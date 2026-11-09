@@ -11,7 +11,10 @@
  * happen is worse than a spinner.
  *
  * THE PAGE REFUSES TO ACT ON A FAILED READ (.claude/rules/database.md): with
- * no read there are no buttons, only the error and a retry.
+ * no read there are no buttons, only the error and a retry. One exception, for
+ * no signal only: the page's last read on this phone is drawn, so a ping tapped
+ * in a basement can still be answered (fast-audit-04). Answers are checked by
+ * the server one by one when they are sent; nothing loaded is saved back.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -26,7 +29,9 @@ import {
   enqueueDelete,
   queueIsEmpty,
   readAuditQueue,
+  readAuditViewCopy,
   writeAuditQueue,
+  writeAuditViewCopy,
   type AuditQueue,
 } from "../auditQueue"
 import type { MuteOption, ReviewChange } from "../auditService"
@@ -55,6 +60,26 @@ interface Confirmed {
 }
 const NONE: Confirmed = { answers: [], deletes: [] }
 
+/**
+ * AN ANSWER THE SERVER REFUSED FOR GOOD, SHOWN UNTIL HE HAS SEEN IT.
+ *
+ * Most often: this phone answered a quarter with no signal, another device
+ * answered it after, and the newer answer stays ("Changed on another device
+ * since"). It used to leave the queue with no word while the sheet still said
+ * "Saved" (alpha test fast-audit-02).
+ */
+export interface NotKept {
+  answer: AuditAnswer
+  reason: string
+}
+
+/**
+ * HOW OFTEN AN OPEN PAGE READS AGAIN, so an answer given on another device
+ * shows here within a minute and is not answered over blindly (alpha test
+ * fast-audit-03). Only while the page is on screen.
+ */
+export const REREAD_MS = 30_000
+
 export function useAudit(account: string) {
   const api = useMemo(() => auditApi(account), [account])
   const [view, setView] = useState<AuditView | null>(null)
@@ -62,6 +87,10 @@ export function useAudit(account: string) {
   const [queue, setQueue] = useState<AuditQueue>(emptyAuditQueue(account))
   const [sendState, setSendState] = useState<SendState>("sent")
   const [confirmed, setConfirmed] = useState<Confirmed>(NONE)
+  const [notKept, setNotKept] = useState<NotKept[]>([])
+  /** The view drawn is this phone's last read, kept for no signal (fast-audit-04). */
+  const [fromCopy, setFromCopy] = useState(false)
+  const viewRef = useRef<AuditView | null>(null)
   const confirmedRef = useRef<Confirmed>(NONE)
   const setC = useCallback((next: Confirmed) => {
     confirmedRef.current = next
@@ -83,24 +112,50 @@ export function useAudit(account: string) {
     [account],
   )
 
-  /** Read the page. An answer older than one already drawn is dropped. */
-  const load = useCallback(async () => {
+  /**
+   * Read the page. An answer older than one already drawn is dropped. Returns
+   * what was read (null when it failed or was overtaken), so a sheet opened
+   * right after fills from Time as it is now (D-PREFILL, alpha fast-time-01).
+   */
+  const load = useCallback(async (): Promise<AuditView | null> => {
     const mine = ++readsStarted.current
     const started = Date.now()
     try {
       const fresh = await api.view()
-      if (mine < readApplied.current) return
+      if (mine < readApplied.current) return null
       readApplied.current = mine
+      viewRef.current = fresh
       setView(fresh)
+      setFromCopy(false)
+      writeAuditViewCopy(browserStore(), account, fresh)
       // What this read includes no longer needs drawing from here.
       const c = confirmedRef.current
       setC({ answers: c.answers.filter((x) => x.at >= started), deletes: c.deletes.filter((x) => x.at >= started) })
       setLoadError(null)
+      return fresh
     } catch (error) {
-      if (mine < readApplied.current) return
+      if (mine < readApplied.current) return null
+      // No signal and nothing on screen yet: draw this phone's last read, so
+      // answers can still be given and wait in the queue (D-OFFLINE). Decisions
+      // (start, end, mute, settings) still need the server and say so.
+      if (!viewRef.current && error instanceof AuditCallError && error.status === 0) {
+        const copy = readAuditViewCopy(browserStore(), account)
+        if (copy) {
+          viewRef.current = copy
+          setView(copy)
+          setFromCopy(true)
+        }
+      }
       setLoadError(error instanceof AuditCallError ? error.message : "Could not read your audit")
+      return null
     }
-  }, [api, setC])
+  }, [api, account, setC])
+
+  /** A newer refusal for a quarter replaces an older one. */
+  const addNotKept = useCallback((lost: NotKept[]) => {
+    const keys = new Set(lost.map((x) => quarterKey(x.answer)))
+    setNotKept((prev) => [...prev.filter((x) => !keys.has(quarterKey(x.answer))), ...lost])
+  }, [])
 
   /** Send the queue: answers in chunks of 200, then deletes. One flush at a time. */
   const flush = useCallback(async () => {
@@ -122,6 +177,11 @@ export function useAudit(account: string) {
             const refused = answer.refused ?? []
             later = new Set(refused.filter((r) => r.retry).map((r) => String(r.id)))
             const gone = new Set(refused.map((r) => String(r.id)))
+            const lost = refused.flatMap((r) => {
+              const answer = r.retry ? undefined : batch.find((a) => a.id === String(r.id))
+              return answer ? [{ answer, reason: r.error }] : []
+            })
+            if (lost.length > 0) addNotKept(lost)
             const at = Date.now()
             const kept = batch.filter((a) => !gone.has(a.id)).map((a) => ({ answer: a, at }))
             const c = confirmedRef.current
@@ -129,7 +189,10 @@ export function useAudit(account: string) {
           },
           {
             onSent: (batch) => setQ(answersSent(queueRef.current, batch.filter((a) => !later.has(a.id)))),
-            onDropped: (batch) => setQ(answersSent(queueRef.current, batch)),
+            onDropped: (batch) => {
+              addNotKept(batch.map((answer) => ({ answer, reason: "The server could not save it" })))
+              setQ(answersSent(queueRef.current, batch))
+            },
           },
         )
         if (!stuck && queueRef.current.answers.some((a) => later.has(a.id))) stuck = { status: 0 }
@@ -159,7 +222,7 @@ export function useAudit(account: string) {
     } finally {
       flushing.current = false
     }
-  }, [api, load, setQ, setC])
+  }, [api, load, setQ, setC, addNotKept])
 
   useEffect(() => {
     const stored = readAuditQueue(browserStore(), account)
@@ -183,10 +246,19 @@ export function useAudit(account: string) {
       queueRef.current = shared
       setQueue(shared)
     }
+    // Another device may have answered meanwhile (fast-audit-03): read again on
+    // focus, and every REREAD_MS while the page is on screen.
+    const onFocus = () => void load()
+    const every = window.setInterval(() => {
+      if (document.visibilityState === "visible") void load()
+    }, REREAD_MS)
     window.addEventListener("online", retry)
     window.addEventListener("storage", onStorage)
+    window.addEventListener("focus", onFocus)
     document.addEventListener("visibilitychange", onVisible)
     return () => {
+      window.clearInterval(every)
+      window.removeEventListener("focus", onFocus)
       window.removeEventListener("storage", onStorage)
       window.removeEventListener("online", retry)
       document.removeEventListener("visibilitychange", onVisible)
@@ -207,6 +279,9 @@ export function useAudit(account: string) {
   const answer = useCallback(
     (answers: AuditAnswer[]) => {
       if (answers.length === 0) return
+      // Answered again: an earlier "not kept" for these quarters is over.
+      const keys = new Set(answers.map(quarterKey))
+      setNotKept((prev) => (prev.some((x) => keys.has(quarterKey(x.answer))) ? prev.filter((x) => !keys.has(quarterKey(x.answer))) : prev))
       setQ(enqueueAnswers(queueRef.current, answers))
       void flush()
     },
@@ -247,6 +322,10 @@ export function useAudit(account: string) {
     sendState,
     waiting: queue.answers.length + queue.deletes.length,
     reload: load,
+    fromCopy,
+    notKept,
+    dismissNotKept: () => setNotKept([]),
+    setZone: (timezone: string) => decide(() => api.zone(timezone)),
     answer,
     remove,
     start: () => decide(() => api.start(crypto.randomUUID())),

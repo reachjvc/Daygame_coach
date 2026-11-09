@@ -21,7 +21,7 @@ import { WHY_MAX } from "../auditService"
 import { stretchLabel } from "../quarterService"
 import type { ActivityCount } from "../suggestService"
 import type { AnswerSource, AuditAnswer, ScaleValue } from "../types"
-import type { DrawnSlot } from "../hooks/useAudit"
+import type { DrawnSlot, NotKept } from "../hooks/useAudit"
 import { ActivityField } from "./ActivityField"
 import { ScaleRow } from "./ScaleRow"
 
@@ -46,6 +46,7 @@ function Card({
   onSave,
   onDelete,
   saved,
+  lost,
   onEdit,
 }: {
   card: AnswerCardInput
@@ -58,6 +59,8 @@ function Card({
   onSave: (answers: AuditAnswer[]) => void
   onDelete: ((id: string) => void) | null
   saved: boolean
+  /** Why the server did not keep what this card saved, or null (fast-audit-02). */
+  lost: string | null
   onEdit: () => void
 }) {
   const e = card.existing
@@ -94,6 +97,30 @@ function Card({
   }
 
   const label = stretchLabel(card.quarters, timezone)
+  if (saved && lost) {
+    return (
+      <section
+        className="flex min-h-14 items-center gap-3 rounded-2xl border border-amber-500/60 bg-amber-500/10 px-3 py-2"
+        data-testid="audit-card"
+        data-card={index}
+      >
+        <div className="min-w-0 flex-1" role="alert" data-testid="audit-card-not-kept">
+          <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">Not kept · {label}</p>
+          <p className="text-sm">
+            {activity.trim()}: {lost}. The Day list shows the answer that was kept.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onEdit}
+          className="flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted/50"
+          aria-label={`Answer ${label} again`}
+        >
+          <Pencil className="size-4" />
+        </button>
+      </section>
+    )
+  }
   if (saved) {
     return (
       <section
@@ -183,6 +210,7 @@ export function AnswerSheet({
   source,
   suggestions,
   slots,
+  notKept = [],
   onSave,
   onDelete,
 }: {
@@ -195,9 +223,12 @@ export function AnswerSheet({
   source: AnswerSource
   suggestions: readonly ActivityCount[]
   slots: readonly DrawnSlot[]
+  notKept?: readonly NotKept[]
   onSave: (answers: AuditAnswer[]) => void
   onDelete?: (id: string) => void
 }) {
+  const lostByQuarter = new Map<number, string>()
+  for (const x of notKept) if (x.answer.runId === runId) lostByQuarter.set(Date.parse(x.answer.slotAt), x.reason)
   const [saved, setSaved] = useState<Set<number>>(new Set())
   const box = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -226,6 +257,7 @@ export function AnswerSheet({
               suggestions={suggestions}
               existingByQuarter={existingByQuarter}
               saved={saved.has(i)}
+              lost={card.quarters.map((q) => lostByQuarter.get(q)).find((r) => r !== undefined) ?? null}
               onEdit={() =>
                 setSaved((prev) => {
                   const next = new Set(prev)

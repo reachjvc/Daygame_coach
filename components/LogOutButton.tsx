@@ -11,6 +11,9 @@
  * tracker would, for a few seconds at most. What still could not go is named,
  * and only "Log out anyway" throws it away. "Stay signed in" keeps everything.
  *
+ * The audit's answers waiting for signal are counted and sent the same way
+ * (`sendWaitingAudit`): they were wiped with no word (alpha test fast-audit-01).
+ *
  * The header and the phone's More sheet each draw their own button; this owns
  * what pressing it does.
  */
@@ -20,6 +23,8 @@ import { useCallback, useRef, useState, useTransition, type ReactNode } from "re
 import { signOut } from "@/app/actions/auth"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog"
+import { unsentAuditChanges } from "@/src/audit/auditQueue"
+import { sendWaitingAudit } from "@/src/audit/sendWaitingAudit"
 import { forgetOfflineCopies } from "@/src/shared/offlineCopies"
 import { SendTrackerChanges } from "@/src/timetrack/components/SendTrackerChanges"
 import { sendTrackerChangesNow, unsentTrackerChanges } from "@/src/timetrack/hooks/useTimetrackSync"
@@ -35,6 +40,9 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
   /** No tracker is mounted in this tab, so a sender of its own is */
   const [ownSender, setOwnSender] = useState(false)
   const stranger = useRef(false)
+  /** The audit queue here is another account's (409): not the person's who is logging out */
+  const auditStranger = useRef(false)
+  const auditSending = useRef(false)
   const [, startTransition] = useTransition()
 
   const leave = useCallback(() => {
@@ -51,19 +59,40 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
     stranger.current = true
   }, [])
 
+  /** One audit send at a time; tried again while Log Out waits, as signal may return */
+  const sendAudit = useCallback(() => {
+    if (auditSending.current || auditStranger.current || unsentAuditChanges() === 0) return
+    auditSending.current = true
+    void sendWaitingAudit()
+      .then((result) => {
+        if (result === "stranger") auditStranger.current = true
+      })
+      .catch(() => {})
+      .finally(() => {
+        auditSending.current = false
+      })
+  }, [])
+
+  const unsent = useCallback(
+    () => (stranger.current ? 0 : unsentTrackerChanges()) + (auditStranger.current ? 0 : unsentAuditChanges()),
+    [],
+  )
+
   const onClick = useCallback(() => {
     if (phase.kind !== "idle") return
-    if (unsentTrackerChanges() === 0) {
+    stranger.current = false
+    auditStranger.current = false
+    if (unsent() === 0) {
       leave()
       return
     }
     setPhase({ kind: "sending" })
-    stranger.current = false
-    if (!sendTrackerChangesNow()) setOwnSender(true)
+    if (unsentTrackerChanges() > 0 && !sendTrackerChangesNow()) setOwnSender(true)
+    sendAudit()
     const started = Date.now()
     const look = () => {
-      const left = unsentTrackerChanges()
-      if (left === 0 || stranger.current) {
+      const left = unsent()
+      if (left === 0) {
         setOwnSender(false)
         leave()
         return
@@ -72,10 +101,11 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
         setPhase({ kind: "asking", left })
         return
       }
+      sendAudit()
       setTimeout(look, LOOK_EVERY_MS)
     }
     setTimeout(look, LOOK_EVERY_MS)
-  }, [phase.kind, leave])
+  }, [phase.kind, leave, sendAudit, unsent])
 
   const stay = useCallback(() => {
     setOwnSender(false)

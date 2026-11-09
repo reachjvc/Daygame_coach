@@ -17,7 +17,7 @@ import { usePushDevice, type PushDeviceState } from "@/src/notifications/hooks/u
 import { ROUTES } from "@/src/shared/routes"
 import { OfflineShell } from "@/src/shared/components/OfflineShell"
 import { useAudit, type AuditState, type DrawnSlot } from "../hooks/useAudit"
-import { answerSheetQuarters, groupQuarters, prefillQuarters, QUARTER_MS, runQuarters, SHEET_WINDOW_MS, withAnswered } from "../quarterService"
+import { answerSheetQuarters, groupQuarters, prefillQuarters, QUARTER_MS, runQuarters, SHEET_WINDOW_MS, stretchLabel, withAnswered } from "../quarterService"
 import type { AnswerSource, AuditRun } from "../types"
 import type { AuditView } from "../auditClient"
 import { AnswerSheet, type AnswerCardInput } from "./AnswerSheet"
@@ -28,6 +28,7 @@ import { ReviewScreen } from "./ReviewScreen"
 import { noPingDevice, PingDeviceCard, PingDeviceList } from "./PingDevices"
 
 const DAY_MS = 24 * 60 * 60_000
+const FILL_IN_WAIT_MS = 3_000
 
 const dayKeyOf = (ms: number, tz: string) => getTodayInTimezone(tz, new Date(ms))
 
@@ -59,6 +60,94 @@ function runDays(run: AuditRun, now: number, tz: string): string[] {
     if (key >= last) break
   }
   return out
+}
+
+/** The zone this device's clock is in, or null when the browser cannot say. */
+function deviceZone(): string | null {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || null
+  } catch {
+    return null
+  }
+}
+
+/** The zone's wall clock at `ms`, as minutes since midnight: two zones differ when these do. */
+function wallMinutes(ms: number, tz: string): number | null {
+  try {
+    const parts = new Intl.DateTimeFormat("en-GB", { timeZone: tz, day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date(ms))
+    const n = (t: string) => Number(parts.find((p) => p.type === t)?.value)
+    return n("day") * 1440 + n("hour") * 60 + n("minute")
+  } catch {
+    return null
+  }
+}
+
+/** "Europe/Copenhagen" → "Copenhagen". */
+const zoneCity = (tz: string) => (tz.split("/").pop() ?? tz).replace(/_/g, " ")
+
+/**
+ * TRAVELLING: the audit's times, quiet hours and pings follow the account's
+ * zone, and the page never said which (alpha test fast-audit-05). When this
+ * device's clock differs, the zone is named and one tap switches the account
+ * to this one (the same setting as in Settings). Never switched unasked.
+ */
+function ZoneLine({ s, accountZone, now }: { s: AuditState; accountZone: string; now: number }) {
+  const [here] = useState(deviceZone)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  if (!here || here === accountZone) return null
+  const a = wallMinutes(now, accountZone)
+  const b = wallMinutes(now, here)
+  if (a === null || b === null || a === b) return null
+  return (
+    <div className="mt-3 rounded-xl border border-border bg-card px-3.5 py-3 text-sm" data-testid="audit-zone">
+      <p>
+        Times here are {zoneCity(accountZone)} time ({accountZone}). This phone is on {zoneCity(here)} time.
+      </p>
+      <Button
+        variant="outline"
+        size="sm"
+        className="mt-2"
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true)
+          setError(null)
+          const failed = await s.setZone(here)
+          setBusy(false)
+          if (failed) setError(failed)
+        }}
+        data-testid="audit-zone-switch"
+      >
+        {busy ? "Switching…" : `Use ${zoneCity(here)} time`}
+      </Button>
+      {error && (
+        <p className="mt-2 text-destructive" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  )
+}
+
+/** Answers the server did not keep, named until he has seen them (fast-audit-02). */
+function NotKeptLine({ s, tz }: { s: AuditState; tz: string }) {
+  if (s.notKept.length === 0) return null
+  return (
+    <div className="mt-3 rounded-xl border border-amber-500/60 bg-amber-500/10 px-3.5 py-3 text-sm" role="alert" data-testid="audit-not-kept">
+      <p className="font-semibold">{s.notKept.length === 1 ? "1 answer was not kept" : `${s.notKept.length} answers were not kept`}</p>
+      <ul className="mt-1 space-y-0.5">
+        {s.notKept.map(({ answer, reason }) => (
+          <li key={`${answer.runId}:${answer.slotAt}`}>
+            {stretchLabel([Date.parse(answer.slotAt)], tz)} · {answer.activity}: {reason}.
+          </li>
+        ))}
+      </ul>
+      <p className="mt-1 text-muted-foreground">The Day list shows the answer that was kept.</p>
+      <Button variant="outline" size="sm" className="mt-2" onClick={s.dismissNotKept} data-testid="audit-not-kept-ok">
+        OK
+      </Button>
+    </div>
+  )
 }
 
 /** Re-render every 30 s, so counts follow the clock. */
@@ -184,8 +273,8 @@ function TodayView({
   viewRef.current = view
 
   const cardsFor = useCallback(
-    (qs: number[], single: boolean): AnswerCardInput[] => {
-      const prefill = prefillQuarters(qs, viewRef.current.timeEntries, Date.now())
+    (qs: number[], single: boolean, read: AuditView | null = null): AnswerCardInput[] => {
+      const prefill = prefillQuarters(qs, (read ?? viewRef.current).timeEntries, Date.now())
       if (single) {
         const texts = new Set(qs.map((q) => prefill.get(q)?.text ?? ""))
         const only = texts.size === 1 ? prefill.get(qs[0]) : undefined
@@ -208,6 +297,20 @@ function TodayView({
       setAnswerNowPending("ready")
     },
     [reload],
+  )
+  // "Fill in" from the Day list reads again too: it used the Time entries
+  // loaded when the page opened, so an entry started or renamed on another
+  // device since filled the card wrongly or not at all (alpha fast-time-01/02).
+  const [fillPending, setFillPending] = useState(false)
+  const openFillIn = useCallback(
+    async (gaps: number[]) => {
+      setFillPending(true)
+      // On a weak signal it waits at most FILL_IN_WAIT_MS, then fills from what it has.
+      const fresh = await Promise.race([reload(), new Promise<null>((r) => setTimeout(() => r(null), FILL_IN_WAIT_MS))])
+      setFillPending(false)
+      setSheet({ title: "Fill in", cards: cardsFor(gaps, true, fresh), source: "later", allowDelete: false })
+    },
+    [reload, cardsFor],
   )
   // Opened from a ping (`?answer=<quarter>&send=<id>`): straight to the answer sheet.
   useEffect(() => {
@@ -256,6 +359,13 @@ function TodayView({
           {s.sendState === "signed-out" ? ". Sign in again to send them." : ", and sent when you have signal."}
         </p>
       )}
+      {s.fromCopy && (
+        <p className="mt-2 text-sm text-muted-foreground" role="status" data-testid="audit-offline-copy">
+          No signal: this is what this phone last read. Answers wait here and are sent when you have signal.
+        </p>
+      )}
+      <NotKeptLine s={s} tz={tz} />
+      <ZoneLine s={s} accountZone={tz} now={now} />
       <div className="mt-3 flex gap-2">
         <Button variant="outline" className="flex-1" onClick={() => setMuteOpen(true)} data-testid="audit-mute-open">
           {muted ?? "Mute"}
@@ -282,7 +392,9 @@ function TodayView({
         timezone={tz}
         selection={selection}
         onSelect={setSelection}
-        onAnswerSelection={(gaps) => setSheet({ title: "Fill in", cards: cardsFor(gaps, true), source: "later", allowDelete: false })}
+        onAnswerSelection={(gaps) => {
+          if (!fillPending) void openFillIn(gaps)
+        }}
         onOpenAnswer={(slot) =>
           setSheet({
             title: "Change answer",
@@ -313,6 +425,7 @@ function TodayView({
           source={sheet.source}
           suggestions={view.suggestions}
           slots={s.slots}
+          notKept={s.notKept}
           onSave={s.answer}
           onDelete={sheet.allowDelete ? s.remove : undefined}
         />

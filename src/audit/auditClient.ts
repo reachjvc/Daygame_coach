@@ -71,6 +71,8 @@ export function auditApi(account: string) {
         "/api/audit/slots",
         json("PUT", { slots, sentAt: new Date().toISOString() }),
       ),
+    /** The account's time zone, as chosen in Settings (the same route Settings uses). */
+    zone: (timezone: string) => call<{ timezone: string }>("/api/settings/time-preferences", json("PUT", { timezone, source: "chosen" })),
     remove: (id: string, at?: string) =>
       call<{ ok: true }>(
         `/api/audit/slots/${id}${at ? `?at=${encodeURIComponent(at)}&sentAt=${encodeURIComponent(new Date().toISOString())}` : ""}`,

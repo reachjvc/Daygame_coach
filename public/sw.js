@@ -101,6 +101,20 @@ function isShell(pathname) {
   return SHELL_PATHS.includes(pathname)
 }
 
+/**
+ * Shells whose page is the same whatever the query says: the query is read by
+ * the page's own script. A ping opens `/audit?answer=<quarter>&send=<id>`, and
+ * with no signal that address matched nothing stored, so the browser's error
+ * page came up (alpha test fast-audit-04). These are stored and answered at
+ * their path alone. Still rule 2: only the named page, at its own path.
+ */
+const QUERY_FREE_SHELLS = ["/audit"]
+
+/** The key a page is stored and looked up under. */
+function shellKey(request, url) {
+  return QUERY_FREE_SHELLS.includes(url.pathname) ? new Request(url.origin + url.pathname) : request
+}
+
 /** Fetched flat, because none of them is a page and none of them is personal. */
 const SHELL_EXTRAS = ["/manifest.webmanifest", "/icon-192.png", "/icon-512.png"]
 
@@ -205,6 +219,7 @@ self.addEventListener("fetch", (event) => {
   if (isPage && !isShell(url.pathname)) return
 
   const storable = isPage || isAsset(request, url)
+  const key = isPage ? shellKey(request, url) : request
 
   event.respondWith(
     fetch(request)
@@ -214,18 +229,18 @@ self.addEventListener("fetch", (event) => {
         // skipped by the first test; `redirected` covers a following fetch.
         if (response.ok && !response.redirected && storable) {
           const copy = response.clone()
-          event.waitUntil(caches.open(CACHE).then((cache) => cache.put(request, copy)))
+          event.waitUntil(caches.open(CACHE).then((cache) => cache.put(key, copy)))
         } else if (isPage && response.type === "opaqueredirect") {
           // The server sent this page elsewhere: the workout it showed is
           // finished or thrown away, or nobody is signed in. The stored copy
           // must not come back the next time there is no signal, offering a
           // finished workout as if it were still open.
-          event.waitUntil(caches.open(CACHE).then((cache) => cache.delete(request)))
+          event.waitUntil(caches.open(CACHE).then((cache) => cache.delete(key)))
         }
         return response
       })
       .catch(async () => {
-        const hit = await caches.match(request)
+        const hit = await caches.match(key)
         if (hit) return hit
         throw new Error("offline and not cached")
       }),

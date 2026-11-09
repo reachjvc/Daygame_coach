@@ -12,9 +12,16 @@
  */
 
 import { browserStore, readOwnedJson, writeOwnedJson, type KeyValueStore } from "@/src/shared/offlineQueue"
+import type { AuditView } from "./auditClient"
 import type { AuditAnswer } from "./types"
 
 export const AUDIT_QUEUE_KEY = "audit-queue-v1"
+/**
+ * The page's last read, so /audit opened with no signal (a ping tapped in a
+ * basement) still draws the day and takes answers (alpha test fast-audit-04).
+ * Only drawn when a read fails for want of signal; one person's, like the queue.
+ */
+export const AUDIT_VIEW_KEY = "audit-view-v1"
 
 export interface QueuedDelete {
   id: string
@@ -93,10 +100,40 @@ export function deletesSent(q: AuditQueue, ids: readonly string[]): AuditQueue {
   return { ...q, deletes: q.deletes.filter((d) => !done.has(d.id)) }
 }
 
-/** Signing out: no answer text stays on a shared phone. */
+/** The account a stored queue belongs to, or null when there is none. Nothing else is read. */
+export function auditQueueOwner(store: KeyValueStore | null = browserStore()): string | null {
+  try {
+    const raw = store?.getItem(AUDIT_QUEUE_KEY)
+    const owner = raw ? (JSON.parse(raw) as { owner?: unknown } | null)?.owner : null
+    return typeof owner === "string" && owner ? owner : null
+  } catch {
+    return null
+  }
+}
+
+/** Answers and deletes on this device the server has not confirmed (Log Out asks before it loses them). */
+export function unsentAuditChanges(store: KeyValueStore | null = browserStore()): number {
+  const owner = auditQueueOwner(store)
+  if (!owner) return 0
+  const q = readAuditQueue(store, owner)
+  return q.answers.length + q.deletes.length
+}
+
+export function readAuditViewCopy(store: KeyValueStore | null, owner: string): AuditView | null {
+  const parsed = readOwnedJson(store, AUDIT_VIEW_KEY, owner) as { view?: AuditView } | null
+  const view = parsed?.view
+  return view && typeof view === "object" && Array.isArray(view.slots) && Array.isArray(view.runs) && typeof view.timezone === "string" ? view : null
+}
+
+export function writeAuditViewCopy(store: KeyValueStore | null, owner: string, view: AuditView): void {
+  writeOwnedJson(store, AUDIT_VIEW_KEY, owner, { view })
+}
+
+/** Signing out: no answer text stays on a shared phone, waiting or last read. */
 export function forgetAuditOnThisDevice(store: KeyValueStore | null = browserStore()): void {
   try {
     store?.removeItem(AUDIT_QUEUE_KEY)
+    store?.removeItem(AUDIT_VIEW_KEY)
   } catch {
     // Nothing kept, nothing to forget.
   }

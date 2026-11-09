@@ -370,3 +370,35 @@ describe("assets and the API", () => {
     expect(respondedAtAll).toBe(false)
   })
 })
+
+describe("the audit, opened from a ping with no signal (alpha test fast-audit-04)", () => {
+  const ping = `${ROUTES.audit}?answer=${encodeURIComponent("2026-11-09T15:30:00.000Z")}&send=00000000-0000-4000-8000-000000000009`
+
+  test("a ping's address is answered with the stored audit page when the network fails", async () => {
+    const h = await installed()
+    h.fetchMock.mockResolvedValueOnce(new Response("<html>audit</html>", { status: 200 }))
+    await dispatch(h, "fetch", { request: page(ROUTES.audit) })
+
+    h.fetchMock.mockRejectedValueOnce(new TypeError("Failed to fetch"))
+    const { response } = await dispatch(h, "fetch", { request: page(ping) })
+    expect(response, "the ping opened the browser's error page").toBeInstanceOf(Response)
+    expect(await (response as Response).text()).toBe("<html>audit</html>")
+  })
+
+  test("a page opened from a ping is stored under the audit's own path, not one copy per ping", async () => {
+    const h = await installed()
+    h.fetchMock.mockResolvedValueOnce(new Response("<html>audit</html>", { status: 200 }))
+    await dispatch(h, "fetch", { request: page(ping) })
+    const stored = [...h.store.get("app-shell-build1")!.keys()]
+    expect(stored).toContain(ORIGIN + ROUTES.audit)
+    expect(stored.some((u) => u.includes("?answer="))).toBe(false)
+  })
+
+  test("other shells are still answered only at their exact address", async () => {
+    const h = await installed()
+    h.store.get("app-shell-build1")!.set(ORIGIN + ROUTES.time, new Response("<html>tracker</html>"))
+    h.fetchMock.mockRejectedValueOnce(new TypeError("Failed to fetch"))
+    const { response } = await dispatch(h, "fetch", { request: page(`${ROUTES.time}?x=1`) })
+    expect(response).toBeInstanceOf(Error)
+  })
+})

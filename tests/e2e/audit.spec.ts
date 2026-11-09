@@ -379,6 +379,9 @@ test.describe("time & energy audit @phone", () => {
       await page.goto("/dashboard", { waitUntil: "domcontentloaded" })
       await whenHydrated(page.getByTestId("header-logout-button"), 60_000)
       await page.getByTestId("header-logout-button").click()
+      // It cannot be sent (no signal for it), so Log Out names it first (alpha
+      // fast-audit-01); only "Log out anyway" throws it away.
+      await page.getByTestId("log-out-anyway").click({ timeout: 20_000 })
       await expect.poll(() => new URL(page.url()).pathname, { timeout: 30_000 }).toBe("/")
       expect(await page.evaluate(() => localStorage.getItem("audit-queue-v1"))).toBeNull()
 

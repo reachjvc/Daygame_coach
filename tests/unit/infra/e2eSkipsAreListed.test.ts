@@ -23,6 +23,8 @@ import { callSites, e2eSourceFiles, parse } from "./e2eSource"
 const KNOWN_SKIPS: Record<string, string> = {
   "tests/e2e/vice-offline.spec.ts › the Black Box opens with no connection, and its record is there":
     "a service worker registers only in a production build; under `next dev` there is none to test",
+  "tests/e2e/audit-devices.spec.ts › 04: a ping tapped with no signal opens the answer sheet, and plain /audit can be answered":
+    "a service worker registers only in a production build; under `next dev` there is none to test",
   "tests/e2e/programs-live-format.spec.ts › describe: the live workout, opened with no signal":
     "Playwright's WebKit fails every navigation while offline is emulated, service worker or not (the Black Box's offline test fails the same way there); these run on Chromium",
   "tests/e2e/programs-live-format.spec.ts › reopens with every set on it: one saved with signal, one waiting for it":
