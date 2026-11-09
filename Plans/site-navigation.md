@@ -1,6 +1,7 @@
 # Site navigation: where everything lives once the site is more than dating
 
 **Written 2026-11-09** for the owner and for the session that builds the comparison page.
+**Status 2026-11-09: steps 1–5 done; waiting for the owner's marks (step 6).**
 **Scope of this plan: a comparison page, then one decision. No app code changes.** Building the
 chosen navigation gets its own plan after the owner picks.
 
@@ -22,9 +23,11 @@ What sorts the features:
 
 | Kind | Features today | Coming (vision) |
 |---|---|---|
-| **Dating only** | Scenarios, preferences, Inner Game, Ask Coach, field sessions (cold approach), levels/XP, articles | more scenarios (the premium tier, vision 6–7), forum, the owner's own articles |
+| **Dating only** | Scenarios, preferences, Inner Game (only a Dashboard card reaches it), Ask Coach, field sessions (cold approach), levels/XP, articles | more scenarios (the premium tier, vision 6–7), forum, the owner's own articles |
 | **Both** | Tracking (approaches + body stats), Your plan (dating is one life area), reviews, journal, achievements | modular tracking page (vision 4), more graphs (vision 5) |
-| **Life only** | Training (gym), Time, Time & energy audit, Black Box (quit a vice) | sleep, weight, food trackers, perfect week |
+| **Life only** | Training (gym), Time, Time & energy audit, Black Box (quit a vice; only reachable from inside Your plan) | sleep, weight, food trackers, perfect week |
+
+Checked 2026-11-09 against the code: today's Dashboard is dating only (practice, coach, articles, level), not a mixed page; Settings sits in More.
 
 Two facts push the design: the **premium tier is the dating part** (vision 6), so dating
 needs one place that can be locked or sold as a unit; and **plan and tracking are one system**
@@ -36,13 +39,13 @@ Each one copies how a named real app does it (rule: copy a named system, never a
 The building session checks each app's real navigation from current screenshots before drawing it,
 and corrects the description below where the app differs.
 
-| # | Name | Copies | Phone bar | Where dating goes |
+| # | Name | Copies (checked 2026-11-09) | Phone bar | Where dating goes |
 |---|---|---|---|---|
-| A | **Two worlds** | an app with a switch between two modes, e.g. Uber's rides / Eats switch | switch at top: Dating ⇄ Life; the bar changes with the mode | its own world; locks as one unit |
-| B | **Today + Browse** | Apple Health (Summary · Sharing · Browse, a category list) | Today · Browse · Me | one category among Body, Time, Mind, Plan |
-| C | **By what you do** | Strava (Home · Maps · Record · Groups · You, record in the middle) | Today · Plan · ⊕ Log · Progress · Me; ⊕ opens "start a field session / workout / timer / audit" | spread by verb: Practice under Today, sessions under Log |
-| D | **By life area** | an app whose tabs are areas, e.g. Headspace-style Today · Explore · areas | Today · Dating · Life · Progress · Me; Dating and Life are hubs with top tabs | its own tab; shared things in Today and Progress |
-| E | **Home + app grid** | super-apps like Revolut or WeChat (home of widgets, a grid of tools) | Home · Tools · Coach · Me; Home is pinned widgets the user arranges (vision 4) | a labeled group in the Tools grid |
+| A | **Two worlds** | **Airbnb** (was Uber, wrong: Uber has no mode switch, Rides/Eats/Hotels are tiles). "Switch to hosting" at the bottom of Profile swaps the whole bar; Messages is in both bars | Life: Today · Plan · Body · Progress · Menu. Dating: Practice · Field · Learn · Progress · Profile. Switch at the bottom of Menu/Profile | its own world; locks as one unit |
+| B | **Today + Browse** | Apple Health (Summary · Sharing · Browse; profile is a picture in Summary's corner) | Summary · Sharing · Browse; Sharing holds the forum when it comes | one category among Body, Time, Mind, Plan, Progress |
+| C | **By what you do** | Strava (Home · Maps · Record · Groups · You; stats live in You, there is no Progress tab) | Today · Explore · ⊕ Record · Community · You; Record opens "field session / workout / timer / audit slot" | spread by verb: Explore, Record, Community |
+| D | **By life area** | **Calm** (was Headspace, wrong: its areas are now tiles inside Explore). Calm's Sleep is its own tab with top tabs | Today · Dating · Life · Progress · Me; Dating and Life are hubs with top tabs | its own tab; shared things in Today and Progress |
+| E | **Home + tool grid** | **Grab** (was Revolut/WeChat: Revolut's home is accounts, WeChat's grid is a pull-down). Grab: Home of service tiles + More + cards; bar Home · Payment · Activity · Messages; profile top corner | Home · Plan · Activity · Coach; profile top corner | dating tiles in the grid, a Dating group under More |
 
 **My lean: D**, with C's ⊕ button as an add-on to try. Reasons: dating gets one tab, which
 matches the premium tier; shared things (Today, Progress) stay single; a new feature joins a hub
@@ -70,6 +73,28 @@ One artifact, phone first (375px frame, works at 320px).
    page's database so the next session can read them.
 8. **A "mix" section:** single ideas he can mark on their own (⊕ button, top switch, pinned home
    widgets, a hub with top tabs), since the final answer may combine options.
+
+## Result (2026-11-09)
+
+**Comparison page:** https://claude.ai/artifact/MGAzdo5nRWDS9vFKWkWF6K ("Five Ways Around", private).
+Marks live in its database, collection `marks`: `opt--<A..E>` (mark yes/maybe/no), `idea--<fab|switch|topswitch|hub|browse|tiles|corner>`
+(mark), and every block's note log as `n--<section>--<hash>` or on the mark docs (`notes: [{text, at}]`, `note` = latest).
+
+Tap counts, from the screen the app opens on, counted by walking each phone mock's screens (shortest path) and confirmed by
+clicking every tappable item on every screen of every mock in a browser test (1,223 taps on the published file, all landed):
+
+| Task | Now | A | B | C | D | E |
+|---|---|---|---|---|---|---|
+| Start a field session | 2 | 3 | 2 | 2 | 3 | 2 |
+| Log a gym set | 3 | 4 | 3 | 3 | 3 | 3 |
+| Start a timer | 3 | 2 | 4 | 2 | 2 | 2 |
+| Open today's plan | 2 | 1 | 4 | 1 | 1 | 1 |
+| Ask the coach | 1 | 4 | 3 | 2 | 3 | 1 |
+| Fill an audit slot | 3 | 2 | 4 | 2 | 4 | 2 |
+| **Total** | **14** | **16** | **20** | **12** | **16** | **11** |
+
+Against the lean: D ties A at 16; E (11) and C (12) are fastest. The page says so.
+Unconfirmed: Airbnb's guest tab names Explore and Wishlists, and Calm's full bar order (Sleep and Discover confirmed).
 
 ## Steps
 
