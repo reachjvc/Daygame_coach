@@ -13,6 +13,7 @@ import {
   splitByStored,
   type StoredAnswer,
 } from "@/src/audit/auditService"
+import { nextPingAt } from "@/src/audit/quarterService"
 import type { AuditAnswer, AuditRun } from "@/src/audit/types"
 
 const CPH = "Europe/Copenhagen"
@@ -98,6 +99,18 @@ describe("muteUntil", () => {
     expect(muteUntil("1h", run(), now, CPH)?.toISOString()).toBe("2026-11-09T10:00:00.000Z")
     expect(muteUntil("2h", run(), now, CPH)?.toISOString()).toBe("2026-11-09T11:00:00.000Z")
     expect(muteUntil("off", run(), now, CPH)).toBeNull()
+  })
+
+  it("ends on the quarter the label names, so that quarter's ping is not a minute late (alpha slow-pass-05)", () => {
+    // Tapped 18:30:34 on a ping: "Muted until 19:30" must mean 19:30:00, or
+    // the 19:30 tick still counts it muted and the ping comes at 19:31.
+    const tap = new Date("2026-11-09T17:30:34.841Z")
+    expect(muteUntil("1h", run(), tap, CPH)?.toISOString()).toBe("2026-11-09T18:30:00.000Z")
+    expect(muteUntil("30m", run(), tap, CPH)?.toISOString()).toBe("2026-11-09T18:00:00.000Z")
+    expect(muteUntil("2h", run(), tap, CPH)?.toISOString()).toBe("2026-11-09T19:30:00.000Z")
+    // The page's "next ping" agrees: the 18:30 tick, not 18:45.
+    const muted = run({ startedAt: "2026-11-09T06:00:00.000Z", quietStart: 0, quietEnd: 0, mutedUntil: muteUntil("1h", run(), tap, CPH)!.toISOString() })
+    expect(new Date(nextPingAt(muted, tap.getTime(), CPH)!).toISOString()).toBe("2026-11-09T18:30:00.000Z")
   })
 
   it("'until morning' outside quiet hours is tomorrow 08:00", () => {

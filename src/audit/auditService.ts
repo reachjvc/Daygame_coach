@@ -366,6 +366,10 @@ const MORNING_FALLBACK = 8 * 60
  * When a mute ends (D-MUTE). "morning" is the end of the quiet hours: the end
  * of the ones running now, else of the next ones (tonight's, ending tomorrow).
  * With no quiet hours, 08:00. Null means unmuted.
+ *
+ * A timed mute ends on the quarter at or before "now + N": the quarter the
+ * label "Muted until 19:30" names. Tap + exactly 1 h (19:30:34) kept the
+ * 19:30:00 tick muted, and that ping came at 19:31 (alpha slow-pass-05).
  */
 export function muteUntil(option: MuteOption, run: Pick<AuditRun, "quietStart" | "quietEnd">, now: Date, tz: string): Date | null {
   const ms = now.getTime()
@@ -373,11 +377,11 @@ export function muteUntil(option: MuteOption, run: Pick<AuditRun, "quietStart" |
     case "off":
       return null
     case "30m":
-      return new Date(ms + 30 * 60_000)
+      return new Date(quarterStart(ms + 30 * 60_000))
     case "1h":
-      return new Date(ms + 60 * 60_000)
+      return new Date(quarterStart(ms + 60 * 60_000))
     case "2h":
-      return new Date(ms + 120 * 60_000)
+      return new Date(quarterStart(ms + 120 * 60_000))
     case "morning": {
       const end = run.quietStart === run.quietEnd ? MORNING_FALLBACK : run.quietEnd
       const today = getTodayInTimezone(tz, now)

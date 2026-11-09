@@ -6,24 +6,45 @@
  *
  * It still reports. A crash this severe is the one you most need to know about,
  * and it is the one a person is least likely to describe accurately.
+ *
+ * WITH NO SIGNAL it says "No signal", not "The fault has been reported": a
+ * report waits in this browser until there is signal, and to the person it is
+ * no signal, not a fault. Reloading /audit in airplane mode came up as the
+ * fault page (alpha test slow-pass-04).
  */
 
-import { useEffect } from "react"
+import { useEffect, useSyncExternalStore } from "react"
 
 import { reportError } from "@/src/shared/errorReportService"
+
+function onConnectionChange(changed: () => void): () => void {
+  window.addEventListener("online", changed)
+  window.addEventListener("offline", changed)
+  return () => {
+    window.removeEventListener("online", changed)
+    window.removeEventListener("offline", changed)
+  }
+}
 
 export default function GlobalError({ error, reset }: { error: Error; reset: () => void }) {
   useEffect(() => {
     reportError(error, { severity: "error" })
   }, [error])
+  const offline = useSyncExternalStore(
+    onConnectionChange,
+    () => navigator.onLine === false,
+    () => false,
+  )
 
   return (
     <html lang="en">
       <body style={{ margin: 0, background: "#0b1120", color: "#e7eef2", fontFamily: "system-ui, sans-serif" }}>
         <main style={{ maxWidth: "32rem", margin: "0 auto", padding: "4rem 1.5rem", lineHeight: 1.6 }}>
-          <h1 style={{ fontSize: "1.4rem", margin: "0 0 .5rem" }}>This page could not load</h1>
+          <h1 style={{ fontSize: "1.4rem", margin: "0 0 .5rem" }}>{offline ? "No signal" : "This page could not load"}</h1>
           <p style={{ margin: "0 0 1.5rem", color: "#93a3ac" }}>
-            The fault has been reported. Anything you had saved is safe.
+            {offline
+              ? "This page could not open without a connection. Anything you had saved is safe. Try again when you have signal."
+              : "The fault has been reported. Anything you had saved is safe."}
           </p>
           <button
             type="button"

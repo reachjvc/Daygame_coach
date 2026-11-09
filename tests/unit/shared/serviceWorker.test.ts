@@ -394,6 +394,50 @@ describe("the audit, opened from a ping with no signal (alpha test fast-audit-04
     expect(stored.some((u) => u.includes("?answer="))).toBe(false)
   })
 
+  test("install also stores the chunks named only in the page's data, not in a tag (alpha slow-pass-04)", async () => {
+    // Next lists a page's own client chunks inside the inline page data as
+    // \"static/chunks/…\". Stored without them, the first reload with no
+    // signal after a new worker stopped on "Loading chunk 9243 failed" and
+    // showed the crash page.
+    const h = await loadWorker("build3")
+    const html =
+      '<html><script src="/_next/static/chunks/main-app.js" async=""></script>' +
+      '<script>self.__next_f.push([1,"2a:\\"static/chunks/9243-873e76f9.js\\"\\n2b:\\"static/chunks/app/(app)/audit/page-f1b0f0c0.js\\"\\n"])</script></html>'
+    h.fetchMock.mockImplementation(async (input: unknown) => {
+      const url = String(typeof input === "string" ? input : (input as { url: string }).url)
+      return url.endsWith(ROUTES.audit) ? new Response(html, { status: 200 }) : new Response("ok", { status: 200 })
+    })
+    await dispatch(h, "install", {})
+    const stored = [...h.store.get("app-shell-build3")!.keys()]
+    expect(stored).toContain(ORIGIN + "/_next/static/chunks/main-app.js")
+    expect(stored).toContain(ORIGIN + "/_next/static/chunks/9243-873e76f9.js")
+    expect(stored).toContain(ORIGIN + "/_next/static/chunks/app/(app)/audit/page-f1b0f0c0.js")
+  })
+
+  test("a new build's worker stores /audit at install, before the page is ever opened (alpha slow-pass-04)", async () => {
+    // A phone whose worker predates a deploy gets the new worker from the new
+    // `?v=<build>` address the next time any shell page is opened with signal;
+    // the audit page is in the new store from that install, not from a visit.
+    const h = await loadWorker("build2")
+    h.store.set("app-shell-build1", new Map([[ORIGIN + ROUTES.audit, new Response("<html>old audit</html>")]]))
+    h.fetchMock.mockImplementation(async (input: unknown) => {
+      const url = String(typeof input === "string" ? input : (input as { url: string }).url)
+      return url.endsWith(ROUTES.audit)
+        ? new Response('<html><script src="/_next/static/chunks/audit-new.js"></script></html>', { status: 200 })
+        : new Response("ok", { status: 200 })
+    })
+    await dispatch(h, "install", {})
+    await dispatch(h, "activate", {})
+    expect([...h.store.keys()]).toEqual(["app-shell-build2"])
+    const stored = [...h.store.get("app-shell-build2")!.keys()]
+    expect(stored).toContain(ORIGIN + ROUTES.audit)
+    expect(stored).toContain(ORIGIN + "/_next/static/chunks/audit-new.js")
+
+    h.fetchMock.mockRejectedValueOnce(new TypeError("Failed to fetch"))
+    const { response } = await dispatch(h, "fetch", { request: page(ROUTES.audit) })
+    expect(await (response as Response).text()).toContain("audit-new.js")
+  })
+
   test("other shells are still answered only at their exact address", async () => {
     const h = await installed()
     h.store.get("app-shell-build1")!.set(ORIGIN + ROUTES.time, new Response("<html>tracker</html>"))

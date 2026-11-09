@@ -305,7 +305,9 @@ function TodayView({
    */
   const cardsFor = useCallback(
     (qs: number[], single: boolean, read: AuditView | null = null, asked: number | null = null): AnswerCardInput[] => {
-      const prefill = prefillQuarters(qs, (read ?? viewRef.current).timeEntries, Date.now())
+      const source = read ?? viewRef.current
+      // A running entry counts only up to when this view was read (slow-pass-02).
+      const prefill = prefillQuarters(qs, source.timeEntries, Date.now(), Date.parse(source.now))
       if (single) {
         const texts = new Set(qs.map((q) => prefill.get(q)?.text ?? ""))
         const only = texts.size === 1 ? prefill.get(qs[0]) : undefined

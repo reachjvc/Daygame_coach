@@ -23,6 +23,10 @@ import { callSites, e2eSourceFiles, parse } from "./e2eSource"
 const KNOWN_SKIPS: Record<string, string> = {
   "tests/e2e/vice-offline.spec.ts › the Black Box opens with no connection, and its record is there":
     "a service worker registers only in a production build; under `next dev` there is none to test",
+  "tests/e2e/audit-offline-reload.spec.ts › slow-pass-04: reloading /audit offline, an answer waiting, still shows the day and takes answers":
+    "a service worker registers only in a production build; under `next dev` there is none to test",
+  "tests/e2e/audit-offline-reload.spec.ts › slow-pass-02: a Time entry the last read saw running does not fill quarters after that read":
+    "a service worker registers only in a production build; under `next dev` there is none to test",
   "tests/e2e/audit-devices.spec.ts › 04: a ping tapped with no signal opens the answer sheet, and plain /audit can be answered":
     "a service worker registers only in a production build; under `next dev` there is none to test",
   "tests/e2e/programs-live-format.spec.ts › describe: the live workout, opened with no signal":

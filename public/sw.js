@@ -148,9 +148,26 @@ async function warmShell(cache, path) {
 
   // The page names its own scripts and stylesheets. Storing the HTML without
   // them leaves an offline launch drawing markup that never wakes up.
+  await Promise.allSettled([...shellAssets(html)].map((url) => cache.add(url)))
+}
+
+/**
+ * Every static file a stored page names: in its tags (`src="/_next/static/…"`)
+ * AND in the page data React reads while it wakes the page up, where the
+ * page's own chunks are listed as `\"static/chunks/…js\"` and never as a tag.
+ * Reading the tags alone missed those, so after a new worker installed, the
+ * first reload with no signal stopped on "Loading chunk … failed" and showed
+ * the crash page (alpha test slow-pass-04, reproduced 2026-11-09 with the
+ * server switched off). The chunks loaded on the page's own visit came from
+ * the network before this worker was in charge, so nothing else stored them.
+ */
+function shellAssets(html) {
   const assets = new Set()
   for (const match of html.matchAll(/(?:src|href)="(\/_next\/static\/[^"]+)"/g)) assets.add(match[1])
-  await Promise.allSettled([...assets].map((url) => cache.add(url)))
+  for (const match of html.matchAll(/(?:\/_next\/)?(static\/(?:chunks|css|media)\/[\w\-./()[\]%@]+?\.(?:js|css|woff2))(?=\\?")/g)) {
+    assets.add("/_next/" + match[1])
+  }
+  return assets
 }
 
 self.addEventListener("install", (event) => {

@@ -177,13 +177,23 @@ const HALF_QUARTER_MS = QUARTER_MS / 2
 /**
  * What Time says each quarter was (D-PREFILL). The entry covering most of the
  * quarter wins if it covers at least half of it (7.5 of 15 minutes); a tie goes
- * to the later start. A running entry counts up to `nowMs`; an entry that
- * starts after `nowMs` (planned ahead) never counts. Quarters without one are
- * left out of the map.
+ * to the later start. A running entry counts up to `nowMs`, and never past
+ * `readAtMs`, the moment the entries were read: "running" is only what Time
+ * said then. A copy kept for no signal, or a page not read again since, may
+ * hold an entry stopped long ago on another device, and it must not fill
+ * every later quarter (alpha slow-pass-02). An entry that starts after
+ * `nowMs` (planned ahead) never counts. Quarters without one are left out of
+ * the map.
  */
-export function prefillQuarters(quarters: readonly number[], entries: readonly TimeEntryForAudit[], nowMs: number): Map<number, Prefill> {
+export function prefillQuarters(
+  quarters: readonly number[],
+  entries: readonly TimeEntryForAudit[],
+  nowMs: number,
+  readAtMs: number = nowMs,
+): Map<number, Prefill> {
+  const runningUntil = Number.isFinite(readAtMs) ? Math.min(nowMs, readAtMs) : nowMs
   const usable = entries
-    .map((e) => ({ e, text: entryText(e), start: Date.parse(e.startedAt), stop: e.stoppedAt ? Date.parse(e.stoppedAt) : nowMs }))
+    .map((e) => ({ e, text: entryText(e), start: Date.parse(e.startedAt), stop: e.stoppedAt ? Date.parse(e.stoppedAt) : runningUntil }))
     .filter((x) => x.text && x.start <= nowMs && Number.isFinite(x.start) && Number.isFinite(x.stop))
   const out = new Map<number, Prefill>()
   for (const q of quarters) {

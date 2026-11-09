@@ -87,6 +87,28 @@ describe("prefillQuarters", () => {
     expect(prefillQuarters([q], running, at("2026-11-09T09:06:00Z")).has(q)).toBe(false)
   })
 
+  it("a running entry counts only up to the read it came from, not on to now (alpha slow-pass-02)", () => {
+    // Read at 17:45 while "Writing report" ran; it stopped at 17:50 on another
+    // device, but this copy (kept for no signal) still says running.
+    const copy = [entry("Writing report", "2026-11-09T17:30:00Z", null)]
+    const readAt = at("2026-11-09T17:45:00Z")
+    const late = at("2026-11-09T18:45:00Z")
+    const p = prefillQuarters([late, at("2026-11-09T17:30:00Z")], copy, at("2026-11-09T19:03:00Z"), readAt)
+    expect(p.has(late)).toBe(false)
+    // The quarter it did cover while the copy was read still fills.
+    expect(p.get(at("2026-11-09T17:30:00Z"))?.text).toBe("Writing report")
+    // Without a read time it is "running now", as before.
+    expect(prefillQuarters([late], copy, at("2026-11-09T19:03:00Z")).has(late)).toBe(true)
+  })
+
+  it("a stopped entry fills only the quarters it overlaps (alpha slow-pass-02)", () => {
+    const stopped = [entry("Writing report", "2026-11-09T16:30:00Z", "2026-11-09T17:18:16Z")]
+    const p = prefillQuarters([at("2026-11-09T17:00:00Z"), at("2026-11-09T17:15:00Z"), at("2026-11-09T17:45:00Z")], stopped, at("2026-11-09T18:03:00Z"))
+    expect(p.get(at("2026-11-09T17:00:00Z"))?.text).toBe("Writing report")
+    expect(p.has(at("2026-11-09T17:15:00Z"))).toBe(false)
+    expect(p.has(at("2026-11-09T17:45:00Z"))).toBe(false)
+  })
+
   it("a planned (future) entry never counts", () => {
     const planned = [entry("Dinner", "2026-11-09T09:00:00Z", "2026-11-09T10:00:00Z")]
     expect(prefillQuarters([q], planned, at("2026-11-09T08:30:00Z")).has(q)).toBe(false)
