@@ -107,6 +107,16 @@ re-counted for all 428 conversations and 3 fresh clips pass your ears.
 **Phase 4: ship (your yes on item 4).** Rebuild the conversation sets the app
 uses (scenario mining, woman responses), then reload the app's Q&A data.
 
+**Later: dense picture read (not started, owner said rough is fine for now,
+2026-11-09).** The 100 assumption sets got 8 frames each, so her look, what
+she is doing and who she is with are often "unknown" or taken from his words.
+Next step when it matters: about 1 frame a second over the minute around his
+approach (60 frames), drop near-duplicates, and have a reader note every clue
+(headphones, bags, a friend nearby, walking or still, how he reaches her) with
+the second it shows. Pulling frames costs nothing; reading them costs LLM
+quota. Up to ~1,000 frames a minute is possible, but neighbouring frames repeat
+each other, so check first that 1 a second misses nothing.
+
 ## Scenario we can build first
 
 **Assumption Game (cold reads).** It needs his lines (clean, his microphone)
