@@ -664,6 +664,9 @@ Changed labels, old → new (Toggl's word in brackets where it is Toggl's; phone
 **Acceptance:** audit counts reported, every confirmed bug fixed or written down with why not; reviews done;
 soak result stated with its last minute; report sent.
 
+**Status (2026-11-09).** The four bugs left after this phase are in `Plans/time-tracker-leftovers.md`; all four
+fixed there (e23b306f, 1fbf75a7, 943fe9a9).
+
 ---
 
 # PART 2 — Ground rules for the executing session

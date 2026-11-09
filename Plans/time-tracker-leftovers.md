@@ -81,6 +81,17 @@ ratchets, push to `main`, check `buildId` at `https://daygame-coach.vercel.app/a
 **Acceptance:** at phone size, only `phonelist.spec.ts:98` (bug 3) fails. At PC size, only
 `pc-offline.spec.ts:85` (bug 2) fails. Speed numbers are recorded here.
 
+**Status (2026-11-09).** Specs copied to `~/.cache/daygame-research/time-audit/regression/audit-2026-11/` (with
+BRIEF.md, the old logs and a README on how to run them; output now goes to `$AUDIT_OUT`). Rewritten tests, each
+keeping its promise: `perf.spec.ts:81` phone lane opens "I’m working on…", types there and starts with Create
+(promise: typing under 100 ms a key, cold open under 3 s); `phonecal.spec.ts:113` and `:124` compare moments with
+`Date.parse` (promise: the edge lands exactly on the neighbour's start); `phonelist.spec.ts:98` counts only long
+tasks that begin inside its 5 s window (promise: a running second stays cheap with every day open — on `next dev`
+the Start's own development-only work ran on after the Stop button was drawn and was counted as the timer's).
+Phone run before the fixes: 30 passed, 4 failed (phonelist:98, plus three that passed alone: they failed under the
+load of my parallel runs). Phone speed, dev server: `perf.spec` cold open 2,125 ms, typing p95 25 ms a key; `perfwhere`
+usable at 1,570 ms (`phone-cold`), sheet typing p95 35 ms (`phone-typing`); tick in `phone-tick` (Phase 3).
+
 ## Phase 2 — The PC edit box follows the other device · S
 
 Depends on Phase 1 (its failing test is `offline/pc-offline.spec.ts:85`, expected
@@ -98,6 +109,13 @@ Depends on Phase 1 (its failing test is `offline/pc-offline.spec.ts:85`, expecte
 **Acceptance:** the unit test and `pc-offline.spec.ts:85` pass, twice each; the timetrack e2e files pass at
 PC size.
 
+**Status (2026-11-09). Done, live e23b306f.** `followNewest` in `src/timetrack/calendarBoxService.ts`, used by
+`CalendarEntryBox.tsx` whenever the saved entry changes. The code review found the first version kept start and
+end as one pair (a start typed into a running entry hid the phone's Stop; a typed start let Save put back an end
+the phone moved): now each edge follows on its own, two tests added. Unit test 9/9; `pc-offline.spec.ts:85`
+passed twice alone and once in the full PC run. Step 3: the phone's sheet keeps only its changes over the newest
+entry (`shownDraft(base, changes)`), so it follows by construction; no shared function needed.
+
 ## Phase 3 — A running timer stays cheap with every day open · M
 
 1. Measure first. Run `phonelist.spec.ts:98` against a production build (`npm run build` with
@@ -113,12 +131,25 @@ PC size.
 **Acceptance:** under 1,000 ms per 5 s on the dev server (D-SPEED-BAR), on two runs. Production number
 reported. Totals in day headers still match (`phonelist.spec.ts:50` passes).
 
+**Status (2026-11-09). Done, live 1fbf75a7.** Doubt first: on this seed the old code measured 61,071 ms per 5 s
+on dev, not 2,429. Almost all of it was React's development-only render logging (`logComponentRender` diffing
+props), which the live site does not run. Fix: `PhoneDay` and `PhoneRow` are memoized; a day is the same object
+while nothing in it can change (`timerList`), and a row compares its entry and the settings, projects, clients,
+tags and favourites it shows. Unit test: with 51 days open one second draws one day. Numbers, 1,958 rows open:
+dev 0, 0 and 112 ms per 5 s (three runs); Start on dev 39.4 s → 3.7 s; production build (`next start`): 0 ms per
+5 s, Start 838 ms. The old code was not measured on a production build. `phonelist.spec.ts` (both tests,
+including the day totals) passes.
+
 ## Phase 4 — Lint green · S
 
 1. Make the D-LINT changes in `eslint.config.*`, plus the two small fixes in `check_render_v3.mjs`.
 2. `npm run lint:ratchet` passes without raising the baseline.
 
 **Acceptance:** lint ratchet green. Nothing in the time tracker changes.
+
+**Status (2026-11-09). Done, live 943fe9a9.** `.claude/worktrees/**` ignored; `docs/research/**/board/*.{js,mjs,cjs}`
+get browser and Node globals; the page globals (`DATA`, `MINP`, `stageDots`) are declared in the file; the empty
+catch says why. Lint ratchet: 290, none new.
 
 ## Phase 5 — Proof and report · S
 
@@ -129,6 +160,15 @@ reported. Totals in day headers still match (`phonelist.spec.ts:50` passes).
 4. Report in plain words, doubt first, with the counts per size and the "try these" list.
 
 **Acceptance:** every audit test passes at its own size, or is written here with why not.
+
+**Status (2026-11-09).** `npm test` 6,455 passed; typecheck 88, none new; lint 290, none new. Timetrack e2e files,
+all green: toggl-time-tracker 20 PC / 4 phone, edge-cases 3 / 3, sync 14 / 9. Full audit on the final code: PC
+(`--grep-invert @phone`) 22 passed, 3 failed; phone 32 passed, 2 failed, 1 skipped. All five passed when run
+alone: `pclist:28`, `perfwhere:96`, `tombstones:58` (that run hit "Database error checking email" from the
+shared test database), `reopen-and-logout:67` (passed in the earlier phone run). Not settled:
+`perfwhere.spec.ts:137` (phone) timed out at 15 minutes in both full phone runs and passed alone twice. It is a
+dev-server freeze after heavy runs; not seen on the production build, which was not run with the full suite.
+Side-by-sides and findability skipped: nothing on screen changed. Review: one subagent, given the diff only.
 
 ---
 
