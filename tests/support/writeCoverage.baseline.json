@@ -11,6 +11,7 @@
   "src/db/auditRepo.ts:startAuditRun": "asserted",
   "src/db/auditRepo.ts:updateRun": "asserted",
   "src/db/auditRepo.ts:upsertSlots": "asserted",
+  "src/db/auditRepo.ts:writeSlotsOverSeen": "asserted",
   "src/db/betaRepo.ts:addWaitlistEmail": "unasserted",
   "src/db/betaRepo.ts:claimBetaSlot": "unasserted",
   "src/db/dashboardRepo.ts:replaceWidgets": "mentioned",

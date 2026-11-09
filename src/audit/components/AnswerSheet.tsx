@@ -124,7 +124,7 @@ function Card({
   const base = useRef<Map<number, AnswerMark | null> | null>(null)
   if (base.current === null) base.current = new Map([...existingByQuarter].map(([q, s]) => [q, markOf(s)]))
   /** "Keep that one" was chosen: the other device's answers, shown in place of this card's. */
-  const [keptOther, setKeptOther] = useState<AnswerMark[] | null>(null)
+  const [keptOther, setKeptOther] = useState<(AnswerMark | null)[] | null>(null)
 
   const save = (en: ScaleValue | null = energy, gr: ScaleValue | null = growth) => {
     setTried(true)
@@ -155,16 +155,16 @@ function Card({
     for (const a of answers) seen.set(Date.parse(a.slotAt), markOf(a))
     onSave(answers)
   }
-  const conflicts = lost.filter((x) => x.stored)
+  const conflicts = lost.filter((x) => x.stored !== undefined)
   /** "Use mine": the refused answers again, now over the answer each quarter holds. */
   const useMine = () => {
-    const again = conflicts.map((x) => ({ ...x.answer, answeredAt: new Date().toISOString(), was: x.stored! }))
+    const again = conflicts.map((x) => ({ ...x.answer, answeredAt: new Date().toISOString(), was: x.stored ?? null }))
     for (const a of again) base.current!.set(Date.parse(a.slotAt), markOf(a))
     onSave(again)
   }
   const keepThat = () => {
-    for (const x of conflicts) base.current!.set(Date.parse(x.answer.slotAt), x.stored!)
-    setKeptOther(distinct(conflicts.map((x) => x.stored!)))
+    for (const x of conflicts) base.current!.set(Date.parse(x.answer.slotAt), x.stored ?? null)
+    setKeptOther(distinct(conflicts.map((x) => x.stored ?? null)))
     onKeepStored(conflicts.map((x) => x.answer))
   }
   // A new answer saves itself on the tap that completes it. A changed one (also
@@ -184,7 +184,7 @@ function Card({
 
   const label = stretchLabel(quarters, timezone)
   if (saved && conflicts.length > 0 && !keptOther) {
-    const theirs = distinct(conflicts.map((x) => x.stored!))
+    const theirs = distinct(conflicts.map((x) => x.stored ?? null))
     return (
       <section
         className="rounded-2xl border border-amber-500/60 bg-amber-500/10 px-3 py-2"
@@ -193,11 +193,17 @@ function Card({
       >
         <div role="alert" data-testid="audit-card-conflict">
           <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">Not saved yet · {stretchLabel(conflicts.map((x) => Date.parse(x.answer.slotAt)), timezone)}</p>
-          {theirs.map((t) => (
-            <p key={t.id} className="text-sm">
-              Answered on another device: {t.activity} <span className="tabular-nums">· E {t.energy} · G {t.growth}</span>
-            </p>
-          ))}
+          {theirs.map((t) =>
+            t ? (
+              <p key={t.id} className="text-sm">
+                Answered on another device: {t.activity} <span className="tabular-nums">· E {t.energy} · G {t.growth}</span>
+              </p>
+            ) : (
+              <p key="deleted" className="text-sm">
+                Deleted on another device
+              </p>
+            ),
+          )}
           <p className="text-sm text-muted-foreground">
             Yours: {activity.trim()} <span className="tabular-nums">· E {energy} · G {growth}</span>
           </p>
@@ -224,12 +230,18 @@ function Card({
           <Check className="size-4" />
         </span>
         <div className="min-w-0 flex-1" role="status" data-testid="audit-card-kept">
-          <p className="text-sm font-semibold text-success">Kept the other device's answer · {label}</p>
-          {keptOther.map((t) => (
-            <p key={t.id} className="truncate text-sm">
-              {t.activity} <span className="tabular-nums text-muted-foreground">· E {t.energy} · G {t.growth}</span>
-            </p>
-          ))}
+          <p className="text-sm font-semibold text-success">Kept the other device's {keptOther.some((t) => t) ? "answer" : "delete"} · {label}</p>
+          {keptOther.map((t) =>
+            t ? (
+              <p key={t.id} className="truncate text-sm">
+                {t.activity} <span className="tabular-nums text-muted-foreground">· E {t.energy} · G {t.growth}</span>
+              </p>
+            ) : (
+              <p key="deleted" className="truncate text-sm">
+                No answer
+              </p>
+            ),
+          )}
         </div>
       </section>
     )
@@ -366,9 +378,9 @@ function Card({
 }
 
 /** One of each answer (a stretch of quarters holds the same answer under many ids). */
-function distinct(marks: readonly AnswerMark[]): AnswerMark[] {
-  const out = new Map<string, AnswerMark>()
-  for (const m of marks) out.set(`${m.activity}\u0000${m.energy}\u0000${m.growth}`, m)
+function distinct(marks: readonly (AnswerMark | null)[]): (AnswerMark | null)[] {
+  const out = new Map<string, AnswerMark | null>()
+  for (const m of marks) out.set(m ? `${m.activity}\u0000${m.energy}\u0000${m.growth}` : "", m)
   return [...out.values()]
 }
 

@@ -2,8 +2,10 @@
  * SAVE ANSWERS. PUT { slots: AuditAnswer[] } (1–200). Each is checked against
  * its own audit (`checkAnswer`). The same quarter again replaces its answer,
  * but only the answer the card saw (`was`): one another device gave or changed
- * since is kept, and comes back in `refused` with `stored`, for the person to
- * choose (alpha slow-pass-06, `splitByStored`).
+ * since is kept, and comes back in `refused` with `stored` (null: deleted on
+ * another device), for the person to choose (alpha slow-pass-06,
+ * `splitByStored`, then `writeSlotsOverSeen`, which checks it in the same
+ * database step as the write).
  *
  * ONE BAD ANSWER NEVER COSTS THE OTHERS. The good ones are stored and the bad
  * ones come back in `refused`, each with `retry`: true when it may pass later
@@ -15,8 +17,8 @@
 
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
-import { answeredTimes, AuditRefused, readRuns, upsertSlots } from "@/src/db/auditRepo"
-import { checkAnswer, correctedTime, NOT_STARTED, splitByStored } from "@/src/audit/auditService"
+import { answeredTimes, AuditRefused, readRuns, upsertSlots, writeSlotsOverSeen } from "@/src/db/auditRepo"
+import { checkAnswer, correctedTime, NOT_STARTED, refusalFor, splitByStored } from "@/src/audit/auditService"
 import { refuseCrossSite } from "@/src/audit/requestGuard"
 import type { AuditAnswer } from "@/src/audit/types"
 
@@ -67,8 +69,17 @@ export async function PUT(req: Request) {
     // The same answer sent twice is stored, not refused as older (`splitByStored`).
     const split = splitByStored(answers, await answeredTimes(auth.userId, answers))
     refused.push(...split.refused)
-    await upsertSlots(auth.userId, split.fresh)
-    return NextResponse.json({ stored: split.fresh.length + split.alreadyStored.length, refused })
+    // Answers queued before `was` existed keep the clock rule; the rest are
+    // written only over what their card saw, checked by the database itself.
+    await upsertSlots(auth.userId, split.fresh.filter((a) => a.was === undefined))
+    const written = await writeSlotsOverSeen(auth.userId, split.fresh.filter((a) => a.was !== undefined))
+    let stored = split.fresh.length - written.missed.length + split.alreadyStored.length
+    for (const { answer, held } of written.missed) {
+      const r = refusalFor(answer, held)
+      if (r) refused.push(r)
+      else stored += 1
+    }
+    return NextResponse.json({ stored, refused })
   } catch (error) {
     if (error instanceof AuditRefused) return NextResponse.json({ error: "The audit could not save that" }, { status: 400 })
     console.error("[audit] save failed", error instanceof Error ? error.message : "unknown")

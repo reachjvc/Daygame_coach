@@ -142,16 +142,16 @@ function NotKeptLine({ s, tz }: { s: AuditState; tz: string }) {
         {s.notKept.map(({ answer, reason, stored }) => (
           <li key={`${answer.runId}:${answer.slotAt}`} data-testid="audit-not-kept-item">
             {stretchLabel([Date.parse(answer.slotAt)], tz)} · {answer.activity}: {reason}.
-            {stored && (
+            {stored !== undefined && (
               <>
                 {" "}
-                Answered on another device: {stored.activity} · E {stored.energy} · G {stored.growth}.
+                {stored ? `Answered on another device: ${stored.activity} · E ${stored.energy} · G ${stored.growth}.` : "Deleted on another device."}
                 {/* the same choice the card offers (alpha slow-pass-06), for a refusal that came while the sheet was closed */}
                 <span className="mt-1 flex gap-2">
                   <Button variant="outline" size="sm" onClick={() => s.keepStored([answer])} data-testid="audit-not-kept-keep">
                     Keep that one
                   </Button>
-                  <Button size="sm" onClick={() => s.answer([{ ...answer, answeredAt: new Date().toISOString(), was: stored }])} data-testid="audit-not-kept-mine">
+                  <Button size="sm" onClick={() => s.answer([{ ...answer, answeredAt: new Date().toISOString(), was: stored ?? null }])} data-testid="audit-not-kept-mine">
                     Use mine
                   </Button>
                 </span>

@@ -159,9 +159,17 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
           </DialogDescription>
           {refused.length > 0 && (
             <ul className="space-y-0.5 text-sm" data-testid="log-out-not-kept">
-              {refused.map(({ answer, reason }) => (
-                <li key={answer.id}>
+              {refused.map(({ answer, reason, stored }) => (
+                <li key={answer.id} data-testid="log-out-not-kept-item">
                   {clock(answer.slotAt)} · {answer.activity}: {reason}.
+                  {/* both answers, so he knows what he would lose (alpha slow-pass-06); the audit page offers Keep that one / Use mine */}
+                  {stored !== undefined && (
+                    <span className="block text-muted-foreground">
+                      Yours: E {answer.energy} · G {answer.growth}.{" "}
+                      {stored ? `On the other device: ${stored.activity} · E ${stored.energy} · G ${stored.growth}.` : "Deleted on the other device."} Stay
+                      signed in to choose on the audit page.
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>

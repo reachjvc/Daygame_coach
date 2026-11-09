@@ -188,3 +188,56 @@ test.describe("one quarter, two devices @phone", () => {
     }
   })
 })
+
+/**
+ * THE CHECK AND THE WRITE ARE ONE STEP (review of a5d7a5f0; `writeSlotsOverSeen`,
+ * asserted here on the rows stored). Two saves that
+ * saw the same thing, sent at the same instant: exactly one is stored, the
+ * other is refused with it. Read-then-write let both pass, the second over the
+ * first.
+ */
+test.describe("two saves at the same instant", () => {
+  const body = (runId: string, slotAt: string, activity: string, was: unknown) => ({
+    sentAt: new Date().toISOString(),
+    slots: [
+      { id: randomUUID(), runId, slotAt, activity, energy: 3, growth: 3, avoiding: false, why: null, source: "app", timeEntryId: null, answeredAt: new Date().toISOString(), was },
+    ],
+  })
+  type Reply = { stored: number; refused: { error: string; stored: { activity: string } | null }[] }
+
+  async function race(page: Page, runId: string, slotAt: string, was: unknown) {
+    const send = (activity: string) => page.request.put("/api/audit/slots", { data: body(runId, slotAt, activity, was) })
+    const replies = await Promise.all([send("Phone"), send("PC"), send("Tablet")])
+    for (const r of replies) expect(r.status()).toBe(200)
+    return (await Promise.all(replies.map((r) => r.json()))) as Reply[]
+  }
+
+  function oneWins(replies: Reply[], stored: string[]) {
+    expect(replies.filter((r) => r.stored === 1)).toHaveLength(1)
+    const losers = replies.filter((r) => r.stored === 0)
+    expect(losers).toHaveLength(2)
+    for (const l of losers) expect(l.refused).toEqual([expect.objectContaining({ error: "Changed on another device since", stored: expect.objectContaining({ activity: stored[0].split(" ")[0] }) })])
+  }
+
+  test("on an empty quarter (was: none)", async ({ page, account }) => {
+    const runId = await seedRun(account.id)
+    const slotAt = new Date(qStart(Date.now()) - 2 * Q).toISOString()
+    const replies = await race(page, runId, slotAt, null)
+    const now = await stored(account.id, runId)
+    expect(now).toHaveLength(1)
+    oneWins(replies, now)
+  })
+
+  test("over the same answer (was: that answer)", async ({ page, account }) => {
+    const runId = await seedRun(account.id)
+    const slotAt = new Date(qStart(Date.now()) - 2 * Q).toISOString()
+    const first = body(runId, slotAt, "Walk", null)
+    expect((await (await page.request.put("/api/audit/slots", { data: first })).json()).stored).toBe(1)
+    const seen = { id: first.slots[0].id, activity: "Walk", energy: 3, growth: 3, why: null }
+    const replies = await race(page, runId, slotAt, seen)
+    const now = await stored(account.id, runId)
+    expect(now).toHaveLength(1)
+    expect(now[0]).not.toContain("Walk")
+    oneWins(replies, now)
+  })
+})

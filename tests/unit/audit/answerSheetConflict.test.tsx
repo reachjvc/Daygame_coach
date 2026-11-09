@@ -127,4 +127,17 @@ describe("the server refused it: another device answered first", () => {
     expect(kept).toHaveLength(1)
     expect(screen.getByTestId("audit-card-kept").textContent).toContain("Walk · E 5 · G 4")
   })
+  test("deleted on another device: named, and Use mine sends it as a new answer (review of a5d7a5f0)", () => {
+    const saves: AuditAnswer[][] = []
+    const editCards: AnswerCardInput[] = [{ quarters: [Date.parse(SLOT_AT)], text: "Walk", entryId: null, existing: fromPhone }]
+    const view = (notKept: NotKept[]) => (
+      <AnswerSheet open onClose={() => {}} title="Change" cards={editCards} runId={RUN_ID} timezone="Europe/Copenhagen" source="app" suggestions={[]} slots={[fromPhone]} notKept={notKept} onSave={(a) => void saves.push(a)} />
+    )
+    const { rerender } = render(view([]))
+    fireEvent.click(screen.getByTestId("audit-save"))
+    rerender(view([{ answer: saves[0][0], reason: "Deleted on another device since", stored: null }]))
+    expect(screen.getByTestId("audit-card-conflict").textContent).toContain("Deleted on another device")
+    fireEvent.click(screen.getByRole("button", { name: "Use mine" }))
+    expect(saves[1][0].was).toBeNull()
+  })
 })

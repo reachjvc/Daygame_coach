@@ -3,8 +3,12 @@
  */
 import { describe, expect, it } from "vitest"
 import {
+  ACTIVITY_MAX,
   CHANGED_SINCE,
   checkAnswer,
+  DELETED_SINCE,
+  refusalFor,
+  WHY_MAX,
   checkQuiet,
   checkReview,
   correctedTime,
@@ -295,8 +299,18 @@ describe("splitByStored with `was`: what the card saw when it opened (alpha slow
     expect(r.alreadyStored).toHaveLength(1)
   })
 
-  it("stores it when the answer the card saw was deleted since", () => {
-    expect(splitByStored([ans({ was: phoneMark })], new Map()).fresh).toHaveLength(1)
+  it("refuses it when the answer the card saw was deleted on another device since (review of a5d7a5f0)", () => {
+    const r = splitByStored([ans({ was: phoneMark })], new Map())
+    expect(r.fresh).toEqual([])
+    expect(r.refused).toEqual([{ id: ID, error: DELETED_SINCE, retry: false, stored: null }])
+  })
+
+  it("refusalFor: what a write that found the quarter changed means", () => {
+    const a = ans()
+    expect(refusalFor(a, { ...phone })).toEqual({ id: ID, error: CHANGED_SINCE, retry: false, stored: phoneMark })
+    expect(refusalFor(a, undefined)).toEqual({ id: ID, error: DELETED_SINCE, retry: false, stored: null })
+    // the same answer got there first (a resend raced itself): stored, not refused
+    expect(refusalFor(a, { id: ID, at: 0, activity: "Reading", energy: 2, growth: 2, why: null })).toBeNull()
   })
 
   it("an answer with no `was` (queued before this rule) keeps the old rule: newer by the clock wins", () => {
@@ -316,5 +330,10 @@ describe("splitByStored with `was`: what the card saw when it opened (alpha slow
     const legacy = checkAnswer(answer(), run(), now)
     expect("answer" in legacy && "was" in legacy.answer).toBe(false)
     expect("error" in checkAnswer(answer({ was: "x" }), run(), now)).toBe(true)
+    const mark = { id: "x", activity: "Walk", energy: 5, growth: 4, why: null }
+    expect("error" in checkAnswer(answer({ was: { ...mark, activity: "a".repeat(ACTIVITY_MAX + 1) } }), run(), now)).toBe(true)
+    expect("error" in checkAnswer(answer({ was: { ...mark, why: "a".repeat(WHY_MAX + 1) } }), run(), now)).toBe(true)
+    expect("error" in checkAnswer(answer({ was: { ...mark, energy: 8 } }), run(), now)).toBe(true)
+    expect("error" in checkAnswer(answer({ was: { ...mark, growth: 2.5 } }), run(), now)).toBe(true)
   })
 })

@@ -288,6 +288,75 @@ export async function upsertSlots(userId: string, answers: AuditAnswer[]): Promi
 }
 
 /**
+ * SAVE ANSWERS ONLY OVER WHAT EACH CARD SAW (`AuditAnswer.was`, alpha
+ * slow-pass-06), AS ONE STEP IN THE DATABASE: reading first and writing after
+ * let two devices that saw the same thing both pass, the second over the
+ * first (review of a5d7a5f0).
+ *
+ * `was: null` is a plain insert: the quarter's unique key refuses it when
+ * another device answered first. An answer seen is an update that matches
+ * only that answer, unchanged (id, words, scores); Postgres re-checks the
+ * match after a concurrent update, so exactly one of two such writes lands.
+ * What did not land comes back in `missed`, with what the quarter holds now
+ * (undefined: nothing, deleted). Answers without `was` go to `upsertSlots`.
+ */
+export async function writeSlotsOverSeen(
+  userId: string,
+  answers: AuditAnswer[],
+): Promise<{ stored: AuditAnswer[]; missed: { answer: AuditAnswer; held: StoredAnswer | undefined }[] }> {
+  const stored: AuditAnswer[] = []
+  const notLanded: AuditAnswer[] = []
+  if (answers.length === 0) return { stored, missed: [] }
+  if (answers.length > UPSERT_AT_MOST) throw new AuditRefused("Too many answers in one save")
+  const supabase = await createServerSupabaseClient()
+  const writeOne = async (a: AuditAnswer) => {
+    if (a.was === undefined) throw new Error("writeSlotsOverSeen takes answers that say what they saw")
+    const row = {
+      id: a.id,
+      user_id: userId,
+      run_id: a.runId,
+      slot_at: a.slotAt,
+      activity: a.activity,
+      energy: a.energy,
+      growth: a.growth,
+      avoiding: a.avoiding,
+      why: a.why,
+      source: a.source,
+      time_entry_id: a.timeEntryId,
+      updated_at: a.answeredAt ?? new Date().toISOString(),
+    }
+    if (a.was === null) {
+      const { error } = await supabase.from("audit_slots").insert(row)
+      if (!error) stored.push(a)
+      // 23505: the quarter (or this id) is taken: another device, or this answer's own first copy
+      else if (error.code === "23505") notLanded.push(a)
+      else throw refusal(error, "save an answer")
+      return
+    }
+    const w = a.was
+    let query = supabase
+      .from("audit_slots")
+      .update(row)
+      .eq("user_id", userId)
+      .eq("run_id", a.runId)
+      .eq("slot_at", a.slotAt)
+      .eq("id", w.id)
+      .eq("activity", w.activity)
+      .eq("energy", w.energy)
+      .eq("growth", w.growth)
+    query = w.why === null ? query.is("why", null) : query.eq("why", w.why)
+    const { data, error } = await query.select("id")
+    if (error) throw refusal(error, "save an answer")
+    if ((data ?? []).length > 0) stored.push(a)
+    else notLanded.push(a)
+  }
+  // a few at a time: a long offline queue is up to 200 answers
+  for (let i = 0; i < answers.length; i += 10) await Promise.all(answers.slice(i, i + 10).map(writeOne))
+  const held = await answeredTimes(userId, notLanded)
+  return { stored, missed: notLanded.map((answer) => ({ answer, held: held.get(`${answer.runId}:${answer.slotAt}`) })) }
+}
+
+/**
  * Delete one answer. With `notAfter`, only if it was not answered again after
  * that time (on another device): a delete made offline never removes a newer
  * answer. Returns whether a row went.

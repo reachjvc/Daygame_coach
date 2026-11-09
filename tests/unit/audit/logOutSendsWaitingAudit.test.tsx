@@ -174,4 +174,25 @@ describe("Log Out with an audit answer still waiting on the phone", () => {
     expect(screen.queryByTestId("log-out-unsent")).toBeNull()
     expect(signedOut.count).toBe(1)
   })
+  test("an answer another device beat is shown next to that device's answer (review of a5d7a5f0)", async () => {
+    answerWaitingOnThePhone()
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init?: RequestInit) => {
+        if (url.startsWith("/api/audit/slots") && init?.method === "PUT") {
+          const body = JSON.parse(String(init.body)) as { slots: AuditAnswer[] }
+          const stored = { id: "pc-1", activity: "Email", energy: 2, growth: 3, why: null }
+          return new Response(JSON.stringify({ stored: 0, refused: body.slots.map((s) => ({ id: s.id, error: "Changed on another device since", retry: false, stored })) }), { status: 200 })
+        }
+        return new Response("{}", { status: 200 })
+      }),
+    )
+    renderLogOut()
+    await wait(1000)
+    const item = screen.getByTestId("log-out-not-kept-item").textContent ?? ""
+    expect(item).toContain("Approached in the metro: Changed on another device since")
+    expect(item).toContain("Yours: E 6")
+    expect(item).toContain("On the other device: Email · E 2 · G 3")
+    expect(signedOut.count).toBe(0)
+  })
 })

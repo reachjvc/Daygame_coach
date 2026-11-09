@@ -76,9 +76,9 @@ export interface NotKept {
   /**
    * The answer the quarter holds instead, when another device answered or
    * changed it since this one's card opened (alpha slow-pass-06): named, with
-   * "Keep that one" / "Use mine".
+   * "Keep that one" / "Use mine". Null: it was deleted there.
    */
-  stored?: AnswerMark
+  stored?: AnswerMark | null
 }
 
 /**
@@ -196,7 +196,7 @@ export function useAudit(account: string) {
             const gone = new Set(refused.map((r) => String(r.id)))
             const lost = refused.flatMap((r) => {
               const answer = r.retry ? undefined : batch.find((a) => a.id === String(r.id))
-              return answer ? [{ answer, reason: r.error, ...(r.stored ? { stored: r.stored } : {}) }] : []
+              return answer ? [{ answer, reason: r.error, ...(r.stored !== undefined ? { stored: r.stored } : {}) }] : []
             })
             if (lost.length > 0) addNotKept(lost)
             const at = Date.now()

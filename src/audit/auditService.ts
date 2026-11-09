@@ -78,7 +78,16 @@ export function checkAnswer(input: unknown, run: AuditRun, now: Date): { answer:
     if (a.was === null) was = null
     else {
       const w = (a.was && typeof a.was === "object" ? a.was : null) as Record<string, unknown> | null
-      if (!w || typeof w.id !== "string" || w.id.length > 200 || typeof w.activity !== "string" || typeof w.energy !== "number" || typeof w.growth !== "number" || (w.why !== null && typeof w.why !== "string")) {
+      if (
+        !w ||
+        typeof w.id !== "string" ||
+        w.id.length > 200 ||
+        typeof w.activity !== "string" ||
+        w.activity.length > ACTIVITY_MAX * 2 ||
+        !isScale(w.energy) ||
+        !isScale(w.growth) ||
+        (w.why !== null && w.why !== undefined && (typeof w.why !== "string" || w.why.length > WHY_MAX * 2))
+      ) {
         return { error: "Bad earlier answer" }
       }
       // normalized as the stored answer was, so the same answer compares equal
@@ -89,6 +98,7 @@ export function checkAnswer(input: unknown, run: AuditRun, now: Date): { answer:
         growth: w.growth,
         why: typeof w.why === "string" ? storableText(w.why).trim() || null : null,
       }
+      if (was.activity.length > ACTIVITY_MAX || (was.why?.length ?? 0) > WHY_MAX) return { error: "Bad earlier answer" }
     }
   }
   return {
@@ -110,6 +120,7 @@ export function checkAnswer(input: unknown, run: AuditRun, now: Date): { answer:
 
 export const NOT_STARTED = "That quarter has not started yet"
 export const CHANGED_SINCE = "Changed on another device since"
+export const DELETED_SINCE = "Deleted on another device since"
 
 const MAX_CLOCK_CORRECTION_MS = 24 * 60 * 60_000
 /**
@@ -167,8 +178,14 @@ const sameAnswer = (a: AuditAnswer, held: StoredAnswer) =>
  * a quarter answered or changed on another device since the card opened is
  * refused (CHANGED_SINCE) with the stored answer, so the card can name it and
  * ask "Keep that one" / "Use mine". The later save used to overwrite the
- * earlier with a plain "Saved". A quarter emptied since (deleted) takes it.
+ * earlier with a plain "Saved". A quarter the card saw answered and that is
+ * empty now was deleted on another device: refused too (DELETED_SINCE), so an
+ * offline phone never silently undoes that delete.
  * Answers without `was` (queued before this rule) keep the clock rule below.
+ *
+ * This is the quick check. The write itself is conditional too
+ * (`writeSlotsOverSeen`), so two devices sending at the same instant cannot
+ * both pass it.
  *
  * An answer older than another device's answer for its quarter is refused
  * (CHANGED_SINCE): the newer one stays. But the SAME answer (id, words and
@@ -177,12 +194,23 @@ const sameAnswer = (a: AuditAnswer, held: StoredAnswer) =>
  * that told the phone "not kept" about an answer the server held (code review,
  * 2026-11-09). It is taken as stored, and not written over the newer copy.
  */
-/** An answer refused because its quarter holds another one now, which comes back with it. */
+/** An answer refused because its quarter holds another one now (or none: deleted), which comes back with it. */
 export interface StoredRefusal {
   id: string
   error: string
   retry: false
-  stored: AnswerMark
+  stored: AnswerMark | null
+}
+
+/**
+ * A write over what the card saw found the quarter holding `held` instead
+ * (the database said no row matched): why it is refused, or null when what is
+ * there is this very answer (a resend that raced its first copy).
+ */
+export function refusalFor(a: AuditAnswer, held: StoredAnswer | undefined): StoredRefusal | null {
+  if (held === undefined) return { id: a.id, error: DELETED_SINCE, retry: false, stored: null }
+  if (sameAnswer(a, held)) return null
+  return { id: a.id, error: CHANGED_SINCE, retry: false, stored: markOf(held) }
 }
 
 export function splitByStored(
@@ -194,8 +222,10 @@ export function splitByStored(
   const refused: StoredRefusal[] = []
   for (const a of answers) {
     const held = stored.get(`${a.runId}:${a.slotAt}`)
-    if (held === undefined) fresh.push(a)
-    else if (sameAnswer(a, held)) alreadyStored.push(a)
+    if (held === undefined) {
+      if (a.was) refused.push({ id: a.id, error: DELETED_SINCE, retry: false, stored: null })
+      else fresh.push(a)
+    } else if (sameAnswer(a, held)) alreadyStored.push(a)
     else if (a.was !== undefined ? sameMark(a.was, markOf(held)) : held.at <= Date.parse(a.answeredAt ?? "")) fresh.push(a)
     else refused.push({ id: a.id, error: CHANGED_SINCE, retry: false, stored: markOf(held) })
   }

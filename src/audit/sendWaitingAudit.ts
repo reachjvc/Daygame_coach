@@ -20,12 +20,13 @@
 import { browserStore, failureOf, refusedForGood, SEND_AT_MOST, type KeyValueStore } from "@/src/shared/offlineQueue"
 import { AuditCallError, auditApi } from "./auditClient"
 import { answersSent, auditQueueOwner, deletesSent, readAuditQueue, writeAuditQueue, type AuditQueue } from "./auditQueue"
-import type { AuditAnswer } from "./types"
+import type { AnswerMark, AuditAnswer } from "./types"
 
 export interface AuditSendOutcome {
   /** sent: nothing waits. refused: what waits can never be stored. waiting: might go later. stranger: not this person's. */
   status: "sent" | "waiting" | "stranger" | "refused"
-  refused: { answer: AuditAnswer; reason: string }[]
+  /** `stored`: what the quarter holds instead (null: deleted there), when another device answered it (alpha slow-pass-06). */
+  refused: { answer: AuditAnswer; reason: string; stored?: AnswerMark | null }[]
 }
 
 const COULD_NOT_SAVE = "The server could not save it"
@@ -54,7 +55,7 @@ export async function sendWaitingAudit(store: KeyValueStore | null = browserStor
           continue
         }
         const answer = batch.find((a) => a.id === String(r.id))
-        if (answer) refused.push({ answer, reason: r.error })
+        if (answer) refused.push({ answer, reason: r.error, ...(r.stored !== undefined ? { stored: r.stored } : {}) })
       }
       put(answersSent(current(), batch.filter((a) => !kept.has(a.id))))
     } catch (error) {
