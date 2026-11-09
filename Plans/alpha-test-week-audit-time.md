@@ -172,6 +172,16 @@ ping: due time, arrival time, taps, seconds to answered. Local copy first; then 
 account if yes.
 **Done when:** a ping log of ≥ 12 quarter-hours per place, and findings appended.
 
+**Status (2026-11-09): done, with gaps.** 3.5 real hours, Android emulator (Chrome 113) + real Google Chrome +
+Firefox (both on a hidden screen, never the owner's), local copy and the live site with the O1 account at once;
+≥ 12 quarter-hours per place on both (`alpha/slow/REPORT.md`, `pings.jsonl`). 6 findings (2 × sev 2, 2 × sev 3,
+2 × sev 4), all fixed live except the same-quarter conflict (in the last fix round). Numbers: ping 0–7 s after the
+quarter (64–66 s right after a mute, since fixed); answers on the live account: 12 of 12 match the log, none lost
+or doubled. Gaps: another session reset the local test database at ~17:51 (one local quarter and the "Time
+running while answering" case lost); the live site took new builds mid-run, so live numbers after ~18:30 are a
+newer build than local; a human's seconds-to-answer cannot be measured with a script (save itself ≤ 2.2 s); a
+desktop notification cannot be clicked by Playwright, so PC clicks were simulated.
+
 ## Phase 4 — The picky eye · S
 A fresh agent, given only the screens and the yardsticks (not the findings so far): every screen at 390 px and
 1440 px, light and dark, Chrome and WebKit. Taps per common task, words that a non-programmer would not
@@ -198,6 +208,17 @@ a code review by a subagent given the diff only (a security review too when sync
 fast-forward to `main`, push, check `buildId` at `https://daygame-coach.vercel.app/api/healthz`. Mark the
 board rows "live <commit>".
 **Done when:** no severity 1–3 left open, and severity 4 either live or on the board as Later.
+
+**Status (2026-11-09): done.** Seven fix rounds, each with a failing test first, the unit suite, type + lint
+ratchets, the audit e2e files on desktop + phone against a production build, and an independent review of the diff
+(reviews found 4 more lost-update holes and one offline-worker hardening point; all fixed before shipping).
+Live commits: 1dd75499 (F01–F02), 2560e028 (F03–F07), 99dc218e (F14–F18), 0b1f9f53 (F08–F13, N01),
+c78b3ddc + bd28a2e1 (polish F20–F27), 7b7a0f13 (slow-pass-02/-04/-05), e59167ab (slow-pass-06: same quarter on two
+devices now asks "Keep that one / Use mine", check and write in one database step). Open: F19 Later (Martell steps
+9–11, per Q2), F28 opinion only, light theme proposed only. Not done: the new database functions' integration
+tests were never run (they reset the shared test database other sessions use); browser tests cover the same writes.
+Known test debt: `mobile-toggl.spec.ts` 16 phone tests fail on the untouched build too (stale wording); "offers to
+turn them on" fails on desktop production builds (headless notification permission).
 
 ## Phase 7 — Prove it · M
 Fresh agents (not the fixers) re-run Phases 2–4 on the final build, plus the slow pass once more. Save every
