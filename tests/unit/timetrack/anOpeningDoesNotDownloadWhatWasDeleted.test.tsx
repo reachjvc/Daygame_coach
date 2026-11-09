@@ -28,6 +28,8 @@ import { cleanup } from "@testing-library/react"
 import { stateToRows } from "@/src/timetrack/timetrackMapperService"
 import type { TimetrackState } from "@/src/timetrack/types"
 
+import { createEmptyWorkspace } from "@/src/timetrack/data/emptyWorkspace"
+
 import { renderDevice, wait } from "./deviceHarness"
 import { fakeAccount } from "./fakeAccount"
 import { baseState, entry } from "./helpers"
@@ -94,5 +96,42 @@ describe("opening on a device that still holds an entry deleted elsewhere", () =
       device.latest().entries.some((e) => e.id === "gym" && !e.serverDeletedAt),
       "the phone still shows the entry the PC deleted",
     ).toBe(false)
+  })
+})
+
+describe("opening on a browser that has nothing of this account yet", () => {
+  /**
+   * A new phone, or a browser whose storage was cleared, starts from a blank
+   * workspace with ids of its own. The account does not have those, and they are
+   * not sent: the account's copy replaces them. Counting them as rows the live
+   * answer must hold sent every such opening for the whole account a second time
+   * (production-build audit, 2026-11-09: 1.5 MB, then 7.7 MB with 7,164 deleted).
+   */
+  test("asks for live rows only, once", async () => {
+    const { account } = anAccountWithDeletedHistory()
+    vi.stubGlobal("fetch", vi.fn(account.fetch))
+
+    const device = renderDevice(createEmptyWorkspace(new Date().toISOString()), { account: USER })
+    await wait(3000)
+
+    expect(account.gets.filter((url) => !url.includes("since=")), "a blank browser read the account twice").toHaveLength(1)
+    expect(device.latest().entries.map((e) => e.id).sort()).toEqual(["call", "gym"])
+    expect(account.posts.flatMap((p) => p.body.rows?.timetrack_entries ?? []), "the opening sent entries it had no reason to").toEqual([])
+  })
+
+  test("a copy holding any row of the account is checked row by row, whatever table it is in", async () => {
+    // a phone in step with an account that has only one timeline block; the PC has since deleted it
+    const block = { id: "tl-1", start: "2026-08-10T08:00:00.000Z", end: "2026-08-10T08:30:00.000Z", label: "/time", converted: false }
+    const blank = createEmptyWorkspace(new Date().toISOString())
+    const phone = { ...blank, timeline: [block] }
+    const account = fakeAccount(stateToRows(phone, USER))
+    account.remove("timetrack_timeline", "tl-1")
+    vi.stubGlobal("fetch", vi.fn(account.fetch))
+
+    const device = renderDevice(phone, { account: USER })
+    await wait(3000)
+
+    expect(account.gets.filter((url) => !url.includes("since=")), "a copy holding a deleted timeline block was let off the check").toHaveLength(2)
+    expect(device.latest().timeline.map((b) => b.id), "the block the PC deleted is still here").toEqual([])
   })
 })

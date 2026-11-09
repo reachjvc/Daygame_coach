@@ -430,6 +430,18 @@ export function sendTrackerChangesNow(): boolean {
   return liveSenders.size > 0
 }
 
+/**
+ * Nothing of anybody's in it: the workspace `createEmptyWorkspace` makes, before
+ * anything was tracked, named or set up. Its few rows are this browser's own
+ * ids; the opening checks too that its workspace is not the account's.
+ */
+function isBlankCopy(copy: TimetrackState): boolean {
+  // every list empty, whatever lists the workspace grows: only its own member and groups may be there
+  return Object.entries(copy).every(
+    ([key, value]) => !Array.isArray(value) || value.length === 0 || key === "members" || key === "groups",
+  )
+}
+
 /** See `OFFLINE_BASE_KEY`: what this browser held when it was last in step, and whose it was */
 interface OfflineBase {
   owner: string
@@ -1603,11 +1615,27 @@ export function useTimetrackSync({
          * from before this ignores `live` and answers whole, without saying `live`.
          */
         if (body.live && !body.empty) {
-          const held = [
-            stateToRows(latestState.current ?? state, userId.current),
-            start ? stateToRows(start, userId.current) : null,
-            pending.current,
-          ]
+          /**
+           * A BLANK COPY HOLDS NOTHING THE ANSWER COULD BE MISSING. A new phone or
+           * cleared storage starts from a blank workspace with ids of its own,
+           * which the account replaces at once. Counted as rows the live answer
+           * must hold, they sent every such opening for the whole account a second
+           * time (production-build audit, 2026-11-09: 7.7 MB with 7,164 deleted).
+           * Only a copy that is blank and untouched since the opening is let off;
+           * any row held otherwise still has to be in the answer (see above).
+           */
+          const latestHeld = latestState.current ?? state
+          // and its workspace is not the account's: a copy that was in step with an empty account is not blank
+          const accountWorkspaces = new Set((body.rows.timetrack_workspaces ?? []).map((row) => row.id))
+          const blankAndUntouched =
+            start !== null &&
+            isBlankCopy(start) &&
+            isBlankCopy(latestHeld) &&
+            !accountWorkspaces.has(start.workspace.id) &&
+            !accountWorkspaces.has(latestHeld.workspace.id)
+          const held = blankAndUntouched
+            ? [pending.current]
+            : [stateToRows(latestHeld, userId.current), start ? stateToRows(start, userId.current) : null, pending.current]
           if (!liveAnswerCovers(body.rows, held)) {
             const whole = await read("/api/timetrack/sync")
             if (!whole.ok) throw new Error(whole.statusText)

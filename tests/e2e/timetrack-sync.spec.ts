@@ -418,7 +418,9 @@ test.describe('the owner\'s overlap: started on the PC, stopped on the phone', (
       const phone = await phoneContext.newPage()
       let releaseRead: () => void = () => {}
       const readHeld = new Promise<void>((resolve) => (releaseRead = resolve))
-      await phone.route('**/api/timetrack/sync', async (route) => {
+      // the opening's read is `sync?live=1`: a glob for the bare path let it through, and
+      // whether Checking… was still on screen to be seen came down to how busy the machine was
+      await phone.route((url) => url.pathname === '/api/timetrack/sync', async (route) => {
         if (route.request().method() === 'GET') await readHeld
         await route.continue()
       })
