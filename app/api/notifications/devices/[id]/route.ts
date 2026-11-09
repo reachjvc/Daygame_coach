@@ -7,7 +7,7 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { removeDevice, setDeviceEnabled, setDeviceTimer } from "@/src/db/notificationsRepo"
 import { afterResponse } from "@/src/shared/afterResponse"
-import { isUuid } from "@/src/thoughts/thoughtsService"
+import { isUuid } from "@/src/shared/ids"
 import { announceCurrentTimer } from "@/src/timetrack/runningTimerService"
 
 type RouteParams = { params: Promise<{ id: string }> }

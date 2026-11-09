@@ -25,7 +25,10 @@
  * Storage is injected, so the rules are tested without a browser.
  */
 
+import { browserStore, readOwnedJson, writeOwnedJson, type KeyValueStore } from "@/src/shared/offlineQueue"
 import type { LogInput } from "./types"
+
+export { browserStore, type KeyValueStore }
 
 export const QUEUE_KEY = "thoughts-queue-v1"
 
@@ -42,12 +45,6 @@ export interface QueueState {
   undos: string[]
 }
 
-export interface KeyValueStore {
-  getItem(key: string): string | null
-  setItem(key: string, value: string): void
-  removeItem(key: string): void
-}
-
 export function emptyQueue(owner: string | null): QueueState {
   return { owner, thoughts: [], logs: [], undos: [] }
 }
@@ -58,34 +55,19 @@ export function isEmpty(q: QueueState): boolean {
 
 /** This person's queue; anyone else's (or an unowned one) is empty, and removed. */
 export function readQueue(store: KeyValueStore | null, owner: string): QueueState {
-  if (!store) return emptyQueue(owner)
-  try {
-    const raw = store.getItem(QUEUE_KEY)
-    if (!raw) return emptyQueue(owner)
-    const parsed = JSON.parse(raw) as Partial<QueueState>
-    if (parsed.owner !== owner) {
-      store.removeItem(QUEUE_KEY)
-      return emptyQueue(owner)
-    }
-    return {
-      owner,
-      thoughts: Array.isArray(parsed.thoughts) ? parsed.thoughts : [],
-      logs: Array.isArray(parsed.logs) ? parsed.logs : [],
-      undos: Array.isArray(parsed.undos) ? parsed.undos.filter((x): x is string => typeof x === "string") : [],
-    }
-  } catch {
-    return emptyQueue(owner)
+  const parsed = readOwnedJson(store, QUEUE_KEY, owner) as Partial<QueueState> | null
+  if (!parsed) return emptyQueue(owner)
+  return {
+    owner,
+    thoughts: Array.isArray(parsed.thoughts) ? parsed.thoughts : [],
+    logs: Array.isArray(parsed.logs) ? parsed.logs : [],
+    undos: Array.isArray(parsed.undos) ? parsed.undos.filter((x): x is string => typeof x === "string") : [],
   }
 }
 
 export function writeQueue(store: KeyValueStore | null, state: QueueState): void {
-  if (!store) return
-  try {
-    if (isEmpty(state) || state.owner === null) store.removeItem(QUEUE_KEY)
-    else store.setItem(QUEUE_KEY, JSON.stringify(state))
-  } catch {
-    // Storage full or blocked: the tap still goes now if there is signal.
-  }
+  const { owner, ...rest } = state
+  writeOwnedJson(store, QUEUE_KEY, owner, isEmpty(state) ? null : rest)
 }
 
 export function enqueueLog(state: QueueState, log: LogInput): QueueState {
@@ -142,15 +124,6 @@ export function pendingByThought(state: QueueState): Map<string, number> {
   const out = new Map<string, number>()
   for (const l of state.logs) if (l.thoughtId) out.set(l.thoughtId, (out.get(l.thoughtId) ?? 0) + 1)
   return out
-}
-
-/** The browser's storage, or null where it is blocked (private windows, some embeds). */
-export function browserStore(): KeyValueStore | null {
-  try {
-    return typeof window === "undefined" ? null : window.localStorage
-  } catch {
-    return null
-  }
 }
 
 /**

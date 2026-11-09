@@ -6,6 +6,8 @@
  */
 
 import { daysBetweenDateKeys, getTodayInTimezone } from "@/src/shared/dateUtils"
+import { isUuid } from "@/src/shared/ids"
+import { matchPhrases, normalizePhrase } from "@/src/shared/textMatch"
 import {
   INTERVAL_CHOICES,
   LOG_SOURCES,
@@ -21,104 +23,17 @@ export const MAX_NOTE_LENGTH = 2000
 /** How many buttons the main page shows before "Show all" (8 to 12 in the plan). */
 export const TOP_BUTTONS = 10
 
-/**
- * ONE WORDING, ONE THOUGHT.
- *
- * "I am bad", "i am bad." and "  I   am BAD!! " are the same thought, so they
- * fold to the same key. The database holds one live wording per key per person
- * (`thoughts_one_wording_per_person`), so this function is the definition of
- * "the same": lower case, curly quotes made straight, whitespace collapsed,
- * and punctuation at either end dropped. Punctuation inside is kept: "I'm" and
- * "Im" are close, not equal, and the suggestions handle close.
- */
-export function normalizeThought(text: string): string {
-  return text
-    .normalize("NFKC")
-    .toLowerCase()
-    .replace(/[‘’‛]/g, "'")
-    .replace(/[“”]/g, '"')
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/^[\s.,!?;:…"'()\-–—]+/u, "")
-    .replace(/[\s.,!?;:…"'()\-–—]+$/u, "")
-}
+/** One wording, one thought: the fold lives in `src/shared/textMatch.ts`. */
+export const normalizeThought = normalizePhrase
 
 /** The wording as stored: trimmed, inner whitespace collapsed, case kept. */
 export function cleanThoughtText(text: string): string {
   return text.replace(/\s+/g, " ").trim()
 }
 
-/** Folded further, for "close" rather than "equal": apostrophes and inner punctuation gone. */
-function looseKey(text: string): string {
-  return normalizeThought(text).replace(/['".,!?;:…()\-–—]/g, "").replace(/\s+/g, " ").trim()
-}
-
-/** Edit distance, capped: anything beyond `cap` is reported as `cap + 1`. */
-function boundedDistance(a: string, b: string, cap: number): number {
-  if (Math.abs(a.length - b.length) > cap) return cap + 1
-  let prev = Array.from({ length: b.length + 1 }, (_, i) => i)
-  for (let i = 1; i <= a.length; i++) {
-    const row = [i]
-    let best = i
-    for (let j = 1; j <= b.length; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1
-      row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + cost)
-      if (row[j] < best) best = row[j]
-    }
-    if (best > cap) return cap + 1
-    prev = row
-  }
-  return prev[b.length]
-}
-
-/**
- * EXISTING THOUGHTS THAT MATCH WHAT IS BEING TYPED, best first.
- *
- * Typing "im bad" must offer "I am bad" before a near-copy is created
- * (Plans/thought.md, "The habit"). Three kinds of match, in this order:
- *   1. the same thought once folded (it would be refused as a duplicate);
- *   2. every typed word starts a word of the thought, in order ("i am b");
- *   3. a small spelling distance from the whole thought ("im bad", "i am bda").
- * Within a kind, the more frequent thought first. Archived thoughts match too:
- * typing one again is how it comes back.
- */
+/** Existing thoughts that match what is being typed, best first (the rules: `matchPhrases`). */
 export function matchThoughts(query: string, thoughts: Thought[], limit = 4): Thought[] {
-  const q = looseKey(query)
-  if (q.length === 0) return []
-  const qWords = q.split(" ")
-
-  const scored: { thought: Thought; kind: number }[] = []
-  for (const thought of thoughts) {
-    const key = looseKey(thought.text)
-    if (key === q) {
-      scored.push({ thought, kind: 0 })
-      continue
-    }
-    const words = key.split(" ")
-    let at = 0
-    let prefixes = true
-    for (const w of qWords) {
-      while (at < words.length && !words[at].startsWith(w)) at++
-      if (at === words.length) {
-        prefixes = false
-        break
-      }
-      at++
-    }
-    if (prefixes) {
-      scored.push({ thought, kind: 1 })
-      continue
-    }
-    const cap = q.length < 5 ? 1 : q.length < 12 ? 2 : 3
-    const squashedQ = q.replace(/ /g, "")
-    const squashedKey = key.replace(/ /g, "")
-    if (boundedDistance(squashedQ, squashedKey, cap) <= cap) scored.push({ thought, kind: 2 })
-  }
-
-  return scored
-    .sort((a, b) => a.kind - b.kind || b.thought.counts.week - a.thought.counts.week || b.thought.counts.total - a.thought.counts.total)
-    .slice(0, limit)
-    .map((s) => s.thought)
+  return matchPhrases(query, thoughts, (t) => t.text, (t) => [t.counts.week, t.counts.total], limit)
 }
 
 /**
@@ -192,11 +107,6 @@ export function needsHelpCard(text: string): boolean {
 // a person could read; the routes turn an error into a 400.
 // ---------------------------------------------------------------------------
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
-export function isUuid(value: unknown): value is string {
-  return typeof value === "string" && UUID.test(value)
-}
 
 type Checked<T> = { ok: true; value: T } | { ok: false; error: string }
 

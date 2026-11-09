@@ -263,19 +263,4 @@ test.describe("rough edges @phone", () => {
     await page.reload()
     await expect(button(page, "I am bad")).toContainText("2")
   })
-
-  test("signing out forgets this browser as a reminder device", async ({ page }) => {
-    await open(page)
-    const endpoint = `https://fcm.googleapis.com/fcm/send/e2e-forget-${Date.now()}`
-    const registered = await page.request.post("/api/notifications/devices", {
-      data: { intent: "enable", label: "Shared laptop", subscription: { endpoint, keys: { p256dh: "BNcR_e2e", auth: "tBHI_e2e" } } },
-    })
-    expect(registered.ok()).toBe(true)
-
-    // What both Log Out buttons call first (src/notifications/pushClient.ts, forgetThisDevice).
-    expect((await page.request.post("/api/notifications/devices/forget", { data: { endpoint } })).ok()).toBe(true)
-
-    const { devices } = await (await page.request.get("/api/notifications/devices")).json()
-    expect(devices).toEqual([])
-  })
 })

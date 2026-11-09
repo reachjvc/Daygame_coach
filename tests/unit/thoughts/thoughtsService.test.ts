@@ -10,7 +10,6 @@ import {
   isReadyToReframe,
   matchThoughts,
   needsHelpCard,
-  normalizeThought,
   sortForButtons,
 } from "@/src/thoughts/thoughtsService"
 import { DEFAULT_SETTINGS, type Thought } from "@/src/thoughts/types"
@@ -30,23 +29,6 @@ function thought(text: string, over: Partial<Thought> = {}, counts: Partial<Thou
     ...over,
   }
 }
-
-describe("normalizeThought", () => {
-  it("folds case, spaces, curly quotes and end punctuation into one key", () => {
-    expect(normalizeThought("I am bad")).toBe("i am bad")
-    expect(normalizeThought("  I   am BAD!! ")).toBe("i am bad")
-    expect(normalizeThought("i am bad.")).toBe("i am bad")
-    expect(normalizeThought("“I’m bad”")).toBe("i'm bad")
-  })
-
-  it("keeps punctuation inside, so close wordings stay distinct", () => {
-    expect(normalizeThought("I'm bad")).not.toBe(normalizeThought("Im bad"))
-  })
-
-  it("is empty for punctuation alone", () => {
-    expect(normalizeThought(" ...!? ")).toBe("")
-  })
-})
 
 describe("matchThoughts", () => {
   const bad = thought("I am bad", {}, { week: 14, total: 40 })

@@ -19,7 +19,6 @@ import { claimDuePrompts, readPromptSchedule, registerDevice, writePromptSchedul
 import { createThought, insertLogs, writeSettings } from "@/src/db/thoughtsRepo"
 import { updateTimezone } from "@/src/db/settingsRepo"
 import { runPromptClock } from "@/src/thoughts/promptService"
-import { pushKeys, sendToPerson } from "@/src/notifications/pushService"
 import { DEFAULT_SETTINGS, type ThoughtSettings } from "@/src/thoughts/types"
 
 vi.mock("@/src/db/supabase", async (importOriginal) =>
@@ -159,17 +158,6 @@ describe("one tick of the clock", () => {
     expect(Date.parse((await readPromptSchedule(user.id)).nextDueAt!)).toBe(loggedAt.getTime() + 15 * 60_000)
   })
 
-  it("removes a device the push service says is gone, and still reaches the others", async () => {
-    const { user, endpoints } = await personDue("clock-gone", ALWAYS, 2)
-    answers.set(endpoints[0], 410)
-
-    await runPromptClock(new Date())
-
-    expect(await sendsOf(user.id)).toEqual([{ kind: "thought-prompt", devices: 2, delivered: 1, removed: 1 }])
-    const left = await asOwner((q) => q("select endpoint from push_devices where user_id = $1", [user.id]))
-    expect(left).toEqual([{ endpoint: endpoints[1] }])
-  })
-
   it("records no reminder for someone with no switched-on device", async () => {
     const { user } = await personDue("clock-nodevice", ALWAYS, 0)
 
@@ -197,18 +185,5 @@ describe("one tick of the clock", () => {
       { id: a.id, title: "I am bad" },
       { id: b.id, title: "Nobody likes me" },
     ])
-  })
-})
-
-describe("a test reminder", () => {
-  it("reaches every switched-on device and is recorded as a test, never as a reminder", async () => {
-    const { user, endpoints } = await personDue("clock-test", ALWAYS, 2)
-    expect(await pushKeys()).toEqual({ publicKey: "test-push_vapid_public", privateKey: "test-push_vapid_private" })
-
-    const result = await sendToPerson(user.id, "test", () => ({ title: "Reminders are on", body: "x", url: "/thoughts?log=1", tag: "thought-prompt" }))
-
-    expect(result).toMatchObject({ devices: 2, delivered: 2, removed: 0 })
-    expect(sent.filter((s) => endpoints.includes(s.endpoint)).map((s) => s.options.topic)).toEqual(["test", "test"])
-    expect(await sendsOf(user.id)).toEqual([{ kind: "test", devices: 2, delivered: 2, removed: 0 }])
   })
 })

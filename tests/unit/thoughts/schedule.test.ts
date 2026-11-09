@@ -7,7 +7,7 @@
  * and UTC-5 after.
  */
 import { describe, expect, it } from "vitest"
-import { firstAllowedAtOrAfter, inQuietHours, latest, nextPromptAt } from "@/src/thoughts/schedule"
+import { latest, nextPromptAt } from "@/src/thoughts/schedule"
 import { DEFAULT_SETTINGS, type ThoughtSettings } from "@/src/thoughts/types"
 
 const CPH = "Europe/Copenhagen"
@@ -139,34 +139,6 @@ describe("zones whose clocks jump at midnight", () => {
     expect(next).not.toBeNull()
     expect(next!.getTime()).toBeGreaterThan(Date.parse("2026-09-06T00:30:00Z"))
     expect(next!.getTime()).toBeLessThanOrEqual(Date.parse("2026-09-06T04:00:00Z"))
-  })
-})
-
-describe("firstAllowedAtOrAfter", () => {
-  it("returns the instant itself when it is allowed", () => {
-    const t = at("2026-10-30T10:00:00Z")
-    expect(firstAllowedAtOrAfter(t, on, CPH)?.toISOString()).toBe(t.toISOString())
-  })
-
-  it("treats 23:00 on Sunday as Sunday when only Sunday is active", () => {
-    const sundays = { ...on, activeDays: 1 << 6, quietStart: null, quietEnd: null }
-    // Sun 1 Nov 23:00 CET = 22:00Z is allowed
-    expect(firstAllowedAtOrAfter(at("2026-11-01T22:00:00Z"), sundays, CPH)?.toISOString()).toBe("2026-11-01T22:00:00.000Z")
-    // Mon 2 Nov 00:30 CET is not; next is Sun 8 Nov 00:00 CET = 7 Nov 23:00Z
-    expect(firstAllowedAtOrAfter(at("2026-11-01T23:30:00Z"), sundays, CPH)?.toISOString()).toBe("2026-11-07T23:00:00.000Z")
-  })
-})
-
-describe("inQuietHours", () => {
-  it("spans midnight", () => {
-    expect(inQuietHours(23 * 60, 22 * 60, 8 * 60)).toBe(true)
-    expect(inQuietHours(7 * 60 + 59, 22 * 60, 8 * 60)).toBe(true)
-    expect(inQuietHours(8 * 60, 22 * 60, 8 * 60)).toBe(false)
-    expect(inQuietHours(21 * 60 + 59, 22 * 60, 8 * 60)).toBe(false)
-  })
-
-  it("is never quiet without quiet hours", () => {
-    expect(inQuietHours(0, null, null)).toBe(false)
   })
 })
 

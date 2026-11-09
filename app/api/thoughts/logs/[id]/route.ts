@@ -3,7 +3,7 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { deleteLog } from "@/src/db/thoughtsRepo"
-import { isUuid } from "@/src/thoughts/thoughtsService"
+import { isUuid } from "@/src/shared/ids"
 
 type RouteParams = { params: Promise<{ id: string }> }
 

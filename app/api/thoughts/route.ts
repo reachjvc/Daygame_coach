@@ -12,7 +12,8 @@ import { requireAuth } from "@/src/db/auth"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { createThought, lastDeliveredAt, readRecentLogIds, readSettings, readThoughts, ThoughtRefused } from "@/src/db/thoughtsRepo"
 import { readPromptSchedule } from "@/src/db/notificationsRepo"
-import { checkThoughtText, isUuid } from "@/src/thoughts/thoughtsService"
+import { isUuid } from "@/src/shared/ids"
+import { checkThoughtText } from "@/src/thoughts/thoughtsService"
 import type { ThoughtsView } from "@/src/thoughts/types"
 
 export async function GET() {

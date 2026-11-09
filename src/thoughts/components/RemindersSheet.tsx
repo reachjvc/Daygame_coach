@@ -9,12 +9,12 @@
  */
 
 import { useEffect, useState } from "react"
-import { X } from "lucide-react"
 import { BottomSheet } from "@/components/BottomSheet"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { getTodayInTimezone, localTimeInstant } from "@/src/shared/dateUtils"
+import { PushDeviceList } from "@/src/notifications/components/PushDeviceList"
 import type { PushDeviceState } from "@/src/notifications/hooks/usePushDevice"
 import { INTERVAL_CHOICES, type ThoughtSettings } from "../types"
 import { formatTime } from "./format"
@@ -233,26 +233,7 @@ export function RemindersSheet({
 
         <div className="space-y-2">
           <Label>Devices</Label>
-          {push.devices.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No device receives reminders yet.</p>
-          ) : (
-            <ul className="divide-y divide-border rounded-xl border border-border">
-              {push.devices.map((d) => (
-                <li key={d.id} className="flex min-h-12 items-center justify-between gap-2 px-3.5 py-1.5">
-                  <span className="min-w-0 text-sm">
-                    {d.label || "A device"}
-                    {push.thisDevice?.id === d.id && <span className="text-muted-foreground"> (this one)</span>}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Switch className={SWITCH} checked={d.enabled} onCheckedChange={(v) => void push.setEnabled(d.id, v)} aria-label={`Reminders on ${d.label}`} />
-                    <Button variant="ghost" size="icon-sm" aria-label={`Remove ${d.label}`} onClick={() => void push.remove(d.id)}>
-                      <X className="size-4" />
-                    </Button>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
+          <PushDeviceList push={push} words={{ empty: "No device receives reminders yet.", switchLabel: (label) => `Reminders on ${label}` }} />
         </div>
 
         <div className="space-y-1">

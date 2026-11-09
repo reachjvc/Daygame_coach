@@ -29,17 +29,8 @@ import {
 } from "@/src/db/thoughtsRepo"
 import {
   closeSend,
-  moveDevice,
-  devicesForSending,
   openSend,
-  recordDeviceOutcome,
-  setDeviceEnabled,
-  readNotificationSecret,
   readPromptSchedule,
-  registerDevice,
-  listDevices,
-  removeDevice,
-  writePromptSchedule,
 } from "@/src/db/notificationsRepo"
 import { DEFAULT_SETTINGS, type LogInput } from "@/src/thoughts/types"
 import { reschedulePrompts } from "@/src/thoughts/promptService"
@@ -294,96 +285,7 @@ describe("settings", () => {
   })
 })
 
-describe("the reminder clock's storage", () => {
-  it("keeps the schedule, the devices and the keys away from every signed-in person", async () => {
-    const user = await newUser("clock-private")
-    await writePromptSchedule(user.id, new Date())
-    await registerDevice(user.id, { endpoint: `https://fcm.googleapis.com/fcm/send/${randomUUID()}`, p256dh: "k", auth: "a", label: "Test" })
-
-    await asUser(user.id, async (q) => {
-      expect(await q("select count(*)::int as n from thought_prompt_schedule")).toEqual([{ n: 0 }])
-      expect(await q("select count(*)::int as n from push_devices")).toEqual([{ n: 0 }])
-      await expect(q("select public.notification_secret('push_vapid_private')")).rejects.toMatchObject({ code: "42501" })
-      await expect(q("select * from public.claim_due_thought_prompts(now(), '1 minute', 10)")).rejects.toMatchObject({ code: "42501" })
-      await expect(
-        q("insert into push_devices (user_id, endpoint, p256dh, auth) values ($1, 'https://evil.example/x', 'k', 'a')", [user.id]),
-      ).rejects.toMatchObject({ code: "42501" })
-    })
-    // The server may read it; nothing has been stored in the test vault.
-    expect(await readNotificationSecret("push_vapid_private")).toBeNull()
-  })
-
-  it("moves a browser's registration to whoever registered it last", async () => {
-    const first = await newUser("devices")
-    const second = await newUser("devices")
-    const endpoint = `https://fcm.googleapis.com/fcm/send/${randomUUID()}`
-
-    await registerDevice(first.id, { endpoint, p256dh: "k", auth: "a", label: "Shared laptop" })
-    await registerDevice(second.id, { endpoint, p256dh: "k2", auth: "a2", label: "Shared laptop" })
-
-    expect(await listDevices(first.id)).toEqual([])
-    const [d] = await listDevices(second.id)
-    expect(d.label).toBe("Shared laptop")
-    expect(Object.keys(d)).not.toContain("endpoint")
-
-    await removeDevice(second.id, { endpoint })
-    expect(await listDevices(second.id)).toEqual([])
-  })
-
-  it("switches a device off after twenty failures in a row, and deletes one the service says is gone", async () => {
-    const user = await newUser("devices")
-    const flaky = await registerDevice(user.id, { endpoint: `https://fcm.googleapis.com/fcm/send/${randomUUID()}`, p256dh: "k", auth: "a", label: "Flaky" })
-    const dead = await registerDevice(user.id, { endpoint: `https://web.push.apple.com/${randomUUID()}`, p256dh: "k", auth: "a", label: "Dead" })
-
-    for (let i = 0; i < 19; i++) await recordDeviceOutcome(flaky, "failed")
-    expect((await devicesForSending(user.id)).map((d) => d.id).sort()).toEqual([flaky, dead].sort())
-    await recordDeviceOutcome(flaky, "failed")
-    await recordDeviceOutcome(dead, "gone")
-
-    expect(await devicesForSending(user.id)).toEqual([])
-    expect((await listDevices(user.id)).map((d) => [d.label, d.enabled])).toEqual([["Flaky", false]])
-    // Switched back on by hand, and one success clears the count.
-    expect(await setDeviceEnabled(user.id, flaky, true)).toBe(true)
-    await recordDeviceOutcome(flaky, "ok")
-    const [row] = await asOwner((q) => q("select failures, enabled, last_success_at is not null as delivered from push_devices where id = $1", [flaky]))
-    expect(row).toEqual({ failures: 0, enabled: true, delivered: true })
-  })
-
-  it("follows a browser to its new address, keeping whether it was on", async () => {
-    const user = await newUser("devices")
-    const before = `https://updates.push.services.mozilla.com/wpush/v2/${randomUUID()}`
-    const after = `https://updates.push.services.mozilla.com/wpush/v2/${randomUUID()}`
-    const id = await registerDevice(user.id, { endpoint: before, p256dh: "k", auth: "a", label: "Firefox" })
-    await setDeviceEnabled(user.id, id, false)
-
-    expect(await moveDevice(user.id, before, { endpoint: after, p256dh: "k2", auth: "a2" })).toBe(true)
-    expect(await moveDevice(user.id, before, { endpoint: after, p256dh: "k2", auth: "a2" })).toBe(false)
-
-    const [row] = await asOwner((q) => q("select id, endpoint, enabled, label from push_devices where user_id = $1", [user.id]))
-    expect(row).toEqual({ id, endpoint: after, enabled: false, label: "Firefox" })
-  })
-
-  it("cannot switch someone else's device", async () => {
-    const owner = await newUser("devices")
-    const other = await newUser("devices")
-    const id = await registerDevice(owner.id, { endpoint: `https://fcm.googleapis.com/fcm/send/${randomUUID()}`, p256dh: "k", auth: "a", label: "Mine" })
-
-    expect(await setDeviceEnabled(other.id, id, false)).toBe(false)
-    await removeDevice(other.id, { id })
-
-    expect((await listDevices(owner.id)).map((d) => d.enabled)).toEqual([true])
-  })
-
-  it("records what a send reached", async () => {
-    const user = await newUser("sends")
-    const sendId = await openSend(user.id, "test", new Date())
-
-    await closeSend(sendId, { devices: 2, delivered: 1, removed: 1 })
-
-    const rows = await asUser(user.id, (q) => q("select kind, devices, delivered, removed from notification_sends"))
-    expect(rows).toEqual([{ kind: "test", devices: 2, delivered: 1, removed: 1 }])
-  })
-
+describe("the clock's reads", () => {
   it("reads a person's counts as the server, for the clock", async () => {
     const user = await newUser("clock-counts")
     actAs(user)

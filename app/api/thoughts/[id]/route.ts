@@ -6,7 +6,8 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { deleteThought, ThoughtNotFound, ThoughtWordingTaken, updateThought, type ThoughtPatch } from "@/src/db/thoughtsRepo"
-import { checkThoughtText, isUuid } from "@/src/thoughts/thoughtsService"
+import { checkThoughtText } from "@/src/thoughts/thoughtsService"
+import { isUuid } from "@/src/shared/ids"
 
 type RouteParams = { params: Promise<{ id: string }> }
 

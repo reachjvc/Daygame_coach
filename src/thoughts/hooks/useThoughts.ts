@@ -42,6 +42,7 @@ import {
   writeQueue,
   type QueueState,
 } from "../logQueue"
+import { SEND_AT_MOST, sendInChunks } from "@/src/shared/offlineQueue"
 import { bumpCounts, drawnThoughts } from "../pending"
 import { ThoughtsCallError, thoughtsApi } from "../thoughtsClient"
 import { normalizeThought, type ReframeInput } from "../thoughtsService"
@@ -61,8 +62,6 @@ export interface LoggedNotice {
 export type SendState = "sent" | "waiting" | "signed-out"
 
 const REFRESH_AFTER_MS = 1500
-/** The log route takes at most 500; smaller sends finish sooner on a weak signal. */
-const SEND_AT_MOST = 200
 
 /**
  * WHAT THE SERVER HAS CONFIRMED BUT THE SCREEN'S LAST READ MAY NOT INCLUDE.
@@ -220,19 +219,23 @@ export function useThoughts() {
         }
 
         const ready = queueRef.current.logs.filter((l) => l.thoughtId === null || !waiting.has(l.thoughtId))
-        for (let i = 0; i < ready.length; i += SEND_AT_MOST) {
-          const batch = ready.slice(i, i + SEND_AT_MOST)
-          try {
+        const logsStuck = await sendInChunks(
+          ready,
+          async (batch) => {
             const answer = await thoughtsApi.log(batch)
             const fresh = new Set(answer.inserted)
             const undone = new Set(queueRef.current.undos)
             const kept = batch.filter((l) => fresh.has(l.id) && !undone.has(l.id))
             setC({ ...confirmedRef.current, logs: [...confirmedRef.current.logs, ...kept] })
-            setQ(logsAnswered(queueRef.current, batch.map((l) => l.id)))
-          } catch (error) {
-            if (refusedForGood(error)) setQ(logsAnswered(queueRef.current, batch.map((l) => l.id)))
-            else break
-          }
+          },
+          {
+            onSent: (batch) => setQ(logsAnswered(queueRef.current, batch.map((l) => l.id))),
+            onDropped: (batch) => setQ(logsAnswered(queueRef.current, batch.map((l) => l.id))),
+            chunk: SEND_AT_MOST,
+          },
+        )
+        if (logsStuck) {
+          stuck ??= new ThoughtsCallError("Could not send", logsStuck.status, logsStuck.retryable)
         }
 
         // Removals go last, after any send of the same tap: a DELETE that
