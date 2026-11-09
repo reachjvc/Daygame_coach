@@ -89,11 +89,12 @@ export function PushDeviceCard({
   /** The caller decides when a device counts as silent (it knows the schedule). */
   silent: boolean
   onTurnOn: () => void
-  onOpenSettings: () => void
+  /** Left out where the card already sits in the settings: no button that leads back to itself. */
+  onOpenSettings?: () => void
   testIdPrefix?: string
   settingsTestId?: string
 }): ReactNode {
-  const settingsButton = (
+  const settingsButton = onOpenSettings && (
     <Button variant="ghost" size="sm" onClick={onOpenSettings} className="shrink-0 text-muted-foreground" data-testid={settingsTestId}>
       {words.settings}
     </Button>

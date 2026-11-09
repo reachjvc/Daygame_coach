@@ -152,30 +152,30 @@ export function prefillQuarters(quarters: readonly number[], entries: readonly T
   return out
 }
 
-export interface QuarterGroup {
-  quarters: number[]
-  /** Blank when Time knows nothing for these quarters. */
-  text: string
-  entryId: string | null
+/**
+ * THE ORDER OF THE ANSWER SHEET'S CARDS: newest first, and the quarter a ping
+ * asked about before all others, so a tapped ping opens on its own quarter
+ * (alpha test picky-eye-02). One card per quarter: Martell logs every 15
+ * minutes, and covering a stretch with one answer is the person's own choice
+ * (`stretchBefore`), never the default (fast-audit-07, picky-eye-03).
+ */
+export function sheetOrder(quarters: readonly number[], asked: number | null): number[] {
+  const newestFirst = [...new Set(quarters)].sort((a, b) => b - a)
+  if (asked == null || !newestFirst.includes(asked)) return newestFirst
+  return [asked, ...newestFirst.filter((q) => q !== asked)]
 }
 
 /**
- * Neighbouring quarters with the same pre-filled text are one card: "Gym,
- * 08:30–10:00". A blank merges with a blank; a gap in time always splits.
+ * What "Same answer for the N quarters before" covers: the quarters right
+ * before `q`, oldest first, each still open (`open` says so) and pre-filled
+ * from the same Time entry as `q`, or, like `q`, from none. A quarter that is
+ * not open, or a different entry, ends the stretch.
  */
-export function groupQuarters(quarters: readonly number[], prefill: ReadonlyMap<number, Prefill>): QuarterGroup[] {
-  const groups: QuarterGroup[] = []
-  for (const q of [...quarters].sort((a, b) => a - b)) {
-    const p = prefill.get(q)
-    const text = p?.text ?? ""
-    const last = groups[groups.length - 1]
-    if (last && last.text === text && last.quarters[last.quarters.length - 1] + QUARTER_MS === q) {
-      last.quarters.push(q)
-      continue
-    }
-    groups.push({ quarters: [q], text, entryId: p?.entryId ?? null })
-  }
-  return groups
+export function stretchBefore(q: number, open: (quarter: number) => boolean, entryOf: (quarter: number) => string | null): number[] {
+  const out: number[] = []
+  const entry = entryOf(q)
+  for (let p = q - QUARTER_MS; open(p) && entryOf(p) === entry; p -= QUARTER_MS) out.unshift(p)
+  return out
 }
 
 const pad = (n: number) => String(n).padStart(2, "0")

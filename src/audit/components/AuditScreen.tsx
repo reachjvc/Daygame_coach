@@ -17,7 +17,7 @@ import { usePushDevice, type PushDeviceState } from "@/src/notifications/hooks/u
 import { ROUTES } from "@/src/shared/routes"
 import { OfflineShell } from "@/src/shared/components/OfflineShell"
 import { useAudit, type AuditState, type DrawnSlot } from "../hooks/useAudit"
-import { answerSheetQuarters, groupQuarters, prefillQuarters, QUARTER_MS, runQuarters, SHEET_WINDOW_MS, stretchLabel, withAnswered } from "../quarterService"
+import { answerSheetQuarters, prefillQuarters, QUARTER_MS, runQuarters, SHEET_WINDOW_MS, sheetOrder, stretchLabel, withAnswered } from "../quarterService"
 import type { AnswerSource, AuditRun } from "../types"
 import type { AuditView } from "../auditClient"
 import { AnswerSheet, type AnswerCardInput } from "./AnswerSheet"
@@ -29,6 +29,8 @@ import { noPingDevice, PingDeviceCard, PingDeviceList } from "./PingDevices"
 
 const DAY_MS = 24 * 60 * 60_000
 const FILL_IN_WAIT_MS = 3_000
+/** How long "Deleted · Undo" stays before the delete is sent (alpha picky-eye-08). */
+export const UNDO_MS = 6_000
 
 const dayKeyOf = (ms: number, tz: string) => getTodayInTimezone(tz, new Date(ms))
 
@@ -259,28 +261,88 @@ function TodayView({
   const [endError, setEndError] = useState<string | null>(null)
   const [answerNowPending, setAnswerNowPending] = useState<"no" | "reading" | "ready">("no")
 
+  /**
+   * DELETE WITH UNDO (alpha picky-eye-08). A deleted answer leaves the screen
+   * at once and "Deleted · Undo" shows for UNDO_MS; only then is the delete
+   * queued. Leaving the page, or a second delete, sends it straight away.
+   */
+  const [held, setHeld] = useState<DrawnSlot | null>(null)
+  const heldRef = useRef<DrawnSlot | null>(null)
+  const removeNow = s.remove
+  // Through a ref, so a new `remove` never re-runs the effect whose cleanup sends the delete early.
+  const removeRef = useRef(removeNow)
+  removeRef.current = removeNow
+  const sendHeld = useCallback(() => {
+    const h = heldRef.current
+    if (!h) return
+    heldRef.current = null
+    setHeld(null)
+    removeRef.current(h.id)
+  }, [])
+  const undoHeld = useCallback(() => {
+    heldRef.current = null
+    setHeld(null)
+  }, [])
+  useEffect(() => {
+    if (!held) return
+    const t = window.setTimeout(sendHeld, UNDO_MS)
+    return () => window.clearTimeout(t)
+  }, [held, sendHeld])
+  useEffect(() => {
+    const onHidden = () => {
+      if (document.visibilityState === "hidden") sendHeld()
+    }
+    document.addEventListener("visibilitychange", onHidden)
+    window.addEventListener("pagehide", sendHeld)
+    return () => {
+      document.removeEventListener("visibilitychange", onHidden)
+      window.removeEventListener("pagehide", sendHeld)
+      sendHeld()
+    }
+  }, [sendHeld])
+  const slots = useMemo(() => (held ? s.slots.filter((sl) => sl.id !== held.id) : s.slots), [s.slots, held])
+
   const quarters = useMemo(() => runQuarters(run, now, tz), [run, now, tz])
   const answered = useMemo(() => {
     const m = new Map<number, DrawnSlot>()
-    for (const sl of s.slots) if (sl.runId === run.id) m.set(Date.parse(sl.slotAt), sl)
+    for (const sl of slots) if (sl.runId === run.id) m.set(Date.parse(sl.slotAt), sl)
     return m
-  }, [s.slots, run.id])
+  }, [slots, run.id])
   const recentGaps = quarters.filter((q) => q + QUARTER_MS > now - SHEET_WINDOW_MS && !answered.has(q))
   // Answered quarters always show, even if quiet hours were changed to cover them later.
   const dayQuarters = withAnswered(quarters, answered.keys()).filter((q) => dayKeyOf(q, tz) === shownDay)
 
   const viewRef = useRef(view)
   viewRef.current = view
+  const answeredRef = useRef(answered)
+  answeredRef.current = answered
 
+  /**
+   * The cards for `qs`: one for a stretch chosen in the Day list (`single`),
+   * else one per quarter, newest first and `asked` on top (alpha F08/F09).
+   * Each is pre-filled from Time; when Time knows nothing, from the answer of
+   * the quarter right before, marked "same as before" (fast-audit-06).
+   */
   const cardsFor = useCallback(
-    (qs: number[], single: boolean, read: AuditView | null = null): AnswerCardInput[] => {
+    (qs: number[], single: boolean, read: AuditView | null = null, asked: number | null = null): AnswerCardInput[] => {
       const prefill = prefillQuarters(qs, (read ?? viewRef.current).timeEntries, Date.now())
       if (single) {
         const texts = new Set(qs.map((q) => prefill.get(q)?.text ?? ""))
         const only = texts.size === 1 ? prefill.get(qs[0]) : undefined
         return [{ quarters: qs, text: only?.text ?? "", entryId: only?.entryId ?? null, existing: null }]
       }
-      return groupQuarters(qs, prefill).map((g) => ({ quarters: g.quarters, text: g.text, entryId: g.entryId, existing: null }))
+      return sheetOrder(qs, asked).map((q) => {
+        const p = prefill.get(q)
+        const before = p ? undefined : answeredRef.current.get(q - QUARTER_MS)
+        return {
+          quarters: [q],
+          text: p?.text ?? before?.activity ?? "",
+          entryId: p?.entryId ?? null,
+          existing: null,
+          asked: q === asked,
+          sameAsBefore: before !== undefined,
+        }
+      })
     },
     [],
   )
@@ -312,22 +374,26 @@ function TodayView({
     },
     [reload, cardsFor],
   )
-  // Opened from a ping (`?answer=<quarter>&send=<id>`): straight to the answer sheet.
+  // Opened from a ping (`?answer=<quarter>&send=<id>`): straight to the answer
+  // sheet, from the read this page just made. It used to read a second time
+  // first, and a tapped ping waited 2.7–5.4 s for its sheet (alpha fast-audit-08).
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (!params.has("answer")) return
     const asked = Date.parse(params.get("answer") ?? "")
     window.history.replaceState(null, "", ROUTES.audit)
-    void openAnswerNow(Number.isFinite(asked) ? asked : null)
+    askedRef.current = Number.isFinite(asked) ? asked : null
+    setAnswerNowPending("ready")
     // once, on arrival
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   useEffect(() => {
     if (answerNowPending !== "ready") return
     setAnswerNowPending("no")
-    const gaps = answerSheetQuarters(run, Date.now(), tz, new Set(answered.keys()), askedRef.current)
+    const asked = askedRef.current
+    const gaps = answerSheetQuarters(run, Date.now(), tz, new Set(answered.keys()), asked)
     askedRef.current = null
-    setSheet({ title: "Answer now", cards: cardsFor(gaps, false), source: "app", allowDelete: false })
+    setSheet({ title: "Answer now", cards: cardsFor(gaps, false, null, asked), source: "app", allowDelete: false })
   }, [answerNowPending, run, tz, answered, cardsFor])
 
   const dayIndex = days.indexOf(shownDay)
@@ -424,13 +490,57 @@ function TodayView({
           timezone={tz}
           source={sheet.source}
           suggestions={view.suggestions}
-          slots={s.slots}
+          slots={slots}
           notKept={s.notKept}
-          onSave={s.answer}
-          onDelete={sheet.allowDelete ? s.remove : undefined}
+          onSave={(answers) => {
+            // Answered again inside the undo time: the new answer replaces the
+            // held one under its id, and no delete follows.
+            const h = held
+            const same = (a: { runId: string; slotAt: string }) => h !== null && a.runId === h.runId && a.slotAt === h.slotAt
+            if (h && answers.some(same)) {
+              undoHeld()
+              s.answer(answers.map((a) => (same(a) ? { ...a, id: h.id } : a)))
+            } else s.answer(answers)
+          }}
+          onDelete={
+            sheet.allowDelete
+              ? (id) => {
+                  sendHeld()
+                  const slot = s.slots.find((sl) => sl.id === id)
+                  if (!slot) return removeNow(id)
+                  heldRef.current = slot
+                  setHeld(slot)
+                }
+              : undefined
+          }
         />
       )}
-      <MuteSheet open={muteOpen} onClose={() => setMuteOpen(false)} run={run} timezone={tz} onMute={s.mute} />
+      {held && (
+        <div
+          className="fixed inset-x-4 bottom-24 z-[9700] mx-auto flex max-w-md items-center gap-3 rounded-xl border border-border bg-card px-4 py-2 shadow-lg sm:bottom-6"
+          role="status"
+          data-testid="audit-undo"
+        >
+          <p className="min-w-0 flex-1 truncate text-sm">
+            Deleted · <span className="tabular-nums">{stretchLabel([Date.parse(held.slotAt)], tz)}</span> · {held.activity}
+          </p>
+          <Button variant="outline" size="sm" onClick={undoHeld}>
+            Undo
+          </Button>
+        </div>
+      )}
+      <MuteSheet
+        open={muteOpen}
+        onClose={() => setMuteOpen(false)}
+        run={run}
+        timezone={tz}
+        onMute={s.mute}
+        push={push}
+        onOpenSettings={() => {
+          setMuteOpen(false)
+          setSettingsOpen(true)
+        }}
+      />
       <SettingsSheet
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}

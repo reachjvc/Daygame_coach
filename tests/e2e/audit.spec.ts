@@ -75,10 +75,12 @@ async function openAudit(page: Page): Promise<void> {
 
 async function answerCard(page: Page, card: ReturnType<Page["getByTestId"]>, activity: string | null, energy: number, growth: number) {
   if (activity !== null) await card.getByTestId("audit-activity").fill(activity)
+  const before = await page.getByTestId("audit-card-saved").count()
+  // a new answer saves on the tap that completes it; a changed one waits for Save
+  const autoSave = (await card.getAttribute("data-autosave")) === "yes"
   await card.getByTestId("audit-energy").getByRole("radio", { name: `Energy ${energy}` }).click()
   await card.getByTestId("audit-growth").getByRole("radio", { name: `Growth ${growth}` }).click()
-  const before = await page.getByTestId("audit-card-saved").count()
-  await card.getByTestId("audit-save").click()
+  if (!autoSave) await card.getByTestId("audit-save").click()
   // the card folds into one green "Saved" line with the answer on it
   await expect(page.getByTestId("audit-card-saved")).toHaveCount(before + 1)
   await expect(page.getByTestId("audit-card-saved").filter({ hasText: `E ${energy} · G ${growth}` }).first()).toBeVisible()
@@ -102,10 +104,16 @@ test.describe("time & energy audit @phone", () => {
     await page.getByTestId("audit-answer-now").click()
     const sheet = page.getByTestId("audit-answer-sheet")
     await expect(sheet).toBeVisible()
+    // One card per quarter (alpha F08): the entry fills two. Whichever quarter
+    // has just ended, the newest "from Time" card is q, and q - 15 min is the
+    // one before it, so ticking "Same answer for the quarter before" covers both.
     const fromTime = sheet.getByTestId("audit-card").filter({ hasText: "from Time" })
+    await expect(fromTime).toHaveCount(2)
+    const newest = fromTime.first()
+    await expect(newest.getByTestId("audit-activity")).toHaveValue("Deep work")
+    await newest.getByTestId("audit-cover").getByRole("checkbox").check()
     await expect(fromTime).toHaveCount(1)
-    await expect(fromTime.getByTestId("audit-activity")).toHaveValue("Deep work")
-    await answerCard(page, fromTime, null, 3, 6)
+    await answerCard(page, fromTime.first(), null, 3, 6)
     await expect.poll(async () => (await slotsOf(account.id, run.id)).filter((s) => s.activity === "Deep work").length).toBeGreaterThanOrEqual(2)
   })
 
@@ -154,7 +162,8 @@ test.describe("time & energy audit @phone", () => {
     await page.getByTestId("audit-row-answered").filter({ hasText: "Reading" }).click()
     await page.getByTestId("audit-answer-sheet").getByTestId("audit-delete").click()
     await expect(page.getByTestId("audit-row-answered").filter({ hasText: "Reading" })).toHaveCount(0)
-    await expect.poll(async () => (await slotsOf(account.id, run.id)).map((s) => s.activity)).toEqual(["Walk in the park"])
+    // sent once the 6 s "Deleted · Undo" has passed (alpha picky-eye-08)
+    await expect.poll(async () => (await slotsOf(account.id, run.id)).map((s) => s.activity), { timeout: 20_000 }).toEqual(["Walk in the park"])
   })
 
   test("mutes for 1 h and sees Muted until", async ({ page, account }) => {

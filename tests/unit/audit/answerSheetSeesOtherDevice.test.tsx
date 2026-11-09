@@ -29,7 +29,7 @@ const fromPc: DrawnSlot = {
   pending: false,
 }
 
-function sheet(slots: DrawnSlot[], onSave = () => {}) {
+function sheet(slots: DrawnSlot[], onSave: (answers: unknown[]) => void = () => {}) {
   return (
     <AnswerSheet open onClose={() => {}} title="Fill in" cards={cards} runId={RUN_ID} timezone="Europe/Copenhagen" source="later" suggestions={[]} slots={slots} onSave={onSave} />
   )
@@ -51,12 +51,25 @@ describe("a card opened on a gap", () => {
     const { rerender } = render(sheet([]))
     fireEvent.change(screen.getByTestId("audit-activity"), { target: { value: "Daygame sets" } })
     fireEvent.click(screen.getByRole("radio", { name: "Energy 6" }))
+    // the tap that completes a new answer saves it (alpha fast-audit-06)
     fireEvent.click(screen.getByRole("radio", { name: "Growth 7" }))
-    fireEvent.click(screen.getByTestId("audit-save"))
+    expect(screen.getByTestId("audit-card-saved")).toBeTruthy()
     rerender(sheet([{ ...fromPc, id: "mine", activity: "Daygame sets", pending: false }]))
     // opened again to change it: still its own answer
     fireEvent.click(screen.getByRole("button", { name: /^Change the answer for/ }))
     expect(screen.getByTestId("audit-save")).toBeTruthy()
     expect(screen.queryByTestId("audit-card-elsewhere")).toBeNull()
+  })
+
+  test("with another device's answer named, a score tap does not save over it: Save does", () => {
+    const saves: unknown[] = []
+    const { rerender } = render(sheet([], (a) => void saves.push(a)))
+    rerender(sheet([fromPc], (a) => void saves.push(a)))
+    fireEvent.change(screen.getByTestId("audit-activity"), { target: { value: "Gym" } })
+    fireEvent.click(screen.getByRole("radio", { name: "Energy 5" }))
+    fireEvent.click(screen.getByRole("radio", { name: "Growth 5" }))
+    expect(saves).toHaveLength(0)
+    fireEvent.click(screen.getByTestId("audit-save"))
+    expect(saves).toHaveLength(1)
   })
 })

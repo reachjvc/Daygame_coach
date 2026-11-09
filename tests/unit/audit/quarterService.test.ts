@@ -6,7 +6,8 @@ import {
   QUARTER_MS,
   answerSheetQuarters,
   withAnswered,
-  groupQuarters,
+  sheetOrder,
+  stretchBefore,
   prefillQuarters,
   quarterLabel,
   quarterStart,
@@ -99,31 +100,31 @@ describe("prefillQuarters", () => {
   })
 })
 
-describe("groupQuarters", () => {
+describe("sheetOrder and stretchBefore (alpha F08/F09: one card per quarter)", () => {
   const base = at("2026-11-09T07:30:00Z")
   const qs = Array.from({ length: 8 }, (_, i) => base + i * QUARTER_MS)
 
-  it("Gym 08:30-10:00 is one group", () => {
-    const gym = [entry("Gym", "2026-11-09T07:30:00Z", "2026-11-09T09:00:00Z")]
-    const groups = groupQuarters(qs.slice(0, 6), prefillQuarters(qs, gym, at("2026-11-09T12:00:00Z")))
-    expect(groups).toHaveLength(1)
-    expect(groups[0].text).toBe("Gym")
-    expect(stretchLabel(groups[0].quarters, CPH)).toBe("08:30–10:00")
+  it("newest first, and the quarter a ping asked about on top", () => {
+    expect(sheetOrder(qs.slice(0, 3), null)).toEqual([qs[2], qs[1], qs[0]])
+    expect(sheetOrder(qs.slice(0, 4), qs[1])).toEqual([qs[1], qs[3], qs[2], qs[0]])
+    // an asked quarter not in the sheet changes nothing
+    expect(sheetOrder(qs.slice(0, 2), qs[5])).toEqual([qs[1], qs[0]])
   })
 
-  it("a blank between two different activities stays apart", () => {
-    const entries = [entry("Gym", "2026-11-09T07:30:00Z", "2026-11-09T08:00:00Z"), entry("Email", "2026-11-09T08:15:00Z", "2026-11-09T08:45:00Z")]
-    const groups = groupQuarters(qs.slice(0, 5), prefillQuarters(qs, entries, at("2026-11-09T12:00:00Z")))
-    expect(groups.map((g) => [g.text, g.quarters.length])).toEqual([
-      ["Gym", 2],
-      ["", 1],
-      ["Email", 2],
-    ])
+  it("covers the open quarters right before, with the same Time entry or none", () => {
+    const gym = [entry("Gym", "2026-11-09T07:30:00Z", "2026-11-09T08:30:00Z")]
+    const prefill = prefillQuarters(qs, gym, at("2026-11-09T12:00:00Z"))
+    const entryOf = (q: number) => prefill.get(q)?.entryId ?? null
+    const open = (q: number) => qs.includes(q)
+    // 08:30-09:30 is Gym (qs[0..3]); qs[4..7] are blank
+    expect(stretchBefore(qs[3], open, entryOf)).toEqual([qs[0], qs[1], qs[2]])
+    expect(stretchBefore(qs[7], open, entryOf)).toEqual([qs[4], qs[5], qs[6]])
+    expect(stretchBefore(qs[4], open, entryOf)).toEqual([])
   })
 
-  it("a gap in time splits, even with the same text", () => {
-    const groups = groupQuarters([qs[0], qs[2]], new Map())
-    expect(groups).toHaveLength(2)
+  it("an answered or saved quarter ends the stretch", () => {
+    const open = (q: number) => qs.includes(q) && q !== qs[2]
+    expect(stretchBefore(qs[5], open, () => null)).toEqual([qs[3], qs[4]])
   })
 })
 

@@ -35,7 +35,20 @@ export function noPingDevice(push: PushDeviceState): boolean {
   return !push.devices.some((d) => d.enabled)
 }
 
-export function PingDeviceCard({ push, onOpenSettings }: { push: PushDeviceState; onOpenSettings: () => void }) {
+/** True when this browser itself gets pings. */
+export function pingsHere(push: PushDeviceState): boolean {
+  return push.thisDevice?.enabled === true && push.permission === "granted"
+}
+
+/** "Android phone · Chrome": the devices that get pings. */
+export function pingDeviceNames(push: PushDeviceState): string {
+  return push.devices
+    .filter((d) => d.enabled)
+    .map((d) => d.label || "A device")
+    .join(" · ")
+}
+
+export function PingDeviceCard({ push, onOpenSettings }: { push: PushDeviceState; onOpenSettings?: () => void }) {
   const here = push.devices.find((d) => d.id === push.thisDevice?.id)
   const silentSince = here?.enabled ? (here.lastSuccessAt ?? here.createdAt) : null
   return (
@@ -53,9 +66,22 @@ export function PingDeviceCard({ push, onOpenSettings }: { push: PushDeviceState
   )
 }
 
+/**
+ * THE DEVICES, AND A WAY TO ADD THIS ONE. A second device (the PC, once the
+ * phone had pings) had no button anywhere to turn pings on for itself (alpha
+ * slow-pass-01): the offer showed only while no device at all had them. Here
+ * it shows whenever this browser does not get them, naming the ones that do.
+ */
 export function PingDeviceList({ push }: { push: PushDeviceState }) {
+  const others = pingDeviceNames(push)
   return (
     <div>
+      {push.devicesKnown && !pingsHere(push) && (
+        <div className="mb-4" data-testid="audit-pings-this-device">
+          <p className="mb-2 text-sm text-muted-foreground">{others ? `Pings go to ${others}. Not to this device.` : "No device gets pings yet."}</p>
+          <PingDeviceCard push={push} />
+        </div>
+      )}
       <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Devices that get pings</h3>
       <div className="mt-2">
         <PushDeviceList push={push} words={{ empty: "No device yet. Turn pings on from the audit page on your phone.", switchLabel: (l) => `Pings on ${l || "this device"}` }} />

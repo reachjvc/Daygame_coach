@@ -61,9 +61,11 @@ async function answerGap(page: Page, label: string, activity: string) {
   await page.getByTestId("audit-answer-selection").click()
   const card = page.getByTestId("audit-answer-sheet").getByTestId("audit-card")
   await card.getByTestId("audit-activity").fill(activity)
+  // a new answer saves on the tap that completes it; otherwise Save does
+  const autoSave = (await card.getAttribute("data-autosave")) === "yes"
   await card.getByTestId("audit-energy").getByRole("radio", { name: "Energy 6" }).click()
   await card.getByTestId("audit-growth").getByRole("radio", { name: "Growth 7" }).click()
-  await card.getByTestId("audit-save").click()
+  if (!autoSave) await card.getByTestId("audit-save").click()
 }
 
 /** A fresh sign-up's zone is whatever the test backend gave it; the labels here are Copenhagen's. */

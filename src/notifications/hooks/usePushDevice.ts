@@ -59,12 +59,15 @@ export function usePushDevice() {
   const [perm, setPerm] = useState<NotificationPermission | "unsupported">("default")
   const [thisDevice, setThisDevice] = useState<ThisDevice | null>(null)
   const [devices, setDevices] = useState<DeviceSummary[]>([])
+  /** The device list has been read at least once: until then, "no device" is not known. */
+  const [devicesKnown, setDevicesKnown] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const loadDevices = useCallback(async () => {
     try {
       setDevices((await json<{ devices: DeviceSummary[] }>("/api/notifications/devices")).devices)
+      setDevicesKnown(true)
     } catch {
       // The list is a convenience; the switch for this device works without it.
     }
@@ -205,7 +208,7 @@ export function usePushDevice() {
     }
   }, [loadDevices])
 
-  return { support, permission: perm, thisDevice, devices, busy, error, turnOn, setTimer, setEnabled, remove, sendTest, reloadDevices: loadDevices }
+  return { support, permission: perm, thisDevice, devices, devicesKnown, busy, error, turnOn, setTimer, setEnabled, remove, sendTest, reloadDevices: loadDevices }
 }
 
 export type PushDeviceState = ReturnType<typeof usePushDevice>

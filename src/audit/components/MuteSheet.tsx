@@ -13,9 +13,11 @@ import { Bell, BellOff, Moon } from "lucide-react"
 import { useState } from "react"
 import { BottomSheet } from "@/components/BottomSheet"
 import { cn } from "@/lib/utils"
+import type { PushDeviceState } from "@/src/notifications/hooks/usePushDevice"
 import { muteUntil, type MuteOption } from "../auditService"
 import { clockLabel } from "../quarterService"
 import type { AuditRun } from "../types"
+import { noPingDevice, PingDeviceCard, pingDeviceNames } from "./PingDevices"
 
 const CHOICES: { option: Exclude<MuteOption, "off">; label: string }[] = [
   { option: "30m", label: "30 min" },
@@ -37,17 +39,32 @@ export function MuteSheet({
   run,
   timezone,
   onMute,
+  push,
+  onOpenSettings,
 }: {
   open: boolean
   onClose: () => void
   run: Pick<AuditRun, "mutedUntil" | "quietStart" | "quietEnd">
   timezone: string
   onMute: (option: MuteOption) => Promise<string | null>
+  /** Which devices get pings: the state line says only what is true (alpha picky-eye-09). */
+  push: PushDeviceState
+  onOpenSettings: () => void
 }) {
   const [busy, setBusy] = useState<MuteOption | null>(null)
   const [error, setError] = useState<string | null>(null)
   const now = new Date()
   const line = mutedLine(run.mutedUntil, timezone, now.getTime())
+  // "Pings are on" only when a device gets them; until the list is read, no claim either way.
+  const nowhere = push.devicesKnown && noPingDevice(push)
+  const names = pingDeviceNames(push)
+  const title = line ?? (nowhere ? "No device gets pings" : push.devicesKnown ? "Pings are on" : "Pings")
+  const sub = line
+    ? "You can still answer. Only the pings wait."
+    : nowhere
+      ? "Muting changes nothing until a device gets them."
+      : `Every 15 minutes, outside your quiet hours${names ? `, to ${names}` : ""}.`
+  const tone = line || nowhere ? "warn" : push.devicesKnown ? "on" : "unknown"
 
   const pick = async (option: MuteOption) => {
     setBusy(option)
@@ -63,23 +80,31 @@ export function MuteSheet({
       <div
         className={cn(
           "flex items-center gap-3 rounded-2xl border px-4 py-3",
-          line ? "border-amber-500/50 bg-amber-500/10" : "border-emerald-500/40 bg-emerald-500/10",
+          tone === "warn" ? "border-amber-500/50 bg-amber-500/10" : tone === "on" ? "border-emerald-500/40 bg-emerald-500/10" : "border-border bg-card",
         )}
         data-testid="audit-mute-state"
       >
         <span
-          className={cn("flex size-10 shrink-0 items-center justify-center rounded-full", line ? "bg-amber-500 text-black" : "bg-emerald-500 text-white")}
+          className={cn(
+            "flex size-10 shrink-0 items-center justify-center rounded-full",
+            tone === "warn" ? "bg-amber-500 text-black" : tone === "on" ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground",
+          )}
           aria-hidden
         >
-          {line ? <BellOff className="size-5" /> : <Bell className="size-5" />}
+          {tone === "warn" ? <BellOff className="size-5" /> : <Bell className="size-5" />}
         </span>
         <div className="min-w-0">
           <p className="font-semibold" data-testid={line ? "audit-muted-line" : undefined}>
-            {line ?? "Pings are on"}
+            {title}
           </p>
-          <p className="text-sm text-muted-foreground">{line ? "You can still answer. Only the pings wait." : "Every 15 minutes, outside your quiet hours."}</p>
+          <p className="text-sm text-muted-foreground">{sub}</p>
         </div>
       </div>
+      {nowhere && (
+        <div className="mt-3">
+          <PingDeviceCard push={push} onOpenSettings={onOpenSettings} />
+        </div>
+      )}
 
       <p className="mt-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">{line ? "Change it to" : "Mute for"}</p>
       <div className="mt-2 grid grid-cols-2 gap-2">
