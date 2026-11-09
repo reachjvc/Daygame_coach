@@ -3,7 +3,7 @@
  */
 import { describe, expect, it } from "vitest"
 import { checkReview } from "@/src/audit/auditService"
-import { bestHoursText, checkWeek, freeSlot, hoursByKind, WEEK_BLOCKS_MAX, type WeekBlock } from "@/src/audit/weekService"
+import { bestHoursText, checkWeek, freeSlot, hoursByKind, kindFor, MARTELL_STEPS, planHours, shiftedEnd, spreadBlock, WEEK_BLOCKS_MAX, type WeekBlock } from "@/src/audit/weekService"
 
 const block = (over: Partial<WeekBlock> = {}): WeekBlock => ({
   id: "b1",
@@ -99,5 +99,75 @@ describe("bestHoursText", () => {
       ]),
     ).toBe("09:00, 10:00 and 08:00")
     expect(bestHoursText([])).toBe(null)
+  })
+})
+
+describe("kindFor (alpha picky-eye-06: a new block was always Deep work)", () => {
+  it("takes the kind of a block with the same name already in the week, and none otherwise", () => {
+    const week = [block({ what: "Gym", kind: "workout" }), block({ id: "b2", what: "Write the book", kind: "deep" })]
+    expect(kindFor(week, "  gym ")).toBe("workout")
+    expect(kindFor(week, "Daygame")).toBe(null)
+    expect(kindFor([], "Gym")).toBe(null)
+  })
+})
+
+describe("shiftedEnd (alpha fast-review-06: From past To was refused)", () => {
+  it("moves To with From, keeping the length, and stops at midnight", () => {
+    expect(shiftedEnd(540, 600, 720)).toBe(780)
+    expect(shiftedEnd(540, 720, 480)).toBe(660)
+    expect(shiftedEnd(540, 1440, 1200)).toBe(1440)
+  })
+})
+
+describe("spreadBlock (alpha picky-eye-07: one block per day meant 15 taps for gym three days)", () => {
+  const ids = () => {
+    let i = 0
+    return () => `n${++i}`
+  }
+  it("makes one block per chosen day, the block itself on its own day", () => {
+    const out = spreadBlock(block({ id: "b1", day: 2 }), [0, 2, 4], ids())
+    expect(out.map((b) => [b.id, b.day])).toEqual([
+      ["b1", 2],
+      ["n1", 0],
+      ["n2", 4],
+    ])
+    expect(out.every((b) => b.start === 540 && b.end === 660 && b.what === "Write the book")).toBe(true)
+  })
+  it("moves the block to the first chosen day when its own day is no longer chosen", () => {
+    expect(spreadBlock(block({ id: "b1", day: 2 }), [5, 3], ids()).map((b) => [b.id, b.day])).toEqual([
+      ["b1", 3],
+      ["n1", 5],
+    ])
+  })
+})
+
+describe("planHours (alpha fast-review-05: evening TV hours were named for the hardest work)", () => {
+  const all = [
+    { hour: 9, energy: 5.0, answers: 8 },
+    { hour: 13, energy: 3.1, answers: 8 },
+    { hour: 14, energy: 2.5, answers: 8 },
+    { hour: 15, energy: 4.0, answers: 8 },
+    { hour: 19, energy: 6.5, answers: 8 },
+    { hour: 20, energy: 6.2, answers: 8 },
+  ]
+  it("names best hours from growth answers only, and low hours (energy under 4) from all answers, apart from the best ones", () => {
+    const work = [
+      { hour: 9, energy: 5.5, answers: 6 },
+      { hour: 15, energy: 4.5, answers: 4 },
+    ]
+    expect(planHours(work, all)).toEqual({ best: "09:00 and 15:00", low: "14:00 and 13:00" })
+  })
+  it("names no best hours without growth answers to go on", () => {
+    expect(planHours([], all).best).toBe(null)
+    expect(planHours([], []).low).toBe(null)
+  })
+})
+
+describe("MARTELL_STEPS", () => {
+  it("lists his steps 1 to 7 from Plans/perfect-week.md, step 4 cutting bleed time included", () => {
+    expect(MARTELL_STEPS).toHaveLength(7)
+    expect(MARTELL_STEPS[1].text).toMatch(/low/)
+    expect(MARTELL_STEPS[3].title).toBe("Cut bleed time")
+    expect(MARTELL_STEPS[3].text).toMatch(/15 minutes shorter/)
   })
 })

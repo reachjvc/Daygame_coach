@@ -50,6 +50,30 @@ describe("applyReviewChange", () => {
     expect(applyReviewChange(stored(), { block: block("phone", 0, 600, 660, "Gym") })).toEqual({ error: '"Gym" overlaps "Write the book" on Monday' })
   })
 
+  it("adds a block with its copies on other days in one write (alpha picky-eye-07)", () => {
+    const r = applyReviewChange(stored(), { block: block("g1", 0, 1020, 1080, "Gym"), copies: [block("g2", 2, 1020, 1080, "Gym"), block("g3", 4, 1020, 1080, "Gym")] })
+    expect("review" in r && r.review.week.map((b) => [b.id, b.day])).toEqual([
+      ["pc", 0],
+      ["g1", 0],
+      ["g2", 2],
+      ["g3", 4],
+    ])
+  })
+
+  it("adds no copy at all when one overlaps, and refuses a copy that reuses a stored id", () => {
+    expect(applyReviewChange(stored(), { block: block("g1", 1, 600, 660, "Gym"), copies: [block("g2", 0, 600, 660, "Gym")] })).toEqual({ error: '"Gym" overlaps "Write the book" on Monday' })
+    expect("error" in applyReviewChange(stored(), { block: block("g1", 1, 600, 660, "Gym"), copies: [block("pc", 2, 600, 660, "Gym")] })).toBe(true)
+    expect("error" in applyReviewChange(stored(), { block: block("g1", 1, 600, 660, "Gym"), copies: "x" })).toBe(true)
+  })
+
+  it("changes a block and adds its copies", () => {
+    const r = applyReviewChange(stored(), { block: block("pc", 0, 480, 600, "Book"), edit: true, copies: [block("c1", 3, 480, 600, "Book")] })
+    expect("review" in r && r.review.week.map((b) => [b.id, b.day, b.what])).toEqual([
+      ["pc", 0, "Book"],
+      ["c1", 3, "Book"],
+    ])
+  })
+
   it("refuses anything else", () => {
     expect("error" in applyReviewChange(stored(), null)).toBe(true)
     expect("error" in applyReviewChange(stored(), {})).toBe(true)

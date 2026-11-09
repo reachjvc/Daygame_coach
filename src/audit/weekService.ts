@@ -102,10 +102,69 @@ export function freeSlot(week: readonly WeekBlock[], day: number): { start: numb
 
 const clock = (hour: number) => hhmm(hour * 60)
 
+/**
+ * Martell's steps 1-7, as Plans/perfect-week.md (Phase 0) words them from his
+ * own videos. Steps 8-11 are not built (summary only, or later).
+ */
+export const MARTELL_STEPS: readonly { title: string; text: string }[] = [
+  { title: "Big rocks first", text: "Workouts, people, deep work and thinking blocks go in before anything else." },
+  { title: "Plan around your energy", text: "Hardest work in your best hours; admin and calls in the low ones." },
+  { title: "Batch the same kind of work", text: "Group the same kind of work into blocks of two to three hours." },
+  { title: "Cut bleed time", text: "Plan meetings and calls 15 minutes shorter than you think they need." },
+  { title: "Block the hobbies", text: "Hobbies and workouts get fixed blocks; never miss a workout two days in a row." },
+  { title: "No extra time", text: "Pair two things in one slot: calls while walking, an audiobook at the gym." },
+  { title: "Say no often", text: "The planned week shows what to refuse: what has no room in it gets a no." },
+]
+
+/** The kind of a block with this name already in the week (case and spaces ignored); null when there is none, so the kind is picked, never assumed. */
+export function kindFor(week: readonly WeekBlock[], what: string): WeekKind | null {
+  const name = what.trim().toLowerCase()
+  if (!name) return null
+  return week.find((b) => b.what.trim().toLowerCase() === name)?.kind ?? null
+}
+
+/** A new From moves To with it, keeping the block's length, up to midnight. */
+export function shiftedEnd(start: number, end: number, newStart: number): number {
+  return Math.min(DAY_MINUTES, newStart + (end - start))
+}
+
+/**
+ * The block on each chosen day: the block itself stays on its own day if that
+ * day is still chosen (else it moves to the first chosen day), and every other
+ * day gets a copy with a new id.
+ */
+export function spreadBlock(block: WeekBlock, days: readonly number[], newId: () => string): WeekBlock[] {
+  const chosen = [...new Set(days)].sort((a, b) => a - b)
+  if (chosen.length === 0) return []
+  const home = chosen.includes(block.day) ? block.day : chosen[0]
+  return [{ ...block, day: home }, ...chosen.filter((d) => d !== home).map((day) => ({ ...block, id: newId(), day }))]
+}
+
+function hoursList(hours: readonly number[]): string | null {
+  if (hours.length === 0) return null
+  const names = hours.map(clock)
+  return names.length === 1 ? names[0] : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`
+}
+
+type HourEnergy = { hour: number; energy: number; answers: number }
+
+/**
+ * Martell's step 2 from the audit. Best: the three hours with the most energy
+ * while doing things that build your life (`workHours`, growth above 4). Low:
+ * the three hours with the least energy over all answers, under the neutral 4,
+ * apart from the best.
+ */
+export function planHours(workHours: readonly HourEnergy[], allHours: readonly HourEnergy[]): { best: string | null; low: string | null } {
+  const best = [...workHours].sort((a, b) => b.energy - a.energy || a.hour - b.hour).slice(0, 3).map((h) => h.hour)
+  const low = [...allHours]
+    .filter((h) => h.energy < 4 && !best.includes(h.hour))
+    .sort((a, b) => a.energy - b.energy || a.hour - b.hour)
+    .slice(0, 3)
+    .map((h) => h.hour)
+  return { best: hoursList(best), low: hoursList(low) }
+}
+
 /** The audit's three most energetic hours, best first, as text ("09:00, 10:00 and 08:00"); null with no hours to go on. */
 export function bestHoursText(hours: readonly { hour: number; energy: number; answers: number }[]): string | null {
-  const top = [...hours].sort((a, b) => b.energy - a.energy || a.hour - b.hour).slice(0, 3)
-  if (top.length === 0) return null
-  const names = top.map((h) => clock(h.hour))
-  return names.length === 1 ? names[0] : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`
+  return hoursList([...hours].sort((a, b) => b.energy - a.energy || a.hour - b.hour).slice(0, 3).map((h) => h.hour))
 }

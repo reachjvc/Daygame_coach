@@ -19,20 +19,12 @@ import { BottomSheet } from "@/components/BottomSheet"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { AuditCallError, type AuditView } from "../auditClient"
-import { BOX_NAMES, buildReview, REVIEW_NOTE_MAX, type Box, type BuiltReview, NOTE_CHANGED, type ReviewChange, type ReviewGroup } from "../auditService"
+import { BOX_NAMES, buildReview, CHOICE_NAMES, choiceFor, REVIEW_NOTE_MAX, type Box, type BuiltReview, NOTE_CHANGED, type ReviewChange, type ReviewGroup } from "../auditService"
 import { storableText } from "../requestGuard"
 import { clockLabel } from "../quarterService"
 import { REVIEW_CHOICES, type AuditRun, type Review, type ReviewChoice, type WeekBlock } from "../types"
 import type { AuditState } from "../hooks/useAudit"
 import { PerfectWeek } from "./PerfectWeek"
-
-const CHOICE_NAMES: Record<ReviewChoice, string> = {
-  more: "Do more",
-  keep: "Keep",
-  handoff: "Hand off",
-  cut: "Cut",
-  change: "Change how",
-}
 
 /** Box tints, by meaning: green for "do more", amber for "costs", red for "cut", violet for "fun". */
 const BOX_TONE: Record<Box, string> = {
@@ -64,7 +56,7 @@ function BoxChip({ box }: { box: Box }) {
 }
 
 function ActivityRow({ g, review, onOpen }: { g: ReviewGroup; review: Review; onOpen: () => void }) {
-  const choice = review.choices[g.key]
+  const choice = choiceFor(g, review.choices)
   return (
     <li>
       <button type="button" onClick={onOpen} className="flex min-h-14 w-full items-center gap-3 px-3 py-2 text-left hover:bg-muted/40" data-testid="review-activity">
@@ -208,9 +200,11 @@ function ActivitySheet({
   useEffect(() => {
     openKey.current = key
   }, [key])
+  // "Do more" pre-filled for an activity in the top box (choiceFor), until another choice is made.
+  const prefilled = group?.box === "more" ? "more" : null
   useEffect(() => {
     if (key === null) return
-    setChoice(review.choices[key] ?? null)
+    setChoice(review.choices[key] ?? prefilled)
     setNote(review.notes[key] ?? "")
     setNoteWas(review.notes[key] ?? "")
     setNoteStale(false)
@@ -234,6 +228,11 @@ function ActivitySheet({
           {hoursText(group.minutes / 60)} · energy {group.energy.toFixed(1)} · growth {group.growth.toFixed(1)} · from {answersText(group.answers)}
         </p>
         <BoxChip box={group.box} />
+        {group.avoidingMinutes > 0 && (
+          <p className="text-sm" data-testid="review-avoiding">
+            Marked &quot;avoiding something&quot;: <span className="font-medium tabular-nums">{hoursText(group.avoidingMinutes / 60)}</span> of its {hoursText(group.minutes / 60)}.
+          </p>
+        )}
         <section>
           <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Why you felt like this</h3>
           {group.whys.length === 0 ? (
@@ -261,7 +260,8 @@ function ActivitySheet({
                 role="radio"
                 aria-checked={choice === c}
                 onClick={() => {
-                  setChoice(choice === c ? null : c)
+                  // A pre-filled choice is changed by picking another, not cleared (it would only come back).
+                  setChoice(choice === c && !prefilled ? null : c)
                   setState("idle")
                 }}
                 className={cn(
@@ -273,6 +273,11 @@ function ActivitySheet({
               </button>
             ))}
           </div>
+          {prefilled && !review.choices[group.key] && choice === "more" && (
+            <p className="mt-2 text-xs text-muted-foreground" data-testid="review-prefilled">
+              Pre-filled, because it lifts you and builds your life. Pick another to change it.
+            </p>
+          )}
           <label htmlFor="review-note" className="mt-3 block text-sm font-medium">
             Note <span className="font-normal text-muted-foreground">(optional)</span>
           </label>
@@ -371,7 +376,7 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
     return failed
   }
   const save = (key: string, choice: ReviewChoice | null, note: string, noteWas: string) => send({ activity: key, choice, note, noteWas })
-  const saveBlock = (block: WeekBlock, edit: boolean) => send({ block, edit })
+  const saveBlock = (block: WeekBlock, edit: boolean, copies: WeekBlock[]) => send(copies.length > 0 ? { block, edit, copies } : { block, edit })
   const removeBlock = (id: string) => send({ removeBlock: id })
 
   const back = (
@@ -446,8 +451,9 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
 
           <PerfectWeek
             week={run.review.week}
-            doMore={built.groups.filter((g) => run.review.choices[g.key] === "more")}
+            doMore={built.groups.filter((g) => choiceFor(g, run.review.choices) === "more")}
             bestHours={built.bestHours}
+            workHours={built.workHours}
             onSaveBlock={saveBlock}
             onRemoveBlock={removeBlock}
           />

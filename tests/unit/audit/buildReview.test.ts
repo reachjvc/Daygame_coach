@@ -3,7 +3,7 @@
  * Written before the function.
  */
 import { describe, expect, it } from "vitest"
-import { buildReview } from "@/src/audit/auditService"
+import { BOX_NAMES, buildReview, CHOICE_NAMES, choiceFor } from "@/src/audit/auditService"
 import type { AuditRun, AuditSlot, ScaleValue } from "@/src/audit/types"
 
 const CPH = "Europe/Copenhagen"
@@ -93,6 +93,18 @@ describe("buildReview", () => {
     expect(r.bestHours).toEqual([{ hour: 8, energy: 3.5, answers: 4 }])
   })
 
+  it("averages energy per hour over growth answers only (above 4) for the hours to put hard work in", () => {
+    // 08:00: four growth answers; 09:00: four answers, only two of them growth.
+    const slots = [0, 1, 2, 3].map((q) => slot(q, "Work", 5, 6)).concat([4, 5].map((q) => slot(q, "Work", 3, 5)), [6, 7].map((q) => slot(q, "Series", 7, 2)))
+    const r = buildReview(slots, run(), CPH)
+    expect(r.workHours).toEqual([{ hour: 8, energy: 5, answers: 4 }])
+  })
+
+  it("counts the minutes marked avoiding per activity", () => {
+    const r = buildReview([slot(0, "Email", 3, 3, { avoiding: true }), slot(1, "Email", 3, 3), slot(2, "Email", 3, 3, { avoiding: true })], run(), CPH)
+    expect(r.groups[0].avoidingMinutes).toBe(30)
+  })
+
   it("does not count answers after the end", () => {
     // quarter 60 is after End now.
     const r = buildReview([slot(60, "After", 4, 4), slot(0, "Email", 4, 4)], run(), CPH)
@@ -121,7 +133,7 @@ describe("buildReview", () => {
 
   it("is an empty review that says so when nothing was answered", () => {
     const r = buildReview([], run(), CPH)
-    expect(r).toMatchObject({ answered: 0, hours: 0, groups: [], bestHours: [], shares: { more: 0, costs: 0, cut: 0, fun: 0 } })
+    expect(r).toMatchObject({ answered: 0, hours: 0, groups: [], bestHours: [], workHours: [], shares: { more: 0, costs: 0, cut: 0, fun: 0 } })
   })
 
   it("takes 1,400 answers without a cap", () => {
@@ -132,5 +144,21 @@ describe("buildReview", () => {
     const r = buildReview(unique, long, CPH)
     expect(r.answered).toBe(unique.length)
     expect(r.possibleQuarters).toBe(14 * 56)
+  })
+})
+
+describe("one meaning per word (alpha fast-review-04, picky-eye-05)", () => {
+  it("never gives a box the name of a choice", () => {
+    const choices = new Set(Object.values(CHOICE_NAMES).map((n) => n.toLowerCase()))
+    for (const name of Object.values(BOX_NAMES)) expect(choices.has(name.toLowerCase())).toBe(false)
+  })
+
+  it("pre-fills Do more for an activity in the top box until another choice is made", () => {
+    const r = buildReview([slot(0, "Daygame", 6, 6), slot(1, "Series", 6, 2)], run(), CPH)
+    const [daygame, series] = [r.groups.find((g) => g.label === "Daygame")!, r.groups.find((g) => g.label === "Series")!]
+    expect(choiceFor(daygame, {})).toBe("more")
+    expect(choiceFor(daygame, { daygame: "keep" })).toBe("keep")
+    expect(choiceFor(series, {})).toBe(null)
+    expect(choiceFor(series, { series: "more" })).toBe("more")
   })
 })

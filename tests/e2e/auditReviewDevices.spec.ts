@@ -62,8 +62,10 @@ async function addBlock(page: Page, day: number, what: string, start: number, en
   await page.getByTestId("perfect-week").getByTestId(`week-add-${day}`).click()
   const sheet = page.getByTestId("week-block-sheet")
   await sheet.getByTestId("week-what").fill(what)
-  await sheet.getByTestId("week-end").selectOption(String(end))
+  await sheet.getByRole("radio", { name: "Deep work" }).click()
+  // From first: a new From moves To along with it.
   await sheet.getByTestId("week-start").selectOption(String(start))
+  await sheet.getByTestId("week-end").selectOption(String(end))
   await sheet.getByTestId("week-save").click()
   await expect(sheet).toBeHidden()
 }

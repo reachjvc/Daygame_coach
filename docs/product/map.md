@@ -264,7 +264,8 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   no signal. Two tables, `audit_runs` and `audit_slots`. Replaced Thoughts on 2026-11-09.
   The review of a finished audit ends with **Your perfect week** (Plans/perfect-week.md,
   since 2026-11-09): Martell's planned week, Monday to Sunday, blocks on the quarter hour,
-  with the "Do more" activities and best hours above it; stored in `audit_runs.review.week`.
+  with the "Do more" activities (pre-filled for the top box) and the best and low hours above it;
+  a block can go on several days at once; stored in `audit_runs.review.week`.
 - `notifications/` — **the app's first notifications that reach a closed app**
   (web push), shared plumbing for any slice: devices per browser (only the real
   push services accepted), sends that expire after 10 minutes and replace the last,

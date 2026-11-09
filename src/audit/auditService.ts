@@ -188,12 +188,13 @@ export function checkReview(input: unknown): { review: Review } | { error: strin
  * One change to a review, as a device sends it:
  *   { activity, choice, note, noteWas? }  one activity's choice and note (null / blank clears);
  *                                         `noteWas` is the note the sheet opened with
- *   { block, edit? }                      add a block, or change the one with its id (`edit`: it must still be there)
+ *   { block, edit?, copies? }             add a block, or change the one with its id (`edit`: it must still be there);
+ *                                         `copies`: new blocks on other days, added in the same write
  *   { removeBlock }                       remove one block by id (already gone: no change)
  */
 export type ReviewChange =
   | { activity: string; choice: ReviewChoice | null; note: string; noteWas?: string }
-  | { block: WeekBlock; edit?: boolean }
+  | { block: WeekBlock; edit?: boolean; copies?: WeekBlock[] }
   | { removeBlock: string }
 
 /** Said when another device changed the note after this sheet opened; the page then shows the newer note. */
@@ -227,7 +228,7 @@ export function applyReviewChange(stored: Review, input: unknown): { review: Rev
     else delete next.choices[key]
     if (storableText(note).trim()) next.notes[key] = note
     else delete next.notes[key]
-  } else if (keys === "block" && !("noteWas" in c)) {
+  } else if ((keys === "block" || keys === "block,copies") && !("noteWas" in c)) {
     if (c.edit !== undefined && typeof c.edit !== "boolean") return { error: "Bad edit" }
     const one = checkWeek([c.block])
     if ("error" in one) return one
@@ -236,6 +237,15 @@ export function applyReviewChange(stored: Review, input: unknown): { review: Rev
     if (at >= 0) next.week[at] = block
     else if (c.edit === true) return { error: BLOCK_GONE }
     else next.week.push(block)
+    // The same block on other days (alpha picky-eye-07): all or none, checked with the rest of the week below.
+    if ("copies" in c) {
+      const copies = checkWeek(c.copies)
+      if ("error" in copies) return copies
+      for (const copy of copies.week) {
+        if (next.week.some((b) => b.id === copy.id)) return { error: "Two blocks share an id" }
+        next.week.push(copy)
+      }
+    }
   } else if (keys === "removeBlock" && !("noteWas" in c) && !("edit" in c)) {
     if (typeof c.removeBlock !== "string") return { error: "Bad block id" }
     next.week = next.week.filter((b) => b.id !== c.removeBlock)
@@ -371,11 +381,34 @@ export { isAwake, localMinute }
 /** Martell's four boxes, growth in place of money (D-BOXES). The names are ours. */
 export type Box = "more" | "costs" | "cut" | "fun"
 export const BOXES: readonly Box[] = ["more", "costs", "cut", "fun"]
+/**
+ * Each box says what its activities are like, never what to do with them:
+ * "Do more" and "Cut" are choices (CHOICE_NAMES), and a box that used the
+ * same words read as a choice already made (alpha fast-review-04, picky-eye-05).
+ */
 export const BOX_NAMES: Record<Box, string> = {
-  more: "Do more",
+  more: "Lifts you and builds your life",
   costs: "Worth it, but it costs me",
-  cut: "Cut",
+  cut: "Drains you, builds nothing",
   fun: "Fun that builds nothing",
+}
+
+/** What you will do with an activity (plan Part 1 step 7). */
+export const CHOICE_NAMES: Record<ReviewChoice, string> = {
+  more: "Do more",
+  keep: "Keep",
+  handoff: "Hand off",
+  cut: "Cut",
+  change: "Change how",
+}
+
+/**
+ * The choice an activity shows: the one made, or "Do more" pre-filled for an
+ * activity in the top box until another is made, so the perfect week starts
+ * from what the boxes already show (alpha fast-review-04).
+ */
+export function choiceFor(g: Pick<ReviewGroup, "key" | "box">, choices: Record<string, ReviewChoice>): ReviewChoice | null {
+  return choices[g.key] ?? (g.box === "more" ? "more" : null)
 }
 
 /** Above 4 is high; exactly 4 counts as low. */
@@ -411,6 +444,12 @@ export interface BuiltReview {
   shares: Record<Box, number>
   /** Average energy per local hour, only hours with at least 4 answers. */
   bestHours: { hour: number; energy: number; answers: number }[]
+  /**
+   * The same, counting only answers with growth above 4: the hours to put the
+   * hardest work in are the ones you had energy while building something, not
+   * the evening hours of a favourite series (alpha fast-review-05).
+   */
+  workHours: { hour: number; energy: number; answers: number }[]
 }
 
 const oneDecimal = (n: number) => Math.round(n * 10) / 10
@@ -484,18 +523,22 @@ export function buildReview(slots: readonly AuditSlot[], run: AuditRun, tz: stri
   const boxMinutes: Record<Box, number> = { more: 0, costs: 0, cut: 0, fun: 0 }
   for (const g of groups) boxMinutes[g.box] += g.minutes
 
-  const perHour = new Map<number, { sum: number; n: number }>()
-  for (const s of counted) {
-    const hour = Math.floor(localMinute(Date.parse(s.slotAt), tz) / 60)
-    const h = perHour.get(hour) ?? { sum: 0, n: 0 }
-    h.sum += s.energy
-    h.n++
-    perHour.set(hour, h)
+  const energyByHour = (from: readonly AuditSlot[]) => {
+    const perHour = new Map<number, { sum: number; n: number }>()
+    for (const s of from) {
+      const hour = Math.floor(localMinute(Date.parse(s.slotAt), tz) / 60)
+      const h = perHour.get(hour) ?? { sum: 0, n: 0 }
+      h.sum += s.energy
+      h.n++
+      perHour.set(hour, h)
+    }
+    return [...perHour.entries()]
+      .filter(([, h]) => h.n >= BEST_HOURS_MIN)
+      .sort((a, b) => a[0] - b[0])
+      .map(([hour, h]) => ({ hour, energy: oneDecimal(h.sum / h.n), answers: h.n }))
   }
-  const bestHours = [...perHour.entries()]
-    .filter(([, h]) => h.n >= BEST_HOURS_MIN)
-    .sort((a, b) => a[0] - b[0])
-    .map(([hour, h]) => ({ hour, energy: oneDecimal(h.sum / h.n), answers: h.n }))
+  const bestHours = energyByHour(counted)
+  const workHours = energyByHour(counted.filter((s) => s.growth > 4))
 
   return {
     possibleQuarters: possible.size,
@@ -505,5 +548,6 @@ export function buildReview(slots: readonly AuditSlot[], run: AuditRun, tz: stri
     groups,
     shares: wholeShares(boxMinutes),
     bestHours,
+    workHours,
   }
 }

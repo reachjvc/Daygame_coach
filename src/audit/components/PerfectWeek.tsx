@@ -20,7 +20,7 @@ import { hhmm as minuteLabel } from "@/src/notifications/quietHours"
 import type { ReviewGroup } from "../auditService"
 import { TimeTile } from "./SettingsSheet"
 import type { WeekBlock, WeekKind } from "../types"
-import { bestHoursText, checkWeek, DAY_NAMES, DAY_SHORT, freeSlot, hoursByKind, WEEK_KIND_NAMES, WEEK_KINDS, WEEK_WHAT_MAX } from "../weekService"
+import { checkWeek, DAY_NAMES, DAY_SHORT, freeSlot, hoursByKind, kindFor, MARTELL_STEPS, planHours, shiftedEnd, spreadBlock, WEEK_KIND_NAMES, WEEK_KINDS, WEEK_WHAT_MAX } from "../weekService"
 
 const KIND_BAR: Record<WeekKind, string> = {
   deep: "bg-sky-500",
@@ -30,15 +30,6 @@ const KIND_BAR: Record<WeekKind, string> = {
   admin: "bg-slate-400",
   rest: "bg-violet-400",
 }
-
-const STEPS: { title: string; text: string }[] = [
-  { title: "Big rocks first", text: "Put in the weekly musts before anything else: deep work, workouts, time with people who matter." },
-  { title: "Plan around your energy", text: "Hardest work in your best hours; admin and calls in your low ones." },
-  { title: "Batch the same kind of work", text: "Group similar tasks into one block of two to three hours." },
-  { title: "Block the hobbies", text: "Workouts get fixed blocks. His rule: never miss two days in a row." },
-  { title: "No extra time", text: "Pair two things in one slot: calls while walking, an audiobook at the gym." },
-  { title: "Say no often", text: "What has no room in this week gets a no." },
-]
 
 /** Quarter-hour times for the pickers. */
 const STARTS = Array.from({ length: 96 }, (_, i) => i * 15)
@@ -56,15 +47,22 @@ function newId(): string {
 
 interface Draft {
   id: string | null
+  /** The day the block is on now (for a new block, the day whose + Block was tapped). */
   day: number
+  /** Every day it goes on: one block per day (alpha picky-eye-07). */
+  days: number[]
   start: number
   end: number
   what: string
-  kind: WeekKind
+  /** Null until picked: never assumed (alpha picky-eye-06). */
+  kind: WeekKind | null
+  /** True while the kind was filled in from a block of the same name, so a new name may change it. */
+  kindFromName: boolean
 }
 
 function BlockSheet({
   draft,
+  week,
   suggestions,
   bestHours,
   onClose,
@@ -72,6 +70,7 @@ function BlockSheet({
   onDelete,
 }: {
   draft: Draft | null
+  week: readonly WeekBlock[]
   suggestions: string[]
   bestHours: string | null
   onClose: () => void
@@ -92,6 +91,17 @@ function BlockSheet({
     setD({ ...d, ...patch })
     setState("idle")
   }
+  // A name already in the week brings its kind along, unless a kind was picked by hand.
+  const setWhat = (what: string) => {
+    if (d.kind !== null && !d.kindFromName) return set({ what })
+    const kind = kindFor(week, what)
+    set({ what, kind, kindFromName: kind !== null })
+  }
+  const toggleDay = (day: number) => {
+    if (d.days.includes(day)) {
+      if (d.days.length > 1) set({ days: d.days.filter((x) => x !== day) })
+    } else set({ days: [...d.days, day].sort((a, b) => a - b) })
+  }
   const run = async (fn: () => Promise<string | null>) => {
     setState("saving")
     const failed = await fn()
@@ -109,14 +119,14 @@ function BlockSheet({
             value={d.what}
             maxLength={WEEK_WHAT_MAX}
             placeholder="Write the book, Gym, Daygame…"
-            onChange={(e) => set({ what: e.target.value })}
+            onChange={(e) => setWhat(e.target.value)}
             className="mt-1.5 h-11 w-full rounded-lg border border-border bg-background px-3 text-base"
             data-testid="week-what"
           />
           {suggestions.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5" aria-label="From your Do more list">
               {suggestions.map((s) => (
-                <button key={s} type="button" onClick={() => set({ what: s.slice(0, WEEK_WHAT_MAX) })} className="h-9 max-w-full truncate rounded-full border border-emerald-500/50 bg-emerald-500/10 px-3 text-sm">
+                <button key={s} type="button" onClick={() => setWhat(s.slice(0, WEEK_WHAT_MAX))} className="h-9 max-w-full truncate rounded-full border border-emerald-500/50 bg-emerald-500/10 px-3 text-sm">
                   {s}
                 </button>
               ))}
@@ -133,7 +143,7 @@ function BlockSheet({
                 type="button"
                 role="radio"
                 aria-checked={d.kind === k}
-                onClick={() => set({ kind: k })}
+                onClick={() => set({ kind: k, kindFromName: false })}
                 className={cn("flex h-10 items-center gap-1.5 rounded-full border px-3 text-sm", d.kind === k ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background/60 hover:bg-muted/50")}
               >
                 <span className={cn("size-2 rounded-full", KIND_BAR[k])} aria-hidden />
@@ -141,21 +151,25 @@ function BlockSheet({
               </button>
             ))}
           </div>
+          {d.kind === null && <p className="mt-2 text-xs text-muted-foreground">Pick one, so the week&apos;s totals count it right.</p>}
           {d.kind === "deep" && bestHours && <p className="mt-2 text-xs text-muted-foreground">Your best hours in this audit: {bestHours}.</p>}
         </fieldset>
 
         <fieldset>
-          <legend className="text-sm font-medium">Day</legend>
-          <div className="mt-2 grid grid-cols-7 gap-1" role="radiogroup" aria-label="Day">
+          <legend className="text-sm font-medium">
+            Days <span className="font-normal text-muted-foreground">(tap more than one to repeat it)</span>
+          </legend>
+          <div className="mt-2 grid grid-cols-7 gap-1" role="group" aria-label="Days">
             {DAY_SHORT.map((name, i) => (
               <button
                 key={name}
                 type="button"
-                role="radio"
-                aria-checked={d.day === i}
+                role="checkbox"
+                aria-checked={d.days.includes(i)}
                 aria-label={DAY_NAMES[i]}
-                onClick={() => set({ day: i })}
-                className={cn("h-10 rounded-lg border text-sm", d.day === i ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background/60")}
+                onClick={() => toggleDay(i)}
+                className={cn("h-10 rounded-lg border text-sm", d.days.includes(i) ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background/60")}
+                data-testid={`week-day-pick-${i}`}
               >
                 {name}
               </button>
@@ -164,7 +178,7 @@ function BlockSheet({
         </fieldset>
 
         <div className="flex gap-3">
-          <TimeTile id="week-start" label="From" value={d.start} options={STARTS} onChange={(start) => set({ start })} />
+          <TimeTile id="week-start" label="From" value={d.start} options={STARTS} onChange={(start) => set({ start, end: shiftedEnd(d.start, d.end, start) })} />
           <TimeTile id="week-end" label="To" value={d.end} options={ENDS} onChange={(end) => set({ end })} />
         </div>
 
@@ -176,7 +190,7 @@ function BlockSheet({
 
         <div className="flex gap-2">
           <Button className="flex-1" disabled={state === "saving"} onClick={() => void run(() => onSave(d))} data-testid="week-save">
-            {state === "saving" ? "Saving…" : "Save"}
+            {state === "saving" ? "Saving…" : d.days.length > 1 ? `Save on ${d.days.length} days` : "Save"}
           </Button>
           {d.id && (
             <Button variant="outline" disabled={state === "saving"} onClick={() => void run(() => onDelete(d.id as string))} data-testid="week-delete">
@@ -193,6 +207,7 @@ export function PerfectWeek({
   week,
   doMore,
   bestHours,
+  workHours,
   onSaveBlock,
   onRemoveBlock,
 }: {
@@ -200,17 +215,20 @@ export function PerfectWeek({
   /** The activities marked "Do more" in this review, most frequent first. */
   doMore: ReviewGroup[]
   bestHours: { hour: number; energy: number; answers: number }[]
+  /** Energy per hour over growth answers only (buildReview `workHours`). */
+  workHours: { hour: number; energy: number; answers: number }[]
   /**
    * Saves one block; `edit` when it changes a block already there (refused if
    * another device removed it meanwhile, rather than adding it back). Resolves
    * to an error a person can read, or null. Only that block is sent, so blocks
    * saved on another device stay.
    */
-  onSaveBlock: (block: WeekBlock, edit: boolean) => Promise<string | null>
+  onSaveBlock: (block: WeekBlock, edit: boolean, copies: WeekBlock[]) => Promise<string | null>
   onRemoveBlock: (id: string) => Promise<string | null>
 }) {
   const [draft, setDraft] = useState<Draft | null>(null)
-  const best = bestHoursText(bestHours)
+  const hours = planHours(workHours, bestHours)
+  const best = hours.best
   const totals = useMemo(() => hoursByKind(week), [week])
   const from = barStart(week)
   const span = 24 * 60 - from
@@ -219,16 +237,18 @@ export function PerfectWeek({
   const add = (day: number) => {
     const slot = freeSlot(week, day)
     if (!slot) return
-    setDraft({ id: null, day, start: slot.start, end: slot.end, what: "", kind: "deep" })
+    setDraft({ id: null, day, days: [day], start: slot.start, end: slot.end, what: "", kind: null, kindFromName: false })
   }
 
   const save = async (d: Draft): Promise<string | null> => {
-    const block: WeekBlock = { id: d.id ?? newId(), day: d.day, start: d.start, end: d.end, what: d.what, kind: d.kind }
-    const next = d.id ? week.map((b) => (b.id === d.id ? block : b)) : [...week, block]
+    if (!d.what.trim()) return "Say what the block is for"
+    if (d.kind === null) return "Pick a kind"
+    const [block, ...copies] = spreadBlock({ id: d.id ?? newId(), day: d.day, start: d.start, end: d.end, what: d.what, kind: d.kind }, d.days, newId)
+    const next = [...(d.id ? week.map((b) => (b.id === d.id ? block : b)) : [...week, block]), ...copies]
     // Checked here first so a mistake (an overlap, an empty name) is said at once, in the sheet, without a round trip.
     const checked = checkWeek(next)
     if ("error" in checked) return checked.error
-    const failed = await onSaveBlock(block, d.id !== null)
+    const failed = await onSaveBlock(block, d.id !== null, copies)
     if (!failed) setDraft(null)
     return failed
   }
@@ -253,15 +273,31 @@ export function PerfectWeek({
             Do more: <span className="font-medium">{suggestions.join(" · ")}</span>
           </p>
         ) : (
-          <p className="text-muted-foreground">Mark activities &quot;Do more&quot; above; they show here as the first things to put in your week.</p>
+          <p className="text-muted-foreground">No activity is set to &quot;Do more&quot; yet. Open one above and choose Do more; it shows here as a first thing to put in your week.</p>
         )}
-        <p>{best ? <>Your best hours: <span className="font-medium tabular-nums">{best}</span>. Put your hardest work there.</> : <span className="text-muted-foreground">Not enough answers yet to name your best hours.</span>}</p>
+        <p data-testid="week-best-hours">
+          {best ? (
+            <>
+              Best hours, for your hardest work: <span className="font-medium tabular-nums">{best}</span>.
+            </>
+          ) : (
+            <span className="text-muted-foreground">Not enough answers yet to name your best hours.</span>
+          )}
+        </p>
+        {hours.low && (
+          <p data-testid="week-low-hours">
+            Low hours, for admin and calls: <span className="font-medium tabular-nums">{hours.low}</span>.
+          </p>
+        )}
+        <p className="text-xs text-muted-foreground">
+          Best hours are when your energy was highest while doing something that builds your life (growth 5 or more). Low hours are when your energy was lowest, under 4.
+        </p>
       </div>
 
       <details className="mt-3 rounded-xl border border-border bg-card px-3 py-2 text-sm">
         <summary className="cursor-pointer py-1 font-medium">Martell&apos;s steps</summary>
         <ol className="mt-1 list-decimal space-y-1.5 pb-1 pl-5">
-          {STEPS.map((s) => (
+          {MARTELL_STEPS.map((s) => (
             <li key={s.title}>
               <span className="font-medium">{s.title}.</span> <span className="text-muted-foreground">{s.text}</span>
             </li>
@@ -299,7 +335,7 @@ export function PerfectWeek({
                 <ul className="mt-1 divide-y divide-border">
                   {blocks.map((b) => (
                     <li key={b.id}>
-                      <button type="button" onClick={() => setDraft({ ...b })} className="flex min-h-11 w-full items-center gap-2 py-1.5 text-left text-sm hover:bg-muted/40" data-testid="week-block">
+                      <button type="button" onClick={() => setDraft({ ...b, days: [b.day], kindFromName: false })} className="flex min-h-11 w-full items-center gap-2 py-1.5 text-left text-sm hover:bg-muted/40" data-testid="week-block">
                         <span className={cn("size-2.5 shrink-0 rounded-full", KIND_BAR[b.kind])} aria-hidden />
                         <span className="w-[6.5rem] shrink-0 tabular-nums text-muted-foreground">
                           {minuteLabel(b.start)}–{minuteLabel(b.end)}
@@ -325,7 +361,7 @@ export function PerfectWeek({
         </p>
       )}
 
-      <BlockSheet draft={draft} suggestions={suggestions} bestHours={best} onClose={() => setDraft(null)} onSave={save} onDelete={remove} />
+      <BlockSheet draft={draft} week={week} suggestions={suggestions} bestHours={best} onClose={() => setDraft(null)} onSave={save} onDelete={remove} />
     </section>
   )
 }
