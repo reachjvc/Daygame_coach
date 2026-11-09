@@ -16,6 +16,12 @@ Written 2026-11-09. Follows the Assumption Moments page
 - **2026-11-09: Phases 0 and 1 done.** Review page:
   https://claude.ai/artifact/TDRWh1quCTtUKsNZHdC22o (marks in its database,
   collection `notes`, one document per action). Waiting on Phase 2, your review.
+- **2026-11-09: reading view.** Your note: you could not find your way around,
+  and you expected to read whole conversations start to finish. Each
+  conversation now reads as one script, top to bottom. Numbered headings mark
+  the parts. Agree / Change / Unsure comes after each part's lines, and the full
+  reading and note boxes fold underneath. A Next button sits at the end. Same
+  link; saved marks are kept.
 - Data, readings and the page source are in
   `~/.cache/daygame-research/conversation-map/social-stoic/`, not in this repo.
 
