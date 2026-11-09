@@ -13,7 +13,7 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { AuditRefused, AuditRunNotFound, changeReview, readRuns, updateRun, type RunPatch } from "@/src/db/auditRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
-import { applyReviewChange, checkQuiet, checkReview, muteUntil, MUTE_OPTIONS, runIsOpen, type MuteOption } from "@/src/audit/auditService"
+import { applyReviewChange, applyReviewParts, checkQuiet, muteUntil, MUTE_OPTIONS, runIsOpen, type MuteOption } from "@/src/audit/auditService"
 import { isUuid } from "@/src/shared/ids"
 import { refuseCrossSite } from "@/src/audit/requestGuard"
 
@@ -56,16 +56,11 @@ export async function PATCH(req: Request, { params }: RouteParams) {
       if ("error" in changed) return NextResponse.json({ error: changed.error }, { status: 400 })
       return NextResponse.json({ run: changed })
     } else if ("review" in body) {
-      const review = checkReview(body.review)
-      if ("error" in review) return NextResponse.json({ error: review.error }, { status: 400 })
-      // A part the request leaves out keeps what is stored: a page from before the
-      // perfect week sends no week, and must not wipe it (code review, 2026-11-09).
-      const sent = body.review as Record<string, unknown>
-      patch.review = {
-        choices: "choices" in sent ? review.review.choices : run.review.choices,
-        notes: "notes" in sent ? review.review.notes : run.review.notes,
-        week: "week" in sent ? review.review.week : run.review.week,
-      }
+      // A page from before reviewChange: the parts it sends replace what is stored, the rest stays
+      // as stored at the moment of writing, with the same check as reviewChange (review 2026-11-09).
+      const changed = await changeReview(auth.userId, id, (stored) => applyReviewParts(stored, body.review))
+      if ("error" in changed) return NextResponse.json({ error: changed.error }, { status: 400 })
+      return NextResponse.json({ run: changed })
     } else {
       return NextResponse.json({ error: "Send a change" }, { status: 400 })
     }

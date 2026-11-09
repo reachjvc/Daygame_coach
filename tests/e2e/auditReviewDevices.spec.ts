@@ -118,6 +118,92 @@ test("blocks, choices and notes saved on two devices at once all stay", async ({
   }
 })
 
+test("a stale sheet never overwrites a newer note, nor brings back a block removed elsewhere", async ({ page, browser, account }) => {
+  test.setTimeout(150_000) // two devices, a reload, and five saves
+  const id = await seedEndedRun(account.id)
+  await openReview(page)
+  const { viewport, userAgent, deviceScaleFactor, isMobile, hasTouch } = devices["Pixel 7"]
+  const phoneCtx = await browser.newContext({ viewport, userAgent, deviceScaleFactor, isMobile, hasTouch, storageState: account.storageState })
+  try {
+    const phone = await phoneCtx.newPage()
+    await openReview(phone)
+    await addBlock(page, 0, "Write the book", 540, 720)
+
+    // PC opens the Daygame sheet; the phone then saves a note for Daygame.
+    await page.getByTestId("review-activity").filter({ hasText: "Daygame" }).first().click()
+    const sheet = page.getByTestId("review-activity-sheet")
+    await expect(sheet.getByTestId("review-note")).toHaveValue("")
+    await choose(phone, "Daygame", "Do more", "Mornings")
+    await sheet.getByRole("radio", { name: "Keep", exact: true }).click()
+    await sheet.getByTestId("review-note").fill("Evenings")
+    await sheet.getByTestId("review-save").click()
+    await expect(sheet.getByRole("alert")).toContainText("changed on another device")
+    await expect(sheet.getByTestId("review-note")).toHaveValue("Mornings")
+    expect((await stored(id)).notes).toEqual({ daygame: "Mornings" })
+    // Saving again now, knowingly, goes through.
+    await sheet.getByTestId("review-note").fill("Mornings and evenings")
+    await sheet.getByTestId("review-save").click()
+    await expect(sheet.getByTestId("review-saved")).toBeVisible()
+    expect((await stored(id)).notes).toEqual({ daygame: "Mornings and evenings" })
+    await page.keyboard.press("Escape")
+
+    // PC opens its block; the phone (opened again, so it sees it) removes it; PC's save is refused, not re-added.
+    await page.getByTestId("perfect-week").getByTestId("week-block").filter({ hasText: "Write the book" }).click()
+    const blockSheet = page.getByTestId("week-block-sheet")
+    await openReview(phone)
+    await phone.getByTestId("week-block").filter({ hasText: "Write the book" }).click()
+    await phone.getByTestId("week-block-sheet").getByTestId("week-delete").click()
+    await expect(phone.getByTestId("week-block-sheet")).toBeHidden()
+    await blockSheet.getByTestId("week-what").fill("Write the book, chapter 2")
+    await blockSheet.getByTestId("week-save").click()
+    await expect(blockSheet.getByTestId("week-error")).toContainText("removed on another device")
+    expect((await stored(id)).week).toEqual([])
+  } finally {
+    await phoneCtx.close()
+  }
+})
+
+test("a week this version cannot read survives a choice saved over it", async ({ page, account }) => {
+  const id = await seedEndedRun(account.id)
+  const oldWeek = [{ id: "x", day: 9, start: 0, end: 15, what: "Old shape", kind: "deep" }]
+  expect((await stackAdmin().from("audit_runs").update({ review: { choices: {}, notes: {}, week: oldWeek } }).eq("id", id)).error).toBeNull()
+  await openReview(page)
+  await choose(page, "Gym", "Keep", "")
+  const review = await stored(id)
+  expect(review.choices).toEqual({ gym: "keep" })
+  expect(review.week).toEqual(oldWeek)
+})
+
+test("a page from before reviewChange, saving at the same moment, keeps every block", async ({ page, account }) => {
+  const id = await seedEndedRun(account.id)
+  await openReview(page)
+  const sends = [
+    ...Array.from({ length: 5 }, (_, i) =>
+      page.request.patch(`/api/audit/runs/${id}`, { data: { reviewChange: { block: { id: `b${i}`, day: i, start: 60, end: 120, what: `Block ${i}`, kind: "deep" } } } }),
+    ),
+    page.request.patch(`/api/audit/runs/${id}`, { data: { review: { notes: { gym: "old page" } } } }),
+  ]
+  for (const res of await Promise.all(sends)) expect(res.status()).toBe(200)
+  const review = await stored(id)
+  expect(review.week.map((b) => b.what).sort()).toEqual(["Block 0", "Block 1", "Block 2", "Block 3", "Block 4"])
+  expect(review.notes).toEqual({ gym: "old page" })
+})
+
+test("on one device, choices made one after another without waiting for Saved all stay (picky-eye-01)", async ({ page, account }) => {
+  const id = await seedEndedRun(account.id)
+  await openReview(page)
+  const sheet = page.getByTestId("review-activity-sheet")
+  for (const [activity, choice] of [["Scrolling", "Cut"], ["Daygame", "Do more"], ["Gym", "Keep"]] as const) {
+    await page.getByTestId("review-activity").filter({ hasText: activity }).first().click()
+    await expect(sheet).toContainText(activity)
+    await sheet.getByRole("radio", { name: choice, exact: true }).click()
+    await sheet.getByTestId("review-save").click()
+    await page.keyboard.press("Escape") // closed before "Saved" shows
+    await expect(sheet).toBeHidden()
+  }
+  await expect.poll(async () => (await stored(id)).choices).toEqual({ scrolling: "cut", daygame: "more", gym: "keep" })
+})
+
 test("ten changes sent at the same moment all land", async ({ page, account }) => {
   const id = await seedEndedRun(account.id)
   await openReview(page)

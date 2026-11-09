@@ -200,8 +200,13 @@ export function PerfectWeek({
   /** The activities marked "Do more" in this review, most frequent first. */
   doMore: ReviewGroup[]
   bestHours: { hour: number; energy: number; answers: number }[]
-  /** Saves one block (new, or changed by its id); resolves to an error a person can read, or null. Only that block is sent, so blocks saved on another device stay. */
-  onSaveBlock: (block: WeekBlock) => Promise<string | null>
+  /**
+   * Saves one block; `edit` when it changes a block already there (refused if
+   * another device removed it meanwhile, rather than adding it back). Resolves
+   * to an error a person can read, or null. Only that block is sent, so blocks
+   * saved on another device stay.
+   */
+  onSaveBlock: (block: WeekBlock, edit: boolean) => Promise<string | null>
   onRemoveBlock: (id: string) => Promise<string | null>
 }) {
   const [draft, setDraft] = useState<Draft | null>(null)
@@ -223,7 +228,7 @@ export function PerfectWeek({
     // Checked here first so a mistake (an overlap, an empty name) is said at once, in the sheet, without a round trip.
     const checked = checkWeek(next)
     if ("error" in checked) return checked.error
-    const failed = await onSaveBlock(block)
+    const failed = await onSaveBlock(block, d.id !== null)
     if (!failed) setDraft(null)
     return failed
   }

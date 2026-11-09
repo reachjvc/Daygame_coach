@@ -17,7 +17,7 @@
 
 import type { AnswerSource, AuditAnswer, AuditRun, AuditSlot, Review, ScaleValue } from "@/src/audit/types"
 import { normalizePhrase } from "@/src/shared/textMatch"
-import { checkWeek } from "@/src/audit/weekService"
+import { nextReviewVersion, readStoredReview, reviewToStore } from "@/src/audit/auditService"
 import { readAllRows } from "./paging"
 import { createAdminSupabaseClient, createServerSupabaseClient } from "./supabase"
 
@@ -67,14 +67,8 @@ const SLOT_COLUMNS = "id, run_id, slot_at, activity, energy, growth, avoiding, w
 const iso = (value: string): string => new Date(value).toISOString()
 
 function toReview(raw: unknown): Review {
-  const r = (raw && typeof raw === "object" ? raw : {}) as { choices?: unknown; notes?: unknown; week?: unknown }
-  // A stored week was checked on the way in; anything unreadable shows as an empty week rather than breaking the review.
-  const week = checkWeek(r.week ?? [])
-  return {
-    choices: (r.choices && typeof r.choices === "object" ? r.choices : {}) as Review["choices"],
-    notes: (r.notes && typeof r.notes === "object" ? r.notes : {}) as Review["notes"],
-    week: "week" in week ? week.week : [],
-  }
+  // A part stored in a shape this version refuses shows as empty rather than breaking the review; changeReview never writes over it.
+  return readStoredReview(raw).review
 }
 
 function toRun(r: RunRow): AuditRun {
@@ -242,11 +236,16 @@ export async function changeReview(userId: string, runId: string, edit: ReviewEd
     if (read.error) throw new Error(`Failed to read the review: ${read.error.message}`)
     if (!read.data) throw new AuditRunNotFound()
     const row = read.data as { review: unknown; updated_at: string }
-    const next = edit(toReview(row.review))
+    const before = toReview(row.review)
+    const next = edit(before)
     if ("error" in next) return next
+    // A part that could not be read goes back exactly as stored; a change to it is refused.
+    const value = reviewToStore(row.review, before, next.review)
+    if ("error" in value) return value
     const { data, error } = await supabase
       .from("audit_runs")
-      .update({ review: next.review, updated_at: new Date().toISOString() })
+      // Always later than the stamp read, so a writer that read before this one fails its check.
+      .update({ review: value.value, updated_at: nextReviewVersion(row.updated_at, new Date()) })
       .eq("user_id", userId)
       .eq("id", runId)
       .eq("updated_at", row.updated_at)

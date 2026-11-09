@@ -14,12 +14,13 @@
  */
 
 import { ArrowLeft, Check } from "lucide-react"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { BottomSheet } from "@/components/BottomSheet"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { AuditCallError, type AuditView } from "../auditClient"
-import { BOX_NAMES, buildReview, REVIEW_NOTE_MAX, type Box, type BuiltReview, type ReviewChange, type ReviewGroup } from "../auditService"
+import { BOX_NAMES, buildReview, REVIEW_NOTE_MAX, type Box, type BuiltReview, NOTE_CHANGED, type ReviewChange, type ReviewGroup } from "../auditService"
+import { storableText } from "../requestGuard"
 import { clockLabel } from "../quarterService"
 import { REVIEW_CHOICES, type AuditRun, type Review, type ReviewChoice, type WeekBlock } from "../types"
 import type { AuditState } from "../hooks/useAudit"
@@ -191,21 +192,39 @@ function ActivitySheet({
   review: Review
   timezone: string
   onClose: () => void
-  onSave: (key: string, choice: ReviewChoice | null, note: string) => Promise<string | null>
+  /** `noteWas`: the stored note this sheet last saw; the save is refused (NOTE_CHANGED) if another device changed it since. */
+  onSave: (key: string, choice: ReviewChoice | null, note: string, noteWas: string) => Promise<string | null>
 }) {
   const [choice, setChoice] = useState<ReviewChoice | null>(null)
   const [note, setNote] = useState("")
+  // The stored note this sheet last saw, and whether a save was refused because another device changed it.
+  const [noteWas, setNoteWas] = useState("")
+  const [noteStale, setNoteStale] = useState(false)
   const [state, setState] = useState<"idle" | "saving" | "saved" | { error: string }>("idle")
   // Reset when another activity opens, not when the saved review comes back
   // (that would wipe the "Saved" the person just saw).
   const key = group?.key ?? null
+  const openKey = useRef<string | null>(null)
+  useEffect(() => {
+    openKey.current = key
+  }, [key])
   useEffect(() => {
     if (key === null) return
     setChoice(review.choices[key] ?? null)
     setNote(review.notes[key] ?? "")
+    setNoteWas(review.notes[key] ?? "")
+    setNoteStale(false)
     setState("idle")
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
+  // Refused because another device changed the note: once the review is read again, show the newer note.
+  const storedNote = key === null ? "" : (review.notes[key] ?? "")
+  useEffect(() => {
+    if (!noteStale) return
+    setNote(storedNote)
+    setNoteWas(storedNote)
+    setNoteStale(false)
+  }, [noteStale, storedNote])
   if (!group) return null
   return (
     <BottomSheet open onClose={onClose} title={group.label.length > 32 ? `${group.label.slice(0, 30)}…` : group.label} testId="review-activity-sheet">
@@ -276,7 +295,13 @@ function ActivitySheet({
               disabled={state === "saving"}
               onClick={async () => {
                 setState("saving")
-                const failed = await onSave(group.key, choice, note)
+                const savedFor = group.key
+                const failed = await onSave(savedFor, choice, note, noteWas)
+                // Closed and another activity opened meanwhile: this answer is not about the sheet now shown.
+                if (openKey.current !== savedFor) return
+                if (failed === NOTE_CHANGED) setNoteStale(true)
+                // What the server stores for this note now (blank clears it), so a second save from this sheet is not refused.
+                else if (!failed) setNoteWas(storableText(note).trim() ? storableText(note) : "")
                 setState(failed ? { error: failed } : "saved")
               }}
               data-testid="review-save"
@@ -291,7 +316,7 @@ function ActivitySheet({
           </div>
           {typeof state === "object" && (
             <p className="mt-2 text-sm text-destructive" role="alert">
-              Not saved: {state.error}. Your choice and note are still here; try again.
+              Not saved: {state.error}.{state.error === NOTE_CHANGED ? " Your choice is still here." : " Your choice and note are still here; try again."}
             </p>
           )}
         </section>
@@ -345,8 +370,8 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
     await load()
     return failed
   }
-  const save = (key: string, choice: ReviewChoice | null, note: string) => send({ activity: key, choice, note })
-  const saveBlock = (block: WeekBlock) => send({ block })
+  const save = (key: string, choice: ReviewChoice | null, note: string, noteWas: string) => send({ activity: key, choice, note, noteWas })
+  const saveBlock = (block: WeekBlock, edit: boolean) => send({ block, edit })
   const removeBlock = (id: string) => send({ removeBlock: id })
 
   const back = (

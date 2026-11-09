@@ -146,14 +146,22 @@ export function checkReview(input: unknown): { review: Review } | { error: strin
 
 /**
  * One change to a review, as a device sends it:
- *   { activity, choice, note }  one activity's choice and note (null / blank clears)
- *   { block }                   add a block, or change the one with its id
- *   { removeBlock }             remove one block by id (already gone: no change)
+ *   { activity, choice, note, noteWas? }  one activity's choice and note (null / blank clears);
+ *                                         `noteWas` is the note the sheet opened with
+ *   { block, edit? }                      add a block, or change the one with its id (`edit`: it must still be there)
+ *   { removeBlock }                       remove one block by id (already gone: no change)
  */
 export type ReviewChange =
-  | { activity: string; choice: ReviewChoice | null; note: string }
-  | { block: WeekBlock }
+  | { activity: string; choice: ReviewChoice | null; note: string; noteWas?: string }
+  | { block: WeekBlock; edit?: boolean }
   | { removeBlock: string }
+
+/** Said when another device changed the note after this sheet opened; the page then shows the newer note. */
+export const NOTE_CHANGED = "This note was changed on another device. The newer note is shown now; change it and save again"
+/** Said when the block being changed was removed on another device; saving would bring it back. */
+export const BLOCK_GONE = "This block was removed on another device"
+/** Said when part of the stored review is in a shape this version cannot read: nothing is written over it. */
+export const REVIEW_UNREADABLE = "Part of this review was saved in a shape this page cannot read, so nothing was changed"
 
 /**
  * Apply one change to the review AS STORED, so two devices on one review never
@@ -165,32 +173,109 @@ export type ReviewChange =
 export function applyReviewChange(stored: Review, input: unknown): { review: Review } | { error: string } {
   if (!input || typeof input !== "object" || Array.isArray(input)) return { error: "Send one change" }
   const c = input as Record<string, unknown>
-  const keys = Object.keys(c).sort().join(",")
+  const keys = Object.keys(c).filter((k) => k !== "noteWas" && k !== "edit").sort().join(",")
   const next: Review = { choices: { ...stored.choices }, notes: { ...stored.notes }, week: [...stored.week] }
-  if (keys === "activity,choice,note") {
-    const { activity, choice, note } = c
+  if (keys === "activity,choice,note" && !("edit" in c)) {
+    const { activity, choice, note, noteWas } = c
     if (typeof activity !== "string" || activity.length < 1 || activity.length > ACTIVITY_MAX) return { error: "Bad activity key" }
     if (choice !== null && (typeof choice !== "string" || !(REVIEW_CHOICES as readonly string[]).includes(choice))) return { error: "Unknown choice" }
     if (typeof note !== "string" || note.length > REVIEW_NOTE_MAX) return { error: `A note can be at most ${REVIEW_NOTE_MAX} characters` }
+    if (noteWas !== undefined && typeof noteWas !== "string") return { error: "Bad note" }
     const key = storableText(activity) || activity
+    if (typeof noteWas === "string" && (stored.notes[key] ?? "") !== noteWas) return { error: NOTE_CHANGED }
     if (choice) next.choices[key] = choice as ReviewChoice
     else delete next.choices[key]
     if (storableText(note).trim()) next.notes[key] = note
     else delete next.notes[key]
-  } else if (keys === "block") {
+  } else if (keys === "block" && !("noteWas" in c)) {
+    if (c.edit !== undefined && typeof c.edit !== "boolean") return { error: "Bad edit" }
     const one = checkWeek([c.block])
     if ("error" in one) return one
     const block = one.week[0]
     const at = next.week.findIndex((b) => b.id === block.id)
     if (at >= 0) next.week[at] = block
+    else if (c.edit === true) return { error: BLOCK_GONE }
     else next.week.push(block)
-  } else if (keys === "removeBlock") {
+  } else if (keys === "removeBlock" && !("noteWas" in c) && !("edit" in c)) {
     if (typeof c.removeBlock !== "string") return { error: "Bad block id" }
     next.week = next.week.filter((b) => b.id !== c.removeBlock)
   } else {
     return { error: "Send one change" }
   }
   return checkReview(next)
+}
+
+/**
+ * A page from before `reviewChange` sends whole parts (`{ choices?, notes?, week? }`).
+ * Only the parts sent replace what is stored; a part left out keeps what is
+ * stored at the moment of writing, not what the route read earlier.
+ */
+export function applyReviewParts(stored: Review, input: unknown): { review: Review } | { error: string } {
+  const checked = checkReview(input)
+  if ("error" in checked) return checked
+  const sent = input as Record<string, unknown>
+  return {
+    review: {
+      choices: "choices" in sent ? checked.review.choices : stored.choices,
+      notes: "notes" in sent ? checked.review.notes : stored.notes,
+      week: "week" in sent ? checked.review.week : stored.week,
+    },
+  }
+}
+
+type ReviewPart = keyof Review
+const REVIEW_PARTS: readonly ReviewPart[] = ["choices", "notes", "week"]
+const isPlainObject = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v)
+
+/**
+ * The review as stored, for showing and changing it, and which parts could not
+ * be read (present, but in a shape this version refuses). An unreadable part
+ * reads as empty, so the screen still opens; `reviewToStore` makes sure it is
+ * never written over.
+ */
+export function readStoredReview(raw: unknown): { review: Review; unreadable: ReviewPart[] } {
+  const r = isPlainObject(raw) ? raw : {}
+  const unreadable: ReviewPart[] = []
+  const week = checkWeek(r.week ?? [])
+  if ("error" in week) unreadable.push("week")
+  if (r.choices !== undefined && !isPlainObject(r.choices)) unreadable.push("choices")
+  if (r.notes !== undefined && !isPlainObject(r.notes)) unreadable.push("notes")
+  return {
+    review: {
+      choices: (isPlainObject(r.choices) ? r.choices : {}) as Review["choices"],
+      notes: (isPlainObject(r.notes) ? r.notes : {}) as Review["notes"],
+      week: "week" in week ? week.week : [],
+    },
+    unreadable: unreadable.sort((a, b) => REVIEW_PARTS.indexOf(a) - REVIEW_PARTS.indexOf(b)),
+  }
+}
+
+/**
+ * What to write after a change: the changed review, with every part that could
+ * not be read carried through exactly as stored (and anything else stored
+ * beside the three parts kept). A change to an unreadable part is refused.
+ */
+export function reviewToStore(raw: unknown, before: Review, after: Review): { value: Record<string, unknown> } | { error: string } {
+  const { unreadable } = readStoredReview(raw)
+  const value: Record<string, unknown> = { ...(isPlainObject(raw) ? raw : {}) }
+  for (const part of REVIEW_PARTS) {
+    if (unreadable.includes(part)) {
+      if (JSON.stringify(after[part]) !== JSON.stringify(before[part])) return { error: REVIEW_UNREADABLE }
+    } else {
+      value[part] = after[part]
+    }
+  }
+  return { value }
+}
+
+/**
+ * The review's next version stamp (`updated_at`): now, but always at least a
+ * millisecond after the one read, so two saves in one millisecond (or a server
+ * clock behind the last writer's) still change it and the next writer's check sees it.
+ */
+export function nextReviewVersion(read: string, now: Date): string {
+  const readMs = Math.floor(Date.parse(read))
+  return new Date(Math.max(now.getTime(), Number.isFinite(readMs) ? readMs + 1 : 0)).toISOString()
 }
 
 export type MuteOption = "30m" | "1h" | "2h" | "morning" | "off"
