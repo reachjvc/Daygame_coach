@@ -48,6 +48,8 @@ describe("the opening's live read", () => {
     expect(live.live).toBe(true)
     expect(live.rows.timetrack_entries.map((e) => e.id)).toEqual([kept])
     expect(live.rows.timetrack_entry_tags.map((link) => link.entry_id)).toEqual([kept])
+    // the link row is the table's own columns, nothing the server joined to filter it
+    expect(Object.keys(live.rows.timetrack_entry_tags[0]).sort()).toEqual(["created_at", "entry_id", "tag_id", "user_id"])
     expect(live.rows.timetrack_workspaces).toHaveLength(1)
     expect(live.rows.timetrack_tags).toHaveLength(1)
 

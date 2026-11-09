@@ -17,7 +17,7 @@
 
 import { createContext } from "react"
 
-import type { EntryDraft, IsoDateTime, TimetrackState } from "../types"
+import type { EntryDraft, Id, IsoDateTime, TimetrackState } from "../types"
 
 /**
  * `run` is handed the workspace as it is now and `tappedAt`, the moment of the
@@ -34,7 +34,8 @@ import type { EntryDraft, IsoDateTime, TimetrackState } from "../types"
  */
 export type AfterCheck = (
   run: (latest: TimetrackState, tappedAt: IsoDateTime) => void,
-  options?: { always?: boolean; keepAsNext?: EntryDraft },
+  /** `stopSeen`: this is a Stop of that entry, kept on disk while it waits (see `keepHeldStop` in TogglLab) */
+  options?: { always?: boolean; keepAsNext?: EntryDraft; stopSeen?: Id | null },
 ) => void
 
 export const AfterCheckContext = createContext<AfterCheck | null>(null)

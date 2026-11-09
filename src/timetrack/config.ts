@@ -40,6 +40,12 @@ export const OFFLINE_BASE_KEY = "toggl-clone:offline-base"
  */
 export const OFFLINE_OWN_ROWS_KEY = "toggl-clone:offline-own-rows"
 /**
+ * A Stop tapped while the tracker was checking, kept until it has run: the
+ * entry it was for, when it was tapped, and whose. The next opening holds it
+ * again for its own check (`keepHeldStop` in TogglLab).
+ */
+export const HELD_STOP_KEY = "toggl-clone:held-stop"
+/**
  * THERE IS DELIBERATELY NO PERSISTED CURSOR, AND THIS IS WHERE SOMEBODY WOULD
  * ADD ONE.
  *

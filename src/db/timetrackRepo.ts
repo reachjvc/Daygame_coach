@@ -39,6 +39,9 @@ function conflictTarget(table: keyof TimetrackRows): string {
 /** Rows per request when reading. The database refuses to return more than 1,000. */
 const PAGE_SIZE = 1000
 
+/** a tag link, joined to its entry only so a live read can leave out a deleted entry's (`pullTimetrackRows`) */
+const LINKS_OF_LIVE_ENTRIES: string = "*, timetrack_entries!inner(id)"
+
 /** Tables with no `updated_at` to compare, so they always come back whole */
 const NO_UPDATED_AT = new Set<keyof TimetrackRows>(["timetrack_entry_tags", "timetrack_webhook_log"])
 
@@ -97,7 +100,20 @@ export async function pullTimetrackRows(userId: string, since?: string | null, o
   const changedAfter = since ? reachBack(since) : null
   const live = options.live === true && !since
 
+  /**
+   * THE LINKS OF A DELETED ENTRY STAY ON THE SERVER TOO.
+   *
+   * A link has no `deleted_at`, so a live read fetched every link and dropped a
+   * deleted entry's here afterwards. With 16,528 deleted entries that was 18,218
+   * links in 19 pages, and a cold open of 4.9 s instead of 2.0 s (heavy-history
+   * audit, Plans/time-tracker-leftovers.md). Joined to its entry (`!inner`) the
+   * server leaves them out; the joined column is taken off again below, and the
+   * filter after the loop stays as the guard it always was.
+   */
+  const linksOfLiveEntries = (table: keyof TimetrackRows) => live && table === "timetrack_entry_tags"
+
   for (const table of TIMETRACK_TABLES) {
+    const linksOnly = linksOfLiveEntries(table)
     /**
      * Read the whole table, a page at a time.
      *
@@ -112,11 +128,12 @@ export async function pullTimetrackRows(userId: string, since?: string | null, o
     for (let from = 0; ; from += PAGE_SIZE) {
       let query = supabase
         .from(table)
-        .select("*")
+        .select(linksOnly ? LINKS_OF_LIVE_ENTRIES : "*")
         .eq("user_id", userId)
         .range(from, from + PAGE_SIZE - 1)
       if (changedAfter && !NO_UPDATED_AT.has(table)) query = query.gt("updated_at", changedAfter)
       if (live && !NO_DELETED_AT.has(table)) query = query.is("deleted_at", null)
+      if (linksOnly) query = query.is("timetrack_entries.deleted_at", null)
       // A stable order, or two pages can return the same row and miss another.
       // Not every table is keyed by `id`: settings has one row per person and
       // the tag links are keyed by the pair they join.
@@ -124,7 +141,10 @@ export async function pullTimetrackRows(userId: string, since?: string | null, o
 
       const { data, error } = await query
       if (error) throw new Error(`Could not read ${table}: ${error.message}`)
-      collected.push(...(data ?? []))
+      for (const row of (data ?? []) as unknown as Record<string, unknown>[]) {
+        if (linksOnly) delete row.timetrack_entries
+        collected.push(row)
+      }
       if (!data || data.length < PAGE_SIZE) break
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -133,6 +153,7 @@ export async function pullTimetrackRows(userId: string, since?: string | null, o
 
   if (!live) return { rows, cursor }
   // the links have no `deleted_at` of their own: those of an entry that is gone go with it
+  // (the server already left them out; this also drops a link whose entry was read before it was made)
   const liveEntries = new Set(rows.timetrack_entries.map((entry) => entry.id))
   rows.timetrack_entry_tags = rows.timetrack_entry_tags.filter((link) => liveEntries.has(link.entry_id))
   return { rows, cursor, live: true }

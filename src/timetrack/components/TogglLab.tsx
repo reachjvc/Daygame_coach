@@ -17,7 +17,7 @@ import { ROUTE_LABELS } from "@/components/navTabs"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { setHaptics } from "../haptics"
-import { SHORTCUTS, TIMER_BAR_KEY } from "../config"
+import { HELD_STOP_KEY, SHORTCUTS, TIMER_BAR_KEY } from "../config"
 import {
   IconBreak,
   IconCalendar,
@@ -40,7 +40,8 @@ import { SendWaitingTimerStops } from "./RunningTimerSetting"
 import { ErrorBoundary } from "@/src/shared/components/ErrorBoundary"
 import { useTimetrack } from "../hooks/useTimetrack"
 import { defaultReportConfig, decodeReportConfig, followRounding, followWeekStart } from "../reportsService"
-import { dateKey, formatClock } from "../timetrackFormatService"
+import { dateKey, formatClock, formatWhen } from "../timetrackFormatService"
+import { newId } from "../idService"
 import {
   draftFromStartLink,
   draftOf,
@@ -321,12 +322,86 @@ export function TogglLab({
     keepAsNext: EntryDraft | null
     /** when the finger came down, on this device's clock: see `serverIsoAt` */
     tappedOnDevice: number
+    /** a Stop kept on disk while it waits, by this id (`keepHeldStop`) */
+    diskId: string | null
+    /** kept from an earlier opening: runs only on a check that landed, and quietly gives way */
+    restored: boolean
   } | null>(null)
   /**
    * The running bar's box for the next thing (`TimerBar`'s Switched at…), kept
    * here because a dropped Start fills it: see `keepAsNext` in `afterCheck.ts`.
    */
   const [nextDraft, setNextDraft] = useState<EntryDraft>(emptyDraft)
+  /**
+   * A HELD TAP IS NOT SAVED YET, AND THE BADGE DOES NOT SAY IT IS.
+   *
+   * "held" while the tap waits; "ran" for the one render after it ran, before the
+   * change-watcher has queued what it wrote. The badge keeps saying Checking…
+   * through both: it said "Saved." in that render, about a Stop not yet sent
+   * (production-build audit, Plans/time-tracker-leftovers.md). The watcher's
+   * queueing and the clearing below land in the same render, so Checking… goes
+   * straight to Saving.
+   */
+  const [holding, setHolding] = useState<"held" | "ran" | null>(null)
+  useEffect(() => {
+    if (holding === "ran") setHolding(null)
+  }, [holding])
+  /**
+   * A HELD STOP IS KEPT ON DISK UNTIL IT HAS RUN.
+   *
+   * It lived only in `heldTap`, so a tab closed while it waited took it along:
+   * a Stop tapped on a phone just taken out of the pocket, and the phone put
+   * away again before the check answered (production-build audit,
+   * Plans/time-tracker-leftovers.md). Running it on the way out would skip the
+   * check it waits for — the copy on screen may be hours old, and the other
+   * device's earlier Stop would lose to this one. So it is written down when it
+   * is held, and the next opening holds it again: it runs when that opening's
+   * check lands, through the same guards, at the moment it was tapped. A Start
+   * is not kept: what it would start is a guess after a reopen.
+   */
+  const keepHeldStop = useCallback(
+    (held: { id: string; seen: Id | null; tappedOnDevice: number }) => {
+      try {
+        window.localStorage.setItem(HELD_STOP_KEY, JSON.stringify({ owner: account ?? null, ...held }))
+      } catch {
+        // storage full or blocked: the Stop is held in memory only, as it was
+      }
+    },
+    [account],
+  )
+  /** only this tap's copy: another tab's held Stop in the same slot is not this one's to forget */
+  const forgetHeldStop = useCallback((id: string | null) => {
+    if (!id) return
+    try {
+      const kept = JSON.parse(window.localStorage.getItem(HELD_STOP_KEY) ?? "null") as { id?: string } | null
+      if (kept?.id === id) window.localStorage.removeItem(HELD_STOP_KEY)
+    } catch {
+      // nothing readable is kept
+    }
+  }, [])
+  useEffect(() => {
+    let kept: { owner?: string | null; id?: string; seen?: Id | null; tappedOnDevice?: number } | null = null
+    try {
+      kept = JSON.parse(window.localStorage.getItem(HELD_STOP_KEY) ?? "null")
+    } catch {
+      kept = null
+    }
+    if (!kept || typeof kept.id !== "string" || typeof kept.tappedOnDevice !== "number") return
+    // another account's Stop waits for that account's opening, untouched
+    if ((kept.owner ?? null) !== (account ?? null) || heldTap.current) return
+    const seen = kept.seen ?? null
+    heldTap.current = {
+      run: (_latest, tappedAt) => actionsNow.current.stop(tappedAt, seen),
+      runningId: seen,
+      always: false,
+      keepAsNext: null,
+      tappedOnDevice: kept.tappedOnDevice,
+      diskId: kept.id,
+      restored: true,
+    }
+    // once, at the opening: what is kept is read before anything new is held
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const afterCheck = useCallback<AfterCheck>(
     (run, options) => {
       const latest = latestState.current
@@ -337,23 +412,39 @@ export function TogglLab({
         run(latest, serverIsoAt(tappedOnDevice))
         return
       }
+      // one tap is held, the last one: the one it replaces is forgotten, on disk too
+      forgetHeldStop(heldTap.current?.diskId ?? null)
+      const diskId = options?.stopSeen !== undefined ? newId() : null
+      if (diskId) keepHeldStop({ id: diskId, seen: options?.stopSeen ?? null, tappedOnDevice })
       heldTap.current = {
         run,
         runningId: runningNow.current?.id ?? null,
         always: options?.always === true,
         keepAsNext: options?.keepAsNext ?? null,
         tappedOnDevice,
+        diskId,
+        restored: false,
       }
+      setHolding("held")
     },
-    [isChecking],
+    [isChecking, keepHeldStop, forgetHeldStop],
   )
   useEffect(() => {
     if (sync.check.checking) return
     const tap = heldTap.current
+    if (!tap) return
+    // a Stop from an earlier opening waits for a check that landed, not one that timed out
+    if (tap.restored && (sync.check.failed || sync.check.lastCheckedAt === null)) return
     const latest = latestState.current
     heldTap.current = null
-    if (!tap || !latest) return
+    // what ran is queued in the next render; what did not run has nothing to wait for
+    setHolding(null)
+    // kept on disk until here: with no workspace yet, the next opening holds it again
+    if (!latest) return
+    forgetHeldStop(tap.diskId)
     if (!tap.always && (runningNow.current?.id ?? null) !== tap.runningId) {
+      // a tap from a page that has since closed is not something to be told about again
+      if (tap.restored) return
       const quoted = (text: string) => `“${text.trim() || "(no description)"}”`
       /**
        * A START THE OTHER DEVICE BEAT KEEPS ITS WORDS (bug audit A5).
@@ -380,7 +471,17 @@ export function TogglLab({
       return
     }
     tap.run(latest, serverIsoAt(tap.tappedOnDevice))
-  }, [sync.check.checking, pushToast])
+    if (tap.restored) {
+      const at = formatWhen(serverIsoAt(tap.tappedOnDevice), latest.user.timeFormat, dateKey(new Date()))
+      pushToast(`Stopped at ${at}, when you tapped Stop before the page closed.`)
+    }
+    setHolding("ran")
+  }, [sync.check.checking, sync.check.failed, sync.check.lastCheckedAt, pushToast, forgetHeldStop])
+  /** the sync as the badges show it: a held tap counts as still checking (see `holding`) */
+  const shownSync = useMemo(
+    () => (holding && !sync.check.checking ? { ...sync, check: { ...sync.check, checking: true } } : sync),
+    [holding, sync],
+  )
   /**
    * Stop is for the entry on the screen when it was pressed, never for one the
    * other device started a moment ago and this screen has not drawn yet (Phase 8
@@ -389,7 +490,7 @@ export function TogglLab({
    */
   const stopTracking = useCallback(() => {
     const seen = runningNow.current?.id ?? null
-    afterCheck((_latest, tappedAt) => actionsNow.current.stop(tappedAt, seen))
+    afterCheck((_latest, tappedAt) => actionsNow.current.stop(tappedAt, seen), { stopSeen: seen })
   }, [afterCheck])
 
   /**
@@ -879,7 +980,7 @@ export function TogglLab({
             requestNotificationPermission,
             resetWorkspace: actions.resetWorkspace,
             replaceState: actions.replaceState,
-            sync,
+            sync: shownSync,
             screen,
             goTo,
             manageTab,
@@ -966,7 +1067,7 @@ export function TogglLab({
             <SyncBadge
               status={sync.status}
               pending={sync.pendingCount}
-              check={sync.check}
+              check={shownSync.check}
               nowMs={nowSec * 1000}
               onCheck={sync.checkNow}
             />

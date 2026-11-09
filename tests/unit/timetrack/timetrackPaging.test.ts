@@ -14,15 +14,23 @@ import { afterEach, describe, expect, test, vi } from "vitest"
 /** Records how a table was read, and hands back pages of a chosen size */
 function fakeSupabase(rowsPerTable: Record<string, number>) {
   const ranges: Record<string, [number, number][]> = {}
+  const filters: Record<string, string[]> = {}
+  const selects: Record<string, string[]> = {}
 
   const builder = (table: string) => {
     let from = 0
     let to = 999
     const chain: Record<string, unknown> = {
-      select: () => chain,
+      select: (columns: string) => {
+        selects[table] = [...(selects[table] ?? []), columns]
+        return chain
+      },
       eq: () => chain,
       gt: () => chain,
-      is: () => chain,
+      is: (column: string) => {
+        filters[table] = [...(filters[table] ?? []), column]
+        return chain
+      },
       limit: () => chain,
       order: () => chain,
       range: (a: number, b: number) => {
@@ -43,7 +51,7 @@ function fakeSupabase(rowsPerTable: Record<string, number>) {
     return chain
   }
 
-  return { client: { from: (table: string) => builder(table) }, ranges }
+  return { client: { from: (table: string) => builder(table) }, ranges, filters, selects }
 }
 
 afterEach(() => vi.resetModules())
@@ -55,6 +63,24 @@ async function pullWith(rowsPerTable: Record<string, number>) {
   const result = await pullTimetrackRows("u1")
   return { result, ranges }
 }
+
+describe("an opening's live read", () => {
+  /**
+   * The links have no `deleted_at`, so a live read used to fetch every link and
+   * drop a deleted entry's afterwards. With 16,528 deleted entries that was
+   * 18,218 links, 19 pages, and a cold open of 4.9 s instead of 2.0 s
+   * (heavy-history audit, Plans/time-tracker-leftovers.md). The server leaves them out.
+   */
+  test("asks the server only for the links of entries that are not deleted", async () => {
+    const { client, filters, selects } = fakeSupabase({})
+    vi.doMock("@/src/db/server", () => ({ createServerSupabaseClient: async () => client }))
+    const { pullTimetrackRows } = await import("@/src/db/timetrackRepo")
+    await pullTimetrackRows("u1", null, { live: true })
+    expect(filters.timetrack_entry_tags).toEqual(["timetrack_entries.deleted_at"])
+    // without `!inner` the filter only blanks the joined entry and every link still comes
+    expect(selects.timetrack_entry_tags).toEqual(["*, timetrack_entries!inner(id)"])
+  })
+})
 
 describe("reading a workspace", () => {
   test("a table larger than one page is read in full, not truncated", async () => {
