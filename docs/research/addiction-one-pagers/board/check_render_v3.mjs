@@ -1,6 +1,7 @@
 // Checks the built one-pager prototype as it renders (RULEBOOK rules 24, 27, 28): every reader view at 390 and
 // 1280 px, and the review page. Run by build_v3.py after it writes the page; prints "FAIL <rule> <where>: <msg>".
 // Usage: node board/check_render_v3.mjs <built.html>   (SHOTS=<dir> also saves full-page screenshots)
+/* global DATA, MINP, stageDots -- the built page's own globals, read inside pg.evaluate */
 import { chromium } from "playwright";
 import { pathToFileURL } from "node:url";
 import path from "node:path";
@@ -155,7 +156,7 @@ try {
     }
     // the review page, as he first opens it (no saved marks, recommendations applied)
     if (width === 1280) {
-      await pg.evaluate(() => { try { localStorage.clear(); } catch (e) {} location.hash = ""; });
+      await pg.evaluate(() => { try { localStorage.clear(); } catch { /* storage blocked: the page opens without it */ } location.hash = ""; });
       await pg.reload();
       const rv = await pg.evaluate(async () => {
         const out = { asks: 0, prop: 0, tokens: [], tabs: {}, offWhy: null, offList: null };

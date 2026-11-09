@@ -26,6 +26,9 @@ export default [
       // eslint's heap, so the ratchet could not start at all — and a gate that
       // cannot start is indistinguishable from a gate that passes.
       ".next-*/**",
+      // Other sessions' git worktrees: copies of this repo at other commits,
+      // not this checkout's code. Their files made the ratchet red here.
+      ".claude/worktrees/**",
     ],
   },
   js.configs.recommended,
@@ -47,6 +50,8 @@ export default [
       "components/**/*.{js,jsx,mjs,cjs,ts,tsx}",
       "scripts/**/*.{js,jsx,mjs,cjs,ts,tsx}",
       "tests/**/*.{js,jsx,mjs,cjs,ts,tsx}",
+      // research boards' render checks: Node scripts that also run code inside a page
+      "docs/research/**/board/*.{js,mjs,cjs}",
       "*.{js,mjs,cjs}",
     ],
     languageOptions: {
