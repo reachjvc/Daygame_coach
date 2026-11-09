@@ -604,7 +604,13 @@ Add two cases to `planLanding.test.ts`:
 
 ### Phase 3. Due now, on top of Today (d3, d5, d11)
 
-**Status:** not started. Depends on: Phases 1 and 2 (`isWrittenReview`, `BUILD_STEPS`).
+**Status:** Built, NOT shipped (2026-11-09): stopped for the owner. Code is on local branch
+`after-setup-p3` (worktree in the session scratchpad). Six existing review specs fail on a Sunday,
+Monday or Tuesday (`life-mastery-reviews` ×2, `-readings`, `-achievements`, `-dated-steps`,
+`-goal-status`): d11 opens Review on last week while the weekly card shows, and they write into "this
+week". Not covered by the plan. Recommended fix: those specs open
+`?step=review&period=<this week>`, asserts unchanged. Also: the plan's `nextSetupStep` rule ("none left →
+recap") and its test row ("else null") disagree; built to the rule. Depends on: Phases 1 and 2 (`isWrittenReview`, `BUILD_STEPS`).
 
 **3.1 Pure service.** New `src/goals/dueNowService.ts`.
 
