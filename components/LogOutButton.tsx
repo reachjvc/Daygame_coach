@@ -13,6 +13,9 @@
  *
  * The audit's answers waiting for signal are counted and sent the same way
  * (`sendWaitingAudit`): they were wiped with no word (alpha test fast-audit-01).
+ * So are its deletes: one still inside its Undo time is sent (he is leaving,
+ * and the dialog says so), and one the server refused is named like a refused
+ * answer (review of 81f325e9).
  *
  * The header and the phone's More sheet each draw their own button; this owns
  * what pressing it does.
@@ -36,7 +39,7 @@ const LOOK_EVERY_MS = 250
 type Phase =
   | { kind: "idle" }
   | { kind: "sending" }
-  | { kind: "asking"; left: number; refused: AuditSendOutcome["refused"] }
+  | { kind: "asking"; left: number; refused: AuditSendOutcome["refused"]; notDeleted: AuditSendOutcome["notDeleted"]; undoSent: number }
   | { kind: "leaving" }
 
 const clock = (iso: string) => {
@@ -57,6 +60,10 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
   const auditSending = useRef(false)
   /** Audit answers the account refused for good, with its reason: named, and dropped only by "Log out anyway" */
   const auditRefused = useRef<AuditSendOutcome["refused"]>([])
+  /** Audit deletes the account refused: named the same way */
+  const auditNotDeleted = useRef<AuditSendOutcome["notDeleted"]>([])
+  /** Deletes sent while still inside their Undo time */
+  const auditUndoSent = useRef(0)
   const auditFinal = useRef(false)
   const [, startTransition] = useTransition()
 
@@ -83,6 +90,8 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
       .then((result) => {
         if (result.status === "stranger") auditStranger.current = true
         auditRefused.current = result.refused
+        auditNotDeleted.current = result.notDeleted
+        auditUndoSent.current += result.undoSent
         if (result.status === "refused") auditFinal.current = true
       })
       .catch(() => {})
@@ -101,6 +110,8 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
     stranger.current = false
     auditStranger.current = false
     auditRefused.current = []
+    auditNotDeleted.current = []
+    auditUndoSent.current = 0
     auditFinal.current = false
     if (unsent() === 0) {
       leave()
@@ -118,9 +129,11 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
         return
       }
       const refused = auditFinal.current ? auditRefused.current : []
+      const notDeleted = auditFinal.current ? auditNotDeleted.current : []
+      const named = refused.length + notDeleted.length
       // Nothing left that waiting could send: ask now rather than wait out the seconds.
-      if (Date.now() - started >= SEND_BEFORE_LOG_OUT_MS || (refused.length > 0 && left <= refused.length)) {
-        setPhase({ kind: "asking", left, refused })
+      if (Date.now() - started >= SEND_BEFORE_LOG_OUT_MS || (named > 0 && left <= named)) {
+        setPhase({ kind: "asking", left, refused, notDeleted, undoSent: auditUndoSent.current })
         return
       }
       sendAudit()
@@ -135,8 +148,10 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
   }, [])
 
   const refused = phase.kind === "asking" ? phase.refused : []
-  const left = phase.kind === "asking" ? Math.max(0, phase.left - refused.length) : 0
-  const all = left + refused.length
+  const notDeleted = phase.kind === "asking" ? phase.notDeleted : []
+  const undoSent = phase.kind === "asking" ? phase.undoSent : 0
+  const left = phase.kind === "asking" ? Math.max(0, phase.left - refused.length - notDeleted.length) : 0
+  const all = left + refused.length + notDeleted.length
   return (
     <>
       {children({ onClick, busy: phase.kind === "sending" || phase.kind === "leaving" })}
@@ -156,6 +171,19 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
                 {refused.length === 1 ? "1 audit answer can't be saved:" : `${refused.length} audit answers can't be saved:`}
               </>
             )}
+            {notDeleted.length > 0 && (
+              <>
+                {" "}
+                {notDeleted.length === 1 ? "1 audit answer can't be deleted:" : `${notDeleted.length} audit answers can't be deleted:`}
+              </>
+            )}
+            {undoSent > 0 && (
+              <>
+                {" "}
+                {undoSent === 1 ? "1 delete you could still undo was sent," : `${undoSent} deletes you could still undo were sent,`} as you are
+                logging out.
+              </>
+            )}
           </DialogDescription>
           {refused.length > 0 && (
             <ul className="space-y-0.5 text-sm" data-testid="log-out-not-kept">
@@ -168,6 +196,21 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
                       Yours: E {answer.energy} · G {answer.growth}.{" "}
                       {stored ? `On the other device: ${stored.activity} · E ${stored.energy} · G ${stored.growth}.` : "Deleted on the other device."} Stay
                       signed in to choose on the audit page.
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          {notDeleted.length > 0 && (
+            <ul className="space-y-0.5 text-sm" data-testid="log-out-not-deleted">
+              {notDeleted.map(({ id, slotAt, activity, reason, stored }) => (
+                <li key={id} data-testid="log-out-not-deleted-item">
+                  {slotAt ? `${clock(slotAt)} · ` : ""}
+                  {activity ? `Delete ${activity}` : "A delete"}: {reason}.
+                  {stored && (
+                    <span className="block text-muted-foreground">
+                      Now on the other device: {stored.activity} · E {stored.energy} · G {stored.growth}. Stay signed in to choose on the audit page.
                     </span>
                   )}
                 </li>

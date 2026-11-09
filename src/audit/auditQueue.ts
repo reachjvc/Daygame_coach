@@ -44,6 +44,12 @@ export interface QueuedDelete {
   seen?: AnswerMark
   /** Its quarter, to name it when the server refuses the delete. */
   slotAt?: string
+  /**
+   * The server refused it: another device changed the answer since
+   * (`stored`), or it refused it outright. Not sent again until he chooses
+   * "Delete anyway" or "Keep" (review of 81f325e9); Log Out names it.
+   */
+  refused?: { reason: string; stored?: AnswerMark }
 }
 
 export interface AuditQueue {
@@ -131,9 +137,32 @@ export function enqueueDelete(
   return {
     ...q,
     answers: q.answers.filter((a) => a.id !== id),
-    deletes: q.deletes.some((d) => d.id === id) ? q.deletes : [...q.deletes, entry],
+    // deleting again what was refused is a new delete, over what he sees now
+    deletes: q.deletes.some((d) => d.id === id && !d.refused) ? q.deletes : [...q.deletes.filter((d) => d.id !== id), entry],
   }
 }
+
+/** The server refused this delete: kept, named, and not sent again until he chooses. */
+export function deleteRefused(q: AuditQueue, id: string, reason: string, stored?: AnswerMark): AuditQueue {
+  return { ...q, deletes: q.deletes.map((d) => (d.id === id ? { ...d, refused: { reason, ...(stored ? { stored } : {}) } } : d)) }
+}
+
+/** "Delete anyway" / "Try again": sent now, over the answer as it is now when that is known. */
+export function retryDelete(q: AuditQueue, id: string): AuditQueue {
+  return {
+    ...q,
+    deletes: q.deletes.map((d) => {
+      if (d.id !== id || !d.refused) return d
+      const { refused, notBefore: _n, restore: _r, ...rest } = d
+      void _n
+      void _r
+      return { ...rest, at: new Date().toISOString(), ...(refused.stored ? { seen: markOf(refused.stored) } : {}) }
+    }),
+  }
+}
+
+/** Deletes still to send (not refused): what hides an answer and what counts as waiting. */
+export const pendingDeletes = (q: AuditQueue): QueuedDelete[] => q.deletes.filter((d) => !d.refused)
 
 /**
  * These answers were just stored: a delete queued meanwhile for one of them
@@ -147,7 +176,7 @@ export function deletesSeeStored(q: AuditQueue, stored: readonly AuditAnswer[]):
 
 /** When the next delete still in its Undo time is due, or null when none waits. */
 export function nextDeleteDue(q: AuditQueue, nowMs: number): number | null {
-  const due = q.deletes.flatMap((d) => (d.notBefore && Date.parse(d.notBefore) > nowMs ? [Date.parse(d.notBefore)] : []))
+  const due = pendingDeletes(q).flatMap((d) => (d.notBefore && Date.parse(d.notBefore) > nowMs ? [Date.parse(d.notBefore)] : []))
   return due.length > 0 ? Math.min(...due) : null
 }
 
@@ -236,8 +265,21 @@ export function forgetAuditViewCopy(store: KeyValueStore | null = browserStore()
   }
 }
 
+const forgetListeners = new Set<() => void>()
+
+/**
+ * Called when this device's audit is forgotten (Log Out): an open audit page
+ * drops its queue and its timers, so nothing is sent, or written back, after
+ * (review of 81f325e9). Returns the unsubscribe.
+ */
+export function onAuditForgotten(listener: () => void): () => void {
+  forgetListeners.add(listener)
+  return () => void forgetListeners.delete(listener)
+}
+
 /** Signing out: no answer text stays on a shared phone, waiting or last read. */
 export function forgetAuditOnThisDevice(store: KeyValueStore | null = browserStore()): void {
+  for (const listener of [...forgetListeners]) listener()
   try {
     store?.removeItem(AUDIT_QUEUE_KEY)
     store?.removeItem(AUDIT_VIEW_KEY)

@@ -69,4 +69,21 @@ describe("the why box", () => {
     expect(saves).toHaveLength(1)
     expect(saves[0][0].why).toBeNull()
   })
+
+  test("a why typed but not saved survives the page's re-read bringing the quarter's answer (review of 81f325e9)", () => {
+    const later: AnswerCardInput[] = [
+      {
+        ...cards[0],
+        existing: { id: "pc-1", runId: RUN_ID, slotAt: SLOT_AT, activity: "Gym", energy: 4, growth: 6, avoiding: false, why: null, source: "app", timeEntryId: null, pending: false },
+      },
+    ]
+    const at = (c: AnswerCardInput[]) => (
+      <AnswerSheet open onClose={() => {}} title="Fill in" cards={c} runId={RUN_ID} timezone="Europe/Copenhagen" source="later" suggestions={[]} slots={[]} onSave={() => {}} />
+    )
+    const { rerender } = render(at(cards))
+    fireEvent.click(screen.getByTestId("audit-why-open"))
+    fireEvent.change(screen.getByTestId("audit-why"), { target: { value: "Half typed" } })
+    rerender(at(later))
+    expect((screen.getByTestId("audit-why") as HTMLTextAreaElement).value).toBe("Half typed")
+  })
 })

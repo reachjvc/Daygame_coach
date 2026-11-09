@@ -169,8 +169,9 @@ function NotKeptLine({ s, tz }: { s: AuditState; tz: string }) {
 }
 
 /**
- * Deletes the server refused because another device changed the answer after
- * this one drew it (alpha prove-audit-03): never deleted unseen, asked here.
+ * Deletes the server refused: another device changed the answer after this
+ * one drew it (alpha prove-audit-03), or it refused outright (review of
+ * 81f325e9). Never deleted unseen, never dropped in silence: asked here.
  */
 function NotDeletedLine({ s, tz }: { s: AuditState; tz: string }) {
   if (s.notDeleted.length === 0) return null
@@ -180,11 +181,20 @@ function NotDeletedLine({ s, tz }: { s: AuditState; tz: string }) {
       <ul className="mt-1 space-y-2">
         {s.notDeleted.map((x) => (
           <li key={x.id} data-testid="audit-not-deleted-item">
-            {x.slotAt ? `${stretchLabel([Date.parse(x.slotAt)], tz)} · ` : ""}Changed on another device: {x.stored.activity} · E {x.stored.energy} · G{" "}
-            {x.stored.growth}.
+            {x.slotAt ? `${stretchLabel([Date.parse(x.slotAt)], tz)} · ` : ""}
+            {x.stored ? (
+              <>
+                Changed on another device: {x.stored.activity} · E {x.stored.energy} · G {x.stored.growth}.
+              </>
+            ) : (
+              <>
+                {x.seen ? `${x.seen.activity}: ` : ""}
+                {x.reason}.
+              </>
+            )}
             <span className="mt-1 flex gap-2">
               <Button variant="outline" size="sm" onClick={() => s.deleteAnyway(x)} data-testid="audit-not-deleted-delete">
-                Delete anyway
+                {x.stored ? "Delete anyway" : "Try again"}
               </Button>
               <Button size="sm" onClick={() => s.keepNotDeleted(x.id)} data-testid="audit-not-deleted-keep">
                 Keep

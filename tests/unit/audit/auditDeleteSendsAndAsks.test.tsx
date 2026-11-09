@@ -16,7 +16,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
-import { emptyAuditQueue, enqueueDelete, readAuditQueue, writeAuditQueue } from "@/src/audit/auditQueue"
+import { emptyAuditQueue, enqueueDelete, forgetAuditOnThisDevice, readAuditQueue, writeAuditQueue } from "@/src/audit/auditQueue"
 import type { AuditView } from "@/src/audit/auditClient"
 import { useAudit } from "@/src/audit/hooks/useAudit"
 import { browserStore } from "@/src/shared/offlineQueue"
@@ -41,14 +41,18 @@ const slot = (activity: string): AuditSlot => ({
   timeEntryId: null,
 })
 const viewWith = (slots: AuditSlot[]): AuditView => ({ run, runs: [run], slots, timeEntries: [], suggestions: [], timezone: "Europe/Copenhagen", now: "2026-11-09T16:00:00.000Z" })
-const mark = (activity: string): AnswerMark => ({ id: ID, activity, energy: 5, growth: 5, why: null })
+const mark = (activity: string, why: string | null = null): AnswerMark => ({ id: ID, activity, energy: 5, growth: 5, why })
+const seenOf = (body: string) => (JSON.parse(body || "{}") as { seen?: AnswerMark }).seen
 
 function fakeServer() {
   const server = {
     view: viewWith([slot("Gym")]),
     offline: false,
     deletes: [] as string[],
+    bodies: [] as string[],
+    status: 200,
     onDelete: (): Record<string, unknown> => ({ ok: true, deleted: true }),
+    holdPut: null as Promise<void> | null,
   }
   vi.stubGlobal(
     "fetch",
@@ -56,7 +60,13 @@ function fakeServer() {
       if (server.offline) throw new TypeError("Failed to fetch")
       if (init?.method === "DELETE") {
         server.deletes.push(url)
-        return new Response(JSON.stringify(server.onDelete()), { status: 200 })
+        server.bodies.push(String(init.body ?? ""))
+        return new Response(JSON.stringify(server.status === 200 ? server.onDelete() : { error: "Bad earlier answer" }), { status: server.status })
+      }
+      if (init?.method === "PUT") {
+        if (server.holdPut) await server.holdPut
+        const body = JSON.parse(String(init.body)) as { slots: unknown[] }
+        return new Response(JSON.stringify({ stored: body.slots.length, refused: [] }), { status: 200 })
       }
       if (url.startsWith("/api/audit")) return new Response(JSON.stringify(server.view), { status: 200 })
       return new Response("{}", { status: 404 })
@@ -99,14 +109,17 @@ describe("a delete stored in its Undo time when the page (re)opens (prove-audit-
 })
 
 describe("a delete carries what it saw (prove-audit-03)", () => {
-  test("names the answer and what it saw in the request", async () => {
+  test("sends what it saw in the body, never in the address (review of 81f325e9: no personal text in a URL)", async () => {
     const server = fakeServer()
     const { result } = renderHook(() => useAudit(OWNER))
     await waitFor(() => expect(result.current.view).not.toBeNull())
-    act(() => result.current.remove(ID, 0, mark("Gym")))
+    act(() => result.current.remove(ID, 0, mark("Gym", "Tired of it")))
     await waitFor(() => expect(server.deletes).toHaveLength(1))
-    const seen = JSON.parse(new URL(server.deletes[0], "http://x").searchParams.get("seen") ?? "null")
-    expect(seen).toEqual(mark("Gym"))
+    expect(seenOf(server.bodies[0])).toEqual(mark("Gym", "Tired of it"))
+    const url = new URL(server.deletes[0], "http://x")
+    expect(url.search).not.toContain("seen")
+    expect(decodeURIComponent(server.deletes[0])).not.toContain("Tired")
+    expect(decodeURIComponent(server.deletes[0])).not.toContain("Gym")
   })
 
   test("refused because another device changed the answer: the deleting device is told, and can delete anyway or keep it", async () => {
@@ -118,7 +131,9 @@ describe("a delete carries what it saw (prove-audit-03)", () => {
     act(() => result.current.remove(ID, 0, mark("Gym")))
     await waitFor(() => expect(result.current.notDeleted).toHaveLength(1))
     expect(result.current.notDeleted[0]).toMatchObject({ id: ID, stored: { activity: "Edited on the PC" } })
-    expect(readAuditQueue(browserStore(), OWNER).deletes).toHaveLength(0)
+    // kept until he chooses, and not counted as waiting for signal
+    expect(readAuditQueue(browserStore(), OWNER).deletes).toHaveLength(1)
+    expect(result.current.waiting).toBe(0)
     // the other device's answer is drawn again
     await waitFor(() => expect(result.current.slots.map((s) => s.activity)).toEqual(["Edited on the PC"]))
 
@@ -126,8 +141,8 @@ describe("a delete carries what it saw (prove-audit-03)", () => {
     act(() => result.current.deleteAnyway(result.current.notDeleted[0]))
     expect(result.current.notDeleted).toHaveLength(0)
     await waitFor(() => expect(server.deletes).toHaveLength(2))
-    const seen = JSON.parse(new URL(server.deletes[1], "http://x").searchParams.get("seen") ?? "null")
-    expect(seen).toMatchObject({ activity: "Edited on the PC" })
+    expect(seenOf(server.bodies[1])).toMatchObject({ activity: "Edited on the PC" })
+    await waitFor(() => expect(readAuditQueue(browserStore(), OWNER).deletes).toHaveLength(0))
   })
 
   test("Keep: the other device's answer stays and nothing more is sent", async () => {
@@ -139,6 +154,48 @@ describe("a delete carries what it saw (prove-audit-03)", () => {
     await waitFor(() => expect(result.current.notDeleted).toHaveLength(1))
     act(() => result.current.keepNotDeleted(ID))
     expect(result.current.notDeleted).toHaveLength(0)
+    expect(readAuditQueue(browserStore(), OWNER).deletes).toHaveLength(0)
     expect(server.deletes).toHaveLength(1)
+  })
+
+  test("refused outright (400): named with the server's reason and kept until he chooses (review of 81f325e9)", async () => {
+    const server = fakeServer()
+    server.status = 400
+    const { result } = renderHook(() => useAudit(OWNER))
+    await waitFor(() => expect(result.current.view).not.toBeNull())
+    act(() => result.current.remove(ID, 0, mark("Gym")))
+    await waitFor(() => expect(result.current.notDeleted).toHaveLength(1))
+    expect(result.current.notDeleted[0]).toMatchObject({ id: ID, reason: "Bad earlier answer" })
+    expect(readAuditQueue(browserStore(), OWNER).deletes).toHaveLength(1)
+    // the answer is still on the server, so it is drawn
+    expect(result.current.slots.map((s) => s.activity)).toEqual(["Gym"])
+  })
+})
+
+describe("nothing is sent after the page is gone or he logged out (review of 81f325e9)", () => {
+  test("a send in flight when the page closes arms no timer after it", async () => {
+    const server = fakeServer()
+    let release = () => {}
+    server.holdPut = new Promise<void>((r) => (release = r))
+    const { result, unmount } = renderHook(() => useAudit(OWNER))
+    await waitFor(() => expect(result.current.view).not.toBeNull())
+    const answer = { ...slot("Other"), id: "00000000-0000-4000-8000-0000000000b2", slotAt: "2026-11-09T15:45:00.000Z", answeredAt: "2026-11-09T15:50:00.000Z", was: null }
+    act(() => result.current.answer([answer]))
+    act(() => result.current.remove(ID, 200, mark("Gym")))
+    unmount()
+    release()
+    await new Promise((r) => setTimeout(r, 700))
+    expect(server.deletes).toHaveLength(0)
+  })
+
+  test("forgetting this device's audit (Log Out) stops a delete waiting out its Undo time", async () => {
+    const server = fakeServer()
+    const { result } = renderHook(() => useAudit(OWNER))
+    await waitFor(() => expect(result.current.view).not.toBeNull())
+    act(() => result.current.remove(ID, 200, mark("Gym")))
+    act(() => forgetAuditOnThisDevice())
+    await new Promise((r) => setTimeout(r, 700))
+    expect(server.deletes).toHaveLength(0)
+    expect(readAuditQueue(browserStore(), OWNER).deletes).toHaveLength(0)
   })
 })

@@ -554,7 +554,9 @@ export function AnswerSheet({
             const quarters = quartersOf(i)
             return (
             <Card
-              key={`${card.quarters[0]}x${card.quarters.length}-${card.existing?.id ?? "new"}`}
+              // the quarter only: a re-read bringing this quarter's answer must not
+              // remount the card and lose what he typed (review of 81f325e9)
+              key={`${card.quarters[0]}x${card.quarters.length}`}
               card={card}
               index={i}
               runId={runId}

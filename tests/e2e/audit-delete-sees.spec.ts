@@ -142,8 +142,11 @@ test.describe("audit deletes and the why @phone", () => {
             async ({ id, seen, account, delay }) => {
               // the save does more reads before its write: a stagger lets either land first
               await new Promise((r) => setTimeout(r, delay))
-              const q = new URLSearchParams({ at: new Date().toISOString(), sentAt: new Date().toISOString(), seen: JSON.stringify(seen) })
-              const r = await fetch(`/api/audit/slots/${id}?${q}`, { method: "DELETE", headers: { "x-page-account": account } })
+              const r = await fetch(`/api/audit/slots/${id}`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json", "x-page-account": account },
+                body: JSON.stringify({ at: new Date().toISOString(), sentAt: new Date().toISOString(), seen }),
+              })
               return (await r.json()) as { deleted: boolean; changed?: { activity: string } }
             },
             { id, seen, account: account.id, delay: (i % 5) * 15 },
@@ -169,6 +172,11 @@ test.describe("audit deletes and the why @phone", () => {
     const runId = await seedRun(account.id)
     const q = qStart(Date.now()) - 2 * Q
     const id = await seedAnswer(account.id, runId, q, "Gym")
+    expect((await stackAdmin().from("audit_slots").update({ why: "Private reason" }).eq("id", id)).error).toBeNull()
+    const sent: { url: string; body: string | null }[] = []
+    page.on("request", (r) => {
+      if (r.method() === "DELETE" && r.url().includes("/api/audit/slots/")) sent.push({ url: r.url(), body: r.postData() })
+    })
     await openAudit(page)
     await page.getByTestId("audit-row-answered").filter({ hasText: "Gym" }).click()
     await page.getByTestId("audit-answer-sheet").getByTestId("audit-delete").click()
@@ -177,6 +185,11 @@ test.describe("audit deletes and the why @phone", () => {
     expect((await stackAdmin().from("audit_slots").update({ activity: "Changed on the PC" }).eq("id", id)).error).toBeNull()
     const line = page.getByTestId("audit-not-deleted")
     await expect(line).toContainText("Changed on another device: Changed on the PC", { timeout: 15_000 })
+    // what it saw goes in the body; his words never in the address (review of 81f325e9)
+    expect(sent).toHaveLength(1)
+    expect(decodeURIComponent(sent[0].url)).not.toContain("Private reason")
+    expect(decodeURIComponent(sent[0].url)).not.toContain("Gym")
+    expect(JSON.parse(sent[0].body ?? "{}").seen).toMatchObject({ id, activity: "Gym", why: "Private reason" })
     expect((await rows(account.id, runId)).map((r) => r.activity)).toEqual(["Changed on the PC"])
     await expect(page.getByTestId("audit-row-answered").filter({ hasText: "Changed on the PC" })).toHaveCount(1)
     await line.getByTestId("audit-not-deleted-delete").click()

@@ -1,11 +1,13 @@
 /**
  * DELETE ONE ANSWER. Deleting one that is already gone (or never was this
  * person's) answers 200 as well, so a phone's queued delete can be resent.
- * `?seen=` (JSON: the answer as the deleting device drew it): deleted only if
- * it is still that, in the same database step; when another device changed it
- * since, it stays and comes back as `changed` (alpha prove-audit-03).
- * Without `seen`, `?at=&sentAt=` (the phone's clock): an answer given again
- * after `at`, on another device, is kept.
+ * A JSON body { at, sentAt, seen }. `seen` (the answer as the deleting device
+ * drew it): deleted only if it is still that, in the same database step; when
+ * another device changed it since, it stays and comes back as `changed`
+ * (alpha prove-audit-03). Never in the address: it is his own words, and
+ * addresses end up in logs (review of 81f325e9). Without `seen`, `at` and
+ * `sentAt` (the phone's clock): an answer given again after `at`, on another
+ * device, is kept. Pages from before the body send `?at=&sentAt=`.
  */
 
 import { NextResponse } from "next/server"
@@ -26,18 +28,25 @@ export async function DELETE(req: Request, { params }: RouteParams) {
   if (!isUuid(id)) return NextResponse.json({ error: "No such answer" }, { status: 400 })
   try {
     const url = new URL(req.url)
-    const at = url.searchParams.get("at")
-    const notAfter = at ? new Date(correctedTime(at, url.searchParams.get("sentAt"), new Date())) : undefined
-    const seenParam = url.searchParams.get("seen")
+    const text = await req.text().catch(() => "")
+    let body: { at?: unknown; sentAt?: unknown; seen?: unknown } = {}
+    if (text.trim() !== "") {
+      if (!(req.headers.get("content-type") ?? "").toLowerCase().startsWith("application/json")) {
+        return NextResponse.json({ error: "Send JSON" }, { status: 415 })
+      }
+      try {
+        const parsed = JSON.parse(text) as unknown
+        body = parsed && typeof parsed === "object" ? (parsed as typeof body) : {}
+      } catch {
+        return NextResponse.json({ error: "Send JSON" }, { status: 400 })
+      }
+    }
+    const at = typeof body.at === "string" ? body.at : url.searchParams.get("at")
+    const sentAt = typeof body.sentAt === "string" ? body.sentAt : url.searchParams.get("sentAt")
+    const notAfter = at ? new Date(correctedTime(at, sentAt, new Date())) : undefined
     let seen: ReturnType<typeof checkMark> = null
-    if (seenParam !== null) {
-      seen = checkMark((() => {
-        try {
-          return JSON.parse(seenParam) as unknown
-        } catch {
-          return null
-        }
-      })())
+    if (body.seen !== undefined) {
+      seen = checkMark(body.seen)
       if (!seen || seen.id !== id) return NextResponse.json({ error: "Bad earlier answer" }, { status: 400 })
     }
     const result = await deleteSlot(auth.userId, id, { notAfter, ...(seen ? { seen } : {}) })

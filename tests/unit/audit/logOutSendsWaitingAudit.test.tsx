@@ -13,7 +13,7 @@ import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
 import { LogOutButton, SEND_BEFORE_LOG_OUT_MS } from "@/components/LogOutButton"
-import { AUDIT_QUEUE_KEY, emptyAuditQueue, enqueueAnswers, unsentAuditChanges, writeAuditQueue } from "@/src/audit/auditQueue"
+import { AUDIT_QUEUE_KEY, emptyAuditQueue, enqueueAnswers, enqueueDelete, unsentAuditChanges, writeAuditQueue } from "@/src/audit/auditQueue"
 import type { AuditAnswer } from "@/src/audit/types"
 
 const signedOut = vi.hoisted(() => ({ count: 0 }))
@@ -194,5 +194,69 @@ describe("Log Out with an audit answer still waiting on the phone", () => {
     expect(item).toContain("Yours: E 6")
     expect(item).toContain("On the other device: Email · E 2 · G 3")
     expect(signedOut.count).toBe(0)
+  })
+
+  describe("a delete waiting on the phone (review of 81f325e9)", () => {
+    const seen = { id: waiting.id, activity: "Approached in the metro", energy: 6, growth: 7, why: null }
+    function deleteWaitingOnThePhone(notBefore?: string) {
+      writeAuditQueue(
+        window.localStorage,
+        enqueueDelete(emptyAuditQueue(OWNER), waiting.id, new Date().toISOString(), notBefore, { ...seen, slotAt: waiting.slotAt }),
+      )
+    }
+
+    test("one another device changed is named with what it is now, kept on Stay, dropped only on Log out anyway", async () => {
+      deleteWaitingOnThePhone()
+      let sends = 0
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async (_url: string, init?: RequestInit) => {
+          if (init?.method === "DELETE") sends += 1
+          return new Response(JSON.stringify({ ok: true, deleted: false, changed: { ...seen, activity: "Edited on the PC" } }), { status: 200 })
+        }),
+      )
+      renderLogOut()
+      await wait(1000)
+      expect(signedOut.count).toBe(0)
+      const item = screen.getByTestId("log-out-not-deleted-item").textContent ?? ""
+      expect(item).toContain("Approached in the metro")
+      expect(item).toContain("Edited on the PC")
+      expect(sends).toBe(1)
+      fireEvent.click(screen.getByTestId("log-out-stay"))
+      await wait(100)
+      expect(unsentAuditChanges(window.localStorage)).toBe(1)
+      fireEvent.click(screen.getByRole("button", { name: "Log Out" }))
+      await wait(1000)
+      fireEvent.click(screen.getByTestId("log-out-anyway"))
+      await wait(100)
+      expect(signedOut.count).toBe(1)
+      expect(window.localStorage.getItem(AUDIT_QUEUE_KEY)).toBeNull()
+    })
+
+    test("one the server refuses outright (400) is named, not dropped in silence", async () => {
+      deleteWaitingOnThePhone()
+      vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ error: "Bad earlier answer" }), { status: 400 })))
+      renderLogOut()
+      await wait(1000)
+      expect(signedOut.count).toBe(0)
+      expect(screen.getByTestId("log-out-not-deleted-item").textContent).toContain("Bad earlier answer")
+      expect(unsentAuditChanges(window.localStorage)).toBe(1)
+    })
+
+    test("one still inside its Undo time is sent, as he is leaving", async () => {
+      deleteWaitingOnThePhone(new Date(Date.now() + 60_000).toISOString())
+      let sends = 0
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async (_url: string, init?: RequestInit) => {
+          if (init?.method === "DELETE") sends += 1
+          return new Response(JSON.stringify({ ok: true, deleted: true }), { status: 200 })
+        }),
+      )
+      renderLogOut()
+      await wait(1000)
+      expect(sends).toBe(1)
+      expect(signedOut.count).toBe(1)
+    })
   })
 })
