@@ -170,6 +170,16 @@ shared test database), `reopen-and-logout:67` (passed in the earlier phone run).
 dev-server freeze after heavy runs; not seen on the production build, which was not run with the full suite.
 Side-by-sides and findability skipped: nothing on screen changed. Review: one subagent, given the diff only.
 
+**Later the same day: the unsettled test, settled.** Full audit on a production build of 67a5c08c. The
+"15-minute freeze" was no freeze: the fixture's account is per worker, so every test in a `--workers=1` run
+shares it. `perf.spec` ended on a Stop and closed before it was sent, and the next test opened onto a timer
+still running, so its Start button never came. Two more effects of the shared account: pccal's Sunday test left
+Sunday weeks for pclist, and two-device tests read the account a moment before a Stop held during a check was
+sent. All fixed in the specs (in the cache copy, not the repo); no app change. Result: PC 25/25, phone 34/34.
+Seen but not fixed: (1) "Saved." can show for a frame between a check's answer and a held Stop being queued; a
+tab closed in that moment loses the Stop. (2) With ~16,500 deleted entries on an account, a cold open took
+4.9 s instead of 2.0 s; with 7,164 it did not slow down.
+
 ---
 
 # Try these on your phone (B-PHONE)
