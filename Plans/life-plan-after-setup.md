@@ -153,7 +153,9 @@ The owner did not answer these. Each recommendation stands.
 
 ## Marks read
 
-Phase 0 fills this in from the decision page.
+Read 2026-11-09 (Phase 0). No decision, removal or question is marked. One note:
+
+- `n-mock-today`, 2026-11-09 08:23: "i like the look of this".
 
 ## Working setup (every phase uses this)
 
@@ -278,7 +280,8 @@ conclusions. `/security-review` cannot run in this checkout.
 
 ### Phase 0. Pictures before, and ground truth (no product change)
 
-**Status:** not started.
+**Status:** Built 2026-11-09 (no product change, nothing to ship). Marks read; before pictures in
+`~/.cache/daygame-plan-after-setup/pictures/p0-before` and `p0-before-phone`, five each.
 
 1. **Marks.** Read the decision page's marks: ArtifactData `list`, url
    https://claude.ai/artifact/Tbhg3XTAizXkLmutiUaQpp, collection `marks`.
