@@ -159,7 +159,7 @@ export function SettingsSheet({
               </Button>
             )}
             {message && !changed && (
-              <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400" role="status">
+              <p className="text-sm font-medium text-success" role="status">
                 {message}
               </p>
             )}

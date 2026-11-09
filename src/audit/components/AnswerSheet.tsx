@@ -181,7 +181,7 @@ function Card({
           <Check className="size-4" />
         </span>
         <div className="min-w-0 flex-1" role="status" data-testid="audit-card-saved">
-          <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">Saved · {label}</p>
+          <p className="text-sm font-semibold text-success">Saved · {label}</p>
           <p className="truncate text-sm">
             {activity.trim()} <span className="tabular-nums text-muted-foreground">· E {energy} · G {growth}</span>
           </p>
