@@ -26,15 +26,22 @@ All of Claude's own recommendations are taken in this plan. Only the items in th
 | O3 | Up to three new tables in the live database for your own picks, daily value ticks and reminder time. Nothing existing changes. | **Yes.** |
 | O4 | A credible public first-hand account of sex with someone under 16. | **"Show each case to me."** Nobody is excluded for it by rule. Each case goes on the decision page with the facts and stays hidden until you mark In or Out. The planning session gave sexual-violence cases the same treatment. |
 | O5 | Fictional characters (James Bond, Don Draper). | **Out**, kept in an archive file. |
-| O6 | Faces of people alive, or dead after 1955. | **Emblem card**, no generated face, until a lawyer says otherwise. |
-| O7 | Who paints the portraits. | **The free generator on your PC**, after a six-portrait look test on the decision page. |
+| O6 | Faces of people alive, or dead after 1955. | Answered "emblem card", then **deferred** with the whole look (see your second rule below). The legal point stays on file for that decision. |
+| O7 | Who paints the portraits. | Answered "the free generator on your PC", then **deferred** with the whole look. |
 
 **Your rule, given while this plan was written:** "people on the edge, like the casanova etc examples, they
 are actually MORE interesting. People are not simple and always good. We want to represent REALITY not some
 sort of world where people have to feel bad about their 'dark' desires." The plan follows it: flawed and dark
 figures are in, shown whole. See "The fairness rules".
 
-Nothing is bought by this plan. The only downloads are free (an image model, about 7 GB).
+**Your second rule, same day:** "the thing of figuring out what the animation or look of each rolemodel has to
+be, has to be deferred or decided upon in total. I.e., i want them to look similar, and i want to find a
+process. But for now, we can work on finding more role models etc., and at some point ill have to decide on
+the proper process for what images we will use and how." So this run does **no** pictures, portraits,
+animation or effects. Every card uses one plain placeholder. Everything learned about the look is kept in
+"Later: the look" at the end, for that one decision.
+
+Nothing is bought by this plan, and nothing large is downloaded in this run.
 
 ---
 
@@ -85,6 +92,8 @@ formats, loaded only when they scroll near. One card is "alive" at a time: the o
 phone the one in the middle of the screen. Profiles are real pages with their own address. Motion stops for
 people who ask for less motion, and for anyone on data-saver.
 
+This run builds the pages that way. The pictures and the movement wait for your look decision.
+
 ## Question 2: could the images be made better?
 
 Your Marcus is good and fits the brand. The method around him does not scale:
@@ -98,11 +107,10 @@ Your Marcus is good and fits the brand. The method around him does not scale:
   named, free source: Marcus's bust, Spinoza's 17th-century portrait. Those sources exist with clear licences
   (checked: Wikimedia Commons returns three public-domain Spinoza portraits with their licence data).
 
-Decided: every person gets a portrait record that names its likeness source and licence. First an "archive"
-portrait: the real public-domain bust or painting, cropped and coloured into one house look (free, automatic,
-authentic). Then, as an upgrade, a painted version in the Marcus style made from that source (O7). People
-covered by O6 get an emblem card. Moving video comes last, only for the most-picked people, and only after the
-licence problem is fixed.
+**Not decided now** (your second rule): the look of every role model, pictures and movement, is one later
+decision, so that they all look alike. The options already worked out are in "Later: the look". The only
+picture work in this run is a note per person: links to free portraits or busts (with their licence) that the
+researcher happens to find, so the later decision starts with sources in hand.
 
 ## Question 3: do the values match the rest of the site?
 
@@ -154,8 +162,7 @@ Every person goes through eight steps. A person is shown only when all pass.
    **His shadow** (two to five sentences, documented, plain, no verdict).
 8. **Machine checks.** A test reads every person file and refuses a missing piece (see Phase 2).
 
-You see only the exceptions, once: O4 and sexual-violence cases, proposed new value words, proposed removals and
-the portrait look test. Everything else is decided by the rules.
+You see only the exceptions, once: O4 and sexual-violence cases, proposed new value words and proposed removals. Everything else is decided by the rules.
 
 ## The fairness rules
 
@@ -223,12 +230,12 @@ Each use is a copy of a system a named person describes. Inventions are labelled
 | **Research on self-distancing**: people reason more wisely about a problem seen through someone else's eyes (Grossmann & Kross 2014, *Psychological Science*); children kept at a boring task longer when pretending to be Batman (White et al. 2017, *Child Development*, one study). | **"What would he do?"** A button on Today: pick a council member, see his principles, write one line about what he would do now. No AI speaks in his voice, so nothing is invented in his name. |
 | **Benjamin Franklin, *Autobiography***: thirteen virtues, one per week, a little book with a mark for each day he fell short. | **Value of the week** (optional). One of your council's values is the week's focus; Today asks "lived it / fell short"; the weekly review shows the seven marks. |
 | Lockwood & Kunda 1997 (*Journal of Personality and Social Psychology*): a role model inspires when his success seems reachable, and can deflate when it does not. | Why every profile has **Where he started**, and why the library mixes giants with ordinary starts. |
-| *Invention, labelled:* a daily phone reminder from your council (opt-in), and a phone wallpaper with his portrait, his line and your value. | Later phases, after the above works. |
+| *Invention, labelled:* a daily phone reminder from your council (opt-in), and a phone wallpaper with his picture, his line and your value. | The reminder in Phase 12; the wallpaper waits for the look decision. |
 
 ## What you will see when it is done
 
-- `/plan/role-models`: 13 categories, about 170 people, each card a portrait or emblem, one card glowing at a
-  time. Search by name or value. Your council sits on top.
+- `/plan/role-models`: 13 categories, about 170 people, every card the same plain placeholder until the look
+  is decided. Search by name or value. Your council sits on top.
 - `/plan/role-models/<person>`: the full profile. Values, each with "how we know" (the evidence, one line each,
   with the source), his checked quotes with exact place, where he started, his shadow, what to read by
   him, and "Add to my council".
@@ -246,9 +253,9 @@ Each use is a copy of a system a named person describes. Inventions are labelled
 | D3 | The eight-step check, two of three evidence kinds from two sources, blind second pick, devil's advocate. | Your "cannot be argued against strongly". | About three agent runs per person. |
 | D4 | Reality, not saints (your rule). Dark and flawed figures are in; every profile shows **His shadow** plainly, with sources, no sermon. Values must still survive the devil's advocate. | You asked for it; edge figures are more interesting; a whitewash is as unfair as a smear. | Some visitors dislike a library that includes conquerors and seducers. |
 | D5 | 13 categories, each tied to life plan areas; "Charisma & Romance" keeps the seducers. | Lets the plan suggest people where they help. | Category names may need a rename later; cheap. |
-| D6 | Images: archive portraits first, painted upgrade second, emblem for O6 people; sizes 320, 640, 960 px in AVIF and WebP; no file over 150 KB. | 150 times smaller than today; consistent; licences on record. | The archive look is plainer than Marcus until painted. |
-| D7 | One card alive at a time; no motion with "reduce motion" or data-saver; profiles are pages, not pop-ups. | Battery, phones, accessibility, back button. | Grid looks calmer than today. |
-| D8 | Video loops only for the most-picked people, only after the licence fix, at 720 px under 200 KB, loaded only when opened. | Licence; bandwidth at scale. | "Alive" faces arrive late. |
+| D6 | **The look is deferred** (your second rule): pictures, portraits, animation and effects are one later decision for all role models. Until then every card and profile uses one plain placeholder, built as a single component (`RoleModelVisual`) so the decision later changes one file. | They must look alike; a process chosen once beats 170 one-off choices. | The library looks plain for a while. |
+| D7 | Profiles are pages with their own address, not pop-ups; everything works by touch; no text appears only under a mouse. | Phones, the back button, sharing a link. | None. |
+| D8 | Merged into D6 (moving portraits are part of the look decision). | | |
 | D9 | Council uses copied systems (Seneca, Abdaal, Hill, Stefan James, Franklin), no AI speaking as the person. | Nothing invented in a real man's name. | Less "magic" than a chat with Marcus. |
 | D10 | The new gallery lives at `/plan/role-models`; the old `/test/role-models` and `/test/marcus-loop` stay untouched as your lab. | A role model feeds the plan; nothing of yours removed. | Two galleries exist for a while. |
 | D11 | Dossiers in the repo keep only citations and short quotes; longer source notes go to `~/.cache/daygame-research/role-models/`. | The repo is public. | None. |
@@ -263,10 +270,10 @@ Each use is a copy of a system a named person describes. Inventions are labelled
 | B-FACE | Selfie videos served publicly | Before: a ranged `curl` on `/testJVC.mp4` answered `206`, but that probe did not check which file answered. Other media in `public/` answer `200` with the real file (`x-matched-path` = the file), so the videos almost surely were served. After `52160d5` (live build `52160d5`): `404`, `x-matched-path: /404`. | Nothing; privacy | Done; history wipe is Phase 0b. |
 | B-HISTORY | Wiping the videos from git history | `git filter-repo` is not installed. GitHub: 0 forks, public, 564 MB. `git worktree list`: 3 worktrees under `.claude/worktrees/` and 6 scratch worktrees of other sessions (alpha test, audit, energy audit, life plan). The files were added in commits `01623760` and `0694bdd7`. | Phase 0b | Install `git-filter-repo` with `pip install --user` (a free tool, not a repo dependency). Only at a quiet moment. |
 | B-VALUES | Value lists differ | Script compare: life plan 131, inner game 301, shared 97; live `values` 222 rows in 10 categories; `core_values` 222; `life_plan_values` 339; `user_values` 1. | Phase 1 | D2. |
-| B-LICENSE | LivePortrait face models | `~/projects/LivePortrait/LICENSE`: "The models of InsightFace are for non-commercial research purposes only." | Phase 13 | Swap to MediaPipe face detection (the ComfyUI-LivePortraitKJ node does this), or a depth-based camera drift instead. |
-| B-RAM | Memory for a local image model | `free -g`: 31 GB total, about 5 GB available while other sessions run. GPU: RTX 4060, 8 GB. | Phase 11 route (a) | Check `free -g` first; generate one image at a time with model offloading; stop if under 8 GB available. |
-| B-COMMONS | Free likeness sources | Wikimedia Commons API search "Spinoza portrait": three files, all "Public domain", with size and artist data. Needs a descriptive User-Agent. | Phase 6 | Ready. Use a generic client name, never an email address. |
-| B-IMG-CONFIG | Site-wide `images.unoptimized: true` | Read `next.config.mjs:37`. Changing it touches every page. | Phase 6 | Do not change it. Make the files at the right sizes with a script. |
+| B-LICENSE | LivePortrait face models | `~/projects/LivePortrait/LICENSE`: "The models of InsightFace are for non-commercial research purposes only." | The look decision | Swap to MediaPipe face detection (the ComfyUI-LivePortraitKJ node does this), or a depth-based camera drift instead. |
+| B-RAM | Memory for a local image model | `free -g`: 31 GB total, about 5 GB available while other sessions run. GPU: RTX 4060, 8 GB. | The look decision | Check `free -g` first; generate one image at a time with model offloading; stop if under 8 GB available. |
+| B-COMMONS | Free likeness sources | Wikimedia Commons API search "Spinoza portrait": three files, all "Public domain", with size and artist data. Needs a descriptive User-Agent. | Likeness links in dossiers; the look decision | Ready. Use a generic client name, never an email address. |
+| B-IMG-CONFIG | Site-wide `images.unoptimized: true` | Read `next.config.mjs:37`. Changing it touches every page. | The look decision | Do not change it. Make the files at the right sizes with a script. |
 | B-NEXT | This Next.js differs from training data | `node_modules/next/dist/docs/` exists. | Phases 5, 7, 8 | Read the routing and data guides there before writing pages. |
 | B-PEERS | Other sessions share this checkout | Recent commits from other sessions daily. | Every commit | Work in a worktree, `git commit --only <paths>`, never `git add -A` or `git stash`. |
 | B-HOSTING | Vercel's free Hobby plan is for non-commercial use only and includes 100 GB of transfer a month (Vercel docs). | Not this plan; matters on the first paying user. | None now | Noted for the owner; no action here. |
@@ -338,7 +345,8 @@ lost work.
    translation? }`), `definingMoment` `{ text, sourceIds }`, `shadow` `{ text, sourceIds }`,
    `councilQuestion` `{ text, principleIndex }`, `readings` (0–3 of `{ title, year }`),
    `sources` (`{ id, kind: "primary"|"secondary", title, author, year, publisher?, url? }`),
-   `portrait` `{ kind: "archive"|"painted"|"emblem", likeness?: { title, url, licence, author }, files? }`,
+   `likenessSources` (optional, 0–3 of `{ title, url, licence, author }`: free portraits or busts noticed while
+   researching; nothing downloaded),
    `review` `{ status: "draft"|"validated"|"flagged"|"excluded"|"proposed-remove", screen: { result, notes },
    blindAgreement: number, devilsAdvocate: string, checkedOn }`.
 3. `scripts/role-models/build-index.mjs`: reads `src/role-models/data/people/*.json`, writes
@@ -350,8 +358,7 @@ lost work.
    word is a life plan word; 3–5 values; each value has evidence of at least two kinds from at least two
    different `sourceId`s; at least one `primary` and two `secondary` sources; every `sourceId` exists; every
    quote has a locator; `shadow` and `startedFrom` are not empty; `status` is set; a `validated` person has
-   `blindAgreement` recorded and a non-empty `devilsAdvocate`; portrait `archive`/`painted` has a licence, and
-   `painted`/`archive` is refused for anyone covered by O6. A second test feeds a deliberately bad fixture from
+   `blindAgreement` recorded and a non-empty `devilsAdvocate`; every likeness source names a licence. A second test feeds a deliberately bad fixture from
    `tests/fixtures/role-models/` and expects each rule to fail on its own (no test that passes by doing nothing).
 
 **Acceptance:** `npx vitest run tests/unit/role-models` passes with an empty catalogue, and each bad fixture
@@ -364,7 +371,9 @@ fails for its own reason.
    profile and flags any sentence that preaches, excuses, flatters or demonises; the shadow must read like a
    biographer's plain account, and nothing may shame the reader for admiring the man). Each states its exact JSON output,
    the source rules (Part 1, "Question 4"), the fairness rules, and "if you cannot find it, say so; never
-   guess". The blind pick prompt receives only the name and the word list.
+   guess". The blind pick prompt receives only the name and the word list. `dossier.md` also says: if you come across a
+   free portrait or bust of him (public domain, CC0, CC BY, CC BY-SA) note its page link, author and licence in
+   `likenessSources`; do not search for one on purpose and do not download anything.
 2. Pilot three people end to end, one at a time: **Marcus Aurelius** (ancient, translation), **Spinoza**
    (philosopher, you named him), **Alex Hormozi** (living, books and podcasts). For each: screen, dossier, blind
    pick, devil's advocate, quote check, profile, then the person file. Longer source notes go to
@@ -403,50 +412,29 @@ listed, append only). Do not wait: flagged people stay hidden until marked; ever
 Read `node_modules/next/dist/docs/` on routing, server components and static generation first.
 
 1. `app/(app)/plan/role-models/page.tsx`: a server component, rendered statically, reads only the card fields
-   (name, tagline, category, top three values, portrait files). Search and category filter in a small client
+   (name, years, tagline, category, top three values). Search and category filter in a small client
    component that receives the card list as props. Shows only `validated` people.
 2. `app/(app)/plan/role-models/[id]/page.tsx`: static pages for every validated person. Sections in this order:
-   portrait, name and tagline, values with "how we know" (one line of evidence per value, with source),
-   quotes with exact place, principles, defining moment, where he started, his shadow, what to read,
+   the placeholder header, name and tagline, values with "how we know" (one line of evidence per value, with
+   source), quotes with exact place, principles, defining moment, where he started, his shadow, what to read,
    and a sources list. A plain link back to the gallery.
-3. Card (`src/role-models/components/RoleModelCard.tsx`): fixed size; on hover or keyboard focus it grows with
-   `transform: scale()` only, never width. On phones the card in the middle of the screen is the "alive" one
-   (an IntersectionObserver with a centre band). Tapping opens the profile page.
-4. One ambient layer (`src/role-models/components/AmbientGlow.tsx`), reusing the agreed numbers from
-   `AGREED_DEFAULTS` in `src/inner-game/components/AmbientEffects.tsx` (spotlight 2, flicker 2, embers 2,
-   vignette 3, rim 1), rendered only on the one active card and on the profile portrait. Off under
-   `prefers-reduced-motion: reduce` and when `navigator.connection.saveData` is true.
-5. Emblem card for people without a portrait: initials in a seal, category colour, same frame and gradient.
-6. A link "Choose your council" from the values step in `/plan` (`ValuesWork.tsx`) to the gallery.
-7. `tests/e2e/role-models.spec.ts`: gallery shows N validated cards; search by a value word filters; a card opens
-   its profile; Back returns; reduced motion shows no running animations
-   (`document.getAnimations().length === 0`). Tag `@phone` for the phone lane.
+3. `src/role-models/components/RoleModelVisual.tsx`: the ONE place a role model's picture will live. For now it
+   draws the same plain placeholder for everyone: initials, years, the category colour as a flat background.
+   No images, no animation, no effects (D6). Card and profile both use it, so the later look decision changes
+   this one file.
+4. Card (`src/role-models/components/RoleModelCard.tsx`): fixed size; the whole card is a link to the profile;
+   works by touch and keyboard; no text that appears only on hover.
+5. A link "Choose your council" from the values step in `/plan` (`ValuesWork.tsx`) to the gallery.
+6. `tests/e2e/role-models.spec.ts`: gallery shows N validated cards; search by a value word filters; a card opens
+   its profile; Back returns; no running animations (`document.getAnimations().length === 0`). Tag `@phone` for
+   the phone lane.
 
-**Acceptance:** the e2e spec passes on desktop and phone lanes; with Playwright, a phone-size first screen
-transfers under 600 KB in total; with reduced motion, zero running animations; checked in the browser at 390 px
-and 1280 px, screenshots in `.playwright-mcp/`.
+**Acceptance:** the e2e spec passes on desktop and phone lanes; a phone-size first screen transfers under
+300 KB in total (Playwright); checked in the browser at 390 px and 1280 px, screenshots in `.playwright-mcp/`.
 
-## Phase 6 — Archive portraits (depends on: 5)
+## Phase 6 — Archive portraits — deferred (see "Later: the look")
 
-1. `scripts/role-models/portraits/fetch_likeness.py` (run with `python3 -I`): for each validated person not
-   covered by O6, search Wikimedia Commons for a portrait, bust or photo; keep only files whose licence is
-   public domain, CC0, CC BY or CC BY-SA; save the original and its licence, author and page URL to
-   `~/dg-media/role-models/src/<id>/`. User-Agent: `role-model-portraits/1.0 (daygame-coach)`.
-2. Pick the best file per person by rules, in this order: a face clearly visible; made in his lifetime or from
-   life (busts, paintings from life, photos); largest. Write the pick and the reason into the person file's
-   `portrait.likeness`.
-3. `scripts/role-models/portraits/grade.py`: crop to head and shoulders (square), apply one house colour grade
-   (warm highlights, teal shadows, vignette, fade to black at the bottom, like Marcus), and export 320, 640
-   and 960 px in AVIF and WebP with ffmpeg (both encoders are installed) into
-   `public/role-models/<id>/`. No file over 150 KB; the 320 px under 40 KB.
-4. Profile page shows the credit line (author, licence, link) under the portrait; CC BY-SA images say the
-   graded version is shared under the same licence.
-5. Card uses `<picture>` with AVIF then WebP, `width`/`height` set, `loading="lazy"` except the first row,
-   `decoding="async"`.
-
-**Acceptance:** every validated person has either an archive portrait with a licence or an emblem; the
-catalogue test's portrait rules pass; look at 12 portraits yourself at 320 px and 960 px and list any that fail
-(bad crop, wrong person, watermark) and fix them.
+Not in this run.
 
 ## Phase 7 — Your council (depends on: 5, and O3 = yes)
 
@@ -474,7 +462,7 @@ rows (integration test); `/security-review` run by a sub-agent on the diff (orig
 1. Values step: in `ValuesWork.tsx`, a row "From your council" lists the taken values not yet in your values,
    each tagged with the person's name; one tap adds it like any other suggestion (reuse `ValueBrowser`).
 2. Today (`TodayTab.tsx`): one council card. The member rotates by day (day number modulo council size). It
-   shows the portrait, one checked quote, the value you took, and the line "Today, as if he were watching."
+   shows his `RoleModelVisual` placeholder, one checked quote, the value you took, and the line "Today, as if he were watching."
    Hidden when the council is empty. Loads after the rest of Today, so a slow read never delays the page.
 3. Weekly review (`PeriodReviewTab.tsx`, week only): one question per council member from `councilQuestion`,
    with "from his principle: …" under it, placed above the existing lessons box. No new storage; answers go
@@ -501,7 +489,85 @@ Same as Phase 3 for every remaining candidate, in batches of five. New exception
 **Acceptance:** every candidate has a person file with a status; at least 120 `validated`; every category at
 least eight.
 
-## Phase 11 — Painted portraits (depends on: 6)
+## Phase 11 — Painted portraits — deferred (see "Later: the look")
+
+Not in this run.
+
+## Phase 12 — Use 3: value of the week, reminder (depends on: 8; O3)
+
+1. Value of the week (Franklin): a table `user_role_model_week_marks` (user, date, value, lived boolean), a tick
+   on Today, seven marks in the weekly review. Optional, off until chosen.
+2. Daily council reminder: opt-in in the council strip; a time of day; sent through the existing push path the
+   way review reminders are (`src/notifications/pushService.ts`, `ReviewReminder.tsx`); respects quiet hours
+   (`quietHours.ts`).
+3. The wallpaper idea waits for the look decision.
+
+**Acceptance:** e2e for the tick; a unit test for reminder timing with quiet hours.
+
+## Phase 13 — Moving portraits — deferred (see "Later: the look")
+
+Not in this run.
+
+## Phase 14 — Final audit and handover (depends on: everything above)
+
+1. Random sample of 20 validated people. A fresh agent, given only the person file, re-checks one value's
+   evidence, one quote's exact place and one claim in his shadow for each. More than one error: fix the cause in the prompts, re-check
+   that wave.
+2. `/code-review` on the full diff; `/security-review` by a sub-agent on the council table and route.
+3. Update `docs/product/map.md` (inner-game line, `/plan/role-models`), and `docs/product/vision.md` item 22.
+4. Set this plan's status to done; prune merged branches as `.claude/rules/finished-work.md` says.
+5. Report to the owner in plain words, doubt first: what is live, the audit's error count, what waits for him.
+
+---
+
+## Later: the look (not in this run)
+
+The owner decides the look of all role models at once, as one process, so they look alike. Nothing below runs
+until he asks. When he does, a session prepares one decision page: the same three people (say Marcus, Spinoza
+and a living man) shown by each candidate process side by side, at card and profile size, still and moving,
+with the file size, cost and licence of each. He picks one process; it is then run for everyone through
+`RoleModelVisual`.
+
+What is already known, for that page:
+- **Sizes.** A card picture at 480 px WebP is 38 KB (today's 5.7 MB PNG); a 720 px H.264 loop is 139 KB
+  (today's 1.1 MB). Image shrinking is off site-wide (`next.config.mjs:37`), so files must be made at size.
+- **Effects.** The CSS ambient layer is cheap (60 fps with the processor slowed 6×); the problem is all cards
+  animating at once (22 to 184 animations). The agreed settings from 2026-02-15 are `AGREED_DEFAULTS` in
+  `src/inner-game/components/AmbientEffects.tsx`.
+- **Licences.** LivePortrait's face models are non-commercial only (B-LICENSE). Stable Diffusion XL base allows
+  commercial use; FLUX.1-dev does not. Wikimedia Commons gives public-domain likenesses with licence data
+  (B-COMMONS); dossiers collect `likenessSources` meanwhile.
+- **Faces of the living and recently dead** (O6, deferred): personality rights; estates license and sue.
+- **Your PC:** RTX 4060 with 8 GB; about 5 GB of free memory while other sessions run (B-RAM).
+- **Your Marcus** (`public/marcus-test/marcus_alive4_01.png`, prompt in `docs/marcus_image_prompts.txt`) is the
+  look you liked.
+
+The three option files below were written as phases before the deferral. They are kept as worked-out options,
+not instructions.
+
+### Option file 1 — Archive portraits (was Phase 6)
+
+1. `scripts/role-models/portraits/fetch_likeness.py` (run with `python3 -I`): for each validated person not
+   covered by O6, search Wikimedia Commons for a portrait, bust or photo; keep only files whose licence is
+   public domain, CC0, CC BY or CC BY-SA; save the original and its licence, author and page URL to
+   `~/dg-media/role-models/src/<id>/`. User-Agent: `role-model-portraits/1.0 (daygame-coach)`.
+2. Pick the best file per person by rules, in this order: a face clearly visible; made in his lifetime or from
+   life (busts, paintings from life, photos); largest. Write the pick and the reason into the person file's
+   `portrait.likeness`.
+3. `scripts/role-models/portraits/grade.py`: crop to head and shoulders (square), apply one house colour grade
+   (warm highlights, teal shadows, vignette, fade to black at the bottom, like Marcus), and export 320, 640
+   and 960 px in AVIF and WebP with ffmpeg (both encoders are installed) into
+   `public/role-models/<id>/`. No file over 150 KB; the 320 px under 40 KB.
+4. Profile page shows the credit line (author, licence, link) under the portrait; CC BY-SA images say the
+   graded version is shared under the same licence.
+5. Card uses `<picture>` with AVIF then WebP, `width`/`height` set, `loading="lazy"` except the first row,
+   `decoding="async"`.
+
+**Acceptance:** every validated person has either an archive portrait with a licence or an emblem; the
+catalogue test's portrait rules pass; look at 12 portraits yourself at 320 px and 960 px and list any that fail
+(bad crop, wrong person, watermark) and fix them.
+
+### Option file 2 — Painted portraits (was Phase 11)
 
 1. Write a style bible `scripts/role-models/portraits/STYLE.md` from the Marcus prompt
    (`docs/marcus_image_prompts.txt`, "PROMPT 1"): framing, light, palette, bottom fade, no text.
@@ -518,19 +584,7 @@ least eight.
 **Acceptance:** painted people pass the catalogue test; each painted portrait looked at by you beside its
 likeness source; none shows text, watermark or a wrong face.
 
-## Phase 12 — Use 3: value of the week, reminder, wallpaper (depends on: 8; O3)
-
-1. Value of the week (Franklin): a table `user_role_model_week_marks` (user, date, value, lived boolean), a tick
-   on Today, seven marks in the weekly review. Optional, off until chosen.
-2. Daily council reminder: opt-in in the council strip; a time of day; sent through the existing push path the
-   way review reminders are (`src/notifications/pushService.ts`, `ReviewReminder.tsx`); respects quiet hours
-   (`quietHours.ts`).
-3. Wallpaper (invention): a button on the profile page draws portrait, one quote and your taken value onto a
-   phone-sized canvas in the browser and offers it as a download. No server work.
-
-**Acceptance:** e2e for the tick and the wallpaper download; a unit test for reminder timing with quiet hours.
-
-## Phase 13 — Moving portraits (depends on: 11; B-LICENSE solved)
+### Option file 3 — Moving portraits (was Phase 13)
 
 Only for the ten most-picked people (or, while you are the only user, the people in your council).
 
@@ -545,16 +599,6 @@ Only for the ten most-picked people (or, while you are the only user, the people
 **Acceptance:** a phone-size profile with video transfers under 400 KB in total; no video plays with reduced
 motion (e2e).
 
-## Phase 14 — Final audit and handover (depends on: everything above)
-
-1. Random sample of 20 validated people. A fresh agent, given only the person file, re-checks one value's
-   evidence, one quote's exact place and one claim in his shadow for each. More than one error: fix the cause in the prompts, re-check
-   that wave.
-2. `/code-review` on the full diff; `/security-review` by a sub-agent on the council table and route.
-3. Update `docs/product/map.md` (inner-game line, `/plan/role-models`), and `docs/product/vision.md` item 22.
-4. Set this plan's status to done; prune merged branches as `.claude/rules/finished-work.md` says.
-5. Report to the owner in plain words, doubt first: what is live, the audit's error count, what waits for him.
-
 ---
 
 # Ground rules for the executing session
@@ -564,6 +608,8 @@ motion (e2e).
 - Money: none. A step that would cost money is skipped, listed, and the rest goes on.
 - Never delete the owner's content. Anything to go is marked `proposed-remove` with a reason and shown on the
   decision page.
+- No pictures, portraits, animation or effects in this run (D6). Every visual goes through `RoleModelVisual`
+  and stays the plain placeholder.
 - Reality, not saints: never drop or soften a person for being dark; never add a moral verdict. Only the
   rules in "The fairness rules" keep someone out.
 - Never invent a quote, a date, a deed or a source. "Not found" is a valid answer and keeps a value out.
@@ -593,5 +639,4 @@ findings, O1–O7, D1–D12, the uses, the 13 categories and all 233 candidates,
   `scratchpad/page/template.html` + the candidate file in the session that wrote this plan; that scratch folder
   will be gone. Read the published page with the `Artifact` tool (`action: "read"`, the URL above), save it to
   your own scratch folder, add the new sections in the same style (each item gets the same "Mark or note"
-  block and a new item id prefix: `x-` for exceptions, `w-` for new value words, `l-` for the portrait look
-  test), and publish to the same `url`. Never drop existing sections or notes.
+  block and a new item id prefix: `x-` for exceptions, `w-` for new value words), and publish to the same `url`. Never drop existing sections or notes.

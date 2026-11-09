@@ -12,8 +12,8 @@ Columns:
   sexual-violence case; it goes on the decision page and stays hidden until the owner marks it).
 - The owner's rule (2026-11-09): represent reality; people on the edge are more interesting. Nobody here is
   excluded for being dark.
-- **Face**: `paint` = died before 1956, so an archive or painted portrait is allowed; `emblem` = alive or died
-  1956 or later (O6).
+- **Face**: input for the later look decision only (nothing is drawn in this run). `paint` = died before 1956;
+  `emblem` = alive or died 1956 or later, where a generated face carries personality-right risk (O6, deferred).
 - **Wave**: `1` = Phase 3 (about 60 people), `2` = Phase 10. `(current)` = in today's library of 30.
 
 Counts: 13 categories, 233 names; 6 are "owner decides" cases. James Bond and Don Draper are not listed: they are fictional (O5).
