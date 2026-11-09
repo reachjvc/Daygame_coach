@@ -6,11 +6,14 @@ import { describe, expect, it, vi } from "vitest"
 import {
   AUDIT_QUEUE_KEY,
   answersSent,
+  cancelDelete,
+  deleteIsDue,
   deletesSent,
   emptyAuditQueue,
   enqueueAnswers,
   enqueueDelete,
   readAuditQueue,
+  unsentAuditChanges,
   writeAuditQueue,
 } from "@/src/audit/auditQueue"
 import type { AuditAnswer } from "@/src/audit/types"
@@ -81,5 +84,31 @@ describe("the audit queue", () => {
     await forgetOfflineCopies()
     expect(window.localStorage.getItem(AUDIT_QUEUE_KEY)).toBeNull()
     vi.unstubAllGlobals()
+  })
+})
+
+describe("a delete with Undo time (alpha picky-eye-08, code review 2026-11-09)", () => {
+  it("is stored at the tap, stamped with the tap, and counted for Log Out", () => {
+    const store = window.localStorage
+    writeAuditQueue(store, enqueueDelete(emptyAuditQueue("me"), "x1", "2026-11-09T10:00:00.000Z", "2026-11-09T10:00:06.000Z"))
+    expect(readAuditQueue(store, "me").deletes).toEqual([{ id: "x1", at: "2026-11-09T10:00:00.000Z", notBefore: "2026-11-09T10:00:06.000Z" }])
+    expect(unsentAuditChanges(store)).toBe(1)
+    store.removeItem(AUDIT_QUEUE_KEY)
+  })
+
+  it("is not due until its Undo time is over", () => {
+    const d = { id: "x1", at: "2026-11-09T10:00:00.000Z", notBefore: "2026-11-09T10:00:06.000Z" }
+    expect(deleteIsDue(d, Date.parse("2026-11-09T10:00:05.000Z"))).toBe(false)
+    expect(deleteIsDue(d, Date.parse("2026-11-09T10:00:06.000Z"))).toBe(true)
+    expect(deleteIsDue({ id: "x2", at: d.at }, 0)).toBe(true)
+  })
+
+  it("Undo takes it back out, and puts back the waiting answer it removed", () => {
+    const waiting = a("x1", "2026-11-09T09:45:00.000Z", "Reading")
+    const held = enqueueDelete(enqueueAnswers(emptyAuditQueue("me"), [waiting]), "x1", "2026-11-09T10:00:00.000Z", "2026-11-09T10:00:06.000Z")
+    expect(held.answers).toEqual([])
+    const undone = cancelDelete(held, "x1")
+    expect(undone.deletes).toEqual([])
+    expect(undone.answers).toEqual([waiting])
   })
 })

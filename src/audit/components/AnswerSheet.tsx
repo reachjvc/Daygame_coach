@@ -71,6 +71,7 @@ function Card({
   onEdit,
   cover,
   onCover,
+  onTouched,
 }: {
   card: AnswerCardInput
   index: number
@@ -87,6 +88,8 @@ function Card({
   onEdit: () => void
   cover: Cover | null
   onCover: (on: boolean) => void
+  /** The person changed something here: no other card may cover (and hide) it now. */
+  onTouched: () => void
 }) {
   const e = card.existing
   const quarters = cover?.on ? [...cover.quarters, ...card.quarters] : card.quarters
@@ -133,10 +136,12 @@ function Card({
   const autoSave = !e && !elsewhere && !savedOnce
   const pickEnergy = (v: ScaleValue) => {
     setEnergy(v)
+    onTouched()
     if (autoSave && activity.trim() && growth !== null) save(v, growth)
   }
   const pickGrowth = (v: ScaleValue) => {
     setGrowth(v)
+    onTouched()
     if (autoSave && activity.trim() && energy !== null) save(energy, v)
   }
 
@@ -228,7 +233,10 @@ function Card({
         </p>
       )}
       <div className="mt-3 space-y-4 px-1">
-        <ActivityField id={`audit-activity-${index}`} value={activity} onChange={setActivity} suggestions={suggestions} />
+        <ActivityField id={`audit-activity-${index}`} value={activity} onChange={(v) => {
+            setActivity(v)
+            onTouched()
+          }} suggestions={suggestions} />
         <ScaleRow label="Energy" low="1 takes my energy" high="7 gives me energy" value={energy} onChange={pickEnergy} testId="audit-energy" />
         <ScaleRow label="Growth" low="1 ruins my life" high="7 builds my life" value={growth} onChange={pickGrowth} testId="audit-growth" />
         <div>
@@ -241,7 +249,10 @@ function Card({
             maxLength={WHY_MAX}
             rows={2}
             placeholder="Is it the activity itself, or how you were thinking about it?"
-            onChange={(ev) => setWhy(ev.target.value)}
+            onChange={(ev) => {
+              setWhy(ev.target.value)
+              onTouched()
+            }}
             className="mt-1.5 w-full min-w-0 rounded-lg border border-border bg-background px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
             data-testid="audit-why"
           />
@@ -298,11 +309,14 @@ export function AnswerSheet({
   const [saved, setSaved] = useState<Set<number>>(new Set())
   /** Card index → the quarters before it that it covers, ticked by the person. */
   const [covers, setCovers] = useState<Map<number, number[]>>(new Map())
+  /** Cards the person has typed or tapped in: never covered, so nothing typed is hidden (code review). */
+  const [touched, setTouched] = useState<Set<number>>(new Set())
   const box = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!open) return
     setSaved(new Set())
     setCovers(new Map())
+    setTouched(new Set())
   }, [open, cards])
 
   const existingByQuarter = new Map<number, DrawnSlot>()
@@ -322,7 +336,7 @@ export function AnswerSheet({
     if (ticked) return { quarters: ticked, on: true }
     const isOpen = (q: number) => {
       const j = single.get(q)
-      return j !== undefined && j !== i && !saved.has(j) && !coveredBy.has(q) && !covers.has(j)
+      return j !== undefined && j !== i && !saved.has(j) && !coveredBy.has(q) && !covers.has(j) && !touched.has(j) && !cards[j].asked
     }
     return { quarters: stretchBefore(c.quarters[0], isOpen, (q) => cards[single.get(q) ?? i]?.entryId ?? null), on: false }
   }
@@ -353,6 +367,9 @@ export function AnswerSheet({
               saved={saved.has(i)}
               lost={quarters.map((q) => lostByQuarter.get(q)).find((r) => r !== undefined) ?? null}
               cover={cover}
+              onTouched={() => {
+                if (!touched.has(i)) setTouched((prev) => new Set(prev).add(i))
+              }}
               onCover={(on) =>
                 setCovers((prev) => {
                   const next = new Map(prev)

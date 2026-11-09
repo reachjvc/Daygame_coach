@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures/test"
+import { test, expect, SIGNED_OUT, signIn } from "./fixtures/test"
 import type { Locator, Page } from "@playwright/test"
 import { randomUUID } from "node:crypto"
 import { stackAdmin } from "./fixtures/stack"
@@ -266,6 +266,60 @@ test.describe("answering a ping @phone", () => {
     await page.getByTestId("audit-mute-open").click()
     await expect(page.getByTestId("audit-mute-state")).toContainText("Pings are on")
     await expect(page.getByTestId("audit-mute-state")).toContainText("to Android phone · Chrome")
+  })
+
+  /** One answer to delete; returns the run. */
+  async function seedOneAnswer(userId: string, activity: string): Promise<string> {
+    const run = await seedRun(userId)
+    const { error } = await stackAdmin()
+      .from("audit_slots")
+      .insert({ id: randomUUID(), user_id: userId, run_id: run, slot_at: new Date(qStart(Date.now()) - 4 * Q).toISOString(), activity, energy: 4, growth: 4, source: "app" })
+    expect(error).toBeNull()
+    return run
+  }
+
+  test("F12: Log Out inside the Undo time still sends the delete, and leaves no queue behind", async ({ browser, throwawayAccount }, info) => {
+    test.setTimeout(150_000)
+    const context = await browser.newContext({ ...info.project.use, storageState: SIGNED_OUT, baseURL: info.project.use.baseURL })
+    try {
+      const page = await context.newPage()
+      await signIn(page, throwawayAccount)
+      const run = await seedOneAnswer(throwawayAccount.id, "Reading")
+      await page.goto(ROUTES.audit)
+      await whenHydrated(page.getByTestId("audit-page"), 60_000)
+      await page.getByTestId("audit-row-answered").filter({ hasText: "Reading" }).click()
+      await page.getByTestId("audit-answer-sheet").getByTestId("audit-delete").click()
+      await expect(page.getByTestId("audit-undo")).toBeVisible()
+      // the delete is on the phone from the tap, not only on screen
+      expect(await page.evaluate(() => localStorage.getItem("audit-queue-v1"))).toContain("notBefore")
+      const header = page.getByTestId("header-logout-button")
+      if (await header.isVisible()) await header.click()
+      else {
+        await page.getByRole("button", { name: "More" }).first().click()
+        await page.getByRole("dialog", { name: "More" }).getByRole("button", { name: "Log Out" }).click()
+      }
+      await expect.poll(() => new URL(page.url()).pathname, { timeout: 30_000 }).toBe("/")
+      await expect.poll(async () => (await slotsOf(throwawayAccount.id, run)).length, { timeout: 15_000 }).toBe(0)
+      expect(await page.evaluate(() => localStorage.getItem("audit-queue-v1"))).toBeNull()
+    } finally {
+      await context.close()
+    }
+  })
+
+  test("F12: with no signal inside the Undo time, the delete waits and is sent when the signal returns", async ({ page, context, account }) => {
+    const run = await seedOneAnswer(account.id, "Reading")
+    await page.goto(ROUTES.audit)
+    await whenHydrated(page.getByTestId("audit-page"), 60_000)
+    await page.getByTestId("audit-row-answered").filter({ hasText: "Reading" }).click()
+    await context.setOffline(true)
+    await page.getByTestId("audit-answer-sheet").getByTestId("audit-delete").click()
+    await expect(page.getByTestId("audit-undo")).toBeHidden({ timeout: 15_000 })
+    await expect(page.getByTestId("audit-waiting")).toContainText("1 change is saved on this phone")
+    expect((await slotsOf(account.id, run)).length).toBe(1)
+    await context.setOffline(false)
+    await page.evaluate(() => window.dispatchEvent(new Event("online")))
+    await expect.poll(async () => (await slotsOf(account.id, run)).length, { timeout: 20_000 }).toBe(0)
+    await expect(page.getByTestId("audit-waiting")).toBeHidden()
   })
 
   test("F13: with no device getting pings, Mute says so and offers the fix", async ({ page, account }) => {

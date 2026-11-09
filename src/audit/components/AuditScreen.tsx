@@ -262,45 +262,24 @@ function TodayView({
   const [answerNowPending, setAnswerNowPending] = useState<"no" | "reading" | "ready">("no")
 
   /**
-   * DELETE WITH UNDO (alpha picky-eye-08). A deleted answer leaves the screen
-   * at once and "Deleted · Undo" shows for UNDO_MS; only then is the delete
-   * queued. Leaving the page, or a second delete, sends it straight away.
+   * DELETE WITH UNDO (alpha picky-eye-08). The delete goes into the stored
+   * queue at the tap, stamped with the tap, and is sent once UNDO_MS has
+   * passed; "Deleted · Undo" shows meanwhile, and Undo takes it back out. In
+   * the queue from the start, Log Out counts and sends it, and no other
+   * device's newer answer is deleted by a late stamp (code review, 2026-11-09).
    */
   const [held, setHeld] = useState<DrawnSlot | null>(null)
-  const heldRef = useRef<DrawnSlot | null>(null)
-  const removeNow = s.remove
-  // Through a ref, so a new `remove` never re-runs the effect whose cleanup sends the delete early.
-  const removeRef = useRef(removeNow)
-  removeRef.current = removeNow
-  const sendHeld = useCallback(() => {
-    const h = heldRef.current
-    if (!h) return
-    heldRef.current = null
-    setHeld(null)
-    removeRef.current(h.id)
-  }, [])
-  const undoHeld = useCallback(() => {
-    heldRef.current = null
-    setHeld(null)
-  }, [])
   useEffect(() => {
     if (!held) return
-    const t = window.setTimeout(sendHeld, UNDO_MS)
+    const t = window.setTimeout(() => setHeld(null), UNDO_MS)
     return () => window.clearTimeout(t)
-  }, [held, sendHeld])
-  useEffect(() => {
-    const onHidden = () => {
-      if (document.visibilityState === "hidden") sendHeld()
-    }
-    document.addEventListener("visibilitychange", onHidden)
-    window.addEventListener("pagehide", sendHeld)
-    return () => {
-      document.removeEventListener("visibilitychange", onHidden)
-      window.removeEventListener("pagehide", sendHeld)
-      sendHeld()
-    }
-  }, [sendHeld])
-  const slots = useMemo(() => (held ? s.slots.filter((sl) => sl.id !== held.id) : s.slots), [s.slots, held])
+  }, [held])
+  const undoRemove = s.undoRemove
+  const undoHeld = useCallback(() => {
+    if (held) undoRemove(held.id)
+    setHeld(null)
+  }, [held, undoRemove])
+  const slots = s.slots
 
   const quarters = useMemo(() => runQuarters(run, now, tz), [run, now, tz])
   const answered = useMemo(() => {
@@ -498,18 +477,17 @@ function TodayView({
             const h = held
             const same = (a: { runId: string; slotAt: string }) => h !== null && a.runId === h.runId && a.slotAt === h.slotAt
             if (h && answers.some(same)) {
-              undoHeld()
+              setHeld(null)
+              // same id: the queued delete for it is dropped (enqueueAnswers)
               s.answer(answers.map((a) => (same(a) ? { ...a, id: h.id } : a)))
             } else s.answer(answers)
           }}
           onDelete={
             sheet.allowDelete
               ? (id) => {
-                  sendHeld()
                   const slot = s.slots.find((sl) => sl.id === id)
-                  if (!slot) return removeNow(id)
-                  heldRef.current = slot
-                  setHeld(slot)
+                  s.remove(id, slot ? UNDO_MS : 0)
+                  setHeld(slot ?? null)
                 }
               : undefined
           }

@@ -23,6 +23,8 @@ import { AuditCallError, auditApi, type AuditView } from "../auditClient"
 import {
   AUDIT_QUEUE_KEY,
   answersSent,
+  cancelDelete,
+  deleteIsDue,
   deletesSent,
   emptyAuditQueue,
   enqueueAnswers,
@@ -205,7 +207,9 @@ export function useAudit(account: string) {
         )
         if (!stuck && queueRef.current.answers.some((a) => later.has(a.id))) stuck = { status: 0 }
         if (!stuck) {
-          for (const { id, at: deletedAt } of queueRef.current.deletes) {
+          for (const { id, at: deletedAt, ...d } of queueRef.current.deletes) {
+            // still in its "Undo" time: sent by the timer that ends it
+            if (!deleteIsDue({ id, at: deletedAt, ...d }, Date.now())) continue
             try {
               await api.remove(id, deletedAt)
               const c = confirmedRef.current
@@ -284,7 +288,7 @@ export function useAudit(account: string) {
     const byQuarter = new Map<string, DrawnSlot>()
     const deleted = new Set([...queue.deletes.map((d) => d.id), ...confirmed.deletes.map((d) => d.id)])
     for (const s of view.slots) if (!deleted.has(s.id)) byQuarter.set(quarterKey(s), { ...s, pending: false })
-    for (const { answer } of confirmed.answers) byQuarter.set(quarterKey(answer), { ...answer, pending: false })
+    for (const { answer } of confirmed.answers) if (!deleted.has(answer.id)) byQuarter.set(quarterKey(answer), { ...answer, pending: false })
     for (const a of queue.answers) byQuarter.set(quarterKey(a), { ...a, pending: true })
     return [...byQuarter.values()].sort((x, y) => x.slotAt.localeCompare(y.slotAt))
   }, [view, queue, confirmed])
@@ -301,13 +305,20 @@ export function useAudit(account: string) {
     [flush, setQ],
   )
 
+  /**
+   * Delete an answer. With `holdMs`, the delete is stored at once (stamped
+   * with the tap) but sent only after that long, so Undo can take it back.
+   */
   const remove = useCallback(
-    (id: string) => {
-      setQ(enqueueDelete(queueRef.current, id))
-      void flush()
+    (id: string, holdMs = 0) => {
+      const now = Date.now()
+      setQ(enqueueDelete(queueRef.current, id, new Date(now).toISOString(), holdMs > 0 ? new Date(now + holdMs).toISOString() : undefined))
+      if (holdMs > 0) window.setTimeout(() => void flush(), holdMs + 50)
+      else void flush()
     },
     [flush, setQ],
   )
+  const undoRemove = useCallback((id: string) => setQ(cancelDelete(queueRef.current, id)), [setQ])
 
   /** A decision: waits for the server, then re-reads. Returns the error sentence, or null. */
   const decide = useCallback(
@@ -333,7 +344,8 @@ export function useAudit(account: string) {
     loadError,
     slots,
     sendState,
-    waiting: queue.answers.length + queue.deletes.length,
+    // a delete still in its Undo time is not "waiting for signal"
+    waiting: queue.answers.length + queue.deletes.filter((d) => deleteIsDue(d, Date.now())).length,
     reload: load,
     fromCopy,
     notKept,
@@ -341,6 +353,7 @@ export function useAudit(account: string) {
     setZone: (timezone: string) => decide(() => api.zone(timezone)),
     answer,
     remove,
+    undoRemove,
     start: () => decide(() => api.start(crypto.randomUUID())),
     end: () => (runId ? decide(() => api.end(runId)) : Promise.resolve("No audit is running")),
     mute: (option: MuteOption) => (runId ? decide(() => api.mute(runId, option)) : Promise.resolve("No audit is running")),

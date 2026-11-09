@@ -58,6 +58,17 @@ describe("the answer sheet", () => {
     expect(saved[0].map((a) => a.slotAt).sort()).toEqual([q0, q0 + Q, q0 + 2 * Q].map((q) => new Date(q).toISOString()))
   })
 
+  test("a card he has typed in, or the pinged one, is never covered (code review: typed text was dropped)", () => {
+    const pinged: AnswerCardInput[] = [q0 + 3 * Q, q0 + 2 * Q, q0 + Q, q0].map((q, i) => ({ quarters: [q], text: "", entryId: null, existing: null, asked: i === 2 }))
+    render(<AnswerSheet open onClose={() => {}} title="Answer now" cards={pinged} runId={RUN_ID} timezone="Europe/Copenhagen" source="app" suggestions={[]} slots={[]} onSave={() => {}} />)
+    // the newest card's stretch stops at the pinged quarter (13:15): only 13:30 is offered
+    expect(screen.getAllByTestId("audit-cover")[0].textContent).toContain("Same answer for the quarter before (13:30–13:45)")
+    // typing in 13:30 takes it out of the newest card's stretch too
+    fireEvent.change(screen.getAllByTestId("audit-activity")[1], { target: { value: "Half written" } })
+    expect(screen.queryAllByTestId("audit-cover")[0]?.textContent ?? "").not.toContain("13:30–13:45)")
+    expect(screen.getAllByTestId("audit-card")).toHaveLength(4)
+  })
+
   test("unticking gives the covered quarters their own cards back", () => {
     renderSheet(() => {})
     const box = () => screen.getAllByTestId("audit-cover")[0].querySelector("input")!

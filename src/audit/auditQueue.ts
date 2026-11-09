@@ -27,6 +27,14 @@ export interface QueuedDelete {
   id: string
   /** When it was deleted, by this phone's clock: a newer answer on another device is kept. */
   at: string
+  /**
+   * Not sent before this instant: the "Deleted · Undo" time (alpha picky-eye-08).
+   * It is in the stored queue from the tap, so Log Out counts and sends it,
+   * and its `at` is the tap, not the end of the undo time (code review, 2026-11-09).
+   */
+  notBefore?: string
+  /** The waiting answer the delete took out of the queue, put back by Undo. */
+  restore?: AuditAnswer
 }
 
 export interface AuditQueue {
@@ -76,14 +84,34 @@ export function enqueueAnswers(q: AuditQueue, answers: readonly AuditAnswer[]): 
   }
 }
 
-/** Delete an answer: out of the queue, and a delete queued in case it already reached the server. */
-export function enqueueDelete(q: AuditQueue, id: string, at: string = new Date().toISOString()): AuditQueue {
+/**
+ * Delete an answer: out of the queue, and a delete queued in case it already
+ * reached the server. With `notBefore`, it waits until then, and Undo
+ * (`cancelDelete`) can take it back.
+ */
+export function enqueueDelete(q: AuditQueue, id: string, at: string = new Date().toISOString(), notBefore?: string): AuditQueue {
+  const waiting = q.answers.find((a) => a.id === id)
+  const entry: QueuedDelete = notBefore ? { id, at, notBefore, ...(waiting ? { restore: waiting } : {}) } : { id, at }
   return {
     ...q,
     answers: q.answers.filter((a) => a.id !== id),
-    deletes: q.deletes.some((d) => d.id === id) ? q.deletes : [...q.deletes, { id, at }],
+    deletes: q.deletes.some((d) => d.id === id) ? q.deletes : [...q.deletes, entry],
   }
 }
+
+/** Undo: a delete still in its undo time leaves the queue, and the waiting answer it took out comes back. */
+export function cancelDelete(q: AuditQueue, id: string): AuditQueue {
+  const d = q.deletes.find((x) => x.id === id)
+  if (!d) return q
+  return {
+    ...q,
+    answers: d.restore && !q.answers.some((a) => a.id === id) ? [...q.answers, d.restore] : q.answers,
+    deletes: q.deletes.filter((x) => x.id !== id),
+  }
+}
+
+/** Is this delete's undo time over at `nowMs`? */
+export const deleteIsDue = (d: QueuedDelete, nowMs: number): boolean => !d.notBefore || Date.parse(d.notBefore) <= nowMs
 
 /**
  * These answers reached the server. Only the exact versions sent leave the
