@@ -48,7 +48,7 @@ almost all on her side:
    glued onto the wrong person's line.
 4. **Lines glued across a cut.** kVNih9mOvsE at 1:42: his first words back
    to her were glued onto his voice-over, so they left the conversation.
-5. **The quality gate can't tell good from bad.** Stage 07b passes 97% of
+5. **The quality gate can't tell good from bad.** Stage 07b passes 98% of
    videos, including ones with every line on the wrong person.
 
 By the pipeline's own confidence marks, 77 of 428 conversations (18%, about
