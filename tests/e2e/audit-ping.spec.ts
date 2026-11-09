@@ -172,7 +172,8 @@ test.describe("answering a ping @phone", () => {
     await first.getByRole("radio", { name: "Growth 6" }).click()
     await expect(page.getByTestId("audit-card-saved").first()).toContainText("Deep work")
     expect(taps).toBeLessThanOrEqual(3)
-    await expect.poll(async () => (await slotsOf(account.id, run)).filter((s) => s.activity === "Deep work").length, { timeout: 20_000 }).toBe(1)
+    // the entry fills both open quarters, so they are one card and one answer (alpha prove-eye-14)
+    await expect.poll(async () => (await slotsOf(account.id, run)).filter((s) => s.activity === "Deep work").length, { timeout: 20_000 }).toBe(2)
   })
 
   test("F10: with no Time entry, the quarter before's answer is offered, and three taps save it", async ({ page, account }) => {
@@ -332,14 +333,17 @@ test.describe("answering a ping @phone", () => {
     const sheet = page.getByTestId("audit-mute-sheet")
     await expect(sheet.getByTestId("audit-mute-state")).toContainText("No device gets pings")
     await expect(sheet).not.toContainText("Pings are on")
-    // the fix, whichever this browser can do: turn on, unblock, install, or another browser
+    // the fix, whichever this browser can do, is one tap away in Settings (alpha prove-eye-03):
+    // turn on, unblock, install, or another browser
+    await sheet.getByTestId("audit-mute-setup").click()
+    const settings = page.getByTestId("audit-settings-sheet")
     await expect(
-      sheet
+      settings
         .getByTestId("audit-pings-offer")
-        .or(sheet.getByTestId("audit-pings-denied"))
-        .or(sheet.getByTestId("audit-pings-install"))
-        .or(sheet.getByText("Pings are off on the development server"))
-        .or(sheet.getByText("This browser can't receive pings")),
+        .or(settings.getByTestId("audit-pings-denied"))
+        .or(settings.getByTestId("audit-pings-install"))
+        .or(settings.getByText("Pings are off on the development server"))
+        .or(settings.getByText("This browser can't receive pings")),
     ).toBeVisible()
   })
 })

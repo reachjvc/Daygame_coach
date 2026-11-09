@@ -8,7 +8,7 @@
  */
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
-import { afterEach, describe, expect, test } from "vitest"
+import { afterEach, beforeEach, describe, expect, test } from "vitest"
 
 import { AnswerSheet, type AnswerCardInput } from "@/src/audit/components/AnswerSheet"
 import type { DrawnSlot, NotKept } from "@/src/audit/hooks/useAudit"
@@ -57,6 +57,14 @@ function answerReading() {
   fireEvent.click(screen.getByRole("radio", { name: "Growth 2" }))
 }
 
+/** Which cards were scrolled into view, in order (jsdom has no scrolling). */
+let scrolled: string[] = []
+beforeEach(() => {
+  scrolled = []
+  Element.prototype.scrollIntoView = function (this: Element) {
+    scrolled.push(this.getAttribute("data-testid") === "audit-card" && this.querySelector("[data-testid=audit-card-conflict]") ? "conflict" : "other")
+  }
+})
 afterEach(cleanup)
 
 describe("a save says what the card saw", () => {
@@ -139,5 +147,26 @@ describe("the server refused it: another device answered first", () => {
     expect(screen.getByTestId("audit-card-conflict").textContent).toContain("Deleted on another device")
     fireEvent.click(screen.getByRole("button", { name: "Use mine" }))
     expect(saves[1][0].was).toBeNull()
+  })
+})
+
+describe("the refused card is in view (alpha prove-eye-01)", () => {
+  test("the sheet scrolls back to it and says at the top that an answer needs him", () => {
+    const saves: AuditAnswer[][] = []
+    const { rerender } = render(sheet([], saves))
+    answerReading()
+    expect(screen.queryByTestId("audit-sheet-needs-you")).toBeNull()
+    scrolled = []
+    rerender(sheet([fromPhone], saves, [{ answer: saves[0][0], reason: "Changed on another device since", stored: phoneMark }]))
+    expect(scrolled).toEqual(["conflict"])
+    const top = screen.getByTestId("audit-sheet-needs-you")
+    expect(top.textContent).toContain("1 answer needs you")
+    scrolled = []
+    fireEvent.click(top)
+    expect(scrolled).toEqual(["conflict"])
+    // answered: the line goes
+    fireEvent.click(screen.getByRole("button", { name: "Keep that one" }))
+    rerender(sheet([fromPhone], saves, []))
+    expect(screen.queryByTestId("audit-sheet-needs-you")).toBeNull()
   })
 })

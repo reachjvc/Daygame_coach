@@ -6,6 +6,7 @@ import {
   QUARTER_MS,
   answerSheetQuarters,
   withAnswered,
+  sheetCards,
   sheetOrder,
   stretchBefore,
   prefillQuarters,
@@ -147,6 +148,27 @@ describe("sheetOrder and stretchBefore (alpha F08/F09: one card per quarter)", (
   it("an answered or saved quarter ends the stretch", () => {
     const open = (q: number) => qs.includes(q) && q !== qs[2]
     expect(stretchBefore(qs[5], open, () => null)).toEqual([qs[3], qs[4]])
+  })
+})
+
+describe("sheetCards (alpha prove-eye-14: a Time stretch is one card)", () => {
+  const base = at("2026-11-09T07:30:00Z")
+  const qs = Array.from({ length: 8 }, (_, i) => base + i * QUARTER_MS)
+  // qs[0..3] Gym, qs[4..5] blank, qs[6..7] Walk
+  const entryOf = (q: number) => (q <= qs[3] ? "gym" : q >= qs[6] ? "walk" : null)
+
+  it("adjacent quarters from the same Time entry are one card; blank ones stay one card each", () => {
+    expect(sheetCards(qs, null, entryOf)).toEqual([[qs[6], qs[7]], [qs[5]], [qs[4]], [qs[0], qs[1], qs[2], qs[3]]])
+  })
+
+  it("the pinged quarter's card is on top, also inside a Time stretch", () => {
+    expect(sheetCards(qs, qs[1], entryOf)[0]).toEqual([qs[0], qs[1], qs[2], qs[3]])
+    expect(sheetCards(qs, qs[4], entryOf)[0]).toEqual([qs[4]])
+  })
+
+  it("an answered quarter (not in the sheet) splits a stretch of the same entry", () => {
+    const open = qs.filter((q) => q !== qs[2])
+    expect(sheetCards(open, null, entryOf)).toEqual([[qs[6], qs[7]], [qs[5]], [qs[4]], [qs[3]], [qs[0], qs[1]]])
   })
 })
 

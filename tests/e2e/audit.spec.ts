@@ -115,19 +115,23 @@ test.describe("time & energy audit @phone", () => {
   test("answers a quarter pre-filled from a Time entry", async ({ page, account }) => {
     const run = await seedRun(account.id)
     const q = quarterStart(Date.now()) - QUARTER
+    // a worker's account carries entries over from its earlier tests
+    expect((await stackAdmin().from("timetrack_entries").delete().eq("user_id", account.id)).error).toBeNull()
     await seedTimeEntry(account.id, "Deep work", q - QUARTER, q + QUARTER - 60_000)
     await openAudit(page)
     await page.getByTestId("audit-answer-now").click()
     const sheet = page.getByTestId("audit-answer-sheet")
     await expect(sheet).toBeVisible()
-    // One card per quarter (alpha F08): the entry fills two. Whichever quarter
-    // has just ended, the newest "from Time" card is q, and q - 15 min is the
-    // one before it, so ticking "Same answer for the quarter before" covers both.
+    // The entry fills q - 15 min and q: one card for the stretch (alpha
+    // prove-eye-14), which splits into one card per quarter on request.
     const fromTime = sheet.getByTestId("audit-card").filter({ hasText: "from Time" })
+    await expect(fromTime).toHaveCount(1)
+    await expect(fromTime.locator("h3")).toContainText("2 quarters · from Time: Deep work")
+    await expect(fromTime.getByTestId("audit-activity")).toHaveValue("Deep work")
+    await fromTime.getByTestId("audit-split").click()
     await expect(fromTime).toHaveCount(2)
-    const newest = fromTime.first()
-    await expect(newest.getByTestId("audit-activity")).toHaveValue("Deep work")
-    await newest.getByTestId("audit-cover").getByRole("checkbox").check()
+    // ticking "Same answer for the quarter before" on the newest covers both again
+    await fromTime.first().getByTestId("audit-cover").getByRole("checkbox").check()
     await expect(fromTime).toHaveCount(1)
     await answerCard(page, fromTime.first(), null, 3, 6)
     await expect.poll(async () => (await slotsOf(account.id, run.id)).filter((s) => s.activity === "Deep work").length).toBeGreaterThanOrEqual(2)
@@ -436,9 +440,18 @@ test.describe("time & energy audit @phone", () => {
     const { devices } = await (await page.request.get("/api/notifications/devices")).json()
     for (const d of devices as { id: string }[]) await page.request.delete(`/api/notifications/devices/${d.id}`)
     await openAudit(page)
-    await expect(page.getByText("Pings are off on the development server").or(page.getByTestId("audit-pings-offer")).or(page.getByText("Pings need the Home Screen app")).or(page.getByText("This browser can't receive pings"))).toBeVisible()
-    await page.getByTestId("audit-settings-open").click()
-    await expect(page.getByTestId("audit-settings-sheet")).toContainText("Devices that get pings")
+    // Today says it in one line; the way to turn them on is in Settings (alpha prove-eye-03)
+    await page.getByTestId("audit-pings-setup").click()
+    const settings = page.getByTestId("audit-settings-sheet")
+    await expect(
+      settings
+        .getByText("Pings are off on the development server")
+        .or(settings.getByTestId("audit-pings-offer"))
+        .or(settings.getByText("Pings need the Home Screen app"))
+        .or(settings.getByText("This browser can't receive pings"))
+        .or(settings.getByTestId("audit-pings-denied")),
+    ).toBeVisible()
+    await expect(settings).toContainText("Devices that get pings")
   })
 
   // ---- From the adversarial audit (Plans/energy-audit.md, Phase 7); each was red before its fix. ----

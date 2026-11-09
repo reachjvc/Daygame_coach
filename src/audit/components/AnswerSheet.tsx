@@ -3,9 +3,12 @@
 /**
  * THE ANSWER SHEET: one card per quarter, newest first, the quarter a ping
  * asked about on top (alpha test 2026-11-09: fast-audit-07, picky-eye-02/03).
- * A card covers the quarters before it only when the person ticks "Same
+ * A blank card covers the quarters before it only when the person ticks "Same
  * answer for the N quarters before", which names them. A stretch chosen in
- * the Day list stays one card: choosing it was the decision.
+ * the Day list stays one card: choosing it was the decision. Quarters Time
+ * filled from one entry are one card too, "09:00–10:00 · 4 quarters · from
+ * Time: Gym", with "Split into 4 single quarters" (prove-eye-14); each quarter
+ * it saves still carries its own `was`.
  *
  * Each card: what you did (pre-filled from Time when it knows, else from the
  * quarter before's answer), Energy 1–7, Growth 1–7, and optionally "Why I
@@ -25,7 +28,10 @@
  * else by then, the server keeps that and returns it, and the card says
  * "Answered on another device: Walk · E 5 · G 4" with "Keep that one" and
  * "Use mine" (which sends this answer again over that one). Never a plain
- * "Saved" over an answer that was not kept.
+ * "Saved" over an answer that was not kept. The refusal comes back after the
+ * sheet has moved on to the next card, so the sheet scrolls back to the
+ * refused card, says "1 answer needs you" on top until it is settled, and
+ * moves on from no save while one waits (prove-eye-01).
  *
  * NO "AVOIDING" BUTTON. The owner's note on the look page (2026-11-09): the
  * "why" box is enough. The column stays (always false from here; an older
@@ -56,6 +62,8 @@ export interface AnswerCardInput {
   asked?: boolean
   /** `text` is the quarter before's answer, offered when Time knows nothing. */
   sameAsBefore?: boolean
+  /** A stretch Time filled from one entry: the single-quarter cards it splits into, in sheet order. */
+  parts?: AnswerCardInput[]
 }
 
 /** The quarters before a card that it can cover, and whether it does. */
@@ -81,6 +89,7 @@ function Card({
   cover,
   onCover,
   onTouched,
+  onSplit,
 }: {
   card: AnswerCardInput
   index: number
@@ -100,6 +109,8 @@ function Card({
   onCover: (on: boolean) => void
   /** The person changed something here: no other card may cover (and hide) it now. */
   onTouched: () => void
+  /** Split a Time stretch into its single quarters. */
+  onSplit: () => void
 }) {
   const e = card.existing
   const quarters = cover?.on ? [...cover.quarters, ...card.quarters] : card.quarters
@@ -187,7 +198,7 @@ function Card({
     const theirs = distinct(conflicts.map((x) => x.stored ?? null))
     return (
       <section
-        className="rounded-2xl border border-amber-500/60 bg-amber-500/10 px-3 py-2"
+        className="scroll-mt-14 rounded-2xl border border-amber-500/60 bg-amber-500/10 px-3 py-2"
         data-testid="audit-card"
         data-card={index}
       >
@@ -313,11 +324,21 @@ function Card({
               · this ping
             </span>
           )}
-          {fromTime && <span className="font-normal text-muted-foreground"> · from Time</span>}
-          {card.sameAsBefore && !e && <span className="font-normal text-muted-foreground"> · same as before</span>}
           {quarters.length > 1 && <span className="font-normal text-muted-foreground"> · {quarters.length} quarters</span>}
+          {fromTime && <span className="font-normal text-muted-foreground"> · from Time{card.parts ? `: ${card.text}` : ""}</span>}
+          {card.sameAsBefore && !e && <span className="font-normal text-muted-foreground"> · same as before</span>}
         </h3>
       </div>
+      {card.parts && !savedOnce && (
+        <button
+          type="button"
+          onClick={onSplit}
+          className="mx-1 min-h-11 text-sm text-primary underline-offset-4 hover:underline"
+          data-testid="audit-split"
+        >
+          Split into {card.parts.length} single quarters
+        </button>
+      )}
       {cover && cover.quarters.length > 0 && (
         <label className="mx-1 mt-2 flex min-h-11 cursor-pointer items-center gap-2.5 rounded-lg bg-muted/40 px-2.5 py-1.5 text-sm" data-testid="audit-cover">
           <input type="checkbox" className="size-5 shrink-0 accent-primary" checked={cover.on} onChange={(ev) => onCover(ev.target.checked)} />
@@ -414,6 +435,9 @@ export function AnswerSheet({
   onKeepStored?: (answers: AuditAnswer[]) => void
   onDelete?: (id: string) => void
 }) {
+  // A split Time stretch replaces its card with its parts, until new cards come (prove-eye-14).
+  const [splitState, setSplitState] = useState<{ of: AnswerCardInput[]; list: AnswerCardInput[] }>({ of: cards, list: cards })
+  const list = splitState.of === cards ? splitState.list : cards
   const lostByQuarter = new Map<number, NotKept>()
   for (const x of notKept) if (x.answer.runId === runId) lostByQuarter.set(Date.parse(x.answer.slotAt), x)
   const [saved, setSaved] = useState<Set<number>>(new Set())
@@ -422,6 +446,7 @@ export function AnswerSheet({
   /** Cards the person has typed or tapped in: never covered, so nothing typed is hidden (code review). */
   const [touched, setTouched] = useState<Set<number>>(new Set())
   const box = useRef<HTMLDivElement>(null)
+  const lastNeeds = useRef("")
   useEffect(() => {
     if (!open) return
     setSaved(new Set())
@@ -434,39 +459,76 @@ export function AnswerSheet({
 
   // Single-quarter new cards can cover the open quarters right before them.
   const single = new Map<number, number>()
-  cards.forEach((c, i) => {
+  list.forEach((c, i) => {
     if (c.quarters.length === 1 && !c.existing) single.set(c.quarters[0], i)
   })
   const coveredBy = new Map<number, number>()
   for (const [i, qs] of covers) for (const q of qs) coveredBy.set(q, i)
   const coverOf = (i: number): { quarters: number[]; on: boolean } | null => {
-    const c = cards[i]
+    const c = list[i]
     if (c.quarters.length !== 1 || c.existing) return null
     const ticked = covers.get(i)
     if (ticked) return { quarters: ticked, on: true }
     const isOpen = (q: number) => {
       const j = single.get(q)
-      return j !== undefined && j !== i && !saved.has(j) && !coveredBy.has(q) && !covers.has(j) && !touched.has(j) && !cards[j].asked
+      return j !== undefined && j !== i && !saved.has(j) && !coveredBy.has(q) && !covers.has(j) && !touched.has(j) && !list[j].asked
     }
-    return { quarters: stretchBefore(c.quarters[0], isOpen, (q) => cards[single.get(q) ?? i]?.entryId ?? null), on: false }
+    return { quarters: stretchBefore(c.quarters[0], isOpen, (q) => list[single.get(q) ?? i]?.entryId ?? null), on: false }
+  }
+  const quartersOf = (i: number): number[] => {
+    const cover = coverOf(i)
+    return cover?.on ? [...cover.quarters, ...list[i].quarters] : list[i].quarters
+  }
+
+  // Saved cards the server refused for another device's answer: they need him (prove-eye-01).
+  const needsYou = list.flatMap((_, i) => (saved.has(i) && quartersOf(i).some((q) => lostByQuarter.get(q)?.stored !== undefined) ? [i] : []))
+  const showCard = (i: number) => box.current?.querySelector<HTMLElement>(`[data-testid="audit-card"][data-card="${i}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" })
+  const needsKey = needsYou.join(",")
+  useEffect(() => {
+    const before = new Set(lastNeeds.current.split(","))
+    lastNeeds.current = needsKey
+    // a refusal that has just come back: bring its card into view
+    const fresh = needsKey.split(",").find((k) => k !== "" && !before.has(k))
+    if (fresh !== undefined) showCard(Number(fresh))
+  }, [needsKey])
+
+  const splitCard = (i: number) => {
+    const parts = list[i].parts
+    if (!parts) return
+    const shift = (j: number) => (j > i ? j + parts.length - 1 : j)
+    setSplitState({ of: cards, list: [...list.slice(0, i), ...parts, ...list.slice(i + 1)] })
+    setSaved((prev) => new Set([...prev].map(shift)))
+    setTouched((prev) => new Set([...prev].filter((j) => j !== i).map(shift)))
+    setCovers((prev) => new Map([...prev].map(([j, qs]) => [shift(j), qs])))
   }
 
   return (
     <BottomSheet open={open} onClose={onClose} title={title} testId="audit-answer-sheet">
       <div ref={box} className="max-h-[70vh] space-y-3 overflow-y-auto overflow-x-hidden pb-2">
-        {cards.length === 0 ? (
+        {needsYou.length > 0 && (
+          <button
+            type="button"
+            onClick={() => showCard(needsYou[0])}
+            className="sticky top-0 z-10 flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-amber-500/60 bg-card px-3 text-left text-sm font-semibold text-amber-500 shadow-sm"
+            data-testid="audit-sheet-needs-you"
+          >
+            <span>{needsYou.length === 1 ? "1 answer needs you" : `${needsYou.length} answers need you`}</span>
+            <span className="font-normal underline underline-offset-4">Show</span>
+          </button>
+        )}
+        {list.length === 0 ? (
           <p className="px-1 py-4 text-sm text-muted-foreground" data-testid="audit-sheet-empty">
             Nothing to answer: every quarter of the last 3 hours has an answer. Older gaps are in the Day list.
           </p>
         ) : (
-          cards.map((card, i) => {
+          list.map((card, i) => {
             // a quarter another card covers is answered by that card
             if (coveredBy.has(card.quarters[0]) && coveredBy.get(card.quarters[0]) !== i) return null
             const cover = coverOf(i)
-            const quarters = cover?.on ? [...cover.quarters, ...card.quarters] : card.quarters
+            const quarters = quartersOf(i)
             return (
             <Card
-              key={`${card.quarters[0]}-${card.existing?.id ?? "new"}`}
+              key={`${card.quarters[0]}x${card.quarters.length}-${card.existing?.id ?? "new"}`}
               card={card}
               index={i}
               runId={runId}
@@ -478,6 +540,7 @@ export function AnswerSheet({
               lost={quarters.flatMap((q) => lostByQuarter.get(q) ?? [])}
               onKeepStored={onKeepStored}
               cover={cover}
+              onSplit={() => splitCard(i)}
               onTouched={() => {
                 if (!touched.has(i)) setTouched((prev) => new Set(prev).add(i))
               }}
@@ -507,6 +570,9 @@ export function AnswerSheet({
               onSave={(answers) => {
                 onSave(answers)
                 setSaved((prev) => new Set(prev).add(i))
+                // never on past a card that still needs him (prove-eye-01)
+                const waiting = needsYou.find((j) => j !== i)
+                if (waiting !== undefined) return void showCard(waiting)
                 // the next card still open (a covered one is not drawn)
                 const next = [...(box.current?.querySelectorAll<HTMLElement>("[data-autosave]") ?? [])].find((el) => Number(el.dataset.card) > i)
                 next?.scrollIntoView({ behavior: "smooth", block: "start" })

@@ -7,6 +7,10 @@
  * a bit bad"): the state on top in one line you can read at a glance, and each
  * choice as a tile that says when it would end, so nobody has to add an hour
  * in their head.
+ *
+ * With no device getting pings, one short line leads to Settings, where the
+ * full help lives. The whole help box here pushed the mute choices below the
+ * fold on an iPhone (alpha prove-eye-03, owner note K-A4).
  */
 
 import { Bell, BellOff, Moon } from "lucide-react"
@@ -17,7 +21,7 @@ import type { PushDeviceState } from "@/src/notifications/hooks/usePushDevice"
 import { muteUntil, type MuteOption } from "../auditService"
 import { clockLabel } from "../quarterService"
 import type { AuditRun } from "../types"
-import { noPingDevice, PingDeviceCard, pingDeviceNames } from "./PingDevices"
+import { noPingDevice, pingDeviceNames } from "./PingDevices"
 
 const CHOICES: { option: Exclude<MuteOption, "off">; label: string }[] = [
   { option: "30m", label: "30 min" },
@@ -101,9 +105,14 @@ export function MuteSheet({
         </div>
       </div>
       {nowhere && (
-        <div className="mt-3">
-          <PingDeviceCard push={push} onOpenSettings={onOpenSettings} />
-        </div>
+        <button
+          type="button"
+          onClick={onOpenSettings}
+          className="mt-2 min-h-11 text-sm text-primary underline-offset-4 hover:underline"
+          data-testid="audit-mute-setup"
+        >
+          Turn pings on in Settings
+        </button>
       )}
 
       <p className="mt-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">{line ? "Change it to" : "Mute for"}</p>

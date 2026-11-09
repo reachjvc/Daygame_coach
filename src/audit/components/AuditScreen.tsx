@@ -19,7 +19,7 @@ import { usePushDevice, type PushDeviceState } from "@/src/notifications/hooks/u
 import { ROUTES } from "@/src/shared/routes"
 import { OfflineShell } from "@/src/shared/components/OfflineShell"
 import { useAudit, type AuditState, type DrawnSlot } from "../hooks/useAudit"
-import { answerSheetQuarters, clockLabel, nextPingAt, prefillQuarters, QUARTER_MS, runDayOf, runQuarters, SHEET_WINDOW_MS, sheetOrder, stretchLabel, withAnswered } from "../quarterService"
+import { answerSheetQuarters, clockLabel, nextPingAt, prefillQuarters, QUARTER_MS, runDayOf, runQuarters, SHEET_WINDOW_MS, sheetCards, sheetOrder, stretchLabel, withAnswered } from "../quarterService"
 import type { AnswerSource, AuditRun } from "../types"
 import type { AuditView } from "../auditClient"
 import { AnswerSheet, type AnswerCardInput } from "./AnswerSheet"
@@ -272,7 +272,8 @@ function TodayView({
   const [selection, setSelection] = useState<DaySelection>({ start: null, end: null })
   const [sheet, setSheet] = useState<SheetState | null>(null)
   const [muteOpen, setMuteOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  // "devices": opened from a "set up pings" link, so the sheet opens on Where pings go (prove-eye-03).
+  const [settingsOpen, setSettingsOpen] = useState<false | "top" | "devices">(false)
   const [confirmEnd, setConfirmEnd] = useState(false)
   const [endError, setEndError] = useState<string | null>(null)
   const [answerNowPending, setAnswerNowPending] = useState<"no" | "reading" | "ready">("no")
@@ -314,7 +315,8 @@ function TodayView({
 
   /**
    * The cards for `qs`: one for a stretch chosen in the Day list (`single`),
-   * else one per quarter, newest first and `asked` on top (alpha F08/F09).
+   * else one per quarter, newest first and `asked` on top (alpha F08/F09),
+   * except that a stretch Time filled from one entry is one card (prove-eye-14).
    * Each is pre-filled from Time; when Time knows nothing, from the answer of
    * the quarter right before, marked "same as before" (fast-audit-06).
    */
@@ -328,7 +330,7 @@ function TodayView({
         const only = texts.size === 1 ? prefill.get(qs[0]) : undefined
         return [{ quarters: qs, text: only?.text ?? "", entryId: only?.entryId ?? null, existing: null }]
       }
-      return sheetOrder(qs, asked).map((q) => {
+      const one = (q: number): AnswerCardInput => {
         const p = prefill.get(q)
         const before = p ? undefined : answeredRef.current.get(q - QUARTER_MS)
         return {
@@ -338,6 +340,19 @@ function TodayView({
           existing: null,
           asked: q === asked,
           sameAsBefore: before !== undefined,
+        }
+      }
+      // A stretch Time filled from one entry is one card, which splits into these (prove-eye-14).
+      return sheetCards(qs, asked, (q) => prefill.get(q)?.entryId ?? null).map((group) => {
+        if (group.length === 1) return one(group[0])
+        const p = prefill.get(group[0])!
+        return {
+          quarters: group,
+          text: p.text,
+          entryId: p.entryId,
+          existing: null,
+          asked: asked !== null && group.includes(asked),
+          parts: sheetOrder(group, asked).map(one),
         }
       })
     },
@@ -431,9 +446,18 @@ function TodayView({
           )}
         </div>
       )}
-      {noPingDevice(push) && (
-        <div className="mt-3">
-          <PingDeviceCard push={push} onOpenSettings={() => setSettingsOpen(true)} />
+      {/* One line here; the full help lives in Settings, with the devices (prove-eye-03). */}
+      {push.devicesKnown && noPingDevice(push) && (
+        <div className="mt-3 flex min-h-11 items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-1.5 text-sm" data-testid="audit-pings-line">
+          <p className="text-muted-foreground">{push.support === "needs-install" ? "Pings need the Home Screen app" : "No device gets pings yet"}</p>
+          <button
+            type="button"
+            onClick={() => setSettingsOpen("devices")}
+            className="min-h-11 shrink-0 font-medium text-primary underline-offset-4 hover:underline"
+            data-testid="audit-pings-setup"
+          >
+            Set up
+          </button>
         </div>
       )}
       {s.waiting > 0 && (
@@ -468,7 +492,7 @@ function TodayView({
         </button>
         <button
           type="button"
-          onClick={() => setSettingsOpen(true)}
+          onClick={() => setSettingsOpen("top")}
           className="flex h-11 flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium transition-colors hover:bg-muted/50"
           data-testid="audit-settings-open"
         >
@@ -573,11 +597,12 @@ function TodayView({
         push={push}
         onOpenSettings={() => {
           setMuteOpen(false)
-          setSettingsOpen(true)
+          setSettingsOpen("devices")
         }}
       />
       <SettingsSheet
-        open={settingsOpen}
+        open={settingsOpen !== false}
+        showDevices={settingsOpen === "devices"}
         onClose={() => setSettingsOpen(false)}
         quietStart={run.quietStart}
         quietEnd={run.quietEnd}

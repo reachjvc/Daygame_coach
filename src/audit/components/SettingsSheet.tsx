@@ -11,7 +11,7 @@
  */
 
 import { Moon, Sun } from "lucide-react"
-import { useEffect, useState, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { BottomSheet } from "@/components/BottomSheet"
 import { Button } from "@/components/ui/button"
 import { hhmm as clockLabel } from "@/src/notifications/quietHours"
@@ -93,6 +93,7 @@ export function SettingsSheet({
   quietEnd,
   onSave,
   devices,
+  showDevices = false,
 }: {
   open: boolean
   onClose: () => void
@@ -100,7 +101,15 @@ export function SettingsSheet({
   quietEnd: number
   onSave: (start: number, end: number) => Promise<string | null>
   devices?: ReactNode
+  /** Opened from a "set up pings" link: start at Where pings go, where the full help is (prove-eye-03). */
+  showDevices?: boolean
 }) {
+  const devicesRef = useRef<HTMLHeadingElement>(null)
+  useEffect(() => {
+    if (!open || !showDevices) return
+    const t = setTimeout(() => devicesRef.current?.scrollIntoView({ block: "start" }), 50)
+    return () => clearTimeout(t)
+  }, [open, showDevices])
   const [start, setStart] = useState(quietStart)
   const [end, setEnd] = useState(quietEnd)
   const [busy, setBusy] = useState(false)
@@ -173,7 +182,7 @@ export function SettingsSheet({
       </section>
       {devices && (
         <>
-          <h3 className="mt-5 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Where pings go</h3>
+          <h3 ref={devicesRef} className="mt-5 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Where pings go</h3>
           <section className="mt-1.5 rounded-2xl border border-border bg-card p-4">{devices}</section>
         </>
       )}

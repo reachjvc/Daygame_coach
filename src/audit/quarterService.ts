@@ -233,14 +233,43 @@ export function prefillQuarters(
 /**
  * THE ORDER OF THE ANSWER SHEET'S CARDS: newest first, and the quarter a ping
  * asked about before all others, so a tapped ping opens on its own quarter
- * (alpha test picky-eye-02). One card per quarter: Martell logs every 15
- * minutes, and covering a stretch with one answer is the person's own choice
- * (`stretchBefore`), never the default (fast-audit-07, picky-eye-03).
+ * (alpha test picky-eye-02). A blank quarter is one card: Martell logs every
+ * 15 minutes, and covering blank quarters with one answer is the person's own
+ * choice (`stretchBefore`), never the default (fast-audit-07, picky-eye-03).
+ * Quarters Time filled from one entry are grouped on top of this (`sheetCards`).
  */
 export function sheetOrder(quarters: readonly number[], asked: number | null): number[] {
   const newestFirst = [...new Set(quarters)].sort((a, b) => b - a)
   if (asked == null || !newestFirst.includes(asked)) return newestFirst
   return [asked, ...newestFirst.filter((q) => q !== asked)]
+}
+
+/**
+ * THE ANSWER SHEET'S CARDS (alpha prove-eye-14): `sheetOrder`, with each run
+ * of adjacent quarters that Time filled from the SAME entry drawn as one card,
+ * oldest quarter first (Plans/energy-audit.md, How it works step 3: "Gym,
+ * 08:30–10:00 is one card"). A blank quarter (no entry) stays a card of its
+ * own: nothing fills blanks silently (alpha F08). A group sits where its first
+ * member sits in that order, so the pinged quarter's card is still on top.
+ */
+export function sheetCards(quarters: readonly number[], asked: number | null, entryOf: (quarter: number) => string | null): number[][] {
+  const order = sheetOrder(quarters, asked)
+  const inSheet = new Set(order)
+  const placed = new Set<number>()
+  const out: number[][] = []
+  for (const q of order) {
+    if (placed.has(q)) continue
+    const entry = entryOf(q)
+    const group = [q]
+    if (entry !== null) {
+      const joins = (p: number) => inSheet.has(p) && !placed.has(p) && entryOf(p) === entry
+      for (let p = q - QUARTER_MS; joins(p); p -= QUARTER_MS) group.unshift(p)
+      for (let p = q + QUARTER_MS; joins(p); p += QUARTER_MS) group.push(p)
+    }
+    for (const g of group) placed.add(g)
+    out.push(group)
+  }
+  return out
 }
 
 /**
