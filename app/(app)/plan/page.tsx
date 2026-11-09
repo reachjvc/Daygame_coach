@@ -6,6 +6,7 @@ import { stepFor, TAB_ORDER } from "@/src/goals/data/northStar"
 import type { NorthStarTabId } from "@/src/goals/types"
 import { landingStep } from "@/src/goals/planLanding"
 import { planIsInUse } from "@/src/db/lifePlanRepo"
+import { parsePeriodParam } from "@/src/goals/reviewService"
 
 /**
  * LIFE MASTERY — its own address at last.
@@ -25,7 +26,7 @@ import { planIsInUse } from "@/src/db/lifePlanRepo"
 export default async function LifeMasteryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ step?: string }>
+  searchParams: Promise<{ step?: string; period?: string }>
 }) {
   const supabase = await createServerSupabaseClient()
   const {
@@ -38,7 +39,7 @@ export default async function LifeMasteryPage({
 
   // ?step=today lands on the day's list. An unknown step opens the flow at the
   // start rather than 404ing: a stale link is not a broken page.
-  const { step } = await searchParams
+  const { step, period } = await searchParams
   // A step that folded into another (`one`, `commit`, `templates`;
   // Plans/life-plan-rebuild.md) is handed over as asked: the flow opens its
   // new home, and on that home the part the link was for.
@@ -67,6 +68,7 @@ export default async function LifeMasteryPage({
       backLabel="Dashboard"
       initialTab={initialTab}
       initialInUse={inUse}
+      initialPeriod={parsePeriodParam(period)}
       timezone={timezone}
     />
   )

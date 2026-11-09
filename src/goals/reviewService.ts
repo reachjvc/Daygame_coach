@@ -95,6 +95,20 @@ export function reviewIdFor(period: Pick<ReviewPeriod, "cadence" | "start">): st
   return `${period.cadence}-${period.start}`
 }
 
+/** A period from an address (`week-2026-11-09`), or null when it names no real period start. */
+export function parsePeriodParam(s: string | undefined): ReviewPeriod | null {
+  const m = /^(week|month|quarter|year)-(\d{4}-\d{2}-\d{2})$/.exec(s ?? "")
+  if (!m) return null
+  const cadence = m[1] as OfferedCadence
+  const start = m[2]
+  try {
+    const p = periodOf(cadence, start)
+    return p.start === start ? p : null
+  } catch {
+    return null
+  }
+}
+
 /** The review written for this period, or null. */
 export function reviewFor(plan: NsPlan, period: ReviewPeriod): NsReview | null {
   const id = reviewIdFor(period)

@@ -1,6 +1,5 @@
 import { test, expect } from "./fixtures/test"
-import { ROUTES } from "@/src/shared/routes"
-import { seedLifePlan } from "./helpers/lifePlan"
+import { seedLifePlan, thisWeeksReview } from "./helpers/lifePlan"
 
 /**
  * READINGS ON A NUMBER GOAL (Plans/life-plan-readings.md), through the real
@@ -35,14 +34,14 @@ const PLAN = {
   seasonFocusId: null,
 }
 
-test("a number goal's reading, written in the week's review", async ({ page, account }) => {
+test("a number goal's reading, written in the week's review", async ({ page, account, accountTimezone }) => {
   await seedLifePlan(page, account.id, PLAN)
   const before = new Date()
   before.setDate(before.getDate() - 12)
   const res = await page.request.put("/api/life-plan/day", { data: { date: dayKey(before), numbers: { g1: 92 } } })
   expect(res.status(), await res.text()).toBe(200)
 
-  await page.goto(`${ROUTES.plan}?step=review`)
+  await page.goto(thisWeeksReview(accountTimezone))
   await expect(page.getByText("Saved to your account.")).toBeVisible()
   const numbers = page.getByTestId("review-numbers")
   await expect(numbers).toContainText("E2E body weight")

@@ -643,6 +643,28 @@ export const REVIEW_PERIOD_COPY = {
   overTimeEmpty: "Score an area and it starts here.",
 } as const
 
+/** The "Due now" cards on top of Today (Plans/life-plan-after-setup.md, Phase 3). */
+export const DUE_COPY = {
+  heading: "Due now",
+  notNow: "Not now",
+  done: "Done",
+  finishSetup: (n: number, label: string) => ({ title: "Finish your plan", detail: `Next: step ${n}, ${label}.` }),
+  week: (period: string) => ({ title: "Weekly review", detail: `Look back at ${period}.` }),
+  month: (period: string) => ({ title: "Monthly review", detail: `Go through ${period}, goal by goal.` }),
+  quarter: (period: string) => ({ title: "Quarterly review", detail: `Look back at ${period}, then set the next one.` }),
+  year: (year: string) => ({ title: "Year review", detail: `Look back over ${year} before you set next year's goals.` }),
+  newYear: { title: "Plan the new year", detail: "Read your north star (step 1) and your values (step 7) again, then set this year's goals (step 4)." },
+  seasonEnded: (date: string) => ({ title: "Your season is over", detail: `It ran until ${date}. Look back at it on the Season step, then write the next one.` }),
+  seasonEnding: (days: number) => ({
+    title: days === 0 ? "Your season ends today" : days === 1 ? "Your season ends tomorrow" : `Your season ends in ${days} days`,
+    detail: "Look back at it on the Season step and decide the next one before it runs out.",
+  }),
+  goalsPassed: (n: number, titles: string[]) => ({
+    title: `${n} ${n === 1 ? "goal" : "goals"} passed ${n === 1 ? "its" : "their"} date`,
+    detail: `${titles.join(", ")}${n > titles.length ? " and more" : ""}. ${n === 1 ? "Mark it achieved, move the date, pause or drop it." : "For each: mark it achieved, move the date, pause or drop it."}`,
+  }),
+}
+
 /**
  * THE REVIEWS, as sets rather than single questions.
  *

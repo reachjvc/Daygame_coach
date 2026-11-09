@@ -1,6 +1,6 @@
 import { test, expect } from "./fixtures/test"
 import { ROUTES } from "@/src/shared/routes"
-import { seedLifePlan } from "./helpers/lifePlan"
+import { seedLifePlan, thisWeeksReview } from "./helpers/lifePlan"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
 
 /**
@@ -43,8 +43,8 @@ test.describe("the Review step", () => {
     })
   })
 
-  test("writes a week, keeps it on the account, and shows the scores over time", async ({ page }) => {
-    await page.goto(`${ROUTES.plan}?step=review`)
+  test("writes a week, keeps it on the account, and shows the scores over time", async ({ page, accountTimezone }) => {
+    await page.goto(thisWeeksReview(accountTimezone))
     await expect(page.getByRole("heading", { name: "Review", exact: true })).toBeVisible()
     await expect(page.getByTestId("review-last")).toHaveText("No weekly review yet.")
     // The copied first review is what health scored last time.
@@ -62,7 +62,7 @@ test.describe("the Review step", () => {
     ])
 
     await page.evaluate(() => window.localStorage.clear())
-    await page.goto(`${ROUTES.plan}?step=review`)
+    await page.goto(thisWeeksReview(accountTimezone))
     await expect(page.getByTestId("review-last")).toContainText("Last weekly review: today")
     await expect(page.getByLabel("Magic moments")).toHaveValue(MOMENT)
     const overTime = page.getByTestId("review-over-time")
@@ -82,7 +82,7 @@ test.describe("the Review step", () => {
    * review, the one the Review step opens; the old two-week number on the
    * area row is left as it was, for Phase 7.
    */
-  test("Your 10s shows the latest review and rates into this week's", async ({ page }) => {
+  test("Your 10s shows the latest review and rates into this week's", async ({ page, accountTimezone }) => {
     await page.goto(`${ROUTES.plan}?step=now`)
     const health = page.getByRole("button", { name: /^Health\. .*Open it\.$/ })
     await expect(health).toHaveAccessibleName(/Rated 3 out of 10/)
@@ -101,7 +101,7 @@ test.describe("the Review step", () => {
 
     // The Review step holds the same score, across a reload with this browser's copy thrown away.
     await page.evaluate(() => window.localStorage.clear())
-    await page.goto(`${ROUTES.plan}?step=review`)
+    await page.goto(thisWeeksReview(accountTimezone))
     await expect(page.getByRole("button", { name: /^Score Health 7 out of 10/ })).toHaveAttribute("aria-pressed", "true")
     await page.goto(`${ROUTES.plan}?step=now`)
     await expect(health).toHaveAccessibleName(/Rated 7 out of 10/)
@@ -117,8 +117,8 @@ test.describe("the Review step", () => {
     await expect(health).toHaveAccessibleName(/Rated 3 out of 10/)
   })
 
-  test("writes a month, a quarter and a year, each its own review", async ({ page }) => {
-    await page.goto(`${ROUTES.plan}?step=review`)
+  test("writes a month, a quarter and a year, each its own review", async ({ page, accountTimezone }) => {
+    await page.goto(thisWeeksReview(accountTimezone))
     const kinds = page.getByRole("group", { name: "How often" })
     for (const [kind, text] of [["Month", "E2E: month"], ["Quarter", "E2E: quarter"], ["Year", "E2E: year"]] as const) {
       await kinds.getByRole("button", { name: kind }).click()

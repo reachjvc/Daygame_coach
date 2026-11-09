@@ -1,6 +1,6 @@
 import { test, expect } from "./fixtures/test"
 import { ROUTES } from "@/src/shared/routes"
-import { seedLifePlan } from "./helpers/lifePlan"
+import { seedLifePlan, thisWeeksReview } from "./helpers/lifePlan"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
 
 /**
@@ -45,7 +45,7 @@ function plan() {
   }
 }
 
-test("a late step is on Today, and ticking it there keeps the day", async ({ page, account }) => {
+test("a late step is on Today, and ticking it there keeps the day", async ({ page, account, accountTimezone }) => {
   await seedLifePlan(page, account.id, plan())
   await page.goto(`${ROUTES.plan}?step=today`)
   await expect(page.getByText("Saved to your account.")).toBeVisible()
@@ -63,7 +63,7 @@ test("a late step is on Today, and ticking it there keeps the day", async ({ pag
     }, { timeout: 15_000 })
     .toEqual([["E2E landing page", true, dayKey(new Date())], ["E2E pricing", false, null]])
 
-  await page.goto(`${ROUTES.plan}?step=review`)
+  await page.goto(thisWeeksReview(accountTimezone))
   await page.getByRole("button", { name: /Your other goals/ }).click()
   await expect(page.getByTestId("review-goals")).toContainText("1 of 2 steps done · 1 in this stretch")
 })

@@ -92,7 +92,10 @@ import { AreaDialog } from "./AreaDialog"
 import { AreaGoalsDialog } from "./AreaGoalsDialog"
 import { ReviewTab } from "./ReviewTab"
 import { PeriodReviewTab } from "./PeriodReviewTab"
-import { appendToReview, rateArea, removeReview, writeReview } from "@/src/goals/reviewService"
+import { appendToReview, rateArea, removeReview, reviewIdFor, writeReview, type ReviewPeriod } from "@/src/goals/reviewService"
+import { DEFAULT_REVIEW_DAY, dueNow, nextSetupStep, type DueCard } from "@/src/goals/dueNowService"
+import { DueNow } from "@/src/goals/components/north-star/DueNow"
+import { COMMIT_DATE_KEY } from "@/src/goals/data/northStarStart"
 import { CommitTab } from "./CommitTab"
 import { ValuesSoFar } from "./ValuesSoFar"
 import { ValuesWork } from "./ValuesWork"
@@ -145,6 +148,7 @@ export function NorthStarFlow({
   initialTab = "star",
   timezone = "UTC",
   initialInUse = false,
+  initialPeriod = null,
 }: {
   /** Whose plan this is. The browser's copy is kept under it, so it is never another account's. */
   userId: string
@@ -169,6 +173,8 @@ export function NorthStarFlow({
   initialTab?: NorthStarTabId
   /** Whether the account's plan has something to do, read on the server: the rail's shape before the plan loads. */
   initialInUse?: boolean
+  /** The review period a link named (`?step=review&period=week-2026-11-09`). */
+  initialPeriod?: ReviewPeriod | null
 }) {
   const [plan, setPlan] = useState<NsPlan>(ns.emptyNsPlan)
   const [loaded, setLoaded] = useState(false)
@@ -183,6 +189,8 @@ export function NorthStarFlow({
   const [railOpen, setRailOpen] = useState(!initialInUse)
   /** "Edit your plan": the setup steps, folded away once the plan is in use. */
   const [buildOpen, setBuildOpen] = useState(BUILD_STEPS.includes(stepFor(initialTab)))
+  /** The review period a card or link asked for; every other way into a step forgets it. */
+  const [reviewPeriod, setReviewPeriod] = useState<ReviewPeriod | null>(initialPeriod ?? null)
   /**
    * THE ADDRESS FOLLOWS THE STEP YOU ARE ON.
    *
@@ -203,6 +211,7 @@ export function NorthStarFlow({
     if (asked === "templates") setCatalogueOpen(true)
     setTabState(next)
     setRailOpen(false)
+    setReviewPeriod(null)
     try {
       window.history.replaceState(null, "", `${ROUTES.plan}?step=${next}`)
     } catch {
@@ -212,6 +221,11 @@ export function NorthStarFlow({
   // The fold follows the step: arriving on a setup step opens it, arriving on a use step closes it.
   useEffect(() => { setBuildOpen(BUILD_STEPS.includes(tab)) }, [tab])
   const railToggleRef = useRef<HTMLButtonElement>(null)
+  /** The Due now cards hidden with "Not now", per account, in this browser. */
+  const [hiddenDue, setHiddenDue] = useState<ReadonlySet<string>>(new Set())
+  useEffect(() => {
+    try { const raw = window.localStorage.getItem(`plan-due-hidden:${userId}`); setHiddenDue(new Set(raw ? (JSON.parse(raw) as string[]) : [])) } catch { /* storage refused: nothing hidden */ }
+  }, [userId])
   const [confirmReset, setConfirmReset] = useState(false)
   /**
    * WHICH RUN OF THE PLAN THIS IS, for the goals pushed on the track step.
@@ -1100,6 +1114,11 @@ export function NorthStarFlow({
 
   const progress = ns.nsProgress(plan, account)
   const states = ns.stepStates(plan, account)
+  const committed = ns.answerOf(plan, COMMIT_DATE_KEY).trim() !== ""
+  const dueCards = decision !== null && today
+    ? dueNow(plan, today, { reviewDay: DEFAULT_REVIEW_DAY, hidden: hiddenDue, nextStep: nextSetupStep(committed, states) })
+    : []
+  const dueWeek = dueCards.find((c) => c.kind === "week")
   // Before the account's plan has loaded, the server's answer, so the cards do not jump.
   const inUse = decision === null ? initialInUse : planInUse(plan)
   const showBuild = !inUse || buildOpen
@@ -1625,6 +1644,27 @@ export function NorthStarFlow({
     />
   ) : null
 
+  /** A goal opened from Today (its card, or a Due now card), with the way back to Today. */
+  const openGoalFromToday = (goalId: string) => {
+    const goal = plan.goals.find((g) => g.id === goalId)
+    if (!goal) return
+    goTo(
+      { tab: ns.isMilestone(goal) ? "milestones" : "systems", areaId: goal.areaId, goalId: goal.id },
+      { label: goal.title, tickId: null, back: "today" }
+    )
+  }
+  const onDueGo = (c: DueCard) => {
+    if ("goalId" in c.go) { openGoalFromToday(c.go.goalId); return }
+    goTo({ tab: c.go.tab }, { label: c.title, tickId: null, back: "today" })
+    // After goTo: setTab cleared the period, and React applies the updates in order.
+    if (c.go.period) setReviewPeriod(c.go.period)
+  }
+  const onHideDue = (c: DueCard) => {
+    const next = [...hiddenDue, c.key].slice(-60)
+    setHiddenDue(new Set(next))
+    try { window.localStorage.setItem(`plan-due-hidden:${userId}`, JSON.stringify(next)) } catch { /* storage refused: hidden until reload */ }
+  }
+
   /** One step card in the rail, numbered by TAB_ORDER so a number always names the same step. */
   const card = (id: NorthStarTabId) => {
     const active = id === tab
@@ -1949,6 +1989,8 @@ export function NorthStarFlow({
           /* The only step that asks what you DID rather than what you want.
              Everything else here is a decision; this is the same plan, on a
              date, with a tick against each line. */
+          <div className="space-y-5">
+            <DueNow cards={dueCards} onGo={onDueGo} onHide={onHideDue} />
             <TodayTab
               ticks={ticks}
               plan={plan}
@@ -2037,16 +2079,10 @@ export function NorthStarFlow({
                  already written under it is touched — see `setStepAsks`. */
               onStepAsks={(routineId, stepId, question) => setPlan((p) => ns.setStepAsks(p, routineId, stepId, question))}
               /* A row that IS a goal, opened as one — and brought back. */
-              onOpenGoal={(goalId) => {
-                const goal = plan.goals.find((g) => g.id === goalId)
-                if (!goal) return
-                goTo(
-                  { tab: ns.isMilestone(goal) ? "milestones" : "systems", areaId: goal.areaId, goalId: goal.id },
-                  { label: goal.title, tickId: null, back: "today" }
-                )
-              }}
+              onOpenGoal={openGoalFromToday}
               onGoToTab={(t) => setTab(t)}
             />
+          </div>
         ) : tab === "journal" ? (
           /* WHERE THE WRITING LIVES.
              Every other tab that asks for words asks for one kind of them, in
@@ -2075,6 +2111,8 @@ export function NorthStarFlow({
              was replaced by it and lost (found by the browser test). */
           decision !== null && today ? (
             <PeriodReviewTab
+              key={reviewPeriod ? reviewIdFor(reviewPeriod) : "now"}
+              initialPeriod={reviewPeriod ?? (dueWeek && "period" in dueWeek.go ? dueWeek.go.period ?? null : null)}
               plan={plan}
               today={today}
               ticks={ticks}

@@ -34,6 +34,9 @@ import { planToRows } from '@/src/goals/lifePlanMapper'
 import { diffPlanRows } from '@/src/goals/lifePlanDiff'
 import type { PlanRows } from '@/src/db/lifePlanTypes'
 import { normalizeNsPlan } from '@/src/goals/northStarService'
+import { periodOf, reviewIdFor } from '@/src/goals/reviewService'
+import { getTodayInTimezone } from '@/src/shared/dateUtils'
+import { ROUTES } from '@/src/shared/routes'
 
 export interface SeededPlan {
   /** The revision the account's plan is at after the seed. */
@@ -135,4 +138,13 @@ export async function openBuildSteps(page: Page): Promise<void> {
   await expect(page.getByText("Saved to your account.")).toBeVisible()
   const fold = page.getByRole("button", { name: /^Edit your plan/ })
   if ((await fold.count()) > 0 && (await fold.getAttribute("aria-expanded")) === "false") await fold.click()
+}
+
+/**
+ * The Review on THIS week, by name. A plain `?step=review` opens the week the
+ * weekly "Due now" card is about while it shows (Sunday to Tuesday: last week;
+ * Plans/life-plan-after-setup.md, d11), and these specs write into this week.
+ */
+export function thisWeeksReview(timezone: string): string {
+  return `${ROUTES.plan}?step=review&period=${reviewIdFor(periodOf('week', getTodayInTimezone(timezone)))}`
 }

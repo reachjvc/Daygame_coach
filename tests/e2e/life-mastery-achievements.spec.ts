@@ -1,6 +1,6 @@
 import { test, expect } from "./fixtures/test"
 import { ROUTES } from "@/src/shared/routes"
-import { seedLifePlan } from "./helpers/lifePlan"
+import { seedLifePlan, thisWeeksReview } from "./helpers/lifePlan"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
 
 /**
@@ -41,7 +41,7 @@ function todayKey(): string {
 }
 
 test.describe("achievements", () => {
-  test("ten approaches: said on Today, listed on the goals, celebrated first in the week's review", async ({ page, account }) => {
+  test("ten approaches: said on Today, listed on the goals, celebrated first in the week's review", async ({ page, account, accountTimezone }) => {
     await seedLifePlan(page, account.id, PLAN)
     const res = await page.request.put("/api/life-plan/day", { data: { date: todayKey(), numbers: { g1: 9 } } })
     expect(res.status(), await res.text()).toBe(200)
@@ -59,7 +59,7 @@ test.describe("achievements", () => {
     await expect(page.getByTestId("achievement-next").first()).toHaveText("Next: 25 approaches in all (15 to go)")
 
     // The week's review starts with it, and can keep it in Magic moments.
-    await page.goto(`${ROUTES.plan}?step=review`)
+    await page.goto(thisWeeksReview(accountTimezone))
     const earned = page.getByTestId("review-earned")
     await expect(earned).toContainText("E2E approaches:")
     await expect(earned).toContainText("10 approaches in all")

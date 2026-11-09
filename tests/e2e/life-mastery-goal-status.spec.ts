@@ -1,6 +1,6 @@
 import { test, expect } from "./fixtures/test"
 import { ROUTES } from "@/src/shared/routes"
-import { seedLifePlan } from "./helpers/lifePlan"
+import { seedLifePlan, thisWeeksReview } from "./helpers/lifePlan"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
 
 /**
@@ -30,7 +30,7 @@ const PLAN = {
   seasonFocusId: null,
 }
 
-test("a goal paused from its card leaves Today and is named in the week's review", async ({ page, account }) => {
+test("a goal paused from its card leaves Today and is named in the week's review", async ({ page, account, accountTimezone }) => {
   await seedLifePlan(page, account.id, PLAN)
   await page.goto(`${ROUTES.plan}?step=today`)
   await expect(page.getByText("Saved to your account.")).toBeVisible()
@@ -48,6 +48,6 @@ test("a goal paused from its card leaves Today and is named in the week's review
   await expect(page.getByText("Saved to your account.")).toBeVisible()
   await expect(page.getByRole("button", { name: "Log one E2E gym sessions" })).toHaveCount(0)
 
-  await page.goto(`${ROUTES.plan}?step=review`)
+  await page.goto(thisWeeksReview(accountTimezone))
   await expect(page.getByTestId("review-changed")).toContainText("E2E gym sessions: Paused")
 })

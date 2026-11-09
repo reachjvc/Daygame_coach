@@ -66,14 +66,16 @@ const NUMBERS_SHOWN = 6
 /** How many reviews the scores-over-time table shows, newest kept. */
 const OVER_TIME_COLUMNS = 8
 
-export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handlers }: {
+export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handlers, initialPeriod }: {
   plan: NsPlan
   today: string
+  /** The period to open on, read once when the tab mounts: a card's or a link's week. */
+  initialPeriod?: ReviewPeriod | null
   /** The finished workouts' ticks, so a step done by training counts toward what was earned. */
   ticks?: TrainingTicks
   handlers: PeriodReviewHandlers
 }) {
-  const [period, setPeriod] = useState<ReviewPeriod>(() => periodOf("week", today))
+  const [period, setPeriod] = useState<ReviewPeriod>(() => initialPeriod ?? periodOf("week", today))
   const current = period.cadence === "fortnight" ? null : periodOf(period.cadence, today)
   const atNow = current !== null && current.start === period.start
   const review = reviewFor(plan, period)
