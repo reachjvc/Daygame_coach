@@ -250,6 +250,96 @@ test.describe("time & energy audit @phone", () => {
     await expect(sheet.getByTestId("review-note")).toHaveValue("Phone in the other room after 21:00")
   })
 
+  test("the perfect week: plan a block from Do more, an overlap is refused, it survives a reload, and the choices stay", async ({ page, account }) => {
+    await clearAudits(account.id)
+    const admin = stackAdmin()
+    const id = randomUUID()
+    const start = Date.parse("2026-11-02T10:00:00Z")
+    expect(
+      (
+        await admin.from("audit_runs").insert({
+          id,
+          user_id: account.id,
+          started_at: new Date(start).toISOString(),
+          ends_at: new Date(start + 14 * 86400_000).toISOString(),
+          ended_at: new Date(start + 2 * 3600_000).toISOString(),
+          quiet_start: 0,
+          quiet_end: 0,
+          review: { choices: { daygame: "more" }, notes: { daygame: "Mornings" } },
+        })
+      ).error,
+    ).toBeNull()
+    const { error } = await admin.from("audit_slots").insert(
+      (["Daygame", "Daygame", "Gym"] as const).map((activity, i) => ({
+        id: randomUUID(),
+        user_id: account.id,
+        run_id: id,
+        slot_at: new Date(start + i * QUARTER).toISOString(),
+        activity,
+        energy: 6,
+        growth: 7,
+        source: "app",
+      })),
+    )
+    expect(error).toBeNull()
+
+    await page.goto(`${ROUTES.audit}?view=review`)
+    const week = page.getByTestId("perfect-week")
+    await expect(week.getByTestId("week-inputs")).toContainText("Do more: Daygame", { timeout: 60_000 })
+    await expect(week.getByTestId("week-day-0")).toContainText("Nothing planned.")
+
+    await week.getByTestId("week-add-0").click()
+    const sheet = page.getByTestId("week-block-sheet")
+    await sheet.getByRole("button", { name: "Daygame" }).click()
+    await expect(sheet.getByTestId("week-what")).toHaveValue("Daygame")
+    await sheet.getByTestId("week-start").selectOption("540")
+    await sheet.getByTestId("week-end").selectOption("660")
+    await sheet.getByTestId("week-save").click()
+    await expect(sheet).toBeHidden()
+    await expect(week.getByTestId("week-day-0").getByTestId("week-block")).toContainText("09:00–11:00")
+    await expect(week.getByTestId("week-totals")).toContainText("Deep work 2 h")
+
+    await week.getByTestId("week-add-0").click()
+    await sheet.getByTestId("week-what").fill("Gym")
+    await sheet.getByRole("radio", { name: "Workout or hobby" }).click()
+    await sheet.getByTestId("week-start").selectOption("600")
+    await sheet.getByTestId("week-end").selectOption("720")
+    await sheet.getByTestId("week-save").click()
+    await expect(sheet.getByTestId("week-error")).toContainText('"Gym" overlaps "Daygame" on Monday')
+    await sheet.getByTestId("week-start").selectOption("660")
+    await sheet.getByTestId("week-save").click()
+    await expect(sheet).toBeHidden()
+    await expect(week.getByTestId("week-day-0").getByTestId("week-block")).toHaveCount(2)
+
+    await page.reload()
+    await page.getByTestId("audit-past-row").first().click()
+    await expect(week.getByTestId("week-day-0").getByTestId("week-block")).toHaveCount(2, { timeout: 60_000 })
+    const stored = await admin.from("audit_runs").select("review").eq("id", id).single()
+    expect(stored.data?.review.choices).toEqual({ daygame: "more" })
+    expect(stored.data?.review.notes).toEqual({ daygame: "Mornings" })
+
+    // A choice saved afterwards keeps the week.
+    await page.getByTestId("review-activity").filter({ hasText: "Gym" }).click()
+    const activity = page.getByTestId("review-activity-sheet")
+    await activity.getByRole("radio", { name: "Keep" }).click()
+    await activity.getByTestId("review-save").click()
+    await expect(activity.getByTestId("review-saved")).toBeVisible()
+    await page.keyboard.press("Escape")
+    await expect(week.getByTestId("week-day-0").getByTestId("week-block")).toHaveCount(2)
+
+    // A page from before the perfect week sends choices and notes only: the week stays.
+    const old = await page.request.patch(`/api/audit/runs/${id}`, { data: { review: { choices: { daygame: "more" }, notes: {} } } })
+    expect(old.status()).toBe(200)
+    const after = await admin.from("audit_runs").select("review").eq("id", id).single()
+    expect(after.data?.review.week).toHaveLength(2)
+    expect(after.data?.review.notes).toEqual({})
+
+    await week.getByTestId("week-day-0").getByTestId("week-block").filter({ hasText: "Gym" }).click()
+    await sheet.getByTestId("week-delete").click()
+    await expect(sheet).toBeHidden()
+    await expect(week.getByTestId("week-day-0").getByTestId("week-block")).toHaveCount(1)
+  })
+
   test("answers while offline, and the answer is saved once when the signal returns", async ({ page, context, account }) => {
     const run = await seedRun(account.id)
     await openAudit(page)

@@ -64,7 +64,8 @@ export function auditApi(account: string) {
     mute: (runId: string, mute: MuteOption) => call<{ run: AuditRun }>(`/api/audit/runs/${runId}`, json("PATCH", { mute })),
     quiet: (runId: string, quietStart: number, quietEnd: number) =>
       call<{ run: AuditRun }>(`/api/audit/runs/${runId}`, json("PATCH", { quietStart, quietEnd })),
-    review: (runId: string, review: Review) => call<{ run: AuditRun }>(`/api/audit/runs/${runId}`, json("PATCH", { review })),
+    /** Only the parts sent change; the rest stays as stored. */
+    review: (runId: string, review: Partial<Review>) => call<{ run: AuditRun }>(`/api/audit/runs/${runId}`, json("PATCH", { review })),
     save: (slots: AuditAnswer[]) =>
       call<{ stored: number; refused?: { id: unknown; error: string; retry: boolean }[] }>(
         "/api/audit/slots",

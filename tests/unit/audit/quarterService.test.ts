@@ -29,7 +29,7 @@ function run(over: Partial<AuditRun> = {}): AuditRun {
     quietStart: 1320,
     quietEnd: 480,
     mutedUntil: null,
-    review: { choices: {}, notes: {} },
+    review: { choices: {}, notes: {}, week: [] },
     endSentAt: null,
     ...over,
   }

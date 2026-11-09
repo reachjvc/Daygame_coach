@@ -21,10 +21,24 @@ export type ReviewChoice = "more" | "keep" | "handoff" | "cut" | "change"
 
 export const REVIEW_CHOICES: readonly ReviewChoice[] = ["more", "keep", "handoff", "cut", "change"]
 
-/** Stored on the run: the choice and the note per activity key (`normalizePhrase` of the activity). */
+/** What a perfect-week block is for (Plans/perfect-week.md; names in weekService). */
+export type WeekKind = "deep" | "workout" | "people" | "batch" | "admin" | "rest"
+
+/** One block of the perfect week: a template, not a date. Day 0 is Monday; start and end are minutes after midnight on the quarter. */
+export interface WeekBlock {
+  id: string
+  day: number
+  start: number
+  end: number
+  what: string
+  kind: WeekKind
+}
+
+/** Stored on the run: the choice and the note per activity key (`normalizePhrase` of the activity), and the perfect week planned from it. */
 export interface Review {
   choices: Record<string, ReviewChoice>
   notes: Record<string, string>
+  week: WeekBlock[]
 }
 
 export interface AuditRun {

@@ -3,7 +3,7 @@
  *   { end: true }                         End now (an open audit only)
  *   { mute: "30m"|"1h"|"2h"|"morning"|"off" }
  *   { quietStart, quietEnd }              minutes after midnight, on the quarter
- *   { review: { choices, notes } }        the review's choices (checkReview)
+ *   { review: { choices?, notes?, week? } } the review (checkReview); a part left out keeps what is stored
  */
 
 import { NextResponse } from "next/server"
@@ -50,7 +50,14 @@ export async function PATCH(req: Request, { params }: RouteParams) {
     } else if ("review" in body) {
       const review = checkReview(body.review)
       if ("error" in review) return NextResponse.json({ error: review.error }, { status: 400 })
-      patch.review = review.review
+      // A part the request leaves out keeps what is stored: a page from before the
+      // perfect week sends no week, and must not wipe it (code review, 2026-11-09).
+      const sent = body.review as Record<string, unknown>
+      patch.review = {
+        choices: "choices" in sent ? review.review.choices : run.review.choices,
+        notes: "notes" in sent ? review.review.notes : run.review.notes,
+        week: "week" in sent ? review.review.week : run.review.week,
+      }
     } else {
       return NextResponse.json({ error: "Send a change" }, { status: 400 })
     }

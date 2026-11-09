@@ -3,7 +3,9 @@
 **Look page:** https://claude.ai/artifact/JrvYJwtBTDN4eQ3PRtmoj1 ("Perfect week, in Martell's words"; marks db,
 collection `marks`: doc ids `p--<step>`, `l--<link>`, `b--<block>`; notes as `notes: [{text, at}]`).
 
-Written 2026-11-09. Status: **Phase 0 done 2026-11-09; waiting for the owner's marks before Phase 1.** The owner marked "Yes" on the D-FILL card of the Audit look page
+Written 2026-11-09. Status: **Phase 2 built 2026-11-09, live; not yet used.** The owner said the same day to
+keep going without looking at anything, so Phase 1 (his marks and a sketch) was skipped and the choices below
+were made for him; the look page stays open for notes. The owner marked "Yes" on the D-FILL card of the Audit look page
 (https://claude.ai/artifact/GF69w68HJxiyFkudNwYBXv, 2026-11-09 08:19 UTC, no note). `Plans/energy-audit.md` (D-FILL)
 says a Yes becomes its own plan; this is it.
 
@@ -75,7 +77,26 @@ the plan's routines offered as big rocks. Page tested before publishing with a f
 a failed save keeps the text, no sideways scroll at 390 px); after publishing, the `marks` collection is empty
 and a non-editor's write is refused.
 
-**Phase 1 — Design from his marks.** Turn his marks into a screen sketch at phone size (390×844) on the same page.
+**Phase 2 result (2026-11-09).** Built without his marks (he asked for that). What was decided, and why:
+
+- **Where (Q1):** the last section of the audit's review, "Your perfect week", under "Your energy through the
+  day". It shows only for a finished audit with answers (Q3); with no "Do more" yet it says to mark some.
+- **Time (Q2):** not linked. **Plan:** not linked yet either (the routines-as-big-rocks card); kept for later
+  so this phase stays small.
+- **No migration:** the week is stored in the audit's existing `review` (jsonb) as `week`. A save that leaves
+  `choices`, `notes` or `week` out keeps what is stored (code review: an old page sending no week must not wipe it).
+- **What it holds:** one template week, Monday to Sunday; blocks on the quarter hour, 00:00 to 24:00, that may
+  touch but never overlap (Martell: no room in the calendar means no room in the week); at most 150.
+- **Kinds:** Deep work, Workout or hobby, People (his big rocks), Batched tasks (his batching), Admin and calls
+  (his low hours), Rest (summary only; kept because rest is a real block of a week).
+- **Above the week:** the "Do more" activities (also offered as one-tap names when adding a block) and the
+  three most energetic hours; Martell's steps 1–7 as a folded checklist. Steps 9–11 (end-of-day dump, Sunday
+  planning, compare and redesign) are not built.
+- **Proof:** unit tests (`weekService.test.ts`), the repo integration test, and an end-to-end test on desktop
+  and phone (add from Do more, overlap refused with its reason, reload, a choice keeps the week, an old-style
+  save keeps the week, remove). Whole audit e2e file: 38 passed. Screens checked at phone size in dark mode.
+
+**Phase 1 — Design from his marks.** Skipped on the owner's word (see Status). Turn his marks into a screen sketch at phone size (390×844) on the same page.
 Done when he has marked the sketch.
 
 **Phase 2 — Build.** Failing tests first; a migration only if the week must be stored (listed under "Only you

@@ -239,7 +239,7 @@ export function useAudit(account: string) {
   // Stable, so a screen can depend on them without re-reading on every render
   // (the review re-read itself on every parent render: code review, 2026-11-09).
   const readRun = useCallback((id: string) => api.view(id), [api])
-  const saveReview = useCallback((id: string, review: Review) => decide(() => api.review(id, review)), [api, decide])
+  const saveReview = useCallback((id: string, review: Partial<Review>) => decide(() => api.review(id, review)), [api, decide])
   return {
     view,
     loadError,

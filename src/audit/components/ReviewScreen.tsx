@@ -9,7 +9,8 @@
  * same activities sorted into Martell's four boxes; then your energy through
  * the day. Tapping an activity opens its card: your "why" notes, and what you
  * decide to do with it (Do more · Keep · Hand off · Cut · Change how) with a
- * note, saved with the audit.
+ * note, saved with the audit. Last, Martell's perfect week planned from it
+ * (Plans/perfect-week.md), saved with the audit too.
  */
 
 import { ArrowLeft, Check } from "lucide-react"
@@ -20,8 +21,9 @@ import { cn } from "@/lib/utils"
 import { AuditCallError, type AuditView } from "../auditClient"
 import { BOX_NAMES, buildReview, REVIEW_NOTE_MAX, type Box, type BuiltReview, type ReviewGroup } from "../auditService"
 import { clockLabel } from "../quarterService"
-import { REVIEW_CHOICES, type AuditRun, type Review, type ReviewChoice } from "../types"
+import { REVIEW_CHOICES, type AuditRun, type Review, type ReviewChoice, type WeekBlock } from "../types"
 import type { AuditState } from "../hooks/useAudit"
+import { PerfectWeek } from "./PerfectWeek"
 
 const CHOICE_NAMES: Record<ReviewChoice, string> = {
   more: "Do more",
@@ -327,10 +329,17 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
     else delete choices[key]
     if (note.trim()) notes[key] = note
     else delete notes[key]
-    const failed = await saveReview(run.id, { choices, notes })
+    return patchReview({ choices, notes })
+  }
+
+  /** Sends only the parts that changed; the server keeps the rest as stored, so a choice never touches the week or the other way round. */
+  const patchReview = async (part: Partial<Review>): Promise<string | null> => {
+    if (!run) return "This audit is not loaded"
+    const failed = await saveReview(run.id, part)
     if (!failed) await load()
     return failed
   }
+  const saveWeek = (week: WeekBlock[]) => patchReview({ week })
 
   const back = (
     <button type="button" onClick={onBack} className="-ml-2 flex h-11 items-center gap-1 rounded-lg px-2 text-sm text-muted-foreground hover:text-foreground" data-testid="review-back">
@@ -401,6 +410,13 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
               <EnergyByHour built={built} />
             </div>
           </section>
+
+          <PerfectWeek
+            week={run.review.week}
+            doMore={built.groups.filter((g) => run.review.choices[g.key] === "more")}
+            bestHours={built.bestHours}
+            onSaveWeek={saveWeek}
+          />
         </>
       )}
 

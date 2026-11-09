@@ -148,11 +148,11 @@ describe("runs", () => {
       mutedUntil: until,
       quietStart: 1380,
       quietEnd: 420,
-      review: { choices: { gym: "more" }, notes: { gym: "keep it up" } },
+      review: { choices: { gym: "more" }, notes: { gym: "keep it up" }, week: [{ id: "b1", day: 0, start: 540, end: 660, what: "Write", kind: "deep" }] },
     })
     expect(patched.mutedUntil).toBe(until.toISOString())
     expect([patched.quietStart, patched.quietEnd]).toEqual([1380, 420])
-    expect(patched.review).toEqual({ choices: { gym: "more" }, notes: { gym: "keep it up" } })
+    expect(patched.review).toEqual({ choices: { gym: "more" }, notes: { gym: "keep it up" }, week: [{ id: "b1", day: 0, start: 540, end: 660, what: "Write", kind: "deep" }] })
     await expect(updateRun(user.id, run.id, { quietStart: 1321 })).rejects.toBeInstanceOf(AuditRefused)
   })
 })

@@ -9,6 +9,7 @@
 
 import { isUuid } from "@/src/shared/ids"
 import { storableText } from "./requestGuard"
+import { checkWeek } from "./weekService"
 import { getTodayInTimezone, localTimeInstant } from "@/src/shared/dateUtils"
 import { hhmm, nextDateKey } from "@/src/notifications/quietHours"
 import { normalizePhrase } from "@/src/shared/textMatch"
@@ -112,12 +113,14 @@ export function checkQuarter(slotAt: unknown, run: AuditRun, now: Date): { slotM
   return { slotMs }
 }
 
-/** The review's choices and notes (D-CHOICES). Anything else is refused. */
+/** The review's choices and notes (D-CHOICES) and the perfect week (`checkWeek`). Anything else is refused. */
 export function checkReview(input: unknown): { review: Review } | { error: string } {
   if (!input || typeof input !== "object" || Array.isArray(input)) return { error: "A review is an object" }
   const r = input as Record<string, unknown>
-  const extra = Object.keys(r).filter((k) => k !== "choices" && k !== "notes")
-  if (extra.length > 0) return { error: "A review holds choices and notes only" }
+  const extra = Object.keys(r).filter((k) => k !== "choices" && k !== "notes" && k !== "week")
+  if (extra.length > 0) return { error: "A review holds choices, notes and a week only" }
+  const checkedWeek = checkWeek(r.week ?? [])
+  if ("error" in checkedWeek) return { error: checkedWeek.error }
   const choices: Record<string, ReviewChoice> = {}
   const notes: Record<string, string> = {}
   const rawChoices = r.choices ?? {}
@@ -138,7 +141,7 @@ export function checkReview(input: unknown): { review: Review } | { error: strin
     const clean = storableText(value)
     if (clean.trim()) notes[storableText(key) || key] = clean
   }
-  return { review: { choices, notes } }
+  return { review: { choices, notes, week: checkedWeek.week } }
 }
 
 export type MuteOption = "30m" | "1h" | "2h" | "morning" | "off"

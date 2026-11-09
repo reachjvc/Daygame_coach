@@ -17,6 +17,7 @@
 
 import type { AnswerSource, AuditAnswer, AuditRun, AuditSlot, Review, ScaleValue } from "@/src/audit/types"
 import { normalizePhrase } from "@/src/shared/textMatch"
+import { checkWeek } from "@/src/audit/weekService"
 import { readAllRows } from "./paging"
 import { createAdminSupabaseClient, createServerSupabaseClient } from "./supabase"
 
@@ -66,10 +67,13 @@ const SLOT_COLUMNS = "id, run_id, slot_at, activity, energy, growth, avoiding, w
 const iso = (value: string): string => new Date(value).toISOString()
 
 function toReview(raw: unknown): Review {
-  const r = (raw && typeof raw === "object" ? raw : {}) as { choices?: unknown; notes?: unknown }
+  const r = (raw && typeof raw === "object" ? raw : {}) as { choices?: unknown; notes?: unknown; week?: unknown }
+  // A stored week was checked on the way in; anything unreadable shows as an empty week rather than breaking the review.
+  const week = checkWeek(r.week ?? [])
   return {
     choices: (r.choices && typeof r.choices === "object" ? r.choices : {}) as Review["choices"],
     notes: (r.notes && typeof r.notes === "object" ? r.notes : {}) as Review["notes"],
+    week: "week" in week ? week.week : [],
   }
 }
 

@@ -14,6 +14,7 @@ import { Moon, Sun } from "lucide-react"
 import { useEffect, useState, type ReactNode } from "react"
 import { BottomSheet } from "@/components/BottomSheet"
 import { Button } from "@/components/ui/button"
+import { hhmm as clockLabel } from "@/src/notifications/quietHours"
 
 const hhmm = (m: number) => `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`
 const STEPS = Array.from({ length: 96 }, (_, i) => i * 15)
@@ -26,18 +27,22 @@ export function awakeQuarters(quietStart: number, quietEnd: number): number {
   return 96 - quiet
 }
 
-function TimeTile({
+/** A time as a tile: the time shown big, the phone's own picker over the whole tile. Also the perfect week's From and To. */
+export function TimeTile({
   id,
   icon,
   label,
   value,
   onChange,
+  options = STEPS,
 }: {
   id: string
-  icon: ReactNode
+  icon?: ReactNode
   label: string
   value: number
   onChange: (v: number) => void
+  /** Minutes after midnight to offer; 00:00 to 23:45 by default. 1440 reads 24:00. */
+  options?: readonly number[]
 }) {
   return (
     <label htmlFor={id} className="relative flex min-h-16 flex-1 cursor-pointer flex-col justify-center rounded-xl border border-border bg-background/60 px-3.5 py-2 hover:border-primary/60">
@@ -45,12 +50,12 @@ function TimeTile({
         {icon}
         {label}
       </span>
-      <span className="text-2xl font-semibold tabular-nums">{hhmm(value)}</span>
+      <span className="text-2xl font-semibold tabular-nums">{clockLabel(value)}</span>
       {/* The native picker, over the whole tile: the phone's own wheel opens. */}
-      <select id={id} value={value} onChange={(e) => onChange(Number(e.target.value))} className="absolute inset-0 cursor-pointer text-base opacity-0" aria-label={label}>
-        {STEPS.map((m) => (
+      <select id={id} value={value} onChange={(e) => onChange(Number(e.target.value))} className="absolute inset-0 cursor-pointer text-base opacity-0" aria-label={label} data-testid={id}>
+        {options.map((m) => (
           <option key={m} value={m}>
-            {hhmm(m)}
+            {clockLabel(m)}
           </option>
         ))}
       </select>

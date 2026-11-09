@@ -18,7 +18,7 @@ function run(over: Partial<AuditRun> = {}): AuditRun {
     quietStart: 1320,
     quietEnd: 480,
     mutedUntil: null,
-    review: { choices: {}, notes: {} },
+    review: { choices: {}, notes: {}, week: [] },
     endSentAt: null,
     ...over,
   }
@@ -119,7 +119,7 @@ describe("runIsOpen", () => {
 describe("checkReview", () => {
   it("accepts choices and notes", () => {
     expect(checkReview({ choices: { email: "cut" }, notes: { email: "Batch it" } })).toEqual({
-      review: { choices: { email: "cut" }, notes: { email: "Batch it" } },
+      review: { choices: { email: "cut" }, notes: { email: "Batch it" }, week: [] },
     })
   })
   it("refuses an unknown choice, extra fields, a long note and too many keys", () => {
@@ -166,6 +166,6 @@ describe("text that cannot be stored", () => {
     const r = checkAnswer(answer({ activity: "Pasted\u0000text", why: "line one\nline\u0007 two" }), run(), new Date("2026-11-09T09:20:00Z"))
     expect("answer" in r && r.answer.activity).toBe("Pastedtext")
     expect("answer" in r && r.answer.why).toBe("line one\nline two")
-    expect(checkReview({ notes: { email: "a\u0000b" } })).toEqual({ review: { choices: {}, notes: { email: "ab" } } })
+    expect(checkReview({ notes: { email: "a\u0000b" } })).toEqual({ review: { choices: {}, notes: { email: "ab" }, week: [] } })
   })
 })
