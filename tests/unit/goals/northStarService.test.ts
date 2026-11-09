@@ -1791,6 +1791,8 @@ describe("nothing is gated, so everything outstanding is listed", () => {
     // The owner had "N more values to reach seven" taken out on 2026-11-04.
     const empty = planTodos(emptyNsPlan()).find((t) => t.id === "values")
     expect(empty?.text).toBe("Ask yourself what you value most")
+    // The lists are on step 7 only since R1, so the to-do opens step 7, not step 1.
+    expect(empty?.tab).toBe("values")
     const one = setValues(emptyNsPlan(), ["Freedom"], NOW)
     expect(planTodos(one).map((t) => t.id)).not.toContain("values")
     expect(planTodos(one).map((t) => t.text).join(" ")).not.toMatch(/seven|more values/i)

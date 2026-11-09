@@ -1120,7 +1120,7 @@ export const STAR_PROMPTS: NsReviewPrompt[] = [
  * two lists were asked on step 1 and again on step 7; they live on step 7 only
  * since 2026-11-09, and step 1 says where they went.
  */
-export const STAR_VALUES_POINTER = "Your values come later, on step 7, Values & identity."
+export const STAR_VALUES_POINTER = `Your values come later, on step ${TAB_ORDER.indexOf("values") + 1}, ${TAB_LABELS.values}.`
 
 export const VALUES_INTRO = {
   title: "What matters to you",
@@ -1231,7 +1231,7 @@ export const VALUES_ORDER = {
   /** Under the list. Says the drag exists and how to do it without a mouse. */
   dragNote: "Drag any value to move it. Keyboard: tab to a value, space to lift it, arrows to move, space to drop.",
   /** Shown when the ordering half has no list to work on yet. */
-  empty: "Nothing to order yet. Write your values in the two lists first (step 7), and the values each area asks for as you rate them.",
+  empty: `Nothing to order yet. Write your values in the two lists first (step ${TAB_ORDER.indexOf("values") + 1}), and the values each area asks for as you rate them.`,
   /** Above the list, naming where the pool came from. */
   pooled: "Everything you have written: the whole-life list, plus the values each area and each goal asked for.",
   pull: "add the ones I wrote per area",

@@ -4352,7 +4352,7 @@ export function planTodos(plan: NsPlan): Array<{ id: string; text: string; tab: 
   if (!answerOf(plan, STAR_WHY_ID).trim()) out.push({ id: "why", text: "Why that life matters to you", tab: "star" })
   // A question, not a count: "N more values to reach seven" went with the
   // floor of 7 (owner, 2026-11-04). How long the list is, is theirs.
-  if (plan.values.length === 0) out.push({ id: "values", text: "Ask yourself what you value most", tab: "star" })
+  if (plan.values.length === 0) out.push({ id: "values", text: "Ask yourself what you value most", tab: "values" })
   const unrated = plan.areas.length - ratedAreaCount(plan, todayISO())
   if (unrated > 0) out.push({ id: "rate", text: `${unrated} of ${plan.areas.length} areas still unrated`, tab: "now" })
   const noTen = plan.areas.filter((a) => !areaReview(plan, a.id).ten.trim()).length

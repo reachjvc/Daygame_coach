@@ -681,7 +681,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
 
           <TagList
             label="What would you have to value to do this?"
-            hint="One word each. These are offered back to you on the north star tab when you build the whole-life list."
+            hint="One word each. These are offered back to you on step 7, Values & identity, when you build the whole-life list."
             placeholder="Discipline"
             color={color}
             items={goal.values}
