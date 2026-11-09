@@ -118,11 +118,25 @@ function subject(): string {
 
 export type DeviceOutcome = "ok" | "gone" | "failed"
 
-/** What a push service's answer means for the device. 404 and 410 mean the address is dead for good. */
+/**
+ * What a push service's answer means for the device. 404 and 410 mean the
+ * address is dead for good.
+ *
+ * SO DO 401 AND 403: the service refuses this server's key for this address,
+ * which happens when the subscription was made with an earlier key pair (alpha
+ * prove-slow-01). No retry can reach it; kept, the device stayed listed as
+ * getting pings that never arrived. Removed, the page offers "Turn on pings
+ * for this device" again, which subscribes with the current key.
+ */
 export function outcomeOf(statusCode: number | undefined): DeviceOutcome {
   if (statusCode !== undefined && statusCode >= 200 && statusCode < 300) return "ok"
   if (statusCode === 404 || statusCode === 410) return "gone"
+  if (isKeyRefused(statusCode)) return "gone"
   return "failed"
+}
+
+function isKeyRefused(statusCode: number | undefined): boolean {
+  return statusCode === 401 || statusCode === 403
 }
 
 export interface SendResult {
@@ -179,6 +193,10 @@ export async function sendToPerson(
         outcome = outcomeOf(res.statusCode)
       } catch (error) {
         outcome = outcomeOf((error as { statusCode?: number }).statusCode)
+        // Every device refusing the key at once means this server's keys are wrong, not the devices'.
+        if (isKeyRefused((error as { statusCode?: number }).statusCode)) {
+          console.error("[push] key refused, device removed", (error as { statusCode?: number }).statusCode ?? "no answer")
+        }
         if (outcome === "failed") {
           // The service's status only: the endpoint is a secret and never logged.
           console.error("[push] send failed", (error as { statusCode?: number }).statusCode ?? "no answer")

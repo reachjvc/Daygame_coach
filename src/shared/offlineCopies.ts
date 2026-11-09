@@ -18,6 +18,7 @@
 
 import { forgetAuditOnThisDevice, forgetAuditViewCopy } from "@/src/audit/auditQueue"
 import { forgetThisDevice, forgetTimerOnThisDevice } from "@/src/notifications/pushClient"
+import { DEVICES_COPY_KEY } from "@/src/notifications/hooks/usePushDevice"
 import { forgetTimeTrackerOnThisDevice } from "@/src/timetrack/browserOwner"
 import { unsentTrackerChanges } from "@/src/timetrack/hooks/useTimetrackSync"
 
@@ -62,6 +63,12 @@ export async function forgetStoredPages(): Promise<void> {
   // The audit's last read is a copy of the previous person's day, drawn when
   // /audit opens with no signal: it goes with the stored pages.
   forgetAuditViewCopy()
+  // So are the device names kept for no signal (`usePushDevice`).
+  try {
+    window.localStorage.removeItem(DEVICES_COPY_KEY)
+  } catch {
+    // Storage blocked: nothing was kept there to forget.
+  }
   try {
     if (typeof caches === "undefined") return
     const stores = await caches.keys()
@@ -90,6 +97,8 @@ export async function forgetOfflineCopies({ keepUnsentTime = false }: { keepUnse
   try {
     window.localStorage.removeItem(LIVE_COPY_KEY)
     window.localStorage.removeItem(LIVE_REST_KEY)
+    // The person's device names, kept for no signal (`usePushDevice`).
+    window.localStorage.removeItem(DEVICES_COPY_KEY)
   } catch {
     // Storage blocked: nothing was kept there to forget.
   }

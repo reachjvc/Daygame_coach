@@ -255,7 +255,8 @@ function StartView({ s, view, push, onReview }: { s: AuditState; view: AuditView
           {error}
         </p>
       )}
-      {noPingDevice(push) && (
+      {/* Only from a list read now: offline the kept copy names devices but offers nothing (prove-slow-02). */}
+      {push.devicesKnown && noPingDevice(push) && (
         <div className="mt-5">
           <PingDeviceCard push={push} onOpenSettings={() => setDevicesOpen(true)} />
         </div>

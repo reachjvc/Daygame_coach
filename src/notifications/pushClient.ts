@@ -74,11 +74,32 @@ function keyBytes(base64url: string): Uint8Array<ArrayBuffer> {
   return out
 }
 
-/** This browser's subscription, made with the server's public key if it has none yet. */
+function sameBytes(a: ArrayBuffer | null | undefined, b: Uint8Array): boolean {
+  if (!a || a.byteLength !== b.length) return false
+  const view = new Uint8Array(a)
+  return view.every((x, i) => x === b[i])
+}
+
+/**
+ * This browser's subscription, made with the server's current public key.
+ *
+ * A SUBSCRIPTION MADE WITH AN EARLIER KEY IS REPLACED (alpha prove-slow-01).
+ * When the server's key pair changes (a rotation, a reset vault), the push
+ * service refuses every message signed with the new key for a subscription
+ * made with the old one. Kept and registered again, it looked switched on in
+ * Settings while no ping ever arrived. One whose key the browser does not
+ * tell is replaced too: it cannot be shown to match. The old address is
+ * forgotten on the server, so the device is not listed twice.
+ */
 export async function subscribe(registration: ServiceWorkerRegistration, publicKey: string): Promise<PushSubscription> {
+  const key = keyBytes(publicKey)
   const existing = await registration.pushManager.getSubscription()
-  if (existing) return existing
-  return registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(publicKey) })
+  if (existing && sameBytes(existing.options?.applicationServerKey, key)) return existing
+  // A browser refuses a new key while the old subscription stands.
+  if (existing) await existing.unsubscribe()
+  const fresh = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key })
+  if (existing && existing.endpoint !== fresh.endpoint) await forgetEndpoint(existing.endpoint)
+  return fresh
 }
 
 /** This browser's address, if it has one, without registering anything. */
@@ -123,6 +144,11 @@ export async function forgetTimerOnThisDevice(): Promise<void> {
 export async function forgetThisDevice(): Promise<void> {
   const endpoint = await currentEndpoint()
   if (!endpoint) return
+  await forgetEndpoint(endpoint)
+}
+
+/** Ask the server to remove the signed-in person's device at `endpoint`. Never throws; waits 3 s at most. */
+async function forgetEndpoint(endpoint: string): Promise<void> {
   try {
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), 3000)

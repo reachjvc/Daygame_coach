@@ -15,7 +15,7 @@
  * switching reminders on.
  */
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { deviceLabel } from "../endpoints"
 import { isInstalledApp, permission, pushSupport, subscribe, workerRegistration, type PushSupport } from "../pushClient"
 
@@ -36,6 +36,34 @@ export interface ThisDevice {
 
 /** The running timer's tag in public/sw.js. */
 const TIMER_TAG = "timer-running"
+
+/**
+ * THE LAST DEVICE LIST THIS PHONE READ (alpha prove-slow-02). With no signal
+ * the list cannot be read, and "no device gets pings" was assumed: a phone
+ * that gets them showed the big "Turn on pings for this device" offer. The
+ * kept list answers instead, while `devicesKnown` stays false, so the page
+ * names where pings go but offers nothing from a copy. Removed at sign-out
+ * (src/shared/offlineCopies.ts).
+ */
+export const DEVICES_COPY_KEY = "push-devices-copy-v1"
+
+function keepDevices(devices: DeviceSummary[]): void {
+  try {
+    window.localStorage.setItem(DEVICES_COPY_KEY, JSON.stringify(devices))
+  } catch {
+    // storage blocked or full: offline, the page names no device
+  }
+}
+
+function keptDevices(): DeviceSummary[] | null {
+  try {
+    const raw = window.localStorage.getItem(DEVICES_COPY_KEY)
+    const list: unknown = raw ? JSON.parse(raw) : null
+    return Array.isArray(list) ? (list as DeviceSummary[]) : null
+  } catch {
+    return null
+  }
+}
 
 async function json<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, { ...init, headers: init?.body ? { "Content-Type": "application/json" } : undefined, cache: "no-store" })
@@ -61,15 +89,22 @@ export function usePushDevice() {
   const [devices, setDevices] = useState<DeviceSummary[]>([])
   /** The device list has been read at least once: until then, "no device" is not known. */
   const [devicesKnown, setDevicesKnown] = useState(false)
+  const readNow = useRef(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const loadDevices = useCallback(async () => {
     try {
-      setDevices((await json<{ devices: DeviceSummary[] }>("/api/notifications/devices")).devices)
+      const list = (await json<{ devices: DeviceSummary[] }>("/api/notifications/devices")).devices
+      setDevices(list)
       setDevicesKnown(true)
+      readNow.current = true
+      keepDevices(list)
     } catch {
       // The list is a convenience; the switch for this device works without it.
+      // No signal: the last list read here, until the server answers (never over a list read now).
+      const kept = readNow.current ? null : keptDevices()
+      if (kept) setDevices(kept)
     }
   }, [])
 

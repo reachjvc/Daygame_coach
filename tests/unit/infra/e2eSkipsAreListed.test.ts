@@ -27,6 +27,10 @@ const KNOWN_SKIPS: Record<string, string> = {
     "a service worker registers only in a production build; under `next dev` there is none to test",
   "tests/e2e/audit-offline-reload.spec.ts › slow-pass-02: a Time entry the last read saw running does not fill quarters after that read":
     "a service worker registers only in a production build; under `next dev` there is none to test",
+  "tests/e2e/audit-offline-pings.spec.ts › prove-slow-02: a phone that gets pings is not offered to turn them on, and the next ping is named":
+    "a service worker registers only in a production build; under `next dev` there is none to test",
+  "tests/e2e/audit-offline-pings.spec.ts › prove-slow-02: before an audit, with no device known, nothing about pings is offered offline":
+    "a service worker registers only in a production build; under `next dev` there is none to test",
   "tests/e2e/audit-devices.spec.ts › 04: a ping tapped with no signal opens the answer sheet, and plain /audit can be answered":
     "a service worker registers only in a production build; under `next dev` there is none to test",
   "tests/e2e/programs-live-format.spec.ts › describe: the live workout, opened with no signal":
