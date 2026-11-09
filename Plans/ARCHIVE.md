@@ -1,19 +1,24 @@
 # Plans that are finished or replaced
 
-Removed from this folder on 2026-11-09 because nothing in them is left to do.
+Removed from this folder because nothing in them is left to do.
 Code comments still name some of them. To read one, run
-`git show 7516348e:Plans/<file>` (the last commit that had all of them).
+`git show <commit>:Plans/<file>`, with the commit in the last column (the last commit that had it).
 
-| Plan | Why it went |
-|---|---|
-| time-tracker-leftovers.md | Finished: Phases 1–5 live; the last two limits it noted were fixed in 7516348e. |
-| toggl-parity.md | Finished: Phases 0–8 live; its last bugs were done through time-tracker-leftovers.md. |
-| time-tracker-like-toggl.md | Replaced by toggl-parity.md, which also shipped its Phase 7. |
-| tests-worth-their-keep.md | Finished 2026-10-16, all ten phases; its four migrations were applied the same day. |
-| tests-worth-their-keep.inventory.md | The file-by-file list for the plan above. |
-| thought.md | Retired 2026-11-08, replaced by energy-audit.md. |
-| life-plan-map.md | Replaced by life-plan-tables.md, which was its result. |
-| life-plan-tables.md | Replaced: life-plan-rebuild.md carried out Q1–Q10, life-plan-achievements.md Q11. |
+| Plan | Why it went | Read it at |
+|---|---|---|
+| time-tracker-leftovers.md | Finished: Phases 1–5 live; the last two limits it noted were fixed in 7516348e. | 7516348e |
+| toggl-parity.md | Finished: Phases 0–8 live; its last bugs were done through time-tracker-leftovers.md. | 7516348e |
+| time-tracker-like-toggl.md | Replaced by toggl-parity.md, which also shipped its Phase 7. | 7516348e |
+| tests-worth-their-keep.md | Finished 2026-10-16, all ten phases; its four migrations were applied the same day. | 7516348e |
+| tests-worth-their-keep.inventory.md | The file-by-file list for the plan above. | 7516348e |
+| thought.md | Retired 2026-11-08, replaced by energy-audit.md. | 7516348e |
+| life-plan-map.md | Replaced by life-plan-tables.md, which was its result. | 7516348e |
+| life-plan-tables.md | Replaced: life-plan-rebuild.md carried out Q1–Q10, life-plan-achievements.md Q11. | 7516348e |
+| life-plan-after-setup.md | Finished 2026-11-09: Phases 0–6 live (land on Today, Due now, one weekly reminder, values on step 7 only). R2 stays "not now"; R3 lives in life-plan-review-reads-back.md. Its decision page stays: https://claude.ai/artifact/Tbhg3XTAizXkLmutiUaQpp | 6412d7c6 |
+| life-plan-achievements.md | Finished: built and live 2026-11-05 (Q11). The sign-off card `q11-achievements` stays on the sign-off page. | 6412d7c6 |
+| life-plan-readings.md | Finished: built 2026-11-05 (round 2). The sign-off card `readings` stays on the sign-off page. | 6412d7c6 |
+| life-plan-goal-status.md | Finished: built and live 2026-11-05 (round 3). The sign-off card `goal-status` stays on the sign-off page. | 6412d7c6 |
+| life-plan-dated-steps.md | Finished: built and live 2026-11-05 (round 4). The sign-off card `dated-steps` stays on the sign-off page. | 6412d7c6 |
 
 ## Still worth trying on your phone (from time-tracker-leftovers.md)
 

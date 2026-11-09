@@ -17,7 +17,8 @@ for your yes. Q11 (achievements) is live too, from its own plan, `Plans/life-pla
 the Review step reading the period back (`Plans/life-plan-review-reads-back.md`); round 2, readings on
 number goals (`Plans/life-plan-readings.md`); round 3, goals that can be achieved, paused or dropped
 (`Plans/life-plan-goal-status.md`); round 4, steps with days (`Plans/life-plan-dated-steps.md`). All
-four live 2026-11-05, none signed off. After round 3 the comparison found nothing left worth building
+four live 2026-11-05, none signed off. The achievements plan and rounds 2–4 are finished and listed in
+`Plans/ARCHIVE.md` (read them with `git show 6412d7c6:Plans/<file>`). After round 3 the comparison found nothing left worth building
 for weekly use beyond round 4; two small things stay unbuilt (a why per experience, item 20; a box to
 set one step's day by hand). The rounds stop here.
 
