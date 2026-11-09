@@ -3,7 +3,7 @@
 **Findings board:** https://claude.ai/artifact/67sKtSTrD1u5bVysh7eVyS (marks db `marks`, doc id = row id F01–F28,
 `mark` = fix | later | no, `notes: [{text, at}]`).
 
-Written 2026-11-09. Status: **running** (started 2026-11-09). O1 = yes ("use a test account"). O2 = left blank in the prompt, read as "none"; the owner's notes on the look pages stand in (alpha/KNOWN.md).
+Written 2026-11-09. Status: **done 2026-11-09** (Phases 0–8). O1 = yes ("use a test account"). O2 = left blank in the prompt, read as "none"; the owner's notes on the look pages stand in (alpha/KNOWN.md).
 
 The owner asked for Claude to be the alpha tester of three features — Time (`/time`), the Time & energy audit
 (`/audit`) and the Perfect week (the last part of the audit's review) — for hours, on several browsers and devices
@@ -225,11 +225,38 @@ Fresh agents (not the fixers) re-run Phases 2–4 on the final build, plus the s
 spec to `alpha/regression/` with a README, so the next round starts from it. Check D-BUDGETS with numbers.
 **Done when:** all budgets met or each miss written here with why.
 
+**Status (2026-11-09): done, with one gap.** Five fresh agents (none of them fixers) re-ran Phases 2–4 and the
+slow pass on the final build e59167ab: 26 new findings (1 × sev 1, 2 × sev 2, 1 × sev 3, 11 × sev 4, 11 × sev 5).
+All sev 1–3 and 8 of the sev 4 were fixed in four more rounds, each with an independent review (which found 13 more
+points, all fixed; one fix that would have deleted every device on a push-key error was reverted before shipping):
+live 7dc37502, 35865c60, d2480278. Specs and real-time scripts: `alpha/regression/` (README + NOTES per folder).
+Budgets (D-BUDGETS), measured on real devices (slow pass 2) and five browser profiles:
+- ping ≤ 60 s after the quarter: **met**, 1–7 s (first ping after a mute: 1 s; was 64–66 s).
+- ≤ 3 taps: **met** for the common case (activity pre-filled from Time or "same as before"); 4 when the activity
+  changes; 1 from the notification's "Same as before".
+- ≤ 10 s to answer: saved 0.6–1.2 s after the sheet opens; a person's own time cannot be measured by a script.
+- screen ≤ 2 s cold on the phone: **met** at normal speed (0.36–0.84 s); **missed** on a slowed connection with a 4×
+  slower CPU (2.98 s) — on the board as Later.
+- no lost or doubled entry or answer: **met** in both final real-time passes (0 lost, 0 doubled; was 1 lost).
+- zero sev 1–2 open: **met**.
+Gap: the last four fix rounds (prove-review-01/02, prove-audit-01/03, prove-slow-01/02 and their reviews) were shipped
+after the Phase 7 testers ran, so they are proven by their own failing-first tests, the full audit e2e set (114–124
+green) and independent reviews, not by another fresh adversarial pass.
+
 ## Phase 8 — Report and clean-up · S
 Delete only the O1 test account's rows (back them up first, json per table), stop servers and the emulator,
 remove worktrees. Report in plain words, doubt first: counts by severity found / fixed / Later, the worst three
 in one line each, the budgets, and "Try these on your phone" (≤ 5 steps, iPhone ones marked). Say "built" and
 "live", never "works" — only the owner's own use decides that.
+
+**Status (2026-11-09): done.** The O1 live test account (dgalphab21e8634@…, id c01f46d0…) was backed up per table
+(`~/dg-backups/alpha-live-test-account-2026-11-09/`, json_agg, 56 rows + the auth user) and then deleted in one
+transaction guarded by its email; a recount found 0 rows left. Its credentials file was removed. The rig server,
+clock loop and emulator container are stopped; the scratch worktrees and merged branches are removed. Left: two
+agent worktrees the harness keeps locked, and three branches whose work reached main rebased (`git branch -d`
+refuses them; they are not force-deleted): alpha-fix10, worktree-agent-a211444144c1e60af,
+worktree-agent-ad839fe9cb9eba39b. The test-only push keys added to the local test stack's vault stay (harmless,
+local only).
 
 ---
 
