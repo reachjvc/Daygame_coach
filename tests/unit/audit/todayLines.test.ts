@@ -33,10 +33,10 @@ describe("runDayOf: calendar days, the start day is Day 1 (F22)", () => {
   it("the evening it starts is Day 1", () => {
     expect(runDayOf(run(), at("2026-11-09T20:30:00Z"), CPH).day).toBe(1)
   })
-  it("counts every calendar day the run touches, so the last one is the day it ends", () => {
+  it("is out of the run's 14 days even when it touches 15 calendar days; the last morning stays Day 14", () => {
     const r = run()
-    expect(runDayOf(r, at("2026-11-10T08:00:00Z"), CPH).of).toBe(15)
-    expect(runDayOf(r, at("2026-11-23T19:00:00Z"), CPH)).toEqual({ day: 15, of: 15 })
+    expect(runDayOf(r, at("2026-11-10T08:00:00Z"), CPH).of).toBe(14)
+    expect(runDayOf(r, at("2026-11-23T19:00:00Z"), CPH)).toEqual({ day: 14, of: 14 })
   })
   it("started at local midnight, it is 14 days and ends as Day 14 closes", () => {
     const r = run({ startedAt: "2026-11-08T23:00:00.000Z", endsAt: "2026-11-22T23:00:00.000Z" })

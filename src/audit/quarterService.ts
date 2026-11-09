@@ -133,9 +133,11 @@ function daysFrom(a: string, b: string): number {
  */
 export function runDayOf(run: Pick<AuditRun, "startedAt" | "endsAt" | "endedAt">, nowMs: number, tz: string): { day: number; of: number } {
   const first = getTodayInTimezone(tz, new Date(Date.parse(run.startedAt)))
-  const last = getTodayInTimezone(tz, new Date(Date.parse(run.endsAt) - 1))
   const today = getTodayInTimezone(tz, new Date(Math.min(nowMs, runStopMs(run) - 1)))
-  const of = daysFrom(first, last) + 1
+  // The run's own length (14), not the calendar days it touches: a run started
+  // in the evening touches 15, and "Day 1 of 15" reads wrong. Its last
+  // calendar morning stays "Day 14 of 14", and the line says when it ends.
+  const of = Math.max(1, Math.round((Date.parse(run.endsAt) - Date.parse(run.startedAt)) / DAY_MS))
   return { day: Math.min(of, Math.max(1, daysFrom(first, today) + 1)), of }
 }
 
