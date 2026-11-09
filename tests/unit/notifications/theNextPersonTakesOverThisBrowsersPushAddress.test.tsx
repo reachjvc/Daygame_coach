@@ -118,6 +118,6 @@ describe("claimThisDevice", () => {
   it("never throws, offline included", async () => {
     aBrowserWithAPushAddress()
     vi.stubGlobal("fetch", vi.fn(async () => Promise.reject(new TypeError("Failed to fetch"))))
-    await expect(claimThisDevice()).resolves.toBeUndefined()
+    await expect(claimThisDevice()).resolves.toBe("failed")
   })
 })

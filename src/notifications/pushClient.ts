@@ -107,12 +107,86 @@ function madeWith(sub: PushSubscription, publicKey: string, key: Uint8Array): bo
   }
 }
 
+/**
+ * A DEVICE MOVING TO A NEW ADDRESS, KEPT ON THE PHONE UNTIL THE SERVER HAS IT
+ * (security review of prove-slow-01, sev 2). Replacing a subscription drops
+ * the old address at the push service at once; the device's row still names
+ * it until a registration with `oldEndpoint` reaches the server. Kept only in
+ * memory, a registration lost to no signal or a server error left the row
+ * "on" at a dead address and the new address with no row. So it is kept here
+ * and named again at every page open until a 2xx answer settles it.
+ *
+ * `to` null: the old subscription was dropped and the new one not made yet
+ * (the browser refused, or the page closed). The next opens subscribe again;
+ * after GIVE_UP refusals the server is told to drop the old address, so the
+ * row stops claiming pings and the page offers to turn them on.
+ */
+const MOVE_KEY = "push-subscription-move-v1"
+const GIVE_UP = 3
+
+interface Move {
+  from: string
+  to: string | null
+  tries: number
+}
+
+/** Storage blocked: the move lives as long as the page does. */
+let moveInMemory: Move | null = null
+
+function readMove(): Move | null {
+  try {
+    const raw = window.localStorage.getItem(MOVE_KEY)
+    if (raw === null) return moveInMemory
+    const m = JSON.parse(raw) as Partial<Move> | null
+    if (typeof m?.from !== "string" || (m.to !== null && typeof m.to !== "string")) return null
+    return { from: m.from, to: m.to ?? null, tries: typeof m.tries === "number" ? m.tries : 0 }
+  } catch {
+    return moveInMemory
+  }
+}
+
+function writeMove(m: Move | null): void {
+  moveInMemory = m
+  try {
+    if (m) window.localStorage.setItem(MOVE_KEY, JSON.stringify(m))
+    else window.localStorage.removeItem(MOVE_KEY)
+  } catch {
+    // storage blocked: kept in memory only
+  }
+}
+
+/** The address the device's row is still at, while this browser's subscription `sub` has not been registered in its place. */
+export function movedFrom(sub: PushSubscription): string | null {
+  const m = readMove()
+  return m && m.to === sub.endpoint ? m.from : null
+}
+
+/** The server answered 2xx to a registration naming `from` as `oldEndpoint`: the row is at the new address. */
+export function moveSettled(from: string | null): void {
+  if (from && readMove()?.from === from) writeMove(null)
+}
+
 /** A fresh subscription with `publicKey`, the old one (if any) dropped first: a browser refuses a new key while it stands. */
 async function subscribeFresh(registration: ServiceWorkerRegistration, existing: PushSubscription | null, publicKey: string): Promise<PushSubscription> {
-  if (existing) await existing.unsubscribe()
+  if (existing) {
+    // A move not settled yet keeps its first address: that is where the row is.
+    const pending = readMove()
+    const from = pending && pending.to === existing.endpoint ? pending.from : existing.endpoint
+    writeMove({ from, to: null, tries: 0 })
+    await existing.unsubscribe()
+  }
   const fresh = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(publicKey) })
   rememberKey(fresh.endpoint, publicKey)
+  const m = readMove()
+  if (m && m.to === null) writeMove(m.from === fresh.endpoint ? null : { ...m, to: fresh.endpoint })
   return fresh
+}
+
+async function serverKey(): Promise<string | null> {
+  const key = await fetch("/api/notifications/key", { cache: "no-store" })
+    .then(async (res) => (res.ok ? ((await res.json()) as { publicKey?: unknown }).publicKey : null))
+    .catch(() => null)
+  return typeof key === "string" ? key : null
 }
 
 /**
@@ -124,54 +198,74 @@ async function subscribeFresh(registration: ServiceWorkerRegistration, existing:
  * made with the old one. Kept and registered again, it looked switched on in
  * Settings while no ping ever arrived. One whose key the browser does not
  * tell, and that was not made here with this key, is replaced too: it cannot
- * be shown to match. The old address is forgotten on the server, so the
- * device is not listed twice.
+ * be shown to match. The caller registers it naming `movedFrom(sub)`, so the
+ * device's row moves with its switches and label rather than starting again.
  */
 export async function subscribe(registration: ServiceWorkerRegistration, publicKey: string): Promise<PushSubscription> {
   const existing = await registration.pushManager.getSubscription()
   if (existing && madeWith(existing, publicKey, keyBytes(publicKey))) return existing
-  const fresh = await subscribeFresh(registration, existing, publicKey)
-  if (existing && existing.endpoint !== fresh.endpoint) await forgetEndpoint(existing.endpoint)
-  return fresh
+  return subscribeFresh(registration, existing, publicKey)
 }
 
-/** The address this page load replaced, and its replacement: every later "refresh" of the replacement names it. */
-let replaced: { from: string; to: string } | null = null
-const oldEndpointOf = (sub: PushSubscription) => (replaced?.to === sub.endpoint ? replaced.from : null)
-let checking: Promise<{ subscription: PushSubscription; oldEndpoint: string | null } | null> | null = null
+type PageSubscription = { subscription: PushSubscription; oldEndpoint: string | null }
+let checking: Promise<PageSubscription | null> | null = null
 
 /**
  * THIS BROWSER'S SUBSCRIPTION AS A PAGE OPENS, A KEY CHANGE HEALED WITHOUT A
  * TAP. With notifications already allowed, a subscription made with another
  * key than the server's (or one not shown to match) is replaced at once, and
- * its `oldEndpoint` returned, so the "refresh" registration moves the device's
- * row to the new address with its switches as they were. A key that cannot be
- * read (no signal, no keys on the server) changes nothing. Null when there is
- * no subscription; never throws.
+ * `oldEndpoint` is returned until the server has the move (`moveSettled`), so
+ * the "refresh" registration moves the device's row to the new address with
+ * its switches as they were. A browser left with no subscription by a refused
+ * replacement subscribes again here (see MOVE_KEY). A key that cannot be read
+ * (no signal, no keys on the server) changes nothing. Null when there is no
+ * subscription; never throws.
  *
  * One check per page at a time: the layout's claim and a screen's device
  * hook both ask as the page opens, and two replacements would race.
  */
-export function subscriptionForPage(
-  registration: ServiceWorkerRegistration,
-): Promise<{ subscription: PushSubscription; oldEndpoint: string | null } | null> {
-  checking ??= (async () => {
+export function subscriptionForPage(registration: ServiceWorkerRegistration): Promise<PageSubscription | null> {
+  checking ??= (async (): Promise<PageSubscription | null> => {
     try {
       const existing = await registration.pushManager.getSubscription()
-      if (!existing) return null
-      const publicKey = await fetch("/api/notifications/key", { cache: "no-store" })
-        .then(async (res) => (res.ok ? ((await res.json()) as { publicKey?: unknown }).publicKey : null))
-        .catch(() => null)
-      if (typeof publicKey !== "string" || madeWith(existing, publicKey, keyBytes(publicKey))) {
-        return { subscription: existing, oldEndpoint: oldEndpointOf(existing) }
+      const pending = readMove()
+      if (!existing) {
+        if (!pending || pending.to !== null) {
+          if (pending) writeMove(null) // the new subscription is gone too: nothing left to move to
+          return null
+        }
+        // The old one was dropped and the new one never made: try again.
+        const publicKey = await serverKey()
+        if (!publicKey) return null
+        try {
+          const fresh = await subscribeFresh(registration, null, publicKey)
+          return { subscription: fresh, oldEndpoint: movedFrom(fresh) }
+        } catch {
+          const tries = pending.tries + 1
+          if (tries >= GIVE_UP) {
+            // The row must stop claiming pings: the page then offers to turn them on.
+            await forgetEndpoint(pending.from)
+            writeMove(null)
+          } else {
+            writeMove({ ...pending, tries })
+          }
+          return null
+        }
+      }
+      if (pending && pending.to === null) {
+        // Subscribed, but the page closed before that was noted; or the old one was never dropped.
+        writeMove(existing.endpoint === pending.from ? null : { ...pending, to: existing.endpoint })
+      }
+      const publicKey = await serverKey()
+      if (!publicKey || madeWith(existing, publicKey, keyBytes(publicKey))) {
+        return { subscription: existing, oldEndpoint: movedFrom(existing) }
       }
       const fresh = await subscribeFresh(registration, existing, publicKey)
-      if (fresh.endpoint !== existing.endpoint) replaced = { from: existing.endpoint, to: fresh.endpoint }
-      return { subscription: fresh, oldEndpoint: oldEndpointOf(fresh) }
+      return { subscription: fresh, oldEndpoint: movedFrom(fresh) }
     } catch {
-      // A replacement that failed: the next page open tries again.
+      // A replacement that failed: the next page open tries again (MOVE_KEY).
       const sub = await registration.pushManager.getSubscription().catch(() => null)
-      return sub ? { subscription: sub, oldEndpoint: oldEndpointOf(sub) } : null
+      return sub ? { subscription: sub, oldEndpoint: movedFrom(sub) } : null
     }
   })().finally(() => {
     checking = null
@@ -258,14 +352,16 @@ async function forgetEndpoint(endpoint: string): Promise<void> {
  * an address with no device is not registered. Chosen over unsubscribing at
  * sign-in, which would also take the same person's own notifications away each
  * time they signed in again, and would need every way of signing in to do it.
- * Never throws; asks nothing of a browser that never allowed notifications.
+ * Never throws; asks nothing of a browser that never allowed notifications
+ * ("none"). "failed": not registered (no signal, a server error), tried again
+ * at the next page load.
  */
-export async function claimThisDevice(): Promise<void> {
-  if (pushSupport() !== "ready" || permission() !== "granted") return
+export async function claimThisDevice(): Promise<"ok" | "failed" | "none"> {
+  if (pushSupport() !== "ready" || permission() !== "granted") return "none"
   try {
     const registration = await navigator.serviceWorker.getRegistration()
     const here = registration ? await subscriptionForPage(registration) : null
-    if (!here) return
+    if (!here) return "none"
     const res = await fetch("/api/notifications/devices", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -277,6 +373,9 @@ export async function claimThisDevice(): Promise<void> {
         ...(here.oldEndpoint ? { oldEndpoint: here.oldEndpoint } : {}),
       }),
     })
+    // Not registered: a move still waiting is sent again at the next open (MOVE_KEY).
+    if (!res.ok) return "failed"
+    moveSettled(here.oldEndpoint)
     /**
      * AND THE PREVIOUS PERSON'S TIMER ON THE SCREEN GOES TOO. Their pushes stop
      * reaching this browser, their "stopped" one included, so a running timer
@@ -284,11 +383,13 @@ export async function claimThisDevice(): Promise<void> {
      * 2026-11-05, low). The timer off here now: whatever it shows is not this
      * person's to see.
      */
-    const answer = res.ok ? ((await res.json().catch(() => ({}))) as { timerRunning?: unknown }) : {}
+    const answer = (await res.json().catch(() => ({}))) as { timerRunning?: unknown }
     if (answer.timerRunning === false) {
       for (const shown of (await registration?.getNotifications({ tag: "timer-running" })) ?? []) shown.close()
     }
+    return "ok"
   } catch {
     // no worker or no signal: the next page load asks again
+    return "failed"
   }
 }

@@ -17,7 +17,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { deviceLabel } from "../endpoints"
-import { isInstalledApp, permission, pushSupport, subscribe, subscriptionForPage, workerRegistration, type PushSupport } from "../pushClient"
+import { isInstalledApp, movedFrom, moveSettled, permission, pushSupport, subscribe, subscriptionForPage, workerRegistration, type PushSupport } from "../pushClient"
 
 export interface DeviceSummary {
   id: string
@@ -44,22 +44,35 @@ const TIMER_TAG = "timer-running"
  * kept list answers instead, while `devicesKnown` stays false, so the page
  * names where pings go but offers nothing from a copy. Removed at sign-out
  * (src/shared/offlineCopies.ts).
+ *
+ * WHOSE LIST IT IS goes with it: a page that names its account (`account`)
+ * uses the copy only when it is that account's, and removes another
+ * account's at once, so a session that ended without Log Out, or a sign-up on
+ * this browser, never shows the previous person's device names. A page that
+ * names no account never uses the copy.
  */
 export const DEVICES_COPY_KEY = "push-devices-copy-v1"
 
-function keepDevices(devices: DeviceSummary[]): void {
+function keepDevices(account: string | undefined, devices: DeviceSummary[]): void {
+  if (!account) return
   try {
-    window.localStorage.setItem(DEVICES_COPY_KEY, JSON.stringify(devices))
+    window.localStorage.setItem(DEVICES_COPY_KEY, JSON.stringify({ account, devices }))
   } catch {
     // storage blocked or full: offline, the page names no device
   }
 }
 
-function keptDevices(): DeviceSummary[] | null {
+function keptDevices(account: string | undefined): DeviceSummary[] | null {
+  if (!account) return null
   try {
     const raw = window.localStorage.getItem(DEVICES_COPY_KEY)
-    const list: unknown = raw ? JSON.parse(raw) : null
-    return Array.isArray(list) ? (list as DeviceSummary[]) : null
+    const kept = (raw ? JSON.parse(raw) : null) as { account?: unknown; devices?: unknown } | null
+    if (!kept) return null
+    if (kept.account !== account || !Array.isArray(kept.devices)) {
+      window.localStorage.removeItem(DEVICES_COPY_KEY)
+      return null
+    }
+    return kept.devices as DeviceSummary[]
   } catch {
     return null
   }
@@ -82,7 +95,7 @@ async function closeTimerNotifications(): Promise<void> {
   }
 }
 
-export function usePushDevice() {
+export function usePushDevice({ account }: { account?: string } = {}) {
   const [support, setSupport] = useState<PushSupport | null>(null)
   const [perm, setPerm] = useState<NotificationPermission | "unsupported">("default")
   const [thisDevice, setThisDevice] = useState<ThisDevice | null>(null)
@@ -99,14 +112,14 @@ export function usePushDevice() {
       setDevices(list)
       setDevicesKnown(true)
       readNow.current = true
-      keepDevices(list)
+      keepDevices(account, list)
     } catch {
       // The list is a convenience; the switch for this device works without it.
       // No signal: the last list read here, until the server answers (never over a list read now).
-      const kept = readNow.current ? null : keptDevices()
+      const kept = readNow.current ? null : keptDevices(account)
       if (kept) setDevices(kept)
     }
-  }, [])
+  }, [account])
 
   useEffect(() => {
     const s = pushSupport()
@@ -129,10 +142,11 @@ export function usePushDevice() {
             ...(here.oldEndpoint ? { oldEndpoint: here.oldEndpoint } : {}),
           }),
         })
+        moveSettled(here.oldEndpoint)
         setThisDevice(r.id ? { id: r.id, enabled: r.enabled, timerRunning: r.timerRunning === true } : null)
         void loadDevices()
       } catch {
-        // Offline: tried again next time the page opens.
+        // Offline or a server error: tried again next time the page opens, a move included.
       }
     })()
   }, [loadDevices])
@@ -146,11 +160,14 @@ export function usePushDevice() {
     if (!registration) throw new Error("This browser could not start the app's background worker")
     const { publicKey } = await json<{ publicKey: string }>("/api/notifications/key")
     const sub = await subscribe(registration, publicKey)
+    // A subscription replaced for a new server key: the device's row moves to it, switches and label kept.
+    const oldEndpoint = movedFrom(sub)
     // the label also tells the server whether this is the installed app on a phone (`timerOnByDefault`)
     const r = await json<{ id: string; enabled: boolean; timerRunning?: boolean }>("/api/notifications/devices", {
       method: "POST",
-      body: JSON.stringify({ subscription: sub.toJSON(), intent, label: deviceLabel(navigator.userAgent, isInstalledApp()) }),
+      body: JSON.stringify({ subscription: sub.toJSON(), intent, label: deviceLabel(navigator.userAgent, isInstalledApp()), ...(oldEndpoint ? { oldEndpoint } : {}) }),
     })
+    moveSettled(oldEndpoint)
     const device = { id: r.id, enabled: r.enabled, timerRunning: r.timerRunning === true }
     setThisDevice(device)
     return device

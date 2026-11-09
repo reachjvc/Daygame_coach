@@ -12,7 +12,9 @@
  *               asked for and the previous person stops getting theirs here.
  *               A browser with no row is not registered: they removed it.
  *               With `oldEndpoint` (the worker, after the browser replaced the
- *               address), the row with the old address moves to the new one.
+ *               address; a page, after replacing a subscription made with an
+ *               earlier server key), the row with the old address moves to the
+ *               new one. "enable" and "timer" take `oldEndpoint` the same way.
  *   "timer"   — the person switched "Show the running timer on this device" on
  *               in the time tracker: register it with the timer on, leaving
  *               reminders as they were (off, for a browser new to this person).
@@ -66,6 +68,15 @@ export async function POST(req: Request) {
   const label = typeof body?.label === "string" ? body.label.slice(0, 80) : ""
 
   try {
+    /**
+     * A SUBSCRIPTION REPLACED FOR A NEW SERVER KEY ("Turn on" or the timer
+     * switch, prove-slow-01): the person's own row at the old address moves to
+     * the new one first, so its switches and label carry over rather than a new
+     * row starting with defaults. Only to an address no device has yet.
+     */
+    if (body?.intent !== "refresh" && typeof body?.oldEndpoint === "string" && body.oldEndpoint !== sub.endpoint && !(await deviceByEndpoint(sub.endpoint))) {
+      await moveDevice(auth.userId, body.oldEndpoint, sub)
+    }
     if (body?.intent === "timer") {
       // "Show the running timer on this device", from the tracker's Settings:
       // the timer on, reminders left as they were (off for a browser new here).

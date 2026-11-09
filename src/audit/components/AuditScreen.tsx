@@ -696,7 +696,7 @@ function TodayView({
 
 export function AuditScreen({ account }: { account: string }) {
   const s = useAudit(account)
-  const push = usePushDevice()
+  const push = usePushDevice({ account })
   const [reviewId, setReviewId] = useState<string | null>(null)
   const view0 = s.view
   // `?view=review` (the end notice): the latest audit that is over.

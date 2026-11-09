@@ -10,7 +10,9 @@
  * Now the hook keeps the last list it read on the phone and answers with it
  * when the server cannot be reached, still saying the list was not read now
  * (`devicesKnown` false), so no screen offers to turn pings on from it. The
- * kept list goes at sign-out with the other copies.
+ * kept list goes at sign-out with the other copies, and is used only by the
+ * account it was read for: another account signed in here (a session that
+ * ended without Log Out, a sign-up) has it removed unseen.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -24,6 +26,8 @@ vi.mock("@/src/notifications/pushClient", () => ({
   workerRegistration: async () => null,
   subscribe: async () => null,
   subscriptionForPage: async () => null,
+  movedFrom: () => null,
+  moveSettled: () => {},
   forgetThisDevice: async () => {},
   forgetTimerOnThisDevice: async () => {},
 }))
@@ -42,6 +46,8 @@ const PHONE = {
 }
 
 let online = true
+const A = "a1c2a8e0-0000-4000-8000-00000000000a"
+const B = "b1c2a8e0-0000-4000-8000-00000000000b"
 
 beforeEach(() => {
   online = true
@@ -60,12 +66,12 @@ afterEach(() => vi.unstubAllGlobals())
 
 describe("the device list with no signal", () => {
   it("is the last list this phone read, not known as read now", async () => {
-    const first = renderHook(() => usePushDevice())
+    const first = renderHook(() => usePushDevice({ account: A }))
     await waitFor(() => expect(first.result.current.devicesKnown).toBe(true))
     first.unmount()
 
     online = false
-    const offline = renderHook(() => usePushDevice())
+    const offline = renderHook(() => usePushDevice({ account: A }))
     await waitFor(() => expect(offline.result.current.devices).toEqual([PHONE]))
     expect(offline.result.current.devicesKnown).toBe(false)
     expect(noPingDevice(offline.result.current)).toBe(false)
@@ -73,7 +79,7 @@ describe("the device list with no signal", () => {
 
   it("is empty and unknown when this phone never read one", async () => {
     online = false
-    const offline = renderHook(() => usePushDevice())
+    const offline = renderHook(() => usePushDevice({ account: A }))
     // the read was tried and failed
     await waitFor(() => expect(vi.mocked(fetch)).toHaveBeenCalled())
     await new Promise((r) => setTimeout(r, 0))
@@ -82,15 +88,39 @@ describe("the device list with no signal", () => {
   })
 
   it("goes at sign-out", async () => {
-    const first = renderHook(() => usePushDevice())
+    const first = renderHook(() => usePushDevice({ account: A }))
     await waitFor(() => expect(first.result.current.devicesKnown).toBe(true))
     first.unmount()
     await forgetOfflineCopies()
 
     online = false
-    const offline = renderHook(() => usePushDevice())
+    const offline = renderHook(() => usePushDevice({ account: A }))
     await waitFor(() => expect(vi.mocked(fetch)).toHaveBeenCalled())
     await new Promise((r) => setTimeout(r, 0))
     expect(offline.result.current.devices).toEqual([])
+  })
+
+  it("is never another account's: a different account signed in here removes it unseen", async () => {
+    const first = renderHook(() => usePushDevice({ account: A }))
+    await waitFor(() => expect(first.result.current.devicesKnown).toBe(true))
+    first.unmount()
+
+    online = false
+    const other = renderHook(() => usePushDevice({ account: B }))
+    await waitFor(() => expect(vi.mocked(fetch)).toHaveBeenCalled())
+    await new Promise((r) => setTimeout(r, 0))
+    expect(other.result.current.devices).toEqual([])
+    expect(window.localStorage.getItem("push-devices-copy-v1")).toBeNull()
+  })
+
+  it("is not used by a page that names no account", async () => {
+    const first = renderHook(() => usePushDevice({ account: A }))
+    await waitFor(() => expect(first.result.current.devicesKnown).toBe(true))
+    first.unmount()
+    online = false
+    const anon = renderHook(() => usePushDevice())
+    await waitFor(() => expect(vi.mocked(fetch)).toHaveBeenCalled())
+    await new Promise((r) => setTimeout(r, 0))
+    expect(anon.result.current.devices).toEqual([])
   })
 })
