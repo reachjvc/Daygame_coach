@@ -3,7 +3,7 @@
 Written 2026-11-08. Built from the owner's marks and notes on the research page "Dread or Delight"
 (https://claude.ai/artifact/V28AzK4axgj7yaczaU9Y4n, marks database collection `marks`), six read-only
 research reports (code, live database, sources) and a four-reviewer attack on the first draft (8 blockers
-and about 30 other problems found and fixed, 2026-11-08). Status: **Phases 0-3 in progress (2026-11-09).**
+and about 30 other problems found and fixed, 2026-11-08). Status: **Phases 0-3 live (2026-11-09); Phases 4-7 not started.**
 Notes since 2026-11-08 20:00 UTC: none (marks read 2026-11-09: 19 documents, the newest written 2026-11-08 18:43 UTC, so no decision changed). Look page: not made yet (Phase 4 makes it).
 
 Format: owner answers first, then Part 1 in plain words, then DECISIONS, BLOCKERS, THE PIECES, PHASES,
@@ -670,6 +670,8 @@ prints only `app/api/notifications/tick/route.ts` and `src/shared/offlineCopies.
 6. Ship.
 
 **Done when:** live has the tables, the clock still succeeds every minute, and all checks are green.
+
+**Status:** Live 2026-11-09, commit 344f8a82, buildId confirmed (live `/api/healthz` showed 344f8a82 at 07:36 UTC). Migration B (`20261109110000_energy_audit.sql`, rollback beside it) was applied to the test database first (rehearsed with its rollback and re-applied, then applied again by a clean rebuild), then live at about 07:30 UTC after `supabase migration list --linked` showed only that file pending. Live checks: `audit_runs` and `audit_slots` exist, `select count(*) from public.audit_pings_due(10)` returned 0, `audit_ends_due(10)` returned 0, `select public.timetrack_alert_due()` returned false without error, and `notifications-clock` succeeded every minute from 07:31 to 07:36 UTC (6 of 6). `auditRepo.integration.test.ts` has 27 tests, all green; with `TEST_SHARED_USER=1` the two access tests go red as they should. Differences from the plan: `startRun` is named `startAuditRun` because `tests/unit/writeCoverage.test.ts` matches write functions by name and a peer's unrelated `startRun` in `src/goals/repLadderService.ts` would have been caught by it; `copyPreviousSlot` takes the new answer's id as a fourth argument (ids are made by the caller). The six audit writes are classified "asserted" in `writeCoverage.baseline.json`. Nothing calls the audit's repos yet (Phase 4 does).
 
 ## Phase 4 — Start, answer, fill in later (no pings yet) · L
 
