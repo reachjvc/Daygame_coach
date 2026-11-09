@@ -41,6 +41,11 @@ export const PUSH_TTL_SECONDS = 600
  * the push service and a stale "running" is never delivered after a "stopped".
  */
 export const TIMER_PUSH_TTL_SECONDS = 12 * 3600
+/**
+ * The plan's weekly review reminder keeps 6 hours: it is sent once a week and
+ * never again, so a phone without signal at 19:00 should still get it that evening.
+ */
+export const REVIEW_PUSH_TTL_SECONDS = 6 * 3600
 
 /** What the worker shows. `actions` are buttons on the notification (Android and laptops only). */
 export interface PushPayload {
@@ -165,7 +170,7 @@ export async function sendToPerson(
       let outcome: DeviceOutcome
       try {
         const res = await webpush.sendNotification({ endpoint: d.endpoint, keys: { p256dh: d.p256dh, auth: d.auth } }, payload, {
-          TTL: timer ? TIMER_PUSH_TTL_SECONDS : PUSH_TTL_SECONDS,
+          TTL: timer ? TIMER_PUSH_TTL_SECONDS : kind === "plan-review" ? REVIEW_PUSH_TTL_SECONDS : PUSH_TTL_SECONDS,
           urgency: "high",
           topic: topicOf(kind),
           vapidDetails: { subject: subject(), publicKey: vapid.publicKey, privateKey: vapid.privateKey },

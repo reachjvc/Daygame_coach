@@ -103,3 +103,24 @@ test.describe("words and folds", () => {
     await expect(page.getByText("Saves to your account as you write.")).toBeVisible()
   })
 })
+
+test.describe("the weekly review reminder", () => {
+  test("switched on, Monday at 08:00, and still so after a reload", async ({ page, account }) => {
+    await seedLifePlan(page, account.id, inUse())
+    await page.goto(`${ROUTES.plan}?step=review`)
+    const block = page.getByTestId("review-reminder")
+    const toggle = block.getByRole("switch", { name: "Weekly reminder" })
+    // Each change is one PUT; wait for it to land before the next.
+    const saved = () => page.waitForResponse((r) => r.url().includes("/api/life-plan/reminders") && r.request().method() === "PUT" && r.ok())
+    if ((await toggle.getAttribute("aria-checked")) !== "true") await Promise.all([saved(), toggle.click()])
+    await expect(toggle).toHaveAttribute("aria-checked", "true")
+    await Promise.all([saved(), block.getByLabel("Day").selectOption("1")])
+    await expect(block.getByRole("status")).toHaveText("Saved to your account.")
+    await Promise.all([saved(), block.getByLabel("Time").selectOption("8")])
+    await expect(block.getByLabel("Time")).toHaveValue("8")
+    await page.reload()
+    await expect(toggle).toHaveAttribute("aria-checked", "true")
+    await expect(block.getByLabel("Day")).toHaveValue("1")
+    await expect(block.getByLabel("Time")).toHaveValue("8")
+  })
+})

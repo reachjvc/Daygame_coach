@@ -9,6 +9,8 @@
  */
 
 import { afterEach, describe, expect, test, vi } from "vitest"
+import { reminderPayload } from "@/src/goals/reviewReminderService"
+import { periodOf } from "@/src/goals/reviewService"
 
 const ORIGIN = "https://app.test"
 
@@ -175,5 +177,16 @@ describe("the audit ping (Plans/energy-audit.md, D-BUTTONS)", () => {
     await w.dispatch("notificationclick", { action: "", notification: { data: w.shown[0].options.data, close: vi.fn() } })
     expect((w.fetchMock.mock.calls as unknown as [string][]).filter(([u]) => String(u).includes("/api/audit"))).toEqual([])
     expect(w.opened).toEqual([`${ORIGIN}${PING.url}`])
+  })
+})
+
+describe("the plan's weekly review reminder (Plans/life-plan-after-setup.md, Phase 5)", () => {
+  test("shows under its own tag and title, quietly replaces, and opens that week", async () => {
+    const w = await loadWorker()
+    await w.dispatch("push", pushOf(reminderPayload(periodOf("week", "2026-11-09"))))
+    expect(w.shown).toHaveLength(1)
+    expect(w.shown[0].title).toBe("Weekly review")
+    expect(w.shown[0].options).toMatchObject({ tag: "plan-review", renotify: false })
+    expect(String((w.shown[0].options.data as { url: string }).url).endsWith("/plan?step=review&period=week-2026-11-09")).toBe(true)
   })
 })

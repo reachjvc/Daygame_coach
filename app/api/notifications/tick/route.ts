@@ -5,13 +5,16 @@
  *
  * Refuses anything without the clock's secret (src/notifications/clockAuth.ts).
  * Each call rings the time tracker's 6 h alert for every timer that has just
- * passed it (`runTimerAlertClock`, Plans/time-tracker-like-toggl.md, Phase 7).
+ * passed it (`runTimerAlertClock`, Plans/time-tracker-like-toggl.md, Phase 7), and
+ * sends the plan's weekly review reminder (`runPlanReviewClock`,
+ * Plans/life-plan-after-setup.md, Phase 5).
  */
 
 import { NextResponse } from "next/server"
 import { bearerMatches, clockSecret } from "@/src/notifications/clockAuth"
 import { runAuditPingClock } from "@/src/audit/pingService"
 import { runTimerAlertClock } from "@/src/timetrack/runningTimerService"
+import { runPlanReviewClock } from "@/src/goals/reviewReminderService"
 
 export async function POST(req: Request) {
   const expected = await clockSecret()
@@ -20,7 +23,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Not allowed" }, { status: 401 })
   }
 
-  const [timerAlerts, auditPings] = await Promise.all([
+  const [timerAlerts, auditPings, planReviews] = await Promise.all([
     runTimerAlertClock().catch((error: unknown) => {
       console.error("[timer alert] tick failed", error instanceof Error ? error.message : "unknown")
       return { failed: true as const }
@@ -29,6 +32,10 @@ export async function POST(req: Request) {
       console.error("[audit ping] tick failed", error instanceof Error ? error.message : "unknown")
       return { failed: true as const }
     }),
+    runPlanReviewClock().catch((error: unknown) => {
+      console.error("[plan review] tick failed", error instanceof Error ? error.message : "unknown")
+      return { failed: true as const }
+    }),
   ])
-  return NextResponse.json({ timerAlerts, auditPings })
+  return NextResponse.json({ timerAlerts, auditPings, planReviews })
 }

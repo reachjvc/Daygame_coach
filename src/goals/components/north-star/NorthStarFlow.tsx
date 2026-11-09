@@ -94,6 +94,7 @@ import { ReviewTab } from "./ReviewTab"
 import { PeriodReviewTab } from "./PeriodReviewTab"
 import { appendToReview, rateArea, removeReview, reviewIdFor, writeReview, type ReviewPeriod } from "@/src/goals/reviewService"
 import { DEFAULT_REVIEW_DAY, dueNow, nextSetupStep, type DueCard } from "@/src/goals/dueNowService"
+import type { Reminder } from "@/src/db/lifePlanRemindersRepo"
 import { DueNow } from "@/src/goals/components/north-star/DueNow"
 import { COMMIT_DATE_KEY } from "@/src/goals/data/northStarStart"
 import { CommitTab } from "./CommitTab"
@@ -221,6 +222,8 @@ export function NorthStarFlow({
   // The fold follows the step: arriving on a setup step opens it, arriving on a use step closes it.
   useEffect(() => { setBuildOpen(BUILD_STEPS.includes(tab)) }, [tab])
   const railToggleRef = useRef<HTMLButtonElement>(null)
+  /** The weekly review reminder's settings, read once the account has answered (Phase 5). */
+  const [reminder, setReminder] = useState<(Reminder & { hasEnabledDevice: boolean }) | null>(null)
   /** The Due now cards hidden with "Not now", per account, in this browser. */
   const [hiddenDue, setHiddenDue] = useState<ReadonlySet<string>>(new Set())
   useEffect(() => {
@@ -297,6 +300,16 @@ export function NorthStarFlow({
    * one rule, one of them tested and dead.
    */
   const [decision, setDecision] = useState<SyncDecision | null>(null)
+  // The weekly reminder's settings, once the account has answered; on any failure it stays null and the block is not shown.
+  const decided = decision !== null
+  useEffect(() => {
+    if (!decided) return
+    let cancelled = false
+    fetch("/api/life-plan/reminders")
+      .then(async (res) => { if (res.ok && !cancelled) setReminder((await res.json()) as Reminder & { hasEnabledDevice: boolean }) })
+      .catch(() => { /* no reminder block: the review still works */ })
+    return () => { cancelled = true }
+  }, [decided])
   /**
    * The rows last accepted by the server, as text.
    *
@@ -1116,7 +1129,7 @@ export function NorthStarFlow({
   const states = ns.stepStates(plan, account)
   const committed = ns.answerOf(plan, COMMIT_DATE_KEY).trim() !== ""
   const dueCards = decision !== null && today
-    ? dueNow(plan, today, { reviewDay: DEFAULT_REVIEW_DAY, hidden: hiddenDue, nextStep: nextSetupStep(committed, states) })
+    ? dueNow(plan, today, { reviewDay: reminder?.reviewDay ?? DEFAULT_REVIEW_DAY, hidden: hiddenDue, nextStep: nextSetupStep(committed, states) })
     : []
   const dueWeek = dueCards.find((c) => c.kind === "week")
   // Before the account's plan has loaded, the server's answer, so the cards do not jump.
@@ -2113,6 +2126,8 @@ export function NorthStarFlow({
             <PeriodReviewTab
               key={reviewPeriod ? reviewIdFor(reviewPeriod) : "now"}
               initialPeriod={reviewPeriod ?? (dueWeek && "period" in dueWeek.go ? dueWeek.go.period ?? null : null)}
+              reminder={reminder}
+              onReminderChange={setReminder}
               plan={plan}
               today={today}
               ticks={ticks}

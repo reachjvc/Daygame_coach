@@ -244,10 +244,11 @@ export async function recordDeviceOutcome(deviceId: string, outcome: "ok" | "gon
  * What a send was. 'timetrack-running' is the silent running/stopped timer
  * notification, 'timetrack-alert' the one alert with sound at 6 h,
  * 'audit-ping' the time & energy audit's quarter-hour question and
- * 'audit-end' its "your two weeks are done". Kept in step with the
+ * 'audit-end' its "your two weeks are done", 'plan-review' the plan's one weekly
+ * review reminder. Kept in step with the
  * database's `notification_sends_kind_check`.
  */
-export type SendKind = "test" | "timetrack-running" | "timetrack-alert" | "audit-ping" | "audit-end"
+export type SendKind = "test" | "timetrack-running" | "timetrack-alert" | "audit-ping" | "audit-end" | "plan-review"
 
 /**
  * Open a send's row before sending, so its id can travel in the notification.
@@ -257,13 +258,13 @@ export type SendKind = "test" | "timetrack-running" | "timetrack-alert" | "audit
  * a second is refused, and this answers null, "already sent, do not send
  * again". That is how the 6 h alert rings once even when two clock ticks race.
  */
-export async function openSend(userId: string, kind: Exclude<SendKind, "timetrack-alert" | "audit-ping" | "audit-end">, at: Date, entryId?: string): Promise<string>
+export async function openSend(userId: string, kind: Exclude<SendKind, "timetrack-alert" | "audit-ping" | "audit-end" | "plan-review">, at: Date, entryId?: string): Promise<string>
 export async function openSend(userId: string, kind: SendKind, at: Date, entryId?: string): Promise<string | null>
 export async function openSend(userId: string, kind: SendKind, at: Date, entryId?: string): Promise<string | null> {
   const row: Record<string, unknown> = { user_id: userId, kind, sent_at: at.toISOString() }
   if (entryId !== undefined) row.entry_id = entryId
   const { data, error } = await createAdminSupabaseClient().from("notification_sends").insert(row).select("id").single()
-  if (error?.code === "23505" && (kind === "timetrack-alert" || kind === "audit-ping" || kind === "audit-end")) return null
+  if (error?.code === "23505" && (kind === "timetrack-alert" || kind === "audit-ping" || kind === "audit-end" || kind === "plan-review")) return null
   if (error) throw new Error(`Failed to record a reminder: ${error.message}`)
   return (data as { id: string }).id
 }

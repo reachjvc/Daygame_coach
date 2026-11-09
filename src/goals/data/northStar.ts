@@ -667,6 +667,22 @@ export const DUE_COPY = {
   }),
 }
 
+/** The weekly review reminder on the Review step (Plans/life-plan-after-setup.md, Phase 5). */
+export const REVIEW_REMINDER_COPY = {
+  heading: "Remind me on my phone",
+  help: "One notification a week, on the day and hour you pick, only while that week's review is unwritten. It never shows what you wrote.",
+  switchLabel: "Weekly reminder",
+  dayLabel: "Day",
+  hourLabel: "Time",
+  days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+  saved: "Saved to your account.",
+  failed: "Not saved. Try again.",
+  unsupported: "This browser can't show notifications. Open the app on your phone to switch them on.",
+  needsInstall: "On an iPhone, add this site to your home screen first, then open it from there.",
+  denied: "Notifications are blocked for this site. Allow them in your phone's settings, then come back.",
+  turnOn: "Turn on notifications on this phone",
+}
+
 /**
  * THE REVIEWS, as sets rather than single questions.
  *

@@ -19,6 +19,8 @@
  * back to look leaves nothing behind.
  */
 
+import { ReviewReminder } from "./ReviewReminder"
+import type { Reminder } from "@/src/db/lifePlanRemindersRepo"
 import { useMemo, useState } from "react"
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react"
 import type { NsGoal, NsPlan, NsReview, NsReviewVerdict } from "@/src/goals/types"
@@ -66,9 +68,12 @@ const NUMBERS_SHOWN = 6
 /** How many reviews the scores-over-time table shows, newest kept. */
 const OVER_TIME_COLUMNS = 8
 
-export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handlers, initialPeriod }: {
+export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handlers, initialPeriod, reminder = null, onReminderChange }: {
   plan: NsPlan
   today: string
+  /** The weekly reminder's settings, null until read (Phase 5 of Plans/life-plan-after-setup.md). */
+  reminder?: (Reminder & { hasEnabledDevice: boolean }) | null
+  onReminderChange?: (next: Reminder & { hasEnabledDevice: boolean }) => void
   /** The period to open on, read once when the tab mounts: a card's or a link's week. */
   initialPeriod?: ReviewPeriod | null
   /** The finished workouts' ticks, so a step done by training counts toward what was earned. */
@@ -103,6 +108,8 @@ export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handle
           </>
         )}
       </div>
+
+      {period.cadence === "week" && onReminderChange && <ReviewReminder reminder={reminder} onChange={onReminderChange} />}
 
       <div className="flex flex-wrap items-center gap-3">
         <div role="group" aria-label="How often" className="inline-flex rounded-lg border border-white/10 p-0.5">

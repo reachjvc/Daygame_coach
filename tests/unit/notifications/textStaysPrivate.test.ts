@@ -43,6 +43,10 @@ const SERVER_CODE = [
   "app/api/audit",
   "src/db/auditRepo.ts",
   "src/db/timetrackRangeRepo.ts",
+  // The plan's weekly review reminder (Plans/life-plan-after-setup.md, Phase 5).
+  "src/goals/reviewReminderService.ts",
+  "src/db/lifePlanRemindersRepo.ts",
+  "app/api/life-plan/reminders",
 ].flatMap(files)
 
 /** The audit's screens and state: no console call at all, since they hold what was typed. */
