@@ -260,7 +260,7 @@ Each use is a copy of a system a named person describes. Inventions are labelled
 
 | ID | What | Tried, and what it returned | Blocks | Recommendation |
 |---|---|---|---|---|
-| B-FACE | Selfie videos served publicly | `curl -r 0-100` on `/testJVC.mp4` on the live site: `206` (served). Moved out in `52160d5`. | Nothing; privacy | Done; history wipe is Phase 0b. |
+| B-FACE | Selfie videos served publicly | Before: a ranged `curl` on `/testJVC.mp4` answered `206`, but that probe did not check which file answered. Other media in `public/` answer `200` with the real file (`x-matched-path` = the file), so the videos almost surely were served. After `52160d5` (live build `52160d5`): `404`, `x-matched-path: /404`. | Nothing; privacy | Done; history wipe is Phase 0b. |
 | B-HISTORY | Wiping the videos from git history | `git filter-repo` is not installed. GitHub: 0 forks, public, 564 MB. `git worktree list`: 3 worktrees under `.claude/worktrees/` and 6 scratch worktrees of other sessions (alpha test, audit, energy audit, life plan). The files were added in commits `01623760` and `0694bdd7`. | Phase 0b | Install `git-filter-repo` with `pip install --user` (a free tool, not a repo dependency). Only at a quiet moment. |
 | B-VALUES | Value lists differ | Script compare: life plan 131, inner game 301, shared 97; live `values` 222 rows in 10 categories; `core_values` 222; `life_plan_values` 339; `user_values` 1. | Phase 1 | D2. |
 | B-LICENSE | LivePortrait face models | `~/projects/LivePortrait/LICENSE`: "The models of InsightFace are for non-commercial research purposes only." | Phase 13 | Swap to MediaPipe face detection (the ComfyUI-LivePortraitKJ node does this), or a depth-based camera drift instead. |
@@ -282,7 +282,8 @@ Read the decision page's notes before each phase (see "Decision page").
 ## Phase 0 — Answers recorded, videos off the site (done by the planning session)
 
 The answers are in the table at the top. The videos left the site in `52160d5`. Check only: after the deploy,
-`curl -s -o /dev/null -w "%{http_code}" https://daygame-coach.vercel.app/testJVC.mp4` answers `404`.
+`curl -s -o /dev/null -w "%{http_code}" https://daygame-coach.vercel.app/testJVC.mp4` answers `404`
+(checked 2026-11-09: it does; a ranged request answers `206` with the 404 page, so check without `-r`).
 
 ## Phase 0b — Wipe the videos from git history (O2 = yes; only at a quiet moment)
 
