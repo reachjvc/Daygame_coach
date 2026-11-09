@@ -236,7 +236,7 @@ export function SeasonBand({ plan, oneThing, ready = true, today: accountToday =
             </span>
           </Link>
           <Link
-            href={withReturn(PLAN_PATH, HERE)}
+            href={withReturn(`${PLAN_PATH}?step=recap`, HERE)}
             className="inline-flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
           >
             {SEASON_BAND_COPY.openPlan}

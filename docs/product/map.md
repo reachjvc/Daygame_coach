@@ -129,6 +129,8 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   journal, review (a week, month, quarter or year: area scores, magic moments,
   lessons, next outcomes; `life_plan_reviews` since 2026-11-04). Old
   `?step=one|commit|templates` links open those steps' new homes.
+  Since 2026-11 `/plan` opens on Today once
+  the plan has an active goal or a routine step; a link naming a step still opens that step.
   **Since 2026-09-23 the plan lives on the ACCOUNT, and so does the day half** —
   the north star, areas, goals, routines and values in twenty-one `life_plan_*`
   tables, and every rating, tick, day note and journal answer in the four day

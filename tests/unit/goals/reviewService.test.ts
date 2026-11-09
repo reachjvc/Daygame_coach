@@ -1,12 +1,14 @@
 import { describe, it, expect } from "vitest"
-import { emptyNsPlan, normalizeNsPlan, planIsUntouched, removeArea, serializeNsPlan, setAreaReview, wheelRatings } from "@/src/goals/northStarService"
+import { addGoal, emptyNsPlan, normalizeNsPlan, planIsUntouched, removeArea, serializeNsPlan, setAreaReview, wheelRatings } from "@/src/goals/northStarService"
 import { planHasNothingWritten } from "@/src/goals/lifePlanSync"
 import { planToRows, rowsToPlan } from "@/src/goals/lifePlanMapper"
 import {
   agoLabel,
   appendToReview,
   averageScore,
+  isWrittenReview,
   lastReviewOf,
+  lastWrittenReviewOf,
   lastScores,
   latestScores,
   periodLabel,
@@ -352,5 +354,30 @@ describe("adding lines to a review", () => {
     expect(appendToReview(plan, week, "magicMoments", ["Approaches: 10 in all"], TODAY, NOW)).toBe(plan)
     const fresh = appendToReview(emptyNsPlan(), week, "magicMoments", ["Approaches: 10 in all"], TODAY, NOW)
     expect(reviewFor(fresh, week)!.magicMoments).toBe("Approaches: 10 in all")
+  })
+})
+
+describe("a review counts as written only when someone wrote in it", () => {
+  const week = periodOf("week", TODAY)
+
+  it("is not written with only a score, which rating an area leaves", () => {
+    const plan = writeReview(emptyNsPlan(), week, { score: { areaId: "lm_health", value: 6 } }, TODAY, NOW)
+    expect(isWrittenReview(reviewFor(plan, week)!)).toBe(false)
+  })
+
+  it("is written once a goal has a verdict", () => {
+    let plan = addGoal(emptyNsPlan(), "lm_health", "Run a 10k", "achievement", NOW)
+    const goalId = plan.goals[0].id
+    plan = writeReview(plan, week, { score: { areaId: "lm_health", value: 6 } }, TODAY, NOW)
+    plan = writeReview(plan, week, { verdict: { goalId, value: "behind" } }, TODAY, NOW)
+    expect(isWrittenReview(reviewFor(plan, week)!)).toBe(true)
+  })
+
+  it("names the older written week as the last review, past a newer scores-only week", () => {
+    const lastWeek = shiftPeriod(week, -1)
+    let plan = writeReview(emptyNsPlan(), lastWeek, { magicMoments: "x" }, "2026-11-01", NOW)
+    plan = writeReview(plan, week, { score: { areaId: "lm_health", value: 6 } }, TODAY, NOW)
+    expect(lastReviewOf(plan, "week")?.periodStart).toBe(week.start)
+    expect(lastWrittenReviewOf(plan, "week")?.periodStart).toBe(lastWeek.start)
   })
 })

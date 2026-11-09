@@ -2099,6 +2099,7 @@ export function NorthStarFlow({
               <CommitTab
                 plan={plan}
                 today={today}
+                onOpenToday={() => setTab("today")}
                 handlers={{ onAnswer: (key, text) => setPlan((p) => ns.setAnswer(p, key, text)) }}
                 tools={
                   /* WHAT IS POINTED AT WHAT, the same view the systems step

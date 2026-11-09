@@ -4,6 +4,8 @@ import { getUserTimezone } from "@/src/db/settingsRepo"
 import { NorthStarFlow } from "@/src/goals/components/north-star/NorthStarFlow"
 import { stepFor, TAB_ORDER } from "@/src/goals/data/northStar"
 import type { NorthStarTabId } from "@/src/goals/types"
+import { landingStep } from "@/src/goals/planLanding"
+import { planIsInUse } from "@/src/db/lifePlanRepo"
 
 /**
  * LIFE MASTERY — its own address at last.
@@ -40,7 +42,10 @@ export default async function LifeMasteryPage({
   // A step that folded into another (`one`, `commit`, `templates`;
   // Plans/life-plan-rebuild.md) is handed over as asked: the flow opens its
   // new home, and on that home the part the link was for.
-  const initialTab = TAB_ORDER.includes(stepFor(step as NorthStarTabId)) ? (step as NorthStarTabId) : undefined
+  // No step asked: Today once the plan is in use (Plans/life-plan-after-setup.md, d1).
+  const inUse = await planIsInUse(user.id)
+  const landed = landingStep(step, inUse)
+  const initialTab = landed ?? (TAB_ORDER.includes(stepFor(step as NorthStarTabId)) ? (step as NorthStarTabId) : undefined)
 
   /**
    * THE ACCOUNT'S ZONE, read once for the whole page.

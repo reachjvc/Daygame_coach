@@ -28,6 +28,7 @@ import {
   saveLifePlan,
   linkPlanGoal,
   StalePlanError,
+  planIsInUse,
 } from "@/src/db/lifePlanRepo"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
 
@@ -192,5 +193,22 @@ describe("reading the plan", () => {
     ]
     const stored = await readLifePlan(USER)
     expect(stored?.rows.checkpoints.map((c) => c.id)).toEqual(["c-1"])
+  })
+})
+
+describe("planIsInUse", () => {
+  it("is true with one goal being worked on", async () => {
+    tables.life_plan_goals = [{ id: "g-1", user_id: USER, status: "active" }]
+    expect(await planIsInUse(USER)).toBe(true)
+  })
+
+  it("is true with no goals and one routine step", async () => {
+    tables.life_plan_routine_steps = [{ id: "s-1", user_id: USER }]
+    expect(await planIsInUse(USER)).toBe(true)
+  })
+
+  it("is false with only a paused goal and no steps", async () => {
+    tables.life_plan_goals = [{ id: "g-1", user_id: USER, status: "paused" }]
+    expect(await planIsInUse(USER)).toBe(false)
   })
 })

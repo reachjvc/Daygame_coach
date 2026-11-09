@@ -2801,4 +2801,5 @@ export const COMMIT_COPY = {
   committed: (date: string) => `Committed on ${date}.`,
   commit: "I commit to this",
   uncommit: "Take it back",
+  openToday: "Open Today →",
 }

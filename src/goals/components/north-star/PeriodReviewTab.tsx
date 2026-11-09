@@ -31,7 +31,7 @@ import {
   REVIEW_LIMITS,
   agoLabel,
   averageScore,
-  lastReviewOf,
+  lastWrittenReviewOf,
   lastScores,
   periodLabel,
   periodOf,
@@ -78,7 +78,7 @@ export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handle
   const atNow = current !== null && current.start === period.start
   const review = reviewFor(plan, period)
   const noun = COPY.nouns[period.cadence]
-  const last = lastReviewOf(plan, period.cadence)
+  const last = lastWrittenReviewOf(plan, period.cadence)
   const before = lastScores(plan, period.start)
   const scoredCount = review ? plan.areas.filter((a) => typeof review.scores[a.id] === "number").length : 0
   const earlier = reviewsOf(plan, period.cadence).filter((r) => r.id !== reviewIdFor(period))
@@ -215,7 +215,7 @@ export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handle
       ))}
 
       {review && (
-        <RemoveReview key={review.id} onRemove={() => handlers.onRemove(review.id)} />
+        <RemoveReview key={`remove-${review.id}`} onRemove={() => handlers.onRemove(review.id)} />
       )}
 
       <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">

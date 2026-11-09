@@ -117,6 +117,11 @@ export function isEmptyReview(r: NsReview): boolean {
   )
 }
 
+/** A review someone wrote in: a word in a box, or a verdict on a goal. Scores alone come from rating an area. */
+export function isWrittenReview(r: Pick<NsReview, "magicMoments" | "lessons" | "nextOutcomes" | "verdicts">): boolean {
+  return Object.keys(r.verdicts ?? {}).length > 0 || !!(r.magicMoments.trim() || r.lessons.trim() || r.nextOutcomes.trim())
+}
+
 /** Oldest first, by the day each period ends: a year sorts after the weeks inside it. */
 function byEnd(reviews: NsReview[]): NsReview[] {
   return [...reviews].sort(
@@ -229,6 +234,11 @@ export function reviewsOf(plan: NsPlan, cadence: NsReviewCadence): NsReview[] {
 /** The review of this kind written most recently (the newest period on a tie), or null. */
 export function lastReviewOf(plan: NsPlan, cadence: NsReviewCadence): NsReview | null {
   return reviewsOf(plan, cadence).reduce<NsReview | null>((best, r) => (!best || r.writtenOn > best.writtenOn ? r : best), null)
+}
+
+/** The written review of this kind written most recently, or null. What "Last weekly review" names. */
+export function lastWrittenReviewOf(plan: NsPlan, cadence: NsReviewCadence): NsReview | null {
+  return reviewsOf(plan, cadence).filter(isWrittenReview).reduce<NsReview | null>((best, r) => (!best || r.writtenOn > best.writtenOn ? r : best), null)
 }
 
 /**

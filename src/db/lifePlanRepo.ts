@@ -134,6 +134,24 @@ export async function findLifePlanId(userId: string): Promise<string | null> {
 }
 
 /**
+ * True when the plan has something to do: one goal being worked on, or one routine step.
+ * Never throws: on any error the page opens as it did before (North star). That is deliberate.
+ */
+export async function planIsInUse(userId: string): Promise<boolean> {
+  try {
+    const supabase = await createServerSupabaseClient()
+    const goals = await supabase.from("life_plan_goals").select("id", { count: "exact", head: true })
+      .eq("user_id", userId).eq("status", "active")
+    if (!goals.error && (goals.count ?? 0) > 0) return true
+    const steps = await supabase.from("life_plan_routine_steps").select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+    return !steps.error && (steps.count ?? 0) > 0
+  } catch {
+    return false
+  }
+}
+
+/**
  * Everything the plan is made of, or null when the account has no plan yet.
  *
  * Null is a real answer and the caller must handle it — a new account starts

@@ -39,6 +39,7 @@ export function CommitTab({
   handlers,
   children,
   tools,
+  onOpenToday,
 }: {
   plan: NsPlan
   today: string
@@ -55,6 +56,7 @@ export function CommitTab({
    * reading it is how a plan gets signed and quietly abandoned instead.
    */
   tools?: React.ReactNode
+  onOpenToday?: () => void
 }) {
   const [open, setOpen] = useState(false)
   const commitment = answerOf(plan, COMMIT_KEY)
@@ -128,6 +130,7 @@ export function CommitTab({
           >
             {committedOn ? COMMIT_COPY.uncommit : COMMIT_COPY.commit}
           </button>
+          {committedOn && onOpenToday && <button type="button" onClick={onOpenToday} className="text-[12.5px] font-medium px-3 py-1.5 rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 transition-colors">{COMMIT_COPY.openToday}</button>}
         </div>
       </section>
     </div>
