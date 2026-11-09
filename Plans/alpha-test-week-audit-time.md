@@ -1,5 +1,8 @@
 # Alpha test: Perfect week, Time & energy audit, Time
 
+**Findings board:** https://claude.ai/artifact/67sKtSTrD1u5bVysh7eVyS (marks db `marks`, doc id = row id F01–F28,
+`mark` = fix | later | no, `notes: [{text, at}]`).
+
 Written 2026-11-09. Status: **running** (started 2026-11-09). O1 = yes ("use a test account"). O2 = left blank in the prompt, read as "none"; the owner's notes on the look pages stand in (alpha/KNOWN.md).
 
 The owner asked for Claude to be the alpha tester of three features — Time (`/time`), the Time & energy audit
@@ -153,6 +156,14 @@ clock on all five browser profiles, seeding two weeks of answers through the app
 live DB). Findings to `alpha/findings.jsonl` (D-YARDSTICK fields).
 **Done when:** every charter ran on every listed browser; each finding reproduced twice.
 
+**Status (2026-11-09): done.** Three agents (fast-audit, fast-review, fast-time): 25 findings, each reproduced
+twice with a spec (`alpha-wt/tests/e2e/alpha/<agent>/`). Severity 1: 3 (Log Out drops waiting answers; a
+perfect-week block or a review choice erased by the other device's save). Severity 2: 3. Gaps: the two-device
+pairs ran as two windows of one engine, not phone + Firefox literally; offline opening only provable on
+Chromium; the app has no light theme, so "light" was never seen; day 14's own end used End now (the server
+clock cannot be faked). The rescued Time regression suite: PC 25/25, Pixel 33/34 (one timing test under load,
+green on rerun).
+
 ## Phase 3 — Slow pass (real time, three screens) · M
 Before fixes. Start an audit on the test account; 3–4 real hours with phone, PC Chrome, PC Firefox open.
 Script a mixed rhythm: answer at once, answer late from the list, ignore three, airplane mode for 45 minutes
@@ -167,10 +178,18 @@ A fresh agent, given only the screens and the yardsticks (not the findings so fa
 understand, steps that differ from Martell or Toggl, dead ends, slow spots.
 **Done when:** each screen has a row in `alpha/screens.md`; findings appended.
 
+**Status (2026-11-09): done.** picky-eye ran every /audit and /time screen at 390 and 1440 px on Chrome,
+WebKit and the iPhone profile, without seeing the other findings: 20 findings (1 severity 1, 8 severity 4,
+11 severity 5). Android and Firefox were not in its run (covered by Phase 2).
+
 ## Phase 5 — Triage and board · S
 Merge duplicates, rank by D-ORDER, publish the findings board (D-BOARD). Put its URL at the top of this file and
 in memory.
 **Done when:** the board is live and every finding has a row.
+
+**Status (2026-11-09): done.** 45 findings merged into 28 rows (`alpha/triage.json`, `alpha/triage.py`):
+Round 1 = F01–F07 (all severity 1–3), already in progress; round 2 =
+F08–F18 (severity 4); polish = F20–F27; F19 (Martell steps 9–11 etc.) is Later per Q2; F28 is opinion only.
 
 ## Phase 6 — Fix rounds · L (repeat per round)
 Per round (≤ 10 findings): failing test first (unit or e2e at the right size), fix in a worktree, typecheck +
