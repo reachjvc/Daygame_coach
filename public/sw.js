@@ -167,6 +167,9 @@ function shellAssets(html) {
   for (const match of html.matchAll(/(?:\/_next\/)?(static\/(?:chunks|css|media)\/[\w\-./()[\]%@]+?\.(?:js|css|woff2))(?=\\?")/g)) {
     assets.add("/_next/" + match[1])
   }
+  // Only the build's own files: never a path that climbs out of /_next/static/
+  // (a "../" in page data would otherwise reach /api, which is never cached).
+  for (const path of assets) if (!path.startsWith("/_next/static/") || path.split("/").includes("..")) assets.delete(path)
   return assets
 }
 

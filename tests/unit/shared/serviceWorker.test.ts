@@ -414,6 +414,20 @@ describe("the audit, opened from a ping with no signal (alpha test fast-audit-04
     expect(stored).toContain(ORIGIN + "/_next/static/chunks/app/(app)/audit/page-f1b0f0c0.js")
   })
 
+  test("a chunk path in page data that climbs out of /_next/static/ is never stored", async () => {
+    const h = await loadWorker("build4")
+    const html =
+      '<html><script>self.__next_f.push([1,"2a:\\"static/chunks/../../../api/audit.js\\"\\n2b:\\"static/chunks/ok-1.js\\"\\n"])</script></html>'
+    h.fetchMock.mockImplementation(async (input: unknown) => {
+      const url = String(typeof input === "string" ? input : (input as { url: string }).url)
+      return url.endsWith(ROUTES.audit) ? new Response(html, { status: 200 }) : new Response("ok", { status: 200 })
+    })
+    await dispatch(h, "install", {})
+    const stored = [...h.store.get("app-shell-build4")!.keys()]
+    expect(stored).toContain(ORIGIN + "/_next/static/chunks/ok-1.js")
+    expect(stored.some((k) => k.includes("..") || k.includes("/api/"))).toBe(false)
+  })
+
   test("a new build's worker stores /audit at install, before the page is ever opened (alpha slow-pass-04)", async () => {
     // A phone whose worker predates a deploy gets the new worker from the new
     // `?v=<build>` address the next time any shell page is opened with signal;
