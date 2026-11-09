@@ -15,7 +15,7 @@
  * failed and the database's own `message`, never a row.
  */
 
-import type { AnswerSource, AuditAnswer, AuditRun, AuditSlot, Review, ScaleValue } from "@/src/audit/types"
+import type { AnswerMark, AnswerSource, AuditAnswer, AuditRun, AuditSlot, Review, ScaleValue } from "@/src/audit/types"
 import { normalizePhrase } from "@/src/shared/textMatch"
 import { nextReviewVersion, readStoredReview, reviewToStore } from "@/src/audit/auditService"
 import type { StoredAnswer } from "@/src/audit/auditService"
@@ -357,17 +357,43 @@ export async function writeSlotsOverSeen(
 }
 
 /**
- * Delete one answer. With `notAfter`, only if it was not answered again after
- * that time (on another device): a delete made offline never removes a newer
- * answer. Returns whether a row went.
+ * Delete one answer.
+ *
+ * With `seen` (what the deleting device drew), only if the stored answer still
+ * IS that, checked in the same statement as the delete: an edit another
+ * device made a moment before is never deleted unseen (alpha prove-audit-03).
+ * When it changed, nothing goes and `changed` names what is stored now, so
+ * the deleting device can ask "Delete anyway / Keep".
+ *
+ * Without `seen` (a delete queued before this rule), `notAfter`: only if it
+ * was not answered again after that time on another device.
  */
-export async function deleteSlot(userId: string, id: string, notAfter?: Date): Promise<boolean> {
+export async function deleteSlot(
+  userId: string,
+  id: string,
+  opts: { notAfter?: Date; seen?: AnswerMark } = {},
+): Promise<{ deleted: boolean; changed?: AnswerMark }> {
   const supabase = await createServerSupabaseClient()
   let query = supabase.from("audit_slots").delete().eq("user_id", userId).eq("id", id)
-  if (notAfter) query = query.lte("updated_at", notAfter.toISOString())
+  const seen = opts.seen
+  if (seen) {
+    query = query.eq("activity", seen.activity).eq("energy", seen.energy).eq("growth", seen.growth)
+    query = seen.why === null ? query.is("why", null) : query.eq("why", seen.why)
+  } else if (opts.notAfter) query = query.lte("updated_at", opts.notAfter.toISOString())
   const { data, error } = await query.select("id")
   if (error) throw new Error(`Failed to delete an answer: ${error.message}`)
-  return (data ?? []).length > 0
+  if ((data ?? []).length > 0) return { deleted: true }
+  if (!seen) return { deleted: false }
+  const { data: held, error: readError } = await supabase
+    .from("audit_slots")
+    .select("id, activity, energy, growth, why")
+    .eq("user_id", userId)
+    .eq("id", id)
+    .maybeSingle()
+  if (readError) throw new Error(`Failed to read the answer: ${readError.message}`)
+  if (!held) return { deleted: false }
+  const h = held as { id: string; activity: string; energy: number; growth: number; why: string | null }
+  return { deleted: false, changed: { id: h.id, activity: h.activity, energy: h.energy, growth: h.growth, why: h.why } }
 }
 
 /** What each of these quarters holds and when it was last answered, by run and quarter (`<run>:<iso>`). */

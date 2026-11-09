@@ -150,7 +150,8 @@ test.describe("answering a ping @phone", () => {
     await expect(first).toBeVisible({ timeout: 60_000 })
     await expect(first.locator("h3")).toHaveText(new RegExp(`^${labelOf(asked)}`))
     await expect(first.getByTestId("audit-asked")).toBeVisible()
-    expect(await inView(page, first.getByTestId("audit-growth"))).toBe(true)
+    // the sheet slides up: measured once it has settled, not on its first frame
+    await expect.poll(() => inView(page, first.getByTestId("audit-growth")), { timeout: 5_000 }).toBe(true)
   })
 
   test("F10: three taps from the notification when Time knows the activity, energy and growth on screen", async ({ page, account }) => {
@@ -164,8 +165,10 @@ test.describe("answering a ping @phone", () => {
     await page.goto(pingUrl(newest))
     const first = page.getByTestId("audit-answer-sheet").getByTestId("audit-card").first()
     await expect(first.getByTestId("audit-activity")).toHaveValue("Deep work", { timeout: 60_000 })
-    expect(await inView(page, first.getByTestId("audit-energy"))).toBe(true)
-    expect(await inView(page, first.getByTestId("audit-growth"))).toBe(true)
+    // the sheet slides up: measured once it has settled, not on its first frame
+    await expect.poll(() => inView(page, first.getByTestId("audit-energy")), { timeout: 5_000 }).toBe(true)
+    // the sheet slides up: measured once it has settled, not on its first frame
+    await expect.poll(() => inView(page, first.getByTestId("audit-growth")), { timeout: 5_000 }).toBe(true)
     taps++
     await first.getByRole("radio", { name: "Energy 4" }).click()
     taps++

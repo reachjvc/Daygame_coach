@@ -14,7 +14,7 @@
 import { browserStore, readOwnedJson, writeOwnedJson, type KeyValueStore } from "@/src/shared/offlineQueue"
 import type { AuditView } from "./auditClient"
 import { markOf, sameMark } from "./auditService"
-import type { AuditAnswer } from "./types"
+import type { AnswerMark, AuditAnswer } from "./types"
 
 export const AUDIT_QUEUE_KEY = "audit-queue-v1"
 /**
@@ -36,6 +36,14 @@ export interface QueuedDelete {
   notBefore?: string
   /** The waiting answer the delete took out of the queue, put back by Undo. */
   restore?: AuditAnswer
+  /**
+   * The answer as the server holds it, as far as this device knows: the delete
+   * goes only if it is still that (alpha prove-audit-03). Absent: deleted by
+   * the clock rule (`at`), as deletes queued before this rule were.
+   */
+  seen?: AnswerMark
+  /** Its quarter, to name it when the server refuses the delete. */
+  slotAt?: string
 }
 
 export interface AuditQueue {
@@ -99,16 +107,48 @@ export function enqueueAnswers(q: AuditQueue, answers: readonly AuditAnswer[]): 
 /**
  * Delete an answer: out of the queue, and a delete queued in case it already
  * reached the server. With `notBefore`, it waits until then, and Undo
- * (`cancelDelete`) can take it back.
+ * (`cancelDelete`) can take it back. `seen` is the answer as drawn on the
+ * server's side; for an answer still waiting here, the server holds what that
+ * one saw (`was`), and nothing of it when it was new.
  */
-export function enqueueDelete(q: AuditQueue, id: string, at: string = new Date().toISOString(), notBefore?: string): AuditQueue {
+export function enqueueDelete(
+  q: AuditQueue,
+  id: string,
+  at: string = new Date().toISOString(),
+  notBefore?: string,
+  drawn?: AnswerMark & { slotAt?: string },
+): AuditQueue {
   const waiting = q.answers.find((a) => a.id === id)
-  const entry: QueuedDelete = notBefore ? { id, at, notBefore, ...(waiting ? { restore: waiting } : {}) } : { id, at }
+  const seen = waiting ? (waiting.was ?? undefined) : drawn ? markOf(drawn) : undefined
+  const slotAt = waiting?.slotAt ?? drawn?.slotAt
+  const entry: QueuedDelete = {
+    id,
+    at,
+    ...(notBefore ? { notBefore, ...(waiting ? { restore: waiting } : {}) } : {}),
+    ...(seen ? { seen } : {}),
+    ...(slotAt ? { slotAt } : {}),
+  }
   return {
     ...q,
     answers: q.answers.filter((a) => a.id !== id),
     deletes: q.deletes.some((d) => d.id === id) ? q.deletes : [...q.deletes, entry],
   }
+}
+
+/**
+ * These answers were just stored: a delete queued meanwhile for one of them
+ * (tapped while its save was on its way) now saw that one.
+ */
+export function deletesSeeStored(q: AuditQueue, stored: readonly AuditAnswer[]): AuditQueue {
+  const byId = new Map(stored.map((a) => [a.id, a]))
+  if (!q.deletes.some((d) => byId.has(d.id))) return q
+  return { ...q, deletes: q.deletes.map((d) => (byId.has(d.id) ? { ...d, seen: markOf(byId.get(d.id)!) } : d)) }
+}
+
+/** When the next delete still in its Undo time is due, or null when none waits. */
+export function nextDeleteDue(q: AuditQueue, nowMs: number): number | null {
+  const due = q.deletes.flatMap((d) => (d.notBefore && Date.parse(d.notBefore) > nowMs ? [Date.parse(d.notBefore)] : []))
+  return due.length > 0 ? Math.min(...due) : null
 }
 
 /** Undo: a delete still in its undo time leaves the queue, and the waiting answer it took out comes back. */

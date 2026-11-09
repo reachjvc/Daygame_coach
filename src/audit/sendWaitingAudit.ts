@@ -69,9 +69,11 @@ export async function sendWaitingAudit(store: KeyValueStore | null = browserStor
   }
   if (waiting) return { status: "waiting", refused }
 
-  for (const { id, at } of current().deletes) {
+  for (const { id, at, seen } of current().deletes) {
     try {
-      await api.remove(id, at)
+      // Refused because another device changed the answer since: that answer
+      // stays, which loses nothing he wrote (prove-audit-03), so it goes too.
+      await api.remove(id, at, seen)
       put(deletesSent(current(), [id]))
     } catch (error) {
       if (stranger(error)) return { status: "stranger", refused: [] }

@@ -168,6 +168,35 @@ function NotKeptLine({ s, tz }: { s: AuditState; tz: string }) {
   )
 }
 
+/**
+ * Deletes the server refused because another device changed the answer after
+ * this one drew it (alpha prove-audit-03): never deleted unseen, asked here.
+ */
+function NotDeletedLine({ s, tz }: { s: AuditState; tz: string }) {
+  if (s.notDeleted.length === 0) return null
+  return (
+    <div className="mt-3 rounded-xl border border-amber-500/60 bg-amber-500/10 px-3.5 py-3 text-sm" role="alert" data-testid="audit-not-deleted">
+      <p className="font-semibold">{s.notDeleted.length === 1 ? "1 answer was not deleted" : `${s.notDeleted.length} answers were not deleted`}</p>
+      <ul className="mt-1 space-y-2">
+        {s.notDeleted.map((x) => (
+          <li key={x.id} data-testid="audit-not-deleted-item">
+            {x.slotAt ? `${stretchLabel([Date.parse(x.slotAt)], tz)} · ` : ""}Changed on another device: {x.stored.activity} · E {x.stored.energy} · G{" "}
+            {x.stored.growth}.
+            <span className="mt-1 flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => s.deleteAnyway(x)} data-testid="audit-not-deleted-delete">
+                Delete anyway
+              </Button>
+              <Button size="sm" onClick={() => s.keepNotDeleted(x.id)} data-testid="audit-not-deleted-keep">
+                Keep
+              </Button>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 /** Re-render every 30 s, so counts follow the clock. */
 function useNow(): number {
   const [now, setNow] = useState(() => Date.now())
@@ -462,8 +491,15 @@ function TodayView({
       )}
       {s.waiting > 0 && (
         <p className="mt-2 text-sm text-amber-500" role="status" data-testid="audit-waiting">
+          {/* "signal" only when a send failed for want of it (alpha prove-audit-01) */}
           {s.waiting === 1 ? "1 change is" : `${s.waiting} changes are`} saved on this phone
-          {s.sendState === "signed-out" ? ". Sign in again to send them." : ", and sent when you have signal."}
+          {s.sendState === "signed-out"
+            ? ". Sign in again to send them."
+            : s.sendState === "offline"
+              ? ", and sent when you have signal."
+              : s.sendState === "waiting"
+                ? ". The server did not take it yet; it is sent again soon."
+                : ", sending now."}
         </p>
       )}
       {s.fromCopy && (
@@ -472,6 +508,7 @@ function TodayView({
         </p>
       )}
       <NotKeptLine s={s} tz={tz} />
+      <NotDeletedLine s={s} tz={tz} />
       <ZoneLine s={s} accountZone={tz} now={now} />
       <div className="mt-3 flex gap-2">
         {/* Muted reads as a state, not a label: amber, filled, bell struck through (alpha F20, owner K-A4). */}
@@ -567,7 +604,8 @@ function TodayView({
             sheet.allowDelete
               ? (id) => {
                   const slot = s.slots.find((sl) => sl.id === id)
-                  s.remove(id, slot ? UNDO_MS : 0)
+                  // with what it showed, so a change made on another device meanwhile is not deleted unseen (prove-audit-03)
+                  s.remove(id, slot ? UNDO_MS : 0, slot)
                   setHeld(slot ?? null)
                 }
               : undefined

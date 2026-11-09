@@ -73,11 +73,21 @@ export function auditApi(account: string) {
       ),
     /** The account's time zone, as chosen in Settings (the same route Settings uses). */
     zone: (timezone: string) => call<{ timezone: string }>("/api/settings/time-preferences", json("PUT", { timezone, source: "chosen" })),
-    remove: (id: string, at?: string) =>
-      call<{ ok: true }>(
-        `/api/audit/slots/${id}${at ? `?at=${encodeURIComponent(at)}&sentAt=${encodeURIComponent(new Date().toISOString())}` : ""}`,
-        { method: "DELETE" },
-      ),
+    /**
+     * Delete one answer. `seen`: the answer as this device drew it; the server
+     * deletes only that, and names what it holds instead (`changed`) when
+     * another device changed it since (alpha prove-audit-03).
+     */
+    remove: (id: string, at?: string, seen?: AnswerMark) => {
+      const q = new URLSearchParams()
+      if (at) {
+        q.set("at", at)
+        q.set("sentAt", new Date().toISOString())
+      }
+      if (seen) q.set("seen", JSON.stringify(seen))
+      const qs = q.toString()
+      return call<{ ok: true; deleted?: boolean; changed?: AnswerMark }>(`/api/audit/slots/${id}${qs ? `?${qs}` : ""}`, { method: "DELETE" })
+    },
   }
 }
 

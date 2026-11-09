@@ -11,8 +11,11 @@
  * it saves still carries its own `was`.
  *
  * Each card: what you did (pre-filled from Time when it knows, else from the
- * quarter before's answer), Energy 1–7, Growth 1–7, and optionally "Why I
- * feel like this". Activity and both scores are needed to save (D-REQUIRED).
+ * quarter before's answer), optionally "Why I feel like this", Energy 1–7,
+ * Growth 1–7. The why opens above the scores from "+ Why I feel like this"
+ * (which takes no height while closed, so both scores stay on screen), and a
+ * why written top-down is saved by the same Growth tap (alpha prove-audit-02).
+ * Activity and both scores are needed to save (D-REQUIRED).
  *
  * THREE TAPS FROM THE NOTIFICATION (fast-audit-06): on a new answer whose
  * activity is filled, the score tap that completes it saves it, so a ping is
@@ -20,7 +23,7 @@
  * changed, the activity typed last, another device's answer to replace) and
  * sticks to the bottom of the card, so it is never below the fold. Saving
  * folds the card into one green line, "✓ Saved · Gym · E 4 · G 7", with a
- * pencil to change it (and add a why), and moves to the next one.
+ * pencil to change it, and moves to the next one.
  *
  * TWO DEVICES, ONE QUARTER (alpha slow-pass-06). Each save carries what the
  * card saw for its quarters when it opened (`was`; another device's answer
@@ -119,6 +122,8 @@ function Card({
   const [growth, setGrowth] = useState<ScaleValue | null>(e?.growth ?? null)
   const avoiding = e?.avoiding ?? false
   const [why, setWhy] = useState(e?.why ?? "")
+  /** The why box shows once asked for, or when the answer has a why. */
+  const [whyOpen, setWhyOpen] = useState(Boolean(e?.why))
   const [tried, setTried] = useState(false)
   /** This card has saved at least once: an answer now drawn for its quarters is its own. */
   const [savedOnce, setSavedOnce] = useState(false)
@@ -358,26 +363,47 @@ function Card({
             setActivity(v)
             onTouched()
           }} suggestions={suggestions} invalid={tried && !activity.trim()} />
-        <ScaleRow label="Energy" low="1 takes my energy" high="7 gives me energy" value={energy} onChange={pickEnergy} testId="audit-energy" invalid={tried && energy === null} />
-        <ScaleRow label="Growth" low="1 ruins my life" high="7 builds my life" value={growth} onChange={pickGrowth} testId="audit-growth" invalid={tried && growth === null} />
-        <div>
-          <label htmlFor={`audit-why-${index}`} className="text-sm font-medium">
-            Why I feel like this <span className="font-normal text-muted-foreground">(optional)</span>
-          </label>
-          <textarea
-            id={`audit-why-${index}`}
-            value={why}
-            maxLength={WHY_MAX}
-            rows={2}
-            placeholder="Is it the activity itself, or how you were thinking about it?"
-            onChange={(ev) => {
-              setWhy(ev.target.value)
-              onTouched()
-            }}
-            className="mt-1.5 w-full min-w-0 rounded-lg border border-border bg-background px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-            data-testid="audit-why"
-          />
+        {/* Above the scores: the tap that completes a new answer saves it, so a why
+            written top-down goes in the same pass (alpha prove-audit-02, K-D5). */}
+        {whyOpen && (
+          <div>
+            <label htmlFor={`audit-why-${index}`} className="text-sm font-medium">
+              Why I feel like this <span className="font-normal text-muted-foreground">(optional)</span>
+            </label>
+            <textarea
+              id={`audit-why-${index}`}
+              value={why}
+              maxLength={WHY_MAX}
+              rows={2}
+              placeholder="Is it the activity itself, or how you were thinking about it?"
+              onChange={(ev) => {
+                setWhy(ev.target.value)
+                onTouched()
+              }}
+              className="mt-1.5 w-full min-w-0 rounded-lg border border-border bg-background px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              data-testid="audit-why"
+            />
+          </div>
+        )}
+        <div className="relative">
+          {/* Closed, it takes no height: the three-tap path keeps both scores on screen. */}
+          {!whyOpen && (
+            <button
+              type="button"
+              onClick={() => {
+                setWhyOpen(true)
+                // straight into typing: the open is the one extra tap
+                requestAnimationFrame(() => document.getElementById(`audit-why-${index}`)?.focus())
+              }}
+              className="absolute -top-4 right-0 z-10 flex h-10 items-center px-1 text-sm font-medium text-primary underline-offset-4 hover:underline"
+              data-testid="audit-why-open"
+            >
+              + Why I feel like this
+            </button>
+          )}
+          <ScaleRow label="Energy" low="1 takes my energy" high="7 gives me energy" value={energy} onChange={pickEnergy} testId="audit-energy" invalid={tried && energy === null} />
         </div>
+        <ScaleRow label="Growth" low="1 ruins my life" high="7 builds my life" value={growth} onChange={pickGrowth} testId="audit-growth" invalid={tried && growth === null} />
         {tried && !ready && (
           <p className="text-sm text-destructive" role="alert" data-testid="audit-card-missing">
             {missingAnswerLine({ activity, energy, growth })}

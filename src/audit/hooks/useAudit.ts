@@ -25,10 +25,12 @@ import {
   answersSent,
   cancelDelete,
   deleteIsDue,
+  deletesSeeStored,
   deletesSent,
   emptyAuditQueue,
   enqueueAnswers,
   enqueueDelete,
+  nextDeleteDue,
   queueIsEmpty,
   readAuditQueue,
   readAuditViewCopy,
@@ -42,7 +44,12 @@ import type { AnswerMark, AuditAnswer, AuditSlot } from "../types"
 /** An answer as drawn: from the server, or still only on this phone. */
 export type DrawnSlot = AuditSlot & { pending: boolean }
 
-export type SendState = "sent" | "waiting" | "signed-out"
+/**
+ * sent: nothing is stuck. offline: a send failed for want of signal. waiting:
+ * the server did not take it (and may later). signed-out: sign in again.
+ * Only "offline" may say "when you have signal" (alpha prove-audit-01).
+ */
+export type SendState = "sent" | "waiting" | "offline" | "signed-out"
 
 const quarterKey = (s: { runId: string; slotAt: string }) => `${s.runId}:${s.slotAt}`
 
@@ -82,6 +89,18 @@ export interface NotKept {
 }
 
 /**
+ * A DELETE THE SERVER REFUSED because another device changed the answer
+ * after this one drew it (alpha prove-audit-03): named, with "Delete anyway"
+ * and "Keep".
+ */
+export interface NotDeleted {
+  id: string
+  slotAt: string | null
+  /** What the answer is now. */
+  stored: AnswerMark
+}
+
+/**
  * HOW OFTEN AN OPEN PAGE READS AGAIN, so an answer given on another device
  * shows here within a minute and is not answered over blindly (alpha test
  * fast-audit-03). Only while the page is on screen.
@@ -98,6 +117,17 @@ export function useAudit(account: string) {
   const [sendState, setSendState] = useState<SendState>("sent")
   const [confirmed, setConfirmed] = useState<Confirmed>(NONE)
   const [notKept, setNotKept] = useState<NotKept[]>([])
+  const [notDeleted, setNotDeleted] = useState<NotDeleted[]>([])
+  /** The send at the end of the next delete's Undo time (alpha prove-audit-01). */
+  const deleteTimer = useRef<number | null>(null)
+  const flushRef = useRef<() => void>(() => {})
+  /** Send again when the next delete's Undo time ends; one timer at a time. */
+  const armDeleteTimer = useCallback(() => {
+    if (deleteTimer.current !== null) window.clearTimeout(deleteTimer.current)
+    deleteTimer.current = null
+    const due = nextDeleteDue(queueRef.current, Date.now())
+    if (due !== null) deleteTimer.current = window.setTimeout(() => flushRef.current(), Math.max(0, due - Date.now()) + 50)
+  }, [])
   /** The view drawn is this phone's last read, kept for no signal (fast-audit-04). */
   const [fromCopy, setFromCopy] = useState(false)
   const viewRef = useRef<AuditView | null>(null)
@@ -206,22 +236,30 @@ export function useAudit(account: string) {
             setC({ ...c, answers: [...c.answers.filter((x) => !kept.some((k) => quarterKey(k.answer) === quarterKey(x.answer))), ...kept] })
           },
           {
-            onSent: (batch) => setQ(answersSent(queueRef.current, batch.filter((a) => !later.has(a.id)), storedNow)),
+            onSent: (batch) => setQ(deletesSeeStored(answersSent(queueRef.current, batch.filter((a) => !later.has(a.id)), storedNow), storedNow)),
             onDropped: (batch) => {
               addNotKept(batch.map((answer) => ({ answer, reason: "The server could not save it" })))
               setQ(answersSent(queueRef.current, batch))
             },
           },
         )
-        if (!stuck && queueRef.current.answers.some((a) => later.has(a.id))) stuck = { status: 0 }
+        // the server's clock has not reached that quarter: waiting, but not for signal
+        if (!stuck && queueRef.current.answers.some((a) => later.has(a.id))) stuck = { status: -1 }
         if (!stuck) {
-          for (const { id, at: deletedAt, ...d } of queueRef.current.deletes) {
+          for (const d of queueRef.current.deletes) {
             // still in its "Undo" time: sent by the timer that ends it
-            if (!deleteIsDue({ id, at: deletedAt, ...d }, Date.now())) continue
+            if (!deleteIsDue(d, Date.now())) continue
+            const { id } = d
             try {
-              await api.remove(id, deletedAt)
+              // a delete queued before a save of the same answer was stored saw that one (deletesSeeStored)
+              const current = queueRef.current.deletes.find((x) => x.id === id) ?? d
+              const result = await api.remove(id, current.at, current.seen)
               const c = confirmedRef.current
-              setC({ answers: c.answers.filter((x) => x.answer.id !== id), deletes: [...c.deletes, { id, at: Date.now() }] })
+              if (result.changed) {
+                // another device changed it since: it stays, and he is asked (prove-audit-03)
+                const changed = result.changed
+                setNotDeleted((prev) => [...prev.filter((x) => x.id !== id), { id, slotAt: current.slotAt ?? null, stored: changed }])
+              } else setC({ answers: c.answers.filter((x) => x.answer.id !== id), deletes: [...c.deletes, { id, at: Date.now() }] })
               setQ(deletesSent(queueRef.current, [id]))
             } catch (error) {
               const e = error as AuditCallError
@@ -234,15 +272,21 @@ export function useAudit(account: string) {
           }
         }
       } while (flushAgain.current && !stuck)
-      if (stuck) setSendState(stuck.status === 401 ? "signed-out" : "waiting")
+      if (stuck) setSendState(stuck.status === 401 ? "signed-out" : stuck.status === 0 ? "offline" : "waiting")
       else {
         setSendState("sent")
         void load()
       }
     } finally {
       flushing.current = false
+      // A delete still in its Undo time (also one stored before a reload) is
+      // sent when that time ends, with the page left open (prove-audit-01).
+      armDeleteTimer()
     }
-  }, [api, load, setQ, setC, addNotKept])
+  }, [api, load, setQ, setC, addNotKept, armDeleteTimer])
+  useEffect(() => {
+    flushRef.current = () => void flush()
+  }, [flush])
 
   useEffect(() => {
     const stored = readAuditQueue(browserStore(), account)
@@ -275,7 +319,10 @@ export function useAudit(account: string) {
     // focus, and every REREAD_MS while the page is on screen.
     const onFocus = () => readSoon()
     const every = window.setInterval(() => {
-      if (document.visibilityState === "visible") readSoon()
+      if (document.visibilityState !== "visible") return
+      // what failed to send is tried again too, not only on the next app switch
+      retry()
+      readSoon()
     }, REREAD_MS)
     window.addEventListener("online", retry)
     window.addEventListener("storage", onStorage)
@@ -283,6 +330,7 @@ export function useAudit(account: string) {
     document.addEventListener("visibilitychange", onVisible)
     return () => {
       window.clearInterval(every)
+      if (deleteTimer.current !== null) window.clearTimeout(deleteTimer.current)
       window.removeEventListener("focus", onFocus)
       window.removeEventListener("storage", onStorage)
       window.removeEventListener("online", retry)
@@ -331,16 +379,27 @@ export function useAudit(account: string) {
   /**
    * Delete an answer. With `holdMs`, the delete is stored at once (stamped
    * with the tap) but sent only after that long, so Undo can take it back.
+   * `seen`: the answer as drawn, so the server deletes only that one.
    */
   const remove = useCallback(
-    (id: string, holdMs = 0) => {
+    (id: string, holdMs = 0, seen?: AnswerMark & { slotAt?: string }) => {
       const now = Date.now()
-      setQ(enqueueDelete(queueRef.current, id, new Date(now).toISOString(), holdMs > 0 ? new Date(now + holdMs).toISOString() : undefined))
-      if (holdMs > 0) window.setTimeout(() => void flush(), holdMs + 50)
+      setQ(enqueueDelete(queueRef.current, id, new Date(now).toISOString(), holdMs > 0 ? new Date(now + holdMs).toISOString() : undefined, seen))
+      if (holdMs > 0) armDeleteTimer()
       else void flush()
     },
-    [flush, setQ],
+    [flush, setQ, armDeleteTimer],
   )
+  /** "Delete anyway": delete the answer as another device left it. */
+  const deleteAnyway = useCallback(
+    (x: NotDeleted) => {
+      setNotDeleted((prev) => prev.filter((y) => y.id !== x.id))
+      remove(x.id, 0, { ...x.stored, ...(x.slotAt ? { slotAt: x.slotAt } : {}) })
+    },
+    [remove],
+  )
+  /** "Keep": the other device's answer stays. */
+  const keepNotDeleted = useCallback((id: string) => setNotDeleted((prev) => prev.filter((x) => x.id !== id)), [])
   const undoRemove = useCallback((id: string) => setQ(cancelDelete(queueRef.current, id)), [setQ])
 
   /** A decision: waits for the server, then re-reads. Returns the error sentence, or null. */
@@ -373,6 +432,9 @@ export function useAudit(account: string) {
     fromCopy,
     notKept,
     dismissNotKept: () => setNotKept([]),
+    notDeleted,
+    deleteAnyway,
+    keepNotDeleted,
     setZone: (timezone: string) => decide(() => api.zone(timezone)),
     answer,
     keepStored,

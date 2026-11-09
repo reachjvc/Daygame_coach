@@ -77,28 +77,9 @@ export function checkAnswer(input: unknown, run: AuditRun, now: Date): { answer:
   if (a.was !== undefined) {
     if (a.was === null) was = null
     else {
-      const w = (a.was && typeof a.was === "object" ? a.was : null) as Record<string, unknown> | null
-      if (
-        !w ||
-        typeof w.id !== "string" ||
-        w.id.length > 200 ||
-        typeof w.activity !== "string" ||
-        w.activity.length > ACTIVITY_MAX * 2 ||
-        !isScale(w.energy) ||
-        !isScale(w.growth) ||
-        (w.why !== null && w.why !== undefined && (typeof w.why !== "string" || w.why.length > WHY_MAX * 2))
-      ) {
-        return { error: "Bad earlier answer" }
-      }
-      // normalized as the stored answer was, so the same answer compares equal
-      was = {
-        id: w.id,
-        activity: storableText(w.activity).trim(),
-        energy: w.energy,
-        growth: w.growth,
-        why: typeof w.why === "string" ? storableText(w.why).trim() || null : null,
-      }
-      if (was.activity.length > ACTIVITY_MAX || (was.why?.length ?? 0) > WHY_MAX) return { error: "Bad earlier answer" }
+      const w = checkMark(a.was)
+      if (!w) return { error: "Bad earlier answer" }
+      was = w
     }
   }
   return {
@@ -154,6 +135,35 @@ export interface StoredAnswer {
   energy: number
   growth: number
   why: string | null
+}
+
+/**
+ * What a device says it saw of an answer (a save's `was`, a delete's `seen`),
+ * checked and normalized as the stored answer was, so the same answer
+ * compares equal. Null when it is not one.
+ */
+export function checkMark(value: unknown): AnswerMark | null {
+  const w = (value && typeof value === "object" ? value : null) as Record<string, unknown> | null
+  if (
+    !w ||
+    typeof w.id !== "string" ||
+    w.id.length > 200 ||
+    typeof w.activity !== "string" ||
+    w.activity.length > ACTIVITY_MAX * 2 ||
+    !isScale(w.energy) ||
+    !isScale(w.growth) ||
+    (w.why !== null && w.why !== undefined && (typeof w.why !== "string" || w.why.length > WHY_MAX * 2))
+  ) {
+    return null
+  }
+  const mark = {
+    id: w.id,
+    activity: storableText(w.activity).trim(),
+    energy: w.energy,
+    growth: w.growth,
+    why: typeof w.why === "string" ? storableText(w.why).trim() || null : null,
+  }
+  return mark.activity.length > ACTIVITY_MAX || (mark.why?.length ?? 0) > WHY_MAX ? null : mark
 }
 
 /** What a device saw of an answer (`AuditAnswer.was`). */

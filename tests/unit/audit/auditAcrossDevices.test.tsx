@@ -192,7 +192,8 @@ describe("opened with no signal (fast-audit-04)", () => {
     expect(result.current.slots.map((s) => s.activity)).toEqual(["Gym"])
 
     act(() => result.current.answer([answer("Daygame sets", "a2")]))
-    await waitFor(() => expect(result.current.sendState).toBe("waiting"))
+    // no signal is named as such (prove-audit-01)
+    await waitFor(() => expect(result.current.sendState).toBe("offline"))
     expect(window.localStorage.getItem(AUDIT_QUEUE_KEY)).toContain("Daygame sets")
   })
 
