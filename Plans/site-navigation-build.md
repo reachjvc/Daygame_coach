@@ -3,12 +3,12 @@
 **Written 2026-11-09** after the owner said of the before/after page: "I quite like this."
 **Status: not started.** Follows `Plans/site-navigation.md` (the choice). This plan builds it.
 
-## Owner-only items (answer once, before Phase 0)
+## Owner-only items (answered 2026-11-09)
 
-| ID | What, in plain words | Recommendation |
+| ID | What, in plain words | Answer |
 |---|---|---|
-| O1 | Pinning a tool to Home (the ☆) has to be remembered on your phone *and* your laptop, so it needs one new empty column in your live database. Adding it deletes nothing and can be taken out again. | **Yes**, but only in Phase 6, after you have used the new Home for a few days. If no: Home shows a fixed set of tiles and the ☆ is left out. |
-| O2 | Some things will no longer appear in two places, for example the plan and training cards on Tracking once they are on Home, and the "coming soon" cards on the Dashboard. Under your rule nothing is removed unless you say so. | Nothing is removed during the build. Each one is listed on the sign-off page as **"proposed to remove"**, and you mark it there. |
+| O1 | Pinning a tool to Home (the ☆) has to be remembered on your phone *and* your laptop, so it needs one new empty column in your live database. Adding it deletes nothing and can be taken out again. | **Yes** (owner, 2026-11-09). Built in Phase 6, after he has used the new Home for a few days. |
+| O2 | May the building session remove things on its own, for example the plan and training cards on Tracking once they are on Home, and the "coming soon" cards on the Dashboard? | **Yes, remove freely** (owner, 2026-11-09; an exception to the no-removal rule for this build only). Every removal is listed in the phase report so he can ask for it back. |
 
 Nothing in this plan costs money.
 
@@ -30,8 +30,8 @@ Each item below was checked in the code on 2026-11-09. Paths are given so the bu
 
 1. **Every push goes live, and the owner is the only user.** A half-finished bar is what he would open in the street.
    *Do:* build in a git worktree. Ship each phase as one fast-forward to `main`, and only when that phase works on its own. After each push, check the live `healthz` buildId (memory: vercel-late-deploy-rollback).
-2. **Content disappears.** The new Home replaces the Dashboard (`src/dashboard/components/DashboardContent.tsx`). That page holds the Scenarios, Cold Approach (coming soon), Inner Game, Ask Coach, Progress and Articles cards, the "Ready to start" block, the dating preferences and the world map. Moving cards from Tracking to Home would also take them off Tracking. The memory rule no-removal-until-owner-says forbids both.
-   *Do:* every block keeps a home, on Home, on All tools or where it already is. Duplicates stay duplicated. They are listed for O2 on the sign-off page.
+2. **Something useful disappears by accident.** The new Home replaces the Dashboard (`src/dashboard/components/DashboardContent.tsx`). That page holds the Scenarios, Cold Approach (coming soon), Inner Game, Ask Coach, Progress and Articles cards, the "Ready to start" block, the dating preferences and the world map. Moving cards from Tracking to Home takes them off Tracking.
+   *Do:* removing is allowed (O2), but each removal is a decision, not a side effect. Every removed block is listed in the phase report with where its job went, or "nowhere" if it was dropped. Any *feature* (a page or tool) must stay reachable.
 3. **A tool becomes unreachable.** Inner Game is linked only from the Dashboard. If Home drops that card, Inner Game is gone.
    *Do:* run `tests/unit/navigation/routeReachability.test.ts` after every phase, and the Phase 4 audit opens every tool from Home in a real browser.
 4. **Non-payers bounce silently.** `app/(app)/coach/page.tsx` redirects anyone without a purchase to `/dashboard` with no message, and Scenarios has its own paywall (`src/scenarios/components/ScenariosPage.tsx`). A Coach tile on Home would send a non-payer back to the same Home with nothing said.
@@ -79,12 +79,12 @@ Each phase ships on its own. Before a phase can ship: unit tests green, typechec
 | # | Phase | Ships | Done when |
 |---|---|---|---|
 | 0 | **Read and baseline.** Read this plan, the before/after page's `marks` db (doc `ba--E` and row notes) and the Five Ways page's marks. Make a worktree on the test stack. Take baseline screenshots of every page, run the full test suite, and time Home's load. | nothing | Baseline saved in the scratchpad. Marks read and quoted in the report. Any owner note that changes this plan is applied to it first. |
-| 1 | **Home and All tools**, built at `/dashboard`. Tiles include Coach, Inner Game and the Black Box, with locks through `tileAccess`. The cards reuse existing loaders. The old Dashboard blocks stay, folded below the cards or on All tools. Nothing else changes. | yes | Every tool can be opened from Home. A non-payer test account sees locks, not bounces. Load time is within 300 ms of baseline. |
+| 1 | **Home and All tools**, built at `/dashboard`. Tiles include Coach, Inner Game and the Black Box, with locks through `tileAccess`. The cards reuse existing loaders. Old Dashboard blocks are kept, moved or removed (O2), each one listed in the report. Nothing else changes. | yes | Every tool can be opened from Home. A non-payer test account sees locks, not bounces. Load time is within 300 ms of baseline. |
 | 2 | **Phone bar: Home · Plan · Activity · You.** The More sheet is replaced by the All tools tile. "You" is `/settings` plus level and a link to your dating answers. The plan's daily screens keep the bar; its setup steps still hide it. Time is unchanged. Labels and back links are updated. | yes | The six tasks are re-counted on the real phone build. Reachability test green. Alpha-test plan noted. |
 | 3 | **Laptop sidebar.** The same items as the phone. Folds to icons on `/time`, and on any page the screenshots show breaking. | yes | Before/after screenshots of every page at 1024 and 1280px. No page has horizontal scroll. |
-| 4 | **Adversarial audit and owner sign-off.** At least 3 independent reviewers try to break it: dead links, locked tiles, standalone mode, the plan wizard, Time, dark mode, a signed-out visitor. Fix what they find. Then publish one sign-off page: real screenshots now vs after, every "proposed to remove" item (O2), the plan's daily screens, and the "Life Mastery" vs "Plan" name. Each gets Yes/No and the note log (memory: review-boards-note-log). | the page | Audit findings fixed or listed. Page published. Report says "built and live", never "done", until the owner marks it. |
-| 5 | **Addresses** (only after the owner marks Phase 4): `/dashboard`→`/home`, `/tracking`→`/activity`, `/settings`→`/you`, through `LEGACY_ROUTES`. Also update the manifest `start_url`, revalidate paths and `docs/product/map.md`. Apply the marked removals. | yes | `legacyRoutes.test.ts` green. Every old address redirects on the live site. |
-| 6 | **☆ pins** (only if O1 is yes): one additive column on `profiles`, read and written in `src/db/profilesRepo.ts`. Back up first and apply with the owner's yes (memory: live-db-backup-method). | yes | A pin set on the phone shows on the laptop. Taking the column out again is written down. |
+| 4 | **Adversarial audit and owner sign-off.** At least 3 independent reviewers try to break it: dead links, locked tiles, standalone mode, the plan wizard, Time, dark mode, a signed-out visitor. Fix what they find. Then publish one sign-off page: real screenshots now vs after, the list of everything removed, the plan's daily screens, and the "Life Mastery" vs "Plan" name. Each gets Yes/No and the note log (memory: review-boards-note-log). | the page | Audit findings fixed or listed. Page published. Report says "built and live", never "done", until the owner marks it. |
+| 5 | **Addresses** (only after the owner marks Phase 4): `/dashboard`→`/home`, `/tracking`→`/activity`, `/settings`→`/you`, through `LEGACY_ROUTES`. Also update the manifest `start_url`, revalidate paths and `docs/product/map.md`. | yes | `legacyRoutes.test.ts` green. Every old address redirects on the live site. |
+| 6 | **☆ pins** (O1 yes): one additive column on `profiles`, read and written in `src/db/profilesRepo.ts`. Back up first; O1 is the owner's yes, so apply it without asking again (memory: live-db-backup-method). | yes | A pin set on the phone shows on the laptop. Taking the column out again is written down. |
 
 ## Blockers
 
@@ -99,5 +99,5 @@ Each phase ships on its own. Before a phase can ship: unit tests green, typechec
 |---|---|---|
 | Rename the addresses? | Yes, but last (Phase 5) | The site's rule is that a tab's page is named what its tab says (`Plans/site-structure.md`). Last, because redirects are the riskiest part to roll back. |
 | Coach as a tab? | No, a tile | A locked tab in the bar is a dead slot for non-payers. |
-| Remove duplicated cards from Tracking? | Not without O2 marks | Rule: no removal until the owner says. |
+| Remove duplicated cards from Tracking? | Yes, if they are now on Home | O2: the owner allowed removals for this build. |
 | Fix the other findings (step numbers out of order, two "North Star"s, Settings icon-only tabs, empty Articles)? | Not in this plan | They are separate pages' bugs. List them on the sign-off page as follow-ups. |
