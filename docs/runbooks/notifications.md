@@ -1,18 +1,19 @@
 # Notifications runbook
 
-What to do when notifications misbehave: Time's running-timer notification and 6 h alert today, the time & energy
-audit's pings once it is built (`Plans/energy-audit.md`). Thought Frequencies and its reminders were deleted on
+What to do when notifications misbehave: Time's running-timer notification and 6 h alert, and the time & energy
+audit's quarter-hour pings (`Plans/energy-audit.md`, live since 2026-11-09). Thought Frequencies and its reminders were deleted on
 2026-11-08 (`Plans/thought.md` is kept as history).
 How it is built: `src/notifications/`, the push block at the end of `public/sw.js`.
 
 ## How a notification travels
 
 1. **The clock.** A `pg_cron` job, `notifications-clock`, runs `public.notifications_clock_tick()` every minute.
-   It does nothing unless something is due (today: a time tracker 6 h alert, below); then it calls
+   It does nothing unless something is due (a time tracker 6 h alert, an audit ping or an audit's end notice,
+   below); then it calls
    `notifications_clock_url` from Supabase Vault with
    `Authorization: Bearer <notifications_clock_secret>` through `pg_net`.
-2. **The address.** `POST /api/notifications/tick` checks the secret (constant time) and runs what is due
-   (`runTimerAlertClock`).
+2. **The address.** `POST /api/notifications/tick` checks the secret (constant time) and runs what is due:
+   `runTimerAlertClock` and `runAuditPingClock`, each on its own, so one failing never stops the other.
 3. **The send.** `src/notifications/pushService.ts`: one `notification_sends` row, then `web-push` to each
    switched-on device in `push_devices`. TTL 10 minutes, urgency high. 404/410 from the push service deletes
    the device; 20 failures in a row switch it off.
@@ -59,6 +60,42 @@ Switch the timer off for every device of one person: `update push_devices set ti
 user_id = '<id>';`. The whole way back: `supabase/migrations/rollback/20261105150000_running_timer_notification.down.sql`
 (deploy the app from before Phase 7 first; it deletes the timer rows from the send log).
 
+## The time & energy audit's pings
+
+Built by `Plans/energy-audit.md`, Phase 5: `src/audit/pingService.ts`, `app/api/audit/ping/route.ts`, the audit
+half of the notification block in `public/sw.js`, migration `20261109110000_energy_audit.sql`.
+
+- **Who gets them.** Devices with `push_devices.enabled` on ("Turn on pings for this device" on `/audit`, and the
+  device list in the audit's Settings). Only while the person has an open audit (`audit_runs.ended_at is null and
+  now() < ends_at`).
+- **When.** At :00, :15, :30 and :45, about the quarter that just ended ("What did you do from 10:00 to 10:15?"),
+  only in the first 5 minutes after it ended, never for a quarter whose start is in the person's quiet hours
+  (default 22:00–08:00), never while muted, never for an answered quarter. `audit_pings_due(limit, now)` decides;
+  the send log holds one `audit-ping` row per quarter (`entry_id` `audit:<run>:<epoch>`, unique index
+  `notification_sends_one_ping_per_quarter`), so a quarter is never pinged twice. After the 14 days, one
+  `audit-end` notice ("Your two weeks are done"), never after End now.
+- **What the lock screen shows.** Only times. Nothing the person wrote is ever in a payload or a log line.
+- **The buttons.** "Same as before" copies the previous quarter's answer (never its why); "Mute 1 h" mutes. The
+  worker posts `{action, slotAt, sendId}` to `/api/audit/ping`; the route acts only on this person's own ping
+  for exactly that quarter, from a same-origin JSON request. On any failure the ping comes back as "Not saved.
+  Tap to answer."
+
+**How to stop them**, from least to most:
+1. The person: Mute (30 min to until morning) or quiet hours in the audit's Settings, or switch the device off.
+2. One person's audit: `update public.audit_runs set ended_at = now() where ended_at is null and user_id = '<id>';`
+3. Every audit: `update public.audit_runs set ended_at = now() where ended_at is null`. Time's alert keeps working.
+
+Read-only checks (put the person's id in):
+
+```sql
+select id, started_at, ends_at, ended_at, quiet_start, quiet_end, muted_until from audit_runs where user_id = '<id>';
+select kind, entry_id, sent_at, devices, delivered from notification_sends
+  where user_id = '<id>' and kind like 'audit-%' order by sent_at desc limit 10;
+```
+
+`audit_pings_due` and `audit_ends_due` may only be called by the service role, so the read-only role gets
+"permission denied" for them; read `audit_runs` instead.
+
 ## Stop every notification now
 
 In the Supabase SQL editor:
@@ -67,7 +104,7 @@ In the Supabase SQL editor:
 select cron.unschedule('notifications-clock');
 ```
 
-**This stops Time's 6 h alert too**, because the same clock rings it. Nothing is deleted. To start again, run
+**This stops Time's 6 h alert and the audit's pings too**, because the same clock rings them. Nothing is deleted. To start again, run
 `select cron.schedule('notifications-clock', '* * * * *', 'select public.notifications_clock_tick()');`.
 The way back from Thoughts' removal is `supabase/migrations/rollback/20261109100000_thoughts_out.down.sql`
 (the data does not come back). **Never run** `rollback/20261030120000_thought_frequencies.down.sql` or

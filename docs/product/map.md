@@ -265,8 +265,9 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   push services accepted), sends that expire after 10 minutes and replace the last,
   the worker's push block in `public/sw.js`. Keys and the clock's secret live in
   Supabase Vault. **The clock is a `pg_cron` job, `notifications-clock`, every minute**,
-  calling `/api/notifications/tick` only when something is due (today: Time's 6 h alert). Stop it with
-  `select cron.unschedule('notifications-clock');` (that stops Time's alert too) — `docs/runbooks/notifications.md`.
+  calling `/api/notifications/tick` only when something is due (Time's 6 h alert, the audit's quarter-hour pings
+  and its end notice). Stop it with `select cron.unschedule('notifications-clock');` (that stops Time's alert and
+  the audit's pings too) — `docs/runbooks/notifications.md`.
 
 ## The data
 
@@ -309,6 +310,10 @@ the truthful record of what exists.
   exercising, qa, articles. Check the branch rather than trusting this list.
 
 ## In flight now
+
+- **The time & energy audit is live** at `/audit` (More → Time & energy audit), since 2026-11-09
+  (`Plans/energy-audit.md`, Phases 0–7). Nobody has used it yet: the owner's look at the screens and his first days
+  with the pings on his phone are pending. The look page with his marks: https://claude.ai/artifact/GF69w68HJxiyFkudNwYBXv.
 
 - **One branch, `main`**, and it is the live site: every push deploys.
   `training-rebuild`, where all work landed until then, was retired on
