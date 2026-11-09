@@ -777,7 +777,7 @@ function EntryFields({
       pushToast(`Stopped ${name} ${formatWhen(stopped.stop ?? tappedAt, latest.user.timeFormat, dateKey(nowIso()))}`, "info", () =>
         undoOrSay(() => latestState.current, (current) => undoStopAt(current, stopped.id, nowIso()), setState, pushToast),
       )
-    })
+    }, { keep: { kind: "stop", seen: entry.id } })
   const continueButton = running ? (
     <button
       type="button"

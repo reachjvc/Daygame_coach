@@ -21,7 +21,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
 import { claimBrowserCopy } from "@/src/timetrack/browserOwner"
 import { TogglLab } from "@/src/timetrack/components/TogglLab"
-import { STORAGE_KEY } from "@/src/timetrack/config"
+import { HELD_STOP_KEY, STORAGE_KEY } from "@/src/timetrack/config"
 import { stateToRows } from "@/src/timetrack/timetrackMapperService"
 import { startTimer } from "@/src/timetrack/timetrackService"
 import type { TimetrackState } from "@/src/timetrack/types"
@@ -130,7 +130,8 @@ describe("a Stop held while the tracker checks", () => {
     holdReads = false
     releaseReads?.()
     render(<TogglLab account={USER} />)
-    for (let i = 0; i < 12 && !account.entry(gymId)?.stopped_at; i++) await wait(500)
+    // a kept Stop is taken up once it is older than `KEPT_STOP_GRACE_MS`
+    for (let i = 0; i < 30 && !account.entry(gymId)?.stopped_at; i++) await wait(500)
 
     expect(account.entry(gymId)?.stopped_at, "the Stop tapped before the tab closed").toBeTruthy()
   })
@@ -150,7 +151,7 @@ describe("a Stop held while the tracker checks", () => {
     holdReads = false
     releaseReads?.()
     render(<TogglLab account={USER} />)
-    await wait(6_000)
+    await wait(12_000)
 
     expect(Date.parse(String(account.entry(gymId)?.stopped_at)), "the other device's 10:00 Stop").toBe(Date.parse(tenOClock))
   })
@@ -172,12 +173,104 @@ describe("a Stop held while the tracker checks", () => {
     releaseReads?.()
     account.online = false
     render(<TogglLab account={USER} />)
-    await wait(6_000)
+    await wait(12_000)
     account.online = true
     window.dispatchEvent(new Event("online"))
-    await wait(6_000)
+    await wait(12_000)
 
     expect(Date.parse(String(account.entry(gymId)?.stopped_at)), "the other device's 10:00 Stop").toBe(Date.parse(tenOClock))
     expect(Date.parse(String(account.entry(gymId)?.stopped_at))).not.toBe(tappedAt)
+  })
+
+  test("a Stop from the list row's ■ is kept too", async () => {
+    const { copy, gymId } = aRunningGym()
+    const account = serve(copy)
+    render(<TogglLab account={USER} />)
+    await wait(50)
+    fireEvent.click(main().getAllByRole("button", { name: "Stop this timer" })[0])
+    await wait(500)
+    expect(window.localStorage.getItem(HELD_STOP_KEY), "the row's Stop was not kept while it waited").toContain(gymId)
+    cleanup()
+
+    holdReads = false
+    releaseReads?.()
+    render(<TogglLab account={USER} />)
+    // a kept Stop is taken up once it is older than `KEPT_STOP_GRACE_MS`
+    for (let i = 0; i < 30 && !account.entry(gymId)?.stopped_at; i++) await wait(500)
+    expect(account.entry(gymId)?.stopped_at, "the row's Stop tapped before the tab closed").toBeTruthy()
+  })
+})
+
+/** a tap kept by a page that closed before its check answered, as `keepHeldStop` writes it */
+function aKeptTap(tap: unknown) {
+  window.localStorage.setItem(HELD_STOP_KEY, JSON.stringify({ owner: USER, id: "kept-1", tap, tappedOnDevice: Date.now() - 60_000 }))
+}
+
+describe("a kept tap from every place that ends the timer", () => {
+  test("Stop at… stops at the moment that was chosen", async () => {
+    const { copy, gymId } = aRunningGym()
+    const account = serve(copy)
+    const eleven = new Date(2026, 7, 10, 11, 0).toISOString()
+    aKeptTap({ kind: "stop", seen: gymId, at: eleven })
+    holdReads = false
+    render(<TogglLab account={USER} />)
+    // a kept Stop is taken up once it is older than `KEPT_STOP_GRACE_MS`
+    for (let i = 0; i < 30 && !account.entry(gymId)?.stopped_at; i++) await wait(500)
+
+    expect(Date.parse(String(account.entry(gymId)?.stopped_at))).toBe(Date.parse(eleven))
+    expect(window.localStorage.getItem(HELD_STOP_KEY), "a tap that ran is not kept").toBeNull()
+  })
+
+  test("the sheet's Done with an end keeps the Stop at that end, and not the rest of the edit", async () => {
+    const { copy, gymId } = aRunningGym()
+    const account = serve(copy)
+    const half = new Date(2026, 7, 10, 11, 30).toISOString()
+    // what EntrySheet keeps for a Done that ends the running entry
+    aKeptTap({ kind: "stop", seen: gymId, at: half })
+    holdReads = false
+    render(<TogglLab account={USER} />)
+    // a kept Stop is taken up once it is older than `KEPT_STOP_GRACE_MS`
+    for (let i = 0; i < 30 && !account.entry(gymId)?.stopped_at; i++) await wait(500)
+
+    expect(Date.parse(String(account.entry(gymId)?.stopped_at))).toBe(Date.parse(half))
+    expect(screen.getByText(/as you asked before the page closed/)).toBeInTheDocument()
+  })
+
+  test("a kept note this code cannot read is dropped, and nothing is stopped", async () => {
+    const { copy, gymId } = aRunningGym()
+    const account = serve(copy)
+    aKeptTap({ kind: "edit", entryId: gymId })
+    holdReads = false
+    render(<TogglLab account={USER} />)
+    await wait(12_000)
+
+    expect(account.entry(gymId)?.stopped_at).toBeNull()
+    expect(window.localStorage.getItem(HELD_STOP_KEY)).toBeNull()
+  })
+
+  test("another account's kept tap is left for that account", async () => {
+    const { copy, gymId } = aRunningGym()
+    const account = serve(copy)
+    window.localStorage.setItem(HELD_STOP_KEY, JSON.stringify({ owner: "someone-else", id: "kept-2", tap: { kind: "stop", seen: gymId }, tappedOnDevice: Date.now() }))
+    holdReads = false
+    render(<TogglLab account={USER} />)
+    await wait(12_000)
+
+    expect(account.entry(gymId)?.stopped_at, "this account's timer was stopped by someone else's tap").toBeNull()
+    expect(window.localStorage.getItem(HELD_STOP_KEY)).toContain("someone-else")
+  })
+
+  test("a Stop another open tab is still holding is left to that tab", async () => {
+    const { copy, gymId } = aRunningGym()
+    const account = serve(copy)
+    // the other tab kept it a moment ago, and is about to run and forget it
+    window.localStorage.setItem(HELD_STOP_KEY, JSON.stringify({ owner: USER, id: "tab-a", tap: { kind: "stop", seen: gymId }, tappedOnDevice: Date.now() }))
+    holdReads = false
+    render(<TogglLab account={USER} />)
+    await wait(2_000)
+    window.localStorage.removeItem(HELD_STOP_KEY)
+    await wait(12_000)
+
+    expect(account.entry(gymId)?.stopped_at, "this tab ran the other tab's Stop as well").toBeNull()
   })
 })

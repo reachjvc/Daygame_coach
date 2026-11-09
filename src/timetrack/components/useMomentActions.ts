@@ -20,7 +20,7 @@ import { serverNowIso } from "../serverClock"
 import { layOnto } from "../tabMergeService"
 import { stopAt, switchAt, undoStopAt } from "../timeFixService"
 import { dateKey, formatWhen } from "../timetrackFormatService"
-import { deleteEntries, undoDisplacement } from "../timetrackService"
+import { deleteEntries, runningEntry, undoDisplacement } from "../timetrackService"
 import type { EntryDraft, IsoDateTime, TimeEntry, TimetrackState } from "../types"
 import type { AfterCheck } from "./afterCheck"
 import type { MomentKind } from "./MomentPicker"
@@ -47,7 +47,9 @@ export function useMomentActions({
 
   return useCallback(
     (kind: MomentKind, atIso: IsoDateTime, nextDraft: EntryDraft) => {
-      const gate = afterCheck ?? ((run: (latest: TimetrackState, tappedAt: IsoDateTime) => void) => run(latestState.current, serverNowIso()))
+      const gate: AfterCheck = afterCheck ?? ((run) => run(latestState.current, serverNowIso()))
+      // a Stop at… is kept on disk while it waits; a Switched at… starts something, and is not (`KeptTap`)
+      const keep = kind === "stop" ? { keep: { kind: "stop" as const, seen: runningEntry(latestState.current)?.id ?? null, at: atIso } } : undefined
       gate((latest) => {
         const nowIso = serverNowIso()
         const when = (iso: IsoDateTime) => formatWhen(iso, latest.user.timeFormat, dateKey(nowIso))
@@ -95,7 +97,7 @@ export function useMomentActions({
         pushToast(`Started ${quoted(started)} ${when(started.start)}`, "info", () =>
           undoOrSay(() => latestState.current, (current) => deleteEntries(current, [started.id], serverNowIso()), setState, pushToast),
         )
-      })
+      }, keep)
     },
     [afterCheck, pushToast, setState],
   )

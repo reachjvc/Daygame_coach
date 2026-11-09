@@ -34,8 +34,17 @@ import type { EntryDraft, Id, IsoDateTime, TimetrackState } from "../types"
  */
 export type AfterCheck = (
   run: (latest: TimetrackState, tappedAt: IsoDateTime) => void,
-  /** `stopSeen`: this is a Stop of that entry, kept on disk while it waits (see `keepHeldStop` in TogglLab) */
-  options?: { always?: boolean; keepAsNext?: EntryDraft; stopSeen?: Id | null },
+  /** `keep`: a tap that ends the running timer, as data, kept on disk while it waits (`keepHeldStop` in TogglLab) */
+  options?: { always?: boolean; keepAsNext?: EntryDraft; keep?: KeptTap },
 ) => void
+
+/**
+ * A held tap that ends the running timer, written so a later opening can do it
+ * again: end `seen` at the tap, or at `at` when a moment was chosen (Stop at…,
+ * the sheet's Done with an end). Only the Stop is kept, never the rest of an
+ * edit: hours later a rename could overwrite one the other device made since.
+ * A Start is never kept: what it would start is a guess after a reopen.
+ */
+export type KeptTap = { kind: "stop"; seen: Id | null; at?: IsoDateTime }
 
 export const AfterCheckContext = createContext<AfterCheck | null>(null)

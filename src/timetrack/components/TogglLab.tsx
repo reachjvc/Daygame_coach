@@ -17,7 +17,7 @@ import { ROUTE_LABELS } from "@/components/navTabs"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { setHaptics } from "../haptics"
-import { HELD_STOP_KEY, SHORTCUTS, TIMER_BAR_KEY } from "../config"
+import { HELD_STOP_KEY, KEPT_STOP_GRACE_MS, SHORTCUTS, TIMER_BAR_KEY } from "../config"
 import {
   IconBreak,
   IconCalendar,
@@ -32,7 +32,9 @@ import {
 } from "../icons"
 import { BottomSheet, SheetRow } from "@/components/BottomSheet"
 import { useTimetrackSync } from "../hooks/useTimetrackSync"
-import { AfterCheckContext, type AfterCheck } from "./afterCheck"
+import { AfterCheckContext, type AfterCheck, type KeptTap } from "./afterCheck"
+import { stopAt, undoStopAt } from "../timeFixService"
+import { undoOrSay } from "./neighbourNotice"
 import { SyncBadge } from "./SyncBadge"
 import { ImportOfferBanner } from "./ImportOfferBanner"
 import { OfflineShell } from "@/src/shared/components/OfflineShell"
@@ -47,9 +49,10 @@ import {
   draftOf,
   emptyDraft,
   startTimer,
+  stopTimer,
   toggleFavorite,
 } from "../timetrackService"
-import { serverIsoAt } from "../serverClock"
+import { serverIsoAt, serverNowIso } from "../serverClock"
 import { layOnto } from "../tabMergeService"
 import { pageBeforeTracker, readTrackerAddress, trackerAddressFor, type Section } from "../trackerAddressService"
 import type { EntryDraft, Id, IsoDate, ReportConfig, RoundingConfig, TimeEntry, TimetrackState, WeekStart } from "../types"
@@ -356,13 +359,18 @@ export function TogglLab({
    * check it waits for — the copy on screen may be hours old, and the other
    * device's earlier Stop would lose to this one. So it is written down when it
    * is held, and the next opening holds it again: it runs when that opening's
-   * check lands, through the same guards, at the moment it was tapped. A Start
-   * is not kept: what it would start is a guess after a reopen.
+   * check lands, through the same guards, at the moment it was tapped. Every
+   * tap that ends the running timer is kept — the bar's ■, a row's ■, the
+   * calendar box's ■, the sheet's Stop and Done, Stop at… (`KeptTap`); a Start
+   * is not: what it would start is a guess after a reopen.
    */
   const keepHeldStop = useCallback(
-    (held: { id: string; seen: Id | null; tappedOnDevice: number }) => {
+    (held: { id: string; tap: KeptTap; tappedOnDevice: number }) => {
       try {
-        window.localStorage.setItem(HELD_STOP_KEY, JSON.stringify({ owner: account ?? null, ...held }))
+        // `seen` beside `tap` for a plain Stop: a page still on the bundle before `tap` reads that.
+        // Not for a chosen moment, which that bundle would save at the tap instead.
+        const forOldPages = held.tap.at === undefined ? { seen: held.tap.seen } : {}
+        window.localStorage.setItem(HELD_STOP_KEY, JSON.stringify({ owner: account ?? null, ...forOldPages, ...held }))
       } catch {
         // storage full or blocked: the Stop is held in memory only, as it was
       }
@@ -379,29 +387,95 @@ export function TogglLab({
       // nothing readable is kept
     }
   }, [])
+  /** bumped when a kept Stop is held after the check already landed, so the release below runs */
+  const [adopted, setAdopted] = useState(0)
+  const adoptedFor = useRef<string | null | undefined>(undefined)
   useEffect(() => {
-    let kept: { owner?: string | null; id?: string; seen?: Id | null; tappedOnDevice?: number } | null = null
-    try {
-      kept = JSON.parse(window.localStorage.getItem(HELD_STOP_KEY) ?? "null")
-    } catch {
-      kept = null
+    // once per account: a page that learns who is signed in a moment late still finds its Stop
+    if (adoptedFor.current === (account ?? null)) return
+    const readKept = () => {
+      try {
+        return JSON.parse(window.localStorage.getItem(HELD_STOP_KEY) ?? "null") as {
+          owner?: string | null
+          id?: string
+          tap?: KeptTap
+          seen?: Id | null
+          tappedOnDevice?: number
+        } | null
+      } catch {
+        return null
+      }
     }
-    if (!kept || typeof kept.id !== "string" || typeof kept.tappedOnDevice !== "number") return
+    const first = readKept()
+    if (!first || typeof first.id !== "string" || typeof first.tappedOnDevice !== "number") return
     // another account's Stop waits for that account's opening, untouched
-    if ((kept.owner ?? null) !== (account ?? null) || heldTap.current) return
-    const seen = kept.seen ?? null
-    heldTap.current = {
-      run: (_latest, tappedAt) => actionsNow.current.stop(tappedAt, seen),
-      runningId: seen,
-      always: false,
-      keepAsNext: null,
-      tappedOnDevice: kept.tappedOnDevice,
-      diskId: kept.id,
-      restored: true,
+    if ((first.owner ?? null) !== (account ?? null)) return
+    adoptedFor.current = account ?? null
+    const keptId = first.id
+    /**
+     * A TAB THAT IS STILL OPEN RUNS ITS OWN STOP. The one that wrote this note
+     * runs it within `CHECK_WAIT_MS` of the tap, answered or not, and forgets it.
+     * So a note is taken up only once it is older than that, with room to spare:
+     * a second tab opened in that moment would otherwise run it as well.
+     */
+    const adopt = () => {
+      const kept = readKept()
+      if (!kept || kept.id !== keptId || typeof kept.tappedOnDevice !== "number" || heldTap.current) return
+      // a note from before `tap` was written is the bar's Stop; one this code cannot read is dropped
+      const tap = kept.tap ?? { kind: "stop" as const, seen: kept.seen ?? null }
+      const readable =
+        tap.kind === "stop" && typeof tap.seen === "string" && (tap.at === undefined || !Number.isNaN(Date.parse(tap.at)))
+      if (!readable) {
+        forgetHeldStop(keptId)
+        return
+      }
+      const seen = tap.seen
+      heldTap.current = {
+        /**
+         * A plain Stop ends the entry as the live tap would have (`stopTimer`,
+         * which keeps an end before the start at the start). A chosen moment
+         * goes through `stopAt`, as Stop at… does: refused with its reason when
+         * the moment is no longer allowed. Either is said with the time saved.
+         */
+        run: (latest, tappedAt) => {
+          const name = (e: { description: string }) => `“${e.description.trim() || "(no description)"}”`
+          let next: TimetrackState
+          if (tap.at === undefined) {
+            next = stopTimer(latest, tappedAt).state
+          } else {
+            const result = stopAt(latest, tap.at, serverNowIso())
+            if (result.violations[0]) {
+              pushToast(`The Stop you tapped before the page closed was not used: ${result.violations[0].message}`, "error")
+              return
+            }
+            next = result.state
+          }
+          const stopped = next.entries.find((e) => e.id === seen)
+          if (!stopped || stopped.stop === null) return
+          setState(layOnto(latest, next))
+          const when = formatWhen(stopped.stop, latest.user.timeFormat, dateKey(new Date()))
+          pushToast(`Stopped ${name(stopped)} ${when}, as you asked before the page closed.`, "info", () =>
+            undoOrSay(() => latestState.current ?? latest, (current) => undoStopAt(current, stopped.id, serverNowIso()), setState, pushToast),
+          )
+        },
+        runningId: seen,
+        always: false,
+        keepAsNext: null,
+        tappedOnDevice: kept.tappedOnDevice,
+        diskId: keptId,
+        restored: true,
+      }
+      setAdopted((n) => n + 1)
     }
-    // once, at the opening: what is kept is read before anything new is held
+    const age = Date.now() - first.tappedOnDevice
+    if (age >= KEPT_STOP_GRACE_MS) {
+      adopt()
+      return
+    }
+    const timer = window.setTimeout(adopt, KEPT_STOP_GRACE_MS - age)
+    return () => window.clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [account])
   const afterCheck = useCallback<AfterCheck>(
     (run, options) => {
       const latest = latestState.current
@@ -414,8 +488,9 @@ export function TogglLab({
       }
       // one tap is held, the last one: the one it replaces is forgotten, on disk too
       forgetHeldStop(heldTap.current?.diskId ?? null)
-      const diskId = options?.stopSeen !== undefined ? newId() : null
-      if (diskId) keepHeldStop({ id: diskId, seen: options?.stopSeen ?? null, tappedOnDevice })
+      // a Stop with nothing it was for has nothing to keep
+      const diskId = options?.keep?.seen ? newId() : null
+      if (options?.keep && diskId) keepHeldStop({ id: diskId, tap: options.keep, tappedOnDevice })
       heldTap.current = {
         run,
         runningId: runningNow.current?.id ?? null,
@@ -471,12 +546,8 @@ export function TogglLab({
       return
     }
     tap.run(latest, serverIsoAt(tap.tappedOnDevice))
-    if (tap.restored) {
-      const at = formatWhen(serverIsoAt(tap.tappedOnDevice), latest.user.timeFormat, dateKey(new Date()))
-      pushToast(`Stopped at ${at}, when you tapped Stop before the page closed.`)
-    }
     setHolding("ran")
-  }, [sync.check.checking, sync.check.failed, sync.check.lastCheckedAt, pushToast, forgetHeldStop])
+  }, [sync.check.checking, sync.check.failed, sync.check.lastCheckedAt, adopted, pushToast, forgetHeldStop])
   /** the sync as the badges show it: a held tap counts as still checking (see `holding`) */
   const shownSync = useMemo(
     () => (holding && !sync.check.checking ? { ...sync, check: { ...sync.check, checking: true } } : sync),
@@ -490,7 +561,7 @@ export function TogglLab({
    */
   const stopTracking = useCallback(() => {
     const seen = runningNow.current?.id ?? null
-    afterCheck((_latest, tappedAt) => actionsNow.current.stop(tappedAt, seen), { stopSeen: seen })
+    afterCheck((_latest, tappedAt) => actionsNow.current.stop(tappedAt, seen), { keep: { kind: "stop", seen } })
   }, [afterCheck])
 
   /**

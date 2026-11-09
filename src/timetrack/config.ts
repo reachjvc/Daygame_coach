@@ -46,6 +46,12 @@ export const OFFLINE_OWN_ROWS_KEY = "toggl-clone:offline-own-rows"
  */
 export const HELD_STOP_KEY = "toggl-clone:held-stop"
 /**
+ * How old a kept Stop must be before another opening takes it up: the tab that
+ * wrote it runs it within `CHECK_WAIT_MS` (3 s) of the tap, so ten seconds is
+ * past any tab still holding its own.
+ */
+export const KEPT_STOP_GRACE_MS = 10_000
+/**
  * THERE IS DELIBERATELY NO PERSISTED CURSOR, AND THIS IS WHERE SOMEBODY WOULD
  * ADD ONE.
  *

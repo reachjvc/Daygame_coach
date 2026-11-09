@@ -335,7 +335,7 @@ export function EntrySheet({
         if (saved) announceNeighbours(saved, latest.user.timeFormat, setState, pushToast, () => latest)
       }
       // ending a running timer is a Stop: it waits for the check, as Stop does (D2)
-      if (saveStops(state, id, changesNow)) afterCheck((latest, tappedAt) => write(latest, tappedAt))
+      if (saveStops(state, id, changesNow)) afterCheck((latest, tappedAt) => write(latest, tappedAt), { keep: { kind: "stop", seen: id, at: changesNow.stop ?? undefined } })
       else write(state, serverNowIso())
       onClose()
       return
@@ -404,7 +404,7 @@ export function EntrySheet({
         setState,
         pushToast,
       )
-    })
+    }, { keep: { kind: "stop", seen: id } })
     onClose()
   }
 

@@ -682,7 +682,7 @@ export function CalendarView({
       pushToast(`Stopped ${name} ${formatWhen(stopped.stop ?? tappedAt, latest.user.timeFormat, dateKey(nowIso()))}`, "info", () =>
         undoOrSay(() => latestState.current, (current) => undoStopAt(current, stopped.id, nowIso()), setState, pushToast),
       )
-    })
+    }, { keep: { kind: "stop", seen: entry.id } })
 
   /** The box's ⋮ → Delete: no question, Toggl Track's words, and Undo */
   const deleteFromBox = (entry: TimeEntry) => {
