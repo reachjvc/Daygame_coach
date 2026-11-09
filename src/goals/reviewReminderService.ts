@@ -12,7 +12,7 @@ import { sendToPerson, type PushPayload } from "@/src/notifications/pushService"
 import { ROUTES } from "@/src/shared/routes"
 import { closeSend, openSend } from "@/src/db/notificationsRepo"
 import { remindersDueAsServer, weekReviewWrittenAsServer, type Reminder } from "@/src/db/lifePlanRemindersRepo"
-import { periodLabel, reviewIdFor, type ReviewPeriod } from "./reviewService"
+import { periodLabel, periodOf, reviewIdFor, type ReviewPeriod } from "./reviewService"
 import { dueWeekPeriod } from "./dueNowService"
 
 export function reminderPayload(p: ReviewPeriod): PushPayload {
@@ -25,13 +25,23 @@ export function reminderPayload(p: ReviewPeriod): PushPayload {
   }
 }
 
+/**
+ * The one-send key: the Monday of the local ISO week the reminder goes out in
+ * (Phase 6). The unique index on it allows one record per person per week, so
+ * moving the reminder day mid-week cannot send a second one. Matches the SQL in
+ * 20261109170000_plan_review_one_per_week.sql character for character.
+ */
+export function reminderEntryId(userId: string, localDay: string): string {
+  return `plan-review:${userId}:${periodOf("week", localDay).start}`
+}
+
 export async function runPlanReviewClock(now = new Date()): Promise<{ sent: number; skipped: number; failed: number }> {
   const result = { sent: 0, skipped: 0, failed: 0 }
   const rows = await remindersDueAsServer(200, now)
   for (const row of rows) {
     try {
       const p = dueWeekPeriod(row.local_day, row.review_day)
-      const entryId = `plan-review:${row.user_id}:${row.local_day}`
+      const entryId = reminderEntryId(row.user_id, row.local_day)
       if (await weekReviewWrittenAsServer(row.user_id, p.start)) {
         // Written already: a record with nothing sent, so the clock stops asking this week.
         const id = await openSend(row.user_id, "plan-review", now, entryId)

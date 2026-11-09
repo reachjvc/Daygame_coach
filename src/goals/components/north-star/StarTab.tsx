@@ -8,8 +8,10 @@
  * to write it.
  *
  * Under the box sits the work the paragraph is worthless without: why it
- * matters, who you would have to become, the values that person lives by, your
- * identity and your affirmations. They are here rather than in the review
+ * matters, who you would have to become, your identity and your affirmations.
+ * The values have their own step, 7 (R1 of Plans/life-plan-after-setup.md):
+ * the same two lists were asked here and there, so this screen points onward
+ * instead. They are here rather than in the review
  * because they belong to the vision, and because the reason is the thing you
  * re-read on a day you do not feel like any of it.
  *
@@ -33,6 +35,7 @@ import {
   NORTH_STAR_SCREEN,
   STAR_ANCHOR,
   STAR_PROMPTS,
+  STAR_VALUES_POINTER,
   STAR_WHY_ID,
   STAR_WORK_INTRO,
 } from "@/src/goals/data/northStar"
@@ -44,13 +47,12 @@ import {
   starWorkAnswered,
   starWorkTotal,
 } from "@/src/goals/northStarService"
-import { ValuesWork, type ValuesHandlers } from "./ValuesWork"
 import { SentenceBox } from "./SentenceBox"
 import { NorthStarHistory } from "./NorthStarHistory"
 
 /**
- * The prompts are laid out by hand rather than mapped, because the values list
- * sits between two of them. Looking one up by id keeps the copy in the data
+ * The prompts are laid out by hand rather than mapped, because other blocks sit
+ * between them. Looking one up by id keeps the copy in the data
  * file and fails loudly if a prompt is ever renamed out from under this file.
  */
 function starPrompt(id: string): NsReviewPrompt {
@@ -93,7 +95,6 @@ export function StarTab({
   onRung,
   onAnswer,
   onNewNorthStar,
-  valuesHandlers,
   onNext,
 }: {
   plan: NsPlan
@@ -103,7 +104,6 @@ export function StarTab({
   onHorizon: (years: number) => void
   onRung: (rungId: string, text: string) => void
   onAnswer: (promptId: string, text: string) => void
-  valuesHandlers: ValuesHandlers
   onNext: () => void
 }) {
   const [ladderOpen, setLadderOpen] = useState(false)
@@ -190,15 +190,9 @@ export function StarTab({
         <StarQuestion prompt={starPrompt(STAR_WHY_ID)} plan={plan} onAnswer={onAnswer} />
       </div>
 
-      {/* The values, between the purpose and the identity, because they are
-          derived from the paragraph ("once you know your vision you make the
-          list: what are the values I need to have to create that life") and
-          because the identity below is written out of them.
-          ONLY THE NOTICING HALF. Ordering them is on the review, once you have
-          rated your areas and written what each one asks of you: on this screen
-          you have a paragraph and nothing else, and ranking a list you are still
-          discovering is guessing. */}
-      <ValuesWork plan={plan} handlers={valuesHandlers} mode="elicit" />
+      {/* The values used to be written here as well as on step 7, the same two
+          lists twice. They live on step 7 only now; this line says where. */}
+      <p className="text-[11.5px] text-zinc-500 px-1" data-testid="star-values-pointer">{STAR_VALUES_POINTER}</p>
 
       {/* Who you are, how you show up, and only then the gap.
           The order and the reason for it are in STAR_PROMPTS' own comment: the

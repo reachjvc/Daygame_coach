@@ -834,10 +834,10 @@ describe("the work under the north star", () => {
     for (const p of STAR_PROMPTS) expect(reviewIds.has(p.id)).toBe(false)
   })
 
-  it("counts the card's own questions and the values list, and not the why", () => {
+  it("counts the card's own questions, and not the why or the values (step 7 since R1)", () => {
     const fresh = emptyNsPlan()
     expect(starWorkAnswered(fresh)).toBe(0)
-    expect(starWorkTotal()).toBe(STAR_PROMPTS.length)
+    expect(starWorkTotal()).toBe(STAR_PROMPTS.length - 1) // every star prompt but the why
 
     // The why is printed above the card that carries the count.
     let plan = setAnswer(fresh, "star_why", "So my kids see it done", NOW)
@@ -846,10 +846,10 @@ describe("the work under the north star", () => {
     plan = setAnswer(plan, "affirmations", "I am someone who finishes", NOW)
     expect(starWorkAnswered(plan)).toBe(1)
 
-    // Whitespace is not an answer, and the values list is worth one.
+    // Whitespace is not an answer, and the values list is no longer on this screen.
     plan = setAnswer(plan, "become", "   ", NOW)
     expect(starWorkAnswered(plan)).toBe(1)
-    expect(starWorkAnswered(setValues(plan, ["Freedom"], NOW))).toBe(2)
+    expect(starWorkAnswered(setValues(plan, ["Freedom"], NOW))).toBe(1)
   })
 
   it("reads back under the paragraph", () => {

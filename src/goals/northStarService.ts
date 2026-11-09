@@ -1422,22 +1422,25 @@ export function rungsAnswered(plan: NsPlan): number {
  * the card it is printed on is a count nobody can reconcile.
  */
 export function starWorkAnswered(plan: NsPlan): number {
-  const written = starWorkPrompts().filter((p) => answerOf(plan, p.id).trim().length > 0).length
-  return written + (plan.values.length > 0 ? 1 : 0)
+  return starWorkPrompts().filter((p) => answerOf(plan, p.id).trim().length > 0).length
 }
 
-/** The questions in that card, plus the values list. */
+/**
+ * The questions in that card. The values list was counted too while step 1
+ * asked for it; it lives on step 7 only since R1 (Plans/life-plan-after-setup.md,
+ * Phase 6), and a count must not include what the screen does not show.
+ */
 export function starWorkTotal(): number {
-  return starWorkPrompts().length + 1
+  return starWorkPrompts().length
 }
 
 function starWorkPrompts() {
   return STAR_PROMPTS.filter((p) => p.id !== STAR_WHY_ID)
 }
 
-/** Anything at all written under the paragraph, the why included. */
+/** Anything at all written under the paragraph, the why included. Values are step 7's (R1). */
 export function starWorkWritten(plan: NsPlan): boolean {
-  return plan.values.length > 0 || STAR_PROMPTS.some((p) => answerOf(plan, p.id).trim().length > 0)
+  return STAR_PROMPTS.some((p) => answerOf(plan, p.id).trim().length > 0)
 }
 
 // -------------------------------------------------------------------- areas

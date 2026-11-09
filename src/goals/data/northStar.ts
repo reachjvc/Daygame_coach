@@ -997,7 +997,7 @@ export const NORTH_STAR_REREAD =
  */
 export const STAR_WORK_INTRO = {
   title: "Under the paragraph",
-  help: "The paragraph is what you want. This is why it matters, who you would have to be to hold it, and what would have to matter to you. Answer what you can today and come back to the rest.",
+  help: "The paragraph is what you want. This is why it matters, and who you would have to be to hold it. Answer what you can today and come back to the rest.",
 }
 
 /**
@@ -1115,6 +1115,13 @@ export const STAR_PROMPTS: NsReviewPrompt[] = [
 // feeling is not refused; it earns one follow-up question, because "our values
 // are just emotions" and "family" or "money" is the means to one.
 
+/**
+ * Step 1's one line about values (R1 of Plans/life-plan-after-setup.md). The
+ * two lists were asked on step 1 and again on step 7; they live on step 7 only
+ * since 2026-11-09, and step 1 says where they went.
+ */
+export const STAR_VALUES_POINTER = "Your values come later, on step 7, Values & identity."
+
 export const VALUES_INTRO = {
   title: "What matters to you",
   help: "A value is what you fall back on when two things you want will not both fit in the same day. Two lists: what has actually been driving you so far, then what that paragraph would need. They are rarely the same, and the difference is the point. You put them in order later, on the review, once you have seen where you stand.",
@@ -1224,7 +1231,7 @@ export const VALUES_ORDER = {
   /** Under the list. Says the drag exists and how to do it without a mouse. */
   dragNote: "Drag any value to move it. Keyboard: tab to a value, space to lift it, arrows to move, space to drop.",
   /** Shown when the ordering half has no list to work on yet. */
-  empty: "Nothing to order yet. Write your values on the north star tab first, and the values each area asks for as you rate them.",
+  empty: "Nothing to order yet. Write your values in the two lists first (step 7), and the values each area asks for as you rate them.",
   /** Above the list, naming where the pool came from. */
   pooled: "Everything you have written: the whole-life list, plus the values each area and each goal asked for.",
   pull: "add the ones I wrote per area",

@@ -104,6 +104,8 @@ describe("the circles on the rail", () => {
     }
     const partial = setNorthStar(emptyNsPlan(), "Something", NOW)
     expect(stepState(partial, "star")).toBe("started")
+    // Values are written on step 7 (R1), so on their own they do not start step 1.
+    expect(stepState(setValues(emptyNsPlan(), ["Freedom"], NOW), "star")).toBe("empty")
     // A saved sentence and nothing under it: started, never done.
     expect(stepState(partial, "one", SAVED)).toBe("started")
   })

@@ -93,7 +93,7 @@ import { AreaGoalsDialog } from "./AreaGoalsDialog"
 import { ReviewTab } from "./ReviewTab"
 import { PeriodReviewTab } from "./PeriodReviewTab"
 import { appendToReview, rateArea, removeReview, reviewIdFor, writeReview, type ReviewPeriod } from "@/src/goals/reviewService"
-import { DEFAULT_REVIEW_DAY, dueNow, nextSetupStep, type DueCard } from "@/src/goals/dueNowService"
+import { DEFAULT_REVIEW_DAY, REMINDER_WAIT_MS, dueNow, nextSetupStep, type DueCard } from "@/src/goals/dueNowService"
 import type { Reminder } from "@/src/db/lifePlanRemindersRepo"
 import { DueNow } from "@/src/goals/components/north-star/DueNow"
 import { COMMIT_DATE_KEY } from "@/src/goals/data/northStarStart"
@@ -224,6 +224,13 @@ export function NorthStarFlow({
   const railToggleRef = useRef<HTMLButtonElement>(null)
   /** The weekly review reminder's settings, read once the account has answered (Phase 5). */
   const [reminder, setReminder] = useState<(Reminder & { hasEnabledDevice: boolean }) | null>(null)
+  /**
+   * Whether the reminder's day is known: loaded, known to be missing, or given
+   * up on. Review picks its week from that day, once, when it opens; opened
+   * before this, it picked the default day's week (Sunday) and kept it
+   * (Phase 6 of Plans/life-plan-after-setup.md).
+   */
+  const [reminderSettled, setReminderSettled] = useState(false)
   /** The Due now cards hidden with "Not now", per account, in this browser. */
   const [hiddenDue, setHiddenDue] = useState<ReadonlySet<string>>(new Set())
   useEffect(() => {
@@ -305,10 +312,14 @@ export function NorthStarFlow({
   useEffect(() => {
     if (!decided) return
     let cancelled = false
+    // Settled on any answer, a failure, or after REMINDER_WAIT_MS, so a slow or failed fetch never holds Review back.
+    const settle = () => { if (!cancelled) setReminderSettled(true) }
+    const wait = window.setTimeout(settle, REMINDER_WAIT_MS)
     fetch("/api/life-plan/reminders")
       .then(async (res) => { if (res.ok && !cancelled) setReminder((await res.json()) as Reminder & { hasEnabledDevice: boolean }) })
       .catch(() => { /* no reminder block: the review still works */ })
-    return () => { cancelled = true }
+      .finally(() => { window.clearTimeout(wait); settle() })
+    return () => { cancelled = true; window.clearTimeout(wait) }
   }, [decided])
   /**
    * The rows last accepted by the server, as text.
@@ -1868,7 +1879,6 @@ export function NorthStarFlow({
           <StarTab
             plan={plan}
             {...starHandlers}
-            valuesHandlers={valuesHandlers}
             onNext={() => setTab("now")}
           />
         ) : tab === "now" ? (
@@ -2122,7 +2132,7 @@ export function NorthStarFlow({
              NOT BEFORE THE ACCOUNT HAS ANSWERED. Its plan lands whole a
              moment after the page opens, and a review written in that moment
              was replaced by it and lost (found by the browser test). */
-          decision !== null && today ? (
+          decision !== null && today && (reminderSettled || reviewPeriod !== null) ? (
             <PeriodReviewTab
               key={reviewPeriod ? reviewIdFor(reviewPeriod) : "now"}
               initialPeriod={reviewPeriod ?? (dueWeek && "period" in dueWeek.go ? dueWeek.go.period ?? null : null)}

@@ -19,6 +19,12 @@ import { DUE_COPY, BUILD_STEPS, SCORED_TABS, TAB_LABELS, TAB_ORDER } from "./dat
 
 export const DEFAULT_REVIEW_DAY = 7 // ISO weekday, 7 = Sunday (Q2: the app's pick, not Stefan's)
 export const DUE_MAX = 3
+/**
+ * How long Review waits for the reminder's day before picking its week from the
+ * default day (Phase 6). Long enough for a normal answer, short enough that a
+ * hung request does not keep the step closed.
+ */
+export const REMINDER_WAIT_MS = 2000
 export type DueKind = "finish-setup" | "season-ended" | "season-ending" | "new-year" | "year" | "quarter" | "month" | "week" | "goals-passed"
 export type DueGo = { tab: NorthStarTabId; period?: ReviewPeriod } | { goalId: string }
 /** `key` names this card for this period; "Not now" hides that key, and the next period has a new one. */
