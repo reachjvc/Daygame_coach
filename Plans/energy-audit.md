@@ -3,8 +3,8 @@
 Written 2026-11-08. Built from the owner's marks and notes on the research page "Dread or Delight"
 (https://claude.ai/artifact/V28AzK4axgj7yaczaU9Y4n, marks database collection `marks`), six read-only
 research reports (code, live database, sources) and a four-reviewer attack on the first draft (8 blockers
-and about 30 other problems found and fixed, 2026-11-08). Status: **not started.**
-Notes since 2026-11-08 20:00 UTC: none yet. Look page: not made yet (Phase 4 makes it).
+and about 30 other problems found and fixed, 2026-11-08). Status: **Phases 0-3 in progress (2026-11-09).**
+Notes since 2026-11-08 20:00 UTC: none (marks read 2026-11-09: 19 documents, the newest written 2026-11-08 18:43 UTC, so no decision changed). Look page: not made yet (Phase 4 makes it).
 
 Format: owner answers first, then Part 1 in plain words, then DECISIONS, BLOCKERS, THE PIECES, PHASES,
 Part 2 (ground rules for the executing session) and the `/goal` prompts at the end. The executing session
@@ -482,6 +482,14 @@ confirmed". Phase 0: "Ground truth recorded <date>".
 
 **Done when:** the status line under this phase lists the signatures, cron jobs, row counts, test
 baseline and toggl-parity count.
+
+**Status:** Ground truth recorded 2026-11-09.
+- Live functions with `thought` in the name: `thought_counts(p_tz text, p_now timestamptz, p_user uuid)`, `merge_thought(p_from uuid, p_into uuid)`, `claim_due_thought_prompts(p_now timestamptz, p_lease interval, p_limit integer)`, `thought_frequency_stats(p_tz text, p_now timestamptz)`.
+- Live cron jobs: 1 `prune-error-reports` (20 3 * * *), 2 `thoughts-clock` (* * * * *), 3 `prune-cron-history` (40 3 * * *).
+- Live row counts: thoughts 10, thought_logs 11, thought_reframes 0, thought_settings 1, thought_prompt_schedule 1. `notification_sends`: thought-prompt 524, timetrack-running 9, test 1.
+- `net._http_response`: 23 rows, all status 200. Cron runs in the last 5 minutes: all succeeded. Live and local migrations in sync (newest 20261105190000).
+- Test baseline on `main` (at 42c43f56, in the worktree): `npx vitest run` 539 files passed, 6487 tests passed, 1 skipped. `node scripts/db/test-stack.mjs env` works.
+- toggl-parity: 25 commits not on `main` (B-PEER still applies).
 
 ## Phase 1 — Lift the shared parts out of Thoughts (no behaviour change) · M
 

@@ -8,7 +8,6 @@ import { describe, expect, it } from "vitest"
 import { deviceLabel, isAllowedPushEndpoint, readSubscription, timerOnByDefault } from "@/src/notifications/endpoints"
 import { bearerMatches } from "@/src/notifications/clockAuth"
 import { outcomeOf } from "@/src/notifications/pushService"
-import { promptPayload, promptUrl, PROMPT_BODY, PROMPT_TITLE } from "@/src/thoughts/promptService"
 
 describe("which addresses the server will send to", () => {
   it.each([
@@ -88,30 +87,5 @@ describe("the clock's secret", () => {
 
   it("never lets anything in when no secret is stored", () => {
     expect(bearerMatches("Bearer ", "")).toBe(false)
-  })
-})
-
-describe("the reminder itself", () => {
-  const id = "6f1c2a8e-1b2c-4d3e-8f4a-5b6c7d8e9f00"
-
-  it("is generic and opens the quick-log sheet for that reminder", () => {
-    const p = promptPayload(id, [])
-    expect(p).toMatchObject({ title: PROMPT_TITLE, body: PROMPT_BODY, tag: "thought-prompt", promptId: id, actions: [] })
-    expect(p.url).toBe(`/thoughts?log=1&prompt=${id}`)
-    expect(promptUrl(null)).toBe("/thoughts?log=1")
-  })
-
-  it("carries at most two thoughts as buttons, shortened, only when asked for", () => {
-    const long = "I am so far behind everyone else that I will never catch up"
-    const p = promptPayload(id, [
-      { id: "a", text: "I am bad" },
-      { id: "b", text: long },
-      { id: "c", text: "third" },
-    ])
-    expect(p.actions?.map((a) => a.id)).toEqual(["a", "b"])
-    expect(p.actions?.[1].title.length).toBe(40)
-    expect(p.actions?.[1].title.endsWith("…")).toBe(true)
-    // The body never names a thought, buttons or not.
-    expect(p.body).toBe(PROMPT_BODY)
   })
 })

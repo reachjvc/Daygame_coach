@@ -17,7 +17,6 @@
  */
 
 import { forgetThisDevice, forgetTimerOnThisDevice } from "@/src/notifications/pushClient"
-import { forgetThoughtsOnThisDevice } from "@/src/thoughts/logQueue"
 import { forgetTimeTrackerOnThisDevice } from "@/src/timetrack/browserOwner"
 import { unsentTrackerChanges } from "@/src/timetrack/hooks/useTimetrackSync"
 
@@ -29,17 +28,17 @@ export const LIVE_REST_KEY = "live-workout-rest-v1"
 const SHELL_STORE_PREFIX = "app-shell-"
 
 /**
- * TWO MORE THINGS GO AT SIGN-OUT SINCE THOUGHT FREQUENCIES (2026-10-30):
- * this browser stops receiving the person's reminders (its push address is
- * removed on the server, which needs the session that is about to end, so it
- * goes first), and any thought taps still waiting for signal are dropped, with
- * the page's offline copy of the thoughts — unlike the workout's queued sets,
- * those hold the text of what somebody thought, and a shared phone must not
- * keep it.
+ * TWO MORE THINGS GO AT SIGN-OUT: this browser stops receiving the person's
+ * pings (its push address is removed on the server, which needs the session
+ * that is about to end, so it goes first), and the old Thoughts queue and page
+ * copy are wiped. Thoughts was deleted on 2026-11-08 (Plans/energy-audit.md),
+ * but a phone may still hold text it kept: the two keys below are removed at
+ * every sign-out, for good, because that text is somebody's thoughts and a
+ * shared phone must not keep it.
  *
  * AND THE RUNNING TIMER (time tracker, Phase 7): its notification names what
  * the person is doing, and a Stop waiting for signal names it too; both go,
- * for the same reason as the thought taps.
+ * for the same reason.
  */
 /**
  * AND THE TIME TRACKER, WHOLE (2026-11-04). Its workspace, unsent queue, drafts
@@ -76,7 +75,12 @@ export async function forgetOfflineCopies({ keepUnsentTime = false }: { keepUnse
   if (!(keepUnsentTime && unsentTrackerChanges() > 0)) forgetTimeTrackerOnThisDevice()
   await forgetThisDevice()
   await forgetTimerOnThisDevice()
-  forgetThoughtsOnThisDevice()
+  try {
+    window.localStorage.removeItem("thoughts-queue-v1")
+    window.localStorage.removeItem("thoughts-view-v1")
+  } catch {
+    // Storage blocked: nothing was kept there to forget.
+  }
   try {
     window.localStorage.removeItem(LIVE_COPY_KEY)
     window.localStorage.removeItem(LIVE_REST_KEY)

@@ -190,7 +190,8 @@ Re-check before relying on them.
     rows, not an account. Account deletion and export are legal requirements the
     day there are users, and they are **the same work on any host** — the move in
     item 36 does not deliver them. "Fully legal" is not yet an item on this file;
-    the owner may want to add one.
+    the owner may want to add one. *2026-11-08: Thoughts deleted at the owner's
+    request; notifications now serve Time and the time & energy audit.*
 
 44. **Achievements: two systems, neither derived from Life Mastery.**
     `src/tracking/achievementsService.ts` computes badges from approach and

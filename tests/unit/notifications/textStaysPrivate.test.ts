@@ -1,10 +1,11 @@
 // @vitest-environment node
 /**
- * A THOUGHT'S TEXT NEVER REACHES A LOG OR A CRASH REPORT (Plans/thought.md,
- * Phase 9 step 5). These are the most private words in the app.
+ * WHAT SOMEBODY TYPED NEVER REACHES A LOG OR A CRASH REPORT (Plans/thought.md,
+ * Phase 9 step 5; now guarding the notifications code, and the audit's code
+ * once Phase 4 adds it). These are among the most private words in the app.
  *
  * Two doors, two checks:
- *   1. SERVER LOGS. Every log line in the thoughts and notifications code is a
+ *   1. SERVER LOGS. Every log line in the notifications code is a
  *      fixed tag plus an Error's message or a status code, nothing else. A
  *      Postgres error's `message` names the rule that was broken; its
  *      `details` and `hint` carry the row itself ("Failing row contains (…,
@@ -33,11 +34,8 @@ function files(dir: string): string[] {
 }
 
 const SERVER_CODE = [
-  "src/db/thoughtsRepo.ts",
   "src/db/notificationsRepo.ts",
-  "src/thoughts",
   "src/notifications",
-  "app/api/thoughts",
   "app/api/notifications",
 ].flatMap(files)
 
@@ -59,12 +57,18 @@ function consoleCalls(source: string): string[] {
 }
 
 /** A fixed tag, then an Error's message (or "unknown"), a status code, or nothing. */
+/** Measured 2026-11-08: 9 console calls in 12 files. The floor sits just under. */
+const CALLS_FLOOR = 6
+
 const ALLOWED_LOG = /^"\[[a-z ]+\][^"]*"(, (error|e) instanceof Error \? (error|e)\.message : "unknown"|, \(error as \{ statusCode\?: number \}\)\.statusCode \?\? "no answer")?$/
 
 describe("server logs", () => {
   it("finds the code it guards", () => {
-    expect(SERVER_CODE.length).toBeGreaterThan(15)
-    expect(SERVER_CODE.flatMap((f) => consoleCalls(fs.readFileSync(path.join(ROOT, f), "utf8"))).length).toBeGreaterThan(15)
+    // Measured 2026-11-08 after Thoughts was deleted: 12 files. Raise as the audit's paths are added.
+    expect(SERVER_CODE.length).toBeGreaterThan(8)
+    const calls = SERVER_CODE.flatMap((f) => consoleCalls(fs.readFileSync(path.join(ROOT, f), "utf8"))).length
+    // Measured at the same time; see the count printed on failure.
+    expect(calls).toBeGreaterThan(CALLS_FLOOR)
   })
 
   it("logs only a fixed tag and an error's message or status, never data", () => {

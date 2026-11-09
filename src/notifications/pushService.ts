@@ -57,7 +57,7 @@ export interface PushPayload {
   silent?: boolean
   /** Ring again when it replaces one with the same tag. Left out: the worker's default, which does. */
   renotify?: boolean
-  /** "timetrack-running": the worker's Stop button and tap go to the timer, not to Thoughts. */
+  /** "timetrack-running": the worker's Stop button and tap go to the timer, not to the audit. */
   kind?: "timetrack-running"
   /** The time entry a timer notification is about, for its Stop button. */
   entryId?: string
@@ -65,14 +65,14 @@ export interface PushPayload {
   name?: string
 }
 
-/** Which devices a kind goes to: reminders to the reminder switch, the timer to the timer switch. */
+/** Which devices a kind goes to: pings to the ping switch, the timer to the timer switch. */
 function isTimerKind(kind: SendKind): boolean {
   return kind === "timetrack-running" || kind === "timetrack-alert"
 }
 
 function topicOf(kind: SendKind): string {
   if (isTimerKind(kind)) return "timer-running"
-  return kind === "test" ? "test" : "thought-prompt"
+  return kind
 }
 
 export class PushNotConfigured extends Error {

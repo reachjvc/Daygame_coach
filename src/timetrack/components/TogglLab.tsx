@@ -713,7 +713,7 @@ export function TogglLab({
   /**
    * THE WAY OUT RETURNS TO WHERE YOU CAME FROM (D9).
    *
-   * "← Dashboard" was written in by hand, so coming from Thoughts it went to the
+   * "← Dashboard" was written in by hand, so coming from Settings it went to the
    * Dashboard (getting-around #4). Where the browser can list this tab's history
    * (`pageBeforeTracker`), the control names that page and steps back to it,
    * past every section visited in between; otherwise it is the fixed link it

@@ -67,19 +67,19 @@ afterEach(() => {
 })
 
 describe("rule 1 — every push shows a notification", () => {
-  test("a reminder is shown with its text, its tag and where it opens", async () => {
+  test("a notification is shown with its text, its tag and where it opens", async () => {
     const w = await loadWorker()
-    await w.dispatch("push", pushOf({ title: "What's on your mind?", body: "Tap to log.", url: "/thoughts?log=1&prompt=p1", tag: "thought-prompt", promptId: "p1" }))
+    await w.dispatch("push", pushOf({ title: "Test notification", body: "Pings will look like this.", url: "/settings", tag: "test" }))
     expect(w.shown).toHaveLength(1)
-    expect(w.shown[0].title).toBe("What's on your mind?")
-    expect(w.shown[0].options).toMatchObject({ tag: "thought-prompt", renotify: true, data: { url: `${ORIGIN}/thoughts?log=1&prompt=p1`, promptId: "p1" } })
+    expect(w.shown[0].title).toBe("Test notification")
+    expect(w.shown[0].options).toMatchObject({ tag: "test", renotify: true, data: { url: `${ORIGIN}/settings`, kind: null, slotAt: null, sendId: null } })
   })
 
-  test("a push with no readable payload still shows the generic reminder", async () => {
+  test("a push with no readable payload still shows the generic notification", async () => {
     const w = await loadWorker()
     await w.dispatch("push", { data: { json: () => { throw new Error("not json") } } })
-    expect(w.shown[0].title).toBe("What's on your mind?")
-    expect(w.shown[0].options.tag).toBe("thought-prompt")
+    expect(w.shown[0].title).toBe("Time & energy audit")
+    expect(w.shown[0].options.tag).toBe("audit-ping")
   })
 })
 
@@ -87,55 +87,20 @@ describe("rule 4 — a tap opens the app, only ever on this site", () => {
   test("an open window is brought forward and sent to the reminder's sheet", async () => {
     const w = await loadWorker()
     w.addWindow(`${ORIGIN}/dashboard`)
-    await w.dispatch("notificationclick", { action: "", notification: { data: { url: `${ORIGIN}/thoughts?log=1&prompt=p1` }, close: vi.fn() } })
-    expect(w.navigated).toEqual([`${ORIGIN}/thoughts?log=1&prompt=p1`])
+    await w.dispatch("notificationclick", { action: "", notification: { data: { url: `${ORIGIN}/settings?p=1` }, close: vi.fn() } })
+    expect(w.navigated).toEqual([`${ORIGIN}/settings?p=1`])
     expect(w.opened).toEqual([])
   })
 
   test("with no window open, one is opened", async () => {
     const w = await loadWorker()
-    await w.dispatch("notificationclick", { action: "", notification: { data: { url: `${ORIGIN}/thoughts?log=1` }, close: vi.fn() } })
-    expect(w.opened).toEqual([`${ORIGIN}/thoughts?log=1`])
+    await w.dispatch("notificationclick", { action: "", notification: { data: { url: `${ORIGIN}/settings` }, close: vi.fn() } })
+    expect(w.opened).toEqual([`${ORIGIN}/settings`])
   })
 
   test("an address on another site is never opened", async () => {
     const w = await loadWorker()
     await w.dispatch("push", pushOf({ url: "https://evil.example/phish" }))
-    expect(w.shown[0].options.data).toMatchObject({ url: `${ORIGIN}/thoughts?log=1` })
-  })
-})
-
-describe("a thought button on the notification", () => {
-  test("logs that thought from the worker, answering the reminder, and confirms", async () => {
-    const w = await loadWorker()
-    await w.dispatch("notificationclick", {
-      action: "t1",
-      notification: { data: { url: `${ORIGIN}/thoughts?log=1`, promptId: "p1", labels: { t1: "I am bad" } }, close: vi.fn() },
-    })
-    expect(w.fetchMock).toHaveBeenCalledTimes(1)
-    const [url, init] = w.fetchMock.mock.calls[0] as unknown as [string, RequestInit]
-    expect(url).toBe("/api/thoughts/logs")
-    expect(JSON.parse(String(init.body))).toEqual({
-      logs: [{ id: "11111111-2222-4333-8444-555555555555", thoughtId: "t1", at: expect.any(String), source: "prompt-action", promptId: "p1" }],
-    })
-    expect(w.shown.map((n) => [n.title, n.options.body])).toEqual([["Logged", "I am bad"]])
-  })
-
-  test("says so when it could not log, and offers the app", async () => {
-    const w = await loadWorker()
-    w.fetchMock.mockResolvedValueOnce(new Response("{}", { status: 401 }))
-    await w.dispatch("notificationclick", {
-      action: "t1",
-      notification: { data: { promptId: "p1", labels: { t1: "I am bad" } }, close: vi.fn() },
-    })
-    expect(w.shown[0].title).toBe("Not logged")
-    expect(w.shown[0].options.data).toMatchObject({ url: `${ORIGIN}/thoughts?log=1&prompt=p1` })
-  })
-
-  test("an action the notification did not offer is treated as a plain tap", async () => {
-    const w = await loadWorker()
-    await w.dispatch("notificationclick", { action: "forged", notification: { data: { labels: {} }, close: vi.fn() } })
-    expect(w.fetchMock).not.toHaveBeenCalled()
-    expect(w.opened).toEqual([`${ORIGIN}/thoughts?log=1`])
+    expect(w.shown[0].options.data).toMatchObject({ url: `${ORIGIN}/settings` })
   })
 })

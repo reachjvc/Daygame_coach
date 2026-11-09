@@ -35,8 +35,7 @@ const SERVER_ONLY: Record<string, string> = {
   embeddings_test: "pipeline scratch table for embedding experiments",
   error_reports: "crash reports, written by the server's error route",
   push_devices:
-    "notification addresses the server POSTs to; a client-written row would let anyone make the server call any URL (20261030120000_thought_frequencies.sql)",
-  thought_prompt_schedule: "when the next thoughts reminder is due; computed and claimed only by the server's clock",
+    "notification addresses the server POSTs to; a client-written row would let anyone make the server call any URL (20261030120000_thought_frequencies.sql, created with Thoughts, kept by 20261106 thoughts_out)",
   waitlist_emails: "sign-ups for the waitlist, written by the server",
 }
 

@@ -3,8 +3,8 @@
  * THE TRACKER'S BACK CONTROL RETURNS TO THE PAGE YOU CAME FROM, AND ON THE PC
  * THE APP'S OWN HEADER TAKES THE PLACE OF THE TRACKER'S TOP ROW.
  *
- * "← Dashboard" was written into the tracker by hand, so coming from Thoughts
- * it sent you to the Dashboard, not back to Thoughts (getting-around #4,
+ * "← Dashboard" was written into the tracker by hand, so coming from Settings
+ * it sent you to the Dashboard, not back to Settings (getting-around #4,
  * design rule D9 in Plans/time-tracker-like-toggl.md). Now it steps back past
  * every section you visited inside the tracker, to the page before it, and
  * says that page's name. When there is no such page to step back to — opened
@@ -69,22 +69,22 @@ afterEach(() => {
 })
 
 describe("the back control", () => {
-  test("coming from Thoughts, it says Thoughts and goes back there", async () => {
-    visited([ROUTES.dashboard, ROUTES.thoughts, ROUTES.time])
+  test("coming from Settings, it says Settings and goes back there", async () => {
+    visited([ROUTES.dashboard, ROUTES.settings, ROUTES.time])
     const go = vi.spyOn(window.history, "go").mockImplementation(() => {})
     await mount(<TimetrackScreen account="user-1" />)
 
-    await waitFor(() => expect(backControl().textContent).toContain("Thoughts"))
+    await waitFor(() => expect(backControl().textContent).toContain("Settings"))
     fireEvent.click(backControl())
     expect(go).toHaveBeenCalledWith(-1)
   })
 
   test("after visiting sections inside the tracker, one tap still leaves it", async () => {
-    visited([ROUTES.thoughts, ROUTES.time, `${ROUTES.time}?view=calendar`, `${ROUTES.time}?view=reports`])
+    visited([ROUTES.settings, ROUTES.time, `${ROUTES.time}?view=calendar`, `${ROUTES.time}?view=reports`])
     const go = vi.spyOn(window.history, "go").mockImplementation(() => {})
     await mount(<TimetrackScreen account="user-1" />, `${ROUTES.time}?view=reports`)
 
-    await waitFor(() => expect(backControl().textContent).toContain("Thoughts"))
+    await waitFor(() => expect(backControl().textContent).toContain("Settings"))
     fireEvent.click(backControl())
     expect(go).toHaveBeenCalledWith(-3)
   })

@@ -1,3 +1,5 @@
+Retired 2026-11-08: replaced by Plans/energy-audit.md
+
 # Thought Frequencies: catch the thoughts that keep coming back, then reframe them
 
 **Status:** built and live 2026-10-30 (Phases 0–9, Phase 10 except the owner's own phone day). Waiting on

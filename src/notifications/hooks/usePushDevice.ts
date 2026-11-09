@@ -8,7 +8,7 @@
  * address (a browser can replace it silently), keeping whether it is on. That
  * is the backstop for every way an address can change without telling us.
  *
- * TWO SWITCHES PER DEVICE: `enabled` (Thought Frequencies reminders) and
+ * TWO SWITCHES PER DEVICE: `enabled` (audit pings) and
  * `timerRunning` ("Show the running timer on this device", the time tracker's,
  * Plans/time-tracker-like-toggl.md Phase 7). `setTimer` is the second one; it
  * asks for permission and registers the device itself when it has to, without

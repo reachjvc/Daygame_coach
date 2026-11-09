@@ -132,10 +132,10 @@ describe("who the running timer reaches", () => {
     expect(await sendsOf(user.id)).toEqual([])
   })
 
-  it("Thought Frequencies reminders still reach only their own devices", async () => {
+  it("ping-switch notifications still reach only their own devices", async () => {
     const { user, endpoints } = await personWithDevices("timer-thoughts-apart")
 
-    await sendToPerson(user.id, "test", () => ({ title: "Reminders are on", body: "x", url: "/thoughts?log=1", tag: "thought-prompt" }))
+    await sendToPerson(user.id, "test", () => ({ title: "Test notification", body: "x", url: "/settings", tag: "test" }))
 
     expect(sent.map((s) => s.endpoint).sort()).toEqual([endpoints.phone, endpoints.pc].sort())
   })

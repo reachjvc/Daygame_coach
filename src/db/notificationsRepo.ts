@@ -1,11 +1,10 @@
 /**
  * NOTIFICATIONS THAT REACH A PHONE WITH THE APP CLOSED — the server's side.
  *
- * Shared plumbing (Plans/thought.md, R7): Thought Frequencies is the first
- * user, the time tracker and the gym's rest timer are meant to be next.
+ * Shared plumbing (Plans/thought.md, R7, now serving Time and the time &
+ * energy audit, Plans/energy-audit.md).
  *
- * EVERYTHING HERE RUNS AS THE SERVICE ROLE. `push_devices` and
- * `thought_prompt_schedule` have no client policy at all, on purpose: the
+ * EVERYTHING HERE RUNS AS THE SERVICE ROLE. `push_devices` has no client policy at all, on purpose: the
  * server POSTs to whatever address a device row holds, so a row written
  * straight from a browser would let anyone make the server call any URL.
  * Every function that acts for a person takes their id from the caller's
@@ -15,7 +14,7 @@
  * and states, never the endpoint or its keys: the address works like a
  * password for sending to that device.
  *
- * TWO SWITCHES PER DEVICE. `enabled` is Thought Frequencies' "reminders on
+ * TWO SWITCHES PER DEVICE. `enabled` is "audit pings on
  * this device"; `timer_running` is the time tracker's "Show the running timer
  * on this device" (Plans/time-tracker-like-toggl.md, Phase 7). They are
  * separate choices, so a function that writes one never touches the other.
@@ -246,7 +245,7 @@ export async function recordDeviceOutcome(deviceId: string, outcome: "ok" | "gon
  * notification, 'timetrack-alert' the one alert with sound at 6 h. Kept in
  * step with the database's `notification_sends_kind_check`.
  */
-export type SendKind = "thought-prompt" | "test" | "timetrack-running" | "timetrack-alert"
+export type SendKind = "test" | "timetrack-running" | "timetrack-alert"
 
 /**
  * Open a send's row before sending, so its id can travel in the notification.
@@ -302,57 +301,6 @@ export async function timerAlertsDueAsServer(limit = 200): Promise<RunningTimerA
 export async function closeSend(sendId: string, counts: { devices: number; delivered: number; removed: number }): Promise<void> {
   const { error } = await createAdminSupabaseClient().from("notification_sends").update(counts).eq("id", sendId)
   if (error) throw new Error(`Failed to record a reminder's outcome: ${error.message}`)
-}
-
-// ---------------------------------------------------------------------------
-// THE THOUGHTS REMINDER SCHEDULE. Here rather than in thoughtsRepo because it
-// is server-only, like everything else in this file.
-// ---------------------------------------------------------------------------
-
-export interface PromptSchedule {
-  nextDueAt: string | null
-  lastSentAt: string | null
-}
-
-export async function readPromptSchedule(userId: string): Promise<PromptSchedule> {
-  const { data, error } = await createAdminSupabaseClient()
-    .from("thought_prompt_schedule")
-    .select("next_due_at, last_sent_at")
-    .eq("user_id", userId)
-    .maybeSingle()
-  if (error) throw new Error(`Failed to read the reminder schedule: ${error.message}`)
-  const row = data as { next_due_at: string | null; last_sent_at: string | null } | null
-  return {
-    nextDueAt: row?.next_due_at ? new Date(row.next_due_at).toISOString() : null,
-    lastSentAt: row?.last_sent_at ? new Date(row.last_sent_at).toISOString() : null,
-  }
-}
-
-/** Write the next due time; `sentAt` also records that a reminder just went out. */
-export async function writePromptSchedule(userId: string, nextDueAt: Date | null, sentAt?: Date): Promise<void> {
-  const row: Record<string, unknown> = {
-    user_id: userId,
-    next_due_at: nextDueAt === null ? null : nextDueAt.toISOString(),
-    updated_at: new Date().toISOString(),
-  }
-  if (sentAt) row.last_sent_at = sentAt.toISOString()
-  const { error } = await createAdminSupabaseClient().from("thought_prompt_schedule").upsert(row, { onConflict: "user_id" })
-  if (error) throw new Error(`Failed to write the reminder schedule: ${error.message}`)
-}
-
-/**
- * Take every reminder due at `now`, each by exactly one caller
- * (`claim_due_thought_prompts`). A taken row is not due again for `leaseSeconds`
- * unless the sender writes its real next time first.
- */
-export async function claimDuePrompts(now: Date, leaseSeconds: number, limit: number): Promise<{ userId: string; dueAt: string }[]> {
-  const { data, error } = await createAdminSupabaseClient().rpc("claim_due_thought_prompts", {
-    p_now: now.toISOString(),
-    p_lease: `${leaseSeconds} seconds`,
-    p_limit: limit,
-  })
-  if (error) throw new Error(`Failed to claim due reminders: ${error.message}`)
-  return ((data ?? []) as { user_id: string; due_at: string }[]).map((r) => ({ userId: r.user_id, dueAt: r.due_at }))
 }
 
 /** The account's timezone, for the clock (which has no session to ask `settingsRepo` with). */

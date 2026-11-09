@@ -90,10 +90,6 @@ const SHELL_PATHS = [
   // page in place of the sets (Plans/program-builder.md, Q21). Its sets queue
   // in localStorage and are put back on screen from there; this keeps the page.
   "/training/live",
-  // Thought Frequencies (Plans/thought.md, Q13). A reminder arrives on a
-  // train and the tap that answers it is the whole point: the taps queue on
-  // the phone and the page draws the last copy of your thoughts it kept.
-  "/thoughts",
 ]
 
 /** Is this one of them? */
@@ -263,8 +259,8 @@ const TIMER_TAG = "timer-running"
 const TIMER_URL = "/time?view=timer"
 const STOP_SYNC_TAG = "timetrack-stop"
 
-/** A page on this site, or `fallback` (the thoughts page) when the payload names anything else. */
-function sameSiteUrl(raw, fallback = "/thoughts?log=1") {
+/** A page on this site, or `fallback` (the settings page) when the payload names anything else. */
+function sameSiteUrl(raw, fallback = "/settings") {
   try {
     const url = new URL(raw || fallback, self.location.origin)
     if (url.origin === self.location.origin) return url.href
@@ -283,9 +279,9 @@ self.addEventListener("push", (event) => {
   }
   const timer = data.kind === TIMER_KIND
   const actions = Array.isArray(data.actions) ? data.actions.slice(0, 2) : []
-  const shown = self.registration.showNotification(data.title || (timer ? "Timer" : "What's on your mind?"), {
-    body: data.body || (timer ? "Time tracker" : "Tap to log your last thought."),
-    tag: data.tag || (timer ? TIMER_TAG : "thought-prompt"),
+  const shown = self.registration.showNotification(data.title || (timer ? "Timer" : "Time & energy audit"), {
+    body: data.body || (timer ? "Time tracker" : ""),
+    tag: data.tag || (timer ? TIMER_TAG : "audit-ping"),
     renotify: data.renotify !== false,
     silent: data.silent === true,
     icon: "/icon-192.png",
@@ -300,7 +296,12 @@ self.addEventListener("push", (event) => {
           // never a thought: "stop" must not be logged as one
           labels: {},
         }
-      : { url: sameSiteUrl(data.url), promptId: data.promptId || null, labels: Object.fromEntries(actions.map((a) => [a.id, a.title])) },
+      : {
+          url: sameSiteUrl(data.url),
+          kind: typeof data.kind === "string" ? data.kind : null,
+          slotAt: typeof data.slotAt === "string" ? data.slotAt : null,
+          sendId: typeof data.sendId === "string" ? data.sendId : null,
+        },
     actions: actions.map((a) => ({ action: a.id, title: a.title })),
   })
   // A timer push arriving means there is signal: a Stop that waited for it goes
@@ -495,38 +496,6 @@ async function focusOrOpen(url) {
   if (self.clients.openWindow) await self.clients.openWindow(url)
 }
 
-/**
- * A thought button on the notification: log it from here, without opening the
- * app. Same route, same rule as a tap in the app: the id is made here, once,
- * so a retry can never count twice. The browser sends the person's own
- * session cookie with it; signed out, the route refuses and the notification
- * says so and offers to open the app.
- */
-async function logFromNotification(thoughtId, promptId, label) {
-  const body = {
-    logs: [{ id: self.crypto.randomUUID(), thoughtId, at: new Date().toISOString(), source: "prompt-action", promptId }],
-  }
-  let ok = false
-  try {
-    const res = await fetch("/api/thoughts/logs", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    })
-    ok = res.ok
-  } catch {
-    ok = false
-  }
-  await self.registration.showNotification(ok ? "Logged" : "Not logged", {
-    body: ok ? label || "Counted." : "Tap to open the app and log it there.",
-    tag: "thought-prompt",
-    silent: true,
-    icon: "/icon-192.png",
-    data: { url: sameSiteUrl(promptId ? `/thoughts?log=1&prompt=${promptId}` : "/thoughts?log=1"), promptId: null, labels: {} },
-  })
-}
-
 self.addEventListener("notificationclick", (event) => {
   const data = event.notification.data || {}
   event.notification.close()
@@ -536,10 +505,6 @@ self.addEventListener("notificationclick", (event) => {
       return
     }
     event.waitUntil(focusOrOpen(sameSiteUrl(data.url, TIMER_URL)))
-    return
-  }
-  if (event.action && data.labels && event.action in data.labels) {
-    event.waitUntil(logFromNotification(event.action, data.promptId || null, data.labels[event.action]))
     return
   }
   event.waitUntil(focusOrOpen(sameSiteUrl(data.url)))

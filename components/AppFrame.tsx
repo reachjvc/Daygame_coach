@@ -56,7 +56,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
           {/* Ten destinations plus Log Out do not fit beside the logo below
               ~1100px. The nav scrolls inside the header instead of pushing the
               page sideways, which the route sweep checks.
-              TIGHTER SINCE THOUGHTS JOINED (2026-10-30): with the default
+              TIGHTER SINCE ANOTHER MORE ITEM JOINED (2026-10-30): with the default
               padding the row was 929px in an 879px nav at 1280px wide, so Log
               Out sat half out of view on an ordinary laptop. `px-2.5` and no
               gap bring it to about 845px. */}

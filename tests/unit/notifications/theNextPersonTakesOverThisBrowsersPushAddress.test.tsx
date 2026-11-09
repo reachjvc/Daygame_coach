@@ -50,7 +50,7 @@ function aBrowserWithAPushAddress({ allowed = true, subscribed = true, timerHere
         getNotifications: async ({ tag }: { tag?: string } = {}) =>
           [
             { tag: "timer-running", close: () => void closed.push("timer-running") },
-            { tag: "thought-prompt", close: () => void closed.push("thought-prompt") },
+            { tag: "audit-ping", close: () => void closed.push("audit-ping") },
           ].filter((n) => !tag || n.tag === tag),
       }),
     },

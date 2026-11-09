@@ -163,8 +163,8 @@ describe("the timer's pushes", () => {
 
   test("a reminder that says nothing about sound rings as reminders always did", async () => {
     const w = await loadWorker()
-    await w.dispatch("push", pushOf({ title: "What's on your mind?", body: "Tap.", url: "/thoughts?log=1", tag: "thought-prompt" }))
-    expect(w.shown[0].options).toMatchObject({ silent: false, renotify: true, tag: "thought-prompt" })
+    await w.dispatch("push", pushOf({ title: "Test notification", body: "Tap.", url: "/settings", tag: "test" }))
+    expect(w.shown[0].options).toMatchObject({ silent: false, renotify: true, tag: "test" })
   })
 
   test("a timer notification never offers its Stop as a thought to log", async () => {
@@ -301,7 +301,7 @@ describe("Stop with no signal", () => {
     const { w, notification } = await shownTimer()
     w.fetchMock.mockRejectedValueOnce(new TypeError("Failed to fetch"))
     await w.dispatch("notificationclick", { action: "stop", notification })
-    await w.dispatch("push", pushOf({ title: "What's on your mind?", tag: "thought-prompt" }))
+    await w.dispatch("push", pushOf({ title: "Test notification", tag: "test" }))
     expect(w.fetchMock).toHaveBeenCalledTimes(1)
     expect(w.queued()).toHaveLength(1)
   })

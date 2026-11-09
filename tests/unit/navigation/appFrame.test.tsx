@@ -95,7 +95,7 @@ describe("the app frame", () => {
    * TIME KEEPS THE LAPTOP HEADER AND DRAWS ITS OWN PHONE BAR (D9 in
    * Plans/time-tracker-like-toggl.md). The reason it was hidden — two bars
    * stacked at the bottom of a phone — is a phone's reason. On a laptop the
-   * header is how you reach Thoughts, Settings and Log Out, and the tracker
+   * header is how you reach Settings and Log Out, and the tracker
    * drops its own duplicate row there instead.
    */
   it("on Time, draws the laptop header but not the phone bar", () => {
