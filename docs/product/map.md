@@ -47,7 +47,7 @@ assuming anything is in the product.
 The navigation is the honest map, and it lives in `components/navTabs.ts`.
 
 Bottom tab bar: **Dashboard · Training · Tracking · Your plan · Scenarios**,
-plus a "More" sheet holding **Time · Ask Coach · Articles · Settings**.
+plus a "More" sheet holding **Time · Time & energy audit · Ask Coach · Articles · Settings**.
 
 **"Your plan" is Life Mastery, a tab since 2026-10-15** on the owner's word,
 taking Time's place because a seventh item runs off-screen on every phone up to
@@ -255,6 +255,11 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   worked up to. Before 2026-09-28 there was no such control and no way out at
   all.
 - `api_ai/` — what every AI call cost, per user, against a budget.
+- `audit/` — **the time & energy audit**, at `/audit` (Plans/energy-audit.md): Dan Martell's
+  two-week audit with Christopher Martell's two scores. Every quarter-hour (:00, :15, :30, :45)
+  you note what you did, Energy 1–7 and Growth 1–7, optionally "avoiding" and "why"; Time's
+  entries pre-fill the activity; one answer can cover a stretch; answers wait on the phone with
+  no signal. Two tables, `audit_runs` and `audit_slots`. Replaced Thoughts on 2026-11-09.
 - `notifications/` — **the app's first notifications that reach a closed app**
   (web push), shared plumbing for any slice: devices per browser (only the real
   push services accepted), sends that expire after 10 minutes and replace the last,

@@ -37,7 +37,25 @@ const SERVER_CODE = [
   "src/db/notificationsRepo.ts",
   "src/notifications",
   "app/api/notifications",
+  // The time & energy audit (Plans/energy-audit.md, Phase 4): activity, "why"
+  // and Time's descriptions are as private as the thoughts were.
+  "src/audit",
+  "app/api/audit",
+  "src/db/auditRepo.ts",
+  "src/db/timetrackRangeRepo.ts",
 ].flatMap(files)
+
+/** The audit's screens and state: no console call at all, since they hold what was typed. */
+function allFiles(dir: string): string[] {
+  const full = path.join(ROOT, dir)
+  if (!fs.existsSync(full)) return []
+  return fs.readdirSync(full, { withFileTypes: true }).flatMap((e) => {
+    const rel = path.join(dir, e.name)
+    if (e.isDirectory()) return allFiles(rel)
+    return /\.tsx?$/.test(e.name) ? [rel] : []
+  })
+}
+const AUDIT_SCREENS = ["src/audit/components", "src/audit/hooks"].flatMap(allFiles)
 
 /** The full argument list of every console call, however many lines it spans. */
 function consoleCalls(source: string): string[] {
@@ -57,15 +75,16 @@ function consoleCalls(source: string): string[] {
 }
 
 /** A fixed tag, then an Error's message (or "unknown"), a status code, or nothing. */
-/** Measured 2026-11-08: 9 console calls in 12 files. The floor sits just under. */
-const CALLS_FLOOR = 6
+/** Measured 2026-11-09 with the audit's paths: 14 console calls in 25 files. The floor sits just under. */
+const CALLS_FLOOR = 12
 
 const ALLOWED_LOG = /^"\[[a-z ]+\][^"]*"(, (error|e) instanceof Error \? (error|e)\.message : "unknown"|, \(error as \{ statusCode\?: number \}\)\.statusCode \?\? "no answer")?$/
 
 describe("server logs", () => {
   it("finds the code it guards", () => {
-    // Measured 2026-11-08 after Thoughts was deleted: 12 files. Raise as the audit's paths are added.
-    expect(SERVER_CODE.length).toBeGreaterThan(8)
+    // Measured 2026-11-09 with the audit's paths: 25 files.
+    expect(SERVER_CODE.length).toBeGreaterThan(22)
+    expect(AUDIT_SCREENS.length).toBeGreaterThan(6)
     const calls = SERVER_CODE.flatMap((f) => consoleCalls(fs.readFileSync(path.join(ROOT, f), "utf8"))).length
     // Measured at the same time; see the count printed on failure.
     expect(calls).toBeGreaterThan(CALLS_FLOOR)
@@ -77,6 +96,11 @@ describe("server logs", () => {
         .filter((args) => !ALLOWED_LOG.test(args))
         .map((args) => `${f}: console(${args})`),
     )
+    expect(offending).toEqual([])
+  })
+
+  it("the audit's screens and state never log at all", () => {
+    const offending = AUDIT_SCREENS.filter((f) => consoleCalls(fs.readFileSync(path.join(ROOT, f), "utf8")).length > 0)
     expect(offending).toEqual([])
   })
 

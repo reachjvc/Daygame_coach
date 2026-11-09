@@ -97,9 +97,9 @@ export async function proxy(request: NextRequest) {
   // API routes answer with 401, never a redirect to a login page: a fetch()
   // that receives an HTML login page reports a confusing parse error instead of
   // "you are signed out". Defence in depth — every route also calls
-  // requireAuth() itself. Only these two API prefixes reach the proxy at all
+  // requireAuth() itself. Only these API prefixes reach the proxy at all
   // (see the matcher); the rest check the user in their own handlers.
-  if (path.startsWith("/api/timetrack/") && !user) {
+  if ((path.startsWith("/api/timetrack/") || path.startsWith("/api/audit/")) && !user) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 })
   }
   if (path.startsWith("/api/")) return response
@@ -139,5 +139,8 @@ export const config = {
     "/((?!api/|_next/|__nextjs|.*\\.jpg$|.*\\.jpeg$|.*\\.png$|.*\\.gif$|.*\\.webp$|.*\\.svg$|.*\\.ico$|.*\\.mp4$|.*\\.pkl$|.*\\.json$|.*\\.js$|.*\\.css$|.*\\.map$|.*\\.txt$|.*\\.xml$|.*\\.webmanifest$).*)",
     "/api/test/:path*",
     "/api/timetrack/:path*",
+    // The audit's "Same as before" and "Mute 1 h" post from the notification
+    // with no page open, so their session is refreshed here like Time's Stop.
+    "/api/audit/:path*",
   ],
 }

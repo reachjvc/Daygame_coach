@@ -1,4 +1,4 @@
-import { LayoutDashboard, BarChart3, Dumbbell, Swords, HelpCircle, BookOpen, Settings, Timer, ScrollText } from "lucide-react"
+import { LayoutDashboard, BarChart3, Dumbbell, Swords, HelpCircle, BookOpen, Settings, Timer, ScrollText, BatteryCharging } from "lucide-react"
 import { ROUTES, isUnder } from "@/src/shared/routes"
 
 /**
@@ -70,6 +70,12 @@ export const MORE_ITEMS = [
    * `PHONE_BAR_HIDDEN_PREFIXES`), so from inside Time nothing changed.
    */
   { label: "Time", icon: Timer, href: ROUTES.time },
+  /**
+   * THE TIME & ENERGY AUDIT, in Thoughts' old place (Plans/energy-audit.md,
+   * D-NAME, D-ICON). `BatteryCharging` is imported here only, so it needs no
+   * entry in `src/shared/iconRoles.ts`.
+   */
+  { label: "Time & energy audit", icon: BatteryCharging, href: ROUTES.audit },
   { label: "Ask Coach", icon: HelpCircle, href: ROUTES.coach },
   { label: "Articles", icon: BookOpen, href: ROUTES.articles },
   { label: "Settings", icon: Settings, href: ROUTES.settings },

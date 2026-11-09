@@ -16,6 +16,7 @@
  * accepts from its owner alone.
  */
 
+import { forgetAuditOnThisDevice } from "@/src/audit/auditQueue"
 import { forgetThisDevice, forgetTimerOnThisDevice } from "@/src/notifications/pushClient"
 import { forgetTimeTrackerOnThisDevice } from "@/src/timetrack/browserOwner"
 import { unsentTrackerChanges } from "@/src/timetrack/hooks/useTimetrackSync"
@@ -75,6 +76,8 @@ export async function forgetOfflineCopies({ keepUnsentTime = false }: { keepUnse
   if (!(keepUnsentTime && unsentTrackerChanges() > 0)) forgetTimeTrackerOnThisDevice()
   await forgetThisDevice()
   await forgetTimerOnThisDevice()
+  // The audit's answers waiting for signal name what the person did and how it felt.
+  forgetAuditOnThisDevice()
   try {
     window.localStorage.removeItem("thoughts-queue-v1")
     window.localStorage.removeItem("thoughts-view-v1")

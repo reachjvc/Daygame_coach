@@ -4,7 +4,7 @@ Written 2026-11-08. Built from the owner's marks and notes on the research page 
 (https://claude.ai/artifact/V28AzK4axgj7yaczaU9Y4n, marks database collection `marks`), six read-only
 research reports (code, live database, sources) and a four-reviewer attack on the first draft (8 blockers
 and about 30 other problems found and fixed, 2026-11-08). Status: **Phases 0-3 live (2026-11-09); Phases 4-7 not started.**
-Notes since 2026-11-08 20:00 UTC: none (marks read 2026-11-09: 19 documents, the newest written 2026-11-08 18:43 UTC, so no decision changed). Look page: not made yet (Phase 4 makes it).
+Notes since 2026-11-08 20:00 UTC: none (marks read 2026-11-09: 19 documents, the newest written 2026-11-08 18:43 UTC, so no decision changed). Look page: **Audit look**, https://claude.ai/artifact/GF69w68HJxiyFkudNwYBXv (marks database collection `marks`; one doc per block, `s--<screen>`, `d-<decision>`, `b--<block>`).
 
 Format: owner answers first, then Part 1 in plain words, then DECISIONS, BLOCKERS, THE PIECES, PHASES,
 Part 2 (ground rules for the executing session) and the `/goal` prompts at the end. The executing session

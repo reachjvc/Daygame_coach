@@ -1,0 +1,239 @@
+import { test, expect, SIGNED_OUT, signIn } from "./fixtures/test"
+import type { Page } from "@playwright/test"
+import { randomUUID } from "node:crypto"
+import { stackAdmin } from "./fixtures/stack"
+import { whenHydrated } from "./helpers/hydration"
+import { ROUTES } from "@/src/shared/routes"
+
+/**
+ * THE TIME & ENERGY AUDIT (Plans/energy-audit.md, Phase 4): start, answer,
+ * fill in later. Pings come in Phase 5.
+ *
+ * Every test but the first seeds an open audit through the test backend, begun
+ * three hours ago and with NO quiet hours, so the same quarters exist whatever
+ * time of day the suite runs.
+ */
+
+const QUARTER = 15 * 60_000
+const quarterStart = (ms: number) => Math.floor(ms / QUARTER) * QUARTER
+
+async function clearAudits(userId: string): Promise<void> {
+  const { error } = await stackAdmin().from("audit_runs").delete().eq("user_id", userId)
+  expect(error).toBeNull()
+}
+
+/** An open audit begun `hoursAgo` hours ago, with no quiet hours. */
+async function seedRun(userId: string, hoursAgo = 3): Promise<{ id: string; startedAt: number }> {
+  await clearAudits(userId)
+  const id = randomUUID()
+  const startedAt = quarterStart(Date.now() - hoursAgo * 60 * 60_000)
+  const { error } = await stackAdmin()
+    .from("audit_runs")
+    .insert({
+      id,
+      user_id: userId,
+      started_at: new Date(startedAt).toISOString(),
+      ends_at: new Date(startedAt + 14 * 24 * 60 * 60_000).toISOString(),
+      quiet_start: 0,
+      quiet_end: 0,
+    })
+  expect(error).toBeNull()
+  return { id, startedAt }
+}
+
+async function slotsOf(userId: string, runId: string): Promise<{ slot_at: string; activity: string; energy: number; growth: number }[]> {
+  const { data, error } = await stackAdmin().from("audit_slots").select("slot_at, activity, energy, growth").eq("user_id", userId).eq("run_id", runId)
+  expect(error).toBeNull()
+  return (data ?? []) as { slot_at: string; activity: string; energy: number; growth: number }[]
+}
+
+/** A stopped Time entry covering [from, to). */
+async function seedTimeEntry(userId: string, description: string, from: number, to: number): Promise<void> {
+  const admin = stackAdmin()
+  const existing = await admin.from("timetrack_workspaces").select("id").eq("user_id", userId).is("deleted_at", null).maybeSingle()
+  let workspaceId = existing.data?.id as string | undefined
+  if (!workspaceId) {
+    const made = await admin.from("timetrack_workspaces").insert({ user_id: userId }).select("id").single()
+    expect(made.error).toBeNull()
+    workspaceId = made.data!.id as string
+  }
+  const { error } = await admin.from("timetrack_entries").insert({
+    user_id: userId,
+    workspace_id: workspaceId,
+    description,
+    started_at: new Date(from).toISOString(),
+    stopped_at: new Date(to).toISOString(),
+    duration_seconds: Math.round((to - from) / 1000),
+  })
+  expect(error).toBeNull()
+}
+
+async function openAudit(page: Page): Promise<void> {
+  await page.goto(ROUTES.audit)
+  await whenHydrated(page.getByTestId("audit-page"), 60_000)
+}
+
+async function answerCard(page: Page, card: ReturnType<Page["getByTestId"]>, activity: string | null, energy: number, growth: number) {
+  if (activity !== null) await card.getByTestId("audit-activity").fill(activity)
+  await card.getByTestId("audit-energy").getByRole("radio", { name: `Energy ${energy}` }).click()
+  await card.getByTestId("audit-growth").getByRole("radio", { name: `Growth ${growth}` }).click()
+  await card.getByTestId("audit-save").click()
+  await expect(card.getByTestId("audit-card-saved")).toBeVisible()
+}
+
+test.describe("time & energy audit @phone", () => {
+  test("starts an audit from the Start screen and sees Today", async ({ page, account }) => {
+    await clearAudits(account.id)
+    await openAudit(page)
+    await expect(page.getByTestId("audit-start")).toContainText("Run it when you feel stuck")
+    await page.getByTestId("audit-start-button").click()
+    await expect(page.getByTestId("audit-today")).toBeVisible()
+    await expect(page.getByTestId("audit-day-of")).toContainText("Day 1 of 14 · ends ")
+  })
+
+  test("answers a quarter pre-filled from a Time entry", async ({ page, account }) => {
+    const run = await seedRun(account.id)
+    const q = quarterStart(Date.now()) - QUARTER
+    await seedTimeEntry(account.id, "Deep work", q - QUARTER, q + QUARTER - 60_000)
+    await openAudit(page)
+    await page.getByTestId("audit-answer-now").click()
+    const sheet = page.getByTestId("audit-answer-sheet")
+    await expect(sheet).toBeVisible()
+    const fromTime = sheet.getByTestId("audit-card").filter({ hasText: "from Time" })
+    await expect(fromTime).toHaveCount(1)
+    await expect(fromTime.getByTestId("audit-activity")).toHaveValue("Deep work")
+    await answerCard(page, fromTime, null, 3, 6)
+    await expect.poll(async () => (await slotsOf(account.id, run.id)).filter((s) => s.activity === "Deep work").length).toBeGreaterThanOrEqual(2)
+  })
+
+  test("selects three gaps in the Day list and answers once, so three rows show", async ({ page, account }) => {
+    const run = await seedRun(account.id)
+    await openAudit(page)
+    const gaps = page.getByTestId("audit-row-gap")
+    await expect(gaps.first()).toBeVisible()
+    await gaps.nth(0).click()
+    await gaps.nth(2).click()
+    await page.getByTestId("audit-answer-selection").click()
+    const card = page.getByTestId("audit-answer-sheet").getByTestId("audit-card")
+    await expect(card).toHaveCount(1)
+    await expect(card).toContainText("3 quarters")
+    await answerCard(page, card, "Email", 2, 3)
+    await page.keyboard.press("Escape")
+    await expect(page.getByTestId("audit-row-answered").filter({ hasText: "Email" })).toHaveCount(3)
+    await expect.poll(async () => (await slotsOf(account.id, run.id)).length).toBe(3)
+  })
+
+  test("changes one answer and deletes one", async ({ page, account }) => {
+    const run = await seedRun(account.id)
+    const a = quarterStart(Date.now()) - 4 * QUARTER
+    const admin = stackAdmin()
+    for (const [i, activity] of ["Walk", "Reading"].entries()) {
+      const { error } = await admin.from("audit_slots").insert({
+        id: randomUUID(),
+        user_id: account.id,
+        run_id: run.id,
+        slot_at: new Date(a + i * QUARTER).toISOString(),
+        activity,
+        energy: 4,
+        growth: 4,
+        source: "app",
+      })
+      expect(error).toBeNull()
+    }
+    await openAudit(page)
+    await page.getByTestId("audit-row-answered").filter({ hasText: "Walk" }).click()
+    const card = page.getByTestId("audit-answer-sheet").getByTestId("audit-card")
+    await expect(card.getByTestId("audit-activity")).toHaveValue("Walk")
+    await answerCard(page, card, "Walk in the park", 6, 5)
+    await page.keyboard.press("Escape")
+    await expect(page.getByTestId("audit-row-answered").filter({ hasText: "Walk in the park" })).toContainText("E 6 · G 5")
+
+    await page.getByTestId("audit-row-answered").filter({ hasText: "Reading" }).click()
+    await page.getByTestId("audit-answer-sheet").getByTestId("audit-delete").click()
+    await expect(page.getByTestId("audit-row-answered").filter({ hasText: "Reading" })).toHaveCount(0)
+    await expect.poll(async () => (await slotsOf(account.id, run.id)).map((s) => s.activity)).toEqual(["Walk in the park"])
+  })
+
+  test("mutes for 1 h and sees Muted until", async ({ page, account }) => {
+    await seedRun(account.id)
+    await openAudit(page)
+    await page.getByTestId("audit-mute-open").click()
+    await page.getByTestId("audit-mute-sheet").getByRole("button", { name: "1 h" }).click()
+    await expect(page.getByTestId("audit-mute-open")).toContainText(/Muted until \d\d:\d\d/)
+    await page.getByTestId("audit-mute-open").click()
+    await page.getByTestId("audit-unmute").click()
+    await expect(page.getByTestId("audit-mute-open")).toHaveText("Mute")
+  })
+
+  test("End now asks first, then shows the Start screen with one past audit", async ({ page, account }) => {
+    await seedRun(account.id)
+    await openAudit(page)
+    await page.getByTestId("audit-end-open").click()
+    await expect(page.getByTestId("audit-end-confirm")).toContainText("End the audit now?")
+    await page.getByTestId("audit-end-confirm-button").click()
+    await expect(page.getByTestId("audit-start")).toBeVisible()
+    await expect(page.getByTestId("audit-past-row")).toHaveCount(1)
+  })
+
+  test("answers while offline, and the answer is saved once when the signal returns", async ({ page, context, account }) => {
+    const run = await seedRun(account.id)
+    await openAudit(page)
+    await expect(page.getByTestId("audit-row-gap").first()).toBeVisible()
+    await context.setOffline(true)
+    await page.getByTestId("audit-row-gap").first().click()
+    await page.getByTestId("audit-answer-selection").click()
+    await answerCard(page, page.getByTestId("audit-answer-sheet").getByTestId("audit-card"), "Daygame", 5, 7)
+    await page.keyboard.press("Escape")
+    await expect(page.getByTestId("audit-waiting")).toContainText("saved on this phone")
+    await expect(page.getByTestId("audit-row-answered").filter({ hasText: "Daygame" })).toHaveCount(1)
+    expect(await slotsOf(account.id, run.id)).toEqual([])
+    await context.setOffline(false)
+    await page.evaluate(() => window.dispatchEvent(new Event("online")))
+    await expect(page.getByTestId("audit-waiting")).toBeHidden({ timeout: 20_000 })
+    await expect.poll(async () => (await slotsOf(account.id, run.id)).length).toBe(1)
+    await page.reload()
+    await expect(page.getByTestId("audit-row-answered").filter({ hasText: "Daygame" })).toHaveCount(1)
+  })
+
+  test("a queued answer is wiped at Log Out: the next account sees none of it", async ({ browser, throwawayAccount, secondUser }) => {
+    test.setTimeout(150_000)
+    const baseURL = test.info().project.use.baseURL
+    const context = await browser.newContext({ storageState: SIGNED_OUT, baseURL, viewport: { width: 1366, height: 900 } })
+    try {
+      const page = await context.newPage()
+      await signIn(page, throwawayAccount)
+      await seedRun(throwawayAccount.id)
+      await openAudit(page)
+      await page.route("**/api/audit/slots", (route) => route.abort("internetdisconnected"))
+      await page.getByTestId("audit-row-gap").first().click()
+      await page.getByTestId("audit-answer-selection").click()
+      await answerCard(page, page.getByTestId("audit-answer-sheet").getByTestId("audit-card"), "Private thing", 2, 2)
+      await page.keyboard.press("Escape")
+      expect(await page.evaluate(() => localStorage.getItem("audit-queue-v1"))).toContain("Private thing")
+
+      await page.goto("/dashboard", { waitUntil: "domcontentloaded" })
+      await whenHydrated(page.getByTestId("header-logout-button"), 60_000)
+      await page.getByTestId("header-logout-button").click()
+      await expect.poll(() => new URL(page.url()).pathname, { timeout: 30_000 }).toBe("/")
+      expect(await page.evaluate(() => localStorage.getItem("audit-queue-v1"))).toBeNull()
+
+      await signIn(page, secondUser)
+      await openAudit(page)
+      await expect(page.getByText("Private thing")).toHaveCount(0)
+    } finally {
+      await context.close()
+    }
+  })
+
+  for (const width of [360, 390]) {
+    test(`the answer sheet has no sideways scroll at ${width} px`, async ({ page, account }) => {
+      await page.setViewportSize({ width, height: 800 })
+      await seedRun(account.id)
+      await openAudit(page)
+      await page.getByTestId("audit-answer-now").click()
+      await expect(page.getByTestId("audit-answer-sheet").getByTestId("audit-card").first()).toBeVisible()
+      const fits = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
+      expect(fits).toBe(true)
+    })
+  }
+})

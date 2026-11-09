@@ -30,6 +30,8 @@ export const ROUTES = {
   scenarioPreferences: "/scenarios/preferences",
   scenarioArchetypes: "/scenarios/preferences/archetypes",
   time: "/time",
+  /** The time & energy audit (Plans/energy-audit.md, D-NAME). Took Thoughts' place in the More sheet. */
+  audit: "/audit",
   coach: "/coach",
   articles: "/articles",
   innerGame: "/inner-game",
@@ -143,6 +145,8 @@ export const LEGACY_ROUTES: ReadonlyArray<{ from: string; to: string }> = [
   { from: "/programs", to: "/training" },
   { from: "/life-mastery", to: "/plan" },
   { from: "/dashboard/goals/plan", to: "/plan" },
+  // Thoughts was deleted on 2026-11-09; the audit replaced it (Plans/energy-audit.md).
+  { from: "/thoughts", to: "/audit" },
 ]
 
 /** Where an old address now lives, or null. The longest matching `from` wins. */
