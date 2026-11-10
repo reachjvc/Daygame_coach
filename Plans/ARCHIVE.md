@@ -6,6 +6,7 @@ Code comments still name some of them. To read one, run
 
 | Plan | Why it went | Read it at |
 |---|---|---|
+| life-plan-rebuild.md | Finished 2026-11-10: Phases 1–7, Q4 and the wheel live; owner accepted every card on the sign-off page in chat ("ill jsut accept all ur recommendations"). | 88ca5fe6 |
 | time-tracker-leftovers.md | Finished: Phases 1–5 live; the last two limits it noted were fixed in 7516348e. | 7516348e |
 | toggl-parity.md | Finished: Phases 0–8 live; its last bugs were done through time-tracker-leftovers.md. | 7516348e |
 | time-tracker-like-toggl.md | Replaced by toggl-parity.md, which also shipped its Phase 7. | 7516348e |

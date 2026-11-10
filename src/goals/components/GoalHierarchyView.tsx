@@ -152,9 +152,12 @@ export function GoalHierarchyView({
               HEALTH TRACKING — and the value it compares against was never
               produced by anything.
 
-              `life_area` is written by `areaSlug` (northStarTrackService.ts),
-              which strips the "lm_" prefix — so Life Mastery's `lm_health` and
-              `lm_fitness` areas arrive here as "health" and "fitness". The
+              `life_area` was written by `areaSlug`, the old Track step's copy
+              into `user_goals` (removed in Phase 7 of
+              Plans/life-plan-rebuild.md, with its copies), which stripped the
+              "lm_" prefix — so Life Mastery's `lm_health` and `lm_fitness`
+              areas arrived here as "health" and "fitness", and goals made
+              before still carry those names. The
               string "health_fitness" exists only in `metricCatalog.ts`, which
               is an unrelated vocabulary. So this panel — weight, sleep, the
               training card — rendered for nobody, unless somebody happened to
