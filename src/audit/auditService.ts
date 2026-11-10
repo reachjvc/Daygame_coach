@@ -302,7 +302,16 @@ export function checkReview(input: unknown): { review: Review } | { error: strin
  * (alpha p9-review-04/05).
  */
 export type ReviewChange =
-  | { activity: string; choice?: ReviewChoice | null; choiceWas?: ReviewChoice | null; note: string; noteWas?: string }
+  | {
+      activity: string
+      choice?: ReviewChoice | null
+      choiceWas?: ReviewChoice | null
+      note: string
+      noteWas?: string
+      /** Notes and choices this sheet sent in saves whose outcome it does not know (a lost reply): stored, they are its own (alpha p10-review-pings-01). */
+      noteTried?: string[]
+      choiceTried?: (ReviewChoice | null)[]
+    }
   | { block: WeekBlock; edit?: boolean; blockWas?: WeekBlock; copies?: WeekBlock[]; tried?: WeekBlock[] }
   | { removeBlock: string; blockWas?: WeekBlock }
 
@@ -335,7 +344,7 @@ export const REVIEW_UNREADABLE = "Part of this review was saved in a shape this 
 export function applyReviewChange(stored: Review, input: unknown): { review: Review } | { error: string } {
   if (!input || typeof input !== "object" || Array.isArray(input)) return { error: "Send one change" }
   const c = input as Record<string, unknown>
-  const keys = Object.keys(c).filter((k) => k !== "noteWas" && k !== "edit" && k !== "choiceWas" && k !== "blockWas" && k !== "tried").sort().join(",")
+  const keys = Object.keys(c).filter((k) => k !== "noteWas" && k !== "edit" && k !== "choiceWas" && k !== "blockWas" && k !== "tried" && k !== "noteTried" && k !== "choiceTried").sort().join(",")
   const next: Review = { choices: { ...stored.choices }, notes: { ...stored.notes }, week: [...stored.week] }
   if ((keys === "activity,choice,note" || (keys === "activity,note" && !("choiceWas" in c))) && !("edit" in c) && !("blockWas" in c)) {
     const { activity, choice, choiceWas, note, noteWas } = c
@@ -345,13 +354,20 @@ export function applyReviewChange(stored: Review, input: unknown): { review: Rev
     if (choice !== undefined && choice !== null && (typeof choice !== "string" || !(REVIEW_CHOICES as readonly string[]).includes(choice))) return { error: "Unknown choice" }
     if (typeof note !== "string" || note.length > REVIEW_NOTE_MAX) return { error: `A note can be at most ${REVIEW_NOTE_MAX} characters` }
     if (noteWas !== undefined && typeof noteWas !== "string") return { error: "Bad note" }
+    const { noteTried = [], choiceTried = [] } = c
+    if (!Array.isArray(noteTried) || noteTried.length > NOTE_TRIED_MAX || noteTried.some((n) => typeof n !== "string" || n.length > REVIEW_NOTE_MAX)) return { error: "Bad tried" }
+    if (!Array.isArray(choiceTried) || choiceTried.length > NOTE_TRIED_MAX || !choiceTried.every(isChoice)) return { error: "Bad tried" }
     const key = storableText(activity) || activity
     // Sent again after a lost reply: already stored exactly so, so done (alpha p9-review-04).
     const choiceStored = choice === undefined || (stored.choices[key] ?? null) === choice
     const noteStored = (stored.notes[key] ?? "") === (storableText(note).trim() ? note : "")
     if (choiceStored && noteStored) return checkReview(next)
-    const noteChanged = typeof noteWas === "string" && (stored.notes[key] ?? "") !== noteWas
-    const choiceChanged = choiceWas !== undefined && (stored.choices[key] ?? null) !== choiceWas
+    // What this sheet sent in a save whose reply was lost is its own write, not another device's (alpha p10-review-pings-01).
+    const storedNote = stored.notes[key] ?? ""
+    const ownNote = (noteTried as string[]).some((n) => (storableText(n).trim() ? n : "") === storedNote)
+    const ownChoice = (choiceTried as unknown[]).includes(stored.choices[key] ?? null)
+    const noteChanged = typeof noteWas === "string" && storedNote !== noteWas && !ownNote
+    const choiceChanged = choiceWas !== undefined && (stored.choices[key] ?? null) !== choiceWas && !ownChoice
     if (noteChanged && choiceChanged) return { error: CHOICE_AND_NOTE_CHANGED }
     if (noteChanged) return { error: NOTE_CHANGED }
     if (choiceChanged) return { error: CHOICE_CHANGED }
@@ -360,7 +376,7 @@ export function applyReviewChange(stored: Review, input: unknown): { review: Rev
     else if (choice === null) delete next.choices[key]
     if (storableText(note).trim()) next.notes[key] = note
     else delete next.notes[key]
-  } else if ((keys === "block" || keys === "block,copies") && !("noteWas" in c) && !("choiceWas" in c)) {
+  } else if ((keys === "block" || keys === "block,copies") && !("noteWas" in c) && !("choiceWas" in c) && !("noteTried" in c) && !("choiceTried" in c)) {
     if (c.edit !== undefined && typeof c.edit !== "boolean") return { error: "Bad edit" }
     const one = checkWeek([c.block])
     if ("error" in one) return one
@@ -395,7 +411,7 @@ export function applyReviewChange(stored: Review, input: unknown): { review: Rev
         next.week.push(copy)
       }
     }
-  } else if (keys === "removeBlock" && !("noteWas" in c) && !("edit" in c) && !("choiceWas" in c) && !("tried" in c)) {
+  } else if (keys === "removeBlock" && !("noteWas" in c) && !("edit" in c) && !("choiceWas" in c) && !("tried" in c) && !("noteTried" in c) && !("choiceTried" in c)) {
     if (typeof c.removeBlock !== "string") return { error: "Bad block id" }
     // Like an edit, a remove carries the block as the sheet saw it: removing a block another device changed since is refused (alpha p9-review-03).
     if ("blockWas" in c) {
@@ -413,6 +429,7 @@ export function applyReviewChange(stored: Review, input: unknown): { review: Rev
 }
 
 const TRIED_MAX = 70
+const NOTE_TRIED_MAX = 20
 
 /**
  * The week with this sheet's own earlier writes taken back out (review of

@@ -173,7 +173,11 @@ function EnergyByHour({ built }: { built: BuiltReview }) {
   )
 }
 
-function ActivitySheet({
+/** The notes and choices an activity sheet sent in saves that failed (alpha p10-review-pings-01). */
+type SheetTried = { notes: string[]; choices: (ReviewChoice | null)[] }
+const TRIED_KEEP = 20
+
+export function ActivitySheet({
   group,
   review,
   timezone,
@@ -187,9 +191,11 @@ function ActivitySheet({
   /**
    * `choice`: only when changed in this sheet, with the stored choice the sheet last saw (`was`);
    * null keeps the stored choice. `noteWas`: the stored note this sheet last saw. Either is refused
-   * (CHOICE_CHANGED / NOTE_CHANGED) if another device changed it since.
+   * (CHOICE_CHANGED / NOTE_CHANGED) if another device changed it since. `tried`: the notes and
+   * choices this sheet sent in saves that failed, whose outcome it does not know (a lost reply may
+   * have landed): stored, they are its own, not another device's (alpha p10-review-pings-01).
    */
-  onSave: (key: string, choice: { value: ReviewChoice | null; was: ReviewChoice | null } | null, note: string, noteWas: string) => Promise<string | null>
+  onSave: (key: string, choice: { value: ReviewChoice | null; was: ReviewChoice | null } | null, note: string, noteWas: string, tried: SheetTried) => Promise<string | null>
 }) {
   const [choice, setChoice] = useState<ReviewChoice | null>(null)
   // The stored choice this sheet last saw, whether it was changed here, and whether a save was refused because another device changed it.
@@ -200,6 +206,9 @@ function ActivitySheet({
   // The stored note this sheet last saw, and whether a save was refused because another device changed it.
   const [noteWas, setNoteWas] = useState("")
   const [noteStale, setNoteStale] = useState(false)
+  // What he typed when another device's newer note replaced it in the box: kept on screen to put back, never lost.
+  const [mine, setMine] = useState<string | null>(null)
+  const tried = useRef<SheetTried>({ notes: [], choices: [] })
   const [state, setState] = useState<"idle" | "saving" | "saved" | { error: string }>("idle")
   // Reset when another activity opens, not when the saved review comes back
   // (that would wipe the "Saved" the person just saw).
@@ -219,6 +228,8 @@ function ActivitySheet({
     setNote(review.notes[key] ?? "")
     setNoteWas(review.notes[key] ?? "")
     setNoteStale(false)
+    setMine(null)
+    tried.current = { notes: [], choices: [] }
     setState("idle")
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
@@ -323,6 +334,24 @@ function ActivitySheet({
             className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-base"
             data-testid="review-note"
           />
+          {mine !== null && mine !== note && (
+            <div className="mt-2 rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm" data-testid="review-note-mine">
+              <p className="text-xs text-muted-foreground">What you typed, not saved:</p>
+              <p className="mt-1 whitespace-pre-wrap break-words">{mine}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={() => {
+                  setNote(mine)
+                  setState("idle")
+                }}
+                data-testid="review-note-use-mine"
+              >
+                Put mine back
+              </Button>
+            </div>
+          )}
           <div className="mt-2 flex items-center gap-3">
             <Button
               className="flex-1"
@@ -331,16 +360,24 @@ function ActivitySheet({
                 setState("saving")
                 const savedFor = group.key
                 const sentChoice = choiceTouched ? choice : undefined
-                const failed = await onSave(savedFor, sentChoice === undefined ? null : { value: sentChoice, was: choiceWas }, note, noteWas)
+                const failed = await onSave(savedFor, sentChoice === undefined ? null : { value: sentChoice, was: choiceWas }, note, noteWas, tried.current)
                 // Closed and another activity opened meanwhile: this answer is not about the sheet now shown.
                 if (openKey.current !== savedFor) return
-                if (failed === NOTE_CHANGED) setNoteStale(true)
-                else if (failed === CHOICE_CHANGED) setChoiceStale(true)
-                else if (failed === CHOICE_AND_NOTE_CHANGED) {
+                if (failed === NOTE_CHANGED || failed === CHOICE_AND_NOTE_CHANGED) {
+                  if (note !== noteWas) setMine(note)
                   setNoteStale(true)
-                  setChoiceStale(true)
                 }
-                else if (!failed) {
+                if (failed === CHOICE_CHANGED || failed === CHOICE_AND_NOTE_CHANGED) setChoiceStale(true)
+                else if (failed && failed !== NOTE_CHANGED) {
+                  // Outcome unknown (a lost reply may have landed): this try counts as the sheet's own from now on.
+                  const t = tried.current
+                  tried.current = {
+                    notes: [...t.notes.filter((n) => n !== note), note].slice(-TRIED_KEEP),
+                    choices: sentChoice === undefined ? t.choices : [...t.choices.filter((x) => x !== sentChoice), sentChoice].slice(-TRIED_KEEP),
+                  }
+                } else if (!failed) {
+                  tried.current = { notes: [], choices: [] }
+                  setMine(null)
                   // What the server stores now (blank clears a note), so a second save from this sheet is not refused.
                   setNoteWas(storableText(note).trim() ? storableText(note) : "")
                   if (sentChoice !== undefined) {
@@ -422,8 +459,10 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
     await load()
     return failed
   }
-  const save = (key: string, choice: { value: ReviewChoice | null; was: ReviewChoice | null } | null, note: string, noteWas: string) =>
-    send(choice ? { activity: key, choice: choice.value, choiceWas: choice.was, note, noteWas } : { activity: key, note, noteWas })
+  const save = (key: string, choice: { value: ReviewChoice | null; was: ReviewChoice | null } | null, note: string, noteWas: string, tried: SheetTried) => {
+    const own = { ...(tried.notes.length > 0 ? { noteTried: tried.notes } : {}), ...(choice && tried.choices.length > 0 ? { choiceTried: tried.choices } : {}) }
+    return send(choice ? { activity: key, choice: choice.value, choiceWas: choice.was, note, noteWas, ...own } : { activity: key, note, noteWas, ...own })
+  }
   // `blockWas`: the block as the sheet opened it; the server refuses if another device changed it since (alpha prove-review-01).
   // `tried`: what this sheet sent in saves whose outcome is unknown, so its own earlier writes are replaced, not doubled or kept.
   const saveBlock = (block: WeekBlock, edit: boolean, copies: WeekBlock[], blockWas: WeekBlock | null, tried: WeekBlock[]) =>
