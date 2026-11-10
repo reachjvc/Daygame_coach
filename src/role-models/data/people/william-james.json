@@ -1,0 +1,342 @@
+{
+  "id": "william-james",
+  "name": "William James",
+  "born": 1842,
+  "died": 1910,
+  "category": "philosophers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_emotions"
+  ],
+  "tagline": "A model of building good habits on purpose, and of choosing to believe life is worth living through years of depression.",
+  "startedFrom": "He was born in New York City in 1842, the first child of Henry James and Mary Walsh James, and was taught by tutors and at private schools in New York and at schools in Geneva, Paris and Boulogne. He studied painting first, then in 1861 turned to science at Harvard and in 1864 entered its medical school. In 1866 he had eye strain, back problems and suicidal depression, and he took a medical degree in 1869 that he never used.",
+  "values": [
+    {
+      "word": "Hope",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He closed his address 'Is Life Worth Living?' by telling his listeners: be not afraid of life; believe that life is worth living, and your belief will help create the fact.",
+          "sourceId": "will-to-believe",
+          "locator": "'Is Life Worth Living?', p. 62"
+        },
+        {
+          "kind": "deed",
+          "claim": "In the spring of 1870, after he had considered suicide and while a virtual invalid in his parents' home, he chose to believe in his own freedom without objective evidence, and this started his recovery.",
+          "sourceId": "iep",
+          "locator": "Section 1, Life and Works"
+        },
+        {
+          "kind": "words",
+          "claim": "On 30 April 1870 he wrote in his notebook that his first act of free will would be to believe in free will, and that he would believe in his individual reality and creative power.",
+          "sourceId": "letters-v1",
+          "locator": "Vol. 1, ch. VI (1869-1872), pp. 147-148 (notebook entry, 30 April 1870)"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He had suicidal depression in the fall of 1866, again in the fall of 1869, and poor health and depression through 1870-71; in 1872 he took up teaching at Harvard.",
+          "sourceId": "sep",
+          "locator": "Section 1, Chronology of James's Life (1866, 1869, 1870-71, 1872 entries)"
+        },
+        {
+          "kind": "words",
+          "claim": "In the same 1870 notebook entry he wrote that life shall be built in doing and suffering and creating.",
+          "sourceId": "letters-v1",
+          "locator": "Vol. 1, ch. VI (1869-1872), p. 148 (notebook entry, 30 April 1870)"
+        },
+        {
+          "kind": "deed",
+          "claim": "He broke down in health in 1899-1902 and spent two years in Europe, and in those same years gave the Gifford Lectures that became The Varieties of Religious Experience.",
+          "sourceId": "letters-v1",
+          "locator": "Vol. 1, Chronology (1899-1902 and 1901-1902 entries)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The IEP says he started down the road to recovery in 1870, though for the rest of his life he had eye strain, back pains, digestive problems, exhaustion and times of brooding depression, and in 1872 began a career of more than a third of a century on the Harvard faculty.",
+          "sourceId": "iep",
+          "locator": "Section 1, Life and Works"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1865 he joined his teacher Louis Agassiz's expedition up the Amazon, collecting specimens for Harvard's zoological museum.",
+          "sourceId": "sep",
+          "locator": "Section 1, Chronology of James's Life (1865 entry)"
+        },
+        {
+          "kind": "deed",
+          "claim": "He was a founding member of the American Society for Psychical Research in 1884 and president of the British Society for Psychical Research in 1894 and 1895.",
+          "sourceId": "sommer-2012",
+          "locator": "Introduction: psychical research and the 'new psychology'"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that he had made and published his own observations of nitrous oxide intoxication, and concluded that normal waking consciousness is only one special type of consciousness.",
+          "sourceId": "varieties",
+          "locator": "Lectures XVI and XVII, Mysticism"
+        },
+        {
+          "kind": "witness",
+          "claim": "The International Encyclopedia of the Social Sciences says trances and other exceptional mental states occupied his attention for many years.",
+          "sourceId": "iess",
+          "locator": "Section 'Varieties of Religious Experience.'"
+        }
+      ]
+    },
+    {
+      "word": "Empathy",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He made 'the blindness with which we all are afflicted in regard to the feelings of creatures and people different from ourselves' the subject of a whole talk, and ended it: we must 'tolerate, respect, and indulge those whom we see harmlessly interested and happy in their own ways'.",
+          "sourceId": "talks",
+          "locator": "Talks to Students, II. On a Certain Blindness in Human Beings (opening and closing paragraphs)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Bertrand Russell's obituary, cited by the Stanford Encyclopedia, praised the 'large tolerance and … humanity' of his work.",
+          "sourceId": "sep",
+          "locator": "Section 6, Late Writings (Essays in Radical Empiricism)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The International Encyclopedia of the Social Sciences calls him above all a humanitarian and only secondarily a psychologist and philosopher.",
+          "sourceId": "iess",
+          "locator": "Section 'Interest in psychical research' (closing paragraph)"
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Unveiling the monument to Robert Gould Shaw and his Black regiment, the 54th Massachusetts, he called the pre-war republic, 'a land of freedom' with 'human slavery enthroned at the heart of it', 'a thing of falsehood and horrible self-contradiction'.",
+          "sourceId": "memories",
+          "locator": "III. Robert Gould Shaw (oration at the Boston Music Hall, 31 May 1897)"
+        },
+        {
+          "kind": "deed",
+          "claim": "On 15 June 1898, as the war with Spain began, he wrote that he was going to a great popular meeting in Boston where his friends were to protest against the new 'Imperialism'.",
+          "sourceId": "letters-v2",
+          "locator": "Vol. 2, p. 74, letter to François Pillon, 15 June 1898"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1899 he became an active member of the Anti-Imperialist League, opposing U.S. policy in the Philippines.",
+          "sourceId": "sep",
+          "locator": "Section 1, Chronology of James's Life (1899 entry)"
+        },
+        {
+          "kind": "witness",
+          "claim": "His son and editor writes that the Philippine policy of the McKinley administration seemed to him a humiliating desertion of the principles America had fought for in the Revolution and the war against slavery, and that the Anti-Imperialists had his entire sympathy.",
+          "sourceId": "letters-v2",
+          "locator": "Vol. 2, pp. 93-94 (editor's note before the letter to Pauline Goldmark, 12 Aug. 1899)"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Start a new habit with the strongest and most public start you can, and allow no exception until it is firmly rooted.",
+      "sourceId": "principles",
+      "locator": "Vol. 1, ch. IV, Habit, p. 123"
+    },
+    {
+      "text": "Act on a resolution at the first chance you get; a good feeling that never turns into a deed makes the next one weaker.",
+      "sourceId": "principles",
+      "locator": "Vol. 1, ch. IV, Habit, pp. 124-125"
+    },
+    {
+      "text": "Every day, do something small and hard for no reason except that you would rather not, so the strength is there when you need it.",
+      "sourceId": "principles",
+      "locator": "Vol. 1, ch. IV, Habit, p. 126"
+    },
+    {
+      "text": "To change how you feel, change what you do: to feel brave, act as if you were brave.",
+      "sourceId": "talks",
+      "locator": "Talks to Students, I. The Gospel of Relaxation"
+    },
+    {
+      "text": "Believe that your life is worth living and act on it; the belief helps make it true.",
+      "sourceId": "will-to-believe",
+      "locator": "'Is Life Worth Living?', p. 62"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Keep the faculty of effort alive in you by a little gratuitous exercise every day.",
+      "sourceId": "principles",
+      "locator": "Vol. 1, ch. IV, Habit, p. 126"
+    },
+    {
+      "text": "Could the young but realize how soon they will become mere walking bundles of habits, they would give more heed to their conduct while in the plastic state.",
+      "sourceId": "principles",
+      "locator": "Vol. 1, ch. IV, Habit, p. 127"
+    },
+    {
+      "text": "Be not afraid of life. Believe that life is worth living, and your belief will help create the fact.",
+      "sourceId": "will-to-believe",
+      "locator": "'Is Life Worth Living?', p. 62 (first printed in the International Journal of Ethics, October 1895)"
+    },
+    {
+      "text": "My first act of free will shall be to believe in free will.",
+      "sourceId": "letters-v1",
+      "locator": "Vol. 1, ch. VI (1869-1872), p. 147 (notebook entry, 30 April 1870)"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 30 April 1870, depressed and a virtual invalid in his parents' home, he wrote in his notebook: 'I think that yesterday was a crisis in my life.' He had been reading the French philosopher Charles Renouvier, who defined free will as 'the sustaining of a thought because I choose to when I might have other thoughts'. He decided that his 'first act of free will shall be to believe in free will', to give up philosophical brooding until the next year, and to build habits of action instead. Until then, he wrote, 'suicide seemed the most manly form to put my daring into'. The IEP dates the start of his recovery to this choice, and in 1872 he began teaching at Harvard.",
+    "sourceIds": [
+      "letters-v1",
+      "iep",
+      "sep"
+    ]
+  },
+  "shadow": {
+    "text": "He publicly backed the trance medium Leonora Piper: in The Will to Believe (1897) he wrote 'My own white crow is Mrs. Piper', meaning she showed knowledge she could not have gained in a normal way, and in 1907 he still wrote that she 'has supernormal knowledge in her trances'. Leading American psychologists, among them Hugo Münsterberg, G. Stanley Hall, Edward Titchener and James McKeen Cattell, 'ruthlessly combated' his efforts to bring psychical research into psychology, in the words of the historians Sommer and Valentine; in Science in 1898 Cattell wrote 'we cannot follow him into the quagmires.' In January 1901 Münsterberg answered a newspaper article that claimed James had lost his mind because he endorsed Piper. In 1894 he wrote to his wife that he had lost his temper with his colleague Josiah Royce, who refused to test her. In 1896 he tried the drug mescal and was violently sick for 24 hours, and he had earlier published his own experiments with nitrous oxide. On the Amazon in 1865 he wrote home that the Indians were 'particularly exasperating by their laziness and stolidity' and 'mentally a most barren people', and in a family letter of 1873 he called Africans 'niggers'. The IEP says his wife handled his 'neurotic obsessions and emotional moodiness'.",
+    "sourceIds": [
+      "will-to-believe",
+      "letters-v2",
+      "sommer-2012",
+      "varieties",
+      "letters-v1",
+      "iep"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you do this week for no other reason than that you would rather not do it?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "Talks to Teachers on Psychology; and to Students on Some of Life's Ideals",
+      "year": 1899
+    },
+    {
+      "title": "The Principles of Psychology (chapter IV, Habit)",
+      "year": 1890
+    },
+    {
+      "title": "The Will to Believe and Other Essays in Popular Philosophy",
+      "year": 1897
+    }
+  ],
+  "sources": [
+    {
+      "id": "principles",
+      "kind": "primary",
+      "title": "The Principles of Psychology, Vol. 1",
+      "author": "William James",
+      "year": 1918,
+      "publisher": "Henry Holt and Company (first published 1890; text at Project Gutenberg #57628)",
+      "url": "https://www.gutenberg.org/ebooks/57628"
+    },
+    {
+      "id": "talks",
+      "kind": "primary",
+      "title": "Talks to Teachers on Psychology; and to Students on Some of Life's Ideals",
+      "author": "William James",
+      "year": 1925,
+      "publisher": "Henry Holt and Company (first published 1899; text at Project Gutenberg #16287)",
+      "url": "https://www.gutenberg.org/ebooks/16287"
+    },
+    {
+      "id": "will-to-believe",
+      "kind": "primary",
+      "title": "The Will to Believe, and Other Essays in Popular Philosophy",
+      "author": "William James",
+      "year": 1912,
+      "publisher": "Longmans, Green, and Co., new impression (first published 1897; text at Project Gutenberg #26659)",
+      "url": "https://www.gutenberg.org/ebooks/26659"
+    },
+    {
+      "id": "varieties",
+      "kind": "primary",
+      "title": "The Varieties of Religious Experience: A Study in Human Nature",
+      "author": "William James",
+      "year": 1902,
+      "publisher": "Longmans, Green, and Co. (text at Project Gutenberg #621)",
+      "url": "https://www.gutenberg.org/ebooks/621"
+    },
+    {
+      "id": "letters-v1",
+      "kind": "primary",
+      "title": "The Letters of William James, Vol. 1",
+      "author": "William James, edited by Henry James (his son)",
+      "year": 1920,
+      "publisher": "The Atlantic Monthly Press (text at Project Gutenberg #40307)",
+      "url": "https://www.gutenberg.org/ebooks/40307"
+    },
+    {
+      "id": "letters-v2",
+      "kind": "primary",
+      "title": "The Letters of William James, Vol. 2",
+      "author": "William James, edited by Henry James (his son)",
+      "year": 1920,
+      "publisher": "The Atlantic Monthly Press (text at Project Gutenberg #38091)",
+      "url": "https://www.gutenberg.org/ebooks/38091"
+    },
+    {
+      "id": "sep",
+      "kind": "secondary",
+      "title": "William James",
+      "author": "Russell Goodman, Stanford Encyclopedia of Philosophy",
+      "year": 2021,
+      "url": "https://plato.stanford.edu/entries/james/"
+    },
+    {
+      "id": "iep",
+      "kind": "secondary",
+      "title": "William James (1842-1910)",
+      "author": "Wayne P. Pomerleau, Internet Encyclopedia of Philosophy",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://iep.utm.edu/james-o/"
+    },
+    {
+      "id": "iess",
+      "kind": "secondary",
+      "title": "James, William",
+      "author": "William D. Phelan, Jr., International Encyclopedia of the Social Sciences",
+      "year": "n.d. (read 2026-11-10 at Encyclopedia.com)",
+      "url": "https://www.encyclopedia.com/social-sciences/applied-and-social-sciences-magazines/james-william"
+    },
+    {
+      "id": "sommer-2012",
+      "kind": "secondary",
+      "title": "Psychical research and the origins of American psychology: Hugo Münsterberg, William James and Eusapia Palladino",
+      "author": "Andreas Sommer and Elizabeth R. Valentine",
+      "year": 2012,
+      "publisher": "History of the Human Sciences 25(2): 23-44",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3552602/"
+    },
+    {
+      "id": "memories",
+      "kind": "primary",
+      "title": "Memories and Studies",
+      "author": "William James",
+      "year": 1911,
+      "publisher": "Longmans, Green, and Co. (text at Project Gutenberg #20768)",
+      "url": "https://www.gutenberg.org/ebooks/20768"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American psychologist and philosopher (1842-1910), not fictional, not a politician or founder of a living religion, and no account of sexual contact with a minor or of sexual violence was found; he is in, with a small documented dark side: his public backing of a trance medium against his colleagues, his drug experiments, and long depression and temper."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I checked every value, quote and sentence against the Gutenberg texts of his books and letters, the SEP, the IEP, the IESS and Sommer and Valentine (2012). Mentorship fell: its evidence shows a teaching job and public lectures, not his guiding of particular people. Hope, Resilience, Curiosity and Empathy held, and the blind pick's Justice was added on his Shaw oration, his 1898 anti-imperialist letter and the SEP. All four quotes match his own texts word for word; the shadow gained his racial remarks in his 1865 and 1873 letters, and several small claims were corrected.",
+    "checkedOn": "2026-11-10"
+  }
+}
