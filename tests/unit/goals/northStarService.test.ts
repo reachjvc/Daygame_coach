@@ -621,14 +621,14 @@ describe("ratings", () => {
 describe("review", () => {
   it("returns an empty review for an area never opened", () => {
     expect(areaReview(emptyNsPlan(), "lm_health")).toEqual({
-      ten: "", purpose: "", snapshot: "", fortnight: null, goalsAim: null, blockers: "", values: [], identity: "",
+      ten: "", purpose: "", snapshot: "", goalsAim: null, blockers: "", values: [], identity: "",
     })
   })
 
   it("merges a patch into the existing review", () => {
     let plan = setAreaReview(emptyNsPlan(), "lm_health", { ten: "Strong and light" }, NOW)
-    plan = setAreaReview(plan, "lm_health", { fortnight: 6 }, NOW)
-    expect(areaReview(plan, "lm_health")).toMatchObject({ ten: "Strong and light", fortnight: 6 })
+    plan = setAreaReview(plan, "lm_health", { goalsAim: "yes" }, NOW)
+    expect(areaReview(plan, "lm_health")).toMatchObject({ ten: "Strong and light", goalsAim: "yes" })
   })
 
   it("collects values from every area and goal, without duplicates", () => {
@@ -713,7 +713,7 @@ describe("round trip through storage", () => {
     plan = addObstacle(plan, plan.goals[0].id, "Work eats my mornings", NOW)
     plan = addBelief(plan, plan.goals[0].id, "I don't have the time", NOW)
     plan = addCheckpoint(plan, plan.goals[0].id, "Squat 120kg", NOW)
-    plan = setAreaReview(plan, "lm_health", { ten: "Strong and light", fortnight: 6, values: ["Vitality"] }, NOW)
+    plan = setAreaReview(plan, "lm_health", { ten: "Strong and light", values: ["Vitality"] }, NOW)
     plan = setDailyRating(plan, TODAY, "lm_health", 7, NOW)
     return plan
   }
@@ -3215,7 +3215,7 @@ describe("clearing the goals without clearing the thinking", () => {
     // 10s and the values took an hour and are still true.
     let plan = setNorthStar(emptyNsPlan(), "I wake up near the water", NOW)
     plan = setValues(plan, ["Freedom", "Health"], NOW)
-    plan = setAreaReview(plan, "lm_fitness", { ten: "Strong and light", fortnight: 4 }, NOW)
+    plan = setAreaReview(plan, "lm_fitness", { ten: "Strong and light", goalsAim: "no" }, NOW)
     plan = toggleSeasonArea(plan, "lm_fitness", NOW)
     plan = addGoalsFromDump(plan, "lm_fitness", "Bænk 28 kg", NOW)
     plan = setSeasonFocus(plan, plan.goals[0].id, NOW)
@@ -3234,7 +3234,7 @@ describe("clearing the goals without clearing the thinking", () => {
     // Kept: everything that took an hour to write.
     expect(after.northStar).toBe("I wake up near the water")
     expect(after.values).toEqual(["Freedom", "Health"])
-    expect(areaReview(after, "lm_fitness")).toMatchObject({ ten: "Strong and light", fortnight: 4 })
+    expect(areaReview(after, "lm_fitness")).toMatchObject({ ten: "Strong and light", goalsAim: "no" })
     expect(after.routines[0].steps.length).toBeGreaterThan(0)
     // The bucket list survives, minus a pointer at a goal that no longer exists.
     expect(after.experiences).toHaveLength(1)

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { addGoal, emptyNsPlan, normalizeNsPlan, planIsUntouched, removeArea, serializeNsPlan, setAreaReview, wheelRatings } from "@/src/goals/northStarService"
+import { addGoal, emptyNsPlan, normalizeNsPlan, planIsUntouched, removeArea, serializeNsPlan, wheelRatings } from "@/src/goals/northStarService"
 import { planHasNothingWritten } from "@/src/goals/lifePlanSync"
 import { planToRows, rowsToPlan } from "@/src/goals/lifePlanMapper"
 import {
@@ -328,19 +328,6 @@ describe("Your 10s reads and rates the reviews", () => {
     expect(reviewFor(plan, periodOf("week", TODAY))).toMatchObject({ scores: { [money.id]: 3 }, scoredOn: { [money.id]: TODAY } })
     const textOnly = removeArea(writeReview(rateArea(emptyNsPlan(), health.id, 6, TODAY, NOW), periodOf("week", TODAY), { lessons: "Sleep." }, TODAY, NOW), health.id, NOW)
     expect(reviewFor(textOnly, periodOf("week", TODAY))!.scoredOn).toBeUndefined()
-  })
-
-  it("no longer reads or writes the old two-week number, and a save carries it back unchanged", () => {
-    const base = emptyNsPlan()
-    const [health] = base.areas
-    const old = setAreaReview(base, health.id, { fortnight: 6 }, NOW)
-    // The old number alone puts nothing on the wheel: Your 10s reads reviews.
-    expect(wheelRatings(old, TODAY)).toEqual({})
-    const plan = rateArea(old, health.id, 3, TODAY, NOW)
-    expect(plan.review[health.id].fortnight).toBe(6)
-    // The column keeps its value through a save until Phase 7 drops it.
-    const area = rows(plan).areas.find((a) => a.label === health.label)!
-    expect(area.review_fortnight).toBe(6)
   })
 })
 

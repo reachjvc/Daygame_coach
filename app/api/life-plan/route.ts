@@ -7,13 +7,6 @@
  * says so. Merging two devices' plans into a third thing neither person wrote
  * is the failure this exists to avoid.
  *
- * PUT, THE WHOLE-PLAN SAVE, IS REFUSED (Phase 4 of Plans/life-plan-rebuild.md).
- * The flow stopped calling it in Phase 1. It deletes every row its payload
- * leaves out, so a page that loaded before an update — and does not know a
- * part the update added — wiped that part on its next save, and since Q5 the
- * read leaves the old habit rows out, so any whole-plan save would delete them
- * all. Only a page running old code can still send it; it is told to reload.
- *
  * The day tables are not reachable from here; they get their own route.
  */
 
@@ -28,20 +21,11 @@ export async function GET(req: Request) {
     const stored = await readLifePlan(auth.userId)
     // Null is a real answer: a new account has no plan and the flow starts
     // empty. It is NOT an empty plan, because the two must stay tellable apart.
-    return NextResponse.json(stored ? { plan: stored.rows, revision: stored.revision, goalLinks: stored.goalLinks } : { plan: null })
+    return NextResponse.json(stored ? { plan: stored.rows, revision: stored.revision } : { plan: null })
   } catch (error) {
     console.error("[life-plan] read failed", error)
     return NextResponse.json({ error: "Could not read your plan" }, { status: 500 })
   }
-}
-
-export async function PUT(req: Request) {
-  const auth = await requireAuth(req)
-  if (!auth.success) return auth.response
-  return NextResponse.json(
-    { error: "This page is out of date and cannot save. Reload it, and your last change will need making again." },
-    { status: 410 },
-  )
 }
 
 /** Save only what changed. The database refuses any table outside the plan. */

@@ -1,19 +1,16 @@
 /**
- * The track step — the join between a plan in localStorage and rows the app counts.
+ * The plan in time: the track step's schedule, Today, the journal and where
+ * each step leads.
  *
- * The mapping is where a plan can quietly lie about itself, so the tests are
- * about the numbers surviving the crossing rather than about the shape of the
- * payload. Two of them exist because the goals hub computes progress as
- * `current / target` and completion as `current >= target`, and a plan can hold
- * goals that make both of those the wrong question.
+ * The cases about turning plan goals into rows of `user_goals` went with that
+ * push in Phase 7 of Plans/life-plan-rebuild.md.
  */
 
 import { describe, it, expect } from "vitest"
-import { addArea, addDailyField, countGoal, removeGoal, addExperiences, addGoal, addCustomStep, addPractice, addSubStep, inferStepDestination, updateStep, dailyFieldsFor, dailyRating, emptyNsPlan, journalEntry, journalHistory, linkGoal, loadNsPlan, moveDailyField, moveSubStep, placeStep, removeDailyField, removeSubStep, renameDailyField, renameSubStep, serializeNsPlan, setAnswer, setAreaReview, setDailyFieldKind, setDailyFieldSource, setDailyRating, setDayNote, setJournalEntry, setNorthStar, setValues, subStepProgress, subStepsFor, toggleExperienceDone, updateGoal, updateRoutine } from "@/src/goals/northStarService"
+import { addDailyField, countGoal, removeGoal, addExperiences, addGoal, addCustomStep, addPractice, addSubStep, inferStepDestination, updateStep, dailyFieldsFor, dailyRating, emptyNsPlan, journalEntry, journalHistory, loadNsPlan, moveDailyField, moveSubStep, placeStep, removeDailyField, removeSubStep, renameDailyField, renameSubStep, serializeNsPlan, setAnswer, setAreaReview, setDailyFieldKind, setDailyFieldSource, setDailyRating, setDayNote, setJournalEntry, setNorthStar, setValues, subStepProgress, subStepsFor, toggleExperienceDone, updateGoal, updateRoutine } from "@/src/goals/northStarService"
 import { JOURNAL_COPY, REVIEW_PROMPTS, STAR_ANCHOR, STAR_PROMPTS, TAB_ORDER } from "@/src/goals/data/northStar"
 import {
   activityPerWeek,
-  areaSlug,
   cadenceLabel,
   DRIVERS_GROUP_ID,
   fieldTargets,
@@ -21,18 +18,11 @@ import {
   readSources,
   groupLogged,
   journalArchive,
-  pushedGoalIds,
   groupSummary,
   standingItems,
   trackGroups,
-  buildTrackInserts,
-  goalToInsert,
-  pushedRealIds,
-  trackGoalId,
   trackActivities,
   trackDays,
-  trackRows,
-  trackTemplateId,
   trackWeeks,
   todayItems,
   todayProgress,
@@ -41,13 +31,11 @@ import {
   weekStartISO,
 } from "@/src/goals/northStarTrackService"
 import { NO_TRAINING_TICKS, stepTickedByHand } from "@/src/goals/dayTicks"
-import { flattenTree } from "@/src/goals/goalsService"
 import { rampWeek, weekCount } from "@/src/goals/northStarTrackService"
 import type { NsGoal, NsPlan } from "@/src/goals/types"
-import { getOrphanedGoalIds, pruneTreeToIds } from "@/src/goals/goalsService"
+import { getOrphanedGoalIds } from "@/src/goals/goalsService"
 import type { GoalWithProgress } from "@/src/goals/types"
 
-const RUN = "run1234"
 
 /** Add a goal and hand back the plan plus the goal that was just added. */
 function withGoal(plan: NsPlan, areaId: string, title: string, type: NsGoal["type"]) {
@@ -55,242 +43,6 @@ function withGoal(plan: NsPlan, areaId: string, title: string, type: NsGoal["typ
   const goal = next.goals[next.goals.length - 1]
   return { plan: next, goal }
 }
-
-describe("what one plan goal becomes", () => {
-  it("sends a driver as a weekly counter, counting things when it counts things", () => {
-    // Twenty approaches a week and four gym days a week are the same field on
-    // a lesser plan. The driver keeps them apart, and so must the push.
-    const seed = emptyNsPlan()
-    const { plan, goal } = withGoal(seed, "lm_relationship", "Approaches", "habit_ramp")
-    const withRate = updateGoal(plan, goal.id, { daysPerWeek: 4, perWeek: 20, unit: "approaches" })
-
-    const insert = goalToInsert(withRate, RUN, withRate.goals[0])
-    expect(insert.tracking_type).toBe("counter")
-    expect(insert.period).toBe("weekly")
-    expect(insert.target_value).toBe(20)
-    expect(insert.goal_type).toBe("habit_ramp")
-    // A driver is something you do, not something you get.
-    expect(insert.goal_nature).toBe("input")
-  })
-
-  it("falls back to days a week when the driver only counts occasions", () => {
-    const seed = emptyNsPlan()
-    const { plan, goal } = withGoal(seed, "lm_fitness", "Gym", "habit_ramp")
-    const insert = goalToInsert(updateGoal(plan, goal.id, { daysPerWeek: 4, perWeek: null }), RUN, {
-      ...goal,
-      daysPerWeek: 4,
-      perWeek: null,
-    })
-    expect(insert.target_value).toBe(4)
-  })
-
-  it("sends a climbing target as a counter with the ladder attached", () => {
-    const seed = emptyNsPlan()
-    const { plan, goal } = withGoal(seed, "lm_fitness", "Bench press", "milestone_ladder")
-    const ladder = { start: 60, target: 100, steps: 5, curveTension: 0, controlPoints: [], pins: [] }
-    const next = updateGoal(plan, goal.id, { ladder, unit: "kg", targetDate: "2027-06-01" })
-
-    const insert = goalToInsert(next, RUN, next.goals[0])
-    expect(insert.tracking_type).toBe("counter")
-    expect(insert.current_value).toBe(60)
-    expect(insert.target_value).toBe(100)
-    expect(insert.milestone_config).toEqual(ladder)
-    // A dated climb ends on its date rather than at the end of the year.
-    expect(insert.period).toBe("custom")
-    expect(insert.custom_end_date).toBe("2027-06-01")
-  })
-
-  it("rounds a fractional ladder rather than sending a float to an integer column", () => {
-    const seed = emptyNsPlan()
-    const { plan, goal } = withGoal(seed, "lm_fitness", "Body fat", "milestone_ladder")
-    const next = updateGoal(plan, goal.id, {
-      ladder: { start: 12.4, target: 85.6, steps: 5, curveTension: 0, controlPoints: [], pins: [] },
-    })
-    const insert = goalToInsert(next, RUN, next.goals[0])
-    expect(insert.current_value).toBe(12)
-    expect(insert.target_value).toBe(86)
-  })
-
-  it("sends a DESCENDING ladder as a real climb, starting at the weight you are", () => {
-    /* It used to go over as a yes/no box with "From 95 kg down to 85 kg."
-       written into the description, because progress was `current / target`
-       and a counter would have read 100% complete on the day it was created.
-       `src/db/goalProgress.ts` measures the distance travelled now, so the row
-       holds the real numbers.
-
-       `current_value` is 95, not 0, and that is the part that matters: zero
-       read as a weight means "below the target, therefore finished". */
-    const seed = emptyNsPlan()
-    const { plan, goal } = withGoal(seed, "lm_health", "Bodyweight", "milestone_ladder")
-    const next = updateGoal(plan, goal.id, {
-      ladder: { start: 95, target: 85, steps: 5, curveTension: 0, controlPoints: [], pins: [] },
-      unit: "kg",
-    })
-
-    const insert = goalToInsert(next, RUN, next.goals[0])
-    expect(insert.tracking_type).toBe("counter")
-    expect(insert.target_value).toBe(85)
-    expect(insert.current_value).toBe(95)
-    expect(insert.milestone_config).toMatchObject({ start: 95, target: 85 })
-    // The prose copy is gone: the columns carry it, and two copies disagree the
-    // first time somebody edits one.
-    expect(insert.description ?? "").not.toContain("down to")
-  })
-
-  it("sends a finish line as a boolean", () => {
-    const seed = emptyNsPlan()
-    const { plan, goal } = withGoal(seed, "lm_fun", "Ride a motorbike across Vietnam", "achievement")
-    const insert = goalToInsert(plan, RUN, goal)
-    expect(insert.tracking_type).toBe("boolean")
-    expect(insert.target_value).toBe(1)
-    expect(insert.goal_nature).toBe("outcome")
-  })
-
-  it("carries the why and the values across, inside the column limits", () => {
-    const seed = emptyNsPlan()
-    const { plan, goal } = withGoal(seed, "lm_money", "Save 20k", "achievement")
-    const next = updateGoal(plan, goal.id, {
-      why: "x".repeat(900),
-      values: ["freedom", "security", "discipline", "a", "b", "c", "d", "e"],
-      title: "y".repeat(400),
-    })
-
-    const insert = goalToInsert(next, RUN, next.goals[0])
-    expect(insert.motivation_note).toHaveLength(500)
-    expect(insert.aligned_values).toHaveLength(7)
-    expect(insert.title).toHaveLength(200)
-  })
-})
-
-describe("which life area a goal lands in", () => {
-  it("keeps all twelve wheel areas apart instead of folding them into the hub's five", () => {
-    const plan = emptyNsPlan()
-    const slugs = plan.areas.map((a) => areaSlug(a))
-    expect(new Set(slugs).size).toBe(plan.areas.length)
-    expect(slugs).toContain("fitness")
-    expect(slugs).toContain("health")
-    expect(slugs).toContain("money")
-  })
-
-  it("names an area the user added after its label, not its counter id", () => {
-    const plan = addArea(emptyNsPlan(), "Brazilian Jiu-Jitsu")
-    const added = plan.areas[plan.areas.length - 1]
-    expect(added.custom).toBe(true)
-    expect(areaSlug(added)).toBe("brazilian_jiu_jitsu")
-  })
-})
-
-describe("the tag that makes a second push safe", () => {
-  it("round-trips the plan goal id", () => {
-    expect(trackGoalId(RUN, trackTemplateId(RUN, "g7"))).toBe("g7")
-  })
-
-  it("does not claim a goal made by hand", () => {
-    expect(trackGoalId(RUN, null)).toBeNull()
-    expect(trackGoalId(RUN, "fw:pillar/obj/tgt:x")).toBeNull()
-  })
-
-  it("does not match a goal from the plan that was thrown away", () => {
-    // After "start over" the counter hands out g1 again. Without the run in
-    // the tag the new g1 would be deduped onto the old g1's row: a goal that
-    // never appears, under a title from a plan that no longer exists.
-    expect(trackGoalId("run2", trackTemplateId("run1", "g1"))).toBeNull()
-  })
-
-  it("reads the hub's rows back into plan ids, ignoring everything else", () => {
-    const map = pushedRealIds(RUN, [
-      { id: "uuid-a", template_id: trackTemplateId(RUN, "g1") },
-      { id: "uuid-b", template_id: trackTemplateId("otherrun", "g1") },
-      { id: "uuid-c", template_id: null },
-      { id: "uuid-d" },
-    ])
-    expect([...map.entries()]).toEqual([["g1", "uuid-a"]])
-  })
-})
-
-describe("the order the push has to go in", () => {
-  it("emits a parent before the child that feeds it, and links them by temp id", () => {
-    const seed = emptyNsPlan()
-    const a = withGoal(seed, "lm_money", "Ten grand a month", "achievement")
-    const b = withGoal(a.plan, "lm_money", "Land three clients", "achievement")
-    // The child feeds the parent, and it was written second, so priority order
-    // alone would send it first and the link would be dropped.
-    const linked = linkGoal(b.plan, b.goal.id, a.goal.id)
-
-    const inserts = buildTrackInserts(linked, RUN)
-    const ids = inserts.map((i) => i._tempId)
-    expect(ids.indexOf(a.goal.id)).toBeLessThan(ids.indexOf(b.goal.id))
-    expect(inserts.find((i) => i._tempId === b.goal.id)?._tempParentId).toBe(a.goal.id)
-  })
-
-  it("hangs a new goal off a parent that is ALREADY over there, by real uuid", () => {
-    // Pushing five goals now and five next week has to build the same tree as
-    // pushing ten at once. A temp id cannot reach a row from last week.
-    const seed = emptyNsPlan()
-    const a = withGoal(seed, "lm_money", "Ten grand a month", "achievement")
-    const b = withGoal(a.plan, "lm_money", "Land three clients", "achievement")
-    const linked = linkGoal(b.plan, b.goal.id, a.goal.id)
-
-    const inserts = buildTrackInserts(linked, RUN, {
-      goalIds: [b.goal.id],
-      pushedRealIds: new Map([[a.goal.id, "real-uuid-of-a"]]),
-    })
-    expect(inserts).toHaveLength(1)
-    expect(inserts[0].parent_goal_id).toBe("real-uuid-of-a")
-    expect(inserts[0]._tempParentId).toBeNull()
-  })
-
-  it("sends a goal whose parent is in neither place as a goal with no parent", () => {
-    const seed = emptyNsPlan()
-    const a = withGoal(seed, "lm_money", "Ten grand a month", "achievement")
-    const b = withGoal(a.plan, "lm_money", "Land three clients", "achievement")
-    const linked = linkGoal(b.plan, b.goal.id, a.goal.id)
-
-    const inserts = buildTrackInserts(linked, RUN, { goalIds: [b.goal.id] })
-    expect(inserts).toHaveLength(1)
-    expect(inserts[0]._tempParentId).toBeNull()
-    expect(inserts[0].parent_goal_id).toBeUndefined()
-  })
-
-  it("sends every goal exactly once", () => {
-    const seed = emptyNsPlan()
-    const a = withGoal(seed, "lm_fitness", "One", "achievement")
-    const b = withGoal(a.plan, "lm_money", "Two", "habit_ramp")
-    const c = withGoal(b.plan, "lm_fun", "Three", "milestone_ladder")
-    const inserts = buildTrackInserts(c.plan, RUN)
-    expect(inserts.map((i) => i._tempId).sort()).toEqual([a.goal.id, b.goal.id, c.goal.id].sort())
-  })
-})
-
-describe("the list the step shows", () => {
-  it("says what each goal becomes and which are already over there", () => {
-    const seed = emptyNsPlan()
-    const a = withGoal(seed, "lm_fitness", "Gym", "habit_ramp")
-    const withRate = updateGoal(a.plan, a.goal.id, { daysPerWeek: 4, perWeek: null })
-    const b = withGoal(withRate, "lm_fun", "See the northern lights", "achievement")
-
-    const rows = trackRows(b.plan, RUN, new Map([[a.goal.id, "uuid-a"]]))
-    const gym = rows.find((r) => r.goalId === a.goal.id)!
-    const lights = rows.find((r) => r.goalId === b.goal.id)!
-
-    expect(gym.shape).toBe("weekly")
-    expect(gym.readout).toBe("4× a week")
-    expect(gym.pushed).toBe(true)
-    expect(gym.areaLabel).toBe("Fitness")
-
-    expect(lights.shape).toBe("finish")
-    expect(lights.readout).toBe("done or not done")
-    // Deleted in the hub means pushable again, not permanently done.
-    expect(lights.pushed).toBe(false)
-  })
-
-  it("renames with the plan — a retitled goal pushes its new title", () => {
-    const seed = emptyNsPlan()
-    const { plan, goal } = withGoal(seed, "lm_fitness", "Gym", "habit_ramp")
-    const renamed = updateGoal(plan, goal.id, { title: "Train four times a week" })
-    expect(trackRows(renamed, RUN, new Map())[0].title).toBe("Train four times a week")
-  })
-})
 
 describe("surviving the goals hub", () => {
   /**
@@ -304,61 +56,13 @@ describe("surviving the goals hub", () => {
    * gone by the time the page below them finished loading. Nothing errored.
    */
   it("does not read a pushed goal as an orphan to be archived", () => {
-    const row = { id: "uuid-a", template_id: trackTemplateId(RUN, "g1") } as GoalWithProgress
+    const row = { id: "uuid-a", template_id: "ns:run1234:g1" } as GoalWithProgress
     expect(getOrphanedGoalIds([row])).toEqual([])
   })
 
   it("still archives a goal pointing at a template that really is gone", () => {
     const row = { id: "uuid-b", template_id: "deleted_template_id" } as GoalWithProgress
     expect(getOrphanedGoalIds([row])).toEqual(["uuid-b"])
-  })
-})
-
-describe("the hub embedded under the step shows THIS plan, not the account", () => {
-  const node = (id: string, templateId: string | null, children: unknown[] = []) =>
-    ({ id, template_id: templateId, children }) as never
-
-  it("drops goals made by hand and goals from another run", () => {
-    const tree = [
-      node("hand", null),
-      node("mine", trackTemplateId(RUN, "g1")),
-      node("other-run", trackTemplateId("otherrun", "g1")),
-      node("catalogue", "daygame_approaches_10"),
-    ]
-    const kept = pruneTreeToIds(tree, new Set(pushedGoalIds(RUN, flattenTree(tree)).values()))
-    expect(kept.map((n) => n.id)).toEqual(["mine"])
-  })
-
-  it("promotes a plan goal hanging off a goal made by hand instead of losing it with the parent", () => {
-    const tree = [node("hand", null, [node("mine", trackTemplateId(RUN, "g2"))])]
-    const kept = pruneTreeToIds(tree, new Set(pushedGoalIds(RUN, flattenTree(tree)).values()))
-    expect(kept.map((n) => n.id)).toEqual(["mine"])
-  })
-
-  /**
-   * THE SECOND DEVICE, AND THE REASON THIS TAKES IDS RATHER THAN A PREFIX.
-   *
-   * It narrowed by the `ns:<run>:` prefix, and the run is minted in ONE
-   * browser's localStorage. So on any other device the prefix matched nothing
-   * and this list rendered EMPTY — underneath a step that had, correctly, just
-   * said those goals were tracked. Recognised and invisible.
-   */
-  it("shows the same goals on a device that did not push them", () => {
-    const tree = [node("mine", trackTemplateId(RUN, "g1"))]
-    const links = { g1: "mine" }
-
-    const viaTagOnly = pruneTreeToIds(tree, new Set(pushedGoalIds("a-different-run", flattenTree(tree)).values()))
-    expect(viaTagOnly.map((n) => n.id), "this is the empty hub the owner would have seen").toEqual([])
-
-    const viaLinks = pruneTreeToIds(tree, new Set(pushedGoalIds("a-different-run", flattenTree(tree), links).values()))
-    expect(viaLinks.map((n) => n.id)).toEqual(["mine"])
-  })
-
-  it("keeps a plan goal's own children under it", () => {
-    const tree = [node("parent", trackTemplateId(RUN, "g1"), [node("child", trackTemplateId(RUN, "g2"))])]
-    const kept = pruneTreeToIds(tree, new Set(pushedGoalIds(RUN, flattenTree(tree)).values()))
-    expect(kept).toHaveLength(1)
-    expect(kept[0].children.map((c) => c.id)).toEqual(["child"])
   })
 })
 
@@ -1512,48 +1216,5 @@ describe("choosing the days a step runs on", () => {
     // The rate the days left behind is kept — it is the last thing anybody said.
     expect(step.daysPerWeek).toBe(1)
     expect(todayItems(cleared, TUESDAY, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!.when).toBe("anyDay")
-  })
-})
-
-/**
- * THE SECOND DEVICE, and the fifty duplicates it used to make.
- *
- * A pushed goal was recognised by its TAG — `ns:<run>:<goal>` — where `<run>`
- * is a code minted in one browser's localStorage. Open the plan anywhere else
- * and the run differs, so every goal already on the account read as never
- * pushed, the Track step offered them all, and pressing push made a second copy
- * of all fifty. Both copies then counted separately.
- */
-describe("which plan goals are already counted goals", () => {
-  const RUN = "abc12345"
-  const OTHER_RUN = "zzz99999"
-  const rows = [
-    { id: "row-1", template_id: `ns:${RUN}:g1` },
-    { id: "row-2", template_id: `ns:${RUN}:g2` },
-  ]
-
-  it("recognises them by the tag on the browser that pushed them", () => {
-    expect([...pushedGoalIds(RUN, rows)].sort()).toEqual([["g1", "row-1"], ["g2", "row-2"]])
-  })
-
-  it("recognises them on a second device FROM THE ACCOUNT'S LINKS", () => {
-    const links = { g1: "row-1", g2: "row-2" }
-    expect([...pushedGoalIds(OTHER_RUN, rows, links)].sort()).toEqual([["g1", "row-1"], ["g2", "row-2"]])
-  })
-
-  it("drops a link whose counted goal is gone, so the goal can be pushed again", () => {
-    // Archived or deleted by hand. Hiding it because a stale pointer exists is
-    // how somebody ends up unable to re-push a goal they removed themselves.
-    const links = { g1: "row-1", g2: "row-deleted" }
-    const found = pushedGoalIds(OTHER_RUN, rows, links)
-    expect(found.get("g1")).toBe("row-1")
-    expect(found.has("g2")).toBe(false)
-  })
-
-  it("still reads the tag for rows pushed before links existed", () => {
-    // Mixed: g1 has a link, g2 only the old tag, on the browser that pushed it.
-    const found = pushedGoalIds(RUN, rows, { g1: "row-1" })
-    expect(found.get("g1")).toBe("row-1")
-    expect(found.get("g2")).toBe("row-2")
   })
 })

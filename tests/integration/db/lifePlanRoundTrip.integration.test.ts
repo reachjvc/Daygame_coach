@@ -16,8 +16,9 @@
  * or worse, silently loses a field — against the real thing.
  *
  * So the middle of this round trip is Postgres, and not a hand-written INSERT
- * either: it is `save_life_plan`, the same function the app calls, with the
- * same JSONB payload the repo sends it.
+ * either: it is `apply_life_plan_changes`, the same function the app calls, with
+ * the same JSONB payload the repo sends it. (`save_life_plan`, the whole-plan
+ * save this was first written against, went in Phase 7.)
  *
  * The fixture is shared with the in-memory test on purpose. Two copies drift,
  * and the one that drifts is the one proving less.
@@ -59,7 +60,7 @@ const TABLES: Array<[keyof PlanRows, string, "plan" | "user"]> = [
   ["obstacles", "life_plan_goal_obstacles", "user"],
   ["beliefs", "life_plan_goal_beliefs", "user"],
   // Not "habits": a goal's habits are routine steps since Phase 4 (Q5), and
-  // the repo leaves the old table out of its read, as `readBackOn` does below.
+  // Phase 7 dropped the old table.
   ["goal_feeds", "life_plan_goal_feeds", "user"],
   ["goal_serves", "life_plan_goal_serves", "user"],
   ["routine_serves", "life_plan_routine_serves", "user"],
@@ -164,10 +165,8 @@ async function readBackOn(db: Client, planId: string, userId: string): Promise<P
     user_id: userId,
     version: p.version,
     seq: p.seq,
-    season_focus_id: p.season_focus_id,
     updated_at: p.updated_at,
   }
-  out.habits = []
   for (const [field, table, on] of TABLES) {
     const col = on === "plan" ? "plan_id" : "user_id"
     const val = on === "plan" ? planId : userId
@@ -197,7 +196,7 @@ describe("a plan that goes through a real Postgres comes back the same plan", ()
     ).toEqual([])
   })
 
-  test("every part of a full plan survives save_life_plan and the read", async () => {
+  test("every part of a full plan survives the save and the read", async () => {
     const { userId, planId } = await personWithPlan()
 
     const plan = fullPlan()

@@ -67,7 +67,7 @@ function fullPlan(): NsPlan {
   plan = setAnswer(plan, "affirmations", AFFIRMATION, NOW)
   plan = setAnswer(plan, "become", BECOME, NOW)
   plan = setAnswer(plan, COMMIT_KEY, "I am doing this until June", NOW)
-  plan = setAreaReview(plan, "lm_health", { ten: TEN, purpose: PURPOSE, fortnight: 4, values: ["Vitality"] }, NOW)
+  plan = setAreaReview(plan, "lm_health", { ten: TEN, purpose: PURPOSE, values: ["Vitality"] }, NOW)
   plan = setCurrentValues(plan, ["Comfort", "Freedom"], NOW)
   plan = setValues(plan, ["Freedom", "Health", "Mastery"], NOW)
   plan = addExperiences(plan, "See the northern lights", null, NOW)

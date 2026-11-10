@@ -46,7 +46,7 @@ function installFetch(rows: PlanRows) {
         patches.push(JSON.parse(String(init?.body)).changes)
         return new Response(JSON.stringify({ revision: 4 + patches.length }), { status: 200 })
       }
-      return new Response(JSON.stringify({ plan: rows, revision: 4, goalLinks: {} }), { status: 200 })
+      return new Response(JSON.stringify({ plan: rows, revision: 4 }), { status: 200 })
     }
     return new Response(JSON.stringify({}), { status: 200 })
   }))

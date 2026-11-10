@@ -34,8 +34,6 @@ export interface LoadedPlan {
   /** The rows exactly as the account holds them: what the first save is compared with. */
   rows: PlanRows | null
   revision: number
-  /** The counted-goal link per plan-goal UUID, so a push can find it. */
-  goalLinks: Record<string, string | null>
   /** The node UUIDs already minted, keyed by the plan's own ids. */
   ids: Map<string, string>
 }
@@ -52,16 +50,14 @@ export async function fetchLifePlan(account: string): Promise<LoadedPlan | undef
     const body = (await res.json()) as {
       plan: PlanRows | null
       revision?: number
-      goalLinks?: Record<string, string | null>
     }
-    if (!body.plan) return { planId: null, plan: null, rows: null, revision: 0, goalLinks: {}, ids: new Map() }
+    if (!body.plan) return { planId: null, plan: null, rows: null, revision: 0, ids: new Map() }
 
     return {
       planId: body.plan.plan_id,
       plan: rowsToPlan(body.plan),
       rows: body.plan,
       revision: body.revision ?? 0,
-      goalLinks: body.goalLinks ?? {},
       // KEPT SO THE NEXT SAVE REUSES THEM. A node that keeps its UUID keeps its
       // ticks and its journal; re-minting deletes both, silently.
       ids: new Map(body.plan.nodes.map((n) => [n.local_id, n.id])),
@@ -172,50 +168,5 @@ export async function saveLifePlanChanges(
     return { ok: true, revision: body.revision, ids, rows }
   } catch {
     return { ok: false, stale: false, message: "The last change could not be saved." }
-  }
-}
-
-/**
- * Record which counted goal each plan goal became.
- *
- * Sent after a push, keyed by the plan's own ids. Failure is reported rather
- * than thrown: the goals themselves are already on the account by this point,
- * and losing the LINK costs a duplicate on the next device — bad, but not worth
- * throwing away a push that succeeded.
- */
-export async function saveGoalLinks(links: Record<string, string | null>, account: string): Promise<boolean> {
-  if (Object.keys(links).length === 0) return true
-  try {
-    const res = await fetch("/api/life-plan/goal-link", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", ...accountHeaders(account) },
-      body: JSON.stringify({ links }),
-    })
-    return !refusedForAccount(res, account) && res.ok
-  } catch {
-    return false
-  }
-}
-
-
-/**
- * ARCHIVE A COUNTED GOAL, asked for when its plan goal is removed.
- *
- * Here rather than in the flow because a screen that fetches has to decide what
- * to show when the request fails, and `NorthStarFlow` does not fetch directly.
- * The boolean is the whole contract: the caller removes the plan goal only on
- * true, because doing the two halves independently is how somebody ends up with
- * the plan goal gone, the counted one still running, and no link left to find
- * it by.
- *
- * ARCHIVE, never `?permanent=true`. The row may carry weeks of history, and "I
- * took it out of my plan" is not "throw the record away".
- */
-export async function archiveCountedGoal(goalId: string, account: string): Promise<boolean> {
-  try {
-    const res = await fetch(`/api/goals/${goalId}`, { method: "DELETE", headers: accountHeaders(account) })
-    return !refusedForAccount(res, account) && res.ok
-  } catch {
-    return false
   }
 }

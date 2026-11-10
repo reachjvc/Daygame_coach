@@ -79,8 +79,8 @@ test.describe("the Review step", () => {
   /**
    * YOUR 10s READS AND RATES THE REVIEWS (the owner, 2026-11-05). The wheel
    * shows the latest review's score; rating an area there writes this week's
-   * review, the one the Review step opens; the old two-week number on the
-   * area row is left as it was, for Phase 7.
+   * review, the one the Review step opens. (The old two-week number on the
+   * area row went in Phase 7.)
    */
   test("Your 10s shows the latest review and rates into this week's", async ({ page, accountTimezone }) => {
     await page.goto(`${ROUTES.plan}?step=now`)
@@ -96,8 +96,6 @@ test.describe("the Review step", () => {
       { cadence: "fortnight", magic: "", outcomes: "", scores: [3] },
       { cadence: "week", magic: "", outcomes: "", scores: [7] },
     ])
-    const areas = async () => ((await (await page.request.get("/api/life-plan")).json()) as { plan: PlanRows }).plan.areas
-    expect((await areas()).find((a) => a.label === "Health")?.review_fortnight).toBe(3)
 
     // The Review step holds the same score, across a reload with this browser's copy thrown away.
     await page.evaluate(() => window.localStorage.clear())

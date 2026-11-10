@@ -4,7 +4,7 @@
  * One interface per table in `20260922100000_life_plan_tables.sql`, named and
  * typed exactly as the columns are. Nothing here is a view or a convenience
  * shape: `lifePlanMapper` turns the flow's `NsPlan` into these and back, and
- * `save_life_plan` takes them verbatim, so a field that drifts from its column
+ * `apply_life_plan_changes` takes them verbatim, so a field that drifts from its column
  * is a save that fails at the database rather than a bug that reads as data
  * loss much later.
  *
@@ -36,7 +36,6 @@ export interface LifePlanRow {
   version: number
   revision: number
   seq: number
-  season_focus_id: string | null
   created_at: string
   updated_at: string
 }
@@ -85,9 +84,7 @@ export interface AreaRow {
   review_snapshot: string
   review_blockers: string
   review_identity: string
-  review_fortnight: number | null
   review_goals_aim: "yes" | "no" | null
-  season_rank: number | null
 }
 
 export interface GoalRow {
@@ -121,18 +118,11 @@ export interface GoalRow {
   status?: "active" | "achieved" | "paused" | "dropped"
   /** The day it got there; null while active. */
   status_on?: string | null
-  serves_one_thing: boolean
   metric: "daily_area" | null
   ladder: unknown | null
   ramp_steps: unknown | null
   reasons_list: string[]
   asked: string[]
-  /**
-   * The link to the counted goal. READ ON LOAD, NEVER SENT ON SAVE — it is
-   * owned by the push, and `save_life_plan` deliberately leaves it out of its
-   * UPDATE so a device that has never pushed cannot blank it.
-   */
-  user_goal_id?: string | null
 }
 
 export interface CheckpointRow {
@@ -170,20 +160,6 @@ export interface BeliefRow {
   useful: boolean | null
   evidence: string
   replacement: string
-}
-
-export interface HabitRow {
-  id: string
-  user_id: string
-  goal_id: string
-  node_kind: "habit"
-  position: number
-  title: string
-  days_per_week: number
-  placeholder: boolean
-  /** Named days in cycle order, `{id, name}` each. The order is the meaning. */
-  routine_days: { id: string; name: string }[]
-  source_target_id: string | null
 }
 
 export interface RoutineRow {
@@ -382,7 +358,7 @@ export interface AnswerRow {
 }
 
 /**
- * Everything `save_life_plan` takes, and everything a read hands back.
+ * Everything a save can write, and everything a read hands back.
  *
  * THE FOUR DAY TABLES ARE NOT HERE, and their absence is the design. A plan is
  * replaced on every save; a day is appended to. If a day rode along in this
@@ -396,7 +372,6 @@ export interface PlanRows {
   user_id: string
   version: number
   seq: number
-  season_focus_id: string | null
   /**
    * WHEN THE ACCOUNT LAST ACCEPTED A SAVE. **Meaningful on the way OUT only.**
    *
@@ -406,7 +381,7 @@ export interface PlanRows {
    * never written, at the exact moment this work exists to be trusted.
    *
    * `PlanRows` is one shape used in two directions, which is why this needs
-   * saying: the DATABASE owns this column and `save_life_plan` sets it, so what
+   * saying: the DATABASE owns this column and the save sets it, so what
    * `planToRows` puts here on the way IN is never read by anything. It is
    * required rather than optional so that the read direction — the one that
    * matters — cannot quietly forget it the way the mapper did.
@@ -419,7 +394,6 @@ export interface PlanRows {
   checkpoints: CheckpointRow[]
   obstacles: ObstacleRow[]
   beliefs: BeliefRow[]
-  habits: HabitRow[]
   goal_feeds: GoalFeedRow[]
   goal_serves: GoalServeRow[]
   routines: RoutineRow[]
@@ -440,7 +414,7 @@ export interface PlanRows {
   answers: AnswerRow[]
 }
 
-/** Every table name the whole-plan save writes, for the tests that count them. */
+/** Every table name a plan save can write, for the tests that count them. */
 export const PLAN_ROW_KEYS = [
   "nodes",
   "north_stars",
@@ -449,7 +423,6 @@ export const PLAN_ROW_KEYS = [
   "checkpoints",
   "obstacles",
   "beliefs",
-  "habits",
   "goal_feeds",
   "goal_serves",
   "routines",
@@ -480,7 +453,7 @@ export type RowTable = (typeof PLAN_ROW_KEYS)[number]
 export interface PlanChanges {
   plan_id: string
   /** The plan row's own fields, only those that changed. */
-  plan: Partial<Pick<PlanRows, "version" | "seq" | "season_focus_id">>
+  plan: Partial<Pick<PlanRows, "version" | "seq">>
   /** Whole rows to write, per table. */
   upsert: Partial<Record<RowTable, Record<string, unknown>[]>>
   /** Rows to remove, per table, each given by its key columns only. */

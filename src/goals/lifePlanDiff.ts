@@ -14,7 +14,7 @@
  * diff never sends them, and every save after fails on a missing parent.
  *
  * A ROW IS COMPARED ON WHAT THE APP SENDS. Columns the read carries and the app
- * does not write (`user_goal_id`, defaults) are not a change, and neither is
+ * does not write (defaults) are not a change, and neither is
  * `user_id`, which the server stamps.
  *
  * TWO TABLES ARE SENT WHOLE. Values and answers have no node, so their ids are
@@ -39,7 +39,6 @@ export const ROW_KEY: Record<RowTable, readonly string[]> = {
   checkpoints: ["id"],
   obstacles: ["id"],
   beliefs: ["id"],
-  habits: ["id"],
   goal_feeds: ["goal_id", "feeds_goal_id"],
   goal_serves: ["goal_id", "area_id"],
   routines: ["id"],
@@ -62,7 +61,7 @@ export const ROW_KEY: Record<RowTable, readonly string[]> = {
 
 type Row = Record<string, unknown>
 
-const PLAN_FIELDS = ["version", "seq", "season_focus_id"] as const
+const PLAN_FIELDS = ["version", "seq"] as const
 
 /** Text that is the same for two rows holding the same values, whatever order their keys were written in. */
 function same(value: unknown): string {

@@ -88,9 +88,7 @@ describe("the training log reaches the schedule on the branch a signed-in person
 
     render(
       <TrackTab
-        account="u1"
         plan={plan}
-        runId="r1"
         today={TODAY}
         ticks={{ [TODAY]: [strengthStepId] }}
         onToggleStep={vi.fn()}

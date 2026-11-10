@@ -626,6 +626,23 @@ non-zero weekly number on its week's day), so the readings and the August–Sept
 plan's own history; then delete the 50 copies and their 24 snapshot rows with the rest of Phase 7.
 Nothing you wrote is then only on the old page, which is archived.
 
+**Run 2026-11-10, after the owner's "GO execute that phase too".** Fresh backup first:
+`~/dg-backups/life-plan-2026-11-10-before-phase7.json` (38 tables, every account). The counts above were
+read again and matched; the seven answer rows were word for word their columns. Migration
+`20261110100000_life_plan_old_homes_out.sql` (undo: `rollback/…down.sql`, structure only; rows from the
+backup) does the list above, the recommendation for the 50 copies included: their 11 values and 10 non-zero
+weekly numbers became day numbers on their plan goals (a number the plan already had for that day is
+kept), then the 50 copies and their 24 snapshot rows went. Also gone: the answer rows for every answer
+with a column of its own (the season's supports and `start:one-thing` too, not only the north star's),
+the 13 habit nodes with their table, all of `life_answers` (only `one_thing` rows) and `life_chapters`,
+the three browser keys (`north-star-v1`, `:orphan`, the Track run code), the Track step's old-goals block,
+`/api/life-plan/goal-link` and `/api/life-answers`. Kept on purpose: `NsGoal.habits` and the fold that
+turns habits in a very old browser copy into routine steps (no database home, nothing to delete); the
+node kind `habit` in the CHECK. Tests: unit 6689 passed; integration 305 of 308 (the 3 failures also fail
+on main without this change: pings and the audit, another session's); the plan's 54 e2e tests, 53 passed
+and 1 skipped (3 failed once on a cold server and passed on rerun). The SQL was first run inside a
+transaction on the test database and rolled back, with seeded copies, then for real there.
+
 ## Ground rules for every phase
 
 - Backup before each database change; `migration list` right before applying, because other sessions add

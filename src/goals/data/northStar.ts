@@ -24,23 +24,17 @@ import type {
 } from "../types"
 
 /**
- * THE OLD, SHARED NAME of the browser's copy of the plan. Read by nothing now:
- * the flow moves it to `ORPHANED_PLAN_KEY` on load. It was one name for every
- * account, so on a shared browser the next person to sign in was shown the
- * last person's plan and, with an empty account, had it imported as theirs.
+ * BROWSER COPIES NOTHING READS ANY MORE, removed on load (Plans/life-plan-rebuild.md,
+ * Phase 7, with the owner's yes on 2026-11-10): the old shared copy of the plan,
+ * one name for every account, so on a shared browser it could be another
+ * person's; where it was kept aside, unread; and the run code the Track step
+ * tagged its copies in the old goals table with.
  */
-export const NORTH_STAR_STORAGE_KEY = "north-star-v1"
-
-/**
- * Where the old shared copy is kept, unread, until Phase 7 of
- * Plans/life-plan-rebuild.md removes it with the owner's yes. It may hold work
- * only that browser had; it may be another person's, so nothing shows it.
- */
-export const ORPHANED_PLAN_KEY = "north-star-v1:orphan"
+export const OLD_SHARED_PLAN_KEYS = ["north-star-v1", "north-star-v1:orphan", "north-star-track-run"] as const
 
 /** Where the browser keeps ITS copy of one account's plan. */
 export function planCacheKey(userId: string): string {
-  return `${NORTH_STAR_STORAGE_KEY}:${userId}`
+  return `north-star-v1:${userId}`
 }
 
 /**
@@ -57,20 +51,6 @@ export function planCacheKey(userId: string): string {
  * it always said it meant and a cleared row stays cleared.
  */
 export const NS_PLAN_VERSION = 2
-
-/**
- * The id of THIS run of the plan, minted on first use and reminted by
- * "start over".
- *
- * Plan goal ids are `g1`, `g2`, … off a counter that starts again at zero when
- * everything is cleared, so they identify a goal within one run and no further.
- * Pushed goals are tagged with both, and the tag is what stops a fresh `g1`
- * from being matched onto the row of a `g1` from a plan that no longer exists.
- * Its own key rather than a field on the plan: it is about where the plan has
- * been sent, not about the plan, and nothing that reads a saved plan should
- * have to migrate for it.
- */
-export const NS_TRACK_RUN_KEY = "north-star-track-run"
 
 /**
  * Step 11's copy.
@@ -779,9 +759,6 @@ export const TRACK_COPY = {
   help:
     "Every goal with a weekly number is counted on Today: press Log one on the day you did it, and its week's count goes up. A ramp starts the week you first log it. Nothing is copied anywhere any more.",
   toToday: "Go to Today",
-  hubTitle: "Goals sent to the old goals page before",
-  hubHelp:
-    "This plan copied these there, and what you counted on them is still there. Counting on them here stays here: it does not reach Today.",
 } as const
 
 /**

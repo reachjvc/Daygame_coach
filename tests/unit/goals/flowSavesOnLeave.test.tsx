@@ -62,7 +62,7 @@ function installFetch(rows: PlanRows, { refuseWrites = false } = {}) {
       if (method === "PATCH") {
         return new Response(JSON.stringify({ revision: 5 + sent.filter((s) => s.method === "PATCH").length }), { status: 200 })
       }
-      return new Response(JSON.stringify({ plan: rows, revision: 5, goalLinks: {} }), { status: 200 })
+      return new Response(JSON.stringify({ plan: rows, revision: 5 }), { status: 200 })
     }
     return new Response(JSON.stringify({}), { status: 200 })
   }))

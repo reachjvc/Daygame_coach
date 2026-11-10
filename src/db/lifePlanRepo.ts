@@ -9,14 +9,14 @@
  * ----------------------------------------------------------------------------
  * EVERY READ IS PAGED. The day tables pass a thousand rows inside three years
  * and the plan tables can too — a plan with fifty goals, each with checkpoints,
- * obstacles, beliefs and habits, is already several hundred nodes. Supabase
+ * obstacles and beliefs, is already several hundred nodes. Supabase
  * returns at most 1,000 rows per request and says NOTHING about the ones it
  * dropped: no error, no flag, just a shorter list. That has bitten this project
  * twice on real data. `readAllRows` orders by `id` so paging cannot skip a row.
  *
  * ----------------------------------------------------------------------------
- * THE SAVE IS ONE STATEMENT AND IT IS LOUD. `save_life_plan` is a single
- * transaction with a revision lock; a stale save raises 55000 and this file
+ * THE SAVE IS ONE STATEMENT AND IT IS LOUD. `apply_life_plan_changes` is a
+ * single transaction with a revision lock; a stale save raises 55000 and this file
  * turns that into a typed refusal the route can answer 409 with. NOTHING here
  * falls back to "save it anyway" — a silent merge of two devices' plans is how
  * somebody loses an evening's work without ever seeing an error.
@@ -24,7 +24,7 @@
 
 import { createServerSupabaseClient } from "./supabase"
 import { readAllRows } from "./paging"
-import { PLAN_ROW_KEYS, type PlanChanges } from "./lifePlanTypes"
+import type { PlanChanges } from "./lifePlanTypes"
 import type {
   AnswerRow,
   AreaRow,
@@ -58,8 +58,6 @@ import type {
 export interface StoredPlan {
   rows: PlanRows
   revision: number
-  /** The counted-goal link per goal UUID. Read here, never written by the save. */
-  goalLinks: Record<string, string | null>
 }
 
 /** A save refused because somebody else's device got there first. */
@@ -72,7 +70,7 @@ export class StalePlanError extends Error {
   }
 }
 
-/** Postgres' code for the revision lock, raised by `save_life_plan`. */
+/** Postgres' code for the revision lock, raised by `apply_life_plan_changes`. */
 const STALE = "55000"
 
 /**
@@ -164,7 +162,7 @@ export async function readLifePlan(userId: string): Promise<StoredPlan | null> {
 
   const plan = await supabase
     .from("life_plans")
-    .select("id, revision, version, seq, season_focus_id, updated_at")
+    .select("id, revision, version, seq, updated_at")
     .eq("user_id", userId)
     .maybeSingle()
   if (plan.error) throw new Error(`Failed to read the plan: ${plan.error.message}`)
@@ -241,33 +239,19 @@ export async function readLifePlan(userId: string): Promise<StoredPlan | null> {
 
   return {
     revision: plan.data.revision as number,
-    // The link, read and handed back so a push can find it — and deliberately
-    // NOT part of what the save sends, so a device that has never pushed cannot
-    // blank it and make the next push duplicate every goal.
-    goalLinks: Object.fromEntries(goals.map((g) => [g.id, g.user_goal_id ?? null])),
     rows: {
       plan_id: planId,
       user_id: userId,
       version: plan.data.version as number,
       seq: plan.data.seq as number,
-      season_focus_id: (plan.data.season_focus_id as string | null) ?? null,
       updated_at: plan.data.updated_at as string,
-      /**
-       * A GOAL'S HABITS ARE ROUTINE STEPS NOW (Plans/life-plan-rebuild.md,
-       * Phase 4, Q5), copied by migration `20261104170000`. The old rows stay
-       * until Phase 7, so they are LEFT OUT OF THE READ, nodes and all. What is
-       * read here is what the change-only save diffs against: a habit row read
-       * here and not written back would be sent as a removal, and the first
-       * save after this change would have deleted every one of them.
-       */
-      nodes: nodes.filter((n) => n.kind !== "habit"),
+      nodes,
       north_stars,
       areas,
       goals,
       checkpoints: checkpoints.filter((r) => goalIds.has(r.goal_id)),
       obstacles: obstacles.filter((r) => goalIds.has(r.goal_id)),
       beliefs: beliefs.filter((r) => goalIds.has(r.goal_id)),
-      habits: [],
       goal_feeds: goal_feeds.filter((r) => goalIds.has(r.goal_id)),
       goal_serves: goal_serves.filter((r) => goalIds.has(r.goal_id)),
       routines,
@@ -291,66 +275,12 @@ export async function readLifePlan(userId: string): Promise<StoredPlan | null> {
 }
 
 /**
- * Write the whole plan, in one transaction, against a revision.
- *
- * `user_goal_id` is STRIPPED from every goal before sending. The column is the
- * link to the counted goal and it belongs to the push; the save function does
- * not list it in its UPDATE either, so this is the belt to that braces. Sending
- * it would let a second device, which has never pushed, blank the link.
- *
- * @throws StalePlanError when the stored revision has moved on.
- */
-export async function saveLifePlan(
-  rows: PlanRows,
-  expectedRevision: number,
-  userId: string,
-): Promise<number> {
-  const supabase = await createServerSupabaseClient()
-
-  // EVERY ROW CARRIES THE SIGNED-IN OWNER, stamped here from the session rather
-  // than trusted from whatever the browser sent. Row security would refuse a
-  // foreign one, but "the database will catch it" is not the same as not
-  // sending it — and the browser has no business knowing its own uuid for a
-  // save to work at all.
-  const payload: Record<string, unknown> = { ...rows, user_id: userId }
-  for (const key of PLAN_ROW_KEYS) {
-    const list = (rows as unknown as Record<string, unknown>)[key]
-    if (!Array.isArray(list)) continue
-    payload[key] = list.map((row) =>
-      row && typeof row === "object" ? { ...(row as Record<string, unknown>), user_id: userId } : row,
-    )
-  }
-  // The link belongs to the push, never to the plan save.
-  payload.goals = rows.goals.map((g) => {
-    const copy: Record<string, unknown> = { ...g, user_id: userId }
-    delete copy.user_goal_id
-    return copy
-  })
-
-  const { data, error } = await supabase.rpc("save_life_plan", {
-    p_rows: payload,
-    p_expected_rev: expectedRevision,
-  })
-
-  if (error) {
-    if (error.code === STALE) throw new StalePlanError(expectedRevision)
-    // Loud, and never "carry on as if it saved". A swallowed error here looks
-    // exactly like a successful save until the next reload.
-    throw new Error(`Failed to save the plan: ${error.message}`)
-  }
-  if (typeof data !== "number") {
-    throw new Error("The plan save returned no revision, so it cannot be trusted to have run.")
-  }
-  return data
-}
-
-/**
  * Save only what changed, quoting the revision it was built on.
  *
  * The changes come from `diffPlanRows`; `apply_life_plan_changes` writes the
  * rows named and removes only the rows named. Every written row carries the
- * signed-in owner, stamped here from the session as `saveLifePlan` does, and
- * the link to the counted goal is never sent.
+ * signed-in owner, stamped here from the session rather than trusted from
+ * whatever the browser sent.
  */
 export async function applyLifePlanChanges(
   changes: PlanChanges,
@@ -361,11 +291,7 @@ export async function applyLifePlanChanges(
 
   const upsert: Record<string, unknown[]> = {}
   for (const [table, rows] of Object.entries(changes.upsert)) {
-    upsert[table] = (rows ?? []).map((row) => {
-      const copy: Record<string, unknown> = { ...row, user_id: userId }
-      if (table === "goals") delete copy.user_goal_id
-      return copy
-    })
+    upsert[table] = (rows ?? []).map((row) => ({ ...row, user_id: userId }))
   }
 
   const { data, error } = await supabase.rpc("apply_life_plan_changes", {
@@ -381,25 +307,4 @@ export async function applyLifePlanChanges(
     throw new Error("The plan save returned no revision, so it cannot be trusted to have run.")
   }
   return data
-}
-
-/**
- * Point a plan goal at the counted goal it became.
- *
- * Its own write because the link is its own fact with its own owner: the push
- * makes it, the plan save may not touch it, and the two must not be able to
- * race each other through one code path.
- */
-export async function linkPlanGoal(
-  userId: string,
-  planGoalId: string,
-  userGoalId: string | null,
-): Promise<void> {
-  const supabase = await createServerSupabaseClient()
-  const { error } = await supabase
-    .from("life_plan_goals")
-    .update({ user_goal_id: userGoalId })
-    .eq("id", planGoalId)
-    .eq("user_id", userId)
-  if (error) throw new Error(`Failed to link the goal: ${error.message}`)
 }

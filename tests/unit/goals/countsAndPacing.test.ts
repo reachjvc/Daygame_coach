@@ -10,7 +10,9 @@
  * not obvious from reading, and a claim that something works is worth exactly
  * as much as the test that proves it. The verdict, checked:
  *
- *   Item 15 / 22 — WORKS, through the ordinary climb. No new machinery.
+ *   Item 22 — WORKS, through the ordinary climb. No new machinery. (Item 15's
+ *             check read the row the Track step pushed to `user_goals`; that
+ *             push went in Phase 7 of Plans/life-plan-rebuild.md.)
  *   Item 27 — the pacing was already written and had nowhere to land until
  *             stages existed. It lands now, on the plan side. The goals hub
  *             draws the stages but not their dates; that is a screen, not a
@@ -19,30 +21,8 @@
 
 import { describe, it, expect } from "vitest"
 import { addGoal, emptyNsPlan, goalMilestones, updateGoal } from "@/src/goals/northStarService"
-import { goalToInsert } from "@/src/goals/northStarTrackService"
 import { badgesForGoal } from "@/src/goals/goalAchievementsService"
 import type { DailyGoalSnapshotRow, UserGoalRow } from "@/src/db/goalTypes"
-
-const RUN = "run-1"
-
-describe("item 15 — a count of things, finished by reaching a total", () => {
-  /** The owner's real Deep Work Hours goal: 0 to 500 hours in total. */
-  function total(start: number, target: number) {
-    const seed = addGoal(emptyNsPlan(), "lm_money", "Deep Work Hours", "milestone_ladder")
-    const plan = updateGoal(seed, seed.goals[0].id, {
-      unit: "hours in total",
-      ladder: { start, target, steps: 4, curveTension: 0, controlPoints: [], pins: [] },
-    })
-    return goalToInsert(plan, RUN, plan.goals[0])
-  }
-
-  it("is a counter that runs to the total", () => {
-    const insert = total(0, 500)
-    expect(insert.tracking_type).toBe("counter")
-    expect(insert.current_value).toBe(0)
-    expect(insert.target_value).toBe(500)
-  })
-})
 
 describe("item 22 — a rate you hold, rewarded by a lifetime total", () => {
   /**
@@ -95,15 +75,6 @@ describe("item 27 — twenty things, twenty days, one a day", () => {
     })
   }
 
-  it("all twenty reach the goal as named stages", () => {
-    const plan = todoList(20, 20)
-    const insert = goalToInsert(plan, RUN, plan.goals[0])
-
-    expect(insert.stages).toHaveLength(20)
-    expect(insert.stages?.[0]).toBe("Item 1")
-    expect(insert.target_value).toBe(20)
-  })
-
   it("and they are paced, roughly one a day, to the date", () => {
     const plan = todoList(20, 20)
     const all = goalMilestones(plan.goals[0], TODAY)
@@ -137,7 +108,5 @@ describe("item 27 — twenty things, twenty days, one a day", () => {
     })
     expect(plan.goals[0].targetDate).toBeNull()
     expect(goalMilestones(plan.goals[0], TODAY)).toEqual([])
-    // It still crosses over as a stage, though — the names are not lost.
-    expect(goalToInsert(plan, RUN, plan.goals[0]).stages).toEqual(["A thing"])
   })
 })

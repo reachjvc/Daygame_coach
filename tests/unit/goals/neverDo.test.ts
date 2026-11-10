@@ -24,11 +24,8 @@ import {
   serializeNsPlan,
   updateGoal,
 } from "@/src/goals/northStarService"
-import { goalToInsert } from "@/src/goals/northStarTrackService"
 import { badgesForGoal } from "@/src/goals/goalAchievementsService"
 import type { DailyGoalSnapshotRow, UserGoalRow } from "@/src/db/goalTypes"
-
-const RUN = "run-1"
 
 function planWith(title: string, type: "achievement" | "habit_ramp" | "milestone_ladder" = "achievement") {
   const plan = addGoal(emptyNsPlan(), "lm_health", title, type)
@@ -66,35 +63,6 @@ describe("the plan records that a goal is a thing not to do", () => {
     const loaded = loadNsPlan(raw)!
     expect(loaded.goals[0].type).toBe("habit_ramp")
     expect(loaded.goals[0].daysPerWeek).toBe(7)
-  })
-})
-
-describe("what No weed becomes when it is pushed", () => {
-  it("is a day at a time, not three times a week", () => {
-    const { plan, goal } = planWith("No weed")
-    const insert = goalToInsert(plan, RUN, goal)
-
-    expect(insert.period).toBe("daily") // was "weekly"
-    expect(insert.tracking_type).toBe("boolean") // was "counter"
-    expect(insert.target_value).toBe(1) // was 3
-    expect(insert.is_abstinence).toBe(true)
-  })
-
-  it("the owner's own goal, with the day count that caused it", () => {
-    // daysPerWeek 3 is exactly what his plan carried. It used to become the
-    // weekly target; it is now irrelevant, because every day is its own answer.
-    const { plan, goal } = planWith("No weed")
-    const withThree = updateGoal(plan, goal.id, { daysPerWeek: 3 })
-    expect(goalToInsert(withThree, RUN, withThree.goals[0]).target_value).toBe(1)
-  })
-
-  it("an ordinary practice is untouched", () => {
-    const { plan, goal } = planWith("Workout", "habit_ramp")
-    const withRate = updateGoal(plan, goal.id, { daysPerWeek: 5 })
-    const insert = goalToInsert(withRate, RUN, withRate.goals[0])
-    expect(insert.period).toBe("weekly")
-    expect(insert.target_value).toBe(5)
-    expect(insert.is_abstinence).toBeUndefined()
   })
 })
 

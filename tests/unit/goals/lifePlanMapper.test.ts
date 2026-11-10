@@ -314,7 +314,8 @@ describe("the season focus survives whatever kind of thing it is", () => {
     plan = { ...plan, seasonFocusId: goalId }
 
     const rows = planToRows(plan, context())
-    expect(rows.season_focus_id, "a goal focus must reach the column").not.toBeNull()
+    // Its home is the season's row since Phase 7 of Plans/life-plan-rebuild.md.
+    expect(rows.seasons[0]?.focus_id, "a goal focus must reach the column").toBeTruthy()
     expect(roundTrip(plan).seasonFocusId).toBe(goalId)
   })
 
@@ -330,3 +331,44 @@ describe("the season focus survives whatever kind of thing it is", () => {
   })
 })
 
+/**
+ * AN ANSWER WITH A COLUMN OF ITS OWN IS KEPT THERE, AND ONLY THERE.
+ *
+ * Until Phase 7 of Plans/life-plan-rebuild.md the north star's and the season's
+ * answers were written twice: to their own columns and to `life_plan_answers`.
+ * The read let a non-empty column win, so clearing the column let the stale row
+ * show through, and the answer came back after it was deleted.
+ */
+describe("an answer has one home", () => {
+  const roundTrip = (plan: NsPlan): NsPlan => rowsToPlan(planToRows(plan, context()))!
+  const HOMED = ["star_why", "start:one-why", "start:one-thing"]
+
+  it("is not written as an answer row when it has a column", () => {
+    const plan = {
+      ...emptyNsPlan(),
+      northStar: "written",
+      answers: { star_why: "Because.", "start:one-why": "I was tired.", "start:one-thing": "Train.", "start:ideal-day": "Up at six." },
+    }
+    const rows = planToRows(plan, context())
+    const ids = rows.answers.map((a) => a.prompt_id)
+    for (const key of HOMED) expect(ids, `${key} written twice`).not.toContain(key)
+    // An answer with no column of its own still crosses as a row, and back.
+    expect(ids).toContain("start:ideal-day")
+    expect(roundTrip(plan).answers["start:ideal-day"]).toBe("Up at six.")
+    // And the homed ones still come back, from their columns.
+    expect(roundTrip(plan).answers.star_why).toBe("Because.")
+    expect(roundTrip(plan).answers["start:one-why"]).toBe("I was tired.")
+  })
+
+  it("ignores an answer row an old page wrote for such a key, even when the column is empty", () => {
+    const plan = { ...emptyNsPlan(), northStar: "written", answers: { "start:ideal-day": "Up at six." } }
+    const rows = planToRows(plan, context())
+    const stale = HOMED.map((prompt_id, i) => ({
+      id: `00000000-0000-4000-9000-00000000000${i}`, user_id: USER_ID, plan_id: PLAN_ID,
+      kind: "answer" as const, prompt_id, body: "an old copy",
+    }))
+    const back = rowsToPlan({ ...rows, answers: [...rows.answers, ...stale] })!
+    for (const key of HOMED) expect(back.answers[key], `${key} read from a stale row`).toBeUndefined()
+    expect(back.answers["start:ideal-day"]).toBe("Up at six.")
+  })
+})

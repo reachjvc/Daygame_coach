@@ -3,7 +3,7 @@
  *
  * `lifePlanMapper.test.ts` sends it through the mapper in memory;
  * `lifePlanRoundTrip.integration.test.ts` sends it through a real Postgres and
- * the real `save_life_plan`. Two fixtures would drift, and the one that drifted
+ * the real change-only save. Two fixtures would drift, and the one that drifted
  * would be the one proving less — the in-memory pass would keep going green on
  * a plan the database half had never seen.
  *
@@ -43,7 +43,11 @@ export function fullPlan(): NsPlan {
        while the fixture's own comment claimed something in every part. The
        round trips were passing over an empty table. */
     rungs: { place: "A small house near the water.", people: "The people who are still here in ten years." },
-    answers: { "start:one-thing": "Train four mornings a week.", star_why: "Because I said I would." },
+    /* `star_why` lives in the north star's own column; `start:ideal-day` has no
+       column of its own, so it is the one that crosses as an answer row. (The
+       `start:one-thing` answer this held went in Phase 7 of
+       Plans/life-plan-rebuild.md: the season's sentence is its home.) */
+    answers: { "start:ideal-day": "Up at six, a run, then the work.", star_why: "Because I said I would." },
     currentValues: ["Comfort", "Avoidance"],
     values: ["Courage", "Discipline"],
     seasonFocusId: health,
@@ -56,7 +60,6 @@ export function fullPlan(): NsPlan {
         ten: "Running without thinking about it.",
         purpose: "To not be afraid of my own body.",
         snapshot: "Out of breath on one flight of stairs.",
-        fortnight: 4,
         goalsAim: "yes",
         blockers: "Evenings disappear.",
         values: ["Vitality", "Consistency"],

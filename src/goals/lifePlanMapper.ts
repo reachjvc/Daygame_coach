@@ -70,7 +70,7 @@ import type {
   ValueRow,
 } from "@/src/db/lifePlanTypes"
 import { normalizeNsPlan, readTimeframe } from "./northStarService"
-import { COMMIT_DATE_KEY, NORTH_STAR_ANSWER_COLUMNS, ONE_ANSWERS } from "./data/northStarStart"
+import { COMMIT_DATE_KEY, NORTH_STAR_ANSWER_COLUMNS, NORTH_STAR_ANSWER_KEYS, ONE_ANSWERS } from "./data/northStarStart"
 import type { NsPastNorthStar, NsPastSeason, NsReview, NsReviewVerdict } from "./types"
 import { readGoalStatus } from "./goalStatus"
 import { SEASON_ANSWER_KEYS } from "./seasonAnswers"
@@ -128,8 +128,8 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
 
   // ---------------------------------------------------------------- the star
   // Earlier north stars first, each its own node, then the current one. Its
-  // answers are written to its own columns AND, until Phase 7 of
-  // Plans/life-plan-rebuild.md, still to the answer rows below.
+  // answers are written to its own columns, and only there (Phase 7 of
+  // Plans/life-plan-rebuild.md removed the copies in the answer rows).
   const north_stars: NorthStarRow[] = (plan.pastNorthStars ?? []).map((past) => {
     const n = node(`${NORTH_STAR_LOCAL_ID}:${past.id}`, "north_star")
     return {
@@ -160,7 +160,6 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
     const n = node(area.id, "area")
     areaId.set(area.id, n.id)
     const review = plan.review?.[area.id]
-    const rank = plan.seasonAreaIds?.indexOf(area.id) ?? -1
     return {
       id: n.id,
       user_id: userId,
@@ -176,9 +175,7 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
       review_snapshot: review?.snapshot ?? "",
       review_blockers: review?.blockers ?? "",
       review_identity: review?.identity ?? "",
-      review_fortnight: review?.fortnight ?? null,
       review_goals_aim: review?.goalsAim ?? null,
-      season_rank: rank >= 0 ? rank : null,
     }
   })
 
@@ -225,7 +222,6 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
       timeframe: goal.timeframe ?? null,
       status: goal.status ?? "active",
       status_on: goal.status === "active" ? null : goal.statusOn ?? null,
-      serves_one_thing: Boolean(goal.servesOneThing),
       metric: goal.metric ?? null,
       ladder: goal.ladder ?? null,
       ramp_steps: goal.rampSteps ?? null,
@@ -258,8 +254,6 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
         evidence: b.evidence ?? "", replacement: b.replacement ?? "",
       })
     })
-    // A goal's habits are not written: they are routine steps that serve the
-    // goal now (Phase 4, Q5), and the old table is only kept until Phase 7.
     ;(goal.values ?? []).forEach((v, j) => {
       if (!v.trim()) return
       values.push({
@@ -436,7 +430,10 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
       id: ctx.idFor(`answer:rung:${prompt_id}`, "goal"),
       user_id: userId, plan_id: planId, kind: "rung" as const, prompt_id, body,
     })),
-    ...entries(plan.answers).map(([prompt_id, body]) => ({
+    // An answer with a column of its own (the north star's, the season's) is
+    // written there and not here: two homes for one answer let a stale copy
+    // show through when the column is cleared.
+    ...entries(plan.answers).filter(([k]) => !HOMED_ANSWER_KEYS.has(k)).map(([prompt_id, body]) => ({
       id: ctx.idFor(`answer:answer:${prompt_id}`, "goal"),
       user_id: userId, plan_id: planId, kind: "answer" as const, prompt_id, body,
     })),
@@ -444,9 +441,8 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
 
   // -------------------------------------------------------------- seasons
   // The past ones as they were kept, then the current one, built from the
-  // plan's own season fields (Plans/life-plan-rebuild.md, Phase 3). Those
-  // fields are ALSO still written to their old homes above (`season_rank`,
-  // `serves_one_thing`, the answers, `season_focus_id`) until Phase 7.
+  // plan's own season fields (Plans/life-plan-rebuild.md, Phase 3). Their old
+  // homes went in Phase 7.
   const seasons: SeasonRow[] = []
   const season_areas: SeasonAreaRow[] = []
   const season_goals: SeasonGoalRow[] = []
@@ -526,23 +522,6 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
     user_id: userId,
     version: plan.version ?? 1,
     seq: plan.seq ?? 0,
-    /**
-     * THE ONE THING FOR THIS SEASON, whatever kind of thing it is.
-     *
-     * Looked up in `nodes`, not in `areaId`. It was `areaId.get(...)` until
-     * 2026-09-23, which silently resolved to null for a focus that is a GOAL —
-     * and `NsGoal`'s own type comment says a goal is the usual case ("Usually a
-     * goal, occasionally an area with nothing written under it yet"). So the
-     * one field the whole Focus step exists to set was dropped by the save for
-     * most people, and came back null on the next device: the season band lost
-     * its heading and the step's ring fell from done back to started.
-     *
-     * The column's foreign key had to move with it — see
-     * `20260923130000_season_focus_is_any_node.sql`.
-     */
-    season_focus_id: plan.seasonFocusId
-      ? nodes.find((n) => n.local_id === plan.seasonFocusId)?.id ?? null
-      : null,
     /* Carried so the shape is whole, and ignored by the server, which owns this
        column. See the field's own note in `lifePlanTypes.ts`. */
     updated_at: plan.updatedAt ?? "",
@@ -553,7 +532,6 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
     checkpoints,
     obstacles,
     beliefs,
-    habits: [],
     goal_feeds,
     goal_serves,
     routines,
@@ -629,13 +607,12 @@ export function rowsToPlan(rows: PlanRows): NsPlan | null {
     const answered =
       Boolean(a.review_ten || a.review_purpose || a.review_snapshot || a.review_blockers ||
         a.review_identity || values.length) ||
-      a.review_fortnight !== null || a.review_goals_aim !== null
+      a.review_goals_aim !== null
     if (!answered) continue
     review[id(a.id)] = {
       ten: a.review_ten,
       purpose: a.review_purpose,
       snapshot: a.review_snapshot,
-      fortnight: a.review_fortnight,
       goalsAim: a.review_goals_aim,
       blockers: a.review_blockers,
       identity: a.review_identity,
@@ -667,8 +644,7 @@ export function rowsToPlan(rows: PlanRows): NsPlan | null {
     daysPerWeek: g.days_per_week,
     perWeek: g.per_week,
     rampSteps: (g.ramp_steps ?? null) as NsGoal["rampSteps"],
-    // Never read back, even when the rows carry some: they are routine steps
-    // now (Phase 4, Q5), and the read leaves the old table out.
+    // Always empty from the account: a goal's habits are routine steps (Q5).
     habits: [],
     reasonsList: g.reasons_list,
     feeling: g.feeling,
@@ -681,7 +657,8 @@ export function rowsToPlan(rows: PlanRows): NsPlan | null {
       .filter((f) => f.goal_id === g.id)
       .sort((a, b) => a.position - b.position)
       .map((f) => id(f.feeds_goal_id)),
-    servesOneThing: g.serves_one_thing,
+    // Set below from the current season's goals, its only home.
+    servesOneThing: false,
     reward: g.reward,
     stake: g.stake,
     obstacles: byGoal(rows.obstacles, g.id).map((o): NsObstacle => ({
@@ -765,8 +742,7 @@ export function rowsToPlan(rows: PlanRows): NsPlan | null {
     }))
 
   // The current season, when the account has one: it is the home of the
-  // focus areas, the focus, the goals inside it and its answers; the old
-  // homes are read only for a plan that has none (Phase 3).
+  // focus areas, the focus, the goals inside it and its answers.
   const seasonRows = rows.seasons ?? []
   const currentSeason = seasonRows.find((r) => !r.ended_on) ?? null
   const inSeason = (sid: string) => ({
@@ -838,10 +814,11 @@ export function rowsToPlan(rows: PlanRows): NsPlan | null {
     routines,
     goals,
     review,
-    // The answer rows, with the north star's own columns over them: those are
-    // the answers' home now, and the rows are the copy kept until Phase 7.
+    // The answer rows, then the north star's and the season's own columns.
+    // A row for an answer with a column of its own is not read: it can only be
+    // a copy an old page wrote.
     answers: {
-      ...fromAnswers(rows.answers, "answer"),
+      ...withoutHomed(fromAnswers(rows.answers, "answer")),
       ...(star ? starAnswersOf(star) : {}),
       ...(currentSeason ? seasonAnswersOf(currentSeason) : {}),
     },
@@ -850,15 +827,8 @@ export function rowsToPlan(rows: PlanRows): NsPlan | null {
     priorityIds: [...rows.goals]
       .sort((a, b) => a.priority_rank - b.priority_rank)
       .map((g) => id(g.id)),
-    seasonFocusId: currentSeason
-      ? currentSeason.focus_id ? id(currentSeason.focus_id) || null : null
-      : rows.season_focus_id ? id(rows.season_focus_id) : null,
-    seasonAreaIds: nowIn
-      ? nowIn.areaIds
-      : areaRows
-          .filter((a) => a.season_rank !== null)
-          .sort((a, b) => (a.season_rank ?? 0) - (b.season_rank ?? 0))
-          .map((a) => id(a.id)),
+    seasonFocusId: currentSeason?.focus_id ? id(currentSeason.focus_id) || null : null,
+    seasonAreaIds: nowIn ? nowIn.areaIds : [],
     experiences: [...rows.experiences]
       .sort((a, b) => a.position - b.position)
       .map((x): NsExperience => ({
@@ -955,6 +925,17 @@ function starAnswersOf(row: NorthStarRow): Record<string, string> {
   }
   if (row.committed_on) out[COMMIT_DATE_KEY] = row.committed_on
   return out
+}
+
+/**
+ * The answers kept in columns of their own: the north star's, its commitment
+ * date, the season's supports, and the season's sentence (`season.sentence`;
+ * the old `start:one-thing` answer was its copy).
+ */
+const HOMED_ANSWER_KEYS: ReadonlySet<string> = new Set([...NORTH_STAR_ANSWER_KEYS, ...SEASON_ANSWER_KEYS, ONE_ANSWERS.oneThing])
+
+function withoutHomed(answers: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(Object.entries(answers).filter(([k]) => !HOMED_ANSWER_KEYS.has(k)))
 }
 
 function fromAnswers(answers: AnswerRow[], kind: "rung" | "answer"): Record<string, string> {

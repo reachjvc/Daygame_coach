@@ -17,7 +17,6 @@ import { ACCOUNT_CHANGED_HEADER, PAGE_ACCOUNT_HEADER } from "@/src/shared/pageAc
 import { call } from "./call"
 import * as plan from "@/app/api/life-plan/route"
 import * as day from "@/app/api/life-plan/day/route"
-import * as goalLink from "@/app/api/life-plan/goal-link/route"
 import * as goal from "@/app/api/goals/[id]/route"
 
 vi.mock("@/src/db/supabase", async (importOriginal) =>
@@ -41,7 +40,6 @@ describe("a request naming another account than the one signed in", () => {
       await call(plan.PATCH, "/api/life-plan", { method: "PATCH", headers: named, body: { changes: { plan_id: x.id, replace: [] }, revision: 0 } }),
       await call(day.GET, "/api/life-plan/day", { headers: named }),
       await call(day.PUT, "/api/life-plan/day", { method: "PUT", headers: named, body: { date: today, note: "meant for X" } }),
-      await call(goalLink.PUT, "/api/life-plan/goal-link", { method: "PUT", headers: named, body: { links: {} } }),
       await call(goal.DELETE, `/api/goals/${x.id}`, { method: "DELETE", headers: named, params: { id: x.id } }),
     ]
     for (const [i, a] of answers.entries()) {

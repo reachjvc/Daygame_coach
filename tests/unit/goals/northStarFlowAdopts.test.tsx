@@ -104,7 +104,7 @@ function installFetch({ enrollmentsAnswer }: { enrollmentsAnswer: "running" | "f
         revision += 1
         return new Response(JSON.stringify({ revision }), { status: 200 })
       }
-      return new Response(JSON.stringify({ plan: rows, revision, goalLinks: {} }), { status: 200 })
+      return new Response(JSON.stringify({ plan: rows, revision }), { status: 200 })
     }
     // Everything else the page reaches for, answered emptily rather than thrown.
     return new Response(JSON.stringify({}), { status: 200 })

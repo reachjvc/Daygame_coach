@@ -94,7 +94,7 @@ function installFetch(accountDays?: { daily: object; logged: object; notes: obje
         revision += 1
         return new Response(JSON.stringify({ revision }), { status: 200 })
       }
-      return new Response(JSON.stringify({ plan: rows, revision, goalLinks: {} }), { status: 200 })
+      return new Response(JSON.stringify({ plan: rows, revision }), { status: 200 })
     }
     // Everything else the page reaches for: answer emptily rather than throw,
     // so a failure here cannot look like a save.

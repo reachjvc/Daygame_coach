@@ -12,23 +12,15 @@
  * The tracking page's header read the first one, so writing your answer in the
  * step named after it changed nothing on the page that showed it.
  *
- * There are now two deliberate namespaces — the Life Mastery written answers in
- * `life_answers`, and the field-report catalogue — and they must never share a
- * name. Two namespaces is fine. One name meaning two things is not.
+ * The one thing is the season's sentence now (`life_answers`, its old home, went
+ * in Phase 7 of Plans/life-plan-rebuild.md). What stays to guard is the
+ * field-report catalogue: no question in it may claim to be the one thing.
  */
 
 import { describe, it, expect } from "vitest"
-import { LIFE_ANSWER_KEYS } from "@/src/db/lifeAnswerRepo"
 import { FIELD_LIBRARY } from "@/src/tracking/config"
 
 describe("AT4 — answer namespaces stay disjoint", () => {
-  it("no life-answer key is also a field-report question id", () => {
-    const fieldIds = new Set(FIELD_LIBRARY.map((f) => f.id))
-    const clashes = LIFE_ANSWER_KEYS.filter((k) => fieldIds.has(k))
-
-    expect(clashes, `these names mean two different things: ${clashes.join(", ")}`).toEqual([])
-  })
-
   it("no field-report question still claims to be the one thing", () => {
     /**
      * Matched on the words a person reads, not on the id: `one_focus` was

@@ -129,9 +129,6 @@ async function dayCounts(page: Page): Promise<Record<string, number>> {
   return out
 }
 
-/** A goal made outside the plan, by this spec, so "not in the plan's hub" has something to be about */
-const FOREIGN_TITLE = 'E2E goal from outside the plan'
-
 test.describe('Life Mastery — the track step', () => {
   test.beforeEach(async ({ page, account }) => {
     // The account is this worker's alone, so every goal on it is a leftover of
@@ -147,7 +144,7 @@ test.describe('Life Mastery — the track step', () => {
     const counting = page.locator('section', { hasText: 'Counting happens on Today' })
     await expect(counting.getByRole('heading', { name: 'Counting happens on Today' })).toBeVisible()
     await expect(page.getByRole('button', { name: /^Track \d+ goals?$/ })).toHaveCount(0)
-    // Nothing was ever copied on this account, so the old block is not drawn either.
+    // The block that showed goals copied before is gone (Phase 7).
     await expect(page.locator('section', { hasText: 'Goals sent to the old goals page before' })).toHaveCount(0)
 
     await counting.getByRole('button', { name: 'Go to Today' }).click()
@@ -225,30 +222,5 @@ test.describe('Life Mastery — the track step', () => {
     await expect(page.getByRole('button', { name: 'Fitness today: 7 out of 10' })).toHaveAttribute('aria-pressed', 'true')
     await expect(vitamins).toBeChecked()
     await expect(page.getByText('1 of 2 this week')).toBeVisible()
-  })
-
-  test('still shows the goals copied before the change, with their counts, and nothing from outside the plan', async ({ page }) => {
-    const seeded = await page.request.post('/api/goals', {
-      data: { title: FOREIGN_TITLE, category: 'custom', target_value: 10, life_area: 'custom' },
-    })
-    expect(seeded.ok(), `could not seed the outside goal: ${seeded.status()}`).toBe(true)
-    // A goal the old Track step copied: tagged with its plan goal, and linked to it on the account.
-    const copied = await page.request.post('/api/goals', {
-      data: { title: 'E2E gym sessions', category: 'custom', target_value: 2, life_area: 'custom', template_id: 'ns:e2e-old-run:g1' },
-    })
-    expect(copied.ok(), `could not seed the copied goal: ${copied.status()}`).toBe(true)
-    const copiedId = ((await copied.json()) as { id: string }).id
-    const linked = await page.request.put('/api/life-plan/goal-link', { data: { links: { g1: copiedId } } })
-    expect(linked.ok(), `could not link it: ${linked.status()}`).toBe(true)
-
-    await page.reload()
-    await page.getByRole('button', { name: /^\d+\s*Track\b/ }).click()
-    const hub = page.locator('section', { hasText: 'Goals sent to the old goals page before' })
-    // Folded: counting on them there no longer reaches Today.
-    await hub.getByRole('button', { name: /Goals sent to the old goals page before \(1\)/ }).click()
-    await expect(hub.getByText('E2E gym sessions')).toBeVisible({ timeout: 15000 })
-    // Goals made outside this plan are not in it.
-    await expect(hub.getByText(FOREIGN_TITLE, { exact: true })).toHaveCount(0)
-    await expect(hub.getByTestId('goals-new-goal-button')).toHaveCount(0)
   })
 })

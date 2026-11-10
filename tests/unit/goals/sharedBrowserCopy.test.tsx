@@ -7,14 +7,16 @@
  * account. Somebody signs out, somebody else signs in on the same laptop, and
  * the flow painted the first person's plan for the second, and, if the second
  * account was empty, imported it as theirs on the next save. The copy is kept
- * per account now (`planCacheKey`), and the old shared one is moved aside on load.
+ * per account now (`planCacheKey`). The old shared one was moved aside on load
+ * until Phase 7 of Plans/life-plan-rebuild.md; now it, the copy kept aside and
+ * the Track step's old run code are all removed on load (`OLD_SHARED_PLAN_KEYS`).
  */
 
 import { cleanup, render, act, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { NorthStarFlow } from "@/src/goals/components/north-star/NorthStarFlow"
 import { emptyNsPlan, serializeNsPlan, setNorthStar } from "@/src/goals/northStarService"
-import { NORTH_STAR_STORAGE_KEY, ORPHANED_PLAN_KEY, planCacheKey } from "@/src/goals/data/northStar"
+import { OLD_SHARED_PLAN_KEYS, planCacheKey } from "@/src/goals/data/northStar"
 
 const SECOND_PERSON = "33333333-3333-4333-8333-333333333333"
 const FIRST_PERSONS_STAR = "The first person's private north star"
@@ -56,17 +58,22 @@ afterEach(() => {
 })
 
 describe("a plan left in the browser by somebody else", () => {
-  it("is not shown, not sent, and not left where the next page reads", async () => {
-    window.localStorage.setItem(NORTH_STAR_STORAGE_KEY, serializeNsPlan(setNorthStar(emptyNsPlan(), FIRST_PERSONS_STAR)))
+  it("is not shown, not sent, and removed, with the copy kept aside and the old run code", async () => {
+    const [shared, keptAside, runCode] = OLD_SHARED_PLAN_KEYS
+    expect([shared, keptAside, runCode]).toEqual(["north-star-v1", "north-star-v1:orphan", "north-star-track-run"])
+    const theirs = serializeNsPlan(setNorthStar(emptyNsPlan(), FIRST_PERSONS_STAR))
+    window.localStorage.setItem(shared, theirs)
+    window.localStorage.setItem(keptAside, theirs)
+    window.localStorage.setItem(runCode, "abc12345")
 
     render(<NorthStarFlow userId={SECOND_PERSON} />)
     await passTime(30_000)
 
     expect(screen.queryByText(FIRST_PERSONS_STAR), "shown to the second person").toBeNull()
     expect(bodies.filter((b) => b.body.includes(FIRST_PERSONS_STAR)), "sent to the second person's account").toEqual([])
-    expect(window.localStorage.getItem(NORTH_STAR_STORAGE_KEY), "left where the next person's page reads").toBeNull()
-    // Moved aside, not deleted: it may hold work only this browser had.
-    expect(window.localStorage.getItem(ORPHANED_PLAN_KEY)).toContain(FIRST_PERSONS_STAR)
+    for (const key of OLD_SHARED_PLAN_KEYS) {
+      expect(window.localStorage.getItem(key), `${key} left in the browser`).toBeNull()
+    }
   })
 
   it("while this person's own copy is still theirs to keep", async () => {

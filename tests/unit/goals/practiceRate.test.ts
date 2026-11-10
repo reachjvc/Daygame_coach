@@ -21,21 +21,16 @@
  *
  * Nothing pinned any of this before: the whole `tests/unit/goals` suite passed
  * unchanged when the behaviour was corrected.
+ *
+ * Since Phase 7 of Plans/life-plan-rebuild.md there is no counted goal: the
+ * Track step's copies in `user_goals` and `goalToInsert` are gone, so the
+ * checks that compared the grid with that goal went with them. The rate the
+ * grid and Today read is what stays, and is what this file checks.
  */
 
 import { describe, it, expect } from "vitest"
-import { addGoal, emptyNsPlan, updateGoal } from "@/src/goals/northStarService"
-import {
-  activityPerWeek,
-  goalToInsert,
-  isEveryDay,
-  practiceRateInWeek,
-  trackActivities,
-} from "@/src/goals/northStarTrackService"
+import { isEveryDay, practiceRateInWeek } from "@/src/goals/northStarTrackService"
 import type { HabitRampStep } from "@/src/goals/types"
-import { rampTargetForPeriod } from "@/src/db/goalRepo"
-
-const RUN = "run-1"
 
 /** The owner's real Approaches ramp, from plan_snapshots revision 340. */
 const APPROACHES_RAMP: HabitRampStep[] = [
@@ -52,20 +47,6 @@ const BEDTIME_RAMP: HabitRampStep[] = [
   { durationWeeks: 8, frequencyPerWeek: 6 },
   { durationWeeks: 24, frequencyPerWeek: 7 },
 ]
-
-/** A driver exactly as the owner's plan holds it. */
-function driver(over: { perWeek?: number | null; daysPerWeek?: number; rampSteps?: HabitRampStep[] | null; unit?: string } = {}) {
-  const seed = emptyNsPlan()
-  const added = addGoal(seed, "lm_relationship", "Approaches", "habit_ramp")
-  const goal = added.goals[added.goals.length - 1]
-  const plan = updateGoal(added, goal.id, {
-    perWeek: over.perWeek ?? null,
-    daysPerWeek: over.daysPerWeek ?? 7,
-    rampSteps: over.rampSteps ?? null,
-    unit: over.unit ?? "/week",
-  })
-  return { plan, goal: plan.goals[0] }
-}
 
 describe("practiceRateInWeek", () => {
   const approaches = { perWeek: null, daysPerWeek: 7, rampSteps: APPROACHES_RAMP }
@@ -107,28 +88,6 @@ describe("practiceRateInWeek", () => {
   })
 })
 
-describe("the goal a ramped practice becomes", () => {
-  it("asks for the ramp's first week, not its steady state", () => {
-    const { plan, goal } = driver({ rampSteps: APPROACHES_RAMP })
-    const insert = goalToInsert(plan, RUN, goal)
-
-    expect(insert.tracking_type).toBe("counter")
-    expect(insert.period).toBe("weekly")
-    expect(insert.target_value).toBe(5) // was 7
-    expect(insert.ramp_steps).toHaveLength(5)
-  })
-
-  it("a practice with no ramp is untouched", () => {
-    const { plan, goal } = driver({ perWeek: 20, rampSteps: null })
-    expect(goalToInsert(plan, RUN, goal).target_value).toBe(20)
-  })
-
-  it("never asks for less than one, however the ramp starts", () => {
-    const { plan, goal } = driver({ rampSteps: [{ durationWeeks: 4, frequencyPerWeek: 0 }] })
-    expect(goalToInsert(plan, RUN, goal).target_value).toBe(1)
-  })
-})
-
 describe("a practice that is simply every day", () => {
   /**
    * The owner's concept item 13: "gør altid X", the mirror of item 14's "never
@@ -137,15 +96,6 @@ describe("a practice that is simply every day", () => {
    * can log all seven on Sunday evening and the week reads complete, while the
    * point of "read every night" is that Wednesday had its own answer.
    */
-  it("goes over as a daily yes-or-no, like its mirror", () => {
-    const { plan, goal } = driver({ perWeek: null, daysPerWeek: 7, rampSteps: null })
-    const insert = goalToInsert(plan, RUN, goal)
-
-    expect(insert.period).toBe("daily")
-    expect(insert.tracking_type).toBe("boolean")
-    expect(insert.target_value).toBe(1)
-  })
-
   it("only when it counts occasions, never when it counts things", () => {
     // "Twenty approaches a week" is a weekly total; seven of those is not a
     // daily yes/no. Nor is a ramped goal, whose rate changes week by week.
@@ -153,84 +103,5 @@ describe("a practice that is simply every day", () => {
     expect(isEveryDay({ perWeek: null, daysPerWeek: 7, rampSteps: APPROACHES_RAMP } as never)).toBe(false)
     expect(isEveryDay({ perWeek: null, daysPerWeek: 4, rampSteps: null } as never)).toBe(false)
     expect(isEveryDay({ perWeek: null, daysPerWeek: 7, rampSteps: null } as never)).toBe(true)
-  })
-
-  it("a six-day practice is still a weekly counter", () => {
-    const { plan, goal } = driver({ perWeek: null, daysPerWeek: 6, rampSteps: null })
-    const insert = goalToInsert(plan, RUN, goal)
-    expect(insert.period).toBe("weekly")
-    expect(insert.target_value).toBe(6)
-  })
-})
-
-describe("the week grid and the goal beneath it cannot disagree", () => {
-  /**
-   * THE CLASS, not the instance. The schedule on the Track step and the counted
-   * goal rendered below it are two readings of one question — "how many this
-   * week" — and they were computed by two functions 250 lines apart in the same
-   * file. One walked the ramp; one did not.
-   *
-   * Compared as WEEKLY TOTALS, because a goal's target is per PERIOD: a daily
-   * rule asks for one a day, which is seven a week. Comparing the raw numbers
-   * would have made this test quietly stop meaning anything the day every-day
-   * practices started going over as daily.
-   */
-  const weeklyTotalOf = (insert: { period?: string; target_value: number }) =>
-    insert.period === "daily" ? insert.target_value * 7 : insert.target_value
-
-  it("agree in week one for every shape of practice, daily ones included", () => {
-    const shapes = [
-      { rampSteps: APPROACHES_RAMP },
-      { rampSteps: BEDTIME_RAMP },
-      { perWeek: 20, rampSteps: APPROACHES_RAMP },
-      { perWeek: 20, rampSteps: null },
-      { perWeek: null, daysPerWeek: 4, rampSteps: null },
-      { perWeek: null, daysPerWeek: 6, rampSteps: null },
-      // The daily one. Grid says seven a week; the goal asks for one a day.
-      { perWeek: null, daysPerWeek: 7, rampSteps: null },
-    ]
-
-    for (const shape of shapes) {
-      const { plan, goal } = driver(shape)
-      const activity = trackActivities(plan).find((a) => a.id === goal.id)!
-      expect(
-        activityPerWeek(activity, 1),
-        `week grid and goal disagree for ${JSON.stringify(shape)}`,
-      ).toBe(weeklyTotalOf(goalToInsert(plan, RUN, goal)))
-    }
-  })
-
-  /**
-   * AND IN EVERY WEEK AFTER, which is where they parted. Week one was all the
-   * test above asked, so a plan saying "gym four times a week, easing in at two
-   * for a fortnight" showed 2, 2, 4 on the grid while the goal it created
-   * settled at 2 once the ramp ended (found by life-mastery-track.spec,
-   * 2026-10-13). The goal's side of each week is what the weekly roll does with
-   * the row it was given (`rampTargetForPeriod`), not a re-reading of the plan.
-   */
-  it("agree in every week, after the ramp as well as during it", () => {
-    const shapes = [
-      { rampSteps: APPROACHES_RAMP },
-      { rampSteps: BEDTIME_RAMP },
-      { perWeek: 20, rampSteps: APPROACHES_RAMP },
-      // The Life Mastery shape: the ramp is only the ease-in; four is the rate.
-      { perWeek: null, daysPerWeek: 4, rampSteps: [{ frequencyPerWeek: 2, durationWeeks: 2 }] },
-      { perWeek: null, daysPerWeek: 5, rampSteps: [{ frequencyPerWeek: 1, durationWeeks: 3 }, { frequencyPerWeek: 3, durationWeeks: 2 }] },
-      { perWeek: 20, rampSteps: null },
-      { perWeek: null, daysPerWeek: 4, rampSteps: null },
-    ]
-    const created = "2026-01-05T10:00:00Z"
-    const day = (week: number) => new Date(Date.parse(created) + (week - 1) * 7 * 86400000).toISOString().slice(0, 10)
-
-    for (const shape of shapes) {
-      const { plan, goal } = driver(shape)
-      const activity = trackActivities(plan).find((a) => a.id === goal.id)!
-      const insert = goalToInsert(plan, RUN, goal)
-      const row = { period: insert.period, ramp_steps: insert.ramp_steps ?? null, created_at: created, target_value: insert.target_value }
-      for (let week = 1; week <= 70; week++) {
-        const goalSays = rampTargetForPeriod(row, day(week)) ?? weeklyTotalOf(insert)
-        expect(activityPerWeek(activity, week), `week ${week} of ${JSON.stringify(shape)}`).toBe(goalSays)
-      }
-    }
   })
 })

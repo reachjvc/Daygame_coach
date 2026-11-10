@@ -13,13 +13,6 @@ import type {
 } from "@/src/goals/data/lifeDirection"
 import type { PairwiseState } from "@/src/goals/data/valuesFramework"
 
-// Re-export types from DB layer for convenience
-import type {
-  GoalType as GoalTypeName,
-  GoalNature as GoalNatureName,
-  GoalTrackingType as GoalTrackingTypeName,
-  GoalPeriod as GoalPeriodName,
-} from "@/src/db/goalTypes"
 
 /**
  * The same four names again, IMPORTED rather than re-exported.
@@ -1410,61 +1403,6 @@ export interface NsPlace {
 }
 
 /**
- * One plan goal, shaped for `POST /api/goals/batch`.
- *
- * A subset of `CreateGoalSchema` plus the batch route's two temp-id fields —
- * only the columns the North Star flow can honestly fill. Deliberately not
- * `UserGoalInsert`: that type carries linked metrics, display categories and
- * phases that this flow has no opinion about, and a partial of it would let a
- * field be set here that nothing in the plan ever populates.
- */
-export interface NsTrackInsert {
-  /** The plan goal's id. `createGoalBatch` maps it to the real row's uuid. */
-  _tempId: string
-  /** The plan goal this one feeds, when that goal is in the same push. */
-  _tempParentId: string | null
-  /** The real uuid of the goal this one feeds, when it is already in the hub. */
-  parent_goal_id?: string
-  title: string
-  life_area: string
-  category: string
-  /** Always `ns:<plan goal id>` — the join, and what makes a re-push idempotent. */
-  template_id: string
-  target_value: number
-  current_value?: number
-  tracking_type: GoalTrackingTypeName
-  period: GoalPeriodName
-  goal_type: GoalTypeName
-  goal_nature: GoalNatureName
-  description?: string
-  motivation_note?: string
-  target_date?: string
-  custom_end_date?: string
-  aligned_values?: string[]
-  milestone_config?: Record<string, unknown>
-  ramp_steps?: Record<string, unknown>[]
-  /** A goal NOT to do. Daily, yes-or-no, and never rewarded with a streak. */
-  is_abstinence?: boolean
-  /** The named steps a staged goal is reached by, in order. */
-  stages?: string[] | null
-}
-
-/** One row of the track step's list: a plan goal and what it becomes. */
-export interface NsTrackRow {
-  goalId: string
-  title: string
-  areaLabel: string
-  areaColor: string
-  /** How it will be counted: every week, up a ladder, or once. */
-  shape: "weekly" | "climb" | "finish"
-  /** The numbers in one phrase — "4× a week", "80 → 100", "done or not done". */
-  readout: string
-  /** Whether a row with this template id is in the goals hub right now. */
-  pushed: boolean
-}
-
-
-/**
  * Where one value has already been named, and how loudly.
  *
  * `hits` is 1 for anything picked by hand. A piece of writing can cue the same
@@ -1946,14 +1884,6 @@ export interface NsAreaReview {
    * mean something.
    */
   snapshot: string
-  /**
-   * The old "last two weeks" rating, 0-10. Nothing shows or writes it since
-   * 2026-11-05: Your 10s reads and rates through the reviews
-   * (`latestScores`, `rateArea`), where this number was copied as the first
-   * review. The mapper still carries it back unchanged, so a save never
-   * clears the column before Phase 7 drops it (Plans/life-plan-rebuild.md).
-   */
-  fortnight: number | null
   /** Whether you say your current goals actually aim at your 10. */
   goalsAim: "yes" | "no" | null
   /** What could stop you in this area. */

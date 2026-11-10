@@ -1,43 +1,19 @@
 /**
- * THE ONE THING — what it is, when it runs out, and what it used to be.
+ * THE ONE THING — when it runs out, and how a screen says so.
  *
- * Every screen that shows your one thing asks this file, and this file reads
- * the newest row. Nothing anywhere keeps a copy, which is why the header on the
- * tracking page cannot go stale — there is no second place for it to be wrong.
+ * Its home is the plan's current season (`seasonService`), which builds the
+ * `OneThing` below. Until Phase 7 of Plans/life-plan-rebuild.md it also had
+ * rows of its own (`life_chapters`, `life_answers`) and the functions that read
+ * them lived here; that copy is gone.
  *
- * Pure functions over rows. The database access is in `lifeAnswerRepo`; the
- * timezone arrives as an argument because a date is a question about somebody's
- * calendar and has no answer without knowing whose.
+ * Pure. The timezone arrives as an argument because a date is a question about
+ * somebody's calendar and has no answer without knowing whose.
  */
 
 import { getTodayInTimezone } from "@/src/shared/dateUtils"
-import type { LifeAnswerRow } from "@/src/db/lifeAnswerRepo"
-import type { LifeChapterRow } from "@/src/db/lifeChapterRepo"
 
 /** How long a one thing runs when nobody says otherwise. */
 export const DEFAULT_HORIZON_DAYS = 90
-
-/**
- * THE SUPPORTS USED TO LIVE HERE, AND THEY NEVER ACTUALLY DID.
- *
- * The why, the cost, the identity and the values had `answer_key` values of
- * their own in `life_answers`, a rule in this file for carrying them across an
- * extension, and a branch in `/api/life-answers` — and **nothing ever wrote
- * one**. Counted on the live database on 2026-09-24, before removing any of it:
- * 522 rows, every one `one_thing`, and none under the other four.
- *
- * They live in the plan, where the rest of the plan's writing lives:
- * `plan.answers["start:one-why"]` and its three siblings, written by the One
- * Thing step and on the account since Phase 1. Two homes for one fact, and the
- * designed one was the dead one.
- *
- * **One consequence, and it is a real change rather than a tidy-up.** The rule
- * removed below blanked the supports when somebody started a genuinely NEW one
- * thing, and carried them across when they merely extended a deadline. The plan
- * has no chapters to hang them off, so they simply persist: start a new one
- * thing and last season's why is still underneath it, to be rewritten. That is
- * the owner's choice between the two homes, not an oversight.
- */
 
 export interface OneThing {
   /** The version's own id — the particular wording. */
@@ -96,102 +72,6 @@ export function defaultDueOn(timezone: string, horizonDays = DEFAULT_HORIZON_DAY
   return addDays(getTodayInTimezone(timezone), horizonDays)
 }
 
-/**
- * ONE CHAPTER, READ BACK: its newest wording and its dates.
- *
- * `rows` is every version the person has, newest first. The chapter picks out
- * its own; nothing is looked up twice and nothing is cached.
- *
- * Returns null for a chapter with no wording of the sentence itself. That is a
- * real state — a chapter is opened and the sentence written in the same request,
- * but a delete can leave the chapter standing — and drawing an empty headline is
- * worse than drawing nothing.
- */
-function toOneThing(chapter: LifeChapterRow, rows: LifeAnswerRow[], today: string): OneThing | null {
-  const mine = rows.filter((r) => r.chapter_id === chapter.id)
-  const sentences = mine.filter((r) => r.answer_key === "one_thing")
-  if (sentences.length === 0) return null
-
-  const daysLeft = daysBetween(today, chapter.due_on)
-
-  return {
-    id: sentences[0].id,
-    chapterId: chapter.id,
-    body: sentences[0].body,
-    answeredAt: sentences[0].answered_at,
-    startedOn: chapter.started_on,
-    dueOn: chapter.due_on,
-    daysLeft,
-    lapsed: daysLeft < 0,
-    wordings: sentences.length,
-    extended: chapter.continues_id != null,
-  }
-}
-
-/**
- * WHAT MY ONE THING IS: the newest chapter, in its newest wording.
- *
- * `chapters` and `rows` both arrive newest-first from the repo. "Current" is not
- * a stored flag and never can be — a flag is a second fact that can disagree
- * with the first, and there is deliberately no column on either table that could
- * hold one.
- *
- * A chapter with no sentence in it is skipped rather than shown blank, so a
- * half-deleted chapter cannot hide the one you are actually on.
- */
-export function currentOneThing(
-  chapters: LifeChapterRow[],
-  rows: LifeAnswerRow[],
-  timezone: string,
-): OneThing | null {
-  const today = getTodayInTimezone(timezone)
-  for (const chapter of chapters) {
-    const one = toOneThing(chapter, rows, today)
-    if (one) return one
-  }
-  return null
-}
-
-/**
- * WHAT IT USED TO BE: the chapters before the current one, newest first.
- *
- * CHAPTERS, NOT WORDINGS. The list a person browses is the list of things they
- * committed to — four or five a year — not every time they reworded one. The
- * wordings inside a chapter are reachable through `wordingsOf`, folded away,
- * because "all of these I wouldn't care to have different versions of" was the
- * whole point of separating the two.
- */
-export function pastOneThings(
-  chapters: LifeChapterRow[],
-  rows: LifeAnswerRow[],
-  timezone: string,
-): OneThing[] {
-  const today = getTodayInTimezone(timezone)
-  const all = chapters.map((c) => toOneThing(c, rows, today)).filter((o): o is OneThing => o !== null)
-  return all.slice(1)
-}
-
-/** Every wording of one chapter's sentence, newest first. The folded-away level. */
-export function wordingsOf(chapterId: string, rows: LifeAnswerRow[]): LifeAnswerRow[] {
-  return rows.filter((r) => r.chapter_id === chapterId && r.answer_key === "one_thing")
-}
-
-/**
- * WHETHER WRITING THIS WOULD CHANGE ANYTHING.
- *
- * Saving the same words again must not append a version, or a page that saves on
- * blur turns one afternoon of typing into forty entries of history. Compared on
- * the trimmed text, because a trailing space is not a new answer.
- *
- * Words only. The deadline used to be half of this comparison and is not any
- * more: it no longer lives on the row. It belongs to the chapter, and moving it
- * is a different act with its own name — see `planOneThingWrite`.
- */
-export function isSameAsCurrent(rows: LifeAnswerRow[], body: string, key = "one_thing"): boolean {
-  const newest = rows.find((r) => r.answer_key === key)
-  return newest ? newest.body.trim() === body.trim() : false
-}
-
 /** The furthest ahead a one thing may run. A season, not a decade. */
 export const MAX_HORIZON_YEARS = 5
 
@@ -237,174 +117,13 @@ export function dueOnProblem(dueOn: string, today: string): string | null {
  * These are different acts and the whole design turns on keeping them apart:
  *
  *   amend  — you reworded it. Same commitment, same clock, a new wording added
- *            to the chapter. This is the common one, and it is why nothing here
- *            can move a date: `addLifeAnswer` has no parameter for one.
+ *            to the chapter. This is the common one, and it moves no date.
  *   extend — the words stand, the deadline moves. A new chapter that CONTINUES
  *            the old one and carries its `started_on` across, so the countdown
  *            changes and the "running since" does not.
  *   start  — a new commitment. A new chapter, starting today.
  */
 export type OneThingAct = "amend" | "extend" | "start"
-
-export type OneThingWrite =
-  | { kind: "reject"; reason: string }
-  /** Nothing to do: the words already say this, in this chapter. */
-  | { kind: "unchanged" }
-  /** Add a wording to a chapter that already exists. No date moves. */
-  | { kind: "amend"; chapterId: string; key: string; body: string }
-  /**
-   * Open a chapter and write the sentence into it. `continuesId` is set for an
-   * extension, and `startedOn` is then the ORIGINAL start, not today.
-   */
-  | { kind: "open"; startedOn: string; dueOn: string; continuesId: string | null; body: string }
-
-/**
- * WHAT WRITING THIS SHOULD DO.
- *
- * One function, because the answers depend on each other and were three
- * separate ifs in a route before. `current` is what the person is on now, or
- * null when they have never written one.
- */
-export function planOneThingWrite(
-  current: OneThing | null,
-  rows: LifeAnswerRow[],
-  act: OneThingAct,
-  rawBody: unknown,
-  askedDueOn: unknown,
-  timezone: string,
-  key = "one_thing",
-): OneThingWrite {
-  const body = typeof rawBody === "string" ? rawBody.trim() : ""
-  if (!body || body.length > MAX_BODY_LENGTH) {
-    return { kind: "reject", reason: `Write something, and keep it under ${MAX_BODY_LENGTH} characters` }
-  }
-
-  const today = getTodayInTimezone(timezone)
-  const asked = typeof askedDueOn === "string" ? askedDueOn : null
-
-  /* NOTHING TO AMEND OR EXTEND YET. The first thing anybody writes opens a
-     chapter whatever they meant to do, rather than failing on a distinction
-     that has no meaning until there is something to distinguish it from. */
-  if (!current) {
-    /* A SUPPORT CANNOT COME FIRST. `open` writes its body as the sentence, so
-       without this a stray "one_why" arriving before anything else had been
-       written would be stored as the person's one thing — their reason showing
-       up as their commitment, on every screen. */
-    if (key !== "one_thing") {
-      return { kind: "reject", reason: "Write your one thing first — this answer is about it" }
-    }
-    const dueOn = asked ?? defaultDueOn(timezone)
-    const problem = dueOnProblem(dueOn, today)
-    if (problem) return { kind: "reject", reason: problem }
-    return { kind: "open", startedOn: today, dueOn, continuesId: null, body }
-  }
-
-  if (act === "amend") {
-    /* A DEADLINE ARRIVING WITH AN AMEND IS IGNORED, DELIBERATELY — see the test
-       "does not judge the deadline when all that changed is the words". A review
-       proposed refusing the contradiction instead. That would refuse a reworded
-       sentence because of a stale date sitting in a field the person never
-       touched, and rewording is the one act that is meant to be free. The box
-       above chooses `extend` itself whenever the date really moved. */
-    const mine = rows.filter((r) => r.chapter_id === current.chapterId)
-    if (isSameAsCurrent(mine, body, key)) return { kind: "unchanged" }
-    return { kind: "amend", chapterId: current.chapterId, key, body }
-  }
-
-  const dueOn = asked ?? defaultDueOn(timezone)
-  const problem = dueOnProblem(dueOn, today)
-  if (problem) return { kind: "reject", reason: problem }
-
-  if (act === "extend") {
-    // Same deadline AND same words is a no-op; either one differing is a real
-    // extension, because "the same sentence, three weeks longer" is a change.
-    if (dueOn === current.dueOn && isSameAsCurrent(rows.filter((r) => r.chapter_id === current.chapterId), body, key)) {
-      return { kind: "unchanged" }
-    }
-    /* AND THE SAME HORIZON THE DATABASE MEASURES.
-       `dueOnProblem` counts five years from TODAY; `life_chapters_dates_sane`
-       counts `due_on <= started_on + 1830` from the day the chapter began, and
-       an extension carries that start across. A deadline four years out on a
-       chapter that started a year ago passes here and is refused by the
-       database, which reaches the person as "That did not save" and no reason —
-       the right refusal for the wrong reason, which is the thing the migration
-       comment says was eliminated. Same 1830 days, stated once on each side. */
-    if (daysBetween(current.startedOn, dueOn) > MAX_HORIZON_YEARS * 366) {
-      return {
-        kind: "reject",
-        reason: `Counting from the day this one began, that is more than ${MAX_HORIZON_YEARS} years. Start a new one instead.`,
-      }
-    }
-    /* THE ORIGINAL START DATE, CARRIED. This single line is the request: "when I
-       change something, I would still want it to be the tracking from the
-       initial first date." */
-    return { kind: "open", startedOn: current.startedOn, dueOn, continuesId: current.chapterId, body }
-  }
-
-  return { kind: "open", startedOn: today, dueOn, continuesId: null, body }
-}
-
-/**
- * CARRYING OUT A DECISION, without knowing what a database is.
- *
- * The writers are handed in. That keeps every rule in this file — including the
- * one that is easiest to get wrong and hardest to see, that an EXTENSION must
- * carry the supports across — testable without a database, and it keeps the API
- * route a thin wrapper.
- *
- * Returns what was written, or null for "nothing needed doing".
- */
-export interface OneThingWriters {
-  addAnswer: (key: string, body: string, chapterId: string) => Promise<{ id: string }>
-  /** Undo an `openChapter` whose sentence never landed. See `applyOneThingWrite`. */
-  dropChapter: (chapterId: string) => Promise<void>
-  openChapter: (startedOn: string, dueOn: string, continuesId: string | null) => Promise<{ id: string }>
-}
-
-export async function applyOneThingWrite(
-  write: OneThingWrite,
-  current: OneThing | null,
-  writers: OneThingWriters,
-): Promise<{ id: string; chapterId: string } | null> {
-  if (write.kind === "reject" || write.kind === "unchanged") return null
-
-  if (write.kind === "amend") {
-    const row = await writers.addAnswer(write.key, write.body, write.chapterId)
-    return { id: row.id, chapterId: write.chapterId }
-  }
-
-  const chapter = await writers.openChapter(write.startedOn, write.dueOn, write.continuesId)
-
-  /* A CHAPTER WITH NO SENTENCE IN IT IS INVISIBLE AND UNDELETABLE.
-     These are two writes. If the second fails — a dropped connection, the
-     2000-character CHECK on the body — the first has already succeeded, and
-     `toOneThing` skips a chapter that holds no sentence, so it never appears in
-     the history and there is no row the person can point at to delete. It also
-     becomes the newest chapter, which is what "current" means, so the page
-     would go blank. Undo it and report the original failure. */
-  let row: { id: string }
-  try {
-    row = await writers.addAnswer("one_thing", write.body, chapter.id)
-  } catch (e) {
-    await writers.dropChapter(chapter.id).catch(() => {
-      // The compensation itself failing is worth knowing about; it does not
-      // change what the caller is told, which is why the write failed.
-      console.error("Could not remove the empty chapter left by a failed write:", chapter.id)
-    })
-    throw e
-  }
-
-  /* THE ANSWERS THAT ARE STILL TRUE ARE NOT COPIED HERE, BECAUSE THEY ARE NOT
-     HERE. This used to walk the supports and re-write them under the new
-     chapter, so that extending a deadline did not leave the why, the cost, the
-     identity and the values blank under an unchanged sentence. It protected a
-     real thing, in the wrong place: the supports live in the plan, which has no
-     chapters, so moving a deadline never touched them and this loop had nothing
-     to copy. `tests/unit/goals/oneThingSupports.test.ts` asserts the outcome
-     that rule existed for, against the home they are actually in. */
-
-  return { id: row.id, chapterId: chapter.id }
-}
 
 /**
  * THE DEADLINE A FORM SHOULD OPEN ON.

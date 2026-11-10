@@ -142,25 +142,6 @@ describe("saving only what changed", () => {
     expect(await tableOf(owner.user, "life_plan_goals")).toEqual(goalsBefore)
   })
 
-  it("never writes the link to a counted goal, even when called directly with one", async () => {
-    const { user, planId, rows } = await personWithPlan("changes-link")
-    const changes = diffPlanRows(null, rows(fullPlan()))
-    const claimed = randomUUID()
-    // Straight to the function, past the repo that strips the link.
-    const goals = (changes.upsert.goals ?? []).map((g) => ({ ...g, user_id: user.id, user_goal_id: claimed }))
-    const stamped = Object.fromEntries(
-      Object.entries(changes.upsert).map(([t, list]) => [t, (list ?? []).map((r) => ({ ...r, user_id: user.id }))]),
-    )
-    const { error } = await user.client.rpc("apply_life_plan_changes", {
-      p_changes: { ...changes, plan_id: planId, upsert: { ...stamped, goals } },
-      p_expected_rev: 0,
-    })
-    expect(error).toBeNull()
-    const written = await tableOf(user, "life_plan_goals")
-    expect(written.length).toBeGreaterThan(0)
-    expect(written.map((g) => g.user_goal_id)).toEqual(written.map(() => null))
-  })
-
   it("cannot be pointed at a table outside the plan, the day tables included", async () => {
     const { user, planId } = await personWithPlan("changes-days")
     const changes = { plan_id: planId, plan: {}, upsert: { days: [{ id: randomUUID() }] }, remove: {}, replace: [] }

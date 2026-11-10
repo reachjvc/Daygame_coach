@@ -108,7 +108,7 @@ describe("a save sends only what changed", () => {
       const list = after[table] as unknown[]
       if (list.length > 0) expect(changes.upsert[table]).toHaveLength(list.length)
     }
-    expect(changes.plan).toEqual({ version: after.version, seq: after.seq, season_focus_id: after.season_focus_id })
+    expect(changes.plan).toEqual({ version: after.version, seq: after.seq })
     // Nor is anything replaced: values and answers are written, never wiped.
     expect(changes.replace).toEqual([])
     expect(changes.upsert.values).toHaveLength(after.values.length)
@@ -121,7 +121,7 @@ describe("a save sends only what changed", () => {
     const held = JSON.parse(JSON.stringify(sent)) as typeof sent
     const stamp = (list: Record<string, unknown>[]) => list.forEach((r) => (r.user_id = "the-real-owner"))
     for (const key of Object.keys(held)) if (Array.isArray((held as unknown as Record<string, unknown>)[key])) stamp((held as unknown as Record<string, Record<string, unknown>[]>)[key])
-    held.goals.forEach((g) => ((g as unknown as Record<string, unknown>).user_goal_id = "a-counted-goal"))
+    held.goals.forEach((g) => ((g as unknown as Record<string, unknown>).created_at = "2026-01-01T00:00:00Z"))
     held.values.forEach((v, i) => (v.id = `account-value-${i}`))
     held.values.reverse()
     expect(nothingChanged(diffPlanRows(held, sent))).toBe(true)
@@ -131,7 +131,7 @@ describe("a save sends only what changed", () => {
     const rows = mapper()
     const plan = fullPlan()
     const after = rows(setNorthStar(plan, "Typed into a plan row that held nothing"))
-    const empty = { ...after, nodes: [], north_stars: [], areas: [], goals: [], checkpoints: [], obstacles: [], beliefs: [], habits: [], goal_feeds: [], goal_serves: [], routines: [], routine_serves: [], steps: [], split_days: [], step_serves: [], experiences: [], fields: [], sub_steps: [], values: [], answers: [], seasons: [], season_areas: [], season_goals: [], reviews: [], review_scores: [] }
+    const empty = { ...after, nodes: [], north_stars: [], areas: [], goals: [], checkpoints: [], obstacles: [], beliefs: [], goal_feeds: [], goal_serves: [], routines: [], routine_serves: [], steps: [], split_days: [], step_serves: [], experiences: [], fields: [], sub_steps: [], values: [], answers: [], seasons: [], season_areas: [], season_goals: [], reviews: [], review_scores: [] }
     const changes = diffPlanRows(empty, after)
     const star = after.north_stars.find((s) => s.ended_on === null)!
     expect(changes.upsert.nodes).toContainEqual(expect.objectContaining({ id: star.id, kind: "north_star" }))

@@ -1,12 +1,10 @@
 import { describe, it, expect, vi } from "vitest"
-import fs from "node:fs"
-import path from "node:path"
 import { randomUUID } from "node:crypto"
 import { actAs, asOwner, asUser, newUser } from "@/tests/db/harness"
 import { applyLifePlanChanges, ensureLifePlan, readLifePlan } from "@/src/db/lifePlanRepo"
 import { planToRows, rowsToPlan } from "@/src/goals/lifePlanMapper"
 import { diffPlanRows } from "@/src/goals/lifePlanDiff"
-import { addGoal, emptyNsPlan, removeGoal, setAreaReview } from "@/src/goals/northStarService"
+import { addGoal, emptyNsPlan, removeGoal } from "@/src/goals/northStarService"
 import { periodOf, writeReview } from "@/src/goals/reviewService"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
 import type { NsPlan } from "@/src/goals/types"
@@ -16,9 +14,7 @@ import type { NsPlan } from "@/src/goals/types"
  *
  *   1. a review written in the app is saved by the change-only save and read
  *      back the same, and one emptied again is gone, scores and all;
- *   2. THE COPY (migration 20261104180000) turns the Your 10s "last two weeks"
- *      scores into a first review, once;
- *   3. another account can neither read a review nor hang a score on one.
+ *   2. another account can neither read a review nor hang a score on one.
  */
 
 vi.mock("@/src/db/supabase", async (importOriginal) =>
@@ -27,25 +23,6 @@ vi.mock("@/src/db/supabase", async (importOriginal) =>
 
 const NOW = "2026-11-04T12:00:00.000Z"
 const TODAY = "2026-11-04"
-const MIGRATION = fs.readFileSync(path.join(process.cwd(), "supabase/migrations/20261104180000_reviews.sql"), "utf8")
-
-/**
- * The migration's copy and nothing else of it, for one person's plan only.
- * Run whole, the migration re-takes a lock on every plan part and reloads the
- * API's schema, and its loop walks every plan in the shared test database:
- * both under other test files' feet while they run.
- */
-function copyFor(userId: string): string {
-  const from = MIGRATION.indexOf("-- ---------------------------------------------------------------- the copy")
-  const to = MIGRATION.indexOf("NOTIFY pgrst")
-  expect(from).toBeGreaterThan(0)
-  expect(to).toBeGreaterThan(from)
-  const copy = MIGRATION.slice(from, to)
-  const loop = "FOR p IN SELECT id, user_id, created_at FROM life_plans LOOP"
-  expect(copy).toContain(loop)
-  return copy.replace(loop, `FOR p IN SELECT id, user_id, created_at FROM life_plans WHERE user_id = '${userId}' LOOP`)
-}
-
 async function personWithPlan(label: string) {
   const user = await newUser(label)
   actAs(user)
@@ -91,28 +68,6 @@ describe("a review", () => {
     expect(await count("life_plan_review_scores", user.id)).toBe(0)
     const reviewNodes = await asOwner((q) => q(`select local_id from life_plan_nodes where user_id = $1 and kind = 'review'`, [user.id]))
     expect(reviewNodes.map((n) => n.local_id)).toEqual(["review:year-2026-01-01"])
-  })
-
-  it("starts from the Your 10s scores, copied in once as the first review", async () => {
-    const { user, planId, rows } = await personWithPlan("reviews-copied")
-    let plan = setAreaReview(emptyNsPlan(), "lm_health", { fortnight: 2 }, NOW)
-    plan = setAreaReview(plan, "lm_friends", { fortnight: 8 }, NOW)
-    plan = setAreaReview(plan, "lm_money", { ten: "No debt." }, NOW)
-    await applyLifePlanChanges(diffPlanRows(null, rows(plan)), 0, user.id)
-    const made = String((await asOwner((q) => q(`select (created_at at time zone 'UTC')::date::text as d from life_plans where id = $1`, [planId])))[0].d)
-
-    await asOwner((q) => q(copyFor(user.id)))
-    const copied = rowsToPlan((await readLifePlan(user.id))!.rows)!
-    expect(copied.reviews).toHaveLength(1)
-    const [first] = copied.reviews
-    expect(first).toMatchObject({ cadence: "fortnight", periodEnd: made, writtenOn: made, scores: { lm_health: 2, lm_friends: 8 } })
-    expect(first.id).toBe(`fortnight-${first.periodStart}`)
-    // Your 10s keeps its own numbers.
-    expect(copied.review.lm_health.fortnight).toBe(2)
-
-    await asOwner((q) => q(copyFor(user.id)))
-    expect(await count("life_plan_reviews", user.id)).toBe(1)
-    expect(await count("life_plan_review_scores", user.id)).toBe(2)
   })
 
   it("is its owner's alone", async () => {

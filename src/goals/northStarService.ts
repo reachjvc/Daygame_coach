@@ -507,7 +507,7 @@ export function emptyNsPlan(): NsPlan {
 }
 
 export function emptyAreaReview(): NsAreaReview {
-  return { ten: "", purpose: "", snapshot: "", fortnight: null, goalsAim: null, blockers: "", values: [], identity: "" }
+  return { ten: "", purpose: "", snapshot: "", goalsAim: null, blockers: "", values: [], identity: "" }
 }
 
 /** The shape defaults a goal gets when it is created or flipped to a type. */
@@ -761,7 +761,6 @@ export function normalizeNsPlan(parsed: unknown): NsPlan | null {
         ten: stringOr(r.ten, ""),
         purpose: stringOr(r.purpose, ""),
         snapshot: stringOr(r.snapshot, ""),
-        fortnight: typeof r.fortnight === "number" ? clamp(r.fortnight, 0, 10) : null,
         goalsAim: r.goalsAim === "yes" || r.goalsAim === "no" ? r.goalsAim : null,
         blockers: stringOr(r.blockers, ""),
         values: readStringList(r.values),

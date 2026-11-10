@@ -59,13 +59,13 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { ArrowLeft, Check, ChevronDown } from "lucide-react"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
 import type { HabitRampStep, MilestoneLadderConfig, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsGoalStatus, NsPlace, NsPlan, NsRoutineProgram, LinkedProgram, VisionGoalType } from "@/src/goals/types"
-import { COMMIT_EDIT_COPY, ERRAND_COPY, NORTH_STAR_STORAGE_KEY, NS_TRACK_RUN_KEY, ORPHANED_PLAN_KEY, planCacheKey, BUILD_STEPS, RAIL_COPY, RECAP_COMMIT_ANCHOR, SCORED_TABS, stepFor, TAB_BLURBS, TAB_LABELS, TAB_ORDER, TODO_COPY, USE_STEPS } from "@/src/goals/data/northStar"
+import { COMMIT_EDIT_COPY, ERRAND_COPY, OLD_SHARED_PLAN_KEYS, planCacheKey, BUILD_STEPS, RAIL_COPY, RECAP_COMMIT_ANCHOR, SCORED_TABS, stepFor, TAB_BLURBS, TAB_LABELS, TAB_ORDER, TODO_COPY, USE_STEPS } from "@/src/goals/data/northStar"
 import { planInUse } from "@/src/goals/planLanding"
 import type { RoutineNeed } from "@/src/goals/data/northStarBuild"
 import type { GuideQuestionId } from "@/src/goals/data/northStarGuide"
 import * as ns from "@/src/goals/northStarService"
 import * as nsTrack from "@/src/goals/northStarTrackService"
-import { archiveCountedGoal, fetchLifePlan, newNodeId, saveLifePlanChanges, startLifePlan } from "@/src/goals/lifePlanClient"
+import { fetchLifePlan, newNodeId, saveLifePlanChanges, startLifePlan } from "@/src/goals/lifePlanClient"
 import { LIFE_PLAN_IMPORTED_KEY, NOTHING_TO_SHOW, SAVE_DEBOUNCE_MS, canSave, decideOnLoad, planHalfAfterLoad, planHasNothingWritten, sendableFingerprint, syncNotice, type SyncDecision, type SyncState } from "@/src/goals/lifePlanSync"
 import { fetchDayRecord, saveDayCatchingUp, sendDayOnLeave } from "@/src/goals/lifePlanDayClient"
 import { ACCOUNT_CHANGED_MESSAGE, nameEveryRequest, onAccountChanged } from "@/src/goals/planAccount"
@@ -111,18 +111,6 @@ import {
   describeTrainingWeek,
   getProgram,
 } from "@/src/programs/forLifeMastery"
-
-/**
- * A fresh run id: what pushed goals are tagged with alongside their plan id.
- *
- * `randomUUID` where it exists, and a random string where it does not — this
- * only has to be different from the last one on the same machine, not globally
- * unique, so an older browser gets the fallback rather than an exception.
- */
-function newRunId(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID().slice(0, 8)
-  return Math.random().toString(36).slice(2, 10)
-}
 
 /** Mark `slot` as holding an open save until `work` settles (`planSaveInFlight`). */
 function holdOpen<T>(slot: { current: Promise<void> | null }, work: Promise<T>): Promise<T> {
@@ -237,15 +225,6 @@ export function NorthStarFlow({
     try { const raw = window.localStorage.getItem(`plan-due-hidden:${userId}`); setHiddenDue(new Set(raw ? (JSON.parse(raw) as string[]) : [])) } catch { /* storage refused: nothing hidden */ }
   }, [userId])
   const [confirmReset, setConfirmReset] = useState(false)
-  /**
-   * WHICH RUN OF THE PLAN THIS IS, for the goals pushed on the track step.
-   *
-   * Read on the client and minted if absent, because plan goal ids restart at
-   * g1 after "start over" and a pushed goal has to stay attached to the plan it
-   * came from. Null until the effect below runs; the track step is the only
-   * thing that needs it and it does not render before the plan has loaded.
-   */
-  const [runId, setRunId] = useState<string | null>(null)
   const [copied, setCopied] = useState<"idle" | "done" | "failed">("idle")
   const [readBackOpen, setReadBackOpen] = useState(false)
   // Both area dialogs are owned here, so only one is ever open and moving from
@@ -397,15 +376,6 @@ export function NorthStarFlow({
    */
   const planSaveInFlight = useRef<Promise<void> | null>(null)
   const saveRun = useRef(0)
-  /**
-   * WHICH COUNTED GOAL EACH PLAN GOAL BECAME, as the ACCOUNT knows it.
-   *
-   * Keyed by the plan's own ids. This is what makes a second device recognise
-   * goals it did not push itself: the tag carries a run code minted in one
-   * browser, so reading identity out of it meant every goal looked new
-   * somewhere else and pushing again duplicated all fifty.
-   */
-  const [goalLinks, setGoalLinks] = useState<Record<string, string>>({})
   /** What this browser held on the way in, captured once for the import. */
   const browserCopy = useRef<NsPlan | null>(null)
   /**
@@ -496,37 +466,16 @@ export function NorthStarFlow({
     setToday(getTodayInTimezone(timezone))
     let saved: NsPlan | null = null
     try {
-      // The shared copy may be somebody else's plan, so it is never shown or
-      // sent. It may also hold work only this browser has, so it is MOVED
-      // ASIDE, not deleted: removing it is Phase 7's, with the owner's yes.
-      const shared = window.localStorage.getItem(NORTH_STAR_STORAGE_KEY)
-      if (shared !== null) {
-        if (window.localStorage.getItem(ORPHANED_PLAN_KEY) === null) window.localStorage.setItem(ORPHANED_PLAN_KEY, shared)
-        window.localStorage.removeItem(NORTH_STAR_STORAGE_KEY)
-      }
+      // The old shared copy may be somebody else's plan, so it was never shown
+      // or sent; it was kept aside until Phase 7 of Plans/life-plan-rebuild.md,
+      // which removes it with the owner's yes (2026-11-10).
+      for (const key of OLD_SHARED_PLAN_KEYS) window.localStorage.removeItem(key)
       saved = ns.loadNsPlan(window.localStorage.getItem(planCacheKey(userId)))
     } catch {
       /* Storage refused; the account's copy is read below either way. */
     }
     browserCopy.current = saved
     if (saved) setPlan(saved)
-    /* The run id must never be the reason this page does not open.
-       It is one string for one step, and it used to sit in front of
-       `setLoaded(true)` with an unguarded `setItem` between them — a browser
-       refusing storage (private mode, quota) would throw here and strand the
-       whole flow on "Opening your plan…", the whole thing broken by its last step.
-       A run that cannot be persisted still works for this session; it just
-       cannot be recognised after a reload, which the track step says out loud
-       rather than silently re-pushing. */
-    let run = newRunId()
-    try {
-      run = window.localStorage.getItem(NS_TRACK_RUN_KEY) ?? run
-      window.localStorage.setItem(NS_TRACK_RUN_KEY, run)
-    } catch {
-      // Storage is unavailable. The plan's own save will say so; this step
-      // carries on with a session-only run.
-    }
-    setRunId(run)
     setLoaded(true)
   }, [])
 
@@ -761,17 +710,6 @@ export function NorthStarFlow({
       }
 
       if (server?.ids) for (const [local, id] of server.ids) nodeIds.set(local, id)
-
-      // The account's links, turned back into the ids this flow talks in.
-      if (server?.goalLinks && server.ids) {
-        const localOf = new Map([...server.ids].map(([local, id]) => [id, local]))
-        const byLocal: Record<string, string> = {}
-        for (const [uuid, userGoalId] of Object.entries(server.goalLinks)) {
-          const local = localOf.get(uuid)
-          if (local && userGoalId) byLocal[local] = userGoalId
-        }
-        setGoalLinks(byLocal)
-      }
 
       if (decision.kind === "use-server" && server?.planId) {
         setPlanId(server.planId)
@@ -1206,70 +1144,11 @@ export function NorthStarFlow({
   }), [])
 
   /**
-   * REMOVING A PLAN GOAL, IN ONE PLACE, AND ASKING ABOUT ITS COUNTED TWIN.
-   *
-   * Five call sites each wrote `setPlan((p) => ns.removeGoal(p, goalId))`, so
+   * REMOVING A PLAN GOAL, IN ONE PLACE. Five call sites each wrote it, so
    * "what deleting a goal means" was stated five times and could be changed in
    * four of them. It means one thing now.
-   *
-   * THE THING IT HAS TO ASK. A pushed plan goal has a row in `user_goals` that
-   * counts, streaks and resets on its own. Removing the plan goal used to leave
-   * that row running with nothing behind it and take the link with it on the
-   * next save — an orphan still counting towards a plan that no longer holds
-   * it, and no way back to it from here. So when a link exists the removal
-   * stops and asks; with no link there is nothing to ask about and it goes.
-   *
-   * Archiving rather than deleting, and only on request: the counted row may
-   * carry weeks of history, and "I took it out of my plan" is not "throw the
-   * record away". `pushedGoalIds` already drops a link whose row is gone, so a
-   * goal archived here is offered again if it is ever re-pushed.
    */
-  const [removing, setRemoving] = useState<{ goalId: string; countedId: string; title: string } | null>(null)
-  const [removeError, setRemoveError] = useState<string | null>(null)
-
-  /**
-   * THE LATEST LINKS AND TITLES, FOR A HANDLER THAT MUST NOT CHANGE IDENTITY.
-   *
-   * Every handler bundle in this file is a `useMemo` with `[]` deps, on purpose:
-   * they are handed to screens that would re-render on every keystroke
-   * otherwise. A `useCallback` that closes over `goalLinks` would be captured
-   * once by those bundles and would then see the links as they were on the
-   * FIRST render — empty — so the question below would never be asked and the
-   * counted goal would be orphaned exactly as before. Read through refs, which
-   * event handlers see after commit.
-   */
-  const linksRef = useRef<Record<string, string>>({})
-  const goalTitlesRef = useRef<NsGoal[]>([])
-  useEffect(() => { linksRef.current = goalLinks }, [goalLinks])
-  useEffect(() => { goalTitlesRef.current = plan.goals }, [plan.goals])
-
-  const removePlanGoal = useCallback((goalId: string) => {
-    const decision = nsTrack.removalOf(goalId, linksRef.current)
-    if (decision.kind === "remove") {
-      setPlan((p) => ns.removeGoal(p, goalId))
-      return
-    }
-    setRemoveError(null)
-    setRemoving({
-      goalId,
-      countedId: decision.countedId,
-      title: goalTitlesRef.current.find((g) => g.id === goalId)?.title ?? "this goal",
-    })
-  }, [])
-
-  /** Take it out of the plan, and archive the counted row too if asked. */
-  const finishRemoval = useCallback(async (alsoArchive: boolean) => {
-    if (!removing) return
-    /* A FAILED ARCHIVE REMOVES NOTHING. Doing both halves independently is how
-       somebody ends up with the plan goal gone, the counted one still running,
-       and no link left to find it by. */
-    if (alsoArchive && !(await archiveCountedGoal(removing.countedId, userId))) {
-      setRemoveError("That goal could not be archived on your goals page, so nothing was removed. Try again in a moment.")
-      return
-    }
-    setPlan((p) => ns.removeGoal(p, removing.goalId))
-    setRemoving(null)
-  }, [removing, userId])
+  const removePlanGoal = useCallback((goalId: string) => setPlan((p) => ns.removeGoal(p, goalId)), [])
 
   const goalHandlers = useMemo(() => ({
     onUpdate: (id: string, patch: Partial<Omit<NsGoal, "id">>) => setPlan((p) => ns.updateGoal(p, id, patch)),
@@ -1620,15 +1499,6 @@ export function NorthStarFlow({
      */
     clearOnce.current = true
     setPlan(ns.emptyNsPlan())
-    /* A NEW RUN, because the id counter starts again at g1.
-       Without this the next plan's first goal would carry the tag of the
-       discarded plan's first goal, and the push would match it onto that row —
-       a goal that never appears, under a title nobody wrote. The goals already
-       tracked are left alone: they are real rows with real progress, and
-       deleting somebody's goals is not what "clear this page" asks for. */
-    const run = newRunId()
-    window.localStorage.setItem(NS_TRACK_RUN_KEY, run)
-    setRunId(run)
     setConfirmReset(false)
     setTab("star")
     setNowAreaId(null)
@@ -1827,51 +1697,6 @@ export function NorthStarFlow({
         </nav>
 
         {ribbon && !areaDialogOpen && !goalDialogOpen && <div className="mb-5">{ribbon}</div>}
-
-        {/* THE COUNTED TWIN, ASKED ABOUT RATHER THAN ORPHANED.
-            A pushed plan goal has a row on the goals page that counts, streaks
-            and resets on its own. Removing it here used to leave that row
-            running with nothing behind it, and take the link with it on the
-            next save — so there was no way back to it from the plan. */}
-        {removing && (
-          <div
-            role="alertdialog"
-            aria-label="This goal is also counted on your goals page"
-            className="mb-5 rounded-xl border border-amber-400/30 bg-amber-500/[0.06] px-4 py-3"
-            data-testid="remove-linked-goal"
-          >
-            <p className="text-[12.5px] text-zinc-200">
-              <span className="font-medium">{removing.title}</span> is also counted on your goals page.
-            </p>
-            <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed max-w-prose">
-              Taking it out of the plan does not stop it counting. Archive it there too, or leave it
-              running on its own — its history is kept either way.
-            </p>
-            {removeError && (
-              <p className="text-[11.5px] text-amber-200/90 mt-2" role="alert">{removeError}</p>
-            )}
-            <div className="flex flex-wrap items-center gap-2 mt-3">
-              <button
-                onClick={() => void finishRemoval(true)}
-                className="text-[12px] px-3 py-1.5 rounded-full border border-rose-400/40 bg-rose-500/10 text-rose-100 hover:bg-rose-500/20 transition-colors"
-              >
-                Remove it and archive the counted goal
-              </button>
-              <button
-                onClick={() => void finishRemoval(false)}
-                className="text-[12px] px-3 py-1.5 rounded-full border border-white/15 text-zinc-200 hover:bg-white/5 transition-colors"
-              >
-                Remove it, keep it counting
-              </button>
-              <button
-                onClick={() => { setRemoving(null); setRemoveError(null) }}
-                className="text-[12px] px-3 py-1.5 rounded-full text-zinc-400 hover:text-zinc-200 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
 
         {!loaded || !today ? (
           <p className="text-sm text-zinc-500">Opening your plan…</p>
@@ -2213,14 +2038,9 @@ export function NorthStarFlow({
           />
         ) : tab === "track" ? (
           /* The weeks at a glance, and the pointer to Today, where goals are
-             counted since Q4 of Plans/life-plan-rebuild.md. The goals copied
-             to the old goals table before that still show here, folded. */
-          runId ? (
-            <TrackTab
-              account={userId}
+             counted since Q4 of Plans/life-plan-rebuild.md. */
+          <TrackTab
               plan={plan}
-              runId={runId}
-              goalLinks={goalLinks}
               today={today ?? ns.todayISO()}
               ticks={ticks}
               logUnavailable={workouts.state === "failed"}
@@ -2231,12 +2051,6 @@ export function NorthStarFlow({
               onToggleStep={(stepId) => setPlan((p) => nsTrack.toggleStepLogged(p, today ?? ns.todayISO(), stepId))}
               onGoToToday={() => setTab("today")}
             />
-          ) : (
-            /* Renders nothing at all if this is left as `runId && …`, which is
-               the worst thing a step can do: no list, no error, no explanation,
-               and nothing to click. */
-            <p className="text-sm text-zinc-500">Opening your goals…</p>
-          )
         ) : null}
 
         {/* What is still missing, in one place, instead of gates on the way
