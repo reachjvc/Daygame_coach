@@ -1,0 +1,280 @@
+{
+  "id": "tecumseh",
+  "name": "Tecumseh",
+  "born": "c. 1768",
+  "died": 1813,
+  "category": "warriors",
+  "areaIds": [
+    "lm_mission",
+    "lm_contribution"
+  ],
+  "tagline": "Shawnee war leader who tried to unite all the tribes to keep their land.",
+  "startedFrom": "He was born about 1768 in a Shawnee village in what is now Ohio. His father, a Shawnee chief, was killed in battle at Point Pleasant in 1774, when Tecumseh was about six; his mother later went south, and his oldest brother Cheeseekau raised him. In 1780 an army from Kentucky burned his home village, Piqua, and its fields; he had no book learning, and in his first battle, some chiefs said, he ran.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At Fallen Timbers in August 1794, while other warriors were retreating, he led a small Shawnee party in a charge on Americans with a field gun, cut the horses loose and rode off.",
+          "sourceId": "dcb",
+          "locator": "para. 'During the closing decades of the 18th century' (Fallen Timbers, Aug. 1794)"
+        },
+        {
+          "kind": "deed",
+          "claim": "On 5 October 1813, after the British troops broke and ran at Moraviantown, about 500 Indians were left facing some 3,000 Americans, and he was killed in that fight.",
+          "sourceId": "dcb",
+          "locator": "para. 'Finally, on 5 October'"
+        },
+        {
+          "kind": "witness",
+          "claim": "In 1812 the British general Isaac Brock wrote: 'A more sagacious or a more gallant Warrior does not I believe exist.'",
+          "sourceId": "dcb",
+          "locator": "para. 'The first official word of Tecumseh's presence in Upper Canada' (Detroit campaign, 1812)"
+        },
+        {
+          "kind": "words",
+          "claim": "On 18 September 1813, when the British general Procter prepared to retreat, he told him: 'we, therefore, wish to remain here and fight our enemy, should they make their appearance.'",
+          "sourceId": "drake-1841",
+          "locator": "ch. XIII (speech to Procter, 18 Sept. 1813)"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1809 he travelled to the Senecas and Wyandots near Sandusky and to the Six Nations in New York to argue for uniting the tribes and owning all Indian land in common.",
+          "sourceId": "dcb",
+          "locator": "para. 'In the spring of 1809'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His enemy Governor Harrison wrote on 7 August 1811 that 'the implicit obedience and respect which the followers of Tecumseh pay to him is really astonishing'.",
+          "sourceId": "esarey-1922",
+          "locator": "vol. 1, p. 549 (Harrison to Secretary of War, 7 Aug. 1811)"
+        },
+        {
+          "kind": "deed",
+          "claim": "By the autumn of 1812 he had about a thousand warriors with him.",
+          "sourceId": "dcb",
+          "locator": "para. 'In the early weeks of the war'"
+        },
+        {
+          "kind": "deed",
+          "claim": "After he joined the British in July 1812, General Isaac Brock placed him in command of all the Native American forces.",
+          "sourceId": "nps",
+          "locator": "page 3 (tecumseh-page-3.htm)"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Harrison wrote in 1811: 'No difficulties deter him', and that for four years he had been in constant motion, from the Wabash to Lake Erie, Lake Michigan and the Mississippi.",
+          "sourceId": "esarey-1922",
+          "locator": "vol. 1, p. 549 (Harrison to Secretary of War, 7 Aug. 1811)"
+        },
+        {
+          "kind": "deed",
+          "claim": "After the Americans burned his village at Tippecanoe in November 1811, he rebuilt his following; by June 1812 the confederacy was at least as strong as before.",
+          "sourceId": "dcb",
+          "locator": "para. 'When Tecumseh returned to Tippecanoe'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer John Sugden, as quoted by BookPage, writes of 'that powerful spirit that again and again urged him to confront every obstacle and meet every danger.'",
+          "sourceId": "bookpage-sugden",
+          "locator": "review, para. 'Tecumseh's powerful impact on Native Americans'"
+        }
+      ]
+    },
+    {
+      "word": "Community",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In August 1810 he said the tribes should 'unite and let them consider their land as the common property of the whole'.",
+          "sourceId": "esarey-1922",
+          "locator": "vol. 1, p. 465 (Tecumseh's speech, 20 Aug. 1810)"
+        },
+        {
+          "kind": "deed",
+          "claim": "At Vincennes in August 1810 he pressed Harrison on the principle that the land was owned in common, so that none could be sold without the consent of all Indians.",
+          "sourceId": "dcb",
+          "locator": "para. 'The confederacy was threatened'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The National Park Service says he conceived an alliance of all remaining Indian peoples, from Canada to the Gulf of Mexico, who would set aside old rivalries.",
+          "sourceId": "nps",
+          "locator": "page 1 (tecumseh.htm)"
+        }
+      ]
+    },
+    {
+      "word": "Compassion",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "During the siege of Fort Meigs in spring 1813, Indian warriors began killing captured Americans and Procter did nothing; the killing stopped only when Tecumseh arrived.",
+          "sourceId": "dcb",
+          "locator": "para. 'Tecumseh's whereabouts during the winter of 1812–13'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Dictionary of Canadian Biography says his 'humanity on this occasion was long remembered'.",
+          "sourceId": "dcb",
+          "locator": "para. 'Tecumseh's whereabouts during the winter of 1812–13'"
+        },
+        {
+          "kind": "witness",
+          "claim": "BookPage's reviewer reports that Sugden's biography gives several examples of Tecumseh overruling fellow warriors to spare an enemy's life.",
+          "sourceId": "bookpage-sugden",
+          "locator": "review, para. 'A disdain for white settlers'"
+        },
+        {
+          "kind": "words",
+          "claim": "On 21 August 1810 he told Harrison: 'When you speak to me of annuities I look at the land, and pity the women and children.'",
+          "sourceId": "esarey-1922",
+          "locator": "vol. 1, p. 469 (Tecumseh's speech, 21 Aug. 1810)"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "What belongs to everyone cannot be sold by a few; a deal needs the consent of all it binds.",
+      "sourceId": "esarey-1922",
+      "locator": "vol. 1, pp. 465-466 (speech of 20 Aug. 1810)"
+    },
+    {
+      "text": "Refuse gifts that would later be counted as payment for something you will not give up.",
+      "sourceId": "esarey-1922",
+      "locator": "vol. 1, p. 466 ('By taking goods from you you will hereafter say that with them you purchased another piece of land from us')"
+    },
+    {
+      "text": "Never harm a man who has surrendered to you, and stop others who do.",
+      "sourceId": "drake-1841",
+      "locator": "ch. III (1792: 'a cowardly act to kill a man when tied and a prisoner'); ch. XII (Fort Meigs, May 1813)"
+    },
+    {
+      "text": "Do not run before you have even seen the enemy; stand where your home is.",
+      "sourceId": "drake-1841",
+      "locator": "ch. XIII (speech to Procter, 18 Sept. 1813)"
+    },
+    {
+      "text": "Say what you want plainly, to the face of the man who opposes you.",
+      "sourceId": "esarey-1922",
+      "locator": "vol. 1, p. 467 ('I have declared myself freely to you')"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "When you speak to me of annuities I look at the land, and pity the women and children.",
+      "sourceId": "esarey-1922",
+      "locator": "vol. 1, p. 469: speech at Vincennes, 21 Aug. 1810, as taken down for Governor Harrison through an interpreter"
+    },
+    {
+      "text": "I am not alone in this determination it is the determination of all the warriors and red people that listen to me.",
+      "sourceId": "esarey-1922",
+      "locator": "vol. 1, p. 466: speech at Vincennes, 20 Aug. 1810, as taken down for Governor Harrison through an interpreter"
+    },
+    {
+      "text": "Our lives are in the hands of the Great Spirit. We are determined to defend our lands, and if it be his will, we wish to leave our bones upon them.",
+      "sourceId": "drake-1841",
+      "locator": "ch. XIII: speech to General Procter, Amherstburg, 18 Sept. 1813, from the British translation found in Procter's papers"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 5 May 1813, at the siege of Fort Meigs in Ohio, the British and Indians defeated an American relief force and took hundreds of prisoners. Held at Fort Miami, the prisoners were shot and tomahawked by warriors while General Procter did nothing; upwards of twenty died in two hours. Tecumseh rode in and the killing stopped. A letter of 1818 printed by Drake, quoting a British officer who was there, says he then told Procter he was unfit to command.",
+    "sourceIds": [
+      "dcb",
+      "drake-1841",
+      "nps"
+    ]
+  },
+  "shadow": {
+    "text": "In his teens and twenties he fought in Shawnee raids on Kentucky settlements and on boats on the Ohio River; in one attack all the people on the boats were killed but one prisoner, who was then burned, after which, by his companion Stephen Ruddell's account, he spoke against burning prisoners. In 1809-10 he threatened death to the chiefs who had sold land to Harrison at Fort Wayne, and on 20 August 1810 he told Harrison that if the land was not given back, 'you will have a hand in killing them.' The same day he called Harrison a liar in council while armed followers stood up, and Harrison ended the meeting. Harrison wrote in 1811 that while most of his followers were attached to him 'from principle and affection', many others followed him 'through fear'. His biographer John Sugden writes that 'arrogance, impulsiveness, haughty pride, and a capacity for ruthlessness' were part of his makeup.",
+    "sourceIds": [
+      "drake-1841",
+      "dcb",
+      "esarey-1922",
+      "bookpage-sugden"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you back away this week before you had even seen what you were afraid of?",
+    "principleIndex": 3
+  },
+  "readings": [
+    {
+      "title": "Speech to Governor Harrison at Vincennes, 20-21 August 1810 (Harrison's record, in Messages and Letters of William Henry Harrison, vol. 1)",
+      "year": 1810
+    },
+    {
+      "title": "Speech to General Procter, 18 September 1813 (British translation, in Drake's Life of Tecumseh, ch. XIII)",
+      "year": 1813
+    }
+  ],
+  "sources": [
+    {
+      "id": "esarey-1922",
+      "kind": "primary",
+      "title": "Messages and Letters of William Henry Harrison, vol. 1, 1800-1811 (Indiana Historical Collections, Governors Messages and Letters)",
+      "author": "William Henry Harrison; Tecumseh's speeches as taken down for Harrison; ed. Logan Esarey",
+      "year": 1922,
+      "publisher": "Indiana Historical Commission, Indianapolis (Internet Archive)",
+      "url": "https://archive.org/details/messagesletterso01harr"
+    },
+    {
+      "id": "drake-1841",
+      "kind": "secondary",
+      "title": "Life of Tecumseh, and of His Brother the Prophet; with a Historical Sketch of the Shawanoe Indians",
+      "author": "Benjamin Drake",
+      "year": 1841,
+      "publisher": "E. Morgan & Co., Cincinnati (Project Gutenberg eBook #15581)",
+      "url": "https://www.gutenberg.org/ebooks/15581"
+    },
+    {
+      "id": "dcb",
+      "kind": "secondary",
+      "title": "TECUMSEH (Tech-kum-thai), Dictionary of Canadian Biography, vol. 5",
+      "author": "Herbert C. W. Goltz",
+      "year": "n.d. (online edition 2003-, read 2026)",
+      "publisher": "University of Toronto / Université Laval",
+      "url": "https://www.biographi.ca/en/bio/tecumseh_5E.html"
+    },
+    {
+      "id": "nps",
+      "kind": "secondary",
+      "title": "Tecumseh (pages 1-4)",
+      "author": "Perry's Victory & International Peace Memorial, U.S. National Park Service",
+      "year": "2015 (last updated; read 2026)",
+      "publisher": "U.S. National Park Service",
+      "url": "https://www.nps.gov/pevi/learn/historyculture/tecumseh.htm"
+    },
+    {
+      "id": "bookpage-sugden",
+      "kind": "secondary",
+      "title": "Review of John Sugden, Tecumseh: A Life",
+      "author": "John T. Slania",
+      "year": 1998,
+      "publisher": "BookPage (April 1998)",
+      "url": "https://bookpage.com/reviews/987-john-sugden-tecumseh-biography/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Shawnee war leader, dead since 1813, not a living politician or a founder of a living religion, with no credible account of sexual violence or of sexual contact with a minor; in, with a documented shadow (frontier raids in his youth, threats to kill the chiefs who sold land, a biographer's list of arrogance and ruthlessness)."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value against Harrison's own 1810-11 record, Drake (1841), the Dictionary of Canadian Biography, the National Park Service pages and Sugden's biography as quoted by BookPage. No value fell: Compassion was the hardest to hold, given the boat raid, the threats to kill the chiefs who sold land and Sugden's 'capacity for ruthlessness', but his mercy to prisoners is recorded in four separate episodes and sources, so those facts stay in the shadow instead. Determination, picked only by the draft, lost its weakest item (a play on his word 'determination') and was kept on three independent sources; Freedom, picked only by the blind agent, was not added because its key line rests on a speech of which no copy was kept. All three quotes match the printed records, and five small fixes tightened locators, a Leadership claim and the shadow's 'through fear' line to what the sources say.",
+    "checkedOn": "2026-11-10"
+  }
+}
