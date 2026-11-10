@@ -1,0 +1,340 @@
+{
+  "id": "hannah-arendt",
+  "name": "Hannah Arendt",
+  "pronoun": "she",
+  "born": 1906,
+  "died": 1975,
+  "category": "philosophers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_friends"
+  ],
+  "tagline": "A refugee who kept thinking for herself and published what she concluded, whatever it cost her.",
+  "startedFrom": "She was born on 14 October 1906 in Hanover, the only child of secular Jewish parents, and grew up in Königsberg. Her father, an engineer, died of a syphilis-related brain illness when she was seven, and battles between Russian and German armies came close to her home soon after. At home, she said in 1964, any ambition was considered improper.",
+  "values": [
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Answering Gershom Scholem's 1963 charge that she lacked love for the Jewish people, she wrote that she had never in her life 'loved' any people or collective, only persons.",
+          "sourceId": "jrb-aschheim-2011",
+          "locator": "Section on the Eichmann exchange (her reply to Scholem's letter of 23 June 1963)"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1963 she published Eichmann in Jerusalem, whose claims about the Jewish councils drew sharp criticism and frayed her ties to the organized Jewish community.",
+          "sourceId": "jwa",
+          "locator": "Section 'Eichmann in Jerusalem'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Alfred Kazin, who knew her from 1946, wrote that 'thinking', as a way of approaching any subject without bowing to its worldly reputation, became her way of independence.",
+          "sourceId": "kazin-nyrb-1982",
+          "locator": "Paragraph beginning 'The sense of freedom central to her political theory'"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1933 she researched anti-Semitic propaganda for the German Zionist Organization, was arrested for it, won the sympathy of her jailer, was released and escaped to Paris; in 1940 she was interned at Gurs in France and escaped.",
+          "sourceId": "jwa",
+          "locator": "Section 'Political Activism & Immigration to New York'"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1964 she said that from the Reichstag fire of 27 February 1933 she felt responsible and no longer thought one could just watch, and that after her arrest she was glad: at least she had done something.",
+          "sourceId": "gaus-rbb",
+          "locator": "Her answers on 1933 and her arrest (transcript, broadcast 28 October 1964)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Stephen J. Whitfield describes her as having 'the undaunted spirit of an exile who had confronted some of the worst horrors of European tyranny'.",
+          "sourceId": "jwa",
+          "locator": "Opening paragraph of the article (after 'In Brief')"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 1964 she said the need to understand was with her from a very early age; she read Kant as a girl and Jaspers' Psychology of Worldviews at fourteen.",
+          "sourceId": "gaus-ghi",
+          "locator": "Excerpt, her answers on her early reading"
+        },
+        {
+          "kind": "deed",
+          "claim": "From 1924 she studied with Heidegger at Marburg, then a semester with Husserl at Freiburg, then with Karl Jaspers at Heidelberg, where she finished her doctorate on Augustine in 1929.",
+          "sourceId": "sep",
+          "locator": "§1 Biographical Sketch"
+        },
+        {
+          "kind": "witness",
+          "claim": "Alfred Kazin wrote that all her life she 'canonized' philosophy as a daily activity, and discussed Plato, Kant, Nietzsche and Kafka as if they lived with her.",
+          "sourceId": "kazin-nyrb-1982",
+          "locator": "Opening paragraphs (first meeting in 1946; 'Intellectually, like many another Jewish thinker')"
+        }
+      ]
+    },
+    {
+      "word": "Friendship",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In her reply to Scholem she wrote that the only kind of love she knew and believed in was the love of persons.",
+          "sourceId": "jrb-aschheim-2011",
+          "locator": "Section on the Eichmann exchange (her reply to Scholem)"
+        },
+        {
+          "kind": "deed",
+          "claim": "She kept up a lifelong friendship with her teacher Karl Jaspers; in 1964 she said he had raised her, as far as anyone taught her to be reasonable, and called their renewed postwar conversation her most powerful postwar experience.",
+          "sourceId": "gaus-ghi",
+          "locator": "Excerpt, her answer on Jaspers' influence"
+        },
+        {
+          "kind": "witness",
+          "claim": "Stephen J. Whitfield writes that her life was 'ennobled by friendship and love'.",
+          "sourceId": "jwa",
+          "locator": "Opening paragraph of the article (after 'In Brief')"
+        }
+      ]
+    },
+    {
+      "word": "Responsibility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 1964 she said that the Reichstag fire of 27 February 1933 and the arrests that night were a shock, that from that moment on she felt responsible, and that she no longer thought one could just watch.",
+          "sourceId": "gaus-rbb",
+          "locator": "Her answer on when she turned to politics (transcript, broadcast 28 October 1964)"
+        },
+        {
+          "kind": "deed",
+          "claim": "From 1933 she helped the German Zionist Organization publicize the plight of the victims of Nazism and researched anti-Semitic propaganda, for which she was arrested.",
+          "sourceId": "jwa",
+          "locator": "Section 'Political Activism & Immigration to New York'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Alfred Kazin, who met her in 1946, recalled that in Paris after 1933 she worked for the Youth Aliyah, and after the war directed an organization that restored to Jewish communities the cultural treasures the Nazis had stolen.",
+          "sourceId": "kazin-nyrb-1982",
+          "locator": "Opening paragraphs (first meeting in 1946)"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Stop and think about what you are actually doing, instead of running on habit and stock phrases.",
+      "sourceId": "hc-1958",
+      "locator": "Prologue: she proposes 'nothing more than to think what we are doing' (quoted in Margaret Canovan's introduction, 2nd ed. 1998, pp. xxi–xxii)"
+    },
+    {
+      "text": "Under pressure most people go along, but some refuse, and those few are enough to keep the world fit to live in.",
+      "sourceId": "newyorker-1963-v",
+      "locator": "Eichmann in Jerusalem—V, The New Yorker, 16 March 1963 issue (book: ch. XIV)"
+    },
+    {
+      "text": "Judge right and wrong for yourself; do not hand your judgment to the crowd or the state.",
+      "sourceId": "sep",
+      "locator": "§6.3 Self-Consciousness, Social Pressure and Autonomy (on 'Personal Responsibility under Dictatorship')"
+    },
+    {
+      "text": "Facts are not opinions: you may keep quiet, but do not let anyone, the state included, rewrite what happened.",
+      "sourceId": "gaus-ghi",
+      "locator": "Excerpt, her answers on publishing what one knows to be true and on 'factual truths'"
+    },
+    {
+      "text": "Give your love to persons, to your friends, not to a nation or a group.",
+      "sourceId": "jrb-aschheim-2011",
+      "locator": "Section on the Eichmann exchange (her reply to Scholem)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Do I see myself as influential? No, I want to understand. And if other people understand in the same sense as I have understood, this gives me satisfaction, a sense of being at home.",
+      "sourceId": "gaus-ghi",
+      "locator": "Zur Person, ZDF, broadcast 28 October 1964; excerpt, her answer on the effect of her work",
+      "translation": "German History Intersections (German Historical Institute Washington), translator not named; German original in the rbb transcript"
+    },
+    {
+      "text": "under conditions of terror most people will comply but some people will not",
+      "sourceId": "newyorker-1963-v",
+      "locator": "Eichmann in Jerusalem—V, The New Yorker, 16 March 1963 issue (book: ch. XIV)"
+    },
+    {
+      "text": "the lesson of the fearsome, word-and-thought-defying banality of evil",
+      "sourceId": "newyorker-1963-v",
+      "locator": "Eichmann in Jerusalem—V, The New Yorker, 16 March 1963 issue, on Eichmann's last words (book: end of ch. XV, p. 252 per SEP)"
+    },
+    {
+      "text": "And I would say that this venture is only possible through trust in other people—through a difficult to grasp but fundamental trust in the humanity of all people.",
+      "sourceId": "gaus-ghi",
+      "locator": "Zur Person, ZDF, broadcast 28 October 1964; excerpt, her last answer, on the venture into the public realm",
+      "translation": "German History Intersections (German Historical Institute Washington), translator not named; German original in the rbb transcript"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1933, after the Reichstag fire, she agreed to collect anti-Semitic statements from German clubs and trade papers for the German Zionist Organization, work the Nazis counted as 'atrocity propaganda'. She was arrested in Berlin and held for eight days; she later said she had to lie to the officer so the organization would not be exposed. After her release she crossed the border illegally and went to Paris, where she worked for the Youth Aliyah, which brought Jewish teenagers from Germany to Palestine.",
+    "sourceIds": [
+      "gaus-rbb",
+      "jwa"
+    ]
+  },
+  "shadow": {
+    "text": "From 1924 or 1925, aged 18, she had an affair with her professor Martin Heidegger, who was 35, married and a father. From 1950 she renewed the friendship and, in the words of Elzbieta Ettinger, who wrote a book on the pair, worked at 'vindicating his name'; in 1971 she wrote that his Nazi involvement had lasted 'ten short hectic months', though he stayed a member of the Nazi party until the regime fell. In Eichmann in Jerusalem (1963) she claimed fewer Jews would have died if the Jewish councils had not collaborated with the Nazis, and wrote that Rabbi Leo Baeck was, in the eyes of Jews and Gentiles, 'the Jewish Führer'. Gershom Scholem found 'overtones of malice' in the book and a lack of love for the Jewish people; she, not he, ended their friendship. Alfred Kazin called the book 'often arrogantly tendentious' and wrote that she could not take criticism; Stephen Whitfield writes that it is 'hardly free of factual error or bias'; later critics such as David Cesarani and Deborah Lipstadt argued that she mistook a fanatical anti-Semite for a mere bureaucrat. In 'Reflections on Little Rock' (1959) she questioned whether forcing the integration of Southern public schools was required by justice, and upheld white parents' right to send their children to segregated schools; after Ralph Ellison's criticism she wrote to him that she had failed to recognize the value of sacrifice.",
+    "sourceIds": [
+      "mit-news-1995",
+      "heidegger-at-eighty-1971",
+      "sep-heidegger",
+      "jwa",
+      "jrb-aschheim-2011",
+      "kazin-nyrb-1982",
+      "sep",
+      "carmy-firstthings-2020"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you go along with something this week that you could have refused?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "Eichmann in Jerusalem: A Report on the Banality of Evil",
+      "year": 1963
+    },
+    {
+      "title": "The Human Condition",
+      "year": 1958
+    },
+    {
+      "title": "The Origins of Totalitarianism",
+      "year": 1951
+    }
+  ],
+  "sources": [
+    {
+      "id": "gaus-rbb",
+      "kind": "primary",
+      "title": "Zur Person: Günter Gaus im Gespräch mit Hannah Arendt (transcript, broadcast 28 October 1964)",
+      "author": "Hannah Arendt and Günter Gaus",
+      "year": 1964,
+      "publisher": "rbb (Rundfunk Berlin-Brandenburg), Zur Person interview archive",
+      "url": "https://www.rbb-online.de/zurperson/interview_archiv/arendt_hannah.html"
+    },
+    {
+      "id": "gaus-ghi",
+      "kind": "primary",
+      "title": "Günter Gaus, \"Conversation with Hannah Arendt,\" from the Series Zur Person (1964), English excerpts",
+      "author": "Hannah Arendt and Günter Gaus",
+      "year": 1964,
+      "publisher": "German History Intersections, German Historical Institute Washington",
+      "url": "https://germanhistory-intersections.org/en/knowledge-and-education/ghis:document-105"
+    },
+    {
+      "id": "newyorker-1963-v",
+      "kind": "primary",
+      "title": "A Reporter at Large: Eichmann in Jerusalem—V",
+      "author": "Hannah Arendt",
+      "year": 1963,
+      "publisher": "The New Yorker (print issue of 16 March 1963)",
+      "url": "https://www.newyorker.com/magazine/1963/03/16/eichmann-in-jerusalem-v"
+    },
+    {
+      "id": "hc-1958",
+      "kind": "primary",
+      "title": "The Human Condition (2nd ed., introduction by Margaret Canovan)",
+      "author": "Hannah Arendt",
+      "year": 1998,
+      "publisher": "University of Chicago Press",
+      "url": "https://chicagoreference.com/dam/ucp/books/pdf/course_intro/978-0-226-58660-1-introduction.pdf"
+    },
+    {
+      "id": "sep",
+      "kind": "secondary",
+      "title": "Hannah Arendt (Stanford Encyclopedia of Philosophy, substantive revision 12 February 2024)",
+      "author": "Tatjana Tömmel and Maurizio Passerin d'Entrèves",
+      "year": 2024,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/arendt/"
+    },
+    {
+      "id": "jwa",
+      "kind": "secondary",
+      "title": "Hannah Arendt (Shalvi/Hyman Encyclopedia of Jewish Women)",
+      "author": "Stephen J. Whitfield",
+      "year": 2009,
+      "publisher": "Jewish Women's Archive",
+      "url": "https://jwa.org/encyclopedia/article/arendt-hannah"
+    },
+    {
+      "id": "kazin-nyrb-1982",
+      "kind": "secondary",
+      "title": "Woman in Dark Times (review of Elisabeth Young-Bruehl, Hannah Arendt: For Love of the World)",
+      "author": "Alfred Kazin",
+      "year": 1982,
+      "publisher": "The New York Review of Books, 24 June 1982",
+      "url": "https://www.nybooks.com/articles/1982/06/24/woman-in-dark-times/"
+    },
+    {
+      "id": "jrb-aschheim-2011",
+      "kind": "secondary",
+      "title": "Between New York and Jerusalem (review of the Arendt–Scholem correspondence, ed. Marie Luise Knott)",
+      "author": "Steven E. Aschheim",
+      "year": 2011,
+      "publisher": "Jewish Review of Books, Winter 2011",
+      "url": "https://jewishreviewofbooks.com/articles/78/between-new-york-and-jerusalem/"
+    },
+    {
+      "id": "mit-news-1995",
+      "kind": "secondary",
+      "title": "Debate swirls around Arendt-Heidegger book",
+      "author": "MIT News Office",
+      "year": 1995,
+      "publisher": "MIT News, 6 December 1995",
+      "url": "https://news.mit.edu/1995/arendt-1206"
+    },
+    {
+      "id": "carmy-firstthings-2020",
+      "kind": "secondary",
+      "title": "Little Rock and the Terrors of Social Life",
+      "author": "Shalom Carmy",
+      "year": 2020,
+      "publisher": "First Things, May 2020",
+      "url": "https://firstthings.com/little-rock-and-the-terrors-of-social-life/"
+    },
+    {
+      "id": "heidegger-at-eighty-1971",
+      "kind": "primary",
+      "title": "Martin Heidegger at Eighty (translated by Albert Hofstadter)",
+      "author": "Hannah Arendt",
+      "year": 1971,
+      "publisher": "The New York Review of Books, 21 October 1971",
+      "url": "https://www.nybooks.com/articles/1971/10/21/martin-heidegger-at-eighty/"
+    },
+    {
+      "id": "sep-heidegger",
+      "kind": "secondary",
+      "title": "Martin Heidegger (Stanford Encyclopedia of Philosophy)",
+      "author": "Mark Wrathall",
+      "year": 2025,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/heidegger/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real political thinker, dead since 1975, never a politician, campaigner or founder of a religion; no account of sexual violence or of sexual contact with anyone under 16 was found; her dark side is the affair with and later defence of Heidegger, the Eichmann in Jerusalem storm and the break with Scholem, and her 1959 essay against forced school integration."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value against her 1964 Gaus interview, the New Yorker Eichmann text, her 1971 essay on Heidegger and six secondary sources. Honesty fell: Kazin calls the Eichmann book 'often arrogantly tendentious', Whitfield says it is not free of factual error or bias, she cut Heidegger's Nazism down to 'ten short hectic months' although he stayed in the party until 1945, and by Aschheim's account she held that truth should yield to friendship. Independence, Courage, Learning and Friendship held on three sources each, the break with Scholem standing as a single lapse in friendship; the blind pick's Responsibility was added on her 1933 work and her own words. All four quotes match the texts; the Paris work was corrected from 'children' to teenagers, as she herself said, and the shadow gained the Heidegger essay and the critics of the book's accuracy.",
+    "checkedOn": "2026-11-10"
+  }
+}
