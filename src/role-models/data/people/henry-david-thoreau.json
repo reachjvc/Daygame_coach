@@ -1,0 +1,347 @@
+{
+  "id": "henry-david-thoreau",
+  "name": "Henry David Thoreau",
+  "born": 1817,
+  "died": 1862,
+  "category": "philosophers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_money",
+    "lm_spirituality"
+  ],
+  "tagline": "A man who built a $28 cabin to find out how little a good life needs.",
+  "startedFrom": "He was born on 12 July 1817 in Concord, Massachusetts; his father had failed as a merchant and then made pencils for a living. His Harvard costs were paid partly by his father, his aunts and his sister Helen, and partly by his own earnings and the college's charity funds. His first job after Harvard, in 1837, was teaching at the Concord public school; he quit after two weeks in a dispute over beating the pupils.",
+  "values": [
+    {
+      "word": "Simplicity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that 'our life is frittered away by detail' and answers: 'Simplicity, simplicity, simplicity! I say, let your affairs be as two or three, and not a hundred or a thousand.'",
+          "sourceId": "walden-1854",
+          "locator": "ch. 2, 'Where I Lived, and What I Lived For'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He built his house at Walden Pond himself and lists every cost of the materials: $28.12½ in all.",
+          "sourceId": "walden-1854",
+          "locator": "ch. 1, 'Economy' (table of house costs)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Emerson writes that 'he chose to be rich by making his wants few, and supplying them himself', and that he declined dinner parties because he made his pride 'in making my dinner cost little'.",
+          "sourceId": "emerson-1883",
+          "locator": "'Thoreau', paragraphs on his renunciations (p. 419 ff.)"
+        }
+      ]
+    },
+    {
+      "word": "Self-reliance",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that for more than five years he kept himself 'solely by the labor of my hands', and that working about six weeks a year covered all his living costs.",
+          "sourceId": "walden-1854",
+          "locator": "ch. 1, 'Economy'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He earned money by short manual jobs such as building a boat or a fence, planting, grafting and surveying, and became a land surveyor around Concord.",
+          "sourceId": "emerson-1883",
+          "locator": "'Thoreau', paragraphs on his work and surveying (p. 419 ff.)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Emerson writes that he 'was exact in securing his own independence, and in holding every man to the like duty'.",
+          "sourceId": "emerson-1883",
+          "locator": "'Thoreau', paragraph beginning 'At this time, a strong, healthy youth'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Walden Woods Project writes that when he lived with his parents as an adult he paid them for his room, and that he was careful to pay off his debts.",
+          "sourceId": "walden-myths",
+          "locator": "section 'Myth: Thoreau was a freeloader'"
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1846 he spent a night in Concord jail for refusing to pay his poll tax, which he says he refused to a state 'which buys and sells men, women, and children'.",
+          "sourceId": "walden-1854",
+          "locator": "ch. 8, 'The Village'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He took part in the Underground Railroad, protested the Fugitive Slave Law and gave support to John Brown and his party.",
+          "sourceId": "sep-furtak",
+          "locator": "section 4, 'Friendship, Politics, and Environmentalism'"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that if a law 'requires you to be the agent of injustice to another, then, I say, break the law', and 'What I have to do is to see, at any rate, that I do not lend myself to the wrong which I condemn.'",
+          "sourceId": "civil-1849",
+          "locator": "Civil Disobedience, paragraph beginning 'If the injustice is part of the necessary friction'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Emerson writes that in 1859, before anyone else spoke for John Brown, he announced a public talk on Brown and, when both the Republican and Abolitionist committees said it was premature, replied that he had not asked their advice.",
+          "sourceId": "emerson-1883",
+          "locator": "'Thoreau', paragraph beginning 'But, idealist as he was'"
+        }
+      ]
+    },
+    {
+      "word": "Nature",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that he cannot keep his health and spirits unless he spends 'four hours a day at least' walking through woods, hills and fields.",
+          "sourceId": "walking-1862",
+          "locator": "'Walking', paragraph beginning 'I think that I cannot preserve my health and spirits'"
+        },
+        {
+          "kind": "deed",
+          "claim": "From about 1848 he kept a routine of study and writing morning and evening with walks in the afternoon; his 1860 lecture 'The Succession of Forest Trees' was his most widely read writing in his lifetime, and he fell ill in December 1860 while counting tree rings.",
+          "sourceId": "walden-chronology",
+          "locator": "narrative paragraphs for 1848, 1860"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia of Philosophy calls him a philosopher, poet, environmental scientist and political activist, who discussed his own findings with leading naturalists and read Humboldt and Darwin.",
+          "sourceId": "sep-furtak",
+          "locator": "opening summary"
+        }
+      ]
+    },
+    {
+      "word": "Solitude",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "From 4 July 1845 he lived alone for two years and two months in the one-room house he built at Walden Pond, a mile and a half south of Concord village. He walked into the village every day or two, and wrote that he had more visitors there than at any other time of his life.",
+          "sourceId": "walden-1854",
+          "locator": "ch. 1, 'Economy' (opening paragraph); ch. 2 (date and place); ch. 6, 'Visitors'; ch. 8, 'The Village'"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes: 'I find it wholesome to be alone the greater part of the time' and 'I never found the companion that was so companionable as solitude.'",
+          "sourceId": "walden-1854",
+          "locator": "ch. 5, 'Solitude'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Emerson lists among his renunciations that 'he never married; he lived alone'.",
+          "sourceId": "emerson-1883",
+          "locator": "'Thoreau', paragraph beginning 'He could easily solve the problems of the surveyor'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Emerson writes that he chose to 'keep his solitary freedom at the cost of disappointing the natural expectations of his family and friends'.",
+          "sourceId": "emerson-1883",
+          "locator": "'Thoreau', paragraph beginning 'At this time, a strong, healthy youth'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Count the price of a thing in the hours of your life you must trade for it, not only in money.",
+      "sourceId": "walden-1854",
+      "locator": "ch. 1, 'Economy'"
+    },
+    {
+      "text": "Keep your affairs few and simple, so the details do not eat your life.",
+      "sourceId": "walden-1854",
+      "locator": "ch. 2, 'Where I Lived, and What I Lived For'"
+    },
+    {
+      "text": "Earn what you truly need with as little work as you can, and keep the rest of your time free for what matters to you.",
+      "sourceId": "walden-1854",
+      "locator": "ch. 1, 'Economy'"
+    },
+    {
+      "text": "Do not take part in a wrong you condemn, even when refusing costs you.",
+      "sourceId": "civil-1849",
+      "locator": "Civil Disobedience, paragraph beginning 'If the injustice is part of the necessary friction'"
+    },
+    {
+      "text": "Walk at your own pace, even if it puts you out of step with the people around you.",
+      "sourceId": "walden-1854",
+      "locator": "ch. 18, 'Conclusion'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I went to the woods because I wished to live deliberately, to front only the essential facts of life, and see if I could not learn what it had to teach, and not, when I came to die, discover that I had not lived.",
+      "sourceId": "walden-1854",
+      "locator": "ch. 2, 'Where I Lived, and What I Lived For'"
+    },
+    {
+      "text": "The cost of a thing is the amount of what I will call life which is required to be exchanged for it, immediately or in the long run.",
+      "sourceId": "walden-1854",
+      "locator": "ch. 1, 'Economy'"
+    },
+    {
+      "text": "If a man does not keep pace with his companions, perhaps it is because he hears a different drummer. Let him step to the music which he hears, however measured or far away.",
+      "sourceId": "walden-1854",
+      "locator": "ch. 18, 'Conclusion'"
+    },
+    {
+      "text": "Under a government which imprisons any unjustly, the true place for a just man is also a prison.",
+      "sourceId": "civil-1849",
+      "locator": "Civil Disobedience, paragraph beginning 'Under a government which imprisons any unjustly'"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1846, while he was living at Walden Pond, he walked into Concord to collect a mended shoe and was arrested for not paying his poll tax, which he had stopped paying in protest. He spent one night in the town jail; someone else paid the tax, and he was let out the next morning. He finished his errand and led a huckleberry-picking party into the hills. In 1849 he published his case for the act as 'Resistance to Civil Government', later known as 'Civil Disobedience'.",
+    "sourceIds": [
+      "civil-1849",
+      "walden-1854",
+      "sanborn-1882",
+      "walden-chronology"
+    ]
+  },
+  "shadow": {
+    "text": "In April 1844 he and a friend, Edward Hoar, cooked fish by Fair Haven Pond on a dry spring day; their fire spread and, by his own count, burned over a hundred acres of Concord woods. He ran to raise the alarm, sat on a cliff and watched the fire come towards him, then joined the townsmen who put it out. In his journal in 1850 he wrote that it had never troubled him 'more than if the lightning had done it', and that some owners called him a 'damned rascal' behind his back. His Walden house stood on land Emerson had bought in 1844, where Thoreau called himself 'merely a squatter'; Emerson's son Edward wrote in 1917 that during those years he often accepted his mother's pies and dropped in at friends' homes at supper-time. In his 1862 eulogy Emerson wrote that he was 'rarely tender', that it 'cost him nothing to say No', and that he counted it a fault in him that he had no ambition.",
+    "sourceIds": [
+      "journal-vol2-1906",
+      "walden-chronology",
+      "walden-1854",
+      "concord-library-emerson-1844",
+      "ewemerson-1917",
+      "emerson-1883"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you buy or agree to this week, and how many hours of your life did it really cost?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Walden",
+      "year": 1854
+    },
+    {
+      "title": "Civil Disobedience (Resistance to Civil Government)",
+      "year": 1849
+    },
+    {
+      "title": "Walking",
+      "year": 1862
+    }
+  ],
+  "sources": [
+    {
+      "id": "walden-1854",
+      "kind": "primary",
+      "title": "Walden; or, Life in the Woods",
+      "author": "Henry David Thoreau",
+      "year": 1854,
+      "publisher": "Ticknor and Fields (Project Gutenberg eBook #205)",
+      "url": "https://www.gutenberg.org/ebooks/205"
+    },
+    {
+      "id": "civil-1849",
+      "kind": "primary",
+      "title": "On the Duty of Civil Disobedience (first published 1849 as 'Resistance to Civil Government')",
+      "author": "Henry David Thoreau",
+      "year": 1849,
+      "publisher": "first in Aesthetic Papers, ed. Elizabeth Peabody, 1849; text read in Project Gutenberg eBook #71",
+      "url": "https://www.gutenberg.org/ebooks/71"
+    },
+    {
+      "id": "walking-1862",
+      "kind": "primary",
+      "title": "Walking",
+      "author": "Henry David Thoreau",
+      "year": 1862,
+      "publisher": "The Atlantic Monthly, June 1862 (Project Gutenberg eBook #1022)",
+      "url": "https://www.gutenberg.org/ebooks/1022"
+    },
+    {
+      "id": "journal-vol2-1906",
+      "kind": "primary",
+      "title": "The Writings of Henry David Thoreau, vol. 8: Journal II, 1850–September 15, 1851",
+      "author": "Henry David Thoreau (ed. Bradford Torrey)",
+      "year": 1906,
+      "publisher": "Houghton Mifflin (Project Gutenberg eBook #59031)",
+      "url": "https://www.gutenberg.org/ebooks/59031"
+    },
+    {
+      "id": "emerson-1883",
+      "kind": "secondary",
+      "title": "Thoreau (eulogy read 9 May 1862; in Lectures and Biographical Sketches)",
+      "author": "Ralph Waldo Emerson",
+      "year": 1883,
+      "publisher": "Houghton, Mifflin and Company (Project Gutenberg eBook #75942)",
+      "url": "https://www.gutenberg.org/ebooks/75942"
+    },
+    {
+      "id": "sanborn-1882",
+      "kind": "secondary",
+      "title": "Henry D. Thoreau (American Men of Letters)",
+      "author": "F. B. Sanborn",
+      "year": 1882,
+      "publisher": "Houghton Mifflin (Project Gutenberg eBook #51426)",
+      "url": "https://www.gutenberg.org/ebooks/51426"
+    },
+    {
+      "id": "sep-furtak",
+      "kind": "secondary",
+      "title": "Henry David Thoreau, Stanford Encyclopedia of Philosophy (revised 2 March 2023)",
+      "author": "Rick Anthony Furtak",
+      "year": 2023,
+      "publisher": "Metaphysics Research Lab, Stanford University",
+      "url": "https://plato.stanford.edu/entries/thoreau/"
+    },
+    {
+      "id": "walden-chronology",
+      "kind": "secondary",
+      "title": "Thoreau's Life – A Brief Chronology",
+      "author": "The Walden Woods Project",
+      "year": "undated (read 2026-11-10)",
+      "publisher": "The Walden Woods Project",
+      "url": "https://www.walden.org/thoreau/a-brief-chronology/"
+    },
+    {
+      "id": "walden-myths",
+      "kind": "secondary",
+      "title": "Myths and Misconceptions",
+      "author": "The Walden Woods Project",
+      "year": "undated (read 2026-11-10)",
+      "publisher": "The Walden Woods Project",
+      "url": "https://walden.org/education/for-students/myths-and-misconceptions"
+    },
+    {
+      "id": "concord-library-emerson-1844",
+      "kind": "secondary",
+      "title": "Herbert Wendell Gleason, Walden from Emerson's Cliff (catalogue entry quoting Emerson's letter of 4 October 1844 on buying land at Walden)",
+      "author": "Concord Free Public Library, Special Collections",
+      "year": "undated (read 2026-11-10)",
+      "publisher": "Concord Free Public Library",
+      "url": "https://concordlibrary.org/special-collections/emerson-celebration/Em_Con_49"
+    },
+    {
+      "id": "ewemerson-1917",
+      "kind": "secondary",
+      "title": "Henry Thoreau as Remembered by a Young Friend",
+      "author": "Edward Waldo Emerson",
+      "year": 1917,
+      "publisher": "Houghton Mifflin (text hosted by The Walden Woods Project)",
+      "url": "https://www.walden.org/sub-work/edward-waldo-emerson-thoreau-as-remembered-by-a-young-friend-1917-henry-david-thoreau/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "ok",
+      "notes": "A real 19th-century writer, dead since 1862, never a politician or religious founder; searches found no account of sexual contact with a minor or of sexual violence, and his dark side is small and documented."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I attacked Self-reliance and Solitude with the well-known counter-case: the Walden house stood on Emerson's land, a mile and a half from Concord village, he walked into town every day or two, had many visitors, and took his mother's pies and friends' suppers. Both held, because he paid for the house, earned his living by manual work and surveying, paid his parents for his room, lived alone and never married, but the Solitude evidence now states the village trips and visitors, and the land and meals went into the shadow. Simplicity, Justice and Nature held against their sources, all four quotes matched the Gutenberg texts, the blind pick chose the same five words, and the shadow now also says he joined in putting the 1844 fire out.",
+    "checkedOn": "2026-11-10"
+  }
+}
