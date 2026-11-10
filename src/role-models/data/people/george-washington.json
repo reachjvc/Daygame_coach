@@ -1,0 +1,391 @@
+{
+  "id": "george-washington",
+  "name": "George Washington",
+  "born": 1732,
+  "died": 1799,
+  "category": "leaders",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset",
+    "lm_emotions"
+  ],
+  "tagline": "A general who handed power back twice and kept a hot temper under command.",
+  "startedFrom": "He was born on 22 February 1732, the third son of a middling Virginia planter. His father died when he was eleven, which ended any hope of higher education; Jefferson wrote that his schooling was only reading, writing and common arithmetic, with surveying added later. He inherited one of the smaller family farms and ten enslaved people, and by seventeen held his first official post as a surveyor, for Culpeper County.",
+  "values": [
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "On accepting the command in 1775 he told Congress he did not wish to make any profit from it, would keep an exact account of his expenses, and wanted only those repaid.",
+          "sourceId": "fo-address-1775",
+          "locator": "Address to the Continental Congress, 16 June 1775"
+        },
+        {
+          "kind": "deed",
+          "claim": "He refused a salary for the whole war, stayed with the army throughout, and lobbied Congress for the soldiers' pay and pensions.",
+          "sourceId": "millercenter",
+          "locator": "Life Before the Presidency"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At the Monongahela on 9 July 1755, where Braddock's force was routed, he had four bullets through his coat and two horses shot under him, as he wrote to his brother nine days later.",
+          "sourceId": "fo-monongahela-1755",
+          "locator": "To John Augustine Washington, 18 July 1755"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Miller Center's biography says he won acclaim and promotion for his courage under fire at the Monongahela.",
+          "sourceId": "millercenter",
+          "locator": "Life Before the Presidency"
+        },
+        {
+          "kind": "witness",
+          "claim": "Jefferson wrote that 'he was incapable of fear, meeting personal dangers with the calmest unconcern'.",
+          "sourceId": "jefferson-1814",
+          "locator": "Thomas Jefferson to Walter Jones, 2 January 1814"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Jefferson wrote that his temper was 'naturally irritable and high toned; but reflection & resolution had obtained a firm and habitual ascendancy over it'.",
+          "sourceId": "jefferson-1814",
+          "locator": "Thomas Jefferson to Walter Jones, 2 January 1814"
+        },
+        {
+          "kind": "deed",
+          "claim": "When an anonymous call for an officers' meeting went round the camp at Newburgh in March 1783, he forbade it and set a meeting four days later, to give the men time to cool their passions.",
+          "sourceId": "mv-newburgh",
+          "locator": "Newburgh Conspiracy (Mount Vernon Digital Encyclopedia)"
+        },
+        {
+          "kind": "words",
+          "claim": "In the Newburgh address he accused the anonymous writer of using the officers' passions 'without giving time for cool, deliberative thinking, & that composure of Mind' that good decisions need.",
+          "sourceId": "fo-newburgh-1783",
+          "locator": "To the Officers of the Army, Newburgh, 15 March 1783"
+        }
+      ]
+    },
+    {
+      "word": "Reputation",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Writing to Martha on 18 June 1775, he said he could not have refused the command 'without exposing my Character to such censures as would have reflected dishonour upon myself'.",
+          "sourceId": "fo-martha-1775",
+          "locator": "To Martha Washington, 18 June 1775"
+        },
+        {
+          "kind": "words",
+          "claim": "In August 1788, weighing the presidency, he worried that 'the world and Posterity might probably accuse me of inconsistency and ambition', and called the character of an honest man 'the most enviable of all titles'.",
+          "sourceId": "fo-hamilton-1788",
+          "locator": "To Alexander Hamilton, 28 August 1788"
+        },
+        {
+          "kind": "witness",
+          "claim": "The historian Gordon Wood, in a 2013 lecture at the American Revolution Institute, highlighted his concern with his reputation, citing his letters, and linked his lack of interest in power to his awareness of his legacy.",
+          "sourceId": "ari-wood-2013",
+          "locator": "The Greatness of George Washington, lecture of 10 May 2013 (event summary)"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When people around you are angry and pushing for a rash step, slow it down so they can think before they act.",
+      "sourceId": "fo-newburgh-1783",
+      "locator": "To the Officers of the Army, Newburgh, 15 March 1783"
+    },
+    {
+      "text": "When the job you were given is done, hand the power back.",
+      "sourceId": "fo-resignation-1783",
+      "locator": "To the United States Congress, 23 December 1783"
+    },
+    {
+      "text": "Before a big step, ask how it will look to the people whose good opinion you need, and to those who come after.",
+      "sourceId": "fo-hamilton-1788",
+      "locator": "To Alexander Hamilton, 28 August 1788"
+    },
+    {
+      "text": "Do the work for the cause, not the pay: keep exact accounts and take only your costs.",
+      "sourceId": "fo-address-1775",
+      "locator": "Address to the Continental Congress, 16 June 1775"
+    },
+    {
+      "text": "Let reflection, not your first flash of temper, decide what you do.",
+      "sourceId": "jefferson-1814",
+      "locator": "Thomas Jefferson to Walter Jones, 2 January 1814"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I do not think my self equal to the Command I am honoured with.",
+      "sourceId": "fo-address-1775",
+      "locator": "Address to the Continental Congress, 16 June 1775 (Papers of George Washington, Revolutionary War Series, vol. 1, pp. 1–3)"
+    },
+    {
+      "text": "Having now finished the work assigned me, I retire from the great theatre of Action…",
+      "sourceId": "fo-resignation-1783",
+      "locator": "Address to Congress resigning his commission, Annapolis, 23 December 1783"
+    },
+    {
+      "text": "I hope I shall always possess firmness and virtue enough to maintain (what I consider the most enviable of all titles) the character of an honest man…",
+      "sourceId": "fo-hamilton-1788",
+      "locator": "To Alexander Hamilton, 28 August 1788 (Papers of George Washington, Confederation Series, vol. 6, pp. 480–482)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In March 1783 the unpaid officers of his army at Newburgh were urged in an anonymous address to threaten Congress, either by leaving the country undefended or by refusing to disband after the peace, a thinly veiled threat of military takeover. He declared the meeting called for 11 March improper, set his own for 15 March, and then entered the room unexpectedly and spoke against the plan. After he left, the officers resolved to work with Congress instead. Nine months later, on 23 December 1783, he handed his commission back to Congress and went home.",
+    "sourceIds": [
+      "mv-newburgh",
+      "fo-newburgh-1783",
+      "fo-resignation-1783",
+      "millercenter"
+    ]
+  },
+  "shadow": {
+    "text": "He held people in slavery from the age of eleven, when he inherited ten, until his death; at least 577 enslaved people lived and worked at Mount Vernon over his lifetime, and 317 were there when he died. In 1767 he asked William Crawford to mark out western land for him that a royal proclamation then closed to settlement, to keep the plan 'a profound Secret' and to carry it on 'under the pretence of hunting other Game'. As president he had enslaved workers rotated out of Philadelphia so they could not claim freedom under Pennsylvania's 1780 law; in April 1791 he wrote to his secretary Tobias Lear that 'it behoves me to prevent the emancipation of them' and asked that it be done 'under pretext that may deceive both them and the Public'. When Ona Judge, Martha Washington's maid, escaped in May 1796, he asked the Treasury secretary to have her recovered from Portsmouth and suggested seizing her and putting her on a ship; he called her offer to return if promised freedom 'totally inadmissible', and in 1799 tried again through Martha's nephew Burwell Bassett Jr. His will freed the people he owned only after his wife's death; the 153 held by the Custis estate, whom he had no legal power to free, stayed enslaved. In May 1779 he ordered General John Sullivan to bring 'total destruction and devastation' to the settlements of the 'hostile tribes' of the Six Nations (Haudenosaunee) and to ruin their crops; the campaign destroyed at least 53 towns, and in 1790 Seneca chiefs wrote to him that when his army came 'we called you the Town-destroyer'.",
+    "sourceIds": [
+      "millercenter",
+      "mv-slavery",
+      "fo-crawford-1767",
+      "fo-lear-1791",
+      "mv-ona-judge",
+      "fo-wolcott-1796",
+      "fo-whipple-1796",
+      "mv-will",
+      "fo-will-1799",
+      "fo-sullivan-1779",
+      "lafayette-1779",
+      "fo-seneca-1790"
+    ]
+  },
+  "councilQuestion": {
+    "text": "When anger pushed you toward a decision this week, did you give it time to cool before you acted?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Address to the Officers of the Army (the Newburgh Address)",
+      "year": 1783
+    },
+    {
+      "title": "Address to Congress on Resigning his Commission",
+      "year": 1783
+    },
+    {
+      "title": "Farewell Address",
+      "year": 1796
+    }
+  ],
+  "sources": [
+    {
+      "id": "fo-address-1775",
+      "kind": "primary",
+      "title": "Address to the Continental Congress, 16 June 1775 (The Papers of George Washington, Revolutionary War Series, vol. 1, ed. Philander D. Chase, pp. 1–3)",
+      "author": "George Washington",
+      "year": 1985,
+      "publisher": "University Press of Virginia; Founders Online, National Archives",
+      "url": "https://founders.archives.gov/documents/Washington/03-01-02-0001"
+    },
+    {
+      "id": "fo-newburgh-1783",
+      "kind": "primary",
+      "title": "From George Washington to Officers of the Army, 15 March 1783 (The Papers of George Washington, Early Access)",
+      "author": "George Washington",
+      "year": "n.d.",
+      "publisher": "Founders Online, National Archives",
+      "url": "https://founders.archives.gov/documents/Washington/99-01-02-10840"
+    },
+    {
+      "id": "fo-resignation-1783",
+      "kind": "primary",
+      "title": "From George Washington to United States Congress, 23 December 1783 (The Papers of George Washington, Early Access)",
+      "author": "George Washington",
+      "year": "n.d.",
+      "publisher": "Founders Online, National Archives",
+      "url": "https://founders.archives.gov/documents/Washington/99-01-02-12223"
+    },
+    {
+      "id": "fo-hamilton-1788",
+      "kind": "primary",
+      "title": "George Washington to Alexander Hamilton, 28 August 1788 (The Papers of George Washington, Confederation Series, vol. 6, ed. W. W. Abbot, pp. 480–482)",
+      "author": "George Washington",
+      "year": 1997,
+      "publisher": "University Press of Virginia; Founders Online, National Archives",
+      "url": "https://founders.archives.gov/documents/Washington/04-06-02-0432"
+    },
+    {
+      "id": "fo-monongahela-1755",
+      "kind": "primary",
+      "title": "George Washington to John Augustine Washington, 18 July 1755 (The Papers of George Washington, Colonial Series, vol. 1, ed. W. W. Abbot, p. 343)",
+      "author": "George Washington",
+      "year": 1983,
+      "publisher": "University Press of Virginia; Founders Online, National Archives",
+      "url": "https://founders.archives.gov/documents/Washington/02-01-02-0169"
+    },
+    {
+      "id": "fo-wolcott-1796",
+      "kind": "primary",
+      "title": "George Washington to Oliver Wolcott, Jr., 1 September 1796 (The Papers of George Washington, Presidential Series, vol. 20, ed. D. R. Hoth and W. M. Ferraro, pp. 639–641)",
+      "author": "George Washington",
+      "year": 2019,
+      "publisher": "University of Virginia Press; Founders Online, National Archives",
+      "url": "https://founders.archives.gov/documents/Washington/05-20-02-0397"
+    },
+    {
+      "id": "fo-whipple-1796",
+      "kind": "primary",
+      "title": "George Washington to Joseph Whipple, 28 November 1796 (The Papers of George Washington, Presidential Series, vol. 21, ed. A. Garbooshian-Huggins)",
+      "author": "George Washington",
+      "year": 2020,
+      "publisher": "University of Virginia Press; Founders Online, National Archives",
+      "url": "https://founders.archives.gov/documents/Washington/05-21-02-0116"
+    },
+    {
+      "id": "fo-sullivan-1779",
+      "kind": "primary",
+      "title": "George Washington to Major General John Sullivan, 31 May 1779 (The Papers of George Washington, Revolutionary War Series, vol. 20, ed. Edward G. Lengel, pp. 716–719)",
+      "author": "George Washington",
+      "year": 2010,
+      "publisher": "University of Virginia Press; Founders Online, National Archives",
+      "url": "https://founders.archives.gov/documents/Washington/03-20-02-0661"
+    },
+    {
+      "id": "fo-will-1799",
+      "kind": "primary",
+      "title": "George Washington's Last Will and Testament, 9 July 1799 (The Papers of George Washington, Retirement Series, vol. 4, ed. W. W. Abbot, pp. 479–511)",
+      "author": "George Washington",
+      "year": 1999,
+      "publisher": "University Press of Virginia; Founders Online, National Archives",
+      "url": "https://founders.archives.gov/documents/Washington/06-04-02-0404-0001"
+    },
+    {
+      "id": "fo-seneca-1790",
+      "kind": "secondary",
+      "title": "Seneca Chiefs to George Washington, 1 December 1790 (The Papers of George Washington, Presidential Series, vol. 7, ed. Jack D. Warren, Jr., pp. 7–16)",
+      "author": "Cornplanter, Half-Town and Great-Tree",
+      "year": 1998,
+      "publisher": "University Press of Virginia; Founders Online, National Archives",
+      "url": "https://founders.archives.gov/documents/Washington/05-07-02-0005"
+    },
+    {
+      "id": "jefferson-1814",
+      "kind": "secondary",
+      "title": "Thomas Jefferson to Walter Jones, 2 January 1814 (The Papers of Thomas Jefferson, Retirement Series, vol. 7, ed. J. Jefferson Looney, pp. 100–104)",
+      "author": "Thomas Jefferson",
+      "year": 2010,
+      "publisher": "Princeton University Press; Founders Online, National Archives",
+      "url": "https://founders.archives.gov/documents/Jefferson/03-07-02-0052"
+    },
+    {
+      "id": "millercenter",
+      "kind": "secondary",
+      "title": "George Washington (Life in Brief; Life Before the Presidency; Impact and Legacy)",
+      "author": "Lindsay M. Chervinsky",
+      "year": "n.d.",
+      "publisher": "Miller Center, University of Virginia",
+      "url": "https://millercenter.org/president/washington"
+    },
+    {
+      "id": "mv-newburgh",
+      "kind": "secondary",
+      "title": "Newburgh Conspiracy (Digital Encyclopedia of George Washington)",
+      "author": "Michael Hattem, updated by Zoie Horecny",
+      "year": 2025,
+      "publisher": "George Washington's Mount Vernon",
+      "url": "https://www.mountvernon.org/library/digitalhistory/digital-encyclopedia/article/newburgh-conspiracy"
+    },
+    {
+      "id": "mv-ona-judge",
+      "kind": "secondary",
+      "title": "Ona Judge (Digital Encyclopedia of George Washington)",
+      "author": "George Washington's Mount Vernon",
+      "year": "n.d.",
+      "publisher": "Mount Vernon Ladies' Association",
+      "url": "https://www.mountvernon.org/library/digitalhistory/digital-encyclopedia/article/ona-judge"
+    },
+    {
+      "id": "mv-slavery",
+      "kind": "secondary",
+      "title": "Slavery (George Washington's Mount Vernon)",
+      "author": "George Washington's Mount Vernon",
+      "year": "n.d.",
+      "publisher": "Mount Vernon Ladies' Association",
+      "url": "https://www.mountvernon.org/george-washington/slavery"
+    },
+    {
+      "id": "mv-will",
+      "kind": "secondary",
+      "title": "George Washington's Will (Digital Encyclopedia of George Washington)",
+      "author": "George Washington's Mount Vernon",
+      "year": "n.d.",
+      "publisher": "Mount Vernon Ladies' Association",
+      "url": "https://www.mountvernon.org/library/digitalhistory/digital-encyclopedia/article/george-washington-s-will"
+    },
+    {
+      "id": "lafayette-1779",
+      "kind": "secondary",
+      "title": "Washington's 1779 Indian Expedition: historical markers project",
+      "author": "A. Lynn Smith and Lafayette College students",
+      "year": "n.d.",
+      "publisher": "Lafayette College",
+      "url": "https://1779.lafayette.edu/"
+    },
+    {
+      "id": "fo-martha-1775",
+      "kind": "primary",
+      "title": "George Washington to Martha Washington, 18 June 1775 (The Papers of George Washington, Revolutionary War Series, vol. 1, ed. Philander D. Chase, pp. 3–6)",
+      "author": "George Washington",
+      "year": 1985,
+      "publisher": "University Press of Virginia; Founders Online, National Archives",
+      "url": "https://founders.archives.gov/documents/Washington/03-01-02-0003"
+    },
+    {
+      "id": "fo-lear-1791",
+      "kind": "primary",
+      "title": "George Washington to Tobias Lear, 12 April 1791 (The Papers of George Washington, Presidential Series, vol. 8, ed. Mark A. Mastromarino, pp. 84–86)",
+      "author": "George Washington",
+      "year": 1999,
+      "publisher": "University Press of Virginia; Founders Online, National Archives",
+      "url": "https://founders.archives.gov/documents/Washington/05-08-02-0062"
+    },
+    {
+      "id": "fo-crawford-1767",
+      "kind": "primary",
+      "title": "George Washington to William Crawford, 17 September 1767 (The Papers of George Washington, Colonial Series, vol. 8, ed. W. W. Abbot and Dorothy Twohig, pp. 26–32)",
+      "author": "George Washington",
+      "year": 1993,
+      "publisher": "University Press of Virginia; Founders Online, National Archives",
+      "url": "https://founders.archives.gov/documents/Washington/02-08-02-0020"
+    },
+    {
+      "id": "ari-wood-2013",
+      "kind": "secondary",
+      "title": "The Greatness of George Washington (lecture, 10 May 2013)",
+      "author": "Gordon S. Wood",
+      "year": 2013,
+      "publisher": "The American Revolution Institute of the Society of the Cincinnati",
+      "url": "https://americanrevolutioninstitute.org/?p=16366"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real, long-dead US general and president (died 1799), not a living politician or founder of a religion; no credible account of sexual violence or of sexual contact with anyone under 16 was found; he has a documented dark side as an enslaver, in the pursuit of Ona Judge, and in the 1779 campaign against the Haudenosaunee."
+    },
+    "blindAgreement": 0.5,
+    "devilsAdvocate": "I attacked all five draft values and re-read every cited letter on Founders Online. Integrity fell on a pattern of planned deception: the 1767 'profound Secret' land scheme under 'pretence of hunting', the 1791 order to move enslaved workers out of Pennsylvania 'under pretext that may deceive both them and the Public', and the quiet seizure he proposed for Ona Judge in 1796. Humility fell because the Miller Center calls his 1775 modesty the 'expected' form and says he 'welcomed the command' and that wearing his uniform to Congress 'was no accident'. Service, Courage and Discipline held; Reputation came in from the blind pick, and the shadow gained the 1767 land scheme and his own words to Lear.",
+    "checkedOn": "2026-11-10"
+  }
+}
