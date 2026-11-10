@@ -1,0 +1,336 @@
+{
+  "id": "wilbur-wright",
+  "name": "Wilbur Wright",
+  "born": 1867,
+  "died": 1912,
+  "category": "scientists",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A bicycle maker who never went to college and read, tested and practised his way, with his brother, to the first powered flights",
+  "startedFrom": "He was born in 1867 near Millville, Indiana, the third of seven children of a bishop of the United Brethren Church, and the family moved often. He planned to attend divinity school at Yale, but in the winter of 1885-86 a neighbourhood bully knocked his teeth out with a hockey stick during a game, and he gave up formal schooling. For three years he stayed at home, nursed his mother until she died of tuberculosis in 1889, and read in his father's library; then he ran a printing shop and, from 1892-93, a bicycle shop with his brother Orville.",
+  "values": [
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 1899 he wrote to the Smithsonian that he was \"about to begin a systematic study of the subject\" and wished \"to avail myself of all that is already known\".",
+          "sourceId": "letter-1899",
+          "locator": "letter of 30 May 1899, last paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "After the Smithsonian sent him pamphlets and a reading list in June 1899, he ordered Langley's book, and the bicycle-shop ledger records $5.50 spent \"for books on flying\" that month.",
+          "sourceId": "crouch-1899",
+          "locator": "paragraphs on Rathbun's reply and the June 1899 ledger entry (note 6)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The National Park Service writes that in his three years at home after his injury he \"continued reading everything available in his father's well-stocked library\".",
+          "sourceId": "nps-people",
+          "locator": "section \"Education\""
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 1900 he wrote to Octave Chanute that his \"disease\" of believing in human flight would \"soon cost me an increased amount of money if not my life\", and that he was arranging his affairs to give it his entire time for a few months.",
+          "sourceId": "letter-1900",
+          "locator": "letter of 13 May 1900, first paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "After the disappointing 1901 glider season, the brothers built a wind tunnel in Dayton; from October to December 1901 they tried some 200 wing shapes and then tested 38 model wings at 45 angles each, until they found where the old figures were wrong.",
+          "sourceId": "centennial-1901",
+          "locator": "paragraphs on the wind tunnel, October-December 1901"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Library of Congress calls the 1900 letter \"a kind of manifesto or declaration of intent\" and describes him as \"a systematic, organized, methodical, and goal-oriented person ready to take on a great challenge\".",
+          "sourceId": "loc-belief",
+          "locator": "essay \"The Belief that Flight is Possible to Man\", third paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Mastery",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that \"knowledge and skill in handling the machine are absolute essentials to flight and it is impossible to obtain them without extensive practice\".",
+          "sourceId": "letter-1900",
+          "locator": "letter of 13 May 1900, paragraph beginning \"My plan then is this\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In autumn 1902 the brothers made between seven hundred and one thousand glides, and on 5 October 1905 he flew 24 1/5 miles in about 39 minutes over Huffman Prairie.",
+          "sourceId": "loc-timeline",
+          "locator": "timeline 1901 to 1910, entries Sept 19-Oct 24, 1902 and October 5, 1905"
+        },
+        {
+          "kind": "witness",
+          "claim": "The aviation historian Charles H. Gibbs-Smith wrote that control was \"the secret\" and that at Le Mans in 1908 Wilbur \"quietly revolutionized aviation\", making more than one hundred flights without injuring anyone.",
+          "sourceId": "gibbs-smith-1960",
+          "locator": "American Heritage, vol. 11 no. 2, paragraphs on the Europeans' errors and on Auvours"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his 1901 speech he said that whoever wants perfect safety should \"sit on a fence and watch the birds\", but whoever really wishes to learn \"must mount a machine\".",
+          "sourceId": "aero-1901",
+          "locator": "\"Some Aeronautical Experiments\", paragraph on the two ways of learning to ride a fractious horse"
+        },
+        {
+          "kind": "witness",
+          "claim": "Introducing him in 1901, Octave Chanute said the brothers had been \"bold enough to attempt some things which neither Lilienthal, nor Pilcher, nor myself dared to do\".",
+          "sourceId": "aero-1901",
+          "locator": "\"Introduction by President Chanute\", second paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1908 the French did not believe the Wrights had been flying since 1903, and the press accused him of bluffing; on 8 August 1908 at the Hunaudieres racecourse near Le Mans he took off before a doubting crowd, banked and flew two circuits.",
+          "sourceId": "gibbs-smith-1960",
+          "locator": "American Heritage, vol. 11 no. 2, paragraph beginning \"The French did not believe\""
+        },
+        {
+          "kind": "witness",
+          "claim": "In March 1909 Congress voted the brothers a medal for their \"ability, courage, and success in navigating the air\".",
+          "sourceId": "loc-timeline",
+          "locator": "timeline 1901 to 1910, entry March 4, 1909 (H.J. Resolution 246)"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that he had been interested in mechanical and human flight \"ever since as a boy I constructed a number of bats\" modelled on Cayley's and Penaud's machines.",
+          "sourceId": "letter-1899",
+          "locator": "letter of 30 May 1899, first paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "In summer 1899, after twisting a cardboard box in the bicycle shop, he built and flew a five-foot kite to test the idea of twisting the wings to keep balance.",
+          "sourceId": "crouch-1899",
+          "locator": "paragraphs on the paper box and the kite, July-August 1899"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1878 their father brought home a toy Penaud helicopter, which the Library of Congress says inspired Wilbur and Orville's first interest in flight.",
+          "sourceId": "loc-timeline",
+          "locator": "timeline 1867 to 1889, entry 1878"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "If you really want to learn a skill, get on the machine and practise; watching from the fence is safe but teaches less.",
+      "sourceId": "aero-1901",
+      "locator": "\"Some Aeronautical Experiments\", paragraph on the two ways of learning to ride a fractious horse"
+    },
+    {
+      "text": "Before you build, learn everything that is already known, then add your own small part.",
+      "sourceId": "letter-1899",
+      "locator": "letter of 30 May 1899, last paragraph (\"avail myself of all that is already known and then if possible add my mite\")"
+    },
+    {
+      "text": "Solve control and skill first; power and machinery come after.",
+      "sourceId": "letter-1900",
+      "locator": "letter of 13 May 1900, second paragraph (\"what is chiefly needed is skill rather than machinery\")"
+    },
+    {
+      "text": "Count your practice in hours, not seconds: a few minutes a year will never make you an expert.",
+      "sourceId": "letter-1900",
+      "locator": "letter of 13 May 1900, third paragraph (Lilienthal's five hours in five years; \"even Methuselah could never have become an expert stenographer with one hour per year for practice\")"
+    },
+    {
+      "text": "When your results do not match the books, test it yourself and make your own tables.",
+      "sourceId": "letter-1910",
+      "locator": "letter of 29 January 1910, paragraph on the impressions found in France (\"finding the results did not agree with the calculations, we made extensive laboratory experiments and prepared tables of our own\")"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I am an enthusiast, but not a crank in the sense that I have some pet theories as to the proper construction of a flying machine.",
+      "sourceId": "letter-1899",
+      "locator": "letter to the Smithsonian Institution, 30 May 1899 (McFarland, Papers, vol. 1, pp. 4-5)"
+    },
+    {
+      "text": "For some years I have been afflicted with the belief that flight is possible to man.",
+      "sourceId": "letter-1900",
+      "locator": "letter to Octave Chanute, 13 May 1900, opening sentence"
+    },
+    {
+      "text": "It is possible to fly without motors, but not without knowledge & skill.",
+      "sourceId": "letter-1900",
+      "locator": "letter to Octave Chanute, 13 May 1900, second paragraph"
+    },
+    {
+      "text": "If you are looking for perfect safety, you will do well to sit on a fence and watch the birds; but if you really wish to learn, you must mount a machine and become acquainted with its tricks by actual trial.",
+      "sourceId": "aero-1901",
+      "locator": "\"Some Aeronautical Experiments\", speech of 18 September 1901, as revised for the Smithsonian Annual Report 1902"
+    }
+  ],
+  "definingMoment": {
+    "text": "In August 1901 the brothers left Kitty Hawk discouraged: their new glider gave scarcely a third of the calculated lift, and Wilbur said men would fly, but not in their lifetime. On 18 September 1901, in a speech to the Western Society of Engineers, he suggested in public that Lilienthal's tables were wrong. From October to December 1901 they built a small wind tunnel at their bicycle shop, tested some 200 wing shapes and then 38 model wings at 45 angles each, and found that Smeaton's coefficient, accepted for almost 150 years, was wrong, while Lilienthal's tables were largely correct. With their own tables they made 700 to 1,000 glides in 1902, and on 17 December 1903 Wilbur flew the longest of the first four powered flights: 59 seconds and 852 feet.",
+    "sourceIds": [
+      "centennial-1901",
+      "aero-1901",
+      "loc-timeline",
+      "nps-lifestory"
+    ]
+  },
+  "shadow": {
+    "text": "Wary of being copied while their patents were pending, the brothers did not fly at all from late 1905 to spring 1908. In August 1909 they sued Glenn Curtiss and his company for infringing their 1906 patent, and from November 1909, as first president of the Wright Company, Wilbur led patent suits in the United States and Europe against fliers they saw as infringers. The suits drained the money of both sides. In January 1910 he quarrelled by letter with his friend and adviser Octave Chanute, who had told a newspaper that the Wrights' control system was not new and, by Wilbur's own reply, had accused them of an \"inordinate desire for wealth\"; Chanute wrote privately that Wilbur had sent \"a violent letter\" and \"quite loses his temper\". In 1900 Wilbur had written that he expected \"no financial profit\" from the first flying machine. In January 1914, after his death, an appeals court ruled for the Wright Company; the historian Sean Trainor (Time, 2015) calls the patent war's effect on American aviation \"indisputably negative\" and notes that American airmen in the First World War flew foreign-made planes.",
+    "sourceIds": [
+      "nps-lifestory",
+      "loc-timeline",
+      "centennial-patent",
+      "letter-1910",
+      "letter-1900",
+      "trainor-2015"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you sit on the fence and watch this week, when you could have climbed on and practised?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Some Aeronautical Experiments",
+      "year": 1901
+    },
+    {
+      "title": "The Papers of Wilbur and Orville Wright (letters, ed. Marvin W. McFarland)",
+      "year": 1953
+    }
+  ],
+  "sources": [
+    {
+      "id": "letter-1899",
+      "kind": "primary",
+      "title": "Letter to the Smithsonian Institution, 30 May 1899 (printed in M. W. McFarland, ed., The Papers of Wilbur and Orville Wright, vol. 1, pp. 4-5; copy in the Wright Papers, Library of Congress)",
+      "author": "Wilbur Wright",
+      "year": 1899,
+      "url": "https://www.wright-brothers.org/History_Wing/Wright_Story/Inventing_the_Airplane/Inkling_of_Idea/More_Info.htm"
+    },
+    {
+      "id": "letter-1900",
+      "kind": "primary",
+      "title": "Letter to Octave Chanute, 13 May 1900 (Octave Chanute Papers, Library of Congress; printed in McFarland, Papers, 1953)",
+      "author": "Wilbur Wright",
+      "year": 1900,
+      "url": "https://invention.psychology.msstate.edu/i/Wrights/library/Chanute_Wright_correspond/May13-1900.html"
+    },
+    {
+      "id": "aero-1901",
+      "kind": "primary",
+      "title": "Some Aeronautical Experiments (speech of 18 September 1901, Journal of the Western Society of Engineers, December 1901; revised by the author for the Smithsonian Annual Report 1902)",
+      "author": "Wilbur Wright",
+      "year": 1902,
+      "publisher": "Smithsonian Institution",
+      "url": "https://invention.psychology.msstate.edu/i/Wrights/library/Aeronautical.html"
+    },
+    {
+      "id": "letter-1910",
+      "kind": "primary",
+      "title": "Letter to Octave Chanute, 29 January 1910, with the editor's note quoting Chanute's letters to George A. Spratt (McFarland, Papers, 1953)",
+      "author": "Wilbur Wright",
+      "year": 1910,
+      "url": "https://invention.psychology.msstate.edu/inventors/i/Wrights/library/Chanute_Wright_correspond/1910/Jan29-1910.html"
+    },
+    {
+      "id": "loc-timeline",
+      "kind": "secondary",
+      "title": "The Wilbur and Orville Wright Timeline, 1846 to 1948 (Wilbur and Orville Wright Papers)",
+      "author": "Library of Congress, Manuscript Division",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.loc.gov/collections/wilbur-and-orville-wright-papers/articles-and-essays/the-wilbur-and-orville-wright-timeline-1846-to-1948/"
+    },
+    {
+      "id": "loc-belief",
+      "kind": "secondary",
+      "title": "\"The Belief that Flight is Possible to Man\" (Wilbur and Orville Wright Papers, Articles and Essays)",
+      "author": "Library of Congress",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.loc.gov/collections/wilbur-and-orville-wright-papers/articles-and-essays/the-belief-that-flight-is-possible-to-man/"
+    },
+    {
+      "id": "nps-people",
+      "kind": "secondary",
+      "title": "Wilbur Wright",
+      "author": "National Park Service (Dayton Aviation Heritage NHP, Wright Brothers National Memorial)",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.nps.gov/people/wilburwright.htm"
+    },
+    {
+      "id": "nps-lifestory",
+      "kind": "secondary",
+      "title": "Wilbur Wright's Life Story",
+      "author": "National Park Service, Dayton Aviation Heritage National Historical Park",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.nps.gov/daav/learn/historyculture/wilburwrightslifestory.htm"
+    },
+    {
+      "id": "crouch-1899",
+      "kind": "secondary",
+      "title": "The Experiments of 1899: Wilbur and Orville Wright Fly a Kite",
+      "author": "Tom D. Crouch, Senior Curator of Aeronautics, National Air and Space Museum (U.S. Centennial of Flight Commission)",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://centennialofflight.net/wbh/1899.html"
+    },
+    {
+      "id": "centennial-1901",
+      "kind": "secondary",
+      "title": "Further Gliding and Wind Tunnel Experiments - 1901",
+      "author": "U.S. Centennial of Flight Commission",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://centennialofflight.net/essay/Wright_Bros/1901/WR3.htm"
+    },
+    {
+      "id": "centennial-patent",
+      "kind": "secondary",
+      "title": "Curtiss and the Wright Patent Battles",
+      "author": "U.S. Centennial of Flight Commission",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://centennialofflight.net/essay/Wright_Bros/Patent_Battles/WR12.htm"
+    },
+    {
+      "id": "gibbs-smith-1960",
+      "kind": "secondary",
+      "title": "How Wilbur Wright Taught Europe to Fly (American Heritage, vol. 11, no. 2)",
+      "author": "Charles H. Gibbs-Smith",
+      "year": 1960,
+      "url": "https://www.americanheritage.com/how-wilbur-wright-taught-europe-fly"
+    },
+    {
+      "id": "trainor-2015",
+      "kind": "secondary",
+      "title": "The Wright Brothers: Pioneers of Patent Trolling (Time, 17 December 2015)",
+      "author": "Sean Trainor",
+      "year": 2015,
+      "url": "https://time.com/4143574/wright-brothers-patent-trolling/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American aviation pioneer (1867-1912), not fictional, never a politician and not the founder of a religion, with no account of sexual contact with a minor or of sexual violence found; his documented dark side is that from 1909 he led years of patent lawsuits against Glenn Curtiss and others, which critics say held back American aviation, and the bitter 1910 break with his mentor Octave Chanute over those suits."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked all five values and every cited sentence. All five held: Learning, Determination and Curiosity are shared with the blind pick, Mastery stands on three sources, and Courage held against his own 1900 letter promising not to take dangerous chances once a third source, the 1909 Congressional medal citation for courage, was added. All four quotes matched the letters and the 1901 speech. I fixed the tagline (Orville flew first), the order of the 1909 suits and the Wright Company, the overstated 'broke with' Chanute and 'main error' in the wind-tunnel story, and added the 1905-08 pause in flying to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
