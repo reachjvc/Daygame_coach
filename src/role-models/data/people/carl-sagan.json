@@ -1,0 +1,361 @@
+{
+  "id": "carl-sagan",
+  "name": "Carl Sagan",
+  "born": 1934,
+  "died": 1996,
+  "category": "scientists",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset",
+    "lm_fun"
+  ],
+  "tagline": "A Brooklyn boy who chased the stars, then taught millions to wonder and to doubt",
+  "startedFrom": "He was born in 1934 and grew up in a working-class Jewish neighbourhood of Brooklyn; his father, who came to America from Ukraine as a boy, worked in the garment industry. When he asked what the stars were, no adult could tell him, so his mother sent him to the public library with his new library card. His father advised him to first learn a profession so he could support his science \"hobby\"; a full scholarship took him to the University of Chicago in 1951.",
+  "values": [
+    {
+      "word": "Wonder",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Describing the day a library book told him the Sun is a star, he wrote: \"I sensed awe\", and said the idea of a vast universe \"has stayed with me ever since\".",
+          "sourceId": "si-1995",
+          "locator": "Skeptical Inquirer 19 (1), Jan/Feb 1995, p. 25"
+        },
+        {
+          "kind": "deed",
+          "claim": "He came up with the idea of turning Voyager 1's cameras back to photograph the distant Earth, and played a critical role in getting the 14 February 1990 pictures taken.",
+          "sourceId": "jpl-2020",
+          "locator": "JPL news, 12 Feb 2020, paragraph on the name of the view"
+        },
+        {
+          "kind": "witness",
+          "claim": "His NAS memoir quotes biographer Keay Davidson: he was \"inspired and troubled all his life\" by pulls \"between wonder and skepticism\".",
+          "sourceId": "nas-2014",
+          "locator": "p. 3, section The early years"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He recalled asking his friends, his parents, their friends and other adults what the stars were, and that none of them knew.",
+          "sourceId": "si-1995",
+          "locator": "Skeptical Inquirer 19 (1), Jan/Feb 1995, p. 25"
+        },
+        {
+          "kind": "deed",
+          "claim": "After his astronomy doctorate (1960) he did postdoctoral work in biology at Stanford and Berkeley because he felt he needed a deeper understanding of biology.",
+          "sourceId": "nas-2014",
+          "locator": "p. 4, section The early years"
+        },
+        {
+          "kind": "deed",
+          "claim": "He worked across planetary science and the origin of life: the greenhouse effect on Venus, windblown dust on Mars, organic aerosols on Titan and nuclear winter.",
+          "sourceId": "cornell-1996",
+          "locator": "paragraph beginning \"His research has focused on topics such as\""
+        }
+      ]
+    },
+    {
+      "word": "Passion",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said he had only ever wanted to be a scientist, \"That's where the fun is. If you're in love, you want to tell the world!\"",
+          "sourceId": "ap-1996",
+          "locator": "AP obituary, 20 Dec 1996, paragraph after \"his top priority\""
+        },
+        {
+          "kind": "words",
+          "claim": "He called popularising science \"as natural as breathing\" and wrote: \"when you're in love, you want to tell the world.\"",
+          "sourceId": "si-1995",
+          "locator": "Skeptical Inquirer 19 (1), Jan/Feb 1995, p. 26"
+        },
+        {
+          "kind": "deed",
+          "claim": "His 1980 PBS series Cosmos became the most watched series in public-television history and was seen by more than 500 million people in 60 countries.",
+          "sourceId": "cornell-1996",
+          "locator": "fourth paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Most of his research papers were collaborations, much of the work done with students, many of whom became leaders in planetary science.",
+          "sourceId": "nas-2014",
+          "locator": "p. 5, section A campus star at Cornell"
+        },
+        {
+          "kind": "deed",
+          "claim": "While recovering from a bone-marrow transplant in 1995-96 he kept supervising undergraduate and graduate students.",
+          "sourceId": "cornell-1996",
+          "locator": "third paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1975 he wrote to Neil deGrasse Tyson, then a senior at the Bronx High School of Science, said he could do real astronomical research as an undergraduate at Cornell, and offered to meet him in Ithaca.",
+          "sourceId": "scifri-2013",
+          "locator": "caption of the 1975 Sagan letter to Tyson (Library of Congress, Seth MacFarlane Collection)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Cornell's astronomy chairman Yervant Terzian called him \"the best science educator in the world this century\" who \"inspired young generations to pursue the sciences\".",
+          "sourceId": "cornell-1996",
+          "locator": "Terzian quotation, sixth paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In The Demon-Haunted World (1995) he wrote that finding the truth amid confusion \"requires vigilance, dedication, and courage\".",
+          "sourceId": "nas-2014",
+          "locator": "p. 10, quoting The Demon-Haunted World"
+        },
+        {
+          "kind": "deed",
+          "claim": "He publicly opposed the nuclear arms race and the Star Wars missile defence plan, clashed with Edward Teller, and his nuclear winter campaign made him many enemies.",
+          "sourceId": "nas-2014",
+          "locator": "pp. 8-9, section A champion of diverse issues"
+        },
+        {
+          "kind": "deed",
+          "claim": "He was arrested with Ann Druyan and more than 130 other protesters at the Nevada nuclear test site, where they demanded a ban on nuclear tests.",
+          "sourceId": "davidson-1999",
+          "locator": "Turner ebook edition, Google Books preview page PT379"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Keep two habits at once: be open to new ideas, and test every idea hard.",
+      "sourceId": "si-1987",
+      "locator": "Skeptical Inquirer 12 (1), Fall 1987, paragraph beginning \"It seems to me what is called for\""
+    },
+    {
+      "text": "Treat fair criticism as a favour, and drop an idea that does not work.",
+      "sourceId": "si-1995",
+      "locator": "Skeptical Inquirer 19 (1), Jan/Feb 1995, p. 27"
+    },
+    {
+      "text": "Change your mind when someone gives you a better argument.",
+      "sourceId": "si-1987",
+      "locator": "Skeptical Inquirer 12 (1), Fall 1987, paragraph beginning \"Really good scientists do both\""
+    },
+    {
+      "text": "If you love your work, explain it to everyone, not only to experts.",
+      "sourceId": "si-1995",
+      "locator": "Skeptical Inquirer 19 (1), Jan/Feb 1995, p. 26"
+    },
+    {
+      "text": "Do not sneer at people who believe strange things; they may be credulous, but they are not stupid.",
+      "sourceId": "si-1995",
+      "locator": "Skeptical Inquirer 19 (1), Jan/Feb 1995, p. 28"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "If you are only skeptical, then no new ideas make it through to you. You never learn anything new.",
+      "sourceId": "si-1987",
+      "locator": "\"The Burden of Skepticism\", Skeptical Inquirer 12 (1), Fall 1987, paragraph beginning \"It seems to me what is called for\""
+    },
+    {
+      "text": "Valid criticism is doing you a favor.",
+      "sourceId": "si-1995",
+      "locator": "\"Wonder and Skepticism\", Skeptical Inquirer 19 (1), Jan/Feb 1995, p. 27"
+    },
+    {
+      "text": "In science it often happens that scientists say, \"You know that's a really good argument; my position is mistaken,\" and then they actually change their minds and you never hear that old view from them again.",
+      "sourceId": "si-1987",
+      "locator": "\"The Burden of Skepticism\", Skeptical Inquirer 12 (1), Fall 1987, paragraph beginning \"Really good scientists do both\""
+    },
+    {
+      "text": "To me, it underscores our responsibility to deal more kindly with one another, and to preserve and cherish the pale blue dot, the only home we've ever known.",
+      "sourceId": "pale-blue-dot-1994",
+      "locator": "Pale Blue Dot (Random House, 1994), closing sentence of the Voyager passage as excerpted by The Planetary Society (chapter and page not seen)"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 14 February 1990 Voyager 1, about 6 billion kilometres from the Sun, turned its camera back and photographed Earth as a single bright pixel. The idea of the picture was Sagan's, and NASA's lab says he played a critical role in getting it taken. In his 1994 book Pale Blue Dot he wrote that there is perhaps no better demonstration of \"the folly of human conceits\" than this image, and that it underscores our responsibility \"to deal more kindly with one another\".",
+    "sourceIds": [
+      "jpl-2020",
+      "nasa-2019",
+      "pale-blue-dot-1994"
+    ]
+  },
+  "shadow": {
+    "text": "His first wife, the biologist Lynn Margulis, told biographer Keay Davidson (Carl Sagan: A Life, 1999) that she did all the housework, that he considered himself too good for domestic chores, and that \"He hit me a few times\". In William Poundstone's 1999 biography, as quoted by David Quammen in The Tangled Tree (2018), she likened their marriage (1957 to the mid-1960s) to \"a torture chamber shared with children\"; Quammen also cites an interview in which she called him \"unbelievably self-centered\". His second marriage, to the artist Linda Salzman, ended in what his National Academy of Sciences memoir calls \"an acrimonious public divorce battle\". From about 1959 he smoked cannabis and described it in a 1969 essay signed only \"Mr. X\", which says he drove in heavy traffic while high a few times; his authorship became public in 1999, after his death. Harvard did not give him tenure, the National Academy of Sciences turned down his nomination in 1992, and a 1999 review of Davidson's biography said he could be \"pompous, arrogant, inconsiderate, and self-absorbed\".",
+    "sourceIds": [
+      "davidson-1999",
+      "quammen-2018",
+      "mr-x-1971",
+      "ap-1999",
+      "nas-2014",
+      "csm-1999"
+    ]
+  },
+  "councilQuestion": {
+    "text": "When someone criticised you this week, did you treat it as a favour or as an attack?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "Cosmos",
+      "year": 1980
+    },
+    {
+      "title": "Pale Blue Dot: A Vision of the Human Future in Space",
+      "year": 1994
+    },
+    {
+      "title": "The Demon-Haunted World: Science as a Candle in the Dark",
+      "year": 1995
+    }
+  ],
+  "sources": [
+    {
+      "id": "si-1987",
+      "kind": "primary",
+      "title": "The Burden of Skepticism",
+      "author": "Carl Sagan",
+      "year": 1987,
+      "publisher": "Skeptical Inquirer 12 (1)",
+      "url": "https://skepticalinquirer.org/1987/10/the-burden-of-skepticism/"
+    },
+    {
+      "id": "si-1995",
+      "kind": "primary",
+      "title": "Wonder and Skepticism",
+      "author": "Carl Sagan",
+      "year": 1995,
+      "publisher": "Skeptical Inquirer 19 (1)",
+      "url": "https://skepticalinquirer.org/1995/01/wonder-and-skepticism/"
+    },
+    {
+      "id": "pale-blue-dot-1994",
+      "kind": "primary",
+      "title": "Pale Blue Dot: A Vision of the Human Future in Space (excerpt published by The Planetary Society)",
+      "author": "Carl Sagan",
+      "year": 1994,
+      "publisher": "Random House",
+      "url": "https://www.planetary.org/worlds/pale-blue-dot"
+    },
+    {
+      "id": "mr-x-1971",
+      "kind": "primary",
+      "title": "Mr. X (essay written 1969 for Marihuana Reconsidered, 1971)",
+      "author": "Carl Sagan",
+      "year": 1971,
+      "publisher": "Lester Grinspoon's Marijuana-Uses site (reprint)",
+      "url": "https://marijuana-uses.com/mr-x/"
+    },
+    {
+      "id": "nas-2014",
+      "kind": "secondary",
+      "title": "Carl Sagan 1934-1996, Biographical Memoir",
+      "author": "David Morrison",
+      "year": 2014,
+      "publisher": "National Academy of Sciences",
+      "url": "https://www.nasonline.org/wp-content/uploads/2024/06/sagan-carl.pdf"
+    },
+    {
+      "id": "cornell-1996",
+      "kind": "secondary",
+      "title": "Carl Sagan, Cornell astronomer, dies today (Dec. 20) in Seattle",
+      "author": "David Brand",
+      "year": 1996,
+      "publisher": "Cornell Chronicle",
+      "url": "https://news.cornell.edu/node/277488"
+    },
+    {
+      "id": "ap-1996",
+      "kind": "secondary",
+      "title": "Carl Sagan Dead At 62",
+      "author": "George Tibbits (Associated Press)",
+      "year": 1996,
+      "publisher": "The Seattle Times",
+      "url": "https://archive.seattletimes.com/archive/19961220/2366075/carl-sagan-dead-at-62"
+    },
+    {
+      "id": "ap-1999",
+      "kind": "secondary",
+      "title": "Sagan Reportedly Avid Pot Smoker",
+      "author": "Scott Andrews (Associated Press)",
+      "year": 1999,
+      "publisher": "The Seattle Times",
+      "url": "https://archive.seattletimes.com/archive/19990822/2978781/sagan-reportedly-avid-pot-smoker"
+    },
+    {
+      "id": "davidson-1999",
+      "kind": "secondary",
+      "title": "Carl Sagan: A Life",
+      "author": "Keay Davidson",
+      "year": 1999,
+      "publisher": "John Wiley & Sons (ebook: Turner Publishing)",
+      "url": "https://books.google.com/books?id=nozuEAAAQBAJ"
+    },
+    {
+      "id": "quammen-2018",
+      "kind": "secondary",
+      "title": "The Tangled Tree: A Radical New History of Life",
+      "author": "David Quammen",
+      "year": 2018,
+      "publisher": "Simon & Schuster",
+      "url": "https://books.google.com/books?id=bH6hDwAAQBAJ"
+    },
+    {
+      "id": "csm-1999",
+      "kind": "secondary",
+      "title": "The man who brought stars closer (review of Davidson, Carl Sagan: A Life)",
+      "author": "Robert C. Cowen",
+      "year": 1999,
+      "publisher": "The Christian Science Monitor",
+      "url": "https://www.csmonitor.com/1999/1007/p19s1.html"
+    },
+    {
+      "id": "jpl-2020",
+      "kind": "secondary",
+      "title": "Pale Blue Dot Revisited",
+      "author": "NASA Jet Propulsion Laboratory",
+      "year": 2020,
+      "publisher": "NASA JPL",
+      "url": "https://www.jpl.nasa.gov/news/pale-blue-dot-revisited/"
+    },
+    {
+      "id": "nasa-2019",
+      "kind": "secondary",
+      "title": "The Pale Blue Dot",
+      "author": "NASA Science",
+      "year": 2019,
+      "publisher": "NASA",
+      "url": "https://science.nasa.gov/resource/voyager-1s-pale-blue-dot/"
+    },
+    {
+      "id": "scifri-2013",
+      "kind": "secondary",
+      "title": "Now You Can Peruse Carl Sagan's Stuff",
+      "author": "Science Friday staff",
+      "year": 2013,
+      "publisher": "Science Friday",
+      "url": "https://www.sciencefriday.com/articles/now-you-can-peruse-carl-sagans-stuff/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American astronomer (1934-1996), not fictional, not a politician, campaigner or founder of a religion; no account of sexual contact with anyone under 16 or of sexual violence was found, but his first wife says he hit her, and his secret cannabis use and colleagues' criticism are documented."
+    },
+    "blindAgreement": 0.2,
+    "devilsAdvocate": "I attacked each value and every sentence against the Skeptical Inquirer texts, the NAS memoir, the Cornell and AP obituaries, JPL and NASA pages, the Mr. X essay, the CSM review and the Davidson and Quammen previews. All five draft values held: Mentorship survived the memoir's note that he left details to others and gave less time to teaching once a third source was added (his 1975 letter to the teenage Neil deGrasse Tyson); the blind pick's Contribution had no room, and its Honesty and Kindness fall against his hidden cannabis use and Margulis's account. Seven claims were fixed, among them the Pale Blue Dot wording and locator and whose book reports each of Margulis's words, and the shadow gained the acrimonious divorce from Linda Salzman.",
+    "checkedOn": "2026-11-10"
+  }
+}
