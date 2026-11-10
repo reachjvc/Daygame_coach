@@ -1,0 +1,44 @@
+{
+  "id": "test-person",
+  "name": "Test Person",
+  "born": 1900,
+  "died": null,
+  "category": "teachers",
+  "areaIds": ["lm_mindset"],
+  "tagline": "A made-up person who passes every rule.",
+  "startedFrom": "Started with nothing in particular.",
+  "values": [
+    { "word": "Discipline", "evidence": [
+      { "kind": "deed", "claim": "Trained every day.", "sourceId": "s2", "locator": "ch. 1" },
+      { "kind": "words", "claim": "Said he held it.", "sourceId": "s1", "locator": "p. 3" } ] },
+    { "word": "courage", "evidence": [
+      { "kind": "deed", "claim": "Stood up.", "sourceId": "s2", "locator": "ch. 2" },
+      { "kind": "witness", "claim": "Called brave.", "sourceId": "s3", "locator": "p. 9" } ] },
+    { "word": "Learning", "evidence": [
+      { "kind": "words", "claim": "Wrote about it.", "sourceId": "s1", "locator": "p. 5" },
+      { "kind": "witness", "claim": "Called a reader.", "sourceId": "s3", "locator": "p. 10" } ] }
+  ],
+  "principles": [
+    { "text": "One.", "sourceId": "s1", "locator": "p. 1" },
+    { "text": "Two.", "sourceId": "s1", "locator": "p. 2" },
+    { "text": "Three.", "sourceId": "s2", "locator": "ch. 3" }
+  ],
+  "quotes": [{ "text": "A short line.", "sourceId": "s1", "locator": "p. 7" }],
+  "definingMoment": { "text": "Something happened.", "sourceIds": ["s2"] },
+  "shadow": { "text": "Something he is held to account for.", "sourceIds": ["s3"] },
+  "councilQuestion": { "text": "Did you?", "principleIndex": 0 },
+  "readings": [{ "title": "His Book", "year": 1950 }],
+  "sources": [
+    { "id": "s1", "kind": "primary", "title": "His Book", "author": "Test Person", "year": 1950 },
+    { "id": "s2", "kind": "secondary", "title": "A Life", "author": "A Biographer", "year": 1990 },
+    { "id": "s3", "kind": "secondary", "title": "Reference Work", "author": "Editors", "year": 2000, "url": "https://example.org/entry" }
+  ],
+  "likenessSources": [{ "title": "Portrait", "url": "https://commons.wikimedia.org/wiki/File:X.jpg", "licence": "Public domain", "author": "Unknown" }],
+  "review": {
+    "status": "validated",
+    "screen": { "result": "ok", "notes": "" },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "All three values held.",
+    "checkedOn": "2026-11-10"
+  }
+}
