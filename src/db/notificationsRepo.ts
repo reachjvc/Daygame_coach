@@ -77,6 +77,10 @@ export async function registerDevice(userId: string, device: DeviceRegistration,
     enabled,
     failures: 0,
     updated_at: now,
+    // registered again at its address: no longer gone
+    gone_at: null,
+    enabled_before_gone: null,
+    timer_before_gone: null,
   }
   // An empty label (the worker re-registering knows none) keeps the one stored.
   if (device.label) row.label = device.label
@@ -95,6 +99,7 @@ export async function listDevices(userId: string): Promise<DeviceSummary[]> {
     .from("push_devices")
     .select("id, label, enabled, timer_running, last_success_at, created_at")
     .eq("user_id", userId)
+    .is("gone_at", null)
     .order("created_at", { ascending: true })
   if (error) throw new Error(`Failed to read your devices: ${error.message}`)
   type Row = { id: string; label: string; enabled: boolean; timer_running: boolean; last_success_at: string | null; created_at: string }
@@ -115,33 +120,51 @@ export async function listDevices(userId: string): Promise<DeviceSummary[]> {
  * and the keys it was registered with (another account's device moves only for
  * a browser posting those). Server-only: the answer names another person's id, and is used only to
  * decide whether a shared browser moves to whoever is signed in now.
+ * A row the push service said is gone answers with the switches it had then,
+ * which a registration at its address brings back.
  */
 export async function deviceByEndpoint(
   endpoint: string,
 ): Promise<{ id: string; userId: string; enabled: boolean; timerRunning: boolean; p256dh: string; auth: string; failures: number } | null> {
   const { data, error } = await createAdminSupabaseClient()
     .from("push_devices")
-    .select("id, user_id, enabled, timer_running, p256dh, auth, failures")
+    .select("id, user_id, enabled, timer_running, p256dh, auth, failures, gone_at, enabled_before_gone, timer_before_gone")
     .eq("endpoint", endpoint)
     .maybeSingle()
   if (error) throw new Error(`Failed to look up this device: ${error.message}`)
-  const row = data as { id: string; user_id: string; enabled: boolean; timer_running: boolean; p256dh: string; auth: string; failures: number } | null
-  return row
-    ? { id: row.id, userId: row.user_id, enabled: row.enabled, timerRunning: row.timer_running, p256dh: row.p256dh, auth: row.auth, failures: row.failures }
-    : null
+  const row = data as (GoneColumns & { id: string; user_id: string; enabled: boolean; timer_running: boolean; p256dh: string; auth: string; failures: number }) | null
+  if (!row) return null
+  const gone = row.gone_at !== null
+  return {
+    id: row.id,
+    userId: row.user_id,
+    enabled: gone ? row.enabled_before_gone === true : row.enabled,
+    timerRunning: gone ? row.timer_before_gone === true : row.timer_running,
+    p256dh: row.p256dh,
+    auth: row.auth,
+    failures: row.failures,
+  }
 }
+
+type GoneColumns = { gone_at: string | null; enabled_before_gone: boolean | null; timer_before_gone: boolean | null }
 
 /**
  * The browser replaced this device's address: carry the row (and whether it
  * is on) over to the new one. False when no row of this person had the old one.
+ * A row the push service said was gone at the old address comes back with the
+ * switches it had (review of 7d1e7328); one the person removed is no row.
  */
 export async function moveDevice(userId: string, oldEndpoint: string, next: { endpoint: string; p256dh: string; auth: string }): Promise<boolean> {
-  const { data, error } = await createAdminSupabaseClient()
-    .from("push_devices")
-    .update({ endpoint: next.endpoint, p256dh: next.p256dh, auth: next.auth, failures: 0, updated_at: new Date().toISOString() })
-    .eq("user_id", userId)
-    .eq("endpoint", oldEndpoint)
-    .select("id")
+  const db = createAdminSupabaseClient()
+  const read = await db.from("push_devices").select("gone_at, enabled_before_gone, timer_before_gone").eq("user_id", userId).eq("endpoint", oldEndpoint).maybeSingle()
+  if (read.error) throw new Error(`Failed to move this device: ${read.error.message}`)
+  const was = read.data as GoneColumns | null
+  if (!was) return false
+  const change: Record<string, unknown> = { endpoint: next.endpoint, p256dh: next.p256dh, auth: next.auth, failures: 0, updated_at: new Date().toISOString() }
+  if (was.gone_at !== null) {
+    Object.assign(change, { enabled: was.enabled_before_gone === true, timer_running: was.timer_before_gone === true, gone_at: null, enabled_before_gone: null, timer_before_gone: null })
+  }
+  const { data, error } = await db.from("push_devices").update(change).eq("user_id", userId).eq("endpoint", oldEndpoint).select("id")
   if (error) throw new Error(`Failed to move this device: ${error.message}`)
   return (data ?? []).length > 0
 }
@@ -183,6 +206,7 @@ export async function devicesForSending(userId: string): Promise<DeviceTarget[]>
     .select("id, endpoint, p256dh, auth")
     .eq("user_id", userId)
     .eq("enabled", true)
+    .is("gone_at", null)
   if (error) throw new Error(`Failed to read devices to send to: ${error.message}`)
   return (data ?? []) as DeviceTarget[]
 }
@@ -198,6 +222,7 @@ export async function devicesForTimer(userId: string): Promise<DeviceTarget[]> {
     .select("id, endpoint, p256dh, auth")
     .eq("user_id", userId)
     .eq("timer_running", true)
+    .is("gone_at", null)
   if (error) throw new Error(`Failed to read devices to send to: ${error.message}`)
   return (data ?? []) as DeviceTarget[]
 }
@@ -205,9 +230,12 @@ export async function devicesForTimer(userId: string): Promise<DeviceTarget[]> {
 /**
  * WHAT HAPPENED TO ONE SEND TO ONE DEVICE.
  *
- * `gone`: the push service said this address no longer exists (404/410), so
- * the row is deleted; it can never work again, and the browser registers a
- * new one when the page is next opened. `failed`: anything else; counted, and
+ * `gone`: the push service said this address no longer exists (404/410). The
+ * row is MARKED gone, not deleted (review of 7d1e7328): both switches go off,
+ * so nothing is sent to it and no clock counts it, and the two it had are kept,
+ * so the phone's move to its new address brings the device back as it was. A
+ * device the person removes is deleted (`removeDevice`) and never comes back.
+ * Gone rows are deleted after 30 days (`deleteLongGoneDevices`). `failed`: anything else; counted, and
  * a device that fails twenty times in a row is switched off rather than tried
  * forever: both switches, reminders and the running timer.
  *
@@ -220,8 +248,18 @@ export async function recordDeviceOutcome(deviceId: string, outcome: "ok" | "gon
   const db = createAdminSupabaseClient()
   const now = new Date().toISOString()
   if (outcome === "gone") {
-    const { error } = await db.from("push_devices").delete().eq("id", deviceId)
-    if (error) throw new Error(`Failed to remove a dead device: ${error.message}`)
+    const read = await db.from("push_devices").select("enabled, timer_running, gone_at, enabled_before_gone, timer_before_gone").eq("id", deviceId).maybeSingle()
+    if (read.error) throw new Error(`Failed to mark a dead device: ${read.error.message}`)
+    const row = read.data as (GoneColumns & { enabled: boolean; timer_running: boolean }) | null
+    if (!row) return
+    // Already gone and switched on again since (a stale page): either switch on counts as on.
+    const enabledBefore = row.enabled || row.enabled_before_gone === true
+    const timerBefore = row.timer_running || row.timer_before_gone === true
+    const { error } = await db
+      .from("push_devices")
+      .update({ enabled: false, timer_running: false, gone_at: row.gone_at ?? now, enabled_before_gone: enabledBefore, timer_before_gone: timerBefore, updated_at: now })
+      .eq("id", deviceId)
+    if (error) throw new Error(`Failed to mark a dead device: ${error.message}`)
     return
   }
   if (outcome === "ok") {
@@ -239,6 +277,15 @@ export async function recordDeviceOutcome(deviceId: string, outcome: "ok" | "gon
   }
   const { error } = await db.from("push_devices").update(change).eq("id", deviceId)
   if (error) throw new Error(`Failed to record a failed delivery: ${error.message}`)
+}
+
+export const GONE_KEPT_DAYS = 30
+
+/** Delete rows the push service said were gone more than 30 days ago: no move came for them. Run by the clock. */
+export async function deleteLongGoneDevices(now: Date = new Date()): Promise<void> {
+  const before = new Date(now.getTime() - GONE_KEPT_DAYS * 86_400_000).toISOString()
+  const { error } = await createAdminSupabaseClient().from("push_devices").delete().lt("gone_at", before)
+  if (error) throw new Error(`Failed to delete long-gone devices: ${error.message}`)
 }
 
 /**

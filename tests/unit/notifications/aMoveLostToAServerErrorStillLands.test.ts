@@ -11,9 +11,10 @@
  * were lost until the person tapped "Turn on" again.
  *
  * Now the phone keeps the device's switches as the server last said them,
- * with the move, and names them when it sends the move again. A row gone in
- * the meantime is made again at the new address with those switches. Only the
- * person's own row, and never a second one.
+ * with the move, and names them when it sends the move again. A ping that
+ * finds the old address gone only marks the row (review of 7d1e7328), and the
+ * move brings it back with its switches. Only the person's own row, and never
+ * a second one.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -45,7 +46,7 @@ describe("a move whose first registration is lost, then a ping", () => {
       await aPhoneThatWorked()
       world.devicesFail = lost
       expect(await claimThisDevice()).toBe("failed")
-      // the old address is dropped: the ping deletes the row
+      // the old address is dropped: the ping marks the row gone
       expect(ping().removed).toBe(1)
       expect(rowsOf("me")).toEqual([])
 

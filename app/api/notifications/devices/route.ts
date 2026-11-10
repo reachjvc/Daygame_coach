@@ -15,13 +15,14 @@
  *               address; a page, after replacing a subscription made with an
  *               earlier server key), the row with the old address moves to the
  *               new one. "enable" and "timer" take `oldEndpoint` the same way.
- *               With `was` too (the row's account and switches as the phone
- *               last heard them, alpha p9-pings), a row gone from the old
- *               address (a ping found it dropped: 410) is made again at the
- *               new one with those switches, and switches turned off by
- *               failed sends while the key was wrong come back. Only when
- *               `was` names the signed-in account, and never onto an address
- *               a device already has.
+ *               A row a ping found gone at the old address (410) is only
+ *               marked so, and the move brings it back with its switches; a
+ *               row the person removed is not made again (review of
+ *               7d1e7328). With `was` too (the row's account and switches as
+ *               the phone last heard them, alpha p9-pings), switches turned
+ *               off by failed sends while the key was wrong come back. Only
+ *               when `was` names the signed-in account, and never onto an
+ *               address a device already has.
  *   "timer"   — the person switched "Show the running timer on this device" on
  *               in the time tracker: register it with the timer on, leaving
  *               reminders as they were (off, for a browser new to this person).
@@ -131,16 +132,9 @@ export async function POST(req: Request) {
         const moved = await deviceByEndpoint(sub.endpoint)
         return answer({ id: moved?.id ?? null, enabled: moved?.enabled ?? false, timerRunning: moved?.timerRunning ?? false })
       }
-      /**
-       * THE ROW WAS DELETED BEFORE THE MOVE LANDED (p9-pings-01): the page had
-       * dropped the old address, its first registration was lost, and a ping
-       * found the address gone (410). Made again here with the switches the
-       * phone kept; the new address has no row, so this is never a second one.
-       */
-      if (was && !before) {
-        const id = await registerDevice(auth.userId, { ...sub, label }, was.enabled, was.timerRunning)
-        return answer({ id, ...was })
-      }
+      // No row at the old address: the person removed this device (a ping
+      // finding the address gone only marks the row, and the move above brings
+      // it back, review of 7d1e7328). Nothing is made again.
     }
     const existing = await deviceByEndpoint(sub.endpoint)
     if (!existing || !mayTake(existing)) return answer({ id: null, enabled: false, timerRunning: false })

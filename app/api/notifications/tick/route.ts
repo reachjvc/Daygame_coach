@@ -17,6 +17,7 @@ import { runAuditPingClock } from "@/src/audit/pingService"
 import { runTimerAlertClock } from "@/src/timetrack/runningTimerService"
 import { runPlanReviewClock } from "@/src/goals/reviewReminderService"
 import { runCouncilReminderClock } from "@/src/role-models/councilReminderService"
+import { deleteLongGoneDevices } from "@/src/db/notificationsRepo"
 
 export async function POST(req: Request) {
   const expected = await clockSecret()
@@ -43,5 +44,7 @@ export async function POST(req: Request) {
       return { failed: true as const }
     }),
   ])
+  // Devices the push service said were gone a month ago, with no move since: deleted.
+  await deleteLongGoneDevices().catch((error: unknown) => console.error("[push] gone cleanup failed", error instanceof Error ? error.message : "unknown"))
   return NextResponse.json({ timerAlerts, auditPings, planReviews, councilReminders })
 }

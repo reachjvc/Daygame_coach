@@ -35,6 +35,8 @@ export interface Row {
   failures: number
   /** The key the browser's subscription at this address was made with. */
   madeWith: string
+  /** The push service said the address is gone: the switches it had then (recordDeviceOutcome "gone"). */
+  gone?: { enabled: boolean; timerRunning: boolean } | null
 }
 
 type Sub = {
@@ -74,7 +76,7 @@ const byEndpoint = (endpoint: string) => [...world.rows.values()].find((r) => r.
 export const fakeRepo = {
   deviceByEndpoint: async (endpoint: string) => {
     const r = byEndpoint(endpoint)
-    return r ? { id: r.id, userId: r.userId, enabled: r.enabled, timerRunning: r.timerRunning, p256dh: r.p256dh, auth: r.auth, failures: r.failures } : null
+    return r ? { id: r.id, userId: r.userId, enabled: r.gone?.enabled ?? r.enabled, timerRunning: r.gone?.timerRunning ?? r.timerRunning, p256dh: r.p256dh, auth: r.auth, failures: r.failures } : null
   },
   registerDevice: async (userId: string, d: { endpoint: string; p256dh: string; auth: string }, enabled = true, timerRunning?: boolean) => {
     const r = byEndpoint(d.endpoint)
@@ -89,6 +91,7 @@ export const fakeRepo = {
       timerRunning: timerRunning ?? r?.timerRunning ?? false,
       failures: 0,
       madeWith: world.live.get(d.endpoint) ?? "",
+      gone: null,
     })
     return id
   },
@@ -96,28 +99,29 @@ export const fakeRepo = {
     const r = byEndpoint(from)
     if (!r || r.userId !== userId) return false
     Object.assign(r, { endpoint: next.endpoint, p256dh: next.p256dh, auth: next.auth, failures: 0, madeWith: world.live.get(next.endpoint) ?? "" })
+    if (r.gone) Object.assign(r, { ...r.gone, gone: null })
     return true
   },
   listDevices: async (userId: string) =>
     [...world.rows.values()]
-      .filter((r) => r.userId === userId)
+      .filter((r) => r.userId === userId && !r.gone)
       .map((r) => ({ id: r.id, label: "phone", enabled: r.enabled, timerRunning: r.timerRunning, lastSuccessAt: null, createdAt: "2026-11-10T00:00:00.000Z" })),
-  removeDevice: async (userId: string, by: { endpoint: string }) => {
-    const r = byEndpoint(by.endpoint)
+  removeDevice: async (userId: string, by: { endpoint: string } | { id: string }) => {
+    const r = "id" in by ? world.rows.get(by.id) : byEndpoint(by.endpoint)
     if (r && r.userId === userId) world.rows.delete(r.id)
   },
 }
 
 export const fakeAuth = { requireAuth: async () => ({ success: true, userId: world.user, supabase: {} }) }
 
-/** One ping round, as the push services answer it. */
+/** One ping round, as the push services answer it. A dropped address marks its row gone, switches off, as the repo does. */
 export function ping(): { delivered: number; removed: number } {
   let delivered = 0
   let removed = 0
-  for (const r of [...world.rows.values()].filter((r) => r.enabled)) {
+  for (const r of [...world.rows.values()].filter((r) => r.enabled && !r.gone)) {
     const key = world.live.get(r.endpoint)
     if (key === undefined) {
-      world.rows.delete(r.id)
+      Object.assign(r, { gone: { enabled: r.enabled, timerRunning: r.timerRunning }, enabled: false, timerRunning: false })
       removed++
     } else if (key !== world.serverKey) {
       r.failures++
@@ -229,8 +233,8 @@ export function aWorld({
   }
 }
 
-/** The rows of the signed-in person, as the test reads them. */
-export const rowsOf = (userId: string) => [...world.rows.values()].filter((r) => r.userId === userId)
+/** The rows of the signed-in person that are not gone, as the test reads them. */
+export const rowsOf = (userId: string) => [...world.rows.values()].filter((r) => r.userId === userId && !r.gone)
 
 export function leaveTheWorld() {
   vi.unstubAllGlobals()

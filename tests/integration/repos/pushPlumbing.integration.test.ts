@@ -12,6 +12,7 @@ import { randomUUID } from "node:crypto"
 import { actAs, asOwner, asUser, newUser } from "@/tests/db/harness"
 import {
   closeSend,
+  deleteLongGoneDevices,
   devicesForSending,
   listDevices,
   moveDevice,
@@ -86,7 +87,7 @@ describe("the notification plumbing's storage", () => {
     expect(await listDevices(second.id)).toEqual([])
   })
 
-  it("switches a device off after twenty failures in a row, and deletes one the service says is gone", async () => {
+  it("switches a device off after twenty failures in a row, and marks one the service says is gone", async () => {
     const user = await newUser("devices")
     const flaky = await registerDevice(user.id, { endpoint: `https://fcm.googleapis.com/fcm/send/${randomUUID()}`, p256dh: "k", auth: "a", label: "Flaky" })
     const dead = await registerDevice(user.id, { endpoint: `https://web.push.apple.com/${randomUUID()}`, p256dh: "k", auth: "a", label: "Dead" })
@@ -117,6 +118,28 @@ describe("the notification plumbing's storage", () => {
 
     const [row] = await asOwner((q) => q("select id, endpoint, enabled, label from push_devices where user_id = $1", [user.id]))
     expect(row).toEqual({ id, endpoint: after, enabled: false, label: "Firefox" })
+  })
+
+  it("brings a gone device back with its switches when it moves, and deletes it after 30 days (review of 7d1e7328)", async () => {
+    const user = await newUser("devices-gone")
+    const before = `https://fcm.googleapis.com/fcm/send/${randomUUID()}`
+    const after = `https://fcm.googleapis.com/fcm/send/${randomUUID()}`
+    const id = await registerDevice(user.id, { endpoint: before, p256dh: "k", auth: "a", label: "Phone" }, true, true)
+    await recordDeviceOutcome(id, "gone")
+    expect(await listDevices(user.id)).toEqual([])
+    expect(await devicesForSending(user.id)).toEqual([])
+    const [gone] = await asOwner((q) => q("select enabled, timer_running, enabled_before_gone, timer_before_gone, gone_at is not null as gone from push_devices where id = $1", [id]))
+    expect(gone).toEqual({ enabled: false, timer_running: false, enabled_before_gone: true, timer_before_gone: true, gone: true })
+
+    expect(await moveDevice(user.id, before, { endpoint: after, p256dh: "k2", auth: "a2" })).toBe(true)
+    expect((await listDevices(user.id)).map((d) => [d.id, d.enabled, d.timerRunning])).toEqual([[id, true, true]])
+    expect((await devicesForSending(user.id)).map((d) => d.id)).toEqual([id])
+
+    await recordDeviceOutcome(id, "gone")
+    await deleteLongGoneDevices(new Date(Date.now() + 29 * 86_400_000))
+    expect(await asOwner((q) => q("select id from push_devices where id = $1", [id]))).toHaveLength(1)
+    await deleteLongGoneDevices(new Date(Date.now() + 31 * 86_400_000))
+    expect(await asOwner((q) => q("select id from push_devices where id = $1", [id]))).toHaveLength(0)
   })
 
   it("cannot switch someone else's device", async () => {
@@ -159,14 +182,14 @@ const sendsOf = (userId: string) =>
   asOwner((q) => q("select kind, devices, delivered, removed from notification_sends where user_id = $1", [userId]))
 
 describe("sending to a person", () => {
-  it("removes a device the push service says is gone, and still reaches the others", async () => {
+  it("marks a device the push service says is gone, and still reaches the others", async () => {
     const { user, endpoints } = await personWithDevices("plumbing-gone", 2)
     answers.set(endpoints[0], 410)
 
     await sendToPerson(user.id, "test", () => ({ title: "Test notification", body: "x", url: "/settings", tag: "test" }))
 
     expect(await sendsOf(user.id)).toEqual([{ kind: "test", devices: 2, delivered: 1, removed: 1 }])
-    const left = await asOwner((q) => q("select endpoint from push_devices where user_id = $1", [user.id]))
+    const left = await asOwner((q) => q("select endpoint from push_devices where user_id = $1 and gone_at is null", [user.id]))
     expect(left).toEqual([{ endpoint: endpoints[1] }])
   })
 

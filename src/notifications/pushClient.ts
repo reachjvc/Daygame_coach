@@ -127,10 +127,10 @@ const GIVE_UP = 3
 /**
  * THE DEVICE AS THE SERVER LAST SAID IT (alpha p9-pings-01/02/03): whose row
  * it is, its address and its two switches, from the last 2xx answer that named
- * a row. It goes with a move (`was`), so a row the server deleted in the
- * meantime (the old address answered 410 to a ping) is made again with its
- * switches, and pings switched off by failures while the key was wrong come
- * back as they were. A later open whose browser holds another address than
+ * a row. It goes with a move (`was`), so pings switched off by failures
+ * while the key was wrong come back as they were. A row a ping found gone at
+ * the old address (410) is only marked so, and the move brings it back; one
+ * the person removed in Settings stays removed (review of 7d1e7328). A later open whose browser holds another address than
  * this one asks for the row to move here (another tab replaced the
  * subscription). Removed at sign-out and when this device is removed.
  */

@@ -58,6 +58,7 @@
   "src/db/lifePlanRepo.ts:ensureLifePlan": "asserted",
   "src/db/metricsRepo.ts:resolveMetricValues": "mentioned",
   "src/db/notificationsRepo.ts:closeSend": "mentioned",
+  "src/db/notificationsRepo.ts:deleteLongGoneDevices": "asserted",
   "src/db/notificationsRepo.ts:moveDevice": "mentioned",
   "src/db/notificationsRepo.ts:openSend": "mentioned",
   "src/db/notificationsRepo.ts:readNotificationSecret": "mentioned",
