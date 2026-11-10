@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
   useCallback,
   useMemo,
@@ -377,7 +378,7 @@ export function useBackCloses(open: boolean, onClose: () => void): { leaving: ()
   const ctx = useContext(HistoryBarrierContext)
   const idRef = useRef<number | null>(null)
   const leavingRef = useRef(false)
-  const unmountTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const unmountPending = useRef(false)
   const onCloseRef = useRef(onClose)
   useEffect(() => {
     onCloseRef.current = onClose
@@ -393,7 +394,11 @@ export function useBackCloses(open: boolean, onClose: () => void): { leaving: ()
     leavingRef.current = false
   }, [ctx])
 
-  useEffect(() => {
+  // IN THE SAME COMMIT AS THE CLOSE, not a passive effect (alpha run p12). A
+  // passive effect ran ~12 ms after Escape; a page load started in that time
+  // (an address typed, a full-page link, a reload) was then cancelled by this
+  // step's history.back(), which the browser reports as an aborted load.
+  useLayoutEffect(() => {
     if (!ctx) return
     if (open && idRef.current === null) {
       leavingRef.current = false
@@ -407,20 +412,21 @@ export function useBackCloses(open: boolean, onClose: () => void): { leaving: ()
   }, [open, ctx, release])
 
   // Unmounted while open (a caller that mounts the sheet only while it is
-  // open). Deferred one task: React's development double-mount runs this
-  // cleanup and the effect again at once, and the effect cancels it. A page
-  // navigation has pushed its own entry by the time it runs, so `release`
-  // leaves the history alone then.
-  useEffect(() => {
-    if (unmountTimer.current !== null) {
-      clearTimeout(unmountTimer.current)
-      unmountTimer.current = null
-    }
+  // open). Deferred to a microtask, after the commit: React's development
+  // double-mount runs this cleanup and the effect again at once, and the effect
+  // cancels it. A page navigation has pushed its own entry by then (Next writes
+  // the history in an insertion effect of the same commit), so `release` leaves
+  // the history alone. Not a timer: a page load started in that gap would be
+  // cancelled by the step's history.back() (see above).
+  useLayoutEffect(() => {
+    unmountPending.current = false
     return () => {
-      unmountTimer.current = setTimeout(() => {
-        unmountTimer.current = null
+      unmountPending.current = true
+      queueMicrotask(() => {
+        if (!unmountPending.current) return
+        unmountPending.current = false
         release()
-      }, 0)
+      })
     }
   }, [release])
 

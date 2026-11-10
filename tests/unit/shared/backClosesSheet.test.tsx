@@ -263,3 +263,35 @@ describe('without the history provider (a component test)', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 })
+
+/**
+ * THE STEP IS TAKEN BACK BEFORE THE CLOSE'S EVENT IS OVER (alpha run p12).
+ * Taken back from a passive effect, it ran ~12 ms after Escape, and a page
+ * load started in that gap (an address typed, a full-page link, a reload) was
+ * cancelled by it: the browser reported the load as aborted. `act` flushes
+ * passive effects at once, so this test leaves it off and clicks for real.
+ */
+describe.each([
+  ['kept mounted', Kept],
+  ['mounted only while open', Mounted],
+])('a sheet %s, closed', (_, Page) => {
+  test('takes its step back in the same task as the click', async () => {
+    render(<Page />)
+    fireEvent.click(screen.getByRole('button', { name: 'Open' }))
+    await settle()
+    const backSpy = vi.spyOn(window.history, 'back')
+    const g = globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
+    const was = g.IS_REACT_ACT_ENVIRONMENT
+    g.IS_REACT_ACT_ENVIRONMENT = false
+    try {
+      screen.getByRole('button', { name: 'Close' }).dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      // microtasks only: no timer or scheduler task gets to run
+      for (let i = 0; i < 5; i++) await Promise.resolve()
+      expect(backSpy).toHaveBeenCalledTimes(1)
+    } finally {
+      g.IS_REACT_ACT_ENVIRONMENT = was
+      backSpy.mockRestore()
+      await settle()
+    }
+  })
+})
