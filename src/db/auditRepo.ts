@@ -266,7 +266,7 @@ export async function changeReview(userId: string, runId: string, edit: ReviewEd
 /**
  * Store the zone a finished audit was lived in beside its review
  * (`review.zone`, alpha p9-review-01), once: a zone already stored stays,
- * unless `replace` (End now: the zone at its end wins over the start's).
+ * unless `replace`. End now no longer calls it (alpha p10-review-pings-03).
  * Written with the same version check as `changeReview`, so a review save
  * landing at the same moment is never written over. Returns the stored zone.
  */

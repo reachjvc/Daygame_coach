@@ -55,7 +55,7 @@ export interface AuditRun {
   endSentAt: string | null
   /**
    * The zone an audit was lived in, stored beside its review (`review.zone`)
-   * when it starts and again at End now, so a later change of the account's
+   * when it starts (End now keeps it), so a later change of the account's
    * zone never rewrites a finished review (alpha p9-review-01). An open audit
    * still follows the account's zone (`runZone`). Null or left out: none
    * stored (audits from before); `runZone` then uses the account's zone.

@@ -4,8 +4,9 @@
  * The page's read stored the account's CURRENT zone on every finished audit
  * that had none, the first time it was read after the deploy, for good. An
  * audit lived in Copenhagen and read after a move to New York was stamped New
- * York. Now the zone is recorded when the audit STARTS, End now stamps the zone
- * at that moment, and the read stores nothing: an audit with no stored zone
+ * York. Now the zone is recorded when the audit STARTS, End now keeps it (it
+ * no longer stamps today's zone, alpha p10-review-pings-03), and the read
+ * stores nothing: an audit with no stored zone
  * keeps falling back to the account's zone when shown.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest"
@@ -93,15 +94,29 @@ describe("starting an audit", () => {
   })
 })
 
-describe("End now", () => {
-  it("stamps the zone at that moment over the one recorded at the start", async () => {
+describe("End now (alpha p10-review-pings-03)", () => {
+  const end = () => PATCH(new Request(`http://x/api/audit/runs/${RUN_ID}`, { ...json({ end: true }), method: "PATCH" }), { params: Promise.resolve({ id: RUN_ID }) })
+  const open = (zone: string | null) => {
     const now = Date.now()
-    h.runs = [run({ startedAt: new Date(now - 86400_000).toISOString(), endsAt: new Date(now + 86400_000).toISOString(), zone: CPH })]
-    const res = await PATCH(new Request(`http://x/api/audit/runs/${RUN_ID}`, { ...json({ end: true }), method: "PATCH" }), {
-      params: Promise.resolve({ id: RUN_ID }),
-    })
+    return run({ startedAt: new Date(now - 86400_000).toISOString(), endsAt: new Date(now + 86400_000).toISOString(), zone })
+  }
+
+  it("keeps the zone recorded at the start, after the account's zone changed", async () => {
+    h.runs = [open(CPH)]
+    const res = await end()
     expect(res.status).toBe(200)
-    expect(h.keepRunZone).toHaveBeenCalledWith("u1", RUN_ID, NY, { replace: true })
+    expect(h.keepRunZone).not.toHaveBeenCalled()
+    const body = (await res.json()) as { run: AuditRun }
+    expect(runZone(body.run, NY)).toBe(CPH)
+  })
+
+  it("stores no zone on an old audit with none, the same as an audit that ends by itself", async () => {
+    h.runs = [open(null)]
+    const res = await end()
+    expect(res.status).toBe(200)
+    expect(h.keepRunZone).not.toHaveBeenCalled()
+    const body = (await res.json()) as { run: AuditRun }
+    expect(body.run.zone ?? null).toBeNull()
   })
 })
 
