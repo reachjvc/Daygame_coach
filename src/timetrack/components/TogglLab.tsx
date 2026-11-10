@@ -30,7 +30,7 @@ import {
   IconTimer,
   IconUndo,
 } from "../icons"
-import { BottomSheet, SheetRow } from "@/components/BottomSheet"
+import { BottomSheet, OVER_SHEET, SheetRow } from "@/components/BottomSheet"
 import { useTimetrackSync } from "../hooks/useTimetrackSync"
 import { AfterCheckContext, type AfterCheck, type KeptTap } from "./afterCheck"
 import { stopAt, undoStopAt } from "../timeFixService"
@@ -1433,9 +1433,11 @@ export function TogglLab({
 
         On a phone they sit above the bottom bar and UNDER an open sheet or menu: on top
         they covered a sheet's rows (findability, 2026-11-05). The phone's sheet says its
-        own refusals, and a delete's Undo waits in the bottom bar (`UndoContext`).
+        own refusals, and a delete's Undo waits in the bottom bar (`UndoContext`). On a
+        wider screen they sit over an open dialog and take presses there (OVER_SHEET).
       */}
       <div
+        {...OVER_SHEET}
         role="status"
         aria-live="polite"
         className="pointer-events-none fixed bottom-[calc(var(--panel-bottom-inset,4rem)+0.5rem)] left-1/2 z-[9550] flex w-full max-w-md -translate-x-1/2 sm:z-[9700] flex-col gap-2 px-3 sm:bottom-4 sm:px-4"

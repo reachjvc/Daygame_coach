@@ -54,6 +54,18 @@ const PANEL =
  * landed outside it and closed the sheet.
  */
 const DOUBLE_CLICK_MS = 500
+
+/**
+ * SPREAD ON A BAR THAT MUST STAY USABLE WHILE A SHEET IS OPEN (review of
+ * 12c050e4): the audit's "Deleted · Undo", the time tracker's toasts. The
+ * sheet is a modal dialog, so a press outside it closed it and the page behind
+ * took no presses: Undo closed the sheet and did nothing. A press or focus on
+ * a marked element leaves the sheet open. The bar also needs
+ * `pointer-events-auto`, as the dialog turns presses off on the page behind,
+ * and must be drawn above the sheet (z above 9600).
+ */
+export const OVER_SHEET = { "data-over-sheet": "" } as const
+const overSheet = (target: EventTarget | null) => target instanceof Element && target.closest("[data-over-sheet]") !== null
 const DOUBLE_CLICK_PX = 24
 
 /**
@@ -177,6 +189,9 @@ export function BottomSheet({
           data-testid={testId}
           onPointerDownCapture={(e) => {
             lastPress.current = { at: Date.now(), x: e.clientX, y: e.clientY }
+          }}
+          onInteractOutside={(e) => {
+            if (overSheet(e.target) || overSheet(e.detail.originalEvent.target)) e.preventDefault()
           }}
           onPointerDownOutside={(e) => {
             const last = lastPress.current

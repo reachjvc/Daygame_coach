@@ -157,3 +157,45 @@ describe('a double click on the panel is one intent (alpha p9-saves-04)', () => 
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 })
+
+/**
+ * A BAR MARKED TO STAY USABLE OVER A SHEET (review of 12c050e4, sev 3/4).
+ *
+ * The sheet is a modal dialog at every width, so a press outside it closes it
+ * and the page behind takes no presses. The audit's "Deleted · Undo" bar sits
+ * above the sheet: tapping Undo closed the sheet and did nothing else. A bar
+ * marked `OVER_SHEET` takes its presses and leaves the sheet open.
+ */
+describe('a bar over the sheet (review of 12c050e4)', () => {
+  test('a press on it does not close the sheet, and its button works', async () => {
+    const { OVER_SHEET } = await import('@/components/BottomSheet')
+    const onClose = vi.fn()
+    const onUndo = vi.fn()
+    render(
+      <>
+        <BottomSheet open onClose={onClose} title="Answer">
+          <button type="button">Save</button>
+        </BottomSheet>
+        <div {...OVER_SHEET} className="pointer-events-auto">
+          <button type="button" onClick={onUndo}>Undo</button>
+        </div>
+      </>,
+    )
+    await new Promise((r) => setTimeout(r, 10))
+    const undo = screen.getByRole('button', { name: 'Undo', hidden: true })
+    fireEvent.pointerDown(undo, { clientX: 20, clientY: 20 })
+    fireEvent.focusIn(undo)
+    fireEvent.click(undo)
+    expect(onUndo).toHaveBeenCalledTimes(1)
+    expect(onClose).not.toHaveBeenCalled()
+    // a press anywhere else off the panel still closes it
+    fireEvent.pointerDown(document.body, { clientX: 20, clientY: 20 })
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  test('the audit Undo bar and the time tracker toasts are marked', () => {
+    for (const file of ['src/audit/components/AuditScreen.tsx', 'src/timetrack/components/TogglLab.tsx']) {
+      expect(fs.readFileSync(path.join(projectRoot, file), 'utf8')).toMatch(/\{\.\.\.OVER_SHEET\}/)
+    }
+  })
+})

@@ -11,7 +11,8 @@
 
 import { Bell, BellOff } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { BottomSheet } from "@/components/BottomSheet"
+import { createPortal } from "react-dom"
+import { BottomSheet, OVER_SHEET } from "@/components/BottomSheet"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { getTodayInTimezone } from "@/src/shared/dateUtils"
@@ -623,9 +624,11 @@ function TodayView({
           }
         />
       )}
-      {held && (
+      {/* Over the answer sheet and usable while it is open (OVER_SHEET): drawn at the end of the page, beside the sheet's own layer. */}
+      {held && createPortal(
         <div
-          className="fixed inset-x-4 bottom-24 z-[9700] mx-auto flex max-w-md items-center gap-3 rounded-xl border border-border bg-card px-4 py-2 shadow-lg sm:bottom-6"
+          {...OVER_SHEET}
+          className="pointer-events-auto fixed inset-x-4 bottom-24 z-[9700] mx-auto flex max-w-md items-center gap-3 rounded-xl border border-border bg-card px-4 py-2 shadow-lg sm:bottom-6"
           role="status"
           data-testid="audit-undo"
         >
@@ -635,7 +638,8 @@ function TodayView({
           <Button variant="outline" size="sm" onClick={undoHeld}>
             Undo
           </Button>
-        </div>
+        </div>,
+        document.body,
       )}
       <MuteSheet
         open={muteOpen}
