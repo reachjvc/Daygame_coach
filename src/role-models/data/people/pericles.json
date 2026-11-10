@@ -1,0 +1,313 @@
+{
+  "id": "pericles",
+  "name": "Pericles",
+  "born": "c. 495 BC",
+  "died": -429,
+  "category": "leaders",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset",
+    "lm_contribution"
+  ],
+  "tagline": "An Athenian leader who told angry voters no, and was voted back in.",
+  "startedFrom": "He was born rich and well connected: his father Xanthippus held high command in the Greek squadron that destroyed the rest of Xerxes' fleet at Mycale in 479 BC, and his mother, a niece of the reformer Cleisthenes, came from the Alcmaeonid family. His teachers included the musician Damon, Zeno of Elea and the philosopher Anaxagoras. Plutarch writes that as a young man he kept out of politics, because he feared that his wealth, his family and a face like the old tyrant Peisistratus would get him banished, and served as a soldier instead.",
+  "values": [
+    {
+      "word": "Integrity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 431 BC, before the Spartan invasion, he told the assembly that the Spartan king Archidamus was his friend, and that if the enemy spared his houses and land he gave them up at once as public property.",
+          "sourceId": "thucydides-crawley",
+          "locator": "History of the Peloponnesian War 2.13.1"
+        },
+        {
+          "kind": "witness",
+          "claim": "Thucydides, who lived through his time, writes that his 'rank, ability, and known integrity' let him lead the people, and that he 'never sought power by improper means'.",
+          "sourceId": "thucydides-crawley",
+          "locator": "History of the Peloponnesian War 2.65.8"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica says his integrity 'is vouched for by Thucydides in such strong terms as to exclude all further doubt on the question'.",
+          "sourceId": "eb1911",
+          "locator": "Pericles, vol. 21, last paragraph before 'Ancient Authorities'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Plutarch writes that kings and tyrants made him guardian of their sons, but he did not make his estate 'a single drachma greater' than his father left it.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Pericles 15.5"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 431 BC, with the Spartan army at Acharnae and the city demanding a march out, he refused to call an assembly and kept the army behind the walls.",
+          "sourceId": "thucydides-crawley",
+          "locator": "History of the Peloponnesian War 2.21.3-2.22.1"
+        },
+        {
+          "kind": "deed",
+          "claim": "After the ostracism of his rival Thucydides son of Melesias, he was elected general every year for fifteen years in a row.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Pericles 16.3"
+        },
+        {
+          "kind": "witness",
+          "claim": "Thucydides writes that he led the people 'instead of being led by them', could afford to anger them, and that Athens became 'government by the first citizen'.",
+          "sourceId": "thucydides-crawley",
+          "locator": "History of the Peloponnesian War 2.65.8-9"
+        },
+        {
+          "kind": "witness",
+          "claim": "Samons, as Moloney's review reports, calls him 'the greatest and most dangerous leader in Athenian history'.",
+          "sourceId": "moloney-samons",
+          "locator": "p. 196, quoting Samons p. 6"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 430-429 BC he lost his sister, most of his relatives and friends and both his legitimate sons in the plague years; he was deposed and fined, then took up office again when the city recalled him.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Pericles 35.4-37.2"
+        },
+        {
+          "kind": "words",
+          "claim": "In Thucydides' version of his speech of 430 BC, he tells the people: 'I am the same man and do not alter, it is you who change', and that 'the hand of heaven must be borne with resignation, that of the enemy with fortitude'.",
+          "sourceId": "thucydides-crawley",
+          "locator": "History of the Peloponnesian War 2.61.2 and 2.64.2"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica writes of the 'calm and undaunted attitude of mind which he preserved in the midst of the severest trials'.",
+          "sourceId": "eb1911",
+          "locator": "Pericles, vol. 21, first paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Patience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 447 BC he tried in the assembly to stop Tolmides marching into Boeotia, telling him to wait for 'that wisest of all counsellors, Time'; a few days later Tolmides was killed in defeat at Coroneia.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Pericles 18.2-3"
+        },
+        {
+          "kind": "words",
+          "claim": "In Thucydides' version of his speech of 432 BC, he asks the Athenians not to combine 'schemes of fresh conquest' with the war, saying 'I am more afraid of our own blunders than of the enemy's devices'.",
+          "sourceId": "thucydides-crawley",
+          "locator": "History of the Peloponnesian War 1.144.1"
+        },
+        {
+          "kind": "witness",
+          "claim": "Thucydides writes that he told them 'to wait quietly, to pay attention to their marine, to attempt no new conquests', and that after his death they did 'the very contrary'.",
+          "sourceId": "thucydides-crawley",
+          "locator": "History of the Peloponnesian War 2.65.7"
+        },
+        {
+          "kind": "witness",
+          "claim": "Plutarch writes that as a general he was 'famous above all things for his saving caution' and did not risk uncertain battles.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Pericles 18.1"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica writes that after the defeats of 447-445 BC 'he repressed all projects of reckless enterprise' and kept to the slow consolidation of the empire.",
+          "sourceId": "eb1911",
+          "locator": "Pericles, vol. 21, general estimate, paragraph on foreign policy"
+        },
+        {
+          "kind": "witness",
+          "claim": "Plutarch writes that when Athenians dreamed of Sicily, Etruria and Carthage, he 'was ever trying to restrain this extravagance of theirs' and to guard what they already held.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Pericles 20.3-21.1"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He drove the building of the Parthenon and the Propylaea, paid in part from the allies' money moved from Delos; when critics said he spent too much, he offered to pay and put his own name on the buildings, and the assembly let him go on.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Pericles 12.1-4, 13.7, 14.1-2"
+        },
+        {
+          "kind": "words",
+          "claim": "In Thucydides' version of his speech of 430 BC, he tells the Athenians: 'Make your decision, therefore, for glory then and honour now'.",
+          "sourceId": "thucydides-crawley",
+          "locator": "History of the Peloponnesian War 2.64.6"
+        },
+        {
+          "kind": "witness",
+          "claim": "Samons, as Moloney's review reports, argues that Pericles' 'dreams of dominance' and his policy of 'no concessions to the Peloponnesians' led to war with Sparta.",
+          "sourceId": "moloney-samons",
+          "locator": "p. 197, quoting Samons p. 126"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica says Athens could hardly have raised the Parthenon had he not given 'such free scope to the genius of Pheidias'.",
+          "sourceId": "eb1911",
+          "locator": "Pericles, vol. 21, general estimate, paragraph on art"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not flatter people to keep their support; tell them the hard thing and accept their anger.",
+      "sourceId": "thucydides-crawley",
+      "locator": "History of the Peloponnesian War 2.65.8-9"
+    },
+    {
+      "text": "Fear your own mistakes more than your rival's plans, and do not start new fights in the middle of one.",
+      "sourceId": "thucydides-crawley",
+      "locator": "History of the Peloponnesian War 1.144.1"
+    },
+    {
+      "text": "Do not give way to a demand made as a threat: one small concession invites a bigger demand.",
+      "sourceId": "thucydides-crawley",
+      "locator": "History of the Peloponnesian War 1.140.5"
+    },
+    {
+      "text": "Give up in public anything that could make you look bought.",
+      "sourceId": "thucydides-crawley",
+      "locator": "History of the Peloponnesian War 2.13.1"
+    },
+    {
+      "text": "Do not let a crowd decide while it is angry; wait until the heat passes.",
+      "sourceId": "thucydides-crawley",
+      "locator": "History of the Peloponnesian War 2.22.1"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I am more afraid of our own blunders than of the enemy's devices.",
+      "sourceId": "thucydides-crawley",
+      "locator": "History of the Peloponnesian War 1.144.1, speech of 432 BC (Thucydides' version of the speech; no writing of Pericles survives)",
+      "translation": "Richard Crawley, 1874"
+    },
+    {
+      "text": "…wealth we employ more for use than for show, and place the real disgrace of poverty not in owning to the fact but in declining the struggle against it.",
+      "sourceId": "thucydides-crawley",
+      "locator": "History of the Peloponnesian War 2.40.1, Funeral Oration, winter 431/430 BC (Thucydides' version of the speech; no writing of Pericles survives)",
+      "translation": "Richard Crawley, 1874"
+    },
+    {
+      "text": "…judging happiness to be the fruit of freedom and freedom of valour, never decline the dangers of war.",
+      "sourceId": "thucydides-crawley",
+      "locator": "History of the Peloponnesian War 2.43.4, Funeral Oration, winter 431/430 BC (Thucydides' version of the speech; no writing of Pericles survives)",
+      "translation": "Richard Crawley, 1874"
+    },
+    {
+      "text": "I am the same man and do not alter, it is you who change…",
+      "sourceId": "thucydides-crawley",
+      "locator": "History of the Peloponnesian War 2.61.2, speech of 430 BC after the plague (Thucydides' version of the speech; no writing of Pericles survives)",
+      "translation": "Richard Crawley, 1874"
+    }
+  ],
+  "definingMoment": {
+    "text": "In the summer of 431 BC the Spartan army invaded Attica and ravaged the land at Acharnae, about seven miles from Athens. Before it came, Pericles had told the assembly that if the Spartan king, his friend, spared his own estate, it would become public property. Now the city was furious and wanted to march out and fight; he was blamed for everything. He refused to call an assembly, kept the army inside the walls and sent out only cavalry against raiders, holding to the plan he had argued before the war: never meet the larger Peloponnesian army in a land battle.",
+    "sourceIds": [
+      "thucydides-crawley"
+    ]
+  },
+  "shadow": {
+    "text": "To match the gifts of his rich rival Cimon he paid citizens from public money, through jury pay and festival grants, which Plutarch calls bribing 'the multitude by the wholesale'. In 451/450 BC he passed a law that only children of two Athenian parents were citizens; his son by Aspasia of Miletus fell outside it, and after his two legitimate sons died in the plague he asked the assembly to suspend his own law for that son. In 440-439 BC he led the fleet against Samos, an ally that had broken away; after a nine-month siege the Samians had to pull down their walls, hand over their ships and hostages and pay the cost of the war. A later Samian writer, Duris, said he had the Samian ship captains and marines crucified and then clubbed to death; Plutarch rejects this as not found in Thucydides, Ephorus or Aristotle. In 432 BC he refused to withdraw the decree that shut Megara out of the harbours of the Athenian empire and the market of Athens, though Sparta said this would prevent war. Thucydides writes that he 'ever urged the Athenians on to war', Plutarch that he alone was held responsible for it, and the historian L. J. Samons (2016) argues that his 'dreams of dominance' led to it. In the Funeral Oration, as Thucydides gives it, he told war widows that the greatest glory is hers 'who is least talked of among the men, whether for good or for bad'; Peter Green (2014) counts this attitude to women among the modern criticisms of him. In his speech of 430 BC, as Thucydides gives it, he called Athens' rule over its allies 'a tyranny'; that year the Athenians deposed him and fined him, by the 1911 Britannica's account 50 talents on a charge of embezzlement.",
+    "sourceIds": [
+      "plutarch-perrin",
+      "aristotle-rackham",
+      "thucydides-crawley",
+      "moloney-samons",
+      "green-lrb",
+      "eb1911"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you tell someone what they wanted to hear this week, instead of what they needed to hear?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "His Funeral Oration, as Thucydides wrote it (History of the Peloponnesian War 2.35-46); no writing of his own survives, and Crawley's translation is free",
+      "year": "c. 400 BC"
+    }
+  ],
+  "sources": [
+    {
+      "id": "thucydides-crawley",
+      "kind": "primary",
+      "title": "History of the Peloponnesian War (by a contemporary who heard him; the speeches are Thucydides' own versions, kept 'as closely as possible to the general sense', 1.22.1; used in place of writings Pericles did not leave)",
+      "author": "Thucydides, translated by Richard Crawley",
+      "year": 1874,
+      "publisher": "Project Gutenberg eBook #7142 (section numbers checked on Perseus, Dent 1910 reprint)",
+      "url": "https://www.gutenberg.org/ebooks/7142"
+    },
+    {
+      "id": "plutarch-perrin",
+      "kind": "secondary",
+      "title": "Life of Pericles, in Plutarch's Lives vol. III (written c. AD 100, about 500 years after his death)",
+      "author": "Plutarch, translated by Bernadotte Perrin",
+      "year": 1916,
+      "publisher": "Loeb Classical Library, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Plutarch/Lives/Pericles*.html"
+    },
+    {
+      "id": "aristotle-rackham",
+      "kind": "secondary",
+      "title": "The Athenian Constitution (school of Aristotle, c. 330 BC)",
+      "author": "Aristotle, translated by H. Rackham",
+      "year": 1952,
+      "publisher": "Loeb Classical Library, via Perseus",
+      "url": "https://www.perseus.tufts.edu/hopper/text?doc=Perseus:text:1999.01.0046:chapter=26"
+    },
+    {
+      "id": "eb1911",
+      "kind": "secondary",
+      "title": "Pericles, Encyclopaedia Britannica, 11th edition, vol. 21",
+      "author": "Maximilian Otto Bismarck Caspari",
+      "year": 1911,
+      "publisher": "Wikisource transcription",
+      "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Pericles"
+    },
+    {
+      "id": "moloney-samons",
+      "kind": "secondary",
+      "title": "A Portrait of Pericles: review of L. J. Samons II, Pericles and the Conquest of History (Cambridge University Press, 2016), The Classical Review 69.1, pp. 196-198",
+      "author": "Eoghan Moloney",
+      "year": 2018,
+      "publisher": "Cambridge University Press; Maynooth University repository copy",
+      "url": "https://mural.maynoothuniversity.ie/17666/"
+    },
+    {
+      "id": "green-lrb",
+      "kind": "secondary",
+      "title": "Image Problems: review of Vincent Azoulay, Pericles of Athens (Princeton, 2014), London Review of Books vol. 36 no. 21",
+      "author": "Peter Green",
+      "year": 2014,
+      "publisher": "London Review of Books",
+      "url": "https://www.lrb.co.uk/the-paper/v36/n21/peter-green/image-problems"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Athenian statesman and general (c. 495-429 BC), long dead, not a founder of a living religion, with no account of sexual contact with a minor or of sexual violence; his dark side is documented and real (the crushing of Samos, the Megarian decree and the road to war, his citizenship law that later caught his own son, an empire he himself called a tyranny)."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value against Thucydides, Plutarch, the 1911 Britannica, Moloney's review of Samons and Green's review of Azoulay, and tested Patience hardest against his push for war in 432 BC, when Thucydides says he 'ever urged the Athenians on to war' and Britannica says he chose 'to hasten on a war with Sparta'. Patience held: the war he chose was one of waiting behind the walls, and Plutarch, Britannica and Thucydides record his restraint of risky ventures before and after; the 432 push went into the shadow. Integrity held against the embezzlement fine of 430 and Plutarch's charge that he bought the poor with public pay, both now in the shadow. No value fell and the blind-only Wisdom and Building things did not displace better-sourced words; all four quotes match Crawley's text and are marked as Thucydides' version of his speeches, and the father's rank at Mycale, the Megara decree's reach and one Ambition date were corrected.",
+    "checkedOn": "2026-11-10"
+  }
+}
