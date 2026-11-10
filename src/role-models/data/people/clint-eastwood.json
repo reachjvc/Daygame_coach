@@ -1,0 +1,416 @@
+{
+  "id": "clint-eastwood",
+  "name": "Clint Eastwood",
+  "born": 1930,
+  "died": null,
+  "category": "charisma",
+  "areaIds": [
+    "lm_mindset",
+    "lm_mission"
+  ],
+  "tagline": "Dug swimming pools into his late twenties, then made films his own way into his nineties.",
+  "startedFrom": "He was born in San Francisco on 31 May 1930, the elder of two children; in the Depression the family moved from town to town while his father looked for work, and he says he was always the tall new boy at school whom the bullies tested. After high school in 1948 he worked as a lumberjack and forest firefighter, was drafted in 1950 and served as an Army swimming instructor at Fort Ord. After a year as a $75-a-week contract player at Universal, he spent the late 1950s digging swimming pools and calling his agent from pay phones, by his own account.",
+  "values": [
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 2008 he told Esquire that the secret to life, to a career and to relationships is never to stop learning, and that he is still working because he learns something new all the time.",
+          "sourceId": "esquire-2009",
+          "locator": "Esquire, January 2009 (interviewed 3 Nov 2008), paragraph beginning 'Children teach you'"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked at 75 what kept him going, he said he learns something new with every job, and that always learning is the best way to stave off senility.",
+          "sourceId": "dga-2006",
+          "locator": "DGA Quarterly, Spring 2006, last answer ('So, what keeps you going?')"
+        },
+        {
+          "kind": "deed",
+          "claim": "As a Universal contract player in 1954 and 1955 he went onto other sets to watch directors work, among them Hitchcock and Douglas Sirk.",
+          "sourceId": "dga-2006",
+          "locator": "DGA Quarterly, Spring 2006, answer to 'how you actually learned how to direct'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Film historian Deborah Allison writes that during Rawhide he took the chance to learn the business by watching the many directors who worked on the series.",
+          "sourceId": "senses-allison-2003",
+          "locator": "paragraph beginning 'Eastwood first entered the film industry in the mid-1950s'"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1968, once he was a star, he formed his own production company, Malpaso, whose first film was Hang 'Em High.",
+          "sourceId": "scribner-briley",
+          "locator": "paragraph beginning 'Capitalizing on his fame and financial status'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Deborah Allison writes that Malpaso let him satisfy his drive to govern every creative aspect of his films, from choosing scripts to approving cast and crew.",
+          "sourceId": "senses-allison-2003",
+          "locator": "paragraph beginning 'Less acknowledged than Eastwood's work as an actor'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The American Film Institute's 1996 Life Achievement tribute says that after the Leone westerns made him a star, 'Eastwood, however, charted his own course', playing characters outside the old Western code.",
+          "sourceId": "afi-1996",
+          "locator": "tribute text, second paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he has never thought about what other people think: you make a film, present it to the public, and it is up to them to judge it.",
+          "sourceId": "dga-2006",
+          "locator": "DGA Quarterly, Spring 2006, answer on Unforgiven and recognition in France"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Kirkus reports that biographer Shawn Levy praises his 'dogged work ethic'.",
+          "sourceId": "kirkus-levy-2025",
+          "locator": "review of Clint: The Man and the Movies, second sentence of the review body"
+        },
+        {
+          "kind": "witness",
+          "claim": "Critic Adam Nayman writes that the quality Levy reveres most in Eastwood is his work ethic.",
+          "sourceId": "nation-nayman-2025",
+          "locator": "closing paragraph, sentence beginning 'It's telling that the quality Levy reveres most'"
+        },
+        {
+          "kind": "deed",
+          "claim": "At 94 he released Juror #2 (2024); critic Justin Chang describes him as still cranking out unfussy mid-budget dramas for a grown-up audience.",
+          "sourceId": "npr-chang-2024",
+          "locator": "review, first paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "Accepting the directing Oscar in February 2005, at 74, he said he was lucky to be still working and had a lot of stuff to do yet.",
+          "sourceId": "oscars-2005",
+          "locator": "77th Academy Awards, Directing, 27 Feb 2005, closing lines"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Unforgiven (1992), which he directed and starred in, won him the Academy Awards for best picture and best director.",
+          "sourceId": "scribner-briley",
+          "locator": "paragraph beginning 'Eastwood's acting and directing career continued'"
+        },
+        {
+          "kind": "words",
+          "claim": "Accepting the directing Oscar for Million Dollar Baby on 27 February 2005, he said that making a picture in thirty-seven days takes a well-oiled machine, and credited his crew.",
+          "sourceId": "oscars-2005",
+          "locator": "77th Academy Awards, Directing, 27 Feb 2005, second paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "The AFI tribute says that as an actor he doesn't waste words and as a director he doesn't waste images.",
+          "sourceId": "afi-1996",
+          "locator": "tribute text, closing paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he likes to work fast because it keeps actors and crew moving forward, but that you are still making a film you want to be right.",
+          "sourceId": "dga-2006",
+          "locator": "DGA Quarterly, Spring 2006, answer on his reputation for working fast"
+        }
+      ]
+    },
+    {
+      "word": "Results",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On Mystic River (2003) unit production manager Tim Moore said 43 shooting days were scheduled and Eastwood shot it in 39; Eastwood said a film he has budgeted will live within the budget.",
+          "sourceId": "dga-2003",
+          "locator": "DGA Quarterly, September 2003, Moore's opening remarks and Eastwood's passage beginning 'Everybody keeps saying'"
+        },
+        {
+          "kind": "witness",
+          "claim": "In 1993 Warner Bros. chairman Bob Daly told Time that he gets the most out of a dollar spent and that ninety-five percent of his movies are hugely profitable.",
+          "sourceId": "time-1993",
+          "locator": "Time, 5 April 1993, page 3 of the web edition"
+        },
+        {
+          "kind": "witness",
+          "claim": "Deborah Allison quotes Malpaso producer Robert Daley on a company policy of buying only accurately and tightly budgeted screenplays, and calls economical production a pivotal feature of the films he directed.",
+          "sourceId": "senses-allison-2003",
+          "locator": "paragraphs beginning 'Less acknowledged than Eastwood's work' and 'If economical production values'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Keep learning on every job, and never think you have it all.",
+      "sourceId": "esquire-2009",
+      "locator": "Esquire, January 2009, paragraph beginning 'Children teach you'"
+    },
+    {
+      "text": "Prove yourself before you ask to be paid well.",
+      "sourceId": "dga-2006",
+      "locator": "DGA Quarterly, Spring 2006, answer on how he got his first directing job (Play Misty for Me at DGA minimum)"
+    },
+    {
+      "text": "Keep your ego in check and listen; stay open to ideas as the work goes on.",
+      "sourceId": "thr-2015",
+      "locator": "Hollywood Masters transcript, 16 Mar 2015, student Q&A, answer to Galloway's question on advice he held onto"
+    },
+    {
+      "text": "When you keep wanting to quit, hang in a little longer.",
+      "sourceId": "thr-2015",
+      "locator": "Hollywood Masters transcript, 16 Mar 2015, answer on the late 1950s before Rawhide"
+    },
+    {
+      "text": "Go with your first impression; dwelling on it talks you out of the right choice.",
+      "sourceId": "esquire-2009",
+      "locator": "Esquire, January 2009, paragraph beginning 'Even in grammar school'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "That's the secret to life, really—never stop learning. It's the secret to career. I'm still working because I learn something new all the time.",
+      "sourceId": "esquire-2009",
+      "locator": "Esquire, 'Clint Eastwood: What I've Learned', by Cal Fussman, January 2009 (interviewed 3 Nov 2008)"
+    },
+    {
+      "text": "I kept wanting to give up but you never quite give up. You always kind of hang in.",
+      "sourceId": "thr-2015",
+      "locator": "The Hollywood Masters, LMU, with Stephen Galloway; transcript in The Hollywood Reporter, 16 Mar 2015"
+    },
+    {
+      "text": "My agent called me and said, 'But they don't want to pay you!' and I said, 'They shouldn't. I should have to prove myself first.'",
+      "sourceId": "dga-2006",
+      "locator": "DGA Quarterly, Spring 2006, interview by Scott Foundas, on directing Play Misty for Me"
+    },
+    {
+      "text": "Always keep your ego in check and not be afraid to listen. Listening is a great art form as I always like to say.",
+      "sourceId": "thr-2015",
+      "locator": "The Hollywood Masters, LMU, with Stephen Galloway; transcript in The Hollywood Reporter, 16 Mar 2015, student Q&A (answer on advice he held onto)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In the late 1960s he optioned Play Misty for Me, a short treatment by his friend Jo Heims, and asked Lew Wasserman at Universal to let him direct it. By his own account Wasserman agreed only if he worked for the Directors Guild minimum; when his agent protested, he answered that they should not pay him, because he should have to prove himself first. Don Siegel, who had directed him, sponsored his Directors Guild membership, and Eastwood gave Siegel his first acting role, in the film, as thanks. The film came out in 1971, made for under $1 million by his account, and was a moderate success; he was still directing at 94, with Juror #2 in 2024.",
+    "sourceIds": [
+      "dga-2006",
+      "senses-allison-2003",
+      "scribner-briley",
+      "nation-nayman-2025",
+      "npr-chang-2024"
+    ]
+  },
+  "shadow": {
+    "text": "His biographer Shawn Levy counts eight children by six women, born some forty-two years apart, and describes multiple infidelities. Sondra Locke, his partner from 1975 to 1989, said she had two abortions and a tubal ligation during their years together, at his urging. After he ended the relationship in 1989 she sued him for palimony, and in 1995 she sued again for fraud, saying a Warner Bros. directing deal he had secretly paid for was a sham; they settled during the September 1996 trial, and jurors said they had been ready to decide for her. Patrick McGilligan's 1999 biography Clint: The Life and Legend carried a former associate's tape-recorded claim that he hit his first wife; Eastwood called it false and sued for libel in 2002, the associate recanted in a sworn affidavit, and in 2004 the author and publisher agreed to remove it. Deborah Allison writes that he fired Philip Kaufman, the first director of The Outlaw Josey Wales (1976), and that the Directors Guild later had a rule, named after him, barring actors from firing a director and taking over. Thomas Carr, one of the most frequent Rawhide directors, called him lazy, said he 'always cost you a morning', and said he never started a day's shooting with Eastwood in the first scene. In 2019 lawyers for the Atlanta Journal-Constitution called his film Richard Jewell's picture of their late reporter Kathy Scruggs, shown trading sex with sources for information, false and defamatory.",
+    "sourceIds": [
+      "kirkus-levy-2025",
+      "scribner-briley",
+      "thr-barnes-2018",
+      "ap-deseret-1998",
+      "ap-voa-2018",
+      "irishexaminer-2004",
+      "senses-allison-2003",
+      "kisseloff-1997",
+      "mcgilligan-1999",
+      "ajc-2019"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did your ego stop you from listening to someone you thought had nothing to teach you?",
+    "principleIndex": 2
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "esquire-2009",
+      "kind": "primary",
+      "title": "Clint Eastwood: What I've Learned (interviewed 3 November 2008)",
+      "author": "Clint Eastwood, interviewed by Cal Fussman",
+      "year": 2009,
+      "publisher": "Esquire, January 2009; read via the Internet Archive copy of 22 Dec 2014",
+      "url": "https://web.archive.org/web/20141222200623/http://www.esquire.com:80/features/what-ive-learned/clint-eastwood-quotes-0109"
+    },
+    {
+      "id": "dga-2006",
+      "kind": "primary",
+      "title": "The Straight Shooter (DGA Interview: Clint Eastwood)",
+      "author": "Clint Eastwood, interviewed by Scott Foundas",
+      "year": 2006,
+      "publisher": "DGA Quarterly, Directors Guild of America, Spring 2006",
+      "url": "https://www.dga.org/craft/dgaq/issues/0601-spring-2006/dga-interview-clint-eastwood"
+    },
+    {
+      "id": "thr-2015",
+      "kind": "primary",
+      "title": "Clint Eastwood Describes His (Almost) Death (The Hollywood Masters, Loyola Marymount University, with transcript)",
+      "author": "Clint Eastwood, interviewed by Stephen Galloway",
+      "year": 2015,
+      "publisher": "The Hollywood Reporter, 16 March 2015",
+      "url": "https://www.hollywoodreporter.com/news/clint-eastwood-describes-his-death-781618"
+    },
+    {
+      "id": "oscars-2005",
+      "kind": "primary",
+      "title": "Acceptance speech, Directing, Million Dollar Baby, 77th Academy Awards (27 February 2005)",
+      "author": "Clint Eastwood",
+      "year": 2005,
+      "publisher": "Academy Awards Acceptance Speech Database, Margaret Herrick Library, AMPAS",
+      "url": "https://aaspeechesdb.oscars.org/link/077-9/"
+    },
+    {
+      "id": "scribner-briley",
+      "kind": "secondary",
+      "title": "Eastwood, Clinton, Jr. (\"Clint\"), Scribner Encyclopedia of American Lives, Thematic Series: The 1960s",
+      "author": "Ron Briley",
+      "year": "undated (Scribner/Gale; read on encyclopedia.com)",
+      "publisher": "Charles Scribner's Sons / Gale, via encyclopedia.com",
+      "url": "https://www.encyclopedia.com/humanities/encyclopedias-almanacs-transcripts-and-maps/eastwood-clinton-jr-clint"
+    },
+    {
+      "id": "senses-allison-2003",
+      "kind": "secondary",
+      "title": "Clint Eastwood (Great Directors)",
+      "author": "Deborah Allison",
+      "year": 2003,
+      "publisher": "Senses of Cinema, issue 28, October 2003",
+      "url": "https://www.sensesofcinema.com/2003/great-directors/eastwood/"
+    },
+    {
+      "id": "afi-1996",
+      "kind": "secondary",
+      "title": "Clint Eastwood, AFI Life Achievement Award (1996), tribute text",
+      "author": "American Film Institute",
+      "year": 1996,
+      "publisher": "American Film Institute",
+      "url": "https://www.afi.com/laa/clint-eastwood/"
+    },
+    {
+      "id": "kirkus-levy-2025",
+      "kind": "secondary",
+      "title": "Review of Clint: The Man and the Movies by Shawn Levy (Mariner Books, 1 July 2025)",
+      "author": "Kirkus Reviews (unsigned)",
+      "year": 2025,
+      "publisher": "Kirkus Reviews",
+      "url": "https://www.kirkusreviews.com/book-reviews/shawn-levy/clint/print"
+    },
+    {
+      "id": "nation-nayman-2025",
+      "kind": "secondary",
+      "title": "The Enigma of Clint Eastwood (review of Shawn Levy, Clint: The Man and the Movies)",
+      "author": "Adam Nayman",
+      "year": 2025,
+      "publisher": "The Nation, 4 September 2025",
+      "url": "https://www.thenation.com/article/culture/clint-eastwood-man-movies/"
+    },
+    {
+      "id": "npr-chang-2024",
+      "kind": "secondary",
+      "title": "'Juror #2' is a thorny legal thriller — and possibly Clint Eastwood's last film",
+      "author": "Justin Chang",
+      "year": 2024,
+      "publisher": "NPR Fresh Air, 8 November 2024 (read on KPBS)",
+      "url": "https://www.kpbs.org/news/2024/11/08/juror-2-is-a-thorny-legal-thriller-and-possibly-clint-eastwoods-last-film"
+    },
+    {
+      "id": "thr-barnes-2018",
+      "kind": "secondary",
+      "title": "Sondra Locke, Oscar-Nominated Actress and Clint Eastwood's Former Partner, Dies at 74 (obituary)",
+      "author": "Mike Barnes",
+      "year": 2018,
+      "publisher": "The Hollywood Reporter, 13 December 2018",
+      "url": "https://www.hollywoodreporter.com/news/sondra-locke-dead-oscar-nominated-actress-was-74-1169048"
+    },
+    {
+      "id": "ap-voa-2018",
+      "kind": "secondary",
+      "title": "Sondra Locke, Oscar-Nominated Actress, Dies at 74 (AP obituary)",
+      "author": "Associated Press",
+      "year": 2018,
+      "publisher": "Associated Press, carried by Voice of America, December 2018",
+      "url": "https://www.voanews.com/a/sondra-locke-oscar-nominated-actress-dies-at-74/4700345.html"
+    },
+    {
+      "id": "ap-deseret-1998",
+      "kind": "secondary",
+      "title": "Locke's book tells the good, the bad and the very ugly",
+      "author": "Associated Press",
+      "year": 1998,
+      "publisher": "Associated Press, carried by Deseret News, 5 January 1998",
+      "url": "https://www.deseret.com/1998/1/5/19356125/locke-s-book-tells-the-good-the-bad-and-the-very-ugly"
+    },
+    {
+      "id": "irishexaminer-2004",
+      "kind": "secondary",
+      "title": "Clint Eastwood settles 'wife beater' libel action",
+      "author": "Irish Examiner (unsigned news report)",
+      "year": 2004,
+      "publisher": "Irish Examiner, 13 August 2004",
+      "url": "https://www.irishexaminer.com/lifestyle/arid-30161486.html"
+    },
+    {
+      "id": "ajc-2019",
+      "kind": "secondary",
+      "title": "Cox, AJC seek 'Richard Jewell' disclaimer in letter to Clint Eastwood",
+      "author": "Jennifer Brett",
+      "year": 2019,
+      "publisher": "The Atlanta Journal-Constitution, December 2019",
+      "url": "https://www.ajc.com/news/cox-ajc-seek-richard-jewell-disclaimer-letter-clint-eastwood/fCo8Q1ySoDXrGg1CY37qpI/"
+    },
+    {
+      "id": "dga-2003",
+      "kind": "secondary",
+      "title": "Clint Eastwood: Conversations with a director and his team (Mystic River)",
+      "author": "Ted Elrick",
+      "year": 2003,
+      "publisher": "DGA Quarterly, Directors Guild of America, September 2003",
+      "url": "https://www.dga.org/craft/dgaq/issues/0309-september-2003/clint-eastwood"
+    },
+    {
+      "id": "time-1993",
+      "kind": "secondary",
+      "title": "Go Ahead, Make My Career: Clint Eastwood",
+      "author": "Paul A. Witteman",
+      "year": 1993,
+      "publisher": "Time, 5 April 1993",
+      "url": "https://content.time.com/time/subscriber/article/0,33009,978137-3,00.html"
+    },
+    {
+      "id": "kisseloff-1997",
+      "kind": "secondary",
+      "title": "The Box: An Oral History of Television, 1920-1961 (Thomas Carr's interview)",
+      "author": "Jeff Kisseloff",
+      "year": 1997,
+      "publisher": "Penguin (first published Viking, 1995); read in the Internet Archive's own full-text search",
+      "url": "https://archive.org/details/box00jeff"
+    },
+    {
+      "id": "mcgilligan-1999",
+      "kind": "secondary",
+      "title": "Clint: The Life and Legend",
+      "author": "Patrick McGilligan",
+      "year": 1999,
+      "publisher": "HarperCollins, London; read in the Internet Archive's own full-text search",
+      "url": "https://archive.org/details/clintlifelegend0000mcgi_o9z1"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living American actor and director (born 1930), not fictional and not a religious founder; he was the non-partisan mayor of Carmel-by-the-Sea from 1986 to 1988 and gave a speech at the 2012 Republican convention, but holds and seeks no office and his public life is film, not a campaign; no account of sexual contact with anyone under 16 or of sexual violence was found, so he is in, with a documented dark side: children by several women and infidelity, Sondra Locke's account that her two abortions and a tubal ligation were at his urging, her fraud suit over a sham directing deal settled during jury deliberations in 1996, a biographer's wife-hitting claim removed in a 2004 libel settlement, and a 2019 film scene the Atlanta Journal-Constitution called defamatory."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value, every quote and every factual sentence against the saved Esquire, DGA, Hollywood Reporter and Academy texts and the secondary sources. Determination fell: it rested on two sources only; the blind pick's Results took its place on three sources, and its Fitness had one source. Hard work held against director Thomas Carr's 'lazy' (Rawhide years, found in Kisseloff's The Box), which now stands in the shadow; Learning, Independence and Craft held, and all four quotes were found word for word. The shadow gained the associate's recantation, the Kaufman firing and Carr's remark; Eastwood's reply to Locke's abortion account was found only in tabloids, so it is not used.",
+    "checkedOn": "2026-11-10"
+  }
+}
