@@ -414,6 +414,48 @@ export function subscriptionForPage(registration: ServiceWorkerRegistration): Pr
   return checking
 }
 
+/** A "refresh" registration's answer: the row, its switches, and the signed-in account. */
+export type RefreshAnswer = { id?: unknown; enabled?: unknown; timerRunning?: unknown; account?: unknown }
+let refreshing: { key: string; answer: Promise<RefreshAnswer | null> } | null = null
+
+/**
+ * ONE REGISTRATION PER PAGE (alpha p10-review-pings-04). The layout's claim
+ * and a screen's device hook both register this browser as the page opens,
+ * with the same subscription and the same pending move. Two posts of one move
+ * raced at the server: one moved the row and put its switches back, the
+ * other read the row before that and registered it off again. A part that
+ * asks while the same registration is on its way gets that one's answer.
+ * Null: not registered (no signal, a server error); a move still waiting is
+ * sent again at the next open (MOVE_KEY).
+ */
+export function refreshThisDevice(here: PageSubscription): Promise<RefreshAnswer | null> {
+  const key = `${here.subscription.endpoint} ${here.oldEndpoint ?? ""}`
+  if (refreshing?.key === key) return refreshing.answer
+  const answer = (async (): Promise<RefreshAnswer | null> => {
+    const res = await fetch("/api/notifications/devices", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+      body: JSON.stringify({
+        subscription: here.subscription.toJSON(),
+        intent: "refresh",
+        label: deviceLabel(navigator.userAgent, isInstalledApp()),
+        // a subscription replaced for a new server key: the device's row follows it, switches named
+        ...(here.oldEndpoint ? { oldEndpoint: here.oldEndpoint } : {}),
+        ...(here.oldEndpoint && here.was ? { was: here.was } : {}),
+      }),
+    }).catch(() => null)
+    if (!res?.ok) return null
+    const body = (await res.json().catch(() => ({}))) as RefreshAnswer
+    registrationAnswered({ endpoint: here.subscription.endpoint, oldEndpoint: here.oldEndpoint ?? undefined, was: here.was }, body)
+    return body
+  })().finally(() => {
+    if (refreshing?.key === key) refreshing = null
+  })
+  refreshing = { key, answer }
+  return answer
+}
+
 /** This browser's address, if it has one, without registering anything. */
 export async function currentEndpoint(): Promise<string | null> {
   try {
@@ -522,22 +564,10 @@ export async function claimThisDevice(): Promise<"ok" | "failed" | "none"> {
     const registration = await navigator.serviceWorker.getRegistration()
     const here = registration ? await subscriptionForPage(registration) : null
     if (!here) return "none"
-    const res = await fetch("/api/notifications/devices", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        subscription: here.subscription.toJSON(),
-        intent: "refresh",
-        label: deviceLabel(navigator.userAgent, isInstalledApp()),
-        // a subscription replaced for a new server key: the device's row follows it, switches named
-        ...(here.oldEndpoint ? { oldEndpoint: here.oldEndpoint } : {}),
-        ...(here.oldEndpoint && here.was ? { was: here.was } : {}),
-      }),
-    })
+    // Shared with the device hook when both ask at once (p10-review-pings-04).
+    const answer = await refreshThisDevice(here)
     // Not registered: a move still waiting is sent again at the next open (MOVE_KEY).
-    if (!res.ok) return "failed"
-    const answer = (await res.json().catch(() => ({}))) as { id?: unknown; enabled?: unknown; timerRunning?: unknown; account?: unknown }
-    registrationAnswered({ endpoint: here.subscription.endpoint, oldEndpoint: here.oldEndpoint ?? undefined, was: here.was }, answer)
+    if (!answer) return "failed"
     /**
      * AND THE PREVIOUS PERSON'S TIMER ON THE SCREEN GOES TOO. Their pushes stop
      * reaching this browser, their "stopped" one included, so a running timer

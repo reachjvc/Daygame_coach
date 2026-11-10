@@ -23,6 +23,7 @@ import {
   moveFor,
   permission,
   pushSupport,
+  refreshThisDevice,
   registrationAnswered,
   subscribe,
   subscriptionForPage,
@@ -144,23 +145,12 @@ export function usePushDevice({ account }: { account?: string } = {}) {
       // a subscription made with an earlier server key is replaced here, without a tap (prove-slow-01)
       const here = registration ? await subscriptionForPage(registration) : null
       if (!here) return
-      try {
-        const r = await json<{ id: string | null; enabled: boolean; timerRunning?: boolean; account?: string }>("/api/notifications/devices", {
-          method: "POST",
-          body: JSON.stringify({
-            subscription: here.subscription.toJSON(),
-            intent: "refresh",
-            label: deviceLabel(navigator.userAgent, isInstalledApp()),
-            ...(here.oldEndpoint ? { oldEndpoint: here.oldEndpoint } : {}),
-            ...(here.oldEndpoint && here.was ? { was: here.was } : {}),
-          }),
-        })
-        registrationAnswered({ endpoint: here.subscription.endpoint, oldEndpoint: here.oldEndpoint ?? undefined, was: here.was }, r)
-        setThisDevice(r.id ? { id: r.id, enabled: r.enabled, timerRunning: r.timerRunning === true } : null)
-        void loadDevices()
-      } catch {
-        // Offline or a server error: tried again next time the page opens, a move included.
-      }
+      // One registration with the layout's claim when both ask at once (p10-review-pings-04).
+      const r = await refreshThisDevice(here)
+      // Offline or a server error: tried again next time the page opens, a move included.
+      if (!r) return
+      setThisDevice(typeof r.id === "string" ? { id: r.id, enabled: r.enabled === true, timerRunning: r.timerRunning === true } : null)
+      void loadDevices()
     })()
   }, [loadDevices])
 

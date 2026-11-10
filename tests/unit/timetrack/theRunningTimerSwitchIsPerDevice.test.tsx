@@ -39,6 +39,11 @@ vi.mock("@/src/notifications/pushClient", () => ({
   moveSettled: () => {},
   moveFor: () => ({}),
   registrationAnswered: () => {},
+  // the page's one "refresh" registration, posted as the real one does
+  refreshThisDevice: async (here: { subscription: { toJSON: () => unknown } }) => {
+    const res = await fetch("/api/notifications/devices", { method: "POST", body: JSON.stringify({ subscription: here.subscription.toJSON(), intent: "refresh", label: "" }) })
+    return res.ok ? res.json() : null
+  },
   switchesChanged: () => {},
   deviceRemoved: () => {},
 }))

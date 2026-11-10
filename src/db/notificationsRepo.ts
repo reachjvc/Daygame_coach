@@ -153,16 +153,37 @@ type GoneColumns = { gone_at: string | null; enabled_before_gone: boolean | null
  * is on) over to the new one. False when no row of this person had the old one.
  * A row the push service said was gone at the old address comes back with the
  * switches it had (review of 7d1e7328); one the person removed is no row.
+ *
+ * `restore`: the switches as the phone last heard them. When failed sends
+ * (a key change left unhealed) switched both off, the move puts them back in
+ * the same write (alpha p9-pings-03), so a second registration of the same
+ * move never reads the row moved but still off (p10-review-pings-04).
  */
-export async function moveDevice(userId: string, oldEndpoint: string, next: { endpoint: string; p256dh: string; auth: string }): Promise<boolean> {
+export async function moveDevice(
+  userId: string,
+  oldEndpoint: string,
+  next: { endpoint: string; p256dh: string; auth: string },
+  restore?: { enabled: boolean; timerRunning: boolean },
+): Promise<boolean> {
   const db = createAdminSupabaseClient()
-  const read = await db.from("push_devices").select("gone_at, enabled_before_gone, timer_before_gone").eq("user_id", userId).eq("endpoint", oldEndpoint).maybeSingle()
+  const read = await db
+    .from("push_devices")
+    .select("gone_at, enabled_before_gone, timer_before_gone, enabled, timer_running, failures")
+    .eq("user_id", userId)
+    .eq("endpoint", oldEndpoint)
+    .maybeSingle()
   if (read.error) throw new Error(`Failed to move this device: ${read.error.message}`)
-  const was = read.data as GoneColumns | null
+  const was = read.data as (GoneColumns & { enabled: boolean; timer_running: boolean; failures: number }) | null
   if (!was) return false
   const change: Record<string, unknown> = { endpoint: next.endpoint, p256dh: next.p256dh, auth: next.auth, failures: 0, updated_at: new Date().toISOString() }
-  if (was.gone_at !== null) {
-    Object.assign(change, { enabled: was.enabled_before_gone === true, timer_running: was.timer_before_gone === true, gone_at: null, enabled_before_gone: null, timer_before_gone: null })
+  const gone = was.gone_at !== null
+  const enabled = gone ? was.enabled_before_gone === true : was.enabled
+  const timerRunning = gone ? was.timer_before_gone === true : was.timer_running
+  if (gone) {
+    Object.assign(change, { enabled, timer_running: timerRunning, gone_at: null, enabled_before_gone: null, timer_before_gone: null })
+  }
+  if (restore && was.failures >= FAILURES_BEFORE_SWITCH_OFF && !enabled && !timerRunning) {
+    Object.assign(change, { enabled: restore.enabled, timer_running: restore.timerRunning })
   }
   const { data, error } = await db.from("push_devices").update(change).eq("user_id", userId).eq("endpoint", oldEndpoint).select("id")
   if (error) throw new Error(`Failed to move this device: ${error.message}`)

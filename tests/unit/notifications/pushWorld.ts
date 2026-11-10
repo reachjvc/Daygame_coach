@@ -95,11 +95,14 @@ export const fakeRepo = {
     })
     return id
   },
-  moveDevice: async (userId: string, from: string, next: { endpoint: string; p256dh: string; auth: string }) => {
+  // `restore`: as the repo, switches turned off by twenty failures come back in the move's own write
+  moveDevice: async (userId: string, from: string, next: { endpoint: string; p256dh: string; auth: string }, restore?: { enabled: boolean; timerRunning: boolean }) => {
     const r = byEndpoint(from)
     if (!r || r.userId !== userId) return false
+    const failures = r.failures
     Object.assign(r, { endpoint: next.endpoint, p256dh: next.p256dh, auth: next.auth, failures: 0, madeWith: world.live.get(next.endpoint) ?? "" })
     if (r.gone) Object.assign(r, { ...r.gone, gone: null })
+    if (restore && failures >= 20 && !r.enabled && !r.timerRunning) Object.assign(r, restore)
     return true
   },
   listDevices: async (userId: string) =>

@@ -49,7 +49,7 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { deviceByEndpoint, listDevices, moveDevice, registerDevice } from "@/src/db/notificationsRepo"
-import { FAILURES_BEFORE_SWITCH_OFF, readSubscription, timerOnByDefault } from "@/src/notifications/endpoints"
+import { readSubscription, timerOnByDefault } from "@/src/notifications/endpoints"
 import { afterResponse } from "@/src/shared/afterResponse"
 import { announceCurrentTimer } from "@/src/timetrack/runningTimerService"
 
@@ -117,18 +117,15 @@ export async function POST(req: Request) {
     // The worker reports a replaced address with the old one, so the row can follow it.
     // A move the phone keeps for another account is not this person's to make (p9-pings-04).
     if (typeof body?.oldEndpoint === "string" && body.oldEndpoint !== sub.endpoint && !wasOther && !(await deviceByEndpoint(sub.endpoint))) {
-      const before = was ? await deviceByEndpoint(body.oldEndpoint) : null
-      if (await moveDevice(auth.userId, body.oldEndpoint, sub)) {
-        /**
-         * PINGS SWITCHED OFF BY FAILED SENDS COME BACK (p9-pings-03). A key
-         * change left unhealed for twenty sends turned both switches off; the
-         * move is the heal, so the switches return to what the phone last
-         * heard, rather than "No device gets pings" with no reason.
-         */
-        if (was && before && before.userId === auth.userId && before.failures >= FAILURES_BEFORE_SWITCH_OFF && !before.enabled && !before.timerRunning) {
-          const id = await registerDevice(auth.userId, { ...sub, label }, was.enabled, was.timerRunning)
-          return answer({ id, ...was })
-        }
+      /**
+       * PINGS SWITCHED OFF BY FAILED SENDS COME BACK (p9-pings-03). A key
+       * change left unhealed for twenty sends turned both switches off; the
+       * move is the heal, so the switches return to what the phone last
+       * heard, rather than "No device gets pings" with no reason. In the
+       * move's own write, so a second post of the same move never reads the
+       * row moved but still off and registers it off (p10-review-pings-04).
+       */
+      if (await moveDevice(auth.userId, body.oldEndpoint, sub, was ?? undefined)) {
         const moved = await deviceByEndpoint(sub.endpoint)
         return answer({ id: moved?.id ?? null, enabled: moved?.enabled ?? false, timerRunning: moved?.timerRunning ?? false })
       }
