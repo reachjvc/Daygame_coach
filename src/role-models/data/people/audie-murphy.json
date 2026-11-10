@@ -1,0 +1,254 @@
+{
+  "id": "audie-murphy",
+  "name": "Audie Murphy",
+  "born": "1924 or 1925",
+  "died": 1971,
+  "category": "warriors",
+  "areaIds": [
+    "lm_mindset",
+    "lm_emotions"
+  ],
+  "tagline": "Medal of Honor soldier who said plainly what the war did to his mind afterwards.",
+  "startedFrom": "He was one of twelve children of poor sharecroppers near Kingston, Texas. His father ran off, his mother died in May 1941, and he left school after the fifth grade. He joined the Army in June 1942, aged eighteen by his papers; Arlington National Cemetery's biography says he altered his birth certificate to look a year older.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 26 January 1945 near Holtzwihr, France, he sent his men back, climbed on a burning tank destroyer and fired its machine gun alone for an hour, exposed on three sides, killing or wounding about 50 Germans.",
+          "sourceId": "moh-citation",
+          "locator": "Medal of Honor citation, War Department G.O. No. 65 (1945), as printed in America's Medal of Honor Recipients (1980), pp. 400-401"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Handbook of Texas says he was personally credited with killing or wounding about fifty Germans and stopping an attack by enemy tanks, and calls it an act of bravery.",
+          "sourceId": "tsha",
+          "locator": "Murphy, Audie Leon, paragraph 1"
+        },
+        {
+          "kind": "witness",
+          "claim": "Reviewing David A. Smith's biography, Michael Dirda recounts that when his closest friend Lattie Tipton was shot by a sniper, Murphy went on a rampage against the German positions; he received the Distinguished Service Cross.",
+          "sourceId": "dirda-2015",
+          "locator": "paragraphs beginning \"But when his closest friend\" and \"He received the Distinguished Service Cross\""
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1966, after two or three years hooked on the sedative Placidyl, he locked himself in a hotel room in Florida and quit it cold turkey through withdrawal and convulsions.",
+          "sourceId": "graham-1989",
+          "locator": "ch. 13 'A Time for Dying', p. 305"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1967 he told the writer Tom Morgan he felt he was starting his life over, was sleeping most nights, and would not take another pill.",
+          "sourceId": "morgan-1983",
+          "locator": "1967 interview, quoted in Graham 1989, ch. 13, p. 305"
+        },
+        {
+          "kind": "words",
+          "claim": "His war memoir, written with David McClure, closes with him swearing that war may brand him but will not defeat him, and that he will learn to live again.",
+          "sourceId": "thab-1949",
+          "locator": "closing paragraph of the book, pp. 272-273 (Holt 1949); his words as told to McClure"
+        },
+        {
+          "kind": "witness",
+          "claim": "Michael Dirda notes that he was wounded three times and once nearly died of gangrene, but always came back to fight again.",
+          "sourceId": "dirda-2015",
+          "locator": "paragraph beginning \"He received the Distinguished Service Cross\""
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Underage, he tried to enlist and was turned down by the Marines, then the paratroopers, and the Army told him to come back when he was old enough.",
+          "sourceId": "graham-1989",
+          "locator": "passage \"The Marines turned him down, then the paratroopers. The Army said come back when you're old enough\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Dirda writes that the Marines would not have him at five foot five and 112 pounds, and that, lying about his age at 17, he finally managed to join the Army.",
+          "sourceId": "dirda-2015",
+          "locator": "paragraph beginning \"Once the United States entered World War II\""
+        },
+        {
+          "kind": "deed",
+          "claim": "His Medal of Honor citation credits his 'refusal to give an inch of ground' and records that, his ammunition gone, he went back to his company, refused medical attention and led a counterattack.",
+          "sourceId": "moh-citation",
+          "locator": "Medal of Honor citation, closing sentences"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer Don Graham lists determination, with pride and a quick temper, among the permanent parts of his character.",
+          "sourceId": "graham-1989",
+          "locator": "passage \"Like his pride, quick temper, and determination, Audie's generosity was a permanent part of his character\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When your people are about to be overrun, hold your ground and keep fighting.",
+      "sourceId": "moh-citation",
+      "locator": "Medal of Honor citation: 'his refusal to give an inch of ground saved his company'"
+    },
+    {
+      "text": "A hard past can mark you; do not let it beat you.",
+      "sourceId": "thab-1949",
+      "locator": "closing paragraph of the book, pp. 272-273 (Holt 1949); words as told to David McClure"
+    },
+    {
+      "text": "Say in public what the war cost you, instead of acting untouched.",
+      "sourceId": "fowler-1962",
+      "locator": "Dallas Morning News, 16 September 1962 (quoted in Graham 1989, end of ch. 4 'Soldier's Home')"
+    },
+    {
+      "text": "When a habit owns you, cut it off at once, even if it hurts.",
+      "sourceId": "graham-1989",
+      "locator": "ch. 13 'A Time for Dying', p. 305"
+    },
+    {
+      "text": "In a fight, hit before you get hit; dead men do not look noble.",
+      "sourceId": "thab-1949",
+      "locator": "credo passage beginning 'I believe in the force of a hand grenade' (Holt 1949); words as told to David McClure"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I may be branded by war, but I will not be defeated by it.",
+      "sourceId": "thab-1949",
+      "locator": "To Hell and Back, closing paragraph of the book, pp. 272-273 (Holt 1949); ghostwritten with David McClure"
+    },
+    {
+      "text": "War robs you mentally and physically. It drains you. Things don't thrill you anymore.",
+      "sourceId": "fowler-1962",
+      "locator": "Dallas Morning News, 16 September 1962, as quoted in Graham 1989, end of ch. 4 'Soldier's Home'"
+    },
+    {
+      "text": "This past year, I feel like I've been starting my life all over again. I've been sleeping lately—most nights, anyway. But I won't take any more pills. Not one.",
+      "sourceId": "morgan-1983",
+      "locator": "1967 interview with Thomas B. Morgan, as quoted in Graham 1989, ch. 13, p. 305"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 26 January 1945, near Holtzwihr in eastern France, his company was attacked by six tanks and waves of infantry. He sent his men back to prepared positions in the woods and stayed forward, directing artillery fire by telephone. Then he climbed onto a burning tank destroyer and fired its machine gun alone for an hour, under fire from three sides. He killed or wounded about 50 Germans, then went back to his company, refused medical attention and led a counterattack that forced the Germans to withdraw. He received the Medal of Honor.",
+    "sourceIds": [
+      "moh-citation",
+      "tsha"
+    ]
+  },
+  "shadow": {
+    "text": "He gambled heavily, including on horses; lawsuits filed against him from 1951 through the 1960s show a pattern of debt, and in his last years he was hounded by creditors. He cheated on both his wives. His first wife, actress Wanda Hendrix, told the divorce court in 1950 that she had been ill and very nervous in the marriage; in a 1974 tabloid interview, three years after his death, she said there were times he held her at gunpoint for no reason at all. He slept with a loaded pistol under his pillow and was hooked on the sleeping drug Placidyl until 1966. In 1970 he and a bartender friend beat up a dog trainer after an argument over a dog; the trainer said a shot was fired, and Murphy was charged with attempted murder and acquitted that October. In 1971 he worked with Jimmy Hoffa's backers to get Edward Partin, the government's key witness against Hoffa, to swear he had lied at Hoffa's trial.",
+    "sourceIds": [
+      "graham-1989",
+      "time-1971",
+      "arlington",
+      "dirda-2015"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What old hurt did you let beat you this week, instead of only marking you?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "To Hell and Back",
+      "year": 1949
+    }
+  ],
+  "sources": [
+    {
+      "id": "thab-1949",
+      "kind": "primary",
+      "title": "To Hell and Back (memoir, ghostwritten with David \"Spec\" McClure; his words as told to McClure)",
+      "author": "Audie Murphy",
+      "year": 1949,
+      "publisher": "Henry Holt",
+      "url": "https://archive.org/details/tohellback0000murp"
+    },
+    {
+      "id": "moh-citation",
+      "kind": "primary",
+      "title": "Medal of Honor citation, War Department General Orders No. 65 (1945), as printed in America's Medal of Honor Recipients (1980)",
+      "author": "U.S. War Department",
+      "year": 1945,
+      "url": "https://archive.org/details/americasmedalofh0000unse"
+    },
+    {
+      "id": "fowler-1962",
+      "kind": "primary",
+      "title": "Audie Murphy: Hunting Proved Valuable in War (interview, Dallas Morning News)",
+      "author": "Wick Fowler",
+      "year": 1962
+    },
+    {
+      "id": "graham-1989",
+      "kind": "secondary",
+      "title": "No Name on the Bullet: A Biography of Audie Murphy",
+      "author": "Don Graham",
+      "year": 1989,
+      "publisher": "Viking",
+      "url": "https://archive.org/details/nonameonbulletbi00grah"
+    },
+    {
+      "id": "tsha",
+      "kind": "secondary",
+      "title": "Murphy, Audie Leon (Handbook of Texas Online)",
+      "author": "Harold B. Simpson",
+      "year": 2015,
+      "publisher": "Texas State Historical Association",
+      "url": "https://www.tshaonline.org/handbook/entries/murphy-audie-leon"
+    },
+    {
+      "id": "arlington",
+      "kind": "secondary",
+      "title": "Audie Murphy (Notable Graves)",
+      "author": "Arlington National Cemetery",
+      "year": "n.d.",
+      "url": "https://arlingtoncemetery.mil/Explore/Notable-Graves/Prominent-Military-Figures/Audie-Murphy"
+    },
+    {
+      "id": "time-1971",
+      "kind": "secondary",
+      "title": "Heroes: To Hell and Not Quite Back",
+      "author": "Time",
+      "year": 1971,
+      "publisher": "Time",
+      "url": "https://time.com/archive/6843716/heroes-to-hell-and-not-quite-back"
+    },
+    {
+      "id": "morgan-1983",
+      "kind": "primary",
+      "title": "The War Hero (Esquire, December 1983; drawing on his 1967 interviews with Audie Murphy, quoted in Graham, No Name on the Bullet, p. 305)",
+      "author": "Thomas B. Morgan",
+      "year": 1983,
+      "publisher": "Esquire"
+    },
+    {
+      "id": "dirda-2015",
+      "kind": "secondary",
+      "title": "A Tragic Hero (review of David A. Smith, The Price of Valor; The Weekly Standard, 6 July 2015)",
+      "author": "Michael Dirda",
+      "year": 2015,
+      "publisher": "Washington Examiner (Weekly Standard archive)",
+      "url": "https://www.washingtonexaminer.com/magazine/2347879/a-tragic-hero/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real person, not a politician or religious founder, no account of sexual contact with a minor or of sexual violence by him; his dark side (heavy gambling and debts, a gun held on his first wife by her account, a 1970 assault charge ending in acquittal, sedative addiction) is shadow."
+    },
+    "blindAgreement": 0.67,
+    "devilsAdvocate": "I attacked each value against Don Graham's biography, the Medal of Honor citation, Time's 1971 report and a 2015 review of David Smith's biography. Humility fell: Graham calls his modesty a public mask over a fierce pride, and quotes him refusing to humble himself before people he did not respect. Honesty fell too: his candour about the war's damage is real, but he cheated on both wives, lied about his age to enlist and kept his gambling a secret life. Courage and Resilience held, the blind pick's Determination was added on three sources, and the shadow gained his infidelity, the 1970 beating and his part in the Hoffa recantation campaign.",
+    "checkedOn": "2026-11-10"
+  }
+}
