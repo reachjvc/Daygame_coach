@@ -1,0 +1,373 @@
+{
+  "id": "jay-z",
+  "name": "Jay-Z",
+  "born": 1969,
+  "died": null,
+  "category": "builders",
+  "areaIds": [
+    "lm_money",
+    "lm_mission",
+    "lm_emotions"
+  ],
+  "tagline": "Sold crack in the Marcy projects, then put out his own record and built his own brands.",
+  "startedFrom": "He grew up in the Marcy Houses, a housing project in Brooklyn, the last of his mother's four children; his father left when he was a boy. Crack reached the projects in about 1985, when he was 12 or 13, and by 14 or 15 he was selling it. When he tried music, every record label he went to turned him down.",
+  "values": [
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that as poor kids in the projects they did not complain about being poor but talked about how rich they were going to be, and made moves to get there by any means.",
+          "sourceId": "decoded-2010",
+          "locator": "excerpt published by NPR, paragraph beginning 'The burden of poverty isn't just...'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Turned down by the record labels, he set up his own label, Roc-A-Fella Records, with Damon Dash and Kareem 'Biggs' Burke, and released his first album, Reasonable Doubt, on it on 25 June 1996.",
+          "sourceId": "grammy-2025",
+          "locator": "paragraphs on the label rejections, the founding of Roc-A-Fella and the release of Reasonable Doubt"
+        },
+        {
+          "kind": "witness",
+          "claim": "Forbes counted his fortune at about $1 billion in 2019 and called him the first hip-hop artist to become a billionaire.",
+          "sourceId": "forbes-2019",
+          "locator": "paragraph 3"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says he wrote in a notebook for hours as a boy, wrote lines on paper bags while on the street, and trained his memory until by his first album, at 26, he no longer needed pen and paper.",
+          "sourceId": "fresh-air-2010",
+          "locator": "answer on the notebook and the paper bags"
+        },
+        {
+          "kind": "words",
+          "claim": "He says he read the dictionary looking for words, and that a sixth-grade teacher, Miss Louden, fed his hunger for the English language.",
+          "sourceId": "fresh-air-2010",
+          "locator": "answer on the word 'provocative'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Rock & Roll Hall of Fame says his raps, often not written down, elevated hip-hop storytelling.",
+          "sourceId": "rockhall-2021",
+          "locator": "inductee page, opening paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Building things",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Forbes lists the brands he built instead of promoting other people's: the clothing line Rocawear, started in 1999 and sold to Iconix for $204 million in 2007; the cognac D'Usse, which he co-owns with Bacardi; and the streaming service Tidal.",
+          "sourceId": "forbes-2019",
+          "locator": "paragraph 5"
+        },
+        {
+          "kind": "deed",
+          "claim": "He co-founded Roc-A-Fella Records with Damon Dash and Kareem 'Biggs' Burke, using money from a singles deal with Payday Records.",
+          "sourceId": "grammy-2025",
+          "locator": "paragraph beginning 'Frustrated by record label rejections'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Rock & Roll Hall of Fame, inducting him in 2021, says he created the template for the sophisticated hip-hop mogul, the businessman behind Roc-A-Fella Records and Roc Nation Management.",
+          "sourceId": "rockhall-2021",
+          "locator": "inductee page, opening paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told MTV in 2001: 'I had to put [Reasonable Doubt] out myself, nobody would sign me.'",
+          "sourceId": "grammy-2025",
+          "locator": "paragraph quoting his 2001 MTV interview"
+        },
+        {
+          "kind": "deed",
+          "claim": "Forbes says he started his own label to release his 1996 debut, and that he decided to build his own brands rather than promote someone else's.",
+          "sourceId": "forbes-2019",
+          "locator": "paragraphs 4-5"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked by Gayle King in 2023 about getting his master recordings back from Def Jam, he said: 'for me, it was the fight of my life.'",
+          "sourceId": "consequence-2023",
+          "locator": "article of 27 October 2023, quote from the CBS interview with Gayle King"
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In a New York Times op-ed on Meek Mill's prison sentence for probation violations he wrote: 'Probation is a trap and we must fight for Meek and everyone else unjustly sent to prison.'",
+          "sourceId": "nyt-oped-2017",
+          "locator": "last paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "On 23 January 2019 he joined Meek Mill and the owners of the 76ers, Nets and Patriots to launch the Reform Alliance, backed by a $50 million pledge, to lobby for changes to state probation and parole laws.",
+          "sourceId": "ap-2019",
+          "locator": "paragraphs 1-2"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When you choose your path, give it everything and stop keeping one foot in the old life.",
+      "sourceId": "fresh-air-2010",
+      "locator": "answer on the turning point that got him out of hustling"
+    },
+    {
+      "text": "If nobody will give you a deal, put the work out yourself and own it.",
+      "sourceId": "grammy-2025",
+      "locator": "paragraph quoting his 2001 MTV interview ('I had to put [Reasonable Doubt] out myself, nobody would sign me')"
+    },
+    {
+      "text": "Build your own brands instead of promoting somebody else's.",
+      "sourceId": "forbes-2019",
+      "locator": "paragraph 5"
+    },
+    {
+      "text": "When someone comes at you hard, look for the hurt behind it before you answer with anger.",
+      "sourceId": "nyt-2017",
+      "locator": "answer to 'What was that like, being in therapy?'"
+    },
+    {
+      "text": "Showing your feelings is strength; the guarded tough-guy act is fake.",
+      "sourceId": "nyt-2017",
+      "locator": "answer on 'Song Cry'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I'm going to give it 100 percent, and just forget everything that I'm doing.",
+      "sourceId": "fresh-air-2010",
+      "locator": "answer on the turning point that got him out of hustling"
+    },
+    {
+      "text": "The strongest thing a man can do is cry. To expose your feelings, to be vulnerable in front of the world. That's real strength.",
+      "sourceId": "nyt-2017",
+      "locator": "answer on 'Song Cry'"
+    },
+    {
+      "text": "You can't just turn your back on the place you come from. You come from a community. Your job is to uplift it now.",
+      "sourceId": "nyt-2017",
+      "locator": "answer to the question on the two readings of 'The Story of O.J.'"
+    },
+    {
+      "text": "Knowing what I know now, you know, you can't sacrifice others for your life.",
+      "sourceId": "nyt-2017",
+      "locator": "answer on the people he sold drugs to"
+    }
+  ],
+  "definingMoment": {
+    "text": "Before his first album he made demos with the DJ Clark Kent but kept going back to the street, one foot in and one foot out, until he decided to give music 100 percent. Every label he went to turned him down. So with Damon Dash and Kareem 'Biggs' Burke he set up his own label, Roc-A-Fella Records, and released his first album, Reasonable Doubt, on it on 25 June 1996. It sold about 420,000 units by the end of that year; the Recording Academy calls it the groundwork for all his later ambitions.",
+    "sourceIds": [
+      "fresh-air-2010",
+      "grammy-2025"
+    ]
+  },
+  "shadow": {
+    "text": "By his own account he sold crack as a teenager in Brooklyn and later carried drugs from New York to the South; asked in 2017 whether he had ever talked with the people he sold to about the pain he caused them, he said no, and that he takes ownership for his part. In October 2001 he pleaded guilty to misdemeanor assault, admitting he stabbed the record producer Lance Rivera at a Manhattan club on 1 December 1999, after accusing him of bootlegging his album; he was given three years' probation, and Rolling Stone reported that Rivera settled with him out of court for $500,000 to $1 million. In 2010 he called it a fight that got out of hand and said he took full responsibility; in 2023 Rivera said Jay-Z was not the one who stabbed him. In 2017 he admitted he had been unfaithful to his wife, Beyonce, and the Anti-Defamation League said a line on his album 4:44 about Jewish people owning property played into anti-Semitic stereotypes; he called that criticism hypocritical. A New York Times critic calls early hits such as 'Big Pimpin'' misogynistic in their attitude to women.",
+    "sourceIds": [
+      "fresh-air-2010",
+      "nyt-2017",
+      "ap-2001",
+      "rs-2001",
+      "insider-2023",
+      "rs-2017"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you keep one foot in an old habit instead of going all in on what you say you want?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Decoded",
+      "year": 2010
+    }
+  ],
+  "sources": [
+    {
+      "id": "fresh-air-2010",
+      "kind": "primary",
+      "title": "Jay-Z: The Fresh Air Interview (Fresh Air, 16 November 2010; NPR transcript)",
+      "author": "Jay-Z (Shawn Carter), interviewed by Terry Gross",
+      "year": 2010,
+      "publisher": "NPR",
+      "url": "https://www.npr.org/transcripts/131334322"
+    },
+    {
+      "id": "decoded-2010",
+      "kind": "primary",
+      "title": "Decoded (excerpt published by NPR, 15 November 2010)",
+      "author": "Jay-Z (Shawn Carter)",
+      "year": 2010,
+      "publisher": "Spiegel & Grau",
+      "url": "https://www.npr.org/2010/11/12/131275670/excerpt-decoded"
+    },
+    {
+      "id": "nyt-2017",
+      "kind": "primary",
+      "title": "Jay-Z Discusses Rap, Marriage and Being a Black Man in Trump's America (interview, edited and condensed, 29 November 2017)",
+      "author": "Jay-Z, interviewed by Dean Baquet",
+      "year": 2017,
+      "publisher": "T: The New York Times Style Magazine",
+      "url": "https://www.nytimes.com/interactive/2017/11/29/t-magazine/jay-z-dean-baquet-interview.html"
+    },
+    {
+      "id": "forbes-2019",
+      "kind": "secondary",
+      "title": "Artist, Icon, Billionaire: How Jay-Z Created His $1 Billion Fortune (3 June 2019)",
+      "author": "Zack O'Malley Greenburg",
+      "year": 2019,
+      "publisher": "Forbes",
+      "url": "https://www.forbes.com/sites/zackomalleygreenburg/2019/06/03/jay-z-billionaire-worth/"
+    },
+    {
+      "id": "grammy-2025",
+      "kind": "secondary",
+      "title": "Jay-Z's Reasonable Doubt: GRAMMY Hall of Fame induction feature (15 May 2025)",
+      "author": "Earl Hopkins",
+      "year": 2025,
+      "publisher": "Recording Academy (grammy.com)",
+      "url": "https://grammy.com/news/jay-z-reasonable-doubt-debut-album-grammy-hall-of-fame"
+    },
+    {
+      "id": "rockhall-2021",
+      "kind": "secondary",
+      "title": "JAY-Z, inducted 2021 (Performer)",
+      "author": "Rock & Roll Hall of Fame",
+      "year": 2021,
+      "url": "https://www.rockhall.com/inductees/jay-z"
+    },
+    {
+      "id": "ap-2001",
+      "kind": "secondary",
+      "title": "Rapper Jay-Z sentenced to probation in stabbing (7 December 2001)",
+      "author": "Associated Press, via Deseret News",
+      "year": 2001,
+      "url": "https://www.deseret.com/2001/12/7/19620562/rapper-jay-z-sentenced-to-probation-in-stabbing"
+    },
+    {
+      "id": "rs-2001",
+      "kind": "secondary",
+      "title": "Jay-Z Gets Probation (7 December 2001)",
+      "author": "Christina Saraceno",
+      "year": 2001,
+      "publisher": "Rolling Stone",
+      "url": "https://www.rollingstone.com/music/music-news/jay-z-gets-probation-244400/"
+    },
+    {
+      "id": "rs-2017",
+      "kind": "secondary",
+      "title": "Review: Jay-Z Is Vulnerable, Apologetic and Still Dazzling on '4:44' (5 July 2017)",
+      "author": "Mosi Reeves",
+      "year": 2017,
+      "publisher": "Rolling Stone",
+      "url": "https://www.rollingstone.com/music/music-album-reviews/review-jay-z-is-vulnerable-apologetic-and-still-dazzling-on-444-123022/"
+    },
+    {
+      "id": "ap-2019",
+      "kind": "secondary",
+      "title": "Meek Mill, Jay-Z and sports owners back justice reforms (23 January 2019)",
+      "author": "Deepti Hajela, Associated Press (via Boston.com)",
+      "year": 2019,
+      "url": "https://www.boston.com/culture/celebs/2019/01/23/meek-mill-jay-z-and-sports-owners-back-justice-reforms/"
+    },
+    {
+      "id": "insider-2023",
+      "kind": "secondary",
+      "title": "22 years after Jay-Z pleaded guilty to stabbing him, Lance 'Un' Rivera says the rapper is innocent (22 May 2023)",
+      "author": "Barnaby Lane",
+      "year": 2023,
+      "publisher": "Insider (via Yahoo News)",
+      "url": "https://ca.news.yahoo.com/22-years-jay-z-pleaded-115522884.html"
+    },
+    {
+      "id": "nyt-oped-2017",
+      "kind": "primary",
+      "title": "Jay-Z: The Criminal Justice System Stalks Black People Like Meek Mill (op-ed, 17 November 2017)",
+      "author": "Jay-Z (Shawn Carter)",
+      "year": 2017,
+      "publisher": "The New York Times",
+      "url": "https://www.nytimes.com/2017/11/17/opinion/jay-z-meek-mill-probation.html"
+    },
+    {
+      "id": "consequence-2023",
+      "kind": "secondary",
+      "title": "JAY-Z on getting his masters back: 'It was the fight of my life' (27 October 2023)",
+      "author": "Eddie Fu",
+      "year": 2023,
+      "publisher": "Consequence",
+      "url": "https://consequence.net/2023/10/jay-z-masters-fight-of-my-life/"
+    },
+    {
+      "id": "abc-2025",
+      "kind": "secondary",
+      "title": "Civil case accusing rapper Jay-Z, Sean 'Diddy' Combs of raping 13-year-old girl dismissed (15 February 2025)",
+      "author": "ABC7 (no byline)",
+      "year": 2025,
+      "publisher": "ABC7",
+      "url": "https://abc7.com/post/civil-case-accusing-sean-diddy-combs-shawn-jay-carter-sexual-assault-dismissed/15908008/"
+    },
+    {
+      "id": "thewrap-2025",
+      "kind": "secondary",
+      "title": "Jay-Z's Rape Accuser Doubles Down After Rapper Sues for Defamation: 'I Stand by My Claims' (4 March 2025)",
+      "author": "Alex Welch",
+      "year": 2025,
+      "publisher": "TheWrap (via Yahoo)",
+      "url": "https://www.yahoo.com/news/jay-z-rape-accuser-doubles-195924519.html"
+    },
+    {
+      "id": "npr-2026",
+      "kind": "secondary",
+      "title": "Woman who accused Jay-Z of sexual assault says her claims were false (25 September 2026)",
+      "author": "Isabella Gomez Sarmiento",
+      "year": 2026,
+      "publisher": "NPR (via WAMC)",
+      "url": "https://www.wamc.org/2026-09-25/woman-who-accused-jay-z-of-sexual-assault-says-her-claims-were-false"
+    },
+    {
+      "id": "cbs-2026",
+      "kind": "secondary",
+      "title": "Jay-Z sexual assault accuser recants claims (25 September 2026)",
+      "author": "Kerry Breen",
+      "year": 2026,
+      "publisher": "CBS News",
+      "url": "https://www.cbsnews.com/news/jay-z-sexual-assault-accuser-recants-claims/"
+    },
+    {
+      "id": "globalnews-2026",
+      "kind": "secondary",
+      "title": "Jay-Z rape accuser withdraws allegation (25 September 2026)",
+      "author": "Rachel Goodman",
+      "year": 2026,
+      "publisher": "Global News",
+      "url": "https://globalnews.ca/news/12072895/jay-z-rape-accuser-withdraws-allegation/"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real, living American rapper and businessman, not a politician, campaigner or religious founder; the 1999 stabbing plea is assault, not sexual violence. Owner case (sex with someone under 16, alleged): in October 2024 the Texas lawyer Tony Buzbee filed an anonymous 'Jane Doe' civil suit against Sean Combs in Manhattan federal court; in December 2024 it was amended to name Shawn 'Jay-Z' Carter, claiming the two men drugged and raped her at a party after the September 2000 MTV Video Music Awards, when she was 13 (ABC7, 15 Feb 2025; NPR, 25 Sep 2026). Carter denied it and called the suit an extortion attempt (ABC7; NPR; Global News). On Friday 14 February 2025 the suit was dismissed with prejudice at the plaintiff's request; his lawyer Alex Spiro said Carter 'never settled, he never paid 1 red penny' (ABC7). In February 2025 Carter sued Buzbee and Jane Doe for malicious prosecution and defamation (NPR); in a March 2025 declaration in a Los Angeles court she said she stood by her claims (TheWrap, 4 Mar 2025). On Thursday 24 September 2026 she filed a 12-page declaration in Manhattan federal court: 'Shawn \"Jay-Z\" Carter never raped me. I have never met or spoken to Mr. Carter', and she said all her claims against him were false; other reports call it a declaration under penalty of perjury (the filing itself was not read). Her new lawyer said she still maintains she was sexually assaulted but was entirely mistaken in naming Carter (CBS News, 25 Sep 2026; Global News, 25 Sep 2026; NPR). Carter then dropped her from his suit; his malicious prosecution case against Buzbee goes on (CBS News; NPR). Buzbee has said she told the same story to at least four lawyers before him (as reported, not read in a primary source). No court ever ruled on whether the claim was true. The case is not in the shadow text; full facts and sources in screen.json and review.json in the research folder."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked all five draft values, re-read the Fresh Air transcript, the NYT interview, Forbes, the Recording Academy, Rolling Stone and AP, and re-checked the owner case against ABC7, NPR, CBS News, Global News and TheWrap. Self-awareness and Contribution fell: each had only two sources, and the Reform Alliance evidence fits Justice better, which the blind pick chose along with Independence; Ambition, Craft and Building things held. All four quotes matched the transcripts word for word. I fixed his father's leaving (an interviewer's guess of age nine), named Damon Dash and Kareem Burke as his label co-founders, cut the claim that he built Tidal, and added the Rivera settlement, the ADL criticism of a 4:44 line and the NYT critic's view of his early lyrics to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
