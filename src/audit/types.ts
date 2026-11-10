@@ -53,6 +53,13 @@ export interface AuditRun {
   mutedUntil: string | null
   review: Review
   endSentAt: string | null
+  /**
+   * The zone a FINISHED audit was lived in, stored beside its review
+   * (`review.zone`) the first time it is read after its end, so a later change
+   * of the account's zone never rewrites its review (alpha p9-review-01).
+   * Null or left out: none stored yet; `runZone` then uses the account's zone.
+   */
+  zone?: string | null
 }
 
 /** One answered quarter. */

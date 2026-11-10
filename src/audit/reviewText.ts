@@ -17,8 +17,8 @@ export function durationText(minutes: number): string {
 
 /** The waking hours an audit could have answered, in whole hours: "about 177 waking hours". */
 export function wakingHoursText(hours: number): string {
-  // Under half an hour would round to "about 0": say minutes instead.
-  if (hours > 0 && hours < 0.5) return `${Math.round(hours * 60)} waking minutes`
+  // Under an hour would round to "about 0" or "about 1": say minutes instead (alpha p9-review-06).
+  if (hours > 0 && hours < 1) return `${Math.round(hours * 60)} waking minutes`
   const whole = Math.round(hours)
   const words = whole === 1 ? "1 waking hour" : `${whole} waking hours`
   return whole === hours ? words : `about ${words}`

@@ -19,6 +19,7 @@ import {
   copyPreviousSlot,
   deleteSlot,
   frequentActivities,
+  keepRunZone,
   markEndSentAsServer,
   readOpenRun,
   readRuns,
@@ -194,6 +195,23 @@ describe("the review, changed from two devices", () => {
     expect((await readRuns(user.id)).find((r) => r.id === run.id)!.review).toEqual({ choices: {}, notes: {}, week: [] })
     actAs(other)
     await expect(changeReview(other.id, run.id, (stored) => ({ review: stored }))).rejects.toBeInstanceOf(AuditRunNotFound)
+  })
+})
+
+describe("the zone a finished audit was lived in (alpha p9-review-01)", () => {
+  it("is stored once beside the review, survives review saves, and a later zone does not replace it", async () => {
+    const user = await newUser("audit-keep-zone")
+    actAs(user)
+    const run = await startAuditRun(user.id, { id: randomUUID(), startedAt: new Date() })
+    expect(run.zone).toBeNull()
+    await changeReview(user.id, run.id, (stored) => applyReviewChange(stored, { activity: "daygame", choice: "more", note: "Mornings" }))
+    expect(await keepRunZone(user.id, run.id, CPH)).toBe(CPH)
+    expect(await keepRunZone(user.id, run.id, "America/New_York")).toBe(CPH)
+    await changeReview(user.id, run.id, (stored) => applyReviewChange(stored, { activity: "scrolling", choice: "cut", note: "" }))
+    const after = (await readRuns(user.id)).find((r) => r.id === run.id)!
+    expect(after.zone).toBe(CPH)
+    expect(after.review.choices).toEqual({ daygame: "more", scrolling: "cut" })
+    expect(after.review.notes).toEqual({ daygame: "Mornings" })
   })
 })
 

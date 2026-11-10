@@ -7,6 +7,7 @@
   "src/db/auditRepo.ts:changeReview": "asserted",
   "src/db/auditRepo.ts:copyPreviousSlot": "asserted",
   "src/db/auditRepo.ts:deleteSlot": "asserted",
+  "src/db/auditRepo.ts:keepRunZone": "asserted",
   "src/db/auditRepo.ts:markEndSentAsServer": "asserted",
   "src/db/auditRepo.ts:startAuditRun": "asserted",
   "src/db/auditRepo.ts:updateRun": "asserted",

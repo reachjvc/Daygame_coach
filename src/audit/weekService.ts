@@ -135,16 +135,35 @@ export function shiftedEnd(start: number, end: number, newStart: number): number
   return Math.min(DAY_MINUTES, newStart + (end - start))
 }
 
+type Span = { start: number; end: number }
+
+/**
+ * The time of a stale change put on the block as stored now (alpha
+ * p9-review-02). From and To count as two fields: one the person left alone
+ * comes from the stored block, and one they changed is applied as the same
+ * change (To an hour earlier: the stored block an hour shorter), so another
+ * device's move is never undone by a resize. Both changed: the person set the
+ * time outright, so theirs stays. Always at least a quarter, inside the day.
+ */
+export function rebasedTime(draft: Span, was: Span, stored: Span): Span {
+  const startDelta = draft.start - was.start
+  const endDelta = draft.end - was.end
+  if (startDelta !== 0 && endDelta !== 0) return { start: draft.start, end: draft.end }
+  if (endDelta !== 0) return { start: stored.start, end: Math.min(DAY_MINUTES, Math.max(stored.start + QUARTER, stored.end + endDelta)) }
+  if (startDelta !== 0) return { start: Math.max(0, Math.min(stored.end - QUARTER, stored.start + startDelta)), end: stored.end }
+  return { start: stored.start, end: stored.end }
+}
+
 /**
  * The block on each chosen day: the block itself stays on its own day if that
  * day is still chosen (else it moves to the first chosen day), and every other
  * day gets a copy with a new id.
  */
-export function spreadBlock(block: WeekBlock, days: readonly number[], newId: () => string): WeekBlock[] {
+export function spreadBlock(block: WeekBlock, days: readonly number[], newId: (day: number) => string): WeekBlock[] {
   const chosen = [...new Set(days)].sort((a, b) => a - b)
   if (chosen.length === 0) return []
   const home = chosen.includes(block.day) ? block.day : chosen[0]
-  return [{ ...block, day: home }, ...chosen.filter((d) => d !== home).map((day) => ({ ...block, id: newId(), day }))]
+  return [{ ...block, day: home }, ...chosen.filter((d) => d !== home).map((day) => ({ ...block, id: newId(day), day }))]
 }
 
 function hoursList(hours: readonly number[]): string | null {

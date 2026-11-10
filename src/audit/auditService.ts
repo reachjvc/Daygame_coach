@@ -294,12 +294,17 @@ export function checkReview(input: unknown): { review: Review } | { error: strin
  *   { block, edit?, blockWas?, copies? }  add a block, or change the one with its id (`edit`: it must still be there);
  *                                         `blockWas`: that block as the sheet opened it (refused if stored differs);
  *                                         `copies`: new blocks on other days, added in the same write
- *   { removeBlock }                       remove one block by id (already gone: no change)
+ *   { removeBlock, blockWas? }            remove one block by id (already gone: no change);
+ *                                         `blockWas`: that block as the sheet saw it (refused if stored differs)
+ *
+ * A change sent again after its reply was lost finds itself stored: when what
+ * is stored is exactly what is sent, it is done, never a conflict with itself
+ * (alpha p9-review-04/05).
  */
 export type ReviewChange =
   | { activity: string; choice?: ReviewChoice | null; choiceWas?: ReviewChoice | null; note: string; noteWas?: string }
   | { block: WeekBlock; edit?: boolean; blockWas?: WeekBlock; copies?: WeekBlock[] }
-  | { removeBlock: string }
+  | { removeBlock: string; blockWas?: WeekBlock }
 
 /** Said when another device changed the note after this sheet opened; the page then shows the newer note. */
 export const NOTE_CHANGED = "This note was changed on another device. The newer note is shown now; change it and save again"
@@ -341,6 +346,10 @@ export function applyReviewChange(stored: Review, input: unknown): { review: Rev
     if (typeof note !== "string" || note.length > REVIEW_NOTE_MAX) return { error: `A note can be at most ${REVIEW_NOTE_MAX} characters` }
     if (noteWas !== undefined && typeof noteWas !== "string") return { error: "Bad note" }
     const key = storableText(activity) || activity
+    // Sent again after a lost reply: already stored exactly so, so done (alpha p9-review-04).
+    const choiceStored = choice === undefined || (stored.choices[key] ?? null) === choice
+    const noteStored = (stored.notes[key] ?? "") === (storableText(note).trim() ? note : "")
+    if (choiceStored && noteStored) return checkReview(next)
     const noteChanged = typeof noteWas === "string" && (stored.notes[key] ?? "") !== noteWas
     const choiceChanged = choiceWas !== undefined && (stored.choices[key] ?? null) !== choiceWas
     if (noteChanged && choiceChanged) return { error: CHOICE_AND_NOTE_CHANGED }
@@ -357,6 +366,10 @@ export function applyReviewChange(stored: Review, input: unknown): { review: Rev
     if ("error" in one) return one
     const block = one.week[0]
     const at = next.week.findIndex((b) => b.id === block.id)
+    // Sent again after a lost reply: the block and its copies are stored exactly so, so done (alpha p9-review-04/05).
+    const copiesSent = "copies" in c ? checkWeek(c.copies) : { week: [] as WeekBlock[] }
+    const isStored = (b: WeekBlock) => next.week.some((s) => sameBlock(s, b))
+    if (at >= 0 && isStored(block) && "week" in copiesSent && copiesSent.week.every(isStored)) return checkReview(next)
     if ("blockWas" in c) {
       const was = checkWeek([c.blockWas])
       if ("error" in was) return was
@@ -377,8 +390,16 @@ export function applyReviewChange(stored: Review, input: unknown): { review: Rev
         next.week.push(copy)
       }
     }
-  } else if (keys === "removeBlock" && !("noteWas" in c) && !("edit" in c) && !("choiceWas" in c) && !("blockWas" in c)) {
+  } else if (keys === "removeBlock" && !("noteWas" in c) && !("edit" in c) && !("choiceWas" in c)) {
     if (typeof c.removeBlock !== "string") return { error: "Bad block id" }
+    // Like an edit, a remove carries the block as the sheet saw it: removing a block another device changed since is refused (alpha p9-review-03).
+    if ("blockWas" in c) {
+      const was = checkWeek([c.blockWas])
+      if ("error" in was) return was
+      if (was.week[0].id !== c.removeBlock) return { error: "Bad block" }
+      const now = next.week.find((b) => b.id === c.removeBlock)
+      if (now && !sameBlock(now, was.week[0])) return { error: blockChanged(now) }
+    }
     next.week = next.week.filter((b) => b.id !== c.removeBlock)
   } else {
     return { error: "Send one change" }
@@ -429,6 +450,30 @@ export function readStoredReview(raw: unknown): { review: Review; unreadable: Re
     },
     unreadable: unreadable.sort((a, b) => REVIEW_PARTS.indexOf(a) - REVIEW_PARTS.indexOf(b)),
   }
+}
+
+function isZone(tz: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en-GB", { timeZone: tz })
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** The zone stored beside a review (`review.zone`, alpha p9-review-01), or null when none or not a real zone. */
+export function storedZone(raw: unknown): string | null {
+  const zone = isPlainObject(raw) ? raw.zone : undefined
+  return typeof zone === "string" && zone.length <= 64 && isZone(zone) ? zone : null
+}
+
+/**
+ * The zone to show an audit in: the zone a finished audit was lived in when
+ * one is stored, else the account's zone. An open audit has none stored, so it
+ * follows the account's zone, as a traveller switches it (alpha fast-audit-05).
+ */
+export function runZone(run: Pick<AuditRun, "zone">, accountZone: string): string {
+  return run.zone ?? accountZone
 }
 
 /**

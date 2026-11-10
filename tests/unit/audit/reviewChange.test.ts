@@ -142,7 +142,6 @@ describe("a block edit carries the block as the sheet opened it (alpha prove-rev
     expect("error" in applyReviewChange(moved(), { block: stale, edit: true, blockWas: { id: "pc" } })).toBe(true)
     expect("error" in applyReviewChange(moved(), { block: stale, edit: true, blockWas: block("other", 0, 780, 960, "Write the book") })).toBe(true)
     expect(applyReviewChange(moved(), { activity: "x", note: "", blockWas: stale })).toEqual({ error: "Send one change" })
-    expect(applyReviewChange(moved(), { removeBlock: "pc", blockWas: stale })).toEqual({ error: "Send one change" })
   })
 })
 

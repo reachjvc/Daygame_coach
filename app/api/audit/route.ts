@@ -15,7 +15,8 @@
 
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
-import { frequentActivities, readOpenRun, readRuns, readSlots } from "@/src/db/auditRepo"
+import { frequentActivities, keepRunZone, readOpenRun, readRuns, readSlots } from "@/src/db/auditRepo"
+import { runIsOpen } from "@/src/audit/auditService"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { readTimeEntriesBetween } from "@/src/db/timetrackRangeRepo"
 import { isUuid } from "@/src/shared/ids"
@@ -35,8 +36,24 @@ export async function GET(req: Request) {
       readOpenRun(auth.userId, now),
       readRuns(auth.userId),
       frequentActivities(auth.userId, 200),
-      getUserTimezone(auth.userId).catch(() => "UTC"),
+      getUserTimezone(auth.userId).catch(() => null),
     ])
+    // A finished audit keeps the zone it was lived in, stored the first time it
+    // is read after its end, so changing the zone later never rewrites its
+    // review (alpha p9-review-01). Not when the zone could not be read.
+    if (timezone) {
+      await Promise.all(
+        runs
+          .filter((r) => !r.zone && !runIsOpen(r, now))
+          .map((r) =>
+            keepRunZone(auth.userId, r.id, timezone)
+              .then((zone) => {
+                r.zone = zone
+              })
+              .catch((e) => console.error("[audit] keep zone failed", e instanceof Error ? e.message : "unknown"))
+          )
+      )
+    }
     const shown = runParam ? runs.find((r) => r.id === runParam) ?? null : run
     if (runParam && !shown) return NextResponse.json({ error: "No such audit" }, { status: 404 })
 
@@ -54,7 +71,7 @@ export async function GET(req: Request) {
       shown ? readSlots(auth.userId, shown.id) : Promise.resolve([]),
       Number.isFinite(from) ? readTimeEntriesBetween(auth.userId, new Date(from).toISOString(), new Date(to).toISOString()) : Promise.resolve([]),
     ])
-    return NextResponse.json({ run, runs, slots, timeEntries, suggestions, timezone, now: now.toISOString() })
+    return NextResponse.json({ run, runs, slots, timeEntries, suggestions, timezone: timezone ?? "UTC", now: now.toISOString() })
   } catch (error) {
     console.error("[audit] read failed", error instanceof Error ? error.message : "unknown")
     return NextResponse.json({ error: "Could not read your audit" }, { status: 500 })

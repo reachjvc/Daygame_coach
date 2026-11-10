@@ -19,7 +19,7 @@ import { BottomSheet } from "@/components/BottomSheet"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { AuditCallError, type AuditView } from "../auditClient"
-import { BOX_NAMES, buildReview, CHOICE_AND_NOTE_CHANGED, CHOICE_CHANGED, CHOICE_NAMES, choiceFor, REVIEW_NOTE_MAX, type Box, type BuiltReview, NOTE_CHANGED, type ReviewChange, type ReviewGroup } from "../auditService"
+import { BOX_NAMES, buildReview, CHOICE_AND_NOTE_CHANGED, CHOICE_CHANGED, CHOICE_NAMES, choiceFor, REVIEW_NOTE_MAX, runZone, type Box, type BuiltReview, NOTE_CHANGED, type ReviewChange, type ReviewGroup } from "../auditService"
 import { storableText } from "../requestGuard"
 import { clockLabel } from "../quarterService"
 import { distinctWhys, durationText, scoreText, wakingHoursText } from "../reviewText"
@@ -407,7 +407,8 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
   }, [load])
 
   const run: AuditRun | null = view?.runs.find((r) => r.id === runId) ?? null
-  const built = useMemo(() => (view && run ? buildReview(view.slots, run, view.timezone) : null), [view, run])
+  // A finished audit is shown in the zone it was lived in (alpha p9-review-01).
+  const built = useMemo(() => (view && run ? buildReview(view.slots, run, runZone(run, view.timezone)) : null), [view, run])
 
   /**
    * Sends one change; the server applies it to the review as stored, so what
@@ -426,7 +427,8 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
   // `blockWas`: the block as the sheet opened it; the server refuses if another device changed it since (alpha prove-review-01).
   const saveBlock = (block: WeekBlock, edit: boolean, copies: WeekBlock[], blockWas: WeekBlock | null) =>
     send({ block, edit, ...(blockWas ? { blockWas } : {}), ...(copies.length > 0 ? { copies } : {}) })
-  const removeBlock = (id: string) => send({ removeBlock: id })
+  // `blockWas`: the block as the sheet saw it; a remove of one changed elsewhere since is refused (alpha p9-review-03).
+  const removeBlock = (id: string, blockWas: WeekBlock | null) => send({ removeBlock: id, ...(blockWas ? { blockWas } : {}) })
 
   const back = (
     <button type="button" onClick={onBack} className="-ml-2 flex h-11 items-center gap-1 rounded-lg px-2 text-sm text-muted-foreground hover:text-foreground" data-testid="review-back">
@@ -452,7 +454,7 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
     )
   }
 
-  const tz = view.timezone
+  const tz = runZone(run, view.timezone)
   const open = built.groups.find((g) => g.key === openKey) ?? null
   const answeredTime = durationText(built.hours * 60)
   return (

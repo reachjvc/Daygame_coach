@@ -21,7 +21,7 @@ import { BLOCK_CHANGED, type ReviewGroup } from "../auditService"
 import { TimeTile } from "./SettingsSheet"
 import type { WeekBlock, WeekKind } from "../types"
 import { durationText } from "../reviewText"
-import { BEST_HOURS_RULE, checkWeek, DAY_NAMES, DAY_SHORT, freeSlot, hoursByKind, kindFor, MARTELL_STEPS, planHours, shiftedEnd, spreadBlock, WEEK_KIND_NAMES, WEEK_KINDS, WEEK_WHAT_MAX, WORK_DAYS_MIN } from "../weekService"
+import { BEST_HOURS_RULE, checkWeek, DAY_NAMES, DAY_SHORT, freeSlot, hoursByKind, kindFor, MARTELL_STEPS, planHours, rebasedTime, shiftedEnd, spreadBlock, WEEK_KIND_NAMES, WEEK_KINDS, WEEK_WHAT_MAX, WORK_DAYS_MIN } from "../weekService"
 
 const KIND_BAR: Record<WeekKind, string> = {
   deep: "bg-sky-500",
@@ -59,7 +59,15 @@ interface Draft {
   kind: WeekKind | null
   /** True while the kind was filled in from a block of the same name, so a new name may change it. */
   kindFromName: boolean
+  /**
+   * An id per day (Monday first), made when the sheet opens: a new block and
+   * its copies keep their ids across Save presses, so a save sent again after
+   * a lost reply is recognised as the same blocks (alpha p9-review-05).
+   */
+  ids: string[]
 }
+
+const freshIds = (): string[] => Array.from({ length: 7 }, () => newId())
 
 /** The stored block a draft was opened from (null for a new block). */
 function blockOf(d: Draft | null): WeekBlock | null {
@@ -73,15 +81,16 @@ function blockOf(d: Draft | null): WeekBlock | null {
  * block, so a move made on another device is kept (alpha prove-review-01).
  */
 function rebased(d: Draft, was: WeekBlock, stored: WeekBlock): Draft {
-  const timeChanged = d.start !== was.start || d.end !== was.end
+  // From and To are two fields: a changed To never brings back the old From (alpha p9-review-02).
+  const time = rebasedTime(d, was, stored)
   const kindChanged = d.kind !== was.kind
   const daysChanged = !(d.days.length === 1 && d.days[0] === was.day)
   return {
     ...d,
     day: stored.day,
     days: daysChanged ? d.days : [stored.day],
-    start: timeChanged ? d.start : stored.start,
-    end: timeChanged ? d.end : stored.end,
+    start: time.start,
+    end: time.end,
     what: d.what !== was.what ? d.what : stored.what,
     kind: kindChanged ? d.kind : stored.kind,
     kindFromName: kindChanged ? d.kindFromName : false,
@@ -104,10 +113,11 @@ function BlockSheet({
   onClose: () => void
   /** `was`: the block as this sheet opened it (or last saw it), so a change made elsewhere since is refused, not undone. */
   onSave: (d: Draft, was: WeekBlock | null) => Promise<string | null>
-  onDelete: (id: string) => Promise<string | null>
+  /** `was`: the block as this sheet saw it, so removing one changed elsewhere since is refused (alpha p9-review-03). */
+  onDelete: (id: string, was: WeekBlock | null) => Promise<string | null>
 }) {
   const [d, setD] = useState<Draft | null>(draft)
-  const [state, setState] = useState<"idle" | "saving" | { error: string }>("idle")
+  const [state, setState] = useState<"idle" | "saving" | { error: string; removing: boolean }>("idle")
   const [openedFor, setOpenedFor] = useState<Draft | null>(draft)
   const [was, setWas] = useState<WeekBlock | null>(blockOf(draft))
   // Refused because another device changed the block: once the week is read again, put the person's change on the stored block.
@@ -145,10 +155,10 @@ function BlockSheet({
       if (d.days.length > 1) set({ days: d.days.filter((x) => x !== day) })
     } else set({ days: [...d.days, day].sort((a, b) => a - b) })
   }
-  const run = async (fn: () => Promise<string | null>) => {
+  const run = async (fn: () => Promise<string | null>, removing = false) => {
     setState("saving")
     const failed = await fn()
-    if (failed) setState({ error: failed })
+    if (failed) setState({ error: failed, removing })
     if (failed?.startsWith(BLOCK_CHANGED)) setRebase(true)
   }
   return (
@@ -233,7 +243,8 @@ function BlockSheet({
 
         {typeof state === "object" && (
           <p className="text-sm text-destructive" role="alert" data-testid="week-error">
-            Not saved: {state.error}.{state.error.startsWith(BLOCK_CHANGED) ? " Your change is put on that block below; save again to keep it." : ""}
+            {state.removing ? "Not removed" : "Not saved"}: {state.error}.
+            {state.error.startsWith(BLOCK_CHANGED) ? (state.removing ? " It is shown below as it is now; press Remove again to remove it." : " Your change is put on that block below; save again to keep it.") : ""}
           </p>
         )}
 
@@ -242,7 +253,7 @@ function BlockSheet({
             {state === "saving" ? "Saving…" : d.days.length > 1 ? `Save on ${d.days.length} days` : "Save"}
           </Button>
           {d.id && (
-            <Button variant="outline" disabled={state === "saving"} onClick={() => void run(() => onDelete(d.id as string))} data-testid="week-delete">
+            <Button variant="outline" disabled={state === "saving"} onClick={() => void run(() => onDelete(d.id as string, was), true)} data-testid="week-delete">
               Remove
             </Button>
           )}
@@ -273,7 +284,7 @@ export function PerfectWeek({
    * saved on another device stay.
    */
   onSaveBlock: (block: WeekBlock, edit: boolean, copies: WeekBlock[], blockWas: WeekBlock | null) => Promise<string | null>
-  onRemoveBlock: (id: string) => Promise<string | null>
+  onRemoveBlock: (id: string, blockWas: WeekBlock | null) => Promise<string | null>
 }) {
   const [draft, setDraft] = useState<Draft | null>(null)
   const hours = planHours(workHours, bestHours)
@@ -286,14 +297,16 @@ export function PerfectWeek({
   const add = (day: number) => {
     const slot = freeSlot(week, day)
     if (!slot) return
-    setDraft({ id: null, day, days: [day], start: slot.start, end: slot.end, what: "", kind: null, kindFromName: false })
+    setDraft({ id: null, day, days: [day], start: slot.start, end: slot.end, what: "", kind: null, kindFromName: false, ids: freshIds() })
   }
 
   const save = async (d: Draft, was: WeekBlock | null): Promise<string | null> => {
     if (!d.what.trim()) return "Say what the block is for"
     if (d.kind === null) return "Pick a kind"
-    const [block, ...copies] = spreadBlock({ id: d.id ?? newId(), day: d.day, start: d.start, end: d.end, what: d.what, kind: d.kind }, d.days, newId)
-    const next = [...(d.id ? week.map((b) => (b.id === d.id ? block : b)) : [...week, block]), ...copies]
+    const [block, ...copies] = spreadBlock({ id: d.id ?? d.ids[d.day], day: d.day, start: d.start, end: d.end, what: d.what, kind: d.kind }, d.days, (day) => d.ids[day])
+    // By id, so blocks already stored by a save whose reply was lost are not counted twice (alpha p9-review-05).
+    const sent = new Set([block, ...copies].map((b) => b.id))
+    const next = [...week.filter((b) => !sent.has(b.id)), block, ...copies]
     // Checked here first so a mistake (an overlap, an empty name) is said at once, in the sheet, without a round trip.
     const checked = checkWeek(next)
     if ("error" in checked) return checked.error
@@ -301,8 +314,8 @@ export function PerfectWeek({
     if (!failed) setDraft(null)
     return failed
   }
-  const remove = async (id: string): Promise<string | null> => {
-    const failed = await onRemoveBlock(id)
+  const remove = async (id: string, was: WeekBlock | null): Promise<string | null> => {
+    const failed = await onRemoveBlock(id, was)
     if (!failed) setDraft(null)
     return failed
   }
@@ -384,7 +397,7 @@ export function PerfectWeek({
                 <ul className="mt-1 divide-y divide-border">
                   {blocks.map((b) => (
                     <li key={b.id}>
-                      <button type="button" onClick={() => setDraft({ ...b, days: [b.day], kindFromName: false })} className="flex min-h-11 w-full items-center gap-2 py-1.5 text-left text-sm hover:bg-muted/40" data-testid="week-block">
+                      <button type="button" onClick={() => setDraft({ ...b, days: [b.day], kindFromName: false, ids: freshIds() })} className="flex min-h-11 w-full items-center gap-2 py-1.5 text-left text-sm hover:bg-muted/40" data-testid="week-block">
                         <span className={cn("size-2.5 shrink-0 rounded-full", KIND_BAR[b.kind])} aria-hidden />
                         <span className="w-[6.5rem] shrink-0 tabular-nums text-muted-foreground">
                           {minuteLabel(b.start)}–{minuteLabel(b.end)}

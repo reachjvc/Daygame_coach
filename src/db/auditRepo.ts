@@ -17,7 +17,7 @@
 
 import type { AnswerMark, AnswerSource, AuditAnswer, AuditRun, AuditSlot, Review, ScaleValue } from "@/src/audit/types"
 import { normalizePhrase } from "@/src/shared/textMatch"
-import { nextReviewVersion, readStoredReview, reviewToStore } from "@/src/audit/auditService"
+import { nextReviewVersion, readStoredReview, reviewToStore, storedZone } from "@/src/audit/auditService"
 import type { StoredAnswer } from "@/src/audit/auditService"
 import { readAllRows } from "./paging"
 import { createAdminSupabaseClient, createServerSupabaseClient } from "./supabase"
@@ -83,6 +83,7 @@ function toRun(r: RunRow): AuditRun {
     mutedUntil: r.muted_until ? iso(r.muted_until) : null,
     review: toReview(r.review),
     endSentAt: r.end_sent_at ? iso(r.end_sent_at) : null,
+    zone: storedZone(r.review),
   }
 }
 
@@ -258,6 +259,37 @@ export async function changeReview(userId: string, runId: string, edit: ReviewEd
     await pause(10 + Math.random() * 40 * (attempt + 1))
   }
   throw new Error("Failed to change the review: it kept changing underneath")
+}
+
+/**
+ * Store the zone a finished audit was lived in beside its review
+ * (`review.zone`, alpha p9-review-01), once: a zone already stored stays.
+ * Written with the same version check as `changeReview`, so a review save
+ * landing at the same moment is never written over. Returns the stored zone.
+ */
+export async function keepRunZone(userId: string, runId: string, zone: string): Promise<string> {
+  const supabase = await createServerSupabaseClient()
+  for (let attempt = 0; attempt < REVIEW_TRIES; attempt++) {
+    const read = await supabase.from("audit_runs").select("review, updated_at").eq("user_id", userId).eq("id", runId).maybeSingle()
+    if (read.error) throw new Error(`Failed to read the audit: ${read.error.message}`)
+    if (!read.data) throw new AuditRunNotFound()
+    const row = read.data as { review: unknown; updated_at: string }
+    const kept = storedZone(row.review)
+    if (kept) return kept
+    const raw = row.review && typeof row.review === "object" && !Array.isArray(row.review) ? (row.review as Record<string, unknown>) : {}
+    const { data, error } = await supabase
+      .from("audit_runs")
+      .update({ review: { ...raw, zone }, updated_at: nextReviewVersion(row.updated_at, new Date()) })
+      .eq("user_id", userId)
+      .eq("id", runId)
+      .eq("updated_at", row.updated_at)
+      .select("id")
+      .maybeSingle()
+    if (error) throw refusal(error, "keep the audit's zone")
+    if (data) return zone
+    await pause(10 + Math.random() * 40 * (attempt + 1))
+  }
+  throw new Error("Failed to keep the audit's zone: it kept changing underneath")
 }
 
 const UPSERT_AT_MOST = 200

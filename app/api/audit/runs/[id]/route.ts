@@ -11,7 +11,7 @@
 
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
-import { AuditRefused, AuditRunNotFound, changeReview, readRuns, updateRun, type RunPatch } from "@/src/db/auditRepo"
+import { AuditRefused, AuditRunNotFound, changeReview, keepRunZone, readRuns, updateRun, type RunPatch } from "@/src/db/auditRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { applyReviewChange, applyReviewParts, checkQuiet, muteUntil, MUTE_OPTIONS, runIsOpen, type MuteOption } from "@/src/audit/auditService"
 import { isUuid } from "@/src/shared/ids"
@@ -65,7 +65,13 @@ export async function PATCH(req: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Send a change" }, { status: 400 })
     }
 
-    return NextResponse.json({ run: await updateRun(auth.userId, id, patch) })
+    const changed = await updateRun(auth.userId, id, patch)
+    if (patch.endedAt) {
+      // Ended now: keep the zone it was lived in (alpha p9-review-01); the page's next read retries a failure.
+      const zone = await getUserTimezone(auth.userId).catch(() => null)
+      if (zone) changed.zone = await keepRunZone(auth.userId, id, zone).catch(() => changed.zone ?? null)
+    }
+    return NextResponse.json({ run: changed })
   } catch (error) {
     if (error instanceof AuditRunNotFound) return NextResponse.json({ error: "No such audit" }, { status: 404 })
     if (error instanceof AuditRefused) return NextResponse.json({ error: "The audit could not save that" }, { status: 400 })

@@ -27,7 +27,12 @@ describe("wakingHoursText", () => {
     expect(wakingHoursText(195)).toBe("195 waking hours")
     expect(wakingHoursText(1)).toBe("1 waking hour")
     expect(wakingHoursText(0.25)).toBe("15 waking minutes")
-    expect(wakingHoursText(0.5)).toBe("about 1 waking hour")
+  })
+
+  it("says minutes for a run shorter than an hour, never about 1 waking hour", () => {
+    expect(wakingHoursText(0.5)).toBe("30 waking minutes")
+    expect(wakingHoursText(0.75)).toBe("45 waking minutes")
+    expect(wakingHoursText(1.25)).toBe("about 1 waking hour")
   })
 })
 
