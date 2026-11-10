@@ -1,0 +1,353 @@
+{
+  "id": "ernest-hemingway",
+  "name": "Ernest Hemingway",
+  "born": 1899,
+  "died": 1961,
+  "category": "artists",
+  "areaIds": [
+    "lm_mission",
+    "lm_fun"
+  ],
+  "tagline": "Wrote one true sentence at a time every morning, and went looking for danger.",
+  "startedFrom": "He was born on 21 July 1899 in Oak Park, Illinois, the son of a doctor, into a family with a history of mental illness. At 17 he went to work at a newspaper in Kansas City. The Marines and the Army Air Service turned him down because he was nearsighted, so in 1918 he joined the Red Cross as an ambulance driver in Italy.",
+  "values": [
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said he rewrote the last page of A Farewell to Arms thirty-nine times before he was satisfied, and that the problem was getting the words right.",
+          "sourceId": "paris-review-1958",
+          "locator": "answers to 'How much rewriting do you do?' and the next question"
+        },
+        {
+          "kind": "words",
+          "claim": "In his Nobel speech he wrote that for a true writer each book should be a new beginning, a try at something beyond reach.",
+          "sourceId": "nobel-speech-1954",
+          "locator": "fifth paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Prize in Literature 1954 was given to him for his mastery of the art of narrative and for his influence on contemporary style.",
+          "sourceId": "nobel-facts",
+          "locator": "Prize motivation"
+        },
+        {
+          "kind": "witness",
+          "claim": "Marc Dudley, an English professor at North Carolina State University, said he lasts because he is a master craftsman.",
+          "sourceId": "cbs-2021",
+          "locator": "answer to Whitaker's question on why Hemingway has not been canceled"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that in his Paris room he set himself to write one story about each thing he knew, and that it was good and severe discipline.",
+          "sourceId": "amf-1964",
+          "locator": "chapter 'Miss Stein Instructs'"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked if he could put his work out of his mind away from the typewriter, he said it takes discipline, and that this discipline is acquired.",
+          "sourceId": "paris-review-1958",
+          "locator": "answer to 'Can you dismiss from your mind whatever project you're on'"
+        },
+        {
+          "kind": "witness",
+          "claim": "George Plimpton, who interviewed him at his house near Havana, describes him standing at his reading-board from early morning until about noon, 'slave of a self-imposed discipline'.",
+          "sourceId": "paris-review-1958",
+          "locator": "introduction, paragraph beginning 'Nowhere is the dedication'"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On the night of 8 July 1918 a mortar shell wounded him on the Italian front; a friend wrote to his parents that he then carried a badly wounded Italian soldier on his back to the first-aid dugout.",
+          "sourceId": "historycom",
+          "locator": "paragraphs 3-4 (Ted Brumbach's letter)"
+        },
+        {
+          "kind": "deed",
+          "claim": "As a war reporter he covered the siege of Madrid in 1937, and in 1944 travelled with the US 22nd Infantry Regiment through to the fighting in the Hürtgen Forest; a shell crashed through the wall of a command post where he was eating, and he stayed at the table.",
+          "sourceId": "historynet-moreira-2018",
+          "locator": "sections on Spain (1937-38) and the 22nd Infantry Regiment (1944), paragraphs beginning 'Living in semisecret sin', 'He continued to travel' and 'Hemingway often displayed'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Peter Moreira, author of Hemingway on the China Front, writes that, whatever the doubts about the extent of his 1918 wounds, he had been badly injured and shown remarkable courage.",
+          "sourceId": "historynet-moreira-2018",
+          "locator": "paragraph beginning 'Contemporary medical accounts recorded 227 shrapnel wounds'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times obituary says that as an adult he sought out danger: wounded in Italy in 1918, nearly killed when three shells hit his hotel room in the Spanish Civil War, and walking away from a plane crash in Africa in 1954.",
+          "sourceId": "nyt-obit-1961",
+          "locator": "section 'Expert on Firearms'"
+        }
+      ]
+    },
+    {
+      "word": "Adventure",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He went to five battlefronts in his life: Italy in 1918, the Greco-Turkish War in 1922, the Spanish Civil War in 1937 and 1938, the Sino-Japanese War in 1941 and the Allied march through France in 1944.",
+          "sourceId": "historynet-moreira-2018",
+          "locator": "paragraph beginning 'Hemingway's 1918 wounding typifies'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He went on big-game safaris in Africa; he nearly died of blood poisoning on one, and on another, in 1954, he and his wife walked away from a plane crash.",
+          "sourceId": "nyt-obit-1961",
+          "locator": "section 'Expert on Firearms'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Ken Burns and Lynn Novick's film describes him as yearning for adventure when he volunteered for the Red Cross in the First World War.",
+          "sourceId": "pbs-burns-2021",
+          "locator": "Episode Guide, Episode 1 'A Writer'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When you are stuck, write one true, simple sentence, and cut anything that sounds like decoration.",
+      "sourceId": "amf-1964",
+      "locator": "chapter 'Miss Stein Instructs'"
+    },
+    {
+      "text": "Stop the day's work while you still know what comes next, so you can start again easily tomorrow.",
+      "sourceId": "amf-1964",
+      "locator": "chapter 'Miss Stein Instructs'; also Paris Review 1958, answer to 'When do you work? Do you keep to a strict schedule?'"
+    },
+    {
+      "text": "Write down your daily output, so you cannot fool yourself about how much you did.",
+      "sourceId": "paris-review-1958",
+      "locator": "introduction, paragraph beginning 'He keeps track of his daily progress' ('so as not to kid myself')"
+    },
+    {
+      "text": "Rewrite until the words are right, even if it takes dozens of tries.",
+      "sourceId": "paris-review-1958",
+      "locator": "answers to 'How much rewriting do you do?' and the next question"
+    },
+    {
+      "text": "Make each new piece of work a try at something that has not been done before.",
+      "sourceId": "nobel-speech-1954",
+      "locator": "fifth paragraph"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "All you have to do is write one true sentence. Write the truest sentence that you know.",
+      "sourceId": "amf-1964",
+      "locator": "chapter 'Miss Stein Instructs' (1964 Scribner text)"
+    },
+    {
+      "text": "For a true writer each book should be a new beginning where he tries again for something that is beyond attainment.",
+      "sourceId": "nobel-speech-1954",
+      "locator": "fifth paragraph; read by Ambassador John M. Cabot, Stockholm, 10 December 1954"
+    },
+    {
+      "text": "I rewrote the ending to Farewell to Arms, the last page of it, thirty-nine times before I was satisfied.",
+      "sourceId": "paris-review-1958",
+      "locator": "answer to 'How much rewriting do you do?'"
+    },
+    {
+      "text": "But it takes discipline to do it and this discipline is acquired. It has to be.",
+      "sourceId": "paris-review-1958",
+      "locator": "answer to 'Can you dismiss from your mind whatever project you're on when you're away from the typewriter?'"
+    }
+  ],
+  "definingMoment": {
+    "text": "Just after midnight on 8 July 1918, aged 18, he was handing out chocolate to Italian soldiers on the Piave front when an Austrian mortar shell burst near him. One soldier was killed and another lost both legs. A friend, Ted Brumbach, wrote to his parents that Ernest, once he came to, carried a third, badly wounded man on his back to the first-aid dugout. Medical records of the time counted 227 shrapnel wounds in his legs, all but about ten of them superficial, and Italy gave him its silver medal for valour; in 1920 he told a Toronto editor he had fought with Italy's Arditi commandos, which was not true.",
+    "sourceIds": [
+      "historycom",
+      "historynet-moreira-2018"
+    ]
+  },
+  "shadow": {
+    "text": "He married four times, and each of his first three marriages ended after he fell for the woman who became his next wife. In his Paris memoir he wrote that while married to Hadley Richardson he was in love with another woman and lied about it; he divorced Hadley for Pauline Pfeiffer, began an affair with Martha Gellhorn in Spain in 1937 while married to Pfeiffer, and with Mary Welsh in 1944 while married to Gellhorn. In 1944 he took the one front-line accreditation from Collier's magazine and a seat on a plane to London, leaving Gellhorn to cross the Atlantic on a munitions ship. On his 1953-54 Kenya safari he courted Debba, a Kamba woman he called his fiancée; biographer Jeffrey Meyers wrote in 1999 that she was 'about fifteen' and that the pursuit, 'in the book as in real life', went no further than frottage, while a 1998 New York Times report called her 18 and his son Patrick, who was on the safari, said the 'marriage' to her was fiction. Filmmakers Ken Burns and Lynn Novick call him an alcoholic who could be abusive and a bully in his later marriages, and say he invented stories of his own heroism; reviewing Mary Dearborn's 2017 biography, Kirkus notes his violent temper and that he never stopped drinking although his doctors told him to. After electroshock treatment for depression at the Mayo Clinic in 1960 and 1961, he shot himself at his home in Ketchum, Idaho, on 2 July 1961; his wife first told the press it was an accident.",
+    "sourceIds": [
+      "amf-1964",
+      "nyt-blumenthal-1998",
+      "historynet-moreira-2018",
+      "meyers-nc-1999",
+      "npr-2021",
+      "kirkus-2017",
+      "pbsnh-markel-2020",
+      "nyt-obit-1961"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you dress something up this week instead of saying the one true thing?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Sun Also Rises",
+      "year": 1926
+    },
+    {
+      "title": "The Old Man and the Sea",
+      "year": 1952
+    },
+    {
+      "title": "A Moveable Feast",
+      "year": 1964
+    }
+  ],
+  "sources": [
+    {
+      "id": "amf-1964",
+      "kind": "primary",
+      "title": "A Moveable Feast (memoir, published after his death, edited by Mary Hemingway)",
+      "author": "Ernest Hemingway",
+      "year": 1964,
+      "publisher": "Charles Scribner's Sons",
+      "url": "https://www.fadedpage.com/showbook.php?pid=20141111"
+    },
+    {
+      "id": "paris-review-1958",
+      "kind": "primary",
+      "title": "The Art of Fiction No. 21 (interview), The Paris Review, Issue 18, Spring 1958",
+      "author": "Ernest Hemingway, interviewed by George Plimpton",
+      "year": 1958,
+      "publisher": "The Paris Review",
+      "url": "https://www.theparisreview.org/interviews/4825/the-art-of-fiction-no-21-ernest-hemingway"
+    },
+    {
+      "id": "nobel-speech-1954",
+      "kind": "primary",
+      "title": "Banquet speech, Nobel Prize in Literature 1954",
+      "author": "Ernest Hemingway",
+      "year": 1954,
+      "publisher": "Nobel Foundation",
+      "url": "https://www.nobelprize.org/prizes/literature/1954/hemingway/speech/"
+    },
+    {
+      "id": "nobel-facts",
+      "kind": "secondary",
+      "title": "Ernest Hemingway – Facts, Nobel Prize in Literature 1954",
+      "author": "Nobel Prize Outreach",
+      "year": 2026,
+      "publisher": "NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/literature/1954/hemingway/facts/"
+    },
+    {
+      "id": "nobel-bio",
+      "kind": "secondary",
+      "title": "Ernest Hemingway – Biographical (from Nobel Lectures, Literature 1901-1967, ed. Horst Frenz)",
+      "author": "Nobel Foundation",
+      "year": 1969,
+      "publisher": "Elsevier",
+      "url": "https://www.nobelprize.org/prizes/literature/1954/hemingway/biographical/"
+    },
+    {
+      "id": "nyt-obit-1961",
+      "kind": "secondary",
+      "title": "Hemingway Dead of Shotgun Wound; Wife Says He Was Cleaning Weapon",
+      "author": "The New York Times (special to the Times)",
+      "year": 1961,
+      "publisher": "The New York Times",
+      "url": "https://archive.nytimes.com/www.nytimes.com/books/99/07/04/specials/hemingway-obit.html"
+    },
+    {
+      "id": "historynet-moreira-2018",
+      "kind": "secondary",
+      "title": "Hemingway at War",
+      "author": "Peter Moreira",
+      "year": 2018,
+      "publisher": "HistoryNet",
+      "url": "https://historynet.com/hemingway-at-war/"
+    },
+    {
+      "id": "historycom",
+      "kind": "secondary",
+      "title": "Ernest Hemingway wounded on the Italian front",
+      "author": "HISTORY.com Editors",
+      "year": 2009,
+      "publisher": "A&E Television Networks",
+      "url": "https://www.history.com/this-day-in-history/july-8/ernest-hemingway-wounded-on-the-italian-front"
+    },
+    {
+      "id": "npr-2021",
+      "kind": "secondary",
+      "title": "New Documentary Examines Ernest Hemingway's Complicated Life (Morning Edition, 5 April 2021)",
+      "author": "Steve Inskeep, with Ken Burns and Lynn Novick",
+      "year": 2021,
+      "publisher": "NPR",
+      "url": "https://www.npr.org/transcripts/984353165"
+    },
+    {
+      "id": "cbs-2021",
+      "kind": "secondary",
+      "title": "Reappraising Ernest Hemingway (CBS Sunday Morning, 11 April 2021)",
+      "author": "Mark Whitaker",
+      "year": 2021,
+      "publisher": "CBS News",
+      "url": "https://www.cbsnews.com/news/reappraising-ernest-hemingway"
+    },
+    {
+      "id": "pbsnh-markel-2020",
+      "kind": "secondary",
+      "title": "How mental health struggles wrote Ernest Hemingway's final chapter",
+      "author": "Howard Markel",
+      "year": 2020,
+      "publisher": "PBS NewsHour",
+      "url": "https://www.pbs.org/newshour/health/how-mental-health-struggles-wrote-ernest-hemingways-final-chapter"
+    },
+    {
+      "id": "kirkus-2017",
+      "kind": "secondary",
+      "title": "Review of Ernest Hemingway: A Biography by Mary V. Dearborn (Knopf, 2017)",
+      "author": "Kirkus Reviews",
+      "year": 2017,
+      "publisher": "Kirkus Reviews",
+      "url": "https://www.kirkusreviews.com/book-reviews/mary-v-dearborn/ernest-hemingway-a-biography/"
+    },
+    {
+      "id": "pbs-burns-2021",
+      "kind": "secondary",
+      "title": "Hemingway, a film by Ken Burns and Lynn Novick: Episode Guide",
+      "author": "Ken Burns and Lynn Novick (Florentine Films)",
+      "year": 2021,
+      "publisher": "PBS",
+      "url": "https://www.pbs.org/kenburns/hemingway/episode-guide"
+    },
+    {
+      "id": "meyers-nc-1999",
+      "kind": "secondary",
+      "title": "Review of True at First Light: A Fictional Memoir, The New Criterion, vol. 18 no. 1, September 1999, pp. 68-70",
+      "author": "Jeffrey Meyers (author of Hemingway: A Biography, 1985)",
+      "year": 1999,
+      "publisher": "The New Criterion",
+      "url": "https://archive.org/details/new-criterion-the-1982-2005"
+    },
+    {
+      "id": "nyt-blumenthal-1998",
+      "kind": "secondary",
+      "title": "Life and Fiction in Hemingway's Africa (New York Times report, reprinted in the International Herald Tribune, 26 August 1998)",
+      "author": "Ralph Blumenthal",
+      "year": 1998,
+      "publisher": "The New York Times / International Herald Tribune",
+      "url": "https://archive.org/details/InternationalHeraldTribune1998FranceEnglish"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real American writer (1899-1961), not fictional, never a politician or candidate, not the founder of a religion; his dark side (affairs that ended three marriages, bullying and temper toward his later wives, heavy drinking, invented war stories, suicide) is shadow. Owner case: on his 1953-54 Kenya safari he courted Debba, a Kamba woman he called his fiancée. Jeffrey Meyers, his biographer, wrote in The New Criterion (September 1999, reviewing True at First Light) that 'Debba is about fifteen' and that his pursuit of her, 'in the book as in real life', 'never gets beyond frottage'; Meyers names no source for the age. Ralph Blumenthal's New York Times report (IHT, 26 August 1998) calls the book's Debba 'an 18-year-old woman'; Carlos Baker's 1969 biography, from Mary Hemingway's diaries, calls her a Wakamba girl and tells of a broken bed; Patrick Hemingway, who was on the safari, said the marriage to Debba is fictional. No other source found gives her age."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I attacked each value and checked every claim against the saved texts of A Moveable Feast, the Paris Review interview, the Nobel speech and the secondary sources, and searched biographies and scholarly work for Debba's age. Hard work fell: only two sources, both already behind Discipline; the blind pick's Solitude fell because his evidence is a statement about writers, not a solitary life. Craft, Discipline, Courage and Adventure held, and all four quotes matched the text. Seven claims were tightened (the 1944 front is France, the medal and wound wording, the Pauline affair now sourced, the obituary's danger list); Meyers' 1999 review says Debba was 'about fifteen', so the file goes to the owner.",
+    "checkedOn": "2026-11-10"
+  }
+}
