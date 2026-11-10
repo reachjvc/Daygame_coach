@@ -1,0 +1,340 @@
+{
+  "id": "jimi-hendrix",
+  "name": "Jimi Hendrix",
+  "born": 1942,
+  "died": 1970,
+  "category": "artists",
+  "areaIds": [
+    "lm_fun",
+    "lm_mission"
+  ],
+  "tagline": "A broke sideman who practised without an amp and rebuilt what an electric guitar can say.",
+  "startedFrom": "He was born in Seattle on 27 November 1942 while his father was overseas in the Army; his parents fought over his mother's drinking and divorced in 1951, and he and his brother were passed among relatives, friends, neighbours and perhaps half a dozen foster homes. Around 1957 his father bought him a used acoustic guitar for $5 and later a cheap electric one, but never an amplifier of his own. He dropped out of Garfield High School and, after two arrests in one week in spring 1961 for riding in a stolen car, joined the Army.",
+  "values": [
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In the Army in 1961-62 he wrote home to have his guitar shipped to him and practised on base in his free hours; his army records say he was distracted by thinking about his guitar.",
+          "sourceId": "historylink-blecha-2011",
+          "locator": "section 'Drivin' South'"
+        },
+        {
+          "kind": "witness",
+          "claim": "David Fricke writes that he slept with his guitar in his army bunk and on tour buses, and Ernie Isley remembers him practising in the hallway of the Isley house in 1964 with no amplifier.",
+          "sourceId": "rs-fricke-1992",
+          "locator": "paragraph beginning 'But for Hendrix, making his American concert debut' and paragraph on the Isley Brothers (1964)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Kathy Etchingham, his partner in London from 1966, says he was determined to show what he could do and spent a lot of time writing songs and practising.",
+          "sourceId": "louder-kielty-2015",
+          "locator": "closing paragraphs, Etchingham to Rich Davenport"
+        },
+        {
+          "kind": "words",
+          "claim": "He told Guitar Player that frustration that makes you want to quit the guitar is part of learning, and that if you stick with it you will be rewarded.",
+          "sourceId": "gp-1968",
+          "locator": "last answer, on advice to young players"
+        }
+      ]
+    },
+    {
+      "word": "Creativity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He produced his 1968 double album Electric Ladyland himself; Rolling Stone named him Performer of the Year 'for creativity, electricity and balls'.",
+          "sourceId": "rs-poy-1969",
+          "locator": "third and last paragraphs"
+        },
+        {
+          "kind": "witness",
+          "claim": "Seattle historian Peter Blecha calls him perhaps the most gifted and inventive guitarist of all time.",
+          "sourceId": "historylink-blecha-2011",
+          "locator": "opening summary paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "He said his records add no false electronic tricks: they use the same equipment as anyone else, but with imagination and common sense.",
+          "sourceId": "gp-1968",
+          "locator": "second answer, on 'clash and bang and fanciness'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Rolling Stone's 1969 profile describes him writing lyrics at all hours in a Moroccan notebook and jamming with jazz and avant-garde players at his rented house in Liberty, New York.",
+          "sourceId": "weller-rs-1969",
+          "locator": "paragraphs on the Liberty house and the previous night's jam"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He built his own recording studio, Electric Lady, in New York, making him one of very few young pop musicians of the time with a studio of his own.",
+          "sourceId": "historylink-blecha-2011",
+          "locator": "section 'Back Home', last paragraphs"
+        },
+        {
+          "kind": "witness",
+          "claim": "Rolling Stone's 1970 obituary says he had for some time been trying to become more independent in his business affairs and saw Electric Lady as a step toward that goal.",
+          "sourceId": "rs-obit-1970",
+          "locator": "paragraph beginning 'Hendrix had been for some time attempting'"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1969, under pressure from his business people to stay inside his hyped image, he said he did not want to be a clown or a 'rock and roll star' any more.",
+          "sourceId": "weller-rs-1969",
+          "locator": "paragraph beginning 'I don't want to be a clown anymore'"
+        }
+      ]
+    },
+    {
+      "word": "Self-expression",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told Guitar Player that things have to go through him and he has to show his feelings as soon as they are there, and that the aim is to get as much of yourself into the music as you can.",
+          "sourceId": "gp-1968",
+          "locator": "answers on turning his back to the audience and on 'music has to go places'"
+        },
+        {
+          "kind": "witness",
+          "claim": "David Fricke writes that he devoted his life to putting his dreams and troubles into sound, and that on record he freed himself from the stage image of a guitar god.",
+          "sourceId": "rs-fricke-1992",
+          "locator": "paragraph beginning 'But for Hendrix' and paragraph on Electric Ladyland ('Weighed down by the stage image')"
+        },
+        {
+          "kind": "deed",
+          "claim": "At Woodstock on the morning of 18 August 1969 he played 'The Star-Spangled Banner' as a solo electric-guitar piece after his band dropped out.",
+          "sourceId": "bethel-woods",
+          "locator": "section on the Monday morning set"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When you are so frustrated you want to quit, treat it as part of learning and keep going.",
+      "sourceId": "gp-1968",
+      "locator": "last answer, on advice to young players"
+    },
+    {
+      "text": "Put as much of yourself into the work as you can, not as much complication.",
+      "sourceId": "gp-1968",
+      "locator": "answer beginning 'Music is getting better and better'"
+    },
+    {
+      "text": "Do not sign anything too soon; get a lawyer before you sign.",
+      "sourceId": "gp-1968",
+      "locator": "last answer, on advice to young players (he had signed a three-year deal with Ed Chalpin in 1965 for a one-dollar advance, rs-fricke-1992)"
+    },
+    {
+      "text": "When the image people sell of you stops fitting, drop it and keep growing.",
+      "sourceId": "weller-rs-1969",
+      "locator": "paragraph beginning 'I don't want to be a clown anymore'"
+    },
+    {
+      "text": "Work toward owning the place where your work is made.",
+      "sourceId": "rs-obit-1970",
+      "locator": "paragraph beginning 'Hendrix had been for some time attempting' (Electric Lady Studios)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Sometimes, you are going to be so frustrated you want to give up the guitar – you'll hate the guitar. But all of this is just a part of learning, because if you stick with it, you're going to be rewarded.",
+      "sourceId": "gp-1968",
+      "locator": "Guitar Player interview, December 1968 issue (interview early October 1968, Winterland, San Francisco), last answer"
+    },
+    {
+      "text": "I don't want to be a clown anymore. I don't want to be a 'rock and roll star.'",
+      "sourceId": "weller-rs-1969",
+      "locator": "Sheila Weller, Rolling Stone, 15 November 1969"
+    },
+    {
+      "text": "Music is getting better and better, but the idea now is not to get as complicated as you can, but to get as much of yourself into it as you can.",
+      "sourceId": "gp-1968",
+      "locator": "Guitar Player interview, December 1968 issue, answer beginning 'Music is getting better and better'"
+    },
+    {
+      "text": "I want to write songs about tranquility, about beautiful things.",
+      "sourceId": "weller-rs-1969",
+      "locator": "Sheila Weller, Rolling Stone, 15 November 1969 (the sunrise drive to the waterfalls)"
+    }
+  ],
+  "definingMoment": {
+    "text": "On the morning of Monday 18 August 1969 he closed the Woodstock festival in Bethel, New York, with a new band he called Gypsy Sun and Rainbows; by the time the set began at 9 a.m., the crowd of half a million had shrunk to about 40,000. During the set he played 'The Star-Spangled Banner' on electric guitar, and the band dropped out while he went on alone, using feedback that Rolling Stone later said simulated exploding bombs. About a month later, on The Dick Cavett Show, he said he was an American, so he played it, and that they had made him sing it in school.",
+    "sourceIds": [
+      "bethel-woods",
+      "rs-martoccio-2019"
+    ]
+  },
+  "shadow": {
+    "text": "Army records released in 2005 say he was unable to conform to military rules and recommend an 'undesirable' discharge; he later said he left after a parachute injury. On 4 January 1968 police in Gothenburg arrested him for smashing a plate-glass window at his hotel, and on 16 January a court found him guilty of damaging the room and fined him. On 3 May 1969 Canadian customs found heroin and hashish in his bag; at his trial he said he had used drugs before but did not know these were there, and a Toronto jury acquitted him on 10 December 1969. His biographer Charles R. Cross calls him openly unfaithful and quotes his girlfriend Carmen Borrero on two times he hit her with a bottle in jealous rages: once, accusing her of an affair with Eric Burdon, he threw an empty vodka bottle that hit her above the eye and she was rushed to hospital; the second time sent her to an emergency room. Kathy Etchingham, who met him the day he arrived in London in 1966, says the beatings of her shown in the biopic Jimi: All Is By My Side never happened. He neither acknowledged nor denied that he was the father of Tamika, born in February 1967 to Diane Carpenter, who had lived with him in 1966 when she was 16 and he was 23; a blood test was still being arranged when he died. He died in London on 18 September 1970, aged 27, after taking barbiturates with red wine; the coroner returned an open verdict.",
+    "sourceIds": [
+      "historylink-blecha-2011",
+      "jh-chronology",
+      "rs-charged-1969",
+      "cross-2005",
+      "willett-2006",
+      "louder-kielty-2015",
+      "rs-estate-1972",
+      "rs-fricke-1992"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did frustration make you want to quit something you are learning, and what did you do next?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Starting at Zero: His Own Story (his words, compiled by Alan Douglas and Peter Neal)",
+      "year": 2013
+    },
+    {
+      "title": "Electric Ladyland (album)",
+      "year": 1968
+    }
+  ],
+  "sources": [
+    {
+      "id": "gp-1968",
+      "kind": "primary",
+      "title": "Jimi Hendrix interview (Guitar Player, December 1968 issue; interview at Winterland, San Francisco, early October 1968), reprinted online",
+      "author": "Jimi Hendrix, interviewed by Guitar Player",
+      "year": 1968,
+      "publisher": "Guitar Player; online reprint 25 October 2023",
+      "url": "https://www.guitarplayer.com/players/jimi-hendrix-guitar-player-interview-1968"
+    },
+    {
+      "id": "weller-rs-1969",
+      "kind": "primary",
+      "title": "Jimi Hendrix: I Don't Want to Be a Clown Any More (interview profile, Rolling Stone, 15 November 1969; reprinted by Rolling Stone Australia, 2016)",
+      "author": "Sheila Weller, with Jimi Hendrix",
+      "year": 1969,
+      "publisher": "Rolling Stone",
+      "url": "https://au.rollingstone.com/music/music-news/flashback-jimi-hendrix-i-dont-want-to-be-a-clown-anymore-1064/"
+    },
+    {
+      "id": "historylink-blecha-2011",
+      "kind": "secondary",
+      "title": "Hendrix, Jimi (1942-1970), HistoryLink.org Essay 2498",
+      "author": "Peter Blecha",
+      "year": 2011,
+      "publisher": "HistoryLink.org, the Free Encyclopedia of Washington State History",
+      "url": "https://historylink.org/File/2498"
+    },
+    {
+      "id": "rs-fricke-1992",
+      "kind": "secondary",
+      "title": "Jimi: The Man and the Music",
+      "author": "David Fricke",
+      "year": 1992,
+      "publisher": "Rolling Stone, 6 February 1992",
+      "url": "https://www.rollingstone.com/music/music-news/jimi-the-man-and-the-music-247379/"
+    },
+    {
+      "id": "cross-2005",
+      "kind": "secondary",
+      "title": "Room Full of Mirrors: A Biography of Jimi Hendrix",
+      "author": "Charles R. Cross",
+      "year": 2005,
+      "publisher": "Hyperion, New York (read through Internet Archive full-text search of the scanned edition)",
+      "url": "https://archive.org/details/roomfullofmirror0000cros"
+    },
+    {
+      "id": "willett-2006",
+      "kind": "secondary",
+      "title": "Jimi Hendrix: \"Kiss the Sky\"",
+      "author": "Edward Willett",
+      "year": 2006,
+      "publisher": "Enslow Publishers (read through Internet Archive full-text search of the scanned edition)",
+      "url": "https://archive.org/details/jimihendrixkisss0000will"
+    },
+    {
+      "id": "bethel-woods",
+      "kind": "secondary",
+      "title": "Jimi Hendrix (Woodstock performer profile)",
+      "author": "Wade Lawrence and Scott Parker, Museum at Bethel Woods",
+      "year": "undated",
+      "publisher": "Bethel Woods Center for the Arts",
+      "url": "https://bethelwoodscenter.org/blog/jimi-hendrix"
+    },
+    {
+      "id": "rs-martoccio-2019",
+      "kind": "secondary",
+      "title": "Flashback: Jimi Hendrix Breaks Down Iconic 'Star-Spangled Banner' Woodstock Performance (on The Dick Cavett Show, 9 September 1969)",
+      "author": "Angie Martoccio",
+      "year": 2019,
+      "publisher": "Rolling Stone, 4 July 2019",
+      "url": "https://www.rollingstone.com/music/music-features/hendrix-star-spangled-banner-woodstock-855473/"
+    },
+    {
+      "id": "rs-obit-1970",
+      "kind": "secondary",
+      "title": "Jimi Hendrix: 1942-1970 (obituary)",
+      "author": "Rolling Stone (unsigned)",
+      "year": 1970,
+      "publisher": "Rolling Stone, 15 October 1970",
+      "url": "https://www.rollingstone.com/music/music-news/jimi-hendrix-1942-1970-93969/"
+    },
+    {
+      "id": "rs-poy-1969",
+      "kind": "secondary",
+      "title": "Jimi Hendrix: Performer of the Year 1969",
+      "author": "Rolling Stone (unsigned)",
+      "year": 1969,
+      "publisher": "Rolling Stone, 1 February 1969",
+      "url": "https://www.rollingstone.com/music/music-news/jimi-hendrix-performer-of-the-year-1969-249763/"
+    },
+    {
+      "id": "rs-charged-1969",
+      "kind": "secondary",
+      "title": "Hendrix Charged: Smack, Hash",
+      "author": "Rolling Stone (unsigned)",
+      "year": 1969,
+      "publisher": "Rolling Stone, 26 July 1969",
+      "url": "https://www.rollingstone.com/music/music-news/hendrix-charged-smack-hash-192459/"
+    },
+    {
+      "id": "rs-estate-1972",
+      "kind": "secondary",
+      "title": "Hendrix Estate Claim Denied to Illegitimate Daughter",
+      "author": "Rolling Stone (unsigned)",
+      "year": 1972,
+      "publisher": "Rolling Stone, 3 February 1972",
+      "url": "https://www.rollingstone.com/music/music-news/hendrix-estate-claim-denied-to-illegitimate-daughter-185135/"
+    },
+    {
+      "id": "louder-kielty-2015",
+      "kind": "secondary",
+      "title": "Hendrix ex slams movie again (Kathy Etchingham interviewed by Rich Davenport)",
+      "author": "Martin Kielty",
+      "year": 2015,
+      "publisher": "Louder (Classic Rock), 4 February 2015",
+      "url": "https://www.loudersound.com/news/hendrix-ex-slams-movie-again"
+    },
+    {
+      "id": "jh-chronology",
+      "kind": "secondary",
+      "title": "Official Jimi Hendrix chronology: entries for 4 and 16 January 1968 (Gothenburg) and 8-10 December 1969 (Toronto trial)",
+      "author": "Experience Hendrix, L.L.C. (the family-run estate)",
+      "year": "undated",
+      "publisher": "jimihendrix.com",
+      "url": "https://jimihendrix.com/encyclopedia/?cat=trial"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American guitarist and songwriter (1942-1970), not fictional, never a politician or campaigner, not the founder of a religion. No accepted source (biography from a real publisher, national press, court record) gives an account of sexual contact with anyone under 16 or of sexual violence, so he is in, with a documented dark side: drug use and a death from barbiturates and wine, a drug arrest and a hotel-damage fine, a biographer's account of him twice hitting a girlfriend with a bottle, open infidelity, and a daughter he neither acknowledged nor denied. For the owner's eye, not owner cases: Diane Carpenter lived with him in 1966 at 16, when he was 23 (Rolling Stone 1972); a 2026 blog review of James Hawthorn's independently published Goodbye, Jimi claims 'underage girls', a $75,000 settlement with a girl he hit with a brick, and heads banged together during a threesome, with no named person, no age and no court record, and none of it was found in Cross, Willett, Rolling Stone or other accepted sources."
+    },
+    "blindAgreement": 0.25,
+    "devilsAdvocate": "I attacked each value and checked every claim against saved copies of the Guitar Player and Rolling Stone interviews, HistoryLink, the Rolling Stone reports, the estate chronology and Cross's biography through full-text search, and I searched biographies and the press for the blog's claims of underage girls and a violent threesome without finding them in any accepted source. Humility fell: its evidence rests on two sources only, and the blind pick's Hard work (overlapping Craft) and Spirituality (one interview) were not added. Craft, Creativity, Independence and Self-expression held, and all four quotes matched the text. Six claims were tightened, among them the 1961 arrests, the undated Cavett show, the Gothenburg court finding, the film's title in place of a wrong year, and Cross's account of a second bottle blow to Carmen Borrero, which the shadow now includes.",
+    "checkedOn": "2026-11-10"
+  }
+}
