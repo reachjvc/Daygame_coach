@@ -27,6 +27,7 @@ import { AnswerSheet, type AnswerCardInput } from "./AnswerSheet"
 import { DayList, type DaySelection } from "./DayList"
 import { MuteSheet, mutedLine } from "./MuteSheet"
 import { SettingsSheet } from "./SettingsSheet"
+import { UndoButton } from "./UndoButton"
 import { ReviewScreen } from "./ReviewScreen"
 import { noPingDevice, PingDeviceCard, PingDeviceList } from "./PingDevices"
 
@@ -649,11 +650,8 @@ function TodayView({
             )}
             {bar.activity && ` · ${bar.activity}`}
           </p>
-          {!late && (
-            <Button variant="outline" size="sm" onClick={undoHeld}>
-              Undo
-            </Button>
-          )}
+          {/* on the touch, so a bar that goes before the finger lifts still answers it (p10-deletes-01) */}
+          {!late && <UndoButton onUndo={undoHeld} />}
         </div>,
         document.body,
       )}
