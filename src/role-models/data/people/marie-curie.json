@@ -1,0 +1,97 @@
+{
+  "id": "marie-curie",
+  "name": "Marie Curie",
+  "pronoun": "she",
+  "born": 1867,
+  "died": 1934,
+  "category": "scientists",
+  "areaIds": ["lm_mission", "lm_contribution"],
+  "tagline": "By her own count, almost four years of work in a leaking shed to prove that radium is a new element.",
+  "startedFrom": "She was born in Warsaw in 1867, under Russian rule, the youngest of five children of two teachers; her mother died when she was nine and her father's money was very modest. At seventeen she became a governess, and for years she studied alone from books while helping to pay for her sister's medical studies in Paris. She reached the Sorbonne in 1891, aged twenty-four, behind the French students in mathematics, and lived in a cold garret room where her meals were often bread with chocolate, eggs or fruit.",
+  "values": [
+    {
+      "word": "Service",
+      "evidence": [
+        { "kind": "words", "claim": "Of 1914 she wrote that the dominant duty was to help the country, and that she looked for the most efficient way to do useful work with her scientific knowledge.", "sourceId": "pierre-curie-1923", "locator": "Autobiographical Notes, ch. III, pp. 208-209" },
+        { "kind": "deed", "claim": "In the First World War she equipped 20 radiology vehicles, the first ready by late October 1914, and taught herself to drive and the basics of anatomy, X-ray equipment and car mechanics.", "sourceId": "aip-pasachoff-2000", "locator": "War Duty (1914-1919), first page (war1.htm)" },
+        { "kind": "deed", "claim": "From 1916 the course she organised at the Radium Institute trained one hundred and fifty women as X-ray operators.", "sourceId": "pierre-curie-1923", "locator": "Autobiographical Notes, ch. III, p. 217" },
+        { "kind": "witness", "claim": "The New York Times reported that when the war broke out she offered her services to the French government and worked at a hospital behind the front with her daughter Irene.", "sourceId": "nyt-1934", "locator": "obituary, paragraph beginning 'When the World War broke out'" }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        { "kind": "words", "claim": "She writes that she and Pierre took out no patent, kept no detail secret, and that she gave all the radium she had made to her laboratory.", "sourceId": "pierre-curie-1923", "locator": "Autobiographical Notes, ch. III, pp. 225-226" },
+        { "kind": "deed", "claim": "The Curies published in detail every process they used to isolate radium, without patenting any of them; she left the gram of radium given to her by American women to the Radium Institute in her will.", "sourceId": "aip-pasachoff-2000", "locator": "Founding the Radium Industry (resbr3.htm); The Radium Institute, Physical Decline (radinst3_text.htm)" },
+        { "kind": "witness", "claim": "The New York Times named 'total disregard of personal gain' as one of her main traits and said the money from her prizes went straight into research.", "sourceId": "nyt-1934", "locator": "obituary, paragraphs on her character and on the 1911 prize" }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        { "kind": "words", "claim": "She writes that she kept her governess post for three and a half years under a promise of mutual aid with her sister, then made up her weak training in Paris: 'My persistent efforts were not in vain.'", "sourceId": "pierre-curie-1923", "locator": "Autobiographical Notes, ch. I, pp. 166 and 172" },
+        { "kind": "deed", "claim": "Despite help from industry, it took her over three years to isolate one tenth of a gram of pure radium chloride.", "sourceId": "aip-pasachoff-2000", "locator": "Research Breakthroughs (1897-1904): The Discovery of Polonium and Radium (resbr2.htm)" },
+        { "kind": "deed", "claim": "She worked as a governess in Poland to support her older sister in Paris before going there herself.", "sourceId": "sci-history-inst", "locator": "Marie Sklodowska Curie, biography page, opening paragraph" },
+        { "kind": "witness", "claim": "Historian Marilyn Ogilvie credits her determination with getting her past a childhood marred by deaths in the family; her critics Boltwood and Rutherford put her success down to perseverance and tenacity.", "sourceId": "physics-today-ogilvie-2017", "locator": "sections 'Early years in Paris' and 'Curie's scientific reputation'" }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        { "kind": "words", "claim": "She writes that she sometimes spent a whole day stirring a boiling mass with an iron rod nearly as large as herself and was broken with fatigue at the day's end.", "sourceId": "pierre-curie-1923", "locator": "Autobiographical Notes, ch. II, pp. 186-187" },
+        { "kind": "witness", "claim": "Paul Appell, quoted in the New York Times obituary, wrote that besides her intellectual labour she frequently had to do severe manual toil, stirring a caldron with a heavy iron rod.", "sourceId": "nyt-1934", "locator": "obituary, paragraph quoting Paul Appell" },
+        { "kind": "witness", "claim": "Ogilvie reports that Rutherford, who liked her, agreed with Boltwood that her success came more from hard work and tenacity than from innate creativity.", "sourceId": "physics-today-ogilvie-2017", "locator": "section 'Curie's scientific reputation'" }
+      ]
+    },
+    {
+      "word": "Focus",
+      "evidence": [
+        { "kind": "words", "claim": "As a student in Paris she gave up her social circle after the first year because all her energy had to go into her studies.", "sourceId": "pierre-curie-1923", "locator": "Autobiographical Notes, ch. I, p. 172" },
+        { "kind": "witness", "claim": "The AIP exhibit retells stories that as a student she fainted from hunger, too absorbed in study to eat, and says living alone let her focus seriously on her studies.", "sourceId": "aip-pasachoff-2000", "locator": "A Student in Paris (1891-1897), first page (stud1.htm)" },
+        { "kind": "witness", "claim": "Her New York Times obituary called her engrossed in her research and named earnestness of purpose as one of her main traits.", "sourceId": "nyt-1934", "locator": "obituary, paragraphs on her character and family" }
+      ]
+    }
+  ],
+  "principles": [
+    { "text": "Measure a thing exactly before you explain it.", "sourceId": "pierre-curie-1923", "locator": "Autobiographical Notes, ch. II, p. 181" },
+    { "text": "Share what you discover; do not lock it up for profit.", "sourceId": "pierre-curie-1923", "locator": "Autobiographical Notes, ch. III, pp. 225-227" },
+    { "text": "To make the world better, work on yourself and help the people you can help most.", "sourceId": "pierre-curie-1923", "locator": "Autobiographical Notes, ch. I, p. 168" },
+    { "text": "Guard your working time from outside distraction, even friendly distraction.", "sourceId": "pierre-curie-1923", "locator": "Autobiographical Notes, ch. II, pp. 190-191" },
+    { "text": "When there is a crisis, go and see the need yourself, then fix it with your own hands.", "sourceId": "pierre-curie-1923", "locator": "Autobiographical Notes, ch. III, pp. 212-214" }
+  ],
+  "quotes": [
+    { "text": "You cannot hope to build a better world without improving the individuals.", "sourceId": "pierre-curie-1923", "locator": "Autobiographical Notes, ch. I, p. 168", "translation": "Charlotte and Vernon Kellogg, 1923" },
+    { "text": "I never had any other ambition than to be able to work freely for science.", "sourceId": "pierre-curie-1923", "locator": "Autobiographical Notes, ch. II, p. 192", "translation": "Charlotte and Vernon Kellogg, 1923" },
+    { "text": "Yet it was in this miserable old shed that we passed the best and happiest years of our life, devoting our entire days to our work.", "sourceId": "pierre-curie-1923", "locator": "Autobiographical Notes, ch. II, p. 186", "translation": "Charlotte and Vernon Kellogg, 1923" },
+    { "text": "We took out no patent and we did not reserve any advantage in any industrial exploitation.", "sourceId": "pierre-curie-1923", "locator": "Autobiographical Notes, ch. III, p. 226", "translation": "Charlotte and Vernon Kellogg, 1923" }
+  ],
+  "definingMoment": {
+    "text": "From 1898 to 1902 she and Pierre worked in an abandoned shed in Paris, once a dissecting room, with a leaking glass roof and one iron stove. She writes that she sometimes spent a whole day stirring a boiling mass with an iron rod nearly as tall as herself, and that only after treating a ton of pitchblende residues did she get definite results; the rough first treatment of that ton was done in the factory of a chemical company the Curies worked with. In 1902 she had one decigram of pure radium chloride and its atomic weight: the proof that radium is a new element. She writes that it took almost four years, and that one year might have been enough with proper means.",
+    "sourceIds": ["pierre-curie-1923", "aip-pasachoff-2000", "nyt-1934"]
+  },
+  "shadow": {
+    "text": "From the summer of 1910, as a widow, she had a love affair with the physicist Paul Langevin, a married father of four and a former student of Pierre Curie. In autumn 1911 the French press printed their intimate letters (or forgeries based on them), an angry crowd gathered in front of her house in Sceaux, and Langevin fought a duel with the journalist Gustave Tery that ended without bloodshed. Svante Arrhenius of the Nobel committee, who had first urged her to come to Stockholm for her second Nobel Prize, then advised her to decline it until her name was cleared; she went anyway. Her 1923 life story leaves the affair out, and the American Institute of Physics exhibit says she romanticised her own life there: the rough treatment of her first ton of ore, for example, was done in a company's factory. Early in the American chemist Bertram Boltwood's career she refused to let him compare his radium solution with her standard, though she later lent it. In 1925 she sat on a commission that recommended lead screens and blood tests for industrial radium workers; the AIP exhibit says she did not believe researchers faced the same dangers, though she had her own staff's blood checked.",
+    "sourceIds": ["aip-pasachoff-2000", "physics-today-ogilvie-2017", "nyrb-bernstein-1995", "pierre-curie-1923"]
+  },
+  "councilQuestion": { "text": "What pulled you away from your most important work this week, and did you let it?", "principleIndex": 3 },
+  "readings": [
+    { "title": "Pierre Curie (with Autobiographical Notes)", "year": 1923 },
+    { "title": "Recherches sur les substances radioactives", "year": 1903 },
+    { "title": "Traité de radioactivité", "year": 1910 }
+  ],
+  "sources": [
+    { "id": "pierre-curie-1923", "kind": "primary", "title": "Pierre Curie, with Autobiographical Notes by Marie Curie", "author": "Marie Curie (translated by Charlotte and Vernon Kellogg)", "year": 1923, "publisher": "The Macmillan Company, New York", "url": "https://archive.org/details/pierrecurie0000curi" },
+    { "id": "aip-pasachoff-2000", "kind": "secondary", "title": "Marie Curie and the Science of Radioactivity (online exhibit)", "author": "Naomi Pasachoff", "year": 2000, "publisher": "American Institute of Physics, Center for History of Physics", "url": "https://history.aip.org/exhibits/curie/" },
+    { "id": "nyt-1934", "kind": "secondary", "title": "Mme. Curie Is Dead; Martyr to Science (obituary, 5 July 1934)", "author": "The New York Times", "year": 1934, "publisher": "The New York Times", "url": "https://archive.nytimes.com/www.nytimes.com/learning/general/onthisday/bday/1107.html" },
+    { "id": "sci-history-inst", "kind": "secondary", "title": "Marie Sklodowska Curie (scientific biography)", "author": "Science History Institute", "year": "n.d.", "publisher": "Science History Institute, Philadelphia", "url": "https://www.sciencehistory.org/education/scientific-biographies/marie-sklodowska-curie/" },
+    { "id": "physics-today-ogilvie-2017", "kind": "secondary", "title": "Marie Curie and her fellow scientists", "author": "Marilyn Ogilvie", "year": 2017, "publisher": "Physics Today", "url": "https://physicstoday.aip.org/news/marie-curie-and-her-fellow-scientists" },
+    { "id": "nyrb-bernstein-1995", "kind": "secondary", "title": "The Passions of Mme. Curie (review of Susan Quinn, Marie Curie: A Life)", "author": "Jeremy Bernstein", "year": 1995, "publisher": "The New York Review of Books", "url": "https://www.nybooks.com/articles/1995/05/25/the-passions-of-mme-curie/" }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": { "result": "shadow", "notes": "Real scientist, died 1934, no political office or religion founded, no account of sexual contact with a minor or sexual violence found; her dark side is a 1910-1911 affair with a married colleague and a romanticised self-account." },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked all five draft values against her 1923 notes page by page and against the AIP exhibit, the 1934 obituary and Ogilvie. Humility fell: her own notes say she turned down the Legion of Honour out of loyalty to Pierre's refusal, she stood for the Academy, and the AIP exhibit says she romanticised her struggle to raise money; it also had only two sources. Service, Generosity and Determination held in both picks, Focus held on three sources, and Hard work came in from the blind pick, backed even by her critics Rutherford and Boltwood. All four quotes were found word for word; the defining moment and shadow now say that a company's factory did the first rough treatment of her ore, and the shadow adds the Boltwood refusal and her 1925 view of radiation risk.",
+    "checkedOn": "2026-11-10"
+  }
+}

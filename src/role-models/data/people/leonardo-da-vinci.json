@@ -1,0 +1,344 @@
+{
+  "id": "leonardo-da-vinci",
+  "name": "Leonardo da Vinci",
+  "born": 1452,
+  "died": 1519,
+  "category": "scientists",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset",
+    "lm_fun"
+  ],
+  "tagline": "A self-taught painter and engineer who asked questions and tested the answers himself.",
+  "startedFrom": "He was born at Vinci on 15 April 1452, the illegitimate son of the notary Ser Piero and a young woman named Caterina, and grew up in his grandfather's house. Because he was born out of wedlock he could not become a notary like his father, and he was not sent to a Latin school; apart from some arithmetic at an abacus school, he taught himself. By June 1472 he was enrolled as a painter in the Florentine painters' company.",
+  "values": [
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Standing at the mouth of a dark cave, he writes, two feelings rose in him: fear of the threatening cave, and desire to see whether there was any marvellous thing inside.",
+          "sourceId": "richter-1883-2",
+          "locator": "vol. II, no. 1339, p. 395"
+        },
+        {
+          "kind": "deed",
+          "claim": "His Milan memoranda list questions to put to other people, such as asking Benedetto Portinari how people go on the ice in Flanders, and asking Maestro Antonio how mortars are placed on bastions.",
+          "sourceId": "richter-1883-2",
+          "locator": "vol. II, no. 1448, p. 435"
+        },
+        {
+          "kind": "deed",
+          "claim": "Probably in the winter of 1508 he dissected an old man who had died in the hospital of Santa Maria Nuova in Florence, to find out why he had died so gently.",
+          "sourceId": "rct-anatomy",
+          "locator": "section 'The Centenarian'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Martin Clayton of the Royal Collection writes that from the outset his anatomical interests went far beyond what was useful to an artist: he wanted to understand the phenomena of life.",
+          "sourceId": "rct-anatomy",
+          "locator": "section 'Anatomical drawing'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Isaacson writes that his method was rooted in experiment, curiosity and the ability to marvel at things most adults stop noticing.",
+          "sourceId": "isaacson-2017",
+          "locator": "ch. 1 'Childhood', section 'Disciple of Experience'"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that just as iron rusts unless it is used, the intellect spoils unless it is kept in use.",
+          "sourceId": "richter-1883-2",
+          "locator": "vol. II, no. 1177, p. 294"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that learning acquired in youth arrests the evil of old age, because old age has wisdom for its food.",
+          "sourceId": "richter-1883-2",
+          "locator": "vol. II, no. 1171, p. 293"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1491 he wrote out a list of books, from Pliny's Natural History and works on arithmetic to Ovid, Petrarch and a book on war machines.",
+          "sourceId": "galileo-chronology",
+          "locator": "entry 1491"
+        },
+        {
+          "kind": "witness",
+          "claim": "Isaacson writes that, apart from some arithmetic at an abacus school, he was mainly self-taught.",
+          "sourceId": "isaacson-2017",
+          "locator": "ch. 1 'Childhood', section 'Disciple of Experience'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Vasari writes that in the few months he studied arithmetic he raised so many doubts and difficulties that he often bewildered his teacher.",
+          "sourceId": "vasari-1913",
+          "locator": "Life of Leonardo da Vinci, second paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that he cannot quote authors as the learned do, so he will rely on something greater: experience, 'the mistress of their Masters'.",
+          "sourceId": "richter-1883-1",
+          "locator": "vol. I, no. 11 (General Introduction to the Book on Painting)"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that experience never errs; only our judgments err, by expecting from it what our experiments did not show.",
+          "sourceId": "richter-1883-2",
+          "locator": "vol. II, no. 1153, p. 288"
+        },
+        {
+          "kind": "deed",
+          "claim": "Around 1509 he injected molten wax into the cavities of a brain to find their true shape, and then gave up the ancient belief that those cavities held the mental faculties.",
+          "sourceId": "rct-anatomy",
+          "locator": "section 'Neurology'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Isaacson writes that his lack of reverence for authority and his willingness to challenge received wisdom led him to an empirical way of studying nature.",
+          "sourceId": "isaacson-2017",
+          "locator": "ch. 1 'Childhood', section 'Disciple of Experience'"
+        }
+      ]
+    },
+    {
+      "word": "Imagination",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He advises painters to look at stained walls and find in them landscapes, battles and strange faces, calling it a way of arousing the mind to various inventions.",
+          "sourceId": "richter-1883-1",
+          "locator": "vol. I, no. 508, pp. 254-255"
+        },
+        {
+          "kind": "deed",
+          "claim": "He drew designs for a flying machine around 1480 and, in the mid-1480s, more flying machines including a parachute.",
+          "sourceId": "galileo-chronology",
+          "locator": "entries 1480 and 1485"
+        },
+        {
+          "kind": "deed",
+          "claim": "Vasari writes that when the King of France came to Milan, Leonardo, asked to devise something strange, made a lion that walked several steps and then opened its breast to show it full of lilies.",
+          "sourceId": "vasari-1913",
+          "locator": "Life of Leonardo da Vinci, paragraph on the King of France in Milan"
+        },
+        {
+          "kind": "witness",
+          "claim": "Clayton writes that he drew incessantly, to plan his art, to explore nature and to record the workings of his imagination.",
+          "sourceId": "rct-life",
+          "locator": "introduction"
+        }
+      ]
+    },
+    {
+      "word": "Excellence",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Vasari writes that his wish always to seek excellence upon excellence and perfection upon perfection was why so many of his works stayed unfinished.",
+          "sourceId": "vasari-1913",
+          "locator": "Life of Leonardo da Vinci, paragraph on the Sforza horse"
+        },
+        {
+          "kind": "witness",
+          "claim": "Clayton writes that his perfectionism, his difficulty squaring what he saw with traditional beliefs, and bad luck, kept him from finishing his treatise on anatomy.",
+          "sourceId": "rct-anatomy",
+          "locator": "introduction"
+        },
+        {
+          "kind": "deed",
+          "claim": "Vasari writes that he worked on the portrait of Lisa, wife of Francesco del Giocondo, for four years and still left it unfinished.",
+          "sourceId": "vasari-1913",
+          "locator": "Life of Leonardo da Vinci, paragraph on Monna Lisa"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1515 he was probably still working on the Mona Lisa and had not yet been able to hand it over.",
+          "sourceId": "galileo-chronology",
+          "locator": "entry 1515"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Test what you are told against your own experience, not against the fame of the man who said it.",
+      "sourceId": "richter-1883-1",
+      "locator": "vol. I, nos. 11-12 (General Introduction to the Book on Painting)"
+    },
+    {
+      "text": "Use your mind every day; left unused, it rusts like iron.",
+      "sourceId": "richter-1883-2",
+      "locator": "vol. II, no. 1177, p. 294"
+    },
+    {
+      "text": "Study what you have a taste for; what you force down, you do not keep.",
+      "sourceId": "richter-1883-2",
+      "locator": "vol. II, nos. 1175-1176, p. 294"
+    },
+    {
+      "text": "When you do not know something, write the question down and go and ask someone who knows.",
+      "sourceId": "richter-1883-2",
+      "locator": "vol. II, no. 1448 (memoranda), p. 435"
+    },
+    {
+      "text": "When you need to think and study, work alone.",
+      "sourceId": "richter-1883-1",
+      "locator": "vol. I, no. 494, p. 248"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Just as iron rusts unless it is used, and water putrifies or, in cold, turns to ice, so our intellect spoils unless it is kept in use.",
+      "sourceId": "richter-1883-2",
+      "locator": "vol. II, no. 1177, p. 294",
+      "translation": "Jean Paul Richter, 1883"
+    },
+    {
+      "text": "Experience never errs; it is only your judgments that err by promising themselves effects such as are not caused by your experiments.",
+      "sourceId": "richter-1883-2",
+      "locator": "vol. II, no. 1153, p. 288",
+      "translation": "Jean Paul Richter, 1883"
+    },
+    {
+      "text": "As a day well spent procures a happy sleep, so a life well employed procures a happy death.",
+      "sourceId": "richter-1883-2",
+      "locator": "vol. II, no. 1173, p. 293",
+      "translation": "Jean Paul Richter, 1883"
+    },
+    {
+      "text": "Obstacles cannot crush me / Every obstacle yields to stern resolve / He who is fixed to a star does not change his mind.",
+      "sourceId": "richter-1883-1",
+      "locator": "vol. I, no. 682, p. 356 (mottoes for emblem drawings, Windsor leaf 198; line breaks shown as /)",
+      "translation": "Jean Paul Richter, 1883"
+    }
+  ],
+  "definingMoment": {
+    "text": "Probably in the winter of 1508, in the hospital of Santa Maria Nuova in Florence, an old man told Leonardo he was over a hundred years old and felt nothing wrong except weakness; a few hours later he died, sitting on a bed. Leonardo dissected him, in his own words 'to see the cause of so sweet a death', and described signs of what are now known as coronary disease and cirrhosis of the liver. In the same notes he compared a dissection of a two-year-old child. This began five years of intense anatomical work, which he never published.",
+    "sourceIds": [
+      "rct-anatomy",
+      "rct-centenarian"
+    ]
+  },
+  "shadow": {
+    "text": "In about 1482 a draft letter to Ludovico Sforza, ruler of Milan, kept among his papers (Richter judges it genuine, perhaps dictated), offered his services mainly as a maker of war machines: portable bridges, mortars, secret mines and covered chariots. From August 1502 to early 1503 he worked for Cesare Borgia, the pope's son, as his 'Family Architect and General Engineer' with the papal army. He left many commissioned works unfinished, among them the Adoration of the Magi and the Battle of Anghiari mural, which in 1506 he signed a contract to come back and finish; Vasari wrote that he 'began many things and never finished one of them'. In 1490 he took a ten-year-old boy, Salai, into his house; about 1564 the painter and writer Lomazzo, in an imagined dialogue, has Leonardo say he played the 'backside game' with Salai 'Many times!' and that Salai was 'a very fair young man, especially around the age of fifteen'. Biographer Charles Nicholl reads this as meaning Salai became his sexual partner in adolescence, and calls Lomazzo a tricky but well-informed source.",
+    "sourceIds": [
+      "richter-1883-2",
+      "galileo-chronology",
+      "rct-life",
+      "vasari-1913",
+      "nicholl-2004"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you wonder about this week, and did you go and ask someone who knows?",
+    "principleIndex": 3
+  },
+  "readings": [
+    {
+      "title": "The Literary Works of Leonardo da Vinci (his notebooks, edited and translated by Jean Paul Richter)",
+      "year": 1883
+    }
+  ],
+  "sources": [
+    {
+      "id": "richter-1883-1",
+      "kind": "primary",
+      "title": "The Literary Works of Leonardo da Vinci, vol. I (Italian text with English translation)",
+      "author": "Leonardo da Vinci, compiled, edited and translated by Jean Paul Richter",
+      "year": 1883,
+      "publisher": "Sampson Low, Marston, Searle & Rivington, London; scan on the Internet Archive",
+      "url": "https://archive.org/details/literaryworksofl01leonuoft"
+    },
+    {
+      "id": "richter-1883-2",
+      "kind": "primary",
+      "title": "The Literary Works of Leonardo da Vinci, vol. II (Italian text with English translation)",
+      "author": "Leonardo da Vinci, compiled, edited and translated by Jean Paul Richter",
+      "year": 1883,
+      "publisher": "Sampson Low, Marston, Searle & Rivington, London; scan on the Internet Archive",
+      "url": "https://archive.org/details/literaryworksofl02leonuoft"
+    },
+    {
+      "id": "vasari-1913",
+      "kind": "secondary",
+      "title": "Lives of the Most Eminent Painters, Sculptors and Architects, vol. IV: Life of Leonardo da Vinci",
+      "author": "Giorgio Vasari, translated by Gaston du C. de Vere",
+      "year": 1913,
+      "publisher": "Macmillan and the Medici Society; Project Gutenberg e-text #28420",
+      "url": "https://www.gutenberg.org/ebooks/28420"
+    },
+    {
+      "id": "isaacson-2017",
+      "kind": "secondary",
+      "title": "Leonardo da Vinci, chapter 1 'Childhood' (excerpt reprinted by permission of the publisher)",
+      "author": "Walter Isaacson",
+      "year": 2017,
+      "publisher": "Simon & Schuster",
+      "url": "https://news.wttw.com/sites/default/files/article/file-attachments/Gini_LeonardoDaVinci.pdf"
+    },
+    {
+      "id": "galileo-chronology",
+      "kind": "secondary",
+      "title": "Chronology of Leonardo da Vinci (Scientific Itineraries in Tuscany, Leonardian itinerary)",
+      "author": "Museo Galileo, Institute and Museum of the History of Science, Florence",
+      "year": "undated",
+      "url": "https://brunelleschi.imss.fi.it/itineraries/itinerary/ChronologyLeonardo.html"
+    },
+    {
+      "id": "rct-anatomy",
+      "kind": "secondary",
+      "title": "Leonardo's Study of Anatomy (Royal Collection Trust, Leonardo in the Royal Collection)",
+      "author": "Martin Clayton, Head of Prints and Drawings",
+      "year": "undated",
+      "publisher": "Royal Collection Trust",
+      "url": "https://www.rct.uk/collection/stories/leonardo-in-the-royal-collection/leonardos-study-of-anatomy"
+    },
+    {
+      "id": "rct-life",
+      "kind": "secondary",
+      "title": "The Life of Leonardo da Vinci (Royal Collection Trust, Leonardo in the Royal Collection)",
+      "author": "Martin Clayton, Head of Prints and Drawings",
+      "year": "undated",
+      "publisher": "Royal Collection Trust",
+      "url": "https://www.rct.uk/collection/stories/leonardo-in-the-royal-collection/the-life-of-leonardo-da-vinci"
+    },
+    {
+      "id": "rct-centenarian",
+      "kind": "secondary",
+      "title": "The Centenarian: Anatomical Manuscript B (exhibition Leonardo da Vinci: Anatomist, The Queen's Gallery, Buckingham Palace)",
+      "author": "Royal Collection Trust",
+      "year": "undated",
+      "publisher": "Royal Collection Trust",
+      "url": "https://www.rct.uk/collection/exhibitions/leonardo-da-vinci/the-queens-gallery-buckingham-palace/the-exhibition/the-centenarian-anatomical-manuscript-b"
+    },
+    {
+      "id": "nicholl-2004",
+      "kind": "secondary",
+      "title": "Leonardo da Vinci: The Flights of the Mind",
+      "author": "Charles Nicholl",
+      "year": 2004,
+      "publisher": "Allen Lane, London"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real Italian painter, engineer and anatomist (1452-1519), not fictional, not a politician or founder of a living religion. Owner case (under-16): Salai came to live with him in July 1490 aged 10 (his own note, Richter no. 1458); Lomazzo's imagined dialogue of c. 1564 has him say he played the 'backside game' with Salai 'Many times!', Salai being 'a very fair young man, especially around the age of fifteen'; Nicholl reads it as Salai becoming his sexual partner on reaching adolescence and calls Lomazzo 'a tricky but well-informed source'; Nicholl also notes that 'proponents of an improbably saintly Leonardo have argued that his life was celibate'. No record from his lifetime of sexual contact with Salai at any age was found."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked every value: Learning and Excellence against Vasari's own line that he 'set himself to learn many things, and then, after having begun them, abandoned them', Independence and Imagination against the blind rule of three sources, and Curiosity against its sources. Nothing fell: the abandoned works read as a pattern of not finishing, which sits in the shadow, while two independent writers (Vasari and Clayton) tie it to perfectionism; Independence and Imagination each rest on at least three sources. All four quotes were found word for word in Richter's 1883 text with no misattribution report; the shadow now quotes Lomazzo's dialogue exactly in Nicholl's English and no longer overstates the Sforza letter.",
+    "checkedOn": "2026-11-10"
+  }
+}

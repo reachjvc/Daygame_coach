@@ -5,10 +5,13 @@ import p_alex_hormozi from "./people/alex-hormozi.json"
 import p_baruch_spinoza from "./people/baruch-spinoza.json"
 import p_epictetus from "./people/epictetus.json"
 import p_friedrich_nietzsche from "./people/friedrich-nietzsche.json"
+import p_leonardo_da_vinci from "./people/leonardo-da-vinci.json"
 import p_marcus_aurelius from "./people/marcus-aurelius.json"
+import p_marie_curie from "./people/marie-curie.json"
+import p_michael_faraday from "./people/michael-faraday.json"
 import p_ralph_waldo_emerson from "./people/ralph-waldo-emerson.json"
 import p_seneca from "./people/seneca.json"
 
-export const PERSON_IDS = ["alex-hormozi","baruch-spinoza","epictetus","friedrich-nietzsche","marcus-aurelius","ralph-waldo-emerson","seneca"] as const
+export const PERSON_IDS = ["alex-hormozi","baruch-spinoza","epictetus","friedrich-nietzsche","leonardo-da-vinci","marcus-aurelius","marie-curie","michael-faraday","ralph-waldo-emerson","seneca"] as const
 
-export const PEOPLE = [p_alex_hormozi, p_baruch_spinoza, p_epictetus, p_friedrich_nietzsche, p_marcus_aurelius, p_ralph_waldo_emerson, p_seneca] as unknown as RoleModelPerson[]
+export const PEOPLE = [p_alex_hormozi, p_baruch_spinoza, p_epictetus, p_friedrich_nietzsche, p_leonardo_da_vinci, p_marcus_aurelius, p_marie_curie, p_michael_faraday, p_ralph_waldo_emerson, p_seneca] as unknown as RoleModelPerson[]

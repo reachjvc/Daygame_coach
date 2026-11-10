@@ -1,0 +1,297 @@
+{
+  "id": "michael-faraday",
+  "name": "Michael Faraday",
+  "born": 1791,
+  "died": 1867,
+  "category": "scientists",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A bookbinder's boy who taught himself science and turned down money and honours for it",
+  "startedFrom": "He was born in 1791 in Newington Butts, south London, the son of a journeyman blacksmith with poor health and little money. He learned only reading, writing and arithmetic at a common day school. At thirteen he became an errand boy in a bookshop, then an apprentice bookbinder from 1805 to 1812.",
+  "values": [
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "As an apprentice he read the books he bound, paid a shilling a time (given by his brother) for Tatum's science lectures in 1810, and wrote and bound his lecture notes into four indexed volumes.",
+          "sourceId": "gladstone-1874",
+          "locator": "Section I, The Story of His Life"
+        },
+        {
+          "kind": "words",
+          "claim": "In a letter of 2 September 1858 he wrote that it was in the books he bound, \"in the hours after work, that I found the beginning of my philosophy.\"",
+          "sourceId": "tyndall-1894",
+          "locator": "Chapter 1 (letter to De la Rive, 2 September 1858)"
+        },
+        {
+          "kind": "words",
+          "claim": "Writing to his friend Abbott from Rome during the 1813-15 tour with Davy, he said he stayed abroad \"only retained by the wish of improvement\" and had \"learned just enough to perceive my ignorance\".",
+          "sourceId": "thompson-1898",
+          "locator": "Chapter I, Early Life, Training, and Travel (letter to Benjamin Abbott from Rome, 1815)"
+        }
+      ]
+    },
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He was twice offered the Presidency of the Royal Society and declined both times, and said publicly several times that he would not accept a knighthood.",
+          "sourceId": "rigb",
+          "locator": "Biography section"
+        },
+        {
+          "kind": "words",
+          "claim": "Refusing the Royal Society presidency, he told Tyndall: \"I must remain plain Michael Faraday to the last.\"",
+          "sourceId": "tyndall-1894",
+          "locator": "Chapter 16, Illustrations of Character"
+        },
+        {
+          "kind": "witness",
+          "claim": "Thompson writes that \"severe self-discipline and genuine humility\" kept him from boasting about or hiding his humble start.",
+          "sourceId": "thompson-1898",
+          "locator": "Chapter VI, Middle and Later Life"
+        }
+      ]
+    },
+    {
+      "word": "Love",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "On 25 January 1847 he wrote in his book of diplomas that his marriage of 12 June 1821, \"as a source of honour and happiness, far exceeds all the rest.\"",
+          "sourceId": "tyndall-1894",
+          "locator": "Chapter 1"
+        },
+        {
+          "kind": "deed",
+          "claim": "Away at Swansea in July 1822, he wrote his wife three letters; one opens by saying he must stop himself writing \"a mere love-letter, just as usual\".",
+          "sourceId": "thompson-1898",
+          "locator": "Chapter II, Life at the Royal Institution (letter of 21 July 1822)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Tyndall, who saw them together, wrote that in his relations to his wife \"he added chivalry to affection\"; they lived together for forty-six years.",
+          "sourceId": "tyndall-1894",
+          "locator": "Chapter 1"
+        },
+        {
+          "kind": "witness",
+          "claim": "Gladstone writes that as the years went on the affection between husband and wife \"became only deeper and deeper\", and quotes a letter from Birmingham: \"Oh! what happiness is ours!\"",
+          "sourceId": "gladstone-1874",
+          "locator": "Section I, The Story of His Life (marriage of 12 June 1821)"
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He served as an elder of the small Sandemanian church from 1840 to 1844 and again after 1860; separated from it in 1844, he kept worshipping with its members and was restored.",
+          "sourceId": "gladstone-1874",
+          "locator": "Section I, The Story of His Life"
+        },
+        {
+          "kind": "words",
+          "claim": "In a letter of 24 October 1844 he wrote that he belonged to \"a very small and despised sect of Christians\" whose \"hope is founded on the faith that is in Christ\".",
+          "sourceId": "bence-jones-1870",
+          "locator": "vol. 2, pp. 193-195 (letter of 24 October 1844)"
+        },
+        {
+          "kind": "deed",
+          "claim": "He held the eldership until 1864, the years in which he was also giving up his Trinity House and Royal Institution posts.",
+          "sourceId": "thompson-1898",
+          "locator": "Chapter VI, Middle and Later Life"
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He was scientific adviser to Trinity House, which runs England's lighthouses, from 1836 to 1865, and founded the Royal Institution's Christmas Lectures for young people in the mid-1820s.",
+          "sourceId": "rigb",
+          "locator": "Biography section"
+        },
+        {
+          "kind": "deed",
+          "claim": "After he had stopped lecturing, he kept working for Trinity House on lighting lighthouses by electric light until 1865.",
+          "sourceId": "thompson-1898",
+          "locator": "Chapter VI, Middle and Later Life"
+        },
+        {
+          "kind": "words",
+          "claim": "He ended his Christmas lectures to children by wishing that their deeds would be \"effectual in the discharge of your duty to your fellow-men.\"",
+          "sourceId": "candle-1861",
+          "locator": "Lecture VI, closing paragraph"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not believe a claim until you have tested it yourself.",
+      "sourceId": "tyndall-1894",
+      "locator": "Chapter 1 (letter to De la Rive, 2 September 1858: he tested Mrs Marcet's book with small experiments)"
+    },
+    {
+      "text": "When money and your real work pull in different directions, choose the work.",
+      "sourceId": "tyndall-1894",
+      "locator": "Chapter 16, Illustrations of Character (his paid consulting income, over 1,000 pounds in 1830, fell to zero from the end of 1845)"
+    },
+    {
+      "text": "Turn down honours and posts that would take you away from what you do best.",
+      "sourceId": "tyndall-1894",
+      "locator": "Chapter 16, Illustrations of Character (refusal of the Royal Society presidency)"
+    },
+    {
+      "text": "A strange idea is worth an experiment if it fits the laws of nature; let the experiment decide.",
+      "sourceId": "bence-jones-1870",
+      "locator": "vol. 2, p. 253 (laboratory book, 19 March 1849)"
+    },
+    {
+      "text": "Date and publish your own results clearly, so nobody can doubt what is yours.",
+      "sourceId": "thompson-1898",
+      "locator": "Chapter VII, Views on the Pursuit of Science and on Education (after the 1823 dispute he was 'especially precise in dating and publishing his own researches')"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Nothing is too wonderful to be true, if it be consistent with the laws of nature; and in such things as these, experiment is the best test of such consistency.",
+      "sourceId": "bence-jones-1870",
+      "locator": "vol. 2, p. 253 (laboratory book, 19 March 1849)"
+    },
+    {
+      "text": "I could trust a fact, and always cross-examined an assertion.",
+      "sourceId": "tyndall-1894",
+      "locator": "Chapter 1 (letter to De la Rive, 2 September 1858)"
+    },
+    {
+      "text": "I must remain plain Michael Faraday to the last.",
+      "sourceId": "tyndall-1894",
+      "locator": "Chapter 16, Illustrations of Character (said to Tyndall on refusing the Royal Society presidency)"
+    },
+    {
+      "text": "That you may, like it, shine as lights to those about you; that, in all your actions, you may justify the beauty of the taper by making your deeds honourable and effectual in the discharge of your duty to your fellow-men.",
+      "sourceId": "candle-1861",
+      "locator": "Lecture VI, closing paragraph"
+    }
+  ],
+  "definingMoment": {
+    "text": "In February to April 1812 a customer of the bookshop took him to four of Humphry Davy's last lectures at the Royal Institution. He wrote the lectures out in full with drawings, and at the end of 1812 sent them to Davy with a letter asking for work in science. Davy answered kindly but warned him that science was \"a harsh mistress\" that paid poorly. Early in 1813 the laboratory assistant's post fell vacant, and on 1 March 1813 Faraday started there at 25 shillings a week and a room in the house.",
+    "sourceIds": [
+      "thompson-1898",
+      "gladstone-1874",
+      "tyndall-1894"
+    ]
+  },
+  "shadow": {
+    "text": "In October 1821 he published his discovery of electromagnetic rotation, and rumours spread that he had not properly credited Davy and Wollaston, specifically that he had plagiarised Wollaston. The Science Museum's Richard Dunn writes that Davy accused him of plagiarism and of failing to credit Wollaston. In 1823 Davy publicly opposed his election to the Royal Society, and he was elected on 8 January 1824 with one vote against. In 1832, when two Italian physicists published on his newest discovery before his full paper appeared, he reprinted their paper with sharp critical notes. Tyndall, who knew him well, called him \"a man of excitable and fiery nature\" who through self-discipline had turned that fire into \"a central glow\".",
+    "sourceIds": [
+      "james-2021",
+      "dunn-2021",
+      "thompson-1898",
+      "tyndall-1894"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which claim did you accept this week without testing it yourself?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Chemical History of a Candle",
+      "year": 1861
+    },
+    {
+      "title": "Experimental Researches in Electricity, Volume 1",
+      "year": 1839
+    }
+  ],
+  "sources": [
+    {
+      "id": "candle-1861",
+      "kind": "primary",
+      "title": "The Chemical History of a Candle (ed. William Crookes; new impression)",
+      "author": "Michael Faraday",
+      "year": 1908,
+      "publisher": "Chatto & Windus",
+      "url": "https://www.gutenberg.org/ebooks/14474"
+    },
+    {
+      "id": "bence-jones-1870",
+      "kind": "secondary",
+      "title": "The Life and Letters of Faraday, 2 vols.",
+      "author": "Henry Bence Jones",
+      "year": 1870,
+      "publisher": "Longmans, Green, and Co.",
+      "url": "https://archive.org/details/lifelettersoffar02joneuoft"
+    },
+    {
+      "id": "tyndall-1894",
+      "kind": "secondary",
+      "title": "Faraday as a Discoverer (5th edition; first published 1868)",
+      "author": "John Tyndall",
+      "year": 1894,
+      "publisher": "Longmans, Green, and Co.",
+      "url": "https://www.gutenberg.org/ebooks/1225"
+    },
+    {
+      "id": "gladstone-1874",
+      "kind": "secondary",
+      "title": "Michael Faraday (3rd edition)",
+      "author": "J. H. Gladstone",
+      "year": 1874,
+      "publisher": "Macmillan and Co.",
+      "url": "https://www.gutenberg.org/ebooks/47396"
+    },
+    {
+      "id": "thompson-1898",
+      "kind": "secondary",
+      "title": "Michael Faraday, His Life and Work",
+      "author": "Silvanus P. Thompson",
+      "year": 1898,
+      "publisher": "Cassell and Company",
+      "url": "https://www.gutenberg.org/ebooks/65735"
+    },
+    {
+      "id": "rigb",
+      "kind": "secondary",
+      "title": "Michael Faraday (1791-1867)",
+      "author": "Royal Institution of Great Britain",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.rigb.org/node/2696"
+    },
+    {
+      "id": "james-2021",
+      "kind": "secondary",
+      "title": "Frank James on Davy, Faraday, and electro-magnetic rotations",
+      "author": "Davy Notebooks Project, Lancaster University (post by Andrew Lacey on Frank A. J. L. James's work)",
+      "year": 2021,
+      "url": "https://wp.lancs.ac.uk/davynotebooks/?p=414"
+    },
+    {
+      "id": "dunn-2021",
+      "kind": "secondary",
+      "title": "A small revolution: Michael Faraday and the origins of the electric motor",
+      "author": "Richard Dunn (Science Museum)",
+      "year": 2021,
+      "url": "https://blog.sciencemuseum.org.uk/a-small-revolution-michael-faraday-and-the-origins-of-the-electric-motor/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "ok",
+      "notes": "A real 19th-century scientist, not a politician or founder of a religion, with no account of sexual misconduct found; his documented shadow is small (priority disputes and a sharp temper held in check)."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked all five draft values against the full texts of Tyndall, Gladstone, Thompson and Bence Jones and the modern Royal Institution, Lancaster and Science Museum pages. None fell: the priority quarrels of 1821-23 and 1832 and his 1844 separation from the church are single episodes and stand in the shadow, not against Humility or Faith. Love, the one value the blind pick did not choose, held once Gladstone's account gave it a third source; Curiosity from the blind pick had no room. All four quotes matched the original texts; the James post was re-credited to its real poster and \"titles\" became \"honours\", since no knighthood offer is on record.",
+    "checkedOn": "2026-11-10"
+  }
+}
