@@ -50,7 +50,8 @@
  *
  * 5. ONE STORE PER BUILD. The store is named after the build id in this file's
  *    registration URL (`/sw.js?v=<build>`), so a new build installs a new worker
- *    with a new store and throws the old one away on activation. A fixed name
+ *    with a new store and throws the old one away once the new one holds
+ *    every page the old one did (`dropOldStores`). A fixed name
  *    would keep stale pages and assets from every past build forever. A build
  *    with no id does not register at all — see OfflineShell.
  *
@@ -139,7 +140,7 @@ async function warmShell(cache, path) {
   if (!response.ok) {
     // Sent elsewhere: signed out, or — for the live workout — no workout open
     // any more. A copy stored earlier is of something that is over, so it goes.
-    if (response.type === "opaqueredirect") await cache.delete(path)
+    if (response.type === "opaqueredirect") await forgetShellEverywhere(path)
     return
   }
 
@@ -188,13 +189,51 @@ self.addEventListener("install", (event) => {
   )
 })
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))))
-      .then(() => self.clients.claim()),
+/** The worker's own stores, this build's and older ones (rule 5). */
+const SHELL_STORE_PREFIX = "app-shell-"
+
+/**
+ * A shell the server now sends elsewhere goes from EVERY store: an older
+ * build's store may still be kept (`dropOldStores`), and its copy is as over
+ * as this one's (rule 4).
+ */
+async function forgetShellEverywhere(key) {
+  const keys = await caches.keys()
+  await Promise.all(
+    keys.filter((name) => name.startsWith(SHELL_STORE_PREFIX)).map((name) => caches.open(name).then((store) => store.delete(key))),
   )
+}
+
+/**
+ * AN OLDER BUILD'S STORE GOES ONCE THIS ONE HOLDS EVERY PAGE IT HELD (alpha
+ * test p9-offline-02). A new worker installed during a signal blip stored no
+ * page at all, activated anyway, and threw the old store away, so /audit with
+ * no signal showed the browser's error page. Until this build's store has the
+ * page, the old one keeps serving it, with the old build's scripts stored
+ * beside it (rule 3); the page's next warm-shell, with signal, fills this
+ * store and the old one goes then. A store that is not this worker's goes at
+ * once, as before.
+ */
+async function dropOldStores() {
+  const current = await caches.open(CACHE)
+  const keys = await caches.keys()
+  await Promise.all(
+    keys
+      .filter((name) => name !== CACHE)
+      .map(async (name) => {
+        if (name.startsWith(SHELL_STORE_PREFIX)) {
+          const old = await caches.open(name)
+          for (const path of SHELL_PATHS) {
+            if ((await old.match(path)) && !(await current.match(path))) return
+          }
+        }
+        await caches.delete(name)
+      }),
+  )
+}
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(dropOldStores().then(() => self.clients.claim()))
 })
 
 /**
@@ -210,7 +249,10 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "warm-shell") {
     event.waitUntil(
-      caches.open(CACHE).then((cache) => Promise.allSettled(SHELL_PATHS.map((path) => warmShell(cache, path)))),
+      caches
+        .open(CACHE)
+        .then((cache) => Promise.allSettled(SHELL_PATHS.map((path) => warmShell(cache, path))))
+        .then(() => dropOldStores()),
     )
   }
 })
@@ -231,7 +273,10 @@ self.addEventListener("fetch", (event) => {
   // stored tracker page was theirs. Drop it, and let the browser load the page.
   // The tracker's own warm-shell message fills the store again afterwards.
   if (isPage && url.pathname.startsWith("/auth/")) {
-    event.waitUntil(caches.delete(CACHE))
+    // Every store of this worker's, an older build's still kept included.
+    event.waitUntil(
+      caches.keys().then((keys) => Promise.all(keys.filter((name) => name.startsWith(SHELL_STORE_PREFIX)).map((name) => caches.delete(name)))),
+    )
     return
   }
 
@@ -255,7 +300,7 @@ self.addEventListener("fetch", (event) => {
           // finished or thrown away, or nobody is signed in. The stored copy
           // must not come back the next time there is no signal, offering a
           // finished workout as if it were still open.
-          event.waitUntil(caches.open(CACHE).then((cache) => cache.delete(key)))
+          event.waitUntil(forgetShellEverywhere(key))
         }
         return response
       })

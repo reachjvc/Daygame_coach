@@ -56,6 +56,11 @@ function fakeCaches(store: Harness["store"]) {
         const key = typeof request === "string" ? new URL(request, ORIGIN).href : request.url
         entries.set(key, response)
       },
+      // the activate step asks an older build's store what it holds (p9-offline-02)
+      match: async (request: { url: string } | string) =>
+        entries.get(typeof request === "string" ? new URL(request, ORIGIN).href : request.url),
+      delete: async (request: { url: string } | string) =>
+        entries.delete(typeof request === "string" ? new URL(request, ORIGIN).href : request.url),
     }
   }
   return {
