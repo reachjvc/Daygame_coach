@@ -1,0 +1,327 @@
+{
+  "id": "jimmy-carter",
+  "name": "Jimmy Carter",
+  "born": 1924,
+  "died": 2024,
+  "category": "leaders",
+  "areaIds": [
+    "lm_contribution",
+    "lm_spirituality",
+    "lm_mission"
+  ],
+  "tagline": "A peanut farmer who became president, lost, then gave forty years to peace and the poor.",
+  "startedFrom": "He was born in 1924 in Plains, Georgia, and grew up on the family farm in Archery, in a house without electricity or indoor plumbing. His parents owned a farm, a warehouse and a store: moderately well off by national standards, wealthy for rural Georgia. As a boy he hauled farm produce into town to sell it, and he left for the Naval Academy, graduating in 1946.",
+  "values": [
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After losing the presidency he and Rosalynn founded the Carter Center in 1982, which mediated conflicts, observed elections in Latin America, Asia and Africa, and led the campaign against Guinea worm.",
+          "sourceId": "ap-obit",
+          "locator": "paragraphs on the Carter Center"
+        },
+        {
+          "kind": "deed",
+          "claim": "He worked with Habitat for Humanity, which builds housing for people in need, and was often seen on television helping with Habitat construction.",
+          "sourceId": "millercenter",
+          "locator": "Life After the Presidency"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Committee's presenter said that where an ex-president could have made money for himself, Carter instead 'wielded hammer and saw for the benefit of others'.",
+          "sourceId": "nobel-speech",
+          "locator": "Award ceremony speech, Oslo, 10 December 2002"
+        }
+      ]
+    },
+    {
+      "word": "Peace",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In September 1978 he kept Egypt's Anwar Sadat and Israel's Menachem Begin at the bargaining table at Camp David for 13 days, which led to the Egypt-Israel peace treaty.",
+          "sourceId": "ap-obit",
+          "locator": "paragraph on his most acclaimed achievement in office"
+        },
+        {
+          "kind": "words",
+          "claim": "In his Nobel lecture he said war may sometimes be a necessary evil but is always an evil, never a good.",
+          "sourceId": "nobel-lecture",
+          "locator": "Nobel Lecture, Oslo, 10 December 2002, closing section"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Committee's presenter said a mediator had rarely played a more important part than Carter did at Camp David, and that 'Carter never mislays the peace-pipe'.",
+          "sourceId": "nobel-speech",
+          "locator": "Award ceremony speech, Oslo, 10 December 2002"
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After he returned to Plains to run the farm he became a deacon and Sunday school teacher at the Plains Baptist Church; after his 1966 defeat he did missionary work in Georgia, Mexico City, Massachusetts and Pennsylvania.",
+          "sourceId": "millercenter",
+          "locator": "Life Before the Presidency"
+        },
+        {
+          "kind": "deed",
+          "claim": "He taught Sunday school lessons at Maranatha Baptist Church in Plains until his mobility declined and the pandemic came.",
+          "sourceId": "ap-obit",
+          "locator": "paragraph on his life in Plains"
+        },
+        {
+          "kind": "words",
+          "claim": "In his Nobel lecture he said: 'I worship Jesus Christ, whom we Christians consider to be the Prince of Peace.'",
+          "sourceId": "nobel-lecture",
+          "locator": "Nobel Lecture, Oslo, 10 December 2002"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Committee's presenter said Carter saw his work as his duty as a Christian and that his deep faith went with an exceptional degree of religious tolerance.",
+          "sourceId": "nobel-speech",
+          "locator": "Award ceremony speech, Oslo, 10 December 2002"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He took over the family farm in 1953; in the 1954 drought its net profit was $187, and by 1959 hard work and good management had made it prosperous.",
+          "sourceId": "millercenter",
+          "locator": "Life Before the Presidency"
+        },
+        {
+          "kind": "deed",
+          "claim": "As a Georgia state senator he promised to read every bill before he voted on it, and kept the promise with long hours of reading.",
+          "sourceId": "millercenter",
+          "locator": "Life Before the Presidency"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Associated Press obituary says he combined his ambition with a keen intellect, deep religious faith and a 'prodigious work ethic', building houses for the poor well into his 90s.",
+          "sourceId": "ap-obit",
+          "locator": "opening paragraphs"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Committee's presenter quoted his motto, 'The worst thing that you can do is not to try', and added: 'Few people, if any, have tried harder.'",
+          "sourceId": "nobel-speech",
+          "locator": "Award ceremony speech, Oslo, 10 December 2002"
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1958 he was the only white man in Plains to refuse to join the segregationist White Citizens Council; its members boycotted his business until the boycott faded.",
+          "sourceId": "millercenter",
+          "locator": "Life Before the Presidency"
+        },
+        {
+          "kind": "deed",
+          "claim": "In his 1971 inaugural address as governor of Georgia he said 'the time for racial discrimination is over'.",
+          "sourceId": "ap-obit",
+          "locator": "paragraph on his 1971 inaugural address"
+        },
+        {
+          "kind": "words",
+          "claim": "In his 1977 inaugural address he said: 'Our commitment to human rights must be absolute.'",
+          "sourceId": "inaugural-1977",
+          "locator": "Inaugural Address, 20 January 1977"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Committee's presenter called the fight for human rights probably the most recurring theme of his life's work, from governor to president to ex-president.",
+          "sourceId": "nobel-speech",
+          "locator": "Award ceremony speech, Oslo, 10 December 2002"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Change your methods when times change, but keep your principles.",
+      "sourceId": "nobel-lecture",
+      "locator": "Nobel Lecture, 10 December 2002 (his teacher Julia Coleman's saying, which he says he thought of often in the White House)"
+    },
+    {
+      "text": "Face the truth first; only then can you change course.",
+      "sourceId": "crisis-1979",
+      "locator": "'Crisis of Confidence' speech, 15 July 1979"
+    },
+    {
+      "text": "Your worth comes from what you do, not from what you own.",
+      "sourceId": "crisis-1979",
+      "locator": "'Crisis of Confidence' speech, 15 July 1979"
+    },
+    {
+      "text": "The worst thing you can do is not to try.",
+      "sourceId": "nobel-speech",
+      "locator": "Award ceremony speech, 10 December 2002 (named there as his motto)"
+    },
+    {
+      "text": "After a defeat, build a place where you can keep working.",
+      "sourceId": "ap-obit",
+      "locator": "paragraphs on the Carter Center (founded 1982 after his 1980 loss; quotes his memoir: 'I wanted a place where we could work')"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "War may sometimes be a necessary evil. But no matter how necessary, it is always an evil, never a good. We will not learn how to live together in peace by killing each other's children.",
+      "sourceId": "nobel-lecture",
+      "locator": "Nobel Lecture, Oslo, 10 December 2002"
+    },
+    {
+      "text": "God gives us the capacity for choice. We can choose to alleviate suffering. We can choose to work together for peace.",
+      "sourceId": "nobel-lecture",
+      "locator": "Nobel Lecture, Oslo, 10 December 2002, last paragraph"
+    },
+    {
+      "text": "But we've discovered that owning things and consuming things does not satisfy our longing for meaning.",
+      "sourceId": "crisis-1979",
+      "locator": "'Crisis of Confidence' speech, 15 July 1979"
+    },
+    {
+      "text": "Your strength can compensate for my weakness, and your wisdom can help to minimize my mistakes.",
+      "sourceId": "inaugural-1977",
+      "locator": "Inaugural Address, 20 January 1977"
+    }
+  ],
+  "definingMoment": {
+    "text": "In September 1978 he brought Egypt's President Anwar Sadat and Israel's Prime Minister Menachem Begin to Camp David and kept them at the table for 13 days and nights. Begin accepted the principle of Egyptian sovereignty over all of Sinai and complete Israeli withdrawal from its military facilities and settlements, and the two countries signed a peace treaty in 1979 that has lasted for decades. The Nobel Committee later said it had wanted to give him the Peace Prize that year, but he had not been nominated in time.",
+    "sourceIds": [
+      "millercenter",
+      "ap-obit",
+      "nobel-speech"
+    ]
+  },
+  "shadow": {
+    "text": "In the 1970 race for governor he ran as the more conservative Democrat and sought the endorsement of several avowed segregationists; the historian Joseph Crespino writes that he sought and won the endorsement of George Wallace, and that a group backing Carter circulated a picture of his opponent Carl Sanders, part-owner of the Atlanta Hawks, in rural counties. Sanders never forgave him for anonymous race-baiting flyers, which Carter disavowed. As a school board leader in the 1950s he had not pushed to end school segregation after Brown v. Board of Education. As president he refused to halt military sales to Iran's government, which violently repressed its opponents, even though some of his advisers urged him to; in April 1980 a rescue mission he approved for the hostages in Tehran failed, and eight American servicemen died. The Miller Center's historian names his 'stubborn independence' and his 'reluctance to engage in a give and take with Congress' among the causes of his downfall, and in his White House Diary he called himself 'micromanaging' and 'excessively autocratic'. In 1980 he lost to Ronald Reagan by nearly 10 percent of the popular vote. His 2006 book Palestine: Peace Not Apartheid led his former adviser Kenneth Stein to resign his Carter Center fellowship, writing that Carter 'allows ideology or opinion to get in the way of facts', and 14 members of the center's Board of Councilors resigned in January 2007.",
+    "sourceIds": [
+      "millercenter",
+      "ap-obit",
+      "nation-crespino",
+      "npr-stein-2007",
+      "ap-resign-2007"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What truth about your own life did you avoid facing this week?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "Why Not the Best?",
+      "year": 1975
+    },
+    {
+      "title": "An Hour Before Daylight: Memories of a Rural Boyhood",
+      "year": 2001
+    },
+    {
+      "title": "A Full Life: Reflections at Ninety",
+      "year": 2015
+    }
+  ],
+  "sources": [
+    {
+      "id": "nobel-lecture",
+      "kind": "primary",
+      "title": "Nobel Lecture",
+      "author": "Jimmy Carter",
+      "year": 2002,
+      "publisher": "The Nobel Foundation",
+      "url": "https://www.nobelprize.org/prizes/peace/2002/carter/lecture/"
+    },
+    {
+      "id": "crisis-1979",
+      "kind": "primary",
+      "title": "Address to the Nation on Energy and National Goals ('Crisis of Confidence'), 15 July 1979",
+      "author": "Jimmy Carter",
+      "year": 1979,
+      "publisher": "Miller Center, University of Virginia (transcript)",
+      "url": "https://millercenter.org/the-presidency/presidential-speeches/july-15-1979-crisis-confidence-speech"
+    },
+    {
+      "id": "inaugural-1977",
+      "kind": "primary",
+      "title": "Inaugural Address, 20 January 1977",
+      "author": "Jimmy Carter",
+      "year": 1977,
+      "publisher": "Miller Center, University of Virginia (transcript)",
+      "url": "https://millercenter.org/the-presidency/presidential-speeches/january-20-1977-inaugural-address"
+    },
+    {
+      "id": "millercenter",
+      "kind": "secondary",
+      "title": "Jimmy Carter (essays: Life in Brief, Life Before the Presidency, Domestic Affairs, Foreign Affairs, Campaigns and Elections, Life After the Presidency, Impact and Legacy)",
+      "author": "Robert A. Strong",
+      "year": 2025,
+      "publisher": "Miller Center, University of Virginia",
+      "url": "https://millercenter.org/president/carter"
+    },
+    {
+      "id": "nobel-speech",
+      "kind": "secondary",
+      "title": "Award Ceremony Speech, Nobel Peace Prize 2002",
+      "author": "Gunnar Berge, Norwegian Nobel Committee",
+      "year": 2002,
+      "publisher": "The Nobel Foundation",
+      "url": "https://www.nobelprize.org/prizes/peace/2002/ceremony-speech/"
+    },
+    {
+      "id": "ap-obit",
+      "kind": "secondary",
+      "title": "Jimmy Carter, 39th U.S. president and humanitarian, dies (obituary)",
+      "author": "Associated Press",
+      "year": 2024,
+      "publisher": "Associated Press, as republished by WBEZ Chicago, 29 December 2024",
+      "url": "https://www.wbez.org/obituary/2024/12/29/jimmy-carter-dead-president-obituary"
+    },
+    {
+      "id": "ap-resign-2007",
+      "kind": "secondary",
+      "title": "Carter's Palestine book prompts resignations",
+      "author": "Associated Press",
+      "year": 2007,
+      "publisher": "NBC News, 11 January 2007",
+      "url": "https://www.nbcnews.com/id/wbna16579676"
+    },
+    {
+      "id": "npr-stein-2007",
+      "kind": "secondary",
+      "title": "A Key Critic's Problem with Jimmy Carter's Book",
+      "author": "NPR",
+      "year": 2007,
+      "publisher": "NPR, 26 January 2007",
+      "url": "https://www.npr.org/2007/01/26/7022490/a-key-critics-problem-with-jimmy-carters-book"
+    },
+    {
+      "id": "nation-crespino",
+      "kind": "secondary",
+      "title": "Jimmy Carter obituary",
+      "author": "Joseph Crespino (Jimmy Carter Professor of History, Emory University)",
+      "year": 2024,
+      "publisher": "The Nation, 29 December 2024",
+      "url": "https://www.thenation.com/article/politics/jimmy-carter-obituary/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real former US president who died on 29 December 2024, so not a living politician and not a founder of a religion; no credible account of sexual violence or of sexual contact with anyone under 16 was found; he has a documented dark side in his 1970 campaign, his presidency and his 2006 Israel book."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked Justice with the 1970 governor's race (segregationist endorsements, Wallace's endorsement, the Sanders photo flyers) and with his 1950s school-board silence, and Peace with his refusal to halt arms sales to the Shah's Iran and the 1980 rescue raid. Both held: the 1970 campaign is one calculated episode set against a lifelong record that began with his 1958 refusal to join the White Citizens Council under a boycott, and the Iran sales were a policy compromise next to Camp David and forty years of Carter Center mediation; both went into the shadow instead. Hard work, a draft-only word, held on three sources after adding the Nobel presenter's 'Few people, if any, have tried harder'. Fixes: Stein's words quoted exactly and 'long-time' adviser corrected to former adviser, the Miller Center's verdict quoted rather than paraphrased, the Sinai concession worded as the source gives it, and Crespino's account of the 1970 race added.",
+    "checkedOn": "2026-11-10"
+  }
+}
