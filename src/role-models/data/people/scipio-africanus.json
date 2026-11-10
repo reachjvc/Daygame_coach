@@ -1,0 +1,326 @@
+{
+  "id": "scipio-africanus",
+  "name": "Scipio Africanus",
+  "born": "c. 236 BC",
+  "died": -183,
+  "category": "warriors",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A Roman general who studied why his father lost, then beat Hannibal.",
+  "startedFrom": "He was born into the Cornelii Scipiones, a patrician family of Rome; his father, also Publius Cornelius Scipio, was consul in 218 BC, the first year of the war with Hannibal. He was seventeen in his first battle, at the Ticinus, and was at the Roman defeat at Cannae in 216 BC. In 212 or 211 BC his father and his uncle were killed with their armies in Spain, and at barely twenty-four he asked for the Spanish command when, Livy says, no one else would stand.",
+  "values": [
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Before he crossed into Spain he found out 'by careful inquiries at Rome' why his father's armies had been beaten, and in Spain he questioned everyone about the enemy and learned from fishermen that the lagoon of New Carthage was shallow and fell every evening.",
+          "sourceId": "polybius-paton",
+          "locator": "Histories 10.7.1-4 and 10.8.1-6, vol. IV pp. 115-119"
+        },
+        {
+          "kind": "words",
+          "claim": "Polybius reports that Scipio 'himself in his letter to Philip explained clearly' that he planned the siege of New Carthage only after working out these facts.",
+          "sourceId": "polybius-paton",
+          "locator": "Histories 10.9.3, vol. IV p. 121"
+        },
+        {
+          "kind": "witness",
+          "claim": "The World History Encyclopedia says that at Baecula he used 'tactics he had learned from Hannibal', and that at Zama he 'had long been learning from Hannibal's tactics and knew them well'.",
+          "sourceId": "whe-mark",
+          "locator": "sections 'Battle of Baecula' and 'Battle of Zama'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer B. H. Liddell Hart writes: 'If Scipio profited by Hannibal's unintended course of instruction on the battlefields of Italy, the pupil surpassed even the master.'",
+          "sourceId": "lh-1926",
+          "locator": "A Greater than Napoleon, ch. 'The Subjugation of Spain', p. 82"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At seventeen, at the cavalry battle by the Po in 218 BC, he is said to have charged alone into the enemy ring around his wounded father when his troop hung back, and his father hailed him as his saviour.",
+          "sourceId": "polybius-paton",
+          "locator": "Histories 10.3.3-6, vol. IV p. 107 (Polybius's source is Scipio's friend Laelius)"
+        },
+        {
+          "kind": "deed",
+          "claim": "When no one would ask for the command in Spain after his father and uncle were killed there, he stood up on the Campus Martius, at barely twenty-four, and announced himself as a candidate.",
+          "sourceId": "livy-roberts",
+          "locator": "History of Rome 26.18"
+        },
+        {
+          "kind": "witness",
+          "claim": "Polybius writes that the rescue gave him 'a universally acknowledged reputation for bravery'.",
+          "sourceId": "polybius-paton",
+          "locator": "Histories 10.3.7, vol. IV pp. 107-109"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica says that after Cannae he 'resolutely protested against several Roman nobles who advocated giving up the struggle and quitting Italy in despair'.",
+          "sourceId": "eb1911",
+          "locator": "Scipio, no. 2 (Africanus the elder), vol. 24, p. 423"
+        }
+      ]
+    },
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "With the Carthaginian armies in Spain divided and far off, he marched on New Carthage, the enemy's main base, by a plan he told only to Laelius, and took it in one day; Polybius says other writers credit gods and chance, but he did it by calculation.",
+          "sourceId": "polybius-paton",
+          "locator": "Histories 10.7.3-10.9.7 and 10.13-15, vol. IV pp. 115-139"
+        },
+        {
+          "kind": "words",
+          "claim": "Arguing in the Senate in 205 BC against Fabius, who wanted the war kept in Italy, he says in the speech Livy gives him: 'It shows more courage to attack than to repel attacks.'",
+          "sourceId": "livy-roberts",
+          "locator": "History of Rome 28.44"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica says that the year after his father's death 'he offered himself for the command of the new army which the Romans resolved to send to Spain', and was elected 'in spite of his youth'.",
+          "sourceId": "eb1911",
+          "locator": "Scipio, no. 2 (Africanus the elder), vol. 24, p. 423"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 206 BC, when his troops at Sucro mutinied over back pay, he had the arrears collected and paid, had the thirty-five ringleaders arrested at supper, and before the assembled army punished them and pardoned the rest, who swore loyalty again.",
+          "sourceId": "polybius-paton",
+          "locator": "Histories 11.25-30, vol. IV pp. 283-295"
+        },
+        {
+          "kind": "witness",
+          "claim": "Polybius writes that 'he indeed possessed a particular talent for inspiring confidence and sympathy in his troops when he called upon them'.",
+          "sourceId": "polybius-paton",
+          "locator": "Histories 10.14.10, vol. IV p. 135"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica says that he 'had also the faculty of inspiring his soldiers with confidence'.",
+          "sourceId": "eb1911",
+          "locator": "Scipio, no. 2 (Africanus the elder), vol. 24, p. 424"
+        }
+      ]
+    },
+    {
+      "word": "Loyalty",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After Cannae in 216 BC, hearing that young nobles planned to leave Italy, he went to their meeting with a drawn sword and made them all swear not to abandon the Republic.",
+          "sourceId": "livy-roberts",
+          "locator": "History of Rome 22.53 (Livy's account; the reviewer Jeff Tatum, BMCR 2026.01.12, is 'less inclined' than Hornblower to believe it)"
+        },
+        {
+          "kind": "deed",
+          "claim": "When the Spanish chiefs hailed him as king in 209/208 BC, he told them he wished to be kingly but not to be king, and ordered them to call him general.",
+          "sourceId": "polybius-paton",
+          "locator": "Histories 10.40.2-5, vol. IV p. 199"
+        },
+        {
+          "kind": "witness",
+          "claim": "Polybius writes that when kingship was often offered to him he refused it, and 'valued more highly his country and his own loyalty to her'.",
+          "sourceId": "polybius-paton",
+          "locator": "Histories 10.40.9, vol. IV p. 201"
+        },
+        {
+          "kind": "words",
+          "claim": "In Livy's account of the same hailing, he told the Spaniards that 'the name of king, so great elsewhere, is insupportable to Roman ears', and that the title he valued most was 'Imperator', given by his soldiers.",
+          "sourceId": "livy-roberts",
+          "locator": "History of Rome 27.19"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "After a defeat, find out exactly why it happened before you try again.",
+      "sourceId": "polybius-paton",
+      "locator": "Histories 10.7.1-3, vol. IV pp. 115-117"
+    },
+    {
+      "text": "Make your plan quietly and tell only the one person who must know.",
+      "sourceId": "polybius-paton",
+      "locator": "Histories 10.9.1 and 10.6.7-8, vol. IV pp. 115, 119-121"
+    },
+    {
+      "text": "When you win, do not rest on it; start planning the next fight.",
+      "sourceId": "polybius-paton",
+      "locator": "Histories 11.24a.1-2, vol. IV p. 281"
+    },
+    {
+      "text": "Turn down a title or honour that puts you above the people you serve.",
+      "sourceId": "polybius-paton",
+      "locator": "Histories 10.40.5-9, vol. IV pp. 199-201"
+    },
+    {
+      "text": "Use time alone and free time to think, not to drift.",
+      "sourceId": "cicero-miller",
+      "locator": "De Officiis 3.1-2, Loeb p. 271"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Let us then not be ungrateful to the gods, but, I suggest, let us leave this worthless fellow, and go at once to render thanks to Jupiter, greatest and best of gods.",
+      "sourceId": "gellius-rolfe",
+      "locator": "Attic Nights 4.18.3, Loeb vol. I, p. 369 (Scipio to the assembly at his trial, on the anniversary of Zama)",
+      "translation": "J. C. Rolfe, 1927"
+    },
+    {
+      "text": "Either put yourselves and your country at our mercy or fight and conquer us.",
+      "sourceId": "polybius-paton",
+      "locator": "Histories 15.8.14, vol. IV p. 483 (Scipio to Hannibal before Zama, 202 BC, as Polybius gives it)",
+      "translation": "W. R. Paton, 1925"
+    },
+    {
+      "text": "Let those … who want to save the republic take their arms at once and follow me.",
+      "sourceId": "livy-roberts",
+      "locator": "History of Rome 22.53 (after Cannae, 216 BC, as Livy gives it)",
+      "translation": "Rev. Canon Roberts, 1905"
+    },
+    {
+      "text": "At our time of life we are not, believe me, so much in danger from armed foes as from the seductive pleasures which tempt us on every side.",
+      "sourceId": "livy-roberts",
+      "locator": "History of Rome 30.14 (to Masinissa, 203 BC, in the speech Livy gives him)",
+      "translation": "Rev. Canon Roberts, 1905"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 210 or 209 BC, soon after he reached a Spain held by Carthage south of the Ebro, Scipio marched on New Carthage, the enemy's main base. He had spent the winter learning about the city from people who knew it, and fishermen told him the lagoon on one side was shallow and fell every evening. He told the plan only to Laelius, who brought the fleet. When the first attack on the walls failed, he waited for the water to fall and sent 500 men with ladders through the lagoon to a wall no one was guarding, and the city fell that day. The scholar Benedict Lowe, as the World History Encyclopedia reports, argues the 'lagoon' was a salt marsh that Scipio drained.",
+    "sourceIds": [
+      "polybius-paton",
+      "eb1911",
+      "whe-mark"
+    ]
+  },
+  "shadow": {
+    "text": "When his troops broke into New Carthage, Polybius writes, Scipio sent most of them, 'as is the Roman custom', to kill everyone they met, sparing none, until a signal, and he made about 2,000 of the town's working men public slaves of Rome. In 205-204 BC his officer Pleminius and his men robbed the people of Locri, inflicted what Livy calls 'unspeakable outrages' on them, their wives and children, and looted the temple of Proserpine; Scipio held an inquiry, cleared Pleminius and kept him in command, chained the tribunes who had fought him, and Pleminius then tortured them to death (Livy 29.8-9); his biographer B. H. Liddell Hart (1926) calls this 'the one serious blemish' on his judgment. In 203 BC in Africa, while peace talks with King Syphax were going on, he sent officers dressed as slaves with his envoys to spy on the enemy camps; then he sent word that his council opposed the peace, which Polybius says he did 'in order not to appear to have broken the truce', and set the camps on fire at night, and thousands burned or were cut down. Polybius writes that he told his mother of a dream he had not had to win his first office, and Livy that he let people believe he had help from the gods. Polybius writes that, asked in the Senate for an account of money received from King Antiochus, he tore up the account book in front of everyone; his brother Lucius was later convicted of taking money, and Livy writes that the sources on these trials disagree so much that he cannot decide between them. Aulus Gellius reports that the lost annalist Valerius Antias wrote, against all other writers, that Scipio kept the captured girl of New Carthage for himself instead of returning her; Polybius and Livy say he gave her back. Valerius Maximus writes that Scipio's wife knew a slave girl of her household was dear to him and kept silent, and freed the girl after his death.",
+    "sourceIds": [
+      "polybius-paton",
+      "livy-roberts",
+      "lh-1926",
+      "gellius-rolfe",
+      "valerius-maximus-latin"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What went wrong for you this week, and did you find out exactly why before you tried again?",
+    "principleIndex": 0
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "polybius-paton",
+      "kind": "primary",
+      "title": "The Histories, vols. IV (books 9-15, 1925) and V (books 16-27, 1926) (the earliest surviving account, used in place of writings he did not leave; Polybius knew Scipio's friend Laelius, c. 150 BC)",
+      "author": "Polybius, translated by W. R. Paton",
+      "year": "1922-1927",
+      "publisher": "Loeb Classical Library, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Polybius/10*.html"
+    },
+    {
+      "id": "livy-roberts",
+      "kind": "primary",
+      "title": "History of Rome (From the Founding of the City), books 22, 26, 27, 28, 29, 30 and 38 (written c. 25 BC-AD 10; speeches are Livy's own composition)",
+      "author": "Livy, translated by Rev. Canon Roberts",
+      "year": 1905,
+      "publisher": "Everyman's Library; Wikisource transcription",
+      "url": "https://en.wikisource.org/wiki/From_the_Founding_of_the_City"
+    },
+    {
+      "id": "gellius-rolfe",
+      "kind": "primary",
+      "title": "Attic Nights, vol. I, book 4 and vol. II, book 7 (2nd century AD; quotes a speech in circulation as Scipio's, and reports the lost annalist Valerius Antias)",
+      "author": "Aulus Gellius, translated by J. C. Rolfe",
+      "year": 1927,
+      "publisher": "Loeb Classical Library, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Gellius/home.html"
+    },
+    {
+      "id": "cicero-miller",
+      "kind": "secondary",
+      "title": "De Officiis, book III (44 BC; reports Scipio's saying on the authority of Cato the Elder)",
+      "author": "Cicero, translated by Walter Miller",
+      "year": 1913,
+      "publisher": "Loeb Classical Library, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cicero/de_Officiis/3A*.html"
+    },
+    {
+      "id": "valerius-maximus-latin",
+      "kind": "primary",
+      "title": "Factorum et dictorum memorabilium libri IX, book 6 (Latin text; c. AD 30)",
+      "author": "Valerius Maximus",
+      "year": "c. AD 30",
+      "publisher": "LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/L/Roman/Texts/Valerius_Maximus/6*.html"
+    },
+    {
+      "id": "eb1911",
+      "kind": "secondary",
+      "title": "Scipio, Encyclopaedia Britannica, 11th edition, vol. 24, pp. 423-425 (entry no. 2, Africanus the elder)",
+      "author": "Encyclopaedia Britannica",
+      "year": 1911,
+      "publisher": "Wikisource transcription",
+      "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Scipio"
+    },
+    {
+      "id": "whe-mark",
+      "kind": "secondary",
+      "title": "Scipio Africanus the Elder, World History Encyclopedia (19 December 2011)",
+      "author": "Joshua J. Mark",
+      "year": 2011,
+      "publisher": "World History Encyclopedia",
+      "url": "https://www.worldhistory.org/Scipio_Africanus_the_Elder/"
+    },
+    {
+      "id": "lh-1926",
+      "kind": "secondary",
+      "title": "A Greater than Napoleon: Scipio Africanus",
+      "author": "B. H. Liddell Hart",
+      "year": 1926,
+      "publisher": "William Blackwood & Sons; Internet Archive scan",
+      "url": "https://archive.org/details/greaterthannapol00lidd"
+    },
+    {
+      "id": "bmcr-jacobs",
+      "kind": "secondary",
+      "title": "Review of Alexander Acimovic, Scipio Africanus (iUniverse, 2007), Bryn Mawr Classical Review 2008.01.20",
+      "author": "John Jacobs",
+      "year": 2008,
+      "publisher": "Bryn Mawr Classical Review",
+      "url": "https://bmcr.brynmawr.edu/?p=26287"
+    },
+    {
+      "id": "bmcr-tatum",
+      "kind": "secondary",
+      "title": "Review of Simon Hornblower, Hannibal and Scipio: Parallel Lives (Cambridge University Press, 2024), Bryn Mawr Classical Review 2026.01.12",
+      "author": "Jeff Tatum",
+      "year": 2026,
+      "publisher": "Bryn Mawr Classical Review",
+      "url": "https://bmcr.brynmawr.edu/?p=97786"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real Roman general (c. 236-183 BC), long dead, no politician of today and no founder of a living religion; he is flagged only because one lost ancient writer (Valerius Antias, reported by Aulus Gellius) claimed he kept a captured girl from New Carthage for sex, against every other account, and his heavy dark side (a city massacre, Locri, the burned camps, the money trials) is shadow. Owner case (no recommendation): 209 BC (or 210), New Carthage, Spain: young Roman soldiers brought Scipio a captured girl 'of surpassing bloom and beauty', 'being aware that Scipio was fond of women'; Polybius says he called her father and handed her back to him at once [polybius-paton, 10.19.3-6, vol. IV p. 149]. Livy tells the same event: the 'adult maiden' was given back to her betrothed Aluccius 'inviolate', and Scipio gave him her ransom gold as a wedding present [livy-roberts, 26.50]. Aulus Gellius (2nd century AD) reports that the annalist Valerius Antias (1st century BC, his work lost) wrote, 'contrary to' all other writers, 'that the captured maiden was not returned to her father, but was kept by Scipio and possessed by him in amorous dalliance' [gellius-rolfe, 7.8.6, vol. II pp. 115-117]. Gellius thinks Antias was led to this by lines of the poet Naevius saying that a great man had once been led home by his father 'from his love', which were 'all but generally believed' to aim at the young Scipio; Gellius says whether the story is 'false or true is uncertain' [gellius-rolfe, 7.8.5-6]. Separate, no force described: Valerius Maximus (1st century AD) writes that Scipio's wife Tertia Aemilia knew that a little slave girl ('ancillulam') of her own household was dear to her husband and kept silent, and after his death freed her and gave her in marriage to one of her freedmen [valerius-maximus-latin, 6.7.1, Latin text read on LacusCurtius; an English rendering on Diotima (Women's Life in Greece and Rome selections) says the same]. Against the claim: Polybius (who knew Scipio's friend Laelius) and Livy both say the girl was returned; Gellius says Antias stands against 'all other writers'. Livy calls Valerius Antias 'usually more given to exaggeration' (38.23); on New Carthage, after listing the writers' clashing figures, the last of them Antias's, he writes 'so wildly do men invent' (26.49). No ancient source gives the girl's age as under 16: Livy calls her an 'adult maiden', Gellius a 'marriageable girl'. The slave-girl story (Valerius Maximus) describes no force; the rules treat it as shadow unless the owner rules otherwise. Valerius Maximus is the only ancient writer to tell the slave-girl story; he gives no date and tells it to praise the wife's patience. Sources: Polybius, Histories 10.19, tr. Paton 1925 (LacusCurtius); Livy 26.49-50 and 38.23, tr. Roberts 1905 (Wikisource); Aulus Gellius, Attic Nights 7.8.3-6, tr. Rolfe 1927 (LacusCurtius); Valerius Maximus 6.7.1, Latin (LacusCurtius)."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked every value and re-read every cited passage, plus the owner case: Gellius on Valerius Antias, Polybius 10.19, Livy 26.49-50 and Valerius Maximus 6.7.1 all say what the screen says. Discipline fell: its main proof is the contested captive-girl episode, it rests on two sources only, and Fabius charged him in the Senate with destroying military discipline (Livy 29.19); Boldness, from the blind pick, came in. Learning held with a third source (Liddell Hart p. 82), Loyalty now notes Tatum's doubt on the Cannae oath, and three facts were fixed: the undated torn account book, Polybius's 'not to appear to have broken the truce', and Livy's 'unspeakable outrages' at Locri. The shadow now also states both owner-case accounts plainly.",
+    "checkedOn": "2026-11-10"
+  }
+}
