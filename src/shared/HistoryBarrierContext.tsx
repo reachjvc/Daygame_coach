@@ -80,6 +80,23 @@ export function HistoryBarrierProvider({ children }: { children: ReactNode }) {
    * that step (from the page under it, the same address) from a Back onto it.
    */
   const lastHrefRef = useRef<string | null>(null)
+  /**
+   * Steps opened while one of our own traversals is on its way, not written
+   * yet (p10-retest-01). A row of one sheet that opens another closes the
+   * first in the same moment: its step's history.back() is still on its way
+   * when the second sheet would push, and the browser took that Back from
+   * where it was when asked, so it landed on the page's own entry, under the
+   * new step. The new sheet stayed open with no step of its own, and Back left
+   * the page. Written once the traversal has landed.
+   */
+  const unwrittenRef = useRef<number[]>([])
+
+  const writeWaiting = useCallback(() => {
+    if (suppressCountRef.current > 0) return
+    const ids = unwrittenRef.current
+    unwrittenRef.current = []
+    for (const id of ids) window.history.pushState({ __barrier: id }, "")
+  }, [])
 
   const runAfterPop = useCallback(() => {
     const queued = afterPopRef.current
@@ -100,6 +117,7 @@ export function HistoryBarrierProvider({ children }: { children: ReactNode }) {
 
       if (suppressCountRef.current > 0) {
         suppressCountRef.current--
+        writeWaiting()
         runAfterPop()
         return
       }
@@ -126,13 +144,22 @@ export function HistoryBarrierProvider({ children }: { children: ReactNode }) {
 
     window.addEventListener("popstate", handlePopState)
     return () => window.removeEventListener("popstate", handlePopState)
-  }, [runAfterPop])
+  }, [runAfterPop, writeWaiting])
 
   const push = useCallback((onBack: () => void, sheet = false): number => {
     const id = nextBarrierId++
     stackRef.current.push({ id, onBack, sheet })
-    window.history.pushState({ __barrier: id }, "")
+    if (suppressCountRef.current > 0) unwrittenRef.current.push(id)
+    else window.history.pushState({ __barrier: id }, "")
     return id
+  }, [])
+
+  /** Forget a step not written yet; true when it was one. */
+  const unwrite = useCallback((id: number) => {
+    const at = unwrittenRef.current.indexOf(id)
+    if (at === -1) return false
+    unwrittenRef.current.splice(at, 1)
+    return true
   }, [])
 
   const remove = useCallback((id: number) => {
@@ -141,9 +168,10 @@ export function HistoryBarrierProvider({ children }: { children: ReactNode }) {
     if (index === -1) return
 
     stack.splice(index, 1)
+    if (unwrite(id)) return // no entry to take back
     suppressCountRef.current++
     window.history.back()
-  }, [])
+  }, [unwrite])
 
   const removeMany = useCallback((ids: number[]) => {
     const stack = stackRef.current
@@ -152,20 +180,21 @@ export function HistoryBarrierProvider({ children }: { children: ReactNode }) {
       const index = stack.findIndex((b) => b.id === id)
       if (index === -1) continue
       stack.splice(index, 1)
-      removed++
+      if (!unwrite(id)) removed++
     }
     if (removed === 0) return
     // One traversal, therefore one popstate, therefore one suppression.
     suppressCountRef.current++
     window.history.go(-removed)
-  }, [])
+  }, [unwrite])
 
   const discard = useCallback((id: number) => {
     const stack = stackRef.current
     const index = stack.findIndex((b) => b.id === id)
     if (index === -1) return
     stack.splice(index, 1)
-  }, [])
+    unwrite(id)
+  }, [unwrite])
 
   const abandon = useCallback((id: number) => {
     discard(id)
@@ -213,9 +242,10 @@ export function HistoryBarrierProvider({ children }: { children: ReactNode }) {
     setTimeout(() => {
       if (afterPopRef.current.length === 0) return
       suppressCountRef.current = Math.max(0, suppressCountRef.current - 1)
+      writeWaiting()
       runAfterPop()
     }, 1000)
-  }, [runAfterPop])
+  }, [runAfterPop, writeWaiting])
 
   const value = useMemo(
     () => ({ push, remove, removeMany, discard, abandon, leaveSheets }),
@@ -357,6 +387,17 @@ export function useHistoryBarrier(active: boolean, onBack: () => void) {
     }
   }, [ctx])
 }
+
+/**
+ * Close every open sheet (and question) at once, their steps taken back in one
+ * traversal, then run `then`. Without a provider it just runs `then`; the
+ * caller still closes its own layers, which is a no-op when this has already.
+ */
+export function useLeaveSheets(): (then: () => void) => void {
+  const ctx = useContext(HistoryBarrierContext)
+  return ctx ? ctx.leaveSheets : runNow
+}
+const runNow = (then: () => void) => then()
 
 /**
  * BACK CLOSES A SHEET (alpha p10-sheets-01). Android's Back, or the browser's,
