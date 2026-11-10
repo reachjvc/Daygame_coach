@@ -111,6 +111,22 @@ export function enqueueAnswers(q: AuditQueue, answers: readonly AuditAnswer[]): 
 }
 
 /**
+ * Answers that would replace a waiting answer their card never saw: their
+ * `was` is not that one. Within one tab a card sees what waits (it is drawn),
+ * so this is another tab's answer, waiting in the same stored queue. Replacing
+ * it dropped that tab's answer while it still said "Saved" (alpha p9-saves-03);
+ * like another device's, it is named, with "Keep that one" / "Use mine".
+ * Answers with no `was` (made before it existed) are never held back.
+ */
+export function unseenWaiting(q: AuditQueue, answers: readonly AuditAnswer[]): { answer: AuditAnswer; stored: AnswerMark }[] {
+  const waiting = new Map(q.answers.map((a) => [quarterKey(a), a]))
+  return answers.flatMap((a) => {
+    const w = waiting.get(quarterKey(a))
+    return w && a.was !== undefined && !sameMark(a.was, markOf(w)) ? [{ answer: a, stored: markOf(w) }] : []
+  })
+}
+
+/**
  * Delete an answer: out of the queue, and a delete queued in case it already
  * reached the server. With `notBefore`, it waits until then, and Undo
  * (`cancelDelete`) can take it back. `seen` is the answer as drawn on the

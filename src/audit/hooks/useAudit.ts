@@ -30,6 +30,7 @@ import {
   deletesSent,
   emptyAuditQueue,
   enqueueAnswers,
+  unseenWaiting,
   enqueueDelete,
   nextDeleteDue,
   onAuditForgotten,
@@ -42,7 +43,7 @@ import {
   writeAuditViewCopy,
   type AuditQueue,
 } from "../auditQueue"
-import { markOf, type MuteOption, type ReviewChange } from "../auditService"
+import { CHANGED_SINCE, markOf, type MuteOption, type ReviewChange } from "../auditService"
 import type { AnswerMark, AuditAnswer, AuditSlot } from "../types"
 
 /** An answer as drawn: from the server, or still only on this phone. */
@@ -117,6 +118,15 @@ export const REREAD_MS = 30_000
 /** A focus, a visibility change or a tick this soon after a read started is the same read. */
 export const REREAD_GAP_MS = 1_000
 
+/** The queue's stored text, or null when there is none or storage is blocked. */
+function rawQueue(): string | null {
+  try {
+    return browserStore()?.getItem(AUDIT_QUEUE_KEY) ?? null
+  } catch {
+    return null
+  }
+}
+
 export function useAudit(account: string) {
   const api = useMemo(() => auditApi(account), [account])
   const [view, setView] = useState<AuditView | null>(null)
@@ -154,12 +164,22 @@ export function useAudit(account: string) {
   const readsInFlight = useRef(0)
   const lastReadStarted = useRef(0)
 
+  /** The stored queue as this tab last saw it: anything else there now was written by another tab. */
+  const seenRaw = useRef<string | null>(null)
+  /**
+   * Change the queue, starting from the queue as stored when another tab of
+   * this account has written it since this tab last looked: two tabs with no
+   * signal each wrote their own copy over the other's answer (alpha p9-saves-03).
+   */
   const setQ = useCallback(
-    (next: AuditQueue) => {
-      const owned = { ...next, owner: account }
+    (change: (q: AuditQueue) => AuditQueue) => {
+      const fromOtherTab = rawQueue() !== seenRaw.current
+      const base = fromOtherTab ? readAuditQueue(browserStore(), account) : queueRef.current
+      const owned = { ...change(base), owner: account }
       queueRef.current = owned
       setQueue(owned)
       writeAuditQueue(browserStore(), owned)
+      seenRaw.current = rawQueue()
     },
     [account],
   )
@@ -246,10 +266,10 @@ export function useAudit(account: string) {
             setC({ ...c, answers: [...c.answers.filter((x) => !kept.some((k) => quarterKey(k.answer) === quarterKey(x.answer))), ...kept] })
           },
           {
-            onSent: (batch) => setQ(deletesSeeStored(answersSent(queueRef.current, batch.filter((a) => !later.has(a.id)), storedNow), storedNow)),
+            onSent: (batch) => setQ((q) => deletesSeeStored(answersSent(q, batch.filter((a) => !later.has(a.id)), storedNow), storedNow)),
             onDropped: (batch) => {
               addNotKept(batch.map((answer) => ({ answer, reason: "The server could not save it" })))
-              setQ(answersSent(queueRef.current, batch))
+              setQ((q) => answersSent(q, batch))
             },
           },
         )
@@ -267,15 +287,15 @@ export function useAudit(account: string) {
               const c = confirmedRef.current
               if (result.changed) {
                 // another device changed it since: it stays, and he is asked (prove-audit-03)
-                setQ(deleteRefused(queueRef.current, id, "Changed on another device", result.changed))
+                setQ((q) => deleteRefused(q, id, "Changed on another device", result.changed))
               } else {
                 setC({ answers: c.answers.filter((x) => x.answer.id !== id), deletes: [...c.deletes, { id, at: Date.now() }] })
-                setQ(deletesSent(queueRef.current, [id]))
+                setQ((q) => deletesSent(q, [id]))
               }
             } catch (error) {
               const e = error as AuditCallError
               // refused for good: named and kept until he chooses, never dropped in silence (review of 81f325e9)
-              if (e instanceof AuditCallError && !e.retryable && e.status !== 401) setQ(deleteRefused(queueRef.current, id, e.message))
+              if (e instanceof AuditCallError && !e.retryable && e.status !== 401) setQ((q) => deleteRefused(q, id, e.message))
               else {
                 stuck = { status: e instanceof AuditCallError ? e.status : 0 }
                 break
@@ -312,6 +332,7 @@ export function useAudit(account: string) {
       setQueue(empty)
     })
     const stored = readAuditQueue(browserStore(), account)
+    seenRaw.current = rawQueue()
     queueRef.current = stored
     setQueue(stored)
     void load()
@@ -334,6 +355,7 @@ export function useAudit(account: string) {
     const onStorage = (e: StorageEvent) => {
       if (e.key !== AUDIT_QUEUE_KEY) return
       const shared = readAuditQueue(browserStore(), account)
+      seenRaw.current = rawQueue()
       queueRef.current = shared
       setQueue(shared)
     }
@@ -389,10 +411,18 @@ export function useAudit(account: string) {
         const h = a.was === null ? hidden.get(quarterKey(a)) : undefined
         return h ? { ...a, was: markOf(h) } : a
       })
-      setQ(enqueueAnswers(queueRef.current, seen))
+      // A waiting answer (another tab's) this card never saw is not replaced
+      // blindly: he is asked, as for another device (alpha p9-saves-03).
+      let unseen: ReturnType<typeof unseenWaiting> = []
+      setQ((q) => {
+        unseen = unseenWaiting(q, seen)
+        const told = new Set(unseen.map((x) => x.answer))
+        return enqueueAnswers(q, seen.filter((a) => !told.has(a)))
+      })
+      if (unseen.length > 0) addNotKept(unseen.map((x) => ({ answer: x.answer, reason: CHANGED_SINCE, stored: x.stored })))
       void flush()
     },
-    [flush, setQ],
+    [flush, setQ, addNotKept],
   )
 
   /** "Keep that one": the other device's answer stays, and this one's refusal is over. */
@@ -409,7 +439,7 @@ export function useAudit(account: string) {
   const remove = useCallback(
     (id: string, holdMs = 0, seen?: AnswerMark & { slotAt?: string }) => {
       const now = Date.now()
-      setQ(enqueueDelete(queueRef.current, id, new Date(now).toISOString(), holdMs > 0 ? new Date(now + holdMs).toISOString() : undefined, seen))
+      setQ((q) => enqueueDelete(q, id, new Date(now).toISOString(), holdMs > 0 ? new Date(now + holdMs).toISOString() : undefined, seen))
       if (holdMs > 0) armDeleteTimer()
       else void flush()
     },
@@ -418,13 +448,13 @@ export function useAudit(account: string) {
   /** "Delete anyway" / "Try again": sent now, over the answer as another device left it. */
   const deleteAnyway = useCallback(
     (x: NotDeleted) => {
-      setQ(retryDelete(queueRef.current, x.id))
+      setQ((q) => retryDelete(q, x.id))
       void flush()
     },
     [flush, setQ],
   )
   /** "Keep": the answer stays, and the refused delete is over. */
-  const keepNotDeleted = useCallback((id: string) => setQ(deletesSent(queueRef.current, [id])), [setQ])
+  const keepNotDeleted = useCallback((id: string) => setQ((q) => deletesSent(q, [id])), [setQ])
   const notDeleted: NotDeleted[] = useMemo(
     () =>
       queue.deletes.flatMap((d) =>
@@ -432,7 +462,7 @@ export function useAudit(account: string) {
       ),
     [queue],
   )
-  const undoRemove = useCallback((id: string) => setQ(cancelDelete(queueRef.current, id)), [setQ])
+  const undoRemove = useCallback((id: string) => setQ((q) => cancelDelete(q, id)), [setQ])
 
   /** A decision: waits for the server, then re-reads. Returns the error sentence, or null. */
   const decide = useCallback(
