@@ -1,0 +1,324 @@
+{
+  "id": "edmund-hillary",
+  "name": "Edmund Hillary",
+  "born": 1919,
+  "died": 2008,
+  "category": "explorers",
+  "areaIds": [
+    "lm_fun",
+    "lm_contribution",
+    "lm_mindset"
+  ],
+  "tagline": "A beekeeper who called his own abilities modest climbed Everest, then built schools for the Sherpas.",
+  "startedFrom": "He was born in 1919 and grew up in Tūākau, in rural South Auckland, where his father founded and edited the local paper and kept bees on the side, and his mother was a teacher. At Auckland Grammar School he was small and shy, with a poor opinion of himself, and read books about mountains and the Antarctic on the long train rides to school. After two unsuccessful years at university he became a full-time beekeeper with his father and brother in 1938.",
+  "values": [
+    {
+      "word": "Adventure",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said that as a young man all he wanted was to get out there and do things and have excitement in the adventure sense.",
+          "sourceId": "achievement-1991",
+          "locator": "Interview of 16 November 1991, answer to 'Did you have the feeling you were destined to achieve something very unique and special?'"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that after his first trip to the snow, a school ski trip to Mt Ruapehu in 1935, he came home in a glow of fiery enthusiasm for the sun, the cold and the snow.",
+          "sourceId": "high-adventure",
+          "locator": "p. 13 (quoted in Te Ara, section 'Early life', note 1)"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1977 he led a team of New Zealanders by jet boat from the sea to the headwaters of the Ganges, where they made the first ascent of Akash Parbat.",
+          "sourceId": "teara",
+          "locator": "section 'Back in Nepal'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Radio New Zealand's obituary calls the Everest ascent just the beginning of a life of adventure and service.",
+          "sourceId": "rnz-2008",
+          "locator": "paragraph beginning 'The ascent of Everest was just the beginning'"
+        }
+      ]
+    },
+    {
+      "word": "Contribution",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1960 Sherpas in the Khumbu told him they badly wanted a school; when the Mount Everest Foundation refused money, he raised it himself, founding what became the Himalayan Trust, and after the 1960-61 Silver Hut expedition supervised the building of Khumjung School.",
+          "sourceId": "teara",
+          "locator": "section 'Back in Nepal'"
+        },
+        {
+          "kind": "deed",
+          "claim": "His projects in Nepal built 26 schools, two hospitals and an airport and gave scholarships to Sherpa children; in 2003 Nepal gave him honorary citizenship for this work.",
+          "sourceId": "rnz-2008",
+          "locator": "paragraph beginning 'In 2003, their government conferred honorary Nepali citizenship'"
+        },
+        {
+          "kind": "words",
+          "claim": "At 72 he said his main concentration was on the welfare of the people he had worked with in the Himalayas and on human welfare in general.",
+          "sourceId": "achievement-1991",
+          "locator": "Interview of 16 November 1991, answer to 'How many [goals] do you have going right now?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Dictionary of New Zealand Biography says it was his humanitarian work, more than Everest or Antarctica, that made him New Zealand's most revered son.",
+          "sourceId": "teara",
+          "locator": "section 'Back in Nepal', paragraph beginning 'Hillary's achievements on Everest'"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said he really wanted very strongly to do these things, and once he started he did not give up easily.",
+          "sourceId": "achievement-1991",
+          "locator": "Interview of 16 November 1991, answer to 'You see yourself as just having modest abilities?'"
+        },
+        {
+          "kind": "deed",
+          "claim": "During air force training in 1944 he climbed Tapuae-o-Uenuku alone: a 32 km walk up the Awatere Valley, a long tramp up the Hodder River, a 14-hour climb and the same walks back, all in one weekend.",
+          "sourceId": "teara",
+          "locator": "section 'Early mountaineering'"
+        },
+        {
+          "kind": "deed",
+          "claim": "On Everest in 1953 he carried about 27 kg to the final camp before he and Tenzing set off for the summit on 29 May.",
+          "sourceId": "teara",
+          "locator": "section 'Everest'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Radio New Zealand's obituary quotes Prime Minister Helen Clark saying he lived a life of determination, humility and generosity.",
+          "sourceId": "rnz-2008",
+          "locator": "paragraph beginning 'She called him a colossus'"
+        }
+      ]
+    },
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that although the media called him a hero, he always saw himself as a person of modest abilities.",
+          "sourceId": "view-summit",
+          "locator": "p. 11 (quoted in Te Ara, section 'Later years', note 6)"
+        },
+        {
+          "kind": "words",
+          "claim": "He told interviewers he had very modest abilities, and that the hero the press described simply did not exist.",
+          "sourceId": "achievement-1991",
+          "locator": "Interview of 16 November 1991, answers to 'You see yourself as just having modest abilities?' and 'The press and the public rather think of you as a star'"
+        },
+        {
+          "kind": "deed",
+          "claim": "For many years after Everest he went on listing his occupation as beekeeper, and he preferred to be called Ed.",
+          "sourceId": "nyt-2008",
+          "locator": "paragraph beginning 'Tough, rawboned, 6 feet 5 inches tall'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Dictionary of New Zealand Biography says decades of hero-worship bemused him.",
+          "sourceId": "teara",
+          "locator": "section 'Later years'"
+        }
+      ]
+    },
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Sent to Antarctica only to lay supply depots for Vivian Fuchs, he finished the depots and then pushed on to the South Pole with three companions, arriving on 4 January 1958, the first party to reach it overland since Scott.",
+          "sourceId": "teara",
+          "locator": "section 'After Everest'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said it is much better to start on something you are not at all sure you can do, since a challenge you are sure of is hardly a challenge.",
+          "sourceId": "achievement-1991",
+          "locator": "Interview of 16 November 1991, answer to 'Was there any point when you felt that you might not make it and might have to give up?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times obituary describes him as having tigerish confidence on a mountain.",
+          "sourceId": "nyt-2008",
+          "locator": "paragraph beginning 'Tough, rawboned, 6 feet 5 inches tall'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Dictionary of New Zealand Biography calls the Pole dash a devil-may-care approach that appealed to many New Zealanders.",
+          "sourceId": "teara",
+          "locator": "section 'After Everest'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Aim high, even at the risk of failing: a goal you are sure to reach is not much of a challenge.",
+      "sourceId": "achievement-1991",
+      "locator": "Interview of 16 November 1991, answers to 'Was there any point when you felt that you might not make it' and 'When you don't get the encouragement, how do you keep your motivation going?'"
+    },
+    {
+      "text": "Each night before bed, go over what may happen the next day and what you will decide, so you are ready when it comes.",
+      "sourceId": "achievement-1991",
+      "locator": "Interview of 16 November 1991, answer to 'You have written that the mediocre can succeed and the fearful can achieve'"
+    },
+    {
+      "text": "Keep the goal, but change the plan when a better idea or a better chance turns up, whoever it comes from.",
+      "sourceId": "achievement-1991",
+      "locator": "Interview of 16 November 1991, answers to 'Behave in what way like him?' (Shackleton) and the question that follows"
+    },
+    {
+      "text": "If you got yourself into trouble, it is up to you to get yourself out.",
+      "sourceId": "achievement-1991",
+      "locator": "Interview of 16 November 1991, answers to 'How would you encourage young people to find their own way?' and the Nupla Pass crevasse question"
+    },
+    {
+      "text": "A person in danger comes before your summit.",
+      "sourceId": "irish-2006",
+      "locator": "Irish Times (Reuters), 27 May 2006, quoting him on the death of David Sharp"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I think it's much better to start out on something that you're not at all sure that you can do.",
+      "sourceId": "achievement-1991",
+      "locator": "Interview, San Francisco, 16 November 1991, answer to 'Was there any point when you felt that you might not make it and might have to give up?'"
+    },
+    {
+      "text": "Aim for something high, and even fail on it if necessary.",
+      "sourceId": "achievement-1991",
+      "locator": "Interview, San Francisco, 16 November 1991, answer to 'When you don't get the encouragement, how do you keep your motivation going?'"
+    },
+    {
+      "text": "Human life is far more important than just getting to the top of a mountain.",
+      "sourceId": "npr-2006",
+      "locator": "Interview with New Zealand Press Association, as reported by the Associated Press on NPR, 26 May 2006"
+    },
+    {
+      "text": "I have always recognised myself as being a person of modest abilities. My achievements have resulted from a goodly share of imagination and plenty of energy.",
+      "sourceId": "view-summit",
+      "locator": "p. 11 (Corgi edition, 2000; quoted in Te Ara, note 6)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1960 Sherpas in the Khumbu region of Nepal told him they badly wanted a school. He asked the Mount Everest Foundation in Britain for the money and was turned down. He raised it himself, and after his 1960-61 expedition he supervised the building of Khumjung School. What he set up became known as the Himalayan Trust, which over the following decades built schools, hospitals, clinics, airfields and bridges in Nepal.",
+    "sourceIds": [
+      "teara",
+      "rnz-2008"
+    ]
+  },
+  "shadow": {
+    "text": "In 1951, when two places opened on the British Everest reconnaissance, he and Earle Riddiford took them after a bitter argument among the four New Zealand climbers, to George Lowe's disgust. In Antarctica in 1957-58 his job was only to lay depots for Vivian Fuchs; he drove on to the South Pole and reached it 16 days before Fuchs, and some in authority and in his own team saw this as a breach of orders and an arrogant attempt to outplay Fuchs. After his wife Louise and daughter Belinda died in a plane crash in Nepal in 1975, he fell into depression and drinking. In 1953 the expedition leader said he and Tenzing reached the summit together, as a team; in 1999 Hillary broke his silence and wrote that he had stepped onto it first.",
+    "sourceIds": [
+      "teara",
+      "nyt-2008"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you pick a goal you were already sure you could reach?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "View from the Summit",
+      "year": 1999
+    },
+    {
+      "title": "High Adventure",
+      "year": 1955
+    },
+    {
+      "title": "Nothing Venture, Nothing Win",
+      "year": 1975
+    }
+  ],
+  "sources": [
+    {
+      "id": "achievement-1991",
+      "kind": "primary",
+      "title": "Sir Edmund Hillary: From Beekeeper to World Explorer (interview, San Francisco, 16 November 1991)",
+      "author": "Edmund Hillary, interviewed by the American Academy of Achievement",
+      "year": 1991,
+      "publisher": "Academy of Achievement, achievement.org (page last revised 2 March 2022)",
+      "url": "https://achievement.org/achiever/sir-edmund-hillary/"
+    },
+    {
+      "id": "view-summit",
+      "kind": "primary",
+      "title": "View from the Summit",
+      "author": "Edmund Hillary",
+      "year": 2000,
+      "publisher": "Corgi, London (first published 1999); pages as cited by the Dictionary of New Zealand Biography"
+    },
+    {
+      "id": "high-adventure",
+      "kind": "primary",
+      "title": "High Adventure",
+      "author": "Edmund Hillary",
+      "year": 1955,
+      "publisher": "Hodder & Stoughton, London; pages as cited by the Dictionary of New Zealand Biography"
+    },
+    {
+      "id": "teara",
+      "kind": "secondary",
+      "title": "Hillary, Edmund Percival, Dictionary of New Zealand Biography",
+      "author": "Shaun Barnett",
+      "year": 2010,
+      "publisher": "Te Ara - the Encyclopedia of New Zealand, Manatū Taonga Ministry for Culture and Heritage",
+      "url": "https://teara.govt.nz/en/biographies/6h1/hillary-edmund-percival"
+    },
+    {
+      "id": "nyt-2008",
+      "kind": "secondary",
+      "title": "Edmund Hillary, First on Everest, Dies at 88",
+      "author": "Robert D. McFadden",
+      "year": 2008,
+      "publisher": "The New York Times, 11 January 2008",
+      "url": "https://www.nytimes.com/2008/01/11/world/asia/11hillary.html"
+    },
+    {
+      "id": "rnz-2008",
+      "kind": "secondary",
+      "title": "Sir Edmund Hillary Obituary (Sir Edmund Hillary: A Tribute)",
+      "author": "Radio New Zealand",
+      "year": 2008,
+      "publisher": "RNZ",
+      "url": "https://www.rnz.co.nz/collections/siredmundhillary/sir-edmund-hillary-obituary"
+    },
+    {
+      "id": "npr-2006",
+      "kind": "secondary",
+      "title": "Everest Pioneer Condemns Climbers",
+      "author": "Associated Press",
+      "year": 2006,
+      "publisher": "NPR, 26 May 2006",
+      "url": "https://www.npr.org/templates/story/story.php?storyId=5434224"
+    },
+    {
+      "id": "irish-2006",
+      "kind": "secondary",
+      "title": "Hillary blames commercialisation for Everest death",
+      "author": "Reuters",
+      "year": 2006,
+      "publisher": "The Irish Times, 27 May 2006",
+      "url": "https://www.irishtimes.com/news/hillary-blames-commercialisation-for-everest-death-1.1008711"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real New Zealand mountaineer, explorer and aid worker (1919-2008), dead since 2008; he was a diplomat (High Commissioner to India 1985-89) but never held or ran for elected office and founded no religion; no account found of sexual contact with a minor or of sexual violence; he is in, with a documented dark side (taking the 1951 Everest places to George Lowe's disgust, the 1957-58 dash to the South Pole seen by some as a breach of orders, depression and drinking after 1975, and his 1999 statement that he stepped on the summit first)."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked all five draft values: Humility against his 1999 claim to have stepped on the summit first and the 'arrogant' Pole dash, Boldness against his own admission that he was often afraid and planned carefully, Determination against the end of his high climbing after 1961. Each was a single lapse or no contrary pattern, and Contribution, Determination and Boldness each rest on three or more independent sources, so all five held; the blind pick's Service, Loyalty and Resilience were not added (no room, thin or single-source evidence, and Te Ara records two years of depression and drinking after 1975). All four quotes matched the 1991 interview, the AP report and Te Ara's citation of View from the Summit; six small factual overstatements were fixed.",
+    "checkedOn": "2026-11-10"
+  }
+}
