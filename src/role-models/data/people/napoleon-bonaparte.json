@@ -1,0 +1,413 @@
+{
+  "id": "napoleon-bonaparte",
+  "name": "Napoleon Bonaparte",
+  "born": 1769,
+  "died": 1821,
+  "category": "warriors",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A Corsican officer who read, worked and fought his way to Emperor of the French.",
+  "startedFrom": "He was born on 15 August 1769 at Ajaccio in Corsica, a year after France took the island over from Genoa, into a family that Genoa had made noble. His father went over to the French and won him a place at the military school of Brienne; he arrived knowing almost no French, spent four months at a school in Autun, entered Brienne in May 1779 at nine, kept to himself there, was teased by his schoolfellows for his name and his country, and spent his free hours reading history. His father died in 1785, he became a junior artillery lieutenant in January 1786, and in 1791, at Auxonne, he lived on very scanty means while educating his younger brother Louis.",
+  "values": [
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "From artillery lieutenant in 1786 he took power in the coup of Brumaire (November 1799), was made Consul for Life by a vote of 3,568,885 to 8,374 in 1802, and took the title Emperor of the French in May 1804.",
+          "sourceId": "eb1911",
+          "locator": "Napoleon I., vol. 19: Brienne and La Fère paragraphs; Brumaire; Consul for Life plebiscite; senatus-consultum of 18 May 1804"
+        },
+        {
+          "kind": "words",
+          "claim": "Writing to the Directory from Leoben on 16 April 1797, he said that whoever fears losing his glory is sure to lose it.",
+          "sourceId": "corr-plon-2",
+          "locator": "vol. II, no. 1735, Leoben, 27 germinal an V (16 April 1797), pp. 491-492"
+        },
+        {
+          "kind": "words",
+          "claim": "At St Helena, as Las Cases reports it (Las Cases wrote down his talk; these are not Napoleon's own pages), he said it was 'not till after Lodi' in May 1796 that 'the first spark of my ambition was kindled'.",
+          "sourceId": "lascases-1836",
+          "locator": "vol. I, journal for September 1815 (account of Toulon and after)"
+        },
+        {
+          "kind": "words",
+          "claim": "At St Helena on 1 May 1816, as Las Cases reports it, he said he must be allowed to have had ambition 'in no small degree', but of 'the highest and noblest kind'.",
+          "sourceId": "lascases-1836",
+          "locator": "vol. II, journal entry May 1st [1816]"
+        },
+        {
+          "kind": "witness",
+          "claim": "His school friend and secretary Bourrienne, writing after the two fell out, says he had 'two ruling passions, glory and war' and was 'tormented with the desire of continually advancing'.",
+          "sourceId": "bourrienne-phipps",
+          "locator": "vol. 4, chapter XXVIII"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica writes that his marriage and the Vendémiaire command were 'stepping-stones' to an end he had 'kept steadily in sight since the spring of the year 1794', and that Lodi first inspired 'dreams of a grander career'.",
+          "sourceId": "eb1911",
+          "locator": "Napoleon I., vol. 19, paragraph on Vendémiaire and the command of the army of Italy"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At Auxonne in 1791, living on very scanty means, he was 'frequently studying fourteen or fifteen hours a day'.",
+          "sourceId": "eb1911",
+          "locator": "Napoleon I., vol. 19, paragraph on his second stay at Auxonne"
+        },
+        {
+          "kind": "deed",
+          "claim": "In his youth he wrote no fewer than 60 essays, novellas and pamphlets, including a history of Corsica.",
+          "sourceId": "whe-mark",
+          "locator": "section 'Early Life'"
+        },
+        {
+          "kind": "words",
+          "claim": "At St Helena in September 1816, as Las Cases reports it, he said that 'occupation is my element' and that he had 'never known any bounds' to his capacity for work.",
+          "sourceId": "lascases-1836",
+          "locator": "vol. III, journal entry 25th-27th [September 1816], 'Zeal for working'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Las Cases, who was with him, records that in the same weeks he dictated 'every day and the whole day' and was occupied 'eight, ten, or twelve hours a day'.",
+          "sourceId": "lascases-1836",
+          "locator": "vol. III, journal entry 25th-27th [September 1816]"
+        },
+        {
+          "kind": "witness",
+          "claim": "Bourrienne, his secretary 1797-1802, writes that their business was sometimes prolonged till two or three in the morning, and also that Napoleon usually slept seven hours a night.",
+          "sourceId": "bourrienne-phipps",
+          "locator": "vol. 4, chapter XXVIII"
+        }
+      ]
+    },
+    {
+      "word": "Reading",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At Brienne (1779-1784) he spent much of his spare time reading history, especially Plutarch.",
+          "sourceId": "eb1911",
+          "locator": "Napoleon I., vol. 19, Brienne paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "His schoolfellow Bourrienne writes that in play-hours he withdrew to the library to read history, especially Polybius and Plutarch, and was also fond of Arrian.",
+          "sourceId": "bourrienne-phipps",
+          "locator": "vol. 1, chapter I"
+        },
+        {
+          "kind": "witness",
+          "claim": "The World History Encyclopedia writes that, lacking friends at school, he 'turned to the company of books'.",
+          "sourceId": "whe-mark",
+          "locator": "section 'Early Life'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Before sailing for Egypt in 1798 he wrote out, in his own hand, the list of a camp library for Bourrienne to buy: history (Plutarch, Polybius, Arrian, Thucydides, Tacitus, the memoirs of Turenne and Frederick II), geography, travels and poetry.",
+          "sourceId": "bourrienne-phipps",
+          "locator": "vol. 2, chapter XII ('Camp library')"
+        },
+        {
+          "kind": "deed",
+          "claim": "In exile at St Helena he wrote accounts of the wars of Julius Caesar, Turenne and Frederick the Great.",
+          "sourceId": "eb1911",
+          "locator": "Napoleon I., vol. 19, St Helena paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Order",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Under his Consulate (1799-1804), the 1911 Britannica writes, France 'gained most of her institutions and the essentials of her machinery of government', including its legal codes and local government.",
+          "sourceId": "eb1911",
+          "locator": "Napoleon I., vol. 19, opening of the section on the Consulate"
+        },
+        {
+          "kind": "witness",
+          "claim": "Las Cases writes that as First Consul he 'constantly presided at the sittings for drawing up the civil code'; in the same passage Napoleon, as Las Cases reports it, names the jurist Tronchet as 'the soul of this code'.",
+          "sourceId": "lascases-1836",
+          "locator": "vol. II, journal entry 12th [May 1816]"
+        },
+        {
+          "kind": "words",
+          "claim": "At St Helena, as Las Cases reports it, he said 'My code alone, from its simplicity, has been more beneficial to France than the whole mass of laws which preceded it'.",
+          "sourceId": "lascases-1836",
+          "locator": "vol. I, journal entry 29th-30th [November 1815]"
+        },
+        {
+          "kind": "witness",
+          "claim": "Bourrienne writes that he was 'scrupulously neat in his person' and carried personal neatness 'to a fastidious degree'.",
+          "sourceId": "bourrienne-phipps",
+          "locator": "vol. 4, chapter XXVIII"
+        },
+        {
+          "kind": "witness",
+          "claim": "Bourrienne records his standing order on mail in 1797: open only letters brought by special courier and leave the rest three weeks in the basket, after which four-fifths needed no answer.",
+          "sourceId": "bourrienne-phipps",
+          "locator": "vol. 2, chapter VI"
+        }
+      ]
+    },
+    {
+      "word": "Legacy",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Bourrienne reports him saying more than once: 'the end of all my labours is, that my name should be indissolubly connected with that of France!'",
+          "sourceId": "bourrienne-phipps",
+          "locator": "vol. 4, chapter XXXIV"
+        },
+        {
+          "kind": "witness",
+          "claim": "Bourrienne writes that he 'never considered a victory fully achieved until he had raised a monument to transmit its memory to posterity', and that he had his cipher and initial put on the monuments of his reign, the old Louvre among them.",
+          "sourceId": "bourrienne-phipps",
+          "locator": "vol. 4, chapters XXVIII and XXXIV"
+        },
+        {
+          "kind": "words",
+          "claim": "At St Helena on 14 November 1816, as Las Cases reports it, he asked why his Code Napoleon might not have served 'as the groundwork for a European Code'.",
+          "sourceId": "lascases-1836",
+          "locator": "vol. IV, journal entry 14th [November 1816], passage on a European Institute"
+        },
+        {
+          "kind": "words",
+          "claim": "Bourrienne reports him saying that 'a great reputation is a great noise' and that while laws, monuments and nations fall, 'the noise continues and resounds in after ages'.",
+          "sourceId": "bourrienne-phipps",
+          "locator": "vol. 4, chapter XXVIII"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not accept \"it is not possible\" as an answer, from yourself or from your people.",
+      "sourceId": "corr-plon-25",
+      "locator": "vol. XXV, no. 20256, to General Count Lemarois, Dresden, 9 July 1813, p. 479"
+    },
+    {
+      "text": "If you are afraid of losing what you have won, you will lose it, so keep pressing forward.",
+      "sourceId": "corr-plon-2",
+      "locator": "vol. II, no. 1735, to the Directory, Leoben, 16 April 1797, pp. 491-492"
+    },
+    {
+      "text": "Make long, steady work your normal state.",
+      "sourceId": "lascases-1836",
+      "locator": "vol. III, journal entry 25th-27th [September 1816]; and eb1911, Auxonne paragraph"
+    },
+    {
+      "text": "Learn from the great men before you by reading their history.",
+      "sourceId": "eb1911",
+      "locator": "Napoleon I., vol. 19, Brienne paragraph and St Helena paragraph"
+    },
+    {
+      "text": "Let good news wait, but act on bad news at once.",
+      "sourceId": "bourrienne-phipps",
+      "locator": "vol. 4, chapter XXVIII (his standing order to his secretary: wake him for bad news, never for good)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "the person who is afraid of losing his glory is sure to lose it.",
+      "sourceId": "bingham-1884",
+      "locator": "vol. I, p. 150 (despatch to the Directory, Leoben, 16 April 1797; French text in Correspondance vol. II, no. 1735)",
+      "translation": "D. A. Bingham, 1884"
+    },
+    {
+      "text": "You have gained battles without guns, passed rivers without bridges, accomplished forced marches without shoes, bivouacked without brandy and often without bread.",
+      "sourceId": "bingham-1884",
+      "locator": "vol. I, p. 74 (proclamation to the Army of Italy, Cherasco, 26 April 1796; French text in Correspondance vol. I, no. 234)",
+      "translation": "D. A. Bingham, 1884"
+    },
+    {
+      "text": "occupation is my element; I was born and made for it.",
+      "sourceId": "lascases-1836",
+      "locator": "vol. III, journal entry 25th-27th [September 1816], 'Zeal for working' (his St Helena talk as Las Cases, a reporter, wrote it down and published it in 1823; not Napoleon's own pen)",
+      "translation": "English edition published by Henry Colburn, 1836; translator not named"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1796, at 26, he took command of the French Army of Italy. On 26 April, at Cherasco, he told his soldiers that in fifteen days they had won six victories, taken twenty-one standards and fifteen thousand prisoners, and fought without guns, crossed rivers without bridges and marched without shoes and often without bread. On 10 May he won the fight at the bridge of Lodi; the 1911 Britannica writes that this success seems first to have given him 'dreams of a grander career', and at St Helena, as his companion Las Cases reports it, he said that it was then that 'the first spark of my ambition was kindled'.",
+    "sourceIds": [
+      "bingham-1884",
+      "corr-plon-1",
+      "eb1911",
+      "lascases-1836"
+    ]
+  },
+  "shadow": {
+    "text": "On 20 May 1802, as First Consul, he had a law passed that kept slavery in the colonies France got back, and he instructed his captains general to restore it where they judged it timely; they did so in Saint-Domingue, Guyane and Guadeloupe. In March 1799 his army stormed Jaffa and, in his own report, 4,000 of its defenders were 'slaughtered'; on 10 March, after three days of debate, he had the soldiers who had surrendered shot. His secretary Bourrienne, who was there, says they had come in as two columns of about 2,500 and 1,600; Bingham's 1884 edition of his letters gives 2,500. On 21 March 1804 the duc d'Enghien, seized on his orders in Baden, outside France, was shot at Vincennes after a hastily summoned court-martial; the 1911 Britannica writes that Napoleon saw before the verdict that he had no part in the plot, and in his will Napoleon wrote that 'under similar circumstances, I should act in the same way'. For his wars, the Fondation Napoléon, building on the demographer Jacques Houdaille, counts 900,000 to 1,000,000 French dead and about 2 million in the armies on the other side; Marlene Daut told National Geographic in 2021 that other estimates run from three to six million. He had an affair with the actress Mademoiselle George that began in late 1802 or in June 1803. Her birth is given as 23 February 1787, though her memoir's editor and a review of her debut call her sixteen in November 1802; the start is dated 1802 by that editor, December 1802 to January 1803 by the historian Frédéric Masson, and 8 June 1803 by the Fondation Napoléon. On the 1787 date she was 15 at the first two dates and 16 at the third. She writes that when he first sent for her she thought 'he is master, one cannot refuse him'.",
+    "sourceIds": [
+      "fn-slavery",
+      "natgeo-charles",
+      "bingham-1884",
+      "bourrienne-phipps",
+      "eb1911",
+      "lascases-1836",
+      "fn-human-cost",
+      "george-memoirs",
+      "masson-1894",
+      "fn-george"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you accept \"it's not possible\" this week, from yourself or someone else, without testing it?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "A Selection from the Letters and Despatches of the First Napoleon (ed. and tr. D. A. Bingham)",
+      "year": 1884
+    },
+    {
+      "title": "Le Souper de Beaucaire",
+      "year": 1793
+    }
+  ],
+  "sources": [
+    {
+      "id": "corr-plon-1",
+      "kind": "primary",
+      "title": "Correspondance de Napoléon Ier, publiée par ordre de l'empereur Napoléon III, tome I (letters and proclamations, 1793-1796)",
+      "author": "Napoleon I",
+      "year": 1858,
+      "publisher": "Henri Plon and J. Dumaine, Paris; Internet Archive (University of Toronto copy)",
+      "url": "https://archive.org/details/correspondancede01napouoft"
+    },
+    {
+      "id": "corr-plon-2",
+      "kind": "primary",
+      "title": "Correspondance de Napoléon Ier, tome II (1796-1797)",
+      "author": "Napoleon I",
+      "year": 1859,
+      "publisher": "Henri Plon and J. Dumaine, Paris; Internet Archive (University of Toronto copy)",
+      "url": "https://archive.org/details/correspondancede02napouoft"
+    },
+    {
+      "id": "corr-plon-25",
+      "kind": "primary",
+      "title": "Correspondance de Napoléon Ier, tome XXV (1813)",
+      "author": "Napoleon I",
+      "year": 1868,
+      "publisher": "Henri Plon and J. Dumaine, Paris; Internet Archive (University of Toronto copy)",
+      "url": "https://archive.org/details/correspondancede25napouoft"
+    },
+    {
+      "id": "bingham-1884",
+      "kind": "primary",
+      "title": "A Selection from the Letters and Despatches of the First Napoleon, with explanatory notes, vol. I (his letters and proclamations in English translation, with the editor's notes)",
+      "author": "Napoleon I; selected and translated by D. A. Bingham",
+      "year": 1884,
+      "publisher": "Chapman and Hall, London; Internet Archive (Cornell copy)",
+      "url": "https://archive.org/details/cu31924024332235"
+    },
+    {
+      "id": "lascases-1836",
+      "kind": "secondary",
+      "title": "Memoirs of the Life, Exile, and Conversations of the Emperor Napoleon, 4 vols (his St Helena talk as written down by his companion Las Cases, a reporter, not Napoleon's own pen; reworked for publication in 1823; the 1911 Britannica ranks it 'on a lower level as regards credibility')",
+      "author": "Emmanuel, comte de Las Cases",
+      "year": 1836,
+      "publisher": "Henry Colburn, London; Project Gutenberg e-texts #53967-53970",
+      "url": "https://www.gutenberg.org/ebooks/53967"
+    },
+    {
+      "id": "eb1911",
+      "kind": "secondary",
+      "title": "Napoleon I., Encyclopaedia Britannica, 11th edition, vol. 19, pp. 190-211",
+      "author": "John Holland Rose",
+      "year": 1911,
+      "publisher": "Wikisource transcription",
+      "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Napoleon_I."
+    },
+    {
+      "id": "bourrienne-phipps",
+      "kind": "secondary",
+      "title": "Memoirs of Napoleon Bonaparte (by his schoolfellow and private secretary, 1797-1802, who reports his words; not Napoleon's own pen; written after the two fell out, and the editor warns they must be read with caution)",
+      "author": "Louis Antoine Fauvelet de Bourrienne, edited by R. W. Phipps",
+      "year": 1891,
+      "publisher": "Charles Scribner's Sons; Project Gutenberg e-texts #3551-3566",
+      "url": "https://www.gutenberg.org/ebooks/3551"
+    },
+    {
+      "id": "whe-mark",
+      "kind": "secondary",
+      "title": "Napoleon Bonaparte, World History Encyclopedia (19 October 2023)",
+      "author": "Harrison W. Mark",
+      "year": 2023,
+      "publisher": "World History Encyclopedia",
+      "url": "https://www.worldhistory.org/Napoleon_Bonaparte/"
+    },
+    {
+      "id": "fn-slavery",
+      "kind": "secondary",
+      "title": "Point d'histoire > Le rétablissement de l'esclavage par Napoléon (10 December 2020)",
+      "author": "Fondation Napoléon",
+      "year": 2020,
+      "publisher": "napoleon.org",
+      "url": "https://www.napoleon.org/histoire-des-2-empires/articles/point-dhistoire-le-retablissement-de-lesclavage-par-napoleon/"
+    },
+    {
+      "id": "fn-human-cost",
+      "kind": "secondary",
+      "title": "Napoleon, the dark side > The human cost of the Napoleonic wars (11 December 2020; English 14 April 2021)",
+      "author": "Fondation Napoléon",
+      "year": 2021,
+      "publisher": "napoleon.org",
+      "url": "https://www.napoleon.org/en/history-of-the-two-empires/articles/napoleon-the-dark-side-the-human-cost-of-the-napoleonic-wars-3-min-read/"
+    },
+    {
+      "id": "natgeo-charles",
+      "kind": "secondary",
+      "title": "Was Napoleon Bonaparte an enlightened leader or tyrant? (4 May 2021)",
+      "author": "Jacqueline Charles",
+      "year": 2021,
+      "publisher": "National Geographic",
+      "url": "https://www.nationalgeographic.com/history/article/napoleon-bonaparte-enlightened-leader-or-tyrant"
+    },
+    {
+      "id": "george-memoirs",
+      "kind": "secondary",
+      "title": "Mémoires inédits de Mademoiselle George, publiés d'après le manuscrit original, 2nd edition",
+      "author": "Mademoiselle George (Marguerite-Joséphine Weimer), edited by P.-A. Chéramy",
+      "year": 1908,
+      "publisher": "Plon-Nourrit, Paris; Project Gutenberg e-text #30906",
+      "url": "https://www.gutenberg.org/ebooks/30906"
+    },
+    {
+      "id": "fn-george",
+      "kind": "secondary",
+      "title": "GEORGE, Marguerite-Joséphine Weimer, dite Mlle (1787-1867), comédienne",
+      "author": "Marc Allégret (Revue du Souvenir napoléonien no. 405), Fondation Napoléon",
+      "year": 2025,
+      "publisher": "napoleon.org",
+      "url": "https://www.napoleon.org/histoire-des-2-empires/biographies/george-marguerite-josephine-weimer-dite-mlle-1787-1867-comedienne/"
+    },
+    {
+      "id": "masson-1894",
+      "kind": "secondary",
+      "title": "Napoléon et les femmes. I, L'amour, 5th edition",
+      "author": "Frédéric Masson",
+      "year": 1894,
+      "publisher": "P. Ollendorff, Paris; Internet Archive (BnF copy)",
+      "url": "https://archive.org/details/bnf-bpt6k65015829"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real French general and emperor (1769-1821), long dead, no politician of today and no founder of a religion; the restoration of slavery (1802), the Jaffa prisoner killings (1799), the execution of the duc d'Enghien (1804) and the dead of his wars are shadow. Owner case (under-16), no recommendation: his affair with the actress Mademoiselle George. Birth: 23 February 1787 (Fondation Napoléon [fn-george]; her memoir's editor Chéramy and Monval's list in the same book [george-memoirs]); against it, Chéramy and Geoffroy's review in the Journal des Débats of 1 December 1802 call her sixteen at her debut (28 November 1802), and the Fondation says she was 'not yet sixteen' then. Start: 1802 (Chéramy, 'La liaison va de 1802 à 1808'); nivôse an XI, 22 December 1802 to 20 January 1803 (Masson 1894, p. 102 [masson-1894]); 8 June 1803 (Fondation). On the 1787 date she was 15 at the first two and 16 at the third. Her own memoir gives no date; it says that after she played Clytemnestre his valet Constant summoned her to Saint-Cloud, that at the first meeting he agreed to her 'Pas aujourd'hui', and that she thought 'Il est maître, on ne peut le refuser!'; she also writes that curiosity and vanity won. Also listed, adult: Marie Walewska, aged 20 in January 1807; the Fondation writes that pressure came 'from all sides', led by her husband, and 'though unwilling, Marie finally gave in'; no source describes force by Napoleon [fn-walewska, in screen.json]."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value against Bourrienne, Las Cases (both reporters of his words, not his own pen) and the 1911 Britannica, and re-checked the Mademoiselle George dates in her memoir, Masson (1894) and the Fondation Napoléon. Ambition and Hard work held (Bourrienne's seven hours of sleep is noted beside the long days); Reading gained his own 1798 camp-library list, Order now notes that he credited Tronchet as 'the soul' of the code, and Legacy, the blind pick's word, was added on Bourrienne and Las Cases. All three quotes were found word for word; the Jaffa count now gives Bourrienne's two columns as his figure, not as a count of the dead, and the owner case now carries a third start date (Masson, December 1802 to January 1803) and the two 'sixteen' sources.",
+    "checkedOn": "2026-11-10"
+  }
+}
