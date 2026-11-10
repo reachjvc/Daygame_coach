@@ -1,0 +1,340 @@
+{
+  "id": "vaclav-havel",
+  "name": "Václav Havel",
+  "born": 1936,
+  "died": 2011,
+  "category": "leaders",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A playwright who stopped going along with the lie, went to prison for it, then led his country.",
+  "startedFrom": "He was born in 1936 into one of the wealthiest families in Prague; his grandfather built the Lucerna ballroom. He was 12 when the Communist regime took the family's property in 1948, and as a 'bourgeois' he was barred from studying the arts. He spent two years at the Czech Technical University, then worked as a stagehand at Prague's ABC theatre and wrote plays in his spare time.",
+  "values": [
+    {
+      "word": "Honesty",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 'The Power of the Powerless' he describes a greengrocer who stops displaying a party slogan he does not believe, and calls this stepping out of 'living within the lie'.",
+          "sourceId": "ppl-wilson",
+          "locator": "the greengrocer passage (his revolt)"
+        },
+        {
+          "kind": "words",
+          "claim": "He opened his first New Year's address as president by telling the nation he assumed they had not chosen him 'so that I, too, would lie to you', and that the country was not flourishing.",
+          "sourceId": "newyear-1990",
+          "locator": "New Year's Address to the Nation, Prague, 1 January 1990, opening (from 'For forty years you heard')"
+        },
+        {
+          "kind": "deed",
+          "claim": "After his release in May 1977 he wrote an article explaining how the authorities had deceived him into giving up Charter 77, and criticised himself for it.",
+          "sourceId": "radio-prague-2011",
+          "locator": "section 'Havel the dissident'"
+        },
+        {
+          "kind": "witness",
+          "claim": "James Kirchick writes that Havel's personal and political philosophy can be summed up in the phrase 'living within the truth'.",
+          "sourceId": "kirchick-2014",
+          "locator": "review body para. 2 (from 'However unlikely')"
+        },
+        {
+          "kind": "witness",
+          "claim": "Michael Žantovský, director of the Václav Havel Library, says Havel's own account of the 1977 episode shows 'the degree of self-reproaching' it caused him, and that his friends never judged him as harshly as he judged himself.",
+          "sourceId": "radio-prague-2021",
+          "locator": "interview with Michael Žantovský on the newly published 1977 prison report"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Arrested in 1979 with other members of the Committee for the Defence of the Unjustly Oppressed, he refused an offer to emigrate to the United States and was sentenced in October 1979 to four years in prison.",
+          "sourceId": "radio-prague-2011",
+          "locator": "section 'Havel the dissident'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In February 1989 he was sentenced to nine months for watching people lay wreaths for Jan Palach; released in May after a mass petition, he drove the next manifesto, 'A Few Sentences'.",
+          "sourceId": "radio-prague-2011",
+          "locator": "section 'Havel the dissident'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Kirchick calls him the government's 'most articulate and fearless critic', who refused early release in exchange for leaving the country.",
+          "sourceId": "kirchick-2014",
+          "locator": "review body paras 1 and 3"
+        }
+      ]
+    },
+    {
+      "word": "Responsibility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his 1990 New Year's address he said that everyone had helped keep the totalitarian system going: 'None of us is just its victim. We are all also its co-creators.'",
+          "sourceId": "newyear-1990",
+          "locator": "New Year's Address to the Nation, 1 January 1990 (from 'When I talk about the contaminated moral atmosphere')"
+        },
+        {
+          "kind": "words",
+          "claim": "Before the US Congress he said the salvation of the world lies in the human heart and 'in human responsibility'.",
+          "sourceId": "congress-1990",
+          "locator": "Address to a Joint Session of the U.S. Congress, Washington, 21 February 1990"
+        },
+        {
+          "kind": "witness",
+          "claim": "Daniel J. Mahoney describes his thought as built on 'responsibility rooted in the memory of Being', a staple of his speeches as president.",
+          "sourceId": "cityjournal-2015",
+          "locator": "paragraph beginning 'Sexual indiscretions aside'"
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He was a main author and spokesman of Charter 77 (published 5 January 1977), which asked the regime to respect the human rights it had signed up to in Helsinki; he was jailed for the first time soon after.",
+          "sourceId": "radio-prague-2011",
+          "locator": "section 'Havel the dissident'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In April 1979 he co-founded the Committee for the Defence of the Unjustly Oppressed to help dissidents and their families.",
+          "sourceId": "radio-prague-2011",
+          "locator": "section 'Havel the dissident'"
+        },
+        {
+          "kind": "words",
+          "claim": "In his first New Year's address he said many prisoners had been through 'a debased judiciary process that curtailed their rights'.",
+          "sourceId": "newyear-1990",
+          "locator": "New Year's Address to the Nation, 1 January 1990, section on the president's tasks"
+        },
+        {
+          "kind": "witness",
+          "claim": "Kirchick writes that in his last years he made the cause of imprisoned dissidents in far-off countries his own.",
+          "sourceId": "kirchick-2014",
+          "locator": "review body para. 2 (from 'However unlikely')"
+        }
+      ]
+    },
+    {
+      "word": "Forgiveness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Immediately on taking office he declared a general amnesty, which drew criticism.",
+          "sourceId": "radio-prague-2011",
+          "locator": "section 'Thirteen years of Havel as president'"
+        },
+        {
+          "kind": "words",
+          "claim": "Announcing the amnesty, he asked the public not to fear released prisoners but to help them 'in the Christian spirit' to find 'the capacity to repent'.",
+          "sourceId": "newyear-1990",
+          "locator": "New Year's Address to the Nation, 1 January 1990, section on the president's tasks"
+        },
+        {
+          "kind": "witness",
+          "claim": "Kirchick writes that, unlike many political prisoners, he showed 'a near-religious capacity for absolution', and as president opposed the wholesale purge of former communist officials.",
+          "sourceId": "kirchick-2014",
+          "locator": "review body para. 4 (from 'Unlike many other political prisoners')"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Stop taking part in small lies you do not believe, even when everyone else goes along.",
+      "sourceId": "ppl-wilson",
+      "locator": "the greengrocer passage"
+    },
+    {
+      "text": "Tell people the hard truth, even on the day they cheer you.",
+      "sourceId": "newyear-1990",
+      "locator": "New Year's Address to the Nation, 1 January 1990, opening (from 'For forty years you heard')"
+    },
+    {
+      "text": "Do not see yourself only as a victim: if you went along, you share the responsibility.",
+      "sourceId": "newyear-1990",
+      "locator": "New Year's Address to the Nation, 1 January 1990 (from 'When I talk about the contaminated moral atmosphere')"
+    },
+    {
+      "text": "Work for something because it is good, not because it is sure to succeed.",
+      "sourceId": "dtp-wilson",
+      "locator": "ch. 5 'The Politics of Hope', pp. 181-182"
+    },
+    {
+      "text": "In the worst times, keep small daily ceremonies that you control yourself.",
+      "sourceId": "olga-letters",
+      "locator": "letter of 27 September 1980 (on tea as part of his daily 'self-help' programme)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "In this revolt the greengrocer steps out of living within the lie. He rejects the ritual and breaks the rules of the game. He discovers once more his suppressed identity and dignity.",
+      "sourceId": "ppl-wilson",
+      "locator": "'The Power of the Powerless' (1978), the greengrocer passage",
+      "translation": "Paul Wilson, 1985 (in John Keane, ed., The Power of the Powerless)"
+    },
+    {
+      "text": "…an ability to work for something because it is good, not just because it stands a chance to succeed.",
+      "sourceId": "dtp-wilson",
+      "locator": "ch. 5 'The Politics of Hope', pp. 181-182",
+      "translation": "Paul Wilson, 1990"
+    },
+    {
+      "text": "I assume you did not propose me for this office so that I, too, would lie to you.",
+      "sourceId": "newyear-1990",
+      "locator": "New Year's Address to the Nation, Prague, 1 January 1990, opening (from 'I assume you did not propose me')",
+      "translation": "English text published by the Office of the President of the Czech Republic (translator not named)"
+    },
+    {
+      "text": "Consciousness precedes Being, and not the other way around, as Marxists claim.",
+      "sourceId": "congress-1990",
+      "locator": "Address to a Joint Session of the U.S. Congress, Washington, 21 February 1990",
+      "translation": "English text published by the Office of the President of the Czech Republic (translator not named)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In May 1979 he was arrested with fifteen other members of the Committee for the Defence of the Unjustly Oppressed, a group he had co-founded a month earlier to help dissidents and their families. He refused an offer to emigrate to the United States. In October 1979 he was sentenced to four years in prison, and theatres across Europe staged his plays in solidarity. His prison letters to his wife became the book 'Letters to Olga'.",
+    "sourceIds": [
+      "radio-prague-2011",
+      "kirchick-2014"
+    ]
+  },
+  "shadow": {
+    "text": "Michael Žantovský's biography, as Victor Sebestyen sums it up in the Spectator, lists 'innumerable affairs, one night stands and drunken binges', with a main mistress and a casual girlfriend at the same time; when his wife Olga had one affair while he was in prison, he was unforgiving. Paul Wilson, his translator, writes in the New York Review of Books that he told Olga about at least three serious affairs, and names his overuse of prescription drugs and his support for the invasion of Iraq as acts that slip into questionable territory. James Kirchick writes that while Olga was dying of cancer he took up with a much younger woman; Radio Prague reports that he married the actress Dagmar Veškrnová in January 1997, eleven months after Olga's death. In prison in 1977 he agreed to have nothing more to do with Charter 77 after the authorities falsely told him the others had given it up; on his release he wrote an article on how he had been deceived and criticised himself for what he saw as his own cowardice. As president his 1990 amnesty was criticised, he was re-elected in 1998 by one vote, and a January 1999 poll found fewer than half of Czechs trusted him. Sebestyen says he stayed in office too long, ill for long periods and dependent on sleeping pills, painkillers and a stimulant, and left with his popularity at rock bottom.",
+    "sourceIds": [
+      "spectator-2014",
+      "nyrb-2015",
+      "kirchick-2014",
+      "radio-prague-2011"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you go along with something this week that you did not believe, just to avoid trouble?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Power of the Powerless",
+      "year": 1978
+    },
+    {
+      "title": "Disturbing the Peace",
+      "year": 1986
+    },
+    {
+      "title": "Letters to Olga",
+      "year": "1988 (English)"
+    }
+  ],
+  "sources": [
+    {
+      "id": "ppl-wilson",
+      "kind": "primary",
+      "title": "The Power of the Powerless (1978), trans. Paul Wilson, in John Keane (ed.), The Power of the Powerless: Citizens Against the State in Central-Eastern Europe (excerpt read on World History Commons, RRCHNM, George Mason University)",
+      "author": "Václav Havel",
+      "year": 1985,
+      "publisher": "Hutchinson",
+      "url": "https://worldhistorycommons.org/power-powerless"
+    },
+    {
+      "id": "dtp-wilson",
+      "kind": "primary",
+      "title": "Disturbing the Peace: A Conversation with Karel Hvížďala, trans. Paul Wilson (pp. 181-182 passage read on the Václav Havel Center site)",
+      "author": "Václav Havel",
+      "year": 1990,
+      "publisher": "Alfred A. Knopf",
+      "url": "https://www.havelcenter.org/havel-quotes/disturbing-the-peace"
+    },
+    {
+      "id": "olga-letters",
+      "kind": "primary",
+      "title": "Letters to Olga, trans. Paul Wilson (letter of 27 September 1980 read on the Václav Havel Center site)",
+      "author": "Václav Havel",
+      "year": 1988,
+      "publisher": "Alfred A. Knopf",
+      "url": "https://www.havelcenter.org/?p=1143"
+    },
+    {
+      "id": "newyear-1990",
+      "kind": "primary",
+      "title": "New Year's Address to the Nation, Prague, 1 January 1990 (English text, Office of the President of the Czech Republic, archived copy)",
+      "author": "Václav Havel",
+      "year": 1990,
+      "publisher": "Office of the President of the Czech Republic",
+      "url": "https://web.archive.org/web/20071228072735/http://old.hrad.cz/president/Havel/speeches/1990/0101_uk.html"
+    },
+    {
+      "id": "congress-1990",
+      "kind": "primary",
+      "title": "Address to a Joint Session of the U.S. Congress, Washington, 21 February 1990 (English text, Office of the President of the Czech Republic, archived copy)",
+      "author": "Václav Havel",
+      "year": 1990,
+      "publisher": "Office of the President of the Czech Republic",
+      "url": "https://web.archive.org/web/2007/http://old.hrad.cz/president/Havel/speeches/1990/2102_uk.html"
+    },
+    {
+      "id": "radio-prague-2011",
+      "kind": "secondary",
+      "title": "Václav Havel: from \"bourgeois reactionary\" to president, Radio Prague International (Czech Radio), 18 December 2011",
+      "author": "Radio Prague International",
+      "year": 2011,
+      "url": "https://english.radio.cz/node/8558072"
+    },
+    {
+      "id": "radio-prague-2021",
+      "kind": "secondary",
+      "title": "Havel's regrets over prison comprise \"spiritual core\" of freshly published lost text, Radio Prague International, 11 November 2021",
+      "author": "Ian Willoughby",
+      "year": 2021,
+      "url": "https://english.radio.cz/node/8733735"
+    },
+    {
+      "id": "spectator-2014",
+      "kind": "secondary",
+      "title": "What went so wrong for Vaclav Havel? (review of Michael Žantovský, Havel: A Life), The Spectator, 8 November 2014",
+      "author": "Victor Sebestyen",
+      "year": 2014,
+      "url": "https://www.spectator.co.uk/article/what-went-so-wrong-for-vaclav-havel/"
+    },
+    {
+      "id": "kirchick-2014",
+      "kind": "secondary",
+      "title": "Václav Havel: Disturber of the Peace (review of Michael Žantovský, Havel: A Life), 5 December 2014",
+      "author": "James Kirchick",
+      "year": 2014,
+      "url": "https://jameskirchick.com/?p=2153"
+    },
+    {
+      "id": "nyrb-2015",
+      "kind": "secondary",
+      "title": "Václav Havel: What He Inspired (review of Michael Žantovský, Havel: A Life), The New York Review of Books, 23 April 2015",
+      "author": "Paul Wilson",
+      "year": 2015,
+      "url": "https://www.nybooks.com/articles/2015/04/23/vaclav-havel-what-he-inspired/"
+    },
+    {
+      "id": "cityjournal-2015",
+      "kind": "secondary",
+      "title": "Prague's Philosopher-King (review of Michael Žantovský, Havel: A Life), City Journal, 26 June 2015",
+      "author": "Daniel J. Mahoney",
+      "year": 2015,
+      "url": "https://www.city-journal.org/article/pragues-philosopher-king"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real playwright, dissident and Czechoslovak/Czech president who died on 18 December 2011, so not a living politician; no credible account of sexual violence or of sexual contact with anyone under 16 was found; his dark side is serial infidelity, heavy drinking and pills, a 1977 prison capitulation he later called cowardice, and a presidency criticised for the 1990 amnesty and for staying on too long."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked Honesty and Courage with his affairs and his 1977 prison capitulation, and Forgiveness with his refusal to forgive Olga's one affair. All held: he told Olga about his serious affairs (Paul Wilson, NYRB), and in 1977 he exposed his own capitulation in print and called it cowardice, a single lapse set against his later prison terms, including four years from 1979. Justice and Forgiveness kept on three sources each; the blind pick's Hope and Integrity did not fit within five. Fixes: the committee's name as Radio Prague gives it, the Sudeten apology taken out of Forgiveness, the Olga letter's 'self-help' wording, unverifiable paragraph numbers replaced, and Wilson's NYRB review added to the shadow (prescription drugs, Iraq).",
+    "checkedOn": "2026-11-10"
+  }
+}
