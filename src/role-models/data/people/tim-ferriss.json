@@ -1,0 +1,304 @@
+{
+  "id": "tim-ferriss",
+  "name": "Tim Ferriss",
+  "born": 1977,
+  "died": null,
+  "category": "teachers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_emotions"
+  ],
+  "tagline": "A self-experimenter who turned writing down his fears into a method anyone can copy.",
+  "startedFrom": "He grew up in the Hamptons on Long Island, the son of a real-estate agent and a physical therapist; he calls himself a 'townie' who grew up serving coffee to people like Steven Spielberg and Jerry Seinfeld. A friend at St. Paul's boarding school told him to apply there, and from St. Paul's he went to Princeton. He has bipolar depression, which runs in his family, and in his last year at Princeton, in 1999, he came close to killing himself.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his 2017 TED talk he says the hard choices, what we most fear doing, asking or saying, are very often exactly what we most need to do.",
+          "sourceId": "ted-2017",
+          "locator": "closing section, after Jerzy Gregorek's mantra (TED2017, recorded 24 April 2017)"
+        },
+        {
+          "kind": "deed",
+          "claim": "In May 2015 he published the story of his 1999 suicide plan, which he says he had kept secret from his family, girlfriends and closest friends for years.",
+          "sourceId": "suicide-2015",
+          "locator": "opening paragraphs and section 'Into the Darkness'"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that what we fear doing most is usually what we most need to do, and tells readers to define the worst case, accept it, and do it.",
+          "sourceId": "fearsetting-2017",
+          "locator": "section 'Q&A: Questions and Actions', question 5"
+        }
+      ]
+    },
+    {
+      "word": "Freedom",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 2004, burned out as head of his sports-nutrition company, he found he would rather learn tango in Buenos Aires and archery in Kyoto, and automated the business so he could.",
+          "sourceId": "newyorker-2011",
+          "locator": "paragraph beginning 'Ferriss's first book, \"The 4-Hour Workweek,\" was turned down'"
+        },
+        {
+          "kind": "words",
+          "claim": "The 4-Hour Workweek says the perfect job, for most people, is the one that takes the least time, and urges 'mini-retirements' now instead of saving leisure for old age.",
+          "sourceId": "newyorker-2011",
+          "locator": "paragraphs beginning 'Ferriss's books appeal' and 'Ferriss's first book'"
+        },
+        {
+          "kind": "words",
+          "claim": "He says the 2004 trip let him remove himself from the business, and that he stretched it into a year and a half around the world, the basis of his first book.",
+          "sourceId": "ted-2017",
+          "locator": "section on the three pages of fear-setting, after 'So I took the trip'"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "The New Yorker writes that he calls this the age of the self-experimenter and that his method is to interview experts and pass on their findings.",
+          "sourceId": "newyorker-2011",
+          "locator": "paragraph beginning 'Ferriss likes to declare that this is the age of the self-experimenter'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2009 he landed in an emergency room with a joint infection after a series of human-growth-factor injections taken as an experiment on himself.",
+          "sourceId": "newyorker-2011",
+          "locator": "paragraph beginning 'Ferriss's self-experimentation has not been without its risks'"
+        },
+        {
+          "kind": "words",
+          "claim": "He says that after 1999 he became very methodical about testing different ways to manage his ups and downs.",
+          "sourceId": "ted-2017",
+          "locator": "opening section, after 'the element of chance'"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "For the Johns Hopkins psychedelic research center opened in 2019 he organised half of the $17 million in commitments and gave more than $2 million of his own.",
+          "sourceId": "nyt-2019",
+          "locator": "paragraph beginning 'Mr. Ferriss, who organized half the $17 million'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Johns Hopkins named him as one of four philanthropists who, with the Steven & Alexandra Cohen Foundation, would cover the center's operating costs for its first five years.",
+          "sourceId": "hopkins-2019",
+          "locator": "paragraph beginning 'The center's operational expenses for the first five years'"
+        },
+        {
+          "kind": "deed",
+          "claim": "For his 33rd birthday in July 2010 he asked readers to fund school field trips for poor children through DonorsChoose and pledged to match every dollar, aiming at $100,000 in all.",
+          "sourceId": "birthday-2010",
+          "locator": "section 'Incentive #2 – How it becomes $100,000'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New Yorker calls him a generous donor to certain nonprofits and says part of the proceeds of The 4-Hour Body went to St. Jude Children's Research Hospital.",
+          "sourceId": "newyorker-2011",
+          "locator": "paragraph beginning 'Ferriss professes to be untroubled'"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After the 1999 crisis he took the rest of his year off to look after his body and mind, then went back, handed in the finished thesis and graduated with the class of 2000.",
+          "sourceId": "suicide-2015",
+          "locator": "section 'Into the Darkness', after the phone call with his mother"
+        },
+        {
+          "kind": "words",
+          "claim": "In his 2017 TED talk he says he has had more than 50 major depressive episodes, 'many rounds in the ring with darkness, taking good notes.'",
+          "sourceId": "ted-2017",
+          "locator": "opening section, after 'I have bipolar depression'"
+        },
+        {
+          "kind": "words",
+          "claim": "He lists the tools he says he still uses to keep 'the darkness at arm's length', among them moving for at least 20 minutes every day.",
+          "sourceId": "suicide-2015",
+          "locator": "sections 'Out of the Darkness' and 'Practical Gremlin Defense', point 9"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Before a hard step, write down the worst that could happen, how to prevent it, and how to repair it.",
+      "sourceId": "ted-2017",
+      "locator": "section describing page one of fear-setting: 'Define', 'Prevent', 'Repair'"
+    },
+    {
+      "text": "What you most fear doing is usually what you most need to do.",
+      "sourceId": "fearsetting-2017",
+      "locator": "section 'Q&A: Questions and Actions', question 5"
+    },
+    {
+      "text": "Count the cost of doing nothing, not only the risk of acting.",
+      "sourceId": "ted-2017",
+      "locator": "section on page three of fear-setting, 'The Cost of Inaction'"
+    },
+    {
+      "text": "Separate what you can control from what you cannot, and put your effort only into the first.",
+      "sourceId": "ted-2017",
+      "locator": "section on stoicism, after 'a painted porch, a \"stoa\"'"
+    },
+    {
+      "text": "Look for the minimal effective dose: the least effort that gets the result.",
+      "sourceId": "newyorker-2011",
+      "locator": "paragraph beginning 'Ferriss likes to declare that this is the age of the self-experimenter'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Most people will choose unhappiness over uncertainty.",
+      "sourceId": "fearsetting-2017",
+      "locator": "section 'The Power of Pessimism: Defining the Nightmare' (adapted from The 4-Hour Workweek)"
+    },
+    {
+      "text": "The hard choices -- what we most fear doing, asking, saying -- these are very often exactly what we most need to do.",
+      "sourceId": "ted-2017",
+      "locator": "closing section (TED2017, recorded 24 April 2017)"
+    },
+    {
+      "text": "My death wasn't just about me. It would completely destroy the lives of those I cared most about.",
+      "sourceId": "suicide-2015",
+      "locator": "section 'Into the Darkness', after the phone call from his mother"
+    },
+    {
+      "text": "Fear-setting has produced my biggest business and personal successes, as well as repeatedly helped me to avoid catastrophic mistakes.",
+      "sourceId": "fearsetting-2017",
+      "locator": "opening paragraph"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1999, his last year at Princeton, missing out on final job interviews, a break-up and a stalled thesis left him planning his suicide. A library notice for a suicide book he had reserved was mailed to his parents' home, and his mother asked him about it on the phone; he writes that this showed him his death would destroy the people he loved. He took the rest of that year off to look after his body and mind, won a national Chinese-kickboxing title, finished the thesis and graduated with the class of 2000. He kept the story secret until May 2015, when he wrote it up after the brother of a young fan who had killed himself asked him to talk about suicide.",
+    "sourceIds": [
+      "suicide-2015",
+      "ted-2017",
+      "newyorker-2011"
+    ]
+  },
+  "shadow": {
+    "text": "He won his 1999 Chinese-kickboxing title by using a rule that a fighter who falls off the platform three times in a round loses; in The 4-Hour Workweek he writes that he made pushing people off his main technique. By his own account, around 2004 he worked 14-plus-hour days and used stimulants to get going and depressants to sleep. In his 2007 SXSW talk he held up a reader who invented an emergency, such as a family emergency, to work two weeks from China: 'No one was the wiser.' In 2011 The New Yorker reported that critics have compared him to P. T. Barnum, that he signed thousands of pre-ordered copies of The 4-Hour Body to lift its best-seller ranking, and that he said he was untroubled that his free time is bought by passing drudgery to less fortunate workers in the developing world: 'It's the efficient use of capital.' His self-experiments put him in an emergency room in 2009 with a joint infection after growth-factor injections.",
+    "sourceIds": [
+      "newyorker-2011",
+      "suicide-2015",
+      "ted-2017",
+      "sxsw-2007"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you put off this week out of fear, and what is waiting cost you?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "The 4-Hour Workweek",
+      "year": 2007
+    },
+    {
+      "title": "Tools of Titans",
+      "year": 2016
+    },
+    {
+      "title": "Some Practical Thoughts on Suicide (blog post)",
+      "year": 2015
+    }
+  ],
+  "sources": [
+    {
+      "id": "ted-2017",
+      "kind": "primary",
+      "title": "Why you should define your fears instead of your goals (TED talk, official transcript)",
+      "author": "Tim Ferriss",
+      "year": 2017,
+      "publisher": "TED, TED2017, recorded 24 April 2017",
+      "url": "https://www.ted.com/talks/tim_ferriss_why_you_should_define_your_fears_instead_of_your_goals/transcript"
+    },
+    {
+      "id": "fearsetting-2017",
+      "kind": "primary",
+      "title": "Fear-Setting: The Most Valuable Exercise I Do Every Month (adapted from chapters in The 4-Hour Workweek and Tools of Titans)",
+      "author": "Tim Ferriss",
+      "year": 2017,
+      "publisher": "tim.blog, 15 May 2017",
+      "url": "https://tim.blog/2017/05/15/fear-setting/"
+    },
+    {
+      "id": "suicide-2015",
+      "kind": "primary",
+      "title": "Some Practical Thoughts on Suicide",
+      "author": "Tim Ferriss",
+      "year": 2015,
+      "publisher": "tim.blog, 6 May 2015",
+      "url": "https://tim.blog/2015/05/06/how-to-commit-suicide/"
+    },
+    {
+      "id": "birthday-2010",
+      "kind": "primary",
+      "title": "My Unusual $100,000 Birthday Present (Plus: Free Round-Trip Anywhere in the World)",
+      "author": "Tim Ferriss",
+      "year": 2010,
+      "publisher": "tim.blog, 22 July 2010",
+      "url": "https://tim.blog/2010/07/22/waiting-for-superman/"
+    },
+    {
+      "id": "sxsw-2007",
+      "kind": "primary",
+      "title": "Secrets of Doing More with Less in a Digital World (SXSW 2007 talk, transcript, The Tim Ferriss Show #548)",
+      "author": "Tim Ferriss",
+      "year": 2007,
+      "publisher": "tim.blog, transcript posted 21 November 2021",
+      "url": "https://tim.blog/2021/11/21/sxsw-presentation-2007-the-4-hour-workweek-transcript/"
+    },
+    {
+      "id": "newyorker-2011",
+      "kind": "secondary",
+      "title": "Better, Faster, Stronger (profile)",
+      "author": "Rebecca Mead",
+      "year": 2011,
+      "publisher": "The New Yorker, issue of 5 September 2011 (online, dated 29 August 2011)",
+      "url": "https://www.newyorker.com/magazine/2011/09/05/better-faster-stronger"
+    },
+    {
+      "id": "nyt-2019",
+      "kind": "secondary",
+      "title": "Tim Ferriss, the Man Who Put His Money Behind Psychedelic Medicine",
+      "author": "Benedict Carey",
+      "year": 2019,
+      "publisher": "The New York Times, 6 September 2019",
+      "url": "https://www.nytimes.com/2019/09/06/health/ferriss-psychedelic-drugs-depression.html"
+    },
+    {
+      "id": "hopkins-2019",
+      "kind": "secondary",
+      "title": "Johns Hopkins Launches Center for Psychedelic Research (news release)",
+      "author": "Johns Hopkins Medicine",
+      "year": 2019,
+      "publisher": "Johns Hopkins Medicine, 4 September 2019",
+      "url": "https://www.hopkinsmedicine.org/news/newsroom/news-releases/johns-hopkins-launches-center-for-psychedelic-research"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living American author, podcaster and investor (The 4-Hour Workweek, The Tim Ferriss Show); not a politician, campaigner or religious founder, and no credible account of sexual contact with a minor or of sexual violence by him was found; he is in, with a documented dark side of rule-gaming, hard self-promotion and risky self-experiments."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value and every sentence against the saved New Yorker profile, the TED transcript, his own blog posts, the NYT and Johns Hopkins reports and the SXSW 2007 transcript. Courage, Freedom, Curiosity and Generosity held (Freedom despite a friend's New Yorker line that he is 'constantly busting ass'); Boldness fell because all its evidence came from only two sources, and the blind pick's Resilience came in on his own accounts of 1999 and after. Six claims were tightened, among them the birthday match (a pledge, outcome not checked) and the phone call with his mother, and the shadow gained his 2007 advice praising a made-up office emergency.",
+    "checkedOn": "2026-11-10"
+  }
+}
