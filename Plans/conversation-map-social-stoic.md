@@ -22,6 +22,14 @@ Written 2026-11-09. Follows the Assumption Moments page
   the parts. Agree / Change / Unsure comes after each part's lines, and the full
   reading and note boxes fold underneath. A Next button sits at the end. Same
   link; saved marks are kept.
+- **2026-11-10: every line tagged.** Your note: you need every line, his
+  thoughts, a tag on each line or part, and your own tags. All 1,015 spoken and
+  voice-over lines now carry my tag for what the line does (162 tag names; 16
+  duplicate names were merged). His talk at the start and end of each video
+  shows too. On each line and part you can add your own tag, remove it, or
+  strike out mine. A tag list per conversation shows the counts and lights up
+  the matching lines. Your tags save to the same database, as `tag` and
+  `untag` entries.
 - Data, readings and the page source are in
   `~/.cache/daygame-research/conversation-map/social-stoic/`, not in this repo.
 
