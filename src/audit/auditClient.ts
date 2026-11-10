@@ -82,11 +82,11 @@ export function auditApi(account: string) {
      * in the body: an address ends up in logs and history, and the answer is
      * his own words (review of 81f325e9).
      */
-    remove: (id: string, at?: string, seen?: AnswerMark) =>
-      call<{ ok: true; deleted?: boolean; changed?: AnswerMark }>(
-        `/api/audit/slots/${id}`,
-        json("DELETE", { ...(at ? { at, sentAt: new Date().toISOString() } : {}), ...(seen ? { seen } : {}) }),
-      ),
+    remove: (id: string, at?: string, seen?: AnswerMark, signal?: AbortSignal) =>
+      call<{ ok: true; deleted?: boolean; changed?: AnswerMark }>(`/api/audit/slots/${id}`, {
+        ...json("DELETE", { ...(at ? { at, sentAt: new Date().toISOString() } : {}), ...(seen ? { seen } : {}) }),
+        ...(signal ? { signal } : {}),
+      }),
   }
 }
 

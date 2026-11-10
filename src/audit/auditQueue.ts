@@ -57,9 +57,35 @@ export interface QueuedDelete {
    * instant (ms): Undo no longer takes it back, and says it is too late. Log
    * Out sends it only if it is still claimed a moment later, so an Undo
    * written at the same instant keeps the answer (alpha p10-deletes-04).
+   * It counts only while `claimHolds`: a Log Out tab closed mid-claim leaves
+   * it, and it ends by itself (code review of p10-deletes-04).
    */
   claimed?: number
+  /**
+   * Log Out let go of its claim at this instant (ms): nothing was sent. Kept,
+   * so a tab still holding the claimed copy cannot merge the claim back over
+   * the release; a claim counts only when newer than this.
+   */
+  released?: number
 }
+
+/**
+ * How long Log Out may send a claimed delete: it gives up on the send by then
+ * (`sendWaitingAudit`), so a claim older than CLAIM_HOLD_MS is never acted on.
+ */
+export const CLAIM_SEND_MS = 3_000
+/**
+ * How long a delete inside its Undo time stays claimed before it is sent: an
+ * Undo another tab read before the claim and writes after it lands well inside
+ * this, and is kept (alpha p10-deletes-04).
+ */
+export const CLAIM_SETTLE_MS = 100
+/** How long a claim counts: Log Out's settle moment plus its send. */
+export const CLAIM_HOLD_MS = CLAIM_SETTLE_MS + CLAIM_SEND_MS
+
+/** Is Log Out (in some tab) sending this delete now: claimed, not released since, and not too long ago? */
+export const claimHolds = (d: QueuedDelete, nowMs: number = Date.now()): boolean =>
+  d.claimed !== undefined && (d.released === undefined || d.released < d.claimed) && nowMs - d.claimed < CLAIM_HOLD_MS
 
 export interface AuditQueue {
   owner: string | null
@@ -212,9 +238,16 @@ export function mergeAuditQueues(primary: AuditQueue, other: AuditQueue): AuditQ
   const theirs = new Map(other.deletes.map((d) => [deleteKey(d), d]))
   const deletes = primary.deletes.map((d) => {
     const t = theirs.get(deleteKey(d))
-    if (!d.refused && t?.refused) return t
-    // a claim by Log Out is never lost either: Undo must see it
-    return !d.claimed && t?.claimed ? { ...d, claimed: t.claimed } : d
+    if (!t) return d
+    const kept = !d.refused && t.refused ? t : d
+    // a claim by Log Out is never lost, nor is its release: the newest of each
+    // is kept, and a claim counts only when newer than the release
+    const claimed = newest(d.claimed, t.claimed)
+    const released = newest(d.released, t.released)
+    const { claimed: _c, released: _r, ...rest } = kept
+    void _c
+    void _r
+    return { ...rest, ...(claimed !== undefined ? { claimed } : {}), ...(released !== undefined ? { released } : {}) }
   })
   const haveDelete = new Set(deletes.map(deleteKey))
   for (const d of other.deletes) if (!haveDelete.has(deleteKey(d))) deletes.push(d)
@@ -227,12 +260,14 @@ export function mergeAuditQueues(primary: AuditQueue, other: AuditQueue): AuditQ
   }
 }
 
+const newest = (x: number | undefined, y: number | undefined) => (x === undefined ? y : y === undefined ? x : Math.max(x, y))
+
 /** Do the two copies hold the same answers, deletes (and refusals) and marks? */
 export function sameAuditQueue(x: AuditQueue, y: AuditQueue): boolean {
   const sig = (q: AuditQueue) =>
     JSON.stringify([
       [...q.answers.map(answerKey)].sort(),
-      [...q.deletes.map((d) => `${deleteKey(d)}:${d.refused ? 1 : 0}`)].sort(),
+      [...q.deletes.map((d) => `${deleteKey(d)}:${d.refused ? 1 : 0}:${d.claimed ?? ""}:${d.released ?? ""}`)].sort(),
       [...(q.marks ?? []).map((m) => `${m.key}:${m.at}:${m.gone}`)].sort(),
     ])
   return sig(x) === sig(y)
@@ -359,16 +394,18 @@ export function cancelDelete(q: AuditQueue, id: string): AuditQueue {
   }
 }
 
-/** Log Out claims these deletes (or, with `claimedAt` null, lets go of them): see `QueuedDelete.claimed`. */
-export function claimDeletes(q: AuditQueue, ids: readonly string[], claimedAt: number | null): AuditQueue {
+/**
+ * Log Out claims these deletes at `claimedAt` (or, with it null, lets go of
+ * them at `nowMs`, a mark merging keeps): see `QueuedDelete.claimed`.
+ */
+export function claimDeletes(q: AuditQueue, ids: readonly string[], claimedAt: number | null, nowMs: number = Date.now()): AuditQueue {
   const these = new Set(ids)
   return {
     ...q,
     deletes: q.deletes.map((d) => {
       if (!these.has(d.id)) return d
-      const { claimed: _c, ...rest } = d
-      void _c
-      return claimedAt === null ? rest : { ...rest, claimed: claimedAt }
+      if (claimedAt !== null) return { ...d, claimed: claimedAt }
+      return d.claimed === undefined ? d : { ...d, released: Math.max(nowMs, d.claimed) }
     }),
   }
 }

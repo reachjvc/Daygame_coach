@@ -19,7 +19,20 @@
 
 import { browserStore, failureOf, refusedForGood, SEND_AT_MOST, type KeyValueStore } from "@/src/shared/offlineQueue"
 import { AuditCallError, auditApi } from "./auditClient"
-import { answersSent, auditQueueOwner, claimDeletes, deleteIsDue, deleteRefused, deletesSent, readAuditQueue, writeAuditQueue, type AuditQueue } from "./auditQueue"
+import {
+  answersSent,
+  auditQueueOwner,
+  CLAIM_SEND_MS,
+  CLAIM_SETTLE_MS,
+  claimDeletes,
+  claimHolds,
+  deleteIsDue,
+  deleteRefused,
+  deletesSent,
+  readAuditQueue,
+  writeAuditQueue,
+  type AuditQueue,
+} from "./auditQueue"
 import type { AnswerMark, AuditAnswer } from "./types"
 
 export interface AuditSendOutcome {
@@ -39,12 +52,8 @@ export interface AuditSendOutcome {
 
 const COULD_NOT_SAVE = "The server could not save it"
 const COULD_NOT_DELETE = "The server could not delete it"
-/**
- * How long a delete inside its Undo time stays claimed before it is sent: an
- * Undo another tab read before the claim and writes after it lands well inside
- * this, and is kept (alpha p10-deletes-04).
- */
-export const CLAIM_SETTLE_MS = 100
+/** Re-exported: it lives with the claim rules in auditQueue. */
+export { CLAIM_SETTLE_MS }
 
 export async function sendWaitingAudit(store: KeyValueStore | null = browserStore()): Promise<AuditSendOutcome> {
   const refused: AuditSendOutcome["refused"] = []
@@ -94,22 +103,30 @@ export async function sendWaitingAudit(store: KeyValueStore | null = browserStor
   const claimed = current()
     .deletes.filter((d) => !d.refused && !deleteIsDue(d, Date.now()))
     .map((d) => d.id)
+  // A claim counts for CLAIM_HOLD_MS only (a Log Out tab closed mid-claim
+  // leaves it): the claimed sends are given up before then, so none lands
+  // after an Undo the ended claim allowed.
+  const giveUp = new AbortController()
+  let deadline: ReturnType<typeof setTimeout> | null = null
   if (claimed.length > 0) {
     put(claimDeletes(current(), claimed, Date.now()))
+    deadline = setTimeout(() => giveUp.abort(), CLAIM_SETTLE_MS + CLAIM_SEND_MS)
     await new Promise((done) => setTimeout(done, CLAIM_SETTLE_MS))
   }
   try {
     return await sendDeletes()
   } finally {
-    // what was not sent (no signal, refused, Stay signed in) can be undone again
+    if (deadline !== null) clearTimeout(deadline)
+    // what was not sent (no signal, refused, Stay signed in) can be undone
+    // again: the release is marked, so another tab's claimed copy cannot bring the claim back
     const left = current()
-    if (left.deletes.some((d) => d.claimed && claimed.includes(d.id))) put(claimDeletes(left, claimed, null))
+    if (left.deletes.some((d) => claimHolds(d) && claimed.includes(d.id))) put(claimDeletes(left, claimed, null))
   }
 
   async function sendDeletes(): Promise<AuditSendOutcome> {
     for (const d of current().deletes) {
       // inside its Undo time and not claimed by this Log Out (made after the claim): left for the next try
-      if (!d.refused && !deleteIsDue(d, Date.now()) && !(d.claimed && claimed.includes(d.id))) continue
+      if (!d.refused && !deleteIsDue(d, Date.now()) && !(claimHolds(d) && claimed.includes(d.id))) continue
       const { id, at, seen } = d
       const name = (reason: string, stored?: AnswerMark) =>
         notDeleted.push({ id, slotAt: d.slotAt ?? null, activity: seen?.activity ?? null, reason, ...(stored ? { stored } : {}) })
@@ -121,7 +138,7 @@ export async function sendWaitingAudit(store: KeyValueStore | null = browserStor
       try {
         // Still inside its Undo time when claimed: sent anyway, as he is leaving (the dialog says so).
         const early = claimed.includes(id)
-        const result = await api.remove(id, at, seen)
+        const result = await api.remove(id, at, seen, early ? giveUp.signal : undefined)
         if (early) undoSent += 1
         if (result.changed) {
           // another device changed the answer since: kept, and named (prove-audit-03)

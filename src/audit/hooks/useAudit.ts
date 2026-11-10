@@ -25,6 +25,7 @@ import {
   answersSent,
   auditQueueFromText,
   cancelDelete,
+  claimHolds,
   deleteIsDue,
   deleteRefused,
   deletesSeeStored,
@@ -526,7 +527,7 @@ export function useAudit(account: string) {
       setQ((q) => {
         const d = q.deletes.find((x) => x.id === id)
         // claimed: Log Out in another tab is sending it (alpha p10-deletes-04)
-        if (!d || d.refused || d.claimed || deleteIsDue(d, Date.now())) return q
+        if (!d || d.refused || claimHolds(d) || deleteIsDue(d, Date.now())) return q
         undone = true
         return cancelDelete(q, id)
       })
