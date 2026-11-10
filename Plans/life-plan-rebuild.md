@@ -11,8 +11,7 @@ looked at it and marked it. The page he marks: https://claude.ai/artifact/K5r4E4
 store). The pictures come from `tests/e2e/life-plan-tour.spec.ts`. Read the marks before the next phase.
 
 **Where it stands, 2026-11-05:** Phases 1–6, Q4, the wheel and the two leaks are live (none signed
-off yet). Phase 7 is prepared, with the list and the live counts, as card `phase7` on the page; it waits
-for your yes. Q11 (achievements) is live too, from its own plan, `Plans/life-plan-achievements.md`
+off yet). Phase 7 is live since 2026-11-10 (your yes: "GO execute that phase too"); see Phase 7 below. Q11 (achievements) is live too, from its own plan, `Plans/life-plan-achievements.md`
 (card `q11-achievements`). Then comparing /plan with Stefan's method and your words, round by round: round 1,
 the Review step reading the period back (`Plans/life-plan-review-reads-back.md`); round 2, readings on
 number goals (`Plans/life-plan-readings.md`); round 3, goals that can be achieved, paused or dropped
@@ -642,6 +641,14 @@ node kind `habit` in the CHECK. Tests: unit 6689 passed; integration 305 of 308 
 on main without this change: pings and the audit, another session's); the plan's 54 e2e tests, 53 passed
 and 1 skipped (3 failed once on a cold server and passed on rerun). The SQL was first run inside a
 transaction on the test database and rolled back, with seeded copies, then for real there.
+
+**Status: live 2026-11-10.** Code a5c23ed6 deployed first (healthz showed it), then the migration was
+applied to the live database (a second backup just before: `life-plan-2026-11-10-before-phase7-apply.json`).
+Checked on the live data: 21 day numbers on your plan goals (g33 bench 22 and g94 hammer curl 14 on 18 Aug,
+weight 90, fat 19 and waist 90 on 20 Sep, six goals at 1 on 18 Aug, ten weekly numbers on 24 and 31 Aug);
+0 copies left in `user_goals`, your 41 older goals untouched; no answer rows left (all had columns); the
+season sentence, the north star's purpose (335 characters), the season's 1 goal and all 50 plan goals as
+before. Not signed off: card `phase7` on the sign-off page still describes the plan, not the run.
 
 ## Ground rules for every phase
 
