@@ -29,7 +29,8 @@ stage. What a user can reach: `docs/product/map.md`; where it is going:
 ## Working with the owner
 
 The owner is not a programmer. Decide technical questions yourself; report in
-plain words, doubt first.
+plain words. A report opens with "is it done?": answer that first (done / built
+/ live / not yet, and what is left), then any doubts.
 
 Only the owner decides, beforehand: spending money (also through a token, key
 or account that can), deleting real data, and anything that cannot be undone.
