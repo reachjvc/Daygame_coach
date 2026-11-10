@@ -27,6 +27,8 @@ import { signOut } from "@/app/actions/auth"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog"
 import { unsentAuditChanges } from "@/src/audit/auditQueue"
+import { forgetSessionInThisBrowser } from "@/src/db/authCookies"
+import { forgetThisDevice } from "@/src/notifications/pushClient"
 import { sendWaitingAudit, type AuditSendOutcome } from "@/src/audit/sendWaitingAudit"
 import { forgetOfflineCopies } from "@/src/shared/offlineCopies"
 import { SendTrackerChanges } from "@/src/timetrack/components/SendTrackerChanges"
@@ -67,12 +69,24 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
   const auditFinal = useRef(false)
   const [, startTransition] = useTransition()
 
+  /**
+   * LOGGING OUT ENDS THE SESSION ON THIS PHONE, SIGNAL OR NOT (alpha test
+   * p9-offline-01). It wiped the copies first and then asked the server, so
+   * with no signal the ask failed, a crash page said everything was safe, and
+   * the phone was still signed in when signal came back. Now: what needs the
+   * session goes first (its push address, the server's sign-out, a few seconds
+   * at most), then the session's cookies leave this browser whatever the
+   * network did, and only then is anything wiped.
+   */
   const leave = useCallback(() => {
     setOwnSender(false)
     setPhase({ kind: "leaving" })
     startTransition(async () => {
-      await forgetOfflineCopies()
-      await signOut()
+      await forgetThisDevice()
+      await Promise.race([signOut().catch(() => null), new Promise((done) => setTimeout(done, SEND_BEFORE_LOG_OUT_MS))])
+      forgetSessionInThisBrowser()
+      await forgetOfflineCopies({ deviceForgotten: true })
+      window.location.replace("/")
     })
   }, [])
 

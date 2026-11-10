@@ -57,3 +57,28 @@ export function requestIsHttps(headers: { get(name: string): string | null }): b
   // Chained proxies send a list; the first entry is the user's own hop.
   return forwarded.split(",")[0]!.trim().toLowerCase() === "https"
 }
+
+/** Supabase's session cookie, its chunks (`.0`, `.1`, …) and its code verifier. */
+const SESSION_COOKIE = /^sb-.+-auth-token(?:\.\d+|-code-verifier)?$/
+
+/**
+ * END THE SESSION IN THIS BROWSER, WITH OR WITHOUT SIGNAL (alpha test
+ * p9-offline-01).
+ *
+ * Signing out on the server needs the network, and Supabase's own browser
+ * sign-out does too: even with `scope: "local"` it asks the server first and
+ * keeps the session when that ask fails. So with no signal Log Out ended
+ * nothing, and the phone was still signed in when signal came back. This drops
+ * the session's cookies here directly, which is possible because they are not
+ * httpOnly (see SHARED above). The flags match the ones the cookie was written
+ * with, or the browser keeps the old one.
+ */
+export function forgetSessionInThisBrowser(): void {
+  if (typeof document === "undefined") return
+  const { path, sameSite, secure } = { ...browserAuthCookieOptions() }
+  for (const pair of document.cookie.split(";")) {
+    const name = pair.trim().split("=")[0]
+    if (!name || !SESSION_COOKIE.test(name)) continue
+    document.cookie = `${name}=; Max-Age=0; path=${path}; SameSite=${sameSite}${secure ? "; Secure" : ""}`
+  }
+}

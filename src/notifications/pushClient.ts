@@ -460,23 +460,38 @@ export async function forgetThisDevice(): Promise<void> {
   writeDevice(null)
   const endpoint = await currentEndpoint()
   if (!endpoint) return
-  await forgetEndpoint(endpoint)
+  if (await forgetEndpoint(endpoint)) return
+  // The server could not be told (no signal, or the session already gone): the
+  // address stays registered there, and the pings sent to it would keep
+  // arriving after Log Out (alpha test p9-offline-01). So this browser drops
+  // the subscription itself; the push service then refuses those pings and the
+  // server removes the row when it is told the address is gone. The next
+  // person to turn notifications on here gets a new address.
+  try {
+    const registration = await navigator.serviceWorker.getRegistration()
+    const sub = await registration?.pushManager.getSubscription()
+    await sub?.unsubscribe()
+  } catch {
+    // nothing this browser can do more
+  }
 }
 
-/** Ask the server to remove the signed-in person's device at `endpoint`. Never throws; waits 3 s at most. */
-async function forgetEndpoint(endpoint: string): Promise<void> {
+/** Ask the server to remove the signed-in person's device at `endpoint`. Never throws; waits 3 s at most. True when it did. */
+async function forgetEndpoint(endpoint: string): Promise<boolean> {
   try {
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), 3000)
-    await fetch("/api/notifications/devices/forget", {
+    const response = await fetch("/api/notifications/devices/forget", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ endpoint }),
       signal: controller.signal,
     }).finally(() => clearTimeout(timer))
+    return response.ok
   } catch {
     // No signal: the address stays registered until the push service reports
     // it gone or the next person to sign in here takes it over, switched off.
+    return false
   }
 }
 

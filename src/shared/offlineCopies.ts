@@ -78,13 +78,20 @@ export async function forgetStoredPages(): Promise<void> {
   }
 }
 
-export async function forgetOfflineCopies({ keepUnsentTime = false }: { keepUnsentTime?: boolean } = {}): Promise<void> {
+export async function forgetOfflineCopies({
+  keepUnsentTime = false,
+  deviceForgotten = false,
+}: {
+  keepUnsentTime?: boolean
+  /** Log Out removed this browser's push address already, while the session still existed. */
+  deviceForgotten?: boolean
+} = {}): Promise<void> {
   // Log Out has sent what it could and asked about the rest (LogOutButton). A
   // sign-out the person did not choose — a password reset — keeps a copy that
   // still holds unsent changes, as a session that ends does: it is theirs, and
   // no other account is shown or sent it (`browserOwner`).
   if (!(keepUnsentTime && unsentTrackerChanges() > 0)) forgetTimeTrackerOnThisDevice()
-  await forgetThisDevice()
+  if (!deviceForgotten) await forgetThisDevice()
   await forgetTimerOnThisDevice()
   // The audit's answers waiting for signal name what the person did and how it felt.
   forgetAuditOnThisDevice()
