@@ -52,7 +52,9 @@ to feel bad about their 'dark' desires."
   settled suit, or named accusers in reputable press) of sexual contact with someone under 16, or of sexual
   violence (rape, sexual assault, groping). Research him fully anyway, then record the facts plainly with
   sources and NO recommendation. When unsure whether a case counts, flag it: flagging only shows it to the
-  owner. Never decide these cases yourself.
+  owner. Never decide these cases yourself. The account must come from a source: your own reading between
+  the lines ("she may not have been able to refuse") is not an account. A consensual adult affair, however
+  unequal in rank, is shadow, not an owner case, unless a source describes force or coercion.
 - Everyone else is in, shadow and all.
 
 **Value words.** Values come ONLY from the life plan list in `scripts/role-models/prompts/value-words.txt`

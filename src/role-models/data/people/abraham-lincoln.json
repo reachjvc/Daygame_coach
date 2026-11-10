@@ -1,0 +1,322 @@
+{
+  "id": "abraham-lincoln",
+  "name": "Abraham Lincoln",
+  "born": 1809,
+  "died": 1865,
+  "category": "leaders",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A frontier boy with under a year of school who taught himself law and led a nation at war.",
+  "startedFrom": "He was born on 12 February 1809 in a one-room log cabin in Kentucky; his father grew up without schooling and could barely sign his name. His mother died when he was nine, and from the age of seven until he was twenty-two he was almost constantly handling an axe on the family farm in Indiana. By his own count, all his schooling added up to less than one year.",
+  "values": [
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his 1860 autobiography he writes that what education he has he 'picked up', that he studied English grammar after twenty-three, and that he studied and nearly mastered the six books of Euclid after serving in Congress.",
+          "sourceId": "cw-basler-4",
+          "locator": "Autobiography Written for John L. Scripps, [c. June 1860], vol. IV, p. 62"
+        },
+        {
+          "kind": "deed",
+          "claim": "While running a failing store in New Salem (1832-33) he walked long distances to borrow books, read Gibbon and Rollin's History of the World, and began studying Blackstone.",
+          "sourceId": "charnwood-1917",
+          "locator": "ch. III"
+        },
+        {
+          "kind": "deed",
+          "claim": "He studied law on his own, without a teacher, and was licensed as a lawyer in the 1830s.",
+          "sourceId": "millercenter",
+          "locator": "Life Before the Presidency"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his first campaign statement, at twenty-three, he writes that every man has his own ambition and that his is to be truly esteemed by his fellow men by making himself worthy of it.",
+          "sourceId": "cw-basler-1",
+          "locator": "Communication to the People of Sangamo County, 9 March 1832, vol. I, p. 8"
+        },
+        {
+          "kind": "deed",
+          "claim": "Six months after arriving in New Salem in 1831 he ran for the Illinois legislature; he lost in 1832, won in 1834, and after winning a seat again in 1854 resigned it at once to run for the US Senate.",
+          "sourceId": "millercenter",
+          "locator": "Life Before the Presidency"
+        },
+        {
+          "kind": "witness",
+          "claim": "His law partner William Herndon writes that he was always calculating and planning ahead, and that his ambition 'was a little engine that knew no rest'.",
+          "sourceId": "herndon-1892",
+          "locator": "vol. II, ch. II"
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In April 1864 he wrote: 'I am naturally anti-slavery. If slavery is not wrong, nothing is wrong.'",
+          "sourceId": "cw-basler-7",
+          "locator": "To Albert G. Hodges, 4 April 1864, vol. VII, p. 281"
+        },
+        {
+          "kind": "deed",
+          "claim": "He issued the Emancipation Proclamation on 1 January 1863 and in January 1865 used the powers of his office, patronage included, to get the Thirteenth Amendment ending slavery through the House.",
+          "sourceId": "millercenter",
+          "locator": "Domestic Affairs"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes of himself that the 1854 repeal of the Missouri Compromise, which opened new territory to slavery, 'aroused him as he had never been before'.",
+          "sourceId": "cw-basler-4",
+          "locator": "Autobiography Written for John L. Scripps, [c. June 1860], vol. IV, p. 67"
+        }
+      ]
+    },
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Looking back on three years of war, he wrote that he attempted 'no compliment to my own sagacity' and claimed not to have controlled events, but that events had controlled him.",
+          "sourceId": "cw-basler-7",
+          "locator": "To Albert G. Hodges, 4 April 1864, vol. VII, p. 282"
+        },
+        {
+          "kind": "deed",
+          "claim": "In July 1863 he wrote to General Grant, whom he did not remember ever meeting, that during the Vicksburg campaign he had feared Grant's moves were a mistake: 'I now wish to make the personal acknowledgment that you were right and I was wrong.'",
+          "sourceId": "lapsley-1905",
+          "locator": "To General Grant, Executive Mansion, 13 July 1863"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer Lord Charnwood writes that through four years of war his 'delicate fairness, his pitifulness, his patience, his modesty' had grown with his capacity.",
+          "sourceId": "charnwood-1917",
+          "locator": "ch. XII"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "When Grant refused to loosen his hold at Petersburg in August 1864, he telegraphed him: 'Neither am I willing. Hold on with a bull-dog gripe, and chew & choke, as much as possible.'",
+          "sourceId": "cw-basler-7",
+          "locator": "To Ulysses S. Grant, 17 August 1864, vol. VII, p. 500"
+        },
+        {
+          "kind": "witness",
+          "claim": "Michael Burlingame writes that perhaps nothing was more consequential abroad than emancipation combined with his 'iron determination to win the war', which made it almost impossible for Britain to intervene for the Confederacy.",
+          "sourceId": "millercenter",
+          "locator": "Foreign Affairs"
+        },
+        {
+          "kind": "deed",
+          "claim": "He wanted McClellan to pursue and destroy Lee's retreating army after Antietam and dismissed him when he did not.",
+          "sourceId": "millercenter",
+          "locator": "Domestic Affairs"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When you were wrong, tell the man who was right, in plain words.",
+      "sourceId": "lapsley-1905",
+      "locator": "To General Grant, 13 July 1863"
+    },
+    {
+      "text": "Drop an opinion as soon as you find out it is wrong.",
+      "sourceId": "cw-basler-1",
+      "locator": "Communication to the People of Sangamo County, 9 March 1832, vol. I, p. 8"
+    },
+    {
+      "text": "Pay your debts in full, even when the law would let you walk away from them.",
+      "sourceId": "charnwood-1917",
+      "locator": "ch. III"
+    },
+    {
+      "text": "If your schooling has gaps, fill them yourself, at any age.",
+      "sourceId": "cw-basler-4",
+      "locator": "Autobiography Written for John L. Scripps, [c. June 1860], vol. IV, p. 62"
+    },
+    {
+      "text": "Keep the oath you took, even when your own feelings push you to break it.",
+      "sourceId": "cw-basler-7",
+      "locator": "To Albert G. Hodges, 4 April 1864, vol. VII, p. 281"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "If slavery is not wrong, nothing is wrong.",
+      "sourceId": "cw-basler-7",
+      "locator": "To Albert G. Hodges, 4 April 1864, vol. VII, p. 281"
+    },
+    {
+      "text": "I claim not to have controlled events, but confess plainly that events have controlled me.",
+      "sourceId": "cw-basler-7",
+      "locator": "To Albert G. Hodges, 4 April 1864, vol. VII, p. 282"
+    },
+    {
+      "text": "Every man is said to have his peculiar ambition. Whether it be true or not, I can say for one that I have no other so great as that of being truly esteemed of my fellow men, by rendering myself worthy of their esteem.",
+      "sourceId": "cw-basler-1",
+      "locator": "Communication to the People of Sangamo County, New Salem, 9 March 1832, vol. I, p. 8"
+    },
+    {
+      "text": "With malice toward none; with charity for all; with firmness in the right, as God gives us to see the right, let us strive on to finish the work we are in; to bind up the nation's wounds…",
+      "sourceId": "cw-basler-8",
+      "locator": "Second Inaugural Address, 4 March 1865, vol. VIII, p. 333"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 22 July 1862 he told his cabinet he would use his war powers as commander in chief to free the enslaved people in the areas in rebellion. His cabinet persuaded him to wait for a Union victory; he announced the preliminary proclamation after Antietam in September and issued the final one on 1 January 1863. It announced that Black men would be accepted into the Union Army and Navy, and by the end of the war more than 180,000 Black soldiers had served in the Union army. After his re-election he used all the powers of his office, patronage included, to push the Thirteenth Amendment, which ended slavery everywhere, through the House on 31 January 1865.",
+    "sourceIds": [
+      "millercenter",
+      "nara-ep"
+    ]
+  },
+  "shadow": {
+    "text": "In his First Inaugural Address, on 4 March 1861, he said he had no purpose to interfere with slavery in the states where it existed, and no objection to a proposed amendment barring the federal government from ever doing so being made 'express, and irrevocable'. In his debate with Stephen Douglas at Charleston, Illinois, on 18 September 1858, he said he was not, and never had been, in favour of the social and political equality of the white and black races, nor of Black men voting, sitting on juries, holding office or marrying white people, and that he favoured 'the superior position' for the white race. On 14 August 1862 he told a delegation of free Black men at the White House that 'it is better for us both, therefore, to be separated' and urged them to consider a colony in Central America; colonization projects he funded there and in Haiti never got off the ground. In late 1862, after military trials in Minnesota, some lasting five minutes and without lawyers or witnesses for the accused, condemned 303 Dakota men to death, he ordered 39 of them executed, and 38 were hanged together at Mankato on 26 December 1862. During the war he suspended habeas corpus, and 15,000 to 20,000 civilians, mostly in the border states, were arrested on suspicion of disloyalty.",
+    "sourceIds": [
+      "cw-basler-4",
+      "nps-debate4",
+      "lapsley-1905",
+      "millercenter",
+      "mpr-2012"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where were you wrong this week, and did you tell the person who was right?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Address at Gettysburg",
+      "year": 1863
+    },
+    {
+      "title": "Letter to Albert G. Hodges",
+      "year": 1864
+    },
+    {
+      "title": "Second Inaugural Address",
+      "year": 1865
+    }
+  ],
+  "sources": [
+    {
+      "id": "cw-basler-1",
+      "kind": "primary",
+      "title": "The Collected Works of Abraham Lincoln, vol. I (ed. Roy P. Basler, Abraham Lincoln Association)",
+      "author": "Abraham Lincoln",
+      "year": 1953,
+      "publisher": "Rutgers University Press",
+      "url": "https://archive.org/details/collectedworksof015581mbp"
+    },
+    {
+      "id": "cw-basler-4",
+      "kind": "primary",
+      "title": "The Collected Works of Abraham Lincoln, vol. IV (ed. Roy P. Basler, Abraham Lincoln Association)",
+      "author": "Abraham Lincoln",
+      "year": 1953,
+      "publisher": "Rutgers University Press",
+      "url": "https://archive.org/details/collectedworksof015582mbp"
+    },
+    {
+      "id": "cw-basler-7",
+      "kind": "primary",
+      "title": "The Collected Works of Abraham Lincoln, vol. VII (ed. Roy P. Basler, Abraham Lincoln Association)",
+      "author": "Abraham Lincoln",
+      "year": 1953,
+      "publisher": "Rutgers University Press",
+      "url": "https://archive.org/details/collectedworksof015583mbp"
+    },
+    {
+      "id": "cw-basler-8",
+      "kind": "primary",
+      "title": "The Collected Works of Abraham Lincoln, vol. VIII (ed. Roy P. Basler, Abraham Lincoln Association)",
+      "author": "Abraham Lincoln",
+      "year": 1953,
+      "publisher": "Rutgers University Press",
+      "url": "https://archive.org/details/collectedworksof015584mbp"
+    },
+    {
+      "id": "lapsley-1905",
+      "kind": "primary",
+      "title": "The Papers and Writings of Abraham Lincoln, Constitutional Edition (ed. Arthur Brooks Lapsley)",
+      "author": "Abraham Lincoln",
+      "year": 1905,
+      "url": "https://www.gutenberg.org/ebooks/3253"
+    },
+    {
+      "id": "nps-debate4",
+      "kind": "primary",
+      "title": "Fourth Debate: Charleston, Illinois, September 18, 1858 (transcript)",
+      "author": "Abraham Lincoln and Stephen A. Douglas; National Park Service, Lincoln Home",
+      "year": 1858,
+      "url": "https://www.nps.gov/liho/learn/historyculture/debate4.htm"
+    },
+    {
+      "id": "millercenter",
+      "kind": "secondary",
+      "title": "Abraham Lincoln (Life in Brief; Life Before the Presidency; Domestic Affairs; Foreign Affairs)",
+      "author": "Michael Burlingame",
+      "year": "n.d.",
+      "publisher": "Miller Center, University of Virginia",
+      "url": "https://millercenter.org/president/lincoln"
+    },
+    {
+      "id": "herndon-1892",
+      "kind": "secondary",
+      "title": "Abraham Lincoln: The True Story of a Great Life, vol. II",
+      "author": "William H. Herndon and Jesse W. Weik",
+      "year": 1892,
+      "publisher": "D. Appleton",
+      "url": "https://www.gutenberg.org/ebooks/38484"
+    },
+    {
+      "id": "charnwood-1917",
+      "kind": "secondary",
+      "title": "Abraham Lincoln",
+      "author": "Lord Charnwood",
+      "year": 1917,
+      "publisher": "Garden City Publishing",
+      "url": "https://www.gutenberg.org/ebooks/18379"
+    },
+    {
+      "id": "mpr-2012",
+      "kind": "secondary",
+      "title": "Little War on the Prairie, Part 11: The condemned end up in Mankato",
+      "author": "John Biewen, MPR News",
+      "year": 2012,
+      "url": "https://www.mprnews.org/story/2012/12/11/dakota-war-part11"
+    },
+    {
+      "id": "nara-ep",
+      "kind": "secondary",
+      "title": "The Emancipation Proclamation (featured document)",
+      "author": "U.S. National Archives and Records Administration",
+      "year": "n.d.",
+      "publisher": "National Archives",
+      "url": "https://www.archives.gov/exhibits/featured-documents/emancipation-proclamation"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real, long-dead US president (died 1865), not a living politician or founder of a religion; no credible account of sexual violence or of sexual contact with anyone under 16 was found; he has a documented dark side on race, Dakota executions and wartime arrests."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked all five draft values and re-checked every locator against the Collected Works, Lapsley, Herndon, Charnwood, Miller Center and MPR texts. Honesty fell: it rested on Charnwood and Herndon only, short of the three sources a draft-only word needs, and his anonymous 1842 'Rebecca' letter cuts against it. Learning, Ambition, Justice and Humility held, Determination came in from the blind pick on his own August 1864 telegram, and the defining moment's unsourced 1 January and army sentences now rest on the National Archives. The shadow gained his 1861 promise not to touch slavery in the states, from the First Inaugural.",
+    "checkedOn": "2026-11-10"
+  }
+}

@@ -1,0 +1,280 @@
+{
+  "id": "benjamin-franklin",
+  "name": "Benjamin Franklin",
+  "born": 1706,
+  "died": 1790,
+  "category": "scientists",
+  "areaIds": [
+    "lm_mindset",
+    "lm_mission",
+    "lm_contribution"
+  ],
+  "tagline": "A runaway apprentice who logged his faults nightly and turned curiosity into science.",
+  "startedFrom": "He was born in Boston in 1706, the youngest son among the seventeen children of a candle and soap maker. His father, judging that college would cost too much, moved him from the grammar school to a writing school, and at ten took him home to cut wicks in the shop; at twelve he was bound apprentice to his brother James, a printer. At seventeen he broke the apprenticeship and ran away; he reached Philadelphia in October 1723 with a Dutch dollar and about a shilling in copper.",
+  "values": [
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He describes a little book with a page for each of thirteen virtues, where every evening he marked a black spot for each fault of the day, working on one virtue a week.",
+          "sourceId": "autobio-pine",
+          "locator": "ch. IX, Plan for Attaining Moral Perfection"
+        },
+        {
+          "kind": "witness",
+          "claim": "Van Doren writes that Franklin worked out his scheme of virtues like a scientist undertaking an experiment in a laboratory.",
+          "sourceId": "vandoren-1938",
+          "locator": "ch. 4, 'Experiments in Perfection', p. 88"
+        },
+        {
+          "kind": "witness",
+          "claim": "Van Doren writes that the industry and frugality Franklin talked about came less from his nature than from his discipline.",
+          "sourceId": "vandoren-1938",
+          "locator": "ch. 4, p. 118"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His letters on electricity, 1747 to 1750, were published in London in 1751; he proposed the lightning rod and won the Royal Society's Copley Medal in 1753.",
+          "sourceId": "loc-exhibit",
+          "locator": "section 'Scientist and Inventor', item 'Experiments in Electricity'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In Maryland in 1755, when a whirlwind passed, the rest of the company watched while he rode after it, close by its side.",
+          "sourceId": "vandoren-1938",
+          "locator": "ch. 6, 'The Whirlwind', pp. 180-181"
+        },
+        {
+          "kind": "witness",
+          "claim": "Van Doren writes that Franklin was more curious than ordinary men and followed up what they only looked at, and that he found electricity a curiosity and left it a science.",
+          "sourceId": "vandoren-1938",
+          "locator": "ch. 6, pp. 171 and 181-182"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "As an apprentice he taught himself to write by turning essays from the Spectator into notes, rewriting them from memory, and comparing his version with the original to find his faults.",
+          "sourceId": "autobio-pine",
+          "locator": "ch. II, Beginning Life as a Printer"
+        },
+        {
+          "kind": "deed",
+          "claim": "From 1733 he taught himself to read French, Italian and Spanish, and so made Latin easier.",
+          "sourceId": "autobio-pine",
+          "locator": "ch. X, Poor Richard's Almanac and Other Activities"
+        },
+        {
+          "kind": "witness",
+          "claim": "Van Doren calls the Autobiography's story of his self-education a classic and incomparable account.",
+          "sourceId": "vandoren-1938",
+          "locator": "ch. 2, 'Learning to Write', p. 14"
+        }
+      ]
+    },
+    {
+      "word": "Contribution",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "With friends from his Junto club he started a subscription library in Philadelphia, which he calls the mother of all the North American subscription libraries.",
+          "sourceId": "autobio-pine",
+          "locator": "ch. VIII, Business Success and First Public Service"
+        },
+        {
+          "kind": "words",
+          "claim": "He refused a patent on his stove, writing that since we enjoy great advantages from the inventions of others, we should serve others by ours, freely and generously.",
+          "sourceId": "autobio-pine",
+          "locator": "ch. XII, Defense of the Province"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Library of Congress says that, not content with a career as a printer, he promoted a host of Philadelphia educational and benevolent societies, including the city's first lending library.",
+          "sourceId": "loc-exhibit",
+          "locator": "section 'Printer and Writer', introduction"
+        }
+      ]
+    },
+    {
+      "word": "Community",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He formed most of his acquaintance into the Junto, a club of mutual improvement meeting on Friday evenings, where each member brought queries on morals, politics or natural philosophy and read an essay every three months.",
+          "sourceId": "autobio-pine",
+          "locator": "ch. VII, Beginning Business in Philadelphia"
+        },
+        {
+          "kind": "deed",
+          "claim": "When more people wanted to join the Junto than its twelve places allowed, he proposed that each member form a subordinate club, for the improvement of 'so many more young citizens'.",
+          "sourceId": "autobio-pine",
+          "locator": "ch. X, Poor Richard's Almanac and Other Activities"
+        },
+        {
+          "kind": "deed",
+          "claim": "On 7 December 1736 he formed the Union Fire Company, the first of the volunteer fire companies of Philadelphia.",
+          "sourceId": "vandoren-1938",
+          "locator": "ch. 5, p. 130"
+        },
+        {
+          "kind": "witness",
+          "claim": "Van Doren dates the Junto to the fall of 1727, calls it Franklin's 'benevolent lobby for the benefit of Philadelphia', and writes that only Franklin ever kept such a club alive for thirty years.",
+          "sourceId": "vandoren-1938",
+          "locator": "ch. 4, 'The Junto', pp. 74-75 and 77"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Work on one habit at a time, check yourself every evening, and write down each slip.",
+      "sourceId": "autobio-pine",
+      "locator": "ch. IX, the little book and the week-by-week plan"
+    },
+    {
+      "text": "Start the day by asking what good you will do, and end it by asking what good you did.",
+      "sourceId": "autobio-pine",
+      "locator": "ch. IX, scheme of employment for the twenty-four hours"
+    },
+    {
+      "text": "Put your view modestly and do not contradict people head-on; you will persuade more and lose less face when wrong.",
+      "sourceId": "autobio-pine",
+      "locator": "ch. IX, on Humility"
+    },
+    {
+      "text": "Be hard-working and thrifty in fact, and let people see it.",
+      "sourceId": "autobio-pine",
+      "locator": "ch. VII, the wheelbarrow passage"
+    },
+    {
+      "text": "Share what you invent freely, because you live on what others invented.",
+      "sourceId": "autobio-pine",
+      "locator": "ch. XII, the Pennsylvania fireplace"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I was surpris'd to find myself so much fuller of faults than I had imagined; but I had the satisfaction of seeing them diminish.",
+      "sourceId": "autobio-pine",
+      "locator": "ch. IX, Plan for Attaining Moral Perfection (written at Passy, 1784)"
+    },
+    {
+      "text": "even if I could conceive that I had compleatly overcome it, I should probably be proud of my humility.",
+      "sourceId": "autobio-pine",
+      "locator": "ch. IX, end of the Passy section (1784)"
+    },
+    {
+      "text": "So convenient a thing is it to be a reasonable creature, since it enables one to find or make a reason for everything one has a mind to do.",
+      "sourceId": "autobio-pine",
+      "locator": "ch. IV, First Visit to Boston (the cod at Block Island)"
+    },
+    {
+      "text": "as we enjoy great advantages from the inventions of others, we should be glad of an opportunity to serve others by any invention of ours; and this we should do freely and generously.",
+      "sourceId": "autobio-pine",
+      "locator": "ch. XII, Defense of the Province (the Pennsylvania fireplace, 1742)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In his late twenties, around 1733, he set out to reach 'moral perfection'. He wrote down thirteen virtues, each with a one-line rule, and made a little book with a page for each, ruled into days of the week. Every evening he put a black spot against each fault of the day, giving one virtue his full attention each week. He found himself 'so much fuller of faults' than he had imagined, never reached the goal, and wrote some fifty years later that the attempt made him a better and happier man.",
+    "sourceIds": [
+      "autobio-pine",
+      "vandoren-1938"
+    ]
+  },
+  "shadow": {
+    "text": "Franklin owned enslaved people: Peter and Jemima, bought before 1750, King, and a boy named Othello; his Pennsylvania Gazette printed advertisements selling enslaved people, and in April 1750 he wrote to his mother that he and Deborah meant to sell an enslaved man and his wife at the first good chance. In the first edition of his essay on the increase of mankind he asked why 'Palatine boors' should be allowed to 'swarm into our settlements', and wrote of excluding 'all blacks and tawnys' from America; the passage was cut from later editions. In 1787 he became president of the Pennsylvania abolition society, and in February 1790 he signed its petition asking Congress to end slavery. In London in 1725, by his own account, he 'attempted familiarities' with his friend Ralph's partner, who had been borrowing money from him, and she rebuffed him; back home he had 'intrigues with low women' and a son, William, born about 1730 to a mother no one has identified. He lived in London from 1764 to 1775 while his wife stayed in Philadelphia, where she died in December 1774, and his 1788 will left William, a loyalist in the war, little.",
+    "sourceIds": [
+      "nps-franklin-court",
+      "nara-petitions",
+      "vandoren-1938",
+      "autobio-pine",
+      "autobio-eliot"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which one habit did you check every evening this week, and how many slips did you write down?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Autobiography",
+      "year": 1791
+    },
+    {
+      "title": "The Way to Wealth",
+      "year": 1758
+    }
+  ],
+  "sources": [
+    {
+      "id": "autobio-pine",
+      "kind": "primary",
+      "title": "Autobiography of Benjamin Franklin, edited by Frank Woodworth Pine",
+      "author": "Benjamin Franklin",
+      "year": 1916,
+      "publisher": "Henry Holt and Company",
+      "url": "https://www.gutenberg.org/ebooks/20203"
+    },
+    {
+      "id": "autobio-eliot",
+      "kind": "primary",
+      "title": "The Autobiography of Benjamin Franklin (The Harvard Classics), edited by Charles W. Eliot",
+      "author": "Benjamin Franklin",
+      "year": 1909,
+      "publisher": "P. F. Collier & Son",
+      "url": "https://www.gutenberg.org/ebooks/148"
+    },
+    {
+      "id": "vandoren-1938",
+      "kind": "secondary",
+      "title": "Benjamin Franklin (first published by Viking, 1938; Bramhall House reprint)",
+      "author": "Carl Van Doren",
+      "year": 1987,
+      "publisher": "Bramhall House",
+      "url": "https://archive.org/details/benjamin-franklin-carl-van-doren"
+    },
+    {
+      "id": "loc-exhibit",
+      "kind": "secondary",
+      "title": "Benjamin Franklin: In His Own Words (exhibition)",
+      "author": "Library of Congress",
+      "year": "n.d.",
+      "url": "https://www.loc.gov/exhibits/franklin/"
+    },
+    {
+      "id": "nps-franklin-court",
+      "kind": "secondary",
+      "title": "Invisible Architects Walking Tour, Stop 8: Franklin Court",
+      "author": "National Park Service, Independence National Historical Park",
+      "year": "n.d.",
+      "url": "https://www.nps.gov/inde/learn/historyculture/invisible-architects-stop-8.htm"
+    },
+    {
+      "id": "nara-petitions",
+      "kind": "secondary",
+      "title": "Benjamin Franklin's Anti-Slavery Petitions to Congress",
+      "author": "National Archives, Center for Legislative Archives",
+      "year": "n.d.",
+      "url": "https://www.archives.gov/legislative/features/franklin"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "Real, long-dead scientist and printer; enslaved people for decades (shadow); his own Autobiography tells of an unwanted sexual advance in London in 1725 whose nature it does not describe, so it goes to the owner. Owner case: 1725, London, he 'attempted familiarities' with Mrs. T----, his friend James Ralph's partner who had been borrowing from him; she 'repuls'd' him 'with a proper resentment'; known only from his own account; no source calls it assault (autobio-pine ch. VI; vandoren-1938 p. 50)."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I attacked each value and checked every claim against the Pine and Eliot texts of the Autobiography, Van Doren's 1938 biography and the Library of Congress, NPS and National Archives pages. Hard work fell: it rested on only two sources, and no independent third was found; Community from the blind pick took its place, with the Union Fire Company moved to it from Contribution. Discipline held despite his own admission that he never mastered Order; all four quotes matched the text. Fixes: the school-and-college order in startedFrom, an unsupported 'later' and 'for decades' in the shadow, a misread Van Doren claim, and his 'Palatine boors' passage added to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}

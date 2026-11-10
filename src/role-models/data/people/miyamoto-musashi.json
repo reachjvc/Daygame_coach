@@ -1,0 +1,260 @@
+{
+  "id": "miyamoto-musashi",
+  "name": "Miyamoto Musashi",
+  "born": "1582 or 1584",
+  "died": 1645,
+  "category": "warriors",
+  "areaIds": [
+    "lm_mindset",
+    "lm_fitness"
+  ],
+  "tagline": "By his own count he won sixty duels, then studied twenty more years to find out why he had won.",
+  "startedFrom": "He was born in 1584 by the usual dating (the scholar Uozumi Takashi says 1582), and sources disagree whether in Harima or Mimasaka province. His father, or by other accounts his adoptive father, was the swordsman Shinmen (Miyamoto) Munisai, and Uozumi says Munisai taught him the sword. His translator Victor Harris writes that by seven his mother was dead and his father had died or left him, and an uncle on his mother's side, a priest, took him in.",
+  "values": [
+    {
+      "word": "Mastery",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that after his duels he studied morning and evening searching for the principle, and came to realise the Way of strategy when he was fifty.",
+          "sourceId": "five-rings-harris",
+          "locator": "Introduction (Musashi's own opening, before the Ground Book)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Heibonsha encyclopedia says that after thirty he single-mindedly pursued the principles of the sword, training again and again, and grasped the Way of strategy at about fifty.",
+          "sourceId": "heibonsha-nakabayashi",
+          "locator": "entry 宮本武蔵, article by Nakabayashi Shinji"
+        },
+        {
+          "kind": "deed",
+          "claim": "Uozumi writes that in 1641, a year after he came to Kumamoto, he presented a 35-article work on swordsmanship to the lord there.",
+          "sourceId": "uozumi-nippon",
+          "locator": "section 'A Life Exemplifying Bushidō', on his final years (Kumamoto, 1640-1645)"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He tells the man who wants his strategy to research diligently, training morning and evening, to polish his skill.",
+          "sourceId": "five-rings-harris",
+          "locator": "The Fire Book, opening section"
+        },
+        {
+          "kind": "words",
+          "claim": "Among the nine rules that close the Ground Book is 'The Way is in training.'",
+          "sourceId": "five-rings-harris",
+          "locator": "The Ground Book, closing list of rules"
+        },
+        {
+          "kind": "witness",
+          "claim": "Harris writes that in his travelling years he gave himself with ferocious single-mindedness to the Way of the sword, not taking a wife or following any profession save his study.",
+          "sourceId": "harris-intro",
+          "locator": "Translator's Introduction, 'Concerning the Life of Miyamoto Musashi'"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He compares strategy to the carpenter's trade and tells his reader to become acquainted with every art and know the Ways of all professions.",
+          "sourceId": "five-rings-harris",
+          "locator": "The Ground Book, 'Comparing the Way of the Carpenter to Strategy' and the closing list of rules"
+        },
+        {
+          "kind": "deed",
+          "claim": "Uozumi writes that he left a dozen or so ink paintings and wooden swords and sword guards he made himself.",
+          "sourceId": "uozumi-nippon",
+          "locator": "section 'Transitioning from an Age of War to Lasting Peace', on what he left behind"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Heibonsha encyclopedia says the ink sliding-door paintings thought to be his at Tōji Kanchi-in are serious work beyond a warrior's pastime, and names his 'Shrike on a Withered Branch' (Kubosō Memorial Museum) among his chief works.",
+          "sourceId": "heibonsha-nakabayashi",
+          "locator": "entry 宮本武蔵, painting paragraph by Suzuki Hiroyuki"
+        }
+      ]
+    },
+    {
+      "word": "Solitude",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He opens the Book of Five Rings by saying he has climbed Mount Iwato in Higo to pay homage to heaven, pray to Kannon and kneel before Buddha, and there takes up his brush.",
+          "sourceId": "five-rings-harris",
+          "locator": "Introduction (Musashi's own opening, before the Ground Book)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Harris writes that in his travelling years he lived apart from society, and that in his last days he left the comfort of lord Hosokawa's house and lived two years alone in a mountain cave.",
+          "sourceId": "harris-intro",
+          "locator": "Translator's Introduction, 'Concerning the Life of Miyamoto Musashi' and its closing pages on Go Rin No Sho"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nipponica encyclopedia says that after lord Tadatoshi's death in 1641 he withdrew from the world, teaching only retainers who asked, keeping company with Zen monks and practising Zen, calligraphy, painting and carving.",
+          "sourceId": "nipponica-watanabe",
+          "locator": "entry 宮本武蔵（剣術家）, by Watanabe Ichirō, final paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "The Japan Tourism Agency says that, aware he had not long to live, he shut himself away in the Reigandō cave to write the Book of Five Rings.",
+          "sourceId": "jta-musashi",
+          "locator": "section 'Musashi's Last Years'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "The Way is in training; reading about it will not get you there.",
+      "sourceId": "five-rings-harris",
+      "locator": "The Ground Book, closing list of rules; The Water Book, opening"
+    },
+    {
+      "text": "Do nothing that is of no use.",
+      "sourceId": "five-rings-harris",
+      "locator": "The Ground Book, closing list of rules"
+    },
+    {
+      "text": "Do not get attached to one favourite weapon or copy others; use what you can handle well.",
+      "sourceId": "five-rings-harris",
+      "locator": "The Ground Book, 'The Benefit of Weapons in Strategy'"
+    },
+    {
+      "text": "Learn the ways of other trades and arts, not only your own.",
+      "sourceId": "five-rings-harris",
+      "locator": "The Ground Book, closing list of rules"
+    },
+    {
+      "text": "First beat the man you were yesterday; beating others comes after.",
+      "sourceId": "five-rings-harris",
+      "locator": "The Water Book, closing passage"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "When I reached thirty I looked back on my past. The previous victories were not due to my having mastered strategy.",
+      "sourceId": "five-rings-harris",
+      "locator": "Introduction (Musashi's own opening, before the Ground Book)",
+      "translation": "Victor Harris, 1974"
+    },
+    {
+      "text": "Today is victory over yourself of yesterday; tomorrow is your victory over lesser men.",
+      "sourceId": "five-rings-harris",
+      "locator": "The Water Book, closing passage",
+      "translation": "Victor Harris, 1974"
+    },
+    {
+      "text": "You should not have a favourite weapon. To become over-familiar with one weapon is as much a fault as not knowing it sufficiently well.",
+      "sourceId": "five-rings-harris",
+      "locator": "The Ground Book, 'The Benefit of Weapons in Strategy'",
+      "translation": "Victor Harris, 1974"
+    },
+    {
+      "text": "Step by step walk the thousand-mile road.",
+      "sourceId": "five-rings-harris",
+      "locator": "The Water Book, closing passage",
+      "translation": "Victor Harris, 1974"
+    }
+  ],
+  "definingMoment": {
+    "text": "In the tenth month of 1643, aged sixty, he climbed Mount Iwato near Kumamoto and began to write the Book of Five Rings. In its opening he tells how he won more than sixty duels by twenty-nine, saw at thirty that those wins had not come from mastery, and studied morning and evening until he grasped the Way at about fifty. He wrote in the Reigandō cave on the mountain and, by Uozumi Takashi's account, finished about a year and a half later, a week before he died in 1645. He gave the manuscript to his pupil Terao Magonojō. No copy in his own hand survives, and the Nipponica encyclopedia says the book cannot with certainty be called his own work.",
+    "sourceIds": [
+      "five-rings-harris",
+      "heibonsha-nakabayashi",
+      "uozumi-nippon",
+      "jta-musashi",
+      "nipponica-watanabe"
+    ]
+  },
+  "shadow": {
+    "text": "By his own count he fought more than sixty duels between thirteen and twenty-eight or twenty-nine. The first man, Arima Kihei, he struck down at thirteen; his translator Victor Harris writes that the boy threw Kihei to the ground and beat him about the head with a stick when he tried to rise, and that Kihei died vomiting blood. Harris, drawing on later chronicles (the earliest, the Niten Ki, was compiled by his pupils a generation after his death), tells that in Kyoto Musashi beat Yoshioka Seijirō savagely as he lay on the ground, killed his brother Denshichirō with one blow, then waited in hiding for Seijirō's son Hanshichirō, a boy not yet in his teens put up as the family's champion, appeared among the boy's armed retainers, cut him down and fought his way out. The scholar Uozumi Takashi says the duels told in novels and films come from a biography written 130 years after Musashi's death and are fiction, and the Nipponica encyclopedia says the Yoshioka fights grew into legend in later tales. Harris writes that he 'seems to have been a horribly cruel man, yet was following logically an honest ideal', and that he was said never to enter a bathtub and to look uncouth and wretched. In 1638 he went with his adopted son Iori to the campaign that put down the Shimabara rising and was badly hurt in the leg, by Nipponica's account; Harris writes that the Christians there were massacred, and the Japan Tourism Agency says historians cannot be sure what part Musashi played.",
+    "sourceIds": [
+      "five-rings-harris",
+      "harris-intro",
+      "uozumi-nippon",
+      "nipponica-watanabe",
+      "jta-musashi"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you spend time on this week that was of no use to what you are training for?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "The Book of Five Rings (Go Rin no Sho); Victor Harris's translation: A Book of Five Rings",
+      "year": 1645
+    }
+  ],
+  "sources": [
+    {
+      "id": "five-rings-harris",
+      "kind": "primary",
+      "title": "A Book of Five Rings (Go Rin no Sho, written 1643-1645)",
+      "author": "Miyamoto Musashi, translated by Victor Harris",
+      "year": 1974,
+      "url": "https://archive.org/details/bookoffiveringsm0000vict"
+    },
+    {
+      "id": "harris-intro",
+      "kind": "secondary",
+      "title": "Translator's Introduction to A Book of Five Rings (life of Musashi, drawn partly on later chronicles such as the Niten Ki)",
+      "author": "Victor Harris",
+      "year": 1974,
+      "url": "https://archive.org/details/bookoffiveringsm0000vict"
+    },
+    {
+      "id": "uozumi-nippon",
+      "kind": "secondary",
+      "title": "Master Swordsman Miyamoto Musashi: The Man Behind The Book of Five Rings (first published in Japanese 13 June 2019)",
+      "author": "Uozumi Takashi",
+      "year": 2019,
+      "publisher": "Nippon.com (Nippon Communications Foundation)",
+      "url": "https://www.nippon.com/en/japan-topics/g00689/"
+    },
+    {
+      "id": "heibonsha-nakabayashi",
+      "kind": "secondary",
+      "title": "宮本武蔵 (Miyamoto Musashi), 改訂新版 世界大百科事典 (Heibonsha World Encyclopedia, revised edition)",
+      "author": "Nakabayashi Shinji (life); Suzuki Hiroyuki (painting)",
+      "year": "undated (online via Kotobank)",
+      "publisher": "Heibonsha, via Kotobank",
+      "url": "https://kotobank.jp/word/%E5%AE%AE%E6%9C%AC%E6%AD%A6%E8%94%B5-139643"
+    },
+    {
+      "id": "nipponica-watanabe",
+      "kind": "secondary",
+      "title": "宮本武蔵（剣術家） (Miyamoto Musashi, swordsman), 日本大百科全書 ニッポニカ (Encyclopedia Nipponica)",
+      "author": "Watanabe Ichirō",
+      "year": "undated (online via Kotobank)",
+      "publisher": "Shogakukan, via Kotobank",
+      "url": "https://kotobank.jp/word/%E5%AE%AE%E6%9C%AC%E6%AD%A6%E8%94%B5-139643"
+    },
+    {
+      "id": "jta-musashi",
+      "kind": "secondary",
+      "title": "Miyamoto Musashi (Multilingual Commentary Database entry)",
+      "author": "Japan Tourism Agency",
+      "year": "undated",
+      "publisher": "Japan Tourism Agency, Ministry of Land, Infrastructure, Transport and Tourism",
+      "url": "https://www.mlit.go.jp/tagengo-db/en/R2-02043.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Japanese swordsman (born 1582 or 1584, died 1645), not fictional, not a living politician or a founder of a religion, with no account found of sexual contact with a minor or of sexual violence; he is in, with a documented violent side (many duels to the death, a later-told killing of a boy, service in the Shimabara campaign)."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I attacked all five draft values. Self-reliance fell: the 'no teacher' line sits beside Uozumi's account that Munisai taught him the sword, his last thirty years were spent as a guest of lords, Nipponica says he went to Kokura relying on his son Iori, and it lacked three independent sources. Self-awareness fell because it rests on one passage of his own and had only two pieces of evidence; Courage, a blind pick, was not added because its only words evidence was a Dokkōdō line with no named translation I could open. Mastery, Discipline and Craft held on Harris, Uozumi and Heibonsha, and Solitude, the blind pick, was added on his own Iwato opening, Harris, Nipponica and the Japan Tourism Agency. All four Harris quotes were found word for word; the shadow now quotes Harris's 'seems to have been' in full, adds the Seijirō and Denshichirō fights and the late date of the chronicles, and the defining moment records the doubt over the book's authorship.",
+    "checkedOn": "2026-11-10"
+  }
+}

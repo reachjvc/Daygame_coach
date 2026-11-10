@@ -1,0 +1,298 @@
+{
+  "id": "yi-sun-sin",
+  "name": "Yi Sun-sin",
+  "born": 1545,
+  "died": 1598,
+  "category": "warriors",
+  "areaIds": [
+    "lm_mindset",
+    "lm_mission"
+  ],
+  "tagline": "An admiral his own king jailed, who came back with 12 ships and turned back 133.",
+  "startedFrom": "He was born in Seoul in 1545, the third son of Yi Chong, and his parents moved to Asan in 1552. He began training in archery for the army in 1566, broke his left leg falling from his horse at the military examination in 1572, and passed it only in 1576. In 1587, by the account in his translator's chronology, an army commander's jealousy got him dismissed and enlisted as a common soldier.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At Myeongnyang on the 16th day of the 9th moon of 1597, 133 enemy ships closed in and his flagship went alone into their fleet while his other captains held back.",
+          "sourceId": "ha-1977",
+          "locator": "War Diary, 16th day, 9th moon, 1597, p. 312"
+        },
+        {
+          "kind": "words",
+          "claim": "The day before, he told his captains that by the principles of strategy, he who seeks his death shall live and he who seeks his life shall die.",
+          "sourceId": "ha-1977",
+          "locator": "War Diary, 15th day, 9th moon, 1597, p. 311"
+        },
+        {
+          "kind": "witness",
+          "claim": "Hulbert writes that at this fight, facing several hundred boats, the admiral made straight for the enemy and, though soon surrounded, sank thirty of their boats.",
+          "sourceId": "hulbert-1905-v2",
+          "locator": "vol. II, ch. II (1597, Admiral Yi reinstated)"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On the 3rd day of the 5th moon of 1592 he had a runaway sailor beheaded as a warning to all sailors; on the 26th day of the 7th moon of 1594 he had three ringleaders of eight runaways executed and the rest flogged.",
+          "sourceId": "ha-1977",
+          "locator": "War Diary, 3rd day, 5th moon, 1592, p. 4; 26th day, 7th moon, 1594, p. 109"
+        },
+        {
+          "kind": "words",
+          "claim": "Before Myeongnyang he told his captains that if they did not obey his orders, even the least error would not be pardoned.",
+          "sourceId": "ha-1977",
+          "locator": "War Diary, 15th day, 9th moon, 1597, p. 311"
+        },
+        {
+          "kind": "witness",
+          "claim": "Mark Peterson, associate professor of Korean at Brigham Young University, writes that by all accounts Yi was a strict, disciplined and upright man.",
+          "sourceId": "peterson-2025",
+          "locator": "para. 2"
+        }
+      ]
+    },
+    {
+      "word": "Loyalty",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1592, when the Kyongsang commander asked for help, a staff officer told him to guard only his own coast; he answered that Kyongsang was as much the king's country as Cholla and sailed with eighty boats.",
+          "sourceId": "hulbert-1905-v1",
+          "locator": "vol. I, ch. VII (the battle of Ok-po)"
+        },
+        {
+          "kind": "deed",
+          "claim": "Arrested in 1597 and degraded to the ranks as a common soldier, he made no complaint and went quietly about his work.",
+          "sourceId": "hulbert-1905-v2",
+          "locator": "vol. II, ch. II (the scheme to remove Admiral Yi)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Peterson writes that after he was jailed and tortured he harbored no ill will against the king and wrote of his wish to serve him as a loyal subject.",
+          "sourceId": "peterson-2025",
+          "locator": "paras. 4-5"
+        }
+      ]
+    },
+    {
+      "word": "Integrity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Before the war he turned down a meeting with his famous relative, the scholar Yi I (Yulgok), saying people could assume a favour was being asked or offered.",
+          "sourceId": "peterson-2025",
+          "locator": "para. 3"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1598 the Japanese general sent him guns and swords, then offered 1,000 ounces of silver, to let the Japanese fleet pass; he sent the weapons back and refused the silver.",
+          "sourceId": "hulbert-1905-v2",
+          "locator": "vol. II, ch. II (the battle of No-ryang)"
+        },
+        {
+          "kind": "deed",
+          "claim": "On the 7th day of the 5th moon of 1597, while serving as a common soldier, he refused a monk's gift of straw slippers and, when pressed to take them, paid him the price.",
+          "sourceId": "ha-1977",
+          "locator": "War Diary, 7th day, 5th moon, 1597, p. 267"
+        },
+        {
+          "kind": "witness",
+          "claim": "Peterson writes that he is reported as being extremely upright, and that in his diary he writes of striving for Confucian ideals of character.",
+          "sourceId": "peterson-2025",
+          "locator": "para. 9"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Let out of prison on the 1st day of the 4th moon of 1597, he heard on the 13th that his mother had died, and on the 19th took leave of her body to go on and serve as a common soldier.",
+          "sourceId": "ha-1977",
+          "locator": "War Diary, 1st-19th days, 4th moon, 1597, pp. 257-262"
+        },
+        {
+          "kind": "words",
+          "claim": "When news came in the 10th moon of 1597 that his youngest son had been killed, he wrote that he wished to follow him to the grave, but his family would have no one to support them, so he endured.",
+          "sourceId": "ha-1977",
+          "locator": "War Diary, 14th day, 10th moon, 1597, p. 322"
+        },
+        {
+          "kind": "deed",
+          "claim": "Hulbert writes that, reinstated with only ten boats, he took them into battle and then rebuilt the barracks on Han-san; it is said, Hulbert adds, that he stored 20,000 bags of rice in two months.",
+          "sourceId": "hulbert-1905-v2",
+          "locator": "vol. II, ch. II (Admiral Yi reinstated)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Lee Kyong-hee, a former editor-in-chief of The Korea Herald, quotes his diary on his son's death in 1597: he wished to follow him to the grave, but would endure with a live body but dead soul.",
+          "sourceId": "lee-herald-2026",
+          "locator": "column, passage on the 10th month of 1597"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Go into the fight ready to die; the man who fights to save himself is the one who dies.",
+      "sourceId": "ha-1977",
+      "locator": "War Diary, 15th day, 9th moon, 1597, p. 311"
+    },
+    {
+      "text": "Do not attack in a hurry: first know yourself and know the enemy.",
+      "sourceId": "ha-1977",
+      "locator": "War Diary, 3rd day, 9th moon, 1594, p. 117"
+    },
+    {
+      "text": "When you are outnumbered, choose the ground: draw the enemy out of the place that suits him into the place that suits you.",
+      "sourceId": "ha-1981",
+      "locator": "Memorial 9, Defeating the Japanese at Kyonnaeryang, 15th of 7th moon 1592, p. 58"
+    },
+    {
+      "text": "Give each man the credit he earned in the fight, and give it without delay.",
+      "sourceId": "ha-1981",
+      "locator": "Memorial 9, Defeating the Japanese at Kyonnaeryang, 15th of 7th moon 1592, p. 68"
+    },
+    {
+      "text": "Look after the people the war has left with nothing.",
+      "sourceId": "ha-1981",
+      "locator": "Memorial 20, Request for Order to Settle War Refugees on Tolsando Farms, 26th of 1st moon 1593, pp. 86-87"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "According to the principles of strategy, 'He who seeks his death shall live, he who seeks his life shall die.'",
+      "sourceId": "ha-1977",
+      "locator": "War Diary, 15th day, 9th moon, 1597, p. 311 (his instruction to his captains; he is quoting the strategy book Wuzi, with one word changed)",
+      "translation": "Ha Tae-hung, 1977"
+    },
+    {
+      "text": "Though the enemy may boast of his thousand warships, he does not dare to come near us. Have no fear! Shoot the enemy with all your might!",
+      "sourceId": "ha-1977",
+      "locator": "War Diary, 16th day, 9th moon, 1597 (Myeongnyang), p. 312",
+      "translation": "Ha Tae-hung, 1977"
+    },
+    {
+      "text": "Thus I endure, with live body but dead soul.",
+      "sourceId": "ha-1977",
+      "locator": "War Diary, 14th day, 10th moon, 1597 (on the death of his son Myon), p. 322",
+      "translation": "Ha Tae-hung, 1977"
+    },
+    {
+      "text": "It is not wise to proceed frivolously.",
+      "sourceId": "ha-1977",
+      "locator": "War Diary, 3rd day, 9th moon, 1594, p. 117",
+      "translation": "Ha Tae-hung, 1977"
+    }
+  ],
+  "definingMoment": {
+    "text": "On the 1st day of the 4th moon of 1597 he came out of prison in Seoul, stripped of his command and ordered to serve as a common soldier, and within two weeks his mother died at sea before he could meet her boat. After his successor's fleet was destroyed he was given back the command, with only 12 ships. On the 16th day of the 9th moon, at the Myeongnyang channel, 133 enemy ships closed in; his flagship went in alone while his captains held back, until he signalled them forward and shouted at one of them, An Wi, to fight. His diary counts 31 enemy ships destroyed that day.",
+    "sourceIds": [
+      "ha-1977"
+    ]
+  },
+  "shadow": {
+    "text": "His own diary records executions of his own men. On the 3rd day of the 5th moon of 1592 he had a runaway sailor beheaded and the head hung up as a warning to all sailors; in 1594 he had three ringleaders of eight runaway sailors executed, and a fisherman who carried thirty deserters executed and his head hung on a pole; in the 8th moon of 1597 two men who raised a false alarm to steal cattle were beheaded. At Myeongnyang he wrote that he felt like sailing to a captain who held back 'to whip off his head, and hang it up high'. On a tour of Cholla in the 9th moon of 1596 his diary records, in Ha Tae-hung's translation, three nights 'with Chin' at Mujang, whom the Segye Ilbo, following the translator Noh Seung-seok, names as the servant Yeojin; on the 19th it records that 'Kwiji, the daugher of Madam Ch'oe came and slept.' Besides three sons by his wife he had two sons by a concubine. The diary also records heavy drinking: on the 25th day of the 7th moon of 1594 he came back 'in heavy drunkenness' and vomited all night. Mark Peterson writes that he never forgave Bae Seol, the commander who saved twelve ships by fleeing the disaster of 1597.",
+    "sourceIds": [
+      "ha-1977",
+      "segye-2010",
+      "peterson-2025"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you hold back this week to keep yourself safe, when only going all in could have worked?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Nanjung Ilgi (War Diary)",
+      "year": 1795
+    },
+    {
+      "title": "Imjin Changch'o (Memorials to Court)",
+      "year": 1795
+    }
+  ],
+  "sources": [
+    {
+      "id": "ha-1977",
+      "kind": "primary",
+      "title": "Nanjung Ilgi: War Diary of Admiral Yi Sun-sin, translated by Ha Tae-hung, edited by Sohn Pow-key",
+      "author": "Yi Sun-sin",
+      "year": 1977,
+      "publisher": "Yonsei University Press, Seoul (Annyeong Books reissue, copyright 2015; scan on the Internet Archive)",
+      "url": "https://archive.org/details/100_20260916"
+    },
+    {
+      "id": "ha-1981",
+      "kind": "primary",
+      "title": "Imjin Changch'o: Admiral Yi Sun-sin's Memorials to Court, translated by Ha Tae-hung, edited by Lee Chong-young",
+      "author": "Yi Sun-sin",
+      "year": 1981,
+      "publisher": "Yonsei University Press, Seoul (Annyeong Books reissue, copyright 2015; scan on the Internet Archive)",
+      "url": "https://archive.org/details/yis-memorials-to-court-imjin-changcho-compressed"
+    },
+    {
+      "id": "hulbert-1905-v1",
+      "kind": "secondary",
+      "title": "The History of Korea, vol. I",
+      "author": "Homer B. Hulbert",
+      "year": 1905,
+      "publisher": "Methodist Publishing House, Seoul; Project Gutenberg eBook #52127",
+      "url": "https://www.gutenberg.org/ebooks/52127"
+    },
+    {
+      "id": "hulbert-1905-v2",
+      "kind": "secondary",
+      "title": "The History of Korea, vol. II",
+      "author": "Homer B. Hulbert",
+      "year": 1905,
+      "publisher": "Methodist Publishing House, Seoul; Project Gutenberg eBook #52749",
+      "url": "https://www.gutenberg.org/ebooks/52749"
+    },
+    {
+      "id": "peterson-2025",
+      "kind": "secondary",
+      "title": "Yi Sun-sin: His character and those around him (The Korea Times, 23 June 2025)",
+      "author": "Mark Peterson",
+      "year": 2025,
+      "publisher": "The Korea Times",
+      "url": "https://www.koreatimes.co.kr/opinion/20250623/yi-sun-sin-his-character-and-those-around-him"
+    },
+    {
+      "id": "segye-2010",
+      "kind": "secondary",
+      "title": "이순신은 리더십 지닌 지도자의 전형 (Yi Sun-sin as the model of a leader; interview with Noh Seung-seok, Segye Ilbo, 24 April 2010)",
+      "author": "Jung Seung-wook",
+      "year": 2010,
+      "publisher": "Segye Ilbo",
+      "url": "https://www.segye.com/newsView/20100423003343"
+    },
+    {
+      "id": "lee-herald-2026",
+      "kind": "secondary",
+      "title": "Yi Sun-sin: The human behind the legend (The Korea Herald, 23 February 2026)",
+      "author": "Lee Kyong-hee",
+      "year": 2026,
+      "publisher": "The Korea Herald",
+      "url": "https://www.koreaherald.com/article/10679833"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Korean naval commander (1545-1598), not fictional, not a politician, not a religious founder. The research agent flagged him because a servant 'may not have been able to refuse'; that was our own inference, and no source (Ha's translation, Segye Ilbo 2010, Asia Economy 2020, Dailian 2020, Pressian 2008) describes force, coercion or assault, and none describes contact with anyone under 16. So he is in, and the diary's nights with Chin (the servant Yeojin) and Kwiji go plainly in the shadow."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked all five draft values and re-checked the screen. Nothing fell: Integrity and Resilience, which only the draft picked, each now rest on three sources (Integrity gained his own diary's refused slippers, Resilience Lee Kyong-hee's Korea Herald column), and the blind pick's Responsibility and Craft were not added because the list was full. All four quotes were found word for word in Ha Tae-hung's translation; I fixed the age at the 1576 exam, Peterson's title, Hulbert's 'it is said' on the rice, and the quote lead-in. The owner-decides flag fell, since no source describes force, so the servant Yeojin, Kwiji, the concubine's sons and his drinking now stand plainly in the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}

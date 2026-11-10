@@ -1,0 +1,286 @@
+{
+  "id": "desmond-doss",
+  "name": "Desmond Doss",
+  "born": 1919,
+  "died": 2006,
+  "category": "warriors",
+  "areaIds": [
+    "lm_mindset",
+    "lm_spirituality",
+    "lm_contribution"
+  ],
+  "tagline": "Courage without a gun: the unarmed medic who stayed on the cliff with his wounded men.",
+  "startedFrom": "He was born in 1919 in Lynchburg, Virginia, the son of a carpenter and a mother who worked in a shoe factory. He left school after one year of high school to work for a lumber company, and he was raised a strict Seventh-day Adventist. He went into the Army in 1942 as a quiet, skinny young man who would not touch a weapon, and both the enlisted men and the officers of his unit bullied him for it.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On Okinawa in 1945, when fire hit the troops who had gained the top of a 400-foot escarpment and drove the others back, he refused cover, stayed with the wounded and lowered them one by one down the cliff.",
+          "sourceId": "moh-citation-1945",
+          "locator": "citation, opening sentences"
+        },
+        {
+          "kind": "deed",
+          "claim": "On 21 May 1945, wounded by a grenade, he crawled off his stretcher so the bearers would carry a worse-hurt man first, was hit again, splinted his broken arm with a rifle stock and crawled 300 yards to the aid station.",
+          "sourceId": "moh-citation-1945",
+          "locator": "citation, paragraph on 21 May"
+        },
+        {
+          "kind": "witness",
+          "claim": "Captain Jack Glover, who had tried to get him transferred, said in the 2004 documentary that Doss turned out to be one of the bravest persons alive.",
+          "sourceId": "npr-blair-2016",
+          "locator": "transcript, Glover's second soundbite"
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said he would not take life because God gave life and it was not his to take.",
+          "sourceId": "amedd-1987",
+          "locator": "answer to the first question ('how you got into the army'), second paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "He said that on the escarpment he prayed the whole time, asking God to help him get one more man.",
+          "sourceId": "npr-blair-2016",
+          "locator": "transcript, Doss soundbite from The Conscientious Objector"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times wrote that he was guided all his life by a framed poster of the Ten Commandments his father bought at an auction.",
+          "sourceId": "nyt-goldstein-2006",
+          "locator": "obituary, second paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "He became a deacon of the Park Avenue Seventh-day Adventist Church in Lynchburg at twenty-one.",
+          "sourceId": "dvb-leepson-2015",
+          "locator": "first paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Working at the Newport News shipyard after the United States entered the war, he was offered a deferment but chose to join the Army on 1 April 1942.",
+          "sourceId": "dvb-leepson-2015",
+          "locator": "second paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "He said his boss offered to defer him but he felt it would be an honor to serve God and country, and did not want to be known as a 4-F.",
+          "sourceId": "amedd-1987",
+          "locator": "answer to the first question ('how you got into the army'), first paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "The National WWII Museum writes that it would have been easy for him to get a deferment, but he felt a calling to serve his country and help his fellow man.",
+          "sourceId": "nww2m-martin-2020",
+          "locator": "paragraph beginning 'Doss, born in 1919'"
+        }
+      ]
+    },
+    {
+      "word": "Integrity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Officers tried to have him discharged for mental illness and one tried to court-martial him for refusing to hold a rifle; he refused the discharge and kept to his refusal.",
+          "sourceId": "nww2m-martin-2020",
+          "locator": "paragraph beginning 'Several attempts were made'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he would not take a gun or weapons training, and called himself a 'conscientious cooperator' who would serve every way except taking life.",
+          "sourceId": "amedd-1987",
+          "locator": "answers to the first two questions"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times reports that he faced harassment in training for his prayer and his refusal to handle weapons or work on the Sabbath, and still became a combat medic.",
+          "sourceId": "nyt-goldstein-2006",
+          "locator": "obituary, paragraphs 4-6 (drafting, training, overseas service)"
+        }
+      ]
+    },
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His commanding officer wanted to credit him with saving a hundred men; Doss estimated fifty, and they settled on seventy-five.",
+          "sourceId": "dvb-leepson-2015",
+          "locator": "fourth paragraph ('During the heavy fighting at Okinawa...')"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1987 he told the Associated Press that he was not trying to be a hero and did not consider himself one.",
+          "sourceId": "wapo-bernstein-2006",
+          "locator": "obituary, paragraph quoting the Associated Press, 1987"
+        },
+        {
+          "kind": "words",
+          "claim": "He said that without God he could not have got the men off the escarpment, and that he wanted the glory to go to God.",
+          "sourceId": "amedd-1987",
+          "locator": "answer to 'How did you save the lives?'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Serve fully, but save life rather than take it.",
+      "sourceId": "amedd-1987",
+      "locator": "answer to the first question ('how you got into the army'), third paragraph"
+    },
+    {
+      "text": "Your life is worth no more than the lives of the men beside you.",
+      "sourceId": "amedd-1987",
+      "locator": "answer to the question about staying on top of the hill"
+    },
+    {
+      "text": "Do not leave the wounded behind.",
+      "sourceId": "dvb-leepson-2015",
+      "locator": "fourth paragraph, Doss's quotation 'They had no way of getting back...'"
+    },
+    {
+      "text": "Claim no more than you did, and give the glory away.",
+      "sourceId": "amedd-1987",
+      "locator": "answers on the escarpment and 'How did you save the lives?'"
+    },
+    {
+      "text": "Put your heart and soul into your work.",
+      "sourceId": "amedd-1987",
+      "locator": "answer to the question on advice for today's medics"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I was trying to take the safest precautions I could, but I felt like my life should be no more important than my buddies.",
+      "sourceId": "amedd-1987",
+      "locator": "interview of 20 March 1987, answer to the question about staying on top of the hill"
+    },
+    {
+      "text": "I was praying the whole time. I just kept praying, Lord, please help me get one more.",
+      "sourceId": "npr-blair-2016",
+      "locator": "NPR Morning Edition, 4 Nov 2016, transcript: Doss soundbite from the documentary The Conscientious Objector (2004)"
+    },
+    {
+      "text": "I loved my men, and they loved me. I don't consider myself a hero. I just couldn't give them up, just like a mother couldn't give up the child.",
+      "sourceId": "wapo-bernstein-2006",
+      "locator": "obituary, 26 Mar 2006, quoting his 1987 interview with the Associated Press"
+    },
+    {
+      "text": "They had no way of getting back and I could not leave them up there.",
+      "sourceId": "dvb-leepson-2015",
+      "locator": "fourth paragraph, quoting Doss and Lee Carson, Washington Post, 12 Oct 1945"
+    }
+  ],
+  "definingMoment": {
+    "text": "On Okinawa in spring 1945 (the New York Times and the National WWII Museum give 5 May; the Dictionary of Virginia Biography puts it on the first day, 29 April), artillery, mortar and machine-gun fire hit the men who had reached the top of the Maeda Escarpment, a cliff about 400 feet high, and drove most of his battalion back. Doss stayed on top with the wounded, carried them one by one to the edge, and lowered each man down the cliff on a rope tied with a double bowline knot. The Army credited him with 75 men; he said the number was closer to 50. He said he kept praying, 'Lord, please help me get one more.'",
+    "sourceIds": [
+      "moh-citation-1945",
+      "nyt-goldstein-2006",
+      "nww2m-martin-2020",
+      "dvb-leepson-2015",
+      "amedd-1987",
+      "npr-blair-2016"
+    ]
+  },
+  "shadow": {
+    "text": "In training from 1942 he refused to touch a weapon, to train with one or to work on Saturdays, his Sabbath. In a 2004 documentary one veteran who trained and served with him said he was regarded 'as a pest', and another said a lot of people thought he was putting on an act. His commanding officers tried to have him discharged for mental illness, and another officer tried to court-martial him for refusing to hold a rifle. Overseas he refused his company commander's order to go on a patrol; when the captain threatened a court martial, Doss went to the doctor he took his orders from, who offered to see about having the captain demoted.",
+    "sourceIds": [
+      "npr-blair-2016",
+      "nww2m-martin-2020",
+      "nyt-goldstein-2006",
+      "amedd-1987"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you put your own comfort ahead of someone who was counting on you?",
+    "principleIndex": 1
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "amedd-1987",
+      "kind": "primary",
+      "title": "Interview with Private First Class Desmond T. Doss, 20 March 1987 (AMEDD Medal of Honor Oral History Interviews, transcript)",
+      "author": "Desmond T. Doss, interviewed by the AMEDD Center of History & Heritage",
+      "year": 1987,
+      "publisher": "U.S. Army Medical Department Center of History & Heritage",
+      "url": "https://achh.army.mil/regiment/moh-bios-dossint"
+    },
+    {
+      "id": "moh-citation-1945",
+      "kind": "secondary",
+      "title": "Medal of Honor citation, Private First Class Desmond T. Doss (War Department General Orders No. 97, 1 November 1945)",
+      "author": "United States War Department",
+      "year": 1945,
+      "publisher": "U.S. National Archives (DocsTeach copy of the citation)",
+      "url": "https://docsteach.org/document/doss-citation/"
+    },
+    {
+      "id": "dvb-leepson-2015",
+      "kind": "secondary",
+      "title": "Desmond Thomas Doss (7 February 1919-23 March 2006), Dictionary of Virginia Biography",
+      "author": "Marc Leepson",
+      "year": 2015,
+      "publisher": "Library of Virginia",
+      "url": "https://www.lva.virginia.gov/collections/dvb/bio/doss-desmond-thomas"
+    },
+    {
+      "id": "nyt-goldstein-2006",
+      "kind": "secondary",
+      "title": "Desmond T. Doss, 87, Heroic War Objector, Dies (obituary, 25 March 2006)",
+      "author": "Richard Goldstein",
+      "year": 2006,
+      "publisher": "The New York Times",
+      "url": "https://www.nytimes.com/2006/03/25/us/desmond-t-doss-87-heroic-war-objector-dies.html"
+    },
+    {
+      "id": "wapo-bernstein-2006",
+      "kind": "secondary",
+      "title": "Lauded Conscientious Objector Desmond T. Doss Sr. (obituary, 26 March 2006)",
+      "author": "Adam Bernstein",
+      "year": 2006,
+      "publisher": "The Washington Post",
+      "url": "https://www.washingtonpost.com/wp-dyn/content/article/2006/03/25/AR2006032501181.html"
+    },
+    {
+      "id": "nww2m-martin-2020",
+      "kind": "secondary",
+      "title": "Private First Class Desmond Thomas Doss Medal of Honor",
+      "author": "Kali Martin",
+      "year": 2020,
+      "publisher": "The National WWII Museum, New Orleans",
+      "url": "https://www.nationalww2museum.org/war/articles/private-first-class-desmond-thomas-doss-medal-of-honor"
+    },
+    {
+      "id": "npr-blair-2016",
+      "kind": "secondary",
+      "title": "The Real 'Hacksaw Ridge' Soldier Saved 75 Souls Without Ever Carrying A Gun (Morning Edition, 4 November 2016, transcript)",
+      "author": "Elizabeth Blair",
+      "year": 2016,
+      "publisher": "NPR",
+      "url": "https://www.npr.org/transcripts/500548745"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "ok",
+      "notes": "Real person (1919-2006), never held or ran for office, founded no religion; searches found no account of sexual contact with a minor or of sexual violence; his documented dark side is small: open refusals of orders and duties that made officers and men see him as a pest."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value: Courage and Integrity against the veterans who called him a pest and his refusal of a patrol order, Humility against his decades of public talks about the war, Service against the claim he chose the Army over a deferment. None showed a pattern against it; the refusals and the pest remarks stay in the shadow, and Humility, picked only by the draft, holds on three sources (Dictionary of Virginia Biography, Washington Post, his 1987 Army interview). Compassion, picked only by the blind agent, was not added because the five places were full. All four quotes were found in their sources; eight sentences were corrected, among them the date of the cliff rescue, which the Dictionary of Virginia Biography puts on 29 April, not early May.",
+    "checkedOn": "2026-11-10"
+  }
+}
