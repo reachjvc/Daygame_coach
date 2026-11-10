@@ -17,7 +17,19 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { deviceLabel } from "../endpoints"
-import { isInstalledApp, movedFrom, moveSettled, permission, pushSupport, subscribe, subscriptionForPage, workerRegistration, type PushSupport } from "../pushClient"
+import {
+  deviceRemoved,
+  isInstalledApp,
+  moveFor,
+  permission,
+  pushSupport,
+  registrationAnswered,
+  subscribe,
+  subscriptionForPage,
+  switchesChanged,
+  workerRegistration,
+  type PushSupport,
+} from "../pushClient"
 
 export interface DeviceSummary {
   id: string
@@ -133,16 +145,17 @@ export function usePushDevice({ account }: { account?: string } = {}) {
       const here = registration ? await subscriptionForPage(registration) : null
       if (!here) return
       try {
-        const r = await json<{ id: string | null; enabled: boolean; timerRunning?: boolean }>("/api/notifications/devices", {
+        const r = await json<{ id: string | null; enabled: boolean; timerRunning?: boolean; account?: string }>("/api/notifications/devices", {
           method: "POST",
           body: JSON.stringify({
             subscription: here.subscription.toJSON(),
             intent: "refresh",
             label: deviceLabel(navigator.userAgent, isInstalledApp()),
             ...(here.oldEndpoint ? { oldEndpoint: here.oldEndpoint } : {}),
+            ...(here.oldEndpoint && here.was ? { was: here.was } : {}),
           }),
         })
-        moveSettled(here.oldEndpoint)
+        registrationAnswered({ endpoint: here.subscription.endpoint, oldEndpoint: here.oldEndpoint ?? undefined, was: here.was }, r)
         setThisDevice(r.id ? { id: r.id, enabled: r.enabled, timerRunning: r.timerRunning === true } : null)
         void loadDevices()
       } catch {
@@ -161,13 +174,13 @@ export function usePushDevice({ account }: { account?: string } = {}) {
     const { publicKey } = await json<{ publicKey: string }>("/api/notifications/key")
     const sub = await subscribe(registration, publicKey)
     // A subscription replaced for a new server key: the device's row moves to it, switches and label kept.
-    const oldEndpoint = movedFrom(sub)
+    const { oldEndpoint } = moveFor(sub)
     // the label also tells the server whether this is the installed app on a phone (`timerOnByDefault`)
-    const r = await json<{ id: string; enabled: boolean; timerRunning?: boolean }>("/api/notifications/devices", {
+    const r = await json<{ id: string; enabled: boolean; timerRunning?: boolean; account?: string }>("/api/notifications/devices", {
       method: "POST",
       body: JSON.stringify({ subscription: sub.toJSON(), intent, label: deviceLabel(navigator.userAgent, isInstalledApp()), ...(oldEndpoint ? { oldEndpoint } : {}) }),
     })
-    moveSettled(oldEndpoint)
+    registrationAnswered({ endpoint: sub.endpoint, oldEndpoint }, r)
     const device = { id: r.id, enabled: r.enabled, timerRunning: r.timerRunning === true }
     setThisDevice(device)
     return device
@@ -206,6 +219,7 @@ export function usePushDevice({ account }: { account?: string } = {}) {
         if (thisDevice && (!on || permission() === "granted")) {
           await json(`/api/notifications/devices/${thisDevice.id}`, { method: "PATCH", body: JSON.stringify({ timerRunning: on }) })
           setThisDevice({ ...thisDevice, timerRunning: on })
+          switchesChanged({ timerRunning: on })
         } else if (on) {
           if (!(await register("timer"))) return false
         }
@@ -229,6 +243,7 @@ export function usePushDevice({ account }: { account?: string } = {}) {
       if (thisDevice?.id === id) setThisDevice({ ...thisDevice, enabled })
       try {
         await json(`/api/notifications/devices/${id}`, { method: "PATCH", body: JSON.stringify({ enabled }) })
+        if (thisDevice?.id === id) switchesChanged({ enabled })
       } catch (e) {
         setError(e instanceof Error ? e.message : "Could not change the device")
         await loadDevices()
@@ -242,7 +257,11 @@ export function usePushDevice({ account }: { account?: string } = {}) {
       setError(null)
       try {
         await json(`/api/notifications/devices/${id}`, { method: "DELETE" })
-        if (thisDevice?.id === id) setThisDevice(null)
+        if (thisDevice?.id === id) {
+          setThisDevice(null)
+          // removed on purpose: no later open may move or make it again
+          deviceRemoved()
+        }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Could not remove the device")
       }

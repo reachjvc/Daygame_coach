@@ -121,13 +121,74 @@ function madeWith(sub: PushSubscription, publicKey: string, key: Uint8Array): bo
  * after GIVE_UP refusals the server is told to drop the old address, so the
  * row stops claiming pings and the page offers to turn them on.
  */
-const MOVE_KEY = "push-subscription-move-v1"
+export const MOVE_KEY = "push-subscription-move-v1"
 const GIVE_UP = 3
 
+/**
+ * THE DEVICE AS THE SERVER LAST SAID IT (alpha p9-pings-01/02/03): whose row
+ * it is, its address and its two switches, from the last 2xx answer that named
+ * a row. It goes with a move (`was`), so a row the server deleted in the
+ * meantime (the old address answered 410 to a ping) is made again with its
+ * switches, and pings switched off by failures while the key was wrong come
+ * back as they were. A later open whose browser holds another address than
+ * this one asks for the row to move here (another tab replaced the
+ * subscription). Removed at sign-out and when this device is removed.
+ */
+export const DEVICE_KEY = "push-this-device-v1"
+
+export interface Was {
+  account: string
+  enabled: boolean
+  timerRunning: boolean
+}
+
+interface KnownDevice extends Was {
+  endpoint: string
+}
+
+function readWas(v: unknown): Was | undefined {
+  const w = v as Partial<Was> | null | undefined
+  if (typeof w?.account !== "string" || typeof w.enabled !== "boolean" || typeof w.timerRunning !== "boolean") return undefined
+  return { account: w.account, enabled: w.enabled, timerRunning: w.timerRunning }
+}
+
+/** Storage blocked: the device lives as long as the page does. */
+let deviceInMemory: KnownDevice | null = null
+
+function readDevice(): KnownDevice | null {
+  try {
+    const raw = window.localStorage.getItem(DEVICE_KEY)
+    if (raw === null) return deviceInMemory
+    const d = JSON.parse(raw) as Partial<KnownDevice> | null
+    const was = readWas(d)
+    return was && typeof d?.endpoint === "string" ? { ...was, endpoint: d.endpoint } : null
+  } catch {
+    return deviceInMemory
+  }
+}
+
+function writeDevice(d: KnownDevice | null): void {
+  deviceInMemory = d
+  try {
+    if (d) window.localStorage.setItem(DEVICE_KEY, JSON.stringify(d))
+    else window.localStorage.removeItem(DEVICE_KEY)
+  } catch {
+    // storage blocked: kept in memory only
+  }
+}
+
+const wasOf = (d: KnownDevice): Was => ({ account: d.account, enabled: d.enabled, timerRunning: d.timerRunning })
+
+/**
+ * `was`: the switches of the row at `from` and whose row it is, when this phone
+ * knew them. A move naming another account than the signed-in one is ignored
+ * by the server and kept here for its own account (p9-pings-04).
+ */
 interface Move {
   from: string
   to: string | null
   tries: number
+  was?: Was
 }
 
 /** Storage blocked: the move lives as long as the page does. */
@@ -139,7 +200,8 @@ function readMove(): Move | null {
     if (raw === null) return moveInMemory
     const m = JSON.parse(raw) as Partial<Move> | null
     if (typeof m?.from !== "string" || (m.to !== null && typeof m.to !== "string")) return null
-    return { from: m.from, to: m.to ?? null, tries: typeof m.tries === "number" ? m.tries : 0 }
+    const was = readWas(m.was)
+    return { from: m.from, to: m.to ?? null, tries: typeof m.tries === "number" ? m.tries : 0, ...(was ? { was } : {}) }
   } catch {
     return moveInMemory
   }
@@ -161,9 +223,62 @@ export function movedFrom(sub: PushSubscription): string | null {
   return m && m.to === sub.endpoint ? m.from : null
 }
 
+/** What a registration of `sub` adds to its body: where the device's row is still, and its switches. */
+export interface MoveFields {
+  oldEndpoint?: string
+  was?: Was
+}
+
+/**
+ * THE ROW TO BRING TO `sub`: a move not settled yet, or else the address the
+ * server last named for this device when the browser now holds another one
+ * (two tabs replaced the subscription at once, p9-pings-02).
+ */
+export function moveFor(sub: PushSubscription): MoveFields {
+  const m = readMove()
+  if (m && m.to === sub.endpoint) return { oldEndpoint: m.from, ...(m.was ? { was: m.was } : {}) }
+  const known = readDevice()
+  if (!m && known && known.endpoint !== sub.endpoint) return { oldEndpoint: known.endpoint, was: wasOf(known) }
+  return {}
+}
+
 /** The server answered 2xx to a registration naming `from` as `oldEndpoint`: the row is at the new address. */
-export function moveSettled(from: string | null): void {
+export function moveSettled(from: string | null | undefined): void {
   if (from && readMove()?.from === from) writeMove(null)
+}
+
+/**
+ * A REGISTRATION ANSWERED 2xx. The move it named is done, unless the answer is
+ * for another account than the one the move is for (a session that ended
+ * without Log Out: the move waits for its own account, p9-pings-04). A named
+ * row is kept as this device; an answer with no row for the address kept here
+ * (the device was removed) forgets it.
+ */
+export function registrationAnswered(
+  posted: { endpoint: string } & MoveFields,
+  answer: { id?: unknown; enabled?: unknown; timerRunning?: unknown; account?: unknown },
+): void {
+  const account = typeof answer.account === "string" ? answer.account : null
+  const m = readMove()
+  if (m && posted.oldEndpoint && m.from === posted.oldEndpoint && !(m.was && account && m.was.account !== account)) writeMove(null)
+  if (typeof answer.id === "string" && account) {
+    writeDevice({ account, endpoint: posted.endpoint, enabled: answer.enabled === true, timerRunning: answer.timerRunning === true })
+    return
+  }
+  const known = readDevice()
+  if (known && account && known.account === account && (known.endpoint === posted.endpoint || known.endpoint === posted.oldEndpoint)) writeDevice(null)
+}
+
+/** This device's switch changed from a tap: the kept switches follow. */
+export function switchesChanged(change: { enabled?: boolean; timerRunning?: boolean }): void {
+  const known = readDevice()
+  if (known) writeDevice({ ...known, ...change })
+}
+
+/** This device was removed from its own Settings: nothing is to be moved or made again. */
+export function deviceRemoved(): void {
+  writeDevice(null)
+  writeMove(null)
 }
 
 /** A fresh subscription with `publicKey`, the old one (if any) dropped first: a browser refuses a new key while it stands. */
@@ -171,8 +286,12 @@ async function subscribeFresh(registration: ServiceWorkerRegistration, existing:
   if (existing) {
     // A move not settled yet keeps its first address: that is where the row is.
     const pending = readMove()
-    const from = pending && pending.to === existing.endpoint ? pending.from : existing.endpoint
-    writeMove({ from, to: null, tries: 0 })
+    const known = readDevice()
+    const keep = pending && pending.to === existing.endpoint
+    const from = keep ? pending.from : existing.endpoint
+    // the row's switches, so the move can make it again if the server deletes it first (p9-pings-01)
+    const was = keep ? pending.was : known?.endpoint === from ? wasOf(known) : undefined
+    writeMove({ from, to: null, tries: 0, ...(was ? { was } : {}) })
     await existing.unsubscribe()
   }
   const fresh = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(publicKey) })
@@ -207,8 +326,32 @@ export async function subscribe(registration: ServiceWorkerRegistration, publicK
   return subscribeFresh(registration, existing, publicKey)
 }
 
-type PageSubscription = { subscription: PushSubscription; oldEndpoint: string | null }
+type PageSubscription = { subscription: PushSubscription; oldEndpoint: string | null; was?: Was }
 let checking: Promise<PageSubscription | null> | null = null
+
+function forPage(subscription: PushSubscription): PageSubscription {
+  const move = moveFor(subscription)
+  return { subscription, oldEndpoint: move.oldEndpoint ?? null, ...(move.was ? { was: move.was } : {}) }
+}
+
+/**
+ * ONE TAB AT A TIME (alpha p9-pings-02). Two tabs opening together (a browser
+ * restoring its tabs, the installed app and a tab) each replaced the
+ * subscription: the row moved to the address the other tab had already
+ * dropped. The Web Locks API holds the check across every tab of this site;
+ * the second tab then finds the first one's new subscription and keeps it. A
+ * browser without it checks per page, and a later open repairs a row left at
+ * the wrong address (`moveFor`).
+ */
+function oneTabAtATime<T>(work: () => Promise<T>): Promise<T> {
+  const locks = typeof navigator === "undefined" ? undefined : (navigator as Navigator & { locks?: LockManager }).locks
+  if (!locks?.request) return work()
+  try {
+    return locks.request("push-subscription-check", work) as Promise<T>
+  } catch {
+    return work()
+  }
+}
 
 /**
  * THIS BROWSER'S SUBSCRIPTION AS A PAGE OPENS, A KEY CHANGE HEALED WITHOUT A
@@ -225,7 +368,7 @@ let checking: Promise<PageSubscription | null> | null = null
  * hook both ask as the page opens, and two replacements would race.
  */
 export function subscriptionForPage(registration: ServiceWorkerRegistration): Promise<PageSubscription | null> {
-  checking ??= (async (): Promise<PageSubscription | null> => {
+  checking ??= oneTabAtATime(async (): Promise<PageSubscription | null> => {
     try {
       const existing = await registration.pushManager.getSubscription()
       const pending = readMove()
@@ -239,13 +382,14 @@ export function subscriptionForPage(registration: ServiceWorkerRegistration): Pr
         if (!publicKey) return null
         try {
           const fresh = await subscribeFresh(registration, null, publicKey)
-          return { subscription: fresh, oldEndpoint: movedFrom(fresh) }
+          return forPage(fresh)
         } catch {
           const tries = pending.tries + 1
           if (tries >= GIVE_UP) {
             // The row must stop claiming pings: the page then offers to turn them on.
             await forgetEndpoint(pending.from)
             writeMove(null)
+            if (readDevice()?.endpoint === pending.from) writeDevice(null)
           } else {
             writeMove({ ...pending, tries })
           }
@@ -257,17 +401,14 @@ export function subscriptionForPage(registration: ServiceWorkerRegistration): Pr
         writeMove(existing.endpoint === pending.from ? null : { ...pending, to: existing.endpoint })
       }
       const publicKey = await serverKey()
-      if (!publicKey || madeWith(existing, publicKey, keyBytes(publicKey))) {
-        return { subscription: existing, oldEndpoint: movedFrom(existing) }
-      }
-      const fresh = await subscribeFresh(registration, existing, publicKey)
-      return { subscription: fresh, oldEndpoint: movedFrom(fresh) }
+      if (!publicKey || madeWith(existing, publicKey, keyBytes(publicKey))) return forPage(existing)
+      return forPage(await subscribeFresh(registration, existing, publicKey))
     } catch {
       // A replacement that failed: the next page open tries again (MOVE_KEY).
       const sub = await registration.pushManager.getSubscription().catch(() => null)
-      return sub ? { subscription: sub, oldEndpoint: movedFrom(sub) } : null
+      return sub ? forPage(sub) : null
     }
-  })().finally(() => {
+  }).finally(() => {
     checking = null
   })
   return checking
@@ -313,6 +454,10 @@ export async function forgetTimerOnThisDevice(): Promise<void> {
  * exists. Never throws and never waits long: a sign-out must not hang on it.
  */
 export async function forgetThisDevice(): Promise<void> {
+  // A move still waiting and the switches kept for it are this person's: the
+  // next person to sign in here must not send them (p9-pings-04).
+  writeMove(null)
+  writeDevice(null)
   const endpoint = await currentEndpoint()
   if (!endpoint) return
   await forgetEndpoint(endpoint)
@@ -369,13 +514,15 @@ export async function claimThisDevice(): Promise<"ok" | "failed" | "none"> {
         subscription: here.subscription.toJSON(),
         intent: "refresh",
         label: deviceLabel(navigator.userAgent, isInstalledApp()),
-        // a subscription replaced for a new server key: the device's row follows it
+        // a subscription replaced for a new server key: the device's row follows it, switches named
         ...(here.oldEndpoint ? { oldEndpoint: here.oldEndpoint } : {}),
+        ...(here.oldEndpoint && here.was ? { was: here.was } : {}),
       }),
     })
     // Not registered: a move still waiting is sent again at the next open (MOVE_KEY).
     if (!res.ok) return "failed"
-    moveSettled(here.oldEndpoint)
+    const answer = (await res.json().catch(() => ({}))) as { id?: unknown; enabled?: unknown; timerRunning?: unknown; account?: unknown }
+    registrationAnswered({ endpoint: here.subscription.endpoint, oldEndpoint: here.oldEndpoint ?? undefined, was: here.was }, answer)
     /**
      * AND THE PREVIOUS PERSON'S TIMER ON THE SCREEN GOES TOO. Their pushes stop
      * reaching this browser, their "stopped" one included, so a running timer
@@ -383,7 +530,6 @@ export async function claimThisDevice(): Promise<"ok" | "failed" | "none"> {
      * 2026-11-05, low). The timer off here now: whatever it shows is not this
      * person's to see.
      */
-    const answer = (await res.json().catch(() => ({}))) as { timerRunning?: unknown }
     if (answer.timerRunning === false) {
       for (const shown of (await registration?.getNotifications({ tag: "timer-running" })) ?? []) shown.close()
     }

@@ -15,11 +15,20 @@
  *               address; a page, after replacing a subscription made with an
  *               earlier server key), the row with the old address moves to the
  *               new one. "enable" and "timer" take `oldEndpoint` the same way.
+ *               With `was` too (the row's account and switches as the phone
+ *               last heard them, alpha p9-pings), a row gone from the old
+ *               address (a ping found it dropped: 410) is made again at the
+ *               new one with those switches, and switches turned off by
+ *               failed sends while the key was wrong come back. Only when
+ *               `was` names the signed-in account, and never onto an address
+ *               a device already has.
  *   "timer"   — the person switched "Show the running timer on this device" on
  *               in the time tracker: register it with the timer on, leaving
  *               reminders as they were (off, for a browser new to this person).
  *
- * Each answer says both switches: `enabled` (reminders) and `timerRunning`.
+ * Each answer says both switches: `enabled` (reminders) and `timerRunning`,
+ * and `account`, the signed-in person's id, so the phone keeps a move or a
+ * device's switches for the account they belong to.
  * On "enable", a device new to this person starts with the timer on only if
  * its label says it is the installed app on a phone (`timerOnByDefault`).
  *
@@ -39,7 +48,7 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { deviceByEndpoint, listDevices, moveDevice, registerDevice } from "@/src/db/notificationsRepo"
-import { readSubscription, timerOnByDefault } from "@/src/notifications/endpoints"
+import { FAILURES_BEFORE_SWITCH_OFF, readSubscription, timerOnByDefault } from "@/src/notifications/endpoints"
 import { afterResponse } from "@/src/shared/afterResponse"
 import { announceCurrentTimer } from "@/src/timetrack/runningTimerService"
 
@@ -66,6 +75,13 @@ export async function POST(req: Request) {
   const mayTake = (existing: Awaited<ReturnType<typeof deviceByEndpoint>>) =>
     !existing || existing.userId === auth.userId || (existing.p256dh === sub.p256dh && existing.auth === sub.auth)
   const label = typeof body?.label === "string" ? body.label.slice(0, 80) : ""
+  const answer = (a: { id: string | null; enabled: boolean; timerRunning: boolean }) => NextResponse.json({ ...a, account: auth.userId })
+  /** The row's switches as this person's phone last heard them, for a move (see the header). Another account's are ignored. */
+  const was =
+    body?.was?.account === auth.userId && typeof body.was.enabled === "boolean" && typeof body.was.timerRunning === "boolean"
+      ? { enabled: body.was.enabled as boolean, timerRunning: body.was.timerRunning as boolean }
+      : null
+  const wasOther = body?.was != null && was === null
 
   try {
     /**
@@ -86,7 +102,7 @@ export async function POST(req: Request) {
       const id = await registerDevice(auth.userId, { ...sub, label }, enabled, true)
       // whatever runs now appears at once, rather than at the next start
       afterResponse(() => announceCurrentTimer(auth.userId))
-      return NextResponse.json({ id, enabled, timerRunning: true })
+      return answer({ id, enabled, timerRunning: true })
     }
     if (body?.intent !== "refresh") {
       // A device new to this person starts with the running timer on only if
@@ -95,22 +111,44 @@ export async function POST(req: Request) {
       if (!mayTake(existing)) return unusable()
       const timerRunning = existing?.userId === auth.userId ? existing.timerRunning : timerOnByDefault(label)
       const id = await registerDevice(auth.userId, { ...sub, label }, true, timerRunning)
-      return NextResponse.json({ id, enabled: true, timerRunning })
+      return answer({ id, enabled: true, timerRunning })
     }
     // The worker reports a replaced address with the old one, so the row can follow it.
-    if (typeof body?.oldEndpoint === "string" && body.oldEndpoint !== sub.endpoint) {
+    // A move the phone keeps for another account is not this person's to make (p9-pings-04).
+    if (typeof body?.oldEndpoint === "string" && body.oldEndpoint !== sub.endpoint && !wasOther && !(await deviceByEndpoint(sub.endpoint))) {
+      const before = was ? await deviceByEndpoint(body.oldEndpoint) : null
       if (await moveDevice(auth.userId, body.oldEndpoint, sub)) {
+        /**
+         * PINGS SWITCHED OFF BY FAILED SENDS COME BACK (p9-pings-03). A key
+         * change left unhealed for twenty sends turned both switches off; the
+         * move is the heal, so the switches return to what the phone last
+         * heard, rather than "No device gets pings" with no reason.
+         */
+        if (was && before && before.userId === auth.userId && before.failures >= FAILURES_BEFORE_SWITCH_OFF && !before.enabled && !before.timerRunning) {
+          const id = await registerDevice(auth.userId, { ...sub, label }, was.enabled, was.timerRunning)
+          return answer({ id, ...was })
+        }
         const moved = await deviceByEndpoint(sub.endpoint)
-        return NextResponse.json({ id: moved?.id ?? null, enabled: moved?.enabled ?? false, timerRunning: moved?.timerRunning ?? false })
+        return answer({ id: moved?.id ?? null, enabled: moved?.enabled ?? false, timerRunning: moved?.timerRunning ?? false })
+      }
+      /**
+       * THE ROW WAS DELETED BEFORE THE MOVE LANDED (p9-pings-01): the page had
+       * dropped the old address, its first registration was lost, and a ping
+       * found the address gone (410). Made again here with the switches the
+       * phone kept; the new address has no row, so this is never a second one.
+       */
+      if (was && !before) {
+        const id = await registerDevice(auth.userId, { ...sub, label }, was.enabled, was.timerRunning)
+        return answer({ id, ...was })
       }
     }
     const existing = await deviceByEndpoint(sub.endpoint)
-    if (!existing || !mayTake(existing)) return NextResponse.json({ id: null, enabled: false, timerRunning: false })
+    if (!existing || !mayTake(existing)) return answer({ id: null, enabled: false, timerRunning: false })
     // someone else's browser moves here with both switches off
     const mine = existing.userId === auth.userId
     const enabled = mine ? existing.enabled : false
     const timerRunning = mine ? existing.timerRunning : false
-    return NextResponse.json({ id: await registerDevice(auth.userId, { ...sub, label }, enabled, timerRunning), enabled, timerRunning })
+    return answer({ id: await registerDevice(auth.userId, { ...sub, label }, enabled, timerRunning), enabled, timerRunning })
   } catch (error) {
     console.error("[notifications] register failed", error instanceof Error ? error.message : "unknown")
     return NextResponse.json({ error: "Could not register this device" }, { status: 500 })

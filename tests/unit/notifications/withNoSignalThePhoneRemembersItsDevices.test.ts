@@ -28,6 +28,10 @@ vi.mock("@/src/notifications/pushClient", () => ({
   subscriptionForPage: async () => null,
   movedFrom: () => null,
   moveSettled: () => {},
+  moveFor: () => ({}),
+  registrationAnswered: () => {},
+  switchesChanged: () => {},
+  deviceRemoved: () => {},
   forgetThisDevice: async () => {},
   forgetTimerOnThisDevice: async () => {},
 }))

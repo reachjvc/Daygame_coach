@@ -20,6 +20,7 @@
  * separate choices, so a function that writes one never touches the other.
  */
 
+import { FAILURES_BEFORE_SWITCH_OFF } from "@/src/notifications/endpoints"
 import { createAdminSupabaseClient } from "./supabase"
 
 export type SecretName = "push_vapid_public" | "push_vapid_private" | "notifications_clock_secret"
@@ -117,16 +118,16 @@ export async function listDevices(userId: string): Promise<DeviceSummary[]> {
  */
 export async function deviceByEndpoint(
   endpoint: string,
-): Promise<{ id: string; userId: string; enabled: boolean; timerRunning: boolean; p256dh: string; auth: string } | null> {
+): Promise<{ id: string; userId: string; enabled: boolean; timerRunning: boolean; p256dh: string; auth: string; failures: number } | null> {
   const { data, error } = await createAdminSupabaseClient()
     .from("push_devices")
-    .select("id, user_id, enabled, timer_running, p256dh, auth")
+    .select("id, user_id, enabled, timer_running, p256dh, auth, failures")
     .eq("endpoint", endpoint)
     .maybeSingle()
   if (error) throw new Error(`Failed to look up this device: ${error.message}`)
-  const row = data as { id: string; user_id: string; enabled: boolean; timer_running: boolean; p256dh: string; auth: string } | null
+  const row = data as { id: string; user_id: string; enabled: boolean; timer_running: boolean; p256dh: string; auth: string; failures: number } | null
   return row
-    ? { id: row.id, userId: row.user_id, enabled: row.enabled, timerRunning: row.timer_running, p256dh: row.p256dh, auth: row.auth }
+    ? { id: row.id, userId: row.user_id, enabled: row.enabled, timerRunning: row.timer_running, p256dh: row.p256dh, auth: row.auth, failures: row.failures }
     : null
 }
 
@@ -232,7 +233,7 @@ export async function recordDeviceOutcome(deviceId: string, outcome: "ok" | "gon
   if (readError) throw new Error(`Failed to record a failed delivery: ${readError.message}`)
   const failures = Math.min(((data as { failures: number } | null)?.failures ?? 0) + 1, 32767)
   const change: Record<string, unknown> = { failures, updated_at: now }
-  if (failures >= 20) {
+  if (failures >= FAILURES_BEFORE_SWITCH_OFF) {
     change.enabled = false
     change.timer_running = false
   }

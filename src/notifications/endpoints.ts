@@ -12,6 +12,9 @@
  *   Edge on Windows                                  *.notify.windows.com
  */
 
+/** Failed sends in a row after which a device's two switches go off (`recordDeviceOutcome`). */
+export const FAILURES_BEFORE_SWITCH_OFF = 20
+
 const EXACT = new Set(["fcm.googleapis.com", "updates.push.services.mozilla.com", "web.push.apple.com"])
 const SUFFIXES = [".notify.windows.com", ".push.apple.com"]
 

@@ -37,6 +37,10 @@ vi.mock("@/src/notifications/pushClient", () => ({
   subscriptionForPage: async () => ({ subscription: client.subscription, oldEndpoint: null }),
   movedFrom: () => null,
   moveSettled: () => {},
+  moveFor: () => ({}),
+  registrationAnswered: () => {},
+  switchesChanged: () => {},
+  deviceRemoved: () => {},
 }))
 
 import { LOCK_SCREEN_NOTE, RunningTimerSetting } from "@/src/timetrack/components/RunningTimerSetting"
