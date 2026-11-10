@@ -1,0 +1,341 @@
+{
+  "id": "alan-turing",
+  "name": "Alan Turing",
+  "born": 1912,
+  "died": 1954,
+  "category": "scientists",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset",
+    "lm_fitness"
+  ],
+  "tagline": "A misfit schoolboy who defined computation, helped break Enigma and would not hide",
+  "startedFrom": "He was born in London in 1912 into an upper-middle-class family. His father served in the Indian Civil Service, so he and his brother were fostered in English homes until 1926. At Sherborne School he was criticised for his handwriting and struggled at English, and he was nearly stopped from taking the School Certificate; in 1929 he failed to win a Cambridge scholarship and won one at King's College the next year.",
+  "values": [
+    {
+      "word": "Originality",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In On Computable Numbers (1936) he introduced an abstract machine, now called the Turing machine; his approach to the decision problem was very different from that of Alonzo Church, who published his answer the same year.",
+          "sourceId": "mactutor",
+          "locator": "Biography, paragraphs on 1936 and On Computable Numbers"
+        },
+        {
+          "kind": "deed",
+          "claim": "He worked on the decision problem alone for a year until April 1936.",
+          "sourceId": "sep",
+          "locator": "Section 2, The Turing Machine and Computability"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer Andrew Hodges calls him \"the most original figure, the most insistent on personal freedom\".",
+          "sourceId": "sep",
+          "locator": "Section 9, Alan Turing: the Unknown Mind"
+        },
+        {
+          "kind": "witness",
+          "claim": "Hodges writes that \"his total originality lay in seeing the relevance of mathematical logic to a problem originally seen as one of physics\".",
+          "sourceId": "hodges-1995",
+          "locator": "Section 3, The Turing machine"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At Sherborne he ran chemistry experiments on his own agenda, which did not please his teacher, and on his own read Einstein's papers on relativity and Eddington's The Nature of the Physical World.",
+          "sourceId": "mactutor",
+          "locator": "Biography, paragraphs on Sherborne School"
+        },
+        {
+          "kind": "deed",
+          "claim": "From 1950 he turned to a new field, the mathematics of how living things grow their shapes, and Hodges writes that he became the first serious user of an electronic computer for mathematical research.",
+          "sourceId": "hodges-1995",
+          "locator": "Section 7, Turing at Manchester"
+        },
+        {
+          "kind": "witness",
+          "claim": "Hodges writes that from his earliest life his fascination with science \"found him at odds with authority\".",
+          "sourceId": "sep",
+          "locator": "Section 1, Outline of Life"
+        }
+      ]
+    },
+    {
+      "word": "Authenticity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At his trial on 31 March 1952 he made no serious denial or defence and told everyone he saw no wrong in his actions.",
+          "sourceId": "hodges-1995",
+          "locator": "Section 8, Alan Turing's Crisis"
+        },
+        {
+          "kind": "deed",
+          "claim": "At Bletchley Park he withdrew a marriage proposal to Joan Clarke and told her he was homosexual.",
+          "sourceId": "hodges-1995",
+          "locator": "Section 5, Emergence of the Computer"
+        },
+        {
+          "kind": "witness",
+          "claim": "The MacTutor biography says he \"was completely open about his sexuality\".",
+          "sourceId": "mactutor",
+          "locator": "Biography, paragraph after the 2009 apology"
+        },
+        {
+          "kind": "witness",
+          "claim": "Hodges describes \"a gay man with strong emotions and a growing insistence on his identity\".",
+          "sourceId": "sep",
+          "locator": "Section 1, Outline of Life"
+        },
+        {
+          "kind": "witness",
+          "claim": "Hodges writes that after the trial \"he talked openly about it in the computing laboratory, refusing to show any shame or remorse\".",
+          "sourceId": "hodges-scrapbook-1952-54",
+          "locator": "Section 'Not Going Linear'"
+        }
+      ]
+    },
+    {
+      "word": "Fitness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He won the Walton Athletic Club's 3-mile and 10-mile championships in record time and finished fifth in the A.A.A. Marathon in 1947.",
+          "sourceId": "mactutor",
+          "locator": "Biography, paragraph on 1947-48"
+        },
+        {
+          "kind": "deed",
+          "claim": "His best marathon time was 2 hours 46 minutes 3 seconds; the club secretary recalled that on joining he \"immediately became our best runner\".",
+          "sourceId": "hodges-update-6",
+          "locator": "Note to page 345 (Walton Athletic Club)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Hodges calls him \"a powerful marathon runner\" who \"almost qualified for the British team in the 1948 Olympic games\".",
+          "sourceId": "sep",
+          "locator": "Section 1, Outline of Life"
+        }
+      ]
+    },
+    {
+      "word": "Contribution",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He cracked the German naval Enigma system at the end of 1939, and his section, Hut 8, which deciphered U-boat messages from mid-1941, became a key unit at Bletchley Park.",
+          "sourceId": "hodges-1995",
+          "locator": "Section 4, The Second World War"
+        },
+        {
+          "kind": "deed",
+          "claim": "In June 1941 convoys rerouted on Hut 8 decrypts were reportedly not sighted by a single North Atlantic U-boat for the first twenty-three days of the month.",
+          "sourceId": "copeland-2004",
+          "locator": "Paragraphs on Hut 8 and naval Enigma"
+        },
+        {
+          "kind": "deed",
+          "claim": "On 21 October 1941 he and three colleagues wrote straight to Churchill that the Enigma work was \"being held up, and in some cases is not being done at all\" for lack of staff; Churchill ordered \"extreme priority\".",
+          "sourceId": "tna-1941",
+          "locator": "Letter of 21 October 1941 (HW 1/155) and Churchill's note"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Ministry of Justice's 2013 pardon notice says he was \"pivotal in breaking the ‘Enigma’ code\".",
+          "sourceId": "govuk-2013",
+          "locator": "Press release text, paragraph on GCHQ"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Stay with a hard problem on your own until you have your own answer, even one others have given up on.",
+      "sourceId": "hodges-1995",
+      "locator": "Section 4, The Second World War (naval Enigma, end of 1939: 'Happy to work alone on a problem that defeated others')"
+    },
+    {
+      "text": "Turn a vague question into a test you can actually run.",
+      "sourceId": "turing-1950",
+      "locator": "Section 1, The Imitation Game ('These questions replace our original, \"Can machines think?\"')"
+    },
+    {
+      "text": "Say clearly what is proved and what is a guess, then let the guesses point your next work.",
+      "sourceId": "turing-1950",
+      "locator": "Section 6, Contrary Views on the Main Question, opening paragraphs"
+    },
+    {
+      "text": "When vital work is stuck, go straight to the person who can fix it and ask plainly.",
+      "sourceId": "tna-1941",
+      "locator": "Letter of 21 October 1941 to Churchill (HW 1/155)"
+    },
+    {
+      "text": "Do not hide who you are, even when it costs you.",
+      "sourceId": "hodges-1995",
+      "locator": "Section 8, Alan Turing's Crisis"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "We can only see a short distance ahead, but we can see plenty there that needs to be done.",
+      "sourceId": "turing-1950",
+      "locator": "Section 7, Learning Machines, closing sentence (p. 460)"
+    },
+    {
+      "text": "Conjectures are of great importance since they suggest useful lines of research.",
+      "sourceId": "turing-1950",
+      "locator": "Section 6, Contrary Views on the Main Question, opening paragraphs (p. 442)"
+    },
+    {
+      "text": "Machines take me by surprise with great frequency.",
+      "sourceId": "turing-1950",
+      "locator": "Section 6, Contrary Views on the Main Question, (6) Lady Lovelace's Objection (p. 450)"
+    },
+    {
+      "text": "Turing believes machines think / Turing lies with men / Therefore machines do not think",
+      "sourceId": "sep",
+      "locator": "Section 9, Alan Turing: the Unknown Mind (letter to Norman Routledge, Turing Archive, King's College, Cambridge)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In December 1951 he met a 19-year-old man in Manchester, and on 7 February 1952 both were arrested for consenting sex at Turing's house. At his trial on 31 March 1952 he made no serious denial and told people he saw no wrong in what he had done. To avoid prison he accepted a year of oestrogen injections, and he lost the security clearance for his secret work for GCHQ. He kept working: he pushed his theory of how plants and animals grow their patterns further and took up new questions in quantum physics. On 7 June 1954 he died of cyanide poisoning at his home; the inquest found suicide, a finding his mother and some biographers dispute.",
+    "sourceIds": [
+      "hodges-scrapbook-1952",
+      "hodges-1995",
+      "govuk-2013",
+      "mactutor",
+      "bbc-2013"
+    ]
+  },
+  "shadow": {
+    "text": "At Bletchley Park he proposed marriage to his colleague Joan Clarke; she accepted, and he then withdrew, telling her he was homosexual. At the National Physical Laboratory after the war, his biographer Andrew Hodges writes, he despised his nominal superior, J. Womersley, and he had no influence on the engineering of the ACE computer he had designed. Hodges writes that he was slow to publish and promote his ideas, and that at Manchester he \"could perhaps have led the world in software development\" but failed to do so. Hodges calls his independence and isolation both his strength and his weakness.",
+    "sourceIds": [
+      "hodges-1995",
+      "sep"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which vague question did you argue about this week that you could have turned into a test?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "Computing Machinery and Intelligence",
+      "year": 1950
+    },
+    {
+      "title": "On Computable Numbers, with an Application to the Entscheidungsproblem",
+      "year": 1936
+    },
+    {
+      "title": "The Chemical Basis of Morphogenesis",
+      "year": 1952
+    }
+  ],
+  "sources": [
+    {
+      "id": "turing-1950",
+      "kind": "primary",
+      "title": "Computing Machinery and Intelligence (Mind, vol. 59, no. 236, pp. 433-460)",
+      "author": "A. M. Turing",
+      "year": 1950,
+      "publisher": "Oxford University Press (Mind)",
+      "url": "https://academic.oup.com/mind/article/LIX/236/433/986238"
+    },
+    {
+      "id": "sep",
+      "kind": "secondary",
+      "title": "Alan Turing (Stanford Encyclopedia of Philosophy, substantive revision 30 September 2013)",
+      "author": "Andrew Hodges",
+      "year": 2013,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/turing/"
+    },
+    {
+      "id": "hodges-1995",
+      "kind": "secondary",
+      "title": "Alan Turing: a short biography (based on his 1995 Oxford dictionary entry)",
+      "author": "Andrew Hodges",
+      "year": 1995,
+      "url": "https://www.turing.org.uk/publications/dnb.html"
+    },
+    {
+      "id": "hodges-update-6",
+      "kind": "secondary",
+      "title": "Update to Alan Turing: the Enigma, Part 6: Mercury Delayed",
+      "author": "Andrew Hodges",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.turing.org.uk/book/update/part6.html"
+    },
+    {
+      "id": "hodges-scrapbook-1952",
+      "kind": "secondary",
+      "title": "The Alan Turing Internet Scrapbook: Growth, Form and Crisis, 1951-1952",
+      "author": "Andrew Hodges",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.turing.org.uk/scrapbook/morph.html"
+    },
+    {
+      "id": "mactutor",
+      "kind": "secondary",
+      "title": "Alan Mathison Turing (MacTutor History of Mathematics)",
+      "author": "J. J. O'Connor and E. F. Robertson (University of St Andrews)",
+      "year": 2003,
+      "url": "https://mathshistory.st-andrews.ac.uk/Biographies/Turing/"
+    },
+    {
+      "id": "tna-1941",
+      "kind": "secondary",
+      "title": "A dramatic plea for Churchill's help",
+      "author": "The National Archives (UK)",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.nationalarchives.gov.uk/explore-the-collection/stories/a-dramatic-plea-for-churchills-help/"
+    },
+    {
+      "id": "govuk-2013",
+      "kind": "secondary",
+      "title": "Royal pardon for WW2 code-breaker Dr Alan Turing (press release, 24 December 2013)",
+      "author": "Ministry of Justice",
+      "year": 2013,
+      "url": "https://www.gov.uk/government/news/royal-pardon-for-ww2-code-breaker-dr-alan-turing"
+    },
+    {
+      "id": "bbc-2013",
+      "kind": "secondary",
+      "title": "Royal pardon for codebreaker Alan Turing (24 December 2013)",
+      "author": "BBC News",
+      "year": 2013,
+      "url": "https://www.bbc.co.uk/news/technology-25495315"
+    },
+    {
+      "id": "hodges-scrapbook-1952-54",
+      "kind": "secondary",
+      "title": "The Alan Turing Internet Scrapbook: Unseen Worlds, Defiant until Death, 1952-1954",
+      "author": "Andrew Hodges",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.turing.org.uk/scrapbook/wondrous.html"
+    },
+    {
+      "id": "copeland-2004",
+      "kind": "secondary",
+      "title": "Alan Turing, Codebreaker and Computer Pioneer",
+      "author": "Jack Copeland and Diane Proudfoot",
+      "year": 2004,
+      "url": "https://alanturing.net/turing_archive/pages/Reference%20Articles/codebreaker.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "ok",
+      "notes": "A real 20th-century mathematician, not a politician, campaigner or founder of a religion; no account of sexual contact with anyone under 16 or of sexual violence was found, and his 1952 conviction was for consenting sex with a 19-year-old adult man."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value and every cited sentence. Resilience fell: the inquest found he killed himself two years after the conviction and Hodges himself says no one could have predicted his course, so it could be argued against strongly; Contribution, the blind pick's word, took its place on three independent sources (Hodges, Copeland, The National Archives) plus the 2013 pardon notice. Originality, Curiosity, Authenticity and Fitness held, all four quotes matched a scan of the 1950 Mind paper or Hodges' SEP entry, and nine sentences were corrected to what the sources say, including his death, now stated in the defining moment.",
+    "checkedOn": "2026-11-10"
+  }
+}
