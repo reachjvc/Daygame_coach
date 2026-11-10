@@ -1,0 +1,311 @@
+{
+  "id": "charles-darwin",
+  "name": "Charles Darwin",
+  "born": 1809,
+  "died": 1882,
+  "category": "scientists",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset",
+    "lm_family"
+  ],
+  "tagline": "An 'ordinary boy' who spent twenty patient years testing one idea before he published it",
+  "startedFrom": "He was born in 1809 in Shrewsbury, the fifth of six children in a wealthy family; his father was a successful doctor and financier, and his mother died when he was eight. He believed his schoolmasters and his father thought him \"a very ordinary boy, rather below the common standard in intellect\", and his father once told him he cared for nothing but \"shooting, dogs, and rat-catching\". He studied medicine at Edinburgh but disliked it and could not bear the sight of blood or suffering, so his father proposed the church instead.",
+  "values": [
+    {
+      "word": "Patience",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Looking back in 1881, he named \"unbounded patience in long reflecting over any subject\" as one of the most important qualities behind his success.",
+          "sourceId": "autobiography-1887",
+          "locator": "Autobiography, vol. 1, p. 107"
+        },
+        {
+          "kind": "deed",
+          "claim": "He worked for eight years on barnacles, published 1851-54, and spent about twenty years on his species theory before On the Origin of Species appeared in 1859.",
+          "sourceId": "vanwyhe",
+          "locator": "biographical sketch, paragraphs on the barnacle work and on the Origin"
+        },
+        {
+          "kind": "witness",
+          "claim": "His son Francis wrote that in experiments he showed a \"power of sticking to a subject\" and \"used almost to apologise for his patience\".",
+          "sourceId": "fd-1887",
+          "locator": "vol. 1, ch. III, p. 149"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that from his early youth he had \"the strongest desire to understand or explain whatever I observed\".",
+          "sourceId": "autobiography-1887",
+          "locator": "Autobiography, vol. 1, p. 103"
+        },
+        {
+          "kind": "deed",
+          "claim": "As a Cambridge student he collected beetles so keenly that some of his records were printed in J. F. Stephens's British Entomology in 1829.",
+          "sourceId": "vanwyhe",
+          "locator": "biographical sketch, paragraph on Cambridge"
+        },
+        {
+          "kind": "witness",
+          "claim": "The historian John van Wyhe names his \"keen observation, imagination, curiosity and determination\" as what let him contribute to ecology, botany and other fields.",
+          "sourceId": "vanwyhe",
+          "locator": "biographical sketch, paragraph beginning \"Darwin's extraordinary achievements\""
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that his \"industry has been nearly as great as it could have been in the observation and collection of facts\", and that the Origin cost him \"thirteen months and ten days' hard labour\".",
+          "sourceId": "autobiography-1887",
+          "locator": "Autobiography, vol. 1, pp. 103 and 86"
+        },
+        {
+          "kind": "witness",
+          "claim": "His son Francis wrote that he \"never wasted a few spare minutes\" and worked \"up to the very limit of his strength\", in spite of constant ill health.",
+          "sourceId": "fd-1887",
+          "locator": "vol. 1, ch. III, pp. 144 and 159"
+        },
+        {
+          "kind": "deed",
+          "claim": "He condensed twenty years of research into one volume in thirteen months, 1858-59.",
+          "sourceId": "vanwyhe",
+          "locator": "biographical sketch, paragraph on the writing of the Origin"
+        }
+      ]
+    },
+    {
+      "word": "Honesty",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that for many years he followed a \"golden rule\": to note at once every fact or thought that went against his own results, because such facts are easily forgotten.",
+          "sourceId": "autobiography-1887",
+          "locator": "Autobiography, vol. 1, p. 87"
+        },
+        {
+          "kind": "deed",
+          "claim": "In the Origin he gave a whole chapter, \"Difficulties on Theory\", to the objections against his theory, writing that some were \"so grave\" that he could not think of them \"without being staggered\".",
+          "sourceId": "origin-1859",
+          "locator": "ch. VI, p. 171"
+        },
+        {
+          "kind": "witness",
+          "claim": "His son Francis wrote that he had \"a horror of any kind of laxness in quoting\" and held as his ideal \"a love of truth and carelessness about fame\".",
+          "sourceId": "fd-1887",
+          "locator": "vol. 1, ch. III, pp. 157-158"
+        }
+      ]
+    },
+    {
+      "word": "Family",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1851 he took his ill daughter Annie, aged ten, to Malvern to consult the hydrotherapist Dr Gully; she died there on 23 April 1851, and a week later he wrote a memorial of her.",
+          "sourceId": "dcp-annie",
+          "locator": "page introduction and memorial text"
+        },
+        {
+          "kind": "words",
+          "claim": "In the memorial he wrote: \"she must have known how we loved her\".",
+          "sourceId": "dcp-annie",
+          "locator": "memorial of Anne Elizabeth Darwin, closing paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "His daughter wrote that he \"was passionately attached to his own children\" and was to all of them \"the most delightful play-fellow\".",
+          "sourceId": "fd-1887",
+          "locator": "vol. 1, ch. III, pp. 135-136"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Write down every fact that goes against your view the moment you meet it, because those are the ones you forget.",
+      "sourceId": "autobiography-1887",
+      "locator": "Autobiography, vol. 1, p. 87 (the \"golden rule\")"
+    },
+    {
+      "text": "Collect the facts first, widely and for years, before you trust a theory.",
+      "sourceId": "autobiography-1887",
+      "locator": "Autobiography, vol. 1, p. 83 (from July 1837 he \"without any theory collected facts on a wholesale scale\")"
+    },
+    {
+      "text": "Use the spare minutes: ten minutes of work are worth starting.",
+      "sourceId": "fd-1887",
+      "locator": "vol. 1, ch. III, p. 144 (\"saving the minutes was the way to get work done\")"
+    },
+    {
+      "text": "Feed the parts of you that your work does not use, or you lose them.",
+      "sourceId": "autobiography-1887",
+      "locator": "Autobiography, vol. 1, pp. 101-102 (his regret at losing his taste for poetry and music)"
+    },
+    {
+      "text": "Stick with a hard problem, but know the point at which to give it up.",
+      "sourceId": "fd-1887",
+      "locator": "vol. 1, ch. III, p. 149"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I had, also, during many years followed a golden rule, namely, that whenever a published fact, a new observation or thought came across me, which was opposed to my general results, to make a memorandum of it without fail and at once.",
+      "sourceId": "autobiography-1887",
+      "locator": "Autobiography, vol. 1, p. 87"
+    },
+    {
+      "text": "If I had to live my life again, I would have made a rule to read some poetry and listen to some music at least once every week.",
+      "sourceId": "autobiography-1887",
+      "locator": "Autobiography, vol. 1, pp. 101-102"
+    },
+    {
+      "text": "Of these, the most important have been—the love of science—unbounded patience in long reflecting over any subject—industry in observing and collecting facts—and a fair share of invention as well as of common sense.",
+      "sourceId": "autobiography-1887",
+      "locator": "Autobiography, vol. 1, p. 107"
+    },
+    {
+      "text": "It makes one's blood boil, yet heart tremble, to think that we Englishmen and our American descendants, with their boastful cry of liberty, have been and are so guilty.",
+      "sourceId": "journal-1845",
+      "locator": "ch. XXI, p. 500 (on slavery in Brazil)"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 18 June 1858, after about twenty years of collecting evidence for his theory, he received an essay from the naturalist Alfred Russel Wallace that he believed held the same theory. He planned to send Wallace's paper for publication ahead of his own work; his friends Lyell and Hooker instead had both men's papers read together at the Linnean Society on 1 July 1858. He then abstracted his unfinished big book, which he had begun in 1856, into one volume in thirteen months and ten days, often stopped by illness. On the Origin of Species came out in November 1859, and the first 1,250 copies sold on the day of publication.",
+    "sourceIds": [
+      "vanwyhe",
+      "autobiography-1887"
+    ]
+  },
+  "shadow": {
+    "text": "In The Descent of Man (1871; second edition 1874) he ranked peoples from \"savage\" to \"civilised\" and wrote that \"the civilised races of man will almost certainly exterminate, and replace, the savage races throughout the world.\" He wrote the same in private letters: in 1862 to Charles Kingsley, \"In 500 years how the Anglo-saxon race will have spread & exterminated whole nations\", and in 1881 to William Graham that \"an endless number of the lower races will have been eliminated by the higher civilised races\". In the same book he wrote that man attains \"a higher eminence, in whatever he takes up, than can woman\". The historians Ian Hesketh and Henry-James Meiring (2021) write that he held all humans to be one species but \"adhered to a racial hierarchy\". In April 1861 he wrote to Hooker that his illness kept him from travelling to the bedside of his critically ill teacher and friend John Stevens Henslow; the Darwin Correspondence Project writes that he often cited ill health to bow out of social engagements and travel.",
+    "sourceIds": [
+      "descent-1874",
+      "dcp-race",
+      "hesketh-2021",
+      "dcp-health"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which fact against your own view did you meet this week, and did you write it down?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Journal of Researches (The Voyage of the Beagle)",
+      "year": 1839
+    },
+    {
+      "title": "On the Origin of Species",
+      "year": 1859
+    },
+    {
+      "title": "Autobiography",
+      "year": 1887
+    }
+  ],
+  "sources": [
+    {
+      "id": "autobiography-1887",
+      "kind": "primary",
+      "title": "Autobiography (written 1876-1881), in The Life and Letters of Charles Darwin, vol. 1, ch. II, ed. Francis Darwin",
+      "author": "Charles Darwin",
+      "year": 1887,
+      "publisher": "John Murray",
+      "url": "https://darwin-online.org.uk/content/frameset?itemID=F1452.1&viewtype=text&pageseq=1"
+    },
+    {
+      "id": "journal-1845",
+      "kind": "primary",
+      "title": "Journal of Researches into the Natural History and Geology of the Countries Visited during the Voyage of H.M.S. Beagle (2nd edition)",
+      "author": "Charles Darwin",
+      "year": 1845,
+      "publisher": "John Murray",
+      "url": "https://darwin-online.org.uk/content/frameset?itemID=F14&viewtype=text&pageseq=1"
+    },
+    {
+      "id": "origin-1859",
+      "kind": "primary",
+      "title": "On the Origin of Species by Means of Natural Selection (1st edition)",
+      "author": "Charles Darwin",
+      "year": 1859,
+      "publisher": "John Murray",
+      "url": "https://darwin-online.org.uk/content/frameset?itemID=F373&viewtype=text&pageseq=1"
+    },
+    {
+      "id": "descent-1874",
+      "kind": "primary",
+      "title": "The Descent of Man, and Selection in Relation to Sex (2nd edition; first published 1871)",
+      "author": "Charles Darwin",
+      "year": 1874,
+      "publisher": "John Murray",
+      "url": "https://darwin-online.org.uk/content/frameset?itemID=F944&viewtype=text&pageseq=1"
+    },
+    {
+      "id": "fd-1887",
+      "kind": "secondary",
+      "title": "Reminiscences of My Father's Everyday Life, in The Life and Letters of Charles Darwin, vol. 1, ch. III",
+      "author": "Francis Darwin",
+      "year": 1887,
+      "publisher": "John Murray",
+      "url": "https://www.gutenberg.org/ebooks/2087"
+    },
+    {
+      "id": "vanwyhe",
+      "kind": "secondary",
+      "title": "Charles Darwin: gentleman naturalist. A biographical sketch",
+      "author": "John van Wyhe (Darwin Online)",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://darwin-online.org.uk/darwin.html"
+    },
+    {
+      "id": "dcp-annie",
+      "kind": "secondary",
+      "title": "The death of Anne Elizabeth Darwin",
+      "author": "Darwin Correspondence Project, University of Cambridge",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.darwinproject.ac.uk/people/about-darwin/family-life/death-anne-elizabeth-darwin"
+    },
+    {
+      "id": "dcp-race",
+      "kind": "secondary",
+      "title": "Race, civilization, and progress",
+      "author": "Darwin Correspondence Project, University of Cambridge",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.darwinproject.ac.uk/learning/universities/darwin-and-human-nature/race-civilization-and-progress"
+    },
+    {
+      "id": "hesketh-2021",
+      "kind": "secondary",
+      "title": "Guide to the classics: Darwin's The Descent of Man, 150 years on",
+      "author": "Ian Hesketh and Henry-James Meiring (University of Queensland), The Conversation",
+      "year": 2021,
+      "url": "https://theconversation.com/guide-to-the-classics-darwins-the-descent-of-man-150-years-on-sex-race-and-our-lowly-ape-ancestry-155305"
+    },
+    {
+      "id": "dcp-health",
+      "kind": "secondary",
+      "title": "Darwin's health",
+      "author": "Darwin Correspondence Project, University of Cambridge",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.darwinproject.ac.uk/people/about-darwin/darwins-health"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real English naturalist (1809-1882), not fictional, never a politician and not the founder of a religion, with no account of sexual contact with a minor or of sexual violence found; his documented dark side is his ranking of human races, his forecasts that 'civilised' races would exterminate 'savage' ones, and his view that women are intellectually below men."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I attacked all five values: Patience against the claim that he delayed the Origin from fear, Hard work against Francis Darwin's account of a working day of about three hours, Honesty against the Patrick Matthew priority charge, and Family against his staying away from dying friends on grounds of illness. None fell: the short day was set by chronic illness and his output stands, he credited Matthew in print in April 1860, and the blind pick chose the same five words. Every quote matched the 1887, 1845 and 1859 texts; four facts were corrected (the patience passage dates from 1881, not 1876; his schoolmasters' view is his own belief; his father proposed the church; the big book was abstracted, in his own word), and his use of illness to avoid duties was added to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
