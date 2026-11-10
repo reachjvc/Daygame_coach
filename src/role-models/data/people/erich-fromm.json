@@ -1,0 +1,331 @@
+{
+  "id": "erich-fromm",
+  "name": "Erich Fromm",
+  "born": 1900,
+  "died": 1980,
+  "category": "philosophers",
+  "areaIds": [
+    "lm_relationship",
+    "lm_mindset"
+  ],
+  "tagline": "A psychoanalyst who taught that love is a skill you learn and practise, not luck.",
+  "startedFrom": "He was born on 23 March 1900 in Frankfurt, the only child of Naphtali Fromm, an Orthodox Jewish wine merchant, and Rosa Krause. His father came from a long line of rabbis and regretted that he had become a wine merchant and not a rabbi; in his biographer Lawrence Friedman's telling, the father was neurotic and overbearing. Fromm studied the Talmud for years, took a doctorate in sociology at Heidelberg in 1922, and came to psychoanalysis from philosophy, not medicine.",
+  "values": [
+    {
+      "word": "Love",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "The Art of Loving opens by asking whether love is an art, and answers that, if it is, it requires knowledge and effort.",
+          "sourceId": "aol",
+          "locator": "ch. I 'Is Love an Art?', opening sentence"
+        },
+        {
+          "kind": "words",
+          "claim": "On television in 1958 he called love an active relatedness and the most difficult thing to achieve, which people must take far more seriously than they do before they get even passably good at it.",
+          "sourceId": "wallace-1958",
+          "locator": "p. 9 (Survival and Freedom no. 5, 1958)"
+        },
+        {
+          "kind": "deed",
+          "claim": "From his courtship of Annis Freeman in 1952 until The Art of Loving was published, he wrote to her several times a day, and his biographer says these letters shaped the book.",
+          "sourceId": "friedman-cup-2013",
+          "locator": "para. 8"
+        },
+        {
+          "kind": "witness",
+          "claim": "A University of Texas history review of his biography calls him 'a voice for love and freedom who spoke in words a schoolchild could read'.",
+          "sourceId": "notevenpast-2013",
+          "locator": "para. 2"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Born into a family descended from a long line of rabbis and raised Orthodox, he gave up Judaism at 26, later saying he did not want to take part in any division of the human race, religious or political.",
+          "sourceId": "nyt-1980",
+          "locator": "section 'A Descendant of Rabbis'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Trained in Freud's technique, he developed his own theories and his own style of analysis, often working face to face with the patient; he told a colleague he had given up the strict Freudian approach because he got bored with it.",
+          "sourceId": "nyt-1980",
+          "locator": "opening section and section 'A Penetrating Man'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1937 Horkheimer, Löwenthal, Marcuse and Adorno rejected his revision of Freud's drive theory; in 1939 he parted with the Institute for Social Research.",
+          "sourceId": "fromm-online",
+          "locator": "entries 1937 and 1939"
+        },
+        {
+          "kind": "witness",
+          "claim": "A reviewer of his biography writes that he 'had a visceral reaction to authority in any doctrinal form'.",
+          "sourceId": "mendes-2015",
+          "locator": "para. beginning 'Fromm's attitude to authority was nothing if not vexed'"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In The Art of Loving he writes that 'love is primarily giving, not receiving'.",
+          "sourceId": "aol",
+          "locator": "ch. II 'The Theory of Love', section 1 'Love, the Answer to the Problem of Human Existence', p. 22"
+        },
+        {
+          "kind": "deed",
+          "claim": "Before and after Kristallnacht he worked to help a large network of Jewish friends, relatives and colleagues escape Germany.",
+          "sourceId": "notevenpast-2013",
+          "locator": "para. 9"
+        },
+        {
+          "kind": "deed",
+          "claim": "He cofounded and paid for SANE, the National Committee for a Sane Nuclear Policy.",
+          "sourceId": "friedman-2013",
+          "locator": "ch. 7 'Politics and Prose', p. 199"
+        },
+        {
+          "kind": "witness",
+          "claim": "A reviewer of his biography writes that he used money earned from his books to support peace-promoting organisations, and that he helped launch and fund SANE and Amnesty International.",
+          "sourceId": "mendes-2015",
+          "locator": "second paragraph and closing paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Hope",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked on television in 1958 whether he was a pessimist, he said his only worry was the danger of war, and that he was optimistic and had faith in the world.",
+          "sourceId": "wallace-1958",
+          "locator": "p. 14"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer writes that he 'offered up an inspiring sense of hopefulness in a world that he found blighted for most of his life by war, terrorism, bigotry, famine'.",
+          "sourceId": "friedman-cup-2013",
+          "locator": "para. 6"
+        },
+        {
+          "kind": "witness",
+          "claim": "The reviewer Alan Ryan names 'Fromm's utopian hopefulness' as what some readers of the biography will reject.",
+          "sourceId": "ryan-2013",
+          "locator": "last excerpted paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "A reviewer of his biography calls his humanism 'adamantly anti-theistic, anti-authority, and optimistic, if not actually utopian'.",
+          "sourceId": "mendes-2015",
+          "locator": "para. beginning 'Fromm's attitude to authority was nothing if not vexed'"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He co-founded the Free Jewish Teaching House in Frankfurt in 1919 and studied the Talmud with Rabbi Rabinkow until 1925.",
+          "sourceId": "fromm-online",
+          "locator": "entries 1919 and 1920"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1957 he held a seminar with the Zen scholar Daisetz T. Suzuki on Zen Buddhism and psychoanalysis.",
+          "sourceId": "fromm-online",
+          "locator": "entry 1957"
+        },
+        {
+          "kind": "witness",
+          "claim": "His New York Times obituary says no subject relating to human experience was beyond his consideration, and that he read the Bible and the Talmud and wrote about Zen and about Jewish and Christian mystics.",
+          "sourceId": "nyt-1980",
+          "locator": "sections 'Traits Held Interrelated' and 'Moved to Switzerland in 1974'"
+        },
+        {
+          "kind": "witness",
+          "claim": "A reviewer of his biography calls him 'an avid student of great teachers and systems, beginning with the vast tradition of Jewish learning, and followed by Marxism and psychoanalysis'.",
+          "sourceId": "mendes-2015",
+          "locator": "para. beginning 'Fromm was an avid student'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Treat love as a skill: learn it and work at it, instead of waiting for the right person to make it easy.",
+      "sourceId": "aol",
+      "locator": "ch. I 'Is Love an Art?', opening sentence"
+    },
+    {
+      "text": "In love, give first; do not wait to receive.",
+      "sourceId": "aol",
+      "locator": "ch. II 'The Theory of Love', section 1, p. 22"
+    },
+    {
+      "text": "Practise any art, love included, with discipline.",
+      "sourceId": "aol",
+      "locator": "ch. IV 'The Practice of Love', on the general requirements of practising an art"
+    },
+    {
+      "text": "Judge success by work well done, useful and meaningful, not by how well you sell yourself.",
+      "sourceId": "wallace-1958",
+      "locator": "p. 7"
+    },
+    {
+      "text": "Keep money and things as means; do not let producing and buying more become the goal of your life.",
+      "sourceId": "wallace-1958",
+      "locator": "pp. 4-5"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Is love an art? Then it requires knowledge and effort.",
+      "sourceId": "aol",
+      "locator": "ch. I 'Is Love an Art?', opening sentence"
+    },
+    {
+      "text": "Love is an activity, not a passive affect; it is a \"standing in,\" not a \"falling for.\"",
+      "sourceId": "aol",
+      "locator": "ch. II 'The Theory of Love', section 1 'Love, the Answer to the Problem of Human Existence', p. 22"
+    },
+    {
+      "text": "Immature love says: \"I love you because I need you.\" Mature love says: \"I need you because I love you.\"",
+      "sourceId": "aol",
+      "locator": "ch. II 'The Theory of Love', section 2 'Love Between Parent and Child', p. 41"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1952 he began courting Annis Freeman, and they married on 18 December 1953. His biographer Lawrence Friedman writes that from the courtship until the book came out, Fromm wrote to her several times a day, at home or on the road, and that these letters shaped the text of The Art of Loving. The book appeared in 1956; Friedman puts its sales at 25 million copies.",
+    "sourceIds": [
+      "friedman-cup-2013",
+      "fromm-online"
+    ]
+  },
+  "shadow": {
+    "text": "In New York, while he was the companion and lover of the psychoanalyst Karen Horney, he took on her daughter Marianne for a three-year training analysis; his biographer Lawrence Friedman writes that Fromm 'lacked the professionalism and understanding to refuse to analyze Marianne'. Friedman also writes that Fromm privately acknowledged to close colleagues such as Gertrud Hunziker-Fromm and Michael Maccoby that his writing on clinical work was restricted by what he knew of 'unethical trysts with female patients (implying that he himself sometimes had such relationships)'. Friedman counts three wives and several affairs. Critics also attacked his scholarship: Harvey Cox of Harvard Divinity School spoke of his 'congenital insensitivity to the normally respected boundaries between disciplines', and the reviewer Alan Ryan calls him 'a far from careful scholar'.",
+    "sourceIds": [
+      "friedman-2013",
+      "friedman-cup-2013",
+      "nyt-1980",
+      "ryan-2013"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you wait this week for love or attraction to just happen, instead of working at it like a skill?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Art of Loving",
+      "year": 1956
+    },
+    {
+      "title": "Escape from Freedom",
+      "year": 1941
+    },
+    {
+      "title": "To Have or to Be?",
+      "year": 1976
+    }
+  ],
+  "sources": [
+    {
+      "id": "aol",
+      "kind": "primary",
+      "title": "The Art of Loving (Harper Colophon Books reprint; checked in the Internet Archive scan artofloving0000from)",
+      "author": "Erich Fromm",
+      "year": 1956,
+      "publisher": "Harper & Row",
+      "url": "https://archive.org/details/artofloving0000from"
+    },
+    {
+      "id": "wallace-1958",
+      "kind": "primary",
+      "title": "Interview with Mike Wallace (ABC, The Mike Wallace Interview, 25 May 1958), first published in Survival and Freedom no. 5",
+      "author": "Erich Fromm",
+      "year": 1958,
+      "publisher": "The Fund for the Republic; text from the Literary Estate of Erich Fromm",
+      "url": "https://opus4.kobv.de/opus4-Fromm/files/951/1958b-eng.pdf"
+    },
+    {
+      "id": "nyt-1980",
+      "kind": "secondary",
+      "title": "Erich Fromm Dies in Switzerland; Psychoanalyst and Author Was 79, The New York Times, 19 March 1980 (scan in the Erich Fromm Archive)",
+      "author": "Dava Sobel",
+      "year": 1980,
+      "publisher": "The New York Times",
+      "url": "https://opus4.kobv.de/opus4-Fromm/files/28712/Sobel_D_1980a.pdf"
+    },
+    {
+      "id": "friedman-2013",
+      "kind": "secondary",
+      "title": "The Lives of Erich Fromm: Love's Prophet (checked through Internet Archive search-inside, scan livesoferichfrom0000frie)",
+      "author": "Lawrence J. Friedman, assisted by Anke M. Schreiber",
+      "year": 2013,
+      "publisher": "Columbia University Press",
+      "url": "https://archive.org/details/livesoferichfrom0000frie"
+    },
+    {
+      "id": "friedman-cup-2013",
+      "kind": "secondary",
+      "title": "Valentine's Day, Erich Fromm, and The Art of Loving, Columbia University Press Blog, 14 February 2013",
+      "author": "Lawrence J. Friedman",
+      "year": 2013,
+      "publisher": "Columbia University Press",
+      "url": "https://cupblog.org/2013/02/14/lawrence-j-friedman-valentines-day-erich-fromm-and-the-art-of-loving/"
+    },
+    {
+      "id": "notevenpast-2013",
+      "kind": "secondary",
+      "title": "The Lives of Erich Fromm: Love's Prophet by Lawrence J. Friedman (2013), Not Even Past, Department of History, University of Texas at Austin, 10 March 2013",
+      "author": "Christopher Duncan",
+      "year": 2013,
+      "publisher": "University of Texas at Austin, Department of History",
+      "url": "https://notevenpast.org/lives-erich-fromm-loves-prophet-2013/"
+    },
+    {
+      "id": "mendes-2015",
+      "kind": "secondary",
+      "title": "A Godless Jewish Humanist (review of Friedman, The Lives of Erich Fromm), Tikkun, reprinted by Truthout 4 January 2015",
+      "author": "Dinah M. Mendes",
+      "year": 2015,
+      "publisher": "Tikkun / Truthout",
+      "url": "https://truthout.org/articles/a-godless-jewish-humanist/"
+    },
+    {
+      "id": "ryan-2013",
+      "kind": "secondary",
+      "title": "Review of Friedman, The Lives of Erich Fromm, The New York Review of Books, summer 2013 (excerpts on the Columbia University Press Blog, 26 August 2013)",
+      "author": "Alan Ryan",
+      "year": 2013,
+      "publisher": "The New York Review of Books",
+      "url": "https://cupblog.org/2013/08/26/the-art-of-being-erich-fromm-a-review-by-the-new-york-review-of-books/"
+    },
+    {
+      "id": "fromm-online",
+      "kind": "secondary",
+      "title": "Important Events - Life of Erich Fromm (chronology)",
+      "author": "Literary Estate of Erich Fromm (Rainer Funk)",
+      "year": "n.d.",
+      "publisher": "Erich Fromm Online",
+      "url": "https://fromm-online.org/en/life/important-dates/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real psychoanalyst and social philosopher, dead since 1980, never held or ran for office and founded no religion; no account of sexual contact with anyone under 16 or of sexual violence was found; his dark side is crossing professional lines with women (an affair with Karen Horney while he was her daughter's training analyst, and his biographer's hint of trysts with female patients), several affairs over three marriages, and critics' charge of loose scholarship."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked Love with his affairs, the training analysis of Karen Horney's daughter while he was Horney's lover, and Friedman's report of trysts with female patients; the affairs fall between or outside his marriages, Friedman says he wanted no one else once with Annis Freeman, so Love held and the breaches went into the shadow in Friedman's own words. The 1958 Mike Wallace interview quote fell, because the only copy found is an estate file that forbids citation without permission; its content stays only as paraphrased evidence. Independence, Generosity, Hope and Learning each held with three or more sources; the blind pick's Freedom and Peace were left out for lack of room.",
+    "checkedOn": "2026-11-10"
+  }
+}
