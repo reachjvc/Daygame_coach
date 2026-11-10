@@ -1,0 +1,280 @@
+{
+  "id": "steve-jobs",
+  "name": "Steve Jobs",
+  "born": 1955,
+  "died": 2011,
+  "category": "builders",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "Fired from the company he started, he came back and rebuilt it by saying no.",
+  "startedFrom": "He was born in San Francisco in 1955 to an unmarried graduate student and adopted at birth by Paul and Clara Jobs; his adoptive mother had not finished college and his father had not finished high school. He dropped out of Reed College after six months, saying he could not see the value of spending his working-class parents' savings on it, then slept on friends' floors and returned Coke bottles for the deposit to buy food.",
+  "values": [
+    {
+      "word": "Focus",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said focus means saying no to the hundred other good ideas, and that he was as proud of what Apple had not done as of what it had done.",
+          "sourceId": "fortune-2008",
+          "locator": "Q&A section 'On Apple's focus'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In his first months back at Apple in 1997 he cut board members, staff and costs and killed dozens of products.",
+          "sourceId": "time-2011",
+          "locator": "paragraph beginning 'During his first months back at Apple'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He killed weak products such as the Newton and replaced more than a dozen Mac models with the iMac.",
+          "sourceId": "guardian-obit",
+          "locator": "paragraph beginning 'Turning Apple around was not easy'"
+        }
+      ]
+    },
+    {
+      "word": "Excellence",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said Apple does not get to do many things, so every one should be really excellent.",
+          "sourceId": "fortune-2008",
+          "locator": "Q&A section 'On what drives Apple employees'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Close to the iPhone's launch he dropped its enclosure design because he did not love it, and the team threw away a year's work and started over.",
+          "sourceId": "fortune-2008",
+          "locator": "Q&A section 'On dealing with roadblocks'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Time's obituary calls him a 'difficult, demanding, sometimes unreasonable perfectionist'.",
+          "sourceId": "time-2011",
+          "locator": "paragraph beginning 'Jobs remained the difficult, demanding'"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told Stanford graduates that being fired from Apple at 30 was devastating, that he still loved his work, and that he decided to start over.",
+          "sourceId": "stanford-2005",
+          "locator": "second story ('love and loss')"
+        },
+        {
+          "kind": "deed",
+          "claim": "Stripped of power at Apple in June 1985, he resigned in September, founded NeXT, and kept Pixar alive by putting more money into it until Toy Story in 1995.",
+          "sourceId": "time-2011",
+          "locator": "paragraphs beginning 'Among the people whose buttons', 'Using his Apple millions' and 'For a while, Jobs' second post-Apple venture'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He bought a computer division of Lucasfilm for $60 million in 1986 to found Pixar.",
+          "sourceId": "wired-1996",
+          "locator": "introduction, paragraph beginning 'Here at NeXT'"
+        }
+      ]
+    },
+    {
+      "word": "Vision",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said waves of technology can be seen years before they happen and you have to choose wisely which ones to surf.",
+          "sourceId": "fortune-2008",
+          "locator": "Q&A section 'On catching tech's next wave'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Wired wrote in 1996 that he had been right twice: that computers would become personal appliances, and that they would be connected on networks.",
+          "sourceId": "wired-1996",
+          "locator": "introduction, first paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "He launched the iPod in 2001, the iTunes store in 2003 and the iPhone in 2007, which the Guardian says changed the music industry and redefined mobile telephony.",
+          "sourceId": "guardian-obit",
+          "locator": "paragraphs beginning 'The iPod, iPhone and iPad' and 'True to his word'"
+        }
+      ]
+    },
+    {
+      "word": "Beauty",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said the calligraphy class he took after dropping out was 'beautiful' and that the Mac became 'the first computer with beautiful typography'.",
+          "sourceId": "stanford-2005",
+          "locator": "first story ('connecting the dots')"
+        },
+        {
+          "kind": "deed",
+          "claim": "Thanks to him the Apple II had a strikingly original case, and on his return he started making eye-catching designs such as the teardrop-shaped iMac.",
+          "sourceId": "guardian-obit",
+          "locator": "paragraphs beginning 'Woz's follow-up, the Apple II' and 'Turning Apple around was not easy'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Time's obituary says the Apple II's stylish case design reflected his instincts.",
+          "sourceId": "time-2011",
+          "locator": "paragraph beginning 'Woz wanted to build computers'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Say no to most good ideas so you have the time and money to do a few things well.",
+      "sourceId": "fortune-2008",
+      "locator": "Q&A section 'On Apple's focus'"
+    },
+    {
+      "text": "Find work you love; if you have not found it, keep looking and do not settle.",
+      "sourceId": "stanford-2005",
+      "locator": "second story ('love and loss')"
+    },
+    {
+      "text": "Each morning ask whether you would do today's plan if it were your last day, and change something when the answer is no too many days in a row.",
+      "sourceId": "stanford-2005",
+      "locator": "third story ('death')"
+    },
+    {
+      "text": "Start with what the customer will experience and work back to the technology, not the other way round.",
+      "sourceId": "guardian-obit",
+      "locator": "paragraph beginning 'Although it went largely unnoticed' (his words at Apple's 1997 developers' conference)"
+    },
+    {
+      "text": "If something is not right, start again, even late and even when it means more work.",
+      "sourceId": "fortune-2008",
+      "locator": "Q&A section 'On dealing with roadblocks'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Your time is limited, so don't waste it living someone else's life.",
+      "sourceId": "stanford-2005",
+      "locator": "Stanford commencement address, 12 June 2005, third story ('death')"
+    },
+    {
+      "text": "Remembering that I'll be dead soon is the most important tool I've ever encountered to help me make the big choices in life.",
+      "sourceId": "stanford-2005",
+      "locator": "Stanford commencement address, 12 June 2005, third story ('death')"
+    },
+    {
+      "text": "People think focus means saying yes to the thing you've got to focus on. But that's not what it means at all. It means saying no to the 100 other good ideas that there are.",
+      "sourceId": "fortune-2008",
+      "locator": "Fortune, 17 March 2008, Q&A section 'On Apple's focus'"
+    },
+    {
+      "text": "Creativity is just connecting things.",
+      "sourceId": "wired-1996",
+      "locator": "Wired 4.02, February 1996, section 'Grokking design'"
+    }
+  ],
+  "definingMoment": {
+    "text": "At the end of 1996 Apple, which was losing money, bought his company NeXT, and he came back as an adviser. In 1997 he told Apple's software developers that 'focusing is about saying no' and apologised for killing projects they had worked on. In September he became interim chief executive, and in his first months he cut staff and costs and killed dozens of products. More than a dozen Mac models were replaced by the iMac.",
+    "sourceIds": [
+      "guardian-obit",
+      "time-2011"
+    ]
+  },
+  "shadow": {
+    "text": "His daughter Lisa was born in 1978 to his high-school girlfriend Chrisann Brennan, and for years he claimed she was not his child. He was sued for child support and the state made him take a paternity test; he disputed the result and in 1982 told a Time journalist that '28% of the male population of the United States could be the father'. In her 2018 memoir Small Fry and a Guardian interview, Lisa says he was almost entirely absent for her first seven years, and that he refused to pay her Harvard fees after her first year, so neighbours paid and he repaid them years later. She also says he kissed and groped her stepmother, his wife, in front of her and joked that she would grow up to be a stripper; she describes it as his attempt to strip sex of shame. Time's obituary says he dismissed people who did not impress him as 'bozos', tormented job candidates and was 'profoundly autocratic', and notes a stock-option-backdating scandal that 'barely dented his reputation'. The Guardian's obituary says some never forgave him for 'cheating Wozniak out of a few thousand dollars' of an Atari bonus for work Wozniak had mostly done. In 2015 a $415 million settlement was heading for court approval in a workers' lawsuit accusing Apple, Google, Intel and Adobe of agreeing not to poach each other's staff; Reuters reported the case rested largely on emails in which Jobs and others planned it.",
+    "sourceIds": [
+      "guardian-obit",
+      "guardian-2018",
+      "time-2011",
+      "reuters-2015"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which good idea did you say no to this week so you could finish the thing that matters most?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Commencement address at Stanford University",
+      "year": 2005
+    }
+  ],
+  "sources": [
+    {
+      "id": "stanford-2005",
+      "kind": "primary",
+      "title": "Commencement address at Stanford University, 12 June 2005 (transcript in 'Stay hungry, stay foolish', Steve Jobs Archive, 12 June 2025; Stanford's own transcript: https://news.stanford.edu/stories/2005/06/youve-got-find-love-jobs-says)",
+      "author": "Steve Jobs",
+      "year": 2025,
+      "publisher": "Steve Jobs Archive",
+      "url": "https://stevejobsarchive.com/stories/stay-hungry-stay-foolish"
+    },
+    {
+      "id": "fortune-2008",
+      "kind": "primary",
+      "title": "What makes Apple golden, with the Q&A 'Steve Jobs on Apple's Chemistry' (interview, February 2008, Kona, Hawaii)",
+      "author": "Steve Jobs, interviewed by Betsy Morris",
+      "year": 2008,
+      "publisher": "Fortune",
+      "url": "https://fortune.com/2008/03/17/what-makes-apple-golden/"
+    },
+    {
+      "id": "wired-1996",
+      "kind": "primary",
+      "title": "Steve Jobs: The Next Insanely Great Thing (interview, Wired 4.02)",
+      "author": "Steve Jobs, interviewed by Gary Wolf",
+      "year": 1996,
+      "publisher": "Wired",
+      "url": "https://www.wired.com/1996/02/jobs-2/"
+    },
+    {
+      "id": "guardian-obit",
+      "kind": "secondary",
+      "title": "Steve Jobs obituary",
+      "author": "Jack Schofield",
+      "year": 2011,
+      "publisher": "The Guardian",
+      "url": "https://www.theguardian.com/technology/2011/oct/06/steve-jobs-obituary"
+    },
+    {
+      "id": "time-2011",
+      "kind": "secondary",
+      "title": "Steve Jobs, 1955–2011: Mourning Technology's Great Reinventor",
+      "author": "Harry McCracken",
+      "year": 2011,
+      "publisher": "Time",
+      "url": "https://time.com/archive/6907559/steve-jobs-1955-2011-mourning-technologys-great-reinventor/"
+    },
+    {
+      "id": "guardian-2018",
+      "kind": "secondary",
+      "title": "The daughter Steve Jobs denied: 'Clearly I was not compelling enough for my father' (interview with Lisa Brennan-Jobs, 1 September 2018)",
+      "author": "Emma Brockes",
+      "year": 2018,
+      "publisher": "The Guardian",
+      "url": "https://www.theguardian.com/global/2018/sep/01/daughter-steve-jobs-denied-lisa-brennan-jobs"
+    },
+    {
+      "id": "reuters-2015",
+      "kind": "secondary",
+      "title": "Apple, Google poaching settlement appears headed for approval (2 March 2015)",
+      "author": "Reuters",
+      "year": 2015,
+      "publisher": "Fortune",
+      "url": "https://fortune.com/2015/03/02/apple-google-poaching-settlement/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American businessman (Apple, NeXT, Pixar), dead since 2011, never a politician, campaigner or religious founder. No credible account of sexual contact with anyone under 16 or of sexual violence: the Small Fry passage (kissing and groping his adult wife in front of the child Lisa) describes no contact with the child and no force, so it is shadow, stated in the file, not an owner case. In, with a documented shadow: denying Lisa, harsh management, the Breakout bonus, the no-poaching case."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked all five values against the saved texts of the Stanford speech, the Fortune 2008 and Wired 1996 interviews, the Guardian and Time obituaries, the Guardian 2018 interview with Lisa Brennan-Jobs and the Reuters report. None fell: the flawed first Mac and iPhone and NeXT's missing market are lapses, not a pattern against Excellence or Vision, and Resilience, Vision and Beauty each have three sources; Craft, Simplicity and Passion from the blind pick had no room. All four quotes matched the originals; six fixes, mostly claims the sources state more weakly (the settlement was heading for approval, not agreed in 2015; who sued for child support is not said), and the shadow gained Lisa's account of his absence, the Harvard fees, the Small Fry passage on sex and the backdating scandal.",
+    "checkedOn": "2026-11-10"
+  }
+}
