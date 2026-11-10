@@ -9,15 +9,21 @@ import {
   useMemo,
   type ReactNode,
 } from "react"
+import {
+  AppRouterContext,
+  type AppRouterInstance,
+} from "next/dist/shared/lib/app-router-context.shared-runtime"
 
 interface Barrier {
   id: number
   onBack: () => void
+  /** An open sheet's step (useBackCloses), not a page's own sub-view. */
+  sheet?: boolean
 }
 
 interface HistoryBarrierContextValue {
   /** Push a barrier onto the stack. Pushes a history entry. Returns barrier id. */
-  push: (onBack: () => void) => number
+  push: (onBack: () => void, sheet?: boolean) => number
   /**
    * Remove a barrier by id. If found in the stack (programmatic close),
    * splices it out, suppresses the next popstate, and calls history.back()
@@ -50,6 +56,11 @@ interface HistoryBarrierContextValue {
    * history, so a later Back that lands on it steps over it.
    */
   abandon: (id: number) => void
+  /**
+   * Run a navigation once the open sheets' steps are taken back, so it leaves
+   * the history as if no sheet had pushed one. See `leaveSheets`.
+   */
+  leaveSheets: (navigate: () => void) => void
 }
 
 const HistoryBarrierContext = createContext<HistoryBarrierContextValue | null>(null)
@@ -60,11 +71,26 @@ export function HistoryBarrierProvider({ children }: { children: ReactNode }) {
   const stackRef = useRef<Barrier[]>([])
   const suppressCountRef = useRef(0)
   const deadRef = useRef(new Set<number>())
+  /** Navigations waiting for `leaveSheets`' traversal to land. */
+  const afterPopRef = useRef<(() => void)[]>([])
+
+  const runAfterPop = useCallback(() => {
+    const queued = afterPopRef.current
+    if (queued.length === 0) return
+    afterPopRef.current = []
+    // A task later: Next's own popstate listener restores the page the
+    // traversal landed on, and a navigation started before that restore is
+    // cancelled by it (app-router-instance: a restore pre-empts a navigation).
+    setTimeout(() => {
+      for (const navigate of queued) navigate()
+    }, 0)
+  }, [])
 
   useEffect(() => {
     const handlePopState = () => {
       if (suppressCountRef.current > 0) {
         suppressCountRef.current--
+        runAfterPop()
         return
       }
 
@@ -87,11 +113,11 @@ export function HistoryBarrierProvider({ children }: { children: ReactNode }) {
 
     window.addEventListener("popstate", handlePopState)
     return () => window.removeEventListener("popstate", handlePopState)
-  }, [])
+  }, [runAfterPop])
 
-  const push = useCallback((onBack: () => void): number => {
+  const push = useCallback((onBack: () => void, sheet = false): number => {
     const id = nextBarrierId++
-    stackRef.current.push({ id, onBack })
+    stackRef.current.push({ id, onBack, sheet })
     window.history.pushState({ __barrier: id }, "")
     return id
   }, [])
@@ -133,15 +159,78 @@ export function HistoryBarrierProvider({ children }: { children: ReactNode }) {
     deadRef.current.add(id)
   }, [discard])
 
+  /**
+   * NAVIGATING FROM AN OPEN SHEET (alpha p9: "Change this program" and "Open
+   * it in the box" did nothing; after "End program" Back showed the ended
+   * program). A row that closes its sheet and calls router.replace at once:
+   * the close took the sheet's step back, and that Back's popstate made Next
+   * restore the page and cancel the replace still on its way. A replace that
+   * did land took the sheet's step's place, so the page under it, the ended
+   * program, stayed one Back behind.
+   *
+   * So the sheets' steps go first, in one traversal, the sheets close as if
+   * Back had been pressed, and the navigation starts once that traversal has
+   * landed: the history is as if no sheet had pushed a step. Only sheets: a
+   * page's own sub-view steps are the page's to manage. Nothing waits when no
+   * sheet's step is the newest entry.
+   */
+  const leaveSheets = useCallback((navigate: () => void) => {
+    if (afterPopRef.current.length > 0) {
+      // a traversal is already on its way (a second tap): after it, in order
+      afterPopRef.current.push(navigate)
+      return
+    }
+    const stack = stackRef.current
+    const newest = (window.history.state as { __barrier?: unknown } | null)?.__barrier
+    if (stack.length === 0 || !stack[stack.length - 1].sheet || stack[stack.length - 1].id !== newest) {
+      navigate()
+      return
+    }
+    const closing: Barrier[] = []
+    while (stack.length > 0 && stack[stack.length - 1].sheet) closing.push(stack.pop()!)
+    // A Forward must not land back on them, should a replace leave them above.
+    for (const b of closing) deadRef.current.add(b.id)
+    afterPopRef.current.push(navigate)
+    suppressCountRef.current++
+    window.history.go(-closing.length)
+    for (const b of closing) b.onBack()
+    // The popstate always comes for a same-document traversal; should it not,
+    // the navigation still happens, not lost.
+    setTimeout(() => {
+      if (afterPopRef.current.length === 0) return
+      suppressCountRef.current = Math.max(0, suppressCountRef.current - 1)
+      runAfterPop()
+    }, 1000)
+  }, [runAfterPop])
+
   const value = useMemo(
-    () => ({ push, remove, removeMany, discard, abandon }),
-    [push, remove, removeMany, discard, abandon],
+    () => ({ push, remove, removeMany, discard, abandon, leaveSheets }),
+    [push, remove, removeMany, discard, abandon, leaveSheets],
   )
 
-  return (
+  // Every router.push/replace under the provider goes through leaveSheets, so
+  // no sheet row has to know it is in a sheet. Links do not use this router
+  // (next/link navigates on its own); BottomSheet abandons the step for them.
+  const router = useContext(AppRouterContext)
+  const sheetSafeRouter = useMemo<AppRouterInstance | null>(
+    () =>
+      router && {
+        ...router,
+        push: (href, options) => leaveSheets(() => router.push(href, options)),
+        replace: (href, options) => leaveSheets(() => router.replace(href, options)),
+      },
+    [router, leaveSheets],
+  )
+
+  const provided = (
     <HistoryBarrierContext.Provider value={value}>
       {children}
     </HistoryBarrierContext.Provider>
+  )
+  return sheetSafeRouter ? (
+    <AppRouterContext.Provider value={sheetSafeRouter}>{provided}</AppRouterContext.Provider>
+  ) : (
+    provided
   )
 }
 
@@ -298,7 +387,7 @@ export function useBackCloses(open: boolean, onClose: () => void): { leaving: ()
       idRef.current = ctx.push(() => {
         idRef.current = null
         onCloseRef.current()
-      })
+      }, true)
     } else if (!open) {
       release()
     }

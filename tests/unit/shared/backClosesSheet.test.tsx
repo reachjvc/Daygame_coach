@@ -5,6 +5,9 @@ import { render, screen, cleanup, fireEvent, act } from '@testing-library/react'
 
 import { BottomSheet } from '@/components/BottomSheet'
 import { HistoryBarrierProvider } from '@/src/shared/HistoryBarrierContext'
+import { AppRouterContext } from 'next/dist/shared/lib/app-router-context.shared-runtime'
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
+import { useRouter } from 'next/navigation'
 
 afterEach(cleanup)
 
@@ -21,8 +24,8 @@ const settle = () => act(async () => { await new Promise((r) => setTimeout(r, 20
 
 beforeEach(async () => {
   // two pages of history, so a stray "back a page" shows up as page "a"
-  window.history.replaceState({ page: 'a' }, '')
-  window.history.pushState({ page: 'b' }, '')
+  window.history.replaceState({ page: 'a' }, '', '/a')
+  window.history.pushState({ page: 'b' }, '', '/b')
 })
 
 /** A sheet that stays mounted and takes `open` (AnswerSheet, More). */
@@ -38,7 +41,7 @@ function Kept() {
           onClick={(e) => {
             // what next/link does: no page load, the router pushes the new page
             e.preventDefault()
-            window.history.pushState({ page: 'elsewhere' }, '')
+            window.history.pushState({ page: 'elsewhere' }, '', '/elsewhere')
             setOpen(false)
           }}
         >
@@ -140,6 +143,91 @@ describe('a link in a sheet', () => {
     await settle()
     expect(at().page).toBe('b')
     backSpy.mockRestore()
+  })
+})
+
+/**
+ * What Next's router does with push/replace: the history entry is written a
+ * moment later, when the new page is ready, and a Back/Forward (popstate) in
+ * between cancels it (app-router-instance: a restore pre-empts the navigation).
+ */
+function fakeRouter() {
+  let pending: { cancelled: boolean } | null = null
+  const onPop = () => { if (pending) pending.cancelled = true }
+  window.addEventListener('popstate', onPop)
+  const go = (kind: 'push' | 'replace') => (href: string) => {
+    const p = { cancelled: false }
+    pending = p
+    setTimeout(() => {
+      if (p.cancelled) return
+      pending = null
+      if (kind === 'push') window.history.pushState({ page: href }, '')
+      else window.history.replaceState({ page: href }, '')
+    }, 10)
+  }
+  const router = {
+    push: go('push'),
+    replace: go('replace'),
+    back: () => window.history.back(),
+    forward: () => window.history.forward(),
+    refresh: () => {},
+    prefetch: () => {},
+  } as unknown as AppRouterInstance
+  return { router, stop: () => window.removeEventListener('popstate', onPop) }
+}
+
+/** A sheet whose rows go to another page through the router (the programs ⋮ sheets). */
+function Routed({ kind, closeFirst }: { kind: 'push' | 'replace'; closeFirst: boolean }) {
+  const [open, setOpen] = React.useState(false)
+  const router = useRouter()
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)}>Open</button>
+      <BottomSheet open={open} onClose={() => setOpen(false)} title="Program" testId="sheet">
+        <button
+          type="button"
+          onClick={() => {
+            if (closeFirst) setOpen(false)
+            router[kind]('/next')
+          }}
+        >
+          Go
+        </button>
+      </BottomSheet>
+    </>
+  )
+}
+
+describe.each([
+  ['replace', true],
+  ['replace', false],
+  ['push', true],
+  ['push', false],
+] as const)('a sheet row that calls router.%s (closing the sheet itself: %s)', (kind, closeFirst) => {
+  let fake: ReturnType<typeof fakeRouter>
+  beforeEach(() => { fake = fakeRouter() })
+  afterEach(() => fake.stop())
+
+  test('goes to the page, and leaves the history as if the sheet took no step', async () => {
+    render(
+      <AppRouterContext.Provider value={fake.router}>
+        <HistoryBarrierProvider>
+          <Routed kind={kind} closeFirst={closeFirst} />
+        </HistoryBarrierProvider>
+      </AppRouterContext.Provider>,
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Open' }))
+    await settle()
+    fireEvent.click(screen.getByRole('button', { name: 'Go' }))
+    await settle()
+    await settle()
+    expect(at().page).toBe('/next')
+    expect(screen.queryByTestId('sheet')).not.toBeInTheDocument()
+
+    // Back: replace took page b's place, so it goes to a; push goes to b
+    await back()
+    await settle()
+    expect(at().page).toBe(kind === 'replace' ? 'a' : 'b')
   })
 })
 
