@@ -1111,9 +1111,25 @@ export function TodayTab({
         </section>
   ) : null
 
+  /**
+   * Today's council member (Plans/role-models.md, Phases 8 and 9), on both of
+   * this step's faces: a plan with nothing running yet still has a council.
+   */
+  const councilCard = (
+    <CouncilToday
+      today={today}
+      note={note}
+      onNote={(text) => {
+        setNote(text)
+        onNote(text)
+      }}
+    />
+  )
+
   if (items.length === 0) {
     return (
       <div className="space-y-5">
+        {councilCard}
         <section className="rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-6">
           <h2 className="text-sm font-semibold text-zinc-200">{longDate(today)}</h2>
           <p className="text-[12px] text-zinc-500 mt-2 leading-relaxed max-w-prose">{TODAY_COPY.empty}</p>
@@ -1326,14 +1342,7 @@ export function TodayTab({
           reads the council on its own after this page has drawn, and draws
           nothing for an empty council. Its "What would he do?" line is added
           to the day's note through the note's own save. */}
-      <CouncilToday
-        today={today}
-        note={note}
-        onNote={(text) => {
-          setNote(text)
-          onNote(text)
-        }}
-      />
+      {councilCard}
       <section className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
         <div className="flex flex-wrap items-baseline justify-between gap-2 px-5 pt-4">
           <div className="min-w-0">

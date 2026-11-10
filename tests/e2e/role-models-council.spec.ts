@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "./fixtures/test"
 import { ROUTES } from "@/src/shared/routes"
 import { shownPeople } from "@/src/role-models/catalog"
-import { seedLifePlan, thisWeeksReview } from "./helpers/lifePlan"
+import { planWithSteps, seedLifePlan, thisWeeksReview } from "./helpers/lifePlan"
 
 /**
  * YOUR COUNCIL, AND WHERE IT SHOWS IN THE PLAN (Plans/role-models.md, Phases 7-9, 12).
@@ -56,12 +56,16 @@ test.describe("the council", () => {
 
 test.describe("the council in the plan", () => {
   test.beforeEach(async ({ page, account }) => {
-    await seedLifePlan(page, account.id, { version: 1, seq: 10, northStar: "E2E: a plan with a north star.", values: ["Honesty"] })
+    await seedLifePlan(page, account.id, {
+      ...planWithSteps([{ id: "s1", title: "E2E: ten push-ups", daysPerWeek: 7 }]),
+      northStar: "E2E: a plan with a north star.",
+      values: ["Honesty"],
+    })
   })
 
   test("with an empty council, Today shows no council card", async ({ page }) => {
     await page.goto(`${ROUTES.plan}?step=today`)
-    await expect(page.getByRole("heading", { level: 2 }).first()).toBeVisible()
+    await expect(page.locator("#today-note")).toBeVisible()
     await page.waitForLoadState("networkidle")
     await expect(page.getByTestId("council-today")).toHaveCount(0)
   })
@@ -124,5 +128,25 @@ test.describe("the council in the plan", () => {
     await expect(page.getByTestId("week-value-lived")).toHaveAttribute("aria-pressed", "true")
     await page.reload()
     await expect(page.getByTestId("week-value-lived")).toHaveAttribute("aria-pressed", "true")
+  })
+})
+
+test.describe("people who lived an area at a 10", () => {
+  test("an area's dialog shows up to three validated people, your council first", async ({ page, account }) => {
+    await seedLifePlan(page, account.id, {
+      ...planWithSteps([{ id: "s1", title: "E2E: read ten pages", daysPerWeek: 7 }]),
+      areas: [{ id: "lm_mindset", label: "Mind & Beliefs", sublabel: "Thoughts", color: "#6366f1", custom: false }],
+    })
+    const inArea = people.filter((p) => p.areaIds.includes("lm_mindset"))
+    expect(inArea.length, "someone in the library serves Mind & Beliefs").toBeGreaterThan(0)
+    const mine = inArea[inArea.length - 1]
+    await add(page, mine.id, [mine.values[0].word])
+    await page.goto(`${ROUTES.plan}?step=now`)
+    await page.getByRole("button", { name: /^Mind & Beliefs\. .*Open it\.$/ }).click()
+    const list = page.getByTestId("area-people")
+    await expect(list).toBeVisible()
+    await expect(list.locator('[data-testid^="area-person-"]')).toHaveCount(Math.min(3, inArea.length))
+    await expect(list.locator('[data-testid^="area-person-"]').first()).toHaveAttribute("data-testid", `area-person-${mine.id}`)
+    await expect(list.getByText("in your council")).toBeVisible()
   })
 })
