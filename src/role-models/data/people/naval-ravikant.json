@@ -1,0 +1,314 @@
+{
+  "id": "naval-ravikant",
+  "name": "Naval Ravikant",
+  "born": 1974,
+  "died": null,
+  "category": "money",
+  "areaIds": [
+    "lm_money",
+    "lm_emotions",
+    "lm_mindset"
+  ],
+  "tagline": "A poor immigrant kid who got rich in tech and treats happiness as a skill to train.",
+  "startedFrom": "He was born in Delhi, India, in 1974 and moved to Queens, New York, at 9. His father, a pharmacist whose Indian degree was not accepted in the US, split from the family; his mother raised him and his brother, worked long hours for little pay, and they moved often. He says the library was his after-school center; passing the test for Stuyvesant High School led him to Dartmouth, which he picked partly for its financial aid.",
+  "values": [
+    {
+      "word": "Wealth",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After the Epinions lawsuit settled he became an angel investor, putting $10,000 to $50,000 into early startups, Twitter among them.",
+          "sourceId": "dam-2014",
+          "locator": "paragraph beginning 'The day he realized what had happened'"
+        },
+        {
+          "kind": "deed",
+          "claim": "By 2009 he also ran The Hit Forge, a fund that made early-stage investments.",
+          "sourceId": "fc-2014",
+          "locator": "paragraph beginning 'By then, Ravikant also had a fund called The Hit Forge'"
+        },
+        {
+          "kind": "words",
+          "claim": "He defines wealth as assets that earn while you sleep, and tells listeners to seek wealth, not money or status.",
+          "sourceId": "rich-2019",
+          "locator": "chapter 'Seek Wealth, Not Money or Status', section 'Wealth is assets that earn while you sleep'"
+        }
+      ]
+    },
+    {
+      "word": "Freedom",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says the purpose of wealth is freedom: not having to wear a tie, sit in traffic or work a job that does not fulfil you.",
+          "sourceId": "rich-2019",
+          "locator": "section 'Wealth buys your freedom'"
+        },
+        {
+          "kind": "words",
+          "claim": "He says he cannot tell staff to be at their desks by 8 a.m., because he will not be at his: 'I want my freedom.'",
+          "sourceId": "rich-2019",
+          "locator": "section 'Every founder has to lie to every employee'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Dartmouth Alumni Magazine reports that he never wears a tie and has cancelled speaking engagements to avoid wearing one.",
+          "sourceId": "dam-2014",
+          "locator": "paragraph beginning 'Ravikant is a trim 40-year-old'"
+        }
+      ]
+    },
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In January 2005 three of the five Epinions founders, he among them, sued partners of Benchmark Capital and August Capital and co-founder Nirav Tolia, saying they had been misled about the company's value before the 2003 merger that valued their shares at zero.",
+          "sourceId": "nyt-2005",
+          "locator": "paragraphs 1-6"
+        },
+        {
+          "kind": "witness",
+          "claim": "A Morrison & Foerster partner told the New York Times it is rare for founders to sue their financial backers, because venture is a small world built on relationships.",
+          "sourceId": "nyt-2005",
+          "locator": "paragraph 3 (Paul T. Friedman)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Dartmouth Alumni Magazine calls him a lead claimant and calls the suit a dangerous move in an industry where a founder's reputation decides his funding.",
+          "sourceId": "dam-2014",
+          "locator": "paragraphs beginning 'For a time it seemed' and 'The day he realized what had happened'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Fast Company writes that his unassuming manner can seem at odds with his evident willingness to cause trouble, not least for himself, and calls the suit an unusual move in an industry that keeps its disputes private.",
+          "sourceId": "fc-2014",
+          "locator": "paragraphs beginning 'The force behind AngelList' and 'The suit eventually settled in 2005'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2014, when Sand Hill Road firms wanted to invest in AngelList, he said he would consider it only if they also introduced him to their own limited partners, which stopped the talks.",
+          "sourceId": "fortune-2014",
+          "locator": "paragraph beginning 'It's fairly clear that the VCs themselves'"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Dartmouth Alumni Magazine describes AngelList as the latest in a series of ventures to satisfy his fierce ambition and need for challenge.",
+          "sourceId": "dam-2014",
+          "locator": "paragraph beginning 'Ravikant is a trim 40-year-old'"
+        },
+        {
+          "kind": "words",
+          "claim": "He says that because he came from a very modest background and was always overachieving and competitive, he wanted to do something bigger than be a money manager.",
+          "sourceId": "dam-2014",
+          "locator": "paragraph beginning 'Given his age'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In February 2010 his Venture Hacks blog announced AngelList, with 50 angel investors signed up; by 2014 it ran Syndicates that let well-known angels pool other investors' money.",
+          "sourceId": "fc-2014",
+          "locator": "paragraphs beginning 'In February 2010' and 'A few months later, AngelList introduced Syndicates'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In November 2014 AngelList launched a series of funds, each meant to back syndicate investments in 100 startups, to bring institutional money into seed deals.",
+          "sourceId": "fortune-2014",
+          "locator": "sentence 'AngelList has just launched a series of new funds'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Own a piece of what you build; you will not get rich renting out your time.",
+      "sourceId": "rich-2019",
+      "locator": "chapter 'You Won't Get Rich Renting Out Your Time'"
+    },
+    {
+      "text": "Take risks under your own name; accountability is what earns you leverage and a share of the business.",
+      "sourceId": "rich-2019",
+      "locator": "chapter 'Embrace Accountability to Get Leverage'"
+    },
+    {
+      "text": "Keep living below your means as money comes in, so it buys freedom instead of a bigger lifestyle.",
+      "sourceId": "rich-2019",
+      "locator": "chapter 'Live Below Your Means for Freedom'"
+    },
+    {
+      "text": "Cut people fair deals even when it costs you now; over time everyone will want to deal with you.",
+      "sourceId": "rich-2019",
+      "locator": "section 'If you cut fair deals, you will get paid in the long run'"
+    },
+    {
+      "text": "Treat happiness as a skill you train, like diet and fitness, not a fixed setting you were born with.",
+      "sourceId": "skill-2020",
+      "locator": "section 'You're not stuck at your level of happiness'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Desire's a contract you make to be unhappy until you get what you want.",
+      "sourceId": "desire-2020",
+      "locator": "opening paragraph (episode of 10 February 2020)"
+    },
+    {
+      "text": "The purpose of wealth is freedom; it's nothing more than that.",
+      "sourceId": "rich-2019",
+      "locator": "section 'Wealth buys your freedom'"
+    },
+    {
+      "text": "Happiness is a skill like nutrition and fitness.",
+      "sourceId": "skill-2020",
+      "locator": "section 'You're not stuck at your level of happiness' (episode of 3 February 2020)"
+    },
+    {
+      "text": "If you cut people fair deals, you won't get paid in the short-term. But over the long-term, everybody will want to deal with you.",
+      "sourceId": "rich-2019",
+      "locator": "section 'If you cut fair deals, you will get paid in the long run'"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 2004 Shopping.com, the company his start-up Epinions had merged into, went public, and he and three other founders got nothing, because in 2003 they had agreed to a merger that valued their shares at zero. In January 2005 he and two other founders sued two venture partners and a co-founder, saying they had been misled about the company's value; it settled in 2005 for an undisclosed sum. He then became an angel investor and, in 2007, started the Venture Hacks blog with Babak Nivi to explain term sheets to founders. In February 2010 a Venture Hacks post announced AngelList, and he lobbied in Washington for the 2012 JOBS Act changes it needed.",
+    "sourceIds": [
+      "dam-2014",
+      "fc-2014",
+      "nyt-2005"
+    ]
+  },
+  "shadow": {
+    "text": "In college he was fired from a law-firm internship after three months; by his own account he was 'completely insubordinate', came late and wore the wrong clothes. In 2003 he and three other Epinions founders agreed to a merger that valued their shares at zero, and in 2005 he, two other founders and 39 former employees sued, saying they had been deceived. TechDirt's Mike Masnick, quoted by VentureBeat, wrote that the founders had agreed to give up their shares and that suing invited more such suits; a San Jose Mercury News reporter later wrote that the case made his name 'radioactive mud' in Silicon Valley. In July 2017, after TechCrunch received allegations about co-founder Babak Nivi's behaviour, Ravikant, then AngelList's CEO, refused to discuss Nivi's exit; Nivi denied the rumours. TechCrunch then reported, citing the New York Times, that AngelList was bound to silence by a non-disparagement agreement. From 2019 Nivi co-hosted Ravikant's podcast.",
+    "sourceIds": [
+      "dam-2014",
+      "nyt-2005",
+      "venturebeat-2005",
+      "fc-2014",
+      "techcrunch-2017",
+      "rich-2019"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you do this week to train your happiness, the way you would train your body?",
+    "principleIndex": 4
+  },
+  "readings": [
+    {
+      "title": "How to Get Rich (without getting lucky), tweetstorm",
+      "year": 2018
+    },
+    {
+      "title": "How to Get Rich (podcast transcripts, with Babak Nivi)",
+      "year": 2019
+    },
+    {
+      "title": "The Almanack of Naval Ravikant (his words, compiled by Eric Jorgenson)",
+      "year": 2020
+    }
+  ],
+  "sources": [
+    {
+      "id": "rich-2019",
+      "kind": "primary",
+      "title": "How to Get Rich (collection of all his podcast episodes on the 'How to Get Rich' tweetstorm, edited transcript)",
+      "author": "Naval Ravikant, interviewed by Babak Nivi",
+      "year": 2019,
+      "publisher": "nav.al, 28 December 2019",
+      "url": "https://nav.al/rich"
+    },
+    {
+      "id": "desire-2020",
+      "kind": "primary",
+      "title": "Desire Is a Contract You Make to Be Unhappy (podcast episode, edited transcript)",
+      "author": "Naval Ravikant",
+      "year": 2020,
+      "publisher": "nav.al, 10 February 2020",
+      "url": "https://nav.al/desire"
+    },
+    {
+      "id": "skill-2020",
+      "kind": "primary",
+      "title": "Happiness Is a Skill You Can Develop (podcast episode, edited transcript)",
+      "author": "Naval Ravikant",
+      "year": 2020,
+      "publisher": "nav.al, 3 February 2020",
+      "url": "https://nav.al/skill"
+    },
+    {
+      "id": "almanack-2020",
+      "kind": "primary",
+      "title": "The Almanack of Naval Ravikant: A Guide to Wealth and Happiness (a compilation of his tweets, talks and interviews, edited by the compiler)",
+      "author": "Eric Jorgenson (compiler), from Naval Ravikant's own words",
+      "year": 2020,
+      "publisher": "Magrathea Publishing; free PDF from the compiler",
+      "url": "https://navalmanack.s3.amazonaws.com/Eric-Jorgenson_The-Almanack-of-Naval-Ravikant_Final.pdf"
+    },
+    {
+      "id": "dam-2014",
+      "kind": "secondary",
+      "title": "Avenging Angel",
+      "author": "Eric Smillie",
+      "year": 2014,
+      "publisher": "Dartmouth Alumni Magazine, November-December 2014",
+      "url": "https://dartmouthalumnimagazine.com/articles/avenging-angel"
+    },
+    {
+      "id": "fc-2014",
+      "kind": "secondary",
+      "title": "Silicon Valley's Avenging Angel",
+      "author": "Alex Halperin",
+      "year": 2014,
+      "publisher": "Fast Company, 24 March 2014",
+      "url": "https://www.fastcompany.com/3027305/naval-ravikants-angellist"
+    },
+    {
+      "id": "nyt-2005",
+      "kind": "secondary",
+      "title": "Founders of Web Site Accuse Backers of Cheating Them",
+      "author": "Gary Rivlin",
+      "year": 2005,
+      "publisher": "The New York Times, 26 January 2005",
+      "url": "https://www.nytimes.com/2005/01/26/technology/founders-of-web-site-accuse-backers-of-cheating-them.html"
+    },
+    {
+      "id": "venturebeat-2005",
+      "kind": "secondary",
+      "title": "Epinions settlement a black eye to VCs?",
+      "author": "Matt Marshall",
+      "year": 2005,
+      "publisher": "VentureBeat, 9 December 2005",
+      "url": "https://venturebeat.com/business/epinions-settlement-a-black-eye-to-vcs/"
+    },
+    {
+      "id": "techcrunch-2017",
+      "kind": "secondary",
+      "title": "AngelList co-founder Babak Nivi out 'for my own reasons'",
+      "author": "Josh Constine",
+      "year": 2017,
+      "publisher": "TechCrunch, 21 July 2017",
+      "url": "https://techcrunch.com/2017/07/21/angellist-babak-nivi/"
+    },
+    {
+      "id": "fortune-2014",
+      "kind": "secondary",
+      "title": "AngelList: A disruptor shakes up angel investing",
+      "author": "Dan Primack",
+      "year": 2014,
+      "publisher": "Fortune, 13 November 2014",
+      "url": "https://fortune.com/2014/11/13/angellist-ceo-naval-ravikant-disruptor/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living Indian-born American entrepreneur and investor (Epinions, AngelList) and podcaster; not a politician, campaigner or religious founder, and no credible account of sexual contact with a minor or of sexual violence by him was found; he is in, with a documented dark side over a lawsuit against his own investors and his silence on a co-founder's exit."
+    },
+    "blindAgreement": 0.5,
+    "devilsAdvocate": "I attacked Fairness and Boldness hardest. Fairness fell: the JOBS Act lobbying was for a law his own business needed, the witness (Tim Ferriss) is an AngelList adviser and syndicate lead, and Fast Company shows AngelList taking part in the clubbiness he mocked. Boldness held: besides the 2005 suit against his own backers (NYT, Dartmouth Alumni Magazine, Fast Company), Fortune reports him demanding VCs' limited partners as the price of their money, and Fast Company names his willingness to cause trouble. Wealth, Freedom and Ambition held; I fixed the shadow and defining moment where they said all four founders sued (three did).",
+    "checkedOn": "2026-11-10"
+  }
+}
