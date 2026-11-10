@@ -1,0 +1,253 @@
+{
+  "id": "giacomo-casanova",
+  "name": "Giacomo Casanova",
+  "born": 1725,
+  "died": 1798,
+  "category": "charisma",
+  "areaIds": [
+    "lm_relationship",
+    "lm_fun"
+  ],
+  "tagline": "Talked his way across Europe, broke out of Venice's roof prison, and wrote it all down.",
+  "startedFrom": "He was born in Venice on 2 April 1725 to Zanetta Farussi, a shoemaker's daughter of sixteen who became an actress; whether his father was her actor husband or a Grimani nobleman is not certain. His mother left him with his grandmother, and he was a weak child with heavy nosebleeds, sent at nine on a doctor's advice to a boarding house in Padua, where he went to school.",
+  "values": [
+    {
+      "word": "Freedom",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "His manuscript preface opens by saying that in everything he did, good or bad, he earned merit or blame, 'et que par consequent je dois me croire libre' (and that therefore I must believe myself free).",
+          "sourceId": "hmv-manuscript",
+          "locator": "Tome 1, Preface, first paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "Jailed in 1755 in the Leads, the cells under the roof of the Doge's Palace, he escaped in 1756 by studying the structure of the building.",
+          "sourceId": "carroll-2004",
+          "locator": "paragraph 2"
+        },
+        {
+          "kind": "witness",
+          "claim": "The BnF's study guide says the range of his late writings shows 'une vraie liberté de penser' (a real freedom of thought); the BnF's 2011 exhibition on him was titled 'Casanova, la passion de la liberté'.",
+          "sourceId": "bnf-doridot",
+          "locator": "p. 3, 'Casanova ou la fièvre d'écrire'; p. 4, 'Genèse d'Histoire de ma vie'"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that he 'ever felt passionately fond of every object which excited my curiosity.'",
+          "sourceId": "machen-1894",
+          "locator": "Author's Preface, paragraph beginning 'The chief business of my life'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Historian James H. Johnson calls him 'Uncommonly curious about the world'.",
+          "sourceId": "johnson-hfrance-2023",
+          "locator": "p. 1, paragraph 1"
+        },
+        {
+          "kind": "witness",
+          "claim": "The BnF guide counts more than 120 works cited in his memoirs and calls him an insatiable reader ('un lecteur insatiable').",
+          "sourceId": "bnf-doridot",
+          "locator": "p. 5, 'Une vie de savoir'"
+        }
+      ]
+    },
+    {
+      "word": "Adventure",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He travelled roughly 40,000 miles in his life on foot, by carriage and by ship, and in one year visited some twenty-six cities.",
+          "sourceId": "johnson-hfrance-2023",
+          "locator": "p. 1, paragraph 1"
+        },
+        {
+          "kind": "witness",
+          "claim": "After schooling in Padua he 'embarked on the adventurer's life', living off patrons and gambling and travelling the Mediterranean, Italy and the Continent.",
+          "sourceId": "carroll-2004",
+          "locator": "paragraph 1"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that his system had been 'to glide away unconcernedly on the stream of life, trusting to the wind wherever it led.'",
+          "sourceId": "machen-1894",
+          "locator": "Author's Preface, paragraph beginning 'The reader of these Memoirs'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The BnF guide quotes the historian Chantal Thomas on his choice to write in French: 'Il dit non à la famille et oui à l'aventure' (he says no to family and yes to adventure).",
+          "sourceId": "bnf-doridot",
+          "locator": "p. 4, 'Écrire en français', quoting Chantal Thomas, Casanova, la passion de la liberté (BnF catalogue, 2011), p. 15"
+        }
+      ]
+    },
+    {
+      "word": "Pleasure",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote: 'The chief business of my life has always been to indulge my senses; I never knew anything of greater importance.'",
+          "sourceId": "machen-1894",
+          "locator": "Author's Preface, paragraph beginning 'The chief business of my life'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Johnson quotes his biographer Damrosch: Casanova held 'a considered philosophy in which pleasure was an end in itself and permanent relationships were a trap' (Damrosch p. 55).",
+          "sourceId": "johnson-hfrance-2023",
+          "locator": "p. 3, paragraph 2"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At midnight on 31 October 1756, after fifteen months in the Leads, he broke through the ceiling with a fellow prisoner, crossed the lead roof of the palace, and left Venice by gondola.",
+          "sourceId": "machen-1894",
+          "locator": "vol. 2, episode 10, ch. XXIX-XXX (escape) and ch. XXXII ('fifteen months and five days')"
+        },
+        {
+          "kind": "witness",
+          "claim": "A reference entry calls it 'a harrowing escape' from cells that were 'virtually impregnable'.",
+          "sourceId": "carroll-2004",
+          "locator": "paragraph 2"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote: 'It is only necessary to have courage, for strength without self-confidence is useless.'",
+          "sourceId": "machen-1894",
+          "locator": "Author's Preface, paragraph beginning 'The reader of these Memoirs'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Count yourself the main cause of your own misfortunes, so that you can be your own pupil.",
+      "sourceId": "hmv-manuscript",
+      "locator": "Tome 1, Preface, last paragraph ('me réconnoissant toujours pour la cause principale de tous les malheurs qui me sont arrivés')"
+    },
+    {
+      "text": "Follow whatever excites your curiosity.",
+      "sourceId": "machen-1894",
+      "locator": "Author's Preface, paragraph beginning 'The chief business of my life'"
+    },
+    {
+      "text": "When you are trapped, study the walls, plan for months, and move when the guards are away.",
+      "sourceId": "machen-1894",
+      "locator": "vol. 2, episode 10, ch. XXVI (plan begun November 1755) and ch. XXIX (escape timed to the Inquisitors' absence, 1-3 November)"
+    },
+    {
+      "text": "Tell your story with your weaknesses in it: a true judgment that condemns you beats a false one that flatters you.",
+      "sourceId": "bnf-doridot",
+      "locator": "p. 3, quoting Histoire de ma fuite (1788), p. 16"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "It is only necessary to have courage, for strength without self-confidence is useless.",
+      "sourceId": "machen-1894",
+      "locator": "Author's Preface, paragraph beginning 'The reader of these Memoirs'",
+      "translation": "Arthur Machen, 1894 (from Jean Laforgue's revised French edition, 1826-38)"
+    },
+    {
+      "text": "I ever felt passionately fond of every object which excited my curiosity.",
+      "sourceId": "machen-1894",
+      "locator": "Author's Preface, paragraph beginning 'The chief business of my life'",
+      "translation": "Arthur Machen, 1894 (from Jean Laforgue's revised French edition, 1826-38)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In July 1755 the Venetian Inquisitors locked him in the Leads, the cells under the lead roof of the Doge's Palace. He began planning an escape that November. With a fellow prisoner, Father Balbi, he broke through the ceiling, and at midnight on 31 October 1756 he climbed out across the roof, got down through the palace and took a gondola to the mainland. He reached Paris, where in 1757 his idea of a state lottery was put into place.",
+    "sourceIds": [
+      "machen-1894",
+      "carroll-2004",
+      "johnson-hfrance-2023"
+    ]
+  },
+  "shadow": {
+    "text": "His own memoirs describe sex with girls he gives as thirteen to fifteen. In Paris in the early 1750s he paid a girl of thirteen, whom Louis XV later called O-Morphi, and her elder sister for sexual access to her short of intercourse. In St Petersburg in 1765 he bought a peasant girl he named Zaira from her father for 100 roubles, kept her as his mistress, gives her age as fourteen, and writes that he beat her. In the Venice carnival of 1745-46 he and his masked friends took a weaver's wife from her husband under a false order of the Council of Ten, and all but one of them had sex with her; his biographer Leo Damrosch calls it 'unquestionably a gang rape'. The historian James H. Johnson notes that the memoirs also describe sex with his own daughter by a former mistress. He drew money from rich patrons with occult rites he did not believe in, which led to his arrest in 1755.",
+    "sourceIds": [
+      "machen-1894",
+      "johnson-hfrance-2023",
+      "carroll-2004"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you blame luck or other people this week for something you caused yourself?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "History of My Life (Histoire de ma vie)",
+      "year": 1822
+    },
+    {
+      "title": "The Story of My Escape (Histoire de ma fuite des prisons de la République de Venise qu'on appelle les Plombs)",
+      "year": 1788
+    }
+  ],
+  "sources": [
+    {
+      "id": "machen-1894",
+      "kind": "primary",
+      "title": "The Memoirs of Jacques Casanova de Seingalt, 1725-1798 (complete)",
+      "author": "Giacomo Casanova, translated by Arthur Machen",
+      "year": 1894,
+      "publisher": "Project Gutenberg eBook #2981 (the 1894 London edition, from Jean Laforgue's revised French text)",
+      "url": "https://www.gutenberg.org/ebooks/2981"
+    },
+    {
+      "id": "hmv-manuscript",
+      "kind": "primary",
+      "title": "Histoire de ma vie (original manuscript text, Tome 1)",
+      "author": "Giacomo Casanova",
+      "year": "1789-1798",
+      "publisher": "Manuscript acquired by the Bibliothèque nationale de France in 2010; transcription on French Wikisource",
+      "url": "https://fr.wikisource.org/wiki/Casanova_%E2%80%93_Histoire_de_ma_vie_(manuscrit)/Tome_1/Preface"
+    },
+    {
+      "id": "johnson-hfrance-2023",
+      "kind": "secondary",
+      "title": "Review of Leo Damrosch, Adventurer: The Life and Times of Giacomo Casanova (Yale University Press, 2022)",
+      "author": "James H. Johnson, Boston University",
+      "year": 2023,
+      "publisher": "H-France Review, vol. 23, no. 25 (Society for French Historical Studies)",
+      "url": "https://h-france.net/vol23reviews/vol23no25johnson.pdf"
+    },
+    {
+      "id": "carroll-2004",
+      "kind": "secondary",
+      "title": "Casanova, Giacomo Girolamo, in Europe, 1450 to 1789: Encyclopedia of the Early Modern World (ed. Jonathan Dewald)",
+      "author": "Linda L. Carroll",
+      "year": 2004,
+      "publisher": "Charles Scribner's Sons (online at Encyclopedia.com)",
+      "url": "https://www.encyclopedia.com/history/encyclopedias-almanacs-transcripts-and-maps/casanova-giacomo-girolamo"
+    },
+    {
+      "id": "bnf-doridot",
+      "kind": "secondary",
+      "title": "Histoire de ma vie de Giacomo Casanova, chevalier de Seingalt (study dossier)",
+      "author": "Caroline Doridot, Bibliothèque nationale de France",
+      "year": "undated",
+      "publisher": "Bibliothèque nationale de France, BnF Classes",
+      "url": "https://classes.bnf.fr/pdf/Casanova2.pdf"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real Venetian adventurer and writer (1725-1798), not fictional, not a modern politician and not a religious founder, but his own memoirs describe sexual contact with girls he gives as thirteen to fifteen (O-Morphi, Zaira, Gabrielle, Rosalie, an unnamed girl at Aix), and a 2023 scholarly review of Leo Damrosch's biography says he 'buys a thirteen-year-old serf for sex' and quotes Damrosch calling a 1745-46 carnival episode 'unquestionably a gang rape'; this falls under the under-16 rule (and the sexual-violence rule), so the owner decides. Owner case (no recommendation): Paris early 1750s, a girl of thirteen (Helene in Machen; the king called her O-Morphi), paid sexual access short of intercourse, 12 francs a visit to her sister (Machen vol. 2 ep. 6 ch. IX); St Petersburg 1765, Zaira bought from her father for 100 roubles, 'only fourteen' in May (thirteen at purchase per Damrosch via Johnson), kept as mistress and beaten (vol. 5 ep. 25 ch. XIX-XX); London c. 1763-64, Gabrielle, 'only fifteen', virgin, 'her fee of twenty guineas' (vol. 5 ep. 24 ch. XV); Marseilles, Rosalie, 'only fifteen', made his mistress (vol. 4 ep. 16 ch. III); Aix-en-Provence, a girl 'only fourteen', attempted intercourse with a friend present (vol. 6 ep. 27 ch. IX); Johnson also reports a paid-for eleven- and twelve-year-old pair of sisters, not found in Machen; Venice carnival 1745-46, a weaver's wife taken by eight masked men under a false Council of Ten order, all but one had sex with her, 'unquestionably a gang rape' per Damrosch (vol. 1 ep. 4 ch. XVII; Johnson p. 2). All ages are Casanova's own; Machen follows Laforgue's reworded text."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I attacked each value: Courage against Carroll's line that he escaped by 'ruthlessly manipulating his jailer and cellmate', Freedom against his years living off patrons and later spying for the Venetian Inquisition, Adventure against his last thirteen years as a librarian at Dux. All five held, and the blind pick chose the same five. Checking the preface against the original manuscript showed that Laforgue had rewritten two of the four quotes ('I am a free agent'; 'every good or of every evil'), so both were dropped and the Freedom evidence and first principle now cite the manuscript itself. The shadow now gives the O-Morphi girl without the name Louison, which the Machen text does not use, and adds the false Council of Ten order and Johnson's note on his daughter.",
+    "checkedOn": "2026-11-10"
+  }
+}
