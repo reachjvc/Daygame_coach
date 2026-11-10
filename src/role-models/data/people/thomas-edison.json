@@ -1,0 +1,405 @@
+{
+  "id": "thomas-edison",
+  "name": "Thomas Edison",
+  "born": 1847,
+  "died": 1931,
+  "category": "scientists",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A model of hard work and of making trial after trial until the thing works",
+  "startedFrom": "He was born in 1847 in Milan, Ohio, the seventh and last child of Samuel and Nancy Edison, and grew up in Port Huron, Michigan. He went to school for only a few months; his mother taught him at home and his father had a library he was encouraged to read. From 1859 he sold newspapers and candy on the railroad, at sixteen he was a full-time telegraph operator, and later in life he was almost totally deaf.",
+  "values": [
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 1882 he said an inventor \"will often have to work long hours at a stretch without a rest\" and that he worked with his assistants from seven at night until eight or nine the next morning.",
+          "sourceId": "abbott-1882",
+          "locator": "As an Inventor, pp. 95-96"
+        },
+        {
+          "kind": "words",
+          "claim": "In an 1898 interview he said: \"for fifteen years I have worked on an average of twenty hours a day.\"",
+          "sourceId": "interview-1898",
+          "locator": "Ch. XIV, A Talk with Edison, section 'Twenty Hours a Day'"
+        },
+        {
+          "kind": "deed",
+          "claim": "After his second marriage in 1886 he spent \"the same long hours away from her and the children as he had in his first marriage\".",
+          "sourceId": "rutgers-bio",
+          "locator": "Paragraph beginning 'Something of Edison's character shows'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Edison Papers write that at Menlo Park \"the normal sixty-hour work week typically stretched to eighty hours\" and that Edison led by example, \"working harder than all of them\".",
+          "sourceId": "rutgers-menlo",
+          "locator": "Paragraph beginning 'The young men who came to Menlo Park also found it an exciting place to work'"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His associate Walter Mallory recalled, in the authorized biography, that on the new storage battery he and his chemists had made over nine thousand experiments in more than five months without a result that promised to solve the problem, and that he kept going.",
+          "sourceId": "dyer-martin-1910",
+          "locator": "Vol. 2, ch. XXIV, Edison's Method in Inventing (Walter S. Mallory's account)"
+        },
+        {
+          "kind": "deed",
+          "claim": "He began work on an alkaline battery in 1899; it took ten years to make it practical.",
+          "sourceId": "nps",
+          "locator": "Paragraph beginning 'Edison's new challenge was to develop a better storage battery'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said inventors fail because they \"give up when they get 'stuck.' That is just the time when one should not be discouraged\".",
+          "sourceId": "abbott-1882",
+          "locator": "As an Inventor, p. 102"
+        },
+        {
+          "kind": "witness",
+          "claim": "Britannica's biography says that after the ore-milling failure \"Failure could not discourage Edison's passion for invention\", and that he continued to work even in his 80s.",
+          "sourceId": "britannica",
+          "locator": "Section 'The Edison laboratory', paragraph beginning 'Most of Edison's successes involved electricity'"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "The National Park Service says he \"was always a very curious child and taught himself much by reading on his own\".",
+          "sourceId": "nps",
+          "locator": "First paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Edison Papers say the evidence \"points to a curious boy in an intellectually stimulating environment\".",
+          "sourceId": "rutgers-bio",
+          "locator": "Paragraph beginning 'We can see the foundation for his success'"
+        },
+        {
+          "kind": "deed",
+          "claim": "While working on the train he read in the Detroit Public Library during his daily layover and did chemistry experiments in a baggage car.",
+          "sourceId": "rutgers-bio",
+          "locator": "Paragraph beginning 'Edison continued his education while working on the train'"
+        }
+      ]
+    },
+    {
+      "word": "Building things",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1876 he moved his staff to a new research laboratory at Menlo Park, New Jersey, and in November 1887 opened a five-building laboratory complex in West Orange.",
+          "sourceId": "nps",
+          "locator": "Paragraphs beginning 'In 1876 Edison sold all his Newark manufacturing concerns' and 'When Edison moved to West Orange'"
+        },
+        {
+          "kind": "words",
+          "claim": "In August 1887, drafting a letter to the banker James Hood Wright, he wrote: \"I will have the best equipped & largest Laboratory extant\".",
+          "sourceId": "rutgers-lab",
+          "locator": "Opening paragraph; also Edison Papers Document Sampler, 'Financing Another Laboratory'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The National Park Service calls the Menlo Park laboratory \"the first of its kind anywhere\" and says it \"is sometimes considered to be Edison's greatest invention\".",
+          "sourceId": "nps",
+          "locator": "Paragraph beginning 'In 1876 Edison sold all his Newark manufacturing concerns'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Britannica says he \"created the world's first industrial research laboratory\".",
+          "sourceId": "britannica",
+          "locator": "Introduction, first paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "At Menlo Park in 1876 he planned to turn out \"a minor invention every ten days and a big thing every six months or so\".",
+          "sourceId": "rutgers-bio",
+          "locator": "Paragraph beginning 'At the end of 1875, as a result of a lawsuit'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He received 1,093 U.S. patents.",
+          "sourceId": "rutgers-bio",
+          "locator": "First paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Edison Papers write that in 1887 \"his ambition was also to maintain his status as the world's foremost inventor\".",
+          "sourceId": "rutgers-lab",
+          "locator": "Opening paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Britannica says that in 1878 he \"boldly announced that he would invent a safe, mild, and inexpensive electric light that would replace the gaslight\", calling it a \"boastful prophecy\".",
+          "sourceId": "britannica",
+          "locator": "Section 'Menlo Park', subsection 'The electric light', first paragraph"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Once you start a task, do not let anything pull you away from it.",
+      "sourceId": "abbott-1882",
+      "locator": "As an Inventor, p. 96"
+    },
+    {
+      "text": "Count every failed experiment as knowledge of one more thing that does not work.",
+      "sourceId": "abbott-1882",
+      "locator": "As an Inventor, p. 100"
+    },
+    {
+      "text": "Make what people actually want and will pay for, not what only looks clever.",
+      "sourceId": "abbott-1882",
+      "locator": "As an Inventor, pp. 101-102"
+    },
+    {
+      "text": "Keep your own workshop and tools so you never have to wait on others.",
+      "sourceId": "rutgers-bio",
+      "locator": "Paragraph beginning 'With money from the facsimile contract'"
+    },
+    {
+      "text": "Keep old failures in mind; one that failed at one job may solve another.",
+      "sourceId": "rutgers-bio",
+      "locator": "Paragraph beginning 'That transmitter, which was built around a small button of carbon'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I never did anything worth doing by accident, nor did any of my inventions come indirectly through accident, except the phonograph. No, when I have fully decided that a result is worth getting, I go about it, and make trial after trial, until it comes.",
+      "sourceId": "interview-1898",
+      "locator": "Ch. XIV, A Talk with Edison, section 'Not by Accident and Not for Fun'"
+    },
+    {
+      "text": "The reason why I get along with comparative ease now is because I know from experience the enormous number of things that will not work.",
+      "sourceId": "abbott-1882",
+      "locator": "As an Inventor, p. 100"
+    },
+    {
+      "text": "Success is the product of the severest kind of mental and physical application.",
+      "sourceId": "interview-1898",
+      "locator": "Ch. XIV, A Talk with Edison, section 'Doing One Thing Eighteen Hours Is the Secret'"
+    },
+    {
+      "text": "When you set out to do a certain thing never let any thing disturb you from doing that.",
+      "sourceId": "abbott-1882",
+      "locator": "As an Inventor, p. 96"
+    }
+  ],
+  "definingMoment": {
+    "text": "In the autumn of 1878 he set out to build an electric lamp that could replace gas lighting. Others had tried and failed, and scientists were divided on whether he could do it. He worked long on platinum filaments, but the metal's high price would have made his system too costly. After a year and a half of work, a lamp with a filament of carbonized sewing thread burned for thirteen and a half hours, and in December 1879 he lit up the Menlo Park laboratory buildings for the public.",
+    "sourceIds": [
+      "rutgers-bio",
+      "rutgers-bonanza",
+      "nps",
+      "britannica"
+    ]
+  },
+  "shadow": {
+    "text": "In December 1887 he wrote to Alfred Southwick, who was seeking a new way to execute criminals, that he would \"join heartily in an effort to totally abolish capital punishment\" but that the most effective machines were the \"alternating machines\" made by his rival George Westinghouse. In 1888, during the \"War of the Currents\", he and his assistants electrocuted dogs and a few larger animals at his laboratory in Orange, New Jersey, some of them before reporters; the Edison Papers say he and his company \"played on public fear\" to brand Westinghouse's alternating current the \"executioner's current\". He was an important witness in the suit over whether electrocution was constitutional, and William Kemmler died in the first electric chair on 6 August 1890. The Library of Congress says that Edison conceived the motion picture camera and started the work, but his assistant W. K. L. Dickson did the bulk of the experiments and most modern scholars give Dickson the major credit, while Edison \"took sole credit for the products of his laboratory\". Tesla wrote in 1919 that a promised $50,000 at Edison's company \"turned out to be a practical joke\"; later accounts such as PBS put that promise in Edison's own mouth. Britannica's biography calls him \"a tyrant to his employees\" and says he \"neglected his family\". His daughter Marion got two letters from him during seven weeks of smallpox; he called Thomas Jr. \"absolutely illiterate scientifically and otherwise\" and asked him to change his name, and told William he had \"brought the blush of shame\" to his cheek. The 1903 killing of the elephant Topsy is often blamed on him; the Edison Papers find no evidence he took part, though his film company filmed it.",
+    "sourceIds": [
+      "smithsonian-2011",
+      "rutgers-currents",
+      "rutgers-topsy",
+      "loc-film",
+      "tesla-1919",
+      "pbs-tesla",
+      "britannica",
+      "ethw-children",
+      "edison-museum"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you try this week that failed, and what did it teach you will not work?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "How to Succeed as an Inventor",
+      "year": 1882
+    },
+    {
+      "title": "The Diary and Sundry Observations of Thomas Alva Edison",
+      "year": 1948
+    }
+  ],
+  "sources": [
+    {
+      "id": "abbott-1882",
+      "kind": "primary",
+      "title": "As an Inventor (How to Succeed as an Inventor), in How to Succeed, ed. Lyman Abbott, pp. 95-104 (based on an interview, as Edison noted)",
+      "author": "Thomas A. Edison",
+      "year": 1882,
+      "publisher": "G. P. Putnam's Sons",
+      "url": "https://archive.org/details/howtosucceedinpu00abbo"
+    },
+    {
+      "id": "interview-1898",
+      "kind": "primary",
+      "title": "A Talk with Edison (interview, first printed as Theodore Dreiser, 'A Photographic Talk with Edison', Success, February 1898), ch. XIV of How They Succeeded: Life Stories of Successful Men Told by Themselves",
+      "author": "Thomas A. Edison, interviewed; book by Orison Swett Marden",
+      "year": 1901,
+      "publisher": "Lothrop Publishing Company",
+      "url": "https://www.gutenberg.org/ebooks/64059"
+    },
+    {
+      "id": "rutgers-bio",
+      "kind": "secondary",
+      "title": "Detailed Biography (Life of Edison)",
+      "author": "Thomas A. Edison Papers, Rutgers University",
+      "year": 2016,
+      "publisher": "Rutgers, The State University of New Jersey",
+      "url": "https://edison.rutgers.edu/life-of-edison/biography/detailed-biography"
+    },
+    {
+      "id": "rutgers-lab",
+      "kind": "secondary",
+      "title": "A World-Class Laboratory (biographical essay, From Menlo Park to West Orange)",
+      "author": "Thomas A. Edison Papers, Rutgers University",
+      "year": "n.d.",
+      "publisher": "Rutgers, The State University of New Jersey",
+      "url": "https://edison.rutgers.edu/life-of-edison/biographical-essays/menlo-west-orange/a-world-class-laboratory"
+    },
+    {
+      "id": "rutgers-bonanza",
+      "kind": "secondary",
+      "title": "A Big Bonanza: Edison's Electric Lighting System (biographical essay)",
+      "author": "Thomas A. Edison Papers, Rutgers University",
+      "year": "n.d.",
+      "publisher": "Rutgers, The State University of New Jersey",
+      "url": "https://edison.rutgers.edu/life-of-edison/biographical-essays/a-big-bonanza-edison-s-electric-lighting-system"
+    },
+    {
+      "id": "rutgers-currents",
+      "kind": "secondary",
+      "title": "The Current Wars (Essaying Edison)",
+      "author": "Thomas A. Edison Papers, Rutgers University",
+      "year": "n.d.",
+      "publisher": "Rutgers, The State University of New Jersey",
+      "url": "https://edison.rutgers.edu/life-of-edison/essaying-edison/essay/the-current-wars"
+    },
+    {
+      "id": "rutgers-topsy",
+      "kind": "secondary",
+      "title": "Did Edison really electrocute Topsy the Elephant? (Myth Buster, Essaying Edison)",
+      "author": "Thomas A. Edison Papers, Rutgers University",
+      "year": "n.d.",
+      "publisher": "Rutgers, The State University of New Jersey",
+      "url": "https://edison.rutgers.edu/life-of-edison/essaying-edison/essay/myth-buster-topsy-the-elephant"
+    },
+    {
+      "id": "nps",
+      "kind": "secondary",
+      "title": "Edison Biography",
+      "author": "Thomas Edison National Historical Park, U.S. National Park Service",
+      "year": "n.d.",
+      "publisher": "National Park Service",
+      "url": "https://www.nps.gov/edis/learn/historyculture/edison-biography.htm"
+    },
+    {
+      "id": "dyer-martin-1910",
+      "kind": "secondary",
+      "title": "Edison: His Life and Inventions (authorized biography, written with Edison's cooperation; Dyer was his general counsel; 2 vols.)",
+      "author": "Frank Lewis Dyer and Thomas Commerford Martin",
+      "year": 1910,
+      "publisher": "Harper & Brothers",
+      "url": "https://www.gutenberg.org/ebooks/820"
+    },
+    {
+      "id": "loc-film",
+      "kind": "secondary",
+      "title": "Origins of Motion Pictures (History of Edison Motion Pictures, Inventing Entertainment collection)",
+      "author": "Library of Congress",
+      "year": "n.d.",
+      "publisher": "Library of Congress",
+      "url": "https://www.loc.gov/collections/edison-company-motion-pictures-and-sound-recordings/articles-and-essays/history-of-edison-motion-pictures/origins-of-motion-pictures/"
+    },
+    {
+      "id": "smithsonian-2011",
+      "kind": "secondary",
+      "title": "Edison vs. Westinghouse: A Shocking Rivalry",
+      "author": "Gilbert King",
+      "year": 2011,
+      "publisher": "Smithsonian Magazine",
+      "url": "https://www.smithsonianmag.com/history/edison-vs-westinghouse-a-shocking-rivalry-102146036/"
+    },
+    {
+      "id": "tesla-1919",
+      "kind": "secondary",
+      "title": "My Inventions, Part IV, Electrical Experimenter, May 1919 (Tesla's own account of working for Edison)",
+      "author": "Nikola Tesla",
+      "year": 1919,
+      "publisher": "Experimenter Publishing Co.",
+      "url": "https://en.wikisource.org/wiki/My_Inventions"
+    },
+    {
+      "id": "pbs-tesla",
+      "kind": "secondary",
+      "title": "Tesla: Master of Lightning, Life and Legacy: Coming to America",
+      "author": "PBS",
+      "year": "n.d.",
+      "publisher": "PBS",
+      "url": "https://www.pbs.org/tesla/ll/ll_america.html"
+    },
+    {
+      "id": "ethw-children",
+      "kind": "secondary",
+      "title": "Thomas Edison's Children",
+      "author": "IEEE History Center (Engineering and Technology History Wiki)",
+      "year": "n.d.",
+      "publisher": "IEEE History Center",
+      "url": "https://ethw.org/Thomas_Edison%27s_Children"
+    },
+    {
+      "id": "edison-museum",
+      "kind": "secondary",
+      "title": "Edison's Two Families",
+      "author": "Edison Museum, Beaumont, Texas",
+      "year": "n.d.",
+      "publisher": "Edison Museum",
+      "url": "https://www.edisonmuseum.org/edison-two-families"
+    },
+    {
+      "id": "rutgers-menlo",
+      "kind": "secondary",
+      "title": "Working at Menlo Park (biographical essay)",
+      "author": "Thomas A. Edison Papers, Rutgers University",
+      "year": "n.d.",
+      "publisher": "Rutgers, The State University of New Jersey",
+      "url": "https://edison.rutgers.edu/life-of-edison/biographical-essays/factory/working-at-menlo-park"
+    },
+    {
+      "id": "britannica",
+      "kind": "secondary",
+      "title": "Thomas Edison (sections Introduction, Menlo Park, The Edison laboratory)",
+      "author": "Matthew Josephson and Robert E. Conot",
+      "year": 2026,
+      "publisher": "Encyclopaedia Britannica",
+      "url": "https://www.britannica.com/biography/Thomas-Edison"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real inventor and businessman (1847-1931), not fictional, not a politician, campaigner or founder of a religion; no account of sexual contact with anyone under 16 or of sexual violence was found; his dark side is documented conduct (the War of the Currents animal electrocutions and electric-chair lobbying, taking sole credit for staff work, harsh treatment of his older children), so he is in with a shadow."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked all five values, every quote and every sentence, and replaced the authorized Dyer and Martin biography as the support it gave Hard work and Determination with independent sources (Edison Papers, Britannica). All five values held: Hard work, Determination, Curiosity and Building things are shared with the blind pick, and Ambition stands on three sources once Britannica's 'boastful prophecy' of 1878 was added; the blind pick's Results was well supported but there was no room. All four quotes matched the 1882 and 1898 texts. I cut an undated '1889' from the shadow, made the animal tests his own act as the Edison Papers say, added his stated opposition to capital punishment as a dated fact, Dickson's share as the Library of Congress puts it, and Britannica's 'a tyrant to his employees' and 'neglected his family'.",
+    "checkedOn": "2026-11-10"
+  }
+}
