@@ -44,6 +44,12 @@ interface HistoryBarrierContextValue {
    * per-step barrier stack, where a flow can drop several levels in one move.
    */
   removeMany: (ids: number[]) => void
+  /**
+   * Drop a barrier whose entry something else has already pushed a page on top
+   * of (a link in a sheet). Its entry cannot be taken out of the middle of the
+   * history, so a later Back that lands on it steps over it.
+   */
+  abandon: (id: number) => void
 }
 
 const HistoryBarrierContext = createContext<HistoryBarrierContextValue | null>(null)
@@ -53,11 +59,22 @@ let nextBarrierId = 1
 export function HistoryBarrierProvider({ children }: { children: ReactNode }) {
   const stackRef = useRef<Barrier[]>([])
   const suppressCountRef = useRef(0)
+  const deadRef = useRef(new Set<number>())
 
   useEffect(() => {
     const handlePopState = () => {
       if (suppressCountRef.current > 0) {
         suppressCountRef.current--
+        return
+      }
+
+      // Landed on an abandoned barrier's entry: the same page, nothing to do
+      // there, so take the Back on past it. Suppressed, because the step after
+      // it lands on an entry nobody left.
+      const landed = (window.history.state as { __barrier?: unknown } | null)?.__barrier
+      if (typeof landed === "number" && deadRef.current.has(landed)) {
+        suppressCountRef.current++
+        window.history.back()
         return
       }
 
@@ -111,9 +128,14 @@ export function HistoryBarrierProvider({ children }: { children: ReactNode }) {
     stack.splice(index, 1)
   }, [])
 
+  const abandon = useCallback((id: number) => {
+    discard(id)
+    deadRef.current.add(id)
+  }, [discard])
+
   const value = useMemo(
-    () => ({ push, remove, removeMany, discard }),
-    [push, remove, removeMany, discard],
+    () => ({ push, remove, removeMany, discard, abandon }),
+    [push, remove, removeMany, discard, abandon],
   )
 
   return (
@@ -231,4 +253,74 @@ export function useHistoryBarrier(active: boolean, onBack: () => void) {
       }
     }
   }, [ctx])
+}
+
+/**
+ * BACK CLOSES A SHEET (alpha p10-sheets-01). Android's Back, or the browser's,
+ * with a sheet open left the page: a changed audit answer was lost, and on a
+ * page opened from a ping Back left the app. Like the time tracker's own entry
+ * sheet, an open sheet is one step in the history: Back takes the step and
+ * closes the sheet.
+ *
+ * Closed any other way (X, Escape, a tap outside, the caller unmounting it),
+ * the step is taken back so it is not left behind as a dead Back press, and
+ * only when it is still the newest entry: a link in the sheet has pushed its
+ * page on top by then, and stepping back would undo the link. `leaving()` says
+ * a link was followed; that entry is abandoned instead (see `abandon`).
+ *
+ * Unlike the other hooks here it works without a provider, doing nothing, so a
+ * component test can render a sheet on its own.
+ */
+export function useBackCloses(open: boolean, onClose: () => void): { leaving: () => void } {
+  const ctx = useContext(HistoryBarrierContext)
+  const idRef = useRef<number | null>(null)
+  const leavingRef = useRef(false)
+  const unmountTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const onCloseRef = useRef(onClose)
+  useEffect(() => {
+    onCloseRef.current = onClose
+  })
+
+  const release = useCallback(() => {
+    const id = idRef.current
+    if (id === null || !ctx) return
+    idRef.current = null
+    const newest = (window.history.state as { __barrier?: unknown } | null)?.__barrier === id
+    if (newest && !leavingRef.current) ctx.remove(id)
+    else ctx.abandon(id)
+    leavingRef.current = false
+  }, [ctx])
+
+  useEffect(() => {
+    if (!ctx) return
+    if (open && idRef.current === null) {
+      leavingRef.current = false
+      idRef.current = ctx.push(() => {
+        idRef.current = null
+        onCloseRef.current()
+      })
+    } else if (!open) {
+      release()
+    }
+  }, [open, ctx, release])
+
+  // Unmounted while open (a caller that mounts the sheet only while it is
+  // open). Deferred one task: React's development double-mount runs this
+  // cleanup and the effect again at once, and the effect cancels it. A page
+  // navigation has pushed its own entry by the time it runs, so `release`
+  // leaves the history alone then.
+  useEffect(() => {
+    if (unmountTimer.current !== null) {
+      clearTimeout(unmountTimer.current)
+      unmountTimer.current = null
+    }
+    return () => {
+      unmountTimer.current = setTimeout(() => {
+        unmountTimer.current = null
+        release()
+      }, 0)
+    }
+  }, [release])
+
+  return useMemo(() => ({ leaving: () => { leavingRef.current = true } }), [])
 }

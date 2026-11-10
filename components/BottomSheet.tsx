@@ -31,6 +31,7 @@ import type { LucideIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { cn } from "@/lib/utils"
+import { useBackCloses } from "@/src/shared/HistoryBarrierContext"
 
 /**
  * ONE TREE AT EVERY WIDTH (alpha p9-saves-01, -02).
@@ -160,6 +161,8 @@ export function BottomSheet({
 }) {
   /** The last press inside the panel, to tell a double click from a click outside. */
   const lastPress = React.useRef<{ at: number; x: number; y: number } | null>(null)
+  // Back closes the sheet instead of leaving the page (p10-sheets-01).
+  const backStep = useBackCloses(open, onClose)
 
   if (!open) return null
 
@@ -195,6 +198,12 @@ export function BottomSheet({
           data-testid={testId}
           onPointerDownCapture={(e) => {
             lastPress.current = { at: Date.now(), x: e.clientX, y: e.clientY }
+          }}
+          onClickCapture={(e) => {
+            // A link followed from the sheet: its page goes on top of the
+            // sheet's history step, which must not be stepped back over then.
+            const a = e.target instanceof Element ? e.target.closest("a[href]") : null
+            if (a && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && a.getAttribute("target") !== "_blank") backStep.leaving()
           }}
           onInteractOutside={(e) => {
             if (overSheet(e.target) || overSheet(e.detail.originalEvent.target)) e.preventDefault()
