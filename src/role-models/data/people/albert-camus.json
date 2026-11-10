@@ -1,0 +1,399 @@
+{
+  "id": "albert-camus",
+  "name": "Albert Camus",
+  "born": 1913,
+  "died": 1960,
+  "category": "philosophers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_mission"
+  ],
+  "tagline": "A poor boy from Algiers who edited a Resistance paper, fought the death penalty, and imagined Sisyphus happy.",
+  "startedFrom": "He was born on 7 November 1913 in Mondovi, Algeria; his father died of wounds from the first battle of the Marne in October 1914, before Albert was one year old. He grew up in his grandmother's cramped flat in the working-class Belcourt district of Algiers, with no bathroom, electricity or running water, while his mother, who was illiterate and partly deaf, cleaned homes and worked in a factory. A scholarship took him to high school, where he had his first serious attack of tuberculosis, an illness that stayed with him for life.",
+  "values": [
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After the Liberation he at first backed harsh punishment for leading collaborators and argued against François Mauriac's plea for mercy; he later said publicly that Mauriac had been right, and he opposed the death penalty for collaborators.",
+          "sourceId": "drb-2013",
+          "locator": "paragraph beginning 'Camus initially supported harsh punishments'"
+        },
+        {
+          "kind": "deed",
+          "claim": "After the Liberation he opposed the death penalty for collaborators.",
+          "sourceId": "sep",
+          "locator": "4. Camus and the World of Violence: The Rebel"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1939 he reported on famine and poverty in Kabylia, at a time when few metropolitan intellectuals addressed colonial questions, and urged full political rights for the indigenous population; during the Algerian war he worked behind the scenes to spare convicted terrorists from the death sentence.",
+          "sourceId": "irishtimes-2014",
+          "locator": "paragraphs beginning 'Camus's alternately angry', 'Writing on the eve' and 'It would also see him'"
+        },
+        {
+          "kind": "words",
+          "claim": "In his Nobel banquet speech he described the writer, himself included, as 'unjust but impassioned for justice'.",
+          "sourceId": "nobel-banquet",
+          "locator": "Banquet speech, Stockholm, 10 December 1957, para. 8"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Swedish Academy's permanent secretary praised his meditations on 'making justice possible in an unjust world'.",
+          "sourceId": "nobel-presentation",
+          "locator": "Presentation Speech by Anders Österling, paragraph beginning 'Personally Camus has moved far beyond nihilism'"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He joined the clandestine paper Combat in 1943 under the pseudonym Bauchard, after a false identity card was issued to him in May 1943 in the name Albert Mathé.",
+          "sourceId": "drb-2013",
+          "locator": "paragraph beginning 'It is difficult to know with any precision'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In March 1944 he succeeded Pascal Pia as editor of Combat, the main underground newspaper of the non-Communist left.",
+          "sourceId": "sep",
+          "locator": "4. Camus and the World of Violence: The Rebel"
+        },
+        {
+          "kind": "witness",
+          "claim": "R. W. Johnson, reviewing Todd's biography, writes that as editor of Combat he took 'a courageous and independent line' that led the Communists to attack him in a tract in May 1944.",
+          "sourceId": "lrb-1997",
+          "locator": "paragraph beginning 'He had begun to work at Gallimard'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1956 he returned to Algiers to make his Call for a Civilian Truce, in the face of very real threats to his life from his own community; the reviewer calls this a genuinely courageous position.",
+          "sourceId": "irishtimes-2014",
+          "locator": "paragraph beginning '\"Justice\" was a key theme'"
+        },
+        {
+          "kind": "witness",
+          "claim": "According to the Internet Encyclopedia of Philosophy, Sartre, his former friend and political opponent, saluted his heroic moral courage in a 1960 eulogy in France-Observateur.",
+          "sourceId": "iep",
+          "locator": "1. Life, last paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Freedom",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his Nobel banquet speech he named 'the service of truth and the service of liberty' as the two tasks that make the writer's craft great.",
+          "sourceId": "nobel-banquet",
+          "locator": "Banquet speech, Stockholm, 10 December 1957, para. 5"
+        },
+        {
+          "kind": "deed",
+          "claim": "In The Rebel (1951), a reflection on freedom and rebellion, he condemned Marxism-Leninism and violence as a means of liberation; the book led to his break with Sartre and to many European Communists branding him a reactionary.",
+          "sourceId": "iep",
+          "locator": "1. Life"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy says this stand established him as 'an outspoken champion of individual freedom' and a critic of tyranny whether practised by the Left or the Right.",
+          "sourceId": "iep",
+          "locator": "1. Life"
+        },
+        {
+          "kind": "deed",
+          "claim": "Time reported in 1960 that he 'resigned from UNESCO when Franco's Spain joined the U.N.'",
+          "sourceId": "time-1960",
+          "locator": "Foreign News: The Rebel, Time, 18 January 1960"
+        }
+      ]
+    },
+    {
+      "word": "Happiness",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In The Myth of Sisyphus he writes that happiness and the absurd are 'two sons of the same earth' and cannot be separated.",
+          "sourceId": "myth-obrien",
+          "locator": "'The Myth of Sisyphus', p. 122 (as cited in SEP §3.4)"
+        },
+        {
+          "kind": "words",
+          "claim": "In his Nobel banquet speech he said he had never been able to give up 'the light, the pleasure of being, and the freedom' in which he grew up.",
+          "sourceId": "nobel-banquet",
+          "locator": "Banquet speech, Stockholm, 10 December 1957, para. 8"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy describes the young Camus as 'aflame with youthful joie de vivre' and passionate in his conviction that life ought to be lived vividly and intensely.",
+          "sourceId": "iep",
+          "locator": "5.b. Development"
+        },
+        {
+          "kind": "words",
+          "claim": "In his last letter to Maria Casarès, days before his death, he wrote that he was so happy at the thought of seeing her again that he was laughing as he wrote.",
+          "sourceId": "irishtimes-2017",
+          "locator": "paragraph beginning 'Camus called Casarès'"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his Nobel banquet speech he said: 'I cannot live without my art. But I have never placed it above everything.'",
+          "sourceId": "nobel-banquet",
+          "locator": "Banquet speech, Stockholm, 10 December 1957, para. 3"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1936 he co-founded the Théâtre du Travail in Algiers, serving as actor and director and writing scripts for it.",
+          "sourceId": "iep",
+          "locator": "1. Life"
+        },
+        {
+          "kind": "deed",
+          "claim": "After leaving political journalism in 1947 he was very active in the theatre as producer and playwright, and adapted plays by Calderón, Lope de Vega, Dino Buzzati and Faulkner.",
+          "sourceId": "nobel-bio",
+          "locator": "Biographical, para. 1"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Foundation's biography calls him 'a stylist of great purity and intense concentration and rationality'.",
+          "sourceId": "nobel-bio",
+          "locator": "Biographical, para. 2"
+        },
+        {
+          "kind": "words",
+          "claim": "R. W. Johnson, reviewing Todd's biography, writes that he warned student audiences that writing was 'a man's trade' and said that talent 'can be acquired by work'.",
+          "sourceId": "lrb-1997",
+          "locator": "paragraph beginning 'From the age of seven'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Stand with the people who suffer history, not with the people who make it.",
+      "sourceId": "nobel-banquet",
+      "locator": "Banquet speech, Stockholm, 10 December 1957, para. 4"
+    },
+    {
+      "text": "Oppose executions, even of your enemies, and say so when you were wrong.",
+      "sourceId": "drb-2013",
+      "locator": "paragraph beginning 'Camus initially supported harsh punishments'"
+    },
+    {
+      "text": "Life gives you no meaning in advance; keep pushing your rock and find your joy in the effort itself.",
+      "sourceId": "myth-obrien",
+      "locator": "'The Myth of Sisyphus', pp. 122-123 (as cited in SEP §3.4)"
+    },
+    {
+      "text": "Do your work in plain view, without shame and without pride.",
+      "sourceId": "nobel-banquet",
+      "locator": "Banquet speech, Stockholm, 10 December 1957, para. 8"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Whatever our personal weaknesses may be, the nobility of our craft will always be rooted in two commitments, difficult to maintain: the refusal to lie about what one knows and the resistance to oppression.",
+      "sourceId": "nobel-banquet",
+      "locator": "Banquet speech, Stockholm, 10 December 1957, para. 5",
+      "translation": "Nobel Foundation English translation (translator not named), in Nobel Lectures, Literature 1901-1967, ed. Horst Frenz, 1969"
+    },
+    {
+      "text": "Each generation doubtless feels called upon to reform the world. Mine knows that it will not reform it, but its task is perhaps even greater. It consists in preventing the world from destroying itself.",
+      "sourceId": "nobel-banquet",
+      "locator": "Banquet speech, Stockholm, 10 December 1957, para. 7",
+      "translation": "Nobel Foundation English translation (translator not named), in Nobel Lectures, Literature 1901-1967, ed. Horst Frenz, 1969"
+    },
+    {
+      "text": "The struggle itself toward the heights is enough to fill a man's heart. One must imagine Sisyphus happy.",
+      "sourceId": "myth-obrien",
+      "locator": "'The Myth of Sisyphus', last paragraph, p. 123 (as cited in SEP §3.4)",
+      "translation": "Justin O'Brien, 1955"
+    }
+  ],
+  "definingMoment": {
+    "text": "In occupied France he joined the clandestine Resistance paper Combat in 1943 under a pseudonym, carrying a false identity card, and in March 1944 he became its editor. His independent line led the Communists to attack him and Sartre in a tract in May 1944, which the reviewer R. W. Johnson calls an open invitation to the Nazis to arrest them. After the Liberation he went on editing Combat; he first called for harsh punishment of leading collaborators, then came to oppose the death penalty for them and said publicly that François Mauriac, who had pleaded for mercy, had been right.",
+    "sourceIds": [
+      "drb-2013",
+      "sep",
+      "lrb-1997",
+      "iep"
+    ]
+  },
+  "shadow": {
+    "text": "He married Francine Faure in December 1940. From 6 June 1944 he was the lover of the actress Maria Casarès; when Francine joined him in Paris after the war he told Casarès not to worry, that Francine was 'like my sister', and Francine was soon pregnant with their twins. The affair resumed after a chance meeting a few years later (accounts give 1946 or 1948) and lasted until his death, when Casarès was one of three lovers. His biographer Olivier Todd, drawing on interviews with his mistresses, shows him often carrying on several affairs at once; in his last week he wrote almost identical letters to Casarès, the actress Catherine Sellers and a young Danish woman called Mi, each saying how much he longed to see her. Francine was hospitalised for depression in 1953, talking about Casarès, and tried to take her own life; during her treatment he said: 'I hope that by autumn it will be over, and it had better be, as I am tired and can't help her anymore.' In 1939 and 1940, as a pacifist, he argued for negotiating with Hitler. On Algeria he did not support demands for self-determination, opposed the FLN and never signed the manifestos against colonialism; after trying to act as a peacemaker he chose a public silence that drew heavy criticism, and some accused him of moral cowardice. In Stockholm in December 1957, challenged by an FLN supporter, he was reported as saying 'I believe in justice, but I will defend my mother before justice'; other accounts give a longer wording about bombs on the trams of Algiers.",
+    "sourceIds": [
+      "irishtimes-1997",
+      "lrb-1997",
+      "irishtimes-2017",
+      "larb-2018",
+      "nyrb-1998",
+      "sep",
+      "irishtimes-2014",
+      "iep",
+      "litreview-2013"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which rock are you pushing this week, and what could you enjoy in the pushing itself, not only in reaching the top?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "The Myth of Sisyphus",
+      "year": 1942
+    },
+    {
+      "title": "The Plague",
+      "year": 1947
+    },
+    {
+      "title": "The Stranger",
+      "year": 1942
+    }
+  ],
+  "sources": [
+    {
+      "id": "nobel-banquet",
+      "kind": "primary",
+      "title": "Banquet speech, Nobel Banquet, Stockholm City Hall, 10 December 1957 (English translation and French original)",
+      "author": "Albert Camus",
+      "year": 1969,
+      "publisher": "Nobel Foundation; Nobel Lectures, Literature 1901-1967, ed. Horst Frenz, Elsevier (text © Éditions Gallimard)",
+      "url": "https://www.nobelprize.org/prizes/literature/1957/camus/speech/"
+    },
+    {
+      "id": "myth-obrien",
+      "kind": "primary",
+      "title": "The Myth of Sisyphus and Other Essays, trans. Justin O'Brien",
+      "author": "Albert Camus",
+      "year": 1955,
+      "publisher": "Alfred A. Knopf"
+    },
+    {
+      "id": "sep",
+      "kind": "secondary",
+      "title": "Albert Camus, Stanford Encyclopedia of Philosophy (substantive revision 13 December 2021)",
+      "author": "Ronald Aronson",
+      "year": 2021,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/camus/"
+    },
+    {
+      "id": "iep",
+      "kind": "secondary",
+      "title": "Albert Camus (1913-1960), Internet Encyclopedia of Philosophy",
+      "author": "David Simpson",
+      "year": "n.d.",
+      "url": "https://iep.utm.edu/camus/"
+    },
+    {
+      "id": "nobel-bio",
+      "kind": "secondary",
+      "title": "Albert Camus - Biographical (from Les Prix Nobel; Nobel Lectures, Literature 1901-1967)",
+      "author": "The Nobel Foundation",
+      "year": 1969,
+      "url": "https://www.nobelprize.org/prizes/literature/1957/camus/biographical/"
+    },
+    {
+      "id": "nobel-presentation",
+      "kind": "secondary",
+      "title": "Nobel Prize in Literature 1957 - Presentation Speech",
+      "author": "Anders Österling, Permanent Secretary of the Swedish Academy",
+      "year": 1957,
+      "url": "https://www.nobelprize.org/prizes/literature/1957/ceremony-speech/"
+    },
+    {
+      "id": "lrb-1997",
+      "kind": "secondary",
+      "title": "Mediterranean Man (review of Olivier Todd, Albert Camus: A Life), London Review of Books vol. 19 no. 20, 16 October 1997",
+      "author": "R. W. Johnson",
+      "year": 1997,
+      "url": "https://www.lrb.co.uk/v19/n20/rw-johnson/mediterranean-man"
+    },
+    {
+      "id": "irishtimes-1997",
+      "kind": "secondary",
+      "title": "A lover of the absurd (review of Olivier Todd, Albert Camus: A Life), The Irish Times, 22 November 1997",
+      "author": "Lara Marlowe",
+      "year": 1997,
+      "url": "https://www.irishtimes.com/news/a-lover-of-the-absurd-1.129676"
+    },
+    {
+      "id": "irishtimes-2017",
+      "kind": "secondary",
+      "title": "Albert Camus's sizzling letters to one of his three lovers, The Irish Times, 25 November 2017",
+      "author": "Lara Marlowe",
+      "year": 2017,
+      "url": "https://www.irishtimes.com/news/world/europe/albert-camus-s-sizzling-letters-to-one-of-his-three-lovers-1.3304417"
+    },
+    {
+      "id": "irishtimes-2014",
+      "kind": "secondary",
+      "title": "Revisiting Camus's calls for justice (review of Algerian Chronicles), The Irish Times, 18 January 2014",
+      "author": "Philip Dine",
+      "year": 2014,
+      "url": "https://www.irishtimes.com/culture/books/revisiting-camus-s-calls-for-justice-1.1655073"
+    },
+    {
+      "id": "litreview-2013",
+      "kind": "secondary",
+      "title": "Stranger in His Own Land (review of Algerian Chronicles, ed. Alice Kaplan, trans. Arthur Goldhammer), Literary Review issue 409, May 2013",
+      "author": "Andrew Hussey",
+      "year": 2013,
+      "url": "https://literaryreview.co.uk/stranger-in-his-own-land"
+    },
+    {
+      "id": "drb-2013",
+      "kind": "secondary",
+      "title": "A Moralist in the Newsroom (review of Camus at Combat), Dublin Review of Books no. 33, 2013",
+      "author": "Enda O'Doherty",
+      "year": 2013,
+      "publisher": "Dublin Review of Books",
+      "url": "https://drb.ie/article/a-moralist-in-the-newsroom/"
+    },
+    {
+      "id": "time-1960",
+      "kind": "secondary",
+      "title": "Foreign News: The Rebel, Time, 18 January 1960",
+      "author": "Time staff",
+      "year": 1960,
+      "publisher": "Time",
+      "url": "https://time.com/archive/6624725/foreign-news-the-rebel/"
+    },
+    {
+      "id": "nyrb-1998",
+      "kind": "secondary",
+      "title": "The Outsider (review of Olivier Todd, Albert Camus: A Life), The New York Review of Books, 15 January 1998",
+      "author": "John Weightman",
+      "year": 1998,
+      "publisher": "The New York Review of Books",
+      "url": "https://www.nybooks.com/articles/1998/01/15/the-outsider/"
+    },
+    {
+      "id": "larb-2018",
+      "kind": "secondary",
+      "title": "\"No Longer the Person I Was\": The Dazzling Correspondence of Albert Camus and Maria Casarès, Los Angeles Review of Books, 4 March 2018",
+      "author": "Robert Zaretsky",
+      "year": 2018,
+      "publisher": "Los Angeles Review of Books",
+      "url": "https://lareviewofbooks.org/article/no-longer-the-person-i-was-the-dazzling-correspondence-of-albert-camus-and-maria-casares"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real writer and philosopher, dead since 1960, never a politician or founder of a religion; no credible account of sexual violence or of sexual contact with anyone under 16 was found; his dark side is serial marital infidelity, his wife's breakdown, and his stand against Algerian independence."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked every value against his love life, his Algeria record and his wartime past, using Todd's biography as reviewed in the LRB, Irish Times, New York Review of Books and Weekly Standard. Honesty fell: for sixteen years he ran overlapping affairs, told Casarès his wife was 'like my sister' while she became pregnant, and in his last week sent near-identical love letters to three women, a pattern, not a lapse. Justice, Courage, Happiness and Craft held on three or more sources, and the blind pick's Freedom was added on The Rebel and his UNESCO resignation. The Plague quote, spoken by a character, was dropped; the collaborator story, the 1939-40 pacifism and the 'tired' remark about his wife were corrected or added.",
+    "checkedOn": "2026-11-10"
+  }
+}
