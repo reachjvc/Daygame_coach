@@ -164,6 +164,8 @@ export function useAudit(account: string) {
   }, [])
   /** The last read was refused because the page's person is no longer the one signed in here. */
   const [accountGone, setAccountGone] = useState<"signed-out" | "other-account" | null>(null)
+  /** The same, for the read that comes next: while set, the stored copy of the day is never drawn. */
+  const accountGoneRef = useRef(false)
   /** The view drawn is this phone's last read, kept for no signal (fast-audit-04). */
   const [fromCopy, setFromCopy] = useState(false)
   const viewRef = useRef<AuditView | null>(null)
@@ -229,6 +231,7 @@ export function useAudit(account: string) {
       const c = confirmedRef.current
       setC({ answers: c.answers.filter((x) => x.at >= started), deletes: c.deletes.filter((x) => x.at >= started) })
       setLoadError(null)
+      accountGoneRef.current = false
       setAccountGone(null)
       return fresh
     } catch (error) {
@@ -243,12 +246,14 @@ export function useAudit(account: string) {
         setFromCopy(false)
         setC(NONE)
         setNotKept([])
+        accountGoneRef.current = true
         setAccountGone(error.status === 401 ? "signed-out" : "other-account")
       }
       // No signal and nothing on screen yet: draw this phone's last read, so
       // answers can still be given and wait in the queue (D-OFFLINE). Decisions
-      // (start, end, mute, settings) still need the server and say so.
-      if (!viewRef.current && error instanceof AuditCallError && error.status === 0) {
+      // (start, end, mute, settings) still need the server and say so. Never
+      // once the person was found gone: the copy is that person's day.
+      if (!viewRef.current && !accountGoneRef.current && error instanceof AuditCallError && error.status === 0) {
         const copy = readAuditViewCopy(browserStore(), account)
         if (copy) {
           viewRef.current = copy
