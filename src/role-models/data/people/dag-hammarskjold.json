@@ -1,0 +1,367 @@
+{
+  "id": "dag-hammarskjold",
+  "name": "Dag Hammarskjöld",
+  "born": 1905,
+  "died": 1961,
+  "category": "leaders",
+  "areaIds": [
+    "lm_contribution",
+    "lm_spirituality"
+  ],
+  "tagline": "A Swedish civil servant who ran the UN, stood up to big powers and kept a diary of faith.",
+  "startedFrom": "He was the youngest of four sons of Hjalmar Hammarskjöld, prime minister of Sweden, from a line of soldiers and officials on his father's side and scholars and clergymen on his mother's. He was the top student of his day at Uppsala and had a doctorate in economics by 1934. His start was privilege, not hardship; his colleague Brian Urquhart writes that in his early years he seems to have suffered from a nagging sense of lack of fulfilment.",
+  "values": [
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In a 1953 radio piece he said he grew up believing that 'no life was more satisfactory than one of selfless service to your country – or humanity'.",
+          "sourceId": "nobel-bio",
+          "locator": "para 1 (quoting his 1953 radio piece for 'This I Believe')"
+        },
+        {
+          "kind": "deed",
+          "claim": "Asked by the General Assembly to free UN Command airmen held by China, he went to Peking (30 Dec 1954 – 13 Jan 1955) and kept negotiating until China announced the release of all 15 American airmen in May and August 1955.",
+          "sourceId": "un-dhl-1955",
+          "locator": "1955 page, opening note and paragraph 'The negotiations culminated…'"
+        },
+        {
+          "kind": "witness",
+          "claim": "UN Secretary-General Kofi Annan named his 'single-minded devotion to duty' as a standard for all servants of the international community.",
+          "sourceId": "annan-2001",
+          "locator": "Uppsala lecture, 6 Sept 2001, passage quoted at the top of the UN Library 'Legacy' page"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Answering Khrushchev's call to resign, he told the Assembly that resigning is easy and staying on is not, and that bowing to a big power is easy and resisting is not.",
+          "sourceId": "a-pv-883",
+          "locator": "A/PV.883, 3 Oct 1960, para. 12"
+        },
+        {
+          "kind": "deed",
+          "claim": "On 3 October 1960, the day Nikita Khrushchev demanded his resignation, he refused in the General Assembly and stayed in office; delegates gave him a standing ovation lasting several minutes.",
+          "sourceId": "un-dhl-1960",
+          "locator": "1960 page, Congo section, paragraphs on 3 October"
+        },
+        {
+          "kind": "deed",
+          "claim": "In August 1960 he went in person to Elisabethville, capital of breakaway Katanga, taking two companies of Swedish UN troops, and got Moïse Tshombe to accept the UN force there.",
+          "sourceId": "un-dhl-1960",
+          "locator": "1960 page, Congo section, paragraph beginning 'Dag Hammarskjöld visited Leopoldville from 26 to 29 July'"
+        }
+      ]
+    },
+    {
+      "word": "Integrity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his private diary for 1952 he told himself never to deny his own experience or convictions 'for the sake of peace and quiet'.",
+          "sourceId": "markings-1964",
+          "locator": "section 1952, p. 84"
+        },
+        {
+          "kind": "words",
+          "claim": "In his Oxford lecture he said a UN official must check himself so his own sympathies do not steer his acts, and that in the end this is 'a question of integrity'.",
+          "sourceId": "oxford-1961",
+          "locator": "lecture part VI (last section), Foundation reprint pp. 13-14"
+        },
+        {
+          "kind": "witness",
+          "claim": "Brian Urquhart, who worked with him for eight years, writes: 'His honesty and integrity were absolute.'",
+          "sourceId": "urquhart-2019",
+          "locator": "paragraph beginning 'An intellectual in action is a fine sight'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Kofi Annan spoke of his 'unimpeachable integrity'.",
+          "sourceId": "annan-2001",
+          "locator": "Uppsala lecture, 6 Sept 2001, passage quoted at the top of the UN Library 'Legacy' page"
+        }
+      ]
+    },
+    {
+      "word": "Spirituality",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his last year he wrote that at some moment he answered Yes to 'Someone—or Something', and from then on was certain his life had a goal.",
+          "sourceId": "markings-1964",
+          "locator": "entry 'Whitsunday, 1961', p. 205"
+        },
+        {
+          "kind": "deed",
+          "claim": "He personally planned and supervised the UN Meditation Room, a room for silence open to all faiths, reopened in 1957, even directing painters there at two in the morning.",
+          "sourceId": "un-dhl-meditation",
+          "locator": "page 'A Room of Quiet', paragraphs 2 and 4"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Foundation's biography calls the entries in his diary Markings 'spiritual truths given artistic form'.",
+          "sourceId": "nobel-bio",
+          "locator": "paragraph on Markings (after the account of his death)"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He took a humanities degree at Uppsala in 1925, then economics in 1928, law in 1930 and a doctorate in economics in 1934.",
+          "sourceId": "nobel-bio",
+          "locator": "paras 2-3"
+        },
+        {
+          "kind": "witness",
+          "claim": "Urquhart writes that he had 'a wide range of learning' and, even in crises, set aside an hour or two a day to read and to translate Saint-John Perse, Djuna Barnes and Martin Buber into Swedish.",
+          "sourceId": "urquhart-2019",
+          "locator": "paragraphs beginning 'An intellectual in action' and 'Hammarskjöld had great physical as well as intellectual stamina'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Swedish Academy elected him in 1954 to chair 17, the seat his father had held before him.",
+          "sourceId": "svenska-akademien",
+          "locator": "member register entry 'Dag Hammarskjöld', opening lines ('Invald 1954', 'stol 17')"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not give up what you have seen or what you believe just to keep things calm.",
+      "sourceId": "markings-1964",
+      "locator": "section 1952, p. 84"
+    },
+    {
+      "text": "When pressure tells you to quit, ask what your duty is; walking away is often the easy way out.",
+      "sourceId": "a-pv-883",
+      "locator": "A/PV.883, 3 Oct 1960, paras. 10-12"
+    },
+    {
+      "text": "Serve the job, not yourself: the man does not count, the institution does.",
+      "sourceId": "a-pv-883",
+      "locator": "A/PV.883, 3 Oct 1960, para. 9"
+    },
+    {
+      "text": "Have your own views, but watch yourself closely so they do not bend your work.",
+      "sourceId": "oxford-1961",
+      "locator": "lecture part VI (last section), Foundation reprint pp. 13-14"
+    },
+    {
+      "text": "Keep a place of stillness inside you, and give it room even in a busy house.",
+      "sourceId": "room-of-quiet-1957",
+      "locator": "opening two sentences"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "It is very easy to resign. It is not so easy to stay on. It is very easy to bow to the wish of a big Power. It is another matter to resist.",
+      "sourceId": "a-pv-883",
+      "locator": "A/PV.883, 3 Oct 1960, para. 12"
+    },
+    {
+      "text": "Never, “for the sake of peace and quiet,” deny your own experience or convictions.",
+      "sourceId": "markings-1964",
+      "locator": "section 1952, p. 84",
+      "translation": "Leif Sjöberg and W. H. Auden, 1964"
+    },
+    {
+      "text": "For all that has been—Thanks! To all that shall be—Yes!",
+      "sourceId": "markings-1964",
+      "locator": "section 1953, first entry (after '—Night is drawing nigh—')",
+      "translation": "Leif Sjöberg and W. H. Auden, 1964"
+    },
+    {
+      "text": "Pray that your loneliness may spur you into finding something to live for, great enough to die for.",
+      "sourceId": "markings-1964",
+      "locator": "section 1952, p. 85",
+      "translation": "Leif Sjöberg and W. H. Auden, 1964"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 3 October 1960 Soviet leader Nikita Khrushchev demanded at the UN General Assembly that he resign over the Congo. He answered the same afternoon: the Soviet Union would not elect a successor but wanted a three-man leadership, so resigning would throw the UN 'to the winds'. He said it was easy to resign and hard to stay, and that he would stay as long as the other nations, those that need the UN for protection, wanted him. Delegates stood and applauded for several minutes.",
+    "sourceIds": [
+      "a-pv-883",
+      "un-dhl-1960"
+    ]
+  },
+  "shadow": {
+    "text": "In August 1960 he refused Prime Minister Patrice Lumumba's demand to use UN troops against breakaway Katanga, and Lumumba turned to the Soviet Union. A US mission cable of 26 August 1960, summarising a talk with him, records that he thought Lumumba must be 'broken' and that the Katanga problem could be solved once Lumumba was 'out of way'. In early September, after President Kasa-Vubu dismissed Lumumba, UN official Andrew Cordier, using Hammarskjöld's leave to take urgent action, closed the Congo's airports and the national radio station. Hammarskjöld told the Security Council on 9-10 September that he had not been consulted but would 'fully endorse the action taken'; Urquhart says he was privately taken aback, and Lumumba's supporters saw the closures as a move against Lumumba. Lumumba was arrested in December 1960 and later shot by a firing squad in Katanga. Belgian author Ludo De Witte argues Hammarskjöld gave 'the green light for the UN to support the coup'; Urquhart calls that a staple of Soviet propaganda but writes that the UN cannot 'escape responsibility'. Urquhart also describes 'a devastating if quiet temper' and a man 'unforgiving of mistakes or misunderstandings'.",
+    "sourceIds": [
+      "un-dhl-1960",
+      "frus-1960-d190",
+      "nyrb-2001-exchange",
+      "s-pv-896",
+      "nyrb-2001-review",
+      "urquhart-2019"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you stay quiet about what you saw or believed, just to keep the peace?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Markings (Vägmärken)",
+      "year": 1963
+    },
+    {
+      "title": "The International Civil Servant in Law and in Fact",
+      "year": 1961
+    }
+  ],
+  "sources": [
+    {
+      "id": "markings-1964",
+      "kind": "primary",
+      "title": "Markings (trans. Leif Sjöberg and W. H. Auden; Swedish original Vägmärken, 1963)",
+      "author": "Dag Hammarskjöld",
+      "year": 1964,
+      "publisher": "Alfred A. Knopf",
+      "url": "https://archive.org/details/markings0000hamm"
+    },
+    {
+      "id": "a-pv-883",
+      "kind": "primary",
+      "title": "Statement by the Secretary-General, General Assembly 883rd plenary meeting, 3 October 1960 (A/PV.883)",
+      "author": "Dag Hammarskjöld",
+      "year": 1960,
+      "publisher": "United Nations",
+      "url": "https://digitallibrary.un.org/record/698629"
+    },
+    {
+      "id": "oxford-1961",
+      "kind": "primary",
+      "title": "The International Civil Servant in Law and in Fact (lecture at Oxford, 30 May 1961)",
+      "author": "Dag Hammarskjöld",
+      "year": 2019,
+      "publisher": "Dag Hammarskjöld Foundation (reprint)",
+      "url": "https://unssc.org/sites/default/files/ics_100_no_4_oxfordspeech.pdf"
+    },
+    {
+      "id": "room-of-quiet-1957",
+      "kind": "primary",
+      "title": "A Room of Quiet (text for visitors to the UN Meditation Room)",
+      "author": "Dag Hammarskjöld",
+      "year": 1957,
+      "publisher": "United Nations, Dag Hammarskjöld Library",
+      "url": "https://www.un.org/depts/dhl/dag/meditationroom.htm"
+    },
+    {
+      "id": "nobel-bio",
+      "kind": "secondary",
+      "title": "Dag Hammarskjöld – Biographical (from Nobel Lectures, Peace 1951-1970, ed. Frederick W. Haberman)",
+      "author": "The Nobel Foundation",
+      "year": 1972,
+      "publisher": "Elsevier / Nobel Foundation",
+      "url": "https://www.nobelprize.org/prizes/peace/1961/hammarskjold/biographical/"
+    },
+    {
+      "id": "un-dhl-1955",
+      "kind": "secondary",
+      "title": "Dag Hammarskjöld: The UN years – 1955",
+      "author": "Dag Hammarskjöld Library, United Nations",
+      "year": "n.d.",
+      "publisher": "United Nations",
+      "url": "https://www.un.org/depts/dhl/dag/time1955.htm"
+    },
+    {
+      "id": "un-dhl-1960",
+      "kind": "secondary",
+      "title": "Dag Hammarskjöld: The UN years – 1960",
+      "author": "Dag Hammarskjöld Library, United Nations",
+      "year": "n.d.",
+      "publisher": "United Nations",
+      "url": "https://www.un.org/depts/dhl/dag/time1960.htm"
+    },
+    {
+      "id": "un-dhl-meditation",
+      "kind": "secondary",
+      "title": "\"A Room of Quiet\": The Meditation Room, United Nations Headquarters",
+      "author": "Dag Hammarskjöld Library, United Nations",
+      "year": "n.d.",
+      "publisher": "United Nations",
+      "url": "https://www.un.org/depts/dhl/dag/meditationroom.htm"
+    },
+    {
+      "id": "annan-2001",
+      "kind": "secondary",
+      "title": "Dag Hammarskjöld and the 21st Century (lecture, Uppsala, 6 September 2001), quoted on the UN Library page 'Legacy'",
+      "author": "Kofi Annan",
+      "year": 2001,
+      "publisher": "United Nations",
+      "url": "https://static.un.org/depts/dhl/dag/legacy.htm"
+    },
+    {
+      "id": "urquhart-2019",
+      "kind": "secondary",
+      "title": "Character Sketches: Dag Hammarskjöld by Brian Urquhart",
+      "author": "Brian Urquhart",
+      "year": 2019,
+      "publisher": "UN News",
+      "url": "https://news.un.org/en/spotlight/character-sketches-dag-hammarskjold-brian-urquhart"
+    },
+    {
+      "id": "nyrb-2001-review",
+      "kind": "secondary",
+      "title": "The Tragedy of Lumumba (review of Ludo De Witte, The Assassination of Lumumba)",
+      "author": "Brian Urquhart",
+      "year": 2001,
+      "publisher": "The New York Review of Books",
+      "url": "https://www.nybooks.com/articles/2001/10/04/the-tragedy-of-lumumba/"
+    },
+    {
+      "id": "nyrb-2001-exchange",
+      "kind": "secondary",
+      "title": "The Tragedy of Lumumba: An Exchange",
+      "author": "Ludo De Witte and Colin Legum, reply by Brian Urquhart",
+      "year": 2001,
+      "publisher": "The New York Review of Books",
+      "url": "https://www.nybooks.com/articles/2001/12/20/the-tragedy-of-lumumba-an-exchange/"
+    },
+    {
+      "id": "frus-1960-d190",
+      "kind": "secondary",
+      "title": "Foreign Relations of the United States, 1958-1960, Vol. XIV, Africa, Document 190: Telegram from the Mission at the United Nations to the Department of State, 26 August 1960",
+      "author": "Office of the Historian, US Department of State",
+      "year": 1992,
+      "publisher": "US Government Printing Office",
+      "url": "https://history.state.gov/historicaldocuments/frus1958-60v14/d190"
+    },
+    {
+      "id": "s-pv-896",
+      "kind": "primary",
+      "title": "Security Council Official Records, 15th year, 896th meeting, 9/10 September 1960 (S/PV.896), statement by the Secretary-General",
+      "author": "Dag Hammarskjöld",
+      "year": 1960,
+      "publisher": "United Nations",
+      "url": "https://docs.un.org/en/S/PV.896"
+    },
+    {
+      "id": "svenska-akademien",
+      "kind": "secondary",
+      "title": "Dag Hammarskjöld – Ledamotsregistret",
+      "author": "Svenska Akademien",
+      "year": "n.d.",
+      "publisher": "Svenska Akademien",
+      "url": "https://www.svenskaakademien.se/svenska-akademien/ledamotsregister/dag-hammarskjold"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Swedish civil servant and UN Secretary-General (1905-1961), never a party politician or religious founder, with no account of sexual contact with a minor or of sexual violence found; he is in, and his shadow is his Congo policy toward Lumumba plus a hard temper."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked Integrity hardest, with the 26 August 1960 US cable in which he wanted Lumumba 'broken' and with the September airport and radio closures he endorsed in the Security Council while saying the steps could not be discussed in terms of partisanship. It is one contested Congo episode, told partly in a US summary, against the witness of Urquhart and Annan, so Integrity held and the facts went into the shadow more plainly. Learning needed a third source and got one (the Swedish Academy); the blind pick's Faith and Peace had no room, and Peace on the list means inner peace, not world peace. All four quotes held, the UN speech checked against the official A/PV.883 record, and the shadow now says he endorsed the closures, not only that he was taken aback.",
+    "checkedOn": "2026-11-10"
+  }
+}
