@@ -1,6 +1,10 @@
 # Sell page: a landing page mock that shows the product moving
 
-Written 2026-11-10. Status: **plan only, nothing built.** The owner asked for a fast way to see how the
+Written 2026-11-10. Status: **built 2026-11-10, first version; page: https://claude.ai/artifact/9Fe3AkrusDtGnjPFPhLaLe (notes db, collection `notes`, one doc per section: `notes: [{text, at}]`). Awaits his reaction.**
+
+**Strategy decided on his word (2026-11-10):** sell hard on promise, mechanism and the product shown moving; no invented customers, reviews or user counts (fake reviews are the one illegal part). No users is turned into the pitch: first 100 founding members, the founder's voice, a money-back guarantee. A variant with customer feedback comes later. Built differently from the plan below: the hero is his street photo with three lines to choose, not a drawn street; screens were redrawn from the code's colours before the signed-in screenshots arrived.
+
+Original status: plan only. The owner asked for a fast way to see how the
 product could be sold: a landing page with animations showing different parts of the product. It may invent
 prices and how finished features look, but must also use what exists and how it looks today. It need not be
 perfect, and it will not be built into the app like this.
