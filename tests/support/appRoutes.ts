@@ -324,13 +324,15 @@ export function symbolicLinksIn(src: string): string[] {
  * the same shape. Derived by looking for `redirect("<route>")` or
  * `redirect(ROUTES.x)` anywhere in the product, so a new gate exempts itself
  * the moment something redirects into it. A page redirecting to itself is a
- * shim, not a gate.
+ * shim, not a gate. A browser-side `window.location.replace("/")` counts the
+ * same: Log Out lands on the front page that way since it must work with no
+ * signal (alpha p9-offline-01), where the server's redirect cannot arrive.
  */
 export function gateRoutes(): Set<string> {
   const found = new Set<string>()
   for (const file of productFiles()) {
     const src = fs.readFileSync(file, "utf-8")
-    for (const m of src.matchAll(/redirect\((?:"(\/[^"]*)"|ROUTES\.(\w+))\)/g)) {
+    for (const m of src.matchAll(/(?:redirect|location\.(?:replace|assign))\((?:"(\/[^"]*)"|ROUTES\.(\w+))\)/g)) {
       const raw = m[1] ?? (ROUTES as Record<string, string>)[m[2]]
       if (!raw) continue
       const target = normalize(raw)
