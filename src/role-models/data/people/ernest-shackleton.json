@@ -1,0 +1,328 @@
+{
+  "id": "ernest-shackleton",
+  "name": "Ernest Shackleton",
+  "born": 1874,
+  "died": 1922,
+  "category": "explorers",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset",
+    "lm_fun"
+  ],
+  "tagline": "Lost his ship to the Antarctic ice, then got all 28 of her men out alive.",
+  "startedFrom": "He was born in 1874 at Kilkea in County Kildare, Ireland, the second of ten children; after a farming slump his father retrained as a doctor, and the family moved to Dublin and then, in 1884, to London. He was a poor scholar at Dulwich College and left at 16, in 1890, to go to sea as a ship's boy on a sailing ship. He worked his way up and gained his master's certificate in 1898.",
+  "values": [
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 30 August 1916 he reached Elephant Island in the Chilean steamer Yelcho and took off the 22 men he had left there four months earlier; Frank Wild called out that they were all well.",
+          "sourceId": "south-1919",
+          "locator": "ch. XI The Rescue"
+        },
+        {
+          "kind": "words",
+          "claim": "The night the ship was lost he gathered the men, explained the position, thanked them, and told them that if they kept working their utmost and trusted him, they would all reach safety.",
+          "sourceId": "south-1919",
+          "locator": "ch. IV Loss of the Endurance (diary entry, 27 October 1915)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Apsley Cherry-Garrard, who served with Scott, wrote that if he was in the devil of a hole and wanted to get out of it, he would take Shackleton every time; Frank Wild called him a great leader.",
+          "sourceId": "rmg-michell",
+          "locator": "sections 'Shackleton's reputation' and 'Shackleton's legacy - 100 years on'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Dictionary of Falklands Biography says his style of leadership stressed care for his men and easy communication with them.",
+          "sourceId": "falklands-burton",
+          "locator": "section 'The Last Expedition - Quest', closing paragraphs"
+        },
+        {
+          "kind": "witness",
+          "claim": "The expedition photographer Frank Hurley writes that when Shackleton halted the march over the ice and the others wanted to push on, the leader was firm: it was a crisis in which the true leader proves himself, and Shackleton stood the test.",
+          "sourceId": "hurley-1925",
+          "locator": "ch. XII Adrift on the Sea Ice, p. 194"
+        }
+      ]
+    },
+    {
+      "word": "Responsibility",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 9 January 1909, 88 degrees 23 minutes south and about 97 miles from the Pole, he turned his party back because they were short of food.",
+          "sourceId": "rmg-pole",
+          "locator": "section on the Nimrod expedition (base camp at Cape Royds, 9 January)"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that near the Pole he compelled himself to look at the matter sensibly and to consider the lives of those who were with him.",
+          "sourceId": "antarctic-1911",
+          "locator": "ch. XXVII Farthest South"
+        },
+        {
+          "kind": "words",
+          "claim": "In a letter to his wife of 26 January 1908 he writes that wintering on the Barrier would endanger the lives of all the men he was responsible for, and that he turned back to McMurdo Sound.",
+          "sourceId": "mill-1923",
+          "locator": "Book II ch. II, p. 119 (letter of 26 January 1908)"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Between May and August 1916 he made four attempts to reach the men on Elephant Island, in the Southern Sky, the Uruguayan trawler Instituto de Pesca No. 1, the schooner Emma and the Yelcho; ice stopped the first three.",
+          "sourceId": "falklands-burton",
+          "locator": "section 'The Epic Journey to South Georgia - James Caird'"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that he could not content himself to wait six or seven weeks for a ship, knowing that six hundred miles away his comrades were in dire need.",
+          "sourceId": "south-1919",
+          "locator": "ch. XI The Rescue"
+        },
+        {
+          "kind": "witness",
+          "claim": "Mill writes that his nature drove him to do difficult, dangerous and big things with all his might, and that the greater the obstacles the happier the endeavour.",
+          "sourceId": "mill-1923",
+          "locator": "Epilogue, p. 289"
+        },
+        {
+          "kind": "witness",
+          "claim": "Hurley writes that after the relief ships were turned back by the ice, Shackleton was still determined, knowing the desperate straits of the men relying on him, and would not wait for summer.",
+          "sourceId": "hurley-1925",
+          "locator": "ch. XV The Next Three Months, p. 281"
+        }
+      ]
+    },
+    {
+      "word": "Adventure",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1890, aged 16, he left Dulwich College to sail round Cape Horn as a boy on the sailing ship Hoghton Tower.",
+          "sourceId": "falklands-burton",
+          "locator": "opening paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Mill, who knew him from the Discovery, writes that the master-passion of his life was probably the outward urge into the unknown.",
+          "sourceId": "mill-1923",
+          "locator": "Epilogue, p. 288"
+        },
+        {
+          "kind": "words",
+          "claim": "Mill quotes him, of the January 1908 push east through the ice: It must be part of my life that I go on striving for the things that are out of reach.",
+          "sourceId": "mill-1923",
+          "locator": "Book II ch. II, p. 118"
+        },
+        {
+          "kind": "witness",
+          "claim": "Hurley calls him an explorer of the type that carried the flag into unknown lands for sheer adventure's sake.",
+          "sourceId": "hurley-1925",
+          "locator": "ch. VII The Antarctic Calls Again, p. 126"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In April 1916 he took the 22-foot James Caird out of Elephant Island for South Georgia, over 800 miles away, across the ocean south of Cape Horn in May, which he calls the most tempestuous storm-swept water in the world; he writes that all hands knew the perils were extreme.",
+          "sourceId": "south-1919",
+          "locator": "ch. IX The Boat Journey (opening pages)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Hurley, who watched the boat leave, calls it a desperate venture and names the six who ventured their lives to help their comrades, Shackleton first.",
+          "sourceId": "hurley-1925",
+          "locator": "ch. XIV, p. 251"
+        },
+        {
+          "kind": "witness",
+          "claim": "Mill writes that he was essentially a fighter, afraid of nothing and of nobody.",
+          "sourceId": "mill-1923",
+          "locator": "Epilogue, p. 288"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When a plan dies, set yourself a new target at once instead of mourning the old one.",
+      "sourceId": "south-1919",
+      "locator": "ch. IV Loss of the Endurance"
+    },
+    {
+      "text": "When the prize and the lives of your people pull apart, choose your people.",
+      "sourceId": "antarctic-1911",
+      "locator": "ch. XXVII Farthest South"
+    },
+    {
+      "text": "In a crisis, carry only what you truly need and leave the rest behind, money included.",
+      "sourceId": "south-1919",
+      "locator": "ch. IV Loss of the Endurance (two pounds of personal gear per man; sovereigns thrown away, photographs kept)"
+    },
+    {
+      "text": "Tell your people the plain truth about where they stand, thank them, and ask for their trust.",
+      "sourceId": "south-1919",
+      "locator": "ch. IV Loss of the Endurance (diary entry, 27 October 1915)"
+    },
+    {
+      "text": "When your people are in need, do not wait for help to come; go and get it yourself.",
+      "sourceId": "south-1919",
+      "locator": "ch. XI The Rescue"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "A man must shape himself to a new mark directly the old one goes to ground.",
+      "sourceId": "south-1919",
+      "locator": "ch. IV Loss of the Endurance"
+    },
+    {
+      "text": "That was all of tangible things; but in memories we were rich. We had pierced the veneer of outside things.",
+      "sourceId": "south-1919",
+      "locator": "ch. X Across South Georgia"
+    },
+    {
+      "text": "We felt that we were going to succeed. The odds against us had been great, but we were winning through.",
+      "sourceId": "south-1919",
+      "locator": "ch. IX The Boat Journey"
+    },
+    {
+      "text": "Only one thing softened our grievous disappointment, and that was the conviction that we had striven to the very limit of our strength.",
+      "sourceId": "antarctic-1911",
+      "locator": "ch. XXVII Farthest South"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 27 October 1915 the ice of the Weddell Sea crushed his ship Endurance, and 28 men camped on the drifting floes. In April 1916 the boats reached Elephant Island, and on 24 April he sailed with five men in the small boat James Caird for South Georgia, about 800 miles away. They landed on 10 May, and he, Worsley and Crean crossed the island's unmapped mountains in 36 hours to reach the whaling station at Stromness. Ice turned back three rescue ships; on 30 August 1916 the fourth, the Chilean steamer Yelcho, reached Elephant Island and took off all 22 men waiting there.",
+    "sourceIds": [
+      "south-1919",
+      "falklands-burton",
+      "irish-times-2016"
+    ]
+  },
+  "shadow": {
+    "text": "In 1907 he agreed with Scott not to use McMurdo Sound as a base; in January 1908, blocked by ice, he went there, and on 26 January wrote to his wife that he had to break his word to Scott. The 1907-09 expedition came home owing nearly £20,000, which a government grant paid; his biographer Mill says he then spent lavishly, that his generosity often outran his means, and that he chased schemes such as Hungarian gold mines. A Royal Museums Greenwich curator writes that he had a reputation for not being entirely trustworthy with money and struggled to repay his debts after each expedition. On the ice in 1915 the carpenter Harry McNish refused to haul the boats and had to back down; McNish later sailed with him in the James Caird, but was refused the Polar Medal, which some in the expedition felt unfair on Shackleton's part. The Ross Sea party that he sent to lay depots for his crossing left 'ill-equipped and underfunded', and three of its men died. After the expedition, Caroline Alexander writes, he was drinking and restless, rarely with his wife, and often in London with his American mistress, Rosalind Chetwynd.",
+    "sourceIds": [
+      "mill-1923",
+      "rmg-michell",
+      "irish-times-2016",
+      "falklands-burton",
+      "alexander-1998"
+    ]
+  },
+  "councilQuestion": {
+    "text": "When a plan of yours fell apart this week, how fast did you set yourself a new target?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "South: The Story of Shackleton's Last Expedition, 1914-1917",
+      "year": 1919
+    },
+    {
+      "title": "The Heart of the Antarctic",
+      "year": 1909
+    }
+  ],
+  "sources": [
+    {
+      "id": "south-1919",
+      "kind": "primary",
+      "title": "South: The Story of Shackleton's Last Expedition, 1914-1917",
+      "author": "Ernest Shackleton (dictated to and prepared with Edward Saunders)",
+      "year": 1919,
+      "publisher": "William Heinemann, London; Project Gutenberg eBook #5199",
+      "url": "https://www.gutenberg.org/ebooks/5199"
+    },
+    {
+      "id": "antarctic-1911",
+      "kind": "primary",
+      "title": "Shackleton in the Antarctic: Being the Story of the British Antarctic Expedition, 1907-1909 (shortened edition of The Heart of the Antarctic)",
+      "author": "Ernest Shackleton (prepared with Edward Saunders)",
+      "year": 1911,
+      "publisher": "William Heinemann, London; Project Gutenberg eBook #69138",
+      "url": "https://www.gutenberg.org/ebooks/69138"
+    },
+    {
+      "id": "mill-1923",
+      "kind": "secondary",
+      "title": "The Life of Sir Ernest Shackleton",
+      "author": "Hugh Robert Mill",
+      "year": 1923,
+      "publisher": "William Heinemann, London; scan on the Internet Archive",
+      "url": "https://archive.org/details/lifeofsirernests00milluoft"
+    },
+    {
+      "id": "falklands-burton",
+      "kind": "secondary",
+      "title": "Shackleton, Sir Ernest Henry (The Boss), Dictionary of Falklands Biography",
+      "author": "Robert Burton",
+      "year": "undated (revised September 2026)",
+      "publisher": "Dictionary of Falklands Biography, ed. David Tatham",
+      "url": "https://www.falklandsbiographies.org/biographies/shackleton_sir"
+    },
+    {
+      "id": "rmg-michell",
+      "kind": "secondary",
+      "title": "Shackleton's death and legacy (An enduring legacy)",
+      "author": "Jeremy Michell, Senior Curator, National Maritime Museum",
+      "year": "undated",
+      "publisher": "Royal Museums Greenwich",
+      "url": "https://www.rmg.co.uk/stories/maritime-history/shackletons-death-legacy"
+    },
+    {
+      "id": "rmg-pole",
+      "kind": "secondary",
+      "title": "South Pole exploration: Sir Ernest Shackleton (Shackleton's search for the South Pole)",
+      "author": "Royal Museums Greenwich",
+      "year": "undated",
+      "publisher": "Royal Museums Greenwich",
+      "url": "https://www.rmg.co.uk/discover/explore/south-pole-exploration-sir-ernest-shackleton"
+    },
+    {
+      "id": "irish-times-2016",
+      "kind": "secondary",
+      "title": "An Irishman's Diary: Mrs Chippy, the Scottish carpenter and the Antarctic",
+      "author": "Norman Freeman",
+      "year": 2016,
+      "publisher": "The Irish Times, 21 March 2016",
+      "url": "https://www.irishtimes.com/opinion/an-irishman-s-diary-mrs-chippy-the-scottish-carpenter-and-the-antarctic-1.2577186"
+    },
+    {
+      "id": "hurley-1925",
+      "kind": "secondary",
+      "title": "Argonauts of the South",
+      "author": "Frank Hurley (photographer on the Endurance expedition)",
+      "year": 1925,
+      "publisher": "G. P. Putnam's Sons, New York and London; scan on the Internet Archive",
+      "url": "https://archive.org/details/argonautsofsouth00hurl"
+    },
+    {
+      "id": "alexander-1998",
+      "kind": "secondary",
+      "title": "The Endurance: Shackleton's Legendary Antarctic Expedition",
+      "author": "Caroline Alexander",
+      "year": 1998,
+      "publisher": "Alfred A. Knopf, New York (final chapter, 'To My Comrades')"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Anglo-Irish polar explorer (1874-1922), not fictional, not a living politician (he stood once for Parliament, at Dundee, and lost, which is not a political life), not the founder of a religion, with no account found of sexual contact with a minor or of sexual violence; he is in, with a documented dark side over a broken promise, money and one crewman."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I attacked each value: Responsibility against his debts, the ill-equipped Ross Sea party and his broken promise to Scott; Leadership against the McNish quarrel; Optimism against its thin sourcing. Optimism fell, because only two sources (South and one Mill witness) back it, and Courage, the blind pick, came in on South, Hurley and Mill; the money and the Ross Sea deaths are not a pattern against his care for his men's lives, so they stay in the shadow. Four sentences were corrected, among them a 1908 letter line that was really his captain's argument, and the shadow gained his affair with Rosalind Chetwynd from Caroline Alexander's book. All four quotes were found in South and in Shackleton in the Antarctic.",
+    "checkedOn": "2026-11-10"
+  }
+}
