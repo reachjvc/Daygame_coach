@@ -22,6 +22,7 @@
  */
 
 import { useCallback, useRef, useState, useTransition, type ReactNode } from "react"
+import { createPortal } from "react-dom"
 
 import { signOut } from "@/app/actions/auth"
 import { Button } from "@/components/ui/button"
@@ -51,6 +52,8 @@ type Phase =
       deletes: ReturnType<typeof unsentAuditDeletes>
     }
   | { kind: "leaving" }
+  /** Signed out here; the front page may not load (no signal), so this page says so itself */
+  | { kind: "left" }
 
 const clock = (iso: string) => {
   try {
@@ -95,6 +98,9 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
       forgetSessionInThisBrowser()
       await forgetOfflineCopies({ deviceForgotten: true })
       window.location.replace("/")
+      // With no signal the front page cannot load, and Safari keeps this page
+      // drawn, his day included (alpha p10-deletes-03): it is covered and says so.
+      setPhase({ kind: "left" })
     })
   }, [])
 
@@ -179,7 +185,21 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
   const lost = left + refused.length
   return (
     <>
-      {children({ onClick, busy: phase.kind === "sending" || phase.kind === "leaving" })}
+      {children({ onClick, busy: phase.kind === "sending" || phase.kind === "leaving" || phase.kind === "left" })}
+      {phase.kind === "left" &&
+        createPortal(
+          <div
+            role="status"
+            data-testid="log-out-signed-out"
+            className="fixed inset-0 z-[10000] flex flex-col items-center justify-center gap-3 bg-background p-6 text-center"
+          >
+            <p className="text-lg font-semibold">Signed out on this phone</p>
+            <a href="/" className="text-sm underline">
+              Go to the front page
+            </a>
+          </div>,
+          document.body,
+        )}
       {ownSender && <SendTrackerChanges onStranger={onStranger} />}
       <Dialog open={phase.kind === "asking"} onOpenChange={(open) => !open && stay()}>
         <DialogContent className="sm:max-w-md" data-testid="log-out-unsent">
