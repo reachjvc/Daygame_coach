@@ -1,0 +1,345 @@
+{
+  "id": "sidney-poitier",
+  "name": "Sidney Poitier",
+  "born": 1927,
+  "died": 2022,
+  "category": "charisma",
+  "areaIds": [
+    "lm_mindset",
+    "lm_mission"
+  ],
+  "tagline": "Told to go wash dishes, he taught himself to act and chose roles that matched his values.",
+  "startedFrom": "He was born two months early in Miami in 1927, while his Bahamian parents, poor tomato farmers, were there to sell their crop; he was the youngest of nine and grew up on Cat Island in a palm-thatched house with no electricity or running water. The family moved to Nassau in 1937 after Florida banned Bahamian tomatoes, and he left school at about 12 to work. He reached New York in 1943 with about three dollars, barely able to read, and slept in a train station and on rooftops.",
+  "values": [
+    {
+      "word": "Integrity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said he did not take whatever roles were available because he had chosen to be an actor whose work stood for his values.",
+          "sourceId": "fresh-air-2000",
+          "locator": "second half, answer on stereotyped roles"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1955 NBC's legal department demanded that he renounce Canada Lee and Paul Robeson and sign a loyalty oath before playing A Man Is Ten Feet Tall; he refused.",
+          "sourceId": "tcm-2022",
+          "locator": "paragraph on 'A Man Is Ten Feet Tall', citing Judith E. Smith, Visions of Belonging (2004)"
+        },
+        {
+          "kind": "deed",
+          "claim": "His memoir This Life tells of refusing roles that lacked positive significance; he did Porgy and Bess only so he could do The Defiant Ones.",
+          "sourceId": "kirkus-1980",
+          "locator": "review text, sentence beginning 'But a (slowly) rising career'"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Working as a dishwasher, he studied the newspaper every night with the help of an old waiter to make himself literate.",
+          "sourceId": "kirkus-1980",
+          "locator": "review text, sentence beginning 'So a furious Sidney flattened his accent'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he repeated radio announcers 'like a parrot' for months and tried to learn what the words meant.",
+          "sourceId": "fresh-air-2000",
+          "locator": "second half, answers on improving his audition skills and on Norman Brokenshire"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Bahamian prime minister, Philip Davis, called him a young man who taught himself to read and write.",
+          "sourceId": "bbc-2022",
+          "locator": "paragraph quoting Philip Davis"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After the American Negro Theater threw him out of his first audition, he bought a radio to lose his accent and got into the theater's school only by offering to work as its janitor without pay.",
+          "sourceId": "nyt-2022",
+          "locator": "paragraphs on his first audition and Frederick O'Neal"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he decided on the way to the bus stop that he would become an actor and go back to show the man who threw him out that he was wrong.",
+          "sourceId": "fresh-air-2000",
+          "locator": "first half, answer to 'why did you come back for more after that?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "TCM's 2022 tribute names his determination to fulfil this ambition as what made him a history maker.",
+          "sourceId": "tcm-2022",
+          "locator": "paragraph 2"
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In August 1964, when SNCC was about to run out of money in Mississippi, he and Harry Belafonte brought $70,000 in cash, raised by Belafonte in two days, to the Freedom Summer headquarters in Greenwood.",
+          "sourceId": "sncc-belafonte",
+          "locator": "section on the 1964 Mississippi Summer Project"
+        },
+        {
+          "kind": "deed",
+          "claim": "He insisted that the film crew on The Lost Man (1969) be at least half African American.",
+          "sourceId": "whitehouse-2009",
+          "locator": "entry 'Sidney Poitier'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times describes his longstanding, outspoken advocacy for racial justice, including the 1963 March on Washington.",
+          "sourceId": "nyt-2022",
+          "locator": "paragraph beginning 'The critics who would later accuse him'"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In August 1964, after the bodies of three murdered Freedom Summer workers were found, he and Harry Belafonte carried the cash Belafonte had raised to the project's headquarters in Greenwood, Mississippi; late at night Klansmen in a pickup truck tried to ram their car off the road.",
+          "sourceId": "sncc-belafonte",
+          "locator": "section on the 1964 Mississippi Summer Project"
+        },
+        {
+          "kind": "deed",
+          "claim": "AP reports that he refused to sign loyalty oaths in the 1950s, when Hollywood was barring suspected Communists, and was followed by the Ku Klux Klan when he visited Mississippi in 1964.",
+          "sourceId": "ap-2022",
+          "locator": "paragraphs on his politics and the 1950s"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times says his left-wing causes and his friendship with Paul Robeson made him a politically risky proposition for film and television producers early in his career.",
+          "sourceId": "nyt-2022",
+          "locator": "paragraph beginning 'The critics who would later accuse him'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Take only work that stands for what you believe, even when other work is easier to get.",
+      "sourceId": "fresh-air-2000",
+      "locator": "second half, answer on stereotyped roles"
+    },
+    {
+      "text": "When someone sets a low limit on you, treat it as a challenge to prove him wrong.",
+      "sourceId": "fresh-air-2000",
+      "locator": "first half, answer to 'why did you come back for more after that?'"
+    },
+    {
+      "text": "Your time is your most valuable currency; do not spend it repeating what you have already done.",
+      "sourceId": "fresh-air-2000",
+      "locator": "last answer, on why he made few films"
+    },
+    {
+      "text": "Luck is outside your control, so set your own goals, choose your route and stay the course.",
+      "sourceId": "cmc-2002",
+      "locator": "commencement address, paragraph beginning 'Now be forewarned'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I had elected to be the kind of actor whose work would stand as a representation of my values.",
+      "sourceId": "fresh-air-2000",
+      "locator": "Fresh Air, WHYY, 18 April 2000, second half, answer on stereotyped roles"
+    },
+    {
+      "text": "I would be less than I would like to be if he turned out to have been prophetic when he made that comment.",
+      "sourceId": "fresh-air-2000",
+      "locator": "Fresh Air, WHYY, 18 April 2000, first half, on the audition where he was told to get a job as a dishwasher"
+    },
+    {
+      "text": "The most important currency I own is my time.",
+      "sourceId": "fresh-air-2000",
+      "locator": "Fresh Air, WHYY, 18 April 2000, final answer"
+    },
+    {
+      "text": "You must yourselves be responsible for setting the goals, choosing the route, and staying the course.",
+      "sourceId": "cmc-2002",
+      "locator": "Commencement address, Claremont McKenna College, 19 May 2002, paragraph beginning 'Now be forewarned'"
+    }
+  ],
+  "definingMoment": {
+    "text": "Soon after leaving the Army, he answered a newspaper ad from the American Negro Theater in Harlem. He could barely read the script, and Frederick O'Neal, a founder of the theater, threw him out and told him to get a job as a dishwasher. He bought a radio, repeated the announcers for months to lose his Bahamian accent, and studied the newspaper with a fellow worker's help. Rejected again at his second audition, he offered to work as the theater's janitor in return for lessons, and in 1946 he was a student there.",
+    "sourceIds": [
+      "fresh-air-2000",
+      "nyt-2022",
+      "tcm-2015"
+    ]
+  },
+  "shadow": {
+    "text": "In November 1943, aged 16, he lied about his age to join the US Army, then faked a mental disorder to get a discharge. From 1959, while married to Juanita Hardy, with whom he had four daughters, he had an affair with the actress Diahann Carroll, who was also married; they met making Porgy and Bess, and he wrote about the affair in his 1980 memoir This Life. Carroll divorced her husband and kept seeing him while he stayed married; the two were briefly engaged, and she ended the relationship in 1968, nine years after they met. His first marriage ended in divorce in 1965. He lived with Joanna Shimkus for eight years and had two daughters with her before they married in 1976. From the late 1960s some critics called him an Uncle Tom for playing saintly roles that sent a reassuring message to white audiences.",
+    "sourceIds": [
+      "nyt-2022",
+      "tcm-2015",
+      "kirkus-1980",
+      "cbb-carroll",
+      "scribner-carroll",
+      "nyt-carroll-2019"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you accept someone's low guess about what you can do, instead of setting out to prove it wrong?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "The Measure of a Man: A Spiritual Autobiography",
+      "year": 2000
+    },
+    {
+      "title": "This Life",
+      "year": 1980
+    }
+  ],
+  "sources": [
+    {
+      "id": "fresh-air-2000",
+      "kind": "primary",
+      "title": "Sidney Poitier Discusses 'The Measure of a Man: A Spiritual Autobiography' (Fresh Air rush transcript, aired 18 April 2000)",
+      "author": "Sidney Poitier, interviewed by Terry Gross",
+      "year": 2000,
+      "publisher": "WHYY / NPR, Fresh Air Archive",
+      "url": "https://freshairarchive.org/segments/actor-sidney-poitier"
+    },
+    {
+      "id": "cmc-2002",
+      "kind": "primary",
+      "title": "Remarks of Sidney Poitier, commencement address, Claremont McKenna College, 19 May 2002",
+      "author": "Sidney Poitier",
+      "year": 2002,
+      "publisher": "Claremont McKenna College",
+      "url": "https://cmc.edu/news/commencement-address-transcript"
+    },
+    {
+      "id": "nyt-2022",
+      "kind": "secondary",
+      "title": "Sidney Poitier, Who Paved the Way for Black Actors in Film, Dies at 94",
+      "author": "William Grimes",
+      "year": 2022,
+      "publisher": "The New York Times, 7 January 2022",
+      "url": "https://www.nytimes.com/2022/01/07/movies/sidney-poitier-dead.html"
+    },
+    {
+      "id": "guardian-2022",
+      "kind": "secondary",
+      "title": "Sidney Poitier obituary",
+      "author": "Brian Baxter",
+      "year": 2022,
+      "publisher": "The Guardian, 7 January 2022",
+      "url": "https://www.theguardian.com/film/2022/jan/07/sidney-poitier-obituary"
+    },
+    {
+      "id": "bbc-2022",
+      "kind": "secondary",
+      "title": "Sidney Poitier: Hollywood trailblazer dies aged 94",
+      "author": "BBC News",
+      "year": 2022,
+      "publisher": "BBC, 7 January 2022",
+      "url": "https://www.bbc.co.uk/news/entertainment-arts-59907931"
+    },
+    {
+      "id": "tcm-2015",
+      "kind": "secondary",
+      "title": "Sidney Poitier Profile",
+      "author": "Lorraine LoBianco",
+      "year": 2015,
+      "publisher": "Turner Classic Movies, 5 January 2015",
+      "url": "https://www.tcm.com/articles/79909/sidney-poitier-profile"
+    },
+    {
+      "id": "tcm-2022",
+      "kind": "secondary",
+      "title": "TCM Remembers Sidney Poitier",
+      "author": "Rob Nixon",
+      "year": 2022,
+      "publisher": "Turner Classic Movies, 25 January 2022",
+      "url": "https://www.tcm.com/articles/featured-actors/021565/tcm-remembers-sidney-poitier"
+    },
+    {
+      "id": "kirkus-1980",
+      "kind": "secondary",
+      "title": "Review of This Life by Sidney Poitier",
+      "author": "Kirkus Reviews",
+      "year": 1980,
+      "publisher": "Kirkus Reviews, issue of 1 May 1980",
+      "url": "https://www.kirkusreviews.com/book-reviews/a/sidney-poitier-4/this-life-2/"
+    },
+    {
+      "id": "sncc-belafonte",
+      "kind": "secondary",
+      "title": "Harry Belafonte",
+      "author": "SNCC Digital Gateway (SNCC Legacy Project and Duke University)",
+      "year": "n.d.",
+      "publisher": "Duke University Libraries",
+      "url": "https://snccdigital.org/people/harry-belafonte/"
+    },
+    {
+      "id": "whitehouse-2009",
+      "kind": "secondary",
+      "title": "President Obama Names Medal of Freedom Recipients (press release, 30 July 2009)",
+      "author": "The White House, Office of the Press Secretary",
+      "year": 2009,
+      "publisher": "obamawhitehouse.archives.gov",
+      "url": "https://obamawhitehouse.archives.gov/the-press-office/president-obama-names-medal-freedom-recipients"
+    },
+    {
+      "id": "ap-2022",
+      "kind": "secondary",
+      "title": "Oscar winner and groundbreaking star Sidney Poitier dies",
+      "author": "Hillel Italie, Associated Press",
+      "year": 2022,
+      "publisher": "Associated Press, via PBS NewsHour, 7 January 2022",
+      "url": "https://www.pbs.org/newshour/arts/oscar-winner-and-groundbreaking-star-sidney-poitier-dies"
+    },
+    {
+      "id": "cbb-carroll",
+      "kind": "secondary",
+      "title": "Carroll, Diahann 1935–",
+      "author": "Elizabeth Rourke",
+      "year": "n.d.",
+      "publisher": "Contemporary Black Biography (Gale), via Encyclopedia.com; draws on Carroll's autobiography Diahann! (1986)",
+      "url": "https://www.encyclopedia.com/people/history/historians-miscellaneous-biographies/diahann-carroll"
+    },
+    {
+      "id": "scribner-carroll",
+      "kind": "secondary",
+      "title": "Carroll, Diahann",
+      "author": "Njoki-Wa-Kinyatti",
+      "year": "n.d.",
+      "publisher": "Scribner Encyclopedia of American Lives, Thematic Series: The 1960s, via Encyclopedia.com",
+      "url": "https://www.encyclopedia.com/humanities/encyclopedias-almanacs-transcripts-and-maps/carroll-diahann"
+    },
+    {
+      "id": "nyt-carroll-2019",
+      "kind": "secondary",
+      "title": "Diahann Carroll, Actress Who Broke Barriers With 'Julia,' Dies at 84",
+      "author": "Margalit Fox",
+      "year": 2019,
+      "publisher": "The New York Times, 4 October 2019",
+      "url": "https://www.nytimes.com/2019/10/04/arts/television/diahann-carroll-dead.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real, dead (2022), not a politician or religious founder; no credible account of sexual violence or of sex with a minor was found; his dark side is a nine-year affair while married, a broken promise to Diahann Carroll, and lying his way into and out of the Army."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value, every quote and every sentence of the profile against the Fresh Air transcript, the 2002 commencement text and the obituaries, and re-sourced the affair away from The Root. Self-respect fell: one of its two pieces was the In the Heat of the Night slap story, which TCM and the screenwriter dispute, so it and the matching principle are gone. Integrity and Learning are shared with the blind pick, Determination and Justice each stand on three sources, and the blind pick's Courage was added on SNCC, AP and NYT evidence. The shadow now keeps only what Gale's and Scribner's reference entries, the NYT and Kirkus support: Carroll's memoir claims about a promise to leave his wife, the postponed wedding and the apartment rest on The Root alone and were cut.",
+    "checkedOn": "2026-11-10"
+  }
+}
