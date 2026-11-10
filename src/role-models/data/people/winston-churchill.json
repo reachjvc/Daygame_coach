@@ -1,0 +1,393 @@
+{
+  "id": "winston-churchill",
+  "name": "Winston Churchill",
+  "born": 1874,
+  "died": 1965,
+  "category": "leaders",
+  "areaIds": [
+    "lm_mindset",
+    "lm_mission"
+  ],
+  "tagline": "A weak pupil who taught himself, then refused to give in when Britain stood alone.",
+  "startedFrom": "He was born in 1874 at Blenheim Palace into a rich aristocratic family, the son of Lord Randolph Churchill and his American wife Jennie Jerome. He wrote that he loved his mother 'at a distance' and that his nurse, Mrs Everest, was the one he confided in. He did badly at school, spent about a year in the lowest form at Harrow, and got into Sandhurst on his third try, and then only for the cavalry.",
+  "values": [
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "At Harrow in October 1941 he told the boys the lesson of the past year was never to give in except to convictions of honour and good sense.",
+          "sourceId": "harrow-1941",
+          "locator": "Speech at Harrow School, 29 October 1941"
+        },
+        {
+          "kind": "words",
+          "claim": "On 4 June 1940, after Dunkirk, he told the Commons: we shall never surrender.",
+          "sourceId": "hansard-1940-06-04",
+          "locator": "HC Deb 4 June 1940, vol 361, c796"
+        },
+        {
+          "kind": "deed",
+          "claim": "When the War Cabinet met nine times from 26 to 28 May 1940, he argued against Lord Halifax's plan to explore peace terms through Mussolini, and on 28 May turned the French proposal down.",
+          "sourceId": "museumofpm",
+          "locator": "sections on 26, 27 and 28 May 1940"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times obituary quotes Harold Macmillan: the other side of his exhausting obstinacy was undefeatable determination.",
+          "sourceId": "nyt-1965",
+          "locator": "obituary, 25 January 1965"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Taken prisoner by the Boers in November 1899, he climbed the wall of his Pretoria prison at the one moment the sentries could not see its top, and escaped; his comrade failed to follow.",
+          "sourceId": "scott-1905",
+          "locator": "ch. III 'The Bright Eyes of Danger', pp. 48-49"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that on 12 December 1899 he pulled himself up the wall twice, let himself down in sickly hesitation, and went over at the third try.",
+          "sourceId": "mel-1930",
+          "locator": "ch. XXI 'I Escape from the Boers - I', pp. 283-284"
+        },
+        {
+          "kind": "deed",
+          "claim": "After resigning over Gallipoli in 1915 he went to the Western Front to fight himself.",
+          "sourceId": "govuk",
+          "locator": "Past Prime Ministers: Winston Churchill, biography"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Swedish Academy's 1953 presentation speech calls him the man who has himself been through the fire, taken risks and withstood extreme pressure.",
+          "sourceId": "nobel-ceremony",
+          "locator": "presentation speech, paragraph on the First World War"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1899 he planned to leave the army, live by his books and journalism, and look for a chance to enter Parliament; he wrote that these plans were mostly carried out.",
+          "sourceId": "mel-1930",
+          "locator": "ch. XVI 'I Leave the Army', pp. 213-214"
+        },
+        {
+          "kind": "deed",
+          "claim": "He was elected Conservative MP for Oldham in 1900, at 25, crossed to the Liberals in 1904, and climbed the ranks of the Liberal government over the next decade.",
+          "sourceId": "govuk",
+          "locator": "Past Prime Ministers: Winston Churchill, biography"
+        },
+        {
+          "kind": "witness",
+          "claim": "His 1905 biographer wrote that he did not hide his ambition and that a passion to lead and to excel showed in everything he wrote.",
+          "sourceId": "scott-1905",
+          "locator": "ch. II 'Subaltern of Hussars', p. 37"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that only in the winter of 1896, aged nearly 22, did the desire for learning come upon him.",
+          "sourceId": "mel-1930",
+          "locator": "ch. IX 'Education at Bangalore', p. 123"
+        },
+        {
+          "kind": "deed",
+          "claim": "As a cavalry officer in Bangalore he had books sent out every month and read all eight volumes of Gibbon's Decline and Fall in the midday heat, then Macaulay.",
+          "sourceId": "mel-1930",
+          "locator": "ch. IX 'Education at Bangalore', pp. 125-126"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Swedish Academy's presentation speech says he never studied at Oxford and had to spend his leisure hours educating himself.",
+          "sourceId": "nobel-ceremony",
+          "locator": "presentation speech, paragraph on Great Contemporaries"
+        },
+        {
+          "kind": "words",
+          "claim": "In a letter thanking his mother for the books she sent, he said he was reading 50 pages of Macaulay and 25 of Gibbon every day.",
+          "sourceId": "hillsdale-2020",
+          "locator": "article citing R. S. Churchill (ed.), The Churchill Documents, vol. 2, p. 730 (footnote 8)"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Writing The River War in 1899 he worked at style, copying Macaulay and Gibbon, and decided the paragraph mattered as much as the sentence.",
+          "sourceId": "mel-1930",
+          "locator": "ch. XVI 'I Leave the Army', p. 225"
+        },
+        {
+          "kind": "witness",
+          "claim": "He won the 1953 Nobel Prize in Literature for his mastery of historical and biographical description and for brilliant oratory.",
+          "sourceId": "nobel-1953",
+          "locator": "prize summary, prize motivation"
+        },
+        {
+          "kind": "deed",
+          "claim": "Over 60 years in the House of Commons he found time to write more than two dozen books.",
+          "sourceId": "nyt-1965",
+          "locator": "obituary, 25 January 1965"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Never give in, unless honour and good sense tell you to.",
+      "sourceId": "harrow-1941",
+      "locator": "Speech at Harrow School, 29 October 1941"
+    },
+    {
+      "text": "Tell people the hard truth about what is coming; do not promise an easy road.",
+      "sourceId": "hansard-1940-05-13",
+      "locator": "HC Deb 13 May 1940, vol 360, c1502"
+    },
+    {
+      "text": "If your schooling left gaps, fill them yourself by reading the great books.",
+      "sourceId": "mel-1930",
+      "locator": "ch. IX 'Education at Bangalore', pp. 123-126"
+    },
+    {
+      "text": "Use your young years to act now; do not settle for things as they are.",
+      "sourceId": "mel-1930",
+      "locator": "ch. IV 'Sandhurst', p. 74"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I have nothing to offer but blood, toil, tears and sweat.",
+      "sourceId": "hansard-1940-05-13",
+      "locator": "HC Deb 13 May 1940, vol 360, c1502"
+    },
+    {
+      "text": "We shall fight on the beaches, we shall fight on the landing grounds, we shall fight in the fields and in the streets, we shall fight in the hills; we shall never surrender",
+      "sourceId": "hansard-1940-06-04",
+      "locator": "HC Deb 4 June 1940, vol 361, c796"
+    },
+    {
+      "text": "Never give in, never give in, never, never, never—in nothing, great or small, large or petty—never give in except to convictions of honour and good sense.",
+      "sourceId": "harrow-1941",
+      "locator": "Speech at Harrow School, 29 October 1941"
+    },
+    {
+      "text": "Twenty to twenty-five! These are the years! Don't be content with things as they are.",
+      "sourceId": "mel-1930",
+      "locator": "ch. IV 'Sandhurst', p. 74"
+    }
+  ],
+  "definingMoment": {
+    "text": "In late May 1940, with the British army trapped around Dunkirk, Foreign Secretary Lord Halifax pressed the War Cabinet to explore peace terms through Mussolini. The War Cabinet met nine times from 26 to 28 May and Churchill argued against it; the minutes record him saying that nations which went down fighting rose again, but those which surrendered tamely were finished. On 28 May he told about twenty-five ministers outside the War Cabinet that Britain would fight on, and they backed him. That night he turned down the French proposal, and on 4 June he told the Commons that Britain would never surrender.",
+    "sourceIds": [
+      "museumofpm",
+      "hansard-1940-06-04"
+    ]
+  },
+  "shadow": {
+    "text": "He fought Indian self-rule through the 1930s; in a speech on 23 February 1931 he described Gandhi 'striding half-naked up the steps of the Vice-regal palace'. He said 'The Aryan stock is bound to triumph' in 1901 and spoke of 'a higher grade race' to the Peel Commission on Palestine in 1937, as his defender Richard Langworth confirms. In a War Office minute of 12 May 1919 he wrote 'I am strongly in favour of using poisoned gas against uncivilised tribes'; the same minute names lachrymatory gas, and Langworth says he meant tear gas. In 1943, while he led the War Cabinet, famine in Bengal killed up to three million people. Madhusree Mukerjee's 2010 book argues that he had food sent away from starving Indians and reports him blaming the famine on Indians 'breeding like rabbits'; historian Janam Mukherjee says he played a role in blocking imports but that blaming him alone is 'highly misleading'; and defenders Arthur Herman and Richard Langworth say the ships could not be spared and credit his choice of Wavell as Viceroy with easing the famine.",
+    "sourceIds": [
+      "cam-1931",
+      "govuk",
+      "langworth-2020",
+      "ncm-1919",
+      "aljazeera-2019",
+      "time-2010"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you give up on this week that honour and good sense did not ask you to drop?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "My Early Life",
+      "year": 1930
+    },
+    {
+      "title": "Painting as a Pastime",
+      "year": 1948
+    },
+    {
+      "title": "The Second World War",
+      "year": "1948-1954"
+    }
+  ],
+  "sources": [
+    {
+      "id": "hansard-1940-05-13",
+      "kind": "primary",
+      "title": "His Majesty's Government (statement on forming the government), HC Deb 13 May 1940 vol 360 cc1501-25",
+      "author": "Winston S. Churchill",
+      "year": 1940,
+      "publisher": "Hansard (UK Parliament)",
+      "url": "https://api.parliament.uk/historic-hansard/commons/1940/may/13/his-majestys-government-1"
+    },
+    {
+      "id": "hansard-1940-06-04",
+      "kind": "primary",
+      "title": "War Situation, HC Deb 4 June 1940 vol 361 cc787-98",
+      "author": "Winston S. Churchill",
+      "year": 1940,
+      "publisher": "Hansard (UK Parliament)",
+      "url": "https://api.parliament.uk/historic-hansard/commons/1940/jun/04/war-situation"
+    },
+    {
+      "id": "harrow-1941",
+      "kind": "primary",
+      "title": "Never Give In (speech at Harrow School, 29 October 1941), transcript",
+      "author": "Winston S. Churchill",
+      "year": 1941,
+      "publisher": "International Churchill Society",
+      "url": "https://winstonchurchill.org/1941/10/29/never-give-in/"
+    },
+    {
+      "id": "mel-1930",
+      "kind": "primary",
+      "title": "My Early Life: A Roving Commission (second impression)",
+      "author": "Winston S. Churchill",
+      "year": 1930,
+      "publisher": "Thornton Butterworth, London",
+      "url": "https://archive.org/details/dli.ministry.17592"
+    },
+    {
+      "id": "scott-1905",
+      "kind": "secondary",
+      "title": "Winston Spencer Churchill",
+      "author": "Alexander MacCallum Scott",
+      "year": 1905,
+      "publisher": "Methuen, London",
+      "url": "https://archive.org/details/winstonspencerc00scotgoog"
+    },
+    {
+      "id": "govuk",
+      "kind": "secondary",
+      "title": "Past Prime Ministers: Winston Churchill",
+      "author": "Prime Minister's Office, 10 Downing Street",
+      "year": "n.d. (read 2026)",
+      "publisher": "GOV.UK",
+      "url": "https://www.gov.uk/government/history/past-prime-ministers/winston-churchill"
+    },
+    {
+      "id": "nobel-bio",
+      "kind": "secondary",
+      "title": "Winston Churchill - Biographical (from Nobel Lectures, Literature 1901-1967, ed. Horst Frenz)",
+      "author": "Nobel Foundation",
+      "year": 1969,
+      "publisher": "Elsevier / NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/literature/1953/churchill/biographical/"
+    },
+    {
+      "id": "nobel-1953",
+      "kind": "secondary",
+      "title": "The Nobel Prize in Literature 1953 (summary and prize motivation)",
+      "author": "Nobel Prize Outreach",
+      "year": 1953,
+      "publisher": "NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/literature/1953/summary/"
+    },
+    {
+      "id": "nobel-ceremony",
+      "kind": "secondary",
+      "title": "Award ceremony speech, Nobel Prize in Literature 1953",
+      "author": "S. Siwertz, Swedish Academy",
+      "year": 1953,
+      "publisher": "NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/literature/1953/ceremony-speech/"
+    },
+    {
+      "id": "nyt-1965",
+      "kind": "secondary",
+      "title": "Churchill is Dead at 90; The World Mourns Him; State Funeral Saturday (The New York Times, 25 January 1965; reprinted by the International Churchill Society)",
+      "author": "Anthony Lewis",
+      "year": 1965,
+      "publisher": "The New York Times",
+      "url": "https://winstonchurchill.org/the-life-of-churchill/in-memoriam/churchill-dead-at-90"
+    },
+    {
+      "id": "museumofpm",
+      "kind": "secondary",
+      "title": "The Cabinet Crisis, May 1940 (with extracts from the War Cabinet minutes, CAB 65/13)",
+      "author": "Museum of the Prime Minister",
+      "year": 2025,
+      "publisher": "Museum of the Prime Minister",
+      "url": "https://www.museumofpm.org/articles/the-cabinet-crisis-may-1940/"
+    },
+    {
+      "id": "aljazeera-2019",
+      "kind": "secondary",
+      "title": "Churchill's policies to blame for 1943 Bengal famine: Study",
+      "author": "Bilal Kuchay",
+      "year": 2019,
+      "publisher": "Al Jazeera",
+      "url": "https://www.aljazeera.com/news/2019/4/1/churchills-policies-to-blame-for-1943-bengal-famine-study"
+    },
+    {
+      "id": "time-2010",
+      "kind": "secondary",
+      "title": "The Ugly Briton (review of Madhusree Mukerjee, Churchill's Secret War)",
+      "author": "Shashi Tharoor",
+      "year": 2010,
+      "publisher": "Time",
+      "url": "https://time.com/archive/6597994/the-ugly-briton/"
+    },
+    {
+      "id": "langworth-2020",
+      "kind": "secondary",
+      "title": "Churchill Derangement Syndrome: A is for Aryans, R is for Racism",
+      "author": "Richard M. Langworth",
+      "year": 2020,
+      "publisher": "richardlangworth.com",
+      "url": "https://richardlangworth.com/churchill-derangement-syndrome"
+    },
+    {
+      "id": "cam-1931",
+      "kind": "secondary",
+      "title": "\"A Seditious Middle Temple Lawyer\", 23 Feb 1931 (catalogue entry for speech notes, CHAR 9/95/34-46)",
+      "author": "Churchill Archives Centre, Cambridge",
+      "year": "n.d. (read 2026)",
+      "publisher": "University of Cambridge ArchiveSearch",
+      "url": "https://archivesearch.lib.cam.ac.uk/repositories/9/archival_objects/1425982"
+    },
+    {
+      "id": "hillsdale-2020",
+      "kind": "secondary",
+      "title": "History as Prologue",
+      "author": "Josiah Leinbach",
+      "year": 2020,
+      "publisher": "Hillsdale College Churchill Project",
+      "url": "https://winstonchurchill.hillsdale.edu/history-statesmanship/"
+    },
+    {
+      "id": "ncm-1919",
+      "kind": "primary",
+      "title": "Churchill's 1919 War Office Memorandum (minute of 12 May 1919), transcript",
+      "author": "Winston S. Churchill",
+      "year": 1919,
+      "publisher": "National Churchill Museum",
+      "url": "https://nationalchurchillmuseum.org/churchills-1919-war-office-memorandum.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real British prime minister who died in 1965, so not a living politician or founder of a religion; no credible account of sexual violence or of sexual contact with anyone under 16 was found; he has a documented dark side on race, India and the 1943 Bengal famine."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked all five values and re-read every locator in My Early Life (1930), Scott (1905), Hansard, the Harrow transcript, the Nobel pages, the Museum of the Prime Minister and the shadow sources. Nothing fell: Determination, Courage and Ambition matched the blind pick, Learning reached three sources with a Hillsdale-cited letter, and Craft held despite David Reynolds showing his war memoirs were largely drafted by assistants, since his early books and speeches were his own. Two claims overstated their sources (he did not climb the Pretoria wall in sight of the sentries, and the nine May 1940 meetings were the War Cabinet's, not nine of his arguments) and are fixed. The shadow gained his own 12 May 1919 minute on poison gas, with Langworth's tear-gas reading beside it.",
+    "checkedOn": "2026-11-10"
+  }
+}

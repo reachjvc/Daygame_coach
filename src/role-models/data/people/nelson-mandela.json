@@ -1,0 +1,395 @@
+{
+  "id": "nelson-mandela",
+  "name": "Nelson Mandela",
+  "born": 1918,
+  "died": 2013,
+  "category": "leaders",
+  "areaIds": [
+    "lm_mission",
+    "lm_emotions"
+  ],
+  "tagline": "A prisoner for 27 years who refused freedom on terms he rejected, then led a divided country.",
+  "startedFrom": "He was born in 1918 in Mvezo, a village in the Eastern Cape, the son of a principal counsellor to the acting king of the Thembu people. After his father died he became a ward of the acting king at the Great Place in Mqhekezweni. He was expelled from the University College of Fort Hare for joining a student protest. When the regent arranged marriages for him and his cousin Justice, the two stole two of the regent's cattle to pay their way and ran away to Johannesburg, arriving in 1941, where he worked as a mine security officer.",
+  "values": [
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told the court he had cherished the ideal of a democratic and free society in which all persons live together in harmony and with equal opportunities.",
+          "sourceId": "rivonia-1964",
+          "locator": "statement from the dock, 20 April 1964, closing paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1952 he was chosen as National Volunteer-in-Chief of the Defiance Campaign of civil disobedience against six unjust laws, and was sentenced for it to nine months' hard labour, suspended for two years.",
+          "sourceId": "nmf-bio",
+          "locator": "Biography, paragraph on the 1952 Defiance Campaign"
+        },
+        {
+          "kind": "deed",
+          "claim": "In August 1952 he and Oliver Tambo set up the law firm Mandela & Tambo.",
+          "sourceId": "nmf-bio",
+          "locator": "Biography, paragraph on Mandela & Tambo"
+        },
+        {
+          "kind": "words",
+          "claim": "At his inauguration as president on 10 May 1994 he said: Let there be justice for all.",
+          "sourceId": "inauguration-1994",
+          "locator": "inauguration speech, Pretoria, 10 May 1994"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On trial for sabotage in the Rivonia Trial and facing the death penalty, he made a statement from the dock on 20 April 1964.",
+          "sourceId": "nmf-bio",
+          "locator": "Biography, paragraph beginning 'On 9 October 1963 Mandela joined 10 others on trial for sabotage'"
+        },
+        {
+          "kind": "words",
+          "claim": "In it he told the court: I admit immediately that I was one of the persons who helped to form Umkhonto we Sizwe.",
+          "sourceId": "rivonia-1964",
+          "locator": "statement from the dock, 20 April 1964, paragraph beginning 'I admit immediately'"
+        },
+        {
+          "kind": "words",
+          "claim": "He ended that statement: But if needs be, it is an ideal for which I am prepared to die.",
+          "sourceId": "rivonia-1964",
+          "locator": "statement from the dock, 20 April 1964, closing paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "After the 1961 acquittal he went underground; in January 1962 he left the country secretly under the name David Motsamayi, took military training in Morocco and Ethiopia, and came back in July 1962.",
+          "sourceId": "nmf-bio",
+          "locator": "Biography, paragraphs beginning 'Days before the end of the Treason Trial' and 'On 11 January 1962'"
+        }
+      ]
+    },
+    {
+      "word": "Integrity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Throughout his imprisonment he rejected at least three offers of release that came with conditions.",
+          "sourceId": "nmf-bio",
+          "locator": "Biography, paragraph on his release from Victor Verster Prison"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1976 the Minister of Prisons offered to release him if he recognised the Transkei homeland and went to live there; he rejected the offer outright.",
+          "sourceId": "saho-bio",
+          "locator": "section on Robben Island, paragraph beginning 'There were also visits from government officials'"
+        },
+        {
+          "kind": "words",
+          "claim": "Answering Botha's 1985 offer he said: I cannot and will not give any undertaking at a time when I and you, the people, are not free.",
+          "sourceId": "birthright-1985",
+          "locator": "statement read 10 February 1985, closing sentence"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Prize biography says he consistently refused to compromise his political position to obtain his freedom.",
+          "sourceId": "nobel-bio",
+          "locator": "Biographical, paragraph beginning 'During his years in prison'"
+        }
+      ]
+    },
+    {
+      "word": "Forgiveness",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "On the day of his release he called on white South Africans to join in shaping a new South Africa: The freedom movement is a political home for you too.",
+          "sourceId": "release-1990",
+          "locator": "speech at Cape Town City Hall, 11 February 1990, paragraph beginning 'It is only through disciplined mass action'"
+        },
+        {
+          "kind": "deed",
+          "claim": "At the 1995 Rugby World Cup final he handed the trophy to the Springbok captain while wearing a Springbok jersey, the team long tied to white rule.",
+          "sourceId": "saho-bio",
+          "locator": "paragraph on the 1995 Rugby World Cup"
+        },
+        {
+          "kind": "deed",
+          "claim": "In November 1995, months after becoming president, he invited Percy Yutar, the prosecutor at his Rivonia Trial, to lunch.",
+          "sourceId": "saho-yutar",
+          "locator": "Dr Percy Yutar, paragraph beginning 'In November 1995'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The BBC names his lack of bitterness over his harsh treatment as part of his appeal.",
+          "sourceId": "bbc-profile",
+          "locator": "opening section"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nelson Mandela Foundation writes that despite terrible provocation he never answered racism with racism.",
+          "sourceId": "nmf-bio",
+          "locator": "Biography, closing paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He left his law degree at Wits unfinished in 1952, took up law again in prison through the University of London without finishing, and obtained an LLB through the University of South Africa in 1989, in the last months of his imprisonment.",
+          "sourceId": "nmf-bio",
+          "locator": "Biography, paragraphs beginning 'Meanwhile, he began studying for an LLB' and 'In 1989'"
+        },
+        {
+          "kind": "deed",
+          "claim": "On Robben Island in 1975 and 1976 he spent four months secretly writing his autobiography by night; a copy was smuggled out and the original was buried in the prison garden.",
+          "sourceId": "saho-bio",
+          "locator": "section on Robben Island, paragraph beginning 'In the 1970s, prisoners were allowed to keep a vegetable garden'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nelson Mandela Foundation writes that he never wavered in his devotion to democracy, equality and learning.",
+          "sourceId": "nmf-bio",
+          "locator": "Biography, closing paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Prize biography says he consistently refused to compromise his political position to obtain his freedom.",
+          "sourceId": "nobel-bio",
+          "locator": "Biographical, paragraph beginning 'During his years in prison'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not buy your own freedom by giving up what you stand for.",
+      "sourceId": "birthright-1985",
+      "locator": "statement read 10 February 1985, paragraphs beginning 'I cherish my own freedom dearly' and 'Only free men can negotiate'"
+    },
+    {
+      "text": "Try every peaceful means first; use force only when all of them are closed.",
+      "sourceId": "rivonia-1964",
+      "locator": "statement from the dock, 20 April 1964, paragraphs beginning 'This conclusion was not easily arrived at' and 'Four forms of violence were possible'"
+    },
+    {
+      "text": "Fight against one group ruling another, whichever group it is, your own included.",
+      "sourceId": "rivonia-1964",
+      "locator": "statement from the dock, 20 April 1964, closing paragraph"
+    },
+    {
+      "text": "When you win, invite your old opponents into what you build.",
+      "sourceId": "release-1990",
+      "locator": "speech at Cape Town City Hall, 11 February 1990, paragraph beginning 'It is only through disciplined mass action'"
+    },
+    {
+      "text": "Lead as a servant of the people, not as a prophet above them.",
+      "sourceId": "release-1990",
+      "locator": "speech at Cape Town City Hall, 11 February 1990, third paragraph"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I have fought against white domination, and I have fought against black domination.",
+      "sourceId": "rivonia-1964",
+      "locator": "statement from the dock, Pretoria Supreme Court, 20 April 1964, closing paragraph"
+    },
+    {
+      "text": "I cherish my own freedom dearly, but I care even more for your freedom.",
+      "sourceId": "birthright-1985",
+      "locator": "reply to P. W. Botha, read by Zindzi Mandela, Jabulani Stadium, Soweto, 10 February 1985"
+    },
+    {
+      "text": "I stand here before you not as a prophet but as a humble servant of you, the people.",
+      "sourceId": "release-1990",
+      "locator": "speech at Cape Town City Hall, 11 February 1990, third paragraph"
+    },
+    {
+      "text": "The time for the healing of the wounds has come.",
+      "sourceId": "inauguration-1994",
+      "locator": "inauguration speech, Union Buildings, Pretoria, 10 May 1994"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 31 January 1985 President P. W. Botha told parliament that Mandela could go free if he unconditionally rejected violence as a political weapon. Mandela had been in prison since 1962. On 10 February 1985 his daughter Zindzi read his answer to a rally at Jabulani Stadium in Soweto: he would give no undertaking while he and the people were not free, and only free men can negotiate. He stayed in prison five more years and was released on 11 February 1990.",
+    "sourceIds": [
+      "birthright-1985",
+      "botha-nmf-2010",
+      "nmf-bio"
+    ]
+  },
+  "shadow": {
+    "text": "In 1961 he helped found Umkhonto we Sizwe, the ANC's armed wing, which began a campaign of explosions on 16 December 1961; at his 1964 trial he said, \"I do not, however, deny that I planned sabotage.\" In the same statement he said, \"I have denied that I am a communist\"; on the day he died in December 2013 the South African Communist Party stated that at his arrest in 1962 he had been a member of its Central Committee. On his release in 1990 he said the armed struggle would continue, and in 1998 the Truth and Reconciliation Commission found that the ANC and its organs had committed gross violations of human rights, and that the armed wing's operations killed fewer security force members than civilians. His first wife, Evelyn Mase, alleged violence in her petition for divorce in the 1950s and soon withdrew the claim; David James Smith's 2010 biography Young Mandela says he attempted to throttle her. In Conversations with Myself (2010) he denied trying to choke her and said he had twisted her arm to take a red-hot poker from her; in 2025 Raymond Suttner, who knew him after his release, wrote that a deposition signed by Mandela, as reported by Paul Landau, suggests he did assault her, at one point knocking her to the ground, and that Evelyn repeatedly said he was unfaithful.",
+    "sourceIds": [
+      "nmf-bio",
+      "rivonia-1964",
+      "sacp-saho",
+      "release-1990",
+      "bbc-trc-1998",
+      "spectator-2010",
+      "bryson-2010",
+      "suttner-2025"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you give up something you stand for this week to get an easier deal for yourself?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Long Walk to Freedom",
+      "year": 1994
+    },
+    {
+      "title": "Conversations with Myself",
+      "year": 2010
+    }
+  ],
+  "sources": [
+    {
+      "id": "rivonia-1964",
+      "kind": "primary",
+      "title": "Statement from the dock at the opening of the defence case, Rivonia Trial, Pretoria Supreme Court, 20 April 1964 (court transcript)",
+      "author": "Nelson Mandela",
+      "year": 1964,
+      "publisher": "South African History Online",
+      "url": "https://sahistory.org.za/archive/court-transcript-statement-dock-nelson-mandela-pretoria-supreme-court-20-april-1964"
+    },
+    {
+      "id": "birthright-1985",
+      "kind": "primary",
+      "title": "'I am not prepared to sell the birthright of the people to be free': reply to P. W. Botha's offer of conditional release, read by Zindzi Mandela, Jabulani Stadium, Soweto, 10 February 1985",
+      "author": "Nelson Mandela",
+      "year": 1985,
+      "publisher": "South African History Online",
+      "url": "https://sahistory.org.za/archive/i-am-not-prepared-sell-birthright-people-be-free"
+    },
+    {
+      "id": "release-1990",
+      "kind": "primary",
+      "title": "Speech on his release from prison, Cape Town City Hall, 11 February 1990",
+      "author": "Nelson Mandela",
+      "year": 1990,
+      "publisher": "United Nations",
+      "url": "https://static.un.org/en/events/mandeladay/speech_on_his_release_from_prison.shtml"
+    },
+    {
+      "id": "inauguration-1994",
+      "kind": "primary",
+      "title": "Inauguration speech as President of South Africa, Pretoria, 10 May 1994",
+      "author": "Nelson Mandela",
+      "year": 1994,
+      "publisher": "SAnews (South African Government News Agency)",
+      "url": "https://www.sanews.gov.za/south-africa/read-nelson-mandelas-inauguration-speech-president-sa"
+    },
+    {
+      "id": "nmf-bio",
+      "kind": "secondary",
+      "title": "Biography of Nelson Mandela",
+      "author": "Nelson Mandela Foundation",
+      "year": "undated (read 2026-11-10)",
+      "url": "https://www.nelsonmandela.org/content/page/biography"
+    },
+    {
+      "id": "saho-bio",
+      "kind": "secondary",
+      "title": "Nelson Rolihlahla Mandela",
+      "author": "South African History Online",
+      "year": 2026,
+      "publisher": "South African History Online",
+      "url": "https://sahistory.org.za/people/nelson-rolihlahla-mandela"
+    },
+    {
+      "id": "nobel-bio",
+      "kind": "secondary",
+      "title": "Nelson Mandela – Biographical (from Les Prix Nobel. The Nobel Prizes 1993, ed. Tore Frängsmyr, Nobel Foundation, Stockholm, 1994)",
+      "author": "Nobel Foundation",
+      "year": 1994,
+      "publisher": "NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/peace/1993/mandela/biographical/"
+    },
+    {
+      "id": "bbc-profile",
+      "kind": "secondary",
+      "title": "Nelson Mandela's life and times",
+      "author": "BBC News",
+      "year": 2011,
+      "publisher": "BBC",
+      "url": "https://www.bbc.com/news/world-africa-12305154"
+    },
+    {
+      "id": "botha-nmf-2010",
+      "kind": "secondary",
+      "title": "Foundation marks 25 years since Nelson Mandela rejected PW Botha's offer of conditional release",
+      "author": "Nelson Mandela Foundation",
+      "year": 2010,
+      "url": "https://nelsonmandela.org/news/entry/foundation-marks-25-years-since-nelson-mandela-rejected-pw-bothas-offer-of-"
+    },
+    {
+      "id": "bbc-trc-1998",
+      "kind": "secondary",
+      "title": "Truth report: Key points",
+      "author": "BBC News",
+      "year": 1998,
+      "publisher": "BBC",
+      "url": "https://news.bbc.co.uk/1/hi/special_report/1998/10/98/truth_and_reconciliation/204015.stm"
+    },
+    {
+      "id": "spectator-2010",
+      "kind": "secondary",
+      "title": "Tried and tested (review of David James Smith, Young Mandela)",
+      "author": "Andro Linklater",
+      "year": 2010,
+      "publisher": "The Spectator",
+      "url": "https://spectator.com/article/tried-and-tested/"
+    },
+    {
+      "id": "bryson-2010",
+      "kind": "secondary",
+      "title": "Madiba book offers personal portrait",
+      "author": "Donna Bryson (Associated Press)",
+      "year": 2010,
+      "publisher": "IOL",
+      "url": "https://iol.co.za/news/2010-10-11-madiba-book-offers-personal-portrait/"
+    },
+    {
+      "id": "suttner-2025",
+      "kind": "secondary",
+      "title": "Dissecting Mandela's concept of masculinity, and his gender politics and practices (Part 4)",
+      "author": "Raymond Suttner",
+      "year": 2025,
+      "publisher": "Daily Maverick",
+      "url": "https://www.dailymaverick.co.za/article/2025-10-30-dissecting-mandelas-concept-of-masculinity-and-his-gender-politics-and-practices-part-4"
+    },
+    {
+      "id": "saho-yutar",
+      "kind": "secondary",
+      "title": "Dr Percy Yutar",
+      "author": "South African History Online",
+      "year": 2019,
+      "publisher": "South African History Online",
+      "url": "https://sahistory.org.za/people/dr-percy-yutar"
+    },
+    {
+      "id": "sacp-saho",
+      "kind": "secondary",
+      "title": "Mandela and the South African Communist Party",
+      "author": "South African History Online",
+      "year": "undated (read 2026-11-10)",
+      "publisher": "South African History Online",
+      "url": "https://sahistory.org.za/article/mandela-and-south-african-communist-party"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real South African lawyer, ANC leader and president (1918-2013), not fictional, dead since 2013 so not a living politician, not the founder of a religion, with no account found of sexual contact with a minor or of sexual violence; he is in, with a documented dark side: he founded and led the ANC's armed wing, and his first wife alleged he assaulted her."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked every value. Humility fell: Richard Stengel, who worked with him on Long Walk to Freedom, wrote in The Spectator (1994) that he could be regal and imperious and that appearing humble was his least convincing role, and the draft's evidence was one speech line and a promise kept. Integrity held against his 1964 denial that he was a communist, which the SACP contradicted in 2013; that went into the shadow as a single lapse, and Forgiveness held with his 1995 lunch with his Rivonia prosecutor added. Determination, the blind agent's pick, was added on his 37-year law degree and his secret prison manuscript; Peace was not, since he founded the armed wing, and Freedom was not, to avoid bending the word. All four quotes checked; eight sentences were corrected, among them the 'first black-owned law firm' claim, which the Nelson Mandela Foundation's own footnote disputes.",
+    "checkedOn": "2026-11-10"
+  }
+}

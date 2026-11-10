@@ -1,0 +1,297 @@
+{
+  "id": "frederick-douglass",
+  "name": "Frederick Douglass",
+  "born": 1818,
+  "died": 1895,
+  "category": "leaders",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "Escaped slavery, taught himself to read, and fought back with fists and words.",
+  "startedFrom": "He was born enslaved in Talbot County, Maryland, in February 1818. He saw his mother only four or five times, always at night, and she died when he was about seven. His father was a white man; who he was, Douglass wrote, 'the means of knowing was withheld from me.' He was kept from school, and Hugh Auld, who held him in Baltimore, said teaching a slave to read was against the law.",
+  "values": [
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Not allowed to go to school, he taught himself to read and write in the streets of Baltimore, and at twelve bought The Columbian Orator.",
+          "sourceId": "nps",
+          "locator": "section 'Slavery and Escape'"
+        },
+        {
+          "kind": "words",
+          "claim": "After his master stopped his lessons, he writes that he set out 'with high hope, and a fixed purpose, at whatever cost of trouble, to learn how to read.'",
+          "sourceId": "narrative-1845",
+          "locator": "ch. VI"
+        },
+        {
+          "kind": "deed",
+          "claim": "While still enslaved he took part in at least one Sabbath school and helped other slaves learn to read and write.",
+          "sourceId": "sep",
+          "locator": "s. 10 'Leadership'"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1833, days after Covey beat him for collapsing in the August heat, Covey tried to tie him up in the stable, and he fought Covey for nearly two hours.",
+          "sourceId": "narrative-1845",
+          "locator": "ch. X"
+        },
+        {
+          "kind": "deed",
+          "claim": "On September 3, 1838, he boarded a northbound train dressed as a sailor and reached New York in less than a day.",
+          "sourceId": "nps",
+          "locator": "section 'Slavery and Escape'"
+        },
+        {
+          "kind": "words",
+          "claim": "After the fight he let it be known 'that the white man who expected to succeed in whipping, must also succeed in killing me.'",
+          "sourceId": "narrative-1845",
+          "locator": "ch. X"
+        }
+      ]
+    },
+    {
+      "word": "Self-respect",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that the fight with Covey 'recalled to life my crushed self-respect and my self-confidence'.",
+          "sourceId": "bondage-1855",
+          "locator": "ch. XVII 'The Last Flogging'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia describes the Covey fight as read by philosophers as emblematic of self-respect, and his writing as an evocation of dignity.",
+          "sourceId": "sep",
+          "locator": "s. 6 'Respect and Dignity'"
+        },
+        {
+          "kind": "deed",
+          "claim": "After the fight he was never again fairly whipped, though he stayed a slave four more years.",
+          "sourceId": "narrative-1845",
+          "locator": "ch. X"
+        }
+      ]
+    },
+    {
+      "word": "Self-reliance",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 1857 he said it is 'no part of gratitude to allow our white friends to do all the work, while we merely hold their coats.'",
+          "sourceId": "two-speeches-1857",
+          "locator": "West India Emancipation speech, Canandaigua, N.Y., August 1857, p. 21"
+        },
+        {
+          "kind": "deed",
+          "claim": "He bought a printing press and ran his own newspaper, The North Star.",
+          "sourceId": "nps",
+          "locator": "section 'The Abolitionist Movement'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia says he likely saw himself as a self-made man, the subject of his speech 'Self-Made Men'.",
+          "sourceId": "sep",
+          "locator": "s. 10 'Leadership'"
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After he spoke at an anti-slavery convention in Nantucket on August 11, 1841, he wrote in 1845, he had been 'engaged in pleading the cause of my brethren' ever since.",
+          "sourceId": "narrative-1845",
+          "locator": "ch. XI"
+        },
+        {
+          "kind": "deed",
+          "claim": "In the Civil War he recruited Black men for the Union army, two of his sons among them, and met President Lincoln to press for equal pay and treatment of Black troops.",
+          "sourceId": "nps",
+          "locator": "section 'Civil War and Reconstruction'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said that what a people will quietly submit to is 'the exact measure of injustice and wrong which will be imposed upon them'.",
+          "sourceId": "two-speeches-1857",
+          "locator": "West India Emancipation speech, Canandaigua, N.Y., August 1857, p. 22"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Learn exactly what the people holding you down do not want you to know.",
+      "sourceId": "narrative-1845",
+      "locator": "ch. VI ('What he most dreaded, that I most desired.')"
+    },
+    {
+      "text": "When someone treats you like a brute, resist; a man who never stands up for himself loses his own respect.",
+      "sourceId": "bondage-1855",
+      "locator": "ch. XVII 'The Last Flogging'"
+    },
+    {
+      "text": "Expect no progress without a struggle: people with power give nothing until someone demands it.",
+      "sourceId": "two-speeches-1857",
+      "locator": "West India Emancipation speech, August 1857, p. 22"
+    },
+    {
+      "text": "Do your own share of the work; do not let helpers do it while you hold their coats.",
+      "sourceId": "two-speeches-1857",
+      "locator": "West India Emancipation speech, August 1857, p. 21"
+    },
+    {
+      "text": "Speak up even when fear weighs on you; the ease comes after you start.",
+      "sourceId": "narrative-1845",
+      "locator": "ch. XI (Nantucket, August 11, 1841)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "You have seen how a man was made a slave; you shall see how a slave was made a man.",
+      "sourceId": "narrative-1845",
+      "locator": "ch. X"
+    },
+    {
+      "text": "…however long I might remain a slave in form, the day had passed forever when I could be a slave in fact.",
+      "sourceId": "narrative-1845",
+      "locator": "ch. X"
+    },
+    {
+      "text": "If there is no struggle there is no progress.",
+      "sourceId": "two-speeches-1857",
+      "locator": "West India Emancipation speech, Canandaigua, N.Y., August 1857, p. 22"
+    },
+    {
+      "text": "Power concedes nothing without a demand. It never did and it never will.",
+      "sourceId": "two-speeches-1857",
+      "locator": "West India Emancipation speech, Canandaigua, N.Y., August 1857, p. 22"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1833, aged about fifteen, he was hired out for a year to Edward Covey, a farmer known for breaking slaves, who whipped him almost every week for six months. In August 1833 Covey beat him after he collapsed from heat while fanning wheat; days later, when Covey tried to tie him in the stable, Douglass fought back for nearly two hours. Covey never laid a finger on him in anger in the six months that followed. Douglass called the fight 'the turning-point in my career as a slave.'",
+    "sourceIds": [
+      "narrative-1845",
+      "sep"
+    ]
+  },
+  "shadow": {
+    "text": "In 1859 he refused to join John Brown's raid on Harpers Ferry; he later wrote that 'my discretion or my cowardice' kept him from going. After the raid he went to Canada and in November 1859 sailed for England, a trip he had planned but which, he wrote, the danger of arrest for complicity with Brown made a necessity. For 28 years the German writer Ottilie Assing, who translated his works, was close to him and spent summers at the Douglass home while he was married to Anna Murray Douglass. Assing's biographer Maria Diedrich (1999) argues they were lovers; in his biographer David Blight's account, as his reviewer Richard Carwardine sums it up, she possibly had an emotionally intimate relationship with him. Anna died in 1882, and in 1884 he married Helen Pitts, a white activist; Kirkus, reviewing Diedrich, reports that Assing then killed herself. Blight also describes him as vain, occasionally arrogant and thin-skinned.",
+    "sourceIds": [
+      "life-and-times-1881",
+      "kirkus-diedrich",
+      "literary-review-blight",
+      "nps"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you want this week that you never actually asked for?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "Narrative of the Life of Frederick Douglass, an American Slave",
+      "year": 1845
+    },
+    {
+      "title": "My Bondage and My Freedom",
+      "year": 1855
+    },
+    {
+      "title": "Life and Times of Frederick Douglass",
+      "year": 1881
+    }
+  ],
+  "sources": [
+    {
+      "id": "narrative-1845",
+      "kind": "primary",
+      "title": "Narrative of the Life of Frederick Douglass, an American Slave",
+      "author": "Frederick Douglass",
+      "year": 1845,
+      "publisher": "Anti-Slavery Office, Boston (Project Gutenberg eBook #23)",
+      "url": "https://www.gutenberg.org/ebooks/23"
+    },
+    {
+      "id": "bondage-1855",
+      "kind": "primary",
+      "title": "My Bondage and My Freedom",
+      "author": "Frederick Douglass",
+      "year": 1855,
+      "publisher": "Miller, Orton & Mulligan (Project Gutenberg eBook #202)",
+      "url": "https://www.gutenberg.org/ebooks/202"
+    },
+    {
+      "id": "life-and-times-1881",
+      "kind": "primary",
+      "title": "Life and Times of Frederick Douglass",
+      "author": "Frederick Douglass",
+      "year": 1881,
+      "publisher": "Park Publishing Co. (Project Gutenberg eBook #71893)",
+      "url": "https://www.gutenberg.org/ebooks/71893"
+    },
+    {
+      "id": "two-speeches-1857",
+      "kind": "primary",
+      "title": "Two Speeches, by Frederick Douglass: One on West India Emancipation, Delivered at Canandaigua, Aug. 4th, and the Other on the Dred Scott Decision",
+      "author": "Frederick Douglass",
+      "year": 1857,
+      "publisher": "C. P. Dewey, Rochester, N.Y.",
+      "url": "https://archive.org/details/ASPC0001937700"
+    },
+    {
+      "id": "sep",
+      "kind": "secondary",
+      "title": "Frederick Douglass (Stanford Encyclopedia of Philosophy)",
+      "author": "Ronald Sundstrom",
+      "year": 2023,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/frederick-douglass/"
+    },
+    {
+      "id": "nps",
+      "kind": "secondary",
+      "title": "Frederick Douglass",
+      "author": "Frederick Douglass National Historic Site, U.S. National Park Service",
+      "year": "n.d. (read 2026)",
+      "publisher": "U.S. National Park Service",
+      "url": "https://www.nps.gov/frdo/learn/historyculture/frederickdouglass.htm"
+    },
+    {
+      "id": "literary-review-blight",
+      "kind": "secondary",
+      "title": "Review of David W. Blight, Frederick Douglass: Prophet of Freedom (Literary Review, issue 478)",
+      "author": "Richard Carwardine",
+      "year": 2019,
+      "publisher": "Literary Review",
+      "url": "https://literaryreview.co.uk/emancipation-and-beyond"
+    },
+    {
+      "id": "kirkus-diedrich",
+      "kind": "secondary",
+      "title": "Review of Maria Diedrich, Love Across Color Lines: Ottilie Assing and Frederick Douglass",
+      "author": "Kirkus Reviews",
+      "year": 1999,
+      "publisher": "Kirkus Reviews",
+      "url": "https://www.kirkusreviews.com/book-reviews/maria-diedrich/love-across-color-lines/print"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real 19th-century abolitionist, dead since 1895, with no credible account of sexual violence or of sexual contact with a minor; in, with a documented shadow (Harpers Ferry refusal and flight, the long Ottilie Assing relationship while married, vanity per his biographer)."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked all five values against the full texts of the three autobiographies, the 1857 speech pamphlet, the Stanford Encyclopedia, the Park Service page and the Blight and Diedrich reviews. None fell: his 1859 refusal to join John Brown is one lapse against Courage and stands in the shadow, and the 1846 purchase of his freedom by abolitionists does not undo Self-reliance. Freedom and Determination from the blind pick had no room. All four quotes matched the original texts; ten fixes were made, mostly dates (the speech day, the fight's day) and claims the sources state more weakly, and the shadow gained Assing's suicide after his 1884 marriage.",
+    "checkedOn": "2026-11-10"
+  }
+}
