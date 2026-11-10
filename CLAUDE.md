@@ -43,6 +43,9 @@ This overrides any plan. A plan opens with these items, in plain words.
   act on, like the naming board he marks Yes/Maybe/No
   (https://claude.ai/artifact/DSD8J1PJt4533EPytGD9v4). For choices,
   comparisons and plans, try different visual forms, not only chat text.
+- Content creation (YouTube, videos, scripts, articles for an audience):
+  always start by reading `docs/product/content_creation.md`. It holds the
+  idea and the two personas (Senior and Doer) to answer in.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
