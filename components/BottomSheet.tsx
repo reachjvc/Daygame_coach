@@ -63,8 +63,14 @@ const DOUBLE_CLICK_MS = 500
  * a marked element leaves the sheet open. The bar also needs
  * `pointer-events-auto`, as the dialog turns presses off on the page behind,
  * and must be drawn above the sheet (z above 9600).
+ *
+ * HEARD AS WELL AS SEEN (p10-sheets-02). A modal sheet marks everything outside
+ * it `aria-hidden`, so a screen reader was told nothing about the bar and could
+ * not find its Undo. Radix leaves live regions alone (`aria-hidden` skips
+ * `[aria-live]`), and every marked bar is a status that reports what just
+ * happened, so the mark makes it one.
  */
-export const OVER_SHEET = { "data-over-sheet": "" } as const
+export const OVER_SHEET = { "data-over-sheet": "", "aria-live": "polite" } as const
 const overSheet = (target: EventTarget | null) => target instanceof Element && target.closest("[data-over-sheet]") !== null
 const DOUBLE_CLICK_PX = 24
 
