@@ -1,0 +1,355 @@
+{
+  "id": "galileo-galilei",
+  "name": "Galileo Galilei",
+  "born": 1564,
+  "died": 1642,
+  "category": "scientists",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A musician's son who trusted his own eyes and instruments over the authority of old books",
+  "startedFrom": "He was born in Pisa in 1564, the first child of Vincenzo Galilei, a musician of noble family but modest means. His father wanted him to be a doctor; he enrolled in medicine at the University of Pisa, studied mathematics instead and left in 1585 without a degree. When his father died in 1591 he had to support the family and pay his sisters' dowries, and fell so far behind that his brother-in-law threatened to have him imprisoned.",
+  "values": [
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that once his telescope was ready he left earthly uses aside, \"betook myself to observations of the heavenly bodies\", and watched stars and planets \"with incredible delight\".",
+          "sourceId": "sm-1880",
+          "locator": "section with the sidenote \"Galileo's first observations with his telescope\""
+        },
+        {
+          "kind": "deed",
+          "claim": "After finding the four moons of Jupiter he made a long series of observations of them, and by 1612 he could give their periods accurately.",
+          "sourceId": "mactutor",
+          "locator": "Biography, paragraph beginning \"While in Rome, and after his return to Florence\""
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer Bethune wrote that, though \"quite blind, and nearly deaf\" in his last years, his mind stayed active to the end, and he was still working on the force of percussion when his final illness began.",
+          "sourceId": "bethune-1830",
+          "locator": "ch. XIX (Character of Galileo; his death)"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that he built a first tube of lead with two lenses, then a better one, and at last, \"by sparing neither labour nor expense\", an instrument that made objects appear more than thirty times nearer.",
+          "sourceId": "sm-1880",
+          "locator": "section with the sidenote \"Galileo's account of the invention of his telescope\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1609 he learned to grind and polish his own lenses, and by August that year his telescope magnified about eight or nine times, much better than the Dutch instrument.",
+          "sourceId": "mactutor",
+          "locator": "Biography, paragraph beginning \"From these reports, and using his own technical skills\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In Padua he earned extra income making a calculating instrument of his own design and other devices in a household workshop staffed by hired craftsmen.",
+          "sourceId": "sep",
+          "locator": "2. Brief Biography, paragraph beginning \"After leaving university\""
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "The Museo Galileo writes that he \"had long been seeking the protection of a prince in order to continue his studies without having to teach\" when he named Jupiter's moons the Medicean Stars.",
+          "sourceId": "imss-astro",
+          "locator": "itinerary page \"Astronomical discoveries and return to Florence (1609-1610)\", paragraph beginning \"Among all these discoveries\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1609 he gave the Venetian Senate the sole rights to make telescopes in return for a large rise in his salary, although he always said the telescope was not his invention.",
+          "sourceId": "mactutor",
+          "locator": "Biography, paragraph beginning \"From these reports, and using his own technical skills\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1610 he named the moons of Jupiter the \"Medicean\" stars after the ruling family of Tuscany, to win their patronage, and was then made Chief Mathematician and Philosopher to the Grand Duke in Florence.",
+          "sourceId": "sep",
+          "locator": "2. Brief Biography, paragraph beginning \"Galileo also used the Starry Messenger\""
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Convicted in 1633 and confined to his villa at Arcetri, and after his eldest daughter died in 1634, he wrote his last book, Two New Sciences, which was smuggled out of Italy and printed in Holland in 1638.",
+          "sourceId": "sep",
+          "locator": "2. Brief Biography, paragraph beginning \"In 1634, while Galileo was confined\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The St Andrews historians write that after his daughter's death \"Galileo was shattered and could not work for many months\", and that when he restarted he began the Two New Sciences.",
+          "sourceId": "mactutor",
+          "locator": "Biography, paragraph beginning \"Found guilty, Galileo was condemned\""
+        },
+        {
+          "kind": "deed",
+          "claim": "The book came out in Leiden in 1638, when he was almost totally blind.",
+          "sourceId": "imss-galileo",
+          "locator": "biography page \"Galileo Galilei\""
+        }
+      ]
+    },
+    {
+      "word": "Recognition",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his dedication he called the moons stars \"unknown to all astronomers before me\" and wrote \"as I was the first to investigate them, who can rightly blame me if I give them a name\".",
+          "sourceId": "sm-1880",
+          "locator": "dedication to Cosimo II de' Medici"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia says that \"to establish his priority\" he rushed the discoveries into print as the Starry Messenger in March 1610.",
+          "sourceId": "sep",
+          "locator": "3.2 Astronomy, first paragraph (beginning \"Galileo was already acquainted with optical lenses\")"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1607, when Baldassarre Capra published a copy of his geometric and military compass as his own, he answered with a printed Defence against Capra's \"Calumnies and Impostures\", backed by workmen's statements that he had made the instrument since 1597.",
+          "sourceId": "bethune-1830",
+          "locator": "ch. V"
+        },
+        {
+          "kind": "deed",
+          "claim": "When the Grand Duke called him to Florence in 1610 he \"expressly requested that he might also be given the title of Philosopher\".",
+          "sourceId": "imss-astro",
+          "locator": "itinerary page \"Astronomical discoveries and return to Florence (1609-1610)\", last paragraph"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not give up what your own senses and reasoning show you just because an authority says otherwise.",
+      "sourceId": "salusbury-1661",
+      "locator": "Letter to the Grand Duchess, tome I, p. 434"
+    },
+    {
+      "text": "Test a claim by measuring it, and repeat the measurement many times before you trust it.",
+      "sourceId": "tns-1914",
+      "locator": "Third Day, pp. 178-179 (the inclined-plane trials, \"repeated a full hundred times\")"
+    },
+    {
+      "text": "If the tool you need is not good enough, build a better one yourself.",
+      "sourceId": "sm-1880",
+      "locator": "section with the sidenote \"Galileo's account of the invention of his telescope\""
+    },
+    {
+      "text": "Never assume that everything worth knowing is already known.",
+      "sourceId": "salusbury-1661",
+      "locator": "Letter to the Grand Duchess, tome I, p. 437"
+    },
+    {
+      "text": "Treat your own work as a beginning that sharper minds will carry further.",
+      "sourceId": "tns-1914",
+      "locator": "Third Day, opening of \"Change of Position\", pp. 153-154"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "For who will prescribe bounds to the Wits of men? Who will assert that all that is sensible and knowable in the World is already discovered and known?",
+      "sourceId": "salusbury-1661",
+      "locator": "Letter to the Grand Duchess Christina (1615), Mathematical Collections, tome I, p. 437",
+      "translation": "Thomas Salusbury, 1661"
+    },
+    {
+      "text": "My purpose is to set forth a very new science dealing with a very ancient subject.",
+      "sourceId": "tns-1914",
+      "locator": "Third Day, \"Change of Position\", p. 153",
+      "translation": "Henry Crew and Alfonso de Salvio, 1914"
+    },
+    {
+      "text": "…there have been opened up to this vast and most excellent science, of which my work is merely the beginning, ways and means by which other minds more acute than mine will explore its remote corners.",
+      "sourceId": "tns-1914",
+      "locator": "Third Day, \"Change of Position\", pp. 153-154",
+      "translation": "Henry Crew and Alfonso de Salvio, 1914"
+    },
+    {
+      "text": "At length, by sparing neither labour nor expense, I succeeded in constructing for myself an instrument so superior that objects seen through it appear magnified nearly a thousand times, and more than thirty times nearer than if viewed by the natural powers of sight alone.",
+      "sourceId": "sm-1880",
+      "locator": "The Sidereal Messenger (1610), section with the sidenote \"Galileo's account of the invention of his telescope\"",
+      "translation": "Edward Stafford Carlos, 1880"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1609, after hearing of a Dutch spyglass, he worked out how it must work and built better ones himself. On 7 January 1610 he saw three small stars in a line beside Jupiter; the next night they had moved, and by 11 January he concluded that they were circling Jupiter. He watched them night after night until 2 March, found a fourth, and published the record as the Sidereus Nuncius in March 1610. He named the moons after the Medici, and by June 1610 he was the Grand Duke's mathematician and philosopher in Florence.",
+    "sourceIds": [
+      "sm-1880",
+      "sep",
+      "mactutor"
+    ]
+  },
+  "shadow": {
+    "text": "He had three children with Marina Gamba in Padua but never married her and did not acknowledge himself as their father; when he moved to Florence in 1610 he left her behind. Around 1613-14 he placed his daughters Virginia and Livia, aged about 13 and 12, in the convent of San Matteo at Arcetri, believing that daughters born outside marriage should not marry; the Museo Galileo says Livia \"did not adjust well to convent life\", which it ties to her \"rejection of the harsh convent life\". In 1615, after a friar sent his Letter to Castelli to the Inquisition, he circulated a milder version and said it was the true one; the signed original found in 2018 suggests that he had made the changes himself. In the 1632 Dialogue he gave the Pope's favourite argument to Simplicio, the defender of the old view; a commission reporting to the Pope in 1632 complained that this closing argument was put \"in the mouth of a simpleton\" and the Museo Galileo says Urban VIII took personal offence, while the historian Karl von Gebler (1879) called the idea that Simplicio was the Pope a slander by his enemies. At his examination on 21 June 1633, told that torture would follow if he did not tell the truth, he said he had not held the Copernican opinion since he was ordered to abandon it in 1616. On 22 June 1633, aged 69, he knelt in Rome, swore that he abjured, cursed and detested the view that the Earth moves, and promised to denounce any heretic he knew.",
+    "sourceIds": [
+      "imss-gamba",
+      "sep",
+      "mactutor",
+      "imss-livia",
+      "abbott-2018",
+      "gebler-1879",
+      "imss-irate"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you accept something because of who said it, when you could have checked it yourself?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Sidereus Nuncius (The Starry Messenger)",
+      "year": 1610
+    },
+    {
+      "title": "Dialogue Concerning the Two Chief World Systems",
+      "year": 1632
+    },
+    {
+      "title": "Two New Sciences",
+      "year": 1638
+    }
+  ],
+  "sources": [
+    {
+      "id": "sm-1880",
+      "kind": "primary",
+      "title": "The Sidereal Messenger of Galileo Galilei (Sidereus Nuncius, 1610)",
+      "author": "Galileo Galilei, translated by Edward Stafford Carlos",
+      "year": 1880,
+      "publisher": "Rivingtons",
+      "url": "https://www.gutenberg.org/ebooks/46036"
+    },
+    {
+      "id": "salusbury-1661",
+      "kind": "primary",
+      "title": "Letter to the Grand Duchess Christina (1615), in Mathematical Collections and Translations, tome I",
+      "author": "Galileo Galilei, translated by Thomas Salusbury",
+      "year": 1661,
+      "publisher": "William Leybourn (text: EEBO-TCP A61244)",
+      "url": "https://github.com/textcreationpartnership/A61244"
+    },
+    {
+      "id": "tns-1914",
+      "kind": "primary",
+      "title": "Dialogues Concerning Two New Sciences (1638)",
+      "author": "Galileo Galilei, translated by Henry Crew and Alfonso de Salvio",
+      "year": 1914,
+      "publisher": "Macmillan",
+      "url": "https://archive.org/details/cu31924012322701"
+    },
+    {
+      "id": "sep",
+      "kind": "secondary",
+      "title": "Galileo Galilei, Stanford Encyclopedia of Philosophy (substantive revision 17 Dec 2025)",
+      "author": "Peter Machamer and David Marshall Miller",
+      "year": 2025,
+      "url": "https://plato.stanford.edu/entries/galileo/"
+    },
+    {
+      "id": "mactutor",
+      "kind": "secondary",
+      "title": "Galileo Galilei, MacTutor History of Mathematics, University of St Andrews",
+      "author": "J J O'Connor and E F Robertson",
+      "year": 2002,
+      "url": "https://mathshistory.st-andrews.ac.uk/Biographies/Galileo/"
+    },
+    {
+      "id": "bethune-1830",
+      "kind": "secondary",
+      "title": "The Life of Galileo Galilei, with Illustrations of the Advancement of Experimental Philosophy",
+      "author": "John Elliot Drinkwater Bethune",
+      "year": 1830,
+      "url": "https://www.gutenberg.org/ebooks/43877"
+    },
+    {
+      "id": "gebler-1879",
+      "kind": "secondary",
+      "title": "Galileo Galilei and the Roman Curia (with the trial documents)",
+      "author": "Karl von Gebler, translated by Mrs. G. Sturge",
+      "year": 1879,
+      "publisher": "C. Kegan Paul & Co.",
+      "url": "https://www.gutenberg.org/ebooks/60215"
+    },
+    {
+      "id": "abbott-2018",
+      "kind": "secondary",
+      "title": "Discovery of Galileo's long-lost letter shows he edited his heretical ideas to fool the Inquisition (Nature, 21 Sept 2018; reprinted in Scientific American)",
+      "author": "Alison Abbott",
+      "year": 2018,
+      "url": "https://www.scientificamerican.com/article/discovery-of-galileos-long-lost-letter-shows-he-edited-his-heretical-ideas-to-fool-the-inquisition/"
+    },
+    {
+      "id": "imss-galileo",
+      "kind": "secondary",
+      "title": "Galileo Galilei (biography), Scientific Itineraries in Tuscany",
+      "author": "Museo Galileo (Istituto e Museo di Storia della Scienza), Florence",
+      "year": 2010,
+      "url": "https://brunelleschi.imss.fi.it/itineraries/biography/GalileoGalilei.html"
+    },
+    {
+      "id": "imss-gamba",
+      "kind": "secondary",
+      "title": "Marina Gamba (biography), Scientific Itineraries in Tuscany",
+      "author": "Museo Galileo (Istituto e Museo di Storia della Scienza), Florence",
+      "year": 2008,
+      "url": "https://brunelleschi.imss.fi.it/itineraries/biography/MarinaGamba.html"
+    },
+    {
+      "id": "imss-livia",
+      "kind": "secondary",
+      "title": "Livia Galilei (sister Arcangela) (biography), Scientific Itineraries in Tuscany",
+      "author": "Museo Galileo (Istituto e Museo di Storia della Scienza), Florence",
+      "year": 2008,
+      "url": "https://brunelleschi.imss.fi.it/itineraries/biography/LiviaGalileiSisterArcangela.html"
+    },
+    {
+      "id": "imss-irate",
+      "kind": "secondary",
+      "title": "Irate theologians (1632-1633), Galileian itinerary",
+      "author": "Museo Galileo (Istituto e Museo di Storia della Scienza), Florence",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://brunelleschi.imss.fi.it/itineraries/itinerary/IrateTheologians.html"
+    },
+    {
+      "id": "imss-virginia-sister",
+      "kind": "secondary",
+      "title": "Virginia Galilei (his sister) (biography), Scientific Itineraries in Tuscany",
+      "author": "Museo Galileo (Istituto e Museo di Storia della Scienza), Florence",
+      "year": 2008,
+      "url": "https://brunelleschi.imss.fi.it/itineraries/biography/VirginiaGalilei.html"
+    },
+    {
+      "id": "imss-astro",
+      "kind": "secondary",
+      "title": "Astronomical discoveries and return to Florence (1609-1610), Galileian itinerary",
+      "author": "Museo Galileo (Istituto e Museo di Storia della Scienza), Florence",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://brunelleschi.imss.fi.it/itineraries/itinerary/AstronomicalDiscoveriesAndReturnToFlorence.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Italian mathematician and astronomer (1564-1642), not fictional, never a politician and not the founder of a religion, with no account of sexual contact with a minor or of sexual violence found; his documented dark side is his treatment of the mother of his children and of his daughters, a softened letter he passed off as the original, his public abjuration in 1633, and a Dialogue the Pope took as mocking him."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I tested every value, and Boldness and Resilience against the 1633 abjuration. Boldness fell: his own 1597 letter to Kepler says he had \"not yet dared to publish\" his Copernican arguments, MacTutor notes no public sign of them for many years, he went public in 1632 only after Urban VIII led him to believe there would be no serious consequences, and when the danger was real he softened the Castelli letter (1615), obeyed the 1616 admonition, denied at his 21 June 1633 examination that he held the view, and abjured; that is a pattern, not a lapse. Resilience held, because the abjuration is about what he gave way to, while the value rests on what came after: confined, grieving his daughter and going blind, he wrote Two New Sciences, published in Leiden in 1638. Recognition came in from the blind pick on four checked pieces from four sources, Ambition kept separate evidence, all four quotes matched the 1661, 1880 and 1914 texts, and the shadow gained the 21 June denial and lost two overstatements.",
+    "checkedOn": "2026-11-10"
+  }
+}
