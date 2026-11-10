@@ -1,0 +1,279 @@
+{
+  "id": "baltasar-gracian",
+  "name": "Baltasar Gracián",
+  "born": 1601,
+  "died": 1658,
+  "category": "sages",
+  "areaIds": [
+    "lm_mindset",
+    "lm_friends"
+  ],
+  "tagline": "A Spanish Jesuit whose 300 short maxims teach how to get on in the world.",
+  "startedFrom": "He was born in 1601 in Belmonte, near Calatayud in Aragon, the eldest son of a doctor who moved his family between towns near Calatayud. He wrote that he was brought up in Toledo by his uncle Antonio. In 1619, at eighteen, he entered the Jesuit novitiate in Tarragona; his father died the next year.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 21 November 1646 he served as army chaplain with the Marquis of Leganés's troops at the relief of Lérida; in his own account he stresses hearing confessions and urging the soldiers on, which earned him the name 'the father of the Victory'.",
+          "sourceId": "cervantes-bio",
+          "locator": "Biografía, paragraph on Huesca 1645 and the Catalan war of 1646"
+        },
+        {
+          "kind": "deed",
+          "claim": "He was chaplain to the troops of Philip IV at the siege of Lleida in 1646.",
+          "sourceId": "gec",
+          "locator": "entry 'Baltasar Gracián', first paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that knowledge and courage are the elements of greatness, and that knowledge without courage is sterile.",
+          "sourceId": "jacobs-1892",
+          "locator": "maxim iv, p. 2"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "From El Héroe on, he published almost all his books under his brother Lorenzo's name, without going through the Jesuits' slow approval process.",
+          "sourceId": "cervantes-bio",
+          "locator": "Biografía, paragraph on El Héroe and Huesca 1636-1639"
+        },
+        {
+          "kind": "deed",
+          "claim": "El Criticón was printed without his order's consent, and for it he lost his chair at Zaragoza and was confined to Graus.",
+          "sourceId": "gec",
+          "locator": "entry 'Baltasar Gracián', paragraph on El Criticón"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that the sage should be self-sufficing: to depend on oneself alone is the highest happiness.",
+          "sourceId": "jacobs-1892",
+          "locator": "maxim cxxxvii, p. 80"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He spent six years enlarging and reworking his Arte de ingenio (1642) into the Agudeza y arte de ingenio (1648), in 63 discourses.",
+          "sourceId": "cervantes-bio",
+          "locator": "Biografía, paragraphs on Madrid 1641-1642 and on the Agudeza (1648)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Gran Enciclopèdia Catalana calls the style of El Criticón perfectionist and concise.",
+          "sourceId": "gec",
+          "locator": "entry 'Baltasar Gracián', paragraph on El Criticón"
+        },
+        {
+          "kind": "witness",
+          "claim": "His translator Jacobs says he knows no prose style harder to translate than Gracián's laconic, artificial epigrams.",
+          "sourceId": "jacobs-intro",
+          "locator": "Preface, pp. vii-viii"
+        }
+      ]
+    },
+    {
+      "word": "Friendship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In Huesca from 1636 he became close friends with the collector Vincencio Juan de Lastanosa, who became his patron and helped publish his books.",
+          "sourceId": "cervantes-bio",
+          "locator": "Biografía, paragraph on Huesca 1636-1639"
+        },
+        {
+          "kind": "deed",
+          "claim": "When the Duke of Nocera, the viceroy he served as confessor, fell from power in 1641, he went with him to Madrid and stayed at court from July 1641 to February 1642.",
+          "sourceId": "cervantes-bio",
+          "locator": "Biografía, paragraph on Zaragoza 1639-1642"
+        },
+        {
+          "kind": "witness",
+          "claim": "Jacobs calls Lastanosa his great friend and his lifelong friend.",
+          "sourceId": "jacobs-intro",
+          "locator": "Introduction, pp. xix-xx"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes: 'Have Friends. 'Tis a second existence', and advises seeking a well-wisher every day.",
+          "sourceId": "jacobs-1892",
+          "locator": "maxim cxi, p. 64"
+        }
+      ]
+    },
+    {
+      "word": "Wisdom",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that each man is as much as he knows, and the wise can do anything.",
+          "sourceId": "jacobs-1892",
+          "locator": "maxim iv, p. 2"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Encyclopaedia Britannica calls him an acute thinker and observer.",
+          "sourceId": "eb1911",
+          "locator": "entry 'Gracián y Morales, Baltasar', vol. 12, p. 311"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographers call the Oráculo manual a manual of advice that is the quintessence of moral philosophy, for use in daily life.",
+          "sourceId": "cervantes-bio",
+          "locator": "Biografía, paragraph on the Oráculo manual (1647)"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Learn to say no well: refuse when you must, but gently, so your no is worth more than another man's yes.",
+      "sourceId": "jacobs-1892",
+      "locator": "maxim lxx, p. 41"
+    },
+    {
+      "text": "Use your enemies' attacks as a mirror and fix the faults they point at.",
+      "sourceId": "jacobs-1892",
+      "locator": "maxim lxxxiv, p. 49"
+    },
+    {
+      "text": "Keep your temper in good times and bad; a man who stays master of himself rises in others' eyes.",
+      "sourceId": "jacobs-1892",
+      "locator": "maxim lii, pp. 30-31"
+    },
+    {
+      "text": "Do not openly outshine your boss; help him without surpassing him.",
+      "sourceId": "jacobs-1892",
+      "locator": "maxim vii, p. 4"
+    },
+    {
+      "text": "Leave while you are ahead, before people grow tired of you.",
+      "sourceId": "jacobs-1892",
+      "locator": "maxim cx, pp. 63-64"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "A wise man gets more use from his enemies than a fool from his friends.",
+      "sourceId": "jacobs-1892",
+      "locator": "maxim lxxxiv, p. 49",
+      "translation": "Joseph Jacobs, 1892"
+    },
+    {
+      "text": "Some men's No is thought more of than the Yes of others: for a gilded No is more satisfactory than a dry Yes.",
+      "sourceId": "jacobs-1892",
+      "locator": "maxim lxx, p. 41",
+      "translation": "Joseph Jacobs, 1892"
+    },
+    {
+      "text": "Knowledge without courage is sterile.",
+      "sourceId": "jacobs-1892",
+      "locator": "maxim iv, p. 2",
+      "translation": "Joseph Jacobs, 1892"
+    },
+    {
+      "text": "A man's capacity and greatness are to be measured by his virtue and not by his fortune.",
+      "sourceId": "jacobs-1892",
+      "locator": "maxim ccc, p. 180",
+      "translation": "Joseph Jacobs, 1892"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 21 November 1646, during the war in Catalonia, he went as army chaplain with the Marquis of Leganés's troops to relieve the siege of Lérida. He wrote his own account of the battle, in which he stresses his own part, hearing the soldiers' confessions and urging them on. It earned him the name 'the father of the Victory'. The same year he published El Discreto, his book on how a man of the world should carry himself.",
+    "sourceIds": [
+      "cervantes-bio",
+      "gec"
+    ]
+  },
+  "shadow": {
+    "text": "Starting with his first book, El Héroe, he published almost all his books under his brother Lorenzo's name, which let him skip his order's slow approval process. Jesuit papers from Huesca in 1638-39 accuse him of absolving a fellow Jesuit's 'weaknesses with women' and of imprudently taking on the raising of a child said to be a former Jesuit's, and call him 'a cross to his superiors'. In Valencia in 1644-45 he planned to read from the pulpit a letter supposedly sent from hell, and had to take it back in public. In 1652 he fell into a bitter quarrel by letter with his former friend and collaborator, the canon Manuel de Salinas. His maxims teach how to keep people dependent on you, and how to find a man's ruling passion and use it to 'checkmate' his free will. In early 1658, after the last part of El Criticón came out without his order's consent, he was publicly reprimanded, put on bread and water, removed from his teaching chair and sent to the small college at Graus; the head of the order ordered him watched and, if he were found writing against the Society, locked up without ink or paper.",
+    "sourceIds": [
+      "cervantes-bio",
+      "gec",
+      "jacobs-1892"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you say yes this week when a clear, kind no would have served you better?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Art of Worldly Wisdom (Oráculo manual y arte de prudencia)",
+      "year": 1647
+    },
+    {
+      "title": "El Criticón",
+      "year": "1651-1657"
+    },
+    {
+      "title": "The Hero (El Héroe)",
+      "year": 1637
+    }
+  ],
+  "sources": [
+    {
+      "id": "jacobs-1892",
+      "kind": "primary",
+      "title": "The Art of Worldly Wisdom (Oráculo manual y arte de prudencia, 1647)",
+      "author": "Balthasar Gracián, translated by Joseph Jacobs",
+      "year": 1892,
+      "publisher": "Macmillan and Co., London and New York; scan on the Internet Archive",
+      "url": "https://archive.org/details/artworldlywisdo00jacogoog"
+    },
+    {
+      "id": "jacobs-intro",
+      "kind": "secondary",
+      "title": "Preface and Introduction to The Art of Worldly Wisdom",
+      "author": "Joseph Jacobs",
+      "year": 1892,
+      "publisher": "Macmillan and Co., London; scan on the Internet Archive",
+      "url": "https://archive.org/details/artworldlywisdo00jacogoog"
+    },
+    {
+      "id": "cervantes-bio",
+      "kind": "secondary",
+      "title": "Biografía de Baltasar Gracián (Biblioteca Virtual Miguel de Cervantes, portal Baltasar Gracián)",
+      "author": "Luis Sánchez Laílla and José Enrique Laplana Gil, Universidad de Zaragoza",
+      "year": "undated",
+      "publisher": "Biblioteca Virtual Miguel de Cervantes",
+      "url": "https://www.cervantesvirtual.com/portales/baltasar_gracian/autor_biografia/"
+    },
+    {
+      "id": "gec",
+      "kind": "secondary",
+      "title": "Baltasar Gracián, Gran Enciclopèdia Catalana",
+      "author": "Enciclopèdia Catalana (contributor RSu)",
+      "year": "undated",
+      "publisher": "Enciclopèdia Catalana",
+      "url": "https://www.enciclopedia.cat/gran-enciclopedia-catalana/baltasar-gracian"
+    },
+    {
+      "id": "eb1911",
+      "kind": "secondary",
+      "title": "Gracián y Morales, Baltasar, Encyclopaedia Britannica, 11th edition, vol. 12, pp. 310-311",
+      "author": "Encyclopaedia Britannica",
+      "year": 1911,
+      "publisher": "Cambridge University Press; transcription on Wikisource",
+      "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Graci%C3%A1n_y_Morales,_Baltasar"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Spanish Jesuit writer (1601-1658), not fictional, not a politician or founder of a living religion, with no account of sexual contact with a minor or of sexual violence found; he is in, with a documented record of defying his order and some cynical counsel."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked each value against the Jacobs 1892 text, the Zaragoza biography on the Cervantes Virtual library, the Gran Enciclopèdia Catalana and the 1911 Britannica. Courage held, though its Lérida evidence rests on his own account, which plays up his part; Friendship held despite his 1652 quarrel with Salinas and his maxim to trust today's friends as tomorrow's enemies, because his ties to Lastanosa and the fallen Duke of Nocera lasted; Independence, Craft and Wisdom held with three sources each. All four quotes checked in Jacobs; the shadow gained the Huesca accusations, the Salinas quarrel and the General's order to lock him up, and lost an unsupported 'constant' and a pinned 1637 date.",
+    "checkedOn": "2026-11-10"
+  }
+}
