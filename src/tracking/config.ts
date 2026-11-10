@@ -561,7 +561,7 @@ export const FIELD_LIBRARY: FieldDefinition[] = [
   {
     // RENAMED from `one_focus`. It was one of four things in this app calling
     // itself "the one thing"; the real one is a person's answer in the Life
-    // Mastery flow, stored in `life_answers`. This is a note about the next
+    // Mastery flow, now the season's sentence on the plan. This is a note about the next
     // session and nothing more. Safe to rename: no saved report or review has
     // ever contained the old id (checked against the live database, 2026-08-27).
     id: "report_next_session_focus",

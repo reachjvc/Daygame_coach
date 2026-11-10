@@ -9,8 +9,9 @@
  * ----------------------------------------------------------------------------
  * WHY THIS IS NOT PART OF `lifePlanRepo.ts`, which owns the other 21 tables.
  *
- * A plan is REPLACED on every save. A day is APPENDED TO. `save_life_plan`
- * deletes any row whose id is absent from the payload, and carries a guard
+ * A plan is changed only where it changed; a day is APPENDED TO. The old
+ * whole-plan save (`save_life_plan`, dropped in Phase 7) deleted any row absent
+ * from its payload; `apply_life_plan_changes` carries the guard
  * naming the first four day tables as ones it may never reach (the fifth's
  * migration checks it too) — because the browser
  * sends the whole plan on a debounce and a browser that has not opened the

@@ -4,7 +4,7 @@
  * Kept apart from `lifePlanTypes.ts` on purpose, and the separation is the
  * point rather than tidiness: **the whole-plan save must never be able to reach
  * these tables.** That is rule 4 of the deployment plan the owner approved, it
- * is enforced in `save_life_plan` by a guard that names them, and a shared type
+ * is enforced in `apply_life_plan_changes` by a guard that names them, and a shared type
  * file is how the two halves start sharing a mapper and then a write.
  *
  * A plan is REPLACED on every save; a day is APPENDED TO. One keystroke in the

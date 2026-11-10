@@ -406,6 +406,7 @@ END;
 $$;
 
 REVOKE ALL ON FUNCTION "public"."save_life_plan"("p_rows" "jsonb", "p_expected_rev" integer) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION "public"."save_life_plan"("p_rows" "jsonb", "p_expected_rev" integer) FROM anon;
 GRANT ALL ON FUNCTION "public"."save_life_plan"("p_rows" "jsonb", "p_expected_rev" integer) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."save_life_plan"("p_rows" "jsonb", "p_expected_rev" integer) TO "service_role";
 

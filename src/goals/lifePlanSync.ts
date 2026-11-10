@@ -173,7 +173,7 @@ export const UNSENT_PLAN_FIELDS = ["daily", "logged", "notes", "journal", "numbe
  *
  * WHY THIS EXISTS AT ALL: ticking a routine step changes `plan.logged`, which is
  * not sent, but it does produce a new plan object. The save effect fired on that
- * and PUT a body identical to the last one, and `save_life_plan` bumps the
+ * and PUT a body identical to the last one, and the save (then `save_life_plan`) bumped the
  * revision unconditionally — so ticking a morning routine made every other
  * device's next save fail as stale.
  */

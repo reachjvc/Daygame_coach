@@ -45,8 +45,8 @@ import { detectTierUpgrades } from "./badgeEngineService"
  * none of them.
  *
  * Ids are the fix because they are the same fact everywhere. The caller already
- * has them — `pushedGoalIds` answers "which plan goals are counted goals" from
- * the account's links first and the tag only as a fallback — so scoping by ids
+ * had them — `pushedGoalIds` (removed with the Track copies in Phase 7 of
+ * Plans/life-plan-rebuild.md) answered which plan goals were counted goals — so scoping by ids
  * is scoping by the one owner of that question rather than by a second, weaker
  * copy of it.
  *

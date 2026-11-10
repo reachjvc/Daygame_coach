@@ -405,7 +405,6 @@ export const ONE_COPY = {
   needsGo: (n: number) => `${n} ${n === 1 ? "goal" : "goals"} written — on to everything else you want`,
 } as const
 
-export const ONE_THING_KEY = `${START_ANSWER_PREFIX}one-thing`
 /** The commitment itself, in the person's own words, and the date they made it. */
 export const COMMIT_KEY = `${START_ANSWER_PREFIX}commit`
 export const COMMIT_DATE_KEY = `${START_ANSWER_PREFIX}commit-date`
