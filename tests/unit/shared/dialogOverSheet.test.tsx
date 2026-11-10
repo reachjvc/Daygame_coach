@@ -5,6 +5,8 @@ import { render, screen, cleanup, fireEvent, act } from '@testing-library/react'
 
 import { BottomSheet } from '@/components/BottomSheet'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { ActionToast } from '@/src/goals/components/ActionToast'
+import { CelebrationOverlay } from '@/src/goals/components/CelebrationOverlay'
 
 afterEach(cleanup)
 
@@ -62,5 +64,28 @@ describe('a dialog opened from inside a sheet', () => {
     expect(screen.queryByText('Skip this session?')).not.toBeInTheDocument()
     expect(onSheetClose).not.toHaveBeenCalled()
     expect(screen.getByTestId('sheet')).toBeInTheDocument()
+  })
+})
+
+/**
+ * TOASTS OVER DIALOGS (alpha p9, review of 39f9193e). Dialogs moved up to 9650;
+ * the goals page's toasts stayed at 100 and 50, so a toast reporting what a
+ * dialog just did was drawn under the dialog's dark overlay.
+ */
+describe('a toast', () => {
+  test('is drawn above dialogs', () => {
+    render(
+      <>
+        <ActionToast message="Failed to delete goal" variant="error" onDismiss={vi.fn()} />
+        <CelebrationOverlay tier="subtle" goalTitle="Run" onDismiss={vi.fn()} />
+        <CelebrationOverlay tier="toast" goalTitle="Read" onDismiss={vi.fn()} />
+      </>,
+    )
+    const toasts = [
+      screen.getByText('Failed to delete goal').parentElement!,
+      screen.getByText('Done!').parentElement!.parentElement!,
+      screen.getByText('Goal complete: Read').parentElement!.parentElement!,
+    ]
+    for (const el of toasts) expect(zOf(el)).toBeGreaterThanOrEqual(9700)
   })
 })

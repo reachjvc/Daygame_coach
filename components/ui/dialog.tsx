@@ -36,7 +36,10 @@ function DialogClose({
  * asked from inside one: Skip this session, End program, Log Out with changes
  * waiting. At z 50 that question was drawn under the sheet and the first tap on
  * the sheet closed it. 9650 is over the sheets, under the 9700 toasts that say
- * what just happened. A Select or Popover opened inside a dialog sits at 9660
+ * what just happened (the goals page's, the audit's, the tracker's on a wider
+ * screen). The one exception is by design: on a phone the time tracker's toasts
+ * sit at 9550, under its sheets and so under dialogs too, because on top they
+ * covered a sheet's rows (TogglLab.tsx, findability 2026-11-05). A Select or Popover opened inside a dialog sits at 9660
  * (select.tsx, popover.tsx), or its list would open under the dialog.
  */
 function DialogOverlay({
