@@ -1,0 +1,286 @@
+{
+  "id": "socrates",
+  "name": "Socrates",
+  "born": -469,
+  "died": -399,
+  "category": "sages",
+  "areaIds": [
+    "lm_mindset",
+    "lm_spirituality"
+  ],
+  "tagline": "A poor Athenian who questioned everyone, himself first, and died rather than stop.",
+  "startedFrom": "He was born in 469 BC in Alopece, a district of Athens; his father Sophroniscus was a stoneworker and his mother Phaenarete later became a midwife. The family was neither very poor nor rich, and he was not of noble birth. Every ancient source that describes him says he was very ugly, in a city that prized male beauty.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "When the Thirty ordered him and four others to fetch Leon of Salamis to be put to death, the other four went and he went home, at the risk of his own life.",
+          "sourceId": "plato-jowett",
+          "locator": "Apology 32c-d"
+        },
+        {
+          "kind": "deed",
+          "claim": "He served as a foot soldier at Potidaea (432 BC), Delium (424 BC) and Amphipolis (422 BC); the general Laches and Alcibiades both praised how he behaved in the retreat from Delium.",
+          "sourceId": "sep-nails",
+          "locator": "§3 A Chronology (citing Laches 181b, Symposium 221a)"
+        },
+        {
+          "kind": "words",
+          "claim": "He tells the jury that, as he held the post his generals gave him at Potidaea, Amphipolis and Delium, he will not desert the post the god gave him through fear of death.",
+          "sourceId": "plato-jowett",
+          "locator": "Apology 28e"
+        },
+        {
+          "kind": "witness",
+          "claim": "Alcibiades says Socrates saved his life when he was wounded at Potidaea, rescuing him and his arms, and was more eager than the generals that Alcibiades, not he, should have the prize for valour.",
+          "sourceId": "symposium-jowett",
+          "locator": "Symposium 220d-e"
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 406 BC, presiding in the Council when the Assembly wanted to try the generals of Arginusae as a group, against the law, he was the only one of the presiding committee to vote against it, though threatened with arrest.",
+          "sourceId": "plato-jowett",
+          "locator": "Apology 32b"
+        },
+        {
+          "kind": "witness",
+          "claim": "Xenophon writes that as president of the Assembly he would not let the people take an unconstitutional vote, and that he refused the Thirty's orders as contrary to the laws.",
+          "sourceId": "xenophon-dakyns",
+          "locator": "Memorabilia IV.iv"
+        },
+        {
+          "kind": "words",
+          "claim": "In prison he tells Crito that we ought not to repay evil with evil to anyone, whatever evil we have suffered from him.",
+          "sourceId": "plato-jowett",
+          "locator": "Crito 49c"
+        }
+      ]
+    },
+    {
+      "word": "Self-awareness",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He tells the jury that to talk every day about virtue, examining himself and others, is the greatest good of man, and that the unexamined life is not worth living.",
+          "sourceId": "plato-jowett",
+          "locator": "Apology 38a"
+        },
+        {
+          "kind": "words",
+          "claim": "After questioning a man thought wise, he says he is a little better off: the other man knows nothing and thinks he knows, while he himself neither knows nor thinks that he knows.",
+          "sourceId": "plato-jowett",
+          "locator": "Apology 21d"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia says his lifework was the examination of people's lives, his own and others'.",
+          "sourceId": "sep-nails",
+          "locator": "§1 Socrates's strangeness"
+        },
+        {
+          "kind": "words",
+          "claim": "Xenophon reports him asking Euthydemus whether he had heeded the Delphic 'Know thyself', and saying that a man who knows himself knows the limits of his powers, while one mistaken about his own capacity misses what is good.",
+          "sourceId": "xenophon-dakyns",
+          "locator": "Memorabilia IV.ii"
+        }
+      ]
+    },
+    {
+      "word": "Simplicity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He went barefoot, wore the same cloak by day that covered him at night, and refused all his life to take money for what he did.",
+          "sourceId": "sep-nails",
+          "locator": "§1 Socrates's strangeness (citing Apology 33a-b)"
+        },
+        {
+          "kind": "words",
+          "claim": "Answering Antiphon, who mocked his poor way of life, he says that to have no wants is godlike and to have as few as possible comes nearest to it.",
+          "sourceId": "xenophon-dakyns",
+          "locator": "Memorabilia I.vi (1.6.10)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy says he never wrote anything down and was committed to living simply.",
+          "sourceId": "iep-ambury",
+          "locator": "opening summary"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Xenophon writes that he kept his appetites and passions under strict control and could bear winter cold, summer heat and every kind of toil.",
+          "sourceId": "xenophon-dakyns",
+          "locator": "Memorabilia I.ii (opening)"
+        },
+        {
+          "kind": "deed",
+          "claim": "Alcibiades tells how, in a hard frost on campaign at Potidaea, Socrates marched barefoot on the ice in his ordinary clothes, better than the soldiers who wore shoes.",
+          "sourceId": "symposium-jowett",
+          "locator": "Symposium 220b"
+        },
+        {
+          "kind": "words",
+          "claim": "He says every honest man should treat self-restraint as the corner-stone of virtue.",
+          "sourceId": "xenophon-dakyns",
+          "locator": "Memorabilia I.v"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Examine your own life and other people's every day; a life never examined is not worth living.",
+      "sourceId": "plato-jowett",
+      "locator": "Apology 38a"
+    },
+    {
+      "text": "Do not think you know what you do not know.",
+      "sourceId": "plato-jowett",
+      "locator": "Apology 21d"
+    },
+    {
+      "text": "Never do wrong, not even to pay back a wrong done to you.",
+      "sourceId": "plato-jowett",
+      "locator": "Crito 49c"
+    },
+    {
+      "text": "Care more about wisdom, truth and your character than about money, fame and honours.",
+      "sourceId": "plato-jowett",
+      "locator": "Apology 29d-e"
+    },
+    {
+      "text": "Stay at the post you have taken, even in danger of death, rather than leave it out of fear.",
+      "sourceId": "plato-jowett",
+      "locator": "Apology 28e"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "…daily to discourse about virtue, and of those other things about which you hear me examining myself and others, is the greatest good of man, and that the unexamined life is not worth living…",
+      "sourceId": "plato-jowett",
+      "locator": "Apology 38a",
+      "translation": "Benjamin Jowett, 1892 (his words as Plato reports them)"
+    },
+    {
+      "text": "Men of Athens, I honour and love you; but I shall obey God rather than you, and while I have life and strength I shall never cease from the practice and teaching of philosophy…",
+      "sourceId": "plato-jowett",
+      "locator": "Apology 29d",
+      "translation": "Benjamin Jowett, 1892 (his words as Plato reports them)"
+    },
+    {
+      "text": "Then we ought not to retaliate or render evil for evil to any one, whatever evil we may have suffered from him.",
+      "sourceId": "plato-jowett",
+      "locator": "Crito 49c",
+      "translation": "Benjamin Jowett, 1892 (his words as Plato reports them)"
+    },
+    {
+      "text": "To have no wants at all is, to my mind, an attribute of Godhead; to have as few wants as possible the nearest approach to Godhead…",
+      "sourceId": "xenophon-dakyns",
+      "locator": "Memorabilia I.vi (1.6.10)",
+      "translation": "H. G. Dakyns, 1897 (his words as Xenophon reports them)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 399 BC Meletus, backed by Anytus and Lycon, charged him with not believing in the city's gods, bringing in new gods and corrupting the young. In Plato's account he told the jury that, even if they let him go on condition that he stop, he would keep questioning people. Found guilty, he first proposed free meals at the city's expense as his due, then a fine of thirty minae that Plato, Crito and others would guarantee; the jury chose death. About a month later, having turned down Crito's plan to help him escape, he drank the hemlock in prison.",
+    "sourceIds": [
+      "plato-jowett",
+      "sep-nails",
+      "iep-ambury"
+    ]
+  },
+  "shadow": {
+    "text": "Two of his companions were Critias, who led the Thirty when they executed many Athenians and foreign residents in 404-403 BC, and Alcibiades, who went over to Sparta in 414 BC; Xenophon records that his accuser held these friendships against him, and the Internet Encyclopedia of Philosophy says they fed the suspicion that he was against the democracy. The same accuser said he taught young men to despise the laws by mocking the choice of officials by lot. At his trial he said he gave no time to his own affairs and lived in utter poverty, though he had a wife and three sons. On his last day, when his wife Xanthippe cried out, he asked Crito to have someone take her home, and she was led away weeping.",
+    "sourceIds": [
+      "xenophon-dakyns",
+      "iep-ambury",
+      "sep-nails",
+      "plato-jowett"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you act as if you knew something you had never checked?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "Apology, by Plato: his defence speech at the trial as Plato tells it (Socrates wrote nothing); Jowett's translation is free",
+      "year": "after 399 BC"
+    },
+    {
+      "title": "Crito, by Plato: his last talk with Crito in prison; Jowett's translation is free",
+      "year": "after 399 BC"
+    },
+    {
+      "title": "Memorabilia, by Xenophon: Xenophon's memories of his words and deeds; Dakyns's translation is free",
+      "year": "after 399 BC"
+    }
+  ],
+  "sources": [
+    {
+      "id": "plato-jowett",
+      "kind": "primary",
+      "title": "The Dialogues of Plato, vol. 2, third edition (Apology, Crito, Phaedo); Socrates wrote nothing, so Plato's accounts stand in as the primary source",
+      "author": "Plato, translated by Benjamin Jowett",
+      "year": 1892,
+      "publisher": "Oxford University Press; Project Gutenberg eBook #76464",
+      "url": "https://www.gutenberg.org/ebooks/76464"
+    },
+    {
+      "id": "symposium-jowett",
+      "kind": "primary",
+      "title": "Symposium (Alcibiades' speech about Socrates)",
+      "author": "Plato, translated by Benjamin Jowett",
+      "year": "edition not stated in the e-text",
+      "publisher": "Project Gutenberg eBook #1600",
+      "url": "https://www.gutenberg.org/ebooks/1600"
+    },
+    {
+      "id": "xenophon-dakyns",
+      "kind": "primary",
+      "title": "The Memorabilia: Recollections of Socrates (Xenophon was his pupil)",
+      "author": "Xenophon, translated by H. G. Dakyns",
+      "year": 1897,
+      "publisher": "Macmillan and Co.; Project Gutenberg eBook #1177",
+      "url": "https://www.gutenberg.org/ebooks/1177"
+    },
+    {
+      "id": "sep-nails",
+      "kind": "secondary",
+      "title": "Socrates, Stanford Encyclopedia of Philosophy (first published 2005, revised 2022)",
+      "author": "Debra Nails",
+      "year": 2022,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/socrates/"
+    },
+    {
+      "id": "iep-ambury",
+      "kind": "secondary",
+      "title": "Socrates, Internet Encyclopedia of Philosophy",
+      "author": "James M. Ambury",
+      "year": "undated",
+      "url": "https://iep.utm.edu/socrates/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "ok",
+      "notes": "A real Athenian philosopher (469-399 BC), not fictional, not a living politician or founder of a living religion; no source gives an account of sexual contact with anyone under 16 or of sexual violence, and his dark side is of the record kind (companions who harmed Athens, contempt for choosing officials by lot, a neglected household)."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked all five values and checked every claim, locator and quote against the Jowett, Dakyns and Symposium e-texts and the SEP and IEP entries. Courage, Justice and Discipline held in both picks; Self-awareness and Simplicity stayed on three sources each after I added Xenophon's Know-thyself talk with Euthydemus (Memorabilia IV.ii). Nothing fell: the blind pick's Wisdom and Integrity were left out for lack of room, all four quotes were found word for word, and two sentences were tightened (the prize at Potidaea, and the Thirty's victims, who SEP says included foreign residents).",
+    "checkedOn": "2026-11-10"
+  }
+}
