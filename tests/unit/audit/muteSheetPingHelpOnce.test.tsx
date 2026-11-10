@@ -6,8 +6,8 @@
  * Mute says it in one line, with the way there.
  */
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
-import { afterEach, describe, expect, test } from "vitest"
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { afterEach, describe, expect, test, vi } from "vitest"
 
 import { MuteSheet } from "@/src/audit/components/MuteSheet"
 import type { PushDeviceState } from "@/src/notifications/hooks/usePushDevice"
@@ -42,5 +42,22 @@ describe("the Mute sheet with no device getting pings", () => {
     expect(screen.getByRole("button", { name: /30 min/ })).toBeTruthy()
     fireEvent.click(screen.getByTestId("audit-mute-setup"))
     expect(opened).toBe(1)
+  })
+})
+
+/**
+ * THE TILE NAMES THE END THE SERVER STORES (alpha p9-sheet-03). The tiles were
+ * worked out once, when the sheet drew; opened 20 s before a quarter and
+ * tapped just after it, "30 min · until 08:45" stored 09:00.
+ */
+describe("the Mute sheet across a quarter boundary", () => {
+  afterEach(() => vi.useRealTimers())
+
+  test("each tile's end moves on at the boundary, with the sheet left open", () => {
+    vi.useFakeTimers({ now: new Date("2026-11-10T08:29:40.000Z") })
+    render(<MuteSheet open onClose={() => {}} run={{ mutedUntil: null, quietStart: 1320, quietEnd: 420 }} timezone="UTC" onMute={async () => null} push={noDevice} onOpenSettings={() => {}} />)
+    expect(screen.getByRole("button", { name: /30 min/ }).textContent).toContain("until 08:45")
+    act(() => void vi.advanceTimersByTime(24_000))
+    expect(screen.getByRole("button", { name: /30 min/ }).textContent).toContain("until 09:00")
   })
 })

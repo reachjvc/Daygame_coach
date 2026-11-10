@@ -14,12 +14,12 @@
  */
 
 import { Bell, BellOff, Moon } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useReducer, useState } from "react"
 import { BottomSheet } from "@/components/BottomSheet"
 import { cn } from "@/lib/utils"
 import type { PushDeviceState } from "@/src/notifications/hooks/usePushDevice"
 import { muteUntil, type MuteOption } from "../auditService"
-import { clockLabel } from "../quarterService"
+import { clockLabel, QUARTER_MS, quarterStart } from "../quarterService"
 import type { AuditRun } from "../types"
 import { noPingDevice, pingDeviceNames } from "./PingDevices"
 
@@ -57,6 +57,22 @@ export function MuteSheet({
 }) {
   const [busy, setBusy] = useState<MuteOption | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Drawn again at each quarter while open: each tile's end moves on at the
+  // boundary, as the server's does, so the tile tapped names the end stored
+  // (alpha p9-sheet-03: drawn at 08:29:40, tapped at 08:30:04, "until 08:45" stored 09:00).
+  const [, redraw] = useReducer((n: number) => n + 1, 0)
+  useEffect(() => {
+    if (!open) return
+    let timer = 0
+    const arm = () => {
+      timer = window.setTimeout(() => {
+        redraw()
+        arm()
+      }, quarterStart(Date.now()) + QUARTER_MS - Date.now())
+    }
+    arm()
+    return () => window.clearTimeout(timer)
+  }, [open])
   const now = new Date()
   const line = mutedLine(run.mutedUntil, timezone, now.getTime())
   // "Pings are on" only when a device gets them; until the list is read, no claim either way.
