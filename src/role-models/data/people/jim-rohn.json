@@ -1,0 +1,294 @@
+{
+  "id": "jim-rohn",
+  "name": "Jim Rohn",
+  "born": 1930,
+  "died": 2009,
+  "category": "teachers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_money"
+  ],
+  "tagline": "A broke store clerk at 25 who read, took classes, got rich and taught daily discipline.",
+  "startedFrom": "He grew up on a farm in Idaho and left college after one year. By 25 he was a husband and father, clerking in a department store, with nothing in the bank and creditors calling.",
+  "values": [
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says discipline means not letting go of the things we know we should be doing, and calls disciplines 'the miracle workers'.",
+          "sourceId": "entrepreneur-1996",
+          "locator": "answer to \"What do you mean by 'do the new disciplines'?\""
+        },
+        {
+          "kind": "witness",
+          "claim": "His SUCCESS tribute says he learned that anyone could have the life he wanted with the right philosophy and the discipline to follow through with action.",
+          "sourceId": "success-2010",
+          "locator": "section \"Change Your Philosophy, Change Your Life\", para 3"
+        },
+        {
+          "kind": "words",
+          "claim": "He told the Washington Post that with Shoaff's help he set goals and disciplined his life and bank account, and quoted Shoaff on practising 'these daily disciplines'.",
+          "sourceId": "wapo-1985",
+          "locator": "paragraphs beginning \"With Schoaff's help\" and \"Schoaff said\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Tony Robbins says Rohn taught him that 'discipline weighs ounces' and regret weighs tons.",
+          "sourceId": "cnbc-2018",
+          "locator": "section \"Create rituals in order to reach your goals\""
+        }
+      ]
+    },
+    {
+      "word": "Wealth",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "By 31 he had left clerking, become a top salesman for Shoaff and earned his first million.",
+          "sourceId": "entrepreneur-1996",
+          "locator": "introduction, paragraph 4"
+        },
+        {
+          "kind": "deed",
+          "claim": "Following Shoaff's rule that 'profits are better than wages', he built a business to replace his clerk's pay and became a millionaire at 31.",
+          "sourceId": "success-2010",
+          "locator": "section \"Change Your Philosophy, Change Your Life\", para 4"
+        },
+        {
+          "kind": "words",
+          "claim": "He says that when he met his mentor at 25 he had worked six years and was broke, and within the next six years he was rich.",
+          "sourceId": "entrepreneur-1996",
+          "locator": "answer to \"What's the key factor in determining our future?\""
+        },
+        {
+          "kind": "words",
+          "claim": "In 1985 he said he earned $3,000 to $8,000 a lecture plus sales of videos, cassettes and his book, and that his philosophy had paid off 'in the millions -- a couple'.",
+          "sourceId": "wapo-1985",
+          "locator": "paragraphs beginning \"Rohn charges $50\" and \"Rohn says it has paid off\""
+        }
+      ]
+    },
+    {
+      "word": "Reading",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At 25 his mentor Earl Shoaff told him to read books on sales, management and financial planning, and to take classes, and he did both.",
+          "sourceId": "entrepreneur-1996",
+          "locator": "answer to \"What's the key factor in determining our future?\""
+        },
+        {
+          "kind": "words",
+          "claim": "He tells readers to 'read all you can' and names Think and Grow Rich and The Richest Man in Babylon as the two books you need to read to build your philosophy.",
+          "sourceId": "success-2015",
+          "locator": "point \"3. Read all you can.\""
+        },
+        {
+          "kind": "words",
+          "claim": "He told the Washington Post that with Shoaff's help he set goals, kept a daily journal and read a book a week.",
+          "sourceId": "wapo-1985",
+          "locator": "paragraph beginning \"With Schoaff's help, Rohn says\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Tony Robbins recalls Rohn teaching him it was fine to miss a meal 'but don't miss your reading'.",
+          "sourceId": "cnbc-2018",
+          "locator": "section \"Read 30 minutes every day\", para 1"
+        }
+      ]
+    },
+    {
+      "word": "Growth",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "His SUCCESS tribute says that pursuing personal growth became a way of life for him.",
+          "sourceId": "success-2010",
+          "locator": "section \"Change Your Philosophy, Change Your Life\", para 3"
+        },
+        {
+          "kind": "words",
+          "claim": "He tells entrepreneurs to work harder on their own development than on their business, because income seldom stays above it.",
+          "sourceId": "entrepreneur-1996",
+          "locator": "answer to \"Why do you advise entrepreneurs to work even harder on personal development than on business?\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Tony Robbins says Rohn got him to see that the secret to life was to work harder on himself than on his job.",
+          "sourceId": "cnbc-2018",
+          "locator": "paragraph 2 (Robbins's tribute after Rohn's death)"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Tony Robbins, broke at 17, paid $35 for a three-hour Rohn seminar; Rohn then advised him to build his skills rather than expect fast results, and Robbins calls him his mentor.",
+          "sourceId": "cnbc-2018",
+          "locator": "opening paragraph, and section \"Do more than you’re expected to\", paras 3-4"
+        },
+        {
+          "kind": "witness",
+          "claim": "His SUCCESS tribute names Mark Sanborn, Tony Robbins, Mark Victor Hansen, Brian Tracy and Jack Canfield among those who carry his message on.",
+          "sourceId": "success-2010",
+          "locator": "section \"A Mentor to Mentors\", para 3"
+        },
+        {
+          "kind": "words",
+          "claim": "He credits his own mentor Earl Shoaff, who hired him, with the philosophy he went on to teach.",
+          "sourceId": "wapo-1985",
+          "locator": "paragraphs beginning \"A college drop-out\" and \"Schoaff said\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Stop blaming outside forces: things change for you when you change.",
+      "sourceId": "entrepreneur-1996",
+      "locator": "answer to \"You say we have the ability to design our future...\""
+    },
+    {
+      "text": "Failure is a few small errors repeated every day; success is the basics done every day.",
+      "sourceId": "entrepreneur-1996",
+      "locator": "answer to the question on \"a series of little neglects\""
+    },
+    {
+      "text": "Work harder on your own development than on your job, because your income follows it.",
+      "sourceId": "entrepreneur-1996",
+      "locator": "answer to \"Why do you advise entrepreneurs to work even harder on personal development than on business?\""
+    },
+    {
+      "text": "Review your life on a fixed rhythm: a few minutes each day, a few hours each week, half a day each month, a weekend each year.",
+      "sourceId": "entrepreneur-1996",
+      "locator": "answer to \"You also teach that we should make it a discipline to regularly reflect...\""
+    },
+    {
+      "text": "Choose on purpose the people you spend time with, and ask what they are doing to you.",
+      "sourceId": "entrepreneur-1996",
+      "locator": "answer to \"Where do we learn our disciplines?\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Failure is a few errors in judgment repeated every day.",
+      "sourceId": "entrepreneur-1996",
+      "locator": "answer to the question on \"a series of little neglects\""
+    },
+    {
+      "text": "Affirmations without disciplines are the beginning of delusion.",
+      "sourceId": "entrepreneur-1996",
+      "locator": "answer to the question on affirming \"yourself into prosperity\""
+    },
+    {
+      "text": "Income seldom exceeds personal development.",
+      "sourceId": "entrepreneur-1996",
+      "locator": "answer to \"Why do you advise entrepreneurs to work even harder on personal development than on business?\""
+    },
+    {
+      "text": "The great challenge of life is to control the process of our own thinking.",
+      "sourceId": "success-2015",
+      "locator": "point \"1. Set your sail.\""
+    }
+  ],
+  "definingMoment": {
+    "text": "In about 1955, at 25, broke and clerking in a store, he met the businessman Earl Shoaff, who told him his future would look like his past unless he changed. Shoaff told him to read books and take classes, and he did. He went to work selling for Shoaff, and by 31 he had earned his first million.",
+    "sourceIds": [
+      "entrepreneur-1996",
+      "success-2010",
+      "success-2015",
+      "wapo-1985",
+      "jimrohn-about"
+    ]
+  },
+  "shadow": {
+    "text": "By his own account, at 25 he was in debt with creditors calling, and when a Girl Scout came to his door selling cookies he lied that he had already bought lots of boxes, because he had no money. His first fortune came from selling for Earl Shoaff, who had made his money in vitamins. The figures in his story, broke at 25 and a millionaire at 31, come from his own telling; no independent record of them was found. In 1985 the Washington Post called him 'one of a new breed of super salesman' whose product was success, and wrote that his rags-to-riches story 'has been smoothed by thousands of repetitions'. He charged $50 a seat, said he earned $3,000 to $8,000 a lecture and sold tapes, videos and his book at his talks. Asked whether he was a snake-oil salesman, he said people must 'do your homework on who has got a gimmick'.",
+    "sourceIds": [
+      "entrepreneur-1996",
+      "success-2010",
+      "wapo-1985"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you blame something outside you this week for a result that was yours to change?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Seven Strategies for Wealth and Happiness",
+      "year": 1986
+    },
+    {
+      "title": "The Five Major Pieces to the Life Puzzle",
+      "year": 1991
+    }
+  ],
+  "sources": [
+    {
+      "id": "entrepreneur-1996",
+      "kind": "primary",
+      "title": "Just Do It (interview with Jim Rohn, 1 January 1996)",
+      "author": "Jim Rohn, interviewed by Robert J. McGarvey",
+      "year": 1996,
+      "publisher": "Entrepreneur",
+      "url": "https://www.entrepreneur.com/article/29016"
+    },
+    {
+      "id": "success-2015",
+      "kind": "primary",
+      "title": "Rohn: 7 Tips for Developing Your Personal Philosophy (essay, first on JimRohn.com; republished 9 August 2015)",
+      "author": "Jim Rohn",
+      "year": 2015,
+      "publisher": "SUCCESS",
+      "url": "https://www.success.com/rohn-7-tips-for-developing-your-personal-philosophy/"
+    },
+    {
+      "id": "success-2010",
+      "kind": "secondary",
+      "title": "Jim Rohn: The Passing of a Personal-Development Legend (26 January 2010; archived copy)",
+      "author": "Erin Casey",
+      "year": 2010,
+      "publisher": "SUCCESS",
+      "url": "https://web.archive.org/web/20141209190821/http://www.success.com/article/jim-rohn-the-passing-of-a-personal-development-legend"
+    },
+    {
+      "id": "jimrohn-about",
+      "kind": "secondary",
+      "title": "About Jim Rohn (official estate site)",
+      "author": "SUCCESS Enterprises",
+      "year": 2026,
+      "url": "https://www.jimrohn.com/about"
+    },
+    {
+      "id": "wapo-1985",
+      "kind": "secondary",
+      "title": "Selling Success (profile of Jim Rohn and the motivational selling industry, 15 October 1985)",
+      "author": "Don Oldenburg",
+      "year": 1985,
+      "publisher": "The Washington Post",
+      "url": "https://www.washingtonpost.com/archive/lifestyle/1985/10/15/selling-success/f7795abd-38f2-42b3-b221-f88fe72bbd51/"
+    },
+    {
+      "id": "cnbc-2018",
+      "kind": "secondary",
+      "title": "3 lasting lessons from the man who mentored Tony Robbins (24 July 2018)",
+      "author": "Zameena Mejia",
+      "year": 2018,
+      "publisher": "CNBC Make It",
+      "url": "https://www.cnbc.com/2018/07/23/3-lasting-lessons-from-jim-rohn-the-man-who-mentored-tony-robbins.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American sales entrepreneur and motivational speaker (1930-2009), never a politician, campaigner or religious founder, with no account of sexual contact with a minor or of sexual violence found; he is in, and his dark side is small and comes mostly from his own accounts."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value, quote and sentence against the 1996 Entrepreneur interview, his SUCCESS essay, the SUCCESS tribute and two independent sources found in this round, a critical 1985 Washington Post profile and a 2018 CNBC piece. Responsibility fell: it rests on his teaching in two sources, not on a deed. Discipline, Wealth, Reading and Growth held on three or more sources, and the blind pick's Mentorship was added on his mentoring of Tony Robbins. All four quotes match his own texts word for word; two small claims were corrected and the Post's account of him as a success salesman was added to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
