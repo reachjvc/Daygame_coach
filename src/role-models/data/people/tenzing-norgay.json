@@ -1,0 +1,260 @@
+{
+  "id": "tenzing-norgay",
+  "name": "Tenzing Norgay",
+  "born": 1914,
+  "died": 1986,
+  "category": "explorers",
+  "areaIds": [
+    "lm_mission",
+    "lm_fun"
+  ],
+  "tagline": "A porter who kept going back to Everest until the seventh time took him to the top.",
+  "startedFrom": "He grew up among the yak pastures of Solu Khumbu in Nepal; he later said he was born at Tsa-chu, a village the historian Peter Hansen places in Tibet. There was no school; he never learned to read, and as an adult could write little more than his own name. At 13 he ran away from home, and later went to Darjeeling, where he worked as a day labourer before he got work as an expedition porter.",
+  "values": [
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Before 1953 he had been on five Everest expeditions: the British ones of 1935, 1936 and 1938 and the two Swiss ones of 1952.",
+          "sourceId": "wylie-hj50",
+          "locator": "section 'Tenzing Norgay'"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that he had come to the mountain of his dream seven times, and that on the seventh the dream came true.",
+          "sourceId": "tiger-of-the-snows",
+          "locator": "ch. 18 'The Dream Comes True', p. 251"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1947 he went with Earl Denman on a small, badly equipped attempt on Everest from Tibet; they nearly reached the North Col.",
+          "sourceId": "lhatoo-hj43",
+          "locator": "In Memoriam, 'Tenzing Norgay (1914-1986)'"
+        }
+      ]
+    },
+    {
+      "word": "Integrity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1953 he turned down a bribe of five thousand rupees to say they never climbed Everest.",
+          "sourceId": "hansen-2000",
+          "locator": "p. 320"
+        },
+        {
+          "kind": "words",
+          "claim": "Explaining why he told who stepped on top first, he wrote that only the truth was good enough for Everest.",
+          "sourceId": "tiger-of-the-snows",
+          "locator": "ch. 18 'The Dream Comes True', p. 248"
+        },
+        {
+          "kind": "witness",
+          "claim": "Charles Wylie, a 1953 team member, wrote that to the end he kept his sense of values, modesty and integrity.",
+          "sourceId": "wylie-hj50",
+          "locator": "section 'Tenzing Norgay'"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He was made sirdar (head of the Sherpas) of the 1947 Swiss Garhwal expedition, and in 1953 he climbed as a full team member while still leading the Sherpas.",
+          "sourceId": "lhatoo-hj43",
+          "locator": "In Memoriam, 'Tenzing Norgay (1914-1986)'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Wylie wrote that the 1953 team was impressed by his energy, good sense and authority over the Sherpa team.",
+          "sourceId": "wylie-hj50",
+          "locator": "section 'Tenzing Norgay'"
+        },
+        {
+          "kind": "deed",
+          "claim": "As sirdar on the autumn 1952 Swiss expedition he had to argue, and sometimes get angry, to keep tired Sherpas working.",
+          "sourceId": "tiger-of-the-snows",
+          "locator": "ch. 15 'Everest with the Swiss (Autumn)', pp. 194-195"
+        }
+      ]
+    },
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Wylie wrote that after 1953, honoured everywhere, he kept his modesty and refused to let his head be turned.",
+          "sourceId": "wylie-hj50",
+          "locator": "section 'Tenzing Norgay'"
+        },
+        {
+          "kind": "words",
+          "claim": "Going home from his 1953 tour he wrote that inside he was still the same old Tenzing.",
+          "sourceId": "tiger-of-the-snows",
+          "locator": "ch. 19 'Tenzing Zindabad!', p. 276"
+        },
+        {
+          "kind": "deed",
+          "claim": "In London in 1953 he refused to let his family accept too many gifts, and made his daughter take a simpler camera than the expensive one she picked.",
+          "sourceId": "tiger-of-the-snows",
+          "locator": "ch. 19 'Tenzing Zindabad!', p. 272"
+        },
+        {
+          "kind": "witness",
+          "claim": "Dorjee Lhatoo, who served under him as an instructor, wrote that he led a dual life, as a celebrity and as a simple man, and was happier in the second.",
+          "sourceId": "lhatoo-hj43",
+          "locator": "In Memoriam, 'Tenzing Norgay (1914-1986)'"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Lhatoo, who served under him as an instructor, wrote that he learnt from him about life as well as climbing, and that Tenzing was happiest out on the mountains with his students, teaching them the simple techniques of mountaincraft.",
+          "sourceId": "lhatoo-hj43",
+          "locator": "In Memoriam, 'Tenzing Norgay (1914-1986)'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He was the first Field Director of the Himalayan Mountaineering Institute, set up in 1954, for 22 years until 1976, then stayed on as its Adviser; several of the 1953 Sherpas joined him there as instructors.",
+          "sourceId": "wylie-hj50",
+          "locator": "opening section and section 'Tenzing Norgay'"
+        },
+        {
+          "kind": "words",
+          "claim": "Ending his autobiography, he wrote that he hoped to give many young Indians a knowledge and love of the high places, and that most of all he wanted to help and teach young people.",
+          "sourceId": "tiger-of-the-snows",
+          "locator": "ch. 20 'From Tiger Hill', pp. 289-290"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Climb with your team, not against it: you get to the top by shared work, not by racing your partners.",
+      "sourceId": "tiger-of-the-snows",
+      "locator": "ch. 17 'For the Seventh Time', p. 228"
+    },
+    {
+      "text": "Tell the true story, even when people want a grander one from you.",
+      "sourceId": "tiger-of-the-snows",
+      "locator": "ch. 18 'The Dream Comes True', p. 248"
+    },
+    {
+      "text": "When the mountain turns you back, return and try again.",
+      "sourceId": "tiger-of-the-snows",
+      "locator": "ch. 18 'The Dream Comes True', p. 251"
+    },
+    {
+      "text": "Do not take more than is right, even when it is offered freely.",
+      "sourceId": "tiger-of-the-snows",
+      "locator": "ch. 19 'Tenzing Zindabad!', p. 272"
+    },
+    {
+      "text": "After the big win, you still have to go home and live your life.",
+      "sourceId": "tiger-of-the-snows",
+      "locator": "ch. 19 'Tenzing Zindabad!', p. 276"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "You do not climb a mountain like Everest by trying to race ahead on your own, or by competing with your comrades. You do it slowly and carefully, by unselfish teamwork.",
+      "sourceId": "tiger-of-the-snows",
+      "locator": "ch. 17 'For the Seventh Time', p. 228"
+    },
+    {
+      "text": "Only the truth is good enough for the future. Only the truth is good enough for Everest.",
+      "sourceId": "tiger-of-the-snows",
+      "locator": "ch. 18 'The Dream Comes True', p. 248"
+    },
+    {
+      "text": "I had climbed my mountain, but I must still live my life.",
+      "sourceId": "tiger-of-the-snows",
+      "locator": "ch. 19 'Tenzing Zindabad!', p. 276"
+    },
+    {
+      "text": "From a mountain coolie, a bearer of loads, to a wearer of a coat with rows of medals who is carried about in planes and worries about income tax.",
+      "sourceId": "tiger-of-the-snows",
+      "locator": "ch. 1 'It Was a Long Road', pp. 10-11"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 29 May 1953, on his seventh expedition to Everest, he and Edmund Hillary reached the summit at about half past eleven in the morning. On top he buried sweets in the snow as an offering and said a prayer of thanks. Afterwards, crowds in Nepal and India pushed him to say he got there first. In his 1955 autobiography he wrote that Hillary stepped on top first and he stepped up after him.",
+    "sourceIds": [
+      "tiger-of-the-snows",
+      "hansen-2000",
+      "lhatoo-hj43"
+    ]
+  },
+  "shadow": {
+    "text": "In 1947 he guided Earl Denman into Tibet without permission; Denman had signed a promise not to go near the border, and Tenzing wrote that he was criticised for the trip. In June 1953 the historian Peter Hansen writes that reporters and reception committees on the way to Kathmandu pressed him to sign papers he could not read, saying he was Nepali and had reached the summit before Hillary; Tenzing later wrote of foolish statements he had been made to sign, without knowing what he was doing, when a crowd picked him up outside Kathmandu. That month, angry at John Hunt's remark that he was \"a good climber within the limits of his experience\", he made statements to the press that he later wrote he regretted. His third marriage is told two ways: his nephew-in-law Dorjee Lhatoo says he married Daku in 1962 and that his second wife, Ang Lahmu, died in 1964; Charles Wylie places the marriage after her death.",
+    "sourceIds": [
+      "tiger-of-the-snows",
+      "lhatoo-hj43",
+      "hansen-2000",
+      "wylie-hj50"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you try to race ahead of your own team this week, instead of climbing with them?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Tiger of the Snows (with James Ramsey Ullman)",
+      "year": 1955
+    }
+  ],
+  "sources": [
+    {
+      "id": "tiger-of-the-snows",
+      "kind": "primary",
+      "title": "Tiger of the Snows: The Autobiography of Tenzing of Everest",
+      "author": "Tenzing Norgay, written in collaboration with James Ramsey Ullman",
+      "year": 1955,
+      "publisher": "G. P. Putnam's Sons, New York",
+      "url": "https://archive.org/details/dli.pahar.3048"
+    },
+    {
+      "id": "lhatoo-hj43",
+      "kind": "secondary",
+      "title": "In Memoriam: Tenzing Norgay (1914-1986), Himalayan Journal 43",
+      "author": "Dorjee Lhatoo",
+      "year": 1987,
+      "publisher": "The Himalayan Club",
+      "url": "https://www.himalayanclub.org/hj/43/22/in-memoriam-33/"
+    },
+    {
+      "id": "wylie-hj50",
+      "kind": "secondary",
+      "title": "Tenzing Norgay 1914-1986 and the Sherpa Team, Himalayan Journal 50 (reprinted from the Alpine Journal 1993)",
+      "author": "Charles Wylie",
+      "year": 1994,
+      "publisher": "The Himalayan Club",
+      "url": "https://www.himalayanclub.org/hj/50/11/tenzing-norgay-1914-1986-and-the-sherpa-team/"
+    },
+    {
+      "id": "hansen-2000",
+      "kind": "secondary",
+      "title": "Confetti of Empire: The Conquest of Everest in Nepal, India, Britain, and New Zealand, Comparative Studies in Society and History 42:2, pp. 307-332",
+      "author": "Peter H. Hansen",
+      "year": 2000,
+      "publisher": "Cambridge University Press",
+      "url": "https://users.wpi.edu/~phansen/publications/Hansen-2000-confetti.pdf"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real, long-dead mountaineer, not a politician or religious founder; no account of sexual misconduct found; documented shadow is small (an illegal border crossing in 1947, angry 1953 statements he later regretted, a contested overlapping third marriage)."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked each value against the autobiography, both Himalayan Journal tributes and Hansen's archival study, and looked again for a dark side. Ambition fell: it rested on only two sources, and Mentorship from the blind pick replaced it, backed by Lhatoo, Wylie and his own book. Integrity held despite the June 1953 papers he signed unread, which now sit in the shadow; the birthplace line was corrected, since Hansen says Tenzing never named Tibet himself.",
+    "checkedOn": "2026-11-10"
+  }
+}
