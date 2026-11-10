@@ -1,0 +1,295 @@
+{
+  "id": "joan-of-arc",
+  "name": "Joan of Arc",
+  "pronoun": "she",
+  "born": "c. 1412",
+  "died": 1431,
+  "category": "warriors",
+  "areaIds": [
+    "lm_mindset",
+    "lm_mission"
+  ],
+  "tagline": "A teenage farm girl who pushed an army to fight and stood up to her judges alone",
+  "startedFrom": "She was born about 1412 in Domremy, a village partly in Champagne and partly in Lorraine, the daughter of Jacques d'Arc, a peasant farmer. She never learned to read or write; she could spin and sew. When she first asked the governor of Vaucouleurs, Robert de Baudricourt, for an escort to the Dauphin in 1428, he told the cousin who came with her to take her home to her father and give her a good whipping.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 7 May 1429, at the assault on the bridge fort at Orléans, she was struck by an arrow above the breast; after the wound was dressed she went back to the attack the same day.",
+          "sourceId": "murray-1902",
+          "locator": "Part II, Depositions in Paris 1455-6, deposition of Brother Jean Pasquerel"
+        },
+        {
+          "kind": "deed",
+          "claim": "At Jargeau in June 1429 she was on a scaling ladder with her standard when a stone hit her head and threw her down; she got up and called the soldiers on.",
+          "sourceId": "murray-1902",
+          "locator": "Part II, Depositions in Paris 1455-6, deposition of the Duke d'Alençon"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica says that her \"extraordinary pluck and sense of leadership\" were responsible for the raising of the siege of Orléans.",
+          "sourceId": "eb-1911",
+          "locator": "Paragraph on the relief of Orléans (vol. 15, p. 447)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Catholic Encyclopedia says that at her trial \"Her attitude was always fearless\".",
+          "sourceId": "ce-1910",
+          "locator": "Paragraph on the official record of the trial"
+        },
+        {
+          "kind": "witness",
+          "claim": "Historian Julien Théry writes that at her trial her concise replies often disarmed the judges and aroused admiration from the public.",
+          "sourceId": "thery-2017",
+          "locator": "Section 'The Journey to the Stake'"
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked on 24 February 1431 whether she was in the grace of God, she answered: \"If I am not, may God place me there; if I am, may God so keep me.\"",
+          "sourceId": "murray-1902",
+          "locator": "Part I, third public examination, Saturday 24 February 1431"
+        },
+        {
+          "kind": "deed",
+          "claim": "Her chaplain testified that on campaign she confessed nearly every day and took communion often.",
+          "sourceId": "murray-1902",
+          "locator": "Part II, Depositions in Paris 1455-6, deposition of Brother Jean Pasquerel"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica says that \"the genuineness of her belief in her mission\" stands clear.",
+          "sourceId": "eb-1911",
+          "locator": "Closing paragraph on her historical character (vol. 15, p. 448)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Catholic Encyclopedia quotes the trial recorder Manchon: until the last she declared that her voices came from God and had not deceived her.",
+          "sourceId": "ce-1910",
+          "locator": "Paragraph on the relapse and execution (30 May 1431)"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Turned away by Baudricourt in 1428, she came back to Vaucouleurs in January 1429 and stayed until he let her go to the king at Chinon.",
+          "sourceId": "ce-1910",
+          "locator": "Paragraphs on Vaucouleurs (1428 and January-February 1429)"
+        },
+        {
+          "kind": "words",
+          "claim": "In Vaucouleurs she told the family she lodged with that she would go to the Dauphin \"even if I have to drag myself thither on my knees\".",
+          "sourceId": "murray-1902",
+          "locator": "Part II, Depositions at Domremy 1455, deposition of Henri Leroyer"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica says that \"by persistent importunity\" she at last prevailed on the governor to grant her request.",
+          "sourceId": "eb-1911",
+          "locator": "Paragraph on Vaucouleurs and Chinon (vol. 15, p. 447)"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Before Troyes in July 1429, while the king's council argued, she told the Dauphin to besiege the town and lose no more time, put herself at the head of the army, and the town submitted the next day.",
+          "sourceId": "murray-1902",
+          "locator": "Part II, Depositions at Orleans 1455, deposition of Jean, Bastard of Orleans, Count de Dunois"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Duke d'Alençon testified that in bearing the lance, assembling an army, ordering operations and directing artillery she was most skilful, and acted like a captain of twenty or thirty years' service.",
+          "sourceId": "murray-1902",
+          "locator": "Part II, Depositions in Paris 1455-6, deposition of the Duke d'Alençon (closing paragraph)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica says she \"nerved the French at a critical time, and inspired an army of laggards and pillagers\".",
+          "sourceId": "eb-1911",
+          "locator": "Closing paragraph on her historical character (vol. 15, p. 448)"
+        }
+      ]
+    },
+    {
+      "word": "Purpose",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked at Poitiers in 1429 what sign she could give, she answered that the sign she had to show was to raise the siege of Orléans.",
+          "sourceId": "murray-1902",
+          "locator": "Part II, Depositions at Orleans 1455, deposition of the Count de Dunois"
+        },
+        {
+          "kind": "words",
+          "claim": "The Duke d'Alençon testified that she often told the king she would last one year and had four duties: beat the English, have him crowned at Reims, free the Duke d'Orléans and raise the siege of Orléans.",
+          "sourceId": "murray-1902",
+          "locator": "Part II, Depositions in Paris 1455-6, deposition of the Duke d'Alençon"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica says that \"the nobility of her purpose\" stands clear.",
+          "sourceId": "eb-1911",
+          "locator": "Closing paragraph on her historical character (vol. 15, p. 448)"
+        },
+        {
+          "kind": "deed",
+          "claim": "After Orléans in May 1429 she wanted to follow up the victory with all speed while the king and his advisers were slow to move, and at her earnest entreaty the Loire campaign was begun.",
+          "sourceId": "ce-1910",
+          "locator": "Paragraph on the relief of Orléans and the Loire campaign"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do the work yourself and trust the outcome; do not wait for help to make the effort unnecessary.",
+      "sourceId": "murray-1902",
+      "locator": "Part II, deposition of Brother Séguin de Séguin (Poitiers, 1429: 'the soldiers will fight, and God will give the victory')"
+    },
+    {
+      "text": "Do not let the other side's numbers talk you out of a fight you came to win.",
+      "sourceId": "murray-1902",
+      "locator": "Part II, Depositions in Paris 1455-6, deposition of the Duke d'Alençon (Jargeau and Patay, June 1429: 'do not fear their numbers')"
+    },
+    {
+      "text": "State your demand plainly and offer peace before you strike.",
+      "sourceId": "murray-1902",
+      "locator": "Part I, fifth public examination, Thursday 1 March 1431 (letter of 22 March 1429: 'She is quite ready to make peace'); Part II, deposition of Pasquerel (third letter, 5 May 1429)"
+    },
+    {
+      "text": "If fear makes you deny what you hold true, take it back openly and say why.",
+      "sourceId": "murray-1902",
+      "locator": "Part I, Second Process, Monday 28 May 1431 ('All I said and revoked, I said for fear of the fire')"
+    },
+    {
+      "text": "Hold the people you lead to the standard you keep yourself.",
+      "sourceId": "murray-1902",
+      "locator": "Part II, depositions of the Duke d'Alençon (she reproved swearing) and Brother Jean Pasquerel (confession before battle, Orléans, May 1429)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "If I am not, may God place me there; if I am, may God so keep me.",
+      "sourceId": "murray-1902",
+      "locator": "Part I, third public examination, Saturday 24 February 1431 (asked whether she was in the grace of God)",
+      "translation": "T. Douglas Murray (ed.), 1902, from Quicherat's Latin text"
+    },
+    {
+      "text": "I would rather have been torn asunder by four horses than have come into France without God's leave.",
+      "sourceId": "murray-1902",
+      "locator": "Part I, fourth public examination, Tuesday 27 February 1431",
+      "translation": "T. Douglas Murray (ed.), 1902, from Quicherat's Latin text"
+    },
+    {
+      "text": "Wheresoever I find your followers in France, I will make them leave, willingly or unwillingly; if they will not obey, I will have them put to death.",
+      "sourceId": "murray-1902",
+      "locator": "Letter to the King of England and the English captains before Orléans, 22 March 1429, as read and acknowledged at the fifth public examination, Thursday 1 March 1431",
+      "translation": "T. Douglas Murray (ed.), 1902, from Quicherat's Latin text"
+    },
+    {
+      "text": "All I said and revoked, I said for fear of the fire.",
+      "sourceId": "murray-1902",
+      "locator": "Part I, Second Process (the relapse), Monday 28 May 1431, in her prison",
+      "translation": "T. Douglas Murray (ed.), 1902, from Quicherat's Latin text"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 7 May 1429 she led the attack on the English fort at the end of the bridge at Orléans. Her chaplain Jean Pasquerel testified that during the assault an arrow struck her above the breast; she was afraid and wept, refused soldiers who wanted to 'charm' the wound, had it dressed with olive oil and lard, and went back to the attack. The fort fell that day, and on 8 May the English lifted the siege. She was about seventeen.",
+    "sourceIds": [
+      "murray-1902",
+      "ce-1910",
+      "eb-1911"
+    ]
+  },
+  "shadow": {
+    "text": "She commanded troops in war while still a teenager: in March 1429 she dictated a letter to the King of England, the Duke of Bedford and the English captains saying that if their men did not leave France 'I will have them put to death', and at her trial she owned the letter, denying only three phrases in it. Her ally the Duke d'Alençon testified that at Jargeau in June 1429 the French killed more than 1,100 men; she said she carried her banner so as not to kill anyone herself. In April 1430 at Lagny she agreed that Franquet d'Arras, a captured enemy gentleman she had meant to exchange, should be put to death after a fifteen-day trial; Burgundian writers later said she beheaded him herself, which Andrew Lang rejects. Alençon also testified that she chased a camp follower with drawn sword, breaking the sword; Lang writes that the tale of her breaking it on a camp follower's back 'appears to be a fable'. On 24 May 1431, facing the stake, she signed an abjuration with a cross. On 28 May, found again in man's dress, she withdrew it: she said she had revoked for fear of the fire, that she would rather die than endure prison any longer, and that she would wear a woman's dress again if taken out of irons and allowed to go to Mass.",
+    "sourceIds": [
+      "murray-1902",
+      "lang-1908",
+      "ce-1910"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you hold back because the odds looked bad, when you came to win?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "Letter to the King of England and the English captains before Orléans",
+      "year": 1429
+    },
+    {
+      "title": "Her answers at the trial of condemnation, Rouen (in T. Douglas Murray, Jeanne d'Arc, Maid of Orleans)",
+      "year": 1431
+    }
+  ],
+  "sources": [
+    {
+      "id": "murray-1902",
+      "kind": "primary",
+      "title": "Jeanne d'Arc, Maid of Orleans, Deliverer of France: being the story of her life, her achievements, and her death, as attested on oath and set forth in the original documents (English translation of the 1431 trial record and the 1450-56 rehabilitation depositions, from Quicherat's edition)",
+      "author": "T. Douglas Murray (ed.)",
+      "year": 1902,
+      "publisher": "William Heinemann, London",
+      "url": "https://www.gutenberg.org/ebooks/57389"
+    },
+    {
+      "id": "ce-1910",
+      "kind": "secondary",
+      "title": "St. Joan of Arc (The Catholic Encyclopedia, vol. 8)",
+      "author": "Herbert Thurston",
+      "year": 1910,
+      "publisher": "Robert Appleton Company, New York",
+      "url": "https://www.newadvent.org/cathen/08409c.htm"
+    },
+    {
+      "id": "eb-1911",
+      "kind": "secondary",
+      "title": "Joan of Arc (Encyclopaedia Britannica, 11th edition, vol. 15, pp. 447-448)",
+      "author": "James Thomson Shotwell and Hugh Chisholm",
+      "year": 1911,
+      "publisher": "Cambridge University Press",
+      "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Joan_of_Arc"
+    },
+    {
+      "id": "lang-1908",
+      "kind": "secondary",
+      "title": "The Maid of France: being the story of the life and death of Jeanne d'Arc",
+      "author": "Andrew Lang",
+      "year": 1908,
+      "publisher": "Longmans, Green, and Co., London",
+      "url": "https://archive.org/details/maidoffrancebein00languoft"
+    },
+    {
+      "id": "thery-2017",
+      "kind": "secondary",
+      "title": "How Joan of Arc turned the tide in the Hundred Years' War (National Geographic History, March 2017)",
+      "author": "Julien Théry",
+      "year": 2017,
+      "publisher": "National Geographic",
+      "url": "https://www.nationalgeographic.com/history/history-magazine/article/joan-of-arc-warrior-heretic-saint-martyr"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real 15th-century French soldier and visionary, executed in 1431, not fictional, not a politician or campaigner, not the founder of a religion (she is a Catholic saint, canonised 1920); no account of sexual contact with anyone under 16 or of sexual violence by her was found; her dark side (a teenage commander in a brutal war, a letter threatening death, consent to the execution of a prisoner, the Beaurevoir leap and the abjuration she took back) is shadow, not an owner case."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked Courage and Determination with her abjuration of 24 May 1431, signed for fear of the fire, and with her own words four days later, which mix the take-back with weariness of prison; Faith with the Beaurevoir leap she made against her voices; and Leadership with the charge that she held no formal command. Each is a single lapse or answered by sworn witnesses and the 1911 Britannica, so all five values hold, and the abjuration and its reasons now stand in full in the shadow. Purpose, picked only by the draft, holds on three sources (the trial and rehabilitation record, the Catholic Encyclopedia, the 1911 Britannica); Integrity, picked only by the blind agent, was not added because the five places were full and the abjuration argues against it. All four quotes were found word for word in Murray's 1902 text; two points of the life story and three of the shadow were corrected or added.",
+    "checkedOn": "2026-11-10"
+  }
+}
