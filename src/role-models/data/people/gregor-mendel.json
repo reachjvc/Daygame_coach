@@ -1,0 +1,309 @@
+{
+  "id": "gregor-mendel",
+  "name": "Gregor Mendel",
+  "pronoun": "he",
+  "born": 1822,
+  "died": 1884,
+  "category": "scientists",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A farm boy turned friar who counted peas for eight years and was recognised only after he died",
+  "startedFrom": "He was born in 1822 in Heinzendorf, a village of about 500 people on the Moravian-Silesian border, the son of a peasant who had to work three days a week unpaid for the landowner. In 1838 a log crushed part of his father's chest, the family could no longer pay his school bills, and he earned his keep as a tutor, while repeated bouts of an illness that his biographer Daniel Hartl links to stress forced him to leave school for weeks or months at a time. His younger sister Theresia, then 11, gave him her share of the family estate so he could keep studying. In 1843 he entered the Augustinian monastery in Brünn; in 1850 he wrote of himself that \"his circumstances decided his vocational choice\".",
+  "values": [
+    {
+      "word": "Patience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He ran his pea crosses from 1856 to 1863, following some lines for four to six generations, and re-examined his records for all the years before he agreed to publish.",
+          "sourceId": "nageli-1950",
+          "locator": "Letter II, 18 April 1867, pp. 4-5"
+        },
+        {
+          "kind": "witness",
+          "claim": "Masaryk University's Faculty of Science writes that he \"showed particular patience during his experiments\".",
+          "sourceId": "muni-2022",
+          "locator": "paragraph beginning \"G. J. Mendel, despite all the respect\""
+        },
+        {
+          "kind": "words",
+          "claim": "His paper says the pea experiment was concluded \"after eight years' pursuit\".",
+          "sourceId": "mendel-1866",
+          "locator": "Introductory Remarks, p. 41"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "From 1874 until he was too ill to go on, he refused to pay a new state tax on monastic income, even after the authorities sequestered the monastery's estates in 1876.",
+          "sourceId": "hartl-2022",
+          "locator": "section \"Abbot Mendel (1868 to 1884)\""
+        },
+        {
+          "kind": "witness",
+          "claim": "William Bateson writes that the other monasteries gradually conformed, \"Mendel alone remaining firm\", that he turned down a proposed compromise and offered honours, and that he \"did not give in\" when the property was distrained; he sums him up as a man of \"obstinate determination\".",
+          "sourceId": "bateson-1909",
+          "locator": "Biographical Notice, pp. 312-314"
+        },
+        {
+          "kind": "words",
+          "claim": "On the tax law he wrote: \"I will fight steadfastly. The truth remains the truth; but this law is unjust\" (English by Kevin F. Roche).",
+          "sourceId": "muni-2022",
+          "locator": "paragraph beginning \"Mendel also showed his unwavering attitude\""
+        },
+        {
+          "kind": "witness",
+          "claim": "His nephew later wrote of \"Mendel's steadfast character, who has resisted all temptations and threats\".",
+          "sourceId": "muni-2022",
+          "locator": "paragraph beginning \"In the end, the government\""
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Besides teaching and his religious duties he kept daily weather and astronomical records, cared for the monastery's orchard and beehives, and grew plants in its greenhouse and gardens.",
+          "sourceId": "hartl-2022",
+          "locator": "abstract"
+        },
+        {
+          "kind": "witness",
+          "claim": "Bateson records that, shown two forms of Ficaria grown side by side for years without change, he joked that nature could not get on with species-making this way and \"there must be something more behind\"; he also crossed bee races from 50 hives and drew and counted sunspots.",
+          "sourceId": "bateson-1909",
+          "locator": "Biographical Notice, pp. 311-313"
+        },
+        {
+          "kind": "words",
+          "claim": "As new abbot in 1868 he wrote that office would not stop him from \"continuing the hybridization experiments of which I have become so fond\"; in 1870 he called them \"my favorite occupation\".",
+          "sourceId": "nageli-1950",
+          "locator": "Letter V, 4 May 1868, p. 16; Letter VIII, 3 July 1870, p. 22"
+        },
+        {
+          "kind": "deed",
+          "claim": "He bought all of Darwin's books as they came out in German translation and read them with marginal notes.",
+          "sourceId": "hartl-2022",
+          "locator": "section \"Scholar and Teacher (1843 to 1868)\""
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "His paper says the choice of plants \"must be made with all possible care\" to avoid questionable results, and reports that among more than 10,000 plants \"carefully examined\" only a very few showed stray pollination.",
+          "sourceId": "mendel-1866",
+          "locator": "Selection of the Experimental Plants, p. 42; p. 48"
+        },
+        {
+          "kind": "witness",
+          "claim": "Bateson calls his faculty \"the steady, slowly-perfected ray of penetrative analysis\" and notes that every letter of his handwriting was \"formed with meticulous precision\".",
+          "sourceId": "bateson-1909",
+          "locator": "Biographical Notice, pp. 313-314"
+        },
+        {
+          "kind": "witness",
+          "claim": "Hartl writes that he showed the proper way to study heredity is character by character, \"paying careful attention to genealogy and the numerical ratios of contrasting traits in each generation\".",
+          "sourceId": "hartl-2022",
+          "locator": "section \"Sources\""
+        },
+        {
+          "kind": "words",
+          "claim": "He criticised the hybridist Gärtner for statements \"too general, too vague\" and asked for kinship to be \"precisely determined, rather then simply estimated from general impressions\".",
+          "sourceId": "nageli-1950",
+          "locator": "Letter I, 31 December 1866, p. 2"
+        }
+      ]
+    },
+    {
+      "word": "Gratitude",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He brought his sister Theresia's sons to Brünn and paid for their schooling, and for two of them through medical school in Vienna; Hartl writes he did this in gratitude for her gift that had let him study.",
+          "sourceId": "hartl-2022",
+          "locator": "section \"Declining Years (1882 to 1884)\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Bateson writes that he \"repaid her advance many times over, himself providing the education of her three sons\".",
+          "sourceId": "bateson-1909",
+          "locator": "Biographical Notice, p. 310"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1883, a few months before his death, he wrote: \"Although I have had to go through a number of bitter moments in my life, I must gratefully admit that niceness and good have prevailed\" (English by Kevin F. Roche).",
+          "sourceId": "muni-2022",
+          "locator": "paragraph beginning \"A. Doupovec\" (vows of F. Bařina, 1883)"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Choose material that fits the question with all possible care before you start, or your results will be open to doubt.",
+      "sourceId": "mendel-1866",
+      "locator": "Selection of the Experimental Plants, p. 42"
+    },
+    {
+      "text": "Count and measure; do not judge from a general impression.",
+      "sourceId": "nageli-1950",
+      "locator": "Letter I, 31 December 1866, p. 2 (\"precisely determined, rather then simply estimated from general impressions\")"
+    },
+    {
+      "text": "Claim only what you observed, and only for as long as you watched it.",
+      "sourceId": "nageli-1950",
+      "locator": "Letter II, 18 April 1867, p. 5 (constancy of type defined for \"the period of observation\")"
+    },
+    {
+      "text": "Check your own records for errors before you go public, and expect to be doubted.",
+      "sourceId": "nageli-1950",
+      "locator": "Letter II, 18 April 1867, pp. 4-5"
+    },
+    {
+      "text": "Take on the long, hard job when it is the only right way to the answer.",
+      "sourceId": "mendel-1866",
+      "locator": "Introductory Remarks, p. 41"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "It requires indeed some courage to undertake a labour of such far-reaching extent; it appears, however, to be the only right way by which we can finally reach the solution of a question the importance of which cannot be over-estimated in connection with the history of the evolution of organic forms.",
+      "sourceId": "mendel-1866",
+      "locator": "Introductory Remarks, p. 41",
+      "translation": "C. T. Druery for the Royal Horticultural Society (1901), revised by William Bateson (1902)"
+    },
+    {
+      "text": "I am not surprised to hear your honor speak of my experiments with mistrustful caution; I would not do otherwise in a similar case.",
+      "sourceId": "nageli-1950",
+      "locator": "Letter II, 18 April 1867, p. 5",
+      "translation": "Leonie Kellen Piternick and George Piternick (1950)"
+    },
+    {
+      "text": "Permit me to state that, as an empirical worker, I must define constancy of type as the retention of a character during the period of observation.",
+      "sourceId": "nageli-1950",
+      "locator": "Letter II, 18 April 1867, p. 5",
+      "translation": "Leonie Kellen Piternick and George Piternick (1950)"
+    },
+    {
+      "text": "I am really unhappy about having to neglect my plants and my bees so completely.",
+      "sourceId": "nageli-1950",
+      "locator": "Letter X, 18 November 1873, p. 30",
+      "translation": "Leonie Kellen Piternick and George Piternick (1950)"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 8 February and 8 March 1865 he read the results of his eight years of pea crosses to the Natural Science Society in Brünn, and the paper was printed in its proceedings in 1866. On 31 December 1866 he sent it to the Munich botany professor Carl Nägeli. In a letter to Nägeli of 18 April 1867 he wrote that he had re-examined his records before publishing without finding a source of error, and that \"as far as I know, no one undertook to repeat the experiments\". The work was not widely recognised until 1900, sixteen years after his death.",
+    "sourceIds": [
+      "mendel-1866",
+      "nageli-1950",
+      "hartl-2022"
+    ]
+  },
+  "shadow": {
+    "text": "In 1874 a new law put a special tax on monastic income; most other monasteries reported their income so that they paid nothing, but Abbot Mendel refused to pay, insisting the law was unconstitutional, which the biologist Daniel Hartl writes it was not. In 1876 the authorities sequestered the monastery's estates, and he went on protesting for years until he was too sick to continue; Hartl writes that he became embittered, thought his friends had betrayed him and alienated many of his fellow friars, and William Bateson wrote in 1909 that \"from being a cheerful, friendly man he became suspicious and misanthropic\". By 1873 office had already pushed out his science: he wrote that he was \"really unhappy\" to neglect his plants and bees. In 1936 the statistician R. A. Fisher found his numbers closer to expectation than chance allows and wrote that the data of most experiments had been \"falsified so as to agree closely with Mendel's expectations\", possibly by an assistant. The charge has been argued over ever since; in 2010 the statisticians Ana Pires and João Branco proposed that an unconscious bias, not deliberate fraud, explains the close fit.",
+    "sourceIds": [
+      "hartl-2022",
+      "bateson-1909",
+      "nageli-1950",
+      "fisher-1936",
+      "pires-2010"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you judge from a general impression this week when you could have counted?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "Experiments in Plant Hybridization",
+      "year": 1866
+    },
+    {
+      "title": "Letters to Carl Nägeli, 1866-1873",
+      "year": "1950 (English translation)"
+    }
+  ],
+  "sources": [
+    {
+      "id": "mendel-1866",
+      "kind": "primary",
+      "title": "Experiments in Plant Hybridisation (read 1865, published 1866), translated for the Royal Horticultural Society, in Mendel's Principles of Heredity: A Defence",
+      "author": "Gregor Mendel (translation C. T. Druery, revised by William Bateson)",
+      "year": 1902,
+      "publisher": "Cambridge University Press",
+      "url": "https://www.gutenberg.org/ebooks/69362"
+    },
+    {
+      "id": "nageli-1950",
+      "kind": "primary",
+      "title": "Gregor Mendel's Letters to Carl Nägeli, 1866-1873, Genetics 35 (5, pt 2), supplement The Birth of Genetics (Electronic Scholarly Publishing edition, 2000)",
+      "author": "Gregor Mendel (translated by Leonie Kellen Piternick and George Piternick)",
+      "year": 1950,
+      "publisher": "Genetics Society of America",
+      "url": "https://www.mun.ca/biology/scarr/4270_Birth_of_Genetics.pdf"
+    },
+    {
+      "id": "hartl-2022",
+      "kind": "secondary",
+      "title": "Gregor Johann Mendel: From peasant to priest, pedagogue, and prelate, PNAS 119 (30): e2121953119",
+      "author": "Daniel L. Hartl (Harvard University)",
+      "year": 2022,
+      "publisher": "Proceedings of the National Academy of Sciences",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9335201/"
+    },
+    {
+      "id": "bateson-1909",
+      "kind": "secondary",
+      "title": "Mendel's Principles of Heredity, Biographical Notice of Mendel",
+      "author": "William Bateson",
+      "year": 1909,
+      "publisher": "Cambridge University Press",
+      "url": "https://archive.org/details/mendelsprinciple00bate"
+    },
+    {
+      "id": "muni-2022",
+      "kind": "secondary",
+      "title": "G. J. Mendel: modest, patient and principled",
+      "author": "Jiřina Relichová, Kateřina Radová, Zuzana Jayasundera and Leoš Verner (Masaryk University, Faculty of Science); English by Kevin F. Roche",
+      "year": 2022,
+      "publisher": "Masaryk University, Faculty of Science",
+      "url": "https://www.sci.muni.cz/en/current-news/g-j-mendel-modest-patient-and-principled"
+    },
+    {
+      "id": "fisher-1936",
+      "kind": "secondary",
+      "title": "Has Mendel's work been rediscovered?, Annals of Science 1: 115-137",
+      "author": "R. A. Fisher",
+      "year": 1936,
+      "publisher": "University of Adelaide Digital Library (Fisher collected papers, no. 144)",
+      "url": "https://hdl.handle.net/2440/15123"
+    },
+    {
+      "id": "pires-2010",
+      "kind": "secondary",
+      "title": "A Statistical Model to Explain the Mendel-Fisher Controversy, Statistical Science 25 (4): 545-565",
+      "author": "Ana M. Pires and João A. Branco",
+      "year": 2010,
+      "publisher": "Institute of Mathematical Statistics",
+      "url": "https://arxiv.org/abs/1104.2975"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Moravian Augustinian friar and abbot (1822-1884), not fictional, not a politician and not the founder of a religion, with no account of sexual contact with a minor or of sexual violence found; his documented dark side is a ten-year tax fight as abbot that left him embittered and estranged from many friars, the research he dropped for office, and Fisher's 1936 charge that his data were too close to expectation."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I checked every value, quote and sentence against his 1866 paper, his letters to Nägeli, Hartl's 2022 PNAS biography, Bateson's 1909 Biographical Notice, the Masaryk University article, Fisher 1936 and Pires and Branco 2010. Courage fell: one of its three pieces described caution rather than daring, and Hartl documents an \"unconquerable timidity\" at sickbeds and a breakdown at his 1856 teaching exam, which he never retook; Craft, from the blind pick, came in on his own method and Bateson's and Hartl's accounts of it. Patience, Determination, Curiosity and Gratitude held, each on three sources, and all four quotes checked. Eight passages were corrected, among them that Theresia gave him her whole share of the estate, and Bateson's account of him turning suspicious and misanthropic was added to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
