@@ -30,6 +30,8 @@ export const BAD_CASES: Array<{ name: string; rules: CatalogRule[]; mutate: (p: 
   { name: "a council question pointing past the principles", rules: ["council-question"], mutate: (p) => { p.councilQuestion.principleIndex = 7 } },
   { name: "a Wikipedia page as a source", rules: ["no-wikipedia"], mutate: (p) => { p.sources[2].url = "https://en.wikipedia.org/wiki/X" } },
   { name: "a Wikiquote page as a source", rules: ["no-wikipedia"], mutate: (p) => { p.sources[2].url = "https://en.m.wikiquote.org/wiki/X" } },
+  { name: "a source link that is not https", rules: ["schema"], mutate: (p) => { p.sources[2].url = "javascript:alert(1)" } },
+  { name: "a plain http source link", rules: ["schema"], mutate: (p) => { p.sources[2].url = "http://example.org/x" } },
   { name: "an unknown category", rules: ["schema"], mutate: (p) => { p.category = "wizards" } },
   { name: "an unknown area", rules: ["schema"], mutate: (p) => { p.areaIds = ["lm_cooking"] } },
 ]

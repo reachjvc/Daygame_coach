@@ -40,6 +40,9 @@ beforeEach(() => {
   sent.length = 0
 })
 
+/** "YYYY-MM-DD", `n` days from the database's today (marks must be near today). */
+const day = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10)
+
 // Tuesday 10 Nov 2026, 08:05 in Copenhagen (UTC+1).
 const TUESDAY_0805 = new Date("2026-11-10T07:05:00Z")
 
@@ -51,11 +54,19 @@ describe("council settings and week marks", () => {
     await writeCouncilSettings(a.id, { weekValue: "Discipline", weekOf: "2026-11-09" })
     await writeCouncilSettings(a.id, { remindOn: true })
     expect(await readCouncilSettings(a.id)).toEqual({ weekValue: "Discipline", weekOf: "2026-11-09", remindOn: true, remindHour: 8 })
-    await writeWeekMark(a.id, "2026-11-09", "Discipline", true)
-    await writeWeekMark(a.id, "2026-11-10", "Discipline", false)
-    await writeWeekMark(a.id, "2026-11-10", "Discipline", true)
-    await writeWeekMark(a.id, "2026-11-09", "Discipline", null)
-    expect(await readWeekMarks(a.id, "2026-11-09", "2026-11-15")).toEqual([{ day: "2026-11-10", value: "Discipline", lived: true }])
+    await writeWeekMark(a.id, day(-1), "Discipline", true)
+    await writeWeekMark(a.id, day(0), "Discipline", false)
+    await writeWeekMark(a.id, day(0), "Discipline", true)
+    await writeWeekMark(a.id, day(-1), "Discipline", null)
+    expect(await readWeekMarks(a.id, day(-7), day(1))).toEqual([{ day: day(0), value: "Discipline", lived: true }])
+  })
+
+  it("refuses a mark far from today, written round the route", async () => {
+    const a = await newUser("week-range")
+    for (const d of [day(-30), day(5), "1999-01-01"]) {
+      const res = await a.client.from("user_role_model_week_marks").insert({ user_id: a.id, day: d, value: "Discipline", lived: true })
+      expect(res.error, d).not.toBeNull()
+    }
   })
 
   it("refuses an hour in the night", async () => {
@@ -69,10 +80,10 @@ describe("council settings and week marks", () => {
     const b = await newUser("week-b")
     actAs(a)
     await writeCouncilSettings(a.id, { remindOn: true })
-    await writeWeekMark(a.id, "2026-11-10", "Discipline", true)
+    await writeWeekMark(a.id, day(0), "Discipline", true)
     expect((await b.client.from("user_role_model_settings").select("user_id").eq("user_id", a.id)).data ?? []).toEqual([])
     expect((await b.client.from("user_role_model_week_marks").select("day").eq("user_id", a.id)).data ?? []).toEqual([])
-    const write = await b.client.from("user_role_model_week_marks").insert({ user_id: a.id, day: "2026-11-11", value: "X", lived: false })
+    const write = await b.client.from("user_role_model_week_marks").insert({ user_id: a.id, day: day(0), value: "X", lived: false })
     expect(write.error).not.toBeNull()
     await b.client.from("user_role_model_settings").update({ remind_on: false }).eq("user_id", a.id)
     const [row] = await asOwner((q) => q(`select remind_on from user_role_model_settings where user_id = $1`, [a.id]))

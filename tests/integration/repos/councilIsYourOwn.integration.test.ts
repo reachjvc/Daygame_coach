@@ -55,13 +55,16 @@ describe("the council rows", () => {
     expect(ok).toBe(5)
   })
 
-  it("refuses an empty value list, six values, and a bad id", async () => {
+  it("refuses an empty value list, six values, a bad id, and a value that is not a short word", async () => {
     const a = await newUser("council-checks")
     for (const row of [
       { role_model_id: "x", position: 0, taken_values: [] },
       { role_model_id: "x", position: 0, taken_values: ["a", "b", "c", "d", "e", "f"] },
       { role_model_id: "../x", position: 0, taken_values: ["a"] },
       { role_model_id: "x", position: 5, taken_values: ["a"] },
+      { role_model_id: "x", position: 0, taken_values: ["a".repeat(41)] },
+      { role_model_id: "x", position: 0, taken_values: [""] },
+      { role_model_id: "x", position: 0, taken_values: ["a", null] },
     ]) {
       const res = await a.client.from("user_role_models").insert({ user_id: a.id, ...row })
       expect(res.error, JSON.stringify(row)).not.toBeNull()

@@ -14,6 +14,8 @@ import { isValueWord } from "./valueWords"
  * failure can be named on its own.
  */
 const text = z.string().trim().min(1)
+/** Links shown on the page: https only, so no javascript: or data: address can ride in a file. */
+const httpsUrl = z.string().url().refine((u) => u.startsWith("https://"), { message: "links must be https" })
 
 export const sourceSchema = z.object({
   id: text,
@@ -22,7 +24,7 @@ export const sourceSchema = z.object({
   author: text,
   year: z.union([z.number().int(), text]),
   publisher: z.string().optional(),
-  url: z.string().url().optional(),
+  url: httpsUrl.optional(),
 })
 
 export const evidenceSchema = z.object({
@@ -46,7 +48,7 @@ export const quoteSchema = z.object({
   translation: z.string().optional(),
 })
 
-export const likenessSourceSchema = z.object({ title: text, url: z.string().url(), licence: text, author: text })
+export const likenessSourceSchema = z.object({ title: text, url: httpsUrl, licence: text, author: text })
 
 export const REVIEW_STATUSES = ["draft", "validated", "flagged", "excluded", "proposed-remove"] as const
 
