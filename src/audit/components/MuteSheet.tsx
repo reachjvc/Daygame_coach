@@ -50,7 +50,8 @@ export function MuteSheet({
   onClose: () => void
   run: Pick<AuditRun, "mutedUntil" | "quietStart" | "quietEnd">
   timezone: string
-  onMute: (option: MuteOption) => Promise<string | null>
+  /** `shown`: the end the tapped tile showed, so that is the end stored (alpha p10-sheets-03). */
+  onMute: (option: MuteOption, shown?: string) => Promise<string | null>
   /** Which devices get pings: the state line says only what is true (alpha picky-eye-09). */
   push: PushDeviceState
   onOpenSettings: () => void
@@ -86,10 +87,10 @@ export function MuteSheet({
       : `Every 15 minutes, outside your quiet hours${names ? `, to ${names}` : ""}.`
   const tone = line || nowhere ? "warn" : push.devicesKnown ? "on" : "unknown"
 
-  const pick = async (option: MuteOption) => {
+  const pick = async (option: MuteOption, shown?: Date | null) => {
     setBusy(option)
     setError(null)
-    const failed = await onMute(option)
+    const failed = await (shown ? onMute(option, shown.toISOString()) : onMute(option))
     setBusy(null)
     if (failed) setError(failed)
     else onClose()
@@ -140,7 +141,7 @@ export function MuteSheet({
               key={c.option}
               type="button"
               disabled={busy !== null}
-              onClick={() => void pick(c.option)}
+              onClick={() => void pick(c.option, until)}
               className="flex min-h-16 flex-col items-start justify-center gap-0.5 rounded-xl border border-border bg-background/60 px-3.5 py-2 text-left transition-colors hover:border-primary/60 hover:bg-primary/10 disabled:opacity-50"
             >
               <span className="flex items-center gap-1.5 text-base font-semibold">

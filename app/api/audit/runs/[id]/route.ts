@@ -1,7 +1,8 @@
 /**
  * CHANGE ONE AUDIT. PATCH with exactly one of:
  *   { end: true }                         End now (an open audit only)
- *   { mute: "30m"|"1h"|"2h"|"morning"|"off" }
+ *   { mute: "30m"|"1h"|"2h"|"morning"|"off", shown?: ISO }
+ *                                         shown: the end the tapped tile showed (muteEnd)
  *   { quietStart, quietEnd }              minutes after midnight, on the quarter
  *   { reviewChange: ReviewChange }        one choice+note, one block, or one block removed,
  *                                         applied to the review as stored (applyReviewChange)
@@ -13,7 +14,7 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { AuditRefused, AuditRunNotFound, changeReview, readRuns, updateRun, type RunPatch } from "@/src/db/auditRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
-import { applyReviewChange, applyReviewParts, checkQuiet, muteUntil, MUTE_OPTIONS, runIsOpen, type MuteOption } from "@/src/audit/auditService"
+import { applyReviewChange, applyReviewParts, checkQuiet, muteEnd, MUTE_OPTIONS, runIsOpen, type MuteOption } from "@/src/audit/auditService"
 import { isUuid } from "@/src/shared/ids"
 import { refuseCrossSite } from "@/src/audit/requestGuard"
 
@@ -42,7 +43,7 @@ export async function PATCH(req: Request, { params }: RouteParams) {
       if (!(MUTE_OPTIONS as readonly string[]).includes(body.mute)) return NextResponse.json({ error: "Unknown mute" }, { status: 400 })
       if (!runIsOpen(run, now)) return NextResponse.json({ error: "This audit is already over" }, { status: 409 })
       const timezone = await getUserTimezone(auth.userId).catch(() => "UTC")
-      patch.mutedUntil = muteUntil(body.mute as MuteOption, run, now, timezone)
+      patch.mutedUntil = muteEnd(body.mute as MuteOption, run, now, timezone, body.shown)
     } else if ("quietStart" in body || "quietEnd" in body) {
       const quiet = checkQuiet(body.quietStart, body.quietEnd)
       if ("error" in quiet) return NextResponse.json({ error: quiet.error }, { status: 400 })

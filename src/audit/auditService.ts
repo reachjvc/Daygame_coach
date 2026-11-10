@@ -615,6 +615,26 @@ export function muteUntil(option: MuteOption, run: Pick<AuditRun, "quietStart" |
   }
 }
 
+/** How stale a Mute tile's end may be and still be stored: a redraw late by a moment, plus the trip to the server. */
+export const MUTE_SHOWN_GRACE_MS = 2 * 60_000
+
+/**
+ * The end a mute stores. `shown` is the end the tapped tile showed: stored
+ * when it is this option's end at some moment of the last MUTE_SHOWN_GRACE_MS,
+ * so a tap just after a quarter (before the sheet was redrawn, or while the
+ * request was on its way) stores what he read, not the next quarter's end
+ * (alpha p10-sheets-03). Anything else: the end at `now`.
+ */
+export function muteEnd(option: MuteOption, run: Pick<AuditRun, "quietStart" | "quietEnd">, now: Date, tz: string, shown?: unknown): Date | null {
+  const own = muteUntil(option, run, now, tz)
+  if (!own || typeof shown !== "string") return own
+  const shownMs = Date.parse(shown)
+  if (!Number.isFinite(shownMs)) return own
+  // the end changes in steps far apart (a quarter at least): the window's two ends hold every value it takes
+  const before = muteUntil(option, run, new Date(now.getTime() - MUTE_SHOWN_GRACE_MS), tz)
+  return before && before.getTime() === shownMs ? before : own
+}
+
 /** Quiet hours sent from the settings sheet: minutes 0–1439, on a quarter. */
 export function checkQuiet(start: unknown, end: unknown): { quietStart: number; quietEnd: number } | { error: string } {
   const ok = (v: unknown): v is number => typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= 1439 && v % 15 === 0

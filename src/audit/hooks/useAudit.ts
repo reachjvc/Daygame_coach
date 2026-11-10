@@ -597,7 +597,7 @@ export function useAudit(account: string) {
     undoable,
     start: () => decide(() => api.start(crypto.randomUUID())),
     end: () => (runId ? decide(() => api.end(runId)) : Promise.resolve("No audit is running")),
-    mute: (option: MuteOption) => (runId ? decide(() => api.mute(runId, option)) : Promise.resolve("No audit is running")),
+    mute: (option: MuteOption, shown?: string) => (runId ? decide(() => api.mute(runId, option, shown)) : Promise.resolve("No audit is running")),
     setQuiet: (start: number, end: number) => (runId ? decide(() => api.quiet(runId, start, end)) : Promise.resolve("No audit is running")),
     changeReview,
     readRun,

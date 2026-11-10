@@ -61,7 +61,9 @@ export function auditApi(account: string) {
     view: (runId?: string) => call<AuditView>(runId ? `/api/audit?run=${encodeURIComponent(runId)}` : "/api/audit"),
     start: (id: string) => call<{ run: AuditRun }>("/api/audit/runs", json("POST", { id })),
     end: (runId: string) => call<{ run: AuditRun }>(`/api/audit/runs/${runId}`, json("PATCH", { end: true })),
-    mute: (runId: string, mute: MuteOption) => call<{ run: AuditRun }>(`/api/audit/runs/${runId}`, json("PATCH", { mute })),
+    /** `shown`: the end the tapped tile showed, stored when it was right a moment ago (muteEnd). */
+    mute: (runId: string, mute: MuteOption, shown?: string) =>
+      call<{ run: AuditRun }>(`/api/audit/runs/${runId}`, json("PATCH", shown ? { mute, shown } : { mute })),
     quiet: (runId: string, quietStart: number, quietEnd: number) =>
       call<{ run: AuditRun }>(`/api/audit/runs/${runId}`, json("PATCH", { quietStart, quietEnd })),
     /** One choice, note or block, applied to the review as stored: another device's saves stay. */
