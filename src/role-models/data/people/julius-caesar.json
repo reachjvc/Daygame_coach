@@ -1,0 +1,344 @@
+{
+  "id": "julius-caesar",
+  "name": "Julius Caesar",
+  "born": "c. 100 BC",
+  "died": -44,
+  "category": "warriors",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A Roman general who moved fast, led from the front, wrote his own record and pardoned his Roman enemies.",
+  "startedFrom": "He was born into an old patrician family in Rome and lost his father in his sixteenth year. When he refused the dictator Sulla's order to divorce his wife Cornelia, Sulla took his priesthood, her dowry and his family inheritances. He went into hiding, sick with fever, moved almost every night and bribed Sulla's men, until relatives and the Vestal virgins won him a pardon.",
+  "values": [
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "As quaestor in Spain he saw a statue of Alexander the Great at Gades, sighed that he had done nothing noteworthy at the age when Alexander had conquered the world, and asked for his discharge to seek greater things at Rome.",
+          "sourceId": "suetonius-rolfe",
+          "locator": "Julius 7.1"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 63 BC he ran for chief priest (pontifex maximus) against two older, higher-ranking men, running up an enormous debt in bribes, and is said to have told his mother he would come home as pontifex or not at all.",
+          "sourceId": "suetonius-rolfe",
+          "locator": "Julius 13"
+        },
+        {
+          "kind": "words",
+          "claim": "Passing a poor Alpine village, he told his friends he would rather be first there than second at Rome; in Spain, reading of Alexander, he wept that he had as yet achieved no brilliant success.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Caesar 11.3-6"
+        },
+        {
+          "kind": "witness",
+          "claim": "Plutarch writes that his men were not astonished at his love of danger, 'knowing his ambition'.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Caesar 17.2"
+        }
+      ]
+    },
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In January 49 BC he led his troops across the Rubicon, the edge of his province, into Italy against the Senate's decree.",
+          "sourceId": "suetonius-rolfe",
+          "locator": "Julius 31.2-33"
+        },
+        {
+          "kind": "deed",
+          "claim": "Ransomed from pirates for fifty talents, he at once launched a fleet, pursued them and carried out the punishment he had threatened while their captive.",
+          "sourceId": "suetonius-rolfe",
+          "locator": "Julius 4.1-2, 74.1"
+        },
+        {
+          "kind": "witness",
+          "claim": "Plutarch writes that he saw the start of the civil war needed 'amazing boldness and speed' more than a large force.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Caesar 32.2"
+        },
+        {
+          "kind": "witness",
+          "claim": "Suetonius writes that it was a question whether he was more cautious or more daring, and that he once crossed the enemy's pickets disguised as a Gaul and put to sea alone at night in a small boat in a gale.",
+          "sourceId": "suetonius-rolfe",
+          "locator": "Julius 58.1-2"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At the battle with the Nervii (57 BC) he called the centurions by name and ordered the standards forward; by his own account the men's courage came back when they fought in sight of their general.",
+          "sourceId": "bg-mcdevitte",
+          "locator": "Gallic War II.25"
+        },
+        {
+          "kind": "deed",
+          "claim": "He called his soldiers 'comrades'; when the civil war began, every centurion offered to pay for a horseman and the soldiers offered to serve without pay, and in the long war not one deserted.",
+          "sourceId": "suetonius-rolfe",
+          "locator": "Julius 67.2-68.1"
+        },
+        {
+          "kind": "witness",
+          "claim": "Plutarch writes that Caesar himself created the spirit of his men by sharing rewards with the brave and by taking every danger and every hardship himself.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Caesar 17.1"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At the battle with the Nervii, with his line breaking and most centurions down, he took a shield from a soldier and went to the front rank himself.",
+          "sourceId": "bg-mcdevitte",
+          "locator": "Gallic War II.25"
+        },
+        {
+          "kind": "witness",
+          "claim": "Plutarch writes that had Caesar not snatched a shield and hurled himself on the enemy, it is thought not a Roman would have survived.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Caesar 20.7-9"
+        },
+        {
+          "kind": "deed",
+          "claim": "When his army gave way he often rallied it single-handed, grabbing fleeing men; once an eagle-bearer made a pass at him with the point of the standard.",
+          "sourceId": "suetonius-rolfe",
+          "locator": "Julius 62"
+        },
+        {
+          "kind": "deed",
+          "claim": "At Alexandria, forced off a bridge, he swam about two hundred paces to a ship, holding papers above the water.",
+          "sourceId": "suetonius-rolfe",
+          "locator": "Julius 64"
+        },
+        {
+          "kind": "words",
+          "claim": "Offered a bodyguard in 44 BC, he refused, saying it was better to die once for all than to be always expecting death.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Caesar 57.7"
+        }
+      ]
+    },
+    {
+      "word": "Clarity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his book On Analogy he told writers to avoid a strange and unfamiliar word 'as you would a rock'.",
+          "sourceId": "gellius-rolfe",
+          "locator": "Attic Nights 1.10.4"
+        },
+        {
+          "kind": "deed",
+          "claim": "He wrote On Analogy while crossing the Alps back to his army, and wrote his war memoirs himself; his officer Hirtius says he wrote them 'easily and rapidly'.",
+          "sourceId": "suetonius-rolfe",
+          "locator": "Julius 56.1, 56.3, 56.5"
+        },
+        {
+          "kind": "witness",
+          "claim": "Cicero, his contemporary, called the memoirs 'plain, correct, and graceful, and divested of all the ornaments of language', and records that On Analogy laid down that an accurate choice of words is the foundation of eloquence.",
+          "sourceId": "cicero-brutus-jones",
+          "locator": "Brutus 253, 262"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Move before the other side is ready: speed can do what a bigger force cannot.",
+      "sourceId": "plutarch-perrin",
+      "locator": "Life of Caesar 32.2"
+    },
+    {
+      "text": "Win back rivals with mercy and generosity; cruelty breeds hatred and short victories.",
+      "sourceId": "att-shuckburgh",
+      "locator": "Letter CCCXLVI (Att. IX.7c), vol. II, p. 303"
+    },
+    {
+      "text": "When the line is breaking, go to the front yourself and call people by name.",
+      "sourceId": "bg-mcdevitte",
+      "locator": "Gallic War II.25"
+    },
+    {
+      "text": "Scout the ground before you take a risk.",
+      "sourceId": "suetonius-rolfe",
+      "locator": "Julius 58.1"
+    },
+    {
+      "text": "Say it in plain, everyday words.",
+      "sourceId": "gellius-rolfe",
+      "locator": "Attic Nights 1.10.4"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "in most cases men willingly believe what they wish.",
+      "sourceId": "bg-mcdevitte",
+      "locator": "Gallic War III.18",
+      "translation": "W. A. McDevitte and W. S. Bohn, 1869"
+    },
+    {
+      "text": "Let this be our new method of conquering — to fortify ourselves by mercy and generosity.",
+      "sourceId": "att-shuckburgh",
+      "locator": "Letter CCCXLVI (Att. IX.7c), Caesar to Oppius and Balbus, March 49 BC, vol. II, p. 303",
+      "translation": "Evelyn S. Shuckburgh, 1899"
+    },
+    {
+      "text": "I would rather be first here than second at Rome.",
+      "sourceId": "plutarch-perrin",
+      "locator": "Life of Caesar 11.4, Loeb vol. VII",
+      "translation": "Bernadotte Perrin, 1919"
+    },
+    {
+      "text": "Avoid, as you would a rock, a strange and unfamiliar word.",
+      "sourceId": "gellius-rolfe",
+      "locator": "Attic Nights 1.10.4, quoting Caesar, On Analogy, book 1",
+      "translation": "John C. Rolfe, 1927"
+    }
+  ],
+  "definingMoment": {
+    "text": "In January 49 BC the Senate set aside the tribunes' veto and the tribunes left Rome. Caesar sent a few cohorts ahead in secret, spent the day in public at a show and a banquet, and left after dark. At the river Rubicon, the edge of his province, he stopped and said, as Suetonius reports: 'Even yet we may draw back; but once cross yon little bridge, and the whole issue is with the sword.' Then he said 'The die is cast', crossed into Italy and took Ariminum. In his own account he does not name the river: he says he spoke to the thirteenth legion and set off with it to Ariminum.",
+    "sourceIds": [
+      "suetonius-rolfe",
+      "plutarch-perrin",
+      "bc-mcdevitte",
+      "eb1911"
+    ]
+  },
+  "shadow": {
+    "text": "In 56 BC, after the Veneti surrendered, he put their whole senate to death and sold the rest as slaves, by his own account so that barbarians would respect envoys. In 55 BC, by his own account, he held the German leaders who came to his camp, then attacked the camp of the Usipetes and Tencteri and sent his cavalry after the women and children who fled; he puts the enemy at 430,000 and says no Roman was killed. Cato proposed handing Caesar over to the Germans for breaking a truce, and in 2015 Vrije Universiteit Amsterdam archaeologists placed the massacre at Kessel in the Netherlands. At Avaricum in 52 BC, he writes, his soldiers spared neither the old nor women nor children, and of about 40,000 people scarcely 800 got away. In 51 BC, after the siege of Uxellodunum, the hands of every man who had fought him were cut off; his officer Hirtius writes that Caesar knew his mercy was known to all and wanted to deter further revolts. His mercy went mainly to fellow Romans in the civil war, where his own letter calls it his policy; in Gaul he gave it or withheld it as it served him, and in March 49 BC Cicero called it his 'cunning kindness'. Suetonius writes that he plundered temples and towns in Gaul and seduced the wives of other leading Romans, among them Crassus and Pompey. In 49 BC he led his army into Italy and started a civil war, and in 44 BC he took the dictatorship for life, which Plutarch calls 'confessedly a tyranny'.",
+    "sourceIds": [
+      "bg-mcdevitte",
+      "plutarch-perrin",
+      "eb1911",
+      "vu-2015",
+      "att-shuckburgh",
+      "cicero-atticus-winstedt",
+      "suetonius-rolfe"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you wait this week for a better moment, when moving fast would have won it?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Gallic War (McDevitte and Bohn's translation is free)",
+      "year": "c. 51 BC"
+    },
+    {
+      "title": "The Civil War",
+      "year": "before 44 BC"
+    }
+  ],
+  "sources": [
+    {
+      "id": "bg-mcdevitte",
+      "kind": "primary",
+      "title": "Caesar's Gallic War (book VIII written by his officer Aulus Hirtius)",
+      "author": "Gaius Julius Caesar, translated by W. A. McDevitte and W. S. Bohn",
+      "year": 1869,
+      "publisher": "Harper & Brothers, New York; Perseus Digital Library",
+      "url": "https://www.perseus.tufts.edu/hopper/text?doc=Perseus:text:1999.02.0001"
+    },
+    {
+      "id": "bc-mcdevitte",
+      "kind": "primary",
+      "title": "The Civil War, in Caesar's Commentaries (Everyman's Library no. 702)",
+      "author": "Gaius Julius Caesar, translated by W. A. McDevitte",
+      "year": 1915,
+      "publisher": "J. M. Dent; Project Gutenberg eBook #10657",
+      "url": "https://www.gutenberg.org/ebooks/10657"
+    },
+    {
+      "id": "att-shuckburgh",
+      "kind": "primary",
+      "title": "The Letters of Cicero, vol. II, letter CCCXLVI (Att. IX.7c): Caesar to C. Oppius and Cornelius Balbus",
+      "author": "Gaius Julius Caesar, translated by Evelyn S. Shuckburgh",
+      "year": 1899,
+      "publisher": "George Bell and Sons; Internet Archive scan",
+      "url": "https://archive.org/details/lettersofcicerow02cice"
+    },
+    {
+      "id": "suetonius-rolfe",
+      "kind": "secondary",
+      "title": "The Lives of the Caesars: The Deified Julius (early 2nd century AD)",
+      "author": "Suetonius, translated by J. C. Rolfe",
+      "year": 1913,
+      "publisher": "Loeb Classical Library, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Suetonius/12Caesars/Julius*.html"
+    },
+    {
+      "id": "plutarch-perrin",
+      "kind": "secondary",
+      "title": "Life of Caesar, in Plutarch's Lives vol. VII (c. AD 100)",
+      "author": "Plutarch, translated by Bernadotte Perrin",
+      "year": 1919,
+      "publisher": "Loeb Classical Library, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Plutarch/Lives/Caesar*.html"
+    },
+    {
+      "id": "gellius-rolfe",
+      "kind": "secondary",
+      "title": "Attic Nights, book 1 (2nd century AD)",
+      "author": "Aulus Gellius, translated by John C. Rolfe",
+      "year": 1927,
+      "publisher": "Loeb Classical Library, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Gellius/1*.html"
+    },
+    {
+      "id": "cicero-brutus-jones",
+      "kind": "secondary",
+      "title": "Cicero's Brutus, or History of Famous Orators (written 46 BC)",
+      "author": "Marcus Tullius Cicero, translated by E. Jones",
+      "year": 1776,
+      "publisher": "B. White, London; Project Gutenberg eBook #9776",
+      "url": "https://www.gutenberg.org/ebooks/9776"
+    },
+    {
+      "id": "cicero-atticus-winstedt",
+      "kind": "secondary",
+      "title": "Letters to Atticus, vol. II, book VIII letter 16 (Formiae, 4 March 49 BC)",
+      "author": "Marcus Tullius Cicero, translated by E. O. Winstedt",
+      "year": 1921,
+      "publisher": "William Heinemann (Loeb Classical Library); Project Gutenberg eBook #50692",
+      "url": "https://www.gutenberg.org/ebooks/50692"
+    },
+    {
+      "id": "eb1911",
+      "kind": "secondary",
+      "title": "Caesar, Gaius Julius, Encyclopaedia Britannica, 11th edition, vol. 4",
+      "author": "Henry Stuart Jones and Margaret Bryant",
+      "year": 1911,
+      "publisher": "Wikisource transcription",
+      "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Caesar,_Gaius_Julius"
+    },
+    {
+      "id": "vu-2015",
+      "kind": "secondary",
+      "title": "VU archaeologists discover location of historic battle fought by Caesar in Dutch river area (news release, 16 December 2015)",
+      "author": "Vrije Universiteit Amsterdam",
+      "year": 2015,
+      "publisher": "VU Amsterdam, via EurekAlert",
+      "url": "https://www.eurekalert.org/news-releases/864488"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Roman general and dictator (c. 100-44 BC), long dead, not a founder of a living religion, with no source account of sexual contact with anyone under 16 or of sexual violence; his dark side is large and documented (the 55 BC slaughter of the Usipetes and Tencteri, the hands cut off at Uxellodunum, plunder, starting a civil war, life dictatorship, many affairs with married women)."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I tested Forgiveness against the Veneti (56 BC), the Usipetes and Tencteri (55 BC), the Eburones (53 BC), Avaricum (52 BC) and Uxellodunum (51 BC), and it fell: his clemency was a policy, which his own letter of March 49 BC calls 'my policy', kept for fellow Romans and given or withheld in Gaul as it served him, and Hirtius says outright that the hands were cut off by a man who knew his mercy was famous; that contrast now stands in the shadow. Courage, the blind pick's word, came in on five checked items from Caesar, Plutarch and Suetonius; Clarity held after its weak 1911 Britannica item (about accuracy, not plainness) was swapped for Cicero's own Brutus. Ambition, Boldness and Leadership held, all four quotes match the named translations with no misattribution found, and the tagline, the definingMoment and the shadow were corrected and extended (Veneti, Avaricum, Cicero's 'cunning kindness').",
+    "checkedOn": "2026-11-10"
+  }
+}
