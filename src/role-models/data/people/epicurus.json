@@ -1,0 +1,286 @@
+{
+  "id": "epicurus",
+  "name": "Epicurus",
+  "born": -341,
+  "died": -270,
+  "category": "sages",
+  "areaIds": [
+    "lm_friends",
+    "lm_emotions"
+  ],
+  "tagline": "A teacher of pleasure who said he was content with bread and water and put friends first.",
+  "startedFrom": "He was born in 341 BC into an Athenian family settled on the island of Samos. His enemies said he helped in his father's school for a pitiful fee and went round cottages with his mother reading charms; he said he first came to philosophy at fourteen. After the Athenian settlers were driven off Samos in 323 BC, he joined his father in Colophon, on the coast of today's Turkey.",
+  "values": [
+    {
+      "word": "Friendship",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that of all the means wisdom gives for a happy life, by far the most important is the acquisition of friends.",
+          "sourceId": "dl-hicks-epicurus",
+          "locator": "Book X, §148, Sovran Maxim 27"
+        },
+        {
+          "kind": "deed",
+          "claim": "Friends came to him from all parts and lived with him in his garden at Athens; his one or two trips to Ionia were to visit friends there.",
+          "sourceId": "dl-hicks-life",
+          "locator": "Book X, §10-11, p. 539"
+        },
+        {
+          "kind": "deed",
+          "claim": "On his last day he asked Idomeneus to watch over the children of his dead friend Metrodorus, and his will paid for their keep.",
+          "sourceId": "dl-hicks-epicurus",
+          "locator": "Book X, §19-22"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia says Epicurus placed an extremely high value on friendship.",
+          "sourceId": "sep",
+          "locator": "Section 6, The Epicurean Life"
+        }
+      ]
+    },
+    {
+      "word": "Simplicity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Diocles reports that he and his friends lived a very simple and frugal life, drinking mostly water; in his letters he says he was content with plain bread and water.",
+          "sourceId": "dl-hicks-life",
+          "locator": "Book X, §11, p. 541"
+        },
+        {
+          "kind": "deed",
+          "claim": "Seneca reports that he kept set days of meagre eating to test whether he fell short of full happiness, and boasted he lived on less than a penny.",
+          "sourceId": "seneca-gummere",
+          "locator": "Letter 18, §9"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that getting used to a simple and inexpensive diet supplies all that is needed for health and makes a man fearless of fortune.",
+          "sourceId": "dl-hicks-epicurus",
+          "locator": "Book X, §131, Letter to Menoeceus"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia says Epicurus was famously content with little.",
+          "sourceId": "sep",
+          "locator": "Section 6, The Epicurean Life"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Diogenes Laertius lists his generosity to his brothers and his gentleness to his servants, shown by his will and by their membership of the school.",
+          "sourceId": "dl-hicks-life",
+          "locator": "Book X, §10, p. 539"
+        },
+        {
+          "kind": "deed",
+          "claim": "His will freed four slaves and provided for Nicanor so that no member who had grown old with him in the school would lack the necessaries of life.",
+          "sourceId": "dl-hicks-epicurus",
+          "locator": "Book X, §20-21, p. 549"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia says his will provided for the children of his friends and that the prevailing view, even among hostile witnesses, was that he was extraordinarily humane.",
+          "sourceId": "sep",
+          "locator": "Section 2, Life"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He founded schools first in Mytilene and Lampsacus and then the Garden in Athens, a community where residents put his teaching into practice.",
+          "sourceId": "iep",
+          "locator": "Section 1, Life"
+        },
+        {
+          "kind": "deed",
+          "claim": "Diocles says he trained his friends to commit his treatises to memory.",
+          "sourceId": "dl-hicks-life",
+          "locator": "Book X, §12"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that he had himself prepared a short summary of his whole system for those unable to study his long works.",
+          "sourceId": "dl-hicks-epicurus",
+          "locator": "Book X, §35, Letter to Herodotus"
+        }
+      ]
+    },
+    {
+      "word": "Peace",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that health of body and tranquillity of mind are the sum and end of a blessed life, and that once pain and fear are gone the tempest of the soul is laid.",
+          "sourceId": "dl-hicks-epicurus",
+          "locator": "Book X, §128, Letter to Menoeceus"
+        },
+        {
+          "kind": "deed",
+          "claim": "Diogenes says he did not even enter public life and spent all his life in Greece, leaving only once or twice to visit friends in Ionia.",
+          "sourceId": "dl-hicks-life",
+          "locator": "Book X, §10, p. 539"
+        },
+        {
+          "kind": "deed",
+          "claim": "On the last day of his life, in constant pain, he wrote that against all his sufferings he set gladness of mind at the memory of past talks with his friend.",
+          "sourceId": "dl-hicks-epicurus",
+          "locator": "Book X, §22, letter to Idomeneus, p. 549"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia says freedom from fear (ataraxy) together with freedom from bodily pain is one way of stating his goal of life, and that his sage would lead a peaceful life, avoiding politics.",
+          "sourceId": "sep",
+          "locator": "Section 4, Psychology and Ethics; Section 5, Social Theory"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Of everything that makes a life happy, friends matter most, so invest in them.",
+      "sourceId": "dl-hicks-epicurus",
+      "locator": "Book X, §148, Sovran Maxims 27-28"
+    },
+    {
+      "text": "To be richer, want less instead of getting more.",
+      "sourceId": "seneca-gummere",
+      "locator": "Letter 21, §7"
+    },
+    {
+      "text": "Get used to plain food, so that losing luxury holds no fear and a treat tastes better.",
+      "sourceId": "dl-hicks-epicurus",
+      "locator": "Book X, §130-131, Letter to Menoeceus"
+    },
+    {
+      "text": "Weigh each pleasure against the pain it brings later, and skip the ones that cost more than they give.",
+      "sourceId": "dl-hicks-epicurus",
+      "locator": "Book X, §129-130, Letter to Menoeceus"
+    },
+    {
+      "text": "Death is nothing to you, so do not let the fear of it spoil the life you have.",
+      "sourceId": "dl-hicks-epicurus",
+      "locator": "Book X, §124-125, Letter to Menoeceus"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Of all the means which are procured by wisdom to ensure happiness throughout the whole of life, by far the most important is the acquisition of friends.",
+      "sourceId": "dl-hicks-epicurus",
+      "locator": "Book X, §148, Sovran Maxim 27",
+      "translation": "R. D. Hicks, 1925"
+    },
+    {
+      "text": "By pleasure we mean the absence of pain in the body and of trouble in the soul.",
+      "sourceId": "dl-hicks-epicurus",
+      "locator": "Book X, §131, Letter to Menoeceus",
+      "translation": "R. D. Hicks, 1925"
+    },
+    {
+      "text": "Death, therefore, the most awful of evils, is nothing to us, seeing that, when we are, death is not come, and, when death is come, we are not.",
+      "sourceId": "dl-hicks-epicurus",
+      "locator": "Book X, §125, Letter to Menoeceus",
+      "translation": "R. D. Hicks, 1925"
+    },
+    {
+      "text": "My continual sufferings from strangury and dysentery are so great that nothing could augment them; but over against them all I set gladness of mind at the remembrance of our past conversations.",
+      "sourceId": "dl-hicks-epicurus",
+      "locator": "Book X, §22, letter to Idomeneus, p. 549",
+      "translation": "R. D. Hicks, 1925"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 270 BC he died of a kidney stone after an illness of two weeks. On his last day he wrote to his friend Idomeneus that his pain was so great that nothing could add to it, but that against it he set his gladness at remembering their talks. In the same letter he asked Idomeneus to watch over the children of his dead friend Metrodorus. His will set the Garden aside for his school to live and study in and freed four of his slaves.",
+    "sourceIds": [
+      "dl-hicks-life",
+      "dl-hicks-epicurus",
+      "sep"
+    ]
+  },
+  "shadow": {
+    "text": "He owned slaves; his will freed four of them by name (Mys, Nicias, Lycon and Phaedrium). The same will kept the daughter of his friend Metrodorus only 'so long as she is well-ordered and obedient to Hermarchus', and left the choice of her husband to Hermarchus. He said he was self-taught and denied being a pupil of Nausiphanes, though Diogenes Laertius's sources and the Stanford Encyclopedia say he studied under him. Diogenes records his opponents' report that he called Nausiphanes a jelly-fish and a fraud, Plato's school 'the toadies of Dionysius' and Aristotle a profligate. His former pupil Timocrates claimed he vomited twice a day from over-indulgence, spent a mina a day on his table and had courtesans in his company; Diogenes calls these accusers 'stark mad', and the Stanford Encyclopedia calls the stories slanders.",
+    "sourceIds": [
+      "dl-hicks-life",
+      "dl-hicks-epicurus",
+      "sep"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you chase more this week when wanting less would have left you just as content?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "Letter to Menoeceus (kept in Diogenes Laertius, Lives, Book X)",
+      "year": "before 270 BC"
+    },
+    {
+      "title": "Sovran Maxims, also called Principal Doctrines (kept in Diogenes Laertius, Lives, Book X)",
+      "year": "before 270 BC"
+    }
+  ],
+  "sources": [
+    {
+      "id": "dl-hicks-epicurus",
+      "kind": "primary",
+      "title": "Epicurus's letters to Herodotus and Menoeceus, his Sovran Maxims, his will and last letter, as preserved in Diogenes Laertius, Lives of Eminent Philosophers, Book X (Loeb vol. II)",
+      "author": "Epicurus; preserved by Diogenes Laertius; translated by R. D. Hicks",
+      "year": 1925,
+      "publisher": "London: William Heinemann; New York: G. P. Putnam's Sons (Loeb Classical Library)",
+      "url": "https://en.wikisource.org/wiki/Lives_of_the_Eminent_Philosophers/Book_X"
+    },
+    {
+      "id": "dl-hicks-life",
+      "kind": "secondary",
+      "title": "Life of Epicurus, in Lives of Eminent Philosophers, Book X, §1-28 (Loeb vol. II)",
+      "author": "Diogenes Laertius; translated by R. D. Hicks",
+      "year": 1925,
+      "publisher": "London: William Heinemann; New York: G. P. Putnam's Sons (Loeb Classical Library)",
+      "url": "https://archive.org/details/livesofeminentph02dioguoft"
+    },
+    {
+      "id": "seneca-gummere",
+      "kind": "secondary",
+      "title": "Moral Letters to Lucilius (Ad Lucilium Epistulae Morales), vol. I, Letters 18 and 21",
+      "author": "Seneca; translated by Richard Mott Gummere",
+      "year": 1917,
+      "publisher": "London: William Heinemann; New York: G. P. Putnam's Sons (Loeb Classical Library)",
+      "url": "https://en.wikisource.org/wiki/Moral_letters_to_Lucilius/Letter_18"
+    },
+    {
+      "id": "sep",
+      "kind": "secondary",
+      "title": "Epicurus, Stanford Encyclopedia of Philosophy (substantive revision 8 July 2022)",
+      "author": "David Konstan",
+      "year": 2022,
+      "url": "https://plato.stanford.edu/entries/epicurus/"
+    },
+    {
+      "id": "iep",
+      "kind": "secondary",
+      "title": "Epicurus (341-271 B.C.E.), Internet Encyclopedia of Philosophy",
+      "author": "Tim O'Keefe",
+      "year": "n.d.",
+      "url": "https://iep.utm.edu/epicur/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Greek philosopher (341-270 BC), not fictional, not a politician (he stayed out of public life, DL X.10) and not the founder of a living religion; no account of sexual violence or sexual contact with anyone under 16 was found, but there is a plain dark side."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked all five draft values and checked every claim, locator and quote against the Hicks Wikisource text and Internet Archive scan, Gummere's Seneca and the SEP and IEP entries. Friendship, Simplicity, Generosity and Mentorship held; Contentment fell because its evidence (content with little, plain diet) was the same as Simplicity's, and the blind pick's Peace came in on four checked pieces (Menoeceus §128, no public life, the last letter, SEP). All four quotes were found word for word; I fixed five small points (over-indulgence not over-eating, the 323/321 dates, the bread-and-water wording, two locators) and added the will's 'obedient' clause on Metrodorus's daughter to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
