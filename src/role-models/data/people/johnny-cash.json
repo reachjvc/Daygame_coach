@@ -1,0 +1,339 @@
+{
+  "id": "johnny-cash",
+  "name": "Johnny Cash",
+  "born": 1932,
+  "died": 2003,
+  "category": "artists",
+  "areaIds": [
+    "lm_spirituality",
+    "lm_health",
+    "lm_contribution"
+  ],
+  "tagline": "Fell hard into pills and jail, climbed back through faith, and sang for the locked-up.",
+  "startedFrom": "He was born J. R. Cash on 26 February 1932 in Kingsland, Arkansas, one of seven children; in 1935 the family moved to Dyess, a government resettlement colony for struggling farmers, where he worked the cotton fields. He wrote that they were poor and that his mother took in laundry to pay for a few voice lessons. In 1944 his brother Jack died in a sawmill accident, a loss that stayed with him for life.",
+  "values": [
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that after a night in a Georgia jail in 1967 he turned to God for help with his habit for the first time, remembering 1 Corinthians 6:19 on the body as the temple of the Holy Spirit.",
+          "sourceId": "guideposts-1970",
+          "locator": "Guideposts, November 1970, paragraphs after the jailer's words"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked in 2002, very ill, whether he was angry at God, he said he was the last one who would be angry at God.",
+          "sourceId": "lkl-2002",
+          "locator": "Larry King Live, 26 Nov 2002, first segment (after the question on regrets)"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1971 and 1972 he produced and filmed Gospel Road, a film about the life of Jesus shot in Israel; over the next thirty years he often appeared at his friend Billy Graham's Crusades, including Little Rock in September 1989.",
+          "sourceId": "arkansas-lensing",
+          "locator": "paragraph beginning 'Cash began the 1970s'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Rolling Stone's obituary says June Carter reinvigorated his Christian faith.",
+          "sourceId": "rs-decurtis-2003",
+          "locator": "page 2 of 3, paragraph beginning 'Cash would occasionally backslide'"
+        }
+      ]
+    },
+    {
+      "word": "Compassion",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "By 1972 he had played San Quentin (1959, 1960, 1961 and 1969), Huntsville in Texas, Folsom twice, Cummins in Arkansas, New Mexico State Prison, Leavenworth, the Lansing prisons for men and for women and Western Federal in Pittsburgh; Senator Brock told the Senate he did all of these voluntarily.",
+          "sourceId": "hearing-1972",
+          "locator": "pp. 70-71, Senator Brock's introduction, 26 July 1972"
+        },
+        {
+          "kind": "words",
+          "claim": "He told the Senate subcommittee that even with the hardest men, progress comes down to the fact that we have got to care, and that if you let men know you care for them, you can do something with them.",
+          "sourceId": "hearing-1972",
+          "locator": "pp. 76-77, Mr. Cash, 26 July 1972"
+        },
+        {
+          "kind": "witness",
+          "claim": "His daughter Tara Cash Schwoebel told NPR he really had a passion for standing up for people who were locked up and treated so poorly.",
+          "sourceId": "npr-veltman-2018",
+          "locator": "paragraph after the San Quentin album (1969)"
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "When radio stations would not play his 1964 album Bitter Tears: Ballads of the American Indian, he bought back thousands of copies, ran a protest letter as a Billboard ad and took the record to stations himself.",
+          "sourceId": "aclu-dambrosio-2016",
+          "locator": "answer to 'What was the extent of the resistance to the album'"
+        },
+        {
+          "kind": "words",
+          "claim": "In the ad he wrote that 'Ballad of Ira Hayes' is strong medicine, and so are Rochester, Harlem, Birmingham and Vietnam, and that he had to fight back when so many stations were afraid of the song.",
+          "sourceId": "billboard-1964",
+          "locator": "Billboard, 22 Aug 1964, full-page ad, p. 31 of the scanned issue"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1972 he testified to a US Senate subcommittee on prison reform, calling among other things for keeping minors out of jail and for focusing on rehabilitating inmates.",
+          "sourceId": "npr-veltman-2018",
+          "locator": "paragraph beginning 'In 1972, Cash testified'"
+        },
+        {
+          "kind": "words",
+          "claim": "He told the senators that the country had 1972 problems and 1872 jails, and described a 15-year-old boy in an Arkansas prison who, prison officials told him, was raped all night and died the next morning.",
+          "sourceId": "hearing-1972",
+          "locator": "pp. 71-72, Mr. Cash, 26 July 1972"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In the 1964 Billboard ad he wrote that he was not afraid to sing the hard, bitter lines of the Ira Hayes song, and asked the DJs and station owners where their guts were.",
+          "sourceId": "billboard-1964",
+          "locator": "Billboard, 22 Aug 1964, full-page ad, p. 31 of the scanned issue"
+        },
+        {
+          "kind": "witness",
+          "claim": "Filmmaker and author Antonino D'Ambrosio says the Bitter Tears record revealed the true courage of an artist telling painfully real stories.",
+          "sourceId": "aclu-dambrosio-2016",
+          "locator": "answer on the album's reception, closing sentences"
+        },
+        {
+          "kind": "witness",
+          "claim": "Biographer Robert Hilburn calls putting out the 'Hurt' video, which showed him frail and near the end, a tremendous act of courage; June Carter had not wanted it released.",
+          "sourceId": "npr-hilburn-2013",
+          "locator": "Morning Edition transcript, passage on 'Hurt'"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked in 2002 how he looked at tomorrow, he said he does not give up, not out of desperation, but because he does not believe in giving up.",
+          "sourceId": "lkl-2002",
+          "locator": "Larry King Live, 26 Nov 2002, final segment"
+        },
+        {
+          "kind": "deed",
+          "claim": "In his last years, having lost most of his sight, short of breath and unable to play guitar, he kept recording, sometimes two lines at a time with rests in between, which were spliced together.",
+          "sourceId": "npr-hilburn-2013",
+          "locator": "Morning Edition transcript, passage on his final years"
+        },
+        {
+          "kind": "witness",
+          "claim": "Rolling Stone's obituary says that after he was found to have an incurable disease in 1997 he did not back down and recorded some of the best music of his career.",
+          "sourceId": "rs-decurtis-2003",
+          "locator": "page 1 of 3, first paragraph"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Treat people in prison as human beings, or do not expect them to act like human beings when they get out.",
+      "sourceId": "hearing-1972",
+      "locator": "p. 72, Mr. Cash, 26 July 1972"
+    },
+    {
+      "text": "To reach a hard man, show him you care; that is what makes change possible.",
+      "sourceId": "hearing-1972",
+      "locator": "pp. 76-77, Mr. Cash, 26 July 1972 (the West Pennsylvania prison concert)"
+    },
+    {
+      "text": "Give more than the deal asks: if you owe ten hours, give ten and a half.",
+      "sourceId": "lkl-2002",
+      "locator": "Larry King Live, 26 Nov 2002, final segment (his father's rule for the cotton fields; he books three hours of studio time and works four or five)"
+    },
+    {
+      "text": "When the gatekeepers bury work you believe in, say so in public and carry it to people yourself.",
+      "sourceId": "aclu-dambrosio-2016",
+      "locator": "answer to 'What was the extent of the resistance to the album' (Bitter Tears, 1964)"
+    },
+    {
+      "text": "Treat your body as given to you by God, and ask for help to get free of what is killing it.",
+      "sourceId": "guideposts-1970",
+      "locator": "Guideposts, November 1970, closing paragraphs"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "The men in prison have to be treated as human beings. If they are not, when they are turned out on the streets, they are not going to act like human beings.",
+      "sourceId": "hearing-1972",
+      "locator": "Statement to the Senate Subcommittee on National Penitentiaries, 26 July 1972, printed hearing p. 72"
+    },
+    {
+      "text": "I don't give up because I don't give up. I don't believe in it.",
+      "sourceId": "lkl-2002",
+      "locator": "Larry King Live, CNN, aired 26 Nov 2002, final segment"
+    },
+    {
+      "text": "Classify me, categorize me—STIFLE me, but it won't work.",
+      "sourceId": "billboard-1964",
+      "locator": "Open letter, full-page ad, Billboard, 22 Aug 1964, p. 31 of the scanned issue"
+    },
+    {
+      "text": "Give God's temple back to Him. The alternative is death.",
+      "sourceId": "guideposts-1970",
+      "locator": "Guideposts, November 1970, last paragraph"
+    }
+  ],
+  "definingMoment": {
+    "text": "By his own account, in 1967 he was taking up to a hundred pills a day when a night officer in a Georgia town (LaFayette, according to the Encyclopedia of Arkansas) found him stumbling in the street and locked him up. The next morning the jailer gave back his things and told him that if he thought his talent came from God, he was wrecking the body God had put it in. He went back to Nashville and asked June Carter and his bassist Marshall Grant to help him quit. He later said the first break took 32 days, with the Tennessee commissioner of mental health coming to the house every day; he married June Carter on 1 March 1968.",
+    "sourceIds": [
+      "guideposts-1970",
+      "lkl-2002",
+      "arkansas-lensing",
+      "cmhof"
+    ]
+  },
+  "shadow": {
+    "text": "From 1957 he was addicted to amphetamines and later barbiturates; by his own account he took up to a hundred pills a day by 1967, missed shows, and once broke into a friend's car for pills and lied about it. He was jailed several times in the 1960s, including at El Paso in 1965 for pills bought in Mexico. On 27 June 1965 a fire that most accounts trace to his camper burned 508 acres of Los Padres National Forest near a condor refuge, and he later said he went into the depositions 'full of amphetamines and arrogance'; the government sued him and he settled in 1969 for $82,000. NPR describes him as abandoning his first wife and their children for June Carter, and his biographer Robert Hilburn says he was unfaithful to June as well. After injuries and eye surgery in the early 1980s he became addicted to pills again and was treated at the Betty Ford clinic. In a 1964 ad he called himself 'almost a half-breed Cherokee-Mohawk'; the filmmaker Antonino D'Ambrosio says he was not native and later took the claim back.",
+    "sourceIds": [
+      "guideposts-1970",
+      "arkansas-lensing",
+      "pyne-2017",
+      "npr-hilburn-2013",
+      "rs-decurtis-2003",
+      "billboard-1964",
+      "aclu-dambrosio-2016",
+      "hearing-1972"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you give exactly what was asked, when you could have given ten hours and a half?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "Man in Black",
+      "year": 1975
+    },
+    {
+      "title": "Cash: The Autobiography (with Patrick Carr)",
+      "year": 1997
+    }
+  ],
+  "sources": [
+    {
+      "id": "hearing-1972",
+      "kind": "primary",
+      "title": "Parole Legislation: Hearings before the Subcommittee on National Penitentiaries of the Committee on the Judiciary, United States Senate, 92nd Congress, July 25, 26 and 27, 1972 (statement of Johnny Cash, 26 July 1972, pp. 70-80)",
+      "author": "United States Senate, Committee on the Judiciary (testimony of Johnny Cash)",
+      "year": 1972,
+      "publisher": "U.S. Government Printing Office; scan on the Internet Archive",
+      "url": "https://archive.org/details/parolelegislatio1972unit"
+    },
+    {
+      "id": "lkl-2002",
+      "kind": "primary",
+      "title": "Interview With Johnny Cash, Larry King Live (transcript)",
+      "author": "Johnny Cash, interviewed by Larry King",
+      "year": 2002,
+      "publisher": "CNN, aired 26 November 2002",
+      "url": "https://transcripts.cnn.com/TRANSCRIPTS/0211/26/lkl.00.html"
+    },
+    {
+      "id": "billboard-1964",
+      "kind": "primary",
+      "title": "Open letter to DJs, station managers and owners on 'The Ballad of Ira Hayes' (full-page advertisement)",
+      "author": "Johnny Cash",
+      "year": 1964,
+      "publisher": "Billboard, 22 August 1964; scan at worldradiohistory.com",
+      "url": "https://worldradiohistory.com/Archive-Billboard/60s/1964/Billboard%201964-08-22.pdf"
+    },
+    {
+      "id": "guideposts-1970",
+      "kind": "primary",
+      "title": "Guideposts Classics: Johnny Cash on Overcoming Addiction (first published November 1970)",
+      "author": "Johnny Cash (first-person magazine story, probably prepared with Guideposts editors)",
+      "year": 1970,
+      "publisher": "Guideposts",
+      "url": "https://guideposts.org/positive-living/health-and-wellness/addiction-and-recovery/guideposts-classics-johnny-cash-on-overcoming-addiction/"
+    },
+    {
+      "id": "arkansas-lensing",
+      "kind": "secondary",
+      "title": "Johnny Cash (1932-2003), Encyclopedia of Arkansas",
+      "author": "Eric Lensing",
+      "year": "undated (last updated October 2026)",
+      "publisher": "CALS Encyclopedia of Arkansas, Central Arkansas Library System",
+      "url": "https://encyclopediaofarkansas.net/entries/johnny-cash-9/"
+    },
+    {
+      "id": "cmhof",
+      "kind": "secondary",
+      "title": "Johnny Cash, Hall of Fame member biography (adapted from the Encyclopedia of Country Music, Oxford University Press)",
+      "author": "Country Music Hall of Fame and Museum",
+      "year": "undated",
+      "publisher": "Country Music Hall of Fame and Museum",
+      "url": "https://www.countrymusichalloffame.org/hall-of-fame/johnny-cash"
+    },
+    {
+      "id": "rs-decurtis-2003",
+      "kind": "secondary",
+      "title": "Johnny Cash: Remembering the Incomparable Legend of Country, Rock and Roll (obituary)",
+      "author": "Anthony DeCurtis",
+      "year": 2003,
+      "publisher": "Rolling Stone, issue of 13 October 2003",
+      "url": "https://www.rollingstone.com/music/music-news/johnny-cash-remembering-the-incomparable-legend-of-country-rock-and-roll-244037/"
+    },
+    {
+      "id": "npr-hilburn-2013",
+      "kind": "secondary",
+      "title": "Biography Doesn't Hold Back On Darkest Years Of 'The Man In Black' (interview with Robert Hilburn, author of Johnny Cash: The Life)",
+      "author": "David Greene, Steve Inskeep and Renee Montagne with Robert Hilburn",
+      "year": 2013,
+      "publisher": "NPR Morning Edition, 29 October 2013",
+      "url": "https://www.npr.org/2013/10/29/240778989/biography-doesnt-hold-back-on-the-man-in-blacks-darkest-years"
+    },
+    {
+      "id": "npr-veltman-2018",
+      "kind": "secondary",
+      "title": "Johnny Cash Takes A Stand: Looking Back On His Folsom Prison Performance",
+      "author": "Chloe Veltman (KQED)",
+      "year": 2018,
+      "publisher": "NPR, 12 January 2018",
+      "url": "https://www.npr.org/2018/01/12/576763031/johnny-cash-at-folsom-prison-50-years-later"
+    },
+    {
+      "id": "aclu-dambrosio-2016",
+      "kind": "secondary",
+      "title": "'Where Are Your Guts?': Johnny Cash's Little-Known Fight for Native Americans (interview with Antonino D'Ambrosio, author of A Heartbeat and a Guitar)",
+      "author": "Stephen Pevar with Antonino D'Ambrosio",
+      "year": 2016,
+      "publisher": "American Civil Liberties Union, 19 February 2016",
+      "url": "https://www.aclu.org/blog/speak-freely/where-are-your-guts-johnny-cashs-little-known-fight-native-americans"
+    },
+    {
+      "id": "pyne-2017",
+      "kind": "secondary",
+      "title": "When Johnny Cash walked out of a burning ring of fire",
+      "author": "Stephen J. Pyne (fire historian, Arizona State University)",
+      "year": 2017,
+      "publisher": "stephenpyne.com, 13 September 2017",
+      "url": "https://www.stephenpyne.com/blog/posts/27924"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American singer-songwriter (1932-2003), not fictional, never a politician or campaigner for office, not the founder of a religion, with no account found of sexual contact with anyone under 16 or of sexual violence; he is in, with a well-documented dark side: a decade of pill addiction with later relapses, arrests, a 1965 forest fire, leaving his first wife and children, and affairs."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value, every quote and every factual sentence against the 1972 Senate hearing record, the Larry King transcript, the 1964 Billboard scan, Guideposts and the secondary sources. All five values held: Faith, Compassion and Justice are shared with the blind pick, and Courage and Determination each rest on three sources; the blind pick's Love fell on thin sourcing and his documented affairs, and Originality had no room. All four quotes were found word for word. Six claims were tightened, among them: the fire's cause is now attributed to most accounts, the 1980s relapse follows the Encyclopedia of Arkansas, the Georgia jail town is attributed, and the Billy Graham line no longer overstates.",
+    "checkedOn": "2026-11-10"
+  }
+}
