@@ -1,0 +1,320 @@
+{
+  "id": "muhammad-ali",
+  "name": "Muhammad Ali",
+  "born": 1942,
+  "died": 2016,
+  "category": "athletes",
+  "areaIds": [
+    "lm_mindset",
+    "lm_fitness",
+    "lm_spirituality"
+  ],
+  "tagline": "Gave up his title and three years of his prime rather than act against his faith.",
+  "startedFrom": "He was born Cassius Marcellus Clay Jr. in Louisville, Kentucky, on 17 January 1942; his mother was a cook and house cleaner, his father a sign painter whom the New York Times describes as violent and often drunk, and the family was modest but not poor. In segregated public schools he was a poor student who was never taught to read properly, and he graduated 376th in a class of 391. He started boxing at 12, after his new bicycle was stolen and the police officer he reported it to, Joe Martin, suggested he first learn to punch properly.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 28 April 1967 in Houston he refused to take the step forward into the army, knowing that a conviction could bring up to five years in prison and a $10,000 fine.",
+          "sourceId": "fjc-bowman-2018",
+          "locator": "Short Narrative, Introduction, pp. 5-6"
+        },
+        {
+          "kind": "words",
+          "claim": "His statement that day says he took his stand with the full realization of its implications and possible consequences.",
+          "sourceId": "ali-statement-1967",
+          "locator": "first paragraph of the statement (FJC 2018, p. 57)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Martin Luther King Jr. said that no matter what you think of Ali's religion, you certainly have to admire his courage.",
+          "sourceId": "fjc-bowman-2018",
+          "locator": "'Ali and the draft bureaucracy', p. 13"
+        },
+        {
+          "kind": "witness",
+          "claim": "David Halberstam called his stand on Vietnam a genuine act of conscience for which he was willing to pay a very high price.",
+          "sourceId": "espn-halberstam-2001",
+          "locator": "paragraph beginning 'To me, his stand on Vietnam'"
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "As a member of the Nation of Islam he kept the ban on pork and prayed five times a day; at his induction he passed up the ham sandwich in the box lunch.",
+          "sourceId": "fjc-bowman-2018",
+          "locator": "p. 10; and the New York Times report of 29 April 1967 (dateline Houston, 28 April) reproduced on p. 56"
+        },
+        {
+          "kind": "words",
+          "claim": "On the stand in July 1967 he said his basis for what he was doing was his religious beliefs, and that he was standing up for them.",
+          "sourceId": "ali-testimony-1967",
+          "locator": "cross-examination by Mr. Susman (FJC 2018, p. 71)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The hearing officer at his draft appeal concluded that he was sincere in his objection on religious grounds.",
+          "sourceId": "clay-v-us-1971",
+          "locator": "per curiam opinion, paragraphs 3 and 12"
+        },
+        {
+          "kind": "deed",
+          "claim": "He later left the Nation of Islam and converted to orthodox Islam.",
+          "sourceId": "nyt-lipsyte-2016",
+          "locator": "paragraph beginning 'Years later, after leaving the group'"
+        }
+      ]
+    },
+    {
+      "word": "Confidence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 25 February 1964, as a 7-to-1 underdog, he took control of the fight with Sonny Liston from the start and won the world title when Liston quit on his stool.",
+          "sourceId": "nyt-lipsyte-2016",
+          "locator": "paragraphs on the 1964 Liston fight"
+        },
+        {
+          "kind": "words",
+          "claim": "After that fight he shouted at the press: Eat your words! I shook up the world! I'm king of the world!",
+          "sourceId": "nyt-lipsyte-2016",
+          "locator": "paragraph beginning 'Clay, the new champion'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Federal Judicial Center's historian calls him an unabashed self-promoter from at least the 1960 Olympics on.",
+          "sourceId": "fjc-bowman-2018",
+          "locator": "'The conversion of Cassius Clay', p. 7"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Kept out of boxing for three and a half years, he came back in October 1970, lost to Joe Frazier in March 1971, and on 30 October 1974 knocked out George Foreman, seven years younger, to win the title back.",
+          "sourceId": "nyt-lipsyte-2016",
+          "locator": "paragraphs on his return, the 1971 Frazier fight and the 1974 Foreman fight"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Federal Judicial Center's historian writes that his brave battle against Parkinson's raised the public's esteem for him, and that he lit the Olympic flame in 1996 while visibly shaking.",
+          "sourceId": "fjc-bowman-2018",
+          "locator": "'Reception and memory', pp. 21-22"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times says he was extolled for his gallantry in the face of incurable illness.",
+          "sourceId": "nyt-lipsyte-2016",
+          "locator": "paragraph beginning 'In later life Ali became'"
+        },
+        {
+          "kind": "witness",
+          "claim": "David Halberstam wrote that the three Frazier fights showed how resilient and how resolute he was, and how courageously he could take a punch.",
+          "sourceId": "espn-halberstam-2001",
+          "locator": "paragraph beginning 'Because of Frazier, we know how great Ali was'"
+        }
+      ]
+    },
+    {
+      "word": "Humour",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On his first visit to the White House, on 10 December 1974, he told President Ford he had made a big mistake letting him come, because now he was going after his job.",
+          "sourceId": "nyt-lipsyte-2016",
+          "locator": "paragraph beginning 'On Dec. 10, 1974'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His widow Lonnie said he never lost his sunny nature: jokes, pranks and magic tricks; he wanted to entertain people.",
+          "sourceId": "nyt-lipsyte-2016",
+          "locator": "paragraph beginning 'But he loved the adoration of crowds'"
+        },
+        {
+          "kind": "witness",
+          "claim": "David Halberstam, who covered his era, remembers him as joyous, funny and talented.",
+          "sourceId": "espn-halberstam-2001",
+          "locator": "paragraph beginning 'I thought he was a brilliant figure'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Associated Press obituary opens on his wit, 'as sharp as the punches he used to \"whup\" opponents', and reports his line to Ferdinand Marcos: 'I saw your wife. You're not as dumb as you look.'",
+          "sourceId": "ap-2016",
+          "locator": "opening paragraph ('PHOENIX -- With a wit as sharp'); paragraph beginning 'Ali spurned white America when he joined the Black Muslims'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When your conscience says no, say no in the open and accept the price instead of running from it.",
+      "sourceId": "ali-statement-1967",
+      "locator": "statement of 28 April 1967, first paragraph; and his testimony of 7 July 1967 that he would rather serve his sentence than flee and, if jailed, 'will just have to go' (FJC 2018, pp. 57, 72-73)"
+    },
+    {
+      "text": "Do not let other people decide who you have to be.",
+      "sourceId": "fjc-bowman-2018",
+      "locator": "p. 7 (press conference the morning after the Liston fight, February 1964)"
+    },
+    {
+      "text": "Speak for yourself, and let every other man follow his own conscience and carry his own cost.",
+      "sourceId": "ali-testimony-1967",
+      "locator": "cross-examination on the Los Angeles peace rally (FJC 2018, p. 69)"
+    },
+    {
+      "text": "Say out loud what you will do, then go and do it.",
+      "sourceId": "nyt-lipsyte-2016",
+      "locator": "paragraphs on his rhymed fight predictions ('most of the predictions came true') and the 1974 Foreman fight ('What did I tell you?')"
+    },
+    {
+      "text": "When you have wronged a man, say so plainly and apologize, even decades later.",
+      "sourceId": "espn-halberstam-2001",
+      "locator": "Ali's 2001 apology to Joe Frazier, quoted in the column"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I have searched my conscience and I find I cannot be true to my belief in my religion by accepting such a call.",
+      "sourceId": "ali-statement-1967",
+      "locator": "statement of 28 April 1967, first paragraph (New York Times, 29 April 1967, p. 1; reproduced in FJC 2018, pp. 55, 57)"
+    },
+    {
+      "text": "There is another alternative and that alternative is justice.",
+      "sourceId": "ali-statement-1967",
+      "locator": "statement of 28 April 1967, third paragraph (FJC 2018, p. 57)"
+    },
+    {
+      "text": "In the end I am confident that justice will come my way for the truth must eventually prevail.",
+      "sourceId": "ali-statement-1967",
+      "locator": "statement of 28 April 1967, third paragraph (FJC 2018, p. 57)"
+    },
+    {
+      "text": "I'm not bucking or talking against the country. I'm just sticking to my religious beliefs.",
+      "sourceId": "ali-testimony-1967",
+      "locator": "testimony of 7 July 1967, cross-examination by Mr. Susman (FJC 2018, p. 71)"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 28 April 1967 in Houston a soldier called him for induction into the army, first as Cassius Marcellus Clay and then as Muhammad Ali, and he did not step forward. He handed reporters a statement saying that as a Muslim minister he could not accept the call. Boxing commissions took away his title and his licence that day; in June a jury convicted him, and the judge gave him the maximum, five years in prison and a $10,000 fine. He stayed free on bail but could not box for three and a half years. On 28 June 1971 the Supreme Court reversed his conviction.",
+    "sourceIds": [
+      "fjc-bowman-2018",
+      "ali-statement-1967",
+      "nyt-lipsyte-2016",
+      "clay-v-us-1971"
+    ]
+  },
+  "shadow": {
+    "text": "After joining the Nation of Islam in 1964 he spoke against racial integration, called Black people who backed it, among them the former champion Floyd Patterson, 'Uncle Toms', and sided with Elijah Muhammad against his mentor Malcolm X; the Federal Judicial Center's historian writes that he later suggested Black people or Muslims who slept with outsiders should be put to death. When Patterson and Ernie Terrell kept calling him Cassius Clay, the New York Times says, he taunted them in the ring as he delivered savage beatings. Before their fights of 1971-75 he called Joe Frazier an Uncle Tom, too ugly to be champion and, before the third, 'the gorilla'; Frazier had supported him while he was barred and lobbied for his licence, and stayed hurt long after. In March 2001 Ali said he had called Frazier names he should not have, and apologized. He divorced his first wife, Sonji Roi, after she refused to dress and behave as a Nation of Islam wife. He had a reputation as a womanizer: the New York Times says he had 'dalliances as casual as autograph sessions' and, while married to his second wife Belinda Boyd, traveled openly with Veronica Porche, whom he later married.",
+    "sourceIds": [
+      "fjc-bowman-2018",
+      "nyt-lipsyte-2016",
+      "espn-halberstam-2001",
+      "irish-times-2011"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you go along with something you believe is wrong this week, just to avoid paying a price?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Greatest: My Own Story (with Richard Durham)",
+      "year": 1975
+    },
+    {
+      "title": "The Soul of a Butterfly (with Hana Yasmeen Ali)",
+      "year": 2004
+    }
+  ],
+  "sources": [
+    {
+      "id": "ali-statement-1967",
+      "kind": "primary",
+      "title": "Statement on refusing induction, Houston, 28 April 1967 (printed in part in Robert Lipsyte, 'Clay Refuses Army Oath; Stripped of Boxing Crown', The New York Times, 29 April 1967, p. 1)",
+      "author": "Muhammad Ali",
+      "year": 1967,
+      "publisher": "reproduced in Federal Judicial Center, United States v. Clay (2018), pp. 54-57",
+      "url": "https://www.fjc.gov/sites/default/files/trials/U.S._v._Clay_Muhammad_Ali%27s_Fight.pdf"
+    },
+    {
+      "id": "ali-testimony-1967",
+      "kind": "primary",
+      "title": "Testimony on his motion to box in Japan, United States v. Cassius Marsellus Clay, Jr., S.D. Tex., Case no. 67H94, 7 July 1967 (transcript, National Archives at Fort Worth)",
+      "author": "Muhammad Ali",
+      "year": 1967,
+      "publisher": "excerpts reproduced in Federal Judicial Center, United States v. Clay (2018), pp. 65-72",
+      "url": "https://www.fjc.gov/sites/default/files/trials/U.S._v._Clay_Muhammad_Ali%27s_Fight.pdf"
+    },
+    {
+      "id": "fjc-bowman-2018",
+      "kind": "secondary",
+      "title": "United States v. Clay: Muhammad Ali's Fight Against the Vietnam Draft (Federal Trials and Great Debates in United States History)",
+      "author": "Winston Bowman, Associate Historian, Federal Judicial History Office",
+      "year": 2018,
+      "publisher": "Federal Judicial Center",
+      "url": "https://www.fjc.gov/sites/default/files/trials/U.S._v._Clay_Muhammad_Ali%27s_Fight.pdf"
+    },
+    {
+      "id": "nyt-lipsyte-2016",
+      "kind": "secondary",
+      "title": "Muhammad Ali Dies at 74: Titan of Boxing and the 20th Century",
+      "author": "Robert Lipsyte",
+      "year": 2016,
+      "publisher": "The New York Times, 4 June 2016 (obituary)",
+      "url": "https://www.nytimes.com/2016/06/04/sports/muhammad-ali-dies.html"
+    },
+    {
+      "id": "espn-halberstam-2001",
+      "kind": "secondary",
+      "title": "Ali wins another fight",
+      "author": "David Halberstam",
+      "year": 2001,
+      "publisher": "ESPN.com Page 2, 21 March 2001",
+      "url": "https://www.espn.com/page2/s/halberstam/010321.html"
+    },
+    {
+      "id": "irish-times-2011",
+      "kind": "secondary",
+      "title": "Boxing legend who starred in epic battles with Ali (obituary of Joe Frazier)",
+      "author": "The Irish Times (unsigned obituary)",
+      "year": 2011,
+      "publisher": "The Irish Times, 12 November 2011",
+      "url": "https://www.irishtimes.com/life-and-style/people/boxing-legend-who-starred-in-epic-battles-with-ali-1.11232"
+    },
+    {
+      "id": "clay-v-us-1971",
+      "kind": "secondary",
+      "title": "Clay v. United States, 403 U.S. 698 (1971)",
+      "author": "Supreme Court of the United States (per curiam)",
+      "year": 1971,
+      "publisher": "court record; text at the Legal Information Institute, Cornell Law School",
+      "url": "https://www.law.cornell.edu/supremecourt/text/403/698"
+    },
+    {
+      "id": "ap-2016",
+      "kind": "secondary",
+      "title": "Muhammad Ali, who riveted the world as 'The Greatest,' dies (obituary)",
+      "author": "The Associated Press",
+      "year": 2016,
+      "publisher": "The Associated Press, 5 June 2016, as carried by WPVI-TV 6abc",
+      "url": "https://6abc.com/sports/muhammad-ali-who-riveted-the-world-as-the-greatest-dies/1370487/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American boxer (1942-2016), not fictional, never a politician or candidate, a member and later minister of the Nation of Islam but not its founder, with no credible account found of sexual contact with anyone under 16 or of sexual violence; he is in, with a documented dark side over his treatment of Joe Frazier and other Black fighters, his separatist statements, his break with Malcolm X, and his womanizing."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value against the saved Federal Judicial Center volume (with Ali's 1967 statement and sworn testimony), the New York Times and AP obituaries, Halberstam's 2001 column, the Irish Times and the Supreme Court opinion. Courage, Faith and Confidence held: he stayed free on bail, kept a playboy life the historian calls a 'genuine but selective' faith, and needed pushing into the ring for the fifth round against Liston, but these are lapses, not a pattern. Resilience and Humour gained a third source (Halberstam; AP); the blind pick's Integrity fell because the Times lists his 'hypocrisies, or at least inconsistencies' and he softened his Vietnam words under oath, and Justice rested on one word of his statement and a presidential citation. All four quotes matched the documents; six fixes were locators and wording, and the shadow gained his beatings of Patterson and Terrell and his first divorce.",
+    "checkedOn": "2026-11-10"
+  }
+}
