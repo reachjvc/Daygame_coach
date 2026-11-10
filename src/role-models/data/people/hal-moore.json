@@ -1,0 +1,260 @@
+{
+  "id": "hal-moore",
+  "name": "Hal Moore",
+  "born": 1922,
+  "died": 2017,
+  "category": "warriors",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "Commander who went in first at Ia Drang and would not leave before his men",
+  "startedFrom": "He was born in 1922 in Bardstown, Kentucky, a town of about 2,000, where his father sold insurance. He wanted West Point, but as a high school senior the senator he asked gave him only a job in the Senate warehouse in Washington. After the United States entered the Second World War he tried again, won a place, and graduated in 1945.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 14 November 1965 he flew into Landing Zone X-Ray in the first lift, with his command group and about seventy-five troops of Company B.",
+          "sourceId": "carland-2000",
+          "locator": "ch. 6 'The Pleiku Campaign', p. 118"
+        },
+        {
+          "kind": "witness",
+          "claim": "His Distinguished Service Cross citation says he entered the landing zone with the first rifle company and repeatedly exposed himself to intense hostile fire.",
+          "sourceId": "army-2017",
+          "locator": "article body, quoted DSC citation"
+        },
+        {
+          "kind": "words",
+          "claim": "He said a leader has to be on the battlefield and cannot be fearful.",
+          "sourceId": "npr-1992",
+          "locator": "Fresh Air interview (1992), transcript, answer on bargaining with God"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said: 'My job was to lead troops. And to lead them, you got to be on the battlefield.'",
+          "sourceId": "npr-1992",
+          "locator": "Fresh Air interview (1992), transcript, answer on bargaining with God"
+        },
+        {
+          "kind": "witness",
+          "claim": "The DSC citation says that by his constant movement and exposure to fire he 'set the standard for his combat troops'.",
+          "sourceId": "army-2017",
+          "locator": "article body, quoted DSC citation"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times obituary quotes a Book Review verdict that he 'became one of the legendary commanders in Vietnam', and Galloway saying Moore was the only man sure they would prevail.",
+          "sourceId": "nyt-2017",
+          "locator": "paragraphs on the book review and on Galloway's interview"
+        }
+      ]
+    },
+    {
+      "word": "Loyalty",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Around 1:30 a.m. on 16 November 1965 he objected by radio to an order to leave X-Ray for Saigon and brief the staff, and stayed.",
+          "sourceId": "wws-1992",
+          "locator": "ch. 15 'Night Fighters', p. 217"
+        },
+        {
+          "kind": "deed",
+          "claim": "Before leaving X-Ray on 16 November he had the area of the heaviest hand-to-hand fighting searched one last time, to keep his promise that no man would be left on the field.",
+          "sourceId": "wws-1992",
+          "locator": "ch. 16 'Policing the Battlefield' (begins p. 225)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times writes that he never left the combat zone and so kept a vow to be first on and last off that endeared him to his troops.",
+          "sourceId": "nyt-2017",
+          "locator": "paragraph on the hand-to-hand fighting at X-Ray"
+        }
+      ]
+    },
+    {
+      "word": "Responsibility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked about his platoon cut off at X-Ray, he said his responsibility was to get to them and keep them from being overrun.",
+          "sourceId": "npr-1992",
+          "locator": "Fresh Air interview (1992), transcript, first answer"
+        },
+        {
+          "kind": "deed",
+          "claim": "On the night of 14 November 1965 he planned a three-company attack to reach the cut-off platoon at daybreak, with himself and his command group following the lead company.",
+          "sourceId": "carland-2000",
+          "locator": "ch. 6 'The Pleiku Campaign', p. 127"
+        }
+      ]
+    },
+    {
+      "word": "Honesty",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He cut the 834 enemy dead his men reported at X-Ray to 634 because the first figure seemed too high.",
+          "sourceId": "carland-2000",
+          "locator": "ch. 6 'The Pleiku Campaign', p. 150"
+        },
+        {
+          "kind": "words",
+          "claim": "In his book he writes that on 15 November he should have paid more attention to the enemy's capabilities and put scout helicopters up at first light.",
+          "sourceId": "wws-1992",
+          "locator": "ch. 12 'A Dawn Attack' (pp. 169-184)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Joseph Galloway told the New York Times that Moore never claimed Ia Drang was an American victory; the obituary adds that the battle shaped his view that America's combat role in Vietnam was futile.",
+          "sourceId": "nyt-2017",
+          "locator": "paragraphs on his view of the war and Galloway's closing remark"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "A leader belongs on the field with his men, not behind them.",
+      "sourceId": "npr-1992",
+      "locator": "Fresh Air interview (1992), transcript, answer on bargaining with God"
+    },
+    {
+      "text": "Leave no man behind: before you go, search the field one last time.",
+      "sourceId": "wws-1992",
+      "locator": "ch. 16 'Policing the Battlefield' (begins p. 225)"
+    },
+    {
+      "text": "Never let your voice or face show your people that you are rattled.",
+      "sourceId": "npr-1992",
+      "locator": "Fresh Air interview (1992), transcript, answer on emotion during the fight"
+    },
+    {
+      "text": "Report the true numbers, even when a bigger number would look better.",
+      "sourceId": "carland-2000",
+      "locator": "ch. 6 'The Pleiku Campaign', p. 150"
+    },
+    {
+      "text": "After the fight, name your own mistakes plainly.",
+      "sourceId": "wws-1992",
+      "locator": "ch. 12 'A Dawn Attack' (pp. 169-184)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "My job was to lead troops. And to lead them, you got to be on the battlefield, and you cannot be fearful. You got to keep your cool.",
+      "sourceId": "npr-1992",
+      "locator": "Fresh Air interview with Terry Gross (1992), rebroadcast 15 Feb 2017, transcript"
+    },
+    {
+      "text": "You had to look cool and be cool. And it's something you can't put on.",
+      "sourceId": "npr-1992",
+      "locator": "Fresh Air interview with Terry Gross (1992), rebroadcast 15 Feb 2017, transcript"
+    },
+    {
+      "text": "my place was with my men — that I was the first man of my battalion to set foot in this terrible killing ground and I damned well intended to be the last man to leave.",
+      "sourceId": "wws-1992",
+      "locator": "ch. 15 'Night Fighters', p. 217"
+    },
+    {
+      "text": "We discovered in that depressing, hellish place, where death was our constant companion, that we loved each other. We killed for each other, we died for each other, and we wept for each other.",
+      "sourceId": "wws-1992",
+      "locator": "Prologue, p. xviii"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 14 November 1965 Lieutenant Colonel Moore flew into Landing Zone X-Ray in the Ia Drang Valley with the first lift of his battalion. Within the hour a prisoner told him three North Vietnamese battalions were on the mountain above. For three days his men held the clearing against a much larger force; 79 Americans died there. Around 1:30 a.m. on 16 November he objected by radio to an order to leave for Saigon and brief the staff, and stayed; later that day he had the field searched one last time for missing men before he flew out.",
+    "sourceIds": [
+      "carland-2000",
+      "wws-1992",
+      "army-2017"
+    ]
+  },
+  "shadow": {
+    "text": "He said in 1992 that as a commander he was responsible for 'killing as many enemy as I can'. The official count for X-Ray was 634 North Vietnamese killed by body count and 1,215 more by estimate; the Army's official history (2000) calls the enemy-loss figures for X-Ray open to doubt. The same history says he had cut his men's count of 834 dead to 634 because it seemed too high. In his book he writes that on the morning of 15 November 1965 he should have put scout helicopters up at first light, before the enemy's dawn attack. He also said that in battle he never thought about his wife and five children back in America.",
+    "sourceIds": [
+      "npr-1992",
+      "carland-2000",
+      "wws-1992"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you lead from a safe distance when you should have been on the ground with your people?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "We Were Soldiers Once... and Young (with Joseph L. Galloway)",
+      "year": 1992
+    },
+    {
+      "title": "We Are Soldiers Still (with Joseph L. Galloway)",
+      "year": 2008
+    }
+  ],
+  "sources": [
+    {
+      "id": "wws-1992",
+      "kind": "primary",
+      "title": "We Were Soldiers Once... and Young: Ia Drang, the Battle That Changed the War in Vietnam",
+      "author": "Harold G. Moore and Joseph L. Galloway",
+      "year": 1992,
+      "publisher": "Random House",
+      "url": "https://archive.org/details/weweresoldie00moor"
+    },
+    {
+      "id": "npr-1992",
+      "kind": "primary",
+      "title": "Remembering Lt. Gen. Harold Moore, Heroic Vietnam War Commander (Fresh Air interview recorded 1992, rebroadcast 15 Feb 2017)",
+      "author": "Terry Gross (interviewer), Harold G. Moore and Joseph L. Galloway",
+      "year": 2017,
+      "publisher": "NPR",
+      "url": "https://www.npr.org/transcripts/515387382"
+    },
+    {
+      "id": "carland-2000",
+      "kind": "secondary",
+      "title": "Stemming the Tide, May 1965 to October 1966 (United States Army in Vietnam)",
+      "author": "John M. Carland",
+      "year": 2000,
+      "publisher": "U.S. Army Center of Military History",
+      "url": "https://archive.org/details/CMHPub91-5"
+    },
+    {
+      "id": "nyt-2017",
+      "kind": "secondary",
+      "title": "Lt. Gen. Harold Moore, Whose Vietnam Heroism Was Depicted in Film, Dies at 94",
+      "author": "Sam Roberts",
+      "year": 2017,
+      "publisher": "The New York Times",
+      "url": "https://www.nytimes.com/2017/02/13/us/harold-moore-dead-general-author-we-were-soldiers-once.html"
+    },
+    {
+      "id": "army-2017",
+      "kind": "secondary",
+      "title": "Vietnam War hero 'Hal' Moore dies at age 94",
+      "author": "Army News Service",
+      "year": 2017,
+      "publisher": "U.S. Army (army.mil)",
+      "url": "https://www.army.mil/article/182389/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "ok",
+      "notes": "Real US Army officer (1922-2017), never a politician or religious founder; no account of sexual contact with a minor or of sexual violence found; his dark side is the ordinary record of a combat commander."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked all five values and re-checked every locator against the NPR transcript, Carland's official history, the army.mil citation, the NYT obituary and the book's Internet Archive full-text search. Courage, Leadership, Loyalty and Responsibility held as core; Honesty, a draft-only word, held once the NYT gave it a third source, and the DSC citation's 'over 800' dead against his own cut to 634 is no pattern against it. Faith from the blind pick was well sourced but there was no room. Fixes: the official count is the Americans', not his battalion's; he objected to the Saigon order rather than refused it; 'dead or alive' was not in the book.",
+    "checkedOn": "2026-11-10"
+  }
+}
