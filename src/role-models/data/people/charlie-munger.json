@@ -1,0 +1,298 @@
+{
+  "id": "charlie-munger",
+  "name": "Charlie Munger",
+  "born": 1924,
+  "died": 2023,
+  "category": "money",
+  "areaIds": [
+    "lm_money",
+    "lm_mindset"
+  ],
+  "tagline": "A lawyer turned investor who read across many fields and said his edge was being a little less stupid than most people.",
+  "startedFrom": "He was born in Omaha, Nebraska, on 1 January 1924, the son and grandson of lawyers. As a boy he worked 12-hour shifts with no meals or breaks at a grocery store run by Warren Buffett's grandfather. He left the University of Michigan to serve as a meteorologist in the Army Air Corps in the Second World War, and got into Harvard Law School without a bachelor's degree.",
+  "values": [
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his 2007 USC law commencement address he said nothing had served him better in his long life than continuous learning.",
+          "sourceId": "pca-2023",
+          "locator": "Chapter Four, Talk Ten (USC Gould School of Law Commencement Address, 13 May 2007), paragraph beginning 'I was very lucky'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Associated Press obituary calls him a voracious reader and a student of human behavior who borrowed models from psychology, physics and mathematics.",
+          "sourceId": "ap-2023",
+          "locator": "paragraph beginning 'Munger was known as a voracious reader'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He entered Harvard Law School without an undergraduate degree and earned his law degree there in 1948.",
+          "sourceId": "ap-2023",
+          "locator": "paragraph beginning 'Then he went on to earn a law degree'"
+        }
+      ]
+    },
+    {
+      "word": "Wisdom",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In a 1994 talk at the USC business school he made 'worldly wisdom' his subject and said facts are only usable when they hang on a latticework of mental models.",
+          "sourceId": "pca-2023",
+          "locator": "Chapter Four, Talk Two (USC Marshall School of Business, 14 April 1994), paragraph beginning 'What is elementary, worldly wisdom?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "On his death Buffett said Berkshire Hathaway could not have been built to its present status without Munger's inspiration, wisdom and participation.",
+          "sourceId": "brk-release-2023",
+          "locator": "news release, 28 November 2023, second paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Buffett wrote that Munger repeatedly jerked him back to sanity when his old habits surfaced.",
+          "sourceId": "brk-2023-letter",
+          "locator": "opening tribute 'Charlie Munger – The Architect of Berkshire Hathaway', paragraph beginning 'Many years later'"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked why he left the law, he said he preferred making the decisions and gambling his own money, and that he left partly from a desire to get resources permitting independence.",
+          "sourceId": "pca-2023",
+          "locator": "Chapter Four, Talk Three (Stanford Law School, 19 April 1996), Q&A 'Could you talk about why you left the law?'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He co-founded a Los Angeles law firm that still bears his name but decided before long that he preferred investing.",
+          "sourceId": "ap-2023",
+          "locator": "paragraph beginning 'Then he went on to earn a law degree'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Alongside his law firm he ran an investment partnership from 1962 to 1975 that returned about 20 percent a year.",
+          "sourceId": "telegraph-2023",
+          "locator": "paragraph beginning 'In parallel with his law firm'"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He gave significant gifts to Harvard-Westlake, Stanford Law School, the University of Michigan and the Huntington Library, and his wealth fell over time as he gave more of his fortune away.",
+          "sourceId": "ap-2023",
+          "locator": "paragraphs beginning 'Munger built a fortune' and 'Munger has given significant gifts'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In April 2013 he gave the University of Michigan a $110 million gift of stock for a graduate student residence hall.",
+          "sourceId": "cnbc-2013",
+          "locator": "body text, sentence beginning 'is giving a $110 million gift of stock'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Telegraph obituary says he gave much of his fortune away to causes such as Planned Parenthood.",
+          "sourceId": "telegraph-2023",
+          "locator": "paragraph beginning 'Buffett was a Democrat'"
+        }
+      ]
+    },
+    {
+      "word": "Partnership",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told law graduates he had had marvelous partners all his life, and got them partly because he tried to deserve them and partly because he chose them shrewdly.",
+          "sourceId": "pca-2023",
+          "locator": "Chapter Four, Talk Ten (USC Gould School of Law Commencement Address, 13 May 2007), paragraph beginning 'Another thing you have to do is have a lot of assiduity'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Buffett wrote that Munger became his partner in running Berkshire, stayed in that role until his death, and was to him part older brother, part loving father.",
+          "sourceId": "brk-2023-letter",
+          "locator": "opening tribute 'Charlie Munger – The Architect of Berkshire Hathaway', paragraphs beginning 'Many years later' and 'Charlie never sought'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Though they lived more than 1,500 miles apart, Buffett consulted him on every major decision, and the two became the biggest shareholders in Blue Chip Stamps.",
+          "sourceId": "ap-2023",
+          "locator": "paragraphs beginning 'During the entire time they worked together' and 'The two men shared investment ideas'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "To find out how to succeed at something, ask what would guarantee failure, and avoid that.",
+      "sourceId": "pca-2023",
+      "locator": "Chapter Four, Talk One (Harvard School Commencement Speech, 13 June 1986), paragraphs beginning 'My final prescription' and 'What Carson did'"
+    },
+    {
+      "text": "The safest way to get what you want is to deserve it: give others what you would want if you were in their place.",
+      "sourceId": "pca-2023",
+      "locator": "Chapter Four, Talk Ten (USC Gould School of Law, 13 May 2007), paragraph beginning 'What are the core ideas'"
+    },
+    {
+      "text": "Do not hold an opinion until you can state the arguments against it better than the people who disagree with you.",
+      "sourceId": "pca-2023",
+      "locator": "Chapter Four, Talk Ten (USC Gould School of Law, 13 May 2007), paragraph beginning 'I have what I call an iron prescription'"
+    },
+    {
+      "text": "Learn the big ideas from all the big subjects, not just your own, and hang what you see on them.",
+      "sourceId": "pca-2023",
+      "locator": "Chapter Four, Talk Two (USC Marshall School of Business, 14 April 1994), paragraph beginning 'What is elementary, worldly wisdom?'; Talk Ten, paragraph beginning 'Well, I could see'"
+    },
+    {
+      "text": "Do not give in to envy, resentment or self-pity; treat each hard blow as a chance to act well and learn.",
+      "sourceId": "pca-2023",
+      "locator": "Chapter Four, Talk Ten (USC Gould School of Law, 13 May 2007), paragraphs beginning 'Generally speaking, envy, resentment' and 'Another thing to cope with'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "the safest way to try to get what you want is to try to deserve what you want.",
+      "sourceId": "pca-2023",
+      "locator": "Chapter Four, Talk Ten (USC Gould School of Law Commencement Address, 13 May 2007), paragraph beginning 'What are the core ideas'"
+    },
+    {
+      "text": "I constantly see people rise in life who are not the smartest, sometimes not even the most diligent. But they are learning machines. They go to bed every night a little wiser than they were that morning.",
+      "sourceId": "pca-2023",
+      "locator": "Chapter Four, Talk Ten (USC Gould School of Law Commencement Address, 13 May 2007), paragraph beginning 'The same requirement exists'"
+    },
+    {
+      "text": "I feel that I’m not entitled to have an opinion unless I can state the arguments against my position better than the people who are in opposition.",
+      "sourceId": "pca-2023",
+      "locator": "Chapter Four, Talk Ten (USC Gould School of Law Commencement Address, 13 May 2007), paragraph beginning 'I have what I call an iron prescription'"
+    },
+    {
+      "text": "Resentment has always worked for me exactly as it worked for Carson. I cannot recommend it highly enough to you if you desire misery.",
+      "sourceId": "pca-2023",
+      "locator": "Chapter Four, Talk One (Harvard School Commencement Speech, 13 June 1986), paragraph beginning 'Resentment has always worked'"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1965 Buffett had just bought control of Berkshire Hathaway, a New England textile mill. Munger, who had no money in Buffett's partnership, told him it was a dumb decision and advised him to stop buying fair businesses at wonderful prices and instead buy wonderful businesses at fair prices. Buffett followed the advice, with much back-sliding by his own account, and later credited Munger with pushing him to buy great businesses such as See's Candy. Buffett called Munger the architect of the present Berkshire.",
+    "sourceIds": [
+      "brk-2023-letter",
+      "ap-2023"
+    ]
+  },
+  "shadow": {
+    "text": "In June 1976 the US Securities and Exchange Commission filed a civil complaint accusing Blue Chip Stamps, a company in which Buffett and Munger were the two biggest shareholders, of failing to disclose that it bought Wesco Financial stock partly to defeat a planned Wesco merger. Blue Chip settled without admitting or denying the allegations and was ordered to pay up to about $298,000 to people who had sold Wesco shares. In September 2010 he told University of Michigan students they should thank God for the bank bailouts, and said people in hardship should 'suck it in and cope'. In 2016 he committed $200 million to a UC Santa Barbara dormitory on condition it was built to his own design, in which 94 percent of the bedrooms had no windows; in October 2021 a consulting architect quit the campus design review committee in protest, calling it a 'social and psychological experiment'.",
+    "sourceIds": [
+      "sec-1976",
+      "ap-2023",
+      "bloomberg-2010",
+      "nbc-2021"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What would have guaranteed you a bad week, and which of those things did you do anyway?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Poor Charlie's Almanack",
+      "year": 2005
+    }
+  ],
+  "sources": [
+    {
+      "id": "pca-2023",
+      "kind": "primary",
+      "title": "Poor Charlie's Almanack: The Essential Wit and Wisdom of Charles T. Munger (Stripe Press edition, full text online)",
+      "author": "Charles T. Munger; edited by Peter D. Kaufman",
+      "year": 2023,
+      "publisher": "Stripe Press",
+      "url": "https://stripe.press/poor-charlies-almanack/book"
+    },
+    {
+      "id": "brk-2023-letter",
+      "kind": "secondary",
+      "title": "Berkshire Hathaway 2023 shareholder letter: Charlie Munger – The Architect of Berkshire Hathaway",
+      "author": "Warren E. Buffett",
+      "year": 2024,
+      "publisher": "Berkshire Hathaway Inc.",
+      "url": "https://www.berkshirehathaway.com/letters/2023ltr.pdf"
+    },
+    {
+      "id": "brk-release-2023",
+      "kind": "secondary",
+      "title": "News release, 28 November 2023 (death of Charlie Munger)",
+      "author": "Berkshire Hathaway Inc.",
+      "year": 2023,
+      "publisher": "Berkshire Hathaway Inc.",
+      "url": "https://www.berkshirehathaway.com/news/nov2823.pdf"
+    },
+    {
+      "id": "ap-2023",
+      "kind": "secondary",
+      "title": "Charlie Munger, Warren Buffett's sidekick at Berkshire Hathaway, dies at 99",
+      "author": "Josh Funk, Associated Press",
+      "year": 2023,
+      "publisher": "Associated Press (as published by WDIV ClickOnDetroit, 28 November 2023)",
+      "url": "https://www.clickondetroit.com/business/2023/11/28/charlie-munger-warren-buffets-sidekick-at-berkshire-hathaway-dies-at-99/"
+    },
+    {
+      "id": "telegraph-2023",
+      "kind": "secondary",
+      "title": "Charlie Munger, billionaire investor who worked alongside Warren Buffett for more than half a century – obituary",
+      "author": "Telegraph Obituaries",
+      "year": 2023,
+      "publisher": "The Daily Telegraph (as syndicated by Yahoo News Canada, 29 November 2023)",
+      "url": "https://ca.news.yahoo.com/charlie-munger-billionaire-investor-worked-151750132.html"
+    },
+    {
+      "id": "sec-1976",
+      "kind": "secondary",
+      "title": "SEC News Digest, 10 June 1976: Complaint names Blue Chip Stamps (Civil Action No. 76-1009, LR-7437)",
+      "author": "US Securities and Exchange Commission",
+      "year": 1976,
+      "publisher": "US Securities and Exchange Commission (archived by UNT Libraries)",
+      "url": "https://webarchive.library.unt.edu/web/20090507192510/http://www.sec.gov/news/digest/1976/dig061076.pdf"
+    },
+    {
+      "id": "bloomberg-2010",
+      "kind": "secondary",
+      "title": "'Thank God' Bailouts Came Before Handouts",
+      "author": "Bloomberg News",
+      "year": 2010,
+      "publisher": "Bloomberg News (as published by Financial Advisor magazine, 20 September 2010)",
+      "url": "https://www.fa-mag.com/news/thank-god-bailouts-came-before-handouts-5948.html?print"
+    },
+    {
+      "id": "nbc-2021",
+      "kind": "secondary",
+      "title": "Windowless, billionaire-designed UC Santa Barbara mega dorm horrifies the internet",
+      "author": "Morgan Sung",
+      "year": 2021,
+      "publisher": "NBC News",
+      "url": "https://www.nbcnews.com/news/uc-santa-barbara-mega-dorm-munger-hall-rcna4401"
+    },
+    {
+      "id": "cnbc-2013",
+      "kind": "secondary",
+      "title": "Billionaire Munger Gives Michigan $110 Million",
+      "author": "CNBC",
+      "year": 2013,
+      "publisher": "CNBC (19 April 2013)",
+      "url": "https://www.cnbc.com/id/100656148"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real person (1924-2023), businessman and investor, not a politician or religious founder; no account of sexual contact with a minor or of sexual violence found; his dark side is a 1976 SEC case against a company he co-controlled, harsh public remarks, and a disputed windowless dormitory design."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked all five draft values against the saved texts of Poor Charlie's Almanack, Buffett's 2023 letter and statement, the AP and Telegraph obituaries, the SEC 1976 digest, NBC and CNBC. Integrity fell: it had only two sources, the Tilson line reports what he taught rather than what he did, and the Blue Chip disclosure case argues against it; Partnership from the blind pick took its place with three sources. Learning, Wisdom, Independence and Generosity held, though the $200 million Santa Barbara money was a conditional commitment to a dorm that was never built, so it left the Generosity evidence and is worded as a commitment in the shadow. All four quotes matched the book text; five other fixes tightened wording to what the sources say.",
+    "checkedOn": "2026-11-10"
+  }
+}

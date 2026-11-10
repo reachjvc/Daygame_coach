@@ -5,6 +5,7 @@ import p_abraham_lincoln from "./people/abraham-lincoln.json"
 import p_alex_hormozi from "./people/alex-hormozi.json"
 import p_baruch_spinoza from "./people/baruch-spinoza.json"
 import p_benjamin_franklin from "./people/benjamin-franklin.json"
+import p_charlie_munger from "./people/charlie-munger.json"
 import p_desmond_doss from "./people/desmond-doss.json"
 import p_epictetus from "./people/epictetus.json"
 import p_ernest_shackleton from "./people/ernest-shackleton.json"
@@ -27,6 +28,6 @@ import p_theodore_roosevelt from "./people/theodore-roosevelt.json"
 import p_winston_churchill from "./people/winston-churchill.json"
 import p_yi_sun_sin from "./people/yi-sun-sin.json"
 
-export const PERSON_IDS = ["abraham-lincoln","alex-hormozi","baruch-spinoza","benjamin-franklin","desmond-doss","epictetus","ernest-shackleton","frederick-douglass","fridtjof-nansen","friedrich-nietzsche","jay-z","leonardo-da-vinci","marcus-aurelius","marie-curie","michael-faraday","miyamoto-musashi","nelson-mandela","ralph-waldo-emerson","richard-branson","seneca","steve-jobs","tenzing-norgay","theodore-roosevelt","winston-churchill","yi-sun-sin"] as const
+export const PERSON_IDS = ["abraham-lincoln","alex-hormozi","baruch-spinoza","benjamin-franklin","charlie-munger","desmond-doss","epictetus","ernest-shackleton","frederick-douglass","fridtjof-nansen","friedrich-nietzsche","jay-z","leonardo-da-vinci","marcus-aurelius","marie-curie","michael-faraday","miyamoto-musashi","nelson-mandela","ralph-waldo-emerson","richard-branson","seneca","steve-jobs","tenzing-norgay","theodore-roosevelt","winston-churchill","yi-sun-sin"] as const
 
-export const PEOPLE = [p_abraham_lincoln, p_alex_hormozi, p_baruch_spinoza, p_benjamin_franklin, p_desmond_doss, p_epictetus, p_ernest_shackleton, p_frederick_douglass, p_fridtjof_nansen, p_friedrich_nietzsche, p_jay_z, p_leonardo_da_vinci, p_marcus_aurelius, p_marie_curie, p_michael_faraday, p_miyamoto_musashi, p_nelson_mandela, p_ralph_waldo_emerson, p_richard_branson, p_seneca, p_steve_jobs, p_tenzing_norgay, p_theodore_roosevelt, p_winston_churchill, p_yi_sun_sin] as unknown as RoleModelPerson[]
+export const PEOPLE = [p_abraham_lincoln, p_alex_hormozi, p_baruch_spinoza, p_benjamin_franklin, p_charlie_munger, p_desmond_doss, p_epictetus, p_ernest_shackleton, p_frederick_douglass, p_fridtjof_nansen, p_friedrich_nietzsche, p_jay_z, p_leonardo_da_vinci, p_marcus_aurelius, p_marie_curie, p_michael_faraday, p_miyamoto_musashi, p_nelson_mandela, p_ralph_waldo_emerson, p_richard_branson, p_seneca, p_steve_jobs, p_tenzing_norgay, p_theodore_roosevelt, p_winston_churchill, p_yi_sun_sin] as unknown as RoleModelPerson[]
