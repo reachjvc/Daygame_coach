@@ -1,0 +1,261 @@
+{
+  "id": "boethius",
+  "name": "Boethius",
+  "born": "c. 475-480",
+  "died": "c. 524-526",
+  "category": "sages",
+  "areaIds": [
+    "lm_emotions",
+    "lm_mindset",
+    "lm_spirituality"
+  ],
+  "tagline": "A Roman statesman who, in prison awaiting death, wrote a book on what fortune cannot take.",
+  "startedFrom": "He was born into the Anicii, an old Roman family that was still among the foremost in wealth and rank, and was growing up when the Gothic king Theodoric made himself master of Italy. His father, a consul, died when he was a child, and the senator Symmachus brought him up; later he married Symmachus's daughter Rusticiana.",
+  "values": [
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that, holding to the independence of conscience, he had to think nothing of offending the powerful in the cause of justice, and that no one ever drew him aside from justice to oppression.",
+          "sourceId": "consolation-james",
+          "locator": "Book I, prose 4"
+        },
+        {
+          "kind": "deed",
+          "claim": "Gibbon records that his authority restrained the oppression of royal officers, that he delivered Paulinus (Gibbon spells it Paulianus) from the palace informers, and that he often relieved the provincials ruined by public and private plunder.",
+          "sourceId": "gibbon",
+          "locator": "ch. XXXIX, part III (paragraph 'A philosopher, liberal of his wealth...')"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia says that as Master of Offices he quickly fell out with many at court, probably because he attacked their corruption.",
+          "sourceId": "sep-marenbon",
+          "locator": "§1 Life and Works"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Anonymus Valesianus, a sixth-century account, says that when Cyprianus charged the patrician Albinus with writing to the emperor against Theodoric, Boethius told the king the charge was false, and that Cyprianus then brought false witnesses against him as Albinus's defender.",
+          "sourceId": "av-rolfe",
+          "locator": "Part II, sections 85-86"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At Verona, when the king wanted to charge the whole senate with treason in the Albinus case, he maintained the innocence of every senator, regardless of his own danger.",
+          "sourceId": "consolation-james",
+          "locator": "Book I, prose 4"
+        },
+        {
+          "kind": "witness",
+          "claim": "Gibbon writes that Boethius alone had the courage to oppose the tyranny of the barbarian officials, and that he stood without arms and without fear before an angry king.",
+          "sourceId": "gibbon",
+          "locator": "ch. XXXIX, part III (paragraph 'A philosopher, liberal of his wealth...')"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Anonymus Valesianus records him saying in the king's presence: 'if Albinus did that, so also have I and the whole senate with one accord done it; it is false, my Lord King.'",
+          "sourceId": "av-rolfe",
+          "locator": "Part II, section 85"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Around 516 he announced a plan to translate and comment on all the writings of Plato and Aristotle; his translations and commentaries on Aristotle's logic were done before his execution cut the plan short.",
+          "sourceId": "sep-marenbon",
+          "locator": "§2 The Logical Project and the Logical Commentaries"
+        },
+        {
+          "kind": "deed",
+          "claim": "He wrote treatises on arithmetic, geometry and music, and translated and commented on Aristotle's logic, passing Greek learning to the Latin Middle Ages.",
+          "sourceId": "iep-correia",
+          "locator": "§3c Scientific Treatises and §3d Logical Writings"
+        },
+        {
+          "kind": "witness",
+          "claim": "Gibbon lists Euclid, Pythagoras, Nicomachus, Archimedes, Ptolemy, Plato and Aristotle among the authors translated and explained by the indefatigable pen of the Roman senator.",
+          "sourceId": "gibbon",
+          "locator": "ch. XXXIX, part III (paragraph 'The senator Boethius...')"
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that he followed Plato's advice that philosophers should enter public life, and brought to his duties no aim but zeal for the public good.",
+          "sourceId": "consolation-james",
+          "locator": "Book I, prose 4"
+        },
+        {
+          "kind": "deed",
+          "claim": "He was sole consul in 510 and was later made Theodoric's Master of Offices, head of the whole civil administration.",
+          "sourceId": "james-proem",
+          "locator": "Proem"
+        },
+        {
+          "kind": "witness",
+          "claim": "Gibbon writes that he turned from his studies to the duties of public and private life, relieved the poor, and used his eloquence for the innocent.",
+          "sourceId": "gibbon",
+          "locator": "ch. XXXIX, part III (paragraph 'The senator Boethius...')"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When you lose something, first count what you still have: the people you love are worth more than the honours you lost.",
+      "sourceId": "consolation-james",
+      "locator": "Book II, prose 4"
+    },
+    {
+      "text": "Look for happiness inside yourself, in what no one can take from you, not in money, rank or praise.",
+      "sourceId": "consolation-james",
+      "locator": "Book II, prose 4"
+    },
+    {
+      "text": "Treat bad luck as a teacher: it shows you how fragile good luck is and who your true friends are.",
+      "sourceId": "consolation-james",
+      "locator": "Book II, prose 8"
+    },
+    {
+      "text": "Use what you learned in quiet study in public work, even when it makes powerful people your enemies.",
+      "sourceId": "consolation-james",
+      "locator": "Book I, prose 4"
+    },
+    {
+      "text": "Do good without boasting of it; public praise takes away part of the quiet reward of a good conscience.",
+      "sourceId": "consolation-james",
+      "locator": "Book I, prose 4"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "For truly in adverse fortune the worst sting of misery is to have been happy.",
+      "sourceId": "consolation-james",
+      "locator": "Book II, prose 4 (spoken by Boethius, the prisoner)",
+      "translation": "H. R. James, 1897"
+    },
+    {
+      "text": "I have had to think nothing of giving offence to the powerful in the cause of justice.",
+      "sourceId": "consolation-james",
+      "locator": "Book I, prose 4 (spoken by Boethius, the prisoner)",
+      "translation": "H. R. James, 1897"
+    },
+    {
+      "text": "For whenever a man by proclaiming his good deeds receives the recompense of fame, he diminishes in a measure the secret reward of a good conscience.",
+      "sourceId": "consolation-james",
+      "locator": "Book I, prose 4 (spoken by Boethius, the prisoner)",
+      "translation": "H. R. James, 1897"
+    },
+    {
+      "text": "Friends, why did ye once so lightly / Vaunt me happy among men? / Surely he who so hath fallen / Was not firmly founded then.",
+      "sourceId": "consolation-james",
+      "locator": "Book I, Song I, 'Boethius' Complaint'",
+      "translation": "H. R. James, 1897"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 522 his two young sons were made consuls together, and he gave the public speech in the king's honour. Soon after, when the senator Albinus was accused of treason, he defended Albinus and the whole senate before the king at Verona. He was himself accused of treason and of magic, held in prison near Pavia, and condemned without a hearing, by a senate about 500 miles away. While he waited for death he wrote the Consolation of Philosophy, a dialogue between himself and a lady who stands for Philosophy, on fortune, happiness and God's government of the world.",
+    "sourceIds": [
+      "james-proem",
+      "consolation-james",
+      "gibbon",
+      "sep-marenbon",
+      "iep-correia",
+      "av-rolfe"
+    ]
+  },
+  "shadow": {
+    "text": "Accused of plotting with the emperor in Constantinople, he called the letters used against him forgeries, yet in his own book he says he did wish to save the senate and would never stop wishing it, that he wished there were hope of freedom for Rome, and that had he known of a plot, the king would never have known of it. Gibbon (1788) called that last line a rash confession, wrote that he shared the danger and perhaps the guilt of Albinus, and cited an anonymous writer who charged him with patriotic treason; Correia's encyclopedia article judges him probably innocent. Gibbon also wrote that in his fights at court his spirit rose above danger and perhaps above prudence, and suggested that, like Cato, he may have mixed private enemies with public justice. In the Consolation, Philosophy scolds him for weeping and for complaining so much while his wife, sons and father-in-law were safe.",
+    "sourceIds": [
+      "consolation-james",
+      "gibbon",
+      "iep-correia"
+    ]
+  },
+  "councilQuestion": {
+    "text": "When something went wrong this week, did you stop to count what you still have?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Consolation of Philosophy",
+      "year": "c. 524"
+    }
+  ],
+  "sources": [
+    {
+      "id": "consolation-james",
+      "kind": "primary",
+      "title": "The Consolation of Philosophy",
+      "author": "Boethius, translated by H. R. James",
+      "year": 1897,
+      "publisher": "Elliot Stock, London; Project Gutenberg eBook #14328",
+      "url": "https://www.gutenberg.org/ebooks/14328"
+    },
+    {
+      "id": "james-proem",
+      "kind": "secondary",
+      "title": "Proem to The Consolation of Philosophy (life of Boethius)",
+      "author": "H. R. James",
+      "year": 1897,
+      "publisher": "Elliot Stock, London; Project Gutenberg eBook #14328",
+      "url": "https://www.gutenberg.org/ebooks/14328"
+    },
+    {
+      "id": "sep-marenbon",
+      "kind": "secondary",
+      "title": "Anicius Manlius Severinus Boethius, Stanford Encyclopedia of Philosophy (first published 2005, revised 2026)",
+      "author": "John Marenbon",
+      "year": 2026,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/boethius/"
+    },
+    {
+      "id": "iep-correia",
+      "kind": "secondary",
+      "title": "Boethius (480-524), Internet Encyclopedia of Philosophy",
+      "author": "Manuel Correia",
+      "year": "undated",
+      "url": "https://iep.utm.edu/boethius/"
+    },
+    {
+      "id": "gibbon",
+      "kind": "secondary",
+      "title": "The History of the Decline and Fall of the Roman Empire, ch. XXXIX (vol. 4 of the Project Gutenberg edition, with notes by H. H. Milman)",
+      "author": "Edward Gibbon",
+      "year": 1788,
+      "publisher": "Project Gutenberg eBook #734",
+      "url": "https://www.gutenberg.org/ebooks/734"
+    },
+    {
+      "id": "av-rolfe",
+      "kind": "secondary",
+      "title": "Excerpta Valesiana, part II (Anonymus Valesianus, sixth century), in Ammianus Marcellinus vol. III",
+      "author": "Anonymus Valesianus, translated by J. C. Rolfe",
+      "year": 1939,
+      "publisher": "Loeb Classical Library, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Excerpta_Valesiana/2*.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Roman senator and philosopher (c. 475-480 to c. 524-526), not fictional, not a living politician or founder of a living religion, with no account of sexual contact with a minor or of sexual violence found; he is in, with a documented dark side around the treason charge and his own pride and self-pity."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I attacked each value against the James translation of the Consolation, Gibbon, the Stanford and Internet encyclopedias and the Anonymus Valesianus. Acceptance fell: its main evidence was a teaching spoken by Lady Philosophy, while his own voice in the book grieves and protests and Gibbon says such consolations do not subdue human feeling; Justice, Courage, Learning and Service held, and the sixth-century Anonymus Valesianus was added for his defence of Albinus. Three of the four draft quotes were Lady Philosophy's words, not his, so they were replaced with lines he speaks as the prisoner, checked in James 1897 and Cooper 1902. The start (he was not born under Theodoric), the defining moment and the shadow (what Gibbon called a rash confession, and Gibbon's 'perhaps') were corrected.",
+    "checkedOn": "2026-11-10"
+  }
+}
