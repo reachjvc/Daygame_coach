@@ -1,0 +1,303 @@
+{
+  "id": "cato-the-younger",
+  "name": "Cato the Younger",
+  "born": -95,
+  "died": -46,
+  "category": "sages",
+  "areaIds": [
+    "lm_mindset",
+    "lm_mission"
+  ],
+  "tagline": "A Roman senator who turned down gifts and honours and, at the last, would not ask Caesar for his life.",
+  "startedFrom": "His parents died when he was a child, and he grew up with his brother Caepio and his sister Porcia in the house of their uncle, the politician Livius Drusus. He was the great-grandson of Cato the Censor; Plutarch puts his share of the family money at 120 talents. Plutarch also says he was slow to learn but kept what he learned, and asked his tutor the reason for every order.",
+  "values": [
+    {
+      "word": "Integrity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On his tour of Asia the Galatian king Deiotarus pressed gifts on him twice, then asked him at least to let his friends take them; he refused and sent the gifts back.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Cato the Younger 15.1-3"
+        },
+        {
+          "kind": "words",
+          "claim": "In 50 BC he wrote to his friend Cicero that he had praised his rule in Cilicia only as far as he could 'conscientiously', and that it was a greater honour to be credited with the 'uprightness and mildness' of a governor than with luck or force.",
+          "sourceId": "fam-shuckburgh",
+          "locator": "Letter CCLXV (Fam. XV.5), vol. II, pp. 174-175"
+        },
+        {
+          "kind": "witness",
+          "claim": "Sallust, who writes of him as a man of 'my own memory', says that he competed 'with the blameless in integrity' and 'preferred to be, rather than to seem, virtuous'.",
+          "sourceId": "sallust-rolfe",
+          "locator": "The War with Catiline 53.6 and 54.6"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica says he showed 'so much zeal and integrity in the management of the public accounts' as quaestor that he was given a post in Asia.",
+          "sourceId": "eb1911",
+          "locator": "Cato, Marcus Porcius (philosopher), vol. 5, p. 536, first paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "As praetor in 54 BC the candidates chose him as holder of a bond against bribery; he took pledges but not the money, and on election day ruled that one of them had cheated and ordered him to pay the others.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Cato the Younger 44.5-7"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 62 BC, as tribune, he walked up the temple steps past gladiators and armed men, sat down between Metellus and Caesar to block a law, and was left standing alone, pelted with sticks and stones.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Cato the Younger 27.4-28.2"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 55 BC, when Pompey's men ambushed his brother-in-law Domitius at dawn and killed the torch-bearer, Cato, wounded in the arm, stayed and urged Domitius to stand his ground.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Cato the Younger 41.4-5"
+        },
+        {
+          "kind": "witness",
+          "claim": "Seneca writes that Cato 'attacked Caesar and Pompey simultaneously, at a time when none dared fall foul of the one without endeavouring to oblige the other'.",
+          "sourceId": "seneca-gummere",
+          "locator": "Moral Letters 104.33"
+        }
+      ]
+    },
+    {
+      "word": "Freedom",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "At Utica he refused to let Lucius Caesar beg mercy for him, saying he was unwilling to be under obligation to the tyrant for his illegal acts.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Cato the Younger 66.1-2"
+        },
+        {
+          "kind": "words",
+          "claim": "On his last night, after arguing at supper that 'the good man alone is free', he tested the edge of his sword and said: 'Now I am my own master.'",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Cato the Younger 67.1 and 70.1"
+        },
+        {
+          "kind": "deed",
+          "claim": "After the defeat at Thapsus in 46 BC he sent his followers off by sea and then stabbed himself; the 1911 Britannica writes that he had lived for the free state and it seemed his duty to perish with it.",
+          "sourceId": "eb1911",
+          "locator": "Cato, Marcus Porcius (philosopher), vol. 5, p. 536, second and third paragraphs"
+        },
+        {
+          "kind": "witness",
+          "claim": "Seneca writes that he 'declared allegiance to liberty in the midst of slavery', and that 'men do not ask whether Cato is free, but whether he is still among the free'.",
+          "sourceId": "seneca-gummere",
+          "locator": "Moral Letters 104.29 and 95.71"
+        }
+      ]
+    },
+    {
+      "word": "Simplicity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He often went out in the streets, and later sat as a judge, without shoes or tunic, wore the unfashionable dark purple, and walked while his friends rode.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Cato the Younger 5.3, 6.3, 44.1"
+        },
+        {
+          "kind": "deed",
+          "claim": "Running the games for his friend Favonius, he gave the actors crowns of wild olive instead of gold, and gifts of beets, lettuce, radishes, pears, wine, pork, figs and firewood.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Cato the Younger 46.2-3"
+        },
+        {
+          "kind": "witness",
+          "claim": "Sallust writes that he 'cultivated self-control, propriety, but above all austerity' and did not compete 'with the rich in riches'.",
+          "sourceId": "sallust-rolfe",
+          "locator": "The War with Catiline 54.5-6"
+        },
+        {
+          "kind": "witness",
+          "claim": "The World History Encyclopedia says he shunned materialism and 'despised fashion and luxury, often going barefoot'.",
+          "sourceId": "whe-wasson",
+          "locator": "section 'Stoicism'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not change your manners to win votes; if people reject you for them, accept the loss.",
+      "sourceId": "plutarch-perrin",
+      "locator": "Life of Cato the Younger 50.1-3"
+    },
+    {
+      "text": "Learn the laws and the details of a job before you ask for it.",
+      "sourceId": "plutarch-perrin",
+      "locator": "Life of Cato the Younger 16.1"
+    },
+    {
+      "text": "Do not take gifts, however good the excuse; let your friends share only in what you got honestly and justly.",
+      "sourceId": "plutarch-perrin",
+      "locator": "Life of Cato the Younger 15.3"
+    },
+    {
+      "text": "Give private advice when you are asked, but in public say what you think is best, asked or not.",
+      "sourceId": "plutarch-perrin",
+      "locator": "Life of Cato the Younger 48.1-2"
+    },
+    {
+      "text": "Praise a man for doing his job honestly and fairly, not for luck or force.",
+      "sourceId": "fam-shuckburgh",
+      "locator": "Letter CCLXV (Fam. XV.5), vol. II, pp. 174-175"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "…it is an honour much more brilliant than a triumph for the senate to declare its opinion, that a province has been retained rather by the uprightness and mildness of its governor, than by the strength of an army or the favour of heaven",
+      "sourceId": "fam-shuckburgh",
+      "locator": "Letter CCLXV (Fam. XV.5), Cato to Cicero, June 50 BC, vol. II, p. 174",
+      "translation": "Evelyn S. Shuckburgh, 1899"
+    },
+    {
+      "text": "Only let them not blame my life. I will begin to speak when I am not going to say what were better left unsaid.",
+      "sourceId": "plutarch-perrin",
+      "locator": "Life of Cato the Younger 4.2, Loeb vol. VIII, p. 247",
+      "translation": "Bernadotte Perrin, 1919"
+    },
+    {
+      "text": "I am unwilling to be under obligations to the tyrant for his illegal acts.",
+      "sourceId": "plutarch-perrin",
+      "locator": "Life of Cato the Younger 66.2, Loeb vol. VIII, p. 397",
+      "translation": "Bernadotte Perrin, 1919"
+    },
+    {
+      "text": "Now I am my own master.",
+      "sourceId": "plutarch-perrin",
+      "locator": "Life of Cato the Younger 70.1, Loeb vol. VIII, p. 405",
+      "translation": "Bernadotte Perrin, 1919"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 46 BC, after Caesar beat the republican army at Thapsus, Cato was holding the city of Utica in North Africa. He spent a night and a day getting the senators and his men onto ships and giving supplies to those who had none. He told Lucius Caesar, who was going to beg Caesar for mercy for the city's Roman merchants, not to ask for him, because he would not owe his life to a tyrant. When word came that the harbour was quiet, he stabbed himself; when his doctor tried to sew up the wound, he pushed him away, tore it open and died.",
+    "sourceIds": [
+      "plutarch-perrin",
+      "eb1911"
+    ]
+  },
+  "shadow": {
+    "text": "In December 63 BC his speech persuaded the Senate to put the captured men of Catiline's conspiracy to death without a trial, after Caesar had argued for close custody instead. That year, swearing to prosecute anyone who had bribed voters in the consular election, he made one exception: his brother-in-law Silanus. With her father's consent he gave his wife Marcia, who by Plutarch's account was then pregnant by him, in marriage to his friend Hortensius, and in 49 BC married her again after Hortensius died and left her his heir; Caesar accused him of greed and of trading in marriage. Plutarch writes that he often drank until morning, and that on his last night he punched a slave in the mouth for not bringing his sword. Suetonius writes that when the nobles raised bribe money to elect Bibulus against Caesar, even Cato did not deny it served the state. At Utica he refused a vote to free slaves to fight, saying it was not lawful or right. The 1911 Britannica writes that when the civil war broke out he 'did not scruple to support the unjust measures of the nobles against Caesar'. His biographer Fred Drogula (2019), as Kit Morrell's review reports, suggests some modest embezzlement in Cyprus, and argues that his obstruction drove Pompey and Caesar together and that his later efforts to split them set Rome on the road to civil war.",
+    "sourceIds": [
+      "plutarch-perrin",
+      "whe-wasson",
+      "suetonius-rolfe",
+      "eb1911",
+      "bmcr-morrell"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you change how you acted this week only to be liked or to get something?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "His one surviving letter, to Cicero (Cicero, Letters to Friends XV.5); Shuckburgh's translation is free",
+      "year": "50 BC"
+    }
+  ],
+  "sources": [
+    {
+      "id": "fam-shuckburgh",
+      "kind": "primary",
+      "title": "The Letters of Cicero, vol. II (B.C. 51-49), letter CCLXV (Fam. XV.5): M. Porcius Cato to Cicero",
+      "author": "Marcus Porcius Cato, translated by Evelyn S. Shuckburgh",
+      "year": 1899,
+      "publisher": "George Bell and Sons; Internet Archive scan",
+      "url": "https://archive.org/details/lettersofcicerow02cice"
+    },
+    {
+      "id": "plutarch-perrin",
+      "kind": "primary",
+      "title": "Life of Cato the Younger, in Plutarch's Lives vol. VIII (the earliest full account, used in place of writings he did not leave; c. AD 100)",
+      "author": "Plutarch, translated by Bernadotte Perrin",
+      "year": 1919,
+      "publisher": "Loeb Classical Library; Internet Archive scan",
+      "url": "https://archive.org/details/plutarchslives08plutuoft"
+    },
+    {
+      "id": "sallust-rolfe",
+      "kind": "secondary",
+      "title": "The War with Catiline (written by a contemporary, c. 42 BC)",
+      "author": "Sallust, translated by J. C. Rolfe",
+      "year": 1921,
+      "publisher": "Loeb Classical Library, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Sallust/Bellum_Catilinae*.html"
+    },
+    {
+      "id": "seneca-gummere",
+      "kind": "secondary",
+      "title": "Moral Letters to Lucilius (1st century AD)",
+      "author": "Seneca, translated by Richard Mott Gummere",
+      "year": "1917-1925",
+      "publisher": "Loeb Classical Library; Wikisource transcription",
+      "url": "https://en.wikisource.org/wiki/Moral_letters_to_Lucilius"
+    },
+    {
+      "id": "suetonius-rolfe",
+      "kind": "secondary",
+      "title": "The Lives of the Caesars: Julius (early 2nd century AD)",
+      "author": "Suetonius, translated by J. C. Rolfe",
+      "year": 1913,
+      "publisher": "Loeb Classical Library, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Suetonius/12Caesars/Julius*.html"
+    },
+    {
+      "id": "eb1911",
+      "kind": "secondary",
+      "title": "Cato, Marcus Porcius (philosopher), Encyclopaedia Britannica, 11th edition, vol. 5",
+      "author": "Encyclopaedia Britannica",
+      "year": 1911,
+      "publisher": "Wikisource transcription",
+      "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Cato,_Marcus_Porcius_(philosopher)"
+    },
+    {
+      "id": "bmcr-morrell",
+      "kind": "secondary",
+      "title": "Review of Fred K. Drogula, Cato the Younger: Life and Death at the End of the Roman Republic (Oxford University Press, 2019), Bryn Mawr Classical Review 2021.02.05",
+      "author": "Kit Morrell",
+      "year": 2021,
+      "publisher": "Bryn Mawr Classical Review",
+      "url": "https://bmcr.brynmawr.edu/2021/2021.02.05/"
+    },
+    {
+      "id": "whe-wasson",
+      "kind": "secondary",
+      "title": "Cato the Younger, World History Encyclopedia (27 July 2023)",
+      "author": "Donald L. Wasson",
+      "year": 2023,
+      "publisher": "World History Encyclopedia",
+      "url": "https://www.worldhistory.org/Cato_the_Younger/"
+    }
+  ],
+  "likenessSources": [
+    {
+      "title": "Bronze bust of Cato the Younger from Volubilis, Archaeological Museum of Rabat",
+      "url": "https://commons.wikimedia.org/wiki/File:Busto_de_Cat%C3%B3n_el_Joven_-_Museo_Arqueol%C3%B3gico_de_Rabat_(1).jpg",
+      "licence": "CC0",
+      "author": "Laci3 (photograph)"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Roman senator (95-46 BC), long dead, not a founder of a living religion, with no account of sexual contact with a minor or of sexual violence; his dark side is documented and real (executions without trial, lending his wife, heavy drinking, a blow to a slave, connived bribery, obstruction blamed for the civil war)."
+    },
+    "blindAgreement": 0.75,
+    "devilsAdvocate": "I attacked each value against Plutarch, Sallust, Suetonius, Seneca, the 1911 Britannica and Morrell's review of Drogula's biography, and tested Justice and Freedom against the executions without trial in 63 BC and the Bibulus bribery. Justice fell: the evidence for it was his fight against bribery and a justice that would not bend to favour, yet he spared his brother-in-law Silanus from prosecution, did not deny that bribery for Bibulus served the state, and Britannica and Drogula say he backed the nobles' side over principle. Freedom held, because it rests on his own refusal to live under or owe anything to Caesar; the executions and his refusal to free slaves at Utica went into the shadow. Integrity, Courage and Simplicity held on three or more sources, all four quotes match Perrin's and Shuckburgh's texts, and the tagline, one principle and the shadow's Drogula sentence were corrected.",
+    "checkedOn": "2026-11-10"
+  }
+}
