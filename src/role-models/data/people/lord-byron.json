@@ -1,0 +1,384 @@
+{
+  "id": "lord-byron",
+  "name": "Lord Byron",
+  "born": 1788,
+  "died": 1824,
+  "category": "charisma",
+  "areaIds": [
+    "lm_fun",
+    "lm_contribution",
+    "lm_relationship"
+  ],
+  "tagline": "Lived at full intensity, then put his money and his life behind a free Greece.",
+  "startedFrom": "He was born in London on 22 January 1788 and was lame from childhood, with a malformed foot. His father, a spendthrift army captain, had run through his mother's Scottish fortune and died in France when the boy was three, so his mother raised him in Aberdeen on a small income. At ten he inherited the title Lord Byron from his great-uncle.",
+  "values": [
+    {
+      "word": "Freedom",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1823 he left Italy to join the Greek war of independence against the Ottoman Empire, and died at Missolonghi in April 1824.",
+          "sourceId": "bbc-history",
+          "locator": "Historic Figures: Lord Byron (1788-1824), paragraphs 4-5"
+        },
+        {
+          "kind": "words",
+          "claim": "In his Ravenna journal, while the Italian Carbonari stored their weapons in his house, he wrote that if Italy could be liberated it did not matter who was sacrificed, and called a free Italy 'a grand object'.",
+          "sourceId": "moore-1854",
+          "locator": "vol. 5, Ravenna journal, entry of 18 February 1821"
+        },
+        {
+          "kind": "witness",
+          "claim": "Historian Roderick Beaton told the Guardian that Byron helped the Greek revolution end in a modern nation state, and the paper says he used his fame to internationalise the Greeks' fight for liberty.",
+          "sourceId": "guardian-2021",
+          "locator": "paragraphs beginning 'The poet soon threw in his lot' and 'Byron helped the revolution'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In Ravenna the Gamba family brought him into the Carbonari, the secret society whose aim was to free Italy from Austrian rule.",
+          "sourceId": "britannica-marchand",
+          "locator": "section 'Byron in Italy: Beppo and Don Juan'"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In November 1823 on Kefalonia he signed a note lending £4,000 of his own money to the Greek provisional government, to pay for a fleet to defend Missolonghi; it was to be repaid out of a larger loan to be raised in London.",
+          "sourceId": "guardian-2021",
+          "locator": "paragraphs beginning 'In the cheque Byron stipulates' and 'Byron agreed to the loan in Kefalonia'"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that besides the £4,000 the Greeks had had private gifts from him for widows, orphans and refugees, and asked 'how can I refuse it if they will fight?'",
+          "sourceId": "moore-1854",
+          "locator": "vol. 6, Letter 530, to John Bowring (dated 13 October 1823 in this edition), postscript"
+        },
+        {
+          "kind": "witness",
+          "claim": "After his death the Greek provisional government declared that his generosity had been 'so conspicuously displayed' at Missolonghi.",
+          "sourceId": "guardian-2021",
+          "locator": "paragraph beginning 'The loss of this illustrious individual'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His friend Francis Hodgson, in a note printed by Moore, wrote that he was bound to acknowledge Byron's 'most generous and well-timed aid' and that Byron had done much for numerous friends.",
+          "sourceId": "prothero-lj1-1898",
+          "locator": "Letter 127, to Francis Hodgson, Gibraltar, 6 August 1809, footnote 4"
+        }
+      ]
+    },
+    {
+      "word": "Adventure",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 3 May 1810 he swam the Hellespont from Sestos to Abydos, about a mile across a strong current, in an hour and ten minutes, after failing a week earlier.",
+          "sourceId": "prothero-lj1-1898",
+          "locator": "Letter 136, to Henry Drury, Salsette frigate, 3 May 1810"
+        },
+        {
+          "kind": "deed",
+          "claim": "From 1809 to 1811 he made a two-year tour of Mediterranean countries.",
+          "sourceId": "bbc-history",
+          "locator": "Historic Figures: Lord Byron, paragraph 2"
+        },
+        {
+          "kind": "words",
+          "claim": "From Constantinople he wrote to his mother that he had had many tiring but never a dull moment, and feared he would get a 'gypsy like wandering disposition'.",
+          "sourceId": "prothero-lj1-1898",
+          "locator": "Letter 141, to his Mother, Constantinople, 28 June 1810"
+        }
+      ]
+    },
+    {
+      "word": "Passion",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that for many years he had woken in low spirits and that temperance and exercise made little difference, but violent passions did: under them he was agitated, not depressed.",
+          "sourceId": "moore-1854",
+          "locator": "vol. 5, Ravenna journal, entry of 6 January 1821, passage beginning 'What is the reason that I have been, all my lifetime, more or less ennuyé?'"
+        },
+        {
+          "kind": "words",
+          "claim": "On his 36th birthday at Missolonghi he wrote: 'Yet though I cannot be beloved, / Still let me love!'",
+          "sourceId": "moore-1854",
+          "locator": "vol. 6, 'On this day I complete my thirty-sixth year', Missolonghi, 22 January 1824, stanza 1"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Guardian describes the liberation of Greece as 'his last great passion'.",
+          "sourceId": "guardian-2021",
+          "locator": "first paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1819 a meeting with Countess Teresa Guiccioli, a married woman of 19, 'reenergized' him, Britannica says; he followed her to Ravenna and from January 1820 lived there as her cavalier servente.",
+          "sourceId": "britannica-marchand",
+          "locator": "section 'Byron in Italy: Beppo and Don Juan'"
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 27 February 1812, in his first speech in the House of Lords, he spoke against the Frame-breaking Bill aimed at the Nottinghamshire machine-breakers.",
+          "sourceId": "moore-1854",
+          "locator": "vol. 2, narrative before Letter 88 ('On the 27th of February...')"
+        },
+        {
+          "kind": "words",
+          "claim": "In that speech he asked whether the penal code did not already have capital punishments enough, said he had never seen such misery under the most despotic government in Turkey as among the starving workmen, and asked whether the Lords would 'hang up men like scarecrows'.",
+          "sourceId": "prothero-lj2-1899",
+          "locator": "Appendix, Parliamentary Speeches, 1. Debate on the Frame-Work Bill, House of Lords, 27 February 1812"
+        },
+        {
+          "kind": "deed",
+          "claim": "On 21 April 1812, in his second speech in the Lords, he argued for a committee on the Roman Catholic claims, saying the Catholics should already have had their share of the country's privileges.",
+          "sourceId": "prothero-lj2-1899",
+          "locator": "Appendix, Parliamentary Speeches, 2. Debate on the Earl of Donoughmore's motion for a committee on the Roman Catholic claims, 21 April 1812"
+        },
+        {
+          "kind": "deed",
+          "claim": "On 1 June 1813 he presented to the Lords the petition of the reformer Major John Cartwright, who had been obstructed while petitioning for reform of Parliament.",
+          "sourceId": "prothero-lj2-1899",
+          "locator": "Appendix, Parliamentary Speeches, 3. Debate on Major Cartwright's petition, 1 June 1813"
+        },
+        {
+          "kind": "witness",
+          "claim": "Britannica calls his first Lords speech 'a humanitarian plea opposing harsh Tory measures against riotous Nottingham weavers'.",
+          "sourceId": "britannica-marchand",
+          "locator": "section 'Celebrity and marriage: Mad, bad, and dangerous to know' (paragraph on February 1812)"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Back the cause you believe in with your own money and your own presence, not only with words.",
+      "sourceId": "moore-1854",
+      "locator": "vol. 6, Letter 530 to John Bowring (postscript) and Letter 531 to Douglas Kinnaird, Cephalonia, 23 December 1823"
+    },
+    {
+      "text": "Find out whether a hard thing can be done by trying it yourself, and try again when the first attempt fails.",
+      "sourceId": "moore-1854",
+      "locator": "vol. 5, Letter 413, to John Murray, Ravenna, 21 February 1821 ('My object was, to ascertain that the Hellespont could be crossed at all by swimming'); the first attempt that failed is in Prothero vol. 1, Letter 136"
+    },
+    {
+      "text": "Keep hoping, even when the odds look hopeless.",
+      "sourceId": "moore-1854",
+      "locator": "vol. 5, Ravenna journal, entry of 18 February 1821"
+    },
+    {
+      "text": "Speak up for desperate people, even when the vote will go against you.",
+      "sourceId": "prothero-lj2-1899",
+      "locator": "Appendix, Parliamentary Speeches, 1. Debate on the Frame-Work Bill, 27 February 1812; the bill passed on 5 March 1812 (Prothero's note to Letter 222, to Samuel Rogers, 4 February 1812)"
+    },
+    {
+      "text": "Once you have joined a side, stay with it: what you do counts for more than what you think.",
+      "sourceId": "moore-1854",
+      "locator": "vol. 2, journal, entry of 16 January 1814 ('as to opinions, I don't think politics worth an opinion. Conduct is another thing:--if you begin with a party, go on with them')"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "It is best to hope, even of the hopeless.",
+      "sourceId": "moore-1854",
+      "locator": "vol. 5, Ravenna journal, entry of 18 February 1821"
+    },
+    {
+      "text": "I have passed many a fatiguing, but never a tedious moment.",
+      "sourceId": "prothero-lj1-1898",
+      "locator": "Letter 141, to his Mother, Constantinople, 28 June 1810"
+    },
+    {
+      "text": "Will you erect a gibbet in every field, and hang up men like scarecrows?",
+      "sourceId": "prothero-lj2-1899",
+      "locator": "Appendix, Parliamentary Speeches, 1. Debate on the Frame-Work Bill, House of Lords, 27 February 1812"
+    },
+    {
+      "text": "Yet though I cannot be beloved, / Still let me love!",
+      "sourceId": "moore-1854",
+      "locator": "vol. 6, 'On this day I complete my thirty-sixth year', Missolonghi, 22 January 1824, stanza 1"
+    }
+  ],
+  "definingMoment": {
+    "text": "In November 1823, on the island of Kefalonia, he lent £4,000 of his own money to the Greek provisional government to pay for a fleet to defend Missolonghi, and he began hiring several hundred Albanian fighters, only some of them genuine Suliotes, onto his own payroll. From Kefalonia he wrote that £300 could keep a hundred armed men in the field for three months. In early January 1824 he reached Missolonghi itself. He caught a fever there and died on 19 April 1824, aged 36, about a hundred days after he arrived.",
+    "sourceIds": [
+      "guardian-2021",
+      "stclair-2008",
+      "moore-1854",
+      "bbc-history"
+    ]
+  },
+  "shadow": {
+    "text": "In 1814 his married half-sister Augusta Leigh gave birth to a daughter whom BBC History calls almost certainly his; Britannica says scholars do not agree on the true nature of his relationship with Augusta. His marriage to Annabella Milbanke in 1815 broke up about a year later amid rumours of incest, sodomy and adultery; the historian Rosemary Hill writes that exactly what happened inside it is impossible now to know. In April 1816 he left England for good, under pressure from the failed marriage, his affairs and huge debts. At his insistence Claire Clairmont gave up their daughter Allegra to him, and he let her see the child only a few times; he placed Allegra in a convent at Bagnacavallo, where she died of fever in April 1822, aged five. Of his lovers in his Venice years he wrote to his friends Hobhouse and Kinnaird: 'some of them are Countesses – & some of them are Cobblers wives – some noble – some middling – some low – & all whores.' In Athens in 1810-11, aged 22, he lodged at a convent school with its pupil Nicolo Giraud, whom the Paris Review gives as fifteen; the scholar Arden Hegele (2026) reads Byron's own letters as describing a sexual relationship, and the critic John Mullan (2003) writes that Byron's letters show he 'had sexual relationships with a series of teenage boys' in the Levant and Greece. His first biographer, Thomas Moore, called it one of his 'extraordinary friendships' with someone 'so inferior to himself', driven by 'the pride of being a protector'. From Malta in May 1811 he wrote to Hobhouse of Teresa Macri, his Athens landlady's daughter, then 12: 'I was near bringing away Theresa but the mother asked 30000 piastres!' JSTOR Daily (2023) tells it as Byron offering her mother £500 for the girl, which she refused.",
+    "sourceIds": [
+      "bbc-history",
+      "britannica-marchand",
+      "lrb-hill-2018",
+      "moore-1854",
+      "lrb-mullan-2003",
+      "hegele-2026",
+      "byron-hobhouse-1811",
+      "byron-online-macri",
+      "jstor-zarevich-2023"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which cause did you talk about this week without putting any of your own time or money behind it?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Childe Harold's Pilgrimage (Cantos I-II)",
+      "year": 1812
+    },
+    {
+      "title": "Don Juan (Cantos I-II)",
+      "year": 1819
+    }
+  ],
+  "sources": [
+    {
+      "id": "prothero-lj1-1898",
+      "kind": "primary",
+      "title": "The Works of Lord Byron: Letters and Journals, Vol. 1",
+      "author": "Lord Byron, edited by Rowland E. Prothero",
+      "year": 1898,
+      "publisher": "John Murray",
+      "url": "https://www.gutenberg.org/ebooks/8901"
+    },
+    {
+      "id": "prothero-lj2-1899",
+      "kind": "primary",
+      "title": "The Works of Lord Byron: Letters and Journals, Vol. 2 (with his parliamentary speeches in the appendix)",
+      "author": "Lord Byron, edited by Rowland E. Prothero",
+      "year": 1899,
+      "publisher": "John Murray",
+      "url": "https://www.gutenberg.org/ebooks/9921"
+    },
+    {
+      "id": "moore-1854",
+      "kind": "primary",
+      "title": "Life of Lord Byron, with his Letters and Journals (6 vols; his letters and journals with Moore's narrative)",
+      "author": "Lord Byron and Thomas Moore",
+      "year": 1854,
+      "publisher": "John Murray",
+      "url": "https://www.gutenberg.org/ebooks/17684"
+    },
+    {
+      "id": "bbc-history",
+      "kind": "secondary",
+      "title": "Historic Figures: Lord Byron (1788-1824)",
+      "author": "BBC History",
+      "year": 2014,
+      "publisher": "BBC",
+      "url": "https://www.bbc.co.uk/history/historic_figures/byron_lord.shtml"
+    },
+    {
+      "id": "guardian-2021",
+      "kind": "secondary",
+      "title": "Revealed: Lord Byron's £4,000 cheque that helped create modern Greece",
+      "author": "Helena Smith",
+      "year": 2021,
+      "publisher": "The Observer / The Guardian",
+      "url": "https://www.theguardian.com/books/2021/apr/18/revealed-lord-byrons-4000-cheque-that-helped-create-modern-greece"
+    },
+    {
+      "id": "stclair-2008",
+      "kind": "secondary",
+      "title": "That Greece Might Still Be Free: The Philhellenes in the War of Independence (ch. 18-19)",
+      "author": "William St Clair",
+      "year": 2008,
+      "publisher": "Open Book Publishers",
+      "url": "https://books.openbookpublishers.com/10.11647/obp.0001/chap19.html"
+    },
+    {
+      "id": "lrb-mullan-2003",
+      "kind": "secondary",
+      "title": "Hidden Consequences (review of Fiona MacCarthy, Byron: Life and Legend), LRB Vol. 25 No. 21",
+      "author": "John Mullan",
+      "year": 2003,
+      "publisher": "London Review of Books",
+      "url": "https://www.lrb.co.uk/the-paper/v25/n21/john-mullan/hidden-consequences"
+    },
+    {
+      "id": "lrb-hill-2018",
+      "kind": "secondary",
+      "title": "Gobblebook (review of Miranda Seymour, In Byron's Wake), LRB Vol. 40 No. 12",
+      "author": "Rosemary Hill",
+      "year": 2018,
+      "publisher": "London Review of Books",
+      "url": "https://www.lrb.co.uk/the-paper/v40/n12/rosemary-hill/gobblebook"
+    },
+    {
+      "id": "hegele-2026",
+      "kind": "secondary",
+      "title": "Love Letters from Lord Byron's Boyfriend",
+      "author": "Arden Hegele",
+      "year": 2026,
+      "publisher": "The Paris Review",
+      "url": "https://www.theparisreview.org/blog/2026/01/23/love-letters-from-lord-byrons-boyfriend/"
+    },
+    {
+      "id": "jstor-zarevich-2023",
+      "kind": "secondary",
+      "title": "When Lord Byron Tried to Buy a Twelve-Year-Old Girl",
+      "author": "Emily Zarevich",
+      "year": 2023,
+      "publisher": "JSTOR Daily",
+      "url": "https://daily.jstor.org/when-lord-byron-tried-to-buy-a-twelve-year-old-girl/"
+    },
+    {
+      "id": "britannica-marchand",
+      "kind": "secondary",
+      "title": "Lord Byron (Encyclopaedia Britannica article)",
+      "author": "Leslie A. Marchand",
+      "year": 2025,
+      "publisher": "Encyclopaedia Britannica",
+      "url": "https://www.britannica.com/biography/Lord-Byron-poet"
+    },
+    {
+      "id": "byron-hobhouse-1811",
+      "kind": "primary",
+      "title": "Letter to John Cam Hobhouse, Malta, 15 May 1811 (NLS Ms.43438 f.26; BLJ II 44-7), transcription",
+      "author": "Lord Byron, transcribed by the Byron Online Project",
+      "year": 1811,
+      "publisher": "Byron Online Project",
+      "url": "https://byrononlineproject.com/items/show/122"
+    },
+    {
+      "id": "byron-online-macri",
+      "kind": "secondary",
+      "title": "Teresa Macri (person entry, citing BLJ I 240n)",
+      "author": "Byron Online Project",
+      "year": 2026,
+      "publisher": "Byron Online Project",
+      "url": "https://byrononlineproject.com/items/show/439"
+    }
+  ],
+  "likenessSources": [
+    {
+      "title": "Lord Byron, 1813, by Thomas Phillips",
+      "url": "https://commons.wikimedia.org/wiki/File:Byron_1813_by_Phillips.jpg",
+      "licence": "Public domain",
+      "author": "Thomas Phillips"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real English poet (1788-1824), not fictional, not a modern politician or founder of a religion. Owner case (under-16), no recommendation: in Athens in August 1810-April 1811, aged 22, he lived at the Capuchin convent school with its pupil Nicolo Giraud, born c.1795 (Byron Online Project) and given as fifteen by Arden Hegele (Paris Review, 2026), who reads Byron's letters to Hobhouse as describing a sexual relationship ('above two hundred' encounters, in Byron's Latin code); John Mullan (LRB 2003, reviewing MacCarthy) writes that Marchand's edition of the letters shows 'sexual relationships with a series of teenage boys' in the Levant and Greece; Thomas Moore (1830) called the Giraud attachment one of his 'extraordinary friendships' driven by 'the pride of being a protector'. Byron's own letters say Giraud was his Italian teacher, called himself his 'Padrone' and 'amico' (23 Aug 1810), and in 1811 left him £7,000 at age 21 in his will directions. Related: Teresa Macri, 12: Byron to Hobhouse, 15 May 1811, 'I was near bringing away Theresa but the mother asked 30000 piastres!'; JSTOR Daily (2023) gives it as a £500 offer the mother refused, citing no primary source. No sexual contact with Teresa is claimed by any source. The Hobhouse letter with the 'two hundred' passage was not found in the transcribed letters opened."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value against its sources: Generosity against the fact that the £4,000 was a loan to be repaid, Freedom and Justice against his own 1814 journal line that politics were not 'worth an opinion', and Passion against the rule of three sources. Nothing fell: the loan stands beside gifts to widows and refugees and Hodgson's thanks, his deeds for Italy, Greece and the Lords petitions outweigh one journal shrug, and Passion gained Britannica as a third source. All four quotes were found word for word. The shadow now quotes Byron's own 1811 letter on Teresa Macri (the mother asked 30,000 piastres) next to JSTOR Daily's £500 version, credits the 'teenage boys' line to John Mullan rather than MacCarthy, and gives the Augusta paternity as BBC's view, not as fact.",
+    "checkedOn": "2026-11-10"
+  }
+}
