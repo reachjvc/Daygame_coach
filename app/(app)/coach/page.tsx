@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { ROUTES } from "@/src/shared/routes"
+import { PAYWALL_HREF } from "@/src/hometab"
 import { createServerSupabaseClient } from "@/src/db/server"
 import { QAPage } from "@/src/qa"
 
@@ -20,9 +20,11 @@ export default async function DashboardQAPage() {
 
   const hasPurchased = profile?.has_purchased ?? false
 
-  // Redirect if no subscription
+  // No subscription: to the plans, the same place Home's locked Coach tile
+  // goes (`tileAccess`). It sent them to the Dashboard with nothing said,
+  // which from a typed or bookmarked address looked like a broken link.
   if (!hasPurchased) {
-    redirect(ROUTES.dashboard)
+    redirect(PAYWALL_HREF)
   }
 
   return (

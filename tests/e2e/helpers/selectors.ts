@@ -17,12 +17,13 @@ export const SELECTORS = {
     settingsLink: 'header-settings-link',
   },
 
+  // Home, at /dashboard until Phase 5 of Plans/site-navigation-build.md. The
+  // Dashboard's module cards became tiles; `content` keeps its old id.
   dashboard: {
     content: 'dashboard-content',
-    scenariosLink: 'dashboard-scenarios-link',
-    innerGameLink: 'dashboard-inner-game-link',
-    trackingLink: 'dashboard-tracking-link',
-    qaLink: 'dashboard-qa-link',
+    scenariosLink: 'home-tile-scenarios',
+    innerGameLink: 'home-tile-inner-game',
+    tile: (id: string) => `home-tile-${id}`,
   },
 
   session: {

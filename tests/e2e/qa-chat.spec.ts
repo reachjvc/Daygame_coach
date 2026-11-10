@@ -16,7 +16,7 @@ const AUTH_TIMEOUT = 15000
  * checked nothing. A redirect away from the page now fails the test instead.
  *
  * Ask Coach is the subscriber's: `/dashboard/qa` sends anyone without
- * `profiles.has_purchased` back to the dashboard, and no route in the app sets
+ * `profiles.has_purchased` to the plans (`/#pricing`), and no route in the app sets
  * that flag (there is no purchase flow yet). So the worker's fresh account is
  * marked paid on the test backend, as the database owner, before the page is
  * opened — a system-only row, not something a person could do.

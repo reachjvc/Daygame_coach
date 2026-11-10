@@ -36,6 +36,11 @@ export const ROUTES = {
   articles: "/articles",
   innerGame: "/inner-game",
   settings: "/settings",
+  /**
+   * All tools: every tool in two groups, Dating and Life
+   * (Plans/site-navigation-build.md). Opened from the last tile on Home.
+   */
+  tools: "/tools",
   training: "/training",
   liveWorkout: "/training/live",
   /**

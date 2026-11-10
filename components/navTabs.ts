@@ -1,4 +1,4 @@
-import { LayoutDashboard, BarChart3, Dumbbell, Swords, HelpCircle, BookOpen, Settings, Timer, ScrollText, BatteryCharging } from "lucide-react"
+import { LayoutDashboard, BarChart3, Dumbbell, Swords, HelpCircle, BookOpen, Settings, Timer, ScrollText, BatteryCharging, Brain, Box, Footprints, Grid2x2, Heart, MessageCircle, type LucideIcon } from "lucide-react"
 import { ROUTES, isUnder } from "@/src/shared/routes"
 
 /**
@@ -148,3 +148,74 @@ export const ROUTE_LABELS: Record<string, string> = {
 export function isActive(pathname: string, href: string, exact: boolean): boolean {
   return exact ? pathname === href : isUnder(pathname, href)
 }
+
+/**
+ * WHO MAY OPEN A TOOL, as the tool itself says it.
+ *
+ * - `open`: everyone signed in.
+ * - `preview`: everyone, but someone who has not paid sees a preview there
+ *   (Scenarios and Inner Game draw their own).
+ * - `paid`: only someone who has paid. Ask Coach sends anyone else away, so a
+ *   tile for it must not be a plain link (`tileAccess` in src/hometab).
+ */
+export type ToolAccess = "open" | "preview" | "paid"
+
+export interface Tool {
+  id: string
+  /** The name in All tools. */
+  label: string
+  /** The name on a Home tile, where four fit across a 320px phone. */
+  short: string
+  icon: LucideIcon
+  href: string
+  group: "dating" | "life"
+  access: ToolAccess
+  /** A tile on Home by default. The owner's own ☆ pins come in Phase 6. */
+  tile: boolean
+}
+
+/**
+ * EVERY TOOL, ONCE: THE HOME TILES AND THE ALL TOOLS LIST BOTH READ THIS.
+ *
+ * Option E of Plans/site-navigation.md, copied from Grab: a grid of service
+ * tiles on Home, the last tile opening the full list. Here rather than in
+ * src/hometab because `Timer` may only be imported from this file
+ * (`CONTEXT_LOCKED_ICONS`), and because this file is already the one list of
+ * where the navigation goes.
+ *
+ * Inner Game and the Black Box are here on purpose. Before this list, Inner
+ * Game could only be reached from a Dashboard card, and the Black Box only
+ * from inside the plan.
+ *
+ * ORDER IS THE TILES' ORDER on Home, as drawn on the before/after page the
+ * owner liked (https://claude.ai/artifact/3BV7cJWjt5YS5RPZtvFtej); All tools
+ * keeps the same order inside each group.
+ *
+ * Icons: each one already means this tool in the navigation or in
+ * `src/shared/iconRoles.ts`, except `Box` (the Black Box) and `Grid2x2` (All
+ * tools), which nothing else in the app uses.
+ */
+export const TOOLS: readonly Tool[] = [
+  { id: "training", label: "Training", short: "Training", icon: Dumbbell, href: ROUTES.training, group: "life", access: "open", tile: true },
+  { id: "time", label: "Time", short: "Time", icon: Timer, href: ROUTES.time, group: "life", access: "open", tile: true },
+  { id: "scenarios", label: "Scenarios", short: "Scenarios", icon: Swords, href: ROUTES.scenarios, group: "dating", access: "preview", tile: true },
+  { id: "audit", label: "Time & energy audit", short: "Audit", icon: BatteryCharging, href: ROUTES.audit, group: "life", access: "open", tile: true },
+  { id: "coach", label: "Ask Coach", short: "Coach", icon: HelpCircle, href: ROUTES.coach, group: "dating", access: "paid", tile: true },
+  { id: "inner-game", label: "Inner Game", short: "Inner Game", icon: Brain, href: ROUTES.innerGame, group: "dating", access: "preview", tile: true },
+  { id: "black-box", label: "Black Box", short: "Black Box", icon: Box, href: ROUTES.quitVice, group: "life", access: "open", tile: true },
+  { id: "field", label: "Field session", short: "Field", icon: Footprints, href: ROUTES.trackingSession, group: "dating", access: "open", tile: false },
+  { id: "articles", label: "Articles", short: "Articles", icon: BookOpen, href: ROUTES.articles, group: "dating", access: "open", tile: false },
+  { id: "dating-answers", label: "Your dating answers", short: "Answers", icon: Heart, href: ROUTES.scenarioPreferences, group: "dating", access: "open", tile: false },
+]
+
+/**
+ * Things that are announced but not built, shown greyed in All tools so the
+ * list says what is coming. Only what the app already promised: the
+ * Dashboard's "Cold Approach · Coming Soon" card.
+ */
+export const COMING_TOOLS: readonly { label: string; icon: LucideIcon; group: Tool["group"] }[] = [
+  { label: "Cold Approach", icon: MessageCircle, group: "dating" },
+]
+
+/** The last tile on Home. */
+export const ALL_TOOLS_TILE = { label: "All tools", icon: Grid2x2, href: ROUTES.tools } as const

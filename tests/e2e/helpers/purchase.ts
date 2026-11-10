@@ -2,7 +2,7 @@
  * A FRESH ACCOUNT HAS NOT PAID, AND NOTHING IN THE APP CAN MAKE IT HAVE PAID.
  *
  * Ask Coach (`/dashboard/qa`) sends anyone without `profiles.has_purchased`
- * back to the dashboard, and no route writes that flag: there is no Stripe
+ * to the plans (`/#pricing`), and no route writes that flag: there is no Stripe
  * webhook yet. So a spec that opens Ask Coach grants it here, as the database
  * owner of the LOCAL test backend, on the account it is signed in as. When a
  * real purchase flow exists, a spec should buy through it instead.

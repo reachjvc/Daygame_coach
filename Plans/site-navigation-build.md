@@ -1,7 +1,7 @@
 # Site navigation build: option E (Home + tool grid)
 
 **Written 2026-11-09** after the owner said of the before/after page: "I quite like this."
-**Status: not started.** Follows `Plans/site-navigation.md` (the choice). This plan builds it.
+**Status: Phases 0 and 1 live (2026-11-10). Phase 2 next.** Follows `Plans/site-navigation.md` (the choice). This plan builds it.
 
 ## Owner-only items (answered 2026-11-09)
 
@@ -101,3 +101,40 @@ Each phase ships on its own. Before a phase can ship: unit tests green, typechec
 | Coach as a tab? | No, a tile | A locked tab in the bar is a dead slot for non-payers. |
 | Remove duplicated cards from Tracking? | Yes, if they are now on Home | O2: the owner allowed removals for this build. |
 | Fix the other findings (step numbers out of order, two "North Star"s, Settings icon-only tabs, empty Articles)? | Not in this plan | They are separate pages' bugs. List them on the sign-off page as follow-ups. |
+
+## Phase reports
+
+### Phase 0 (2026-11-10)
+
+- Marks: the before/after page's `marks` db and the Five Ways page's `marks` db are both empty, and neither page has comments. B1 stands: the chat line "I quite like this" is the yes to E as drawn.
+- B2 (Grab's tiles): not confirmed. Two searches found no help page or current screenshot showing whether Grab's tiles can be reordered. The drawing is kept: a fixed grid whose last tile opens all tools.
+- Baseline: unit suite green apart from the known flaky `aChangeFromAnOlderPageIsNotLost`; typecheck 88 errors (the ratchet's baseline).
+- Lesson: the first attempt ran the typecheck beside two dev servers and was killed for memory (exit 137), and WSL went down with it, taking the uncommitted worktree in /tmp. Run heavy steps one at a time, and commit a checkpoint to the branch often.
+
+### Phase 1 (2026-11-10): Home and All tools
+
+Home is at `/dashboard`, All tools at `/tools`. Tiles: Training, Time, Scenarios, Audit, Coach, Inner Game, Black Box, All tools. Cards: today's plan, training, field, time.
+
+- Load time on the test stack (dev server, median of 8): first draw 1001 ms against the old Dashboard's 779 ms (+222 ms); settled 1637 ms against 1344 ms (+293 ms). Inside the 300 ms limit, with little room.
+- A non-payer sees locks on Scenarios and Inner Game (they open their own preview) and on Coach (opens the plans). Ask Coach itself now sends a non-payer to the plans (`/#pricing`) rather than back to the Dashboard with nothing said.
+- Every tile and every All tools row is opened in a real browser by `tests/e2e/dashboard-navigation.spec.ts`.
+
+Removed from the old Dashboard, and where each job went:
+
+| Block | Where its job went |
+|---|---|
+| Headline "Choose a training module" and its welcome text | The date and "Your tools, then what is on today." |
+| Scenarios card | Scenarios tile (preview lock for non-payers) |
+| Cold Approach "Coming soon" card | All tools, Dating group, greyed "Coming soon" row |
+| Inner Game card | Inner Game tile |
+| Ask Your Coach card | Coach tile (lock and plans for non-payers) |
+| Progress Tracking card | Field card (this week's approaches, Start Session, See your stats) |
+| Articles & Research card | All tools, Dating group |
+| "Ready to Start Training?" block | A one-line "See plans" strip under the tiles, for non-payers |
+| The non-payer headline that said whether the dating questions were answered | All tools row "Your dating answers" |
+| Dating answers and world map | Kept on Home for payers, as before; they move to You in Phase 2 |
+
+Nothing was removed from Tracking yet; its plan and training cards come off in Phase 2, when it becomes Activity.
+
+Found, not caused by this build (on `main` before it): at 320px the dating answers' map pushes the page 2px sideways, and Tracking's quick buttons push it 34px sideways. To fix in Phase 2 (the answers move to You) and Phase 3 (no page may scroll sideways).
+
