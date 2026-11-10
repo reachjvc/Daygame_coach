@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { AuditRefused, startAuditRun } from "@/src/db/auditRepo"
+import { getUserTimezone } from "@/src/db/settingsRepo"
 import { isUuid } from "@/src/shared/ids"
 import { refuseCrossSite } from "@/src/audit/requestGuard"
 
@@ -17,7 +18,10 @@ export async function POST(req: Request) {
   const body = (await req.json().catch(() => null)) as { id?: unknown } | null
   if (!isUuid(body?.id)) return NextResponse.json({ error: "Send an id" }, { status: 400 })
   try {
-    const run = await startAuditRun(auth.userId, { id: body.id, startedAt: new Date() })
+    // The zone it starts in is kept with it (review.zone), so a finished audit
+    // that was never ended by hand still shows in the zone it was lived in.
+    const zone = await getUserTimezone(auth.userId).catch(() => null)
+    const run = await startAuditRun(auth.userId, { id: body.id, startedAt: new Date(), zone })
     return NextResponse.json({ run })
   } catch (error) {
     if (error instanceof AuditRefused) return NextResponse.json({ error: "An audit is already running" }, { status: 409 })

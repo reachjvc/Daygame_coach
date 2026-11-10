@@ -67,9 +67,10 @@ export async function PATCH(req: Request, { params }: RouteParams) {
 
     const changed = await updateRun(auth.userId, id, patch)
     if (patch.endedAt) {
-      // Ended now: keep the zone it was lived in (alpha p9-review-01); the page's next read retries a failure.
+      // Ended now: keep the zone it was lived in at its end (alpha p9-review-01), over the one
+      // recorded at its start; a failure keeps the start's zone.
       const zone = await getUserTimezone(auth.userId).catch(() => null)
-      if (zone) changed.zone = await keepRunZone(auth.userId, id, zone).catch(() => changed.zone ?? null)
+      if (zone) changed.zone = await keepRunZone(auth.userId, id, zone, { replace: true }).catch(() => changed.zone ?? null)
     }
     return NextResponse.json({ run: changed })
   } catch (error) {

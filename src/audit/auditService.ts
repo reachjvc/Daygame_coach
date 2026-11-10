@@ -303,7 +303,7 @@ export function checkReview(input: unknown): { review: Review } | { error: strin
  */
 export type ReviewChange =
   | { activity: string; choice?: ReviewChoice | null; choiceWas?: ReviewChoice | null; note: string; noteWas?: string }
-  | { block: WeekBlock; edit?: boolean; blockWas?: WeekBlock; copies?: WeekBlock[] }
+  | { block: WeekBlock; edit?: boolean; blockWas?: WeekBlock; copies?: WeekBlock[]; tried?: WeekBlock[] }
   | { removeBlock: string; blockWas?: WeekBlock }
 
 /** Said when another device changed the note after this sheet opened; the page then shows the newer note. */
@@ -335,7 +335,7 @@ export const REVIEW_UNREADABLE = "Part of this review was saved in a shape this 
 export function applyReviewChange(stored: Review, input: unknown): { review: Review } | { error: string } {
   if (!input || typeof input !== "object" || Array.isArray(input)) return { error: "Send one change" }
   const c = input as Record<string, unknown>
-  const keys = Object.keys(c).filter((k) => k !== "noteWas" && k !== "edit" && k !== "choiceWas" && k !== "blockWas").sort().join(",")
+  const keys = Object.keys(c).filter((k) => k !== "noteWas" && k !== "edit" && k !== "choiceWas" && k !== "blockWas" && k !== "tried").sort().join(",")
   const next: Review = { choices: { ...stored.choices }, notes: { ...stored.notes }, week: [...stored.week] }
   if ((keys === "activity,choice,note" || (keys === "activity,note" && !("choiceWas" in c))) && !("edit" in c) && !("blockWas" in c)) {
     const { activity, choice, choiceWas, note, noteWas } = c
@@ -365,6 +365,11 @@ export function applyReviewChange(stored: Review, input: unknown): { review: Rev
     const one = checkWeek([c.block])
     if ("error" in one) return one
     const block = one.week[0]
+    if ("tried" in c) {
+      const own = ownEarlierWrites(next.week, c.tried, block.id, c.blockWas)
+      if ("error" in own) return own
+      next.week = own.week
+    }
     const at = next.week.findIndex((b) => b.id === block.id)
     // Sent again after a lost reply: the block and its copies are stored exactly so, so done (alpha p9-review-04/05).
     const copiesSent = "copies" in c ? checkWeek(c.copies) : { week: [] as WeekBlock[] }
@@ -390,7 +395,7 @@ export function applyReviewChange(stored: Review, input: unknown): { review: Rev
         next.week.push(copy)
       }
     }
-  } else if (keys === "removeBlock" && !("noteWas" in c) && !("edit" in c) && !("choiceWas" in c)) {
+  } else if (keys === "removeBlock" && !("noteWas" in c) && !("edit" in c) && !("choiceWas" in c) && !("tried" in c)) {
     if (typeof c.removeBlock !== "string") return { error: "Bad block id" }
     // Like an edit, a remove carries the block as the sheet saw it: removing a block another device changed since is refused (alpha p9-review-03).
     if ("blockWas" in c) {
@@ -405,6 +410,42 @@ export function applyReviewChange(stored: Review, input: unknown): { review: Rev
     return { error: "Send one change" }
   }
   return checkReview(next)
+}
+
+const TRIED_MAX = 70
+
+/**
+ * The week with this sheet's own earlier writes taken back out (review of
+ * 8190829d). `tried`: every block the sheet sent in a save whose outcome it
+ * does not know (a lost reply). A stored block with one of those ids that is
+ * exactly one of those tries is the person's own write: it goes, so the save
+ * now sent puts back only what the sheet shows (a day unticked since loses its
+ * copy). The edited block itself goes back to `blockWas`, so the usual check
+ * against another device still runs. A stored block with one of those ids that
+ * is none of them was changed on another device: refused, naming it.
+ */
+function ownEarlierWrites(week: WeekBlock[], triedRaw: unknown, blockId: string, blockWasRaw: unknown): { week: WeekBlock[] } | { error: string } {
+  if (!Array.isArray(triedRaw) || triedRaw.length > TRIED_MAX) return { error: "Bad tried" }
+  const tried: WeekBlock[] = []
+  for (const raw of triedRaw) {
+    const one = checkWeek([raw])
+    if ("error" in one) return one
+    tried.push(one.week[0])
+  }
+  let was: WeekBlock | null = null
+  if (blockWasRaw !== undefined) {
+    const w = checkWeek([blockWasRaw])
+    if ("error" in w) return w
+    was = w.week[0].id === blockId ? w.week[0] : null
+  }
+  const ids = new Set(tried.map((b) => b.id))
+  const out: WeekBlock[] = []
+  for (const s of week) {
+    if (!ids.has(s.id) || (was && sameBlock(s, was))) out.push(s)
+    else if (!tried.some((t) => sameBlock(s, t))) return { error: blockChanged(s) }
+    else if (was && s.id === was.id) out.push(was)
+  }
+  return { week: out }
 }
 
 /**
@@ -469,10 +510,12 @@ export function storedZone(raw: unknown): string | null {
 
 /**
  * The zone to show an audit in: the zone a finished audit was lived in when
- * one is stored, else the account's zone. An open audit has none stored, so it
- * follows the account's zone, as a traveller switches it (alpha fast-audit-05).
+ * one is stored, else the account's zone. An open audit follows the account's
+ * zone, as a traveller switches it (alpha fast-audit-05), even though the zone
+ * at its start is stored.
  */
-export function runZone(run: Pick<AuditRun, "zone">, accountZone: string): string {
+export function runZone(run: Pick<AuditRun, "zone" | "endedAt" | "endsAt">, accountZone: string, now: Date = new Date()): string {
+  if (runIsOpen(run, now)) return accountZone
   return run.zone ?? accountZone
 }
 

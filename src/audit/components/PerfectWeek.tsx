@@ -12,7 +12,7 @@
  * simplest otherwise; the plan lists which.
  */
 
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { BottomSheet } from "@/components/BottomSheet"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -281,12 +281,17 @@ export function PerfectWeek({
    * Saves one block; `edit` when it changes a block already there (refused if
    * another device removed it meanwhile, rather than adding it back). Resolves
    * to an error a person can read, or null. Only that block is sent, so blocks
-   * saved on another device stay.
+   * saved on another device stay. `tried`: every block this sheet sent in a
+   * save that failed, whose outcome is unknown (a lost reply may have landed):
+   * the server takes those back out first, so a sheet changed since saves only
+   * what it shows (review of 8190829d).
    */
-  onSaveBlock: (block: WeekBlock, edit: boolean, copies: WeekBlock[], blockWas: WeekBlock | null) => Promise<string | null>
+  onSaveBlock: (block: WeekBlock, edit: boolean, copies: WeekBlock[], blockWas: WeekBlock | null, tried: WeekBlock[]) => Promise<string | null>
   onRemoveBlock: (id: string, blockWas: WeekBlock | null) => Promise<string | null>
 }) {
   const [draft, setDraft] = useState<Draft | null>(null)
+  // Per open sheet (its first id): the blocks sent in saves that failed.
+  const triedBySheet = useRef(new Map<string, WeekBlock[]>())
   const hours = planHours(workHours, bestHours)
   const best = hours.best
   const totals = useMemo(() => hoursByKind(week), [week])
@@ -305,13 +310,23 @@ export function PerfectWeek({
     if (d.kind === null) return "Pick a kind"
     const [block, ...copies] = spreadBlock({ id: d.id ?? d.ids[d.day], day: d.day, start: d.start, end: d.end, what: d.what, kind: d.kind }, d.days, (day) => d.ids[day])
     // By id, so blocks already stored by a save whose reply was lost are not counted twice (alpha p9-review-05).
-    const sent = new Set([block, ...copies].map((b) => b.id))
+    // The server takes this sheet's own earlier writes back out first; so does this check.
+    const sheet = d.ids[0]
+    const tried = triedBySheet.current.get(sheet) ?? []
+    const sent = new Set([block, ...copies, ...tried].map((b) => b.id))
     const next = [...week.filter((b) => !sent.has(b.id)), block, ...copies]
     // Checked here first so a mistake (an overlap, an empty name) is said at once, in the sheet, without a round trip.
     const checked = checkWeek(next)
     if ("error" in checked) return checked.error
-    const failed = await onSaveBlock(block, d.id !== null, copies, was)
-    if (!failed) setDraft(null)
+    const failed = await onSaveBlock(block, d.id !== null, copies, was, tried)
+    if (!failed) {
+      triedBySheet.current.delete(sheet)
+      setDraft(null)
+    } else {
+      const same = (a: WeekBlock, b: WeekBlock) => a.id === b.id && a.day === b.day && a.start === b.start && a.end === b.end && a.what === b.what && a.kind === b.kind
+      const all = [...tried, block, ...copies].filter((b, i, list) => list.findIndex((x) => same(x, b)) === i)
+      triedBySheet.current.set(sheet, all.slice(-70))
+    }
     return failed
   }
   const remove = async (id: string, was: WeekBlock | null): Promise<string | null> => {

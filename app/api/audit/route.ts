@@ -15,8 +15,7 @@
 
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
-import { frequentActivities, keepRunZone, readOpenRun, readRuns, readSlots } from "@/src/db/auditRepo"
-import { runIsOpen } from "@/src/audit/auditService"
+import { frequentActivities, readOpenRun, readRuns, readSlots } from "@/src/db/auditRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { readTimeEntriesBetween } from "@/src/db/timetrackRangeRepo"
 import { isUuid } from "@/src/shared/ids"
@@ -38,22 +37,9 @@ export async function GET(req: Request) {
       frequentActivities(auth.userId, 200),
       getUserTimezone(auth.userId).catch(() => null),
     ])
-    // A finished audit keeps the zone it was lived in, stored the first time it
-    // is read after its end, so changing the zone later never rewrites its
-    // review (alpha p9-review-01). Not when the zone could not be read.
-    if (timezone) {
-      await Promise.all(
-        runs
-          .filter((r) => !r.zone && !runIsOpen(r, now))
-          .map((r) =>
-            keepRunZone(auth.userId, r.id, timezone)
-              .then((zone) => {
-                r.zone = zone
-              })
-              .catch((e) => console.error("[audit] keep zone failed", e instanceof Error ? e.message : "unknown"))
-          )
-      )
-    }
+    // No zone is stored here: a finished audit with none falls back to the
+    // account's zone when shown (runZone). Stamping today's zone on old audits
+    // would guess (review of 8190829d); the zone is kept at Start and End now.
     const shown = runParam ? runs.find((r) => r.id === runParam) ?? null : run
     if (runParam && !shown) return NextResponse.json({ error: "No such audit" }, { status: 404 })
 

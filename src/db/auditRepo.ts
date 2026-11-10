@@ -151,7 +151,8 @@ export async function readSlots(userId: string, runId: string): Promise<AuditSlo
  * with the same id returns the run that exists. Refuses (AuditRefused) while
  * another run is still open.
  */
-export async function startAuditRun(userId: string, input: { id: string; startedAt: Date }): Promise<AuditRun> {
+/** `zone`: the account's zone at the start, kept beside the review (`review.zone`); null stores none. */
+export async function startAuditRun(userId: string, input: { id: string; startedAt: Date; zone?: string | null }): Promise<AuditRun> {
   const supabase = await createServerSupabaseClient()
   // Close what has run out, each at its own end (an open run past its end).
   const expired = await supabase
@@ -176,6 +177,7 @@ export async function startAuditRun(userId: string, input: { id: string; started
     user_id: userId,
     started_at: input.startedAt.toISOString(),
     ends_at: new Date(input.startedAt.getTime() + DAYS_14_MS).toISOString(),
+    ...(input.zone && storedZone({ zone: input.zone }) ? { review: { zone: input.zone } } : {}),
   }
   const { data, error } = await supabase.from("audit_runs").insert(row).select(RUN_COLUMNS).single()
   if (error) {
@@ -263,11 +265,12 @@ export async function changeReview(userId: string, runId: string, edit: ReviewEd
 
 /**
  * Store the zone a finished audit was lived in beside its review
- * (`review.zone`, alpha p9-review-01), once: a zone already stored stays.
+ * (`review.zone`, alpha p9-review-01), once: a zone already stored stays,
+ * unless `replace` (End now: the zone at its end wins over the start's).
  * Written with the same version check as `changeReview`, so a review save
  * landing at the same moment is never written over. Returns the stored zone.
  */
-export async function keepRunZone(userId: string, runId: string, zone: string): Promise<string> {
+export async function keepRunZone(userId: string, runId: string, zone: string, { replace = false }: { replace?: boolean } = {}): Promise<string> {
   const supabase = await createServerSupabaseClient()
   for (let attempt = 0; attempt < REVIEW_TRIES; attempt++) {
     const read = await supabase.from("audit_runs").select("review, updated_at").eq("user_id", userId).eq("id", runId).maybeSingle()
@@ -275,7 +278,7 @@ export async function keepRunZone(userId: string, runId: string, zone: string): 
     if (!read.data) throw new AuditRunNotFound()
     const row = read.data as { review: unknown; updated_at: string }
     const kept = storedZone(row.review)
-    if (kept) return kept
+    if (kept && (!replace || kept === zone)) return kept
     const raw = row.review && typeof row.review === "object" && !Array.isArray(row.review) ? (row.review as Record<string, unknown>) : {}
     const { data, error } = await supabase
       .from("audit_runs")

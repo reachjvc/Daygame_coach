@@ -213,6 +213,17 @@ describe("the zone a finished audit was lived in (alpha p9-review-01)", () => {
     expect(after.review.choices).toEqual({ daygame: "more", scrolling: "cut" })
     expect(after.review.notes).toEqual({ daygame: "Mornings" })
   })
+
+  it("is recorded at the start, and End now's zone replaces it (review of 8190829d)", async () => {
+    const user = await newUser("audit-start-zone")
+    actAs(user)
+    const run = await startAuditRun(user.id, { id: randomUUID(), startedAt: new Date(), zone: CPH })
+    expect(run.zone).toBe(CPH)
+    expect(run.review).toEqual({ choices: {}, notes: {}, week: [] })
+    expect(await keepRunZone(user.id, run.id, "America/New_York")).toBe(CPH)
+    expect(await keepRunZone(user.id, run.id, "America/New_York", { replace: true })).toBe("America/New_York")
+    expect((await readRuns(user.id)).find((r) => r.id === run.id)!.zone).toBe("America/New_York")
+  })
 })
 
 describe("answers", () => {

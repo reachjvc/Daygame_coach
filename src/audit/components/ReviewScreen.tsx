@@ -425,8 +425,9 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
   const save = (key: string, choice: { value: ReviewChoice | null; was: ReviewChoice | null } | null, note: string, noteWas: string) =>
     send(choice ? { activity: key, choice: choice.value, choiceWas: choice.was, note, noteWas } : { activity: key, note, noteWas })
   // `blockWas`: the block as the sheet opened it; the server refuses if another device changed it since (alpha prove-review-01).
-  const saveBlock = (block: WeekBlock, edit: boolean, copies: WeekBlock[], blockWas: WeekBlock | null) =>
-    send({ block, edit, ...(blockWas ? { blockWas } : {}), ...(copies.length > 0 ? { copies } : {}) })
+  // `tried`: what this sheet sent in saves whose outcome is unknown, so its own earlier writes are replaced, not doubled or kept.
+  const saveBlock = (block: WeekBlock, edit: boolean, copies: WeekBlock[], blockWas: WeekBlock | null, tried: WeekBlock[]) =>
+    send({ block, edit, ...(blockWas ? { blockWas } : {}), ...(copies.length > 0 ? { copies } : {}), ...(tried.length > 0 ? { tried } : {}) })
   // `blockWas`: the block as the sheet saw it; a remove of one changed elsewhere since is refused (alpha p9-review-03).
   const removeBlock = (id: string, blockWas: WeekBlock | null) => send({ removeBlock: id, ...(blockWas ? { blockWas } : {}) })
 
