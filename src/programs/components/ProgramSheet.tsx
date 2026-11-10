@@ -49,6 +49,7 @@ import { effectiveProgram } from "../customize"
 import { getProgram, enrollmentName } from "../data/catalog"
 import { ROUTES } from "@/src/shared/routes"
 import { UNIT_CONFIG } from "../config"
+import { useBackCloses, useLeaveSheets } from "@/src/shared/HistoryBarrierContext"
 import type { ProgramEnrollment, UnitSystem } from "../types"
 
 /** Which confirmation is open, if any. */
@@ -78,6 +79,13 @@ export function ProgramSheet({
   const [asking, setAsking] = useState<Asking>(null)
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState<string | null>(null)
+  /**
+   * THE QUESTION IS ITS OWN STEP, ABOVE THE SHEET'S (alpha p10-retest-05).
+   * Back with "Skip this session?" open closed the sheet behind it and left
+   * the question on screen. Back closes the top layer: the question first.
+   */
+  useBackCloses(asking !== null, () => setAsking(null))
+  const leaveSheets = useLeaveSheets()
 
   const program = getProgram(enrollment.program_id)
   const schedule = program
@@ -120,10 +128,9 @@ export function ProgramSheet({
           : what === "unit"
             ? await changeProgramUnit(enrollment.id, otherUnit)
             : await skipSession(enrollment.id)
-    setBusy(false)
-    setAsking(null)
-
     if (!res.ok) {
+      setBusy(false)
+      setAsking(null)
       // The server's own sentence — Phase 0's "Finish or throw away the open
       // workout first" arrives here verbatim, which is more useful than
       // anything this file could invent.
@@ -132,6 +139,8 @@ export function ProgramSheet({
     }
 
     if (what === "end") {
+      setBusy(false)
+      setAsking(null)
       // Ended programs are not on this screen any more, so staying here would
       // show a card for something that stopped existing.
       router.replace(`${ROUTES.training}?view=programs`)
@@ -146,7 +155,13 @@ export function ProgramSheet({
      * `saveRunningSchedule` already calls this for.
      */
     if (what === "unit") await refreshEnrollments()
+    setBusy(false)
     onChanged()
+    // The question and the sheet close together, their two steps taken back
+    // in one traversal: closed one by one, the sheet's step (no longer the
+    // newest) was left behind as a dead Back press.
+    leaveSheets(() => {})
+    setAsking(null)
     onClose()
   }
 

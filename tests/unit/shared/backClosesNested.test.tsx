@@ -10,15 +10,23 @@
  *   Back closed the sheet behind it and left the question on screen.
  */
 import * as React from 'react'
-import { describe, test, expect, afterEach, beforeEach } from 'vitest'
+import { describe, test, expect, vi, afterEach, beforeEach } from 'vitest'
 import { render, screen, cleanup, fireEvent, act } from '@testing-library/react'
 
 import { BottomSheet } from '@/components/BottomSheet'
 import { HistoryBarrierProvider } from '@/src/shared/HistoryBarrierContext'
+import { AppRouterContext } from 'next/dist/shared/lib/app-router-context.shared-runtime'
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 import { LiftMenu } from '@/src/programs/components/live/LiftMenu'
-import type { PrescribedExercise } from '@/src/programs/types'
+import { ProgramSheet } from '@/src/programs/components/ProgramSheet'
+import { seedEnrollment } from '@/src/programs/runtime'
+import { requireProgram } from '@/src/programs/data/catalog'
+import type { PrescribedExercise, ProgramEnrollment } from '@/src/programs/types'
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+})
 
 const at = () => (window.history.state as { page?: string; __barrier?: number } | null) ?? {}
 async function back() {
@@ -90,6 +98,103 @@ describe('a sheet opened from a row of another sheet', () => {
     expect(at().__barrier).toBeUndefined()
 
     // and the next Back is a real one
+    await back()
+    expect(at().page).toBe('a')
+  })
+})
+
+function enrollment(): ProgramEnrollment {
+  const program = requireProgram('stronglifts-5x5')
+  const { exerciseState, cursor } = seedEnrollment(program, 'beginner', 'kg')
+  return {
+    id: 'e1',
+    user_id: 'u1',
+    program_id: 'stronglifts-5x5',
+    level: 'beginner',
+    unitSystem: 'kg',
+    exerciseState,
+    cursor,
+    is_active: true,
+    started_at: '2026-01-01T00:00:00.000Z',
+    customSchedule: null,
+  }
+}
+
+const router = {
+  push: vi.fn(),
+  replace: vi.fn(),
+  back: () => window.history.back(),
+  forward: () => window.history.forward(),
+  refresh: () => {},
+  prefetch: () => {},
+} as unknown as AppRouterInstance
+
+function Program() {
+  const [open, setOpen] = React.useState(false)
+  return (
+    <AppRouterContext.Provider value={router}>
+      <HistoryBarrierProvider>
+        <button type="button" onClick={() => setOpen(true)}>Menu</button>
+        <ProgramSheet open={open} onClose={() => setOpen(false)} enrollment={enrollment()} onChanged={() => {}} />
+      </HistoryBarrierProvider>
+    </AppRouterContext.Provider>
+  )
+}
+
+async function askSkip() {
+  render(<Program />)
+  fireEvent.click(screen.getByRole('button', { name: 'Menu' }))
+  await settle()
+  fireEvent.click(screen.getByTestId('sheet-skip'))
+  await settle()
+  expect(screen.getByTestId('sheet-confirm')).toBeInTheDocument()
+}
+
+describe('a question asked over the program sheet', () => {
+  test('Back closes the question first, then the sheet, then leaves', async () => {
+    await askSkip()
+
+    await back()
+    expect(screen.queryByTestId('sheet-confirm')).not.toBeInTheDocument()
+    expect(screen.getByTestId('program-sheet')).toBeInTheDocument()
+    expect(window.location.pathname).toBe('/b')
+    expect(at().__barrier).toBeDefined() // the sheet's own step, still there
+
+    await back()
+    expect(screen.queryByTestId('program-sheet')).not.toBeInTheDocument()
+    expect(at().page).toBe('b')
+    expect(at().__barrier).toBeUndefined()
+
+    await back()
+    expect(at().page).toBe('a')
+  })
+
+  test('dismissed with Escape, it leaves the sheet and its one step', async () => {
+    await askSkip()
+    fireEvent.keyDown(screen.getByTestId('sheet-confirm'), { key: 'Escape' })
+    await settle()
+    expect(screen.queryByTestId('sheet-confirm')).not.toBeInTheDocument()
+    expect(screen.getByTestId('program-sheet')).toBeInTheDocument()
+
+    await back()
+    expect(screen.queryByTestId('program-sheet')).not.toBeInTheDocument()
+    expect(at().page).toBe('b')
+    await back()
+    expect(at().page).toBe('a')
+  })
+
+  test('answered, it closes with the sheet and leaves no dead Back press', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, status: 200, json: async () => ({}) })))
+    await askSkip()
+    fireEvent.click(screen.getByTestId('sheet-confirm'))
+    await settle()
+    await settle()
+    await settle()
+    expect(screen.queryByTestId('sheet-confirm')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('program-sheet')).not.toBeInTheDocument()
+    expect(at().page).toBe('b')
+    expect(at().__barrier).toBeUndefined()
+
     await back()
     expect(at().page).toBe('a')
   })
