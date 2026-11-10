@@ -1,0 +1,283 @@
+{
+  "id": "david-goggins",
+  "name": "David Goggins",
+  "born": 1975,
+  "died": null,
+  "category": "athletes",
+  "areaIds": [
+    "lm_fitness",
+    "lm_mindset"
+  ],
+  "tagline": "From 297 pounds and spraying for cockroaches to Navy SEAL and ultra runner.",
+  "startedFrom": "He was born in 1975 and grew up in what he calls a tortured home near Buffalo, New York, until his mother left his father and moved to Brazil, Indiana, when he was about eight. There he was one of the few Black children, found racial slurs written on his notebook, had a learning disability and copied schoolwork for years; he and his mother lived for a time in subsidised housing on food stamps. After he dropped out of Air Force pararescue training he gained weight, and back in civilian life he weighed 297 pounds and sprayed for cockroaches at night.",
+  "values": [
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "To ship out to SEAL training he had to lose 106 pounds in less than three months, and he did it.",
+          "sourceId": "allhands-2018",
+          "locator": "paragraphs on the Navy recruiter ('After weeks of determination...')"
+        },
+        {
+          "kind": "witness",
+          "claim": "Stars and Stripes reports that friends and family said he had 'that unbreakable determination' long before he had a fit body.",
+          "sourceId": "stripes-2010",
+          "locator": "paragraph beginning 'Friends and family said'"
+        },
+        {
+          "kind": "words",
+          "claim": "He says that at 24 he chose to 'fail and fail and fail until I succeed' rather than stay the 300-pound exterminator.",
+          "sourceId": "rogan-1080",
+          "locator": "section 'Facing Fears and Making a Change'"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 2010, aged 35, he got up at 3 a.m. nearly every day, ran 15 miles, then cycled 25 miles to work at Naval Amphibious Base Coronado.",
+          "sourceId": "stripes-2010",
+          "locator": "paragraph beginning 'Goggins has every excuse in the world'"
+        },
+        {
+          "kind": "words",
+          "claim": "He tells sailors that discipline is like a muscle: the military teaches it, but they lose it unless they keep it up on their own.",
+          "sourceId": "allhands-2018",
+          "locator": "last two paragraphs"
+        },
+        {
+          "kind": "words",
+          "claim": "He says his daily routine of work-outs and study is 'a discipline', 'a regimen' and a choice he made.",
+          "sourceId": "huberman-2024",
+          "locator": "section 'Learning, Studying & Attention Deficit Hyperactivity Disorder (ADHD)' (from 00:07:58)"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Injury and illness forced him to start SEAL training over twice; he went through Hell Week three times before graduating with Class 235 in 2001.",
+          "sourceId": "stripes-2010",
+          "locator": "paragraphs beginning 'Goggins barely passed his SEAL physical screening test' and 'The injury and illness forced him'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He failed his first two attempts at the 24-hour pull-up record, once with rhabdomyolysis, and set it with 4,030 on his third attempt in 2013.",
+          "sourceId": "espn-2022",
+          "locator": "passage on Goggins's record attempts in 'Can't Hurt Me'"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked why he did not give up after being sent back to day one of BUD/S, he said he had to find different ways to stay in the fight.",
+          "sourceId": "allhands-2018",
+          "locator": "paragraph after the account of his fractured kneecap"
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After SEALs he had trained with died in Operation Red Wings on 28 June 2005, he took up endurance racing, and by 2010 it had raised more than $250,000 for the Special Operations Warrior Foundation.",
+          "sourceId": "stripes-2010",
+          "locator": "paragraphs beginning 'He does it anyway', 'Since then, competing in endurance races' and 'Goggins either went through SEAL school'"
+        },
+        {
+          "kind": "words",
+          "claim": "He says that after Red Wings he wanted to find a way to raise money for the families of the SEALs who died.",
+          "sourceId": "allhands-2018",
+          "locator": "paragraphs on Operation Red Wings"
+        },
+        {
+          "kind": "witness",
+          "claim": "His former SEAL instructor, Senior Chief Jason Torey, called him naval special warfare's 'number one recruiting tool' and said 'he earns that trident every day'.",
+          "sourceId": "stripes-2010",
+          "locator": "paragraph beginning 'He's the number one recruiting tool'"
+        }
+      ]
+    },
+    {
+      "word": "Fitness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At 43 he had completed more than 60 ultramarathons, many over 100 miles, and still ran 8 to 30 miles every day.",
+          "sourceId": "allhands-2018",
+          "locator": "paragraphs beginning 'If that wasn't enough' and 'Reading through his impressive resume'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His wife Aleeza told Stars and Stripes in 2010 that he hates running and cycling and is angry every morning he has to do it.",
+          "sourceId": "stripes-2010",
+          "locator": "paragraph beginning 'He realized that in order to gain the attention'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2013 he set the 24-hour pull-up record with 4,030 pull-ups, a record since nearly doubled by others.",
+          "sourceId": "espn-2022",
+          "locator": "passage on Goggins's record attempts in 'Can't Hurt Me'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2026, at 51, he re-enlisted with an age waiver and was assigned to the Air Force's Special Warfare Training Wing, as Air Force officials confirmed.",
+          "sourceId": "militarytimes-2026",
+          "locator": "opening paragraphs and paragraph on spokeswoman Ann Stefanek"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Go and do the hard things you would normally say no to, so the mind grows tough.",
+      "sourceId": "rogan-1080",
+      "locator": "section 'Building Mental Toughness'"
+    },
+    {
+      "text": "Learn how to fail before you expect to win.",
+      "sourceId": "huberman-2024",
+      "locator": "section 'Inner Dialogue; Failing Properly' (from 02:15:27)"
+    },
+    {
+      "text": "Tell yourself the plain truth about yourself, even when it is ugly, and then change it.",
+      "sourceId": "rogan-1080",
+      "locator": "section 'Sharing the Journey of Self-Discovery'"
+    },
+    {
+      "text": "Keep up your discipline on your own when no one makes you.",
+      "sourceId": "allhands-2018",
+      "locator": "last two paragraphs"
+    },
+    {
+      "text": "Draw your drive from the work no one sees, not from praise.",
+      "sourceId": "huberman-2024",
+      "locator": "section 'Unseen Work, Real Passion & Purpose, Medicine Cabinet Analogy' (from 01:39:06)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "So the first part of my success was learning how to fail properly.",
+      "sourceId": "huberman-2024",
+      "locator": "section 'Inner Dialogue; Failing Properly' (from 02:15:27)"
+    },
+    {
+      "text": "I just had to find different ways to stay in the fight.",
+      "sourceId": "allhands-2018",
+      "locator": "paragraph after the account of his fractured kneecap"
+    },
+    {
+      "text": "The military teaches you these great values, but we don't keep up the discipline on our own and we lose it. So wherever you go, keep that discipline up.",
+      "sourceId": "allhands-2018",
+      "locator": "last paragraph"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 28 June 2005, in Operation Red Wings in Afghanistan, SEALs he had trained with or gone through Hell Week with were killed. He decided to raise money for their children through the Special Operations Warrior Foundation by running the 135-mile Badwater race. Told by the race director to get ultramarathon experience first, he entered a 24-hour race in San Diego with no training and covered about 100 miles in 19 hours, with broken bones in his feet. In July 2006 he finished fifth at Badwater, and by 2010 his races had raised more than $250,000 for the foundation.",
+    "sourceIds": [
+      "stripes-2010",
+      "allhands-2018"
+    ]
+  },
+  "shadow": {
+    "text": "By his own account he copied schoolwork from fourth grade to his junior year of high school and lied to people to make them his friends. Accounts of his story differ in detail: in 2010 Stars and Stripes reported he lost 100 pounds in 59 days and restarted SEAL training after a hernia and pneumonia, while the Navy's 2018 interview gives 106 pounds in under three months, and stress fractures, pneumonia and a fractured kneecap. Former SEAL and congressman Dan Crenshaw said in 2020 that he had never met a SEAL who knew Goggins; in April 2023 Goggins answered that he was 'part of the teams but not the brotherhood'.",
+    "sourceIds": [
+      "rogan-1080",
+      "stripes-2010",
+      "allhands-2018",
+      "dailycaller-2023"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which hard thing did you say no to this week that you could have gone and done?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Can't Hurt Me: Master Your Mind and Defy the Odds",
+      "year": 2018
+    },
+    {
+      "title": "Never Finished: Unshackle Your Mind and Win the War Within",
+      "year": 2022
+    }
+  ],
+  "sources": [
+    {
+      "id": "huberman-2024",
+      "kind": "primary",
+      "title": "Huberman Lab: David Goggins: How to Build Immense Inner Strength (podcast, 1 January 2024; official transcript, marked 'under human review')",
+      "author": "David Goggins, interviewed by Andrew Huberman",
+      "year": 2024,
+      "url": "https://www.hubermanlab.com/episode/david-goggins-how-to-build-immense-inner-strength"
+    },
+    {
+      "id": "rogan-1080",
+      "kind": "primary",
+      "title": "The Joe Rogan Experience #1080: David Goggins (podcast, February 2018; Singju Post transcript with section headings)",
+      "author": "David Goggins, interviewed by Joe Rogan",
+      "year": 2018,
+      "url": "https://singjupost.com/transcript-of-david-goggins-on-joe-rogan-podcast-1080/"
+    },
+    {
+      "id": "allhands-2018",
+      "kind": "secondary",
+      "title": "The Toughest Man Alive: An Interview with retired Navy SEAL David Goggins (27 November 2018)",
+      "author": "Austin Rooney, Defense Media Activity",
+      "year": 2018,
+      "publisher": "All Hands Magazine, U.S. Navy",
+      "url": "https://allhands.navy.mil/Stories/Display-Story/Article/1840612"
+    },
+    {
+      "id": "stripes-2010",
+      "kind": "secondary",
+      "title": "'He epitomizes what a SEAL is' (Heroes 2010, 7 June 2010)",
+      "author": "Erik Slavin",
+      "year": 2010,
+      "publisher": "Stars and Stripes",
+      "url": "https://web.archive.org/web/20161210024210/http://www.stripes.com/news/special-reports/he-epitomizes-what-a-seal-is-1.105742"
+    },
+    {
+      "id": "espn-2022",
+      "kind": "secondary",
+      "title": "The incredible quest for the world's most famous fitness record (20 June 2022)",
+      "author": "Ryan Hockensmith",
+      "year": 2022,
+      "publisher": "ESPN",
+      "url": "https://www.espn.co.uk/olympics/story/_/id/34108468/anthony-robles-ncaa-wrestler-pullup-record"
+    },
+    {
+      "id": "militarytimes-2026",
+      "kind": "secondary",
+      "title": "SEAL influencer David Goggins, 51, in Air Force special ops training (16 March 2026)",
+      "author": "Hope Hodge Seck",
+      "year": 2026,
+      "publisher": "Military Times",
+      "url": "https://www.militarytimes.com/news/your-military/2026/03/16/seal-influencer-david-goggins-51-in-air-force-special-ops-training/"
+    },
+    {
+      "id": "dailycaller-2023",
+      "kind": "secondary",
+      "title": "Dan Crenshaw and David Goggins clash over how former Navy SEALs should conduct themselves (9 April 2023)",
+      "author": "Daily Caller staff",
+      "year": 2023,
+      "publisher": "The Daily Caller",
+      "url": "https://web.archive.org/web/20240721185127/https://dailycaller.com/2023/04/09/david-goggins-dan-crenshaw-podcast-fight/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living American athlete, author and former Navy SEAL (re-enlisted in the Air Force in 2026), not a politician, campaigner or religious founder, with no credible account of sexual contact with a minor or of sexual violence found; he is in, with a documented dark side."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value, every quote and every factual sentence against the Navy, Stars and Stripes, ESPN, Military Times and the podcast transcripts. Learning fell: only his own two podcast accounts support it, and no third source does. Fitness, the blind pick, came in on four sourced deeds; Determination, Discipline, Resilience and Service held. The Never Finished quote was dropped because its page could not be confirmed from the book, and the line about his daughter was cut because only two entertainment sites relaying the same posts report it.",
+    "checkedOn": "2026-11-10"
+  }
+}
