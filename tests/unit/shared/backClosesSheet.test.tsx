@@ -144,6 +144,30 @@ describe('a link in a sheet', () => {
     expect(at().page).toBe('b')
     backSpy.mockRestore()
   })
+
+  test('Back, then Forward, gets back to the page the link opened', async () => {
+    render(<Kept />)
+    fireEvent.click(screen.getByRole('button', { name: 'Open' }))
+    await settle()
+    fireEvent.click(screen.getByRole('link', { name: 'Elsewhere' }))
+    await settle()
+
+    await back()
+    await settle()
+    expect(at().page).toBe('b')
+
+    await act(async () => {
+      window.history.forward()
+      await new Promise((r) => setTimeout(r, 20))
+    })
+    await settle()
+    expect(at().page).toBe('elsewhere')
+
+    // and Back from there still goes to page b
+    await back()
+    await settle()
+    expect(at().page).toBe('b')
+  })
 })
 
 /**

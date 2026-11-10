@@ -73,6 +73,12 @@ export function HistoryBarrierProvider({ children }: { children: ReactNode }) {
   const deadRef = useRef(new Set<number>())
   /** Navigations waiting for `leaveSheets`' traversal to land. */
   const afterPopRef = useRef<(() => void)[]>([])
+  /**
+   * The address the last Back/Forward landed on; null once a link from a
+   * sheet has gone to a page above an abandoned step. Tells a Forward onto
+   * that step (from the page under it, the same address) from a Back onto it.
+   */
+  const lastHrefRef = useRef<string | null>(null)
 
   const runAfterPop = useCallback(() => {
     const queued = afterPopRef.current
@@ -88,6 +94,9 @@ export function HistoryBarrierProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const handlePopState = () => {
+      const cameFrom = lastHrefRef.current
+      lastHrefRef.current = window.location.href
+
       if (suppressCountRef.current > 0) {
         suppressCountRef.current--
         runAfterPop()
@@ -95,12 +104,15 @@ export function HistoryBarrierProvider({ children }: { children: ReactNode }) {
       }
 
       // Landed on an abandoned barrier's entry: the same page, nothing to do
-      // there, so take the Back on past it. Suppressed, because the step after
-      // it lands on an entry nobody left.
+      // there, so take the press on past it, the way it was going: Forward
+      // from the page under it (the same address) goes on to the page the
+      // link opened, Back goes on down. Suppressed, because the step after it
+      // lands on an entry nobody left.
       const landed = (window.history.state as { __barrier?: unknown } | null)?.__barrier
       if (typeof landed === "number" && deadRef.current.has(landed)) {
         suppressCountRef.current++
-        window.history.back()
+        if (cameFrom === window.location.href) window.history.forward()
+        else window.history.back()
         return
       }
 
@@ -157,6 +169,7 @@ export function HistoryBarrierProvider({ children }: { children: ReactNode }) {
   const abandon = useCallback((id: number) => {
     discard(id)
     deadRef.current.add(id)
+    lastHrefRef.current = null
   }, [discard])
 
   /**
