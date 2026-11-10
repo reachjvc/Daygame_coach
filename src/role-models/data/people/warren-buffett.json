@@ -1,0 +1,394 @@
+{
+  "id": "warren-buffett",
+  "name": "Warren Buffett",
+  "born": 1930,
+  "died": null,
+  "category": "money",
+  "areaIds": [
+    "lm_money",
+    "lm_contribution",
+    "lm_mindset"
+  ],
+  "tagline": "Bought businesses to hold for decades, has lived in the same Omaha house since 1958, and is giving nearly all of it away.",
+  "startedFrom": "He was born in Omaha in 1930 and writes that he was born healthy, reasonably intelligent, white, male and in America, and thanks Lady Luck for it. In 1941 he worked in his grandfather's grocery store, he went to public schools, and he spent some teenage years in Washington after his father won a seat in Congress in 1942. In 1954 he took a job in New York with Ben Graham, and in 1956 he went back to Omaha for good.",
+  "values": [
+    {
+      "word": "Patience",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that inactivity strikes him as intelligent behaviour in investing.",
+          "sourceId": "letter-1996",
+          "locator": "1996 letter, section 'Common Stock Investments'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2023 Berkshire neither bought nor sold a share of Coca-Cola or American Express, holdings it had left untouched for well over two decades.",
+          "sourceId": "letter-2023",
+          "locator": "2023 letter, section 'Non-controlled Businesses That Leave Us Comfortable', printed p. 9"
+        },
+        {
+          "kind": "witness",
+          "claim": "His successor as CEO writes that discipline, patience and judgment define his investing: choose the pitches you want, wait for them, then swing.",
+          "sourceId": "abel-2025",
+          "locator": "2025 letter, printed p. 1 (Ted Williams paragraph)"
+        }
+      ]
+    },
+    {
+      "word": "Reputation",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his 2010 memo to Berkshire's managers he calls guarding Berkshire's reputation the top priority and repeats the line he says he has used for 25 years: they can afford to lose money, but not a shred of reputation.",
+          "sourceId": "letter-2010",
+          "locator": "Memo to Berkshire Hathaway managers, 26 July 2010, appended to the 2010 letter, paragraph 2"
+        },
+        {
+          "kind": "deed",
+          "claim": "He served ten months as interim chairman of Salomon after its 1991 scandal, and reports that Fortune's survey then ranked Salomon second of 311 companies for how much it improved its reputation.",
+          "sourceId": "letter-1992",
+          "locator": "1992 letter, section 'The Salomon Interlude', paragraphs 1-2"
+        },
+        {
+          "kind": "witness",
+          "claim": "Carol Loomis writes that he had long told his three children it takes a lifetime to build a reputation and five minutes to tear it down, and that he weighed this during the Salomon crisis.",
+          "sourceId": "fortune-1997",
+          "locator": "section 'GUTFREUND FALLS', last paragraph (Sunday 18 August 1991, bankruptcy option)"
+        },
+        {
+          "kind": "witness",
+          "claim": "His successor writes that Berkshire played a clip of his 1991 Salomon testimony on losing a shred of reputation at every shareholder meeting for over 25 years.",
+          "sourceId": "abel-2025",
+          "locator": "2025 letter, section 'Integrity', printed p. 4"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In June 2006 he signed pledges giving about $37 billion in Berkshire stock to five foundations, about $31 billion of it to the Gates Foundation.",
+          "sourceId": "npr-2006",
+          "locator": "article text, paragraphs 2-4"
+        },
+        {
+          "kind": "words",
+          "claim": "In his 2010 Giving Pledge letter he writes that more than 99% of his wealth will go to philanthropy during his life or at his death.",
+          "sourceId": "pledge-2010",
+          "locator": "'My Philanthropic Pledge', paragraph 3"
+        },
+        {
+          "kind": "deed",
+          "claim": "On 10 November 2025 he gave 2.7 million Berkshire B shares to four family foundations.",
+          "sourceId": "thanksgiving-2025",
+          "locator": "news release, p. 1"
+        }
+      ]
+    },
+    {
+      "word": "Simplicity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He writes that he has owned and lived in the same Omaha house since 1958, a few minutes' drive from the office building where he has worked for 64 years.",
+          "sourceId": "thanksgiving-2025",
+          "locator": "p. 2 ('the house I have owned and occupied since 1958'; 'In 1958, I bought my first and only home')"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that owning many homes would be a burden and that too many possessions end up possessing their owner.",
+          "sourceId": "pledge-2010",
+          "locator": "'My Philanthropic Pledge', paragraph 8"
+        },
+        {
+          "kind": "witness",
+          "claim": "CNBC calls him famously frugal and reports he still lives in the modest house he bought in 1958.",
+          "sourceId": "cnbc-2023",
+          "locator": "opening paragraphs"
+        }
+      ]
+    },
+    {
+      "word": "Honesty",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 1983 he promised shareholders candid reports: the business facts he would want to know if their positions were reversed.",
+          "sourceId": "letter-1983",
+          "locator": "1983 letter, list of owner-related business principles at the start"
+        },
+        {
+          "kind": "deed",
+          "claim": "In his 2014 letter he called his 1960s purchase of Berkshire a 'monumentally stupid decision' and said his slow sale of Tesco shares was a big mistake.",
+          "sourceId": "letter-2014",
+          "locator": "2014 letter, section 'Investments' (Tesco, printed p. 17) and 'Berkshire – Past, Present and Future: In the Beginning' (printed p. 24)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Fortune reported in 2025 that he 'candidly revealed' his mistakes and had used the words 'mistake' or 'error' 16 times in his 2019-2023 letters.",
+          "sourceId": "fortune-2025",
+          "locator": "article paragraphs 1-3"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Before you act, ask whether you would be happy to see it on the front page, written by an unfriendly but intelligent reporter.",
+      "sourceId": "letter-2010",
+      "locator": "Memo to Berkshire Hathaway managers, 26 July 2010, paragraph 2"
+    },
+    {
+      "text": "Stay inside what you truly understand, and know where its edges are.",
+      "sourceId": "letter-1996",
+      "locator": "1996 letter, section 'Common Stock Investments' (circle of competence)"
+    },
+    {
+      "text": "Be careful when everyone else is greedy, and be bold when everyone else is afraid.",
+      "sourceId": "letter-1986",
+      "locator": "1986 letter, section 'Marketable Securities'"
+    },
+    {
+      "text": "When you have found something truly good, stick with it; patience pays.",
+      "sourceId": "letter-2023",
+      "locator": "2023 letter, section 'Non-controlled Businesses That Leave Us Comfortable', printed p. 9"
+    },
+    {
+      "text": "Decide what you want your obituary to say, then live to deserve it.",
+      "sourceId": "thanksgiving-2025",
+      "locator": "section 'A Few Final Thoughts', p. 7"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "We can afford to lose money – even a lot of money. But we can't afford to lose reputation – even a shred of reputation.",
+      "sourceId": "letter-2010",
+      "locator": "Memo to Berkshire Hathaway managers, 26 July 2010, paragraph 2 (he says he has repeated it in these memos for more than 25 years)"
+    },
+    {
+      "text": "Our goal is more modest: we simply attempt to be fearful when others are greedy and to be greedy only when others are fearful.",
+      "sourceId": "letter-1986",
+      "locator": "1986 letter, section 'Marketable Securities'"
+    },
+    {
+      "text": "Too often, a vast collection of possessions ends up possessing its owner.",
+      "sourceId": "pledge-2010",
+      "locator": "'My Philanthropic Pledge', paragraph 8"
+    },
+    {
+      "text": "Decide what you would like your obituary to say and live the life to deserve it.",
+      "sourceId": "thanksgiving-2025",
+      "locator": "section 'A Few Final Thoughts', p. 7"
+    }
+  ],
+  "definingMoment": {
+    "text": "In August 1991 Salomon, where Berkshire had $700 million invested, was hit by a scandal after a trader broke Treasury bidding rules. On Sunday 18 August, a day he has called the most important of his life, the Treasury banned Salomon from bidding at its auctions; after a day of phone calls with Treasury Secretary Nicholas Brady and the New York Fed, the ban was partly lifted and the board elected Buffett interim chairman. He took $1 a year, ordered full cooperation with regulators and the law, and in September apologised to a House subcommittee. Salomon settled for $290 million, and he stepped down after ten months.",
+    "sourceIds": [
+      "fortune-1997",
+      "letter-1992"
+    ]
+  },
+  "shadow": {
+    "text": "In April 2015 the Center for Public Integrity and The Seattle Times reported that Clayton Homes, the mobile-home maker and lender Berkshire bought in 2003, relied on predatory sales practices, high fees and interest rates that can top 15 percent. At Berkshire's meeting in May 2015 Buffett said he made 'no apologies whatsoever' about Clayton's lending; after a follow-up report on minority borrowers, Clayton denied any discrimination. In March 2011 his deputy David Sokol resigned after buying about $10 million of Lubrizol stock shortly before recommending that Berkshire buy the company; Buffett's release on the resignation included a line defending Sokol's conduct as legal, and in May, after Berkshire's board called Sokol's disclosures 'misleadingly incomplete', Buffett said he had erred by not asking Sokol more. Sokol denied wrongdoing. In June 2021 ProPublica, using leaked IRS data, reported that while his wealth grew $24.3 billion from 2014 to 2018 by Forbes's count, he reported paying $23.7 million in taxes, and that no one among the 25 richest Americans avoided as much tax; it noted his public stance for higher taxes on the rich. He replied that the tax code should be changed substantially and that he plans to give 99.5% of his fortune away.",
+    "sourceIds": [
+      "cpi-2015",
+      "reuters-2016",
+      "ap-2011",
+      "propublica-2021"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you do this week that you would not want to read about on the front page, written by an unfriendly but intelligent reporter?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Essays of Warren Buffett: Lessons for Corporate America (letters edited by Lawrence A. Cunningham)",
+      "year": 1997
+    },
+    {
+      "title": "Berkshire Hathaway 2014 letter to shareholders ('Berkshire – Past, Present and Future')",
+      "year": 2015
+    },
+    {
+      "title": "My Philanthropic Pledge",
+      "year": 2010
+    }
+  ],
+  "sources": [
+    {
+      "id": "letter-1983",
+      "kind": "primary",
+      "title": "Berkshire Hathaway Inc. Chairman's Letter, 1983",
+      "author": "Warren E. Buffett",
+      "year": 1984,
+      "publisher": "Berkshire Hathaway",
+      "url": "https://www.berkshirehathaway.com/letters/1983.html"
+    },
+    {
+      "id": "letter-1986",
+      "kind": "primary",
+      "title": "Berkshire Hathaway Inc. Chairman's Letter, 1986",
+      "author": "Warren E. Buffett",
+      "year": 1987,
+      "publisher": "Berkshire Hathaway",
+      "url": "https://www.berkshirehathaway.com/letters/1986.html"
+    },
+    {
+      "id": "letter-1992",
+      "kind": "primary",
+      "title": "Berkshire Hathaway Inc. Chairman's Letter, 1992",
+      "author": "Warren E. Buffett",
+      "year": 1993,
+      "publisher": "Berkshire Hathaway",
+      "url": "https://www.berkshirehathaway.com/letters/1992.html"
+    },
+    {
+      "id": "letter-1996",
+      "kind": "primary",
+      "title": "Berkshire Hathaway Inc. Chairman's Letter, 1996",
+      "author": "Warren E. Buffett",
+      "year": 1997,
+      "publisher": "Berkshire Hathaway",
+      "url": "https://www.berkshirehathaway.com/letters/1996.html"
+    },
+    {
+      "id": "letter-2010",
+      "kind": "primary",
+      "title": "Berkshire Hathaway Inc. letter to shareholders, 2010 (with the 26 July 2010 memo to managers)",
+      "author": "Warren E. Buffett",
+      "year": 2011,
+      "publisher": "Berkshire Hathaway",
+      "url": "https://www.berkshirehathaway.com/letters/2010ltr.pdf"
+    },
+    {
+      "id": "letter-2014",
+      "kind": "primary",
+      "title": "Berkshire Hathaway Inc. letter to shareholders, 2014",
+      "author": "Warren E. Buffett",
+      "year": 2015,
+      "publisher": "Berkshire Hathaway",
+      "url": "https://www.berkshirehathaway.com/letters/2014ltr.pdf"
+    },
+    {
+      "id": "letter-2023",
+      "kind": "primary",
+      "title": "Berkshire Hathaway Inc. letter to shareholders, 2023",
+      "author": "Warren E. Buffett",
+      "year": 2024,
+      "publisher": "Berkshire Hathaway",
+      "url": "https://www.berkshirehathaway.com/letters/2023ltr.pdf"
+    },
+    {
+      "id": "pledge-2010",
+      "kind": "primary",
+      "title": "My Philanthropic Pledge (Giving Pledge letter)",
+      "author": "Warren Buffett",
+      "year": 2010,
+      "publisher": "The Giving Pledge",
+      "url": "https://givingpledge.org/pledger?pledgerId=177"
+    },
+    {
+      "id": "thanksgiving-2025",
+      "kind": "primary",
+      "title": "Berkshire Hathaway news release and Thanksgiving message to shareholders, 10 November 2025",
+      "author": "Warren E. Buffett",
+      "year": 2025,
+      "publisher": "Berkshire Hathaway",
+      "url": "https://www.berkshirehathaway.com/news/nov1025.pdf"
+    },
+    {
+      "id": "fortune-1997",
+      "kind": "secondary",
+      "title": "Warren Buffett's Wild Ride at Salomon (Fortune, 27 October 1997)",
+      "author": "Carol J. Loomis",
+      "year": 1997,
+      "publisher": "Fortune",
+      "url": "https://fortune.com/article/warren-buffett-salomon"
+    },
+    {
+      "id": "abel-2025",
+      "kind": "secondary",
+      "title": "Berkshire Hathaway Inc. letter to shareholders, 2025 (28 February 2026)",
+      "author": "Gregory E. Abel",
+      "year": 2026,
+      "publisher": "Berkshire Hathaway",
+      "url": "https://www.berkshirehathaway.com/letters/2025ltr.pdf"
+    },
+    {
+      "id": "npr-2006",
+      "kind": "secondary",
+      "title": "Buffett Gift Sends $31 Billion to Gates Foundation (26 June 2006)",
+      "author": "NPR",
+      "year": 2006,
+      "publisher": "NPR",
+      "url": "https://www.npr.org/2006/06/26/5512893/buffett-gift-sends-31-billion-to-gates-foundation"
+    },
+    {
+      "id": "cnbc-2023",
+      "kind": "secondary",
+      "title": "Billionaire Warren Buffett Still Lives in the Same Home He Bought for $31,500 More Than 60 Years Ago (3 March 2023)",
+      "author": "Cheyenne DeVon",
+      "year": 2023,
+      "publisher": "CNBC (syndicated by NBC Boston)",
+      "url": "https://www.nbcboston.com/news/business/money-report/billionaire-warren-buffett-still-lives-in-the-same-home-he-bought-for-31500-more-than-60-years-ago/2987367/"
+    },
+    {
+      "id": "fortune-2025",
+      "kind": "secondary",
+      "title": "Warren Buffett warns bosses of the 'cardinal sin' of leadership—and his biggest investing mistakes (26 February 2025)",
+      "author": "Emma Burleigh",
+      "year": 2025,
+      "publisher": "Fortune",
+      "url": "https://fortune.com/2025/02/26/warren-buffet-investing-management-mistakes-shareholder-letter/"
+    },
+    {
+      "id": "cpi-2015",
+      "kind": "secondary",
+      "title": "Warren Buffett's mobile home empire preys on the poor (3 April 2015; with The Seattle Times)",
+      "author": "Mike Baker and Daniel Wagner",
+      "year": 2015,
+      "publisher": "Center for Public Integrity",
+      "url": "https://publicintegrity.org/business/warren-buffetts-mobile-home-empire-preys-on-the-poor/"
+    },
+    {
+      "id": "reuters-2016",
+      "kind": "secondary",
+      "title": "Federal Probe Sought for Buffett's Mobile Home Unit (13 January 2016)",
+      "author": "Reuters",
+      "year": 2016,
+      "publisher": "Fortune",
+      "url": "https://fortune.com/2016/01/13/clayton-homes-buffett-federal-probe/"
+    },
+    {
+      "id": "propublica-2021",
+      "kind": "secondary",
+      "title": "The Secret IRS Files: Trove of Never-Before-Seen Records Reveal How the Wealthiest Avoid Income Tax (8 June 2021)",
+      "author": "Jesse Eisinger, Jeff Ernsthausen and Paul Kiel",
+      "year": 2021,
+      "publisher": "ProPublica",
+      "url": "https://www.propublica.org/article/the-secret-irs-files-trove-of-never-before-seen-records-reveal-how-the-wealthiest-avoid-income-tax"
+    },
+    {
+      "id": "ap-2011",
+      "kind": "secondary",
+      "title": "Buffett: Mistakes were made in handling Sokol (1 May 2011)",
+      "author": "Josh Funk (Associated Press)",
+      "year": 2011,
+      "publisher": "NBC News",
+      "url": "https://www.nbcnews.com/id/wbna42848432"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living American investor (Berkshire Hathaway chairman 1970-2026, now chairman emeritus and a director), not a politician, campaigner or religious founder, with no credible account of sexual contact with a minor or of sexual violence found; he is in, with a documented dark side from business and tax reporting."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value: Integrity against his defence of Clayton Homes' lending in 2015 and his first release on David Sokol's Lubrizol trades in 2011; Simplicity against his Laguna Beach beach house (1971-2018) and the expensive private plane he says he likes; Generosity against his giving most of it only from age 75. Integrity fell, because those cases form a pattern and its best evidence (Loomis, his friend, and Berkshire's own letters) is about guarding reputation, so Reputation, the blind pick, came in on his memo, the 1992 letter, Loomis and Abel. Patience, Generosity, Simplicity and Honesty held; the tagline's 'one house' was corrected, the shadow gained the Sokol affair from the AP, and all four quotes were found in his own letters.",
+    "checkedOn": "2026-11-10"
+  }
+}
