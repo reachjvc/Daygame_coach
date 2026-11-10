@@ -1,0 +1,372 @@
+{
+  "id": "tony-robbins",
+  "name": "Tony Robbins",
+  "born": 1960,
+  "died": null,
+  "category": "teachers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_emotions"
+  ],
+  "tagline": "From a violent home and a janitor's job to coaching millions on state and decision.",
+  "startedFrom": "He was born Anthony Mahavorick; his father was a parking garage attendant, and after his parents split when he was 7 he grew up in Azusa and Glendora, California. His mother, an alcoholic and pill user, could be abusive; as the eldest of three he shopped, cooked and, in his words, tried 'to protect my brother and sister', and money was usually tight. By his account, at 17 his mother chased him out of the house with a knife; he took a part-time janitor job at about $40 a week and gave up his plan to study sportswriting at USC.",
+  "values": [
+    {
+      "word": "Contribution",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He launched the 100 Million Meals Challenge with Feeding America in 2014, matched other donors' gifts and gave proceeds from his books; in November 2023 the follow-up 1 Billion Meals Challenge reached its goal about two years early.",
+          "sourceId": "feedingamerica-2023",
+          "locator": "press release of 29 November 2023, paragraphs on the challenge's history and funding"
+        },
+        {
+          "kind": "deed",
+          "claim": "By his own account, from age 17 he delivered Thanksgiving food to two families, then four, then eight, and later built a foundation that he said fed 2 million people in 35 countries in 2005.",
+          "sourceId": "ted-2006",
+          "locator": "transcript, passage beginning 'My life was touched because when I was 11 years old'"
+        },
+        {
+          "kind": "words",
+          "claim": "He calls the sixth human need 'to contribute beyond ourselves' and says 'the secret to living is giving'.",
+          "sourceId": "ted-2006",
+          "locator": "transcript, passage on the six human needs ('But number five, you must grow')"
+        }
+      ]
+    },
+    {
+      "word": "Growth",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At 17, earning $40 a week as a part-time janitor, he paid $35, about a week's pay, for a three-hour Jim Rohn seminar.",
+          "sourceId": "cnbc-2017-01",
+          "locator": "opening paragraphs"
+        },
+        {
+          "kind": "witness",
+          "claim": "Fortune reports that as a teenager he set himself a goal of reading one book a day, studying speed-reading and self-improvement books.",
+          "sourceId": "fortune-2014",
+          "locator": "paragraph beginning 'As he was shooting up in height'"
+        },
+        {
+          "kind": "words",
+          "claim": "He says that whatever a person has, 'It's never enough if you don't keep growing.'",
+          "sourceId": "ferriss-178",
+          "locator": "transcript, answer on the art of fulfillment (paragraph beginning 'It's not like a science because it's different for everybody')"
+        }
+      ]
+    },
+    {
+      "word": "Energy",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Fortune calls him 'the relentlessly energetic life coach'.",
+          "sourceId": "fortune-2014",
+          "locator": "paragraph on Gallup's engagement figures, early in the article"
+        },
+        {
+          "kind": "deed",
+          "claim": "In a four-day event he covers, by his account to Fortune, the equivalent of an ultramarathon over 52 hours of seminar time, talking almost nonstop.",
+          "sourceId": "fortune-2014",
+          "locator": "paragraph beginning 'For Robbins, the priming is a counterweight'"
+        },
+        {
+          "kind": "words",
+          "claim": "He says that on a flat day he does 'something radical with my body', a cold plunge, a run or lifting, to find 'that sense of energy and passion and intensity' again.",
+          "sourceId": "ferriss-178",
+          "locator": "transcript, his first answer (on whether he has bad days)"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Fortune describes him as 'a happy workaholic who sleeps barely five hours a night and spends 200 days a year on the road'.",
+          "sourceId": "fortune-2014",
+          "locator": "paragraph on Gallup's engagement figures, early in the article"
+        },
+        {
+          "kind": "deed",
+          "claim": "He said in 2016 that years of being on stage up to 50 hours in a week, pounding his arms together, had left him with trouble in the nerves of his arms.",
+          "sourceId": "ferriss-178",
+          "locator": "transcript, paragraph beginning 'About, gosh, three months ago'"
+        },
+        {
+          "kind": "words",
+          "claim": "His advice to his 21-year-old self is 'you've got to have that belief and bust tail'.",
+          "sourceId": "cnbc-2017-10",
+          "locator": "section on what he would tell his younger self"
+        }
+      ]
+    },
+    {
+      "word": "Gratitude",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Each day he spends 10 to 20 minutes 'priming': a breathing routine, then focusing on gratitude, then on three goals.",
+          "sourceId": "fortune-2014",
+          "locator": "paragraph beginning 'As Robbins' hands wrap over my skull'"
+        },
+        {
+          "kind": "deed",
+          "claim": "CNBC reports a daily routine of three three-minute segments that he uses to stay grateful.",
+          "sourceId": "cnbc-2017-03",
+          "locator": "article text and video caption"
+        },
+        {
+          "kind": "words",
+          "claim": "He says 'The antidote to that suffering is appreciation' and leads a two-minute exercise of feeling grateful for three moments.",
+          "sourceId": "ferriss-178",
+          "locator": "transcript, paragraph beginning 'The antidote to that suffering is appreciation' and the guided exercise near the end"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When you are stuck, change your body first, because the body changes the mind fastest.",
+      "sourceId": "ferriss-178",
+      "locator": "transcript, his first answer (on whether he has bad days)"
+    },
+    {
+      "text": "Decide what you focus on and what it means, because that meaning makes the emotion that drives what you do.",
+      "sourceId": "ted-2006",
+      "locator": "transcript, passage beginning 'What determines your resources?'"
+    },
+    {
+      "text": "When you fail, look at your resourcefulness, not at the resources you lack.",
+      "sourceId": "ted-2006",
+      "locator": "transcript, passage on the reasons people give for failing ('They are a claim to you missing resources')"
+    },
+    {
+      "text": "Trade your expectations for appreciation.",
+      "sourceId": "ferriss-178",
+      "locator": "transcript, paragraph beginning 'Now it's already an expectation'"
+    },
+    {
+      "text": "Keep growing, so you have something of value to give beyond yourself.",
+      "sourceId": "ted-2006",
+      "locator": "transcript, passage on the six human needs ('But number five, you must grow')"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "The defining factor is never resources; it's resourcefulness.",
+      "sourceId": "ted-2006",
+      "locator": "transcript, passage after the Al Gore exchange"
+    },
+    {
+      "text": "It wasn't your ability; it was your state.",
+      "sourceId": "ted-2006",
+      "locator": "transcript, passage beginning 'Two invisible forces. Very quickly. One: state.'"
+    },
+    {
+      "text": "Life is always happening for us, not to us. It's our job to find out where the benefit is.",
+      "sourceId": "ferriss-178",
+      "locator": "transcript, paragraph beginning 'Went into the hospital for the MRI'"
+    },
+    {
+      "text": "Success without fulfillment to me is the ultimate failure in life.",
+      "sourceId": "ferriss-178",
+      "locator": "transcript, end of the Steve Wynn and Rothko story"
+    }
+  ],
+  "definingMoment": {
+    "text": "On Thanksgiving when he was 11, his family had no money and no food, and a stranger came to the door with a delivery of food. By his own account, at 17 he began buying Thanksgiving food for two families, then four, then eight, and later built a foundation to do it on a larger scale. In 2014 he launched the 100 Million Meals Challenge with Feeding America, matching donors and giving his book proceeds. In November 2023 Feeding America announced that the follow-up challenge had reached one billion meals, about two years early.",
+    "sourceIds": [
+      "ted-2006",
+      "feedingamerica-2023"
+    ]
+  },
+  "shadow": {
+    "text": "In May and June 2019 BuzzFeed News published accounts from former staff and followers that he made unwanted sexual advances and was naked in front of assistants, mostly in the 1990s and early 2000s; a former executive assistant said in a sworn statement that he put his hand on her knee in her job interview and that her team often took calls from women saying he had groped them. In November 2019 it published a former camper's account that at a California summer camp in August 1985, when she was under 18 and he was 25, he forced himself on her, kissing her and groping her breasts; two other campers said they saw him kissing a camper, and a camper's diary of that day describes it. Robbins denies all of it; his lawyers said 'No sexual assault happened. Period.' He sued BuzzFeed for defamation in Dublin in November 2019, and in June 2021 the High Court refused BuzzFeed's bid to move the case; no report of its end in a national paper and no charge or court finding against him was found. A 50-minute recording of a 2018 seminar shows him telling a woman who said her husband abused her 'She's lying to herself'; she later told BuzzFeed she did not take it personally. At a March 2018 seminar he said 'I'm not mocking the #MeToo Movement, I'm mocking victimhood', then apologised in April. In June 2016 Dallas Fire-Rescue said 30 to 40 people were injured at his firewalk and five went to hospital; his company said 5 of 7,000 walkers asked for more than on-site care.",
+    "sourceIds": [
+      "buzzfeed-2019-05",
+      "buzzfeed-2019-06",
+      "buzzfeed-2019-11",
+      "nbc-2019-05",
+      "irishtimes-2019",
+      "breakingnews-2021",
+      "nbc-2018-04",
+      "npr-2016"
+    ]
+  },
+  "councilQuestion": {
+    "text": "When did you stay stuck in a low mood this week instead of moving your body to change it?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Unlimited Power",
+      "year": 1986
+    },
+    {
+      "title": "Awaken the Giant Within",
+      "year": 1991
+    },
+    {
+      "title": "Money: Master the Game",
+      "year": 2014
+    }
+  ],
+  "sources": [
+    {
+      "id": "ted-2006",
+      "kind": "primary",
+      "title": "Why we do what we do (TED2006 talk, February 2006; official TED transcript)",
+      "author": "Tony Robbins",
+      "year": 2006,
+      "publisher": "TED",
+      "url": "https://www.ted.com/talks/tony_robbins_why_we_do_what_we_do/transcript"
+    },
+    {
+      "id": "ferriss-178",
+      "kind": "primary",
+      "title": "The Tim Ferriss Show #178: Tony Robbins - On Achievement Versus Fulfillment (episode posted 10 August 2016; official transcript posted 6 June 2018)",
+      "author": "Tony Robbins, interviewed by Tim Ferriss",
+      "year": 2016,
+      "url": "https://tim.blog/2018/06/06/the-tim-ferriss-show-transcripts-tony-robbins-on-achievement-versus-fulfillment/"
+    },
+    {
+      "id": "fortune-2014",
+      "kind": "secondary",
+      "title": "Tony Robbins, The CEO Whisperer (30 October 2014)",
+      "author": "Brian O'Keefe",
+      "year": 2014,
+      "publisher": "Fortune",
+      "url": "https://fortune.com/2014/10/30/tony-robbins-best-advice-executive-coach/"
+    },
+    {
+      "id": "cnbc-2017-01",
+      "kind": "secondary",
+      "title": "The best investment Tony Robbins ever made cost him $35 at age 17 (24 January 2017)",
+      "author": "Kathleen Elkins",
+      "year": 2017,
+      "publisher": "CNBC",
+      "url": "https://www.cnbc.com/make-it/2017/01/24/the-best-investment-tony-robbins-ever-made-cost-him-35-at-age-17.html"
+    },
+    {
+      "id": "cnbc-2017-03",
+      "kind": "secondary",
+      "title": "Tony Robbins says this daily habit makes him successful (30 March 2017)",
+      "author": "Kathryn Dill",
+      "year": 2017,
+      "publisher": "CNBC",
+      "url": "https://www.cnbc.com/2017/03/30/tony-robbins-says-this-daily-habit-makes-him-successful.html"
+    },
+    {
+      "id": "cnbc-2017-10",
+      "kind": "secondary",
+      "title": "Self-made millionaire Tony Robbins shares the advice he would give his 21-year-old self (9 October 2017)",
+      "author": "Zameena Mejia",
+      "year": 2017,
+      "publisher": "CNBC",
+      "url": "https://www.cnbc.com/2017/10/06/tony-robbins-its-crucial-that-you-bust-tail-early-in-your-career.html"
+    },
+    {
+      "id": "feedingamerica-2023",
+      "kind": "secondary",
+      "title": "Feeding America and Tony Robbins' 1 Billion Meals Challenge Smashes Goal Two Years Ahead of Schedule (press release, 29 November 2023)",
+      "author": "Feeding America",
+      "year": 2023,
+      "publisher": "Feeding America",
+      "url": "https://feedingamerica.org/about-us/press-room/tony-robbins-1-billion-meals-challenge"
+    },
+    {
+      "id": "buzzfeed-2019-05",
+      "kind": "secondary",
+      "title": "Tony Robbins Berated Abuse Victims, Leaked Records Show, And Former Followers Accuse Him Of Sexual Advances (17 May 2019)",
+      "author": "Jane Bradley and Katie J.M. Baker",
+      "year": 2019,
+      "publisher": "BuzzFeed News",
+      "url": "https://www.buzzfeednews.com/amphtml/janebradley/tony-robbins-self-help-secrets"
+    },
+    {
+      "id": "buzzfeed-2019-06",
+      "kind": "secondary",
+      "title": "Tony Robbins Has Been Accused Of Groping More Women And Mistreating Vulnerable Followers (19 June 2019)",
+      "author": "Jane Bradley and Katie J.M. Baker",
+      "year": 2019,
+      "publisher": "BuzzFeed News",
+      "url": "https://www.buzzfeednews.com/article/janebradley/tony-robbins-accused-of-groping-women-mistreating-followers"
+    },
+    {
+      "id": "buzzfeed-2019-11",
+      "kind": "secondary",
+      "title": "Tony Robbins Has Been Accused Of Sexually Assaulting A High Schooler At A Summer Camp (22 November 2019)",
+      "author": "Katie J.M. Baker and Jane Bradley",
+      "year": 2019,
+      "publisher": "BuzzFeed News",
+      "url": "https://www.buzzfeednews.com/article/katiejmbaker/tony-robbins-accused-sexual-assault-teenager-supercamp"
+    },
+    {
+      "id": "nbc-2019-05",
+      "kind": "secondary",
+      "title": "Tony Robbins accused of sexual misconduct, berating abuse victims (17 May 2019)",
+      "author": "Daniella Silva and Chelsea Damberg",
+      "year": 2019,
+      "publisher": "NBC News",
+      "url": "https://www.nbcnews.com/news/us-news/tony-robbins-accused-sexual-misconduct-berating-abuse-victims-n1007041"
+    },
+    {
+      "id": "irishtimes-2019",
+      "kind": "secondary",
+      "title": "Self-help guru Tony Robbins sues Buzzfeed in Irish courts (27 November 2019)",
+      "author": "Simon Carswell",
+      "year": 2019,
+      "publisher": "The Irish Times",
+      "url": "https://www.irishtimes.com/news/crime-and-law/self-help-guru-tony-robbins-sues-buzzfeed-in-irish-courts-1.4097155"
+    },
+    {
+      "id": "breakingnews-2021",
+      "kind": "secondary",
+      "title": "BuzzFeed fails to stop US self-help guru Tony Robbins suing it in Ireland (4 June 2021)",
+      "year": 2021,
+      "url": "https://www.breakingnews.ie/business/buzzfeed-fails-to-stop-us-self-help-guru-tony-robbins-suing-it-in-ireland-1137607.html",
+      "author": "BreakingNews.ie (no byline)",
+      "publisher": "BreakingNews.ie (Irish Examiner group)"
+    },
+    {
+      "id": "nbc-2018-04",
+      "kind": "secondary",
+      "title": "Motivational speaker Tony Robbins apologizes after critique of #MeToo (9 April 2018)",
+      "author": "Jonathan Sperling",
+      "year": 2018,
+      "publisher": "NBC News",
+      "url": "https://www.nbcnews.com/news/amp/ncna863961"
+    },
+    {
+      "id": "npr-2016",
+      "kind": "secondary",
+      "title": "Dozens Burned During Tony Robbins Motivational Exercise (24 June 2016)",
+      "author": "Merrit Kennedy",
+      "year": 2016,
+      "publisher": "NPR (via KPBS)",
+      "url": "https://www.kpbs.org/news/2016/06/24/dozens-burned-during-tony-robbins-motivational"
+    },
+    {
+      "id": "foxbusiness-2020",
+      "kind": "secondary",
+      "title": "Tony Robbins raises $18M for charity with 60th birthday bash (6 March 2020)",
+      "author": "Daniella Genovese",
+      "year": 2020,
+      "publisher": "FOX Business",
+      "url": "https://www.foxbusiness.com/lifestyle/tony-robbins-donations-birthday-charity"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real, living American self-help author and seminar speaker, not a politician, campaigner or religious founder. Owner case (sexual violence): BuzzFeed News in May and June 2019 published accounts from former staff and followers of unwanted sexual advances and nudity in front of assistants (1990s-2000s), and a former executive assistant's sworn statement that he put his hand on her knee in a job interview and that her team took frequent calls from women saying he had groped them. In November 2019 it published a former camper's account ('Elle') that in August 1985 at SuperCamp, Montecito, California, he forced himself on her, kissing her and groping her breasts; BuzzFeed gives her age only as under 18 (the camp took eighth to twelfth graders), so whether she was under 16 is not known; Robbins was 25. Two other campers said they saw him kissing a camper, counsellors said she told them, a camper's diary dated 25 August 1985 records it, and the founders confirmed a report of an 'inappropriate' incident (Jensen denied taking part in the mediation). Robbins denies all of it ('No sexual assault happened. Period.'); he sued BuzzFeed UK for defamation in the Dublin High Court on 26 November 2019; on 4 June 2021 the court refused BuzzFeed's bid to have the case heard elsewhere; its end is not found in a national-press source (an aggregator and Wikipedia mirrors say he discontinued it in 2025). No charge, conviction or civil finding against him found."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked all five values and re-read the TED and Ferriss transcripts, Fortune, three CNBC pieces, the Feeding America release, the BuzzFeed and NBC reports, NPR and the Irish press. All five held: Growth, Hard work and Gratitude were the draft's alone and each has three pieces of evidence from three sources, so Learning, Influence and Ambition from the blind pick did not fit. All four quotes matched the transcripts. I fixed his birthplace (Fortune and Britannica differ, so it is left out), marked the knife story as his account, and in the shadow used BuzzFeed's own words for the camp account, made the groping account second-hand as reported, gave the #MeToo line in full, and added the 2021 Dublin ruling.",
+    "checkedOn": "2026-11-10"
+  }
+}
