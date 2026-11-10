@@ -295,3 +295,42 @@ describe.each([
     }
   })
 })
+
+/**
+ * FORWARD ONTO A SHEET'S SPENT STEP (alpha p10-retest-02). After Back (or X)
+ * closed a sheet, its step was still there ahead of the page: Forward landed
+ * on it, showed nothing, and the next Back stayed on the page, a dead press.
+ * Forward onto it now takes the press back off it: nothing reopens, and the
+ * next Back leaves the page.
+ */
+describe.each([
+  ['kept mounted', Kept],
+  ['mounted only while open', Mounted],
+])('a sheet %s, after it closed', (_, Page) => {
+  async function forward() {
+    await act(async () => {
+      window.history.forward()
+      await new Promise((r) => setTimeout(r, 20))
+    })
+    await settle()
+  }
+
+  test.each(['Back', 'X'])('closed by %s, Forward reopens nothing and leaves no dead Back press', async (how) => {
+    render(<Page />)
+    fireEvent.click(screen.getByRole('button', { name: 'Open' }))
+    await settle()
+    if (how === 'Back') await back()
+    else {
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+      await settle()
+    }
+    expect(at().page).toBe('b')
+
+    await forward()
+    expect(screen.queryByTestId('sheet')).not.toBeInTheDocument()
+    expect(at().page).toBe('b')
+
+    await back()
+    expect(at().page).toBe('a')
+  })
+})

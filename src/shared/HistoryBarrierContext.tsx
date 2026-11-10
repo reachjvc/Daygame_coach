@@ -72,6 +72,13 @@ export function HistoryBarrierProvider({ children }: { children: ReactNode }) {
   const stackRef = useRef<Barrier[]>([])
   const suppressCountRef = useRef(0)
   const deadRef = useRef(new Set<number>())
+  /**
+   * Sheets' steps already taken back, by Back or by closing (p10-retest-02).
+   * The entry stays ahead of the page, so Forward lands on it: nothing to
+   * reopen there, and the next Back would be a dead press. A Forward onto one
+   * is taken back off it.
+   */
+  const spentRef = useRef(new Set<number>())
   /** Navigations waiting for `leaveSheets`' traversal to land. */
   const afterPopRef = useRef<(() => void)[]>([])
   /**
@@ -135,10 +142,17 @@ export function HistoryBarrierProvider({ children }: { children: ReactNode }) {
         return
       }
 
+      if (typeof landed === "number" && spentRef.current.has(landed)) {
+        suppressCountRef.current++
+        window.history.back()
+        return
+      }
+
       const stack = stackRef.current
       if (stack.length === 0) return
 
       const top = stack.pop()!
+      if (top.sheet) spentRef.current.add(top.id)
       top.onBack()
     }
 
@@ -167,8 +181,9 @@ export function HistoryBarrierProvider({ children }: { children: ReactNode }) {
     const index = stack.findIndex((b) => b.id === id)
     if (index === -1) return
 
-    stack.splice(index, 1)
+    const [gone] = stack.splice(index, 1)
     if (unwrite(id)) return // no entry to take back
+    if (gone.sheet) spentRef.current.add(id)
     suppressCountRef.current++
     window.history.back()
   }, [unwrite])
