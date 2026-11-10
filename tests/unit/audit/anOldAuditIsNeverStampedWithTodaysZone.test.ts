@@ -17,7 +17,7 @@ const RUN_ID = "00000000-0000-4000-8000-000000000001"
 const h = vi.hoisted(() => ({
   keepRunZone: vi.fn(async (_u: string, _r: string, zone: string) => zone),
   startAuditRun: vi.fn(async (_u: string, input: { id: string; zone?: string | null }) => ({ id: input.id })),
-  runs: [] as Record<string, unknown>[],
+  runs: [] as { id: string }[],
   zone: "America/New_York" as string,
 }))
 
