@@ -1,0 +1,430 @@
+{
+  "id": "richard-branson",
+  "name": "Richard Branson",
+  "born": 1950,
+  "died": null,
+  "category": "builders",
+  "areaIds": [
+    "lm_mission",
+    "lm_fun",
+    "lm_mindset"
+  ],
+  "tagline": "Left school at 16, built Virgin by trying things, and made adventure part of the job.",
+  "startedFrom": "He grew up in England, the son of a barrister who struggled in his career and a mother who had been a ballet dancer and an air hostess. He is dyslexic; his teachers called him stupid and lazy, and he left his private school at 16 to start Student magazine. He says he could not have started Virgin without the £100 his mother got by selling a necklace she had found on the road.",
+  "values": [
+    {
+      "word": "Adventure",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that he has always gone in search of adventures because that is where he feels most alive.",
+          "sourceId": "blog-adventure-2022",
+          "locator": "post of 11 July 2022, paragraph 2"
+        },
+        {
+          "kind": "deed",
+          "claim": "With pilot Per Lindstrand he made the first crossing of the Atlantic by hot-air balloon, from Maine to Northern Ireland, on 2-3 July 1987.",
+          "sourceId": "gwr-1987",
+          "locator": "record entry 'First transatlantic crossing by hot-air balloon'"
+        },
+        {
+          "kind": "witness",
+          "claim": "CNBC calls him a thrill-seeker who has flown to space in his own rocket ship and crossed oceans in a hot-air balloon.",
+          "sourceId": "cnbc-2024",
+          "locator": "opening paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Fun",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that life should be an adventure, and since most of it is spent at work, work should be fun too.",
+          "sourceId": "blog-culture-2017",
+          "locator": "post of 22 August 2017, paragraph 3"
+        },
+        {
+          "kind": "deed",
+          "claim": "He says Virgin Atlantic hired cabin crew who enjoyed their jobs, was the first airline to offer seatback screens and served in-flight ice creams.",
+          "sourceId": "blog-vaa-2023",
+          "locator": "post of 7 September 2023, paragraph beginning 'Nevertheless, we did go the full distance!'"
+        },
+        {
+          "kind": "words",
+          "claim": "Forty years after launching Virgin Atlantic he said that since then 'life has been a hell of a lot more fun.'",
+          "sourceId": "independent-2024",
+          "locator": "article of 14 June 2024, paragraph after 'screw it, let's give it a go'"
+        }
+      ]
+    },
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that the one philosophy that has defined his life as an entrepreneur is 'Screw it, let's do it'.",
+          "sourceId": "blog-screwit-2025",
+          "locator": "post of 10 July 2025, opening line"
+        },
+        {
+          "kind": "deed",
+          "claim": "He says that the day after the charter flight he improvised, he rang Boeing to ask whether it had a second-hand 747 for an airline he was thinking of starting.",
+          "sourceId": "cnbc-2019",
+          "locator": "paragraphs after 'Branson recalled'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Invited in 1987 to fly the Atlantic in a hot-air balloon, he agreed at once, though he did not know how to fly a balloon.",
+          "sourceId": "blog-adventure-2022",
+          "locator": "section 'Ballooning across the Atlantic'"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that when British Airways went after Virgin Atlantic there were so many dark days it would have been easier to quit, and they did not quit.",
+          "sourceId": "blog-toughest-2016",
+          "locator": "post of 15 January 2016, paragraph 4"
+        },
+        {
+          "kind": "deed",
+          "claim": "He writes that after the 1971 customs settlement the next two years were a crash course in managing cash, with every penny from the shops going into another shop and into paying off the debt.",
+          "sourceId": "slate-2014",
+          "locator": "paragraphs after 'virgins at crime' (quoting Losing My Virginity)"
+        },
+        {
+          "kind": "deed",
+          "claim": "In January 1993 he received £500,000, and Virgin Atlantic £110,000, in a libel settlement with British Airways, which also agreed to pay costs of perhaps £3 million.",
+          "sourceId": "spectator-1993",
+          "locator": "Portrait of the Week, 16 January 1993, p. 4"
+        },
+        {
+          "kind": "words",
+          "claim": "He says he sold Virgin Records in 1992 to fund Virgin Atlantic's fight with British Airways because 'I wasn't going to let British Airways beat us.'",
+          "sourceId": "cnbc-2024",
+          "locator": "interview, answer on protecting the downside"
+        }
+      ]
+    },
+    {
+      "word": "Building things",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He left school at 16 to start his first business, Student magazine, launched in 1968.",
+          "sourceId": "blog-student-2015",
+          "locator": "post of 25 August 2015, paragraph 1"
+        },
+        {
+          "kind": "witness",
+          "claim": "Slate describes his Virgin empire growing from a record label to airlines, rail and mobile phone service.",
+          "sourceId": "slate-2014",
+          "locator": "paragraph 1"
+        },
+        {
+          "kind": "deed",
+          "claim": "By 2014 he counted more than 400 Virgin companies and 70,000 employees.",
+          "sourceId": "blog-learn-2014",
+          "locator": "post of 27 October 2014, paragraph 8"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Before a big gamble, arrange a way out that caps what you can lose.",
+      "sourceId": "blog-vaa-2023",
+      "locator": "post of 7 September 2023, paragraph beginning 'So, I wrote out a list'"
+    },
+    {
+      "text": "When a great opportunity comes, say yes and work out how to do it afterwards.",
+      "sourceId": "blog-adventure-2022",
+      "locator": "section 'Ballooning across the Atlantic'"
+    },
+    {
+      "text": "Learn by doing and by failing, not by waiting for the rules.",
+      "sourceId": "blog-learn-2014",
+      "locator": "post of 27 October 2014, paragraphs 1-2"
+    },
+    {
+      "text": "Make work fun and treat the people who work for you as capable adults.",
+      "sourceId": "blog-culture-2017",
+      "locator": "post of 22 August 2017, paragraphs 3-4"
+    },
+    {
+      "text": "Grow by putting yourself outside your comfort zone.",
+      "sourceId": "blog-mother-2016",
+      "locator": "post of 28 July 2016, paragraphs 4-5"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "You don't learn to walk by following rules, you learn by doing and by falling over.",
+      "sourceId": "blog-learn-2014",
+      "locator": "post of 27 October 2014, paragraph 2 (first word capitalised)"
+    },
+    {
+      "text": "Growth happens when you put yourself outside your comfort zone.",
+      "sourceId": "blog-mother-2016",
+      "locator": "post of 28 July 2016, paragraph 4 (first word capitalised)"
+    },
+    {
+      "text": "If you're scared and excited about what comes next, you're probably on the right path.",
+      "sourceId": "blog-letter-2018",
+      "locator": "post of 23 January 2018, letter 'Dear Ricky', second-last paragraph"
+    },
+    {
+      "text": "Life should be an adventure and as we spend most of it at work, it follows that work should be fun too.",
+      "sourceId": "blog-culture-2017",
+      "locator": "post of 22 August 2017, paragraph 3"
+    }
+  ],
+  "definingMoment": {
+    "text": "He says that at 28 his flight to the British Virgin Islands was cancelled, so he hired a plane, wrote 'Virgin Airways: $39 single flight' on a blackboard and filled it with the stranded passengers. The next day, he says, he rang Boeing to ask for a second-hand 747. Boeing leased him one it would take back after a year, so the most he could lose was capped. Virgin Atlantic launched in 1984.",
+    "sourceIds": [
+      "blog-vaa-2023",
+      "cnbc-2019"
+    ]
+  },
+  "shadow": {
+    "text": "In 1971, aged 20, he sold records in Britain that he had declared for export, to avoid a 33% purchase tax; Customs arrested him, he spent a night in jail and settled for £60,000, and in his memoir he wrote 'I was guilty.' He has been resident on Necker in the British Virgin Islands since 2006, which lets him avoid UK income and capital gains tax; he says he moved for his health and his love of the island, not for tax. In April 2020, as he sought UK government help for Virgin Atlantic, MP Diane Abbott said he had 'not paid tax in this country for 14 years.' In 2017 the singer Antonia Jenae said that at a June 2010 party on Necker he put his face in her breasts, and told The Sun she felt it was sexual assault; he said he had no recollection of it, and a Virgin statement said he apologised if anyone had felt uncomfortable. Emails in the Epstein files, published in 2026, show that in 2013, five years after Jeffrey Epstein's conviction, he replied to Epstein 'As long as you bring your harem!'; Virgin says the word meant adult women at a business meeting.",
+    "sourceIds": [
+      "slate-2014",
+      "reuters-2013",
+      "fortune-2020",
+      "fortune-2017",
+      "irishtimes-2026"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which opportunity did you turn down this week only because you did not yet know how to do it?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "Losing My Virginity",
+      "year": 1998
+    },
+    {
+      "title": "Business Stripped Bare",
+      "year": 2008
+    },
+    {
+      "title": "Finding My Virginity",
+      "year": 2017
+    }
+  ],
+  "sources": [
+    {
+      "id": "blog-learn-2014",
+      "kind": "primary",
+      "title": "You learn by doing and by falling over (blog post, 27 October 2014)",
+      "author": "Richard Branson",
+      "year": 2014,
+      "publisher": "Virgin.com",
+      "url": "https://www.virgin.com/branson-family/richard-branson-blog/you-learn-by-doing-and-by-falling-over"
+    },
+    {
+      "id": "blog-student-2015",
+      "kind": "primary",
+      "title": "Student magazine (blog post, 25 August 2015)",
+      "author": "Richard Branson",
+      "year": 2015,
+      "publisher": "Virgin.com",
+      "url": "https://www.virgin.com/branson-family/richard-branson-blog/student-magazine"
+    },
+    {
+      "id": "blog-father-2015",
+      "kind": "primary",
+      "title": "Life lessons from my father (blog post, 19 June 2015)",
+      "author": "Richard Branson",
+      "year": 2015,
+      "publisher": "Virgin.com",
+      "url": "https://www.virgin.com/branson-family/richard-branson-blog/life-lessons-my-father"
+    },
+    {
+      "id": "blog-toughest-2016",
+      "kind": "primary",
+      "title": "Lessons from my toughest start-up days (blog post, 15 January 2016)",
+      "author": "Richard Branson",
+      "year": 2016,
+      "publisher": "Virgin.com",
+      "url": "https://www.virgin.com/branson-family/richard-branson-blog/lessons-my-toughest-start-days"
+    },
+    {
+      "id": "blog-mother-2016",
+      "kind": "primary",
+      "title": "My mother's unconventional parenting lessons (blog post, 28 July 2016)",
+      "author": "Richard Branson",
+      "year": 2016,
+      "publisher": "Virgin.com",
+      "url": "https://www.virgin.com/branson-family/richard-branson-blog/my-mothers-unconventional-parenting-lessons"
+    },
+    {
+      "id": "blog-culture-2017",
+      "kind": "primary",
+      "title": "Adventure culture (blog post, 22 August 2017)",
+      "author": "Richard Branson",
+      "year": 2017,
+      "publisher": "Virgin.com",
+      "url": "https://www.virgin.com/branson-family/richard-branson-blog/adventure-culture"
+    },
+    {
+      "id": "blog-letter-2018",
+      "kind": "primary",
+      "title": "My letter to my younger dyslexic self (blog post, 23 January 2018)",
+      "author": "Richard Branson",
+      "year": 2018,
+      "publisher": "Virgin.com",
+      "url": "https://www.virgin.com/branson-family/richard-branson-blog/my-letter-my-younger-dyslexic-self"
+    },
+    {
+      "id": "blog-mum-2021",
+      "kind": "primary",
+      "title": "Celebrating my mum, Eve Branson (blog post, 11 January 2021)",
+      "author": "Richard Branson",
+      "year": 2021,
+      "publisher": "Virgin.com",
+      "url": "https://www.virgin.com/branson-family/richard-branson-blog/celebrating-my-mum-eve-branson"
+    },
+    {
+      "id": "blog-adventure-2022",
+      "kind": "primary",
+      "title": "Life is an adventure (blog post, 11 July 2022)",
+      "author": "Richard Branson",
+      "year": 2022,
+      "publisher": "Virgin.com",
+      "url": "https://www.virgin.com/branson-family/richard-branson-blog/life-is-an-adventure"
+    },
+    {
+      "id": "blog-vaa-2023",
+      "kind": "primary",
+      "title": "What if travelling by plane could be fun? The story of Virgin Atlantic (blog post, 7 September 2023)",
+      "author": "Richard Branson",
+      "year": 2023,
+      "publisher": "Virgin.com",
+      "url": "https://www.virgin.com/branson-family/richard-branson-blog/what-if-travelling-by-plane-could-be-fun-the-story-of-virgin-atlantic"
+    },
+    {
+      "id": "blog-dyslexia-2024",
+      "kind": "primary",
+      "title": "My advice to parents with dyslexic children (blog post, 22 July 2024)",
+      "author": "Richard Branson",
+      "year": 2024,
+      "publisher": "Virgin.com",
+      "url": "https://www.virgin.com/branson-family/richard-branson-blog/my-advice-to-parents-with-dyslexic-children"
+    },
+    {
+      "id": "blog-screwit-2025",
+      "kind": "primary",
+      "title": "Screw it, let's do it: how Virgin's adventure mindset built a global brand (blog post, 10 July 2025)",
+      "author": "Richard Branson",
+      "year": 2025,
+      "publisher": "Virgin.com",
+      "url": "https://www.virgin.com/branson-family/richard-branson-blog/screw-it-lets-do-it-how-virgins-adventure-mindset-built-a-global-brand"
+    },
+    {
+      "id": "slate-2014",
+      "kind": "secondary",
+      "title": "A Portrait of the Billionaire as a Young Tax Cheat (27 May 2014)",
+      "author": "Jordan Weissmann",
+      "year": 2014,
+      "publisher": "Slate",
+      "url": "https://www.slate.com/articles/business/how_failure_breeds_success/2014/05/richard_branson_tax_fraud_how_a_youthful_indiscretion_helped_create_a_billionaire.html"
+    },
+    {
+      "id": "gwr-1987",
+      "kind": "secondary",
+      "title": "First transatlantic crossing by hot-air balloon",
+      "author": "Guinness World Records",
+      "year": 1987,
+      "url": "https://www.guinnessworldrecords.com/world-records/63137-hot-air-balloon-first-atlantic-crossing"
+    },
+    {
+      "id": "spectator-1993",
+      "kind": "secondary",
+      "title": "Portrait of the Week (16 January 1993, p. 4)",
+      "author": "The Spectator",
+      "year": 1993,
+      "publisher": "The Spectator",
+      "url": "https://archive.spectator.co.uk/article/16th-january-1993/4/portrait-of-the-week"
+    },
+    {
+      "id": "reuters-2013",
+      "kind": "secondary",
+      "title": "Richard Branson says quit Britain for health not tax (24 October 2013)",
+      "author": "Reuters",
+      "year": 2013,
+      "publisher": "Reuters, via Today.com",
+      "url": "https://www.today.com/news/richard-branson-says-quit-britain-health-not-tax-wbna53364377"
+    },
+    {
+      "id": "cnbc-2019",
+      "kind": "secondary",
+      "title": "How Richard Branson started Virgin Atlantic with a blackboard selling $39 flights (29 December 2019)",
+      "author": "Karen Gilchrist",
+      "year": 2019,
+      "publisher": "CNBC",
+      "url": "https://www.cnbc.com/2019/12/30/richard-branson-started-virgin-atlantic-with-a-board-and-39-flights.html"
+    },
+    {
+      "id": "cnbc-2024",
+      "kind": "secondary",
+      "title": "Richard Branson: Tough business decision helped me build Virgin Group (29 April 2024)",
+      "author": "Tom Huddleston Jr.",
+      "year": 2024,
+      "publisher": "CNBC",
+      "url": "https://www.cnbc.com/2024/04/29/richard-branson-tough-business-decision-helped-me-build-virgin-group.html"
+    },
+    {
+      "id": "fortune-2017",
+      "kind": "secondary",
+      "title": "Richard Branson Says He Has 'No Recollection' of Sexual Misconduct Alleged by Joss Stone's Backup Singer (25 November 2017)",
+      "author": "David Z. Morris",
+      "year": 2017,
+      "publisher": "Fortune",
+      "url": "https://fortune.com/2017/11/25/richard-branson-no-recollection-antonia-jenae/"
+    },
+    {
+      "id": "fortune-2020",
+      "kind": "secondary",
+      "title": "As Virgin wobbles, Richard Branson looks to use his private island as collateral (21 April 2020)",
+      "author": "Tom Metcalf and Ben Stupples (Bloomberg)",
+      "year": 2020,
+      "publisher": "Fortune",
+      "url": "https://fortune.com/2020/04/21/virgin-bankruptcy-richard-branson-private-necker-island-collateral/"
+    },
+    {
+      "id": "irishtimes-2026",
+      "kind": "secondary",
+      "title": "Epstein files: Key revelations and some stories you may have missed (6 February 2026)",
+      "author": "Naomi O'Leary",
+      "year": 2026,
+      "publisher": "The Irish Times",
+      "url": "https://www.irishtimes.com/world/us/2026/02/06/epstein-files-key-revelations-and-some-stories-you-may-have-missed/"
+    },
+    {
+      "id": "independent-2024",
+      "kind": "secondary",
+      "title": "'I decided screw it, let's give it a go': Richard Branson says airlines were 'abysmal' when he started Virgin (14 June 2024)",
+      "author": "Simon Calder",
+      "year": 2024,
+      "publisher": "The Independent, via Yahoo News",
+      "url": "https://au.news.yahoo.com/decided-screw-let-richard-branson-170020864.html"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real, living British businessman (Virgin Group), not a politician, campaigner or religious founder. Owner case (sexual violence): on 16 October 2017 the backing singer Antonia Jenae wrote on Facebook that at a June 2010 party on Necker he tried to get her to show him her breasts and later put his face in her breasts; she told The Sun 'I feel like it was sexual assault.' Branson told The Telegraph he had 'no recollection of the incident'; a Virgin Management statement said his family and friends present did not recall it either and that he 'apologises if anyone felt that way'; Joss Stone's father said the group 'had a wonderful afternoon'. No police complaint, lawsuit or investigation found. Both press reports (Fortune 25 Nov 2017; NZ Herald 27 Nov 2017, from the Daily Mail and The Sun) re-tell one account. No account of sexual contact with anyone under 16 found."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked all five values and re-read every cited page: his Virgin.com posts, Slate, Guinness, The Spectator archive, Reuters, CNBC, Fortune and the Irish Times. All five held: Fun, Resilience and Building things were the draft's alone, so Fun got a third source (The Independent, 2024) and Resilience a CNBC interview on selling Virgin Records to keep fighting British Airways; Contribution and Determination from the blind pick did not fit within five. All four quotes matched his posts word for word. I fixed the defining moment to say the age of 28 is his own account (CNBC puts it in the early 1980s), and in the shadow the tax lines, who apologised, the Jenae account's own words and the date of Epstein's conviction.",
+    "checkedOn": "2026-11-10"
+  }
+}
