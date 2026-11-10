@@ -44,6 +44,10 @@ Doer answers a decided task. When a message has both, the Senior speaks
 first, then the Doer does the work. Each reply says which persona is
 speaking.
 
+Every reply and file keeps apart what the owner said and what Claude wrote
+or assumed; mark Claude's material as Claude's. Label points 1a, 1b, 2a…
+and other blocks with their own letters (A1, W1…) so he can refer to them.
+
 Keeping this file: add only a little at a time. Remove lines that are
 outdated, repeated or contradicted without asking, and list in the reply
 exactly what was added and removed, so the owner can undo it.
