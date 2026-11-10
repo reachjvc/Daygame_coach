@@ -1,7 +1,7 @@
 # Site navigation build: option E (Home + tool grid)
 
 **Written 2026-11-09** after the owner said of the before/after page: "I quite like this."
-**Status: Phases 0 to 3 live (2026-11-10). Phase 4 (audit and sign-off page) next.** Follows `Plans/site-navigation.md` (the choice). This plan builds it.
+**Status: Phases 0 to 4 built and live (2026-11-10). Waiting for the owner on the sign-off page before Phases 5 and 6.** Follows `Plans/site-navigation.md` (the choice). This plan builds it.
 
 ## Owner-only items (answered 2026-11-09)
 
@@ -169,4 +169,21 @@ Removed, and where each job went:
 - Before/after screenshots of 20 pages at 1024 and 1280px, light and dark (80 each): no page scrolls sideways, and no page's own layout broke, so no page needed the folded rail besides Time.
 
 Removed: nothing. The header row above 1024px became the sidebar.
+
+### Phase 4 (2026-11-10): adversarial audit
+
+Three independent reviewers: one read the three commits, one tested the phone build (320/375/390px, paid, free, signed out), one the laptop build (700 to 1440px). No high-severity break. Fixed:
+
+- Locked Coach tile, "See plans" and /coach for a non-payer landed at the top of the front page, not at the prices: the front page now scrolls to `#pricing`.
+- Ask Coach's send button sat under the phone bar (a fixed-height box stacked on a phone): the box is fixed-height only on a laptop now.
+- Black Box from Home: no bar and "← Life Mastery" into the plan. Every tile and All tools row now carries `?from=`, so tools say "← Home" / "← All tools"; Home's Start Session too.
+- Seven back links said "← Tracking", role models "← Your plan", the Black Box "← Life Mastery", two hints "Settings": now Activity, Plan, You.
+- Changing a dating answer on You sent you to Home and refreshed only Home: the profile actions refresh and return to You.
+- You at 320px slid sideways 11px when the answers were unfolded (a grid without a column limit in `UserPreferences`).
+- The plan's top step row was 83px at 320px: 55px now (the routine save line hides on a phone; warnings stay).
+- Folded rail on Time: the logo link had no name for screen readers. Plan's step cards used `aria-current="page"` beside the bar's: now `"step"`.
+- The guard "every tool that turns non-payers away is marked paid" was a fixed list: it now reads the pages.
+- You no longer fails to open when the profile read fails.
+
+Left, listed on the sign-off page: the plan's content moves sideways when it switches between a daily and a setup step on a laptop (the sidebar comes and goes); an account with no plan taps Plan and lands on setup step 1, which has no bar (by design); Coach opened from its tile starts scrolled down; Activity's stat tiles truncate at 1024px; You loads the map code even folded; a dev-only hydration warning when the answers unfold.
 

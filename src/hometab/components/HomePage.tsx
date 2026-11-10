@@ -52,7 +52,7 @@ export async function HomePage() {
 
       <nav aria-label="Your tools" className="mb-6 grid grid-cols-4 gap-2 sm:grid-cols-8 sm:gap-3" data-testid="home-tiles">
         {TOOLS.filter((t) => t.tile).map((t) => (
-          <ToolTile key={t.id} id={t.id} label={t.short} icon={t.icon} access={tileAccess(t, viewer)} />
+          <ToolTile key={t.id} id={t.id} label={t.short} icon={t.icon} access={tileAccess(t, viewer, ROUTES.dashboard)} />
         ))}
         <ToolTile id="all" label={ALL_TOOLS_TILE.label} icon={ALL_TOOLS_TILE.icon} access={{ state: "open", href: ALL_TOOLS_TILE.href }} />
       </nav>

@@ -4,6 +4,7 @@ import { ChevronRight, Lock } from "lucide-react"
 import { createServerSupabaseClient, getProfile } from "@/src/db/server"
 import { COMING_TOOLS, TOOLS, type Tool } from "@/components/navTabs"
 import { tileAccess, type ToolViewer } from "../tileAccess"
+import { ROUTES } from "@/src/shared/routes"
 
 const GROUPS: { id: Tool["group"]; title: string }[] = [
   { id: "dating", title: "Dating" },
@@ -37,7 +38,7 @@ export async function ToolsPage() {
             <h2 id={`tools-${g.id}`} className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{g.title}</h2>
             <ul className="divide-y divide-border rounded-xl border border-border bg-card">
               {TOOLS.filter((t) => t.group === g.id).map((t) => {
-                const access = tileAccess(t, viewer)
+                const access = tileAccess(t, viewer, ROUTES.tools)
                 return (
                   <li key={t.id}>
                     <Link href={access.href} className="flex min-h-12 items-center gap-3 px-4 py-3 hover:bg-muted/40" data-testid={`tools-row-${t.id}`} data-access={access.state}>

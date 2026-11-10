@@ -7,6 +7,7 @@ import { loadSeasonBand } from "@/src/goals/seasonBandData"
 import { getActiveSession, getTrackingStatsForDisplay } from "@/src/tracking/trackingService"
 import { clockIn, timerName, watchTimer } from "@/src/timetrack/runningTimerService"
 import { ROUTES } from "@/src/shared/routes"
+import { withReturn } from "@/src/shared/returnTo"
 
 /**
  * HOME'S CARDS: today's plan, field sessions and time. (Training is the
@@ -73,11 +74,11 @@ export async function FieldCard({ userId }: { userId: string }) {
       <div className="flex flex-wrap gap-2">
         {active ? (
           <Button asChild size="sm">
-            <Link href={ROUTES.trackingSession} data-testid="home-resume-session">Back to the session</Link>
+            <Link href={withReturn(ROUTES.trackingSession, ROUTES.dashboard)} data-testid="home-resume-session">Back to the session</Link>
           </Button>
         ) : (
           <Button asChild size="sm" className="gap-1.5">
-            <Link href={`${ROUTES.trackingSession}?autostart=true`} data-testid="home-start-session">
+            <Link href={withReturn(`${ROUTES.trackingSession}?autostart=true`, ROUTES.dashboard)} data-testid="home-start-session">
               <Play className="size-4" aria-hidden />
               Start Session
             </Link>

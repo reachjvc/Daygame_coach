@@ -27,7 +27,7 @@ export default async function SettingsPageWrapper() {
     redirect(`/auth/login?next=${encodeURIComponent(ROUTES.settings)}`)
   }
 
-  const [training, profileRow] = await Promise.all([getTrainingSettings(user.id), getProfile(user.id)])
+  const [training, profileRow] = await Promise.all([getTrainingSettings(user.id), getProfile(user.id).catch(() => null)])
   const { profile, subscription, stats } = await getSettingsPageData(
     user.id,
     user.email || "",

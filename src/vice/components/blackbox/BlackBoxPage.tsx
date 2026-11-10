@@ -270,7 +270,7 @@ export function BlackBoxPage() {
       <div className="mb-3 flex items-center justify-between gap-3">
         <BackLink
           fallback={ROUTES.plan}
-          fallbackLabel="Life Mastery"
+          fallbackLabel="Plan"
           className="inline-flex min-h-11 items-center gap-1.5 text-[12px] text-zinc-500 transition-colors hover:text-white"
         />
         {/* THE WAY OUT OF THE MODULE, ON THE MODULE'S FRONT DOOR.

@@ -54,7 +54,7 @@ export default function FieldReportHistoryPage() {
     <div className="max-w-4xl mx-auto px-4 py-8" data-testid="tracking-history-page">
       {/* Header */}
       <div className="mb-8">
-        <BackLink fallback={ROUTES.tracking} fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4" />
+        <BackLink fallback={ROUTES.tracking} fallbackLabel="Activity" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4" />
         <h1 className="text-3xl font-bold">Field Report History</h1>
         <p className="text-muted-foreground mt-2">
           Review your past field reports and reflections

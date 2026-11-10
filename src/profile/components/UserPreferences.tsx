@@ -179,7 +179,7 @@ export function UserPreferences({
         <CardTitle>Your Preferences</CardTitle>
       </CardHeader>
       <CardContent className="space-y-8">
-        <div className="grid gap-6 lg:grid-cols-[1.15fr_1fr] lg:grid-rows-[auto_auto]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:grid-rows-[auto_auto] [&>*]:min-w-0">
           <div className="flex h-full flex-col lg:col-start-1 lg:row-start-1">
             {primaryArchetypeData?.image && (
               <div

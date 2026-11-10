@@ -181,7 +181,7 @@ export function VoiceRecorderButton({
         {showLanguageHint && (
           <span className="text-xs text-muted-foreground animate-in fade-in duration-300">
             Transcribing in {langLabel}. Change in{" "}
-            <a href={ROUTES.settings} className="underline hover:text-primary">Settings</a>.
+            <a href={ROUTES.settings} className="underline hover:text-primary">You</a>.
           </span>
         )}
       </div>

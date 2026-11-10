@@ -1,4 +1,5 @@
 import type { Tool } from "@/components/navTabs"
+import { withReturn } from "@/src/shared/returnTo"
 
 /**
  * Where a locked tool sends somebody: the plans on the front page. They have
@@ -30,9 +31,13 @@ export type TileState =
  * The payment model may change (a cheap tier, scenario packs); when it does,
  * this function and `Tool.access` change, and no tile does.
  */
-export function tileAccess(tool: Pick<Tool, "href" | "access">, viewer: ToolViewer | null): TileState {
+export function tileAccess(tool: Pick<Tool, "href" | "access">, viewer: ToolViewer | null, from?: string): TileState {
   const paid = viewer?.has_purchased === true
-  if (tool.access === "open" || paid) return { state: "open", href: tool.href }
-  if (tool.access === "preview") return { state: "preview", href: tool.href }
+  /* `from`: the page the tile is on, carried on the link so the tool's own
+     back control says "← Home" and goes there. Without it the Black Box
+     said "← Life Mastery" and sent you into the plan (Phase 4 audit). */
+  const href = from ? withReturn(tool.href, from) : tool.href
+  if (tool.access === "open" || paid) return { state: "open", href }
+  if (tool.access === "preview") return { state: "preview", href }
   return { state: "locked", href: PAYWALL_HREF }
 }

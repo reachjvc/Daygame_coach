@@ -1569,7 +1569,7 @@ export function NorthStarFlow({
       <button
         key={id}
         onClick={() => { setTab(id); if (window.matchMedia?.("(max-width: 639px)").matches) railToggleRef.current?.focus() }}
-        aria-current={active ? "page" : undefined}
+        aria-current={active ? "step" : undefined}
         className={`rounded-xl border p-3 text-left transition-colors ${
           active ? "border-violet-400/40 bg-violet-500/10" : "border-white/10 bg-white/[0.02] hover:border-white/25"
         }`}
@@ -1608,7 +1608,7 @@ export function NorthStarFlow({
   const siteBar = USE_STEPS.includes(tab)
   const stepNav = (
     <div className={siteBar ? "sticky top-0 z-30 bg-zinc-950/90 backdrop-blur-sm border-b border-white/10" : "sticky bottom-0 bg-zinc-950/90 backdrop-blur-sm border-t border-white/10"}>
-      <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between gap-3">
+      <div className={`max-w-5xl mx-auto flex items-center justify-between gap-3 ${siteBar ? "px-4 py-2 sm:px-6 sm:py-3" : "px-6 py-3"}`}>
         {tabIndex > 0 ? (
           <button onClick={() => setTab(TAB_ORDER[tabIndex - 1])} className="text-xs text-zinc-400 hover:text-white transition-colors">
             ← {TAB_LABELS[TAB_ORDER[tabIndex - 1]]}
@@ -1642,18 +1642,23 @@ export function NorthStarFlow({
               "unknown" is an account with no plan yet: nothing is saved until
               something is written, and then it goes to the account
               (Plans/life-plan-after-setup.md, F10). */}
-          {!plan.updatedAt && !unsent
-            ? "Nothing written yet"
-            : serverState === "saved" && !unsent
-              ? "Saved to your account."
-              : loaded && serverState === "unknown"
-                ? "Saves to your account as you write."
-                : "Saved on this device."}
+          {/* The routine line ("Saved to your account.") gives way on a phone
+              under the site bar, where the row must stay one line high; the
+              amber warnings above it stay at every width. */}
+          <span className={siteBar ? "hidden sm:inline" : undefined}>
+            {!plan.updatedAt && !unsent
+              ? "Nothing written yet"
+              : serverState === "saved" && !unsent
+                ? "Saved to your account."
+                : loaded && serverState === "unknown"
+                  ? "Saves to your account as you write."
+                  : "Saved on this device."}
+          </span>
         </span>
         {tabIndex < TAB_ORDER.length - 1 ? (
           <button
             onClick={() => setTab(TAB_ORDER[tabIndex + 1])}
-            className="text-sm font-medium px-4 py-2 rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 transition-colors"
+            className="text-sm font-medium px-4 py-2 rounded-lg whitespace-nowrap bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 transition-colors"
           >
             {TAB_LABELS[TAB_ORDER[tabIndex + 1]]} →
           </button>

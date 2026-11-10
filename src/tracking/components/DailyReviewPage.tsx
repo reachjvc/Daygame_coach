@@ -205,7 +205,7 @@ export function DailyReviewPage({ userId }: DailyReviewPageProps) {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8" data-testid="daily-review-page">
       <div className="mb-8">
-        <BackLink fallback={ROUTES.tracking} fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4" />
+        <BackLink fallback={ROUTES.tracking} fallbackLabel="Activity" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4" />
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-amber-500/10">
             <Sun className="size-6 text-amber-500" />

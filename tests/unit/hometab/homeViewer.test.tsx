@@ -18,6 +18,8 @@
  */
 
 import { cleanup, render, screen } from "@testing-library/react"
+import fs from "node:fs"
+import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { ProfileRow } from "@/src/db"
@@ -61,7 +63,7 @@ describe("who is sent where", () => {
     expect(screen.getByTestId("tools-row-coach")).toHaveAttribute("href", PAYWALL_HREF)
     expect(screen.getByTestId("tools-row-coach")).toHaveAttribute("data-access", "locked")
     // Previews open the tool itself, which shows its own preview.
-    expect(screen.getByTestId("tools-row-scenarios")).toHaveAttribute("href", ROUTES.scenarios)
+    expect(screen.getByTestId("tools-row-scenarios").getAttribute("href")?.split("?")[0]).toBe(ROUTES.scenarios)
     expect(screen.getByTestId("tools-row-scenarios")).toHaveAttribute("data-access", "preview")
   })
 
@@ -77,7 +79,8 @@ describe("who is sent where", () => {
     render(await ToolsPage())
     expect(hrefs()).not.toContain(PAYWALL_HREF)
     expect(hrefs()).not.toContain("/auth/sign-up")
-    for (const t of TOOLS) expect(screen.getByTestId(`tools-row-${t.id}`)).toHaveAttribute("href", t.href)
+    // Each opens its tool, carrying All tools as the way back (`?from=`).
+    for (const t of TOOLS) expect(screen.getByTestId(`tools-row-${t.id}`).getAttribute("href")?.split("?from=")[0]).toBe(t.href)
   })
 })
 
@@ -88,9 +91,29 @@ describe("tileAccess", () => {
     expect(tileAccess(coach, { has_purchased: false })).toEqual({ state: "locked", href: PAYWALL_HREF })
     expect(tileAccess(coach, null)).toEqual({ state: "locked", href: PAYWALL_HREF })
   })
-  it("every tool that turns non-payers away is marked paid", () => {
-    // Coach redirects them (app/(app)/coach/page.tsx). If another tool starts
-    // doing that, it must be marked here too, or its tile is a silent bounce.
-    expect(TOOLS.filter((t) => t.access === "paid").map((t) => t.id)).toEqual(["coach"])
+  it("every page that turns non-payers away is a tool marked paid", () => {
+    // Coach redirects them (app/(app)/coach/page.tsx). If another page starts
+    // doing that, its tile must be marked paid too, or it is a silent bounce.
+    // Read from the pages themselves: a page that reads the purchase flag and
+    // redirects is one that turns people away. (It was a fixed list, which
+    // could not notice a second such page; Phase 4 audit.)
+    const root = path.join(process.cwd(), "app/(app)")
+    const pages: string[] = []
+    const walk = (dir: string) => {
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        const p = path.join(dir, e.name)
+        if (e.isDirectory()) walk(p)
+        else if (e.name === "page.tsx") pages.push(p)
+      }
+    }
+    walk(root)
+    const turnsAway = pages
+      .filter((p) => {
+        const src = fs.readFileSync(p, "utf8")
+        return /has_?[pP]urchased/.test(src) && /\bredirect\(/.test(src.replace(/redirect\(\s*[`"']\/auth\/login[^)]*\)/g, ""))
+      })
+      .map((p) => "/" + path.relative(root, path.dirname(p)).split(path.sep).join("/"))
+      .sort()
+    expect(turnsAway).toEqual(TOOLS.filter((t) => t.access === "paid").map((t) => t.href).sort())
   })
 })

@@ -58,7 +58,7 @@ export function CouncilSettings({ members }: { members: CouncilMember[] }) {
         </select>
       </div>
       {settings.remindOn && !settings.hasEnabledDevice && (
-        <p className="text-xs text-amber-400">No phone takes reminders yet. Turn them on in Settings, under notifications.</p>
+        <p className="text-xs text-amber-400">No phone takes reminders yet. Turn them on in You, under notifications.</p>
       )}
       {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
     </div>

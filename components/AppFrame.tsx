@@ -42,8 +42,10 @@ const ITEMS = TABS
  * docs/plans/own-platform-and-app.md), where server-only code does not run.
  * Who may see what stays with each page and the proxy; this is navigation only.
  *
- * Text-only links: showing the tab bar's icons here too needs the owner's word
- * (Q-ICON in the plan, `.claude/rules/ui.md`).
+ * Icons: the laptop sidebar shows the phone bar's icon beside each place (one
+ * meaning per icon). Put to the owner on the Phase 4 sign-off page of
+ * Plans/site-navigation-build.md (`.claude/rules/ui.md`: ask before reusing an
+ * icon somewhere new).
  */
 export function AppFrame({ children }: { children: ReactNode }) {
   const pathname = usePathname()
@@ -97,7 +99,7 @@ export function SiteHeader({ folded = false }: { folded?: boolean } = {}) {
       data-folded={folded ? "true" : undefined}
     >
       <div className={`mx-auto max-w-6xl flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:mx-0 lg:h-full lg:flex-col lg:items-stretch lg:justify-start lg:gap-6 lg:py-5 ${folded ? "lg:px-2" : "lg:px-3"}`}>
-        <span className={folded ? "lg:flex lg:justify-center lg:[&_a>span]:hidden" : "lg:px-2 lg:[&_a]:whitespace-nowrap lg:[&_a]:text-lg"}>
+        <span className={folded ? "lg:flex lg:justify-center lg:[&_a>span]:sr-only" : "lg:px-2 lg:[&_a]:whitespace-nowrap lg:[&_a]:text-lg"}>
           <AppLogo />
         </span>
         {/* Four destinations plus Log Out fit beside the logo at any width

@@ -241,7 +241,7 @@ describe("changing step writes the address", () => {
     const step = (id: NorthStarTabId) => buttons[TAB_ORDER.indexOf(id)]
 
     fireEvent.click(step("systems"))
-    expect(step("systems").getAttribute("aria-current")).toBe("page")
+    expect(step("systems").getAttribute("aria-current")).toBe("step") // "step", not "page": the site bar marks Plan as the page (Phase 4 audit)
     expect(window.location.pathname).toBe(ROUTES.plan)
     expect(window.location.search).toBe("?step=systems")
 
@@ -251,7 +251,7 @@ describe("changing step writes the address", () => {
       throw new DOMException("history writes refused", "SecurityError")
     })
     fireEvent.click(step("values"))
-    expect(step("values").getAttribute("aria-current")).toBe("page")
+    expect(step("values").getAttribute("aria-current")).toBe("step")
     expect(step("systems").getAttribute("aria-current")).toBeNull()
     expect(window.location.search).toBe("?step=systems")
   })

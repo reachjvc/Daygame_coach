@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import { CheckCircle2, MessageCircle, BarChart3, Zap, Swords } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -20,6 +21,23 @@ interface HomePageProps {
  * sales header (sign in, get started) and nothing else.
  */
 export function HomePage({ isLoggedIn = false }: HomePageProps) {
+  /* AT THE PLANS WHEN ASKED FOR THEM. A locked tile, "See plans" and Ask
+     Coach for a non-payer all send people to `/#pricing`. The browser's own
+     jump to the anchor did not happen (a client navigation into this page,
+     or a redirect), so somebody who tapped a lock landed on the hero and saw
+     no prices (Plans/site-navigation-build.md, Phase 4 audit). */
+  useEffect(() => {
+    const go = () => {
+      if (window.location.hash === "#pricing") document.getElementById("pricing")?.scrollIntoView()
+    }
+    const frame = requestAnimationFrame(go)
+    window.addEventListener("hashchange", go)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener("hashchange", go)
+    }
+  }, [])
+
   const page = (
     <div className="min-h-dvh bg-background">
       {!isLoggedIn && <AppHeader />}

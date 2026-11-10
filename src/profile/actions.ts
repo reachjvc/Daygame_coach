@@ -56,6 +56,7 @@ export async function saveDatingPreferences(formData: FormData) {
   revalidatePath(ROUTES.scenarios)
   revalidatePath(ROUTES.scenarioPreferences)
   revalidatePath(ROUTES.dashboard)
+  revalidatePath(ROUTES.settings)
 
   /* `next` comes from the page, but it rides in a form field the browser owns,
      so it is user input. `safeNextPath` is the existing owner of that rule --
@@ -65,6 +66,10 @@ export async function saveDatingPreferences(formData: FormData) {
   redirect(safeNextPath(typeof next === "string" ? next : null, ROUTES.dashboard))
 }
 
+/* THE DATING ANSWERS LIVE ON YOU (/settings) since 2026-11-10
+   (Plans/site-navigation-build.md, Phase 2): the edits below refresh it and
+   return there. They refreshed and returned to the Dashboard, which Home
+   replaced and which no longer shows them. */
 export async function updateProfilePreference(formData: FormData) {
   const userId = await requireAuth()
 
@@ -76,8 +81,8 @@ export async function updateProfilePreference(formData: FormData) {
     value: preferenceValue,
   })
 
-  revalidatePath(ROUTES.dashboard)
-  redirect(ROUTES.dashboard)
+  revalidatePath(ROUTES.settings)
+  redirect(ROUTES.settings)
 }
 
 export async function updatePreferredRegion(regionId: string) {
@@ -85,7 +90,7 @@ export async function updatePreferredRegion(regionId: string) {
 
   await updatePreferredRegionForUser(userId, regionId)
 
-  revalidatePath(ROUTES.dashboard)
+  revalidatePath(ROUTES.settings)
 }
 
 export async function updateSecondaryRegionDirect(regionId: string | null) {
@@ -93,7 +98,7 @@ export async function updateSecondaryRegionDirect(regionId: string | null) {
 
   await updateSecondaryRegionDirectForUser(userId, regionId)
 
-  revalidatePath(ROUTES.dashboard)
+  revalidatePath(ROUTES.settings)
 }
 
 export async function updateAgeRange(ageRangeStart: number, ageRangeEnd: number) {
@@ -101,7 +106,7 @@ export async function updateAgeRange(ageRangeStart: number, ageRangeEnd: number)
 
   await updateAgeRangeForUser(userId, ageRangeStart, ageRangeEnd)
 
-  revalidatePath(ROUTES.dashboard)
+  revalidatePath(ROUTES.settings)
 }
 
 export async function updateArchetypes(formData: FormData) {
@@ -115,6 +120,6 @@ export async function updateArchetypes(formData: FormData) {
 
   await updateArchetypesForUser(userId, data)
 
-  revalidatePath(ROUTES.dashboard)
-  redirect(ROUTES.dashboard)
+  revalidatePath(ROUTES.settings)
+  redirect(ROUTES.settings)
 }

@@ -763,7 +763,7 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
     return (
       <div className="max-w-6xl mx-auto px-4 py-8" data-testid="field-report-template-selection">
         <div className="mb-8">
-          <BackLink fallback={ROUTES.tracking} fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4" />
+          <BackLink fallback={ROUTES.tracking} fallbackLabel="Activity" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4" />
           <h1 className="text-3xl font-bold">Write Field Report</h1>
           <p className="text-muted-foreground mt-2">
             {sessionData ? "Review your session and choose a template" : "Choose a template that fits your session"}

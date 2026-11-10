@@ -331,7 +331,7 @@ export function SessionDetailPage({ sessionId }: SessionDetailPageProps) {
   if (error || !session) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <BackLink fallback={ROUTES.tracking} fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6" />
+        <BackLink fallback={ROUTES.tracking} fallbackLabel="Activity" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6" />
         <Card className="p-8 text-center">
           <AlertCircle className="size-12 mx-auto mb-4 text-muted-foreground opacity-50" />
           <h2 className="text-xl font-semibold mb-2">{error || "Session not found"}</h2>
@@ -356,7 +356,7 @@ export function SessionDetailPage({ sessionId }: SessionDetailPageProps) {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       {/* Back link */}
-      <BackLink fallback={ROUTES.tracking} fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6" />
+      <BackLink fallback={ROUTES.tracking} fallbackLabel="Activity" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6" />
 
       {/* Header */}
       <div className="mb-6">

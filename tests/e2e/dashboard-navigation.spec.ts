@@ -60,6 +60,6 @@ test.describe("a throwaway account", () => {
     await expect(coach).toHaveAttribute("data-access", "open", {
       timeout: AUTH_TIMEOUT,
     })
-    await Promise.all([page.waitForURL(urlOf(ROUTES.coach, "$"), { timeout: AUTH_TIMEOUT }), coach.click()])
+    await Promise.all([page.waitForURL(urlOf(ROUTES.coach, "(\\?from=|$)") /* the tile carries Home as the way back */, { timeout: AUTH_TIMEOUT }), coach.click()])
   })
 })

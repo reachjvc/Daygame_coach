@@ -182,9 +182,14 @@ export function QAPage({ endpoint = "/api/qa", variantLabel, requestTimeoutMs, s
         )}
       </header>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px] h-[calc(var(--app-vh)*100-280px)]">
+        {/* ONE SCREEN TALL ONLY WHERE THE TWO COLUMNS SIT SIDE BY SIDE. On a
+            phone the columns stack inside that fixed height, the second spilled
+            past the page's end, and the bottom of the chat (the send button)
+            sat under the tab bar (Plans/site-navigation-build.md, Phase 4
+            audit). There the chat gets its own height and the page grows. */}
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:h-[calc(var(--app-vh)*100-280px)]">
           {/* Left column: Chat */}
-          <Card className="flex h-full flex-col">
+          <Card className="flex h-[calc(var(--app-vh)*100-12rem)] min-h-[420px] flex-col lg:h-full lg:min-h-0">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="space-y-1 flex-1">

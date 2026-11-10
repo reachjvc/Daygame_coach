@@ -354,7 +354,7 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8" data-testid="weekly-review-page">
         <div className="mb-8">
-          <BackLink fallback={ROUTES.tracking} fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4" />
+          <BackLink fallback={ROUTES.tracking} fallbackLabel="Activity" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4" />
           <h1 className="text-3xl font-bold">Weekly Review</h1>
           <p className="text-muted-foreground mt-2">
             Reflect on your week and set intentions for the next one
