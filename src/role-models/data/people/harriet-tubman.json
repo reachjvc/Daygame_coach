@@ -1,0 +1,302 @@
+{
+  "id": "harriet-tubman",
+  "name": "Harriet Tubman",
+  "pronoun": "she",
+  "born": "c. 1822",
+  "died": 1913,
+  "category": "leaders",
+  "areaIds": [
+    "lm_contribution",
+    "lm_family",
+    "lm_mission"
+  ],
+  "tagline": "Escaped slavery alone, then went back again and again to bring her family out.",
+  "startedFrom": "She was born enslaved as Araminta Ross in Dorchester County, Maryland, around 1822, the fifth of nine children; her owner sold three of her sisters away. From about age six she was hired out to other masters, and one mistress whipped her so often that the scars still showed in old age. In her teens an overseer's thrown weight fractured her skull, leaving her with seizures and sleeping spells for life, and she never learned to read or write.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Between 1850 and 1860 she went back into Maryland, a slave state, 13 times and brought out more than 70 family members and friends.",
+          "sourceId": "nps",
+          "locator": "section 'Escape from Slavery'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Frederick Douglass wrote to her that, except John Brown, he knew of no one who had willingly faced more perils and hardships to serve the enslaved.",
+          "sourceId": "bradford-1869",
+          "locator": "letter of Frederick Douglass, Rochester, Aug. 29, 1868, pp. 6-7"
+        },
+        {
+          "kind": "witness",
+          "claim": "General Rufus Saxton wrote in 1868 that she made many raids inside enemy lines, 'displaying remarkable courage, zeal, and fidelity.'",
+          "sourceId": "bradford-1869",
+          "locator": "letter of Gen. Rufus Saxton, Atlanta, March 21, 1868, p. 64"
+        },
+        {
+          "kind": "words",
+          "claim": "She told Bradford she had decided that liberty or death were the two things she had a right to, and that no man should take her alive.",
+          "sourceId": "bradford-1886",
+          "locator": "p. 29 (as told to Sarah Bradford)"
+        }
+      ]
+    },
+    {
+      "word": "Family",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "After her escape she told Bradford that her home was still in Maryland, where her parents, brothers and sisters were, and that she would make a home in the North and bring them there.",
+          "sourceId": "bradford-1869",
+          "locator": "p. 20 (as told to Sarah Bradford)"
+        },
+        {
+          "kind": "deed",
+          "claim": "Her first rescue, in December 1850, was her niece Kessiah Bowley and two children; she brought out three of her brothers on Christmas Day 1854 and her parents about two years later.",
+          "sourceId": "larson-flight",
+          "locator": "page 'Harriet Tubman's Flight to Freedom'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1859 she bought a house in Auburn, New York, from William H. Seward as a home for her family.",
+          "sourceId": "nps",
+          "locator": "section 'Life in Auburn, New York'"
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked how she was not afraid to go back with a price on her head, she answered that it was not her but the Lord, and that she told him she trusted him to lead her.",
+          "sourceId": "bradford-1869",
+          "locator": "p. 35 (as told to Sarah Bradford)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Thomas Garrett, the Wilmington Underground Railroad agent, wrote that he never met anyone of any colour with more confidence in the voice of God.",
+          "sourceId": "bradford-1869",
+          "locator": "letter of Thomas Garrett, Wilmington, 6th month 1868, p. 49"
+        },
+        {
+          "kind": "witness",
+          "claim": "Her biographer Kate Clifford Larson writes that her life was rooted in an intensely deep spiritual faith.",
+          "sourceId": "larson-bio",
+          "locator": "page 'Harriet Tubman Biography', closing paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In the Civil War she nursed sick soldiers and freed people at Fernandina and in smallpox and fever wards, drawing only twenty days' rations for herself in four years.",
+          "sourceId": "bradford-1869",
+          "locator": "p. 38"
+        },
+        {
+          "kind": "witness",
+          "claim": "Army surgeon Henry K. Durrant certified in May 1864 her 'kindness and attention to the sick and suffering of her own race.'",
+          "sourceId": "bradford-1869",
+          "locator": "certificate of Henry K. Durrant, Beaufort, S.C., May 3, 1864, p. 68"
+        },
+        {
+          "kind": "deed",
+          "claim": "She bought land next to her own in Auburn by mortgage for the Harriet Tubman Home for the Aged and transferred it to the AME Zion Church in 1903.",
+          "sourceId": "larson-bio",
+          "locator": "page 'Harriet Tubman Biography'"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In June 1863 she planned the raid up the Combahee River and led it with Colonel James Montgomery and the 2nd Carolina Colored Infantry; it freed more than 750 people.",
+          "sourceId": "nps",
+          "locator": "section 'Military Leader'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Wendell Phillips recalled John Brown introducing her as 'one of the best and bravest persons on this continent--General Tubman, as we call her.'",
+          "sourceId": "bradford-1869",
+          "locator": "letter of Wendell Phillips, June 16, 1868, p. 5"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1863 she took on the role of a scout and organized a group of spies for the Union army.",
+          "sourceId": "nwhm",
+          "locator": "section 'General Tubman: The Union Spy'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Decide what you will not live without, and be ready to fight for it rather than be taken back.",
+      "sourceId": "bradford-1886",
+      "locator": "p. 29 ('one of two things I had a right to, liberty, or death')"
+    },
+    {
+      "text": "When you get free of something, go back for the people you love.",
+      "sourceId": "bradford-1869",
+      "locator": "p. 20 ('I was free, and they should be free')"
+    },
+    {
+      "text": "Pay for your mission with your own work first: earn the money, then go.",
+      "sourceId": "bradford-1869",
+      "locator": "pp. 20 and 78 (worked in hotels and kitchens, then went back; expeditions paid chiefly with her own money)"
+    },
+    {
+      "text": "Once a group sets out, nobody turns back and puts the rest in danger.",
+      "sourceId": "bradford-1869",
+      "locator": "p. 25"
+    },
+    {
+      "text": "Go where you believe you are sent, and do not let fear of the price on your head decide for you.",
+      "sourceId": "bradford-1869",
+      "locator": "pp. 35 and 49 (her answer on fear; Thomas Garrett's letter)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I had reasoned dis out in my mind; there was one of two things I had a right to, liberty, or death; if I could not have one, I would have de oder; for no man should take me alive…",
+      "sourceId": "bradford-1886",
+      "locator": "p. 29 (her words as told to Sarah Bradford)"
+    },
+    {
+      "text": "I was free, and they should be free. I would make a home in the North and bring them there, God helping me.",
+      "sourceId": "bradford-1869",
+      "locator": "p. 20 (her words as told to Sarah Bradford)"
+    },
+    {
+      "text": "When I found I had crossed dat line, I looked at my hands to see if I was de same pusson.",
+      "sourceId": "bradford-1869",
+      "locator": "p. 19 (her words as told to Sarah Bradford)"
+    },
+    {
+      "text": "I grew up like a neglected weed,--ignorant of liberty, having no experience of it.",
+      "sourceId": "drew-1856",
+      "locator": "p. 30, 'Harriet Tubman' (interview at St. Catharines, Canada West)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In March 1849 her owner, Edward Brodess, died in debt, and she expected to be sold south. In the fall of 1849 she escaped alone, travelling by night with the North Star and help from Black and white helpers, and reached Philadelphia. She told Bradford that she was free but no one was there to welcome her, because her family was still in Maryland. In December 1850 she made her first rescue: she waited in Baltimore while her niece Kessiah Bowley's free husband took Kessiah and their two children from the auction block in Cambridge, Maryland, and sailed them up the Chesapeake to her.",
+    "sourceIds": [
+      "nps",
+      "larson-flight",
+      "bradford-1869"
+    ]
+  },
+  "shadow": {
+    "text": "On her rescue trips she carried a revolver, and when worn-out runaways wanted to turn back, she pointed it at their heads, said that dead runaways tell no tales (Bradford prints her word, a racial slur), and told them: \"Go on or die.\" Bradford writes that she carried the babies in her parties drugged with paregoric, and Larson records an infant in the Ennals family, in December 1860, drugged to keep it quiet as slave patrols passed. Before her escape, while her owner was trying to sell her, she prayed for God to kill him; he died in March 1849, and she told Bradford that she would then have given all the world to bring him back.",
+    "sourceIds": [
+      "bradford-1869",
+      "bradford-1886",
+      "larson-flight",
+      "larson-myths"
+    ]
+  },
+  "councilQuestion": {
+    "text": "You have got further than someone close to you: what did you do this week to bring them along?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "Scenes in the Life of Harriet Tubman (her story as told to Sarah Bradford)",
+      "year": 1869
+    },
+    {
+      "title": "Harriet, the Moses of Her People (her story as told to Sarah Bradford)",
+      "year": 1886
+    }
+  ],
+  "sources": [
+    {
+      "id": "bradford-1869",
+      "kind": "primary",
+      "title": "Scenes in the Life of Harriet Tubman (her words as told to the author, with letters from Douglass, Phillips, Garrett, Saxton and others)",
+      "author": "Sarah H. Bradford",
+      "year": 1869,
+      "publisher": "W. J. Moses, Auburn, N.Y. (Documenting the American South, UNC)",
+      "url": "https://docsouth.unc.edu/neh/bradford/bradford.html"
+    },
+    {
+      "id": "bradford-1886",
+      "kind": "primary",
+      "title": "Harriet, the Moses of Her People (her words as told to the author)",
+      "author": "Sarah H. Bradford",
+      "year": 1886,
+      "publisher": "Geo. R. Lockwood & Son, New York (Documenting the American South, UNC)",
+      "url": "https://docsouth.unc.edu/neh/harriet/harriet.html"
+    },
+    {
+      "id": "drew-1856",
+      "kind": "primary",
+      "title": "A North-Side View of Slavery. The Refugee: or the Narratives of Fugitive Slaves in Canada, Related by Themselves",
+      "author": "Benjamin Drew",
+      "year": 1856,
+      "publisher": "John P. Jewett and Company, Boston (Documenting the American South, UNC)",
+      "url": "https://docsouth.unc.edu/neh/drew/drew.html"
+    },
+    {
+      "id": "nps",
+      "kind": "secondary",
+      "title": "Harriet Tubman",
+      "author": "Harriet Tubman Underground Railroad National Historical Park, U.S. National Park Service",
+      "year": 2022,
+      "publisher": "U.S. National Park Service",
+      "url": "https://www.nps.gov/hatu/learn/historyculture/htubman.htm"
+    },
+    {
+      "id": "nwhm",
+      "kind": "secondary",
+      "title": "Harriet Tubman (biography)",
+      "author": "Shay Dawson, National Women's History Museum",
+      "year": 2024,
+      "publisher": "National Women's History Museum",
+      "url": "https://www.womenshistory.org/education-resources/biographies/harriet-tubman"
+    },
+    {
+      "id": "larson-bio",
+      "kind": "secondary",
+      "title": "Harriet Tubman Biography (companion site to Bound for the Promised Land, 2004)",
+      "author": "Kate Clifford Larson",
+      "year": "n.d. (read 2026)",
+      "publisher": "harriettubmanbiography.com (Internet Archive copy)",
+      "url": "https://web.archive.org/web/20260316040436/http://www.harriettubmanbiography.com/harriet-tubman-biography.html"
+    },
+    {
+      "id": "larson-flight",
+      "kind": "secondary",
+      "title": "Harriet Tubman's Flight to Freedom",
+      "author": "Kate Clifford Larson",
+      "year": "n.d. (read 2026)",
+      "publisher": "harriettubmanbiography.com (Internet Archive copy)",
+      "url": "https://web.archive.org/web/20260316040438/http://www.harriettubmanbiography.com/harriet-tubman-s-flight-to-freedom.html"
+    },
+    {
+      "id": "larson-myths",
+      "kind": "secondary",
+      "title": "Harriet Tubman Myths and Facts, and Selected Quotes and Misquotes",
+      "author": "Kate Clifford Larson",
+      "year": "n.d. (read 2026)",
+      "publisher": "harriettubmanbiography.com (Internet Archive copy)",
+      "url": "https://web.archive.org/web/20261026122557/http://harriettubmanbiography.com/harriet-tubman-myths-and-facts.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real 19th-century abolitionist and Union scout, dead since 1913, not a living politician or religious founder, with no credible account of sexual violence or of sexual contact with a minor; in, with a documented shadow (she held a revolver to the heads of runaways who wanted to turn back, drugged babies to keep them quiet, and prayed for her owner's death)."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value, quote and sentence against Bradford's 1869 and 1886 books, Drew's 1856 interview, the NPS and NWHM pages and Larson's own site, and searched for contrary accounts of her family life and of her role at Combahee. No value fell: Courage, Faith and Service are shared with the blind pick, and Family and Leadership each rest on three separate sources; the blind pick's Freedom was left out only for lack of room. All four quotes match the original pages; the first rescue was corrected (she waited in Baltimore, she did not go into Dorchester County), and the shadow now says who reports the revolver threat and the drugged babies. The account that she took a girl, Margaret, from a free home in 1859 was found only in book snippets with no page, so it stays out.",
+    "checkedOn": "2026-11-10"
+  }
+}
