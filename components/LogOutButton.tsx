@@ -21,7 +21,7 @@
  * what pressing it does.
  */
 
-import { useCallback, useRef, useState, useTransition, type ReactNode } from "react"
+import { useCallback, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 
 import { signOut } from "@/app/actions/auth"
@@ -176,6 +176,36 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
     setPhase({ kind: "idle" })
   }, [])
 
+  /**
+   * THE PAGE UNDER IT IS GONE FOR EVERYONE, NOT ONLY THE EYE (alpha
+   * p10-retest-04). The panel covered the page, but Tab went from its button
+   * into the page (the account's email, his day's buttons) and a screen
+   * reader read them out. Everything else in the body is made inert, hidden
+   * from screen readers and not drawn; the way out takes the focus.
+   */
+  const panelRef = useRef<HTMLDivElement>(null)
+  const signedOut = phase.kind === "left"
+  useLayoutEffect(() => {
+    const panel = panelRef.current
+    if (!signedOut || !panel) return
+    const covered: HTMLElement[] = []
+    for (const el of Array.from(document.body.children)) {
+      if (el === panel || !(el instanceof HTMLElement)) continue
+      el.setAttribute("inert", "")
+      el.setAttribute("aria-hidden", "true")
+      el.style.setProperty("display", "none", "important")
+      covered.push(el)
+    }
+    panel.querySelector("button")?.focus()
+    return () => {
+      for (const el of covered) {
+        el.removeAttribute("inert")
+        el.removeAttribute("aria-hidden")
+        el.style.removeProperty("display")
+      }
+    }
+  }, [signedOut])
+
   const refused = phase.kind === "asking" ? phase.refused : []
   const notDeleted = phase.kind === "asking" ? phase.notDeleted : []
   const undoSent = phase.kind === "asking" ? phase.undoSent : 0
@@ -189,11 +219,12 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
       {phase.kind === "left" &&
         createPortal(
           <div
+            ref={panelRef}
             role="status"
             data-testid="log-out-signed-out"
             className="fixed inset-0 z-[10000] flex flex-col items-center justify-center gap-3 bg-background p-6 text-center"
           >
-            <p className="text-lg font-semibold">Signed out on this phone</p>
+            <p className="text-lg font-semibold">Signed out on this device</p>
             {/* a full page load, not an app move: this page holds nothing of the session now */}
             <button type="button" onClick={() => window.location.replace("/")} className="min-h-11 text-sm underline">
               Go to the front page
