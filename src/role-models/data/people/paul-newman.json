@@ -1,0 +1,344 @@
+{
+  "id": "paul-newman",
+  "name": "Paul Newman",
+  "born": 1925,
+  "died": 2008,
+  "category": "charisma",
+  "areaIds": [
+    "lm_contribution",
+    "lm_relationship",
+    "lm_fun"
+  ],
+  "tagline": "Movie star who gave away all his food company profits and laughed at his own fame.",
+  "startedFrom": "He was born in the Cleveland area in 1925 and grew up in affluent Shaker Heights, Ohio, where his father owned a thriving sporting goods store. In his memoir he describes a hard-drinking father who had little time for him and a mother who treated him as something pretty to show off, and says he was small and a mediocre student, and believed he had a learning disability. He joined the Navy in 1943, and when a test showed he was colorblind he became an aircraft radio operator instead of a pilot.",
+  "values": [
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1982 he started the Newman's Own food brand with the writer A. E. Hotchner; the company said in 2008 that all its profits, more than $200 million, had been given to charity.",
+          "sourceId": "nyt-2008",
+          "locator": "paragraph beginning 'But the movies and the occasional stage role'"
+        },
+        {
+          "kind": "deed",
+          "claim": "The foundation that owns the company says it has given away more than $600 million to good causes since 1982.",
+          "sourceId": "nof",
+          "locator": "About Us page, section '100% for Purpose'"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked why he was a philanthropist, he said he had been very lucky and tried to acknowledge that by giving back to those to whom luck had been brutal.",
+          "sourceId": "lkl-2004",
+          "locator": "Larry King Live, 17 Apr 2004, first answer"
+        },
+        {
+          "kind": "witness",
+          "claim": "Lynn Barber notes that when he died the Economist called him the most generous individual, relative to his income, in 20th-century American history.",
+          "sourceId": "spectator-2022",
+          "locator": "last paragraph, beginning 'His daughter Clea records'"
+        }
+      ]
+    },
+    {
+      "word": "Humour",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He once handed out pots, wooden spoons and whistles to a roomful of guests and made them sit through 'The Silver Chalice', the film he called the worst movie ever made.",
+          "sourceId": "nyt-2008",
+          "locator": "paragraph beginning 'Then Hollywood knocked'"
+        },
+        {
+          "kind": "deed",
+          "claim": "By his own account, when Robert Redford gave him a wrecked, engineless Porsche for his birthday, he had it crushed, boxed and dropped in Redford's front hall.",
+          "sourceId": "lkl-2004",
+          "locator": "Larry King Live, 17 Apr 2004, final segment (question on pranks)"
+        },
+        {
+          "kind": "words",
+          "claim": "He said what he liked about his food business was that it does not take itself very seriously, and that this was half the delight of it.",
+          "sourceId": "lkl-2004",
+          "locator": "Larry King Live, 17 Apr 2004, segment on Newman's Own and the camps"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times obituary credits his acting with a physical grace, unassuming intelligence and good humor that made it all seem effortless.",
+          "sourceId": "nyt-2008",
+          "locator": "paragraph beginning 'He acted in more than 65 movies'"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He took his family to Yale University to study directing in the early 1950s and was accepted as a student at the Actors Studio in New York.",
+          "sourceId": "nyt-2008",
+          "locator": "paragraphs beginning 'In May 1950 his father died' and 'He was also accepted as a student'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he insisted on two weeks of rehearsal, unpaid, on almost every film since 1954, because without it anything on screen happens by accident.",
+          "sourceId": "filmmonthly-2002",
+          "locator": "answers to 'Do rehearsals help you?' and 'Why?'"
+        },
+        {
+          "kind": "words",
+          "claim": "In his memoir he says he never enjoyed performing but enjoyed all the preliminary work: the detail, the observation, putting things together.",
+          "sourceId": "memoir-2022",
+          "locator": "Kenyon College passage (publisher's online excerpt)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times obituary calls him an ambitious, intellectual actor and a passionate student of his craft.",
+          "sourceId": "nyt-2008",
+          "locator": "paragraph beginning 'Yet he was also an ambitious, intellectual actor'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His honorary Oscar of 1986 was given in part for his dedication to his craft.",
+          "sourceId": "ap-2008",
+          "locator": "paragraph beginning 'He won an honorary Oscar in 1986'"
+        }
+      ]
+    },
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked whether he stepped back to look at what the camps had achieved, he said he had had an idea that a lot of other people built on and expanded, so he could take some credit for it.",
+          "sourceId": "lkl-2004",
+          "locator": "Larry King Live, 17 Apr 2004, first segment (question on his achievements)"
+        },
+        {
+          "kind": "words",
+          "claim": "Told he was an icon, he answered that others said so, not he, and that his three-year-old grandson did not think so.",
+          "sourceId": "filmmonthly-2002",
+          "locator": "answer to 'Can you escape the icon of Paul Newman in your roles?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Lynn Barber's review of his memoir describes him as painfully insecure but also modest and generous.",
+          "sourceId": "spectator-2022",
+          "locator": "standfirst under the headline"
+        },
+        {
+          "kind": "witness",
+          "claim": "His daughters' written statement on his death called him a rare symbol of selfless humility, the last to acknowledge that what he was doing was special.",
+          "sourceId": "ap-2008",
+          "locator": "daughters' statement paragraph, near the end of the obituary"
+        }
+      ]
+    },
+    {
+      "word": "Partnership",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "When good roles for his wife Joanne Woodward dwindled, he produced and directed 'Rachel, Rachel' (1968) for her, which brought her an Oscar nomination; they co-starred in 10 films over a 50-year marriage.",
+          "sourceId": "nyt-2008",
+          "locator": "paragraphs beginning 'Mr. Newman's three younger daughters' and 'When good roles for Ms. Woodward dwindled'"
+        },
+        {
+          "kind": "deed",
+          "claim": "They married in 1958 and he directed her in several films, including 'Rachel, Rachel' and 'The Glass Menagerie'.",
+          "sourceId": "ap-2008",
+          "locator": "paragraph beginning 'Newman sometimes teamed with his wife'"
+        },
+        {
+          "kind": "words",
+          "claim": "In his memoir he credits Woodward with awakening him sexually, calling himself 'simply a creature of her invention'.",
+          "sourceId": "nydn-2022",
+          "locator": "paragraph beginning 'Newman knows what brought about the change' (quoting the memoir)"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Admit how much luck you were given, and pay it back to people luck has treated brutally.",
+      "sourceId": "lkl-2004",
+      "locator": "Larry King Live, 17 Apr 2004, first answer and the answer on Newman's Own after the first break"
+    },
+    {
+      "text": "Giving is the normal thing to do; it is stinginess that needs explaining.",
+      "sourceId": "filmmonthly-2002",
+      "locator": "answer to 'Is charity your responsibility as a celebrity?'"
+    },
+    {
+      "text": "Do the slow preparation first, because without it anything good that happens is an accident.",
+      "sourceId": "filmmonthly-2002",
+      "locator": "answers to 'Do rehearsals help you?' and 'Why?'"
+    },
+    {
+      "text": "Do serious work without taking yourself seriously; the fun is half the point.",
+      "sourceId": "lkl-2004",
+      "locator": "Larry King Live, 17 Apr 2004, segment on Newman's Own and the camps"
+    },
+    {
+      "text": "Deal so straight that people trust you on your word, as his father's good name carried his store through the Depression.",
+      "sourceId": "filmmonthly-2002",
+      "locator": "answer to 'What was your relationship with your father?'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I try to acknowledge that by giving back something to those to whom luck has been brutal.",
+      "sourceId": "lkl-2004",
+      "locator": "Larry King Live, CNN, aired 17 Apr 2004 (guest host Heather Mills McCartney), first answer"
+    },
+    {
+      "text": "I don't think that there's anything exceptional or noble in being philanthropic. It's the other attitude that confuses me.",
+      "sourceId": "filmmonthly-2002",
+      "locator": "Interview with Paul Fischer, Film Monthly, posted 1 Jul 2002, answer to 'Is charity your responsibility as a celebrity?'"
+    },
+    {
+      "text": "I never enjoyed acting, never enjoyed going out there and doing it. I enjoyed all the preliminary work—the detail, the observation, putting things together.",
+      "sourceId": "memoir-2022",
+      "locator": "The Extraordinary Life of an Ordinary Man (Knopf, 2022), Kenyon College passage, as printed in the publisher's online excerpt"
+    },
+    {
+      "text": "You discover a lot of things on your feet and if you don't have any rehearsal then anything that happens on the screen is by accident.",
+      "sourceId": "filmmonthly-2002",
+      "locator": "Interview with Paul Fischer, Film Monthly, posted 1 Jul 2002, answer to 'Why?' (on rehearsals)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1982, as a lark, he began selling a salad dressing he had made and bottled for friends at Christmas, in a company he started with the writer A. E. Hotchner. All its profits went to charity: more than $200 million by his death in 2008, by the company's count, and more than $600 million by the foundation's count today. Much of the money built the Hole in the Wall Gang Camps, free camps for children with cancer and other serious illnesses. When the first camp opened in 1988 it was less than half full, because, he said, parents would not trust them until the camp had proved it knew what it was doing.",
+    "sourceIds": [
+      "nyt-2008",
+      "nof",
+      "lkl-2004"
+    ]
+  },
+  "shadow": {
+    "text": "He married the actress Jacqueline Witte, whom he met in summer stock in 1949, and had three children with her; from 1953 he was drawn to Joanne Woodward, and by 1957 the two were living together while his wife at first refused a divorce. He later admitted that his drinking was out of control in those years; by 1971 Woodward came close to leaving him over it, and he gave up hard liquor but kept drinking beer. In his memoir he says he had no gift for fathering; he smoked pot with his son Scott, and says he asked Scott's forgiveness for 'that part of me which provided the impetus for his own destruction'. Scott died of an overdose of alcohol and pills in 1978, aged 28. After his mother accused Woodward of an affair with Gore Vidal, he threw her out of his car and did not speak to her again for 15 years.",
+    "sourceIds": [
+      "nyt-2008",
+      "nydn-2022",
+      "kirkus-2022",
+      "aarp-2022",
+      "spectator-2022"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did luck help you this week, and what did you give back to someone it treated badly?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Extraordinary Life of an Ordinary Man: A Memoir",
+      "year": 2022
+    },
+    {
+      "title": "Shameless Exploitation in Pursuit of the Common Good (with A. E. Hotchner)",
+      "year": 2003
+    }
+  ],
+  "sources": [
+    {
+      "id": "memoir-2022",
+      "kind": "primary",
+      "title": "The Extraordinary Life of an Ordinary Man: A Memoir (edited by David Rosenthal from interview transcripts recorded 1986-1991 with Stewart Stern)",
+      "author": "Paul Newman",
+      "year": 2022,
+      "publisher": "Alfred A. Knopf; excerpt on the Penguin Random House book page",
+      "url": "https://www.penguinrandomhouse.com/books/704752/the-extraordinary-life-of-an-ordinary-man-by-paul-newman/"
+    },
+    {
+      "id": "lkl-2004",
+      "kind": "primary",
+      "title": "Heather McCartney Interviews Paul Newman, Larry King Live (transcript)",
+      "author": "Paul Newman, interviewed by Heather Mills McCartney",
+      "year": 2004,
+      "publisher": "CNN, aired 17 April 2004",
+      "url": "https://transcripts.cnn.com/TRANSCRIPTS/0404/17/lkl.00.html"
+    },
+    {
+      "id": "filmmonthly-2002",
+      "kind": "primary",
+      "title": "Paul Newman's Road To Glory (Road to Perdition press interview)",
+      "author": "Paul Newman, interviewed by Paul Fischer",
+      "year": 2002,
+      "publisher": "Film Monthly, posted 1 July 2002; Internet Archive copy",
+      "url": "https://web.archive.org/web/20021017103322/http://www.filmmonthly.com/Profiles/Articles/PNewman/PNewman.html"
+    },
+    {
+      "id": "nyt-2008",
+      "kind": "secondary",
+      "title": "Paul Newman, a Magnetic Titan of Hollywood, Is Dead at 83 (obituary)",
+      "author": "Aljean Harmetz",
+      "year": 2008,
+      "publisher": "The New York Times, 27 September 2008",
+      "url": "https://www.nytimes.com/2008/09/28/movies/28newman.html"
+    },
+    {
+      "id": "ap-2008",
+      "kind": "secondary",
+      "title": "Paul Newman, actor who personified cool, dies (obituary)",
+      "author": "Associated Press",
+      "year": 2008,
+      "publisher": "AP, 27 September 2008, as carried by MPR News",
+      "url": "https://www.mprnews.org/story/2008/09/27/newman_obit"
+    },
+    {
+      "id": "nydn-2022",
+      "kind": "secondary",
+      "title": "Hollywood legend Paul Newman's triumphs and regrets retold in posthumous memoir",
+      "author": "Jacqueline Cutler",
+      "year": 2022,
+      "publisher": "New York Daily News, 21 October 2022, as carried by Yahoo",
+      "url": "https://www.yahoo.com/entertainment/hollywood-legend-paul-newman-triumphs-173100319.html"
+    },
+    {
+      "id": "spectator-2022",
+      "kind": "secondary",
+      "title": "The troubled life of Paul Newman (review of The Extraordinary Life of an Ordinary Man)",
+      "author": "Lynn Barber",
+      "year": 2022,
+      "publisher": "The Spectator, issue of 5 November 2022",
+      "url": "https://spectator.com/article/the-troubled-life-of-paul-newman/"
+    },
+    {
+      "id": "kirkus-2022",
+      "kind": "secondary",
+      "title": "The Extraordinary Life of an Ordinary Man (review)",
+      "author": "Kirkus Reviews",
+      "year": 2022,
+      "publisher": "Kirkus Reviews",
+      "url": "https://www.kirkusreviews.com/book-reviews/paul-newman/the-extraordinary-life-of-an-ordinary-man/"
+    },
+    {
+      "id": "aarp-2022",
+      "kind": "secondary",
+      "title": "7 Surprising Takeaways From Paul Newman's Stunningly Frank Memoir",
+      "author": "AARP (byline not shown on the page)",
+      "year": 2022,
+      "publisher": "AARP, 18 October 2022",
+      "url": "https://www.aarp.org/entertainment/books/info-2022/paul-newman-memoir.html"
+    },
+    {
+      "id": "nof",
+      "kind": "secondary",
+      "title": "About Us",
+      "author": "Newman's Own Foundation",
+      "year": "undated (read 2026-11-10)",
+      "publisher": "Newman's Own Foundation (his own foundation, not independent)",
+      "url": "https://www.newmansownfoundation.org/about-us"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American actor and food-company philanthropist (1925-2008), not fictional, never a candidate or office holder (a 1968 McCarthy delegate and an activist, now dead), not the founder of a religion, with no account found of sexual contact with anyone under 16 or of sexual violence; he is in, with a documented dark side: years of heavy drinking, an affair with Joanne Woodward while married with three children, and by his own account failures as a father."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value, every quote and every factual sentence against the Larry King transcript, the Film Monthly interview, the publisher's memoir excerpt, the NYT and AP obituaries and the four memoir reviews. All five values held: Generosity, Humour and Craft are shared with the blind pick, Humility now rests on four sources including his daughters' statement, and Partnership survived the reported 1968-69 affair, which rests only on the woman's own account in one biography and is disputed. The blind pick's Passion (racing) is well sourced but had no room. All four quotes were found word for word; five claims were tightened, among them the camp-credit paraphrase, the Scott forgiveness line now quoted exactly, and the mother rift given its cause.",
+    "checkedOn": "2026-11-10"
+  }
+}
