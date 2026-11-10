@@ -1,0 +1,273 @@
+{
+  "id": "immanuel-kant",
+  "name": "Immanuel Kant",
+  "born": 1724,
+  "died": 1804,
+  "category": "philosophers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_mission"
+  ],
+  "tagline": "A harness maker's son who lived by the clock and taught that every person has dignity.",
+  "startedFrom": "He was born in Königsberg in 1724 into an artisan family: his father was a master harness maker whose trade was in decline, and his parents at times relied on relatives for money. As a university student he was poor enough that, when his clothes were out for mending, he went out in coats and boots borrowed from the students he tutored. Both parents died before he could afford an academic career, so he spent six years as a private tutor outside the city.",
+  "values": [
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He went to bed at ten, and his servant had strict orders to wake him at five minutes to five and never let him sleep longer, however he pleaded; with some pride he would ask the servant in front of guests whether in thirty years he had ever had to wake him twice. He sat at his table by five, prepared his lectures till seven, lectured for two hours, and after dinner walked for an hour, which neither bad weather nor anything else was apt to stop.",
+          "sourceId": "stuckenberg-1882",
+          "locator": "ch. VI, pp. 159-161"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia of Philosophy says that by his retirement in 1796 he had for nearly two decades lived a highly disciplined life focused on completing his philosophical system.",
+          "sourceId": "sep-rohlf",
+          "locator": "sec. 1, Life and works"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He taught for fifteen years (1755-1770) as an unsalaried lecturer paid only by his students, about twenty hours a week, was turned down for a chair in 1758, and became professor only in 1770 at 46; he then worked for about a decade on the Critique of Pure Reason, publishing nothing else of significance until it came out in 1781.",
+          "sourceId": "sep-rohlf",
+          "locator": "sec. 1, Life and works"
+        },
+        {
+          "kind": "witness",
+          "claim": "Stuckenberg writes that, pursuing his purpose resolutely through poverty, he learned self-denial, mastered circumstances and developed remarkable will-power.",
+          "sourceId": "stuckenberg-1882",
+          "locator": "ch. II, p. 51"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy says his main professional goal as a lecturer paid by his students was the Königsberg chair of logic and metaphysics, which he reached only in 1770 at 46, and that in the 'silent decade' after it he published hardly anything while the Critique of Pure Reason took much longer than planned.",
+          "sourceId": "iep-jankowiak",
+          "locator": "sec. 1, Life"
+        }
+      ]
+    },
+    {
+      "word": "Honesty",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He argues that a man in difficulty may not make a promise he means to break, because he cannot will that lying should be a universal law.",
+          "sourceId": "abbott-1889",
+          "locator": "Fundamental Principles, First Section, p. 19"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1797 he wrote that to be truthful in all declarations is a sacred unconditional command of reason, not to be limited by any expediency, even towards a murderer asking where his victim is.",
+          "sourceId": "abbott-1889",
+          "locator": "Appendix I, On a Supposed Right to Tell Lies from Benevolent Motives, p. 363"
+        },
+        {
+          "kind": "witness",
+          "claim": "Stuckenberg writes that he regarded truthfulness as the cardinal virtue, and quotes his student Borowski: he was reliable and truthful in every word.",
+          "sourceId": "stuckenberg-1882",
+          "locator": "ch. X, pp. 326-327"
+        }
+      ]
+    },
+    {
+      "word": "Autonomy",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He names autonomy of the will, the will being a law to itself, as the supreme principle of morality.",
+          "sourceId": "abbott-1889",
+          "locator": "Fundamental Principles, Second Section, p. 59"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1792-93, when the Berlin censors refused the second part of his book on religion, he was determined to publish: he put the whole book to the Königsberg theological faculty to decide which faculty should censor it, the philosophical faculty then approved it, and the book appeared in 1793.",
+          "sourceId": "stuckenberg-1882",
+          "locator": "ch. X, pp. 361-362"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia of Philosophy speaks of the mature Kant's emphasis on reason and autonomy, rather than on emotion or dependence on authority.",
+          "sourceId": "sep-rohlf",
+          "locator": "sec. 1, Life and works"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Before you act, ask whether you could accept everyone acting on the same rule; if not, do not do it.",
+      "sourceId": "abbott-1889",
+      "locator": "Fundamental Principles, First Section, p. 19; Second Section, p. 38"
+    },
+    {
+      "text": "Treat every person, yourself included, as someone who matters in himself, never only as a tool for your goals.",
+      "sourceId": "abbott-1889",
+      "locator": "Fundamental Principles, Second Section, p. 47"
+    },
+    {
+      "text": "Do not make a promise you do not mean to keep, even to get out of trouble.",
+      "sourceId": "abbott-1889",
+      "locator": "Fundamental Principles, First Section, p. 19"
+    },
+    {
+      "text": "Develop your talents instead of letting them rust in comfort and amusement.",
+      "sourceId": "abbott-1889",
+      "locator": "Fundamental Principles, Second Section, p. 41"
+    },
+    {
+      "text": "Fix your hours for sleep, work and exercise, and keep them, so your body serves your work.",
+      "sourceId": "stuckenberg-1882",
+      "locator": "ch. VI, pp. 159-161"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Nothing can possibly be conceived in the world, or even out of it, which can be called good without qualification, except a Good Will.",
+      "sourceId": "abbott-1889",
+      "locator": "Fundamental Principles, First Section, p. 9",
+      "translation": "Thomas Kingsmill Abbott, 4th edition, 1889 (first edition 1873)"
+    },
+    {
+      "text": "So act as to treat humanity, whether in thine own person or in that of any other, in every case as an end withal, never as means only.",
+      "sourceId": "abbott-1889",
+      "locator": "Fundamental Principles, Second Section, p. 47",
+      "translation": "Thomas Kingsmill Abbott, 4th edition, 1889 (first edition 1873)"
+    },
+    {
+      "text": "Whatever has a value can be replaced by something else which is equivalent; whatever, on the other hand, is above all value, and therefore admits of no equivalent, has a dignity.",
+      "sourceId": "abbott-1889",
+      "locator": "Fundamental Principles, Second Section, p. 53",
+      "translation": "Thomas Kingsmill Abbott, 4th edition, 1889 (first edition 1873)"
+    },
+    {
+      "text": "Two things fill the mind with ever new and increasing admiration and awe, the oftener and the more steadily we reflect on them: the starry heavens above and the moral law within.",
+      "sourceId": "abbott-1889",
+      "locator": "Critique of Practical Reason, Conclusion, p. 260",
+      "translation": "Thomas Kingsmill Abbott, 4th edition, 1889 (first edition 1873)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1770, at 46, after fifteen years as an unsalaried lecturer, he finally became professor of logic and metaphysics in Königsberg. For the next decade he published almost nothing while he worked on one book. The Critique of Pure Reason came out in 1781, the year he turned 57. Early reviews were few and, in his view, missed the point, so he wrote a shorter explanation in 1783 and followed it with his main works on ethics in 1785 and 1788.",
+    "sourceIds": [
+      "sep-rohlf"
+    ]
+  },
+  "shadow": {
+    "text": "In his 1764 book on the beautiful and the sublime he wrote that Africans have by nature no feeling above the trifling, repeated Hume's claim that no Black person had ever shown talent, and said Black people were so talkative they had to be driven apart with beatings. His essay Of the Different Human Races (1775, revised 1777) sorted mankind into four races, and his physical geography lectures, edited from his manuscript at his request by Friedrich Theodor Rink and published in 1802, rank them: humanity is most perfect in the white race, the yellow Indians have less talent, Black people are far lower, and part of the American peoples lowest. In the mid-1790s he criticised European colonial practices in print; Pauline Kleingeld argues he gave up the racial ranking then, Huaping Lu-Adler that he kept it throughout. The Stanford Encyclopedia of Philosophy says his personal views are considered sexist and racist universally today. In 1794 the king's minister censured his book on religion and warned him not to repeat such views; Kant answered that 'as your Royal Majesty's most faithful subject' he would refrain from all public discussion of religion. After the king died in 1797 he held himself released and published on religion again, saying he had chosen that wording on purpose so the promise would end with the king. He was charged with duplicity; his biographer Stuckenberg calls it a mental reservation meant to make the king think he promised one thing, and his student Borowski counted it the one exception to his rule of strict truth.",
+    "sourceIds": [
+      "kant-aa-2",
+      "kant-aa-9",
+      "sep-james-race",
+      "sep-rauscher",
+      "stuckenberg-1882",
+      "iep-jankowiak"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which talent of yours did you let rust this week because comfort or amusement was easier?",
+    "principleIndex": 3
+  },
+  "readings": [
+    {
+      "title": "An Answer to the Question: What Is Enlightenment?",
+      "year": 1784
+    },
+    {
+      "title": "Groundwork of the Metaphysics of Morals (Fundamental Principles of the Metaphysic of Morals)",
+      "year": 1785
+    },
+    {
+      "title": "Critique of Practical Reason",
+      "year": 1788
+    }
+  ],
+  "sources": [
+    {
+      "id": "abbott-1889",
+      "kind": "primary",
+      "title": "Kant's Critique of Practical Reason and Other Works on the Theory of Ethics (fourth edition; includes Fundamental Principles of the Metaphysic of Morals and On a Supposed Right to Tell Lies from Benevolent Motives)",
+      "author": "Immanuel Kant, translated by Thomas Kingsmill Abbott",
+      "year": 1889,
+      "publisher": "Longmans, Green, & Co., London; Cornell University Library scan on the Internet Archive",
+      "url": "https://archive.org/details/cu31924029021612"
+    },
+    {
+      "id": "kant-aa-2",
+      "kind": "primary",
+      "title": "Beobachtungen über das Gefühl des Schönen und Erhabenen (1764) and Von den verschiedenen Racen der Menschen (1775/1777), Akademie-Ausgabe vol. II",
+      "author": "Immanuel Kant",
+      "year": "undated electronic edition",
+      "publisher": "Königlich Preußische Akademie der Wissenschaften, Berlin; electronic edition, Universität Duisburg-Essen (korpora.org)",
+      "url": "https://korpora.org/Kant/aa02/253.html"
+    },
+    {
+      "id": "kant-aa-9",
+      "kind": "primary",
+      "title": "Immanuel Kants physische Geographie, edited by Friedrich Theodor Rink (1802), Akademie-Ausgabe vol. IX",
+      "author": "Immanuel Kant, edited by F. T. Rink",
+      "year": "undated electronic edition",
+      "publisher": "Akademie-Ausgabe, Berlin; electronic edition, Universität Duisburg-Essen (korpora.org)",
+      "url": "https://korpora.org/Kant/aa09/316.html"
+    },
+    {
+      "id": "stuckenberg-1882",
+      "kind": "secondary",
+      "title": "The Life of Immanuel Kant",
+      "author": "J. H. W. Stuckenberg",
+      "year": 1882,
+      "publisher": "Macmillan and Co., London; University of Toronto scan on the Internet Archive",
+      "url": "https://archive.org/details/thelifeofimmanue00stucuoft"
+    },
+    {
+      "id": "sep-rohlf",
+      "kind": "secondary",
+      "title": "Immanuel Kant, Stanford Encyclopedia of Philosophy (first published 2010, revised 2024)",
+      "author": "Michael Rohlf",
+      "year": 2024,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/kant/"
+    },
+    {
+      "id": "sep-rauscher",
+      "kind": "secondary",
+      "title": "Kant's Social and Political Philosophy, Stanford Encyclopedia of Philosophy (first published 2007, revised 2026)",
+      "author": "Frederick Rauscher",
+      "year": 2026,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/kant-social-political/"
+    },
+    {
+      "id": "sep-james-race",
+      "kind": "secondary",
+      "title": "Race, Stanford Encyclopedia of Philosophy (first published 2008, revised 2025)",
+      "author": "Michael James",
+      "year": 2025,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/race/"
+    },
+    {
+      "id": "iep-jankowiak",
+      "kind": "secondary",
+      "title": "Immanuel Kant, Internet Encyclopedia of Philosophy",
+      "author": "Tim Jankowiak",
+      "year": "undated online article",
+      "publisher": "Internet Encyclopedia of Philosophy (University of Tennessee at Martin)",
+      "url": "https://iep.utm.edu/kantview/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real German philosopher (1724-1804), not fictional, not a politician or founder of a living religion, with no account of sexual contact with a minor or of sexual violence found; he is in, with documented racial ranking in his writings and lectures and an equivocal 1794 promise to the king."
+    },
+    "blindAgreement": 0.75,
+    "devilsAdvocate": "I attacked every value and reopened the Abbott and Stuckenberg scans, the Akademie pages and the SEP and IEP entries. Honesty held against the 1794 promise: Stuckenberg (pp. 362-364, note 148) reads it as a mental reservation, but Borowski counts it the single exception to Kant's strict truthfulness, so it is a lapse and sits in the shadow. Respect fell, because his ranking of races in print and lectures from 1764 to at least the 1780s is a pattern against respecting every person; Courage from the blind pick was not added, since he bowed to the king in 1794. Determination gained a third source (IEP), and the shadow now gives the censure, the 1797 release and the duplicity charge as the sources state them.",
+    "checkedOn": "2026-11-10"
+  }
+}
