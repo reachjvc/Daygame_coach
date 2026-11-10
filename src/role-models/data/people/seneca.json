@@ -1,0 +1,303 @@
+{
+  "id": "seneca",
+  "name": "Seneca",
+  "born": "c. 4 BC",
+  "died": 65,
+  "category": "sages",
+  "areaIds": [
+    "lm_mindset",
+    "lm_emotions"
+  ],
+  "tagline": "A rich, sickly, much-attacked adviser to Nero who wrote on time, fear and anger.",
+  "startedFrom": "He was born in Corduba, Spain, around 4 BC, son of a provincial Roman knight, a nobleman of low rank, and was probably brought to Rome by age five to train for public life. His father pushed him toward a political career and detested philosophy. As a young man he was so ill and thin that he often wanted to end his life, and only the thought of his father kept him alive; at about 45 he had still not reached the rank of praetor.",
+  "values": [
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "As a youth he was the first to arrive and the last to leave the classroom of the Stoic teacher Attalus.",
+          "sourceId": "letters-gummere",
+          "locator": "Letter 108.3"
+        },
+        {
+          "kind": "deed",
+          "claim": "As an old man he spent days at the lectures of the philosopher Metronax, and wrote that even an old man should keep learning.",
+          "sourceId": "letters-gummere",
+          "locator": "Letter 76.1-4"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy says his references to former teachers, Attalus the Stoic, Fabianus the Sextian and others, show his advanced training in philosophy and rhetoric.",
+          "sourceId": "iep-wagoner",
+          "locator": "§1 Life, Political Career, and Death"
+        }
+      ]
+    },
+    {
+      "word": "Self-awareness",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that each night, when the lamp is out and his wife is silent, he reviews his whole day and all he said and did, and hides nothing from himself.",
+          "sourceId": "dialogues-stewart",
+          "locator": "Of Anger, Book III.36"
+        },
+        {
+          "kind": "words",
+          "claim": "He tells Lucilius he keeps watching himself continually and reviews each day.",
+          "sourceId": "letters-gummere",
+          "locator": "Letter 83.2"
+        },
+        {
+          "kind": "words",
+          "claim": "Answering critics who said he talked one way and lived another, he wrote: 'I am not a wise man', and that he was satisfied if each day he took away something from his vices.",
+          "sourceId": "dialogues-stewart",
+          "locator": "Of a Happy Life, XVII-XVIII"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy notes that even in his late Letters he denies he is close to living a fully philosophical life, and says he falls short.",
+          "sourceId": "iep-wagoner",
+          "locator": "§2g Criticism and Influence"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Taught by Sotion, he gave up animal food for at least a year, and went back to it at his father's request.",
+          "sourceId": "letters-gummere",
+          "locator": "Letter 108.22"
+        },
+        {
+          "kind": "deed",
+          "claim": "He used to start each new year with a plunge into the cold water of the Virgo aqueduct.",
+          "sourceId": "letters-gummere",
+          "locator": "Letter 83.5"
+        },
+        {
+          "kind": "deed",
+          "claim": "He writes that, as Attalus taught, he still sleeps in old age on a pillow so hard that it leaves no trace of his head.",
+          "sourceId": "letters-gummere",
+          "locator": "Letter 108.23"
+        },
+        {
+          "kind": "words",
+          "claim": "He advises setting aside days of the cheapest food and roughest dress, three or four days at a time, as a test of yourself.",
+          "sourceId": "letters-gummere",
+          "locator": "Letter 18.5-7"
+        },
+        {
+          "kind": "witness",
+          "claim": "Tacitus says that at his death in 65 his aged body was emaciated by frugal living, and reports that in 64, fearing poison, he lived on field fruits and spring water.",
+          "sourceId": "tacitus-loeb",
+          "locator": "Annals 15.63; 15.45"
+        },
+        {
+          "kind": "witness",
+          "claim": "Cassius Dio, though hostile to him, says that earlier in his career he had been of such austere habits that he asked Nero to excuse him from kissing him or eating at the same table.",
+          "sourceId": "dio-loeb",
+          "locator": "61.10.4 (LacusCurtius page 'Epitome of Book 61')"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 65, ordered to die, he was 'nothing daunted', told his weeping friends to remember their philosophy, opened his veins, and dictated to his secretaries while dying.",
+          "sourceId": "tacitus-loeb",
+          "locator": "Annals 15.62-64"
+        },
+        {
+          "kind": "words",
+          "claim": "Of his illness as a young man, when he wanted to die, he writes that he commanded himself to live, because sometimes it is an act of bravery even to live.",
+          "sourceId": "letters-gummere",
+          "locator": "Letter 78.2"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy says that on receiving the sentence he is reported to have acted calmly, his last moments tranquil.",
+          "sourceId": "iep-wagoner",
+          "locator": "§1 Life, Political Career, and Death"
+        }
+      ]
+    },
+    {
+      "word": "Wealth",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Cassius Dio says he lent the Britons 40,000,000 sesterces they did not want, in hope of good interest, and later called the loan in all at once.",
+          "sourceId": "dio-loeb",
+          "locator": "62.2.1 (LacusCurtius page 'Epitome of Book 62')"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 62, after enemies accused him of a fortune beyond any private man's and of villas and gardens outshining the emperor's, he offered his estates to Nero, who refused them.",
+          "sourceId": "tacitus-loeb",
+          "locator": "Annals 14.52-56"
+        },
+        {
+          "kind": "words",
+          "claim": "He argues that the wise man may own great wealth if it is honestly gained and spent: 'my riches belong to me, you belong to your riches.'",
+          "sourceId": "dialogues-stewart",
+          "locator": "Of a Happy Life, XXI-XXIII ('my riches belong to me…' is in XXII)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy calls him one of the wealthiest men in the world.",
+          "sourceId": "iep-wagoner",
+          "locator": "introduction and §2g Criticism and Influence"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not suffer before trouble comes: most of what frightens you hurts more in your head than it will in fact.",
+      "sourceId": "letters-gummere",
+      "locator": "Letter 13.4-5, 13.10"
+    },
+    {
+      "text": "Time is the only thing that is really yours, so take hold of today's task instead of putting it off.",
+      "sourceId": "letters-gummere",
+      "locator": "Letter 1.2-3"
+    },
+    {
+      "text": "Practise being poor for a few days at a time, with cheap food and rough clothes, so you stop fearing it.",
+      "sourceId": "letters-gummere",
+      "locator": "Letter 18.5-8"
+    },
+    {
+      "text": "Each night, go over your whole day honestly and note what to do better tomorrow.",
+      "sourceId": "dialogues-stewart",
+      "locator": "Of Anger, Book III.36"
+    },
+    {
+      "text": "A trip will not cure a troubled mind; change yourself, not the place.",
+      "sourceId": "letters-gummere",
+      "locator": "Letter 28.1-2"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "There are more things, Lucilius, likely to frighten us than there are to crush us; we suffer more often in imagination than in reality.",
+      "sourceId": "letters-gummere",
+      "locator": "Letter 13.4 (Loeb vol. I, 1917)",
+      "translation": "Richard Mott Gummere, 1917"
+    },
+    {
+      "text": "Nothing, Lucilius, is ours, except time.",
+      "sourceId": "letters-gummere",
+      "locator": "Letter 1.3 (Loeb vol. I, 1917)",
+      "translation": "Richard Mott Gummere, 1917"
+    },
+    {
+      "text": "For sometimes it is an act of bravery even to live.",
+      "sourceId": "letters-gummere",
+      "locator": "Letter 78.2 (Loeb vol. II, 1920)",
+      "translation": "Richard Mott Gummere, 1920"
+    },
+    {
+      "text": "You need a change of soul rather than a change of climate.",
+      "sourceId": "letters-gummere",
+      "locator": "Letter 28.1 (Loeb vol. I, 1917)",
+      "translation": "Richard Mott Gummere, 1917"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 65 Nero sent a tribune to Seneca's villa outside Rome with an order to die, after he was named in the conspiracy of Piso. Refused his will, he told his friends he left them the image of his life, and asked them where their philosophy had gone. He and his wife Paulina opened their veins; Nero had hers bandaged, and Seneca dictated to his secretaries as he bled. When the blood and the poison were too slow, he was carried into a hot bath and died of the steam.",
+    "sourceIds": [
+      "tacitus-loeb",
+      "iep-wagoner"
+    ]
+  },
+  "shadow": {
+    "text": "The Internet Encyclopedia of Philosophy notes that he wrote that poverty is no evil while he was one of the wealthiest men in the world. In 41 the senate convicted him of adultery with Julia Livilla, Caligula's sister, and he spent eight years exiled on Corsica; Cassius Dio says Messalina trumped up the charge, and the IEP says his guilt is not clearly attested. Dio, writing about 150 years later and hostile to him, says that from exile he sent Messalina and Claudius's freedmen a book of their praises, which he later suppressed out of shame. In 54 he wrote the speech Nero gave at Claudius's funeral, and he also wrote the Apocolocyntosis, a satire on Claudius's deification. In 58 the senator Suillius asked in public by what philosophy he had won 300 million sesterces in four years of court favour, and accused him of hunting the wills of the childless and of usury. Dio says he lent the Britons 40 million sesterces they did not want and called it in all at once, one cause of their revolt of 61; Tacitus, in his account of the revolt, does not name him. In 59, when Nero's first attempt to kill his mother Agrippina failed, Tacitus says Seneca asked Burrus whether the soldiers should be ordered to do it, and then wrote Nero's letter to the senate defending the killing. Dio also charges him with an affair with Agrippina, licentiousness in his marriage, and 'the delight that he took in boys past their prime'.",
+    "sourceIds": [
+      "tacitus-loeb",
+      "dio-loeb",
+      "iep-wagoner"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you dread this week that has not actually happened?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Moral Letters to Lucilius (Richard Mott Gummere's translation)",
+      "year": "62-65"
+    }
+  ],
+  "sources": [
+    {
+      "id": "letters-gummere",
+      "kind": "primary",
+      "title": "Ad Lucilium Epistulae Morales (Moral letters to Lucilius), 3 vols., 1917-1925",
+      "author": "Seneca, translated by Richard Mott Gummere",
+      "year": 1917,
+      "publisher": "Loeb Classical Library (Heinemann / Putnam), via Wikisource",
+      "url": "https://en.wikisource.org/wiki/Moral_letters_to_Lucilius"
+    },
+    {
+      "id": "dialogues-stewart",
+      "kind": "primary",
+      "title": "Minor Dialogues, Together with the Dialogue on Clemency",
+      "author": "Seneca, translated by Aubrey Stewart",
+      "year": 1889,
+      "publisher": "George Bell and Sons (Bohn's Classical Library); Project Gutenberg eBook #64576",
+      "url": "https://www.gutenberg.org/ebooks/64576"
+    },
+    {
+      "id": "tacitus-loeb",
+      "kind": "secondary",
+      "title": "Annals, Books 12-15 (ancient account by a senator writing about 50 years later)",
+      "author": "Tacitus",
+      "year": 1937,
+      "publisher": "Loeb Classical Library, Tacitus vols. IV-V, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Tacitus/Annals/15C*.html"
+    },
+    {
+      "id": "dio-loeb",
+      "kind": "secondary",
+      "title": "Roman History, epitomes of Books 60-62 (ancient account written about 150 years later, hostile to Seneca)",
+      "author": "Cassius Dio, translated by Earnest Cary",
+      "year": 1925,
+      "publisher": "Loeb Classical Library vols. VII-VIII, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cassius_Dio/61*.html"
+    },
+    {
+      "id": "sep-vogt",
+      "kind": "secondary",
+      "title": "Seneca, Stanford Encyclopedia of Philosophy (first published 2007, revised 2024)",
+      "author": "Katja Vogt",
+      "year": 2024,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/seneca/"
+    },
+    {
+      "id": "iep-wagoner",
+      "kind": "secondary",
+      "title": "Seneca, Internet Encyclopedia of Philosophy",
+      "author": "Robert Wagoner",
+      "year": "undated",
+      "url": "https://iep.utm.edu/seneca/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Roman Stoic and statesman (c. 4 BC-65), not fictional, not a living politician or founder of a living religion, with no credible account of sexual contact with anyone under 16 or of sexual violence; he is in, with a well-documented dark side (vast wealth and its getting, his part around Agrippina's murder, flattery from exile). Dio's uncorroborated line about 'boys past their prime' (no age stated) is recorded in the shadow, not raised as an owner case."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked all five values: Discipline against Dio's citrus tables and licentiousness and Tacitus's villas, Courage against his flattery from exile and his part in Agrippina's killing, Self-awareness and Wealth against his own words. None showed a pattern that breaks the value: the luxury and the court compromises went into the shadow, and Discipline and Self-awareness, the draft's own picks, now rest on three sources each, with Dio's own note of his austere habits. All four quotes were found word for word in Gummere with no misattribution report; the shadow gained the 41 adultery conviction and the Claudius funeral speech beside the satire, and Dio's line on boys is now quoted exactly.",
+    "checkedOn": "2026-11-10"
+  }
+}

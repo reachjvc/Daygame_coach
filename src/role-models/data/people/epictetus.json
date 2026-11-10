@@ -1,0 +1,292 @@
+{
+  "id": "epictetus",
+  "name": "Epictetus",
+  "born": "c. 55",
+  "died": "c. 135",
+  "category": "sages",
+  "areaIds": [
+    "lm_mindset",
+    "lm_emotions"
+  ],
+  "tagline": "A lame former slave who taught that your own judgment is the one thing no one can take.",
+  "startedFrom": "He was born around 55 in Hierapolis in Phrygia (now Pamukkale, Turkey) and came to Rome as a boy, the slave of Epaphroditus, a rich freedman who had served Nero. He was lame: one ancient story says his master twisted his leg until it broke, while the tenth-century Suda blames rheumatism. While still a slave he studied with the Stoic teacher Musonius Rufus.",
+  "values": [
+    {
+      "word": "Freedom",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He defines the free man as one who lives as he wishes, not subject to compulsion, hindrance or force, whose desires are not thwarted.",
+          "sourceId": "discourses-long",
+          "locator": "Discourses IV.1"
+        },
+        {
+          "kind": "words",
+          "claim": "He tells a tyrant who threatens chains that he may fetter the leg, but not even Zeus can overpower the will.",
+          "sourceId": "discourses-long",
+          "locator": "Discourses I.1"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia says his chief concerns are integrity, self-management and personal freedom.",
+          "sourceId": "sep-graver",
+          "locator": "opening summary (above §1)"
+        }
+      ]
+    },
+    {
+      "word": "Acceptance",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He tells the reader not to ask that things happen as he wishes, but to wish them to happen as they do.",
+          "sourceId": "discourses-long",
+          "locator": "Encheiridion 8"
+        },
+        {
+          "kind": "words",
+          "claim": "He tells his students he would say to God: I have been sick and poor because it was your will, and I was content.",
+          "sourceId": "discourses-long",
+          "locator": "Discourses III.5"
+        },
+        {
+          "kind": "deed",
+          "claim": "Celsus, quoted by Origen, tells that when his master twisted his leg he said, smiling and unmoved, 'You will break my leg', and when it broke, 'Did I not tell you that you would break it?' Origen calls his firmness justly admired.",
+          "sourceId": "origen-crombie",
+          "locator": "Against Celsus VII.53-54"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy retells the story of him enduring the broken leg with complete composure, and notes that the Suda blames his lameness on rheumatism instead.",
+          "sourceId": "iep-seddon",
+          "locator": "§1 Life"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Banished from Rome by Domitian in about 89, he opened his own school at Nicopolis, which drew many upper-class Romans, among them Arrian.",
+          "sourceId": "iep-seddon",
+          "locator": "§1 Life"
+        },
+        {
+          "kind": "words",
+          "claim": "He tells his students that the philosopher's school is a surgery: they should leave it not with pleasure but with pain.",
+          "sourceId": "discourses-long",
+          "locator": "Discourses III.23"
+        },
+        {
+          "kind": "witness",
+          "claim": "His pupil Arrian writes that he wrote down the talks in Epictetus's own words as nearly as he could, and that a hearer could not help being moved the way Epictetus wished.",
+          "sourceId": "discourses-long",
+          "locator": "Arrian's prologue, letter to Lucius Gellius"
+        },
+        {
+          "kind": "witness",
+          "claim": "Gellius reports that Herodes Atticus called him the greatest of Stoics and had his Discourses read out to silence a boastful young man.",
+          "sourceId": "gellius-loeb",
+          "locator": "Attic Nights 1.2.6-13"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He tells his students to train against their own pulls: 'I am rather inclined to pleasure: I will incline to the contrary side above measure for the sake of exercise.'",
+          "sourceId": "discourses-long",
+          "locator": "Discourses III.12"
+        },
+        {
+          "kind": "words",
+          "claim": "He tells the reader to train in labour and endurance for himself, not for show: when very thirsty, take a draught of cold water, spit it out, and tell no one.",
+          "sourceId": "discourses-long",
+          "locator": "Encheiridion 47"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia names integrity, self-management and personal freedom as his chief concerns.",
+          "sourceId": "sep-graver",
+          "locator": "opening summary (above §1)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Gellius describes the first book of the Discourses as the place where the old man rebukes young self-styled Stoics who showed neither virtue nor honest industry but only babbled.",
+          "sourceId": "gellius-loeb",
+          "locator": "Attic Nights 1.2.6"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Sort everything into what is in your power (your opinions, wants and aversions) and what is not (body, property, reputation), and put your effort only into the first.",
+      "sourceId": "discourses-long",
+      "locator": "Encheiridion 1"
+    },
+    {
+      "text": "What upsets you is your opinion about an event, not the event itself.",
+      "sourceId": "discourses-long",
+      "locator": "Encheiridion 5"
+    },
+    {
+      "text": "Stop wishing things would go your way; want them to go the way they go.",
+      "sourceId": "discourses-long",
+      "locator": "Encheiridion 8"
+    },
+    {
+      "text": "Real change in a man takes time, the way a fig must flower, fruit and ripen.",
+      "sourceId": "discourses-long",
+      "locator": "Discourses I.15"
+    },
+    {
+      "text": "Know what you are worth, and do not sell your own will for a small price.",
+      "sourceId": "discourses-long",
+      "locator": "Discourses I.2"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Men are disturbed not by the things which happen, but by the opinions about the things…",
+      "sourceId": "discourses-long",
+      "locator": "Encheiridion 5",
+      "translation": "George Long, 1877"
+    },
+    {
+      "text": "You may fetter my leg, but my will not even Zeus himself can overpower.",
+      "sourceId": "discourses-long",
+      "locator": "Discourses I.1",
+      "translation": "George Long, 1877"
+    },
+    {
+      "text": "Seek not that the things which happen should happen as you wish; but wish the things which happen to be as they are, and you will have a tranquil flow of life.",
+      "sourceId": "discourses-long",
+      "locator": "Encheiridion 8",
+      "translation": "George Long, 1877"
+    },
+    {
+      "text": "Nothing great… is produced suddenly, since not even the grape or the fig is.",
+      "sourceId": "discourses-long",
+      "locator": "Discourses I.15",
+      "translation": "George Long, 1877"
+    }
+  ],
+  "definingMoment": {
+    "text": "In about 89 the emperor Domitian banished the philosophers from Rome, and Epictetus, by then a free man, had to leave. He went to Nicopolis in north-west Greece and opened his own school, which drew upper-class Romans; he taught there until his death around 135. One student, Arrian, wrote down his talks as nearly as he could in his own words, and those notes are the Discourses we read today.",
+    "sourceIds": [
+      "iep-seddon",
+      "sep-graver",
+      "discourses-long"
+    ]
+  },
+  "shadow": {
+    "text": "He did not oppose slavery itself: Emily Wilson, reviewing his works in the London Review of Books (2023), writes that he assumed it was normal, never suggested that those who owned people were committing a moral evil, and at times repeated the conventional line that runaway slaves are cowards. He taught that a man kissing his child or wife should tell himself he is kissing a human being, so that he will not be disturbed when they die; Wilson writes that such advice is of little use to a parent who puts his children's well-being above his own calm. He often told his students 'the door is open', and a note in George Long's translation, citing the editor Schweighaeuser, ties this to the Stoic teaching that death is in a man's own power. Lucian records that he urged the younger philosopher Demonax to marry and have children, though he never married himself; Demonax answered by asking for one of his daughters.",
+    "sourceIds": [
+      "lrb-wilson",
+      "discourses-long",
+      "lucian-fowler",
+      "long-life",
+      "iep-seddon"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which thing outside your power did you spend the most worry on this week?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Encheiridion (The Manual), compiled by Arrian; George Long's translation is free",
+      "year": "c. 104-107"
+    },
+    {
+      "title": "Discourses, recorded by Arrian; George Long's translation is free",
+      "year": "c. 104-107"
+    }
+  ],
+  "sources": [
+    {
+      "id": "discourses-long",
+      "kind": "primary",
+      "title": "The Discourses of Epictetus; with the Encheiridion and Fragments (talks written down by his pupil Arrian; Arrian's prologue included)",
+      "author": "Epictetus, recorded by Arrian, translated by George Long",
+      "year": 1877,
+      "publisher": "Wikisource transcription of the 1877 edition",
+      "url": "https://en.wikisource.org/wiki/The_Discourses_of_Epictetus;_with_the_Encheiridion_and_Fragments"
+    },
+    {
+      "id": "long-life",
+      "kind": "secondary",
+      "title": "Epictetus (introductory life, prefaced to his translation of the Discourses)",
+      "author": "George Long",
+      "year": 1877,
+      "url": "https://en.wikisource.org/wiki/The_Discourses_of_Epictetus;_with_the_Encheiridion_and_Fragments/Epictetus"
+    },
+    {
+      "id": "sep-graver",
+      "kind": "secondary",
+      "title": "Epictetus, Stanford Encyclopedia of Philosophy (first published 2008, revised 2025)",
+      "author": "Margaret Graver",
+      "year": 2025,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/epictetus/"
+    },
+    {
+      "id": "iep-seddon",
+      "kind": "secondary",
+      "title": "Epictetus, Internet Encyclopedia of Philosophy",
+      "author": "Keith H. Seddon",
+      "year": "undated",
+      "url": "https://iep.utm.edu/epictetu/"
+    },
+    {
+      "id": "origen-crombie",
+      "kind": "secondary",
+      "title": "Against Celsus, Book VII (preserves Celsus's story of the broken leg; 3rd century)",
+      "author": "Origen, translated by Frederick Crombie",
+      "year": 1885,
+      "publisher": "Ante-Nicene Fathers vol. 4; New Advent",
+      "url": "https://www.newadvent.org/fathers/04167.htm"
+    },
+    {
+      "id": "lucian-fowler",
+      "kind": "secondary",
+      "title": "The Works of Lucian of Samosata, vol. III (Life of Demonax; 2nd century)",
+      "author": "Lucian, translated by H. W. Fowler and F. G. Fowler",
+      "year": 1905,
+      "publisher": "Clarendon Press; Project Gutenberg eBook #6829",
+      "url": "https://www.gutenberg.org/ebooks/6829"
+    },
+    {
+      "id": "gellius-loeb",
+      "kind": "secondary",
+      "title": "Attic Nights, Book I (2nd century)",
+      "author": "Aulus Gellius",
+      "year": 1927,
+      "publisher": "Loeb Classical Library vol. I, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Gellius/1*.html"
+    },
+    {
+      "id": "lrb-wilson",
+      "kind": "secondary",
+      "title": "I have gorgeous hair (review of Epictetus, The Complete Works, trans. Robin Waterfield), London Review of Books vol. 45 no. 11, 1 June 2023",
+      "author": "Emily Wilson",
+      "year": 2023,
+      "publisher": "London Review of Books",
+      "url": "https://www.lrb.co.uk/the-paper/v45/n11/emily-wilson/i-have-gorgeous-hair"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "ok",
+      "notes": "A real Greek Stoic teacher (c. 55-c. 135), born a slave, not a politician or founder of a living religion, with no account of sexual contact with a minor or of sexual violence; his dark side is small and of the record kind (views on slavery, family, suicide, an unmarried man urging marriage)."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I attacked all five draft values and opened every cited text. Simplicity and Kindness fell: each rested on two sources, and the adoption story behind Kindness is one late anecdote (Simplicius) retold by Long and the Stanford Encyclopedia, while the IEP says he had no children. Freedom, Acceptance and Mentorship held in both picks, and Discipline came in from the blind pick on his own training rules plus the Stanford Encyclopedia and Gellius. All four quotes were found word for word in Long's 1877 text; the shadow now gives Wilson's slavery point as she words it and no longer calls Demonax his pupil, which Lucian does not say.",
+    "checkedOn": "2026-11-10"
+  }
+}

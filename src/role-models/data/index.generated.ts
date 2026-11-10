@@ -3,8 +3,11 @@ import type { RoleModelPerson } from "../types"
 
 import p_alex_hormozi from "./people/alex-hormozi.json"
 import p_baruch_spinoza from "./people/baruch-spinoza.json"
+import p_epictetus from "./people/epictetus.json"
+import p_friedrich_nietzsche from "./people/friedrich-nietzsche.json"
 import p_marcus_aurelius from "./people/marcus-aurelius.json"
+import p_seneca from "./people/seneca.json"
 
-export const PERSON_IDS = ["alex-hormozi","baruch-spinoza","marcus-aurelius"] as const
+export const PERSON_IDS = ["alex-hormozi","baruch-spinoza","epictetus","friedrich-nietzsche","marcus-aurelius","seneca"] as const
 
-export const PEOPLE = [p_alex_hormozi, p_baruch_spinoza, p_marcus_aurelius] as unknown as RoleModelPerson[]
+export const PEOPLE = [p_alex_hormozi, p_baruch_spinoza, p_epictetus, p_friedrich_nietzsche, p_marcus_aurelius, p_seneca] as unknown as RoleModelPerson[]

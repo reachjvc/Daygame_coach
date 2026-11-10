@@ -1,0 +1,333 @@
+{
+  "id": "friedrich-nietzsche",
+  "name": "Friedrich Nietzsche",
+  "born": 1844,
+  "died": 1900,
+  "category": "philosophers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_emotions",
+    "lm_mission"
+  ],
+  "tagline": "A philosopher who kept writing through nearly ten years of illness and told men to love their fate.",
+  "startedFrom": "He was born in 1844 in Röcken, a small Prussian town, the son of a Lutheran minister. His father died of a brain haemorrhage before he was five, his little brother died soon after, and he grew up in Naumburg in a household of his mother, sister, grandmother and an aunt. From 14 to 19 he attended Schulpforta, a first-rate boarding school, and he was never in outstanding health.",
+  "values": [
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Headaches, eye trouble and vomiting forced him to resign his Basel professorship in June 1879, at 34; his main works were written in the nearly ten wandering years that followed.",
+          "sourceId": "sep-wicks",
+          "locator": "§1 Life: 1844–1900"
+        },
+        {
+          "kind": "deed",
+          "claim": "In the summer of 1879, ill and poorly lodged in the Engadine, he filled six notebooks; in September he sent the finished manuscript to Peter Gast, writing that death might take him at any hour and that his sufferings had not changed his humour.",
+          "sourceId": "halevy-1911",
+          "locator": "Chapter V, Crisis and Convalescence"
+        },
+        {
+          "kind": "witness",
+          "claim": "Halévy writes that he had no God, no faith and no friends to lean on, 'and yet he did not bend'.",
+          "sourceId": "halevy-1911",
+          "locator": "Chapter V, Crisis and Convalescence"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that he stopped being a pessimist in the years his vitality was lowest, and that what does not kill a well-made man makes him stronger.",
+          "sourceId": "ecce-homo-ludovici",
+          "locator": "'Why I Am So Wise', §2"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "From August to October 1870 he served as a hospital attendant in the Franco-Prussian War, took part in the siege of Metz, nursed wounded soldiers closely and caught diphtheria and dysentery.",
+          "sourceId": "sep-wicks",
+          "locator": "§1 Life: 1844–1900"
+        },
+        {
+          "kind": "witness",
+          "claim": "Halévy says that in charge of wounded men in 1870 'he did his duty with kindness and courage'.",
+          "sourceId": "halevy-1911",
+          "locator": "Chapter III, Friedrich Nietzsche and Richard Wagner—Triebschen"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that the secret of the greatest productivity and enjoyment of life is to live in danger.",
+          "sourceId": "gay-science-common",
+          "locator": "§283"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1878 he published Human, All-Too-Human, which ended his friendship with Richard Wagner.",
+          "sourceId": "iep-wilkerson",
+          "locator": "§1 Life"
+        },
+        {
+          "kind": "deed",
+          "claim": "From 1880 he lived as a stateless man, having given up his German citizenship without taking Swiss citizenship, never staying anywhere longer than a few months.",
+          "sourceId": "sep-wicks",
+          "locator": "§1 Life: 1844–1900"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that one must test oneself for independence: not to cling to any person, fatherland, sympathy or science.",
+          "sourceId": "bge-zimmern",
+          "locator": "§41"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia says commentators from the earliest reception have noted the value he places on individuality and the independence of the free spirit.",
+          "sourceId": "sep-anderson",
+          "locator": "§3.2.5 Individuality, Autonomy, 'Freedom of Spirit'"
+        }
+      ]
+    },
+    {
+      "word": "Solitude",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After leaving Basel he moved with the seasons, summers in Sils Maria and winters in Genoa, Nice or Rapallo, in search of relief for his illness and solitude for his work.",
+          "sourceId": "iep-wilkerson",
+          "locator": "§1 Life"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that even to suffer from solitude is an objection, and that the only thing he always suffered from was the multitude.",
+          "sourceId": "ecce-homo-ludovici",
+          "locator": "'Why I Am So Clever', §10"
+        },
+        {
+          "kind": "words",
+          "claim": "In Zarathustra he tells the reader: 'Flee, my friend, into thy solitude!', away from the noise of the market-place.",
+          "sourceId": "zarathustra-common",
+          "locator": "Part I, XII 'The Flies in the Market-place'"
+        }
+      ]
+    },
+    {
+      "word": "Acceptance",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He calls amor fati, love of fate, his formula for greatness: to want nothing to be different, and to love what is necessary, not only bear it.",
+          "sourceId": "ecce-homo-ludovici",
+          "locator": "'Why I Am So Clever', §10"
+        },
+        {
+          "kind": "words",
+          "claim": "In The Gay Science (1882), under the heading 'For the New Year', he wrote that his wish was to see what is necessary in things as beautiful: 'Amor fati: let that henceforth be my love!'",
+          "sourceId": "gay-science-common",
+          "locator": "§276"
+        },
+        {
+          "kind": "witness",
+          "claim": "Halévy writes that in his worst illness in 1879 he accepted suffering as a test and as a spiritual exercise, and refused to complain.",
+          "sourceId": "halevy-1911",
+          "locator": "Chapter V, Crisis and Convalescence"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Love what is necessary in your life, the hard parts too; do not only put up with it.",
+      "sourceId": "ecce-homo-ludovici",
+      "locator": "'Why I Am So Clever', §10"
+    },
+    {
+      "text": "What your conscience really asks is that you become who you are.",
+      "sourceId": "gay-science-common",
+      "locator": "§270"
+    },
+    {
+      "text": "Treat a hardship that does not break you as training that makes you stronger.",
+      "sourceId": "twilight-ludovici",
+      "locator": "'Maxims and Missiles', 8"
+    },
+    {
+      "text": "Shape your strengths and weaknesses into one style of your own, by long practice and daily work.",
+      "sourceId": "gay-science-common",
+      "locator": "§290"
+    },
+    {
+      "text": "Live so that you would want this same life again, over and over, forever.",
+      "sourceId": "gay-science-common",
+      "locator": "§341"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "My formula for greatness in man is amor fati: the fact that a man wishes nothing to be different, either in front of him or behind him, or for all eternity.",
+      "sourceId": "ecce-homo-ludovici",
+      "locator": "'Why I Am So Clever', §10",
+      "translation": "Anthony M. Ludovici, 1911"
+    },
+    {
+      "text": "That which does not kill me, makes me stronger.",
+      "sourceId": "twilight-ludovici",
+      "locator": "'Maxims and Missiles', 8",
+      "translation": "Anthony M. Ludovici, 1911"
+    },
+    {
+      "text": "If a man knows the wherefore of his existence, then the manner of it can take care of itself.",
+      "sourceId": "twilight-ludovici",
+      "locator": "'Maxims and Missiles', 12",
+      "translation": "Anthony M. Ludovici, 1911"
+    },
+    {
+      "text": "The secret of realising the largest productivity and the greatest enjoyment of existence is to live in danger! Build your cities on the slope of Vesuvius!",
+      "sourceId": "gay-science-common",
+      "locator": "§283",
+      "translation": "Thomas Common, 1910"
+    }
+  ],
+  "definingMoment": {
+    "text": "In June 1879, at 34, headaches, eye trouble and vomiting forced him to give up his professorship at Basel, and he left with a small pension. That summer in the Engadine, poorly lodged and sparingly fed, he filled six notebooks, and at the beginning of September he sent the finished book to his friend Peter Gast. He wrote to Gast that death might take him at any hour, and that his continual, bitter sufferings had not altered his humour. Until his collapse in January 1889 he moved between the Alps and the Mediterranean and wrote his main works.",
+    "sourceIds": [
+      "sep-wicks",
+      "halevy-1911",
+      "iep-wilkerson"
+    ]
+  },
+  "shadow": {
+    "text": "In Beyond Good and Evil (1886) he wrote that a healthy aristocracy should accept 'the sacrifice of a legion of individuals' reduced 'to slaves and instruments', and that a man of depth must think of woman 'as a possession'. The Internet Encyclopedia of Philosophy says his politics were 'definitely not democratic'. In 1882, when his friendship with Lou Salomé and Paul Rée broke, he spoke against Rée to her; Halévy says that about a year later he drafted a letter calling Rée 'a liar and a knave' and offering him a lesson 'with a pair of pistols', though it is not certain it was sent. By the early 1890s his sister Elisabeth, who had tried to found an 'Aryan, anti-Semitic' colony in Paraguay, had taken control of his papers, and in the 1930s the Nazis took up parts of his work, partly through her. He had written of 'this damned anti-Semitism' and called it the reason for his break with her.",
+    "sourceIds": [
+      "bge-zimmern",
+      "iep-wilkerson",
+      "halevy-1911",
+      "sep-wicks",
+      "time-1958"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which part of this past week would you not want to live again, exactly the same, over and over?",
+    "principleIndex": 4
+  },
+  "readings": [
+    {
+      "title": "The Gay Science (Thomas Common's translation: The Joyful Wisdom)",
+      "year": 1882
+    },
+    {
+      "title": "Twilight of the Idols",
+      "year": 1889
+    },
+    {
+      "title": "Ecce Homo",
+      "year": 1908
+    }
+  ],
+  "sources": [
+    {
+      "id": "gay-science-common",
+      "kind": "primary",
+      "title": "The Joyful Wisdom (La Gaya Scienza), Complete Works vol. 10",
+      "author": "Friedrich Nietzsche, translated by Thomas Common, edited by Oscar Levy",
+      "year": 1910,
+      "publisher": "Project Gutenberg eBook #52881",
+      "url": "https://www.gutenberg.org/ebooks/52881"
+    },
+    {
+      "id": "ecce-homo-ludovici",
+      "kind": "primary",
+      "title": "Ecce Homo, Complete Works vol. 17",
+      "author": "Friedrich Nietzsche, translated by Anthony M. Ludovici, edited by Oscar Levy",
+      "year": 1911,
+      "publisher": "Project Gutenberg eBook #52190",
+      "url": "https://www.gutenberg.org/ebooks/52190"
+    },
+    {
+      "id": "twilight-ludovici",
+      "kind": "primary",
+      "title": "The Twilight of the Idols; or, How to Philosophize with the Hammer, Complete Works vol. 16",
+      "author": "Friedrich Nietzsche, translated by Anthony M. Ludovici, edited by Oscar Levy",
+      "year": 1911,
+      "publisher": "Project Gutenberg eBook #52263",
+      "url": "https://www.gutenberg.org/ebooks/52263"
+    },
+    {
+      "id": "bge-zimmern",
+      "kind": "primary",
+      "title": "Beyond Good and Evil (from The Complete Works of Friedrich Nietzsche, 1909-1913)",
+      "author": "Friedrich Nietzsche, translated by Helen Zimmern",
+      "year": "1909-1913 edition",
+      "publisher": "Project Gutenberg eBook #4363",
+      "url": "https://www.gutenberg.org/ebooks/4363"
+    },
+    {
+      "id": "zarathustra-common",
+      "kind": "primary",
+      "title": "Thus Spake Zarathustra: A Book for All and None",
+      "author": "Friedrich Nietzsche, translated by Thomas Common",
+      "year": 1909,
+      "publisher": "Project Gutenberg eBook #1998",
+      "url": "https://www.gutenberg.org/ebooks/1998"
+    },
+    {
+      "id": "halevy-1911",
+      "kind": "secondary",
+      "title": "The Life of Friedrich Nietzsche",
+      "author": "Daniel Halévy, translated by J. M. Hone",
+      "year": 1911,
+      "publisher": "T. Fisher Unwin, London; Project Gutenberg eBook #53620",
+      "url": "https://www.gutenberg.org/ebooks/53620"
+    },
+    {
+      "id": "sep-wicks",
+      "kind": "secondary",
+      "title": "Nietzsche's Life and Works, Stanford Encyclopedia of Philosophy (first published 1997, revised 2021)",
+      "author": "Robert Wicks",
+      "year": 2021,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/nietzsche-life-works/"
+    },
+    {
+      "id": "sep-anderson",
+      "kind": "secondary",
+      "title": "Friedrich Nietzsche, Stanford Encyclopedia of Philosophy (first published 2017, revised 2026)",
+      "author": "R. Lanier Anderson",
+      "year": 2026,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/nietzsche/"
+    },
+    {
+      "id": "iep-wilkerson",
+      "kind": "secondary",
+      "title": "Nietzsche, Friedrich, Internet Encyclopedia of Philosophy",
+      "author": "Dale Wilkerson",
+      "year": "undated",
+      "url": "https://iep.utm.edu/nietzsch/"
+    },
+    {
+      "id": "time-1958",
+      "kind": "secondary",
+      "title": "Germany: Her Brother's Keeper (Time, 17 March 1958)",
+      "author": "Time magazine staff",
+      "year": 1958,
+      "publisher": "Time",
+      "url": "https://time.com/archive/6800613/germany-her-brothers-keeper"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real German philosopher (1844-1900), not a living politician or founder of a living religion, with no credible account of sexual contact with a minor or of sexual violence; he is in, with a documented dark side in his own writings (against equality, for slavery under an aristocracy, women as a possession) and in his conduct toward Paul Rée in 1882-83; the later Nazi use of his work came through his sister and is not his act."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked all five values and checked every claim against the Gutenberg texts of Common, Ludovici, Zimmern and Halévy and the SEP and IEP pages. Courage held although the IEP says he joined the 1870 war 'swayed by public opinion and youthful exuberance'; the motive does not undo the nursing at Metz. Acceptance held narrowly: Halévy's own pages show bitterness toward Rée and Lou in 1882-83, which goes in the shadow as a lapse, while his acceptance of illness is documented; the blind pick Honesty was not added for want of a deed and of room. All four quotes were found word for word, and four sentences were fixed, among them an 'expecting to die' that Halévy places in September, not the summer, and a sister who took his papers in the early 1890s, not at his collapse.",
+    "checkedOn": "2026-11-10"
+  }
+}
