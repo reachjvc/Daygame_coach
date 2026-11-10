@@ -1,0 +1,277 @@
+{
+  "id": "bruce-lee",
+  "name": "Bruce Lee",
+  "born": 1940,
+  "died": 1973,
+  "category": "athletes",
+  "areaIds": [
+    "lm_fitness",
+    "lm_mindset"
+  ],
+  "tagline": "Dropped fixed fighting styles to build his own, then took it to the screen.",
+  "startedFrom": "He was born in San Francisco in 1940, while his father, a Cantonese opera actor, was on tour, and grew up in a crowded family flat in Kowloon, Hong Kong, where he acted in about 20 films. He did badly at school, fought in the streets and was expelled from La Salle College. After a 1958 rooftop fight brought the police to his family, he left for the United States in April 1959 with $100 and worked as a waiter in Seattle while he finished high school.",
+  "values": [
+    {
+      "word": "Self-expression",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "On Canadian television in December 1971 he said that, to him, martial art ultimately means honestly expressing yourself, and that this is very hard to do.",
+          "sourceId": "berton-1971",
+          "locator": "Pierre Berton Show, Dec. 1971, about 11:43 into the broadcast"
+        },
+        {
+          "kind": "words",
+          "claim": "In a note his wife quotes, he wrote that to live is to express one's self freely in creation.",
+          "sourceId": "lee-1975",
+          "locator": "p. 158"
+        },
+        {
+          "kind": "deed",
+          "claim": "On The Way of the Dragon (1972) he wrote the script, directed, choreographed the fights and played percussion on part of the soundtrack.",
+          "sourceId": "historylink-2002",
+          "locator": "section 'Game of Death'"
+        }
+      ]
+    },
+    {
+      "word": "Growth",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In a note his wife quotes, he wrote that he was happy because he was daily growing and did not know where the limit lay.",
+          "sourceId": "lee-1975",
+          "locator": "p. 158"
+        },
+        {
+          "kind": "words",
+          "claim": "On television in 1971 he said that fighting without a fixed style is a process of continuing growth.",
+          "sourceId": "berton-1971",
+          "locator": "Pierre Berton Show, Dec. 1971, about 7:58 into the broadcast"
+        },
+        {
+          "kind": "deed",
+          "claim": "After the 1964 Wong Jack Man fight he judged his own performance neither crisp nor efficient, and changed both his way of fighting and his training.",
+          "sourceId": "lee-1975",
+          "locator": "pp. 75-76"
+        },
+        {
+          "kind": "witness",
+          "claim": "HistoryLink writes that after that fight he read all he could find, anything to help him grow as a martial artist and a human being, and built a library of more than 2,500 books.",
+          "sourceId": "historylink-2002",
+          "locator": "section 'The Way of the Intercepting Fist'"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "His biographer Matthew Polly says he was denied even minor parts for years, and that keeping at it until he succeeded is probably the most remarkable thing about him.",
+          "sourceId": "paw-2018",
+          "locator": "paragraph on Enter the Dragon and racism"
+        },
+        {
+          "kind": "deed",
+          "claim": "In August 1970 he injured his back training; doctors said he would never fight again. He refused to accept that, spent three months in bed and three more mostly at home, and used the time to write his notes on Jeet Kune Do.",
+          "sourceId": "historylink-2002",
+          "locator": "section 'The Way of the Intercepting Fist' (paragraph on 13 August 1970)"
+        },
+        {
+          "kind": "witness",
+          "claim": "His wife writes that he could never reconcile himself to giving up kung fu, and that it was more than six months before he could resume even light training.",
+          "sourceId": "lee-1975",
+          "locator": "p. 15"
+        },
+        {
+          "kind": "words",
+          "claim": "On television in 1971 he said that you have to train so that when you move, you are determined to move.",
+          "sourceId": "berton-1971",
+          "locator": "Pierre Berton Show, Dec. 1971, about 12:28 into the broadcast"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In early 1969 he wrote a note headed 'My Definite Chief Aim': to be the first highest paid Oriental superstar in the United States and to have $10,000,000 by 1980.",
+          "sourceId": "lee-1975",
+          "locator": "pp. 110-111"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1971 he signed with Golden Harvest in Hong Kong; The Big Boss broke the Hong Kong box-office record, and he then went into partnership with Raymond Chow and wrote and directed his next film himself.",
+          "sourceId": "historylink-2002",
+          "locator": "section 'Returning to Hong Kong a Super Hero'"
+        }
+      ]
+    },
+    {
+      "word": "Fitness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His wife writes that he ran six and sometimes seven days a week, for two to six miles, and rode ten to twenty miles on a stationary bicycle every second day.",
+          "sourceId": "lee-1975",
+          "locator": "p. 114"
+        },
+        {
+          "kind": "words",
+          "claim": "He told a reporter that the best exercise is running and that it should be kept up for life.",
+          "sourceId": "lee-1975",
+          "locator": "p. 114"
+        },
+        {
+          "kind": "deed",
+          "claim": "After the 1964 Wong Jack Man fight left him winded, he took up more extreme fitness training.",
+          "sourceId": "historylink-2002",
+          "locator": "section 'The Way of the Intercepting Fist'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His wife writes that few men have disciplined their bodies with such dedication.",
+          "sourceId": "lee-1975",
+          "locator": "p. 15"
+        },
+        {
+          "kind": "witness",
+          "claim": "Fox News, reporting the actress Sharon Farrell's account to his biographer, writes that he kept his physique with constant training and raw beef protein shakes.",
+          "sourceId": "fox-2018",
+          "locator": "paragraph on Sharon Farrell"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Express yourself honestly instead of putting on a show.",
+      "sourceId": "berton-1971",
+      "locator": "Pierre Berton Show, Dec. 1971, about 11:43 into the broadcast"
+    },
+    {
+      "text": "Do not lock yourself into one fixed style; keep growing past it.",
+      "sourceId": "berton-1971",
+      "locator": "Pierre Berton Show, Dec. 1971, about 7:00-8:00 into the broadcast"
+    },
+    {
+      "text": "Keep moving and adapting, the way running water never grows stale.",
+      "sourceId": "berton-1971",
+      "locator": "Pierre Berton Show, Dec. 1971, about 10:10 into the broadcast"
+    },
+    {
+      "text": "Write your goal down in plain words and commit to it.",
+      "sourceId": "lee-1975",
+      "locator": "pp. 110-111"
+    },
+    {
+      "text": "Train your body every day, with running as the base.",
+      "sourceId": "lee-1975",
+      "locator": "p. 114"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "To me, ultimately, martial art means honestly expressing yourself. Now it is very difficult to do.",
+      "sourceId": "berton-1971",
+      "locator": "Pierre Berton Show, Dec. 1971, about 11:43 into the broadcast"
+    },
+    {
+      "text": "I Bruce Lee, will be the first highest paid Oriental superstar in the United States. In return I will give the most exciting performances and render the best of quality in the capacity of an actor.",
+      "sourceId": "lee-1975",
+      "locator": "p. 110 ('My Definite Chief Aim', early 1969)"
+    },
+    {
+      "text": "I am happy because I am daily growing and am honestly not knowing where the limit lies.",
+      "sourceId": "lee-1975",
+      "locator": "p. 158"
+    }
+  ],
+  "definingMoment": {
+    "text": "In December 1964 in Oakland, leaders of the local Chinese martial arts community objected to his teaching non-Chinese students and sent Wong Jack Man to challenge him: if Lee lost, he was to stop. Lee refused their rules and fought; in his wife's account he won comparatively easily, while Wong Jack Man later gave a different account. Lee judged his own fighting neither crisp nor efficient, and began to drop fixed style and train harder. This was the start of the method he later called Jeet Kune Do.",
+    "sourceIds": [
+      "historylink-2002",
+      "lee-1975"
+    ]
+  },
+  "shadow": {
+    "text": "As a teenager in Hong Kong he fought in street gangs; in 1967 he told Black Belt magazine, 'I was a punk and went out looking for fights.' His wife writes that he had a very fiery temper; in 1973 a shouting row with the director Lo Wei at Golden Harvest ended with Lo Wei saying he had been threatened, the police called, and Lee signing a paper promising not to harm him. His biographer Matthew Polly reports affairs with the actresses Sharon Farrell and Betty Ting Pei, in whose flat he died on 20 July 1973. He used cannabis: a doctor who treated him after his collapse in May 1973 told the inquest that Lee admitted taking it.",
+    "sourceIds": [
+      "historylink-2002",
+      "lee-1975",
+      "fox-2018"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you put on a show this week instead of honestly showing what you think or feel?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Tao of Jeet Kune Do",
+      "year": 1975
+    },
+    {
+      "title": "Bruce Lee: Artist of Life",
+      "year": 1999
+    }
+  ],
+  "sources": [
+    {
+      "id": "berton-1971",
+      "kind": "primary",
+      "title": "The Pierre Berton Show: interview with Bruce Lee (recorded in Hong Kong, December 1971)",
+      "author": "Bruce Lee, interviewed by Pierre Berton",
+      "year": 1971,
+      "url": "https://archive.org/details/bruce-lee-interview-pierre-berton-show-1971"
+    },
+    {
+      "id": "lee-1975",
+      "kind": "secondary",
+      "title": "Bruce Lee: The Man Only I Knew",
+      "author": "Linda Lee",
+      "year": 1975,
+      "publisher": "Warner Paperback Library",
+      "url": "https://archive.org/details/bruce-lee-the-man-only-i-knew_202112"
+    },
+    {
+      "id": "historylink-2002",
+      "kind": "secondary",
+      "title": "Lee, Bruce (1940-1973), HistoryLink.org Essay 3999",
+      "author": "Alyssa Burrows",
+      "year": 2002,
+      "publisher": "HistoryLink.org",
+      "url": "https://historylink.org/file/3999"
+    },
+    {
+      "id": "paw-2018",
+      "kind": "secondary",
+      "title": "Bruce Lee, the Man Behind the Icon",
+      "author": "Eveline Chao",
+      "year": 2018,
+      "publisher": "Princeton Alumni Weekly",
+      "url": "https://paw.princeton.edu/article/bruce-lee-man-behind-icon"
+    },
+    {
+      "id": "fox-2018",
+      "kind": "secondary",
+      "title": "Bruce Lee may have died from a heat stroke, new book claims (interview with biographer Matthew Polly)",
+      "author": "Stephanie Nolasco",
+      "year": 2018,
+      "publisher": "Fox News",
+      "url": "https://www.foxnews.com/entertainment/bruce-lee-may-have-died-from-a-heat-stroke-new-book-claims"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Hong Kong-American martial artist and actor (1940-1973), not fictional, never a politician or the founder of a religion, with no account found of sexual contact with a minor or of sexual violence; he is in, with a documented dark side of street fighting, temper, affairs and cannabis use."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked each value and every quote. Originality fell: the editor of his own notes writes there is nothing new in them, and much of the Tao is adapted from fencing and boxing manuals and older Chinese texts. Determination, the blind pick, came in on Polly, HistoryLink and Linda Lee; Self-expression, Growth, Ambition and Fitness held. The 'Be water' quote was dropped because the Longstreet lines are credited to Stirling Silliphant's script, and the 'honestly expressing yourself' line was kept after I transcribed the broadcast audio myself and heard it at 11:43.",
+    "checkedOn": "2026-11-10"
+  }
+}
