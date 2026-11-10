@@ -11,6 +11,14 @@ const innerGameWords = [...config.matchAll(/values: \[([\s\S]*?)\]/g)].flatMap((
   [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]),
 )
 
+describe("the agents' word list file", () => {
+  it("matches the life plan list exactly", () => {
+    const file = readFileSync(path.resolve(__dirname, "../../../scripts/role-models/prompts/value-words.txt"), "utf8")
+    const words = file.trim().split("\n").flatMap((line) => line.slice(line.indexOf(":") + 1).split(",").map((w) => w.trim()))
+    expect(words).toEqual([...ROLE_MODEL_VALUE_WORDS])
+  })
+})
+
 describe("inner game to life plan word map", () => {
   it("maps every inner game word, and only those", () => {
     expect(innerGameWords.length).toBe(301)

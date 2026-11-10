@@ -28,6 +28,8 @@ export const BAD_CASES: Array<{ name: string; rules: CatalogRule[]; mutate: (p: 
   { name: "a likeness without a licence", rules: ["schema", "likeness-licence"], mutate: (p) => { p.likenessSources[0].licence = "" } },
   { name: "the same value twice", rules: ["duplicate-value"], mutate: (p) => { p.values[2].word = "discipline" } },
   { name: "a council question pointing past the principles", rules: ["council-question"], mutate: (p) => { p.councilQuestion.principleIndex = 7 } },
+  { name: "a Wikipedia page as a source", rules: ["no-wikipedia"], mutate: (p) => { p.sources[2].url = "https://en.wikipedia.org/wiki/X" } },
+  { name: "a Wikiquote page as a source", rules: ["no-wikipedia"], mutate: (p) => { p.sources[2].url = "https://en.m.wikiquote.org/wiki/X" } },
   { name: "an unknown category", rules: ["schema"], mutate: (p) => { p.category = "wizards" } },
   { name: "an unknown area", rules: ["schema"], mutate: (p) => { p.areaIds = ["lm_cooking"] } },
 ]

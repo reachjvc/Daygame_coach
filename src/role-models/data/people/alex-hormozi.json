@@ -1,0 +1,303 @@
+{
+  "id": "alex-hormozi",
+  "name": "Alex Hormozi",
+  "born": null,
+  "died": null,
+  "category": "builders",
+  "areaIds": [
+    "lm_money",
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "Quit a consulting job, got down to his last $1,000, then built and sold gym businesses.",
+  "startedFrom": "He grew up in Baltimore, the son of a doctor who fled the Iranian Revolution; his parents later divorced. He finished Vanderbilt in three years and worked as a management consultant for $50,000 to $60,000 a year. By 23 he had saved $50,000 from that pay; he quit, told his father only once he was halfway across the country, and put the savings into a gym in California, which left him $5,000 against $5,000 a month in rent.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked for the most courageous thing he has done, he names quitting his consulting job.",
+          "sourceId": "game-833",
+          "locator": "Ep 833, 00:37-00:53"
+        },
+        {
+          "kind": "deed",
+          "claim": "He quit his management consulting job to start his first business and slept on the floor of his gym because he could not pay rent.",
+          "sourceId": "czechcrunch-2025",
+          "locator": "paragraph after the Inc.com quote on his consulting job"
+        },
+        {
+          "kind": "deed",
+          "claim": "He left the job and drove across the country to start a gym; he calls the way he told his father, by phone from halfway there, cowardice.",
+          "sourceId": "doac-2026",
+          "locator": "00:35:38"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says he has come to accept that he loves working and does not need to judge himself for it.",
+          "sourceId": "mfm-2022",
+          "locator": "early in the episode (auto-caption transcript, no timestamp shown)"
+        },
+        {
+          "kind": "deed",
+          "claim": "He describes a working day that runs from about 5 AM to 4 PM.",
+          "sourceId": "mfm-2022",
+          "locator": "chapter 'Alex's 5 AM to 4 PM schedule', from 00:46:30"
+        },
+        {
+          "kind": "witness",
+          "claim": "He recounts an employee telling him that seeing him at the office at 4 AM every day, when he did not need to, showed a consistency his content did not.",
+          "sourceId": "doac-2026",
+          "locator": "01:00:23"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He calls a $1 billion goal for Acquisition.com basically irrelevant and says winning by the standards of the very rich means building something worth 10, 50 or 100 billion.",
+          "sourceId": "mfm-2023",
+          "locator": "transcript, section on why people get mega rich (no timestamp shown)"
+        },
+        {
+          "kind": "witness",
+          "claim": "A 2026 newspaper column says Acquisition.com, which he founded, reports over $250 million in annual revenue.",
+          "sourceId": "berkshire-eagle-2026",
+          "locator": "opening paragraphs"
+        }
+      ]
+    },
+    {
+      "word": "Focus",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After his 2016 car crash he fire-sold his other businesses, nine or ten run at once, to go all in on Gym Launch.",
+          "sourceId": "game-380",
+          "locator": "Ep 380, 00:47-01:47"
+        },
+        {
+          "kind": "words",
+          "claim": "He repeats his partner's point that focus cannot be seen from outside: people see the win, not the options a person turned down.",
+          "sourceId": "doac-2026",
+          "locator": "01:01:17"
+        },
+        {
+          "kind": "words",
+          "claim": "He says a season in which he focused on one thing was a game changer.",
+          "sourceId": "mfm-2022",
+          "locator": "auto-caption transcript, no timestamp shown"
+        }
+      ]
+    },
+    {
+      "word": "Building things",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Gym Launch, founded in 2016, had helped over 4,500 gyms by January 2022, and Prestige Labs was founded in 2018; both name Alex and Leila Hormozi as founders.",
+          "sourceId": "apg-2022",
+          "locator": "release of 11 January 2022, paragraphs 1-3"
+        },
+        {
+          "kind": "witness",
+          "claim": "A 2026 newspaper column says he built Gym Launch, Prestige Labs and ALAN, and wrote the $100M book series.",
+          "sourceId": "berkshire-eagle-2026",
+          "locator": "opening paragraphs"
+        },
+        {
+          "kind": "deed",
+          "claim": "His third book, $100M Money Models, set the Guinness record for the fastest-selling non-fiction book in August 2025.",
+          "sourceId": "guinness-2025",
+          "locator": "record entry 78599"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Care more about your own future than about what other people think of it.",
+      "sourceId": "doac-2026",
+      "locator": "00:25:28 (section 'Advice to His Younger Self')"
+    },
+    {
+      "text": "When you close something down, pay everyone what you owe, even if it leaves you with almost nothing.",
+      "sourceId": "game-380",
+      "locator": "Ep 380, 04:29-05:29 and 10:24-11:50"
+    },
+    {
+      "text": "Make fear specific: say what failure would actually look like and play out plan B in detail.",
+      "sourceId": "doac-2026",
+      "locator": "00:28:08 (section 'Fear Only Exists in the Vague')"
+    },
+    {
+      "text": "Keep your living costs low so you can afford to wait for a long-term goal.",
+      "sourceId": "doac-2026",
+      "locator": "00:29:54"
+    },
+    {
+      "text": "Give the right path time: more people fail by abandoning it than by choosing wrong.",
+      "sourceId": "doac-2026",
+      "locator": "01:03:48"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "You have to decide whether you care more about your future than what other people think about your future.",
+      "sourceId": "doac-2026",
+      "locator": "00:25:28 (also in the cold open, 00:00:15)"
+    },
+    {
+      "text": "Fear only exists in the vague, never in the specific.",
+      "sourceId": "doac-2026",
+      "locator": "00:28:08"
+    },
+    {
+      "text": "There are mistakes of picking the wrong path, but I think there are more mistakes of abandoning the right path.",
+      "sourceId": "doac-2026",
+      "locator": "01:03:48"
+    },
+    {
+      "text": "You'd be astonished at how little you can actually live on if you try to live on little.",
+      "sourceId": "doac-2026",
+      "locator": "00:29:54"
+    }
+  ],
+  "definingMoment": {
+    "text": "On Christmas Eve 2016 his payment processor told him it would hold the money from his gym launches for six months. He owed a salesman $22,000 in commission on sales he had not been paid for, and he paid it, which left him $1,000. He went ahead with six gym launches set for 26 December, backed by a credit card with a $100,000 limit. Gym Launch, the company built on those launches, said by January 2022 that it had helped more than 4,500 gyms.",
+    "sourceIds": [
+      "game-742",
+      "game-380",
+      "apg-2022"
+    ]
+  },
+  "shadow": {
+    "text": "By his own account, in 2016 he crashed head-on at 60 miles an hour while driving under the influence, at a time when he was running six gyms, two agencies and more. He says that in early 2017 35% of Gym Launch's sales were being refunded, because his team had no control over fulfilment. He has also said he took 'a ton of Adderall' to write a sales letter in 48 hours for a women's weight-loss product. In August 2025 Guinness World Records listed his $100M Money Models as the fastest-selling non-fiction book, 2,917,443 copies in one day; CzechCrunch reported that the count included bulk bundles of 200 books sold for about $6,000, so it counts copies, not individual buyers.",
+    "sourceIds": [
+      "game-380",
+      "game-742",
+      "guinness-2025",
+      "czechcrunch-2025"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did worry about what someone else would think steer one of your choices this week?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "$100M Offers",
+      "year": 2021
+    },
+    {
+      "title": "$100M Leads",
+      "year": 2023
+    },
+    {
+      "title": "$100M Money Models",
+      "year": 2025
+    }
+  ],
+  "sources": [
+    {
+      "id": "doac-2026",
+      "kind": "primary",
+      "title": "The Diary Of A CEO: The Man Who Made $100M Before 32: The Secret Was To Stop Letting Them Control Me (interview, 20 July 2026; Happy Scribe transcript timestamps)",
+      "author": "Alex Hormozi, interviewed by Steven Bartlett",
+      "year": 2026,
+      "url": "https://podcasts.happyscribe.com/the-diary-of-a-ceo-with-steven-bartlett/the-man-who-made-100m-before-32-the-secret-was-to-stop-letting-them-control-me-alex-hormozi"
+    },
+    {
+      "id": "game-380",
+      "kind": "primary",
+      "title": "The Game with Alex Hormozi, Ep 380: How I Made My First Million (5 April 2022; PodScripts transcript)",
+      "author": "Alex Hormozi",
+      "year": 2022,
+      "url": "https://podscripts.co/podcasts/the-game-with-alex-hormozi/how-i-made-my-first-million-ep-380"
+    },
+    {
+      "id": "game-742",
+      "kind": "primary",
+      "title": "The Game with Alex Hormozi, Ep 742: I Lost Everything Twice...Then Made $26M in 18 Months (My First Million) (11 September 2024; PodScripts transcript)",
+      "author": "Alex Hormozi",
+      "year": 2024,
+      "url": "https://podscripts.co/podcasts/the-game-with-alex-hormozi/i-lost-everything-twicethen-made-26m-in-18-months-my-first-million-ep-742"
+    },
+    {
+      "id": "game-833",
+      "kind": "primary",
+      "title": "The Game with Alex Hormozi, Ep 833: The NO BS Way To Build $1,000,000 Business (on Impact Theory with Tom Bilyeu Pt 2) (25 March 2025; PodScripts transcript)",
+      "author": "Alex Hormozi",
+      "year": 2025,
+      "url": "https://podscripts.co/podcasts/the-game-with-alex-hormozi/the-no-bs-way-to-build-1000000-business-on-impact-theory-with-tom-bilyeu-pt-2-ep-833"
+    },
+    {
+      "id": "apg-2022",
+      "kind": "secondary",
+      "title": "American Pacific Group Completes Investment into Gym Launch and Prestige Labs (press release, 11 January 2022)",
+      "author": "American Pacific Group, via Business Wire",
+      "year": 2022,
+      "url": "https://www.businesswire.com/news/home/20220111005226/en/American-Pacific-Group-Completes-Investment-into-Gym-Launch-and-Prestige-Labs"
+    },
+    {
+      "id": "czechcrunch-2025",
+      "kind": "secondary",
+      "title": "Prodal tři miliony knih za 24 hodin. Z majitele fitka se stal podnikatelský guru, jehož metody teď frčí (18 August 2025)",
+      "author": "David Zlomek",
+      "year": 2025,
+      "publisher": "CzechCrunch",
+      "url": "https://cc.cz/prodal-tri-miliony-knih-za-24-hodin-z-majitele-fitka-se-stal-podnikatelsky-guru-jehoz-metody-ted-frci/"
+    },
+    {
+      "id": "berkshire-eagle-2026",
+      "kind": "secondary",
+      "title": "Expert Alex Hormozi shared these lessons for building business (Mind Your Business column, 15 August 2026)",
+      "author": "Allen Harris",
+      "year": 2026,
+      "publisher": "The Berkshire Eagle",
+      "url": "https://www.berkshireeagle.com/businesscolumnist/expert-alex-hormozi-shared-these-lessons-for-building-business/1478442"
+    },
+    {
+      "id": "guinness-2025",
+      "kind": "secondary",
+      "title": "Fastest-selling non-fiction book",
+      "author": "Guinness World Records",
+      "year": 2025,
+      "url": "https://www.guinnessworldrecords.com/world-records/78599-fastest-selling-non-fiction-book"
+    },
+    {
+      "id": "mfm-2022",
+      "kind": "primary",
+      "title": "My First Million: From Broke At 26 To $100 Million Net Worth By 31 (Alex Hormozi Interview) (11 February 2022; Rosetta auto-caption transcript)",
+      "author": "Alex Hormozi, interviewed by the My First Million hosts",
+      "year": 2022,
+      "url": "https://rosetta.to/u/myfirstmillionpod/from-broke-at-26-to-100-million-net-worth-by-31-alex-hormozi-interview"
+    },
+    {
+      "id": "mfm-2023",
+      "kind": "primary",
+      "title": "My First Million #462: Alex Hormozi's Plan To Grow Acquisition.com To $1 Billion (6 June 2023; Rosetta transcript)",
+      "author": "Alex Hormozi, interviewed by the My First Million hosts",
+      "year": 2023,
+      "url": "https://rosetta.to/u/myfirstmillionpod/alex-hormozi-s-plan-to-grow-acquisition-com-to-1-billion-462"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living American businessman and author (Gym Launch, Acquisition.com), not a politician, campaigner or religious founder, with no credible account of sexual contact with a minor or of sexual violence found; he is in, with a documented dark side drawn mostly from his own accounts."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked all five draft values against the transcripts and the blind pick, which shared none of them. Integrity and Self-reliance fell: each rested on two of his own podcasts only, short of the three sources a draft-only word needs. Courage, Focus and Building things held with three sources each, and Hard work and Ambition came in from the blind pick on checked evidence. All four quotes matched the Diary of a CEO transcript; his birth year stays not found, because only uncited bio sites give one.",
+    "checkedOn": "2026-11-10"
+  }
+}

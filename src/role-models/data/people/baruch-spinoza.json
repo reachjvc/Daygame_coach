@@ -1,0 +1,287 @@
+{
+  "id": "baruch-spinoza",
+  "name": "Baruch Spinoza",
+  "born": 1632,
+  "died": 1677,
+  "category": "philosophers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_emotions",
+    "lm_spirituality"
+  ],
+  "tagline": "A lens grinder who lived on little so he could think and write freely.",
+  "startedFrom": "He was born in Amsterdam in 1632 into a Portuguese-Jewish merchant family of moderate means, and his mother died when he was nearly six. At seventeen he had to cut short his studies to help in the family import business, which he ran with his brother Gabriel after his father died in 1654. At twenty-three his community banned him, and he came to earn his living by grinding lenses.",
+  "values": [
+    {
+      "word": "Freedom",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Seeing toleration in Holland threatened, he put the Ethics aside and published the Theological-Political Treatise anonymously in 1670.",
+          "sourceId": "sep-nadler",
+          "locator": "§1 Biography"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that the true aim of government is liberty: to let people develop their minds and bodies in security and use their reason unshackled.",
+          "sourceId": "chief-works-1",
+          "locator": "Theologico-Political Treatise, ch. XX, pp. 258-259"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia says the best government, for Spinoza, allows freedom of philosophical speculation and of religious belief.",
+          "sourceId": "sep-nadler",
+          "locator": "§3.2 The State"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1673 he was invited to the chair of philosophy at Heidelberg by order of the Elector Palatine, and he did not take it.",
+          "sourceId": "pollock-1880",
+          "locator": "ch. I, pp. 34-35"
+        },
+        {
+          "kind": "words",
+          "claim": "Declining the chair, he writes that teaching would make him abandon his own research and that he does not know the limits within which his freedom of teaching would be confined.",
+          "sourceId": "chief-works-2",
+          "locator": "Letter LIV (to Fabritius, The Hague, 30 March 1673), pp. 374-375"
+        },
+        {
+          "kind": "deed",
+          "claim": "On a visit to the French army headquarters at Utrecht, officers suggested he could expect a pension if he dedicated a work to Louis XIV; he did not take up the offer.",
+          "sourceId": "pollock-1880",
+          "locator": "ch. I, pp. 36-37"
+        },
+        {
+          "kind": "witness",
+          "claim": "Pollock describes him as a man who could be free-spoken and of good will towards all sorts of men, but would be dependent on none.",
+          "sourceId": "pollock-1880",
+          "locator": "ch. I, p. 41"
+        }
+      ]
+    },
+    {
+      "word": "Simplicity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Among his rules of life he sets down that he will try to obtain only enough money to preserve his life and health.",
+          "sourceId": "chief-works-2",
+          "locator": "On the Improvement of the Understanding, sec. 17, rule III, p. 7"
+        },
+        {
+          "kind": "deed",
+          "claim": "When his friend Simon de Vries died, the heir offered him a yearly allowance of 500 florins; he called it too much and would take only 300.",
+          "sourceId": "pollock-1880",
+          "locator": "ch. I, p. 23"
+        },
+        {
+          "kind": "witness",
+          "claim": "Pollock writes of his almost incredible frugality, his expenses sometimes only a few pence for the whole day.",
+          "sourceId": "pollock-1880",
+          "locator": "ch. I, p. 41"
+        },
+        {
+          "kind": "witness",
+          "claim": "Elwes quotes Colerus, who lived in his last lodgings: it is scarce credible how sober and frugal he was, though friends offered him their purses.",
+          "sourceId": "elwes-intro",
+          "locator": "Introduction, p. xviii"
+        }
+      ]
+    },
+    {
+      "word": "Peace",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Declining the Heidelberg chair, he writes that he is not holding back in the hope of something better, but through his love of quietness, which he can keep if he stays away from lecturing in public.",
+          "sourceId": "chief-works-2",
+          "locator": "Letter LIV (to Fabritius, The Hague, 30 March 1673), p. 375"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1675 he went to Amsterdam to publish the Ethics; when theologians complained of him to the prince and the magistrates, he put off publication, and it did not appear in his lifetime.",
+          "sourceId": "pollock-1880",
+          "locator": "ch. I, p. 38"
+        },
+        {
+          "kind": "witness",
+          "claim": "Pollock writes that it was not common with Spinoza to be visibly disturbed or angry.",
+          "sourceId": "pollock-1880",
+          "locator": "ch. I, p. 36"
+        },
+        {
+          "kind": "witness",
+          "claim": "Elwes writes of his natural desire for peace, and that personal renown never had any weight with him.",
+          "sourceId": "elwes-intro",
+          "locator": "Introduction, p. xviii"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When a strong feeling pushes you around, work out clearly where it comes from; once you understand it, it loses its grip.",
+      "sourceId": "chief-works-2",
+      "locator": "Ethics, Part V, Prop. III, p. 248"
+    },
+    {
+      "text": "Try to understand why people act as they do, instead of mocking, lamenting or condemning them.",
+      "sourceId": "chief-works-1",
+      "locator": "Political Treatise, ch. I, sec. 4, p. 288"
+    },
+    {
+      "text": "Answer other people's hatred, anger and contempt with kindness, not with more hatred.",
+      "sourceId": "chief-works-2",
+      "locator": "Ethics, Part IV, Prop. XLVI, p. 220"
+    },
+    {
+      "text": "Earn only as much money as you need for life and health, and take pleasures only as far as they keep you healthy.",
+      "sourceId": "chief-works-2",
+      "locator": "On the Improvement of the Understanding, sec. 17, rules II-III, p. 7"
+    },
+    {
+      "text": "Turn down a post, however honourable, if it would cost you your time to think or your freedom to say what you think.",
+      "sourceId": "chief-works-2",
+      "locator": "Letter LIV (to Fabritius, 30 March 1673), pp. 374-375"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "An emotion, which is a passion, ceases to be a passion, as soon as we form a clear and distinct idea thereof.",
+      "sourceId": "chief-works-2",
+      "locator": "Ethics, Part V, Prop. III, p. 248",
+      "translation": "R. H. M. Elwes, 1884 (revised edition, 1891 printing)"
+    },
+    {
+      "text": "I have laboured carefully, not to mock, lament, or execrate, but to understand human actions",
+      "sourceId": "chief-works-1",
+      "locator": "Political Treatise, ch. I, sec. 4, p. 288",
+      "translation": "R. H. M. Elwes, 1884 (revised edition, 1891 printing)"
+    },
+    {
+      "text": "A free man thinks of death least of all things; and his wisdom is a meditation not of death but of life.",
+      "sourceId": "chief-works-2",
+      "locator": "Ethics, Part IV, Prop. LXVII, p. 232",
+      "translation": "R. H. M. Elwes, 1884 (revised edition, 1891 printing)"
+    },
+    {
+      "text": "But all things excellent are as difficult as they are rare.",
+      "sourceId": "chief-works-2",
+      "locator": "Ethics, Part V, Prop. XLII, Note (last sentence of the Ethics), p. 271",
+      "translation": "R. H. M. Elwes, 1884 (revised edition, 1891 printing)"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 16 February 1673 a Heidelberg professor wrote, by order of the Elector Palatine, offering him the chair of philosophy, with freedom to teach as long as he did not use it to disturb the established religion. On 30 March he answered that he could not bring himself to accept. He wrote that teaching students would make him give up his own research, and that he did not know where the limits of that freedom lay. He added that he was not holding out for something better, but acting from love of quiet, and asked leave to consider the matter further. He never took the post, and stayed in his rented room in The Hague, living on a small income, until his death in 1677.",
+    "sourceIds": [
+      "chief-works-2",
+      "pollock-1880",
+      "iep-dutton"
+    ]
+  },
+  "shadow": {
+    "text": "In 1656 he went to the Dutch city authorities to have himself declared an orphan, so that he would not have to pay the debts he inherited from his father; Nadler notes that this broke a rule of his own community. In his unfinished Political Treatise he argued that women do not have by nature equal right with men, and should be kept out of government. In the Ethics he wrote that men may use animals as they please, and called the law against slaughtering them vain superstition and womanish pity.",
+    "sourceIds": [
+      "nadler-neh",
+      "chief-works-1",
+      "chief-works-2"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which strong feeling pushed you around this week, and did you stop to understand where it came from?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Ethics",
+      "year": 1677
+    },
+    {
+      "title": "Theological-Political Treatise",
+      "year": 1670
+    },
+    {
+      "title": "On the Improvement of the Understanding",
+      "year": 1677
+    }
+  ],
+  "sources": [
+    {
+      "id": "chief-works-1",
+      "kind": "primary",
+      "title": "The Chief Works of Benedict de Spinoza, vol. I: Theologico-Political Treatise, Political Treatise (revised edition)",
+      "author": "Benedict de Spinoza, translated by R. H. M. Elwes",
+      "year": 1891,
+      "publisher": "George Bell and Sons, London (Bohn's Philosophical Library); scan on the Internet Archive",
+      "url": "https://archive.org/details/chiefworksofbene01spin"
+    },
+    {
+      "id": "chief-works-2",
+      "kind": "primary",
+      "title": "The Chief Works of Benedict de Spinoza, vol. II: On the Improvement of the Understanding, Ethics, Select Letters (revised edition)",
+      "author": "Benedict de Spinoza, translated by R. H. M. Elwes",
+      "year": 1891,
+      "publisher": "George Bell and Sons, London (Bohn's Philosophical Library); scan on the Internet Archive",
+      "url": "https://archive.org/details/chiefworksofbene02spin"
+    },
+    {
+      "id": "elwes-intro",
+      "kind": "secondary",
+      "title": "Introduction to The Chief Works of Benedict de Spinoza, vol. I (life of Spinoza, drawing on Colerus 1706)",
+      "author": "R. H. M. Elwes",
+      "year": 1891,
+      "publisher": "George Bell and Sons, London",
+      "url": "https://archive.org/details/chiefworksofbene01spin"
+    },
+    {
+      "id": "pollock-1880",
+      "kind": "secondary",
+      "title": "Spinoza: His Life and Philosophy",
+      "author": "Frederick Pollock",
+      "year": 1880,
+      "publisher": "C. Kegan Paul & Co., London; scan on the Internet Archive",
+      "url": "https://archive.org/details/spinozahislife00polluoft"
+    },
+    {
+      "id": "sep-nadler",
+      "kind": "secondary",
+      "title": "Baruch Spinoza, Stanford Encyclopedia of Philosophy (first published 2001, revised 2023)",
+      "author": "Steven Nadler",
+      "year": 2023,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/spinoza/"
+    },
+    {
+      "id": "iep-dutton",
+      "kind": "secondary",
+      "title": "Benedict De Spinoza (1632-1677), Internet Encyclopedia of Philosophy",
+      "author": "Blake D. Dutton",
+      "year": "undated",
+      "url": "https://iep.utm.edu/spinoza/"
+    },
+    {
+      "id": "nadler-neh",
+      "kind": "secondary",
+      "title": "Why Spinoza Was Excommunicated, Humanities vol. 34 no. 5 (September/October 2013)",
+      "author": "Steven Nadler",
+      "year": 2013,
+      "publisher": "National Endowment for the Humanities",
+      "url": "https://www.neh.gov/article/why-spinoza-was-excommunicated"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Dutch philosopher (1632-1677), not fictional, not a politician or founder of a living religion, with no account of sexual contact with a minor or of sexual violence found; he is in, with a small documented dark side."
+    },
+    "blindAgreement": 0.75,
+    "devilsAdvocate": "I attacked every value and opened each cited page in the Elwes and Pollock scans. Generosity fell: its main deed, the bed left from the sisters' inheritance, rests on Colerus alone and sits badly with Nadler's account that he had himself declared an orphan to escape his father's debts; Self-awareness fell because it was only his doctrine, with no deed. Solitude, a blind pick, fell because Pollock and Elwes both say he did not love solitude for its own sake; Peace, another blind pick, came in on his own 'love of quietness', the shelved Ethics and two witnesses. All four quotes were found word for word in Elwes, and the defining moment now says he asked for time and never took the post, as the letter shows, instead of a flat no.",
+    "checkedOn": "2026-11-10"
+  }
+}

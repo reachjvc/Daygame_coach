@@ -24,6 +24,7 @@ export type CatalogRule =
   | "likeness-licence"
   | "duplicate-value"
   | "council-question"
+  | "no-wikipedia"
 
 export interface CatalogFailure {
   rule: CatalogRule
@@ -33,6 +34,13 @@ export interface CatalogFailure {
 type Loose = Record<string, unknown>
 const arr = (v: unknown): Loose[] => (Array.isArray(v) ? (v as Loose[]) : [])
 const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "")
+const hostOf = (url: string): string => {
+  try {
+    return new URL(url).hostname
+  } catch {
+    return ""
+  }
+}
 
 export function checkPerson(raw: unknown): CatalogFailure[] {
   const out: CatalogFailure[] = []
@@ -60,6 +68,12 @@ export function checkPerson(raw: unknown): CatalogFailure[] {
     const ids = new Set(ev.map((e) => str(e.sourceId)))
     if (kinds.size < 2) fail("evidence-kinds", `"${word}": evidence of ${kinds.size} kind; two of deed/words/witness needed`)
     if (ids.size < 2) fail("evidence-sources", `"${word}": evidence from ${ids.size} source; two different sources needed`)
+  }
+
+  for (const s of sources) {
+    if (/(^|\.)(wikipedia|wikiquote)\.org$/i.test(hostOf(str(s.url)))) {
+      fail("no-wikipedia", `source "${str(s.id)}" is Wikipedia or Wikiquote, a map, never a source`)
+    }
   }
 
   if (![...kindOf.values()].includes("primary")) fail("primary-source", "no primary source")

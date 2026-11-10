@@ -63,7 +63,10 @@ const yearSchema = z.union([z.number().int(), text])
 export const personSchema = z.object({
   id: text.regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lower-case words joined by hyphens"),
   name: text,
-  born: yearSchema,
+  /** "she" for the few women; the section headings follow it. Absent means "he". */
+  pronoun: z.enum(["he", "she"]).optional(),
+  /** null when no reliable source gives it (never guessed). */
+  born: yearSchema.nullable(),
   died: yearSchema.nullable(),
   category: text.refine((c) => ROLE_MODEL_CATEGORY_MAP.has(c as never), { message: "unknown category" }),
   areaIds: z.array(text.refine((a) => LIFE_MASTERY_AREA_MAP.has(a), { message: "unknown life plan area" })).min(1).max(3),

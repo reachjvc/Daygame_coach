@@ -1,0 +1,288 @@
+{
+  "id": "marcus-aurelius",
+  "name": "Marcus Aurelius",
+  "born": 121,
+  "died": 180,
+  "category": "sages",
+  "areaIds": [
+    "lm_mindset",
+    "lm_emotions"
+  ],
+  "tagline": "An emperor who trained his own mind in a notebook he wrote only for himself.",
+  "startedFrom": "He was born in Rome in 121 into a senatorial family; his grandfather had been consul twice and prefect of the city. His father died in office as a praetor while Marcus was a boy, and his grandfather raised him. Dio says he was frail in body and at first could not stand the cold, and the Historia Augusta says that as a boy he studied so hard that he damaged his health.",
+  "values": [
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At twelve he took up the plain dress and hard life of a philosopher, sleeping on the ground until his mother persuaded him to use a couch strewn with skins.",
+          "sourceId": "historia-augusta",
+          "locator": "Life of Marcus 2.6"
+        },
+        {
+          "kind": "words",
+          "claim": "He tells himself to show the qualities that are wholly in his power: sincerity, gravity, endurance of labour, aversion to pleasure, contentment with few things.",
+          "sourceId": "meditations-long",
+          "locator": "Book V.5"
+        },
+        {
+          "kind": "witness",
+          "claim": "Dio writes that he built his body up from a very weak one to one capable of the greatest endurance.",
+          "sourceId": "dio-loeb",
+          "locator": "Epitome of Book 72, section 34"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "As judge he would try the same case for eleven or twelve days, and sometimes held court at night.",
+          "sourceId": "dio-loeb",
+          "locator": "Epitome of Book 72, section 6"
+        },
+        {
+          "kind": "witness",
+          "claim": "Dio calls him industrious, applying himself diligently to all the duties of his office.",
+          "sourceId": "dio-loeb",
+          "locator": "Epitome of Book 72, section 6"
+        },
+        {
+          "kind": "words",
+          "claim": "He tells himself that when he rises unwillingly in the morning he is rising to the work of a human being, not made to lie warm in bed.",
+          "sourceId": "meditations-long",
+          "locator": "Book V.1"
+        },
+        {
+          "kind": "deed",
+          "claim": "As a young man he gave so much work to his studies that he damaged his health.",
+          "sourceId": "historia-augusta",
+          "locator": "Life of Marcus 3.7"
+        }
+      ]
+    },
+    {
+      "word": "Forgiveness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After the revolt of Avidius Cassius in 175 he asked the senate not to execute any of Cassius's supporters, and destroyed the conspirators' papers unread so he would not be forced to hate them.",
+          "sourceId": "dio-loeb",
+          "locator": "Epitome of Book 72, sections 29-30"
+        },
+        {
+          "kind": "deed",
+          "claim": "He spared Cassius's family: a son was only banished and the children received more than half the estate.",
+          "sourceId": "historia-augusta",
+          "locator": "Life of Marcus 26.11-12"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that the best way to avenge yourself is not to become like the wrongdoer.",
+          "sourceId": "meditations-long",
+          "locator": "Book VI.6"
+        }
+      ]
+    },
+    {
+      "word": "Self-awareness",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that his teacher Rusticus gave him the impression that his character needed improvement and discipline.",
+          "sourceId": "meditations-long",
+          "locator": "Book I.7"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia says scholars now generally agree he wrote the Meditations for his own moral improvement; at least part was written during his last military campaigns.",
+          "sourceId": "sep-kamtekar",
+          "locator": "§1 Life and Works"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy describes the Meditations as a personal notebook, probably written while he was on campaign in central Europe.",
+          "sourceId": "iep-sellars",
+          "locator": "§2 The Meditations"
+        }
+      ]
+    },
+    {
+      "word": "Simplicity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He thanks his mother for teaching him simplicity in his way of living, far removed from the habits of the rich.",
+          "sourceId": "meditations-long",
+          "locator": "Book I.3"
+        },
+        {
+          "kind": "deed",
+          "claim": "As a young Caesar he wore a dark cloak when out without his father and never kept a torch-bearer for himself alone.",
+          "sourceId": "dio-loeb",
+          "locator": "Epitome of Book 72, section 35.5"
+        },
+        {
+          "kind": "deed",
+          "claim": "To pay for the Marcomannic war without an extra tax on the provinces, he sold the palace furnishings and his wife's robes at a public sale in the Forum of Trajan.",
+          "sourceId": "historia-augusta",
+          "locator": "Life of Marcus 17.4-5"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When something outside you hurts, the hurt comes from your judgment of it, and you can drop that judgment now.",
+      "sourceId": "meditations-long",
+      "locator": "Book VIII.47"
+    },
+    {
+      "text": "Expect to meet rude and ungrateful people each day, and do not hate them: people are made to work together.",
+      "sourceId": "meditations-long",
+      "locator": "Book II.1"
+    },
+    {
+      "text": "Get out of bed and do your work: you were made for action, not to stay warm.",
+      "sourceId": "meditations-long",
+      "locator": "Book V.1"
+    },
+    {
+      "text": "Stop talking about what a good man should be, and be one.",
+      "sourceId": "meditations-long",
+      "locator": "Book X.16"
+    },
+    {
+      "text": "The best revenge is not to become like the man who wronged you.",
+      "sourceId": "meditations-long",
+      "locator": "Book VI.6"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "If thou art pained by any external thing, it is not this thing that disturbs thee, but thy own judgment about it. And it is in thy power to wipe out this judgment now.",
+      "sourceId": "meditations-long",
+      "locator": "Book VIII.47",
+      "translation": "George Long, 1862"
+    },
+    {
+      "text": "No longer talk at all about the kind of man that a good man ought to be, but be such.",
+      "sourceId": "meditations-long",
+      "locator": "Book X.16",
+      "translation": "George Long, 1862"
+    },
+    {
+      "text": "Such as are thy habitual thoughts, such also will be the character of thy mind; for the soul is dyed by the thoughts.",
+      "sourceId": "meditations-long",
+      "locator": "Book V.16",
+      "translation": "George Long, 1862"
+    },
+    {
+      "text": "Be like the promontory against which the waves continually break, but it stands firm and tames the fury of the water around it.",
+      "sourceId": "meditations-long",
+      "locator": "Book IV.49",
+      "translation": "George Long, 1862"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 175 Avidius Cassius, whom Marcus had put in charge of all Asia, declared himself emperor. Marcus told his soldiers that the prize he hoped for was to forgive a man who had wronged him. Cassius was killed by his own officers before they met, and Marcus would not look at the severed head and ordered it buried. He wrote to the senate asking that none of Cassius's supporters be put to death, and destroyed the conspirators' papers unread.",
+    "sourceIds": [
+      "dio-loeb",
+      "long-sketch"
+    ]
+  },
+  "shadow": {
+    "text": "In 177 the Christians of Lyon wrote that the emperor's reply to the governor was that Christians should be put to death unless they denied their faith; Roman citizens were beheaded and the rest sent to the wild beasts. George Long (1862) notes that the same letter tells miracle stories and says a reader must accept it or reject it whole. Long also gives evidence that, under Marcus and Verus, the Christian writer Justin and others were whipped and beheaded in Rome for refusing to sacrifice to the gods, sentenced by the city prefect Junius Rusticus, the teacher Marcus thanks in the Meditations. In his Danube wars, Dio says, he wished to exterminate the Iazyges utterly. In 177 he made his son Commodus co-emperor and heir; the Historia Augusta says Commodus had already shown himself base and cruel, and Dio writes that after Marcus history fell from a kingdom of gold to one of iron and rust.",
+    "sourceIds": [
+      "eusebius-mcgiffert",
+      "long-sketch",
+      "dio-loeb",
+      "historia-augusta"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What upset you this week, and was it the thing itself or your judgment of it?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Meditations (George Long's translation: The Thoughts of the Emperor Marcus Aurelius Antoninus)",
+      "year": 1558
+    }
+  ],
+  "sources": [
+    {
+      "id": "meditations-long",
+      "kind": "primary",
+      "title": "The Thoughts of the Emperor Marcus Aurelius Antoninus",
+      "author": "Marcus Aurelius, translated by George Long",
+      "year": 1862,
+      "publisher": "Project Gutenberg eBook #15877 (printing year not stated in the e-text)",
+      "url": "https://www.gutenberg.org/ebooks/15877"
+    },
+    {
+      "id": "long-sketch",
+      "kind": "secondary",
+      "title": "Biographical Sketch of Marcus Aurelius Antoninus (prefaced to his translation of the Thoughts)",
+      "author": "George Long",
+      "year": 1862,
+      "url": "https://www.gutenberg.org/ebooks/15877"
+    },
+    {
+      "id": "sep-kamtekar",
+      "kind": "secondary",
+      "title": "Marcus Aurelius, Stanford Encyclopedia of Philosophy (first published 2010, revised 2025)",
+      "author": "Rachana Kamtekar",
+      "year": 2025,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/marcus-aurelius/"
+    },
+    {
+      "id": "iep-sellars",
+      "kind": "secondary",
+      "title": "Marcus Aurelius, Internet Encyclopedia of Philosophy",
+      "author": "John Sellars",
+      "year": "undated",
+      "url": "https://iep.utm.edu/marcus/"
+    },
+    {
+      "id": "historia-augusta",
+      "kind": "secondary",
+      "title": "Historia Augusta, Life of Marcus Aurelius (ancient account, 4th century; reliability uneven)",
+      "author": "attributed to Julius Capitolinus",
+      "year": 1921,
+      "publisher": "Loeb Classical Library vol. I, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Historia_Augusta/Marcus_Aurelius/1*.html"
+    },
+    {
+      "id": "dio-loeb",
+      "kind": "secondary",
+      "title": "Roman History, epitome of Book 72 (ancient account by a contemporary senator, preserved in a Byzantine epitome)",
+      "author": "Cassius Dio",
+      "year": 1927,
+      "publisher": "Loeb Classical Library vol. IX, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cassius_Dio/72*.html"
+    },
+    {
+      "id": "eusebius-mcgiffert",
+      "kind": "secondary",
+      "title": "Church History, Book V (preserves the letter of the churches of Vienne and Lyon, 177)",
+      "author": "Eusebius, translated by Arthur Cushman McGiffert",
+      "year": 1890,
+      "publisher": "Nicene and Post-Nicene Fathers, Second Series, vol. 1; New Advent",
+      "url": "https://www.newadvent.org/fathers/250105.htm"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Roman emperor (121-180), not a living politician or religious founder, with no account of sexual contact with a minor or of sexual violence; he is in, with a documented dark side (Christians condemned at Lyon under his rescript, wars of extermination on the Danube, Commodus made heir)."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked all five values and found no pattern against any: his harshness was to foreign enemies and Christians, which went into the shadow, while forgiveness of rebels at home is told by Dio, the Historia Augusta and his own notebook. Hard work and Self-awareness were the draft's own picks, so each now rests on three sources; weak evidence was swapped out (a diet Dio ties to illness, a loose reading of Long's doubt about the Lyon letter). All four quotes were found word for word in Long's text with no misattribution report, and the shadow gained Justin's execution under Junius Rusticus.",
+    "checkedOn": "2026-11-10"
+  }
+}

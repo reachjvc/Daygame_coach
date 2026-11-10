@@ -1,0 +1,87 @@
+{
+  "why": "Fictional characters are out of the role model library (Plans/role-models.md, O5, the owner's answer 2026-11-09). Kept here as they were in src/inner-game/data/role-models.json on 2026-11-10, unchanged, so nothing of the owner's is lost.",
+  "people": [
+    {
+      "id": "james-bond",
+      "name": "James Bond",
+      "tagline": "The embodiment of cool under pressure and effortless sophistication",
+      "category": "charisma",
+      "values": [
+        "confidence",
+        "calm",
+        "excellence",
+        "boldness",
+        "presence"
+      ],
+      "quote": "A gentleman is one who is never unintentionally rude.",
+      "quoteSource": "Ian Fleming",
+      "quoteVerified": true,
+      "whyThisPerson": "Bond is an archetype, not a person—which makes him even more useful as a model. He represents the man who has cultivated himself so completely that nothing rattles him. Guns pointed at his head? He makes a quip. Beautiful woman trying to manipulate him? He plays along while staying three steps ahead. The fantasy isn't the gadgets or the women—it's the unshakeable inner frame. Bond walks into any situation believing he belongs there, and so everyone else believes it too. He's not just confident; he's calibrated. He reads situations instantly and responds with exactly the right amount of force, charm, or detachment.",
+      "corePhilosophy": [
+        "Unshakeable composure is more powerful than any weapon",
+        "Excellence in small things—dress, drink, manners—reflects excellence in all things",
+        "Stay playful even in serious situations; tension is a choice",
+        "Know your environment better than anyone else in the room",
+        "Never explain yourself more than necessary"
+      ],
+      "definingMoment": "In Casino Royale, Bond loses everything at the poker table—his mission, his money, his composure. He's poisoned, nearly dies, and has to restart from zero. But he comes back. Not with bravado, but with cold clarity. He reads his opponent, makes the impossible bet, and wins not through luck but through psychological dominance. It's the moment that defines the modern Bond: not invincible, but unbreakable.",
+      "howThisHelpsYou": "If Bond resonates with you, you value composure and self-mastery above all. You want to be the man who doesn't flinch, who can handle social pressure without breaking a sweat. In connecting with people, this means you're never reactive, never desperate. You respond; you don't react. Your calm becomes magnetic because it's so rare.",
+      "additionalQuotes": [
+        {
+          "text": "The distance between insanity and genius is measured only by success.",
+          "source": "Tomorrow Never Dies"
+        },
+        {
+          "text": "Shaken, not stirred.",
+          "source": "Dr. No"
+        },
+        {
+          "text": "The world is not enough.",
+          "source": "The World Is Not Enough"
+        }
+      ],
+      "imageVariations": []
+    },
+    {
+      "id": "don-draper",
+      "name": "Don Draper",
+      "tagline": "The master of reinvention and the power of presence",
+      "category": "icons",
+      "values": [
+        "confidence",
+        "creativity",
+        "presence",
+        "ambition",
+        "reinvention"
+      ],
+      "quote": "If you don't like what's being said, change the conversation.",
+      "quoteSource": "Mad Men, Season 3",
+      "quoteVerified": true,
+      "whyThisPerson": "Don Draper is a fiction—both in the show and within the show. Dick Whitman, a poor farm boy, took a dead man's identity and became Don Draper, the most successful ad man in New York. But here's the twist: knowing he's an invention doesn't diminish his power. It amplifies it. Draper shows that identity is performance, and you can perform a better version of yourself into existence. His magnetism comes from absolute commitment to his chosen role. He walks into rooms like he deserves to be there, speaks with authority he manufactured, and succeeds because he makes people believe in his version of reality.",
+      "corePhilosophy": [
+        "People want to be told what to do so badly that they'll listen to anyone",
+        "Success comes from projecting certainty, even when you feel none",
+        "Change the conversation—never play defense",
+        "Make people feel things; logic follows emotion",
+        "You only have one life. You can decide what to do with it"
+      ],
+      "definingMoment": "In the Kodak Carousel pitch, Draper takes a slide projector—a piece of technology—and turns it into a meditation on memory, loss, and the ache of time passing. \"This device isn't a spaceship, it's a time machine,\" he says, showing slides of his own family. The clients are moved to tears. It's manipulation, yes, but it's also truth: Draper understands that people don't buy products, they buy feelings. And he's learned to weaponize authenticity, even when his own life is a fiction.",
+      "howThisHelpsYou": "If Don Draper speaks to you, you understand that reality is negotiable. You can decide who you want to be and then become that person through sustained performance. In connecting with people, this means projecting the energy of the man you're becoming, not the man you were. You control the frame. You change the conversation.",
+      "additionalQuotes": [
+        {
+          "text": "I have a life, and it only goes in one direction: forward.",
+          "source": "Mad Men"
+        },
+        {
+          "text": "Nostalgia—it's delicate, but potent.",
+          "source": "Mad Men (Carousel pitch)"
+        },
+        {
+          "text": "People tell you who they are, but we ignore it because we want them to be who we want them to be.",
+          "source": "Mad Men"
+        }
+      ],
+      "imageVariations": []
+    }
+  ]
+}
