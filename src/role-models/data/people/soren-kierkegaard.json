@@ -1,0 +1,313 @@
+{
+  "id": "soren-kierkegaard",
+  "name": "Søren Kierkegaard",
+  "born": 1813,
+  "died": 1855,
+  "category": "philosophers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_mission",
+    "lm_spirituality"
+  ],
+  "tagline": "A Danish writer who looked for an idea to live and die for, and ended his life attacking the state church in public.",
+  "startedFrom": "He was born in Copenhagen on 5 May 1813, the youngest of seven children of a merchant who had been born poor in Jutland and grown rich. His father was deeply melancholic, sternly religious and sure he had brought a curse on the family; of the seven children only Søren and his brother Peter Christian lived past 33. At school he stood out for his plain clothes and thin build, and he learned to stop the teasing with a sharp tongue.",
+  "values": [
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "At 22 he writes in his journal that what matters is to understand his calling, to see what God really wants him to do.",
+          "sourceId": "sks-17",
+          "locator": "Journal AA:12, Gilleleje, 1 August 1835, SKS 17, 24"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia calls him known as a defender of Christian faith.",
+          "sourceId": "sep-lippitt-evans",
+          "locator": "§1 Life and Works"
+        },
+        {
+          "kind": "deed",
+          "claim": "Towards the end, in hospital in 1855, he told his lifelong friend Emil Boesen, a priest of the church he had attacked, that he still believed in Christ.",
+          "sourceId": "sep-lippitt-evans",
+          "locator": "§1 Life and Works"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1845 he publicly dared the satirical paper The Corsair to attack him; it mocked his looks and his relationship with Regine Olsen, and he was mocked in the street.",
+          "sourceId": "iep-mcdonald",
+          "locator": "§1e The \"Second Authorship\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In the last two years of his life he attacked the Danish state church in newspapers and in a paper of his own, The Moment, of which he wrote ten issues.",
+          "sourceId": "sep-lippitt-evans",
+          "locator": "§1 Life and Works"
+        },
+        {
+          "kind": "words",
+          "claim": "In the first issue of The Moment he says he takes up the fight, though nothing is more against his liking, because he would forever regret not doing it.",
+          "sourceId": "hollander-1923",
+          "locator": "The Present Moment, No. I, 1 \"By Way of Introduction\" (Danish: Øieblikket Nr. 1, \"Stemning\", 24 May 1855, SKS 13, 129-130)"
+        }
+      ]
+    },
+    {
+      "word": "Purpose",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In the same 1835 entry he writes that he must find a truth that is true for him, the idea for which he will live and die.",
+          "sourceId": "sks-17",
+          "locator": "Journal AA:12, Gilleleje, 1 August 1835, SKS 17, 24"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia says his final reason for breaking his engagement was his dedication to a life of writing as a religious poet.",
+          "sourceId": "iep-mcdonald",
+          "locator": "§1b Regina Olsen: The Sacrifice of Love"
+        },
+        {
+          "kind": "deed",
+          "claim": "After The Corsair affair he gave up the idea of becoming a pastor, feeling called to \"remain at his post\" as an author.",
+          "sourceId": "sep-lippitt-evans",
+          "locator": "§1 Life and Works, paragraph on the Corsair affair"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that he has dearly loved to write, and to wait hours, days and weeks for the right expression to come.",
+          "sourceId": "hollander-1923",
+          "locator": "The Present Moment, No. I, 1 \"By Way of Introduction\" (SKS 13, 129-130)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia says he became a master of Danish, one of the two great stylists of the language in his time, with Hans Christian Andersen.",
+          "sourceId": "iep-mcdonald",
+          "locator": "§1a Father and Son: Inherited Melancholy"
+        },
+        {
+          "kind": "witness",
+          "claim": "Jonathan Rée writes that even under false names his \"taut, graceful prose\" was hard to mistake.",
+          "sourceId": "lrb-ree-2005",
+          "locator": "London Review of Books 27.15, opening section, paragraph on his pseudonyms"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After the break with Regine in 1841 he began Either/Or in Berlin and, from 1843 to 1846, published a long run of books, including Fear and Trembling and Concluding Unscientific Postscript; a second, highly productive period followed from 1847.",
+          "sourceId": "sep-lippitt-evans",
+          "locator": "§1 Life and Works"
+        },
+        {
+          "kind": "deed",
+          "claim": "The Corsair's mockery drove him to begin a \"second authorship\" of signed discourses and works by the pseudonym Anti-Climacus.",
+          "sourceId": "iep-mcdonald",
+          "locator": "§1e The \"Second Authorship\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Jonathan Rée counts some thirty books published in his short life, at times at the rate of three a year.",
+          "sourceId": "lrb-ree-2005",
+          "locator": "London Review of Books 27.15, review of Garff, paragraphs on his output and his journals"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Find the one aim you are willing to live and die for; knowledge only counts once it serves how you live.",
+      "sourceId": "sks-17",
+      "locator": "Journal AA:12, Gilleleje, 1 August 1835, SKS 17, 24-25"
+    },
+    {
+      "text": "Get to know yourself first; only then does your life get calm and meaning.",
+      "sourceId": "sks-17",
+      "locator": "Journal AA:12, Gilleleje, 1 August 1835, SKS 17, 27"
+    },
+    {
+      "text": "You will never fully understand your life while you are living it, so do not wait for full understanding before you act.",
+      "sourceId": "sks-18",
+      "locator": "Journal JJ:167 (1843), SKS 18, 306 (Pap. IV A 164)"
+    },
+    {
+      "text": "Take responsibility for the person you have become: choose yourself, as the first step to changing yourself.",
+      "sourceId": "sep-lippitt-evans",
+      "locator": "§3.2 The Ethical (the pseudonym Judge William in Either/Or II, SKS 3, 172)"
+    },
+    {
+      "text": "Do the hard thing you would forever regret leaving undone, even when you would much rather not.",
+      "sourceId": "hollander-1923",
+      "locator": "The Present Moment, No. I, 1 \"By Way of Introduction\" (SKS 13, 129-130)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Why, then, do I wish to work in the present moment? Because I should forever repent of not having done so",
+      "sourceId": "hollander-1923",
+      "locator": "The Present Moment, No. I, 1 \"By Way of Introduction\"; his own name, 24 May 1855 (Danish: Øieblikket Nr. 1, SKS 13, 130)",
+      "translation": "Lee M. Hollander, 1923"
+    },
+    {
+      "text": "It is really true what philosophy tells us, that life must be understood backwards. But with this, one forgets the second proposition, that it must be lived forwards.",
+      "sourceId": "sks-18",
+      "locator": "Journal JJ:167 (1843), his own journal; SKS 18, 306 (Pap. IV A 164)",
+      "translation": "Palle E. T. Jørgensen, University of Iowa web page (undated)"
+    },
+    {
+      "text": "true seriousness appears only when a man fully equal to his task is forced, against his will, to undertake it--against his will, but fully equal to the task.",
+      "sourceId": "hollander-1923",
+      "locator": "The Present Moment, No. I, 1 \"By Way of Introduction\"; his own name, 24 May 1855 (Danish: Øieblikket Nr. 1, SKS 13, 129)",
+      "translation": "Lee M. Hollander, 1923"
+    },
+    {
+      "text": "Then, faith was a task for a whole life-time because it was held that proficiency in faith was not to be won within a few days or weeks.",
+      "sourceId": "hollander-1923",
+      "locator": "Fear and Trembling (1843), Preface (Hollander: \"Introduction\"); written in the voice of his pseudonym Johannes de silentio, not in his own name (Danish: SKS 4, 102-103)",
+      "translation": "Lee M. Hollander, 1923"
+    }
+  ],
+  "definingMoment": {
+    "text": "When Bishop Mynster died in 1854, Martensen, who was to succeed him, called him \"a witness to the truth\". Kierkegaard answered with a public attack on the Danish state church in articles in the newspaper Fædrelandet. On 24 May 1855 he put out the first issue of his own paper, The Moment, writing that he took up the fight because he would forever regret not doing it. He wrote ten issues. In the autumn he collapsed in the street and died in hospital on 11 November 1855, aged 42.",
+    "sourceIds": [
+      "iep-mcdonald",
+      "sep-lippitt-evans",
+      "sks-13",
+      "hollander-1923"
+    ]
+  },
+  "shadow": {
+    "text": "As a student he ran up debts, which his father reluctantly paid. In 1840 he became engaged to the eighteen-year-old Regine Olsen; when she fought his wish to end it, he pretended to be a scoundrel who had played with her feelings, and in 1841 he broke the engagement. He lived on his inheritance without needing to work for a living and was never ordained; Joakim Garff calculates that his books brought in about 300 rixdollars a year while he spent some 2,600 a year on wine, cigars, shoes, hats and carriages. The Internet Encyclopedia says he dared The Corsair to attack him partly out of vanity. He held back critical writings while Bishop Mynster, his father's old pastor, was alive; in 1854-55 he filled his attacks on the church with personal insults against Mynster, who had died the year before. In the first issue of The Moment he wrote that he felt in his element only among people's mediocrity and meanness, and that scorn was the passion of his soul. He often wrote of Jews in harsh and offensive language, which the Kierkegaard scholar Bruce Kirmmse finds notably sharper than that of most educated people of his generation.",
+    "sourceIds": [
+      "iep-mcdonald",
+      "sep-lippitt-evans",
+      "lrb-ree-2005",
+      "hollander-1923",
+      "kirmmse-1992"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you put off this week that you would forever regret leaving undone?",
+    "principleIndex": 4
+  },
+  "readings": [
+    {
+      "title": "Either/Or",
+      "year": 1843
+    },
+    {
+      "title": "Fear and Trembling",
+      "year": 1843
+    },
+    {
+      "title": "Works of Love",
+      "year": 1847
+    }
+  ],
+  "sources": [
+    {
+      "id": "hollander-1923",
+      "kind": "primary",
+      "title": "Selections from the Writings of Kierkegaard (University of Texas Bulletin no. 2326, Comparative Literature Series no. 3)",
+      "author": "Søren Kierkegaard, translated by Lee M. Hollander",
+      "year": 1923,
+      "publisher": "University of Texas, Austin; Project Gutenberg eBook #60333",
+      "url": "https://www.gutenberg.org/ebooks/60333"
+    },
+    {
+      "id": "sks-4",
+      "kind": "primary",
+      "title": "Frygt og Bæven, Søren Kierkegaards Skrifter vol. 4",
+      "author": "Søren Kierkegaard (pseudonym Johannes de silentio)",
+      "year": 1997,
+      "publisher": "Søren Kierkegaard Forskningscenteret; Royal Danish Library text portal",
+      "url": "https://tekster.kb.dk/text/sks-fb-txt-root"
+    },
+    {
+      "id": "sks-13",
+      "kind": "primary",
+      "title": "Øieblikket Nr. 1 (24 May 1855), Søren Kierkegaards Skrifter vol. 13",
+      "author": "Søren Kierkegaard",
+      "year": 2009,
+      "publisher": "Søren Kierkegaard Forskningscenteret; Royal Danish Library text portal",
+      "url": "https://tekster.kb.dk/text/sks-oi1-txt-root"
+    },
+    {
+      "id": "sks-17",
+      "kind": "primary",
+      "title": "Journalen AA (1835), Søren Kierkegaards Skrifter vol. 17",
+      "author": "Søren Kierkegaard",
+      "year": 2005,
+      "publisher": "Søren Kierkegaard Forskningscenteret; Royal Danish Library text portal",
+      "url": "https://tekster.kb.dk/text/sks-aa-txt-shoot-n12"
+    },
+    {
+      "id": "sks-18",
+      "kind": "primary",
+      "title": "Journalen JJ (1843), Søren Kierkegaards Skrifter vol. 18",
+      "author": "Søren Kierkegaard",
+      "year": 2000,
+      "publisher": "Søren Kierkegaard Forskningscenteret; Royal Danish Library text portal",
+      "url": "https://tekster.kb.dk/text/sks-jj-txt-shoot-n167"
+    },
+    {
+      "id": "sep-lippitt-evans",
+      "kind": "secondary",
+      "title": "Søren Kierkegaard, Stanford Encyclopedia of Philosophy (first published 22 May 2023)",
+      "author": "John Lippitt and C. Stephen Evans",
+      "year": 2023,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/kierkegaard/"
+    },
+    {
+      "id": "iep-mcdonald",
+      "kind": "secondary",
+      "title": "Søren Kierkegaard (1813-1855), Internet Encyclopedia of Philosophy",
+      "author": "William McDonald",
+      "year": "undated",
+      "url": "https://iep.utm.edu/kierkega/"
+    },
+    {
+      "id": "lrb-ree-2005",
+      "kind": "secondary",
+      "title": "Dancing in the Service of Thought (review of Joakim Garff, Søren Kierkegaard: A Biography), London Review of Books vol. 27 no. 15, 4 August 2005",
+      "author": "Jonathan Rée",
+      "year": 2005,
+      "publisher": "London Review of Books",
+      "url": "https://www.lrb.co.uk/the-paper/v27/n15/jonathan-ree/dancing-in-the-service-of-thought"
+    },
+    {
+      "id": "kirmmse-1992",
+      "kind": "secondary",
+      "title": "Kierkegaard, Jødedommen og Jøderne (English summary: Kierkegaard, Judaism, and the Jews), Kirkehistoriske Samlinger, December 1992, pp. 77-107",
+      "author": "Bruce H. Kirmmse",
+      "year": 1992,
+      "publisher": "Kirkehistoriske Samlinger (tidsskrift.dk)",
+      "url": "https://tidsskrift.dk/kirkehistoriskesamlinger/article/view/160252"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Danish philosopher and religious writer (1813-1855), not fictional, not a politician or founder of a living religion, with no account of sexual contact with a minor or of sexual violence found; he is in, with a documented dark side."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked all five values and checked every claim against the SEP, IEP and LRB texts, the Hollander translation and the Danish SKS text on the Royal Danish Library portal. Courage held although the IEP says he provoked The Corsair partly out of vanity and he held back his attack until Mynster was dead; both now stand in the shadow. Self-awareness fell (only two sources, and his own account of his authorship was written after the fact) and the blind pick Hard work came in on SEP, IEP and LRB; the aesthete 'A' quote was swapped for a line in his own name, and the shadow gained his student debts and, from Kirmmse 1992, his anti-Jewish language.",
+    "checkedOn": "2026-11-10"
+  }
+}
