@@ -210,13 +210,15 @@
     ]
   },
   "shadow": {
-    "text": "In 1907 he agreed with Scott not to use McMurdo Sound as a base; in January 1908, blocked by ice, he went there, and on 26 January wrote to his wife that he had to break his word to Scott. The 1907-09 expedition came home owing nearly £20,000, which a government grant paid; his biographer Mill says he then spent lavishly, that his generosity often outran his means, and that he chased schemes such as Hungarian gold mines. A Royal Museums Greenwich curator writes that he had a reputation for not being entirely trustworthy with money and struggled to repay his debts after each expedition. On the ice in 1915 the carpenter Harry McNish refused to haul the boats and had to back down; McNish later sailed with him in the James Caird, but was refused the Polar Medal, which some in the expedition felt unfair on Shackleton's part. The Ross Sea party that he sent to lay depots for his crossing left 'ill-equipped and underfunded', and three of its men died. After the expedition, Caroline Alexander writes, he was drinking and restless, rarely with his wife, and often in London with his American mistress, Rosalind Chetwynd.",
+    "text": "In 1907 he agreed with Scott not to use McMurdo Sound as a base; in January 1908, blocked by ice, he went there, and on 26 January wrote to his wife that he had to break his word to Scott. The 1907-09 expedition came home owing nearly £20,000, which a government grant paid; his biographer Mill says he then spent lavishly, that his generosity often outran his means, and that he chased schemes such as Hungarian gold mines. A Royal Museums Greenwich curator writes that he had a reputation for not being entirely trustworthy with money and struggled to repay his debts after each expedition. On the ice in 1915 the carpenter Harry McNish refused to haul the boats and had to back down; McNish later sailed with him in the James Caird, but was refused the Polar Medal, which some in the expedition felt unfair on Shackleton's part. The Ross Sea party that he sent to lay depots for his crossing left 'ill-equipped and underfunded', and three of its men died. A Royal Museums Greenwich history says he was ill-adapted to domesticity and had an affair with Rosalind Chetwynd, an American divorced from her baronet husband who became an actress, while he remained firmly attached to his wife Emily in many ways; Kari Herbert writes that the claim of a long-standing affair rests on thin evidence. The curator Jeremy Michell notes the effect his restlessness had on his family, especially Emily. On the Quest in 1922 his drinking was no secret, the Byrd Polar Center writes; the night he died the doctor Alexander Macklin told him to give up good living, and he answered that first it had been drink.",
     "sourceIds": [
       "mill-1923",
       "rmg-michell",
       "irish-times-2016",
       "falklands-burton",
-      "alexander-1998"
+      "nmm-2018",
+      "herbert-2013",
+      "byrd-grunes"
     ]
   },
   "councilQuestion": {
@@ -231,6 +233,10 @@
     {
       "title": "The Heart of the Antarctic",
       "year": 1909
+    },
+    {
+      "title": "The Endurance: Shackleton's Legendary Antarctic Expedition (Caroline Alexander)",
+      "year": 1998
     }
   ],
   "sources": [
@@ -307,12 +313,31 @@
       "url": "https://archive.org/details/argonautsofsouth00hurl"
     },
     {
-      "id": "alexander-1998",
+      "id": "nmm-2018",
       "kind": "secondary",
-      "title": "The Endurance: Shackleton's Legendary Antarctic Expedition",
-      "author": "Caroline Alexander",
-      "year": 1998,
-      "publisher": "Alfred A. Knopf, New York (final chapter, 'To My Comrades')"
+      "title": "South: The Race to the Pole",
+      "author": "National Maritime Museum (Royal Museums Greenwich)",
+      "year": 2018,
+      "publisher": "Bloomsbury Publishing, London; p. 150, read in the Google Books preview",
+      "url": "https://books.google.com/books?id=N4loDwAAQBAJ"
+    },
+    {
+      "id": "herbert-2013",
+      "kind": "secondary",
+      "title": "Heart of the Hero: The Remarkable Women Who Inspired the Great Polar Explorers",
+      "author": "Kari Herbert",
+      "year": 2013,
+      "publisher": "Saraband, Glasgow; read in the Google Books preview",
+      "url": "https://books.google.com/books?id=_vLJDwAAQBAJ"
+    },
+    {
+      "id": "byrd-grunes",
+      "kind": "secondary",
+      "title": "The end of an era (History Corner)",
+      "author": "Marissa Grunes, Byrd Polar and Climate Research Center, Ohio State University (from the Sir George Hubert Wilkins Papers)",
+      "year": "undated",
+      "publisher": "Byrd Polar and Climate Research Center",
+      "url": "https://byrd.osu.edu/end-era"
     }
   ],
   "review": {
@@ -322,7 +347,7 @@
       "notes": "A real Anglo-Irish polar explorer (1874-1922), not fictional, not a living politician (he stood once for Parliament, at Dundee, and lost, which is not a political life), not the founder of a religion, with no account found of sexual contact with a minor or of sexual violence; he is in, with a documented dark side over a broken promise, money and one crewman."
     },
     "blindAgreement": 1.0,
-    "devilsAdvocate": "I attacked each value: Responsibility against his debts, the ill-equipped Ross Sea party and his broken promise to Scott; Leadership against the McNish quarrel; Optimism against its thin sourcing. Optimism fell, because only two sources (South and one Mill witness) back it, and Courage, the blind pick, came in on South, Hurley and Mill; the money and the Ross Sea deaths are not a pattern against his care for his men's lives, so they stay in the shadow. Four sentences were corrected, among them a 1908 letter line that was really his captain's argument, and the shadow gained his affair with Rosalind Chetwynd from Caroline Alexander's book. All four quotes were found in South and in Shackleton in the Antarctic.",
+    "devilsAdvocate": "I attacked each value: Responsibility against his debts, the ill-equipped Ross Sea party and his broken promise to Scott; Leadership against the McNish quarrel; Optimism against its thin sourcing. Optimism fell, because only two sources (South and one Mill witness) back it, and Courage, the blind pick, came in on South, Hurley and Mill; the money and the Ross Sea deaths are not a pattern against his care for his men's lives, so they stay in the shadow. Four sentences were corrected, among them a 1908 letter line that was really his captain's argument, and the shadow gained his affair with Rosalind Chetwynd, his drinking and his restlessness, from Royal Museums Greenwich, Kari Herbert and the Byrd Polar Center. All four quotes were found in South and in Shackleton in the Antarctic.",
     "checkedOn": "2026-11-10"
   }
 }
