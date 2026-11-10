@@ -1,0 +1,321 @@
+{
+  "id": "dale-carnegie",
+  "name": "Dale Carnegie",
+  "born": 1888,
+  "died": 1955,
+  "category": "teachers",
+  "areaIds": [
+    "lm_friends",
+    "lm_relationship",
+    "lm_mindset"
+  ],
+  "tagline": "A timid farm boy who learned to speak up, then taught adults how to deal with people.",
+  "startedFrom": "He was born Dale Carnagey on 24 November 1888 in Maryville, Missouri, the son of poor farmers. At the teachers' college in Warrensburg other students shunned him for his shabby, ill-fitting clothes, and he left in 1908 without a degree after failing Latin. He then worked as a salesman, and he later wrote that he despised that work.",
+  "values": [
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He writes that to prepare How to Win Friends he read everything he could find on the subject and hired a researcher who spent a year and a half in libraries reading what he had missed.",
+          "sourceId": "htwf-2022",
+          "locator": "'How This Book Was Written - and Why' (Dale Carnegie, 1936), p. xxii"
+        },
+        {
+          "kind": "deed",
+          "claim": "He writes that he spent seven years preparing How to Stop Worrying, reading what philosophers had said about worry and hundreds of biographies, from Confucius to Churchill.",
+          "sourceId": "htsw-2024",
+          "locator": "'How This Book Was Written - and Why', pp. xxviii-xxix"
+        },
+        {
+          "kind": "witness",
+          "claim": "City Journal's review of Watts's biography calls him a prodigious note-taker, always on the lookout for useful stories and anecdotes.",
+          "sourceId": "cityjournal-vanderkam-2014",
+          "locator": "paragraph beginning 'Carnegie became a keen observer of human nature'"
+        }
+      ]
+    },
+    {
+      "word": "Confidence",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that his college training in public speaking wiped out his timidity and lack of self-confidence and gave him the courage and assurance to deal with people.",
+          "sourceId": "htsw-1948",
+          "locator": "preface 'How This Book Was Written - and Why' (also 2024 Gallery ed., p. xxvi)"
+        },
+        {
+          "kind": "deed",
+          "claim": "At college he joined the debate team and at first did badly; after copying the style of a Chautauqua speaker he had great success, became a popular student and gave public speaking lessons to other students.",
+          "sourceId": "shsmo",
+          "locator": "second and third paragraphs"
+        },
+        {
+          "kind": "witness",
+          "claim": "Reviewing Watts's biography, Maureen Corrigan says that, as Watts depicts him, he seems to have been born with a bedrock optimism and belief in his own potential.",
+          "sourceId": "npr-corrigan-2013",
+          "locator": "Fresh Air transcript, paragraph beginning 'His people skills were subsequently honed'"
+        }
+      ]
+    },
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In the preface to How to Win Friends he writes that he gradually realized he was sorely in need of such training himself, and that he was appalled at his own frequent lack of finesse and understanding.",
+          "sourceId": "htwf-1936",
+          "locator": "preface 'How This Book Was Written - and Why' (also 2022 Gallery ed., p. xx)"
+        },
+        {
+          "kind": "deed",
+          "claim": "He writes that he kept a folder in his private filing cabinet marked FTD, short for 'Fool Things I Have Done', holding written records of the foolish things he had been guilty of.",
+          "sourceId": "htsw-1948",
+          "locator": "Part Six, ch. 22 'Fool Things I Have Done', opening (p. 174 in this edition)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Kirkus, reviewing Watts's biography, says Watts portrays him as easygoing and self-deprecating, a man who long kept a file called 'Damned Fool Things I Have Done'.",
+          "sourceId": "kirkus-2013",
+          "locator": "review body, sentence beginning 'Watts portrays Carnegie'"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1912 he began teaching public speaking at the 125th Street YMCA in New York, and he later took the course to Philadelphia, Baltimore, London and Paris.",
+          "sourceId": "americanheritage-1985",
+          "locator": "fourth and fifth paragraphs"
+        },
+        {
+          "kind": "deed",
+          "claim": "The title page of his 1915 textbook lists him as instructor in public speaking at the YMCA schools of New York, Brooklyn, Baltimore and Philadelphia.",
+          "sourceId": "aps-1915",
+          "locator": "title page"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes of his YMCA night classes that he had to motivate his students and help them solve their problems, and that it was exciting work which he loved.",
+          "sourceId": "htsw-2024",
+          "locator": "'How This Book Was Written - and Why', p. xxvii"
+        }
+      ]
+    },
+    {
+      "word": "Influence",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that he and his researcher were determined to find every practical idea anyone had ever used for winning friends and influencing people, and that he turned the material into a talk he gave each season to his classes.",
+          "sourceId": "htwf-2022",
+          "locator": "'How This Book Was Written - and Why' (Dale Carnegie, 1936), p. xxii"
+        },
+        {
+          "kind": "deed",
+          "claim": "After seeing at Speakers' Corner in Hyde Park, London, that the most enthusiastic speakers drew the largest crowds, he built enthusiasm into his Dale Carnegie Course.",
+          "sourceId": "shsmo",
+          "locator": "paragraph beginning 'During World War I'"
+        },
+        {
+          "kind": "deed",
+          "claim": "City Journal's review of Watts's biography says he trained the employees of major corporations and took to the radio to reach even more people.",
+          "sourceId": "cityjournal-vanderkam-2014",
+          "locator": "paragraph beginning 'Carnegie became a keen observer of human nature'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Before you criticize someone, try to understand why he acts the way he does.",
+      "sourceId": "htwf-1936",
+      "locator": "Part One, ch. 1 'If You Want to Gather Honey, Don't Kick Over the Beehive', paragraph after Carlyle's 'by the way he treats little men'"
+    },
+    {
+      "text": "Learn by doing: use a new idea at once, or you will forget it.",
+      "sourceId": "htwf-1936",
+      "locator": "'Nine Suggestions on How to Get the Most Out of This Book', no. 6"
+    },
+    {
+      "text": "Each week, look back at how you dealt with people: what you got wrong, what you got right, and what you can learn.",
+      "sourceId": "htwf-1936",
+      "locator": "'Nine Suggestions on How to Get the Most Out of This Book', no. 8 (the Wall Street banker's Saturday review)"
+    },
+    {
+      "text": "Do the work in front of you today instead of worrying about what lies far ahead.",
+      "sourceId": "htsw-2024",
+      "locator": "Part One, ch. 1 'Live in Day-tight Compartments', pp. 3-4"
+    },
+    {
+      "text": "To lose the fear of speaking, speak in front of people as often as you can.",
+      "sourceId": "aps-1915",
+      "locator": "ch. I 'Acquiring Confidence Before an Audience', opening section"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Instead of condemning people, let's try to understand them. Let's try to figure out why they do what they do.",
+      "sourceId": "htwf-1936",
+      "locator": "Part One, ch. 1 'If You Want to Gather Honey, Don't Kick Over the Beehive', paragraph after Carlyle's 'by the way he treats little men'"
+    },
+    {
+      "text": "I also gradually realized that I was sorely in need of such training myself.",
+      "sourceId": "htwf-1936",
+      "locator": "preface 'How This Book Was Written - and Why'"
+    },
+    {
+      "text": "I wasn't interested in making a lot of money, but I was interested in making a lot of living.",
+      "sourceId": "htsw-1948",
+      "locator": "preface 'How This Book Was Written - and Why'"
+    },
+    {
+      "text": "Only knowledge that is used sticks in your mind.",
+      "sourceId": "htwf-1936",
+      "locator": "'Nine Suggestions on How to Get the Most Out of This Book', no. 6"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1912 he began teaching public speaking in the evenings at the 125th Street YMCA in New York. By his own account, Columbia and New York University had turned him down, and the YMCA would not pay him a fixed fee, so he worked for a share of the takings and his classes had to show results quickly. He wrote that within three seasons he was earning $30 a night there. How to Win Friends and Influence People (1936) grew out of these classes.",
+    "sourceIds": [
+      "americanheritage-1985",
+      "htsw-2024",
+      "htwf-2022"
+    ]
+  },
+  "shadow": {
+    "text": "He was born Dale Carnagey and, after speaking to a sold-out crowd at Carnegie Hall, changed the spelling to Carnegie, the name of the businessman Andrew Carnegie, to whom he was not related; the State Historical Society of Missouri dates this to 1916, other sources later. Kirkus's review of Steven Watts's 2013 biography says he may have sought to link himself in the public mind with the industrialist. After his first marriage ended in divorce in 1931, he had an affair with a married woman, and, according to Watts as reviewed in Salon, he always believed he was the father of her daughter, who knew him as 'Uncle Dale'; City Journal's review says he most likely fathered the child. Critics called his method insincere and manipulative; City Journal's reviewer gives as an example his advice to let people think an idea is their own.",
+    "sourceIds": [
+      "shsmo",
+      "kirkus-2013",
+      "salon-miller-2013",
+      "cityjournal-vanderkam-2014"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Looking back at your week, which mistake did you make with someone, and what would you do differently next time?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "How to Win Friends and Influence People",
+      "year": 1936
+    },
+    {
+      "title": "How to Stop Worrying and Start Living",
+      "year": 1948
+    }
+  ],
+  "sources": [
+    {
+      "id": "htwf-1936",
+      "kind": "primary",
+      "title": "How to Win Friends and Influence People",
+      "author": "Dale Carnegie",
+      "year": 1936,
+      "publisher": "Simon and Schuster",
+      "url": "https://archive.org/details/howtowinfriendsi0000dale_s5t3"
+    },
+    {
+      "id": "htwf-2022",
+      "kind": "primary",
+      "title": "How to Win Friends and Influence People (Updated for the Next Generation of Leaders), publisher's sample pages",
+      "author": "Dale Carnegie",
+      "year": 2022,
+      "publisher": "Gallery Books (Simon & Schuster)",
+      "url": "https://download.boekhuis.nl/9780671027032_fragm-docb.pdf"
+    },
+    {
+      "id": "htsw-1948",
+      "kind": "primary",
+      "title": "How to Stop Worrying and Start Living",
+      "author": "Dale Carnegie",
+      "year": 1948,
+      "publisher": "Simon and Schuster",
+      "url": "https://archive.org/details/bwb_O8-BTQ-782"
+    },
+    {
+      "id": "htsw-2024",
+      "kind": "primary",
+      "title": "How to Stop Worrying and Start Living (Updated for the Next Generation), publisher's sample pages",
+      "author": "Dale Carnegie",
+      "year": 2024,
+      "publisher": "Gallery Books (Simon & Schuster)",
+      "url": "https://download.boekhuis.nl/9780671035976_fragm-docb.pdf"
+    },
+    {
+      "id": "aps-1915",
+      "kind": "primary",
+      "title": "The Art of Public Speaking",
+      "author": "J. Berg Esenwein and Dale Carnagey",
+      "year": 1915,
+      "publisher": "The Home Correspondence School",
+      "url": "https://www.gutenberg.org/ebooks/16317"
+    },
+    {
+      "id": "shsmo",
+      "kind": "secondary",
+      "title": "Historic Missourians: Dale Carnegie",
+      "author": "State Historical Society of Missouri",
+      "year": 2020,
+      "url": "https://historicmissourians.shsmo.org/dale-carnegie/"
+    },
+    {
+      "id": "americanheritage-1985",
+      "kind": "secondary",
+      "title": "If You Want to Gather Honey",
+      "author": "Peter Baida",
+      "year": 1985,
+      "publisher": "American Heritage, vol. 36, no. 2 (February/March 1985)",
+      "url": "https://www.americanheritage.com/if-you-want-gather-honey"
+    },
+    {
+      "id": "npr-corrigan-2013",
+      "kind": "secondary",
+      "title": "'Self-Help Messiah' Dale Carnegie Gets A Second Life In Print (Fresh Air review)",
+      "author": "Maureen Corrigan",
+      "year": 2013,
+      "publisher": "NPR",
+      "url": "https://www.npr.org/2013/11/07/243466374/self-help-messiah-dale-carnegie-gets-a-second-life-in-print"
+    },
+    {
+      "id": "salon-miller-2013",
+      "kind": "secondary",
+      "title": "The father of self-help",
+      "author": "Laura Miller",
+      "year": 2013,
+      "publisher": "Salon",
+      "url": "https://www.salon.com/2013/10/20/the_father_of_self_help/"
+    },
+    {
+      "id": "cityjournal-vanderkam-2014",
+      "kind": "secondary",
+      "title": "The Story of America Itself (review of Self-Help Messiah)",
+      "author": "Laura Vanderkam",
+      "year": 2014,
+      "publisher": "City Journal",
+      "url": "https://www.city-journal.org/article/the-story-of-america-itself"
+    },
+    {
+      "id": "kirkus-2013",
+      "kind": "secondary",
+      "title": "Review of Self-Help Messiah by Steven Watts",
+      "author": "Kirkus Reviews",
+      "year": 2013,
+      "publisher": "Kirkus Reviews",
+      "url": "https://www.kirkusreviews.com/book-reviews/steven-watts/self-help-messiah/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American teacher and author (1888-1955), not fictional, never a politician or candidate, not the founder of a religion, and with no account found of sexual contact with anyone under 16 or of sexual violence; he is in, with a documented dark side: a name changed to echo Andrew Carnegie, an affair with a married woman whose daughter he believed was his, and methods critics call manipulative."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked each value against his own books (checked in the 1936 and 1948 Simon and Schuster scans and the current Gallery editions), the State Historical Society of Missouri, American Heritage (1985) and four reviews of Watts's 2013 biography, which I counted as one source. Patience fell: only two sources, one of them hedged ('seems to have been'). Learning, Confidence, Humility and Mentorship held on three sources each, and the blind pick's Influence was added on his own preface, SHSMO and City Journal. All four quotes match the 1936 and 1948 texts; the shadow now says which review reports what, adds Kirkus on the name change, and the 'FTID' folder was corrected to 'FTD'.",
+    "checkedOn": "2026-11-10"
+  }
+}
