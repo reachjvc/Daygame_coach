@@ -498,9 +498,17 @@ export async function forgetTimerOnThisDevice(): Promise<void> {
 export async function forgetThisDevice(): Promise<void> {
   // A move still waiting and the switches kept for it are this person's: the
   // next person to sign in here must not send them (p9-pings-04).
+  const pending = readMove()
+  const known = readDevice()
   writeMove(null)
   writeDevice(null)
   const endpoint = await currentEndpoint()
+  // The row may still be at an address the browser already dropped (a move
+  // not landed yet): that row goes too, or it stays switched on at a dead
+  // address (alpha p10-review-pings-05). The server removes only the signed-in
+  // person's rows, so another account's waiting move is left alone.
+  const earlier = [pending?.from, known?.endpoint].filter((e, i, all): e is string => typeof e === "string" && e !== endpoint && all.indexOf(e) === i)
+  await Promise.all(earlier.map((e) => forgetEndpoint(e)))
   if (!endpoint) return
   if (await forgetEndpoint(endpoint)) return
   // The server could not be told (no signal, or the session already gone): the
