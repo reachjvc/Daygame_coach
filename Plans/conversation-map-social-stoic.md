@@ -38,6 +38,14 @@ Written 2026-11-09. Follows the Assumption Moments page
   "my boyfriend lives here"; the voice check heard one voice, so 23 of 53
   speakers are guesses from the words. Rule from now on: every set must show
   its opener.
+- **2026-11-10: London Daygame Model stages.** Your note: too many tags,
+  the "guesses" are confusing, and you wanted stages in colour to the side.
+  Every line now carries a stage from Tom Torero's London Daygame Model: Open,
+  Stack, Vibe, Invest, Close, plus "outside the model" (for example the date
+  after the close), and the hook point is marked. Each line also gets one move
+  from a list of 18. That replaces the 162 tags. You can tap a stage to change
+  it; your change saves as a `stage` entry. Doubt is now written in plain
+  words ("not sure who says this", "Not sure: stack or vibe…").
 - Data, readings and the page source are in
   `~/.cache/daygame-research/conversation-map/social-stoic/`, not in this repo.
 
