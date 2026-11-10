@@ -1,0 +1,273 @@
+{
+  "id": "roald-amundsen",
+  "name": "Roald Amundsen",
+  "born": 1872,
+  "died": 1928,
+  "category": "explorers",
+  "areaIds": [
+    "lm_mission",
+    "lm_fitness",
+    "lm_fun"
+  ],
+  "tagline": "A polar explorer who reached the South Pole first by preparing for every difficulty.",
+  "startedFrom": "He was born in 1872 at Borge in Østfold, the youngest of four sons of a ship's captain and shipowner, and grew up in Kristiania (Oslo). His father died when he was 14, and his mother steered him into medicine, which he studied badly and gave up as soon as she died in 1893. He was short-sighted, and he says he passed the army medical only because the doctor, admiring his muscles, forgot to test his eyes.",
+  "values": [
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that at fifteen, reading Sir John Franklin, a strange ambition burned within him to endure the same sufferings, and he secretly decided to be an Arctic explorer.",
+          "sourceId": "my-life",
+          "locator": "ch. I 'Early Memories', pp. 2-3"
+        },
+        {
+          "kind": "deed",
+          "claim": "When Cook and Peary both claimed the North Pole in 1909, he secretly turned his planned North Pole expedition toward the South Pole.",
+          "sourceId": "snl",
+          "locator": "section 'Ekspedisjonen til Sydpolen med Fram (1910-1912)', subsections 'Forberedelser' and 'Kappløpet med Scott'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Norwegian encyclopedia says he was no scientist: the geographical conquests were what he burned for, and science was the reason he needed to raise money.",
+          "sourceId": "snl",
+          "locator": "section 'Ekspedisjonen gjennom Nordvestpassasjen med Gjøa (1903-1906)', subsection 'Forberedelser', first paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that from fifteen he played football, which he did not like, to train his body for hardship, and slept with his windows wide open in the bitterest weather as part of his hardening.",
+          "sourceId": "my-life",
+          "locator": "ch. I 'Early Memories', p. 3"
+        },
+        {
+          "kind": "deed",
+          "claim": "For years before his first expedition he trained, bathed in the fjord every day, slept with the window open all year round and read all the polar literature he could find.",
+          "sourceId": "snl",
+          "locator": "section 'Tidlige ekspedisjoner', first paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In September 1900 he went to the Deutsche Seewarte in Hamburg to study magnetism under Georg von Neumayer, then at observatories in Wilhelmshaven and Potsdam.",
+          "sourceId": "snl",
+          "locator": "section 'Ekspedisjonen gjennom Nordvestpassasjen med Gjøa (1903-1906)', subsection 'Forberedelser', second paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "During nearly two years at Gjøa Haven (1903-1905) he studied how the Netsilik people lived in the Arctic, convinced it would help later expeditions, and used much of it on the South Pole journey.",
+          "sourceId": "snl",
+          "locator": "section 'Ekspedisjonen gjennom Nordvestpassasjen med Gjøa (1903-1906)', subsection 'Ekspedisjonen', paragraph beginning 'Ekspedisjonen kartla'; caption 'Barn med bue'"
+        },
+        {
+          "kind": "words",
+          "claim": "For the South Pole expedition he had about 250 reindeer skins sewn into clothes after the pattern of the Netsilik ('Netchelli') people he had lived beside on the Gjøa voyage.",
+          "sourceId": "south-pole-1",
+          "locator": "vol. I, ch. II 'Plan and Preparations', p. 79"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that in Hamburg he was the first at the observatory each morning and the last to leave at night, and studied with indefatigable zeal.",
+          "sourceId": "my-life",
+          "locator": "ch. II 'Ice-bound in the Antarctic', p. 35"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that he had spent a lifetime learning the art of polar exploration.",
+          "sourceId": "my-life",
+          "locator": "ch. VIII 'The Transpolar Flight of the Norge', p. 134"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that his career was a steady progress toward a definite goal from the age of fifteen.",
+          "sourceId": "my-life",
+          "locator": "ch. I 'Early Memories', p. 1"
+        },
+        {
+          "kind": "deed",
+          "claim": "Having concluded that an expedition should not have two leaders, he took his mate's exam in 1895 and signed on ships to qualify as a ship's master, so he could command both ship and expedition.",
+          "sourceId": "snl",
+          "locator": "section 'Tidlige ekspedisjoner', second paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Fridtjof Nansen wrote in his introduction that Amundsen 'has always reached the goal he has aimed at', sailing the little Gjøa round the north of America on a course sought in vain for four hundred years.",
+          "sourceId": "south-pole-1",
+          "locator": "Introduction by Fridtjof Nansen, p. xxviii"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Foresee every difficulty and prepare for it; what people call luck is mostly preparation.",
+      "sourceId": "south-pole-1",
+      "locator": "vol. I, ch. IX 'The End of the Winter', p. 370"
+    },
+    {
+      "text": "Train your body for the hard thing years before you need it.",
+      "sourceId": "my-life",
+      "locator": "ch. I, p. 3; ch. X 'The Serious Business of Exploration', p. 238"
+    },
+    {
+      "text": "Before you choose your route, read everything the people before you found out.",
+      "sourceId": "my-life",
+      "locator": "ch. X 'The Serious Business of Exploration', p. 239"
+    },
+    {
+      "text": "When someone has a better method, take it and adapt it to your own work.",
+      "sourceId": "my-life",
+      "locator": "ch. X 'The Serious Business of Exploration', pp. 241-242"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Victory awaits him who has everything in order — luck, people call it. Defeat is certain for him who has neglected to take the necessary precautions in time; this is called bad luck.",
+      "sourceId": "south-pole-1",
+      "locator": "vol. I, ch. IX 'The End of the Winter', p. 370",
+      "translation": "A. G. Chater, 1912"
+    },
+    {
+      "text": "Whatever I have accomplished in exploration has been the result of lifelong planning, painstaking preparation, and the hardest kind of conscientious work.",
+      "sourceId": "my-life",
+      "locator": "ch. I 'Early Memories', p. 1",
+      "translation": "English edition, Doubleday, Page & Company, 1927 (no translator named in the edition)"
+    },
+    {
+      "text": "To the explorer, however, adventure is merely an unwelcome interruption of his serious labours. … To him, an adventure is merely a bit of bad planning, brought to light by the test of trial.",
+      "sourceId": "my-life",
+      "locator": "ch. X 'The Serious Business of Exploration', pp. 236-237",
+      "translation": "English edition, Doubleday, Page & Company, 1927 (no translator named in the edition)"
+    },
+    {
+      "text": "The regions around the North Pole — well, yes, the North Pole itself — had attracted me from childhood, and here I was at the South Pole. Can anything more topsy-turvy be imagined?",
+      "sourceId": "south-pole-2",
+      "locator": "vol. II, ch. XII 'At the Pole', p. 121",
+      "translation": "A. G. Chater, 1912"
+    }
+  ],
+  "definingMoment": {
+    "text": "To choose a base for the South Pole, he compared every description of the Ross ice barrier since 1842 and picked the Bay of Whales, closer to the Pole than the British route. Through the winter of 1911 his men rebuilt their boots and dog harness; his own boots took nearly two years to get right. On 14 December 1911 he and four companions, Bjaaland, Hanssen, Hassel and Wisting, became the first people at the South Pole, five weeks before Robert Scott. They were back at their base after 99 days and about 3,000 km, almost without problems.",
+    "sourceIds": [
+      "my-life",
+      "south-pole-1",
+      "snl"
+    ]
+  },
+  "shadow": {
+    "text": "On the night of 16 June 1903 he sailed out of Kristiania in secret, he writes himself, because his main creditor had threatened to seize his ship and have him arrested for fraud. In 1910 he turned his North Pole expedition, which Nansen had backed with the loan of the Fram, toward the South Pole and kept it from most of his men until Madeira; afterwards he did not take the Fram north as he had promised Nansen, but went on paid lecture tours. In September 1911 he started for the Pole too early, out of fear that Scott would be first, and on the retreat he hurried ahead to base and left the weakest men behind; when Hjalmar Johansen criticised him for it on 17 September, he expelled Johansen from the Pole party. Johansen left the expedition in Hobart and shot himself in Kristiania in January 1913. In September 1924 he filed for bankruptcy, and in 1925 his ship Maud was seized for his debts. In 1924 he also broke with his brother Leon, who had run his business affairs: he wrote that Leon turned against him over a debt, while the Norwegian encyclopedia says he pushed Leon away, as he did other supporters such as Hjalmar Riiser-Larsen. After the 1926 Norge flight he quarrelled in public with Umberto Nobile over the credit. He never married, and several of his love affairs were with married women.",
+    "sourceIds": [
+      "my-life",
+      "snl",
+      "mia-life",
+      "mia-johansen",
+      "mia-magids"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What went wrong for you this week that you could have seen coming and prepared for?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The South Pole",
+      "year": 1912
+    },
+    {
+      "title": "My Life as an Explorer",
+      "year": 1927
+    },
+    {
+      "title": "The North West Passage (Nordvestpassagen)",
+      "year": 1907
+    }
+  ],
+  "sources": [
+    {
+      "id": "south-pole-1",
+      "kind": "primary",
+      "title": "The South Pole: An Account of the Norwegian Antarctic Expedition in the Fram, 1910-1912, vol. I",
+      "author": "Roald Amundsen, translated by A. G. Chater",
+      "year": 1912,
+      "publisher": "John Murray, London; scan on the Internet Archive (University of Toronto copy); text also Project Gutenberg #3414",
+      "url": "https://archive.org/details/southpoleaccount01amunuoft"
+    },
+    {
+      "id": "south-pole-2",
+      "kind": "primary",
+      "title": "The South Pole: An Account of the Norwegian Antarctic Expedition in the Fram, 1910-1912, vol. II",
+      "author": "Roald Amundsen, translated by A. G. Chater",
+      "year": 1912,
+      "publisher": "John Murray, London; scan on the Internet Archive (University of Toronto copy); text also Project Gutenberg #3415",
+      "url": "https://archive.org/details/southpoleaccount02amunuoft"
+    },
+    {
+      "id": "my-life",
+      "kind": "primary",
+      "title": "My Life as an Explorer",
+      "author": "Roald Amundsen",
+      "year": 1927,
+      "publisher": "Doubleday, Page & Company, Garden City, New York (first edition); scan on the Internet Archive (York University copy)",
+      "url": "https://archive.org/details/roaldamundsenmyl00amun"
+    },
+    {
+      "id": "snl",
+      "kind": "secondary",
+      "title": "Roald Amundsen, Store norske leksikon (contains text from Norsk biografisk leksikon)",
+      "author": "Susan Barr",
+      "year": 2025,
+      "publisher": "Store norske leksikon, last updated 4 July 2025",
+      "url": "https://snl.no/Roald_Amundsen"
+    },
+    {
+      "id": "mia-life",
+      "kind": "secondary",
+      "title": "Roald Amundsen's life, in brief",
+      "author": "Roald Amundsen's Home, Museums in Akershus (MiA)",
+      "year": "undated (read 2026-11-10)",
+      "publisher": "Museene i Akershus (MiA), Follo museum",
+      "url": "https://amundsen.mia.no/en/resource/roald-amundsens-life-briefly/"
+    },
+    {
+      "id": "mia-johansen",
+      "kind": "secondary",
+      "title": "Hjalmar Johansen",
+      "author": "Roald Amundsen's Home, Museums in Akershus (MiA)",
+      "year": "undated (read 2026-11-10)",
+      "publisher": "Museene i Akershus (MiA), Follo museum",
+      "url": "https://amundsen.mia.no/en/person/hjalmar-johansen-2/"
+    },
+    {
+      "id": "mia-magids",
+      "kind": "secondary",
+      "title": "Elisabeth \"Bess\" Magids",
+      "author": "Roald Amundsen's Home, Museums in Akershus (MiA)",
+      "year": "undated (read 2026-11-10)",
+      "publisher": "Museene i Akershus (MiA), Follo museum",
+      "url": "https://amundsen.mia.no/en/person/elisabeth-bess-magids/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Norwegian polar explorer (1872-1928), dead since 1928, never a candidate for office and no founder of a religion; searches found no account of sexual contact with a minor or of sexual violence; he is in, with a documented dark side (escaping a creditor in 1903, hiding the South Pole plan, expelling Hjalmar Johansen in 1911, bankruptcy, broken friendships, affairs with married women)."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I attacked each value against Store norske leksikon, the Amundsen home museum and his own two books, and tested Loyalty hardest against his expulsion of Hjalmar Johansen and his break with his brother Leon. Loyalty fell: all its evidence is one friendship, with Frederick Cook, while the same sources show him deceiving Nansen, expelling Johansen and pushing away Leon and Riiser-Larsen. Ambition, Discipline, Learning and Determination held and match the blind pick; a disputed Hardangervidda claim was replaced with Nansen's own words. All four quotes match the scans word for word, and the shadow now dates the bankruptcy to 1924 and gives both sides of the break with Leon.",
+    "checkedOn": "2026-11-10"
+  }
+}
