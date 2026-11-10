@@ -1,0 +1,344 @@
+{
+  "id": "viktor-frankl",
+  "name": "Viktor Frankl",
+  "born": 1905,
+  "died": 1997,
+  "category": "teachers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_emotions"
+  ],
+  "tagline": "A doctor who lost his family in the camps and taught that life asks something of you.",
+  "startedFrom": "He was born on 26 March 1905 in Leopoldstadt, the Jewish district of Vienna. His father held a government job running children's aid, and as a boy in the First World War he stood in bread lines from 3 a.m. He did well at school, wrote to Sigmund Freud as a teenager, and qualified as a doctor in 1930.",
+  "values": [
+    {
+      "word": "Meaning",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that in the camp the prisoners had to learn, and teach despairing men, that it did not matter what they expected from life, but what life expected from them.",
+          "sourceId": "msfm-1963",
+          "locator": "Part One (the camp account), passage 'we had to teach the despairing men, that it did not really matter what we expected from life...'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He founded logotherapy, a school of psychotherapy named after the Greek 'logos', meaning, and wrote 33 more books on it after the war.",
+          "sourceId": "nyt-1997",
+          "locator": "paragraph beginning 'In the postwar years he wrote 33 other books'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His critical biographer Timothy Pytell sums up logotherapy as 'therapy through meaning', which takes the will to meaning to be the main driving force in people.",
+          "sourceId": "pytell-2015",
+          "locator": "Introduction, p. 1"
+        }
+      ]
+    },
+    {
+      "word": "Responsibility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that he recommends the Statue of Liberty on the East Coast be supplemented by a Statue of Responsibility on the West Coast.",
+          "sourceId": "msfm-1984",
+          "locator": "passage ending '...a Statue of Responsibility on the West Coast', just before the heading 'The Psychiatric Credo'"
+        },
+        {
+          "kind": "deed",
+          "claim": "After the war he spoke in public against the idea of collective German guilt, telling a former Nazi that as former prisoner number 119104 it was his obligation to do so.",
+          "sourceId": "cityjournal-kronen-2023",
+          "locator": "paragraph beginning 'After Frankl gave a lecture against collective guilt'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Pytell writes that in a 1937 article Frankl recast the idea of having a mission in life as one of accepting responsibility.",
+          "sourceId": "pytell-2015",
+          "locator": "Introduction, p. 7"
+        },
+        {
+          "kind": "deed",
+          "claim": "As a guest professor at Harvard in 1961 he made the remark that the Statue of Liberty on the East Coast should be supplemented by a Statue of Responsibility on the West Coast.",
+          "sourceId": "vfi-bio",
+          "locator": "timeline entry '1961'"
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "From 1933 to 1937 he worked in the female suicide ward of the Am Steinhof state hospital in Vienna, after running youth counselling in the late 1920s.",
+          "sourceId": "pytell-2015",
+          "locator": "Introduction, p. 6"
+        },
+        {
+          "kind": "deed",
+          "claim": "In the camps he and other prisoners tried to stop suicides by reminding despairing men that someone or some work was still waiting for them.",
+          "sourceId": "nyt-1997",
+          "locator": "paragraphs beginning 'One specific action' and 'The Germans did not allow prisoners'"
+        },
+        {
+          "kind": "words",
+          "claim": "In Yes to Life (1946) he wrote that after a suicide attempt the doctor has not only the right but the duty to intervene and save the patient if he can.",
+          "sourceId": "cityjournal-kronen-2023",
+          "locator": "paragraph beginning 'Suicide remains among the most complex moral issues'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In Theresienstadt he set up a first response team for shocked new arrivals and, with Rabbi Regina Jonas, worked against suicide among the inmates.",
+          "sourceId": "vfi-bio",
+          "locator": "timeline entry '1942' (Terezin camp)"
+        }
+      ]
+    },
+    {
+      "word": "Optimism",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 1984 he added a postscript to his camp book called 'The Case for a Tragic Optimism', arguing that a man can stay optimistic in spite of the 'tragic triad', which includes guilt and death.",
+          "sourceId": "msfm-1984",
+          "locator": "Postscript 1984, 'The Case for a Tragic Optimism'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Pytell, who is critical of him, writes that his most significant achievement was to survive Auschwitz and Dachau and still keep a hopeful and positive take on life.",
+          "sourceId": "pytell-2015",
+          "locator": "Introduction, p. 4"
+        },
+        {
+          "kind": "witness",
+          "claim": "City Journal describes his outlook as 'tragic optimism': staying optimistic about life in the face of suffering, guilt and death.",
+          "sourceId": "cityjournal-kronen-2023",
+          "locator": "paragraph beginning 'Frankl referred to his vision as “tragic optimism”'"
+        }
+      ]
+    },
+    {
+      "word": "Family",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He obtained a US immigration visa but let it expire rather than leave his elderly parents in Vienna.",
+          "sourceId": "vfi-bio",
+          "locator": "timeline entry '1940' (visa)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Katherine Arens, reviewing Pytell's biography, reports that he did not use a 1941 US visa; Frankl said it was for his patients, Pytell thinks his parents and fiancee were the likelier reason.",
+          "sourceId": "hnet-arens-2006",
+          "locator": "paragraph beginning 'Such shared aims did not shelter Frankl' (citing Pytell 2005, pp. 96 f.)"
+        },
+        {
+          "kind": "deed",
+          "claim": "In the camp, when his father was dying of pulmonary edema, he gave him a smuggled vial of morphine to ease his pain.",
+          "sourceId": "cityjournal-kronen-2023",
+          "locator": "paragraph beginning 'When his father was afflicted with pulmonary edema'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Stop asking what you can get from life; ask what life is asking of you today.",
+      "sourceId": "msfm-1963",
+      "locator": "Part One (the camp account), passage 'we had to teach the despairing men, that it did not really matter what we expected from life...'"
+    },
+    {
+      "text": "When you cannot change a situation, change the way you meet it.",
+      "sourceId": "msfm-1984",
+      "locator": "passage '...a human achievement. When we are no longer able to change a situation...'"
+    },
+    {
+      "text": "Freedom must be matched by responsibility.",
+      "sourceId": "msfm-1984",
+      "locator": "passage ending '...a Statue of Responsibility on the West Coast', just before the heading 'The Psychiatric Credo'"
+    },
+    {
+      "text": "Do not aim at success or happiness; give yourself to a cause or a person, and they come as a side effect.",
+      "sourceId": "msfm-1984",
+      "locator": "front matter of the 1984 edition, passage 'students both in Europe and in America: \"Don't aim at success...\"'"
+    },
+    {
+      "text": "Act as if you were living for the second time and had got it wrong the first time.",
+      "sourceId": "msfm-1963",
+      "locator": "passage on responsibleness: 'the categorical imperative of logotherapy, which is: \"So live as if you were living already for the second time...\"'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Everything can be taken from a man but one thing: the last of the human freedoms—to choose one's attitude in any given set of circumstances, to choose one's own way.",
+      "sourceId": "msfm-1963",
+      "locator": "Part One (the camp account), passage beginning 'We who lived in concentration camps can remember the men who walked through the huts comforting others'",
+      "translation": "Ilse Lasch, 1959"
+    },
+    {
+      "text": "It did not really matter what we expected from life, but rather what life expected from us.",
+      "sourceId": "msfm-1963",
+      "locator": "Part One (the camp account), passage 'we had to teach the despairing men, that it did not really matter what we expected from life...'",
+      "translation": "Ilse Lasch, 1959"
+    },
+    {
+      "text": "When we are no longer able to change a situation—just think of an incurable disease such as inoperable cancer—we are challenged to change ourselves.",
+      "sourceId": "msfm-1984",
+      "locator": "passage '...a human achievement. When we are no longer able to change a situation...' (footnote 3 follows)",
+      "translation": "English text of the 1984 edition (translation credited to Ilse Lasch, 1959)"
+    },
+    {
+      "text": "The salvation of man is through love and in love.",
+      "sourceId": "msfm-1963",
+      "locator": "Part One (the camp account), sentence after 'the greatest secret that human poetry and human thought and belief have to impart'",
+      "translation": "Ilse Lasch, 1959"
+    }
+  ],
+  "definingMoment": {
+    "text": "In September 1942 he was deported with his wife Tilly and his parents to the Theresienstadt ghetto, where his father died about half a year later. In 1944 he, Tilly and his mother were sent to Auschwitz-Birkenau; his mother was killed there. After a few days he was sent on to Kaufering and Tuerkheim, sub-camps of Dachau, where he worked as a labourer and then as a doctor. The manuscript of his first book was lost at Auschwitz; ill with typhoid in Tuerkheim, he kept himself awake at night rebuilding it on stolen slips of paper. Freed in April 1945, he learned within days in Vienna that his wife, his mother and his brother were dead, and that year dictated Man's Search for Meaning, by his own account in nine successive days.",
+    "sourceIds": [
+      "vfi-bio",
+      "pytell-2015",
+      "nyt-1997",
+      "msfm-2004"
+    ]
+  },
+  "shadow": {
+    "text": "From 1940 to 1942 he ran the neurology department of Vienna's Rothschild Hospital. His biographer Timothy Pytell writes that there, trying to revive Jewish patients who had attempted suicide rather than be deported, he experimented with shock therapy, stimulants injected into the heart and amphetamines, and later tried brain surgery beyond his competence, which Frankl described hesitantly in a 1981 interview. Alexander Batthyany, who heads the Frankl archive, describes the same years as attempts to rescue suicidal patients, and cites a patient's report that false diagnoses kept her in the hospital for months until staff helped her escape Vienna. Pytell also writes that in 1936-37 he took part in seminars of the Austrian branch of the international psychotherapy society and in 1937 wrote for the journal of the Goering Institute, while arguing that a therapist could not dictate a patient's sense of responsibility; Batthyany reports that he sharply criticised the Goering-linked school. Pytell and the Frankl Institute both put his time at Auschwitz at a few days; Pytell says his memoirs left out important details and falsified certain realities. Batthyany's 2021 book says it corrects the errors and misrepresentations in Pytell's work, and a 2023 review in Holocaust and Genocide Studies says it refutes Pytell's case 'with a broad range of detailed, documented information and archival data'. Holocaust scholar Lawrence Langer called his camp account 'a very partial view'. Pytell and historian Anson Rabinbach point to his late public ties with Kurt Waldheim and Joerg Haider; Pytell says he signed a book 'to my friend Jörg Haider'. In 1995 he accepted honorary citizenship of Vienna on the nomination of Haider's far-right Freedom Party. His approved biographer said he could sound boastful and self-congratulatory; Abraham Maslow's journal calls him self-absorbed and narcissistic.",
+    "sourceIds": [
+      "pytell-2015",
+      "hnet-arens-2006",
+      "pytell-pt-2017",
+      "batthyany-2021",
+      "russo-netzer-2023",
+      "vfi-bio"
+    ]
+  },
+  "councilQuestion": {
+    "text": "This week, where did you wait for life to give you something, instead of asking what it was asking of you?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Man's Search for Meaning",
+      "year": 1946
+    },
+    {
+      "title": "Yes to Life: In Spite of Everything",
+      "year": 1946
+    },
+    {
+      "title": "Recollections: An Autobiography",
+      "year": 1995
+    }
+  ],
+  "sources": [
+    {
+      "id": "msfm-1963",
+      "kind": "primary",
+      "title": "Man's Search for Meaning: An Introduction to Logotherapy (trans. Ilse Lasch)",
+      "author": "Viktor E. Frankl",
+      "year": 1963,
+      "publisher": "Beacon Press",
+      "url": "https://archive.org/details/manssearchformea0000fran"
+    },
+    {
+      "id": "msfm-1984",
+      "kind": "primary",
+      "title": "Man's Search for Meaning, revised and updated, with Preface to the 1984 edition and Postscript 1984",
+      "author": "Viktor E. Frankl",
+      "year": 1984,
+      "publisher": "Simon & Schuster / Washington Square Press",
+      "url": "https://archive.org/details/manssearchformea00fran_0"
+    },
+    {
+      "id": "msfm-2004",
+      "kind": "primary",
+      "title": "Man's Search for Meaning, with Preface to the 1992 edition",
+      "author": "Viktor E. Frankl",
+      "year": 2004,
+      "publisher": "Rider",
+      "url": "https://archive.org/details/manssearchformea0000fran_f2v4"
+    },
+    {
+      "id": "nyt-1997",
+      "kind": "secondary",
+      "title": "Dr. Viktor E. Frankl of Vienna, Psychiatrist of the Search for Meaning, Dies at 92",
+      "author": "Holcomb B. Noble",
+      "year": 1997,
+      "publisher": "The New York Times, 4 September 1997",
+      "url": "https://www.nytimes.com/1997/09/04/world/dr-viktor-e-frankl-of-vienna-psychiatrist-of-the-search-for-meaning-dies-at-92.html"
+    },
+    {
+      "id": "pytell-2015",
+      "kind": "secondary",
+      "title": "Viktor Frankl's Search for Meaning: An Emblematic 20th-Century Life (publisher's sample: Introduction)",
+      "author": "Timothy Pytell",
+      "year": 2015,
+      "publisher": "Berghahn Books",
+      "url": "https://www.berghahnbooks.com/downloads/intros/PytellViktor_intro.pdf"
+    },
+    {
+      "id": "hnet-arens-2006",
+      "kind": "secondary",
+      "title": "When a Discipline Goes into Exile: Rethinking Intellectual Biographies (review of Pytell, Viktor Frankl: Das Ende eines Mythos?, 2005)",
+      "author": "Katherine Arens",
+      "year": 2006,
+      "publisher": "H-German, H-Net Reviews",
+      "url": "https://www.h-net.org/reviews/showrev.php?id=11462"
+    },
+    {
+      "id": "pytell-pt-2017",
+      "kind": "secondary",
+      "title": "Is It OK to Criticize a Saint? Humanizing Viktor Frankl",
+      "author": "Timothy Pytell",
+      "year": 2017,
+      "publisher": "Psychology Today (blog Authoritarian Therapy), 31 March 2017",
+      "url": "https://www.psychologytoday.com/us/blog/authoritarian-therapy/201703/is-it-ok-criticize-saint-humanizing-viktor-frankl"
+    },
+    {
+      "id": "cityjournal-kronen-2023",
+      "kind": "secondary",
+      "title": "Yes to Life",
+      "author": "Samuel Kronen",
+      "year": 2023,
+      "publisher": "City Journal, 18 August 2023",
+      "url": "https://www.city-journal.org/article/yes-to-life"
+    },
+    {
+      "id": "vfi-bio",
+      "kind": "secondary",
+      "title": "Viktor Frankl: Biography (timeline)",
+      "author": "Viktor Frankl Institut, Vienna",
+      "year": 2026,
+      "publisher": "Viktor Frankl Institut",
+      "url": "https://www.viktorfrankl.org/biography.html"
+    },
+    {
+      "id": "batthyany-2021",
+      "kind": "secondary",
+      "title": "Viktor Frankl and the Shoah: Advancing the Debate (publisher's book and chapter abstracts: 'How Not to Reconstruct History'; '1940-1942: At the Rothschild Hospital')",
+      "author": "Alexander Batthyany",
+      "year": 2021,
+      "publisher": "Springer (SpringerBriefs in Psychology)",
+      "url": "https://doi.org/10.1007/978-3-030-83063-2"
+    },
+    {
+      "id": "russo-netzer-2023",
+      "kind": "secondary",
+      "title": "Review of Alexander Batthyany, Viktor Frankl and the Shoah: Advancing the Debate (publisher's extract)",
+      "author": "Pninit Russo-Netzer",
+      "year": 2023,
+      "publisher": "Holocaust and Genocide Studies 37(2), 334-336",
+      "url": "https://doi.org/10.1093/hgs/dcad018"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Austrian psychiatrist and author (1905-1997), not fictional, never a politician or candidate, not the founder of a religion, and with no account found of sexual contact with anyone under 16 or of sexual violence; he is in, with a documented and contested dark side: experiments on suicidal Jewish patients in 1940-42, an account of the camps that a historian says omits and inflates, and late public ties to Kurt Waldheim and Joerg Haider's FPOe."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value with Pytell's critical biography, the Psychology Today post, the Arens review and the Frankl Institute's own timeline, and rechecked the four quotes in the Internet Archive scans through Open Library's search-inside. Meaning, Responsibility and Service held (core, also in the blind pick); Optimism and Family held on three sources each, so the blind pick's Resilience and Loyalty had no room. The defining moment was wrong in two places, now fixed: his father died in Theresienstadt with him present, and his wife was not pregnant when she died (the pregnancy had been forcibly ended in 1941-42). The shadow now says who claims what: the Rothschild experiments rest on Pytell, the short Auschwitz stay is also in the Frankl Institute's timeline, and Batthyany's 2021 reply and a 2023 review of it are named.",
+    "checkedOn": "2026-11-10"
+  }
+}
