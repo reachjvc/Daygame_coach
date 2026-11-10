@@ -1,0 +1,282 @@
+{
+  "id": "richard-winters",
+  "name": "Richard Winters",
+  "born": 1918,
+  "died": 2011,
+  "category": "warriors",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset",
+    "lm_fitness"
+  ],
+  "tagline": "The quiet officer who led from the front and gave the credit to his men.",
+  "startedFrom": "He was born in 1918 in Ephrata, Pennsylvania, to Richard and Edith Winters, and graduated from Franklin and Marshall College in 1941. That summer he volunteered for the Army to get his one year of required service done. He wrote that though he felt a strong sense of duty, he had no desire to get into the war in Europe.",
+  "values": [
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On D-Day, 6 June 1944, after his company commander was killed, he took command and led a dozen paratroopers in an attack on four German guns firing on a Utah Beach causeway; all the guns were destroyed.",
+          "sourceId": "army-scavetta-2012",
+          "locator": "paragraphs 6-7 (Meehan killed; Brecourt Manor attack)"
+        },
+        {
+          "kind": "deed",
+          "claim": "His Distinguished Service Cross citation credits his 'heroic and determined leadership' in putting a German battery out of action on 6 June 1944.",
+          "sourceId": "dsc-go31-1944",
+          "locator": "citation, last sentence"
+        },
+        {
+          "kind": "witness",
+          "claim": "Staff Sergeant William Guarnere said Winters was the first one out there, yelling 'Follow me!', and that he saved the company a lot of times.",
+          "sourceId": "nyt-hevesi-2011",
+          "locator": "obituary, paragraphs quoting Guarnere (after the Carentan/D-Day paragraph)"
+        },
+        {
+          "kind": "words",
+          "claim": "His second principle for leaders is to lead from the front: say 'Follow me!' and then lead the way.",
+          "sourceId": "winters-kingseed-2006",
+          "locator": "'Leadership at the Point of a Bayonet: Ten Principles for Success', p. 293, principle 2"
+        }
+      ]
+    },
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that the cohesion in Easy Company was hardly the result of his leadership: the company belonged to the men, and the officers were only caretakers.",
+          "sourceId": "winters-kingseed-2006",
+          "locator": "chapter 8, 'The Island', last paragraph before Part III"
+        },
+        {
+          "kind": "words",
+          "claim": "He urged leaders to remain humble, writing that if you don't worry about who gets the credit, you get a lot more done.",
+          "sourceId": "winters-kingseed-2006",
+          "locator": "chapter 16, 'Reflections' (pp. 283-292); also 'Ten Principles for Success', p. 293, principle 7 ('Remain humble. Don't worry about who receives the credit.')"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times wrote that, despite the Distinguished Service Cross, the Bronze Star and the Purple Heart, he played down his combat role.",
+          "sourceId": "nyt-hevesi-2011",
+          "locator": "obituary, paragraph before the closing memoir quotation"
+        },
+        {
+          "kind": "witness",
+          "claim": "NPR reported that he always played down his heroism, and that his favourite line was a veteran's answer to his grandson: 'No, but I served in a company of heroes.'",
+          "sourceId": "npr-bowman-2011",
+          "locator": "transcript, Bowman's remembrance, after the Distinguished Service Cross sentence"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His Distinguished Service Cross citation says that on 6 June 1944 he advanced through intense enemy automatic-weapons fire and put out of action guns that were shelling the beachhead.",
+          "sourceId": "dsc-go31-1944",
+          "locator": "citation, second and third sentences"
+        },
+        {
+          "kind": "witness",
+          "claim": "Guarnere said Winters 'got shot in the leg and still kept going'; the Times' correction of 17 January 2011 places that wound at Carentan, shortly after D-Day.",
+          "sourceId": "nyt-hevesi-2011",
+          "locator": "obituary, Guarnere quotation, with the correction of 17 Jan 2011"
+        },
+        {
+          "kind": "witness",
+          "claim": "Private Clancy Lyall of Easy Company said Winters was there with the men in everything they had to do and would not run.",
+          "sourceId": "npr-bowman-2011",
+          "locator": "transcript, Lyall's two soundbites"
+        }
+      ]
+    },
+    {
+      "word": "Loyalty",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "In 1945 Floyd Talbert, one of his soldiers, wrote to him from a hospital thanking him for his loyalty and leadership: 'I would follow you into hell.'",
+          "sourceId": "wapo-shapiro-2011",
+          "locator": "post of 9 Jan 2011, paragraphs on Talbert's letter"
+        },
+        {
+          "kind": "words",
+          "claim": "Sixty years after the war he wrote that he kept a list of the Toccoa men by his desk and looked at it every day.",
+          "sourceId": "winters-kingseed-2006",
+          "locator": "chapter 2, 'There Is Nothing Easy in Easy Company', pp. 33-34"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Lead from the front: say 'Follow me!' and go first.",
+      "sourceId": "winters-kingseed-2006",
+      "locator": "'Ten Principles for Success', p. 293, principle 2"
+    },
+    {
+      "text": "Stay humble and do not worry about who gets the credit.",
+      "sourceId": "winters-kingseed-2006",
+      "locator": "'Ten Principles for Success', p. 293, principle 7; chapter 16, 'Reflections'"
+    },
+    {
+      "text": "Keep your body strong, because physical stamina is the root of mental toughness.",
+      "sourceId": "winters-kingseed-2006",
+      "locator": "'Ten Principles for Success', p. 293, principle 3"
+    },
+    {
+      "text": "Every night, look in the mirror and ask yourself if you did your best.",
+      "sourceId": "winters-kingseed-2006",
+      "locator": "'Ten Principles for Success', p. 293, principle 8"
+    },
+    {
+      "text": "Be a leader of character, competence and courage.",
+      "sourceId": "winters-kingseed-2006",
+      "locator": "'Ten Principles for Success', p. 293, principle 1"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "…the cohesion that existed in the company was hardly the result of my leadership. The company belonged to the men—the officers were merely the caretakers.",
+      "sourceId": "winters-kingseed-2006",
+      "locator": "Beyond Band of Brothers, chapter 8, 'The Island' (begins p. 135), closing paragraph before Part III (p. 151); wording checked in the 2008 Berkley Caliber paperback scan"
+    },
+    {
+      "text": "Wars do not make men great, but they do bring out the greatness in good men.",
+      "sourceId": "winters-kingseed-2006",
+      "locator": "Beyond Band of Brothers, chapter 16, 'Reflections', closing paragraph, p. 292 (2006 hardcover, as cited by Wikiquote's sourced entry; the 2008 paperback index gives 'on war, 291-92'); wording checked in the 2008 paperback scan"
+    },
+    {
+      "text": "Stay in top physical shape—physical stamina is the root of mental toughness.",
+      "sourceId": "winters-kingseed-2006",
+      "locator": "Beyond Band of Brothers, 'Leadership at the Point of a Bayonet: Ten Principles for Success', p. 293, principle 3 (page from the 2008 paperback's contents and index)"
+    },
+    {
+      "text": "To this day I keep a list of the Toccoa men by my desk and I look at it every day.",
+      "sourceId": "winters-kingseed-2006",
+      "locator": "Beyond Band of Brothers, chapter 2, 'There Is Nothing Easy in Easy Company', pp. 33-34 (2008 paperback index: 'on Toccoa men, 33-34')"
+    }
+  ],
+  "definingMoment": {
+    "text": "On D-Day, 6 June 1944, his company commander was killed when his plane was hit by German anti-aircraft fire, and Winters took command of Easy Company. That morning near Brécourt Manor he led a small group of paratroopers (the accounts give between 7 and 13 men) against a battery of four German guns firing on a Utah Beach causeway, and all four guns were put out of action. Staff Sergeant William Guarnere said Winters was 'the first one out there, yelling, Follow me!' He received the Distinguished Service Cross for the action under First Army General Orders No. 31 of 1 July 1944.",
+    "sourceIds": [
+      "army-scavetta-2012",
+      "dsc-go31-1944",
+      "nyt-hevesi-2011"
+    ]
+  },
+  "shadow": {
+    "text": "In training in the United States and England he clashed with his first company commander, Captain Herbert Sobel. He wrote home 'Don't ask me what the captain does' and sent home a photo of Sobel with a moustache drawn on it. When Sobel charged him over a latrine inspection, he asked for trial by court martial instead of taking the punishment. A group of the company's sergeants then wrote to Colonel Sink refusing to serve under Sobel; several were punished, and Sobel was transferred out of the company in February 1944. The paratrooper Don Malarkey believed Winters 'quietly orchestrated the deal to force Sobel out', and said he did it for the men. In his 2006 memoir Winters wrote that Sobel 'was not just unfair; he was plain mean'.",
+    "sourceIds": [
+      "tp-clark-2021",
+      "ambrose-1992",
+      "winters-kingseed-2006"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you tell others what to do instead of going first yourself?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Beyond Band of Brothers: The War Memoirs of Major Dick Winters (with Cole C. Kingseed)",
+      "year": 2006
+    }
+  ],
+  "sources": [
+    {
+      "id": "winters-kingseed-2006",
+      "kind": "primary",
+      "title": "Beyond Band of Brothers: The War Memoirs of Major Dick Winters",
+      "author": "Dick Winters with Cole C. Kingseed",
+      "year": 2006,
+      "publisher": "Berkley Caliber, New York (wording checked in the 2008 Berkley Caliber paperback scan at the Internet Archive)",
+      "url": "https://archive.org/details/beyondbandofbrot0000wint_o6m0"
+    },
+    {
+      "id": "nyt-hevesi-2011",
+      "kind": "secondary",
+      "title": "Richard Winters Dies at 92; Led 'Band of Brothers' (obituary, 10 January 2011; corrected 17 January 2011)",
+      "author": "Dennis Hevesi",
+      "year": 2011,
+      "publisher": "The New York Times",
+      "url": "https://www.nytimes.com/2011/01/11/us/11winters.html"
+    },
+    {
+      "id": "wapo-shapiro-2011",
+      "kind": "secondary",
+      "title": "Dick Winters dies; WWII hero commanded 'Band of Brothers' (Post Mortem, 9 January 2011)",
+      "author": "T. Rees Shapiro",
+      "year": 2011,
+      "publisher": "The Washington Post",
+      "url": "https://web.archive.org/web/20220820235950/http://voices.washingtonpost.com/postmortem/2011/01/dick-winters-dies-wwii-hero-co.html"
+    },
+    {
+      "id": "npr-bowman-2011",
+      "kind": "secondary",
+      "title": "Dick Winters, 'Band Of Brothers' Inspiration, Dies (Morning Edition, 11 January 2011, transcript)",
+      "author": "Tom Bowman",
+      "year": 2011,
+      "publisher": "NPR",
+      "url": "https://www.npr.org/transcripts/132826373"
+    },
+    {
+      "id": "army-scavetta-2012",
+      "kind": "secondary",
+      "title": "Normandy monument dedicated to Maj. Richard Winters",
+      "author": "Staff Sgt. Rick Scavetta, U.S. European Command",
+      "year": 2012,
+      "publisher": "U.S. Army (army.mil)",
+      "url": "https://www.army.mil/article/81406"
+    },
+    {
+      "id": "dsc-go31-1944",
+      "kind": "secondary",
+      "title": "Distinguished Service Cross citation, First Lieutenant Richard D. Winters (Headquarters, First U.S. Army, General Orders No. 31, 1 July 1944)",
+      "author": "Headquarters, First U.S. Army (text as reproduced by Home of Heroes)",
+      "year": 1944,
+      "publisher": "Home of Heroes",
+      "url": "https://homeofheroes.com/recipient/richard-d-winters/"
+    },
+    {
+      "id": "ambrose-1992",
+      "kind": "secondary",
+      "title": "Band of Brothers: E Company, 506th Regiment, 101st Airborne from Normandy to Hitler's Eagle's Nest",
+      "author": "Stephen E. Ambrose",
+      "year": 1992,
+      "publisher": "Simon & Schuster, New York (checked in the 2001 Simon & Schuster scan at the Internet Archive)",
+      "url": "https://archive.org/details/bandofbrothersec00ambr"
+    },
+    {
+      "id": "tp-clark-2021",
+      "kind": "secondary",
+      "title": "'I request trial by court-martial': The real story behind that one beloved scene in 'Band of Brothers' (quoting Erik Dorr, Hang Tough: The WWII Letters and Artifacts of Major Dick Winters)",
+      "author": "James Clark",
+      "year": 2021,
+      "publisher": "Task & Purpose",
+      "url": "https://taskandpurpose.com/culture/band-of-brothers-winters-court-martial-true-story/"
+    },
+    {
+      "id": "reagan-costanzo-2023",
+      "kind": "secondary",
+      "title": "'Outstanding Veterans': Major Dick Winters",
+      "author": "Katie Costanzo",
+      "year": 2023,
+      "publisher": "Ronald Reagan Presidential Library & Museum (National Archives)",
+      "url": "https://reagan.blogs.archives.gov/2023/06/09/outstanding-veterans-major-dick-winters"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "ok",
+      "notes": "Real person (1918-2011), an Army officer and later a farmer and feed businessman who never held or ran for office and founded no religion; searches found no account of sexual contact with a minor or of sexual violence; his documented dark side is small: his open contempt for, and part in the removal of, his first company commander, Herbert Sobel."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I attacked each value against his memoir (wording checked in the Internet Archive's own scans), the 1944 citation, the NYT, Washington Post, NPR and army.mil reports, Ambrose and Dorr. Leadership, Humility, Courage and Loyalty held; Fitness fell because its evidence came from only two sources, one of them an assigned duty of leading calisthenics. All four quotes held, one principle whose wording I could not see in a lawful copy was swapped for one I could, and the shadow gained the sergeants' punishment, Malarkey's full view and Ambrose for the latrine charge.",
+    "checkedOn": "2026-11-10"
+  }
+}
