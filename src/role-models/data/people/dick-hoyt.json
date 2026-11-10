@@ -1,0 +1,265 @@
+{
+  "id": "dick-hoyt",
+  "name": "Dick Hoyt",
+  "born": 1940,
+  "died": 2021,
+  "category": "givers",
+  "areaIds": [
+    "lm_family",
+    "lm_fitness",
+    "lm_contribution"
+  ],
+  "tagline": "He was not a runner when his disabled son asked to race; together they finished more than 1,000 races.",
+  "startedFrom": "He was the sixth of ten children in a small house in North Reading, Massachusetts, with no running water or indoor bathroom for his first six years; his father sold used cars. He married in 1961, and in 1962 his first son, Rick, was born unable to speak or control his limbs, and a doctor told the couple to put him in an institution. In 1977 he was not a runner and had never run more than a mile outside boot camp.",
+  "values": [
+    {
+      "word": "Devotion",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He raced with his son Rick more than 1,000 times, including 32 Boston Marathons up to 2014.",
+          "sourceId": "nyt-2021",
+          "locator": "paragraphs on the 1,000 races and on the Boston Marathon 1980-2014"
+        },
+        {
+          "kind": "witness",
+          "claim": "Sports Illustrated writes that friends who pushed Rick in two relays 'discovered the depths of Dick's devotion' when their own feet were wrecked.",
+          "sourceId": "si-2011",
+          "locator": "online page 4, paragraph beginning 'They did their second Boston in 2:59'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he raced only because of Rick and had no wish to race alone.",
+          "sourceId": "rw-2006",
+          "locator": "paragraph beginning 'Rick's decision echoed one his father had made many times before'"
+        }
+      ]
+    },
+    {
+      "word": "Family",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He and Judy refused a doctor's advice to put Rick in an institution, raised him at home with his two brothers, and Dick carried him up mountains on family hikes.",
+          "sourceId": "rw-2006",
+          "locator": "paragraphs beginning 'Still, a college degree was hardly what Judy and Dick Hoyt expected' and 'As Judy worked this front'"
+        },
+        {
+          "kind": "witness",
+          "claim": "In the AP obituary a son (the paragraph follows Russ Hoyt's remarks) called him a hero not only for pushing Rick but because he was 'a great father to all of us'.",
+          "sourceId": "ap-2021",
+          "locator": "paragraph beginning 'I know it's a cliche'"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At 45, unable to swim, he bought a house on a man-made lake and jumped in every day after work until he could swim the leg of his and Rick's first triathlon.",
+          "sourceId": "si-2011",
+          "locator": "online page 5, paragraphs beginning 'Dick was 45' and 'Judy blanched'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Stopped short of the finish by the 2013 Boston Marathon bombing, he and Rick came back in 2014 and finished their 32nd Boston.",
+          "sourceId": "nyt-2021",
+          "locator": "paragraph beginning 'They ran the Boston Marathon nearly every year from 1980 to 2014'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said there is nothing you can't do once you make up your mind to do it.",
+          "sourceId": "npr-2014",
+          "locator": "transcript, Dick Hoyt's answer beginning 'When Rick was born, you know, we'd take Rick in a restaurant'"
+        }
+      ]
+    },
+    {
+      "word": "Fitness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Pushing Rick, he ran a 2:40:47 marathon at the 1992 Marine Corps Marathon, first in his 50-59 age group.",
+          "sourceId": "nyt-2021",
+          "locator": "paragraph beginning 'Their fastest marathon time came in 1992'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Boston Marathon director Dave McGillivray thought Dick could have become a world-class age-group runner had he raced alone.",
+          "sourceId": "rw-2006",
+          "locator": "paragraph beginning 'Dave McGillivray, the race director of the Boston Marathon'"
+        },
+        {
+          "kind": "words",
+          "claim": "He described training alone with a 94-pound bag of cement in the running chair and on the bike while Rick was at college.",
+          "sourceId": "npr-2014",
+          "locator": "transcript, Dick Hoyt's answer beginning 'And so what I did is I replaced him with a bag of cement'"
+        }
+      ]
+    },
+    {
+      "word": "Contribution",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said the biggest thing was that other physically challenged children were now out in public, able to 'live, learn, work and play'.",
+          "sourceId": "npr-2014",
+          "locator": "transcript, Dick Hoyt's answer beginning 'And the biggest thing is'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2006 he ran an Easter Seals fund drive tied to the Boston Marathon, aiming to raise a million dollars, and asked a Starbucks manager on his way to contribute.",
+          "sourceId": "rw-2006",
+          "locator": "paragraph beginning 'Dick's tea is ready'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Sports Illustrated reports that Team Hoyt fund-raisers collected hundreds of thousands of dollars for communication devices, running chairs and camps for disabled people.",
+          "sourceId": "si-2011",
+          "locator": "online page 7, paragraph beginning 'And there are families with disabled children'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not leave the weaker one on the sidelines: if he cannot take part, you do not either.",
+      "sourceId": "npr-2021",
+      "locator": "archived recording on the Ironman, 'They said, Dick, you're a good athlete'"
+    },
+    {
+      "text": "Decide that you can, then do it; 'no' is not an answer you accept.",
+      "sourceId": "npr-2014",
+      "locator": "transcript, Dick Hoyt's answer beginning 'When Rick was born'"
+    },
+    {
+      "text": "Let the person you serve make the call about his own life.",
+      "sourceId": "rw-2006",
+      "locator": "paragraph beginning 'Word got out about Dick's heart attack' ('I left the decision up to Rick')"
+    },
+    {
+      "text": "Train for the load you will really carry.",
+      "sourceId": "npr-2014",
+      "locator": "transcript, Dick Hoyt's answer beginning 'And so what I did is I replaced him with a bag of cement'"
+    },
+    {
+      "text": "Finish the job you started, even when everyone expects you to turn back.",
+      "sourceId": "rw-2006",
+      "locator": "paragraph beginning 'At the time Rick asked to run that race' ('It wasn't in his nature to quit a job he'd started')"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "And our message is, yes, you can. There isn't anything you can't do as long as you make up your mind to do it. And there's no such word as no.",
+      "sourceId": "npr-2014",
+      "locator": "NPR Here & Now, 11 April 2014, transcript"
+    },
+    {
+      "text": "The only reason I race is Rick. I've got no desire to do this on my own.",
+      "sourceId": "rw-2006",
+      "locator": "paragraph beginning 'Rick's decision echoed one his father had made many times before'"
+    },
+    {
+      "text": "They said, Dick, you're a good athlete. You can compete, but your disabled son has to sit in the sidelines and watch you. And I said, no, we don't do things that way.",
+      "sourceId": "npr-2021",
+      "locator": "NPR All Things Considered, 19 March 2021, archived recording"
+    },
+    {
+      "text": "It'll be harder to stop than keep going.",
+      "sourceId": "si-2011",
+      "locator": "online page 9, paragraph beginning 'It'll be harder to stop'"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1977 Rick, then 15, asked to run a five-mile benefit race in Westfield, Massachusetts, for a college lacrosse player who had been paralyzed. Dick was not a runner, and people expected him to push Rick to the first corner and turn back. He pushed Rick's wheelchair the whole five miles, and they finished next to last. That night Rick typed on his computer that when he was running, he did not feel disabled.",
+    "sourceIds": [
+      "nyt-2021",
+      "npr-2014",
+      "rw-2006"
+    ]
+  },
+  "shadow": {
+    "text": "For Rick's early years Dick worked long hours at two or three jobs and left most of Rick's daily care to his wife, Judy; Sports Illustrated says he both provided for and avoided his son. Early in the racing, by his own account, 20 to 25 parents of disabled children wrote to him believing he was using Rick to get publicity for himself. As the racing took over, Sports Illustrated says Judy felt 'ever more marooned' while reporters ran past her to the two men, and in 1992 he borrowed $70,000 against their house for a trek across America that raised about $2,000. Their marriage of more than 30 years ended soon after; Runner's World dates the divorce 1994, Sports Illustrated 1995. In 2006 Judy asked in Runner's World why Rick should 'put himself at risk, just to please his father'; Rick said racing was his own idea. Dick kept racing after a 2003 heart attack and three stents, while a friend told him to quit and the Boston Marathon director said he was 'walking the fine line between gutsy and foolish'.",
+    "sourceIds": [
+      "si-2011",
+      "rw-2006"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Who did you leave on the sidelines this week because it was easier to go alone?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Devoted: The Story of a Father's Love for His Son",
+      "year": 2010
+    }
+  ],
+  "sources": [
+    {
+      "id": "npr-2014",
+      "kind": "primary",
+      "title": "Father-Son Team To Run One Last Boston Marathon (Here & Now interview)",
+      "author": "Dick Hoyt, interviewed by Sacha Pfeiffer",
+      "year": 2014,
+      "publisher": "NPR / WBUR",
+      "url": "https://www.npr.org/transcripts/301828646"
+    },
+    {
+      "id": "npr-2021",
+      "kind": "secondary",
+      "title": "Remembering Dick Hoyt, Who Pushed His Son In A Wheelchair Over Marathon Finish Lines (with archived recordings of Dick Hoyt)",
+      "author": "Audie Cornish and Ailsa Chang, All Things Considered",
+      "year": 2021,
+      "publisher": "NPR",
+      "url": "https://www.npr.org/transcripts/979340006"
+    },
+    {
+      "id": "nyt-2021",
+      "kind": "secondary",
+      "title": "Dick Hoyt, who ran marathons while pushing his son, dies at 80",
+      "author": "Victor Mather",
+      "year": 2021,
+      "publisher": "The New York Times (reprinted by West Hawaii Today)",
+      "url": "https://westhawaiitoday.com/?p=192847"
+    },
+    {
+      "id": "si-2011",
+      "kind": "secondary",
+      "title": "The Wheels of Life",
+      "author": "Gary Smith",
+      "year": 2011,
+      "publisher": "Sports Illustrated, 18 April 2011 (Internet Archive copy)",
+      "url": "https://web.archive.org/web/20191207185734/https://www.si.com/vault/2011/04/18/106057672/the-wheels-of-life"
+    },
+    {
+      "id": "rw-2006",
+      "kind": "secondary",
+      "title": "Team Hoyt Starts Again",
+      "author": "John Brant",
+      "year": 2006,
+      "publisher": "Runner's World, May 2006 issue (Internet Archive copy)",
+      "url": "https://web.archive.org/web/20160321070846/http://rw.runnersworld.com/selects/team-hoyt.html"
+    },
+    {
+      "id": "ap-2021",
+      "kind": "secondary",
+      "title": "Dick Hoyt, who pushed son in multiple Boston Marathons, dies at 80",
+      "author": "The Associated Press",
+      "year": 2021,
+      "publisher": "AP (via FOX 5 New York)",
+      "url": "https://www.fox5ny.com/news/dick-hoyt-who-pushed-son-in-multiple-boston-marathons-dies-at-80"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American father, National Guard officer and endurance athlete (1940-2021), never a politician, campaigner or religious founder, with no account found of sexual contact with a minor or of sexual violence; he is in, and his dark side is the cost his racing put on his marriage and his own health."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value, quote and sentence against the NPR 2014 interview, the NPR 2021 archive tape, the NYT and AP obituaries, Sports Illustrated 2011 and Runner's World 2006. Family took the hardest case, his early avoidance of Rick and a marriage worn down by the racing, but held on his sons' account and the raising of Rick at home; that cost stays in the shadow. Devotion, Determination, Fitness and Contribution held on three sources each, and the blind pick's Humility was not added because it rests on one unconfirmed quote. All four quotes match their sources word for word; five claims were corrected, including an unsupported 1985 date and a son's quote whose speaker the AP does not name, and his own account of parents accusing him of seeking publicity was added to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
