@@ -1,0 +1,321 @@
+{
+  "id": "theodore-roosevelt",
+  "name": "Theodore Roosevelt",
+  "born": 1858,
+  "died": 1919,
+  "category": "leaders",
+  "areaIds": [
+    "lm_fitness",
+    "lm_mindset",
+    "lm_mission"
+  ],
+  "tagline": "A sickly, timid boy who trained his body and nerve into a rancher, soldier and president.",
+  "startedFrom": "He was born on 27 October 1858 in New York City, the son of a well-to-do businessman. He was a sickly boy with bad asthma, taught mostly by tutors at home, and by his own account 'nervous and timid' and unable to hold his own against rougher boys.",
+  "values": [
+    {
+      "word": "Strength",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that after two boys on a stage-coach bullied him when he was nearly fourteen, he decided to make up for his lack of natural prowess by training, and started to learn to box.",
+          "sourceId": "autobiography-1913",
+          "locator": "ch. II, 'The Vigor of Life'"
+        },
+        {
+          "kind": "deed",
+          "claim": "As a teenager he decided he would 'make his body' and took up gymnastics and weight-lifting, which helped him develop a rugged physique.",
+          "sourceId": "millercenter-life",
+          "locator": "Life Before the Presidency"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that he was afraid of many things at first, from grizzly bears to gun-fighters, but by acting as if he was not afraid he gradually stopped being afraid.",
+          "sourceId": "autobiography-1913",
+          "locator": "ch. II, 'The Vigor of Life'"
+        },
+        {
+          "kind": "witness",
+          "claim": "At San Juan, Cuba, on 1 July 1898, officers who saw it wrote that he led the Rough Riders' charge on Kettle Hill on horseback, on his own initiative, then the charge on the next hill, and shot one of the enemy near the trenches.",
+          "sourceId": "autobiography-1913",
+          "locator": "Appendix B to ch. VII, 'The San Juan Fight' (letters of Leonard Wood and M. J. Jenkins)"
+        },
+        {
+          "kind": "deed",
+          "claim": "Shot in the chest in Milwaukee on 14 October 1912, he went on to give his speech for about eighty minutes before going to hospital.",
+          "sourceId": "remey-1912",
+          "locator": "Chronology, 14 October 1912"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his 1899 Chicago speech he says: 'In this life we get nothing save by effort', and calls for 'the life of toil and effort, of labor and strife'.",
+          "sourceId": "strenuous-life-1900",
+          "locator": "'The Strenuous Life', speech, Hamilton Club, Chicago, 10 April 1899, opening paragraphs (essay begins p. 3)"
+        },
+        {
+          "kind": "deed",
+          "claim": "In May 1885, though he owned the ranch, he worked the spring round-up in Montana as an ordinary cowpuncher, taking his turn with the half-broken horses.",
+          "sourceId": "hagedorn-1921",
+          "locator": "ch. XVI"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that he never won anything without hard labor, careful planning and working long in advance.",
+          "sourceId": "autobiography-1913",
+          "locator": "ch. II, 'The Vigor of Life'"
+        }
+      ]
+    },
+    {
+      "word": "Nature",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "As president (1901-09) he created 150 national forests, five national parks, eighteen national monuments and 51 wildlife refuges; protected forest land rose from 42 to 172 million acres.",
+          "sourceId": "millercenter-domestic",
+          "locator": "Domestic Affairs"
+        },
+        {
+          "kind": "witness",
+          "claim": "The National Park Service calls him the 'conservationist president', says about 230 million acres of public land were protected during his presidency, and traces his concern to the North Dakota Badlands, where he first came in September 1883.",
+          "sourceId": "nps-conservation",
+          "locator": "Theodore Roosevelt and Conservation, opening section"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes of camping three days in the Yosemite with John Muir, sleeping in the Sequoia grove and in a snowstorm, and says he would always be glad he did it.",
+          "sourceId": "autobiography-1913",
+          "locator": "ch. IX, 'Outdoors and Indoors'"
+        }
+      ]
+    },
+    {
+      "word": "Reading",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that books are 'almost as individual as friends', that his books overflowed into every room of his house, and that the books he profited from most were the ones he read for pleasure.",
+          "sourceId": "autobiography-1913",
+          "locator": "ch. IX, 'Outdoors and Indoors'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In April 1886, guarding three captured boat thieves on a frozen river for days, he passed the time reading Tolstoy's Anna Karenina and Matthew Arnold.",
+          "sourceId": "hagedorn-1921",
+          "locator": "ch. XXII"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "If you lack a natural gift, build it by slow training, even if it takes years.",
+      "sourceId": "autobiography-1913",
+      "locator": "ch. II, 'The Vigor of Life'"
+    },
+    {
+      "text": "Act as if you are not afraid; keep it up and the fear goes.",
+      "sourceId": "autobiography-1913",
+      "locator": "ch. II, 'The Vigor of Life'"
+    },
+    {
+      "text": "Do the disagreeable, irksome jobs instead of shirking them; that is how a man of ordinary power earns his place.",
+      "sourceId": "autobiography-1913",
+      "locator": "ch. IV, 'In Cowboy Land'"
+    },
+    {
+      "text": "Choose effort over ease; free time is for other work, not idleness.",
+      "sourceId": "strenuous-life-1900",
+      "locator": "'The Strenuous Life', speech, Chicago, 10 April 1899, second paragraph"
+    },
+    {
+      "text": "Respect the man who tries and fails over the critic who never tries.",
+      "sourceId": "addresses-1910",
+      "locator": "'Citizenship in a Republic', address at the Sorbonne, Paris, 23 April 1910"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "It is hard to fail, but it is worse never to have tried to succeed. In this life we get nothing save by effort.",
+      "sourceId": "strenuous-life-1900",
+      "locator": "'The Strenuous Life', speech, Hamilton Club, Chicago, 10 April 1899, second paragraph"
+    },
+    {
+      "text": "There were all kinds of things of which I was afraid at first, ranging from grizzly bears to \"mean\" horses and gun-fighters; but by acting as if I was not afraid I gradually ceased to be afraid.",
+      "sourceId": "autobiography-1913",
+      "locator": "ch. II, 'The Vigor of Life'"
+    },
+    {
+      "text": "I had to train myself painfully and laboriously not merely as regards my body but as regards my soul and spirit.",
+      "sourceId": "autobiography-1913",
+      "locator": "ch. II, 'The Vigor of Life'"
+    },
+    {
+      "text": "The credit belongs to the man who is actually in the arena, whose face is marred by dust and sweat and blood; who strives valiantly; who errs, and comes short again and again, because there is no effort without error and shortcoming…",
+      "sourceId": "addresses-1910",
+      "locator": "'Citizenship in a Republic', address at the Sorbonne, Paris, 23 April 1910"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 14 October 1912, campaigning for president in Milwaukee, he was shot in the chest by John Schrank outside his hotel. The folded speech and the glasses case in his coat pocket slowed the bullet. He went on to the Auditorium, held up the manuscript with the bullet hole, told the crowd 'it takes more than that to kill a bull moose', and spoke for about eighty minutes before going to hospital. He carried the bullet in his chest for the rest of his life.",
+    "sourceIds": [
+      "remey-1912",
+      "wpr-2015"
+    ]
+  },
+  "shadow": {
+    "text": "In a lecture in New York in January 1886 he said he did not go so far as to think the only good Indians were dead Indians, 'but I believe nine out of every ten are'. In his 1899 'Strenuous Life' speech he said many Filipinos were 'utterly unfit for self-government' and argued for American rule of the islands. In 1903, when Colombia balked at the canal treaty, his government backed Panama's revolt with money and a naval blockade. In November 1906, after a shooting in Brownsville, Texas, was blamed on Black soldiers of the 25th Infantry, he had 167 of them discharged 'without honor', with no trial; the Miller Center notes the army assumed their guilt despite conflicting accounts and no physical evidence. The Army reversed the discharges in 1972. On his 1909-10 African safari for the Smithsonian, his party killed over 500 large animals.",
+    "sourceIds": [
+      "hagedorn-1921",
+      "strenuous-life-1900",
+      "millercenter-foreign",
+      "millercenter-domestic",
+      "trlibrary-brownsville",
+      "trlibrary-safari"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did fear hold you back this week, and what would you have done if you had acted as if you were not afraid?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "An Autobiography",
+      "year": 1913
+    },
+    {
+      "title": "The Strenuous Life",
+      "year": 1900
+    },
+    {
+      "title": "Citizenship in a Republic",
+      "year": 1910
+    }
+  ],
+  "sources": [
+    {
+      "id": "autobiography-1913",
+      "kind": "primary",
+      "title": "Theodore Roosevelt: An Autobiography",
+      "author": "Theodore Roosevelt",
+      "year": 1913,
+      "publisher": "Project Gutenberg eBook #3335 (text of the 1913 edition)",
+      "url": "https://www.gutenberg.org/ebooks/3335"
+    },
+    {
+      "id": "strenuous-life-1900",
+      "kind": "primary",
+      "title": "The Strenuous Life (Works, Executive Edition)",
+      "author": "Theodore Roosevelt",
+      "year": 1900,
+      "publisher": "P. F. Collier & Son (Project Gutenberg eBook #58821)",
+      "url": "https://www.gutenberg.org/ebooks/58821"
+    },
+    {
+      "id": "addresses-1910",
+      "kind": "primary",
+      "title": "African and European Addresses",
+      "author": "Theodore Roosevelt, introduction by Lawrence F. Abbott",
+      "year": 1910,
+      "publisher": "Project Gutenberg eBook #13930",
+      "url": "https://www.gutenberg.org/ebooks/13930"
+    },
+    {
+      "id": "millercenter-life",
+      "kind": "secondary",
+      "title": "Theodore Roosevelt: Life Before the Presidency",
+      "author": "Sidney Milkis",
+      "year": "n.d. (read 2026-11-10)",
+      "publisher": "Miller Center, University of Virginia",
+      "url": "https://millercenter.org/president/roosevelt/life-before-the-presidency"
+    },
+    {
+      "id": "millercenter-domestic",
+      "kind": "secondary",
+      "title": "Theodore Roosevelt: Domestic Affairs",
+      "author": "Sidney Milkis",
+      "year": "n.d. (read 2026-11-10)",
+      "publisher": "Miller Center, University of Virginia",
+      "url": "https://millercenter.org/president/roosevelt/domestic-affairs"
+    },
+    {
+      "id": "millercenter-foreign",
+      "kind": "secondary",
+      "title": "Theodore Roosevelt: Foreign Affairs",
+      "author": "Sidney Milkis",
+      "year": "n.d. (read 2026-11-10)",
+      "publisher": "Miller Center, University of Virginia",
+      "url": "https://millercenter.org/president/roosevelt/foreign-affairs"
+    },
+    {
+      "id": "hagedorn-1921",
+      "kind": "secondary",
+      "title": "Roosevelt in the Bad Lands",
+      "author": "Hermann Hagedorn",
+      "year": 1921,
+      "publisher": "Houghton Mifflin (Project Gutenberg eBook #24317)",
+      "url": "https://www.gutenberg.org/ebooks/24317"
+    },
+    {
+      "id": "nps-conservation",
+      "kind": "secondary",
+      "title": "Theodore Roosevelt and Conservation",
+      "author": "National Park Service, Theodore Roosevelt National Park",
+      "year": 2017,
+      "url": "https://www.nps.gov/thro/learn/historyculture/theodore-roosevelt-and-conservation.htm"
+    },
+    {
+      "id": "remey-1912",
+      "kind": "secondary",
+      "title": "The Attempted Assassination of ex-President Theodore Roosevelt",
+      "author": "Oliver E. Remey, Henry F. Cochems, Wheeler P. Bloodgood",
+      "year": 1912,
+      "publisher": "The Progressive Publishing Company, Milwaukee (Project Gutenberg eBook #21261)",
+      "url": "https://www.gutenberg.org/ebooks/21261"
+    },
+    {
+      "id": "wpr-2015",
+      "kind": "secondary",
+      "title": "Shot In The Chest In Milwaukee, Theodore Roosevelt Kept On Talking In 1912",
+      "author": "Erika Janik",
+      "year": 2015,
+      "publisher": "Wisconsin Public Radio",
+      "url": "https://wpr.org/history/conflicts-disasters/shot-chest-milwaukee-theodore-roosevelt-kept-talking-1912"
+    },
+    {
+      "id": "trlibrary-brownsville",
+      "kind": "secondary",
+      "title": "The Brownsville Affair: An Injustice That Took 66 Years to Correct",
+      "author": "Theodore Roosevelt Presidential Library",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://trlibrary.com/tr/presidency/brownsville"
+    },
+    {
+      "id": "trlibrary-safari",
+      "kind": "secondary",
+      "title": "The African Safari (1909-1910): The Smithsonian Expedition",
+      "author": "Theodore Roosevelt Presidential Library",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.trlibrary.com/tr/post-presidency/african-safari"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real, long-dead US president (died 1919), not a living politician or founder of a religion; searches found no credible account of sexual violence or of sexual contact with anyone under 16; he has a documented dark side on race and empire, as the candidate list guessed."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I attacked all five values against the full texts of the Autobiography, the 1899 Chicago speech, the Sorbonne address, Hagedorn's 1921 Bad Lands book, the Miller Center, the Park Service and the TR Presidential Library. None fell: the blind pick chose the same five words, and his big-game hunting does not undo a lifelong pattern of natural history and conservation, so it went into the shadow. All four quotes matched the original texts. Seven fixes: the Kettle Hill charge was on horseback (eyewitness letters), not on foot as the Miller Center says; Brownsville is now 167 men discharged 'without honor', with the 1972 reversal; and several claims now say exactly what their sources say.",
+    "checkedOn": "2026-11-10"
+  }
+}
