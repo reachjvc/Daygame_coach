@@ -1,0 +1,338 @@
+{
+  "id": "george-clooney",
+  "name": "George Clooney",
+  "born": 1961,
+  "died": null,
+  "category": "charisma",
+  "areaIds": [
+    "lm_friends",
+    "lm_contribution",
+    "lm_fun"
+  ],
+  "tagline": "Movie star who paid back the friends who carried him and points his fame at others.",
+  "startedFrom": "He was born in Lexington, Kentucky, in 1961, the son of the TV news anchor Nick Clooney and nephew of the singer Rosemary Clooney. His father told him the odds of succeeding as an actor were virtually none; he has said he was a broke actor and used to cut tobacco for a living. In Los Angeles he rode a bicycle to his first auditions, at one point was so poor he stayed in a friend's closet, and borrowed $200 for his first headshots. By his own count he struggled for 12 or so years as an actor; ER, which began in 1994, made him a star.",
+  "values": [
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 2013 he gave each of his 14 closest friends $1 million in cash in a suitcase; his friend Rande Gerber told the story on MSNBC in 2017 and Clooney confirmed it in 2020.",
+          "sourceId": "snopes-2020",
+          "locator": "rating section and the quoted Gerber account beginning 'Sitting in front of each of us'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he did it because these friends let him sleep on their couches and lent him money when he was broke, and asked: how do you repay people like that?",
+          "sourceId": "gq-2020",
+          "locator": "paragraphs beginning 'And I thought, what I do have are these guys' and 'The next day he had all his friends come over'"
+        },
+        {
+          "kind": "deed",
+          "claim": "After the January 2010 Haiti earthquake he co-hosted the Hope for Haiti Now telethon with Wyclef Jean, which had raised $61 million by the time of the report.",
+          "sourceId": "csm-2010",
+          "locator": "paragraphs beginning 'The celebrity telethon has so far raised' and 'The two-hour telethon was hosted by George Clooney'"
+        }
+      ]
+    },
+    {
+      "word": "Friendship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He came to Los Angeles at the urging of his cousin and close friend Miguel Ferrer, and borrowed $200 for his first headshots from Grant Heslov, who became his long-time writing and producing partner.",
+          "sourceId": "tcm-afi",
+          "locator": "paragraphs beginning 'Clooney was born in Lexington' and 'Things were rough during Clooney's early Hollywood days'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said the friends who had helped him over 35 years were the reason he had anything at all: without them, he said, he would not have any of it.",
+          "sourceId": "gq-2020",
+          "locator": "paragraph beginning 'And I thought, what I do have are these guys'"
+        },
+        {
+          "kind": "deed",
+          "claim": "By Rande Gerber's account, Clooney told the 14 friends at the table that he could not be where he was without all of them, before each opened a bag holding $1 million.",
+          "sourceId": "snopes-2020",
+          "locator": "quoted Gerber account beginning 'Sitting in front of each of us'"
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 14 September 2006 he told members of the UN Security Council that Darfur was the first genocide of the 21st century and begged them to act before the African Union force left at the end of the month.",
+          "sourceId": "un-2006",
+          "locator": "UN News, 14 Sep 2006, paragraphs beginning 'Describing Darfur as this century's first genocide' and 'Mr. Clooney added that Darfur represents'"
+        },
+        {
+          "kind": "deed",
+          "claim": "On 16 March 2012 he and his father were handcuffed and arrested after ignoring three police warnings at a protest outside Sudan's embassy in Washington against Sudan blocking aid.",
+          "sourceId": "aljazeera-2012",
+          "locator": "first three paragraphs"
+        },
+        {
+          "kind": "words",
+          "claim": "He said his job was to spread the attention that follows him to people who need it, because Sudan's president Omar al-Bashir operates in the dark.",
+          "sourceId": "lkl-2010",
+          "locator": "Larry King Live, 16 Oct 2010, answer to 'Do you think who you are helps?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Turner Classic Movies' AFI tribute says he campaigned tirelessly for a peaceful end to the Darfur conflict, became a UN Messenger of Peace in 2008 and co-founded the Satellite Sentinel Project in 2010 to watch military activity in Sudan.",
+          "sourceId": "tcm-afi",
+          "locator": "paragraph beginning 'Along with his busy career'"
+        }
+      ]
+    },
+    {
+      "word": "Humour",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "By his own account he took out 'For Your Consideration' ads with Matt Damon in a green Speedo for about two years until Damon was named Sexiest Man Alive, and sent Meryl Streep accent-coaching CDs in Brad Pitt's name.",
+          "sourceId": "stern-2020",
+          "locator": "paragraphs beginning 'Always the jokester' and 'I sent that thing of voices to her'"
+        },
+        {
+          "kind": "witness",
+          "claim": "GQ's Zach Baron calls him the rare person who makes fame seem fun, an opportunity for mischief and adventure.",
+          "sourceId": "gq-2020",
+          "locator": "paragraph beginning 'But Clooney has always seemed to understand that celebrity is a game'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Turner Classic Movies notes that he frequently jokes about the critical drubbing he took for 'Batman & Robin'.",
+          "sourceId": "tcm-afi",
+          "locator": "paragraph ending 'his respect for the script'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Matt Damon said on CNN in July 2023 that Clooney had his Monuments Men costume taken in bit by bit so Damon would think he was gaining weight, and that he never tries to get Clooney back because the countermeasures would be so severe.",
+          "sourceId": "huffpost-2023",
+          "locator": "article on Damon's appearance on 'Who's Talking to Chris Wallace', passages on the Monuments Men costume prank and 'I've never tried to get George back'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Use the attention you get for things you did not earn to point at people who get none.",
+      "sourceId": "lkl-2010",
+      "locator": "Larry King Live, 16 Oct 2010, answer to 'Do you think who you are helps?'"
+    },
+    {
+      "text": "Before you speak for a cause, know the subject inside out, or you do it damage.",
+      "sourceId": "un-2006b",
+      "locator": "UN News interview, 14 Sep 2006, paragraphs beginning 'If you're a celebrity' and 'People like to come in and say'"
+    },
+    {
+      "text": "Pay back the people who helped you while you are all still alive; do not wait for your will.",
+      "sourceId": "gq-2020",
+      "locator": "paragraph beginning 'And I thought, what I do have are these guys'"
+    },
+    {
+      "text": "When you name what went wrong, name your own part first.",
+      "sourceId": "gq-2020",
+      "locator": "paragraph beginning 'The only way you can honestly talk about things'"
+    },
+    {
+      "text": "If someone with power is picking on people below him, make him deal with you instead.",
+      "sourceId": "thr-roven-2016",
+      "locator": "answer to 'On your first film with David O. Russell, Three Kings, he and George Clooney got into a fight. What happened?'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I've slept on their couches when I was broke. They loaned me money when I was broke. They helped me when I needed help over the years.",
+      "sourceId": "gq-2020",
+      "locator": "Interview with Zach Baron, GQ, published 17 Nov 2020, paragraph beginning 'And I thought, what I do have are these guys'"
+    },
+    {
+      "text": "I get much more attention than I need or deserve. And there are an awful lot of people in the world that need some attention.",
+      "sourceId": "lkl-2010",
+      "locator": "Larry King Live, CNN, aired 16 Oct 2010 (rush transcript), answer to 'Do you think who you are helps?'"
+    },
+    {
+      "text": "If you're a celebrity and you're going to do it, you better be really well informed on the subject matter, because otherwise I think you do damage to it.",
+      "sourceId": "un-2006b",
+      "locator": "Interview with the UN News Service, published 14 Sep 2006, after his Security Council briefing on Darfur"
+    },
+    {
+      "text": "The only way you can honestly talk about things is to include yourself and your shortcomings in those things.",
+      "sourceId": "gq-2020",
+      "locator": "Interview with Zach Baron, GQ, published 17 Nov 2020, on 'Batman & Robin'"
+    }
+  ],
+  "definingMoment": {
+    "text": "In late September 2013, aged about 52 and single, he drew $14 million in cash from a vault in downtown Los Angeles and packed $1 million into each of 14 bags. The next day he called his closest friends to his house, pointed on a map to the places he had been because of them, and gave each of them a bag. He said they had let him sleep on their couches and lent him money when he was broke. His friend Rande Gerber told the story on MSNBC in 2017; Clooney confirmed it to GQ in 2020.",
+    "sourceIds": [
+      "gq-2020",
+      "snopes-2020"
+    ]
+  },
+  "shadow": {
+    "text": "While shooting 'Three Kings' (released 1999) he fought physically with the director David O. Russell: by the producer Charles Roven's account, Clooney saw Russell apparently yelling at the extras' assistant director (Roven says Russell was shouting to be heard), ran over saying 'if you're going to pick on somebody, pick on me', and the two grabbed each other until Roven pulled him away. The Ringer reports that the two wrestled and shouted at each other repeatedly during the shoot. He says he takes pride in picking 'good fights'; GQ lists past feuds with TV Guide, Russell Crowe and a Washington Post critic, and he keeps stacks of angry letters his assistant calls 'George Versus the World'. In October 2017 the 'ER' actress Vanessa Marquez said he helped get her blacklisted after she reported harassment on the show; he said he had no idea she was blacklisted, had nothing to do with casting, and would not have done it. His first marriage, to the actress Talia Balsam, lasted from 1989 to 1993; afterwards he said he was never getting married or having children, until he met Amal Alamuddin, whom he married in 2014.",
+    "sourceIds": [
+      "thr-roven-2016",
+      "ringer-2019",
+      "gq-2020",
+      "wrap-2017",
+      "tcm-afi"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you get attention or help this week that you could pass on to someone who gets none?",
+    "principleIndex": 0
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "gq-2020",
+      "kind": "primary",
+      "title": "George Clooney on His Brush with Death, Picking Proper Fights, and Turning into a Wife Guy (GQ Men of the Year interview)",
+      "author": "George Clooney, interviewed by Zach Baron",
+      "year": 2020,
+      "publisher": "GQ, published 17 November 2020",
+      "url": "https://www.gq.com/story/george-clooney-icon-of-the-year-2020"
+    },
+    {
+      "id": "lkl-2010",
+      "kind": "primary",
+      "title": "Interview with George Clooney and John Prendergast, Larry King Live (rush transcript)",
+      "author": "George Clooney, interviewed by Larry King",
+      "year": 2010,
+      "publisher": "CNN, aired 16 October 2010",
+      "url": "https://transcripts.cnn.com/show/lkl/date/2010-10-16/segment/01"
+    },
+    {
+      "id": "un-2006b",
+      "kind": "primary",
+      "title": "Celebrities can do more to help UN spotlight world crises, says actor George Clooney (interview)",
+      "author": "George Clooney, interviewed by the UN News Service",
+      "year": 2006,
+      "publisher": "UN News, 14 September 2006",
+      "url": "https://news.un.org/en/story/2006/09/192152-celebrities-can-do-more-help-un-spotlight-world-crises-says-actor-george"
+    },
+    {
+      "id": "stern-2020",
+      "kind": "primary",
+      "title": "George Clooney on Pranking Brad Pitt and Meryl Streep, Playing Batman Badly, and How He Proposed to His Wife Amal",
+      "author": "The Howard Stern Show (recap of his interview, with his quoted words)",
+      "year": 2020,
+      "publisher": "howardstern.com, 16 December 2020",
+      "url": "https://www.howardstern.com/?p=148615"
+    },
+    {
+      "id": "un-2006",
+      "kind": "secondary",
+      "title": "Nobel Laureate Elie Wiesel and actor George Clooney urge UN action on Darfur",
+      "author": "UN News",
+      "year": 2006,
+      "publisher": "United Nations, 14 September 2006",
+      "url": "https://news.un.org/en/story/2006/09/192142"
+    },
+    {
+      "id": "aljazeera-2012",
+      "kind": "secondary",
+      "title": "Actor Clooney freed after Sudan rally arrest",
+      "author": "Al Jazeera",
+      "year": 2012,
+      "publisher": "Al Jazeera, 17 March 2012",
+      "url": "https://www.aljazeera.com/news/2012/3/17/actor-clooney-freed-after-sudan-rally-arrest"
+    },
+    {
+      "id": "tcm-afi",
+      "kind": "secondary",
+      "title": "AFI Life Achievement Award: George Clooney",
+      "author": "Frank Miller",
+      "year": 2018,
+      "publisher": "Turner Classic Movies",
+      "url": "https://www.tcm.com/articles/1427253/afi-life-achievement-award-george-clooney"
+    },
+    {
+      "id": "csm-2010",
+      "kind": "secondary",
+      "title": "'Hope for Haiti Now' telethon galvanizes giving",
+      "author": "Husna Haq",
+      "year": 2010,
+      "publisher": "The Christian Science Monitor, 26 January 2010",
+      "url": "https://www.csmonitor.com/USA/2010/0126/Hope-for-Haiti-Now-telethon-galvanizes-giving"
+    },
+    {
+      "id": "snopes-2020",
+      "kind": "secondary",
+      "title": "Did George Clooney Give Each of His 14 Best Friends Suitcases Filled with $1 Million?",
+      "author": "Nur Nasreen Ibrahim",
+      "year": 2020,
+      "publisher": "Snopes, 19 November 2020",
+      "url": "https://www.snopes.com/fact-check/george-clooney-friends-million/"
+    },
+    {
+      "id": "thr-roven-2016",
+      "kind": "secondary",
+      "title": "THR's Producer of the Year: Charles Roven on the Future of DC Films and What Really Happened Between George Clooney and David O. Russell",
+      "author": "Stephen Galloway",
+      "year": 2016,
+      "publisher": "The Hollywood Reporter, 22 December 2016",
+      "url": "https://www.hollywoodreporter.com/features/thrs-producer-year-charles-roven-future-dc-films-what-happened-between-george-clooney-david"
+    },
+    {
+      "id": "ringer-2019",
+      "kind": "secondary",
+      "title": "The Battle of 'Three Kings' Ended With a Perfect Movie and a Vision of the Future",
+      "author": "Sean Fennessey",
+      "year": 2019,
+      "publisher": "The Ringer, 29 March 2019",
+      "url": "https://www.theringer.com/2019/03/29/movies/three-kings-david-o-russell-george-clooney-mark-wahlberg-ice-cube-spike-jonze"
+    },
+    {
+      "id": "wrap-2017",
+      "kind": "secondary",
+      "title": "George Clooney 'Had No Idea' That 'ER' Actress Vanessa Marquez Was Blacklisted",
+      "author": "Reid Nakamura",
+      "year": 2017,
+      "publisher": "TheWrap, 13 October 2017",
+      "url": "https://www.thewrap.com/george-clooney-no-idea-er-actress-vanessa-marquez-blacklisted"
+    },
+    {
+      "id": "huffpost-2023",
+      "kind": "secondary",
+      "title": "Matt Damon Shares Prank That Made George Clooney The 'Maddest I've Ever Seen Him'",
+      "author": "Josie Harvey",
+      "year": 2023,
+      "publisher": "HuffPost UK, 24 July 2023 (reporting CNN's 'Who's Talking to Chris Wallace')",
+      "url": "https://www.huffingtonpost.co.uk/entry/george-clooney-prank-matt-damon-brad-pitt_uk_64bea60ce4b0ad7b75f9be9c"
+    },
+    {
+      "id": "ktvz-2024",
+      "kind": "secondary",
+      "title": "George Clooney says Democrats need a new nominee just weeks after he headlined a major fundraiser for Biden",
+      "author": "CNN (via KTVZ)",
+      "year": 2024,
+      "publisher": "CNN Newsource / KTVZ, 10 July 2024",
+      "url": "https://ktvz.com/politics/cnn-us-politics/2024/07/10/george-clooney-says-democrats-need-a-new-nominee-just-weeks-after-he-hosted-a-major-fundraiser-for-biden/"
+    },
+    {
+      "id": "ap-2021",
+      "kind": "secondary",
+      "title": "Clooney nixes political career, sees US recovery post-Trump",
+      "author": "Associated Press",
+      "year": 2021,
+      "publisher": "AP via WJLA, 10 October 2021",
+      "url": "https://wjla.com/news/entertainment/clooney-nixes-political-career-sees-us-recovery-post-trump"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living American actor, director and producer (born 1961), not fictional and not the founder of a religion. He has never held or run for office, and in October 2021 he ruled out running, telling the BBC's Andrew Marr 'No, because I would actually like to have a nice life' (ap-2021). He raises money for Democratic candidates: he headlined the 15 June 2024 Los Angeles fundraiser that raised $28 million for Joe Biden's re-election, and on 10 July 2024 wrote a New York Times opinion piece ('I love Joe Biden') saying Democrats needed a new nominee (ktvz-2024). His public life is acting and filmmaking, not a political campaign, so he is in. No account was found of sexual contact with anyone under 16 or of sexual violence by him. His documented dark side: a physical fight with a director on set, feuds he says he is proud of, and a 2017 claim by an ER actress, which he denies, that he helped get her blacklisted."
+    },
+    "blindAgreement": 0.75,
+    "devilsAdvocate": "I attacked each value and every sentence against the saved GQ 2020 interview, the Larry King transcript, the UN News reports, TCM, Snopes, The Hollywood Reporter, The Ringer and TheWrap. Generosity, Friendship and Justice held and match the blind pick; Humour held on four sources, adding Matt Damon's 2023 CNN account. Humility fell: its evidence is his own self-deprecating talk and praise from an activist ally, against his own pride in picking fights and his 'George Versus the World' letters. Five claims were tightened, among them the Three Kings fight (Roven says Russell was only shouting to be heard, and it was a tussle, not blows) and the feuds, which GQ calls former ones.",
+    "checkedOn": "2026-11-10"
+  }
+}
