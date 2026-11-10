@@ -1,0 +1,348 @@
+{
+  "id": "david-hume",
+  "name": "David Hume",
+  "born": 1711,
+  "died": 1776,
+  "category": "philosophers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_friends"
+  ],
+  "tagline": "A cheerful sceptic who lived on little, kept his friends, and met death calmly.",
+  "startedFrom": "He was born in Edinburgh in 1711, a younger son of a good but not rich family; his father died when he was a baby and his mother raised the children. His family wanted him to be a lawyer, but he would only study philosophy and literature, and in 1729, still a teenager, the strain of study brought on a breakdown that took years to get over. In 1734 he tried working for merchants in Bristol, gave it up within months, and went to France to live cheaply and write.",
+  "values": [
+    {
+      "word": "Optimism",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that he was always more inclined to see the favourable than the unfavourable side of things, and that this turn of mind is worth more than being born to an estate of ten thousand a year.",
+          "sourceId": "mol-1777",
+          "locator": "MOL 9 (Miller p. xxxvi)"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that when his first book, the Treatise, 'fell dead-born from the press', his cheerful and hopeful temper let him get over the blow very soon.",
+          "sourceId": "mol-1777",
+          "locator": "MOL 6 (Miller p. xxxiv)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Adam Smith wrote that his constant pleasantry came from good nature and good humour, and that in his last illness his cheerfulness was so great that many people could not believe he was dying.",
+          "sourceId": "burton-1846",
+          "locator": "vol. II, p. 441 and p. 509 (Adam Smith's letter printed with My Own Life)"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that in France in 1734 he resolved to make a very strict frugality make up for his lack of money, so as to keep his independence unharmed.",
+          "sourceId": "mol-1777",
+          "locator": "MOL 4 (Miller p. xxxiv)"
+        },
+        {
+          "kind": "deed",
+          "claim": "After two years as a general's secretary in the late 1740s, through his pay and his frugality he had saved nearly a thousand pounds, a fortune he called independent.",
+          "sourceId": "mol-1777",
+          "locator": "MOL 7 (Miller pp. xxxiv-xxxv)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Adam Smith wrote that Hume's frugality was founded not on greed but on the love of independence.",
+          "sourceId": "burton-1846",
+          "locator": "vol. II, p. 441 (Adam Smith's letter printed with My Own Life)"
+        }
+      ]
+    },
+    {
+      "word": "Friendship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In his will of 4 January 1776 he left all his manuscripts to Adam Smith, writing that he could trust to 'that intimate and sincere friendship, which has ever subsisted between us', and left £200 each to d'Alembert and Adam Ferguson.",
+          "sourceId": "burton-1846",
+          "locator": "vol. II, pp. 489-490"
+        },
+        {
+          "kind": "words",
+          "claim": "He describes himself as a man of an open, social and cheerful humour, capable of attachment but little given to enmity.",
+          "sourceId": "mol-1777",
+          "locator": "MOL 21 (Miller p. xl)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The physician Dr Cullen wrote that in his last weeks Hume received his friends in his drawing-room and talked with them in his usual spirit about literature and politics.",
+          "sourceId": "burton-1846",
+          "locator": "vol. II, p. 516 (Cullen to Hunter, 17 Sep 1776)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy says his last years in Edinburgh were spent revising his works and socializing with friends in its intellectual circles, and that after his death his friends Adam Smith and S. J. Pratt published affectionate eulogies.",
+          "sourceId": "iep-fieser",
+          "locator": "sec. 1, Life"
+        }
+      ]
+    },
+    {
+      "word": "Acceptance",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Five days before he died he wrote to the Comtesse de Boufflers that he saw death approach gradually, without any anxiety or regret.",
+          "sourceId": "burton-1846",
+          "locator": "vol. II, p. 514 (letter of 20 Aug 1776)"
+        },
+        {
+          "kind": "words",
+          "claim": "In April 1776, knowing his illness was mortal, he wrote that it was difficult to be more detached from life than he was.",
+          "sourceId": "mol-1777",
+          "locator": "MOL 20 (Miller p. xl)"
+        },
+        {
+          "kind": "witness",
+          "claim": "His doctor, Dr Black, wrote to Adam Smith that Hume died in such a happy composure of mind that nothing could exceed it.",
+          "sourceId": "burton-1846",
+          "locator": "vol. II, p. 515 (Black to Smith, 26 Aug 1776)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia of Philosophy says he died of his illness peacefully in 1776.",
+          "sourceId": "sep-qu-radcliffe",
+          "locator": "sec. 1, Life and Works"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In December 1754, after the library curators slighted him, he kept the post of Advocates' librarian for the books but gave its salary to the blind poet Thomas Blacklock as an annuity.",
+          "sourceId": "burton-1846",
+          "locator": "vol. I, p. 393 (Hume to Adam Smith, 17 Dec 1754)"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1766 he offered Jean-Jacques Rousseau, ordered out of Switzerland, refuge in England and secured him a government pension.",
+          "sourceId": "iep-fieser",
+          "locator": "sec. 1, Life"
+        },
+        {
+          "kind": "witness",
+          "claim": "Adam Smith wrote that even when Hume was poorest, his necessary frugality never stopped him from acts of charity and generosity.",
+          "sourceId": "burton-1846",
+          "locator": "vol. II, p. 441 (Adam Smith's letter printed with My Own Life)"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Live cheaply enough that you never need anyone's favour.",
+      "sourceId": "mol-1777",
+      "locator": "MOL 4 (Miller p. xxxiv); MOL 17 (Miller pp. xxxviii-xxxix)"
+    },
+    {
+      "text": "Do not answer your critics; keep clear of literary quarrels.",
+      "sourceId": "mol-1777",
+      "locator": "MOL 9 (Miller pp. xxxv-xxxvi)"
+    },
+    {
+      "text": "Look for the favourable side of what happens to you.",
+      "sourceId": "mol-1777",
+      "locator": "MOL 9 (Miller p. xxxvi)"
+    },
+    {
+      "text": "Believe a thing only as strongly as the evidence for it.",
+      "sourceId": "ehu-1777",
+      "locator": "sec. 10, para. 4 (E 10.4)"
+    },
+    {
+      "text": "Mix thinking with company and action: study hard, but stay among people.",
+      "sourceId": "ehu-1777",
+      "locator": "sec. 1, para. 6 (E 1.6)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I was ever more disposed to see the favorable than unfavorable side of things; a turn of mind which it is more happy to possess, than to be born to an estate of ten thousand a year.",
+      "sourceId": "mol-1777",
+      "locator": "MOL 9 (Miller p. xxxvi)"
+    },
+    {
+      "text": "Be a philosopher; but, amidst all your philosophy, be still a man.",
+      "sourceId": "ehu-1777",
+      "locator": "sec. 1, para. 6 (E 1.6)"
+    },
+    {
+      "text": "A wise man, therefore, proportions his belief to the evidence.",
+      "sourceId": "ehu-1777",
+      "locator": "sec. 10, para. 4 (E 10.4)"
+    },
+    {
+      "text": "I see death approach gradually, without any anxiety or regret.",
+      "sourceId": "burton-1846",
+      "locator": "vol. II, p. 514 (letter to the Comtesse de Boufflers, 20 Aug 1776)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In spring 1775 he fell ill with a bowel disorder that he came to see as fatal. In his short life story, dated 18 April 1776, he wrote that the illness had never for a moment lowered his spirits. In August, Adam Smith recorded, Hume joked about the excuses he might give Charon, the ferryman of the dead, for a little more time, and said he had done everything of consequence he ever meant to do. He died in Edinburgh on 25 August 1776, and his doctor wrote that he died in a happy composure of mind that nothing could exceed.",
+    "sourceIds": [
+      "mol-1777",
+      "burton-1846",
+      "sep-qu-radcliffe"
+    ]
+  },
+  "shadow": {
+    "text": "In a footnote first printed in 1753-54 in his essay Of National Characters, he wrote that he was apt to suspect 'the negroes, and in general all the other species of men' to be 'naturally inferior to the whites'. The final 1777 edition keeps the claim about Black people and drops the other groups; the Stanford Encyclopedia says he softened it in response to criticism, while the historian Felix Waldmann says that when James Beattie criticised it in 1770 Hume was unmoved and the 1777 text repeats the same views almost word for word. The plantation facts below all come from one historian, Waldmann, who found them in the archives; the newspaper and university reports of them relay his work. In a letter of March 1766, which Waldmann found at Princeton and published in 2014, Hume encouraged his patron Lord Hertford to buy a slave plantation in Grenada. Waldmann also reports that in June 1766 Hume wrote to the French governor of Martinique to help the purchase, and that early that year he lent £400 to John Stewart, a wine merchant buying several plantations, one of which held 42 enslaved people by November 1767. No source says Hume himself bought or invested in a plantation; Waldmann calls it 'not inconceivable' that the loan went into the slave trade. In September 2020 the University of Edinburgh renamed its David Hume Tower, citing his comments on race.",
+    "sourceIds": [
+      "miller-1987",
+      "essays-1777",
+      "sep-race-james",
+      "waldmann-2020",
+      "mclaughlin-2020",
+      "iash-2020",
+      "huffpost-2020"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What went wrong for you this week, and what is the favourable side of it that you have not looked at yet?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "My Own Life",
+      "year": 1777
+    },
+    {
+      "title": "An Enquiry concerning Human Understanding",
+      "year": 1748
+    },
+    {
+      "title": "Essays, Moral and Political",
+      "year": 1741
+    }
+  ],
+  "sources": [
+    {
+      "id": "mol-1777",
+      "kind": "primary",
+      "title": "My Own Life (written 18 April 1776, first published 1777); paragraph numbers (MOL) and page references to E. F. Miller's Liberty Fund edition of the Essays (1987) as given on Hume Texts Online, ed. Peter Millican",
+      "author": "David Hume",
+      "year": 1777,
+      "publisher": "W. Strahan and T. Cadell, London; text on Hume Texts Online (davidhume.org)",
+      "url": "https://davidhume.org/texts/mol"
+    },
+    {
+      "id": "ehu-1777",
+      "kind": "primary",
+      "title": "An Enquiry concerning Human Understanding (first published 1748; text of the 1777 edition), Hume Texts Online, ed. Peter Millican",
+      "author": "David Hume",
+      "year": 1777,
+      "publisher": "Hume Texts Online (davidhume.org)",
+      "url": "https://davidhume.org/texts/e"
+    },
+    {
+      "id": "essays-1777",
+      "kind": "primary",
+      "title": "Of National Characters (1748; text of the 1777 Essays and Treatises on Several Subjects), note NC 20n6.1, Hume Texts Online, ed. Amyas Merivale",
+      "author": "David Hume",
+      "year": 1777,
+      "publisher": "Hume Texts Online (davidhume.org)",
+      "url": "https://davidhume.org/texts/empl1/nc"
+    },
+    {
+      "id": "miller-1987",
+      "kind": "primary",
+      "title": "Essays, Moral, Political, and Literary, ed. Eugene F. Miller (revised edition), variant readings for essay XXI, Of National Characters, note i (the 1753-54 text of the footnote)",
+      "author": "David Hume, edited by Eugene F. Miller",
+      "year": 1987,
+      "publisher": "Liberty Fund, Indianapolis; online at Econlib",
+      "url": "https://www.econlib.org/library/LFBooks/Hume/hmMPL.html?chapter_num=55"
+    },
+    {
+      "id": "burton-1846",
+      "kind": "secondary",
+      "title": "Life and Correspondence of David Hume, from the papers bequeathed by his nephew to the Royal Society of Edinburgh (2 vols; prints Hume's letters, his will, Adam Smith's letter on his last days, and letters by the physicians Black and Cullen)",
+      "author": "John Hill Burton",
+      "year": 1846,
+      "publisher": "William Tait, Edinburgh; Project Gutenberg #42843 and #42844",
+      "url": "https://www.gutenberg.org/ebooks/42844"
+    },
+    {
+      "id": "sep-qu-radcliffe",
+      "kind": "secondary",
+      "title": "David Hume, Stanford Encyclopedia of Philosophy (new entry, first published 16 June 2026)",
+      "author": "Hsueh Qu and Elizabeth S. Radcliffe",
+      "year": 2026,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/hume/"
+    },
+    {
+      "id": "iep-fieser",
+      "kind": "secondary",
+      "title": "David Hume (1711-1776), Internet Encyclopedia of Philosophy",
+      "author": "James Fieser",
+      "year": "undated",
+      "url": "https://iep.utm.edu/hume/"
+    },
+    {
+      "id": "sep-race-james",
+      "kind": "secondary",
+      "title": "Race, Stanford Encyclopedia of Philosophy (first published 2008, substantive revision 2 Feb 2025), sec. 1, History of the Concept of Race",
+      "author": "Michael James",
+      "year": 2025,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/race/"
+    },
+    {
+      "id": "waldmann-2020",
+      "kind": "secondary",
+      "title": "David Hume was a brilliant philosopher but also a racist involved in slavery, The Scotsman, 17 July 2020",
+      "author": "Felix Waldmann",
+      "year": 2020,
+      "publisher": "The Scotsman",
+      "url": "https://www.scotsman.com/news/opinion/columnists/david-hume-was-a-brilliant-philosopher-but-also-a-racist-involved-in-slavery-dr-felix-waldmann-2915908"
+    },
+    {
+      "id": "mclaughlin-2020",
+      "kind": "secondary",
+      "title": "David Hume's ties to Grenadian plantations revealed, The Scotsman, 17 July 2020",
+      "author": "Martyn McLaughlin",
+      "year": 2020,
+      "publisher": "The Scotsman",
+      "url": "https://www.scotsman.com/news/uk-news/david-humes-ties-to-grenadian-plantations-revealed-2915740"
+    },
+    {
+      "id": "iash-2020",
+      "kind": "secondary",
+      "title": "David Hume and slavery (news item, 17 July 2020)",
+      "author": "Institute for Advanced Studies in the Humanities, University of Edinburgh",
+      "year": 2020,
+      "publisher": "University of Edinburgh",
+      "url": "https://www.iash.ed.ac.uk/news/david-hume-and-slavery"
+    },
+    {
+      "id": "huffpost-2020",
+      "kind": "secondary",
+      "title": "Edinburgh University Renames David Hume Tower Over Philosopher's 'Comments On Race', HuffPost UK, 13 September 2020",
+      "author": "Jasmin Gray",
+      "year": 2020,
+      "publisher": "HuffPost UK",
+      "url": "https://www.huffingtonpost.co.uk/entry/edinburgh-university-david-hume-tower_uk_5f5e2956c5b67602f6068b02"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Scottish philosopher and historian (1711-1776), not fictional, not a living politician or founder of a living religion, with no account of sexual contact with a minor or of sexual violence found; he is in, with a racist footnote in his essays and a documented part in a 1766 slave-plantation purchase."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked every value and reopened My Own Life, the Enquiry, Burton's letters, the SEP and IEP entries and Waldmann's Scotsman pieces. All five values held: Independence against his later government posts and Hertford's patronage, Optimism against the 1729 breakdown, Generosity against the pride behind the Blacklock gift, and Friendship against the public Rousseau quarrel, after the IEP gave Friendship its third source; Reputation and Learning from the blind pick were not added for lack of room. The shadow now says the plantation facts rest on one historian, Felix Waldmann, and that no source says Hume invested; one principle was trimmed to what My Own Life says.",
+    "checkedOn": "2026-11-10"
+  }
+}
