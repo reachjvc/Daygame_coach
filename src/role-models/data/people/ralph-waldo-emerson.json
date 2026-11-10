@@ -1,0 +1,357 @@
+{
+  "id": "ralph-waldo-emerson",
+  "name": "Ralph Waldo Emerson",
+  "born": 1803,
+  "died": 1882,
+  "category": "philosophers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_spirituality"
+  ],
+  "tagline": "A minister who gave up his pulpit to think for himself, and taught others to do the same.",
+  "startedFrom": "He was born in Boston in 1803, the son of a minister who died in 1811 and left a widow with six children under ten and little money. His mother took in boarders, and he and his brother Edward shared one overcoat, taking turns to wear it. He went to Harvard at fourteen and paid his way as the president's messenger and as a waiter.",
+  "values": [
+    {
+      "word": "Self-reliance",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 'Self-Reliance' he writes: Trust thyself: every heart vibrates to that iron string.",
+          "sourceId": "essays-1883",
+          "locator": "Self-Reliance, p. 49"
+        },
+        {
+          "kind": "deed",
+          "claim": "He was sympathetic to the Brook Farm community but turned down urgent appeals to join it, and kept his own household in Concord.",
+          "sourceId": "iep-brewton",
+          "locator": "sec. 1 Biography"
+        },
+        {
+          "kind": "deed",
+          "claim": "After leaving the ministry he came back to Boston in November 1833 and began a career as a lecturer.",
+          "sourceId": "sep-goodman",
+          "locator": "sec. 1 Chronology, 1833"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia says that chief among the virtues he wrote about is what he calls self-reliance.",
+          "sourceId": "sep-goodman",
+          "locator": "sec. 2.3 Morality"
+        }
+      ]
+    },
+    {
+      "word": "Integrity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes: Nothing is at last sacred but the integrity of your own mind.",
+          "sourceId": "essays-1883",
+          "locator": "Self-Reliance, p. 52"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1832 he resigned as minister of Boston's Second Church rather than give the Lord's Supper in a form he no longer believed in; the church voted 30 to 24 to accept.",
+          "sourceId": "cabot-1887",
+          "locator": "vol. I, ch. IV, pp. 154-158"
+        },
+        {
+          "kind": "witness",
+          "claim": "Holmes writes that it was not in his nature to hide his doubts from his people, and praises the sermon's outspoken honesty.",
+          "sourceId": "holmes-1884",
+          "locator": "ch. III, p. 57"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 15 July 1838 he told the graduating class of Harvard's Divinity School to cast all conformity behind them; the leading Unitarian journal repudiated its doctrines, and his former colleague Henry Ware wrote to him that some of its statements would tend to overthrow the authority of Christianity.",
+          "sourceId": "holmes-1884",
+          "locator": "ch. V sec. 1, pp. 116-125"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1844 no church in Concord would let him speak against slavery, and he gave his address on the emancipation of the British West Indies in the courthouse.",
+          "sourceId": "sep-goodman",
+          "locator": "sec. 3 Emerson on Slavery and Race"
+        },
+        {
+          "kind": "words",
+          "claim": "Answering Ware in 1838, he wrote that he could not pay his friends so mean a compliment as to hide his opposition to their views out of fear of offence.",
+          "sourceId": "holmes-1884",
+          "locator": "ch. V sec. 1, pp. 124-125 (letter to Henry Ware Jr.)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy says the Divinity School Address was the occasion of a twenty-nine year breach with Harvard.",
+          "sourceId": "iep-brewton",
+          "locator": "sec. 1 Biography"
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 23 April 1838 he wrote a letter to President Van Buren protesting the forced removal of the Cherokee from Georgia.",
+          "sourceId": "misc-1904",
+          "locator": "Letter to Martin Van Buren, Concord, 23 April 1838, pp. 89-96"
+        },
+        {
+          "kind": "deed",
+          "claim": "In his 1851 address to the citizens of Concord he called for repeal of the Fugitive Slave Law and for disobeying it while it stood.",
+          "sourceId": "sep-goodman",
+          "locator": "sec. 3 Emerson on Slavery and Race"
+        },
+        {
+          "kind": "words",
+          "claim": "In that address he says: An immoral law makes it a man's duty to break it, at every hazard.",
+          "sourceId": "misc-1904",
+          "locator": "The Fugitive Slave Law, Address to Citizens of Concord, 3 May 1851, p. 186"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy says that by the 1850s he was an outspoken advocate of abolition in lectures across New England and the Midwest.",
+          "sourceId": "iep-brewton",
+          "locator": "sec. 1 Biography"
+        }
+      ]
+    },
+    {
+      "word": "Nature",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In Nature (1836) he writes: In the woods, we return to reason and faith.",
+          "sourceId": "nature-1883",
+          "locator": "Nature, ch. I, p. 15"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1844 he bought land on the shore of Walden Pond, and the next year let Thoreau build his cabin there.",
+          "sourceId": "iep-brewton",
+          "locator": "sec. 1 Biography"
+        },
+        {
+          "kind": "deed",
+          "claim": "In a letter of 4 October 1844 to his brother William he says he bid on and bought eleven acres at $8.10 an acre, and is now landlord and waterlord of 14 acres on the shore of Walden.",
+          "sourceId": "concord-library",
+          "locator": "item description, Walden Pond, MA"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia says that in 'The American Scholar' nature is first in time and first in importance in the scholar's education.",
+          "sourceId": "sep-goodman",
+          "locator": "sec. 2.1 Education"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Say what you really think, even to friends and teachers who will be hurt by it.",
+      "sourceId": "holmes-1884",
+      "locator": "ch. V sec. 1, pp. 124-125 (letter to Henry Ware Jr., 1838)"
+    },
+    {
+      "text": "Try to please people, but never by giving up your own view.",
+      "sourceId": "journals-2",
+      "locator": "Journal, White Mountains, 14 July 1832, vol. II, p. 493"
+    },
+    {
+      "text": "Keep your own mind in a crowd, not only when you are alone.",
+      "sourceId": "essays-1883",
+      "locator": "Self-Reliance, p. 55"
+    },
+    {
+      "text": "When a law orders you to do wrong, you have a duty to break it.",
+      "sourceId": "misc-1904",
+      "locator": "The Fugitive Slave Law, Address to Citizens of Concord, 3 May 1851, p. 186"
+    },
+    {
+      "text": "Go out into nature when you need to find your balance again.",
+      "sourceId": "nature-1883",
+      "locator": "Nature, ch. I, p. 15"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Trust thyself: every heart vibrates to that iron string.",
+      "sourceId": "essays-1883",
+      "locator": "Self-Reliance, p. 49"
+    },
+    {
+      "text": "It is easy in the world to live after the world's opinion; it is easy in solitude to live after our own; but the great man is he who in the midst of the crowd keeps with perfect sweetness the independence of solitude.",
+      "sourceId": "essays-1883",
+      "locator": "Self-Reliance, p. 55"
+    },
+    {
+      "text": "A foolish consistency is the hobgoblin of little minds, adored by little statesmen and philosophers and divines.",
+      "sourceId": "essays-1883",
+      "locator": "Self-Reliance, p. 58"
+    },
+    {
+      "text": "Nothing can bring you peace but yourself. Nothing can bring you peace but the triumph of principles.",
+      "sourceId": "essays-1883",
+      "locator": "Self-Reliance, p. 87 (last lines of the essay)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In June 1832, as minister of Boston's Second Church, he proposed that the bread and wine be dropped from the Lord's Supper and the rite kept only as a remembrance. A church committee declined to advise any change. He went to the White Mountains to think it over, and on 14 July wrote in his journal that a man ought to please, but not at the expense of his own view. On 9 September 1832 he preached a sermon giving his reasons and resigned his post the same day.",
+    "sourceIds": [
+      "cabot-1887",
+      "holmes-1884",
+      "journals-2"
+    ]
+  },
+  "shadow": {
+    "text": "In his journal in November 1822, at nineteen, he wrote that nature had plainly assigned different degrees of intellect to the races, European, Moor, Tartar and African, that the barriers between them were insurmountable, and that this inequality showed Providence meant some to lead and some to serve; in the same entries he called slavery the worst institution on earth. In 'Fate' (1860) he wrote that the German and Irish millions, like the Negro, have a great deal of guano in their destiny. The Stanford Encyclopedia calls such passages disturbing pronouncements about race, and says slavery was not a main item on his agenda until the 1840s. The historian Nell Irvin Painter, in The History of White People (2010), notes that he lectured on the 'Genius of the Anglo-Saxon Race' and argued in English Traits (1856) that racial stock determines national destiny, and calls him the 'philosopher king of American white race theory'.",
+    "sourceIds": [
+      "journals-1",
+      "conduct-1860",
+      "sep-goodman",
+      "foner-2010"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you go along with someone this week just to please them, against your own view?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "Essays: First Series (with Self-Reliance)",
+      "year": 1841
+    },
+    {
+      "title": "Nature",
+      "year": 1836
+    },
+    {
+      "title": "The Conduct of Life",
+      "year": 1860
+    }
+  ],
+  "sources": [
+    {
+      "id": "essays-1883",
+      "kind": "primary",
+      "title": "Essays: First Series (Riverside Edition, Emerson's Complete Works vol. II)",
+      "author": "Ralph Waldo Emerson",
+      "year": 1887,
+      "publisher": "Houghton, Mifflin and Company, Boston (edition 1883, this printing 1887); scan on the Internet Archive",
+      "url": "https://archive.org/details/essaysem00emeruoft"
+    },
+    {
+      "id": "nature-1883",
+      "kind": "primary",
+      "title": "Nature, Addresses, and Lectures (new and revised edition, Emerson's Complete Works vol. I)",
+      "author": "Ralph Waldo Emerson",
+      "year": 1883,
+      "publisher": "Riverside Press, Cambridge; scan on the Internet Archive",
+      "url": "https://archive.org/details/natureaddressesl00emer_1"
+    },
+    {
+      "id": "misc-1904",
+      "kind": "primary",
+      "title": "Miscellanies (Complete Works vol. XI)",
+      "author": "Ralph Waldo Emerson, edited by Edward W. Emerson",
+      "year": 1904,
+      "publisher": "Houghton, Mifflin and Company, Boston and New York; scan on the Internet Archive",
+      "url": "https://archive.org/details/miscellanies00emer_3"
+    },
+    {
+      "id": "journals-1",
+      "kind": "primary",
+      "title": "Journals of Ralph Waldo Emerson, vol. I: 1820-1824",
+      "author": "Ralph Waldo Emerson, edited by Edward Waldo Emerson and Waldo Emerson Forbes",
+      "year": 1909,
+      "publisher": "Houghton Mifflin Company, Boston; scan on the Internet Archive",
+      "url": "https://archive.org/details/journalsofralphw01emeruoft"
+    },
+    {
+      "id": "journals-2",
+      "kind": "primary",
+      "title": "Journals of Ralph Waldo Emerson, vol. II: 1824-1832",
+      "author": "Ralph Waldo Emerson, edited by Edward Waldo Emerson and Waldo Emerson Forbes",
+      "year": 1909,
+      "publisher": "Houghton Mifflin Company, Boston; scan on the Internet Archive",
+      "url": "https://archive.org/details/journalsofralphw02emeruoft"
+    },
+    {
+      "id": "conduct-1860",
+      "kind": "primary",
+      "title": "The Conduct of Life",
+      "author": "Ralph Waldo Emerson",
+      "year": 1860,
+      "publisher": "Project Gutenberg eBook #39827",
+      "url": "https://www.gutenberg.org/ebooks/39827"
+    },
+    {
+      "id": "cabot-1887",
+      "kind": "secondary",
+      "title": "A Memoir of Ralph Waldo Emerson, vol. I",
+      "author": "James Elliot Cabot",
+      "year": 1887,
+      "publisher": "Houghton, Mifflin and Company, Boston; scan on the Internet Archive",
+      "url": "https://archive.org/details/amemoirralphwal02cabogoog"
+    },
+    {
+      "id": "holmes-1884",
+      "kind": "secondary",
+      "title": "Ralph Waldo Emerson (American Men of Letters)",
+      "author": "Oliver Wendell Holmes",
+      "year": 1884,
+      "publisher": "Houghton, Mifflin and Company, Boston (1886 printing); scan on the Internet Archive",
+      "url": "https://archive.org/details/rwebyoliver00holmrich"
+    },
+    {
+      "id": "sep-goodman",
+      "kind": "secondary",
+      "title": "Ralph Waldo Emerson, Stanford Encyclopedia of Philosophy (first published 2002, revised 2022)",
+      "author": "Russell Goodman",
+      "year": 2022,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/emerson/"
+    },
+    {
+      "id": "iep-brewton",
+      "kind": "secondary",
+      "title": "Ralph Waldo Emerson (1803-1882), Internet Encyclopedia of Philosophy",
+      "author": "Vince Brewton",
+      "year": "undated",
+      "url": "https://iep.utm.edu/emerson/"
+    },
+    {
+      "id": "concord-library",
+      "kind": "secondary",
+      "title": "Walden Pond, MA (Special Collections item, quoting Emerson's letter to William Emerson, 4 October 1844)",
+      "author": "Concord Free Public Library",
+      "year": "undated",
+      "publisher": "Concord Free Public Library, Special Collections",
+      "url": "https://www.sc.concordlibrary.org/items/show/2047"
+    },
+    {
+      "id": "foner-2010",
+      "kind": "secondary",
+      "title": "Review of Nell Irvin Painter, The History of White People (W. W. Norton, 2010), Harper's Magazine, September 2010",
+      "author": "Eric Foner",
+      "year": 2010,
+      "publisher": "Harper's Magazine; text on the author's site",
+      "url": "https://ericfoner.com/reviews/092010harpers.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American essayist and lecturer (1803-1882), not fictional, never a politician or campaigner for office, not the founder of a living religion, with no account found of sexual contact with a minor or of sexual violence; he is in, with a documented dark side in his writing on race."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked all five values: Courage and Justice against his slow start on slavery and his written race theory, Integrity against the friends who called his resignation a scruple about forms, Self-reliance against his reliance on Ellen's inheritance and lecture fees. None showed a pattern that breaks the value; the race writing and the late start on slavery stay in the shadow, which now also carries his 1822 line that some are meant to serve and Nell Irvin Painter's reading of English Traits. Courage, the draft's own pick, now rests on three sources with the IEP's note of the twenty-nine year breach with Harvard; Reading, the blind pick's weakest word, had one piece of evidence and was not added. All four quotes and every page locator were found in the 1883 Riverside, 1904 Centenary and 1909 Journals scans.",
+    "checkedOn": "2026-11-10"
+  }
+}

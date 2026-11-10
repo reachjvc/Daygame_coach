@@ -1,4 +1,5 @@
-import { test, expect, type Page } from "./fixtures/test"
+import type { Page } from "@playwright/test"
+import { test, expect } from "./fixtures/test"
 import { ROUTES } from "@/src/shared/routes"
 import { shownPeople } from "@/src/role-models/catalog"
 import { planWithSteps, seedLifePlan, thisWeeksReview } from "./helpers/lifePlan"

@@ -6,8 +6,9 @@ import p_baruch_spinoza from "./people/baruch-spinoza.json"
 import p_epictetus from "./people/epictetus.json"
 import p_friedrich_nietzsche from "./people/friedrich-nietzsche.json"
 import p_marcus_aurelius from "./people/marcus-aurelius.json"
+import p_ralph_waldo_emerson from "./people/ralph-waldo-emerson.json"
 import p_seneca from "./people/seneca.json"
 
-export const PERSON_IDS = ["alex-hormozi","baruch-spinoza","epictetus","friedrich-nietzsche","marcus-aurelius","seneca"] as const
+export const PERSON_IDS = ["alex-hormozi","baruch-spinoza","epictetus","friedrich-nietzsche","marcus-aurelius","ralph-waldo-emerson","seneca"] as const
 
-export const PEOPLE = [p_alex_hormozi, p_baruch_spinoza, p_epictetus, p_friedrich_nietzsche, p_marcus_aurelius, p_seneca] as unknown as RoleModelPerson[]
+export const PEOPLE = [p_alex_hormozi, p_baruch_spinoza, p_epictetus, p_friedrich_nietzsche, p_marcus_aurelius, p_ralph_waldo_emerson, p_seneca] as unknown as RoleModelPerson[]
