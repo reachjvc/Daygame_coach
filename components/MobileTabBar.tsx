@@ -2,30 +2,34 @@
 
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { useState } from "react"
-import { Menu, LogOut } from "lucide-react"
-import { LogOutButton } from "@/components/LogOutButton"
-import { BottomSheet, SheetRow } from "@/components/BottomSheet"
-import { TABS, MORE_ITEMS, HIDDEN_ROUTE_PREFIXES, PHONE_BAR_HIDDEN_PREFIXES, isActive } from "@/components/navTabs"
+import { TABS, HIDDEN_ROUTE_PREFIXES, PHONE_BAR_HIDDEN_PREFIXES, isActive } from "@/components/navTabs"
 import { isUnder } from "@/src/shared/routes"
 
 /**
  * Every item in the bar, measured on an iPhone 14, used to be 43.75px tall with
  * an 11px label — a quarter of a pixel under the 44px a fingertip needs, and a
  * pixel under the smallest text this app is willing to show. Six of them, on
- * every page. `min-h-11` and `text-xs` are the floors.
+ * every page (four since 2026-11-10). `min-h-11` and `text-xs` are the floors.
  */
 const BAR_ITEM = "flex min-h-11 flex-col items-center justify-center gap-0.5 min-w-[56px] py-1"
 
-export function MobileTabBar() {
+/**
+ * `force`: draw the bar on a route the frame hides it on. The plan's daily
+ * steps (Today, Track, Journal, Review) pass it: /plan hides the frame for its
+ * setup steps, which draw their own bottom controls, but the daily steps are
+ * where you live and keep the bar (Plans/site-navigation-build.md, risk 5).
+ */
+export function MobileTabBar({ force = false }: { force?: boolean } = {}) {
   const pathname = usePathname()
-  const [moreOpen, setMoreOpen] = useState(false)
 
   // Hide on routes that have their own bottom bar
-  if ([...HIDDEN_ROUTE_PREFIXES, ...PHONE_BAR_HIDDEN_PREFIXES].some((p) => isUnder(pathname, p))) {
+  if (!force && [...HIDDEN_ROUTE_PREFIXES, ...PHONE_BAR_HIDDEN_PREFIXES].some((p) => isUnder(pathname, p))) {
     return null
   }
 
+  /* NO MORE SHEET since 2026-11-10. What it held (Time, the audit, Ask
+     Coach, Articles, Settings, Log Out) is on Home's tiles, in All tools, and
+     on You (Plans/site-navigation-build.md, Phase 2). */
   return (
     <>
       {/* Bottom tab bar */}
@@ -50,61 +54,15 @@ export function MobileTabBar() {
                  */
                 aria-current={active ? "page" : undefined}
                 className={`${BAR_ITEM} ${active ? "text-primary" : "text-muted-foreground"}`}
-                data-testid={`tab-${tab.label.toLowerCase().replace(/\s+/g, "-")}`}
+                data-testid={tab.testId}
               >
                 <tab.icon className="size-5" />
                 <span className="text-xs leading-tight">{tab.label}</span>
               </Link>
             )
           })}
-
-          {/* More button */}
-          <button
-            onClick={() => setMoreOpen(true)}
-            className={`${BAR_ITEM} text-muted-foreground`}
-            data-testid="tab-more"
-          >
-            <Menu className="size-5" />
-            <span className="text-xs leading-tight">More</span>
-          </button>
         </div>
       </nav>
-
-      {/* "More" menu. The shared sheet — the same one every ⋮ menu in the app
-          opens — rather than this file's own copy of one. */}
-      <BottomSheet
-        open={moreOpen}
-        onClose={() => setMoreOpen(false)}
-        title="More"
-        testId="more-sheet"
-      >
-        {MORE_ITEMS.map((item) => (
-          <SheetRow
-            key={item.href}
-            href={item.href}
-            icon={item.icon}
-            onClick={() => setMoreOpen(false)}
-          >
-            {item.label}
-          </SheetRow>
-        ))}
-
-        <div className="border-t border-border my-2" />
-
-        {/* THE SHEET STAYS OPEN. Closing it here unmounted Log Out before it
-            ran, so it did nothing at all — you tapped it, the menu slid away,
-            and you were still signed in. Signing out redirects to the front
-            page, which takes the sheet with it; and while Log Out sends or
-            asks about changes not saved yet (LogOutButton), its question is
-            drawn over the sheet. */}
-        <LogOutButton>
-          {({ onClick, busy }) => (
-            <SheetRow icon={LogOut} testId="more-logout-button" onClick={onClick} disabled={busy}>
-              Log Out
-            </SheetRow>
-          )}
-        </LogOutButton>
-      </BottomSheet>
     </>
   )
 }

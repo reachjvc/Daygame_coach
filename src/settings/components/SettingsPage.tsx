@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useTransition, useMemo, useRef, useEffect } from "react"
+import { useState, useTransition, useMemo, useRef, useEffect, type ReactNode } from "react"
+import { LogOutButton } from "@/components/LogOutButton"
 import { ROUTES } from "@/src/shared/routes"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -59,6 +60,11 @@ interface SettingsPageClientProps extends SettingsPageProps {
   onCancelSubscription: () => Promise<{ success: boolean }>
   onReactivateSubscription: () => Promise<{ success: boolean }>
   onOpenBillingPortal: () => Promise<{ url: string } | null>
+  /**
+   * What You shows above the settings: your dating answers. Drawn by the
+   * server page, which has the profile (Plans/site-navigation-build.md, Phase 2).
+   */
+  datingAnswers?: ReactNode
 }
 
 export function SettingsPage({
@@ -76,6 +82,7 @@ export function SettingsPage({
   onCancelSubscription,
   onReactivateSubscription,
   onOpenBillingPortal,
+  datingAnswers,
 }: SettingsPageClientProps) {
   const router = useRouter()
   /* TWO TRANSITIONS, NOT ONE.
@@ -228,7 +235,20 @@ export function SettingsPage({
         {/* No Back control: Settings is a tab destination, and the app's frame
             is the way out. A "Back" here made it look like part of the page
             you came from. Plans/site-structure.md, D7. */}
-        <h1 className="mb-6 text-xl font-semibold">Settings</h1>
+        {/* YOU (the fourth tab since 2026-11-10): Settings, plus your dating
+            answers and Log Out, which lived in the More sheet. Your level is
+            the Profile tab's "Levels & XP", not tracked yet. */}
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <h1 className="text-xl font-semibold">You</h1>
+          <LogOutButton>
+            {({ onClick, busy }) => (
+              <Button variant="outline" size="sm" type="button" onClick={onClick} disabled={busy} data-testid="you-logout-button">
+                Log Out
+              </Button>
+            )}
+          </LogOutButton>
+        </div>
+        {datingAnswers}
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
             <TabsTrigger value="profile" className="gap-2" data-testid="settings-tab-profile">

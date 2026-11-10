@@ -15,7 +15,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { cleanup, render, screen, within } from "@testing-library/react"
 import AppLayout from "@/app/(app)/layout"
 import { AppFrame } from "@/components/AppFrame"
-import { MORE_ITEMS, TABS } from "@/components/navTabs"
+import { TABS } from "@/components/navTabs"
 import { ROUTES } from "@/src/shared/routes"
 
 let path: string = ROUTES.dashboard
@@ -45,7 +45,9 @@ describe("the app frame", () => {
     expect(screen.getByTestId("mobile-tab-bar")).toBeTruthy()
   })
 
-  it("names every destination the bar and the More sheet name, and marks the one you are on", () => {
+  // The bar has four since 2026-11-10 (Plans/site-navigation-build.md, Phase
+  // 2) and no More sheet; the header names the same four.
+  it("names every destination the bar names, and marks the one you are on", () => {
     path = ROUTES.settings
     const { container } = render(
       <AppFrame>
@@ -53,11 +55,11 @@ describe("the app frame", () => {
       </AppFrame>,
     )
     const nav = headerNav(container)
-    for (const item of [...TABS, ...MORE_ITEMS]) {
+    for (const item of TABS) {
       expect(nav.getByRole("link", { name: item.label }).getAttribute("href")).toBe(item.href)
     }
     const current = nav.getAllByRole("link").filter((a) => a.getAttribute("aria-current") === "page")
-    expect(current.map((a) => a.textContent)).toEqual(["Settings"])
+    expect(current.map((a) => a.textContent)).toEqual(["You"])
   })
 
   it("offers Log Out from the header, as a button, never a link", () => {
@@ -110,7 +112,9 @@ describe("the app frame", () => {
     expect(header, "no laptop header on Time").not.toBeNull()
     // hidden below `sm`, as on every page: on a phone the tracker's own header is the top
     expect(header!.className.split(/\s+/)).toEqual(expect.arrayContaining(["hidden", "sm:block"]))
-    expect(headerNav(container).getByRole("link", { name: "Time" }).getAttribute("aria-current")).toBe("page")
+    // The way out on a laptop: Time is a tool on Home since 2026-11-10, so the
+    // header does not name it, but it names Home.
+    expect(headerNav(container).getByRole("link", { name: "Home" }).getAttribute("href")).toBe(ROUTES.dashboard)
     expect(screen.queryByTestId("mobile-tab-bar"), "two bars stacked at the bottom of a phone").toBeNull()
     // and no room kept at the bottom for a bar that is not there
     expect(container.querySelector(".pb-tab-bar")).toBeNull()

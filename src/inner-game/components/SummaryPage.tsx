@@ -137,7 +137,7 @@ export function SummaryPage({
         <Button asChild className="flex-1 h-11" size="lg">
           <Link href={ROUTES.dashboard}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
+            Back to Home
           </Link>
         </Button>
         <Button

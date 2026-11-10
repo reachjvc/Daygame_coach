@@ -4,7 +4,6 @@ import { redirect } from "next/navigation"
 import { createServerSupabaseClient, getProfile } from "@/src/db/server"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { ALL_TOOLS_TILE, TOOLS } from "@/components/navTabs"
-import { UserPreferences } from "@/src/profile/components"
 import { TrainingCard } from "@/src/programs/components/TrainingCard"
 import { ROUTES } from "@/src/shared/routes"
 import { PAYWALL_HREF, tileAccess, type ToolViewer } from "../tileAccess"
@@ -90,24 +89,6 @@ export async function HomePage() {
         </Suspense>
       </div>
 
-      {profile && viewer.has_purchased && (
-        /* The Dashboard's dating answers, kept here until You exists to hold
-           them (Phase 2). */
-        <div className="mt-10" data-testid="home-dating-answers">
-          <UserPreferences
-            age_range_start={profile.age_range_start ?? 22}
-            age_range_end={profile.age_range_end ?? 25}
-            archetype={profile.archetype ?? ""}
-            secondary_archetype={profile.secondary_archetype ?? undefined}
-            tertiary_archetype={profile.tertiary_archetype ?? undefined}
-            dating_foreigners={profile.dating_foreigners ?? false}
-            user_is_foreign={profile.user_is_foreign ?? undefined}
-            preferred_region={profile.preferred_region ?? undefined}
-            secondary_region={profile.secondary_region ?? undefined}
-            primary_goal={profile.primary_goal ?? undefined}
-          />
-        </div>
-      )}
     </main>
   )
 }

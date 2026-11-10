@@ -29,7 +29,7 @@ export function DailyReviewCard() {
 
   return (
     <Card className="p-4 sm:p-6" data-testid="daily-review-card">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-amber-500/10">
             <Sun className="size-5 text-amber-500" />

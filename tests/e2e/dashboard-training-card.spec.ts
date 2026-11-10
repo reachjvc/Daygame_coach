@@ -54,9 +54,10 @@ async function reset(page: Page, enrol: boolean): Promise<void> {
   else await resetTraining(page)
 }
 
+/** The card lives on Home since 2026-11-10 (Plans/site-navigation-build.md, Phase 2); it was on Tracking. */
 async function openTracking(page: Page): Promise<void> {
   await page.setViewportSize({ width: 390, height: 900 })
-  await page.goto(ROUTES.tracking, { waitUntil: "networkidle" })
+  await page.goto(ROUTES.dashboard, { waitUntil: "networkidle" })
 }
 
 test.beforeEach(() => {

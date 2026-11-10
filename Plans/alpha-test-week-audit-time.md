@@ -1,5 +1,7 @@
 # Alpha test: Perfect week, Time & energy audit, Time
 
+> **Navigation changed on 2026-11-10** (Plans/site-navigation-build.md: bar is Home · Plan · Activity · You, tools are tiles on Home, no More sheet). Re-count every tap path in this plan before using it.
+
 **Findings board:** https://claude.ai/artifact/67sKtSTrD1u5bVysh7eVyS (marks db `marks`, doc id = row id F01–F28,
 `mark` = fix | later | no, `notes: [{text, at}]`).
 

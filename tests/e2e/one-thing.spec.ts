@@ -24,7 +24,8 @@ import { seedLifePlan } from "./helpers/lifePlan"
  * next move does not leave this asserting an address that no longer exists.
  */
 const PLAN = `${ROUTES.plan}?step=one`
-const TRACKING = ROUTES.tracking
+/** Where the season band is read back: Home since 2026-11-10 (Plans/site-navigation-build.md, Phase 2), Tracking before. */
+const TRACKING = ROUTES.dashboard
 
 const isoDay = (offsetDays: number) => new Date(Date.now() + offsetDays * 86_400_000).toISOString().slice(0, 10)
 
@@ -81,7 +82,7 @@ test.describe("the one thing", () => {
     await expect(page.getByTestId("season-band")).toContainText(/days left/)
   })
 
-  test("clicking it on the tracking page returns you to the step that owns it", async ({ page, account }) => {
+  test("clicking it on Home returns you to the step that owns it", async ({ page, account }) => {
     await startOneThing(page, account.id, "Something to aim at")
     await page.goto(TRACKING)
     const header = page.getByTestId("season-band-one-thing")
@@ -93,7 +94,7 @@ test.describe("the one thing", () => {
     // and always arrived within 20 s. `one` is the Season step's old name.
     await expect(page).toHaveURL(new RegExp(`${ROUTES.plan}\\?step=(one|focus)`), { timeout: 20_000 })
     // …and carries the way back, so you are not stranded in a long flow.
-    await expect(page.getByTestId("back-link")).toHaveText(/Tracking/)
+    await expect(page.getByTestId("back-link")).toHaveText(/Home/)
   })
 
   test("starting a new one moves the old one into the history", async ({ page, account }) => {

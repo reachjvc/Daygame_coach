@@ -12,5 +12,5 @@ import { TrackerLoading } from "@/src/timetrack/components/TrackerLoading"
  * the tracker itself runs in the browser.
  */
 export default function TimeLoading() {
-  return <TrackerLoading backHref={ROUTES.dashboard} backLabel="Dashboard" underAppHeader />
+  return <TrackerLoading backHref={ROUTES.dashboard} backLabel="Home" underAppHeader />
 }

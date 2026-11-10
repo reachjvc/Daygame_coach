@@ -1,8 +1,6 @@
 import { requireAuth } from "@/src/db/auth"
 import { getDashboardLayout } from "@/src/tracking/dashboardService"
 import { ProgressDashboard } from "@/src/tracking/components/ProgressDashboard"
-import { loadSeasonBand, type SeasonBandData } from "@/src/goals/seasonBandData"
-import { NO_TRAINING_TICKS } from "@/src/goals/dayTicks"
 import type { DashboardLayoutResponse } from "@/src/tracking/types"
 
 /**
@@ -32,38 +30,14 @@ export default async function TrackingPage() {
   const auth = await requireAuth()
 
   let initialDashboard: DashboardLayoutResponse | undefined
-  /**
-   * The season band's plan, day rows and training ticks: `loadSeasonBand`,
-   * shared with Home so the two cannot count differently.
-   */
-  let season: SeasonBandData = {
-    seasonPlan: null,
-    oneThing: null,
-    seasonReady: false,
-    today: null,
-    seasonTicks: NO_TRAINING_TICKS,
-  }
-
   if (auth.success) {
-    const [tiles, band] = await Promise.all([
-      getDashboardLayout(auth.userId).catch((error) => {
-        console.error("Failed to pre-render dashboard tiles:", error)
-        return undefined
-      }),
-      loadSeasonBand(auth.userId),
-    ])
-    initialDashboard = tiles
-    season = band
+    initialDashboard = await getDashboardLayout(auth.userId).catch((error) => {
+      console.error("Failed to pre-render dashboard tiles:", error)
+      return undefined
+    })
   }
 
   return (
-    <ProgressDashboard
-      initialDashboard={initialDashboard}
-      seasonPlan={season.seasonPlan}
-      oneThing={season.oneThing}
-      seasonReady={season.seasonReady}
-      today={season.today}
-      seasonTicks={season.seasonTicks}
-    />
+    <ProgressDashboard initialDashboard={initialDashboard} />
   )
 }

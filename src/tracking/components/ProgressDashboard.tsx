@@ -6,13 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Play } from "lucide-react"
 import Link from "next/link"
 import { QuickAddModal } from "./QuickAddModal"
-import { SeasonBand } from "@/src/goals/components/north-star/SeasonBand"
-import type { NsPlan } from "@/src/goals/types"
-import type { OneThing } from "@/src/goals/oneThingService"
-import { NO_TRAINING_TICKS, type TrainingTicks } from "@/src/goals/dayTicks"
 import type { DashboardLayoutResponse } from "../types"
 import { ROUTES } from "@/src/shared/routes"
-import { TrainingCard } from "@/src/programs/components/TrainingCard"
 import {
   DashboardSkeleton,
   StatTileGrid,
@@ -44,23 +39,8 @@ const AchievementsModal = lazy(() =>
  * says there and what it says here cannot drift apart.
  */
 
-export function ProgressDashboard({ initialDashboard, seasonPlan = null, oneThing = null, seasonReady = false, today = null, seasonTicks = NO_TRAINING_TICKS }: {
+export function ProgressDashboard({ initialDashboard }: {
   initialDashboard?: DashboardLayoutResponse
-  /** The Life Mastery plan, read on the server. Passed straight to the band. */
-  seasonPlan?: NsPlan | null
-  oneThing?: OneThing | null
-  /** False when the page could not read them, so the band draws nothing. */
-  seasonReady?: boolean
-  /** The ACCOUNT's calendar day, read on the server. Null when it could not be. */
-  today?: string | null
-  /**
-   * What the training log ticks, read on the server beside the plan.
-   *
-   * Defaults to "no log in hand" rather than to an empty object typed by hand,
-   * so a caller that omits it is saying the same thing every other caller says
-   * with those words — and `seasonReady` already covers a read that failed.
-   */
-  seasonTicks?: TrainingTicks
 }) {
   const { state, deleteSession, deleteFieldReport, refresh } = useTrackingStats()
   const [achievementsOpen, setAchievementsOpen] = useState(false)
@@ -81,7 +61,7 @@ export function ProgressDashboard({ initialDashboard, seasonPlan = null, oneThin
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Progress Tracking</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Activity</h1>
           <p className="text-muted-foreground mt-1">
             Track your approaches, write reports, and watch yourself improve
           </p>
@@ -94,23 +74,9 @@ export function ProgressDashboard({ initialDashboard, seasonPlan = null, oneThin
         </Link>
       </div>
 
-      {/* THE ONE THING AND THIS SEASON, above everything.
-          The two decisions the plan hangs off, on the page opened daily. Both
-          halves are read on the SERVER and handed down: this band used to read
-          the plan out of localStorage, so on a second device it told somebody
-          who had written a plan to go and build one. */}
-      <SeasonBand plan={seasonPlan} oneThing={oneThing} ready={seasonReady} today={today} ticks={seasonTicks} />
-
-      {/*
-        TODAY'S TRAINING, ABOVE THE THINGS YOU READ.
-        It was pushed to the bottom of this page for a good reason that has since
-        stopped being true: the card here USED to embed every lift and every set
-        of the session, so a five-lift day pushed everything else below the fold.
-        That card is gone. This one is four lines and ALWAYS there — including
-        when there is no program, which is exactly when somebody needs the way
-        in. A thing you act on belongs above the things you read.
-      */}
-      <TrainingCard from={ROUTES.tracking} className="mb-6" />
+      {/* THE PLAN BAND AND THE TRAINING CARD MOVED TO HOME on 2026-11-10
+          (Plans/site-navigation-build.md, Phase 2): Home is the page opened
+          daily now, and the same band twice is one place too many. */}
 
       {/* Stat tiles — user-configurable; see StatTileGrid */}
       <StatTileGrid initial={initialDashboard} />
@@ -118,7 +84,9 @@ export function ProgressDashboard({ initialDashboard, seasonPlan = null, oneThin
       {state.isLoading ? (
         <DashboardSkeleton cardsOnly />
       ) : (
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-[minmax(0,1fr)] md:grid-cols-2 gap-6 [&>*]:min-w-0">
+        {/* `minmax(0,1fr)`: a bare `grid` sized its one column to the widest
+            card, 338px at 320px wide, and pushed the page sideways. */}
         {/* Quick Actions */}
         <QuickActionsCard onQuickAddClick={() => setQuickAddOpen(true)} />
 

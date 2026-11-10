@@ -50,11 +50,12 @@ const PLAN_PATH = ROUTES.plan
 /**
  * WHERE THESE LINKS CAME FROM, carried on the link.
  *
- * This band lives on the tracking page, and the plan it opens has its own back
- * control aimed at the goals hub. Without the return address, opening your plan
- * from here and pressing back lands you somewhere you have never been.
+ * This band lives on Home (on the tracking page until 2026-11-10,
+ * Plans/site-navigation-build.md Phase 2), and the plan it opens has its own
+ * back control. Without the return address, opening your plan from here and
+ * pressing back lands you somewhere you have never been.
  */
-const HERE = ROUTES.tracking
+const HERE = ROUTES.dashboard
 
 /* The shape of the reply is `OneThing` from `oneThingService` — the same type
    the route builds it from. This file used to redeclare a four-field version of

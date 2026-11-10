@@ -1,5 +1,5 @@
 import { test, expect } from "./fixtures/test"
-import { HIDDEN_ROUTE_PREFIXES, MORE_ITEMS, PHONE_BAR_HIDDEN_PREFIXES, TABS } from "@/components/navTabs"
+import { HIDDEN_ROUTE_PREFIXES, PHONE_BAR_HIDDEN_PREFIXES, ROUTE_LABELS, TAB_ROUTES, TABS, TOOLS } from "@/components/navTabs"
 import { isUnder } from "@/src/shared/routes"
 
 /**
@@ -9,13 +9,19 @@ import { isUnder } from "@/src/shared/routes"
  * It did: Settings drew "‹ Back", Scenarios "Back to Dashboard", Training "← Dashboard", and on a
  * laptop Tracking had no navigation at all. Plans/site-structure.md.
  *
- * Runs on a fresh account, which is unpaid: Ask Coach sends it to the Dashboard and Scenarios
- * shows the preferences form first. Both are still inside the frame, which is what is checked.
+ * Runs on a fresh account, which is unpaid: Scenarios shows the preferences form first, which is
+ * still inside the frame, which is what is checked. Ask Coach is left out: since 2026-11-10 it
+ * sends an unpaid account to the plans on the front page, which is outside the app on purpose.
+ *
+ * Since 2026-11-10 (Plans/site-navigation-build.md, Phase 2) the destinations are the four tabs,
+ * All tools, and every tool a Home tile opens (`TAB_ROUTES`); the header and the bar name the
+ * four tabs on both widths.
  */
-const ITEMS = [...TABS, ...MORE_ITEMS]
+const PAID_ONLY = new Set(TOOLS.filter((t) => t.access === "paid").map((t) => t.href))
+const ITEMS = TAB_ROUTES.filter((href) => !PAID_ONLY.has(href)).map((href) => ({ href, label: ROUTE_LABELS[href] ?? href }))
 const FRAMED = ITEMS.filter((item) => !HIDDEN_ROUTE_PREFIXES.some((p) => isUnder(item.href, p)))
 const WIDTHS = [
-  { name: "laptop", viewport: { width: 1280, height: 800 }, labels: ITEMS.map((i) => i.label) },
+  { name: "laptop", viewport: { width: 1280, height: 800 }, labels: TABS.map((t) => t.label) },
   { name: "phone", viewport: { width: 390, height: 844 }, labels: TABS.map((t) => t.label) },
 ]
 
@@ -43,7 +49,7 @@ for (const item of FRAMED) {
           backControls: [...document.querySelectorAll("a, button")]
             .filter((el) => visible(el) && !el.closest("nav"))
             .map(text)
-            .filter((t) => /^(←\s*)?back\b|^←|^‹/i.test(t) || t === "Dashboard"),
+            .filter((t) => /^(←\s*)?back\b|^←|^‹/i.test(t) || t === "Dashboard" || t === "Home"),
         }
       })
       for (const label of width.labels) expect(seen.navLinks).toContain(label)

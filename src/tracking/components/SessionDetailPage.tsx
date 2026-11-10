@@ -341,7 +341,7 @@ export function SessionDetailPage({ sessionId }: SessionDetailPageProps) {
               : "The session you're looking for doesn't exist or has been deleted."}
           </p>
           <Link href={ROUTES.tracking}>
-            <Button>Go to Dashboard</Button>
+            <Button>Go to Home</Button>
           </Link>
         </Card>
       </div>

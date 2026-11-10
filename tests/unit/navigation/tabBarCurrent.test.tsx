@@ -26,10 +26,16 @@ function currentTabs(): string[] {
 }
 
 describe("the current tab", () => {
-  it("is named on /programs, the route this bar used not to reach at all", () => {
-    path = ROUTES.training
+  it("is named on You, which holds Settings", () => {
+    path = ROUTES.settings
     render(<MobileTabBar />)
-    expect(currentTabs()).toEqual(["Training"])
+    expect(currentTabs()).toEqual(["You"])
+  })
+
+  it("is named on Activity, which is Tracking under its new name", () => {
+    path = ROUTES.trackingHistory
+    render(<MobileTabBar />)
+    expect(currentTabs()).toEqual(["Activity"])
   })
 
   it("is exactly one tab, never several", () => {
@@ -46,12 +52,16 @@ describe("the current tab", () => {
     expect(currentTabs()).toEqual([])
   })
 
-  it("marks Scenarios on its preferences, which are part of it", () => {
-    // The dating answers moved from /preferences to /scenarios/preferences
-    // (Plans/site-structure.md, D1): only Scenarios uses them, so the bar says
-    // you are in Scenarios rather than nowhere.
-    path = ROUTES.scenarioPreferences
-    render(<MobileTabBar />)
-    expect(currentTabs()).toEqual(["Scenarios"])
+  it("marks none on a tool opened from Home, which the bar does not name", () => {
+    // Since 2026-11-10 the tools (Training, Scenarios, Time...) are tiles on
+    // Home, copied from Grab, whose bar does not light up for a service either
+    // (Plans/site-navigation-build.md, Phase 2). Marking Home there would
+    // say you are on a page you are not on.
+    for (const route of [ROUTES.training, ROUTES.scenarioPreferences]) {
+      path = route
+      const { unmount } = render(<MobileTabBar />)
+      expect(currentTabs()).toEqual([])
+      unmount()
+    }
   })
 })

@@ -1,4 +1,4 @@
-import { LayoutDashboard, BarChart3, Dumbbell, Swords, HelpCircle, BookOpen, Settings, Timer, ScrollText, BatteryCharging, Brain, Box, Footprints, Grid2x2, Heart, MessageCircle, type LucideIcon } from "lucide-react"
+import { LayoutDashboard, BarChart3, Dumbbell, Swords, HelpCircle, BookOpen, Timer, ScrollText, BatteryCharging, Brain, Box, Footprints, Grid2x2, Heart, MessageCircle, UserRound, type LucideIcon } from "lucide-react"
 import { ROUTES, isUnder } from "@/src/shared/routes"
 
 /**
@@ -17,68 +17,42 @@ import { ROUTES, isUnder } from "@/src/shared/routes"
  * reading "Your plan" next to a tab reading "Life Mastery" is two names for
  * one page. Declared here because `TABS` is above `ROUTE_LABELS` and a const
  * cannot be read before it is defined.
+ *
+ * "Plan" since 2026-11-10 (Plans/site-navigation-build.md, risk 14): the bar
+ * of option E says Plan. The page's own title is a separate question, put to
+ * the owner on the sign-off page.
  */
-const ROUTE_LABELS_LIFE_MASTERY = "Your plan"
+const ROUTE_LABELS_LIFE_MASTERY = "Plan"
 
+/**
+ * THE BAR: HOME · PLAN · ACTIVITY · YOU (option E, Plans/site-navigation-build.md).
+ *
+ * Copied from Grab: Home holds the tools as tiles, and the bar holds only the
+ * few places you return to. Every tool that had a tab or a row in the More
+ * sheet (Training, Scenarios, Time, the audit, Ask Coach, Articles) is a tile
+ * on Home or a row in All tools (`TOOLS` below), so the More sheet is gone and
+ * nothing it held is.
+ *
+ * - Home is the Dashboard's address until Phase 5.
+ * - Activity is Tracking under a new name; same address until Phase 5.
+ * - You is Settings, plus your dating answers and Log Out. Grab keeps the
+ *   profile in a corner; here it takes a tab because there are no messages
+ *   to fill one (risk 21, a deliberate change from the copied app).
+ *
+ * `testId` keeps the ids the old tabs had where the meaning is the same
+ * (risk 11), so a spec that opened "the dashboard tab" still opens Home.
+ */
 export const TABS = [
-  { label: "Dashboard", icon: LayoutDashboard, href: ROUTES.dashboard, exact: true },
-  // NO GOALS TAB. The hub is archived at /test/archive/goals-hub; the plan
-  // below is the one goals surface.
+  { label: "Home", icon: LayoutDashboard, href: ROUTES.dashboard, exact: true, testId: "tab-dashboard" },
   /**
-   * TRAINING, IN THE BAR.
-   *
-   * It was reachable by exactly one route in the whole product: the dashboard
-   * has no training card, the tab bar had no training tab, and the only link
-   * lived inside a Quick Actions panel on the Tracking page. So logging a set
-   * meant knowing that the gym tracker is filed under "Tracking", taking four
-   * to six taps to get there, and landing on whichever tab you last used.
-   *
-   * It is a top-level thing people do several times a week; it belongs beside
-   * the other things people do several times a week.
+   * THE PLAN, A TAB SINCE 2026-10-15, on the owner's word: Today, Track and
+   * Journal are daily. Its daily steps draw this bar themselves (the frame
+   * hides on /plan because the setup steps draw their own bottom controls;
+   * `NorthStarFlow`, `USE_STEPS`).
    */
-  { label: "Training", icon: Dumbbell, href: ROUTES.training, exact: false },
-  { label: "Tracking", icon: BarChart3, href: ROUTES.tracking, exact: false },
-  /**
-   * YOUR PLAN (LIFE MASTERY), A TAB SINCE 2026-10-15, on the owner's word.
-   *
-   * It sat in the More sheet from 2026-09-24 on the reasoning that "the bar is
-   * things somebody does several times a week, and a fourteen-step plan is not
-   * one of them". That missed half the plan: Today, Track and Journal are
-   * daily. The owner asked for it in the bar.
-   *
-   * IT TOOK TIME'S PLACE, because a seventh item does not fit. Measured on the
-   * real bar with a cloned tab: five tabs plus More at the 56px floor
-   * (`BAR_ITEM`) need 392px, and the bar ran off-screen at 320, 360, 375 and
-   * 390px, fitting only from 412px. The owner chose Time to move to the sheet.
-   *
-   * Beside Tracking on purpose: the vision's first item is that the plan is
-   * where you decide and Tracking is where you live it, one system.
-   *
-   * `ScrollText` is used nowhere else but the laptop header's link to the same
-   * page (`src/shared/iconRoles.ts`), so the icon means one thing.
-   */
-  { label: ROUTE_LABELS_LIFE_MASTERY, icon: ScrollText, href: ROUTES.plan, exact: false },
-  { label: "Scenarios", icon: Swords, href: ROUTES.scenarios, exact: false },
-] as const
-
-/** The Lair was a second goals surface. Deleted outright on 2026-09-09. */
-export const MORE_ITEMS = [
-  /**
-   * TIME, FIRST IN THE SHEET since it gave its tab to the plan (2026-10-15).
-   * First because the other three are reference and settings, and this is a
-   * place you go to work. Its own pages hide the phone bar anyway (see
-   * `PHONE_BAR_HIDDEN_PREFIXES`), so from inside Time nothing changed.
-   */
-  { label: "Time", icon: Timer, href: ROUTES.time },
-  /**
-   * THE TIME & ENERGY AUDIT, in Thoughts' old place (Plans/energy-audit.md,
-   * D-NAME, D-ICON). `BatteryCharging` is imported here only, so it needs no
-   * entry in `src/shared/iconRoles.ts`.
-   */
-  { label: "Time & energy audit", icon: BatteryCharging, href: ROUTES.audit },
-  { label: "Ask Coach", icon: HelpCircle, href: ROUTES.coach },
-  { label: "Articles", icon: BookOpen, href: ROUTES.articles },
-  { label: "Settings", icon: Settings, href: ROUTES.settings },
+  { label: ROUTE_LABELS_LIFE_MASTERY, icon: ScrollText, href: ROUTES.plan, exact: false, testId: "tab-your-plan" },
+  { label: "Activity", icon: BarChart3, href: ROUTES.tracking, exact: false, testId: "tab-tracking" },
+  { label: "You", icon: UserRound, href: ROUTES.settings, exact: false, testId: "tab-you" },
 ] as const
 
 /** Every route the bar itself reaches: a destination, never a sub-page. */
@@ -129,25 +103,22 @@ export const HIDDEN_ROUTE_PREFIXES: string[] = [
  */
 export const PHONE_BAR_HIDDEN_PREFIXES: string[] = [ROUTES.time]
 
-export const TAB_ROUTES: string[] = [...TABS, ...MORE_ITEMS].map((t) => t.href)
-
-/** What to call a route in a back link, for the routes that have a name. */
-export const ROUTE_LABELS: Record<string, string> = {
-  ...Object.fromEntries([...TABS, ...MORE_ITEMS].map((t) => [t.href, t.label])),
-  [ROUTES.trackingHistory]: "History",
-  [ROUTES.plan]: ROUTE_LABELS_LIFE_MASTERY,
-  [ROUTES.training]: "Training",
-}
-
 /**
- * Is this item the page you are on? One rule for every bar that marks it: the
- * tab bar and the laptop header. Segment-aware, so `/dashboard` marked exactly
- * does not light up on the pages below it, and a future `/timeline`
- * would not light up Time.
+ * Every top-level destination: the four tabs, All tools, and every tool a
+ * Home tile or an All tools row opens. Each has the bar (or, for Time, its own
+ * bar and back arrow), so each is its own way back. Sub-pages are not here.
  */
-export function isActive(pathname: string, href: string, exact: boolean): boolean {
-  return exact ? pathname === href : isUnder(pathname, href)
-}
+export const TAB_ROUTES: string[] = [
+  ...TABS.map((t) => t.href),
+  ROUTES.tools,
+  ROUTES.training,
+  ROUTES.scenarios,
+  ROUTES.time,
+  ROUTES.audit,
+  ROUTES.coach,
+  ROUTES.articles,
+  ROUTES.innerGame,
+]
 
 /**
  * WHO MAY OPEN A TOOL, as the tool itself says it.
@@ -219,3 +190,26 @@ export const COMING_TOOLS: readonly { label: string; icon: LucideIcon; group: To
 
 /** The last tile on Home. */
 export const ALL_TOOLS_TILE = { label: "All tools", icon: Grid2x2, href: ROUTES.tools } as const
+
+/** What to call a route in a back link, for the routes that have a name. */
+export const ROUTE_LABELS: Record<string, string> = {
+  /* The tools first and the tabs last, so a tab's name wins where both name
+     one address. Labels are what the back link reads: "← Black Box". */
+  ...Object.fromEntries(TOOLS.map((t) => [t.href, t.label])),
+  ...Object.fromEntries(TABS.map((t) => [t.href, t.label])),
+  [ROUTES.tools]: "All tools",
+  [ROUTES.trackingHistory]: "History",
+  [ROUTES.plan]: ROUTE_LABELS_LIFE_MASTERY,
+  [ROUTES.training]: "Training",
+}
+
+/**
+ * Is this item the page you are on? One rule for every bar that marks it: the
+ * tab bar and the laptop header. Segment-aware, so `/dashboard` marked exactly
+ * does not light up on the pages below it, and a future `/timeline`
+ * would not light up Time.
+ */
+export function isActive(pathname: string, href: string, exact: boolean): boolean {
+  return exact ? pathname === href : isUnder(pathname, href)
+}
+

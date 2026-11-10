@@ -65,7 +65,7 @@ export default async function LifeMasteryPage({
       key={user.id}
       userId={user.id}
       backHref={ROUTES.dashboard}
-      backLabel="Dashboard"
+      backLabel="Home"
       initialTab={initialTab}
       initialInUse={inUse}
       initialPeriod={parsePeriodParam(period)}

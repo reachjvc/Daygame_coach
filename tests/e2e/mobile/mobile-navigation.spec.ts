@@ -5,26 +5,22 @@ import { ROUTES } from '@/src/shared/routes'
 const AUTH_TIMEOUT = 15000
 
 /**
- * The phone's way to everything the bar has no room for: the More sheet. It
- * opens, it holds Settings and the way out, and a tap on an item goes there
- * and closes it.
+ * The phone's way to Settings and out: the You tab.
  *
- * This used to drive the header's ☰ menu. Inside the app there is no phone
- * header any more (Plans/site-structure.md, D9): it duplicated the More sheet,
- * which already had Log Out, and the two could disagree.
+ * It was the More sheet until 2026-11-10, which held Settings and Log Out
+ * beside the tools. The tools went to Home's tiles and All tools, and Settings
+ * and Log Out to You (Plans/site-navigation-build.md, Phase 2). Log Out is
+ * seen, never clicked: signing out ends every session of the account.
  */
-test('the More sheet opens, and an item in it navigates and closes it', async ({ page }) => {
+test('the You tab opens Settings, with the way out on it', async ({ page }) => {
   await page.goto(ROUTES.dashboard, { timeout: AUTH_TIMEOUT })
 
   // the laptop header's links are not on a phone; the bar is
   await expect(page.getByTestId(SELECTORS.header.settingsLink)).toBeHidden()
-  await page.getByTestId('tab-more').click()
+  await page.getByTestId('tab-you').click()
 
-  const sheet = page.getByTestId('more-sheet')
-  await expect(sheet).toBeVisible({ timeout: AUTH_TIMEOUT })
-  await expect(sheet.getByText('Log Out')).toBeVisible()
-
-  await sheet.getByRole('link', { name: 'Settings' }).click()
-  await expect(sheet).toBeHidden({ timeout: AUTH_TIMEOUT })
   await expect(page).toHaveURL(new RegExp(`${ROUTES.settings}$`), { timeout: AUTH_TIMEOUT })
+  await expect(page.getByRole('heading', { name: 'You', level: 1 })).toBeVisible({ timeout: AUTH_TIMEOUT })
+  await expect(page.getByTestId('you-logout-button')).toBeVisible()
+  await expect(page.getByTestId('tab-you')).toHaveAttribute('aria-current', 'page')
 })

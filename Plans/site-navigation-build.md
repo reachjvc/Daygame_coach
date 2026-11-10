@@ -1,7 +1,7 @@
 # Site navigation build: option E (Home + tool grid)
 
 **Written 2026-11-09** after the owner said of the before/after page: "I quite like this."
-**Status: Phases 0 and 1 live (2026-11-10). Phase 2 next.** Follows `Plans/site-navigation.md` (the choice). This plan builds it.
+**Status: Phases 0, 1 and 2 live (2026-11-10). Phase 3 next.** Follows `Plans/site-navigation.md` (the choice). This plan builds it.
 
 ## Owner-only items (answered 2026-11-09)
 
@@ -137,4 +137,27 @@ Removed from the old Dashboard, and where each job went:
 Nothing was removed from Tracking yet; its plan and training cards come off in Phase 2, when it becomes Activity.
 
 Found, not caused by this build (on `main` before it): at 320px the dating answers' map pushes the page 2px sideways, and Tracking's quick buttons push it 34px sideways. To fix in Phase 2 (the answers move to You) and Phase 3 (no page may scroll sideways).
+
+### Phase 2 (2026-11-10): the bar is Home · Plan · Activity · You
+
+- Phone bar and laptop header both show Home, Plan, Activity, You (the header also keeps Log Out). Old test ids kept on the same meanings (`tab-dashboard`, `tab-your-plan`, `tab-tracking`, `header-settings-link`).
+- The plan's daily steps (Today, Track, Journal, Review) now draw the site header and bar, and their "← step · step →" controls sit at the top. Setup steps (North star and the rest) are unchanged: their own bottom controls, no site bar.
+- You = Settings, titled "You", with Log Out at the top and a "Your dating answers" row (opens the questionnaire; "Show them here" unfolds the old summary with the map).
+- Activity = Tracking, retitled. Its 320px sideways scroll is fixed (a card grid without a column limit, and the Daily Reflection row not wrapping).
+- Back links and labels say Home, Activity, You, Plan. The season band's link now returns to Home.
+- The alpha-test plan has a line saying its tap paths need re-counting.
+
+The six tasks, re-counted on the real phone build from Home (a browser script tapped each): start a field session 1, log a gym set 3, start a timer 2, open today's plan 1, ask the coach 1, fill an audit slot 2. Total 10, against 11 on the drawing and 14 on the old site. Field session is 1, not the drawing's 2, because Home's card has the Start Session button.
+
+Removed, and where each job went:
+
+| What | Where its job went |
+|---|---|
+| The More sheet (Time, audit, Ask Coach, Articles, Settings, Log Out) | Time, audit, Coach: Home tiles. Articles: All tools. Settings and Log Out: You |
+| Training and Scenarios tabs | Home tiles (Training first) |
+| Laptop header links to Training, Scenarios, Time, audit, Ask Coach, Articles | Home tiles and All tools; Phase 3's sidebar may bring some back |
+| Tracking's plan band and training card | Home (same components) |
+| Dating answers summary on Home | You, folded under "Your dating answers" |
+| "Settings" as the page title | "You" |
+| "Progress Tracking" as the page title | "Activity" |
 

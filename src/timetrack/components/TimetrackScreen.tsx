@@ -119,5 +119,5 @@ export function TimetrackScreen({ account }: { account: string }) {
     )
   }
   // Dashboard is where the back control goes when there is no page before this one to return to
-  return <TogglLab account={account} backHref={ROUTES.dashboard} backLabel="Dashboard" underAppHeader />
+  return <TogglLab account={account} backHref={ROUTES.dashboard} backLabel="Home" underAppHeader />
 }

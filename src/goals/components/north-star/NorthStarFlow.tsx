@@ -102,6 +102,8 @@ import { ValuesSoFar } from "./ValuesSoFar"
 import { ValuesWork } from "./ValuesWork"
 import { RecapTab, type RecapHandlers } from "./RecapTab"
 import { BackLink } from "@/components/BackLink"
+import { SiteHeader } from "@/components/AppFrame"
+import { MobileTabBar } from "@/components/MobileTabBar"
 import { getTodayInTimezone } from "@/src/shared/dateUtils"
 import { ROUTES } from "@/src/shared/routes"
 // ONE DOOR into the gym slice — see src/programs/forLifeMastery.ts.
@@ -133,7 +135,7 @@ function holdOpen<T>(slot: { current: Promise<void> | null }, work: Promise<T>):
 export function NorthStarFlow({
   userId,
   backHref = ROUTES.dashboard,
-  backLabel = "Dashboard",
+  backLabel = "Home",
   initialTab = "star",
   timezone = "UTC",
   initialInUse = false,
@@ -1593,9 +1595,82 @@ export function NorthStarFlow({
     )
   }
 
+  /**
+   * THE DAILY STEPS KEEP THE SITE'S BAR (Plans/site-navigation-build.md, risk 5).
+   *
+   * /plan hides the site frame, because the setup steps draw their own bottom
+   * controls and two bars stacked on a phone is one too many. But Today,
+   * Track, Journal and Review are where you live, and with the frame hidden
+   * there the only way out was the small back link. So on those four the page
+   * draws the site header and bar itself, and its own "← step · step →"
+   * controls move to the top, out of the bar's way. Setup steps are unchanged.
+   */
+  const siteBar = USE_STEPS.includes(tab)
+  const stepNav = (
+    <div className={siteBar ? "sticky top-0 z-30 bg-zinc-950/90 backdrop-blur-sm border-b border-white/10" : "sticky bottom-0 bg-zinc-950/90 backdrop-blur-sm border-t border-white/10"}>
+      <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between gap-3">
+        {tabIndex > 0 ? (
+          <button onClick={() => setTab(TAB_ORDER[tabIndex - 1])} className="text-xs text-zinc-400 hover:text-white transition-colors">
+            ← {TAB_LABELS[TAB_ORDER[tabIndex - 1]]}
+          </button>
+        ) : <span />}
+        {/* What is actually happening to what you typed, said plainly and
+            with the off switch next to it. A copy going to a server is not a
+            thing to bury in a privacy policy nobody opens. */}
+        <span className="text-[11px] text-zinc-600 text-center min-w-0">
+          {/* WHAT HAPPENED TO THE PLAN ITSELF comes first and in amber, above
+              the line about the improvement copy. They are different facts
+              and the one people need is "is my work safe", not "was a
+              research copy sent". Silent while all is well. */}
+          {(otherAccount || serverNote) && (
+            <span className="block text-amber-200/80 mb-0.5">{otherAccount ? ACCOUNT_CHANGED_MESSAGE : serverNote}</span>
+          )}
+          {storageRefused && (
+            <span className="block text-amber-200/80 mb-0.5">
+              This browser will not let the page store anything. Your work is only in this tab.
+            </span>
+          )}
+          {/* THE MIRROR IS GONE, and with it the line offering to stop it.
+              Until 2026-09-24 this said "a copy sent so this page can be
+              improved", with a button to delete that copy — a whole plan,
+              journal included, going to an unauthenticated table keyed by a
+              random browser id. What is left says the one thing that is now
+              true and is worth saying: where the work is. */}
+          {/* `unsent` is the whole correction: during the debounce and while
+              the request is open, this browser has the work and the account
+              does not, and "Saved on this device." is what that is.
+              "unknown" is an account with no plan yet: nothing is saved until
+              something is written, and then it goes to the account
+              (Plans/life-plan-after-setup.md, F10). */}
+          {!plan.updatedAt && !unsent
+            ? "Nothing written yet"
+            : serverState === "saved" && !unsent
+              ? "Saved to your account."
+              : loaded && serverState === "unknown"
+                ? "Saves to your account as you write."
+                : "Saved on this device."}
+        </span>
+        {tabIndex < TAB_ORDER.length - 1 ? (
+          <button
+            onClick={() => setTab(TAB_ORDER[tabIndex + 1])}
+            className="text-sm font-medium px-4 py-2 rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 transition-colors"
+          >
+            {TAB_LABELS[TAB_ORDER[tabIndex + 1]]} →
+          </button>
+        ) : (
+          <span className="text-[11px] text-zinc-600 tabular-nums">
+            {progress.areasRated} of {progress.areas} areas rated
+          </span>
+        )}
+      </div>
+    </div>
+  )
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
-      <div className="max-w-5xl mx-auto px-6 py-10 pb-28">
+      {siteBar && <SiteHeader />}
+      {siteBar && stepNav}
+      <div className={`max-w-5xl mx-auto px-6 py-10 ${siteBar ? "pb-tab-bar sm:pb-28" : "pb-28"}`}>
         <div className="flex items-center justify-between gap-3 mb-6">
           {/* The props stay, as the fallback: a return address on the link
               wins, so arriving here from the tracking page goes back there. */}
@@ -2166,63 +2241,8 @@ export function NorthStarFlow({
         )
       })()}
 
-      <div className="sticky bottom-0 bg-zinc-950/90 backdrop-blur-sm border-t border-white/10">
-        <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between gap-3">
-          {tabIndex > 0 ? (
-            <button onClick={() => setTab(TAB_ORDER[tabIndex - 1])} className="text-xs text-zinc-400 hover:text-white transition-colors">
-              ← {TAB_LABELS[TAB_ORDER[tabIndex - 1]]}
-            </button>
-          ) : <span />}
-          {/* What is actually happening to what you typed, said plainly and
-              with the off switch next to it. A copy going to a server is not a
-              thing to bury in a privacy policy nobody opens. */}
-          <span className="text-[11px] text-zinc-600 text-center min-w-0">
-            {/* WHAT HAPPENED TO THE PLAN ITSELF comes first and in amber, above
-                the line about the improvement copy. They are different facts
-                and the one people need is "is my work safe", not "was a
-                research copy sent". Silent while all is well. */}
-            {(otherAccount || serverNote) && (
-              <span className="block text-amber-200/80 mb-0.5">{otherAccount ? ACCOUNT_CHANGED_MESSAGE : serverNote}</span>
-            )}
-            {storageRefused && (
-              <span className="block text-amber-200/80 mb-0.5">
-                This browser will not let the page store anything. Your work is only in this tab.
-              </span>
-            )}
-            {/* THE MIRROR IS GONE, and with it the line offering to stop it.
-                Until 2026-09-24 this said "a copy sent so this page can be
-                improved", with a button to delete that copy — a whole plan,
-                journal included, going to an unauthenticated table keyed by a
-                random browser id. What is left says the one thing that is now
-                true and is worth saying: where the work is. */}
-            {/* `unsent` is the whole correction: during the debounce and while
-                the request is open, this browser has the work and the account
-                does not, and "Saved on this device." is what that is.
-                "unknown" is an account with no plan yet: nothing is saved until
-                something is written, and then it goes to the account
-                (Plans/life-plan-after-setup.md, F10). */}
-            {!plan.updatedAt && !unsent
-              ? "Nothing written yet"
-              : serverState === "saved" && !unsent
-                ? "Saved to your account."
-                : loaded && serverState === "unknown"
-                  ? "Saves to your account as you write."
-                  : "Saved on this device."}
-          </span>
-          {tabIndex < TAB_ORDER.length - 1 ? (
-            <button
-              onClick={() => setTab(TAB_ORDER[tabIndex + 1])}
-              className="text-sm font-medium px-4 py-2 rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 transition-colors"
-            >
-              {TAB_LABELS[TAB_ORDER[tabIndex + 1]]} →
-            </button>
-          ) : (
-            <span className="text-[11px] text-zinc-600 tabular-nums">
-              {progress.areasRated} of {progress.areas} areas rated
-            </span>
-          )}
-        </div>
-      </div>
+      {!siteBar && stepNav}
+      {siteBar && <MobileTabBar force />}
     </div>
   )
 }

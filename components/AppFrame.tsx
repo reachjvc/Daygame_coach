@@ -7,7 +7,7 @@ import { AppLogo } from "@/components/AppLogo"
 import { LogOutButton } from "@/components/LogOutButton"
 import { MobileTabBar } from "@/components/MobileTabBar"
 import { Button } from "@/components/ui/button"
-import { HIDDEN_ROUTE_PREFIXES, MORE_ITEMS, PHONE_BAR_HIDDEN_PREFIXES, TABS, isActive } from "@/components/navTabs"
+import { HIDDEN_ROUTE_PREFIXES, PHONE_BAR_HIDDEN_PREFIXES, TABS, isActive } from "@/components/navTabs"
 import { ROUTES, isUnder } from "@/src/shared/routes"
 
 /** The e2e helpers find these (tests/e2e/helpers/selectors.ts). Same IDs AppHeader used. */
@@ -17,7 +17,8 @@ const TEST_IDS: Record<string, string> = {
   [ROUTES.settings]: "header-settings-link",
 }
 
-const ITEMS = [...TABS, ...MORE_ITEMS].map((item) => ({ ...item, exact: "exact" in item ? item.exact : false }))
+/** The bar's four, in the bar's order. The tools are on Home (Phase 2 of Plans/site-navigation-build.md); the laptop sidebar is Phase 3. */
+const ITEMS = TABS
 
 /**
  * THE SIGNED-IN APP'S NAVIGATION, ON EVERY PAGE, AT EVERY WIDTH.
@@ -30,7 +31,7 @@ const ITEMS = [...TABS, ...MORE_ITEMS].map((item) => ({ ...item, exact: "exact" 
  * 2026-10-13 and said Settings looked like "a subset of something".
  * `Plans/site-structure.md`, Phase 3.
  *
- * One list feeds both bars (`TABS` and `MORE_ITEMS` in navTabs.ts), so the
+ * One list feeds both bars (`TABS` in navTabs.ts), so the
  * laptop header and the phone bar cannot disagree. Pages that draw their own
  * top and bottom controls (`HIDDEN_ROUTE_PREFIXES`) get neither bar; pages
  * that draw only their own phone bar (`PHONE_BAR_HIDDEN_PREFIXES`, the time
@@ -50,67 +51,79 @@ export function AppFrame({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <header className="hidden sm:block border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
-        <div className="mx-auto max-w-6xl flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-          <AppLogo />
-          {/* Ten destinations plus Log Out do not fit beside the logo below
-              ~1100px. The nav scrolls inside the header instead of pushing the
-              page sideways, which the route sweep checks.
-              TIGHTER SINCE ANOTHER MORE ITEM JOINED (2026-10-30): with the default
-              padding the row was 929px in an 879px nav at 1280px wide, so Log
-              Out sat half out of view on an ordinary laptop. `px-2.5` and no
-              gap bring it to about 845px. */}
-          <nav className="flex min-w-0 items-center overflow-x-auto" aria-label="Main">
-            {ITEMS.map((item) => {
-              // Where you are, said in colour as the phone bar says it, and to
-              // a screen reader by aria-current.
-              const active = isActive(pathname, item.href, item.exact)
-              return (
-                <Button
-                  key={item.href}
-                  asChild
-                  variant="ghost"
-                  size="sm"
-                  className={`shrink-0 px-2.5 hover:text-primary ${active ? "text-primary" : "text-foreground"}`}
-                  data-testid={TEST_IDS[item.href]}
-                >
-                  <Link href={item.href} aria-current={active ? "page" : undefined}>
-                    {item.label}
-                  </Link>
-                </Button>
-              )
-            })}
-            {/* Log Out before the development-only lab link, so the way out is
-                never the item that scrolls out of view. */}
-            {/* What this browser kept for opening pages with no signal goes
-                first, and what has not reached the account yet is sent or
-                asked about before it goes (LogOutButton). */}
-            <LogOutButton>
-              {({ onClick, busy }) => (
-                <Button
-                  variant="ghost"
-                  type="button"
-                  size="sm"
-                  className="shrink-0 px-2.5 text-foreground hover:text-primary"
-                  data-testid="header-logout-button"
-                  onClick={onClick}
-                  disabled={busy}
-                >
-                  Log Out
-                </Button>
-              )}
-            </LogOutButton>
-            {process.env.NODE_ENV === "development" && (
-              <Button asChild variant="ghost" size="sm" className="shrink-0 text-amber-500 hover:text-amber-400">
-                <Link href="/test">Test Pages</Link>
-              </Button>
-            )}
-          </nav>
-        </div>
-      </header>
+      <SiteHeader />
       {/* No room kept for a phone bar the page draws for itself */}
       {ownPhoneBar ? children : <div className="pb-tab-bar">{children}</div>}
       {!ownPhoneBar && <MobileTabBar />}
     </>
+  )
+}
+
+/**
+ * The laptop header on its own, for a page the frame steps aside for that
+ * still wants it: the plan's daily steps (`NorthStarFlow`, `USE_STEPS`).
+ * Hidden below `sm`, where the phone bar does this job.
+ */
+export function SiteHeader() {
+  const pathname = usePathname()
+  return (
+    <header className="hidden sm:block border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
+      <div className="mx-auto max-w-6xl flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <AppLogo />
+        {/* Ten destinations plus Log Out do not fit beside the logo below
+            ~1100px. The nav scrolls inside the header instead of pushing the
+            page sideways, which the route sweep checks.
+            TIGHTER SINCE ANOTHER MORE ITEM JOINED (2026-10-30): with the default
+            padding the row was 929px in an 879px nav at 1280px wide, so Log
+            Out sat half out of view on an ordinary laptop. `px-2.5` and no
+            gap bring it to about 845px. */}
+        <nav className="flex min-w-0 items-center overflow-x-auto" aria-label="Main">
+          {ITEMS.map((item) => {
+            // Where you are, said in colour as the phone bar says it, and to
+            // a screen reader by aria-current.
+            const active = isActive(pathname, item.href, item.exact)
+            return (
+              <Button
+                key={item.href}
+                asChild
+                variant="ghost"
+                size="sm"
+                className={`shrink-0 px-2.5 hover:text-primary ${active ? "text-primary" : "text-foreground"}`}
+                data-testid={TEST_IDS[item.href]}
+              >
+                <Link href={item.href} aria-current={active ? "page" : undefined}>
+                  {item.label}
+                </Link>
+              </Button>
+            )
+          })}
+          {/* Log Out before the development-only lab link, so the way out is
+              never the item that scrolls out of view. */}
+          {/* What this browser kept for opening pages with no signal goes
+              first, and what has not reached the account yet is sent or
+              asked about before it goes (LogOutButton). */}
+          <LogOutButton>
+            {({ onClick, busy }) => (
+              <Button
+                variant="ghost"
+                type="button"
+                size="sm"
+                className="shrink-0 px-2.5 text-foreground hover:text-primary"
+                data-testid="header-logout-button"
+                onClick={onClick}
+                disabled={busy}
+              >
+                Log Out
+              </Button>
+            )}
+          </LogOutButton>
+          {process.env.NODE_ENV === "development" && (
+            <Button asChild variant="ghost" size="sm" className="shrink-0 text-amber-500 hover:text-amber-400">
+              <Link href="/test">Test Pages</Link>
+            </Button>
+          )}
+        </nav>
+      </div>
+    </header>
   )
 }

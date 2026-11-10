@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { ROUTES } from "@/src/shared/routes"
-import { createServerSupabaseClient } from "@/src/db/server"
+import { createServerSupabaseClient, getProfile } from "@/src/db/server"
+import { DatingAnswers } from "@/src/hometab/components/DatingAnswers"
 import { getSettingsPageData, SettingsPage } from "@/src/settings"
 import { getTrainingSettings } from "@/src/db/workoutRepo"
 import {
@@ -26,7 +27,7 @@ export default async function SettingsPageWrapper() {
     redirect(`/auth/login?next=${encodeURIComponent(ROUTES.settings)}`)
   }
 
-  const training = await getTrainingSettings(user.id)
+  const [training, profileRow] = await Promise.all([getTrainingSettings(user.id), getProfile(user.id)])
   const { profile, subscription, stats } = await getSettingsPageData(
     user.id,
     user.email || "",
@@ -52,6 +53,7 @@ export default async function SettingsPageWrapper() {
       onCancelSubscription={cancelSubscription}
       onReactivateSubscription={reactivateSubscription}
       onOpenBillingPortal={openBillingPortal}
+      datingAnswers={<DatingAnswers profile={profileRow} />}
     />
   )
 }

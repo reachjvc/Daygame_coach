@@ -14,6 +14,9 @@
  * tracker's own "← Dashboard · Time" row would be a second bar saying the same
  * thing; there it is for phones only. jsdom draws no CSS, so "for phones only"
  * is read from the `sm:hidden` class that does it.
+ *
+ * Since 2026-11-10 (Plans/site-navigation-build.md, Phase 2) Settings is
+ * named "You" and the Dashboard "Home"; the reasons below are unchanged.
  */
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
@@ -74,7 +77,7 @@ describe("the back control", () => {
     const go = vi.spyOn(window.history, "go").mockImplementation(() => {})
     await mount(<TimetrackScreen account="user-1" />)
 
-    await waitFor(() => expect(backControl().textContent).toContain("Settings"))
+    await waitFor(() => expect(backControl().textContent).toContain("You"))
     fireEvent.click(backControl())
     expect(go).toHaveBeenCalledWith(-1)
   })
@@ -84,7 +87,7 @@ describe("the back control", () => {
     const go = vi.spyOn(window.history, "go").mockImplementation(() => {})
     await mount(<TimetrackScreen account="user-1" />, `${ROUTES.time}?view=reports`)
 
-    await waitFor(() => expect(backControl().textContent).toContain("Settings"))
+    await waitFor(() => expect(backControl().textContent).toContain("You"))
     fireEvent.click(backControl())
     expect(go).toHaveBeenCalledWith(-3)
   })
@@ -95,7 +98,7 @@ describe("the back control", () => {
     await mount(<TimetrackScreen account="user-1" />)
 
     const link = backControl()
-    expect(link.textContent).toContain("Dashboard")
+    expect(link.textContent).toContain("Home")
     expect(link.getAttribute("href")).toBe(ROUTES.dashboard)
     expect(go).not.toHaveBeenCalled()
   })
@@ -103,12 +106,12 @@ describe("the back control", () => {
   test("coming from the sign-in page, it does not send you back to sign in", async () => {
     visited(["/auth/login", ROUTES.time])
     await mount(<TimetrackScreen account="user-1" />)
-    expect(backControl().textContent).toContain("Dashboard")
+    expect(backControl().textContent).toContain("Home")
   })
 
   test("in a browser without the Navigation API, it is the Dashboard link", async () => {
     await mount(<TimetrackScreen account="user-1" />)
-    expect(backControl().textContent).toContain("Dashboard")
+    expect(backControl().textContent).toContain("Home")
     expect(backControl().getAttribute("href")).toBe(ROUTES.dashboard)
   })
 })
