@@ -1,7 +1,8 @@
 # Site navigation build: option E (Home + tool grid)
 
 **Written 2026-11-09** after the owner said of the before/after page: "I quite like this."
-**Status: Phases 0 to 4 built and live (2026-11-10). Waiting for the owner on the sign-off page before Phases 5 and 6.** Follows `Plans/site-navigation.md` (the choice). This plan builds it.
+**Status: Phases 0 to 4 built and live (2026-11-10). Waiting for the owner on the sign-off page before Phases 5 and 6.**
+**Sign-off page:** https://claude.ai/artifact/Az4FePPkYD7ddBxSCSMhWV (db collection `marks`, doc id = card id: `signoff` mark go/hold, cards `bar` `home` `locks` `tools` `plan` `you` `activity` `sidebar` `time` `q-name` `q-icons` `taps` `audit` `followups`, removals `rm-0`..`rm-11`; mark `change` = he wants it changed; `notes: [{text, at}]`). Unmarked = accepted. Follows `Plans/site-navigation.md` (the choice). This plan builds it.
 
 ## Owner-only items (answered 2026-11-09)
 
