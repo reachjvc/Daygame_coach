@@ -1,0 +1,301 @@
+{
+  "id": "nikola-tesla",
+  "name": "Nikola Tesla",
+  "born": 1856,
+  "died": 1943,
+  "category": "scientists",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "Pictured the AC motor whole in his head, then built it after work hours",
+  "startedFrom": "He was born in 1856 in Smiljan, a village in the Austrian Empire (now Croatia), the son of a Serbian Orthodox priest who wanted him to join the clergy. He was often ill; after cholera kept him in bed for nine months, his father promised to let him study engineering. At the Polytechnic in Graz, from 1875, he began with top grades; by late 1877 he was gambling and had lost his scholarship, and he left Graz in 1878 without a degree.",
+  "values": [
+    {
+      "word": "Imagination",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that he did not rush into building: \"When I get an idea I start at once building it up in my imagination\", testing and improving the device in his mind first.",
+          "sourceId": "mi-1919",
+          "locator": "Part I, My Early Life, Electrical Experimenter, February 1919, p. 744"
+        },
+        {
+          "kind": "witness",
+          "claim": "Britannica says that as he grew up \"he displayed remarkable imagination and creativity as well as a poetic touch\".",
+          "sourceId": "britannica",
+          "locator": "Opening section, paragraph on his family"
+        },
+        {
+          "kind": "witness",
+          "claim": "The IEEE History Center describes his \"original method of visual invention, which involved perfecting devices in his head and not building models until he was sure they would actually work\".",
+          "sourceId": "ethw",
+          "locator": "Biography, sixth paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Originality",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He patented his electro-magnetic motor run by alternating currents: US Patent 381,968, filed 12 October 1887 and issued 1 May 1888.",
+          "sourceId": "patent-381968",
+          "locator": "Specification, Letters Patent No. 381,968, dated May 1, 1888"
+        },
+        {
+          "kind": "deed",
+          "claim": "He discovered and patented the rotating magnetic field, which Britannica calls the basis of most alternating-current machinery.",
+          "sourceId": "britannica",
+          "locator": "Opening paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Of the seven AC patents he filed for in November and December 1887, PBS writes: \"So original were the ideas that they were issued without a successful challenge\".",
+          "sourceId": "pbs",
+          "locator": "Life and Legacy, War of the Currents, first paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Vision",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After returning to New York in 1900 he began building a wireless broadcasting tower on Long Island with $150,000 from J. P. Morgan, meant to send messages, pictures, weather warnings and stock reports around the world.",
+          "sourceId": "britannica",
+          "locator": "Paragraph beginning 'Returning to New York in 1900'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He proposed to Morgan a \"world system\" of wireless communication and raised a 187-foot tower at Wardenclyffe, abandoned in 1905.",
+          "sourceId": "pbs",
+          "locator": "Life and Legacy, Tower of Dreams"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1919 he wrote that of all his inventions the Magnifying Transmitter \"will prove most important and valuable to future generations\".",
+          "sourceId": "mi-1919",
+          "locator": "Part VI, The Art of Telautomatics, Electrical Experimenter, October 1919, p. 508"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Of the motor problem he wrote: \"With me it was a sacred vow, a question of life and death. I knew that I would perish if I failed.\"",
+          "sourceId": "mi-1919",
+          "locator": "Part III, My Later Endeavors, Electrical Experimenter, April 1919, p. 907"
+        },
+        {
+          "kind": "deed",
+          "claim": "On a work assignment in Strasbourg in 1883 he built his first induction motor after work hours.",
+          "sourceId": "britannica",
+          "locator": "Paragraph beginning 'Training for an engineering career'"
+        },
+        {
+          "kind": "deed",
+          "claim": "After his arc-light company left him with worthless stock certificates, he found a new backer, A. K. Brown of Western Union, for his AC motor and developed the system's components in a small laboratory.",
+          "sourceId": "pbs",
+          "locator": "Life and Legacy, Coming to America, last two paragraphs"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote: \"After years of such discipline I gained so complete a mastery over myself that I toyed with passions which have meant destruction to some of the strongest men.\"",
+          "sourceId": "mi-1919",
+          "locator": "Part I, My Early Life, Electrical Experimenter, February 1919, p. 746"
+        },
+        {
+          "kind": "deed",
+          "claim": "By his own account he gave up gambling, heavy smoking and his morning coffee outright.",
+          "sourceId": "mi-1919",
+          "locator": "Part I, My Early Life, Electrical Experimenter, February 1919, pp. 746-747"
+        },
+        {
+          "kind": "deed",
+          "claim": "The TU Graz archive records that he began his studies working regularly from 3 in the morning until 11 at night and earned \"excellent\" in every exam but one.",
+          "sourceId": "tugraz-2016",
+          "locator": "Section 'Above-average start to his studies'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The IEEE History Center writes that his father was \"an intellectual who prodded his son to develop unusual mental discipline\".",
+          "sourceId": "ethw",
+          "locator": "Biography, first paragraph"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Work an invention out completely in your mind before you build it.",
+      "sourceId": "mi-1919",
+      "locator": "Part I, My Early Life, Electrical Experimenter, February 1919, p. 744"
+    },
+    {
+      "text": "Do the work you are drawn to; effort under compulsion drains your energy.",
+      "sourceId": "mi-1919",
+      "locator": "Part I, My Early Life, Electrical Experimenter, February 1919, p. 696"
+    },
+    {
+      "text": "When a habit is hurting you, cut it out completely instead of cutting down.",
+      "sourceId": "mi-1919",
+      "locator": "Part I, My Early Life, Electrical Experimenter, February 1919, pp. 746-747 (gambling, smoking, coffee)"
+    },
+    {
+      "text": "When an expert calls your idea impossible, test it yourself before you give it up.",
+      "sourceId": "mi-1919",
+      "locator": "Part III, April 1919, p. 907 (Professor Poeschl's 'impossible idea'); Part IV, May 1919, p. 17 (motor built in Strasbourg, 1883)"
+    },
+    {
+      "text": "Train your will on small things until what you want and what you will are the same.",
+      "sourceId": "mi-1919",
+      "locator": "Part I, My Early Life, Electrical Experimenter, February 1919, the 'Abafi' passage ending 'After years of such discipline' (p. 746): 'gradually desire and will grew to be identical'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Every effort under compulsion demands a sacrifice of life-energy. I never paid such a price.",
+      "sourceId": "mi-1919",
+      "locator": "Part I, My Early Life, Electrical Experimenter, February 1919, p. 696"
+    },
+    {
+      "text": "My method is different. I do not rush into actual work. When I get an idea I start at once building it up in my imagination.",
+      "sourceId": "mi-1919",
+      "locator": "Part I, My Early Life, Electrical Experimenter, February 1919, p. 744"
+    },
+    {
+      "text": "When natural inclination develops into a passionate desire, one advances towards his goal in seven-league boots.",
+      "sourceId": "mi-1919",
+      "locator": "Part IV, The Discovery of the Tesla Coil and Transformer, Electrical Experimenter, May 1919, p. 16"
+    },
+    {
+      "text": "But instinct is something which transcends knowledge.",
+      "sourceId": "mi-1919",
+      "locator": "Part III, My Later Endeavors, Electrical Experimenter, April 1919, p. 907"
+    }
+  ],
+  "definingMoment": {
+    "text": "At Graz his physics professor had told him that a motor without a commutator was \"an impossible idea\". Later, in Budapest, while walking in the city park with a friend and reciting Goethe's Faust, he saw how a rotating magnetic field could do it, and drew the diagram in the sand with a stick. In 1883, on a work assignment in Strasbourg, he built the motor after work hours and saw it turn on alternating currents. His patent for the motor, No. 381,968, was issued on 1 May 1888, and that month George Westinghouse bought the rights to his AC system.",
+    "sourceIds": [
+      "mi-1919",
+      "britannica",
+      "patent-381968"
+    ]
+  },
+  "shadow": {
+    "text": "In an interview in Liberty magazine of 9 February 1935, as told to George Sylvester Viereck, he predicted that by 2100 eugenics would be \"universally established\". He said that sterilizing \"the criminal and the insane\" was \"not sufficient\" and that \"no one who is not a desirable parent should be permitted to produce progeny.\" In his third year at Graz (1877-78) he sat no exams; his roommate later said gambling, smoking and coffee came to dominate his life, and the school struck him off for unpaid fees. The TU Graz archive records that his father told the authorities Nikola had been ill in a Graz hospital, while Nikola told the provincial finance office he had never been treated there. PBS writes that he accepted $150,000 from J. P. Morgan for a wireless communication tower while his actual plan was a large demonstration of power sent without wires. Britannica calls him \"quite impractical in financial matters\" and says his claims of a death ray and of being able to split the Earth met caustic criticism. PBS writes that in 1937 he presented his particle-beam plan to the Amtorg Trading Corporation, \"an alleged Soviet arms front\", and in 1939 received a check for $25,000.",
+    "sourceIds": [
+      "liberty-1935",
+      "smithsonian-2012",
+      "tugraz-2016",
+      "pbs",
+      "britannica"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which plan did you start building this week before you had thought it through to the end?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "My Inventions",
+      "year": 1919
+    },
+    {
+      "title": "The Problem of Increasing Human Energy",
+      "year": 1900
+    }
+  ],
+  "sources": [
+    {
+      "id": "mi-1919",
+      "kind": "primary",
+      "title": "My Inventions (six parts, Electrical Experimenter, February-June and October 1919)",
+      "author": "Nikola Tesla",
+      "year": 1919,
+      "publisher": "Experimenter Publishing Co. (Electrical Experimenter)",
+      "url": "https://en.wikisource.org/wiki/My_Inventions"
+    },
+    {
+      "id": "patent-381968",
+      "kind": "primary",
+      "title": "US Patent 381,968, Electro-Magnetic Motor (filed 12 October 1887, issued 1 May 1888)",
+      "author": "Nikola Tesla",
+      "year": 1888,
+      "publisher": "United States Patent Office",
+      "url": "https://patents.google.com/patent/US381968A/en"
+    },
+    {
+      "id": "liberty-1935",
+      "kind": "primary",
+      "title": "A Machine to End War (as told to George Sylvester Viereck), Liberty, 9 February 1935 (PBS reprint)",
+      "author": "Nikola Tesla",
+      "year": 1935,
+      "publisher": "Liberty magazine",
+      "url": "https://www.pbs.org/tesla/res/res_art11.html"
+    },
+    {
+      "id": "britannica",
+      "kind": "secondary",
+      "title": "Nikola Tesla (Encyclopaedia Britannica, last updated 15 October 2026)",
+      "author": "Inez Whitaker Hunt",
+      "year": 2026,
+      "publisher": "Encyclopaedia Britannica",
+      "url": "https://www.britannica.com/biography/Nikola-Tesla"
+    },
+    {
+      "id": "pbs",
+      "kind": "secondary",
+      "title": "Tesla: Master of Lightning, Life and Legacy (companion site to the PBS film)",
+      "author": "PBS",
+      "year": "n.d. (read 2026-11-10)",
+      "publisher": "PBS",
+      "url": "https://www.pbs.org/tesla/ll/index.html"
+    },
+    {
+      "id": "tugraz-2016",
+      "kind": "secondary",
+      "title": "Nikola Tesla's time at TU Graz (19 December 2016)",
+      "author": "Bernhard Reismann (TU Graz Archive and Documentation)",
+      "year": 2016,
+      "publisher": "Graz University of Technology",
+      "url": "https://www.tugraz.at/en/news/article/nikola-tesla-s-time-at-tu-graz"
+    },
+    {
+      "id": "smithsonian-2012",
+      "kind": "secondary",
+      "title": "Nikola Tesla the Eugenicist: Eliminating Undesirables by 2100 (16 November 2012)",
+      "author": "Matt Novak",
+      "year": 2012,
+      "publisher": "Smithsonian Magazine",
+      "url": "https://www.smithsonianmag.com/history/nikola-tesla-the-eugenicist-eliminating-undesirables-by-2100-130299355/"
+    },
+    {
+      "id": "ethw",
+      "kind": "secondary",
+      "title": "Nikola Tesla (Engineering and Technology History Wiki biography)",
+      "author": "IEEE History Center",
+      "year": "n.d. (read 2026-11-10)",
+      "publisher": "IEEE History Center / ETHW",
+      "url": "https://ethw.org/Nikola_Tesla"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real inventor (1856-1943), not fictional, not a politician, campaigner or founder of a religion; no account of sexual contact with anyone under 16 or of sexual violence was found; his dark side is documented speech and conduct (1935 eugenics remarks, student gambling, money dealings), so he is in with a shadow."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked all five values and every cited sentence. Nothing fell: Imagination, Originality and Vision are shared with the blind pick, and Determination and Discipline each stand on three sources with two independent ones beyond his own My Inventions (Britannica and PBS; the TU Graz archive and the IEEE History Center), though his Graz collapse and Britannica's 'driven by compulsions' are the case against Discipline and sit in the shadow. All four quotes matched the 1919 text; I corrected the Graz timeline and two evidence lines, replaced a principle that turned his self-described 'mania' for finishing into advice, and added the hospital story and the 1937 Amtorg deal to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
