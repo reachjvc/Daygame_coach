@@ -191,8 +191,11 @@ export function useAudit(account: string) {
    */
   const setQ = useCallback(
     (change: (q: AuditQueue) => AuditQueue) => {
-      const fromOtherTab = rawQueue() !== seenRaw.current
-      const base = fromOtherTab ? mergeAuditQueues(readAuditQueue(browserStore(), account), queueRef.current) : queueRef.current
+      const raw = rawQueue()
+      const fromOtherTab = raw !== seenRaw.current
+      // removed by another tab (Log Out there): nothing of this tab's copy is written back
+      const stored = fromOtherTab ? readAuditQueue(browserStore(), account) : null
+      const base = !stored ? queueRef.current : raw === null ? stored : mergeAuditQueues(stored, queueRef.current)
       const owned = { ...markRemoved(base, change(base)), owner: account }
       queueRef.current = owned
       setQueue(owned)
