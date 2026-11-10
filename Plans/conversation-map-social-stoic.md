@@ -30,6 +30,14 @@ Written 2026-11-09. Follows the Assumption Moments page
   strike out mine. A tag list per conversation shows the counts and lights up
   the matching lines. Your tags save to the same database, as `tag` and
   `untag` entries.
+- **2026-11-10: the "goes badly" set swapped.** Your note: a set without its
+  start is no use while we build the opening phases. `UKytjD6YvNk` (only the
+  last 36 seconds) is out. In its place is `A-gUGrsvkKY` 20:08–21:39 from the
+  Assumption Moments sets you did not comment on. It is on camera from his
+  first word, and she reveals a boyfriend. Doubts: one edit skip right after
+  "my boyfriend lives here"; the voice check heard one voice, so 23 of 53
+  speakers are guesses from the words. Rule from now on: every set must show
+  its opener.
 - Data, readings and the page source are in
   `~/.cache/daygame-research/conversation-map/social-stoic/`, not in this repo.
 
@@ -159,7 +167,8 @@ per set against the video agrees.
 *Done 2026-11-09.*
 - **The 5 sets:**
   - goes badly: boyfriend refusal, `UKytjD6YvNk` 15:36–16:12. The video shows
-    only the end; no failed set in the untouched videos shows its opener.
+    only the end. Replaced on 2026-11-10 by `A-gUGrsvkKY` 20:08–21:39 (see
+    Progress).
   - off the street: coffee shop, `UMZkMjD3luQ`.
   - group: four girls in Prague, `vBhN49LSyz4`.
   - pushback: the "arrogant" Polish woman, 31 minutes, `gISxAc0Zvtw`.
