@@ -1,0 +1,353 @@
+{
+  "id": "hannibal",
+  "name": "Hannibal",
+  "born": "c. 247 BC",
+  "died": "c. 183 BC",
+  "category": "warriors",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A model of holding one purpose for a lifetime, and of leading men through hardship.",
+  "startedFrom": "He was the son of Hamilcar Barca, the Carthaginian general of the First Punic War, which Carthage lost to Rome; Sicily was given up at the peace, and Rome seized Sardinia soon after. At nine, by his own later account, he swore at an altar never to be a friend of Rome (Dexter Hoyos accepts the story; Jeff Tatum doubts it), and he went with his father to Spain, where he grew up in the army. Nothing is known of his mother, and almost everything known of him was written by his enemies' side.",
+  "values": [
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told King Antiochus that at nine he swore never to be the friend of the Romans, and that 'there was nothing he would not do against the Romans'.",
+          "sourceId": "polybius-paton",
+          "locator": "Histories 3.11.5-9, vol. II p. 29 (Hannibal's own account as Polybius reports it)"
+        },
+        {
+          "kind": "deed",
+          "claim": "He fought the Romans in Italy for sixteen years without once breaking up his army.",
+          "sourceId": "polybius-paton",
+          "locator": "Histories 11.19.3, vol. IV pp. 267-269"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica says that 'for steadfastness of purpose' he 'has perhaps never had an equal'.",
+          "sourceId": "eb1911",
+          "locator": "'Hannibal', vol. 12, p. 921, closing paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Nepos writes that he kept his inherited hatred of Rome so firmly 'that he would have given up his life rather than renounce it'.",
+          "sourceId": "nepos-rolfe",
+          "locator": "Life of Hannibal 1.3"
+        },
+        {
+          "kind": "witness",
+          "claim": "World History Encyclopedia writes that he 'remained true to the vow he had taken when young; to the end, he remained an enemy of Rome'.",
+          "sourceId": "whe-mark",
+          "locator": "'Hannibal', section 'Later Years & Legacy', closing paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Polybius writes that he held Africans, Spaniards, Ligurians, Celts, Phoenicians, Italians and Greeks together for sixteen years 'free from sedition towards him or among themselves'.",
+          "sourceId": "polybius-paton",
+          "locator": "Histories 11.19.3-5, vol. IV p. 269"
+        },
+        {
+          "kind": "witness",
+          "claim": "Livy writes that the army and its general were so attached to him that no leader had more of the soldiers' confidence.",
+          "sourceId": "livy-roberts",
+          "locator": "History of Rome 21.4"
+        },
+        {
+          "kind": "deed",
+          "claim": "On the Alpine pass in 218 BC, with snow falling and his men in low spirits, he called them together, showed them the plain of the Po below and restored their spirits.",
+          "sourceId": "polybius-paton",
+          "locator": "Histories 3.54.1-3, vol. II p. 131"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica notes: 'We never hear of a mutiny in his army, composed though it was of Africans, Spaniards and Gauls.'",
+          "sourceId": "eb1911",
+          "locator": "'Hannibal', vol. 12, p. 921, closing paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Richard A. Gabriel's military biography, in its publisher's description, says he 'sustained his army in the field for sixteen long years without mutiny or desertion'.",
+          "sourceId": "gabriel-2011",
+          "locator": "publisher's summary (Project MUSE book page)"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At the siege of Saguntum (219 BC) he shared the work at the battering rams himself, cheered on the troops and exposed himself recklessly to danger.",
+          "sourceId": "polybius-paton",
+          "locator": "Histories 3.17.8, vol. II p. 43"
+        },
+        {
+          "kind": "witness",
+          "claim": "Livy writes that he was fearless in danger and 'the first to enter the fight and the last to leave the field'.",
+          "sourceId": "livy-roberts",
+          "locator": "History of Rome 21.4"
+        },
+        {
+          "kind": "witness",
+          "claim": "Theodore Ayrault Dodge writes that at Saguntum, 'exposing himself at the head of his troops', he was so badly wounded in the thigh that for some time he could not run the siege.",
+          "sourceId": "dodge-1891",
+          "locator": "vol. I, ch. XI, p. 159"
+        },
+        {
+          "kind": "witness",
+          "claim": "Reviewing John Prevas's biography, Carrie Callaghan writes that at Saguntum 'the aggressive young commander took a javelin to the leg and collapsed', a nearly fatal wound.",
+          "sourceId": "wirb-callaghan",
+          "locator": "review of Hannibal's Oath, 4 November 2017, paragraph on Saguntum"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Crossing the Arno marshes in 217 BC he caught an eye infection and lost the eye, because he had no time to stop and treat it, and kept the march going.",
+          "sourceId": "polybius-paton",
+          "locator": "Histories 3.79.12, vol. II pp. 195-197"
+        },
+        {
+          "kind": "deed",
+          "claim": "After his defeat at Zama (202 BC) he reached Hadrumetum and within a few days had raised a large new force.",
+          "sourceId": "nepos-rolfe",
+          "locator": "Life of Hannibal 6.3-4"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica writes that as his veterans melted away he raised fresh troops on the spot, and that 'his life was one continuous struggle against destiny'.",
+          "sourceId": "eb1911",
+          "locator": "'Hannibal', vol. 12, p. 921, closing paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Carrie Callaghan's review of John Prevas's biography: 'He kept his army alive for nearly 16 years of warfare in hostile territory, all while bouncing from crisis to crisis.'",
+          "sourceId": "wirb-callaghan",
+          "locator": "review of Hannibal's Oath, 4 November 2017, paragraph on Trasimene and Cannae"
+        }
+      ]
+    },
+    {
+      "word": "Responsibility",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After Zama he told the Carthaginian senate frankly that he had lost not a battle but the whole war, and that peace was their only chance.",
+          "sourceId": "livy-roberts",
+          "locator": "History of Rome 30.35"
+        },
+        {
+          "kind": "words",
+          "claim": "Having pulled an opponent of the peace off the platform, he asked the senate to judge not his breach of custom but 'whether or not he really felt for his country', and urged them to accept the terms.",
+          "sourceId": "polybius-paton",
+          "locator": "Histories 15.19.2-7, vol. IV pp. 505-507"
+        },
+        {
+          "kind": "deed",
+          "claim": "As chief magistrate after the war he made the judges stand for election each year and recovered stolen public money so the payment owed to Rome could be met without a tax on citizens.",
+          "sourceId": "livy-roberts",
+          "locator": "History of Rome 33.46-47"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica writes that he reformed abuses so effectively that Rome's tribute could be paid without extra taxes.",
+          "sourceId": "eb1911",
+          "locator": "'Hannibal', vol. 12, p. 921, paragraph on his time as suffete"
+        },
+        {
+          "kind": "witness",
+          "claim": "Paul Burton's review of Dexter Hoyos's Hannibal's Dynasty describes the reforms he brought in as sufete: making the order of judges an annually elected office instead of a seat for life, and reforming taxes and revenue.",
+          "sourceId": "bmcr-burton",
+          "locator": "Bryn Mawr Classical Review 2005.07.65, on Hoyos ch. 16 (pp. 190-202)"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Find out the ground, the people and the enemy before you move.",
+      "sourceId": "polybius-paton",
+      "locator": "Histories 3.48.10-11 (inquiry and native guides before the Alps), 3.79.1 (the marshes)"
+    },
+    {
+      "text": "Live as hard as your men: same clothes, the bare ground, first in and last out.",
+      "sourceId": "livy-roberts",
+      "locator": "History of Rome 21.4"
+    },
+    {
+      "text": "Cut off the hope of retreat in your own mind: go in resolved to win.",
+      "sourceId": "polybius-paton",
+      "locator": "Histories 3.63.8-10, vol. II pp. 151-153"
+    },
+    {
+      "text": "Trust reason more than a winning streak; luck turns.",
+      "sourceId": "livy-roberts",
+      "locator": "History of Rome 30.30 (to Scipio, 202 BC); also Polybius 15.15.4-5"
+    },
+    {
+      "text": "When you have lost, say so plainly and save what can still be saved.",
+      "sourceId": "livy-roberts",
+      "locator": "History of Rome 30.35, 30.37"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "For either you must conquer, or die, or fall alive into the hands of your foes.",
+      "sourceId": "polybius-paton",
+      "locator": "Histories 3.63.4, vol. II p. 151 (to his army before the Ticinus, 218 BC, as Polybius gives it)",
+      "translation": "W. R. Paton, 1922"
+    },
+    {
+      "text": "I prefer to take reason rather than Fortune as my guide.",
+      "sourceId": "livy-roberts",
+      "locator": "History of Rome 30.30 (to Scipio before Zama, 202 BC, in the speech Livy gives him)",
+      "translation": "Rev. Canon Roberts, 1905"
+    },
+    {
+      "text": "The art of war which I have been taught from my boyhood ... I think I am fairly well acquainted with. The rules and laws and customs of civic life and of the forum I must learn from you.",
+      "sourceId": "livy-roberts",
+      "locator": "History of Rome 30.37 (to the people of Carthage, 202 BC, as Livy gives it)",
+      "translation": "Rev. Canon Roberts, 1905"
+    },
+    {
+      "text": "Let us relieve the Romans from the anxiety they have so long experienced, since they think it tries their patience too much to wait for an old man's death.",
+      "sourceId": "livy-roberts",
+      "locator": "History of Rome 39.51 (his last words before taking poison, as Livy gives them)",
+      "translation": "Rev. Canon Roberts, 1905"
+    }
+  ],
+  "definingMoment": {
+    "text": "In the autumn of 218 BC he led his army over the Alps into Italy. Snow had already fallen on the pass and his men were in low spirits, so he called them together, showed them the plain of the Po below and pointed out where Rome lay. The way down was narrow and steep; men and animals who missed the path in the snow fell over the cliff, and at one point a landslip had carried the track away. The crossing cost him about half his army, but it brought him straight into Roman Italy, so the war would be fought on Roman ground.",
+    "sourceIds": [
+      "polybius-paton",
+      "eb1911"
+    ]
+  },
+  "shadow": {
+    "text": "When he stormed Saguntum in 219 BC, Livy writes, orders had been given to kill all adult males, and the prisoners were handed over to his soldiers. After the Alps in 218 BC he had captured mountain men starved, chained and beaten on purpose, then made them fight each other to the death in front of his army as a lesson. Polybius writes that on the march through Umbria and Picenum in 217 BC his men had orders to kill all adults who fell into their hands, 'owing to his inveterate hatred of the Romans', and that later he broke treaties with some Italian towns and gave their property to plunder. Polybius also reports that 'among the Carthaginians he was notorious for his love of money', as Carthaginians and his enemy King Masinissa told him. Livy charges him with 'inhuman cruelty' and 'a perfidy worse than Punic', and writes that Italian soldiers who would not sail with him in 203 BC took refuge in the temple of Juno Lacinia and 'were foully murdered' there. These accounts come from the Roman side; Polybius says his real nature is hard to judge, since some cruelties were said to be the work of his friends and of circumstance, and the 1911 Britannica says Livy's charge of cruelty rests on little more than the warfare of the age.",
+    "sourceIds": [
+      "livy-roberts",
+      "polybius-paton",
+      "eb1911"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you walk into this week without first finding out the ground?",
+    "principleIndex": 0
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "polybius-paton",
+      "kind": "primary",
+      "title": "The Histories, vols. II (books 3-4, 1922) and IV (books 9-15, 1925) (Hannibal left no surviving writing; this is the earliest surviving account, by a Greek historian writing for a Roman-ruled world c. 150 BC, from the side of Hannibal's enemies)",
+      "author": "Polybius, translated by W. R. Paton",
+      "year": "1922-1925",
+      "publisher": "Loeb Classical Library, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Polybius/3*.html"
+    },
+    {
+      "id": "livy-roberts",
+      "kind": "primary",
+      "title": "History of Rome (From the Founding of the City), books 21, 30, 33 and 39 (a Roman historian writing c. 25 BC-AD 10, hostile to Hannibal; the speeches are Livy's own composition)",
+      "author": "Livy, translated by Rev. Canon Roberts",
+      "year": 1905,
+      "publisher": "Everyman's Library; Wikisource transcription",
+      "url": "https://en.wikisource.org/wiki/From_the_Founding_of_the_City/Book_21"
+    },
+    {
+      "id": "nepos-rolfe",
+      "kind": "primary",
+      "title": "Life of Hannibal, in On Great Generals (a Roman biographer of the 1st century BC who admired him)",
+      "author": "Cornelius Nepos, translated by J. C. Rolfe",
+      "year": 1929,
+      "publisher": "Loeb Classical Library, via attalus.org",
+      "url": "https://www.attalus.org/translate/nepos23.html"
+    },
+    {
+      "id": "eb1911",
+      "kind": "secondary",
+      "title": "Hannibal, Encyclopaedia Britannica, 11th edition, vol. 12, pp. 920-922",
+      "author": "Maximilian Otto Bismarck Caspari",
+      "year": 1911,
+      "publisher": "Wikisource transcription",
+      "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Hannibal_(general)"
+    },
+    {
+      "id": "whe-mark",
+      "kind": "secondary",
+      "title": "Hannibal, World History Encyclopedia (29 March 2018)",
+      "author": "Joshua J. Mark",
+      "year": 2018,
+      "publisher": "World History Encyclopedia",
+      "url": "https://www.worldhistory.org/hannibal/"
+    },
+    {
+      "id": "bmcr-tatum",
+      "kind": "secondary",
+      "title": "Review of Simon Hornblower, Hannibal and Scipio: Parallel Lives (Cambridge University Press, 2024), Bryn Mawr Classical Review 2026.01.12",
+      "author": "Jeff Tatum",
+      "year": 2026,
+      "publisher": "Bryn Mawr Classical Review",
+      "url": "https://bmcr.brynmawr.edu/?p=97786"
+    },
+    {
+      "id": "dodge-1891",
+      "kind": "secondary",
+      "title": "Hannibal: A History of the Art of War among the Carthaginians and Romans down to the Battle of Pydna, 168 B.C., vol. I",
+      "author": "Theodore Ayrault Dodge",
+      "year": 1891,
+      "publisher": "Houghton, Mifflin and Company; Internet Archive scan of the Cornell University Library copy",
+      "url": "https://archive.org/details/cu31924030986438"
+    },
+    {
+      "id": "gabriel-2011",
+      "kind": "secondary",
+      "title": "Hannibal: The Military Biography of Rome's Greatest Enemy (publisher's description)",
+      "author": "Richard A. Gabriel",
+      "year": 2011,
+      "publisher": "Potomac Books (University of Nebraska Press); description on Project MUSE",
+      "url": "https://muse.jhu.edu/book/41324"
+    },
+    {
+      "id": "wirb-callaghan",
+      "kind": "secondary",
+      "title": "Review of John Prevas, Hannibal's Oath: The Life and Wars of Rome's Greatest Enemy (Da Capo Press, 2017)",
+      "author": "Carrie Callaghan",
+      "year": 2017,
+      "publisher": "Washington Independent Review of Books",
+      "url": "https://www.washingtonindependentreviewofbooks.com/bookreview/hannibals-oath-the-life-and-wars-of-romes-greatest-enemy"
+    },
+    {
+      "id": "bmcr-burton",
+      "kind": "secondary",
+      "title": "Review of Dexter Hoyos, Hannibal's Dynasty: Power and Politics in the Western Mediterranean, 247-183 BC (Routledge, 2003; paperback 2005), Bryn Mawr Classical Review 2005.07.65",
+      "author": "Paul Burton",
+      "year": 2005,
+      "publisher": "Bryn Mawr Classical Review",
+      "url": "https://bmcr.brynmawr.edu/?p=24207"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Carthaginian general (c. 247-183 BC), long dead, no modern politician and no founder of a living religion; no source found gives an account of sexual violence or of sex with anyone under 16; his dark side is his conduct of war as his enemies' historians report it, which is shadow."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked every value against the hostile record and re-read every cited passage in Polybius, Livy, Nepos and the 1911 Britannica, then looked for modern backing outside the ancient writers: Dodge, Gabriel, Prevas (via a review), Hoyos (via BMCR) and World History Encyclopedia. Nothing fell: Courage held although Prevas says he relied on cunning after his Saguntum wound, Leadership held against Livy's report of desertions at Capua (no mutiny is recorded), and Responsibility held with Hoyos's account of his reforms; Nepos's weak Rhodian battle item was dropped from Courage. Three facts were fixed (Sardinia was seized after the peace, the oath is disputed by name, the Alpine descent is told in Polybius's order), and the shadow now adds Polybius on his love of money.",
+    "checkedOn": "2026-11-10"
+  }
+}
