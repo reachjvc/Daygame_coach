@@ -137,6 +137,7 @@ function isAsset(request, url) {
  * offline launch it exists for shows the browser's error page instead.
  */
 async function warmShell(cache, path) {
+  const forgetsBefore = forgetsOf(path)
   const response = await fetch(path, { redirect: "manual" })
   if (!response.ok) {
     // Sent elsewhere: signed out, or — for the live workout — no workout open
@@ -155,6 +156,10 @@ async function warmShell(cache, path) {
   // then thrown away as replaced (alpha test p10-review-pings-06).
   const added = await Promise.allSettled([...shellAssets(html)].map((url) => cache.add(url)))
   if (added.some((result) => result.status === "rejected")) return
+  // Forgotten while this was fetching its scripts: the page fetched here is of
+  // something that is over by now, and storing it would bring it back (alpha
+  // run p12: a workout thrown away on another phone stayed stored as open).
+  if (forgetsOf(path) !== forgetsBefore) return
   await cache.put(path, response)
 }
 
@@ -212,11 +217,27 @@ self.addEventListener("install", (event) => {
 const SHELL_STORE_PREFIX = "app-shell-"
 
 /**
+ * How many times each shell has been forgotten since this worker started. A
+ * warm-shell stores its page only after every script the page names is
+ * stored, which can take seconds; a forget in that time means the page it
+ * fetched is out of date, so it does not store it (`warmShell`).
+ */
+const forgets = new Map()
+function pathOf(key) {
+  return new URL(typeof key === "string" ? key : key.url, self.location.origin).pathname
+}
+function forgetsOf(key) {
+  return forgets.get(pathOf(key)) || 0
+}
+
+/**
  * A shell the server now sends elsewhere goes from EVERY store: an older
  * build's store may still be kept (`dropOldStores`), and its copy is as over
  * as this one's (rule 4).
  */
 async function forgetShellEverywhere(key) {
+  const path = pathOf(key)
+  forgets.set(path, forgetsOf(path) + 1)
   const keys = await caches.keys()
   await Promise.all(
     keys.filter((name) => name.startsWith(SHELL_STORE_PREFIX)).map((name) => caches.open(name).then((store) => store.delete(key))),
