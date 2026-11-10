@@ -29,35 +29,32 @@ import { X } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { cn } from "@/lib/utils"
 
-/** Tailwind's `sm` breakpoint. Below it we are on a phone and draw the sheet. */
-const WIDE_SCREEN = "(min-width: 640px)"
+/**
+ * ONE TREE AT EVERY WIDTH (alpha p9-saves-01, -02).
+ *
+ * On a screen wider than a phone it is a centred dialog; below 640 px it is a
+ * sheet from the bottom. That used to be two different trees picked by a
+ * `matchMedia` hook, so crossing 640 px (a phone turned sideways, a window
+ * narrowed, and on every desktop open a frame after the first paint) threw
+ * away everything inside and built it again: the audit card he was typing in
+ * went back to the old answer, and Save stored that. Now it is always the same
+ * Radix dialog, and only CSS (`sm:`) moves it, so nothing inside is rebuilt.
+ */
+const PANEL =
+  "fixed inset-x-0 bottom-0 z-[9600] flex max-h-[92dvh] flex-col rounded-t-2xl border-t border-border bg-card pb-safe shadow-lg outline-none animate-slide-up " +
+  "sm:inset-0 sm:m-auto sm:h-fit sm:max-h-[min(calc(100dvh-2rem),100%)] sm:w-[calc(100%-2rem)] sm:max-w-lg sm:rounded-lg sm:border sm:pb-2"
 
 /**
- * True once we know the window is wider than a phone.
- *
- * It starts false on purpose: the sheet is the design, the dialog is the
- * wide-screen variation. Starting false means a phone draws the right thing on
- * the first paint and a desktop corrects itself a frame later, rather than
- * every phone flashing a dialog. Environments with no `matchMedia` at all
- * (server render, jsdom) therefore get the sheet, which is the base case.
+ * A second click this soon and this close to the first is the same double
+ * click (alpha p9-saves-04): Save on a desktop dialog folds the card, the
+ * dialog shrinks round its middle, and the second click of a double-click
+ * landed outside it and closed the sheet.
  */
-function useWideScreen(): boolean {
-  const [wide, setWide] = React.useState(false)
-
-  React.useEffect(() => {
-    const query = window.matchMedia?.(WIDE_SCREEN)
-    if (!query) return
-    const sync = () => setWide(query.matches)
-    sync()
-    query.addEventListener("change", sync)
-    return () => query.removeEventListener("change", sync)
-  }, [])
-
-  return wide
-}
+const DOUBLE_CLICK_MS = 500
+const DOUBLE_CLICK_PX = 24
 
 /**
  * One row of a sheet. A link when it goes somewhere, a button when it does
@@ -143,78 +140,62 @@ export function BottomSheet({
   testId?: string
   children: React.ReactNode
 }) {
-  const wide = useWideScreen()
-
-  // Escape closes it. Without this the only way out of the sheet was to find
-  // the X or tap the exact strip of backdrop above the panel. Not on the
-  // wide-screen path: Radix's dialog handles Escape itself there, and two
-  // listeners would call the caller's onClose twice for one key press.
-  React.useEffect(() => {
-    if (!open || wide) return
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose()
-    }
-    document.addEventListener("keydown", onKeyDown)
-    return () => document.removeEventListener("keydown", onKeyDown)
-  }, [open, wide, onClose])
+  /** The last press inside the panel, to tell a double click from a click outside. */
+  const lastPress = React.useRef<{ at: number; x: number; y: number } | null>(null)
 
   if (!open) return null
 
-  if (wide) {
-    // Radix's dialog already handles Escape, the backdrop and the close button.
-    return (
-      <Dialog open onOpenChange={(next) => !next && onClose()}>
-        <DialogContent data-testid={testId}>
-          <DialogTitle>{title}</DialogTitle>
-          <div className="space-y-1">{children}</div>
-        </DialogContent>
-      </Dialog>
-    )
-  }
-
+  // Radix handles Escape, the backdrop, focus and the page behind. Escape used
+  // to be the only way out besides the X or the exact strip of backdrop above
+  // the panel; it still closes, at every width.
   return (
-    <div
-      /**
-       * ABOVE EVERY BAR IN THE APP, not just the one this was written for.
-       *
-       * `z-50` cleared the app's own tab bar (`z-40`) and nothing else. The
-       * time tracker draws its own bottom navigation at `z-[9500]` — a private
-       * scale it invented so its portalled panels clear its sticky header — so
-       * a sheet opened there was drawn UNDERNEATH it: the last row was on
-       * screen, looked normal, and the tap landed on the navigation instead.
-       * Measured, not guessed: `elementFromPoint` over the bottom row returned
-       * the nav.
-       *
-       * That is the same failure the tracker's own panels already carry a
-       * comment about, and a modal is the one thing that must be above page
-       * chrome whatever the chrome thinks it is worth. 9600 is the tracker's
-       * modal layer: over every bar, under the toasts that report what just
-       * happened.
-       */
-      className="fixed inset-0 z-[9600]"
-      role="dialog"
-      aria-modal="true"
-      aria-label={title}
-      data-testid={testId}
-    >
-      {/* Backdrop. Tapping anywhere off the panel closes. */}
-      <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" onClick={onClose} />
+    <DialogPrimitive.Root open onOpenChange={(next) => !next && onClose()}>
+      <DialogPrimitive.Portal>
+        {/* Backdrop. Tapping anywhere off the panel closes. */}
+        <DialogPrimitive.Overlay className="fixed inset-0 z-[9600] bg-background/60 backdrop-blur-sm" />
+        {/**
+         * ABOVE EVERY BAR IN THE APP, not just the one this was written for.
+         *
+         * `z-50` cleared the app's own tab bar (`z-40`) and nothing else. The
+         * time tracker draws its own bottom navigation at `z-[9500]` — a private
+         * scale it invented so its portalled panels clear its sticky header — so
+         * a sheet opened there was drawn UNDERNEATH it: the last row was on
+         * screen, looked normal, and the tap landed on the navigation instead.
+         * Measured, not guessed: `elementFromPoint` over the bottom row returned
+         * the nav. 9600 is the tracker's modal layer: over every bar, under the
+         * toasts that report what just happened.
+         *
+         * `pb-safe` keeps the last row clear of the home bar. AT MOST 92% OF THE
+         * SCREEN, AND THE INSIDE SCROLLS: a tall sheet (Thought Frequencies'
+         * reminder settings, 2026-10-30) grew past the top of a phone screen,
+         * its title and first rows unreachable. The title row stays put.
+         */}
+        <DialogPrimitive.Content
+          className={PANEL}
+          aria-modal="true"
+          aria-describedby={undefined}
+          data-testid={testId}
+          onPointerDownCapture={(e) => {
+            lastPress.current = { at: Date.now(), x: e.clientX, y: e.clientY }
+          }}
+          onPointerDownOutside={(e) => {
+            const last = lastPress.current
+            const o = e.detail.originalEvent
+            if (last && Date.now() - last.at < DOUBLE_CLICK_MS && Math.abs(o.clientX - last.x) <= DOUBLE_CLICK_PX && Math.abs(o.clientY - last.y) <= DOUBLE_CLICK_PX) {
+              e.preventDefault()
+            }
+          }}
+        >
+          <div className="flex shrink-0 items-center justify-between px-3 pt-3 pb-1">
+            <DialogPrimitive.Title className="px-2 text-sm font-semibold text-foreground sm:text-base">{title}</DialogPrimitive.Title>
+            <Button variant="ghost" size="icon" aria-label="Close" onClick={onClose}>
+              <X className="size-5" />
+            </Button>
+          </div>
 
-      {/* The panel itself. `pb-safe` keeps the last row clear of the home bar.
-          AT MOST 92% OF THE SCREEN, AND THE INSIDE SCROLLS. It had no limit,
-          so a tall sheet (Thought Frequencies' reminder settings, 2026-10-30)
-          grew past the top of a phone screen, its title and first rows
-          unreachable: nothing scrolls a fixed panel. The title row stays put. */}
-      <div className="absolute bottom-0 left-0 right-0 flex max-h-[92dvh] flex-col bg-card rounded-t-2xl border-t border-border pb-safe animate-slide-up">
-        <div className="flex shrink-0 items-center justify-between px-3 pt-3 pb-1">
-          <span className="px-2 text-sm font-semibold text-foreground">{title}</span>
-          <Button variant="ghost" size="icon" aria-label="Close" onClick={onClose}>
-            <X className="size-5" />
-          </Button>
-        </div>
-
-        <div className="min-h-0 overflow-y-auto overscroll-contain px-3 pb-4 space-y-1">{children}</div>
-      </div>
-    </div>
+          <div className="min-h-0 overflow-y-auto overscroll-contain px-3 pb-4 space-y-1">{children}</div>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   )
 }

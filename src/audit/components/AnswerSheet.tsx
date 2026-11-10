@@ -139,8 +139,12 @@ function Card({
    */
   const base = useRef<Map<number, AnswerMark | null> | null>(null)
   if (base.current === null) base.current = new Map([...existingByQuarter].map(([q, s]) => [q, markOf(s)]))
-  /** "Keep that one" was chosen: the other device's answers, shown in place of this card's. */
-  const [keptOther, setKeptOther] = useState<(AnswerMark | null)[] | null>(null)
+  /**
+   * "Keep that one" was chosen: the other device's answers, shown in place of
+   * this card's, and the quarters they hold. The card's other quarters kept
+   * his answer, and say so (alpha p9-sheet-02).
+   */
+  const [keptOther, setKeptOther] = useState<{ marks: (AnswerMark | null)[]; quarters: number[] } | null>(null)
 
   const save = (en: ScaleValue | null = energy, gr: ScaleValue | null = growth) => {
     setTried(true)
@@ -180,7 +184,7 @@ function Card({
   }
   const keepThat = () => {
     for (const x of conflicts) base.current!.set(Date.parse(x.answer.slotAt), x.stored ?? null)
-    setKeptOther(distinct(conflicts.map((x) => x.stored ?? null)))
+    setKeptOther({ marks: distinct(conflicts.map((x) => x.stored ?? null)), quarters: conflicts.map((x) => Date.parse(x.answer.slotAt)) })
     onKeepStored(conflicts.map((x) => x.answer))
   }
   // A new answer saves itself on the tap that completes it. A changed one (also
@@ -236,6 +240,8 @@ function Card({
     )
   }
   if (saved && keptOther) {
+    const keptAt = new Set(keptOther.quarters)
+    const mine = quarters.filter((q) => !keptAt.has(q))
     return (
       <section
         className="flex min-h-14 items-center gap-3 rounded-2xl border border-emerald-500/60 bg-emerald-500/10 px-3 py-2"
@@ -246,8 +252,10 @@ function Card({
           <Check className="size-4" />
         </span>
         <div className="min-w-0 flex-1" role="status" data-testid="audit-card-kept">
-          <p className="text-sm font-semibold text-success">Kept the other device's {keptOther.some((t) => t) ? "answer" : "delete"} · {label}</p>
-          {keptOther.map((t) =>
+          <p className="text-sm font-semibold text-success">
+            Kept the other device's {keptOther.marks.some((t) => t) ? "answer" : "delete"} · {stretchLabel(keptOther.quarters, timezone)}
+          </p>
+          {keptOther.marks.map((t) =>
             t ? (
               <p key={t.id} className="truncate text-sm">
                 {t.activity} <span className="tabular-nums text-muted-foreground">· E {t.energy} · G {t.growth}</span>
@@ -257,6 +265,14 @@ function Card({
                 No answer
               </p>
             ),
+          )}
+          {mine.length > 0 && (
+            <>
+              <p className="mt-1 text-sm font-semibold text-success">Saved · {stretchLabel(mine, timezone)}</p>
+              <p className="truncate text-sm">
+                {activity.trim()} <span className="tabular-nums text-muted-foreground">· E {energy} · G {growth}</span>
+              </p>
+            </>
           )}
         </div>
       </section>
@@ -473,6 +489,8 @@ export function AnswerSheet({
   const [touched, setTouched] = useState<Set<number>>(new Set())
   const box = useRef<HTMLDivElement>(null)
   const lastNeeds = useRef("")
+  /** The card just saved: the sheet moves on from it once it has folded (alpha p9-sheet-01). */
+  const movedFrom = useRef<number | null>(null)
   useEffect(() => {
     if (!open) return
     setSaved(new Set())
@@ -517,6 +535,20 @@ export function AnswerSheet({
     const fresh = needsKey.split(",").find((k) => k !== "" && !before.has(k))
     if (fresh !== undefined) showCard(Number(fresh))
   }, [needsKey])
+
+  // After the saved card folded into its green line: scrolling in the same tick
+  // landed a card too far, as the fold then pulled everything up (p9-sheet-01).
+  useEffect(() => {
+    const i = movedFrom.current
+    movedFrom.current = null
+    if (i === null || !saved.has(i)) return
+    // never on past a card that still needs him (prove-eye-01)
+    const waiting = needsYou.find((j) => j !== i)
+    if (waiting !== undefined) return void showCard(waiting)
+    // the next card still open (a covered one is not drawn)
+    const next = [...(box.current?.querySelectorAll<HTMLElement>("[data-autosave]") ?? [])].find((el) => Number(el.dataset.card) > i)
+    next?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }, [saved]) // eslint-disable-line react-hooks/exhaustive-deps -- runs once per fold, reading this render's cards
 
   const splitCard = (i: number) => {
     const parts = list[i].parts
@@ -597,13 +629,8 @@ export function AnswerSheet({
               }
               onSave={(answers) => {
                 onSave(answers)
+                movedFrom.current = i
                 setSaved((prev) => new Set(prev).add(i))
-                // never on past a card that still needs him (prove-eye-01)
-                const waiting = needsYou.find((j) => j !== i)
-                if (waiting !== undefined) return void showCard(waiting)
-                // the next card still open (a covered one is not drawn)
-                const next = [...(box.current?.querySelectorAll<HTMLElement>("[data-autosave]") ?? [])].find((el) => Number(el.dataset.card) > i)
-                next?.scrollIntoView({ behavior: "smooth", block: "start" })
               }}
             />
             )

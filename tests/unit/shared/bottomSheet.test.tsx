@@ -138,3 +138,22 @@ describe('One bottom sheet for every menu', () => {
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 })
+
+describe('a double click on the panel is one intent (alpha p9-saves-04)', () => {
+  test('the second press of a double click, landing just off a panel that shrank, does not close it', async () => {
+    const onClose = vi.fn()
+    render(
+      <BottomSheet open onClose={onClose} title="Answer">
+        <button type="button">Save</button>
+      </BottomSheet>,
+    )
+    // Radix starts listening for outside presses a tick after it opens
+    await new Promise((r) => setTimeout(r, 10))
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Save' }), { clientX: 300, clientY: 400 })
+    fireEvent.pointerDown(document.body, { clientX: 302, clientY: 401 })
+    expect(onClose).not.toHaveBeenCalled()
+    // a press off the panel somewhere else still closes it
+    fireEvent.pointerDown(document.body, { clientX: 20, clientY: 20 })
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+})
