@@ -1,0 +1,351 @@
+{
+  "id": "fred-rogers",
+  "name": "Fred Rogers",
+  "born": 1928,
+  "died": 2003,
+  "category": "givers",
+  "areaIds": [
+    "lm_contribution",
+    "lm_emotions",
+    "lm_family"
+  ],
+  "tagline": "A shy, bullied boy who made plain, daily kindness his life's craft on television.",
+  "startedFrom": "He was born in 1928 in Latrobe, Pennsylvania, into a very wealthy family: his father ran manufacturing firms in the town, and a chauffeur picked him up from school. As a boy he was overweight, shy and sickly, sometimes kept at home by illness, and other children chased him and called him 'fat Freddy'. Adults told him to pretend he did not care, so nobody would bother him.",
+  "values": [
+    {
+      "word": "Kindness",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Before the US Senate he described his work as giving 'an expression of care every day to each child, to help him realize that he is unique'.",
+          "sourceId": "senate-1969",
+          "locator": "Testimony, Senate Subcommittee on Communications, 1 May 1969"
+        },
+        {
+          "kind": "witness",
+          "claim": "David Newell, who played Mr. McFeely on the show, said on the day Rogers died: 'He was so genuinely, genuinely kind, a wonderful person.'",
+          "sourceId": "ap-spangler-2003",
+          "locator": "paragraph quoting family spokesman David Newell"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Fred Rogers Institute at Saint Vincent College, which holds his archive of over 20,000 items, says he was known for his creativity, kindness, spirituality and commitment to children.",
+          "sourceId": "fri-about",
+          "locator": "section 'Fred's Legacy'"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At seventy he still swam nearly every morning, rose at 5:30 to read, study, write and pray, went to bed at 9:30, and did not drink, smoke or eat meat; he had kept his weight at 143 pounds for about thirty-one years.",
+          "sourceId": "esquire-junod-1998",
+          "locator": "passages on his morning swim, his weight of 143 pounds and his daily schedule"
+        },
+        {
+          "kind": "witness",
+          "claim": "Guitarist Joe Negri, who worked on the show, called him 'certainly a perfectionist' who refused to accept shoddy ad-libbing from guests.",
+          "sourceId": "ap-spangler-2003",
+          "locator": "paragraph quoting Joe Negri"
+        },
+        {
+          "kind": "deed",
+          "claim": "The AP obituary reports that off the set he swam daily and read voraciously.",
+          "sourceId": "ap-spangler-2003",
+          "locator": "paragraph beginning 'Off the set'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Former Post-Gazette reporter Tim Reeves wrote that Rogers invited him to swim early morning laps with him at the Pittsburgh Athletic Association, 'a discipline he treasured'.",
+          "sourceId": "pg-batz-2018",
+          "locator": "passage quoting Tim Reeves on swimming laps at the Pittsburgh Athletic Association"
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He earned a divinity degree at Pittsburgh Theological Seminary while working in television, and was ordained by the United Presbyterian Church with the charge to work with children and their families through the mass media.",
+          "sourceId": "mbc-encyclopedia",
+          "locator": "Bio, fourth paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "He once volunteered at a state prison in Pittsburgh and helped set up a playroom there for children visiting their parents.",
+          "sourceId": "ap-spangler-2003",
+          "locator": "paragraph beginning 'Off the set'"
+        },
+        {
+          "kind": "words",
+          "claim": "In his 1999 Television Academy interview he said he would like to be remembered as a compassionate human being who was lucky to be born when television could let him use all the talents he had been given.",
+          "sourceId": "tva-1999",
+          "locator": "interview page, 'About' quotation; chapter 10, 'On how he'd like to be remembered'"
+        }
+      ]
+    },
+    {
+      "word": "Gratitude",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Accepting his Lifetime Achievement Emmy in 1997, he used his speech to ask the audience for ten seconds of silence to think of the people who had helped them become who they are, and timed it himself.",
+          "sourceId": "emmy-1997",
+          "locator": "Lifetime Achievement acceptance, 24th Daytime Emmy Awards, Radio City Music Hall, 21 May 1997"
+        },
+        {
+          "kind": "words",
+          "claim": "At Dartmouth in 2002 he said that 'we just don't get to be competent human beings without a lot of different investments from others', and asked the graduates for a silent minute to think of those people.",
+          "sourceId": "dartmouth-2002",
+          "locator": "Commencement address, Dartmouth College, June 2002, paragraphs after the Little Prince passage"
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He completed a bachelor of divinity at Pittsburgh Theological Seminary in 1962 and was ordained a Presbyterian minister.",
+          "sourceId": "mbc-encyclopedia",
+          "locator": "biographical summary and Bio, fourth paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "Each morning he rose early to pray for the many people who had asked for his prayers.",
+          "sourceId": "esquire-junod-1998",
+          "locator": "passage beginning 'The first time I called Mister Rogers on the telephone'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Fred Rogers Institute's archivist says the archive shows that Mister Rogers was not a character separate from Fred but 'Fred's way of ministering to children and families'.",
+          "sourceId": "fri-about",
+          "locator": "opening section"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Thank the people who helped make you, and give others a moment to remember theirs.",
+      "sourceId": "emmy-1997",
+      "locator": "Lifetime Achievement acceptance, 21 May 1997"
+    },
+    {
+      "text": "Feelings, anger included, can be named and handled; you can stop yourself and do something else instead.",
+      "sourceId": "senate-1969",
+      "locator": "Testimony, 1 May 1969, on 'mentionable and manageable' feelings and the song 'What do you do with the mad that you feel?'"
+    },
+    {
+      "text": "Do not pretend you do not care, even when people tell you it would be safer.",
+      "sourceId": "ctpublic-king-2018",
+      "locator": "section 'On Rogers being bullied as a child'"
+    },
+    {
+      "text": "Keep the same plain daily habits, year after year: rise early, swim, sleep on time.",
+      "sourceId": "esquire-junod-1998",
+      "locator": "passages on his morning swim and daily schedule"
+    },
+    {
+      "text": "Nobody has to do anything sensational to be loved; treat people that way.",
+      "sourceId": "dartmouth-2002",
+      "locator": "Commencement address, June 2002, passage after the song 'It's You I Like'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I give an expression of care every day to each child, to help him realize that he is unique.",
+      "sourceId": "senate-1969",
+      "locator": "Testimony, Senate Subcommittee on Communications, Washington, 1 May 1969"
+    },
+    {
+      "text": "…if we in public television can only make it clear that feelings are mentionable and manageable, we will have done a great service for mental health.",
+      "sourceId": "senate-1969",
+      "locator": "Testimony, Senate Subcommittee on Communications, Washington, 1 May 1969"
+    },
+    {
+      "text": "All of us have special ones who have loved us into being.",
+      "sourceId": "emmy-1997",
+      "locator": "Lifetime Achievement acceptance, 24th Daytime Emmy Awards, New York, 21 May 1997"
+    },
+    {
+      "text": "You don't ever have to do anything sensational for people to love you.",
+      "sourceId": "dartmouth-2002",
+      "locator": "Commencement address, Dartmouth College, June 2002"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 1 May 1969 he testified to a US Senate subcommittee as a proposal stood to cut federal funding for public broadcasting from $20 million to $10 million. Its chairman, Senator John Pastore, seemed gruff and impatient when he gave him the floor. Rogers declined to read his written statement, spoke for about six minutes about children's feelings, and recited the words of his song 'What do you do with the mad that you feel?'. Pastore said it was the first time he had had goose bumps in two days, and that Rogers had just earned the $20 million.",
+    "sourceIds": [
+      "senate-1969",
+      "weta-scalera-2018"
+    ]
+  },
+  "shadow": {
+    "text": "François Clemmons, who played Officer Clemmons on the show from 1968, writes in his 2020 memoir that Rogers called him into his office after being told Clemmons had been seen at a gay bar. By Clemmons's account, Rogers said it did not matter to him personally if Clemmons was gay, but that he could not be out as gay and stay an important member of the show. Clemmons writes that Rogers then asked whether he had thought of getting married, and that by the time he left the office he had decided to marry a woman; they divorced in 1974.",
+    "sourceIds": [
+      "npr-cannariato-2020",
+      "advocate-2020",
+      "npr-storycorps-2016"
+    ]
+  },
+  "councilQuestion": {
+    "text": "When you felt angry this week, did you name it and choose what to do with it, or did it choose for you?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "Mister Rogers Talks with Parents",
+      "year": 1983
+    },
+    {
+      "title": "You Are Special",
+      "year": 1994
+    },
+    {
+      "title": "The World According to Mister Rogers: Important Things to Remember",
+      "year": 2003
+    }
+  ],
+  "sources": [
+    {
+      "id": "senate-1969",
+      "kind": "primary",
+      "title": "Testimony before the Senate Commerce Subcommittee on Communications, hearings on S. 1242 (Extension of authorizations under the Public Broadcasting Act of 1967), 1 May 1969; transcript from the audio",
+      "author": "Fred Rogers",
+      "year": 1969,
+      "publisher": "U.S. Govt. Print. Off. (hearings); transcript by American Rhetoric",
+      "url": "https://www.americanrhetoric.com/speeches/fredrogerssenatetestimonypbs.htm"
+    },
+    {
+      "id": "emmy-1997",
+      "kind": "primary",
+      "title": "Lifetime Achievement Award acceptance speech, 24th Annual Daytime Emmy Awards, 21 May 1997; transcript from the audio",
+      "author": "Fred Rogers",
+      "year": 1997,
+      "publisher": "American Rhetoric (transcript)",
+      "url": "https://americanrhetoric.com/speeches/fredrogerslifetimeachievementemmyaward.htm"
+    },
+    {
+      "id": "dartmouth-2002",
+      "kind": "primary",
+      "title": "2002 Commencement Address by Fred Rogers '50",
+      "author": "Fred Rogers",
+      "year": 2002,
+      "publisher": "Dartmouth College, Office of Communications",
+      "url": "https://home.dartmouth.edu/news/2002/06/2002-commencement-address-fred-rogers-50"
+    },
+    {
+      "id": "tva-1999",
+      "kind": "primary",
+      "title": "Fred Rogers interview, conducted by Karen Herman, Pittsburgh, 22 July 1999",
+      "author": "Fred Rogers (interviewed by Karen Herman)",
+      "year": 1999,
+      "publisher": "Television Academy Foundation, The Interviews",
+      "url": "https://interviews.televisionacademy.com/interviews/fred-rogers"
+    },
+    {
+      "id": "esquire-junod-1998",
+      "kind": "secondary",
+      "title": "Can You Say ... Hero?",
+      "author": "Tom Junod",
+      "year": 1998,
+      "publisher": "Esquire, November 1998",
+      "url": "https://www.esquire.com/entertainment/tv/a27134/can-you-say-hero-esq1198/"
+    },
+    {
+      "id": "ap-spangler-2003",
+      "kind": "secondary",
+      "title": "Host of Mister Rogers' Neighborhood dies at 74 (AP obituary)",
+      "author": "Todd Spangler, The Associated Press",
+      "year": 2003,
+      "publisher": "The Seattle Times, 27 February 2003",
+      "url": "https://archive.seattletimes.com/archive/20030227/webrogersobit27/host-of-mister-rogers-neighborhood-dies-at-74"
+    },
+    {
+      "id": "mbc-encyclopedia",
+      "kind": "secondary",
+      "title": "Rogers, Fred McFeely (Encyclopedia of Television entry)",
+      "author": "Museum of Broadcast Communications",
+      "year": "undated (read 2026-11-10)",
+      "publisher": "Museum of Broadcast Communications, Chicago",
+      "url": "https://www.museum.tv/tv-encyclopedia-14/rogers-fred-mcfeely"
+    },
+    {
+      "id": "fri-about",
+      "kind": "secondary",
+      "title": "About Fred",
+      "author": "Fred Rogers Institute, Saint Vincent College",
+      "year": "undated (read 2026-11-10)",
+      "publisher": "Fred Rogers Institute",
+      "url": "https://www.fredrogersinstitute.org/about-fred"
+    },
+    {
+      "id": "ctpublic-king-2018",
+      "kind": "secondary",
+      "title": "The Legacy Of 'Mister Rogers' (interview with biographer Maxwell King, author of The Good Neighbor, 2018)",
+      "author": "Connecticut Public Radio, Where We Live (Lucy Nalpathanchil with Maxwell King)",
+      "year": 2018,
+      "publisher": "Connecticut Public, 5 September 2018",
+      "url": "https://www.ctpublic.org/arts-and-culture/2018-09-05/the-legacy-of-mister-rogers"
+    },
+    {
+      "id": "weta-scalera-2018",
+      "kind": "secondary",
+      "title": "Mister Rogers Comes to Washington",
+      "author": "Nick Scalera",
+      "year": 2018,
+      "publisher": "WETA, Boundary Stones, 27 February 2018",
+      "url": "https://boundarystones.weta.org/2018/02/27/mister-rogers-comes-washington"
+    },
+    {
+      "id": "pg-batz-2018",
+      "kind": "secondary",
+      "title": "That time Fred Rogers officiated a wedding (Mister Rogers' Neighborhood 50th anniversary; reprinted by the Laurel Highlands Visitors Bureau)",
+      "author": "Bob Batz Jr.",
+      "year": 2018,
+      "publisher": "Pittsburgh Post-Gazette, 19 February 2018",
+      "url": "https://www.golaurelhighlands.com/articles/post/fred-rogers-officiated-a-wedding/"
+    },
+    {
+      "id": "npr-cannariato-2020",
+      "kind": "secondary",
+      "title": "Officer Clemmons, Mister Rogers' Neighborhood Policeman Pal, Tells His Story (review of Officer Clemmons: A Memoir)",
+      "author": "Nicholas Cannariato",
+      "year": 2020,
+      "publisher": "NPR, 30 April 2020",
+      "url": "https://www.npr.org/2020/04/30/847315345"
+    },
+    {
+      "id": "advocate-2020",
+      "kind": "secondary",
+      "title": "Fred Rogers Advised Officer Clemmons To Stay Closeted, Marry a Woman",
+      "author": "David Artavia",
+      "year": 2020,
+      "publisher": "The Advocate, 25 April 2020",
+      "url": "https://www.advocate.com/television/2020/4/25/fred-rogers-advised-officer-clemmons-stay-closeted-marry-woman"
+    },
+    {
+      "id": "npr-storycorps-2016",
+      "kind": "secondary",
+      "title": "Walking The Beat In Mr. Rogers' Neighborhood, Where A New Day Began Together (StoryCorps)",
+      "author": "NPR Morning Edition / StoryCorps (François Clemmons with Karl Lindholm)",
+      "year": 2016,
+      "publisher": "NPR, 11 March 2016",
+      "url": "https://www.npr.org/2016/03/11/469846519"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American television host and Presbyterian minister (1928-2003), never a politician or candidate, founded no religion; searches by name found no credible account (no court record, suit or named accuser) of sexual contact with anyone under 16 or of sexual violence; his documented dark side is that, by his cast member François Clemmons's account, he told Clemmons he could not be out as gay and stay on the show."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value against the Senate testimony, the Emmy and Dartmouth speeches, Esquire 1998, the AP obituary and the Fred Rogers Institute, and searched for a darker side beyond Clemmons's account; none with a reputable source turned up. Faith, Service and Gratitude are shared with the blind pick; Kindness held on three sources, and Discipline held once a third, the Post-Gazette's Tim Reeves account, was added. All four quotes match his own transcripts; the defining moment now rests on WETA instead of a Facebook-sourced magazine item, and three small facts were corrected.",
+    "checkedOn": "2026-11-10"
+  }
+}
