@@ -1,0 +1,344 @@
+{
+  "id": "blaise-pascal",
+  "name": "Blaise Pascal",
+  "born": 1623,
+  "died": 1662,
+  "category": "philosophers",
+  "areaIds": [
+    "lm_spirituality",
+    "lm_mindset"
+  ],
+  "tagline": "A sickly mathematician who kept working through pain and then gave himself wholly to his faith.",
+  "startedFrom": "He was born in Clermont, France, in 1623, the only son of a magistrate and tax official, in a comfortable family. His mother died when he was three, and he never went to school: his father taught him at home. He was ill from early childhood, and his sister reports that from the age of eighteen he never passed a day without pain.",
+  "values": [
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On the night of 23 November 1654 he wrote down a religious experience, sewed the paper into his coat and carried it until his death eight years later.",
+          "sourceId": "sep-clarke-wood",
+          "locator": "§1 Life and Works"
+        },
+        {
+          "kind": "deed",
+          "claim": "Nobody, not even his sisters, knew of this note, the Memorial; it was found only after his death.",
+          "sourceId": "iep-simpson",
+          "locator": "§1d Second Conversion"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that faith is God felt by the heart, not by the reason.",
+          "sourceId": "hc48",
+          "locator": "Thoughts, fragment 278 (Brunschvicg numbering), p. 99"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia says everything known of his mature years points to a single-minded, unwavering religious belief.",
+          "sourceId": "sep-clarke-wood",
+          "locator": "§1 Life and Works"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His father kept mathematics from him, so at about twelve he began to work out geometry on his own, and his father then gave him Euclid.",
+          "sourceId": "mactutor",
+          "locator": "biography, paragraph on his education"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy says that as a boy he showed an early inquisitiveness about natural phenomena and a fondness for devising experiments.",
+          "sourceId": "iep-simpson",
+          "locator": "§1a Early Years"
+        },
+        {
+          "kind": "deed",
+          "claim": "In Rouen, around 1646-47, he answered a scholar's objection by filling two forty-foot tubes, one with water and one with wine, and measuring the result.",
+          "sourceId": "st-cyres-1909",
+          "locator": "ch. VII, p. 102"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that in questions of nature authority is useless and experiments are the only principles of physics.",
+          "sourceId": "hc48",
+          "locator": "Minor Works, Preface to the Treatise on Vacuum, pp. 446-448"
+        },
+        {
+          "kind": "witness",
+          "claim": "T. S. Eliot writes that from his earliest years he showed a disposition to find things out for himself.",
+          "sourceId": "eliot-intro",
+          "locator": "Introduction, 2nd paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In June 1662 he gave up his own house to a poor family suffering from smallpox and went to his sister's house to be nursed; he never left it.",
+          "sourceId": "eb1911",
+          "locator": "'Pascal, Blaise', life section, paragraph on his last years"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy says that in his last years he took in a homeless family.",
+          "sourceId": "iep-simpson",
+          "locator": "§1e Final Years"
+        },
+        {
+          "kind": "deed",
+          "claim": "By his will he gave half his share in the 1662 Paris coach company to the general hospitals of Paris and Clermont-Ferrand, for the poor.",
+          "sourceId": "clermont-carrosses",
+          "locator": "page 'Les carrosses à 5 sols'"
+        },
+        {
+          "kind": "witness",
+          "claim": "MacTutor writes that he spent his last years giving to the poor.",
+          "sourceId": "mactutor",
+          "locator": "biography, paragraph on the Letters to Carcavi"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Through his 1654 letters with Fermat he was unwell, writing in July that he was still bedridden; MacTutor writes that despite his health problems he worked intensely on scientific and mathematical questions until October 1654.",
+          "sourceId": "mactutor",
+          "locator": "biography, paragraph on the Fermat correspondence"
+        },
+        {
+          "kind": "deed",
+          "claim": "Seriously ill from early 1659, he kept working on the notes that became the Pensées in short spurts, as far as his health allowed.",
+          "sourceId": "iep-simpson",
+          "locator": "§1e Final Years"
+        },
+        {
+          "kind": "words",
+          "claim": "In his prayer on sickness he asks not to meet his illness with impatience and not to make a bad use of it.",
+          "sourceId": "hc48",
+          "locator": "Minor Works, Prayer to Ask of God the Proper Use of Sickness, sec. II, p. 370"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia says his final years were given to religious controversy to the extent that his increasingly poor health permitted.",
+          "sourceId": "sep-clarke-wood",
+          "locator": "§1 Life and Works"
+        }
+      ]
+    },
+    {
+      "word": "Devotion",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "The parchment copy of his Memorial of 23 November 1654 ends with the pledge: total submission to Jesus Christ and to his director.",
+          "sourceId": "iep-simpson",
+          "locator": "§1d Second Conversion"
+        },
+        {
+          "kind": "deed",
+          "claim": "He wore a belt studded with sharp nails to punish his own flesh.",
+          "sourceId": "iep-simpson",
+          "locator": "§1 Biography (introduction) and §1a Early Years"
+        },
+        {
+          "kind": "witness",
+          "claim": "Early in 1655 his sister Jacqueline wrote that at Port-Royal he attended all the Offices, from Prime to Compline, and got up at five in the morning.",
+          "sourceId": "st-cyres-1909",
+          "locator": "ch. XI, p. 197"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica says that he lived much at Port-Royal and partly at least kept its rule, and that in his last years we hear only of acts of charity and of extravagant asceticism.",
+          "sourceId": "eb1911",
+          "locator": "'Pascal, Blaise', life section, paragraphs on the second conversion and his last years"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Learn to stay quietly in your own room; much of your trouble comes from running away from it into distractions.",
+      "sourceId": "hc48",
+      "locator": "Thoughts, fragment 139 (Brunschvicg numbering), p. 52"
+    },
+    {
+      "text": "Your worth lies in thinking well, not in how much space or property you hold.",
+      "sourceId": "hc48",
+      "locator": "Thoughts, fragments 347-348 (Brunschvicg numbering), p. 120"
+    },
+    {
+      "text": "In questions about the world, test things by experiment and reason, not by who said them.",
+      "sourceId": "hc48",
+      "locator": "Minor Works, Preface to the Treatise on Vacuum, pp. 446-448"
+    },
+    {
+      "text": "To convince someone, help him find the reasons himself; people trust reasons they discovered more than reasons handed to them.",
+      "sourceId": "hc48",
+      "locator": "Thoughts, fragment 10 (Brunschvicg numbering), p. 11"
+    },
+    {
+      "text": "When illness or hardship comes, do not meet it with impatience; ask how to use it well.",
+      "sourceId": "hc48",
+      "locator": "Minor Works, Prayer to Ask of God the Proper Use of Sickness, sec. II, p. 370"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I have discovered that all the unhappiness of men arises from one single fact, that they cannot stay quietly in their own chamber.",
+      "sourceId": "hc48",
+      "locator": "Thoughts, fragment 139 (Brunschvicg numbering), p. 52",
+      "translation": "W. F. Trotter, 1910 (Harvard Classics vol. 48)"
+    },
+    {
+      "text": "Man is but a reed, the most feeble thing in nature, but he is a thinking reed.",
+      "sourceId": "hc48",
+      "locator": "Thoughts, fragment 347 (Brunschvicg numbering), p. 120",
+      "translation": "W. F. Trotter, 1910 (Harvard Classics vol. 48)"
+    },
+    {
+      "text": "The heart has its reasons, which reason does not know.",
+      "sourceId": "hc48",
+      "locator": "Thoughts, fragment 277 (Brunschvicg numbering), p. 99",
+      "translation": "W. F. Trotter, 1910 (Harvard Classics vol. 48)"
+    },
+    {
+      "text": "People are generally better persuaded by the reasons which they have themselves discovered than by those which have come into the mind of others.",
+      "sourceId": "hc48",
+      "locator": "Thoughts, fragment 10 (Brunschvicg numbering), p. 11",
+      "translation": "W. F. Trotter, 1910 (Harvard Classics vol. 48)"
+    }
+  ],
+  "definingMoment": {
+    "text": "On the night of 23 November 1654, from about half past ten until half past midnight, Pascal had an intense religious experience in his Paris home. He wrote it down, sewed the paper into the lining of his coat, and carried it until he died; no one knew of it until after his death. He then broke off his letters with Fermat on probability and stopped a finished booklet on the vacuum from going to print. On 7 January 1655 he went into retreat at Port-Royal des Champs, where, his sister Jacqueline wrote, he said he could be alone as much as he liked.",
+    "sourceIds": [
+      "iep-simpson",
+      "sep-clarke-wood",
+      "st-cyres-1909"
+    ]
+  },
+  "shadow": {
+    "text": "In 1647, newly won to Jansenism, he and two friends denounced Saint-Ange, a former Capuchin friar, as a heretic around Rouen and then twice to the archbishop, against the advice of an older friend. After their father died in 1651, he opposed his sister Jacqueline's wish to enter the convent of Port-Royal; she had made her share of their father's property over to him, and when she came to take her vows he held it until he finally signed a deed of gift. T. S. Eliot writes that he objected on worldly grounds: their joint money let him live in style, with a coach and horses. In his Provincial Letters of 1656-57, published under a pen name, he denied being a member of Port-Royal. In October 1658, in a history of the cycloid written for the mathematics contest he ran as \"Amos Dettonville\", he publicly accused Torricelli, who had died in 1647, of claiming Roberval's solution of the cycloid as his own; St Cyres writes that he took the story on Roberval's word alone. The Internet Encyclopedia of Philosophy says he was known to be impatient with and demanding of others, and sometimes seemed arrogant and self-absorbed. In his last years, his sister Gilberte reports, he could not bear to see her caress her own children.",
+    "sourceIds": [
+      "st-cyres-1909",
+      "eb1911",
+      "eliot-intro",
+      "sep-clarke-wood",
+      "histoire-roulette",
+      "iep-simpson"
+    ]
+  },
+  "councilQuestion": {
+    "text": "When were you alone with nothing to do this week, and what did you reach for to escape it?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Pensées",
+      "year": 1670
+    },
+    {
+      "title": "The Provincial Letters",
+      "year": "1656-1657"
+    }
+  ],
+  "sources": [
+    {
+      "id": "hc48",
+      "kind": "primary",
+      "title": "Thoughts (tr. W. F. Trotter), Letters (tr. M. L. Booth), Minor Works (tr. O. W. Wight), The Harvard Classics vol. 48; Thoughts translated from Brunschvicg's text",
+      "author": "Blaise Pascal",
+      "year": 1910,
+      "publisher": "P. F. Collier & Son, New York; scan on the Internet Archive",
+      "url": "https://archive.org/details/harvardclassicsf0048blai"
+    },
+    {
+      "id": "sep-clarke-wood",
+      "kind": "secondary",
+      "title": "Blaise Pascal, Stanford Encyclopedia of Philosophy (first published 2007, revised 2015)",
+      "author": "Desmond Clarke and William Wood",
+      "year": 2015,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/pascal/"
+    },
+    {
+      "id": "iep-simpson",
+      "kind": "secondary",
+      "title": "Pascal, Blaise, Internet Encyclopedia of Philosophy",
+      "author": "David Simpson",
+      "year": "undated",
+      "url": "https://iep.utm.edu/pascal-b/"
+    },
+    {
+      "id": "st-cyres-1909",
+      "kind": "secondary",
+      "title": "Pascal",
+      "author": "Viscount St Cyres (Stafford Harry Northcote)",
+      "year": 1909,
+      "publisher": "Smith, Elder & Co., London; scan on the Internet Archive",
+      "url": "https://archive.org/details/pascalstcyres00stcyiala"
+    },
+    {
+      "id": "eb1911",
+      "kind": "secondary",
+      "title": "Pascal, Blaise, Encyclopaedia Britannica, 11th edition, vol. 20 (life section)",
+      "author": "George Saintsbury",
+      "year": 1911,
+      "publisher": "Cambridge University Press; transcription on Wikisource",
+      "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Pascal,_Blaise"
+    },
+    {
+      "id": "mactutor",
+      "kind": "secondary",
+      "title": "Blaise Pascal, MacTutor History of Mathematics",
+      "author": "J. J. O'Connor and E. F. Robertson",
+      "year": 1996,
+      "publisher": "University of St Andrews",
+      "url": "https://mathshistory.st-andrews.ac.uk/Biographies/Pascal/"
+    },
+    {
+      "id": "eliot-intro",
+      "kind": "secondary",
+      "title": "Introduction to Pascal's Pensées (Trotter translation, Dutton paperback 1958; Project Gutenberg eBook #18269)",
+      "author": "T. S. Eliot",
+      "year": 1958,
+      "publisher": "E. P. Dutton & Co., New York",
+      "url": "https://www.gutenberg.org/ebooks/18269"
+    },
+    {
+      "id": "histoire-roulette",
+      "kind": "primary",
+      "title": "Histoire de la roulette, appelée autrement la trochoïde ou cycloïde (dated 10 October 1658), in Œuvres, Hachette 1914",
+      "author": "Blaise Pascal",
+      "year": 1658,
+      "publisher": "Hachette, Paris (Œuvres de Blaise Pascal, 1914); transcription on French Wikisource",
+      "url": "https://fr.wikisource.org/wiki/Histoire_de_la_roulette"
+    },
+    {
+      "id": "clermont-carrosses",
+      "kind": "secondary",
+      "title": "Les carrosses à 5 sols (Pascal entrepreneur), Blaise Pascal site of the Clermont Auvergne Métropole libraries",
+      "author": "Bibliothèques Clermont Auvergne Métropole",
+      "year": "undated",
+      "publisher": "Clermont Auvergne Métropole",
+      "url": "https://blaisepascal.bibliotheques-clermontmetropole.eu/son-oeuvre/pascal-entrepreneur/les-carrosses-a-5-sols"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real French mathematician, physicist and Catholic writer (1623-1662), not fictional, not a politician and not the founder of a religion, with no account found of sexual contact with a minor or of sexual violence; he is in, with a documented dark side."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked every value against the SEP and IEP entries, St Cyres, the 1911 Britannica and the texts, keeping in mind that his sister Gilberte, the main witness, wrote a hagiography. Solitude fell: his Port-Royal retreats were spells, the Britannica says he never became one of its solitaries, his last years were public polemic, a contest and a coach company, and fragment 139 is about rest, not being alone; Honesty from the blind pick was not added, since he wrote under pen names and denied in print belonging to Port-Royal. Devotion came in from the blind pick on IEP, Jacqueline's letter and the Britannica, Resilience lost the Gilberte-only cycloid story and stands on MacTutor, IEP and SEP, and Generosity gained his will to the Paris and Clermont hospitals. The shadow now names the Torricelli charge from Pascal's own 1658 text, his denial of Port-Royal and the IEP's account of his temper.",
+    "checkedOn": "2026-11-10"
+  }
+}
