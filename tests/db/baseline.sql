@@ -1,4 +1,4 @@
--- baseline-stamp: 20261030140000
+-- baseline-stamp: 20261110130000
 -- Schema only (no rows), dumped from the linked Supabase project by scripts/db/baseline.sh.
 -- Do not edit by hand: write a migration, then re-run the script once production has it.
 
@@ -149,6 +149,225 @@ CREATE TYPE "public"."linked_metric" AS ENUM (
 ALTER TYPE "public"."linked_metric" OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."apply_life_plan_changes"("p_changes" "jsonb", "p_expected_rev" integer) RETURNS integer
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $_$
+DECLARE
+  -- Dependency order: parents before children. Removal runs it backwards.
+  v_tables CONSTANT TEXT[][] := ARRAY[
+    ARRAY['nodes',          'life_plan_nodes'],
+    ARRAY['north_stars',    'life_plan_north_stars'],
+    ARRAY['areas',          'life_plan_areas'],
+    ARRAY['goals',          'life_plan_goals'],
+    ARRAY['checkpoints',    'life_plan_goal_checkpoints'],
+    ARRAY['obstacles',      'life_plan_goal_obstacles'],
+    ARRAY['beliefs',        'life_plan_goal_beliefs'],
+    ARRAY['routines',       'life_plan_routines'],
+    ARRAY['steps',          'life_plan_routine_steps'],
+    ARRAY['split_days',     'life_plan_routine_split_days'],
+    ARRAY['experiences',    'life_plan_experiences'],
+    ARRAY['fields',         'life_plan_fields'],
+    ARRAY['sub_steps',      'life_plan_sub_steps'],
+    ARRAY['seasons',        'life_plan_seasons'],
+    ARRAY['goal_feeds',     'life_plan_goal_feeds'],
+    ARRAY['goal_serves',    'life_plan_goal_serves'],
+    ARRAY['routine_serves', 'life_plan_routine_serves'],
+    ARRAY['step_serves',    'life_plan_step_serves'],
+    ARRAY['reviews',        'life_plan_reviews'],
+    ARRAY['season_areas',   'life_plan_season_areas'],
+    ARRAY['season_goals',   'life_plan_season_goals'],
+    ARRAY['review_scores',  'life_plan_review_scores'],
+    ARRAY['review_goals',   'life_plan_review_goals'],
+    ARRAY['values',         'life_plan_values'],
+    ARRAY['answers',        'life_plan_answers']
+  ];
+  -- The two tables `replace` may name. Both carry plan_id.
+  v_whole CONSTANT TEXT[] := ARRAY['values', 'answers'];
+  v_plan_id UUID;
+  v_rev INTEGER;
+  v_key TEXT;
+  v_table TEXT;
+  v_rows JSONB;
+  v_pk TEXT[];
+  v_cols TEXT;
+  v_set TEXT;
+  v_match TEXT;
+  i INTEGER;
+BEGIN
+  IF p_changes IS NULL OR jsonb_typeof(p_changes) <> 'object' THEN
+    RAISE EXCEPTION 'apply_life_plan_changes needs an object of changes'
+      USING ERRCODE = '22023';
+  END IF;
+
+  -- Every table key the caller used must be on the list.
+  FOR v_key IN
+    SELECT k FROM jsonb_object_keys(coalesce(p_changes -> 'upsert', '{}'::jsonb)) AS k
+    UNION SELECT k FROM jsonb_object_keys(coalesce(p_changes -> 'remove', '{}'::jsonb)) AS k
+  LOOP
+    IF NOT EXISTS (SELECT 1 FROM generate_subscripts(v_tables, 1) AS s WHERE v_tables[s][1] = v_key) THEN
+      RAISE EXCEPTION 'apply_life_plan_changes cannot reach "%"', v_key USING ERRCODE = '22023';
+    END IF;
+  END LOOP;
+  FOR v_key IN SELECT jsonb_array_elements_text(coalesce(p_changes -> 'replace', '[]'::jsonb)) LOOP
+    IF NOT v_key = ANY (v_whole) THEN
+      RAISE EXCEPTION 'apply_life_plan_changes cannot replace "%"', v_key USING ERRCODE = '22023';
+    END IF;
+  END LOOP;
+
+  -- The plan the caller may actually see. Row security makes this find
+  -- nothing for somebody else's plan, which is the refusal we want.
+  SELECT id, revision INTO v_plan_id, v_rev
+    FROM life_plans
+   WHERE id = (p_changes ->> 'plan_id')::uuid
+     FOR UPDATE;
+
+  IF v_plan_id IS NULL THEN
+    RAISE EXCEPTION 'No such plan, or it is not yours' USING ERRCODE = '42501';
+  END IF;
+
+  IF v_rev <> p_expected_rev THEN
+    RAISE EXCEPTION 'Plan revision is % but the save was built on %', v_rev, p_expected_rev
+      USING ERRCODE = '55000';
+  END IF;
+
+  -- ---------------------------------------------------------------- removal
+  -- Children first. Only the rows named, matched on their key columns.
+  FOR i IN REVERSE array_length(v_tables, 1) .. 1 LOOP
+    v_key := v_tables[i][1];
+    v_table := v_tables[i][2];
+
+    IF v_key = ANY (v_whole) AND (p_changes -> 'replace') ? v_key THEN
+      EXECUTE format('DELETE FROM %I WHERE plan_id = $1', v_table) USING v_plan_id;
+    END IF;
+
+    v_rows := p_changes -> 'remove' -> v_key;
+    CONTINUE WHEN v_rows IS NULL OR jsonb_array_length(v_rows) = 0;
+
+    SELECT array_agg(a.attname::text ORDER BY a.attnum) INTO v_pk
+      FROM pg_index x
+      JOIN pg_attribute a ON a.attrelid = x.indrelid AND a.attnum = ANY (x.indkey)
+     WHERE x.indrelid = v_table::regclass AND x.indisprimary;
+
+    SELECT string_agg(format('t.%1$I = k.%1$I', c), ' AND ') INTO v_match FROM unnest(v_pk) AS c;
+    EXECUTE format(
+      'DELETE FROM %1$I t USING jsonb_populate_recordset(NULL::%1$I, $1) k WHERE %2$s',
+      v_table, v_match)
+      USING v_rows;
+  END LOOP;
+
+  -- ----------------------------------------------------------------- upsert
+  FOR i IN 1 .. array_length(v_tables, 1) LOOP
+    v_key := v_tables[i][1];
+    v_table := v_tables[i][2];
+    v_rows := p_changes -> 'upsert' -> v_key;
+    CONTINUE WHEN v_rows IS NULL OR jsonb_array_length(v_rows) = 0;
+
+    SELECT array_agg(a.attname::text ORDER BY a.attnum) INTO v_pk
+      FROM pg_index x
+      JOIN pg_attribute a ON a.attrelid = x.indrelid AND a.attnum = ANY (x.indkey)
+     WHERE x.indrelid = v_table::regclass AND x.indisprimary;
+
+    -- The table's real columns that the rows actually carry. A field a page
+    -- running older code still sends for a column that is gone is ignored.
+    SELECT string_agg(quote_ident(a.attname), ', ' ORDER BY a.attnum),
+           string_agg(format('%1$I = EXCLUDED.%1$I', a.attname), ', ' ORDER BY a.attnum)
+             FILTER (WHERE a.attname <> ALL (v_pk)
+                       AND a.attname NOT IN ('user_id', 'plan_id'))
+      INTO v_cols, v_set
+      FROM pg_attribute a
+     WHERE a.attrelid = v_table::regclass AND a.attnum > 0 AND NOT a.attisdropped
+       AND EXISTS (SELECT 1 FROM jsonb_array_elements(v_rows) e WHERE e.value ? a.attname);
+
+    EXECUTE format(
+      'INSERT INTO %1$I (%2$s) SELECT %2$s FROM jsonb_populate_recordset(NULL::%1$I, $1) ON CONFLICT (%3$s) DO %4$s',
+      v_table, v_cols,
+      (SELECT string_agg(quote_ident(c), ', ') FROM unnest(v_pk) AS c),
+      CASE WHEN v_set IS NULL THEN 'NOTHING' ELSE 'UPDATE SET ' || v_set END)
+      USING v_rows;
+  END LOOP;
+
+  -- -------------------------------------------------------------- the plan
+  UPDATE life_plans
+     SET version = coalesce((p_changes -> 'plan' ->> 'version')::int, version),
+         seq = greatest(seq, coalesce((p_changes -> 'plan' ->> 'seq')::int, 0)),
+         revision = revision + 1
+   WHERE id = v_plan_id
+  RETURNING revision INTO v_rev;
+
+  RETURN v_rev;
+END;
+$_$;
+
+
+ALTER FUNCTION "public"."apply_life_plan_changes"("p_changes" "jsonb", "p_expected_rev" integer) OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."audit_ends_due"("p_limit" integer, "p_now" timestamp with time zone DEFAULT "now"()) RETURNS TABLE("run_id" "uuid", "user_id" "uuid")
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+  select r.id, r.user_id
+    from public.audit_runs as r
+   where r.ended_at is null
+     and p_now >= r.ends_at
+     and p_now < r.ends_at + interval '2 days'
+     and r.end_sent_at is null
+     and exists (select 1 from public.push_devices as d where d.user_id = r.user_id and d.enabled)
+     and not exists (select 1 from public.notification_sends as s where s.kind = 'audit-end' and s.entry_id = 'audit-end:' || r.id::text)
+   order by r.ends_at
+   limit greatest(coalesce(p_limit, 0), 0)
+$$;
+
+
+ALTER FUNCTION "public"."audit_ends_due"("p_limit" integer, "p_now" timestamp with time zone) OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."audit_pings_due"("p_limit" integer, "p_now" timestamp with time zone DEFAULT "now"()) RETURNS TABLE("run_id" "uuid", "user_id" "uuid", "slot_at" timestamp with time zone, "timezone" "text")
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+  with q as (
+    select to_timestamp(floor(extract(epoch from p_now) / 900) * 900) - interval '15 minutes' as slot_at
+  )
+  select r.id, r.user_id, q.slot_at, z.tz
+    from public.audit_runs as r
+    cross join q
+    left join public.profiles as p on p.id = r.user_id
+    cross join lateral (
+      select case when p.timezone in (select name from pg_catalog.pg_timezone_names) then p.timezone else 'UTC' end as tz
+    ) as z
+    cross join lateral (
+      select (extract(hour from q.slot_at at time zone z.tz) * 60
+            + extract(minute from q.slot_at at time zone z.tz))::int as m
+    ) as t
+   where r.ended_at is null
+     and p_now < r.ends_at
+     and q.slot_at + interval '15 minutes' > r.started_at
+     and p_now < q.slot_at + interval '20 minutes'
+     and (r.muted_until is null or r.muted_until <= p_now)
+     and not (
+       case
+         when r.quiet_start = r.quiet_end then false
+         when r.quiet_start < r.quiet_end then t.m >= r.quiet_start and t.m < r.quiet_end
+         else t.m >= r.quiet_start or t.m < r.quiet_end
+       end
+     )
+     and exists (select 1 from public.push_devices as d where d.user_id = r.user_id and d.enabled)
+     and not exists (select 1 from public.audit_slots as a where a.run_id = r.id and a.slot_at = q.slot_at)
+     and not exists (
+       select 1 from public.notification_sends as s
+        where s.kind = 'audit-ping'
+          and s.entry_id = 'audit:' || r.id::text || ':' || extract(epoch from q.slot_at)::bigint::text
+     )
+   order by r.user_id
+   limit greatest(coalesce(p_limit, 0), 0)
+$$;
+
+
+ALTER FUNCTION "public"."audit_pings_due"("p_limit" integer, "p_now" timestamp with time zone) OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."calculate_level"("xp_amount" integer) RETURNS integer
     LANGUAGE "plpgsql"
     AS $$
@@ -185,27 +404,32 @@ end $$;
 ALTER FUNCTION "public"."claim_beta_slot"("p_code" "text") OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."claim_due_thought_prompts"("p_now" timestamp with time zone, "p_lease" interval, "p_limit" integer) RETURNS TABLE("user_id" "uuid", "due_at" timestamp with time zone)
-    LANGUAGE "sql"
-    SET "search_path" TO 'public'
+CREATE OR REPLACE FUNCTION "public"."council_reminders_due"("p_limit" integer, "p_now" timestamp with time zone DEFAULT "now"()) RETURNS TABLE("user_id" "uuid", "local_day" "date", "tz" "text")
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
     AS $$
-  WITH due AS (
-    SELECT s.user_id, s.next_due_at
-      FROM thought_prompt_schedule s
-     WHERE s.next_due_at IS NOT NULL AND s.next_due_at <= p_now
-     ORDER BY s.next_due_at
-     LIMIT p_limit
-       FOR UPDATE SKIP LOCKED
-  )
-  UPDATE thought_prompt_schedule s
-     SET next_due_at = p_now + p_lease, updated_at = p_now
-    FROM due
-   WHERE s.user_id = due.user_id
-  RETURNING s.user_id, due.next_due_at
+  select s.user_id, (p_now at time zone z.tz)::date, z.tz
+    from public.user_role_model_settings as s
+    left join public.profiles as p on p.id = s.user_id
+    cross join lateral (
+      select case when p.timezone in (select name from pg_catalog.pg_timezone_names) then p.timezone else 'UTC' end as tz
+    ) as z
+   where s.remind_on
+     and extract(hour from p_now at time zone z.tz) = s.remind_hour
+     and extract(minute from p_now at time zone z.tz) < 20
+     and exists (select 1 from public.push_devices as d where d.user_id = s.user_id and d.enabled)
+     and exists (select 1 from public.user_role_models as m where m.user_id = s.user_id)
+     and not exists (
+       select 1 from public.notification_sends as n
+        where n.kind = 'council-daily'
+          and n.entry_id = 'council-daily:' || s.user_id::text || ':' || ((p_now at time zone z.tz)::date)::text
+     )
+   order by s.user_id
+   limit greatest(coalesce(p_limit, 0), 0)
 $$;
 
 
-ALTER FUNCTION "public"."claim_due_thought_prompts"("p_now" timestamp with time zone, "p_lease" interval, "p_limit" integer) OWNER TO "postgres";
+ALTER FUNCTION "public"."council_reminders_due"("p_limit" integer, "p_now" timestamp with time zone) OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."end_enrollment"("p_id" "uuid") RETURNS "uuid"
@@ -313,42 +537,6 @@ $$;
 
 
 ALTER FUNCTION "public"."handle_new_user"() OWNER TO "postgres";
-
-
-CREATE OR REPLACE FUNCTION "public"."life_answers_reject_update"() RETURNS "trigger"
-    LANGUAGE "plpgsql"
-    AS $$
-begin
-  raise exception
-    'life_answers is append-only: delete the row and write a new one (attempted update on %)', old.id
-    using errcode = 'restrict_violation';
-end;
-$$;
-
-
-ALTER FUNCTION "public"."life_answers_reject_update"() OWNER TO "postgres";
-
-
-COMMENT ON FUNCTION "public"."life_answers_reject_update"() IS 'Append-only enforcement for life_answers. Binds the service role too, unlike an RLS policy.';
-
-
-
-CREATE OR REPLACE FUNCTION "public"."life_chapters_reject_update"() RETURNS "trigger"
-    LANGUAGE "plpgsql"
-    AS $$
-begin
-  raise exception
-    'life_chapters is append-only: delete the chapter and open a new one (attempted update on %)', old.id
-    using errcode = 'restrict_violation';
-end;
-$$;
-
-
-ALTER FUNCTION "public"."life_chapters_reject_update"() OWNER TO "postgres";
-
-
-COMMENT ON FUNCTION "public"."life_chapters_reject_update"() IS 'Append-only enforcement for life_chapters. Binds the service role too, unlike an RLS policy.';
-
 
 
 CREATE OR REPLACE FUNCTION "public"."life_plan_touch_updated_at"() RETURNS "trigger"
@@ -470,33 +658,6 @@ $$;
 ALTER FUNCTION "public"."match_embeddings_test"("query_embedding" "public"."vector", "match_threshold" double precision, "match_count" integer) OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."merge_thought"("p_from" "uuid", "p_into" "uuid") RETURNS "void"
-    LANGUAGE "plpgsql"
-    SET "search_path" TO 'public'
-    AS $$
-DECLARE
-  me UUID := auth.uid();
-BEGIN
-  IF p_from = p_into THEN
-    RAISE EXCEPTION 'a thought cannot be merged into itself' USING ERRCODE = '22023';
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM thoughts WHERE id = p_from AND user_id = me AND merged_into IS NULL)
-     OR NOT EXISTS (SELECT 1 FROM thoughts WHERE id = p_into AND user_id = me AND merged_into IS NULL) THEN
-    RAISE EXCEPTION 'both thoughts must exist and not be merged already' USING ERRCODE = 'P0002';
-  END IF;
-
-  UPDATE thought_logs SET thought_id = p_into WHERE thought_id = p_from AND user_id = me;
-  UPDATE thought_reframes SET thought_id = p_into, updated_at = now() WHERE thought_id = p_from AND user_id = me;
-  UPDATE thoughts SET merged_into = p_into, updated_at = now() WHERE merged_into = p_from AND user_id = me;
-  UPDATE thoughts SET merged_into = p_into, pinned = false, updated_at = now() WHERE id = p_from AND user_id = me;
-  UPDATE thoughts SET updated_at = now() WHERE id = p_into AND user_id = me;
-END
-$$;
-
-
-ALTER FUNCTION "public"."merge_thought"("p_from" "uuid", "p_into" "uuid") OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."notification_secret"("p_name" "text") RETURNS "text"
     LANGUAGE "sql" STABLE SECURITY DEFINER
     SET "search_path" TO ''
@@ -515,34 +676,85 @@ CREATE OR REPLACE FUNCTION "public"."notifications_clock_tick"() RETURNS bigint
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
     AS $$
-DECLARE
-  target TEXT;
-  token TEXT;
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM public.thought_prompt_schedule
-     WHERE next_due_at IS NOT NULL AND next_due_at <= now()
-  ) THEN
-    RETURN NULL;
-  END IF;
+declare
+  target text;
+  token text;
+begin
+  if not exists (select 1 from public.audit_pings_due(1)) and not exists (select 1 from public.audit_ends_due(1)) and not public.timetrack_alert_due() and not exists (select 1 from public.plan_reviews_due(1)) and not exists (select 1 from public.council_reminders_due(1)) then
+    return null;
+  end if;
 
-  SELECT decrypted_secret INTO target FROM vault.decrypted_secrets WHERE name = 'notifications_clock_url';
-  SELECT decrypted_secret INTO token FROM vault.decrypted_secrets WHERE name = 'notifications_clock_secret';
-  IF target IS NULL OR token IS NULL OR target NOT LIKE 'https://%' THEN
-    RETURN NULL;
-  END IF;
+  select decrypted_secret into target from vault.decrypted_secrets where name = 'notifications_clock_url';
+  select decrypted_secret into token from vault.decrypted_secrets where name = 'notifications_clock_secret';
+  if target is null or token is null or target not like 'https://%' then
+    return null;
+  end if;
 
-  RETURN net.http_post(
+  return net.http_post(
     url := target,
     headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || token),
     body := '{}'::jsonb,
     timeout_milliseconds := 25000
   );
-END
+end
 $$;
 
 
 ALTER FUNCTION "public"."notifications_clock_tick"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."plan_reviews_due"("p_limit" integer, "p_now" timestamp with time zone DEFAULT "now"()) RETURNS TABLE("user_id" "uuid", "local_day" "date", "review_day" smallint)
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+  select r.user_id, (p_now at time zone z.tz)::date, r.review_day
+    from public.life_plan_reminders as r
+    left join public.profiles as p on p.id = r.user_id
+    cross join lateral (
+      select case when p.timezone in (select name from pg_catalog.pg_timezone_names) then p.timezone else 'UTC' end as tz
+    ) as z
+    -- The Monday of the local ISO week (date_trunc('week') starts weeks on Monday).
+    cross join lateral (
+      select date_trunc('week', p_now at time zone z.tz)::date as monday
+    ) as w
+   where r.push_on
+     and extract(isodow from p_now at time zone z.tz) = r.review_day
+     and extract(hour from p_now at time zone z.tz) = r.review_hour
+     and extract(minute from p_now at time zone z.tz) < 20
+     and exists (select 1 from public.push_devices as d where d.user_id = r.user_id and d.enabled)
+     -- Nothing sent or recorded for this person this week, whichever day it
+     -- was keyed by. Keys end in a YYYY-MM-DD date, so text order is date order.
+     and not exists (
+       select 1 from public.notification_sends as s
+        where s.kind = 'plan-review'
+          and s.user_id = r.user_id
+          and s.entry_id like 'plan-review:' || r.user_id::text || ':%'
+          and right(s.entry_id, 10) between w.monday::text and (w.monday + 6)::text
+     )
+   order by r.user_id
+   limit greatest(coalesce(p_limit, 0), 0)
+$$;
+
+
+ALTER FUNCTION "public"."plan_reviews_due"("p_limit" integer, "p_now" timestamp with time zone) OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."plan_week_review_written"("p_user" "uuid", "p_start" "date") RETURNS boolean
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+  select exists (
+    select 1 from public.life_plan_reviews as v
+     where v.user_id = p_user and v.cadence = 'week' and v.period_start = p_start
+       -- Any visible character, as the app's trim() counts it (btrim strips spaces only).
+       and (coalesce(v.magic_moments, '') ~ '\S' or coalesce(v.lessons, '') ~ '\S'
+            or coalesce(v.next_outcomes, '') ~ '\S'
+            or exists (select 1 from public.life_plan_review_goals as g where g.review_id = v.id))
+  )
+$$;
+
+
+ALTER FUNCTION "public"."plan_week_review_written"("p_user" "uuid", "p_start" "date") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."program_drafts_touch_updated_at"() RETURNS "trigger"
@@ -782,226 +994,6 @@ COMMENT ON FUNCTION "public"."resume_enrollment"("p_id" "uuid", "p_displace" "uu
 
 
 
-CREATE OR REPLACE FUNCTION "public"."save_life_plan"("p_rows" "jsonb", "p_expected_rev" integer) RETURNS integer
-    LANGUAGE "plpgsql"
-    SET "search_path" TO 'public', 'pg_temp'
-    AS $$
-DECLARE
-  v_plan_id UUID;
-  v_rev INTEGER;
-BEGIN
-  IF p_rows IS NULL OR jsonb_typeof(p_rows) <> 'object' THEN
-    RAISE EXCEPTION 'save_life_plan needs an object of row arrays'
-      USING ERRCODE = '22023';
-  END IF;
-
-  -- The plan the caller may actually see. Row security means this finds
-  -- nothing at all for somebody else's plan, which is the refusal we want.
-  SELECT id, revision INTO v_plan_id, v_rev
-    FROM life_plans
-   WHERE id = (p_rows ->> 'plan_id')::uuid
-     FOR UPDATE;
-
-  IF v_plan_id IS NULL THEN
-    RAISE EXCEPTION 'No such plan, or it is not yours'
-      USING ERRCODE = '42501';
-  END IF;
-
-  IF v_rev <> p_expected_rev THEN
-    RAISE EXCEPTION 'Plan revision is % but the save was built on %', v_rev, p_expected_rev
-      USING ERRCODE = '55000';
-  END IF;
-
-  -- ------------------------------------------------------------------ nodes
-  -- Gone from the plan: gone from the database, taking its detail row and its
-  -- ticks with it. Still present: keeps the UUID it already had.
-  DELETE FROM life_plan_nodes n
-   WHERE n.plan_id = v_plan_id
-     AND NOT EXISTS (
-       SELECT 1 FROM jsonb_array_elements(coalesce(p_rows -> 'nodes', '[]'::jsonb)) AS e
-        WHERE (e.value ->> 'id')::uuid = n.id);
-
-  INSERT INTO life_plan_nodes (id, plan_id, user_id, kind, local_id)
-  SELECT (e.value ->> 'id')::uuid, v_plan_id, (e.value ->> 'user_id')::uuid,
-         e.value ->> 'kind', e.value ->> 'local_id'
-    FROM jsonb_array_elements(coalesce(p_rows -> 'nodes', '[]'::jsonb)) AS e
-      ON CONFLICT (id) DO UPDATE
-         SET local_id = EXCLUDED.local_id;
-
-  -- ---------------------------------------------------------- detail tables
-  -- One upsert each, in dependency order. No branching: every array is already
-  -- exactly its table's shape.
-  INSERT INTO life_plan_north_stars
-  SELECT * FROM jsonb_populate_recordset(NULL::life_plan_north_stars,
-    coalesce(p_rows -> 'north_stars', '[]'::jsonb))
-  ON CONFLICT (id) DO UPDATE SET
-    text = EXCLUDED.text, horizon_years = EXCLUDED.horizon_years;
-
-  INSERT INTO life_plan_areas
-  SELECT * FROM jsonb_populate_recordset(NULL::life_plan_areas,
-    coalesce(p_rows -> 'areas', '[]'::jsonb))
-  ON CONFLICT (id) DO UPDATE SET
-    position = EXCLUDED.position, label = EXCLUDED.label, sublabel = EXCLUDED.sublabel,
-    color = EXCLUDED.color, custom = EXCLUDED.custom,
-    review_ten = EXCLUDED.review_ten, review_purpose = EXCLUDED.review_purpose,
-    review_snapshot = EXCLUDED.review_snapshot, review_blockers = EXCLUDED.review_blockers,
-    review_identity = EXCLUDED.review_identity, review_fortnight = EXCLUDED.review_fortnight,
-    review_goals_aim = EXCLUDED.review_goals_aim, season_rank = EXCLUDED.season_rank;
-
-  -- `user_goal_id` IS ABSENT FROM THIS UPDATE ON PURPOSE. It is the link to the
-  -- counted goal and it is owned by the push, not by the plan save. Listing it
-  -- here would let a plan written on a second device, which has never pushed,
-  -- blank the link and make the next push create a duplicate of every goal.
-  INSERT INTO life_plan_goals
-  SELECT * FROM jsonb_populate_recordset(NULL::life_plan_goals,
-    coalesce(p_rows -> 'goals', '[]'::jsonb))
-  ON CONFLICT (id) DO UPDATE SET
-    position = EXCLUDED.position, priority_rank = EXCLUDED.priority_rank,
-    area_id = EXCLUDED.area_id, title = EXCLUDED.title,
-    goal_type = EXCLUDED.goal_type, why = EXCLUDED.why, pain_why = EXCLUDED.pain_why,
-    sentence = EXCLUDED.sentence, feeling = EXCLUDED.feeling, reward = EXCLUDED.reward,
-    stake = EXCLUDED.stake, unit = EXCLUDED.unit, target_date = EXCLUDED.target_date,
-    belief_level = EXCLUDED.belief_level, desire_level = EXCLUDED.desire_level,
-    days_per_week = EXCLUDED.days_per_week, per_week = EXCLUDED.per_week,
-    is_abstinence = EXCLUDED.is_abstinence, serves_one_thing = EXCLUDED.serves_one_thing,
-    metric = EXCLUDED.metric, ladder = EXCLUDED.ladder, ramp_steps = EXCLUDED.ramp_steps,
-    reasons_list = EXCLUDED.reasons_list, asked = EXCLUDED.asked;
-
-  INSERT INTO life_plan_goal_checkpoints
-  SELECT * FROM jsonb_populate_recordset(NULL::life_plan_goal_checkpoints,
-    coalesce(p_rows -> 'checkpoints', '[]'::jsonb))
-  ON CONFLICT (id) DO UPDATE SET
-    goal_id = EXCLUDED.goal_id, position = EXCLUDED.position, title = EXCLUDED.title,
-    done = EXCLUDED.done, celebration = EXCLUDED.celebration;
-
-  INSERT INTO life_plan_goal_obstacles
-  SELECT * FROM jsonb_populate_recordset(NULL::life_plan_goal_obstacles,
-    coalesce(p_rows -> 'obstacles', '[]'::jsonb))
-  ON CONFLICT (id) DO UPDATE SET
-    goal_id = EXCLUDED.goal_id, position = EXCLUDED.position,
-    what = EXCLUDED.what, counter = EXCLUDED.counter;
-
-  INSERT INTO life_plan_goal_beliefs
-  SELECT * FROM jsonb_populate_recordset(NULL::life_plan_goal_beliefs,
-    coalesce(p_rows -> 'beliefs', '[]'::jsonb))
-  ON CONFLICT (id) DO UPDATE SET
-    goal_id = EXCLUDED.goal_id, position = EXCLUDED.position, old = EXCLUDED.old,
-    useful = EXCLUDED.useful, evidence = EXCLUDED.evidence, replacement = EXCLUDED.replacement;
-
-  INSERT INTO life_plan_goal_habits
-  SELECT * FROM jsonb_populate_recordset(NULL::life_plan_goal_habits,
-    coalesce(p_rows -> 'habits', '[]'::jsonb))
-  ON CONFLICT (id) DO UPDATE SET
-    goal_id = EXCLUDED.goal_id, position = EXCLUDED.position, title = EXCLUDED.title,
-    days_per_week = EXCLUDED.days_per_week, placeholder = EXCLUDED.placeholder,
-    routine_days = EXCLUDED.routine_days, source_target_id = EXCLUDED.source_target_id;
-
-  INSERT INTO life_plan_routines
-  SELECT * FROM jsonb_populate_recordset(NULL::life_plan_routines,
-    coalesce(p_rows -> 'routines', '[]'::jsonb))
-  ON CONFLICT (id) DO UPDATE SET
-    position = EXCLUDED.position, label = EXCLUDED.label,
-    blueprint_id = EXCLUDED.blueprint_id, kind = EXCLUDED.kind,
-    area_id = EXCLUDED.area_id, days_per_week = EXCLUDED.days_per_week,
-    enrollment_id = EXCLUDED.enrollment_id;
-
-  INSERT INTO life_plan_routine_steps
-  SELECT * FROM jsonb_populate_recordset(NULL::life_plan_routine_steps,
-    coalesce(p_rows -> 'steps', '[]'::jsonb))
-  ON CONFLICT (id) DO UPDATE SET
-    routine_id = EXCLUDED.routine_id, position = EXCLUDED.position,
-    library_step_id = EXCLUDED.library_step_id, title = EXCLUDED.title,
-    minutes = EXCLUDED.minutes, days_per_week = EXCLUDED.days_per_week,
-    dimension = EXCLUDED.dimension, days = EXCLUDED.days, start_min = EXCLUDED.start_min,
-    goes_to = EXCLUDED.goes_to, goes_to_set = EXCLUDED.goes_to_set,
-    asks = EXCLUDED.asks, asks_set = EXCLUDED.asks_set;
-
-  INSERT INTO life_plan_routine_split_days
-  SELECT * FROM jsonb_populate_recordset(NULL::life_plan_routine_split_days,
-    coalesce(p_rows -> 'split_days', '[]'::jsonb))
-  ON CONFLICT (id) DO UPDATE SET
-    routine_id = EXCLUDED.routine_id, position = EXCLUDED.position, name = EXCLUDED.name;
-
-  INSERT INTO life_plan_experiences
-  SELECT * FROM jsonb_populate_recordset(NULL::life_plan_experiences,
-    coalesce(p_rows -> 'experiences', '[]'::jsonb))
-  ON CONFLICT (id) DO UPDATE SET
-    position = EXCLUDED.position, title = EXCLUDED.title, area_id = EXCLUDED.area_id,
-    goal_id = EXCLUDED.goal_id, done = EXCLUDED.done, done_on = EXCLUDED.done_on;
-
-  INSERT INTO life_plan_fields
-  SELECT * FROM jsonb_populate_recordset(NULL::life_plan_fields,
-    coalesce(p_rows -> 'fields', '[]'::jsonb))
-  ON CONFLICT (id) DO UPDATE SET
-    position = EXCLUDED.position, label = EXCLUDED.label, kind = EXCLUDED.kind,
-    target_id = EXCLUDED.target_id, read_source_id = EXCLUDED.read_source_id;
-
-  INSERT INTO life_plan_sub_steps
-  SELECT * FROM jsonb_populate_recordset(NULL::life_plan_sub_steps,
-    coalesce(p_rows -> 'sub_steps', '[]'::jsonb))
-  ON CONFLICT (id) DO UPDATE SET
-    position = EXCLUDED.position, target_id = EXCLUDED.target_id, title = EXCLUDED.title;
-
-  -- ------------------------------------------------- link and list tables
-  -- Replaced wholesale. Nothing points at one of these rows, so nothing can be
-  -- orphaned by rewriting them, and a pair table has no stable id to upsert on.
-  DELETE FROM life_plan_goal_feeds f
-   USING life_plan_goals g
-   WHERE f.goal_id = g.id AND g.plan_id = v_plan_id;
-  INSERT INTO life_plan_goal_feeds
-  SELECT * FROM jsonb_populate_recordset(NULL::life_plan_goal_feeds,
-    coalesce(p_rows -> 'goal_feeds', '[]'::jsonb));
-
-  DELETE FROM life_plan_goal_serves s
-   USING life_plan_goals g
-   WHERE s.goal_id = g.id AND g.plan_id = v_plan_id;
-  INSERT INTO life_plan_goal_serves
-  SELECT * FROM jsonb_populate_recordset(NULL::life_plan_goal_serves,
-    coalesce(p_rows -> 'goal_serves', '[]'::jsonb));
-
-  DELETE FROM life_plan_routine_serves s
-   USING life_plan_routines r
-   WHERE s.routine_id = r.id AND r.plan_id = v_plan_id;
-  INSERT INTO life_plan_routine_serves
-  SELECT * FROM jsonb_populate_recordset(NULL::life_plan_routine_serves,
-    coalesce(p_rows -> 'routine_serves', '[]'::jsonb));
-
-  DELETE FROM life_plan_step_serves ss
-   USING life_plan_routine_steps st, life_plan_routines r
-   WHERE ss.step_id = st.id AND st.routine_id = r.id AND r.plan_id = v_plan_id;
-  INSERT INTO life_plan_step_serves
-  SELECT * FROM jsonb_populate_recordset(NULL::life_plan_step_serves,
-    coalesce(p_rows -> 'step_serves', '[]'::jsonb));
-
-  DELETE FROM life_plan_values WHERE plan_id = v_plan_id;
-  INSERT INTO life_plan_values
-  SELECT * FROM jsonb_populate_recordset(NULL::life_plan_values,
-    coalesce(p_rows -> 'values', '[]'::jsonb));
-
-  DELETE FROM life_plan_answers WHERE plan_id = v_plan_id;
-  INSERT INTO life_plan_answers
-  SELECT * FROM jsonb_populate_recordset(NULL::life_plan_answers,
-    coalesce(p_rows -> 'answers', '[]'::jsonb));
-
-  -- ------------------------------------------------------------- the plan
-  -- `seq` may only ever rise: it is the id counter, and letting a stale device
-  -- lower it would mint an id that already belongs to something else.
-  UPDATE life_plans
-     SET version = coalesce((p_rows ->> 'version')::int, version),
-         seq = greatest(seq, coalesce((p_rows ->> 'seq')::int, 0)),
-         season_focus_id = (p_rows ->> 'season_focus_id')::uuid,
-         revision = revision + 1
-   WHERE id = v_plan_id
-  RETURNING revision INTO v_rev;
-
-  RETURN v_rev;
-END;
-$$;
-
-
-ALTER FUNCTION "public"."save_life_plan"("p_rows" "jsonb", "p_expected_rev" integer) OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."save_program_state"("p_id" "uuid", "p_fields" "jsonb", "p_expect" "jsonb" DEFAULT NULL::"jsonb") RETURNS "jsonb"
     LANGUAGE "plpgsql"
     SET "search_path" TO 'public'
@@ -1105,107 +1097,233 @@ COMMENT ON FUNCTION "public"."start_enrollment"("p_row" "jsonb", "p_displace" "u
 
 
 
-CREATE OR REPLACE FUNCTION "public"."thought_counts"("p_tz" "text", "p_now" timestamp with time zone DEFAULT "now"(), "p_user" "uuid" DEFAULT NULL::"uuid") RETURNS TABLE("thought_id" "uuid", "today" integer, "week" integer, "month" integer, "total" integer, "first_at" timestamp with time zone, "last_at" timestamp with time zone)
-    LANGUAGE "sql" STABLE
-    SET "search_path" TO 'public'
+CREATE OR REPLACE FUNCTION "public"."timetrack_alert_due"("p_user" "uuid" DEFAULT NULL::"uuid") RETURNS boolean
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
     AS $$
-  SELECT
-    l.thought_id,
-    (count(*) FILTER (WHERE l.at >= (date_trunc('day', p_now AT TIME ZONE p_tz) AT TIME ZONE p_tz)))::int,
-    (count(*) FILTER (WHERE l.at >= p_now - interval '7 days'))::int,
-    (count(*) FILTER (WHERE l.at >= p_now - interval '30 days'))::int,
-    count(*)::int,
-    min(l.at),
-    max(l.at)
-  FROM public.thought_logs l
-  WHERE l.user_id = coalesce(p_user, auth.uid()) AND l.thought_id IS NOT NULL AND l.at <= p_now
-  GROUP BY l.thought_id
-  ORDER BY l.thought_id
-$$;
-
-
-ALTER FUNCTION "public"."thought_counts"("p_tz" "text", "p_now" timestamp with time zone, "p_user" "uuid") OWNER TO "postgres";
-
-
-CREATE OR REPLACE FUNCTION "public"."thought_frequency_stats"("p_tz" "text", "p_now" timestamp with time zone DEFAULT "now"()) RETURNS "jsonb"
-    LANGUAGE "sql" STABLE
-    SET "search_path" TO 'public'
-    AS $$
-  WITH me AS (SELECT auth.uid() AS uid),
-  recent AS (
-    SELECT l.thought_id, l.at, l.prompt_id
-      FROM thought_logs l, me
-     WHERE l.user_id = me.uid AND l.at <= p_now AND l.at > p_now - interval '30 days'
-  ),
-  week_top AS (
-    SELECT thought_id, count(*)::int AS n FROM recent
-     WHERE thought_id IS NOT NULL AND at > p_now - interval '7 days'
-     GROUP BY thought_id ORDER BY n DESC, thought_id LIMIT 10
-  ),
-  month_top AS (
-    SELECT thought_id, count(*)::int AS n FROM recent
-     WHERE thought_id IS NOT NULL
-     GROUP BY thought_id ORDER BY n DESC, thought_id LIMIT 10
-  ),
-  heat AS (
-    SELECT extract(isodow FROM at AT TIME ZONE p_tz)::int AS dow,
-           extract(hour FROM at AT TIME ZONE p_tz)::int AS hour,
-           count(*)::int AS n
-      FROM recent WHERE thought_id IS NOT NULL
-     GROUP BY 1, 2
-  ),
-  days AS (
-    SELECT thought_id, (at AT TIME ZONE p_tz)::date AS day, count(*)::int AS n
-      FROM recent
-     WHERE thought_id IS NOT NULL AND at > p_now - interval '15 days'
-     GROUP BY 1, 2
-  ),
-  first_reframe AS (
-    SELECT r.thought_id, min(r.created_at) AS reframed_at
-      FROM thought_reframes r, me WHERE r.user_id = me.uid
-     GROUP BY r.thought_id
-  ),
-  windows AS (
-    SELECT f.thought_id, f.reframed_at,
-           greatest(f.reframed_at - interval '14 days',
-                    coalesce((SELECT min(l.at) FROM thought_logs l, me
-                               WHERE l.user_id = me.uid AND l.thought_id = f.thought_id), f.reframed_at)) AS before_from,
-           least(f.reframed_at + interval '14 days', p_now) AS after_to
-      FROM first_reframe f
-  ),
-  before_after AS (
-    SELECT w.thought_id, w.reframed_at,
-           (SELECT count(*) FROM thought_logs l, me
-             WHERE l.user_id = me.uid AND l.thought_id = w.thought_id
-               AND l.at >= w.before_from AND l.at < w.reframed_at)::int AS before_n,
-           round((extract(epoch FROM (w.reframed_at - w.before_from)) / 86400)::numeric, 2) AS before_days,
-           (SELECT count(*) FROM thought_logs l, me
-             WHERE l.user_id = me.uid AND l.thought_id = w.thought_id
-               AND l.at >= w.reframed_at AND l.at < w.after_to)::int AS after_n,
-           round((extract(epoch FROM greatest(w.after_to - w.reframed_at, interval '0')) / 86400)::numeric, 2) AS after_days
-      FROM windows w
-  ),
-  sends AS (
-    SELECT s.id FROM notification_sends s, me
-     WHERE s.user_id = me.uid AND s.kind = 'thought-prompt' AND s.delivered > 0
-       AND s.sent_at <= p_now AND s.sent_at > p_now - interval '7 days'
-  )
-  SELECT jsonb_build_object(
-    'weekTop', coalesce((SELECT jsonb_agg(jsonb_build_object('thoughtId', thought_id, 'n', n) ORDER BY n DESC, thought_id) FROM week_top), '[]'::jsonb),
-    'monthTop', coalesce((SELECT jsonb_agg(jsonb_build_object('thoughtId', thought_id, 'n', n) ORDER BY n DESC, thought_id) FROM month_top), '[]'::jsonb),
-    'heat', coalesce((SELECT jsonb_agg(jsonb_build_object('dow', dow, 'hour', hour, 'n', n)) FROM heat), '[]'::jsonb),
-    'days', coalesce((SELECT jsonb_agg(jsonb_build_object('thoughtId', thought_id, 'day', day, 'n', n)) FROM days), '[]'::jsonb),
-    'reframes', coalesce((SELECT jsonb_agg(jsonb_build_object(
-        'thoughtId', thought_id, 'reframedAt', reframed_at,
-        'beforeN', before_n, 'beforeDays', before_days, 'afterN', after_n, 'afterDays', after_days)) FROM before_after), '[]'::jsonb),
-    'prompts', jsonb_build_object(
-        'delivered', (SELECT count(*) FROM sends)::int,
-        'answered', (SELECT count(DISTINCT l.prompt_id) FROM thought_logs l JOIN sends s ON s.id = l.prompt_id, me WHERE l.user_id = me.uid)::int)
+  select exists (
+    select 1 from public.timetrack_alerts_due(2147483647) as a where p_user is null or a.user_id = p_user
   )
 $$;
 
 
-ALTER FUNCTION "public"."thought_frequency_stats"("p_tz" "text", "p_now" timestamp with time zone) OWNER TO "postgres";
+ALTER FUNCTION "public"."timetrack_alert_due"("p_user" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."timetrack_alerts_due"("p_limit" integer) RETURNS TABLE("id" "text", "user_id" "uuid", "description" "text", "project_name" "text", "started_at" timestamp with time zone)
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+  select d.id, d.user_id, d.description, d.project_name, d.started_at
+    from (
+      select distinct on (e.user_id)
+             e.id, e.user_id, e.description, pr.name as project_name, e.started_at
+        from public.timetrack_entries as e
+        left join public.timetrack_projects as pr on pr.id = e.project_id
+        left join public.profiles as p on p.id = e.user_id
+       where e.stopped_at is null
+         and e.deleted_at is null
+         and e.started_at <= now() - interval '6 hours'
+         and e.started_at > now() - interval '7 days'
+         and exists (select 1 from public.push_devices as dv where dv.user_id = e.user_id and dv.timer_running)
+         and not exists (
+           select 1 from public.notification_sends as s where s.kind = 'timetrack-alert' and s.entry_id = e.id
+         )
+         and extract(hour from now() at time zone (
+               case when p.timezone in (select name from pg_catalog.pg_timezone_names) then p.timezone else 'UTC' end
+             )) between 7 and 22
+       order by e.user_id, e.started_at asc, e.id asc
+    ) as d
+   order by d.started_at asc, d.id asc
+   limit greatest(coalesce(p_limit, 0), 0)
+$$;
+
+
+ALTER FUNCTION "public"."timetrack_alerts_due"("p_limit" integer) OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."timetrack_push"("p_batch" "jsonb", "p_tag_sets" "jsonb" DEFAULT '{}'::"jsonb") RETURNS "jsonb"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $_$
+declare
+  v_uid uuid := auth.uid();
+  v_tables constant text[] := array[
+    'timetrack_workspaces', 'timetrack_clients', 'timetrack_projects', 'timetrack_project_rates',
+    'timetrack_project_alerts', 'timetrack_alert_events', 'timetrack_tasks', 'timetrack_tags',
+    'timetrack_entries', 'timetrack_entry_tags', 'timetrack_favorites', 'timetrack_saved_reports',
+    'timetrack_approvals', 'timetrack_webhooks', 'timetrack_webhook_log',
+    'timetrack_autotracker_rules', 'timetrack_timeline', 'timetrack_calendars', 'timetrack_settings'
+  ];
+  v_sets jsonb := coalesce(p_tag_sets, '{}'::jsonb);
+  v_part jsonb;
+  v_table text;
+  v_bases jsonb;
+  v_keycol text;
+  v_checked boolean;
+  v_stamped boolean;
+  v_columns text[];
+  v_row jsonb;
+  v_key text;
+  v_base text;
+  v_list text;
+  v_current jsonb;
+  v_new jsonb;
+  v_count integer;
+  v_applied integer := 0;
+  v_written jsonb := '{}'::jsonb;
+  v_conflicts jsonb := '{}'::jsonb;
+  v_conflict_tags jsonb := '{}'::jsonb;
+  v_entries_written text[] := '{}';
+  v_entries_refused text[] := '{}';
+  v_entry text;
+  v_tags jsonb;
+begin
+  if v_uid is null then
+    raise exception 'Not signed in' using errcode = '42501';
+  end if;
+  if jsonb_typeof(p_batch) is distinct from 'array' then
+    raise exception 'p_batch must be an array of {table, rows, bases}' using errcode = '22023';
+  end if;
+  if jsonb_typeof(v_sets) is distinct from 'object' then
+    raise exception 'p_tag_sets must map an entry id to its tag ids' using errcode = '22023';
+  end if;
+
+  -- The caller sends the tables parents first (the repo's TIMETRACK_TABLES order),
+  -- so every foreign key is satisfied as it goes.
+  for v_part in select value from jsonb_array_elements(p_batch) loop
+    v_table := v_part->>'table';
+    if v_table is null or not (v_table = any (v_tables)) then
+      raise exception 'Not a time-tracking table: %', coalesce(v_table, '(none)') using errcode = '22023';
+    end if;
+    v_bases := coalesce(v_part->'bases', '{}'::jsonb);
+
+    if v_table = 'timetrack_entry_tags' then
+      -- Links are only ever added here. An entry whose whole set travels in
+      -- p_tag_sets is handled below instead, and a refused entry's links wait for
+      -- the device to send them again with the entry.
+      insert into public.timetrack_entry_tags (entry_id, tag_id, user_id)
+      select link->>'entry_id', link->>'tag_id', v_uid
+      from jsonb_array_elements(coalesce(v_part->'rows', '[]'::jsonb)) as link
+      where not ((link->>'entry_id') = any (v_entries_refused))
+        and not (v_sets ? (link->>'entry_id'))
+      on conflict (entry_id, tag_id) do nothing;
+      get diagnostics v_count = row_count;
+      v_applied := v_applied + v_count;
+      continue;
+    end if;
+
+    v_keycol := case when v_table = 'timetrack_settings' then 'user_id' else 'id' end;
+    v_checked := v_table not in ('timetrack_workspaces', 'timetrack_webhook_log');
+    v_stamped := v_table <> 'timetrack_webhook_log';
+    select array_agg(a.attname::text) into v_columns
+    from pg_catalog.pg_attribute as a
+    where a.attrelid = pg_catalog.to_regclass('public.' || v_table)
+      and a.attnum > 0
+      and not a.attisdropped;
+
+    for v_row in select value from jsonb_array_elements(coalesce(v_part->'rows', '[]'::jsonb)) loop
+      v_row := v_row || jsonb_build_object('user_id', v_uid);
+      v_key := v_row->>v_keycol;
+      if v_key is null then
+        raise exception 'A % row without its %', v_table, v_keycol using errcode = '22023';
+      end if;
+
+      -- the columns this row names; unknown keys are ignored, `updated_at` is ours
+      select string_agg(pg_catalog.quote_ident(k), ', ') into v_list
+      from jsonb_object_keys(v_row) as k
+      where k = any (v_columns) and k <> 'updated_at';
+
+      execute format('select to_jsonb(t) from public.%I as t where t.%I::text = $1 for update', v_table, v_keycol)
+        into v_current using v_key;
+
+      v_new := null;
+      if v_current is null then
+        if v_stamped then
+          execute format(
+            'insert into public.%I as t (%s, updated_at) select %s, now() from pg_catalog.jsonb_populate_record(null::public.%I, $1) returning to_jsonb(t.updated_at)',
+            v_table, v_list, v_list, v_table
+          ) into v_new using v_row;
+        else
+          execute format(
+            'insert into public.%I (%s) select %s from pg_catalog.jsonb_populate_record(null::public.%I, $1)',
+            v_table, v_list, v_list, v_table
+          ) using v_row;
+        end if;
+      else
+        v_base := v_bases->>v_key;
+        if v_checked and (v_base is null or (v_current->>'updated_at')::timestamptz <> v_base::timestamptz) then
+          -- Stale, or a write of a row the device believed was new: the stored row
+          -- stays as it is, and the device is told what it is.
+          v_conflicts := jsonb_set(
+            v_conflicts, array[v_table], coalesce(v_conflicts->v_table, '[]'::jsonb) || jsonb_build_array(v_current)
+          );
+          if v_table = 'timetrack_entries' then
+            v_entries_refused := v_entries_refused || v_key;
+            v_conflict_tags := v_conflict_tags || jsonb_build_object(
+              v_key,
+              coalesce(
+                (select jsonb_agg(l.tag_id order by l.tag_id) from public.timetrack_entry_tags as l where l.entry_id = v_key),
+                '[]'::jsonb
+              )
+            );
+          end if;
+          continue;
+        end if;
+        if v_stamped then
+          -- the touch trigger sets updated_at to now()
+          execute format(
+            'update public.%I as t set (%s) = (select %s from pg_catalog.jsonb_populate_record(null::public.%I, $1)) where t.%I::text = $2 returning to_jsonb(t.updated_at)',
+            v_table, v_list, v_list, v_table, v_keycol
+          ) into v_new using v_row, v_key;
+        else
+          execute format(
+            'update public.%I as t set (%s) = (select %s from pg_catalog.jsonb_populate_record(null::public.%I, $1)) where t.%I::text = $2',
+            v_table, v_list, v_list, v_table, v_keycol
+          ) using v_row, v_key;
+        end if;
+      end if;
+
+      v_applied := v_applied + 1;
+      if v_new is not null then
+        v_written := jsonb_set(
+          v_written, array[v_table], coalesce(v_written->v_table, '{}'::jsonb) || jsonb_build_object(v_key, v_new)
+        );
+      end if;
+      if v_table = 'timetrack_entries' then
+        v_entries_written := v_entries_written || v_key;
+      end if;
+    end loop;
+  end loop;
+
+  -- An entry's whole tag set: what is not in it goes, what is in it is there.
+  for v_entry, v_tags in select s.key, s.value from jsonb_each(v_sets) as s loop
+    if jsonb_typeof(v_tags) is distinct from 'array' then
+      raise exception 'The tag set for entry % is not a list', v_entry using errcode = '22023';
+    end if;
+    -- a set travels with its entry, under the entry's check
+    if not (v_entry = any (v_entries_written)) then
+      continue;
+    end if;
+    delete from public.timetrack_entry_tags as l
+    where l.entry_id = v_entry
+      and not (l.tag_id in (select jsonb_array_elements_text(v_tags)));
+    insert into public.timetrack_entry_tags (entry_id, tag_id, user_id)
+    select v_entry, tag, v_uid from jsonb_array_elements_text(v_tags) as tag
+    on conflict (entry_id, tag_id) do nothing;
+  end loop;
+
+  return jsonb_build_object(
+    'applied', v_applied,
+    'written', v_written,
+    'conflicts', v_conflicts,
+    'conflict_tags', v_conflict_tags
+  );
+end;
+$_$;
+
+
+ALTER FUNCTION "public"."timetrack_push"("p_batch" "jsonb", "p_tag_sets" "jsonb") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."timetrack_touch_updated_at"() RETURNS "trigger"
@@ -1285,6 +1403,23 @@ $$;
 
 
 ALTER FUNCTION "public"."user_programs_touch_updated_at"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."user_role_models_at_most_five"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+begin
+  perform pg_advisory_xact_lock(hashtextextended('user_role_models:' || new.user_id::text, 0));
+  if (select count(*) from public.user_role_models where user_id = new.user_id) >= 5 then
+    raise exception 'council_full' using errcode = 'P0001', hint = 'A council holds at most five people.';
+  end if;
+  return new;
+end;
+$$;
+
+
+ALTER FUNCTION "public"."user_role_models_at_most_five"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."workout_logs_enrollment_is_own"() RETURNS "trigger"
@@ -1379,6 +1514,57 @@ ALTER TABLE "public"."approaches" OWNER TO "postgres";
 
 COMMENT ON COLUMN "public"."approaches"."set_type" IS 'Type of set: solo, two_set, three_plus, seated, moving, etc.';
 
+
+
+CREATE TABLE IF NOT EXISTS "public"."audit_runs" (
+    "id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "started_at" timestamp with time zone NOT NULL,
+    "ends_at" timestamp with time zone NOT NULL,
+    "ended_at" timestamp with time zone,
+    "quiet_start" smallint DEFAULT 1320 NOT NULL,
+    "quiet_end" smallint DEFAULT 480 NOT NULL,
+    "muted_until" timestamp with time zone,
+    "review" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
+    "end_sent_at" timestamp with time zone,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "audit_runs_check" CHECK ((("ends_at" > "started_at") AND ("ends_at" <= ("started_at" + '31 days'::interval)))),
+    CONSTRAINT "audit_runs_check1" CHECK ((("ended_at" IS NULL) OR ("ended_at" >= "started_at"))),
+    CONSTRAINT "audit_runs_check2" CHECK ((("mod"(("quiet_start")::integer, 15) = 0) AND ("mod"(("quiet_end")::integer, 15) = 0))),
+    CONSTRAINT "audit_runs_quiet_end_check" CHECK ((("quiet_end" >= 0) AND ("quiet_end" <= 1439))),
+    CONSTRAINT "audit_runs_quiet_start_check" CHECK ((("quiet_start" >= 0) AND ("quiet_start" <= 1439)))
+);
+
+
+ALTER TABLE "public"."audit_runs" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."audit_slots" (
+    "id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "run_id" "uuid" NOT NULL,
+    "slot_at" timestamp with time zone NOT NULL,
+    "activity" "text" NOT NULL,
+    "energy" smallint NOT NULL,
+    "growth" smallint NOT NULL,
+    "avoiding" boolean DEFAULT false NOT NULL,
+    "why" "text",
+    "source" "text" NOT NULL,
+    "time_entry_id" "text",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "audit_slots_activity_check" CHECK ((("length"("activity") >= 1) AND ("length"("activity") <= 200))),
+    CONSTRAINT "audit_slots_energy_check" CHECK ((("energy" >= 1) AND ("energy" <= 7))),
+    CONSTRAINT "audit_slots_growth_check" CHECK ((("growth" >= 1) AND ("growth" <= 7))),
+    CONSTRAINT "audit_slots_slot_at_check" CHECK (("mod"(EXTRACT(epoch FROM "slot_at"), (900)::numeric) = (0)::numeric)),
+    CONSTRAINT "audit_slots_source_check" CHECK (("source" = ANY (ARRAY['app'::"text", 'later'::"text", 'same'::"text"]))),
+    CONSTRAINT "audit_slots_time_entry_id_check" CHECK ((("time_entry_id" IS NULL) OR ("length"("time_entry_id") <= 200))),
+    CONSTRAINT "audit_slots_why_check" CHECK ((("why" IS NULL) OR ("length"("why") <= 2000)))
+);
+
+
+ALTER TABLE "public"."audit_slots" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."beta_invites" (
@@ -1614,31 +1800,6 @@ CREATE TABLE IF NOT EXISTS "public"."inner_game_progress" (
 ALTER TABLE "public"."inner_game_progress" OWNER TO "postgres";
 
 
-CREATE TABLE IF NOT EXISTS "public"."life_answers" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "user_id" "uuid" NOT NULL,
-    "answer_key" "text" NOT NULL,
-    "body" "text" NOT NULL,
-    "answered_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "legacy_due_on" "date",
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "chapter_id" "uuid" NOT NULL,
-    CONSTRAINT "life_answers_answer_key_check" CHECK (("answer_key" = ANY (ARRAY['one_thing'::"text", 'one_why'::"text", 'one_cost'::"text", 'one_identity'::"text", 'one_values'::"text"]))),
-    CONSTRAINT "life_answers_body_check" CHECK ((("length"("btrim"("body")) >= 1) AND ("length"("btrim"("body")) <= 2000)))
-);
-
-
-ALTER TABLE "public"."life_answers" OWNER TO "postgres";
-
-
-COMMENT ON TABLE "public"."life_answers" IS 'Dated written answers from the Life Mastery flow. Current = newest row. Insert and delete only; never updated.';
-
-
-
-COMMENT ON COLUMN "public"."life_answers"."legacy_due_on" IS 'FROZEN. The per-row deadline from before chapters existed, kept for reference. Never read, never written. The live deadline is life_chapters.due_on.';
-
-
-
 CREATE TABLE IF NOT EXISTS "public"."life_areas" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "user_id" "uuid" NOT NULL,
@@ -1655,31 +1816,6 @@ CREATE TABLE IF NOT EXISTS "public"."life_areas" (
 
 
 ALTER TABLE "public"."life_areas" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."life_chapters" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "user_id" "uuid" NOT NULL,
-    "statement_key" "text" NOT NULL,
-    "started_on" "date" NOT NULL,
-    "due_on" "date" NOT NULL,
-    "opened_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "continues_id" "uuid",
-    CONSTRAINT "life_chapters_dates_sane" CHECK ((("due_on" >= "started_on") AND ("due_on" <= ("started_on" + 1830)))),
-    CONSTRAINT "life_chapters_statement_key_check" CHECK (("statement_key" = 'one_thing'::"text"))
-);
-
-
-ALTER TABLE "public"."life_chapters" OWNER TO "postgres";
-
-
-COMMENT ON TABLE "public"."life_chapters" IS 'What you committed to, and the dates it runs between. The words live in life_answers, one or more versions per chapter. Current = newest chapter; never a stored flag.';
-
-
-
-COMMENT ON COLUMN "public"."life_chapters"."continues_id" IS 'The chapter this one continues when a deadline moved. Deliberately not a foreign key: nulling it on delete is an UPDATE, which the append-only trigger refuses. A dangling id means the chapter it continued was deleted.';
-
 
 
 CREATE TABLE IF NOT EXISTS "public"."life_plan_answers" (
@@ -1713,21 +1849,17 @@ CREATE TABLE IF NOT EXISTS "public"."life_plan_areas" (
     "review_snapshot" "text" DEFAULT ''::"text" NOT NULL,
     "review_blockers" "text" DEFAULT ''::"text" NOT NULL,
     "review_identity" "text" DEFAULT ''::"text" NOT NULL,
-    "review_fortnight" smallint,
     "review_goals_aim" "text",
-    "season_rank" integer,
     CONSTRAINT "life_plan_areas_color_check" CHECK (("char_length"("color") <= 40)),
     CONSTRAINT "life_plan_areas_label_check" CHECK (("char_length"("label") <= 200)),
     CONSTRAINT "life_plan_areas_node_kind_check" CHECK (("node_kind" = 'area'::"text")),
     CONSTRAINT "life_plan_areas_position_check" CHECK (("position" >= 0)),
     CONSTRAINT "life_plan_areas_review_blockers_check" CHECK (("char_length"("review_blockers") <= 20000)),
-    CONSTRAINT "life_plan_areas_review_fortnight_check" CHECK ((("review_fortnight" IS NULL) OR (("review_fortnight" >= 0) AND ("review_fortnight" <= 10)))),
     CONSTRAINT "life_plan_areas_review_goals_aim_check" CHECK ((("review_goals_aim" IS NULL) OR ("review_goals_aim" = ANY (ARRAY['yes'::"text", 'no'::"text"])))),
     CONSTRAINT "life_plan_areas_review_identity_check" CHECK (("char_length"("review_identity") <= 20000)),
     CONSTRAINT "life_plan_areas_review_purpose_check" CHECK (("char_length"("review_purpose") <= 20000)),
     CONSTRAINT "life_plan_areas_review_snapshot_check" CHECK (("char_length"("review_snapshot") <= 20000)),
     CONSTRAINT "life_plan_areas_review_ten_check" CHECK (("char_length"("review_ten") <= 20000)),
-    CONSTRAINT "life_plan_areas_season_rank_check" CHECK ((("season_rank" IS NULL) OR ("season_rank" >= 0))),
     CONSTRAINT "life_plan_areas_sublabel_check" CHECK (("char_length"("sublabel") <= 400))
 );
 
@@ -1751,6 +1883,18 @@ CREATE TABLE IF NOT EXISTS "public"."life_plan_day_journal" (
 
 
 ALTER TABLE "public"."life_plan_day_journal" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."life_plan_day_numbers" (
+    "user_id" "uuid" NOT NULL,
+    "day_id" "uuid" NOT NULL,
+    "node_id" "uuid" NOT NULL,
+    "value" numeric NOT NULL,
+    CONSTRAINT "life_plan_day_numbers_value_check" CHECK ((("value" >= ('-1000000000'::integer)::numeric) AND ("value" <= (1000000000)::numeric)))
+);
+
+
+ALTER TABLE "public"."life_plan_day_numbers" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."life_plan_day_ratings" (
@@ -1821,7 +1965,7 @@ CREATE TABLE IF NOT EXISTS "public"."life_plan_fields" (
     "kind" "text" DEFAULT 'write'::"text" NOT NULL,
     "target_id" "uuid",
     "read_source_id" "text",
-    CONSTRAINT "life_plan_fields_kind_check" CHECK (("kind" = ANY (ARRAY['write'::"text", 'read'::"text", 'go'::"text"]))),
+    CONSTRAINT "life_plan_fields_kind_check" CHECK (("kind" = ANY (ARRAY['write'::"text", 'read'::"text", 'go'::"text", 'number'::"text"]))),
     CONSTRAINT "life_plan_fields_label_check" CHECK (("char_length"("label") <= 500)),
     CONSTRAINT "life_plan_fields_node_kind_check" CHECK (("node_kind" = 'field'::"text")),
     CONSTRAINT "life_plan_fields_position_check" CHECK (("position" >= 0)),
@@ -1862,7 +2006,10 @@ CREATE TABLE IF NOT EXISTS "public"."life_plan_goal_checkpoints" (
     "title" "text" DEFAULT ''::"text" NOT NULL,
     "done" boolean DEFAULT false NOT NULL,
     "celebration" "text" DEFAULT ''::"text" NOT NULL,
+    "due_on" "date",
+    "done_on" "date",
     CONSTRAINT "life_plan_goal_checkpoints_celebration_check" CHECK (("char_length"("celebration") <= 2000)),
+    CONSTRAINT "life_plan_goal_checkpoints_days_check" CHECK (((("due_on" IS NULL) OR (("due_on" >= '1900-01-01'::"date") AND ("due_on" <= '2200-12-31'::"date"))) AND (("done_on" IS NULL) OR (("done_on" >= '1900-01-01'::"date") AND ("done_on" <= '2200-12-31'::"date"))))),
     CONSTRAINT "life_plan_goal_checkpoints_node_kind_check" CHECK (("node_kind" = 'checkpoint'::"text")),
     CONSTRAINT "life_plan_goal_checkpoints_position_check" CHECK (("position" >= 0)),
     CONSTRAINT "life_plan_goal_checkpoints_title_check" CHECK (("char_length"("title") <= 500))
@@ -1883,29 +2030,6 @@ CREATE TABLE IF NOT EXISTS "public"."life_plan_goal_feeds" (
 
 
 ALTER TABLE "public"."life_plan_goal_feeds" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."life_plan_goal_habits" (
-    "id" "uuid" NOT NULL,
-    "user_id" "uuid" NOT NULL,
-    "goal_id" "uuid" NOT NULL,
-    "node_kind" "text" DEFAULT 'habit'::"text" NOT NULL,
-    "position" integer NOT NULL,
-    "title" "text" DEFAULT ''::"text" NOT NULL,
-    "days_per_week" smallint DEFAULT 0 NOT NULL,
-    "placeholder" boolean DEFAULT false NOT NULL,
-    "routine_days" "jsonb" DEFAULT '[]'::"jsonb" NOT NULL,
-    "source_target_id" "text",
-    CONSTRAINT "life_plan_goal_habits_days_per_week_check" CHECK ((("days_per_week" >= 0) AND ("days_per_week" <= 7))),
-    CONSTRAINT "life_plan_goal_habits_node_kind_check" CHECK (("node_kind" = 'habit'::"text")),
-    CONSTRAINT "life_plan_goal_habits_position_check" CHECK (("position" >= 0)),
-    CONSTRAINT "life_plan_goal_habits_routine_days_check" CHECK (("jsonb_typeof"("routine_days") = 'array'::"text")),
-    CONSTRAINT "life_plan_goal_habits_source_target_id_check" CHECK ((("source_target_id" IS NULL) OR ("char_length"("source_target_id") <= 120))),
-    CONSTRAINT "life_plan_goal_habits_title_check" CHECK (("char_length"("title") <= 500))
-);
-
-
-ALTER TABLE "public"."life_plan_goal_habits" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."life_plan_goal_obstacles" (
@@ -1961,13 +2085,14 @@ CREATE TABLE IF NOT EXISTS "public"."life_plan_goals" (
     "days_per_week" smallint DEFAULT 0 NOT NULL,
     "per_week" numeric,
     "is_abstinence" boolean DEFAULT false NOT NULL,
-    "serves_one_thing" boolean DEFAULT false NOT NULL,
     "metric" "text",
     "ladder" "jsonb",
     "ramp_steps" "jsonb",
     "reasons_list" "text"[] DEFAULT '{}'::"text"[] NOT NULL,
     "asked" "text"[] DEFAULT '{}'::"text"[] NOT NULL,
-    "user_goal_id" "uuid",
+    "timeframe" "text",
+    "status" "text" DEFAULT 'active'::"text" NOT NULL,
+    "status_on" "date",
     CONSTRAINT "life_plan_goals_belief_level_check" CHECK ((("belief_level" IS NULL) OR (("belief_level" >= 0) AND ("belief_level" <= 10)))),
     CONSTRAINT "life_plan_goals_days_per_week_check" CHECK ((("days_per_week" >= 0) AND ("days_per_week" <= 7))),
     CONSTRAINT "life_plan_goals_desire_level_check" CHECK ((("desire_level" IS NULL) OR (("desire_level" >= 0) AND ("desire_level" <= 10)))),
@@ -1984,6 +2109,9 @@ CREATE TABLE IF NOT EXISTS "public"."life_plan_goals" (
     CONSTRAINT "life_plan_goals_reward_check" CHECK (("char_length"("reward") <= 20000)),
     CONSTRAINT "life_plan_goals_sentence_check" CHECK (("char_length"("sentence") <= 20000)),
     CONSTRAINT "life_plan_goals_stake_check" CHECK (("char_length"("stake") <= 20000)),
+    CONSTRAINT "life_plan_goals_status_check" CHECK (("status" = ANY (ARRAY['active'::"text", 'achieved'::"text", 'paused'::"text", 'dropped'::"text"]))),
+    CONSTRAINT "life_plan_goals_status_on_check" CHECK ((("status_on" IS NULL) OR (("status_on" >= '1900-01-01'::"date") AND ("status_on" <= '2200-12-31'::"date")))),
+    CONSTRAINT "life_plan_goals_timeframe_check" CHECK ((("timeframe" IS NULL) OR ("timeframe" = ANY (ARRAY['1m'::"text", '90d'::"text", '1y'::"text", '3y'::"text", '5y'::"text", '10y'::"text", '20y'::"text"])))),
     CONSTRAINT "life_plan_goals_title_check" CHECK (("char_length"("title") <= 500)),
     CONSTRAINT "life_plan_goals_unit_check" CHECK (("char_length"("unit") <= 100)),
     CONSTRAINT "life_plan_goals_why_check" CHECK (("char_length"("why") <= 20000))
@@ -1999,7 +2127,7 @@ CREATE TABLE IF NOT EXISTS "public"."life_plan_nodes" (
     "user_id" "uuid" NOT NULL,
     "kind" "text" NOT NULL,
     "local_id" "text" NOT NULL,
-    CONSTRAINT "life_plan_nodes_kind_check" CHECK (("kind" = ANY (ARRAY['north_star'::"text", 'area'::"text", 'goal'::"text", 'checkpoint'::"text", 'obstacle'::"text", 'belief'::"text", 'habit'::"text", 'routine'::"text", 'routine_step'::"text", 'split_day'::"text", 'experience'::"text", 'field'::"text", 'sub_step'::"text"]))),
+    CONSTRAINT "life_plan_nodes_kind_check" CHECK (("kind" = ANY (ARRAY['north_star'::"text", 'area'::"text", 'goal'::"text", 'checkpoint'::"text", 'obstacle'::"text", 'belief'::"text", 'habit'::"text", 'routine'::"text", 'routine_step'::"text", 'split_day'::"text", 'experience'::"text", 'field'::"text", 'sub_step'::"text", 'season'::"text", 'review'::"text"]))),
     CONSTRAINT "life_plan_nodes_local_id_check" CHECK (((("char_length"("local_id") >= 1) AND ("char_length"("local_id") <= 80)) AND ("local_id" ~ '^[A-Za-z0-9_:.-]+$'::"text")))
 );
 
@@ -2014,13 +2142,93 @@ CREATE TABLE IF NOT EXISTS "public"."life_plan_north_stars" (
     "node_kind" "text" DEFAULT 'north_star'::"text" NOT NULL,
     "text" "text" DEFAULT ''::"text" NOT NULL,
     "horizon_years" smallint DEFAULT 10 NOT NULL,
+    "started_on" "date" DEFAULT CURRENT_DATE NOT NULL,
+    "ended_on" "date",
+    "purpose" "text" DEFAULT ''::"text" NOT NULL,
+    "identity" "text" DEFAULT ''::"text" NOT NULL,
+    "conduct" "text" DEFAULT ''::"text" NOT NULL,
+    "become" "text" DEFAULT ''::"text" NOT NULL,
+    "affirmations" "text" DEFAULT ''::"text" NOT NULL,
+    "commitment" "text" DEFAULT ''::"text" NOT NULL,
+    "committed_on" "date",
+    CONSTRAINT "life_plan_north_stars_affirmations_check" CHECK (("char_length"("affirmations") <= 100000)),
+    CONSTRAINT "life_plan_north_stars_become_check" CHECK (("char_length"("become") <= 100000)),
+    CONSTRAINT "life_plan_north_stars_commitment_check" CHECK (("char_length"("commitment") <= 100000)),
+    CONSTRAINT "life_plan_north_stars_conduct_check" CHECK (("char_length"("conduct") <= 100000)),
+    CONSTRAINT "life_plan_north_stars_dates" CHECK ((("ended_on" IS NULL) OR ("ended_on" >= "started_on"))),
     CONSTRAINT "life_plan_north_stars_horizon_years_check" CHECK (("horizon_years" = ANY (ARRAY[5, 10, 20]))),
+    CONSTRAINT "life_plan_north_stars_identity_check" CHECK (("char_length"("identity") <= 100000)),
     CONSTRAINT "life_plan_north_stars_node_kind_check" CHECK (("node_kind" = 'north_star'::"text")),
+    CONSTRAINT "life_plan_north_stars_purpose_check" CHECK (("char_length"("purpose") <= 100000)),
     CONSTRAINT "life_plan_north_stars_text_check" CHECK (("char_length"("text") <= 20000))
 );
 
 
 ALTER TABLE "public"."life_plan_north_stars" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."life_plan_reminders" (
+    "user_id" "uuid" NOT NULL,
+    "push_on" boolean DEFAULT false NOT NULL,
+    "review_day" smallint DEFAULT 7 NOT NULL,
+    "review_hour" smallint DEFAULT 19 NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "life_plan_reminders_review_day_check" CHECK ((("review_day" >= 1) AND ("review_day" <= 7))),
+    CONSTRAINT "life_plan_reminders_review_hour_check" CHECK ((("review_hour" >= 6) AND ("review_hour" <= 22)))
+);
+
+
+ALTER TABLE "public"."life_plan_reminders" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."life_plan_review_goals" (
+    "user_id" "uuid" NOT NULL,
+    "review_id" "uuid" NOT NULL,
+    "goal_id" "uuid" NOT NULL,
+    "verdict" "text" NOT NULL,
+    CONSTRAINT "life_plan_review_goals_verdict_check" CHECK (("verdict" = ANY (ARRAY['on_track'::"text", 'behind'::"text", 'change'::"text"])))
+);
+
+
+ALTER TABLE "public"."life_plan_review_goals" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."life_plan_review_scores" (
+    "user_id" "uuid" NOT NULL,
+    "review_id" "uuid" NOT NULL,
+    "area_id" "uuid" NOT NULL,
+    "score" smallint NOT NULL,
+    "scored_on" "date",
+    CONSTRAINT "life_plan_review_scores_score_check" CHECK ((("score" >= 0) AND ("score" <= 10))),
+    CONSTRAINT "life_plan_review_scores_scored_on_check" CHECK ((("scored_on" IS NULL) OR (("scored_on" >= '1900-01-01'::"date") AND ("scored_on" <= '2200-12-31'::"date"))))
+);
+
+
+ALTER TABLE "public"."life_plan_review_scores" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."life_plan_reviews" (
+    "id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "plan_id" "uuid" NOT NULL,
+    "node_kind" "text" DEFAULT 'review'::"text" NOT NULL,
+    "cadence" "text" NOT NULL,
+    "period_start" "date" NOT NULL,
+    "period_end" "date" NOT NULL,
+    "written_on" "date" DEFAULT CURRENT_DATE NOT NULL,
+    "magic_moments" "text" DEFAULT ''::"text" NOT NULL,
+    "lessons" "text" DEFAULT ''::"text" NOT NULL,
+    "next_outcomes" "text" DEFAULT ''::"text" NOT NULL,
+    CONSTRAINT "life_plan_reviews_cadence_check" CHECK (("cadence" = ANY (ARRAY['week'::"text", 'fortnight'::"text", 'month'::"text", 'quarter'::"text", 'year'::"text"]))),
+    CONSTRAINT "life_plan_reviews_dates" CHECK ((("period_end" >= "period_start") AND ("period_start" >= '1900-01-01'::"date") AND ("period_end" <= '2200-12-31'::"date"))),
+    CONSTRAINT "life_plan_reviews_lessons_check" CHECK (("char_length"("lessons") <= 100000)),
+    CONSTRAINT "life_plan_reviews_magic_moments_check" CHECK (("char_length"("magic_moments") <= 100000)),
+    CONSTRAINT "life_plan_reviews_next_outcomes_check" CHECK (("char_length"("next_outcomes") <= 100000)),
+    CONSTRAINT "life_plan_reviews_node_kind_check" CHECK (("node_kind" = 'review'::"text"))
+);
+
+
+ALTER TABLE "public"."life_plan_reviews" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."life_plan_routine_serves" (
@@ -2110,6 +2318,59 @@ CREATE TABLE IF NOT EXISTS "public"."life_plan_routines" (
 ALTER TABLE "public"."life_plan_routines" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."life_plan_season_areas" (
+    "user_id" "uuid" NOT NULL,
+    "season_id" "uuid" NOT NULL,
+    "area_id" "uuid" NOT NULL,
+    "position" integer DEFAULT 0 NOT NULL,
+    CONSTRAINT "life_plan_season_areas_position_check" CHECK (("position" >= 0))
+);
+
+
+ALTER TABLE "public"."life_plan_season_areas" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."life_plan_season_goals" (
+    "user_id" "uuid" NOT NULL,
+    "season_id" "uuid" NOT NULL,
+    "goal_id" "uuid" NOT NULL,
+    "position" integer DEFAULT 0 NOT NULL,
+    CONSTRAINT "life_plan_season_goals_position_check" CHECK (("position" >= 0))
+);
+
+
+ALTER TABLE "public"."life_plan_season_goals" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."life_plan_seasons" (
+    "id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "plan_id" "uuid" NOT NULL,
+    "node_kind" "text" DEFAULT 'season'::"text" NOT NULL,
+    "started_on" "date" DEFAULT CURRENT_DATE NOT NULL,
+    "ends_on" "date",
+    "ended_on" "date",
+    "sentence" "text" DEFAULT ''::"text" NOT NULL,
+    "why" "text" DEFAULT ''::"text" NOT NULL,
+    "cost" "text" DEFAULT ''::"text" NOT NULL,
+    "identity" "text" DEFAULT ''::"text" NOT NULL,
+    "values_note" "text" DEFAULT ''::"text" NOT NULL,
+    "areas_note" "text" DEFAULT ''::"text" NOT NULL,
+    "focus_id" "uuid",
+    CONSTRAINT "life_plan_seasons_areas_note_check" CHECK (("char_length"("areas_note") <= 100000)),
+    CONSTRAINT "life_plan_seasons_cost_check" CHECK (("char_length"("cost") <= 100000)),
+    CONSTRAINT "life_plan_seasons_dates" CHECK (((("ends_on" IS NULL) OR ("ends_on" >= "started_on")) AND (("ended_on" IS NULL) OR ("ended_on" >= "started_on")))),
+    CONSTRAINT "life_plan_seasons_identity_check" CHECK (("char_length"("identity") <= 100000)),
+    CONSTRAINT "life_plan_seasons_node_kind_check" CHECK (("node_kind" = 'season'::"text")),
+    CONSTRAINT "life_plan_seasons_sentence_check" CHECK (("char_length"("sentence") <= 2000)),
+    CONSTRAINT "life_plan_seasons_values_note_check" CHECK (("char_length"("values_note") <= 100000)),
+    CONSTRAINT "life_plan_seasons_why_check" CHECK (("char_length"("why") <= 100000))
+);
+
+
+ALTER TABLE "public"."life_plan_seasons" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."life_plan_step_serves" (
     "user_id" "uuid" NOT NULL,
     "step_id" "uuid" NOT NULL,
@@ -2164,7 +2425,6 @@ CREATE TABLE IF NOT EXISTS "public"."life_plans" (
     "version" integer DEFAULT 1 NOT NULL,
     "revision" integer DEFAULT 0 NOT NULL,
     "seq" integer DEFAULT 0 NOT NULL,
-    "season_focus_id" "uuid",
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     CONSTRAINT "life_plans_revision_check" CHECK (("revision" >= 0)),
@@ -2202,9 +2462,11 @@ CREATE TABLE IF NOT EXISTS "public"."notification_sends" (
     "devices" smallint DEFAULT 0 NOT NULL,
     "delivered" smallint DEFAULT 0 NOT NULL,
     "removed" smallint DEFAULT 0 NOT NULL,
+    "entry_id" "text",
     CONSTRAINT "notification_sends_delivered_check" CHECK (("delivered" >= 0)),
     CONSTRAINT "notification_sends_devices_check" CHECK (("devices" >= 0)),
-    CONSTRAINT "notification_sends_kind_check" CHECK (("kind" = ANY (ARRAY['thought-prompt'::"text", 'test'::"text"]))),
+    CONSTRAINT "notification_sends_entry_id_check" CHECK ((("entry_id" IS NULL) OR ("length"("entry_id") <= 200))),
+    CONSTRAINT "notification_sends_kind_check" CHECK (("kind" = ANY (ARRAY['test'::"text", 'timetrack-running'::"text", 'timetrack-alert'::"text", 'audit-ping'::"text", 'audit-end'::"text", 'plan-review'::"text", 'council-daily'::"text"]))),
     CONSTRAINT "notification_sends_removed_check" CHECK (("removed" >= 0))
 );
 
@@ -2421,6 +2683,7 @@ CREATE TABLE IF NOT EXISTS "public"."push_devices" (
     "last_success_at" timestamp with time zone,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "timer_running" boolean DEFAULT false NOT NULL,
     CONSTRAINT "push_devices_auth_check" CHECK ((("length"("auth") >= 1) AND ("length"("auth") <= 100))),
     CONSTRAINT "push_devices_endpoint_check" CHECK ((("endpoint" ~~ 'https://%'::"text") AND ("length"("endpoint") <= 1000))),
     CONSTRAINT "push_devices_failures_check" CHECK (("failures" >= 0)),
@@ -2579,97 +2842,6 @@ CREATE TABLE IF NOT EXISTS "public"."sticking_points" (
 
 
 ALTER TABLE "public"."sticking_points" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."thought_logs" (
-    "id" "uuid" NOT NULL,
-    "user_id" "uuid" NOT NULL,
-    "thought_id" "uuid",
-    "at" timestamp with time zone NOT NULL,
-    "source" "text" NOT NULL,
-    "prompt_id" "uuid",
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    CONSTRAINT "thought_logs_source_check" CHECK (("source" = ANY (ARRAY['tap'::"text", 'typed'::"text", 'prompt'::"text", 'prompt-action'::"text"])))
-);
-
-
-ALTER TABLE "public"."thought_logs" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."thought_prompt_schedule" (
-    "user_id" "uuid" NOT NULL,
-    "next_due_at" timestamp with time zone,
-    "last_sent_at" timestamp with time zone,
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
-);
-
-
-ALTER TABLE "public"."thought_prompt_schedule" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."thought_reframes" (
-    "id" "uuid" NOT NULL,
-    "user_id" "uuid" NOT NULL,
-    "thought_id" "uuid" NOT NULL,
-    "text" "text" NOT NULL,
-    "belief_before" smallint,
-    "belief_after" smallint,
-    "evidence" "text" DEFAULT ''::"text" NOT NULL,
-    "friend" "text" DEFAULT ''::"text" NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    CONSTRAINT "thought_reframes_belief_after_check" CHECK ((("belief_after" IS NULL) OR (("belief_after" >= 0) AND ("belief_after" <= 100)))),
-    CONSTRAINT "thought_reframes_belief_before_check" CHECK ((("belief_before" IS NULL) OR (("belief_before" >= 0) AND ("belief_before" <= 100)))),
-    CONSTRAINT "thought_reframes_evidence_check" CHECK (("length"("evidence") <= 2000)),
-    CONSTRAINT "thought_reframes_friend_check" CHECK (("length"("friend") <= 2000)),
-    CONSTRAINT "thought_reframes_text_check" CHECK ((("length"("btrim"("text")) >= 1) AND ("length"("btrim"("text")) <= 500)))
-);
-
-
-ALTER TABLE "public"."thought_reframes" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."thought_settings" (
-    "user_id" "uuid" NOT NULL,
-    "reminders_on" boolean DEFAULT false NOT NULL,
-    "interval_minutes" smallint DEFAULT 15 NOT NULL,
-    "quiet_start" smallint DEFAULT 1320,
-    "quiet_end" smallint DEFAULT 480,
-    "active_days" smallint DEFAULT 127 NOT NULL,
-    "paused_until" timestamp with time zone,
-    "show_thoughts" boolean DEFAULT false NOT NULL,
-    "reframe_after_days" smallint DEFAULT 3 NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    CONSTRAINT "thought_settings_active_days_check" CHECK ((("active_days" >= 1) AND ("active_days" <= 127))),
-    CONSTRAINT "thought_settings_interval_minutes_check" CHECK (("interval_minutes" = ANY (ARRAY[5, 10, 15, 20, 30, 45, 60, 90, 120]))),
-    CONSTRAINT "thought_settings_quiet_both_or_neither" CHECK ((("quiet_start" IS NULL) = ("quiet_end" IS NULL))),
-    CONSTRAINT "thought_settings_quiet_end_check" CHECK ((("quiet_end" IS NULL) OR (("quiet_end" >= 0) AND ("quiet_end" <= 1439)))),
-    CONSTRAINT "thought_settings_quiet_not_empty" CHECK ((("quiet_start" IS DISTINCT FROM "quiet_end") OR ("quiet_start" IS NULL))),
-    CONSTRAINT "thought_settings_quiet_start_check" CHECK ((("quiet_start" IS NULL) OR (("quiet_start" >= 0) AND ("quiet_start" <= 1439)))),
-    CONSTRAINT "thought_settings_reframe_after_days_check" CHECK ((("reframe_after_days" >= 1) AND ("reframe_after_days" <= 14)))
-);
-
-
-ALTER TABLE "public"."thought_settings" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."thoughts" (
-    "id" "uuid" NOT NULL,
-    "user_id" "uuid" NOT NULL,
-    "text" "text" NOT NULL,
-    "norm" "text" NOT NULL,
-    "pinned" boolean DEFAULT false NOT NULL,
-    "archived_at" timestamp with time zone,
-    "merged_into" "uuid",
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    CONSTRAINT "thoughts_norm_check" CHECK ((("length"("norm") >= 1) AND ("length"("norm") <= 280))),
-    CONSTRAINT "thoughts_not_merged_into_itself" CHECK (("merged_into" IS DISTINCT FROM "id")),
-    CONSTRAINT "thoughts_text_check" CHECK ((("length"("btrim"("text")) >= 1) AND ("length"("btrim"("text")) <= 280)))
-);
-
-
-ALTER TABLE "public"."thoughts" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."timetrack_alert_events" (
@@ -3136,6 +3308,49 @@ COMMENT ON TABLE "public"."user_programs" IS 'Programs people build themselves, 
 
 
 
+CREATE TABLE IF NOT EXISTS "public"."user_role_model_settings" (
+    "user_id" "uuid" NOT NULL,
+    "week_value" "text",
+    "week_of" "date",
+    "remind_on" boolean DEFAULT false NOT NULL,
+    "remind_hour" smallint DEFAULT 8 NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "user_role_model_settings_remind_hour_check" CHECK ((("remind_hour" >= 7) AND ("remind_hour" <= 21))),
+    CONSTRAINT "user_role_model_settings_week_value_check" CHECK ((("week_value" IS NULL) OR (("length"("week_value") >= 1) AND ("length"("week_value") <= 40))))
+);
+
+
+ALTER TABLE "public"."user_role_model_settings" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."user_role_model_week_marks" (
+    "user_id" "uuid" NOT NULL,
+    "day" "date" NOT NULL,
+    "value" "text" NOT NULL,
+    "lived" boolean NOT NULL,
+    "marked_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "user_role_model_week_marks_value_check" CHECK ((("length"("value") >= 1) AND ("length"("value") <= 40)))
+);
+
+
+ALTER TABLE "public"."user_role_model_week_marks" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."user_role_models" (
+    "user_id" "uuid" NOT NULL,
+    "role_model_id" "text" NOT NULL,
+    "position" smallint NOT NULL,
+    "taken_values" "text"[] NOT NULL,
+    "added_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "user_role_models_position_check" CHECK ((("position" >= 0) AND ("position" <= 4))),
+    CONSTRAINT "user_role_models_role_model_id_check" CHECK ((("role_model_id" ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::"text") AND ("length"("role_model_id") <= 80))),
+    CONSTRAINT "user_role_models_taken_values_check" CHECK ((("cardinality"("taken_values") >= 1) AND ("cardinality"("taken_values") <= 5)))
+);
+
+
+ALTER TABLE "public"."user_role_models" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."user_tracking_stats" (
     "user_id" "uuid" NOT NULL,
     "total_approaches" integer DEFAULT 0,
@@ -3403,6 +3618,26 @@ ALTER TABLE ONLY "public"."approaches"
 
 
 
+ALTER TABLE ONLY "public"."audit_runs"
+    ADD CONSTRAINT "audit_runs_id_user_id_key" UNIQUE ("id", "user_id");
+
+
+
+ALTER TABLE ONLY "public"."audit_runs"
+    ADD CONSTRAINT "audit_runs_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."audit_slots"
+    ADD CONSTRAINT "audit_slots_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."audit_slots"
+    ADD CONSTRAINT "audit_slots_run_id_slot_at_key" UNIQUE ("run_id", "slot_at");
+
+
+
 ALTER TABLE ONLY "public"."beta_invites"
     ADD CONSTRAINT "beta_invites_code_key" UNIQUE ("code");
 
@@ -3468,11 +3703,6 @@ ALTER TABLE ONLY "public"."inner_game_progress"
 
 
 
-ALTER TABLE ONLY "public"."life_answers"
-    ADD CONSTRAINT "life_answers_pkey" PRIMARY KEY ("id");
-
-
-
 ALTER TABLE ONLY "public"."life_areas"
     ADD CONSTRAINT "life_areas_pkey" PRIMARY KEY ("id");
 
@@ -3480,11 +3710,6 @@ ALTER TABLE ONLY "public"."life_areas"
 
 ALTER TABLE ONLY "public"."life_areas"
     ADD CONSTRAINT "life_areas_user_id_slug_key" UNIQUE ("user_id", "slug");
-
-
-
-ALTER TABLE ONLY "public"."life_chapters"
-    ADD CONSTRAINT "life_chapters_pkey" PRIMARY KEY ("id");
 
 
 
@@ -3520,6 +3745,11 @@ ALTER TABLE ONLY "public"."life_plan_day_journal"
 
 ALTER TABLE ONLY "public"."life_plan_day_journal"
     ADD CONSTRAINT "life_plan_day_journal_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."life_plan_day_numbers"
+    ADD CONSTRAINT "life_plan_day_numbers_pkey" PRIMARY KEY ("day_id", "node_id");
 
 
 
@@ -3613,21 +3843,6 @@ ALTER TABLE ONLY "public"."life_plan_goal_feeds"
 
 
 
-ALTER TABLE ONLY "public"."life_plan_goal_habits"
-    ADD CONSTRAINT "life_plan_goal_habits_owner_key" UNIQUE ("id", "user_id");
-
-
-
-ALTER TABLE ONLY "public"."life_plan_goal_habits"
-    ADD CONSTRAINT "life_plan_goal_habits_pkey" PRIMARY KEY ("id");
-
-
-
-ALTER TABLE ONLY "public"."life_plan_goal_habits"
-    ADD CONSTRAINT "life_plan_goal_habits_position_key" UNIQUE ("goal_id", "position") DEFERRABLE INITIALLY DEFERRED;
-
-
-
 ALTER TABLE ONLY "public"."life_plan_goal_obstacles"
     ADD CONSTRAINT "life_plan_goal_obstacles_owner_key" UNIQUE ("id", "user_id");
 
@@ -3668,11 +3883,6 @@ ALTER TABLE ONLY "public"."life_plan_goals"
 
 
 
-ALTER TABLE ONLY "public"."life_plan_goals"
-    ADD CONSTRAINT "life_plan_goals_user_goal_key" UNIQUE ("user_goal_id");
-
-
-
 ALTER TABLE ONLY "public"."life_plan_nodes"
     ADD CONSTRAINT "life_plan_nodes_detail_key" UNIQUE ("id", "user_id", "kind");
 
@@ -3694,12 +3904,42 @@ ALTER TABLE ONLY "public"."life_plan_nodes"
 
 
 ALTER TABLE ONLY "public"."life_plan_north_stars"
-    ADD CONSTRAINT "life_plan_north_stars_one_per_plan" UNIQUE ("plan_id");
+    ADD CONSTRAINT "life_plan_north_stars_one_current" EXCLUDE USING "btree" ("plan_id" WITH =) WHERE (("ended_on" IS NULL)) DEFERRABLE INITIALLY DEFERRED;
 
 
 
 ALTER TABLE ONLY "public"."life_plan_north_stars"
     ADD CONSTRAINT "life_plan_north_stars_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."life_plan_reminders"
+    ADD CONSTRAINT "life_plan_reminders_pkey" PRIMARY KEY ("user_id");
+
+
+
+ALTER TABLE ONLY "public"."life_plan_review_goals"
+    ADD CONSTRAINT "life_plan_review_goals_pkey" PRIMARY KEY ("review_id", "goal_id");
+
+
+
+ALTER TABLE ONLY "public"."life_plan_review_scores"
+    ADD CONSTRAINT "life_plan_review_scores_pkey" PRIMARY KEY ("review_id", "area_id");
+
+
+
+ALTER TABLE ONLY "public"."life_plan_reviews"
+    ADD CONSTRAINT "life_plan_reviews_one_per_period" UNIQUE ("plan_id", "cadence", "period_start");
+
+
+
+ALTER TABLE ONLY "public"."life_plan_reviews"
+    ADD CONSTRAINT "life_plan_reviews_owner_key" UNIQUE ("id", "user_id");
+
+
+
+ALTER TABLE ONLY "public"."life_plan_reviews"
+    ADD CONSTRAINT "life_plan_reviews_pkey" PRIMARY KEY ("id");
 
 
 
@@ -3750,6 +3990,31 @@ ALTER TABLE ONLY "public"."life_plan_routines"
 
 ALTER TABLE ONLY "public"."life_plan_routines"
     ADD CONSTRAINT "life_plan_routines_position_key" UNIQUE ("plan_id", "position") DEFERRABLE INITIALLY DEFERRED;
+
+
+
+ALTER TABLE ONLY "public"."life_plan_season_areas"
+    ADD CONSTRAINT "life_plan_season_areas_pkey" PRIMARY KEY ("season_id", "area_id");
+
+
+
+ALTER TABLE ONLY "public"."life_plan_season_goals"
+    ADD CONSTRAINT "life_plan_season_goals_pkey" PRIMARY KEY ("season_id", "goal_id");
+
+
+
+ALTER TABLE ONLY "public"."life_plan_seasons"
+    ADD CONSTRAINT "life_plan_seasons_one_current" EXCLUDE USING "btree" ("plan_id" WITH =) WHERE (("ended_on" IS NULL)) DEFERRABLE INITIALLY DEFERRED;
+
+
+
+ALTER TABLE ONLY "public"."life_plan_seasons"
+    ADD CONSTRAINT "life_plan_seasons_owner_key" UNIQUE ("id", "user_id");
+
+
+
+ALTER TABLE ONLY "public"."life_plan_seasons"
+    ADD CONSTRAINT "life_plan_seasons_pkey" PRIMARY KEY ("id");
 
 
 
@@ -3898,36 +4163,6 @@ ALTER TABLE ONLY "public"."sticking_points"
 
 
 
-ALTER TABLE ONLY "public"."thought_logs"
-    ADD CONSTRAINT "thought_logs_pkey" PRIMARY KEY ("id");
-
-
-
-ALTER TABLE ONLY "public"."thought_prompt_schedule"
-    ADD CONSTRAINT "thought_prompt_schedule_pkey" PRIMARY KEY ("user_id");
-
-
-
-ALTER TABLE ONLY "public"."thought_reframes"
-    ADD CONSTRAINT "thought_reframes_pkey" PRIMARY KEY ("id");
-
-
-
-ALTER TABLE ONLY "public"."thought_settings"
-    ADD CONSTRAINT "thought_settings_pkey" PRIMARY KEY ("user_id");
-
-
-
-ALTER TABLE ONLY "public"."thoughts"
-    ADD CONSTRAINT "thoughts_id_owner" UNIQUE ("id", "user_id");
-
-
-
-ALTER TABLE ONLY "public"."thoughts"
-    ADD CONSTRAINT "thoughts_pkey" PRIMARY KEY ("id");
-
-
-
 ALTER TABLE ONLY "public"."timetrack_alert_events"
     ADD CONSTRAINT "timetrack_alert_events_pkey" PRIMARY KEY ("id");
 
@@ -4053,6 +4288,21 @@ ALTER TABLE ONLY "public"."user_programs"
 
 
 
+ALTER TABLE ONLY "public"."user_role_model_settings"
+    ADD CONSTRAINT "user_role_model_settings_pkey" PRIMARY KEY ("user_id");
+
+
+
+ALTER TABLE ONLY "public"."user_role_model_week_marks"
+    ADD CONSTRAINT "user_role_model_week_marks_pkey" PRIMARY KEY ("user_id", "day");
+
+
+
+ALTER TABLE ONLY "public"."user_role_models"
+    ADD CONSTRAINT "user_role_models_pkey" PRIMARY KEY ("user_id", "role_model_id");
+
+
+
 ALTER TABLE ONLY "public"."user_tracking_stats"
     ADD CONSTRAINT "user_tracking_stats_pkey" PRIMARY KEY ("user_id");
 
@@ -4127,6 +4377,14 @@ CREATE INDEX "ai_usage_logs_feature_idx" ON "public"."ai_usage_logs" USING "btre
 
 
 CREATE INDEX "ai_usage_logs_user_created_idx" ON "public"."ai_usage_logs" USING "btree" ("user_id", "created_at" DESC);
+
+
+
+CREATE UNIQUE INDEX "audit_runs_one_open_per_person" ON "public"."audit_runs" USING "btree" ("user_id") WHERE ("ended_at" IS NULL);
+
+
+
+CREATE INDEX "audit_slots_owner_slot" ON "public"."audit_slots" USING "btree" ("user_id", "slot_at");
 
 
 
@@ -4206,6 +4464,10 @@ CREATE INDEX "idx_life_plan_day_journal_question" ON "public"."life_plan_day_jou
 
 
 
+CREATE INDEX "idx_life_plan_day_numbers_node" ON "public"."life_plan_day_numbers" USING "btree" ("node_id");
+
+
+
 CREATE INDEX "idx_life_plan_days_recent" ON "public"."life_plan_days" USING "btree" ("plan_id", "on_date" DESC);
 
 
@@ -4215,6 +4477,22 @@ CREATE INDEX "idx_life_plan_goals_area" ON "public"."life_plan_goals" USING "btr
 
 
 CREATE INDEX "idx_life_plan_nodes_plan" ON "public"."life_plan_nodes" USING "btree" ("plan_id", "kind");
+
+
+
+CREATE INDEX "idx_life_plan_review_goals_goal" ON "public"."life_plan_review_goals" USING "btree" ("goal_id");
+
+
+
+CREATE INDEX "idx_life_plan_review_scores_area" ON "public"."life_plan_review_scores" USING "btree" ("area_id");
+
+
+
+CREATE INDEX "idx_life_plan_reviews_plan" ON "public"."life_plan_reviews" USING "btree" ("plan_id", "period_start");
+
+
+
+CREATE INDEX "idx_life_plan_seasons_plan" ON "public"."life_plan_seasons" USING "btree" ("plan_id", "started_on");
 
 
 
@@ -4354,15 +4632,19 @@ CREATE INDEX "idx_workout_sets_log" ON "public"."workout_sets" USING "btree" ("l
 
 
 
-CREATE INDEX "life_answers_chapter_idx" ON "public"."life_answers" USING "btree" ("chapter_id", "answer_key", "answered_at" DESC);
+CREATE UNIQUE INDEX "notification_sends_one_alert_per_entry" ON "public"."notification_sends" USING "btree" ("entry_id") WHERE ("kind" = 'timetrack-alert'::"text");
 
 
 
-CREATE INDEX "life_answers_current_idx" ON "public"."life_answers" USING "btree" ("user_id", "answer_key", "answered_at" DESC);
+CREATE UNIQUE INDEX "notification_sends_one_council_daily" ON "public"."notification_sends" USING "btree" ("entry_id") WHERE ("kind" = 'council-daily'::"text");
 
 
 
-CREATE INDEX "life_chapters_current_idx" ON "public"."life_chapters" USING "btree" ("user_id", "statement_key", "opened_at" DESC);
+CREATE UNIQUE INDEX "notification_sends_one_ping_per_quarter" ON "public"."notification_sends" USING "btree" ("entry_id") WHERE ("kind" = ANY (ARRAY['audit-ping'::"text", 'audit-end'::"text"]));
+
+
+
+CREATE UNIQUE INDEX "notification_sends_one_plan_review" ON "public"."notification_sends" USING "btree" ("entry_id") WHERE ("kind" = 'plan-review'::"text");
 
 
 
@@ -4371,34 +4653,6 @@ CREATE INDEX "notification_sends_owner_sent" ON "public"."notification_sends" US
 
 
 CREATE INDEX "push_devices_owner" ON "public"."push_devices" USING "btree" ("user_id");
-
-
-
-CREATE INDEX "thought_logs_owner_at" ON "public"."thought_logs" USING "btree" ("user_id", "at");
-
-
-
-CREATE INDEX "thought_logs_owner_thought_at" ON "public"."thought_logs" USING "btree" ("user_id", "thought_id", "at");
-
-
-
-CREATE INDEX "thought_logs_prompt" ON "public"."thought_logs" USING "btree" ("prompt_id") WHERE ("prompt_id" IS NOT NULL);
-
-
-
-CREATE INDEX "thought_prompt_schedule_due" ON "public"."thought_prompt_schedule" USING "btree" ("next_due_at") WHERE ("next_due_at" IS NOT NULL);
-
-
-
-CREATE INDEX "thought_reframes_thought" ON "public"."thought_reframes" USING "btree" ("user_id", "thought_id", "created_at");
-
-
-
-CREATE INDEX "thoughts_merged_into" ON "public"."thoughts" USING "btree" ("merged_into") WHERE ("merged_into" IS NOT NULL);
-
-
-
-CREATE UNIQUE INDEX "thoughts_one_wording_per_person" ON "public"."thoughts" USING "btree" ("user_id", "norm") WHERE ("merged_into" IS NULL);
 
 
 
@@ -4518,14 +4772,6 @@ CREATE OR REPLACE TRIGGER "inner_game_progress_updated_at" BEFORE UPDATE ON "pub
 
 
 
-CREATE OR REPLACE TRIGGER "life_answers_no_update" BEFORE UPDATE ON "public"."life_answers" FOR EACH ROW EXECUTE FUNCTION "public"."life_answers_reject_update"();
-
-
-
-CREATE OR REPLACE TRIGGER "life_chapters_no_update" BEFORE UPDATE ON "public"."life_chapters" FOR EACH ROW EXECUTE FUNCTION "public"."life_chapters_reject_update"();
-
-
-
 CREATE OR REPLACE TRIGGER "life_plan_day_journal_touch" BEFORE UPDATE ON "public"."life_plan_day_journal" FOR EACH ROW EXECUTE FUNCTION "public"."life_plan_touch_updated_at"();
 
 
@@ -4642,6 +4888,10 @@ CREATE OR REPLACE TRIGGER "user_goals_updated_at_trigger" BEFORE UPDATE ON "publ
 
 
 
+CREATE OR REPLACE TRIGGER "user_role_models_at_most_five" BEFORE INSERT ON "public"."user_role_models" FOR EACH ROW EXECUTE FUNCTION "public"."user_role_models_at_most_five"();
+
+
+
 CREATE OR REPLACE TRIGGER "user_tracking_stats_updated_at" BEFORE UPDATE ON "public"."user_tracking_stats" FOR EACH ROW EXECUTE FUNCTION "public"."update_tracking_updated_at"();
 
 
@@ -4662,6 +4912,21 @@ ALTER TABLE ONLY "public"."approaches"
 
 ALTER TABLE ONLY "public"."approaches"
     ADD CONSTRAINT "approaches_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."audit_runs"
+    ADD CONSTRAINT "audit_runs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."audit_slots"
+    ADD CONSTRAINT "audit_slots_run_id_user_id_fkey" FOREIGN KEY ("run_id", "user_id") REFERENCES "public"."audit_runs"("id", "user_id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."audit_slots"
+    ADD CONSTRAINT "audit_slots_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
 
@@ -4735,23 +5000,8 @@ ALTER TABLE ONLY "public"."inner_game_progress"
 
 
 
-ALTER TABLE ONLY "public"."life_answers"
-    ADD CONSTRAINT "life_answers_chapter_id_fkey" FOREIGN KEY ("chapter_id") REFERENCES "public"."life_chapters"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."life_answers"
-    ADD CONSTRAINT "life_answers_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
-
-
-
 ALTER TABLE ONLY "public"."life_areas"
     ADD CONSTRAINT "life_areas_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."life_chapters"
-    ADD CONSTRAINT "life_chapters_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
 
@@ -4772,6 +5022,16 @@ ALTER TABLE ONLY "public"."life_plan_areas"
 
 ALTER TABLE ONLY "public"."life_plan_day_journal"
     ADD CONSTRAINT "life_plan_day_journal_day_fk" FOREIGN KEY ("day_id", "user_id") REFERENCES "public"."life_plan_days"("id", "user_id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."life_plan_day_numbers"
+    ADD CONSTRAINT "life_plan_day_numbers_day_fk" FOREIGN KEY ("day_id", "user_id") REFERENCES "public"."life_plan_days"("id", "user_id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."life_plan_day_numbers"
+    ADD CONSTRAINT "life_plan_day_numbers_node_fk" FOREIGN KEY ("node_id", "user_id") REFERENCES "public"."life_plan_nodes"("id", "user_id") ON DELETE CASCADE;
 
 
 
@@ -4865,16 +5125,6 @@ ALTER TABLE ONLY "public"."life_plan_goal_feeds"
 
 
 
-ALTER TABLE ONLY "public"."life_plan_goal_habits"
-    ADD CONSTRAINT "life_plan_goal_habits_goal_fk" FOREIGN KEY ("goal_id", "user_id") REFERENCES "public"."life_plan_goals"("id", "user_id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."life_plan_goal_habits"
-    ADD CONSTRAINT "life_plan_goal_habits_node_fk" FOREIGN KEY ("id", "user_id", "node_kind") REFERENCES "public"."life_plan_nodes"("id", "user_id", "kind") ON DELETE CASCADE;
-
-
-
 ALTER TABLE ONLY "public"."life_plan_goal_obstacles"
     ADD CONSTRAINT "life_plan_goal_obstacles_goal_fk" FOREIGN KEY ("goal_id", "user_id") REFERENCES "public"."life_plan_goals"("id", "user_id") ON DELETE CASCADE;
 
@@ -4910,11 +5160,6 @@ ALTER TABLE ONLY "public"."life_plan_goals"
 
 
 
-ALTER TABLE ONLY "public"."life_plan_goals"
-    ADD CONSTRAINT "life_plan_goals_user_goal_id_fkey" FOREIGN KEY ("user_goal_id") REFERENCES "public"."user_goals"("id") ON DELETE SET NULL;
-
-
-
 ALTER TABLE ONLY "public"."life_plan_nodes"
     ADD CONSTRAINT "life_plan_nodes_plan_fk" FOREIGN KEY ("plan_id", "user_id") REFERENCES "public"."life_plans"("id", "user_id") ON DELETE CASCADE;
 
@@ -4932,6 +5177,41 @@ ALTER TABLE ONLY "public"."life_plan_north_stars"
 
 ALTER TABLE ONLY "public"."life_plan_north_stars"
     ADD CONSTRAINT "life_plan_north_stars_plan_fk" FOREIGN KEY ("plan_id", "user_id") REFERENCES "public"."life_plans"("id", "user_id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."life_plan_reminders"
+    ADD CONSTRAINT "life_plan_reminders_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."life_plan_review_goals"
+    ADD CONSTRAINT "life_plan_review_goals_goal_fk" FOREIGN KEY ("goal_id", "user_id") REFERENCES "public"."life_plan_goals"("id", "user_id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."life_plan_review_goals"
+    ADD CONSTRAINT "life_plan_review_goals_review_fk" FOREIGN KEY ("review_id", "user_id") REFERENCES "public"."life_plan_reviews"("id", "user_id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."life_plan_review_scores"
+    ADD CONSTRAINT "life_plan_review_scores_area_fk" FOREIGN KEY ("area_id", "user_id") REFERENCES "public"."life_plan_areas"("id", "user_id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."life_plan_review_scores"
+    ADD CONSTRAINT "life_plan_review_scores_review_fk" FOREIGN KEY ("review_id", "user_id") REFERENCES "public"."life_plan_reviews"("id", "user_id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."life_plan_reviews"
+    ADD CONSTRAINT "life_plan_reviews_node_fk" FOREIGN KEY ("id", "user_id", "node_kind") REFERENCES "public"."life_plan_nodes"("id", "user_id", "kind") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."life_plan_reviews"
+    ADD CONSTRAINT "life_plan_reviews_plan_fk" FOREIGN KEY ("plan_id", "user_id") REFERENCES "public"."life_plans"("id", "user_id") ON DELETE CASCADE;
 
 
 
@@ -4985,6 +5265,41 @@ ALTER TABLE ONLY "public"."life_plan_routines"
 
 
 
+ALTER TABLE ONLY "public"."life_plan_season_areas"
+    ADD CONSTRAINT "life_plan_season_areas_area_fk" FOREIGN KEY ("area_id", "user_id") REFERENCES "public"."life_plan_areas"("id", "user_id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."life_plan_season_areas"
+    ADD CONSTRAINT "life_plan_season_areas_season_fk" FOREIGN KEY ("season_id", "user_id") REFERENCES "public"."life_plan_seasons"("id", "user_id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."life_plan_season_goals"
+    ADD CONSTRAINT "life_plan_season_goals_goal_fk" FOREIGN KEY ("goal_id", "user_id") REFERENCES "public"."life_plan_goals"("id", "user_id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."life_plan_season_goals"
+    ADD CONSTRAINT "life_plan_season_goals_season_fk" FOREIGN KEY ("season_id", "user_id") REFERENCES "public"."life_plan_seasons"("id", "user_id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."life_plan_seasons"
+    ADD CONSTRAINT "life_plan_seasons_focus_fk" FOREIGN KEY ("focus_id", "user_id") REFERENCES "public"."life_plan_nodes"("id", "user_id") ON DELETE SET NULL ("focus_id");
+
+
+
+ALTER TABLE ONLY "public"."life_plan_seasons"
+    ADD CONSTRAINT "life_plan_seasons_node_fk" FOREIGN KEY ("id", "user_id", "node_kind") REFERENCES "public"."life_plan_nodes"("id", "user_id", "kind") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."life_plan_seasons"
+    ADD CONSTRAINT "life_plan_seasons_plan_fk" FOREIGN KEY ("plan_id", "user_id") REFERENCES "public"."life_plans"("id", "user_id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."life_plan_step_serves"
     ADD CONSTRAINT "life_plan_step_serves_goal_fk" FOREIGN KEY ("goal_id", "user_id") REFERENCES "public"."life_plan_goals"("id", "user_id") ON DELETE CASCADE;
 
@@ -5022,11 +5337,6 @@ ALTER TABLE ONLY "public"."life_plan_values"
 
 ALTER TABLE ONLY "public"."life_plan_values"
     ADD CONSTRAINT "life_plan_values_plan_fk" FOREIGN KEY ("plan_id", "user_id") REFERENCES "public"."life_plans"("id", "user_id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."life_plans"
-    ADD CONSTRAINT "life_plans_season_focus_fk" FOREIGN KEY ("season_focus_id", "user_id") REFERENCES "public"."life_plan_nodes"("id", "user_id") ON DELETE SET NULL ("season_focus_id");
 
 
 
@@ -5127,51 +5437,6 @@ ALTER TABLE ONLY "public"."sleep_logs"
 
 ALTER TABLE ONLY "public"."sticking_points"
     ADD CONSTRAINT "sticking_points_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."thought_logs"
-    ADD CONSTRAINT "thought_logs_prompt_owner" FOREIGN KEY ("prompt_id", "user_id") REFERENCES "public"."notification_sends"("id", "user_id") ON DELETE SET NULL ("prompt_id");
-
-
-
-ALTER TABLE ONLY "public"."thought_logs"
-    ADD CONSTRAINT "thought_logs_thought_owner" FOREIGN KEY ("thought_id", "user_id") REFERENCES "public"."thoughts"("id", "user_id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."thought_logs"
-    ADD CONSTRAINT "thought_logs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."thought_prompt_schedule"
-    ADD CONSTRAINT "thought_prompt_schedule_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."thought_reframes"
-    ADD CONSTRAINT "thought_reframes_thought_owner" FOREIGN KEY ("thought_id", "user_id") REFERENCES "public"."thoughts"("id", "user_id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."thought_reframes"
-    ADD CONSTRAINT "thought_reframes_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."thought_settings"
-    ADD CONSTRAINT "thought_settings_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."thoughts"
-    ADD CONSTRAINT "thoughts_merged_into_owner" FOREIGN KEY ("merged_into", "user_id") REFERENCES "public"."thoughts"("id", "user_id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."thoughts"
-    ADD CONSTRAINT "thoughts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
 
@@ -5412,6 +5677,21 @@ ALTER TABLE ONLY "public"."user_goals"
 
 ALTER TABLE ONLY "public"."user_programs"
     ADD CONSTRAINT "user_programs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."user_role_model_settings"
+    ADD CONSTRAINT "user_role_model_settings_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."user_role_model_week_marks"
+    ADD CONSTRAINT "user_role_model_week_marks_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."user_role_models"
+    ADD CONSTRAINT "user_role_models_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
 
@@ -5800,6 +6080,10 @@ CREATE POLICY "Users can view their own scenarios" ON "public"."scenarios" FOR S
 
 
 
+CREATE POLICY "add to own council" ON "public"."user_role_models" FOR INSERT TO "authenticated" WITH CHECK (("user_id" = "auth"."uid"()));
+
+
+
 ALTER TABLE "public"."ai_usage_logs" ENABLE ROW LEVEL SECURITY;
 
 
@@ -5826,6 +6110,44 @@ CREATE POLICY "approaches_update_own" ON "public"."approaches" FOR UPDATE USING 
 
 
 
+ALTER TABLE "public"."audit_runs" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "audit_runs_delete_own" ON "public"."audit_runs" FOR DELETE USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "audit_runs_insert_own" ON "public"."audit_runs" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "audit_runs_select_own" ON "public"."audit_runs" FOR SELECT USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "audit_runs_update_own" ON "public"."audit_runs" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+ALTER TABLE "public"."audit_slots" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "audit_slots_delete_own" ON "public"."audit_slots" FOR DELETE USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "audit_slots_insert_own" ON "public"."audit_slots" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "audit_slots_select_own" ON "public"."audit_slots" FOR SELECT USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "audit_slots_update_own" ON "public"."audit_slots" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
 ALTER TABLE "public"."beta_invites" ENABLE ROW LEVEL SECURITY;
 
 
@@ -5837,6 +6159,10 @@ CREATE POLICY "beta_testers_select_own" ON "public"."beta_testers" FOR SELECT US
 
 
 ALTER TABLE "public"."body_measurements" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "change own council" ON "public"."user_role_models" FOR UPDATE TO "authenticated" USING (("user_id" = "auth"."uid"())) WITH CHECK (("user_id" = "auth"."uid"()));
+
 
 
 ALTER TABLE "public"."core_values" ENABLE ROW LEVEL SECURITY;
@@ -5861,14 +6187,6 @@ CREATE POLICY "dashboard_widgets_select_own" ON "public"."dashboard_widgets" FOR
 
 
 CREATE POLICY "dashboard_widgets_update_own" ON "public"."dashboard_widgets" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "delete own chapters" ON "public"."life_chapters" FOR DELETE USING (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "delete own life answers" ON "public"."life_answers" FOR DELETE USING (("auth"."uid"() = "user_id"));
 
 
 
@@ -5938,13 +6256,7 @@ CREATE POLICY "inner_game_progress_update_own" ON "public"."inner_game_progress"
 
 
 
-ALTER TABLE "public"."life_answers" ENABLE ROW LEVEL SECURITY;
-
-
 ALTER TABLE "public"."life_areas" ENABLE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."life_chapters" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."life_plan_answers" ENABLE ROW LEVEL SECURITY;
@@ -6001,6 +6313,25 @@ CREATE POLICY "life_plan_day_journal_select_own" ON "public"."life_plan_day_jour
 
 
 CREATE POLICY "life_plan_day_journal_update_own" ON "public"."life_plan_day_journal" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+ALTER TABLE "public"."life_plan_day_numbers" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "life_plan_day_numbers_delete_own" ON "public"."life_plan_day_numbers" FOR DELETE USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_day_numbers_insert_own" ON "public"."life_plan_day_numbers" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_day_numbers_select_own" ON "public"."life_plan_day_numbers" FOR SELECT USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_day_numbers_update_own" ON "public"."life_plan_day_numbers" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
 
 
 
@@ -6156,25 +6487,6 @@ CREATE POLICY "life_plan_goal_feeds_update_own" ON "public"."life_plan_goal_feed
 
 
 
-ALTER TABLE "public"."life_plan_goal_habits" ENABLE ROW LEVEL SECURITY;
-
-
-CREATE POLICY "life_plan_goal_habits_delete_own" ON "public"."life_plan_goal_habits" FOR DELETE USING (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "life_plan_goal_habits_insert_own" ON "public"."life_plan_goal_habits" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "life_plan_goal_habits_select_own" ON "public"."life_plan_goal_habits" FOR SELECT USING (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "life_plan_goal_habits_update_own" ON "public"."life_plan_goal_habits" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
-
-
-
 ALTER TABLE "public"."life_plan_goal_obstacles" ENABLE ROW LEVEL SECURITY;
 
 
@@ -6270,6 +6582,66 @@ CREATE POLICY "life_plan_north_stars_update_own" ON "public"."life_plan_north_st
 
 
 
+ALTER TABLE "public"."life_plan_reminders" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."life_plan_review_goals" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "life_plan_review_goals_delete_own" ON "public"."life_plan_review_goals" FOR DELETE USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_review_goals_insert_own" ON "public"."life_plan_review_goals" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_review_goals_select_own" ON "public"."life_plan_review_goals" FOR SELECT USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_review_goals_update_own" ON "public"."life_plan_review_goals" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+ALTER TABLE "public"."life_plan_review_scores" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "life_plan_review_scores_delete_own" ON "public"."life_plan_review_scores" FOR DELETE USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_review_scores_insert_own" ON "public"."life_plan_review_scores" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_review_scores_select_own" ON "public"."life_plan_review_scores" FOR SELECT USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_review_scores_update_own" ON "public"."life_plan_review_scores" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+ALTER TABLE "public"."life_plan_reviews" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "life_plan_reviews_delete_own" ON "public"."life_plan_reviews" FOR DELETE USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_reviews_insert_own" ON "public"."life_plan_reviews" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_reviews_select_own" ON "public"."life_plan_reviews" FOR SELECT USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_reviews_update_own" ON "public"."life_plan_reviews" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
 ALTER TABLE "public"."life_plan_routine_serves" ENABLE ROW LEVEL SECURITY;
 
 
@@ -6343,6 +6715,63 @@ CREATE POLICY "life_plan_routines_select_own" ON "public"."life_plan_routines" F
 
 
 CREATE POLICY "life_plan_routines_update_own" ON "public"."life_plan_routines" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+ALTER TABLE "public"."life_plan_season_areas" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "life_plan_season_areas_delete_own" ON "public"."life_plan_season_areas" FOR DELETE USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_season_areas_insert_own" ON "public"."life_plan_season_areas" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_season_areas_select_own" ON "public"."life_plan_season_areas" FOR SELECT USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_season_areas_update_own" ON "public"."life_plan_season_areas" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+ALTER TABLE "public"."life_plan_season_goals" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "life_plan_season_goals_delete_own" ON "public"."life_plan_season_goals" FOR DELETE USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_season_goals_insert_own" ON "public"."life_plan_season_goals" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_season_goals_select_own" ON "public"."life_plan_season_goals" FOR SELECT USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_season_goals_update_own" ON "public"."life_plan_season_goals" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+ALTER TABLE "public"."life_plan_seasons" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "life_plan_seasons_delete_own" ON "public"."life_plan_seasons" FOR DELETE USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_seasons_insert_own" ON "public"."life_plan_seasons" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_seasons_select_own" ON "public"."life_plan_seasons" FOR SELECT USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "life_plan_seasons_update_own" ON "public"."life_plan_seasons" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
 
 
 
@@ -6439,7 +6868,15 @@ CREATE POLICY "notification_sends_select_own" ON "public"."notification_sends" F
 ALTER TABLE "public"."nutrition_logs" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "open own chapters" ON "public"."life_chapters" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "own council settings" ON "public"."user_role_model_settings" TO "authenticated" USING (("user_id" = "auth"."uid"())) WITH CHECK (("user_id" = "auth"."uid"()));
+
+
+
+CREATE POLICY "own reminder row" ON "public"."life_plan_reminders" TO "authenticated" USING (("user_id" = "auth"."uid"())) WITH CHECK (("user_id" = "auth"."uid"()));
+
+
+
+CREATE POLICY "own week marks" ON "public"."user_role_model_week_marks" TO "authenticated" USING (("user_id" = "auth"."uid"())) WITH CHECK (("user_id" = "auth"."uid"()));
 
 
 
@@ -6473,11 +6910,11 @@ CREATE POLICY "purchases_select_own" ON "public"."purchases" FOR SELECT USING ((
 ALTER TABLE "public"."push_devices" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "read own chapters" ON "public"."life_chapters" FOR SELECT USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "read own council" ON "public"."user_role_models" FOR SELECT TO "authenticated" USING (("user_id" = "auth"."uid"()));
 
 
 
-CREATE POLICY "read own life answers" ON "public"."life_answers" FOR SELECT USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "remove from own council" ON "public"."user_role_models" FOR DELETE TO "authenticated" USING (("user_id" = "auth"."uid"()));
 
 
 
@@ -6564,85 +7001,6 @@ CREATE POLICY "sticking_points_select_own" ON "public"."sticking_points" FOR SEL
 
 
 CREATE POLICY "sticking_points_update_own" ON "public"."sticking_points" FOR UPDATE USING (("user_id" = "auth"."uid"())) WITH CHECK (("user_id" = "auth"."uid"()));
-
-
-
-ALTER TABLE "public"."thought_logs" ENABLE ROW LEVEL SECURITY;
-
-
-CREATE POLICY "thought_logs_delete_own" ON "public"."thought_logs" FOR DELETE USING (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "thought_logs_insert_own" ON "public"."thought_logs" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "thought_logs_select_own" ON "public"."thought_logs" FOR SELECT USING (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "thought_logs_update_own" ON "public"."thought_logs" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
-
-
-
-ALTER TABLE "public"."thought_prompt_schedule" ENABLE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."thought_reframes" ENABLE ROW LEVEL SECURITY;
-
-
-CREATE POLICY "thought_reframes_delete_own" ON "public"."thought_reframes" FOR DELETE USING (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "thought_reframes_insert_own" ON "public"."thought_reframes" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "thought_reframes_select_own" ON "public"."thought_reframes" FOR SELECT USING (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "thought_reframes_update_own" ON "public"."thought_reframes" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
-
-
-
-ALTER TABLE "public"."thought_settings" ENABLE ROW LEVEL SECURITY;
-
-
-CREATE POLICY "thought_settings_delete_own" ON "public"."thought_settings" FOR DELETE USING (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "thought_settings_insert_own" ON "public"."thought_settings" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "thought_settings_select_own" ON "public"."thought_settings" FOR SELECT USING (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "thought_settings_update_own" ON "public"."thought_settings" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
-
-
-
-ALTER TABLE "public"."thoughts" ENABLE ROW LEVEL SECURITY;
-
-
-CREATE POLICY "thoughts_delete_own" ON "public"."thoughts" FOR DELETE USING (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "thoughts_insert_own" ON "public"."thoughts" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "thoughts_select_own" ON "public"."thoughts" FOR SELECT USING (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "thoughts_update_own" ON "public"."thoughts" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
 
 
 
@@ -7029,6 +7387,15 @@ CREATE POLICY "user_goals_update_own" ON "public"."user_goals" FOR UPDATE USING 
 ALTER TABLE "public"."user_programs" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."user_role_model_settings" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."user_role_model_week_marks" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."user_role_models" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."user_tracking_stats" ENABLE ROW LEVEL SECURITY;
 
 
@@ -7123,13 +7490,17 @@ ALTER TABLE "public"."workout_logs" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."workout_sets" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "write own life answers" ON "public"."life_answers" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
-
-
-
 
 
 ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
+
+
+
+
+
+
+ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."timetrack_entries";
+
 
 
 
@@ -7582,6 +7953,22 @@ GRANT ALL ON FUNCTION "public"."vector"("public"."vector", integer, boolean) TO 
 
 
 
+REVOKE ALL ON FUNCTION "public"."apply_life_plan_changes"("p_changes" "jsonb", "p_expected_rev" integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."apply_life_plan_changes"("p_changes" "jsonb", "p_expected_rev" integer) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."apply_life_plan_changes"("p_changes" "jsonb", "p_expected_rev" integer) TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."audit_ends_due"("p_limit" integer, "p_now" timestamp with time zone) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."audit_ends_due"("p_limit" integer, "p_now" timestamp with time zone) TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."audit_pings_due"("p_limit" integer, "p_now" timestamp with time zone) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."audit_pings_due"("p_limit" integer, "p_now" timestamp with time zone) TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."binary_quantize"("public"."halfvec") TO "postgres";
 GRANT ALL ON FUNCTION "public"."binary_quantize"("public"."halfvec") TO "anon";
 GRANT ALL ON FUNCTION "public"."binary_quantize"("public"."halfvec") TO "authenticated";
@@ -7608,11 +7995,6 @@ GRANT ALL ON FUNCTION "public"."claim_beta_slot"("p_code" "text") TO "service_ro
 
 
 
-REVOKE ALL ON FUNCTION "public"."claim_due_thought_prompts"("p_now" timestamp with time zone, "p_lease" interval, "p_limit" integer) FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."claim_due_thought_prompts"("p_now" timestamp with time zone, "p_lease" interval, "p_limit" integer) TO "service_role";
-
-
-
 GRANT ALL ON FUNCTION "public"."cosine_distance"("public"."halfvec", "public"."halfvec") TO "postgres";
 GRANT ALL ON FUNCTION "public"."cosine_distance"("public"."halfvec", "public"."halfvec") TO "anon";
 GRANT ALL ON FUNCTION "public"."cosine_distance"("public"."halfvec", "public"."halfvec") TO "authenticated";
@@ -7631,6 +8013,11 @@ GRANT ALL ON FUNCTION "public"."cosine_distance"("public"."vector", "public"."ve
 GRANT ALL ON FUNCTION "public"."cosine_distance"("public"."vector", "public"."vector") TO "anon";
 GRANT ALL ON FUNCTION "public"."cosine_distance"("public"."vector", "public"."vector") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."cosine_distance"("public"."vector", "public"."vector") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."council_reminders_due"("p_limit" integer, "p_now" timestamp with time zone) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."council_reminders_due"("p_limit" integer, "p_now" timestamp with time zone) TO "service_role";
 
 
 
@@ -7934,18 +8321,6 @@ GRANT ALL ON FUNCTION "public"."l2_normalize"("public"."vector") TO "service_rol
 
 
 
-GRANT ALL ON FUNCTION "public"."life_answers_reject_update"() TO "anon";
-GRANT ALL ON FUNCTION "public"."life_answers_reject_update"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."life_answers_reject_update"() TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."life_chapters_reject_update"() TO "anon";
-GRANT ALL ON FUNCTION "public"."life_chapters_reject_update"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."life_chapters_reject_update"() TO "service_role";
-
-
-
 GRANT ALL ON FUNCTION "public"."life_plan_touch_updated_at"() TO "anon";
 GRANT ALL ON FUNCTION "public"."life_plan_touch_updated_at"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."life_plan_touch_updated_at"() TO "service_role";
@@ -7971,18 +8346,22 @@ GRANT ALL ON FUNCTION "public"."match_embeddings_test"("query_embedding" "public
 
 
 
-REVOKE ALL ON FUNCTION "public"."merge_thought"("p_from" "uuid", "p_into" "uuid") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."merge_thought"("p_from" "uuid", "p_into" "uuid") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."merge_thought"("p_from" "uuid", "p_into" "uuid") TO "service_role";
-
-
-
 REVOKE ALL ON FUNCTION "public"."notification_secret"("p_name" "text") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."notification_secret"("p_name" "text") TO "service_role";
 
 
 
 REVOKE ALL ON FUNCTION "public"."notifications_clock_tick"() FROM PUBLIC;
+
+
+
+REVOKE ALL ON FUNCTION "public"."plan_reviews_due"("p_limit" integer, "p_now" timestamp with time zone) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."plan_reviews_due"("p_limit" integer, "p_now" timestamp with time zone) TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."plan_week_review_written"("p_user" "uuid", "p_start" "date") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."plan_week_review_written"("p_user" "uuid", "p_start" "date") TO "service_role";
 
 
 
@@ -8028,13 +8407,6 @@ REVOKE ALL ON FUNCTION "public"."resume_enrollment"("p_id" "uuid", "p_displace" 
 GRANT ALL ON FUNCTION "public"."resume_enrollment"("p_id" "uuid", "p_displace" "uuid"[]) TO "anon";
 GRANT ALL ON FUNCTION "public"."resume_enrollment"("p_id" "uuid", "p_displace" "uuid"[]) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."resume_enrollment"("p_id" "uuid", "p_displace" "uuid"[]) TO "service_role";
-
-
-
-REVOKE ALL ON FUNCTION "public"."save_life_plan"("p_rows" "jsonb", "p_expected_rev" integer) FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."save_life_plan"("p_rows" "jsonb", "p_expected_rev" integer) TO "anon";
-GRANT ALL ON FUNCTION "public"."save_life_plan"("p_rows" "jsonb", "p_expected_rev" integer) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."save_life_plan"("p_rows" "jsonb", "p_expected_rev" integer) TO "service_role";
 
 
 
@@ -8129,15 +8501,18 @@ GRANT ALL ON FUNCTION "public"."subvector"("public"."vector", integer, integer) 
 
 
 
-REVOKE ALL ON FUNCTION "public"."thought_counts"("p_tz" "text", "p_now" timestamp with time zone, "p_user" "uuid") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."thought_counts"("p_tz" "text", "p_now" timestamp with time zone, "p_user" "uuid") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."thought_counts"("p_tz" "text", "p_now" timestamp with time zone, "p_user" "uuid") TO "service_role";
+REVOKE ALL ON FUNCTION "public"."timetrack_alert_due"("p_user" "uuid") FROM PUBLIC;
 
 
 
-REVOKE ALL ON FUNCTION "public"."thought_frequency_stats"("p_tz" "text", "p_now" timestamp with time zone) FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."thought_frequency_stats"("p_tz" "text", "p_now" timestamp with time zone) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."thought_frequency_stats"("p_tz" "text", "p_now" timestamp with time zone) TO "service_role";
+REVOKE ALL ON FUNCTION "public"."timetrack_alerts_due"("p_limit" integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."timetrack_alerts_due"("p_limit" integer) TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."timetrack_push"("p_batch" "jsonb", "p_tag_sets" "jsonb") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."timetrack_push"("p_batch" "jsonb", "p_tag_sets" "jsonb") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."timetrack_push"("p_batch" "jsonb", "p_tag_sets" "jsonb") TO "service_role";
 
 
 
@@ -8174,6 +8549,12 @@ GRANT ALL ON FUNCTION "public"."update_user_lair_config_updated_at"() TO "servic
 GRANT ALL ON FUNCTION "public"."user_programs_touch_updated_at"() TO "anon";
 GRANT ALL ON FUNCTION "public"."user_programs_touch_updated_at"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."user_programs_touch_updated_at"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."user_role_models_at_most_five"() TO "anon";
+GRANT ALL ON FUNCTION "public"."user_role_models_at_most_five"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."user_role_models_at_most_five"() TO "service_role";
 
 
 
@@ -8384,6 +8765,18 @@ GRANT ALL ON TABLE "public"."approaches" TO "service_role";
 
 
 
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."audit_runs" TO "anon";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."audit_runs" TO "authenticated";
+GRANT ALL ON TABLE "public"."audit_runs" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."audit_slots" TO "anon";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."audit_slots" TO "authenticated";
+GRANT ALL ON TABLE "public"."audit_slots" TO "service_role";
+
+
+
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."beta_invites" TO "anon";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."beta_invites" TO "authenticated";
 GRANT ALL ON TABLE "public"."beta_invites" TO "service_role";
@@ -8458,21 +8851,9 @@ GRANT ALL ON TABLE "public"."inner_game_progress" TO "service_role";
 
 
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_answers" TO "anon";
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_answers" TO "authenticated";
-GRANT ALL ON TABLE "public"."life_answers" TO "service_role";
-
-
-
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_areas" TO "anon";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_areas" TO "authenticated";
 GRANT ALL ON TABLE "public"."life_areas" TO "service_role";
-
-
-
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_chapters" TO "anon";
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_chapters" TO "authenticated";
-GRANT ALL ON TABLE "public"."life_chapters" TO "service_role";
 
 
 
@@ -8491,6 +8872,12 @@ GRANT ALL ON TABLE "public"."life_plan_areas" TO "service_role";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_day_journal" TO "anon";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_day_journal" TO "authenticated";
 GRANT ALL ON TABLE "public"."life_plan_day_journal" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_day_numbers" TO "anon";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_day_numbers" TO "authenticated";
+GRANT ALL ON TABLE "public"."life_plan_day_numbers" TO "service_role";
 
 
 
@@ -8542,12 +8929,6 @@ GRANT ALL ON TABLE "public"."life_plan_goal_feeds" TO "service_role";
 
 
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_goal_habits" TO "anon";
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_goal_habits" TO "authenticated";
-GRANT ALL ON TABLE "public"."life_plan_goal_habits" TO "service_role";
-
-
-
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_goal_obstacles" TO "anon";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_goal_obstacles" TO "authenticated";
 GRANT ALL ON TABLE "public"."life_plan_goal_obstacles" TO "service_role";
@@ -8578,6 +8959,29 @@ GRANT ALL ON TABLE "public"."life_plan_north_stars" TO "service_role";
 
 
 
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_reminders" TO "authenticated";
+GRANT ALL ON TABLE "public"."life_plan_reminders" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_review_goals" TO "anon";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_review_goals" TO "authenticated";
+GRANT ALL ON TABLE "public"."life_plan_review_goals" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_review_scores" TO "anon";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_review_scores" TO "authenticated";
+GRANT ALL ON TABLE "public"."life_plan_review_scores" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_reviews" TO "anon";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_reviews" TO "authenticated";
+GRANT ALL ON TABLE "public"."life_plan_reviews" TO "service_role";
+
+
+
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_routine_serves" TO "anon";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_routine_serves" TO "authenticated";
 GRANT ALL ON TABLE "public"."life_plan_routine_serves" TO "service_role";
@@ -8599,6 +9003,24 @@ GRANT ALL ON TABLE "public"."life_plan_routine_steps" TO "service_role";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_routines" TO "anon";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_routines" TO "authenticated";
 GRANT ALL ON TABLE "public"."life_plan_routines" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_season_areas" TO "anon";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_season_areas" TO "authenticated";
+GRANT ALL ON TABLE "public"."life_plan_season_areas" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_season_goals" TO "anon";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_season_goals" TO "authenticated";
+GRANT ALL ON TABLE "public"."life_plan_season_goals" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_seasons" TO "anon";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."life_plan_seasons" TO "authenticated";
+GRANT ALL ON TABLE "public"."life_plan_seasons" TO "service_role";
 
 
 
@@ -8836,36 +9258,6 @@ GRANT ALL ON TABLE "public"."sticking_points" TO "service_role";
 
 
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."thought_logs" TO "anon";
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."thought_logs" TO "authenticated";
-GRANT ALL ON TABLE "public"."thought_logs" TO "service_role";
-
-
-
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."thought_prompt_schedule" TO "anon";
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."thought_prompt_schedule" TO "authenticated";
-GRANT ALL ON TABLE "public"."thought_prompt_schedule" TO "service_role";
-
-
-
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."thought_reframes" TO "anon";
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."thought_reframes" TO "authenticated";
-GRANT ALL ON TABLE "public"."thought_reframes" TO "service_role";
-
-
-
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."thought_settings" TO "anon";
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."thought_settings" TO "authenticated";
-GRANT ALL ON TABLE "public"."thought_settings" TO "service_role";
-
-
-
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."thoughts" TO "anon";
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."thoughts" TO "authenticated";
-GRANT ALL ON TABLE "public"."thoughts" TO "service_role";
-
-
-
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."timetrack_alert_events" TO "anon";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."timetrack_alert_events" TO "authenticated";
 GRANT ALL ON TABLE "public"."timetrack_alert_events" TO "service_role";
@@ -8989,6 +9381,21 @@ GRANT ALL ON TABLE "public"."user_goals" TO "service_role";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."user_programs" TO "anon";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."user_programs" TO "authenticated";
 GRANT ALL ON TABLE "public"."user_programs" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."user_role_model_settings" TO "authenticated";
+GRANT ALL ON TABLE "public"."user_role_model_settings" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."user_role_model_week_marks" TO "authenticated";
+GRANT ALL ON TABLE "public"."user_role_model_week_marks" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."user_role_models" TO "authenticated";
+GRANT ALL ON TABLE "public"."user_role_models" TO "service_role";
 
 
 
