@@ -57,7 +57,23 @@ export interface AuditQueue {
   answers: AuditAnswer[]
   /** Deletes the server has not confirmed. */
   deletes: QueuedDelete[]
+  /**
+   * What a tab took out of the queue (sent, undone, replaced) or put back, and
+   * when: an older copy written by another tab cannot bring it back
+   * (`mergeAuditQueues`, alpha p9-deletes-02). Kept for `QUEUE_MARK_KEEP_MS`.
+   */
+  marks?: QueueMark[]
 }
+
+/** One answer version (`a:`) or delete (`d:`) leaving the queue (`gone`) or coming back, at `at` (ms). */
+export interface QueueMark {
+  key: string
+  at: number
+  gone: boolean
+}
+
+/** How long a mark is kept: far longer than another tab's write takes to arrive. */
+export const QUEUE_MARK_KEEP_MS = 60 * 60_000
 
 export const emptyAuditQueue = (owner: string | null): AuditQueue => ({ owner, answers: [], deletes: [] })
 
@@ -66,9 +82,19 @@ export const queueIsEmpty = (q: AuditQueue): boolean => q.answers.length === 0 &
 const quarterKey = (a: Pick<AuditAnswer, "runId" | "slotAt">) => `${a.runId}:${a.slotAt}`
 
 export function readAuditQueue(store: KeyValueStore | null, owner: string): AuditQueue {
-  const parsed = readOwnedJson(store, AUDIT_QUEUE_KEY, owner) as Partial<AuditQueue> | null
-  if (!parsed) return emptyAuditQueue(owner)
+  return parseAuditQueue(readOwnedJson(store, AUDIT_QUEUE_KEY, owner), owner) ?? emptyAuditQueue(owner)
+}
+
+const isMark = (x: unknown): x is QueueMark =>
+  !!x && typeof x === "object" && typeof (x as QueueMark).key === "string" && typeof (x as QueueMark).at === "number" && typeof (x as QueueMark).gone === "boolean"
+
+/** A stored queue (its owner already checked and removed), or null when there is none. */
+function parseAuditQueue(stored: Record<string, unknown> | null, owner: string): AuditQueue | null {
+  const parsed = stored as Partial<AuditQueue> | null
+  if (!parsed) return null
+  const marks = Array.isArray(parsed.marks) ? parsed.marks.filter(isMark) : []
   return {
+    ...(marks.length > 0 ? { marks } : {}),
     owner,
     answers: Array.isArray(parsed.answers) ? parsed.answers : [],
     deletes: Array.isArray(parsed.deletes)
@@ -85,7 +111,103 @@ export function readAuditQueue(store: KeyValueStore | null, owner: string): Audi
 
 export function writeAuditQueue(store: KeyValueStore | null, q: AuditQueue): void {
   const { owner, ...rest } = q
-  writeOwnedJson(store, AUDIT_QUEUE_KEY, owner, queueIsEmpty(q) ? null : rest)
+  writeOwnedJson(store, AUDIT_QUEUE_KEY, owner, queueIsEmpty(q) && !q.marks?.length ? null : rest)
+}
+
+/**
+ * The queue in a storage event's new text, or null when the key was removed
+ * (Log Out in another tab) or holds another account's queue.
+ */
+export function auditQueueFromText(raw: string | null, owner: string): AuditQueue | null {
+  if (!raw) return null
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown> | null
+    if (!parsed || typeof parsed !== "object" || parsed.owner !== owner) return null
+    return parseAuditQueue(parsed, owner)
+  } catch {
+    return null
+  }
+}
+
+/** A short fingerprint, so a mark never keeps an answer's text after it was sent (cyrb53). */
+function fingerprint(text: string): string {
+  let h1 = 0xdeadbeef
+  let h2 = 0x41c6ce57
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i)
+    h1 = Math.imul(h1 ^ c, 2654435761)
+    h2 = Math.imul(h2 ^ c, 1597334677)
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909)
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36)
+}
+/** One version of one answer: an edit under the same id is another version. */
+const answerKey = (a: AuditAnswer) => `a:${a.id}:${fingerprint(JSON.stringify(a))}`
+const deleteKey = (d: QueuedDelete) => `d:${d.id}@${d.at}`
+const keysOf = (q: AuditQueue) => new Set([...q.answers.map(answerKey), ...q.deletes.map(deleteKey)])
+
+/** The latest mark of each key; at the same instant, gone wins. */
+function latestMarks(...lists: (QueueMark[] | undefined)[]): Map<string, QueueMark> {
+  const latest = new Map<string, QueueMark>()
+  for (const m of lists.flatMap((l) => l ?? [])) {
+    const was = latest.get(m.key)
+    if (!was || m.at > was.at || (m.at === was.at && m.gone)) latest.set(m.key, m)
+  }
+  return latest
+}
+
+/**
+ * `after` is `before` changed by this tab at `nowMs`: what left the queue is
+ * marked gone, and what came back (Undo puts a waiting answer back) is marked
+ * back. Marks older than QUEUE_MARK_KEEP_MS are dropped.
+ */
+export function markRemoved(before: AuditQueue, after: AuditQueue, nowMs: number = Date.now()): AuditQueue {
+  const was = keysOf(before)
+  const now = keysOf(after)
+  const latest = latestMarks(before.marks, after.marks)
+  for (const key of was) if (!now.has(key)) latest.set(key, { key, at: nowMs, gone: true })
+  for (const key of now) if (latest.get(key)?.gone) latest.set(key, { key, at: nowMs, gone: false })
+  const marks = [...latest.values()].filter((m) => m.at > nowMs - QUEUE_MARK_KEEP_MS)
+  const { marks: _m, ...rest } = after
+  void _m
+  return marks.length > 0 ? { ...rest, marks } : rest
+}
+
+/**
+ * Two tabs' copies of the queue as one (alpha p9-deletes-02): everything
+ * either holds, minus what either took out since (its latest mark is gone).
+ * `primary` wins where both hold the same delete, except that a refusal is
+ * never lost. Answers keep `primary`'s order, the other's extras after.
+ */
+export function mergeAuditQueues(primary: AuditQueue, other: AuditQueue): AuditQueue {
+  const latest = latestMarks(primary.marks, other.marks)
+  const live = (key: string) => !latest.get(key)?.gone
+  const answers = [...primary.answers]
+  const haveAnswer = new Set(answers.map(answerKey))
+  for (const a of other.answers) if (!haveAnswer.has(answerKey(a))) answers.push(a)
+  const theirs = new Map(other.deletes.map((d) => [deleteKey(d), d]))
+  const deletes = primary.deletes.map((d) => (!d.refused && theirs.get(deleteKey(d))?.refused ? theirs.get(deleteKey(d))! : d))
+  const haveDelete = new Set(deletes.map(deleteKey))
+  for (const d of other.deletes) if (!haveDelete.has(deleteKey(d))) deletes.push(d)
+  const marks = [...latest.values()]
+  return {
+    owner: primary.owner,
+    answers: answers.filter((a) => live(answerKey(a))),
+    deletes: deletes.filter((d) => live(deleteKey(d))),
+    ...(marks.length > 0 ? { marks } : {}),
+  }
+}
+
+/** Do the two copies hold the same answers, deletes (and refusals) and marks? */
+export function sameAuditQueue(x: AuditQueue, y: AuditQueue): boolean {
+  const sig = (q: AuditQueue) =>
+    JSON.stringify([
+      [...q.answers.map(answerKey)].sort(),
+      [...q.deletes.map((d) => `${deleteKey(d)}:${d.refused ? 1 : 0}`)].sort(),
+      [...(q.marks ?? []).map((m) => `${m.key}:${m.at}:${m.gone}`)].sort(),
+    ])
+  return sig(x) === sig(y)
 }
 
 /**

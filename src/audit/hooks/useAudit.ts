@@ -23,6 +23,7 @@ import { AuditCallError, auditApi, type AuditView } from "../auditClient"
 import {
   AUDIT_QUEUE_KEY,
   answersSent,
+  auditQueueFromText,
   cancelDelete,
   deleteIsDue,
   deleteRefused,
@@ -32,6 +33,8 @@ import {
   enqueueAnswers,
   unseenWaiting,
   enqueueDelete,
+  markRemoved,
+  mergeAuditQueues,
   nextDeleteDue,
   onAuditForgotten,
   pendingDeletes,
@@ -39,6 +42,7 @@ import {
   readAuditQueue,
   readAuditViewCopy,
   retryDelete,
+  sameAuditQueue,
   writeAuditQueue,
   writeAuditViewCopy,
   type AuditQueue,
@@ -167,15 +171,17 @@ export function useAudit(account: string) {
   /** The stored queue as this tab last saw it: anything else there now was written by another tab. */
   const seenRaw = useRef<string | null>(null)
   /**
-   * Change the queue, starting from the queue as stored when another tab of
+   * Change the queue, merged with the queue as stored when another tab of
    * this account has written it since this tab last looked: two tabs with no
    * signal each wrote their own copy over the other's answer (alpha p9-saves-03).
+   * What the change takes out is marked, so another tab's older copy cannot
+   * bring it back (an undone delete sent after all: alpha p9-deletes-02).
    */
   const setQ = useCallback(
     (change: (q: AuditQueue) => AuditQueue) => {
       const fromOtherTab = rawQueue() !== seenRaw.current
-      const base = fromOtherTab ? readAuditQueue(browserStore(), account) : queueRef.current
-      const owned = { ...change(base), owner: account }
+      const base = fromOtherTab ? mergeAuditQueues(readAuditQueue(browserStore(), account), queueRef.current) : queueRef.current
+      const owned = { ...markRemoved(base, change(base)), owner: account }
       queueRef.current = owned
       setQueue(owned)
       writeAuditQueue(browserStore(), owned)
@@ -350,11 +356,18 @@ export function useAudit(account: string) {
       retry()
       readSoon()
     }
-    // Another tab of this account changed the queue: take its version, so two
-    // tabs never overwrite each other's waiting answers (offline audit, 2026-11-09).
+    // Another tab of this account changed the queue: merge its version with
+    // this tab's, so two tabs never overwrite each other's waiting answers
+    // (offline audit, 2026-11-09). Its write may have landed after an older one
+    // of its own (alpha p9-deletes-02): the event's text, what is stored now,
+    // and this tab's copy are merged, and written back when storage lacks any.
+    // The key removed (Log Out in another tab) or another account's: taken as is.
     const onStorage = (e: StorageEvent) => {
       if (e.key !== AUDIT_QUEUE_KEY) return
-      const shared = readAuditQueue(browserStore(), account)
+      const stored = readAuditQueue(browserStore(), account)
+      const incoming = auditQueueFromText(e.newValue, account)
+      const shared = incoming && rawQueue() ? mergeAuditQueues(mergeAuditQueues(stored, incoming), queueRef.current) : stored
+      if (!sameAuditQueue(shared, stored)) writeAuditQueue(browserStore(), shared)
       seenRaw.current = rawQueue()
       queueRef.current = shared
       setQueue(shared)
