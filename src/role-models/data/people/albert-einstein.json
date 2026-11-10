@@ -1,0 +1,351 @@
+{
+  "id": "albert-einstein",
+  "name": "Albert Einstein",
+  "born": 1879,
+  "died": 1955,
+  "category": "scientists",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A patent clerk who reimagined space and time and would not keep quiet",
+  "startedFrom": "He was born in 1879 in Ulm, Germany, to middle-class Jewish parents; his father ran an electrical business in Munich. He hated his Munich high school, where success depended on memorising and obeying, and left it at 15. In 1895 he failed the entrance exam of the Zurich Polytechnic. After graduating in 1900 he found no university post, and in 1902 he became a patent examiner in Bern.",
+  "values": [
+    {
+      "word": "Imagination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "From 1907 he built his theory of gravity on a thought experiment: a man in a closed box cannot tell whether a dropped stone falls because of gravity or because the box is being pulled upward.",
+          "sourceId": "aip",
+          "locator": "Exhibit page 'The Great Works II' (great2.htm)"
+        },
+        {
+          "kind": "words",
+          "claim": "In a 1929 interview he said he was \"enough of the artist to draw freely upon my imagination\" and that imagination is more important than knowledge.",
+          "sourceId": "viereck-1929",
+          "locator": "The Saturday Evening Post, 26 October 1929, p. 117, col. 1"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Foundation's biography says he \"had a strategy of his own and was able to visualize the main stages on the way to his goal\".",
+          "sourceId": "nobel",
+          "locator": "Biographical, paragraph beginning 'Einstein always appeared'"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In a letter to his biographer Carl Seelig he wrote, in German, that he had no special gift and was only passionately curious.",
+          "sourceId": "seelig-1952",
+          "locator": "Letter of 11 March 1952, Albert Einstein Archives 39-13"
+        },
+        {
+          "kind": "deed",
+          "claim": "As a patent clerk in Bern he met friends regularly to read and discuss books on science and philosophy, a group they called the Olympia Academy.",
+          "sourceId": "aip",
+          "locator": "Exhibit page 'Formative Years III' (early3.htm)"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1904 he was seen wheeling his son's pram through Bern, stopping to write mathematical symbols in a notebook kept in the pram.",
+          "sourceId": "nyt-1955",
+          "locator": "Section 'Einstein Noted as an Iconoclast', first paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "For his last decades he kept working on a unified field theory after most other scientists who had joined the search gave it up, aware that many colleagues thought he was chasing a will-o'-the-wisp.",
+          "sourceId": "aip",
+          "locator": "Exhibit page 'Science and Philosophy' II (philos2.htm), first paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1930 he wrote that he was \"a horse for single harness\" and that his distance from others made him independent of their customs, opinions and prejudices.",
+          "sourceId": "what-i-believe-1930",
+          "locator": "Forum and Century 84 (4), October 1930, paragraphs beginning 'My passionate interest' and 'Such isolation'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times obituary says \"it was this independence\" that made him the centre of controversy over unpopular causes.",
+          "sourceId": "nyt-1955",
+          "locator": "Section 'Center of Controversies', first sentence"
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote of his \"passionate interest in social justice and social responsibility\".",
+          "sourceId": "what-i-believe-1930",
+          "locator": "Forum and Century 84 (4), October 1930, paragraph beginning 'My passionate interest'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1946 at Lincoln University in Pennsylvania he called racism \"a disease of white people\"; in 1951 he offered to be a character witness for W. E. B. Du Bois.",
+          "sourceId": "harvard-2007",
+          "locator": "Paragraph on Lincoln University (1946) and paragraph on W. E. B. Du Bois (1951)"
+        },
+        {
+          "kind": "deed",
+          "claim": "In the early 1930s he joined an international protest to save the lives of eight Black men wrongly convicted of rape in Scottsboro, Alabama.",
+          "sourceId": "aip",
+          "locator": "Exhibit page 'Public Concerns' III, list 'A Sample of Einstein's Public Activities: 1930-1935' (public3.htm)"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer Philipp Frank, quoted in the New York Times obituary, called him \"a fighter for social equality and human fraternity\".",
+          "sourceId": "nyt-1955",
+          "locator": "Section 'Legend Grew With Years', second paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At the outbreak of the First World War, when 93 leading German intellectuals signed a manifesto defending Germany's war conduct, he and only three others signed an antiwar counter-manifesto.",
+          "sourceId": "aip",
+          "locator": "Exhibit page 'Public Concerns' I (public1.htm), first paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1953 he wrote to a schoolteacher that intellectuals called before a Congressional investigating committee should refuse to testify, calling its tactics \"a kind of inquisition\".",
+          "sourceId": "nyt-1955",
+          "locator": "Section 'Center of Controversies', second paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Harvard Gazette reports that he kept supporting progressive causes through the 1950s, when anti-Communist witch hunts made it dangerous, and offered in 1951 to be a character witness for the indicted W. E. B. Du Bois.",
+          "sourceId": "harvard-2007",
+          "locator": "Paragraph beginning 'Einstein continued to support progressive causes'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times obituary says \"he never wavered when his conscience dictated that he take a course of action, no matter how unpopular\".",
+          "sourceId": "nyt-1955",
+          "locator": "Section 'Center of Controversies', second paragraph"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do your own thinking; do not rest your peace of mind on the customs, opinions and prejudices of others.",
+      "sourceId": "what-i-believe-1930",
+      "locator": "Forum and Century 84 (4), October 1930, paragraph beginning 'Such isolation'"
+    },
+    {
+      "text": "Trust your imagination and intuition to run ahead of what you know, then let the test decide.",
+      "sourceId": "viereck-1929",
+      "locator": "The Saturday Evening Post, 26 October 1929, p. 117, col. 1"
+    },
+    {
+      "text": "Your life is built on other people's work, so give back as much as you have received.",
+      "sourceId": "what-i-believe-1930",
+      "locator": "Forum and Century 84 (4), October 1930, second paragraph"
+    },
+    {
+      "text": "When your conscience says no, refuse openly and do not cooperate, even if it costs you.",
+      "sourceId": "nyt-1955",
+      "locator": "Section 'Center of Controversies', second paragraph (letter to a schoolteacher, 1953)"
+    },
+    {
+      "text": "Do not make comfort, possessions or outward success your goal; a simple life is best for body and mind.",
+      "sourceId": "what-i-believe-1930",
+      "locator": "Forum and Century 84 (4), October 1930, paragraphs beginning 'To ponder' and 'Without the sense'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Imagination is more important than knowledge. Knowledge is limited. Imagination encircles the world.",
+      "sourceId": "viereck-1929",
+      "locator": "The Saturday Evening Post, 26 October 1929, p. 117, col. 1",
+      "translation": "Interview published in English by George Sylvester Viereck, 1929; no translator named"
+    },
+    {
+      "text": "I am a horse for single harness, not cut out for tandem or team work.",
+      "sourceId": "what-i-believe-1930",
+      "locator": "Forum and Century 84 (4), October 1930, paragraph beginning 'My passionate interest'",
+      "translation": "English text as published in Forum and Century, 1930; translator not named"
+    },
+    {
+      "text": "My political ideal is democracy. Everyone should be respected as an individual, but no one idolized.",
+      "sourceId": "what-i-believe-1930",
+      "locator": "Forum and Century 84 (4), October 1930, paragraph beginning 'My political ideal'",
+      "translation": "English text as published in Forum and Century, 1930; translator not named"
+    },
+    {
+      "text": "To make a goal of comfort or happiness has never appealed to me; a system of ethics built on this basis would be sufficient only for a herd of cattle.",
+      "sourceId": "what-i-believe-1930",
+      "locator": "Forum and Century 84 (4), October 1930, paragraph beginning 'To ponder interminably'",
+      "translation": "English text as published in Forum and Century, 1930; translator not named"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1905, while working as a patent examiner in Bern, he wrote papers in his spare time after the day's work, with little contact with the scientific literature or other physicists. That year the Annalen der Physik published his papers on light quanta, on the jittering motion of particles in liquids and on what became special relativity, followed by the paper showing that mass and energy are equivalent. The paper on light later won him the 1921 Nobel Prize.",
+    "sourceIds": [
+      "mactutor",
+      "aip",
+      "nyt-1955"
+    ]
+  },
+  "shadow": {
+    "text": "Their first child, a daughter born to Mileva Marić before their 1903 marriage, was apparently given up for adoption. In July 1914 in Berlin, his romantic interest already turned to his cousin Elsa, he gave Mileva a written list of \"conditions\" for living together: she was to keep his clothes and rooms in order, serve his three meals in his room and give up all personal relations with him beyond what social form required. The editors of his Collected Papers call the conditions \"brutal\" and write that in his letters of 1914-18 his two sons, besides Mileva, \"bear the brunt of his callousness\". The divorce terms of 1919 required his Nobel Prize money to be deposited for Mileva and the sons; Hebrew University archivists said in 2006 that he did not deposit all of it and invested most of it in the US. Letters released in 2006 show affairs with several women during his second marriage, to Elsa. His diary of a 1922-23 tour of Asia calls the Chinese \"industrious, filthy, obtuse people\"; its editor Ze'ev Rosenkranz concludes that it holds \"quite a few racist and dehumanising comments\".",
+    "sourceIds": [
+      "aip",
+      "cpae-8-memo",
+      "cpae-8-intro",
+      "nbc-2006",
+      "guardian-2018"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you go along with other people's opinion when your own judgement said something else?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "What I Believe (The World As I See It)",
+      "year": 1930
+    },
+    {
+      "title": "Autobiographical Notes",
+      "year": 1949
+    },
+    {
+      "title": "Ideas and Opinions",
+      "year": 1954
+    }
+  ],
+  "sources": [
+    {
+      "id": "what-i-believe-1930",
+      "kind": "primary",
+      "title": "What I Believe (Living Philosophies XIII), Forum and Century 84 (4)",
+      "author": "Albert Einstein",
+      "year": 1930,
+      "publisher": "Forum and Century, scan on the Internet Archive",
+      "url": "https://archive.org/details/what-i-believe-albert-einstein-1930"
+    },
+    {
+      "id": "viereck-1929",
+      "kind": "primary",
+      "title": "What Life Means to Einstein: An Interview by George Sylvester Viereck",
+      "author": "Albert Einstein, interviewed by George Sylvester Viereck",
+      "year": 1929,
+      "publisher": "The Saturday Evening Post",
+      "url": "https://www.saturdayeveningpost.com/wp-content/uploads/satevepost/what_life_means_to_einstein.pdf"
+    },
+    {
+      "id": "seelig-1952",
+      "kind": "primary",
+      "title": "Letter to Carl Seelig, 11 March 1952 (Albert Einstein Archives 39-13)",
+      "author": "Albert Einstein",
+      "year": 1952,
+      "publisher": "Albert Einstein Archives, Hebrew University of Jerusalem (catalogue entry)",
+      "url": "https://ein-web.adlibhosting.com/aea/Details/archive/110010989"
+    },
+    {
+      "id": "cpae-8-memo",
+      "kind": "primary",
+      "title": "The Collected Papers of Albert Einstein, Vol. 8 (English translation), Docs. 22-23, pp. 32-33",
+      "author": "Albert Einstein; translated by Ann M. Hentschel",
+      "year": 1998,
+      "publisher": "Princeton University Press (Internet Archive copy of the Einstein Papers Project digital edition)",
+      "url": "https://web.archive.org/web/20231223224626/https://einsteinpapers.press.princeton.edu/vol8-trans/60"
+    },
+    {
+      "id": "cpae-8-intro",
+      "kind": "secondary",
+      "title": "Introduction to Volume 8, The Collected Papers of Albert Einstein, Vol. 8 Part A, pp. xl-xli",
+      "author": "Editors of the Einstein Papers Project",
+      "year": 1998,
+      "publisher": "Princeton University Press (Internet Archive copy of the Einstein Papers Project digital edition)",
+      "url": "https://web.archive.org/web/20211027092232/https://einsteinpapers.press.princeton.edu/vol8a-doc/40"
+    },
+    {
+      "id": "aip",
+      "kind": "secondary",
+      "title": "Einstein: Image and Impact (online exhibit)",
+      "author": "American Institute of Physics, Center for History of Physics",
+      "year": 2004,
+      "publisher": "American Institute of Physics",
+      "url": "https://history.aip.org/exhibits/einstein/"
+    },
+    {
+      "id": "mactutor",
+      "kind": "secondary",
+      "title": "Albert Einstein (MacTutor History of Mathematics biography)",
+      "author": "J. J. O'Connor and E. F. Robertson",
+      "year": 1997,
+      "publisher": "University of St Andrews",
+      "url": "https://mathshistory.st-andrews.ac.uk/Biographies/Einstein/"
+    },
+    {
+      "id": "nobel",
+      "kind": "secondary",
+      "title": "Albert Einstein - Biographical (from Nobel Lectures, Physics 1901-1921)",
+      "author": "Nobel Foundation",
+      "year": 1967,
+      "publisher": "NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/physics/1921/einstein/biographical/"
+    },
+    {
+      "id": "nyt-1955",
+      "kind": "secondary",
+      "title": "Dr. Albert Einstein Dies in Sleep at 76; World Mourns Loss of Great Scientist",
+      "author": "The New York Times",
+      "year": 1955,
+      "publisher": "The New York Times, 19 April 1955",
+      "url": "https://archive.nytimes.com/www.nytimes.com/learning/general/onthisday/bday/0314.html"
+    },
+    {
+      "id": "harvard-2007",
+      "kind": "secondary",
+      "title": "Albert Einstein, civil rights activist",
+      "author": "Ken Gewertz",
+      "year": 2007,
+      "publisher": "Harvard Gazette, 12 April 2007",
+      "url": "https://news.harvard.edu/gazette/story/2007/04/albert-einstein-civil-rights-activist/"
+    },
+    {
+      "id": "nbc-2006",
+      "kind": "secondary",
+      "title": "New letters shed light on Einstein's love life",
+      "author": "msnbc.com news services (Reuters and The Associated Press)",
+      "year": 2006,
+      "publisher": "NBC News, 10 July 2006",
+      "url": "https://www.nbcnews.com/id/13804030/ns/technology_and_science-science/t/new-letters-shed-light-einsteins-love-life/"
+    },
+    {
+      "id": "guardian-2018",
+      "kind": "secondary",
+      "title": "Einstein's travel diaries reveal 'shocking' xenophobia",
+      "author": "Alison Flood",
+      "year": 2018,
+      "publisher": "The Guardian, 12 June 2018",
+      "url": "https://www.theguardian.com/books/2018/jun/12/einsteins-travel-diaries-reveal-shocking-xenophobia"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real physicist (1879-1955), not fictional, not a politician, campaigner or founder of a religion; no account of sexual contact with anyone under 16 or of sexual violence was found; his dark side is his treatment of his first wife and sons, affairs, and racist remarks in his 1922-23 travel diary."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked all five values and every cited sentence. Justice was tested against the 1922-23 diary and his treatment of Mileva and his sons; it held because those are one private diary and his family conduct, both now told in the shadow, against a public record of acting for racial and social justice from 1930 to 1953. Courage lost the claim that he refused to sign the 1914 manifesto, which the Collected Papers editors do not support, and now rests on the counter-manifesto he signed as one of four, his 1953 refuse-to-testify letter and his 1950s Du Bois support; Independence lost the 1896 citizenship claim, which the editors explain as avoiding military service. All four quotes matched the 1930 Forum scan or Quote Investigator's microfilm check, and the shadow gained the Nobel-money breach of the divorce terms.",
+    "checkedOn": "2026-11-10"
+  }
+}
