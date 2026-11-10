@@ -1,0 +1,298 @@
+{
+  "id": "bertrand-russell",
+  "name": "Bertrand Russell",
+  "born": 1872,
+  "died": 1970,
+  "category": "philosophers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_contribution"
+  ],
+  "tagline": "An orphaned earl's grandson who thought clearly and went to prison for what he said.",
+  "startedFrom": "He was born on 18 May 1872 at Trelleck in Monmouthshire, grandson of the first Earl Russell. When he was two his mother and sister died of diphtheria, and eighteen months later his father died, so he grew up with his grandparents at Pembroke Lodge in Richmond Park; after his grandfather died, when he was six, he lay awake at night wondering when his grandmother would die too. He was not sent to school but taught by governesses and tutors.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1916 he was fined £100 for a No-Conscription Fellowship leaflet he wrote, and as a result Trinity College took away his lectureship.",
+          "sourceId": "odnb",
+          "locator": "'The First World War'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1918 he was sentenced to six months' imprisonment for a pacifist article he had written in The Tribunal.",
+          "sourceId": "nobel-bio",
+          "locator": "Biographical, para. 2"
+        },
+        {
+          "kind": "deed",
+          "claim": "In September 1961, aged 89, asked in court whether he would be bound over to keep the peace, he shouted 'No!' and was given two months in prison, later cut to one week.",
+          "sourceId": "time-1961",
+          "locator": "'Great Britain: Philosopher in Jail', court-scene paragraphs ('One day last week...' to '...reduced to one week for health reasons')"
+        },
+        {
+          "kind": "witness",
+          "claim": "His Oxford DNB biographer writes that in the First World War he showed 'the courage in resisting the state which was characteristic of his political activities throughout his long life'.",
+          "sourceId": "odnb",
+          "locator": "'The First World War', para. 2"
+        },
+        {
+          "kind": "witness",
+          "claim": "Presenting his Nobel Prize, the Swedish Academy's permanent secretary praised 'the unwavering valour of this rebellious teller of the truth' and called him 'a fearless champion of free speech'.",
+          "sourceId": "nobel-presentation",
+          "locator": "Presentation Speech by Anders Österling, 1950, paras 6-7"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In the prologue to his Autobiography he writes that he sought knowledge 'with equal passion', wishing 'to understand the hearts of men' and 'to know why the stars shine'.",
+          "sourceId": "sep",
+          "locator": "1. Russell's Chronology (quoting Autobiography, 1967, pp. 3-4)"
+        },
+        {
+          "kind": "words",
+          "claim": "In The Problems of Philosophy he says philosophy's questions are worth studying for their own sake, because they 'enlarge our conception of what is possible'.",
+          "sourceId": "problems-1912",
+          "locator": "Chapter XV, 'The Value of Philosophy', last paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "After the 1900 Mathematical Congress in Paris he immediately studied the works of the Italian mathematician Peano, wrote The Principles of Mathematics (1903), and with Whitehead went on to develop the mathematical logic of Peano and Frege.",
+          "sourceId": "nobel-bio",
+          "locator": "Biographical, para. 2"
+        },
+        {
+          "kind": "deed",
+          "claim": "As a young man he spent part of each day for weeks reading Georg Cantor and went through all his arguments 'in the minutest detail', later finding that 'all the fallacies were mine'.",
+          "sourceId": "sep",
+          "locator": "8. Contemporary Russell Scholarship (quoting Autobiography, 1967, p. 127)"
+        },
+        {
+          "kind": "witness",
+          "claim": "A. J. Ayer wrote that the popular idea of a philosopher who 'combines universal learning with the direction of human conduct' was more nearly met by Russell than by any other philosopher of his time.",
+          "sourceId": "sep",
+          "locator": "1. Russell's Chronology (quoting Ayer 1972a, p. 127)"
+        }
+      ]
+    },
+    {
+      "word": "Clarity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He wrote many of his books for ordinary readers; the Swedish Academy said this was the main reason for his Nobel Prize, not his technical work.",
+          "sourceId": "nobel-presentation",
+          "locator": "Presentation Speech by Anders Österling, 1950, para. 3"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Swedish Academy praised 'his keen and sound good sense, his clear style, and his wit in the midst of seriousness'.",
+          "sourceId": "nobel-presentation",
+          "locator": "Presentation Speech by Anders Österling, 1950, para. 4"
+        },
+        {
+          "kind": "witness",
+          "claim": "W. V. Quine wrote that Russell's books, written 'for a graduated public, layman to specialist', drew readers with their wit and 'a sense of new-found clarity'.",
+          "sourceId": "sep",
+          "locator": "1. Russell's Chronology (quoting Quine 1966c, p. 657)"
+        },
+        {
+          "kind": "witness",
+          "claim": "His Oxford DNB biographer writes that through The Problems of Philosophy (1912) he found 'a gift for writing on difficult subjects for the general public', and later calls The ABC of Atoms a use of his 'gift for the lucid explanation of technical ideas'.",
+          "sourceId": "odnb",
+          "locator": "'The impact of Ottoline Morrell and Ludwig Wittgenstein', para. 1; 'Second marriage', para. 10"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When you study anything, ask only what the facts are; do not let what you wish were true bend your answer.",
+      "sourceId": "future-of-science-1959",
+      "locator": "'Self-portrait' (BBC interview with John Freeman), final answer, at the page break marked 85"
+    },
+    {
+      "text": "Choose love over hatred: hatred is the foolish choice.",
+      "sourceId": "future-of-science-1959",
+      "locator": "'Self-portrait' (BBC interview with John Freeman), final answer, at the page break marked 85"
+    },
+    {
+      "text": "Hold your beliefs with some doubt; doubt frees you from the habits and prejudices of your time.",
+      "sourceId": "problems-1912",
+      "locator": "Chapter XV, 'The Value of Philosophy', para. 7"
+    },
+    {
+      "text": "Say in public what you believe, even when it costs you your job or your freedom.",
+      "sourceId": "odnb",
+      "locator": "'The First World War' and 'Post-war political activism'"
+    },
+    {
+      "text": "When a quarrel could destroy everyone, think of yourself first as a human being, not as a member of a side.",
+      "sourceId": "manifesto-1955",
+      "locator": "Russell-Einstein Manifesto, 9 July 1955, paras 2 and last before the resolution"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Three passions, simple but overwhelmingly strong, have governed my life: the longing for love, the search for knowledge, and unbearable pity for the suffering of mankind.",
+      "sourceId": "autobiography-1",
+      "locator": "Vol. 1, Prologue: 'What I Have Lived For', first sentence"
+    },
+    {
+      "text": "The moral thing I should wish to say to them is very simple. I should say love is wise, hatred is foolish.",
+      "sourceId": "future-of-science-1959",
+      "locator": "'Self-portrait' (BBC Face to Face interview with John Freeman, 1959), final answer, at the page break marked 85"
+    },
+    {
+      "text": "…it removes the somewhat arrogant dogmatism of those who have never travelled into the region of liberating doubt, and it keeps alive our sense of wonder by showing familiar things in an unfamiliar aspect.",
+      "sourceId": "problems-1912",
+      "locator": "Chapter XV, 'The Value of Philosophy', para. 7"
+    }
+  ],
+  "definingMoment": {
+    "text": "When Britain brought in conscription in 1916, he campaigned for the No-Conscription Fellowship and wrote a leaflet against a two-year sentence given to a conscientious objector. He was fined £100, and Trinity College took away his lectureship. In 1918 he was sentenced to six months for an article in The Tribunal claiming that American troops would be used to break strikes in Britain, a claim his biographer Ray Monk calls foolish and unfounded. He served five months in Brixton Prison and wrote his Introduction to Mathematical Philosophy there.",
+    "sourceIds": [
+      "nobel-bio",
+      "odnb",
+      "sep"
+    ]
+  },
+  "shadow": {
+    "text": "In new year 1902, by Ray Monk's account, he realised he no longer loved his wife Alys; he turned cold towards her and, when she asked that summer, told her his love was dead. For nine more years he grew, Monk writes, increasingly cold and irritable towards her, then left her in 1911 for an affair with Lady Ottoline Morrell, the wife of a Liberal MP. From 1914 on he had many affairs, among them, during the war, one with Vivien Eliot, the wife of the poet T. S. Eliot, and in summer 1919 two lovers, Colette Malleson and Dora Black, joined him on the same holiday at sometimes overlapping times. His third wife, Peter, came to hate him, partly over what she saw as his coldness towards her. After his son John was diagnosed with schizophrenia at the end of 1954, Monk writes, Russell had almost nothing to do with him, while fighting Dora in court to keep John's three daughters. Between 1945 and 1950 he urged more than once that the West threaten Russia with atomic bombardment if it refused to accept international authority. He later denied having done so; Monk says the public record shows otherwise, and the biographer Ronald Clark concluded that he deliberately tried to conceal his earlier views. Critics also cite his early support for British imperialism and his comments on eugenics and race in Marriage and Morals (1929).",
+    "sourceIds": [
+      "odnb",
+      "mcmaster",
+      "sep"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you believe something because you wanted it to be true, not because the facts showed it?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Problems of Philosophy",
+      "year": 1912
+    },
+    {
+      "title": "The Conquest of Happiness",
+      "year": 1930
+    },
+    {
+      "title": "The Autobiography of Bertrand Russell",
+      "year": 1967
+    }
+  ],
+  "sources": [
+    {
+      "id": "autobiography-1",
+      "kind": "primary",
+      "title": "The Autobiography of Bertrand Russell, Vol. 1: 1872-1914",
+      "author": "Bertrand Russell",
+      "year": 1967,
+      "publisher": "George Allen and Unwin, London",
+      "url": "https://archive.org/details/autobiographyofb0001russ"
+    },
+    {
+      "id": "future-of-science-1959",
+      "kind": "primary",
+      "title": "The Future of Science, with a 'Self-portrait' of the author (transcript of the BBC Face to Face interview with John Freeman, 1959)",
+      "author": "Bertrand Russell",
+      "year": 1959,
+      "publisher": "Philosophical Library, New York",
+      "url": "https://archive.org/details/futureofsciencew0000bert"
+    },
+    {
+      "id": "problems-1912",
+      "kind": "primary",
+      "title": "The Problems of Philosophy (Project Gutenberg eBook #5827)",
+      "author": "Bertrand Russell",
+      "year": 1912,
+      "publisher": "Project Gutenberg (e-text of the 1912 book)",
+      "url": "https://www.gutenberg.org/ebooks/5827"
+    },
+    {
+      "id": "manifesto-1955",
+      "kind": "primary",
+      "title": "The Russell-Einstein Manifesto, issued in London, 9 July 1955",
+      "author": "Bertrand Russell, Albert Einstein and nine other signatories",
+      "year": 1955,
+      "publisher": "Pugwash Conferences on Science and World Affairs",
+      "url": "https://pugwash.org/1955/07/09/statement-manifesto/"
+    },
+    {
+      "id": "odnb",
+      "kind": "secondary",
+      "title": "Russell, Bertrand Arthur William, third Earl Russell (1872-1970), Oxford Dictionary of National Biography",
+      "author": "Ray Monk",
+      "year": 2004,
+      "publisher": "Oxford University Press (text hosted by MacTutor, University of St Andrews)",
+      "url": "https://mathshistory.st-andrews.ac.uk/DNB/Russell.html"
+    },
+    {
+      "id": "sep",
+      "kind": "secondary",
+      "title": "Bertrand Russell, Stanford Encyclopedia of Philosophy (substantive revision 15 October 2024)",
+      "author": "Andrew David Irvine",
+      "year": 2024,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/russell/"
+    },
+    {
+      "id": "nobel-bio",
+      "kind": "secondary",
+      "title": "Bertrand Russell - Biographical (from Les Prix Nobel en 1950)",
+      "author": "The Nobel Foundation",
+      "year": 1951,
+      "url": "https://www.nobelprize.org/prizes/literature/1950/russell/biographical/"
+    },
+    {
+      "id": "nobel-facts",
+      "kind": "secondary",
+      "title": "Bertrand Russell - Facts, Nobel Prize in Literature 1950",
+      "author": "The Nobel Foundation",
+      "year": "n.d.",
+      "url": "https://www.nobelprize.org/prizes/literature/1950/russell/facts/"
+    },
+    {
+      "id": "nobel-presentation",
+      "kind": "secondary",
+      "title": "Nobel Prize in Literature 1950 - Presentation Speech",
+      "author": "Anders Österling, Permanent Secretary of the Swedish Academy",
+      "year": 1950,
+      "url": "https://www.nobelprize.org/prizes/literature/1950/ceremony-speech/"
+    },
+    {
+      "id": "mcmaster",
+      "kind": "secondary",
+      "title": "Russell's Life: A Short Biography",
+      "author": "The Bertrand Russell Research Centre, McMaster University",
+      "year": "n.d.",
+      "url": "https://russell.humanities.mcmaster.ca/about-russell/russells-life/"
+    },
+    {
+      "id": "time-1961",
+      "kind": "secondary",
+      "title": "Great Britain: Philosopher in Jail, Time, 22 September 1961",
+      "author": "Time (staff)",
+      "year": 1961,
+      "url": "https://time.com/archive/6811046/great-britain-philosopher-in-jail/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real philosopher, died 2 February 1970; his anti-war and anti-nuclear campaigning (No-Conscription Fellowship, CND, Committee of 100) and his failed runs for Parliament (1907, 1922, 1923) make him a political campaigner, but the exclusion covers living campaigners only, so it does not apply; no credible account of sexual violence or of sexual contact with anyone under 16 was found; his dark side is serial infidelity and coldness in marriage, withdrawal from his schizophrenic son, and his 1945-50 call to threaten Russia with atomic bombardment, which he later denied."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I attacked every value against Monk's Oxford DNB life, the SEP entry and the Nobel and Time texts. Honesty fell: Monk says he denied his 1945-50 atomic-threat statements against the public record, the SEP reports Ronald Clark's conclusion that he deliberately concealed them, and the value had only two sources. Compassion fell as a pattern in his own house: nine cold years with Alys, a third wife who resented his coldness, and almost no contact with his ill son John, set against a public pity that was real. Courage, Curiosity and Clarity held, each now with at least three sources, and the shadow gained the denial, his third marriage and the critics' charges the SEP records.",
+    "checkedOn": "2026-11-10"
+  }
+}
