@@ -1,0 +1,314 @@
+{
+  "id": "michel-de-montaigne",
+  "name": "Michel de Montaigne",
+  "born": 1533,
+  "died": 1592,
+  "category": "sages",
+  "areaIds": [
+    "lm_mindset",
+    "lm_emotions",
+    "lm_friends"
+  ],
+  "tagline": "A man who studied himself on paper for twenty years and published the flaws too.",
+  "startedFrom": "He was born in 1533 at the family château east of Bordeaux, the eldest of eight children of a rich family that had only lately risen from merchants into the minor nobility. His father had him taught Latin before French and sent him at six to the Collège de Guyenne in Bordeaux. He became a magistrate, but his career in the Bordeaux Parlement was not distinguished, and he was passed over for higher offices.",
+  "values": [
+    {
+      "word": "Self-awareness",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that he studies himself more than any other subject.",
+          "sourceId": "essays-cotton",
+          "locator": "Book III, ch. XIII, Of Experience"
+        },
+        {
+          "kind": "deed",
+          "claim": "He began the Essays around 1572 and kept adding to them, in the margins of his own copy, until his death in 1592.",
+          "sourceId": "iep-edelman",
+          "locator": "§1 Life"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia says he wrote the Essays aiming both to address his topics and to make himself known to the reader.",
+          "sourceId": "iep-edelman",
+          "locator": "introduction"
+        },
+        {
+          "kind": "witness",
+          "claim": "Hazlitt writes that what he set out to do was to dissect his mind and show how it was made.",
+          "sourceId": "hazlitt-preface",
+          "locator": "Preface, vol. 1"
+        }
+      ]
+    },
+    {
+      "word": "Honesty",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Of his work as a go-between for the princes, he writes that he cannot permit himself, for any consideration, to tell them a lie.",
+          "sourceId": "essays-cotton",
+          "locator": "Book III, ch. I, Of Profit and Honesty"
+        },
+        {
+          "kind": "words",
+          "claim": "In his note to the reader he calls it an honest book in which his defects are to be read to the life.",
+          "sourceId": "essays-cotton",
+          "locator": "The Author to the Reader (1580)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia says both kings regarded him as trustworthy, and that Henri of Navarre seems to have sent him on a secret mission to Henri III in Paris in February 1588.",
+          "sourceId": "iep-edelman",
+          "locator": "§1 Life"
+        },
+        {
+          "kind": "witness",
+          "claim": "The historian De Thou, who walked and talked with him at Blois, called him a frank man without constraint.",
+          "sourceId": "hazlitt-life",
+          "locator": "The Life of Montaigne (1588, Blois)"
+        }
+      ]
+    },
+    {
+      "word": "Friendship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In August 1563, when his friend La Boétie lay dying of dysentery and told him the illness was infectious, he stayed at his side until he died.",
+          "sourceId": "letters-hazlitt",
+          "locator": "Letter I (account of La Boétie's death, printed 1571)"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1571 he had La Boétie's short works printed in Paris.",
+          "sourceId": "hazlitt-life",
+          "locator": "The Life of Montaigne (1571)"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked why he loved La Boétie, he writes that it can only be expressed as: because it was he, because it was I.",
+          "sourceId": "essays-cotton",
+          "locator": "Book I, ch. XXVII, Of Friendship"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia calls it an intense friendship that lasted until La Boétie's sudden death in 1563.",
+          "sourceId": "iep-edelman",
+          "locator": "§1 Life"
+        }
+      ]
+    },
+    {
+      "word": "Solitude",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1570 he sold his office in the Parlement and went back to his château, where in 1571 he built the tower that housed his study.",
+          "sourceId": "iep-edelman",
+          "locator": "§1 Life"
+        },
+        {
+          "kind": "deed",
+          "claim": "On his birthday, the last day of February 1571, he had a Latin inscription put on a wall saying he had withdrawn, weary of court and public office, to spend the rest of his life in quiet.",
+          "sourceId": "hazlitt-life",
+          "locator": "The Life of Montaigne (1571)"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that a man must reserve a back shop, wholly his own and free, for his true liberty and his chief solitude.",
+          "sourceId": "essays-cotton",
+          "locator": "Book I, ch. XXXVIII, Of Solitude"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia says that, tired of active life, he retired at only 37 to his father's castle and, like Petrarch, chose to dedicate himself to the Muses.",
+          "sourceId": "sep-foglia",
+          "locator": "§1 Life"
+        }
+      ]
+    },
+    {
+      "word": "Travel",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1580-81 he travelled through Germany and Switzerland to Rome and kept a journal of the trip.",
+          "sourceId": "iep-edelman",
+          "locator": "§1 Life"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia notes that he gave his love of travel as one reason for the trip, along with his kidney stones and wish to see Rome.",
+          "sourceId": "iep-edelman",
+          "locator": "§1 Life"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1854 French life of him, in Hazlitt's version, says he enjoyed travelling so much that he dreaded arriving at the night's stop, and in Switzerland went to see Protestant ministers to learn their beliefs.",
+          "sourceId": "hazlitt-life",
+          "locator": "The Life of Montaigne (journey of 1580-81)"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that he knows no better school for life than travel, which shows the soul the diversity of so many other lives.",
+          "sourceId": "essays-cotton",
+          "locator": "Book III, ch. IX, Of Vanity"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Study yourself, your moods and your habits, more closely than any other subject.",
+      "sourceId": "essays-cotton",
+      "locator": "Book III, ch. XIII, Of Experience"
+    },
+    {
+      "text": "Enjoy your wife, children and goods, but keep a room in yourself that does not depend on them, so losing them is not the end of you.",
+      "sourceId": "essays-cotton",
+      "locator": "Book I, ch. XXXVIII, Of Solitude"
+    },
+    {
+      "text": "Never lie to the people you deal with; say nothing to one side that you could not say to the other.",
+      "sourceId": "essays-cotton",
+      "locator": "Book III, ch. I, Of Profit and Honesty"
+    },
+    {
+      "text": "Do your job well, but do not mistake the job for yourself.",
+      "sourceId": "essays-cotton",
+      "locator": "Book III, ch. X, Of Managing the Will"
+    },
+    {
+      "text": "When you do something, be there: when you dance, dance; when you walk, bring your mind back to the walk.",
+      "sourceId": "essays-cotton",
+      "locator": "Book III, ch. XIII, Of Experience"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "If a man should importune me to give a reason why I loved him, I find it could no otherwise be expressed, than by making answer: because it was he, because it was I.",
+      "sourceId": "essays-cotton",
+      "locator": "Book I, ch. XXVII, Of Friendship",
+      "translation": "Charles Cotton, 1685-86, revised by William Carew Hazlitt, 1877"
+    },
+    {
+      "text": "I study myself more than any other subject; ‘tis my metaphysic, my physic",
+      "sourceId": "essays-cotton",
+      "locator": "Book III, ch. XIII, Of Experience",
+      "translation": "Charles Cotton, 1685-86, revised by William Carew Hazlitt, 1877"
+    },
+    {
+      "text": "When I dance, I dance; when I sleep, I sleep.",
+      "sourceId": "essays-cotton",
+      "locator": "Book III, ch. XIII, Of Experience",
+      "translation": "Charles Cotton, 1685-86, revised by William Carew Hazlitt, 1877"
+    },
+    {
+      "text": "‘Tis an absolute and, as it were, a divine perfection, for a man to know how loyally to enjoy his being.",
+      "sourceId": "essays-cotton",
+      "locator": "Book III, ch. XIII, Of Experience",
+      "translation": "Charles Cotton, 1685-86, revised by William Carew Hazlitt, 1877"
+    }
+  ],
+  "definingMoment": {
+    "text": "In August 1563 his closest friend, Étienne de La Boétie, fell ill with dysentery near Bordeaux. On the Saturday, La Boétie told him the illness was infectious and asked him to come only now and then. By Montaigne's own account, he never left his side after that. La Boétie left him his library and died early on 18 August 1563, aged thirty-two. In 1571 Montaigne had his friend's writings printed in Paris.",
+    "sourceIds": [
+      "letters-hazlitt",
+      "hazlitt-life",
+      "iep-edelman"
+    ]
+  },
+  "shadow": {
+    "text": "In July 1585, near the end of his second term as mayor of Bordeaux, plague hit the city; he stayed outside and wrote to the city officials on 30 July that he would come only as near as Feuillas, leaving them to judge whether his presence at the election was worth the risk. The Stanford Encyclopedia says he was criticised for abandoning the town to protect himself and his family. His 1571 retirement did not end his ambitions: he courted noble patrons, put his royal titles on the 1580 title page and removed them in 1582, and the Internet Encyclopedia reports a recent argument that the 1580 book was partly a bid for a diplomat's post. In Of Friendship he wrote that the ordinary talent of women is not enough for the deepest kind of friendship. Only one of his six children lived past infancy; he wrote that he lost two or three at nurse, if not without grief, at least without repining.",
+    "sourceIds": [
+      "letters-hazlitt",
+      "sep-foglia",
+      "essays-cotton",
+      "iep-edelman"
+    ]
+  },
+  "councilQuestion": {
+    "text": "When this week were you doing one thing while your mind was somewhere else?",
+    "principleIndex": 4
+  },
+  "readings": [
+    {
+      "title": "Essays",
+      "year": 1580
+    },
+    {
+      "title": "Of Friendship (Essays, Book I)",
+      "year": 1580
+    },
+    {
+      "title": "Of Experience (Essays, Book III)",
+      "year": 1588
+    }
+  ],
+  "sources": [
+    {
+      "id": "essays-cotton",
+      "kind": "primary",
+      "title": "Essays of Michel de Montaigne, translated by Charles Cotton (1685-86), edited and revised by William Carew Hazlitt",
+      "author": "Michel de Montaigne",
+      "year": 1877,
+      "publisher": "Project Gutenberg e-text #3600 (text of the 1877 Hazlitt edition)",
+      "url": "https://www.gutenberg.org/ebooks/3600"
+    },
+    {
+      "id": "letters-hazlitt",
+      "kind": "primary",
+      "title": "The Letters of Montaigne, in Essays of Michel de Montaigne, ed. W. C. Hazlitt, vol. 1",
+      "author": "Michel de Montaigne",
+      "year": 1877,
+      "publisher": "Project Gutenberg e-text #3600 (text of the 1877 Hazlitt edition)",
+      "url": "https://www.gutenberg.org/ebooks/3600"
+    },
+    {
+      "id": "hazlitt-life",
+      "kind": "secondary",
+      "title": "The Life of Montaigne, translated freely from the life in the Paris variorum edition of 1854, in Essays of Michel de Montaigne, vol. 1",
+      "author": "W. C. Hazlitt (translator and editor)",
+      "year": 1877,
+      "publisher": "Project Gutenberg e-text #3600 (text of the 1877 Hazlitt edition)",
+      "url": "https://www.gutenberg.org/ebooks/3600"
+    },
+    {
+      "id": "hazlitt-preface",
+      "kind": "secondary",
+      "title": "Preface to Essays of Michel de Montaigne",
+      "author": "William Carew Hazlitt",
+      "year": 1877,
+      "publisher": "Project Gutenberg e-text #3600 (text of the 1877 Hazlitt edition)",
+      "url": "https://www.gutenberg.org/ebooks/3600"
+    },
+    {
+      "id": "sep-foglia",
+      "kind": "secondary",
+      "title": "Michel de Montaigne, Stanford Encyclopedia of Philosophy (first published 2004, substantive revision 2026)",
+      "author": "Marc Foglia and Emiliano Ferrari",
+      "year": 2026,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/montaigne/"
+    },
+    {
+      "id": "iep-edelman",
+      "kind": "secondary",
+      "title": "Michel de Montaigne (1533-1592), Internet Encyclopedia of Philosophy",
+      "author": "Christopher Edelman",
+      "year": "undated",
+      "url": "https://iep.utm.edu/montaigne/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real French writer and magistrate (1533-1592), dead for centuries, not a founder of a religion, with no account found of sexual contact with a minor or of sexual violence; he is in, with a documented dark side."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked every value and checked each claim and locator in the Gutenberg Cotton/Hazlitt text, the Internet Encyclopedia and the Stanford Encyclopedia. Solitude took the hardest hit, since the Internet Encyclopedia says his 1571 retirement did not end his political aims and he went on to serve as envoy, mayor and go-between; it held because he spent most of 1571-80 and 1586-92 writing in his tower, and the ambition went into the shadow. Travel held on his own words and the travel journal, though the Internet Encyclopedia says a hoped-for post in Rome may have been the main motive. All four quotes were found word for word; no value or quote fell, and the Honesty evidence about the 1588 mission is now marked as a witness account of trust, not a deed of honesty.",
+    "checkedOn": "2026-11-10"
+  }
+}
