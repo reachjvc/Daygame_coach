@@ -1,0 +1,340 @@
+{
+  "id": "richard-feynman",
+  "name": "Richard Feynman",
+  "born": 1918,
+  "died": 1988,
+  "category": "scientists",
+  "areaIds": [
+    "lm_mission",
+    "lm_fun",
+    "lm_mindset"
+  ],
+  "tagline": "A physicist who played with problems for fun and refused to fool himself or anyone else.",
+  "startedFrom": "He was born in New York City on 11 May 1918 and grew up in Far Rockaway, New York. His parents shaped him, and his father encouraged his habit of asking questions. He studied at MIT, where he took his first degree in 1939, and at Princeton, where he took his doctorate in 1942. That June he married Arline Greenbaum, who had been diagnosed with terminal tuberculosis while they were courting; while she lay in a sanatorium in Albuquerque he drove the 200-mile round trip from Los Alamos every weekend, and she died on 16 June 1945.",
+  "values": [
+    {
+      "word": "Honesty",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his 1974 Caltech commencement address he asks scientists for 'a kind of utter honesty': to report everything that might make their result invalid, not only what supports it.",
+          "sourceId": "ccs-1974",
+          "locator": "Cargo Cult Science, Engineering and Science 37:7 (June 1974), paragraphs beginning 'But there is one feature I notice' and 'For example, if you're doing an experiment'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1986 he felt the Challenger commission's report was watered down and threatened to take his name off it unless his own findings went in; they were added to the report.",
+          "sourceId": "cbs-2008",
+          "locator": "How Conflict Made All the Difference to the Rogers Commission (14 Jan 2008)"
+        },
+        {
+          "kind": "deed",
+          "claim": "His own appendix to the Challenger report sets the working engineers' estimate of losing a shuttle (about 1 in 100) against management's (1 in 100,000) and says NASA owes the citizens who fund it frankness and honesty.",
+          "sourceId": "appendix-f",
+          "locator": "Appendix F, Introduction [F1] and Conclusions"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Los Angeles Times obituary writes that his ice-water experiment 'cut through all the technical manuals and bureaucratic jawboning' that threatened to hide why Challenger exploded.",
+          "sourceId": "latimes-1988",
+          "locator": "opening section, before 'Flair for Showmanship'"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says that because so many people believe in UFOs, astrology and ESP, he decided to investigate why, and calls this 'my curiosity for investigation'.",
+          "sourceId": "ccs-1974",
+          "locator": "Cargo Cult Science, Engineering and Science 37:7 (June 1974), second paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "At Los Alamos, a lab where research was top secret, he developed a talent for picking the combination locks on the safes.",
+          "sourceId": "maglab",
+          "locator": "Los Alamos paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "In his Nobel lecture he tells how, as an MIT undergraduate reading about known physics, he came to see that the quantum theory of electricity and magnetism was not satisfactory, and stuck with his own idea for years out of 'youthful enthusiasm'.",
+          "sourceId": "nobel-lecture",
+          "locator": "Nobel Lecture, 11 December 1965, opening section"
+        },
+        {
+          "kind": "witness",
+          "claim": "The physicist and writer Alan Lightman, reviewing James Gleick's biography, describes him as 'intensely curious, and highly original in all things'.",
+          "sourceId": "paw-1993",
+          "locator": "Princeton Alumni Weekly, 27 January 1993, review of Genius"
+        }
+      ]
+    },
+    {
+      "word": "Joy",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "At the 1965 Nobel banquet he said his work had already been rewarded before the prize, by the moment of finding himself 'alone before one new corner of nature's pattern of beauty': 'That was my reward.'",
+          "sourceId": "nobel-banquet",
+          "locator": "Banquet speech, Stockholm, 10 December 1965, first paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "His former student Albert Hibbs, quoted in the Los Angeles Times obituary, wrote that what made him smile in the lecture hall 'was physics. The joy of physics!'",
+          "sourceId": "latimes-1988",
+          "locator": "section 'Complicated Rhythm'"
+        },
+        {
+          "kind": "words",
+          "claim": "In his Nobel lecture he speaks of 'the psychological excitement of feeling that possible nobody has yet thought of the crazy possibility you are looking at right now'.",
+          "sourceId": "nobel-lecture",
+          "locator": "Nobel Lecture, 11 December 1965, paragraph beginning 'So what happened to the old theory' (the sentence before it)"
+        }
+      ]
+    },
+    {
+      "word": "Humour",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At Los Alamos colleagues often opened their safes to find joking notes he had left inside.",
+          "sourceId": "maglab",
+          "locator": "Los Alamos paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Los Angeles Times obituary credits his 'flair for showmanship, along with a healthy dose of humor and irreverence' for his hold on Caltech students over 36 years.",
+          "sourceId": "latimes-1988",
+          "locator": "section 'Flair for Showmanship'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He opened his 1974 commencement address with a joke that the graduation hats were another crazy idea of the Middle Ages, his own being too loose.",
+          "sourceId": "ccs-1974",
+          "locator": "Cargo Cult Science, Engineering and Science 37:7 (June 1974), first paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Alan Lightman, reviewing Gleick's biography, calls him 'stubborn, irreverent, unrefined, uncultured, proud, playful'.",
+          "sourceId": "paw-1993",
+          "locator": "Princeton Alumni Weekly, 27 January 1993, review of Genius"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not fool yourself, because you are the easiest person to fool.",
+      "sourceId": "ccs-1974",
+      "locator": "Cargo Cult Science, Engineering and Science 37:7 (June 1974), paragraph beginning 'The first principle'"
+    },
+    {
+      "text": "When you show your work, also show everything that could prove it wrong.",
+      "sourceId": "ccs-1974",
+      "locator": "Cargo Cult Science, Engineering and Science 37:7 (June 1974), paragraph beginning 'For example, if you're doing an experiment'"
+    },
+    {
+      "text": "Tell the people who back you the real risks, even if it costs you their support.",
+      "sourceId": "appendix-f",
+      "locator": "Appendix F, Conclusions"
+    },
+    {
+      "text": "Check a claim with a simple test of your own instead of trusting the paperwork.",
+      "sourceId": "latimes-1988",
+      "locator": "opening section, the O-ring and ice-water experiment"
+    },
+    {
+      "text": "Tell how you really got there, wrong turns included, not only the polished result.",
+      "sourceId": "nobel-lecture",
+      "locator": "Nobel Lecture, 11 December 1965, first paragraph"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "The first principle is that you must not fool yourself—and you are the easiest person to fool.",
+      "sourceId": "ccs-1974",
+      "locator": "Cargo Cult Science, Caltech commencement address 1974, Engineering and Science 37:7 (June 1974)"
+    },
+    {
+      "text": "For a successful technology, reality must take precedence over public relations, for nature cannot be fooled.",
+      "sourceId": "appendix-f",
+      "locator": "Appendix F, Personal Observations on Reliability of Shuttle, last sentence"
+    },
+    {
+      "text": "I'm talking about a specific, extra type of integrity that is not lying, but bending over backwards to show how you're maybe wrong…",
+      "sourceId": "ccs-1974",
+      "locator": "Cargo Cult Science, Caltech commencement address 1974, Engineering and Science 37:7 (June 1974)"
+    },
+    {
+      "text": "Imagination reaches out repeatedly trying to achieve some higher level of understanding, until suddenly I find myself momentarily alone before one new corner of nature's pattern of beauty and true majesty revealed.",
+      "sourceId": "nobel-banquet",
+      "locator": "Banquet speech, Stockholm, 10 December 1965"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1986 he sat on the presidential commission that investigated the explosion of the space shuttle Challenger, which killed seven people. Before television cameras he clamped a rubber O-ring from a model of the shuttle in a C-clamp, dropped it into a glass of ice water, and showed that the cold made the rubber lose its spring. He felt the commission's report was watered down and threatened to take his name off it unless his own findings went in. They were added as Appendix F, which ends: 'nature cannot be fooled.'",
+    "sourceIds": [
+      "latimes-1988",
+      "cbs-2008",
+      "appendix-f"
+    ]
+  },
+  "shadow": {
+    "text": "A 1958 FBI memo, citing a Los Angeles Times article from two years earlier, says his former wife testified in their divorce that when she disturbed his calculus or his drums he flew into a violent rage, choked her, threw bric-a-brac and smashed furniture; by 1958 his only divorce was from his second wife. In Surely You're Joking, Mr. Feynman! (1985) he describes tactics he used to get women in bars to sleep with him; the writer Leila McNeill says he describes treating women as worthless and lashing out at those who turned him down, an outlook he says he later dropped. Lawrence Krauss's biography, as reported by Ashutosh Jogalekar, says that as a young professor at Cornell he pretended to be a student to ask undergraduate women out, and Jogalekar writes that more than one biography documents affairs with two married women. Alan Lightman, reviewing James Gleick's biography, writes that after Arline's death he never again let anyone get close to him, though he had many affairs. His Los Angeles Times obituary says he spent much of his adult life polishing the image of a skirt-chaser.",
+    "sourceIds": [
+      "nbc-2012",
+      "latimes-1988",
+      "baffler-2019",
+      "sciam-2014",
+      "paw-1993"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you fool yourself this week, and what would have shown you sooner?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "\"Surely You're Joking, Mr. Feynman!\"",
+      "year": 1985
+    },
+    {
+      "title": "What Do You Care What Other People Think?",
+      "year": 1988
+    },
+    {
+      "title": "Cargo Cult Science",
+      "year": 1974
+    }
+  ],
+  "sources": [
+    {
+      "id": "ccs-1974",
+      "kind": "primary",
+      "title": "Cargo Cult Science (Caltech commencement address, 1974), Engineering and Science 37:7",
+      "author": "Richard P. Feynman",
+      "year": 1974,
+      "publisher": "California Institute of Technology",
+      "url": "https://calteches.library.caltech.edu/51/2/CargoCult.htm"
+    },
+    {
+      "id": "appendix-f",
+      "kind": "primary",
+      "title": "Report of the Presidential Commission on the Space Shuttle Challenger Accident, vol. 2, Appendix F: Personal Observations on Reliability of Shuttle",
+      "author": "Richard P. Feynman",
+      "year": 1986,
+      "publisher": "NASA",
+      "url": "https://history.nasa.gov/rogersrep/v2appf.htm"
+    },
+    {
+      "id": "nobel-lecture",
+      "kind": "primary",
+      "title": "The Development of the Space-Time View of Quantum Electrodynamics (Nobel Lecture, 11 December 1965)",
+      "author": "Richard P. Feynman",
+      "year": 1965,
+      "publisher": "Nobel Foundation",
+      "url": "https://www.nobelprize.org/prizes/physics/1965/feynman/lecture/"
+    },
+    {
+      "id": "nobel-banquet",
+      "kind": "primary",
+      "title": "Banquet speech, Stockholm, 10 December 1965",
+      "author": "Richard P. Feynman",
+      "year": 1965,
+      "publisher": "Nobel Foundation",
+      "url": "https://www.nobelprize.org/prizes/physics/1965/feynman/speech/"
+    },
+    {
+      "id": "nobel-bio",
+      "kind": "secondary",
+      "title": "Richard P. Feynman – Biographical (from Nobel Lectures, Physics 1963-1970)",
+      "author": "Nobel Foundation",
+      "year": 1972,
+      "publisher": "Elsevier / NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/physics/1965/feynman/biographical/"
+    },
+    {
+      "id": "latimes-1988",
+      "kind": "secondary",
+      "title": "Nobel Physicist R. P. Feynman of Caltech Dies (obituary, Los Angeles Times, 16 February 1988; reprinted by MacTutor, University of St Andrews)",
+      "author": "Lee Dye",
+      "year": 1988,
+      "publisher": "Los Angeles Times",
+      "url": "https://mathshistory.st-andrews.ac.uk/Obituaries/Feynman_LA_Times"
+    },
+    {
+      "id": "lanl-2023",
+      "kind": "secondary",
+      "title": "Early Lab Love Stories (The Vault, Los Alamos National Laboratory)",
+      "author": "Patty Templeton, National Security Research Center",
+      "year": 2023,
+      "publisher": "Los Alamos National Laboratory",
+      "url": "https://www.lanl.gov/media/publications/the-vault/1023-early-lab-love-stories"
+    },
+    {
+      "id": "maglab",
+      "kind": "secondary",
+      "title": "Richard Feynman (Magnet Academy: Pioneers)",
+      "author": "National High Magnetic Field Laboratory",
+      "year": "n.d.",
+      "publisher": "National MagLab (Florida State University)",
+      "url": "https://nationalmaglab.org/magnet-academy/history-of-electricity-magnetism/pioneers/richard-feynman/"
+    },
+    {
+      "id": "cbs-2008",
+      "kind": "secondary",
+      "title": "How Conflict Made All the Difference to the Rogers Commission",
+      "author": "Jeff Palfini, CBS News",
+      "year": 2008,
+      "publisher": "CBS News",
+      "url": "https://www.cbsnews.com/news/how-conflict-made-all-the-difference-to-the-rogers-commission"
+    },
+    {
+      "id": "nbc-2012",
+      "kind": "secondary",
+      "title": "FBI files on famous physicist Feynman released",
+      "author": "LiveScience staff",
+      "year": 2012,
+      "publisher": "NBC News",
+      "url": "https://www.nbcnews.com/id/wbna47830290"
+    },
+    {
+      "id": "sciam-2014",
+      "kind": "secondary",
+      "title": "Richard Feynman, sexism and changing perceptions of a scientific icon",
+      "author": "Ashutosh Jogalekar",
+      "year": 2014,
+      "publisher": "Scientific American (blog The Curious Wavefunction)",
+      "url": "https://www.scientificamerican.com/blog/the-curious-wavefunction/richard-feynman-sexism-and-changing-perceptions-of-a-scientific-icon/"
+    },
+    {
+      "id": "baffler-2019",
+      "kind": "secondary",
+      "title": "Surely You're a Creep, Mr. Feynman (The Baffler, no. 43)",
+      "author": "Leila McNeill",
+      "year": 2019,
+      "publisher": "The Baffler",
+      "url": "https://thebaffler.com/latest/surely-youre-a-creep-mr-feynman-mcneill"
+    },
+    {
+      "id": "paw-1993",
+      "kind": "secondary",
+      "title": "The Magician: Exploring the Genius of Richard Feynman *42 (review of James Gleick, Genius)",
+      "author": "Alan Lightman",
+      "year": 1993,
+      "publisher": "Princeton Alumni Weekly",
+      "url": "https://paw.princeton.edu/article/magician-exploring-genius-richard-feynman-42"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real physicist, died 1988, never a politician or founder of a religion; no credible account of sexual violence or of sexual contact with anyone under 16 was found; his second wife's divorce testimony of physical violence (choking, smashing furniture), his own published accounts of how he chased women in bars, posing as a student to date undergraduates and affairs with married women are documented shadow."
+    },
+    "blindAgreement": 0.5,
+    "devilsAdvocate": "I attacked each value against his divorce record, his own bar stories, Krauss's and Gleick's biographies as reported by Jogalekar and Lightman, and the cited texts. Love fell: beyond Arline the record shows a pattern against it, from many affairs and two with married women to his second wife's testimony that he choked her, and Lightman writes he never again let anyone close; the Arline story moved to where he started from. Honesty held as a lifelong pattern in his science and the Challenger inquiry, which his own 1974 address limits to acting as a scientist; posing as a student to date undergraduates stays in the shadow as a personal deception. Curiosity, Joy and Humour held on three or more sources each, all four quotes match the original texts, and the shadow now says 'former wife' as the FBI memo does, plus Lightman's account of his affairs.",
+    "checkedOn": "2026-11-10"
+  }
+}
