@@ -1,6 +1,6 @@
 # Street scene, round 2: the drawn street and a photo close-up, in one playable encounter
 
-Written 2026-11-10. Status: **plan only; waits for the owner's "go".** Follows `Plans/street-scene.md` and
+Written 2026-11-10. Status: **built 2026-11-10 with the owner's four pictures; page: https://claude.ai/artifact/HN67Vjb4yHLM49FScHpunT. Verdict given in chat: A if the approach itself is trained, otherwise C; B ruled out; D not really tested (the filter is too mild). Awaits his reaction.** Follows `Plans/street-scene.md` and
 the first showcase page (https://claude.ai/artifact/BsDff3e3aTrZ64KiJLHWr9). The owner liked the drawn
 street, showed a photo-real portrait he had made in ChatGPT, and asked for a showcase that combines the two.
 He said the scenario may be guessed and need not match the app's scenarios or code.
