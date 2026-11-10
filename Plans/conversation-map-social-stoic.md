@@ -46,6 +46,13 @@ Written 2026-11-09. Follows the Assumption Moments page
   from a list of 18. That replaces the 162 tags. You can tap a stage to change
   it; your change saves as a `stage` entry. Doubt is now written in plain
   words ("not sure who says this", "Not sure: stack or vibe…").
+- **2026-11-10: stages re-coded from a researched guide.** Your note: look
+  deeper into the stages, and allow them to be out of order and mixed. A stage
+  guide (Torero's guides and blog, Krauser's model page and blog posts, a guest
+  post on how sets loop in practice) now drives the coding. All 1,048 lines
+  were coded again; 251 changed stage. 53 lines now mix two stages (split
+  colour bar), mostly stack + vibe and vibe + invest. The guide is on the page
+  under "The stages". The guide and briefs are in the cache, not this repo.
 - Data, readings and the page source are in
   `~/.cache/daygame-research/conversation-map/social-stoic/`, not in this repo.
 
