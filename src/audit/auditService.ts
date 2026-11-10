@@ -313,7 +313,7 @@ export type ReviewChange =
       choiceTried?: (ReviewChoice | null)[]
     }
   | { block: WeekBlock; edit?: boolean; blockWas?: WeekBlock; copies?: WeekBlock[]; tried?: WeekBlock[] }
-  | { removeBlock: string; blockWas?: WeekBlock }
+  | { removeBlock: string; blockWas?: WeekBlock; tried?: WeekBlock[] }
 
 /** Said when another device changed the note after this sheet opened; the page then shows the newer note. */
 export const NOTE_CHANGED = "This note was changed on another device. The newer note is shown now; change it and save again"
@@ -411,15 +411,25 @@ export function applyReviewChange(stored: Review, input: unknown): { review: Rev
         next.week.push(copy)
       }
     }
-  } else if (keys === "removeBlock" && !("noteWas" in c) && !("edit" in c) && !("choiceWas" in c) && !("tried" in c) && !("noteTried" in c) && !("choiceTried" in c)) {
+  } else if (keys === "removeBlock" && !("noteWas" in c) && !("edit" in c) && !("choiceWas" in c) && !("noteTried" in c) && !("choiceTried" in c)) {
     if (typeof c.removeBlock !== "string") return { error: "Bad block id" }
+    // The blocks this sheet sent in saves that failed: stored, they are his own write, not another device's (alpha p10-review-pings-02).
+    const tried: WeekBlock[] = []
+    if ("tried" in c) {
+      if (!Array.isArray(c.tried) || c.tried.length > TRIED_MAX) return { error: "Bad tried" }
+      for (const raw of c.tried) {
+        const one = checkWeek([raw])
+        if ("error" in one) return one
+        tried.push(one.week[0])
+      }
+    }
     // Like an edit, a remove carries the block as the sheet saw it: removing a block another device changed since is refused (alpha p9-review-03).
     if ("blockWas" in c) {
       const was = checkWeek([c.blockWas])
       if ("error" in was) return was
       if (was.week[0].id !== c.removeBlock) return { error: "Bad block" }
       const now = next.week.find((b) => b.id === c.removeBlock)
-      if (now && !sameBlock(now, was.week[0])) return { error: blockChanged(now) }
+      if (now && !sameBlock(now, was.week[0]) && !tried.some((t) => sameBlock(now, t))) return { error: blockChanged(now) }
     }
     next.week = next.week.filter((b) => b.id !== c.removeBlock)
   } else {

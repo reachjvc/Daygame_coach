@@ -468,7 +468,8 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
   const saveBlock = (block: WeekBlock, edit: boolean, copies: WeekBlock[], blockWas: WeekBlock | null, tried: WeekBlock[]) =>
     send({ block, edit, ...(blockWas ? { blockWas } : {}), ...(copies.length > 0 ? { copies } : {}), ...(tried.length > 0 ? { tried } : {}) })
   // `blockWas`: the block as the sheet saw it; a remove of one changed elsewhere since is refused (alpha p9-review-03).
-  const removeBlock = (id: string, blockWas: WeekBlock | null) => send({ removeBlock: id, ...(blockWas ? { blockWas } : {}) })
+  const removeBlock = (id: string, blockWas: WeekBlock | null, tried: WeekBlock[]) =>
+    send({ removeBlock: id, ...(blockWas ? { blockWas } : {}), ...(tried.length > 0 ? { tried } : {}) })
 
   const back = (
     <button type="button" onClick={onBack} className="-ml-2 flex h-11 items-center gap-1 rounded-lg px-2 text-sm text-muted-foreground hover:text-foreground" data-testid="review-back">

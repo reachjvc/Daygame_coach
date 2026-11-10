@@ -287,7 +287,8 @@ export function PerfectWeek({
    * what it shows (review of 8190829d).
    */
   onSaveBlock: (block: WeekBlock, edit: boolean, copies: WeekBlock[], blockWas: WeekBlock | null, tried: WeekBlock[]) => Promise<string | null>
-  onRemoveBlock: (id: string, blockWas: WeekBlock | null) => Promise<string | null>
+  /** `tried`: as for a save, so a remove after this sheet's own lost save is not called another device's change (alpha p10-review-pings-02). */
+  onRemoveBlock: (id: string, blockWas: WeekBlock | null, tried: WeekBlock[]) => Promise<string | null>
 }) {
   const [draft, setDraft] = useState<Draft | null>(null)
   // Per open sheet (its first id): the blocks sent in saves that failed.
@@ -330,8 +331,12 @@ export function PerfectWeek({
     return failed
   }
   const remove = async (id: string, was: WeekBlock | null): Promise<string | null> => {
-    const failed = await onRemoveBlock(id, was)
-    if (!failed) setDraft(null)
+    const sheet = draft?.ids[0]
+    const failed = await onRemoveBlock(id, was, (sheet !== undefined && triedBySheet.current.get(sheet)) || [])
+    if (!failed) {
+      if (sheet !== undefined) triedBySheet.current.delete(sheet)
+      setDraft(null)
+    }
     return failed
   }
 
