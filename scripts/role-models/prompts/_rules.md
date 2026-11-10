@@ -23,6 +23,10 @@ have seen the text at that place, in this session, or in a reference that cites 
   same press release are one source).
 - Give a `url` for every source you can, so a reader can check it. Full texts: Project Gutenberg, Wikisource,
   the Internet Archive, Perseus, MIT Classics, the author's own site.
+- **Only lawful copies.** Read a book only where it is lawfully online: public domain texts, the publisher's or
+  Google Books preview, the Internet Archive's own pages, a library's site. Never open, read or cite a pirated or
+  unlicensed copy (PDF mirrors, "free download" sites, unofficial uploads), even to check a page. If the only
+  way to see a passage is such a copy, treat the passage as not found and use another source or leave it out.
 
 **Quotes.** Exact words and exact place: book and section or chapter and page and edition; speech and date;
 interview with outlet and date; podcast with episode, date and (if you can) a timestamp. Checked against the
