@@ -1,0 +1,315 @@
+{
+  "id": "ada-lovelace",
+  "name": "Ada Lovelace",
+  "pronoun": "she",
+  "born": 1815,
+  "died": 1852,
+  "category": "scientists",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A mathematician who saw that a calculating machine could work on more than numbers",
+  "startedFrom": "She was born in London in December 1815, the only child of the marriage of the poet Lord Byron and Annabella Milbanke; her parents separated a month later and she never saw her father again. Her mother, who wanted to keep her from becoming a poet like him, kept her working hard at her lessons under a series of tutors, with punishments such as solitary confinement. After an illness in 1829, which her mother put down to measles, she could not walk for years and recovered only slowly.",
+  "values": [
+    {
+      "word": "Vision",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In Note A of her 1843 paper she wrote that the Analytical Engine might act on things other than number, and might compose elaborate pieces of music.",
+          "sourceId": "lovelace-1843",
+          "locator": "Note A, p. 694"
+        },
+        {
+          "kind": "witness",
+          "claim": "Her ODNB biographer writes that the Notes contain \"prescient comments about the future of such an engine, which have stood the test of time\".",
+          "sourceId": "odnb-toole",
+          "locator": "Paragraph on the Notes (third paragraph)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Betty Toole (1992, p. 2) calls her \"a synthesizer and a visionary\", as quoted by Hollings, Martin and Rice.",
+          "sourceId": "hmr-2017",
+          "locator": "Section 1, Introduction"
+        },
+        {
+          "kind": "words",
+          "claim": "In November 1844 she wrote that she hoped to \"bequeath to the generations a Calculus of the Nervous System\".",
+          "sourceId": "hmr-2017",
+          "locator": "Section 6, Conclusion (letter to Woronzow Greig, 15 Nov. 1844, Somerville Papers, Bodleian Dep. c.367, Folder MSBY-9, f. 255r)"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "From about July 1840 to January 1842 she took a correspondence course in university-level mathematics with Augustus De Morgan, working through algebra, trigonometry and the calculus.",
+          "sourceId": "hmr-2017",
+          "locator": "Section 2, Background"
+        },
+        {
+          "kind": "words",
+          "claim": "In February 1841 she wrote to her mother of \"the heap of papers of my writing\" as evidence \"of my steady industry for some months past\".",
+          "sourceId": "hmr-2017",
+          "locator": "Section 2, Background (letter to Lady Byron, 24 Feb. [1841], Bodleian Dep. Lovelace-Byron 42, ff. 20r-20v)"
+        },
+        {
+          "kind": "witness",
+          "claim": "In January 1844 De Morgan told her mother that her power of thinking on mathematics had been \"utterly out of the common way for any beginner, man or woman\".",
+          "sourceId": "hmr-2017",
+          "locator": "Section 1, Introduction (De Morgan to Lady Byron, 21 Jan. 1844, Dep. Lovelace-Byron 339, f. 2)"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1844, after an illness, she wrote to Sophia De Morgan that she had resumed her studies the day before, \"but for some time I must only give them half an hour to an hour a day\".",
+          "sourceId": "mactutor",
+          "locator": "Biography, paragraph after the publication of the Notes (1844 letter to De Morgan's wife)"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "As a child she was fascinated by machines and toyed with designs for a flying machine powered by steam.",
+          "sourceId": "odnb-toole",
+          "locator": "Second paragraph (childhood and education)"
+        },
+        {
+          "kind": "deed",
+          "claim": "In July 1843 she proposed writing on \"galvanic series, mathematically determined\", and by the mid-1840s she had taken up crystallography.",
+          "sourceId": "wwh-2002",
+          "locator": "Paragraphs after the publication of the Notes"
+        },
+        {
+          "kind": "witness",
+          "claim": "Sophia De Morgan recalled that in 1833, aged seventeen, she \"understood its working, and saw the great beauty of the invention\" on seeing Babbage's Difference Engine.",
+          "sourceId": "mactutor",
+          "locator": "Biography, paragraph on 1833"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "On 14 August 1843 she asked Babbage whether there was \"any chance of allowing myself … to conduct the business for you\".",
+          "sourceId": "wolfram-2016",
+          "locator": "Section 'Ada’s Paper' (letter to Babbage, 14 August 1843)"
+        },
+        {
+          "kind": "deed",
+          "claim": "She offered to take a larger part in organising the building of the Analytical Engine, and Babbage turned the offer down.",
+          "sourceId": "bodleian-2018",
+          "locator": "Paragraph on the collaboration by letter ('Babbage turned down her offer to become further involved in organising the building of the engine')"
+        },
+        {
+          "kind": "witness",
+          "claim": "MacTutor says she regarded the Notes as her first mathematical publication and wrote in many letters of the works she expected to follow.",
+          "sourceId": "mactutor",
+          "locator": "Biography, paragraph after the publication of the Notes"
+        },
+        {
+          "kind": "words",
+          "claim": "On 6 February 1841 she wrote to her mother that she believed she had \"a most singular combination of qualities exactly fitted to make me pre-eminently a discoverer of the hidden realities of nature\".",
+          "sourceId": "wolfram-2016",
+          "locator": "Section 'Back to Ada' (letter to Lady Byron, 6 February 1841)"
+        }
+      ]
+    },
+    {
+      "word": "Clarity",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Her ODNB biographer writes that she had \"a marked talent for conveying new and sometimes difficult concepts in limpid prose\".",
+          "sourceId": "odnb-toole",
+          "locator": "Paragraph on the Notes (third paragraph)"
+        },
+        {
+          "kind": "deed",
+          "claim": "Of the 66 pages of the 1843 paper, 41 are her appendices, which explain step by step how the engine would work.",
+          "sourceId": "bodleian-2018",
+          "locator": "Paragraph on the publication of the paper ('of its sixty-six pages, forty-one make up her appendices')"
+        },
+        {
+          "kind": "witness",
+          "claim": "Stephen Wolfram writes that her achievement was to distil from Babbage's details \"a clear exposition of the abstract operation of the machine\".",
+          "sourceId": "wolfram-2016",
+          "locator": "Section 'Babbage vs. Ada?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Mary Somerville, sent a copy of the paper, praised \"the clearness with which you have illustrated a very difficult subject\".",
+          "sourceId": "wwh-2002",
+          "locator": "Paragraph after the publication of the Notes"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Say plainly what a new tool cannot do, not only what it can.",
+      "sourceId": "lovelace-1843",
+      "locator": "Note G, p. 722 ('no pretensions whatever to originate any thing'; on the tendency first to overrate, then to undervalue)"
+    },
+    {
+      "text": "Ask what else a machine could work on besides the job it was built for.",
+      "sourceId": "lovelace-1843",
+      "locator": "Note A, p. 694 ('it might act upon other things besides number')"
+    },
+    {
+      "text": "Pick the example that shows what only the new tool can do, not the easiest one.",
+      "sourceId": "lovelace-1843",
+      "locator": "Note G, p. 725 ('our object is not simplicity or facility of computation, but the illustration of the powers of the engine')"
+    },
+    {
+      "text": "Fill the gaps in your basics before you push on to the advanced work.",
+      "sourceId": "hmr-2017",
+      "locator": "Section 2, Background (De Morgan to Lovelace, 27 Sept. 1840) and Section 3, opening paragraphs"
+    },
+    {
+      "text": "Check the work of the expert you work with; even the master can make a grave mistake.",
+      "sourceId": "babbage-1864",
+      "locator": "Chapter VIII, The Countess of Lovelace's Notes, p. 136"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "The Analytical Engine weaves algebraical patterns just as the Jacquard-loom weaves flowers and leaves.",
+      "sourceId": "lovelace-1843",
+      "locator": "Note A, p. 696"
+    },
+    {
+      "text": "The Analytical Engine has no pretensions whatever to originate any thing. It can do whatever we know how to order it to perform.",
+      "sourceId": "lovelace-1843",
+      "locator": "Note G, p. 722"
+    },
+    {
+      "text": "Supposing, for instance, that the fundamental relations of pitched sounds in the science of harmony and of musical composition were susceptible of such expression and adaptations, the engine might compose elaborate and scientific pieces of music of any degree of complexity or extent.",
+      "sourceId": "lovelace-1843",
+      "locator": "Note A, p. 694"
+    },
+    {
+      "text": "I am a little vexed at this interruption. I was going on so nicely",
+      "sourceId": "hmr-2017",
+      "locator": "Section 2, Background (letter to De Morgan, [June 1841], Bodleian Dep. Lovelace-Byron 170, f. 50v)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1843 she translated L. F. Menabrea's French paper on Charles Babbage's planned Analytical Engine and, at Babbage's suggestion, added her own Notes, about three times as long as the paper. Babbage wrote in 1864 that the choice of examples was entirely hers; he had offered to do the algebra for the Bernoulli numbers example in Note G, and she sent it back after finding a grave mistake in it. The Notes, signed A.A.L., said the engine could combine its quantities as if they were letters or other general symbols, not only numbers. How much of the mathematics was hers is debated: Dorothy Stein (1985) judged her grasp of mathematics tenuous and Allan Bromley (1990) said she lacked the knowledge to write a program, while Hollings, Martin and Rice (2017), reading her letters to De Morgan, found she had the skills and take the paper to be a collaboration with Babbage.",
+    "sourceIds": [
+      "babbage-1864",
+      "lovelace-1843",
+      "hmr-2017",
+      "bodleian-2018"
+    ]
+  },
+  "shadow": {
+    "text": "In the years after 1843, up to 1851, she bet on horse races; MacTutor says she pawned some of her jewels to pay for it and owed £2000 in gambling debts when she died, and Women in World History says she drew her husband into the betting scheme. Her ODNB biographer Betty Toole writes that she gambled and lost, was at the mercy of gambling friends and stopped in June 1851, while Stephen Wolfram finds scant evidence of huge gambling debts or of affairs. Toole writes that after 1843 physicians prescribed her laudanum, and MacTutor says she drank too much wine, at times in place of meals. Women in World History says that from about 1844 she had an affair with John Crosse, and MacTutor says her husband had over 100 of her letters to such friends destroyed. Women in World History says she left the raising of her three children to servants, and that in later years they remembered her with great affection; Wolfram writes that she had many difficulties with her eldest son, who joined the navy and deserted, and that her youngest son was largely brought up by her mother.",
+    "sourceIds": [
+      "mactutor",
+      "wwh-2002",
+      "odnb-toole",
+      "wolfram-2016"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you oversell, or undersell, what something you made can really do?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Sketch of the Analytical Engine, with Notes by the Translator",
+      "year": 1843
+    }
+  ],
+  "sources": [
+    {
+      "id": "lovelace-1843",
+      "kind": "primary",
+      "title": "Sketch of the Analytical Engine invented by Charles Babbage, by L. F. Menabrea, with notes upon the memoir by the translator (Scientific Memoirs, vol. 3, Article XXIX, from p. 666)",
+      "author": "Ada Augusta, Countess of Lovelace (notes signed A.A.L.)",
+      "year": 1843,
+      "publisher": "Richard and John E. Taylor, London",
+      "url": "https://www.fourmilab.ch/babbage/sketch.html"
+    },
+    {
+      "id": "babbage-1864",
+      "kind": "secondary",
+      "title": "Passages from the Life of a Philosopher",
+      "author": "Charles Babbage",
+      "year": 1864,
+      "publisher": "Longman, Green, Longman, Roberts, & Green",
+      "url": "https://www.gutenberg.org/ebooks/57532"
+    },
+    {
+      "id": "hmr-2017",
+      "kind": "secondary",
+      "title": "The Lovelace-De Morgan mathematical correspondence: A critical re-appraisal (Historia Mathematica 44 (3), 202-231)",
+      "author": "Christopher Hollings, Ursula Martin and Adrian Rice",
+      "year": 2017,
+      "publisher": "Elsevier (open access, CC BY)",
+      "url": "https://doi.org/10.1016/j.hm.2017.04.001"
+    },
+    {
+      "id": "bodleian-2018",
+      "kind": "secondary",
+      "title": "Ada Lovelace and the Analytical Engine (Bodleian Libraries blog, 26 July 2018)",
+      "author": "Christopher Hollings, Ursula Martin and Adrian Rice",
+      "year": 2018,
+      "publisher": "Bodleian Libraries, University of Oxford",
+      "url": "https://blogs.bodleian.ox.ac.uk/adalovelace/2018/07/26/ada-lovelace-and-the-analytical-engine/"
+    },
+    {
+      "id": "odnb-toole",
+      "kind": "secondary",
+      "title": "Byron, (Augusta) Ada, countess of Lovelace (Oxford Dictionary of National Biography; text as reproduced by MacTutor)",
+      "author": "Betty Alexandra Toole",
+      "year": 2004,
+      "publisher": "Oxford University Press",
+      "url": "https://mathshistory.st-andrews.ac.uk/DNB/Lovelace.html"
+    },
+    {
+      "id": "mactutor",
+      "kind": "secondary",
+      "title": "Augusta Ada Byron King, Countess of Lovelace (MacTutor History of Mathematics)",
+      "author": "J. J. O'Connor and E. F. Robertson (University of St Andrews)",
+      "year": 2002,
+      "url": "https://mathshistory.st-andrews.ac.uk/Biographies/Lovelace/"
+    },
+    {
+      "id": "wwh-2002",
+      "kind": "secondary",
+      "title": "Lovelace, Ada Byron, Countess of (1815-1852), in Women in World History: A Biographical Encyclopedia",
+      "author": "Anne Commire (ed.)",
+      "year": 2002,
+      "publisher": "Gale (via Encyclopedia.com)",
+      "url": "https://www.encyclopedia.com/women/encyclopedias-almanacs-transcripts-and-maps/lovelace-ada-byron-countess-1815-1852"
+    },
+    {
+      "id": "wolfram-2016",
+      "kind": "secondary",
+      "title": "Untangling the Tale of Ada Lovelace (in Idea Makers; first posted 10 December 2015)",
+      "author": "Stephen Wolfram",
+      "year": 2016,
+      "publisher": "Wolfram Media",
+      "url": "https://writings.stephenwolfram.com/2015/12/untangling-the-tale-of-ada-lovelace/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real 19th-century mathematician, not a politician, campaigner or founder of a religion; no account of sexual contact with anyone under 16 or of sexual violence by her was found; her dark side (horse-race betting and debts, an affair, distance from her children) is shadow, not an owner case."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value, quote and sentence against her 1843 Notes in the original printing, Babbage's 1864 memoir, the ODNB, MacTutor, Women in World History, Wolfram and the 2017 Historia Mathematica study, and searched for misattributions. All five values held: Vision, Learning and Ambition match the blind pick, and Curiosity and Clarity each rest on three or more independent sources; the strongest attack, that after 1843 she produced no further mathematics, limits her results, not her ambition. No quote fell, though the music quote now gives her condition in full and one principle was re-sourced to her own words in Note G. Five sentences were corrected, among them that she was Byron's only child (he had others), and her wine and laudanum use was added to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
