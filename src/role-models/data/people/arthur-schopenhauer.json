@@ -1,0 +1,319 @@
+{
+  "id": "arthur-schopenhauer",
+  "name": "Arthur Schopenhauer",
+  "born": 1788,
+  "died": 1860,
+  "category": "philosophers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_emotions"
+  ],
+  "tagline": "A philosopher who looked straight at desire and suffering, and lived on his own terms.",
+  "startedFrom": "He was born in Danzig in 1788, the son of a successful merchant and shipowner who groomed him to take over the family business. His father died in 1805, possibly by suicide, when Arthur was seventeen and a merchant's apprentice in Hamburg. Two years later he left the apprenticeship to prepare for university, living on his share of the inheritance.",
+  "values": [
+    {
+      "word": "Solitude",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that a man can be himself only so long as he is alone, and that only alone is he really free.",
+          "sourceId": "counsels-saunders",
+          "locator": "ch. II, sec. 9, p. 27"
+        },
+        {
+          "kind": "deed",
+          "claim": "From 1833 until his death in 1860 he lived alone in Frankfurt, with a succession of poodles, on a fixed daily routine.",
+          "sourceId": "sep-wicks",
+          "locator": "sec. 1, Life: 1788-1860"
+        },
+        {
+          "kind": "witness",
+          "claim": "Zimmern writes that in Frankfurt he preferred to take his walks alone and craved solitude.",
+          "sourceId": "zimmern-1876",
+          "locator": "ch. on his residence at Frankfort, p. 162"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1819 the Danzig firm holding his money went bankrupt; his mother and sister took the 30 per cent offered, but he refused it, held on to his bills, and by 1822 had been paid in full with interest, about 9,400 thalers.",
+          "sourceId": "wallace-1890",
+          "locator": "ch. VI, pp. 143-145"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that to be self-sufficient, to be all in all to oneself and want for nothing, is the chief qualification for happiness.",
+          "sourceId": "counsels-saunders",
+          "locator": "ch. II, sec. 9, p. 26"
+        },
+        {
+          "kind": "witness",
+          "claim": "Wallace writes that all along he had carried out the old Greek ideal of self-sufficing independence.",
+          "sourceId": "wallace-1890",
+          "locator": "ch. VII, p. 210"
+        },
+        {
+          "kind": "witness",
+          "claim": "Zimmern writes that he always saw his inherited independence as the greatest blessing of his life, because it gave him the unbroken leisure his studies needed.",
+          "sourceId": "zimmern-1876",
+          "locator": "ch. on his sojourn in Italy, p. 131"
+        }
+      ]
+    },
+    {
+      "word": "Health",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that nine-tenths of our happiness depends upon health alone, and that the greatest folly is to sacrifice health for gain, advancement, learning or fame.",
+          "sourceId": "wisdom-saunders",
+          "locator": "ch. II, p. 19"
+        },
+        {
+          "kind": "deed",
+          "claim": "He went out every day into the suburban by-ways, in all weathers, a habit he kept up to his last years.",
+          "sourceId": "wallace-1890",
+          "locator": "ch. VII, p. 210"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1831 he left Berlin because of the cholera epidemic coming from Russia, and moved south.",
+          "sourceId": "sep-wicks",
+          "locator": "sec. 1, Life: 1788-1860"
+        },
+        {
+          "kind": "deed",
+          "claim": "Zimmern describes his daily rule: about nine hours' sleep, up between seven and eight summer and winter, and a cold sponge bath, rare in Germany then.",
+          "sourceId": "zimmern-1876",
+          "locator": "ch. on his residence at Frankfort, p. 158"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1834 his publisher told him most unsold copies of his 1818 main work had been sold as waste paper; he kept working and in 1844 got the same publisher to bring out a second edition in two volumes.",
+          "sourceId": "wallace-1890",
+          "locator": "ch. IV, p. 109; ch. VII, p. 189"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy says his main work made no impression on the public, and that he spent his last years enjoying his hard won and belated fame.",
+          "sourceId": "iep-troxell",
+          "locator": "sec. 1, Schopenhauer's Life"
+        },
+        {
+          "kind": "deed",
+          "claim": "After the failed book and lectures he kept publishing from Frankfurt: On the Will in Nature (1836), the two ethics essays (1841, after the Danish society refused his prize essay), the enlarged main work (1844) and Parerga and Paralipomena (1851).",
+          "sourceId": "sep-wicks",
+          "locator": "sec. 1, Life: 1788-1860"
+        }
+      ]
+    },
+    {
+      "word": "Clarity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that every really great writer tries to express his thoughts as purely, clearly, definitely and shortly as possible, and that an obscure style means a confused brain.",
+          "sourceId": "art-literature-saunders",
+          "locator": "On Style, p. 22"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy says the first-time reader is most surprised by the clarity and elegance of his prose, which he modelled on English and French stylists.",
+          "sourceId": "iep-troxell",
+          "locator": "sec. 2, Schopenhauer's Thought"
+        },
+        {
+          "kind": "witness",
+          "claim": "Zimmern writes that his style was from the first clear, classical and exact, which he put down to early reading of English and French authors.",
+          "sourceId": "zimmern-1876",
+          "locator": "ch. on his student years, p. 39"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Find out from experience what you really want and what you can do, then act on that knowledge steadily, not by passing mood.",
+      "sourceId": "wwi-haldane-kemp-1",
+      "locator": "Book IV, sec. 55, pp. 393-394"
+    },
+    {
+      "text": "Never trade your health for money, a career, learning or fame.",
+      "sourceId": "wisdom-saunders",
+      "locator": "ch. II, p. 19"
+    },
+    {
+      "text": "Learn to be at ease alone: only alone are you fully free to be yourself.",
+      "sourceId": "counsels-saunders",
+      "locator": "ch. II, sec. 9, p. 27"
+    },
+    {
+      "text": "Getting what you want gives only short relief before the next want, so do not stake your happiness on the next desire.",
+      "sourceId": "wwi-haldane-kemp-1",
+      "locator": "Book III, sec. 38, p. 253"
+    },
+    {
+      "text": "Say what you mean as plainly, clearly and briefly as you can.",
+      "sourceId": "art-literature-saunders",
+      "locator": "On Style, p. 22"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "No attained object of desire can give lasting satisfaction, but merely a fleeting gratification; it is like the alms thrown to the beggar, that keeps him alive to-day that his misery may be prolonged till the morrow.",
+      "sourceId": "wwi-haldane-kemp-1",
+      "locator": "Book III, sec. 38, p. 253",
+      "translation": "R. B. Haldane and J. Kemp, first published 1883-86 (7th edition, 1909)"
+    },
+    {
+      "text": "A man can be himself only so long as he is alone; and if he does not love solitude, he will not love freedom; for it is only when he is alone that he is really free.",
+      "sourceId": "counsels-saunders",
+      "locator": "ch. II, sec. 9, p. 27",
+      "translation": "T. Bailey Saunders, 4th edition, 1895"
+    },
+    {
+      "text": "the greatest of follies is to sacrifice health for any other kind of happiness, whatever it may be, for gain, advancement, learning or fame, let alone, then, for fleeting sensual pleasures.",
+      "sourceId": "wisdom-saunders",
+      "locator": "ch. II, p. 19",
+      "translation": "T. Bailey Saunders, 3rd edition, 1891"
+    },
+    {
+      "text": "Style is nothing but the mere silhouette of thought; and an obscure or bad style means a dull or confused brain.",
+      "sourceId": "art-literature-saunders",
+      "locator": "On Style, p. 22",
+      "translation": "T. Bailey Saunders, 1891"
+    }
+  ],
+  "definingMoment": {
+    "text": "His main work, The World as Will and Representation, came out in December 1818 and made no impression. In 1834 his publisher told him that most of the unsold copies had been sold off as waste paper. He kept working on the same ideas, and in 1844 he got the publisher to bring out a second edition with a whole new second volume. Wider recognition came only after an English review praised his philosophy in 1853.",
+    "sourceIds": [
+      "wallace-1890",
+      "sep-wicks",
+      "iep-troxell"
+    ]
+  },
+  "shadow": {
+    "text": "On 12 August 1821 in Berlin he told a 47-year-old seamstress, Caroline Luise Marguet, to leave the hall outside his rooms; when she refused, he hauled her out by the waist, and when she came back he pushed her out again, using an insulting word, so that she fell. She told the court he had also torn her cap, kicked and beaten her; he admitted only the insult and said he was defending his rights as a lodger. He was fined 20 thalers, and after she said the fall had left her unable to work, the court ordered him to pay her 60 thalers a year, a ruling made final in 1826, which he paid until her death. On her death certificate he wrote the Latin pun 'Obit anus, abit onus' (the old woman dies, the burden goes). In 1819, when his mother and sister accepted 30 per cent from a failed Danzig firm that held their money, he could not forgive them, and eleven years of silence followed. In his essay On Women (1851) he called women 'big children all their life long' and 'the second sex, inferior in every respect to the first'. He left his estate to disabled Prussian soldiers, and the families of the dead, who had put down the 1848 revolution.",
+    "sourceIds": [
+      "wallace-1890",
+      "iep-troxell",
+      "sep-wicks",
+      "zimmern-1876",
+      "pessimism-saunders"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you chase this week, and how long did the good feeling last once you had it?",
+    "principleIndex": 3
+  },
+  "readings": [
+    {
+      "title": "The World as Will and Representation",
+      "year": 1818
+    },
+    {
+      "title": "Parerga and Paralipomena (includes Aphorisms on the Wisdom of Life)",
+      "year": 1851
+    }
+  ],
+  "sources": [
+    {
+      "id": "wwi-haldane-kemp-1",
+      "kind": "primary",
+      "title": "The World as Will and Idea, vol. I (seventh edition)",
+      "author": "Arthur Schopenhauer, translated by R. B. Haldane and J. Kemp",
+      "year": 1909,
+      "publisher": "Kegan Paul, Trench, Trubner & Co., London (English and Foreign Philosophical Library); scan on the Internet Archive",
+      "url": "https://archive.org/details/theworldaswillan01schouoft"
+    },
+    {
+      "id": "wisdom-saunders",
+      "kind": "primary",
+      "title": "The Wisdom of Life, being the first part of Aphorismen zur Lebensweisheit (third edition)",
+      "author": "Arthur Schopenhauer, translated by T. Bailey Saunders",
+      "year": 1891,
+      "publisher": "Swan Sonnenschein & Co., London; scan on the Internet Archive",
+      "url": "https://archive.org/details/wisdomoflifebein00scho"
+    },
+    {
+      "id": "counsels-saunders",
+      "kind": "primary",
+      "title": "Counsels and Maxims, being the second part of Aphorismen zur Lebensweisheit (fourth edition)",
+      "author": "Arthur Schopenhauer, translated by T. Bailey Saunders",
+      "year": 1895,
+      "publisher": "Swan Sonnenschein & Co., London; scan on the Internet Archive",
+      "url": "https://archive.org/details/counselsmaximsbe0000scho"
+    },
+    {
+      "id": "art-literature-saunders",
+      "kind": "primary",
+      "title": "The Art of Literature: a series of essays",
+      "author": "Arthur Schopenhauer, selected and translated by T. Bailey Saunders",
+      "year": 1891,
+      "publisher": "Swan Sonnenschein & Co., London; scan on the Internet Archive",
+      "url": "https://archive.org/details/artliteratureas00saungoog"
+    },
+    {
+      "id": "pessimism-saunders",
+      "kind": "primary",
+      "title": "Studies in Pessimism: a series of essays (fourth edition)",
+      "author": "Arthur Schopenhauer, selected and translated by T. Bailey Saunders",
+      "year": 1893,
+      "publisher": "Swan Sonnenschein & Co., London; scan on the Internet Archive",
+      "url": "https://archive.org/details/studiesinpessim00schouoft"
+    },
+    {
+      "id": "wallace-1890",
+      "kind": "secondary",
+      "title": "Life of Arthur Schopenhauer (Great Writers series)",
+      "author": "William Wallace",
+      "year": 1890,
+      "publisher": "Walter Scott, London; scan on the Internet Archive",
+      "url": "https://archive.org/details/lifeofschopenhau00walluoft"
+    },
+    {
+      "id": "zimmern-1876",
+      "kind": "secondary",
+      "title": "Arthur Schopenhauer: His Life and His Philosophy",
+      "author": "Helen Zimmern",
+      "year": 1876,
+      "publisher": "Longmans, Green, and Co., London; scan on the Internet Archive",
+      "url": "https://archive.org/details/arthurschopenha00zimmgoog"
+    },
+    {
+      "id": "sep-wicks",
+      "kind": "secondary",
+      "title": "Arthur Schopenhauer, Stanford Encyclopedia of Philosophy (first published 2003, revised 2021)",
+      "author": "Robert Wicks",
+      "year": 2021,
+      "publisher": "Stanford University",
+      "url": "https://plato.stanford.edu/entries/schopenhauer/"
+    },
+    {
+      "id": "iep-troxell",
+      "kind": "secondary",
+      "title": "Arthur Schopenhauer (1788-1860), Internet Encyclopedia of Philosophy",
+      "author": "Mary Troxell",
+      "year": "undated",
+      "url": "https://iep.utm.edu/schopenh/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real German philosopher (1788-1860), not fictional, not a politician or founder of a living religion, with no account of sexual contact with a minor or of sexual violence found; he is in, with a documented assault on a woman and openly hostile writing about women."
+    },
+    "blindAgreement": 0.2,
+    "devilsAdvocate": "I attacked every value and reopened each cited page in the Saunders, Haldane-Kemp, Wallace and Zimmern scans and the SEP and IEP entries. All five draft values held; the four draft-only ones (Independence, Health, Determination, Clarity) now carry at least three pieces of evidence from three sources, mostly by adding Zimmern's 1876 biography and the SEP. The blind picks Compassion, Self-reliance and Boldness did not come in: Compassion was his ethics, not his conduct; Self-reliance repeats Independence; Boldness rests on one deed, and there was no room. All four quotes were found word for word; the defining moment lost a wrong age and 'recognition began only', since a Norwegian prize had come in 1839, and the shadow gained the 1819 family break and the 1848 bequest.",
+    "checkedOn": "2026-11-10"
+  }
+}
