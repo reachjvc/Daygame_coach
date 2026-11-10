@@ -260,6 +260,30 @@ refuses them; they are not force-deleted): alpha-fix10, worktree-agent-a21144414
 worktree-agent-ad839fe9cb9eba39b. The test-only push keys added to the local test stack's vault stay (harmless,
 local only).
 
+## Phase 9 — Break the last fixes (owner's "go ahead", 2026-11-10) · M
+
+The Phase 8 report said the last fix rounds were proven only by unit tests and review. The owner said to send
+fresh testers at them.
+
+**Status (2026-11-10): done, live.** Round p9: six testers found 24 problems (findings-p9.jsonl); fixers and a
+review fixed them. WSL crashed mid-round (load ~140) and /tmp was wiped: the 12 committed fix commits survived,
+the delete/Undo fixer's uncommitted work and every p9 repro spec did not. The rig moved to
+`~/.cache/daygame-research/alpha/` (p9wt, alpha-wt), the delete/Undo fixes were redone test-first.
+Round p10: three testers (deletes, sheets, review-pings) re-checked every p9 finding on the fixed build and found
+16 more (findings-p10.jsonl), two code reviews found 10 more; all fixed in four fix rounds, then a re-tester
+checked every p10 finding twice (all gone) and found 5 small ones, also fixed. The full e2e suite on the final
+build was compared with origin/main's build: every failure left also fails on main (stale specs: the bottom bar
+lost "More"/"Training", mobile-toggl wording, role-models-council). Migration 20261110150000_push_devices_gone
+(three nullable columns) was applied live before the code. Vitest 6953 passed; type and lint ratchets: none new.
+
+Behaviour changes he will notice: Back closes any open sheet (and a confirm over it first); a late Undo says
+"Too late to undo: deleted"; Log Out names an unsent delete; after Log Out with no signal a "Signed out on this
+device" panel covers the page; a perfect-week note clash keeps his typed text with "Put mine back"; toasts and
+confirms always sit above sheets.
+
+Doubts: no real iPhone or hardware Back button (WebKit and Playwright goBack stood in); real 404/410 answers from
+Google's push service were not seen (it answered 403); the on-screen keyboard was simulated.
+
 ---
 
 # PART 2 — Rules for the executing session
