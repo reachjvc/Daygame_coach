@@ -62,7 +62,8 @@ export interface AuditQueue {
   /**
    * What a tab took out of the queue (sent, undone, replaced) or put back, and
    * when: an older copy written by another tab cannot bring it back
-   * (`mergeAuditQueues`, alpha p9-deletes-02). Kept for `QUEUE_MARK_KEEP_MS`.
+   * (`mergeAuditQueues`, alpha p9-deletes-02). Kept for `QUEUE_MARK_KEEP_MS`,
+   * a delete's for `DELETE_MARK_KEEP_MS`, at most `QUEUE_MARKS_MAX` of them.
    */
   marks?: QueueMark[]
 }
@@ -76,6 +77,15 @@ export interface QueueMark {
 
 /** How long a mark is kept: far longer than another tab's write takes to arrive. */
 export const QUEUE_MARK_KEEP_MS = 60 * 60_000
+/**
+ * A delete's mark is kept for the audit's whole length: a tab frozen in the
+ * background for hours (a phone) still holds its old copy of the delete, and
+ * merged it back once the hour was over, sending a delete he had undone
+ * (code review of auditQueue.ts).
+ */
+export const DELETE_MARK_KEEP_MS = 14 * 24 * 60 * 60_000
+/** The newest marks kept, so the stored queue stays small. */
+export const QUEUE_MARKS_MAX = 1000
 
 export const emptyAuditQueue = (owner: string | null): AuditQueue => ({ owner, answers: [], deletes: [] })
 
@@ -162,7 +172,8 @@ function latestMarks(...lists: (QueueMark[] | undefined)[]): Map<string, QueueMa
 /**
  * `after` is `before` changed by this tab at `nowMs`: what left the queue is
  * marked gone, and what came back (Undo puts a waiting answer back) is marked
- * back. Marks older than QUEUE_MARK_KEEP_MS are dropped.
+ * back. Marks older than QUEUE_MARK_KEEP_MS (a delete's: DELETE_MARK_KEEP_MS)
+ * are dropped, and only the newest QUEUE_MARKS_MAX are kept.
  */
 export function markRemoved(before: AuditQueue, after: AuditQueue, nowMs: number = Date.now()): AuditQueue {
   const was = keysOf(before)
@@ -170,7 +181,10 @@ export function markRemoved(before: AuditQueue, after: AuditQueue, nowMs: number
   const latest = latestMarks(before.marks, after.marks)
   for (const key of was) if (!now.has(key)) latest.set(key, { key, at: nowMs, gone: true })
   for (const key of now) if (latest.get(key)?.gone) latest.set(key, { key, at: nowMs, gone: false })
-  const marks = [...latest.values()].filter((m) => m.at > nowMs - QUEUE_MARK_KEEP_MS)
+  const marks = [...latest.values()]
+    .filter((m) => m.at > nowMs - (m.key.startsWith("d:") ? DELETE_MARK_KEEP_MS : QUEUE_MARK_KEEP_MS))
+    .sort((x, y) => y.at - x.at)
+    .slice(0, QUEUE_MARKS_MAX)
   const { marks: _m, ...rest } = after
   void _m
   return marks.length > 0 ? { ...rest, marks } : rest

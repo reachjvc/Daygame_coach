@@ -319,9 +319,14 @@ export function useAudit(account: string) {
             // still in its "Undo" time: sent by the timer that ends it
             if (!deleteIsDue(d, Date.now())) continue
             const { id } = d
+            // Another tab may have changed the queue since this one last looked,
+            // also while this one was frozen (a phone in the background gets no
+            // storage event): its Undo is taken before the delete is sent.
+            if (rawQueue() !== seenRaw.current) setQ((q) => q)
+            // a delete queued before a save of the same answer was stored saw that one (deletesSeeStored)
+            const current = queueRef.current.deletes.find((x) => x.id === id && !x.refused)
+            if (!current) continue
             try {
-              // a delete queued before a save of the same answer was stored saw that one (deletesSeeStored)
-              const current = queueRef.current.deletes.find((x) => x.id === id) ?? d
               const result = await api.remove(id, current.at, current.seen)
               const c = confirmedRef.current
               if (result.changed) {
