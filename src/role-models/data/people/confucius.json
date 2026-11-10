@@ -1,0 +1,258 @@
+{
+  "id": "confucius",
+  "name": "Confucius",
+  "born": -551,
+  "died": -479,
+  "category": "sages",
+  "areaIds": [
+    "lm_mindset",
+    "lm_family"
+  ],
+  "tagline": "A teacher who made learning and right conduct in daily life the work of a lifetime.",
+  "startedFrom": "His father died when he was in his third year, leaving the family poor but with some social standing. He said himself: \"When I was young, my condition was low.\" His first jobs were keeper of the grain stores and then overseer of the public fields.",
+  "values": [
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said that at fifteen he had his mind bent on learning.",
+          "sourceId": "analects-legge",
+          "locator": "Book II, ch. IV.1 (Legge numbering)"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he was not born with knowledge but was fond of antiquity and earnest in seeking it there.",
+          "sourceId": "analects-legge",
+          "locator": "Book VII, ch. XIX"
+        },
+        {
+          "kind": "witness",
+          "claim": "As a young man he became known for expertise in the classical ritual and ceremonial forms of the Zhou.",
+          "sourceId": "sep",
+          "locator": "Section 2, Sources for Confucius's Life and Thought"
+        },
+        {
+          "kind": "witness",
+          "claim": "A hallmark of his thought is his emphasis on education and study: real understanding, he argued, comes only from long and careful study.",
+          "sourceId": "sep-riegel",
+          "locator": "Section 4, Confucius and Education, para. 1"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "From his twenty-second year he taught in his own house, and he never refused a pupil however small the fee.",
+          "sourceId": "legge-life",
+          "locator": "Prolegomena, Life of Confucius, para. 3, p. 61"
+        },
+        {
+          "kind": "deed",
+          "claim": "Sima Qian says some 3000 students received some form of his training.",
+          "sourceId": "sep",
+          "locator": "Section 2, Sources for Confucius's Life and Thought"
+        },
+        {
+          "kind": "words",
+          "claim": "He said that from the man bringing a bundle of dried flesh upwards, he had never refused instruction to anyone.",
+          "sourceId": "analects-legge",
+          "locator": "Book VII, ch. VII"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At the meeting of the dukes of Lu and Qi at Jiagu, when armed men advanced on the stage to seize the duke of Lu, he spoke out against them until the duke of Qi ordered them off, then withdrew with his duke.",
+          "sourceId": "legge-life",
+          "locator": "Prolegomena, Life of Confucius, para. 6, pp. 73-74"
+        },
+        {
+          "kind": "deed",
+          "claim": "He dug a ditch round the ducal cemetery to take in the grave of Duke Zhao that the Ji chief had set apart, and told the chief he did it to hide the chief's disloyalty.",
+          "sourceId": "legge-life",
+          "locator": "Prolegomena, Life of Confucius, para. 6, p. 73"
+        },
+        {
+          "kind": "deed",
+          "claim": "When the people of Kuang attacked him, taking him for their old enemy Yang Hu, his followers were alarmed but he was calm.",
+          "sourceId": "legge-life",
+          "locator": "Prolegomena, Life of Confucius, para. 8, pp. 77-78"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Zuozhuan shows him as a heroic figure courageously facing down dangers to the lord of Lu; at Jiagu in 500 BC he got Qi to withdraw its armed men from the meeting.",
+          "sourceId": "sep-riegel",
+          "locator": "Section 1, Confucius' Life (opening overview of the sources, and the Jiagu paragraph)"
+        },
+        {
+          "kind": "words",
+          "claim": "He said that to see what is right and not to do it is want of courage.",
+          "sourceId": "analects-legge",
+          "locator": "Book II, ch. XXIV.2"
+        }
+      ]
+    },
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He called himself 'a transmitter and not a maker', believing in and loving the ancients.",
+          "sourceId": "analects-legge",
+          "locator": "Book VII, ch. I"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he dared not rank himself with the sage and the man of perfect virtue, and that carrying out in his conduct what he professed was something he had not yet attained.",
+          "sourceId": "analects-legge",
+          "locator": "Book VII, chs. XXXII-XXXIII"
+        },
+        {
+          "kind": "witness",
+          "claim": "Legge, who also charged him with insincerity, reads these sayings as 'a genuine humility': he was conscious that personally he came short in many things.",
+          "sourceId": "legge-life",
+          "locator": "Prolegomena, sect. II, His Influence and Opinions, para. 4, p. 95"
+        },
+        {
+          "kind": "witness",
+          "claim": "Above all else, the Analects depicts him as someone who 'transmits, but does not innovate'.",
+          "sourceId": "iep",
+          "locator": "Section 2, The Confucius of the Analects, para. 1"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not do to others what you would not want done to yourself.",
+      "sourceId": "analects-legge",
+      "locator": "Book XV, ch. XXIII"
+    },
+    {
+      "text": "When you see what is right, do it; standing back is a lack of courage.",
+      "sourceId": "analects-legge",
+      "locator": "Book II, ch. XXIV.2"
+    },
+    {
+      "text": "Teach anyone who comes eager to learn, whatever he can pay.",
+      "sourceId": "analects-legge",
+      "locator": "Book VII, ch. VII-VIII"
+    },
+    {
+      "text": "Turn down money and rank that come by wrong means; plain food is enough.",
+      "sourceId": "analects-legge",
+      "locator": "Book VII, ch. XV"
+    },
+    {
+      "text": "Be slow to speak and earnest in what you do.",
+      "sourceId": "analects-legge",
+      "locator": "Book IV, ch. XXIV"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "What you do not want done to yourself, do not do to others.",
+      "sourceId": "analects-legge",
+      "locator": "Book XV, ch. XXIII (Legge numbering; 15.24 in other editions)",
+      "translation": "James Legge, 1861"
+    },
+    {
+      "text": "To see what is right and not to do it is want of courage.",
+      "sourceId": "analects-legge",
+      "locator": "Book II, ch. XXIV.2",
+      "translation": "James Legge, 1861"
+    },
+    {
+      "text": "With coarse rice to eat, with water to drink, and my bended arm for a pillow;-- I have still joy in the midst of these things.",
+      "sourceId": "analects-legge",
+      "locator": "Book VII, ch. XV",
+      "translation": "James Legge, 1861"
+    }
+  ],
+  "definingMoment": {
+    "text": "In his 56th year he was minister of crime in Lu. The neighbouring state of Qi sent the duke of Lu eighty dancing girls and 120 horses, and for three days the duke held no court. Confucius waited for the great spring sacrifice to see if it would bring the duke back to his duties. When it did not, and the portions of the offering were not sent round to the ministers, Confucius left Lu and spent about thirteen years going from state to state looking for a ruler who would use his teaching.",
+    "sourceIds": [
+      "legge-life",
+      "analects-legge",
+      "sep"
+    ]
+  },
+  "shadow": {
+    "text": "His own translator, James Legge, charged him in 1861 with insincerity, \"the most serious charge that can be brought against him\". Legge's cases: Confucius broke an oath he had sworn under force at Pu, saying \"The spirits do not hear such\" (a story told by Sima Qian and the Family Sayings), and he sent word that he was sick to avoid a visitor, Ru Bei, then played his lute so the man would hear. Twice he was inclined to accept invitations from officers holding towns in rebellion, Gongshan Furao and Bi Xi; his disciple Zilu objected, the second time quoting his own words back to him, and he did not go. He said that girls and servants are the most difficult people to deal with, and that an upright father and son hide each other's wrongdoing. Later texts say that as minister he had an officer, Shaozheng Mao, put to death; Legge notes that the earliest sources say nothing of it and the scholar Jiang Yong rejected it.",
+    "sourceIds": [
+      "legge-life",
+      "analects-legge",
+      "sep"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you see what was right this week and not do it?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "The Analects (compiled by his followers after his death)",
+      "year": "c. 5th-2nd century BC"
+    }
+  ],
+  "sources": [
+    {
+      "id": "analects-legge",
+      "kind": "primary",
+      "title": "Confucian Analects, in The Chinese Classics, vol. 1 (compiled by his followers after his death)",
+      "author": "Confucius's disciples; translated by James Legge",
+      "year": 1861,
+      "publisher": "Hongkong: the author; London: Trübner",
+      "url": "https://www.gutenberg.org/ebooks/4094"
+    },
+    {
+      "id": "legge-life",
+      "kind": "secondary",
+      "title": "Prolegomena, Confucius and his Immediate Disciples, sect. I: Life of Confucius; sect. II: His Influence and Opinions, in The Chinese Classics, vol. 1",
+      "author": "James Legge",
+      "year": 1861,
+      "publisher": "Hongkong: the author; London: Trübner",
+      "url": "https://archive.org/details/chineseclassics00minggoog"
+    },
+    {
+      "id": "sep",
+      "kind": "secondary",
+      "title": "Confucius, Stanford Encyclopedia of Philosophy",
+      "author": "Mark Csikszentmihalyi",
+      "year": 2024,
+      "url": "https://plato.stanford.edu/entries/confucius/"
+    },
+    {
+      "id": "iep",
+      "kind": "secondary",
+      "title": "Confucius (551-479 B.C.E.), Internet Encyclopedia of Philosophy",
+      "author": "Jeff Richey",
+      "year": "n.d.",
+      "url": "https://iep.utm.edu/confucius/"
+    },
+    {
+      "id": "sep-riegel",
+      "kind": "secondary",
+      "title": "Confucius, Stanford Encyclopedia of Philosophy (archived edition, substantive revision 23 March 2013; since replaced by a new entry)",
+      "author": "Jeffrey Riegel",
+      "year": 2013,
+      "url": "https://plato.stanford.edu/archives/win2013/entries/confucius/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real historical teacher, not a living politician; no account of sexual violence or sex with a minor (the Nanzi visit, Analects VI.xxvi, carries no accusation of any act). Not the founder of a living religion in the rules' sense: he called himself 'a transmitter and not a maker' (Analects VII.i) and claimed to found nothing; the Analects were compiled by followers over centuries, and Confucianism as a state doctrine and cult took shape under the Han and later."
+    },
+    "blindAgreement": 0.75,
+    "devilsAdvocate": "I attacked each draft value and opened every cited page of Legge's 1861 volume and both Stanford Encyclopedia entries. Integrity fell: Legge lists several acts of insincerity (the broken oath at Pu, the feigned sickness), and the Analects show him twice inclined to join rebel officers, so a hostile reader has a pattern, not one lapse; Family fell for resting on two sources, with Legge noting his distance from his son. Learning, Mentorship and Courage held, Courage now with Riegel's Stanford entry on the Zuozhuan's Jiagu account, and Humility came in from the blind pick on his own sayings, read by Legge himself as genuine. All three quotes were found word for word in Legge; the Jiagu claim, the defining moment's date and the shadow's 'two cases' were corrected.",
+    "checkedOn": "2026-11-10"
+  }
+}
