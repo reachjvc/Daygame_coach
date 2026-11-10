@@ -1,0 +1,363 @@
+{
+  "id": "david-bowie",
+  "name": "David Bowie",
+  "born": 1947,
+  "died": 2016,
+  "category": "artists",
+  "areaIds": [
+    "lm_fun",
+    "lm_mission"
+  ],
+  "tagline": "A musician who kept reinventing his sound and finished his last album while dying.",
+  "startedFrom": "He was born David Robert Jones in London on 8 January 1947. Geoffrey Marsh, co-curator of the V&A exhibition drawn from his archive, describes a very ordinary background and a very ordinary school, which he left at 16. As a teenager he took up the saxophone, led bands and sang the blues in a succession of unsuccessful groups and singles, and a blow in a teenage brawl left his left pupil permanently dilated; his career-making hit, 'Space Oddity', came in 1969.",
+  "values": [
+    {
+      "word": "Creativity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In the late 1970s he made Low, \"Heroes\" and Lodger with Brian Eno and Tony Visconti, using electronics and experimental methods such as having musicians play unfamiliar instruments.",
+          "sourceId": "nyt-2016",
+          "locator": "paragraph beginning 'He also made what is usually called his Berlin trilogy'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said what he was good at, and enjoyed most, was the game of 'what if?', such as combining Brecht-Weill musical drama with rhythm and blues.",
+          "sourceId": "berklee-1999",
+          "locator": "paragraph beginning '\"Be doobiee doobie doop a doop bip,\"'"
+        },
+        {
+          "kind": "words",
+          "claim": "In 2002 he said he would rather move on than sing the same songs every night for a year: 'What I like doing is writing and recording and much more on the - I guess, on that creative level.'",
+          "sourceId": "npr-2002",
+          "locator": "Bowie's answer about touring, beginning 'As I say, I don't mind trying it out', transcript on page"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He kept moving into new styles: funk on Young Americans (1975), recorded mainly in Philadelphia; the Krautrock sound of West Berlin, which fascinated him; electronic dance music on Earthling (1997); and a jazz quartet on Blackstar (2016).",
+          "sourceId": "nyt-2016",
+          "locator": "paragraphs beginning 'He moved to the United States in 1974', 'For a far-reaching change of environment', 'His experiments continued in the 1990s' and 'His final albums'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he went on 'a crusade' to change the kind of information rock music contained, and listed loves from Coltrane and John Cage to Edith Piaf and Shirley Bassey.",
+          "sourceId": "berklee-1999",
+          "locator": "paragraph beginning 'So, I learned enough saxophone and guitar'"
+        },
+        {
+          "kind": "witness",
+          "claim": "V&A curator Geoffrey Marsh said he is 'fascinated with ideas and fascinated that there's so much stuff out there that most people don't get access to'.",
+          "sourceId": "qq-2013",
+          "locator": "answer to 'How would you describe Bowie's relationship to literature?'"
+        }
+      ]
+    },
+    {
+      "word": "Reading",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked in 1998 for his idea of perfect happiness, he answered: 'Reading.'",
+          "sourceId": "proust-1998",
+          "locator": "first question, 'What is your idea of perfect happiness?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Geoffrey Marsh, co-curator of the V&A exhibition built from his archive, called him 'a voracious reader' and said the archive holds 'massive numbers of books that he's kept'.",
+          "sourceId": "qq-2013",
+          "locator": "answers to 'How would you describe Bowie's relationship to literature?' and 'How did you compile the book list?'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In October 2013 his official website published the complete list of his top 100 books, from Orwell to Mishima.",
+          "sourceId": "db-2013",
+          "locator": "whole post"
+        }
+      ]
+    },
+    {
+      "word": "Novelty",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said of the Ziggy years: 'I had such short attention span and got disinterested so quickly after I created some kind of project that I wanted to move on.'",
+          "sourceId": "npr-2002",
+          "locator": "Bowie's answer on how he came up with Ziggy and the musical he never wrote, transcript on page"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1973 he abruptly announced his retirement, the retirement of Ziggy Stardust, at the height of that persona's success; in 1989 he was 'determined to change again' and recorded, without top billing, as a member of Tin Machine.",
+          "sourceId": "nyt-2016",
+          "locator": "paragraphs beginning 'By then, with the albums' and 'As the 1980s began'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times obituary calls him 'a person of relentless reinvention'.",
+          "sourceId": "nyt-2016",
+          "locator": "paragraph beginning 'Mr. Bowie was a person of relentless reinvention'"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He recorded Blackstar while having chemotherapy, and after learning in November 2015 that his cancer was terminal he kept working and demoed five new songs in his final weeks.",
+          "sourceId": "rs-2016",
+          "locator": "paragraphs beginning 'About a week before his death' and 'Visconti first learned of Bowie's illness'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His producer Tony Visconti said: 'He was so brave and courageous... He never showed any fear.'",
+          "sourceId": "rs-2016",
+          "locator": "paragraph beginning 'Bowie had already finished Blackstar by November'"
+        },
+        {
+          "kind": "words",
+          "claim": "He told young artists to go 'a little bit out of your depth', until their feet do not quite touch the bottom.",
+          "sourceId": "inspirations-1997",
+          "locator": "Bowie segment, third quoted passage in the Cartoon Brew transcript"
+        },
+        {
+          "kind": "witness",
+          "claim": "A critic writing days after his death, in an article on his dark side, still calls him 'a man unafraid to make daring artistic choices'.",
+          "sourceId": "phoenix-2016",
+          "locator": "paragraph beginning 'Those tributes are well-deserved'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Play 'what if': put together things that do not seem to belong together and see what works.",
+      "sourceId": "berklee-1999",
+      "locator": "paragraph beginning '\"Be doobiee doobie doop a doop bip,\"'"
+    },
+    {
+      "text": "Do not make your work to meet other people's expectations; remember the reason you started.",
+      "sourceId": "inspirations-1997",
+      "locator": "Bowie segment, first and second quoted passages in the Cartoon Brew transcript"
+    },
+    {
+      "text": "Work a little out of your depth; if you feel safe, you are in the wrong place.",
+      "sourceId": "inspirations-1997",
+      "locator": "Bowie segment, third quoted passage in the Cartoon Brew transcript"
+    },
+    {
+      "text": "Learn just enough of a skill to get your idea across, then work with people who do it better.",
+      "sourceId": "berklee-1999",
+      "locator": "paragraph beginning 'So, I learned enough saxophone and guitar'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "If you feel safe in the area that you're working in, you're not working in the right area. Always go a little further into the water than you feel you're capable of being in.",
+      "sourceId": "inspirations-1997",
+      "locator": "Bowie segment (1997 film); third quoted passage in the Cartoon Brew transcript"
+    },
+    {
+      "text": "I think it's terribly dangerous for an artist to fulfill other people's expectations. They generally produce their worst work when they do that.",
+      "sourceId": "inspirations-1997",
+      "locator": "Bowie segment (1997 film); second quoted passage in the Cartoon Brew transcript"
+    },
+    {
+      "text": "In fact, what I found that I was good at doing, and what I really enjoyed the most, was the game of \"what if?\"",
+      "sourceId": "berklee-1999",
+      "locator": "commencement address, 8 May 1999, paragraph beginning '\"Be doobiee doobie doop a doop bip,\"'"
+    },
+    {
+      "text": "Music has given me over 40 years of extraordinary experiences.",
+      "sourceId": "berklee-1999",
+      "locator": "commencement address, 8 May 1999, closing paragraph"
+    }
+  ],
+  "definingMoment": {
+    "text": "About 18 months before he died he was being treated for cancer, and the public did not know. His producer Tony Visconti learned of it only when Bowie came to the first Blackstar sessions in New York straight from chemotherapy. By mid-2015 he was in remission, but in November the cancer came back and spread, and he knew it was terminal; he had already finished the album. Blackstar came out on 8 January 2016, his 69th birthday, and he died two days later; in his last weeks he had demoed five new songs for another album.",
+    "sourceIds": [
+      "nyt-2016",
+      "rs-2016",
+      "rs-2026"
+    ]
+  },
+  "shadow": {
+    "text": "In 2015 Lori Mattix said that during his Spiders from Mars tour in the early 1970s, when press accounts put her age at 14 or 15, Bowie had sex with her in his suite at the Beverly Hilton and then with her and her friend Sable Starr; she called it beautiful and said she did not regret it, and no public reply from Bowie has been found. In October 1987 a Dallas woman, Wanda Nichols, accused him of sexual assault in his hotel room after a concert; he called the allegations 'ridiculous' and said anything between them was consensual, and in November a grand jury declined to indict him. By the mid-1970s he was addicted to cocaine, and in an interview published in February 1976 he suggested Britain could benefit from a fascist leader, a remark he later disowned. A few months later a gesture he made at London's Victoria Station was contested as a Nazi salute; he denied it, saying he was waving to fans.",
+    "sourceIds": [
+      "thrillist-2015",
+      "phoenix-2016",
+      "salon-2016",
+      "upi-1987",
+      "upi-1987-11-11",
+      "nyt-2016",
+      "irex-2026"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you stay in safe water this week when you could have gone a little out of your depth?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "The Rise and Fall of Ziggy Stardust and the Spiders from Mars (album)",
+      "year": 1972
+    },
+    {
+      "title": "Low (album)",
+      "year": 1977
+    },
+    {
+      "title": "Blackstar (album)",
+      "year": 2016
+    }
+  ],
+  "sources": [
+    {
+      "id": "berklee-1999",
+      "kind": "primary",
+      "title": "Commencement address, Berklee College of Music, Hynes Convention Center, Boston (8 May 1999), transcript on Berklee's Commencement 1999 page",
+      "author": "David Bowie",
+      "year": 1999,
+      "publisher": "Berklee College of Music",
+      "url": "https://college.berklee.edu/node/1031103"
+    },
+    {
+      "id": "inspirations-1997",
+      "kind": "primary",
+      "title": "Interview segment in the documentary Inspirations (dir. Michael Apted, 1997); transcript as printed by Cartoon Brew, 'David Bowie's Advice To Artists' (2016)",
+      "author": "David Bowie",
+      "year": 1997,
+      "url": "https://www.cartoonbrew.com/ideas-commentary/david-bowies-advice-to-artists-its-dangerous-for-an-artist-to-fulfill-other-peoples-expectations-205245.html"
+    },
+    {
+      "id": "proust-1998",
+      "kind": "primary",
+      "title": "Proust Questionnaire, Vanity Fair (August 1998); answers reprinted by The Marginalian (2014)",
+      "author": "David Bowie",
+      "year": 1998,
+      "publisher": "Vanity Fair",
+      "url": "https://www.themarginalian.org/2014/07/10/david-bowie-proust-questionnaire-vanity-fair/"
+    },
+    {
+      "id": "db-2013",
+      "kind": "primary",
+      "title": "Bowie's top 100 books - the complete list (October 2013)",
+      "author": "DavidBowie.com (his official website)",
+      "year": 2013,
+      "url": "https://web.archive.org/web/2014/http://www.davidbowie.com/news/bowie-s-top-100-books-complete-list-52061"
+    },
+    {
+      "id": "npr-2002",
+      "kind": "primary",
+      "title": "David Bowie: The 'Fresh Air' interview (Terry Gross, originally broadcast 2002; republished with transcript 25 August 2023)",
+      "author": "David Bowie, interviewed by Terry Gross",
+      "year": 2002,
+      "publisher": "NPR",
+      "url": "https://www.npr.org/2023/08/25/1195632580/david-bowie-the-fresh-air-interview"
+    },
+    {
+      "id": "nyt-2016",
+      "kind": "secondary",
+      "title": "David Bowie Dies at 69; Star Transcended Music, Art and Fashion (11 January 2016)",
+      "author": "Jon Pareles",
+      "year": 2016,
+      "publisher": "The New York Times",
+      "url": "https://www.nytimes.com/2016/01/12/arts/music/david-bowie-dies-at-69.html"
+    },
+    {
+      "id": "rs-2016",
+      "kind": "secondary",
+      "title": "David Bowie Planned Post-'Blackstar' Album, 'Thought He Had Few More Months' (13 January 2016)",
+      "author": "Brian Hiatt",
+      "year": 2016,
+      "publisher": "Rolling Stone",
+      "url": "https://web.archive.org/web/2016/http://www.rollingstone.com/music/news/david-bowie-planned-post-blackstar-album-thought-he-had-few-more-months-20160113"
+    },
+    {
+      "id": "rs-2026",
+      "kind": "secondary",
+      "title": "How David Bowie Redefined the Art of Saying Goodbye (11 January 2026)",
+      "author": "Rob Sheffield",
+      "year": 2026,
+      "publisher": "Rolling Stone",
+      "url": "https://au.rollingstone.com/music/music-features/david-bowie-death-10-years-on-final-act-1235496612/"
+    },
+    {
+      "id": "qq-2013",
+      "kind": "secondary",
+      "title": "Curator Geoffrey Marsh on David Bowie's reading habits (26 September 2013)",
+      "author": "Quill & Quire (interview with Geoffrey Marsh, V&A)",
+      "year": 2013,
+      "publisher": "Quill & Quire",
+      "url": "https://web.archive.org/web/2016/http://www.quillandquire.com/events/2013/09/26/curator-geoffrey-marsh-on-david-bowies-reading-habits/"
+    },
+    {
+      "id": "irex-2026",
+      "kind": "secondary",
+      "title": "Station To Station, David Bowie: The inside story of the Thin White Duke and the 1976 album (13 January 2026)",
+      "author": "Richard Purden",
+      "year": 2026,
+      "publisher": "Irish Examiner",
+      "url": "https://www.irishexaminer.com/lifestyle/artsandculture/arid-41774081.html"
+    },
+    {
+      "id": "thrillist-2015",
+      "kind": "secondary",
+      "title": "I Lost My Virginity to David Bowie (3 November 2015)",
+      "author": "Lori Mattix, as told to Michael Kaplan",
+      "year": 2015,
+      "publisher": "Thrillist",
+      "url": "https://www.thrillist.com/entertainment/nation/i-lost-my-virginity-to-david-bowie"
+    },
+    {
+      "id": "phoenix-2016",
+      "kind": "secondary",
+      "title": "David Bowie and the 15-Year-Old Girls (13 January 2016)",
+      "author": "David Accomazzo",
+      "year": 2016,
+      "publisher": "Phoenix New Times",
+      "url": "https://www.phoenixnewtimes.com/music/david-bowie-and-the-15-year-old-girls-7962946"
+    },
+    {
+      "id": "salon-2016",
+      "kind": "secondary",
+      "title": "The dark side of David Bowie: As the mourning goes on, we can't ignore his history with underaged groupies in '70s (13 January 2016)",
+      "author": "Erin Keane",
+      "year": 2016,
+      "publisher": "Salon",
+      "url": "https://www.salon.com/2016/01/13/the_dark_side_of_david_bowie_as_the_mourning_goes_on_we_cant_ignore_his_history_with_underaged_groupies_in_70s/"
+    },
+    {
+      "id": "upi-1987",
+      "kind": "secondary",
+      "title": "British singer-actor David Bowie was cleared Wednesday by a grand jury (18 November 1987)",
+      "author": "Vicky Bowles",
+      "year": 1987,
+      "publisher": "United Press International",
+      "url": "https://www.upi.com/Archives/1987/11/18/British-singer-actor-David-Bowie-was-cleared-Wednesday-by-a/1514564210000/"
+    },
+    {
+      "id": "upi-1987-11-11",
+      "kind": "secondary",
+      "title": "David Bowie sexual assault case goes before grand jury (11 November 1987)",
+      "author": "Vicky Bowles",
+      "year": 1987,
+      "publisher": "United Press International",
+      "url": "https://www.upi.com/Archives/1987/11/11/David-Bowie-sexual-assault-case-goes-before-grand-jury/8094563605200/"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real English musician (1947-2016), not a politician, campaigner or religious founder; in 2015 Lori Mattix gave a first-hand public account that he had sex with her, by the press accounts at 14 or 15, and in 1987 a Dallas woman filed a sexual assault complaint that a grand jury declined to indict, so he goes to the owner. Owner case: Thrillist, 3 Nov 2015: Mattix says she first met him on his Spiders from Mars tour when she had 'not yet turned 15' and refused his invitation; about five months later, at the Beverly Hilton, he 'de-virginized' her and that night had sex with her and Sable Starr; she places it the night before his Long Beach concert on that tour (fan tour logs: March 1973; no reputable source for the date was opened); she says she does not regret it. Phoenix New Times gives her age as 14 at the first meeting and headlines 15; Salon and the Thrillist interviewer say 15. Phoenix found no confirmation or denial from him. Other versions (Starr in Please Kill Me, Mattix to Trynka) not opened. Dallas: Wanda Nichols, 30, complaint of 12 Oct 1987 that he assaulted her in his hotel room on 9 Oct, bit her back and told her he had given her AIDS; through spokesmen he called it 'ridiculous', denied assault and said anything between them was consensual; the grand jury heard testimony on 11 Nov and its no-bill was released 18 Nov 1987; her civil petition for an AIDS test was postponed to 18 Dec, outcome not found (UPI, two reports)."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value and re-read the NYT obituary, the Berklee transcript, the Inspirations transcripts, the NPR 2002 transcript, Rolling Stone, Quill & Quire and every owner-case and shadow source, including both UPI reports. Sobriety fell: it rested on two sources, one a one-line BBC video summary, and the record of when he stopped drinking is only in fan sites; the blind pick's Novelty came in on his own NPR words and the NYT. Creativity, Reading, Curiosity and Courage held, Courage now on three sources; all four quotes matched their transcripts. I fixed eight sentences, among them: the album was finished before November 2015, the Mattix night is no longer dated 1973 or placed in 'Los Angeles', Phoenix New Times's 14 is her age at the first meeting, and the grand jury's decision was released on 18 November.",
+    "checkedOn": "2026-11-10"
+  }
+}
