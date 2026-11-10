@@ -154,4 +154,19 @@ describe("a new build's worker installed with no signal", () => {
     await w.dispatch("message", { data: { type: "warm-shell" } })
     for (const entries of w.store.values()) expect(entries.has(ORIGIN + "/audit"), "his /audit outlived the session").toBe(false)
   })
+
+  test("with both stores holding a page, the newest build's copy is the one shown (review of be70cb5b)", async () => {
+    const online = { value: false }
+    const w = await newBuildWorker(online)
+    // the old build also held /time, which the new store still lacks, so the old store stays
+    w.store.get(OLD)!.set(ORIGIN + "/time", new Response("old time"))
+    await w.dispatch("install")
+    await w.dispatch("activate")
+    w.store.get(NEW)!.set(ORIGIN + "/audit", new Response('<html><script src="/_next/static/chunks/new.js"></script></html>'))
+    expect(w.store.has(OLD)).toBe(true)
+    const opened = await w.dispatch("fetch", { request: page("/audit") })
+    expect(await (opened as Response).text()).toContain("new.js")
+    // a page only the old store holds still opens
+    expect(await ((await w.dispatch("fetch", { request: page("/time") })) as Response).text()).toBe("old time")
+  })
 })

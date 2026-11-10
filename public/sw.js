@@ -232,6 +232,23 @@ async function dropOldStores() {
   )
 }
 
+/**
+ * A STORED COPY, THIS BUILD'S FIRST (review of be70cb5b). `caches.match`
+ * searches the stores oldest first, so while an older build's store is kept
+ * (above) its copy of a page this build has stored too was the one shown.
+ * This worker's store first, then the others newest first.
+ */
+async function matchNewestFirst(key) {
+  const own = await (await caches.open(CACHE)).match(key)
+  if (own) return own
+  const names = (await caches.keys()).filter((name) => name !== CACHE).reverse()
+  for (const name of names) {
+    const hit = await (await caches.open(name)).match(key)
+    if (hit) return hit
+  }
+  return undefined
+}
+
 self.addEventListener("activate", (event) => {
   event.waitUntil(dropOldStores().then(() => self.clients.claim()))
 })
@@ -305,7 +322,7 @@ self.addEventListener("fetch", (event) => {
         return response
       })
       .catch(async () => {
-        const hit = await caches.match(key)
+        const hit = await matchNewestFirst(key)
         if (hit) return hit
         throw new Error("offline and not cached")
       }),
