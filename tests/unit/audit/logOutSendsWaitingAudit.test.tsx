@@ -243,6 +243,21 @@ describe("Log Out with an audit answer still waiting on the phone", () => {
       expect(unsentAuditChanges(window.localStorage)).toBe(1)
     })
 
+    test("one not sent for want of signal is named as a delete, and logging out keeps that answer (alpha p9-deletes-04)", async () => {
+      deleteWaitingOnThePhone()
+      vi.stubGlobal("fetch", vi.fn(async () => Promise.reject(new TypeError("Failed to fetch"))))
+      renderLogOut()
+      await wait(SEND_BEFORE_LOG_OUT_MS + 500)
+      expect(signedOut.count).toBe(0)
+      const time = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(waiting.slotAt))
+      const text = screen.getByTestId("log-out-unsent").textContent ?? ""
+      expect(text).toContain(`${time} · Approached in the metro: delete not sent; logging out keeps this answer`)
+      // not "1 change ... lose it": losing this delete brings the answer back
+      expect(text).not.toContain("hasn't reached")
+      expect(text).not.toContain("and lose")
+      expect(text).toContain("Log out anyway?")
+    })
+
     test("one still inside its Undo time is sent, as he is leaving", async () => {
       deleteWaitingOnThePhone(new Date(Date.now() + 60_000).toISOString())
       let sends = 0

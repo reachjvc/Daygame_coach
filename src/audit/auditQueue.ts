@@ -384,6 +384,21 @@ export function unsentAuditChanges(store: KeyValueStore | null = browserStore())
   return q.answers.length + q.deletes.length
 }
 
+/**
+ * Deletes on this device the server has not had yet (refused ones aside, which
+ * Log Out names with their reason): named as deletes, since logging out
+ * without them keeps the answer (alpha p9-deletes-04).
+ */
+export function unsentAuditDeletes(store: KeyValueStore | null = browserStore()): { id: string; slotAt: string | null; activity: string | null }[] {
+  const owner = auditQueueOwner(store)
+  if (!owner) return []
+  return pendingDeletes(readAuditQueue(store, owner)).map((d) => ({
+    id: d.id,
+    slotAt: d.slotAt ?? null,
+    activity: d.restore?.activity ?? d.seen?.activity ?? null,
+  }))
+}
+
 export function readAuditViewCopy(store: KeyValueStore | null, owner: string): AuditView | null {
   const parsed = readOwnedJson(store, AUDIT_VIEW_KEY, owner) as { view?: AuditView } | null
   const view = parsed?.view

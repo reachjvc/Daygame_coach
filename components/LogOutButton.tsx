@@ -26,7 +26,7 @@ import { useCallback, useRef, useState, useTransition, type ReactNode } from "re
 import { signOut } from "@/app/actions/auth"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog"
-import { unsentAuditChanges } from "@/src/audit/auditQueue"
+import { unsentAuditChanges, unsentAuditDeletes } from "@/src/audit/auditQueue"
 import { forgetSessionInThisBrowser } from "@/src/db/authCookies"
 import { forgetThisDevice } from "@/src/notifications/pushClient"
 import { sendWaitingAudit, type AuditSendOutcome } from "@/src/audit/sendWaitingAudit"
@@ -41,7 +41,15 @@ const LOOK_EVERY_MS = 250
 type Phase =
   | { kind: "idle" }
   | { kind: "sending" }
-  | { kind: "asking"; left: number; refused: AuditSendOutcome["refused"]; notDeleted: AuditSendOutcome["notDeleted"]; undoSent: number }
+  | {
+      kind: "asking"
+      left: number
+      refused: AuditSendOutcome["refused"]
+      notDeleted: AuditSendOutcome["notDeleted"]
+      undoSent: number
+      /** Deletes not sent yet: named, since logging out keeps those answers (alpha p9-deletes-04) */
+      deletes: ReturnType<typeof unsentAuditDeletes>
+    }
   | { kind: "leaving" }
 
 const clock = (iso: string) => {
@@ -147,7 +155,8 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
       const named = refused.length + notDeleted.length
       // Nothing left that waiting could send: ask now rather than wait out the seconds.
       if (Date.now() - started >= SEND_BEFORE_LOG_OUT_MS || (named > 0 && left <= named)) {
-        setPhase({ kind: "asking", left, refused, notDeleted, undoSent: auditUndoSent.current })
+        const deletes = auditStranger.current ? [] : unsentAuditDeletes()
+        setPhase({ kind: "asking", left, refused, notDeleted, undoSent: auditUndoSent.current, deletes })
         return
       }
       sendAudit()
@@ -164,8 +173,10 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
   const refused = phase.kind === "asking" ? phase.refused : []
   const notDeleted = phase.kind === "asking" ? phase.notDeleted : []
   const undoSent = phase.kind === "asking" ? phase.undoSent : 0
-  const left = phase.kind === "asking" ? Math.max(0, phase.left - refused.length - notDeleted.length) : 0
-  const all = left + refused.length + notDeleted.length
+  const deletes = phase.kind === "asking" ? phase.deletes : []
+  const left = phase.kind === "asking" ? Math.max(0, phase.left - refused.length - notDeleted.length - deletes.length) : 0
+  // a delete left behind loses nothing: the answer stays
+  const lost = left + refused.length
   return (
     <>
       {children({ onClick, busy: phase.kind === "sending" || phase.kind === "leaving" })}
@@ -231,7 +242,17 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
               ))}
             </ul>
           )}
-          <p className="text-sm text-muted-foreground">Log out anyway and lose {all === 1 ? "it" : "them"}?</p>
+          {deletes.length > 0 && (
+            <ul className="space-y-0.5 text-sm" data-testid="log-out-delete-waiting">
+              {deletes.map(({ id, slotAt, activity }) => (
+                <li key={id} data-testid="log-out-delete-waiting-item">
+                  {slotAt ? `${clock(slotAt)} · ` : ""}
+                  {activity ?? "An answer"}: delete not sent; logging out keeps this answer.
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="text-sm text-muted-foreground">{lost > 0 ? `Log out anyway and lose ${lost === 1 ? "it" : "them"}?` : "Log out anyway?"}</p>
           <DialogFooter>
             <Button variant="outline" onClick={stay} data-testid="log-out-stay">
               Stay signed in
