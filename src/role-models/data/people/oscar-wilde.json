@@ -1,0 +1,352 @@
+{
+  "id": "oscar-wilde",
+  "name": "Oscar Wilde",
+  "born": 1854,
+  "died": 1900,
+  "category": "charisma",
+  "areaIds": [
+    "lm_fun",
+    "lm_friends"
+  ],
+  "tagline": "A model of wit, style and living as yourself.",
+  "startedFrom": "He was born in Dublin in 1854, the second son of Dr William Wilde and the poet Jane Elgee; his biographer describes a shy boy overshadowed by a cheerful, noisy elder brother. He won scholarships to Trinity College Dublin and then to Magdalen College, Oxford, where he took first-class honours; his father's death in 1876 left the family poorer.",
+  "values": [
+    {
+      "word": "Humour",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His comedy The Importance of Being Earnest had been running in London for seven weeks when his libel case began in April 1895.",
+          "sourceId": "dib-2009",
+          "locator": "section 'Prison and final years'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer calls him 'the supreme talker of his time', in overwhelming demand at dinner tables, and quotes Shaw (1895): 'He plays with everything'.",
+          "sourceId": "dib-2009",
+          "locator": "sections 'A rebel martyr?' and 'Homosexuality and other identities'"
+        },
+        {
+          "kind": "words",
+          "claim": "He subtitled The Importance of Being Earnest 'A Trivial Comedy for Serious People' and gave Algernon the line 'The truth is rarely pure and never simple.'",
+          "sourceId": "earnest-1895",
+          "locator": "title page; Act I, Algernon's reply to Jack"
+        }
+      ]
+    },
+    {
+      "word": "Beauty",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He opens his novel with 'The artist is the creator of beautiful things.'",
+          "sourceId": "dorian-1891",
+          "locator": "The Preface, first line"
+        },
+        {
+          "kind": "deed",
+          "claim": "Through 1882 he toured North America as the spokesman of the aesthetic movement, lecturing on 'The decorative arts' and 'The house beautiful'.",
+          "sourceId": "dib-2009",
+          "locator": "section 'London, America, and marriage'"
+        },
+        {
+          "kind": "words",
+          "claim": "In prison he wrote that 'love in the artist is simply the sense of beauty that reveals to the world its body and its soul.'",
+          "sourceId": "de-profundis-1913",
+          "locator": "paragraph beginning 'It is, if I can fully attain to it, the ultimate realisation of the artistic life'"
+        }
+      ]
+    },
+    {
+      "word": "Self-expression",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote: 'Art is the most intense mode of Individualism that the world has known.'",
+          "sourceId": "soul-1909",
+          "locator": "paragraph beginning 'Now, I have said that the community by means of organisation of machinery'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In his early London years, mocked as a poseur, he went out in the evening in knee breeches and silk stockings with green cornflowers and gilded lilies in his coat.",
+          "sourceId": "harris-1916",
+          "locator": "vol. 1, ch. IV"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer says Yeats, Shaw and other Irish writers saw their own status grow through 'the force of Wilde's prowess and challenge to social and literary conventions'.",
+          "sourceId": "dib-2009",
+          "locator": "section 'Homosexuality and other identities', near its end"
+        }
+      ]
+    },
+    {
+      "word": "Compassion",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After his release he wrote to the Daily Chronicle on prison conditions; the letters were published on 28 May 1897 and 24 March 1898.",
+          "sourceId": "dib-2009",
+          "locator": "section 'Prison and final years'"
+        },
+        {
+          "kind": "words",
+          "claim": "The first letter defends warder Martin, dismissed for giving sweet biscuits to a hungry child prisoner; he wrote he was 'utterly distressed' to see the three children at Reading, 'for I knew the treatment in store for them'.",
+          "sourceId": "prison-letters-1898",
+          "locator": "'The Case of Warder Martin', opening paragraphs"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer writes that in prison he 'became deeply concerned about his fellow-prisoners', and that The Ballad of Reading Gaol helped the prison reform struggle.",
+          "sourceId": "dib-2009",
+          "locator": "section 'Prison and final years'"
+        }
+      ]
+    },
+    {
+      "word": "Pleasure",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "From prison he wrote: 'I don't regret for a single moment having lived for pleasure.'",
+          "sourceId": "de-profundis-1913",
+          "locator": "paragraph beginning 'I don't regret for a single moment'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Under Lord Alfred Douglas's influence he moved from gay friendships to paying male prostitutes.",
+          "sourceId": "dib-2009",
+          "locator": "section 'A rebel martyr?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "André Gide, who was with him in Algiers shortly before the 1895 trials, describes him laughing 'non tant joyeux que triomphant' after arranging a night of sex for Gide, and comments: 'Le grand plaisir du débauché, c'est d'entraîner à la débauche'.",
+          "sourceId": "gide-1924",
+          "locator": "part II, ch. II (Algiers)"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Be yourself: grow your own personality instead of piling up possessions.",
+      "sourceId": "soul-1909",
+      "locator": "paragraph beginning 'When Jesus talks about the poor' ('Be yourself. Don't imagine that your perfection lies in accumulating or possessing external things.')"
+    },
+    {
+      "text": "Think your own thoughts; most people live on other people's opinions.",
+      "sourceId": "de-profundis-1913",
+      "locator": "paragraph beginning 'It is tragic how few people'"
+    },
+    {
+      "text": "Judge a work by how well it is made, not by its moral.",
+      "sourceId": "dorian-1891",
+      "locator": "The Preface ('Books are well written, or badly written. That is all.')"
+    },
+    {
+      "text": "Taste all of life, the dark side as well as the sunny side.",
+      "sourceId": "de-profundis-1913",
+      "locator": "paragraph beginning 'This New Life, as through my love of Dante' (the 'fruit of all the trees in the garden of the world' passage)"
+    },
+    {
+      "text": "Cruelty mostly comes from a lack of imagination; look at the person, not only the rule.",
+      "sourceId": "prison-letters-1898",
+      "locator": "'The Case of Warder Martin' ('Ordinary cruelty is simply stupidity. It comes from the entire want of imagination.')"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Most people are other people. Their thoughts are some one else's opinions, their lives a mimicry, their passions a quotation.",
+      "sourceId": "de-profundis-1913",
+      "locator": "paragraph beginning 'It is tragic how few people' (Methuen 1913 text)"
+    },
+    {
+      "text": "I don't regret for a single moment having lived for pleasure. I did it to the full, as one should do everything that one does.",
+      "sourceId": "de-profundis-1913",
+      "locator": "paragraph beginning 'I don't regret for a single moment' (Methuen 1913 text)"
+    },
+    {
+      "text": "Art is the most intense mode of Individualism that the world has known.",
+      "sourceId": "soul-1909",
+      "locator": "paragraph beginning 'Now, I have said that the community by means of organisation of machinery' (Humphreys 1909 text)"
+    },
+    {
+      "text": "Ordinary cruelty is simply stupidity.",
+      "sourceId": "prison-letters-1898",
+      "locator": "'The Case of Warder Martin', letter to the Daily Chronicle, 28 May 1897"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 30 April 1895, on trial at the Old Bailey for gross indecency, he was asked what a line in a poem by Lord Alfred Douglas meant: 'the love that dare not speak its name'. He answered that it was the deep affection of an older man for a younger one, as between David and Jonathan, as in Plato and in the sonnets of Shakespeare and Michelangelo, 'beautiful', 'pure' and 'noble'. The gallery broke into applause mixed with hisses, and the judge threatened to clear the court. The next day the jury could not agree on a verdict.",
+    "sourceIds": [
+      "globe-1895",
+      "trial-1906",
+      "dib-2009"
+    ]
+  },
+  "shadow": {
+    "text": "He paid male prostitutes for sex, and gave gifts such as a cigarette case and a suit of clothes to young working-class men like Alphonse Conway, a Worthing boy. In April 1895 he sued the Marquess of Queensberry for libel and denied under oath any indecency with the young men named, among them Walter Grainger, a servant he put at 'about sixteen', and Conway, whom he put at 'about eighteen' and whom a baptism record shows was 16; he dropped the case on 5 April. From the statements Grainger and Conway gave Queensberry's solicitors, the biographer Neil McKenna (2003) writes that Wilde had sex with Grainger 'on many occasions', and the historian Antony Edmonds (2014) that he was sexually involved with Conway. At his criminal trials Edward Shelley, a publisher's clerk, testified that Wilde had touched him sexually and that he resented it; Wilde denied it, and the judge withdrew that count for want of corroboration. On 25 May 1895 he was convicted of gross indecency and sentenced to two years' hard labour. In a letter of 16 April 1900 he wrote of a Palermo seminarian: 'Giuseppe was fifteen', and 'every day I kissed him behind the high altar.' His biographer Owen Dudley Edwards calls his neglect of his wife Constance and their two sons during his years with Douglas 'much the most serious moral offence he had committed'; the sons never saw him again. Of those years he wrote in prison: 'I grew careless of the lives of others.'",
+    "sourceIds": [
+      "dib-2009",
+      "libel-transcript",
+      "edmonds-2014-site",
+      "mckenna-2003",
+      "trial-1906",
+      "hart-davis-1962",
+      "de-profundis-1913"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you go along with what others wanted when you could have been yourself?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Picture of Dorian Gray",
+      "year": 1890
+    },
+    {
+      "title": "De Profundis",
+      "year": 1905
+    },
+    {
+      "title": "The Ballad of Reading Gaol",
+      "year": 1898
+    }
+  ],
+  "sources": [
+    {
+      "id": "de-profundis-1913",
+      "kind": "primary",
+      "title": "De Profundis (expanded Ross text; written in Reading Gaol 1897, first published 1905)",
+      "author": "Oscar Wilde",
+      "year": 1913,
+      "publisher": "Methuen & Co. (Project Gutenberg #921)",
+      "url": "https://www.gutenberg.org/ebooks/921"
+    },
+    {
+      "id": "soul-1909",
+      "kind": "primary",
+      "title": "The Soul of Man under Socialism (first printed in the Fortnightly Review, Feb. 1891)",
+      "author": "Oscar Wilde",
+      "year": 1909,
+      "publisher": "Arthur L. Humphreys (Project Gutenberg #1017)",
+      "url": "https://www.gutenberg.org/ebooks/1017"
+    },
+    {
+      "id": "dorian-1891",
+      "kind": "primary",
+      "title": "The Picture of Dorian Gray (1891 book text, with the Preface)",
+      "author": "Oscar Wilde",
+      "year": 1891,
+      "publisher": "Project Gutenberg #174",
+      "url": "https://www.gutenberg.org/ebooks/174"
+    },
+    {
+      "id": "prison-letters-1898",
+      "kind": "primary",
+      "title": "Children in Prison and Other Cruelties of Prison Life (his letter to the Daily Chronicle of 28 May 1897)",
+      "author": "Oscar Wilde",
+      "year": 1898,
+      "publisher": "Murdoch & Co. (Project Gutenberg #42104)",
+      "url": "https://www.gutenberg.org/ebooks/42104"
+    },
+    {
+      "id": "libel-transcript",
+      "kind": "primary",
+      "title": "Transcript of the libel trial: testimony of Oscar Wilde, cross-examination by Carson (fact-oriented part), April 1895",
+      "author": "Douglas O. Linder (ed.), Famous Trials, UMKC School of Law",
+      "year": "n.d. (archived 2025)",
+      "url": "https://web.archive.org/web/2025/http://law2.umkc.edu/faculty/projects/ftrials/wilde/Wildelibelowfact.html"
+    },
+    {
+      "id": "trial-1906",
+      "kind": "primary",
+      "title": "The Trial of Oscar Wilde, from the Shorthand Reports",
+      "author": "Charles Grolleau (ed.)",
+      "year": 1906,
+      "publisher": "Privately printed, Paris (Project Gutenberg #38916)",
+      "url": "https://www.gutenberg.org/ebooks/38916"
+    },
+    {
+      "id": "dib-2009",
+      "kind": "secondary",
+      "title": "Wilde, Oscar Fingal O'Flahertie",
+      "author": "Owen Dudley Edwards",
+      "year": 2009,
+      "publisher": "Dictionary of Irish Biography, Royal Irish Academy",
+      "url": "https://www.dib.ie/biography/wilde-oscar-fingal-oflahertie-a9036"
+    },
+    {
+      "id": "globe-1895",
+      "kind": "secondary",
+      "title": "Wilde's Defence (cable dated London, April 30)",
+      "author": "The Globe (Toronto), 1 May 1895, via the Wilde Trials International News Archive, Simon Fraser University",
+      "year": 1895,
+      "url": "https://wilde.dhil.lib.sfu.ca/ctg_1728.html"
+    },
+    {
+      "id": "harris-1916",
+      "kind": "secondary",
+      "title": "Oscar Wilde, His Life and Confessions, vol. 1",
+      "author": "Frank Harris",
+      "year": 1916,
+      "publisher": "Project Gutenberg #16894",
+      "url": "https://www.gutenberg.org/ebooks/16894"
+    },
+    {
+      "id": "gide-1924",
+      "kind": "secondary",
+      "title": "Si le grain ne meurt (N.R.F. edition), part II, chapter II",
+      "author": "André Gide",
+      "year": 1924,
+      "publisher": "Éditions de la N.R.F. (Wikisource)",
+      "url": "https://fr.wikisource.org/wiki/Si_le_grain_ne_meurt/Partie_II/II"
+    },
+    {
+      "id": "edmonds-2014-site",
+      "kind": "secondary",
+      "title": "Oscar Wilde's Scandalous Summer (book website: chapter 5, 'Further Information about Alphonse Conway's Origins', home page)",
+      "author": "Antony Edmonds",
+      "year": 2014,
+      "url": "https://oscarwilde.org.uk/oscar-wilde-scandalous-summer-chapter-5.html"
+    },
+    {
+      "id": "earnest-1895",
+      "kind": "primary",
+      "title": "The Importance of Being Earnest: A Trivial Comedy for Serious People (first staged 1895)",
+      "author": "Oscar Wilde",
+      "year": 1895,
+      "publisher": "Project Gutenberg #844 (edition not named)",
+      "url": "https://www.gutenberg.org/ebooks/844"
+    },
+    {
+      "id": "hart-davis-1962",
+      "kind": "primary",
+      "title": "The Letters of Oscar Wilde (letter to Robert Ross, Rome, 16 April 1900, pp. 820-821)",
+      "author": "Oscar Wilde; Rupert Hart-Davis (ed.)",
+      "year": 1962,
+      "publisher": "Harcourt, Brace & World",
+      "url": "https://archive.org/details/in.ernet.dli.2015.225943"
+    },
+    {
+      "id": "mckenna-2003",
+      "kind": "secondary",
+      "title": "The Secret Life of Oscar Wilde",
+      "author": "Neil McKenna",
+      "year": 2003,
+      "publisher": "Century",
+      "url": "https://archive.org/details/secretlifeofosca0000mcke"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real Irish writer (1854-1900), not fictional, never a politician or religious founder. Owner case (under-16, and sexual violence), no recommendation. Under 16: his own letter to Robert Ross of 16 April 1900 says of a Palermo seminarian 'Giuseppe was fifteen' and 'every day I kissed him behind the high altar' (Hart-Davis 1962, pp. 820-821). At the line: Walter Grainger, a servant he put at 'about sixteen' (libel trial, April 1895), whom McKenna (2003), from Grainger's statement, calls sixteen and says Wilde had sex with; Alphonse Conway, 16 by baptism record and birth certificate, whom Edmonds (2014), from Conway's statement, says Wilde kissed and sexually touched in August-September 1894. Unwanted touching: Edward Shelley testified at the 1895 criminal trials that Wilde kissed and later sexually touched him, that he resented it and called it being 'entrapped'; McKenna (2003) writes Shelley woke 'unwittingly and unwillingly in Oscar's bed'. Wilde denied every 1895 allegation under oath; the libel case was dropped before Grainger or Conway testified, and the judge withdrew the Shelley count for want of corroboration. Gide's memoir has him take an unnamed youth of unstated age in Algiers in early 1895."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked Compassion with his neglect of his wife and sons and his own line 'I grew careless of the lives of others', Self-expression with the DIB's note that he kept his sexuality and Catholicism concealed, and every claim against its source. No value fell: the carelessness covers 1892-95 and now stands in the shadow, while the prison letters and the DIB witness hold for Compassion; Self-expression and Pleasure each have three sources. One Compassion claim cited the DIB for the warder Martin story, which the DIB does not tell, and was moved to Wilde's own letter; a weak Humour item was replaced with the play's own text. The screen grew: his 1900 letter puts a seminarian he kissed daily at fifteen, McKenna reports Grainger's and Shelley's statements, and Shelley's sworn trial testimony is added, so the shadow and owner case now carry them.",
+    "checkedOn": "2026-11-10"
+  }
+}
