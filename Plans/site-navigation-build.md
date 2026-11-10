@@ -1,7 +1,7 @@
 # Site navigation build: option E (Home + tool grid)
 
 **Written 2026-11-09** after the owner said of the before/after page: "I quite like this."
-**Status: Phases 0, 1 and 2 live (2026-11-10). Phase 3 next.** Follows `Plans/site-navigation.md` (the choice). This plan builds it.
+**Status: Phases 0 to 3 live (2026-11-10). Phase 4 (audit and sign-off page) next.** Follows `Plans/site-navigation.md` (the choice). This plan builds it.
 
 ## Owner-only items (answered 2026-11-09)
 
@@ -160,4 +160,13 @@ Removed, and where each job went:
 | Dating answers summary on Home | You, folded under "Your dating answers" |
 | "Settings" as the page title | "You" |
 | "Progress Tracking" as the page title | "Activity" |
+
+### Phase 3 (2026-11-10): laptop sidebar
+
+- From 1024px wide the site navigation is a left sidebar (224px): logo, Home, Plan, Activity, You, and Log Out at the foot, each with the phone bar's icon. Between 640 and 1024px it stays a row at the top, because a 224px sidebar would take a third of a small screen. It is one element restyled by width, so there is one set of links.
+- On Time the sidebar folds to a 64px icon rail; Time's own sidebar is unchanged beside it.
+- The plan's daily steps get the sidebar too; setup steps and the Black Box still hide the site frame.
+- Before/after screenshots of 20 pages at 1024 and 1280px, light and dark (80 each): no page scrolls sideways, and no page's own layout broke, so no page needed the folded rail besides Time.
+
+Removed: nothing. The header row above 1024px became the sidebar.
 

@@ -102,7 +102,7 @@ import { ValuesSoFar } from "./ValuesSoFar"
 import { ValuesWork } from "./ValuesWork"
 import { RecapTab, type RecapHandlers } from "./RecapTab"
 import { BackLink } from "@/components/BackLink"
-import { SiteHeader } from "@/components/AppFrame"
+import { SiteHeader, sidebarOffset } from "@/components/AppFrame"
 import { MobileTabBar } from "@/components/MobileTabBar"
 import { getTodayInTimezone } from "@/src/shared/dateUtils"
 import { ROUTES } from "@/src/shared/routes"
@@ -1667,7 +1667,7 @@ export function NorthStarFlow({
   )
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div className={`min-h-screen bg-zinc-950 text-white ${siteBar ? sidebarOffset(false) : ""}`}>
       {siteBar && <SiteHeader />}
       {siteBar && stepNav}
       <div className={`max-w-5xl mx-auto px-6 py-10 ${siteBar ? "pb-tab-bar sm:pb-28" : "pb-28"}`}>
