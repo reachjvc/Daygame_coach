@@ -1,0 +1,377 @@
+{
+ "id": "arnold-schwarzenegger",
+ "name": "Arnold Schwarzenegger",
+ "born": 1947,
+ "died": null,
+ "category": "athletes",
+ "areaIds": [
+  "lm_fitness",
+  "lm_mission",
+  "lm_mindset"
+ ],
+ "tagline": "Set huge goals as a village boy in Austria, then trained five hours a day to reach them.",
+ "startedFrom": "He grew up in Thal, a village next to Graz in Austria, in the years after the Second World War; the home had no indoor plumbing, telephone or refrigerator until he was a teenager, and meat came once a week. His father, the village police chief, had belonged to the Nazi party, was strict, and regularly pitted his two sons against each other. His parents expected him to become a policeman like his father or a tradesman such as a mechanic or a furniture maker.",
+ "values": [
+  {
+   "word": "Vision",
+   "evidence": [
+    {
+     "kind": "words",
+     "claim": "He said he decided to become a bodybuilding champion as his ticket to America the moment he saw a magazine cover of his idol, Mr. Universe Reg Park, and planned to use it to go into the movies.",
+     "sourceId": "usc-2009",
+     "locator": "rule number one, 'Trust yourself'"
+    },
+    {
+     "kind": "deed",
+     "claim": "He won Mr. Universe at 20 in 1967, came to America in 1968, and after his bodybuilding titles turned to film acting.",
+     "sourceId": "aaya",
+     "locator": "sections 'The Determination to Excel' and 'From Bodybuilding to Business'"
+    },
+    {
+     "kind": "witness",
+     "claim": "The Gale reference work calls becoming a film actor 'one of his main life goals'.",
+     "sourceId": "aaya",
+     "locator": "section 'From Bodybuilding to Business'"
+    }
+   ]
+  },
+  {
+   "word": "Hard work",
+   "evidence": [
+    {
+     "kind": "words",
+     "claim": "He writes that he trained five hours a day for fifteen years and invented the 'double split' to fit two workouts into each day.",
+     "sourceId": "be-useful-ch3",
+     "locator": "ch. 3 'Work Your Ass Off'"
+    },
+    {
+     "kind": "deed",
+     "claim": "As a teenager he set up a gym in an unheated room at home and trained there daily; his training sessions routinely lasted five hours.",
+     "sourceId": "aaya",
+     "locator": "section 'The Determination to Excel'"
+    },
+    {
+     "kind": "words",
+     "claim": "He called 'Work your butt off' the most important of his six rules of success.",
+     "sourceId": "usc-2009",
+     "locator": "rule number five"
+    }
+   ]
+  },
+  {
+   "word": "Ambition",
+   "evidence": [
+    {
+     "kind": "words",
+     "claim": "He said he did not want just to be a bodybuilding champion but 'the best bodybuilder of all times', and not just a movie star but the highest-paid one.",
+     "sourceId": "usc-2009",
+     "locator": "passage before rule number one"
+    },
+    {
+     "kind": "deed",
+     "claim": "He became the first person to win all three major bodybuilding titles, Mr. Universe, Mr. World and Mr. Olympia, and in 1980 took his seventh Mr. Olympia title.",
+     "sourceId": "aaya",
+     "locator": "section 'From Bodybuilding to Business'"
+    },
+    {
+     "kind": "witness",
+     "claim": "The Christian Science Monitor calls him, as a teenager, 'the ambitious teenager'.",
+     "sourceId": "csmonitor-2003",
+     "locator": "paragraphs on Alfred Gerstl"
+    }
+   ]
+  },
+  {
+   "word": "Contribution",
+   "evidence": [
+    {
+     "kind": "words",
+     "claim": "He made giving back the sixth of his rules of success, told graduates to 'always find time to give something back', and said helping people brings more satisfaction than anything else.",
+     "sourceId": "usc-2009",
+     "locator": "rule number six"
+    },
+    {
+     "kind": "deed",
+     "claim": "He was named Special Olympics International Weight Training Coach in 1979 and chaired the President's Council on Physical Fitness and Sports from 1990 to 1993.",
+     "sourceId": "cslib",
+     "locator": "biography paragraph beginning 'Prior to and during his term as governor'"
+    },
+    {
+     "kind": "deed",
+     "claim": "He was Special Olympics national weight-training coach from 1977 and international coach from 1979.",
+     "sourceId": "aaya",
+     "locator": "career summary at the head of the entry"
+    }
+   ]
+  },
+  {
+   "word": "Resilience",
+   "evidence": [
+    {
+     "kind": "deed",
+     "claim": "In 1968 he finished second to Frank Zane at the Mr. Universe contest in Miami, stayed in America under Joe Weider's patronage to train at Gold's Gym, and won the title back in 1969.",
+     "sourceId": "aaya",
+     "locator": "sections 'The Determination to Excel' and 'From Bodybuilding to Business'"
+    },
+    {
+     "kind": "deed",
+     "claim": "After a 2018 heart-valve operation went wrong and became open-heart surgery, he had a nurse mark each breathing session and walk on a whiteboard, was home after six days and flew to Budapest a month later to begin filming on schedule.",
+     "sourceId": "be-useful-aarp",
+     "locator": "whole excerpt"
+    },
+    {
+     "kind": "words",
+     "claim": "He says he lost contests, films, ballot measures and his marriage, and tells people not to be afraid of failure 'because you're going to fail'.",
+     "sourceId": "npr-2023",
+     "locator": "answer to 'Which battles did you lose?'"
+    }
+   ]
+  }
+ ],
+ "principles": [
+  {
+   "text": "Decide clearly what you want to become, and aim at the big version of it, not the small one.",
+   "sourceId": "npr-2023",
+   "locator": "answers on having a clear vision and on big goals"
+  },
+  {
+   "text": "There is no shortcut: put in the hours of work.",
+   "sourceId": "be-useful-ch3",
+   "locator": "ch. 3 'Work Your Ass Off'"
+  },
+  {
+   "text": "Accept that you will sometimes fail, and do not let the fear of it stop you trying.",
+   "sourceId": "usc-2009",
+   "locator": "rule number three, 'Don't be afraid to fail'"
+  },
+  {
+   "text": "When a plan goes wrong, let yourself feel it, then set a new goal and get to work on it.",
+   "sourceId": "be-useful-aarp",
+   "locator": "passage on waking after the 2018 surgery"
+  },
+  {
+   "text": "Other people helped you get where you are, so help others in return.",
+   "sourceId": "npr-2023",
+   "locator": "answer on being 'a creation' of the people who helped him"
+  }
+ ],
+ "quotes": [
+  {
+   "text": "Work works. That's the bottom line. No matter what you do. No matter who you are.",
+   "sourceId": "be-useful-ch3",
+   "locator": "ch. 3 'Work Your Ass Off'"
+  },
+  {
+   "text": "You can't be paralyzed by fear of failure or you will never push yourself.",
+   "sourceId": "usc-2009",
+   "locator": "rule number three, 'Don't be afraid to fail'"
+  },
+  {
+   "text": "You never want to fail because you didn't work hard enough.",
+   "sourceId": "usc-2009",
+   "locator": "rule number five, 'Work your butt off'"
+  },
+  {
+   "text": "Reaching out and helping people will bring you more satisfaction than anything else you have ever done.",
+   "sourceId": "usc-2009",
+   "locator": "rule number six, giving back"
+  }
+ ],
+ "definingMoment": {
+  "text": "In 1967, aged 20, he became the youngest man to win the Mr. Universe title. In 1968 he went to Miami to defend it and finished second to Frank Zane. He stayed in America with the backing of the fitness publisher Joe Weider, trained at Gold's Gym in Venice, California, and won the title back in 1969.",
+  "sourceIds": [
+   "aaya",
+   "cslib"
+  ]
+ },
+ "shadow": {
+  "text": "In October 2003, days before he was elected governor of California, the Los Angeles Times printed accounts by women who said he had groped or humiliated them between 1975 and 2000; by election day the paper had printed the accounts of 16 women. He said a lot of it was not true but admitted he had 'behaved badly sometimes' and apologised, and in 2023 he said, 'Forget all the excuses, it was wrong.' On 2 January 2011, hours before leaving office, he cut the 16-year manslaughter sentence of Esteban Núñez, son of the former Assembly speaker Fabian Núñez, to seven years; the victim's family learned of it from a reporter, and a Sacramento judge later ruled it lawful but 'repugnant to the bulk of the citizenry of this state'. In May 2011 he confirmed that more than ten years earlier he had fathered a child with a long-serving member of his household staff, and that he told his wife only after leaving office; the couple filed for divorce that year. In 2005 he said he had used steroids as a bodybuilder, under doctors' supervision, and had 'no regrets about it'.",
+  "sourceIds": [
+   "irishtimes-2003",
+   "pbs-2003",
+   "cnn-2003",
+   "lbc-2023",
+   "ap-2011-nunez",
+   "abc7-nunez-ruling",
+   "ap-2011-child",
+   "cslib",
+   "ap-2005-steroids"
+  ]
+ },
+ "councilQuestion": {
+  "text": "What did you avoid trying this week because you were afraid it would fail?",
+  "principleIndex": 2
+ },
+ "readings": [
+  {
+   "title": "Total Recall: My Unbelievably True Life Story",
+   "year": 2012
+  },
+  {
+   "title": "Be Useful: Seven Tools for Life",
+   "year": 2023
+  }
+ ],
+ "sources": [
+  {
+   "id": "be-useful-ch3",
+   "kind": "primary",
+   "title": "Be Useful: Seven Tools for Life, ch. 3 'Work Your Ass Off' (extract published by Penguin, 10 October 2023)",
+   "author": "Arnold Schwarzenegger",
+   "year": 2023,
+   "publisher": "Penguin Press / Ebury",
+   "url": "https://www.penguin.co.uk/discover/articles/extract-be-useful-by-arnold-schwarzenegger"
+  },
+  {
+   "id": "be-useful-aarp",
+   "kind": "primary",
+   "title": "Be Useful: Seven Tools for Life, excerpt on his 2018 heart surgery (published by AARP, 2023)",
+   "author": "Arnold Schwarzenegger",
+   "year": 2023,
+   "publisher": "Penguin Press",
+   "url": "https://www.aarp.org/entertainment/books/arnold-schwarzenegger-be-useful-excerpt/"
+  },
+  {
+   "id": "total-recall-2012",
+   "kind": "primary",
+   "title": "Total Recall: My Unbelievably True Life Story (excerpt published by NPR, 2 October 2012)",
+   "author": "Arnold Schwarzenegger",
+   "year": 2012,
+   "publisher": "Simon & Schuster",
+   "url": "https://www.npr.org/2012/10/02/162157471/excerpt-total-recall"
+  },
+  {
+   "id": "usc-2009",
+   "kind": "primary",
+   "title": "Commencement address at the University of Southern California, 15 May 2009 (Office of the Governor transcript)",
+   "author": "Arnold Schwarzenegger",
+   "year": 2009,
+   "publisher": "Office of the Governor of California (archived)",
+   "url": "https://web.archive.org/web/20101223130604/http://gov.ca.gov:80/speech/12323"
+  },
+  {
+   "id": "npr-2023",
+   "kind": "primary",
+   "title": "Arnold Schwarzenegger has one main guiding principle: Be useful (Morning Edition interview with A Martínez, 6 October 2023)",
+   "author": "Arnold Schwarzenegger (interviewed by A Martínez)",
+   "year": 2023,
+   "publisher": "NPR",
+   "url": "https://www.npr.org/2023/10/06/1203694351/arnold-schwarzenegger-has-one-main-guiding-principle-be-useful"
+  },
+  {
+   "id": "aaya",
+   "kind": "secondary",
+   "title": "Schwarzenegger, Arnold, in Authors and Artists for Young Adults, vol. 59",
+   "author": "Gale (Thomson Gale), via Encyclopedia.com",
+   "year": "n.d.",
+   "publisher": "Gale",
+   "url": "https://www.encyclopedia.com/arts/culture-magazines/schwarzenegger-arnold"
+  },
+  {
+   "id": "csmonitor-2003",
+   "kind": "secondary",
+   "title": "The Arnold they remember back home (24 September 2003)",
+   "author": "Colin Woodard, The Christian Science Monitor",
+   "year": 2003,
+   "url": "https://www.csmonitor.com/2003/0924/p01s04-uspo.html"
+  },
+  {
+   "id": "cslib",
+   "kind": "secondary",
+   "title": "Governors of California: Arnold Schwarzenegger",
+   "author": "California State Library",
+   "year": 2019,
+   "url": "https://governors.library.ca.gov/38-schwarzenegger.html"
+  },
+  {
+   "id": "ap-2011-nunez",
+   "kind": "secondary",
+   "title": "Schwarzenegger commutes Nunez sentence (2 January 2011)",
+   "author": "Associated Press via CBS Sacramento",
+   "year": 2011,
+   "url": "https://www.cbsnews.com/sacramento/news/schwarzenegger-commutes-estab-nunezs-sentence"
+  },
+  {
+   "id": "abc7-nunez-ruling",
+   "kind": "secondary",
+   "title": "Schwarzenegger didn't break law by cutting manslaughter sentence, rules judge",
+   "author": "ABC7 Los Angeles",
+   "year": 2012,
+   "url": "https://abc7.com/archive/8803124/"
+  },
+  {
+   "id": "ap-2011-child",
+   "kind": "secondary",
+   "title": "Schwarzenegger reveals he had child with staffer (17 May 2011)",
+   "author": "Associated Press via CBS Sacramento",
+   "year": 2011,
+   "url": "https://www.cbsnews.com/sacramento/news/schwarzenegger-reveals-he-had-child-with-staffer"
+  },
+  {
+   "id": "ap-2005-steroids",
+   "kind": "secondary",
+   "title": "Schwarzenegger: 'No regrets' about steroid use (26 February 2005)",
+   "author": "Associated Press via NBC News",
+   "year": 2005,
+   "url": "https://www.nbcnews.com/id/wbna7035676"
+  },
+  {
+   "id": "cbs-2011",
+   "kind": "secondary",
+   "title": "Schwarzenegger womanizing allegations followed him for years (19 May 2011)",
+   "author": "David Riedel, CBS News",
+   "year": 2011,
+   "url": "https://www.cbsnews.com/news/schwarzenegger-womanizing-allegations-followed-him-for-years"
+  },
+  {
+   "id": "pbs-2003",
+   "kind": "secondary",
+   "title": "Los Angeles Times faces criticism over Schwarzenegger stories (13 October 2003)",
+   "author": "PBS NewsHour",
+   "year": 2003,
+   "url": "https://www.pbs.org/newshour/nation/media-july-dec03-latimes_10-13"
+  },
+  {
+   "id": "irishtimes-2003",
+   "kind": "secondary",
+   "title": "Candidate admits he 'behaved badly' in the past (3 October 2003)",
+   "author": "Conor O'Clery, The Irish Times",
+   "year": 2003,
+   "url": "https://www.irishtimes.com/news/candidate-admits-he-behaved-badly-in-the-past-1.380624"
+  },
+  {
+   "id": "cnn-2003",
+   "kind": "primary",
+   "title": "Live From... California Recall Election, transcript (2 October 2003)",
+   "author": "CNN (Schwarzenegger's own words)",
+   "year": 2003,
+   "url": "https://transcripts.cnn.com/show/lol/date/2003-10-02/segment/04"
+  },
+  {
+   "id": "cbs-ap-2006",
+   "kind": "secondary",
+   "title": "Schwarzenegger settles libel suit (26 August 2006)",
+   "author": "Associated Press via CBS News",
+   "year": 2006,
+   "url": "https://www.cbsnews.com/news/schwarzenegger-settles-libel-suit"
+  },
+  {
+   "id": "lbc-2023",
+   "kind": "secondary",
+   "title": "Arnold Schwarzenegger apologises for groping women 20 years after dismissing allegations (6 June 2023)",
+   "author": "Kieran Kelly, LBC",
+   "year": 2023,
+   "url": "https://www.lbc.co.uk/article/arnold-schwarzenegger-apologises-groping-women-20-years-ago-DWzZ5c_2/"
+  }
+ ],
+ "review": {
+  "status": "flagged",
+  "screen": {
+   "result": "owner-decides",
+   "notes": "A real, living bodybuilder, actor and former Republican governor of California (sworn in 17 November 2003, left office January 2011) who holds and seeks no office; his 2025 speaking against California's Proposition 50 was an issue campaign, not a candidacy, so he is not excluded. Owner case (sexual violence): on 2 October 2003, five days before the recall election, the Los Angeles Times printed accounts by six women who said he touched them sexually without consent, and by 5 October its series held the accounts of 16 women, covering 1975 to 2000 (CBS News 2011; PBS NewsHour 2003; Irish Times 2003). Accounts include a breast grabbed in the street in 1980, a hand under a secretary's skirt in the late 1980s and a crew member pinned in a lift on Terminator 2 (Irish Times). His spokesman denied the accounts; he said 'A lot of what you see in the stories is not true' but 'yes, I have behaved badly sometimes' and 'I'm deeply sorry about that, and I apologize' (CNN transcript, 2 Oct 2003), and on 5 October called the articles 'puke politics' (PBS). The British presenter Anna Richardson, who said he touched her breast at a December 2000 interview, sued him and two aides for libel in London in May 2004 over their denial; it was settled in August 2006, no terms released (AP via CBS News). In 2023 he said 'Forget all the excuses, it was wrong' (LBC, 6 June 2023). No criminal charge or court finding on the groping accounts was found. A weaker tabloid claim (Gigi Goyette, age 16 in 1975) is recorded in screen.json. The original LA Times articles could not be opened; they are known through CBS, PBS and the Irish Times."
+  },
+  "blindAgreement": 0.8,
+  "devilsAdvocate": "I attacked all five values and re-read the USC 2009 transcript, the Be Useful extracts, the NPR interview and excerpt, the Gale entry, the Monitor, the State Library page and every shadow and owner-case source. All five held: Vision, Hard work, Ambition and Contribution matched the blind pick, Resilience held on three sources, and the blind pick's Looking strong found no room. All four quotes matched the official texts word for word. I fixed ten sentences that said more than their source (the 1968 Zane result, the move to America, the surgery tally, the 16 accounts, doctors' supervision) and added the 2011 Núñez commutation to the shadow.",
+  "checkedOn": "2026-11-10"
+ }
+}
