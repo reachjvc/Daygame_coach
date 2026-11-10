@@ -1,0 +1,327 @@
+{
+  "id": "fridtjof-nansen",
+  "name": "Fridtjof Nansen",
+  "born": 1861,
+  "died": 1930,
+  "category": "explorers",
+  "areaIds": [
+    "lm_fun",
+    "lm_contribution",
+    "lm_mindset"
+  ],
+  "tagline": "An explorer who left himself no way back, then spent his fame on refugees.",
+  "startedFrom": "He was born in 1861 at Store Frøen near Christiania (now Oslo); his father was a prosperous lawyer and his mother came from one of Norway's few noble families. His mother introduced her children to outdoor life, and from about the age of twelve he went on long hunting and fishing trips in the forests outside the city. At university he could not decide what work to do, and he later called himself at that age a \"ne'er-do-weel\" except for some little sport.",
+  "values": [
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1888 he crossed Greenland from the empty east coast to the settled west coast, so that once his party was put ashore there could be no retreat.",
+          "sourceId": "nobel-bio",
+          "locator": "Biographical, paragraph on the Greenland crossing"
+        },
+        {
+          "kind": "deed",
+          "claim": "In November 1892 he told the Royal Geographical Society in London he would let his ship freeze into the polar pack and drift; Admiral Nares answered that this ignored the Arctic rule of keeping a safe line of retreat.",
+          "sourceId": "farthest-north-1",
+          "locator": "vol. I, ch. I, pp. 40-42"
+        },
+        {
+          "kind": "words",
+          "claim": "He told St Andrews students that one secret of such successes as he had had was to burn his boats and demolish the bridges behind him.",
+          "sourceId": "adventure-1927",
+          "locator": "Adventure (rectorial address, St Andrews, 3 November 1926), p. 27"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel biography says that in 1920-21 he repatriated 450,000 prisoners of war, moving with his customary boldness and ingenuity.",
+          "sourceId": "nobel-bio",
+          "locator": "Biographical, paragraph beginning 'In the spring of 1920'"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that men kept returning to the polar ice simply to satisfy man's thirst for knowledge.",
+          "sourceId": "farthest-north-1",
+          "locator": "vol. I, ch. I Introduction, p. 2"
+        },
+        {
+          "kind": "deed",
+          "claim": "He took a doctorate in 1888 on the central nervous system of lower vertebrates, published six volumes of scientific results from the Fram voyage, and became professor of oceanography in 1908.",
+          "sourceId": "nobel-bio",
+          "locator": "Biographical, paragraphs on Bergen and on the Fram's scientific results"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Norwegian national biography calls him a pioneering natural scientist (banebrytende naturforsker).",
+          "sourceId": "nbl",
+          "locator": "introduction"
+        }
+      ]
+    },
+    {
+      "word": "Adventure",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1882, as a zoology student, he shipped on the sealer Viking for four and a half months to the east coast of Greenland.",
+          "sourceId": "nobel-bio",
+          "locator": "Biographical, paragraph beginning 'In 1882'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In the winter of 1884 he skied across the mountains from Bergen to Kristiania to take part in ski competitions.",
+          "sourceId": "sveen-2001",
+          "locator": "section 'Science and adventure'"
+        },
+        {
+          "kind": "words",
+          "claim": "He told students: You will all find your adventure, for life itself is an adventure.",
+          "sourceId": "adventure-1927",
+          "locator": "Adventure, p. 38"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel biography says that in his twenties he united his athletic ability, his science, his drawing and his yearning for adventure.",
+          "sourceId": "nobel-bio",
+          "locator": "Biographical, paragraph beginning 'In school Nansen excelled'"
+        }
+      ]
+    },
+    {
+      "word": "Self-reliance",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "The Nobel biography says he had the endurance to ski fifty miles in a day and the self-reliance to go on long trips with a minimum of gear and only his dog for company.",
+          "sourceId": "nobel-bio",
+          "locator": "Biographical, first paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "In a note left on Franz Josef Land on 19 May 1896 he wrote that he and Johansen had reached the place on 26 August 1895, wintered there, and lived on bear's flesh.",
+          "sourceId": "farthest-north-2",
+          "locator": "vol. II, ch. IX, note dated Tuesday 19 May 1896, p. 488"
+        },
+        {
+          "kind": "words",
+          "claim": "He told students: The great thing is to do your best, and to be independent of all other necessities.",
+          "sourceId": "adventure-1927",
+          "locator": "Adventure, pp. 39-40"
+        }
+      ]
+    },
+    {
+      "word": "Compassion",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "As League of Nations High Commissioner he sent home about 450,000 prisoners of war in about a year and a half from spring 1920, and from 1921 directed relief for the Russian famine, though most western nations distrusted help for Russia.",
+          "sourceId": "nobel-bio",
+          "locator": "Biographical, paragraphs beginning 'In the spring of 1920' and 'The Red Cross in 1921'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He spent his Peace Prize money in the Soviet Union on two model farms, one in Ukraine and one by the Volga.",
+          "sourceId": "sveen-2001",
+          "locator": "section 'The nomination for the Nobel Peace Prize'"
+        },
+        {
+          "kind": "words",
+          "claim": "In his Nobel lecture he says that he and those working with him believe that kindness achieves more than cruelty.",
+          "sourceId": "nobel-lecture",
+          "locator": "Nobel lecture, Oslo, 19 December 1922, paragraph beginning 'But why were there some who did not want to help?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Foundation's 2001 article calls him the altruistic champion of people in times of distress.",
+          "sourceId": "sveen-2001",
+          "locator": "opening paragraph"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Prepare with great care, then put your whole self into it once you start.",
+      "sourceId": "adventure-1927",
+      "locator": "Adventure, p. 26"
+    },
+    {
+      "text": "In the big things of life, leave yourself no way back, so the only way is forward.",
+      "sourceId": "adventure-1927",
+      "locator": "Adventure, p. 27; No More War, p. 59"
+    },
+    {
+      "text": "When pushing on only wastes your time, stop, and turn to the goal you can still reach.",
+      "sourceId": "farthest-north-2",
+      "locator": "vol. II, ch. V, journal 6-8 April 1895, pp. 168-170"
+    },
+    {
+      "text": "Try to understand people who think differently; abusing them convinces no one.",
+      "sourceId": "nobel-lecture",
+      "locator": "Nobel lecture, 19 December 1922, paragraph beginning 'Such an understanding'"
+    },
+    {
+      "text": "Take time alone, away from the rush, to find out what your life is for.",
+      "sourceId": "adventure-1927",
+      "locator": "Adventure, pp. 38-39"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I have always thought that the much-praised \"line of retreat\" is a snare for people who wish to reach their goal.",
+      "sourceId": "adventure-1927",
+      "locator": "Adventure (rectorial address, St Andrews, 3 November 1926), p. 27"
+    },
+    {
+      "text": "But there is only one road, and that lies straight ahead, right through, be it land or sea, be it smooth or rough, be it mere ice or ice and water.",
+      "sourceId": "farthest-north-2",
+      "locator": "vol. II, ch. II, journal of Sunday 10 February 1895, p. 86",
+      "translation": "English edition, Harper & Brothers, 1897 (translator not named in the edition)"
+    },
+    {
+      "text": "The first great thing is to find yourself, and for that you need solitude and contemplation, at least sometimes.",
+      "sourceId": "adventure-1927",
+      "locator": "Adventure, p. 38"
+    },
+    {
+      "text": "Abuse convinces no one; it only degrades and brutalizes the abuser.",
+      "sourceId": "nobel-lecture",
+      "locator": "Nobel lecture, Oslo, 19 December 1922, paragraph beginning 'Such an understanding'",
+      "translation": "English translation published by the Nobel Foundation in Nobel Lectures, Peace 1901-1925 (ed. F. W. Haberman, 1972), from the Norwegian text in Les Prix Nobel en 1921-1922; translator not named"
+    }
+  ],
+  "definingMoment": {
+    "text": "In January 1888 he published a plan to cross Greenland on skis from the empty east coast to the settled west coast, and authorities at once attacked it as impossible, pointing not least to the recklessness of starting on the east coast with no way back. On 17 July his party of six left the sealer Jason in two boats, drifted south with the ice, and only got ashore on 29 July. They set off across the ice cap on 15 August and reached Godthåb on the west coast on 3 October 1888. In 1926 he told students that burning his boats behind him had been one secret of such successes as he had had.",
+    "sourceIds": [
+      "nbl",
+      "nobel-bio",
+      "adventure-1927"
+    ]
+  },
+  "shadow": {
+    "text": "His marriage to the singer Eva Sars, from 1889, was troubled, the Nobel Foundation's 2001 article says, because he was often away and because he attracted many women. The Fridtjof Nansen Institute says he is believed to have been romantically involved with Sigrun Munthe, the wife of a neighbour, before Eva died in 1907; he married Sigrun in 1919, and the Institute says she then spent many unhappy and lonely days at home while he travelled. In his 1923 book Russia and Peace he defended Lenin's harsh methods as necessary to build up the country. In 1922, at the Greek government's request, he took on the Greek refugee crisis; he decided, in the Nobel article's words, that the only solution lay in ethnic separation, and he arranged an exchange of about 1,250,000 Greeks living in Turkey for about 500,000 Turks living in Greece. The same article says he held the social-Darwinist view that people needed to be led by their strongest leaders and was no warm supporter of parties or parliamentary democracy; in 1925 he was the main speaker at the founding meeting of the conservative, anti-communist Fatherland Association (Fedrelandslaget).",
+    "sourceIds": [
+      "sveen-2001",
+      "fni-family",
+      "nbl",
+      "nobel-bio"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you keep a way out open this week that let you hold back from going all in?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "Farthest North",
+      "year": 1897
+    },
+    {
+      "title": "The First Crossing of Greenland",
+      "year": 1890
+    },
+    {
+      "title": "Adventure and Other Papers",
+      "year": 1927
+    }
+  ],
+  "sources": [
+    {
+      "id": "farthest-north-1",
+      "kind": "primary",
+      "title": "Farthest North, vol. I",
+      "author": "Fridtjof Nansen",
+      "year": 1897,
+      "publisher": "Harper & Brothers, New York and London; text Project Gutenberg #30197, page images at 19thcenturyscience.org",
+      "url": "https://www.gutenberg.org/ebooks/30197"
+    },
+    {
+      "id": "farthest-north-2",
+      "kind": "primary",
+      "title": "Farthest North, vol. II",
+      "author": "Fridtjof Nansen",
+      "year": 1897,
+      "publisher": "Harper & Brothers, New York and London; text Project Gutenberg #34120, page images at 19thcenturyscience.org",
+      "url": "https://www.gutenberg.org/ebooks/34120"
+    },
+    {
+      "id": "adventure-1927",
+      "kind": "primary",
+      "title": "Adventure, and Other Papers (Adventure: rectorial address at St Andrews, 3 November 1926; No More War; Peace)",
+      "author": "Fridtjof Nansen",
+      "year": 1967,
+      "publisher": "First published 1927 (Hogarth Press, L. & V. Woolf, London); reprint Books for Libraries Press, Freeport NY, 1967; scan on the Internet Archive",
+      "url": "https://archive.org/details/adventureotherpa0000frid_y6y6"
+    },
+    {
+      "id": "nobel-lecture",
+      "kind": "primary",
+      "title": "Nobel lecture, 19 December 1922 (given the title 'The Suffering People of Europe')",
+      "author": "Fridtjof Nansen",
+      "year": 1972,
+      "publisher": "Nobel Lectures, Peace 1901-1925, ed. F. W. Haberman, Elsevier, Amsterdam; NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/peace/1922/nansen/lecture/"
+    },
+    {
+      "id": "nobel-bio",
+      "kind": "secondary",
+      "title": "Fridtjof Nansen - Biographical",
+      "author": "Nobel Foundation, ed. Frederick W. Haberman",
+      "year": 1972,
+      "publisher": "Nobel Lectures, Peace 1901-1925, Elsevier, Amsterdam; NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/peace/1922/nansen/biographical/"
+    },
+    {
+      "id": "sveen-2001",
+      "kind": "secondary",
+      "title": "Fridtjof Nansen: Scientist and humanitarian",
+      "author": "Asle Sveen",
+      "year": 2001,
+      "publisher": "NobelPrize.org (Nobel Foundation), 15 March 2001",
+      "url": "https://www.nobelprize.org/prizes/peace/1922/nansen/article/"
+    },
+    {
+      "id": "nbl",
+      "kind": "secondary",
+      "title": "Fridtjof Nansen, Norsk biografisk leksikon",
+      "author": "Susan Barr, Leif Østby, Knut Are Tvedt, Karl H. Brox, Vidar Iversen",
+      "year": "undated (read 2026-11-10)",
+      "publisher": "Store norske leksikon",
+      "url": "https://nbl.snl.no/Fridtjof_Nansen"
+    },
+    {
+      "id": "fni-family",
+      "kind": "secondary",
+      "title": "The Nansen family (Polhøgda)",
+      "author": "Fridtjof Nansen Institute",
+      "year": "undated (read 2026-11-10)",
+      "publisher": "Fridtjof Nansen Institute, Lysaker",
+      "url": "https://www.fni.no/about-fni/polhogda/nansen-family"
+    }
+  ],
+  "likenessSources": [
+    {
+      "title": "Fridtjof Nansen, 29 April 1911 (photograph)",
+      "url": "https://commons.wikimedia.org/wiki/File:Fridtjof_Nansen_LOC_03377u-3.jpg",
+      "licence": "Public domain (as stated by Norsk biografisk leksikon)",
+      "author": "Henry van der Weyde"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Norwegian explorer, scientist and League of Nations humanitarian (1861-1930), dead since 1930, never a candidate for office and no founder of a religion; no account found of sexual contact with a minor or of sexual violence; he is in, with a documented dark side (affairs during his first marriage, his defence of Lenin's methods, the Greek-Turkish population exchange, his distrust of parliamentary democracy)."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked all five values against the Nobel biography, Sveen's 2001 Nobel article, the Norwegian national biography and his own texts; the strongest case was against Compassion, from the 1922-24 Greek-Turkish population exchange and his 1923 defence of Lenin's harsh methods. Both are political decisions set against years of prisoner, famine and refugee relief, so Compassion held and the two facts stay in the shadow. No value fell; the blind pick's Determination, Service and Vision had good evidence but no room. All four quotes matched the page images and original texts; three wordings were tightened (\"one secret\" of his successes, the critics' grounds in 1888, his spelling \"ne'er-do-weel\") and the shadow gained Sigrun's lonely years and his social-Darwinist view of leadership.",
+    "checkedOn": "2026-11-10"
+  }
+}
