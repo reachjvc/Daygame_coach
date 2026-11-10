@@ -19,7 +19,7 @@ import { getTodayInTimezone } from "@/src/shared/dateUtils"
 import { usePushDevice, type PushDeviceState } from "@/src/notifications/hooks/usePushDevice"
 import { ROUTES } from "@/src/shared/routes"
 import { OfflineShell } from "@/src/shared/components/OfflineShell"
-import { useAudit, type AuditState, type DrawnSlot } from "../hooks/useAudit"
+import { useAudit, type AuditState, type DrawnSlot, type Undoable } from "../hooks/useAudit"
 import { answerSheetQuarters, clockLabel, nextPingAt, prefillQuarters, QUARTER_MS, runDayOf, runQuarters, SHEET_WINDOW_MS, sheetCards, sheetOrder, stretchLabel, withAnswered } from "../quarterService"
 import type { AnswerSource, AuditRun } from "../types"
 import type { AuditView } from "../auditClient"
@@ -33,6 +33,8 @@ import { noPingDevice, PingDeviceCard, PingDeviceList } from "./PingDevices"
 const FILL_IN_WAIT_MS = 3_000
 /** How long "Deleted · Undo" stays before the delete is sent (alpha picky-eye-08). */
 export const UNDO_MS = 6_000
+/** How long "Too late to undo" stays after an Undo that landed after the delete's time. */
+const TOO_LATE_MS = 4_000
 
 const dayKeyOf = (ms: number, tz: string) => getTodayInTimezone(tz, new Date(ms))
 
@@ -325,18 +327,25 @@ function TodayView({
    * passed; "Deleted · Undo" shows meanwhile, and Undo takes it back out. In
    * the queue from the start, Log Out counts and sends it, and no other
    * device's newer answer is deleted by a late stamp (code review, 2026-11-09).
+   *
+   * The bar is the queued delete's (`s.undoable`): it goes at the instant the
+   * delete may be sent, and comes back after a reload inside that time (alpha
+   * p9-deletes-01, -03). An Undo that lands after it says so (`tooLate`).
    */
-  const [held, setHeld] = useState<DrawnSlot | null>(null)
+  const held = s.undoable
+  const [tooLate, setTooLate] = useState<Undoable | null>(null)
   useEffect(() => {
-    if (!held) return
-    const t = window.setTimeout(() => setHeld(null), UNDO_MS)
+    if (!tooLate) return
+    const t = window.setTimeout(() => setTooLate(null), TOO_LATE_MS)
     return () => window.clearTimeout(t)
-  }, [held])
+  }, [tooLate])
   const undoRemove = s.undoRemove
   const undoHeld = useCallback(() => {
-    if (held) undoRemove(held.id)
-    setHeld(null)
+    if (held && !undoRemove(held.id)) setTooLate(held)
   }, [held, undoRemove])
+  // the late tap's bar shows at once, even before the bar's own time has caught up
+  const late = tooLate !== null && (held === null || held.id === tooLate.id)
+  const bar = late ? tooLate : held
   const slots = s.slots
 
   const quarters = useMemo(() => runQuarters(run, now, tz), [run, now, tz])
@@ -605,9 +614,8 @@ function TodayView({
             // Answered again inside the undo time: the new answer replaces the
             // held one under its id, and no delete follows.
             const h = held
-            const same = (a: { runId: string; slotAt: string }) => h !== null && a.runId === h.runId && a.slotAt === h.slotAt
+            const same = (a: { runId: string; slotAt: string }) => h !== null && (h.runId === null || a.runId === h.runId) && a.slotAt === h.slotAt
             if (h && answers.some(same)) {
-              setHeld(null)
               // same id: the queued delete for it is dropped (enqueueAnswers)
               s.answer(answers.map((a) => (same(a) ? { ...a, id: h.id } : a)))
             } else s.answer(answers)
@@ -618,14 +626,13 @@ function TodayView({
                   const slot = s.slots.find((sl) => sl.id === id)
                   // with what it showed, so a change made on another device meanwhile is not deleted unseen (prove-audit-03)
                   s.remove(id, slot ? UNDO_MS : 0, slot)
-                  setHeld(slot ?? null)
                 }
               : undefined
           }
         />
       )}
       {/* Over the answer sheet and usable while it is open (OVER_SHEET): drawn at the end of the page, beside the sheet's own layer. */}
-      {held && createPortal(
+      {bar && createPortal(
         <div
           {...OVER_SHEET}
           className="pointer-events-auto fixed inset-x-4 bottom-24 z-[9700] mx-auto flex max-w-md items-center gap-3 rounded-xl border border-border bg-card px-4 py-2 shadow-lg sm:bottom-6"
@@ -633,11 +640,20 @@ function TodayView({
           data-testid="audit-undo"
         >
           <p className="min-w-0 flex-1 truncate text-sm">
-            Deleted · <span className="tabular-nums">{stretchLabel([Date.parse(held.slotAt)], tz)}</span> · {held.activity}
+            {late ? "Too late to undo: deleted" : "Deleted"}
+            {bar.slotAt && (
+              <>
+                {" "}
+                · <span className="tabular-nums">{stretchLabel([Date.parse(bar.slotAt)], tz)}</span>
+              </>
+            )}
+            {bar.activity && ` · ${bar.activity}`}
           </p>
-          <Button variant="outline" size="sm" onClick={undoHeld}>
-            Undo
-          </Button>
+          {!late && (
+            <Button variant="outline" size="sm" onClick={undoHeld}>
+              Undo
+            </Button>
+          )}
         </div>,
         document.body,
       )}

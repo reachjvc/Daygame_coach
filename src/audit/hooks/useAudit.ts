@@ -113,6 +113,16 @@ export interface NotDeleted {
   stored?: AnswerMark
 }
 
+/** A delete still inside its Undo time, as "Deleted · Undo" names it. */
+export interface Undoable {
+  id: string
+  /** Its `notBefore`: the bar goes at this instant, and Undo with it. */
+  until: string
+  slotAt: string | null
+  runId: string | null
+  activity: string | null
+}
+
 /**
  * HOW OFTEN AN OPEN PAGE READS AGAIN, so an answer given on another device
  * shows here within a minute and is not answered over blindly (alpha test
@@ -450,7 +460,7 @@ export function useAudit(account: string) {
    * `seen`: the answer as drawn, so the server deletes only that one.
    */
   const remove = useCallback(
-    (id: string, holdMs = 0, seen?: AnswerMark & { slotAt?: string }) => {
+    (id: string, holdMs = 0, seen?: AnswerMark & { slotAt?: string; runId?: string }) => {
       const now = Date.now()
       setQ((q) => enqueueDelete(q, id, new Date(now).toISOString(), holdMs > 0 ? new Date(now + holdMs).toISOString() : undefined, seen))
       if (holdMs > 0) armDeleteTimer()
@@ -475,7 +485,46 @@ export function useAudit(account: string) {
       ),
     [queue],
   )
-  const undoRemove = useCallback((id: string) => setQ((q) => cancelDelete(q, id)), [setQ])
+  /**
+   * Undo: true when the delete was taken back. False when its Undo time is
+   * over (a tap that landed late on a busy page) or it already went: the delete
+   * stands, and the page says so rather than closing as if undone (alpha
+   * p9-deletes-01). Only a delete still inside its time can be undone, and none
+   * of those has been sent (the timer sends it once that time is over).
+   */
+  const undoRemove = useCallback(
+    (id: string): boolean => {
+      let undone = false
+      setQ((q) => {
+        const d = q.deletes.find((x) => x.id === id)
+        if (!d || d.refused || deleteIsDue(d, Date.now())) return q
+        undone = true
+        return cancelDelete(q, id)
+      })
+      return undone
+    },
+    [setQ],
+  )
+
+  /**
+   * THE DELETE "DELETED · UNDO" OFFERS, from the stored queue: its time is the
+   * delete's own `notBefore`, the instant it may be sent (alpha p9-deletes-01),
+   * and a reload inside that time offers it again (p9-deletes-03). The latest
+   * delete still in its time; null when none is.
+   */
+  const [undoClock, setUndoClock] = useState(() => Date.now())
+  const undoable: Undoable | null = useMemo(() => {
+    const open = pendingDeletes(queue).filter((d) => d.notBefore && Date.parse(d.notBefore) > undoClock)
+    const d = open.sort((x, y) => Date.parse(y.notBefore!) - Date.parse(x.notBefore!))[0]
+    if (!d?.notBefore) return null
+    const activity = d.restore?.activity ?? d.seen?.activity ?? null
+    return { id: d.id, until: d.notBefore, slotAt: d.slotAt ?? null, runId: d.runId ?? null, activity }
+  }, [queue, undoClock])
+  useEffect(() => {
+    if (!undoable) return
+    const t = window.setTimeout(() => setUndoClock(Date.now()), Math.max(0, Date.parse(undoable.until) - Date.now()))
+    return () => window.clearTimeout(t)
+  }, [undoable, undoClock])
 
   /** A decision: waits for the server, then re-reads. Returns the error sentence, or null. */
   const decide = useCallback(
@@ -515,6 +564,7 @@ export function useAudit(account: string) {
     keepStored,
     remove,
     undoRemove,
+    undoable,
     start: () => decide(() => api.start(crypto.randomUUID())),
     end: () => (runId ? decide(() => api.end(runId)) : Promise.resolve("No audit is running")),
     mute: (option: MuteOption) => (runId ? decide(() => api.mute(runId, option)) : Promise.resolve("No audit is running")),

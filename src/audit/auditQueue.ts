@@ -44,6 +44,8 @@ export interface QueuedDelete {
   seen?: AnswerMark
   /** Its quarter, to name it when the server refuses the delete. */
   slotAt?: string
+  /** Its audit, so an answer given again for that quarter inside the Undo time replaces it. */
+  runId?: string
   /**
    * The server refused it: another device changed the answer since
    * (`stored`), or it refused it outright. Not sent again until he chooses
@@ -260,17 +262,19 @@ export function enqueueDelete(
   id: string,
   at: string = new Date().toISOString(),
   notBefore?: string,
-  drawn?: AnswerMark & { slotAt?: string },
+  drawn?: AnswerMark & { slotAt?: string; runId?: string },
 ): AuditQueue {
   const waiting = q.answers.find((a) => a.id === id)
   const seen = waiting ? (waiting.was ?? undefined) : drawn ? markOf(drawn) : undefined
   const slotAt = waiting?.slotAt ?? drawn?.slotAt
+  const runId = waiting?.runId ?? drawn?.runId
   const entry: QueuedDelete = {
     id,
     at,
     ...(notBefore ? { notBefore, ...(waiting ? { restore: waiting } : {}) } : {}),
     ...(seen ? { seen } : {}),
     ...(slotAt ? { slotAt } : {}),
+    ...(runId ? { runId } : {}),
   }
   return {
     ...q,
