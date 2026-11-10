@@ -1,0 +1,297 @@
+{
+  "id": "aristotle",
+  "name": "Aristotle",
+  "born": -384,
+  "died": -322,
+  "category": "philosophers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_friends"
+  ],
+  "tagline": "The philosopher who taught that a man's character is built by what he does again and again.",
+  "startedFrom": "He was born in 384 BC in Stagira, a small city in the Macedonian region of northeastern Greece; his father, Nicomachus, was physician to Amyntas, king of Macedon. At about seventeen he went to Athens to study at Plato's Academy and stayed twenty years. As a resident alien, not an Athenian citizen, he may have been passed over for the Academy's leadership in favour of Plato's nephew Speusippus; the IEP gives this as one explanation of why he left.",
+  "values": [
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He joined Plato's Academy at seventeen and stayed with Plato twenty years.",
+          "sourceId": "dl-hicks",
+          "locator": "Book V, sect. 9 (Hicks numbering)"
+        },
+        {
+          "kind": "deed",
+          "claim": "At the Academy he gained his encyclopedic knowledge of the philosophical tradition, which he draws on throughout his works.",
+          "sourceId": "iep",
+          "locator": "Section 1, Life and Lost Works"
+        },
+        {
+          "kind": "witness",
+          "claim": "Diogenes Laertius calls him Plato's most genuine disciple.",
+          "sourceId": "dl-hicks",
+          "locator": "Book V, sect. 1 (Hicks numbering)"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that we must strain every nerve to live in accordance with the best thing in us, and that the life according to reason is also the happiest.",
+          "sourceId": "ne-ross",
+          "locator": "Book X, ch. 7"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He opened the Metaphysics with 'ALL men by nature desire to know', and wrote that men first began to philosophize owing to their wonder.",
+          "sourceId": "metaphysics-ross",
+          "locator": "Book I, Part 1 and Part 2"
+        },
+        {
+          "kind": "deed",
+          "claim": "At Assos (from 347 BC) he in all likelihood began to expand his researches into marine biology, and he went on with empirical research on Lesbos with Theophrastus.",
+          "sourceId": "sep-shields",
+          "locator": "Section 1, Aristotle's Life"
+        },
+        {
+          "kind": "witness",
+          "claim": "The IEP notes he gave the earliest report of the bee waggle dance and drew on animal anatomy seen at sacrifices.",
+          "sourceId": "iep",
+          "locator": "Section 3.a.ii, Biology (bee dance); 3.a.i, Cosmology and Geology (sacrifices, HA 496b25)"
+        }
+      ]
+    },
+    {
+      "word": "Friendship",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that without friends no one would choose to live, though he had all other goods, and gave two books of his Ethics to friendship.",
+          "sourceId": "ne-ross",
+          "locator": "Book VIII, ch. 1 (Books VIII-IX on friendship)"
+        },
+        {
+          "kind": "deed",
+          "claim": "After Plato's death he stayed three years with Hermias, ruler of Atarneus; when Hermias was killed by the Persian king he wrote a hymn to him that ends on 'the grace of lasting friendship', and an inscription for his statue at Delphi. The hymn was later the ground of an impiety charge against him.",
+          "sourceId": "dl-hicks",
+          "locator": "Book V, sects. 5-9 (Hicks numbering)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Christopher Shields calls Hermias his host and 'a friend and former Academic', and says that on Lesbos he worked together with Theophrastus.",
+          "sourceId": "sep-shields",
+          "locator": "Section 1, Aristotle's Life"
+        },
+        {
+          "kind": "deed",
+          "claim": "His will names Theophrastus among the five men to take charge of Herpyllis, his children and his property; Theophrastus took over his school when he withdrew to Chalcis.",
+          "sourceId": "dl-hicks",
+          "locator": "Book V, sect. 12 (will) and sect. 36 (Life of Theophrastus) (Hicks numbering)"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 343 BC, at King Philip's request, he went to Pella to tutor Philip's thirteen-year-old son Alexander, probably for two or three years.",
+          "sourceId": "sep-shields",
+          "locator": "Section 1, Aristotle's Life"
+        },
+        {
+          "kind": "deed",
+          "claim": "At the Lyceum he would walk up and down discussing philosophy with his pupils, which is said to give the school its name, Peripatetic.",
+          "sourceId": "dl-hicks",
+          "locator": "Book V, sect. 2 (Hicks numbering)"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that no one will doubt that the legislator should direct his attention above all to the education of youth.",
+          "sourceId": "politics-jowett",
+          "locator": "Book VIII, Part I"
+        }
+      ]
+    },
+    {
+      "word": "Wisdom",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Criticising his teacher's theory of Forms, he wrote that as philosophers or lovers of wisdom, piety requires us to honour truth above our friends.",
+          "sourceId": "ne-ross",
+          "locator": "Book I, ch. 6"
+        },
+        {
+          "kind": "deed",
+          "claim": "He studied under Plato for twenty years but is famous for rejecting Plato's theory of forms.",
+          "sourceId": "iep",
+          "locator": "Introduction (opening summary)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Maimonides called him the chief of the philosophers, and medieval scholastics referred to him simply as 'The Philosopher'.",
+          "sourceId": "iep",
+          "locator": "Section 5, Aristotle's Influence"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "You become the kind of man you are by what you do again and again: just by doing just acts, brave by doing brave acts.",
+      "sourceId": "ne-ross",
+      "locator": "Book II, ch. 1"
+    },
+    {
+      "text": "Judge a life as a whole: one good day or a short good spell does not make a man happy.",
+      "sourceId": "ne-ross",
+      "locator": "Book I, ch. 7"
+    },
+    {
+      "text": "Getting angry or spending money is easy; doing it to the right person, to the right extent, at the right time and in the right way is the hard part.",
+      "sourceId": "ne-ross",
+      "locator": "Book II, ch. 9"
+    },
+    {
+      "text": "Honour the truth above your friends, even when the view you are testing is your own teacher's.",
+      "sourceId": "ne-ross",
+      "locator": "Book I, ch. 6"
+    },
+    {
+      "text": "Treat friends as a necessity of a good life, not a luxury.",
+      "sourceId": "ne-ross",
+      "locator": "Book VIII, ch. 1"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "So too we become just by doing just acts, temperate by doing temperate acts, brave by doing brave acts.",
+      "sourceId": "ne-ross",
+      "locator": "Book II, ch. 1",
+      "translation": "W. D. Ross, 1908"
+    },
+    {
+      "text": "For one swallow does not make a summer, nor does one day; and so too one day, or a short time, does not make a man blessed and happy.",
+      "sourceId": "ne-ross",
+      "locator": "Book I, ch. 7",
+      "translation": "W. D. Ross, 1908"
+    },
+    {
+      "text": "Any one can get angry—that is easy—or give or spend money; but to do this to the right person, to the right extent, at the right time, with the right motive, and in the right way, that is not for every one, nor is it easy.",
+      "sourceId": "ne-ross",
+      "locator": "Book II, ch. 9",
+      "translation": "W. D. Ross, 1908"
+    },
+    {
+      "text": "For without friends no one would choose to live, though he had all other goods.",
+      "sourceId": "ne-ross",
+      "locator": "Book VIII, ch. 1",
+      "translation": "W. D. Ross, 1908"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 335 BC he returned to Athens and set up his own school in a public exercise ground dedicated to Apollo Lykeios: the Lyceum. Diogenes Laertius reports that he walked up and down there discussing philosophy with his pupils, which is one account of the name Peripatetic. Its members researched botany, biology, logic, medicine, ethics, politics and more, and collected manuscripts, by some ancient accounts building the first great library of antiquity. He led the school for thirteen years, until he left Athens for Chalcis in 323 BC.",
+    "sourceIds": [
+      "sep-shields",
+      "dl-hicks"
+    ]
+  },
+  "shadow": {
+    "text": "In the Politics he argued that some men are slaves by nature, and that 'for these latter slavery is both expedient and right' (Book I, Part V). In the same book he wrote that 'the male is by nature superior, and the female inferior', and that a woman has a deliberative faculty 'but it is without authority', while a slave has none (Book I, Parts V and XIII). Fred Miller, in the Stanford Encyclopedia, writes that he asserts the slave's lack of a deliberative faculty 'without evidence', and makes his claim about women 'without substantiation'. He owned slaves himself: his will, as Diogenes Laertius gives it, frees some of them only when his daughter marries and others at the proper age 'if they deserve it'. Herpyllis, the mother of his son Nicomachus, is called his concubine by Diogenes; some scholars suppose she was his slave, others that she was a freed woman and likely his wife.",
+    "sourceIds": [
+      "politics-jowett",
+      "sep-miller",
+      "dl-hicks",
+      "sep-shields"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you do over and over this week, and what kind of man is it making you?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Nicomachean Ethics",
+      "year": "4th century BC"
+    },
+    {
+      "title": "Politics",
+      "year": "4th century BC"
+    }
+  ],
+  "sources": [
+    {
+      "id": "ne-ross",
+      "kind": "primary",
+      "title": "Nicomachean Ethics",
+      "author": "Aristotle, translated by W. D. Ross",
+      "year": 1908,
+      "publisher": "Clarendon Press (text at the Internet Classics Archive, MIT)",
+      "url": "https://classics.mit.edu/Aristotle/nicomachaen.html"
+    },
+    {
+      "id": "politics-jowett",
+      "kind": "primary",
+      "title": "Politics",
+      "author": "Aristotle, translated by Benjamin Jowett",
+      "year": 1885,
+      "publisher": "Clarendon Press (text at the Internet Classics Archive, MIT)",
+      "url": "https://classics.mit.edu/Aristotle/politics.html"
+    },
+    {
+      "id": "metaphysics-ross",
+      "kind": "primary",
+      "title": "Metaphysics",
+      "author": "Aristotle, translated by W. D. Ross",
+      "year": 1908,
+      "publisher": "Clarendon Press (text at the Internet Classics Archive, MIT)",
+      "url": "https://classics.mit.edu/Aristotle/metaphysics.html"
+    },
+    {
+      "id": "dl-hicks",
+      "kind": "secondary",
+      "title": "Lives of the Eminent Philosophers, Book V: Aristotle",
+      "author": "Diogenes Laertius, translated by R. D. Hicks",
+      "year": 1925,
+      "publisher": "Loeb Classical Library (text at Wikisource)",
+      "url": "https://en.wikisource.org/wiki/Lives_of_the_Eminent_Philosophers/Book_V"
+    },
+    {
+      "id": "sep-shields",
+      "kind": "secondary",
+      "title": "Aristotle",
+      "author": "Christopher Shields, Stanford Encyclopedia of Philosophy",
+      "year": 2020,
+      "url": "https://plato.stanford.edu/entries/aristotle/"
+    },
+    {
+      "id": "sep-miller",
+      "kind": "secondary",
+      "title": "Aristotle's Political Theory",
+      "author": "Fred Miller, Stanford Encyclopedia of Philosophy",
+      "year": 2022,
+      "url": "https://plato.stanford.edu/entries/aristotle-politics/"
+    },
+    {
+      "id": "iep",
+      "kind": "secondary",
+      "title": "Aristotle (384 B.C.E.-322 B.C.E.)",
+      "author": "Justin Humphreys, Internet Encyclopedia of Philosophy",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://iep.utm.edu/aristotle/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Greek philosopher (384-322 BC), not fictional, not a living politician or founder of a living religion, and no account of sexual contact with a minor or of sexual violence was found; he is in, with a documented dark side in his defence of natural slavery, his ranking of women below men, and his own slaveholding."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I attacked all five values and checked every quote, claim and locator against Ross's Ethics and Metaphysics, Jowett's Politics, Hicks's Diogenes Laertius and the SEP and IEP entries. Friendship was the weakest: its will evidence (statues of Nicanor, Proxenus and Arimnestus) shows memorials, not friendship, so it was replaced by his three years with Hermias, the hymn praising 'lasting friendship', Shields's 'a friend and former Academic', and the trust he put in Theophrastus; with that it held on three sources. Learning, Curiosity, Mentorship and Wisdom held, all four quotes were found word for word, and I fixed five small points (northeastern Greece, the SEP's 'in all likelihood', the X.7 wording, the 'truth above friends' principle, Miller on women in the shadow).",
+    "checkedOn": "2026-11-10"
+  }
+}
