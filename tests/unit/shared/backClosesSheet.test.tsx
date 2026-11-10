@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import * as React from 'react'
 import { describe, test, expect, vi, afterEach, beforeEach } from 'vitest'
-import { render, screen, cleanup, fireEvent, act, waitFor } from '@testing-library/react'
+import { render, screen, cleanup, fireEvent, act } from '@testing-library/react'
 
 import { BottomSheet } from '@/components/BottomSheet'
 import { HistoryBarrierProvider } from '@/src/shared/HistoryBarrierContext'
