@@ -1,0 +1,335 @@
+{
+  "id": "genghis-khan",
+  "name": "Genghis Khan",
+  "born": "c. 1162",
+  "died": 1227,
+  "category": "warriors",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "An abandoned boy who united the Mongols and promoted men for loyalty and deeds.",
+  "startedFrom": "He was born Temüjin; the year is uncertain, and 1155, 1162 and 1167 are all given. His father Yesügei, a minor Mongol chief, was killed by Tatars when the boy was nine. The Tayichi'ut kinsmen then moved away and left his widowed mother and her small children on their own; the Secret History says they lived on wild fruit, roots and fish. As a youth he was captured by the Tayichi'ut and held in a wooden neck-collar until he escaped.",
+  "values": [
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Abandoned by the Tayichi'ut after his father's death, the family survived on crab apples, roots, wild onions and fish from the Onan River.",
+          "sourceId": "sh-rachewiltz",
+          "locator": "§§73-75, pp. 17-18"
+        },
+        {
+          "kind": "deed",
+          "claim": "Held prisoner by the Tayichi'ut in a wooden cangue, he struck his guard, lay in the river with only his face above water, and escaped with the help of Sorqan Shira's family.",
+          "sourceId": "sh-rachewiltz",
+          "locator": "§§81-87, pp. 22-24"
+        },
+        {
+          "kind": "deed",
+          "claim": "Beaten by Ong Khan's Kereyit in 1203 and deserted by most of his troops, he withdrew to the nearly dry Baljuna and was reduced to drinking water squeezed from the mud, with the men who had stayed.",
+          "sourceId": "dohsson-1834",
+          "locator": "vol. 1, livre I ch. II, pp. 71-72 (from Rashid al-Din)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica writes that with the half of his father's people his mother brought back, 'this doubtful material', he held his ground against the plots and attacks of the neighbouring tribes.",
+          "sourceId": "eb1911",
+          "locator": "Jenghiz Khan, vol. 15, first paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Morgan writes that after the family was abandoned 'their life for the next few years is represented as having been very hard', and that he gradually drew young warriors to him.",
+          "sourceId": "iranica-morgan",
+          "locator": "Čengīz Khan, vol. V fasc. 2, third paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Britannica writes that after the family was abandoned it 'led a life of extreme poverty, eating roots and fish', and that, held captive in a wooden collar, he knocked down his guard and fled.",
+          "sourceId": "britannica-bawden",
+          "locator": "section 'Early struggles'"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Morgan writes that the young Temüjin was 'evidently exhibiting remarkable qualities of leadership even at this early stage', drawing warriors from other clans who later became great generals.",
+          "sourceId": "iranica-morgan",
+          "locator": "Čengīz Khan, vol. V fasc. 2, third paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1206, at the source of the Onan, he organised the Mongols into units of a thousand and named 95 commanders, among them Jebe, who had shot his horse, and Sorqan Shira, who had hidden him as a boy.",
+          "sourceId": "sh-rachewiltz",
+          "locator": "§202, pp. 125-126"
+        },
+        {
+          "kind": "words",
+          "claim": "He said his bravest officer (d'Ohsson spells him Yessoutaï) was unfit to command because he never felt hunger, thirst or fatigue: a general must feel them to know what his men suffer and spare their strength.",
+          "sourceId": "dohsson-1834",
+          "locator": "vol. 1, livre I ch. X, p. 403"
+        },
+        {
+          "kind": "witness",
+          "claim": "Britannica's assessment: 'all his life he could attract the loyalties of men willing to serve him, both fellow nomads and civilized men from the settled world.'",
+          "sourceId": "britannica-bawden",
+          "locator": "section 'Assessment'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Reviewing Jack Weatherford's 2004 biography, the Christian Science Monitor reports Weatherford's case that he judged people on their merits and loyalty rather than family, and promoted shepherds and camel tenders to generals; the reviewer adds that scholars may think Weatherford swings the pendulum too far.",
+          "sourceId": "csm-lamb-2004",
+          "locator": "review 'Embrace the inner Genghis', 23 March 2004"
+        }
+      ]
+    },
+    {
+      "word": "Loyalty",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "When Širgü'etü and his sons came saying they had seized their lord Tarqutai but could not bring themselves to hand him over, he told them that had they done it they would have been cut down, and that their thought 'is correct'.",
+          "sourceId": "sh-rachewiltz",
+          "locator": "§149, pp. 66-68"
+        },
+        {
+          "kind": "deed",
+          "claim": "When Jamuqa's last five companions seized him and brought him in, he had the companions cut down in Jamuqa's presence for raising their hands against their lord.",
+          "sourceId": "sh-rachewiltz",
+          "locator": "§200, pp. 121-122"
+        },
+        {
+          "kind": "deed",
+          "claim": "At Baljuna in 1203 he swore to share sweet and bitter with the men who had not left him; they were later known as the Baljuna men and richly rewarded.",
+          "sourceId": "dohsson-1834",
+          "locator": "vol. 1, livre I ch. II, pp. 71-72"
+        },
+        {
+          "kind": "deed",
+          "claim": "According to d'Ohsson, the men who delivered Jamuqa to him were put to death 'comme coupables de trahison envers leur chef'.",
+          "sourceId": "dohsson-1834",
+          "locator": "vol. 1, livre I ch. II, p. 91"
+        },
+        {
+          "kind": "witness",
+          "claim": "Britannica: 'He had a sense of the value of loyalty, unlike Toghril or Jamuka. Enemies guilty of treachery toward their lords could expect short shrift from him, but he would exploit their treachery at the same time.'",
+          "sourceId": "britannica-bawden",
+          "locator": "section 'Assessment'"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Before the 1202 battle with the Tatars he decreed that no one stop for booty and that anyone who did not turn back to the starting point when ordered be cut down; when his own kinsmen Altan, Quchar and Daritai broke the decree, he had all their booty taken from them.",
+          "sourceId": "sh-rachewiltz",
+          "locator": "§153, pp. 71-72"
+        },
+        {
+          "kind": "witness",
+          "claim": "Juvaini, in his chapter on the laws Genghis Khan framed, writes that the army was divided into tens, hundreds, thousands and ten-thousands, that men arrived 'not a twinkling of an eye before or after the appointed hour', and that a single horseman could be sent to punish even a distant commander.",
+          "sourceId": "juvaini-boyle",
+          "locator": "vol. i, ch. II, p. 31"
+        },
+        {
+          "kind": "witness",
+          "claim": "Britannica writes that after 1206 his troops 'were divided up on the decimal system, were rigidly disciplined', and names organisation and discipline among the fundamental factors in his military successes.",
+          "sourceId": "britannica-bawden",
+          "locator": "sections 'Unification of the Mongol nation' and 'Assessment'"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1204 he questioned the captured Uighur chancellor Tatatungo about the Naiman royal seal, kept him to use it in his own name, and had him teach his sons the Uighur script, laws and customs.",
+          "sourceId": "dohsson-1834",
+          "locator": "vol. 1, livre I ch. II, pp. 88-89"
+        },
+        {
+          "kind": "witness",
+          "claim": "Morgan writes that he 'welcomed the assistance of peoples with greater administrative experience than the Mongols had had', the Uighurs and Khitans, and borrowed from the Uighurs a script for Mongolian, until then unwritten.",
+          "sourceId": "iranica-morgan",
+          "locator": "Čengīz Khan, vol. V fasc. 2, paragraph beginning 'Čengīz's achievement'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Britannica: a minister of the Naiman khan 'taught him the uses of literacy'; after the Khwarazm war he learned from Muslim advisers the 'meaning and importance of towns'; 'He was above all adaptable, a man who could learn.'",
+          "sourceId": "britannica-bawden",
+          "locator": "sections 'Unification of the Mongol nation' and 'Assessment'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Reward the people who stood by you, by name and in public, for what each one did.",
+      "sourceId": "sh-rachewiltz",
+      "locator": "§§202-208, pp. 125-133 ('the great principle whereby services are duly rewarded', §208)"
+    },
+    {
+      "text": "Take on a former enemy who openly owns what he did against you.",
+      "sourceId": "sh-rachewiltz",
+      "locator": "§147, pp. 64-65 (Jebe)"
+    },
+    {
+      "text": "Do not trust someone who betrays his own leader, even when the betrayal helps you.",
+      "sourceId": "sh-rachewiltz",
+      "locator": "§149, p. 68 and §200, p. 122"
+    },
+    {
+      "text": "A leader must feel hunger and tiredness himself, so he knows what his people are carrying.",
+      "sourceId": "dohsson-1834",
+      "locator": "vol. 1, livre I ch. X, p. 403"
+    },
+    {
+      "text": "Set the rules before the fight and apply them to your own family too.",
+      "sourceId": "sh-rachewiltz",
+      "locator": "§153, pp. 71-72"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "As for this one, however, he does not hide his killings and hostile actions; on the contrary, he makes them known. He is a man to have as a companion.",
+      "sourceId": "sh-rachewiltz",
+      "locator": "§147, p. 65 (of Jebe, the enemy archer who had shot his horse, 1201)",
+      "translation": "Igor de Rachewiltz, 2004; shorter version 2015"
+    },
+    {
+      "text": "How could we let men live who have raised their hands against their rightful lord? To whom can such men be companions?",
+      "sourceId": "sh-rachewiltz",
+      "locator": "§200, p. 122 (on the men who handed over Jamuqa, c. 1205)",
+      "translation": "Igor de Rachewiltz, 2004; shorter version 2015"
+    },
+    {
+      "text": "Such a son must a father have",
+      "sourceId": "juvaini-boyle",
+      "locator": "vol. i, ch. XXII, p. 134 (watching Jalal-ad-Din escape across the Indus, 1221, as Juvaini reports it)",
+      "translation": "John Andrew Boyle, 1958"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1206, at the source of the Onan River, the Mongol tribes he had brought together raised the white standard with nine tails and gave him the title of khan. He then organised the people into units of a thousand and named 95 commanders. The list includes Jebe, an archer who had fought for the Tayichi'ut, shot his war horse and admitted it to his face, and Sorqan Shira, who had hidden him in a cart of wool when he escaped as a boy prisoner. He then named his companions' services one by one; to reward Jürchedei he gave him one of his own wives, Ibaqa, 'in deference to the great principle whereby services are duly rewarded'.",
+    "sourceIds": [
+      "sh-rachewiltz"
+    ]
+  },
+  "shadow": {
+    "text": "As a boy, after quarrels over a lark and a fish, he and his brother Qasar shot dead their half-brother Bekter. The historian David Morgan writes that he rose by using his allies, among them Toghril (Ong Khan) and his own sworn brother Jamuqa, 'and discarding them when they had served their turn'; Britannica writes that he exterminated the nobility of the Jürkin clan, his nominal allies, after they plundered his camp. In 1202, after defeating the Tatars, who had killed his father, he and his kinsmen decided to kill every Tatar taller than the linchpin of a cart and enslave the rest, and the Secret History says it was done. In the war on the Khwarazm empire (1219-1223) his armies killed the people of city after city: at Urgench in 1221 Juvaini writes that each soldier was given 24 people to kill; at Merv, taken by his son Tolui, Juvaini says a count over 13 days found more than 1,300,000 dead; at Nishapur, to avenge his son-in-law, everyone was killed except 400 craftsmen, and a local history of Herat puts the dead there at 1,747,000 men, besides women and children. Morgan writes that such figures 'should not be taken too literally' and that it may be doubted anyone was counting, but that the killing was on a scale beyond anything people then had known. Britannica writes that massacre was a weapon he regularly used, that 'massacre was used for its own sake', and that Balkh was slaughtered in spite of a prompt surrender. The Persian vizier Rashid al-Din, writing at the Mongol court some 80 years after his death, reports him saying that a man's greatest joy is to defeat his enemies, take what they own, ride their horses and clasp their daughters and wives in his arms. The Secret History says he took as wives the Tatar sisters Yisügen and Yisüi after their men were killed, having Yisüi's husband cut down, and Gürbesü, mother of the Naiman khan he had destroyed. At Bukhara in 1220, where he was present, Ibn al-Athir (as summarised by the historian Barthold) says the Mongols treated the women with violence; at Merv in 1221 Juvaini records women dragged from their husbands and 'the ravishment of their virgin daughters'.",
+    "sourceIds": [
+      "sh-rachewiltz",
+      "iranica-morgan",
+      "britannica-bawden",
+      "juvaini-boyle",
+      "dohsson-1834",
+      "iranica-melville",
+      "barthold-1928"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Who helped you this week, and did you tell them, by name, what they did?",
+    "principleIndex": 0
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "sh-rachewiltz",
+      "kind": "primary",
+      "title": "The Secret History of the Mongols: A Mongolian Epic Chronicle of the Thirteenth Century (anonymous, written probably 1228 or 1240 at the Mongol court; used in place of writings he did not leave, as the work Iranica calls the single source for his early life; shorter version, edited by John C. Street, of the 2004 Brill translation)",
+      "author": "translated by Igor de Rachewiltz",
+      "year": 2015,
+      "publisher": "Western Washington University, CEDAR open access (CC BY-NC-ND 4.0)",
+      "url": "https://cedar.wwu.edu/cedarbooks/4"
+    },
+    {
+      "id": "juvaini-boyle",
+      "kind": "secondary",
+      "title": "The History of the World-Conqueror, vol. i (Tarikh-i Jahan-gushay, written c. 1252-1260 by a Persian official in Mongol service)",
+      "author": "'Ala-ad-Din 'Ata-Malik Juvaini, translated by John Andrew Boyle",
+      "year": 1958,
+      "publisher": "Manchester University Press; Internet Archive",
+      "url": "https://archive.org/details/historyoftheworl011691mbp"
+    },
+    {
+      "id": "dohsson-1834",
+      "kind": "secondary",
+      "title": "Histoire des Mongols, depuis Tchinguiz-Khan jusqu'à Timour Bey ou Tamerlan, vol. 1 (drawn largely from Rashid al-Din's Jami' al-tawarikh, which d'Ohsson cites)",
+      "author": "Constantin d'Ohsson",
+      "year": 1834,
+      "publisher": "Les frères Van Cleef, La Haye et Amsterdam; Internet Archive",
+      "url": "https://archive.org/details/histoiredesmongo01ohss"
+    },
+    {
+      "id": "iranica-morgan",
+      "kind": "secondary",
+      "title": "Čengīz Khan, Encyclopaedia Iranica vol. V fasc. 2, pp. 133-135",
+      "author": "David O. Morgan",
+      "year": 1990,
+      "publisher": "Encyclopaedia Iranica",
+      "url": "https://www.iranicaonline.org/articles/cengiz"
+    },
+    {
+      "id": "iranica-melville",
+      "kind": "secondary",
+      "title": "Jāmeʿ al-tawārīḵ, Encyclopaedia Iranica (on Rashid al-Din's Compendium of Chronicles, written 1300-10)",
+      "author": "Charles Melville",
+      "year": 2008,
+      "publisher": "Encyclopaedia Iranica",
+      "url": "https://www.iranicaonline.org/articles/jame-al-tawarik"
+    },
+    {
+      "id": "eb1911",
+      "kind": "secondary",
+      "title": "Jenghiz Khan, Encyclopaedia Britannica, 11th edition, vol. 15",
+      "author": "Robert Kennaway Douglas",
+      "year": 1911,
+      "publisher": "Wikisource transcription",
+      "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Jenghiz_Khan"
+    },
+    {
+      "id": "britannica-bawden",
+      "kind": "secondary",
+      "title": "Genghis Khan, Encyclopaedia Britannica online (read in Wayback Machine copies of 6 January 2017, full text, and 9 January 2026)",
+      "author": "Charles R. Bawden",
+      "year": "2017-2026",
+      "publisher": "Encyclopaedia Britannica",
+      "url": "https://www.britannica.com/biography/Genghis-Khan"
+    },
+    {
+      "id": "csm-lamb-2004",
+      "kind": "secondary",
+      "title": "Embrace the inner Genghis (review of Jack Weatherford, Genghis Khan and the Making of the Modern World, Crown 2004)",
+      "author": "Gregory M. Lamb",
+      "year": 2004,
+      "publisher": "The Christian Science Monitor",
+      "url": "https://www.csmonitor.com/2004/0323/p17s01-bogn.html"
+    },
+    {
+      "id": "barthold-1928",
+      "kind": "secondary",
+      "title": "Turkestan Down to the Mongol Invasion, 2nd edition, translated from the Russian (Gibb Memorial Series, n.s. V)",
+      "author": "W. Barthold",
+      "year": 1928,
+      "publisher": "Luzac, London; Internet Archive (Digital Library of India copy)",
+      "url": "https://archive.org/details/in.ernet.dli.2015.2380"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real Mongol ruler (c. 1162-1227), long dead, no politician of today and no founder of a living religion; flagged for the 'greatest joy' saying, wives taken from peoples he had just killed or conquered, and reports of rape by his armies; mass killing of civilians, the killing of his half-brother and the discarding of allies are shadow. Owner case (no recommendation): Rashid al-Din (vizier to the Mongol Il-khans, wrote 1300-10) reports him saying man's greatest delight is to defeat his enemies, take their goods, ride their horses and 'presser dans ses bras leurs filles et leurs femmes' [dohsson-1834 p. 404]; 1202 he took the Tatar sisters Yisügen and Yisüi as wives after the Tatar men were killed and had Yisüi's husband cut down [sh §§154-156]; 1204 he took Gürbesü, mother of the defeated Naiman khan [sh §196]; 1204 he 'examined' the offered Merkit girl Qulan [sh §197]; he gave his wife Ibaqa to an officer as a reward [sh §208]; 1214 the Jin emperor gave him two princesses and 500 youths and maidens [eb1911]; 1220 Bukhara, with him present: Ibn al-Athir, as summarised by Barthold, says the Mongols were 'treating the women with violence' [barthold-1928 p. 410]; 1221 Merv (under Tolui): Juvaini records 'the ravishment of their virgin daughters' [juvaini i, 161-162]. Doubts: the Secret History describes no force against his wives and says he 'loved' Yisügen and Qulan; the saying is a report written about 80 years later, seen only in d'Ohsson's French; Juvaini and Ibn al-Athir describe the armies, not an order from him. Broadbridge (Cambridge UP 2018, per Bryn Hammond's review) treats the Tatar sisters as captured wives whose trauma the sources do not record."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value against the Secret History, Juvaini, d'Ohsson and two modern reference works, Morgan in Encyclopaedia Iranica and Bawden in Britannica, plus a review of Weatherford. All five values held: Britannica independently names his loyalty, discipline, tenacity and readiness to learn, though Morgan and Britannica also record him discarding allies and exploiting treachery, which went into the shadow; the blind pick's Determination and Generosity were not added because the five places were full. The Bukhara 'punishment of God' quote fell because Barthold (1928) calls the speech 'quite beyond belief'; fixes went to the birth date, the Baljuna claim, the setting of the 'services duly rewarded' phrase, and a principle Britannica contradicts. The owner case was re-checked and widened with Ibn al-Athir's Bukhara report and Broadbridge's study of captured wives.",
+    "checkedOn": "2026-11-10"
+  }
+}
