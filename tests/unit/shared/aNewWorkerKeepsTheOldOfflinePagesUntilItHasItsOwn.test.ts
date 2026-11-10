@@ -163,6 +163,8 @@ describe("a new build's worker installed with no signal", () => {
     await w.dispatch("install")
     await w.dispatch("activate")
     w.store.get(NEW)!.set(ORIGIN + "/audit", new Response('<html><script src="/_next/static/chunks/new.js"></script></html>'))
+    // with its script: a page alone does not count as held (alpha test p10-review-pings-06)
+    w.store.get(NEW)!.set(ORIGIN + "/_next/static/chunks/new.js", new Response("new"))
     expect(w.store.has(OLD)).toBe(true)
     const opened = await w.dispatch("fetch", { request: page("/audit") })
     expect(await (opened as Response).text()).toContain("new.js")

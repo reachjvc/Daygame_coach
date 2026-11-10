@@ -31,7 +31,8 @@
  *    was a trap: after a deploy the stored page named chunk files that had been
  *    thrown out with the previous build's cache, so an offline launch drew the
  *    timer and nothing worked. `warmShell` reads the page's own
- *    `/_next/static/` references out of it and stores those too.
+ *    `/_next/static/` references out of it and stores the page only once all of
+ *    those are stored too.
  *
  * 4. NOTHING SIGNED-IN OUTLIVES A SIGN-IN. Cache Storage belongs to the browser,
  *    not to the person. Reaching the login page as a real navigation — a session
@@ -51,7 +52,7 @@
  * 5. ONE STORE PER BUILD. The store is named after the build id in this file's
  *    registration URL (`/sw.js?v=<build>`), so a new build installs a new worker
  *    with a new store and throws the old one away once the new one holds
- *    every page the old one did (`dropOldStores`). A fixed name
+ *    every page the old one did, each with its scripts (`dropOldStores`). A fixed name
  *    would keep stale pages and assets from every past build forever. A build
  *    with no id does not register at all — see OfflineShell.
  *
@@ -145,11 +146,29 @@ async function warmShell(cache, path) {
   }
 
   const html = await response.clone().text()
-  await cache.put(path, response)
 
   // The page names its own scripts and stylesheets. Storing the HTML without
-  // them leaves an offline launch drawing markup that never wakes up.
-  await Promise.allSettled([...shellAssets(html)].map((url) => cache.add(url)))
+  // them leaves an offline launch drawing markup that never wakes up, so the
+  // page is stored only once every one of them is (rule 3). One that failed
+  // leaves this store as it was: a new build's worker installing while only
+  // the scripts fail stored scriptless pages, and the old working copy was
+  // then thrown away as replaced (alpha test p10-review-pings-06).
+  const added = await Promise.allSettled([...shellAssets(html)].map((url) => cache.add(url)))
+  if (added.some((result) => result.status === "rejected")) return
+  await cache.put(path, response)
+}
+
+/**
+ * Does this store hold the page AND every static file it names (rule 3)? A
+ * page stored on a visit, whose scripts then failed to load, is not complete.
+ */
+async function holdsComplete(store, key) {
+  const page = await store.match(key)
+  if (!page) return false
+  for (const asset of shellAssets(await page.clone().text())) {
+    if (!(await store.match(asset))) return false
+  }
+  return true
 }
 
 /**
@@ -224,7 +243,8 @@ async function dropOldStores() {
         if (name.startsWith(SHELL_STORE_PREFIX)) {
           const old = await caches.open(name)
           for (const path of SHELL_PATHS) {
-            if ((await old.match(path)) && !(await current.match(path))) return
+            // Held complete, with its scripts: a page alone is no replacement (alpha test p10-review-pings-06).
+            if ((await old.match(path)) && !(await holdsComplete(current, path))) return
           }
         }
         await caches.delete(name)
@@ -236,17 +256,22 @@ async function dropOldStores() {
  * A STORED COPY, THIS BUILD'S FIRST (review of be70cb5b). `caches.match`
  * searches the stores oldest first, so while an older build's store is kept
  * (above) its copy of a page this build has stored too was the one shown.
- * This worker's store first, then the others newest first.
+ * This worker's store first, then the others newest first. For a page, a copy
+ * stored with all its scripts comes before one without (alpha test
+ * p10-review-pings-06): a page this build stored on a visit whose scripts never
+ * loaded would otherwise hide the older store's working copy.
  */
-async function matchNewestFirst(key) {
-  const own = await (await caches.open(CACHE)).match(key)
-  if (own) return own
-  const names = (await caches.keys()).filter((name) => name !== CACHE).reverse()
+async function matchNewestFirst(key, isPage = false) {
+  const names = [CACHE, ...(await caches.keys()).filter((name) => name !== CACHE).reverse()]
+  let first
   for (const name of names) {
-    const hit = await (await caches.open(name)).match(key)
-    if (hit) return hit
+    const store = await caches.open(name)
+    const hit = await store.match(key)
+    if (!hit) continue
+    if (!isPage || (await holdsComplete(store, key))) return hit
+    first = first || hit
   }
-  return undefined
+  return first
 }
 
 self.addEventListener("activate", (event) => {
@@ -322,7 +347,7 @@ self.addEventListener("fetch", (event) => {
         return response
       })
       .catch(async () => {
-        const hit = await matchNewestFirst(key)
+        const hit = await matchNewestFirst(key, isPage)
         if (hit) return hit
         throw new Error("offline and not cached")
       }),
