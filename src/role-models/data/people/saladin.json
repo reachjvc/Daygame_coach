@@ -1,0 +1,287 @@
+{
+  "id": "saladin",
+  "name": "Saladin",
+  "born": "1137 or 1138",
+  "died": 1193,
+  "category": "warriors",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "The sultan who took Jerusalem in 1187, praised by Christian and Muslim writers alike for his generosity and chivalry.",
+  "startedFrom": "He was born in 1137 or 1138 in the citadel of Tikrit, in today's Iraq, where his father Ayyub, a Kurd, was governor; soon after, the family had to leave the town and went to Mosul. His father and his uncle Shirkuh served the Turkish lords Zengi and Nur ad-Din, and he started out in Nur ad-Din's service. In 1164 his uncle took him to Egypt as his lieutenant.",
+  "values": [
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He gave away whole provinces, once sold one of his farms to have presents for visiting delegations, and at his death left only 47 silver dirhams and one gold piece, and no house, land or garden.",
+          "sourceId": "bahaddin-wilson",
+          "locator": "Part I, ch. I, p. 7 and ch. III, p. 19"
+        },
+        {
+          "kind": "words",
+          "claim": "Baha ad-Din heard him say that there may be someone in the world 'who esteems money of as little value as the dust of the earth', and took it that he meant himself.",
+          "sourceId": "bahaddin-wilson",
+          "locator": "Part I, ch. III, p. 19"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica says 'His generosity and hospitality were proved in his gifts to Richard and his treatment of captives.'",
+          "sourceId": "eb1911",
+          "locator": "Saladin, vol. 24, last paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "World History Encyclopedia writes that his generosity to his kinsmen 'was famed' and notes 'his lack of interest in accumulating personal wealth'.",
+          "sourceId": "whe-saladin",
+          "locator": "section 'Battle of Hattin & Jerusalem'"
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Every Monday and Thursday he sat in public to hear complaints from anyone, and when a man of Damascus complained about his nephew Taqi ad-Din, he made the nephew appear before the court.",
+          "sourceId": "bahaddin-wilson",
+          "locator": "Part I, ch. II, p. 15"
+        },
+        {
+          "kind": "deed",
+          "claim": "When a merchant sued him in the Jerusalem court for a dead slave's money, he named an attorney, sat down beside the man, proved his case with witnesses, and then gave the man a robe of honour and money for his costs.",
+          "sourceId": "bahaddin-wilson",
+          "locator": "Part I, ch. II, pp. 16-18"
+        },
+        {
+          "kind": "witness",
+          "claim": "Lane-Poole writes that 'He claimed and allowed no privileges before the court', and that royal princes or the Sultan himself had to appear before the judge like any ordinary defendant.",
+          "sourceId": "lane-poole",
+          "locator": "ch. XXII, p. 371"
+        },
+        {
+          "kind": "witness",
+          "claim": "Gibbon writes that 'The justice of his divan was accessible to the meanest suppliant against himself and his ministers; and it was only for a kingdom that Saladin would deviate from the rule of equity.'",
+          "sourceId": "gibbon",
+          "locator": "vol. 6, ch. LIX, paragraph on Saladin's character"
+        },
+        {
+          "kind": "witness",
+          "claim": "World History Encyclopedia names 'his growing reputation for justice and generosity' as one of the things that helped him take Aleppo and Mosul in 1183-85.",
+          "sourceId": "whe-saladin",
+          "locator": "section 'Unifying the Muslim World'"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In the great battle on the plain of Acre (1189), when even the centre of his army had fled, he held his ground with a handful of men, rallied them on a rise and led them back into the fight.",
+          "sourceId": "bahaddin-wilson",
+          "locator": "Part I, ch. IV, pp. 22-23"
+        },
+        {
+          "kind": "words",
+          "claim": "Riding the stormy coast road in the winter of 1188-89, he said he meant to follow the Franks across the sea, and told Baha ad-Din: 'I strive for the door of the most glorious of deaths.'",
+          "sourceId": "bahaddin-wilson",
+          "locator": "Part I, ch. V, pp. 26-27"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica credits him with 'the Oriental's power of endurance, alternating with violent and emotional courage'.",
+          "sourceId": "eb1911",
+          "locator": "Saladin, vol. 24, last paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "At Marj Ayyun in June 1179, when part of his army had been put to flight, he rallied the fleeing troops and led a charge that broke the Frankish army and took the Masters of the Temple and the Hospital prisoner.",
+          "sourceId": "lane-poole",
+          "locator": "ch. X, pp. 157-158"
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He prayed at the set hours even when ill or travelling, and in the last year of his life, at Jerusalem, he made up the Ramadan fasts he had missed through illness and war, against his doctor's advice.",
+          "sourceId": "bahaddin-wilson",
+          "locator": "Part I, ch. I, pp. 7-8"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica calls him 'intensely devout and regular in prayers and fasting' and says that 'Above all he typifies the Mahommedan's utter self-surrender to a sacred cause.'",
+          "sourceId": "eb1911",
+          "locator": "Saladin, vol. 24, last paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Lane-Poole writes: 'For above all things Saladin was a devout Moslem. His religion was all the world to him.'",
+          "sourceId": "lane-poole",
+          "locator": "ch. XXII, p. 372"
+        },
+        {
+          "kind": "witness",
+          "claim": "Gibbon calls him 'Both in faith and practice ... a rigid Mussulman' who prayed five times a day and 'scrupulously repaid' the fasts he missed.",
+          "sourceId": "gibbon",
+          "locator": "vol. 6, ch. LIX, paragraph on Saladin's character"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Win people over with gentleness and kindness; do not build your power on bloodshed.",
+      "sourceId": "bahaddin-wilson",
+      "locator": "Part II, ch. CLXXV, p. 392"
+    },
+    {
+      "text": "Stand before the law like anyone else: if a man sues you, answer him in court.",
+      "sourceId": "bahaddin-wilson",
+      "locator": "Part I, ch. II, pp. 16-18"
+    },
+    {
+      "text": "Keep your word, even to an enemy you do not like.",
+      "sourceId": "lane-poole",
+      "locator": "ch. XIV, p. 231"
+    },
+    {
+      "text": "Give freely and keep little for yourself.",
+      "sourceId": "bahaddin-wilson",
+      "locator": "Part I, ch. III, pp. 19-20"
+    },
+    {
+      "text": "Do not hold on to anger against anyone; make peace quickly.",
+      "sourceId": "bahaddin-wilson",
+      "locator": "Part I, ch. VII, pp. 36-37; Part II, ch. CLXXV, p. 392"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I have become great as I am because I have won the hearts of men by gentleness and kindness.",
+      "sourceId": "bahaddin-wilson",
+      "locator": "Part II, ch. CLXXV, p. 392 (to his son az-Zahir, Jerusalem, Ramadan 588 / September 1192)",
+      "translation": "Palestine Pilgrims' Text Society, ed. C. W. Wilson, rev. C. R. Conder, 1897"
+    },
+    {
+      "text": "Beware of bloodshed; trust not in that, for spilt blood never sleeps.",
+      "sourceId": "bahaddin-wilson",
+      "locator": "Part II, ch. CLXXV, p. 392 (to his son az-Zahir, 1192)",
+      "translation": "Palestine Pilgrims' Text Society, ed. C. W. Wilson, rev. C. R. Conder, 1897"
+    },
+    {
+      "text": "It is not the wont of kings to kill kings; but that man had transgressed all bounds, and therefore did I treat him thus.",
+      "sourceId": "bahaddin-wilson",
+      "locator": "Part II, ch. XXXV, p. 115 (to King Guy after killing Reynald of Chatillon, Hattin, July 1187)",
+      "translation": "Palestine Pilgrims' Text Society, ed. C. W. Wilson, rev. C. R. Conder, 1897"
+    },
+    {
+      "text": "The pain leaves me when I am on horseback, and only returns when I dismount.",
+      "sourceId": "bahaddin-wilson",
+      "locator": "Part I, ch. VI, p. 28 (plain of Acre, 1189-90)",
+      "translation": "Palestine Pilgrims' Text Society, ed. C. W. Wilson, rev. C. R. Conder, 1897"
+    }
+  ],
+  "definingMoment": {
+    "text": "In September 1187, three months after Hattin, he besieged Jerusalem, and his miners broke into the north wall. He had sworn to take the city by the sword, but when its defender Balian of Ibelin threatened that the garrison would kill their own women and children and the 5,000 Muslim captives, and wreck the Dome of the Rock and al-Aqsa, he took the surrender on 2 October instead: each man paid ten dinars, each woman five, each child one, and 7,000 poor were freed for one sum of 30,000. His guards kept order in the streets, and he let the Patriarch leave with the church treasure, saying he would not break faith with him. When the forty days ran out, he freed the old people who could not pay. Baha ad-Din was told that he kept nothing of the nearly 220,000 dinars taken.",
+    "sourceIds": [
+      "bahaddin-wilson",
+      "lane-poole"
+    ]
+  },
+  "shadow": {
+    "text": "After Hattin in July 1187 he had every captured knight of the Temple and the Hospital put to death; his own official Baha ad-Din writes that 'he spared not a single one', Lane-Poole counts about 200, and a surviving Templar wrote of 230 Templars beheaded. His chancellor Imad ad-Din, as Steve Tibble quotes him, writes that Saladin said he would 'purify the land of these two impure races', that scholars and Sufis asked to do the killing, and that he watched from his dais 'his face joyful'. At Hattin he struck Reynald of Chatillon with his sword in his tent, as he had sworn to do, after Reynald refused to become a Muslim, and those present finished him off. Lane-Poole, an admiring biographer, writes that in the war for the faith he could be 'stern, almost implacable', and points to 'the list of executions, especially of Templars'. After Nur ad-Din died in 1174 he came into Syria calling himself the servant of the 11-year-old heir es-Salih, took Damascus, Emesa and Hamah, besieged the boy in Aleppo, and in 1175, after beating the Zengid armies, removed es-Salih's name from prayers and coins and ruled in his own name. In 1191 he ordered the young Sufi teacher Suhrawardi put to death for heresy, and after Richard killed the Muslim prisoners at Acre that August, Baha ad-Din records captured Franks 'put to death in the most cruel manner'. At Jerusalem in 1187, those who could not pay their ransom in forty days were made slaves.",
+    "sourceIds": [
+      "bahaddin-wilson",
+      "lane-poole",
+      "tibble-2026",
+      "eb1911",
+      "whe-saladin"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you try to get your way this week by pressure, when gentleness would have won the person over?",
+    "principleIndex": 0
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "bahaddin-wilson",
+      "kind": "primary",
+      "title": "The Life of Saladin ('What Befell Sultan Yusuf'), Palestine Pilgrims' Text Society vol. XIII; written by his own qadi of the army and adviser, who served him from 1188, used in place of writings Saladin did not leave",
+      "author": "Baha ad-Din ibn Shaddad; translation from the French Recueil edition, edited by C. W. Wilson and revised by C. R. Conder",
+      "year": 1897,
+      "publisher": "Committee of the Palestine Exploration Fund, London; Internet Archive scan",
+      "url": "https://archive.org/details/lifesaladin00condgoog"
+    },
+    {
+      "id": "lane-poole",
+      "kind": "secondary",
+      "title": "Saladin and the Fall of the Kingdom of Jerusalem (Heroes of the Nations; first published 1898)",
+      "author": "Stanley Lane-Poole",
+      "year": 1906,
+      "publisher": "G. P. Putnam's Sons; Internet Archive scan",
+      "url": "https://archive.org/details/bub_gb_M7pIVpjuyw0C"
+    },
+    {
+      "id": "eb1911",
+      "kind": "secondary",
+      "title": "Saladin, Encyclopaedia Britannica, 11th edition, vol. 24",
+      "author": "Winifred F. Knox (W. F. K.)",
+      "year": 1911,
+      "publisher": "Wikisource transcription",
+      "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Saladin"
+    },
+    {
+      "id": "whe-saladin",
+      "kind": "secondary",
+      "title": "Saladin, World History Encyclopedia (30 August 2018)",
+      "author": "Mark Cartwright",
+      "year": 2018,
+      "publisher": "World History Encyclopedia",
+      "url": "https://www.worldhistory.org/Saladin/"
+    },
+    {
+      "id": "whe-hattin",
+      "kind": "secondary",
+      "title": "Battle of Hattin, World History Encyclopedia (30 October 2018)",
+      "author": "Mark Cartwright",
+      "year": 2018,
+      "publisher": "World History Encyclopedia",
+      "url": "https://www.worldhistory.org/Battle_of_Hattin/"
+    },
+    {
+      "id": "tibble-2026",
+      "kind": "secondary",
+      "title": "Hattin and the Templars' Last Stand (Medievalists.net, 25 January 2026), quoting Imad ad-Din al-Isfahani, Saladin's chancellor and secretary, and the Templar Terricus",
+      "author": "Steve Tibble (Royal Holloway, University of London)",
+      "year": 2026,
+      "publisher": "Medievalists.net",
+      "url": "https://www.medievalists.net/2026/01/hattin-and-the-templars-last-stand/"
+    },
+    {
+      "id": "gibbon",
+      "kind": "secondary",
+      "title": "The History of the Decline and Fall of the Roman Empire, vol. 6, ch. LIX",
+      "author": "Edward Gibbon",
+      "year": 1788,
+      "publisher": "Strahan and Cadell, London; Project Gutenberg #736",
+      "url": "https://www.gutenberg.org/ebooks/736"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real 12th-century sultan (1137/38-1193), long dead, not a politician of today and not the founder of a religion, with no account of sexual contact with a minor or of sexual violence by him; his dark side is documented and real (execution of the captured Templars and Hospitallers after Hattin, his rise over Nur ad-Din's heir, the killing of Suhrawardi for heresy, killing of prisoners in 1191, enslavement of those who could not pay ransom at Jerusalem)."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I checked every value against Baha ad-Din and Imad ad-Din, who were both his own officials, and looked for independent backing in Lane-Poole (1898), the 1911 Britannica, Gibbon, World History Encyclopedia and Tibble (2026). Kindness fell: Baha ad-Din and Lane-Poole praise his gentleness, but the beheading of about 200-230 bound Templar and Hospitaller prisoners after Hattin (watched, Imad ad-Din says, with 'his face joyful'), his own sword-blow to Reynald of Chatillon, and the cruel killing of Frankish prisoners in 1191 are a repeated pattern, and Lane-Poole himself points to 'the list of executions, especially of Templars'. Justice held against the Suhrawardi execution because Lane-Poole and Gibbon, writing apart, both describe an open court where he answered suits against himself, and Lane-Poole calls the Suhrawardi killing the only severe act outside war; it stays in the shadow. Generosity, Courage and Faith held on three or more sources, all four quotes match the 1897 text, and the tagline, the Balian sentence and the shadow (Reynald added) were corrected.",
+    "checkedOn": "2026-11-10"
+  }
+}
