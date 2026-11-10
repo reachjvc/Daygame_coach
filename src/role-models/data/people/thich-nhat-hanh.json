@@ -1,0 +1,332 @@
+{
+  "id": "thich-nhat-hanh",
+  "name": "Thich Nhat Hanh",
+  "born": 1926,
+  "died": 2022,
+  "category": "sages",
+  "areaIds": [
+    "lm_emotions",
+    "lm_spirituality"
+  ],
+  "tagline": "A monk who taught mindfulness for daily life and worked for peace through war and exile",
+  "startedFrom": "He was born in 1926 in Hue, central Vietnam, the second-youngest of six children; his father was a land-reform official in the imperial administration under the French. He became a novice at Tu Hieu Temple at 16, in 1942, and lived through the famine of 1945. In the late 1950s, after his mother died, he had a depression that, he said, doctors could not help; he said he healed it by mindful walking and breathing.",
+  "values": [
+    {
+      "word": "Peace",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 1 June 1966, at a press conference in Washington, he presented a five-point proposal to end the Vietnam War.",
+          "sourceId": "pv-bio",
+          "locator": "section 'Leaving Vietnam to call for peace'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said the Vietnamese people's objective 'is to have peace', and that they dislike war even more than communism.",
+          "sourceId": "proposal-1966",
+          "locator": "paragraph beginning 'To us, America's first objective'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Martin Luther King, nominating him for the Nobel Peace Prize in January 1967, called him 'an apostle of peace and non-violence'.",
+          "sourceId": "coleman-2017",
+          "locator": "quotation of King's nomination letter"
+        }
+      ]
+    },
+    {
+      "word": "Mindfulness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In the late 1950s he treated his own depression with mindful walking and breathing, as he later told in a Dharma talk of 20 June 2014.",
+          "sourceId": "pv-bio",
+          "locator": "section 'Experimental community'"
+        },
+        {
+          "kind": "words",
+          "claim": "He told members of Congress: 'Life is only available in the present moment,' and taught them mindful breathing.",
+          "sourceId": "lecture-2003",
+          "locator": "paragraphs beginning 'When you sit in your car' and 'In our daily lives'"
+        },
+        {
+          "kind": "witness",
+          "claim": "AP's obituary calls him the monk who helped spread the practice of mindfulness in the West.",
+          "sourceId": "ap-2022",
+          "locator": "first paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Compassion",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After a conference in Singapore in December 1976, he and his colleagues rented two large boats and within a few weeks rescued over eight hundred boat people from the sea.",
+          "sourceId": "pv-bio",
+          "locator": "section 'Boat-people crisis'"
+        },
+        {
+          "kind": "words",
+          "claim": "He told members of Congress: 'It is very important to take the time to sit down and listen with compassion.'",
+          "sourceId": "lecture-2003",
+          "locator": "paragraph beginning 'Mindfulness helps us to not be angry'"
+        },
+        {
+          "kind": "witness",
+          "claim": "AP's obituary says he presented Zen Buddhism, at its essence, as peace through compassionate listening.",
+          "sourceId": "ap-2022",
+          "locator": "paragraph beginning 'There and in talks and retreats'"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After the November 1964 flood he and two colleagues took boats up the Thu Bon River between the lines of fire to bring aid.",
+          "sourceId": "pv-bio",
+          "locator": "section 'Leader in the Buddhist peace & social work movements'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said his 1966 voyage to America 'entails great personal risk for me upon my return to South Vietnam. Yet I assume this risk willingly'.",
+          "sourceId": "proposal-1966",
+          "locator": "paragraph beginning 'I wish, first of all'"
+        },
+        {
+          "kind": "deed",
+          "claim": "After he went abroad in 1966 to campaign against the war, both North and South Vietnam barred him from coming home.",
+          "sourceId": "ap-2022",
+          "locator": "paragraph beginning 'Both North and South Vietnam barred'"
+        }
+      ]
+    },
+    {
+      "word": "Community",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1982 he and his followers bought an old farm in the Dordogne, France, and turned it into the Plum Village practice centre.",
+          "sourceId": "pv-bio",
+          "locator": "section 'Creation of Plum Village'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He founded the Order of Inter-being in Vietnam and later the Plum Village retreat centre in France.",
+          "sourceId": "ap-2022",
+          "locator": "paragraphs beginning 'For most of the remainder' and 'Nhat Hanh plunged into anti-war activism'"
+        },
+        {
+          "kind": "words",
+          "claim": "His Eighth Mindfulness Training says 'true community is rooted in inclusiveness' and in the practice of harmony of views.",
+          "sourceId": "trainings-2012",
+          "locator": "The Eighth Mindfulness Training"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Fight the hatred, not the person: the real enemy is the intolerance and hate inside people, not people.",
+      "sourceId": "letter-1965",
+      "locator": "paragraph beginning 'I believe with all my heart'"
+    },
+    {
+      "text": "Hold no belief so tightly that you would fight or kill for it, not even a Buddhist one.",
+      "sourceId": "trainings-2012",
+      "locator": "The First Mindfulness Training"
+    },
+    {
+      "text": "When anger comes, say and do nothing until you have breathed or walked mindfully and looked at where it comes from.",
+      "sourceId": "trainings-2012",
+      "locator": "The Sixth Mindfulness Training"
+    },
+    {
+      "text": "To end a conflict, listen deeply and speak gently; force cannot remove the wrong ideas behind violence.",
+      "sourceId": "lecture-2003",
+      "locator": "paragraphs beginning 'When you communicate with compassion' and 'We call this loving or gentle speech'"
+    },
+    {
+      "text": "Live in the present moment, because it is the only place where life happens.",
+      "sourceId": "trainings-2012",
+      "locator": "The Seventh Mindfulness Training"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Their enemies are not man. They are intolerance, fanaticism, dictatorship, cupidity, hatred and discrimination which lie within the heart of man.",
+      "sourceId": "letter-1965",
+      "locator": "letter to Martin Luther King Jr., 1 June 1965, paragraph beginning 'I believe with all my heart'"
+    },
+    {
+      "text": "You cannot remove wrong perceptions with a gun.",
+      "sourceId": "lecture-2003",
+      "locator": "Library of Congress lecture, 10 September 2003, paragraph beginning 'We call this loving or gentle speech'"
+    },
+    {
+      "text": "They are not doctrines to fight, kill, or die for.",
+      "sourceId": "trainings-2012",
+      "locator": "The First Mindfulness Training (2012 revision)"
+    },
+    {
+      "text": "This country is able to produce King but cannot preserve King.",
+      "sourceId": "letter-1968",
+      "locator": "letter to Raphael Gould, April 1968, written the morning after he heard of King's assassination, third paragraph"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 1 June 1966, during a speaking tour of the United States, he read a five-point peace plan at a press conference in Washington: a US statement that it wanted a government that answered to the Vietnamese people, an end to the bombing, fighting limited to defence, a time set for US troops to leave, and rebuilding aid with no political strings. The same day the South Vietnamese government denounced him on Saigon radio as a traitor. He could not go home for 39 years; Vietnam let him back only in 2005.",
+    "sourceIds": [
+      "proposal-1966",
+      "pv-bio",
+      "ap-2022",
+      "tricycle-2022"
+    ]
+  },
+  "shadow": {
+    "text": "In a 1965 letter to Martin Luther King he wrote that the Vietnamese monks who burned themselves in protest had not committed suicide, and he later told Oprah Winfrey such a death was 'an act of compassion'; AP's obituary calls this one of the rare controversies of his life. When the communist government let him visit Vietnam in 2005, the banned Unified Buddhist Church of Vietnam said his return gave a 'precious propaganda bonus' to the regime, and its two leaders, held under house arrest, refused to meet him; in 2007 the same church called his second pilgrimage a betrayal. In 2007 his former editor and publisher Arnie Kotler wrote about the end of their partnership; Tricycle's editor summed up the essay's picture of him as 'manipulative, hypocritical, and even litigious', and said he could not comment on whether it was true.",
+    "sourceIds": [
+      "letter-1965",
+      "ap-2022",
+      "ap-2005",
+      "time-2007",
+      "tricycle-2007"
+    ]
+  },
+  "councilQuestion": {
+    "text": "When did anger make you say or do something this week before you had taken one breath?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "The Miracle of Mindfulness",
+      "year": 1975
+    },
+    {
+      "title": "Being Peace",
+      "year": 1987
+    }
+  ],
+  "sources": [
+    {
+      "id": "letter-1965",
+      "kind": "primary",
+      "title": "In Search of the Enemy of Man (letter to Martin Luther King Jr., 1 June 1965; first published in Dialogue, La Boi Press, 1965)",
+      "author": "Thich Nhat Hanh",
+      "year": 1965,
+      "publisher": "Plum Village",
+      "url": "https://plumvillage.org/about/thich-nhat-hanh/letters/in-search-of-the-enemy-of-man"
+    },
+    {
+      "id": "proposal-1966",
+      "kind": "primary",
+      "title": "A Proposal for Peace (statement read at a press conference in Washington, D.C., 1 June 1966; reprinted in Love in Action, 1993)",
+      "author": "Thich Nhat Hanh",
+      "year": 1966,
+      "publisher": "Plum Village",
+      "url": "https://plumvillage.org/about/thich-nhat-hanh/letters/a-proposal-for-peace-1-june-1966"
+    },
+    {
+      "id": "letter-1968",
+      "kind": "primary",
+      "title": "Letter after hearing of Dr. Martin Luther King, Jr.'s assassination (to Raphael Gould, April 1968)",
+      "author": "Thich Nhat Hanh",
+      "year": 1968,
+      "publisher": "Plum Village",
+      "url": "https://plumvillage.org/about/thich-nhat-hanh/letters/letter-after-hearing-of-dr-martin-luther-king-jr-s-assassination"
+    },
+    {
+      "id": "lecture-2003",
+      "kind": "primary",
+      "title": "Leading with Courage and Compassion (lecture to members of Congress, Library of Congress, 10 September 2003; edited transcript)",
+      "author": "Thich Nhat Hanh",
+      "year": 2003,
+      "publisher": "Plum Village",
+      "url": "https://plumvillage.org/about/thich-nhat-hanh/letters/thich-nhat-hanh-address-to-us-congress-september-10-2003"
+    },
+    {
+      "id": "trainings-2012",
+      "kind": "primary",
+      "title": "The Fourteen Mindfulness Trainings (written 1966; revised version presented by him at Plum Village, February 2012)",
+      "author": "Thich Nhat Hanh",
+      "year": 2012,
+      "publisher": "Plum Village",
+      "url": "https://plumvillage.org/mindfulness/the-14-mindfulness-trainings"
+    },
+    {
+      "id": "pv-bio",
+      "kind": "secondary",
+      "title": "Thich Nhat Hanh: Extended Biography (by his own community, not independent of him)",
+      "author": "International Plum Village Community",
+      "year": 2020,
+      "publisher": "Plum Village",
+      "url": "https://plumvillage.org/about/thich-nhat-hanh/thich-nhat-hanh-full-biography/"
+    },
+    {
+      "id": "ap-2022",
+      "kind": "secondary",
+      "title": "Thich Nhat Hanh, influential Zen Buddhist monk, dies at 95",
+      "author": "Hau Dinh, Elaine Kurtenbach and Hrvoje Hranjski (Associated Press)",
+      "year": 2022,
+      "publisher": "Associated Press, via KSAT",
+      "url": "https://www.ksat.com/news/world/2022/01/22/thich-nhat-hanh-influential-zen-buddhist-monk-dies-at-95/"
+    },
+    {
+      "id": "ap-2005",
+      "kind": "secondary",
+      "title": "Exiled monk returns to a changed Vietnam (2 April 2005)",
+      "author": "Associated Press",
+      "year": 2005,
+      "publisher": "Deseret News",
+      "url": "https://www.deseret.com/2005/4/2/19885171/exiled-monk-returns-to-a-changed-vietnam/"
+    },
+    {
+      "id": "time-2007",
+      "kind": "secondary",
+      "title": "The Fighting Monks of Vietnam (2 March 2007)",
+      "author": "Kay Johnson",
+      "year": 2007,
+      "publisher": "Time",
+      "url": "https://time.com/archive/6940235/the-fighting-monks-of-vietnam/"
+    },
+    {
+      "id": "tricycle-2007",
+      "kind": "secondary",
+      "title": "Two Takes on Thich Nhat Hanh (15 August 2007)",
+      "author": "James Shaheen",
+      "year": 2007,
+      "publisher": "Tricycle: The Buddhist Review",
+      "url": "https://tricycle.org/?p=24273"
+    },
+    {
+      "id": "coleman-2017",
+      "kind": "secondary",
+      "title": "Exactly One Year Before His Death Martin Luther King Denounced the War in Vietnam",
+      "author": "Arica L. Coleman",
+      "year": 2017,
+      "publisher": "History News Network",
+      "url": "https://www.historynewsnetwork.org/article/exactly-one-year-before-his-death-martin-luther-ki"
+    },
+    {
+      "id": "tricycle-2022",
+      "kind": "secondary",
+      "title": "Obituary of Thich Nhat Hanh (21 January 2022)",
+      "author": "Joan Duncan Oliver",
+      "year": 2022,
+      "publisher": "Tricycle: The Buddhist Review",
+      "url": "https://tricycle.org/article/thich-nhat-hanh-dies/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Zen monk, no account of sexual violence or of sex with a minor against him, small documented dark side. He founded the Order of Interbeing (1966) and Plum Village (1982), but both sit inside an existing religion: he was ordained in the Linji (Lam Te) school and received dharma transmission as a 42nd-generation teacher of its Lieu Quan line in 1966 (Plum Village biography, confirmed independently by Tricycle's 2022 obituary), and Plum Village says the Order belongs to the Linji (Rinzai) tradition. Founding an order within Buddhism, like Francis of Assisi within Christianity, is not founding a living religion, so the rule does not exclude him (owner may overrule)."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value with his defence of the self-immolations, the Unified Buddhist Church's charge that his returns served the Hanoi regime, and Arnie Kotler's account of him as manipulative; these are single episodes, not a pattern against Peace, Compassion or Community, so all five values held, Courage on three separate sources (Plum Village, his 1966 statement, AP). Service, chosen only by the blind pick, was not added for lack of room. All four quotes were found word for word on Plum Village's copies of the texts; the defining moment's five points, the boat rescue wording and the shadow's mixing of the 2005 and 2007 visits were corrected.",
+    "checkedOn": "2026-11-10"
+  }
+}
