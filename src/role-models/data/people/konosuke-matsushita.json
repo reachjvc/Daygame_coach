@@ -1,0 +1,346 @@
+{
+  "id": "konosuke-matsushita",
+  "name": "Konosuke Matsushita",
+  "born": 1894,
+  "died": 1989,
+  "category": "builders",
+  "areaIds": [
+    "lm_mission",
+    "lm_money"
+  ],
+  "tagline": "Left school at nine, started a socket shop with under 100 yen, and built Panasonic.",
+  "startedFrom": "He was the youngest of eight children of a small landowner who lost the family's home and land in rice speculation in 1899. At nine he left school in the fourth grade to work as an apprentice in a brazier shop and then a bicycle shop in Osaka; by 1913 his parents and most of his brothers and sisters had died. TIME called him a frail orphan; he caught pneumonia wiring a theatre in winter, and the commercial school course he began in 1913 he left in 1914.",
+  "values": [
+    {
+      "word": "Contribution",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 1929 he wrote that society had entrusted the company to him, so it must be run to help society develop and improve people's lives, with profit as the reward for that.",
+          "sourceId": "panasonic-chronicle",
+          "locator": "Company History, 1929: 'Management objective and company creed announced'"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that he told his staff running a business was not a private concern but a public endeavour.",
+          "sourceId": "quest-1988",
+          "locator": "ch. 'In the Grip of War', p. 232"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1927 he launched the National Super-Iron at 3.2 yen, when other irons cost about 5 yen, and planned 10,000 a month to bring the price down.",
+          "sourceId": "panasonic-founder",
+          "locator": "story 2-04, 'Launching the \"Super-Iron\": in 1927 at age 32'"
+        },
+        {
+          "kind": "witness",
+          "claim": "TIME wrote in 1962 that of all the men who built Japan's industry, none had worked so consistently to get its products to Japan's ordinary people.",
+          "sourceId": "time-1962",
+          "locator": "page 2 of 9, section 'King of Taxpayers'"
+        }
+      ]
+    },
+    {
+      "word": "Responsibility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "At the 1964 Atami conference he told the dealers that half the cause of their losses was his company's own complacency, and that it had to address its own failures before blaming them.",
+          "sourceId": "panasonic-chronicle",
+          "locator": "Company History, 1964: 'Atami conference held'"
+        },
+        {
+          "kind": "deed",
+          "claim": "After the Atami conference he took on the post of acting head of sales himself and reformed the sales system.",
+          "sourceId": "php-chronology",
+          "locator": "1920-1973, entry for 1964"
+        },
+        {
+          "kind": "witness",
+          "claim": "Business historian Takeo Kikkawa, quoting Kiyoshi Nakamura, writes that at Atami he listened to the dealers for thirteen hours over three days, measured the company's failings against its 'co-existence and co-prosperity' creed, and then rebuilt the sales system.",
+          "sourceId": "kikkawa-2023",
+          "locator": "Case 15, 'Konosuke Matsushita After WWII', pp. 178-179"
+        },
+        {
+          "kind": "deed",
+          "claim": "In the 1929 slump he halved production and factory hours but kept paying full wages and dismissed no one.",
+          "sourceId": "php-chronology",
+          "locator": "1920-1973, entry for 1929"
+        }
+      ]
+    },
+    {
+      "word": "Building things",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In June 1917 he left a well-paid inspector's job with savings of under 100 yen and set up a socket workshop in his dirt-floored tenement; in March 1918 he founded the works that became Panasonic.",
+          "sourceId": "panasonic-founder",
+          "locator": "story 1-04, 'Setting up his own company and starting a socket business: in 1917 at age 22', and story 2-01"
+        },
+        {
+          "kind": "witness",
+          "claim": "TIME called him a manufacturing and merchandising genius who, starting as a nine-year-old errand boy, built Japan's biggest appliance business from nothing.",
+          "sourceId": "time-1962",
+          "locator": "page 2 of 9, section 'King of Taxpayers'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Kikkawa writes that he built Matsushita Electric into Japan's largest home appliance maker and was called the 'God of Management'.",
+          "sourceId": "kikkawa-2023",
+          "locator": "Case 15, 'Matsushita's Way of Doing Business', pp. 173-174"
+        }
+      ]
+    },
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1923, when wholesalers refused his new bicycle lamp, he sent samples straight to bicycle shops and let them test it; the orders that followed brought the wholesalers back.",
+          "sourceId": "panasonic-founder",
+          "locator": "story 2-02, 'Designing and selling bullet-shaped, battery-powered bicycle lamps: in 1923 at age 28'"
+        },
+        {
+          "kind": "deed",
+          "claim": "TIME reports that when retailers did not believe the lamp would run 30 hours, he left one switched on in each store.",
+          "sourceId": "time-1962",
+          "locator": "page 3 of 9, section 'Neglected Cranny'"
+        },
+        {
+          "kind": "witness",
+          "claim": "TIME described him as 'a daring manufacturing and merchandising genius'.",
+          "sourceId": "time-1962",
+          "locator": "page 2 of 9, section 'King of Taxpayers'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1927, when the whole Japanese market for irons was put at about 100,000 a year, he ordered 10,000 National Super-Irons a month.",
+          "sourceId": "panasonic-founder",
+          "locator": "story 2-04, 'Launching the \"Super-Iron\": in 1927 at age 32'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Encyclopedia of World Biography names a willingness to take risks as a trait that followed him throughout his career.",
+          "sourceId": "ewb-gale",
+          "locator": "entry 'Konosuke Matsushita' (sentence: 'One of the traits that followed Matsushita throughout his career was a willingness to take risks.')"
+        }
+      ]
+    },
+    {
+      "word": "Vision",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 5 May 1932 he announced the company's mission of making goods as plentiful as tap water, with a 250-year plan of ten 25-year periods to fulfil it.",
+          "sourceId": "panasonic-chronicle",
+          "locator": "Company History, 1932: 'First commemoration of company founding held'"
+        },
+        {
+          "kind": "words",
+          "claim": "He told TIME that watching a vagrant drink from a tap in 1932 made him decide the industrialist's mission is to fill the world with products and eliminate wants.",
+          "sourceId": "time-1962",
+          "locator": "page 3 of 9, section 'Neglected Cranny'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Kikkawa writes that in Diamond's 1956 New Year issue he predicted 1956 would be the first year of Japan's great development, and that it did become the first year of high growth.",
+          "sourceId": "kikkawa-2023",
+          "locator": "Case 15, \"'Matsushita's Way of Doing Business' as Practiced by the 'God of Management'\", p. 174"
+        },
+        {
+          "kind": "witness",
+          "claim": "One of his executives told TIME: 'He sees markets before they are there.'",
+          "sourceId": "time-1962",
+          "locator": "page 6 of 9, section 'Trust the Help'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Make useful goods so plentiful and cheap that every family can have them.",
+      "sourceId": "quest-1988",
+      "locator": "ch. 12 'The Mission of Enterprise', tap-water passage pp. 201-202"
+    },
+    {
+      "text": "Treat your business as something society has trusted you with, and run it for society's good.",
+      "sourceId": "panasonic-chronicle",
+      "locator": "Company History, 1929: 'Management objective and company creed announced'"
+    },
+    {
+      "text": "When the people you work with are failing, look at your own mistakes before you blame them.",
+      "sourceId": "panasonic-chronicle",
+      "locator": "Company History, 1964: 'Atami conference held'"
+    },
+    {
+      "text": "In a slump, cut output and hours before you cut people.",
+      "sourceId": "php-chronology",
+      "locator": "1920-1973, entry for 1929"
+    },
+    {
+      "text": "Give each manager a whole business to run, then let him run it.",
+      "sourceId": "panasonic-founder",
+      "locator": "story 2-07, 'Implementing an autonomous management system - Divisional System: in 1933 at age 38'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "This demonstrates the mission of the manufacturer, which is to produce commodities for daily life as abundantly as tap water.",
+      "sourceId": "panasonic-words",
+      "locator": "'The Mission of Manufacturers', from his book 'My Way of Life and Thinking'",
+      "translation": "Panasonic Holdings' English translation (translator not named); Quest for Prosperity (1988) has the same sentence beginning 'It demonstrates'"
+    },
+    {
+      "text": "Before blaming our sales companies for their dependence on our side, I think we have to address our own failures.",
+      "sourceId": "panasonic-chronicle",
+      "locator": "Company History, 1964: 'Atami conference held' (speech on the last day of the Atami conference, 1964)",
+      "translation": "Panasonic Holdings' English translation (translator not named)"
+    },
+    {
+      "text": "If one wants to raise sheep, one must learn the nature of sheep. So with humble heart, I want to study human nature.",
+      "sourceId": "time-1962",
+      "locator": "page 7 of 9, section 'Tea & Flower Petals' (interview, TIME, 23 February 1962)",
+      "translation": "English as printed by TIME (interpreter not named)"
+    },
+    {
+      "text": "I underlined my conviction that running a business and managing an enterprise were not merely a private concern but a public endeavor.",
+      "sourceId": "quest-1988",
+      "locator": "ch. 'In the Grip of War', p. 232 (seen in the Internet Archive full-text search, running head '232 In the Grip of War')",
+      "translation": "PHP Institute English edition, 1988 (translated from his Japanese books; translator not named)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1964 Matsushita's profits fell for the first time since 1950, and most of its dealers were losing money. He called the presidents of all its sales companies and distributors to a three-day meeting at a hot-spring hotel in Atami. They blamed the company, and his managers blamed them back. On the last day he told them half the cause was his own company's complacency and that it must fix its own failures first. He then took over sales himself as acting head and rebuilt the sales system.",
+    "sourceIds": [
+      "panasonic-chronicle",
+      "kikkawa-2023",
+      "php-chronology",
+      "quest-1988"
+    ]
+  },
+  "shadow": {
+    "text": "During the Pacific War his company made goods for the military, and in 1943 it set up Matsushita Shipbuilding and then Matsushita Airplane, which built wooden ships and wooden training planes. In 1946 the Allied occupation ordered him out as president because of this war work and listed his family as a zaibatsu family; petitions from his union and dealers got the order reversed. In 1964, after the discount chain Daiei sold his goods 20% below list price, his company stopped supplying Daiei; the two did not trade again until 1994. In July 1967 Japan's Fair Trade Commission told Matsushita Electric to stop forcing retailers to hold its prices; the company denied it and gave in only in 1971, during a consumer boycott.",
+    "sourceIds": [
+      "panasonic-founder",
+      "time-1962",
+      "kikkawa-2023",
+      "php-chronology",
+      "diamond-2019",
+      "toyokeizai-2025",
+      "ewb-gale"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you blame someone else this week before you checked your own part in it?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "Quest for Prosperity: The Life of a Japanese Industrialist",
+      "year": 1988
+    },
+    {
+      "title": "Not for Bread Alone: A Business Ethos, a Management Ethic",
+      "year": 1984
+    }
+  ],
+  "sources": [
+    {
+      "id": "quest-1988",
+      "kind": "primary",
+      "title": "Quest for Prosperity: The Life of a Japanese Industrialist (autobiography; English edition made from his Japanese books, translator not named)",
+      "author": "Konosuke Matsushita",
+      "year": 1988,
+      "publisher": "PHP Institute",
+      "url": "https://archive.org/details/questforprosperi0000mats"
+    },
+    {
+      "id": "panasonic-founder",
+      "kind": "secondary",
+      "title": "The Founder, Konosuke Matsushita (illustrated life story, stories 1-01 to 4-10)",
+      "author": "Panasonic Holdings Corporation",
+      "year": "undated (read in Internet Archive copies of 2022-2024)",
+      "url": "https://holdings.panasonic/global/corporate/about/history/konosuke-matsushita.html"
+    },
+    {
+      "id": "panasonic-chronicle",
+      "kind": "secondary",
+      "title": "Company History (chronicle pages for 1929, 1932 and 1964)",
+      "author": "Panasonic Holdings Corporation",
+      "year": "undated (read in Internet Archive copies of 2025)",
+      "url": "https://holdings.panasonic/global/corporate/about/history/chronicle/1964.html"
+    },
+    {
+      "id": "panasonic-words",
+      "kind": "secondary",
+      "title": "Konosuke Matsushita Museum, Words of Konosuke Matsushita: The Mission of Manufacturers",
+      "author": "Panasonic Holdings Corporation",
+      "year": "undated (read in Internet Archive copy of 2025)",
+      "url": "https://holdings.panasonic/global/corporate/about/history/panasonic-museum/konosuke/words/word_06.html"
+    },
+    {
+      "id": "php-chronology",
+      "kind": "secondary",
+      "title": "Life of Konosuke Matsushita: chronology 1920-1973 and 1974-1989",
+      "author": "PHP Institute (the institute he founded)",
+      "year": "undated",
+      "url": "https://konosuke-matsushita.com/en/biography/from1920to1973.php"
+    },
+    {
+      "id": "time-1962",
+      "kind": "secondary",
+      "title": "Business Abroad: Following Henry Ford (cover story, 23 February 1962)",
+      "author": "TIME (unsigned)",
+      "year": 1962,
+      "publisher": "TIME",
+      "url": "https://content.time.com/time/subscriber/article/0,33009,895931,00.html"
+    },
+    {
+      "id": "kikkawa-2023",
+      "kind": "secondary",
+      "title": "History of Innovative Entrepreneurs in Japan, Case 15: Konosuke Matsushita: Initiator of the 'Consumer Revolution' Drives High Economic Growth (open access)",
+      "author": "Takeo Kikkawa",
+      "year": 2023,
+      "publisher": "Springer",
+      "url": "https://doi.org/10.1007/978-981-19-9454-8"
+    },
+    {
+      "id": "diamond-2019",
+      "kind": "secondary",
+      "title": "Daiei Nakauchi Isao, Matsushita Denki e no chosenjo (The Legend Interview, with editor's notes; 14 August 2019)",
+      "author": "Diamond editorial department",
+      "year": 2019,
+      "publisher": "Diamond Online",
+      "url": "https://diamond.jp/articles/-/211131"
+    },
+    {
+      "id": "toyokeizai-2025",
+      "kind": "secondary",
+      "title": "'Showa no Shikiho' ni kizamareta Daiei to Matsushita no kobo (12 December 2025)",
+      "author": "Tanaka Hisataka (田中 久貴)",
+      "year": 2025,
+      "publisher": "Toyo Keizai Online",
+      "url": "https://toyokeizai.net/articles/-/923534"
+    },
+    {
+      "id": "ewb-gale",
+      "kind": "secondary",
+      "title": "Konosuke Matsushita (Encyclopedia of World Biography entry, online at Encyclopedia.com)",
+      "author": "Encyclopedia of World Biography (unsigned)",
+      "year": "undated (read online 2026-11-10)",
+      "publisher": "Gale",
+      "url": "https://www.encyclopedia.com/history/encyclopedias-almanacs-transcripts-and-maps/konosuke-matsushita"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Japanese industrialist (1894-1989), founder of Matsushita Electric (now Panasonic); not fictional, not a living politician or campaigner, not the founder of a religion, and no credible account of sexual contact with a minor or of sexual violence was found; he is in, with a documented dark side (war production, the 1946 purge, and the company's fight to hold retail prices)."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked each value against TIME's 1962 cover story, Kikkawa's Springer case study, Panasonic's own history pages and Japanese press on the Daiei price war. Trust fell: it rested on two sources, and TIME itself shows him overruling his managers' forecast and he took over sales personally in 1964; Vision from the blind pick replaced it, backed by the 1932 250-year plan, TIME and Kikkawa. Contribution held despite his fight to keep retail prices up, which stays in the shadow; Boldness gained a third source, and the war-company line now says his company, not he, set up the shipyard.",
+    "checkedOn": "2026-11-10"
+  }
+}
