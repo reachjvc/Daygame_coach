@@ -1,0 +1,332 @@
+{
+  "id": "jocko-willink",
+  "name": "Jocko Willink",
+  "born": 1971,
+  "died": null,
+  "category": "teachers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_mission"
+  ],
+  "tagline": "SEAL commander turned teacher of one idea: own every problem in your world.",
+  "startedFrom": "He was born in 1971 in Torrington, Connecticut, the son of two teachers: his father taught and coached at a regional high school in Litchfield, and his mother later became a school principal. He says he grew up in a small New England town as a rebellious kid, and that his father did not allow him to quit at anything. By his own account, when four SEALs were killed in the 1989 invasion of Panama he felt ashamed that he was not there, went to a recruiting station, and started SEAL training in April 1991.",
+  "values": [
+    {
+      "word": "Responsibility",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In spring 2006 in Ramadi, after a firefight between friendly forces on an operation he led, he told the debrief, with his commanding officer present, that he alone as commander was to blame (his own account).",
+          "sourceId": "tedx-2017",
+          "locator": "talk, account of the debrief (paragraphs beginning 'And I stood up before them' and 'And then I told them that there was only one person at fault')"
+        },
+        {
+          "kind": "words",
+          "claim": "In the book Extreme Ownership he writes of the same incident: 'I was responsible for everything in Task Unit Bruiser' and 'There is only one person to blame for this: me.'",
+          "sourceId": "fox-2015-excerpt",
+          "locator": "excerpt, section 'The Ma'laab District, Ramadi, Iraq: Fog of War'"
+        },
+        {
+          "kind": "words",
+          "claim": "He defines extreme ownership as taking responsibility for everything in your world with no one else to blame.",
+          "sourceId": "ferriss107",
+          "locator": "transcript p. 47"
+        },
+        {
+          "kind": "deed",
+          "claim": "As a troop commander, when his Commodore asked what he needed, he answered 'we're good, sir' and handled his own problems, asking only for things that were truly needed (his own account).",
+          "sourceId": "ferriss107",
+          "locator": "transcript pp. 46-47"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "CNBC reported in 2018 that he wakes at 4:30 a.m., a habit he says he taught himself as a young SEAL after noticing that some of the best people got to work before he did.",
+          "sourceId": "cnbc-2018",
+          "locator": "paragraph beginning 'Willink, who wakes at 4:30 a.m.'"
+        },
+        {
+          "kind": "deed",
+          "claim": "On a visit to Biddle Air National Guard Base on 5 October 2021 he joined airmen for a 5:00 a.m. workout in the base gym; the Air Guard story says he normally starts his day around 4:30 a.m. with a training session.",
+          "sourceId": "dvids-2021",
+          "locator": "paragraph 3, beginning 'Willink normally starts his day'"
+        },
+        {
+          "kind": "words",
+          "claim": "He says practice takes discipline, and that more practice gives more freedom to create: 'another example of how discipline will equal freedom'.",
+          "sourceId": "ferriss187",
+          "locator": "answer to the listener question from Jonathan Mule (creative work)"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He commanded SEAL Team 3's Task Unit Bruiser in Iraq, where his sailors worked closely with the Army's 1st Battalion, 506th Parachute Infantry Regiment.",
+          "sourceId": "stripes-2021",
+          "locator": "paragraph beginning 'In Iraq, where he commanded'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His Silver Star citation (7 April to 21 October 2006) says he 'demonstrated exceptional leadership, operational vision, and courage under fire in the battle for Ramadi'.",
+          "sourceId": "hov-silver-star",
+          "locator": "citation text, second sentence"
+        },
+        {
+          "kind": "deed",
+          "claim": "After Iraq he served as officer in charge of training for all West Coast SEAL Teams and led the development of their leadership training (his company's biography).",
+          "sourceId": "echelonfront-bio",
+          "locator": "biography, sentence beginning 'Jocko returned from Iraq'"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His Silver Star citation says he spearheaded battalion-sized missions, leading his forces in 'high intensity and bloody urban warfare', to set up six combat outposts in Ramadi.",
+          "sourceId": "hov-silver-star",
+          "locator": "citation text, sentence beginning 'Lieutenant Willink spearheaded'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Stars and Stripes reports that the citation for the Silver Star he earned on that deployment praises his courage under fire.",
+          "sourceId": "stripes-2021",
+          "locator": "paragraph beginning 'The citation for Willink's Silver Star'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His father writes that he was awarded a Bronze Star for valor during his first tour in Iraq.",
+          "sourceId": "family-page",
+          "locator": "paragraph on the children, sentence beginning 'He was awarded a bronze star'"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Running West Coast SEAL training, he personally instructed the next generation of SEAL leaders (his company's biography); he later wrote the Way of the Warrior Kid book series for children.",
+          "sourceId": "echelonfront-bio",
+          "locator": "biography, sentences beginning 'Jocko returned from Iraq' and 'Jocko also authored'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In October 2021 he held a question-and-answer session with Air National Guard members on the challenges of being a citizen warrior and balancing military and family life.",
+          "sourceId": "dvids-2021",
+          "locator": "paragraphs beginning 'Willink then went on to a scheduled question-and-answer session' to 'And then that is, to me'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Stars and Stripes reports that an airman at Biddle base prepared for basic training and pushed through technical school with the help of Willink's podcasts.",
+          "sourceId": "stripes-2021",
+          "locator": "paragraph beginning 'Airman 1st Class William Guilfoyle'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Take responsibility for everything in your world, and blame no one else.",
+      "sourceId": "ferriss107",
+      "locator": "transcript p. 47"
+    },
+    {
+      "text": "When something goes wrong, say 'Good', then learn from it and get better.",
+      "sourceId": "ferriss187",
+      "locator": "answer to the listener question from Jeffrey McLeod (internal doubt)"
+    },
+    {
+      "text": "Get up early, every day, and make the discipline decision first thing in the morning.",
+      "sourceId": "cnbc-2018",
+      "locator": "sections 'Listen to your body' and 'Don't sleep in on Saturday'"
+    },
+    {
+      "text": "Lead with humility: ask the people who know more than you for advice.",
+      "sourceId": "ferriss107",
+      "locator": "transcript p. 16"
+    },
+    {
+      "text": "If your boss does not give you what you need, it is your job to explain why you need it.",
+      "sourceId": "ferriss107",
+      "locator": "transcript p. 47"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "That's extreme ownership in a nutshell: you're taking responsibility for everything in your world and there's no one else to blame.",
+      "sourceId": "ferriss107",
+      "locator": "transcript p. 47"
+    },
+    {
+      "text": "Out of the gate, my immediate answer is humility. Because when you're in a situation like that, there's no way that you know everything.",
+      "sourceId": "ferriss107",
+      "locator": "transcript p. 16"
+    },
+    {
+      "text": "Good. I'm going to learn from it. I'm going to get better.",
+      "sourceId": "ferriss187",
+      "locator": "answer to the listener question from Jeffrey McLeod (internal doubt)"
+    },
+    {
+      "text": "Whenever I face anything that's challenging, whenever anything sucks, I like it. It's going to make me tougher.",
+      "sourceId": "stripes-2021",
+      "locator": "paragraph beginning 'The crowd laughs' (speech at Biddle Air National Guard Base, 19 April 2021)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In spring 2006 in Ramadi, Iraq, on an operation he was in charge of, friendly units fought each other by mistake: one Iraqi soldier was killed and others were wounded, among them one of his SEALs. His commanding officer stopped all operations and came with an investigating officer for a debrief. By his own account he had prepared a list of everyone's mistakes, but at the debrief he told his men and his superiors that he, as the commander, was the only one to blame, and set out new procedures. He says his commanding officer trusted him more afterwards.",
+    "sourceIds": [
+      "tedx-2017"
+    ]
+  },
+  "shadow": {
+    "text": "In April 2024, answering a letter attributed to a Marine officer, Willink said on his podcast that the claim that his Task Unit Bruiser caused Marine deaths in Ramadi was 'a sickening lie'. In August 2024 the journalist Seth Hettena published accounts by two Marines who served in Ramadi in 2006, Capt. Ryan Thornton and Sgt. Graham Platner, that Bruiser's SEAL snipers shot unarmed people; Thornton said they were 'gut-shooting women' from the hospital. Hettena writes that Willink had acknowledged on his podcast that Bruiser snipers killed unarmed civilians in a 'small number' of instances, which Willink said were investigated. In a written statement to Hettena, Willink said that 'No women or children were ever engaged' and that every engagement was deemed within the rules of engagement. He warned that people making such claims 'clearly expose themselves to swift legal action', and Hettena wrote that Willink had threatened to sue him.",
+    "sourceIds": [
+      "jocko-434-5",
+      "hettena-2024"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you blame someone else this week for a problem that was yours to own?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Extreme Ownership: How U.S. Navy SEALs Lead and Win (with Leif Babin)",
+      "year": 2015
+    },
+    {
+      "title": "Discipline Equals Freedom: Field Manual",
+      "year": 2017
+    }
+  ],
+  "sources": [
+    {
+      "id": "ferriss107",
+      "kind": "primary",
+      "title": "The Tim Ferriss Show #107: Jocko Willink (podcast, September 2015; official transcript PDF)",
+      "author": "Jocko Willink, interviewed by Tim Ferriss",
+      "year": 2015,
+      "publisher": "Tim Ferriss",
+      "url": "https://tim.blog/wp-content/uploads/2018/08/107-jocko-willink.pdf"
+    },
+    {
+      "id": "fox-2015-excerpt",
+      "kind": "primary",
+      "title": "Read an excerpt from 'Extreme Ownership' (20 October 2015; reprinted by permission of St. Martin's Press)",
+      "author": "Jocko Willink (book co-written with Leif Babin)",
+      "year": 2015,
+      "publisher": "Fox News",
+      "url": "https://www.foxnews.com/opinion/read-an-excerpt-from-extreme-ownership"
+    },
+    {
+      "id": "ferriss187",
+      "kind": "primary",
+      "title": "The Tim Ferriss Show #187: Jocko Willink on Discipline, Leadership, and Overcoming Doubt (podcast, 21 September 2016; official transcript)",
+      "author": "Jocko Willink, interviewed by Tim Ferriss",
+      "year": 2016,
+      "publisher": "Tim Ferriss",
+      "url": "https://tim.blog/2018/06/04/the-tim-ferriss-show-transcripts-jocko-willink-on-discipline-leadership-and-overcoming-doubt/"
+    },
+    {
+      "id": "tedx-2017",
+      "kind": "primary",
+      "title": "Extreme Ownership, TEDxUniversityofNevada (video published 2 February 2017; transcript by The Singju Post)",
+      "author": "Jocko Willink",
+      "year": 2017,
+      "publisher": "TEDx Talks",
+      "url": "https://www.youtube.com/watch?v=ljqra3BcqWM"
+    },
+    {
+      "id": "jocko-434-5",
+      "kind": "primary",
+      "title": "Jocko Podcast 434.5: Facts and Clarifications. War Crimes, Murder, and Leadership (23 April 2024; auto-caption transcript)",
+      "author": "Jocko Willink and Echo Charles",
+      "year": 2024,
+      "publisher": "Jocko Podcast",
+      "url": "https://rosetta.to/u/jockopodcastofficial/jocko-podcast-434-5-facts-and-clarifications-war-crimes-murder-and-leadership"
+    },
+    {
+      "id": "echelonfront-bio",
+      "kind": "primary",
+      "title": "Jocko Willink, Co-Founder & CEO (company biography)",
+      "author": "Echelon Front LLC",
+      "year": 2026,
+      "publisher": "Echelon Front",
+      "url": "https://echelonfront.com/team/jocko-willink/"
+    },
+    {
+      "id": "family-page",
+      "kind": "primary",
+      "title": "John Gretton Willink (family history page written by his father)",
+      "author": "John Gretton Willink Sr.",
+      "year": "n.d.",
+      "publisher": "Tjeenk Willink family site",
+      "url": "https://familie.tjeenkwillink.eu/X-12_John_Gretton_Willink.htm"
+    },
+    {
+      "id": "stripes-2021",
+      "kind": "secondary",
+      "title": "Retired SEAL Jocko Willink surprises guard members, tells them to relish adversity (29 April 2021)",
+      "author": "Chad Garland",
+      "year": 2021,
+      "publisher": "Stars and Stripes",
+      "url": "https://www.stripes.com/theaters/us/retired-seal-jocko-willink-surprises-guard-members-tells-them-to-relish-adversity-1.671563"
+    },
+    {
+      "id": "dvids-2021",
+      "kind": "secondary",
+      "title": "Retired SEAL Jocko Willink returns to Biddle Air National Guard Base (7 October 2021)",
+      "author": "Wilfredo Acosta, 111th Attack Wing",
+      "year": 2021,
+      "publisher": "DVIDS, U.S. Department of Defense",
+      "url": "https://www.dvidshub.net/news/406937/retired-seal-jocko-willink-returns-biddle-air-national-guard-base"
+    },
+    {
+      "id": "cnbc-2018",
+      "kind": "secondary",
+      "title": "Former Navy SEAL commander Jocko Willink explains how to train yourself to be an early riser (20 November 2018)",
+      "author": "Emma Newburger",
+      "year": 2018,
+      "publisher": "CNBC Make It",
+      "url": "https://www.cnbc.com/2018/11/20/former-navy-seal-commander-how-to-train-yourself-to-be-an-early-riser.html"
+    },
+    {
+      "id": "hettena-2024",
+      "kind": "secondary",
+      "title": "Exclusive: The Trouble with Task Unit Bruiser (22 August 2024)",
+      "author": "Seth Hettena",
+      "year": 2024,
+      "publisher": "The After-Action Report (Substack)",
+      "url": "https://theiceman.substack.com/p/the-trouble-with-task-unit-bruiser"
+    },
+    {
+      "id": "hov-silver-star",
+      "kind": "secondary",
+      "title": "John Willink, Silver Star citation (Global War on Terrorism, action 7 April to 21 October 2006), Hall of Valor",
+      "author": "Military Times (citation text of the U.S. Navy award)",
+      "year": "n.d.",
+      "publisher": "Military Times",
+      "url": "https://valor.militarytimes.com/recipient/recipient-315878/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living retired U.S. Navy SEAL officer, author, podcaster and business owner who has said he does not want to run for office and holds none; not a politician, campaigner or religious founder, and no credible account of sexual contact with a minor or of sexual violence was found; he is in, with a documented dark side."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value, every quote and every factual sentence against the Ferriss transcripts, the TEDx talk, the Extreme Ownership excerpt, Stars and Stripes, DVIDS, CNBC, his Silver Star citation in the Military Times Hall of Valor and Hettena's 2024 report. Humility fell: every piece of it is his own telling, no outside witness describes him acting humbly, and when Marines accused his unit in 2024 he answered with a legal warning rather than an inquiry. Courage, the blind pick, came in on the Silver Star citation and his father's account of a Bronze Star for valor; Responsibility, Discipline, Leadership and Mentorship held, with Responsibility given a third source in the book excerpt. The shadow was put in date order and now says who says what: the Marines' accounts, Hettena's report of his podcast admission, his written denial and his legal threat.",
+    "checkedOn": "2026-11-10"
+  }
+}
