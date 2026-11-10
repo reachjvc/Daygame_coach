@@ -4,81 +4,343 @@
   "born": 1770,
   "died": 1827,
   "category": "artists",
-  "areaIds": ["lm_mission", "lm_mindset"],
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
   "tagline": "A composer who kept writing music while he went deaf.",
   "startedFrom": "He was born in Bonn in 1770. His father was his first teacher, and his schooling stopped at thirteen. His father drank, and in November 1789, before he was nineteen, a decree paid part of his father's salary to him and made him head of the family.",
   "values": [
-    { "word": "Resilience", "evidence": [
-      { "kind": "words", "claim": "Writing to his friend Wegeler about his deafness, he said he would take Fate by the throat and it would not wholly overcome him.", "sourceId": "letters-wegeler-1801", "locator": "Letter to F. G. Wegeler, 16 November 1801 (Thayer/Krehbiel 1921, vol. I, ch. XX)" },
-      { "kind": "words", "claim": "In the Heiligenstadt Testament he wrote that deafness had brought him close to ending his life, that only his art held him back, and that he had chosen patience as his guide.", "sourceId": "heiligenstadt-1802", "locator": "Heiligenstadt Testament, 6 October 1802 (Thayer/Krehbiel 1921, vol. I, ch. XXII, 'Text of the Heiligenstadt Will')" },
-      { "kind": "witness", "claim": "Thayer writes that a month after the despairing Heiligenstadt letter 'the wonderful elasticity of his nature' had let his mind recover.", "sourceId": "thayer-1921-v1", "locator": "vol. I, ch. XXII, section 'A Quick Reversion to Merriment'" },
-      { "kind": "deed", "claim": "On 7 May 1824 he stood on stage at the first performance of his Ninth Symphony; the singer Unger pulled him by the sleeve and pointed him to the applause he had not heard, and then he turned and bowed.", "sourceId": "thayer-1921-v3", "locator": "vol. III, ch. V, account of the concert of 7 May 1824 and note 114" }
-    ] },
-    { "word": "Independence", "evidence": [
-      { "kind": "deed", "claim": "Living in Prince Lichnowsky's house in Vienna, he would not be home every day by half past three for the prince's 4 o'clock dinner and often ate in taverns; on the day he heard the prince had told his man to serve Beethoven first, he hired his own servant.", "sourceId": "thayer-1921-v1", "locator": "vol. I, ch. XIII, Wegeler's account (Wegeler p. 33) as quoted by Thayer" },
-      { "kind": "witness", "claim": "Grove calls him 'eminently independent and impatient of restraint', unlike his teacher Haydn.", "sourceId": "grove-1879", "locator": "vol. 1, 'Beethoven, Ludwig van', p. 168" },
-      { "kind": "words", "claim": "He told Wegeler that his publishers no longer bargained with him: 'I ask, and they pay.'", "sourceId": "letters-wegeler-1801", "locator": "Letter to F. G. Wegeler, 29 June 1801 (Thayer/Krehbiel 1921, vol. I, ch. XX)" }
-    ] },
-    { "word": "Hard work", "evidence": [
-      { "kind": "words", "claim": "He wrote that he lived only in his notes, began a new piece as soon as one was finished, and often worked on three or four at once.", "sourceId": "letters-wegeler-1801", "locator": "Letter to F. G. Wegeler, 29 June 1801 (Thayer/Krehbiel 1921, vol. I, ch. XX); German original and museum translation on the Beethoven-Haus page 'Composing'" },
-      { "kind": "witness", "claim": "Grove writes that as a young man in Bonn he spent his free time in 'assiduous practice and composition', and that his sketchbooks of that time are 'crammed with ideas'.", "sourceId": "grove-1879", "locator": "vol. 1, 'Beethoven, Ludwig van', p. 165" },
-      { "kind": "deed", "claim": "By about mid-June 1805 he had sketched the whole of his opera Fidelio, taking the main numbers in order, in a sketchbook of over 340 pages.", "sourceId": "thayer-1921-v2", "locator": "vol. II, ch. III, sidenote 'The Sketches for Fidelio'" }
-    ] },
-    { "word": "Craft", "evidence": [
-      { "kind": "witness", "claim": "Grove writes that hardly a bar of his music was not rewritten a dozen times; the sketchbooks show 18 attempts at the aria 'O Hoffnung' in Fidelio.", "sourceId": "grove-1879", "locator": "vol. 1, 'Beethoven, Ludwig van', p. 174" },
-      { "kind": "deed", "claim": "The musicologist Susanne Cox writes that the many revisions in his working manuscripts show that writing out the score was not routine work, and that some fair copies turned back into drafts under his corrections.", "sourceId": "cox-2023", "locator": "pp. 190 and 207 (sections on the working manuscripts)" },
-      { "kind": "witness", "claim": "Thayer writes that he never thought the Missa solemnis finished as long as it was still in his hands.", "sourceId": "thayer-1921-v3", "locator": "vol. III, ch. III, before the sidenote 'The Mass Sold to Schlesinger'" }
-    ] },
-    { "word": "Nature", "evidence": [
-      { "kind": "words", "claim": "Writing to his friend Thérèse before a summer in the country, he said he looked forward to wandering among woods, trees, plants and rocks, and that no man on earth could love the country as he did.", "sourceId": "letters-wallace-1866", "locator": "Letter 61, 'To Baroness von Drossdick' (Lady Wallace's heading; undated in that edition)" },
-      { "kind": "witness", "claim": "Thayer calls his love of nature 'a marked trait of his character', fed by long walks in the hills around Vienna, and says he chose his summer homes for it.", "sourceId": "thayer-1921-v1", "locator": "vol. I, ch. XVII, paragraph beginning 'Beethoven's love of nature'" },
-      { "kind": "deed", "claim": "The Beethoven-Haus says that from 1799 he spent most summers in the country, walked daily in all weathers, and composed on his walks with a sketchbook in his pocket.", "sourceId": "beethoven-haus-nature-2017", "locator": "Exhibition guide 'In the open air', section 'Beethoven's life with nature', pp. 1-2" }
-    ] }
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Writing to his friend Wegeler about his deafness, he said he would take Fate by the throat and it would not wholly overcome him.",
+          "sourceId": "letters-wegeler-1801",
+          "locator": "Letter to F. G. Wegeler, 16 November 1801 (Thayer/Krehbiel 1921, vol. I, ch. XX)"
+        },
+        {
+          "kind": "words",
+          "claim": "In the Heiligenstadt Testament he wrote that deafness had brought him close to ending his life, that only his art held him back, and that he had chosen patience as his guide.",
+          "sourceId": "heiligenstadt-1802",
+          "locator": "Heiligenstadt Testament, 6 October 1802 (Thayer/Krehbiel 1921, vol. I, ch. XXII, 'Text of the Heiligenstadt Will')"
+        },
+        {
+          "kind": "witness",
+          "claim": "Thayer writes that a month after the despairing Heiligenstadt letter 'the wonderful elasticity of his nature' had let his mind recover.",
+          "sourceId": "thayer-1921-v1",
+          "locator": "vol. I, ch. XXII, section 'A Quick Reversion to Merriment'"
+        },
+        {
+          "kind": "deed",
+          "claim": "On 7 May 1824 he stood on stage at the first performance of his Ninth Symphony; the singer Unger pulled him by the sleeve and pointed him to the applause he had not heard, and then he turned and bowed.",
+          "sourceId": "thayer-1921-v3",
+          "locator": "vol. III, ch. V, account of the concert of 7 May 1824 and note 114"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Living in Prince Lichnowsky's house in Vienna, he would not be home every day by half past three for the prince's 4 o'clock dinner and often ate in taverns; on the day he heard the prince had told his man to serve Beethoven first, he hired his own servant.",
+          "sourceId": "thayer-1921-v1",
+          "locator": "vol. I, ch. XIII, Wegeler's account (Wegeler p. 33) as quoted by Thayer"
+        },
+        {
+          "kind": "witness",
+          "claim": "Grove calls him 'eminently independent and impatient of restraint', unlike his teacher Haydn.",
+          "sourceId": "grove-1879",
+          "locator": "vol. 1, 'Beethoven, Ludwig van', p. 168"
+        },
+        {
+          "kind": "words",
+          "claim": "He told Wegeler that his publishers no longer bargained with him: 'I ask, and they pay.'",
+          "sourceId": "letters-wegeler-1801",
+          "locator": "Letter to F. G. Wegeler, 29 June 1801 (Thayer/Krehbiel 1921, vol. I, ch. XX)"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that he lived only in his notes, began a new piece as soon as one was finished, and often worked on three or four at once.",
+          "sourceId": "letters-wegeler-1801",
+          "locator": "Letter to F. G. Wegeler, 29 June 1801 (Thayer/Krehbiel 1921, vol. I, ch. XX); German original and museum translation on the Beethoven-Haus page 'Composing'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Grove writes that as a young man in Bonn he spent his free time in 'assiduous practice and composition', and that his sketchbooks of that time are 'crammed with ideas'.",
+          "sourceId": "grove-1879",
+          "locator": "vol. 1, 'Beethoven, Ludwig van', p. 165"
+        },
+        {
+          "kind": "deed",
+          "claim": "By about mid-June 1805 he had sketched the whole of his opera Fidelio, taking the main numbers in order, in a sketchbook of over 340 pages.",
+          "sourceId": "thayer-1921-v2",
+          "locator": "vol. II, ch. III, sidenote 'The Sketches for Fidelio'"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Grove writes that hardly a bar of his music was not rewritten a dozen times; the sketchbooks show 18 attempts at the aria 'O Hoffnung' in Fidelio.",
+          "sourceId": "grove-1879",
+          "locator": "vol. 1, 'Beethoven, Ludwig van', p. 174"
+        },
+        {
+          "kind": "deed",
+          "claim": "The musicologist Susanne Cox writes that the many revisions in his working manuscripts show that writing out the score was not routine work, and that some fair copies turned back into drafts under his corrections.",
+          "sourceId": "cox-2023",
+          "locator": "pp. 190 and 207 (sections on the working manuscripts)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Thayer writes that he never thought the Missa solemnis finished as long as it was still in his hands.",
+          "sourceId": "thayer-1921-v3",
+          "locator": "vol. III, ch. III, before the sidenote 'The Mass Sold to Schlesinger'"
+        }
+      ]
+    },
+    {
+      "word": "Nature",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Writing to his friend Thérèse before a summer in the country, he said he looked forward to wandering among woods, trees, plants and rocks, and that no man on earth could love the country as he did.",
+          "sourceId": "letters-wallace-1866",
+          "locator": "Letter 61, 'To Baroness von Drossdick' (Lady Wallace's heading; undated in that edition)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Thayer calls his love of nature 'a marked trait of his character', fed by long walks in the hills around Vienna, and says he chose his summer homes for it.",
+          "sourceId": "thayer-1921-v1",
+          "locator": "vol. I, ch. XVII, paragraph beginning 'Beethoven's love of nature'"
+        },
+        {
+          "kind": "deed",
+          "claim": "The Beethoven-Haus says that from 1799 he spent most summers in the country, walked daily in all weathers, and composed on his walks with a sketchbook in his pocket.",
+          "sourceId": "beethoven-haus-nature-2017",
+          "locator": "Exhibition guide 'In the open air', section 'Beethoven's life with nature', pp. 1-2"
+        }
+      ]
+    }
   ],
   "principles": [
-    { "text": "When a blow hits you, fight it and keep working; do not let it beat you.", "sourceId": "letters-wegeler-1801", "locator": "Letter to F. G. Wegeler, 16 November 1801" },
-    { "text": "Do not quit before you have done the work you feel called to do.", "sourceId": "heiligenstadt-1802", "locator": "Heiligenstadt Testament, 6 October 1802" },
-    { "text": "Rewrite until it is right; the first idea is only raw material.", "sourceId": "grove-1879", "locator": "vol. 1, 'Beethoven, Ludwig van', p. 174" },
-    { "text": "Good character, not money, is what makes a life happy.", "sourceId": "heiligenstadt-1802", "locator": "Heiligenstadt Testament, 6 October 1802" },
-    { "text": "Always have the next piece of work started before the last one is done.", "sourceId": "letters-wegeler-1801", "locator": "Letter to F. G. Wegeler, 29 June 1801" }
+    {
+      "text": "When a blow hits you, fight it and keep working; do not let it beat you.",
+      "sourceId": "letters-wegeler-1801",
+      "locator": "Letter to F. G. Wegeler, 16 November 1801"
+    },
+    {
+      "text": "Do not quit before you have done the work you feel called to do.",
+      "sourceId": "heiligenstadt-1802",
+      "locator": "Heiligenstadt Testament, 6 October 1802"
+    },
+    {
+      "text": "Rewrite until it is right; the first idea is only raw material.",
+      "sourceId": "grove-1879",
+      "locator": "vol. 1, 'Beethoven, Ludwig van', p. 174"
+    },
+    {
+      "text": "Good character, not money, is what makes a life happy.",
+      "sourceId": "heiligenstadt-1802",
+      "locator": "Heiligenstadt Testament, 6 October 1802"
+    },
+    {
+      "text": "Always have the next piece of work started before the last one is done.",
+      "sourceId": "letters-wegeler-1801",
+      "locator": "Letter to F. G. Wegeler, 29 June 1801"
+    }
   ],
   "quotes": [
-    { "text": "I will take Fate by the throat; it shall not wholly overcome me.", "sourceId": "letters-wegeler-1801", "locator": "Letter to F. G. Wegeler, 16 November 1801 (Thayer/Krehbiel 1921, vol. I, ch. XX)", "translation": "Henry Edward Krehbiel, 1921" },
-    { "text": "only art it was that withheld me, ah it seemed impossible to leave the world until I had produced all that I felt called upon to produce", "sourceId": "heiligenstadt-1802", "locator": "Heiligenstadt Testament, 6 October 1802 (Thayer/Krehbiel 1921, vol. I, ch. XXII, 'Text of the Heiligenstadt Will')", "translation": "Henry Edward Krehbiel, 1921" },
-    { "text": "recommend virtue to your children, it alone can give happiness, not money, I speak from experience", "sourceId": "heiligenstadt-1802", "locator": "Heiligenstadt Testament, 6 October 1802 (Thayer/Krehbiel 1921, vol. I, ch. XXII, 'Text of the Heiligenstadt Will')", "translation": "Henry Edward Krehbiel, 1921" },
-    { "text": "I live only in my notes and when one composition is scarcely ended another is already begun.", "sourceId": "letters-wegeler-1801", "locator": "Letter to F. G. Wegeler, 29 June 1801 (Thayer/Krehbiel 1921, vol. I, ch. XX)", "translation": "Henry Edward Krehbiel, 1921" }
+    {
+      "text": "I will take Fate by the throat; it shall not wholly overcome me.",
+      "sourceId": "letters-wegeler-1801",
+      "locator": "Letter to F. G. Wegeler, 16 November 1801 (Thayer/Krehbiel 1921, vol. I, ch. XX)",
+      "translation": "Henry Edward Krehbiel, 1921"
+    },
+    {
+      "text": "only art it was that withheld me, ah it seemed impossible to leave the world until I had produced all that I felt called upon to produce",
+      "sourceId": "heiligenstadt-1802",
+      "locator": "Heiligenstadt Testament, 6 October 1802 (Thayer/Krehbiel 1921, vol. I, ch. XXII, 'Text of the Heiligenstadt Will')",
+      "translation": "Henry Edward Krehbiel, 1921"
+    },
+    {
+      "text": "recommend virtue to your children, it alone can give happiness, not money, I speak from experience",
+      "sourceId": "heiligenstadt-1802",
+      "locator": "Heiligenstadt Testament, 6 October 1802 (Thayer/Krehbiel 1921, vol. I, ch. XXII, 'Text of the Heiligenstadt Will')",
+      "translation": "Henry Edward Krehbiel, 1921"
+    },
+    {
+      "text": "I live only in my notes and when one composition is scarcely ended another is already begun.",
+      "sourceId": "letters-wegeler-1801",
+      "locator": "Letter to F. G. Wegeler, 29 June 1801 (Thayer/Krehbiel 1921, vol. I, ch. XX)",
+      "translation": "Henry Edward Krehbiel, 1921"
+    }
   ],
   "definingMoment": {
     "text": "On 6 October 1802, at Heiligenstadt near Vienna, he wrote a letter to his brothers that he kept and never sent. He said his growing deafness had brought him close to ending his life, and that only his art had held him back. He wrote that he had chosen patience as his guide. Soon after he went back to Vienna, and the Second Symphony he had finished at Heiligenstadt was first played in April 1803.",
-    "sourceIds": ["heiligenstadt-1802", "thayer-1921-v1", "blain-2024-testament"]
+    "sourceIds": [
+      "heiligenstadt-1802",
+      "thayer-1921-v1",
+      "blain-2024-testament"
+    ]
   },
   "shadow": {
     "text": "After his brother Carl died in November 1815, he fought Carl's widow Johanna in the courts for about five years to be sole guardian of her son Karl, although Carl's last codicil asked that the boy stay with his mother and that the two share the guardianship. On 2 February 1816 the boy was taken from her and put in a boarding school, and Beethoven asked the school not to admit her to him at all. His biographer Thayer says he swung 'from almost cruel severity to almost limitless indulgence' with the boy. On 29 July 1826 Karl shot himself in the head and survived; he told the police that his uncle had 'tormented him too much'. In business, he had promised his Missa solemnis to the publisher Simrock, who kept money on deposit for it from 1820; in 1822 he also offered it to Schlesinger and to Peters, who both accepted, while writing that he would keep his word to Simrock. It went in the end to a fourth publisher, Schott.",
-    "sourceIds": ["thayer-1921-v2", "thayer-1921-v3", "blain-2024-karl"]
+    "sourceIds": [
+      "thayer-1921-v2",
+      "thayer-1921-v3",
+      "blain-2024-karl"
+    ]
   },
-  "councilQuestion": { "text": "When something went wrong this week, did you keep working, or did you let it stop you?", "principleIndex": 0 },
+  "councilQuestion": {
+    "text": "When something went wrong this week, did you keep working, or did you let it stop you?",
+    "principleIndex": 0
+  },
   "readings": [
-    { "title": "Heiligenstadt Testament", "year": "written 1802, found after his death in 1827" },
-    { "title": "Letters to Franz Wegeler of 29 June and 16 November 1801", "year": "written 1801" }
+    {
+      "title": "Heiligenstadt Testament",
+      "year": "written 1802, found after his death in 1827"
+    },
+    {
+      "title": "Letters to Franz Wegeler of 29 June and 16 November 1801",
+      "year": "written 1801"
+    }
   ],
   "sources": [
-    { "id": "heiligenstadt-1802", "kind": "primary", "title": "Heiligenstadt Testament (6 and 10 October 1802), translated by H. E. Krehbiel in Thayer, The Life of Ludwig van Beethoven, vol. I, ch. XXII", "author": "Ludwig van Beethoven", "year": 1921, "publisher": "The Beethoven Association, New York (Project Gutenberg #43591)", "url": "https://www.gutenberg.org/ebooks/43591" },
-    { "id": "letters-wegeler-1801", "kind": "primary", "title": "Letters to Franz Gerhard Wegeler, 29 June and 16 November 1801, translated by H. E. Krehbiel in Thayer, The Life of Ludwig van Beethoven, vol. I, ch. XX", "author": "Ludwig van Beethoven", "year": 1921, "publisher": "The Beethoven Association, New York (Project Gutenberg #43591)", "url": "https://www.gutenberg.org/ebooks/43591" },
-    { "id": "letters-wallace-1866", "kind": "primary", "title": "Beethoven's Letters 1790-1826, from the collection of Dr. Ludwig Nohl, vol. 1, translated by Lady Wallace", "author": "Ludwig van Beethoven", "year": 1866, "publisher": "Project Gutenberg #13065 (text of the 1866 translation)", "url": "https://www.gutenberg.org/ebooks/13065" },
-    { "id": "thayer-1921-v1", "kind": "secondary", "title": "The Life of Ludwig van Beethoven, vol. I", "author": "Alexander Wheelock Thayer, ed. Henry Edward Krehbiel", "year": 1921, "publisher": "The Beethoven Association, New York", "url": "https://www.gutenberg.org/ebooks/43591" },
-    { "id": "thayer-1921-v2", "kind": "secondary", "title": "The Life of Ludwig van Beethoven, vol. II", "author": "Alexander Wheelock Thayer, ed. Henry Edward Krehbiel", "year": 1921, "publisher": "The Beethoven Association, New York", "url": "https://www.gutenberg.org/ebooks/43592" },
-    { "id": "thayer-1921-v3", "kind": "secondary", "title": "The Life of Ludwig van Beethoven, vol. III", "author": "Alexander Wheelock Thayer, ed. Henry Edward Krehbiel", "year": 1921, "publisher": "The Beethoven Association, New York", "url": "https://www.gutenberg.org/ebooks/43593" },
-    { "id": "grove-1879", "kind": "secondary", "title": "Beethoven, Ludwig van, in A Dictionary of Music and Musicians, vol. 1", "author": "George Grove", "year": 1879, "publisher": "Macmillan, London", "url": "https://en.wikisource.org/wiki/A_Dictionary_of_Music_and_Musicians/Beethoven,_Ludwig_van" },
-    { "id": "cox-2023", "kind": "secondary", "title": "Beethoven's 'Concept'. Working Manuscripts Between Sketch and Fair Copy, in Beethoven and the Piano: Philology, Context and Performance Practice (Musikforschung der Hochschule der Künste Bern 16), ed. Leonardo Miucci, Claudio Bacciagaluppi, Daniel Allenbach and Martin Skamletz, pp. 188-209", "author": "Susanne Cox", "year": 2023, "publisher": "Edition Argus, Schliengen", "url": "https://www.hkb-interpretation.ch/fileadmin/user_upload/documents/Publikationen/Bd.16/HKB16_10_Cox_188-209.pdf" },
-    { "id": "blain-2024-testament", "kind": "secondary", "title": "A document of despair: how Beethoven's anguished Heiligenstadt Testament revealed his advancing deafness", "author": "Terry Blain", "year": 2024, "publisher": "Classical Music (BBC Music Magazine), 21 October 2024", "url": "https://www.classical-music.com/features/composers/heiligenstadt-testament" },
-    { "id": "blain-2024-karl", "kind": "secondary", "title": "'My uncle tormented me too much': what drove Beethoven's nephew to attempt suicide?", "author": "Terry Blain", "year": 2024, "publisher": "Classical Music (BBC Music Magazine), 18 November 2024", "url": "https://www.classical-music.com/articles/what-drove-beethovens-nephew-to-attempt-suicide" },
-    { "id": "beethoven-haus-nature-2017", "kind": "secondary", "title": "In the open air: Beethoven and Nature (guide to the special exhibition, 3 November - 19 December 2017)", "author": "Beethoven-Haus Bonn", "year": 2017, "publisher": "Beethoven-Haus Bonn", "url": "https://internet.beethoven.de/pdf-sonderausstellung/Im-Freien-Beethoven-und-die-Natur-Brief-Guide.pdf" },
-    { "id": "beethoven-haus-composing", "kind": "secondary", "title": "Composing (Komponieren): quotations from his letters, with the German originals", "author": "Beethoven-Haus Bonn", "year": "accessed 2026", "publisher": "Beethoven-Haus Bonn", "url": "https://www.beethoven.de/en/g/Komponieren" },
-    { "id": "beethoven-haus-fate", "kind": "secondary", "title": "Fate (Schicksal): quotations from his letters and the Heiligenstadt Testament", "author": "Beethoven-Haus Bonn", "year": "accessed 2026", "publisher": "Beethoven-Haus Bonn", "url": "https://www.beethoven.de/en/g/schicksal" }
+    {
+      "id": "heiligenstadt-1802",
+      "kind": "primary",
+      "title": "Heiligenstadt Testament (6 and 10 October 1802), translated by H. E. Krehbiel in Thayer, The Life of Ludwig van Beethoven, vol. I, ch. XXII",
+      "author": "Ludwig van Beethoven",
+      "year": 1921,
+      "publisher": "The Beethoven Association, New York (Project Gutenberg #43591)",
+      "url": "https://www.gutenberg.org/ebooks/43591"
+    },
+    {
+      "id": "letters-wegeler-1801",
+      "kind": "primary",
+      "title": "Letters to Franz Gerhard Wegeler, 29 June and 16 November 1801, translated by H. E. Krehbiel in Thayer, The Life of Ludwig van Beethoven, vol. I, ch. XX",
+      "author": "Ludwig van Beethoven",
+      "year": 1921,
+      "publisher": "The Beethoven Association, New York (Project Gutenberg #43591)",
+      "url": "https://www.gutenberg.org/ebooks/43591"
+    },
+    {
+      "id": "letters-wallace-1866",
+      "kind": "primary",
+      "title": "Beethoven's Letters 1790-1826, from the collection of Dr. Ludwig Nohl, vol. 1, translated by Lady Wallace",
+      "author": "Ludwig van Beethoven",
+      "year": 1866,
+      "publisher": "Project Gutenberg #13065 (text of the 1866 translation)",
+      "url": "https://www.gutenberg.org/ebooks/13065"
+    },
+    {
+      "id": "thayer-1921-v1",
+      "kind": "secondary",
+      "title": "The Life of Ludwig van Beethoven, vol. I",
+      "author": "Alexander Wheelock Thayer, ed. Henry Edward Krehbiel",
+      "year": 1921,
+      "publisher": "The Beethoven Association, New York",
+      "url": "https://www.gutenberg.org/ebooks/43591"
+    },
+    {
+      "id": "thayer-1921-v2",
+      "kind": "secondary",
+      "title": "The Life of Ludwig van Beethoven, vol. II",
+      "author": "Alexander Wheelock Thayer, ed. Henry Edward Krehbiel",
+      "year": 1921,
+      "publisher": "The Beethoven Association, New York",
+      "url": "https://www.gutenberg.org/ebooks/43592"
+    },
+    {
+      "id": "thayer-1921-v3",
+      "kind": "secondary",
+      "title": "The Life of Ludwig van Beethoven, vol. III",
+      "author": "Alexander Wheelock Thayer, ed. Henry Edward Krehbiel",
+      "year": 1921,
+      "publisher": "The Beethoven Association, New York",
+      "url": "https://www.gutenberg.org/ebooks/43593"
+    },
+    {
+      "id": "grove-1879",
+      "kind": "secondary",
+      "title": "Beethoven, Ludwig van, in A Dictionary of Music and Musicians, vol. 1",
+      "author": "George Grove",
+      "year": 1879,
+      "publisher": "Macmillan, London",
+      "url": "https://en.wikisource.org/wiki/A_Dictionary_of_Music_and_Musicians/Beethoven,_Ludwig_van"
+    },
+    {
+      "id": "cox-2023",
+      "kind": "secondary",
+      "title": "Beethoven's 'Concept'. Working Manuscripts Between Sketch and Fair Copy, in Beethoven and the Piano: Philology, Context and Performance Practice (Musikforschung der Hochschule der Künste Bern 16), ed. Leonardo Miucci, Claudio Bacciagaluppi, Daniel Allenbach and Martin Skamletz, pp. 188-209",
+      "author": "Susanne Cox",
+      "year": 2023,
+      "publisher": "Edition Argus, Schliengen",
+      "url": "https://www.hkb-interpretation.ch/fileadmin/user_upload/documents/Publikationen/Bd.16/HKB16_10_Cox_188-209.pdf"
+    },
+    {
+      "id": "blain-2024-testament",
+      "kind": "secondary",
+      "title": "A document of despair: how Beethoven's anguished Heiligenstadt Testament revealed his advancing deafness",
+      "author": "Terry Blain",
+      "year": 2024,
+      "publisher": "Classical Music (BBC Music Magazine), 21 October 2024",
+      "url": "https://www.classical-music.com/features/composers/heiligenstadt-testament"
+    },
+    {
+      "id": "blain-2024-karl",
+      "kind": "secondary",
+      "title": "'My uncle tormented me too much': what drove Beethoven's nephew to attempt suicide?",
+      "author": "Terry Blain",
+      "year": 2024,
+      "publisher": "Classical Music (BBC Music Magazine), 18 November 2024",
+      "url": "https://www.classical-music.com/articles/what-drove-beethovens-nephew-to-attempt-suicide"
+    },
+    {
+      "id": "beethoven-haus-nature-2017",
+      "kind": "secondary",
+      "title": "In the open air: Beethoven and Nature (guide to the special exhibition, 3 November - 19 December 2017)",
+      "author": "Beethoven-Haus Bonn",
+      "year": 2017,
+      "publisher": "Beethoven-Haus Bonn",
+      "url": "https://internet.beethoven.de/pdf-sonderausstellung/Im-Freien-Beethoven-und-die-Natur-Brief-Guide.pdf"
+    },
+    {
+      "id": "beethoven-haus-composing",
+      "kind": "secondary",
+      "title": "Composing (Komponieren): quotations from his letters, with the German originals",
+      "author": "Beethoven-Haus Bonn",
+      "year": "accessed 2026",
+      "publisher": "Beethoven-Haus Bonn",
+      "url": "https://www.beethoven.de/en/g/Komponieren"
+    },
+    {
+      "id": "beethoven-haus-fate",
+      "kind": "secondary",
+      "title": "Fate (Schicksal): quotations from his letters and the Heiligenstadt Testament",
+      "author": "Beethoven-Haus Bonn",
+      "year": "accessed 2026",
+      "publisher": "Beethoven-Haus Bonn",
+      "url": "https://www.beethoven.de/en/g/schicksal"
+    }
   ],
   "review": {
     "status": "validated",
-    "screen": { "result": "shadow", "notes": "A real, long-dead composer, not a politician or religious founder; no credible account of sexual contact with a minor or of sexual violence was found (one unsourced Vienna tourist-show page making such a claim was checked and no biography, museum or scholarly source carries it); his documented dark side is his fight to take his nephew from the boy's mother, harsh guardianship, and double-dealing with publishers." },
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, long-dead composer, not a politician or religious founder; no credible account of sexual contact with a minor or of sexual violence was found (one unsourced Vienna tourist-show page making such a claim was checked and no biography, museum or scholarly source carries it); his documented dark side is his fight to take his nephew from the boy's mother, harsh guardianship, and double-dealing with publishers."
+    },
     "blindAgreement": 0.6,
     "devilsAdvocate": "I attacked each value and checked every claim against Thayer, Grove, the letters, the Beethoven-Haus and Classical Music, and searched again for any accepted source behind the 'child molester' line on a Vienna tourist-show page; none exists, so he is not flagged. Purpose fell: all its evidence is one 1802 document retold, and it now sits inside Resilience. Nature, the blind pick, came in on his letter, Thayer and the Beethoven-Haus; Craft and Hard work held once a third source each was added. The Ninth Symphony line, the Missa solemnis sale and the school order were rewritten to say only what Thayer says.",
     "checkedOn": "2026-11-10"
