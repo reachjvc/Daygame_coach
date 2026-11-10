@@ -1,0 +1,340 @@
+{
+  "id": "cary-grant",
+  "name": "Cary Grant",
+  "born": 1904,
+  "died": 1986,
+  "category": "charisma",
+  "areaIds": [
+    "lm_relationship",
+    "lm_friends",
+    "lm_mindset"
+  ],
+  "tagline": "A shy Bristol boy who copied the manner he wanted until it became his own.",
+  "startedFrom": "He was born Archibald Leach in Bristol, England, on 18 January 1904, the only child of a father who pressed suits and made only a modest living. When he was nine he came home from school to find his mother gone, and he did not see her again for more than twenty years. He had, in his words, a sketchy education, and at fourteen he left school to join Bob Pender's troupe of acrobats and knockabout comedians.",
+  "values": [
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "With the Pender troupe he learned dancing, tumbling and stilt-walking on a bare stage every day, and how to convey a mood or meaning without words.",
+          "sourceId": "lhj-1963",
+          "locator": "Part 1, Ladies' Home Journal, January 1963, p. 142"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that he watched headline artists from the wings and grew to respect the diligence and long experience it took to acquire expert timing, 'the amount of effort that resulted in such effortlessness'.",
+          "sourceId": "lhj-1963",
+          "locator": "Part 1, Ladies' Home Journal, January 1963, p. 142"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Encyclopedia of World Biography says his later skill at physical comedy and timing owed much to his early training with Pender's group.",
+          "sourceId": "ewb",
+          "locator": "section 'Decides to Become an Actor'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The International Dictionary of Films and Filmmakers calls him a master of light comic acting whose style is the yardstick for others who attempt it.",
+          "sourceId": "idff",
+          "locator": "essay, first paragraph after the bibliography"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Eliot writes that he became a freelance actor-for-hire on a per-film basis in 1937, after his original five-year exclusive deal with Paramount expired.",
+          "sourceId": "eliot-2009",
+          "locator": "p. 11 (Crown ebook edition, Google Books preview)"
+        },
+        {
+          "kind": "deed",
+          "claim": "After years of asking Paramount for light comedy and being ignored, he decided after Suzy (1936) to leave the studio, go freelance and get an agent for the first time.",
+          "sourceId": "bfi-hutchinson-2020",
+          "locator": "paragraphs beginning 'Now Grant knew where he was headed' and 'Indeed, Zukor had mostly ignored his requests'"
+        },
+        {
+          "kind": "words",
+          "claim": "He defended stars who produced their own films, pointing to Chaplin, Pickford and Fairbanks, who made films of their own choosing and ran their own studio.",
+          "sourceId": "lhj-1963",
+          "locator": "Part 2, Ladies' Home Journal, March 1963, p. 35"
+        },
+        {
+          "kind": "witness",
+          "claim": "Geoffrey O'Brien writes that, in a move then radical, he cut himself loose from long-term studio contracts and insisted on freelance status after 1936.",
+          "sourceId": "nyrb-obrien-2004",
+          "locator": "paragraph beginning 'Then, with mysterious suddenness'; paragraph beginning 'He was anchored'"
+        }
+      ]
+    },
+    {
+      "word": "Self-awareness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Shortly after finishing An Affair to Remember (1957) he began supervised LSD therapy on the recommendation of the psychiatrists Mortimer A. Hartman and Arthur Chandler.",
+          "sourceId": "eliot-2009",
+          "locator": "p. 308 (Crown ebook edition, Google Books preview)"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that the therapy let him see which misconceptions, guilts and fears had formed the pattern of his behaviour since childhood.",
+          "sourceId": "lhj-1963",
+          "locator": "Part 3 (conclusion), Ladies' Home Journal, April 1963, p. 152"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that only recently had he begun to unify Archie Leach and Cary Grant into one person.",
+          "sourceId": "lhj-1963",
+          "locator": "Part 1, Ladies' Home Journal, January 1963, p. 53"
+        },
+        {
+          "kind": "witness",
+          "claim": "Geoffrey O'Brien notes that in 1957 he began LSD under medical supervision and, with Betsy Drake, sought out religious, mystical and psychological figures.",
+          "sourceId": "nyrb-obrien-2004",
+          "locator": "paragraph beginning 'In his later years'"
+        }
+      ]
+    },
+    {
+      "word": "Confidence",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that one pretends, or copies someone or some teacher, until it can be done confidently and easily in what becomes one's own manner.",
+          "sourceId": "lhj-1963",
+          "locator": "Part 2, Ladies' Home Journal, March 1963, p. 40"
+        },
+        {
+          "kind": "deed",
+          "claim": "In the late 1920s, after seeing Noel Coward in Private Lives, he copied Coward's gestures and accent on musical-comedy road tours.",
+          "sourceId": "lhj-1963",
+          "locator": "Part 2, Ladies' Home Journal, March 1963, p. 40"
+        },
+        {
+          "kind": "deed",
+          "claim": "In New York in the 1920s he studied screen comedians, did face and neck exercises after remarks about his looks, and worked to retrain his Bristol accent.",
+          "sourceId": "bfi-hutchinson-2020",
+          "locator": "paragraph beginning 'Leach's 1920s were a period of concerted self-improvement'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Geoffrey O'Brien writes that he worked on polishing his image, his manners, his accent and his flair for clothes.",
+          "sourceId": "nyrb-obrien-2004",
+          "locator": "paragraph containing 'He worked on polishing his image'"
+        }
+      ]
+    },
+    {
+      "word": "Humour",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He recalled begging Paramount for years to let him do something other than straight romantic leads: 'I said I should be doing light comedy. They wouldn't listen.'",
+          "sourceId": "bfi-hutchinson-2020",
+          "locator": "paragraph beginning 'Now Grant knew where he was headed'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Once freelance he made the comedies Topper and The Awful Truth (both 1937), the films that made him a star.",
+          "sourceId": "bfi-hutchinson-2020",
+          "locator": "paragraphs on Topper and The Awful Truth, near the end"
+        },
+        {
+          "kind": "witness",
+          "claim": "The International Dictionary of Films and Filmmakers calls him a master of light comic acting.",
+          "sourceId": "idff",
+          "locator": "essay, first paragraph after the bibliography"
+        },
+        {
+          "kind": "witness",
+          "claim": "Geoffrey O'Brien writes that comic situations drew from him exquisitely timed displays of petulance and near panic, and that in His Girl Friday he is both funny and beautiful.",
+          "sourceId": "nyrb-obrien-2004",
+          "locator": "paragraphs beginning 'There is an emblematic scene' and the His Girl Friday passage"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Copy the manner of someone you admire until you can do it with ease, and it becomes your own.",
+      "sourceId": "lhj-1963",
+      "locator": "Part 2, Ladies' Home Journal, March 1963, p. 40"
+    },
+    {
+      "text": "Put in the hidden work so the result looks easy, and relax your body so your mind can follow.",
+      "sourceId": "lhj-1963",
+      "locator": "Part 1, Ladies' Home Journal, January 1963, p. 142"
+    },
+    {
+      "text": "Accept the result of whatever you say or do, reward or penalty, and do not complain or explain.",
+      "sourceId": "lhj-1963",
+      "locator": "Part 2, Ladies' Home Journal, March 1963, p. 24"
+    },
+    {
+      "text": "Keep control of your own work: choose each job yourself instead of signing your freedom away.",
+      "sourceId": "bfi-hutchinson-2020",
+      "locator": "paragraphs beginning 'Indeed, Zukor had mostly ignored his requests' (went freelance, hired an agent)"
+    },
+    {
+      "text": "Look straight at the fears and old patterns from your childhood that still drive what you do.",
+      "sourceId": "lhj-1963",
+      "locator": "Part 3 (conclusion), Ladies' Home Journal, April 1963, p. 152"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "One pretends to do something, or copy someone or some teacher, until it can be done confidently and easily in what becomes one's own manner.",
+      "sourceId": "lhj-1963",
+      "locator": "\"Archie Leach\", Part 2, Ladies' Home Journal, March 1963, p. 40"
+    },
+    {
+      "text": "I strove to make everything I did at least appear relaxed. Perhaps by relaxing outwardly I could eventually relax inwardly.",
+      "sourceId": "lhj-1963",
+      "locator": "\"Archie Leach\", Part 1, Ladies' Home Journal, January 1963, p. 142"
+    },
+    {
+      "text": "I have spent the greater part of my life fluctuating between Archie Leach and Cary Grant; unsure of either, suspecting each.",
+      "sourceId": "lhj-1963",
+      "locator": "\"Archie Leach\", Part 1, Ladies' Home Journal, January 1963, p. 53"
+    },
+    {
+      "text": "I probably chose my profession because I was seeking approval, adulation, admiration and affection: each a degree of love.",
+      "sourceId": "lhj-1963",
+      "locator": "\"Archie Leach\", Part 3 (conclusion), Ladies' Home Journal, April 1963, p. 152"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1936 his five-year Paramount contract was ending. For years he had asked the studio for light comedy and been handed parts Gary Cooper had turned down. He did not sign again: he went freelance, hired an agent for the first time and chose his films one at a time. In 1937, working freelance, he made Topper and The Awful Truth, his first smash hit as a lead and his first true classic.",
+    "sourceIds": [
+      "bfi-hutchinson-2020",
+      "eliot-2009",
+      "nyrb-obrien-2004"
+    ]
+  },
+  "shadow": {
+    "text": "In December 1934 his first wife, Virginia Cherrill, amended her divorce complaint to accuse him of having \"drank excessively, choked and beat her, and threatened to kill her\". At the one-hour hearing on 26 March 1935 she testified that he was \"sulky, morose, took to drinking\", her mother testified that she had seen him \"mistreat\" her daughter, and the divorce was granted. Geoffrey O'Brien, reviewing two biographies in 2004, describes episodes of \"extreme possessiveness and violent jealousy\", among them ramming the car of Oscar Levant, his rival for Cherrill's affections. In March 1968 his fourth wife, Dyan Cannon, and other witnesses testified in Los Angeles that he had used LSD for years, spanked and hit her, and said he would break her \"like a pony\". Grant, recovering in New York from a car accident, denied it all through his lawyers. His own witness, the psychiatrist Judd Marmor, testified that Grant had told him he spanked his wife, for what Grant called \"reasonable and adequate causes\". The judge granted Cannon the divorce and custody of their two-year-old daughter, Jennifer. O'Brien also writes that he was a bad tipper and billed houseguests who overstayed for their laundry and phone calls.",
+    "sourceIds": [
+      "eliot-2009",
+      "wansell-1983",
+      "latimes-1934",
+      "nyrb-obrien-2004",
+      "time-1968",
+      "eyman-2020"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Whose ease with people did you study this week, and where did you practise it until it began to feel like your own?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Archie Leach (Ladies' Home Journal, three parts)",
+      "year": 1963
+    }
+  ],
+  "sources": [
+    {
+      "id": "lhj-1963",
+      "kind": "primary",
+      "title": "Archie Leach (three parts: January, March and April 1963)",
+      "author": "Cary Grant",
+      "year": 1963,
+      "publisher": "Ladies' Home Journal, vol. 80, nos. 1-3",
+      "url": "https://archive.org/details/ladieshomejourna80janwyet"
+    },
+    {
+      "id": "eliot-2009",
+      "kind": "secondary",
+      "title": "Cary Grant: A Biography (first published by Harmony Books, 2004)",
+      "author": "Marc Eliot",
+      "year": 2009,
+      "publisher": "Crown (ebook edition; read only in the Google Books preview)",
+      "url": "https://books.google.com/books?id=V51G29nQy6oC"
+    },
+    {
+      "id": "eyman-2020",
+      "kind": "secondary",
+      "title": "Cary Grant: A Brilliant Disguise",
+      "author": "Scott Eyman",
+      "year": 2020,
+      "publisher": "Simon & Schuster (read only in the Google Books preview)",
+      "url": "https://books.google.com/books?id=kodGEAAAQBAJ"
+    },
+    {
+      "id": "wansell-1983",
+      "kind": "secondary",
+      "title": "Cary Grant, Haunted Idol",
+      "author": "Geoffrey Wansell",
+      "year": 1983,
+      "publisher": "Collins (Google Books snippet view)",
+      "url": "https://books.google.com/books?id=AGtZAAAAMAAJ"
+    },
+    {
+      "id": "nyrb-obrien-2004",
+      "kind": "secondary",
+      "title": "The Man in the Smoking Jacket (review of Eliot and of Morecambe and Sterling)",
+      "author": "Geoffrey O'Brien",
+      "year": 2004,
+      "publisher": "The New York Review of Books, 16 December 2004",
+      "url": "https://www.nybooks.com/articles/2004/12/16/the-man-in-the-smoking-jacket/"
+    },
+    {
+      "id": "bfi-hutchinson-2020",
+      "kind": "secondary",
+      "title": "The making of Cary Grant",
+      "author": "Pamela Hutchinson",
+      "year": 2020,
+      "publisher": "BFI, Sight and Sound",
+      "url": "https://www.bfi.org.uk/sight-and-sound/features/making-cary-grant"
+    },
+    {
+      "id": "time-1968",
+      "kind": "secondary",
+      "title": "Milestones: Mar. 29, 1968",
+      "author": "Time",
+      "year": 1968,
+      "publisher": "Time",
+      "url": "https://time.com/archive/6631973/milestones-mar-29-1968/"
+    },
+    {
+      "id": "latimes-1934",
+      "kind": "secondary",
+      "title": "Grant Legal Fight Gains (photo caption 'Amends Plea'), Los Angeles Times, 19 December 1934, p. A8",
+      "author": "Los Angeles Times",
+      "year": 1934,
+      "publisher": "Los Angeles Times Photographic Archives, UCLA Library Special Collections, via Calisphere",
+      "url": "https://calisphere.org/item/ark:/21198/zz002dc23h"
+    },
+    {
+      "id": "ewb",
+      "kind": "secondary",
+      "title": "Cary Grant (Encyclopedia of World Biography)",
+      "author": "Gale editors",
+      "year": "n.d. (online at Encyclopedia.com, updated 2018)",
+      "publisher": "Gale",
+      "url": "https://www.encyclopedia.com/people/literature-and-arts/film-and-television-biographies/cary-grant"
+    },
+    {
+      "id": "idff",
+      "kind": "secondary",
+      "title": "Grant, Cary (International Dictionary of Films and Filmmakers)",
+      "author": "Janet E. Lorenz, updated by Guo-Juin Hong",
+      "year": "n.d. (online at Encyclopedia.com)",
+      "url": "https://www.encyclopedia.com/people/literature-and-arts/film-and-television-biographies/cary-grant"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real actor, not fictional, no politics or religion, no account found of sexual contact with anyone under 16 or of sexual violence; in, with a documented dark side: two wives accused him in divorce court of physical violence (Cherrill 1934-35, Cannon 1968)."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked every value, quote and factual sentence, and replaced the research agent's unlicensed copy of Marc Eliot's biography with the Google Books preview of its Crown edition, Scott Eyman's and Geoffrey Wansell's biographies, Time and a 1934 Los Angeles Times caption; Eliot claims I could not see there (the Academy resignation, the Arsenic and Old Lace gift, the three-year LSD span, the dropped Cherrill charges) are gone. Generosity fell: his war-charity gifts are real, but O'Brien documents a pattern of personal stinginess, so it moved to the shadow. Craft and Self-awareness are shared with the blind pick, Independence and Confidence each rest on at least three sources, and the blind pick's Humour was added. All four quotes were found word for word in the 1963 Ladies' Home Journal scan.",
+    "checkedOn": "2026-11-10"
+  }
+}
