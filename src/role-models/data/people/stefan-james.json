@@ -1,0 +1,332 @@
+{
+  "id": "stefan-james",
+  "name": "Stefan James",
+  "born": 1986,
+  "died": null,
+  "category": "teachers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_mission",
+    "lm_money"
+  ],
+  "tagline": "A shy, indebted college dropout who built a self-improvement channel and business online.",
+  "startedFrom": "He grew up in Vancouver, the son of a Greek father; his family's money fell, he changed high schools three times and was bullied. By his own account he was a C-minus student who barely finished high school, struggled with depression, anxiety and shyness, dropped out of college, and saw his parents go through a divorce and a bankruptcy. In his early 20s he had about $15,000 of credit card debt and paid a friend $500 a month to sleep on his couch.",
+  "values": [
+    {
+      "word": "Growth",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He calls the decision to commit his life to self-development one of the first and most important decisions of his life.",
+          "sourceId": "plm-10-decisions-2020",
+          "locator": "00:04:59"
+        },
+        {
+          "kind": "deed",
+          "claim": "At 17 he stopped playing video games and signed up for classes in public speaking, acting and improvisation.",
+          "sourceId": "entrepreneur-2019",
+          "locator": "section 'Heartbroken.'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2012 he started Project Life Mastery, a blog and YouTube channel to document his attempt to master each part of his life.",
+          "sourceId": "entrepreneur-2019",
+          "locator": "section 'Prosperity through purpose.'"
+        }
+      ]
+    },
+    {
+      "word": "Responsibility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Looking back on his credit card debt, he says he first had to take ownership and responsibility for how he got into it: living above his means, not tracking his money and avoiding his statements.",
+          "sourceId": "plm-debt-2020",
+          "locator": "00:00:52 and 00:01:49"
+        },
+        {
+          "kind": "deed",
+          "claim": "To pay the debt he moved onto a friend's couch for about a year at $500 a month, sold his 1989 Honda Civic for $1,500 and worked weekend construction jobs.",
+          "sourceId": "plm-debt-2020",
+          "locator": "00:10:27, 00:11:24 and 00:14:51"
+        },
+        {
+          "kind": "deed",
+          "claim": "Earning no more than about $2,000 a month, he paid a friend $500 a month to live on his couch and spent another $500 a month on a life coach.",
+          "sourceId": "entrepreneur-2019",
+          "locator": "section 'The man in the mirror.'"
+        },
+        {
+          "kind": "words",
+          "claim": "He calls the letter he wrote himself in 2010 a letter of being totally direct and honest with himself, calling himself out on his behaviour.",
+          "sourceId": "plm-letter-2017",
+          "locator": "00:00:11-00:00:24"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says giving taught him to be more generous, and that he started by giving 10 or 25 cents to a homeless person every day because the habit matters more than the amount.",
+          "sourceId": "plm-10-decisions-2020",
+          "locator": "00:25:25-00:25:31"
+        },
+        {
+          "kind": "deed",
+          "claim": "In August 2016 he filmed himself in Nicaragua helping build two houses he had funded, a year after funding one in El Salvador.",
+          "sourceId": "plm-nicaragua-2016",
+          "locator": "00:00:08-00:00:25"
+        },
+        {
+          "kind": "witness",
+          "claim": "Entrepreneur reports, from him, that he helped build schools in Ethiopia, Kenya, Ecuador and India and houses in Nicaragua and El Salvador.",
+          "sourceId": "entrepreneur-2019",
+          "locator": "section 'There is no getting without giving.'"
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He names committing his life to Christ as the second of the ten decisions that changed his life, and says his faith made him more giving, forgiving and patient.",
+          "sourceId": "plm-10-decisions-2020",
+          "locator": "00:10:26 and 00:12:25"
+        },
+        {
+          "kind": "deed",
+          "claim": "Raised Greek Orthodox, in 2019 he went to Israel to be baptized again in the Jordan River and rededicate his life to Christ.",
+          "sourceId": "plm-testimony-2019",
+          "locator": "00:02:58 and 00:16:13"
+        },
+        {
+          "kind": "words",
+          "claim": "In 2021 he says he has read most of the New Testament and does Bible study a few times a week, though he needs to do more.",
+          "sourceId": "plm-books-2021",
+          "locator": "00:46:51"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says he has done a morning ritual every day for over 16 years, since he was 17, without checking social media or email first.",
+          "sourceId": "plm-10-decisions-2020",
+          "locator": "00:32:16 and 00:33:51"
+        },
+        {
+          "kind": "deed",
+          "claim": "While in debt he tracked every expense in a spreadsheet each week, on Tuesdays, and kept to a budget.",
+          "sourceId": "plm-debt-2020",
+          "locator": "00:05:24-00:05:36"
+        },
+        {
+          "kind": "deed",
+          "claim": "In August 2014 he filmed his morning ritual step by step, from waking up to starting work, as an update of an earlier morning-ritual video.",
+          "sourceId": "plm-morning-2014",
+          "locator": "00:00:21"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Stop avoiding the statements: track every dollar coming in and going out, each week.",
+      "sourceId": "plm-debt-2020",
+      "locator": "00:01:49 and 00:05:36"
+    },
+    {
+      "text": "Make giving a daily habit, even in small amounts; the habit matters more than the amount.",
+      "sourceId": "plm-10-decisions-2020",
+      "locator": "00:25:25"
+    },
+    {
+      "text": "For any problem, find people who have already solved it and learn from them.",
+      "sourceId": "plm-10-decisions-2020",
+      "locator": "00:07:34"
+    },
+    {
+      "text": "Start the day with your own ritual before you check email or social media.",
+      "sourceId": "plm-10-decisions-2020",
+      "locator": "00:33:51"
+    },
+    {
+      "text": "Be blunt with yourself about where you fall short, in writing if that is what it takes.",
+      "sourceId": "plm-letter-2017",
+      "locator": "00:00:11 and 00:10:02"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "It's not how much money you give, it's the habit. The habit is more important than the amount.",
+      "sourceId": "plm-10-decisions-2020",
+      "locator": "00:25:25"
+    },
+    {
+      "text": "You can lose money but you can't lose who you are.",
+      "sourceId": "plm-10-decisions-2020",
+      "locator": "00:22:37"
+    },
+    {
+      "text": "Look at your debt as a blessing, as a gift, as a valuable lesson.",
+      "sourceId": "plm-debt-2020",
+      "locator": "00:19:17"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 22 January 2010, sleeping in a friend's living room and in credit card debt, he wrote himself a letter in the voice of his goals for a paid 100-Day Challenge program, blaming his procrastination and lack of discipline; he says parts of it may have come from the program. He later said this was when he decided to commit to mastery. He moved onto the couch, sold his car and took weekend construction work to pay off the debt. Around 2011 he went all in on publishing Kindle e-books, and in 2012 he started Project Life Mastery.",
+    "sourceIds": [
+      "plm-letter-2017",
+      "plm-debt-2020",
+      "entrepreneur-2019"
+    ]
+  },
+  "shadow": {
+    "text": "His first big money came from Kindle e-books and from a course on the method, K Money Mastery, which he called his program in a 2015 live stream. A 2015 TCK Publishing summary of an interview with him says he wrote some of the books himself and hired ghostwriters for others. In October 2015 the German trade site OMR reported that he advised buyers to publish health books, such as on gambling addiction, under a pen name posing as a recovered patient, and to report bad reviews as abuse so they disappear; it also reported his claim that e-book sales had bought him a sports car and a $1.7 million apartment. In April 2024 Vox called K Money Mastery 'the OG self-publishing grift course', where a later course seller learned a formula of swapping and buying five-star reviews; Vox does not name him.",
+    "sourceIds": [
+      "plm-hangout-2015",
+      "tck-podcast",
+      "omr-2015",
+      "vox-2024",
+      "entrepreneur-2019"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which number in your life did you avoid looking at this week?",
+    "principleIndex": 0
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "plm-10-decisions-2020",
+      "kind": "primary",
+      "title": "10 Decisions That Changed My Life Forever (Project Life Mastery YouTube video, 7 May 2020; auto-caption timestamps)",
+      "author": "Stefan James",
+      "year": 2020,
+      "url": "https://www.youtube.com/watch?v=Tug0HU0q8qg"
+    },
+    {
+      "id": "plm-debt-2020",
+      "kind": "primary",
+      "title": "How I Paid Off $15,000 In Credit Card Debt, Then Became A Millionaire (Project Life Mastery YouTube video, 11 March 2020; auto-caption timestamps)",
+      "author": "Stefan James",
+      "year": 2020,
+      "url": "https://www.youtube.com/watch?v=DA_qgda-3L4"
+    },
+    {
+      "id": "plm-letter-2017",
+      "kind": "primary",
+      "title": "A Letter That Changed My Life... (Project Life Mastery YouTube video, 7 January 2017; auto-caption timestamps)",
+      "author": "Stefan James",
+      "year": 2017,
+      "url": "https://www.youtube.com/watch?v=IoR5DzX-9YI"
+    },
+    {
+      "id": "plm-nicaragua-2016",
+      "kind": "primary",
+      "title": "Journey To Nicaragua: Building 2 Houses For Families Suffering From Poverty (Project Life Mastery YouTube vlog, 5 August 2016; auto-caption timestamps)",
+      "author": "Stefan James",
+      "year": 2016,
+      "url": "https://www.youtube.com/watch?v=o9dMVcGUHaY"
+    },
+    {
+      "id": "plm-testimony-2019",
+      "kind": "primary",
+      "title": "Stefan James Christian Testimony | How I Became A Christian & My Spiritual Journey (Project Life Mastery YouTube video, 20 December 2019; auto-caption timestamps)",
+      "author": "Stefan James",
+      "year": 2019,
+      "url": "https://www.youtube.com/watch?v=wDQ7PwL-C_4"
+    },
+    {
+      "id": "plm-dropout-2019",
+      "kind": "primary",
+      "title": "Why I Dropped Out Of College... (Project Life Mastery YouTube video, 16 January 2019; auto-caption timestamps)",
+      "author": "Stefan James",
+      "year": 2019,
+      "url": "https://www.youtube.com/watch?v=88-MQ-PKfGA"
+    },
+    {
+      "id": "plm-birthday-2016",
+      "kind": "primary",
+      "title": "#AskStefan LIVE Q&A: Ask A Millionaire Anything! (Project Life Mastery live stream, 3 May 2016, his 30th birthday; auto-caption timestamps)",
+      "author": "Stefan James",
+      "year": 2016,
+      "url": "https://www.youtube.com/watch?v=2kYLUwBF3h4"
+    },
+    {
+      "id": "plm-hangout-2015",
+      "kind": "primary",
+      "title": "Stefan's 29th Birthday Google Hangout (Project Life Mastery live stream, 2 May 2015; auto-caption timestamps)",
+      "author": "Stefan James",
+      "year": 2015,
+      "url": "https://www.youtube.com/watch?v=OcYECokZIeM"
+    },
+    {
+      "id": "entrepreneur-2019",
+      "kind": "secondary",
+      "title": "This Entrepreneur Used to Be the Shyest Kid in School. Now He Makes Millions Teaching Self-Mastery. (10 January 2019)",
+      "author": "No byline (author given as entrepreneur.com; photo credited to Stefan James; figures are his own)",
+      "year": 2019,
+      "publisher": "Entrepreneur",
+      "url": "https://www.entrepreneur.com/living/this-entrepreneur-used-to-be-the-shyest-kid-in-school-now/325807"
+    },
+    {
+      "id": "omr-2015",
+      "kind": "secondary",
+      "title": "Sehr dreist: Wie ein paar Typen bei Amazon mit geklauten Inhalten viel Geld verdienen (30 October 2015)",
+      "author": "Martin Gardt",
+      "year": 2015,
+      "publisher": "OMR (Online Marketing Rockstars)",
+      "url": "https://omr.com/de/daily/amazon-kindle-scam"
+    },
+    {
+      "id": "vox-2024",
+      "kind": "secondary",
+      "title": "Amazon is filled with garbage ebooks. Here's how they get made. (16 April 2024)",
+      "author": "Constance Grady",
+      "year": 2024,
+      "publisher": "Vox",
+      "url": "https://www.vox.com/culture/24128560/amazon-trash-ebooks-mikkelsen-twins-ai-publishing-academy-scam"
+    },
+    {
+      "id": "tck-podcast",
+      "kind": "secondary",
+      "title": "040: Overcome Perfectionism and Exercise Your Creative Genius with Stefan James (podcast episode page, 31 January 2015; a fellow Kindle-course publisher summarising an interview with him)",
+      "author": "Tom Corson-Knowles",
+      "year": 2015,
+      "publisher": "TCK Publishing",
+      "url": "https://www.tckpublishing.com/overcome-perfectionism-with-stefan-pylarinos/"
+    },
+    {
+      "id": "plm-books-2021",
+      "kind": "primary",
+      "title": "42 Life-Changing Books For Mastering Every Area Of Your Life (Project Life Mastery YouTube video, 23 November 2021; auto-caption timestamps)",
+      "author": "Stefan James",
+      "year": 2021,
+      "url": "https://www.youtube.com/watch?v=qXwwJdwmgic"
+    },
+    {
+      "id": "plm-morning-2014",
+      "kind": "primary",
+      "title": "My New Morning Ritual - How To Be Even More Productive, Happy And Healthy Everyday (Project Life Mastery YouTube video, 13 August 2014; auto-caption timestamps)",
+      "author": "Stefan James",
+      "year": 2014,
+      "url": "https://www.youtube.com/watch?v=OgRGJBpTOeU"
+    }
+  ],
+  "review": {
+    "status": "draft",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living Canadian YouTuber, course seller and coach (Project Life Mastery), not a politician, campaigner or religious founder, with no account of sexual contact with a minor or of sexual violence found; he is in, with a documented dark side around his Kindle publishing course."
+    },
+    "blindAgreement": 0.2,
+    "devilsAdvocate": "I attacked all five values against the video transcripts, the blind pick (which shared only Growth) and the press. All five held: Responsibility, Generosity, Faith and Discipline each now rest on three sources, so the blind pick's Mastery, Contribution, Wealth and Determination had no room. The three quotes match his videos' captions word for word. He stays a draft because only one press source tells his life story, an unbylined Entrepreneur profile built on his own account, and no second independent reliable secondary source could be found.",
+    "checkedOn": "2026-11-10"
+  }
+}
