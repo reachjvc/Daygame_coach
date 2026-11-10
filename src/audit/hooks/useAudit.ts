@@ -162,6 +162,8 @@ export function useAudit(account: string) {
     const due = nextDeleteDue(queueRef.current, Date.now())
     if (due !== null) deleteTimer.current = window.setTimeout(() => flushRef.current(), Math.max(0, due - Date.now()) + 50)
   }, [])
+  /** The last read was refused because the page's person is no longer the one signed in here. */
+  const [accountGone, setAccountGone] = useState<"signed-out" | "other-account" | null>(null)
   /** The view drawn is this phone's last read, kept for no signal (fast-audit-04). */
   const [fromCopy, setFromCopy] = useState(false)
   const viewRef = useRef<AuditView | null>(null)
@@ -224,9 +226,22 @@ export function useAudit(account: string) {
       const c = confirmedRef.current
       setC({ answers: c.answers.filter((x) => x.at >= started), deletes: c.deletes.filter((x) => x.at >= started) })
       setLoadError(null)
+      setAccountGone(null)
       return fresh
     } catch (error) {
       if (mine < readApplied.current) return null
+      // The page's person is no longer signed in here: someone else is (409,
+      // requireAuth), or nobody (401). Their day is not drawn any more, on a
+      // browser the next person is using (alpha p9-deletes-05). What waits in
+      // the queue stays: it is only ever sent to its own account.
+      if (error instanceof AuditCallError && (error.status === 401 || error.status === 409)) {
+        viewRef.current = null
+        setView(null)
+        setFromCopy(false)
+        setC(NONE)
+        setNotKept([])
+        setAccountGone(error.status === 401 ? "signed-out" : "other-account")
+      }
       // No signal and nothing on screen yet: draw this phone's last read, so
       // answers can still be given and wait in the queue (D-OFFLINE). Decisions
       // (start, end, mute, settings) still need the server and say so.
@@ -553,6 +568,7 @@ export function useAudit(account: string) {
     // a delete still in its Undo time is not "waiting for signal"
     waiting: queue.answers.length + pendingDeletes(queue).filter((d) => deleteIsDue(d, Date.now())).length,
     reload: load,
+    accountGone,
     fromCopy,
     notKept,
     dismissNotKept: () => setNotKept([]),

@@ -735,7 +735,18 @@ export function AuditScreen({ account }: { account: string }) {
       {/* The page opens with no signal (`/audit` is in the worker's SHELL_PATHS), and a ping tapped in a basement still lands. */}
       <OfflineShell />
       {!view ? (
-        s.loadError ? (
+        s.accountGone ? (
+          // someone else is signed in here now, or nobody: the earlier person's day is gone from this tab (p9-deletes-05)
+          <div className="mt-6 rounded-2xl border border-border bg-card p-5" role="alert" data-testid="audit-account-gone">
+            <p>{s.accountGone === "signed-out" ? "You are signed out in this browser." : "Someone else is signed in in this browser now."}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {s.accountGone === "signed-out" ? "Sign in again to see your audit." : "Reload the page to see the audit of who is signed in."}
+            </p>
+            <Button className="mt-4" onClick={() => window.location.reload()}>
+              Reload
+            </Button>
+          </div>
+        ) : s.loadError ? (
           <div className="mt-6 rounded-2xl border border-border bg-card p-5" role="alert" data-testid="audit-load-error">
             <p>{s.loadError}.</p>
             <p className="mt-1 text-sm text-muted-foreground">Nothing was changed. Try again when you have signal.</p>
