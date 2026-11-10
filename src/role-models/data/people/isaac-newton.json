@@ -1,0 +1,365 @@
+{
+  "id": "isaac-newton",
+  "name": "Isaac Newton",
+  "born": 1643,
+  "died": 1727,
+  "category": "scientists",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A farm boy called 'idle' at school who held one problem in his mind until it gave way",
+  "startedFrom": "He was born at Woolsthorpe in Lincolnshire on Christmas Day 1642 (4 January 1643 by the modern calendar), months after his father, an illiterate but well-off farmer, had died. When he was three his mother remarried and left him with his grandmother. His school reports called him \"idle\" and \"inattentive\", his mother took him out of school to run the farm, which he did badly, and in 1661 he went to Cambridge as a sizar, paying his way by serving other students.",
+  "values": [
+    {
+      "word": "Focus",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "His assistant Humphrey Newton, who lived with him for about five years in Cambridge, wrote that he was \"so intent, so serious upon his studies, that he eat very sparingly, nay, oftimes he has forget to eat at all\".",
+          "sourceId": "humphrey-1728",
+          "locator": "first letter to John Conduitt, 17 January 1727/8, p. 2"
+        },
+        {
+          "kind": "deed",
+          "claim": "Save for a few weeks away, from late 1684 until early 1687 he concentrated on the lines of research that expanded a short tract of nine folio pages into the 500-page Principia.",
+          "sourceId": "sep",
+          "locator": "section 1.2, last two paragraphs"
+        },
+        {
+          "kind": "witness",
+          "claim": "The economist John Maynard Keynes, who owned many of his papers, wrote that his \"peculiar gift was the power of holding continuously in his mind a purely mental problem until he had seen straight through it\".",
+          "sourceId": "keynes-1946",
+          "locator": "\"Newton, the Man\", paragraph beginning \"I believe that the clue to his mind\""
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote to Richard Bentley that if he had done the public any service, it was \"due to no thing but industry & a patient thought\".",
+          "sourceId": "bentley-1692",
+          "locator": "letter to Richard Bentley, 10 December 1692, f. 4r"
+        },
+        {
+          "kind": "witness",
+          "claim": "Humphrey Newton wrote that he never saw him take any recreation, \"Thinking all Hours lost, that was not spent in his Studyes\", and that he seldom went to bed before two or three in the morning.",
+          "sourceId": "humphrey-1728",
+          "locator": "first letter to John Conduitt, 17 January 1727/8, p. 2"
+        },
+        {
+          "kind": "deed",
+          "claim": "Appointed Warden of the Mint in 1696 during the Great Recoinage, he studied the Mint's workings and \"drastically improved productivity\".",
+          "sourceId": "np-mint",
+          "locator": "\"The Mint: A Brief Introduction\", paragraph beginning \"Newton rescued the Recoinage\""
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "As a student, about 1664, he began a notebook of \"Quæstiones quædam Philosophiæ\" (\"Certain Philosophical Questions\") under a Latin motto that sets truth above Plato and Aristotle: \"Amicus Plato amicus Aristoteles magis amica veritas\".",
+          "sourceId": "quaestiones",
+          "locator": "MS Add. 3996, f. 88r (opening heading)"
+        },
+        {
+          "kind": "deed",
+          "claim": "By 1664 he was reading far beyond the set course, teaching himself mathematics from Oughtred, Viète, Wallis and Descartes.",
+          "sourceId": "sep",
+          "locator": "section 1.2, first paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Newton Project writes that his studies as an undergraduate were \"almost entirely extra-curricular\" and that his notebook shows him \"far more in touch with current developments\" than most of his tutors.",
+          "sourceId": "np-personal",
+          "locator": "\"Isaac Newton's Personal Life\", last paragraphs"
+        }
+      ]
+    },
+    {
+      "word": "Building things",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He built his first reflecting telescope in 1669, while a young Fellow of Trinity College.",
+          "sourceId": "sep",
+          "locator": "section 1.2, paragraph ending with the Lucasian Professorship"
+        },
+        {
+          "kind": "words",
+          "claim": "In the Opticks he describes grinding and polishing the metal mirrors himself and says a London craftsman who tried to copy them \"fell much short of what I had attained to\".",
+          "sourceId": "opticks-1730",
+          "locator": "Book I, Part I, Prop. VII"
+        },
+        {
+          "kind": "witness",
+          "claim": "Humphrey Newton wrote that he made and altered his brick furnaces himself \"without troubling a Brick-layer\".",
+          "sourceId": "humphrey-1728",
+          "locator": "second letter to John Conduitt, February 1727/8, p. 6"
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that when writing the Principia he \"had an eye upon such Principles as might work with considering men for the beleife of a Deity\".",
+          "sourceId": "bentley-1692",
+          "locator": "letter to Richard Bentley, 10 December 1692, opening sentence"
+        },
+        {
+          "kind": "deed",
+          "claim": "From about 1673 he made an intensive study of the Bible and the Church Fathers that went on for the rest of his life.",
+          "sourceId": "np-glance",
+          "locator": "\"Life and Work at a Glance\", entry for 1673"
+        },
+        {
+          "kind": "witness",
+          "claim": "The historian George Smith writes that over 60 years of work he put \"no less effort\" into alchemy, theology and biblical studies than into mathematics and physics.",
+          "sourceId": "sep",
+          "locator": "opening summary"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Hold a hard problem in your mind and keep at it: what you achieve comes from steady work and patient thought.",
+      "sourceId": "bentley-1692",
+      "locator": "letter to Richard Bentley, 10 December 1692 (\"industry & a patient thought\")"
+    },
+    {
+      "text": "Prove things by reason and experiment, not by guesses you cannot test.",
+      "sourceId": "opticks-1730",
+      "locator": "Book I, Part I, opening sentence; Book III, Query 31"
+    },
+    {
+      "text": "Use no more causes than are true and enough to explain what you see.",
+      "sourceId": "principia-1729",
+      "locator": "Book III, Rules of Reasoning in Philosophy, Rule I"
+    },
+    {
+      "text": "Respect your teachers, but put the truth above them.",
+      "sourceId": "quaestiones",
+      "locator": "MS Add. 3996, f. 88r (\"Amicus Plato amicus Aristoteles magis amica veritas\")"
+    },
+    {
+      "text": "Make your instruments yourself and keep them, so you can prove what you claim.",
+      "sourceId": "opticks-1730",
+      "locator": "Book I, Part I, Prop. VII (\"have one of them still by me, by which I can prove the truth of what I write\")"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "If I have seen further it is by standing on ye sholders of Giants.",
+      "sourceId": "hooke-1676",
+      "locator": "letter to Robert Hooke, 5 February 1675/6, first page, 7-8 lines from the bottom (manuscript image reproduced by the Linda Hall Library, 2026). The image is older than Newton: John of Salisbury's Metalogicon (1159), Book III, ch. 4, gives it to Bernard of Chartres."
+    },
+    {
+      "text": "But if I have done the publick any service this way 'tis due to no thing but industry & a patient thought.",
+      "sourceId": "bentley-1692",
+      "locator": "letter to Richard Bentley, 10 December 1692, f. 4r"
+    },
+    {
+      "text": "My Design in this Book is not to explain the Properties of Light by Hypotheses, but to propose and prove them by Reason and Experiments.",
+      "sourceId": "opticks-1730",
+      "locator": "Book I, Part I, opening sentence (4th edition, 1730)"
+    },
+    {
+      "text": "We are to admit no more causes of natural things, than such as are both true and sufficient to explain their appearances.",
+      "sourceId": "principia-1729",
+      "locator": "Book III, Rules of Reasoning in Philosophy, Rule I",
+      "translation": "Andrew Motte, 1729"
+    }
+  ],
+  "definingMoment": {
+    "text": "In August 1684 the astronomer Edmond Halley visited him in Cambridge and asked what path a planet would follow under a force that weakens with the square of the distance. He answered at once, an ellipse, but could not find his paper, so he promised to send a proof. In November he sent Halley a short tract of nine folio pages, and from late 1684 to early 1687, apart from a few weeks away, he expanded it into the 500-page Principia, published in July 1687 at Halley's expense. Humphrey Newton, who copied the manuscript for the press, wrote that in these years he often forgot to eat and seldom went to bed before two or three in the morning.",
+    "sourceIds": [
+      "sep",
+      "np-glance",
+      "humphrey-1728"
+    ]
+  },
+  "shadow": {
+    "text": "In a 1662 list of his sins he confessed boyhood \"Threatning my father and mother Smith to burne them and the house over them\" and \"Wishing death and hoping it to some\". From 1672 he answered Robert Hooke's criticism of his work on light with a quarrel that the Newton Project says he kept up until Hooke died in 1703; MacTutor writes that he delayed publishing his full account of optics until after Hooke's death, and the Opticks appeared in 1704. In 1712, as President of the Royal Society, he picked the committee that was to judge whether he or Leibniz had invented the calculus, wrote its report himself, and in 1715 reviewed that report anonymously in the Society's journal; the Newton Project says the report was right that he came first but \"quite unjustly\" implied plagiarism by Leibniz. Also in 1712 he used his office to make the Astronomer Royal, John Flamsteed, hand over his unfinished star catalogue for Halley to edit, and the 1713 second edition of the Principia cut every reference to Flamsteed. As Warden of the Mint from 1696 he built a web of informers to hunt counterfeiters and, Oxford's Newton and the Mint project writes, \"extracted confessions through threats and bribes\". On 21 February 1699 Katherine Carter swore her statement against the coiner William Chaloner before him; Chaloner wrote to him from Newgate in March that he would be \"murthered\" unless Newton saved him, and was hanged at Tyburn on 22 March 1699.",
+    "sourceIds": [
+      "np-glance",
+      "mactutor",
+      "sep",
+      "np-mint",
+      "mint-carter-1699",
+      "chaloner-1699",
+      "guzman-1699"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which hard problem did you hold in your mind this week long enough to get to the bottom of it?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Philosophiæ Naturalis Principia Mathematica (The Mathematical Principles of Natural Philosophy)",
+      "year": 1687
+    },
+    {
+      "title": "Opticks",
+      "year": 1704
+    }
+  ],
+  "sources": [
+    {
+      "id": "hooke-1676",
+      "kind": "primary",
+      "title": "Letter to Robert Hooke, 5 February 1675/6 (manuscript, Simon Gratz collection, Historical Society of Pennsylvania)",
+      "author": "Isaac Newton",
+      "year": 1676,
+      "url": "https://digitallibrary.hsp.org/Detail/objects/9792"
+    },
+    {
+      "id": "bentley-1692",
+      "kind": "primary",
+      "title": "Original letter from Isaac Newton to Richard Bentley, dated 10 December 1692 (Trinity College Library, Cambridge, 189.R.4.47, ff. 4A-5), Newton Project transcription",
+      "author": "Isaac Newton",
+      "year": 1692,
+      "url": "https://www.newtonproject.ox.ac.uk/view/texts/normalized/THEM00254"
+    },
+    {
+      "id": "quaestiones",
+      "kind": "primary",
+      "title": "'Quæstiones quædam Philosophiæ' ('Certain Philosophical Questions'), MS Add. 3996, Cambridge University Library, Newton Project transcription",
+      "author": "Isaac Newton",
+      "year": "c. 1664",
+      "url": "https://www.newtonproject.ox.ac.uk/view/texts/normalized/THEM00092"
+    },
+    {
+      "id": "opticks-1730",
+      "kind": "primary",
+      "title": "Opticks: or, A Treatise of the Reflections, Refractions, Inflections and Colours of Light (4th edition, corrected; first published 1704)",
+      "author": "Isaac Newton",
+      "year": 1730,
+      "publisher": "William Innys",
+      "url": "https://www.gutenberg.org/ebooks/33504"
+    },
+    {
+      "id": "principia-1729",
+      "kind": "primary",
+      "title": "The Mathematical Principles of Natural Philosophy, translated by Andrew Motte (from the 3rd Latin edition of 1726)",
+      "author": "Isaac Newton",
+      "year": 1729,
+      "publisher": "Benjamin Motte",
+      "url": "https://en.wikisource.org/wiki/The_Mathematical_Principles_of_Natural_Philosophy_(1729)/Rules_of_Reasoning_in_Philosophy"
+    },
+    {
+      "id": "mint-carter-1699",
+      "kind": "primary",
+      "title": "The Information of Katherine Carter, 21 February 1698/9, sworn before Isaac Newton (National Archives, MINT 15/17/120), Newton Project transcription",
+      "author": "Isaac Newton (as Warden of the Mint)",
+      "year": 1699,
+      "url": "https://www.newtonproject.ox.ac.uk/view/texts/normalized/MINT01373"
+    },
+    {
+      "id": "humphrey-1728",
+      "kind": "secondary",
+      "title": "Two letters from Humphrey Newton to John Conduitt, dated 17 January and 14 February 1727/8 (Keynes Ms. 135, King's College, Cambridge), Newton Project transcription",
+      "author": "Humphrey Newton",
+      "year": 1728,
+      "url": "https://www.newtonproject.ox.ac.uk/view/texts/normalized/THEM00033"
+    },
+    {
+      "id": "chaloner-1699",
+      "kind": "secondary",
+      "title": "William Chaloner's Letter to Isaac Newton, early March 1698/9 (National Archives, MINT 15/17/205), Newton and the Mint transcription",
+      "author": "William Chaloner",
+      "year": 1699,
+      "url": "https://newtonandthemint.history.ox.ac.uk/transcriptions/normalised/MINT00918"
+    },
+    {
+      "id": "guzman-1699",
+      "kind": "secondary",
+      "title": "Guzman Redivivus: A Short View of the Life of Will. Chaloner (London, 1699), Newton and the Mint transcription",
+      "author": "Anonymous",
+      "year": 1699,
+      "url": "https://newtonandthemint.history.ox.ac.uk/transcriptions/normalised/MINT01534"
+    },
+    {
+      "id": "sep",
+      "kind": "secondary",
+      "title": "Isaac Newton, Stanford Encyclopedia of Philosophy",
+      "author": "George Smith",
+      "year": 2007,
+      "url": "https://plato.stanford.edu/entries/newton/"
+    },
+    {
+      "id": "np-glance",
+      "kind": "secondary",
+      "title": "Newton's Life and Work at a Glance",
+      "author": "The Newton Project (University of Oxford)",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.newtonproject.ox.ac.uk/his-life-and-work-at-a-glance"
+    },
+    {
+      "id": "np-personal",
+      "kind": "secondary",
+      "title": "Isaac Newton's Personal Life",
+      "author": "The Newton Project (University of Oxford)",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.newtonproject.ox.ac.uk/his-personal-life"
+    },
+    {
+      "id": "np-mint",
+      "kind": "secondary",
+      "title": "The Mint: A Brief Introduction",
+      "author": "Newton and the Mint project, University of Oxford (Rob Iliffe and Scott Mandelbrote)",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://hf-web-mint2.history.ox.ac.uk/introduction/the-mint"
+    },
+    {
+      "id": "mactutor",
+      "kind": "secondary",
+      "title": "Sir Isaac Newton, MacTutor History of Mathematics (University of St Andrews)",
+      "author": "J. J. O'Connor and E. F. Robertson",
+      "year": 2000,
+      "url": "https://mathshistory.st-andrews.ac.uk/Biographies/Newton/"
+    },
+    {
+      "id": "keynes-1946",
+      "kind": "secondary",
+      "title": "Newton, the Man (written for the Royal Society's Newton tercentenary, read in July 1946), MacTutor transcription",
+      "author": "John Maynard Keynes",
+      "year": 1946,
+      "url": "https://mathshistory.st-andrews.ac.uk/Extras/Keynes_Newton/"
+    },
+    {
+      "id": "lindahall-2026",
+      "kind": "secondary",
+      "title": "Scientist of the Day: Isaac Newton (on the letter to Hooke of 5 February 1675/76)",
+      "author": "William B. Ashworth, Jr., Linda Hall Library",
+      "year": 2026,
+      "url": "https://www.lindahall.org/about/news/scientist-of-the-day/isaac-newton-3/"
+    },
+    {
+      "id": "metalogicon-mcgarry",
+      "kind": "secondary",
+      "title": "The Metalogicon of John of Salisbury, translated by Daniel D. McGarry (Book III, ch. 4, p. 167)",
+      "author": "John of Salisbury",
+      "year": 1955,
+      "publisher": "University of California Press",
+      "url": "https://archive.org/details/mandothersogicon7654john"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real English mathematician and natural philosopher (1643-1727), not fictional, not a living politician and not the founder of a religion, with no account of sexual contact with a minor or of sexual violence found; his documented dark side is his feuds with Hooke, Leibniz and Flamsteed, in which he used his power as President of the Royal Society, and his hard pursuit of counterfeiters as Warden of the Mint, which sent men to the gallows."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value and every sentence against freshly fetched texts: Humphrey Newton's letters, the Bentley letter, the Opticks, Motte's Principia, the SEP, MacTutor, Keynes and the Oxford Newton Project and Mint pages, and I read the shoulders line off the manuscript image. All five values held: Focus, Hard work and Curiosity are shared with the blind pick; Building things and Faith each rest on three separate sources, and Faith survives his anti-Trinitarian views and rare chapel-going because his Bible study and Bentley letter are his own. Five claims were tightened, among them the Opticks delay (MacTutor ties it to Hooke's death) and the Chaloner witnesses (one sworn statement before him is documented, not several), and the shadow gained his boyhood threat to burn his mother and stepfather and the removal of Flamsteed from the 1713 Principia.",
+    "checkedOn": "2026-11-10"
+  }
+}
