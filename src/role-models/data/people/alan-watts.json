@@ -1,0 +1,314 @@
+{
+  "id": "alan-watts",
+  "name": "Alan Watts",
+  "born": 1915,
+  "died": 1973,
+  "category": "philosophers",
+  "areaIds": [
+    "lm_spirituality",
+    "lm_fun",
+    "lm_mindset"
+  ],
+  "tagline": "Play and pleasure: the ex-priest who popularised Zen in the West and laughed at solemnity.",
+  "startedFrom": "He was born on 6 January 1915 in Chislehurst, Kent, the only surviving child of a Michelin tyre executive and a mother who taught at a school for missionaries' daughters. He went to King's School, Canterbury, but chose not to go to university. At fourteen he declared himself a Buddhist, and he taught himself, with Christmas Humphreys of the Buddhist Lodge in London as his guide, while working in his father's office.",
+  "values": [
+    {
+      "word": "Play",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that truly religious people joke about their religion and that much of the secret of life is knowing how to laugh.",
+          "sourceId": "imow-1972",
+          "locator": "Prologue, p. 6"
+        },
+        {
+          "kind": "witness",
+          "claim": "In his eulogy Michael Murphy, founder of Esalen, recalled his 'infectious, outrageous laughter' and called him 'our gentlest and most joyous teacher'.",
+          "sourceId": "lionsroar-2020",
+          "locator": "passage quoting Michael Murphy's eulogy"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Encyclopedia of World Biography records that he once called himself a spiritual 'entertainer'.",
+          "sourceId": "ewb",
+          "locator": "entry 'Alan Wilson Watts', paragraph on his refusal to join any religious group"
+        }
+      ]
+    },
+    {
+      "word": "Spirituality",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1929, at fourteen, he declared himself a Buddhist and wrote to Christmas Humphreys of the Buddhist Lodge in London.",
+          "sourceId": "tricycle-2007",
+          "locator": "early-life section"
+        },
+        {
+          "kind": "deed",
+          "claim": "He edited the Buddhist Lodge's journal The Middle Way from 1934 to 1938, was ordained an Episcopal priest, and served as Episcopal chaplain at Northwestern University from 1944 to 1950.",
+          "sourceId": "ewb",
+          "locator": "entry 'Alan Wilson Watts', career paragraphs"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that his work and life were fully concerned with religion and that 'the mystery of being is my supreme fascination'.",
+          "sourceId": "imow-1972",
+          "locator": "ch. 3 'I Go to the Buddha for Refuge', opening paragraph (chapter begins p. 65)"
+        }
+      ]
+    },
+    {
+      "word": "Pleasure",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that the whole point and joy of human life is to integrate the spiritual with the material, the mystical with the sensuous.",
+          "sourceId": "imow-1972",
+          "locator": "Preface, p. xi"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Encyclopedia of World Biography quotes him calling himself an unrepentant sensualist and lists food, drink and nature among the pleasures he loved.",
+          "sourceId": "ewb",
+          "locator": "entry 'Alan Wilson Watts', paragraph on his marriages and children"
+        },
+        {
+          "kind": "witness",
+          "claim": "Tricycle's 2007 profile of him is titled 'The Sensualist'.",
+          "sourceId": "tricycle-2007",
+          "locator": "title"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He left the Episcopal chaplaincy at Northwestern University in 1950, and from 1957 until his death lived by writing and lecturing, joined to no church or college.",
+          "sourceId": "ewb",
+          "locator": "entry 'Alan Wilson Watts', career paragraphs"
+        },
+        {
+          "kind": "words",
+          "claim": "He opened his autobiography: 'I have always done things in my own way', the way that 'comes naturally to me'.",
+          "sourceId": "imow-1972",
+          "locator": "Preface, p. xi"
+        },
+        {
+          "kind": "witness",
+          "claim": "Kirkus, reviewing Monica Furlong's 1986 biography, writes that after leaving his chaplaincy he lived as a free-lance lecturer and writer.",
+          "sourceId": "kirkus-1986",
+          "locator": "review text, paragraph on his career after Northwestern"
+        },
+        {
+          "kind": "deed",
+          "claim": "He chose not to attend college and designed his own course of study, with Christmas Humphreys as his preceptor.",
+          "sourceId": "tricycle-2007",
+          "locator": "early-life section"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Kirkus reports Monica Furlong's judgement that he cared intensely about ideas and had a boundless curiosity about what others made of them.",
+          "sourceId": "kirkus-1986",
+          "locator": "review text, closing paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "David Chadwick writes that his approach to wisdom was curious and inclusive, drawing on psychology, science, art, humour and nature.",
+          "sourceId": "lionsroar-2020",
+          "locator": "paragraph on his approach to wisdom"
+        },
+        {
+          "kind": "deed",
+          "claim": "Tricycle reports that as a boy he wrote papers for the fun of exploring his own ideas, and that he held no intelligent person should restrict himself to artificially segregated fields of spiritual or intellectual adventure.",
+          "sourceId": "tricycle-2007",
+          "locator": "early-life section and paragraph on his teaching"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Laugh at what you hold most serious, your own beliefs included.",
+      "sourceId": "imow-1972",
+      "locator": "Prologue, p. 6"
+    },
+    {
+      "text": "Live now: plans for the future mean nothing unless you are in touch with the present.",
+      "sourceId": "woi-1951",
+      "locator": "ch. III 'The Great Stream', p. 51"
+    },
+    {
+      "text": "Use the rules of society as tools; do not fight them and do not be fooled by them.",
+      "sourceId": "woz-1957",
+      "locator": "Part One, ch. 1 'The Philosophy of the Tao', p. 11"
+    },
+    {
+      "text": "Do things your own way, even if it means leaving a safe post.",
+      "sourceId": "imow-1972",
+      "locator": "Preface, p. xi"
+    },
+    {
+      "text": "Treat religion as something to experience, not a side to fight for.",
+      "sourceId": "imow-1972",
+      "locator": "ch. 3 'I Go to the Buddha for Refuge', opening paragraph (chapter begins p. 65)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Truly religious people always make jokes about their religion; their faith is so strong that they can afford it. Much of the secret of life consists in knowing how to laugh, and also how to breathe.",
+      "sourceId": "imow-1972",
+      "locator": "Prologue, p. 6"
+    },
+    {
+      "text": "To be free from convention is not to spurn it but not to be deceived by it. It is to be able to use it as an instrument instead of being used by it.",
+      "sourceId": "woz-1957",
+      "locator": "Part One, ch. 1 'The Philosophy of the Tao', p. 11"
+    },
+    {
+      "text": "There is no other reality than present reality, so that, even if one were to live for endless ages, to live for the future would be to miss the point everlastingly.",
+      "sourceId": "woi-1951",
+      "locator": "ch. III 'The Great Stream', p. 51"
+    },
+    {
+      "text": "I am committed to the view that the whole point and joy of human life is to integrate the spiritual with the material, the mystical with the sensuous, and the altruistic with a kind of proper self-love",
+      "sourceId": "imow-1972",
+      "locator": "Preface, p. xi"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1950 Watts gave up his post as Episcopal chaplain at Northwestern University and left the priesthood and Illinois. In 1951 he began teaching in San Francisco at the American Academy of Asian Studies. From 1957 until his death in 1973 he made his living by writing and lecturing, tied to no church or university. He later told LIFE magazine (1961) that he left the Church 'not because it doesn't practice what it preaches, but because it preaches.'",
+    "sourceIds": [
+      "ewb",
+      "tricycle-2007"
+    ]
+  },
+  "shadow": {
+    "text": "Watts drank heavily in his later years, mostly vodka: Tricycle (2007) reports he was hospitalised with delirium tremens, and The Spectator (2023) reports he was drinking a bottle of vodka a day by the early 1970s and gives his reason: 'When I drink I don't feel so alone.' He joked that he was 'an ecstatic alcoholic', and his wife Jano later called the two of them 'codependent alcoholics'. He married three times and had seven children; in 1949 his first wife left him and the marriage was annulled, on grounds he accepted that he was a 'sexual pervert'. The historian Christopher Harding writes that a series of affairs, together with his low view of fatherhood, helped destroy his family, that his daughter Joan said he had become 'lost in work and alcohol', and that as a chaplain he let counselling sessions with students become intimate. Kirkus, reviewing Monica Furlong's 1986 biography, writes that his three wives and seven children 'never felt he was present for long'. He said of himself: 'By all the standards of this society I have been a terrible father.' The Spectator names relationships with the poet Jean Burden and, in 1964, the Jungian analyst June Singer.",
+    "sourceIds": [
+      "tricycle-2007",
+      "spectator-2023",
+      "lionsroar-2020",
+      "aeon-2024",
+      "kirkus-1986"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you take so seriously this week that you could not laugh at it, and what would change if you did?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Wisdom of Insecurity",
+      "year": 1951
+    },
+    {
+      "title": "The Way of Zen",
+      "year": 1957
+    },
+    {
+      "title": "In My Own Way",
+      "year": 1972
+    }
+  ],
+  "sources": [
+    {
+      "id": "imow-1972",
+      "kind": "primary",
+      "title": "In My Own Way: An Autobiography, 1915-1965",
+      "author": "Alan Watts",
+      "year": 1972,
+      "publisher": "Pantheon Books",
+      "url": "https://archive.org/details/inmyownway00alan"
+    },
+    {
+      "id": "woi-1951",
+      "kind": "primary",
+      "title": "The Wisdom of Insecurity",
+      "author": "Alan W. Watts",
+      "year": "1951 (Vintage Books reprint)",
+      "publisher": "Vintage Books",
+      "url": "https://archive.org/details/wisdomofinsecuri0000alan"
+    },
+    {
+      "id": "woz-1957",
+      "kind": "primary",
+      "title": "The Way of Zen",
+      "author": "Alan W. Watts",
+      "year": 1957,
+      "publisher": "Pantheon Books",
+      "url": "https://archive.org/details/wayofzen0000watt"
+    },
+    {
+      "id": "ewb",
+      "kind": "secondary",
+      "title": "Alan Wilson Watts (Encyclopedia of World Biography)",
+      "author": "Gale, Encyclopedia of World Biography",
+      "year": "n.d. (online, updated 2018)",
+      "publisher": "Gale, via Encyclopedia.com",
+      "url": "https://www.encyclopedia.com/topic/Alan_Watts.aspx"
+    },
+    {
+      "id": "tricycle-2007",
+      "kind": "secondary",
+      "title": "The Sensualist",
+      "author": "Mira Tweti",
+      "year": 2007,
+      "publisher": "Tricycle: The Buddhist Review, Fall 2007",
+      "url": "https://tricycle.org/magazine/sensualist/"
+    },
+    {
+      "id": "aeon-2024",
+      "kind": "secondary",
+      "title": "How Alan Watts re-imagined religion, desire and life itself",
+      "author": "Christopher Harding",
+      "year": 2024,
+      "publisher": "Aeon",
+      "url": "https://aeon.co/essays/how-alan-watts-re-imagined-religion-desire-and-life-itself"
+    },
+    {
+      "id": "spectator-2023",
+      "kind": "secondary",
+      "title": "The paradox of Alan Watts",
+      "author": "Gus Carter",
+      "year": 2023,
+      "publisher": "The Spectator",
+      "url": "https://spectator.com/?p=406909"
+    },
+    {
+      "id": "lionsroar-2020",
+      "kind": "secondary",
+      "title": "Celebrating the Life & Teachings of Alan Watts",
+      "author": "David Chadwick",
+      "year": 2020,
+      "publisher": "Lion's Roar",
+      "url": "https://www.lionsroar.com/celebrating-alan-watts/"
+    },
+    {
+      "id": "kirkus-1986",
+      "kind": "secondary",
+      "title": "Review of Zen Effects: The Life of Alan Watts by Monica Furlong",
+      "author": "Kirkus Reviews",
+      "year": 1986,
+      "publisher": "Kirkus Reviews",
+      "url": "https://www.kirkusreviews.com/book-reviews/a/monica-furlong-3/zen-effects-the-life-of-alan-watts/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real, dead (1973), not a politician or founder of a living religion; no credible account of sexual contact with anyone under 16 or of sexual violence was found; heavy drinking, a broken first marriage and several affairs are documented and go in the shadow."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked every value against Tricycle, Aeon, The Spectator, Lion's Roar, the Encyclopedia of World Biography and Kirkus on Furlong's biography. Presence fell: its evidence was only his teaching, while his family 'never felt he was present for long', his daughter said he was 'lost in work and alcohol', and he drank a bottle of vodka a day so as not to feel alone. Play, Spirituality and Pleasure held as core; Independence held with a third and fourth source (Kirkus, Tricycle), and Curiosity from the blind pick was added with three sources. All four quotes were found word for word in the Internet Archive texts; the shadow gained his family's and daughter's words and his own 'terrible father' line.",
+    "checkedOn": "2026-11-10"
+  }
+}
