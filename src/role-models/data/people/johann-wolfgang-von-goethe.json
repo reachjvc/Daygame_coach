@@ -1,0 +1,314 @@
+{
+  "id": "johann-wolfgang-von-goethe",
+  "name": "Johann Wolfgang von Goethe",
+  "born": 1749,
+  "died": 1832,
+  "category": "artists",
+  "areaIds": [
+    "lm_mission",
+    "lm_fun"
+  ],
+  "tagline": "A poet and minister who kept learning, from skull bones to starting over in Rome at 37.",
+  "startedFrom": "He was born in Frankfurt in 1749. His great-grandfather was a farrier and his grandfather a tailor who became a well-off innkeeper; his father studied law and lived on his own money. His father and private tutors taught him at home; at sixteen he went to university at Leipzig, and came home very ill after a sudden haemorrhage.",
+  "values": [
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1784, comparing the skulls of men and animals with the anatomist Loder, he found the intermaxillary bone in the human jaw, which was then assumed to be missing in man.",
+          "sourceId": "lewes-1855",
+          "locator": "Book V, ch. IV 'Preparations for Italy', p. 295 and note 1 (letter to Herder, 27 March 1784)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Britannica of 1911 says his work on botany and anatomy shows that he, as no other of his contemporaries, had the kind of scientific mind that made for progress in the 19th century.",
+          "sourceId": "eb1911",
+          "locator": "vol. 12, 'Goethe, Johann Wolfgang von', p. 187"
+        },
+        {
+          "kind": "words",
+          "claim": "Late in life he told Eckermann he took no pride in his poetry, but was 'not a little proud' to be, as he believed, the only person of his century who knew the truth about colours.",
+          "sourceId": "eckermann-oxenford",
+          "locator": "vol. II, p. 145, entry of Thursday 19 February 1829"
+        }
+      ]
+    },
+    {
+      "word": "Nature",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told Eckermann that nature 'understands no jesting; she is always true, always serious, always severe; she is always right, and the errors and faults are always those of man.'",
+          "sourceId": "eckermann-oxenford",
+          "locator": "vol. II, p. 131, entry of Friday 13 February 1829"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1790 he published his essay on the metamorphosis of plants, which the Britannica of 1911 calls a fundamental achievement for the new science of comparative morphology.",
+          "sourceId": "eb1911",
+          "locator": "vol. 12, 'Goethe, Johann Wolfgang von', pp. 184-185"
+        },
+        {
+          "kind": "deed",
+          "claim": "In the years before Italy Linnaeus was a constant companion on his journeys, and he studied rocks, plants and an elephant's skull; his biographer Lewes says he everywhere sought unity in nature.",
+          "sourceId": "lewes-1855",
+          "locator": "Book V, ch. IV 'Preparations for Italy', pp. 295-296"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Britannica of 1911 says Spinoza taught him to see in nature 'the living garment of God', and that he took his stand on nature and experience.",
+          "sourceId": "eb1911",
+          "locator": "vol. 12, 'Goethe, Johann Wolfgang von', p. 187"
+        }
+      ]
+    },
+    {
+      "word": "Growth",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 3 September 1786 he left Karlsbad in secret to go to Italy, asking the duke for leave of unknown length so that he could 'lose himself in a world where he is unknown'.",
+          "sourceId": "lewes-1855",
+          "locator": "Book V, ch. IV 'Preparations for Italy', p. 300 (letter to the duke, 2 September 1786)"
+        },
+        {
+          "kind": "words",
+          "claim": "From Rome he wrote that he had to unlearn so much of what he knew, and that the more he had to renounce his former self, the more delighted he was.",
+          "sourceId": "italy-morrison",
+          "locator": "Travels in Italy, letter dated Rome, 20 December 1786"
+        },
+        {
+          "kind": "words",
+          "claim": "At 74 he told Eckermann that 'the most important part of an individual's life is that of development'.",
+          "sourceId": "eckermann-oxenford",
+          "locator": "vol. I, p. 124, entry of Tuesday 27 January 1824"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "The Britannica of 1911 calls him 'the soul of the Weimar government, and a minister of state of energy and foresight', busy with farming, gardens and mining.",
+          "sourceId": "eb1911",
+          "locator": "vol. 12, 'Goethe, Johann Wolfgang von', p. 183"
+        },
+        {
+          "kind": "deed",
+          "claim": "From his arrival in Weimar in 1775 he worked to get the old Ilmenau mines working again, and gave the speech at their reopening on 24 February 1784.",
+          "sourceId": "lewes-1855",
+          "locator": "Book V, ch. IV 'Preparations for Italy', pp. 294-295"
+        },
+        {
+          "kind": "words",
+          "claim": "At 74 he said that in his seventy-five years he had never had a month of real comfort: his life had been the endless rolling of a stone he always had to raise again.",
+          "sourceId": "eckermann-oxenford",
+          "locator": "vol. I, p. 125, entry of Tuesday 27 January 1824"
+        }
+      ]
+    },
+    {
+      "word": "Creativity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told Eckermann that his real happiness was 'my poetic meditation and production'.",
+          "sourceId": "eckermann-oxenford",
+          "locator": "vol. I, p. 125, entry of Tuesday 27 January 1824"
+        },
+        {
+          "kind": "deed",
+          "claim": "Between 1771 and 1775 he wrote Götz von Berlichingen, Clavigo and The Sorrows of Young Werther (1774); the Britannica calls these his most productive years in literature.",
+          "sourceId": "eb1911",
+          "locator": "vol. 12, 'Goethe, Johann Wolfgang von', p. 183"
+        },
+        {
+          "kind": "deed",
+          "claim": "He carried Faust through his working life: the Gretchen scenes came from the early Faust of his Sturm und Drang years (1771-1775), the completed first part appeared in 1808, and the Britannica calls the second part a worthy close to his life.",
+          "sourceId": "eb1911",
+          "locator": "vol. 12, 'Goethe, Johann Wolfgang von', pp. 183, 185-186"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When your life no longer fits, go where nobody knows you and learn again.",
+      "sourceId": "lewes-1855",
+      "locator": "Book V, ch. IV, p. 300 (letter to the duke, 2 September 1786)"
+    },
+    {
+      "text": "If you built on a bad foundation, pull it down and build again, gladly.",
+      "sourceId": "italy-morrison",
+      "locator": "Travels in Italy, letter dated Rome, 20 December 1786"
+    },
+    {
+      "text": "Look at a thing long and closely until you understand it yourself, rather than take the answer ready-made.",
+      "sourceId": "poetry-truth-oxenford",
+      "locator": "Book XI (the Strasbourg minster, before leaving Strasbourg)"
+    },
+    {
+      "text": "Test your ideas against nature: it does not joke, and the mistakes are yours.",
+      "sourceId": "eckermann-oxenford",
+      "locator": "vol. II, p. 131, entry of Friday 13 February 1829"
+    },
+    {
+      "text": "When you have done wrong, say so plainly and make no excuse.",
+      "sourceId": "poetry-truth-oxenford",
+      "locator": "Book XII (Frederica's answer to his written adieu)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I reckon a new-birth day,--a true new birth from the day that I entered Rome.",
+      "sourceId": "italy-morrison",
+      "locator": "Travels in Italy, letter dated Rome, 3 December 1786",
+      "translation": "A. J. W. Morrison (George Bell & Sons edition, 1881)"
+    },
+    {
+      "text": "It has been the perpetual rolling of a stone, which I have always had to raise anew.",
+      "sourceId": "eckermann-oxenford",
+      "locator": "vol. I, p. 125, entry of Tuesday 27 January 1824",
+      "translation": "John Oxenford, 1850"
+    },
+    {
+      "text": "Nature understands no jesting; she is always true, always serious, always severe; she is always right, and the errors and faults are always those of man.",
+      "sourceId": "eckermann-oxenford",
+      "locator": "vol. II, p. 131, entry of Friday 13 February 1829",
+      "translation": "John Oxenford, 1850"
+    }
+  ],
+  "definingMoment": {
+    "text": "At three in the morning on 3 September 1786 he slipped out of Karlsbad alone, with a portmanteau and a knapsack. He was 37 and a leading minister of Weimar; only the duke knew he was going, and not for how long. He reached Rome on 29 October 1786 and stayed in Italy until April 1788. From Rome he wrote that he had to unlearn so much that he felt like an architect pulling down a tower built on a bad foundation.",
+    "sourceIds": [
+      "italy-morrison",
+      "lewes-1855",
+      "eb1911"
+    ]
+  },
+  "shadow": {
+    "text": "In 1771 he left Friederike Brion, a village pastor's daughter he had courted in Sesenheim, with a written goodbye; in his memoirs he wrote that he had 'wounded the most beautiful heart to its very depths', and he gave no excuse. In 1783, as a member of the duke's privy council, he voted to keep the death penalty for infanticide; the duke then confirmed the death sentence on the servant Johanna Catharina Höhn, who had killed her newborn, and she was executed on 28 November 1783. Rüdiger Scholz (2004) holds Goethe to blame for her death; Volker Wahl (2025) says the vote was about the law in general and the duke alone decided her sentence. W. Daniel Wilson, in Das Goethe-Tabu, also charges that as a minister he encouraged spying on students and professors at Jena; the historian Gordon Craig (2000) judged Wilson's charges often overdrawn or inaccurate. After his return from Italy in 1788 he took Christiane Vulpius as his mistress; court society did not accept her and even his close friends ignored her. Their son was born in 1789, and he married her only in 1806. The Britannica of 1911 says he opposed Newton's theory of light and colour with obstinacy and inadequate mathematical knowledge.",
+    "sourceIds": [
+      "poetry-truth-oxenford",
+      "lewes-1855",
+      "scholz-2004",
+      "wahl-2025",
+      "wilson-2008",
+      "craig-2000",
+      "eb1911"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you look at long and closely this week until you understood it yourself, instead of taking someone's word for it?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "The Sorrows of Young Werther",
+      "year": 1774
+    },
+    {
+      "title": "Faust, Part One",
+      "year": 1808
+    },
+    {
+      "title": "Italian Journey",
+      "year": 1816
+    }
+  ],
+  "sources": [
+    {
+      "id": "poetry-truth-oxenford",
+      "kind": "primary",
+      "title": "The Autobiography of Goethe: Truth and Poetry from My Own Life, Books I-XX (revised edition)",
+      "author": "Johann Wolfgang von Goethe, tr. John Oxenford",
+      "year": 1897,
+      "publisher": "George Bell and Sons, London",
+      "url": "https://www.gutenberg.org/ebooks/52654"
+    },
+    {
+      "id": "eckermann-oxenford",
+      "kind": "primary",
+      "title": "Conversations of Goethe with Eckermann and Soret, 2 vols.",
+      "author": "Johann Peter Eckermann (recording Goethe's talk), tr. John Oxenford",
+      "year": 1850,
+      "publisher": "Smith, Elder & Co., London",
+      "url": "https://archive.org/details/conversationsofg01goetuoft"
+    },
+    {
+      "id": "italy-morrison",
+      "kind": "primary",
+      "title": "Letters from Switzerland and Travels in Italy",
+      "author": "Johann Wolfgang von Goethe, tr. A. J. W. Morrison",
+      "year": 1881,
+      "publisher": "George Bell & Sons, London",
+      "url": "https://www.gutenberg.org/ebooks/53205"
+    },
+    {
+      "id": "lewes-1855",
+      "kind": "secondary",
+      "title": "The Life and Works of Goethe (Everyman's Library 269)",
+      "author": "George Henry Lewes",
+      "year": 1959,
+      "publisher": "J. M. Dent & Sons, London (Everyman edition first published 1908; this reprint 1959)",
+      "url": "https://archive.org/details/lifeworksofgoeth00leweuoft"
+    },
+    {
+      "id": "eb1911",
+      "kind": "secondary",
+      "title": "Goethe, Johann Wolfgang von, Encyclopaedia Britannica, 11th edition, vol. 12, pp. 182-189",
+      "author": "John George Robertson and Walter Alison Phillips",
+      "year": 1911,
+      "publisher": "Cambridge University Press",
+      "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Goethe,_Johann_Wolfgang_von"
+    },
+    {
+      "id": "scholz-2004",
+      "kind": "secondary",
+      "title": "Das kurze Leben der Johanna Catharina Höhn: Kindesmorde und Kindesmörderinnen im Weimar Carl Augusts und Goethes (publisher's description and FAZ review summary)",
+      "author": "Rüdiger Scholz (ed.)",
+      "year": 2004,
+      "publisher": "Königshausen & Neumann, Würzburg",
+      "url": "https://www.perlentaucher.de/buch/ruediger-scholz/das-kurze-leben-der-johanna-catharina-hoehn.html"
+    },
+    {
+      "id": "wahl-2025",
+      "kind": "secondary",
+      "title": "Augenblick, Nr. 1 (on Goethe and the Höhn case)",
+      "author": "Volker Wahl",
+      "year": 2025,
+      "publisher": "Freundeskreis Goethe Weimar",
+      "url": "https://www.goethe-weimar.de/fileadmin/user_upload/Augenblick_Folge_1_final.pdf"
+    },
+    {
+      "id": "wilson-2008",
+      "kind": "secondary",
+      "title": "The 'Halsgericht' for the Execution of Johann Höhn in Weimar, 28 November 1783, German Life and Letters 61:1, pp. 33-45",
+      "author": "W. Daniel Wilson",
+      "year": 2008,
+      "publisher": "Wiley-Blackwell",
+      "url": "https://pure.royalholloway.ac.uk/en/publications/the-halsgericht-for-the-execution-of-johann-h%C3%B6hn-in-weimar-28-nov/"
+    },
+    {
+      "id": "craig-2000",
+      "kind": "secondary",
+      "title": "Germany's Greatest (review of W. Daniel Wilson, Das Goethe-Tabu, and other books), The New York Review of Books, 13 April 2000",
+      "author": "Gordon A. Craig",
+      "year": 2000,
+      "publisher": "The New York Review of Books",
+      "url": "https://www.nybooks.com/articles/2000/04/13/germanys-greatest/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real poet, scientist and Weimar minister who died in 1832; no credible account of sexual contact with anyone under 16 or of sexual violence was found, but his record has documented dark sides."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value, all three quotes and every factual sentence against the Oxenford, Morrison, Lewes and 1911 Britannica texts. All five values held: Curiosity, Nature, Hard work and Creativity were also the blind pick, and Growth stayed on three checked pieces of evidence from three sources; Learning, the blind pick's fifth word, had no room. All quotes checked word for word. I cut 'to study law' and 'in writing', which the sources did not say, corrected two Nature claims to the sources' words, and added to the shadow the execution date, Wilson's Jena charge with Craig's reply, and the Britannica's verdict on his fight with Newton.",
+    "checkedOn": "2026-11-10"
+  }
+}
