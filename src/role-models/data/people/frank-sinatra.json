@@ -1,0 +1,442 @@
+{
+  "id": "frank-sinatra",
+  "name": "Frank Sinatra",
+  "born": 1915,
+  "died": 1998,
+  "category": "charisma",
+  "areaIds": [
+    "lm_mission",
+    "lm_friends",
+    "lm_fun"
+  ],
+  "tagline": "A Hoboken kid who ran his own music and came back when everyone wrote him off.",
+  "startedFrom": "He was born on 12 December 1915 in Hoboken, New Jersey, the only child of Italian immigrants: his father Marty was a boxer and a city fireman, his mother Dolly a midwife and a power in local Democratic politics. He was not a slum kid, and he was always well dressed. He dropped out of high school, and when his mother found out he wanted to be a singer she threw a shoe at him, then came round and backed him.",
+  "values": [
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "With Tommy Dorsey's band (1940-42) he learned phrasing, dynamics and style from the way Dorsey played the trombone, and worked hard at building a style of his own.",
+          "sourceId": "cm-gale",
+          "locator": "Contemporary Musicians entry, paragraph beginning '\"I learned about dynamics and phrashing'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Baker's Biographical Dictionary says he was one of the first popular singers to sing long phrases in one breath, with masterful phrasing and control of volume and tone.",
+          "sourceId": "baker-freeland",
+          "locator": "section 'Early Years', paragraph beginning 'By the mid-1940s'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Will Friedwald says that from the Columbia years Sinatra was in charge of everything on every level, from the songs to the arrangements and the technology, and that studio tapes from as early as 1949 catch him directing where the microphones and the trumpets should go.",
+          "sourceId": "npr-friedwald-2015",
+          "locator": "Fresh Air transcript, answers on Nelson Riddle and on why he founded Reprise"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Dissatisfied with the young-crooner roles MGM gave him in musicals, he left the studio.",
+          "sourceId": "idff",
+          "locator": "International Dictionary of Films and Filmmakers essay, paragraph beginning 'Dissatisfied, however'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1961 he moved to his own record label, Reprise.",
+          "sourceId": "baker-freeland",
+          "locator": "section '1950s and 1960s Masterworks', paragraph beginning 'Up-tempo releases'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Friedwald says Sinatra 'always wanted to totally control and own everything he did', and was virtually the only band singer of the Dorsey era with a say in picking his own songs.",
+          "sourceId": "npr-friedwald-2015",
+          "locator": "Fresh Air transcript, answer to 'Why did Sinatra want his own company?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Maclean's obituary says his recording of My Way celebrated 'the defiant streak of truculent independence' that had become his trademark.",
+          "sourceId": "macleans-1998",
+          "locator": "paragraph beginning 'Who else but Sinatra'"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1946 he was at the top of the music polls and had sold more than ten million records; by 1949 he had fallen to number 49 in record sales. He then fought for and won the part of Maggio in From Here to Eternity.",
+          "sourceId": "cm-gale",
+          "locator": "Contemporary Musicians entry, paragraph beginning 'Because of Sinatra's movie career'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He won the Oscar for best supporting actor for From Here to Eternity at the ceremony of 25 March 1954.",
+          "sourceId": "oscars-1954",
+          "locator": "26th Academy Awards page, Actor in a Supporting Role"
+        },
+        {
+          "kind": "witness",
+          "claim": "Friedwald says Columbia and Sinatra did not renew his contract at the end of 1952, and that Capitol's chief Alan Livingston still believed Sinatra could sing when 'nobody else did'.",
+          "sourceId": "npr-friedwald-2015",
+          "locator": "Fresh Air transcript, answer to 'Why did Sinatra end up leaving Columbia'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Maclean's says he was 'virtually washed up' when the Maggio role revived his career, and that his acting success led to his rebirth as a singer.",
+          "sourceId": "macleans-1998",
+          "locator": "paragraph beginning 'Meanwhile, Sinatra's career'"
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1945 he starred in The House I Live In, a short film made for the Anti-Defamation League in which he stops a gang of boys bullying a Jewish boy; it earned an honorary Academy Award in 1946 and entered the National Film Registry in 2007.",
+          "sourceId": "loc-2015",
+          "locator": "Library of Congress blog post, opening paragraphs"
+        },
+        {
+          "kind": "deed",
+          "claim": "In November 1945 he went to Froebel High School in Gary, Indiana, where white students were striking against Black classmates, and told them to end the strike and go back to school.",
+          "sourceId": "npr-simon-2015",
+          "locator": "Scott Simon essay, paragraphs quoting the Chicago Defender of 5 November 1945"
+        },
+        {
+          "kind": "words",
+          "claim": "He told Playboy he detests people who pretend to be liberal but are bigots in their own lives, citing the mob that cursed a Black schoolgirl at Little Rock.",
+          "sourceId": "playboy-1963",
+          "locator": "Playboy, February 1963, answer to 'Hasn't religious faith just as often served as a civilizing influence?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Gay Talese wrote that Sinatra threw a punch at a musician who said something anti-Semitic and took up the cause of Black Americans two decades before it became fashionable.",
+          "sourceId": "talese-1966",
+          "locator": "paragraph beginning 'But he did—as he would leave other warm places'"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "When a musician friend lost his house and his wife in a Los Angeles mudslide in the mid-1960s, Sinatra found him a new home, paid the hospital bills the insurance did not cover and furnished the house himself.",
+          "sourceId": "talese-1966",
+          "locator": "paragraph beginning 'Frank Sinatra does things personally'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1972 the State of Israel gave him its Medallion of Valor; JTA reported that he had endowed yearly scholarships for many children of the Frank Sinatra Youth Center in Nazareth.",
+          "sourceId": "jta-1972",
+          "locator": "JTA dispatch of 6 November 1972, last paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "The Academy gave him the Jean Hersholt Humanitarian Award at the ceremony of 15 April 1971.",
+          "sourceId": "oscars-1971",
+          "locator": "43rd Academy Awards page, Jean Hersholt Humanitarian Award"
+        },
+        {
+          "kind": "witness",
+          "claim": "The UXL Encyclopedia of World Biography says he made many appearances to support charities and did benefits for soldiers during the Second World War.",
+          "sourceId": "uxl",
+          "locator": "section 'Fans', paragraph beginning 'Though Sinatra was exempted'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Mean every word you sing or say: people only come with you if you reach out to them honestly.",
+      "sourceId": "playboy-1963",
+      "locator": "Playboy, February 1963, answer about being described as 'honest'"
+    },
+    {
+      "text": "Say what you really think in public, even when it may cost you, and do not back out halfway.",
+      "sourceId": "playboy-1963",
+      "locator": "Playboy, February 1963, answers 'No, wait, let me finish' and 'No, let's let it run'"
+    },
+    {
+      "text": "Stand up to bigotry where you meet it, because hate solves no problems.",
+      "sourceId": "npr-simon-2015",
+      "locator": "Scott Simon essay on Gary, Indiana, November 1945 (deed); Playboy, February 1963, disarmament answers (words)"
+    },
+    {
+      "text": "Keep control of your own work: choose the songs, plan the sessions, own the company.",
+      "sourceId": "npr-friedwald-2015",
+      "locator": "Fresh Air transcript, answer to 'Why did Sinatra want his own company?'"
+    },
+    {
+      "text": "When your career falls apart, go hard after the one chance that can bring you back.",
+      "sourceId": "idff",
+      "locator": "International Dictionary of Films and Filmmakers essay, paragraph beginning 'Dissatisfied, however' (Maggio 'a role for which Sinatra campaigned')"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "When I sing, I believe. I'm honest.",
+      "sourceId": "playboy-1963",
+      "locator": "Playboy Interview: Frank Sinatra (Joe Hyams), Playboy, February 1963, answer to 'Of the thousands of words which have been written about you'"
+    },
+    {
+      "text": "If you want to get an audience with you, there's only one way. You have to reach out to them with total honesty and humility.",
+      "sourceId": "playboy-1963",
+      "locator": "Playboy Interview: Frank Sinatra (Joe Hyams), Playboy, February 1963, answer to 'Of the thousands of words which have been written about you'"
+    },
+    {
+      "text": "Fear is the enemy of logic.",
+      "sourceId": "playboy-1963",
+      "locator": "Playboy Interview: Frank Sinatra (Joe Hyams), Playboy, February 1963, answer to 'You spoke a moment ago of the fear and suspicion'"
+    },
+    {
+      "text": "Hate solves no problems. It only creates them.",
+      "sourceId": "playboy-1963",
+      "locator": "Playboy Interview: Frank Sinatra (Joe Hyams), Playboy, February 1963, answer beginning 'I'm not an industrialist or an economist'"
+    }
+  ],
+  "definingMoment": {
+    "text": "By 1949 he had fallen to number 49 in record sales, and at the end of 1952 he and Columbia Records did not renew his contract. He campaigned for the part of Private Angelo Maggio in From Here to Eternity, a dramatic role far from the singing parts he was known for. On 25 March 1954 it won him the Oscar for best supporting actor. At Capitol, whose chief Alan Livingston told Friedwald that he still believed Sinatra could sing when nobody else did, his records with Nelson Riddle put him back at the top of the charts.",
+    "sourceIds": [
+      "cm-gale",
+      "npr-friedwald-2015",
+      "idff",
+      "oscars-1954"
+    ]
+  },
+  "shadow": {
+    "text": "On 8 April 1947 he hit the Hearst columnist Lee Mortimer at Ciro's nightclub in Hollywood. Sinatra said Mortimer had called him an ethnic slur; Mortimer said he was hit from behind while other men held him. Charged with battery, Sinatra told the court in June that he had made a mistake, and Mortimer dropped the case, saying Sinatra had promised him $9,000. He kept company with mob bosses: the FBI's 1,275-page file on him names Sam Giancana and Lucky Luciano, though the claims of underworld activity were never proven and he was never charged with any. In 1963, after Giancana stayed at Sinatra's Cal-Neva Lodge despite a ban from Nevada casinos, Sinatra phoned the gaming official Ed Olsen, swore at him, called him 'a crippled S.O.B.', and that October gave up his Nevada casino interests. In 1981 he played Sun City in South Africa despite the boycott against apartheid. In the 2005 biography by Anthony Summers and Robbyn Swan, Susan Murphy says that in 1969, when she was 20, he threw her on a bed in a guest bungalow at his Palm Springs home and, after she said 'God no!', 'did what he wanted to do'; Sinatra Enterprises called the claim 'crazy'. In 2019 Harry Connick Jr. said that in the early 1990s Sinatra held the face of Connick's girlfriend Jill Goodacre in an elevator and kissed her on the mouth; Connick called it 'completely inappropriate'.",
+    "sourceIds": [
+      "time-1947-apr",
+      "time-1947-jun",
+      "irishtimes-1998",
+      "uxl",
+      "mobmuseum-2020",
+      "time-2015",
+      "wenn-2005",
+      "irishtimes-2005",
+      "usatoday-2019"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you go quiet this week when you could have said what you really thought?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "Playboy Interview: Frank Sinatra (with Joe Hyams, Playboy)",
+      "year": 1963
+    },
+    {
+      "title": "In the Wee Small Hours (album)",
+      "year": 1955
+    },
+    {
+      "title": "Songs for Swingin' Lovers! (album)",
+      "year": 1956
+    }
+  ],
+  "sources": [
+    {
+      "id": "playboy-1963",
+      "kind": "primary",
+      "title": "Playboy Interview: Frank Sinatra",
+      "author": "Frank Sinatra, interviewed by Joe Hyams",
+      "year": 1963,
+      "publisher": "Playboy, February 1963 (Longform Reprints, archived by the Internet Archive)",
+      "url": "https://web.archive.org/web/20210421102805/http://reprints.longform.org/playboy-interview-frank-sinatra"
+    },
+    {
+      "id": "talese-1966",
+      "kind": "secondary",
+      "title": "Frank Sinatra Has a Cold",
+      "author": "Gay Talese",
+      "year": 1966,
+      "publisher": "Esquire, April 1966",
+      "url": "https://www.esquire.com/news-politics/a638/frank-sinatra-has-a-cold-gay-talese/"
+    },
+    {
+      "id": "macleans-1998",
+      "kind": "secondary",
+      "title": "Frank Sinatra (Obituary)",
+      "author": "Barry Came",
+      "year": 1998,
+      "publisher": "Maclean's, 25 May 1998 (The Canadian Encyclopedia)",
+      "url": "https://thecanadianencyclopedia.ca/en/article/frank-sinatra-obituary"
+    },
+    {
+      "id": "baker-freeland",
+      "kind": "secondary",
+      "title": "Sinatra, Frank (Baker's Biographical Dictionary of Popular Musicians Since 1990)",
+      "author": "David Freeland",
+      "year": "n.d. (online at Encyclopedia.com)",
+      "url": "https://www.encyclopedia.com/people/literature-and-arts/music-popular-and-jazz-biographies/frank-sinatra"
+    },
+    {
+      "id": "cm-gale",
+      "kind": "secondary",
+      "title": "Frank Sinatra (Contemporary Musicians)",
+      "author": "Gale editors",
+      "year": "n.d. (online at Encyclopedia.com)",
+      "publisher": "Gale",
+      "url": "https://www.encyclopedia.com/people/literature-and-arts/music-popular-and-jazz-biographies/frank-sinatra"
+    },
+    {
+      "id": "idff",
+      "kind": "secondary",
+      "title": "Sinatra, Frank (International Dictionary of Films and Filmmakers)",
+      "author": "Jerome Delamater",
+      "year": "n.d. (online at Encyclopedia.com)",
+      "url": "https://www.encyclopedia.com/people/literature-and-arts/music-popular-and-jazz-biographies/frank-sinatra"
+    },
+    {
+      "id": "uxl",
+      "kind": "secondary",
+      "title": "Sinatra, Frank (UXL Encyclopedia of World Biography)",
+      "author": "Gale editors",
+      "year": "n.d. (online at Encyclopedia.com, updated 2018)",
+      "publisher": "Gale",
+      "url": "https://www.encyclopedia.com/people/literature-and-arts/music-popular-and-jazz-biographies/frank-sinatra"
+    },
+    {
+      "id": "npr-friedwald-2015",
+      "kind": "secondary",
+      "title": "Celebrating Sinatra's Centennial: A Biographer Reflects On Ol' Blue Eyes (Fresh Air, Terry Gross with Will Friedwald)",
+      "author": "Will Friedwald, interviewed by Terry Gross",
+      "year": 2015,
+      "publisher": "NPR, 11 December 2015",
+      "url": "https://www.npr.org/transcripts/459286140"
+    },
+    {
+      "id": "npr-simon-2015",
+      "kind": "secondary",
+      "title": "'One More' For Frank Sinatra, Who Took A Stand In Gary, Indiana",
+      "author": "Scott Simon",
+      "year": 2015,
+      "publisher": "NPR, 12 December 2015",
+      "url": "https://www.npr.org/2015/12/12/459414244/one-more-for-sinatra-who-took-a-stand-in-gary-indiana"
+    },
+    {
+      "id": "loc-2015",
+      "kind": "secondary",
+      "title": "Honoring Frank Sinatra on His Birthday",
+      "author": "Library of Congress, National Audio-Visual Conservation Center",
+      "year": 2015,
+      "publisher": "Library of Congress, Now See Hear! blog",
+      "url": "https://blogs.loc.gov/now-see-hear/2015/12/honoring-frank-sinatra-on-his-birthday/"
+    },
+    {
+      "id": "oscars-1954",
+      "kind": "secondary",
+      "title": "The 26th Academy Awards (1954)",
+      "author": "Academy of Motion Picture Arts and Sciences",
+      "year": 1954,
+      "url": "https://www.oscars.org/oscars/ceremonies/1954"
+    },
+    {
+      "id": "oscars-1971",
+      "kind": "secondary",
+      "title": "The 43rd Academy Awards (1971)",
+      "author": "Academy of Motion Picture Arts and Sciences",
+      "year": 1971,
+      "url": "https://www.oscars.org/oscars/ceremonies/1971"
+    },
+    {
+      "id": "jta-1972",
+      "kind": "secondary",
+      "title": "Sinatra Awarded for Aiding Israel",
+      "author": "Jewish Telegraphic Agency",
+      "year": 1972,
+      "publisher": "JTA, 6 November 1972",
+      "url": "https://www.jta.org/1972/11/06/archive/sinatra-awarded-for-aiding-israel"
+    },
+    {
+      "id": "time-1947-apr",
+      "kind": "secondary",
+      "title": "People, Apr. 21, 1947",
+      "author": "Time",
+      "year": 1947,
+      "publisher": "Time, 21 April 1947",
+      "url": "https://time.com/archive/6790586/people-people-apr-21-1947/"
+    },
+    {
+      "id": "time-1947-jun",
+      "kind": "secondary",
+      "title": "People, Jun. 16, 1947",
+      "author": "Time",
+      "year": 1947,
+      "publisher": "Time, 16 June 1947",
+      "url": "https://time.com/archive/6793235/people-people-jun-16-1947/"
+    },
+    {
+      "id": "irishtimes-1998",
+      "kind": "secondary",
+      "title": "FBI releases Sinatra files",
+      "author": "The Irish Times (Washington dateline)",
+      "year": 1998,
+      "publisher": "The Irish Times, 9 December 1998",
+      "url": "https://www.irishtimes.com/news/fbi-releases-sinatra-files-1.223679"
+    },
+    {
+      "id": "mobmuseum-2020",
+      "kind": "secondary",
+      "title": "Frank Sinatra's terrible, horrible, no good, very bad year",
+      "author": "Larry Henry",
+      "year": 2020,
+      "publisher": "The Mob Museum, Las Vegas, 4 August 2020",
+      "url": "https://themobmuseum.org/blog/frank-sinatras-terrible-horrible-no-good-very-bad-year/"
+    },
+    {
+      "id": "time-2015",
+      "kind": "secondary",
+      "title": "When Frank Sinatra Took a Stand for Civil Rights in Schools",
+      "author": "Eliza Berman",
+      "year": 2015,
+      "publisher": "Time, 18 May 2015",
+      "url": "https://time.com/3857736/frank-sinatra-civil-rights/"
+    },
+    {
+      "id": "wenn-2005",
+      "kind": "secondary",
+      "title": "Sinatra Rape Claim In Book",
+      "author": "WENN",
+      "year": 2005,
+      "publisher": "WENN, 6 May 2005 (via Contactmusic, archived)",
+      "url": "https://web.archive.org/web/20231225220742/https://www.contactmusic.com/frank-sinatra/news/sinatra-rape-claim-in-book"
+    },
+    {
+      "id": "irishtimes-2005",
+      "kind": "secondary",
+      "title": "He did it sideways (review of Summers and Swan, Sinatra: The Life)",
+      "author": "Shane Hegarty",
+      "year": 2005,
+      "publisher": "The Irish Times, 1 June 2005",
+      "url": "https://www.irishtimes.com/culture/he-did-it-sideways-1.449901"
+    },
+    {
+      "id": "usatoday-2019",
+      "kind": "secondary",
+      "title": "Harry Connick Jr. recalls 'inappropriate' elevator moment with Frank Sinatra",
+      "author": "Rasha Ali",
+      "year": 2019,
+      "publisher": "USA Today, 19 November 2019 (via Yahoo)",
+      "url": "https://www.yahoo.com/entertainment/harry-connick-jr-recalls-inappropriate-215722338.html"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real American singer and actor (1915-1998), not fictional, never a politician or candidate, not the founder of a religion; owner decides because of two accounts of sexual contact: (1) the 2005 biography Sinatra: The Life by Anthony Summers and Robbyn Swan (Knopf) prints Susan Murphy's account, under her own name, that in 1969, when she was 20, Sinatra threw her on a bed in a guest bungalow at his Palm Springs home and, after she said 'God no!', 'did what he wanted to do' (reported as a rape claim); (2) in 2019 Harry Connick Jr. told British TV that in the early 1990s Sinatra held his girlfriend Jill Goodacre's face and kissed her on the mouth uninvited. The rest of his dark side (mob friends, a 1947 assault on a columnist, threats to a gaming official, Sun City 1981) is shadow. Owner case (no recommendation): In their 2005 biography Sinatra: The Life, Anthony Summers and Robbyn Swan print Susan Murphy's account that in 1969, when she was 20, Sinatra threw her on a bed in a guest bungalow at his Palm Springs home and, after she said 'God no!', 'did what he wanted to do'; Sinatra Enterprises called it 'crazy'. In November 2019 Harry Connick Jr. said on British television that in the early 1990s Sinatra, in an elevator, held the face of Connick's girlfriend Jill Goodacre, told her she was beautiful and kissed her on the mouth; Connick called it 'completely inappropriate' and said she found it funny. Sinatra had died in 1998. Sources: Summers and Swan, Sinatra: The Life (Knopf 2005, page not read); WENN 6 May 2005; Irish Times review 1 June 2005; USA Today, People and Fox News, 19 November 2019."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked Justice with his 1981 Sun City show despite the apartheid boycott, and checked every value claim, quote and shadow sentence against the saved sources. All five values held: Sun City is a single lapse against a record from 1945 on, so it now stands in the shadow, and Craft, Resilience and Generosity match the blind pick. Three claims were tightened (Friedwald does not say he planned every session; Livingston, not Friedwald, is the one who 'still believed'; 'at least two men' became 'other men'), and all four Playboy quotes were found at their place. A new search found Susan Murphy's 1969 account in the 2005 Summers and Swan biography, now in the shadow and the owner case beside Connick's.",
+    "checkedOn": "2026-11-10"
+  }
+}
