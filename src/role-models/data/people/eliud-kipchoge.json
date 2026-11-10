@@ -1,0 +1,373 @@
+{
+  "id": "eliud-kipchoge",
+  "name": "Eliud Kipchoge",
+  "born": 1984,
+  "died": null,
+  "category": "athletes",
+  "areaIds": [
+    "lm_fitness",
+    "lm_mindset"
+  ],
+  "tagline": "Kenyan marathon runner, Olympic champion in 2016 and 2021, and the first person to run the marathon distance in under two hours.",
+  "startedFrom": "He was born in 1984 in western Kenya, the youngest of four children; his father died when he was a baby and his mother, a kindergarten teacher, raised him. He ran to school and back every day, and as a teenager he earned money transporting milk by bike. When the coach Patrick Sang offered him a 10-day training plan, he had no pen, so he wrote it on his arm with a stick.",
+  "values": [
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his Oxford Union address he says, twice, that only the disciplined ones are free in life, and that without discipline you are a slave to your moods.",
+          "sourceId": "oxford-union-2018",
+          "locator": "00:14:43-00:14:55"
+        },
+        {
+          "kind": "witness",
+          "claim": "His coach Patrick Sang, after nearly 20 years together, says he has never missed a training session.",
+          "sourceId": "bbc-2020",
+          "locator": "paragraphs on his fixed training schedule, quoting Sang"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2016, already an Olympic medallist and winner of the London, Berlin and Chicago marathons, he was on the camp's hand-written chore roster and cleaned shared toilets like everyone else.",
+          "sourceId": "ap-2016",
+          "locator": "opening paragraphs on the chore roster"
+        },
+        {
+          "kind": "words",
+          "claim": "He told the Irish Examiner in 2021 that what kept him at the top for a long time is self-discipline.",
+          "sourceId": "examiner-2021",
+          "locator": "Kipchoge quote: 'What made me stay (at the top) for a long time is self-discipline.'"
+        }
+      ]
+    },
+    {
+      "word": "Simplicity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 2016, though rich enough not to, he drew washing water from an outdoor well and shared a cramped bedroom at the Kaptagat camp.",
+          "sourceId": "ap-2016",
+          "locator": "paragraph beginning 'With their wealth, they could cover themselves with bling'"
+        },
+        {
+          "kind": "words",
+          "claim": "Described by the BBC in 2020 as a multi-millionaire, he says money stays in the bank and he wants to live a simple life; of the camp he says 'our life here is simple, very simple'.",
+          "sourceId": "bbc-2020",
+          "locator": "camp-life section"
+        },
+        {
+          "kind": "words",
+          "claim": "He says rejecting a flashy life gives him more time to concentrate and be the person he needs to be.",
+          "sourceId": "examiner-2021",
+          "locator": "Kipchoge quote: 'Rejecting that flashy life is giving me more time to concentrate'"
+        }
+      ]
+    },
+    {
+      "word": "Consistency",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He names consistency as one of his factors of success and says that if you are not consistent you cannot go anywhere.",
+          "sourceId": "oxford-union-2018",
+          "locator": "00:19:21-00:20:36 ('sixth factor is consistency')"
+        },
+        {
+          "kind": "deed",
+          "claim": "He won the Berlin Marathon in 2015, 2017, 2018, 2022 and 2023, the London Marathon in 2015, 2016, 2018 and 2019, and Olympic marathon gold in 2016 and 2021.",
+          "sourceId": "wa-profile",
+          "locator": "Honours: Major Marathon and Olympic Games"
+        },
+        {
+          "kind": "witness",
+          "claim": "Sang says that in nearly 20 years he has not missed one session.",
+          "sourceId": "bbc-2020",
+          "locator": "paragraphs on his fixed training schedule, quoting Sang"
+        },
+        {
+          "kind": "words",
+          "claim": "He says small habits are what make him successful.",
+          "sourceId": "examiner-2021",
+          "locator": "Kipchoge quote: 'Small habits are what make me successful.'"
+        }
+      ]
+    },
+    {
+      "word": "Reading",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that he reads for an hour every afternoon and another hour before bed, and decided to spend camp time reading rather than watching TV.",
+          "sourceId": "wa-books-2019",
+          "locator": "whole article (first-person essay)"
+        },
+        {
+          "kind": "witness",
+          "claim": "World Athletics described him in 2017 as a voracious reader of motivational and business books, with Stephen Covey among his favourite authors.",
+          "sourceId": "wa-spikes-2017",
+          "locator": "paragraph beginning 'A voracious reader of motivational and business books'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2016 he had a line from Paulo Coelho hung on the wall above his bed at the camp.",
+          "sourceId": "ap-2016",
+          "locator": "paragraph beginning 'On the wall above Kipchoge's bed'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In September 2021 he launched a foundation to raise money for libraries, schools and forests, saying books taught him to value life.",
+          "sourceId": "star-2021",
+          "locator": "whole article"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He missed the two-hour mark by 25 seconds at Monza in 2017, tried again, and ran 1:59:40 in Vienna on 12 October 2019.",
+          "sourceId": "si-2019",
+          "locator": "opening paragraphs"
+        },
+        {
+          "kind": "words",
+          "claim": "He tells Oxford students that the world is full of challenges, that we need to challenge ourselves, and that he took on the challenge of running that fast.",
+          "sourceId": "oxford-union-2018",
+          "locator": "00:10:10-00:10:38"
+        },
+        {
+          "kind": "words",
+          "claim": "After the Vienna run he said he was the first human to run under two hours and expected more people to do it after him.",
+          "sourceId": "ap-2019",
+          "locator": "Kipchoge quotes in the report"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do what is right, not what you feel like doing.",
+      "sourceId": "oxford-union-2018",
+      "locator": "00:12:22-00:12:40 (his definition of self-discipline)"
+    },
+    {
+      "text": "Build discipline slowly, every day, like a muscle in the gym; it is not a one-time event.",
+      "sourceId": "oxford-union-2018",
+      "locator": "00:14:00-00:14:29"
+    },
+    {
+      "text": "Keep living simply when the money comes.",
+      "sourceId": "bbc-2020",
+      "locator": "camp-life section ('I want to live a simple life')"
+    },
+    {
+      "text": "Spend your free time with books rather than the TV.",
+      "sourceId": "wa-books-2019",
+      "locator": "whole article (first-person essay)"
+    },
+    {
+      "text": "Put the team before yourself: your full effort is nothing next to a small part of the whole team.",
+      "sourceId": "oxford-union-2018",
+      "locator": "00:18:36-00:19:08"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Only the disciplined ones are free in life.",
+      "sourceId": "oxford-union-2018",
+      "locator": "00:14:43 (repeated at 00:14:48)"
+    },
+    {
+      "text": "I can tell people that no human is limited.",
+      "sourceId": "ap-2019",
+      "locator": "Kipchoge quotes after the Vienna run, 12 October 2019"
+    },
+    {
+      "text": "Money stays away. I'm not working with money; money is in the bank. I want to live a simple life.",
+      "sourceId": "bbc-2020",
+      "locator": "camp-life section"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 2017, on the Monza motor-racing circuit, he missed the two-hour mark by 25 seconds. He tried again. On 12 October 2019 in Vienna he ran the marathon distance in 1:59:40, the first person to go under two hours. Afterwards he said he could tell people that no human is limited.",
+    "sourceIds": [
+      "si-2019",
+      "ap-2019"
+    ]
+  },
+  "shadow": {
+    "text": "His 1:59:40 in Vienna in October 2019 used rotating pacemakers (AP counted 36, Sports Illustrated 41), a pace car projecting a laser line and drinks brought to him on the move, so it was not eligible as a world record. He ran in unreleased Nike shoes with a carbon-fibre plate; critics said the shoes aided him unfairly, and in February 2020 he called them fair and said 'it's the person who is running, not the shoe'. In October 2022 Philemon Kacheran, one of his Vienna pacemakers, whom Patrick Sang called one of his strongest training partners, was banned for three years after testing positive for testosterone. In May 2024 Rodgers Kwemoi, a runner from the Kaptagat camp where Kipchoge trains, was banned for six years; the tribunal found he had used blood manipulation over a long period. The same month Joyce Komen, wife of the former runner Daniel Komen, sued him and others in the Eldoret High Court, saying they bought her family's property without her consent; no ruling was reported.",
+    "sourceIds": [
+      "ap-2019",
+      "si-2019",
+      "standard-2020",
+      "runningmag-2022",
+      "star-2024",
+      "ap-2024",
+      "ap-2016",
+      "citizen-2024"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you do what you felt like doing instead of what you knew was right?",
+    "principleIndex": 0
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "oxford-union-2018",
+      "kind": "primary",
+      "title": "Eliud Kipchoge & David Bedford | Full Address and Q&A | Oxford Union (talk of late 2017, video published 5 January 2018; YouTube captions timestamps)",
+      "author": "Eliud Kipchoge",
+      "year": 2018,
+      "publisher": "Oxford Union",
+      "url": "https://www.youtube.com/watch?v=Tc00mDtzIJU"
+    },
+    {
+      "id": "wa-books-2019",
+      "kind": "primary",
+      "title": "My passion for books, by Eliud Kipchoge (23 October 2019; written with Steve Landells)",
+      "author": "Eliud Kipchoge",
+      "year": 2019,
+      "publisher": "World Athletics",
+      "url": "https://worldathletics.org/personal-best/lifestyle/athlete-hobbies-eliud-kipchoge-books"
+    },
+    {
+      "id": "ap-2016",
+      "kind": "secondary",
+      "title": "Stars live monkishly at Kenyan running camp (AP, 29 March 2016; NBC Sports republication)",
+      "author": "John Leicester, Associated Press",
+      "year": 2016,
+      "publisher": "Associated Press",
+      "url": "https://www.nbcsports.com/olympics/news/eliud-kipchoge-stephen-kiprotitch-kenya-running-camp-marathon"
+    },
+    {
+      "id": "bbc-2020",
+      "kind": "secondary",
+      "title": "The humble home life behind Kipchoge's remarkable success (BBC, republished by The Standard, 23 April 2020)",
+      "author": "BBC",
+      "year": 2020,
+      "publisher": "BBC / The Standard (Kenya)",
+      "url": "https://www.standardmedia.co.ke/sports/amp/counties/article/2001368889/www.digger.co.ke"
+    },
+    {
+      "id": "ap-2019",
+      "kind": "secondary",
+      "title": "'No human is limited': Kipchoge runs sub-2 hour marathon (AP, 12 October 2019)",
+      "author": "Associated Press",
+      "year": 2019,
+      "publisher": "Associated Press, via MPR News",
+      "url": "https://www.mprnews.org/story/2019/10/12/ap-no-human-is-limited-kipchoge-runs-sub2-hour-marathon"
+    },
+    {
+      "id": "si-2019",
+      "kind": "secondary",
+      "title": "Eliud Kipchoge breaks two-hour marathon barrier in Vienna (12 October 2019)",
+      "author": "Chris Chavez",
+      "year": 2019,
+      "publisher": "Sports Illustrated",
+      "url": "https://www.si.com/edge/2019/10/12/eliud-kipchoge-breaks-two-hour-marathon-barrier-vienna-history"
+    },
+    {
+      "id": "afp-2024",
+      "kind": "secondary",
+      "title": "Paris: The ultimate challenge for marathon legend Kipchoge (AFP, 18 July 2024)",
+      "author": "AFP",
+      "year": 2024,
+      "publisher": "AFP, via Arab News Pakistan",
+      "url": "https://www.arabnews.pk/sport/paris-the-ultimate-challenge-for-marathon-legend-kipchoge-2551641"
+    },
+    {
+      "id": "wa-profile",
+      "kind": "secondary",
+      "title": "Eliud Kipchoge athlete profile (honours and results)",
+      "author": "World Athletics",
+      "year": 2026,
+      "publisher": "World Athletics",
+      "url": "https://worldathletics.org/athletes/kenya/eliud-kipchoge-14208194"
+    },
+    {
+      "id": "standard-2020",
+      "kind": "secondary",
+      "title": "Eliud Kipchoge dismisses INEOS 1:59 challenge critics (2 February 2020)",
+      "author": "Odero Charles",
+      "year": 2020,
+      "publisher": "The Standard (Kenya)",
+      "url": "https://www.standardmedia.co.ke/amp/article/2001356630/eliud-kipchoge-dismisses-ineos-1-59-challenge-critics"
+    },
+    {
+      "id": "star-2021",
+      "kind": "secondary",
+      "title": "Eliud Kipchoge launches foundation to help children access education (9 September 2021)",
+      "author": "The Star (edited by D Tarus)",
+      "year": 2021,
+      "publisher": "The Star (Kenya)",
+      "url": "https://www.the-star.co.ke/news/2021-09-09-eliud-kipchoge-launches-foundation-to-help-children-access-education"
+    },
+    {
+      "id": "star-2024",
+      "kind": "secondary",
+      "title": "Former world U-20 champ Kwemoi handed six-year ban for doping (17 May 2024)",
+      "author": "The Star",
+      "year": 2024,
+      "publisher": "The Star (Kenya)",
+      "url": "https://www.the-star.co.ke/sports/2024-05-18-former-world-u-20-champ-kwemoi-handed-six-year-ban-for-doping"
+    },
+    {
+      "id": "citizen-2024",
+      "kind": "secondary",
+      "title": "Olympic champion Eliud Kipchoge embroiled in a Ksh100million land case in Eldoret (16 May 2024)",
+      "author": "Cyrus Sholim",
+      "year": 2024,
+      "publisher": "Citizen Digital",
+      "url": "https://citizen.digital/sports/olympic-champion-eliud-kipchoge-embroiled-in-a-ksh100million-land-case-in-eldoret-n342219"
+    },
+    {
+      "id": "examiner-2021",
+      "kind": "secondary",
+      "title": "Eliud Kipchoge: Inside the camp, and the mind, of the greatest marathon runner of all time (29 October 2021)",
+      "author": "Cathal Dennehy",
+      "year": 2021,
+      "publisher": "Irish Examiner",
+      "url": "https://www.irishexaminer.com/sport/othersport/arid-40732662.html"
+    },
+    {
+      "id": "wa-spikes-2017",
+      "kind": "secondary",
+      "title": "Eliud Kipchoge: marathon maestro (Spikes, 19 September 2017)",
+      "author": "World Athletics (Spikes)",
+      "year": 2017,
+      "publisher": "World Athletics",
+      "url": "https://worldathletics.org/spikes/news/eliud-kipchoge-marathon-maestro"
+    },
+    {
+      "id": "runningmag-2022",
+      "kind": "secondary",
+      "title": "NN Running Team athlete handed three-year doping ban (11 October 2022)",
+      "author": "Marley Dickinson",
+      "year": 2022,
+      "publisher": "Canadian Running Magazine",
+      "url": "https://runningmagazine.ca/?p=88568"
+    },
+    {
+      "id": "ap-2024",
+      "kind": "secondary",
+      "title": "Kenyan runner Kwemoi banned 6 years for blood doping and stripped of Olympics, world champs results (AP, 17 May 2024)",
+      "author": "Associated Press",
+      "year": 2024,
+      "publisher": "Associated Press, via Yahoo Sports",
+      "url": "https://sports.yahoo.com/kenyan-runner-kwemoi-banned-6-161922111.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living Kenyan marathon runner, not a politician, campaigner or religious founder, with no credible account of sexual contact with a minor or of sexual violence found; he is in, with a modest documented dark side."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value: Simplicity against his own room at the camp in 2020 and the Ksh100m property case, Ambition against the runs being Nike and INEOS projects, Reading against its thin evidence, and Discipline and Consistency against his 2023-2025 losses. All five held: the lapses are single, the projects were his chosen goal, and Reading gained a 2017 World Athletics account; Humility and Hard work, the blind picks, had no room. The shadow lost an unsupported 'blood doping' wording from The Star (now sourced to AP's report of the tribunal) and gained a Vienna pacemaker's 2022 testosterone ban; all three quotes were found at the cited place.",
+    "checkedOn": "2026-11-10"
+  }
+}
