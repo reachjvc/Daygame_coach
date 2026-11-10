@@ -1,0 +1,369 @@
+{
+  "id": "john-adams",
+  "name": "John Adams",
+  "born": 1735,
+  "died": 1826,
+  "category": "leaders",
+  "areaIds": [
+    "lm_relationship",
+    "lm_mission",
+    "lm_contribution"
+  ],
+  "tagline": "Defended the soldiers who fired on a Boston crowd; wrote to his wife for nearly 40 years.",
+  "startedFrom": "He was born in 1735 in Braintree, Massachusetts, to a comfortable but not wealthy family; his father was a farmer, shoemaker and church deacon. As a boy he skipped school to hunt and fish, but his father insisted on an education, and he entered Harvard at fifteen. After graduating in 1755 he taught school in Worcester to pay for his law studies, and in his first year as a Boston lawyer he had one client.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "The morning after the Boston Massacre of 5 March 1770 he agreed at once to defend Captain Preston and the soldiers, risking the trust of his own patriot side and the practice he had built over twelve years.",
+          "sourceId": "morse-1884",
+          "locator": "chapter 'At the Bar', pp. 37-38"
+        },
+        {
+          "kind": "deed",
+          "claim": "He was chosen to defend the British soldiers charged in the Boston Massacre, and none of the accused soldiers was sent to jail.",
+          "sourceId": "millercenter",
+          "locator": "essay 'Life Before the Presidency', section 'Legal and Publishing Career'"
+        },
+        {
+          "kind": "words",
+          "claim": "Three years later he wrote that the defence brought him 'Anxiety, and Obloquy enough' but was 'one of the most gallant, generous, manly and disinterested Actions of my whole Life'.",
+          "sourceId": "diary-2",
+          "locator": "entry of 5 March 1773"
+        },
+        {
+          "kind": "witness",
+          "claim": "Morse writes that at first the defence brought 'a great clamor of rebuke and wrath', and that 'it is difficult to admire too highly the spirit which saw no cause even for an hour's hesitation'.",
+          "sourceId": "morse-1884",
+          "locator": "chapter 'At the Bar', p. 38"
+        }
+      ]
+    },
+    {
+      "word": "Integrity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1799 he sent new envoys to Paris to end the undeclared naval war with France, though much of his own Federalist party opposed it; early in 1800 he fired two cabinet members for failing to support his foreign policy, which alienated many Federalists, and he lost the election that year.",
+          "sourceId": "millercenter",
+          "locator": "essay 'Campaigns and Elections', election of 1800; essay 'Foreign Affairs'"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1815 he wrote that he would defend his missions to France 'as long as I have an eye to direct my hand', calling them 'the most disinterested and meritorious actions of my life'.",
+          "sourceId": "works-10",
+          "locator": "To James Lloyd, Quincy, January 1815, p. 113"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Miller Center essay says he prided himself on never giving in to public opinion that conflicted with his principles.",
+          "sourceId": "millercenter",
+          "locator": "essay 'Impact and Legacy', first paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Morse, while listing his vanity and anger, says that to the end he remained 'a thoroughly honest-minded and devoted servant of his country'.",
+          "sourceId": "morse-1884",
+          "locator": "chapter 'The Vice-Presidency', p. 243"
+        }
+      ]
+    },
+    {
+      "word": "Partnership",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He and Abigail exchanged more than 1,100 letters, from their courtship in 1762 until 1801, through his years in Congress and in Europe.",
+          "sourceId": "mhs-letters",
+          "locator": "page 'About the Correspondence between John and Abigail Adams'"
+        },
+        {
+          "kind": "words",
+          "claim": "From Congress in April 1776 he calls himself her 'Partner', asks her to keep him informed of the ships and forts at Boston, and writes that he gets more news from her than from anyone else.",
+          "sourceId": "afc-1",
+          "locator": "JA to AA, 28 April 1776, pp. 399-400"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Miller Center essay says he valued no one's opinion half as much as his own, except that of his wife, Abigail.",
+          "sourceId": "millercenter",
+          "locator": "essay 'Impact and Legacy', first paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Morse calls the marriage 'a singularly happy union' and Abigail 'a most able helpmate and congenial comrade' through his career.",
+          "sourceId": "morse-1884",
+          "locator": "chapter 'At the Bar', pp. 20-21 (marriage, 25 October 1764)"
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In the Continental Congress he sat on more committees than any other member, ninety, chairing twenty, and then served as a diplomat in Europe from 1778 to 1788.",
+          "sourceId": "millercenter",
+          "locator": "essay 'Life Before the Presidency', Congress and diplomacy paragraphs"
+        },
+        {
+          "kind": "words",
+          "claim": "In April 1776 he wrote that instead of domestic and rural happiness he was destined to public contention, and would think himself well rewarded if his private pleasure and interest were sacrificed to the happiness of others.",
+          "sourceId": "afc-1",
+          "locator": "JA to AA, 28 April 1776, p. 399"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Miller Center essay says that by the end of the Revolution he had a solid reputation as a patriot who had served his country at considerable personal sacrifice.",
+          "sourceId": "millercenter",
+          "locator": "essay 'Life Before the Presidency', closing paragraphs"
+        },
+        {
+          "kind": "witness",
+          "claim": "Morse writes that his achievements up to 1788 were the fruit of hard toil and personal risk, and his deserts second only to Washington's.",
+          "sourceId": "morse-1884",
+          "locator": "chapter 'The Vice-Presidency', pp. 240-241"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He gathered a working library (today more than 3,000 books, with additions by his descendants), annotated many of the books heavily in the margins, and in 1822 signed a deed placing it in a future academy for students.",
+          "sourceId": "bpl-guide",
+          "locator": "John Adams Library research guide, 'Overview'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He entered Harvard at fifteen, graduated in 1755, and taught school in Worcester to pay for two years of law study.",
+          "sourceId": "millercenter",
+          "locator": "essay 'Life Before the Presidency', first paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "From Paris in 1780 he wrote that the science of government was his duty to study more than all other sciences, so that his sons could study mathematics and philosophy and their children the arts.",
+          "sourceId": "afc-3",
+          "locator": "JA to AA, 12 May 1780, p. 342"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Boston Public Library says he championed reading both for pleasure and for an educated worldview, and that his library was at the centre of his intellectual development.",
+          "sourceId": "bpl-guide",
+          "locator": "John Adams Library research guide, 'Overview'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Go by the evidence, even when the crowd, or your own side, wants another verdict.",
+      "sourceId": "legal-papers-3",
+      "locator": "Adams' Argument for the Defense, 3-4 December 1770, p. 269"
+    },
+    {
+      "text": "Put the public good ahead of your own comfort and your own grievances.",
+      "sourceId": "afc-1",
+      "locator": "JA to AA, 28 April 1776, p. 399"
+    },
+    {
+      "text": "Name your worst fault plainly, and watch for it most when you are with other people.",
+      "sourceId": "diary-1",
+      "locator": "entry of 3 May 1756, p. 25"
+    },
+    {
+      "text": "Do the hard, unglamorous work now so that the people after you get freer choices.",
+      "sourceId": "afc-3",
+      "locator": "JA to AA, 12 May 1780, p. 342"
+    },
+    {
+      "text": "Take the responsibility for an unpopular decision you believe in, and keep defending it.",
+      "sourceId": "works-10",
+      "locator": "To James Lloyd, Quincy, January 1815, p. 113"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Facts are stubborn things; and whatever may be our wishes, our inclinations, or the dictates of our passions, they cannot alter the state of facts and evidence",
+      "sourceId": "legal-papers-3",
+      "locator": "Adams' Argument for the Defense (trial of the soldiers), 3-4 December 1770, p. 269"
+    },
+    {
+      "text": "Vanity I am sensible, is my cardinal Vice and cardinal Folly, and I am in continual Danger, when in Company, of being led an ignis fatuus Chase by it, without the strictest Caution and watchfulness over my self.",
+      "sourceId": "diary-1",
+      "locator": "entry of 3 May 1756, p. 25"
+    },
+    {
+      "text": "Is there no Way for two friendly Souls, to converse together, altho the Bodies are 400 Miles off?—Yes by Letter.—But I want a better Communication. I want to hear you think, or to see your Thoughts.",
+      "sourceId": "afc-1",
+      "locator": "JA to AA, Philadelphia, 28 April 1776, p. 400"
+    },
+    {
+      "text": "I must study Politicks and War that my sons may have liberty to study Mathematicks and Philosophy.",
+      "sourceId": "afc-3",
+      "locator": "JA to AA, Paris, post 12 May 1780, p. 342"
+    }
+  ],
+  "definingMoment": {
+    "text": "On the night of 5 March 1770 British soldiers fired into a crowd in Boston, and five men died. The next morning Adams, a patriot lawyer, agreed to defend Captain Preston and the soldiers, and at first his own side met it with rebuke and anger. Preston was acquitted, and so were all the soldiers but two, who were convicted of manslaughter and branded on the hand; his whole fee was nineteen guineas. Three years later he wrote in his diary that it was 'one of the best Pieces of Service I ever rendered my Country'.",
+    "sourceIds": [
+      "morse-1884",
+      "millercenter",
+      "diary-2"
+    ]
+  },
+  "shadow": {
+    "text": "In June and July 1798, as president, he signed the Alien and Sedition Acts, passed by a Federalist Congress; the Sedition Act made it a crime to publish 'false, scandalous, and malicious writing' about the government, and the only journalists prosecuted under it were editors of opposition newspapers, with ten convictions while he was in office. In 1779 his own draft of the Massachusetts constitution had said: 'The liberty of the press therefore ought not to be restrained.' On 1 August 1799, sent an issue of the Philadelphia Aurora by his secretary of state, he wrote that its editor William Duane 'merits the execution of the alien law. I am very willing to try its strength upon him', and that if the prosecutor William Rawle did not prosecute the paper 'he will not do his duty'. Many years later he still called the laws 'constitutional and salutary, if not necessary', his biographer Morse records. At twenty he wrote in his diary that vanity was his 'cardinal Vice'; Morse describes the older man as 'extravagantly vain' and dogmatic, with an anger that at times cost him his dignity, and in October 1800 Alexander Hamilton, his chief rival among the Federalists, published a pamphlet calling him unstable and unfit to be president. In April 1776, when Abigail asked him to 'Remember the Ladies' in the new laws, he answered: 'I cannot but laugh.'",
+    "sourceIds": [
+      "nara-alien-sedition",
+      "millercenter",
+      "pja-8",
+      "works-9",
+      "morse-1884",
+      "diary-1",
+      "afc-1"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you let what you, or your friends, wanted to be true outweigh the facts this week?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Thoughts on Government",
+      "year": 1776
+    },
+    {
+      "title": "Familiar Letters of John Adams and His Wife Abigail Adams, During the Revolution",
+      "year": 1876
+    }
+  ],
+  "sources": [
+    {
+      "id": "legal-papers-3",
+      "kind": "primary",
+      "title": "Legal Papers of John Adams, vol. 3 (Boston Massacre trials), ed. L. Kinvin Wroth and Hiller B. Zobel",
+      "author": "John Adams",
+      "year": 1965,
+      "publisher": "Belknap Press of Harvard University Press (Adams Papers Digital Edition, Massachusetts Historical Society)",
+      "url": "https://www.masshist.org/publications/adams-papers/index.php/view/ADMS-05-03-02-0001-0004-0016"
+    },
+    {
+      "id": "diary-1",
+      "kind": "primary",
+      "title": "Diary and Autobiography of John Adams, vol. 1, ed. L. H. Butterfield",
+      "author": "John Adams",
+      "year": 1961,
+      "publisher": "Belknap Press of Harvard University Press (Adams Papers Digital Edition, Massachusetts Historical Society)",
+      "url": "https://www.masshist.org/publications/adams-papers/index.php/view/ADMS-01-01-02-0002-0005-0003"
+    },
+    {
+      "id": "diary-2",
+      "kind": "primary",
+      "title": "Diary and Autobiography of John Adams, vol. 2, ed. L. H. Butterfield",
+      "author": "John Adams",
+      "year": 1961,
+      "publisher": "Belknap Press of Harvard University Press (Adams Papers Digital Edition, Massachusetts Historical Society)",
+      "url": "https://www.masshist.org/publications/adams-papers/index.php/view/ADMS-01-02-02-0003-0002-0002"
+    },
+    {
+      "id": "afc-1",
+      "kind": "primary",
+      "title": "Adams Family Correspondence, vol. 1, ed. L. H. Butterfield",
+      "author": "John Adams and Abigail Adams",
+      "year": 1963,
+      "publisher": "Belknap Press of Harvard University Press (Adams Papers Digital Edition, Massachusetts Historical Society)",
+      "url": "https://www.masshist.org/publications/adams-papers/index.php/view/ADMS-04-01-02-0258"
+    },
+    {
+      "id": "afc-3",
+      "kind": "primary",
+      "title": "Adams Family Correspondence, vol. 3, ed. L. H. Butterfield and Marc Friedlaender",
+      "author": "John Adams and Abigail Adams",
+      "year": 1973,
+      "publisher": "Belknap Press of Harvard University Press (Adams Papers Digital Edition, Massachusetts Historical Society)",
+      "url": "https://www.masshist.org/publications/adams-papers/index.php/view/ADMS-04-03-02-0258"
+    },
+    {
+      "id": "pja-8",
+      "kind": "primary",
+      "title": "Papers of John Adams, vol. 8: The Report of a Constitution or Form of Government for the Commonwealth of Massachusetts, 28-31 October 1779, Declaration of Rights, Art. XVII",
+      "author": "John Adams",
+      "year": 1779,
+      "publisher": "Adams Papers Digital Edition, Massachusetts Historical Society",
+      "url": "https://www.masshist.org/publications/adams-papers/index.php/view/ADMS-06-08-02-0161-0002"
+    },
+    {
+      "id": "works-9",
+      "kind": "primary",
+      "title": "The Works of John Adams, vol. 9, ed. Charles Francis Adams (To T. Pickering, Quincy, 1 August 1799, p. 5)",
+      "author": "John Adams",
+      "year": 1854,
+      "publisher": "Little, Brown and Company",
+      "url": "https://archive.org/details/worksofjohnadams09adam"
+    },
+    {
+      "id": "works-10",
+      "kind": "primary",
+      "title": "The Works of John Adams, vol. 10, ed. Charles Francis Adams",
+      "author": "John Adams",
+      "year": 1856,
+      "publisher": "Little, Brown and Company",
+      "url": "https://archive.org/details/worksjohnadams10adamrich"
+    },
+    {
+      "id": "millercenter",
+      "kind": "secondary",
+      "title": "John Adams essays (Life in Brief, Life Before the Presidency, Campaigns and Elections, Domestic Affairs, Foreign Affairs, Family Life, Impact and Legacy)",
+      "author": "C. James Taylor, Miller Center, University of Virginia",
+      "year": "n.d.",
+      "url": "https://millercenter.org/president/adams"
+    },
+    {
+      "id": "morse-1884",
+      "kind": "secondary",
+      "title": "John Adams (American Statesmen series)",
+      "author": "John T. Morse, Jr.",
+      "year": 1884,
+      "publisher": "Houghton, Mifflin and Company",
+      "url": "https://archive.org/details/americanstatesme00john_0"
+    },
+    {
+      "id": "nara-alien-sedition",
+      "kind": "secondary",
+      "title": "Milestone Documents: Alien and Sedition Acts (1798)",
+      "author": "National Archives",
+      "year": "n.d.",
+      "url": "https://www.archives.gov/milestone-documents/alien-and-sedition-acts"
+    },
+    {
+      "id": "mhs-letters",
+      "kind": "secondary",
+      "title": "Adams Family Papers: An Electronic Archive, About the Correspondence between John and Abigail Adams",
+      "author": "Massachusetts Historical Society",
+      "year": "n.d.",
+      "url": "https://www.masshist.org/digitaladams/archive/letter/"
+    },
+    {
+      "id": "bpl-guide",
+      "kind": "secondary",
+      "title": "John Adams Library: Overview (research guide)",
+      "author": "Boston Public Library",
+      "year": "n.d.",
+      "url": "https://guides.bpl.org/johnadams"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real, long-dead statesman (died 1826), not a living politician or religious founder; no account of sexual contact with a minor or of sexual violence found; his shadow is signing the Alien and Sedition Acts (1798), his vanity and temper, and laughing off Abigail's 'Remember the Ladies' request (1776)."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked Integrity hardest with the Alien and Sedition Acts: his 1779 constitution draft said the press 'ought not to be restrained', yet he signed the 1798 laws, urged the Aurora's prosecution and offered to use the alien law on its editor in 1799, and never repented. That is one episode against a lifelong pattern of unpopular stands (the 1770 defence, the 1799 peace mission that split his party), so Integrity held, and the shadow now carries those facts. Courage, Partnership, Service and Learning held on re-read sources; nothing fell, and one Integrity claim was cut back to what the Miller Center says.",
+    "checkedOn": "2026-11-10"
+  }
+}
