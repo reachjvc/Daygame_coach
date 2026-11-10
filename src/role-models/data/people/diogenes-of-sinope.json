@@ -1,0 +1,295 @@
+{
+  "id": "diogenes-of-sinope",
+  "name": "Diogenes of Sinope",
+  "born": "c. 412 or c. 404 BC",
+  "died": -323,
+  "category": "sages",
+  "areaIds": [
+    "lm_mindset",
+    "lm_money"
+  ],
+  "tagline": "A Greek exile who owned almost nothing and said what he thought to anyone.",
+  "startedFrom": "He was the son of Hicesius, a banker in Sinope on the Black Sea. He left the city, or was sent away, after its coins were debased; Diogenes Laertius gives several versions of whether he or his father did it, and coin finds confirm that the debasement happened. He reached Athens as an exile, and Antisthenes, whom he wanted as his teacher, at first drove him off.",
+  "values": [
+    {
+      "word": "Simplicity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Diogenes Laertius reports that he threw away his cup when he saw a child drink from his hands, and his bowl when he saw a child eat lentils from a hollowed piece of bread.",
+          "sourceId": "dl-hicks",
+          "locator": "Lives of Eminent Philosophers VI.37"
+        },
+        {
+          "kind": "deed",
+          "claim": "When a friend was slow to find him a cottage in Athens, he made his home in a large jar (the 'tub') in the Metroön, as Diogenes Laertius says Diogenes explained in his own letters.",
+          "sourceId": "dl-hicks",
+          "locator": "Lives of Eminent Philosophers VI.23"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica says he lived in a tub belonging to the temple of Cybele and destroyed the single wooden bowl he owned on seeing a peasant boy drink from his hands.",
+          "sourceId": "eb1911",
+          "locator": "Diogenes, vol. 8, pp. 281-282"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy says he took a tub for an abode in Athens and learned from watching a mouse that he had no need for conventional shelter.",
+          "sourceId": "iep-diogenes",
+          "locator": "section 1, 'Life', third paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Self-reliance",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Told to chase his runaway slave Manes, he said it would be absurd if Manes could live without Diogenes but Diogenes could not get on without Manes.",
+          "sourceId": "dl-hicks",
+          "locator": "Lives of Eminent Philosophers VI.55"
+        },
+        {
+          "kind": "words",
+          "claim": "He mocked a man whose servant put his shoes on him: he would be fully happy only when the servant also wiped his nose.",
+          "sourceId": "dl-hicks",
+          "locator": "Lives of Eminent Philosophers VI.44"
+        },
+        {
+          "kind": "witness",
+          "claim": "Diogenes Laertius records that the people of Sinope later set up bronze statues of him with verses saying he alone taught mortals 'the lesson of self-sufficingness'.",
+          "sourceId": "dl-hicks",
+          "locator": "Lives of Eminent Philosophers VI.78"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy says the Cynic idea of freedom that Diogenes stood for 'comprises both autarkeia, or self-sufficiency, and parrhēsia'.",
+          "sourceId": "iep-cynics",
+          "locator": "section 3.a.i, 'Freedom and Parrhēsia'"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In summer he rolled in hot sand and in winter embraced statues covered with snow, 'using every means of inuring himself to hardship'.",
+          "sourceId": "dl-hicks",
+          "locator": "Lives of Eminent Philosophers VI.23"
+        },
+        {
+          "kind": "words",
+          "claim": "Diogenes Laertius reports him saying that nothing in life succeeds without strenuous practice, and that practice can overcome anything.",
+          "sourceId": "dl-hicks",
+          "locator": "Lives of Eminent Philosophers VI.70-71"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy lists among Cynic training that Diogenes 'walked barefoot in the snow, hugged cold statues, and rolled about in the scalding summer sand'.",
+          "sourceId": "iep-cynics",
+          "locator": "section 3.a.ii, 'Training and Toughness'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica says he inured himself to the weather by living in a tub.",
+          "sourceId": "eb1911",
+          "locator": "Diogenes, vol. 8, p. 282"
+        }
+      ]
+    },
+    {
+      "word": "Freedom",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked what was the most beautiful thing in the world, he answered 'Freedom of speech.'",
+          "sourceId": "dl-hicks",
+          "locator": "Lives of Eminent Philosophers VI.69"
+        },
+        {
+          "kind": "deed",
+          "claim": "Cleomenes, quoted by Diogenes Laertius, says that when Diogenes was a slave in Corinth his friends wanted to buy his freedom and he called them simpletons, saying lions are not the slaves of those who feed them.",
+          "sourceId": "dl-hicks",
+          "locator": "Lives of Eminent Philosophers VI.75"
+        },
+        {
+          "kind": "witness",
+          "claim": "Diogenes Laertius says he claimed to live like Heracles, who 'preferred liberty to everything'.",
+          "sourceId": "dl-hicks",
+          "locator": "Lives of Eminent Philosophers VI.71"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy writes of the freedom 'so forcefully advocated by the Cynics', citing his answer about the most beautiful thing.",
+          "sourceId": "iep-cynics",
+          "locator": "section 3.a.i, 'Freedom and Parrhēsia'"
+        }
+      ]
+    },
+    {
+      "word": "Honesty",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Dionysius the Stoic, quoted by Diogenes Laertius, says that after the battle of Chaeronea (338 BC) he was dragged before Philip of Macedon and, asked who he was, said 'A spy upon your insatiable greed'.",
+          "sourceId": "dl-hicks",
+          "locator": "Lives of Eminent Philosophers VI.43"
+        },
+        {
+          "kind": "witness",
+          "claim": "The World History Encyclopedia says he advocated complete truthfulness at all times and was known for brutal honesty in conversation.",
+          "sourceId": "whe-mark",
+          "locator": "opening paragraph and section 'Diogenes' Beliefs'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Oxford classicist Armand D'Angour writes that the anecdotes show him 'as being no respecter of persons'.",
+          "sourceId": "engelsberg-dangour",
+          "locator": "fifth paragraph"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When you find you can live without a thing, get rid of it.",
+      "sourceId": "dl-hicks",
+      "locator": "Lives of Eminent Philosophers VI.37"
+    },
+    {
+      "text": "Train on real hardship, because practice can overcome anything.",
+      "sourceId": "dl-hicks",
+      "locator": "Lives of Eminent Philosophers VI.23, VI.70-71"
+    },
+    {
+      "text": "Judge an act by reason and nature, not by custom: what is not wrong in private is not wrong in public.",
+      "sourceId": "iep-diogenes",
+      "locator": "section 2, 'Philosophical Practice: A Socrates Gone Mad', second paragraph"
+    },
+    {
+      "text": "Say what you think to anyone, a king included.",
+      "sourceId": "dl-hicks",
+      "locator": "Lives of Eminent Philosophers VI.43, VI.69"
+    },
+    {
+      "text": "Do not depend on people you would have to chase.",
+      "sourceId": "dl-hicks",
+      "locator": "Lives of Eminent Philosophers VI.55"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "This at least, if nothing else—to be prepared for every fortune.",
+      "sourceId": "dl-hicks",
+      "locator": "Lives of Eminent Philosophers VI.63, Loeb vol. II; a saying reported by Diogenes Laertius (3rd century AD)",
+      "translation": "R. D. Hicks, 1925"
+    },
+    {
+      "text": "It would be absurd, if Manes can live without Diogenes, but Diogenes cannot get on without Manes.",
+      "sourceId": "dl-hicks",
+      "locator": "Lives of Eminent Philosophers VI.55, Loeb vol. II; a saying reported by Diogenes Laertius (3rd century AD)",
+      "translation": "R. D. Hicks, 1925"
+    },
+    {
+      "text": "Why then do you live, if you do not care to live well?",
+      "sourceId": "dl-hicks",
+      "locator": "Lives of Eminent Philosophers VI.65, Loeb vol. II; a saying reported by Diogenes Laertius (3rd century AD)",
+      "translation": "R. D. Hicks, 1925"
+    },
+    {
+      "text": "Nay, it was through that, you miserable fellow, that I came to be a philosopher.",
+      "sourceId": "dl-hicks",
+      "locator": "Lives of Eminent Philosophers VI.49, Loeb vol. II; a saying reported by Diogenes Laertius (3rd century AD), his reply to a man who reproached him with his exile",
+      "translation": "R. D. Hicks, 1925"
+    }
+  ],
+  "definingMoment": {
+    "text": "After his exile from Sinope he came to Athens; no source gives the year. Diogenes Laertius writes that once Antisthenes took him as a pupil, he, 'exile as he was, set out upon a simple life': he folded his cloak to sleep in, carried a wallet for his food, and called the public porticoes the homes the Athenians had built him. When a friend was slow to find him a cottage, he moved into a large jar in the Metroön. Once, seeing a child drink from his hands, he threw away his cup.",
+    "sourceIds": [
+      "dl-hicks",
+      "iep-diogenes",
+      "eb1911"
+    ]
+  },
+  "shadow": {
+    "text": "He left Sinope over debased coins; Diogenes Laertius says Diogenes admits in his own Pordalus that he debased them. Diogenes Laertius says he did everything in public, sex included, and the Internet Encyclopedia of Philosophy says he masturbated in the marketplace; D'Angour adds that he urinated on people he disliked and defecated in the theatre. Diogenes Laertius reports that he spat in a host's face (others told this of Aristippus), hit people with his stick and beat a man named Meidias with boxing gloves. Seeing women hanged from an olive tree, he said he wished every tree bore such fruit. He saw nothing wrong in stealing from a temple, nor anything impious in touching human flesh, citing the custom of some foreign nations.",
+    "sourceIds": [
+      "dl-hicks",
+      "iep-diogenes",
+      "iep-cynics",
+      "engelsberg-dangour"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you buy, keep or chase this week that you could have lived without?",
+    "principleIndex": 0
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "dl-hicks",
+      "kind": "primary",
+      "title": "Lives of Eminent Philosophers, Book VI, Life of Diogenes (VI.20-81), Loeb vol. II (written in the 3rd century AD from older collections of anecdotes; used in place of writings of his, none of which survive)",
+      "author": "Diogenes Laertius, translated by R. D. Hicks",
+      "year": 1925,
+      "publisher": "Loeb Classical Library (Heinemann / Putnam); Internet Archive scan",
+      "url": "https://archive.org/details/livesofeminentph02diog"
+    },
+    {
+      "id": "iep-diogenes",
+      "kind": "secondary",
+      "title": "Diogenes of Sinope (c. 404-323 B.C.E.), Internet Encyclopedia of Philosophy",
+      "author": "Julie Piering",
+      "year": "undated (read 2026-11-10)",
+      "publisher": "Internet Encyclopedia of Philosophy",
+      "url": "https://iep.utm.edu/diogenes-of-sinope/"
+    },
+    {
+      "id": "iep-cynics",
+      "kind": "secondary",
+      "title": "Cynics, Internet Encyclopedia of Philosophy (same author as iep-diogenes, so not independent of it)",
+      "author": "Julie Piering",
+      "year": "undated (read 2026-11-10)",
+      "publisher": "Internet Encyclopedia of Philosophy",
+      "url": "https://iep.utm.edu/cynics/"
+    },
+    {
+      "id": "eb1911",
+      "kind": "secondary",
+      "title": "Diogenes, Encyclopaedia Britannica, 11th edition, vol. 8, pp. 281-282",
+      "author": "Encyclopaedia Britannica",
+      "year": 1911,
+      "publisher": "Wikisource transcription",
+      "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Diogenes"
+    },
+    {
+      "id": "whe-mark",
+      "kind": "secondary",
+      "title": "Diogenes of Sinope, World History Encyclopedia (2 August 2014)",
+      "author": "Joshua J. Mark",
+      "year": 2014,
+      "publisher": "World History Encyclopedia",
+      "url": "https://www.worldhistory.org/Diogenes_of_Sinope/"
+    },
+    {
+      "id": "engelsberg-dangour",
+      "kind": "secondary",
+      "title": "Mad dog Diogenes: review of Jean-Manuel Roubineau, The Dangerous Life and Ideas of Diogenes the Cynic (Oxford University Press, 2023), Engelsberg Ideas, 31 August 2023",
+      "author": "Armand D'Angour",
+      "year": 2023,
+      "publisher": "Engelsberg Ideas",
+      "url": "https://engelsbergideas.com/reviews/mad-dog-diogenes/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Greek philosopher (c. 412/404-323 BC), long dead, not a politician or founder of a living religion; no account of sexual contact with a minor or of sexual violence; dark side documented in the anecdote record (coin debasement, public masturbation, hitting and spitting at people, a remark welcoming hanged women, approval of temple theft and eating human flesh in theory). Almost everything about him is anecdote in Diogenes Laertius VI (Hicks 1925); every quote is a saying Laertius reports, not his own writing, and the reference works warn much may be invented."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked all five values and checked every claim, locator and quote against the Hicks 1925 text (Internet Archive scan and Wikisource), the IEP entries, the 1911 Britannica and D'Angour's 2023 review. All five held: Self-reliance survived the charge that he lived by begging, Honesty survived the debased coinage as a single early act, and Discipline (not in the blind pick) has checked evidence from three sources; the blind pick's Humour had no room. All four quotes were found word for word; I fixed four sentences (the cup story's order, 'every day' in a principle, masturbation now attributed to its sources, and Hicks's 'touching human flesh' in place of 'eating'). The status is validated because IEP, the 1911 Britannica and D'Angour are independent secondary sources; the rules name the Stanford Encyclopedia as one acceptable source, not a required one.",
+    "checkedOn": "2026-11-10"
+  }
+}
