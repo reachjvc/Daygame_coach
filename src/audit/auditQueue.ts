@@ -52,6 +52,13 @@ export interface QueuedDelete {
    * "Delete anyway" or "Keep" (review of 81f325e9); Log Out names it.
    */
   refused?: { reason: string; stored?: AnswerMark }
+  /**
+   * Log Out (in any tab) is about to send it inside its Undo time, at this
+   * instant (ms): Undo no longer takes it back, and says it is too late. Log
+   * Out sends it only if it is still claimed a moment later, so an Undo
+   * written at the same instant keeps the answer (alpha p10-deletes-04).
+   */
+  claimed?: number
 }
 
 export interface AuditQueue {
@@ -203,7 +210,12 @@ export function mergeAuditQueues(primary: AuditQueue, other: AuditQueue): AuditQ
   const haveAnswer = new Set(answers.map(answerKey))
   for (const a of other.answers) if (!haveAnswer.has(answerKey(a))) answers.push(a)
   const theirs = new Map(other.deletes.map((d) => [deleteKey(d), d]))
-  const deletes = primary.deletes.map((d) => (!d.refused && theirs.get(deleteKey(d))?.refused ? theirs.get(deleteKey(d))! : d))
+  const deletes = primary.deletes.map((d) => {
+    const t = theirs.get(deleteKey(d))
+    if (!d.refused && t?.refused) return t
+    // a claim by Log Out is never lost either: Undo must see it
+    return !d.claimed && t?.claimed ? { ...d, claimed: t.claimed } : d
+  })
   const haveDelete = new Set(deletes.map(deleteKey))
   for (const d of other.deletes) if (!haveDelete.has(deleteKey(d))) deletes.push(d)
   const marks = [...latest.values()]
@@ -344,6 +356,20 @@ export function cancelDelete(q: AuditQueue, id: string): AuditQueue {
     ...q,
     answers: d.restore && !q.answers.some((a) => a.id === id) ? [...q.answers, d.restore] : q.answers,
     deletes: q.deletes.filter((x) => x.id !== id),
+  }
+}
+
+/** Log Out claims these deletes (or, with `claimedAt` null, lets go of them): see `QueuedDelete.claimed`. */
+export function claimDeletes(q: AuditQueue, ids: readonly string[], claimedAt: number | null): AuditQueue {
+  const these = new Set(ids)
+  return {
+    ...q,
+    deletes: q.deletes.map((d) => {
+      if (!these.has(d.id)) return d
+      const { claimed: _c, ...rest } = d
+      void _c
+      return claimedAt === null ? rest : { ...rest, claimed: claimedAt }
+    }),
   }
 }
 

@@ -19,7 +19,7 @@
 
 import { browserStore, failureOf, refusedForGood, SEND_AT_MOST, type KeyValueStore } from "@/src/shared/offlineQueue"
 import { AuditCallError, auditApi } from "./auditClient"
-import { answersSent, auditQueueOwner, deleteIsDue, deleteRefused, deletesSent, readAuditQueue, writeAuditQueue, type AuditQueue } from "./auditQueue"
+import { answersSent, auditQueueOwner, claimDeletes, deleteIsDue, deleteRefused, deletesSent, readAuditQueue, writeAuditQueue, type AuditQueue } from "./auditQueue"
 import type { AnswerMark, AuditAnswer } from "./types"
 
 export interface AuditSendOutcome {
@@ -39,6 +39,12 @@ export interface AuditSendOutcome {
 
 const COULD_NOT_SAVE = "The server could not save it"
 const COULD_NOT_DELETE = "The server could not delete it"
+/**
+ * How long a delete inside its Undo time stays claimed before it is sent: an
+ * Undo another tab read before the claim and writes after it lands well inside
+ * this, and is kept (alpha p10-deletes-04).
+ */
+export const CLAIM_SETTLE_MS = 100
 
 export async function sendWaitingAudit(store: KeyValueStore | null = browserStore()): Promise<AuditSendOutcome> {
   const refused: AuditSendOutcome["refused"] = []
@@ -82,33 +88,55 @@ export async function sendWaitingAudit(store: KeyValueStore | null = browserStor
   }
   if (waiting) return outcome("waiting")
 
-  for (const d of current().deletes) {
-    const { id, at, seen } = d
-    const name = (reason: string, stored?: AnswerMark) =>
-      notDeleted.push({ id, slotAt: d.slotAt ?? null, activity: seen?.activity ?? null, reason, ...(stored ? { stored } : {}) })
-    // refused before: not sent again, named
-    if (d.refused) {
-      name(d.refused.reason, d.refused.stored)
-      continue
-    }
-    try {
-      // Still inside its Undo time: sent anyway, as he is leaving (the dialog says so).
-      const early = !deleteIsDue(d, Date.now())
-      const result = await api.remove(id, at, seen)
-      if (early) undoSent += 1
-      if (result.changed) {
-        // another device changed the answer since: kept, and named (prove-audit-03)
-        put(deleteRefused(current(), id, "Changed on another device", result.changed))
-        name("Changed on another device", result.changed)
-      } else put(deletesSent(current(), [id]))
-    } catch (error) {
-      if (stranger(error)) return outcome("stranger")
-      if (refusedForGood(failureOf(error))) {
-        const reason = error instanceof AuditCallError ? error.message : COULD_NOT_DELETE
-        put(deleteRefused(current(), id, reason))
-        name(reason)
-      } else return outcome("waiting")
-    }
+  // Deletes still inside their Undo time are claimed first, and sent only if
+  // still claimed a moment later: an Undo in another tab at the same instant
+  // keeps the answer, and one after the claim says it is too late.
+  const claimed = current()
+    .deletes.filter((d) => !d.refused && !deleteIsDue(d, Date.now()))
+    .map((d) => d.id)
+  if (claimed.length > 0) {
+    put(claimDeletes(current(), claimed, Date.now()))
+    await new Promise((done) => setTimeout(done, CLAIM_SETTLE_MS))
   }
-  return outcome(refused.length + notDeleted.length > 0 ? "refused" : "sent")
+  try {
+    return await sendDeletes()
+  } finally {
+    // what was not sent (no signal, refused, Stay signed in) can be undone again
+    const left = current()
+    if (left.deletes.some((d) => d.claimed && claimed.includes(d.id))) put(claimDeletes(left, claimed, null))
+  }
+
+  async function sendDeletes(): Promise<AuditSendOutcome> {
+    for (const d of current().deletes) {
+      // inside its Undo time and not claimed by this Log Out (made after the claim): left for the next try
+      if (!d.refused && !deleteIsDue(d, Date.now()) && !(d.claimed && claimed.includes(d.id))) continue
+      const { id, at, seen } = d
+      const name = (reason: string, stored?: AnswerMark) =>
+        notDeleted.push({ id, slotAt: d.slotAt ?? null, activity: seen?.activity ?? null, reason, ...(stored ? { stored } : {}) })
+      // refused before: not sent again, named
+      if (d.refused) {
+        name(d.refused.reason, d.refused.stored)
+        continue
+      }
+      try {
+        // Still inside its Undo time when claimed: sent anyway, as he is leaving (the dialog says so).
+        const early = claimed.includes(id)
+        const result = await api.remove(id, at, seen)
+        if (early) undoSent += 1
+        if (result.changed) {
+          // another device changed the answer since: kept, and named (prove-audit-03)
+          put(deleteRefused(current(), id, "Changed on another device", result.changed))
+          name("Changed on another device", result.changed)
+        } else put(deletesSent(current(), [id]))
+      } catch (error) {
+        if (stranger(error)) return outcome("stranger")
+        if (refusedForGood(failureOf(error))) {
+          const reason = error instanceof AuditCallError ? error.message : COULD_NOT_DELETE
+          put(deleteRefused(current(), id, reason))
+          name(reason)
+        } else return outcome("waiting")
+      }
+    }
+    return outcome(refused.length + notDeleted.length > 0 ? "refused" : "sent")
+  }
 }

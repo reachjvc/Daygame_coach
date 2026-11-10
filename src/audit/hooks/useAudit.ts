@@ -525,7 +525,8 @@ export function useAudit(account: string) {
       let undone = false
       setQ((q) => {
         const d = q.deletes.find((x) => x.id === id)
-        if (!d || d.refused || deleteIsDue(d, Date.now())) return q
+        // claimed: Log Out in another tab is sending it (alpha p10-deletes-04)
+        if (!d || d.refused || d.claimed || deleteIsDue(d, Date.now())) return q
         undone = true
         return cancelDelete(q, id)
       })
