@@ -248,7 +248,7 @@ export async function recordDeviceOutcome(deviceId: string, outcome: "ok" | "gon
  * review reminder. Kept in step with the
  * database's `notification_sends_kind_check`.
  */
-export type SendKind = "test" | "timetrack-running" | "timetrack-alert" | "audit-ping" | "audit-end" | "plan-review"
+export type SendKind = "test" | "timetrack-running" | "timetrack-alert" | "audit-ping" | "audit-end" | "plan-review" | "council-daily"
 
 /**
  * Open a send's row before sending, so its id can travel in the notification.

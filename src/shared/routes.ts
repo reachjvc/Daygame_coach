@@ -68,6 +68,8 @@ export const ROUTES = {
    * production links into the archive.
    */
   quitVice: "/plan/quit-vice",
+  /** The role model library (Plans/role-models.md); each person at `/plan/role-models/<id>`. */
+  roleModels: "/plan/role-models",
 } as const
 
 /** One tracking session's own page. */

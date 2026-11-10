@@ -38,6 +38,7 @@ import { latestScores, periodLabel, periodOf, periodOfReview, reviewFor, scoreAg
 import { ScoreRow } from "./ScoreRow"
 import { TagList } from "./GoalCard"
 import { ValueBrowser } from "./ValueBrowser"
+import { AreaPeople } from "@/src/role-models/components/AreaPeople"
 import { SentenceBox } from "./SentenceBox"
 
 export function AreaDialog({
@@ -322,6 +323,8 @@ export function AreaDialog({
                 }}
               />
             </div>
+            {/* People from the role model library who lived this area at a 10. */}
+            <AreaPeople areaId={area.id} label={area.label} />
             <div className="mt-4">
               <p className="text-[12.5px] text-zinc-200">{AREA_REVIEW_COPY.identity.question}</p>
               <p className="text-[11px] text-zinc-500 mt-0.5">{AREA_REVIEW_COPY.identity.help}</p>

@@ -31,6 +31,7 @@
  * schedule uses (`trackGroups`), so the two screens describe one plan.
  */
 
+import { CouncilToday } from "@/src/role-models/components/CouncilToday"
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, Check, ChevronDown, ChevronUp, Minus, Plus, Trash2 } from "lucide-react"
 import type { NorthStarTabId, NsDailyField, NsFieldKind, NsPlan, NsSubStep } from "@/src/goals/types"
@@ -1321,6 +1322,18 @@ export function TodayTab({
 
   return (
     <div className="space-y-5">
+      {/* Today's council member (Plans/role-models.md, Phases 8 and 9). It
+          reads the council on its own after this page has drawn, and draws
+          nothing for an empty council. Its "What would he do?" line is added
+          to the day's note through the note's own save. */}
+      <CouncilToday
+        today={today}
+        note={note}
+        onNote={(text) => {
+          setNote(text)
+          onNote(text)
+        }}
+      />
       <section className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
         <div className="flex flex-wrap items-baseline justify-between gap-2 px-5 pt-4">
           <div className="min-w-0">

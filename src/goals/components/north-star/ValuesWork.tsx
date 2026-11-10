@@ -34,6 +34,7 @@
  */
 
 import { useState, type ReactNode } from "react"
+import Link from "next/link"
 // ChevronDown for the disclosure. Reordering is a drag now, so it wears
 // GripVertical — the handle every other sortable list in the project uses
 // (SortablePriorityList, WidgetGrid, GoalCategorySection), same role, no new
@@ -59,6 +60,8 @@ import {
   valueConflicts,
   valuesDiff,
 } from "@/src/goals/northStarService"
+import { ROUTES } from "@/src/shared/routes"
+import { CouncilValues } from "@/src/role-models/components/CouncilValues"
 import { TagList } from "./GoalCard"
 import { ValueBrowser } from "./ValueBrowser"
 import { useValueDrag, useValueHandle } from "./valueDrag"
@@ -246,6 +249,17 @@ export function ValuesWork({ plan, handlers, mode }: {
             ? VALUES_INTRO.askNote
             : `${plan.values.length} written. ${VALUES_INTRO.daily}`}
         </p>
+        {/* The values taken from your council, not yet in this list. */}
+        <CouncilValues values={plan.values} onAdd={addTo(plan.values, handlers.onValues)} />
+        {/* Ali Abdaal's Method 4: the people you admire, and what you would take
+            from them. The library is where you choose them (Plans/role-models.md). */}
+        <Link
+          href={ROUTES.roleModels}
+          className="mt-2 inline-block text-[11.5px] text-violet-300 underline-offset-4 hover:underline"
+          data-testid="values-choose-council"
+        >
+          Choose your council: values from people you admire →
+        </Link>
       </div>
 
       {/* The diff between the two, which is the point of asking twice. */}

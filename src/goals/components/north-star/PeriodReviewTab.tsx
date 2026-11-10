@@ -19,9 +19,10 @@
  * back to look leaves nothing behind.
  */
 
+import { CouncilQuestions } from "@/src/role-models/components/CouncilQuestions"
 import { ReviewReminder } from "./ReviewReminder"
 import type { Reminder } from "@/src/db/lifePlanRemindersRepo"
-import { useMemo, useState } from "react"
+import { useMemo, useState, Fragment } from "react"
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react"
 import type { NsGoal, NsPlan, NsReview, NsReviewVerdict } from "@/src/goals/types"
 import { ACHIEVEMENT_COPY, GOAL_STATUS_COPY, READBACK_COPY, READINGS_COPY, REVIEW_PERIOD_COPY as COPY, STEP_DAYS_COPY } from "@/src/goals/data/northStar"
@@ -218,6 +219,10 @@ export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handle
       </section>
 
       {COPY.boxes.map((box) => (
+        <Fragment key={`${reviewIdFor(period)}:${box.field}`}>
+        {/* The council's questions, week only, above the lessons box: the
+            answers go where the lessons go (Plans/role-models.md, Phase 8). */}
+        {period.cadence === "week" && box.field === "lessons" && <CouncilQuestions weekStart={period.start} />}
         <ReviewText
           // A new period is a new box: the draft of the last one must not follow.
           key={`${reviewIdFor(period)}:${box.field}`}
@@ -228,6 +233,7 @@ export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handle
           value={review?.[box.field] ?? ""}
           onCommit={(text) => write({ [box.field]: text } as ReviewPatch)}
         />
+        </Fragment>
       ))}
 
       {review && (

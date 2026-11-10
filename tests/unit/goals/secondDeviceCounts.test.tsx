@@ -82,7 +82,10 @@ describe("a driver on Today", () => {
     fireEvent.click(screen.getByRole("button", { name: "Log one Twenty approaches" }))
     fireEvent.click(screen.getByRole("button", { name: "Take one back off Twenty approaches" }))
     expect(onCountGoal.mock.calls).toEqual([[driverId, 1], [driverId, -1]])
-    expect(fetch).not.toHaveBeenCalled()
+    // The one read Today makes is the role model council's card
+    // (Plans/role-models.md, Phase 8); nothing goes near the old goals table.
+    const urls = vi.mocked(fetch).mock.calls.map(([u]) => String(u))
+    expect(urls.filter((u) => !u.startsWith("/api/role-models/council"))).toEqual([])
   })
 
   it("counts a driver that was never sent anywhere", () => {
