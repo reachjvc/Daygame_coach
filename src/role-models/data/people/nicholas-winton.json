@@ -1,0 +1,278 @@
+{
+  "id": "nicholas-winton",
+  "name": "Nicholas Winton",
+  "born": 1909,
+  "died": 2015,
+  "category": "givers",
+  "areaIds": [
+    "lm_contribution",
+    "lm_mindset"
+  ],
+  "tagline": "A stockbroker who saw that nobody was getting the children out of Prague, and took it on.",
+  "startedFrom": "He was born in London in 1909 to a wealthy family of German-Jewish origin that had converted to Christianity, and grew up in a 20-room house in West Hampstead. He went to Stowe School, was apprenticed in banking in London, worked at banks in Hamburg, Berlin and Paris, and became a stockbroker in 1931. When he went to Prague at the end of 1938 he had no experience of refugee work, and only his holiday, about two weeks by his own account, to spare from his job.",
+  "values": [
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said he was not heroic because he was never in danger, and wanted Doreen Warriner and Trevor Chadwick, who stayed in Prague, to get the praise.",
+          "sourceId": "guardian-moss-2014",
+          "locator": "paragraph beginning 'He is grand, venerable, wise, universally lauded'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times calls him a reluctant hero who was incredulous at being compared with Schindler and Wallenberg.",
+          "sourceId": "nyt-mcfadden-2015",
+          "locator": "paragraph beginning 'For all his ensuing honors' and paragraph quoting Vera Gissing"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Guardian's obituary says he always rejected the idea that his actions were heroic and insisted Chadwick was the real hero.",
+          "sourceId": "guardian-bates-2015",
+          "locator": "second paragraph and paragraph beginning 'He modestly insisted'"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked what made him think he could do it, he said his motto was that if something is not impossible, there must be a way of doing it.",
+          "sourceId": "cbs-simon-2014",
+          "locator": "script, Winton's answer to 'What made you think you could do it?'"
+        },
+        {
+          "kind": "deed",
+          "claim": "When the Home Office was slow with entry visas, he had the entry permits forged, and he paid the costs donors did not cover out of his own pocket.",
+          "sourceId": "nyt-mcfadden-2015",
+          "locator": "paragraph beginning 'Hundreds of families volunteered to take children'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His daughter Barbara told the Guardian that he lacked ambition but had anger at injustice and singlemindedness once he set out to right a wrong.",
+          "sourceId": "guardian-moss-2014",
+          "locator": "paragraph beginning 'Winton met and married the Danish-born Grete Gjelstrup', last two sentences"
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After the war he worked for refugee organisations and for the Abbeyfield Society, a charity for the elderly, raised more than a million pounds in one drive, and was made MBE in 1983 for his charity work.",
+          "sourceId": "nyt-mcfadden-2015",
+          "locator": "paragraph beginning 'He was a Royal Air Force officer in the war'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Because his son Robin had Down's syndrome, he joined the charity Mencap and was still active in it 50 years later.",
+          "sourceId": "guardian-moss-2014",
+          "locator": "paragraph beginning 'Winton's youngest son, Robin'"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1995 he said he had always done charity work, had done it for the 28 years since he retired, and that it was simply work he liked doing.",
+          "sourceId": "ushmm-oh-1995",
+          "locator": "transcript p. 11, answer to 'What suited you for that job?'"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Back in London in 1939 he worked on the Stock Exchange by day and gave his late afternoons and evenings to the rescue.",
+          "sourceId": "ushmm-encyclopedia",
+          "locator": "paragraph beginning 'Winton returned to London to organize the rescue operation'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Yad Vashem historian David Silberklang told CBS that in Prague Winton worked until 2 a.m. and got up early to meet the next parents.",
+          "sourceId": "cbs-simon-2014",
+          "locator": "script, Silberklang's third answer ('People started coming to him in increasing numbers')"
+        },
+        {
+          "kind": "words",
+          "claim": "He said the rescue needed no special knowledge, only a lot of effort, work and initiative and dealing with authority.",
+          "sourceId": "ushmm-oh-1995",
+          "locator": "transcript pp. 10-11, answer to 'Did your skills as a stockbroker aid you in doing this work?'"
+        }
+      ]
+    },
+    {
+      "word": "Compassion",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 1995 he said he toured the refugee camps near Prague in the dead of winter, that it was 'cold and pathetic' to see, and that this was when his ideas about what was happening on the continent were formed.",
+          "sourceId": "ushmm-oh-1995",
+          "locator": "transcript p. 5, answer about Martin Blake and the camps ('we toured 'round these camps in the dead of winter and snow')"
+        },
+        {
+          "kind": "deed",
+          "claim": "He sent money to Prague to cover expenses for children whose parents had been arrested and shot or had fled into hiding.",
+          "sourceId": "nyt-mcfadden-2015",
+          "locator": "paragraph beginning 'Mr. Winton sent more money'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Czech president, Milos Zeman, told him he had been led by a desire to help those who could not defend themselves, the vulnerable.",
+          "sourceId": "guardian-bates-2015",
+          "locator": "paragraph beginning 'He modestly insisted'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "If a thing is not impossible, there is a way to do it: look for the way.",
+      "sourceId": "cbs-simon-2014",
+      "locator": "script, Winton's answer to 'What made you think you could do it?'"
+    },
+    {
+      "text": "If nobody is doing a job that needs doing, do it yourself, even without permission.",
+      "sourceId": "ushmm-oh-1995",
+      "locator": "transcript p. 6 (Warriner: 'perhaps you'd like to try and do it') and pp. 7, 11 (notepaper printed with the committee's name, 'I just used their name')"
+    },
+    {
+      "text": "Save the life first; settle the rest later.",
+      "sourceId": "ushmm-oh-1995",
+      "locator": "transcript pp. 12-13, answer about the Jewish community and the Barbican Mission ('The chief thing was to save the children')"
+    },
+    {
+      "text": "In charity work be tough: run it like a business and work from the list.",
+      "sourceId": "ushmm-oh-1995",
+      "locator": "transcript p. 9, answer to 'While you were in Prague, did you interview any parents, children?'"
+    },
+    {
+      "text": "Live by plain ethics, goodness, kindness, love and honesty, whatever your religion.",
+      "sourceId": "guardian-moss-2014",
+      "locator": "paragraph beginning 'Winton has come to see religion as organised hypocrisy'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I work on the motto that if something's not impossible, there must be a way of doing it.",
+      "sourceId": "cbs-simon-2014",
+      "locator": "60 Minutes, 'Saving the Children', CBS, 27 Apr 2014, script: answer to 'What made you think you could do it?'"
+    },
+    {
+      "text": "It worked. That's the main thing.",
+      "sourceId": "cbs-simon-2014",
+      "locator": "60 Minutes, 'Saving the Children', CBS, 27 Apr 2014, script: answer to 'But you seem to be enjoying it' (on the forged papers and 'blackmail')"
+    },
+    {
+      "text": "I wasn't heroic because I was never in danger.",
+      "sourceId": "guardian-moss-2014",
+      "locator": "The Guardian, 9 Nov 2014, paragraph beginning 'He is grand, venerable, wise, universally lauded'"
+    },
+    {
+      "text": "We need something else, and that something is ethics. Goodness, kindness, love, honesty.",
+      "sourceId": "guardian-moss-2014",
+      "locator": "The Guardian, 9 Nov 2014, paragraph beginning 'Winton has come to see religion as organised hypocrisy'"
+    }
+  ],
+  "definingMoment": {
+    "text": "In December 1938 his friend Martin Blake asked him to skip their ski holiday and come to Prague, where refugees from the Sudetenland filled cold, overcrowded camps. Doreen Warriner of the British refugee committee told him her committee was too overworked to do anything for the children and suggested he try. He began taking parents' applications at his hotel under the committee's name, without its permission, and put Trevor Chadwick in charge of the Prague end. Back in London he worked on the Stock Exchange by day and in the late afternoons and evenings raised money, found foster homes and met the £50 guarantee for each child. From 14 March to 2 August 1939 eight transports took children to Britain, 669 in the official count; the largest, with 250 children, was due to leave on 1 September 1939 and never did.",
+    "sourceIds": [
+      "ushmm-encyclopedia",
+      "ushmm-oh-1995",
+      "nyt-mcfadden-2015",
+      "cbs-simon-2014"
+    ]
+  },
+  "shadow": {
+    "text": "In January 1939, by the Guardian's account, a flight of 20 children left Prague sponsored by the Barbican Mission, which aimed to convert them to Christianity. When a deputation of rabbis told him to stop sending children there, he said he was saving the children, not the religion, and, by the Guardian's account, asked whether they would prefer the children dead or alive. Placements were made with no time to check the families; in 1995 he said some children were badly treated and used as servants, that he did not think of it at the time, and that it still did not concern him greatly, since they were alive and most of the children left behind were not. He used the refugee committee's name on his letters without its permission, had Home Office permits forged, and told CBS it 'took a bit of blackmail'. Historian Tony Kushner wrote in 2024 that Warriner and Chadwick did the dangerous work in Prague, and that 'the need for a secular saint' pushed Winton into an unwanted limelight and mythical status as the British Schindler.",
+    "sourceIds": [
+      "guardian-bates-2015",
+      "ushmm-oh-1995",
+      "nyt-mcfadden-2015",
+      "cbs-simon-2014",
+      "kushner-2024"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What job did you see this week that nobody was doing, and did you wait for someone else to do it?",
+    "principleIndex": 1
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "cbs-simon-2014",
+      "kind": "primary",
+      "title": "Saving the Children (60 Minutes script, aired 27 April 2014)",
+      "author": "Nicholas Winton, interviewed by Bob Simon",
+      "year": 2014,
+      "publisher": "CBS News",
+      "url": "https://www.cbsnews.com/news/saving-the-children-during-world-war-11-60-minutes/"
+    },
+    {
+      "id": "guardian-moss-2014",
+      "kind": "primary",
+      "title": "'British Schindler' Nicholas Winton: I wasn't heroic. I was never in danger (interview, 9 November 2014)",
+      "author": "Stephen Moss",
+      "year": 2014,
+      "publisher": "The Guardian",
+      "url": "https://www.theguardian.com/world/2014/nov/09/british-schindler-nicholas-winton-interview"
+    },
+    {
+      "id": "ushmm-oh-1995",
+      "kind": "primary",
+      "title": "Oral history interview with Nicholas Winton, 17 November 1995 (RG-50.030*0422, transcript)",
+      "author": "Nicholas Winton, interviewed by Arwen Donahue",
+      "year": 1995,
+      "publisher": "United States Holocaust Memorial Museum",
+      "url": "https://collections.ushmm.org/oh_findingaids/RG-50.030.0422_trs_en.pdf"
+    },
+    {
+      "id": "nyt-mcfadden-2015",
+      "kind": "secondary",
+      "title": "Nicholas Winton, Rescuer of 669 Children From Holocaust, Dies at 106 (obituary, 1 July 2015)",
+      "author": "Robert D. McFadden",
+      "year": 2015,
+      "publisher": "The New York Times",
+      "url": "https://www.nytimes.com/2015/07/02/world/europe/nicholas-winton-is-dead-at-106-saved-children-from-the-holocaust.html"
+    },
+    {
+      "id": "guardian-bates-2015",
+      "kind": "secondary",
+      "title": "Sir Nicholas Winton obituary (1 July 2015)",
+      "author": "Stephen Bates",
+      "year": 2015,
+      "publisher": "The Guardian",
+      "url": "https://www.theguardian.com/world/2015/jul/01/sir-nicholas-winton"
+    },
+    {
+      "id": "ushmm-encyclopedia",
+      "kind": "secondary",
+      "title": "Nicholas Winton and the Rescue of Children from Czechoslovakia, 1938-1939 (Holocaust Encyclopedia)",
+      "author": "United States Holocaust Memorial Museum",
+      "year": "n.d. (last edited 30 Sep 2026)",
+      "publisher": "United States Holocaust Memorial Museum",
+      "url": "https://encyclopedia.ushmm.org/content/en/article/nicholas-winton-and-the-rescue-of-children-from-czechoslovakia-1938-1939"
+    },
+    {
+      "id": "kushner-2024",
+      "kind": "secondary",
+      "title": "What One Life gets wrong about Nicholas Winton and the Kindertransport story (12 January 2024)",
+      "author": "Tony Kushner",
+      "year": 2024,
+      "publisher": "The Conversation",
+      "url": "https://theconversation.com/what-one-life-gets-wrong-about-nicholas-winton-and-the-kindertransport-story-220965"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real British stockbroker and humanitarian (1909-2015); he stood once, unsuccessfully, for Maidenhead council in 1954 but never held office and is dead; he founded no religion; searches by name found no account of sexual contact with a minor or of sexual violence; his documented dark side is how he ran the rescue: children placed with a conversion mission and with unchecked hosts, forged permits and borrowed letterhead, and a fame that historians say overshadows the people who did the work in Prague."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I checked every claim against the CBS script, the 2014 Guardian interview, the 1995 USHMM transcript, the NYT and Guardian obituaries, the USHMM encyclopedia and Kushner's 2024 critique, and attacked each value with his own words that charity work must be tough, not soft-hearted. Kindness fell: its evidence was a statement and a phrase from a witness, while his own account of unchecked placements cuts against it; the blind pick's Compassion took its place on three sources. Humility, Determination, Service and Hard work held, though one scrapbook claim was cut because the Guardian calls the discovery story partly apocryphal. All four quotes match the originals; the tagline, the holiday, the Prague hand-over and the January Barbican flight were reworded to what the sources say.",
+    "checkedOn": "2026-11-10"
+  }
+}
