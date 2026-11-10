@@ -1,0 +1,288 @@
+{
+  "id": "srinivasa-ramanujan",
+  "name": "Srinivasa Ramanujan",
+  "born": 1887,
+  "died": 1920,
+  "category": "scientists",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "Poor, self-taught and without a degree, he wrote to Cambridge and was taken seriously",
+  "startedFrom": "He was born in 1887 in Erode, south India, into a poor Brahmin family; his father was a clerk to a cloth merchant in Kumbakonam. From 1903 he taught himself higher mathematics from a borrowed textbook, Carr's Synopsis, without the aid of other books. In college he neglected every subject but mathematics, lost his scholarship, failed the First Arts examination in 1907 and never took a degree; he had no definite occupation, except mathematics, until 1912.",
+  "values": [
+    {
+      "word": "Originality",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told Hardy he had not followed the usual university course but was 'striking out a new path' for himself.",
+          "sourceId": "ramanujan-letters",
+          "locator": "letter to G. H. Hardy, 16 January 1913, Collected Papers (1927), p. xxiii"
+        },
+        {
+          "kind": "deed",
+          "claim": "Working alone in India, he found for himself the functional equation of the Zeta-function and the main terms of famous problems in number theory.",
+          "sourceId": "hardy-1921",
+          "locator": "Collected Papers (1927), part III, p. xxx"
+        },
+        {
+          "kind": "witness",
+          "claim": "Hardy wrote that his work had one gift no one could deny: 'profound and invincible originality'.",
+          "sourceId": "hardy-1921",
+          "locator": "Collected Papers (1927), p. xxxvi; repeated in Hardy, Ramanujan (1940), Lecture I, p. 7"
+        }
+      ]
+    },
+    {
+      "word": "Passion",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At Government College in 1904 he did mathematics in every lecture hour, whatever the subject; this 'excessive devotion to Mathematics' cost him promotion and his scholarship.",
+          "sourceId": "seshu-aiyar-rao-1927",
+          "locator": "Collected Papers (1927), p. xii"
+        },
+        {
+          "kind": "witness",
+          "claim": "MacTutor records that his scholarship was not renewed because he devoted more and more of his time to mathematics and neglected his other subjects.",
+          "sourceId": "mactutor-1998",
+          "locator": "paragraph on Government College, Kumbakonam (1904-1905); page has no page numbers"
+        },
+        {
+          "kind": "witness",
+          "claim": "Hardy wrote that in literature, philosophy and mathematics alike he had 'a passion for what was unexpected, strange, and odd'.",
+          "sourceId": "hardy-1921",
+          "locator": "Collected Papers (1927), p. xxxi"
+        }
+      ]
+    },
+    {
+      "word": "Devotion",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His Indian biographers write that he had 'a special veneration for the Namakkal goddess' and went to popular lectures on the Ramayana and Mahabharata.",
+          "sourceId": "seshu-aiyar-rao-1927",
+          "locator": "Collected Papers (1927), p. xviii"
+        },
+        {
+          "kind": "witness",
+          "claim": "Hardy wrote that in England he kept the religious observances of his caste 'with a severity most unusual in Indians resident in England'.",
+          "sourceId": "hardy-1921",
+          "locator": "Collected Papers (1927), p. xxxi"
+        },
+        {
+          "kind": "witness",
+          "claim": "Hardy wrote that he had promised his parents to keep these observances 'and he kept his promises to the letter', cooking all his own food in Cambridge.",
+          "sourceId": "hardy-1940",
+          "locator": "Lecture I, p. 4"
+        },
+        {
+          "kind": "witness",
+          "claim": "Kanigel describes him as a practising Hindu and scrupulous vegetarian, and writes that much evidence suggests he was more than mechanical in his observance.",
+          "sourceId": "odnb-2004",
+          "locator": "section 'Return to India'"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Very ill after his return to India, he worked until about four days before his death; all his work on mock theta functions was done on his deathbed.",
+          "sourceId": "seshu-aiyar-rao-1927",
+          "locator": "Collected Papers (1927), p. xviii"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1919, ill, he wrote that he would 'certainly do my best to deserve the help that has been given me'.",
+          "sourceId": "ramanujan-letters",
+          "locator": "letter to the Registrar, University of Madras, 11 January 1919, Collected Papers (1927), pp. xix-xx"
+        },
+        {
+          "kind": "witness",
+          "claim": "Kanigel records that he continued his work until a few days before his death on 26 April 1920.",
+          "sourceId": "odnb-2004",
+          "locator": "section 'Return to India'"
+        },
+        {
+          "kind": "deed",
+          "claim": "After his marriage in 1909, notebooks under his arm, he went up and down south India looking for a job or a patron.",
+          "sourceId": "odnb-2004",
+          "locator": "section 'Early studies in India'"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 1919 he asked that, after £50 a year for his parents, the surplus of his allowance go to school fees for poor boys and orphans and to books for schools.",
+          "sourceId": "ramanujan-letters",
+          "locator": "letter to the Registrar, University of Madras, 11 January 1919, Collected Papers (1927), pp. xix-xx"
+        },
+        {
+          "kind": "witness",
+          "claim": "His Indian biographers write that when he got his scholarship his first act was to give part of it to his poor parents, and speak of his 'largeness of heart'.",
+          "sourceId": "seshu-aiyar-rao-1927",
+          "locator": "Collected Papers (1927), p. xix"
+        },
+        {
+          "kind": "deed",
+          "claim": "Of his £250 Madras scholarship in England, £50 went to support his family in India.",
+          "sourceId": "hardy-1921",
+          "locator": "Collected Papers (1927), part III, p. xxx"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Give your spare hours to the work you care about, even while a day job pays the bills.",
+      "sourceId": "ramanujan-letters",
+      "locator": "letter to G. H. Hardy, 16 January 1913, Collected Papers (1927), p. xxiii"
+    },
+    {
+      "text": "If the usual route is closed to you, make your own path.",
+      "sourceId": "ramanujan-letters",
+      "locator": "letter to G. H. Hardy, 16 January 1913, Collected Papers (1927), p. xxiii"
+    },
+    {
+      "text": "Send your best work to the best person in the field and ask for advice.",
+      "sourceId": "ramanujan-letters",
+      "locator": "letter to G. H. Hardy, 16 January 1913, Collected Papers (1927), p. xxiii"
+    },
+    {
+      "text": "Keep the promises you made at home, even far from home.",
+      "sourceId": "hardy-1940",
+      "locator": "Lecture I, p. 4"
+    },
+    {
+      "text": "Keep at the work you love, even when your body is failing.",
+      "sourceId": "seshu-aiyar-rao-1927",
+      "locator": "Collected Papers (1927), p. xviii"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I have not trodden through the conventional regular course which is followed in a University course, but I am striking out a new path for myself.",
+      "sourceId": "ramanujan-letters",
+      "locator": "letter to G. H. Hardy, 16 January 1913, Collected Papers (1927), p. xxiii"
+    },
+    {
+      "text": "To preserve my brains, I want food and this is now my first consideration.",
+      "sourceId": "ramanujan-letters",
+      "locator": "letter to G. H. Hardy, 27 February 1913, quoted in Collected Papers (1927), p. xv"
+    },
+    {
+      "text": "I hope that I shall soon be able to do more and will certainly do my best to deserve the help that has been given me.",
+      "sourceId": "ramanujan-letters",
+      "locator": "letter to the Registrar, University of Madras, 11 January 1919, Collected Papers (1927), pp. xix-xx"
+    },
+    {
+      "text": "It is a very interesting number; it is the smallest number expressible as a sum of two cubes in two different ways.",
+      "sourceId": "hardy-1921",
+      "locator": "spoken to Hardy about taxi-cab No. 1729, as Hardy reports it, Collected Papers (1927), p. xxxv"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 16 January 1913, a Port Trust clerk in Madras paid £20 a year, he wrote to G. H. Hardy at Cambridge. He said he had no university education, asked for advice, and enclosed pages with a hundred or more theorems. Hardy wrote that he might prove 'a mathematician of the very highest class'; with support from Hardy and from G. T. Walker, the University of Madras gave him a scholarship, and from 1 May 1913 he did mathematics full time. In April 1914 he arrived in Cambridge.",
+    "sourceIds": [
+      "ramanujan-letters",
+      "seshu-aiyar-rao-1927",
+      "hardy-1921"
+    ]
+  },
+  "shadow": {
+    "text": "From 1904 to 1907 he worked only on mathematics, neglected his other subjects, lost his scholarship, ran away for a time and never took a degree. On 14 July 1909 he married Janaki, then nine or ten years old (sources differ), in a match his mother arranged; she came to live with him about three years later. Kanigel calls his early relationship with her 'limited at best', and he left her in India while he lived in England from 1914 to 1919. Hardy wrote that his Indian work on prime numbers was 'definitely wrong' and that many of its results were false, and that his 1913 letters to him were probably not entirely his own in their English. After his return to India in 1919 his Indian biographers found him 'a difficult patient', and for a time he refused further treatment.",
+    "sourceIds": [
+      "seshu-aiyar-rao-1927",
+      "odnb-2004",
+      "mactutor-1998",
+      "hardy-1921"
+    ]
+  },
+  "councilQuestion": {
+    "text": "How many of your spare hours this week went to the work you most want to master?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Collected Papers of Srinivasa Ramanujan",
+      "year": 1927
+    },
+    {
+      "title": "Notebooks of Srinivasa Ramanujan (facsimile)",
+      "year": 1957
+    }
+  ],
+  "sources": [
+    {
+      "id": "ramanujan-letters",
+      "kind": "primary",
+      "title": "Letters to G. H. Hardy (16 January and 27 February 1913) and to the Registrar, University of Madras (11 January 1919), as printed in Collected Papers of Srinivasa Ramanujan",
+      "author": "Srinivasa Ramanujan",
+      "year": 1927,
+      "publisher": "Cambridge University Press",
+      "url": "https://archive.org/details/pli.kerala.rare.28155"
+    },
+    {
+      "id": "seshu-aiyar-rao-1927",
+      "kind": "secondary",
+      "title": "Srinivasa Ramanujan (1887-1920), biographical notice in Collected Papers of Srinivasa Ramanujan",
+      "author": "P. V. Seshu Aiyar and R. Ramachandra Rao",
+      "year": 1927,
+      "publisher": "Cambridge University Press",
+      "url": "https://archive.org/details/pli.kerala.rare.28155"
+    },
+    {
+      "id": "hardy-1921",
+      "kind": "secondary",
+      "title": "Srinivasa Ramanujan (1887-1920), obituary notice (Proc. London Math. Soc., 1921), reprinted in Collected Papers of Srinivasa Ramanujan",
+      "author": "G. H. Hardy",
+      "year": 1927,
+      "publisher": "Cambridge University Press",
+      "url": "https://archive.org/details/pli.kerala.rare.28155"
+    },
+    {
+      "id": "hardy-1940",
+      "kind": "secondary",
+      "title": "Ramanujan: Twelve Lectures on Subjects Suggested by His Life and Work",
+      "author": "G. H. Hardy",
+      "year": 1940,
+      "publisher": "Cambridge University Press",
+      "url": "https://archive.org/details/in.ernet.dli.2015.212059"
+    },
+    {
+      "id": "odnb-2004",
+      "kind": "secondary",
+      "title": "Ramanujan, Srinivasa (1887-1920), Oxford Dictionary of National Biography (reproduced by MacTutor)",
+      "author": "Robert Kanigel",
+      "year": 2004,
+      "publisher": "Oxford University Press",
+      "url": "https://mathshistory.st-andrews.ac.uk/DNB/Ramanujan.html"
+    },
+    {
+      "id": "mactutor-1998",
+      "kind": "secondary",
+      "title": "Srinivasa Aiyangar Ramanujan (MacTutor History of Mathematics)",
+      "author": "J. J. O'Connor and E. F. Robertson",
+      "year": 1998,
+      "publisher": "University of St Andrews",
+      "url": "https://mathshistory.st-andrews.ac.uk/Biographies/Ramanujan/"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "Real, long-dead mathematician, not a politician or religious founder. Owner decision (2026-11-10): he sees every case involving a minor. Owner case (no recommendation): on 14 July 1909, aged 21, he married Janaki, nine at her betrothal (Oxford DNB) or ten (MacTutor), in a match his mother arranged; she did not live with him for about three years (until she was twelve, per MacTutor); the Oxford DNB calls their early relationship 'limited at best' and says that after his return in 1919, when she was grown, they 'may have shared something like a real marriage'. No source found reports sexual contact while she was a child (odnb-2004; mactutor-1998; seshu-aiyar-rao-1927 p. xiii)."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value and checked every claim against the 1927 Collected Papers, Hardy's 1940 lectures, Kanigel's Oxford DNB entry and MacTutor. Self-reliance fell: Ramachandra Rao's own account says he wanted food provided 'without exertion on his part', and he sought patrons for years; Integrity fell because its evidence was caste observance, now under Devotion from the blind pick, with Passion also added. All four quotes matched the text. Fixes: the textbook and exam facts in startedFrom, who won him the Madras scholarship, and the shadow's dating, with Hardy's doubt about the English of his letters added.",
+    "checkedOn": "2026-11-10"
+  }
+}
