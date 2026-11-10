@@ -1,0 +1,346 @@
+{
+  "id": "alexander-the-great",
+  "name": "Alexander the Great",
+  "born": -356,
+  "died": -323,
+  "category": "warriors",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A king who led his army from Greece to India and fought in its front rank.",
+  "startedFrom": "He was born in 356 BC, the son of King Philip II of Macedon and Olympias. Philip brought in the philosopher Aristotle to teach him at Mieza when he was about 13; at 16 he ruled Macedonia as regent while his father was away. At 20, after Philip was murdered in 336 BC, he became king of a Macedonia whose army had beaten the Greek cities in the field, with the tribes on his borders and the Greek cities ready to break away.",
+  "values": [
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "As a boy, whenever news came that Philip had taken a city or won a battle, he told his friends that his father would leave him no great deed to do.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Alexander 5.4, Loeb vol. VII, p. 235"
+        },
+        {
+          "kind": "witness",
+          "claim": "Plutarch writes that he 'did not covet pleasure, nor even wealth, but excellence and fame', and wanted a kingdom of 'struggles and wars and ambitions' rather than luxury.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Alexander 5.5-6, p. 235"
+        },
+        {
+          "kind": "words",
+          "claim": "At the river Hyphasis in 326 BC, in the speech Arrian gives him, he asked his officers to march on to the Ganges and the Eastern Sea, so that the limits of their empire would be 'those which God has made also the limits of the earth'.",
+          "sourceId": "arrian-chinnock",
+          "locator": "Anabasis 5.26"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica writes that the traditional view is that he 'aimed at conquering the whole world', and that Niebuhr and Grote saw in him 'mad ambition and vainglory'.",
+          "sourceId": "eb1911",
+          "locator": "Alexander III., vol. 1, section 'Character and policy', first paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "As king from 336 to 323 BC he carried his rule from Greece through Asia Minor, Egypt and Mesopotamia to India.",
+          "sourceId": "whe-mark",
+          "locator": "Introduction"
+        }
+      ]
+    },
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At a town of the Malli in 326-325 BC, when the ladders broke behind him, he jumped down alone from the wall into the citadel full of enemies.",
+          "sourceId": "arrian-chinnock",
+          "locator": "Anabasis 6.9"
+        },
+        {
+          "kind": "deed",
+          "claim": "At Tyre in 332 BC he threw a bridge from a wooden tower to the city wall and crossed it alone to gain a footing on the wall.",
+          "sourceId": "diodorus-welles",
+          "locator": "Library of History 17.46.2, Loeb vol. VIII, p. 249"
+        },
+        {
+          "kind": "words",
+          "claim": "Before Gaugamela in 331 BC, when Parmenio and the older officers urged a night attack on the far larger Persian army, he answered, 'I will not steal my victory.'",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Alexander 31.10-12, p. 319"
+        },
+        {
+          "kind": "witness",
+          "claim": "Arrian writes that he was 'exceedingly fond of incurring danger' and that 'even what he had to do in secret he did with the greatest boldness'.",
+          "sourceId": "arrian-chinnock",
+          "locator": "Anabasis 7.28"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At the Granicus in 334 BC, his spear broken, he took another, rode ahead of his men, struck down Darius's son-in-law Mithridates, and, when Rhoesaces broke off a piece of his helmet with a scimitar, struck him down too.",
+          "sourceId": "arrian-chinnock",
+          "locator": "Anabasis 1.15"
+        },
+        {
+          "kind": "words",
+          "claim": "At Opis in 324 BC, in the speech Arrian gives him, he told his mutinous soldiers that no part of the front of his body was free of wounds from sword, arrow and siege engine.",
+          "sourceId": "arrian-chinnock",
+          "locator": "Anabasis 7.10"
+        },
+        {
+          "kind": "witness",
+          "claim": "Arrian calls him 'very heroic in courage'.",
+          "sourceId": "arrian-chinnock",
+          "locator": "Anabasis 7.28"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica writes that, whatever else historians dispute, 'the high physical courage' stands out clear.",
+          "sourceId": "eb1911",
+          "locator": "Alexander III., vol. 1, section 'Character and policy', first paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Plutarch writes that he 'was wont to court danger', exercising himself and inciting others to deeds of valour.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Alexander 41.1, p. 345"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On the march through the Gedrosian desert in 325 BC he went on foot with his thirsty army; when soldiers brought him a helmet of water from a small spring, he praised them and poured it on the ground in front of everyone.",
+          "sourceId": "arrian-chinnock",
+          "locator": "Anabasis 6.26"
+        },
+        {
+          "kind": "deed",
+          "claim": "In the pursuit of Darius (330 BC) he handed back a helmet of water undrunk, saying his horsemen would lose heart if he drank alone; Plutarch writes that they then said they would not feel weary or thirsty 'so long as they had such a king'.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Alexander 42.7-10, p. 351"
+        },
+        {
+          "kind": "words",
+          "claim": "At the Hyphasis, in the speech Arrian gives him, he told his officers that 'the labours are common to you and me, we have an equal share of the dangers'.",
+          "sourceId": "arrian-chinnock",
+          "locator": "Anabasis 5.26"
+        },
+        {
+          "kind": "witness",
+          "claim": "Arrian calls him very skilful in marshalling, arming and ruling an army, and 'very renowned for rousing the courage of his soldiers ... and dispelling their fear in the midst of danger by his own freedom from fear'.",
+          "sourceId": "arrian-chinnock",
+          "locator": "Anabasis 7.28"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Before crossing to Asia in 334 BC he gave away farms, villages and revenues until nearly all the crown property was gone; asked what he kept for himself, he said 'My hopes'.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Alexander 15.3-6, pp. 261-263"
+        },
+        {
+          "kind": "deed",
+          "claim": "At Susa in 324 BC he paid the debts of every soldier who showed a bond, without taking down names; the gift is said to have come to 20,000 talents.",
+          "sourceId": "arrian-chinnock",
+          "locator": "Anabasis 7.5"
+        },
+        {
+          "kind": "witness",
+          "claim": "Diodorus writes that in 330 BC, sending the allied Greek troops home, he gave each horseman a talent and each foot soldier ten minas, paid their wages for the march home, and gave three talents to each man who stayed, 'in part because of his native generosity' and in part because he had taken so much money.",
+          "sourceId": "diodorus-welles",
+          "locator": "Library of History 17.74.3-4, Loeb vol. VIII, pp. 331-333"
+        },
+        {
+          "kind": "deed",
+          "claim": "Diodorus writes that in 324 BC, discharging 10,000 of his oldest Macedonian soldiers, he paid their debts in a single day, little short of 10,000 talents.",
+          "sourceId": "diodorus-welles",
+          "locator": "Library of History 17.109.2, Loeb vol. VIII, p. 439"
+        },
+        {
+          "kind": "witness",
+          "claim": "Plutarch writes that he 'was naturally munificent, and became still more so as his wealth increased'.",
+          "sourceId": "plutarch-perrin",
+          "locator": "Life of Alexander 39.1, p. 339"
+        },
+        {
+          "kind": "witness",
+          "claim": "Arrian writes that he was 'very sparing' in spending on his own pleasures but 'exceedingly bountiful in spending it for the benefit of his associates'.",
+          "sourceId": "arrian-chinnock",
+          "locator": "Anabasis 7.28"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Carry the same hardship you ask of your people, where they can see you carry it.",
+      "sourceId": "arrian-chinnock",
+      "locator": "Anabasis 6.26 (the water poured out in the desert) and 7.10"
+    },
+    {
+      "text": "Win in open daylight, without tricks.",
+      "sourceId": "arrian-chinnock",
+      "locator": "Anabasis 3.10 (refusing Parmenio's night attack before Gaugamela)"
+    },
+    {
+      "text": "Work is for kings and comfort is for slaves: keep using your own hands.",
+      "sourceId": "plutarch-perrin",
+      "locator": "Life of Alexander 40.2-3, pp. 343-345"
+    },
+    {
+      "text": "Set no end to your efforts except the efforts themselves, as long as they lead to great deeds.",
+      "sourceId": "arrian-chinnock",
+      "locator": "Anabasis 5.26"
+    },
+    {
+      "text": "Give your people what you own and keep your hopes for yourself.",
+      "sourceId": "plutarch-perrin",
+      "locator": "Life of Alexander 15.3-5, pp. 261-263"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I, for my part, think, that to a brave man there is no end to labours except the labours themselves, provided they lead to glorious achievements.",
+      "sourceId": "arrian-chinnock",
+      "locator": "Anabasis 5.26 (to his officers at the river Hyphasis, 326 BC, in the speech Arrian gives him, c. AD 150)",
+      "translation": "E. J. Chinnock, 1884"
+    },
+    {
+      "text": "Boys, my father will anticipate everything; and for me he will leave no great or brilliant achievement to be displayed to the world with your aid.",
+      "sourceId": "plutarch-perrin",
+      "locator": "Life of Alexander 5.4, Loeb vol. VII, p. 235 (to his friends as a boy, as Plutarch reports it, c. AD 100)",
+      "translation": "Bernadotte Perrin, 1919"
+    },
+    {
+      "text": "I will not steal my victory.",
+      "sourceId": "plutarch-perrin",
+      "locator": "Life of Alexander 31.12, Loeb vol. VII, p. 319 (to Parmenio and his officers before Gaugamela, 331 BC, as Plutarch reports it)",
+      "translation": "Bernadotte Perrin, 1919"
+    },
+    {
+      "text": "Come now! whoever of you has wounds, let him strip and show them, and I will show mine in turn",
+      "sourceId": "arrian-chinnock",
+      "locator": "Anabasis 7.10 (to his mutinous army at Opis, 324 BC, in the speech Arrian gives him)",
+      "translation": "E. J. Chinnock, 1884"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 326-325 BC, storming a town of the Malli in India, Alexander climbed onto the wall, and the ladder broke under the guards pushing up behind him. Standing almost alone under missiles, he jumped down inside the citadel, set his back to the wall and killed their leader and others who came at him. An arrow went through his breastplate into his chest, so that, Ptolemy says, air came out of the wound with the blood; Peucestas, holding the sacred shield from Troy, and Leonnatus stood over him until his men broke in. The 1911 Britannica calls it an incident 'such as characterized the personality of Alexander for all succeeding time'.",
+    "sourceIds": [
+      "arrian-chinnock",
+      "plutarch-perrin",
+      "eb1911"
+    ]
+  },
+  "shadow": {
+    "text": "In 335 BC his army stormed Thebes, which had revolted; Arrian writes that he left the settlement to his Greek allies, who voted to raze the city and sell its women, children and surviving men, and Plutarch counts more than 6,000 dead and more than 30,000 sold. At Tyre in 332 BC, after a seven-month siege, Arrian counts about 8,000 Tyrians killed and 30,000 sold, and Diodorus writes that he crucified all the men of military age, not less than 2,000. On the way into India (327-326 BC), at Massaga, Plutarch and Diodorus write that he let the Indian mercenaries leave under a truce and then fell on them on the march; Arrian writes that they had agreed to join his army, and that he surrounded them at night and cut them down when they tried to slip away home. Plutarch calls it a stain on his military career. At Persepolis in 331-330 BC he burned the Persian royal palace against Parmenio's advice; Arrian thinks he acted without prudence, and Plutarch and Diodorus tell it as a drinking party urged on by the Athenian courtesan Thaïs. Later on the march east he had Parmenio himself killed by secret orders after Parmenio's son Philotas was executed for conspiracy; the 1911 Britannica calls it 'perhaps the worst crime' that can be laid to his charge. At Maracanda, in a drunken quarrel, he ran through his friend Cleitus, who had saved his life at the Granicus, then lay three days without food or drink. In 329 BC he had the captured Bessus's nose and ears cut off before sending him to be executed, a punishment Arrian says he does not commend; in 327 BC the historian Callisthenes, who had opposed bowing down to him, was put to death after a plot by the royal pages. The Roman writer Curtius says that in 330 BC a Persian noble gave him the eunuch Bagoas, 'in the very flower of boyhood', and that Alexander became intimate with him; Plutarch reports that he kissed Bagoas in a theatre while his soldiers cheered; no source gives Bagoas's age, and the historian Daniel Ogden holds that Curtius's account cannot settle what the relationship was. Plutarch says he took Barsine, a widow captured at Damascus, as his partner; the historian Borja Antela-Bernárdez (2025) writes that she was forced, citing no ancient account of force, while Arrian and Plutarch praise his restraint with captive women.",
+    "sourceIds": [
+      "arrian-chinnock",
+      "plutarch-perrin",
+      "diodorus-welles",
+      "eb1911",
+      "curtius-vogel",
+      "bmcr-banchich",
+      "antela-2025"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you ask someone this week to carry a load you would not carry yourself?",
+    "principleIndex": 0
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "arrian-chinnock",
+      "kind": "primary",
+      "title": "The Anabasis of Alexander (written c. AD 150 from the lost memoirs of his officers Ptolemy and Aristobulus; used in place of writings he did not leave, as the account the 1911 Britannica calls 'our best authority'; the speeches are Arrian's composition)",
+      "author": "Arrian, translated by E. J. Chinnock",
+      "year": 1884,
+      "publisher": "Hodder and Stoughton; Project Gutenberg e-text #46976",
+      "url": "https://www.gutenberg.org/ebooks/46976"
+    },
+    {
+      "id": "plutarch-perrin",
+      "kind": "secondary",
+      "title": "Life of Alexander, in Plutarch's Lives vol. VII (written c. AD 100, from lost earlier writers and letters)",
+      "author": "Plutarch, translated by Bernadotte Perrin",
+      "year": 1919,
+      "publisher": "Loeb Classical Library, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Plutarch/Lives/Alexander*/3.html"
+    },
+    {
+      "id": "diodorus-welles",
+      "kind": "secondary",
+      "title": "The Library of History, book 17, Loeb vol. VIII (written c. 30 BC, the earliest surviving narrative)",
+      "author": "Diodorus Siculus, translated by C. Bradford Welles",
+      "year": 1963,
+      "publisher": "Loeb Classical Library, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Diodorus_Siculus/17A*.html"
+    },
+    {
+      "id": "curtius-vogel",
+      "kind": "secondary",
+      "title": "Historiae Alexandri Magni, books 4, 6 and 10 (Latin text; written in the 1st century AD)",
+      "author": "Quintus Curtius Rufus, edited by Theodor Vogel",
+      "year": 1880,
+      "publisher": "Teubner, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/L/Roman/Texts/Curtius/6*.html"
+    },
+    {
+      "id": "eb1911",
+      "kind": "secondary",
+      "title": "Alexander III., Encyclopaedia Britannica, 11th edition, vol. 1",
+      "author": "Edwyn Robert Bevan and Margaret Bryant",
+      "year": 1911,
+      "publisher": "Wikisource transcription",
+      "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Alexander_III."
+    },
+    {
+      "id": "whe-mark",
+      "kind": "secondary",
+      "title": "Alexander the Great, World History Encyclopedia (14 November 2013, revised 4 February 2025)",
+      "author": "Joshua J. Mark",
+      "year": 2013,
+      "publisher": "World History Encyclopedia",
+      "url": "https://www.worldhistory.org/Alexander_the_Great/"
+    },
+    {
+      "id": "bmcr-banchich",
+      "kind": "secondary",
+      "title": "Review of Daniel Ogden, Alexander the Great: Myth, Genesis and Sexuality (University of Exeter Press, 2011), Bryn Mawr Classical Review 2012.05.18",
+      "author": "Thomas M. Banchich",
+      "year": 2012,
+      "publisher": "Bryn Mawr Classical Review",
+      "url": "https://bmcr.brynmawr.edu/2012/2012.05.18"
+    },
+    {
+      "id": "antela-2025",
+      "kind": "secondary",
+      "title": "Violaciones y violencia sexual en la campaña de Alejandro, Revista Universitaria de Historia Militar vol. 14 no. 28, pp. 34-50",
+      "author": "Borja Antela-Bernárdez",
+      "year": 2025,
+      "publisher": "Revista Universitaria de Historia Militar; Universitat Autònoma de Barcelona repository",
+      "url": "https://ddd.uab.cat/pub/artpub/2025/327249/ruhm_a2025v14n28p34.pdf"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real Macedonian king (356-323 BC), long dead, no politician of today and no founder of a living religion; flagged because Curtius says he became intimate with the eunuch Bagoas, given to him 'in the very flower of boyhood' (no age stated), and because a 2025 article says the captive Barsine was forced; Thebes, Tyre, Massaga, Persepolis, Parmenio, Cleitus, Bessus and Callisthenes are shadow. Owner case (no recommendation): 330 BC, Hyrcania: Nabarzanes gave Alexander Bagoas, 'a eunuch of singular beauty and in the very flower of boyhood', with whom Darius and then Alexander became intimate [curtius-vogel 6.5.23]; Curtius later says Bagoas had bound Alexander to him 'by the submission of his body' [10.1.25]; Plutarch reports Alexander kissing 'his favourite, Bagoas' in a theatre [plutarch-perrin 67.8]; no ancient source gives his age, and the Latin 'pueritia' has no fixed upper limit; Ogden (via Banchich, BMCR 2012.05.18, p. 170) holds Curtius's testimony 'simply too good' to draw conclusions from; Arrian never names Bagoas as his partner. 333 BC: Barsine, Memnon's widow, captured at Damascus, became his partner [plutarch-perrin 21.7-9]; Antela-Bernárdez (2025, p. 37 and n. 3-4) writes that Barsine was forced, citing Heckel's Who's Who for her but no ancient account of force, and argues from the childbirth death of Darius's captive wife that the story of his restraint is propaganda; Plutarch (21.7, 22.5, 30.1) and Arrian (4.19-20) say he used no force on captive women."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value and checked every claim against the Chinnock Arrian, the Perrin Plutarch, the Welles Diodorus, the Latin Curtius and the 1911 Britannica, and re-read the Antela-Bernárdez article and the BMCR review behind the owner case. Generosity, which rested on Plutarch and Arrian alone, held: Diodorus, from a separate source tradition, names his 'native generosity' (17.74) and the debt payment (17.109), though he adds that captured money made it easy. All four quotes matched the text; the blind pick's Curiosity was not added because the five places were full and one of its two items is a letter of doubted authenticity. Fixes: the Massaga account now gives Arrian's different version, startedFrom no longer dates Philip's victory over Greece to the birth, Antela-Bernárdez's claim now says it cites no ancient account of force, and Bessus's mutilation and Callisthenes' death were added to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
