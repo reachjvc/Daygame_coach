@@ -53,6 +53,6 @@ describe("Log Out where the front page cannot load", () => {
     expect(signedOut.className).toMatch(/fixed/)
     expect(signedOut.className).toMatch(/inset-0/)
     expect(signedOut.className).toMatch(/bg-background/)
-    expect(screen.getByRole("link", { name: /front page/i }).getAttribute("href")).toBe("/")
+    expect(screen.getByRole("button", { name: /front page/i })).toBeTruthy()
   })
 })

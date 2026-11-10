@@ -194,9 +194,10 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
             className="fixed inset-0 z-[10000] flex flex-col items-center justify-center gap-3 bg-background p-6 text-center"
           >
             <p className="text-lg font-semibold">Signed out on this phone</p>
-            <a href="/" className="text-sm underline">
+            {/* a full page load, not an app move: this page holds nothing of the session now */}
+            <button type="button" onClick={() => window.location.replace("/")} className="min-h-11 text-sm underline">
               Go to the front page
-            </a>
+            </button>
           </div>,
           document.body,
         )}
