@@ -1,0 +1,401 @@
+{
+  "id": "martin-luther-king-jr",
+  "name": "Martin Luther King Jr.",
+  "born": 1929,
+  "died": 1968,
+  "category": "leaders",
+  "areaIds": [
+    "lm_contribution",
+    "lm_mission",
+    "lm_spirituality"
+  ],
+  "tagline": "A Baptist preacher who led the fight against segregation and refused to strike back.",
+  "startedFrom": "He was born Michael Luther King Jr. on 15 January 1929 in Atlanta, the son and grandson of the pastors of Ebenezer Baptist Church. His father never earned more than an ordinary salary but saved, so the family always had the basics; still, he grew up in a segregated city, with separate schools and the back of the bus. He entered Morehouse College at fifteen, reading, by his own account, at only an eighth-grade level.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Threatened with death during the Montgomery bus boycott and with his home bombed, he decided not to use armed bodyguards.",
+          "sourceId": "ki-nonviolence",
+          "locator": "King Institute encyclopedia, 'Nonviolence', paragraph beginning 'While intellectually committed to nonviolence'"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that after a threatening call in late January 1956 he was ready to quit, prayed at his kitchen table, and his fears went: 'I was ready to face anything.'",
+          "sourceId": "autobiography",
+          "locator": "Chapter 8, 'Violence of Desperate Men', paragraphs beginning 'One night toward the end of January' to 'I tell you I've seen the lightning flash'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Committee chairman said King had been imprisoned many times, his home bombed and his family threatened, and that he 'has never faltered'.",
+          "sourceId": "nobel-presentation-1964",
+          "locator": "Presentation speech by Gunnar Jahn, 10 December 1964, closing paragraph beginning 'Today we pay tribute'"
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "As president of the Montgomery Improvement Association he led the 13-month bus boycott (5 December 1955 to 20 December 1956) that ended when the US Supreme Court struck down segregated seating on buses.",
+          "sourceId": "ki-boycott",
+          "locator": "King Institute encyclopedia, 'Montgomery Bus Boycott', first paragraph and paragraph beginning 'On 5 June 1956'"
+        },
+        {
+          "kind": "words",
+          "claim": "On the boycott's first night, 5 December 1955, he told the crowd at Holt Street Baptist Church: 'we're going to work with grim and bold determination to gain justice on the buses in this city.'",
+          "sourceId": "ki-boycott",
+          "locator": "King Institute encyclopedia, 'Montgomery Bus Boycott', paragraph beginning 'That evening, at a mass meeting' (citing Papers 3:73)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel biography says that from 1957 to 1968 he spoke over 2,500 times, 'appearing wherever there was injustice, protest, and action'.",
+          "sourceId": "nobel-bio",
+          "locator": "Biographical, paragraph beginning 'In 1957 he was elected president'"
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He was a Baptist minister all his working life: pastor of Dexter Avenue Baptist Church in Montgomery from 1954 and co-pastor of Ebenezer Baptist Church in Atlanta from 1960 until his death.",
+          "sourceId": "nobel-bio",
+          "locator": "Biographical, first two paragraphs"
+        },
+        {
+          "kind": "words",
+          "claim": "Of his kitchen-table prayer in January 1956 he wrote: 'At that moment I experienced the presence of the Divine as I had never experienced Him before.'",
+          "sourceId": "autobiography",
+          "locator": "Chapter 8, 'Violence of Desperate Men', paragraph beginning 'I tell you I've seen the lightning flash'"
+        },
+        {
+          "kind": "words",
+          "claim": "He called nonviolent resistance the 'guiding light of our movement. Christ furnished the spirit and motivation while Gandhi furnished the method'.",
+          "sourceId": "ki-nonviolence",
+          "locator": "King Institute encyclopedia, 'Nonviolence', paragraph beginning 'While intellectually committed' (citing Papers 5:423)"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 5 December 1955, aged 26 and new to Montgomery, he was elected president of the Montgomery Improvement Association, which ran the bus boycott.",
+          "sourceId": "ki-boycott",
+          "locator": "King Institute encyclopedia, 'Montgomery Bus Boycott', paragraph beginning 'On 5 December, 90 percent'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1957 he was elected president of the Southern Christian Leadership Conference; the Nobel biography says he led the Birmingham protest and directed the 1963 March on Washington.",
+          "sourceId": "nobel-bio",
+          "locator": "Biographical, paragraph beginning 'In 1957 he was elected president'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel biography says he 'emerged as a Negro leader of the first rank' during the boycott and became 'a world figure'.",
+          "sourceId": "nobel-bio",
+          "locator": "Biographical, paragraphs beginning 'In 1954' and 'In 1957'"
+        },
+        {
+          "kind": "words",
+          "claim": "In his January 1956 prayer he said: 'The people are looking to me for leadership, and if I stand before them without strength and courage, they too will falter.'",
+          "sourceId": "autobiography",
+          "locator": "Chapter 8, 'Violence of Desperate Men', paragraph beginning 'I got out of bed'"
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "When told he had won the 1964 Nobel Peace Prize, he announced he would give the prize money of $54,123 to the civil rights movement.",
+          "sourceId": "nobel-bio",
+          "locator": "Biographical, paragraph beginning 'At the age of thirty-five'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The King Institute records that he split the roughly $54,000 Nobel prize among civil rights groups, giving $25,000 to the Gandhi Society for Human Rights, $12,000 to the SCLC and the rest to groups including CORE, the NAACP and SNCC.",
+          "sourceId": "ki-nobel",
+          "locator": "King Institute encyclopedia, 'Nobel Peace Prize', paragraph beginning 'King departed for Oslo'"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote: 'Because of the influence of my mother and father, I guess I always had a deep urge to serve humanity.'",
+          "sourceId": "autobiography",
+          "locator": "Chapter 2, 'Morehouse College', paragraph beginning 'Because of the influence of my mother and father'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Refusing to go along with something wrong is as much a duty as helping with something right.",
+      "sourceId": "autobiography",
+      "locator": "Chapter 2, 'Morehouse College', paragraph beginning 'I became convinced that noncooperation with evil'"
+    },
+    {
+      "text": "Do not answer violence with violence, and do not hate the man you are fighting.",
+      "sourceId": "ki-nonviolence",
+      "locator": "King Institute encyclopedia, 'Nonviolence', paragraph on the six principles (citing Stride Toward Freedom, 85)"
+    },
+    {
+      "text": "Try to win your opponent over as a friend, not to humiliate him.",
+      "sourceId": "ki-nonviolence",
+      "locator": "King Institute encyclopedia, 'Nonviolence', paragraph on the six principles, second principle (citing Stride Toward Freedom, 84)"
+    },
+    {
+      "text": "Freedom is not handed to you by those in power; you have to work for it.",
+      "sourceId": "autobiography",
+      "locator": "Chapter 11, 'Birth of a New Nation' (Sermon on Ghana, Dexter Avenue Baptist Church, 7 April 1957), opening paragraph"
+    },
+    {
+      "text": "Before you act, get the facts, try to negotiate and prepare yourself; take direct action only after that.",
+      "sourceId": "ki-letter",
+      "locator": "King Institute encyclopedia, 'Letter from Birmingham Jail', paragraph beginning 'In Why We Can't Wait' (citing Why We Can't Wait, 79)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I have a dream that my four little children will one day live in a nation where they will not be judged by the color of their skin but by the content of their character.",
+      "sourceId": "autobiography",
+      "locator": "Chapter 20, 'March on Washington': 'I Have a Dream' address, Lincoln Memorial, Washington, D.C., 28 August 1963"
+    },
+    {
+      "text": "We came to see that, in the long run, it is more honorable to walk in dignity than ride in humiliation.",
+      "sourceId": "statement-1956",
+      "locator": "Statement on Ending the Bus Boycott, Montgomery, 20 December 1956, first paragraph"
+    },
+    {
+      "text": "I was much more afraid in Montgomery when I had a gun in my house.",
+      "sourceId": "autobiography",
+      "locator": "Chapter 8, 'Violence of Desperate Men', closing paragraphs, after the decision to 'get rid of the one weapon we owned'"
+    },
+    {
+      "text": "I may not get there with you. But I want you to know tonight, that we, as a people, will get to the Promised Land.",
+      "sourceId": "ki-mountaintop",
+      "locator": "'I've Been to the Mountaintop', Bishop Charles Mason Temple, Memphis, 3 April 1968 (A Call to Conscience, 2001, pp. 222-223, as quoted by the King Institute)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In late January 1956, during the Montgomery bus boycott, a late-night phone threat left him, by his own account, ready to give up; he prayed at his kitchen table and wrote that his fear left him. On 30 January a bomb went off on his porch while his wife and baby daughter were inside. He went out to an angry, partly armed crowd, told them his family was all right and urged them not to get their weapons. Friends pushed him to arm himself and he applied for a licence to carry a gun, which was refused; after talking it over with Coretta he got rid of the one gun they owned and hired unarmed watchmen.",
+    "sourceIds": [
+      "autobiography",
+      "ki-boycott"
+    ]
+  },
+  "shadow": {
+    "text": "As a student he often used other writers' words without credit, including in his 1955 PhD dissertation, which borrowed from a fellow student's dissertation without proper citation; the King Papers Project at Stanford published these findings in 1991. In October 1991 a Boston University committee found that he had plagiarized parts of the dissertation; it advised against revoking his degree and put a letter stating the finding with the dissertation in the university library. The King Institute also records that the discussion of nonviolence in his first book, Stride Toward Freedom (1958), was drawn from an address by Harris Wofford. He had affairs during his marriage to Coretta Scott King: FBI surveillance in the 1960s recorded what it described as his affairs, David Garrow wrote in 2019 that the FBI files describe relationships with dozens of women, and his closest friend Ralph Abernathy wrote in 1989 of 'my friend's weakness for women', including encounters on the night before King was killed. In 2019 Garrow also published a typed FBI summary of the bugged rooms at the Willard Hotel in January 1964, saying a pastor friend of King's raped a woman who protested, with a handwritten note beside it: 'King looked on, laughed and offered advice.' The recording is under court seal until 2027; the historians Mary Frances Berry, Donna Murch and Kenneth O'Reilly and his lawyer Clarence Jones said the note cannot be trusted on its own, given the FBI's campaign to discredit him.",
+    "sourceIds": [
+      "ki-dissertation",
+      "deseret-1991",
+      "ki-stride",
+      "ki-fbi",
+      "garrow-2019",
+      "deseret-1989",
+      "ki-abernathy",
+      "wesa-2019",
+      "ajc-2019",
+      "jones-2019"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you go along with something this week that you knew was wrong?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Stride Toward Freedom: The Montgomery Story",
+      "year": 1958
+    },
+    {
+      "title": "Strength to Love",
+      "year": 1963
+    },
+    {
+      "title": "Why We Can't Wait",
+      "year": 1964
+    }
+  ],
+  "sources": [
+    {
+      "id": "autobiography",
+      "kind": "primary",
+      "title": "The Autobiography of Martin Luther King, Jr.",
+      "author": "Martin Luther King Jr., edited by Clayborne Carson (assembled after his death from his own writings, speeches and recordings)",
+      "year": 1998,
+      "publisher": "Warner Books; chapters online at the King Institute, Stanford University",
+      "url": "https://kinginstitute.stanford.edu/publications/autobiography-martin-luther-king-jr"
+    },
+    {
+      "id": "statement-1956",
+      "kind": "primary",
+      "title": "Statement on Ending the Bus Boycott",
+      "author": "Martin Luther King Jr.",
+      "year": 1956,
+      "publisher": "The Papers of Martin Luther King, Jr., vol. 3 (King Papers Project, Stanford)",
+      "url": "https://kinginstitute.stanford.edu/king-papers/documents/statement-ending-bus-boycott"
+    },
+    {
+      "id": "nobel-bio",
+      "kind": "secondary",
+      "title": "Martin Luther King Jr. – Biographical",
+      "author": "Nobel Foundation (Les Prix Nobel en 1964, ed. Göran Liljestrand)",
+      "year": 1965,
+      "publisher": "NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/peace/1964/king/biographical/"
+    },
+    {
+      "id": "nobel-presentation-1964",
+      "kind": "secondary",
+      "title": "Award ceremony speech, Nobel Peace Prize 1964",
+      "author": "Gunnar Jahn, Chairman of the Nobel Committee",
+      "year": 1964,
+      "publisher": "NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/peace/1964/ceremony-speech/"
+    },
+    {
+      "id": "ki-boycott",
+      "kind": "secondary",
+      "title": "Montgomery Bus Boycott (King Encyclopedia)",
+      "author": "Martin Luther King, Jr. Research and Education Institute, Stanford University",
+      "year": "n.d.",
+      "url": "https://kinginstitute.stanford.edu/montgomery-bus-boycott"
+    },
+    {
+      "id": "ki-nonviolence",
+      "kind": "secondary",
+      "title": "Nonviolence (King Encyclopedia)",
+      "author": "Martin Luther King, Jr. Research and Education Institute, Stanford University",
+      "year": "n.d.",
+      "url": "https://kinginstitute.stanford.edu/nonviolence"
+    },
+    {
+      "id": "ki-letter",
+      "kind": "secondary",
+      "title": "\"Letter from Birmingham Jail\" (King Encyclopedia)",
+      "author": "Martin Luther King, Jr. Research and Education Institute, Stanford University",
+      "year": "n.d.",
+      "url": "https://kinginstitute.stanford.edu/letter-birmingham-jail"
+    },
+    {
+      "id": "ki-mountaintop",
+      "kind": "secondary",
+      "title": "\"I've Been to the Mountaintop\" (King Encyclopedia)",
+      "author": "Martin Luther King, Jr. Research and Education Institute, Stanford University",
+      "year": "n.d.",
+      "url": "https://kinginstitute.stanford.edu/ive-been-mountaintop"
+    },
+    {
+      "id": "ki-dissertation",
+      "kind": "secondary",
+      "title": "Dissertation of Martin Luther King, Jr. (King Encyclopedia)",
+      "author": "Martin Luther King, Jr. Research and Education Institute, Stanford University",
+      "year": "n.d.",
+      "url": "https://kinginstitute.stanford.edu/dissertation-martin-luther-king-jr"
+    },
+    {
+      "id": "ki-fbi",
+      "kind": "secondary",
+      "title": "Federal Bureau of Investigation (FBI) (King Encyclopedia)",
+      "author": "Martin Luther King, Jr. Research and Education Institute, Stanford University",
+      "year": "n.d.",
+      "url": "https://kinginstitute.stanford.edu/federal-bureau-investigation-fbi"
+    },
+    {
+      "id": "deseret-1991",
+      "kind": "secondary",
+      "title": "King's plagiarism shouldn't taint his rights reputation, panelists agree",
+      "author": "Deseret News",
+      "year": 1991,
+      "publisher": "Deseret News, 11 October 1991",
+      "url": "https://www.deseret.com/1991/10/11/18945697/king-s-plagiarism-shouldn-t-taint-his-rights-reputation-panelists-agree/"
+    },
+    {
+      "id": "deseret-1989",
+      "kind": "secondary",
+      "title": "Abernathy tells of King's weakness for women",
+      "author": "Deseret News",
+      "year": 1989,
+      "publisher": "Deseret News, 12 October 1989",
+      "url": "https://www.deseret.com/1989/10/12/18827724/abernathy-tells-of-king-s-weakness-for-women"
+    },
+    {
+      "id": "garrow-2019",
+      "kind": "secondary",
+      "title": "The Troubling Legacy of Martin Luther King",
+      "author": "David J. Garrow",
+      "year": 2019,
+      "publisher": "Standpoint (London), June 2019",
+      "url": "https://davidgarrow.com/wp-content/uploads/2019/05/DJGStandpoint2019.pdf"
+    },
+    {
+      "id": "ki-nobel",
+      "kind": "secondary",
+      "title": "Nobel Peace Prize (King Encyclopedia)",
+      "author": "Martin Luther King, Jr. Research and Education Institute, Stanford University",
+      "year": "n.d.",
+      "url": "https://kinginstitute.stanford.edu/nobel-peace-prize"
+    },
+    {
+      "id": "ki-stride",
+      "kind": "secondary",
+      "title": "Stride Toward Freedom: The Montgomery Story (King Encyclopedia)",
+      "author": "Martin Luther King, Jr. Research and Education Institute, Stanford University",
+      "year": "n.d.",
+      "url": "https://kinginstitute.stanford.edu/stride-toward-freedom-montgomery-story"
+    },
+    {
+      "id": "ki-abernathy",
+      "kind": "secondary",
+      "title": "Abernathy, Ralph David (King Encyclopedia)",
+      "author": "Martin Luther King, Jr. Research and Education Institute, Stanford University",
+      "year": "n.d.",
+      "url": "https://kinginstitute.stanford.edu/abernathy-ralph-david"
+    },
+    {
+      "id": "wesa-2019",
+      "kind": "secondary",
+      "title": "Pittsburgh Historian Uncovers Explosive Allegations About MLK, Jr.; Some Experts Skeptical",
+      "author": "Bill O'Driscoll",
+      "year": 2019,
+      "publisher": "90.5 WESA (Pittsburgh NPR station), 30 May 2019",
+      "url": "https://www.wesanews.org/identity-justice/2019-05-30/pittsburgh-historian-uncovers-explosive-allegations-about-mlk-jr-some-experts-skeptical"
+    },
+    {
+      "id": "ajc-2019",
+      "kind": "secondary",
+      "title": "FBI's long-buried allegations of MLK misconduct met with skepticism",
+      "author": "Ernie Suggs and Shelia Poole",
+      "year": 2019,
+      "publisher": "Atlanta Journal-Constitution, 7 June 2019",
+      "url": "https://www.ajc.com/news/fbi-long-buried-allegations-mlk-misconduct-met-with-skepticism/4sxfRFMJhWEWJ4MWYnUciJ"
+    },
+    {
+      "id": "jones-2019",
+      "kind": "secondary",
+      "title": "Don't Give J. Edgar Hoover a Posthumous Victory in his Attempts to Assassinate Dr. King's Character",
+      "author": "Clarence B. Jones (with Jonathan D. Greenberg)",
+      "year": 2019,
+      "publisher": "University of San Francisco, 30 May 2019",
+      "url": "https://www.usfca.edu/news/jones-response-garrow-hoover-martin-luther-king-jr"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real American Baptist minister and civil rights leader (1929-1968), not fictional, never held or ran for office, did not found a religion; owner decides because of the Willard Hotel note (no recommendation). Facts: in Standpoint (June 2019, online 30 May) David Garrow published a typed FBI summary from William Sullivan's file saying that at the Willard Hotel, Washington, in January 1964 the Baltimore pastor Logan Kearse 'immediately and forcibly raped' a woman who protested; beside it someone added in handwriting 'King looked on, laughed and offered advice.' The same summary says that the next evening, when a woman 'shied away' from a sex act, King and other men 'discussed how she was to be taught'; no force described. The tapes and transcripts are sealed by a 31 January 1977 court order until 31 January 2027; in 2025 the Justice Department asked Judge Richard Leon to open them early, King's family and the SCLC opposed, and the New York Amsterdam News (4 Dec 2025) reports he refused. No woman is named and no complaint was ever made. Disputes: Mary Frances Berry ('Sometimes they're made up'; WESA 30 May 2019), Donna Murch ('highly suspect'), Kenneth O'Reilly ('None of this... means that there was a rape or that MLK laughed'), Andrew Young and Logan Kearse's son (AJC 7 June 2019), Clarence Jones (USF 30 May 2019), all pointing to the FBI's campaign to discredit King; Beverly Gage thought it 'unlikely that it was invented with no basis in reality'; Jason Miller (The Conversation, 31 May 2019) believes the memos; Garrow says the note-takers had the tape and had no motive to embellish. Also listed for the owner: Garrow's retelling of a 1964 Nevada memo in which a paid sex worker, Gail LaRue, said she got 'scared as they were pretty drunk' and left; no force described. Full facts and sources: research folder screen.json ownerCase."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value with his affairs, the dissertation plagiarism, borrowed book text and criticism of his leadership, and re-checked every claim, quote and sentence against the King Institute, NobelPrize.org, Deseret News and Garrow texts. All five values held (Justice, Courage and Faith match the blind pick; Leadership and Service now rest on three sources each); the Nobel acceptance quote fell because it is not in a King Institute or King Papers text and was replaced by a line from the Autobiography. The shadow now also states the Willard Hotel note, the 2025 failed bid to unseal the tapes, Clarence Jones's dispute and the borrowed nonviolence text in Stride Toward Freedom.",
+    "checkedOn": "2026-11-10"
+  },
+  "pronoun": "he"
+}
