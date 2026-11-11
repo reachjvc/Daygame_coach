@@ -1,0 +1,381 @@
+{
+  "id": "paul-farmer",
+  "name": "Paul Farmer",
+  "born": 1959,
+  "died": 2022,
+  "category": "givers",
+  "areaIds": [
+    "lm_contribution",
+    "lm_mission"
+  ],
+  "tagline": "A doctor who built health care for the world's poorest and would not settle for less.",
+  "startedFrom": "He was born in 1959 in North Adams, Massachusetts, the second of six children of a public school teacher. After he finished fifth grade the family of eight moved to Florida in an old bus and lived in it at a campground, later on a boat; by his own account, from the age of ten he did not live in a house for many years. For a short time he, his father and his brothers picked oranges alongside workers from Mexico and Haiti. He won a full scholarship to Duke University.",
+  "values": [
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1998 Partners In Health began its HIV Equity Initiative in Haiti, giving AIDS drugs free to poor rural patients chosen on medical grounds only, not on their ability to pay.",
+          "sourceId": "larb-2022",
+          "locator": "paragraph beginning \"In 1998, PIH launched its HIV Equity Initiative\""
+        },
+        {
+          "kind": "words",
+          "claim": "He said people are taught to accept scarcity for others, usually Black, brown or poor people, never for themselves or their own families, and that this logic is lethal on the ground.",
+          "sourceId": "gazette-2018",
+          "locator": "paragraph beginning \"This is something I've been struggling with since I was a student\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The journalist Amy Wilentz, a longtime friend, wrote: \"Balance was not his thing, but justice was.\"",
+          "sourceId": "nation-2022",
+          "locator": "paragraph beginning \"I emceed a conference at UCLA\""
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1985, while still a medical student, he and colleagues opened a two-room clinic in the squatter village of Cange, Haiti, to treat all comers whether or not they could pay; in 1993 he gave his $220,000 MacArthur grant to Partners In Health.",
+          "sourceId": "achievement-bio",
+          "locator": "paragraphs beginning \"In Cange, among the poorest\", \"In 1985, Paul Farmer and his colleagues\" and \"Back in Haiti, Zanmi Lasante's operation grew\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In September 2014, during the Ebola epidemic, he went to Liberia with a group of physicians and health activists and visited the only hospital of Grand Gedeh county; in October he wrote that the team was going back within days.",
+          "sourceId": "lrb-2014",
+          "locator": "first paragraph and paragraph beginning \"In Zwedru, we visited\""
+        },
+        {
+          "kind": "words",
+          "claim": "He said the most satisfying things he had done were in service of other people, and that some part of everybody's life ought to go to such work.",
+          "sourceId": "achievement-interview",
+          "locator": "answer to \"What advice or encouragement would you give to your grandchildren?\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Former US President Bill Clinton said he saw every day as a new opportunity to teach, learn, give and serve.",
+          "sourceId": "ap-2022",
+          "locator": "paragraph beginning \"Paul Farmer changed the way health care is delivered\""
+        }
+      ]
+    },
+    {
+      "word": "Compassion",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Amy Wilentz wrote that he felt pity and love for the stranger, the destitute and the outcast.",
+          "sourceId": "nation-2022",
+          "locator": "paragraph beginning \"\"All too\" is right\""
+        },
+        {
+          "kind": "deed",
+          "claim": "Tracy Kidder recalled that in Peru, when a shy tuberculosis patient followed them to the car to thank him, Farmer took both her hands and told her in Spanish that it was a privilege for him.",
+          "sourceId": "ap-2022",
+          "locator": "paragraphs beginning \"One of Kidder's strongest memories\" and \"With her head down\""
+        },
+        {
+          "kind": "words",
+          "claim": "In a 2013 commencement address he told graduates that the world needs empathy and compassion linked to reasoned plans and meaningful action.",
+          "sourceId": "udel-2013",
+          "locator": "paragraph beginning \"You can be the cure for EDD\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Harvard president Larry Bacow wrote that his love and care for others would always inspire him.",
+          "sourceId": "gazette-2018",
+          "locator": "editor's note, paragraph beginning \"In a note to Harvard's University Professors\""
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said the real secret of his work was persistence: staying engaged with a hard problem for 25 years rather than looking for a big idea.",
+          "sourceId": "achievement-interview",
+          "locator": "answer to \"Initially you went to a hospital in Haiti...\", passage under \"Keys to success: Perseverance\""
+        },
+        {
+          "kind": "deed",
+          "claim": "When the World Health Organization resisted giving HIV drugs to Haitians who could not read, he set up his own programme, with a dosing chart based on the position of the sun and hired helpers, called accompaniers, who hiked to patients' homes.",
+          "sourceId": "ap-2022",
+          "locator": "paragraph beginning \"She noted that when the World Health Organization resisted\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Michelle Karshan, who worked closely with him, said: \"He didn't take no for an answer.\"",
+          "sourceId": "ap-2022",
+          "locator": "paragraph beginning \"Michelle Karshan, vice president\""
+        },
+        {
+          "kind": "deed",
+          "claim": "Many in the international community called his AIDS treatment in rural Haiti wasteful, not sustainable or cost-effective; the programme went ahead and its community model was later taken up worldwide.",
+          "sourceId": "larb-2022",
+          "locator": "paragraphs beginning \"Not everyone agreed\" and \"The PIH's HIV Equity Initiative, which began in Cange\""
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "For three years of medical school he lived in Cange and commuted to Harvard for exams and lab work, and his grades were among the highest in his class.",
+          "sourceId": "achievement-bio",
+          "locator": "paragraph beginning \"Farmer was still in Haiti when he received word\""
+        },
+        {
+          "kind": "deed",
+          "claim": "The outreach worker Bernadin Gracia said he and Farmer walked for hours up mountains in heat or rain to find patients, and that Farmer \"was never tired and never complained\"; their last talk was at 2 a.m., not an unusual working hour for them.",
+          "sourceId": "larb-2022",
+          "locator": "paragraphs beginning \"Gracia was hired as an outreach worker\", \"We would find very sick patients\" and \"They shared their last words\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Amy Wilentz quotes a friend who called him \"a maniac of the best kind\", and asks how else he could have done all he did in his limited time.",
+          "sourceId": "nation-2022",
+          "locator": "paragraph beginning \"\"All too\" is right\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Stick with a hard problem for years; staying engaged is often the real innovation.",
+      "sourceId": "achievement-interview",
+      "locator": "answer to \"Initially you went to a hospital in Haiti...\", passage under \"Keys to success: Perseverance\""
+    },
+    {
+      "text": "When someone dies of something preventable, call it a failure, find out what failed and fix it; never call it fate.",
+      "sourceId": "achievement-interview",
+      "locator": "answer to \"Do you see every pediatric death in Haiti as a failure?\""
+    },
+    {
+      "text": "You never do anything big on your own: build a team and lean on it.",
+      "sourceId": "achievement-interview",
+      "locator": "answers to \"Have you ever gotten so tired of system failures and losing patients that you lost hope?\" and \"What do you know now about achievement...?\""
+    },
+    {
+      "text": "Do not accept for other people a level of care you would never accept for yourself or your own family.",
+      "sourceId": "gazette-2018",
+      "locator": "paragraph beginning \"This is something I've been struggling with since I was a student\""
+    },
+    {
+      "text": "When you help someone, go with them and stay until they, not you, say the job is done.",
+      "sourceId": "hmag-2011",
+      "locator": "paragraph quoting his definition, beginning \"To accompany someone\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "You work hard, but you never do anything on your own.",
+      "sourceId": "gazette-2018",
+      "locator": "paragraph beginning \"But at 30, armed with two Harvard degrees\""
+    },
+    {
+      "text": "Sometimes what's innovative and what's entrepreneurial is just staying engaged with something that's difficult.",
+      "sourceId": "achievement-interview",
+      "locator": "answer to \"Initially you went to a hospital in Haiti...\", passage under \"Keys to success: Perseverance\""
+    },
+    {
+      "text": "Neglect is rarely benign and discrimination never is.",
+      "sourceId": "udel-2013",
+      "locator": "paragraph beginning \"Ours is a nation still saddled with a big EDD problem\""
+    },
+    {
+      "text": "Explaining any of it as the natural order of things blocks meaningful change.",
+      "sourceId": "gazette-2018",
+      "locator": "paragraph beginning \"I think they're very related\""
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1998, when many in the international community called it wasteful, Partners In Health began its HIV Equity Initiative in Haiti: free AIDS drugs for poor rural patients chosen only on medical grounds, with food, and community health workers to bring the medicine. When the World Health Organization resisted giving the drugs to patients who could not read, he made a dosing chart based on the position of the sun. In 2001 he and his colleagues published their results in The Lancet.",
+    "sourceIds": [
+      "larb-2022",
+      "ap-2022"
+    ]
+  },
+  "shadow": {
+    "text": "In April 2004 he argued in the London Review of Books that the Bush administration had brought about the fall of Haiti's president Jean-Bertrand Aristide; a reader, Peter Dailey, answered in the same paper that the account was \"misleading and riddled with errors\" and that Farmer had taken part in a lobbying effort in Washington for Aristide's government, while other letter writers backed Farmer. The journalist Amy Wilentz wrote in 2022 that Aristide's last term was marred by violence and that Farmer would not discuss it even privately, saying only \"He's my friend.\" Tracy Kidder, who wrote a book about him, said in a 2022 radio interview that outside the clinic Farmer could be temperamental and something of a bully. In February 2022 he signed a letter by 38 Harvard professors questioning the university's sanctions on the anthropologist John Comaroff, whom Harvard had found in breach of its sexual and professional conduct rules; after three students sued, he withdrew his name and wrote, \"I made a mistake signing this letter.\" In 2018 he said his own early clinic work in Haiti had been \"really quite bad\" and that he once tended toward sanctimony.",
+    "sourceIds": [
+      "lrb-2004",
+      "lrb-letters-2004",
+      "nation-2022",
+      "wamc-2022",
+      "globe-2022",
+      "crimson-2022",
+      "gazette-2018"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which hard problem did you walk away from this week that you could have stayed with a little longer?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "To Repair the World: Paul Farmer Speaks to the Next Generation",
+      "year": 2013
+    },
+    {
+      "title": "Pathologies of Power: Health, Human Rights, and the New War on the Poor",
+      "year": 2003
+    },
+    {
+      "title": "Fevers, Feuds, and Diamonds: Ebola and the Ravages of History",
+      "year": 2020
+    }
+  ],
+  "sources": [
+    {
+      "id": "achievement-interview",
+      "kind": "primary",
+      "title": "Paul Farmer interview, International Achievement Summit, Cape Town, 3 July 2009",
+      "author": "Paul Farmer (interviewed by the Academy of Achievement)",
+      "year": 2009,
+      "publisher": "American Academy of Achievement (edited transcript)",
+      "url": "https://achievement.org/achiever/paul-farmer/"
+    },
+    {
+      "id": "gazette-2018",
+      "kind": "primary",
+      "title": "Paul Farmer's life of purpose (interview)",
+      "author": "Paul Farmer, interviewed by Alvin Powell",
+      "year": 2018,
+      "publisher": "Harvard Gazette, 21 May 2018 (editor's note added February 2022)",
+      "url": "https://news.harvard.edu/gazette/story/2018/05/harvards-paul-farmer-on-traveling-the-world-to-fight-inequality-in-health/"
+    },
+    {
+      "id": "udel-2013",
+      "kind": "primary",
+      "title": "On Empathy and Reason (commencement address, University of Delaware, 25 May 2013)",
+      "author": "Paul Farmer",
+      "year": 2013,
+      "publisher": "UDaily, University of Delaware",
+      "url": "https://www1.udel.edu/udaily/2013/may/address052613.html"
+    },
+    {
+      "id": "princeton-2008",
+      "kind": "primary",
+      "title": "Full text of Paul Farmer's Baccalaureate remarks (Princeton, 2008)",
+      "author": "Paul Farmer",
+      "year": 2008,
+      "publisher": "The Daily Princetonian",
+      "url": "https://www.dailyprincetonian.com/article/2008/05/full-text-of-paul-farmers-baccalaureate-remarks"
+    },
+    {
+      "id": "lrb-2004",
+      "kind": "primary",
+      "title": "Who removed Aristide?",
+      "author": "Paul Farmer",
+      "year": 2004,
+      "publisher": "London Review of Books, Vol. 26 No. 8, 15 April 2004",
+      "url": "https://www.lrb.co.uk/the-paper/v26/n08/paul-farmer/who-removed-aristide"
+    },
+    {
+      "id": "lrb-2014",
+      "kind": "primary",
+      "title": "Diary: Ebola",
+      "author": "Paul Farmer",
+      "year": 2014,
+      "publisher": "London Review of Books, Vol. 36 No. 20, 23 October 2014",
+      "url": "https://www.lrb.co.uk/the-paper/v36/n20/paul-farmer/diary"
+    },
+    {
+      "id": "lrb-letters-2004",
+      "kind": "secondary",
+      "title": "Letters on 'Who removed Aristide?' (Peter Hallward, 6 May; Peter Dailey, 20 May; Anthony Fenton and Timothy Williams, 3 June; Brian Concannon, 24 June 2004)",
+      "author": "Readers of the London Review of Books",
+      "year": 2004,
+      "publisher": "London Review of Books, Vol. 26 Nos. 9-12",
+      "url": "https://www.lrb.co.uk/the-paper/v26/n08/paul-farmer/who-removed-aristide"
+    },
+    {
+      "id": "achievement-bio",
+      "kind": "secondary",
+      "title": "Paul Farmer: biography",
+      "author": "American Academy of Achievement (staff)",
+      "year": "2022 (updated after his death)",
+      "publisher": "American Academy of Achievement",
+      "url": "https://achievement.org/achiever/paul-farmer/"
+    },
+    {
+      "id": "nation-2022",
+      "kind": "secondary",
+      "title": "Paul Farmer, 1959-2022",
+      "author": "Amy Wilentz",
+      "year": 2022,
+      "publisher": "The Nation, 22 February 2022",
+      "url": "https://www.thenation.com/article/world/paul-farmer-obituary/"
+    },
+    {
+      "id": "ap-2022",
+      "kind": "secondary",
+      "title": "Dr. Paul Farmer, global humanitarian leader, dies at 62",
+      "author": "The Associated Press",
+      "year": 2022,
+      "publisher": "NBC News, 21 February 2022",
+      "url": "https://www.nbcnews.com/news/obituaries/dr-paul-farmer-global-humanitarian-leader-dies-62-rcna17124"
+    },
+    {
+      "id": "larb-2022",
+      "kind": "secondary",
+      "title": "The Mother Hen Who Scratches Your Soul: An Appreciation of Paul Farmer",
+      "author": "Sophie Cousins",
+      "year": 2022,
+      "publisher": "Los Angeles Review of Books, 17 May 2022",
+      "url": "https://lareviewofbooks.org/article/the-mother-hen-who-scratches-your-soul-an-appreciation-of-paul-farmer"
+    },
+    {
+      "id": "hmag-2011",
+      "kind": "secondary",
+      "title": "To Kennedy School graduates, Paul Farmer recommends \"accompaniment\" as policy",
+      "author": "Harvard Magazine",
+      "year": 2011,
+      "publisher": "Harvard Magazine, 25 May 2011",
+      "url": "https://www.harvardmagazine.com/2011/05/paul-farmer-accompaniment-as-policy"
+    },
+    {
+      "id": "wamc-2022",
+      "kind": "secondary",
+      "title": "Tracy Kidder reflects on the life and death of Dr. Paul Farmer, subject of his \"Mountains Beyond Mountains\"",
+      "author": "Josh Landes",
+      "year": 2022,
+      "publisher": "WAMC Northeast Public Radio, 20 March 2022",
+      "url": "https://wamc.org/news/2022-03-20/tracy-kidder-reflects-on-the-life-and-death-of-dr-paul-farmer-subject-of-his-mountains-beyond-mountains"
+    },
+    {
+      "id": "globe-2022",
+      "kind": "secondary",
+      "title": "Harvard professors drop support for colleague accused of sexual harassment",
+      "author": "Laura Krantz",
+      "year": 2022,
+      "publisher": "The Boston Globe, 9 February 2022",
+      "url": "https://www.bostonglobe.com/2022/02/09/metro/professors-drop-support-colleague-accused-sexual-harassment/"
+    },
+    {
+      "id": "crimson-2022",
+      "kind": "secondary",
+      "title": "35 Harvard Professors Retract Support for Letter Questioning Results of Comaroff Investigations",
+      "author": "Ariel H. Kim and Meimei Xu",
+      "year": 2022,
+      "publisher": "The Harvard Crimson, 10 February 2022",
+      "url": "https://www.thecrimson.com/article/2022/2/10/comaroff-faculty-letter-retraction/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American doctor and anthropologist (1959-2022) who co-founded Partners In Health; never held or ran for office, never ran a political campaign, founded no religion; no account of sexual contact with a minor or of sexual violence by him was found; he is in, and his dark side is partisan loyalty to Aristide in Haiti, a temper Kidder described, and signing (then retracting) the 2022 Harvard letter questioning sanctions on John Comaroff."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value against the Aristide partisanship, Kidder's account of his temper, the Comaroff letter and his own admission that his early clinic work was bad, and re-read every cited passage in the saved sources. All five values held: the temper is one trait set against many witnesses to his care, not a pattern against Compassion, and Hard work stands on three separate sources. The blind pick's Impact had no room; all four quotes were found word for word. Six sentences were corrected, among them an orange-picking 'summer' and a 'decades' of friendship that the sources do not state.",
+    "checkedOn": "2026-11-10"
+  }
+}
