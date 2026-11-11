@@ -1,0 +1,346 @@
+{
+  "id": "john-bogle",
+  "name": "John Bogle",
+  "born": 1929,
+  "died": 2019,
+  "category": "money",
+  "areaIds": [
+    "lm_money",
+    "lm_contribution"
+  ],
+  "tagline": "The founder of Vanguard, who built cheap index funds so ordinary savers get a fair share.",
+  "startedFrom": "He was born in Montclair, New Jersey, in 1929 into a well-off family that lost its business and its home in the Great Depression. As a boy and student he delivered newspapers, waited tables and set pins in a bowling alley. He went to Blair Academy and then Princeton on scholarships, and an early D in economics at Princeton nearly cost him his scholarship.",
+  "values": [
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In a 2010 commencement speech he said that after being fired in January 1974 he 'wasn't the giving-up type' and had started Vanguard by September 1974.",
+          "sourceId": "trinity-2010",
+          "locator": "p. 3, paragraph beginning 'During all those decades of health challenges'"
+        },
+        {
+          "kind": "deed",
+          "claim": "When the first index fund's offering raised only $11.3 million in August 1976, against an expected $150 million, the underwriters suggested returning the money and he refused.",
+          "sourceId": "aps-2020",
+          "locator": "p. 165, section 'A Challenge to Judgment', paragraph beginning 'Four Wall Street investment banks'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographical memoir for the American Philosophical Society names determination as one of his defining character traits.",
+          "sourceId": "aps-2020",
+          "locator": "p. 164, section 'The Phoenix Rises', first paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "After he was fired from Wellington Management he persuaded the board of the Wellington funds to split from the management company and let him run the funds' administration at cost.",
+          "sourceId": "inquirer-2019",
+          "locator": "paragraph beginning 'Refusing to surrender'"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He had his first heart attack at about 30; at 37 his doctor advised him to retire and he changed doctors instead; in 1996, after 128 days waiting in hospital, he received a heart transplant.",
+          "sourceId": "inquirer-2019",
+          "locator": "paragraphs beginning 'Mr. Bogle had his first heart attack in 1960' and 'Mr. Bogle outlived three pacemakers'"
+        },
+        {
+          "kind": "words",
+          "claim": "He told Trinity graduates that when doctors said he would probably not reach 40 there was 'little choice but to fight on', and that he fought through seven or eight more heart attacks.",
+          "sourceId": "trinity-2010",
+          "locator": "pp. 2-3, paragraph beginning 'That same spirit bolstered my ability'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His APS memoir lists his determination, grit, wisdom and resilience while he lived with a congenital heart condition.",
+          "sourceId": "aps-2020",
+          "locator": "p. 168, paragraph beginning 'He achieved all of this'"
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told Georgetown MBA graduates to hold to professional values 'in which serving the client is always the highest priority'.",
+          "sourceId": "georgetown-2007",
+          "locator": "p. 4, third caveat, paragraph beginning 'Three, no matter what career you choose'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He set up Vanguard as a company owned by the funds it runs, and so by their investors, giving up the chance of a much larger personal fortune.",
+          "sourceId": "bloomberg-2019",
+          "locator": "paragraph beginning 'By making Vanguard a cooperative'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Warren Buffett wrote that if a statue is ever put up for the person who has done the most for American investors, the choice should be Jack Bogle.",
+          "sourceId": "brk-2016",
+          "locator": "p. 24, paragraph beginning 'If a statue is ever erected'"
+        }
+      ]
+    },
+    {
+      "word": "Simplicity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He called the index fund 'the simplest basic idea in financial history': own the whole stock market and hold it forever.",
+          "sourceId": "princeton-2009",
+          "locator": "pp. 11-12, paragraph beginning 'Perhaps immodestly'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1976 Vanguard launched First Index Investment Trust, the first index fund for individual investors, which tracked the S&P 500 instead of paying managers to pick stocks.",
+          "sourceId": "ap-2019",
+          "locator": "paragraphs beginning 'Bogle did not invent the index fund' and 'Vanguard's first index fund'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Associated Press obituary describes him as the man who simplified investing for the masses.",
+          "sourceId": "ap-2019",
+          "locator": "first paragraph, beginning 'VALLEY FORGE'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His APS memoir says he described himself as an 'apostle of simplicity' and came to indexing through practice, not theory.",
+          "sourceId": "aps-2020",
+          "locator": "p. 166, section 'The Cost Matters Hypothesis', first paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "For more than 20 years he gave half his annual income to charitable causes, and he endowed the Bogle Brothers Scholarships at Blair Academy and Princeton.",
+          "sourceId": "inquirer-2019",
+          "locator": "paragraphs beginning 'While Mr. Bogle may have been cheap' and 'At Blair and Princeton'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He went to Blair Academy on a scholarship and later became a trustee and one of the school's largest donors.",
+          "sourceId": "bloomberg-2019",
+          "locator": "paragraph beginning 'He attended high school at Blair Academy'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He set up the Bogle Brothers Scholars Program at Blair in 1968, which has paid for nearly 200 students, and his gifts helped build Bogle Hall, the school's science building.",
+          "sourceId": "blair-2019",
+          "locator": "paragraph beginning 'Mr. Bogle’s Blair philanthropy encompasses every facet'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Philadelphia Inquirer obituary says his generosity to Blair and Princeton far outstripped his famous frugality.",
+          "sourceId": "inquirer-2019",
+          "locator": "paragraph beginning 'He was a social critic'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not try to beat the market: own the whole market at low cost and hold it.",
+      "sourceId": "princeton-2009",
+      "locator": "pp. 11-12, paragraph beginning 'Perhaps immodestly'"
+    },
+    {
+      "text": "Every cost you pay comes out of your return, so the more the middlemen take, the less you keep.",
+      "sourceId": "georgetown-2007",
+      "locator": "p. 2, paragraph beginning 'Yes, the more that our financial system takes'"
+    },
+    {
+      "text": "Treat the people you serve as if they owned your business, and put their interest first.",
+      "sourceId": "vanguard-40",
+      "locator": "p. 5, section 'Disruptive Innovation', first paragraph"
+    },
+    {
+      "text": "When you are knocked down, do not give up; fight back for your work and your principles.",
+      "sourceId": "trinity-2010",
+      "locator": "p. 1, paragraph beginning 'That is the simple message'; p. 3, paragraph beginning 'During all those decades'"
+    },
+    {
+      "text": "Know when you have enough: life is not about money but about doing good work in the world.",
+      "sourceId": "georgetown-2007",
+      "locator": "pp. 4-5, closing paragraphs beginning 'I close by returning' and 'But it's not time for any of you'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "the great game of life is not about money; it is about doing your best to build the world anew.",
+      "sourceId": "georgetown-2007",
+      "locator": "p. 5, last full paragraph, beginning 'But it's not time for any of you to rest in peace'"
+    },
+    {
+      "text": "It is said on Wall Street, correctly, that “money has no conscience,” but don’t allow that truism to let you ignore your own conscience, nor to alter your own conduct and character.",
+      "sourceId": "georgetown-2007",
+      "locator": "p. 3, first caveat, paragraph beginning 'One, if you do enter this field'"
+    },
+    {
+      "text": "Yes, the more that our financial system takes, the less our investors make.",
+      "sourceId": "georgetown-2007",
+      "locator": "p. 2, paragraph beginning 'Yes, the more that our financial system takes'"
+    },
+    {
+      "text": "Treat your customers as if they were your owners.",
+      "sourceId": "vanguard-40",
+      "locator": "p. 5, section 'Disruptive Innovation', first paragraph"
+    }
+  ],
+  "definingMoment": {
+    "text": "In January 1974 the directors of Wellington Management fired him as chief executive. He persuaded the board of the Wellington funds to let him form a new company owned by the funds themselves, and Vanguard was incorporated on 24 September 1974. On 18 September 1975 he proposed to its board an index fund, the first for individual investors. Its offering on 31 August 1976 raised only about $11 million instead of the expected $150 million, and he refused the underwriters' advice to give the money back. The fund, mocked as 'Bogle's Folly', became today's Vanguard 500 Index Fund.",
+    "sourceIds": [
+      "vanguard-40",
+      "aps-2020",
+      "ap-2019"
+    ]
+  },
+  "shadow": {
+    "text": "As head of Wellington Management he arranged a 1966-67 merger with a small Boston firm that ran aggressive stock funds, and he later wrote that he was 'pretty much solely responsible' for it. In the bear market that followed, by his own account, the firm's Ivest Fund fell 65% from high to low, three of the new funds were closed, and Wellington Fund had the worst record of any balanced fund in the country from 1966 to 1976. Vanguard's founding deal barred it from managing money; to launch the index fund he argued that tracking an index was not managing money, and he later called that argument 'Disingenuous, let's call it. But true.' After handing the chief executive job to his chosen successor John Brennan in 1996, he clashed with him over Vanguard's growth plans. At the mandatory retirement age of 70 he asked the board to waive the rule for him, and the board refused.",
+    "sourceIds": [
+      "vanguard-40",
+      "trinity-2010",
+      "aps-2020",
+      "inquirer-2019",
+      "money-2019",
+      "bloomberg-2019",
+      "ap-2019"
+    ]
+  },
+  "councilQuestion": {
+    "text": "When something knocked you down this week, did you give up on it or fight back?",
+    "principleIndex": 3
+  },
+  "readings": [
+    {
+      "title": "The Little Book of Common Sense Investing",
+      "year": 2007
+    },
+    {
+      "title": "Enough: True Measures of Money, Business, and Life",
+      "year": 2008
+    },
+    {
+      "title": "Stay the Course: The Story of Vanguard and the Index Revolution",
+      "year": 2018
+    }
+  ],
+  "sources": [
+    {
+      "id": "georgetown-2007",
+      "kind": "primary",
+      "title": "\"Enough\": Commencement Address to MBA Graduates of the McDonough School of Business, Georgetown University, 18 May 2007",
+      "author": "John C. Bogle",
+      "year": 2007,
+      "publisher": "John C. Bogle Center for Financial Literacy (Bogle archive)",
+      "url": "https://boglecenter.net/wp-content/uploads/Georgetown_2007.pdf"
+    },
+    {
+      "id": "vanguard-40",
+      "kind": "primary",
+      "title": "Vanguard Turns 40! Happy Birthday! And Thanks to our Crew! (24 September 2014)",
+      "author": "John C. Bogle",
+      "year": 2014,
+      "publisher": "John C. Bogle Center for Financial Literacy (Bogle archive)",
+      "url": "https://boglecenter.net/wp-content/uploads/Vanguard-Turns-40.pdf"
+    },
+    {
+      "id": "trinity-2010",
+      "kind": "primary",
+      "title": "The Fifth \"Never\": A Commencement Address to the Class of 2010, Trinity College, Hartford, 23 May 2010",
+      "author": "John C. Bogle",
+      "year": 2010,
+      "publisher": "John C. Bogle Center for Financial Literacy (Bogle archive)",
+      "url": "https://boglecenter.net/wp-content/uploads/trinitymay2010.pdf"
+    },
+    {
+      "id": "princeton-2009",
+      "kind": "primary",
+      "title": "Aspiring to Build a Better Financial World: Remarks at the Princeton Varsity Club Speaker Series, 30 April 2009",
+      "author": "John C. Bogle",
+      "year": 2009,
+      "publisher": "John C. Bogle Center for Financial Literacy (Bogle archive)",
+      "url": "https://boglecenter.net/wp-content/uploads/Princeton-4-30-09.pdf"
+    },
+    {
+      "id": "bloomberg-2019",
+      "kind": "secondary",
+      "title": "John Bogle, Vanguard Founder Who Urged Low Fees, Dies at 89 (Bloomberg News, 16 January 2019)",
+      "author": "Christopher Condon",
+      "year": 2019,
+      "publisher": "Bloomberg News, as carried by WealthManagement.com",
+      "url": "https://www.wealthmanagement.com/ria-news/john-bogle-vanguard-founder-who-urged-low-fees-dies-at-89"
+    },
+    {
+      "id": "ap-2019",
+      "kind": "secondary",
+      "title": "John Bogle dies at 89; fought for lower fees for investors (16 January 2019)",
+      "author": "The Associated Press",
+      "year": 2019,
+      "publisher": "Associated Press, as carried by TribLive",
+      "url": "https://triblive.com/news/world/john-bogle-dies-at-89-fought-for-lower-fees-for-investors"
+    },
+    {
+      "id": "inquirer-2019",
+      "kind": "secondary",
+      "title": "John Bogle, who founded Vanguard and revolutionized retirement savings, dies at 89 (16 January 2019)",
+      "author": "Art Carey and Erin Arvedlund",
+      "year": 2019,
+      "publisher": "The Philadelphia Inquirer",
+      "url": "https://www.inquirer.com/business/john-bogle-dead-vanguard-obituary-20190116.html"
+    },
+    {
+      "id": "aps-2020",
+      "kind": "secondary",
+      "title": "John C. Bogle, 8 May 1929 - 16 January 2019 (biographical memoir), Proceedings of the American Philosophical Society 164 (2), June 2020, pp. 161-168",
+      "author": "Michael W. Nolan Jr.",
+      "year": 2020,
+      "publisher": "American Philosophical Society",
+      "url": "https://www.amphilsoc.org/sites/default/files/2022-06/attachments/Bogle.pdf"
+    },
+    {
+      "id": "brk-2016",
+      "kind": "secondary",
+      "title": "Berkshire Hathaway Inc. 2016 Letter to Shareholders (February 2017)",
+      "author": "Warren E. Buffett",
+      "year": 2017,
+      "publisher": "Berkshire Hathaway Inc.",
+      "url": "https://www.berkshirehathaway.com/letters/2016ltr.pdf"
+    },
+    {
+      "id": "money-2019",
+      "kind": "secondary",
+      "title": "Jack Bogle, Who Revolutionized the Way Millions of Americans Save and Invest, Dies at Age 89 (Money, 16 January 2019)",
+      "author": "Pat Regnier",
+      "year": 2019,
+      "publisher": "Money",
+      "url": "https://money.com/jack-bogle-obituary/"
+    },
+    {
+      "id": "blair-2019",
+      "kind": "secondary",
+      "title": "Blair Community Mourns the Loss of John C. Bogle '47 (31 January 2019)",
+      "author": "Joanne Miceli",
+      "year": 2019,
+      "publisher": "Blair Academy",
+      "url": "https://www.blair.edu/about-blair/publications-news/post/~board/news/post/blair-community-mourns-the-loss-of-john-c-bogle-47"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real businessman (1929-2019), not a politician, campaigner or religious founder; no account of sexual misconduct found; a documented dark side (a failed merger he pushed that hurt fund investors, and a late power fight at Vanguard) makes him shadow, not ok."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked all five draft values against the saved texts of his Georgetown, Trinity, Princeton and Vanguard-at-40 speeches, the APS memoir, Buffett's 2016 letter and the Bloomberg, AP and Inquirer obituaries. Determination, Resilience, Service and Simplicity held and the blind pick chose them too; Generosity, picked only by the draft, held once Blair Academy's own obituary gave it a third source. Integrity, picked only by the blind agent, was not added: his own word for the argument he used to launch the index fund was 'disingenuous', and that fact now sits in the shadow. All four quotes matched the speech texts; three fixes brought the defining moment and an evidence line in line with their sources.",
+    "checkedOn": "2026-11-10"
+  }
+}
