@@ -1,0 +1,369 @@
+{
+  "id": "rafael-nadal",
+  "name": "Rafael Nadal",
+  "born": 1986,
+  "died": null,
+  "category": "athletes",
+  "areaIds": [
+    "lm_fitness",
+    "lm_mindset"
+  ],
+  "tagline": "A champion who played through chronic pain and never thought himself special.",
+  "startedFrom": "He grew up in Manacor, a town on Mallorca, where his uncle Toni, a coach at the local club, started teaching him tennis at three. Toni was hard on him: he shouted, made him pick up the balls and sweep the court after practice, and played down his early junior wins. At 14 he and his parents turned down a tennis scholarship in Barcelona so he could stay at home.",
+  "values": [
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked which quality made him proudest of his career, he answered: probably determination.",
+          "sourceId": "asap-2025-rg",
+          "locator": "Roland Garros press conference, 25 May 2025, answer on the qualities that gave him most pride"
+        },
+        {
+          "kind": "deed",
+          "claim": "Won the 2022 Australian Open final from two sets down against Medvedev, months after a foot condition had kept him nearly off the tour.",
+          "sourceId": "bbc-ao22",
+          "locator": "opening paragraphs and section \"Nadal's emotional celebrations after adversity\""
+        },
+        {
+          "kind": "deed",
+          "claim": "Won the 2022 French Open with anaesthetic injections in the nerves of his left foot to numb chronic pain.",
+          "sourceId": "bbc-inj",
+          "locator": "opening paragraphs"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Associated Press describes his style as every point pursued as though it were his last.",
+          "sourceId": "ap-2024",
+          "locator": "fourth paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Said that despite his numbers he never considered himself somebody special and always felt he could lose.",
+          "sourceId": "asap-2025-rg",
+          "locator": "Roland Garros press conference, 25 May 2025, answer on his name on Court Philippe Chatrier"
+        },
+        {
+          "kind": "deed",
+          "claim": "In October 2018 he helped clear mud with a broom after flash floods on Mallorca and opened his academy to people left homeless.",
+          "sourceId": "bbc-flood",
+          "locator": "opening paragraphs"
+        },
+        {
+          "kind": "witness",
+          "claim": "BBC Sport cites the flood clean-up as showing a humbleness which motivates others.",
+          "sourceId": "bbc-spain-2024",
+          "locator": "paragraph after the fan quote from Javier Ibanez"
+        }
+      ]
+    },
+    {
+      "word": "Respect",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Said the Big Four showed that the toughest rivals can respect each other and do not need to hate an opponent to beat him.",
+          "sourceId": "asap-2025-rg",
+          "locator": "Roland Garros press conference, 25 May 2025, answer on Federer, Djokovic and Murray at the ceremony"
+        },
+        {
+          "kind": "witness",
+          "claim": "BBC tennis correspondent Russell Fuller reports he shook hands with whole camera crews and often embraced the stenographers.",
+          "sourceId": "bbc-fuller-2024",
+          "locator": "paragraph beginning \"The Nadal I encountered in interview rooms\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Fellow players voted him the ATP's Stefan Edberg Sportsmanship Award five times: 2010 and 2018 to 2021.",
+          "sourceId": "atp-2021",
+          "locator": "article of 17 Dec 2021, opening paragraphs and awards list"
+        }
+      ]
+    },
+    {
+      "word": "Progress",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Said he went into every practice session with the goal to improve something, never just to practise.",
+          "sourceId": "asap-2025-rg",
+          "locator": "Roland Garros press conference, 25 May 2025, answer on the qualities that gave him most pride"
+        },
+        {
+          "kind": "words",
+          "claim": "After the 2022 French Open final he said he kept going step by step, practice by practice, always with a clear goal to improve something.",
+          "sourceId": "asap-2022-rg",
+          "locator": "Roland Garros press conference, 5 Jun 2022, answer on whether what he has achieved surprises him"
+        },
+        {
+          "kind": "witness",
+          "claim": "His uncle and coach Toni says one of the most important things he told him was that he needed to improve always.",
+          "sourceId": "bbc-toughlove",
+          "locator": "paragraph beginning \"I think I gave him the commitment to the sport\""
+        }
+      ]
+    },
+    {
+      "word": "Family",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "After the 2022 Australian Open final he said his family was always next to him, especially in the low moments, and without them he would not be there.",
+          "sourceId": "asap-2022-ao",
+          "locator": "Australian Open press conference, 30 Jan 2022, answer on the hardest parts of the comeback"
+        },
+        {
+          "kind": "deed",
+          "claim": "At 14 he and his parents turned down a tennis scholarship that would have moved him to Barcelona, and he stayed in Manacor with his family and his uncle as coach.",
+          "sourceId": "bbc-toughlove",
+          "locator": "paragraphs beginning \"That was part of the thinking behind their decision\""
+        },
+        {
+          "kind": "witness",
+          "claim": "BBC Sport reports he never permanently left his hometown of Manacor despite travelling the world.",
+          "sourceId": "bbc-spain-2024",
+          "locator": "paragraph beginning \"It also showed the love which proud homebird Nadal retains\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Go into every practice with one thing you want to improve, never just to get the session done.",
+      "sourceId": "asap-2025-rg",
+      "locator": "Roland Garros press conference, 25 May 2025, answer on the qualities that gave him most pride"
+    },
+    {
+      "text": "You can fight a rival with everything you have without hating him.",
+      "sourceId": "asap-2025-rg",
+      "locator": "Roland Garros press conference, 25 May 2025, answer on Federer, Djokovic and Murray at the ceremony"
+    },
+    {
+      "text": "Treat the drivers, ball kids and staff well: the people who see you every day know who you really are.",
+      "sourceId": "asap-2025-rg",
+      "locator": "Roland Garros press conference, 25 May 2025, answer on being called the most respectful player"
+    },
+    {
+      "text": "Take a long injury or setback one step at a time.",
+      "sourceId": "asap-2022-rg",
+      "locator": "Roland Garros press conference, 5 Jun 2022, answer on the foot treatment"
+    },
+    {
+      "text": "If you do what you want to do, hard work is not a sacrifice.",
+      "sourceId": "asap-2025-rg",
+      "locator": "Roland Garros press conference, 25 May 2025, answer on whether he wants his son to play professionally"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "You don't need to hate the opponent to try to beat him with all your forces.",
+      "sourceId": "asap-2025-rg",
+      "locator": "Roland Garros press conference, 25 May 2025, answer on Federer, Djokovic and Murray at the ceremony"
+    },
+    {
+      "text": "I always went on court on every single practice session with the goal to improve, you know. I never went on a tennis court just for practice.",
+      "sourceId": "asap-2025-rg",
+      "locator": "Roland Garros press conference, 25 May 2025, answer on the qualities that gave him most pride"
+    },
+    {
+      "text": "To the bigger audience, you can, in some way, lie, but you can't lie the people who are next to you every single day.",
+      "sourceId": "asap-2025-rg",
+      "locator": "Roland Garros press conference, 25 May 2025, answer on being called the most respectful player"
+    },
+    {
+      "text": "When you are doing what you want to do, you are not doing sacrifices. You work hard, of course. You push as much as you can.",
+      "sourceId": "asap-2025-rg",
+      "locator": "Roland Garros press conference, 25 May 2025, answer on whether he wants his son to play professionally"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 30 January 2022 he played Daniil Medvedev in the Australian Open final. A chronic foot condition had let him play only one tournament in the last seven months of 2021, and he had been ill with Covid in December. He lost the first two sets, then won 2-6 6-7 6-4 6-4 7-5 after five hours and 24 minutes, for a then-record 21st Grand Slam title. Afterwards he said he was destroyed physically.",
+    "sourceIds": [
+      "bbc-ao22",
+      "asap-2022-ao"
+    ]
+  },
+  "shadow": {
+    "text": "In January 2024 he became an ambassador for the Saudi Tennis Federation, a well-paid role. Amnesty International UK called it \"the latest chapter in Saudi Arabia's relentless sportswashing operation\" and asked him to speak out on human rights; he said he saw \"real potential\" for tennis there. In June 2018 he told an Italian magazine that prize money in tennis should follow the size of the audience, and compared it with female models, who he said earn more than male models. He also clashed with the time rules on court: at Wimbledon in 2018 he got two time violations, and after a 2015 dispute he had asked that umpire Carlos Bernardes not take his matches.",
+    "sourceIds": [
+      "pa-2024-saudi",
+      "reuters-2024-saudi",
+      "bbc-spain-2024",
+      "si-2018-pay",
+      "cbs-2018-pay",
+      "bbc-time-2018"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which session this week did you just get through, without one thing you set out to improve?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Rafa (with John Carlin)",
+      "year": 2011
+    }
+  ],
+  "sources": [
+    {
+      "id": "asap-2025-rg",
+      "kind": "primary",
+      "title": "Rafael Nadal press conference, Roland Garros tribute, 25 May 2025 (FastScripts transcript)",
+      "author": "Rafael Nadal; transcript by ASAP Sports",
+      "year": 2025,
+      "publisher": "ASAP Sports",
+      "url": "https://www.asapsports.com/show_interview.php?id=208675"
+    },
+    {
+      "id": "asap-2022-ao",
+      "kind": "primary",
+      "title": "Rafael Nadal press conference after the Australian Open final, 30 Jan 2022 (FastScripts transcript)",
+      "author": "Rafael Nadal; transcript by ASAP Sports",
+      "year": 2022,
+      "publisher": "ASAP Sports",
+      "url": "https://www.asapsports.com/show_interview.php?id=172605"
+    },
+    {
+      "id": "asap-2022-rg",
+      "kind": "primary",
+      "title": "Rafael Nadal press conference after the Roland Garros final, 5 Jun 2022 (FastScripts transcript)",
+      "author": "Rafael Nadal; transcript by ASAP Sports",
+      "year": 2022,
+      "publisher": "ASAP Sports",
+      "url": "https://www.asapsports.com/show_interview.php?id=177074"
+    },
+    {
+      "id": "bbc-toughlove",
+      "kind": "secondary",
+      "title": "Rafael Nadal: The 'tough love' that shaped a 22-time Grand Slam champion",
+      "author": "Jonathan Jurejko",
+      "year": 2024,
+      "publisher": "BBC Sport",
+      "url": "https://www.bbc.co.uk/sport/tennis/60183861"
+    },
+    {
+      "id": "bbc-ao22",
+      "kind": "secondary",
+      "title": "Australian Open: Rafael Nadal beats Daniil Medvedev from two sets down in Melbourne epic",
+      "author": "Jonathan Jurejko",
+      "year": 2022,
+      "publisher": "BBC Sport",
+      "url": "https://www.bbc.co.uk/sport/tennis/60183864"
+    },
+    {
+      "id": "bbc-inj",
+      "kind": "secondary",
+      "title": "French Open: Rafael Nadal won't play Wimbledon if he needs foot injections",
+      "author": "Jonathan Jurejko",
+      "year": 2022,
+      "publisher": "BBC Sport",
+      "url": "https://www.bbc.co.uk/sport/tennis/61698213"
+    },
+    {
+      "id": "bbc-flood",
+      "kind": "secondary",
+      "title": "Rafael Nadal opens his tennis academy centre to Majorca flood victims",
+      "author": "BBC Sport",
+      "year": 2018,
+      "publisher": "BBC Sport",
+      "url": "https://www.bbc.co.uk/sport/tennis/45820609"
+    },
+    {
+      "id": "bbc-spain-2024",
+      "kind": "secondary",
+      "title": "Rafael Nadal retires: What the 22-time Grand Slam champion means to Spain",
+      "author": "Jonathan Jurejko",
+      "year": 2024,
+      "publisher": "BBC Sport",
+      "url": "https://www.bbc.co.uk/sport/tennis/articles/c0k82g8lzn0o"
+    },
+    {
+      "id": "bbc-fuller-2024",
+      "kind": "secondary",
+      "title": "Rafael Nadal retiring: Reflections on 'the son every mum would love to have'",
+      "author": "Russell Fuller",
+      "year": 2024,
+      "publisher": "BBC Sport",
+      "url": "https://www.bbc.co.uk/sport/tennis/articles/cyvy9dervqzo"
+    },
+    {
+      "id": "bbc-time-2018",
+      "kind": "secondary",
+      "title": "Wimbledon 2018: Rafael Nadal through to round three despite time violations",
+      "author": "Sonia Oxley",
+      "year": 2018,
+      "publisher": "BBC Sport",
+      "url": "https://www.bbc.co.uk/sport/tennis/44726266"
+    },
+    {
+      "id": "ap-2024",
+      "kind": "secondary",
+      "title": "Rafael Nadal, 22-time Grand Slam champion and 'King of Clay,' to retire from tennis",
+      "author": "Tales Azzoni and Howard Fendrich",
+      "year": 2024,
+      "publisher": "Associated Press (via PBS News)",
+      "url": "https://www.pbs.org/newshour/world/rafael-nadal-22-time-grand-slam-champion-and-king-of-clay-to-retire-from-tennis"
+    },
+    {
+      "id": "pa-2024-saudi",
+      "kind": "secondary",
+      "title": "Rafael Nadal urged to use new Saudi tennis role to speak out on human rights",
+      "author": "PA Sport Staff",
+      "year": 2024,
+      "publisher": "PA Media (via Irish Examiner)",
+      "url": "https://www.irishexaminer.com/sport/othersport/arid-41310268.html"
+    },
+    {
+      "id": "reuters-2024-saudi",
+      "kind": "secondary",
+      "title": "Nadal named Saudi Tennis Federation ambassador",
+      "author": "Reuters",
+      "year": 2024,
+      "publisher": "Reuters (via The Daily Star)",
+      "url": "https://www.thedailystar.net/sports/more-sports/tennis/news/nadal-named-saudi-tennis-federation-ambassador-3520431"
+    },
+    {
+      "id": "atp-2021",
+      "kind": "secondary",
+      "title": "Nadal Earns Stefan Edberg Sportsmanship Award: 'I Can't Be Happier'",
+      "author": "ATP Staff",
+      "year": 2021,
+      "publisher": "ATP Tour",
+      "url": "https://www.atptour.com/en/news/nadal-atp-awards-2021-stefan-edberg-sportsmanship"
+    },
+    {
+      "id": "si-2018-pay",
+      "kind": "secondary",
+      "title": "Rafael Nadal Thinks Viewership Should Determine Men's and Women's Tennis Earnings",
+      "author": "Nihal Kolur",
+      "year": 2018,
+      "publisher": "Sports Illustrated",
+      "url": "https://www.si.com/tennis/2018/06/12/rafael-nadal-thinks-viewership-should-determine-tennis-earnings"
+    },
+    {
+      "id": "cbs-2018-pay",
+      "kind": "secondary",
+      "title": "Rafael Nadal says women tennis players shouldn't be paid equally if TV ratings aren't equal",
+      "author": "Cody Benjamin",
+      "year": 2018,
+      "publisher": "CBS Sports",
+      "url": "https://www.cbssports.com/tennis/news/rafael-nadal-says-women-tennis-players-shouldnt-be-paid-equally-if-tv-ratings-arent-equal"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real, living retired tennis player, not a politician or religious founder; no account of sexual contact with a minor or sexual violence found; shadow is a paid Saudi ambassador role (2024) criticised as sportswashing, and repeated time-rule trouble on court."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value: Humility against his own 'not trying to be humble' and the Saudi money, Respect against his 2018 Wimbledon time violations and his request to keep umpire Carlos Bernardes off his matches, and Progress and Respect for having only two sources each. All five held: the umpire and clock clashes are single episodes set against five player-voted sportsmanship awards, and Progress gained a 2022 Roland Garros transcript; Generosity and Hard work, the blind picks, had no room. The shadow gained his 2018 remarks on women's prize money, one claim lost an unsupported 'before matches', and all four quotes were found word for word in the ASAP Sports transcript.",
+    "checkedOn": "2026-11-10"
+  }
+}
