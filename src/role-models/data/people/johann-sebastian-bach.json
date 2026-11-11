@@ -1,0 +1,332 @@
+{
+  "id": "johann-sebastian-bach",
+  "name": "Johann Sebastian Bach",
+  "born": 1685,
+  "died": 1750,
+  "category": "artists",
+  "areaIds": [
+    "lm_mission",
+    "lm_spirituality"
+  ],
+  "tagline": "A church musician who worked every week to honour God and to teach the next player.",
+  "startedFrom": "He was born in Eisenach on 21 March 1685, the son of Johann Ambrosius Bach, Court and Town Musician there. His mother died first and his father in 1695, when he was not yet ten, so he went to live with his eldest brother, an organist in Ohrdruf, who gave him his first keyboard lessons. As a teenager he went to Lüneburg and sang in the choir of St Michael's, where his treble voice earned him a living.",
+  "values": [
+    {
+      "word": "Devotion",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his 1708 letter of resignation from Mühlhausen he wrote that he had always kept one end in view: well-ordered church music to the honour of God.",
+          "sourceId": "muhlhausen-1708",
+          "locator": "letter of 25 June 1708, in Spitta (tr. Bell and Fuller Maitland), vol. 1, p. 373"
+        },
+        {
+          "kind": "words",
+          "claim": "He inscribed his Little Organ Book 'in honour of the Lord Most High'.",
+          "sourceId": "orgelbuchlein-title",
+          "locator": "title page; in Spitta (tr. Bell and Fuller Maitland), vol. 1, p. 598, note 329"
+        },
+        {
+          "kind": "deed",
+          "claim": "Spitta reports that he never failed to sign a first score with 'S.D.G.' ('To the glory of God alone') at the end and 'J.J.' ('Jesus, help') at the start.",
+          "sourceId": "spitta-1899",
+          "locator": "vol. 1, Appendix, note 11, p. 625"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer Charles Sanford Terry calls him 'sincerely religious' and 'a lover of sound theology, and of a piety as deep as it was unpretentious'.",
+          "sourceId": "terry-1920",
+          "locator": "Chapter IIA, 'Bach at Leipzig, 1723-1750', paragraph beginning 'A man of rigid uprightness'"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "His first biographer, Forkel, reports that when asked how he had mastered his art, he usually answered that he had had to work hard, and that anyone who worked as hard would get as far.",
+          "sourceId": "forkel-1802",
+          "locator": "Chapter VIII, 'Personal Characteristics', second paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Forkel writes that as a young composer he 'robbed himself of sleep to practise in the night what he had written during the day'.",
+          "sourceId": "forkel-1802",
+          "locator": "Chapter V, 'Bach the Composer', first paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "His son C. P. E. Bach stated that he composed five cantatas for every Sunday and feast day of the church year; from this Terry counts at least 295 cantatas, of which 202 survive.",
+          "sourceId": "terry-1920",
+          "locator": "Appendix II, 'The Church Cantatas arranged chronologically', first two paragraphs"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "As a boy he secretly copied a book of keyboard music by moonlight over six months; at Lüneburg he travelled several times to Hamburg to hear the organist Reinken.",
+          "sourceId": "forkel-1802",
+          "locator": "Chapter II, 'The Career of Bach', paragraphs 2-4"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked by the Arnstadt consistory in February 1706 where he had been, he answered that he had gone to Lübeck 'to learn thoroughly one or two things connected with his art'.",
+          "sourceId": "arnstadt-1706",
+          "locator": "consistory record of 21 February 1706, in Spitta (tr. Bell and Fuller Maitland), vol. 1, p. 315"
+        },
+        {
+          "kind": "deed",
+          "claim": "Forkel says he learned musical form by arranging Vivaldi's violin concertos for keyboard and studying their structure.",
+          "sourceId": "forkel-1802",
+          "locator": "Chapter V, 'Bach the Composer', first paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In the last decade of his life he went back to the organ works of his Weimar years and revised them.",
+          "sourceId": "terry-1920",
+          "locator": "Chapter IIA, 'Bach at Leipzig, 1723-1750', paragraph beginning 'Apart from his musical activities'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Spitta notes that his autograph cantata scores are 'generally so full' of corrections and alterations.",
+          "sourceId": "spitta-1899",
+          "locator": "vol. 1, Appendix, note 11, p. 625"
+        },
+        {
+          "kind": "deed",
+          "claim": "Forkel reports that in his pupils' work he struck out as faulty any note whose origin or destination was not perfectly clear.",
+          "sourceId": "forkel-1802",
+          "locator": "Chapter VII, 'Bach as a Teacher', paragraph beginning 'Bach required his pupils in composition'"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote on the title page of The Well-Tempered Clavier (1722) that it was 'for the use and practice of young musicians who desire to learn'.",
+          "sourceId": "wtc-1722",
+          "locator": "title page; in Spitta (tr. Bell and Fuller Maitland), vol. 2, pp. 161-162"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote on the title page of the Little Organ Book that it was made 'that my neighbour may be taught thereby', for the beginning organist.",
+          "sourceId": "orgelbuchlein-title",
+          "locator": "title page; in Spitta (tr. Bell and Fuller Maitland), vol. 1, p. 598, note 329"
+        },
+        {
+          "kind": "deed",
+          "claim": "Forkel reports that he wrote the Six Little Preludes and the two-part Inventions during lessons for particular pupils, and played pieces over to pupils to show how they should sound.",
+          "sourceId": "forkel-1802",
+          "locator": "Chapter VII, 'Bach as a Teacher', paragraphs beginning 'First of all let me show' and 'Not until this stage'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do your work for something higher than yourself, and put that aim on the page.",
+      "sourceId": "muhlhausen-1708",
+      "locator": "letter of 25 June 1708, in Spitta (tr. Bell and Fuller Maitland), vol. 1, p. 373; S.D.G. signatures: Spitta vol. 1, p. 625, note 11"
+    },
+    {
+      "text": "Put your skill down to work, not talent: whoever works as hard can get as far.",
+      "sourceId": "forkel-1802",
+      "locator": "Chapter VIII, 'Personal Characteristics', second paragraph"
+    },
+    {
+      "text": "Go to the best masters you can reach, even far away, and study their work closely.",
+      "sourceId": "forkel-1802",
+      "locator": "Chapter II, 'The Career of Bach' (Hamburg, Celle, Lübeck journeys); Chapter V (Vivaldi arrangements)"
+    },
+    {
+      "text": "Make your work so that the next learner can use it.",
+      "sourceId": "wtc-1722",
+      "locator": "title page; in Spitta (tr. Bell and Fuller Maitland), vol. 2, pp. 161-162"
+    },
+    {
+      "text": "Cut every note that has no clear reason to be there.",
+      "sourceId": "forkel-1802",
+      "locator": "Chapter VII, 'Bach as a Teacher', paragraph beginning 'Bach required his pupils in composition'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I have always kept one end in view, namely, with all good will to conduct well-ordered church music to the honour of God and in agreement with your desires",
+      "sourceId": "muhlhausen-1708",
+      "locator": "letter to the Mühlhausen council, 25 June 1708; Spitta, vol. 1, p. 373",
+      "translation": "Clara Bell and J. A. Fuller Maitland, 1884 (in Spitta, Johann Sebastian Bach)"
+    },
+    {
+      "text": "Inscribed in honour of the Lord Most High, And that my neighbour may be taught thereby",
+      "sourceId": "orgelbuchlein-title",
+      "locator": "title page of the Orgelbüchlein (Little Organ Book); Spitta, vol. 1, p. 598, note 329",
+      "translation": "Clara Bell and J. A. Fuller Maitland, 1884 (in Spitta, Johann Sebastian Bach)"
+    },
+    {
+      "text": "For the use and practice of young musicians who desire to learn, as well as for those who are already skilled in this study, by way of amusement",
+      "sourceId": "wtc-1722",
+      "locator": "title page of The Well-Tempered Clavier, Book I, 1722; Spitta, vol. 2, p. 162",
+      "translation": "Clara Bell and J. A. Fuller Maitland, 1884 (in Spitta, Johann Sebastian Bach)"
+    },
+    {
+      "text": "They are all born musicians, and I can assure you that I can already form a concert, both vocal and instrumental, of my own family",
+      "sourceId": "erdmann-1730",
+      "locator": "letter to Georg Erdmann, Leipzig, 28 October 1730; Spitta, vol. 2, p. 254",
+      "translation": "Clara Bell and J. A. Fuller Maitland, 1884 (in Spitta, Johann Sebastian Bach)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In October 1705, as the 20-year-old organist of the New Church in Arnstadt, he took four weeks' leave and went to Lübeck to hear the organist Dietrich Buxtehude; Forkel says he walked the whole way. He came back in February 1706, and the consistory told him he had stayed away four times as long as his leave. On 21 February 1706 they asked him where he had been, and he answered that he had gone to Lübeck 'to learn thoroughly one or two things connected with his art'. At the same hearing they charged him with 'making surprising variationes in the chorales, and intermixing divers strange sounds', so that the congregation were confused.",
+    "sourceIds": [
+      "forkel-1802",
+      "arnstadt-1706",
+      "spitta-1899"
+    ]
+  },
+  "shadow": {
+    "text": "On the night of 4 August 1705 in Arnstadt he got into a street fight with the student Geyersbach, whom he had mocked as a 'nanny-goat bassoonist'; Geyersbach came at him with a stick and Bach drew his sword before passers-by stepped in, and the church consistory heard the case. In 1706 the consistory rebuked him for overstaying his leave about fourfold and for holding no rehearsals with the student choir. From 6 November to 2 December 1717 the Duke of Weimar kept him under arrest for demanding his instant release to take a new post. On 2 August 1730 the Leipzig town council called him 'incorrigible', accused him of neglecting his singing classes and leaving without permission, and withheld part of his income. In August 1736, in a dispute with the rector Johann August Ernesti over who named the head prefect, he twice turned the rector's choice out of his place in church during the service, the first time claiming, Spitta writes 'without any grounds', the Superintendent's authority, and he sent away from table a pupil who had obeyed the rector. He died in 1750 without a will, and under the legal division his widow Anna Magdalena received about 400 of the estate's 1,158 thalers.",
+    "sourceIds": [
+      "milka-2021",
+      "wpr-2016",
+      "arnstadt-1706",
+      "spitta-1899",
+      "terry-1920",
+      "bbcmm-2025"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you tell yourself you lack the talent, when the real gap was hours of work?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "The Well-Tempered Clavier, Book I (manuscript)",
+      "year": 1722
+    },
+    {
+      "title": "Goldberg Variations (Clavier-Übung IV)",
+      "year": 1741
+    },
+    {
+      "title": "Musical Offering",
+      "year": 1747
+    }
+  ],
+  "sources": [
+    {
+      "id": "muhlhausen-1708",
+      "kind": "primary",
+      "title": "Letter asking the Mühlhausen council for his dismissal (25 June 1708), English translation printed in Spitta, Johann Sebastian Bach, vol. 1, pp. 373-374",
+      "author": "Johann Sebastian Bach",
+      "year": 1708,
+      "url": "https://archive.org/details/johannsebastianb01spituoft"
+    },
+    {
+      "id": "orgelbuchlein-title",
+      "kind": "primary",
+      "title": "Title page of the Orgelbüchlein (Little Organ Book), autograph in Berlin; German text and English translation printed in Spitta, vol. 1, p. 598, note 329",
+      "author": "Johann Sebastian Bach",
+      "year": "c. 1717-1723",
+      "url": "https://archive.org/details/johannsebastianb01spituoft"
+    },
+    {
+      "id": "wtc-1722",
+      "kind": "primary",
+      "title": "Title page of Das wohltemperirte Clavier (The Well-Tempered Clavier), Book I (1722); German text and English translation printed in Spitta, vol. 2, pp. 161-162",
+      "author": "Johann Sebastian Bach",
+      "year": 1722,
+      "url": "https://archive.org/details/johannsebastianb02spituoft"
+    },
+    {
+      "id": "erdmann-1730",
+      "kind": "primary",
+      "title": "Letter to Georg Erdmann, Leipzig (28 October 1730), English translation printed in Spitta, vol. 2, pp. 253-254",
+      "author": "Johann Sebastian Bach",
+      "year": 1730,
+      "url": "https://archive.org/details/johannsebastianb02spituoft"
+    },
+    {
+      "id": "arnstadt-1706",
+      "kind": "primary",
+      "title": "Record of the Arnstadt consistory's hearing of the organist Bach (21 February 1706), with his answers; English translation printed in Spitta, vol. 1, pp. 315-317",
+      "author": "Arnstadt Consistory",
+      "year": 1706,
+      "url": "https://archive.org/details/johannsebastianb01spituoft"
+    },
+    {
+      "id": "forkel-1802",
+      "kind": "secondary",
+      "title": "Johann Sebastian Bach: His Life, Art, and Work (first published in German 1802), translated by Charles Sanford Terry",
+      "author": "Johann Nikolaus Forkel",
+      "year": 1920,
+      "publisher": "Constable / Harcourt, Brace and Howe (Project Gutenberg text)",
+      "url": "https://www.gutenberg.org/ebooks/35041"
+    },
+    {
+      "id": "terry-1920",
+      "kind": "secondary",
+      "title": "Chapter IIA 'Bach at Leipzig, 1723-1750', notes and appendices to his translation of Forkel's Johann Sebastian Bach",
+      "author": "Charles Sanford Terry",
+      "year": 1920,
+      "publisher": "Constable / Harcourt, Brace and Howe (Project Gutenberg text)",
+      "url": "https://www.gutenberg.org/ebooks/35041"
+    },
+    {
+      "id": "spitta-1899",
+      "kind": "secondary",
+      "title": "Johann Sebastian Bach: His Work and Influence on the Music of Germany, 1685-1750, translated by Clara Bell and J. A. Fuller Maitland (3 vols.; vol. 3 on the 1736 prefect dispute, pp. 3-8)",
+      "author": "Philipp Spitta",
+      "year": 1899,
+      "publisher": "Novello and Company",
+      "url": "https://archive.org/details/johannsebastianb01spituoft"
+    },
+    {
+      "id": "milka-2021",
+      "kind": "secondary",
+      "title": "Which of Two Cousins Did He See Home from the Castle on 4 August 1705?, Min-Ad: Israel Studies in Musicology Online, vol. 18",
+      "author": "Anatoly Milka (tr. Marina Ritzarev)",
+      "year": 2021,
+      "publisher": "Israel Musicological Society",
+      "url": "https://min-ad.org.il/min-ad/article/download/33/29"
+    },
+    {
+      "id": "wpr-2016",
+      "kind": "secondary",
+      "title": "Bach Draws His Sword (12 February 2016)",
+      "author": "Norman Gilliland",
+      "year": 2016,
+      "publisher": "Wisconsin Public Radio",
+      "url": "https://wpr.org/bach-draws-his-sword"
+    },
+    {
+      "id": "bbcmm-2025",
+      "kind": "secondary",
+      "title": "Why music's greatest composer was thrown in jail (3 June 2025)",
+      "author": "BBC Music Magazine",
+      "year": 2025,
+      "publisher": "BBC Music Magazine (classical-music.com)",
+      "url": "https://www.classical-music.com/features/composers/why-did-bach-go-to-prison"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real German composer and church musician (1685-1750), not fictional, not a politician or campaigner, not a founder of a religion; no account of sexual contact with a minor or of sexual violence was found, but he has a documented record of fights with employers and a street brawl, so he is in with a shadow."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked all five values and checked every quote, claim and locator against Forkel (Terry's 1920 translation), Terry's own chapter and appendices, Spitta's three volumes, Milka, WPR and BBC Music Magazine. Devotion held against Friedrich Blume's 1962 claim that Bach lost his calling as a church musician around 1730, because the S.D.G. signatures, the Mühlhausen letter and the Orgelbüchlein title page are his own; Mentorship held against his neglect of school singing classes, because his private teaching is documented. No value and no quote fell; I fixed four sentences (the five cantata cycles, the leave the consistory said he overstayed, 'was now' in the hymn charge, the Lüneburg choir) and added the 1736 prefect fight with Ernesti to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
