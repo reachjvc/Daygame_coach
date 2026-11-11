@@ -1,0 +1,345 @@
+{
+  "id": "mustafa-kemal-ataturk",
+  "name": "Mustafa Kemal Atatürk",
+  "born": 1881,
+  "died": 1938,
+  "category": "leaders",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "An officer who led Turkey's fight for independence and rebuilt it as a secular republic.",
+  "startedFrom": "He was born in 1881 in Salonica, then an Ottoman port, into a family of modest means. His father, who worked at the customs house, died when he was seven, and his mother raised him. In 1893 he entered a military secondary school and went on to the military academy, the start of an army career.",
+  "values": [
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In May 1919 he went to Anatolia to begin a nationalist struggle against the invasion and partition of the country.",
+          "sourceId": "turgay-2004",
+          "locator": "entry 'Ataturk, Mustafa Kemal (1881–1938)', paragraph on the First World War and after"
+        },
+        {
+          "kind": "words",
+          "claim": "He told the 1927 party congress that in 1919 only one resolution was possible: to create a new Turkish state whose sovereignty and independence the whole world would recognise, which could only be had by complete independence.",
+          "sourceId": "nutuk-1929",
+          "locator": "p. 17"
+        },
+        {
+          "kind": "words",
+          "claim": "In talks with the French envoy Franklin-Bouillon in 1921, as he reports them, he said that full independence means unlimited independence: political, economic, legal, military and cultural.",
+          "sourceId": "nutuk-1929",
+          "locator": "pp. 525-526"
+        },
+        {
+          "kind": "witness",
+          "sourceId": "reed-2002",
+          "claim": "Mango's biography, quoted in Reed's review, says he believed the struggle for genuine independence should be waged by each nation for itself.",
+          "locator": "p. 577, quoting Mango, Atatürk, p. xi"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In a cipher telegram of 18 June 1919 to the corps commander at Adrianople he wrote that he had sworn to work with the nation until it gained complete independence and had firmly resolved not to leave Anatolia.",
+          "sourceId": "nutuk-1929",
+          "locator": "pp. 22-23"
+        },
+        {
+          "kind": "deed",
+          "claim": "When the War Minister and the Sultan kept ordering him back to Constantinople in June-July 1919 he replied 'I cannot return', and on the night of 8 July 1919 resigned his commission rather than obey.",
+          "sourceId": "nutuk-1929",
+          "locator": "p. 43"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Books & Ideas review of Hanioğlu says the book shows how he 'gradually but resolutely took power'.",
+          "sourceId": "booksandideas-2012",
+          "locator": "section 'From Young Turk to Father-Turk'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Rejecting the Mudros Armistice of October 1918, he moved to Anatolia in May 1919 to begin a nationalist struggle against the invasion and partition of the country.",
+          "sourceId": "turgay-2004",
+          "locator": "entry 'Ataturk, Mustafa Kemal (1881–1938)', paragraph on the First World War and after"
+        }
+      ]
+    },
+    {
+      "word": "Progress",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Under his rule Turkey took the Gregorian calendar (1925), the Swiss Civil Code (1926) and the Latin alphabet (1928), and in 1934 a family-name law and the vote for women.",
+          "sourceId": "turgay-2004",
+          "locator": "entry 'Ataturk, Mustafa Kemal (1881–1938)', paragraph on the reforms"
+        },
+        {
+          "kind": "words",
+          "claim": "He closed his 1927 speech by saying he had shown how the nation regained its independence and created 'a national and modern State founded on the latest results of science'.",
+          "sourceId": "nutuk-1929",
+          "locator": "p. 723"
+        },
+        {
+          "kind": "witness",
+          "claim": "Reviewing Hanioğlu's biography, Delbarre, Kaynar and Aymes write that his whole reform project rested on seeing European civilisation as the only viable model for modernity.",
+          "sourceId": "booksandideas-2012",
+          "locator": "section 'From Young Turk to Father-Turk', on the final chapter"
+        },
+        {
+          "kind": "witness",
+          "sourceId": "reed-2002",
+          "claim": "Mango's biography, quoted in Reed's review, concludes that above all he was 'a man of the Enlightenment', and that he sought participation in a universal civilisation.",
+          "locator": "p. 577, quoting Mango, Atatürk, pp. xi and 528"
+        }
+      ]
+    },
+    {
+      "word": "Control",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Taking the supreme command on 4-5 August 1921, he insisted that the Assembly's full powers be transferred to him personally so that he could 'give orders unconditionally', and asked for this for about three months.",
+          "sourceId": "nutuk-1929",
+          "locator": "pp. 516-518"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1925 his government brought in the law for the restoration of order, set the Independence Courts to work and closed the opposition Progressive Republican Party; he says so himself in 1927.",
+          "sourceId": "nutuk-1929",
+          "locator": "pp. 720-721"
+        },
+        {
+          "kind": "witness",
+          "claim": "Zürcher's study of the Progressive Republican Party dates from its suppression in 1925 'the period of one-party dictatorship which lasted until after the Second World War'.",
+          "sourceId": "zurcher-1991",
+          "locator": "publisher's description (ARCE library catalogue record)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Books & Ideas review of Hanioğlu says the book shows how he 'gradually but resolutely took power'.",
+          "sourceId": "booksandideas-2012",
+          "locator": "section 'From Young Turk to Father-Turk'"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "The Australian War Memorial writes that at Gallipoli in 1915, as commander of the 19th Division, his 'ability to inspire his troops' boosted Turkish morale.",
+          "sourceId": "awm",
+          "locator": "encyclopedia entry 'Atatürk (Mustafa Kemal)', second paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "On the night of 9-10 August 1915 the British battalions holding Chunuk Bair gave way to a massive Turkish counter-attack launched by him.",
+          "sourceId": "soutar-2016",
+          "locator": "page 4 of the online article ('Cite this article': first published 16 Feb 2016)"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1919 he moulded regional paramilitary defence groups into a nationalist army, was elected unanimously as first president of the Ankara assembly in 1920, and served as commander in chief in the War of Independence.",
+          "sourceId": "turgay-2004",
+          "locator": "entry 'Ataturk, Mustafa Kemal (1881–1938)', paragraph on 1919-1923"
+        },
+        {
+          "kind": "witness",
+          "claim": "Mango, quoted in Reed's review, concludes that he was 'a competent commander, a shrewd politician, a statesman of supreme realism'.",
+          "sourceId": "reed-2002",
+          "locator": "p. 577, quoting Mango, Atatürk, p. 528"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Move in stages: keep your final aim to yourself and bring out each step only when people are ready for it.",
+      "sourceId": "nutuk-1929",
+      "locator": "pp. 19-20 (\"proceed by stages\"; \"making each step perfectly understood at the right time\"); p. 598 (republic, caliphate and hat kept out of the 1923 programme \"before the hour had come\")"
+    },
+    {
+      "text": "Let deeds come before words and theories.",
+      "sourceId": "nutuk-1929",
+      "locator": "p. 599"
+    },
+    {
+      "text": "Before you start, decide that you will see it through to the end; if you are not ready for that, do not begin.",
+      "sourceId": "nutuk-1929",
+      "locator": "p. 41"
+    },
+    {
+      "text": "Independence is only real when it is whole: political, economic, legal, military and cultural.",
+      "sourceId": "nutuk-1929",
+      "locator": "p. 526"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Therefore, Independence or Death! This was the rallying cry of all those who honestly desired to save their country.",
+      "sourceId": "nutuk-1929",
+      "locator": "p. 18 (speech to the Republican People's Party congress, Ankara, 15-20 October 1927)",
+      "translation": "English translation published by K. F. Koehler, Leipzig, 1929; translator not named"
+    },
+    {
+      "text": "Whoever speaks of complete and full independence means thereby unlimited independence: political, economic, legal, military, cultural, and the rest.",
+      "sourceId": "nutuk-1929",
+      "locator": "p. 526 (his words to Franklin-Bouillon, 1921, as he gives them in the 1927 speech)",
+      "translation": "English translation published by K. F. Koehler, Leipzig, 1929; translator not named"
+    },
+    {
+      "text": "In the way of reconstitution and material and moral development of the nation we preferred to make acts precede words and theories.",
+      "sourceId": "nutuk-1929",
+      "locator": "p. 599",
+      "translation": "English translation published by K. F. Koehler, Leipzig, 1929; translator not named"
+    },
+    {
+      "text": "Turkish Youth! your primary duty is ever to preserve and defend the National independence, the Turkish Republic.",
+      "sourceId": "nutuk-1929",
+      "locator": "p. 723 (closing address to the youth, 20 October 1927)",
+      "translation": "English translation published by K. F. Koehler, Leipzig, 1929; translator not named"
+    }
+  ],
+  "definingMoment": {
+    "text": "In May 1919, with the country occupied, he went to Anatolia to organise resistance. By his own account the War Minister and then the Sultan ordered him back to Constantinople again and again; he answered 'I cannot return'. On the night of 8 July 1919 Constantinople cancelled his commission, and at 10.50 p.m. he wired his resignation from the army. He carried on as a private man, with no rank, relying on the support of the nation.",
+    "sourceIds": [
+      "nutuk-1929",
+      "turgay-2004"
+    ]
+  },
+  "shadow": {
+    "text": "After the Kurdish rebellion led by Sheikh Said in 1925, his government ruled under an emergency law with Independence Tribunals and closed the opposition Progressive Republican Party. Sheikh Said and the rebel leaders were hanged at Diyarbakır in June 1925; the historian William Gourlay writes that soldiers destroyed numerous Kurdish villages and killed thousands in reprisals. The historian Erik-Jan Zürcher dates from that closure the one-party dictatorship that lasted until after the Second World War. In 1926 trials in İzmir and Ankara, on charges of plotting to kill him and restore the Committee of Union and Progress, ended with about a dozen men hanged, among them former leaders of that Committee. On 4 May 1937 the Council of Ministers, with him among them, decided in secret on an attack in Dersim to kill all who had used arms and to remove the population; the historian Hans-Lukas Kieser says he stood personally behind the campaign. An unpublished report of the regional inspectorate counted 13,160 civilians dead and 11,818 deported, a state document read out by Prime Minister Erdoğan in 2011 gave about 13,800 killed, and Kieser rejects a figure of 40,000 as implausibly high.",
+    "sourceIds": [
+      "nutuk-1929",
+      "gourlay-2025",
+      "zurcher-1991",
+      "dadrian-2005",
+      "kieser-2011",
+      "aljazeera-2011"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you talk about a plan this week when you could have done its first step instead?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "A Speech Delivered by Ghazi Mustapha Kemal (Nutuk)",
+      "year": 1927
+    }
+  ],
+  "sources": [
+    {
+      "id": "nutuk-1929",
+      "kind": "primary",
+      "title": "A Speech Delivered by Ghazi Mustapha Kemal, President of the Turkish Republic, October 1927",
+      "author": "Mustafa Kemal (Atatürk); English translation, translator not named",
+      "year": 1929,
+      "publisher": "K. F. Koehler, Leipzig",
+      "url": "https://archive.org/details/speechdeliveredg010347mbp"
+    },
+    {
+      "id": "turgay-2004",
+      "kind": "secondary",
+      "title": "Ataturk, Mustafa Kemal (1881–1938), in Encyclopedia of Islam and the Muslim World, ed. Richard C. Martin",
+      "author": "A. Uner Turgay",
+      "year": 2004,
+      "publisher": "Macmillan Reference USA (via Encyclopedia.com)",
+      "url": "https://www.encyclopedia.com/religion/encyclopedias-almanacs-transcripts-and-maps/ataturk-mustafa-kemal-1881-1938"
+    },
+    {
+      "id": "awm",
+      "kind": "secondary",
+      "title": "Atatürk (Mustafa Kemal)",
+      "author": "Australian War Memorial",
+      "year": 2023,
+      "url": "https://www.awm.gov.au/encyclopedia/ataturk"
+    },
+    {
+      "id": "booksandideas-2012",
+      "kind": "secondary",
+      "title": "The Formation of a Leader: Mustafa Kemal in His Lifetime (review of M. Şükrü Hanioğlu, Atatürk: An Intellectual Biography, Princeton, 2011)",
+      "author": "Clélia Delbarre, Erdal Kaynar, Marc Aymes",
+      "year": 2012,
+      "publisher": "Books & Ideas (La Vie des idées)",
+      "url": "https://laviedesidees.fr/IMG/pdf/kemal_en.pdf"
+    },
+    {
+      "id": "zurcher-1991",
+      "kind": "secondary",
+      "title": "Political Opposition in the Early Turkish Republic: The Progressive Republican Party 1924-1925",
+      "author": "Erik Jan Zürcher",
+      "year": 1991,
+      "publisher": "E. J. Brill, Leiden",
+      "url": "https://library.arce.org/portal/Record/47354/Description"
+    },
+    {
+      "id": "gourlay-2025",
+      "kind": "secondary",
+      "title": "The roots of Kurdish discontent",
+      "author": "William Gourlay (Monash University)",
+      "year": 2025,
+      "publisher": "Engelsberg Ideas",
+      "url": "https://engelsbergideas.com/essays/the-roots-of-kurdish-discontent/"
+    },
+    {
+      "id": "dadrian-2005",
+      "kind": "secondary",
+      "title": "Atatürk, Mustafa Kemal Pasha, in Encyclopedia of Genocide and Crimes Against Humanity, ed. Dinah L. Shelton",
+      "author": "Vahakn N. Dadrian",
+      "year": 2005,
+      "publisher": "Macmillan Reference USA (via Encyclopedia.com)",
+      "url": "https://www.encyclopedia.com/international/encyclopedias-almanacs-transcripts-and-maps/ataturk-mustafa-kemal-pasha"
+    },
+    {
+      "id": "kieser-2011",
+      "kind": "secondary",
+      "title": "Dersim Massacre, 1937-1938",
+      "author": "Hans-Lukas Kieser",
+      "year": 2011,
+      "publisher": "Mass Violence & Résistance, Sciences Po",
+      "url": "https://www.sciencespo.fr/mass-violence-war-massacre-resistance/en/document/dersim-massacre-1937-1938.html"
+    },
+    {
+      "id": "aljazeera-2011",
+      "kind": "secondary",
+      "title": "Erdogan apologises to Kurds for mass killing",
+      "author": "Al Jazeera",
+      "year": 2011,
+      "url": "https://www.aljazeera.com/news/2011/11/24/erdogan-apologises-to-kurds-for-mass-killing"
+    },
+    {
+      "id": "reed-2002",
+      "kind": "secondary",
+      "title": "Review of Andrew Mango, Atatürk: The Biography of the Founder of Modern Turkey (John Murray, 1999)",
+      "author": "Howard A. Reed",
+      "year": 2002,
+      "publisher": "International Journal of Middle East Studies 34(3), pp. 577-580, Cambridge University Press",
+      "url": "https://www.cambridge.org/core/journals/international-journal-of-middle-east-studies/article/andrew-mango-ataturkthe-biography-of-the-founder-of-modern-turkey-london-john-murray-1999-woodstock-ny-overlook-press-2000-pp-687-4000-cloth/59C1B895F707AED03616889B79679AC6"
+    },
+    {
+      "id": "soutar-2016",
+      "kind": "secondary",
+      "title": "The battle for Chunuk Bair",
+      "author": "Monty Soutar",
+      "year": 2016,
+      "publisher": "Auckland Museum - Tāmaki Paenga Hira",
+      "url": "https://www.aucklandmuseum.com/discover/collections/topics/the-battle-for-chunuk-bair?p=4"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Ottoman officer and the first president of Turkey (1881-1938), long dead, no politician of today and no founder of a religion; no credible account of sexual contact with anyone under 16 or of sexual violence was found; his authoritarian one-party rule, the repression after the Sheikh Said rebellion (1925), the 1926 plot trials and the Dersim campaign (1937-38) are shadow."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value against Mango (via Reed's IJMES review), Zürcher, Kieser and the Hanioğlu review, and checked every claim and quote against the 1929 English Nutuk. Courage fell: beyond his own account, only the Australian War Memorial's 'reckless bravery' line held, one secondary source; Leadership (blind pick) came in on four independent sources. Independence, Determination, Progress and Control held; the principle on time-limited emergency powers was cut because his 1925-38 one-party rule argues against it. The shadow now adds the 1925 reprisals and the Dersim cabinet decision, and drops the 1951 insult law, which came after his death.",
+    "checkedOn": "2026-11-10"
+  }
+}
