@@ -1,0 +1,343 @@
+{
+  "id": "ryan-holiday",
+  "name": "Ryan Holiday",
+  "born": 1987,
+  "died": null,
+  "category": "teachers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_emotions"
+  ],
+  "tagline": "A former media manipulator who now writes and lives by everyday Stoic practice.",
+  "startedFrom": "He grew up in Sacramento, California; his father was a police detective and his mother a high school principal, and they stayed together. At 19, as a sophomore at UC Riverside, he read Marcus Aurelius's Meditations. That summer he interned at a Hollywood talent agency, took the $30,000 job it offered and dropped out, which troubled his parents; he was also offered work by the author Robert Greene.",
+  "values": [
+    {
+      "word": "Reading",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He keeps notes from the books he reads on 4-by-6-inch cards, a system he learned as Robert Greene's research assistant; for The Obstacle Is the Way he filled thousands of cards.",
+          "sourceId": "rh-notecard-2014",
+          "locator": "paragraphs beginning 'Now to be clear, this is not \"my\" notecard system' and '-If I have a thought'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In January 2020 he and his wife put their life savings into a 140-year-old building on Main Street in Bastrop, Texas, to open a bookstore.",
+          "sourceId": "rh-bookstore-2021",
+          "locator": "paragraph beginning 'In January of last year'"
+        },
+        {
+          "kind": "words",
+          "claim": "He tells readers to pick up a book every day and to 'make a real and unending commitment to reading'.",
+          "sourceId": "rh-13habits-2018",
+          "locator": "item 'Read. Read. Read.'"
+        },
+        {
+          "kind": "witness",
+          "claim": "A local newspaper calls him 'a voracious reader'.",
+          "sourceId": "postregister-2021",
+          "locator": "section 'Remodel', paragraph on the fireplace of 2,000 books"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 2016 he said he writes about two pages in a journal every morning and logs the time he spent exercising and his hours of deep work the day before.",
+          "sourceId": "ferriss-169-2016",
+          "locator": "answer beginning 'I think journaling is important, so every morning when I wake up I write in a Moleskine'"
+        },
+        {
+          "kind": "witness",
+          "claim": "ESPN writes that at home he pursued 'the Stoic tenets of discipline and humility', reading philosophy, science and history.",
+          "sourceId": "espn-2020",
+          "locator": "opening section, paragraph beginning 'He reads other Stoics'"
+        },
+        {
+          "kind": "words",
+          "claim": "In 2019 he said he journals every morning, had kept a one-line-a-day journal for about three and a half years, checks no phone in the morning and usually schedules nothing before noon.",
+          "sourceId": "aom-565-2019",
+          "locator": "answers beginning 'So, for me, that's like, I don't watch a lot of news' and 'I do it every morning'"
+        }
+      ]
+    },
+    {
+      "word": "Self-awareness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At 27, in a work crisis in which he says he had a panic attack over emails he could not send, he went to Workaholics Anonymous meetings in Los Angeles; later he saw a therapist who specialises in it.",
+          "sourceId": "ferriss-169-2016",
+          "locator": "answers beginning 'Yeah, sure. I'm not sure what I can say', 'Yeah, they do. They weren't eating' and 'Yeah. I was 27 at the time'"
+        },
+        {
+          "kind": "words",
+          "claim": "Looking back on his first book, he writes that he wishes he had been 'aware enough to question my life and my choices and my industry sooner'.",
+          "sourceId": "rh-24things-2023",
+          "locator": "item beginning 'Do I regret writing Trust Me I'm Lying?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times reports that he grew disillusioned with his work as a hype man and decided to write a self-indicting exposé.",
+          "sourceId": "nyt-2016",
+          "locator": "paragraph beginning 'A year later, he went to work for American Apparel'"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In April 2025 the US Naval Academy asked him, an hour before a lecture, to drop slides criticising its removal of 381 books from its library; he refused and the talk was cancelled.",
+          "sourceId": "cnn-2025",
+          "locator": "paragraphs 1-4"
+        },
+        {
+          "kind": "deed",
+          "claim": "A Baltimore newspaper reports the same refusal and cancellation, and that the academy called it a 'schedule change'.",
+          "sourceId": "banner-2025",
+          "locator": "paragraphs beginning 'So when the Annapolis-based military academy' and 'Commander Tim Hawkins'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he could not speak to midshipmen 'about courage and about doing the right thing' and then remove his objection.",
+          "sourceId": "cnn-2025",
+          "locator": "paragraph beginning '\"I said I couldn't do that,\" Holiday recalled'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In July 2026 he opened a free lending library of banned books next to his bookstore; CultureMap reports the idea took shape after the Naval Academy cancellation.",
+          "sourceId": "culturemap-2026",
+          "locator": "paragraphs beginning 'Ryan Holiday, a bestselling author', 'The idea took shape' and 'The library opened to the public in mid-July'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "You do not control the world around you; you control how you respond to it.",
+      "sourceId": "nyt-2016",
+      "locator": "paragraph beginning 'Mr. Holiday discovered Stoicism by reading'"
+    },
+    {
+      "text": "Watch for busyness itself becoming the addiction: you are a human being, not a human doing.",
+      "sourceId": "ferriss-169-2016",
+      "locator": "answers beginning 'Yeah, they do. They weren't eating', 'They say this thing in the meetings' and 'I could just plug into it'"
+    },
+    {
+      "text": "Read something every day, even if it is only a few pages.",
+      "sourceId": "rh-13habits-2018",
+      "locator": "item 'Read. Read. Read.'"
+    },
+    {
+      "text": "Before you commit to an idea you are excited about, ask friends to talk you out of it.",
+      "sourceId": "rh-bookstore-2021",
+      "locator": "paragraph beginning 'I thought I had some sense of what could go wrong'"
+    },
+    {
+      "text": "Do not drop an objection you believe in when keeping it costs you the stage.",
+      "sourceId": "cnn-2025",
+      "locator": "paragraph beginning '\"I said I couldn't do that,\" Holiday recalled'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "The essential idea of Stoicism in my interpretation is, you don’t control the world around you, you control how you respond.",
+      "sourceId": "nyt-2016",
+      "locator": "paragraph beginning 'Mr. Holiday discovered Stoicism by reading' (interview quote)"
+    },
+    {
+      "text": "I was just too blind, too caught up at being good at something to figure out it wasn’t a good thing to be good at.",
+      "sourceId": "rh-24things-2023",
+      "locator": "item beginning 'Do I regret writing Trust Me I'm Lying?'"
+    },
+    {
+      "text": "Whenever I’m considering an idea I’m excited about, I like to ask friends to talk me out of it.",
+      "sourceId": "rh-bookstore-2021",
+      "locator": "paragraph beginning 'I thought I had some sense of what could go wrong'"
+    },
+    {
+      "text": "Death doesn’t make life pointless but rather purposeful.",
+      "sourceId": "rh-13habits-2018",
+      "locator": "item 'Think About Death'"
+    }
+  ],
+  "definingMoment": {
+    "text": "In April 2025 the US Naval Academy, where he had lectured on courage and on doing the right thing, invited him back to speak on wisdom. About an hour before the talk, the academy asked him not to mention its removal of 381 books from its library. He refused to drop the slides, and the academy cancelled the talk, calling it a schedule change. In July 2026 he opened a free lending library of banned books next to his bookstore in Bastrop; CultureMap reports the idea took shape after that cancellation.",
+    "sourceIds": [
+      "cnn-2025",
+      "banner-2025",
+      "culturemap-2026"
+    ]
+  },
+  "shadow": {
+    "text": "In his writing, above all his 2012 book Trust Me, I'm Lying, he set out tactics he had used for clients: forging and leaking documents, fake tweets and Twitter accounts, and bought web traffic. For Tucker Max's film I Hope They Serve Beer in Hell he defaced the film's billboards and emailed photos to blogs to stir up a feminist boycott. In the book he writes that he advised a friend to send a letter threatening a lawsuit that brought a $500,000 payment, adding: 'I still shook someone down.' In the months before the book came out he posed as a fake expert through the Help A Reporter Out service and was quoted by ABC News, CBS and The New York Times. At American Apparel he handled public relations while its founder Dov Charney faced sexual harassment allegations. At Stoicon 2016 some philosophers said his version was not Stoicism; asked there whether Stoicism was becoming too trendy, he said 'if it has to be simplified a bit to reach the masses, so be it.'",
+    "sourceIds": [
+      "nyt-2016",
+      "bi-2012",
+      "poynter-2012"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which idea you were excited about this week did you put in front of someone who might talk you out of it?",
+    "principleIndex": 3
+  },
+  "readings": [
+    {
+      "title": "The Obstacle Is the Way",
+      "year": 2014
+    },
+    {
+      "title": "Ego Is the Enemy",
+      "year": 2016
+    },
+    {
+      "title": "The Daily Stoic",
+      "year": 2016
+    }
+  ],
+  "sources": [
+    {
+      "id": "ferriss-169-2016",
+      "kind": "primary",
+      "title": "The Tim Ferriss Show #169: Useful Lessons from Workaholics Anonymous, Corporate Implosions, and More (episode of 25 June 2016; official transcript)",
+      "author": "Ryan Holiday, interviewed by Tim Ferriss",
+      "year": 2016,
+      "url": "https://tim.blog/2018/06/01/the-tim-ferriss-show-transcripts-ryan-holiday-169-useful-lessons-from-workaholics-anonymous-corporate-implosions-and-more/"
+    },
+    {
+      "id": "aom-565-2019",
+      "kind": "primary",
+      "title": "Art of Manliness Podcast #565: Stillness Is the Key (2 December 2019; transcript on the episode page)",
+      "author": "Ryan Holiday, interviewed by Brett McKay",
+      "year": 2019,
+      "url": "https://www.artofmanliness.com/character/self-improvement/podcast-565-stillness-is-the-key/"
+    },
+    {
+      "id": "rh-notecard-2014",
+      "kind": "primary",
+      "title": "The Notecard System: The Key For Remembering, Organizing And Using Everything You Read (1 April 2014)",
+      "author": "Ryan Holiday",
+      "year": 2014,
+      "url": "https://ryanholiday.net/the-notecard-system-the-key-for-remembering-organizing-and-using-everything-you-read/"
+    },
+    {
+      "id": "rh-13habits-2018",
+      "kind": "primary",
+      "title": "13 Life-Changing Habits To Try And Do Every Single Day (14 May 2018)",
+      "author": "Ryan Holiday",
+      "year": 2018,
+      "url": "https://ryanholiday.net/13-life-changing-habits-to-try-and-do-every-single-day/"
+    },
+    {
+      "id": "rh-bookstore-2021",
+      "kind": "primary",
+      "title": "Opening a Small-Town Bookstore During the Pandemic Was the Craziest Thing We Ever Did (28 April 2021; written for Texas Monthly)",
+      "author": "Ryan Holiday",
+      "year": 2021,
+      "url": "https://ryanholiday.net/opening-a-small-town-bookstore-during-the-pandemic-was-the-craziest-thing-we-ever-did/"
+    },
+    {
+      "id": "rh-24things-2023",
+      "kind": "primary",
+      "title": "24 Things I Wish I Had Done Sooner (or my biggest regrets) (25 July 2023)",
+      "author": "Ryan Holiday",
+      "year": 2023,
+      "url": "https://ryanholiday.net/24-things-i-wish-i-had-done-sooner-or-my-biggest-regrets/"
+    },
+    {
+      "id": "nyt-2016",
+      "kind": "secondary",
+      "title": "Ryan Holiday Sells Stoicism as a Life Hack, Without Apology (6 December 2016)",
+      "author": "Alexandra Alter",
+      "year": 2016,
+      "publisher": "The New York Times",
+      "url": "https://www.nytimes.com/2016/12/06/fashion/ryan-holiday-stoicism-american-apparel.html"
+    },
+    {
+      "id": "guardian-2024",
+      "kind": "secondary",
+      "title": "The stoicism secret: how Ryan Holiday became a Silicon Valley guru (28 October 2024)",
+      "author": "Zoe Williams",
+      "year": 2024,
+      "publisher": "The Guardian",
+      "url": "https://www.theguardian.com/books/2024/oct/28/the-stoicism-secret-how-ryan-holiday-became-a-silicon-valley-guru"
+    },
+    {
+      "id": "espn-2020",
+      "kind": "secondary",
+      "title": "The ancient credo that fueled the Patriot Way, inspired Nick Saban and helped Ryan Shazier heal (21 May 2020)",
+      "author": "Paul Kix",
+      "year": 2020,
+      "publisher": "ESPN",
+      "url": "https://www.espn.com/espn/story/_/id/29200293"
+    },
+    {
+      "id": "postregister-2021",
+      "kind": "secondary",
+      "title": "Author defies COVID obstacle to open bookstore (24 March 2021)",
+      "author": "Kristen Meriwether",
+      "year": 2021,
+      "publisher": "Bastrop Post-Register",
+      "url": "https://post-register.com/author-defies-covid-obstacle-to-open-bookstore/"
+    },
+    {
+      "id": "cnn-2025",
+      "kind": "secondary",
+      "title": "US Naval Academy canceled author's lecture that would have criticized book bans (19 April 2025; CNN Newssource copy on KRDO)",
+      "author": "Natasha Bertrand",
+      "year": 2025,
+      "publisher": "CNN",
+      "url": "https://krdo.com/news/2025/04/19/us-naval-academy-canceled-authors-lecture-that-would-have-criticized-book-bans/"
+    },
+    {
+      "id": "banner-2025",
+      "kind": "secondary",
+      "title": "He refused to censor his lecture. Then the Naval Academy canceled it. (21 April 2025)",
+      "author": "Ellie Wolfe",
+      "year": 2025,
+      "publisher": "The Baltimore Banner",
+      "url": "https://www.thebanner.com/education/higher-education/ryan-holiday-naval-academy-lecture-dei-RDG7YVOTCRAIJPF2FT6GITCHXQ/"
+    },
+    {
+      "id": "culturemap-2026",
+      "kind": "secondary",
+      "title": "Bastrop bookseller opens library for lending out banned books (5 August 2026)",
+      "author": "Natalie Grigson",
+      "year": 2026,
+      "publisher": "CultureMap Austin",
+      "url": "https://austin.culturemap.com/news/city-life/painted-porch-banned-books-library/"
+    },
+    {
+      "id": "bi-2012",
+      "kind": "secondary",
+      "title": "The 10 Biggest Lies Told By American Apparel's Top PR Man (3 August 2012)",
+      "author": "Jim Edwards",
+      "year": 2012,
+      "publisher": "Business Insider",
+      "url": "https://www.businessinsider.com/the-10-biggest-lies-told-by-american-apparels-top-pr-man-2012-8"
+    },
+    {
+      "id": "poynter-2012",
+      "kind": "secondary",
+      "title": "Telling the truth about media manipulator Ryan Holiday (22 July 2012)",
+      "author": "Craig Silverman",
+      "year": 2012,
+      "publisher": "Poynter",
+      "url": "https://www.poynter.org/reporting-editing/2012/telling-the-truth-about-media-manipulator-ryan-holiday/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living American author and marketer (born 1987), not a politician, campaigner or religious founder, with no credible account of sexual contact with a minor or of sexual violence found; he is in, with a documented dark side from his media-manipulation years, which he told himself in his first book."
+    },
+    "blindAgreement": 0.25,
+    "devilsAdvocate": "I checked every claim against the saved newspaper, podcast and blog texts and argued against each value. Justice fell: its evidence was one monument gift, a power-bill gift and a partisan quote, and his own record of a $500,000 shake-down letter and years of deceiving reporters argues strongly against the plain reading. Reading, Discipline, Self-awareness and Courage held, Discipline and Courage each on a third verified source; the shadow now places his 'so be it' answer correctly and adds the shake-down letter.",
+    "checkedOn": "2026-11-10"
+  }
+}
