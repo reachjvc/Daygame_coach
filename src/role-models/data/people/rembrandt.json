@@ -1,0 +1,330 @@
+{
+  "id": "rembrandt",
+  "name": "Rembrandt van Rijn",
+  "born": 1606,
+  "died": 1669,
+  "category": "artists",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A painter who kept studying his own face, in success and after bankruptcy",
+  "startedFrom": "He was born in Leiden in 1606, the ninth child of a miller and a baker's daughter; his father owned a mill and some property, a solid middle-class family. His parents sent him to the Latin school and enrolled him at Leiden University at fourteen, but he left to train as a painter: about three years with Jacob van Swanenburgh in Leiden, then six months with Pieter Lastman in Amsterdam. The Latin school gave him a late start against his younger friend Jan Lievens, who already had his own studio at twelve.",
+  "values": [
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "On 12 January 1639 he wrote to Huygens that the Prince's two Passion pictures were finished 'door stuijdiose vlijt' (through studious diligence), and that their being the most natural of the series was the main reason they had taken so long.",
+          "sourceId": "worp-1913",
+          "locator": "Letter No. 2020, Rembrandt to Constantijn Huygens, 12 January 1639"
+        },
+        {
+          "kind": "witness",
+          "claim": "Houbraken reports that some of Rembrandt's students told him he sometimes sketched a face in ten different ways before putting it on the panel, and could spend a day or two arranging a turban.",
+          "sourceId": "houbraken-1718",
+          "locator": "Vol. 1, pp. 260-261 (Houbraken Translated)"
+        },
+        {
+          "kind": "deed",
+          "claim": "In his 1669 Self Portrait at the Age of 63, X-rays show he first painted himself holding a brush and then changed it, and he built up the skin of his face in thick layers of paint.",
+          "sourceId": "ng-63",
+          "locator": "Self Portrait at the Age of 63 (NG221), 'In-depth' section"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Constantijn Huygens, who visited Rembrandt and Jan Lievens in their Leiden studio around 1628, wrote that he had 'never observed such diligence and application in men of any sort, pursuit, or age', and that they treated even the diversions of youth as a waste of time.",
+          "sourceId": "huygens-autobiography",
+          "locator": "Reading 29, final paragraph ('I do not wish to pass judgement on the validity of this excuse...'), Binstock translation"
+        },
+        {
+          "kind": "witness",
+          "claim": "Houbraken writes that for many years he was so busy painting that people had to wait a long time for their pieces.",
+          "sourceId": "houbraken-1718",
+          "locator": "Vol. 1, p. 269 (Houbraken Translated)"
+        },
+        {
+          "kind": "deed",
+          "claim": "From 1639 on he sketched endlessly: people on the street, beggars, circuses, women and children, Saskia.",
+          "sourceId": "ng-artist",
+          "locator": "Section 'Continued success', first paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "Unfinished paintings listed in his estate suggest he was working right up to his death on 4 October 1669.",
+          "sourceId": "bakker-2017",
+          "locator": "Page 4 of 10, paragraph on his death"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He did not make the trip to Italy that young painters were advised to make; the National Gallery says he felt he could learn what he needed from the art in his own country.",
+          "sourceId": "ng-artist",
+          "locator": "Section 'Early life and training', third paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Around 1630 Huygens reproached Rembrandt and Lievens for not spending a few months in Italy; they answered that they had no time to waste on foreign travel and that the best Italian paintings could be seen north of the Alps.",
+          "sourceId": "huygens-autobiography",
+          "locator": "Reading 29, last two paragraphs ('I can scarcely tear myself away...' and following), Binstock translation"
+        },
+        {
+          "kind": "witness",
+          "claim": "Houbraken, writing in 1718, says Rembrandt 'would not bind himself to the rules of others' and was satisfied with following life as it presented itself to him.",
+          "sourceId": "houbraken-1718",
+          "locator": "Vol. 1, p. 267 (Houbraken Translated)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Chapman writes that, unlike his pupil Gerrit Dou, who cultivated refinement and a fashionable persona, Rembrandt 'would become increasingly independent'.",
+          "sourceId": "chapman-2017",
+          "locator": "Page 9 of 20, end of the section before 'Self-Portraits'"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Chapman writes that throughout his career he showed 'virtually unparalleled drive and ambition'.",
+          "sourceId": "chapman-2017",
+          "locator": "Page 2 of 20, opening paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "He attended the Latin school and was enrolled at Leiden University at fourteen, but his parents took him out in 1621 to train as a painter because, Bakker writes, his 'ambitions lay elsewhere'; his early biblical scenes suggest he aimed to be a history painter.",
+          "sourceId": "bakker-2017",
+          "locator": "Page 2 of 10, first and second paragraphs"
+        },
+        {
+          "kind": "words",
+          "claim": "On 13 February 1639, told the Prince would pay no more than the 600 guilders each paid for the earlier Passion pictures, he wrote he would settle for 600 each for the new two, 'alhoewel sy t kennelick meryteeren' (although they clearly deserve it).",
+          "sourceId": "worp-1913",
+          "locator": "Letter No. 2042, Rembrandt to Constantijn Huygens, 13 February 1639"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After his insolvency in 1656 and the auction of his house in 1658 he moved to rented rooms on the Rozengracht and kept working: The Conspiracy of Claudius Civilis for the Town Hall in 1661, The Syndics in 1662, and portraits of the rich Trip family.",
+          "sourceId": "bakker-2017",
+          "locator": "Pages 3-4 of 10, paragraphs on the insolvency and after"
+        },
+        {
+          "kind": "deed",
+          "claim": "After the 1656 bankruptcy he moved with Titus and Hendrickje to a much poorer district, continued to paint, and painted self-portraits more often in the last twenty years of his life.",
+          "sourceId": "ng-artist",
+          "locator": "Section 'Bankruptcy', second paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer Malcolm Bell calls him one who, 'though well-nigh crushed, was never subdued; one whose courage sustained him to the last'.",
+          "sourceId": "bell-1901",
+          "locator": "Chapter I, Birth and Early Years, opening pages"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Give a work the time it needs to look natural, even if the buyer has to wait.",
+      "sourceId": "worp-1913",
+      "locator": "Letter No. 2020, 12 January 1639 (the naturalness of the two pictures 'is also the main reason' they took so long)"
+    },
+    {
+      "text": "Paint life as you see it, not by other people's rules.",
+      "sourceId": "houbraken-1718",
+      "locator": "Vol. 1, pp. 262 and 267 ('taking as his fundamental rule nothing but imitation of nature'; 'would not bind himself to the rules of others')"
+    },
+    {
+      "text": "Try a subject many ways before you settle on one.",
+      "sourceId": "houbraken-1718",
+      "locator": "Vol. 1, pp. 257-258 (many differing sketches of the same subject) and pp. 260-261 (a face sketched ten ways)"
+    },
+    {
+      "text": "Ask for what your work is worth, and press for money you have earned.",
+      "sourceId": "worp-1913",
+      "locator": "Letters No. 2042 (13 February 1639) and No. 2045 (c. 17 February 1639, 'mijn welverdiende 1244 guldens')"
+    },
+    {
+      "text": "Study your own face as closely as you would study a sitter's.",
+      "sourceId": "ng-63",
+      "locator": "Self Portrait at the Age of 63 (NG221), 'In-depth' section"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "A pious mind considers honour to be good",
+      "sourceId": "grossmann-album-1634",
+      "locator": "Album amicorum II of Burchard Grossmann, f. 233r-v, inscription signed Amsterdam 1634 (Dutch: 'Een vroom gemoet / Acht eer voor goet')",
+      "translation": "Koninklijke Bibliotheek, The Hague, collection page (translator not named)"
+    },
+    {
+      "text": "in a strong light, so that it may be looked at from a distance, for thus it will be seen to the best advantage",
+      "sourceId": "worp-1913",
+      "locator": "Letter No. 2032, Rembrandt to Constantijn Huygens, 27 January 1639, postscript ('hangt dit stuck op een starck licht en dat men daer wijt kan af staen, soo sal t best vouchen'); English in Michel 1894, vol. I, ch. VIII, p. 160",
+      "translation": "Florence Simmonds, 1894, from Émile Michel's French (1893)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1669, the last year of his life and thirteen years after his bankruptcy, he painted three self-portraits. In the one now in London, X-rays show he first painted himself as an artist at work, holding what seems to be a brush, and then changed it, apparently to keep the eye on his face. He built up the sagging fold under his eye and the blemishes on his forehead in thick, heavy paint. Many later writers see this as unflinching honesty about age and death; the National Gallery warns his motive may have been a painter's interest in the problem of painting ageing skin.",
+    "sourceIds": [
+      "ng-63",
+      "ng-artist"
+    ]
+  },
+  "shadow": {
+    "text": "After his wife Saskia died in 1642 he began a sexual relationship with Geertje Dircx, his son's nurse. In 1649 she summoned him before Amsterdam's Chamber of Marital Affairs, saying he had promised to marry her; he would not even admit he had slept with her, and the case ended with him paying her a yearly sum (Ponte 2024). In the summer of 1650 she was locked up in the house of correction at Gouda: the National Gallery says Rembrandt, who had charged her with pawning Saskia's jewellery, 'somehow had her sent' there, while the Rijksmuseum says she was imprisoned for increasingly unstable behaviour. He did not marry his next partner, Hendrickje Stoffels; under Saskia's will he would lose most of his share of her fortune if he remarried, and in 1654 the church reprimanded Hendrickje for living 'in whoredom' (Bakker 2017; National Gallery). He spent heavily on art and curiosities and lived above his means; in 1638 a relative of Saskia's accused the couple of squandering her parents' inheritance, and in 1656 his creditors took him to the insolvency court. Later, short of money, he and Titus sold Saskia's tomb, and he still put in an offer for a Holbein that came up for sale (National Gallery).",
+    "sourceIds": [
+      "ponte-2024",
+      "ng-artist",
+      "rijksmuseum-bio",
+      "bakker-2017"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you follow someone else's rule this week when your own eyes told you something different?",
+    "principleIndex": 1
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "worp-1913",
+      "kind": "primary",
+      "title": "De briefwisseling van Constantijn Huygens, deel 2: 1634-1639 (Rembrandt's letters Nos. 2020, 2032, 2042, 2045)",
+      "author": "Rembrandt van Rijn (letters), ed. J. A. Worp",
+      "year": 1913,
+      "publisher": "DBNL digital edition",
+      "url": "https://www.dbnl.org/tekst/huyg001jawo04_01/huyg001jawo04_01_1062.php"
+    },
+    {
+      "id": "grossmann-album-1634",
+      "kind": "primary",
+      "title": "Drawing and inscription in the Album amicorum II of Burchard Grossmann, f. 233r-v (KB 133 C 14 C)",
+      "author": "Rembrandt van Rijn",
+      "year": 1634,
+      "publisher": "Koninklijke Bibliotheek, The Hague (collection page)",
+      "url": "https://collecties.kb.nl/en/collections/friendship-books/celebrities-friendship-books/album-amicorum-ii-burchard-grossmann"
+    },
+    {
+      "id": "bakker-2017",
+      "kind": "secondary",
+      "title": "Rembrandt van Rijn (artist biography, The Leiden Collection Catalogue, 4th ed.)",
+      "author": "Piet Bakker",
+      "year": 2017,
+      "publisher": "The Leiden Collection, New York",
+      "url": "https://www.theleidencollection.com/artists/rembrandt-van-rijn/"
+    },
+    {
+      "id": "chapman-2017",
+      "kind": "secondary",
+      "title": "Rembrandt and The Leiden Collection (essay, The Leiden Collection Catalogue, 4th ed.)",
+      "author": "H. Perry Chapman",
+      "year": 2017,
+      "publisher": "The Leiden Collection, New York",
+      "url": "https://www.theleidencollection.com/essays/rembrandt-and-the-leiden-collection/"
+    },
+    {
+      "id": "ng-artist",
+      "kind": "secondary",
+      "title": "Rembrandt (artist biography)",
+      "author": "The National Gallery, London",
+      "year": "n.d.",
+      "url": "https://www.nationalgallery.org.uk/artists/rembrandt"
+    },
+    {
+      "id": "ng-63",
+      "kind": "secondary",
+      "title": "Rembrandt, Self Portrait at the Age of 63, 1669 (NG221)",
+      "author": "The National Gallery, London",
+      "year": "n.d.",
+      "url": "https://www.nationalgallery.org.uk/paintings/rembrandt-self-portrait-at-the-age-of-63"
+    },
+    {
+      "id": "houbraken-1718",
+      "kind": "secondary",
+      "title": "The Great Theatre of Netherlandish Painters and Paintresses, vol. 1, pp. 254-273 (Houbraken Translated, trans. and ed. Hendrik J. Horn and Rieke van Leeuwen)",
+      "author": "Arnold Houbraken",
+      "year": 2021,
+      "publisher": "RKD Studies, The Hague",
+      "url": "https://houbraken-translated.rkdstudies.nl/1-240-289/page-260-269/"
+    },
+    {
+      "id": "michel-1894",
+      "kind": "secondary",
+      "title": "Rembrandt: His Life, His Work, and His Time, vol. I (trans. Florence Simmonds, ed. Frederick Wedmore)",
+      "author": "Émile Michel",
+      "year": 1894,
+      "publisher": "William Heinemann, London",
+      "url": "https://archive.org/details/rembrandthislife01mich"
+    },
+    {
+      "id": "bell-1901",
+      "kind": "secondary",
+      "title": "Rembrandt van Rijn (The Great Masters in Painting and Sculpture)",
+      "author": "Malcolm Bell",
+      "year": 1901,
+      "publisher": "George Bell & Sons, London",
+      "url": "https://www.gutenberg.org/ebooks/32661"
+    },
+    {
+      "id": "ponte-2024",
+      "kind": "secondary",
+      "title": "He Too. Lievens, like Rembrandt, before the Chamber of Marital Affairs (Kroniek van het Rembrandthuis 2024/25, 3-6)",
+      "author": "Mark Ponte",
+      "year": 2024,
+      "publisher": "Museum Het Rembrandthuis, Amsterdam",
+      "url": "https://doi.org/10.48296/KvhR2024.01"
+    },
+    {
+      "id": "rijksmuseum-bio",
+      "kind": "secondary",
+      "title": "Rembrandt van Rijn, Susanna and the Elders, c. 1650-1655 (RP-T-1898-A-3689), artist biography",
+      "author": "Rijksmuseum, Amsterdam",
+      "year": "n.d.",
+      "url": "https://www.rijksmuseum.nl/en/collection/RP-T-1898-A-3689"
+    },
+    {
+      "id": "rifkin-2020",
+      "kind": "secondary",
+      "title": "Rembrandt and Burchard Grossmann the Younger: Some Context, Some Speculations (Kroniek van het Rembrandthuis 2020, 23-63)",
+      "author": "Joshua Rifkin",
+      "year": 2020,
+      "publisher": "Museum Het Rembrandthuis, Amsterdam",
+      "url": "https://doi.org/10.48296/KvhR2020.02"
+    },
+    {
+      "id": "huygens-autobiography",
+      "kind": "secondary",
+      "title": "Excerpts from the Autobiography of Constantijn Huygens, 1629-31 (Art Humanities Primary Source Reading 29, trans. Benjamin Binstock, from the KB manuscript as published in Oud Holland 1891)",
+      "author": "Constantijn Huygens",
+      "year": "1629-31",
+      "publisher": "Columbia University, Art Humanities Primary Source Reader",
+      "url": "https://projects.mcah.columbia.edu/arthumanities/pdfs/arthum_rembrandt_reader.pdf"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real 17th-century Dutch painter, not a politician, campaigner or founder of a religion; no account of sexual contact with anyone under 16 or of sexual violence by him was found; his dark side (the Geertje Dircx affair and her detention, not marrying Hendrickje Stoffels, heavy spending and the 1656 insolvency) is shadow, not an owner case."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked all five draft values and checked every claim against Bakker and Chapman (Leiden Collection), the National Gallery pages, Houbraken Translated, Ponte, the Rijksmuseum, the DBNL letters and the Columbia reader's Huygens autobiography. Self-awareness fell: the evidence only shows 'artistic' self-awareness and some 80 self-portraits, which the National Gallery says he made to practise expressions, test lighting and sell, 'less by soul-searching'. Craft, Independence, Ambition and Resilience held; Hard work, the blind pick, came in on Huygens's 1628 witness, Houbraken and Bakker. I corrected the Ambition letter claim and the 'parents' inheritance' wording, and added Saskia's will, the sold tomb and the Holbein bid to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
