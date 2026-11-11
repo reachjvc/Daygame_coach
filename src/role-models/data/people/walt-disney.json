@@ -1,0 +1,269 @@
+{
+  "id": "walt-disney",
+  "name": "Walt Disney",
+  "born": 1901,
+  "died": 1966,
+  "category": "builders",
+  "areaIds": [
+    "lm_mission",
+    "lm_fun"
+  ],
+  "tagline": "Bankrupt at 21, lost his cartoon character and most of his animators at 26, then made Mickey Mouse and built Disneyland.",
+  "startedFrom": "He was born in Chicago in 1901 and grew up on a small Missouri farm and in Kansas City under a stern father whose businesses kept failing. As a boy he got up at 3:30 in the morning to deliver newspapers. He never finished high school; his art training was a few months of classes in Chicago and Kansas City.",
+  "values": [
+    {
+      "word": "Imagination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1934 he gathered his staff on a sound stage and acted out the whole story of Snow White alone, to pitch the first feature-length cartoon.",
+          "sourceId": "pbs-2015",
+          "locator": "Part 1, narration and Gabler/Watts on the 1934 Snow White meeting"
+        },
+        {
+          "kind": "words",
+          "claim": "Opening Disneyland, he dedicated Fantasyland as 'a world of imagination, hopes, and dreams'.",
+          "sourceId": "ar-1955",
+          "locator": "Fantasyland Opening Day Dedication Address, 17 July 1955"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times obituary says he built his empire 'from his fertile imagination and industrious factory of drawing boards'.",
+          "sourceId": "nyt-1966",
+          "locator": "section \"Weaver of Fantasies\", para 1"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After his Laugh-O-grams company headed into bankruptcy in 1923 he moved to Los Angeles; when he lost Oswald the Rabbit and most of his animators in 1928, he made Mickey Mouse and told Roy to sell Walt's own car if needed to pay for sound.",
+          "sourceId": "pbs-2015",
+          "locator": "Part 1, narration on Laugh-O-grams (summer 1923) and on Oswald and Steamboat Willie (1928)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times obituary says his phlegmatic manner 'often masked his independence and tenacity'.",
+          "sourceId": "nyt-1966",
+          "locator": "section \"Did Not Draw Mickey Mouse\", para 3"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times obituary says that after his first fairy-tale cartoons failed to sell, he was 'so determined to continue in this field that at times he had no money for food'.",
+          "sourceId": "nyt-1966",
+          "locator": "section \"Did Not Draw Mickey Mouse\", paragraph beginning \"In 1920 he organized\""
+        }
+      ]
+    },
+    {
+      "word": "Excellence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On Snow White he insisted the film could not be rushed or done cheaply; the budget was raised six times over and the trade press called it 'Disney's Folly'.",
+          "sourceId": "pbs-2015",
+          "locator": "Part 1, narration on the Snow White production (1937)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Biographer Neal Gabler calls him 'Always a perfectionist. Obsessive about that.'",
+          "sourceId": "cbs-2006",
+          "locator": "Gabler's answer on the type of boss Disney was"
+        }
+      ]
+    },
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1952, to start Disneyland, he sold his Palm Springs vacation home and borrowed $100,000 against his life insurance.",
+          "sourceId": "pbs-2015",
+          "locator": "Part 2, narration on the start of WED and Disneyland (1952)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times obituary says 'He was not afraid of risk' and quotes him: 'It's not what you have, but how much you can borrow that's important in business.'",
+          "sourceId": "nyt-1966",
+          "locator": "section \"Honored by Universities\", paras 6-7"
+        },
+        {
+          "kind": "witness",
+          "claim": "Critic Richard Schickel wrote in 1968 that his 'fearlessness about new technologies led him to try television' while the rest of the industry hoped it would go away, and that he borrowed on a modest life insurance policy to plan Disneyland.",
+          "sourceId": "ah-1968",
+          "locator": "paragraphs beginning \"From 1950 on\" and \"In the early fifties\""
+        }
+      ]
+    },
+    {
+      "word": "Optimism",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked near 60 to sum up his success, he told a reporter: 'I guess I'm an optimist. I'm not in business to make unhappy pictures.'",
+          "sourceId": "nyt-1966",
+          "locator": "section \"Exhibition at Museum\", paras 2-3"
+        },
+        {
+          "kind": "witness",
+          "claim": "His Laugh-O-grams business manager recalled that 'He was always optimistic about his ability and about the value of his ideas.'",
+          "sourceId": "pbs-2015",
+          "locator": "Part 1, narration on Laugh-O-grams and the Alice pitch (1923)"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Stop grumbling and waiting to be told: if you are not moving forward, do something about it.",
+      "sourceId": "pbs-2015",
+      "locator": "Part 1, archival audio of his February 1941 speech to staff"
+    },
+    {
+      "text": "Do not rush or cheapen the work that matters, even when the money runs short.",
+      "sourceId": "pbs-2015",
+      "locator": "Part 1, narration on the Snow White production (1937)"
+    },
+    {
+      "text": "Money is for building the next thing: borrow and spend it on what you create.",
+      "sourceId": "nyt-1966",
+      "locator": "section \"Honored by Universities\", paras 6-7"
+    },
+    {
+      "text": "Work with people who are better than you at the craft.",
+      "sourceId": "pbs-2015",
+      "locator": "Part 1, Eric Smoodin on bringing in Ub Iwerks (1924)"
+    },
+    {
+      "text": "Once you take a stand on principle, hold it, whatever it costs.",
+      "sourceId": "huac-1947",
+      "locator": "p. 284"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "If you're not progressing as you should, instead of grumbling and growling, do something about it.",
+      "sourceId": "pbs-2015",
+      "locator": "Part 1, archival audio of his speech to staff, February 1941"
+    },
+    {
+      "text": "…it was a matter of principle with me, and I fight for principles.",
+      "sourceId": "huac-1947",
+      "locator": "p. 284, testimony of 24 October 1947"
+    },
+    {
+      "text": "To all who come to this happy place: Welcome. Disneyland is your land.",
+      "sourceId": "ar-1955",
+      "locator": "Disneyland Opening Day Dedication Address, 17 July 1955"
+    }
+  ],
+  "definingMoment": {
+    "text": "In early 1928 his distributor kept Oswald the Rabbit, a character Disney did not own, and hired away almost all his animators. Back in Los Angeles, he and a few loyal staff worked out a new character, Mickey Mouse. No distributor wanted the first two Mickey shorts, so he decided to add synchronised sound and told his brother Roy to sell Walt's own car if needed to pay for it. Steamboat Willie opened in New York on 18 November 1928 and was a hit.",
+    "sourceIds": [
+      "pbs-2015",
+      "nyt-1966"
+    ]
+  },
+  "shadow": {
+    "text": "In May 1941 he fired animator Art Babbitt for 'union activities', and more than 200 of his workers went on strike; he refused to recognise or negotiate with their union. The New York Times obituary says he 'insisted on absolute authority' and 'was savage in rebuking a subordinate'. On 24 October 1947 he told Congress's House Un-American Activities Committee that four men tied to the strike and its union were Communists, saying of two of them, 'No one has any way of proving those things.' When Song of the South came out in 1946, the NAACP called it a 'dangerously glorified picture of slavery'. In the winter of 1938-39, weeks after the Kristallnacht pogrom, he was one of only two major Hollywood figures to break the boycott of the Nazi filmmaker Leni Riefenstahl, giving her a studio tour. He was a founding officer of an anti-Communist film group that biographer Neal Gabler calls anti-Semitic; Gabler says Disney willingly allied himself with anti-Semites but found no evidence against him beyond 'the casual anti-Semitism' common among non-Jews then.",
+    "sourceIds": [
+      "pbs-2015",
+      "nyt-1966",
+      "huac-1947",
+      "thr-2021",
+      "cbs-2006",
+      "ap-2015"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you grumble or wait to be told this week, instead of doing something about it?",
+    "principleIndex": 0
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "huac-1947",
+      "kind": "primary",
+      "title": "Hearings Regarding the Communist Infiltration of the Motion Picture Industry: testimony of Walter E. Disney, 24 October 1947",
+      "author": "U.S. House of Representatives, Committee on Un-American Activities",
+      "year": 1947,
+      "publisher": "U.S. Government Printing Office (scan: Media History Digital Library)",
+      "url": "https://lantern.mediahist.org/catalog/hearingsregardin1947aunit_0296"
+    },
+    {
+      "id": "ar-1955",
+      "kind": "primary",
+      "title": "Disneyland Opening Day Dedication Addresses, 17 July 1955 (transcript)",
+      "author": "Walt Disney",
+      "year": 1955,
+      "publisher": "American Rhetoric (transcript with video)",
+      "url": "https://americanrhetoric.com/speeches/waltdisneyopeningdaydisneyland.htm"
+    },
+    {
+      "id": "pbs-2015",
+      "kind": "secondary",
+      "title": "Walt Disney (American Experience), film transcript",
+      "author": "Sarah Colt (director)",
+      "year": 2015,
+      "publisher": "PBS / WGBH",
+      "url": "https://www.pbs.org/wgbh/americanexperience/films/walt-disney/"
+    },
+    {
+      "id": "nyt-1966",
+      "kind": "secondary",
+      "title": "Walt Disney, 65, Dies on Coast; Founded an Empire on a Mouse",
+      "author": "The New York Times",
+      "year": 1966,
+      "publisher": "The New York Times, 16 December 1966",
+      "url": "https://archive.nytimes.com/www.nytimes.com/learning/general/onthisday/bday/1205.html"
+    },
+    {
+      "id": "cbs-2006",
+      "kind": "secondary",
+      "title": "Walt Disney: More Than 'Toons, Theme Parks (interview with biographer Neal Gabler)",
+      "author": "Brian Dakss",
+      "year": 2006,
+      "publisher": "CBS News, 1 November 2006",
+      "url": "https://www.cbsnews.com/news/walt-disney-more-than-toons-theme-parks/"
+    },
+    {
+      "id": "ap-2015",
+      "kind": "secondary",
+      "title": "Disney anti-Semitic? That seems a bit goofy",
+      "author": "Associated Press",
+      "year": 2015,
+      "publisher": "Philadelphia Daily News, 3 August 2015",
+      "url": "https://www.inquirer.com/philly/news/nation_world/20150803_Disney_anti-Semitic__That_seems_a_bit_goofy.html"
+    },
+    {
+      "id": "thr-2021",
+      "kind": "secondary",
+      "title": "When Leni Riefenstahl Came to Hollywood (Guest Column)",
+      "author": "Thomas Doherty",
+      "year": 2021,
+      "publisher": "The Hollywood Reporter, 23 August 2021",
+      "url": "https://www.hollywoodreporter.com/movies/movie-features/leni-riefenstahl-hollywood-1235001606/"
+    },
+    {
+      "id": "ah-1968",
+      "kind": "secondary",
+      "title": "Walt Disney: Myth and Reality",
+      "author": "Richard Schickel",
+      "year": 1968,
+      "publisher": "American Heritage, vol. 19, no. 3, April 1968",
+      "url": "https://www.americanheritage.com/walt-disney-myth-and-reality"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American film producer and theme-park builder (1901-1966), never a politician, campaigner or religious founder, with no account found of sexual contact with a minor or of sexual violence; he is in, with a documented dark side (anti-union fight and HUAC testimony, the Riefenstahl visit, Song of the South) and a disputed antisemitism charge."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value, quote and sentence against the PBS transcript, the 1966 New York Times obituary, the 1947 HUAC record and a 1968 American Heritage essay by Richard Schickel found in this round. No value fell: Boldness, the draft's only word the blind pick lacked, gained a third source in Schickel, and Optimism and Excellence survive as single lapses (his post-strike crisis, his cheaper later films). All three quotes match their originals; four sentences were corrected (the tagline, the sound decision, the Riefenstahl date) and the Times account of his 'absolute authority' was added to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
