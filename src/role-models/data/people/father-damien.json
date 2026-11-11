@@ -1,0 +1,313 @@
+{
+  "id": "father-damien",
+  "name": "Father Damien",
+  "pronoun": "he",
+  "born": 1840,
+  "died": 1889,
+  "category": "givers",
+  "areaIds": [
+    "lm_contribution",
+    "lm_spirituality"
+  ],
+  "tagline": "A farm boy turned priest who chose to live and die among exiled leprosy patients.",
+  "startedFrom": "He was born Jozef De Veuster on 3 January 1840 in Tremelo, a farming village in Belgium; the village school taught little beyond reading, writing and sums, and as a young man he was kept at home to work in the family's fields. When he joined the Congregation of the Sacred Hearts in 1859, his superiors judged that without Latin and Greek he could not become a priest and made him a lay brother. His older brother Pamphile read a Latin grammar aloud to him while he worked; he learned parts of it by heart, his superior noticed, and he was then allowed to study for the priesthood.",
+  "values": [
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He was the first of four priests who volunteered to serve the leprosy settlement on Molokai, left on 10 May 1873, stayed at his own request and that of the patients, and served there sixteen years until his death in 1889.",
+          "sourceId": "vatican",
+          "locator": "St Jozef Damien De Veuster (1840-1889) - Biography, paras 2-3"
+        },
+        {
+          "kind": "deed",
+          "claim": "With the patients' help he built houses and a water system, planted trees, organised schools, bands and choirs, gave medical care to the living and buried the dead.",
+          "sourceId": "nps-damien",
+          "locator": "section 'Father Damien Arrives'"
+        },
+        {
+          "kind": "words",
+          "claim": "In his 1886 report he writes that kindness to all, charity to the needy and a sympathising hand to the sufferers and the dying had been his constant means of work among the patients.",
+          "sourceId": "report-1886",
+          "locator": "Special Report, Kalawao, 11 March 1886, 'The Morality of the Leper Settlement', Appendix M, p. cxxii"
+        }
+      ]
+    },
+    {
+      "word": "Compassion",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told the Board of Health that forcibly separating married couples gave them a pain of mind 'more unbearable than the pains and agonies of the disease itself', and that faithful husbands and wives should be allowed to follow their partners into exile.",
+          "sourceId": "report-1886",
+          "locator": "Special Report, 1886, 'The Kokuas, or Assistants', Appendix M, p. cxix"
+        },
+        {
+          "kind": "deed",
+          "claim": "After a storm in 1874 blew down most of the patients' huts, he and his 'leper boys' built a good many small houses for those who had no money to hire carpenters.",
+          "sourceId": "clifford-1889",
+          "locator": "ch. III 'Father Damien and Molokai', pp. 72-73 (quoting his report)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Vatican's biography says he showed no difference in his approach and care of the patients and found a place for everyone, of any religion.",
+          "sourceId": "vatican",
+          "locator": "St Jozef Damien De Veuster (1840-1889) - Biography, para 5"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Bishop Maigret would not order any priest to Molokai because he saw it as a likely death sentence; Damien volunteered and went first.",
+          "sourceId": "vatican",
+          "locator": "St Jozef Damien De Veuster (1840-1889) - Biography, para 2"
+        },
+        {
+          "kind": "witness",
+          "claim": "Robert Louis Stevenson, after a week at the settlement in 1889, writes that Damien 'did what we have never dreamed of daring'.",
+          "sourceId": "stevenson-1890",
+          "locator": "Open Letter, reply to 'Damien was not a pure man in his relations with women'"
+        },
+        {
+          "kind": "witness",
+          "claim": "May Quinlan's 1909 biography calls him 'a man of exceptional courage and bravery'.",
+          "sourceId": "quinlan-1909",
+          "locator": "ch. 'Damien the Leper', p. 134"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Charles Warren Stoddard, who visited in 1884, writes that his duties never ended, that he helped build most of the new cottages himself, and that he was physician, magistrate, schoolteacher, carpenter, painter, cook and grave-digger.",
+          "sourceId": "stoddard-1885",
+          "locator": "section VIII, pp. 51-53"
+        },
+        {
+          "kind": "words",
+          "claim": "In a December 1874 letter home he writes that he has to steal an hour or two from his sleep to write letters, and in another early letter that he makes the coffins for the poorest dead himself.",
+          "sourceId": "letters-quinlan",
+          "locator": "letter to his family, December 1874, p. 116; letter 'Picture to yourself…', p. 112"
+        },
+        {
+          "kind": "deed",
+          "claim": "Helped by patients, he built houses and a water system and expanded St. Philomena church.",
+          "sourceId": "nps-damien",
+          "locator": "section 'Father Damien Arrives'"
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Telling his bishop that he had leprosy, he wrote that God knew what was best for him and that he said 'Fiat voluntas tua' (Thy will be done) every day 'with a ready heart'.",
+          "sourceId": "letters-quinlan",
+          "locator": "letter to his bishop announcing his leprosy (undated; Quinlan places it after 1884), p. 143"
+        },
+        {
+          "kind": "witness",
+          "claim": "Stevenson writes that Damien believed his religion 'with the simplicity of a peasant or a child', and that this 'intense and narrow faith' made him one of the world's heroes.",
+          "sourceId": "stevenson-1890",
+          "locator": "Open Letter, reply to 'Damien was bigoted'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Vatican's biography says 'Damien was above all a Catholic missionary.'",
+          "sourceId": "vatican",
+          "locator": "St Jozef Damien De Veuster (1840-1889) - Biography, para 4"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Live among the people you serve as one of them, not as a visitor.",
+      "sourceId": "letters-quinlan",
+      "locator": "letter 'Picture to yourself…', pp. 111-112 ('I make myself a leper among the lepers… in preaching I say: We lepers')"
+    },
+    {
+      "text": "Help everyone who needs it, whether or not they share your beliefs.",
+      "sourceId": "letters-quinlan",
+      "locator": "letter 'Picture to yourself…', p. 111 (help 'given to all without distinction')"
+    },
+    {
+      "text": "When a hard job needs doing and nobody else will do it, do it with your own hands.",
+      "sourceId": "letters-quinlan",
+      "locator": "letter 'Picture to yourself…', p. 112 (makes the coffins himself)"
+    },
+    {
+      "text": "When someone shows you that you are wrong, admit it and change course.",
+      "sourceId": "stevenson-1890",
+      "locator": "Open Letter, diary passage C and the Chapman money story that follows"
+    },
+    {
+      "text": "Ask the people in charge plainly, in writing, for what your people need.",
+      "sourceId": "report-1886",
+      "locator": "Special Report, 1886, Appendix M, pp. cxiii (milk cattle) and cxvii (clothing allowance 'quite insufficient')"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Kindness to all, charity to the needy, a sympathizing hand to the sufferers and the dying, in conjunction with a solid religious instruction to my listeners, have been my constant means to introduce moral habits among the lepers.",
+      "sourceId": "report-1886",
+      "locator": "Special Report from Rev. J. Damien, Kalawao, 11 March 1886, 'The Morality of the Leper Settlement', Appendix M, p. cxxii"
+    },
+    {
+      "text": "I would not be cured, if the price of my cure was that I must leave the island and give up my work.",
+      "sourceId": "clifford-1889",
+      "locator": "ch. III 'Father Damien and Molokai', p. 91 (said to Clifford at Kalawao, December 1888)"
+    },
+    {
+      "text": "As for me, I make myself a leper among the lepers, to gain all to Jesus Christ.",
+      "sourceId": "letters-quinlan",
+      "locator": "letter 'Picture to yourself…', pp. 111-112",
+      "translation": "English translation printed in Life and Letters of Father Damien (Catholic Truth Society, London, 1889); translator not named"
+    },
+    {
+      "text": "As I have no doubt of the real character of the malady I remain calm, resigned and very happy in the midst of my people.",
+      "sourceId": "letters-quinlan",
+      "locator": "letter to his bishop announcing his leprosy (undated; Quinlan places it after 1884), p. 143",
+      "translation": "English translation printed in Life and Letters of Father Damien (Catholic Truth Society, London, 1889); translator not named"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1873, at the dedication of a chapel on Maui, Bishop Louis Maigret said he could not send a priest to the leprosy patients exiled to Kalawao on Molokai; he would not order anyone to go, because it could mean death. Damien offered at once; he was the first of four priests who volunteered to take turns, and on 10 May 1873 he sailed on a boat carrying cattle and patients. In his own report he writes that he slept for several weeks under a single pandanus tree, among 816 exiles, many living in shelters of branches and leaves. He did not take his turn and leave: he stayed sixteen years and died of the disease at Kalawao on 15 April 1889.",
+    "sourceIds": [
+      "vatican",
+      "clifford-1889",
+      "nps-damien",
+      "report-1886"
+    ]
+  },
+  "shadow": {
+    "text": "In his 1886 report to the Board of Health he wrote that he 'had hard work to annihilate Laka's religion and worship, and thereby put a stop to the hula', and he asked the authorities to keep healthy children and young people out of the settlement with 'the strictest severity'. In 1878 he served for a short time as the settlement's administrator; the International Leprosy Association's history says he was removed at the request of the patients, who complained to the Board of Health, and Stevenson's informants said he 'had no control' and that his life was threatened. The geographer R. D. K. Herman (2010), summing up the historian Pennie Moblo, writes that patients petitioned to have him removed, and that the Protestant minister and patient J. K. Kahuila, whom Damien had put in irons and jailed as 'rebellious', hired a Honolulu lawyer and asked for an investigation of him for abuse of power. In 1889 Robert Louis Stevenson wrote down what Protestants who had opposed him in his life said: that he was domineering and officious, got his way with bribes, turned patients against the regular doctors' remedies, and at first meant to spend a donor's money on Catholics only until a colleague talked him out of it. The boys' home he ran was in a poor state, which Stevenson's informants put down to his lack of control and his 'slovenly ways and false ideas of hygiene'; officials called it 'Damien's Chinatown', and the National Park Service says he shared the poi bowl and his pipe with patients and did not always wash his hands after dressing sores. In August 1889 the Honolulu minister C. M. Hyde wrote that he was 'not a pure man in his relations with women'; the letter names no woman and gives no evidence, and Stevenson answered in 1890 that earlier visitors seemed not to have heard the rumour, and that he had heard it once before, from a man from Honolulu in a bar on a Samoan beach.",
+    "sourceIds": [
+      "report-1886",
+      "ila-history",
+      "herman-2010",
+      "stevenson-1890",
+      "nps-damien"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which hard or unpleasant job did you leave for someone else this week that you could have done with your own hands?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "Special Report from Rev. J. Damien, Catholic Priest at Kalawao",
+      "year": 1886
+    },
+    {
+      "title": "Life and Letters of Father Damien, the Apostle of the Lepers (his letters, ed. by his brother Pamphile)",
+      "year": 1889
+    }
+  ],
+  "sources": [
+    {
+      "id": "report-1886",
+      "kind": "primary",
+      "title": "Special Report from Rev. J. Damien, Catholic Priest at Kalawao, March 1886 (Appendix M, in Appendix to the Report on Leprosy of the President of the Board of Health to the Legislative Assembly of 1886)",
+      "author": "J. Damien",
+      "year": 1886,
+      "publisher": "P. C. Advertiser Steam Print, Honolulu",
+      "url": "https://archive.org/details/101593877.nlm.nih.gov"
+    },
+    {
+      "id": "letters-quinlan",
+      "kind": "primary",
+      "title": "Letters of Father Damien (from Life and Letters of Father Damien, Catholic Truth Society, 1889), as reprinted in May Quinlan, Damien of Molokai",
+      "author": "Damien De Veuster",
+      "year": 1909,
+      "publisher": "Macdonald and Evans, London",
+      "url": "https://archive.org/details/b28978717"
+    },
+    {
+      "id": "clifford-1889",
+      "kind": "secondary",
+      "title": "Father Damien: A Journey from Cashmere to His Home in Hawaii",
+      "author": "Edward Clifford",
+      "year": 1889,
+      "publisher": "Macmillan and Co., London",
+      "url": "https://archive.org/details/fatherdamienjour00clif"
+    },
+    {
+      "id": "stoddard-1885",
+      "kind": "secondary",
+      "title": "The Lepers of Molokai",
+      "author": "Charles Warren Stoddard",
+      "year": 1885,
+      "publisher": "Ave Maria, Notre Dame (Ave Maria Series no. VII)",
+      "url": "https://archive.org/details/lepersofmolokai1885stod"
+    },
+    {
+      "id": "stevenson-1890",
+      "kind": "secondary",
+      "title": "Father Damien: An Open Letter to the Reverend Dr. Hyde of Honolulu (Sydney, 25 February 1890)",
+      "author": "Robert Louis Stevenson",
+      "year": 1890,
+      "url": "https://www.gutenberg.org/ebooks/281"
+    },
+    {
+      "id": "quinlan-1909",
+      "kind": "secondary",
+      "title": "Damien of Molokai",
+      "author": "May Quinlan",
+      "year": 1909,
+      "publisher": "Macdonald and Evans, London",
+      "url": "https://archive.org/details/b28978717"
+    },
+    {
+      "id": "nps-damien",
+      "kind": "secondary",
+      "title": "Father Damien (Kalaupapa National Historical Park)",
+      "author": "U.S. National Park Service",
+      "year": 2022,
+      "url": "https://www.nps.gov/kala/historyculture/damien.htm"
+    },
+    {
+      "id": "vatican",
+      "kind": "secondary",
+      "title": "St Jozef Damien De Veuster (1840-1889) - Biography (canonization, 11 October 2009)",
+      "author": "Office for the Liturgical Celebrations of the Supreme Pontiff, Holy See",
+      "year": 2009,
+      "url": "https://www.vatican.va/news_services/liturgy/saints/2009/ns_lit_doc_20091011_de-veuster_en.html"
+    },
+    {
+      "id": "ila-history",
+      "kind": "secondary",
+      "title": "Father Damien (History of Leprosy, person entry)",
+      "author": "International Leprosy Association and Sasakawa Health Foundation",
+      "year": 2026,
+      "url": "https://leprosyhistory.org/person/person2/"
+    },
+    {
+      "id": "herman-2010",
+      "kind": "secondary",
+      "title": "Out of Sight, Out of Mind, Out of Power: Leprosy, Race, and Colonization in Hawai'i (Hūlili: Multidisciplinary Research on Hawaiian Well-Being, vol. 6, pp. 271-301)",
+      "author": "R. D. K. Herman",
+      "year": 2010,
+      "publisher": "Kamehameha Schools, Honolulu",
+      "url": "https://kamehamehapublishing.org/wp-content/uploads/sites/38/2020/09/Hulili_Vol6_12.pdf"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real Belgian Catholic priest (1840-1889), long dead, not a politician or the founder of a religion; no credible account of sexual violence or of sexual contact with anyone under 16 was found; he has a documented dark side (suppressing the hula and Laka worship, backing harsh isolation rules, a domineering and stubborn manner, poor hygiene in his boys' home) and an unsourced 1889 rumour about adult women."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value against Stevenson's diary of Damien's Protestant opponents, Quinlan's list of his colleagues' complaints, the International Leprosy Association's history and R. D. K. Herman's 2010 summary of Pennie Moblo's critical study, and re-read every cited passage in the 1886 report, Clifford, Stoddard, Quinlan, the NPS and the Vatican. No value fell: the complaints describe a domineering, untidy and sectarian man, not one who shirked the work, the danger or the sick, and Hard work, the one word the blind pick lacked, rests on Stoddard, his own letters and the NPS; the blind pick's Devotion had no room. All four quotes held; I added the 1878 removal at the patients' request and the Kahuila jailing to the shadow, and made eight corrections, among them a Latin grammar he 'learned by heart' that Quinlan says he learned in parts and a rumour Stevenson heard 'once before', not 'only once'.",
+    "checkedOn": "2026-11-10"
+  }
+}
