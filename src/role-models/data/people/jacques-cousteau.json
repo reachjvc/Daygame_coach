@@ -1,0 +1,310 @@
+{
+  "id": "jacques-cousteau",
+  "name": "Jacques Cousteau",
+  "born": 1910,
+  "died": 1997,
+  "category": "explorers",
+  "areaIds": [
+    "lm_fun",
+    "lm_mission",
+    "lm_contribution"
+  ],
+  "tagline": "A naval officer who built a way to breathe underwater, then showed the sea to the world",
+  "startedFrom": "He was born on 11 June 1910 in France, the second son of a man who worked for a rich American, and grew up partly in France and partly in America. He entered the French naval academy at twenty, but injuries ended his plan to become a naval pilot. He began swimming in the sea to rebuild the strength in his arms, and that is where he found his life's work.",
+  "values": [
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked how he came to nature and water, he answered: \"I have always been curious about things\", and said that as a child he went bird watching at night against his parents' wishes.",
+          "sourceId": "courier-1991",
+          "locator": "answer to the first question, \"How did you come to be interested in nature...\""
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer writes that even as a fund-raiser and showman he kept \"the boyish curiosity about the undersea world and its creatures\".",
+          "sourceId": "matsen-2010",
+          "locator": "passage beginning \"At the same time, he maintained the boyish curiosity\""
+        },
+        {
+          "kind": "deed",
+          "claim": "As a young naval officer at Cam Ranh Bay in Indochina he watched fishermen dive and come up with fish in their hands, found it \"so extraordinary\" that he set out to improve his own underwater swimming.",
+          "sourceId": "courier-1991",
+          "locator": "answer to the first question, sentence beginning \"Two years later, during a round-the-world voyage\""
+        }
+      ]
+    },
+    {
+      "word": "Adventure",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He called himself and his diving friends Frédéric Dumas and Philippe Tailliez \"the Three Musketeers of underwater adventure\".",
+          "sourceId": "courier-1991",
+          "locator": "answer to the first question, second paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "He toured the world in the Calypso, a converted minesweeper with a marine laboratory, from the Antarctic to the Amazon.",
+          "sourceId": "irish-times-1997",
+          "locator": "fourth paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Kirkus, reviewing his biography, describes him \"traveling the world's oceans to create new films\" and developing technology for ever deeper dives.",
+          "sourceId": "kirkus-2009",
+          "locator": "review text, sentence beginning \"Cousteau sure-handedly built\""
+        }
+      ]
+    },
+    {
+      "word": "Building things",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He opens his book with the June 1943 delivery of \"an automatic compressed-air diving lung conceived by Emile Gagnan and myself\", which he called \"the result of years of struggle and dreams\".",
+          "sourceId": "silent-world-1953",
+          "locator": "ch. 1, \"Menfish\", opening paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "The Irish Times obituary records that his skin-diving gear was co-invented by him in 1943 and that The Silent World was filmed with it.",
+          "sourceId": "irish-times-1997",
+          "locator": "second paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "He later built the first French underwater television cameras and a series of small research submarines, one for 350 metres and one for 3,000 metres.",
+          "sourceId": "courier-1991",
+          "locator": "answer beginning \"The Silent World dates from 1956\""
+        }
+      ]
+    },
+    {
+      "word": "Nature",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He described his path with the slogan \"Know, Love, Protect\": he explored, fell in love with the beauty under the sea, then campaigned against what threatened it.",
+          "sourceId": "courier-1991",
+          "locator": "answer to \"How did you become interested in environmental problems?\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In one of his last campaigns he joined the international protests against France's nuclear tests in the South Pacific in 1995.",
+          "sourceId": "irish-times-1997",
+          "locator": "paragraph beginning \"In one of his last campaigns\""
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer writes that he used his fame to argue for population control, nuclear disarmament and the protection of rivers and oceans.",
+          "sourceId": "matsen-2010",
+          "locator": "passage with \"which he used to advocate for population control\""
+        },
+        {
+          "kind": "witness",
+          "claim": "National Geographic, on his centenary, quotes the Cousteau Society: he \"started out as a spear fisherman and a world explorer, not a guardian\", and came to argue that the idea of endless oceans was a human conceit.",
+          "sourceId": "natgeo-2010",
+          "locator": "article of 11 June 2010, quotes of Clark Lee Merriam"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Needing a ship in 1949 and having no money, he went through his address book, reached the agent of the Guinness company and got a credit of 25 million francs, with which he bought and refitted the Calypso.",
+          "sourceId": "courier-1991",
+          "locator": "answer beginning \"No. In 1949 I decided\""
+        },
+        {
+          "kind": "witness",
+          "claim": "His son Jean-Michel, quoted by his biographer about the years after the war: \"His curiosity and ambition were starting to pay off.\"",
+          "sourceId": "matsen-2010",
+          "locator": "passage with Jean-Michel's words \"His curiosity and ambition were starting to pay off\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Kirkus writes that he \"sure-handedly built that success into an undersea empire, finding backers, acquiring and fitting out the Calypso\".",
+          "sourceId": "kirkus-2009",
+          "locator": "review text, sentence beginning \"Cousteau sure-handedly built\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "First get to know a thing, then you will love it, then protect it.",
+      "sourceId": "courier-1991",
+      "locator": "answer to \"How did you become interested in environmental problems?\""
+    },
+    {
+      "text": "When no tool does the job, build one: he tested every breathing set he could find, found none good enough, and made the aqualung with Gagnan.",
+      "sourceId": "courier-1991",
+      "locator": "answer to the first question, paragraphs beginning \"I became obsessed\" and \"Then came the war\""
+    },
+    {
+      "text": "Test the new thing on yourself first: he made the first dives with the new aqualung himself in June 1943.",
+      "sourceId": "silent-world-1953",
+      "locator": "ch. 1, \"Menfish\""
+    },
+    {
+      "text": "If you have no money for the plan, ask the people who might back it: he went through his address book and found the money for a ship.",
+      "sourceId": "courier-1991",
+      "locator": "answer beginning \"No. In 1949 I decided\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "From this day forward we would swim across miles of country no man had known, free and level, with our flesh feeling what the fish scales know.",
+      "sourceId": "silent-world-1953",
+      "locator": "ch. 1, \"Menfish\" (first aqualung dive, June 1943)"
+    },
+    {
+      "text": "When I saw all this beauty under the sea, I fell in love with it.",
+      "sourceId": "courier-1991",
+      "locator": "answer to \"How did you become interested in environmental problems?\"",
+      "translation": "UNESCO Courier English edition, November 1991 (translator not named)"
+    },
+    {
+      "text": "I have always been curious about things.",
+      "sourceId": "courier-1991",
+      "locator": "answer to the first question",
+      "translation": "UNESCO Courier English edition, November 1991 (translator not named)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In June 1943 a wooden case with the new aqualung, made with the engineer Emile Gagnan, reached him at Bandol on the French Riviera. He took it into the sea and swam freely underwater with air on his back. He wrote that from that day on they would swim across miles of country no man had known. Ten years later he told the story in The Silent World, and in 1956 its film won the top award at Cannes.",
+    "sourceIds": [
+      "silent-world-1953",
+      "matsen-2010",
+      "irish-times-1997"
+    ]
+  },
+  "shadow": {
+    "text": "From the late 1970s, while still married to Simone Melchior, he kept a secret second family with Francine Triplet and had two children with her; he married Francine in June 1991, six months after Simone's death. He fell out with his son Jean-Michel and took legal action over the Cousteau name on Jean-Michel's resort in Fiji; the case was settled in 1996. He began as a spear fisherman, and in The Silent World (1953) he wrote that in tropical waters \"we have used dynamite to rally sharks\", and the 1956 film shows his crew using dynamite near a coral reef and, after their ship struck a young sperm whale and they shot it, shooting the sharks that came to the carcass. Survey work for oil companies helped pay for his early expeditions; in 1991 he said of his team, \"We were the people who discovered oil in the Gulf!\" In a letter of 1 May 1941, published by his biographer Bernard Violet in 1999, he wrote that no suitable flat in Marseille would become available \"until we have booted out all the vile yids who are burdening us\" (the Guardian's translation). In a 1991 UNESCO Courier interview he said that to stabilise world population \"we must eliminate 350,000 people per day\", calling the thought so horrible \"that we shouldn't even say it\"; in the same interview he named safe water, schooling for girls and pensions as the way to stop population growth.",
+    "sourceIds": [
+      "matsen-2010",
+      "kirkus-2009",
+      "irish-times-1997",
+      "silent-world-1953",
+      "natgeo-2010",
+      "ucsb-ihc-2010",
+      "variety-2021",
+      "courier-1991",
+      "guardian-1999",
+      "jta-1999"
+    ]
+  },
+  "councilQuestion": {
+    "text": "This week, where did you wait for a tool or a way that does not exist yet, instead of building it?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "The Silent World",
+      "year": 1953
+    },
+    {
+      "title": "The Living Sea",
+      "year": 1963
+    }
+  ],
+  "sources": [
+    {
+      "id": "silent-world-1953",
+      "kind": "primary",
+      "title": "The Silent World",
+      "author": "J.-Y. Cousteau with Frédéric Dumas (written in English with the help of James Dugan)",
+      "year": 1953,
+      "publisher": "Hamish Hamilton, London",
+      "url": "https://archive.org/details/silentworld0000jyco"
+    },
+    {
+      "id": "courier-1991",
+      "kind": "primary",
+      "title": "Interview with Jacques-Yves Cousteau (interviewed by Bahgat Elnadi and Adel Rifaat), The UNESCO Courier, November 1991; web reprint 16 November 2020",
+      "author": "Jacques-Yves Cousteau",
+      "year": 1991,
+      "publisher": "UNESCO",
+      "url": "https://courier.unesco.org/en/articles/interview-jacques-yves-cousteau-0"
+    },
+    {
+      "id": "matsen-2010",
+      "kind": "secondary",
+      "title": "Jacques Cousteau: The Sea King",
+      "author": "Brad Matsen",
+      "year": 2010,
+      "publisher": "Vintage Books (first ed. Pantheon 2009)",
+      "url": "https://archive.org/details/jacquescousteaus0000unse"
+    },
+    {
+      "id": "kirkus-2009",
+      "kind": "secondary",
+      "title": "Review of Jacques Cousteau: The Sea King by Brad Matsen, Kirkus Reviews, 1 September 2009",
+      "author": "Kirkus Reviews",
+      "year": 2009,
+      "url": "https://www.kirkusreviews.com/book-reviews/brad-matsen/jacques-cousteau/"
+    },
+    {
+      "id": "irish-times-1997",
+      "kind": "secondary",
+      "title": "Tributes follow death of \"old man of the sea\" Jacques Yves Cousteau, The Irish Times, 26 June 1997",
+      "author": "The Irish Times",
+      "year": 1997,
+      "url": "https://www.irishtimes.com/news/tributes-follow-death-of-old-man-of-the-sea-jacques-yves-cousteau-1.85445"
+    },
+    {
+      "id": "guardian-1999",
+      "kind": "secondary",
+      "title": "Cousteau was anti-semitic and a liar, says biographer, The Guardian, 18 June 1999",
+      "author": "Jon Henley",
+      "year": 1999,
+      "url": "https://www.theguardian.com/world/1999/jun/18/jonhenley1"
+    },
+    {
+      "id": "jta-1999",
+      "kind": "secondary",
+      "title": "Controversial Cousteau letter found, JTA Daily Bulletin, 22 June 1999",
+      "author": "Jewish Telegraphic Agency",
+      "year": 1999,
+      "url": "https://www.jta.org/archive/controversial-cousteau-letter-found-2"
+    },
+    {
+      "id": "natgeo-2010",
+      "kind": "secondary",
+      "title": "Jacques Cousteau Centennial: What He Did, Why He Matters, National Geographic, 11 June 2010",
+      "author": "Ker Than",
+      "year": 2010,
+      "url": "https://www.nationalgeographic.com/adventure/article/100611-jacques-cousteau-100th-anniversary-birthday-legacy-google"
+    },
+    {
+      "id": "variety-2021",
+      "kind": "secondary",
+      "title": "How Jacques Cousteau's Regrets Became the Focal Point for Documentary 'Becoming Cousteau', Variety, 9 November 2021",
+      "author": "Meredith Woerner",
+      "year": 2021,
+      "url": "https://variety.com/video/jacques-cousteau-documentary-liz-garbus/"
+    },
+    {
+      "id": "ucsb-ihc-2010",
+      "kind": "secondary",
+      "title": "The Silent World (screening notes), Interdisciplinary Humanities Center, University of California, Santa Barbara, 13 April 2010",
+      "author": "UCSB Interdisciplinary Humanities Center",
+      "year": 2010,
+      "url": "https://ihc.ucsb.edu/the-silent-world/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real man, died 1997, not a politician or religious founder; searches found no account of sexual contact with a minor or of sexual violence; the dark side is family conduct, an antisemitic 1941 letter and a 1991 remark on population."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked Nature hardest: his 1953 book says the team used dynamite to rally sharks, the 1956 film shows a reef blasted and sharks killed, and oil surveys paid for the ship. That is a pattern, but against protecting the sea in his early years, not against the plain value: he lived in and for the sea from the 1930s to his death and campaigned for it for three decades, so Nature held and the early conduct went into the shadow. Curiosity, Adventure, Building things and Nature are shared with the blind pick; Ambition held on three sources; the blind pick's Impact was not added (no room, thin sources). All three quotes matched their texts; six fixes tightened claims to their sources, and the shadow gained his early dynamite and shark killing and his oil survey money.",
+    "checkedOn": "2026-11-10"
+  }
+}
