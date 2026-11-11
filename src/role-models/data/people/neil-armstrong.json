@@ -1,0 +1,304 @@
+{
+  "id": "neil-armstrong",
+  "name": "Neil Armstrong",
+  "born": 1930,
+  "died": 2012,
+  "category": "explorers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_mission"
+  ],
+  "tagline": "A test pilot who stayed calm in emergencies and gave the credit for the Moon to his team.",
+  "startedFrom": "He was born in 1930 on his grandfather's farm near Wapakoneta, Ohio. His father was a state auditor, so the family moved every few years, and he went to about six schools. He learned to fly before he had a driving licence, and a Navy scholarship paid for his engineering studies at Purdue.",
+  "values": [
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked whether he treated Apollo 11 differently from his earlier missions, he said it was the culmination of the work of 300,000 or 400,000 people over a decade.",
+          "sourceId": "nasa-oh-2001",
+          "locator": "answer to Brinkley's question on whether he treated Apollo 11 differently from earlier missions"
+        },
+        {
+          "kind": "witness",
+          "claim": "His friend and fellow astronaut Richard Truly writes that he always deflected credit from himself, rarely gave media interviews and avoided the spotlight.",
+          "sourceId": "nae-truly-2013",
+          "locator": "p. 15"
+        },
+        {
+          "kind": "witness",
+          "claim": "His first wife Janet told his biographer that he felt guilty for getting all the acclaim for the work of tens of thousands of people.",
+          "sourceId": "irishtimes-2012",
+          "locator": "paragraph quoting Hansen's interview with Armstrong's first wife"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 3 September 1951, over Korea, a cable cut off part of his jet's wing; he flew it back over friendly territory and ejected near Pohang.",
+          "sourceId": "nasa-oh-2001",
+          "locator": "answer to Brinkley's question about the ejection of 3 September 1951"
+        },
+        {
+          "kind": "deed",
+          "claim": "He flew 78 combat missions in Korea and was back in combat two days after ejecting; on 6 March 1968 he ejected from a failing lunar landing trainer below 100 feet and was at his desk an hour later.",
+          "sourceId": "nae-truly-2013",
+          "locator": "pp. 9 and 13"
+        },
+        {
+          "kind": "witness",
+          "claim": "Truly quotes Michael Griffin, then president of the AIAA, praising his 'unyielding courage to do the right thing as he saw it'.",
+          "sourceId": "nae-truly-2013",
+          "locator": "p. 16"
+        }
+      ]
+    },
+    {
+      "word": "Focus",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said the most important thing under the pressure of Apollo 11 was to focus on the job and allow nothing to distract the crew.",
+          "sourceId": "nasa-oh-2001",
+          "locator": "answer to Brinkley's question on whether he treated Apollo 11 differently from earlier missions"
+        },
+        {
+          "kind": "deed",
+          "claim": "During the landing, with computer alarms sounding, he took manual control and flew past the boulder field around West Crater; the descent burn ran 36 seconds longer than planned.",
+          "sourceId": "alsj-landing",
+          "locator": "commentary after 102:42:32 and at 102:45:47 (burn-length note)"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer James Hansen says he had the ability to block out what was going on around him and focus on his own world.",
+          "sourceId": "physicstoday-hansen-2018",
+          "locator": "answer to \"What was his childhood like?\""
+        }
+      ]
+    },
+    {
+      "word": "Competence",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says he and Buzz Aldrin spent much of their training mastering the lunar module, knowing it inside out.",
+          "sourceId": "nasa-oh-2001",
+          "locator": "answer to Brinkley's question on how training for Apollo 11 differed from Apollo 8"
+        },
+        {
+          "kind": "deed",
+          "claim": "As a NACA and NASA test pilot at Edwards he flew seven X-15 flights to the edge of space and many other research aircraft.",
+          "sourceId": "nae-truly-2013",
+          "locator": "p. 10"
+        },
+        {
+          "kind": "witness",
+          "claim": "Fellow test pilot Bill Dana said he had a mind that absorbed things like a sponge and a memory like a photograph.",
+          "sourceId": "nae-truly-2013",
+          "locator": "p. 10"
+        }
+      ]
+    },
+    {
+      "word": "Responsibility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said the commander is always responsible for his craft, and that when the risk is too high you go back to the basics: save the craft, save the crew, get home.",
+          "sourceId": "nasa-oh-2001",
+          "locator": "answer to Ambrose on the commander's override; answer to Ambrose on the Gemini VIII decision"
+        },
+        {
+          "kind": "deed",
+          "claim": "On Gemini VIII, 16 March 1966, when the docked craft began to roll and the crew risked passing out, he undocked, shut off the faulty thrusters, used the re-entry system to regain control and brought the crew home early.",
+          "sourceId": "nae-truly-2013",
+          "locator": "pp. 11-12"
+        },
+        {
+          "kind": "deed",
+          "claim": "NASA's account of Gemini VIII credits him with turning off the whole orbital thruster system and stopping the spin with the re-entry control thrusters; the flight rules then required the crew to come home early.",
+          "sourceId": "nasa-gemini8-2016",
+          "locator": "section on the crew's response to the roll and the order to re-enter"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Judge people by how they perform, not by how they look.",
+      "sourceId": "nasa-oh-2001",
+      "locator": "answer to Brinkley's question on Marsh Beebe and E. M. Beauchamp"
+    },
+    {
+      "text": "When the risk gets too high, give up the goal and bring the craft and the crew home.",
+      "sourceId": "nasa-oh-2001",
+      "locator": "answer to Ambrose on what he attributes the Gemini VIII decision to"
+    },
+    {
+      "text": "Under pressure, do your own job as well as you can and let nothing distract you.",
+      "sourceId": "nasa-oh-2001",
+      "locator": "answer to Brinkley's question on whether he treated Apollo 11 differently from earlier missions"
+    },
+    {
+      "text": "Give the credit to the team that did the work.",
+      "sourceId": "nae-truly-2013",
+      "locator": "p. 15"
+    },
+    {
+      "text": "Learn your machine inside out before you trust your life to it.",
+      "sourceId": "nasa-oh-2001",
+      "locator": "answer to Brinkley's question on how training for Apollo 11 differed from Apollo 8"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "That's one small step for (a) man; one giant leap for mankind.",
+      "sourceId": "alsj-step",
+      "locator": "109:24:23 MET, 20 July 1969 (the 'a' is the journal's bracket for his stated intent)"
+    },
+    {
+      "text": "I think if there was anything I learned from our skipper was that it's not how you look; it's how you perform.",
+      "sourceId": "nasa-oh-2001",
+      "locator": "answer to Brinkley's question on Marsh Beebe and E. M. Beauchamp"
+    },
+    {
+      "text": "save your craft, save the folks, get back home, and be disappointed that you had to leave some of your goals behind.",
+      "sourceId": "nasa-oh-2001",
+      "locator": "answer to Ambrose on what he attributes the Gemini VIII decision to"
+    },
+    {
+      "text": "I am and ever will be a white-socks, pocket-protector, nerdy engineer",
+      "sourceId": "npc-2000",
+      "locator": "National Press Club luncheon, 22 February 2000, as reported by Wired News"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 20 July 1969 he flew the lunar module Eagle down to the Moon with Buzz Aldrin. During the descent, computer alarms kept sounding, and near the surface the planned spot turned out to be a crater ringed with large boulders. He took manual control, flew past the boulder field and landed on smoother ground with the low-fuel light already on. The burn ran 36 seconds longer than planned.",
+    "sourceIds": [
+      "alsj-landing",
+      "nae-truly-2013",
+      "nasa-oh-2001"
+    ]
+  },
+  "shadow": {
+    "text": "His two-year-old daughter Karen died of an inoperable brain tumour in January 1962. His biographer James Hansen found that he would not talk about her, even with his wife Janet, and that people who knew him well in later years did not know he had had a daughter. Hansen also found a series of incidents in his test flying in the months after her death. Hansen calls the marriage problematic: he \"kept so much stuff locked up\" and was not an easy husband to engage with. After a separation, the 38-year marriage ended in divorce in 1994. After the 1969 tours he withdrew from public view and, by his own count, accepted less than 1 percent of the requests he received; he recorded one television advertisement, for Chrysler in 1979, and became a wealthy businessman and director of corporate boards.",
+    "sourceIds": [
+      "nae-truly-2013",
+      "nbc-hansen-2018",
+      "physicstoday-hansen-2018",
+      "nasa-oh-2001",
+      "irishtimes-2012"
+    ]
+  },
+  "councilQuestion": {
+    "text": "When did something pull your attention off the one job that mattered this week, and what would full focus have looked like?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "NASA Johnson Space Center Oral History (interview with Stephen E. Ambrose and Douglas Brinkley)",
+      "year": 2001
+    },
+    {
+      "title": "First on the Moon (with Michael Collins and Edwin E. Aldrin Jr.; written with Gene Farmer and Dora Jane Hamblin)",
+      "year": 1970
+    }
+  ],
+  "sources": [
+    {
+      "id": "nasa-oh-2001",
+      "kind": "primary",
+      "title": "NASA Johnson Space Center Oral History Project: Edited Oral History Transcript, Neil A. Armstrong (Houston, 19 September 2001)",
+      "author": "Neil A. Armstrong, interviewed by Stephen E. Ambrose and Douglas Brinkley",
+      "year": 2001,
+      "publisher": "NASA Johnson Space Center",
+      "url": "https://www.nasa.gov/wp-content/uploads/2015/02/62281main_armstrong_oralhistory.pdf"
+    },
+    {
+      "id": "alsj-landing",
+      "kind": "primary",
+      "title": "Apollo 11 Lunar Surface Journal: The First Lunar Landing (air-to-ground transcript with commentary)",
+      "author": "Eric M. Jones (editor); crew transcript",
+      "year": 1995,
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/wp-content/uploads/static/history/alsj/a11/a11.landing.html"
+    },
+    {
+      "id": "alsj-step",
+      "kind": "primary",
+      "title": "Apollo 11 Lunar Surface Journal: One Small Step (air-to-ground transcript with commentary)",
+      "author": "Eric M. Jones (editor); crew transcript",
+      "year": 1995,
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/wp-content/uploads/static/history/alsj/a11/a11.step.html"
+    },
+    {
+      "id": "npc-2000",
+      "kind": "primary",
+      "title": "Remarks at the National Press Club, 22 February 2000, reported in \"One Small Step, One Small Click\"",
+      "author": "Neil Armstrong (reported by Wired News)",
+      "year": 2000,
+      "publisher": "Wired",
+      "url": "https://www.wired.com/2000/02/one-small-step-one-small-click/"
+    },
+    {
+      "id": "nae-truly-2013",
+      "kind": "secondary",
+      "title": "Neil A. Armstrong, 1930-2012, in Memorial Tributes: Volume 17, pp. 6-17",
+      "author": "Richard H. Truly",
+      "year": 2013,
+      "publisher": "National Academy of Engineering / National Academies Press",
+      "url": "https://www.nationalacademies.org/read/18477/chapter/4"
+    },
+    {
+      "id": "irishtimes-2012",
+      "kind": "secondary",
+      "title": "One final step for a reluctant hero (obituary)",
+      "author": "Lara Marlowe",
+      "year": 2012,
+      "publisher": "The Irish Times",
+      "url": "https://www.irishtimes.com/news/one-final-step-for-a-reluctant-hero-1.543419"
+    },
+    {
+      "id": "physicstoday-hansen-2018",
+      "kind": "secondary",
+      "title": "Q&A: Neil Armstrong biographer James Hansen",
+      "author": "Melinda Baldwin (interviewing James R. Hansen)",
+      "year": 2018,
+      "publisher": "Physics Today (American Institute of Physics)",
+      "url": "https://physicstoday.aip.org/news/q-a-neil-armstrong-biographer-james-hansen"
+    },
+    {
+      "id": "nbc-hansen-2018",
+      "kind": "secondary",
+      "title": "'First Man's' portrait of Neil Armstrong gets at the man behind the myth (interview with James R. Hansen)",
+      "author": "Denise Chow",
+      "year": 2018,
+      "publisher": "NBC News",
+      "url": "https://www.nbcnews.com/news/amp/ncna919741"
+    },
+    {
+      "id": "nasa-gemini8-2016",
+      "kind": "secondary",
+      "title": "Gemini's First Docking Turns to Wild Ride in Orbit",
+      "author": "Bob Granath",
+      "year": 2016,
+      "publisher": "NASA",
+      "url": "https://www.nasa.gov/missions/gemini/gemini-viii/geminis-first-docking-turns-to-wild-ride-in-orbit/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American naval aviator, test pilot, astronaut and engineer (1930-2012), never a politician, campaigner or religious founder, with no account of sexual contact with a minor or of sexual violence found; he is in, and his dark side is emotional distance and extreme privacy, told by his biographer and the record."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked Humility with his Chrysler advertisement, his corporate wealth and his suits over his name, Competence and Focus with the flying incidents Hansen found after his daughter's death, and Responsibility with his emotional distance at home; none showed a pattern against the value, so all five held, with a third independent NASA source added for Responsibility. All four quotes matched the NASA oral history, the Apollo Lunar Surface Journal and Wired's report of the 2000 Press Club talk. The shadow lost the 2014 hospital settlement, which was his family's act, not his, and gained the post-1962 flying incidents and the Chrysler advertisement; five small wording overstatements were fixed.",
+    "checkedOn": "2026-11-10"
+  }
+}
