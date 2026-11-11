@@ -1,0 +1,298 @@
+{
+  "id": "fyodor-dostoevsky",
+  "name": "Fyodor Dostoevsky",
+  "born": 1821,
+  "died": 1881,
+  "category": "artists",
+  "areaIds": [
+    "lm_mindset",
+    "lm_mission",
+    "lm_spirituality"
+  ],
+  "tagline": "Faced a firing squad, did four years' hard labour, beat his gambling and kept writing.",
+  "startedFrom": "He was born in Moscow in 1821, in the staff house of a workhouse hospital where his father was a staff physician. His mother died in February 1837, when he was fifteen, and his father in 1839, while Fyodor was a student at the College of Engineering in St Petersburg. In October 1844 he was discharged from army engineering 'on account of illness' while he worked on his first novel, Poor Folk, and his early letters are full of debts and requests for money.",
+  "values": [
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Just out of the Omsk prison he wrote that he was 'a child of unfaith and scepticism', tormented by a 'longing for faith', and set down his creed: nothing is more perfect than Christ, and if the truth excluded Christ he would stay with Christ.",
+          "sourceId": "letters-mayne",
+          "locator": "Letter XXII, to Mme. N. D. Fonvisin, Omsk, beginning of March 1854, pp. 67-68"
+        },
+        {
+          "kind": "witness",
+          "claim": "Ian Thomson, reviewing Frank's biography, calls him 'a man who yearned for faith' whose Orthodoxy was inseparable from his belief in the Russian peasant soul.",
+          "sourceId": "irishtimes-2010",
+          "locator": "paras 2 and 10"
+        },
+        {
+          "kind": "witness",
+          "claim": "Prospect, on Frank's last volume, says the novel's answer to Ivan Karamazov's revolt against God comes through Father Zosima, and that a life of reading the New Testament was never so evident as in The Brothers Karamazov.",
+          "sourceId": "prospect-2002",
+          "locator": "para. 17"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "From the Peter and Paul Fortress he wrote to his brother that human beings have 'an incredible amount of endurance and will to live' and that he had found more of it in himself than he expected.",
+          "sourceId": "letters-mayne",
+          "locator": "Letter XVII, to his brother Michael, 18 July 1849, p. 46"
+        },
+        {
+          "kind": "deed",
+          "claim": "After the staged execution of December 1849 his sentence became a Siberian prison camp followed by army service; Morson writes that one of the condemned men went mad, 'another wrote Crime and Punishment'.",
+          "sourceId": "nyrb-2021",
+          "locator": "paras 8-9"
+        },
+        {
+          "kind": "deed",
+          "claim": "He served four years (1850-54) in the prison at Omsk, was then enrolled as a private soldier in Semipalatinsk, rose to ensign in 1856 and began The House of the Dead in 1855.",
+          "sourceId": "letters-mayne",
+          "locator": "Chronological table after V. Tchechichin, pp. xiii-xiv"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Under contract to deliver a whole novel at short notice, he dictated and revised The Gambler within a month with a stenographer, then went back to Crime and Punishment; he worked at his desk from 10 PM to 6 AM.",
+          "sourceId": "nyrb-1995",
+          "locator": "paras 4 and 7"
+        },
+        {
+          "kind": "words",
+          "claim": "Writing from Geneva in January 1868 about The Idiot, he said he had started a new novel three weeks earlier and was 'now working day and night'.",
+          "sourceId": "letters-mayne",
+          "locator": "Letter XXXIX, to his niece Sofia Alexandrovna, Geneva, 1 [13] January 1868, p. 134"
+        },
+        {
+          "kind": "witness",
+          "claim": "J. M. Coetzee, reviewing Frank, writes that Frank calls him, 'at risk of exaggeration', 'a literary proletarian forced to write for wages'.",
+          "sourceId": "nyrb-1995",
+          "locator": "para. 10"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Just before sending a finished manuscript to his publisher he destroyed most of it because he was no longer pleased with it, though his debts depended on it: 'if one is displeased with one's work, it can't possibly be good'.",
+          "sourceId": "letters-mayne",
+          "locator": "Letter XXXIX, to his niece Sofia Alexandrovna, Geneva, 1 [13] January 1868, p. 134"
+        },
+        {
+          "kind": "deed",
+          "claim": "When his editor refused to print the Stavrogin confession chapter of The Devils, he rewrote that chapter several times, reworked the rest of the novel, and revised it a second time for book publication.",
+          "sourceId": "nyrb-1995",
+          "locator": "paras 30-31"
+        },
+        {
+          "kind": "witness",
+          "claim": "Prospect reports that Frank's biography corrects the notion that he rushed through his novels careless of style or structure.",
+          "sourceId": "prospect-2002",
+          "locator": "para. 14"
+        },
+        {
+          "kind": "words",
+          "claim": "At 23 he finished Poor Folk in November 1844, altered it radically in December, wrote it out fair again, and in February went on 'polishing, cutting, adding' until he was satisfied in March 1845.",
+          "sourceId": "letters-mayne",
+          "locator": "Letter VI, to his brother Michael, 24 March 1845, p. 18"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Your mood is your own job, even in a cell: boredom passes, and cheerfulness depends in the end on you.",
+      "sourceId": "letters-mayne",
+      "locator": "Letter XVII, to his brother Michael, 18 July 1849, p. 46"
+    },
+    {
+      "text": "Use the hard years: turn inward, study the people around you, and come out with more than you went in with.",
+      "sourceId": "letters-mayne",
+      "locator": "Letter XXI, to his brother Michael, Omsk, 22 February 1854, pp. 59 and 62"
+    },
+    {
+      "text": "If the work is not good, throw it out and start again, even when you need the money.",
+      "sourceId": "letters-mayne",
+      "locator": "Letter XXXIX, to his niece Sofia Alexandrovna, Geneva, 1 [13] January 1868, p. 134"
+    },
+    {
+      "text": "Carry the people who depend on you, even when their debts become yours.",
+      "sourceId": "nyrb-1995",
+      "locator": "para. 3"
+    },
+    {
+      "text": "Call your vice by its name, and make the last time the last time.",
+      "sourceId": "wiesbaden-lexikon",
+      "locator": "entry 'Dostojewski, Fjodor Michailowitsch', passage on April 1871 (letter of 28 April 1871)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "If anyone could prove to me that Christ is outside the truth, and if the truth really did exclude Christ, I should prefer to stay with Christ and not with truth.",
+      "sourceId": "letters-mayne",
+      "locator": "Letter XXII, to Mme. N. D. Fonvisin, Omsk, beginning of March 1854, pp. 67-68 (2nd ed. 1917)",
+      "translation": "Ethel Colburn Mayne, 1914 (2nd ed. re-set 1917), from Alexander Eliasberg's German edition"
+    },
+    {
+      "text": "…the tedium is a passing matter, and cheerfulness depends in the last resort upon myself. Human beings have an incredible amount of endurance and will to live; I should never have expected to find so much in myself; now I know it from experience.",
+      "sourceId": "letters-mayne",
+      "locator": "Letter XVII, to his brother Michael, Peter and Paul Fortress, 18 July 1849, p. 46 (2nd ed. 1917)",
+      "translation": "Ethel Colburn Mayne, 1914 (2nd ed. re-set 1917), from Alexander Eliasberg's German edition"
+    },
+    {
+      "text": "Still, the eternal concentration, the escape into myself from bitter reality, did bear its fruit.",
+      "sourceId": "letters-mayne",
+      "locator": "Letter XXI, to his brother Michael, Omsk, 22 February 1854, p. 59 (2nd ed. 1917)",
+      "translation": "Ethel Colburn Mayne, 1914 (2nd ed. re-set 1917), from Alexander Eliasberg's German edition"
+    },
+    {
+      "text": "Of course it was vile in me to gamble away so much.",
+      "sourceId": "letters-mayne",
+      "locator": "Letter XXXIV, to Apollon Maikov, Geneva, 16 [28] August 1867, p. 119 (2nd ed. 1917)",
+      "translation": "Ethel Colburn Mayne, 1914 (2nd ed. re-set 1917), from Alexander Eliasberg's German edition"
+    }
+  ],
+  "definingMoment": {
+    "text": "Arrested in April 1849 with the Petrashevsky circle, partly for reading aloud Belinsky's revolutionary letter to Gogol, he spent eight months in the Peter and Paul Fortress. On 22 December 1849 the prisoners were taken to Semyonovsky Square, read the death sentence and dressed in white shirts; he stood in the second group of three, with about a minute to live, when the Tsar's pardon was read. The pardon had been staged in advance as part of the punishment, and his sentence became four years of hard labour in Omsk followed by service as a private soldier. Writing to his brother after his release in February 1854, he said the four years had borne fruit and that he had come to know the Russian people as few know them.",
+    "sourceIds": [
+      "letters-mayne",
+      "nyrb-2021"
+    ]
+  },
+  "shadow": {
+    "text": "From his first visit to Wiesbaden in 1862 until April 1871 he gambled heavily at roulette; at Baden-Baden in 1867 he lost his winnings and his own money, and he and his young wife Anna pawned their clothes and her last possessions. Stephen Dobson writes that before 1871 he repeatedly confessed to Anna, promised to stop and broke those promises, and the novelist J. M. Coetzee, reviewing Frank's biography, writes that the gambling brought Anna poverty and left her lied to and deceived. In 1863, while married to his first wife, he had a stormy affair with the young radical Apollinaria Suslova. In A Writer's Diary (1876-77) he attacked Jews in terms the scholar Gary Saul Morson calls extreme even for his day. Joseph Frank, in 1963, described him as 'difficult, impetuous, impractical, irascible, quarrelsome, and capable of malice and flashes of hatred'. In a letter to Tolstoy of 28 November 1883, nearly three years after Dostoevsky's death, his former colleague and first biographer Nikolai Strakhov wrote, on the basis only of a rumour, that Dostoevsky had once boasted of having violated a little girl; his biographers David Magarshack and Joseph Frank reject the story as unreliable, and a 2019 study calls it a slander.",
+    "sourceIds": [
+      "wiesbaden-lexikon",
+      "letters-mayne",
+      "conversation-2024",
+      "nyrb-1995",
+      "nyrb-2021",
+      "nyrb-1963",
+      "klimova-2021",
+      "kibalnik-2019"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which habit cost you something this week, and did you call it by its real name?",
+    "principleIndex": 4
+  },
+  "readings": [
+    {
+      "title": "Notes from Underground",
+      "year": 1864
+    },
+    {
+      "title": "Crime and Punishment",
+      "year": 1866
+    },
+    {
+      "title": "The Brothers Karamazov",
+      "year": 1880
+    }
+  ],
+  "sources": [
+    {
+      "id": "letters-mayne",
+      "kind": "primary",
+      "title": "Letters of Fyodor Michailovitch Dostoevsky to his Family and Friends, trans. Ethel Colburn Mayne (2nd ed., re-set; with a chronological table after V. Tchechichin)",
+      "author": "Fyodor Dostoevsky",
+      "year": 1917,
+      "publisher": "Chatto & Windus, London (1st ed. October 1914)",
+      "url": "https://archive.org/details/lettersoffyodorm00dostiala"
+    },
+    {
+      "id": "nyrb-1995",
+      "kind": "secondary",
+      "title": "The Artist at High Tide (review of Joseph Frank, Dostoevsky: The Miraculous Years, 1865-1871), The New York Review of Books, 2 March 1995",
+      "author": "J. M. Coetzee",
+      "year": 1995,
+      "url": "https://www.nybooks.com/articles/1995/03/02/the-artist-at-high-tide/"
+    },
+    {
+      "id": "nyrb-2021",
+      "kind": "secondary",
+      "title": "Dostoevsky and His Demons (review of Thomas Marullo, Fyodor Dostoevsky: A Life in Letters, Memoirs, and Criticism; Joseph Frank, Lectures on Dostoevsky; Alex Christofi, Dostoevsky in Love), The New York Review of Books, 1 July 2021",
+      "author": "Gary Saul Morson",
+      "year": 2021,
+      "url": "https://www.nybooks.com/articles/2021/07/01/dostoevsky-and-his-demons/"
+    },
+    {
+      "id": "nyrb-1963",
+      "kind": "secondary",
+      "title": "A Raw Deal (review of David Magarshack, Dostoevsky), The New York Review of Books, 1 June 1963",
+      "author": "Joseph Frank",
+      "year": 1963,
+      "url": "https://www.nybooks.com/articles/1963/06/01/a-raw-deal/"
+    },
+    {
+      "id": "prospect-2002",
+      "kind": "secondary",
+      "title": "The definitive Dostoevsky (on Joseph Frank, Dostoevsky: The Mantle of the Prophet, 1871-1881), Prospect, 19 July 2002",
+      "author": "Derek Brower",
+      "year": 2002,
+      "url": "https://www.prospectmagazine.co.uk/culture/59616/the-definitive-dostoevsky"
+    },
+    {
+      "id": "irishtimes-2010",
+      "kind": "secondary",
+      "title": "From Russia with redemption (review of Joseph Frank, Dostoevsky: A Writer in His Time), The Irish Times, 30 January 2010",
+      "author": "Ian Thomson",
+      "year": 2010,
+      "url": "https://www.irishtimes.com/culture/books/from-russia-with-redemption-1.1274660"
+    },
+    {
+      "id": "wiesbaden-lexikon",
+      "kind": "secondary",
+      "title": "Dostojewski, Fjodor Michailowitsch, Wiesbaden Stadtlexikon (City of Wiesbaden)",
+      "author": "Wolfgang Young",
+      "year": "n.d.",
+      "url": "https://www.wiesbaden.de/en/stadtlexikon/stadtlexikon-a-z/dostojewski-fjodor-michailowitsch"
+    },
+    {
+      "id": "conversation-2024",
+      "kind": "secondary",
+      "title": "How Dostoevsky overcame his gambling addiction, The Conversation, 24 January 2024",
+      "author": "Stephen Dobson (CQUniversity Australia)",
+      "year": 2024,
+      "url": "https://theconversation.com/how-dostoevsky-overcame-his-gambling-addiction-220655"
+    },
+    {
+      "id": "klimova-2021",
+      "kind": "secondary",
+      "title": "Dostoevsky - Strakhov - Tolstoy: Toward to the Story of One Conflict, RUDN Journal of Philosophy 25(1), 72-88",
+      "author": "S. M. Klimova",
+      "year": 2021,
+      "url": "https://journals.rudn.ru/philosophy/article/view/25913/en_US"
+    },
+    {
+      "id": "kibalnik-2019",
+      "kind": "secondary",
+      "title": "Solving the riddle of a writer's defamation: why did Nikolay Strakhov slander Fyodor Dostoevsky? Social Sciences 50(3), 115-134",
+      "author": "Sergei Kibalnik",
+      "year": 2019,
+      "url": "https://pureportal.spbu.ru/en/publications/solving-the-riddle-of-a-writers-defamation(4ac57fc4-15d1-4110-a947-6fdea7248a13).html"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real Russian novelist (1821-1881), never a politician or founder of a religion; nearly three years after his death his former colleague Nikolai Strakhov wrote to Tolstoy, on the basis only of a rumour, that Dostoevsky had once boasted of violating a little girl, so the case goes to the owner; his gambling, an affair and his anti-Jewish writing are shadow. Owner case: letter of 28 Nov 1883, secondhand rumour, no girl, date or place named (nyrb-1963, klimova-2021); rejected as unreliable by Magarshack and Frank (nyrb-1963), called a slander by Kibalnik 2019; the Stavrogin child-seduction chapter of The Devils is the likely seed (nyrb-1995, prospect-2002)."
+    },
+    "blindAgreement": 0.75,
+    "devilsAdvocate": "I attacked each value against the saved sources: Faith against his own lifelong doubt, Resilience against his self-destructive years after Siberia, Hard work against his missed deadlines, and Responsibility against nine years of gambling away money his dependents needed while promising his wife to stop. Responsibility fell: it holds only in the narrow sense of carrying his brother's family and debts, and those facts now stand under Family, the blind pick's word, on four pieces of evidence from three sources. Faith, Resilience, Hard work and Craft held; all four quotes match Mayne's text word for word, three claims were corrected, and his broken promises to stop gambling and Frank's account of his temper were added to the shadow. The status is flagged because of Strakhov's 1883 rumour, which goes to the owner. At lead review Family was dropped as well: its evidence is his taking on his brother's dependents, and the same nine years of gambling away money those dependents needed, with broken promises to stop, argue strongly against it, as they did against Responsibility.",
+    "checkedOn": "2026-11-10"
+  }
+}
