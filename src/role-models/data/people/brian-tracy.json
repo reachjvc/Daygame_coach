@@ -1,0 +1,352 @@
+{
+  "id": "brian-tracy",
+  "name": "Brian Tracy",
+  "born": 1944,
+  "died": null,
+  "category": "teachers",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A high-school dropout and door-to-door salesman who built a career teaching goal-setting.",
+  "startedFrom": "He was born in Canada in 1944, the oldest of four brothers; his father was a carpenter and his mother a nurse, and he grew up in Toronto, southern California and Vancouver. He says his parents were not regularly employed and that he left high school at eighteen without graduating. His first job was washing dishes in a small hotel, followed by years of labouring jobs and work as a seaman on a Norwegian freighter.",
+  "values": [
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told Selling Power that people have to be 'perpetual learning machines', and that reading thousands of books was largely responsible for his own growth and success.",
+          "sourceId": "sellingpower",
+          "locator": "interview, answer to the question on borrowing comic books, and answer to 'That's an interesting observation'"
+        },
+        {
+          "kind": "deed",
+          "claim": "After leaving high school without graduating, he went back to study; the University of Alberta lists him as a 1978 Bachelor of Commerce graduate.",
+          "sourceId": "ualberta",
+          "locator": "'Speakers' section ('Brian Tracy, '78 BCom')"
+        },
+        {
+          "kind": "deed",
+          "claim": "He writes that he studied time management for more than thirty years and read hundreds of books and thousands of articles on it before writing Eat That Frog!.",
+          "sourceId": "frog-2007",
+          "locator": "Preface, p. x"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After he was made head of a sales force in his mid-twenties, he began teaching his salespeople how to write out their goals and sell more effectively.",
+          "sourceId": "goals-2010",
+          "locator": "ch. 1 'Get Started', section 'The Day My Life Changed', pp. 6-7"
+        },
+        {
+          "kind": "deed",
+          "claim": "He said that two years after sleeping on the floor he had 95 people selling for him in six countries, people he 'recruited, trained, taught and worked with'.",
+          "sourceId": "mixergy-2016",
+          "locator": "transcript, answer to 'What were you selling at the time?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Brattland, quoted in Entrepreneur, calls him the 'steak' of his programmes: 'a Brian Tracy who knows how to inspire salespeople'.",
+          "sourceId": "entrepreneur-1996",
+          "locator": "paragraph beginning 'I needed both sizzle and steak'"
+        },
+        {
+          "kind": "words",
+          "claim": "He told Selling Power he feels he has been given a gift whose true purpose is to help other people.",
+          "sourceId": "sellingpower",
+          "locator": "answer to 'You seem to be happy with yourself.'"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told Selling Power that when he began speaking, his goal was to become one of the top ten speakers in the United States.",
+          "sourceId": "sellingpower",
+          "locator": "answer to 'Was public speaking one of your major goals?'"
+        },
+        {
+          "kind": "deed",
+          "claim": "As a struggling commission salesman he wrote down what he calls an outrageous goal: to earn $1,000 a month selling door to door.",
+          "sourceId": "goals-2010",
+          "locator": "ch. 1 'Get Started', section 'The Day My Life Changed', p. 6"
+        },
+        {
+          "kind": "deed",
+          "claim": "He writes that within three years of starting in sales he was a vice president in charge of a ninety-five-person sales force in six countries, at twenty-five.",
+          "sourceId": "frog-2007",
+          "locator": "Preface, section 'Success Is Predictable', p. xii"
+        }
+      ]
+    },
+    {
+      "word": "Travel",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He writes that as a young man he got a job on a tramp freighter and for eight years travelled and worked, visiting more than eighty countries on five continents.",
+          "sourceId": "frog-2007",
+          "locator": "Preface, section 'The Power of Written Goals', p. x"
+        },
+        {
+          "kind": "deed",
+          "claim": "He told Selling Power that at 20 he set out from London to reach Johannesburg, crossed the Sahara in a Land Rover in about six weeks, worked in Johannesburg, then went overland to Singapore and Bangkok.",
+          "sourceId": "sellingpower",
+          "locator": "answers to 'When did you travel to Africa?' and 'Where did you go from there?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "In the 2016 interview Andrew Warner asked him why he travels 150 days a year; Tracy said he also takes each of his grown children on an international trip every year.",
+          "sourceId": "mixergy-2016",
+          "locator": "transcript, Andrew's question beginning 'Yeah, it's unbelievable' and Tracy's answer about his four grown children"
+        },
+        {
+          "kind": "deed",
+          "claim": "He writes that he has travelled, lived and worked in more than ninety countries, learning French, German and Spanish along the way.",
+          "sourceId": "goals-2010",
+          "locator": "ch. 1 'Get Started', section 'Life Goes Up and Down', p. 7"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In a 2016 interview he said he had left hospital about an hour and a half earlier after three and a half hours of back surgery, and kept the appointment 'because I committed to it'.",
+          "sourceId": "mixergy-2016",
+          "locator": "transcript, exchange after 'Man, are you a hardworking guy'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The interviewer, Andrew Warner, reports a client who hired him saying he had back surgery a few days before a job and still showed up.",
+          "sourceId": "mixergy-2016",
+          "locator": "transcript, Andrew's remark beginning 'Man, are you a hardworking guy'"
+        },
+        {
+          "kind": "words",
+          "claim": "He names decision, discipline and determination as the three qualities needed to build the habit of finishing important tasks.",
+          "sourceId": "frog-2007",
+          "locator": "Introduction, section 'The Three Ds of New Habit Formation', p. 6"
+        },
+        {
+          "kind": "deed",
+          "claim": "He writes that through inexperience he spent or lost everything he had made and had to start over several times, each time by writing out a new set of goals.",
+          "sourceId": "goals-2010",
+          "locator": "ch. 1 'Get Started', section 'Life Goes Up and Down', p. 7"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Write down your goals, make a plan for each one, and work on the plan every day.",
+      "sourceId": "goals-2010",
+      "locator": "Introduction 'Success Is Goals', p. 2"
+    },
+    {
+      "text": "Do your biggest and most important task first, before anything else.",
+      "sourceId": "frog-2007",
+      "locator": "Introduction, sections 'The Truth about Frogs' and 'Take Action Immediately', pp. 2-3"
+    },
+    {
+      "text": "Find out what successful people do, and do the same things until you get the same results.",
+      "sourceId": "frog-2007",
+      "locator": "Preface, p. xi"
+    },
+    {
+      "text": "Any skill you need for a goal can be learned, so go and learn it.",
+      "sourceId": "ari-2014",
+      "locator": "answer to 'What did you do?' (first steps on the road to success)"
+    },
+    {
+      "text": "Take full responsibility for where you are: no excuses, no blaming others.",
+      "sourceId": "ari-2014",
+      "locator": "answer to 'A lot of people say they can't succeed because they face impossible barriers.'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "You can learn anything you need to learn to achieve any goal you can set for yourself.",
+      "sourceId": "ari-2014",
+      "locator": "answer to 'What did you do?' (interview held June 2012, published 5 Aug 2014)"
+    },
+    {
+      "text": "Write down your goals, make plans to achieve them, and work on your plans every single day.",
+      "sourceId": "goals-2010",
+      "locator": "Introduction 'Success Is Goals', p. 2"
+    },
+    {
+      "text": "If you have to eat two frogs, eat the ugliest one first.",
+      "sourceId": "frog-2007",
+      "locator": "Introduction, section 'The Truth about Frogs', p. 2"
+    },
+    {
+      "text": "I have read thousands of books and I know that this has been largely responsible for my own growth and success.",
+      "sourceId": "sellingpower",
+      "locator": "answer after the question on borrowing comic books (childhood reading)"
+    }
+  ],
+  "definingMoment": {
+    "text": "Back in Canada after years of travel, he earned less than $15,000 in 1975 and realized he had no clear idea of what he wanted to do with his life. He sat down and wrote out a series of goals; he says he earned $50,000 the next year, then $75,000, then $100,000. Working in real estate development, he made about $50,000 from a shopping-centre deal and used it to support himself while he studied; the University of Alberta lists him as a 1978 Bachelor of Commerce graduate.",
+    "sourceIds": [
+      "sellingpower",
+      "ualberta"
+    ]
+  },
+  "shadow": {
+    "text": "In Goals! (second edition, 2010) he tells of a Harvard study begun in 1979 in which the 3 percent of MBA graduates with written goals later earned ten times as much as the other 97 percent together. Harvard Library says it has been asked about this study repeatedly, has never found it, and concludes it is an urban legend; it adds that Mark McCormack's book, which Tracy names as his source, does not reference it. In a 2016 interview Andrew Warner asked why he had not checked with Harvard; Tracy answered that he does not have time for that kind of research, that he reads voraciously, and that you pass such findings on 'just like if you hear a good joke or story'. In an interview from about 1989 he said he enrolled in an Executive MBA program at the University of Alberta and got his degree at 32, and the interview's introduction calls him an MBA graduate; the university's alumni page lists a Bachelor of Commerce in 1978.",
+    "sourceIds": [
+      "goals-2010",
+      "harvard-library",
+      "mixergy-2016",
+      "sellingpower",
+      "ualberta"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which of your goals did you write down this week, and what did you do on it each day?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Eat That Frog!",
+      "year": 2001
+    },
+    {
+      "title": "Goals!",
+      "year": 2003
+    },
+    {
+      "title": "Maximum Achievement",
+      "year": 1993
+    }
+  ],
+  "sources": [
+    {
+      "id": "goals-2010",
+      "kind": "primary",
+      "title": "Goals! How to Get Everything You Want, Faster Than You Ever Thought Possible (2nd ed.), publisher's excerpt: contents, Introduction and ch. 1",
+      "author": "Brian Tracy",
+      "year": 2010,
+      "publisher": "Berrett-Koehler",
+      "url": "https://web.archive.org/web/20250805101706/https://www.bkconnection.com/static/Goals_2nd_EXCERPT.pdf"
+    },
+    {
+      "id": "frog-2007",
+      "kind": "primary",
+      "title": "Eat That Frog! (2nd ed.), publisher's excerpt: Preface (dated October 2006), Introduction, ch. 1-2",
+      "author": "Brian Tracy",
+      "year": 2007,
+      "publisher": "Berrett-Koehler",
+      "url": "https://web.archive.org/web/20220324224108/https://www.bkconnection.com/static/Eat-That-Frog-EXCERPT.pdf"
+    },
+    {
+      "id": "ari-2014",
+      "kind": "primary",
+      "title": "Your Success Is Your Responsibility: An Interview with Brian Tracy (interview held June 2012)",
+      "author": "Don Watkins (interviewer)",
+      "year": 2014,
+      "publisher": "Ayn Rand Institute, Voices for Reason blog, 5 August 2014",
+      "url": "https://ari.aynrand.org/?p=3963"
+    },
+    {
+      "id": "sellingpower",
+      "kind": "primary",
+      "title": "Brian Tracy and the Psychology of Selling (Personal Selling Power interview, c. 1989, posted online 2 February 2010)",
+      "author": "Gerhard Gschwandtner (interviewer)",
+      "year": 2010,
+      "publisher": "Selling Power",
+      "url": "https://www.sellingpower.com/2010/02/02/8794/brian-tracy-and-the-psychology-of-selling-success-achievement/"
+    },
+    {
+      "id": "mixergy-2016",
+      "kind": "primary",
+      "title": "How to master your life (from the master of time management), full interview transcript",
+      "author": "Andrew Warner (interviewer)",
+      "year": 2016,
+      "publisher": "Mixergy, published 7 December 2016",
+      "url": "https://mixergy.com/?p=47694"
+    },
+    {
+      "id": "ca-sos-2003",
+      "kind": "primary",
+      "title": "Special Election 2003, Candidate Statement: Brian Tracy, Independent",
+      "author": "California Secretary of State (statement by the candidate)",
+      "year": 2003,
+      "publisher": "California Secretary of State",
+      "url": "https://vigarchive.sos.ca.gov/2003/special/recall/1-3-1-tracyb.html"
+    },
+    {
+      "id": "entrepreneur-1996",
+      "kind": "secondary",
+      "title": "Peak Performance (profile of Dan Brattland and Peak Performers International)",
+      "author": "Entrepreneur staff",
+      "year": 1996,
+      "publisher": "Entrepreneur, 1 July 1996",
+      "url": "https://www.entrepreneur.com/business-news/business-peak-performance/26610"
+    },
+    {
+      "id": "ualberta",
+      "kind": "secondary",
+      "title": "How to Achieve in a Highly Competitive World (alumni event page)",
+      "author": "University of Alberta Alumni",
+      "year": "n.d.",
+      "publisher": "University of Alberta",
+      "url": "https://www.ualberta.ca/en/events/alumni/how-to-achieve-in-a-highly-competitive-world.html"
+    },
+    {
+      "id": "harvard-library",
+      "kind": "secondary",
+      "title": "Ask a Librarian FAQ: the 'Harvard Goals Study'",
+      "author": "Harvard Library",
+      "year": "n.d.",
+      "publisher": "Harvard University",
+      "url": "https://ask.library.harvard.edu/faq/82314"
+    },
+    {
+      "id": "ca-sov-2003",
+      "kind": "secondary",
+      "title": "Statement of Vote, October 7, 2003 Statewide Special Election, Summary Pages",
+      "author": "California Secretary of State",
+      "year": 2003,
+      "publisher": "California Secretary of State",
+      "url": "https://elections.cdn.sos.ca.gov/sov/2003-special/index.htm"
+    },
+    {
+      "id": "loc-authority",
+      "kind": "secondary",
+      "title": "Name authority record: Tracy, Brian, 1944- (n86114369)",
+      "author": "Library of Congress",
+      "year": "n.d.",
+      "publisher": "Library of Congress",
+      "url": "https://id.loc.gov/authorities/names/n86114369.html"
+    },
+    {
+      "id": "heritage-trustee",
+      "kind": "secondary",
+      "title": "Brian Tracy: Emeritus Trustee since 2025, Heritage Trustee from 1999 to 2025 (trustee page, Internet Archive capture of 25 December 2025)",
+      "author": "The Heritage Foundation",
+      "year": 2025,
+      "publisher": "The Heritage Foundation",
+      "url": "https://web.archive.org/web/20251225030428/https://www.heritage.org/staff/brian-tracy"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living Canadian-American speaker and self-help author (born 1944), not fictional and not a religious founder. He ran once for governor of California, as an independent in the 7 October 2003 recall (842 votes, official Statement of Vote); no later candidacy was found, he holds and seeks no office, and his public life is teaching and selling seminars, books and recordings, not a political campaign. The Heritage Foundation lists him as a trustee from 1999 to 2025 and emeritus trustee since 2025 (its page, Internet Archive capture of 25 Dec 2025): a think-tank board role, not a campaign. No account found of sexual contact with anyone under 16 or of sexual violence. He is in, with a documented dark side: he spread a Harvard goals study that Harvard Library calls an urban legend, and his own account of his degree differs from his university's."
+    },
+    "blindAgreement": 0.2,
+    "devilsAdvocate": "I attacked each value against the saved book excerpts and the Selling Power, Ayn Rand Institute and Mixergy interviews, and rejected the blind pick's evidence because it rested on unofficial talk transcripts and his own promotional bio. All five draft values held, each on at least three sources, but nearly all evidence is his own telling, because no independent biography or major newspaper profile of him exists; Travel and Mentorship were rebuilt on stronger items. Ten claims, locators and links were fixed, among them his degree (he said he enrolled in an Executive MBA and got his degree at 32, not that he earned an MBA) and his answer on the Harvard study, and the screen note now confirms his Heritage Foundation trusteeship and that he seeks no office.",
+    "checkedOn": "2026-11-10"
+  }
+}
