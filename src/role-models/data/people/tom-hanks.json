@@ -1,0 +1,316 @@
+{
+  "id": "tom-hanks",
+  "name": "Tom Hanks",
+  "born": 1956,
+  "died": null,
+  "category": "charisma",
+  "areaIds": [
+    "lm_relationship",
+    "lm_family",
+    "lm_contribution"
+  ],
+  "tagline": "An actor known off screen for plain decency: on time, kind, married since 1988.",
+  "startedFrom": "He grew up in Northern California; his parents split when he was five, and he went with his father, who worked in small restaurants and remarried more than once, so that by age 10 he had lived in 10 houses. In 1974 he left high school 'an underachieving student with lousy SAT scores' who could not afford tuition, and went to Chabot, a free community college.",
+  "values": [
+    {
+      "word": "Kindness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In April 2020 he answered a letter from an 8-year-old Australian boy, Corona De Vries, who was bullied over his name, and sent him a Corona typewriter.",
+          "sourceId": "reuters-2020",
+          "locator": "Reuters report, 23 April 2020 (whole article)"
+        },
+        {
+          "kind": "deed",
+          "claim": "His letter to the boy said 'Ask a grown up how it works. And use it to write me back.'",
+          "sourceId": "cbs-2020",
+          "locator": "CBS News, 24 April 2020, paragraphs 6-8"
+        },
+        {
+          "kind": "witness",
+          "claim": "The NYT lists his small kindnesses: in 2008 he stopped filming by the Pantheon in Rome to escort a bride and her father to the altar; he swapped seats with a carsick publicist; director Marielle Heller said he 'treats everyone like people'.",
+          "sourceId": "nyt-2019",
+          "locator": "opening list of stories; the publicist's car story; the closing round of interviews"
+        },
+        {
+          "kind": "witness",
+          "claim": "Presenting the Medal of Freedom, President Obama said: 'He is a good man -- which is the best title you can have.'",
+          "sourceId": "pmof-remarks-2016",
+          "locator": "Remarks, 22 Nov 2016, passage on Tom Hanks"
+        }
+      ]
+    },
+    {
+      "word": "Gratitude",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He credits a free community college with his life: 'That place made me what I am today.'",
+          "sourceId": "nyt-2015",
+          "locator": "final paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "From the summer of 1998, by the campaign co-chairman's account, he fronted the public campaign to fund the National World War II Memorial, telling Americans it was 'time to say thank you'.",
+          "sourceId": "abmc-2004",
+          "locator": "Remarks of Frederick W. Smith, dedication, 29 May 2004"
+        },
+        {
+          "kind": "witness",
+          "claim": "His Presidential Medal of Freedom citation says that on screen and off he 'honored the sacrifices of those who have served our Nation'.",
+          "sourceId": "pmof-remarks-2016",
+          "locator": "citation read for Thomas J. Hanks, 22 Nov 2016"
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He was national spokesman for the World War II Memorial Campaign and spoke at the memorial's dedication in Washington on 29 May 2004.",
+          "sourceId": "abmc-2004",
+          "locator": "Speakers list and 'Remarks of Tom Hanks, National WWII Memorial Dedication, May 29, 2004'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The National WWII Museum says that off screen he 'played an active role in the creation of The National WWII Memorial' and has been a champion of the museum; he was executive producer and narrator of its 2009 film 'Beyond All Boundaries'.",
+          "sourceId": "wwii-museum-2015",
+          "locator": "press release, 25 Feb 2015, paragraph on Tom Hanks"
+        },
+        {
+          "kind": "witness",
+          "claim": "The White House announcement says he 'has advocated for social and environmental justice, and for our veterans and their families'.",
+          "sourceId": "pmof-2016",
+          "locator": "entry 'Tom Hanks', 16 Nov 2016"
+        }
+      ]
+    },
+    {
+      "word": "Partnership",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He married Rita Wilson in 1988 and was still married to her in 2019; the NYT writer said there 'has not been much drama in this marriage department'.",
+          "sourceId": "nyt-2019",
+          "locator": "paragraph on his 1985 divorce and remarriage"
+        },
+        {
+          "kind": "words",
+          "claim": "On Desert Island Discs (BBC Radio 4, 8 May 2016) he said that with Wilson he told himself 'I don't think I'm ever going to be lonely anymore.'",
+          "sourceId": "abc-2016",
+          "locator": "ABC News report, 9 May 2016, last paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "President Obama said he 'has stood up to cancer with his beloved wife, Rita'.",
+          "sourceId": "pmof-remarks-2016",
+          "locator": "Remarks, 22 Nov 2016, passage on Tom Hanks"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "To play Fred Rogers (2019) he studied hours of tapes to learn Rogers's slow pace and cadence.",
+          "sourceId": "nyt-2019",
+          "locator": "passage on the Toronto panel and the 'slowness' of Fred Rogers"
+        },
+        {
+          "kind": "words",
+          "claim": "After 'A League of Their Own' (1992) he said no for about a year to the light comedies and romantic dramas he was offered, to change the kind of work he did.",
+          "sourceId": "fresh-air-2016",
+          "locator": "Fresh Air, 26 April 2016, answer on Penny Marshall and 'League Of Their Own'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The White House called him 'one of the Nation's finest actors and filmmakers'.",
+          "sourceId": "pmof-2016",
+          "locator": "entry 'Tom Hanks', 16 Nov 2016"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Show up a little early and respect the whole process, even when other people don't.",
+      "sourceId": "nyt-2019",
+      "locator": "first Toronto interview, on waiting ahead of the appointed time"
+    },
+    {
+      "text": "When well-paid work starts to repeat itself, say no until the work you want comes.",
+      "sourceId": "fresh-air-2016",
+      "locator": "answer on Penny Marshall and 'League Of Their Own'"
+    },
+    {
+      "text": "Fight down your self-doubt and move forward; do not sweat every possible mistake.",
+      "sourceId": "fresh-air-2016",
+      "locator": "answer on loss of self-confidence ('fight down those doubts')"
+    },
+    {
+      "text": "With your children: say you love them, ask them to forgive you at times, ask what they need, keep them safe.",
+      "sourceId": "nyt-2019",
+      "locator": "Santa Fe interview, answer on parenting"
+    },
+    {
+      "text": "Morality is shown by what you do, not declared.",
+      "sourceId": "abmc-2004",
+      "locator": "Remarks of Tom Hanks, 29 May 2004, third paragraph"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I think a long time ago, I learned how important it was to show up a little bit early.",
+      "sourceId": "nyt-2019",
+      "locator": "first Toronto interview (published 13 Nov 2019)"
+    },
+    {
+      "text": "…true human morality can only be demonstrated – by deed, by sacrifice and ultimately by mercy.",
+      "sourceId": "abmc-2004",
+      "locator": "Remarks of Tom Hanks, National WWII Memorial Dedication, 29 May 2004, third paragraph"
+    },
+    {
+      "text": "…you have to move forward with a degree of confidence. And you cannot sweat too much the possibility that you are making a wrong mistake.",
+      "sourceId": "fresh-air-2016",
+      "locator": "Fresh Air, NPR, 26 April 2016, transcript, answer on loss of self-confidence"
+    },
+    {
+      "text": "That place made me what I am today.",
+      "sourceId": "nyt-2015",
+      "locator": "final paragraph"
+    }
+  ],
+  "definingMoment": {
+    "text": "In March 2020 he and his wife Rita Wilson tested positive for Covid-19 in Australia and spent more than two weeks in quarantine on the Gold Coast. An 8-year-old boy there, Corona De Vries, wrote to ask if they were OK and said he was bullied at school over his name. Hanks wrote back on a Corona typewriter he had taken to the Gold Coast and sent the boy that typewriter, telling him to 'use it to write me back'; the letter was reported on 23 April 2020.",
+    "sourceIds": [
+      "reuters-2020",
+      "cbs-2020"
+    ]
+  },
+  "shadow": {
+    "text": "He and his first wife, Samantha Lewes, split in 1985 (ABC News gives the divorce as 1987); their son Colin was born when Hanks was 21 and their daughter Elizabeth four and a half years later, and he married Rita Wilson in 1988. In 2019 he spoke of 'mistakes I made with my own kids and not explaining things or not being there for them'. In the same interview he said his ability to 'seduce a room' began when he was very young as a self-defence mechanism and 'turned into a manipulative kind of thing', and he called his habit of telling a meeting 'we can make it work' about a rewrite he had problems with 'a cowardice'. The 2019 NYT profile mentions 'that weird one-sided feud' with Henry Winkler, fired after 13 days as director of 'Turner & Hooch', who later told Andy Cohen he 'got along great — great — with that dog'.",
+    "sourceIds": [
+      "nyt-2019",
+      "abc-2016"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you hold back from this week only because you were afraid of making a mistake?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "Uncommon Type: Some Stories",
+      "year": 2017
+    },
+    {
+      "title": "The Making of Another Major Motion Picture Masterpiece",
+      "year": 2023
+    }
+  ],
+  "sources": [
+    {
+      "id": "nyt-2015",
+      "kind": "primary",
+      "title": "I Owe It All to Community College (op-ed)",
+      "author": "Tom Hanks",
+      "year": 2015,
+      "publisher": "The New York Times, 14 Jan 2015",
+      "url": "https://www.nytimes.com/2015/01/14/opinion/tom-hanks-on-his-two-years-at-chabot-college.html"
+    },
+    {
+      "id": "fresh-air-2016",
+      "kind": "primary",
+      "title": "Tom Hanks Says Self-Doubt Is 'A High-Wire Act That We All Walk' (interview with Terry Gross, transcript)",
+      "author": "Tom Hanks",
+      "year": 2016,
+      "publisher": "NPR, Fresh Air, 26 April 2016",
+      "url": "https://www.npr.org/transcripts/475573489"
+    },
+    {
+      "id": "abmc-2004",
+      "kind": "secondary",
+      "title": "Memorial Dedication (with the full remarks of Tom Hanks and Frederick W. Smith, 29 May 2004)",
+      "author": "American Battle Monuments Commission",
+      "year": 2004,
+      "publisher": "WWII Memorial Registry",
+      "url": "https://wwiiregistry.abmc.gov/memorial-dedication/"
+    },
+    {
+      "id": "nyt-2019",
+      "kind": "secondary",
+      "title": "This Tom Hanks Story Will Help You Feel Less Bad",
+      "author": "Taffy Brodesser-Akner",
+      "year": 2019,
+      "publisher": "The New York Times, 13 Nov 2019",
+      "url": "https://www.nytimes.com/2019/11/13/movies/tom-hanks-mister-rogers.html"
+    },
+    {
+      "id": "pmof-2016",
+      "kind": "secondary",
+      "title": "President Obama Names Recipients of the Presidential Medal of Freedom",
+      "author": "The White House, Office of the Press Secretary",
+      "year": 2016,
+      "publisher": "whitehouse.gov (archived), 16 Nov 2016",
+      "url": "https://obamawhitehouse.archives.gov/the-press-office/2016/11/16/president-obama-names-recipients-presidential-medal-freedom"
+    },
+    {
+      "id": "pmof-remarks-2016",
+      "kind": "secondary",
+      "title": "Remarks by the President at Presentation of the Presidential Medal of Freedom",
+      "author": "Barack Obama",
+      "year": 2016,
+      "publisher": "whitehouse.gov (archived), 22 Nov 2016",
+      "url": "https://obamawhitehouse.archives.gov/the-press-office/2016/11/22/remarks-president-presentation-presidential-medal-freedom"
+    },
+    {
+      "id": "reuters-2020",
+      "kind": "secondary",
+      "title": "Tom Hanks sends letter and typewriter to Australian boy bullied over his name, Corona",
+      "author": "Reuters",
+      "year": 2020,
+      "publisher": "NBC News, 23 April 2020",
+      "url": "https://www.nbcnews.com/news/us-news/tom-hanks-sends-letter-typewriter-australian-boy-bullied-over-his-n1190691"
+    },
+    {
+      "id": "cbs-2020",
+      "kind": "secondary",
+      "title": "Tom Hanks pens heartwarming letter to bullied boy named Corona",
+      "author": "Chevaz Clarke",
+      "year": 2020,
+      "publisher": "CBS News, 24 April 2020",
+      "url": "https://www.cbsnews.com/news/tom-hanks-sends-letter-to-boy-bullied-over-his-name/"
+    },
+    {
+      "id": "abc-2016",
+      "kind": "secondary",
+      "title": "Tom Hanks Opens Up About First Marriage, Meeting Rita Wilson (report on BBC Radio 4 Desert Island Discs, 8 May 2016)",
+      "author": "Michael Rothman",
+      "year": 2016,
+      "publisher": "ABC News / Good Morning America, 9 May 2016",
+      "url": "https://goodmorningamerica.com/news/story/tom-hanks-opens-marriage-meeting-rita-wilson-38981945"
+    },
+    {
+      "id": "wwii-museum-2015",
+      "kind": "secondary",
+      "title": "The National WWII Museum Honors Tom Brokaw and Tom Hanks with American Spirit Award",
+      "author": "The National WWII Museum",
+      "year": 2015,
+      "publisher": "The National WWII Museum, press release, 25 Feb 2015",
+      "url": "https://www.nationalww2museum.org/media/press-releases/national-wwii-museum-honors-tom-brokaw-and-tom-hanks-american-spirit-award-new"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living actor, not fictional, no office or campaign, no religion founded, no credible account of sexual contact with anyone under 16 or of sexual violence (a QAnon smear with no act, victim or evidence, reported as baseless, is not counted); in, with a small shadow mostly in his own words."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value and every sentence against the saved NYT, NPR, ABMC, White House, Reuters, CBS and ABC texts, and searched again for misconduct, lawsuits and feuds (only his son's suits and a baseless QAnon smear turned up, neither his act). Kindness was tested against his own 2019 words that his niceness is a 'manipulative' way to seduce a room; it held on the documented deeds, and those words stay in the shadow. Gratitude rested on two sources and held once the Medal of Freedom citation was added; Service gained the National WWII Museum's own account, and the blind pick's Contribution and Humility were not added (no room). Eight sentences were fixed, among them the divorce date (1985 split, 1987 divorce per ABC) and the Winkler line, now told as the NYT writer's remark rather than a feud stated as fact.",
+    "checkedOn": "2026-11-10"
+  }
+}
