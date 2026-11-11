@@ -1,0 +1,319 @@
+{
+  "id": "cal-newport",
+  "name": "Cal Newport",
+  "born": null,
+  "died": null,
+  "category": "teachers",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A computer science professor who built his career on long stretches of undistracted work.",
+  "startedFrom": "He grew up near Princeton, New Jersey, and went to a public school; his mother programmed mainframe computers and his father worked in survey research, later becoming editor-in-chief of the Gallup Poll. In high school he ran an early web development company and took computer science classes at Princeton. When he reached Dartmouth he found he did not know how to succeed next to private-school students used to harder study.",
+  "values": [
+    {
+      "word": "Focus",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In the 2017 interview he says he has never had a social media account, on purpose, and that he spends long stretches of many days on deeper thinking.",
+          "sourceId": "npr-2019",
+          "locator": "transcript, second half, answer on how he structures his day"
+        },
+        {
+          "kind": "deed",
+          "claim": "Facebook reached his college in 2004 and he chose not to sign up for it; he says that within a few years he felt like the only person not using it.",
+          "sourceId": "tf-2022",
+          "locator": "transcript, answer on why he never joined Facebook (2004)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Dartmouth Alumni Magazine reported in 2024 that he is still not on social media and has been campaigning against email.",
+          "sourceId": "dam-2024",
+          "locator": "body text, c. para. 18"
+        },
+        {
+          "kind": "witness",
+          "claim": "Gulf News reported in 2018 that he has never signed up for a social media account.",
+          "sourceId": "gulfnews-2018",
+          "locator": "opening paragraphs"
+        },
+        {
+          "kind": "words",
+          "claim": "In February 2024 he says he never signed up for traditional social media: no Facebook, Twitter or Instagram account.",
+          "sourceId": "tf-2024",
+          "locator": "transcript, answer on techno-selectionism and social media"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says he works set hours, plans the day 'like a chess player moving the pieces around', and does not let his mood decide how the day goes.",
+          "sourceId": "npr-2019",
+          "locator": "transcript, second half, answer on how he structures his day"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2009 he described the shutdown ritual he runs, without exception, at the end of his normal workday: update and read over his task lists, review the next two weeks of his calendar and his weekly plan, then say 'schedule shutdown, complete'.",
+          "sourceId": "blog-2009",
+          "locator": "Drastically Reduce Stress with a Work Shutdown Ritual (8 June 2009)"
+        },
+        {
+          "kind": "witness",
+          "claim": "NPR host Shankar Vedantam introduced him as a man who 'leads an enormously disciplined life with a lot of rules and rituals'.",
+          "sourceId": "npr-2019",
+          "locator": "transcript, after the first break"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says Steve Martin's advice 'be so good they can't ignore you' hit him as a PhD student: first do really good work, practise and get a lot better; it became the base of his career and writing.",
+          "sourceId": "tf-2022",
+          "locator": "transcript, opening answer on Steve Martin"
+        },
+        {
+          "kind": "words",
+          "claim": "He names 'obsess over quality' as the core of his three slow productivity principles, with 'do fewer things' and 'work at a natural pace'.",
+          "sourceId": "tf-2024",
+          "locator": "transcript, section on the three principles of Slow Productivity"
+        },
+        {
+          "kind": "deed",
+          "claim": "Papers he co-wrote won Best Paper awards at OPODIS (December 2018) and DISC (October 2022); Georgetown made him a full professor, with tenure, in August 2024.",
+          "sourceId": "cv-2025",
+          "locator": "Employment; Recent Academic Honors"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He earned an A.B. in computer science at Dartmouth (2004, summa cum laude), then an M.S. (2006) and a Ph.D. (2009) in computer science at MIT.",
+          "sourceId": "cv-2025",
+          "locator": "Education"
+        },
+        {
+          "kind": "deed",
+          "claim": "In high school he ran out of computer science courses and took computer science at Princeton University.",
+          "sourceId": "tf-2022",
+          "locator": "transcript, answer on what he did in college"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that to stay valuable 'you must master the art of quickly learning complicated things', and that this needs deep work.",
+          "sourceId": "changethis-2016",
+          "locator": "section on why deep work is valuable, before 'The Deep Work Hypothesis'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times review of Slow Productivity (2024) reports that he set out to learn cinema by reading a lot of books and looking for discussions of lens and framing techniques.",
+          "sourceId": "nyt-szalai-2024",
+          "locator": "paragraph on 'high-quality leisure activities'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Long, undistracted blocks of hard work are rare and valuable, so make them the core of your working life.",
+      "sourceId": "changethis-2016",
+      "locator": "The Deep Work Hypothesis"
+    },
+    {
+      "text": "Fix your work hours first, then make the work fit inside them.",
+      "sourceId": "blog-2008",
+      "locator": "Fixed-Schedule Productivity (15 February 2008)"
+    },
+    {
+      "text": "End each workday with the same short review, so that unfinished work does not follow you home.",
+      "sourceId": "blog-2009",
+      "locator": "Drastically Reduce Stress with a Work Shutdown Ritual (8 June 2009)"
+    },
+    {
+      "text": "Before looking for tricks to get noticed, get so good at the work that people cannot ignore you.",
+      "sourceId": "tf-2022",
+      "locator": "transcript, opening answer on Steve Martin"
+    },
+    {
+      "text": "Do fewer things, work at a natural pace, and obsess over quality.",
+      "sourceId": "tf-2024",
+      "locator": "transcript, section on the three principles of Slow Productivity"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "The ability to perform deep work is becoming increasingly rare at exactly the same time it is becoming increasingly valuable in our economy.",
+      "sourceId": "changethis-2016",
+      "locator": "The Deep Work Hypothesis (adapted from Deep Work, 2016)"
+    },
+    {
+      "text": "I don't let my mood dictate how my day unfolds.",
+      "sourceId": "npr-2019",
+      "locator": "transcript, answer on how he structures his day"
+    },
+    {
+      "text": "Fix the schedule you want. Then make everything else fit around your needs.",
+      "sourceId": "blog-2008",
+      "locator": "Fixed-Schedule Productivity (15 February 2008)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 2004 Facebook reached Dartmouth, where he was a computer science student, and he chose not to join. He says that within a few years he felt like the only person not using it, and that the idea that everyone had to use these services made him a sceptic. He stayed off social media and in 2016 wrote a New York Times op-ed, 'Quit Social Media. Your Career May Depend on It.' In December 2024, home after surgery, he downloaded TikTok to retest his old arguments, and lost interest in it once his schedule filled up again.",
+    "sourceIds": [
+      "tf-2022",
+      "npr-2019",
+      "blog-2023",
+      "ny-2025"
+    ]
+  },
+  "shadow": {
+    "text": "By his own account he is 'bad at email' and has made himself 'very comfortable with annoying people', which he says 'causes some trouble'. In the same NPR interview (2017, rebroadcast 2019) the host said Newport had missed their scheduled talk the week before and left him waiting; Newport said he had forgotten to put it in his calendar, that it 'did cause problems', and that a life built on deep work 'is less convenient for most people involved'. Two weeks after his 2016 op-ed told readers to quit social media, The New York Times ran a rebuttal by Patrick Gillooly of the job site Monster. In March 2024 Times critic Jennifer Szalai wrote that Slow Productivity keeps returning to ground covered in his earlier books, 'repackaging warmed-over ideas', and that it advises a 'deflection project' for turning down requests by seeming busier than you are.",
+    "sourceIds": [
+      "npr-2019",
+      "blog-2023",
+      "ny-2025",
+      "nyt-szalai-2024"
+    ]
+  },
+  "councilQuestion": {
+    "text": "How many hours this week did you give to one hard task with no phone and no inbox open?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "So Good They Can't Ignore You",
+      "year": 2012
+    },
+    {
+      "title": "Deep Work",
+      "year": 2016
+    },
+    {
+      "title": "Digital Minimalism",
+      "year": 2019
+    }
+  ],
+  "sources": [
+    {
+      "id": "changethis-2016",
+      "kind": "primary",
+      "title": "Focused Success: The Continued Importance & Great Rewards of Cultivating Deep Work in a Distracted World (ChangeThis manifesto 257.04, adapted from Deep Work, Grand Central Publishing, 2016)",
+      "author": "Cal Newport",
+      "year": 2026,
+      "publisher": "Porchlight / ChangeThis",
+      "url": "https://www.porchlightbooks.com/cdn/shop/files/257.04.DeepWork.pdf"
+    },
+    {
+      "id": "blog-2008",
+      "kind": "primary",
+      "title": "Fixed-Schedule Productivity: How I Accomplish a Large Amount of Work in a Small Number of Work Hours (blog post, 15 February 2008)",
+      "author": "Cal Newport",
+      "year": 2008,
+      "url": "https://calnewport.com/fixed-schedule-productivity-how-i-accomplish-a-large-amount-of-work-in-a-small-number-of-work-hours/"
+    },
+    {
+      "id": "blog-2009",
+      "kind": "primary",
+      "title": "Drastically Reduce Stress with a Work Shutdown Ritual (blog post, 8 June 2009)",
+      "author": "Cal Newport",
+      "year": 2009,
+      "url": "https://calnewport.com/drastically-reduce-stress-with-a-work-shutdown-ritual/"
+    },
+    {
+      "id": "blog-2023",
+      "kind": "primary",
+      "title": "Standing Up to Technology (blog post, 18 December 2023)",
+      "author": "Cal Newport",
+      "year": 2023,
+      "url": "https://calnewport.com/standing-up-to-technology/"
+    },
+    {
+      "id": "npr-2019",
+      "kind": "primary",
+      "title": "Hidden Brain: How to Avoid Distractions and Do Meaningful Work (broadcast 26 August 2019, revisiting a 2017 interview; NPR transcript)",
+      "author": "Cal Newport, interviewed by Shankar Vedantam",
+      "year": 2019,
+      "publisher": "NPR",
+      "url": "https://www.npr.org/transcripts/754336716"
+    },
+    {
+      "id": "tf-2022",
+      "kind": "primary",
+      "title": "The Tim Ferriss Show #568: Cal Newport — The Eternal Pursuit of Craftsmanship, the Deep Life, Slow Productivity, and a 30-Day Digital Minimalism Challenge (transcript, 4 February 2022)",
+      "author": "Cal Newport, interviewed by Tim Ferriss",
+      "year": 2022,
+      "url": "https://tim.blog/2022/02/04/cal-newport-transcript/"
+    },
+    {
+      "id": "tf-2024",
+      "kind": "primary",
+      "title": "The Tim Ferriss Show #722: Cal Newport — How to Embrace Slow Productivity, Build a Deep Life, Achieve Mastery, and Defend Your Time (transcript, 24 February 2024)",
+      "author": "Cal Newport, interviewed by Tim Ferriss",
+      "year": 2024,
+      "url": "https://tim.blog/2024/02/24/cal-newport-slow-productivity-transcript/"
+    },
+    {
+      "id": "cv-2025",
+      "kind": "primary",
+      "title": "Curriculum vitae (dated 28 October 2025)",
+      "author": "Calvin (Cal) Newport",
+      "year": 2025,
+      "url": "https://calnewport.com/wp-content/uploads/2025/10/calnewport-cv-10-28-2025.pdf"
+    },
+    {
+      "id": "dam-2024",
+      "kind": "secondary",
+      "title": "The Productivity Trap (profile, May-June 2024 issue)",
+      "author": "Dan Koeppel",
+      "year": 2024,
+      "publisher": "Dartmouth Alumni Magazine",
+      "url": "https://dartmouthalumnimagazine.com/articles/productivity-trap"
+    },
+    {
+      "id": "gulfnews-2018",
+      "kind": "secondary",
+      "title": "The man who's pulling the plug on social media (Weekend Review, updated 5 November 2018)",
+      "author": "Syed Hamad Ali",
+      "year": 2018,
+      "publisher": "Gulf News",
+      "url": "https://gulfnews.com/lifestyle/the-man-whos-pulling-the-plug-on-social-media-1.2154797"
+    },
+    {
+      "id": "nyt-szalai-2024",
+      "kind": "secondary",
+      "title": "The Very Busy Writer Telling Everyone to Slow Down (review of Slow Productivity, The New York Times, 6 March 2024; read in the Internet Archive capture of nytimes.com, 29 June 2025)",
+      "author": "Jennifer Szalai",
+      "year": 2024,
+      "publisher": "The New York Times",
+      "url": "https://web.archive.org/web/20250629102221/https://www.nytimes.com/2024/03/06/books/review/slow-productivity-cal-newport.html"
+    },
+    {
+      "id": "ny-2025",
+      "kind": "primary",
+      "title": "What Happened When an Extremely Offline Person Tried TikTok (Infinite Scroll column, 15 January 2025; read in the Internet Archive capture of newyorker.com, 4 July 2026)",
+      "author": "Cal Newport",
+      "year": 2025,
+      "publisher": "The New Yorker",
+      "url": "https://web.archive.org/web/20260704060001/https://www.newyorker.com/culture/infinite-scroll/what-happened-when-an-extremely-offline-person-tried-tiktok"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living American computer science professor and author (Georgetown, Deep Work), not a politician, campaigner or religious founder, with no credible account of sexual contact with a minor or of sexual violence found; he is in, with a small documented shadow drawn mostly from his own accounts and from critics."
+    },
+    "blindAgreement": 0.75,
+    "devilsAdvocate": "I attacked all five draft values against the transcripts, his blog, his CV and the 2024 Times review, which I re-read in the Internet Archive copy of nytimes.com instead of an unlicensed reprint. Balance fell: it rested on his own 2008 student schedule and prescriptions, while the Times calls him 'the very busy writer' with a 'troubling addiction to writing books'; the narrow sense, fixed work hours, stays in his principles. Focus, Discipline and Craft held and match the blind pick; Learning held on three sources, with the degrees moved to his CV after the alumni profile listed an M.A. His 2024 TikTok trial now sits in the defining moment, which no longer says he has never had an account, and his birth year stays not found because the only record traces to Wikipedia.",
+    "checkedOn": "2026-11-10"
+  }
+}
