@@ -1,0 +1,373 @@
+{
+  "id": "serena-williams",
+  "name": "Serena Williams",
+  "pronoun": "she",
+  "born": 1981,
+  "died": null,
+  "category": "athletes",
+  "areaIds": [
+    "lm_fitness",
+    "lm_mindset"
+  ],
+  "tagline": "A tennis player who turned anger and doubt into 23 Grand Slam singles titles.",
+  "startedFrom": "She was born in 1981 in Saginaw, Michigan, the youngest of her mother's five daughters. Her father Richard, a former sharecropper from Louisiana, and her mother Oracene taught themselves tennis from books and videos, and coached their daughters; they moved the family to Compton, California, where Serena and her sister Venus practised for hours every day on rundown public courts. By her own account she was not very good at tennis as a small girl and got fewer early chances than Venus.",
+  "values": [
+    {
+      "word": "Winning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "She won 23 Grand Slam singles titles, the most of any player in the Open Era, and was ranked No. 1 in the world for 319 weeks.",
+          "sourceId": "ithf",
+          "locator": "Breaking Boundaries profile, paragraphs on her pro career and major titles"
+        },
+        {
+          "kind": "words",
+          "claim": "In 2022 she wrote: 'I love to win. I love the battle.'",
+          "sourceId": "vogue-2022",
+          "locator": "paragraph beginning \"Praise to these people, but I'm going to be honest\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The International Tennis Hall of Fame says fans were held by her 'athleticism, powerful baseline strokes, and will-to-win.'",
+          "sourceId": "ithf",
+          "locator": "Breaking Boundaries profile, paragraph beginning \"Serena's professional career began in 1995\""
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "As a child in Compton she and Venus practised for hours every day on rundown public tennis courts, coached by their parents.",
+          "sourceId": "nwhm",
+          "locator": "biography, second paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "She wrote that by 19 she had spent 'tens of thousands of hours' and most of her adolescence serving, running, practising and training day in and day out.",
+          "sourceId": "time-2015",
+          "locator": "first paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Vogue's Rob Haskell wrote in 2018 that her gifts 'fused with years of hard work'; her mother told him: 'Serena works herself too hard. She's always been that way, ever since she was a little girl.'",
+          "sourceId": "vogue-2018",
+          "locator": "paragraphs beginning \"It's no secret that a high capacity to delay gratification\" and \"Oracene says that she mainly bites her tongue\""
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After a knee operation, injuries and the 2003 murder of her sister Yetunde she fell to No. 139 in the world, then won the 2008 US Open and was No. 1 again in 2009, the longest gap between No. 1 rankings of any player.",
+          "sourceId": "nwhm",
+          "locator": "paragraphs beginning \"However, 2003 also brought troubles\" and \"In 2008, Williams began her return\""
+        },
+        {
+          "kind": "deed",
+          "claim": "A day after the emergency C-section birth of her daughter in September 2017 she felt short of breath, insisted on a CT scan and blood thinner, and went through a pulmonary embolism and further operations.",
+          "sourceId": "vogue-2018",
+          "locator": "paragraphs beginning \"The next day, while recovering in the hospital\" and \"But this was just the first chapter\""
+        },
+        {
+          "kind": "words",
+          "claim": "In 2022 she wrote: 'I went from a C-section to a second pulmonary embolism to a grand slam final. I played while breastfeeding. I played through postpartum depression.'",
+          "sourceId": "vogue-2022",
+          "locator": "paragraph beginning \"I started playing tennis with the goal of winning the U.S. Open\""
+        }
+      ]
+    },
+    {
+      "word": "Family",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "She won all 14 of her Grand Slam doubles titles and three Olympic doubles golds with her sister Venus, and in 2018 she and her family set up the Yetunde Price Resource Center in Compton in memory of her murdered sister.",
+          "sourceId": "ithf",
+          "locator": "Breaking Boundaries profile, paragraphs on doubles, the Olympics and charity work"
+        },
+        {
+          "kind": "words",
+          "claim": "In 2022 she wrote: 'if I have to choose between building my tennis résumé and building my family, I choose the latter.'",
+          "sourceId": "vogue-2022",
+          "locator": "paragraph beginning \"I started playing tennis with the goal of winning the U.S. Open\""
+        },
+        {
+          "kind": "words",
+          "claim": "In a 2017 TED interview she said of her sister Venus: 'She's the love of my life, she's my best friend, she's my soulmate.'",
+          "sourceId": "ted-2017",
+          "locator": "Q&A, answer containing 'She's the love of my life'"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 2017 she said: 'I have to show up and want it more than anyone else in this moment.'",
+          "sourceId": "ted-2017",
+          "locator": "Q&A, answer containing 'want it more than anyone else in this moment'"
+        },
+        {
+          "kind": "deed",
+          "claim": "She won the January 2017 Australian Open nearly two months pregnant, without dropping a set in the whole tournament.",
+          "sourceId": "fortune-2017",
+          "locator": "opening paragraphs"
+        },
+        {
+          "kind": "words",
+          "claim": "In 2022 she wrote that getting fewer early chances than Venus 'made me work harder, turning me into a savage fighter', and that she never wanted to stop until she got something right.",
+          "sourceId": "vogue-2022",
+          "locator": "paragraphs beginning \"If you watched King Richard\" and \"My whole life, up to now, has been tennis\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Use anger and people's doubt as fuel, and turn it into something good.",
+      "sourceId": "vogue-2022",
+      "locator": "paragraph beginning \"To me that's kind of the essence of being Serena\""
+    },
+    {
+      "text": "Study other people's losses so you do not have to lose the same way yourself.",
+      "sourceId": "vogue-2022",
+      "locator": "paragraph beginning \"If you watched King Richard\""
+    },
+    {
+      "text": "Keep redoing the work until it is right, even if perfect does not exist.",
+      "sourceId": "vogue-2022",
+      "locator": "paragraph beginning \"My whole life, up to now, has been tennis\""
+    },
+    {
+      "text": "Forgive, and go back to the place that hurt you when you are ready.",
+      "sourceId": "time-2015",
+      "locator": "last three paragraphs"
+    },
+    {
+      "text": "When your body tells you something is wrong, say so at once and insist on being checked.",
+      "sourceId": "cnn-2018",
+      "locator": "third paragraph (\"So, when I fell short of breath, I didn't wait a second to alert the nurses.\")"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I want to be great. I want to be perfect. I know perfect doesn't exist, but whatever my perfect was, I never wanted to stop until I got it right.",
+      "sourceId": "vogue-2022",
+      "locator": "Vogue, 9 August 2022, paragraph beginning \"My whole life, up to now, has been tennis\""
+    },
+    {
+      "text": "I've built a career on channeling anger and negativity and turning it into something good.",
+      "sourceId": "vogue-2022",
+      "locator": "Vogue, 9 August 2022, paragraph beginning \"To me that's kind of the essence of being Serena\""
+    },
+    {
+      "text": "I was raised by my mom to love and forgive freely.",
+      "sourceId": "time-2015",
+      "locator": "TIME, 4 February 2015, second-to-last paragraph"
+    },
+    {
+      "text": "I love to win. I love the battle.",
+      "sourceId": "vogue-2022",
+      "locator": "Vogue, 9 August 2022, paragraph beginning \"Praise to these people, but I'm going to be honest\""
+    }
+  ],
+  "definingMoment": {
+    "text": "On 28 January 2017 she beat her sister Venus 6-4, 6-4 in the Australian Open final in Melbourne. It was her 23rd Grand Slam singles title, the most of any player in the Open Era. She later revealed that she had been pregnant during the tournament; in 2022 she wrote that she was two months pregnant when she won.",
+    "sourceIds": [
+      "si-2017",
+      "nwhm",
+      "vogue-2022"
+    ]
+  },
+  "shadow": {
+    "text": "At the 2009 US Open semifinal, after a foot-fault call, she shouted at the lineswoman; Sports Illustrated, from the ESPN tape, reported her saying she would shove the ball down the woman's throat. She was fined a record $82,500, on top of $10,000 on site, and put on probation at the four Grand Slams of 2010 and 2011. At the 2011 US Open final she called the chair umpire 'unattractive inside' and was fined $2,000. At the 2018 US Open final she called umpire Carlos Ramos 'a thief' and was fined $17,000 for three code violations; her coach admitted he had tried to signal her. In a 2013 Rolling Stone profile she was quoted saying the 16-year-old Steubenville rape victim 'shouldn't have put herself in that position'; on 19 June she apologised for 'what I supposedly said', and on 23 and 24 June apologised again, the second time for her 'insensitive and misinformed comments'.",
+    "sourceIds": [
+      "si-2009",
+      "cbs-2009",
+      "npr-2011",
+      "ap-2018",
+      "si-2013",
+      "fox-2013"
+    ]
+  },
+  "councilQuestion": {
+    "text": "When someone doubted you or made you angry this week, what did you turn that feeling into?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "On the Line (with Daniel Paisner)",
+      "year": 2009
+    },
+    {
+      "title": "Serena Williams Says Farewell to Tennis On Her Own Terms—And In Her Own Words (Vogue)",
+      "year": 2022
+    },
+    {
+      "title": "Serena Williams: I'm Going Back to Indian Wells (TIME)",
+      "year": 2015
+    }
+  ],
+  "sources": [
+    {
+      "id": "vogue-2022",
+      "kind": "primary",
+      "title": "Serena Williams Says Farewell to Tennis On Her Own Terms—And In Her Own Words (Vogue, 9 August 2022; as told to Rob Haskell)",
+      "author": "Serena Williams, as told to Rob Haskell",
+      "year": 2022,
+      "publisher": "Vogue",
+      "url": "https://www.vogue.com/article/serena-williams-retirement-in-her-own-words"
+    },
+    {
+      "id": "time-2015",
+      "kind": "primary",
+      "title": "Serena Williams: I'm Going Back to Indian Wells (TIME, 4 February 2015)",
+      "author": "Serena Williams",
+      "year": 2015,
+      "publisher": "TIME",
+      "url": "https://time.com/3694659/serena-williams-indian-wells/"
+    },
+    {
+      "id": "cnn-2018",
+      "kind": "primary",
+      "title": "What my life-threatening experience taught me about giving birth (CNN Opinion, 20 February 2018)",
+      "author": "Serena Williams",
+      "year": 2018,
+      "publisher": "CNN",
+      "url": "https://www.cnn.com/2018/02/20/opinions/protect-mother-pregnancy-williams-opinion/index.html"
+    },
+    {
+      "id": "vogue-2018",
+      "kind": "secondary",
+      "title": "Serena Williams on Motherhood, Marriage, and Making Her Comeback (Vogue, 10 January 2018)",
+      "author": "Rob Haskell",
+      "year": 2018,
+      "publisher": "Vogue",
+      "url": "https://www.vogue.com/article/serena-williams-vogue-cover-interview-february-2018"
+    },
+    {
+      "id": "nwhm",
+      "kind": "secondary",
+      "title": "Serena Williams (biography)",
+      "author": "Mariana Brandman",
+      "year": 2022,
+      "publisher": "National Women's History Museum",
+      "url": "https://www.womenshistory.org/education-resources/biographies/serena-williams"
+    },
+    {
+      "id": "ithf",
+      "kind": "secondary",
+      "title": "Serena Williams (Breaking Boundaries digital exhibit)",
+      "author": "International Tennis Hall of Fame",
+      "year": "n.d. (updated 2026)",
+      "publisher": "International Tennis Hall of Fame, Newport, Rhode Island",
+      "url": "https://breakingboundaries.tennisfame.com/players/serena-williams"
+    },
+    {
+      "id": "si-2015",
+      "kind": "secondary",
+      "title": "Serena Williams wins Indian Wells return (SI.com, 14 March 2015)",
+      "author": "Courtney Nguyen",
+      "year": 2015,
+      "publisher": "Sports Illustrated",
+      "url": "https://www.si.com/tennis/2015/03/14/serena-williams-wins-indian-well-return-monica-niculescu"
+    },
+    {
+      "id": "si-2017",
+      "kind": "secondary",
+      "title": "Serena Williams beats Venus in Australian Open final (SI.com, 28 January 2017)",
+      "author": "SI Wire",
+      "year": 2017,
+      "publisher": "Sports Illustrated",
+      "url": "https://www.si.com/tennis/2017/01/28/serena-williams-venus-australian-open-final"
+    },
+    {
+      "id": "si-2009",
+      "kind": "secondary",
+      "title": "Serena meltdown (SI.com, 13 September 2009)",
+      "author": "Richard Deitsch",
+      "year": 2009,
+      "publisher": "Sports Illustrated",
+      "url": "https://www.si.com/more-sports/2009/09/13/serena-meltdown"
+    },
+    {
+      "id": "cbs-2009",
+      "kind": "secondary",
+      "title": "Serena Williams' outburst at US Open brings record $82K fine, two years probation (CBS News / AP, 30 November 2009)",
+      "author": "CBS News and The Associated Press",
+      "year": 2009,
+      "publisher": "CBS News",
+      "url": "https://www.cbsnews.com/news/serena-williams-outburst-us-open-tirade-brings-record-82k-fine-two-years-probation"
+    },
+    {
+      "id": "npr-2011",
+      "kind": "secondary",
+      "title": "Serena Williams Fined After U.S. Open Outburst (NPR, 12 September 2011)",
+      "author": "Eyder Peralta",
+      "year": 2011,
+      "publisher": "NPR",
+      "url": "https://www.npr.org/sections/thetwo-way/2011/09/12/140407787/serena-williams-fined-after-us-open-outburst"
+    },
+    {
+      "id": "ap-2018",
+      "kind": "secondary",
+      "title": "Serena Williams fined $17,000 for rules violations at U.S. Open (AP, via PBS NewsHour, 9 September 2018)",
+      "author": "Howard Fendrich, Associated Press",
+      "year": 2018,
+      "publisher": "PBS NewsHour",
+      "url": "https://www.pbs.org/newshour/nation/serena-williams-fined-17000-for-rules-violations-at-u-s-open"
+    },
+    {
+      "id": "si-2013",
+      "kind": "secondary",
+      "title": "Serena Williams apologizes for comments about Steubenville rape case (SI.com, 19 June 2013)",
+      "author": "Courtney Nguyen",
+      "year": 2013,
+      "publisher": "Sports Illustrated",
+      "url": "https://www.si.com/tennis/2013/06/19/serena-williams-steubenville-rape-case"
+    },
+    {
+      "id": "fox-2013",
+      "kind": "secondary",
+      "title": "Serena apologizes again to rape victim (FOX Sports, 24 June 2013)",
+      "author": "Sam Gardner",
+      "year": 2013,
+      "publisher": "FOX Sports",
+      "url": "https://www.foxsports.com/stories/tennis/serena-apologizes-again-to-rape-victim"
+    },
+    {
+      "id": "ted-2017",
+      "kind": "primary",
+      "title": "'Winning for me is super addictive': 7 questions with Serena Williams at TED2017 (TED Blog, 25 April 2017)",
+      "author": "Kate Torgovnick May (interview)",
+      "year": 2017,
+      "publisher": "TED",
+      "url": "https://blog.ted.com/serena-williams-at-ted2017/"
+    },
+    {
+      "id": "fortune-2017",
+      "kind": "secondary",
+      "title": "Serena Williams: Another Pregnant Woman Just Doing Her Job (Fortune, 20 April 2017)",
+      "author": "Claire Zillman",
+      "year": 2017,
+      "publisher": "Fortune",
+      "url": "https://fortune.com/2017/04/20/serena-williams-pregnant/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real, living tennis player and investor (born 1981), not a politician or campaigner and not a religious founder; no credible account of sexual violence by her or of sexual contact with anyone under 16 was found; she has a documented dark side: on-court abuse of officials at three US Opens (2009, 2011, 2018) with fines and probation, and 2013 remarks blaming a 16-year-old rape victim, for which she apologised."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I reopened every source behind the draft (Vogue 2022 and 2018, TIME 2015, CNN 2018, the two museum pages, SI, CBS/AP, NPR, AP/PBS, FOX Sports) and argued against each value. Forgiveness fell: it rests on one act, the 2015 return to Indian Wells after a 14-year boycott, while in 2018 she said she was 'not there yet' on forgiving her sister's killer and she never made peace with umpire Carlos Ramos. Winning, Hard work, Family and Resilience held (Chris Evert's 2006 letter on her focus is one injured, depressed stretch, not a pattern), and Determination from the blind pick was added on TED, Fortune and Vogue evidence. All four quotes match the texts; the shadow now says the 2009 words are SI's reading of the tape, gives the 2010-11 probation and the full apology dates.",
+    "checkedOn": "2026-11-10"
+  }
+}
