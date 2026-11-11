@@ -1,0 +1,311 @@
+{
+  "id": "jesse-owens",
+  "name": "Jesse Owens",
+  "born": 1913,
+  "died": 1980,
+  "category": "athletes",
+  "areaIds": [
+    "lm_fitness",
+    "lm_mindset",
+    "lm_contribution"
+  ],
+  "tagline": "A sharecroppers' son who won four golds in Berlin, then had to rebuild after the fame.",
+  "startedFrom": "He was born in 1913 in Oakville, Alabama, the ninth of ten children of sharecroppers Henry and Emma Owens. As a small boy he was often ill with pneumonia and chest trouble, and by seven he was expected to pick 100 pounds of cotton a day. The family moved to Cleveland after World War I, where the Depression and a car accident that crippled his father left them short of money.",
+  "values": [
+    {
+      "word": "Excellence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 25 May 1935 at the Big Ten Championships in Ann Arbor he set world records in the long jump, 220-yard dash and 220-yard low hurdles and tied the 100-yard record, all in less than one hour; in 1936 in Berlin he won the 100 m, 200 m, long jump and 4 x 100 m relay.",
+          "sourceId": "encyclopedia-alabama",
+          "locator": "paragraphs 'Owens became a national star during his time at OSU' and 'In Berlin, Owens dominated the Olympics'"
+        },
+        {
+          "kind": "witness",
+          "claim": "ESPN reports that a 1950 Associated Press poll voted him the greatest track and field star of the first half of the century, and that its SportsCentury panel ranked him No. 6 among North American athletes of the 20th century.",
+          "sourceId": "espn-myth",
+          "locator": "headline and paragraph 'In a 1950 Associated Press poll'"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His dry-cleaning firm (1938) fell into debt and he filed for personal bankruptcy in 1939; he later did much better with several public relations firms and paid speaking work.",
+          "sourceId": "osu-legacy",
+          "locator": "page 'Owens' Legacy: a National Icon', paragraphs 2-3"
+        },
+        {
+          "kind": "deed",
+          "claim": "After Ford let him go in 1945 and his Detroit sporting goods store failed, he went back to racing horses on tour, moved to Chicago in 1949 and built a successful public relations agency.",
+          "sourceId": "encyclopedia-alabama",
+          "locator": "paragraph 'Owens's fortunes briefly declined when World War II ended'"
+        },
+        {
+          "kind": "words",
+          "claim": "In a 1971 interview he said racing horses was called degrading, 'but what was I supposed to do? I had four gold medals, but you can't eat four gold medals.'",
+          "sourceId": "baker-1986",
+          "locator": "ch. 8 'Tarnished Gold', p. 142"
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1953 he was made head of the Illinois Youth Commission and for years oversaw the state's recreation and education programmes for teenagers; he also worked for the South Side Boys Club.",
+          "sourceId": "encyclopedia-alabama",
+          "locator": "paragraph 'Owens's fortunes briefly declined when World War II ended'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In the 1950s he toured Asia as a State Department goodwill ambassador, and he worked with Boys' Clubs of America and the ARCO Jesse Owens Games as a role model for young people.",
+          "sourceId": "osu-legacy",
+          "locator": "page 'Owens' Legacy: a National Icon', paragraphs 4-5"
+        },
+        {
+          "kind": "witness",
+          "claim": "President Carter's statement on his death says his athletic triumphs 'were the prelude to a career devoted to helping others' and speaks of 'a lifetime of service.'",
+          "sourceId": "carter-1980",
+          "locator": "Statement on the Death of Jesse Owens, 31 March 1980"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Because he had to work after school, his junior-high coach Charles Riley met him each morning for track practice an hour before school.",
+          "sourceId": "baker-1986",
+          "locator": "ch. 2 'Friends, Mentors, and Heroes' (pp. 17-32)"
+        },
+        {
+          "kind": "deed",
+          "claim": "At Ohio State, barred from living on campus, he paid his way working as an elevator operator and later as a page in the state legislature.",
+          "sourceId": "espn-hero",
+          "locator": "section 'Odds 'n ends', paragraph 'When Owens entered Ohio State in the fall of 1933'"
+        },
+        {
+          "kind": "words",
+          "claim": "Of Berlin he writes: 'I slaved for those gold medals. But so did thousands of other boys.'",
+          "sourceId": "owens-story-1970",
+          "locator": "ch. 12 'Olympic Victories' (pp. 67-71)"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Two weeks before the 25 May 1935 Big Ten Championships he slipped and badly hurt his tailbone; on the day he could not bend over to touch his knees, yet he ran and jumped, setting three world records and tying a fourth.",
+          "sourceId": "espn-hero",
+          "locator": "section 'Signature event May 25, 1935'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In Berlin on 4 August 1936 his first two qualifying attempts in the long jump did not count; with one attempt left he qualified, and won the final that afternoon.",
+          "sourceId": "espn-myth",
+          "locator": "paragraph 'The next day, Owens was almost out of the long jump'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer says he arrived in Ann Arbor for the 1935 Big Ten meet with his back extremely sore from an injury sustained several days earlier, and after one long jump refrained from jumping again to protect it.",
+          "sourceId": "baker-1986",
+          "locator": "ch. 3 'College Pride and Prejudice' (pp. 33-53), closing account of the Big Ten meet of 25 May 1935"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "The fight that matters most is the one inside you, not the one for medals.",
+      "sourceId": "blackthink-1970",
+      "locator": "ch. 7 'I Know Because I've Been There', p. 150"
+    },
+    {
+      "text": "When the work you want is closed to you, take the honest paid work you can get.",
+      "sourceId": "baker-1986",
+      "locator": "ch. 8 'Tarnished Gold', p. 142"
+    },
+    {
+      "text": "Look for the good around you and point it out; then you start to believe in it.",
+      "sourceId": "blackthink-1970",
+      "locator": "ch. 8 'Showcase the Good', p. 166"
+    },
+    {
+      "text": "If your days are full, train before the day begins.",
+      "sourceId": "baker-1986",
+      "locator": "ch. 2 'Friends, Mentors, and Heroes' (pp. 17-32)"
+    },
+    {
+      "text": "When you change your mind about something you said in public, say so in public.",
+      "sourceId": "encyclopedia-alabama",
+      "locator": "paragraph 'Throughout the turbulent social changes of the civil rights era' (I Have Changed, 1972, a partial retraction of Blackthink)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "The battles that count aren't the ones for gold medals. The struggles within yourself—the invisible, inevitable battles inside all of us—that's where it's at.",
+      "sourceId": "blackthink-1970",
+      "locator": "ch. 7 'I Know Because I've Been There', p. 150"
+    },
+    {
+      "text": "Hitler didn't snub me—it was our president who snubbed me. The president didn't even send me a telegram.",
+      "sourceId": "schaap-2007",
+      "locator": "p. 211 (quoting United Press, 'Snubbed by Roosevelt, Not Hitler, Says Owens', 16 Oct. 1936)"
+    },
+    {
+      "text": "People said it was degrading for an Olympic champion to run against a horse, but what was I supposed to do? I had four gold medals, but you can't eat four gold medals.",
+      "sourceId": "baker-1986",
+      "locator": "ch. 8 'Tarnished Gold', p. 142 (quoting a 1971 interview)"
+    },
+    {
+      "text": "I loved Luz Long, as much as my own brothers. I still love Luz Long.",
+      "sourceId": "blackthink-1970",
+      "locator": "ch. 10 'Open Letter to a Young Negro', p. 192"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 4 August 1936 in Berlin, Owens failed his first two qualifying jumps in the long jump and qualified with his last try. In the final that afternoon he beat the German Luz Long, and Long was the first to congratulate him. Owens later wrote that the two corresponded for three years; Long was killed in the war, and Owens kept in touch with his family. That week Owens won four gold medals: 100 m, 200 m, long jump and 4 x 100 m relay.",
+    "sourceIds": [
+      "espn-myth",
+      "baker-1986",
+      "blackthink-1970",
+      "encyclopedia-alabama"
+    ]
+  },
+  "shadow": {
+    "text": "In 1939 he filed for personal bankruptcy, and he owed the government tax on income earned after Berlin. In December 1965 he pleaded no contest in federal court in Chicago to not filing income tax returns for 1959 to 1962 and was fined $3,000. His first daughter was born in August 1932, when he was 18; in 1935, while Ruth Solomon was raising the child in Cleveland, he had a much-photographed fling with a Los Angeles socialite, Quincella Nickerson, which his biographer William J. Baker says set off the events that led to his marriage to Ruth on 5 July 1935. In the mid-1940s, while married, he had an affair with a nurse who assisted him on a tour; she became pregnant, the tour was cancelled and the matter was kept quiet. Baker writes that he was 'strong on imagination, weak on literal truth' and doubts parts of his Berlin stories, such as Long's advice in the qualifying round. His 1970 book Blackthink attacked Black Power activists; most African American critics condemned it, and in 1972 he partly took it back.",
+    "sourceIds": [
+      "osu-legacy",
+      "baker-1986",
+      "espn-hero",
+      "encyclopedia-alabama"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which fight inside yourself did you face this week, and which one did you dodge?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Jesse Owens Story (with Paul Neimark)",
+      "year": 1970
+    },
+    {
+      "title": "Blackthink: My Life as Black Man and White Man (with Paul Neimark)",
+      "year": 1970
+    },
+    {
+      "title": "I Have Changed (with Paul Neimark)",
+      "year": 1972
+    }
+  ],
+  "sources": [
+    {
+      "id": "blackthink-1970",
+      "kind": "primary",
+      "title": "Blackthink: My Life as Black Man and White Man",
+      "author": "Jesse Owens with Paul G. Neimark (co-written)",
+      "year": 1970,
+      "publisher": "William Morrow",
+      "url": "https://archive.org/details/blackthinkmylife00owen"
+    },
+    {
+      "id": "owens-story-1970",
+      "kind": "primary",
+      "title": "The Jesse Owens Story",
+      "author": "Jesse Owens with Paul G. Neimark (co-written)",
+      "year": 1970,
+      "publisher": "G. P. Putnam's Sons",
+      "url": "https://archive.org/details/jesseowensstory00owen"
+    },
+    {
+      "id": "baker-1986",
+      "kind": "secondary",
+      "title": "Jesse Owens: An American Life",
+      "author": "William J. Baker",
+      "year": 1986,
+      "publisher": "Free Press",
+      "url": "https://archive.org/details/jesseowensameric00bake"
+    },
+    {
+      "id": "schaap-2007",
+      "kind": "secondary",
+      "title": "Triumph: The Untold Story of Jesse Owens and Hitler's Olympics",
+      "author": "Jeremy Schaap",
+      "year": 2007,
+      "publisher": "Houghton Mifflin",
+      "url": "https://archive.org/details/triumphuntoldsto0000scha"
+    },
+    {
+      "id": "encyclopedia-alabama",
+      "kind": "secondary",
+      "title": "Jesse Owens",
+      "author": "Matthew Llewellyn and Mark Dyreson, Encyclopedia of Alabama",
+      "year": 2007,
+      "publisher": "Alabama Humanities Alliance",
+      "url": "https://encyclopediaofalabama.org/article/jesse-owens/"
+    },
+    {
+      "id": "osu-legacy",
+      "kind": "secondary",
+      "title": "Jesse Owens: A Lasting Legend (exhibit page 'Owens' Legacy: a National Icon')",
+      "author": "Ohio State University Libraries",
+      "year": "n.d.",
+      "publisher": "The Ohio State University",
+      "url": "https://library.osu.edu/jesse-owens-a-lasting-legend/owens-legacy-a-national-icon"
+    },
+    {
+      "id": "espn-myth",
+      "kind": "secondary",
+      "title": "Owens pierced a myth",
+      "author": "Larry Schwartz",
+      "year": "n.d. (SportsCentury series)",
+      "publisher": "ESPN.com",
+      "url": "https://www.espn.com/sportscentury/features/00016393.html"
+    },
+    {
+      "id": "espn-hero",
+      "kind": "secondary",
+      "title": "SportsCentury: Jesse Owens, An American hero",
+      "author": "Larry Schwartz",
+      "year": "n.d. (SportsCentury series)",
+      "publisher": "ESPN.com",
+      "url": "https://www.espn.com/sportscentury/features/00194717.html"
+    },
+    {
+      "id": "carter-1980",
+      "kind": "secondary",
+      "title": "Statement on the Death of Jesse Owens",
+      "author": "Jimmy Carter",
+      "year": 1980,
+      "publisher": "The American Presidency Project",
+      "url": "https://www.presidency.ucsb.edu/documents/statement-the-death-jesse-owens"
+    }
+  ],
+  "likenessSources": [
+    {
+      "title": "Bundesarchiv Bild 183-R96374, Berlin, Olympiade, Jesse Owens beim Weitsprung (crop)",
+      "url": "https://commons.wikimedia.org/wiki/File:Bundesarchiv_Bild_183-R96374,_Berlin,_Olympiade,_Jesse_Owens_beim_Weitsprung_crop.jpg",
+      "licence": "CC BY-SA 3.0 DE",
+      "author": "Unknown (German Federal Archive)"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, dead athlete, not a politician or religious founder; no account of sexual violence was found. Age check: Ruth Solomon was 13 and he 15 when they met (Baker 1986, p. 20; OSU Libraries), and with her birth on 27 April 1915 (Find a Grave; AP obituary, 86 at death in June 2001) she was 16 and he 18 when their first daughter was conceived (born 8 August 1932); no source places sexual contact before she was 16, so not an owner case. His dark side (bankruptcy, tax conviction, the Nickerson fling, an affair, embellished stories, Blackthink) is shadow."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I checked the ages, every value, quote and shadow sentence against Baker's biography, Owens's own books (Internet Archive full-text search), ESPN, the Encyclopedia of Alabama, OSU Libraries and Carter's statement. Friendship fell: it rests only on the Luz Long story, which Baker doubts in parts, and no other friendship is documented. Excellence, Resilience and Service held as core, Hard work held with three sources, and the blind pick's Determination was added on the 1935 back injury and the Berlin last-chance jump. The shadow gained the 1935 Nickerson fling; the ages put Ruth at 16 at conception, so the file is not flagged.",
+    "checkedOn": "2026-11-10"
+  }
+}
