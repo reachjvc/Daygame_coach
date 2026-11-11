@@ -1,0 +1,332 @@
+{
+  "id": "zeno-of-citium",
+  "name": "Zeno of Citium",
+  "born": "c. 335 or 333 BC",
+  "died": "c. 262 or 261 BC",
+  "category": "sages",
+  "areaIds": [
+    "lm_mindset",
+    "lm_emotions"
+  ],
+  "tagline": "A merchant whose ship was wrecked on the way to Athens, who stayed there and founded Stoicism.",
+  "startedFrom": "He was born in Citium on Cyprus, a Greek town with Phoenician settlers, the son of the merchant Mnaseas, who, Demetrius of Magnesia says, brought him books about Socrates from Athens while he was still a boy. Diogenes Laertius describes him as lean, flabby and delicate, and he first worked as a trader himself. Laertius reports it was said that he came to Greece with over a thousand talents, while Seneca says the shipwreck took all he owned; Smith's Dictionary (1870) thinks the loss more likely.",
+  "values": [
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Told of a shipwreck in which all his property was lost, he said, 'Fortune bids me follow philosophy in lighter marching order.'",
+          "sourceId": "seneca-stewart",
+          "locator": "Of Peace of Mind (De Tranquillitate Animi), chapter XIV"
+        },
+        {
+          "kind": "words",
+          "claim": "Diogenes Laertius reports him saying 'I made a prosperous voyage when I suffered shipwreck', and in another version, 'It is well done of thee, Fortune, thus to drive me to philosophy.'",
+          "sourceId": "dl-hicks",
+          "locator": "Lives of Eminent Philosophers VII.4-5"
+        },
+        {
+          "kind": "witness",
+          "claim": "The World History Encyclopedia says that, stranded in Athens after a shipwreck, he picked up Xenophon's Memorabilia and made the study of philosophy his only interest.",
+          "sourceId": "whe-mark",
+          "locator": "section 'Early Life'"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Shown seven logical forms of the 'Reaper' argument and told the price was a hundred drachmas, he paid two hundred, 'to such lengths would he go in his love of learning'.",
+          "sourceId": "dl-hicks",
+          "locator": "Lives of Eminent Philosophers VII.25"
+        },
+        {
+          "kind": "deed",
+          "claim": "He studied under the Cynic Crates, then Stilpo, Xenocrates and Polemo, worked at logic with Diodorus and studied alongside the logician Philo; Laertius gives twenty years under his masters.",
+          "sourceId": "dl-hicks",
+          "locator": "Lives of Eminent Philosophers VII.2, VII.4, VII.16, VII.25"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia of Philosophy calls him 'a voracious reader of Socratic dialogues' who studied under Crates and was influenced by Plato's Academy and the Megarian School.",
+          "sourceId": "sep-stoicism",
+          "locator": "section 1.1, 'The School and its History'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy says he began under Crates but also counted Polemo and Stilpo among his teachers, and built his ethics as a compromise between them.",
+          "sourceId": "iep-stoicism",
+          "locator": "section 1.b, 'Greek Stoicism'"
+        }
+      ]
+    },
+    {
+      "word": "Simplicity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Diogenes Laertius says he showed 'the utmost endurance, and the greatest frugality': his food needed no fire to cook and his cloak was thin.",
+          "sourceId": "dl-hicks",
+          "locator": "Lives of Eminent Philosophers VII.27"
+        },
+        {
+          "kind": "witness",
+          "claim": "A comic poet (Philemon, or Poseidippus) mocked his diet of one loaf, dried figs and water, and 'More temperate than Zeno the philosopher' became a saying.",
+          "sourceId": "dl-hicks",
+          "locator": "Lives of Eminent Philosophers VII.27"
+        },
+        {
+          "kind": "witness",
+          "claim": "Smith's Dictionary says 'his moderation and contentment had become proverbial' and that weakness of body is said to have first led him 'to live rigorously and simply'.",
+          "sourceId": "smith-1870",
+          "locator": "vol. III, 'Zenon, 1. Of Citium', p. 1313"
+        },
+        {
+          "kind": "words",
+          "claim": "Told that a shipwreck had taken all his property, he said, 'Fortune bids me follow philosophy in lighter marching order.'",
+          "sourceId": "seneca-stewart",
+          "locator": "Of Peace of Mind (De Tranquillitate Animi), chapter XIV"
+        }
+      ]
+    },
+    {
+      "word": "Consistency",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Zeno defined the goal of life as 'living in agreement', that is, 'in accordance with one concordant reason, since those who live in conflict are unhappy' (reported by Stobaeus).",
+          "sourceId": "sep-stoicism",
+          "locator": "section 4.1, 'The Telos' (Stobaeus, Long and Sedley 63B)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Athenian decree honouring him says he gave 'to all in his own conduct a pattern for imitation in perfect consistency with his teaching'.",
+          "sourceId": "dl-hicks",
+          "locator": "Lives of Eminent Philosophers VII.10"
+        },
+        {
+          "kind": "witness",
+          "claim": "Smith's Dictionary sees no reason to doubt that decree, which honoured him because his doctrines and 'his life spent in accordance with them' led the young to virtue.",
+          "sourceId": "smith-1870",
+          "locator": "vol. III, 'Zenon, 1. Of Citium', p. 1314"
+        },
+        {
+          "kind": "witness",
+          "claim": "The World History Encyclopedia says the Athenians praised him for 'his consistency in living what he taught'.",
+          "sourceId": "whe-mark",
+          "locator": "section 'Student & Teacher'"
+        }
+      ]
+    },
+    {
+      "word": "Vision",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "While still a pupil of Crates he wrote his Republic, the plan of a city of the wise.",
+          "sourceId": "dl-hicks",
+          "locator": "Lives of Eminent Philosophers VII.4, VII.32-33"
+        },
+        {
+          "kind": "witness",
+          "claim": "Plutarch sums up the Republic as one principle, that all men should be fellow citizens under one order, and says Zeno wrote it 'giving shape to a dream or, as it were, shadowy picture of a well-ordered and philosophic commonwealth'.",
+          "sourceId": "plutarch-alexander",
+          "locator": "On the Fortune or the Virtue of Alexander I, chapter 6 (Moralia 329)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Stanford Encyclopedia of Philosophy says the Stoic school was founded around 300 BCE by Zeno.",
+          "sourceId": "sep-stoicism",
+          "locator": "section 1.1, 'The School and its History'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The World History Encyclopedia describes his Republic as a utopia whose citizens 'claim the universe as their home'.",
+          "sourceId": "whe-mark",
+          "locator": "section 'Zeno's Republic'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Treat a loss as a push toward the work that matters.",
+      "sourceId": "seneca-stewart",
+      "locator": "Of Peace of Mind, chapter XIV; also Diogenes Laertius VII.4-5"
+    },
+    {
+      "text": "Listen more than you talk.",
+      "sourceId": "dl-hicks",
+      "locator": "Lives of Eminent Philosophers VII.23, VII.24"
+    },
+    {
+      "text": "Live by one consistent line of reasoning, because a life in conflict with itself is unhappy.",
+      "sourceId": "sep-stoicism",
+      "locator": "section 4.1, 'The Telos' (Stobaeus, Long and Sedley 63B)"
+    },
+    {
+      "text": "Keep learning however far you have come: conceit blocks mastery.",
+      "sourceId": "dl-hicks",
+      "locator": "Lives of Eminent Philosophers VII.23, VII.25"
+    },
+    {
+      "text": "Let an insult go unanswered, like an envoy sent home without a reply.",
+      "sourceId": "dl-hicks",
+      "locator": "Lives of Eminent Philosophers VII.24"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I made a prosperous voyage when I suffered shipwreck.",
+      "sourceId": "dl-hicks",
+      "locator": "Lives of Eminent Philosophers VII.4, Loeb vol. II; a saying reported by Diogenes Laertius (3rd century AD), who notes others place it in his time under Crates",
+      "translation": "R. D. Hicks, 1925"
+    },
+    {
+      "text": "Fortune bids me follow philosophy in lighter marching order.",
+      "sourceId": "seneca-stewart",
+      "locator": "Of Peace of Mind (De Tranquillitate Animi), chapter XIV; a saying reported by Seneca, on hearing that a shipwreck had taken all his property",
+      "translation": "Aubrey Stewart, 1900"
+    },
+    {
+      "text": "The reason why we have two ears and only one mouth is that we may listen the more and talk the less.",
+      "sourceId": "dl-hicks",
+      "locator": "Lives of Eminent Philosophers VII.23, Loeb vol. II; a saying reported by Diogenes Laertius, said to a young man talking nonsense",
+      "translation": "R. D. Hicks, 1925"
+    },
+    {
+      "text": "As an envoy feels who is dismissed without an answer.",
+      "sourceId": "dl-hicks",
+      "locator": "Lives of Eminent Philosophers VII.24, Loeb vol. II; a saying reported by Diogenes Laertius, his answer when asked how he felt about abuse",
+      "translation": "R. D. Hicks, 1925"
+    }
+  ],
+  "definingMoment": {
+    "text": "Sailing from Phoenicia to the Piraeus with a cargo of purple, he was shipwrecked; Diogenes Laertius gives no year (the World History Encyclopedia puts it at about 314 BC), and gives his age as thirty, while his pupil Persaeus says twenty-two. In Athens he sat in a bookshop reading Xenophon's memories of Socrates and asked where such men could be found. The bookseller pointed to the Cynic Crates, who was passing, and Zeno became his pupil. Seneca says the wreck took all his property and that he said Fortune wanted him to follow philosophy with lighter baggage; Laertius also gives versions in which he was already in Athens when he heard of the wreck, or had sold his cargo first.",
+    "sourceIds": [
+      "dl-hicks",
+      "seneca-stewart",
+      "smith-1870",
+      "whe-mark"
+    ]
+  },
+  "shadow": {
+    "text": "Cassius the Sceptic charged that his early Republic called everyone who is not virtuous an enemy and a slave, even parents to their children, and that it proposed wives held in common and cities without temples, law courts or gymnasia; Isidorus of Pergamum says the Stoic Athenodorus cut the passages the school disliked from his books at the Pergamum library, and that they were later put back. Diogenes Laertius calls him sour, frowning and 'very niggardly', records that he refused oil to a begging Cynic and beat a slave for stealing, and says he made an unwanted rich, handsome pupil from Rhodes sit on dusty benches and then among the beggars until the young man left. Laertius writes that he was in love with the youth Chremonides and got up and moved away from him. A speaker in Athenaeus's banquet dialogue, attacking the Stoics, cites Zeno's biographer Antigonus of Carystus for the claim that he never had sex with a woman but always with boy-favourites. Diogenes Laertius's Greek says he rarely made use of young boys, and once or twice of a young girl so as not to seem a woman-hater; Hicks translates this as servants. No source gives the boys' ages.",
+    "sourceIds": [
+      "dl-hicks",
+      "dl-perseus-grc",
+      "athenaeus-kaibel",
+      "athenaeus-yonge"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you talk this week when listening would have served you better?",
+    "principleIndex": 1
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "dl-hicks",
+      "kind": "primary",
+      "title": "Lives of Eminent Philosophers, Book VII, Life of Zeno (VII.1-38), Loeb vol. II (written in the 3rd century AD from older collections; used in place of writings of his, none of which survive)",
+      "author": "Diogenes Laertius, translated by R. D. Hicks",
+      "year": 1925,
+      "publisher": "Loeb Classical Library (Heinemann / Putnam); Internet Archive scan",
+      "url": "https://archive.org/details/livesofeminentph02diog"
+    },
+    {
+      "id": "dl-perseus-grc",
+      "kind": "primary",
+      "title": "Vitae philosophorum VII.13 (Greek text), Perseus canonical-greekLit",
+      "author": "Diogenes Laertius, ed. R. D. Hicks",
+      "year": 1925,
+      "publisher": "Perseus Digital Library (GitHub)",
+      "url": "https://github.com/PerseusDL/canonical-greekLit/blob/master/data/tlg0004/tlg001/tlg0004.tlg001.perseus-grc2.xml"
+    },
+    {
+      "id": "seneca-stewart",
+      "kind": "primary",
+      "title": "Of Peace of Mind (De Tranquillitate Animi), in Minor Dialogues (an ancient report of his saying, written about 300 years after his death)",
+      "author": "Seneca, translated by Aubrey Stewart",
+      "year": 1900,
+      "publisher": "George Bell and Sons (Bohn's Classical Library); Wikisource transcription",
+      "url": "https://en.wikisource.org/wiki/Of_Peace_of_Mind"
+    },
+    {
+      "id": "athenaeus-kaibel",
+      "kind": "primary",
+      "title": "Deipnosophistae 13.563e (Greek text), an ancient report citing Antigonus of Carystus's lost Life of Zeno",
+      "author": "Athenaeus, ed. Georg Kaibel",
+      "year": 1887,
+      "publisher": "Teubner; Perseus Digital Library",
+      "url": "https://www.perseus.tufts.edu/hopper/text?doc=Perseus:text:2008.01.0405:book=13:chapter=15"
+    },
+    {
+      "id": "athenaeus-yonge",
+      "kind": "primary",
+      "title": "The Deipnosophists, vol. 3, Book XIII, section 15",
+      "author": "Athenaeus, translated by C. D. Yonge",
+      "year": 1854,
+      "publisher": "Henry G. Bohn; Project Gutenberg",
+      "url": "https://www.gutenberg.org/ebooks/66508"
+    },
+    {
+      "id": "smith-1870",
+      "kind": "secondary",
+      "title": "Dictionary of Greek and Roman Biography and Mythology, vol. III, 'Zenon, 1. Of Citium', pp. 1313-1315",
+      "author": "William Smith (ed.)",
+      "year": 1870,
+      "publisher": "Little, Brown and Company; Internet Archive scan",
+      "url": "https://archive.org/details/dictionaryofgree03smituoft"
+    },
+    {
+      "id": "plutarch-alexander",
+      "kind": "primary",
+      "title": "On the Fortune or the Virtue of Alexander, First Oration, Loeb Moralia vol. IV (an ancient report of Zeno's lost Republic)",
+      "author": "Plutarch",
+      "year": 1936,
+      "publisher": "Loeb Classical Library; LacusCurtius transcription (public domain)",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Plutarch/Moralia/Fortuna_Alexandri*/1.html"
+    },
+    {
+      "id": "sep-stoicism",
+      "kind": "secondary",
+      "title": "Stoicism, Stanford Encyclopedia of Philosophy (first published 20 January 2023)",
+      "author": "Marion Durand, Simon Shogry and Dirk Baltzly",
+      "year": 2023,
+      "publisher": "Stanford Encyclopedia of Philosophy",
+      "url": "https://plato.stanford.edu/entries/stoicism/"
+    },
+    {
+      "id": "iep-stoicism",
+      "kind": "secondary",
+      "title": "Stoicism, Internet Encyclopedia of Philosophy",
+      "author": "Massimo Pigliucci",
+      "year": "undated (read 2026-11-10)",
+      "publisher": "Internet Encyclopedia of Philosophy",
+      "url": "https://iep.utm.edu/stoicism/"
+    },
+    {
+      "id": "whe-mark",
+      "kind": "secondary",
+      "title": "Zeno of Citium, World History Encyclopedia (15 February 2011)",
+      "author": "Joshua J. Mark",
+      "year": 2011,
+      "publisher": "World History Encyclopedia",
+      "url": "https://www.worldhistory.org/Zeno_of_Citium/"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real Greek philosopher from Cyprus (c. 335/333-262/261 BC), long dead, not fictional, not a politician of today and not the founder of a living religion; flagged because a speaker in Athenaeus's banquet dialogue cites Zeno's contemporary biographer Antigonus of Carystus for the claim that Zeno never had sex with a woman but always with boy-favourites, and Diogenes Laertius's Greek says he 'made use of' young boys (paidaria) rarely; no source gives any age. Sources are thin: nothing he wrote survives. Owner case (under-16, no recommendation): Athenaeus 13.563e (speaker Myrtilus, attacking the Stoics) says Zeno 'never had to do with a woman, but always with boy-favourites, as Antigonus of Carystus records' [athenaeus-kaibel; Yonge softens it]; DL VII.13 Greek: he 'made use of young boys rarely, once or twice of some young girl, so as not to seem a woman-hater' [dl-perseus-grc], which Hicks renders as servants [dl-hicks]; DL VII.17 says he was enamoured of the youth Chremonides and moved away from him; no source gives any age; the two ancient reports contradict each other on women, and no reference work read discusses his own sexual conduct."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked all five draft values and re-read every cited passage in Hicks's Laertius, Seneca, Athenaeus (Greek and Yonge), Smith 1870, the SEP, IEP, WHE and Plutarch. Humility fell: it rested on two sources, and Laertius's own record (the rich Rhodian pupil sat among beggars, his biting put-downs, Timon's 'gloomy pride') argues hard against the plain reading, so only modesty about learning survives; Discipline fell for lacking a third source and gave way to the blind pick's Simplicity, and the blind pick's Vision came in on Plutarch's account of the Republic. Resilience, Learning and Consistency held; I fixed four facts (Philo was a fellow student, not a teacher; the shipwreck year; the Republic charges are Cassius's; Athenodorus cut the passages) and the shadow now adds the Rhodian pupil, the begging Cynic and Chremonides. The status is flagged because the screen sends the Athenaeus and Laertius reports about boys to the owner; everything else is finished.",
+    "checkedOn": "2026-11-10"
+  }
+}
