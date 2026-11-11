@@ -1,0 +1,392 @@
+{
+  "id": "reinhold-messner",
+  "name": "Reinhold Messner",
+  "born": 1944,
+  "died": null,
+  "category": "explorers",
+  "areaIds": [
+    "lm_fun",
+    "lm_fitness",
+    "lm_mindset"
+  ],
+  "tagline": "Climbed the highest mountains without bottled oxygen, by his own strict rules",
+  "startedFrom": "He was born in 1944 in Bressanone (Brixen), in the German-speaking South Tyrol of Italy, the second of nine children (eight boys and a girl). His father Josef took him into the mountains as a small boy. He says that when his father saw climbing would be his life, he tried to stop him, but it was too late.",
+  "values": [
+    {
+      "word": "Adventure",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 8 May 1978 he and Peter Habeler reached the top of Everest without bottled oxygen, the first to do so.",
+          "sourceId": "outside-2017",
+          "locator": "opening section ('Tenzing Norgay wasn't buying it')"
+        },
+        {
+          "kind": "deed",
+          "claim": "After the 8,000 m peaks he crossed Antarctica on foot (1990) and the Gobi desert (2004).",
+          "sourceId": "olympedia",
+          "locator": "Biography"
+        },
+        {
+          "kind": "words",
+          "claim": "He says he takes the same perspective with each new adventure: he looks back from the end of his life and asks if it matters to him.",
+          "sourceId": "observer-2003",
+          "locator": "third-last paragraph ('I always take the same perspective')"
+        }
+      ]
+    },
+    {
+      "word": "Self-reliance",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1980 he climbed Everest alone, without bottled oxygen, by a new route on the north side.",
+          "sourceId": "outside-2017",
+          "locator": "section on the feud with Habeler ('Messner went on to climb Everest again without oxygen in 1980')"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1980 he became the first man to climb Everest without oxygen alone.",
+          "sourceId": "olympedia",
+          "locator": "Biography"
+        },
+        {
+          "kind": "words",
+          "claim": "He says extreme mountaineering means being responsible for yourself: all freedom, but also all responsibility.",
+          "sourceId": "lacrux-2022",
+          "locator": "answer on his youth in Villnöss ('Extreme mountaineering means being responsible for yourself'), English edition"
+        },
+        {
+          "kind": "words",
+          "claim": "He says he learned to do difficult routes in small groups without tents, without Sherpas and without oxygen, before going alone.",
+          "sourceId": "aoa-2018",
+          "locator": "interview, answer on getting over fear ('I learned to be in small groups')"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In April 1978 a two-day storm at the South Col stopped his first try at Everest without oxygen; he went back down, talked Habeler round, and they reached the top on 8 May.",
+          "sourceId": "outside-2017",
+          "locator": "middle sections (storm at the South Col; 'If I can do it, you can do it')"
+        },
+        {
+          "kind": "witness",
+          "claim": "Time's Jamie Murphy found his lungs were like an above-average marathon runner's; what set him apart was his drive to succeed.",
+          "sourceId": "ewb",
+          "locator": "section 'Messner's Innovations'"
+        },
+        {
+          "kind": "words",
+          "claim": "He says he did one activity at a time, with all his willpower, money and time: complete commitment.",
+          "sourceId": "observer-2003",
+          "locator": "last paragraph ('If you look at my life')"
+        },
+        {
+          "kind": "witness",
+          "claim": "Filmmaker Leo Dickinson, who filmed the 1978 climb: 'Messner is the most driven human being I've ever seen on the planet.'",
+          "sourceId": "outside-2017",
+          "locator": "section on regrouping before the May summit bid"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says that in 1978 people told them climbing Everest without oxygen was not possible and would cost their lives or their brains; climbers coming down said they should not even try, and they went.",
+          "sourceId": "observer-2003",
+          "locator": "opening paragraph ('When we proposed climbing Everest without oxygen')"
+        },
+        {
+          "kind": "deed",
+          "claim": "In April 1978, with Habeler sick, he went on into a storm with two Sherpas for a solo try and sat out two days of 80-mile-per-hour winds at the South Col.",
+          "sourceId": "outside-2017",
+          "locator": "section on the first attempt ('continued into the storm for a solo attempt')"
+        },
+        {
+          "kind": "witness",
+          "claim": "Some climbers called him and Habeler foolhardy for risking brain damage and death without oxygen; they kept to their methods.",
+          "sourceId": "ewb",
+          "locator": "section 'Messner's Innovations'"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked how he handled fear alone, he said that with one partner fear is only half; going solo means carrying all of it yourself.",
+          "sourceId": "aoa-2018",
+          "locator": "interview, answer on mental fear ('If you are together, fear is only half')"
+        }
+      ]
+    },
+    {
+      "word": "Solitude",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked if people should spend more time alone, he said: 'People should stay alone for a while. They should stay in silence.'",
+          "sourceId": "aoa-2018",
+          "locator": "interview, answer on spending time alone"
+        },
+        {
+          "kind": "words",
+          "claim": "He says his 1973 solo try on Nanga Parbat failed because he could not yet bear being up there alone, with no one to speak to, and that it took him a long time to learn it.",
+          "sourceId": "observer-2003",
+          "locator": "paragraph beginning 'After my brother died'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1980 he climbed Everest alone, without bottled oxygen, by a new route on the north side.",
+          "sourceId": "outside-2017",
+          "locator": "section on the feud with Habeler ('this time solo and unaided')"
+        },
+        {
+          "kind": "deed",
+          "claim": "In June 2004 he finished a five-week solo walk across the Gobi desert.",
+          "sourceId": "aoa-2018",
+          "locator": "photo caption dated 26 June 2004"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Before each new venture, picture yourself at the end of your life looking back, and ask if this matters to you.",
+      "sourceId": "observer-2003",
+      "locator": "third-last paragraph ('I always take the same perspective')"
+    },
+    {
+      "text": "Attempt only what you are capable of, and stay a little inside your own limit.",
+      "sourceId": "nzz-2017",
+      "locator": "answer to the question on speed and risk ('There's a basic rule, however')"
+    },
+    {
+      "text": "Reach the goal by fair means or not at all: he would give up the Everest summit rather than use bottled oxygen.",
+      "sourceId": "outside-2017",
+      "locator": "section before the summit day, quoting Everest: Expedition to the Ultimate (1979) ('I was determined to forswear the summit')"
+    },
+    {
+      "text": "Do one thing at a time, with all your will, money and time.",
+      "sourceId": "observer-2003",
+      "locator": "last paragraph ('If you look at my life')"
+    },
+    {
+      "text": "On the mountain you are responsible for yourself.",
+      "sourceId": "lacrux-2022",
+      "locator": "answer on his youth ('Extreme mountaineering means being responsible for yourself'), English edition"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I always take the same perspective with each new adventure. I put myself in the position of being at the end of my life looking back. Then I ask myself if what I am doing is important to me.",
+      "sourceId": "observer-2003",
+      "locator": "Interview by Ed Douglas, The Observer, as reprinted in Nepali Times #147 (30 May 2003), third-last paragraph"
+    },
+    {
+      "text": "I did one activity at a time, with all my willpower, all my money and all my time. Complete commitment.",
+      "sourceId": "observer-2003",
+      "locator": "Interview by Ed Douglas, The Observer, as reprinted in Nepali Times #147 (30 May 2003), last paragraph"
+    },
+    {
+      "text": "Now that I'm nearing 59, I understand that failing is more important than having success.",
+      "sourceId": "observer-2003",
+      "locator": "Interview by Ed Douglas, The Observer, as reprinted in Nepali Times #147 (30 May 2003), fourth-last paragraph"
+    },
+    {
+      "text": "There’s a basic rule, however: one should only attempt what one is capable of. That means that one should always stay a little inside of one’s own personal limit.",
+      "sourceId": "nzz-2017",
+      "locator": "Interview by Alexandra Kohler, Neue Zürcher Zeitung, May 2017, as republished by Outside, 5 May 2017; answer on speed and risk",
+      "translation": "Martin Fritz Huber, 2017 (from the German)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In April 1978 a two-day storm at Everest's South Col stopped his first try without bottled oxygen, and he went back down. He later wrote that he had been determined to give up the summit rather than reach it with breathing equipment. On 8 May 1978 he and Peter Habeler stood on top without it, the first people to do so. Two climbers who came up after them found the two emergency oxygen bottles at the South Col camp still full.",
+    "sourceIds": [
+      "outside-2017",
+      "olympedia"
+    ]
+  },
+  "shadow": {
+    "text": "In June 1970 his younger brother Günther died on the way down from Nanga Parbat; Reinhold says an avalanche killed him on the Diamir Face. In 2003 expedition members Hans Saler and Max von Kienlin wrote that he left Günther near the summit to make his own traverse, and that Günther died alone on the other side; Saler said there was 'a big lie' behind Reinhold's story. Messner called their account a lie and sued: in July 2003 a Hamburg court issued an interim injunction halting reprints of both books, and the case against von Kienlin ended in a settlement in 2007. In 2005 remains found on the Diamir Face were identified by DNA as Günther's, and the forensic team wrote that the place supports Messner's version. He says his father blamed him for Günther's death, and after 1970 he and the expedition leader, Karl Herrligkoffer, fought each other in court at least a dozen times. After 1978 he and Habeler fell out over Habeler's book on their Everest climb and barely spoke for two decades; they have since made up. In 2023 a study by Eberhard Jurgalski said he had stopped 65 m short of Annapurna's true summit in 1985, and Guinness World Records moved the 14-peaks record to Ed Viesturs; Messner rejects the finding. In 2024 he said his family broke apart once he had handed most of his estate to his children and then wife; by 2026 he had no contact with his four children, and his son Simon said they did not know why.",
+    "sourceIds": [
+      "outside-2003",
+      "aaj-2004",
+      "derstandard-2007",
+      "ap-2005",
+      "parson-2007",
+      "observer-2003",
+      "outside-2017",
+      "irishtimes-2023",
+      "orf-2024",
+      "bluewin-2026"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which thing you did this week would still matter to you if you looked back on it from the end of your life?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Crystal Horizon: Everest, the First Solo Ascent (Der gläserne Horizont)",
+      "year": 1982
+    },
+    {
+      "title": "The Naked Mountain (Der nackte Berg)",
+      "year": 2002
+    },
+    {
+      "title": "Everest: Expedition to the Ultimate (Everest: Expedition zum Endpunkt)",
+      "year": 1978
+    }
+  ],
+  "sources": [
+    {
+      "id": "observer-2003",
+      "kind": "primary",
+      "title": "Solo without oxygen (first-person interview by Ed Douglas in The Observer; reprinted in Nepali Times, issue #147, 30 May - 5 June 2003)",
+      "author": "Reinhold Messner, interviewed by Ed Douglas",
+      "year": 2003,
+      "publisher": "The Observer / Nepali Times",
+      "url": "https://archive.nepalitimes.com/news.php?id=3251"
+    },
+    {
+      "id": "nzz-2017",
+      "kind": "primary",
+      "title": "Reinhold Messner Speaks on Ueli Steck's Death (Neue Zürcher Zeitung interview by Alexandra Kohler, translated by Martin Fritz Huber)",
+      "author": "Reinhold Messner, interviewed by Alexandra Kohler",
+      "year": 2017,
+      "publisher": "Outside",
+      "url": "https://www.outsideonline.com/outdoor-adventure/climbing/reinhold-messner-speaks-ueli-stecks-death/"
+    },
+    {
+      "id": "lacrux-2022",
+      "kind": "primary",
+      "title": "Messner's rope teams: an interview with Reinhold Messner (first published in bergundsteigen; Lacrux English edition, 1 January 2022)",
+      "author": "Reinhold Messner, interviewed by Gebi Bendler and Dominik Prantl",
+      "year": 2022,
+      "publisher": "Lacrux",
+      "url": "https://www.lacrux.com/en/klettern/messners-seilschaften-ein-interview-mit-reinhold-messner/"
+    },
+    {
+      "id": "outside-2017",
+      "kind": "secondary",
+      "title": "A Single Narrow Gasping Lung (15 September 2017)",
+      "author": "Grayson Schaffer",
+      "year": 2017,
+      "publisher": "Outside",
+      "url": "https://www.outsideonline.com/outdoor-adventure/climbing/single-narrow-gasping-lung/"
+    },
+    {
+      "id": "outside-2003",
+      "kind": "secondary",
+      "title": "Buried in the Past",
+      "author": "Outside editors (byline not shown online)",
+      "year": 2003,
+      "publisher": "Outside",
+      "url": "https://www.outsideonline.com/outdoor-adventure/climbing/buried-past/"
+    },
+    {
+      "id": "ewb",
+      "kind": "secondary",
+      "title": "Reinhold Messner (Encyclopedia of World Biography)",
+      "author": "Gale editors",
+      "year": "n.d. (read 2026)",
+      "publisher": "Gale, via Encyclopedia.com",
+      "url": "https://www.encyclopedia.com/history/encyclopedias-almanacs-transcripts-and-maps/reinhold-messner"
+    },
+    {
+      "id": "olympedia",
+      "kind": "secondary",
+      "title": "Reinhold Messner (biography)",
+      "author": "OlyMADMen",
+      "year": "n.d. (read 2026)",
+      "publisher": "Olympedia",
+      "url": "https://www.olympedia.org/athletes/1200405"
+    },
+    {
+      "id": "ap-2005",
+      "kind": "secondary",
+      "title": "Climber claims brother's remains 35 years later (4 September 2005)",
+      "author": "Associated Press",
+      "year": 2005,
+      "publisher": "NBC News",
+      "url": "https://www.nbcnews.com/news/amp/wbna9210063"
+    },
+    {
+      "id": "parson-2007",
+      "kind": "secondary",
+      "title": "Unravelling the mystery of Nanga Parbat (case report), International Journal of Legal Medicine, issue 4/2007",
+      "author": "Walther Parson, Anita Brandstätter, Harald Niederstätter, Petra Grubwieser, Richard Scheithauer",
+      "year": 2007,
+      "publisher": "Springer",
+      "url": "https://www.springermedicine.com/unravelling-the-mystery-of-nanga-parbat/21015654"
+    },
+    {
+      "id": "aaj-2004",
+      "kind": "secondary",
+      "title": "The Naked Mountain (book review, with editor's note on the Saler and von Kienlin books)",
+      "author": "Al Hospers",
+      "year": 2004,
+      "publisher": "American Alpine Journal",
+      "url": "https://publications.americanalpineclub.org/articles/12200444700/The-Naked-Mountain"
+    },
+    {
+      "id": "derstandard-2007",
+      "kind": "secondary",
+      "title": "Einigung im Streit um Messners Bruder (dpa report, December 2007)",
+      "author": "dpa",
+      "year": 2007,
+      "publisher": "Der Standard",
+      "url": "https://www.derstandard.at/story/3157651/einigung-im-streit-um-messners-bruder"
+    },
+    {
+      "id": "aoa-2018",
+      "kind": "primary",
+      "title": "Reinhold Messner: Life at the Limit (interview, Bozen, 22 August 2018, with biography and photo captions)",
+      "author": "Reinhold Messner, interviewed by the Academy of Achievement",
+      "year": 2018,
+      "publisher": "American Academy of Achievement",
+      "url": "https://achievement.org/achiever/reinhold-messner/"
+    },
+    {
+      "id": "irishtimes-2023",
+      "kind": "secondary",
+      "title": "High dudgeon: Mountaineer has records removed, but he won't climb down (28 September 2023)",
+      "author": "Derek Scally",
+      "year": 2023,
+      "publisher": "The Irish Times",
+      "url": "https://www.irishtimes.com/world/europe/2023/09/28/high-dudgeon-mountaineer-has-records-removed-but-he-wont-climb-down/"
+    },
+    {
+      "id": "orf-2024",
+      "kind": "secondary",
+      "title": "Reinhold Messner hat Erbschaftsstreit mit Kindern (21 July 2024)",
+      "author": "ORF editors",
+      "year": 2024,
+      "publisher": "ORF",
+      "url": "https://orf.at/stories/3364164/"
+    },
+    {
+      "id": "bluewin-2026",
+      "kind": "secondary",
+      "title": "Reinhold Messner Talks About Losing Contact With His Children (Teleschau, 8 October 2026)",
+      "author": "Teleschau",
+      "year": 2026,
+      "publisher": "blue News",
+      "url": "https://www.bluewin.ch/en/people/reinhold-messner-talks-about-losing-contact-with-his-children-li.3629188"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real living South Tyrolean mountaineer and author (born 1944); he sat in the European Parliament for the Greens from 1999 to 2004 but left politics when his term ended and holds and seeks no office now; he founded no religion; no account of sexual contact with anyone under 16 or of sexual violence was found; he is in, with a documented and contested dark side over his brother Günther's death on Nanga Parbat in 1970."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I attacked all five draft values and the blind pick. Simplicity fell because it holds only in the narrow sense of light climbing gear, while he lives in a castle and built a six-museum enterprise, and Vision fell as a draft-only word without three independent sources (Outside notes he did not invent alpine style, and Gale says going without oxygen was not first a deliberate plan). Adventure, Self-reliance and Determination held, and the blind pick's Courage and Solitude were added on four checked pieces each. All four quotes matched their texts; six factual sentences were corrected, and the shadow now adds the Habeler feud, the 2023 Annapurna record change and the break with his children.",
+    "checkedOn": "2026-11-10"
+  }
+}
