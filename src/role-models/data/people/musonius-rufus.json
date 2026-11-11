@@ -1,0 +1,312 @@
+{
+  "id": "musonius-rufus",
+  "name": "Musonius Rufus",
+  "born": "before 30",
+  "died": "before 101-102",
+  "category": "sages",
+  "areaIds": [
+    "lm_mindset",
+    "lm_health"
+  ],
+  "tagline": "A Roman Stoic who taught that philosophy is daily training in hardship and plain living.",
+  "startedFrom": "He was born before 30 at Volsinii in Etruria, the son of a Roman knight named Capito, so he started high, in Rome's second-ranked class. His friendships brought danger, not comfort: around 60, when Nero banished his friend Rubellius Plautus to Asia Minor, Musonius went into exile with him.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 69 he joined the envoys sent from Rome to the advancing Flavian army and went among the armed soldiers to speak for peace, though some were ready to throw him down and trample him.",
+          "sourceId": "tacitus-histories",
+          "locator": "Histories 3.80-81"
+        },
+        {
+          "kind": "witness",
+          "claim": "The emperor Julian, writing to Themistius, says Musonius became famous because he bore his sufferings with courage and sustained with firmness the cruelty of tyrants.",
+          "sourceId": "julian-wright",
+          "locator": "Letter to Themistius, 265 (Wright 1913, vol. 2)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy reports that the emperor Julian said Musonius became famous because he endured his sufferings with courage and stood firm against the cruelty of tyrants.",
+          "sourceId": "iep-stephens",
+          "locator": "§7 Impact"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Speaking to a man who lamented his banishment, he says no one has seen him cringing or disheartened by his own exile, because losing his country has not cost him his ability to endure exile.",
+          "sourceId": "lutz-1947",
+          "locator": "Lecture IX, 'That exile is not an evil', p. 75"
+        },
+        {
+          "kind": "deed",
+          "claim": "Nero banished him in 65 after the Piso conspiracy; Tacitus says it was the splendour of his name that drove him into exile.",
+          "sourceId": "tacitus-annals",
+          "locator": "Annals 15.71"
+        },
+        {
+          "kind": "deed",
+          "claim": "The Internet Encyclopedia of Philosophy records that Nero banished him to the arid, desolate island of Gyaros after the Piso conspiracy of 65, and that he returned to Rome under Galba in 68.",
+          "sourceId": "iep-stephens",
+          "locator": "§1 Life"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Epictetus, then a slave of Nero's freedman Epaphroditus, attended his lectures in Rome.",
+          "sourceId": "long-intro",
+          "locator": "Introduction"
+        },
+        {
+          "kind": "words",
+          "claim": "Epictetus remembers him saying, 'If you have leisure to praise me, I am speaking to no purpose', and speaking so that every listener supposed someone had accused him before Rufus.",
+          "sourceId": "discourses-long",
+          "locator": "Discourses III.23"
+        },
+        {
+          "kind": "witness",
+          "claim": "Tacitus writes that Musonius Rufus encouraged the studies of Rome's young men by the teachings of philosophy.",
+          "sourceId": "tacitus-annals",
+          "locator": "Annals 15.71"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy names his pupils, among them Euphrates of Tyre, Dio of Prusa and, the greatest, Epictetus.",
+          "sourceId": "iep-stephens",
+          "locator": "§7 Impact"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He tells students to train body and soul together by getting used to cold, heat, thirst, hunger, meagre rations, hard beds, going without pleasures and patience under pain.",
+          "sourceId": "lutz-1947",
+          "locator": "Lecture VI, 'On training', p. 55"
+        },
+        {
+          "kind": "words",
+          "claim": "He says the man who will not exert himself almost always convicts himself as unworthy of good, since every good is gained by toil.",
+          "sourceId": "lutz-1947",
+          "locator": "Lecture VII, 'That one should disdain hardships', p. 59"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy says he held that philosophy must be studied to build good character, a sound mind and a tough, healthy body.",
+          "sourceId": "iep-stephens",
+          "locator": "opening summary (above the table of contents)"
+        }
+      ]
+    },
+    {
+      "word": "Simplicity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says he would choose sickness rather than luxury, because sickness harms only the body while luxury destroys body and soul.",
+          "sourceId": "lutz-1947",
+          "locator": "Lecture XX, 'On furnishings', p. 127"
+        },
+        {
+          "kind": "words",
+          "claim": "He says clothes and shoes are like armour, for protection and not display, and that going barefoot is better than sandals for anyone used to it.",
+          "sourceId": "lutz-1947",
+          "locator": "Lecture XIX, 'On clothing and shelter', pp. 121-123"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Internet Encyclopedia of Philosophy says he called for austere habits: the simplest vegetarian diet and minimal, inexpensive clothes and footwear.",
+          "sourceId": "iep-stephens",
+          "locator": "opening summary; §4 Food and Frugality"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Encyclopedia of Philosophy lists curtailing one's bodily and material wants among the themes of his surviving fragments.",
+          "sourceId": "reydams-schils-2005",
+          "locator": "entry text, sentence beginning 'Other themes in the preserved fragments'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Philosophy means working out by reason what is right, and then doing it.",
+      "sourceId": "lutz-1947",
+      "locator": "Lecture XIV, 'Is marriage a handicap for the pursuit of philosophy?', p. 97"
+    },
+    {
+      "text": "Train body and mind together: get used to cold, heat, hunger, hard beds and saying no to pleasure.",
+      "sourceId": "lutz-1947",
+      "locator": "Lecture VI, 'On training', p. 55"
+    },
+    {
+      "text": "Every good thing costs effort, and people suffer for worthless goals anyway, so put your effort into a worthy one.",
+      "sourceId": "lutz-1947",
+      "locator": "Lecture VII, 'That one should disdain hardships', pp. 57-59"
+    },
+    {
+      "text": "Eat cheap, plain food for strength, and dress for protection, not for show.",
+      "sourceId": "lutz-1947",
+      "locator": "Lectures XVIIIB and XIX, pp. 119-123"
+    },
+    {
+      "text": "Do not go to law or hit back over an insult: the shame belongs to the one who gives it.",
+      "sourceId": "lutz-1947",
+      "locator": "Lecture X, 'Will the philosopher prosecute anyone for personal injury?', pp. 77-79"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "…if I have been deprived of my country, I have not been deprived of my ability to endure exile.",
+      "sourceId": "lutz-1947",
+      "locator": "Lecture IX, 'That exile is not an evil', p. 75",
+      "translation": "Cora E. Lutz, 1947"
+    },
+    {
+      "text": "…the study of philosophy is nothing else than to search out by reason what is right and proper and by deeds to put it into practice.",
+      "sourceId": "lutz-1947",
+      "locator": "Lecture XIV, p. 97",
+      "translation": "Cora E. Lutz, 1947"
+    },
+    {
+      "text": "I would choose sickness rather than luxury, for sickness harms only the body, but luxury destroys both body and soul…",
+      "sourceId": "lutz-1947",
+      "locator": "Lecture XX, 'On furnishings', p. 127",
+      "translation": "Cora E. Lutz, 1947"
+    },
+    {
+      "text": "If you have leisure to praise me, I am speaking to no purpose.",
+      "sourceId": "discourses-long",
+      "locator": "Discourses III.23 (Epictetus quoting Rufus)",
+      "translation": "George Long, 1877"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 69, as the Flavian army under Antonius Primus closed on Rome, the Senate sent envoys to urge peace, and Musonius joined them. He went among the armed soldiers and spoke of the blessings of peace and the perils of war. Tacitus writes that many thought it ridiculous, more thought it tiresome, and some were ready to trample him, until he gave way to warnings and stopped his 'ill-timed wisdom'. The next year he went before the Senate and won the conviction of Publius Egnatius Celer, the philosopher whose perjury had helped destroy Barea Soranus.",
+    "sourceIds": [
+      "tacitus-histories",
+      "smith-1873"
+    ]
+  },
+  "shadow": {
+    "text": "His lectures teach that sex is right only inside marriage and only to beget children, and call sex between men 'a monstrous thing and contrary to nature'. He praised the old lawgivers who forbade women to have abortions, punished those who did, and set a penalty on childlessness. He argued that women need the same philosophy as men, but held that men's constitution is stronger and that spinning and indoor work fit women better; Martha Nussbaum titled her 2002 essay on him 'The Incomplete Feminism of Musonius Rufus'.",
+    "sourceIds": [
+      "lutz-1947",
+      "iep-stephens"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you pick comfort this week when a little cold, hunger or effort would have trained you?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "Lectures and Sayings (notes kept by his pupils; Cora Lutz's 1947 translation, 'Musonius Rufus: The Roman Socrates', is free on the Internet Archive)",
+      "year": "1st century"
+    }
+  ],
+  "sources": [
+    {
+      "id": "lutz-1947",
+      "kind": "primary",
+      "title": "Musonius Rufus, 'The Roman Socrates': lectures and fragments, Greek text with English translation (Yale Classical Studies vol. 10); the lectures are notes kept by a pupil, preserved by Stobaeus",
+      "author": "Musonius Rufus, recorded by his pupils, translated by Cora E. Lutz",
+      "year": 1947,
+      "publisher": "Yale University Press; Internet Archive scan",
+      "url": "https://archive.org/details/MUSONIUSRUFUSSTOICFRAGMENTS"
+    },
+    {
+      "id": "discourses-long",
+      "kind": "primary",
+      "title": "The Discourses of Epictetus (talks recorded by Arrian; Epictetus quotes his teacher Rufus)",
+      "author": "Epictetus, recorded by Arrian, translated by George Long",
+      "year": 1877,
+      "publisher": "Standard Ebooks edition of Long's translation",
+      "url": "https://standardebooks.org/ebooks/epictetus/discourses/george-long/text/single-page"
+    },
+    {
+      "id": "long-intro",
+      "kind": "secondary",
+      "title": "Introduction (life of Epictetus), prefaced to his translation of the Discourses",
+      "author": "George Long",
+      "year": 1877,
+      "publisher": "Standard Ebooks edition",
+      "url": "https://standardebooks.org/ebooks/epictetus/discourses/george-long/text/single-page"
+    },
+    {
+      "id": "tacitus-annals",
+      "kind": "secondary",
+      "title": "The Annals (books XIV-XV)",
+      "author": "Tacitus, translated by Alfred John Church and William Jackson Brodribb",
+      "year": 1942,
+      "publisher": "Random House reprint; Perseus Digital Library",
+      "url": "https://www.perseus.tufts.edu/hopper/text?doc=Perseus:text:1999.02.0078:book=15:chapter=71"
+    },
+    {
+      "id": "tacitus-histories",
+      "kind": "secondary",
+      "title": "The Histories (books III-IV)",
+      "author": "Tacitus, translated by Alfred John Church and William Jackson Brodribb",
+      "year": 1942,
+      "publisher": "Random House reprint; Perseus Digital Library",
+      "url": "https://www.perseus.tufts.edu/hopper/text?doc=Perseus:text:1999.02.0080:book=3:chapter=81"
+    },
+    {
+      "id": "iep-stephens",
+      "kind": "secondary",
+      "title": "Musonius Rufus, Internet Encyclopedia of Philosophy",
+      "author": "William O. Stephens",
+      "year": "undated",
+      "publisher": "Internet Encyclopedia of Philosophy",
+      "url": "https://iep.utm.edu/musonius/"
+    },
+    {
+      "id": "reydams-schils-2005",
+      "kind": "secondary",
+      "title": "Musonius Rufus (30-100 CE?), Encyclopedia of Philosophy, 2nd edition",
+      "author": "Gretchen J. Reydams-Schils",
+      "year": 2005,
+      "publisher": "Macmillan Reference / Gale, via Encyclopedia.com",
+      "url": "https://www.encyclopedia.com/humanities/encyclopedias-almanacs-transcripts-and-maps/musonius-rufus-30-100-ce"
+    },
+    {
+      "id": "smith-1873",
+      "kind": "secondary",
+      "title": "Rufus, C. Musonius, A Dictionary of Greek and Roman Biography and Mythology",
+      "author": "William Smith (editor)",
+      "year": 1873,
+      "publisher": "John Murray; Perseus Digital Library",
+      "url": "https://www.perseus.tufts.edu/hopper/text?doc=Perseus:text:1999.04.0104:entry=rufus-c-musonius-bio-1"
+    },
+    {
+      "id": "julian-wright",
+      "kind": "secondary",
+      "title": "Letter to Themistius the Philosopher, in The Works of the Emperor Julian, vol. 2 (written in the 4th century)",
+      "author": "Julian, translated by Wilmer Cave Wright",
+      "year": 1913,
+      "publisher": "Loeb Classical Library (Heinemann / Macmillan); Project Gutenberg",
+      "url": "https://www.gutenberg.org/ebooks/48768"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "ok",
+      "notes": "A real Roman Stoic teacher of the first century (born before 30, died before 101-102), not fictional, not a politician or founder of a living religion, with no account of sexual contact with a minor or of sexual violence; his dark side is his strict teaching on sex, abortion and women's work, and one prosecution."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked all five draft values and opened every cited text in Tacitus, Lutz, Long, the IEP and Julian. No value fell: Courage, Mentorship and Discipline were in both picks, and Resilience and Simplicity each stand on three separate sources; the blind pick's Fairness lost to his own lectures on gender roles and sex, and Self-reliance rested on teaching alone. The Celer prosecution left Courage and the shadow, because Tacitus says the case revived hatred of the informers and calls it the righteous duty of an accuser, not an attack to his discredit. Philostratus' canal story was cut, since Conybeare's index names that prisoner 'Musonius of Babylon'; Julian's letter now stands in, checked in Wright's 1913 text.",
+    "checkedOn": "2026-11-10"
+  }
+}
