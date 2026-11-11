@@ -1,0 +1,357 @@
+{
+  "id": "steven-pressfield",
+  "name": "Steven Pressfield",
+  "born": 1943,
+  "died": null,
+  "category": "artists",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A writer who wrote for 27 years before his first published novel, then named what had stopped him.",
+  "startedFrom": "He was born in 1943 in Trinidad and grew up in the United States. He studied at Duke University, served as an infantryman in the Marine Corps Reserve and had his first job in advertising in New York. Then came years of odd jobs: he drove tractor-trailers, picked fruit, worked on offshore oil rigs, and for one season lived in a house with no power, water, doors or windows for $15 a month.",
+  "values": [
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says he wrote for 27 years, through 21 jobs in eleven states, before his first novel was published.",
+          "sourceId": "about-page",
+          "locator": "opening lines of the page, after 'I wrote for 17 years before I earned my first penny'"
+        },
+        {
+          "kind": "words",
+          "claim": "He says he wrote three novels that never got published, each taking about two years of full-time work, before The Legend of Bagger Vance.",
+          "sourceId": "ferriss-2021",
+          "locator": "answer on how he learned to write, after 'I think I was 53'"
+        },
+        {
+          "kind": "deed",
+          "claim": "The Golfer's Journal reports that he spent 20 years writing and pitching books to publishers without success before his breakthrough in 1995 with The Legend of Bagger Vance.",
+          "sourceId": "golfers-2025",
+          "locator": "episode description, first two sentences"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Tim Ferriss read him his own account of his day (gym at 5:30 every morning, work from about 11:30, two and a half hours at most, never at night); in reply he said he goes to the gym early to build momentum before he sits down to write.",
+          "sourceId": "ferriss-2021",
+          "locator": "section on 'little successes': Ferriss reading his writingroutines.com answer and his reply about Randall Wallace"
+        },
+        {
+          "kind": "words",
+          "claim": "He tells writers with a full-time job that they can still be professionals for an hour a day.",
+          "sourceId": "pro-hour-2021",
+          "locator": "closing paragraphs, from 'Let us be of good cheer then'"
+        },
+        {
+          "kind": "words",
+          "claim": "He says the only way he found to finish his first book was sheer will.",
+          "sourceId": "welltyped-2022",
+          "locator": "paragraph beginning 'The only answer I've found is sheer will'"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "The Los Angeles Times wrote in 2008 that he does his homework, and that Killing Rommel is loaded with details about vehicles, weapons, communications gear and strategy.",
+          "sourceId": "latimes-2008",
+          "locator": "paragraph beginning 'Whether he is writing about the battle of Thermopylae'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Teamed with the screenwriter Ron Shusett as the junior partner who sat at the keyboard, he says his ten or so years as a screenwriter taught him what a story is.",
+          "sourceId": "ferriss-2021",
+          "locator": "answer on how their agent Mike Warner teamed him with Ron Shusett"
+        },
+        {
+          "kind": "deed",
+          "claim": "Screenplays of his were filmed, among them King Kong Lives (1986) and Freejack (1992).",
+          "sourceId": "sfe-2022",
+          "locator": "entry text, first sentence"
+        },
+        {
+          "kind": "words",
+          "claim": "He says advertising taught him to cut copy again and again until 25 words said what 250 had said.",
+          "sourceId": "ferriss-2021",
+          "locator": "answer on what he learned as a copywriter at agencies such as Benton & Bowles"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After he was fired and turned down by the 50 North Carolina trucking companies he had applied to, he stopped on his way out of town at one that had already turned him down a couple of times, and its dispatcher, Hugh Reeves, hired him.",
+          "sourceId": "ferriss-2021",
+          "locator": "answer beginning 'After I got fired for stealing that can of pineapple juice'"
+        },
+        {
+          "kind": "words",
+          "claim": "He says that while he was 'falling on my face over and over and over' as a would-be writer, he decided the cause was his amateur habits and resolved to think like a pro.",
+          "sourceId": "creativepenn-2014",
+          "locator": "answer to Joanna Penn's question on the habits of a pro"
+        },
+        {
+          "kind": "words",
+          "claim": "In a 2026 interview he said the house above a cove where he had lived for 30 years burned in the Malibu fires, and that he now writes at a little desk in the dining room of a rental.",
+          "sourceId": "rcd-2026",
+          "locator": "answer to 'Where is the physical place you go to feel whole'"
+        },
+        {
+          "kind": "deed",
+          "claim": "RealClearDefense reports that his twelfth novel, The Arcadian, came out in May 2026.",
+          "sourceId": "rcd-2026",
+          "locator": "introduction, paragraph beginning 'By this measure'"
+        }
+      ]
+    },
+    {
+      "word": "Self-awareness",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says that in his trucking years he was 'like a self destruction machine' and had to watch himself constantly so he would not act out and destroy everything.",
+          "sourceId": "ferriss-2021",
+          "locator": "answer on tractor-trailer driving and Hugh Reeves"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that before his first finished book he got to the 99-yard line on every project and compulsively blew them all up.",
+          "sourceId": "welltyped-2022",
+          "locator": "paragraph beginning 'I didn't care. My demons were about finishing'"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that in his wilderness years he was too ashamed of himself to contact his family, and ducked them when they reached out.",
+          "sourceId": "wilderness-2022",
+          "locator": "paragraph beginning 'In my own wilderness years'"
+        },
+        {
+          "kind": "deed",
+          "claim": "His book The War of Art introduced the idea of 'resistance', a force that keeps people from doing their work, and became a bestseller.",
+          "sourceId": "golfers-2025",
+          "locator": "episode description, third sentence"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Give the force that stops you a name, Resistance, and expect it to hit hardest near the finish.",
+      "sourceId": "welltyped-2022",
+      "locator": "paragraphs on Michael Crichton: 'as he approached the moment of truth ... his inner Resistance would ramp up its intensity'"
+    },
+    {
+      "text": "Finish what you start, even if it may fail; after the first finish, finishing gets easier.",
+      "sourceId": "welltyped-2022",
+      "locator": "closing paragraphs"
+    },
+    {
+      "text": "Act like a professional: whatever is going on in your head, deliver the load.",
+      "sourceId": "ferriss-2021",
+      "locator": "answer on Hugh Reeves: 'you better fucking deliver that load'"
+    },
+    {
+      "text": "Stack small wins before you sit down to work, so you start with momentum.",
+      "sourceId": "ferriss-2021",
+      "locator": "answer on Randall Wallace's 'little successes'"
+    },
+    {
+      "text": "Assume nobody wants to read your work, and make it good enough that they have to.",
+      "sourceId": "ferriss-2021",
+      "locator": "answer on advertising and Nobody Wants to Read Your Sh*t"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Once you finish, even one time, you will never have trouble finishing again.",
+      "sourceId": "welltyped-2022",
+      "locator": "last sentence of the post"
+    },
+    {
+      "text": "We can be pros for an hour a day.",
+      "sourceId": "pro-hour-2021",
+      "locator": "closing paragraphs, after 'Let us resolve:'"
+    },
+    {
+      "text": "If I had to define my occupation, I'd say I'm a servant of the muse.",
+      "sourceId": "rcd-2026",
+      "locator": "answer to the first question ('Why are you still writing fiction?')"
+    },
+    {
+      "text": "I would define art as the broadest possible terms: anything that is a gift to the wider world.",
+      "sourceId": "ferriss-2021",
+      "locator": "end of his answer on the hero's journey and the artist's journey (Richard Rohr)"
+    }
+  ],
+  "definingMoment": {
+    "text": "He had written three novels that never sold and spent about ten years writing screenplays in Hollywood. When he told his Hollywood agent he would write a golf novel instead, the agent said nobody would buy or read it, and they parted; Pressfield says he fired the agent, and that the agent says it was the other way round. A New York literary agent took the manuscript and it found a publisher and a film buyer almost at once. The Legend of Bagger Vance came out in 1995, and Robert Redford filmed it in 2000.",
+    "sourceIds": [
+      "ferriss-2021",
+      "sfe-2022",
+      "golfers-2025"
+    ]
+  },
+  "shadow": {
+    "text": "By his own account, in his trucking years he was 'like a self destruction machine'. He was fired from a job delivering institutional food to restaurants after his boss caught him taking a can of pineapple juice from a restaurant's back room. Near the end of the first novel he tried to write, he did something, which he will not describe, that made his wife 'hate me and kick me out'. In his wilderness years he cut off contact with his wife, brother and parents out of shame, and avoided them when they reached out.",
+    "sourceIds": [
+      "ferriss-2021",
+      "wilderness-2022"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did your mood decide this week whether you did the work you had promised?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "The War of Art",
+      "year": 2002
+    },
+    {
+      "title": "Gates of Fire",
+      "year": 1998
+    },
+    {
+      "title": "Turning Pro",
+      "year": 2012
+    }
+  ],
+  "sources": [
+    {
+      "id": "ferriss-2021",
+      "kind": "primary",
+      "title": "The Tim Ferriss Show #501: Steven Pressfield on The Artist's Journey, the Wisdom of Little Successes, Shadow Careers, and Overcoming Resistance (transcript)",
+      "author": "Steven Pressfield, interviewed by Tim Ferriss",
+      "year": 2021,
+      "publisher": "tim.blog, 27 February 2021",
+      "url": "https://tim.blog/2021/02/27/steven-pressfield-transcript/"
+    },
+    {
+      "id": "about-page",
+      "kind": "primary",
+      "title": "About (Internet Archive copy of 24 April 2023)",
+      "author": "Steven Pressfield",
+      "year": 2023,
+      "publisher": "stevenpressfield.com, archived by the Internet Archive",
+      "url": "https://web.archive.org/web/20230424102529/https://stevenpressfield.com/about/"
+    },
+    {
+      "id": "welltyped-2022",
+      "kind": "primary",
+      "title": "\"It's very well typed\" (Internet Archive copy of 4 June 2023)",
+      "author": "Steven Pressfield",
+      "year": 2022,
+      "publisher": "stevenpressfield.com, 12 January 2022, archived by the Internet Archive",
+      "url": "https://web.archive.org/web/20230604200927/https://stevenpressfield.com/2022/01/its-very-well-typed/"
+    },
+    {
+      "id": "pro-hour-2021",
+      "kind": "primary",
+      "title": "Be a Pro for one hour (Internet Archive copy of 6 June 2023)",
+      "author": "Steven Pressfield",
+      "year": 2021,
+      "publisher": "stevenpressfield.com, 12 May 2021, archived by the Internet Archive",
+      "url": "https://web.archive.org/web/20230606224334/https://stevenpressfield.com/2021/05/be-a-pro-for-one-hour/"
+    },
+    {
+      "id": "wilderness-2022",
+      "kind": "primary",
+      "title": "Wilderness = Exile (Internet Archive copy of 19 October 2022)",
+      "author": "Steven Pressfield",
+      "year": 2022,
+      "publisher": "stevenpressfield.com, 19 October 2022, archived by the Internet Archive",
+      "url": "https://web.archive.org/web/20221019082102/https://stevenpressfield.com/2022/10/wilderness-exile/"
+    },
+    {
+      "id": "reserve-2014",
+      "kind": "primary",
+      "title": "Inner Wars and Outer Wars (Internet Archive copy of 6 June 2023)",
+      "author": "Steven Pressfield",
+      "year": 2014,
+      "publisher": "stevenpressfield.com, 28 May 2014, archived by the Internet Archive",
+      "url": "https://web.archive.org/web/20230606233006/https://stevenpressfield.com/2014/05/inner-wars-and-outer-wars/"
+    },
+    {
+      "id": "creativepenn-2014",
+      "kind": "primary",
+      "title": "The Lion's Gate, Fighting Resistance And Mental Toughness For Writers With Steven Pressfield (podcast transcript)",
+      "author": "Steven Pressfield, interviewed by Joanna Penn",
+      "year": 2014,
+      "publisher": "The Creative Penn, 18 June 2014",
+      "url": "https://www.thecreativepenn.com/2014/06/18/steven-pressfield/"
+    },
+    {
+      "id": "latimes-2008",
+      "kind": "secondary",
+      "title": "Hunting 'the Desert Fox' (review of Killing Rommel)",
+      "author": "Tony Perry",
+      "year": 2008,
+      "publisher": "Los Angeles Times, 28 June 2008",
+      "url": "https://www.latimes.com/archives/la-xpm-2008-jun-28-et-book28-story.html"
+    },
+    {
+      "id": "rcd-2026",
+      "kind": "secondary",
+      "title": "Art and War with a Master Storyteller (interview)",
+      "author": "John J. Waters",
+      "year": 2026,
+      "publisher": "RealClearDefense, 1 May 2026",
+      "url": "https://www.realcleardefense.com/uncategorized/articles/art-and-war-with-a-master-storyteller-2026-05-01"
+    },
+    {
+      "id": "sfe-2022",
+      "kind": "secondary",
+      "title": "Pressfield, Steven (entry updated 12 September 2022)",
+      "author": "John Clute",
+      "year": 2022,
+      "publisher": "The Encyclopedia of Science Fiction",
+      "url": "https://sf-encyclopedia.com/entry/pressfield_steven"
+    },
+    {
+      "id": "uncg-litmap",
+      "kind": "secondary",
+      "title": "Pressfield, Steven (North Carolina Literary Map)",
+      "author": "University Libraries, University of North Carolina at Greensboro",
+      "year": "n.d.",
+      "url": "https://libapps4.uncg.edu/nclitmap/author?au=2095"
+    },
+    {
+      "id": "golfers-2025",
+      "kind": "secondary",
+      "title": "Mind Game: Steven Pressfield (episode page and description)",
+      "author": "Casey Bannon",
+      "year": 2025,
+      "publisher": "The Golfer's Journal, 16 February 2025",
+      "url": "https://www.golfersjournal.com/editorial/steven-pressfield/"
+    }
+  ],
+  "likenessSources": [
+    {
+      "title": "Author Steven Pressfield, June 2011",
+      "url": "https://commons.wikimedia.org/wiki/File:Author_Steven_Pressfield,_June_2011.JPG",
+      "licence": "CC0",
+      "author": "Ciro612"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living American novelist and writer on creative work (The Legend of Bagger Vance, Gates of Fire, The War of Art); not a politician, campaigner or religious founder, and no credible account of sexual contact with a minor or of sexual violence by him was found; he is in, with a small, self-told dark side of self-sabotage, a job lost for theft and a marriage he says he blew up."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value and sentence against the Ferriss transcript, clean Internet Archive copies of his own posts (his live site now carries injected spam on every page, so no live link to it is given), RealClearDefense, the LA Times and the Encyclopedia of Science Fiction. All five values held; Self-awareness, the draft's own pick, stood on four pieces from four sources, while the blind pick's Hard work was not added for lack of room. Nine claims were tightened, among them the trucking-company hire, the Shusett years, the Malibu fire date and an unsourced Port of Spain birthplace, and the 2026 post with no clean copy was replaced by an older one.",
+    "checkedOn": "2026-11-10"
+  }
+}
