@@ -1,0 +1,348 @@
+{
+  "id": "michael-jordan",
+  "name": "Michael Jordan",
+  "born": 1963,
+  "died": null,
+  "category": "athletes",
+  "areaIds": [
+    "lm_fitness",
+    "lm_mindset"
+  ],
+  "tagline": "A player who turned defeats and slights into fuel, and won six NBA titles.",
+  "startedFrom": "He was born in Brooklyn in 1963 and grew up in North Carolina, following an older brother he idolized into basketball. In 1978, as a 5-foot-11 sophomore at Laney High School in Wilmington, he did not make the varsity team, which took his taller friend Leroy Smith instead. He went home and cried, then played on the junior varsity, like most sophomores.",
+  "values": [
+    {
+      "word": "Winning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He led the Chicago Bulls to six NBA titles (1991-93 and 1996-98) and was Finals MVP all six times.",
+          "sourceId": "nba-legends",
+          "locator": "paragraph beginning \"A brief listing of his top accomplishments\""
+        },
+        {
+          "kind": "words",
+          "claim": "In The Last Dance he says his mentality was 'to go out and win at any cost'.",
+          "sourceId": "espn-friedell-2020",
+          "locator": "paragraph beginning \"My mentality was to go out and win at any cost\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In January 1999 he retired on top, after a sixth title clinched with his last shot as a Bull.",
+          "sourceId": "deseret-ap-1999",
+          "locator": "paragraph beginning \"Now, Jordan goes out as he always wanted\""
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "His trainer Tim Grover says: 'If I asked for six, I knew he was gonna do 12.'",
+          "sourceId": "cbs-quinn-bulk-2020",
+          "locator": "paragraph beginning \"I would give him a certain amount of reps\""
+        },
+        {
+          "kind": "words",
+          "claim": "He says his teammates would all agree that he never asked them to do anything he did not do himself.",
+          "sourceId": "espn-friedell-2020",
+          "locator": "paragraph beginning \"You ask all my teammates\""
+        },
+        {
+          "kind": "words",
+          "claim": "Closing his 2009 Hall of Fame speech, he said he hoped his career had given people the desire to achieve their goals 'through hard work, perseverance, and positive attitude'.",
+          "sourceId": "hof-speech-2009",
+          "locator": "closing section, before 'One day you might look up and see me playing the game at 50'"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His Bulls lost to the Detroit Pistons in three straight playoffs (1988-90); the next year they swept Detroit and won his first title.",
+          "sourceId": "nba-legends",
+          "locator": "paragraphs beginning \"The Pistons, known as the 'Bad Boys'\" and \"Were they ever wrong\""
+        },
+        {
+          "kind": "deed",
+          "claim": "After a third straight playoff loss to the Detroit Pistons, in which he says he was 'getting brutally beaten up', he began training with Tim Grover and went from 200 to 215 pounds.",
+          "sourceId": "cbs-quinn-bulk-2020",
+          "locator": "paragraphs beginning \"I was getting brutally beaten up\" and \"We started at 200\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1996, after his father's murder, his retirement, a failed baseball career and a 1995 playoff defeat, he led the Bulls back to the title.",
+          "sourceId": "seattletimes-1996",
+          "locator": "paragraph beginning \"The past three years have been difficult for Jordan\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Teammate Ron Harper said after the 1996 title: 'He's going to find a way to beat you... You're not going to keep him down.'",
+          "sourceId": "seattletimes-1996",
+          "locator": "paragraph beginning \"He's going to find a way to beat you\""
+        }
+      ]
+    },
+    {
+      "word": "Passion",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His Bulls contract had a 'love-of-the-game clause' that let him play basketball at any time in the off-season, unlike most NBA players.",
+          "sourceId": "nba-legends",
+          "locator": "paragraph beginning \"He also had a clause in his contract\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Bulls assistant coach Johnny Bach said: 'He never looked like he'd been sentenced by a judge to play basketball.'",
+          "sourceId": "deseret-ap-1999",
+          "locator": "paragraph beginning \"He never looked like he'd been sentenced\""
+        },
+        {
+          "kind": "words",
+          "claim": "Retiring in 1999, he said he wanted his desire to be there 'not one-fourth of the time I step onto the court, but every time'.",
+          "sourceId": "deseret-ap-1999",
+          "locator": "paragraph beginning \"But he said he wanted to make sure\""
+        },
+        {
+          "kind": "words",
+          "claim": "In his 2009 Hall of Fame speech he told how he insisted on his 'love of the game clause' to play in the summer, and said the game had given him a platform 'to share my passion with millions'.",
+          "sourceId": "hof-speech-2009",
+          "locator": "Doug Collins passage ('love of the game clause') and closing section ('share my passion')"
+        }
+      ]
+    },
+    {
+      "word": "Excellence",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Retiring in January 1999, he said: 'I tried to be the best basketball player I could be.'",
+          "sourceId": "deseret-ap-1999",
+          "locator": "paragraph beginning \"I tried to be the best basketball player I could be\""
+        },
+        {
+          "kind": "deed",
+          "claim": "Besides his titles he won five MVP awards, ten scoring titles and Defensive Player of the Year, and made the All-Defensive First Team nine times.",
+          "sourceId": "nba-legends",
+          "locator": "paragraph beginning \"A brief listing of his top accomplishments\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Teammate Scott Burrell says he played with 'a guy that has the highest standards of any basketball player ever'.",
+          "sourceId": "espn-friedell-2020",
+          "locator": "paragraph beginning \"You're playing with a guy that has the highest standards\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Never ask others to do what you will not do yourself.",
+      "sourceId": "espn-friedell-2020",
+      "locator": "paragraph beginning \"You ask all my teammates\""
+    },
+    {
+      "text": "Use every rejection and slight as fuel to prove the doubter wrong.",
+      "sourceId": "hof-speech-2009",
+      "locator": "passage on Leroy Smith and the coach who picked Smith over him"
+    },
+    {
+      "text": "When you keep losing to the same opponent, rebuild yourself until you can beat him.",
+      "sourceId": "cbs-quinn-bulk-2020",
+      "locator": "paragraphs beginning \"I was getting brutally beaten up\" and \"We started at 200\""
+    },
+    {
+      "text": "Set one high standard for the whole team and do not accept less from anyone.",
+      "sourceId": "espn-friedell-2020",
+      "locator": "paragraph beginning \"Winning has a price\""
+    },
+    {
+      "text": "Stop when you can no longer bring your full desire every time you play.",
+      "sourceId": "deseret-ap-1999",
+      "locator": "paragraph beginning \"But he said he wanted to make sure\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Never say never, because limits, like fears, are often just an illusion.",
+      "sourceId": "hof-speech-2009",
+      "locator": "closing lines; wording as quoted in ESPN TrueHoop, 22 September 2009"
+    },
+    {
+      "text": "Winning has a price. And leadership has a price. So I pulled people along when they didn't want to be pulled.",
+      "sourceId": "last-dance",
+      "locator": "episode 7 (aired 10 May 2020), closing interview; transcribed in ESPN, 11 May 2020"
+    },
+    {
+      "text": "My mentality was to go out and win at any cost.",
+      "sourceId": "last-dance",
+      "locator": "episode 7 (aired 10 May 2020); transcribed in ESPN, 11 May 2020"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 16 June 1996, Father's Day, the Chicago Bulls beat Seattle 87-75 to win the NBA title. It was his first title since his father was murdered in 1993, since his first retirement and his try at professional baseball, and since a playoff defeat in 1995. At the final buzzer he lay on the floor holding the ball and wept, then dedicated the championship to his father. He was named Finals MVP for the fourth time.",
+    "sourceIds": [
+      "seattletimes-1996",
+      "nba-legends"
+    ]
+  },
+  "shadow": {
+    "text": "In October 1991 he lost money at poker, dice and golf and paid it with a $57,000 check to a man later convicted of money laundering; he publicly called it a loan until October 1992, when he said, 'I lost it gambling.' In 1993 a golf partner wrote in a book that Jordan owed him $1.25 million in bets; Jordan denied it, they later settled for $300,000, and an NBA investigation cleared Jordan of wrongdoing. Teammates describe him as harsh in practice: Jud Buechler said, 'We were his teammates, and we were afraid of him,' and Will Perdue said, 'He was a jerk. He crossed the line numerous times.' In a 1995 training-camp scrimmage, after Steve Kerr hit him in the chest, he hit Kerr in the eye, leaving him with a black eye; he called Kerr that day to apologize. In 2002 he said in a lawsuit that he had paid a former lover, Karla Knafel, $250,000 under threat of exposing their relationship; in 2007 an appeals court ruled that her claim to $5 million could not be enforced.",
+    "sourceIds": [
+      "deseret-ap-1992",
+      "cbs-quinn-gambling-2020",
+      "yahoo-young-2020",
+      "espn-friedell-2020",
+      "fox-ap-2002",
+      "ljworld-ap-2007"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you ask more of someone this week than you were doing yourself?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "For the Love of the Game: My Story (edited by Mark Vancil)",
+      "year": 1998
+    },
+    {
+      "title": "I Can't Accept Not Trying: Michael Jordan on the Pursuit of Excellence (with Mark Vancil)",
+      "year": 1994
+    }
+  ],
+  "sources": [
+    {
+      "id": "last-dance",
+      "kind": "primary",
+      "title": "The Last Dance (documentary series, 10 episodes, interviews with Jordan)",
+      "author": "ESPN Films and Netflix, director Jason Hehir",
+      "year": 2020
+    },
+    {
+      "id": "hof-speech-2009",
+      "kind": "primary",
+      "title": "Basketball Hall of Fame enshrinement speech, Springfield, Massachusetts, 11 September 2009",
+      "author": "Michael Jordan",
+      "year": 2009
+    },
+    {
+      "id": "espn-truehoop-2009",
+      "kind": "secondary",
+      "title": "Limits and Illusions: Michael Jordan in the NBA at 50 (22 September 2009)",
+      "author": "ESPN TrueHoop",
+      "year": 2009,
+      "url": "https://www.espn.com/blog/truehoop/post/_/id/6982/limits-and-illusions-michael-jordan-in-the-nba-at-50"
+    },
+    {
+      "id": "espn-friedell-2020",
+      "kind": "secondary",
+      "title": "Michael Jordan, in 'Last Dance,' calls harsh reputation price of winning, leadership (11 May 2020)",
+      "author": "Nick Friedell, ESPN",
+      "year": 2020,
+      "url": "https://www.espn.com/nba/story/_/id/29159653/michael-jordan-calls-harsh-reputation-price-winning-leadership"
+    },
+    {
+      "id": "nba-legends",
+      "kind": "secondary",
+      "title": "Legends profile: Michael Jordan",
+      "author": "NBA.com Staff",
+      "year": "accessed 2026-11-10",
+      "url": "https://www.nba.com/news/history-nba-legend-michael-jordan"
+    },
+    {
+      "id": "hoophall",
+      "kind": "secondary",
+      "title": "Michael Jordan (Hall of Famer page)",
+      "author": "Naismith Memorial Basketball Hall of Fame",
+      "year": "accessed 2026-11-10",
+      "url": "https://www.hoophall.com/hall-of-famers/michael-jordan/"
+    },
+    {
+      "id": "nbc-helin-2012",
+      "kind": "secondary",
+      "title": "The man who cut Michael Jordan in high school... sort of (11 January 2012, excerpting Thomas Lake, Sports Illustrated, 16 January 2012)",
+      "author": "Kurt Helin, NBC Sports",
+      "year": 2012,
+      "url": "https://www.nbcsports.com/nba/news/the-man-who-cut-michael-jordan-in-high-school-sort-of"
+    },
+    {
+      "id": "seattletimes-1996",
+      "kind": "secondary",
+      "title": "Emotions Spill Over For Jordan On Father's Day -- Bull Recalls Slain Dad After Victory (17 June 1996)",
+      "author": "The Seattle Times",
+      "year": 1996,
+      "url": "https://archive.seattletimes.com/archive/19960617/2335204/emotions-spill-over-for-jordan-on-fathers-day----bull-recalls-slain-dad-after-victory"
+    },
+    {
+      "id": "deseret-ap-1999",
+      "kind": "secondary",
+      "title": "Jordan speaks: 'I'm gone' (13 January 1999)",
+      "author": "Associated Press, in Deseret News",
+      "year": 1999,
+      "url": "https://www.deseret.com/1999/1/13/19423118/jordan-speaks-i-m-gone-br-nba-s-greatest-retires-151-again/"
+    },
+    {
+      "id": "cbs-quinn-bulk-2020",
+      "kind": "secondary",
+      "title": "How Michael Jordan bulked up to outmuscle Pistons, win first NBA championship with Bulls (11 May 2020)",
+      "author": "Sam Quinn, CBS Sports",
+      "year": 2020,
+      "url": "https://www.cbssports.com/nba/news/how-michael-jordan-bulked-up-to-outmuscle-pistons-win-first-nba-championship-with-bulls"
+    },
+    {
+      "id": "deseret-ap-1992",
+      "kind": "secondary",
+      "title": "Jordan admits paying large gambling debt (16 October 1992)",
+      "author": "Associated Press, in Deseret News",
+      "year": 1992,
+      "url": "https://www.deseret.com/1992/10/16/19010677/jordan-admits-paying-large-gambling-debt/"
+    },
+    {
+      "id": "cbs-quinn-gambling-2020",
+      "kind": "secondary",
+      "title": "Michael Jordan and gambling: A brief history of basketball's most famous bettor (17 May 2020)",
+      "author": "Sam Quinn, CBS Sports",
+      "year": 2020,
+      "url": "https://www.cbssports.com/nba/news/michael-jordan-and-gambling-a-brief-history-of-basketballs-most-famous-bettor"
+    },
+    {
+      "id": "yahoo-young-2020",
+      "kind": "secondary",
+      "title": "Michael Jordan, Steve Kerr remember training camp fight that ended in black eye, ejection (11 May 2020)",
+      "author": "Ryan Young, Yahoo Sports",
+      "year": 2020,
+      "url": "https://sports.yahoo.com/the-last-dance-michael-jordan-steve-kerr-remember-training-camp-fight-black-eye-phil-jackson-031303773.html"
+    },
+    {
+      "id": "fox-ap-2002",
+      "kind": "secondary",
+      "title": "Michael Jordan Sues Woman for Extortion (24 October 2002)",
+      "author": "Associated Press, in Fox News",
+      "year": 2002,
+      "url": "https://www.foxnews.com/story/michael-jordan-sues-woman-for-extortion"
+    },
+    {
+      "id": "ljworld-ap-2007",
+      "kind": "secondary",
+      "title": "Appellate court rules in favor of Jordan (13 December 2007)",
+      "author": "Associated Press, in Lawrence Journal-World",
+      "year": 2007,
+      "url": "https://www2.ljworld.com/news/2007/dec/13/appellate_court_rules_favor_jordan/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living American basketball player and former team owner (born 1963), never a politician, campaigner or religious founder; searches found no account of sexual contact with a minor or of sexual violence; he is in, with a documented dark side of heavy gambling, rough treatment of teammates and a paid-off former lover."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value and every sentence against the saved ESPN, AP, Seattle Times, NBA.com, CBS and Yahoo texts and the Hall of Fame speech. Leadership fell: it holds only as a demanding on-court captain whom teammates feared, while his two decades leading the Wizards front office and the Bobcats/Hornets brought a firing and few wins; Excellence, from the blind pick, came in on three sources. Winning, Hard work, Resilience and Passion held, the last two after a third source each; the shadow now says Kerr hit first and Jordan apologized, and that Jordan denied the $1.25 million claim.",
+    "checkedOn": "2026-11-10"
+  }
+}
