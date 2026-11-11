@@ -1,0 +1,377 @@
+{
+  "id": "mike-tyson",
+  "name": "Mike Tyson",
+  "born": 1966,
+  "died": null,
+  "category": "athletes",
+  "areaIds": [
+    "lm_fitness",
+    "lm_emotions",
+    "lm_mindset"
+  ],
+  "tagline": "A reform-school kid who became the youngest heavyweight champion, then fell and rebuilt.",
+  "startedFrom": "He was born on 30 June 1966 in Brooklyn and grew up in Bedford-Stuyvesant and Brownsville; his father left when he was two. He was a pudgy, bullied boy with a lisp who by fifth grade could barely read, and he took to robbing. After an armed-robbery arrest he was sent in 1978 to the Tryon School, a reform school in upstate New York.",
+  "values": [
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At the Tryon reform school, after he joined Bobby Stewart's boxing program, the daily logs showed he did everything he was told and asked staff for extra work.",
+          "sourceId": "iron-ambition-si-2017",
+          "locator": "SI.com excerpt, paragraph beginning 'Stewart would check the daily logs'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Contemporary Black Biography says he 'thrived under the new structure and discipline in his life' after meeting Cus D'Amato.",
+          "sourceId": "cbb",
+          "locator": "first entry (Watkins and Pendergast), paragraph beginning 'on June 30, 1966, to Lorna Tyson'"
+        },
+        {
+          "kind": "words",
+          "claim": "He says discipline is doing what you hate as if you love it, and that this is 'all I practiced my whole life, even now'; he mopped and swept the gym after every session even when he was on magazine covers.",
+          "sourceId": "theovon-2026",
+          "locator": "transcript sections 'Ego, Discipline, and Alexander the Great' and 'Life With Cus: Structure, Discipline, and Love'"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 22 November 1986, aged 20, he knocked out Trevor Berbick to become the youngest heavyweight champion in history.",
+          "sourceId": "history-1986",
+          "locator": "opening paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that after hearing Muhammad Ali speak at a juvenile centre, 'I just knew that I wanted to be famous.'",
+          "sourceId": "iron-ambition-si-2017",
+          "locator": "SI.com excerpt, paragraph beginning 'But watching his biopic'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Notable Sports Figures says that a year after D'Amato's death 'Tyson had fulfilled his dream and become the youngest heavyweight champion in history.'",
+          "sourceId": "nsf-winters",
+          "locator": "paragraph beginning 'On November 22, 1986'"
+        }
+      ]
+    },
+    {
+      "word": "Achievement",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 22 November 1986, aged 20, he knocked out Trevor Berbick in the second round to win the WBC title and become the youngest heavyweight champion in history.",
+          "sourceId": "history-1986",
+          "locator": "opening paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "On 1 August 1987 he beat the IBF champion Tony Tucker on points and became undisputed world heavyweight champion.",
+          "sourceId": "nsf-winters",
+          "locator": "paragraph beginning 'Smith fought not so much to crush Tyson's bones'; chronology 'Takes IBF heavyweight championship, August 1'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In June 1988 he beat the former IBF champion Michael Spinks in 91 seconds.",
+          "sourceId": "cbb",
+          "locator": "first entry, paragraph beginning 'In the ring the fighter was at the absolute pinnacle of his power'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Oxford World Encyclopedia says that in 1987 he 'became the first undisputed heavyweight champion for a decade'.",
+          "sourceId": "world-encyclopedia",
+          "locator": "entry 'Tyson, Mike', second sentence"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "As a reform-school boy he kept coming back to spar with Bobby Stewart although Stewart kept beating him, until Stewart began to teach him.",
+          "sourceId": "iron-ambition-si-2017",
+          "locator": "SI.com excerpt, paragraphs beginning 'Even though he had manhandled me' and 'Once he saw that I kept coming back'"
+        },
+        {
+          "kind": "deed",
+          "claim": "After three years in prison he returned to the ring and in 1996 won back the WBC and WBA heavyweight titles.",
+          "sourceId": "cbb",
+          "locator": "first entry, awards list ('WBC championship, 1996; WBA championship, 1996'); the second CBB entry says 'regained'"
+        },
+        {
+          "kind": "words",
+          "claim": "He says: 'Adversity makes the strong stronger and the weak weaker. Which side do you choose?'",
+          "sourceId": "interview-2020",
+          "locator": "answer beginning 'I wasn't as mature as I thought I was'"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Before turning professional in 1985 he studied boxing history and old newsreel footage of the great fighters and wanted to copy them.",
+          "sourceId": "cbb",
+          "locator": "first entry, paragraph beginning 'On March 4, 1985'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Donald McRae describes his 'encyclopedic knowledge of boxing', moving from one old fighter's film to the next in his office.",
+          "sourceId": "irishtimes-2014",
+          "locator": "paragraph beginning 'Tyson has an encyclopedic knowledge of boxing'"
+        },
+        {
+          "kind": "words",
+          "claim": "He says D'Amato taught him to be a defensive fighter: 'If you move your head and counter after you make them miss, you can hit them and they can't hit you.'",
+          "sourceId": "rollingstone-2013",
+          "locator": "answers beginning 'So, maybe I'm good' and 'They talk about me offensively'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do the work you hate as if you loved it; that is what discipline is.",
+      "sourceId": "theovon-2026",
+      "locator": "transcript section 'Ego, Discipline, and Alexander the Great'"
+    },
+    {
+      "text": "Never say anything negative about yourself, because your mind does not know when you are joking.",
+      "sourceId": "theovon-2026",
+      "locator": "transcript section 'Cus D'Amato's Lessons and the Champion's Mindset'"
+    },
+    {
+      "text": "Find a mentor: even a bad mentor is better than none.",
+      "sourceId": "theovon-2026",
+      "locator": "transcript section 'On Cus D'Amato and Finding a Home'"
+    },
+    {
+      "text": "Staying clean is not enough: a sober life means being honest and aware of other people's feelings.",
+      "sourceId": "irishtimes-2014",
+      "locator": "paragraph beginning 'Tyson admits in his relentlessly gripping autobiography'"
+    },
+    {
+      "text": "Hard times can make you stronger; keep struggling to your last breath.",
+      "sourceId": "interview-2020",
+      "locator": "answer beginning 'I wasn't as mature as I thought I was'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Everybody has plans until they get hit for the first time.",
+      "sourceId": "ap-1987",
+      "locator": "AP report on Tyrell Biggs, Oroville Mercury-Register, 19 Aug 1987, p. 1B, col. 2 (cited by Quote Investigator)"
+    },
+    {
+      "text": "I didn't have an emotional problem. I had a morality problem.",
+      "sourceId": "irishtimes-2014",
+      "locator": "paragraph beginning 'Has Tyson worked out his own definition of happiness?'"
+    },
+    {
+      "text": "I've come a long way in controlling my anger and my outbursts.",
+      "sourceId": "rollingstone-2013",
+      "locator": "answer to 'So if you're a fighter, or a football player...'"
+    },
+    {
+      "text": "I'd never had any goals in my life except for robbing but Bobby gave me something to focus on.",
+      "sourceId": "iron-ambition-si-2017",
+      "locator": "SI.com excerpt, paragraph beginning 'Once he saw that I kept coming back'"
+    }
+  ],
+  "definingMoment": {
+    "text": "When he was 13, Cus D'Amato watched him spar for less than ten minutes and told his reform-school coach, Bobby Stewart, that barring outside distractions the boy would be heavyweight champion of the world. D'Amato trained him, became his legal guardian, and died in November 1985. On 22 November 1986 Tyson knocked out Trevor Berbick in the second round to win the WBC title. At 20 he was the youngest heavyweight champion in history.",
+    "sourceIds": [
+      "iron-ambition-si-2017",
+      "cbb",
+      "history-1986"
+    ]
+  },
+  "shadow": {
+    "text": "In February 1992 an Indianapolis jury convicted him of raping Desiree Washington, an 18-year-old pageant contestant, in his hotel room in July 1991; he served three years in prison and has always denied it. In January 2023 an anonymous woman sued him, saying he raped her in a limousine in the early 1990s; she withdrew the suit in March 2025 after the court refused to let her amend it, her lawyers said they stood by her account, and he denied it. In 1988 his first wife, Robin Givens, said on national television that he had abused her, and her divorce papers spoke of 'unprovoked rages of violence and destruction'. In June 1997 he bit both of Evander Holyfield's ears in a title fight and was banned for a year, and in 1999 he went to jail for assaulting two motorists after a traffic accident. For years he was addicted to cocaine and alcohol, and he relapsed as late as 2013. In April 2022 he was filmed repeatedly punching a passenger seated behind him on a plane at San Francisco airport; the district attorney filed no charges, citing the passenger's conduct and both men's requests.",
+    "sourceIds": [
+      "great-american-trials",
+      "history-1992",
+      "ap-2023",
+      "ap-2025",
+      "cbb",
+      "nsf-winters",
+      "irishtimes-2014",
+      "cbs-ap-2022"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you hate doing this week, and did you do it anyway as if you loved it?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Undisputed Truth",
+      "year": 2013
+    },
+    {
+      "title": "Iron Ambition: My Life with Cus D'Amato",
+      "year": 2017
+    }
+  ],
+  "sources": [
+    {
+      "id": "iron-ambition-si-2017",
+      "kind": "primary",
+      "title": "Iron Ambition: My Life with Cus D'Amato (excerpt, chapter 1)",
+      "author": "Mike Tyson with Larry Sloman",
+      "year": 2017,
+      "publisher": "Blue Rider Press; excerpt published by arrangement on SI.com, 30 May 2017",
+      "url": "https://www.si.com/boxing/2017/05/30/mike-tyson-cus-damato-iron-ambition-book-excerpt"
+    },
+    {
+      "id": "theovon-2026",
+      "kind": "primary",
+      "title": "This Past Weekend w/ Theo Von #658: Mike Tyson (live at the Wiltern)",
+      "author": "Mike Tyson with Theo Von",
+      "year": 2026,
+      "publisher": "Podcast, 15 May 2026; transcript read on The Singju Post (not checked against the audio)",
+      "url": "https://singjupost.com/transcript-mike-tyson-on-this-past-weekend-w-theo-von-658/"
+    },
+    {
+      "id": "rollingstone-2013",
+      "kind": "primary",
+      "title": "Mike Tyson on Ditching Club Life and Getting Sober (interview)",
+      "author": "Rob Tannenbaum",
+      "year": 2013,
+      "publisher": "Rolling Stone, 4 Dec 2013",
+      "url": "https://www.rollingstone.com/culture/culture-news/mike-tyson-on-ditching-club-life-and-getting-sober-56592"
+    },
+    {
+      "id": "interview-2020",
+      "kind": "primary",
+      "title": "Mike Tyson Revisits (and Revises) His \"Interview\" Feature From 1990",
+      "author": "Mike Tyson (Interview magazine)",
+      "year": 2020,
+      "publisher": "Interview, 26 Oct 2020",
+      "url": "https://interviewmagazine.com/culture/mike-tyson-revisits-and-revises-his-interview-1990"
+    },
+    {
+      "id": "ap-1987",
+      "kind": "primary",
+      "title": "Biggs has plans for Tyson",
+      "author": "Associated Press",
+      "year": 1987,
+      "publisher": "Oroville Mercury-Register, 19 Aug 1987, p. 1B, col. 2; seen via Quote Investigator, 25 Aug 2021",
+      "url": "https://quoteinvestigator.com/2021/08/25/plans-hit/"
+    },
+    {
+      "id": "irishtimes-2014",
+      "kind": "secondary",
+      "title": "'Higher power' brought Mike Tyson back down to earth",
+      "author": "Donald McRae (Guardian Service)",
+      "year": 2014,
+      "publisher": "The Irish Times, 25 Jan 2014",
+      "url": "https://www.irishtimes.com/sport/other-sports/higher-power-brought-mike-tyson-back-down-to-earth-1.1667277"
+    },
+    {
+      "id": "cbb",
+      "kind": "secondary",
+      "title": "Tyson, Mike 1966-",
+      "author": "Michael J. Watkins and Tom Pendergast",
+      "year": "n.d. (online entry)",
+      "publisher": "Contemporary Black Biography, Gale (on Encyclopedia.com)",
+      "url": "https://www.encyclopedia.com/people/sports-and-games/sports-biographies/mike-tyson"
+    },
+    {
+      "id": "nsf-winters",
+      "kind": "secondary",
+      "title": "Mike Tyson",
+      "author": "Robert Winters",
+      "year": "n.d. (online entry)",
+      "publisher": "Notable Sports Figures, Gale (on Encyclopedia.com)",
+      "url": "https://www.encyclopedia.com/people/sports-and-games/sports-biographies/mike-tyson"
+    },
+    {
+      "id": "eaacch-brennan",
+      "kind": "secondary",
+      "title": "Tyson, Mike",
+      "author": "Carol Brennan",
+      "year": 2005,
+      "publisher": "Encyclopedia of African-American Culture and History, Gale (on Encyclopedia.com)",
+      "url": "https://www.encyclopedia.com/people/sports-and-games/sports-biographies/mike-tyson"
+    },
+    {
+      "id": "history-1986",
+      "kind": "secondary",
+      "title": "Mike Tyson becomes the youngest heavyweight champ in history",
+      "author": "HISTORY.com Editors",
+      "year": "n.d. (online page)",
+      "publisher": "HISTORY.com (A&E)",
+      "url": "https://www.history.com/this-day-in-history/november-22/mike-tyson-becomes-the-youngest-heavyweight-champ-in-history"
+    },
+    {
+      "id": "history-1992",
+      "kind": "secondary",
+      "title": "Boxing legend Mike Tyson convicted of raping beauty queen",
+      "author": "HISTORY.com Editors",
+      "year": 2009,
+      "publisher": "HISTORY.com (A&E)",
+      "url": "https://www.history.com/this-day-in-history/February-10/boxing-legend-convicted-of-raping-beauty-queen"
+    },
+    {
+      "id": "great-american-trials",
+      "kind": "secondary",
+      "title": "Mike Tyson Trial: 1992",
+      "author": "Colin Evans",
+      "year": "n.d. (online entry)",
+      "publisher": "Great American Trials, Gale (on Encyclopedia.com)",
+      "url": "https://www.encyclopedia.com/law/law-magazines/mike-tyson-trial-1992"
+    },
+    {
+      "id": "ap-2023",
+      "kind": "secondary",
+      "title": "Woman files suit accusing Mike Tyson of rape in early '90s",
+      "author": "Karen Matthews (Associated Press)",
+      "year": 2023,
+      "publisher": "AP via FOX 5 New York, 25 Jan 2023",
+      "url": "https://www.fox5ny.com/news/mike-tyson-accused-of-raping-woman"
+    },
+    {
+      "id": "world-encyclopedia",
+      "kind": "secondary",
+      "title": "Tyson, Mike",
+      "author": "World Encyclopedia (Oxford University Press / Philip's)",
+      "year": "n.d. (online entry, updated 27 Jun 2018)",
+      "publisher": "World Encyclopedia (on Encyclopedia.com)",
+      "url": "https://www.encyclopedia.com/people/sports-and-games/sports-biographies/mike-tyson"
+    },
+    {
+      "id": "ap-2025",
+      "kind": "secondary",
+      "title": "Woman drops lawsuit accusing boxing champion Mike Tyson of 1991 rape",
+      "author": "Associated Press",
+      "year": 2025,
+      "publisher": "AP via KSL, 11 Mar 2025",
+      "url": "https://ksl.com/article/51273121"
+    },
+    {
+      "id": "cbs-ap-2022",
+      "kind": "secondary",
+      "title": "No charges for Mike Tyson in San Francisco International airplane scuffle",
+      "author": "CBS San Francisco with the Associated Press",
+      "year": 2022,
+      "publisher": "CBS News Bay Area, 10 May 2022",
+      "url": "https://www.cbsnews.com/sanfrancisco/news/no-charges-for-mike-tyson-in-san-francisco-international-airplane-scuffle/"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real, living American boxer (born 1966), not fictional, never a politician, candidate or founder of a religion; owner decides because of sexual-violence accounts: a 1992 Indiana jury conviction for raping Desiree Washington (18) in July 1991, a 1991 pageant suit calling him a 'serial buttocks fondler', a 2023 civil rape suit (withdrawn 2025), and a contact with an 11-year-old girl when he was about 15 that he describes himself (grabbing her butt). The rest of his dark side (violence toward his first wife alleged in her divorce papers, the 1997 ear bite, 1998 road-rage assault, cocaine addiction) is shadow. Owner case facts: 1992 jury conviction for raping Desiree Washington (18), served three years, denies it; 1991 pageant suit ($21m, 'serial buttocks fondler', 11 of 23 contestants); 2023 anonymous civil rape suit withdrawn 2025, denied; about 1982, aged about 15, grabbed the butt of an 11-year-old girl in Teddy Atlas's family (his own memoir admits it)."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value against the saved sources and new searches: Discipline against his untrained, partying years after D'Amato died, Craft against his later decline, and Self-awareness against his lasting denial of the 1992 rape conviction. Self-awareness fell: its evidence came from only two sources and it holds only in the narrow sense of honesty about his addiction and temper. Discipline, Ambition, Resilience and Craft held on three sources each, and the blind pick's Achievement was added on his 1986 and 1987 titles. All four quotes match their sources word for word; four claims were corrected, and the 2023 civil rape suit and the 2022 plane assault were added to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
