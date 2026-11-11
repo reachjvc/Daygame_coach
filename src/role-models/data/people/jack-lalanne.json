@@ -1,0 +1,347 @@
+{
+  "id": "jack-lalanne",
+  "name": "Jack LaLanne",
+  "born": 1914,
+  "died": 2011,
+  "category": "athletes",
+  "areaIds": [
+    "lm_fitness",
+    "lm_health"
+  ],
+  "tagline": "Trained every morning into his 90s and spent his life getting Americans to exercise.",
+  "startedFrom": "He was born in San Francisco in 1914 to French immigrant parents; his father worked for the telephone company and taught dance, and his mother was a maid. By 15, by his own account, he was a sugar-addicted, pimply, nearsighted boy with headaches and a violent temper, and he had dropped out of high school. His father died of a heart attack at 50.",
+  "values": [
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Into his 90s he began each day with two hours of workouts: weight lifting, then a swim against a current or tied in place.",
+          "sourceId": "nyt-2011",
+          "locator": "paragraph beginning 'Mr. LaLanne, 5-foot-6 and 150 pounds'"
+        },
+        {
+          "kind": "words",
+          "claim": "In 2004 he told NPR that leaving a hot bed and a hot woman for a cold gym at five or six in the morning takes a lot of discipline, and that he never liked to exercise but liked results.",
+          "sourceId": "npr-atc-2011",
+          "locator": "All Things Considered transcript, 24 Jan 2011, second LaLanne clip (recorded 2004)"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked if he ever indulged, he said never; when his wife says he can miss a workout because nobody knows, he answers that he knows.",
+          "sourceId": "stanford-2008",
+          "locator": "answer to the question 'If it tastes good, spit it out. Don't you ever indulge?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "NPR's Tom Goldman describes him as a mix of chirpy optimism and drill-sergeant discipline.",
+          "sourceId": "npr-2011",
+          "locator": "paragraph beginning 'I was told to be there between 7 and 7:30'"
+        }
+      ]
+    },
+    {
+      "word": "Fitness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At 60 he swam from Alcatraz to Fisherman's Wharf handcuffed, shackled and towing a 1,000-pound boat; at 70 he towed 70 boats carrying 70 people a mile and a half through Long Beach Harbor.",
+          "sourceId": "nyt-2011",
+          "locator": "paragraph beginning 'At 60 he swam from Alcatraz Island'"
+        },
+        {
+          "kind": "deed",
+          "claim": "At 45 he did one thousand push-ups and one thousand chin-ups in an hour and 22 minutes.",
+          "sourceId": "stjames",
+          "locator": "paragraph beginning 'Another maneuver LaLanne used'"
+        },
+        {
+          "kind": "words",
+          "claim": "At 92 he said he worked out two hours every day, seven days a week, to work at living.",
+          "sourceId": "stanford-2008",
+          "locator": "answer to the question 'Did you ever think you'd live to celebrate your 93rd birthday?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Arnold Schwarzenegger told the Los Angeles Times that nobody could match LaLanne's numbers of chin-ups and push-ups.",
+          "sourceId": "latimes-2011",
+          "locator": "paragraphs beginning 'No one — not even Arnold Schwarzenegger'"
+        }
+      ]
+    },
+    {
+      "word": "Health",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After hearing Paul Bragg's lecture at 15 he never again ate cake, pie, ice cream or any sweet, nor drank coffee or tea, by his own testimony and that of everyone around him.",
+          "sourceId": "latimes-2011",
+          "locator": "paragraph beginning 'LaLanne took Bragg's message fully to heart'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said that exercise is king and nutrition is queen, and that to be happy you need to be healthy.",
+          "sourceId": "lifeext-2006",
+          "locator": "paragraph beginning 'Greater longevity, however' and the closing quoted paragraph 'Nutrition and exercise should be an important part'"
+        },
+        {
+          "kind": "witness",
+          "claim": "NPR writes that he devoted his life to making Americans fit and healthy.",
+          "sourceId": "npr-2011",
+          "locator": "opening paragraph 'Before there was power yoga and Tae-Bo'"
+        },
+        {
+          "kind": "words",
+          "claim": "The New York Times reports that he said he disliked working out and kept at it strictly to feel fit and stay healthy.",
+          "sourceId": "nyt-2011",
+          "locator": "paragraph beginning 'Mr. LaLanne, 5-foot-6 and 150 pounds'"
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "NPR's Tom Goldman says LaLanne told him spreading healthy living was his religion; LaLanne added that he believed he was put on this Earth to help people.",
+          "sourceId": "npr-atc-2011",
+          "locator": "All Things Considered transcript, 24 Jan 2011, clip after 'it was, he told me, his religion' (recorded 2004)"
+        },
+        {
+          "kind": "words",
+          "claim": "At 92 he said his whole thing was helping people: the fat person, the young kid, the old person.",
+          "sourceId": "stanford-2008",
+          "locator": "answer to the question 'Do you ever walk up to people who you see who are heavy, obese, fat?'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He invited women into his health clubs and told the elderly and the disabled that they could exercise despite their limitations.",
+          "sourceId": "nyt-2011",
+          "locator": "paragraph beginning 'Long before Richard Simmons and Jane Fonda'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Los Angeles Times writes that he proposed the then-radical idea that women, the elderly and even the disabled should work out to retain strength.",
+          "sourceId": "latimes-2011",
+          "locator": "paragraph beginning 'LaLanne opened what is commonly believed'"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "When business at his first Oakland gym (1936) was slow, he went to a local high school, picked out the skinniest and fattest students and offered, with their parents' permission, to turn their lives around.",
+          "sourceId": "latimes-2011",
+          "locator": "paragraph beginning 'But business was slow'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he went to the students' parents at night, and that out of ten homes he would sign up ten.",
+          "sourceId": "stanford-2008",
+          "locator": "answer to the question 'How did you get a gym started when no one was concerned about physical fitness?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times quotes him that people thought him a charlatan and a nut and the doctors were against him, and writes that he persevered.",
+          "sourceId": "nyt-2011",
+          "locator": "paragraphs beginning 'People thought I was a charlatan and a nut'"
+        },
+        {
+          "kind": "words",
+          "claim": "He told the Los Angeles Times that since most people saw him as a charlatan, he began his stunts because 'I had to get people believing in me'.",
+          "sourceId": "latimes-2011",
+          "locator": "paragraphs beginning 'When he started, he knew that most people viewed him as a charlatan'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Train and eat right together: exercise is king, nutrition is queen, and you need both.",
+      "sourceId": "lifeext-2006",
+      "locator": "paragraph beginning 'Greater longevity, however, does not just happen on its own'"
+    },
+    {
+      "text": "Keep the promise to yourself even when nobody else would know you broke it.",
+      "sourceId": "stanford-2008",
+      "locator": "answer to the question 'If it tastes good, spit it out. Don't you ever indulge?'"
+    },
+    {
+      "text": "Your genes do not decide how you age: do the things that are under your control.",
+      "sourceId": "lifeext-2006",
+      "locator": "paragraph beginning 'You control your life'"
+    },
+    {
+      "text": "Never be satisfied, because the minute you are satisfied you get complacent.",
+      "sourceId": "spokesman-2004",
+      "locator": "tips list, passage beginning 'Never be satisfied — ever'"
+    },
+    {
+      "text": "Accept other people as they are; you do not change people.",
+      "sourceId": "latimes-2011",
+      "locator": "paragraph beginning 'LaLanne also knew when to back off'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I've only got one enemy: Jack LaLanne.",
+      "sourceId": "npr-atc-2011",
+      "locator": "All Things Considered transcript, 24 Jan 2011, first LaLanne clip (recorded 2004)"
+    },
+    {
+      "text": "I've never liked to exercise, but I like results.",
+      "sourceId": "npr-atc-2011",
+      "locator": "All Things Considered transcript, 24 Jan 2011, second LaLanne clip (recorded 2004)"
+    },
+    {
+      "text": "I work at living. Most people work at dying.",
+      "sourceId": "stanford-2008",
+      "locator": "answer to the question 'Did you ever think you'd live to celebrate your 93rd birthday?'"
+    },
+    {
+      "text": "Exercise is king and nutrition is queen: together, you have a kingdom.",
+      "sourceId": "lifeext-2006",
+      "locator": "paragraph beginning 'Greater longevity, however, does not just happen on its own'"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1936, at 21, he opened LaLanne's Physical Culture Studio in Oakland, at a time when, by his account, doctors said lifting weights caused heart attacks and loss of sex drive. Business was slow. He went to a high school, picked out the fattest and skinniest students and visited their parents at night with a promise of results; he said he signed up ten homes out of ten. After about a year the fathers began asking to train with him in secret, and about a year after that the wives did too.",
+    "sourceIds": [
+      "latimes-2011",
+      "nyt-2011",
+      "stanford-2008"
+    ]
+  },
+  "shadow": {
+    "text": "By his own account, as a boy he tried to kill his brother, set the house on fire and had an uncontrollable temper, which he later blamed on sugar. He built a business on his name: his first TV sponsor made a longevity pill, his gyms were later licensed to Bally, and by his late 80s the business was mostly juicers sold on infomercials, plus his lectures. A Portland Press Herald editorial in 2011, written in praise of his message, said that in his later years he was better known for his stunts and 'as an infomercial huckster for a juicing machine' than for that message. He told Life Extension magazine in 2006 that man can live to be 150, and in a 2008 interview he said, 'I can't afford to have a fat wife.'",
+    "sourceIds": [
+      "npr-2011",
+      "nyt-2011",
+      "latimes-2011",
+      "pressherald-2011",
+      "lifeext-2006",
+      "stanford-2008"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you skip this week only because nobody would have known?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "The Jack LaLanne Way to Vibrant Good Health",
+      "year": 1960
+    },
+    {
+      "title": "Revitalize Your Life After 50",
+      "year": 1995
+    },
+    {
+      "title": "Live Young Forever: 12 Steps to Optimum Health, Fitness & Longevity",
+      "year": 2009
+    }
+  ],
+  "sources": [
+    {
+      "id": "npr-atc-2011",
+      "kind": "primary",
+      "title": "Remembering Fitness Icon Jack LaLanne (All Things Considered transcript, with his recorded words from 2004)",
+      "author": "Tom Goldman, Michele Norris (NPR); Jack LaLanne",
+      "year": 2011,
+      "publisher": "NPR",
+      "url": "https://www.npr.org/transcripts/133188009"
+    },
+    {
+      "id": "stanford-2008",
+      "kind": "primary",
+      "title": "Jumpin' Jack (interview with Jack LaLanne)",
+      "author": "Paul Costello",
+      "year": 2008,
+      "publisher": "Stanford Medicine magazine, Spring 2008",
+      "url": "https://sm.stanford.edu/archive/stanmed/2008spring/jumpin_jack.html"
+    },
+    {
+      "id": "lifeext-2006",
+      "kind": "primary",
+      "title": "Jack LaLanne (exclusive interview)",
+      "author": "Life Extension magazine (no byline)",
+      "year": 2006,
+      "publisher": "Life Extension, August 2006",
+      "url": "https://www.lifeextension.com/magazine/2006/8/report_lalanne"
+    },
+    {
+      "id": "nyt-2011",
+      "kind": "secondary",
+      "title": "Jack LaLanne, Founder of Modern Fitness Movement, Dies at 96",
+      "author": "Richard Goldstein",
+      "year": 2011,
+      "publisher": "The New York Times, 23 Jan 2011",
+      "url": "https://www.nytimes.com/2011/01/24/sports/24lalanne.html"
+    },
+    {
+      "id": "latimes-2011",
+      "kind": "secondary",
+      "title": "Jack LaLanne dies at 96; spiritual father of U.S. fitness movement",
+      "author": "Claudia Luther",
+      "year": 2011,
+      "publisher": "Los Angeles Times, 23 Jan 2011",
+      "url": "https://www.latimes.com/local/obituaries/la-me-jack-lalanne-20110124-story.html"
+    },
+    {
+      "id": "npr-2011",
+      "kind": "secondary",
+      "title": "Remembering Jack LaLanne: Founding Father Of Fitness",
+      "author": "Tom Goldman",
+      "year": 2011,
+      "publisher": "NPR, 24 Jan 2011",
+      "url": "https://www.npr.org/2011/01/24/133175583/jack-lalanne-founding-father-of-fitness"
+    },
+    {
+      "id": "stjames",
+      "kind": "secondary",
+      "title": "LaLanne, Jack (1914—), St. James Encyclopedia of Popular Culture",
+      "author": "Tina Gianoulis",
+      "year": "undated (written before 2011)",
+      "publisher": "St. James Press, via Encyclopedia.com",
+      "url": "https://www.encyclopedia.com/media/encyclopedias-almanacs-transcripts-and-maps/lalanne-jack-1914"
+    },
+    {
+      "id": "spokesman-2004",
+      "kind": "secondary",
+      "title": "Fitness guru Jack LaLanne still buff and sharp at 90",
+      "author": "Patrick S. Pemberton (The Tribune, San Luis Obispo)",
+      "year": 2004,
+      "publisher": "The Spokesman-Review, 5 Oct 2004",
+      "url": "https://www.spokesman.com/stories/2004/oct/05/fitness-guru-jack-lalanne-still-buff-and-sharp-at/"
+    },
+    {
+      "id": "pressherald-2011",
+      "kind": "secondary",
+      "title": "Our View: Fitness guru Jack LaLanne was far ahead of his time (editorial)",
+      "author": "Portland Press Herald editorial board",
+      "year": 2011,
+      "publisher": "Portland Press Herald, 25 Jan 2011",
+      "url": "https://www.pressherald.com/?p=398711"
+    }
+  ],
+  "likenessSources": [
+    {
+      "title": "Jack LaLanne 1961 portrait (publicity photo)",
+      "url": "https://commons.wikimedia.org/wiki/File:Jack_LaLanne_1961_portrait.JPG",
+      "licence": "Public domain",
+      "author": "Cliff Riddle, Hollywood"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American fitness pioneer and TV host (1914-2011), not fictional, never a politician or the founder of a religion, with no account found of sexual contact with a minor or of sexual violence; he is in, with a small documented dark side: a violent boyhood by his own account, a business built on selling his name and products, and blunt talk about fat people."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value, quote and sentence against the saved and live texts of the NYT, LA Times, NPR, Stanford Medicine and Life Extension pieces, and searched again for lawsuits or scandals in his own name (none found; the 1975 NLRB case was a New York spa company run by others). No value fell: Discipline, Fitness, Service and Determination are shared with the blind pick, and Health holds on four sources; the blind pick's Longevity was not added for lack of room. All four quotes match his recorded words. Seven claims were corrected, among them the timing of the fathers and wives joining his gym and the context of the 'huckster' editorial line.",
+    "checkedOn": "2026-11-10"
+  }
+}
