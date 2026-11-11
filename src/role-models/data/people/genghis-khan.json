@@ -135,7 +135,7 @@
           "kind": "witness",
           "claim": "Juvaini, in his chapter on the laws Genghis Khan framed, writes that the army was divided into tens, hundreds, thousands and ten-thousands, that men arrived 'not a twinkling of an eye before or after the appointed hour', and that a single horseman could be sent to punish even a distant commander.",
           "sourceId": "juvaini-boyle",
-          "locator": "vol. i, ch. II, p. 31"
+          "locator": "vol. i, ch. II, pp. 30-31"
         },
         {
           "kind": "witness",
@@ -212,7 +212,7 @@
     {
       "text": "Such a son must a father have",
       "sourceId": "juvaini-boyle",
-      "locator": "vol. i, ch. XXII, p. 134 (watching Jalal-ad-Din escape across the Indus, 1221, as Juvaini reports it)",
+      "locator": "vol. i, ch. XXII, pp. 134-135 (watching Jalal-ad-Din escape across the Indus, 1221, as Juvaini reports it)",
       "translation": "John Andrew Boyle, 1958"
     }
   ],
@@ -223,15 +223,14 @@
     ]
   },
   "shadow": {
-    "text": "As a boy, after quarrels over a lark and a fish, he and his brother Qasar shot dead their half-brother Bekter. The historian David Morgan writes that he rose by using his allies, among them Toghril (Ong Khan) and his own sworn brother Jamuqa, 'and discarding them when they had served their turn'; Britannica writes that he exterminated the nobility of the Jürkin clan, his nominal allies, after they plundered his camp. In 1202, after defeating the Tatars, who had killed his father, he and his kinsmen decided to kill every Tatar taller than the linchpin of a cart and enslave the rest, and the Secret History says it was done. In the war on the Khwarazm empire (1219-1223) his armies killed the people of city after city: at Urgench in 1221 Juvaini writes that each soldier was given 24 people to kill; at Merv, taken by his son Tolui, Juvaini says a count over 13 days found more than 1,300,000 dead; at Nishapur, to avenge his son-in-law, everyone was killed except 400 craftsmen, and a local history of Herat puts the dead there at 1,747,000 men, besides women and children. Morgan writes that such figures 'should not be taken too literally' and that it may be doubted anyone was counting, but that the killing was on a scale beyond anything people then had known. Britannica writes that massacre was a weapon he regularly used, that 'massacre was used for its own sake', and that Balkh was slaughtered in spite of a prompt surrender. The Persian vizier Rashid al-Din, writing at the Mongol court some 80 years after his death, reports him saying that a man's greatest joy is to defeat his enemies, take what they own, ride their horses and clasp their daughters and wives in his arms. The Secret History says he took as wives the Tatar sisters Yisügen and Yisüi after their men were killed, having Yisüi's husband cut down, and Gürbesü, mother of the Naiman khan he had destroyed. At Bukhara in 1220, where he was present, Ibn al-Athir (as summarised by the historian Barthold) says the Mongols treated the women with violence; at Merv in 1221 Juvaini records women dragged from their husbands and 'the ravishment of their virgin daughters'.",
+    "text": "As a boy, after quarrels over a lark and a fish, he and his brother Qasar shot dead their half-brother Bekter. The historian David Morgan writes that he rose by using his allies, among them Toghril (Ong Khan) and his own sworn brother Jamuqa, 'and discarding them when they had served their turn'; Britannica writes that he exterminated the nobility of the Jürkin clan, his nominal allies, after they plundered his camp. In 1202, after defeating the Tatars, who had killed his father, he and his kinsmen decided to kill every Tatar taller than the linchpin of a cart and enslave the rest, and the Secret History says it was done. In the war on the Khwarazm empire (1219-1223) his armies killed the people of city after city: at Urgench in 1221 Juvaini writes that each soldier was given 24 people to kill; at Merv, taken by his son Tolui, Juvaini says a count over 13 days found more than 1,300,000 dead; at Nishapur, to avenge his son-in-law, everyone was killed except 400 craftsmen, and a local history of Herat puts the dead there at 1,747,000 men, besides women and children. Morgan writes that such figures 'should not be taken too literally' and that it may be doubted anyone was counting, but that the killing was on a scale beyond anything people then had known. Britannica writes that massacre was a weapon he regularly used, that 'massacre was used for its own sake', and that Balkh was slaughtered in spite of a prompt surrender. The Persian vizier Rashid al-Din, writing at the Mongol court some 80 years after his death, reports him saying that a man's greatest joy is to defeat his enemies, take what they own, ride their horses and clasp their daughters and wives in his arms. The Secret History says he took as wives the Tatar sisters Yisügen and Yisüi after their men were killed, having Yisüi's husband cut down, and Gürbesü, mother of the Naiman khan he had destroyed. At Merv in 1221 Juvaini records women dragged from their husbands and 'the ravishment of their virgin daughters'.",
     "sourceIds": [
       "sh-rachewiltz",
       "iranica-morgan",
       "britannica-bawden",
       "juvaini-boyle",
       "dohsson-1834",
-      "iranica-melville",
-      "barthold-1928"
+      "iranica-melville"
     ]
   },
   "councilQuestion": {
@@ -255,8 +254,8 @@
       "title": "The History of the World-Conqueror, vol. i (Tarikh-i Jahan-gushay, written c. 1252-1260 by a Persian official in Mongol service)",
       "author": "'Ala-ad-Din 'Ata-Malik Juvaini, translated by John Andrew Boyle",
       "year": 1958,
-      "publisher": "Manchester University Press; Internet Archive",
-      "url": "https://archive.org/details/historyoftheworl011691mbp"
+      "publisher": "Manchester University Press / Harvard University Press; Internet Archive lending copy",
+      "url": "https://archive.org/details/historyofworldco0001alaa"
     },
     {
       "id": "dohsson-1834",
@@ -311,25 +310,16 @@
       "year": 2004,
       "publisher": "The Christian Science Monitor",
       "url": "https://www.csmonitor.com/2004/0323/p17s01-bogn.html"
-    },
-    {
-      "id": "barthold-1928",
-      "kind": "secondary",
-      "title": "Turkestan Down to the Mongol Invasion, 2nd edition, translated from the Russian (Gibb Memorial Series, n.s. V)",
-      "author": "W. Barthold",
-      "year": 1928,
-      "publisher": "Luzac, London; Internet Archive (Digital Library of India copy)",
-      "url": "https://archive.org/details/in.ernet.dli.2015.2380"
     }
   ],
   "review": {
     "status": "flagged",
     "screen": {
       "result": "owner-decides",
-      "notes": "A real Mongol ruler (c. 1162-1227), long dead, no politician of today and no founder of a living religion; flagged for the 'greatest joy' saying, wives taken from peoples he had just killed or conquered, and reports of rape by his armies; mass killing of civilians, the killing of his half-brother and the discarding of allies are shadow. Owner case (no recommendation): Rashid al-Din (vizier to the Mongol Il-khans, wrote 1300-10) reports him saying man's greatest delight is to defeat his enemies, take their goods, ride their horses and 'presser dans ses bras leurs filles et leurs femmes' [dohsson-1834 p. 404]; 1202 he took the Tatar sisters Yisügen and Yisüi as wives after the Tatar men were killed and had Yisüi's husband cut down [sh §§154-156]; 1204 he took Gürbesü, mother of the defeated Naiman khan [sh §196]; 1204 he 'examined' the offered Merkit girl Qulan [sh §197]; he gave his wife Ibaqa to an officer as a reward [sh §208]; 1214 the Jin emperor gave him two princesses and 500 youths and maidens [eb1911]; 1220 Bukhara, with him present: Ibn al-Athir, as summarised by Barthold, says the Mongols were 'treating the women with violence' [barthold-1928 p. 410]; 1221 Merv (under Tolui): Juvaini records 'the ravishment of their virgin daughters' [juvaini i, 161-162]. Doubts: the Secret History describes no force against his wives and says he 'loved' Yisügen and Qulan; the saying is a report written about 80 years later, seen only in d'Ohsson's French; Juvaini and Ibn al-Athir describe the armies, not an order from him. Broadbridge (Cambridge UP 2018, per Bryn Hammond's review) treats the Tatar sisters as captured wives whose trauma the sources do not record."
+      "notes": "A real Mongol ruler (c. 1162-1227), long dead, no politician of today and no founder of a living religion; flagged for the 'greatest joy' saying, wives taken from peoples he had just killed or conquered, and reports of rape by his armies; mass killing of civilians, the killing of his half-brother and the discarding of allies are shadow. Owner case (no recommendation): Rashid al-Din (vizier to the Mongol Il-khans, wrote 1300-10) reports him saying man's greatest delight is to defeat his enemies, take their goods, ride their horses and 'presser dans ses bras leurs filles et leurs femmes' [dohsson-1834 p. 404]; 1202 he took the Tatar sisters Yisügen and Yisüi as wives after the Tatar men were killed and had Yisüi's husband cut down [sh §§154-156]; 1204 he took Gürbesü, mother of the defeated Naiman khan [sh §196]; 1204 he 'examined' the offered Merkit girl Qulan [sh §197]; he gave his wife Ibaqa to an officer as a reward [sh §208]; 1214 the Jin emperor gave him two princesses and 500 youths and maidens [eb1911]; 1221 Merv (under Tolui): Juvaini records 'the ravishment of their virgin daughters' [juvaini i, pp. 161-162]. Doubts: the Secret History describes no force against his wives and says he 'loved' Yisügen and Qulan; the saying is a report written about 80 years later, seen only in d'Ohsson's French; Juvaini describes the armies, not an order from him. Broadbridge (Cambridge UP 2018, per Bryn Hammond's review) treats the Tatar sisters as captured wives whose trauma the sources do not record."
     },
     "blindAgreement": 0.6,
-    "devilsAdvocate": "I attacked each value against the Secret History, Juvaini, d'Ohsson and two modern reference works, Morgan in Encyclopaedia Iranica and Bawden in Britannica, plus a review of Weatherford. All five values held: Britannica independently names his loyalty, discipline, tenacity and readiness to learn, though Morgan and Britannica also record him discarding allies and exploiting treachery, which went into the shadow; the blind pick's Determination and Generosity were not added because the five places were full. The Bukhara 'punishment of God' quote fell because Barthold (1928) calls the speech 'quite beyond belief'; fixes went to the birth date, the Baljuna claim, the setting of the 'services duly rewarded' phrase, and a principle Britannica contradicts. The owner case was re-checked and widened with Ibn al-Athir's Bukhara report and Broadbridge's study of captured wives.",
+    "devilsAdvocate": "I attacked each value against the Secret History, Juvaini, d'Ohsson and two modern reference works, Morgan in Encyclopaedia Iranica and Bawden in Britannica, plus a review of Weatherford. All five values held: Britannica independently names his loyalty, discipline, tenacity and readiness to learn, though Morgan and Britannica also record him discarding allies and exploiting treachery, which went into the shadow; the blind pick's Determination and Generosity were not added because the five places were full. The Bukhara 'punishment of God' quote fell because Barthold calls the speech 'quite beyond belief' (as J. J. Saunders reports, 1971); fixes went to the birth date, the Baljuna claim, the setting of the 'services duly rewarded' phrase, and a principle Britannica contradicts. The owner case was re-checked and widened with Broadbridge's study of captured wives.",
     "checkedOn": "2026-11-10"
   }
 }
