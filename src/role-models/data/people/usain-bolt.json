@@ -1,0 +1,282 @@
+{
+  "id": "usain-bolt",
+  "name": "Usain Bolt",
+  "born": 1986,
+  "died": null,
+  "category": "athletes",
+  "areaIds": [
+    "lm_fitness",
+    "lm_fun",
+    "lm_mindset"
+  ],
+  "tagline": "The 100 m world-record holder who won eight Olympic golds and celebrated openly, on the track and off it.",
+  "startedFrom": "He was born in 1986 in Sherwood Content, a village in the hills of Trelawny, Jamaica. His father ran a small grocery shop and, during the boy's youth, worked in the coffee fields; the house had no running water, so the boy carried buckets of water home for the family to cook and clean. Cricket was his first sport. By his own account he was \"really lazy\", \"coming out of high school doing absolutely nothing.\"",
+  "values": [
+    {
+      "word": "Fun",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After breaking the 200 m world record at the 2008 Beijing Olympics he wrapped himself in a Jamaican flag and walked a barefoot solo victory lap, swaying to reggae from the loudspeakers.",
+          "sourceId": "ap-2008",
+          "locator": "paragraph beginning \"Bolt made little effort to congratulate the other runners\""
+        },
+        {
+          "kind": "words",
+          "claim": "He told TIME in 2009 he makes no apologies for nightlife: 'I'm going to go out and enjoy myself.'",
+          "sourceId": "time-2009",
+          "locator": "page 4, paragraph beginning \"Bolt makes no apologies for loving the nightlife\""
+        },
+        {
+          "kind": "words",
+          "claim": "Asked in 2016 whether entertaining is part of his job, he said: 'Yes. I have to show who I am, play with the crowd, play with the camera.'",
+          "sourceId": "gq-campbell-2016",
+          "locator": "Q&A, question \"Do you see it as part of your job to entertain?\""
+        }
+      ]
+    },
+    {
+      "word": "Winning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He won the Olympic 100 m and 200 m at three Games in a row (2008, 2012, 2016) and holds eight Olympic gold medals.",
+          "sourceId": "olympedia",
+          "locator": "Biographical information (medals) and Olympic results table"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked whether love of winning or fear of losing drives him, he said: 'I definitely need to win because I hate losing,' and that he will not play a game he knows he will lose.",
+          "sourceId": "gq-campbell-2016",
+          "locator": "Q&A, question \"What motivates you more, a love of winning or a fear of losing?\""
+        },
+        {
+          "kind": "deed",
+          "claim": "At the 2009 World Championships in Berlin he ran 9.58 for 100 m and 19.19 for 200 m, both world records.",
+          "sourceId": "time-2009",
+          "locator": "page 1, paragraph beginning \"After that, he really turned on the speed\""
+        }
+      ]
+    },
+    {
+      "word": "Confidence",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "A Puma executive who worked with him a month before the 2004 Olympics recalls him saying: 'Don't worry. I'm going to be an Olympic champion.'",
+          "sourceId": "time-2009",
+          "locator": "page 2, paragraph beginning \"These achievements were in no way a measure of his work ethic\""
+        },
+        {
+          "kind": "words",
+          "claim": "On Justin Gatlin spitting in his lane in 2010 he said: 'I am the fastest so how can he intimidate me?'",
+          "sourceId": "gq-campbell-2016",
+          "locator": "Q&A, question \"Did Justin Gatlin really spit in your lane?\""
+        },
+        {
+          "kind": "deed",
+          "claim": "After breaking the 200 m world record at the 2008 Olympics he put his face inches from a TV camera on his victory lap, raised an index finger and yelled \"I am No. 1! I am No. 1!\"",
+          "sourceId": "ap-2008",
+          "locator": "paragraph beginning \"Bolt made little effort to congratulate the other runners\""
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In December 2009 he hosted the '9.58 Super Party', whose takings were to refurbish the health clinic in his home village.",
+          "sourceId": "time-2009",
+          "locator": "page 4, paragraph beginning \"Ya, mon.\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2010 the Sherwood Content health centre reopened after a renovation costing nearly $4 million (Jamaica Observer figure), paid partly with all the proceeds of the party; he had also paid to wire his first school, Piedmont Basic, for electricity.",
+          "sourceId": "observer-2010",
+          "locator": "opening paragraphs and paragraph on Piedmont Basic School"
+        },
+        {
+          "kind": "words",
+          "claim": "At the reopening he said: 'It is my way of showing my community that I still care, still love them and I will continue to do as much as possible.'",
+          "sourceId": "observer-2010",
+          "locator": "paragraph beginning \"It was an honour for me to collaborate\""
+        },
+        {
+          "kind": "deed",
+          "claim": "After retiring he still put on his Boxing Day Christmas treat for children and adults at Waldensia All-Age School in Sherwood Content, and said: \"It doesn't matter that I retire, I will always try to do something.\"",
+          "sourceId": "observer-2017",
+          "locator": "opening paragraph and Bolt's quote on retiring"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Accept that injuries and losses will come, and work to make them less likely instead of panicking when they do.",
+      "sourceId": "gq-campbell-2016",
+      "locator": "Q&A, question \"What about the mental side?\""
+    },
+    {
+      "text": "Enjoy your life openly; do not twist yourself to fit other people's standards.",
+      "sourceId": "time-2009",
+      "locator": "page 4, paragraph beginning \"Bolt makes no apologies for loving the nightlife\""
+    },
+    {
+      "text": "Find a coach you believe in, ask him why, then do what he says.",
+      "sourceId": "gq-campbell-2016",
+      "locator": "Q&A, questions \"Do you ever argue with him?\" and \"But he is like a third parent?\""
+    },
+    {
+      "text": "Run for yourself first; do not carry a whole country's expectations on your back.",
+      "sourceId": "time-2009",
+      "locator": "page 4, paragraph beginning \"Bolt feels the weight of expectations\""
+    },
+    {
+      "text": "Cut the clubs and the drinking during the season, and keep the fun for after it.",
+      "sourceId": "gq-campbell-2016",
+      "locator": "Q&A, questions \"What other sacrifices do you make?\" and \"What about going to clubs\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I accept I will get injured. I accept I cannot win every race. I work hard to decrease the chances of those things happening, but I accept they will happen.",
+      "sourceId": "gq-campbell-2016",
+      "locator": "Q&A, answer to \"What about the mental side? How much do you work on that?\""
+    },
+    {
+      "text": "I'm going to go out and enjoy myself. If that's going to be a problem, that's their problem.",
+      "sourceId": "time-2009",
+      "locator": "page 4, paragraph beginning \"Bolt makes no apologies for loving the nightlife\""
+    },
+    {
+      "text": "I love competing. I am so competitive. I definitely need to win because I hate losing.",
+      "sourceId": "gq-campbell-2016",
+      "locator": "Q&A, answer to \"What motivates you more, a love of winning or a fear of losing?\""
+    }
+  ],
+  "definingMoment": {
+    "text": "In the 100 metres final at the 2008 Beijing Olympics he built such a lead that he slowed, spread his arms and pounded his chest before the line, and still set a world record of 9.69 seconds. Days later he broke the 200 metres world record as well; the AP reported he was the only man ever to win both sprints at one Olympics by breaking the world record in each. He then walked a barefoot victory lap wrapped in the Jamaican flag. American sprinter Shawn Crawford said that a man who had worked that hard \"deserves to dance.\"",
+    "sourceIds": [
+      "ap-2008",
+      "time-2009"
+    ]
+  },
+  "shadow": {
+    "text": "In August 2008 IOC president Jacques Rogge said of Bolt's Beijing celebrations: \"I would love him to show more respect for his competitors. That's not the way we perceive being a champion.\" Before the 2004 Olympics, a Puma executive told TIME, \"we literally had to fight him every day to get him to the track.\" After the 2016 Rio Olympics a photo of him in bed with another woman went round while his girlfriend Kasi was at home; GQ reported that she let Twitter know he was risking his future with her. In August 2020 a viral video showed him and guests dancing and singing at a surprise party for his 34th birthday, where the Jamaica Gleaner reported mask and distancing rules were later ignored; days later he tested positive for COVID-19. The prime minister and health minister announced an investigation, which police shelved in April 2021 because they got the footage only after the event.",
+    "sourceIds": [
+      "ap-2008",
+      "time-2009",
+      "gq-friedman-2016",
+      "gleaner-2020",
+      "gleaner-2021"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which setback this week did you fight against, instead of accepting it and working to make it less likely next time?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Faster than Lightning: My Autobiography",
+      "year": 2013
+    },
+    {
+      "title": "9.58: Being the World's Fastest Man",
+      "year": 2010
+    }
+  ],
+  "sources": [
+    {
+      "id": "gq-campbell-2016",
+      "kind": "primary",
+      "title": "GQ interview with Usain Bolt (2016), reprinted in full in \"A tribute to (and long interview with) the Living Legend that is Usain Bolt\"",
+      "author": "Alastair Campbell (interviewer)",
+      "year": 2017,
+      "publisher": "alastaircampbell.org (first in GQ, 2016)",
+      "url": "https://alastaircampbell.org/2017/08/a-tribute-to-and-long-interview-with-the-living-legend-that-is-usain-bolt/"
+    },
+    {
+      "id": "gq-friedman-2016",
+      "kind": "primary",
+      "title": "Usain Bolt on Winning Gold, \"Wining\" Women, and Retiring on Top (GQ Men of the Year 2016)",
+      "author": "Devin Friedman",
+      "year": 2016,
+      "publisher": "GQ, reprinted on usainbolt.com",
+      "url": "https://usainbolt.com/usain-is-gq-man-of-the-year-2016/"
+    },
+    {
+      "id": "time-2009",
+      "kind": "secondary",
+      "title": "Usain Bolt (Person of the Year 2009, runners-up)",
+      "author": "Sean Gregory",
+      "year": 2009,
+      "publisher": "TIME",
+      "url": "https://content.time.com/time/specials/packages/article/0,28804,1946375_1947252_1947644,00.html"
+    },
+    {
+      "id": "ap-2008",
+      "kind": "secondary",
+      "title": "IOC chides Bolt for lack of respect to rivals",
+      "author": "Associated Press",
+      "year": 2008,
+      "publisher": "6abc (WPVI) archive",
+      "url": "https://6abc.com/archive/6342055"
+    },
+    {
+      "id": "olympedia",
+      "kind": "secondary",
+      "title": "Usain Bolt",
+      "author": "OlyMADMen (Olympedia editors)",
+      "year": "n.d. (checked 2026-11-10)",
+      "publisher": "Olympedia",
+      "url": "https://www.olympedia.org/athletes/105512"
+    },
+    {
+      "id": "observer-2010",
+      "kind": "secondary",
+      "title": "'Bolt's health centre' reopens",
+      "author": "Horace Hines",
+      "year": 2010,
+      "publisher": "Jamaica Observer",
+      "url": "https://www.jamaicaobserver.com/2010/12/08/bolts-health-centre-reopens/"
+    },
+    {
+      "id": "gleaner-2020",
+      "kind": "secondary",
+      "title": "Bolt party probe on track - DPP could receive file on birthday bash investigation in two weeks",
+      "author": "Corey Robinson",
+      "year": 2020,
+      "publisher": "Jamaica Gleaner",
+      "url": "https://jamaica-gleaner.com/article/lead-stories/20200913/bolt-party-probe-track-dpp-could-receive-file-birthday-bash"
+    },
+    {
+      "id": "gleaner-2021",
+      "kind": "secondary",
+      "title": "Cops false-start on Bolt birthday party probe",
+      "author": "Jamaica Gleaner staff",
+      "year": 2021,
+      "publisher": "Jamaica Gleaner",
+      "url": "https://jamaica-gleaner.com/article/lead-stories/20210425/cops-false-start-bolt-birthday-party-probe"
+    },
+    {
+      "id": "observer-2017",
+      "kind": "secondary",
+      "title": "Bolt brings cheer to Sherwood Content",
+      "author": "Horace Hines",
+      "year": 2017,
+      "publisher": "Jamaica Observer",
+      "url": "https://www.jamaicaobserver.com/2017/12/27/bolt-brings-cheer-to-sherwood-content/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real, living retired sprinter, not a politician or religious founder; no credible account of sexual violence or contact with anyone under 16 found; small documented dark side: IOC rebuke for showboating (2008), admitted laziness, affair photo while in a relationship (2016), COVID-rule-breaking birthday party (2020)."
+    },
+    "blindAgreement": 0.75,
+    "devilsAdvocate": "I attacked all five draft values against the saved TIME, AP, GQ, Jamaica Observer, Gleaner and Olympedia pages and checked every locator. Trust fell: it rests on faith in one man, his coach Glen Mills, which is too narrow for the plain word, and the blind pick's Hard work fell against his own admission that he was 'really lazy' and Puma's account of fighting him to train. Fun, Winning and Generosity held as core; Confidence held with three sources once the AP victory-lap account replaced a medal table. All three quotes matched the originals; the shadow and defining moment were tightened to what the sources say.",
+    "checkedOn": "2026-11-10"
+  }
+}
