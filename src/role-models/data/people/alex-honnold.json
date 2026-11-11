@@ -1,0 +1,340 @@
+{
+  "id": "alex-honnold",
+  "name": "Alex Honnold",
+  "born": 1985,
+  "died": null,
+  "category": "explorers",
+  "areaIds": [
+    "lm_emotions",
+    "lm_mindset",
+    "lm_fun"
+  ],
+  "tagline": "A shy kid who grew his comfort zone step by step until he climbed El Capitan without a rope.",
+  "startedFrom": "He grew up in suburban Sacramento, California, an upbringing he calls privileged, and began climbing at a local gym at about ten. He was too shy to ask strangers to climb with him, so he got used to climbing alone, without a rope. At 19 he dropped out of university and took up climbing outside full time, living out of his mother's borrowed minivan and driving from climb to climb.",
+  "values": [
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 2008 he free soloed Moonlight Buttress in Zion and the Regular Northwest Face of Half Dome, climbs National Geographic says no serious climber had imagined could be done without a rope.",
+          "sourceId": "natgeo-2019",
+          "locator": "paragraph beginning \"Croft's achievement stood until 2007\""
+        },
+        {
+          "kind": "words",
+          "claim": "He says Moonlight Buttress and Half Dome were 'big steps forward' for him because they had never been done before.",
+          "sourceId": "kvpr-2015",
+          "locator": "answer beginning \"Moonlight Buttress was like the big solo that I did\""
+        },
+        {
+          "kind": "deed",
+          "claim": "On 25 January 2026, aged 40, he free soloed the 1,667-foot Taipei 101 skyscraper without ropes or gear, streamed live on Netflix.",
+          "sourceId": "deseret-2026",
+          "locator": "paragraphs beginning \"In just over an hour and a half\" and \"Honnold, a 40-year-old married father of two\""
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Over a year he spent hundreds of hours on Freerider on ropes, memorizing thousands of hand and foot moves, and wrote each day's training in notebooks.",
+          "sourceId": "natgeo-2019",
+          "locator": "paragraph beginning \"Over a year, Alex spent hundreds of hours on Freerider\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Personality tests reported in Nautilus scored him 'exceedingly conscientious' and high in premeditation.",
+          "sourceId": "nautilus-2016",
+          "locator": "paragraph beginning \"Honnold also scores as exceedingly conscientious\""
+        },
+        {
+          "kind": "words",
+          "claim": "In his own account of the 2017 solo he says preparing for the upper route meant rehearsing the Boulder Problem and upper corners, memorizing the hard moves he could not avoid.",
+          "sourceId": "aaj-2018",
+          "locator": "paragraph beginning \"Preparing for the rest of the route simply meant rehearsing\""
+        },
+        {
+          "kind": "words",
+          "claim": "He says he tries to minimize falling or dying 'through preparation and training'.",
+          "sourceId": "kvpr-2015",
+          "locator": "answer to \"How do you grapple with the worst case scenario\""
+        }
+      ]
+    },
+    {
+      "word": "Simplicity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In January 2007 he decided to buy a van with money his father had left him and live on the road.",
+          "sourceId": "alpinist-2011",
+          "locator": "paragraph beginning \"IN JANUARY 2007\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2011, already famous, he lived mostly in a van, kept almost everything he owned in it and lived on less than a thousand dollars a month.",
+          "sourceId": "cbs-2011",
+          "locator": "script, section on his van"
+        },
+        {
+          "kind": "words",
+          "claim": "He says he owns very few things and spends money on nothing except food and gas.",
+          "sourceId": "booktalk-2016",
+          "locator": "answer to \"You are frequently referred to as a 'dirtbag'\""
+        }
+      ]
+    },
+    {
+      "word": "Contribution",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He founded the Honnold Foundation in 2012 to fund solar energy access for communities.",
+          "sourceId": "honnold-foundation",
+          "locator": "Foundation page, opening section"
+        },
+        {
+          "kind": "deed",
+          "claim": "He says he gives a third of his income to the foundation, and may give more in the future.",
+          "sourceId": "aljazeera-2023",
+          "locator": "paragraph beginning \"Honnold says that he gives a third of his income\""
+        },
+        {
+          "kind": "words",
+          "claim": "He says he started the foundation after earning more from a two-day car commercial than his sister, who does community work, makes in five years, which he found 'so messed up'.",
+          "sourceId": "booktalk-2016",
+          "locator": "answer to \"You have recently set up the Honnold Foundation\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Grow your comfort zone in small steps, a little harder each time, until the big goal is within reach.",
+      "sourceId": "kvpr-2015",
+      "locator": "last answer, advice to climbers"
+    },
+    {
+      "text": "If you are afraid, prepare more or do not go; there is no shame in turning back.",
+      "sourceId": "booktalk-2016",
+      "locator": "answer beginning \"That's interesting. For the most part, if something seems really scary\""
+    },
+    {
+      "text": "Tell useful fear, a warning of real danger, from fear that only stops you performing.",
+      "sourceId": "kvpr-2015",
+      "locator": "answer to \"How do you manage that fear?\""
+    },
+    {
+      "text": "Choose your risks on purpose and with open eyes, in line with how you want to live.",
+      "sourceId": "natgeo-int-2015",
+      "locator": "answer to \"What would you say to someone who has a beef with you\""
+    },
+    {
+      "text": "After each effort, write down honestly what you could have done better.",
+      "sourceId": "booktalk-2016",
+      "locator": "answer to \"Your Yosemite Valley nickname is Alex 'No Big Deal' Honnold\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "It's all a matter of choosing the amount of risk you're willing to accept, with open eyes.",
+      "sourceId": "natgeo-int-2015",
+      "locator": "answer to \"What would you say to someone who has a beef with you because of the risks you take?\""
+    },
+    {
+      "text": "My comfort zone is like a little bubble around me, and I've pushed it in different directions and made it bigger and bigger until these objectives that seemed totally crazy, eventually fall within the realm of the possible.",
+      "sourceId": "natgeo-int-2015",
+      "locator": "answer to \"I've done four expeditions with you... So keep explaining.\""
+    },
+    {
+      "text": "If I'm afraid, I either put in more time preparing or I just don't do it.",
+      "sourceId": "booktalk-2016",
+      "locator": "answer beginning \"That's interesting. For the most part, if something seems really scary\""
+    },
+    {
+      "text": "There is no adrenaline rush, you know? Like if I get a rush, it means that something has gone horribly wrong, you know?",
+      "sourceId": "cbs-2011",
+      "locator": "script, answer to Lara Logan: \"Do you feel the adrenaline at all?\""
+    }
+  ],
+  "definingMoment": {
+    "text": "In November 2016, his ankle still swollen from a fall on the same slab while practising, he started up Freerider on El Capitan without a rope. He felt nervous, climbed poorly, and at the crux of the Freeblast slab grabbed a bolt and gave up the attempt. Through the spring he rehearsed the route on ropes and found ways around moves he did not like. On 3 June 2017 he started at first light and reached the top of the 3,000-foot wall in 3 hours 56 minutes, the first free solo of a full route on El Capitan.",
+    "sourceIds": [
+      "aaj-2018",
+      "natgeo-2019",
+      "cbc-2026"
+    ]
+  },
+  "shadow": {
+    "text": "In the film Free Solo (2018), Fatherly reports, he tells the camera he would 'always' choose climbing over a woman, and Variety quotes him saying, 'If I perish, you'll find someone else. Not a big deal.' In 2022 he said he 'wasn't a great boyfriend' and, asked to name his deficits, answered, 'Lack of affection, lack of caring?' In 2010, 'emotionally unhinged' by a faltering relationship, he free soloed a 1,000-foot Nevada wall he had climbed with a rope only once, years earlier; personality surveys reported by Nautilus in 2016 scored him high in urgency and disinhibition. In January 2026, a married father of two, he free soloed Taipei 101 live on Netflix for a fee he called 'an embarrassingly small amount'; a media ethics professor told CBC that in such a show 'the danger becomes the allure'.",
+    "sourceIds": [
+      "fatherly-2022",
+      "variety-2018",
+      "nautilus-2016",
+      "deseret-2026",
+      "cbc-2026"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which small step past your comfort zone did you take this week, and which one did you avoid?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Alone on the Wall (with David Roberts)",
+      "year": 2015
+    }
+  ],
+  "sources": [
+    {
+      "id": "alone-on-the-wall",
+      "kind": "primary",
+      "title": "Alone on the Wall: Alex Honnold and the Ultimate Limits of Adventure",
+      "author": "Alex Honnold with David Roberts",
+      "year": 2015,
+      "publisher": "W. W. Norton",
+      "url": "https://wwnorton.co.uk/books/9780393247626-alone-on-the-wall"
+    },
+    {
+      "id": "natgeo-int-2015",
+      "kind": "primary",
+      "title": "Legendary Climber Alex Honnold Shares His Closest Call (interview)",
+      "author": "Mark Synnott, National Geographic",
+      "year": 2015,
+      "url": "https://www.nationalgeographic.com/adventure/article/ropeless-climber-alex-honnolds-closest-call"
+    },
+    {
+      "id": "booktalk-2016",
+      "kind": "primary",
+      "title": "Alex Honnold Isn't Fearless—He Just Accepts Death (Book Talk interview, 3 January 2016)",
+      "author": "Simon Worrall, National Geographic",
+      "year": 2016,
+      "url": "https://www.nationalgeographic.com/news/2016/01/160103-honnold-climb-mountain-solo-adventure-ngbooktalk/"
+    },
+    {
+      "id": "kvpr-2015",
+      "kind": "primary",
+      "title": "Q&A: Alex Honnold On Climbing El Capitan Without Ropes, Fear And His Book \"Alone On The Wall\" (17 November 2015)",
+      "author": "Ezra David Romero, KVPR Valley Public Radio",
+      "year": 2015,
+      "url": "https://www.kvpr.org/community/2015-11-17/q-a-alex-honnold-on-climbing-el-capitan-without-ropes-fear-and-his-book-alone-on-the-wall"
+    },
+    {
+      "id": "natgeo-int-2017",
+      "kind": "primary",
+      "title": "First interview with free solo climber Alex Honnold, who scaled El Capitan without a rope (4 June 2017)",
+      "author": "Mark Synnott, National Geographic",
+      "year": 2017,
+      "url": "https://www.nationalgeographic.com/adventure/article/interview-rope-free-solo-climb-yosemite-el-capitan"
+    },
+    {
+      "id": "aljazeera-2023",
+      "kind": "primary",
+      "title": "Alex Honnold: Climbing genius seeks to have a global impact (Generation Sport interview, broadcast 24 September 2023)",
+      "author": "Al Jazeera English, host Iman Amrani",
+      "year": 2023,
+      "url": "https://www.aljazeera.com/sports/2023/9/26/alex-honnold-climbing-genius-seeks-to-have-a-global-impact"
+    },
+    {
+      "id": "fatherly-2022",
+      "kind": "primary",
+      "title": "Alex Honnold, The World's Boldest Climber, Just Became A Dad. Now What? (interview, 24 May 2022)",
+      "author": "Drew Magary, Fatherly",
+      "year": 2022,
+      "url": "https://www.fatherly.com/life/alex-honnold-interview-wife-child"
+    },
+    {
+      "id": "honnold-foundation",
+      "kind": "primary",
+      "title": "Honnold Foundation",
+      "author": "Alex Honnold (official site)",
+      "year": "accessed 2026-11-10",
+      "url": "https://alexhonnold.com/foundation"
+    },
+    {
+      "id": "npr-2016",
+      "kind": "primary",
+      "title": "For Famed Rock Climber, A 'Big Break' That Thankfully Wasn't Literal (3 January 2016)",
+      "author": "NPR",
+      "year": 2016,
+      "url": "https://www.npr.org/transcripts/459977784"
+    },
+    {
+      "id": "cbs-2011",
+      "kind": "secondary",
+      "title": "Alone on the Wall (60 Minutes, aired 2 October 2011)",
+      "author": "Lara Logan, CBS News",
+      "year": 2011,
+      "url": "https://www.cbsnews.com/news/the-ascent-of-alex-honnold-27-12-2011/"
+    },
+    {
+      "id": "nautilus-2016",
+      "kind": "secondary",
+      "title": "The Strange Brain of the World's Greatest Solo Climber (3 August 2016)",
+      "author": "J.B. MacKinnon, Nautilus",
+      "year": 2016,
+      "url": "https://nautil.us/the-strange-brain-of-the-worlds-greatest-solo-climber-236051"
+    },
+    {
+      "id": "natgeo-2019",
+      "kind": "secondary",
+      "title": "How Alex Honnold made 'the ultimate climb'—without a rope (National Geographic magazine, February 2019)",
+      "author": "Mark Synnott, National Geographic",
+      "year": 2019,
+      "url": "https://www.nationalgeographic.com/magazine/article/alex-honnold-made-ultimate-climb-el-capitan-without-rope"
+    },
+    {
+      "id": "variety-2018",
+      "kind": "secondary",
+      "title": "Film Review: 'Free Solo' (1 September 2018)",
+      "author": "Peter Debruge, Variety",
+      "year": 2018,
+      "url": "https://variety.com/2018/film/reviews/free-solo-review-1202917354/"
+    },
+    {
+      "id": "cbc-2026",
+      "kind": "secondary",
+      "title": "This climber plans to scale a skyscraper on live TV. Should we want to watch him risk his life? (22 January 2026)",
+      "author": "Stephanie Hogan, CBC News",
+      "year": 2026,
+      "url": "https://www.cbc.ca/news/world/alex-honnold-free-solo-climb-netflix-live-9.7055091"
+    },
+    {
+      "id": "deseret-2026",
+      "kind": "secondary",
+      "title": "Alex Honnold successfully free solos Taipei 101, Taiwan's tallest skyscraper (25 January 2026)",
+      "author": "Eva Terry, Deseret News",
+      "year": 2026,
+      "url": "https://www.deseret.com/u-s-world/2026/01/24/alex-honnold-free-solo-taipei-101/"
+    },
+    {
+      "id": "aaj-2018",
+      "kind": "primary",
+      "title": "Freerider (Free Solo on El Capitan)",
+      "author": "Alex Honnold, American Alpine Journal",
+      "year": 2018,
+      "url": "https://publications.americanalpineclub.org/articles/13201214748/"
+    },
+    {
+      "id": "alpinist-2011",
+      "kind": "secondary",
+      "title": "Less and Less Alone (Alpinist 35, Summer 2011)",
+      "author": "Alex Lowther, Alpinist",
+      "year": 2011,
+      "url": "https://alpinist.com/features/less-and-less-alone-alex-honnold/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living American rock climber (born 1985), never a politician, campaigner or religious founder; no account of sexual contact with a minor or of sexual violence was found; he is in, and his dark side is small: self-described coldness as a partner and the public debate over his risk-taking."
+    },
+    "blindAgreement": 0.5,
+    "devilsAdvocate": "I attacked each value and every sentence against National Geographic, CBS, KVPR, Nautilus, the American Alpine Journal, Alpinist and the 2026 press. Progress fell: Nautilus describes impulsive 'fuck it' solos, he chose not to rehearse Half Dome, and the step-by-step story holds only as a method. The Sentinel 'first ever' claim fell because Henry Barber soloed that face in 1973, and the defining moment was corrected to his own account (he grabbed a bolt and gave up). Boldness, Discipline, Simplicity and Contribution held, and all four quotes check.",
+    "checkedOn": "2026-11-10"
+  }
+}
