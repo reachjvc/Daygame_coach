@@ -1,0 +1,306 @@
+{
+  "id": "oskar-schindler",
+  "name": "Oskar Schindler",
+  "born": 1908,
+  "died": 1974,
+  "category": "givers",
+  "areaIds": [
+    "lm_contribution",
+    "lm_money"
+  ],
+  "tagline": "A Nazi Party profiteer who spent his war fortune keeping over 1,000 Jews alive.",
+  "startedFrom": "He was born in 1908 in Zwittau, Moravia, into a middle-class Catholic family of the German-speaking minority, and went to a German grammar school. At 20 he married Emilie Pelzl, a farmer's daughter. He worked in his father's farm-machinery factory until it went bankrupt in the economic crisis, then worked as a sales representative for a plant in Brno.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In January 1945 he talked the SS commandant into handing over two sealed cattle cars of prisoners from the Goleszow camp, then had the survivors nursed and the dead buried with Jewish rites on land he bought.",
+          "sourceId": "yad-vashem",
+          "locator": "paragraphs beginning 'One of the most remarkable humanitarian acts' and 'When the wagons were forced open'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In November 1943 he travelled to Budapest and gave a Jewish rescue committee information about the mass murder of Jews in occupied Poland.",
+          "sourceId": "ushmm-encyclopedia",
+          "locator": "section 'Schindler's Contacts with a Jewish Rescue Group'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Historian Mordecai Paldiel calls the Budapest meeting and the smuggling of money and camp photos 'highly risky ventures for Schindler'.",
+          "sourceId": "paldiel-2021",
+          "locator": "p. 218, first paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "In his farewell speech in May 1945 he told the prisoners he had tried and risked everything to get them extra food.",
+          "sourceId": "yv-speech-1945",
+          "locator": "paragraph beginning 'I have tried and risked everything'"
+        }
+      ]
+    },
+    {
+      "word": "Compassion",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Yad Vashem writes that his growing revulsion and horror at the brutality of the Nazi persecution of the Jews changed him, until rescuing them came before making money.",
+          "sourceId": "yad-vashem",
+          "locator": "paragraph beginning 'Schindler never developed any ideologically motivated resistance'"
+        },
+        {
+          "kind": "deed",
+          "claim": "At Brünnlitz he and Emilie took in three transports of prisoners from other camps and gave them medical care and food.",
+          "sourceId": "ushmm-encyclopedia",
+          "locator": "section 'Helping Other Prisoners'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In summer 1944, when hundreds of his former workers were sent from Plaszow to Mauthausen in freight cars, he bribed Göth and the SS guards to give them water at the station and on the way.",
+          "sourceId": "ushmm-encyclopedia",
+          "locator": "section 'The End of Schindler's Emalia Camp, Summer 1944'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Yad Vashem's commission wrote to him in 1963 of his constant care for the health of the Jews in his factories, with extra food, medicine and medical care, and his unceasing efforts to ease their plight.",
+          "sourceId": "paldiel-2021",
+          "locator": "p. 223, letter one of the Commission (protocol of 24 December 1963)"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At Brünnlitz in 1944-45 he paid for scarce food and medicine for the prisoners from his own earnings, spending the fortune he had made in Kraków.",
+          "sourceId": "ushmm-encyclopedia",
+          "locator": "sections 'Schindler's Rescue Efforts at Brünnlitz' and 'Acquiring Food and Medicine at Brünnlitz'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Moshe Bejski, one of the prisoners, said that when women knitted with wool stolen from a neighbouring factory, Schindler had the Gestapo case closed and paid 8,000 Marks for the wool.",
+          "sourceId": "yv-bejski-1962",
+          "locator": "second paragraph, beginning 'I personally met Schindler only in Brunnlitz'"
+        },
+        {
+          "kind": "deed",
+          "claim": "From 1943 he kept his Jewish workers in a sub-camp at his Kraków factory and added to their below-subsistence diet with food he bought on the black market with his own money.",
+          "sourceId": "yad-vashem",
+          "locator": "paragraph beginning 'In March 1943, the Krakow ghetto was being liquidated'"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1962 he told the survivors that when the war ended he was left with much less than he had owned before.",
+          "sourceId": "paldiel-2021",
+          "locator": "pp. 216-217, quoting Bejski, Yad Vashem Studies 24 (1994), p. 343"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "The US Holocaust Memorial Museum says he came to occupied Kraków at 31 intent on getting rich.",
+          "sourceId": "ushmm-encyclopedia",
+          "locator": "section 'Introduction', second paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "He took over a run-down enamelware factory in October 1939 and by the end of 1942 had grown it into an enamel and ammunition plant of about 45,000 square metres with almost 800 workers.",
+          "sourceId": "yad-vashem",
+          "locator": "paragraph beginning 'Shortly after the outbreak of war'"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1962 he told the survivors he came to Poland for business, not to rescue Jews, and that he worked and earned a lot.",
+          "sourceId": "paldiel-2021",
+          "locator": "p. 216, last paragraph, quoting Bejski, Yad Vashem Studies 24 (1994), p. 343"
+        }
+      ]
+    },
+    {
+      "word": "Pleasure",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Yad Vashem calls him a hedonist and gambler by nature who caroused into the night, mixed with senior SS officers and chased women in Kraków.",
+          "sourceId": "yad-vashem",
+          "locator": "paragraph beginning 'A hedonist and gambler by nature'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He befriended the Plaszow commandant Amon Göth and went to drunken parties at Göth's villa.",
+          "sourceId": "ushmm-encyclopedia",
+          "locator": "section 'Schindler's Friendship with Plaszow Commandant Amon Göth'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Paldiel writes that he went to Kraków to make easy profits and pay for the playboy lifestyle he wanted.",
+          "sourceId": "paldiel-2021",
+          "locator": "p. 211, first paragraph"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Give the credit to the people who did the hard work beside you.",
+      "sourceId": "yv-speech-1945",
+      "locator": "paragraph beginning 'Do not thank me for your survival'"
+    },
+    {
+      "text": "Keep your promise to the end, even when walking away would be easy.",
+      "sourceId": "paldiel-2021",
+      "locator": "pp. 216-217, his 1962 reply, quoting Bejski, Yad Vashem Studies 24 (1994), p. 343"
+    },
+    {
+      "text": "If the system needs what you produce, make the people you protect look necessary to it, and bend the records to fit.",
+      "sourceId": "yad-vashem",
+      "locator": "paragraph beginning 'Schindler's most effective tool in this privately conceived rescue campaign'"
+    },
+    {
+      "text": "Make friends with powerful men and spend that friendship, and your money, on favours for people who have none.",
+      "sourceId": "ushmm-encyclopedia",
+      "locator": "section 'Schindler's Friendship with Plaszow Commandant Amon Göth'"
+    },
+    {
+      "text": "Do not take revenge; bring your accusations to the proper judges.",
+      "sourceId": "yv-speech-1945",
+      "locator": "paragraph beginning 'In his proclamation today, Montgomery'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Do not thank me for your survival, thank your own people, who worked day and night to save you from annihilation.",
+      "sourceId": "yv-speech-1945",
+      "locator": "Farewell speech to the prisoners at Brünnlitz, May 1945, paragraph beginning 'Do not thank me for your survival'",
+      "translation": "English translation published by Yad Vashem; translator and year not given"
+    },
+    {
+      "text": "…it was always my will to demonstrate and defend humanity, to conduct my affairs humanely, the principle that guided all of my decisions.",
+      "sourceId": "yv-speech-1945",
+      "locator": "Farewell speech to the prisoners at Brünnlitz, May 1945, paragraph beginning 'I have demanded some productive output from you'",
+      "translation": "English translation published by Yad Vashem; translator and year not given"
+    },
+    {
+      "text": "I came to Poland for business purposes, and not for the rescue of Jews.",
+      "sourceId": "paldiel-2021",
+      "locator": "Reply at the banquet in his honour, Dan Hotel, Tel Aviv, 2 May 1962; Paldiel 2021, p. 216, quoting Bejski, Yad Vashem Studies 24 (1994), p. 343",
+      "translation": "English as printed by Paldiel (2021) after Bejski (1994); original language and translator not given"
+    },
+    {
+      "text": "It was not hard for me to escape with my fortune, but I stayed with you until the end. … I kept my promise.",
+      "sourceId": "paldiel-2021",
+      "locator": "Reply at the banquet in his honour, Dan Hotel, Tel Aviv, 2 May 1962; Paldiel 2021, pp. 216-217, quoting Bejski, Yad Vashem Studies 24 (1994), p. 343",
+      "translation": "English as printed by Paldiel (2021) after Bejski (1994); original language and translator not given"
+    }
+  ],
+  "definingMoment": {
+    "text": "In January 1945 the SS left two sealed cattle cars at the gates of his Brünnlitz camp. Inside were Jewish prisoners from Goleszow, a subcamp of Auschwitz, who had travelled for seven days in deep winter without food or water. Emilie stopped the commandant from sending the train back, and Oskar convinced him that he needed the people for work. About 100 survivors, frostbitten and starving, were nursed back to life. Schindler refused to let the dead be burned and had them buried with Jewish rites on a plot he bought for the purpose.",
+    "sourceIds": [
+      "yad-vashem",
+      "paldiel-2021"
+    ]
+  },
+  "shadow": {
+    "text": "He joined the Sudeten German Party in 1935, spied for Nazi Germany's military intelligence against Czechoslovakia, the country of which he was a citizen, from about 1936, was jailed for it by the Czechoslovak police in July 1938, and gained provisional Nazi Party membership in February 1939. In occupied Kraków from late 1939 he took over a Jewish-owned enamelware firm through the German expropriation process, ran at least one other business stolen from Jewish owners, and used Jewish forced labour because it was cheaper than paying Poles. In 1961-63 Julius Wiener and Nathan Wurzel told Yad Vashem that he had seized their family businesses by force and had German police or SS men beat them. Mordecai Paldiel, former head of Yad Vashem's Righteous department, finds Wurzel's charge inconsistent, and a former Wiener bookkeeper contradicted Wiener on some points; Yad Vashem's commission wrote that it could not reach conclusions on the charges, and after its chairman threatened to resign it did not give him its Righteous title, which it gave in 1993. He drank heavily, had numerous affairs, repeatedly mismanaged his money and failed to pay back loans, and in 1957 left his wife Emilie in Argentina with large debts; by her account he cashed in his return ticket.",
+    "sourceIds": [
+      "ushmm-encyclopedia",
+      "paldiel-2021",
+      "seattle-ellison-1994",
+      "irish-times-2001"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you promise someone that would have been easy to drop this week, and did you see it through?",
+    "principleIndex": 1
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "yv-speech-1945",
+      "kind": "primary",
+      "title": "The Speech delivered by Schindler to his Jewish workers in Brunnlitz, May 1945, upon the proclamation of the German surrender",
+      "author": "Oskar Schindler",
+      "year": "n.d. (speech given May 1945)",
+      "publisher": "Yad Vashem",
+      "url": "https://www.yadvashem.org/righteous/stories/schindler/schindler-speech.html"
+    },
+    {
+      "id": "yv-bejski-1962",
+      "kind": "secondary",
+      "title": "Testimony of Moshe Bejsky, May 1962",
+      "author": "Moshe Bejski",
+      "year": "n.d. (testimony given May 1962)",
+      "publisher": "Yad Vashem",
+      "url": "https://www.yadvashem.org/righteous/stories/schindler/moshe-bejsky-testimony.html"
+    },
+    {
+      "id": "yad-vashem",
+      "kind": "secondary",
+      "title": "Oskar and Emilie Schindler (Righteous Among the Nations, featured story)",
+      "author": "Yad Vashem",
+      "year": "n.d.",
+      "publisher": "Yad Vashem",
+      "url": "https://www.yadvashem.org/righteous/stories/schindler.html"
+    },
+    {
+      "id": "ushmm-encyclopedia",
+      "kind": "secondary",
+      "title": "Oskar Schindler (Holocaust Encyclopedia)",
+      "author": "United States Holocaust Memorial Museum",
+      "year": "n.d. (last edited 10 Mar 2025)",
+      "publisher": "United States Holocaust Memorial Museum",
+      "url": "https://encyclopedia.ushmm.org/content/en/article/oskar-schindler"
+    },
+    {
+      "id": "paldiel-2021",
+      "kind": "secondary",
+      "title": "Oskar Schindler and the Creation of the Commission for the Righteous at Yad Vashem (Jahrbuch für Antisemitismusforschung 30, pp. 209-226)",
+      "author": "Mordecai Paldiel",
+      "year": 2021,
+      "publisher": "Metropol (open access via Technische Universität Berlin)",
+      "url": "https://doi.org/10.14279/depositonce-16777"
+    },
+    {
+      "id": "mhk-krakow",
+      "kind": "secondary",
+      "title": "Biography of Oskar Schindler",
+      "author": "Museum of Krakow",
+      "year": "n.d.",
+      "publisher": "Muzeum Krakowa",
+      "url": "https://muzeumkrakowa.pl/en/branches/biography-of-oskar-schindler"
+    },
+    {
+      "id": "seattle-ellison-1994",
+      "kind": "secondary",
+      "title": "Frau Schindler -- Bitter Widow Who Helped Save Jewish Workers Says Oskar Was No Hero To Her (3 February 1994)",
+      "author": "Katherine Ellison (Knight-Ridder Newspapers)",
+      "year": 1994,
+      "publisher": "The Seattle Times",
+      "url": "https://archive.seattletimes.com/archive/19940203/1893296/frau-schindler----bitter-widow-who-helped-save-jewish-workers-says-oskar-was-no-hero-to-her"
+    },
+    {
+      "id": "irish-times-2001",
+      "kind": "secondary",
+      "title": "Role in rescue of Jews was overlooked (obituary of Emilie Schindler, October 2001)",
+      "author": "The Irish Times",
+      "year": 2001,
+      "publisher": "The Irish Times",
+      "url": "https://www.irishtimes.com/news/role-in-rescue-of-jews-was-overlooked-1.332023"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Sudeten German businessman (1908-1974), dead, never a politician or office holder, founded no religion; searches by name found no account of sexual contact with a minor or of sexual violence; the candidate list's guess is confirmed: he was a Nazi Party member, German spy and war profiteer who used forced labour, and two Kraków Jews accused him of seizing their businesses by force and having them beaten, before and alongside the rescue that made him famous."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I attacked each value against his serial affairs, his leaving Emilie in Argentina in 1957, his spying against his own country, the Wiener and Wurzel charges and his post-war claims for repayment, and rechecked every claim against Yad Vashem, the USHMM, Paldiel's 2021 article and the newspaper pieces. Loyalty fell: it holds only toward the prisoners in his care, while his wife, his country and his creditors give a strong case against it. Courage, Generosity, Ambition and Pleasure held on three or more sources, and the blind pick's Compassion was added on his care for prisoners who were not his workers. The New York Times 2004 piece was cut because the only copy is an unmarked History News Network reprint, and with it the claim of two ignored children; the 1963 commission's own letter now stands for the charges being unresolved.",
+    "checkedOn": "2026-11-10"
+  }
+}
