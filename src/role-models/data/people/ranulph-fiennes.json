@@ -1,0 +1,333 @@
+{
+  "id": "ranulph-fiennes",
+  "name": "Ranulph Fiennes",
+  "born": 1944,
+  "died": null,
+  "category": "explorers",
+  "areaIds": [
+    "lm_fitness",
+    "lm_mindset"
+  ],
+  "tagline": "A soldier turned explorer who climbed Everest at 65, six years after a heart attack.",
+  "startedFrom": "He was born on 7 March 1944, four months after his father, commander of the Royal Scots Greys, stepped on a mine in Italy and died; his mother raised him, partly in South Africa. At Eton he was bullied and took up boxing. He never got the O- and A-levels he needed for the army college at Sandhurst, and took a short-service commission in his father's regiment.",
+  "values": [
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He reached the top of Everest in May 2009, aged 65, after turning back in 2005 with a heart attack and in 2008 with exhaustion.",
+          "sourceId": "bbc-2009",
+          "locator": "BBC News, 21 May 2009, paras 1-10"
+        },
+        {
+          "kind": "words",
+          "claim": "In the 2022 documentary Explorer he says that in his most dangerous moments he told himself 'I cannot give in'.",
+          "sourceId": "guardian-2022",
+          "locator": "Explorer review, para. 3"
+        },
+        {
+          "kind": "witness",
+          "claim": "The BBC correspondent who climbed with him for the first two days said a 'bull-headed determination' drove him on.",
+          "sourceId": "bbc-2009",
+          "locator": "BBC News, 21 May 2009, quote from Andrew North"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In June 2003 he had a heart attack and a double bypass; that autumn he and Mike Stroud ran seven marathons in seven days, with the Falkland Islands standing in for Antarctica, ending in New York on 2 November 2003.",
+          "sourceId": "nbc-2003",
+          "locator": "msnbc.com news services, 3 Nov 2003, paras on the June surgery, the Falklands leg and the New York finish"
+        },
+        {
+          "kind": "deed",
+          "claim": "After his hand froze on a solo North Pole attempt in 2000, he sawed off the dead tops of his fingers himself, with fretsaw blades bought at the village shop.",
+          "sourceId": "guardian-2007",
+          "locator": "Jon Henley interview, 5 Oct 2007, paras on the 2000 North Pole attempt and the amputation"
+        },
+        {
+          "kind": "words",
+          "claim": "He says he has 'an ability to suffer cold and hunger and not get nasty', but denies a high pain threshold.",
+          "sourceId": "smh-2019",
+          "locator": "Richard Jinman interview, 19 Feb 2019, para. 2"
+        }
+      ]
+    },
+    {
+      "word": "Adventure",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He led the three-year Transglobe Expedition, completed in 1982, the first circumnavigation of the world on its polar axis, and led more than 30 expeditions.",
+          "sourceId": "bbc-2009",
+          "locator": "BBC News, 21 May 2009, closing paras ('During his career Sir Ranulph has led more than 30 expeditions')"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Guinness Book of Records once called him the 'World's Greatest Living Explorer'.",
+          "sourceId": "ind-2003",
+          "locator": "The Independent, Cahal Milmo, 9 June 2003, para. 2"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked what drives him, he says: 'It's my DNA. My ancestors did lots of travel in new places.'",
+          "sourceId": "spectator-2023",
+          "locator": "Melanie McDonagh interview, The Spectator (Spectator Life), 20 Oct 2023"
+        }
+      ]
+    },
+    {
+      "word": "Partnership",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He calls his first wife Ginny his 'wife, sister, friend, adviser, suggester, planner - my everything'; he had known her since he was 12.",
+          "sourceId": "guardian-2007",
+          "locator": "Jon Henley interview, 5 Oct 2007, para. on Ginny and Louise"
+        },
+        {
+          "kind": "witness",
+          "claim": "Ginny encouraged him to start leading expeditions; after they married in 1970 she did the planning and was the expeditions' radio operator.",
+          "sourceId": "smh-2019",
+          "locator": "Richard Jinman interview, 19 Feb 2019, paras on how he became an expedition leader"
+        },
+        {
+          "kind": "witness",
+          "claim": "A review of the 2022 film Explorer says Ginny was 'the brains of the operation', dreaming up the expeditions and going on many of them.",
+          "sourceId": "guardian-2022",
+          "locator": "Explorer review, para. 4"
+        },
+        {
+          "kind": "witness",
+          "claim": "Dr Mike Stroud, his 'longtime expedition partner', crossed Antarctica with him in 1993 and ran the seven marathons beside him in 2003, carrying a small defibrillator in case Fiennes fell ill.",
+          "sourceId": "nbc-2003",
+          "locator": "msnbc.com news services, 3 Nov 2003, paras 1 and on the defibrillator and the 1993 crossing"
+        }
+      ]
+    },
+    {
+      "word": "Fitness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At 65 he became the oldest Briton to reach the top of Everest, climbing from the highest camp to the summit in nine hours, a pace the BBC correspondent called 'remarkably fast'.",
+          "sourceId": "bbc-2009",
+          "locator": "BBC News, 21 May 2009, quote from Andrew North"
+        },
+        {
+          "kind": "words",
+          "claim": "In his autobiography he writes that at fifty-seven he was averaging three two-and-a-half-hour runs most weeks of the year.",
+          "sourceId": "madbad-2007",
+          "locator": "Mad, Bad & Dangerous to Know (Hodder & Stoughton 2007), passage after the 2000 amputations; page not seen, checked by Internet Archive full-text search"
+        },
+        {
+          "kind": "words",
+          "claim": "At 74, after heart attacks, a bypass and back trouble, he said his running had become a 'shuffle': 'But I still shuffle every day.'",
+          "sourceId": "smh-2019",
+          "locator": "Richard Jinman interview, 19 Feb 2019, paras on ageing ('But I still shuffle every day')"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Plan an expedition so carefully that it is feasible; an expedition that cannot work is the mad kind.",
+      "sourceId": "guardian-2007",
+      "locator": "Jon Henley interview, 5 Oct 2007, para. 5 ('These expeditions are very carefully planned and entirely feasible')"
+    },
+    {
+      "text": "In the most dangerous moments, tell yourself you cannot give in.",
+      "sourceId": "guardian-2022",
+      "locator": "Explorer review, para. 3 ('I cannot give in,' Fiennes would tell himself)"
+    },
+    {
+      "text": "As you get older, go slower and learn not to get carried away, instead of dropping the goal.",
+      "sourceId": "guardian-2007",
+      "locator": "Jon Henley interview, 5 Oct 2007, last para."
+    },
+    {
+      "text": "Keep moving every day, even when running has become a shuffle.",
+      "sourceId": "smh-2019",
+      "locator": "Richard Jinman interview, 19 Feb 2019, paras on ageing"
+    },
+    {
+      "text": "Only do a thing twice if you did not do it properly the first time.",
+      "sourceId": "smh-2019",
+      "locator": "Richard Jinman interview, 19 Feb 2019, last quote"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I do have an ability to suffer cold and hunger and not get nasty.",
+      "sourceId": "smh-2019",
+      "locator": "Sydney Morning Herald interview by Richard Jinman, 19 Feb 2019, para. 2"
+    },
+    {
+      "text": "The thing is, sometimes people are out to get you. Crevasses aren't.",
+      "sourceId": "guardian-2007",
+      "locator": "Guardian interview by Jon Henley, 5 Oct 2007, paragraph on his fear as a young soldier in Oman"
+    },
+    {
+      "text": "The older and the more decrepit you get, the more you learn not to get too carried away.",
+      "sourceId": "guardian-2007",
+      "locator": "Guardian interview by Jon Henley, 5 Oct 2007, last para."
+    },
+    {
+      "text": "If there is madness in there, I would like someone to specify it to me.",
+      "sourceId": "guardian-2007",
+      "locator": "Guardian interview by Jon Henley, 5 Oct 2007, para. beginning 'Not a madman'"
+    }
+  ],
+  "definingMoment": {
+    "text": "In June 2003, aged 59, he collapsed with a heart attack on a plane at Bristol airport and had an emergency bypass. He had planned to run seven marathons on seven continents in seven days with Dr Mike Stroud, and instead of cancelling he said he wanted to go and run. About four months later the two men ran in Patagonia, the Falkland Islands (in place of Antarctica), Sydney, Singapore, London and Cairo, and finished in New York on 2 November 2003 in 5 hours 25 minutes.",
+    "sourceIds": [
+      "ind-2003",
+      "nbc-2003",
+      "bbc-2009"
+    ]
+  },
+  "shadow": {
+    "text": "In 1966 police arrested him, then a 22-year-old lieutenant in the Royal Scots Greys, at Castle Combe in Wiltshire, on charges of trying to set fire to an outhouse near a dam built for the film Doctor Dolittle, while a friend was accused of trying to blow up the dam. He has said he kept plastic explosive left over from an army explosives course in Hereford; a judge fined him (£500, according to the Guardian) and put him on police probation, and he was dismissed from the SAS. He then spent several years fighting Marxist rebels in Dhofar for the Sultan of Oman; in his autobiography he writes that 'a large part of our task was to ambush them before they could target us'. His 1991 book The Feather Men was sold by Bloomsbury as a 'true adventure' about four British soldiers, two of them SAS men, murdered by a hit squad. In 2010 a Ministry of Defence source said many of its events 'never took place', and the daughter of Major Mike Kealy, named in it as a victim, said her father died on an SAS endurance exercise in 1979 and called the claims 'absolutely untrue'. Asked whether the story was fact or fiction, Fiennes replied 'yes it is', and said much in the book could be checked.",
+    "sourceIds": [
+      "time-1966",
+      "guardian-2007",
+      "smh-2019",
+      "madbad-2007",
+      "telegraph-2010a",
+      "telegraph-2010b"
+    ]
+  },
+  "councilQuestion": {
+    "text": "On which days this past week did you not move your body at all, not even a slow shuffle?",
+    "principleIndex": 3
+  },
+  "readings": [
+    {
+      "title": "Mad, Bad & Dangerous to Know",
+      "year": 2007
+    },
+    {
+      "title": "Living Dangerously",
+      "year": 1987
+    },
+    {
+      "title": "Mind over Matter",
+      "year": 1993
+    }
+  ],
+  "sources": [
+    {
+      "id": "madbad-2007",
+      "kind": "primary",
+      "title": "Mad, Bad & Dangerous to Know: The Autobiography",
+      "author": "Ranulph Fiennes",
+      "year": 2007,
+      "publisher": "Hodder & Stoughton",
+      "url": "https://archive.org/details/madbaddangeroust0000fien"
+    },
+    {
+      "id": "guardian-2007",
+      "kind": "primary",
+      "title": "Ranulph Fiennes on Tony Blair, cutting off his own fingers and his plan to return to Everest (interview)",
+      "author": "Jon Henley",
+      "year": 2007,
+      "publisher": "The Guardian",
+      "url": "https://www.theguardian.com/theguardian/2007/oct/05/features11.g21"
+    },
+    {
+      "id": "smh-2019",
+      "kind": "primary",
+      "title": "Sir Ranulph Fiennes on rivalry, pain and the storage of amputated fingers (interview, 19 February 2019)",
+      "author": "Richard Jinman",
+      "year": 2019,
+      "publisher": "The Sydney Morning Herald",
+      "url": "https://web.archive.org/web/20190222153049/https://www.smh.com.au/entertainment/sir-ranulph-fiennes-on-rivalry-pain-and-the-storage-of-amputated-fingers-20190218-h1be6y.html"
+    },
+    {
+      "id": "spectator-2023",
+      "kind": "primary",
+      "title": "Sir Ranulph Fiennes: a living Lawrence of Arabia (interview)",
+      "author": "Melanie McDonagh",
+      "year": 2023,
+      "publisher": "The Spectator",
+      "url": "https://spectator.com/article/sir-ranulph-fiennes-interview/"
+    },
+    {
+      "id": "bbc-2009",
+      "kind": "secondary",
+      "title": "Fiennes climbs to Everest summit",
+      "author": "BBC News",
+      "year": 2009,
+      "publisher": "BBC",
+      "url": "https://news.bbc.co.uk/2/hi/uk_news/8060649.stm"
+    },
+    {
+      "id": "nbc-2003",
+      "kind": "secondary",
+      "title": "Britons run 7 marathons in 7 days",
+      "author": "msnbc.com news services",
+      "year": 2003,
+      "publisher": "NBC News",
+      "url": "https://www.nbcnews.com/id/wbna3339839"
+    },
+    {
+      "id": "ind-2003",
+      "kind": "secondary",
+      "title": "Sir Ranulph Fiennes has emergency heart attack surgery",
+      "author": "Cahal Milmo",
+      "year": 2003,
+      "publisher": "The Independent",
+      "url": "https://www.independent.co.uk/news/uk/home-news/sir-ranulph-fiennes-has-emergency-heart-attack-surgery-108144.html"
+    },
+    {
+      "id": "guardian-2022",
+      "kind": "secondary",
+      "title": "Explorer review – Ranulph Fiennes on frostbite, family and James Bond",
+      "author": "Cath Clarke",
+      "year": 2022,
+      "publisher": "The Guardian",
+      "url": "https://www.theguardian.com/film/2022/jul/13/explorer-review-ranulph-fiennes-on-frostbite-family-and-james-bond"
+    },
+    {
+      "id": "time-1966",
+      "kind": "secondary",
+      "title": "World: 19th Century Fox",
+      "author": "Time staff",
+      "year": 1966,
+      "publisher": "Time",
+      "url": "https://content.time.com/time/subscriber/article/0,33009,835939,00.html"
+    },
+    {
+      "id": "telegraph-2010a",
+      "kind": "secondary",
+      "title": "Sir Ranulph Fiennes under fire as SAS get Hollywood treatment",
+      "author": "Richard Eden",
+      "year": 2010,
+      "publisher": "The Daily Telegraph",
+      "url": "https://web.archive.org/web/20100623151309/http://www.telegraph.co.uk/news/newstopics/celebritynews/7840676/Sir-Ranulph-Fiennes-under-fire-as-SAS-get-Hollywood-treatment.html"
+    },
+    {
+      "id": "telegraph-2010b",
+      "kind": "secondary",
+      "title": "Family of 'murdered' SAS major hit back at Sir Ranulph Fiennes over Hollywood film",
+      "author": "Richard Eden",
+      "year": 2010,
+      "publisher": "The Daily Telegraph",
+      "url": "https://web.archive.org/web/20100630085308/http://www.telegraph.co.uk/news/newstopics/celebritynews/7856447/Family-of-murdered-SAS-major-hit-back-at-Sir-Ranulph-Fiennes-over-Hollywood-film.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Living explorer and former soldier, not a politician or religious founder; no sexual-misconduct account found. Shadow: 1966 Castle Combe arrest, fine, police probation and SAS dismissal; Dhofar war service; The Feather Men sold as true and disputed (2010). 2026 press about his care concerns his wife's conduct, not his. Task's 'false Everest/marathon times later corrected': not found in any source."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked all five values: Adventure against his own dislike of the word 'adventurer' and his claim that exploring was 'a way of making a living', Determination and Fitness against the climbs he abandoned and his heart attacks, bypass, diabetes and back trouble, Partnership against the view that the evidence describes Ginny's work rather than his. None showed a pattern of contrary behaviour; Partnership (Ginny, plus his long expedition partnership with Mike Stroud) and Fitness (now with his own account of his running at 57) each rest on three sources, so all five held, and the blind pick's Courage and Contribution were not added for lack of room. All four quotes matched the Guardian and Sydney Morning Herald texts; the shadow lost the commanding officer's 'kill Communists' line, whose speaker I could not confirm, and thirteen smaller facts and principles were corrected, including six continents rather than seven for the marathons and what the 1966 charge actually was.",
+    "checkedOn": "2026-11-10"
+  }
+}
