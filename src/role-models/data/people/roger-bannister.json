@@ -1,0 +1,329 @@
+{
+  "id": "roger-bannister",
+  "name": "Roger Bannister",
+  "born": 1929,
+  "died": 2018,
+  "category": "athletes",
+  "areaIds": [
+    "lm_fitness",
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A medical student who trained about 35 minutes a day and ran the first mile under four minutes.",
+  "startedFrom": "He was born in Harrow, near London, in 1929. His father, the youngest of 11 children from a Lancashire cotton area with heavy unemployment, passed the civil service examination and became a clerk in London; his mother had worked in a cotton mill until she was 18 or 19, and neither parent went to university. He came to Oxford at 17 on a medical scholarship, never having worn running shoes or run on a track.",
+  "values": [
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After finishing fourth in the 1500 metres at the 1952 Helsinki Olympics, he thought about giving up athletics, then set himself a new target: the first mile under four minutes.",
+          "sourceId": "exeter-2018",
+          "locator": "paragraph beginning \"The 1500 metres final of the 1952 Olympics\""
+        },
+        {
+          "kind": "words",
+          "claim": "He called Helsinki 'a defeat and a kind of humiliation' that he had to get over to prove it was not the best he could do.",
+          "sourceId": "aoa-2000",
+          "locator": "answer to \"Yours was as public a defeat as one can imagine\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Olympedia records that he would probably have retired had he won gold in 1952, and instead went on to attempt the world record.",
+          "sourceId": "olympedia",
+          "locator": "paragraph beginning \"It was a record that Bannister\""
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says that as a medical student he would take about two hours off, run very hard for about 35 minutes, and be back at the hospital by two o'clock, for several years.",
+          "sourceId": "aoa-2000",
+          "locator": "answer beginning \"For example, I knew I wasn't going to be an obstetrician\""
+        },
+        {
+          "kind": "witness",
+          "claim": "John Cantwell writes that he would leave St Mary's Hospital and squeeze in a 30-minute workout during his lunch break.",
+          "sourceId": "cantwell-2015",
+          "locator": "second paragraph, beginning \"On May 6, 1954, I was walking\""
+        },
+        {
+          "kind": "words",
+          "claim": "He told Times Higher Education that while doing breathing research in the Oxford physiology laboratory he fitted his training into 'half or three quarters of an hour each day'.",
+          "sourceId": "the-1995",
+          "locator": "paragraph beginning \"Alongside which, Bannister had his own training schedule\""
+        },
+        {
+          "kind": "deed",
+          "claim": "His preparation for the sub-four-minute mile was interval training in lunch breaks, or when he was meant to be in obstetrics lectures.",
+          "sourceId": "si-2018",
+          "locator": "third paragraph, beginning \"Even had he lived in 16th century Florence\""
+        }
+      ]
+    },
+    {
+      "word": "Contribution",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Under him as first chairman of the Sports Council, public funding of sports facilities rose fast, Britain's new sports centres grew to over 800, and he started the first testing for anabolic steroids.",
+          "sourceId": "exeter-2018",
+          "locator": "paragraph beginning \"Later in 1954 Sir Roger took gold\""
+        },
+        {
+          "kind": "deed",
+          "claim": "He set up a laboratory for disorders of the autonomic nervous system and wrote the first textbook on them.",
+          "sourceId": "aoa-2000",
+          "locator": "answer to \"Without making a false analogy between sports and scientific research\""
+        },
+        {
+          "kind": "words",
+          "claim": "He says the Sport for All campaign, about chances for everyone rather than Olympic medals, may be of more long-term significance than anything else he did.",
+          "sourceId": "aoa-2000",
+          "locator": "answer to \"Could you tell us about your activity with the Sports Council?\""
+        },
+        {
+          "kind": "witness",
+          "claim": "David Epstein reports he was knighted in 1975 for leading the British Sports Council and its Sport for All campaign.",
+          "sourceId": "si-2018",
+          "locator": "second paragraph, beginning \"On May 6, 1954, Bannister ran\""
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says: 'All my life I've wanted to go on learning.'",
+          "sourceId": "aoa-2000",
+          "locator": "answer to \"Very often athletes or other really driven young people\""
+        },
+        {
+          "kind": "deed",
+          "claim": "From his late 70s he took Oxford short courses (2007-2012) in philosophy, history and other subjects, and completed a Diploma in Creative Writing in 2009.",
+          "sourceId": "oxford-conted",
+          "locator": "paragraph beginning \"Starting in his late 70s\""
+        },
+        {
+          "kind": "witness",
+          "claim": "John Cantwell writes that his retirement included new hobbies such as wood carving, and that he started a book club and a walking club.",
+          "sourceId": "cantwell-2015",
+          "locator": "paragraph beginning \"Retirement has included ample time\""
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says that to him running was an experiment: how far muscles, heart and lungs could be trained for one specific, skilled task.",
+          "sourceId": "aoa-2000",
+          "locator": "answer beginning \"Yes, six weeks later\""
+        },
+        {
+          "kind": "words",
+          "claim": "He says he chose neurology because it seemed the most difficult, the most intriguing and the most important part of medicine.",
+          "sourceId": "aoa-2000",
+          "locator": "answer beginning \"Yes, I was self-motivated\""
+        },
+        {
+          "kind": "deed",
+          "claim": "From 1950, alongside his running, he studied in the Oxford physiology laboratory how carbon dioxide and oxygen regulate breathing in exercise, building a treadmill in the workshop for it.",
+          "sourceId": "the-1995",
+          "locator": "paragraphs beginning \"By the end of 1954\" and \"Knowing that I was interested in neurology ultimately\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Cardiologist John Cantwell, who met him in 1995, writes that he seemed 'vitally interested in learning all that he could' about the person he was talking to.",
+          "sourceId": "cantwell-2015",
+          "locator": "paragraph beginning \"In 1995, I had the occasion to meet\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "After a public defeat, do not quit on it: set a new target and prove to yourself it was not your best.",
+      "sourceId": "aoa-2000",
+      "locator": "answers to \"Did that that defeat help?\" and \"Yours was as public a defeat as one can imagine\""
+    },
+    {
+      "text": "Find the smallest amount of hard training that still makes you better each year, and fit it around your main work.",
+      "sourceId": "aoa-2000",
+      "locator": "answer beginning \"I must be the international athlete who trained least\""
+    },
+    {
+      "text": "Treat your training as an experiment: test what works for your own body instead of obeying without reasons.",
+      "sourceId": "aoa-2000",
+      "locator": "answers beginning \"Yes, six weeks later\" and \"There was a coach, but I fell out with him\""
+    },
+    {
+      "text": "When a real chance comes, take it even if conditions are not perfect; it may not come again.",
+      "sourceId": "aoa-2000",
+      "locator": "answer to \"What was it you said when you saw the flag moving in the wind?\""
+    },
+    {
+      "text": "Keep learning all your life and look for a new challenge after each one.",
+      "sourceId": "oxford-conted",
+      "locator": "paragraphs beginning \"Bannister told Hamley\" and \"To poetry tutor Jenny Lewis\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "It's a defeat and a kind of humiliation. I had to get over it and prove to myself, if not to other people, that that was not the best I could do.",
+      "sourceId": "aoa-2000",
+      "locator": "answer to \"Yours was as public a defeat as one can imagine\""
+    },
+    {
+      "text": "To me, running was an experiment.",
+      "sourceId": "aoa-2000",
+      "locator": "answer beginning \"Yes, six weeks later\""
+    },
+    {
+      "text": "All my life I've wanted to go on learning.",
+      "sourceId": "aoa-2000",
+      "locator": "answer to \"Very often athletes or other really driven young people\""
+    },
+    {
+      "text": "I'd rather be remembered for my work in neurology than my running.",
+      "sourceId": "bigissue-2014",
+      "locator": "last paragraph, beginning \"I'd rather be remembered\""
+    }
+  ],
+  "definingMoment": {
+    "text": "On 6 May 1954, a medical student of 25, he went to St Mary's Hospital in London in the morning to sharpen his spikes, then took the train to Oxford. Winds of up to 25 miles per hour made a record look impossible, and he waited all afternoon to decide. Shortly before the 6 pm race the wind dropped and he said, 'Let's do it.' Chris Brasher and Chris Chataway set the pace for the first three laps, he passed Chataway on the last lap, and he finished in 3 minutes 59.4 seconds, the first mile under four minutes.",
+    "sourceIds": [
+      "aoa-2000",
+      "exeter-2018",
+      "wa-2018"
+    ]
+  },
+  "shadow": {
+    "text": "In September 1995, at a British Association for the Advancement of Science conference, he said black sprinters have 'certain natural anatomical advantages' and that he was 'prepared to risk political incorrectness'; a wire report noted he gave no evidence. John Cantwell, chief medical officer of the 1996 Atlanta Olympics, writes that after Bannister was quoted in Sports Illustrated saying black athletes 'all seem to have certain anatomical advantages', the organizing committee vetoed adding him to the Games' medical staff. In 1954 critics, among them an Athletics Weekly editorial and Harold Abrahams, questioned his use of two pacemakers, and in a 2004 book the author John Bale wrote that the record was 'paced, not raced'.",
+    "sourceIds": [
+      "spokesman-1995",
+      "the-1995",
+      "cantwell-2015",
+      "spiked-2018"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which chance did you let pass this week because the conditions were not perfect?",
+    "principleIndex": 3
+  },
+  "readings": [
+    {
+      "title": "The First Four Minutes",
+      "year": 1955
+    },
+    {
+      "title": "Twin Tracks: The Autobiography",
+      "year": 2014
+    }
+  ],
+  "sources": [
+    {
+      "id": "aoa-2000",
+      "kind": "primary",
+      "title": "Sir Roger Bannister interview (International Achievement Summit, London, 27 October 2000, and Dublin, 7 June 2002; one combined transcript)",
+      "author": "American Academy of Achievement",
+      "year": 2000,
+      "url": "https://achievement.org/achiever/sir-roger-bannister/"
+    },
+    {
+      "id": "bigissue-2014",
+      "kind": "primary",
+      "title": "Roger Bannister: \"I'd rather be remembered for neurology than running\" (Letter To My Younger Self, May 2014, reposted 5 March 2018)",
+      "author": "Jane Graham, The Big Issue",
+      "year": 2014,
+      "url": "https://www.bigissue.com/interviews/roger-bannister-id-rather-remembered-neurology-running"
+    },
+    {
+      "id": "the-1995",
+      "kind": "secondary",
+      "title": "A breath of fresh air by a four-minute miler (22 September 1995)",
+      "author": "Times Higher Education",
+      "year": 1995,
+      "url": "https://www.timeshighereducation.com/news/a-breath-of-fresh-air-by-a-four-minute-miler/95213.article"
+    },
+    {
+      "id": "spokesman-1995",
+      "kind": "secondary",
+      "title": "Bannister says blacks possess anatomical sprinting advantages (14 September 1995, compiled from wire services)",
+      "author": "The Spokesman-Review",
+      "year": 1995,
+      "url": "https://www.spokesman.com/stories/1995/sep/14/bannister-says-blacks-possess-anatomical"
+    },
+    {
+      "id": "exeter-2018",
+      "kind": "secondary",
+      "title": "Exonian Sir Roger Bannister dies aged 88 (March 2018)",
+      "author": "Exeter College, University of Oxford",
+      "year": 2018,
+      "url": "https://www.exeter.ox.ac.uk/exonian-sir-roger-bannister-dies-aged-88/"
+    },
+    {
+      "id": "wa-2018",
+      "kind": "secondary",
+      "title": "Roger Bannister obituary (4 March 2018)",
+      "author": "IAAF / World Athletics",
+      "year": 2018,
+      "url": "https://worldathletics.org/news/iaaf-news/roger-bannister-obituary"
+    },
+    {
+      "id": "olympedia",
+      "kind": "secondary",
+      "title": "Roger Bannister (athlete biography)",
+      "author": "Olympedia (OlyMADMen)",
+      "year": "accessed 2026-11-10",
+      "url": "https://www.olympedia.org/athletes/68857"
+    },
+    {
+      "id": "si-2018",
+      "kind": "secondary",
+      "title": "Magical Mile Was Just One of Sir Roger Bannister's Myriad Accomplishments (4 March 2018)",
+      "author": "David Epstein, Sports Illustrated",
+      "year": 2018,
+      "url": "https://www.si.com/track-and-field/2018/03/04/sir-roger-bannister-obituary-neurology-four-minute-mile"
+    },
+    {
+      "id": "cantwell-2015",
+      "kind": "secondary",
+      "title": "Reflections on Sir Roger Bannister and his autobiography, Twin Tracks (Proceedings, Baylor University Medical Center 28(4):528-530)",
+      "author": "John Davis Cantwell",
+      "year": 2015,
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4569246/"
+    },
+    {
+      "id": "oxford-conted",
+      "kind": "secondary",
+      "title": "Roger Bannister's fourth challenge",
+      "author": "Oxford Lifelong Learning, Department for Continuing Education, University of Oxford",
+      "year": "accessed 2026-11-10",
+      "url": "https://lifelong-learning.ox.ac.uk/about/roger-bannisters-fourth-challenge"
+    },
+    {
+      "id": "spiked-2018",
+      "kind": "secondary",
+      "title": "The legend and myths of that four-minute mile (8 March 2018; draws on John Bale, Roger Bannister and the Four-Minute Mile, Routledge 2004)",
+      "author": "Mick Hume, spiked",
+      "year": 2018,
+      "url": "https://www.spiked-online.com/2018/03/08/the-legend-and-myths-of-that-four-minute-mile"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real British runner and neurologist (1929-2018), never a politician, campaigner or religious founder; no account of sexual contact with a minor or of sexual violence was found; he is in, and his dark side is his 1995 public claim that black athletes have natural anatomical advantages, plus the 1954 criticism of his paced record."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value and every sentence against the saved Academy of Achievement transcript, the Exeter College, World Athletics, Olympedia and Sports Illustrated obituaries, Cantwell's 2015 article and the 1995 reports. Self-reliance fell: in his own words he had a coach, Franz Stampfl, by 1954, Stampfl's advice led him to run that day, and two pacemakers carried the pace, so only the narrow sense (working out his own training) holds. Determination, Discipline, Contribution and Learning held, and the blind pick's Curiosity came in on his own account of running as an experiment and his breathing research. Three sentences were tightened: his father's job, his mother's mill years and the description of John Bale.",
+    "checkedOn": "2026-11-10"
+  }
+}
