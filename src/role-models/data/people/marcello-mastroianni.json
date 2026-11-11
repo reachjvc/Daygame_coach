@@ -1,0 +1,292 @@
+{
+  "id": "marcello-mastroianni",
+  "name": "Marcello Mastroianni",
+  "born": 1924,
+  "died": 1996,
+  "category": "charisma",
+  "areaIds": [
+    "lm_relationship",
+    "lm_friends",
+    "lm_mission"
+  ],
+  "tagline": "A film star who never took himself seriously, but took his work seriously.",
+  "startedFrom": "He was born on 28 September 1924 in Fontana Liri, a small shoe-making town about fifty miles southeast of Rome, the first of two sons of Ottorino Mastrojanni and Ida Irolle. In his own words the family accepted poverty as normal: his father repaired broken furniture in a garage, mended his son's shoes with pieces of aluminium, and later went blind from diabetes. He qualified as a surveyor at a trade school and wanted to be an architect, but the war came first.",
+  "values": [
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He described letting a character grow inside him until it took over on set, while keeping one eye outside himself to watch and control it.",
+          "sourceId": "nyt-1987",
+          "locator": "paragraphs beginning \"It's like a woman getting pregnant\" and \"So when I come onto the set\""
+        },
+        {
+          "kind": "words",
+          "claim": "He said that in his years in Visconti's theatre company he learned to throw away the tricks a lazy actor depends on, and that the profession is a discipline.",
+          "sourceId": "dewey-1993",
+          "locator": "p. 45"
+        },
+        {
+          "kind": "witness",
+          "claim": "Fellini called the legend that he was indifferent and lazy nonsense: he spent hours discussing a role until he understood it thoroughly.",
+          "sourceId": "dewey-1993",
+          "locator": "p. 61"
+        },
+        {
+          "kind": "deed",
+          "claim": "He won two best actor awards at the Cannes Film Festival and was nominated for three Oscars.",
+          "sourceId": "ap-1996",
+          "locator": "paragraph beginning \"Since his screen debut in 1947\""
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He shot six films in 1954, a load that made it impossible for him to go on working on the stage.",
+          "sourceId": "dewey-1993",
+          "locator": "p. 68"
+        },
+        {
+          "kind": "witness",
+          "claim": "Dewey writes that his claim to be lazy is exaggerated: with 125 films since the 1950s, almost always in the lead, he was one of the world's busiest performers.",
+          "sourceId": "dewey-1993",
+          "locator": "p. 61"
+        },
+        {
+          "kind": "deed",
+          "claim": "Time records that he kept acting for half a century, in more than 120 films.",
+          "sourceId": "time-1996",
+          "locator": "p. 1, paragraph beginning \"He died in Paris\""
+        },
+        {
+          "kind": "words",
+          "claim": "At almost 63 he said he wanted to live another thousand years because he had a lot of films to do.",
+          "sourceId": "nyt-1987",
+          "locator": "paragraph beginning \"I don't believe in a hereafter\""
+        }
+      ]
+    },
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "At Cannes in May 1996 he said he was always annoyed when people said extraordinary things about actors: they just do a job.",
+          "sourceId": "ap-1996",
+          "locator": "paragraph beginning \"Mastroianni appeared weak at the Cannes Film Festival\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Associated Press obituary calls him ironic, understated and always modest, uncomfortable with his screen image.",
+          "sourceId": "ap-1996",
+          "locator": "paragraph beginning \"Ironic, understated and always modest\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Christian Science Monitor calls him self-deprecating to the end: receiving the French Legion of Honour in 1993 he called himself a charlatan, a buffoon and a liar.",
+          "sourceId": "csm-1996",
+          "locator": "first paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "Compared with Gable, Cooper and Bogart, he said he had skinny legs and a face with no power, and that if they were heroes he was a nonhero.",
+          "sourceId": "nyt-1987",
+          "locator": "paragraph beginning \"I don't have their bodies\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Dewey writes that he declines to think of himself as a star or to act like one.",
+          "sourceId": "dewey-1993",
+          "locator": "p. 17"
+        }
+      ]
+    },
+    {
+      "word": "Humour",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At the end of a guest spot on the TV show Laugh-In he stared into the camera and pulled off his toupee; Time says he made fun of his own star machismo.",
+          "sourceId": "time-1996",
+          "locator": "p. 2, first paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "The director Roger Vadim said his humour and tenderness about himself were among the best and rarest qualities of geniuses.",
+          "sourceId": "ap-1996",
+          "locator": "paragraph beginning \"He had this huge quality\""
+        },
+        {
+          "kind": "deed",
+          "claim": "For years he made an old Italian joke about Jesus, Joseph the carpenter and Pinocchio part of his interview repertoire.",
+          "sourceId": "dewey-1993",
+          "locator": "p. 261"
+        }
+      ]
+    },
+    {
+      "word": "Friendship",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said he loved working with Fellini and Ettore Scola because, like old friends at a café, they knew his defects and limits and accepted him with all of them.",
+          "sourceId": "nyt-1987",
+          "locator": "paragraph beginning \"He pauses for another cigarette and an espresso\""
+        },
+        {
+          "kind": "words",
+          "claim": "Of the three or four women he said he had loved, he said that except for Faye Dunaway they had parted as friends or were still friends.",
+          "sourceId": "dewey-1993",
+          "locator": "p. 181"
+        },
+        {
+          "kind": "witness",
+          "claim": "Dewey writes that, Dunaway apart, he never made a secret of lasting friendships with his former lovers, and that his comfort with Jeanne Moreau during La Notte grew into a friendship of decades.",
+          "sourceId": "dewey-1993",
+          "locator": "front flap of the dust jacket (scan leaf 2); p. 117"
+        },
+        {
+          "kind": "deed",
+          "claim": "When he died in December 1996, Catherine Deneuve, his partner of the early 1970s, was at his bedside with their daughter Chiara.",
+          "sourceId": "ap-1996",
+          "locator": "paragraph beginning \"The actor's lawyer in Rome confirmed the death\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Spend your time with friends who know your defects and limits and accept you with all of them.",
+      "sourceId": "nyt-1987",
+      "locator": "paragraph beginning \"He pauses for another cigarette and an espresso\""
+    },
+    {
+      "text": "Treat your work as a discipline: drop the tricks a lazy man leans on to get through.",
+      "sourceId": "dewey-1993",
+      "locator": "p. 45"
+    },
+    {
+      "text": "Let the role grow inside you, but keep one eye outside yourself to watch and control it.",
+      "sourceId": "nyt-1987",
+      "locator": "paragraph beginning \"So when I come onto the set\""
+    },
+    {
+      "text": "Take the work seriously, never yourself: an actor just does a job.",
+      "sourceId": "ap-1996",
+      "locator": "paragraphs beginning \"He had this huge quality\" (Vadim) and \"Mastroianni appeared weak at the Cannes Film Festival\""
+    },
+    {
+      "text": "When one piece of work is done, go into the next without looking back, as a new adventure.",
+      "sourceId": "nyt-1987",
+      "locator": "paragraph beginning \"In the mirror, I look years younger\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Why do I love so much being with Fellini and Ettore Scola? Because they know my defects, my limits, and accept me with all of it.",
+      "sourceId": "nyt-1987",
+      "locator": "Curtis Bill Pepper, \"Still Mastroianni\", The New York Times Magazine, 20 September 1987, section 6, p. 47; paragraph beginning \"He pauses for another cigarette\""
+    },
+    {
+      "text": "I'm always rather annoyed when people say extraordinary things about actors. We just do a job.",
+      "sourceId": "ap-1996",
+      "locator": "said at the Cannes Film Festival, May 1996; reported by the Associated Press, 19 December 1996"
+    },
+    {
+      "text": "They said I was playing a singles game, making my own rules, that I appeared to be sweet and gentle, but was really a monstrous egotist … I guess it was mostly true.",
+      "sourceId": "nyt-1987",
+      "locator": "Curtis Bill Pepper, \"Still Mastroianni\", The New York Times Magazine, 20 September 1987, section 6, p. 47; paragraph beginning \"He has lived openly with both Faye Dunaway and Catherine Deneuve\""
+    },
+    {
+      "text": "But I'm alive, full of curiosity, I want to walk on the moon.",
+      "sourceId": "nyt-1987",
+      "locator": "Curtis Bill Pepper, \"Still Mastroianni\", The New York Times Magazine, 20 September 1987, section 6, p. 47; paragraph beginning \"I don't believe in a hereafter\""
+    }
+  ],
+  "definingMoment": {
+    "text": "During the war he helped draw maps at the military map institute in Florence. After Italy surrendered in September 1943, he and other men from the institute were sent north to Dobbiaco in the Alps to dig trenches. In early 1944, told he would be moved to a labour camp in Germany, he used his map-maker's drawing skills to forge papers for himself and the painter Remo Brindisi. The two escaped to Venice and lived there hand to mouth, hiding from the Germans, until the war ended in 1945.",
+    "sourceIds": [
+      "dewey-1993",
+      "ap-1996"
+    ]
+  },
+  "shadow": {
+    "text": "He married the actress Flora Carabella in 1950 and stayed married to her until his death in 1996, while living openly with other women. While making A Place for Lovers (1968) he began an affair of more than two years with Faye Dunaway; Dewey reports that her associates said she lost patience when he refused to divorce his wife. During It Only Happens to Others (1971) he moved into a Paris apartment with Catherine Deneuve, and their daughter Chiara was born on 28 May 1972. His wife said that when the Deneuve affair began she asked him whether he wanted to separate, and he answered: \"No, leave it as it is.\" Both Dunaway and Deneuve left him; in 1987 he said they had called him a monstrous egotist who would never change his life to fit theirs, and added: \"I guess it was mostly true.\" In 1987 he smoked 60 cigarettes a day, and Dewey writes that after the break-up with Deneuve in the mid-1970s he liked wine and grappa \"more than they liked him\".",
+    "sourceIds": [
+      "dewey-1993",
+      "nyt-1987",
+      "time-1996"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Who saw your faults this week and still wanted your company, and did you give them your time?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Marcello Mastroianni: mi ricordo, sì, io mi ricordo (his spoken memoir on film, directed by Anna Maria Tatò)",
+      "year": 1997
+    }
+  ],
+  "sources": [
+    {
+      "id": "nyt-1987",
+      "kind": "primary",
+      "title": "Still Mastroianni (interview profile)",
+      "author": "Curtis Bill Pepper",
+      "year": 1987,
+      "publisher": "The New York Times Magazine, 20 September 1987, section 6, p. 47",
+      "url": "https://www.nytimes.com/1987/09/20/magazine/still-mastroianni.html"
+    },
+    {
+      "id": "dewey-1993",
+      "kind": "secondary",
+      "title": "Marcello Mastroianni: His Life and Art",
+      "author": "Donald Dewey",
+      "year": 1993,
+      "publisher": "Carol Publishing Group, Secaucus, N.J.",
+      "url": "https://archive.org/details/marcellomastroia0000dewe"
+    },
+    {
+      "id": "time-1996",
+      "kind": "secondary",
+      "title": "Marcello Mastroianni (1924-1996): Imperfect, Irresistable [sic]",
+      "author": "Richard Corliss",
+      "year": 1996,
+      "publisher": "Time, 30 December 1996",
+      "url": "https://content.time.com/time/subscriber/article/0,33009,985778-1,00.html"
+    },
+    {
+      "id": "ap-1996",
+      "kind": "secondary",
+      "title": "'Latin lover' actor Marcello Mastroianni dies",
+      "author": "Associated Press",
+      "year": 1996,
+      "publisher": "Associated Press, printed in the Deseret News, 19 December 1996",
+      "url": "https://www.deseret.com/1996/12/19/19283602/latin-lover-actor-marcello-mastroianni-dies/"
+    },
+    {
+      "id": "csm-1996",
+      "kind": "secondary",
+      "title": "Marcello Mastroianni: Italy's 'Common Man'",
+      "author": "Lara Santoro",
+      "year": 1996,
+      "publisher": "The Christian Science Monitor, 20 December 1996",
+      "url": "https://www.csmonitor.com/1996/1220/122096.feat.film.2.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Italian actor (1924-1996), not fictional, no politics or religion, and no account found of sexual contact with anyone under 16 or of sexual violence; in, with a documented dark side: lifelong open infidelity to his wife, plus heavy smoking and a period of heavy drinking."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked every value, quote and sentence, and re-read the 1987 New York Times interview, the AP, Time and Christian Science Monitor obituaries, and Dewey's biography through the Internet Archive's search-inside, where every cited page matched. Humility held against his own 'monstrous egotist' admission, because that charge concerns his love life while his modesty about fame is reported by AP, the Monitor, Dewey and his own words; Hard work held against his lifelong claim to be lazy, which Fellini, Dewey and his daughter all reject. The blind pick's Loyalty fell to his lifelong infidelity, and its Passion is well supported but had no room beside five holding values. All four quotes were found word for word; the fixes were small: the Laugh-In claim now follows Time's words, the shadow now says who said what in 1987 and adds his wife's account, and a weak Friendship item was replaced.",
+    "checkedOn": "2026-11-10"
+  }
+}
