@@ -1,0 +1,339 @@
+{
+  "id": "sean-connery",
+  "name": "Sean Connery",
+  "born": 1930,
+  "died": 2020,
+  "category": "charisma",
+  "areaIds": [
+    "lm_mindset",
+    "lm_mission",
+    "lm_contribution"
+  ],
+  "tagline": "Milkman at 13 who read his way into acting and became the first film James Bond.",
+  "startedFrom": "He was born on 25 August 1930 in Fountainbridge, Edinburgh, the son of a factory worker and a cleaning woman, and grew up in one room of a tenement with a shared toilet and no hot water. From the age of nine he delivered milk before school; he left school at 13 with no qualifications and worked as a full-time milkman, coffin polisher and bricklayer, then joined the Royal Navy, which discharged him about three years later with stomach ulcers. Back in Edinburgh he drove trucks, worked as a lifeguard, posed as a model at the Edinburgh College of Art and spent his spare time bodybuilding.",
+  "values": [
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Accepting the AFI Life Achievement Award in 2006 he said his big break came at five, when he learned to read, and that having left school at 13 he would not be standing there without the books, the plays and the scripts.",
+          "sourceId": "afi-2006",
+          "locator": "AFI Life Achievement Award speech, 8 June 2006, paragraph beginning 'I had a very hard working mother and father'"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1992 he told the Houston Chronicle he spent his South Pacific tour in every library in Britain, Ireland, Scotland and Wales, and that the books and the reading can change one's life: 'I'm the living evidence.'",
+          "sourceId": "nyt-2020",
+          "locator": "NYT obituary, 31 Oct 2020, section 'A Challenging Childhood', paragraph quoting The Houston Chronicle, 1992"
+        },
+        {
+          "kind": "deed",
+          "claim": "On the South Pacific tour (1953-54) the American actor Robert Henderson lent him Ibsen, Shakespeare and Shaw and persuaded him to take elocution lessons.",
+          "sourceId": "bbc-2020",
+          "locator": "BBC obituary, 31 Oct 2020, paragraph beginning 'American actor Robert Henderson'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Encyclopedia of World Biography says the unschooled Connery looked up to Henderson as a mentor, and quotes him saying he spent his days at the library and his evenings at the theatre.",
+          "sourceId": "ewb",
+          "locator": "section 'Chose Acting over Soccer', second paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1971 he used his then-record $1.25m fee for Diamonds Are Forever to set up the Scottish International Education Trust.",
+          "sourceId": "bbc-2020",
+          "locator": "BBC obituary, 31 Oct 2020, paragraph beginning 'Saltzman and Broccoli lured Connery back'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He gave 50,000 pounds to the National Youth Theatre after reading that it needed money.",
+          "sourceId": "nyt-2020",
+          "locator": "NYT obituary, 31 Oct 2020, paragraph beginning 'When asked why he was willing to take second billing'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Encyclopedia of World Biography, after the trust gift, writes that it 'is not the only example of Connery's generosity to charities', naming the 1987 National Youth Theatre gift.",
+          "sourceId": "ewb",
+          "locator": "section 'Bond, James Bond', last paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "For The Untouchables he told The Times in 1987 that he read the scenes in which his character did not appear, to learn what the character knows and does not know.",
+          "sourceId": "nyt-2020",
+          "locator": "NYT obituary, 31 Oct 2020, paragraph beginning 'After reading Malone's scenes', quoting his 1987 Times interview"
+        },
+        {
+          "kind": "deed",
+          "claim": "To audition for the chorus of South Pacific in 1953 he took a crash course in dancing and singing.",
+          "sourceId": "ewb",
+          "locator": "section 'A Depression-Era Childhood', last paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Encyclopedia of World Biography calls him a very conscientious worker, always trying to improve the film he is in rather than making himself look better at others' expense.",
+          "sourceId": "ewb",
+          "locator": "section 'Roles Increased with Age', last paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "Though he had little formal training, he studied for three years with the Swedish dancer Yat Malmgren, more interested in movement and gesture than in elocution.",
+          "sourceId": "bfi-1992",
+          "locator": "Sight and Sound, October 1992, paragraph beginning 'Although he didn't receive much formal training'"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "From the age of nine he delivered milk from a horse cart for four hours before school, and at 13 became a full-time milkman.",
+          "sourceId": "nyt-2020",
+          "locator": "NYT obituary, 31 Oct 2020, section 'A Challenging Childhood', paragraphs on the milk round"
+        },
+        {
+          "kind": "deed",
+          "claim": "Back in Edinburgh he drove trucks, worked as a lifeguard and modelled at the Edinburgh College of Art, bodybuilding in his spare time.",
+          "sourceId": "bbc-2020",
+          "locator": "BBC obituary, 31 Oct 2020, paragraph beginning 'He scraped a living any way he could'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Encyclopedia of World Biography: 'Connery has worked hard throughout his career and taken professional risks with his roles.'",
+          "sourceId": "ewb",
+          "locator": "section 'Roles Increased with Age', last paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "During the filming of Thunderball he worked long days on set and gave press interviews at night.",
+          "sourceId": "ewb",
+          "locator": "section 'Bond, James Bond', paragraph beginning 'Between 1962 and 1967'"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Tired of Bond and afraid of being typecast, he left the role after You Only Live Twice (1967) and turned down On Her Majesty's Secret Service.",
+          "sourceId": "bbc-2020",
+          "locator": "BBC obituary, 31 Oct 2020, paragraphs beginning 'But by the time You Only Live Twice was completed'"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1987 he told The Times that Burt Lancaster lasted longer than Kirk Douglas because he refused to be limited, 'And that's the way I've tried to be.'",
+          "sourceId": "nyt-2020",
+          "locator": "NYT obituary, 31 Oct 2020, section 'I Don't Mind Being Older', first paragraph, quoting his 1987 Times interview"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Encyclopedia of World Biography calls him 'the stubborn Scot' who took roles that interested him, regardless of how they fit his image.",
+          "sourceId": "ewb",
+          "locator": "opening section, second paragraph"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Educate yourself with books when school did not do it for you.",
+      "sourceId": "afi-2006",
+      "locator": "AFI Life Achievement Award speech, 8 June 2006, paragraph beginning 'I had a very hard working mother and father'"
+    },
+    {
+      "text": "Learn a part from what the other people in the story think of him, so you never play what he cannot know.",
+      "sourceId": "nyt-2020",
+      "locator": "NYT obituary, 31 Oct 2020, paragraph beginning 'After reading Malone's scenes', quoting his 1987 Times interview"
+    },
+    {
+      "text": "Do not let anyone box you in; take the less flattering part and do not mind looking older or stupid.",
+      "sourceId": "nyt-2020",
+      "locator": "NYT obituary, 31 Oct 2020, section 'I Don't Mind Being Older', first paragraph, quoting his 1987 Times interview"
+    },
+    {
+      "text": "Check the books on your own deals, and go to court when you think someone is cheating you.",
+      "sourceId": "nyt-2020",
+      "locator": "NYT obituary, 31 Oct 2020, paragraphs beginning 'If he enjoyed being silly on the screen' and 'In 1978 he and Mr. Caine filed suit'"
+    },
+    {
+      "text": "Use your power for what is good for the whole film and the other actors, not only your own part.",
+      "sourceId": "ewb",
+      "locator": "section 'Roles Increased with Age', last paragraph, quoting his interview in Premiere"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "You see, at five, I learned to read. It's that simple and it's that profound.",
+      "sourceId": "afi-2006",
+      "locator": "AFI Life Achievement Award acceptance speech, Kodak Theatre, Los Angeles, 8 June 2006"
+    },
+    {
+      "text": "Patience truly is a virtue.",
+      "sourceId": "oscars-1988",
+      "locator": "Oscar acceptance speech, Actor in a Supporting Role (The Untouchables), 60th Academy Awards, 11 April 1988"
+    },
+    {
+      "text": "My strength as an actor, I think, is that I've stayed close to the core of myself.",
+      "sourceId": "nyt-2020",
+      "locator": "Interview with The New York Times, 1987, as quoted in its obituary of 31 October 2020 (closing paragraphs)"
+    },
+    {
+      "text": "The trap that bad actors fall into is playing information they don't have.",
+      "sourceId": "nyt-2020",
+      "locator": "Interview with The New York Times, 1987, on playing Malone in The Untouchables, as quoted in its obituary of 31 October 2020"
+    }
+  ],
+  "definingMoment": {
+    "text": "He had left the Bond role after You Only Live Twice in 1967, afraid of being typecast. In 1971 the producers brought him back for Diamonds Are Forever only by meeting his demand for a then-record fee, which the BBC gives as $1.25 million. He used the money to set up the Scottish International Education Trust, which helps talented Scots study. The trust still makes awards today; it reports 16 awards worth over 43,000 pounds in one recent year.",
+    "sourceIds": [
+      "bbc-2020",
+      "nyt-2020",
+      "ewb",
+      "siet"
+    ]
+  },
+  "shadow": {
+    "text": "In a 1965 Playboy interview he said an open-handed slap of a woman is justified if all other alternatives fail and there has been plenty of warning; when Barbara Walters asked him about it on ABC in December 1987 he said he had not changed his opinion, and in Vanity Fair in 1993 he said some women 'want a smack'. His first wife, Diane Cilento, wrote in her 2006 memoir that he was cruel and emotionally abusive, and told the Daily Mail that in a hotel room in Spain in 1965 he struck her twice in the face, knocking her to the floor and briefly unconscious; in 2005 she had said there was 'physical contact' that should be seen in context. He always denied hitting her and called her book 'a crock of shit'. The BBC says their marriage ended amid allegations that he had been violent towards her and had a string of affairs. The New York Times says he eventually said he had been wrong about hitting women, many years later; Snopes found no on-the-record statement in which he said so. From 1975 he lived in Marbella, mostly to avoid British income tax according to the New York Times, and later in the Bahamas.",
+    "sourceIds": [
+      "snopes-2020",
+      "nyt-2020",
+      "ap-2020",
+      "upi-2005",
+      "scotsman-2005",
+      "bbc-2020"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you say no to something because you might look older, foolish or out of your usual role?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "Being a Scot (with Murray Grigor)",
+      "year": 2008
+    }
+  ],
+  "sources": [
+    {
+      "id": "afi-2006",
+      "kind": "primary",
+      "title": "Acceptance speech, AFI Life Achievement Award (8 June 2006)",
+      "author": "Sean Connery",
+      "year": 2006,
+      "publisher": "American Film Institute; transcript on Speakola, checked against the BBC News report of 9 June 2006",
+      "url": "https://speakola.com/arts/sean-connery-life-is-good-but-isnt-the-third-act-shit-afi-lifetime-acheivement-2006"
+    },
+    {
+      "id": "oscars-1988",
+      "kind": "primary",
+      "title": "Acceptance speech, Actor in a Supporting Role, The Untouchables, 60th Academy Awards (11 April 1988)",
+      "author": "Sean Connery",
+      "year": 1988,
+      "publisher": "Academy Awards Acceptance Speech Database, Margaret Herrick Library, AMPAS",
+      "url": "https://aaspeechesdb.oscars.org/link/060-2/"
+    },
+    {
+      "id": "nyt-2020",
+      "kind": "secondary",
+      "title": "Sean Connery, Who Embodied James Bond and More, Dies at 90",
+      "author": "Aljean Harmetz",
+      "year": 2020,
+      "publisher": "The New York Times, 31 October 2020 (updated 27 July 2021); read via the Internet Archive copy of 25 Sep 2025",
+      "url": "https://www.nytimes.com/2020/10/31/movies/sean-connery-dead.html"
+    },
+    {
+      "id": "bbc-2020",
+      "kind": "secondary",
+      "title": "Obituary: Sir Sean Connery",
+      "author": "BBC News",
+      "year": 2020,
+      "publisher": "BBC News, 31 October 2020",
+      "url": "https://www.bbc.co.uk/news/entertainment-arts-13087132"
+    },
+    {
+      "id": "ap-2020",
+      "kind": "secondary",
+      "title": "Sean Connery, the original James Bond, dies at 90",
+      "author": "Bob Thomas and Jill Lawless, Associated Press",
+      "year": 2020,
+      "publisher": "Associated Press, carried by PBS NewsHour, 31 October 2020",
+      "url": "https://www.pbs.org/newshour/arts/sean-connery-the-original-james-bond-dies-at-90"
+    },
+    {
+      "id": "ewb",
+      "kind": "secondary",
+      "title": "Sean Connery",
+      "author": "Encyclopedia of World Biography (Gale)",
+      "year": 2018,
+      "publisher": "Gale, read on encyclopedia.com (entry updated 23 May 2018)",
+      "url": "https://www.encyclopedia.com/history/encyclopedias-almanacs-transcripts-and-maps/sean-connery"
+    },
+    {
+      "id": "snopes-2020",
+      "kind": "secondary",
+      "title": "Did Sean Connery Condone Slapping Women?",
+      "author": "Dan MacGuill",
+      "year": 2020,
+      "publisher": "Snopes, 2 November 2020",
+      "url": "https://www.snopes.com/fact-check/sean-connery-slap-women/"
+    },
+    {
+      "id": "upi-2005",
+      "kind": "secondary",
+      "title": "Diane Cilento says Sean Connery abused her",
+      "author": "United Press International",
+      "year": 2005,
+      "publisher": "UPI, 24 September 2005",
+      "url": "https://www.upi.com/Entertainment_News/2005/09/24/Diane-Cilento-says-Sean-Connery-abused-her/80841127618681/"
+    },
+    {
+      "id": "siet",
+      "kind": "secondary",
+      "title": "About the Scottish International Education Trust",
+      "author": "Scottish International Education Trust",
+      "year": "n.d. (read 2026)",
+      "publisher": "SIET website",
+      "url": "https://scotinted.org.uk/?p=65"
+    },
+    {
+      "id": "bfi-1992",
+      "kind": "secondary",
+      "title": "Before Bond: Sean Connery's early years",
+      "author": "Geoffrey Macnab",
+      "year": 1992,
+      "publisher": "Sight and Sound (British Film Institute), October 1992; reposted online 1 November 2020",
+      "url": "https://www.bfi.org.uk/sight-and-sound/features/sean-connery-early-years-before-bond"
+    },
+    {
+      "id": "scotsman-2005",
+      "kind": "secondary",
+      "title": "Jealous Connery beat me, says ex-wife",
+      "author": "The Scotsman newsroom",
+      "year": 2005,
+      "publisher": "The Scotsman, 26 September 2005",
+      "url": "https://www.scotsman.com/news/people/jealous-connery-beat-me-says-ex-wife-2509499"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Scottish actor (1930-2020), not fictional, never a candidate for office (he backed and funded the Scottish National Party but never stood) and no religious founder; searches found no account of sexual contact with anyone under 16 and no account of sexual violence, so he is in, with a documented dark side: he said on the record in 1965, 1987 and 1993 that slapping a woman can be justified, his first wife Diane Cilento wrote in 2006 that he hit her (he denied it), the BBC reports affairs during that marriage, and he lived abroad partly to avoid British income tax."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked every value, quote and sentence, and checked whether reports of Diane Cilento's 2006 memoir describe sexual violence: the Scotsman, Irish Examiner, UPI, Snopes quoting the Daily Mail, the Australian Book Review and The New Daily describe hitting and emotional abuse only, so it stays in the shadow, now with her account that the blows knocked her briefly unconscious. Craft held once a third source (Sight and Sound on three years of movement study with Yat Malmgren) was added; Generosity held against the New York Times' note of his 'penury' and lawsuits, since three sources document his gifts. Learning, Hard work and Independence are shared with the blind pick; the blind pick's Contribution and Fitness were not added (no room; Contribution rests on the same trust gift). The startedFrom was corrected: the BBC puts the coffin and brick jobs before the navy, and all four quotes check.",
+    "checkedOn": "2026-11-10"
+  }
+}
