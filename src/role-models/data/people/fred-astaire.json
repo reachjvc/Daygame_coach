@@ -1,0 +1,300 @@
+{
+  "id": "fred-astaire",
+  "name": "Fred Astaire",
+  "born": 1899,
+  "died": 1987,
+  "category": "charisma",
+  "areaIds": [
+    "lm_fun",
+    "lm_mission"
+  ],
+  "tagline": "A dancer who worked for weeks on each routine so that it looked easy on screen.",
+  "startedFrom": "He was born Frederick Austerlitz in Omaha, Nebraska, on 10 May 1899, into a comfortable middle-class family; his father, an immigrant from Vienna, sold beer. When he was five, his mother took him and his older sister Adele to New York to put them on the stage. He went to ballet school as a small boy and, in his words, taught himself the rest; Adele was the star of their act, and in his memoir he recalled reviews that made him feel the weaker partner.",
+  "values": [
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1937 Morton Eustis reported that he planned all his own dance routines, thought them through first, sometimes charted them on paper or a blackboard, worked them out with his own feet, and planned his own camera angles.",
+          "sourceId": "eustis-1937",
+          "locator": "Theatre Arts Monthly, May 1937, p. 372"
+        },
+        {
+          "kind": "words",
+          "claim": "He told Eustis that working out the steps is a very complicated process, something like writing music: each step must flow into the next and the whole dance must have an integrated pattern.",
+          "sourceId": "eustis-1937",
+          "locator": "Theatre Arts Monthly, May 1937, p. 380"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Encyclopedia of World Biography calls him a master choreographer whose dances are notable for inventiveness, wit, musicality and economy, with Astaire himself the guiding creative hand and the final authority.",
+          "sourceId": "ewb",
+          "locator": "section 'Astaire's Legacy'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Arlene Croce writes that he choreographed all his own numbers, usually with Hermes Pan, supervised the filming and cutting, and worked out each number's musical structure before choreographing it.",
+          "sourceId": "nyrb-croce-2012",
+          "locator": "paragraph beginning 'In Hollywood (appropriately, Astaire signed'"
+        }
+      ]
+    },
+    {
+      "word": "Excellence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "For the roller-skating sequence in Shall We Dance (1937) he shot the whole dance almost thirty times before a take was chosen; an average dance was shot six to ten times, each time in its entirety.",
+          "sourceId": "eustis-1937",
+          "locator": "Theatre Arts Monthly, May 1937, p. 381"
+        },
+        {
+          "kind": "deed",
+          "claim": "After he slipped in a tap routine on a radio broadcast and covered it so that no listener noticed, he was miserable for days, saying it was awful to disappoint the young dancers listening.",
+          "sourceId": "eustis-1937",
+          "locator": "Theatre Arts Monthly, May 1937, p. 382"
+        },
+        {
+          "kind": "witness",
+          "claim": "Jeanine Basinger writes that he was known to be a perfectionist and that the careful matching of dance, image and rhythm in his best numbers came from his desire for the best in every aspect of his work.",
+          "sourceId": "idff",
+          "locator": "essay, second paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "David Sterritt's obituary essay names his sheer talent combined with a legendary perfectionism, and says he worked at his art with unflagging dedication.",
+          "sourceId": "csm-1987",
+          "locator": "second paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Eustis reported in 1937 that he would often work for weeks on a routine to perfect it before he even tried it out in rehearsal.",
+          "sourceId": "eustis-1937",
+          "locator": "Theatre Arts Monthly, May 1937, p. 381"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he got ahead only by going through dismal disappointments for twenty-odd years and working in vaudeville, night clubs and anywhere he could.",
+          "sourceId": "eustis-1937",
+          "locator": "Theatre Arts Monthly, May 1937, p. 386"
+        },
+        {
+          "kind": "witness",
+          "claim": "Arlene Croce writes that the grinding schedule of rehearsal and performance in vaudeville made a workaholic of him.",
+          "sourceId": "nyrb-croce-2012",
+          "locator": "paragraph beginning 'In vaudeville, the grinding schedule'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Encyclopedia of World Biography says he spent weeks working out his choreography and was an efficient planner and worker whose tireless struggle for improvement earned his co-workers' admiration.",
+          "sourceId": "ewb",
+          "locator": "section 'Astaire's Legacy'"
+        }
+      ]
+    },
+    {
+      "word": "Control",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said he always tried to run a dance straight in the movies, keeping the full figure of the dancers in view and the flow of the movement intact, instead of cutting it up with close-ups and trick angles.",
+          "sourceId": "eustis-1937",
+          "locator": "Theatre Arts Monthly, May 1937, pp. 378-379"
+        },
+        {
+          "kind": "deed",
+          "claim": "He placed the camera at about eye level, shot each dance with three cameras at once, and told the director in advance exactly how much floor space each dance would need.",
+          "sourceId": "eustis-1937",
+          "locator": "Theatre Arts Monthly, May 1937, pp. 379, 381"
+        },
+        {
+          "kind": "witness",
+          "claim": "Jeanine Basinger writes that his insistence on control of his own dance work widened his influence on films: he created his own choreography in most of them and took part in deciding how his dances were photographed, scored and edited.",
+          "sourceId": "idff",
+          "locator": "essay, second paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Arlene Croce writes that at RKO he supervised the filming and cutting of his numbers, and that wherever you looked in the musical side of the process, you found Astaire.",
+          "sourceId": "nyrb-croce-2012",
+          "locator": "paragraph beginning 'In Hollywood (appropriately, Astaire signed'"
+        }
+      ]
+    },
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "At the end of his autobiography he wrote that he had no desire to prove anything by dancing and had never used it as an outlet or as a means of expressing himself.",
+          "sourceId": "steps-1959",
+          "locator": "p. 325 (last page of text)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Jeanine Basinger writes that his own assessment of his contribution reflects his personal modesty, simplicity and elegance.",
+          "sourceId": "idff",
+          "locator": "essay, last paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "David Sterritt writes that he carried his social flair with grace and even modesty, with never a hint of flash.",
+          "sourceId": "csm-1987",
+          "locator": "fourth paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Eustis wrote in 1937 that he objected to talking about himself, which made him the bane of the RKO publicity department.",
+          "sourceId": "eustis-1937",
+          "locator": "Theatre Arts Monthly, May 1937, p. 372"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Plan every routine yourself in detail, then work on it for weeks until it is right before anyone sees it.",
+      "sourceId": "eustis-1937",
+      "locator": "Theatre Arts Monthly, May 1937, pp. 372, 381"
+    },
+    {
+      "text": "Cut every movement that does not serve the whole, and stop at the peak.",
+      "sourceId": "eustis-1937",
+      "locator": "Theatre Arts Monthly, May 1937, pp. 380-381"
+    },
+    {
+      "text": "While a new piece of work is taking shape, trust your own idea instead of going around asking for opinions.",
+      "sourceId": "steps-1959",
+      "locator": "ch. 1 'Forethoughts', p. 6"
+    },
+    {
+      "text": "Expect years of setbacks, and take every chance to perform and learn wherever you can.",
+      "sourceId": "eustis-1937",
+      "locator": "Theatre Arts Monthly, May 1937, p. 386"
+    },
+    {
+      "text": "Do not try to look artistic or to prove anything; do the work well and let the art come by itself.",
+      "sourceId": "steps-1959",
+      "locator": "ch. 1 'Forethoughts', p. 7; p. 325"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I have no desire to prove anything by it. I have never used it as an outlet or as a means of expressing myself. I just dance.",
+      "sourceId": "steps-1959",
+      "locator": "Steps in Time (Harper, 1959), p. 325, the book's closing lines"
+    },
+    {
+      "text": "If the dance is right, there shouldn't be a single superfluous movement. It should build to a climax and stop!",
+      "sourceId": "eustis-1937",
+      "locator": "Morton Eustis interview, Theatre Arts Monthly, May 1937, pp. 380-381"
+    },
+    {
+      "text": "But I do know that unless the young dancer is willing to take an awful lot of set-backs, he's never going to get any recognition.",
+      "sourceId": "eustis-1937",
+      "locator": "Morton Eustis interview, Theatre Arts Monthly, May 1937, p. 386"
+    },
+    {
+      "text": "What I think is the really dangerous approach is the \"let's be artistic\" attitude. I know that artistry just happens.",
+      "sourceId": "steps-1959",
+      "locator": "Steps in Time (Harper, 1959), ch. 1 'Forethoughts', p. 7"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1932 his sister Adele, the star of their act, retired from the stage to marry, ending a partnership of about twenty-five years. He took the lead in the stage musical Gay Divorce without her, and the show proved he could flourish without his sister. In 1933 he went to Hollywood. Watching the previews of the Carioca in Flying Down to Rio, a number he thought only fair, he saw the audience enjoy it and told himself he could surely do something better than that.",
+    "sourceIds": [
+      "ewb",
+      "eustis-1937",
+      "nyrb-croce-2012"
+    ]
+  },
+  "shadow": {
+    "text": "In Swing Time (1936) he performed the number \"Bojangles of Harlem\" in blackface, and in Easter Parade (1948) he did a second blackface number, \"Steppin' Out with My Baby\". The Encyclopedia of World Biography says his perfectionism, his habit of worrying, his shyness and his self-doubt could make him difficult, even exasperating, to work with. In 1980, past the age of 80, he married the jockey Robyn Smith, then in her mid-thirties; the critic Arlene Croce, reviewing Kathleen Riley's biography, writes that the marriage left his sister and his whole family in shock.",
+    "sourceIds": [
+      "nyrb-croce-2012",
+      "ewb"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What will you show people next week, and how many hours did you practise it this week so that it will look easy?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Steps in Time",
+      "year": 1959
+    }
+  ],
+  "sources": [
+    {
+      "id": "steps-1959",
+      "kind": "primary",
+      "title": "Steps in Time",
+      "author": "Fred Astaire",
+      "year": 1959,
+      "publisher": "Harper & Brothers, New York",
+      "url": "https://archive.org/details/stepsintime0000asta"
+    },
+    {
+      "id": "eustis-1937",
+      "kind": "primary",
+      "title": "Fred Astaire: The Actor-Dancer Attacks His Part (interview)",
+      "author": "Morton Eustis",
+      "year": 1937,
+      "publisher": "Theatre Arts Monthly, vol. 21, no. 5, May 1937, pp. 371-386",
+      "url": "https://archive.org/details/sim_theatre-arts_1937-05_21_5"
+    },
+    {
+      "id": "nyrb-croce-2012",
+      "kind": "secondary",
+      "title": "They're the Top: On Fred and Adele Astaire (review of Todd Decker, Music Makes Me, and Kathleen Riley, The Astaires)",
+      "author": "Arlene Croce",
+      "year": 2012,
+      "publisher": "The New York Review of Books, 5 April 2012",
+      "url": "https://www.nybooks.com/articles/2012/04/05/theyre-the-top-adele-fred-astaire/"
+    },
+    {
+      "id": "idff",
+      "kind": "secondary",
+      "title": "Astaire, Fred (International Dictionary of Films and Filmmakers)",
+      "author": "Jeanine Basinger, updated by Corey K. Creekmur",
+      "year": "n.d. (online at Encyclopedia.com, updated 2018)",
+      "publisher": "Gale",
+      "url": "https://www.encyclopedia.com/people/literature-and-arts/dance-biographies/fred-astaire"
+    },
+    {
+      "id": "ewb",
+      "kind": "secondary",
+      "title": "Fred Astaire (Encyclopedia of World Biography)",
+      "author": "Gale editors",
+      "year": "n.d. (online at Encyclopedia.com, updated 2018)",
+      "publisher": "Gale",
+      "url": "https://www.encyclopedia.com/people/literature-and-arts/dance-biographies/fred-astaire"
+    },
+    {
+      "id": "csm-1987",
+      "kind": "secondary",
+      "title": "Grace and modesty characterized Astaire",
+      "author": "David Sterritt",
+      "year": 1987,
+      "publisher": "The Christian Science Monitor, 24 June 1987",
+      "url": "https://www.csmonitor.com/1987/0624/lfred.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American dancer, actor and choreographer (1899-1987), not fictional, never a politician, campaigner or religious founder; searches found no account of sexual contact with anyone under 16 or of sexual violence; in, with a small documented dark side (two blackface numbers, a perfectionism that made him hard to work with, a late marriage that shocked his family)."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value against the 1937 Theatre Arts interview, Steps in Time (through Internet Archive search-inside), Croce's 2012 review, the two Gale encyclopedia entries and the 1987 Monitor essay. Craft, Excellence and Hard work held as core values; Control held on his own camera and choreography decisions, though Croce notes he had less freedom at MGM, and Humility held on four independent sources. The blind pick's Originality was not added: its only usable source was one TCM profile, and the fan-site evidence was barred. All four quotes match the scanned texts; six small claims were tightened, including Gay Divorce proving he could do without his sister rather than succeed alone.",
+    "checkedOn": "2026-11-10"
+  }
+}
