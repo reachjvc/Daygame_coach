@@ -1,0 +1,332 @@
+{
+  "id": "christopher-columbus",
+  "name": "Christopher Columbus",
+  "born": "c. 1451",
+  "died": 1506,
+  "category": "explorers",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A sailor who spent seven years asking for ships, then sailed west into an unknown ocean.",
+  "startedFrom": "He was born in Genoa, probably in 1451, the eldest son of Domenico Colombo, a wool-comber of small means; the Catholic Encyclopedia says his early schooling was poor, and at about twenty he still worked in the family weaving trade. He went to sea young and settled in Portugal, where he probably made maps and charts for a living. He had no title and no fortune of his own, and in Spain, while he waited for an answer, he lived on the help of friends.",
+  "values": [
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "From about 1484 to 1492 he kept pressing his plan: rejected in Portugal, rejected by a Spanish committee under Talavera and again by a junta in 1491, while his brother Bartholomew took it to England and France; he set out for France himself in January 1492 and was called back; the agreement was signed on 17 April 1492.",
+          "sourceId": "eb1911",
+          "locator": "Columbus, Christopher, vol. 6, section 'Quest of a patron'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Catholic Encyclopedia calls him 'persistent in carrying them into execution' and says his success in overcoming obstacles shows 'unflinching determination'.",
+          "sourceId": "ce-bandelier",
+          "locator": "Christopher Columbus, paragraph beginning 'Columbus was unquestionably a man of genius'"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1500 he wrote of his enterprise: 'Seven years passed in discussion, and nine in execution', and that the support of God and of the queen 'made me persevere'.",
+          "sourceId": "nurse-barwick",
+          "locator": "Letter to the Nurse of Prince John, 1500, p. 372"
+        },
+        {
+          "kind": "words",
+          "claim": "On 10 October 1492, when the crews complained of the length of the voyage, Las Casas's abstract of his journal says he told them he had to go to the Indies and would go on until he found them.",
+          "sourceId": "journal-markham",
+          "locator": "Journal, entry for Wednesday 10 October 1492, p. 108"
+        }
+      ]
+    },
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 3 August 1492 he left Palos with three ships to cross the ocean westward, and on the third voyage in August 1498 he took his ships into the Gulf of Paria 'at immense risk' on the waters thrown up by the Orinoco.",
+          "sourceId": "eb1911",
+          "locator": "Columbus, Christopher, vol. 6, sections 'First voyage' and 'Third voyage'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Catholic Encyclopedia calls him 'a bold, skilful navigator' and 'a man of original ideas'.",
+          "sourceId": "ce-bandelier",
+          "locator": "Christopher Columbus, paragraph beginning 'Columbus was unquestionably a man of genius'"
+        },
+        {
+          "kind": "words",
+          "claim": "In the prologue to his journal he writes that he was to go to India 'by way of the west, whither up to this day, we do not know for certain that any one has gone'.",
+          "sourceId": "journal-markham",
+          "locator": "Journal, prologue to the Sovereigns, p. 90"
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Announcing the discovery on 15 February 1493, he thanked 'Eternal God our Lord who gives to all those who walk His way, victory over things which seem impossible'.",
+          "sourceId": "santangel-quaritch",
+          "locator": "Letter to Santangel, 15 February 1493, p. 271"
+        },
+        {
+          "kind": "words",
+          "claim": "Sent home in chains in 1500, he wrote: 'Hope in the Creator of all men sustains me'.",
+          "sourceId": "nurse-barwick",
+          "locator": "Letter to the Nurse of Prince John, 1500, first paragraph, p. 371"
+        },
+        {
+          "kind": "deed",
+          "claim": "On landing on 12 October 1492 he and his men knelt on the shore and gave thanks to God; returning to Cadiz in June 1496 he landed wearing the habit of a Franciscan.",
+          "sourceId": "eb1911",
+          "locator": "Columbus, Christopher, vol. 6, sections 'America discovered' and 'Second voyage'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Catholic Encyclopedia says he 'was also of a deeply religious nature' and always named the conversion of the peoples he found as a main object of his voyages.",
+          "sourceId": "ce-bandelier",
+          "locator": "Christopher Columbus, paragraph beginning 'Columbus was also of a deeply religious nature'"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In January 1492 he held out for the rank of Admiral of the Ocean, the viceroyalty of all he would discover and a tenth of its precious metals; when the court refused, talks broke off and before the end of the month he set out for France.",
+          "sourceId": "eb1911",
+          "locator": "Columbus, Christopher, vol. 6, section 'Quest of a patron'"
+        },
+        {
+          "kind": "words",
+          "claim": "In the prologue to his journal he records that he was to be called Don, Admiral, 'perpetual Viceroy and Governor' of all lands he found, and that his eldest son should succeed him 'from generation to generation for ever'.",
+          "sourceId": "journal-markham",
+          "locator": "Journal, prologue to the Sovereigns, p. 90"
+        },
+        {
+          "kind": "deed",
+          "claim": "In his codicil of 19 May 1506, the day before he died, he ordered that his heirs never diminish the entailed estate but 'always to increase and ennoble it'.",
+          "sourceId": "eb1911",
+          "locator": "Columbus, Christopher, vol. 6, section 'Fourth voyage', last paragraphs"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Catholic Encyclopedia allows that 'the ambition for fame and wealth' may have influenced him, beside his faith.",
+          "sourceId": "ce-bandelier",
+          "locator": "Christopher Columbus, paragraph beginning 'Columbus was also of a deeply religious nature'"
+        }
+      ]
+    },
+    {
+      "word": "Mastery",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "The Catholic Encyclopedia calls him a 'skilful navigator, better acquainted with the principles of cosmography and astronomy than the average skipper of his time'.",
+          "sourceId": "ce-bandelier",
+          "locator": "Christopher Columbus, paragraph beginning 'Columbus was unquestionably a man of genius'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1502 he saw a hurricane coming and was refused shelter at Santo Domingo; he anchored in the lee of the land and rode it out, while the storm destroyed the homeward fleet from Hispaniola.",
+          "sourceId": "eb1911",
+          "locator": "Columbus, Christopher, vol. 6, section 'Fourth voyage'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Stranded on Jamaica in 1503-1504, he got food from the islanders again by foretelling an eclipse.",
+          "sourceId": "eb1911",
+          "locator": "Columbus, Christopher, vol. 6, section 'Fourth voyage'"
+        },
+        {
+          "kind": "words",
+          "claim": "In the prologue to his journal he sets himself to write down each night what passed in the day and to 'construct a new chart for navigating' with all the sea and lands in their proper positions.",
+          "sourceId": "journal-markham",
+          "locator": "Journal, prologue to the Sovereigns, last paragraph"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When the answer is no, take the same plan to the next door, and keep going for years.",
+      "sourceId": "eb1911",
+      "locator": "Columbus, Christopher, vol. 6, section 'Quest of a patron'"
+    },
+    {
+      "text": "Name your full price before you start, and walk away if it is refused.",
+      "sourceId": "eb1911",
+      "locator": "Columbus, Christopher, vol. 6, section 'Quest of a patron' (January 1492 terms)"
+    },
+    {
+      "text": "Once you are under way, do not turn back because the people around you complain.",
+      "sourceId": "journal-markham",
+      "locator": "Journal, entry for Wednesday 10 October 1492, p. 108"
+    },
+    {
+      "text": "Write down every day what you did and saw.",
+      "sourceId": "journal-markham",
+      "locator": "Journal, prologue to the Sovereigns, last paragraph"
+    },
+    {
+      "text": "In the worst hour, hold on to your hope in God.",
+      "sourceId": "nurse-barwick",
+      "locator": "Letter to the Nurse of Prince John, 1500, first paragraph, p. 371"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Seven years passed in discussion, and nine in execution.",
+      "sourceId": "nurse-barwick",
+      "locator": "Letter to the Nurse of Prince John, 1500, p. 372",
+      "translation": "George F. Barwick, 1903"
+    },
+    {
+      "text": "I shall forget sleep, and shall work at the business of navigation, that so the service may be performed",
+      "sourceId": "journal-markham",
+      "locator": "Journal of the First Voyage, prologue to the Sovereigns, last paragraph",
+      "translation": "Clements R. Markham, 1893, slightly revised by E. G. Bourne, 1906"
+    },
+    {
+      "text": "Eternal God our Lord who gives to all those who walk His way, victory over things which seem impossible",
+      "sourceId": "santangel-quaritch",
+      "locator": "Letter to Luis de Santangel, 15 February 1493, p. 271",
+      "translation": "Quaritch, The Spanish Letter of Columbus, 1893, revised by E. G. Bourne, 1906"
+    },
+    {
+      "text": "I was twenty-eight years old when I came into your Highnesses' service, and now I have not a hair upon me that is not gray",
+      "sourceId": "jamaica-major",
+      "locator": "Letter on the Fourth Voyage, Jamaica, 7 July 1503, p. 417",
+      "translation": "R. H. Major, Select Letters of Columbus, revised by E. G. Bourne, 1906"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 10 October 1492, more than a month after leaving the Canaries, his crews complained that they could take the voyage no longer. By Las Casas's abstract of his journal, he answered that he had to go to the Indies and would go on until he found them. At ten in the night of 11 October he saw a light ahead, and at two in the morning of 12 October a sailor, Rodrigo de Triana, sighted land: the island its people called Guanahani, which he named San Salvador.",
+    "sourceIds": [
+      "journal-markham",
+      "eb1911"
+    ]
+  },
+  "shadow": {
+    "text": "On the way out in 1492 he logged a shorter distance for the crew than the one he reckoned for himself, so the voyage would not seem long. Two days after landing, on 14 October 1492, he wrote of the seven islanders he had caused to be taken that 'with fifty men they can all be subjugated and made to do what is required of them'. The Britannica (1911) says his despatch home of 2 February 1494 founded the West Indian slave trade. As governor of Hispaniola he shipped captives from the island to Spain for sale: early in 1495, 500 or more were loaded, and his companion Michele da Cuneo reported that about 200 died of exposure on the way. Cuneo also wrote that Columbus gave him a captive Carib woman; the historian Martha Guzmán Riverón (2025) writes that Cuneo describes mistreating and sexually assaulting her. Columbus made the islanders over fourteen in the gold regions pay a tribute in gold every three months, and those who fled were hunted down and sold; in 1499, to pacify Roldán's rebels, he granted repartimientos that made the Indians on the land perpetual serfs of the settlers. In 1500 the royal investigator Francisco de Bobadilla, who had already been named to replace him, took testimony from 23 witnesses; by the historian Consuelo Varela's account of that report, punishments under Columbus and his brothers included cutting off ears and noses, and she calls his rule 'a form of tyranny'. The Catholic Encyclopedia (1908) holds that the charges of cruelty rest mainly on 'rather suspicious authority', but says the harsh measures were without doubt authorized by him.",
+    "sourceIds": [
+      "journal-markham",
+      "eb1911",
+      "stone-1975",
+      "guzman-2025",
+      "ce-bandelier",
+      "guardian-2006"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you stop asking for this week after hearing one no?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Journal of the First Voyage (abstract by Las Casas)",
+      "year": 1825
+    },
+    {
+      "title": "Letter to Luis de Santangel",
+      "year": 1493
+    },
+    {
+      "title": "Letter on the Fourth Voyage (Lettera Rarissima)",
+      "year": 1505
+    }
+  ],
+  "sources": [
+    {
+      "id": "journal-markham",
+      "kind": "primary",
+      "title": "Journal of the First Voyage of Columbus, in The Northmen, Columbus and Cabot, 985-1503 (Original Narratives of Early American History)",
+      "author": "Christopher Columbus (abstract by Bartolomé de Las Casas), tr. Clements R. Markham; ed. Julius E. Olson and Edward Gaylord Bourne",
+      "year": 1906,
+      "publisher": "Charles Scribner's Sons",
+      "url": "https://www.gutenberg.org/ebooks/18571"
+    },
+    {
+      "id": "santangel-quaritch",
+      "kind": "primary",
+      "title": "Letter from Columbus to Luis de Santangel, 15 February 1493, in The Northmen, Columbus and Cabot, 985-1503",
+      "author": "Christopher Columbus, tr. after Quaritch (1893); ed. Julius E. Olson and Edward Gaylord Bourne",
+      "year": 1906,
+      "publisher": "Charles Scribner's Sons",
+      "url": "https://www.gutenberg.org/ebooks/18571"
+    },
+    {
+      "id": "nurse-barwick",
+      "kind": "primary",
+      "title": "Letter of Columbus to the Nurse of Prince John (1500), in The Northmen, Columbus and Cabot, 985-1503",
+      "author": "Christopher Columbus, tr. George F. Barwick; ed. Julius E. Olson and Edward Gaylord Bourne",
+      "year": 1906,
+      "publisher": "Charles Scribner's Sons",
+      "url": "https://www.gutenberg.org/ebooks/18571"
+    },
+    {
+      "id": "jamaica-major",
+      "kind": "primary",
+      "title": "Letter of Columbus on the Fourth Voyage, Jamaica, 7 July 1503, in The Northmen, Columbus and Cabot, 985-1503",
+      "author": "Christopher Columbus, tr. R. H. Major, revised by Edward Gaylord Bourne",
+      "year": 1906,
+      "publisher": "Charles Scribner's Sons",
+      "url": "https://www.gutenberg.org/ebooks/18571"
+    },
+    {
+      "id": "eb1911",
+      "kind": "secondary",
+      "title": "Columbus, Christopher, Encyclopædia Britannica, 11th ed., vol. 6",
+      "author": "Charles Raymond Beazley",
+      "year": 1911,
+      "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Columbus,_Christopher"
+    },
+    {
+      "id": "ce-bandelier",
+      "kind": "secondary",
+      "title": "Christopher Columbus, The Catholic Encyclopedia, vol. 4",
+      "author": "Adolph Francis Bandelier",
+      "year": 1908,
+      "publisher": "Robert Appleton Company",
+      "url": "https://www.newadvent.org/cathen/04140a.htm"
+    },
+    {
+      "id": "stone-1975",
+      "kind": "secondary",
+      "title": "Columbus and Genocide, American Heritage 26.6 (October 1975)",
+      "author": "Edward T. Stone",
+      "year": 1975,
+      "url": "https://www.americanheritage.com/columbus-and-genocide"
+    },
+    {
+      "id": "guardian-2006",
+      "kind": "secondary",
+      "title": "New evidence shows that Columbus was a tyrant (The Guardian, reprinted in the Taipei Times, 8 August 2006)",
+      "author": "The Guardian (unsigned in the reprint)",
+      "year": 2006,
+      "url": "https://www.taipeitimes.com/News/world/archives/2006/08/08/2003322345"
+    },
+    {
+      "id": "guzman-2025",
+      "kind": "secondary",
+      "title": "Mentality and ideologies in letters from the first years of contact in 'America'?, Araucaria 27.58, pp. 297-323",
+      "author": "Martha Guzmán Riverón",
+      "year": 2025,
+      "url": "https://revistascientificas.us.es/index.php/araucaria/article/download/26257/24159/138511"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real Genoese navigator (c. 1451-1506), long dead, no politician of today and no founder of a religion; flagged for the owner. Owner case: his companion Michele da Cuneo wrote (1495) that he sexually assaulted a captive Carib woman whom Columbus had given him (Guzmán Riverón 2025, p. 318); Columbus's own 1500 letter says dealers on Hispaniola sought girls 'from nine to ten' (p. 378); no source says Columbus himself took part in either."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value and opened every cited passage in the 1906 Gutenberg texts, the 1911 Britannica and the Catholic Encyclopedia. All five values held: Mastery survives the case that his latitude readings were far off (Cuba at 42 degrees), because the sources praise his seamanship, not his cosmography; Determination, Faith and Ambition match the blind pick. Five claims were tightened (Bartholomew, not Columbus, took the plan to England and France; he had patrons, so 'no patron' became 'no fortune'; the Catholic Encyclopedia only allows that ambition 'may' have moved him), and all four quotes were found word for word. The shadow gained his double reckoning, the seven captives of 14 October, the 1494 slave despatch, the 1499 repartimientos and Cuneo's account of the captive woman.",
+    "checkedOn": "2026-11-10"
+  }
+}
