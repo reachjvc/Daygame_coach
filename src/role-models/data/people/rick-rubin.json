@@ -1,0 +1,290 @@
+{
+  "id": "rick-rubin",
+  "name": "Rick Rubin",
+  "born": 1963,
+  "died": null,
+  "category": "artists",
+  "areaIds": [
+    "lm_mission",
+    "lm_spirituality"
+  ],
+  "tagline": "A producer who trusts his own taste and strips music down to what matters.",
+  "startedFrom": "He grew up an only child in Lido Beach on Long Island, New York; his father sold shoes wholesale, and his parents wanted him to become a lawyer. From the age of 9 he loved magic, and in high school he was, he says, the only punk. In 1983, as a student at New York University, he borrowed $5,000 from his parents to make his first record and ran his new label, Def Jam, from his dorm room.",
+  "values": [
+    {
+      "word": "Creativity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says that before Def Jam rap records were long and rarely had a hook, and that by making them sound more like pop songs 'we changed the form'.",
+          "sourceId": "nyt-2007",
+          "locator": "paragraph beginning 'He also seeks a melody'"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that creativity is not a rare gift but 'a fundamental aspect of being human' and is for everyone, not only artists.",
+          "sourceId": "creative-act-2023",
+          "locator": "section 'Everyone Is a Creator' (publisher-licensed excerpt printed by Porchlight Books)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Chuck D of Public Enemy told 60 Minutes that Rubin 'pioneered a certain energy' in hip-hop 'for it to be daring'.",
+          "sourceId": "cbs-60m-2023",
+          "locator": "Chuck D's answer to 'What kind of an impact do you think Rick had on hip-hop?'"
+        }
+      ]
+    },
+    {
+      "word": "Authenticity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1990 Geffen, which distributed his label Def American, refused to release a Geto Boys album it called offensive; Rubin said the album would come out through the Warner/Elektra/Atlantic distribution group, and Geffen ended the deal.",
+          "sourceId": "lat-1990",
+          "locator": "whole article (18 September 1990)"
+        },
+        {
+          "kind": "words",
+          "claim": "He said of the Geto Boys record: 'I thought the art was good.'",
+          "sourceId": "nyt-2007",
+          "locator": "paragraph beginning 'Although Rubin claims that Geffen fired him'"
+        },
+        {
+          "kind": "words",
+          "claim": "He told NPR: 'My job is to be true to myself,' and that if people do not like the work, 'we wouldn't change it'.",
+          "sourceId": "npr-2023",
+          "locator": "Rubin's answer beginning 'No. No, I'm right for me'"
+        }
+      ]
+    },
+    {
+      "word": "Presence",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said: 'So much of what I do is just being present and listening for that right sound.'",
+          "sourceId": "nyt-2007",
+          "locator": "paragraph beginning 'His responses are instant, specific and constructively definitive'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Before his 60 Minutes interview began he asked Anderson Cooper to spend two minutes meditating with eyes closed; he usually listens to music lying down, barefoot, with his eyes shut.",
+          "sourceId": "cbs-60m-2023",
+          "locator": "opening exchange ('Should we spend two minutes eyes closed meditating') and paragraph beginning 'His presence is laid back'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Lynn Hirschberg describes him listening to a demo with his eyes closed, 'almost meditating'.",
+          "sourceId": "nyt-2007",
+          "locator": "paragraph beginning 'Kusatsu, who has elaborate tattoos'"
+        }
+      ]
+    },
+    {
+      "word": "Simplicity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He calls himself a 'reducer' rather than a producer and says: 'I like the idea of getting the point across with the least amount of information possible.'",
+          "sourceId": "cbs-60m-2023",
+          "locator": "passage beginning 'Rubin has referred to himself as a reducer'"
+        },
+        {
+          "kind": "deed",
+          "claim": "On LL Cool J's first single, 'I Need a Beat', he tightened the structure and edited the rhymes into song-like verses, giving 'a spare, clean sound' instead of the endless repetitions of most early rap.",
+          "sourceId": "nyt-2007",
+          "locator": "paragraph beginning 'Russell Simmons, who was then a hip-hop producer'"
+        },
+        {
+          "kind": "deed",
+          "claim": "His American Recordings albums with Johnny Cash had Cash singing, usually over an acoustic guitar arrangement.",
+          "sourceId": "npr-2010",
+          "locator": "second paragraph of the article"
+        }
+      ]
+    },
+    {
+      "word": "Spirituality",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "During the final months of Johnny Cash's life, Rubin, who was born Jewish, took communion with him every day.",
+          "sourceId": "nyt-2007",
+          "locator": "paragraph beginning 'And yet it was different with Cash'"
+        },
+        {
+          "kind": "words",
+          "claim": "He told NPR he is 'a seeker' and has 'a knowingness that there is a power greater than us that seems to animate everything'.",
+          "sourceId": "npr-2023",
+          "locator": "answers beginning 'I'm - I will say I'm a seeker' and 'Yes, yes, yes. Yes. I have a knowingness'"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked by Anderson Cooper whether his way of working sounds very spiritual, he answered: 'It is. No, it is. The whole thing is spiritual.'",
+          "sourceId": "cbs-60m-2023",
+          "locator": "answer to 'But, I mean, that does sound very spiritual'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Know what you like and what you do not like, and say it plainly.",
+      "sourceId": "cbs-60m-2023",
+      "locator": "answers to 'You must know something' and 'So what are you being paid for?'"
+    },
+    {
+      "text": "Make the work for yourself first; the audience comes last, because it only knows what has come before.",
+      "sourceId": "cbs-60m-2023",
+      "locator": "exchange beginning 'The audience comes last' and Rubin's answer 'Maybe for someone else it is. But it's not for me.'"
+    },
+    {
+      "text": "Strip a piece down to what is actually necessary before you add anything.",
+      "sourceId": "cbs-60m-2023",
+      "locator": "passage beginning 'Rubin has referred to himself as a reducer'"
+    },
+    {
+      "text": "Do not stop at the first batch: the last songs written are often the best, so write more.",
+      "sourceId": "nyt-2007",
+      "locator": "paragraph beginning 'Whenever he agrees to produce an album'"
+    },
+    {
+      "text": "Do not make a decision for the wrong reason, such as a deadline or because someone else wants it.",
+      "sourceId": "nyt-2007",
+      "locator": "paragraph beginning '\"I don't know about this guy,\" Rubin says diplomatically'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Creativity is not a rare ability. It is not difficult to access. Creativity is a fundamental aspect of being human. It’s our birthright. And it’s for all of us.",
+      "sourceId": "creative-act-2023",
+      "locator": "section 'Everyone Is a Creator' (publisher-licensed excerpt printed by Porchlight Books)"
+    },
+    {
+      "text": "Well, the audience doesn't know what they want. The audience only knows what's come before.",
+      "sourceId": "cbs-60m-2023",
+      "locator": "60 Minutes, first aired 15 January 2023; answer to 'How can that be?'"
+    },
+    {
+      "text": "I like the idea of getting the point across with the least amount of information possible.",
+      "sourceId": "cbs-60m-2023",
+      "locator": "60 Minutes, first aired 15 January 2023; passage beginning 'Rubin has referred to himself as a reducer'"
+    },
+    {
+      "text": "So much of what I do is just being present and listening for that right sound.",
+      "sourceId": "nyt-2007",
+      "locator": "New York Times Magazine, 2 September 2007, paragraph beginning 'His responses are instant, specific and constructively definitive'"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1993 Rubin, then known for rap and heavy metal records, began working with the country singer Johnny Cash. He had seen Cash play a dinner theater in Orange County, where, he says, 'it just seemed like the world had passed him by'. On their American Recordings albums Cash sang mostly over an acoustic guitar, and Rubin picked rock songs for him, including Nine Inch Nails' 'Hurt'. The partnership lasted the last ten years of Cash's life, and Cash credited Rubin with reviving his career.",
+    "sourceIds": [
+      "npr-2010",
+      "cbs-60m-2023",
+      "nyt-2007"
+    ]
+  },
+  "shadow": {
+    "text": "His label Def American signed the comic Andrew Dice Clay, whom the New York Times calls a misogynist, and the rap group Geto Boys, whose song 'Mind of a Lunatic' describes necrophilia and murder. David Geffen, whose company distributed the label, says he begged Rubin not to release the Geto Boys record; Rubin stood by it, and on 17 September 1990 Geffen ended the deal. In 2008 fans complained that Metallica's Death Magnetic, which he produced, was made so loud that detail was lost, and thousands signed a petition for a remix; Rubin declined to comment. In September 2020 he was cited for walking on a Kauai beach during Hawaii's 14-day COVID quarantine, and in February 2021 he pleaded no contest to disorderly conduct and was fined $1,000.",
+    "sourceIds": [
+      "nyt-2007",
+      "lat-1990",
+      "wsj-2008",
+      "garden-2021"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you hide what you really liked or disliked this week instead of saying it plainly?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Creative Act: A Way of Being",
+      "year": 2023
+    }
+  ],
+  "sources": [
+    {
+      "id": "creative-act-2023",
+      "kind": "primary",
+      "title": "The Creative Act: A Way of Being (excerpt 'Everyone Is a Creator', as printed by Porchlight Books)",
+      "author": "Rick Rubin",
+      "year": 2023,
+      "publisher": "Penguin Press",
+      "url": "https://porchlightbooks.com/blog/excerpts/creative-act-excerpt"
+    },
+    {
+      "id": "cbs-60m-2023",
+      "kind": "primary",
+      "title": "In Shangri-La with music producer Rick Rubin (60 Minutes interview with Anderson Cooper, first aired 15 January 2023; transcript page 28 May 2023)",
+      "author": "Rick Rubin, interviewed by Anderson Cooper",
+      "year": 2023,
+      "publisher": "CBS News",
+      "url": "https://www.cbsnews.com/news/rick-rubin-60-minutes-transcript-2023-05-28/"
+    },
+    {
+      "id": "npr-2023",
+      "kind": "primary",
+      "title": "Rick Rubin on how creating something is 'a devotional act' (Enlighten Me, 10 December 2023; transcript)",
+      "author": "Rick Rubin, interviewed by Rachel Martin",
+      "year": 2023,
+      "publisher": "NPR",
+      "url": "https://www.npr.org/transcripts/1217613273"
+    },
+    {
+      "id": "nyt-2007",
+      "kind": "secondary",
+      "title": "The Music Man (The New York Times Magazine, 2 September 2007, p. MM26)",
+      "author": "Lynn Hirschberg",
+      "year": 2007,
+      "publisher": "The New York Times",
+      "url": "https://www.nytimes.com/2007/09/02/magazine/02rubin.t.html"
+    },
+    {
+      "id": "npr-2010",
+      "kind": "secondary",
+      "title": "'American' Remembered: Rick Rubin On Johnny Cash (Fresh Air, 26 February 2010)",
+      "author": "NPR Fresh Air staff",
+      "year": 2010,
+      "publisher": "NPR",
+      "url": "https://www.npr.org/2010/02/26/124078116/american-remembered-rick-rubin-on-johnny-cash"
+    },
+    {
+      "id": "lat-1990",
+      "kind": "secondary",
+      "title": "Geffen Cancels Distribution Pact With Controversial Def American (18 September 1990)",
+      "author": "Steve Hochman",
+      "year": 1990,
+      "publisher": "Los Angeles Times",
+      "url": "https://www.latimes.com/archives/la-xpm-1990-09-18-ca-821-story.html"
+    },
+    {
+      "id": "wsj-2008",
+      "kind": "secondary",
+      "title": "Even Heavy-Metal Fans Complain That Today's Music Is Too Loud!!! (25 September 2008)",
+      "author": "Ethan Smith",
+      "year": 2008,
+      "publisher": "The Wall Street Journal",
+      "url": "https://web.archive.org/web/20081227001638/http://online.wsj.com/article/SB122228767729272339.html"
+    },
+    {
+      "id": "garden-2021",
+      "kind": "secondary",
+      "title": "Rubin pleads no contest, fined $1,000 (10 February 2021)",
+      "author": "Jason Blasco",
+      "year": 2021,
+      "publisher": "The Garden Island",
+      "url": "https://thegardenisland.com/2021/02/10/hawaii-news/rubin-pleads-no-contest-fined-1000"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living American record producer (co-founder of Def Jam, founder of Def American/American Recordings); not a politician, campaigner or religious founder, and searches by name found no credible account of sexual contact with a minor or of sexual violence by him; he is in, with a documented dark side of releasing deliberately offensive records, a loudness complaint, and a COVID quarantine plea."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked all five values and re-read every claim against the CBS, NPR, New York Times, Los Angeles Times, Wall Street Journal and Garden Island texts. No value fell: musicians' complaints that he was rarely in the studio (Corey Taylor, Josh Klinghoffer) appear only in music-news sites and speak to his hours, not to the meditative presence the evidence shows. Spirituality rested on two sources until I added his own 60 Minutes words, the Creativity evidence about starting Def Jam was swapped for his account of changing rap's song form, and the Geto Boys claim now says what the Los Angeles Times says: Rubin announced a Warner release, not that it had happened.",
+    "checkedOn": "2026-11-10"
+  }
+}
