@@ -1,0 +1,287 @@
+{
+  "id": "ingvar-kamprad",
+  "name": "Ingvar Kamprad",
+  "born": 1926,
+  "died": 2018,
+  "category": "builders",
+  "areaIds": [
+    "lm_money",
+    "lm_mission"
+  ],
+  "tagline": "A dyslexic farm boy who built IKEA and preached thrift, simple rules and hard work.",
+  "startedFrom": "He grew up on a farm in Småland, southern Sweden, a dyslexic boy from a poor family who found it hard to concentrate in school. As a child he sold matches from his bicycle, then fish, seeds and pencils. At 17, in 1943, he registered his own mail-order firm, IKEA, with money his father gave him.",
+  "values": [
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In the Testament he wrote: \"We believe in hard, committed work that brings results.\"",
+          "sourceId": "testament",
+          "locator": "section 3, opening paragraph (beginning \"A better everyday life for the many people!\")"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times says that all his life he practised thrift and diligence and presented them as the basis of IKEA's success.",
+          "sourceId": "nyt-2018",
+          "locator": "paragraph beginning \"It made him wealthy beyond imagining\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Associated Press says his work ethic, frugality and down-to-earth style remain at the core of IKEA's corporate identity.",
+          "sourceId": "ap-2018",
+          "locator": "paragraph beginning \"His work ethic, frugality\""
+        },
+        {
+          "kind": "deed",
+          "claim": "He announced his retirement in 1986 but kept travelling to his stores and making major decisions.",
+          "sourceId": "nyt-2018",
+          "locator": "paragraph beginning \"In 1976, Kamprad moved to Switzerland\""
+        }
+      ]
+    },
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In the Testament he wrote that humbleness is the key word, decisive for us as human beings.",
+          "sourceId": "testament",
+          "locator": "section 9, \"Most things still remain to be done. A glorious future!\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Associated Press says he never adopted the aura of a tycoon and that his down-to-earth style stays at the core of IKEA's identity.",
+          "sourceId": "ap-2018",
+          "locator": "paragraphs beginning \"His work ethic, frugality\" and \"Later in life, his name often appeared\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times says he responded humbly when his fascist past was exposed in 1994, in a message to his employees.",
+          "sourceId": "nyt-2018",
+          "locator": "paragraph beginning \"Kamprad responded humbly to the disclosures\""
+        },
+        {
+          "kind": "words",
+          "claim": "He told Forbes in 2000 that he stayed close to ordinary people \"because at heart I am one of them\".",
+          "sourceId": "nyt-2018",
+          "locator": "last paragraph, beginning \"I see my task as serving the majority of people\""
+        }
+      ]
+    },
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In the Testament he wrote that refusing a pattern just because it is well established is how IKEA makes progress: \"We dare to do things differently!\"",
+          "sourceId": "testament",
+          "locator": "section 6, \"Doing it a different way\""
+        },
+        {
+          "kind": "deed",
+          "claim": "With Swedish suppliers boycotting IKEA, he wrote to Poland's foreign trade minister and in January 1961 went to Warsaw to find factories there.",
+          "sourceId": "ikea-museum-poland",
+          "locator": "paragraphs beginning \"In 1960, Ingvar read\" and \"In January 1961\""
+        },
+        {
+          "kind": "deed",
+          "claim": "When competitors organised a boycott by IKEA's suppliers, he went to Poland for materials and manufacturing, which cut costs further.",
+          "sourceId": "nyt-2018",
+          "locator": "paragraph beginning \"In 1953, he opened a showroom in Almhult\""
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "The New York Times speaks of his \"driving ambition\" and says that over seven decades he built IKEA into the world's largest furniture retailer.",
+          "sourceId": "nyt-2018",
+          "locator": "paragraphs beginning \"During the next seven decades\" and \"It made him wealthy beyond imagining\""
+        },
+        {
+          "kind": "words",
+          "claim": "In the Testament he wrote that bigger production runs and more markets give IKEA new advantages: \"That is why it is our duty to expand.\"",
+          "sourceId": "testament",
+          "locator": "opening statement, last paragraph before section 1"
+        },
+        {
+          "kind": "deed",
+          "claim": "In June 2013, at 87, he announced he would step down from the board that controls the IKEA brand, handing over to his son Mathias.",
+          "sourceId": "ap-2018",
+          "locator": "last paragraph, beginning \"In June 2013, Kamprad announced\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not judge a solution until you know what it costs.",
+      "sourceId": "testament",
+      "locator": "section 4, \"Reaching good results with small means\""
+    },
+    {
+      "text": "Get good results with small means; treat waste of money, time or materials as a disease.",
+      "sourceId": "testament",
+      "locator": "section 4, \"Reaching good results with small means\""
+    },
+    {
+      "text": "Make the decision and accept your mistakes; only people who do nothing make none.",
+      "sourceId": "testament",
+      "locator": "section 8, \"Taking responsibility – a privilege\""
+    },
+    {
+      "text": "Keep asking \"why\", and do not accept a way of doing things just because it is established.",
+      "sourceId": "testament",
+      "locator": "section 6, \"Doing it a different way\""
+    },
+    {
+      "text": "Live and work without status symbols: no luxury hotels, fancy cars or posh titles.",
+      "sourceId": "testament",
+      "locator": "section 5, \"Simplicity is a virtue\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Only while sleeping one makes no mistakes.",
+      "sourceId": "testament",
+      "locator": "section 8, \"Taking responsibility – a privilege\"",
+      "translation": "IKEA's official English version (Inter IKEA Systems B.V., 1976–2013 edition); translator not named"
+    },
+    {
+      "text": "Expensive solutions to any kind of problem are usually the work of mediocrity.",
+      "sourceId": "testament",
+      "locator": "section 4, \"Reaching good results with small means\"",
+      "translation": "IKEA's official English version (Inter IKEA Systems B.V., 1976–2013 edition); translator not named"
+    },
+    {
+      "text": "Happiness is not reaching your goal. Happiness is being on the way.",
+      "sourceId": "testament",
+      "locator": "section 9, \"Most things still remain to be done. A glorious future!\"",
+      "translation": "IKEA's official English version (Inter IKEA Systems B.V., 1976–2013 edition); translator not named"
+    },
+    {
+      "text": "Well, I'm known as a very thrifty person, and the stores are meant for people like me.",
+      "sourceId": "nyt-2018",
+      "locator": "paragraph beginning \"Well, I'm known as a very thrifty person\" (his 1997 interview with The New York Times, quoted in the obituary)"
+    }
+  ],
+  "definingMoment": {
+    "text": "From 1952 the Swedish furniture retailers' association threatened suppliers who sold to IKEA, and by the late 1950s IKEA could not get enough furniture. In 1960, having read that Poland's foreign trade minister would visit Stockholm, Kamprad wrote to him and was invited to Poland. In January 1961 he went to Warsaw with his father, his head of purchasing and a designer, and bought chairs, tables and fabrics; Polish prices turned out almost 50% below Swedish manufacturing costs. The boycott failed, and because IKEA could not buy what everyone else sold, it began designing its own furniture.",
+    "sourceIds": [
+      "ikea-museum-poland",
+      "ikea-museum-price-wars",
+      "nyt-2018"
+    ]
+  },
+  "shadow": {
+    "text": "In 1942 he joined the Swedish fascist movement of Per Engdahl; he attended meetings, raised funds and recruited members, and in a 1950 letter to Engdahl said he was proud of his involvement. A 2011 book by the journalist Elisabeth Åsbrink reported that the security police opened a file on him in 1943 and, by opening his letters, found him recruiting for the Nazi party SSS; she also quoted him in 2010 still calling Engdahl a great human being. When Expressen exposed the links in 1994, he called them the most stupid mistake of his life. He lived in Switzerland from the late 1970s to avoid Swedish taxes, and IKEA's ownership through a Dutch foundation also served as a tax shelter. For years he said his influence over IKEA was limited; in 2011 Swedish television reported a Liechtenstein foundation, Interogo, set up in 1989, through which his family controlled Inter IKEA, and he confirmed it. Besides the old Volvo and the economy flights, reporters found, he had a villa over Lake Geneva, an estate in Sweden, vineyards in Provence and a Porsche. He made no secret of his alcoholism and said he kept it in check by drying out three times a year.",
+    "sourceIds": [
+      "nyt-2018",
+      "ap-2018",
+      "thelocal-2011-tt",
+      "thelocal-2011-afp",
+      "thelocal-2011-interogo"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you choose this week without first asking what it would cost you in money or time?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Testament of a Furniture Dealer",
+      "year": 1976
+    },
+    {
+      "title": "Leading by Design: The IKEA Story (with Bertil Torekull)",
+      "year": 1999
+    }
+  ],
+  "sources": [
+    {
+      "id": "testament",
+      "kind": "primary",
+      "title": "The Testament of a Furniture Dealer",
+      "author": "Ingvar Kamprad",
+      "year": 2013,
+      "publisher": "Inter IKEA Systems B.V. (written 20 December 1976; edition marked 1976–2013)",
+      "url": "https://www.ikea.com/my/en/files/pdf/7c/03/7c03f40f/the-testament-of-a-furniture-dealer.pdf"
+    },
+    {
+      "id": "nyt-2018",
+      "kind": "secondary",
+      "title": "Ingvar Kamprad, Founder of Ikea and Creator of a Global Empire, Dies at 91",
+      "author": "Robert D. McFadden",
+      "year": 2018,
+      "publisher": "The New York Times (28 January 2018; licensed reprint on WRAL.com)",
+      "url": "https://www.wral.com/ingvar-kamprad-founder-of-ikea-and-creator-of-a-global-empire-dies-at-91/17296306/"
+    },
+    {
+      "id": "ap-2018",
+      "kind": "secondary",
+      "title": "IKEA says founder Ingvar Kamprad has died at 91",
+      "author": "Karl Ritter",
+      "year": 2018,
+      "publisher": "Associated Press (28 January 2018; reprint on WJLA.com)",
+      "url": "https://wjla.com/news/nation-world/ikea-says-founder-ingvar-kamprad-has-died-at-91-01-28-2018"
+    },
+    {
+      "id": "thelocal-2011-tt",
+      "kind": "secondary",
+      "title": "'Ikea founder was an active Nazi': report",
+      "author": "TT / The Local",
+      "year": 2011,
+      "publisher": "The Local Sweden (24 August 2011)",
+      "url": "https://www.thelocal.com/20110824/35732"
+    },
+    {
+      "id": "thelocal-2011-afp",
+      "kind": "secondary",
+      "title": "Book re-ignites debate on Ikea founder's Nazi past",
+      "author": "Nina Larsson (AFP) / The Local",
+      "year": 2011,
+      "publisher": "The Local Sweden (1 September 2011)",
+      "url": "https://www.thelocal.se/20110901/35892"
+    },
+    {
+      "id": "ikea-museum-poland",
+      "kind": "secondary",
+      "title": "Cześć Polsko!",
+      "author": "IKEA Museum",
+      "year": "n.d. (read 2026)",
+      "publisher": "IKEA Museum, Älmhult (company-owned museum)",
+      "url": "https://ikeamuseum.com/en/explore/the-story-of-ikea/czesc-polsko/"
+    },
+    {
+      "id": "ikea-museum-price-wars",
+      "kind": "secondary",
+      "title": "Price wars",
+      "author": "IKEA Museum",
+      "year": "n.d. (read 2026)",
+      "publisher": "IKEA Museum, Älmhult (company-owned museum)",
+      "url": "https://www.ikeamuseum.com/en/explore/the-story-of-ikea/price-wars/"
+    },
+    {
+      "id": "thelocal-2011-interogo",
+      "kind": "secondary",
+      "title": "Ikea founder controls company through secret foundation: report",
+      "author": "TT / The Local",
+      "year": 2011,
+      "publisher": "The Local Sweden (26 January 2011), reporting SVT's Uppdrag granskning",
+      "url": "https://www.thelocal.se/20110126/31650"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Swedish businessman (1926-2018), founder of IKEA, never a politician, campaigner or religious founder; no account of sexual contact with a minor or of sexual violence was found; he is in, and his dark side is his youth membership of Swedish fascist and Nazi movements (apologised for in 1994, but in 2010 he still praised the fascist leader Per Engdahl), tax-driven residence abroad and a tax-sheltering ownership structure, and alcoholism."
+    },
+    "blindAgreement": 0.5,
+    "devilsAdvocate": "I attacked each value against the Testament, the New York Times and AP obituaries, the IKEA Museum and three reports in The Local, including a 2011 one on his Liechtenstein foundation. Responsibility fell: he hid his fascist past until it was exposed and still praised Engdahl in 2010, and it rested on two sources. Humility, Hard work and Boldness held on three sources each. Simplicity was then dropped by the lead reviewer: the Times found his thrift partly an image (a Lake Geneva villa, vineyards, a Porsche), which a hostile reader could argue strongly against, and it now stands in the shadow; the blind pick's Ambition was added. All four quotes match the Testament or the Times word for word; three sentences were corrected and the foundation and the thrift-image facts were added to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
