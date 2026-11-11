@@ -1,0 +1,244 @@
+{
+  "id": "irena-sendler",
+  "name": "Irena Sendler",
+  "pronoun": "she",
+  "born": 1910,
+  "died": 2008,
+  "category": "givers",
+  "areaIds": [
+    "lm_contribution",
+    "lm_mindset"
+  ],
+  "tagline": "A social worker who hid Jewish children from the Nazis and kept silent under torture.",
+  "startedFrom": "She was born in 1910, the daughter of a doctor. Her father died of typhus in 1917 after treating patients his colleagues shunned, many of them Jewish; leaders of the Jewish community offered her hard-up mother money for Irena's education. She went on to study Polish literature at Warsaw University and became a social worker for the city.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 20 October 1943 she was arrested, sentenced to death and sent to Pawiak prison; after underground activists bribed officials to free her, she went on with her underground work in hiding.",
+          "sourceId": "yad-vashem",
+          "locator": "\"Irena Sendler (Poland)\" page, paragraph beginning \"On 20 October 1943\""
+        },
+        {
+          "kind": "deed",
+          "claim": "The Gestapo beat and tortured her, but she never revealed the names of the children or of her colleagues.",
+          "sourceId": "ushmm-encyclopedia",
+          "locator": "introduction to the oral history clip, paragraph beginning \"Under the alias “Jolanta,”\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Economist's obituary calls her one of the bravest of the Poles who defied prejudice.",
+          "sourceId": "economist-2008",
+          "locator": "second paragraph, beginning \"Certainly prejudice was prevalent in pre-war Poland\""
+        }
+      ]
+    },
+    {
+      "word": "Compassion",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "She said she was brought up to believe that a drowning person must be rescued, whatever his religion or nationality.",
+          "sourceId": "bbc-2005",
+          "locator": "paragraph after \"But she recruited a group of her social worker colleagues\""
+        },
+        {
+          "kind": "words",
+          "claim": "She said no religion moved her: she acted \"from the need of my heart\".",
+          "sourceId": "economist-2008",
+          "locator": "third paragraph, beginning \"She was, a friend said\""
+        },
+        {
+          "kind": "deed",
+          "claim": "After the Warsaw ghetto was created in 1940, she used her job and her pre-war contacts to bring food and money to Jews.",
+          "sourceId": "ushmm-encyclopedia",
+          "locator": "introduction to the oral history clip, paragraph beginning \"Irena Sendler (Sendlerowa) was working as a social worker\""
+        },
+        {
+          "kind": "deed",
+          "claim": "She got a city permit to inspect sanitary conditions in the ghetto and used it to go in and help the dying.",
+          "sourceId": "yad-vashem",
+          "locator": "\"Irena Sendler (Poland)\" page, first paragraph, beginning \"When World War II broke out\""
+        }
+      ]
+    },
+    {
+      "word": "Responsibility",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "She gave each hidden child a new identity and recorded, in code, each child's real name and hiding place so that surviving relatives could find them after the war.",
+          "sourceId": "ushmm-memoriam",
+          "locator": "second paragraph, beginning \"As head of the children’s section of Żegota\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Economist writes that she insisted on recording the children's details so they could trace their families later, though it made the work even riskier.",
+          "sourceId": "economist-2008",
+          "locator": "paragraph beginning \"To make matters even riskier\""
+        },
+        {
+          "kind": "words",
+          "claim": "She says she kept the coded file of the children's real names at home, and that without it the hidden children could not have been returned to the Jewish community.",
+          "sourceId": "ushmm-oral-history",
+          "locator": "clip \"Irena Sendler describes how she was arrested and tortured by the Gestapo\", transcript"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Help a person in danger, whatever his religion or nation.",
+      "sourceId": "bbc-2005",
+      "locator": "paragraph after \"But she recruited a group of her social worker colleagues\""
+    },
+    {
+      "text": "Write down who each person you hide really is, so the family can find them again.",
+      "sourceId": "ushmm-memoriam",
+      "locator": "second paragraph, beginning \"As head of the children’s section of Żegota\""
+    },
+    {
+      "text": "Keep the names of the people who trust you, even under pressure.",
+      "sourceId": "ushmm-encyclopedia",
+      "locator": "introduction to the oral history clip, paragraph beginning \"Under the alias “Jolanta,”\""
+    },
+    {
+      "text": "One rescue takes many hands: build a team in which each person does one part in secret.",
+      "sourceId": "economist-2008",
+      "locator": "paragraph beginning \"That bureaucratic loophole\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Every child saved with my help and the help of all the wonderful secret messengers, who today are no longer living, is the justification of my existence on this Earth, and not a title to glory.",
+      "sourceId": "senate-letter-2007",
+      "locator": "letter to the Polish Senate, read at its session of 14 March 2007, as quoted by the Associated Press (CBS News, 14 March 2007)",
+      "translation": "English as published by the Associated Press, 2007; translator not named"
+    },
+    {
+      "text": "I was brought up to believe that a person must be rescued when drowning, regardless of religion and nationality.",
+      "sourceId": "bbc-2005",
+      "locator": "interview with Adam Easton, BBC News, 3 March 2005",
+      "translation": "English as published by BBC News, 2005; translator not named"
+    },
+    {
+      "text": "Let me stress most emphatically that we who were rescuing children are not some kind of heroes. Indeed, that term irritates me greatly.",
+      "sourceId": "bbc-2005",
+      "locator": "interview with Adam Easton, BBC News, 3 March 2005, last paragraph",
+      "translation": "English as published by BBC News, 2005; translator not named"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 20 October 1943 the Gestapo arrested her in Warsaw. She was beaten and tortured, held in Pawiak prison and sentenced to death, but she did not give away the names of the children or of her colleagues. Her fellow rescuers in Żegota, the underground Council for Aid to Jews, bribed officials to set her free. She took a new name and went on working for Żegota in hiding.",
+    "sourceIds": [
+      "yad-vashem",
+      "ushmm-encyclopedia",
+      "ushmm-oral-history"
+    ]
+  },
+  "shadow": {
+    "text": "She said many times that she saved 2,500 children; Anna Bikont's 2017 biography calls the figure greatly inflated and reports that the most optimistic estimates put the children Żegota helped at about 500. Historian Dariusz Libionka writes that serious historians never took the 2,500 claim seriously, and that the figure, from a 1979 statement by her and three colleagues, was never given as a count of survivors or of children she saved herself. Bikont found that she told her story in changing versions, maintained that she carried children out of the ghetto herself, and often took her colleagues' work as her own; Libionka adds that, by the documents, she spent less than a month in Pawiak prison, not the three months she often described. In January 1947 she joined the communist Polish Workers' Party of her own will and held posts in the party; Libionka reports that she stayed in the party until its end and that there were no grounds for the persecution by the communists that she and later accounts described, and Władysław Bartoszewski said: \"it is not true that she was persecuted for it.\" Before the war, while married, she took her future second husband, a Jewish man, from his wife, her friend; writing about him in 1981, she hid that he was Jewish. Both her marriages broke up; she felt she had been a bad wife to both husbands and a neglectful mother, and her children resented that her social work left her no time for them when they needed her most.",
+    "sourceIds": [
+      "dzieje-2017",
+      "libionka-2017",
+      "economist-2008"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Who needed your help this week, and what made you decide he was not your problem?",
+    "principleIndex": 0
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "ushmm-oral-history",
+      "kind": "primary",
+      "title": "Irena Sendler describes how she was arrested and tortured by the Gestapo (filmed interview clip, Polish with English transcript), Holocaust Encyclopedia",
+      "author": "Irena Sendler (interviewee); United States Holocaust Memorial Museum",
+      "year": "undated clip, read online 2026",
+      "publisher": "United States Holocaust Memorial Museum",
+      "url": "https://encyclopedia.ushmm.org/content/en/oral-history/irena-sendler-describes-how-she-was-arrested-and-tortured-by-the-gestapo"
+    },
+    {
+      "id": "senate-letter-2007",
+      "kind": "primary",
+      "title": "Letter to the Polish Senate, read by Elżbieta Ficowska at the session of 14 March 2007 (as quoted by the Associated Press: \"Poland Honors Holocaust Hero\", CBS News, 14 March 2007)",
+      "author": "Irena Sendler",
+      "year": 2007,
+      "url": "https://www.cbsnews.com/news/poland-honors-holocaust-hero"
+    },
+    {
+      "id": "bbc-2005",
+      "kind": "secondary",
+      "title": "Holocaust heroine's survival tale (BBC News, 3 March 2005; includes interview quotes)",
+      "author": "Adam Easton, BBC News",
+      "year": 2005,
+      "url": "https://news.bbc.co.uk/1/hi/world/europe/4314145.stm"
+    },
+    {
+      "id": "yad-vashem",
+      "kind": "secondary",
+      "title": "Irena Sendler (Poland), \"Women of Valor\": Stories of Women Who Rescued Jews During the Holocaust",
+      "author": "Yad Vashem",
+      "year": "online exhibition, read 2026",
+      "publisher": "Yad Vashem",
+      "url": "https://www.yadvashem.org/yv/en/exhibitions/righteous-women/sendler.asp"
+    },
+    {
+      "id": "ushmm-encyclopedia",
+      "kind": "secondary",
+      "title": "Introduction to the clip \"Irena Sendler describes how she was arrested and tortured by the Gestapo\", Holocaust Encyclopedia",
+      "author": "United States Holocaust Memorial Museum",
+      "year": "online, read 2026",
+      "publisher": "United States Holocaust Memorial Museum",
+      "url": "https://encyclopedia.ushmm.org/content/en/oral-history/irena-sendler-describes-how-she-was-arrested-and-tortured-by-the-gestapo"
+    },
+    {
+      "id": "ushmm-memoriam",
+      "kind": "secondary",
+      "title": "In Memoriam: Irena Sendler (1910–2008)",
+      "author": "United States Holocaust Memorial Museum",
+      "year": 2008,
+      "publisher": "United States Holocaust Memorial Museum",
+      "url": "https://www.ushmm.org/information/press/in-memoriam/irena-sendler-1910-2008"
+    },
+    {
+      "id": "economist-2008",
+      "kind": "secondary",
+      "title": "Irena Sendler (obituary, The Economist, 22 May 2008), reprinted by the International Raoul Wallenberg Foundation",
+      "author": "The Economist",
+      "year": 2008,
+      "url": "https://www.raoulwallenberg.net/?p=5206"
+    },
+    {
+      "id": "dzieje-2017",
+      "kind": "secondary",
+      "title": "\"Sendlerowa. W ukryciu\" - nowa biografia matki dzieci Holokaustu (PAP report on Anna Bikont, Sendlerowa. W ukryciu, Czarne 2017; dzieje.pl, Museum of Polish History, 28 October 2017)",
+      "author": "Polish Press Agency (PAP)",
+      "year": 2017,
+      "publisher": "Muzeum Historii Polski (dzieje.pl)",
+      "url": "https://dzieje.pl/node/81423"
+    },
+    {
+      "id": "libionka-2017",
+      "kind": "secondary",
+      "title": "Review of Anna Bikont, Sendlerowa. W ukryciu (Zagłada Żydów. Studia i Materiały 13, 2017, pp. 784–789)",
+      "author": "Dariusz Libionka",
+      "year": 2017,
+      "publisher": "Polish Center for Holocaust Research, IFiS PAN",
+      "url": "https://doi.org/10.32927/ZZSiM.388"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Polish social worker (1910-2008), never a politician, campaigner or religious founder; no account of sexual contact with a minor or of sexual violence was found; she is in, and her dark side is a self-made legend she spread (the contested 2,500 figure, changing versions of her story, colleagues' work taken as her own), voluntary membership of the communist party from 1947 until its end while later telling a story of persecution, and taking a married friend's husband while married herself."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I attacked each value against Anna Bikont's 2017 biography (through the PAP report and Dariusz Libionka's review), the Economist and New York Times obituaries, Yad Vashem and the USHMM pages, and re-checked every quote. Fairness fell: it rested on one university protest from two sources, and Bikont's finding that she often took her colleagues' credit argues against fair dealing; the blind pick's Humility and Loyalty fell for the same kind of reason. Courage, Compassion and Responsibility held, since the arrest, torture, death sentence and the coded file of children's names stand in sources that also accept the debunking. All three quotes held; seven sentences were corrected, among them an unsourced birthplace, an arrest 'at her home' no source gives, and a second husband's name that only joins two sources by guesswork.",
+    "checkedOn": "2026-11-10"
+  }
+}
