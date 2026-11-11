@@ -1,0 +1,340 @@
+{
+  "id": "ray-dalio",
+  "name": "Ray Dalio",
+  "born": 1949,
+  "died": null,
+  "category": "money",
+  "areaIds": [
+    "lm_money",
+    "lm_mindset"
+  ],
+  "tagline": "A hedge fund founder who turned his painful mistakes into written rules for living.",
+  "startedFrom": "He was born in 1949 in Jackson Heights, Queens, the only child of Italian-American parents: his father was a jazz musician, his mother a homemaker. When he was eight the family moved to Manhasset, Long Island, and he later called himself a bad student with a bad rote memory. From the age of twelve he caddied at a golf club whose members included Wall Street investors, and he put his caddie money into the stock market.",
+  "values": [
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told Tim Ferriss that after each painful mistake he asked what he would do differently, wrote the answer down as a principle, and that these notes became his book.",
+          "sourceId": "ferriss-2017",
+          "locator": "answer beginning 'I think for everyone, and for me at the time' and the two paragraphs after it"
+        },
+        {
+          "kind": "words",
+          "claim": "In his 2017 TED talk he said he began to treat his mistakes as puzzles whose solutions were principles he wrote down so he would remember them.",
+          "sourceId": "ted-2017",
+          "locator": "paragraph beginning 'In order to be an effective investor'"
+        },
+        {
+          "kind": "deed",
+          "claim": "By 2011 he had collected his rules in 'Principles', a hundred-page text that was required reading for Bridgewater's new hires.",
+          "sourceId": "newyorker-2011",
+          "locator": "paragraph beginning 'Dalio is serenely convinced'"
+        }
+      ]
+    },
+    {
+      "word": "Honesty",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said an idea meritocracy needs radical truthfulness and radical transparency: people saying what they really believe and seeing everything.",
+          "sourceId": "ted-2017",
+          "locator": "paragraphs beginning 'It was one of the most painful' and 'What I mean by radical truthfulness'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Virtually all Bridgewater meetings were taped, including his own talks with senior colleagues, so staff could see his mistakes.",
+          "sourceId": "newyorker-2011",
+          "locator": "paragraph beginning 'The next item on Dalio's agenda'"
+        },
+        {
+          "kind": "witness",
+          "claim": "James Comey, then Bridgewater's top lawyer, said it took him three months to learn that when Dalio says 'I think you are wrong,' he means exactly that.",
+          "sourceId": "newyorker-2011",
+          "locator": "paragraph beginning 'Another new member of Bridgewater's management committee'"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said that as a boy he did not like following instructions but loved to figure out how things worked for himself.",
+          "sourceId": "ted-2017",
+          "locator": "paragraph beginning 'Since I was a kid'"
+        },
+        {
+          "kind": "deed",
+          "claim": "After being fired from Shearson Hayden Stone he got some clients to hire him as a consultant and founded Bridgewater in his two-bedroom apartment, at 26.",
+          "sourceId": "newyorker-2011",
+          "locator": "paragraph beginning 'After graduating, Dalio went to Harvard Business School'"
+        },
+        {
+          "kind": "words",
+          "claim": "He told the New Yorker he did not want Bridgewater to go public or be controlled by anybody outside the firm.",
+          "sourceId": "newyorker-2011",
+          "locator": "paragraph beginning 'Last year, Dalio sold about twenty per cent'"
+        },
+        {
+          "kind": "words",
+          "claim": "He told Tim Ferriss that being in the markets or being an entrepreneur requires betting against the consensus, and called himself 'a professional mistake maker'.",
+          "sourceId": "ferriss-2017",
+          "locator": "answer beginning 'Let me first say that, by the way, I'm a professional mistake maker'"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In their 2011 Giving Pledge letter he and his wife Barbara wrote that giving their excess to people with extreme shortages had been a good investment and a great satisfaction.",
+          "sourceId": "givingpledge-2011",
+          "locator": "pledge letter, third paragraph ('We also have been fortunate')"
+        },
+        {
+          "kind": "deed",
+          "claim": "In April 2019 he and Barbara announced a $100 million donation for public education and new businesses in poor Connecticut communities, believed to be the largest known gift to the state.",
+          "sourceId": "ap-2019",
+          "locator": "first two paragraphs"
+        },
+        {
+          "kind": "deed",
+          "claim": "He joined the Giving Pledge started by Bill Gates and Warren Buffett, promising to give away at least half of his money.",
+          "sourceId": "newyorker-2011",
+          "locator": "paragraph beginning 'Dalio insists that money has never been his main motivation'"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Eileen Murray, a senior Bridgewater executive who had spent 25 years on Wall Street, said she had never seen a CEO spend as much time developing his people.",
+          "sourceId": "newyorker-2011",
+          "locator": "paragraph beginning 'Some senior executives at Bridgewater do relish working there'"
+        },
+        {
+          "kind": "deed",
+          "claim": "The New Yorker reported in July 2011 that he was formally giving up his co-CEO title for the title 'Mentor', and he called his new role 'minister/mentor'.",
+          "sourceId": "newyorker-2011",
+          "locator": "paragraph beginning 'Dalio contests this account'"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked in 2017 why he published Principles, he said that at 68 his number one goal was to help people be successful without him by passing along what he had learned.",
+          "sourceId": "ferriss-2017",
+          "locator": "answer beginning 'I'm at a stage in my life where my objective is no longer'"
+        },
+        {
+          "kind": "words",
+          "claim": "He says he made the animated series 'Principles for Success' to share principles he believes anyone can adopt.",
+          "sourceId": "pfs",
+          "locator": "introduction above the episode list"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "After a painful mistake, ask what you would do differently next time and write the answer down as a rule.",
+      "sourceId": "ferriss-2017",
+      "locator": "answer beginning 'I think for everyone, and for me at the time' and the two paragraphs after it"
+    },
+    {
+      "text": "When you feel sure, ask 'How do I know I'm right?' and find the smartest people who disagree with you.",
+      "sourceId": "ted-2017",
+      "locator": "paragraph beginning 'It was one of the most painful'"
+    },
+    {
+      "text": "Say what you really believe, and let anyone, whatever his rank, tell you openly where you went wrong.",
+      "sourceId": "ted-2017",
+      "locator": "paragraphs beginning 'What I mean by radical truthfulness' and 'for not showing a good balance of open-mindedness'"
+    },
+    {
+      "text": "Weigh each opinion by how believable the person is on that subject, not one person, one vote.",
+      "sourceId": "ferriss-2017",
+      "locator": "paragraph beginning 'Democratic is one man, one vote' and the three paragraphs after it"
+    },
+    {
+      "text": "Never take a risk that can knock you out of the game; take the painful ones you can learn from.",
+      "sourceId": "ferriss-2017",
+      "locator": "answer beginning 'Well, I think the most important thing is there's the risk of the ruin' and the paragraph after it"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Rather than thinking, \"I'm right,\" I started to ask myself, \"How do I know I'm right?\" I gained a humility that I needed in order to balance my audacity.",
+      "sourceId": "ted-2017",
+      "locator": "paragraph beginning 'It was one of the most painful'"
+    },
+    {
+      "text": "Rewards keep you doing the same things, and so you don’t grow from successes.",
+      "sourceId": "ferriss-2017",
+      "locator": "paragraph beginning 'Mistakes, look, first of all'"
+    },
+    {
+      "text": "I have to know how not to die, know how not to get knocked out of the game.",
+      "sourceId": "ferriss-2017",
+      "locator": "answer beginning 'Well, I think the most important thing is there's the risk of the ruin'"
+    },
+    {
+      "text": "Our greatest power is that we know that we don’t know and we are open to being wrong and learning.",
+      "sourceId": "newyorker-2011",
+      "locator": "e-mail from Dalio quoted in the paragraph beginning 'Dalio doesn't pretend that Bridgewater is a typical workplace'"
+    }
+  ],
+  "definingMoment": {
+    "text": "In the late 1970s and early 1980s he predicted a debt crisis and a deep fall in stocks. Mexico defaulted in August 1982, but stocks and the economy rose instead of falling. He lost so much money for himself and his clients that he had to let almost everyone at Bridgewater go and borrow $4,000 from his father to pay family bills. He said the loss made him stop thinking 'I'm right' and start asking 'How do I know I'm right?', and look for smart people who disagreed with him.",
+    "sourceIds": [
+      "ted-2017",
+      "ferriss-2017"
+    ]
+  },
+  "shadow": {
+    "text": "On New Year's Eve 1974 he went drinking with his boss at Shearson Hayden Stone, got into a disagreement and hit him; around the same time he paid an exotic dancer to drop her cloak in front of a grain growers' convention, and he was fired. In July 2016 the New York Times reported an employee's complaint that called Bridgewater a 'cauldron of fear and intimidation' under constant video recording, and a labor board complaint that its confidentiality agreements restrained staff; Dalio called the story 'a distortion of reality.' In a CNBC interview in late 2021, asked about dissidents who had disappeared in China, he compared its government to a 'strict parent'; Senator Mitt Romney called his China investments 'a sad moral lapse', and Dalio later said he had 'sloppily answered' and was not endorsing that approach. Rob Copeland's 2023 book The Fund says he berated a pregnant senior executive on video as she wept and showed the tape to staff and job candidates, and that a software rule kept his own believability rating on top whatever others rated him. Bridgewater called the book 'a false and misleading portrayal', and Dalio said a fact checker had found 'over 400' points that Copeland 'made up'.",
+    "sourceIds": [
+      "newyorker-2011",
+      "nyt-2016",
+      "fortune-2016",
+      "fortune-2021",
+      "fortune-2023",
+      "bridgewater-2023",
+      "nyt-review-2023"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which mistake hurt you this week, and what rule did you write down so it does not happen again?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Principles: Life and Work",
+      "year": 2017
+    }
+  ],
+  "sources": [
+    {
+      "id": "ted-2017",
+      "kind": "primary",
+      "title": "How to build a company where the best ideas win (TED2017 talk, recorded 24 April 2017, transcript)",
+      "author": "Ray Dalio",
+      "year": 2017,
+      "publisher": "TED",
+      "url": "https://www.ted.com/talks/ray_dalio_how_to_build_a_company_where_the_best_ideas_win/transcript"
+    },
+    {
+      "id": "ferriss-2017",
+      "kind": "primary",
+      "title": "The Tim Ferriss Show #264: Ray Dalio, The Steve Jobs of Investing (episode 13 September 2017; official transcript)",
+      "author": "Ray Dalio, interviewed by Tim Ferriss",
+      "year": 2018,
+      "publisher": "tim.blog",
+      "url": "https://tim.blog/2018/02/01/the-tim-ferriss-show-transcripts-ray-dalio/"
+    },
+    {
+      "id": "givingpledge-2011",
+      "kind": "primary",
+      "title": "Ray and Barbara Dalio: Giving Pledge letter",
+      "author": "Ray and Barbara Dalio",
+      "year": 2011,
+      "publisher": "The Giving Pledge",
+      "url": "https://www.givingpledge.org/pledger/ray-and-barbara-dalio/"
+    },
+    {
+      "id": "pfs",
+      "kind": "primary",
+      "title": "Principles for Success (animated series page, undated, checked 2026-11-10)",
+      "author": "Ray Dalio",
+      "year": "undated",
+      "publisher": "principles.com",
+      "url": "https://www.principles.com/principles-for-success"
+    },
+    {
+      "id": "newyorker-2011",
+      "kind": "secondary",
+      "title": "Mastering the Machine",
+      "author": "John Cassidy",
+      "year": 2011,
+      "publisher": "The New Yorker (25 July 2011 issue)",
+      "url": "https://www.newyorker.com/magazine/2011/07/25/mastering-the-machine"
+    },
+    {
+      "id": "nyt-2016",
+      "kind": "secondary",
+      "title": "At World's Largest Hedge Fund, Sex, Fear and Video Surveillance",
+      "author": "Alexandra Stevenson and Matthew Goldstein (CNBC's page prints 'Alexander Stevenson')",
+      "year": 2016,
+      "publisher": "The New York Times (as carried by CNBC, 27 July 2016)",
+      "url": "https://www.cnbc.com/2016/07/27/at-worlds-largest-hedge-fund-sex-fear-and-video-surveillance.html"
+    },
+    {
+      "id": "fortune-2016",
+      "kind": "secondary",
+      "title": "Read the World Largest Hedge Fund's Response to Claims of Harassment (with Dalio's memo 'The New York Times Story Is a Distortion of Reality')",
+      "author": "Lucinda Shen",
+      "year": 2016,
+      "publisher": "Fortune (28 July 2016)",
+      "url": "https://fortune.com/2016/07/28/read-ray-dalios-full-response-to-the-new-york-times-harassment-claims-article/"
+    },
+    {
+      "id": "ap-2019",
+      "kind": "secondary",
+      "title": "Billionaire gives $100 million to fund Connecticut education",
+      "author": "Associated Press",
+      "year": 2019,
+      "publisher": "Associated Press (as published by FOX 5 New York, 5 April 2019)",
+      "url": "https://www.fox5ny.com/news/billionaire-gives-100-million-to-fund-connecticut-education"
+    },
+    {
+      "id": "fortune-2021",
+      "kind": "secondary",
+      "title": "Ray Dalio says his comments comparing China to a 'strict parent' regarding its treatment of dissidents were misunderstood",
+      "author": "Sebastian Tong, Bloomberg",
+      "year": 2021,
+      "publisher": "Fortune (5 December 2021)",
+      "url": "https://fortune.com/2021/12/05/ray-dalio-bridgewater-china-comments-human-rights-misunderstood/"
+    },
+    {
+      "id": "fortune-2023",
+      "kind": "secondary",
+      "title": "Speaking at a Fortune event, Ray Dalio publicly addresses the bombshell book about his hedge fund",
+      "author": "Jessica Mathews",
+      "year": 2023,
+      "publisher": "Fortune (30 November 2023)",
+      "url": "https://fortune.com/2023/11/30/ray-dalio-book-response-bridgewater/"
+    },
+    {
+      "id": "bridgewater-2023",
+      "kind": "secondary",
+      "title": "Our Statement on a Recent Book About Ray Dalio and Bridgewater",
+      "author": "Bridgewater Associates",
+      "year": 2023,
+      "publisher": "Bridgewater Associates",
+      "url": "https://bridgewater.com/our-statement-on-a-recent-book-about-bridgewater"
+    },
+    {
+      "id": "nyt-review-2023",
+      "kind": "secondary",
+      "title": "A model boss from hell (review of Rob Copeland, The Fund)",
+      "author": "The New York Times News Service",
+      "year": 2023,
+      "publisher": "The New York Times, as carried by Business Standard (12 November 2023)",
+      "url": "https://www.business-standard.com/book/a-model-boss-from-hell-123111200705_1.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real, living investor (born 1949), founder of Bridgewater Associates, not a politician, campaigner or religious founder; no account of sexual contact with a minor or of sexual violence by him found; his dark side is a 1974 drunken fight with his boss and firing, reporting on a fearful, surveilled workplace (2016 NYT, 2023 book The Fund, both disputed by him and the firm), and 2021 remarks on China."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked all five draft values and the blind pick's Humility and Mindfulness against the saved TED and Ferriss transcripts, the New Yorker profile, the Giving Pledge letter, AP, Fortune and the NYT review of The Fund. Humility fell: his own words claim it, but Cassidy, the NYT and Copeland's book describe public berating and a ratings rule that kept him on top; Mindfulness was not added because his practice is Transcendental Meditation, a different method. Learning, Honesty and Generosity held as core; Independence and Mentorship each reached three sources with a Ferriss passage added. All four quotes match the transcripts and the New Yorker; fixes softened the $100 million 'gave' to 'announced', dated the CNBC remark to what Fortune supports, and added the book's believability-rule claim to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
