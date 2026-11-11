@@ -1,0 +1,346 @@
+{
+  "id": "james-dyson",
+  "name": "James Dyson",
+  "born": 1947,
+  "died": null,
+  "category": "builders",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "An inventor who built 5,127 prototypes before his bagless vacuum cleaner worked.",
+  "startedFrom": "He was born in 1947 in Cromer, Norfolk, the son of two teachers at Gresham's School, where his father was head of Classics. His father died when he was nine, and the school's financial help let him stay on as a pupil. He then studied art at the Byam Shaw School and furniture and interior design at the Royal College of Art in London.",
+  "values": [
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "From 1979 he built 5,127 prototypes of a bagless vacuum cleaner, paid for in part with a second mortgage on his family home.",
+          "sourceId": "gale-2005",
+          "locator": "paragraph beginning \"In 1979, the determined tinkerer established Dyson Research Ltd.\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Gale's Newsmakers reference calls him 'the determined tinkerer'.",
+          "sourceId": "gale-2005",
+          "locator": "paragraph beginning \"In 1979, the determined tinkerer established Dyson Research Ltd.\""
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that money ran short and his wife gave art lessons for extra cash during the prototypes, and that 'I just kept at it.'",
+          "sourceId": "wired-2011",
+          "locator": "paragraph beginning \"There are countless times an inventor can give up on an idea\""
+        }
+      ]
+    },
+    {
+      "word": "Building things",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1974 he formed a firm to make the Ballbarrow, a wheelbarrow with a plastic ball in place of the wheel.",
+          "sourceId": "gale-2005",
+          "locator": "paragraph beginning \"Dyson went on to study painting at the Byam Shaw School of Art\""
+        },
+        {
+          "kind": "words",
+          "claim": "He says his business plan is to use technology to create a better product that solves a problem and is well designed.",
+          "sourceId": "fastco-2007",
+          "locator": "answer to \"How did the hand dryer come about?\""
+        },
+        {
+          "kind": "witness",
+          "claim": "A 2023 High Court judgment describes him as an 'iconic inventor, designer, entrepreneur and philanthropist'.",
+          "sourceId": "mgn-2023",
+          "locator": "para 1"
+        },
+        {
+          "kind": "words",
+          "claim": "In 2021 he told Tim Ferriss that making things with your hands matters: 'Using your hands is not a lowly activity.'",
+          "sourceId": "ferriss-2021",
+          "locator": "transcript passage on using both hands and brains (no timestamps)"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After major vacuum makers such as Black & Decker and Electrolux turned his design down, he sold it first in Japan (1986), then built his own factory and sold the DC01 in Britain from 1993; his company stayed privately held.",
+          "sourceId": "gale-2005",
+          "locator": "paragraphs beginning \"Dyson did manage to begin making and selling\" and \"When Dyson launched his product in the United States\""
+        },
+        {
+          "kind": "words",
+          "claim": "In 2002 he told BBC News Online: 'We want to stay a private company.'",
+          "sourceId": "bbc-2002",
+          "locator": "paragraph beginning \"Remember we're a private company\""
+        },
+        {
+          "kind": "words",
+          "claim": "He told Management Today (1999) he could not be bothered convincing other people that what he was doing was right, which you must do if you do not control all of it.",
+          "sourceId": "gale-2005",
+          "locator": "paragraph ending \"...if you don't control all of it.\" (citing Management Today, July 1999, p. 72)"
+        },
+        {
+          "kind": "words",
+          "claim": "In 2021 he told Tim Ferriss that he bought out his partner Jeremy Fry for £45,000, 'and I was on my own', and that he had found he liked relying on himself rather than sharing decisions.",
+          "sourceId": "ferriss-2021",
+          "locator": "transcript passage beginning \"So I bought him out for 45,000 pounds\" (no timestamps)"
+        }
+      ]
+    },
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 2016 his company began an electric car project with plans to invest more than £2bn; in October 2019 he closed it as not commercially viable.",
+          "sourceId": "bbc-2019",
+          "locator": "paragraphs beginning \"Dyson had planned to invest more than £2bn\" and \"In an email sent to all employees\""
+        },
+        {
+          "kind": "deed",
+          "claim": "He funded his own research company in 1979 partly with a second mortgage on a home that also housed three small children.",
+          "sourceId": "gale-2005",
+          "locator": "paragraph beginning \"In 1979, the determined tinkerer established Dyson Research Ltd.\""
+        },
+        {
+          "kind": "words",
+          "claim": "He calls building his own digital motor, with over £250 million invested, one of the greatest risks he has taken, and says 'Risk is good' and that he encourages his engineers to make bold decisions.",
+          "sourceId": "rolandberger-2016",
+          "locator": "answers beginning \"One of the greatest risks I've taken\" and to \"How do you encourage others to make the best of failure?\""
+        }
+      ]
+    },
+    {
+      "word": "Contribution",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 2002 the James Dyson Foundation, Dyson's charitable arm, was set up to inspire young engineers, and in June 2019 he and his wife paid for a new science, technology and engineering (STEAM) centre at Gresham's, the largest donation the school has received.",
+          "sourceId": "greshams",
+          "locator": "section \"Engineering and Science Education\" and paragraph beginning \"In June 2019\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The 2023 High Court judgment notes his charitable work, the James Dyson Foundation (2002), and the Dyson Institute of Engineering and Technology he opened in 2017 to train engineers.",
+          "sourceId": "mgn-2023",
+          "locator": "para 1"
+        },
+        {
+          "kind": "words",
+          "claim": "He says that to get young people to study engineering 'we must inspire them at the earliest possible stage'.",
+          "sourceId": "greshams",
+          "locator": "closing quotation by Sir James Dyson, after \"sir jameS dyson's advice to the class of 2022\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Treat each failed attempt as a lesson: find out why it failed and use that in the next try.",
+      "sourceId": "fastco-2007",
+      "locator": "answer to \"You once described the inventor's life as 'one of failure.' How so?\""
+    },
+    {
+      "text": "To find what others have not, try the 'wrong' way on purpose and watch why it fails.",
+      "sourceId": "fastco-2007",
+      "locator": "answer to \"Not all failures lead to solutions, though. How do you fail constructively?\""
+    },
+    {
+      "text": "Start from what annoys you: a thing that does not work properly is a problem worth solving.",
+      "sourceId": "entrepreneur-2025",
+      "locator": "section \"Solving Real Problems Starts With Annoyance\""
+    },
+    {
+      "text": "Keep control of what you build, so you do not spend your time convincing others you are right.",
+      "sourceId": "gale-2005",
+      "locator": "paragraph ending \"...if you don't control all of it.\" (citing Management Today, July 1999)"
+    },
+    {
+      "text": "Stop a project, however big, when the numbers do not work, and carry what you learned into the next one.",
+      "sourceId": "bbc-2019",
+      "locator": "quotes from his staff email, from \"This is not a product failure\" to \"it will not be the last\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I made 5,127 prototypes of my vacuum before I got it right. There were 5,126 failures. But I learned from each one.",
+      "sourceId": "fastco-2007",
+      "locator": "answer to \"You once described the inventor's life as 'one of failure.' How so?\""
+    },
+    {
+      "text": "We're taught to do things the right way. But if you want to discover something that other people haven't, you need to do things the wrong way.",
+      "sourceId": "fastco-2007",
+      "locator": "answer to \"Not all failures lead to solutions, though. How do you fail constructively?\""
+    },
+    {
+      "text": "It wasn't the final prototype that made the struggle worth it. The process bore the fruit. I just kept at it.",
+      "sourceId": "wired-2011",
+      "locator": "paragraph beginning \"There are countless times an inventor can give up on an idea\""
+    },
+    {
+      "text": "This is not the first project which has changed direction and it will not be the last.",
+      "sourceId": "bbc-2019",
+      "locator": "last quoted line of his email to staff, 10 October 2019"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1979 he set up Dyson Research with one backer, his buyout money from the Ballbarrow firm and a second mortgage on his home, while his wife taught to pay the bills. Over the next years he built 5,127 prototypes of a bagless cyclone vacuum cleaner. Major makers such as Black & Decker and Electrolux turned it down; it first went on sale in Japan, as the G-Force, in 1986. In 1993 his own DC01 went on sale in Britain, and by early 1995 it was the country's best-selling vacuum cleaner.",
+    "sourceIds": [
+      "gale-2005",
+      "wired-2011"
+    ]
+  },
+  "shadow": {
+    "text": "In February 2002 he said Dyson planned to move vacuum cleaner manufacturing from Malmesbury, Wiltshire, to the Far East, with the loss of about 800 jobs. He championed Brexit in 2016, and in January 2019 Dyson announced it would move its head office to Singapore; a January 2022 Daily Mirror column said this meant 'talk the talk, then screw your country', and in December 2023 the High Court dismissed his libel claim over it. In 2022, 24 Nepalese and Bangladeshi migrant workers sued Dyson in London, alleging forced labour, beatings and withheld passports at a Malaysian supplier's factories that made parts for Dyson. Dyson denied liability, said the supplier was responsible and argued the case belonged in Malaysia; in December 2024 the Court of Appeal ruled it should be heard in England, in May 2025 the Supreme Court refused Dyson permission to appeal, and in February 2026 Dyson settled without admitting liability.",
+    "sourceIds": [
+      "bbc-2002",
+      "mgn-2023",
+      "lawgazette-2024",
+      "uksc-2025",
+      "bbc-2026"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which attempt failed for you this week, and what did you learn from why it failed?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Against the Odds (with Giles Coren)",
+      "year": 1997
+    },
+    {
+      "title": "Invention: A Life",
+      "year": 2021
+    }
+  ],
+  "sources": [
+    {
+      "id": "fastco-2007",
+      "kind": "primary",
+      "title": "Failure Doesn't Suck (interview with Sir James Dyson, May 2007)",
+      "author": "Chuck Salter, Fast Company",
+      "year": 2007,
+      "url": "https://www.fastcompany.com/59549/failure-doesnt-suck"
+    },
+    {
+      "id": "wired-2011",
+      "kind": "primary",
+      "title": "No Innovator's Dilemma Here: In Praise of Failure (8 April 2011)",
+      "author": "James Dyson, Wired",
+      "year": 2011,
+      "url": "https://www.wired.com/2011/04/in-praise-of-failure/"
+    },
+    {
+      "id": "rolandberger-2016",
+      "kind": "primary",
+      "title": "Inventor James Dyson on learning to fail (Think:Act interview, 27 December 2016)",
+      "author": "Henrik Bork, Roland Berger",
+      "year": 2016,
+      "url": "https://www.rolandberger.com/en/Insights/Publications/Inventor-James-Dyson-on-learning-to-fail.html"
+    },
+    {
+      "id": "entrepreneur-2025",
+      "kind": "primary",
+      "title": "How 5,127 Failures Resulted in Sir James Dyson Becoming a Billionaire Inventor (How Success Happens interview, 26 November 2025)",
+      "author": "Dan Bova, Entrepreneur",
+      "year": 2025,
+      "url": "https://www.entrepreneur.com/leadership/how-5127-failures-resulted-in-sir-james-dyson-becoming-a/500127"
+    },
+    {
+      "id": "ferriss-2021",
+      "kind": "primary",
+      "title": "The Tim Ferriss Show #530: Sir James Dyson, transcript (3 September 2021)",
+      "author": "Tim Ferriss",
+      "year": 2021,
+      "url": "https://tim.blog/2021/09/03/james-dyson-transcript/"
+    },
+    {
+      "id": "gale-2005",
+      "kind": "secondary",
+      "title": "Dyson, James (Newsmakers 2005 Cumulation)",
+      "author": "Carol Brennan, Gale, via Encyclopedia.com",
+      "year": 2005,
+      "url": "https://www.encyclopedia.com/books/culture-magazines/dyson-james"
+    },
+    {
+      "id": "greshams",
+      "kind": "secondary",
+      "title": "Sir James Dyson and Gresham's",
+      "author": "Gresham's School",
+      "year": "accessed 2026-11-10",
+      "url": "https://greshams.com/senior-school/the-dyson-building/sir-james-dyson-and-greshams"
+    },
+    {
+      "id": "bbc-2002",
+      "kind": "secondary",
+      "title": "Dyson to move production to Far East (5 February 2002)",
+      "author": "BBC News Online",
+      "year": 2002,
+      "url": "https://news.bbc.co.uk/2/hi/business/1801909.stm"
+    },
+    {
+      "id": "bbc-2019",
+      "kind": "secondary",
+      "title": "Dyson has scrapped its electric car project (10 October 2019)",
+      "author": "BBC News",
+      "year": 2019,
+      "url": "https://www.bbc.co.uk/news/business-50004184"
+    },
+    {
+      "id": "mgn-2023",
+      "kind": "secondary",
+      "title": "Sir James Dyson v MGN Limited [2023] EWHC 3092 (KB), judgment of 1 December 2023",
+      "author": "Mr Justice Jay, High Court of England and Wales",
+      "year": 2023,
+      "url": "https://caselaw.nationalarchives.gov.uk/ewhc/kb/2023/3092"
+    },
+    {
+      "id": "lawgazette-2024",
+      "kind": "secondary",
+      "title": "Forced labour claims against Dyson to be heard in England (17 December 2024)",
+      "author": "Law Society Gazette",
+      "year": 2024,
+      "url": "https://www.lawgazette.co.uk/news/forced-labour-claims-against-dyson-to-be-heard-in-england/5121840.article"
+    },
+    {
+      "id": "uksc-2025",
+      "kind": "secondary",
+      "title": "Limbu and others v Dyson Technology Ltd and others, UKSC 2025/0019, permission to appeal refused 1 May 2025",
+      "author": "Supreme Court of the United Kingdom",
+      "year": 2025,
+      "url": "https://supremecourt.uk/cases/uksc-2025-0019"
+    },
+    {
+      "id": "bbc-2026",
+      "kind": "secondary",
+      "title": "Dyson settles forced labour suit in landmark UK case (27 February 2026)",
+      "author": "BBC News",
+      "year": 2026,
+      "url": "https://www.bbc.com/news/articles/cddnry8dnl7o"
+    }
+  ],
+  "likenessSources": [
+    {
+      "title": "Sir James Dyson CBE FREng FRS.jpg (Wikimedia Commons)",
+      "url": "https://commons.wikimedia.org/wiki/File:Sir_James_Dyson_CBE_FREng_FRS.jpg",
+      "licence": "CC BY-SA 4.0",
+      "author": "The Royal Society (Royal Society uploader)"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living British inventor and manufacturer (born 1947), never a politician, campaigner or religious founder; no account of sexual contact with a minor or of sexual violence was found; he is in, and his dark side is business conduct: moving factory jobs abroad, moving his head office to Singapore after backing Brexit, and forced-labour claims at a Malaysian supplier."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked all five values against the saved Gale, Fast Company, Wired, Roland Berger, Gresham's, BBC and court texts, and the Tim Ferriss transcript. All five held: Independence survived the point that he first tried to license the cleaner to Black & Decker and Electrolux, because he then kept sole ownership for decades; Contribution survived the point that the Dyson Institute feeds his own firm, because the Foundation and the Gresham's gift go beyond it; Boldness, the draft's own pick, rests on three sources. All four quotes matched the originals. The shadow now says the 2002 move was a stated plan and adds the Supreme Court's May 2025 refusal of Dyson's appeal, which the BBC's settlement report had compressed.",
+    "checkedOn": "2026-11-10"
+  }
+}
