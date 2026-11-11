@@ -1,0 +1,289 @@
+{
+  "id": "florence-nightingale",
+  "name": "Florence Nightingale",
+  "pronoun": "she",
+  "born": 1820,
+  "died": 1910,
+  "category": "givers",
+  "areaIds": [
+    "lm_contribution",
+    "lm_mission"
+  ],
+  "tagline": "A nurse who turned hospital deaths into hard data and fought officials for reform",
+  "startedFrom": "She was born in Florence, Italy, in 1820 into a wealthy English family, and her father taught her Latin, Greek and mathematics at home. Nursing was then seen as work for working-class women, and her family was against it: in 1845 her plan to train at Salisbury hospital terrified her mother and came to nothing. She was 31 before she got three months' training, at Kaiserswerth in Germany in 1851.",
+  "values": [
+    {
+      "word": "Purpose",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "She refused Richard Monckton Milnes's proposal of marriage and refused again when he renewed it, though Cook says she was strongly drawn to him.",
+          "sourceId": "cook-1913",
+          "locator": "Vol. 1, Part I, ch. VII 'The Single Life', p. 99"
+        },
+        {
+          "kind": "words",
+          "claim": "In her notes on the refusal she wrote that her \"moral, an active nature\" would not find satisfaction in his life, and that to give up the chance of a true and rich life \"would seem to me like suicide\".",
+          "sourceId": "cook-1913",
+          "locator": "Vol. 1, Part I, ch. VII 'The Single Life', p. 100"
+        },
+        {
+          "kind": "witness",
+          "claim": "In 1854 Elizabeth Gaskell wrote that she would not go among the villagers because \"her heart and soul are absorbed by her hospital plans\".",
+          "sourceId": "lrb-2008",
+          "locator": "Review, paragraph on 1853-54 (Harley Street and the Broad Street cholera)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Florence Nightingale Museum says she sensed a 'calling' from God at an early age and, despite parental concern, persisted in her ambition to nurse.",
+          "sourceId": "fnm",
+          "locator": "Biography page, early-life paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "She left London with a party of nurses on 21 October 1854 for the army hospital at Scutari, where the sick and wounded lay in dirty, vermin-ridden wards.",
+          "sourceId": "nam",
+          "locator": "Section 'Arrival at Scutari'"
+        },
+        {
+          "kind": "deed",
+          "claim": "At Scutari she bought supplies with her own money and with donations to get round the red tape.",
+          "sourceId": "lrb-2008",
+          "locator": "Review, paragraph on the Barrack Hospital ('To bypass blockages caused by red tape')"
+        },
+        {
+          "kind": "words",
+          "claim": "In a private note of 1856, back from the war, she wrote: \"I stand at the altar of the murdered men, and, while I live, I fight their cause.\"",
+          "sourceId": "cook-1913",
+          "locator": "Vol. 1, Part III, ch. I, p. 318"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1851, despite her family's disapproval, she completed a course of nursing training in Germany.",
+          "sourceId": "nam",
+          "locator": "Section 'Training and appointment'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Cook writes that the officials who dealt with her, whether they praised or complained, \"all alike perceived her power and strength of will\".",
+          "sourceId": "cook-1913",
+          "locator": "Vol. 1, Part II, ch. VII 'The Ministering Angel', p. 233"
+        },
+        {
+          "kind": "witness",
+          "claim": "Hugh Pennington writes that she was a chronic invalid, \"far more productive than her long lasting ill-health should have allowed\", driving reforms from her sofa for some twenty-five years.",
+          "sourceId": "lrb-2008",
+          "locator": "Review, paragraphs on her illness and 'From her sofa'"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "She was appointed Superintendent of the Female Nurses in the Hospitals in the East, and in 1860 used the Nightingale Fund to found the Nightingale Training School at St Thomas's Hospital.",
+          "sourceId": "nam",
+          "locator": "Sections 'Training and appointment' and 'Nightingale Training School'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Of her year running the Harley Street nursing home (1853-54), Cook writes that she \"reduced chaos to order, and her management of the Institution won praise in all quarters\".",
+          "sourceId": "cook-1913",
+          "locator": "Vol. 1, Part I, ch. X 'Freedom. Paris and Harley Street', p. 136"
+        },
+        {
+          "kind": "words",
+          "claim": "She wrote that few people understand \"what it is the being 'in charge'\", and that whoever is in charge must ask how to make sure the right thing is always done.",
+          "sourceId": "notes-nursing",
+          "locator": "Ch. III 'Petty Management', sidenotes 'What is the cause of half the accidents which happen?' and 'What it is to be \"in charge.\"'"
+        },
+        {
+          "kind": "witness",
+          "claim": "General Sir John Burgoyne wrote in March 1855: \"She likes to govern, and bestows all her tenderness upon those who depend upon her\".",
+          "sourceId": "nam",
+          "locator": "Section 'Troubles and turmoils' (letter of 27 March 1855)"
+        }
+      ]
+    },
+    {
+      "word": "Clarity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Her figures showed soldiers had a better chance of surviving in the front-line hospitals (12.5 per cent mortality) than at Scutari (37.5 per cent), and her diagrams showed more soldiers died of disease than of wounds.",
+          "sourceId": "nam",
+          "locator": "Section 'Statistics'"
+        },
+        {
+          "kind": "witness",
+          "claim": "On 26 December 1858 Sir John McNeill wrote that her Contribution to the Sanitary History of the British Army was \"complete and unanswerable\".",
+          "sourceId": "cook-1913",
+          "locator": "Vol. 1, Part III, ch. IV 'Reaping the Fruit', p. 387"
+        },
+        {
+          "kind": "words",
+          "claim": "Of the question \"Is he better?\" she wrote in Notes on Nursing: \"What you want are facts, not opinions\".",
+          "sourceId": "notes-nursing",
+          "locator": "Ch. XIII 'Observation of the Sick', sidenote 'What is the use of the question, Is he better?'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not ask how you can always do the right thing yourself; ask how to make sure it is always done, even when you are away.",
+      "sourceId": "notes-nursing",
+      "locator": "Ch. III 'Petty Management', sidenote 'What is the cause of half the accidents which happen?'"
+    },
+    {
+      "text": "Bring the people who decide facts, not opinions.",
+      "sourceId": "notes-nursing",
+      "locator": "Ch. XIII 'Observation of the Sick', opening sidenote and the paragraph 'What he wants is not your opinion ... but your facts'"
+    },
+    {
+      "text": "Give no excuses and take none: when something goes wrong, act.",
+      "sourceId": "cook-1913",
+      "locator": "Vol. 1, Part IV, ch. VI 'Miss Nightingale at Home', p. 506 (letter to Hilary Bonham Carter, 1861)"
+    },
+    {
+      "text": "Ending someone's uncertainty quickly helps him more than sparing him effort.",
+      "sourceId": "notes-nursing",
+      "locator": "Ch. III 'Petty Management', sidenote 'Partial measures such as \"being always in the way\" yourself...'"
+    },
+    {
+      "text": "Do not trade the work you are made for a comfortable life that leaves it undone.",
+      "sourceId": "cook-1913",
+      "locator": "Vol. 1, Part I, ch. VII 'The Single Life', pp. 100-101"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I attribute my success to this:—I never gave or took an excuse.",
+      "sourceId": "cook-1913",
+      "locator": "Vol. 1, Part IV, ch. VI 'Miss Nightingale at Home', p. 506 (letter to Hilary Bonham Carter, 1861)"
+    },
+    {
+      "text": "Let whoever is in charge keep this simple question in her head (not, how can I always do this right thing myself, but) how can I provide for this right thing to be always done?",
+      "sourceId": "notes-nursing",
+      "locator": "Ch. III 'Petty Management', sidenote 'What is the cause of half the accidents which happen?'"
+    },
+    {
+      "text": "Apprehension, uncertainty, waiting, expectation, fear of surprise, do a patient more harm than any exertion.",
+      "sourceId": "notes-nursing",
+      "locator": "Ch. III 'Petty Management', sidenote 'Partial measures such as \"being always in the way\" yourself...'"
+    },
+    {
+      "text": "I stand at the altar of the murdered men, and, while I live, I fight their cause.",
+      "sourceId": "cook-1913",
+      "locator": "Vol. 1, Part III, ch. I, p. 318 (private note of 1856)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In October 1854 she took 38 nurses to the British army hospital at Scutari, near Constantinople, and first entered the Barrack Hospital on 4 November. Army doctors at first saw her opinions as an attack on their professionalism, and she bought supplies with her own money and with donations to get round the red tape. After the war she turned the army's death figures into charts showing that far more soldiers died of disease than of wounds. When a pamphlet questioned her figures, she answered it in print, and on 26 December 1858 Sir John McNeill called her reply \"complete and unanswerable\".",
+    "sourceIds": [
+      "cook-1913",
+      "nam",
+      "lrb-2008"
+    ]
+  },
+  "shadow": {
+    "text": "At Scutari the death rate rose to 42 per cent by February 1855; the National Army Museum says she wrongly blamed poor food rather than bad sanitation, and that deaths fell only after a government sanitary commission repaired the sewers and the ventilation. In March 1855 General Sir John Burgoyne wrote that she did not \"appear to be amiable in ordinary intercourse with her equals or superiors\" and that \"She likes to govern\". In December 1860 Sidney Herbert, the minister she worked through, told her he was said to have a fatal disease; her biographer E. T. Cook writes that she urged him \"with all her formidable powers of persuasion\" to keep his War Office post and finish their work, and says she did not fully realize how ill he was. In June 1861, after Herbert wrote that he was at his wits' end over reorganising the War Office, she wrote to Sir John McNeill that \"A Sidney Herbert beaten by a Ben Hawes is a greater humiliation really (as a matter of principle) than the disaster of Scutari.\" Herbert died on 2 August 1861, and Lytton Strachey wrote in 1918 that if she had been less ruthless he would not have perished. Hugh Pennington (2008) calls her a miasmatist who held that disease came from bad smells, while her biographer Mark Bostridge and Lynn McDonald, editor of her collected works, reply that she later accepted germ theory.",
+    "sourceIds": [
+      "nam",
+      "cook-1913",
+      "strachey-1918",
+      "lrb-2008"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which job this week got done only because you did it yourself, and how could you make sure it gets done without you?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Notes on Nursing: What It Is, and What It Is Not",
+      "year": 1859
+    },
+    {
+      "title": "Notes on Hospitals",
+      "year": 1859
+    }
+  ],
+  "sources": [
+    {
+      "id": "notes-nursing",
+      "kind": "primary",
+      "title": "Notes on Nursing: What It Is, and What It Is Not (first published 1859; text of the D. Appleton reprint, Project Gutenberg eBook #12439)",
+      "author": "Florence Nightingale",
+      "year": 1898,
+      "publisher": "D. Appleton and Company, New York",
+      "url": "https://www.gutenberg.org/ebooks/12439"
+    },
+    {
+      "id": "cook-1913",
+      "kind": "secondary",
+      "title": "The Life of Florence Nightingale, vol. 1 of 2 (prints many of her letters and private notes)",
+      "author": "Sir Edward Tyas Cook",
+      "year": 1913,
+      "publisher": "Macmillan and Co., London",
+      "url": "https://www.gutenberg.org/ebooks/40057"
+    },
+    {
+      "id": "nam",
+      "kind": "secondary",
+      "title": "Florence Nightingale: The Lady with the Lamp",
+      "author": "National Army Museum, London",
+      "year": "n.d. (read 2026)",
+      "publisher": "National Army Museum",
+      "url": "https://www.nam.ac.uk/explore/florence-nightingale-lady-lamp"
+    },
+    {
+      "id": "lrb-2008",
+      "kind": "secondary",
+      "title": "Beware Bad Smells (review of Mark Bostridge, Florence Nightingale: The Woman and Her Legend), London Review of Books 30 (23), 4 December 2008, with letters from Mark Bostridge (18 December 2008) and Lynn McDonald (29 January 2009)",
+      "author": "Hugh Pennington",
+      "year": 2008,
+      "publisher": "London Review of Books",
+      "url": "https://www.lrb.co.uk/the-paper/v30/n23/hugh-pennington/beware-bad-smells"
+    },
+    {
+      "id": "strachey-1918",
+      "kind": "secondary",
+      "title": "Eminent Victorians, 'Florence Nightingale'",
+      "author": "Lytton Strachey",
+      "year": 1918,
+      "publisher": "Chatto & Windus, London",
+      "url": "https://www.gutenberg.org/ebooks/2447"
+    },
+    {
+      "id": "fnm",
+      "kind": "secondary",
+      "title": "Florence Nightingale biography",
+      "author": "Florence Nightingale Museum, London",
+      "year": "n.d. (read 2026)",
+      "publisher": "Florence Nightingale Museum",
+      "url": "https://www.florence-nightingale.co.uk/florence-nightingale-biography/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real 19th-century nurse and statistician, not a politician, campaigner for office or founder of a religion; no account of sexual contact with anyone under 16 or of sexual violence by her was found; her dark side (Scutari death rate and its cause, a domineering manner, pressing the dying Sidney Herbert, contested views on germ theory and on colonised peoples) is shadow, not an owner case."
+    },
+    "blindAgreement": 0.2,
+    "devilsAdvocate": "I attacked each value, quote and sentence against Cook's 1913 Life (page by page in the Gutenberg text), Notes on Nursing, the National Army Museum, the Florence Nightingale Museum and the LRB review and letters, and searched Quote Investigator and Wikiquote for misattributions. All five values held; only Service matches the blind pick, and Purpose and Leadership each gained a third source; the blind pick's Hard work, Results and Courage are well supported but there was no room. No quote fell: Quote Investigator traces the excuse line to her 1861 letter in Cook. The Herbert passage was corrected: she urged him in December 1860, after he told her he was said to have a fatal disease, and her 'humiliation' line was written to McNeill in June 1861.",
+    "checkedOn": "2026-11-10"
+  }
+}
