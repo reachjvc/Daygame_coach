@@ -1,0 +1,351 @@
+{
+  "id": "akira-kurosawa",
+  "name": "Akira Kurosawa",
+  "born": 1910,
+  "died": 1998,
+  "category": "artists",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "Film director who fought for every detail and at 80 said he did not yet understand cinema.",
+  "startedFrom": "He was born in Tokyo in 1910, the youngest of eight children of a strict father who had trained at a military academy. He wanted to be a painter, failed the art school entrance exam, and only started in film at 26. After his older brother, a silent-film narrator, killed himself, he answered a newspaper ad and became an assistant director at the P.C.L. studio in 1936.",
+  "values": [
+    {
+      "word": "Excellence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He had the castle set for Throne of Blood taken down before it was filmed, because the carpenters had used nails that the long lens would show.",
+          "sourceId": "richie-criterion-2009",
+          "locator": "paragraph beginning \"Though he sometimes said that he photographed merely in order to have something to edit\""
+        },
+        {
+          "kind": "words",
+          "claim": "Told that Seven Samurai cost as much as seven films, he answered that the film was entertaining exactly as far as it went over budget.",
+          "sourceId": "long-take",
+          "locator": "p. 67, conversation with Hisashi Inoue, as quoted with page in McKibbin, Senses of Cinema (2026)"
+        },
+        {
+          "kind": "witness",
+          "claim": "J. Bottum, writing at his death in 1998, lists among the stories told about him the three years and $10 million he spent on accurate samurai costumes for Ran (1985).",
+          "sourceId": "bottum-1998",
+          "locator": "paragraph beginning \"Steven Spielberg did pause\""
+        },
+        {
+          "kind": "deed",
+          "claim": "He took two years to make Red Beard (1965) so that its actors and sets would have the lived-in look he wanted.",
+          "sourceId": "harper-soc-2003",
+          "locator": "paragraph beginning \"Due to the freshly remembered excesses of Red Beard\""
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Donald Richie writes that he was interested only in practice, in focal lengths, camera positions and colour values, and talked about his methods as though he were a carpenter or a mason.",
+          "sourceId": "richie-criterion-2009",
+          "locator": "paragraphs beginning \"He was interested only in practice\" and \"I do not think he even considered himself an artist\""
+        },
+        {
+          "kind": "deed",
+          "claim": "For Rashomon he had the camera pointed straight at the sun, then a taboo, and put black ink in the rain so it would show against the sky.",
+          "sourceId": "autobiography-rashomon",
+          "locator": "paragraphs beginning \"We set up a parallel schedule\" and \"I had to be sure that this huge gate\""
+        },
+        {
+          "kind": "deed",
+          "claim": "For The Most Beautiful (1944) he shot at a real optics factory, had the actresses live and work there and drilled them in factory routines to scrub out stage acting.",
+          "sourceId": "prince-criterion-2010",
+          "locator": "paragraph beginning \"Inspired by the great silent-era Soviet films\""
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his 1990 Oscar speech he promised to work as hard as he could at making movies from then on.",
+          "sourceId": "oscars-1990",
+          "locator": "Akira Kurosawa, Honorary Award, 62nd Academy Awards, 26 March 1990"
+        },
+        {
+          "kind": "deed",
+          "claim": "Shooting Rashomon in the summer heat of Kyoto in 1950, he and his crew worked every afternoon without stopping for water, though some got heat stroke.",
+          "sourceId": "autobiography-rashomon",
+          "locator": "paragraph beginning \"When the location moved from the Nara Mountains\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Kyoto Prize citation of 1994 said that at 84 he was still at the forefront, burning with zeal to make films that open new territory.",
+          "sourceId": "kyoto-prize-1994",
+          "locator": "citation, last paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Abandoned by the big Japanese studios, he looked for money in Russia, the USA and France to get Ran made.",
+          "sourceId": "richie-criterion-2009",
+          "locator": "paragraphs beginning \"It was, indeed, Kurosawa's concern for perfecting the product\" and \"Finally, fully abandoned by big-business Japan\""
+        },
+        {
+          "kind": "witness",
+          "claim": "His script supervisor says that after Fox let him go from Tora! Tora! Tora! and rumours said his mind was failing, he needed to make a good film to answer them, and he finished Dodes'ka-den in 27 days, two months early.",
+          "sourceId": "nogami-criterion-2009",
+          "locator": "first answer, and answer beginning \"This is sheer conjecture on my part\""
+        },
+        {
+          "kind": "deed",
+          "claim": "After Red Beard (1965) he spent five years trying to get any project made, went to the Soviet Union to make Dersu Uzala, then waited six more years until Coppola and Lucas backed Kagemusha (1980).",
+          "sourceId": "harper-soc-2003",
+          "locator": "paragraphs beginning \"Red Beard (1965) was a drastic investment\" and \"Due to the freshly remembered excesses of Red Beard\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Get the details right, even the ones most people will never notice.",
+      "sourceId": "richie-criterion-2009",
+      "locator": "paragraph beginning \"Though he sometimes said that he photographed merely in order to have something to edit\""
+    },
+    {
+      "text": "Never decide you have mastered your craft; keep working to understand it.",
+      "sourceId": "oscars-1990",
+      "locator": "Akira Kurosawa, Honorary Award, 62nd Academy Awards, 26 March 1990"
+    },
+    {
+      "text": "Study the real thing before you build it.",
+      "sourceId": "autobiography-rashomon",
+      "locator": "paragraphs beginning \"The gate was growing larger\" and \"At first I thought my gate should be\""
+    },
+    {
+      "text": "When people doubt you, answer with the next piece of work.",
+      "sourceId": "nogami-criterion-2009",
+      "locator": "first answer"
+    },
+    {
+      "text": "Treat the plan as the battle flag and lead from the front.",
+      "sourceId": "richie-criterion-2009",
+      "locator": "paragraph beginning \"To exercise such complete control\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I'm a little worried, because I don't feel that I understand cinema yet.",
+      "sourceId": "oscars-1990",
+      "locator": "Akira Kurosawa, Honorary Award, 62nd Academy Awards, 26 March 1990",
+      "translation": "Spoken in Japanese, interpreted on stage by Audie Bock, 1990"
+    },
+    {
+      "text": "Human beings are unable to be honest with themselves about themselves. They cannot talk about themselves without embellishing.",
+      "sourceId": "autobiography-rashomon",
+      "locator": "Rashomon chapter, his explanation of the script to the three assistant directors",
+      "translation": "Audie E. Bock, 1982"
+    },
+    {
+      "text": "That movie is entertaining in the exact degree that it went over budget.",
+      "sourceId": "long-take",
+      "locator": "p. 67, conversation with Hisashi Inoue on Seven Samurai, as quoted with page in McKibbin, Senses of Cinema (2026)",
+      "translation": "Anne McKnight, 2026"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1950 the Daiei studio agreed to make his Rashomon. While he waited to start, he studied old temple gates and records, and the gate set grew so big that a Daiei executive later complained its price could have paid for over a hundred ordinary sets. In the summer heat he and his crew shot every afternoon without a break for water. In 1951, after his next film failed and Daiei withdrew another offer, he came home to hear from his wife that Rashomon had won the top prize at the Venice Film Festival; he had not known it was entered.",
+    "sourceIds": [
+      "autobiography-rashomon",
+      "bottum-1998",
+      "jt-1998",
+      "nippon-2022"
+    ]
+  },
+  "shadow": {
+    "text": "The critic Donald Richie, who knew him, writes that his complete control came with egotism and a dictatorial disposition, and remembers blowups on set, storming off, and a habit of needling one person to show the others what awaited them; this earned him the nickname Tenno, the Emperor. Seven Samurai (1954) took a year to shoot and cost almost five times an average Japanese film, and critics attacked his dictatorial approach to cast and crew. Richie writes that he was famous for monopolising the people he needed and dropping those he did not: after Red Beard (1965) he never again worked with his star Toshiro Mifune, and in the mid-1980s he refused him for Ran because Mifune had acted in the likes of Shogun. During the war he directed The Most Beautiful (1944), which the scholar Stephen Prince calls an outright propaganda project, and by his own account he spent part of the war writing scripts to earn money for heavy drinking. His daughter Kazuko recalls that her mother did everything for him, so that he never knew anything but movies.",
+    "sourceIds": [
+      "richie-criterion-2009",
+      "sharp-bfi-2014",
+      "richie-the-2002",
+      "prince-criterion-2010",
+      "mansfield-jt-2015",
+      "long-take",
+      "mckibbin-2026"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you settle for good enough this week on something that mattered to you?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Something Like an Autobiography",
+      "year": 1982
+    },
+    {
+      "title": "Long Take",
+      "year": 2026
+    }
+  ],
+  "sources": [
+    {
+      "id": "oscars-1990",
+      "kind": "primary",
+      "title": "Academy Awards Acceptance Speech Database: Akira Kurosawa, Honorary Award (62nd Academy Awards)",
+      "author": "Akira Kurosawa (via interpreter Audie Bock)",
+      "year": 1990,
+      "publisher": "Academy of Motion Picture Arts and Sciences",
+      "url": "https://aaspeechesdb.oscars.org/link/062-25/"
+    },
+    {
+      "id": "autobiography-rashomon",
+      "kind": "primary",
+      "title": "Akira Kurosawa on Rashomon (excerpt from Something Like an Autobiography, trans. Audie E. Bock)",
+      "author": "Akira Kurosawa",
+      "year": 1982,
+      "publisher": "Vintage Books; excerpt reprinted by the Criterion Collection",
+      "url": "https://www.criterion.com/current/posts/196-akira-kurosawa-on-rashomon"
+    },
+    {
+      "id": "long-take",
+      "kind": "primary",
+      "title": "Long Take (trans. Anne McKnight)",
+      "author": "Akira Kurosawa (with essays by Kazuko Kurosawa)",
+      "year": 2026,
+      "publisher": "University of Minnesota Press",
+      "url": "https://www.upress.umn.edu/9781517903299/long-take/"
+    },
+    {
+      "id": "richie-criterion-2009",
+      "kind": "secondary",
+      "title": "Remembering Kurosawa",
+      "author": "Donald Richie",
+      "year": 2009,
+      "publisher": "The Criterion Collection",
+      "url": "https://www.criterion.com/current/posts/1323"
+    },
+    {
+      "id": "richie-the-2002",
+      "kind": "secondary",
+      "title": "Review of The Emperor and the Wolf by Stuart Galbraith IV",
+      "author": "Donald Richie",
+      "year": 2002,
+      "publisher": "Times Higher Education",
+      "url": "https://www.timeshighereducation.com/node/86291"
+    },
+    {
+      "id": "nogami-criterion-2009",
+      "kind": "secondary",
+      "title": "Dodes'ka-den: A Conversation with Teruyo Nogami",
+      "author": "Teruyo Nogami (interviewed by the Criterion Collection)",
+      "year": 2009,
+      "publisher": "The Criterion Collection",
+      "url": "https://www.criterion.com/current/posts/1036-dodes-ka-den-a-conversation-with-teruyo-nogami"
+    },
+    {
+      "id": "prince-criterion-2010",
+      "kind": "secondary",
+      "title": "Eclipse Series 23: The First Films of Akira Kurosawa",
+      "author": "Stephen Prince",
+      "year": 2010,
+      "publisher": "The Criterion Collection",
+      "url": "https://www.criterion.com/current/posts/1539-eclipse-series-23-the-first-films-of-akira-kurosawa"
+    },
+    {
+      "id": "bottum-1998",
+      "kind": "secondary",
+      "title": "The Last Samurai",
+      "author": "J. Bottum",
+      "year": 1998,
+      "publisher": "The Weekly Standard (archive at the Washington Examiner)",
+      "url": "https://www.washingtonexaminer.com/magazine/2177598/the-last-samurai/"
+    },
+    {
+      "id": "sharp-bfi-2014",
+      "kind": "secondary",
+      "title": "Seven Samurai: the rocky road to classic status of Akira Kurosawa's action masterpiece",
+      "author": "Jasper Sharp",
+      "year": 2014,
+      "publisher": "British Film Institute",
+      "url": "https://www.bfi.org.uk/features/seven-samurai-akira-kurosawa-classic-status"
+    },
+    {
+      "id": "mckibbin-2026",
+      "kind": "secondary",
+      "title": "A Hapless Perfectionist: Akira Kurosawa's Long Take",
+      "author": "Tony McKibbin",
+      "year": 2026,
+      "publisher": "Senses of Cinema",
+      "url": "https://www.sensesofcinema.com/2026/book-reviews/a-hapless-perfectionist-akira-kurosawas-long-take/"
+    },
+    {
+      "id": "nippon-2022",
+      "kind": "secondary",
+      "title": "Kurosawa Akira: Films of Love and Justice",
+      "author": "Tsuzuki Masaaki",
+      "year": 2022,
+      "publisher": "Nippon.com",
+      "url": "https://www.nippon.com/en/japan-topics/b07225/kurosawa-akira-films-of-love-and-justice.html"
+    },
+    {
+      "id": "kirkus-1982",
+      "kind": "secondary",
+      "title": "Review of Something Like an Autobiography",
+      "author": "Kirkus Reviews",
+      "year": 1982,
+      "publisher": "Kirkus Reviews",
+      "url": "https://www.kirkusreviews.com/book-reviews/akira-kurosawa/something-like-an-autoblography/"
+    },
+    {
+      "id": "jt-1998",
+      "kind": "secondary",
+      "title": "Kurosawa to receive special award",
+      "author": "The Japan Times",
+      "year": 1998,
+      "publisher": "The Japan Times",
+      "url": "https://www.japantimes.co.jp/news/1998/09/07/national/kurosawa-to-receive-special-award/"
+    },
+    {
+      "id": "kyoto-prize-1994",
+      "kind": "secondary",
+      "title": "Akira Kurosawa, 1994 Kyoto Prize in Creative Arts and Moral Sciences: citation",
+      "author": "Inamori Foundation",
+      "year": 1994,
+      "publisher": "Inamori Foundation",
+      "url": "https://www.kyotoprize.org/en/laureates/akira_kurosawa/"
+    },
+    {
+      "id": "harper-soc-2003",
+      "kind": "secondary",
+      "title": "Kurosawa, Akira (Great Directors)",
+      "author": "Dan Harper",
+      "year": 2003,
+      "publisher": "Senses of Cinema",
+      "url": "https://www.sensesofcinema.com/2002/great-directors/kurosawa/"
+    },
+    {
+      "id": "mansfield-jt-2015",
+      "kind": "secondary",
+      "title": "Akira Kurosawa: Something Like An Autobiography (review)",
+      "author": "Stephen Mansfield",
+      "year": 2015,
+      "publisher": "The Japan Times",
+      "url": "https://www.japantimes.co.jp/culture/2015/12/26/books/book-reviews/akira-kurosawa-something-like-autobiography/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Japanese film director (1910-1998), never a politician, campaigner or religious founder; searches found no account of sexual contact with anyone under 16 or of sexual violence by him, so he is in, with a documented shadow of temper, control and wartime propaganda work."
+    },
+    "blindAgreement": 0.5,
+    "devilsAdvocate": "I attacked all five values and re-read every cited page (Richie, Nogami, Prince, the Rashomon chapter, the Oscar transcript, BFI, Times Higher Education, McKibbin, Bottum, nippon.com). Mastery fell, since its main evidence is him saying at 80 that he had not grasped cinema, and Leadership fell, since it rested on one remark of his found in two places plus a reviewer's line, against Richie's account of rule by needling; Craft, the blind pick's word, came in on three sources. Excellence, Hard work and Determination held on three or more sources, all three quotes held (the Long Take line is printed word for word with its page in the Senses of Cinema review), and seven sentences were corrected, including the gate-set cost, which a Daiei executive and not he put at a hundred sets. His wartime drinking in his own account and his dependence at home, from his daughter's essay, were added to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
