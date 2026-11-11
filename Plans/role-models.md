@@ -1,9 +1,11 @@
 # Role models: a library you can trust, and a reason to come back to it
 
-Written 2026-11-09. Status: **in progress** (2026-11-10): Phases 0-5, 7, 8, 9 and 12 are built and live;
-Phase 3's acceptance is met (50 validated, every category at least 3, 12 owner cases and the proposed word
-Frugality on the decision page); Phase 10 (wave 2) has started; Phase 0b (history wipe) waits for a quiet
-moment; Phase 14 (final audit) is open. Runner tooling: `~/.cache/daygame-research/role-models/_tooling/`. Candidate long list: `Plans/role-models-candidates.md`.
+Written 2026-11-09. Status: **done except Phase 0b** (2026-11-11): Phases 0-5, 7-10, 12 and 14 are built and
+live. Phase 10: every one of the 233 candidates has a person file (194 validated, 38 flagged for the owner,
+1 draft); every category has at least 12. Phase 14: a fresh audit of 20 random validated people plus the 5
+with the lowest blind agreement found 0 errors in 75 checks (small locator and link slips fixed). Waiting on
+the owner: the 38 flagged cases and 6 proposed value words on the decision page; Phase 0b (history wipe) waits
+for a quiet moment with no other session working. Runner tooling: `~/.cache/daygame-research/role-models/_tooling/`. Candidate long list: `Plans/role-models-candidates.md`.
 Decision page (veto any decision, notes are read before each phase): see "Decision page" below.
 
 The owner asked for four things:
