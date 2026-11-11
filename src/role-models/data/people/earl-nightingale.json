@@ -1,0 +1,325 @@
+{
+  "id": "earl-nightingale",
+  "name": "Earl Nightingale",
+  "born": 1921,
+  "died": 1989,
+  "category": "teachers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_money"
+  ],
+  "tagline": "A Depression tent kid who read for 17 years, then taught millions to live by one goal.",
+  "startedFrom": "His father left the family when he was 12, in the Great Depression. He lived with his mother and two brothers in a government tent in Long Beach, California, while his mother worked in a sewing factory. He went to the public library to find out why some people were rich and so many were poor.",
+  "values": [
+    {
+      "word": "Reading",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "As a boy he went to the public library and read books on religion, philosophy, history and psychology, looking for why some people succeed.",
+          "sourceId": "success-2009",
+          "locator": "paragraphs beginning \"Fortunately, his mother, Gladys\" and \"Through reading books on religion\""
+        },
+        {
+          "kind": "words",
+          "claim": "In The Strangest Secret he builds his case from the books he had read, quoting Rollo May, Marcus Aurelius, Disraeli, William James, Norman Vincent Peale, George Bernard Shaw and Dorothea Brande.",
+          "sourceId": "strangest-secret",
+          "locator": "sections \"The Definition of Success\" (Rollo May) and \"We Become What We Think About\" (Marcus Aurelius to Shaw); \"30-Day Action Ideas\", item 2 (Dorothea Brande)"
+        },
+        {
+          "kind": "words",
+          "claim": "In his essay on the 'Haves' and 'Have Nots' he draws on what he had read, from a report on Macy's training program to William James, Goethe and Abraham Maslow.",
+          "sourceId": "haves-have-nots",
+          "locator": "paragraph beginning \"I remember reading that the employees at Macy's\"; steps list, \"Change your attitude\"; paragraph beginning \"The late renowned psychologist\""
+        }
+      ]
+    },
+    {
+      "word": "Purpose",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says the difference between people who succeed and people who fail is goals: people with goals succeed because they know where they are going.",
+          "sourceId": "strangest-secret",
+          "locator": "paragraph beginning \"The difference is goals.\""
+        },
+        {
+          "kind": "witness",
+          "claim": "His estate site says that as a boy of twelve he decided to discover why people succeed or fail and was determined to become financially successful early.",
+          "sourceId": "earlnightingale-site",
+          "locator": "home page, paragraph beginning \"a man who decided to chart a course\""
+        },
+        {
+          "kind": "words",
+          "claim": "He says that around 1950 he made two decisions that guided the rest of his life: to discover the secret of success and to become a writer.",
+          "sourceId": "success-2009",
+          "locator": "paragraph beginning \"“I took to broadcasting like nothing before in my life”\""
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says earning money is the result of success, and success is in direct proportion to the service we give.",
+          "sourceId": "strangest-secret",
+          "locator": "\"30-Day Action Ideas\", item 3, paragraph beginning \"Your success will always be measured\""
+        },
+        {
+          "kind": "words",
+          "claim": "He tells readers to ask themselves each morning how they can increase their service that day.",
+          "sourceId": "acres-of-diamonds",
+          "locator": "paragraph beginning \"It takes imagination, curious imagination\""
+        },
+        {
+          "kind": "witness",
+          "claim": "His widow Diana sums up the laws his work rests on as: you become what you think about, you reap what you sow, and you must provide service to others.",
+          "sourceId": "success-2009",
+          "locator": "last paragraph of the main article (\"Nightingale’s widow, Diana, attributes...\")"
+        }
+      ]
+    },
+    {
+      "word": "Wealth",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After the war, while working in radio, he bought a small Franklin Life Insurance agency and gave its salesmen a pep talk every week.",
+          "sourceId": "success-2009",
+          "locator": "paragraph beginning \"Seizing new opportunities\""
+        },
+        {
+          "kind": "deed",
+          "claim": "He co-founded Nightingale-Conant, which the Chicago Tribune called a pioneer in producing motivational audiotapes.",
+          "sourceId": "tribune-1989",
+          "locator": "abstract, paragraph 1"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that the only difference between people who earn big incomes and those who earn small ones is that the first decided to earn more.",
+          "sourceId": "haves-have-nots",
+          "locator": "paragraph beginning \"I’ve discovered that the only difference\""
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Near Camp Lejeune at the end of the war he volunteered evenings and weekends as an announcer at a new radio station to learn the skill.",
+          "sourceId": "success-2009",
+          "locator": "paragraph beginning \"Toward the end of the war\""
+        },
+        {
+          "kind": "deed",
+          "claim": "His estate site says that in the ten years after 1946 he wrote, sold and produced fifteen radio and television programs a week.",
+          "sourceId": "earlnightingale-site",
+          "locator": "home page, paragraph beginning \"a man who decided to chart a course\" (lines \"in ten years he founded and headed four corporations. He wrote, sold and produced fifteen radio and television programs per week\")"
+        },
+        {
+          "kind": "deed",
+          "claim": "From 1959 he had a five-minute daily radio program, Our Changing World, as the National Association of Broadcasters records on its Broadcasting Hall of Fame page, which lists him as a 1986 inductee.",
+          "sourceId": "nab-hof",
+          "locator": "inductee page, text under \"America's Favorite Flying Cowboy\""
+        },
+        {
+          "kind": "words",
+          "claim": "He tells readers to get up an hour earlier, because an extra hour a day gives six extra 40-hour weeks a year, and to use it to write down ideas for reaching their goal.",
+          "sourceId": "haves-have-nots",
+          "locator": "steps list, items \"Start getting up a little earlier\" and \"Try for five ideas every morning\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Pick one clear goal, write it on a card, and look at it every morning, during the day and at night.",
+      "sourceId": "strangest-secret",
+      "locator": "\"30-Day Action Ideas\", item 1"
+    },
+    {
+      "text": "Give service first; money comes after, in proportion to what you gave.",
+      "sourceId": "strangest-secret",
+      "locator": "\"30-Day Action Ideas\", item 3"
+    },
+    {
+      "text": "Do not copy the crowd: acting like everyone else without knowing why is how most people fail.",
+      "sourceId": "strangest-secret",
+      "locator": "section \"The Definition of Success\", paragraph beginning \"Rollo May, the distinguished psychiatrist\""
+    },
+    {
+      "text": "Look for the opportunity in the work you already have before you look for it somewhere else.",
+      "sourceId": "acres-of-diamonds",
+      "locator": "paragraphs beginning \"The thing about this story\" and \"If you feel like running away\""
+    },
+    {
+      "text": "Get up an hour early and write down five ideas a day for reaching your goal.",
+      "sourceId": "haves-have-nots",
+      "locator": "steps list, items \"Start getting up a little earlier\" and \"Try for five ideas every morning\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "We become what we think about.",
+      "sourceId": "strangest-secret",
+      "locator": "section \"We Become What We Think About\", paragraph after the George Bernard Shaw quote"
+    },
+    {
+      "text": "The only people who make money work in a mint. The rest of us must earn money.",
+      "sourceId": "strangest-secret",
+      "locator": "\"30-Day Action Ideas\", item 3, paragraph beginning \"Your success will always be measured\""
+    },
+    {
+      "text": "Each morning ask yourself, How can I increase my service today?",
+      "sourceId": "acres-of-diamonds",
+      "locator": "paragraph beginning \"It takes imagination, curious imagination\""
+    }
+  ],
+  "definingMoment": {
+    "text": "In the spring of 1956 he was asked to put what he had learned in years of reading into a short essay and record it. By his account he asked himself what he would tell his children if he had only a short time to live, woke at 4 the next morning with the answer, wrote it down and had it recorded by noon the following day. He called it The Strangest Secret. Word spread from his insurance agents to their relatives and friends, his friend Lloyd Conant took over the orders, and SUCCESS reports it sold more than a million copies, the first spoken-word record to reach Gold Record status. The business became Nightingale-Conant, which the Chicago Tribune's obituary called a pioneer in producing motivational audiotapes.",
+    "sourceIds": [
+      "success-2009",
+      "tribune-1989"
+    ]
+  },
+  "shadow": {
+    "text": "Some of his teaching rests on numbers he gave without a source. In The Strangest Secret (1956) he says that of 100 people who start at 25, by 65 one will be rich and 54 broke. In an essay collected in The Essence of Success he calls a breakdown that puts real worries at 8 percent \"an authoritative estimate\" without naming it. In another essay (undated) he says only about 3 percent of all American veterans used their GI Bill education allowances; the Department of Veterans Affairs records that 7.8 million of 16 million World War II veterans used the original bill for education or training. The Strangest Secret also tells listeners to leave how they will reach their goal \"to a power greater than yourself\" and promises \"Money? Yes, lots of it.\" His estate site says he was financially independent at 35; no independent record of that figure was found.",
+    "sourceIds": [
+      "strangest-secret",
+      "fog-of-worry",
+      "haves-have-nots",
+      "va-news-2017",
+      "earlnightingale-site"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you want the reward this week before you had given the service that earns it?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "The Strangest Secret",
+      "year": 1956
+    },
+    {
+      "title": "Lead the Field",
+      "year": 1960
+    },
+    {
+      "title": "Earl Nightingale's Greatest Discovery",
+      "year": 1987
+    }
+  ],
+  "sources": [
+    {
+      "id": "strangest-secret",
+      "kind": "primary",
+      "title": "The Strangest Secret (transcript of the 1956 audio program)",
+      "author": "Earl Nightingale",
+      "year": "1956 (transcript online by 2019)",
+      "publisher": "Nightingale-Conant",
+      "url": "https://www.nightingale.com/blogs/articles/the-strangest-secret"
+    },
+    {
+      "id": "acres-of-diamonds",
+      "kind": "primary",
+      "title": "Acres of Diamonds (article; archived copy, 13 November 2019)",
+      "author": "Earl Nightingale",
+      "year": 2019,
+      "publisher": "Nightingale-Conant",
+      "url": "https://web.archive.org/web/20191113160429/https://www.nightingale.com/articles/acres-of-diamonds/"
+    },
+    {
+      "id": "haves-have-nots",
+      "kind": "primary",
+      "title": "The Difference Between the 'Haves' & the 'Have Nots' (article; archived copy, 12 December 2019)",
+      "author": "Earl Nightingale",
+      "year": 2019,
+      "publisher": "Nightingale-Conant",
+      "url": "https://web.archive.org/web/20191212024958/https://www.nightingale.com/articles/the-difference-between-the-haves-the-have-nots/"
+    },
+    {
+      "id": "fog-of-worry",
+      "kind": "primary",
+      "title": "The Fog of Worry (Only 8% of Worries are Worth It), from The Essence of Success, ed. Carson V. Conant (archived copy, 20 November 2019)",
+      "author": "Earl Nightingale",
+      "year": 2019,
+      "publisher": "Nightingale-Conant",
+      "url": "https://web.archive.org/web/20191120182320/https://www.nightingale.com/articles/the-fog-of-worry-only-8-of-worries-are-worth-it/"
+    },
+    {
+      "id": "success-2009",
+      "kind": "secondary",
+      "title": "Earl Nightingale's Greatest Discovery (30 March 2009; archived copy)",
+      "author": "SUCCESS Staff",
+      "year": 2009,
+      "publisher": "SUCCESS",
+      "url": "https://web.archive.org/web/20171117174604/http://www.success.com/article/earl-nightingales-greatest-discovery"
+    },
+    {
+      "id": "tribune-1989",
+      "kind": "secondary",
+      "title": "Radio, TV broadcaster Earl Nightingale, 68 (obituary, 29 March 1989; archived abstract)",
+      "author": "Kenan Heise",
+      "year": 1989,
+      "publisher": "Chicago Tribune",
+      "url": "https://web.archive.org/web/20121020080250/http://pqasb.pqarchiver.com/chicagotribune/access/24699872.html?dids=24699872:24699872&FMT=ABS&FMTS=ABS:FT&date=Mar+29,+1989&author=Kenan+Heise.&pub=Chicago+Tribune+(pre-1997+Fulltext)&desc=Radio,+TV+broadcaster+Earl+Nightingale,+68&pqatl=google"
+    },
+    {
+      "id": "deseret-1989",
+      "kind": "secondary",
+      "title": "Voice of Sky King dies at age 68 (28 March 1989)",
+      "author": "Deseret News",
+      "year": 1989,
+      "publisher": "Deseret News",
+      "url": "https://www.deseret.com/1989/3/28/18800430/voice-of-sky-king-dies-at-age-68/"
+    },
+    {
+      "id": "ww2museum-2021",
+      "kind": "secondary",
+      "title": "Fallen Champions: USS Arizona's Marine Detachment",
+      "author": "Frank Clay",
+      "year": 2021,
+      "publisher": "The National WWII Museum",
+      "url": "https://www.nationalww2museum.org/war/articles/uss-arizona-marines-pearl-harbor"
+    },
+    {
+      "id": "earlnightingale-site",
+      "kind": "secondary",
+      "title": "Earl Nightingale (estate site run for his family, home page; not independent)",
+      "author": "Earlnightingale.com",
+      "year": 2021,
+      "url": "https://earlnightingale.com"
+    },
+    {
+      "id": "nab-hof",
+      "kind": "secondary",
+      "title": "Earl Nightingale: America's Favorite Flying Cowboy (1986 radio inductee)",
+      "author": "National Association of Broadcasters",
+      "year": "1986 (page read 2026)",
+      "publisher": "NAB Broadcasting Hall of Fame",
+      "url": "https://nab.org/hof/inductees/earlNightingale.asp"
+    },
+    {
+      "id": "va-news-2017",
+      "kind": "secondary",
+      "title": "WWII Veteran reflects on G.I. Bill benefits, offers advice to today's Veterans (19 January 2017)",
+      "author": "Mark Ledesma",
+      "year": 2017,
+      "publisher": "VA News, U.S. Department of Veterans Affairs",
+      "url": "https://news.va.gov/34599/wwii-veteran-reflects-on-g-i-bill-benefits-provides-sage-advice-to-recent-veterans/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American radio broadcaster and motivational author (1921-1989), never a politician, campaigner or religious founder, with no account found of sexual contact with a minor or of sexual violence; he is in, and his dark side is small: success claims and statistics he gave without a source."
+    },
+    "blindAgreement": 0.2,
+    "devilsAdvocate": "I attacked each value against his own texts and found the strongest case against Hard work: The Strangest Secret says thinking, not toil, decides success; it held because the deeds (volunteer announcing, a daily program from 1959 recorded by the broadcasters' hall of fame) are documented outside his company. No value fell, but only Service matches the blind pick, so agreement is low (0.20). Two independent secondary sources beyond his company now stand: the Chicago Tribune obituary and the NAB Broadcasting Hall of Fame, with the Deseret News and the National WWII Museum as further checks. I added an unsourced veterans figure to the shadow and fixed the dates and wording of the defining moment.",
+    "checkedOn": "2026-11-10"
+  }
+}
