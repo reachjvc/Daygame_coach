@@ -1,0 +1,340 @@
+{
+  "id": "thor-heyerdahl",
+  "name": "Thor Heyerdahl",
+  "born": 1914,
+  "died": 2002,
+  "category": "explorers",
+  "areaIds": [
+    "lm_fun",
+    "lm_mission"
+  ],
+  "tagline": "Experts said his idea was impossible, so he built the raft and tested it himself.",
+  "startedFrom": "He was born in 1914 in Larvik, Norway, the only son of a brewer and of the head of the Larvik area museums association, and his parents divorced during his early childhood. As a boy he nearly drowned twice and stayed afraid of water; he had still not learned to swim when he set out on the Kon-Tiki raft. He studied zoology in Oslo but never finished a degree.",
+  "values": [
+    {
+      "word": "Adventure",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He led the Kon-Tiki raft voyage (1947), the Ra I and Ra II reed-boat voyages (1969, 1970) and the Tigris voyage (1977-78).",
+          "sourceId": "snl",
+          "locator": "sections 'Kon-Tiki', 'Ra', 'Tigris'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said the Ra voyages were more adventurous than Kon-Tiki, but he enjoyed Kon-Tiki much more.",
+          "sourceId": "newera-1972",
+          "locator": "answer beginning 'The Ra voyages were more adventurous than Kon-Tiki'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Irish Times obituary called him one of the great individualistic standard-bearers of mid-20th-century adventure.",
+          "sourceId": "irishtimes-2002",
+          "locator": "first paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After a year on Fatu Hiva (1937-38) he left zoology at the University of Oslo to study how ancient seafarers crossed oceans.",
+          "sourceId": "vestfold",
+          "locator": "paragraph beginning 'When Thor Heyerdahl returned from Polynesia'"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that the unsolved mysteries of the South Seas fascinated him and that there must be a rational solution to them.",
+          "sourceId": "kontiki-1950",
+          "locator": "ch. I 'A Theory', p. 15"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Kon-Tiki Museum says he was good at asking unexpected questions that shook established truths, and was not always right.",
+          "sourceId": "kontiki-museum",
+          "locator": "section 'Author and spokesperson'"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "When a New York museum scientist dismissed his theory in the winter before the voyage, he decided to build a balsa raft and sail it himself, arguing that it is easier to interest people in an expedition than in an unread manuscript.",
+          "sourceId": "kontiki-1950",
+          "locator": "ch. I 'A Theory', p. 12; ch. II 'An Expedition is Born', pp. 23, 25, 27"
+        },
+        {
+          "kind": "deed",
+          "claim": "Ra I had to be abandoned in 1969; he rebuilt the design and Ra II crossed the Atlantic from 17 May to 12 June 1970.",
+          "sourceId": "snl",
+          "locator": "section 'Ra'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Reporting on Kvam's biography, NewsinEnglish wrote that Heyerdahl never gave in or gave up.",
+          "sourceId": "newsinenglish-2013",
+          "locator": "paragraph beginning 'Heyerdahl never gave in'"
+        }
+      ]
+    },
+    {
+      "word": "Nature",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1937 he and his wife Liv went to Fatu Hiva wanting to escape Western civilisation and 'return to nature', and stayed the better part of a year.",
+          "sourceId": "kontiki-museum",
+          "locator": "section 'Fatu Hiva – and home again'"
+        },
+        {
+          "kind": "deed",
+          "claim": "On Ra II (1970) he recorded ocean pollution daily at the request of the UN Secretary-General and met masses of oil on 43 of the 57 days.",
+          "sourceId": "kontiki-museum",
+          "locator": "section 'Environmental activist'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said it was time for every man in the street to demand that the environment, water, land and air, be preserved.",
+          "sourceId": "newera-1972",
+          "locator": "answer to 'What did you learn about pollution from your Ra expeditions?'"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "For Ra I (1969) he chose a crew of seven men from seven nations to show that people from different nations can work together under stress.",
+          "sourceId": "vestfold",
+          "locator": "paragraph beginning 'Ra was launched in the spring of 1969'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said that on Ra I all his men wanted to go on, but as leader he stopped because the chance of losing one or two men was too great.",
+          "sourceId": "newera-1972",
+          "locator": "answer beginning 'Even with all these mistakes and blunders'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Irish Times obituary says every archaeologist who ever worked with him liked and respected him.",
+          "sourceId": "irishtimes-2002",
+          "locator": "fifth paragraph, beginning 'Demanding, opinionated'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When experts say your idea cannot work, test it yourself instead of waiting for them to agree.",
+      "sourceId": "kontiki-1950",
+      "locator": "ch. II 'An Expedition is Born', pp. 25, 27"
+    },
+    {
+      "text": "Admit your doubts honestly, then act on what you know.",
+      "sourceId": "kontiki-1950",
+      "locator": "ch. III 'To South America', p. 68"
+    },
+    {
+      "text": "Look at a problem from every field, not only from your own specialty.",
+      "sourceId": "kontiki-1950",
+      "locator": "ch. II 'An Expedition is Born', p. 24"
+    },
+    {
+      "text": "No experiment is worth a man's life; stop when the risk to your people is too high.",
+      "sourceId": "newera-1972",
+      "locator": "answer beginning 'Even with all these mistakes and blunders'"
+    },
+    {
+      "text": "People of different nations can work together under hard conditions if they join hands for a common goal.",
+      "sourceId": "newera-1972",
+      "locator": "answer beginning 'Very much so. It was perhaps the most satisfactory part of the trip'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I'm so sure that the Indians crossed the Pacific on their rafts that I'm willing to build a raft of the kind myself and cross the sea just to prove that it's possible.",
+      "sourceId": "kontiki-1950",
+      "locator": "ch. II 'An Expedition is Born', p. 25",
+      "translation": "F. H. Lyon, 1950"
+    },
+    {
+      "text": "If only one of them proved to be right, we had not a chance. I am afraid I asked myself many times if we knew what we were doing.",
+      "sourceId": "kontiki-1950",
+      "locator": "ch. III 'To South America', p. 68",
+      "translation": "F. H. Lyon, 1950"
+    },
+    {
+      "text": "The world was simple, stars in the darkness. Whether it was 1947 B.C. or A.D. suddenly became of no significance. We lived, and that we felt with alert intensity.",
+      "sourceId": "kontiki-1950",
+      "locator": "ch. VI 'Across the Pacific: II', p. 132",
+      "translation": "F. H. Lyon, 1950"
+    },
+    {
+      "text": "We learned that no space is too narrow, no stress too great, if men will only join hands for common survival.",
+      "sourceId": "newera-1972",
+      "locator": "answer beginning 'Very much so. It was perhaps the most satisfactory part of the trip'"
+    }
+  ],
+  "definingMoment": {
+    "text": "In the office of a New York museum, in the winter before the voyage, a scientist told him that South Americans could not have reached Polynesia because they had no boats. When Heyerdahl answered that they had rafts, the scientist told him he could try a trip from Peru to the Pacific islands on a balsa-wood raft. He did: on 28 April 1947 he and five other men left Callao, Peru, on the balsa raft Kon-Tiki. After 101 days at sea the raft ran aground on the Raroia atoll in Polynesia.",
+    "sourceIds": [
+      "kontiki-1950",
+      "kontiki-museum"
+    ]
+  },
+  "shadow": {
+    "text": "His main theory, that eastern Polynesia was first settled from South America by a white race of 'culture bearers', has little support today: archaeology and DNA point to settlement from the west, out of Asia. A 2020 genetic study in Nature found Native American DNA in eastern Polynesians from one contact around AD 1200, which supports contact but not his settlement theory. Critics, among them Graham Holton (2004) and Victor Melander (2019), call the culture-bearer model racist; the Kon-Tiki Museum disputes this. In February 1938 he gave a skull from the Marquesas to the Nazi race theorist Hans F. K. Günther in Berlin, and wrote to his mother how wonderful it was to come to 'a race of firm character' after France; the Kon-Tiki Museum says the visit was a one-off, to get help selling their collection. The Irish Times obituary says he refused to play by the basic rules of academic exchange and bristled at criticism. He left his wife Liv and two small sons in Canada in 1942 for war service, and his eldest son says they heard nothing from him for three years; that marriage ended in 1948. In 1972 he told his family at Christmas that he was leaving his second wife Yvonne for a married Italian woman; none of their three daughters could accept it, and he lost contact with them, reconciling with his daughter Anette before her death in 1990.",
+    "sourceIds": [
+      "snl",
+      "ioannidis-2020",
+      "kontiki-racism",
+      "dagbladet-2005",
+      "irishtimes-2002",
+      "oslobook-2016",
+      "newsinenglish-2013",
+      "klikk-2013"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which idea did you only talk about this week when you could have tested it yourself?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Kon-Tiki Expedition (Kon-Tiki)",
+      "year": 1948
+    },
+    {
+      "title": "Aku-Aku: The Secret of Easter Island",
+      "year": 1957
+    },
+    {
+      "title": "Fatu-Hiva: Back to Nature",
+      "year": 1974
+    }
+  ],
+  "sources": [
+    {
+      "id": "kontiki-1950",
+      "kind": "primary",
+      "title": "The Kon-Tiki Expedition: By Raft Across the South Seas (tr. F. H. Lyon from Kon-Tiki ekspedisjonen, 1948), first published March 1950",
+      "author": "Thor Heyerdahl",
+      "year": 1950,
+      "publisher": "George Allen & Unwin, London",
+      "url": "https://archive.org/details/kontikiexpeditio0000heye_c0m5"
+    },
+    {
+      "id": "newera-1972",
+      "kind": "primary",
+      "title": "An Interview with Famed Explorer Thor Heyerdahl, New Era, April 1972, p. 16",
+      "author": "Thor Heyerdahl (interviewee)",
+      "year": 1972,
+      "publisher": "The Church of Jesus Christ of Latter-day Saints",
+      "url": "https://www.churchofjesuschrist.org/study/new-era/1972/04/an-interview-with-famed-explorer-thor-heyerdahl?lang=eng"
+    },
+    {
+      "id": "snl",
+      "kind": "secondary",
+      "title": "Thor Heyerdahl (Norsk biografisk leksikon / Store norske leksikon)",
+      "author": "Gunnar Håland",
+      "year": 2026,
+      "publisher": "Store norske leksikon",
+      "url": "https://snl.no/Thor_Heyerdahl"
+    },
+    {
+      "id": "kontiki-museum",
+      "kind": "secondary",
+      "title": "Thor Heyerdahl",
+      "author": "The Kon-Tiki Museum",
+      "year": "n.d. (read 2026)",
+      "publisher": "The Kon-Tiki Museum, Oslo",
+      "url": "https://kon-tiki.no/en/thor-heyerdahl"
+    },
+    {
+      "id": "vestfold",
+      "kind": "secondary",
+      "title": "Thor Heyerdahl – biography",
+      "author": "Thor Heyerdahl Institute, Vestfoldmuseene",
+      "year": "n.d. (read 2026)",
+      "publisher": "Vestfoldmuseene",
+      "url": "https://vestfoldmuseene.no/thor-heyerdahl-instituttet/en/thor-heyerdahl---biography"
+    },
+    {
+      "id": "irishtimes-2002",
+      "kind": "secondary",
+      "title": "Sailed 'Kon-Tiki' across Pacific to link cultures of east and west (obituary, 20 April 2002)",
+      "author": "The Irish Times",
+      "year": 2002,
+      "publisher": "The Irish Times",
+      "url": "https://www.irishtimes.com/news/sailed-kon-tiki-across-pacific-to-link-cultures-of-east-and-west-1.1085864"
+    },
+    {
+      "id": "ioannidis-2020",
+      "kind": "secondary",
+      "title": "Native American gene flow into Polynesia predating Easter Island settlement, Nature 583, 572-577",
+      "author": "Alexander G. Ioannidis et al.",
+      "year": 2020,
+      "publisher": "Nature",
+      "url": "https://www.nature.com/articles/s41586-020-2487-2"
+    },
+    {
+      "id": "dagbladet-2005",
+      "kind": "secondary",
+      "title": "Hjalp tysk raseideolog (on Ragnar Kvam jr., Thor Heyerdahl: Mannen og havet), 20 November 2005",
+      "author": "Tore Gjerstad",
+      "year": 2005,
+      "publisher": "Dagbladet",
+      "url": "https://www.dagbladet.no/kultur/hjalp-tysk-raseideolog/66155752"
+    },
+    {
+      "id": "kontiki-racism",
+      "kind": "secondary",
+      "title": "Racism in Thor Heyerdahl's theories?",
+      "author": "The Kon-Tiki Museum",
+      "year": "n.d. (read 2026)",
+      "publisher": "The Kon-Tiki Museum, Oslo",
+      "url": "https://www.kon-tiki.no/en/news/rasisme-i-thor-heyerdahls-teorier"
+    },
+    {
+      "id": "oslobook-2016",
+      "kind": "secondary",
+      "title": "Thor Heyerdahl Jr.—On His Relationship with A Legendary Father (interview with his eldest son), 8 August 2016",
+      "author": "The Oslo Book",
+      "year": 2016,
+      "publisher": "The Oslo Book",
+      "url": "https://theoslobook.no/2016/08/08/thor-heyerdahl-jr/"
+    },
+    {
+      "id": "newsinenglish-2013",
+      "kind": "secondary",
+      "title": "Thor Heyerdahl's darker final years (on Ragnar Kvam jr., Thor Heyerdahl: Mannen og mytene), 28 October 2013",
+      "author": "Views and News from Norway",
+      "year": 2013,
+      "publisher": "NewsinEnglish.no",
+      "url": "https://www.newsinenglish.no/2013/10/28/thor-heyerdahls-darker-final-years/"
+    },
+    {
+      "id": "klikk-2013",
+      "kind": "secondary",
+      "title": "Annonserte brudd i juleselskapet (NTB/VG report on Kvam's third volume)",
+      "author": "Klikk.no (Side2)",
+      "year": 2013,
+      "publisher": "Klikk.no",
+      "url": "https://www.klikk.no/underholdning/annonserte-brudd-i-juleselskapet-4365503"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real person, died 2002, not a politician or founder of a religion, no account of sexual contact with a minor or of sexual violence found; in, with a documented shadow (rejected theory with a racial 'white culture-bearers' model, the 1938 Günther skull episode, absence from and break with his families)."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value, quote and factual sentence. The research had read Kon-Tiki from an unlicensed scan, so every Kon-Tiki quote, claim and page was re-checked through the Internet Archive's own full-text search of its lending copies of the 1950 Allen & Unwin edition; all three quotes and all page numbers held. All five values held: Curiosity and Leadership face real counter-evidence (he bent findings to fit his theory, and fought with academics and his families), but these are shadow, not a pattern against the value; the blind pick's Courage was not added, as five values already held. Eight facts were corrected, including 'only child' to 'only son', and the shadow now adds the racism critique, the 1938 letter and his academic conduct.",
+    "checkedOn": "2026-11-10"
+  }
+}
