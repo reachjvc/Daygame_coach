@@ -1,0 +1,362 @@
+{
+  "id": "thomas-j-stanley",
+  "name": "Thomas J. Stanley",
+  "born": 1944,
+  "died": 2015,
+  "category": "money",
+  "areaIds": [
+    "lm_money",
+    "lm_mindset"
+  ],
+  "tagline": "A marketing professor who studied how America's quiet self-made millionaires live.",
+  "startedFrom": "He was born in 1944 in the Bronx, New York. His father drove a subway car and his mother was a homemaker and secretary; the family lived in a small apartment in a blue-collar part of the Bronx. He went to college in Connecticut, worked summers at a Chevrolet dealership, did graduate work at the University of Tennessee and earned his doctorate at the University of Georgia in 1974.",
+  "values": [
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1989 he left his teaching job at Georgia State University to do independent research full time.",
+          "sourceId": "uga-2021",
+          "locator": "section 'An academic beginning'"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that he had greatly benefited 'in my own career as a small business owner'.",
+          "sourceId": "blog-2011-11-mentors",
+          "locator": "blog post 'The Millionaire Next Door Turns 15!', 1 Nov 2011, third paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "He quoted his own book Millionaire Women Next Door on financially independent people: 'They make their own decisions about their next destination.'",
+          "sourceId": "blog-2012-03-destiny",
+          "locator": "blog post 'Build Wealth to Control Your Own Destiny', 13 Mar 2012, second quoted passage from Millionaire Women Next Door"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Reuters reported, citing his website, that in 1980 he carried out the first national survey of America's millionaires.",
+          "sourceId": "reuters-2015",
+          "locator": "Reuters report, 2 March 2015, paragraph after the list of his other books"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1979 he first published on the subject, after presenting a paper in New York on people he called the 'Wealthy Blue Collar Segment'.",
+          "sourceId": "uga-2021",
+          "locator": "section 'An academic beginning'"
+        },
+        {
+          "kind": "words",
+          "claim": "Recalling a childhood Halloween visit to a rich neighbourhood, he wrote that twenty years later he began studying the affluent and was 'still as enthusiastic as that young trick-or-treater'.",
+          "sourceId": "blog-2009-08-encounter",
+          "locator": "blog post 'My First Encounter with a Millionaire', 24 Aug 2009, last paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "His daughter Sarah Stanley Fallaw writes that his work aimed at 'providing real data versus conventional wisdom about the wealthy'.",
+          "sourceId": "fallaw-2015",
+          "locator": "post 'Thomas J. Stanley, Father & Mentor', 24 March 2015, fourth paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He hired his marketing student William D. Danko as a research assistant and encouraged him through his MBA and Ph.D.; in 1993 he asked Danko to be his partner on the book.",
+          "sourceId": "nyt-lieber-2015",
+          "locator": "fifth and sixth paragraphs"
+        },
+        {
+          "kind": "witness",
+          "claim": "His daughter Sarah Stanley Fallaw, who worked with him on his last research projects, calls him 'my father and mentor'.",
+          "sourceId": "fallaw-2015",
+          "locator": "post 'Thomas J. Stanley, Father & Mentor', 24 March 2015, first paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that The Millionaire Next Door 'was not developed in a vacuum' and that he 'had a variety of great mentors who influenced me'.",
+          "sourceId": "blog-2011-11-mentors",
+          "locator": "blog post 'The Millionaire Next Door Turns 15!', 1 Nov 2011, first paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Each Christmas he and his family drove around delivering presents to the people who had done work for him that year.",
+          "sourceId": "uga-2021",
+          "locator": "paragraph quoting Sarah Stanley Fallaw on Christmas"
+        },
+        {
+          "kind": "deed",
+          "claim": "On the last day of December 2001 he gave part of his speaking fees to the University of Georgia Libraries; he and his family also gave the original manuscript of The Millionaire Next Door to UGA's Hargrett Rare Book and Manuscript Library.",
+          "sourceId": "uga-2021",
+          "locator": "section 'Giving back to UGA'"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that he had found a strong link between giving time or money to good causes and economic success, and advised: 'give and associate with givers'.",
+          "sourceId": "blog-2009-08-giving",
+          "locator": "blog post 'Success Through Giving', 13 Aug 2009, last paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Family",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "His wife Janet said that of all his successes, the one that probably brought him the most pride was his children and grandchildren.",
+          "sourceId": "ajc-2015",
+          "locator": "paragraph after the account of the crash"
+        },
+        {
+          "kind": "deed",
+          "claim": "The whole family often went to Georgia Bulldogs games together, and he and his wife Janet went fishing in the lakes of the North Georgia mountains.",
+          "sourceId": "uga-2021",
+          "locator": "section 'An academic beginning' (football) and last section, Janet Stanley on fishing"
+        },
+        {
+          "kind": "deed",
+          "claim": "At his death he and his daughter Sarah were working together on several projects, including two new books.",
+          "sourceId": "fallaw-2015",
+          "locator": "post 'Thomas J. Stanley, Father & Mentor', 24 March 2015, first paragraph"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Measure wealth by what you own minus what you owe, not by how much you earn or show.",
+      "sourceId": "blog-2009-07-wealth",
+      "locator": "blog post 'Wealth Is Not Income, Income Is Not Wealth', 23 Jul 2009, first paragraph"
+    },
+    {
+      "text": "Spend your few best hours each day on work that lasts, not on routine that eats them.",
+      "sourceId": "blog-2009-07-write",
+      "locator": "blog post 'To Write or To Commute?', 13 Jul 2009, first and last paragraphs"
+    },
+    {
+      "text": "Use hard criticism to harden your resolve instead of letting it stop you.",
+      "sourceId": "blog-2015-02-critics",
+      "locator": "blog post 'Critics Are Needed to Build Your Resolve', 24 Feb 2015, quoted passage from The Millionaire Mind"
+    },
+    {
+      "text": "Give time or money to good causes, and spend time with people who give.",
+      "sourceId": "blog-2009-08-giving",
+      "locator": "blog post 'Success Through Giving', 13 Aug 2009, last paragraph"
+    },
+    {
+      "text": "Build enough savings that you can say no to an employer and make your own decisions.",
+      "sourceId": "blog-2012-03-destiny",
+      "locator": "blog post 'Build Wealth to Control Your Own Destiny', 13 Mar 2012, first paragraph and quoted passages"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Even steel cannot be hardened unless it's hammered, and it's no different with people.",
+      "sourceId": "blog-2015-02-critics",
+      "locator": "blog post 'Critics Are Needed to Build Your Resolve', 24 Feb 2015, quoting his book The Millionaire Mind (2000)"
+    },
+    {
+      "text": "A disciplined person sets his or her sights on a lofty target, then figures out productive ways to reach the target.",
+      "sourceId": "blog-2012-02-discipline",
+      "locator": "blog post 'Discipline: A Nutrient of Success', 14 Feb 2012, quoting his book The Millionaire Mind (2000)"
+    },
+    {
+      "text": "If you want to succeed in business, give and associate with givers.",
+      "sourceId": "blog-2009-08-giving",
+      "locator": "blog post 'Success Through Giving', 13 Aug 2009, last sentence"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1989 he left his teaching job at Georgia State University to research the wealthy full time. In 1993 he asked his former student William Danko to join him on a book about them. He wrote the 477-page manuscript by hand in about 180 days, about four hours a day. The Millionaire Next Door came out in 1996 with a first printing of 5,000 copies; with its sequel it spent more than 170 weeks on the New York Times best-seller list.",
+    "sourceIds": [
+      "uga-2021",
+      "nyt-lieber-2015",
+      "blog-2009-07-write",
+      "ajc-2015"
+    ]
+  },
+  "shadow": {
+    "text": "In 2001 the writer Nassim Nicholas Taleb called The Millionaire Next Door 'an extremely misleading (but almost enjoyable) book' and used it to illustrate survivorship bias: studying only the people who got rich. Stanley and his co-author William Danko had not spoken for about 15 years when Stanley died; Danko told the New York Times he did not know why. The Millionaire Next Door argued against spending much on cars, and he died in 2015 driving a 2012 Corvette; New York Times columnist Ron Lieber wrote that Stanley too had a taste for the finer things in life and asked whether that made him a hypocrite, 'or just a human being'.",
+    "sourceIds": [
+      "taleb-2001",
+      "nyt-lieber-2015",
+      "ajc-2015-plea"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which of your best hours this week went into work that will last, and which went to routine?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "The Millionaire Next Door (with William D. Danko)",
+      "year": 1996
+    },
+    {
+      "title": "The Millionaire Mind",
+      "year": 2000
+    },
+    {
+      "title": "Stop Acting Rich",
+      "year": 2009
+    }
+  ],
+  "sources": [
+    {
+      "id": "blog-2009-07-write",
+      "kind": "primary",
+      "title": "To Write or To Commute? (blog post, 13 July 2009)",
+      "author": "Thomas J. Stanley",
+      "year": 2009,
+      "publisher": "thomasjstanley.com (archived by the Internet Archive)",
+      "url": "https://web.archive.org/web/20191206232647/http://www.thomasjstanley.com/2009/07/to-write-or-to-commute/"
+    },
+    {
+      "id": "blog-2009-07-wealth",
+      "kind": "primary",
+      "title": "Wealth Is Not Income, Income Is Not Wealth (blog post, 23 July 2009)",
+      "author": "Thomas J. Stanley",
+      "year": 2009,
+      "publisher": "thomasjstanley.com (archived by the Internet Archive)",
+      "url": "https://web.archive.org/web/20171214055942/http://www.thomasjstanley.com/2009/07/wealth-is-not-income-income-is-not-wealth/"
+    },
+    {
+      "id": "blog-2009-08-giving",
+      "kind": "primary",
+      "title": "Success Through Giving (blog post, 13 August 2009)",
+      "author": "Thomas J. Stanley",
+      "year": 2009,
+      "publisher": "thomasjstanley.com (archived by the Internet Archive)",
+      "url": "https://web.archive.org/web/20191122235247/http://www.thomasjstanley.com/2009/08/success-through-giving/"
+    },
+    {
+      "id": "blog-2009-08-encounter",
+      "kind": "primary",
+      "title": "My First Encounter with a Millionaire (blog post, 24 August 2009)",
+      "author": "Thomas J. Stanley",
+      "year": 2009,
+      "publisher": "thomasjstanley.com (archived by the Internet Archive)",
+      "url": "https://web.archive.org/web/20160916075859/http://www.thomasjstanley.com/2009/08/my-first-encounter-with-a-millionaire/"
+    },
+    {
+      "id": "blog-2011-11-mentors",
+      "kind": "primary",
+      "title": "The Millionaire Next Door Turns 15! (blog post, 1 November 2011)",
+      "author": "Thomas J. Stanley",
+      "year": 2011,
+      "publisher": "thomasjstanley.com (archived by the Internet Archive)",
+      "url": "https://web.archive.org/web/20171010052021/http://www.thomasjstanley.com/2011/11/the-millionaire-next-door-turns-15/"
+    },
+    {
+      "id": "blog-2012-02-discipline",
+      "kind": "primary",
+      "title": "Discipline: A Nutrient of Success (blog post, 14 February 2012)",
+      "author": "Thomas J. Stanley",
+      "year": 2012,
+      "publisher": "thomasjstanley.com (archived by the Internet Archive)",
+      "url": "https://web.archive.org/web/20160112133308/http://www.thomasjstanley.com/2012/02/discipline-a-nutrient-of-success/"
+    },
+    {
+      "id": "blog-2012-03-destiny",
+      "kind": "primary",
+      "title": "Build Wealth to Control Your Own Destiny (blog post, 13 March 2012)",
+      "author": "Thomas J. Stanley",
+      "year": 2012,
+      "publisher": "thomasjstanley.com (archived by the Internet Archive)",
+      "url": "https://web.archive.org/web/20151226045513/http://www.thomasjstanley.com/2012/03/build-wealth-to-control-your-own-destiny/"
+    },
+    {
+      "id": "blog-2015-02-critics",
+      "kind": "primary",
+      "title": "Critics Are Needed to Build Your Resolve (blog post, 24 February 2015)",
+      "author": "Thomas J. Stanley",
+      "year": 2015,
+      "publisher": "thomasjstanley.com (archived by the Internet Archive)",
+      "url": "https://web.archive.org/web/20151107033432/http://www.thomasjstanley.com/2015/02/critics-are-needed-to-build-your-resolve/"
+    },
+    {
+      "id": "nyt-lieber-2015",
+      "kind": "secondary",
+      "title": "Paying Tribute to Thomas Stanley and His 'Millionaire Next Door'",
+      "author": "Ron Lieber",
+      "year": 2015,
+      "publisher": "The New York Times, 6 March 2015",
+      "url": "https://www.nytimes.com/2015/03/07/your-money/paying-tribute-to-thomas-stanley-and-his-millionaire-next-door.html"
+    },
+    {
+      "id": "ajc-2015",
+      "kind": "secondary",
+      "title": "'Millionaire Next Door' author dies in crash",
+      "author": "Ariel Hart",
+      "year": 2015,
+      "publisher": "The Atlanta Journal-Constitution, 1 March 2015",
+      "url": "https://www.ajc.com/news/millionaire-next-door-author-dies-crash/PM2IyoJSqzLnKfe3BOEo4J"
+    },
+    {
+      "id": "ajc-2015-plea",
+      "kind": "secondary",
+      "title": "Guilty plea in DUI crash that killed 'Millionaire Next Door' author",
+      "author": "Alexis Stevens",
+      "year": 2015,
+      "publisher": "The Atlanta Journal-Constitution, 18 December 2015",
+      "url": "https://www.ajc.com/news/crime--law/guilty-plea-dui-crash-that-killed-millionaire-next-door-author/kqLSDr1NRVtDZN7yZr2pIL"
+    },
+    {
+      "id": "reuters-2015",
+      "kind": "secondary",
+      "title": "'Millionaire Next Door' author dies in car crash near Atlanta",
+      "author": "Rich McKay (Reuters)",
+      "year": 2015,
+      "publisher": "Reuters, 2 March 2015 (as carried by Investing.com)",
+      "url": "https://www.investing.com/news/general/millionaire-next-door-author-dies-in-car-crash-near-atlanta-330459"
+    },
+    {
+      "id": "uga-2021",
+      "kind": "secondary",
+      "title": "Thomas Stanley: He changed the way we view wealth (Georgia Groundbreakers)",
+      "author": "Jill Neimark",
+      "year": 2021,
+      "publisher": "UGA Today, University of Georgia, 9 May 2021",
+      "url": "https://news.uga.edu/thomas-stanley-georgia-groundbreaker/"
+    },
+    {
+      "id": "fallaw-2015",
+      "kind": "secondary",
+      "title": "Thomas J. Stanley, Father & Mentor",
+      "author": "Sarah Stanley Fallaw (his daughter)",
+      "year": 2015,
+      "publisher": "DataPoints, 24 March 2015",
+      "url": "https://datapoints.com/?p=831"
+    },
+    {
+      "id": "taleb-2001",
+      "kind": "secondary",
+      "title": "Fooled by Randomness, chapter 8 'Too Many Millionaires Next Door'",
+      "author": "Nassim Nicholas Taleb",
+      "year": 2001,
+      "publisher": "Texere",
+      "url": "https://archive.org/details/fooledbyrandomne00tale_0"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real person (1944-2015), marketing professor, researcher and author, not a politician, campaigner or religious founder; no account of sexual contact with a minor or of sexual violence found; his dark side is small and documented: a critic called his research 'extremely misleading' for survivorship bias, he and his co-author had not spoken for about 15 years when he died, and he died driving a 2012 Corvette, which a New York Times columnist set against the book's advice on cars."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked all five draft values against the saved blog posts, the New York Times tribute, the Atlanta Journal-Constitution and Reuters reports, the UGA profile, his daughter's post and Open Library search-inside of The Millionaire Mind and Fooled by Randomness. Discipline fell: both pieces of evidence were his own blog, with no witness, short of the three sources a draft-only word needs. Family from the blind pick took its place with three sources; Independence, Curiosity, Mentorship and Generosity held, Mentorship despite the unexplained 15-year silence with Danko, which stays in the shadow. All three quotes matched the book text; seven fixes tightened dates, attributions, locators and the Taleb and Lieber wording.",
+    "checkedOn": "2026-11-10"
+  }
+}
