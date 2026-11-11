@@ -1,0 +1,373 @@
+{
+  "id": "stephen-king",
+  "name": "Stephen King",
+  "born": 1947,
+  "died": null,
+  "category": "artists",
+  "areaIds": [
+    "lm_mission",
+    "lm_health",
+    "lm_relationship"
+  ],
+  "tagline": "Wrote every day, quit drink and cocaine, and was writing again five weeks after a crash.",
+  "startedFrom": "He was born in Maine in 1947; his father walked out when he was two and left his mother with two boys and a pile of bills, which she worked to pay off. After the University of Maine he could not find a teaching job and loaded motel sheets and hospital linen in an industrial laundry, while his wife Tabitha worked at Dunkin' Donuts. With two small children they lived in cheap flats and a trailer, without a phone, kept off welfare by the stories he sold to men's magazines.",
+  "values": [
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In On Writing he says he aims for 10 pages, about 2,000 words, a day, and that while working on a book he writes every day, Christmas, the Fourth of July and his birthday included.",
+          "sourceId": "parini-2000",
+          "locator": "first paragraph (quoting On Writing)"
+        },
+        {
+          "kind": "words",
+          "claim": "In 2014, aged 67, he said he walks, then writes fresh copy for about two hours, 'Every day, even weekends.'",
+          "sourceId": "rs-2014",
+          "locator": "answers to \"Walk me through your typical day\" and \"Do you do that every day?\""
+        },
+        {
+          "kind": "deed",
+          "claim": "While teaching school, during one February vacation week he wrote The Running Man, writing while the children napped as his wife worked at Dunkin' Donuts.",
+          "sourceId": "brockes-2013",
+          "locator": "paragraph beginning \"Every scrap of free time had to be put to good use\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In the early 1970s he wrote after his laundry shifts, and sometimes on his lunch hour.",
+          "sourceId": "ow-early-years",
+          "locator": "paragraph beginning \"I wrote after work\""
+        }
+      ]
+    },
+    {
+      "word": "Sobriety",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He has been sober since his family staged an intervention in the late 1980s.",
+          "sourceId": "brockes-2013",
+          "locator": "paragraph beginning \"King has been sober for decades\""
+        },
+        {
+          "kind": "words",
+          "claim": "In 2013 he said he had not had a drink 'in about 25 years'.",
+          "sourceId": "npr-2013",
+          "locator": "section \"On whether his own experiences in Alcoholics Anonymous helped to shape...\""
+        },
+        {
+          "kind": "words",
+          "claim": "In 2014 he said he chooses to believe in God so he can ask: 'Help me not to take a drink today. Help me not to take a drug today.'",
+          "sourceId": "rs-2014",
+          "locator": "answer to \"All that said, you've made it clear over the years that you still believe in God\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Tim Adams, after interviewing him in 2000, wrote: 'King has been sober ever since.'",
+          "sourceId": "adams-2000",
+          "locator": "paragraph beginning \"King has been sober ever since\""
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Hit by a van on 19 June 1999, with his lower right leg broken in at least nine places, a broken hip, four broken ribs and a collapsed lung, he began writing again on 24 July, five weeks later.",
+          "sourceId": "ow-accident",
+          "locator": "paragraphs beginning \"Bryan Smith's estimate of my injuries\" and \"I came home to Bangor on 9 July\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Jay Parini wrote that his summoning 'the will to work' from a wheelchair at a makeshift desk five weeks after the accident was 'nothing less than astounding'.",
+          "sourceId": "parini-2000",
+          "locator": "paragraph beginning \"Understanding her husband's compulsion to write\""
+        },
+        {
+          "kind": "words",
+          "claim": "Asked in 2000 whether the accident had given him a new subject, he said 'you have to put it to work for you. Otherwise it doesn't mean anything.'",
+          "sourceId": "adams-2000-transcript",
+          "locator": "answer to \"Has the accident given you a new subject?\""
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 2013 he and his wife pledged $3 million to the Bangor Public Library, after giving $2.5 million towards a new wing in the 1990s.",
+          "sourceId": "flood-2013",
+          "locator": "first and third paragraphs"
+        },
+        {
+          "kind": "deed",
+          "claim": "He and his wife paid $1.2 million to have a Little League stadium built in Bangor, which opened in 1992, and gave it to the city.",
+          "sourceId": "burnham-bdn-2019",
+          "locator": "sentence beginning \"the top-notch baseball facility that the Kings donated $1.2 million to have built\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2011, after federal heating aid was cut, he pledged to match up to $70,000 raised for fuel for low-income people in Maine.",
+          "sourceId": "flood-2011",
+          "locator": "first and second paragraphs"
+        },
+        {
+          "kind": "words",
+          "claim": "In 2014 he said money for its own sake does not interest him: 'There's a lot of it, and we give a lot of it away.'",
+          "sourceId": "rs-2014",
+          "locator": "answer to \"When you look at these hedge-fund guys just living like kings\""
+        }
+      ]
+    },
+    {
+      "word": "Partnership",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that his wife 'made a crucial difference' in his teaching years: had she called his writing time wasted, 'a lot of the heart would have gone out of me'.",
+          "sourceId": "ow-carrie",
+          "locator": "first paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "When he threw the first pages of Carrie in the bin, Tabitha fished them out and said she would help with the parts about high-school girls; he went on and finished the book.",
+          "sourceId": "ow-carrie",
+          "locator": "paragraphs beginning \"The next night, when I came home from school\" and \"The manuscript of Carrie went off to Doubleday\""
+        },
+        {
+          "kind": "words",
+          "claim": "Of their early years, when he minded the babies until she came home from her shift at 11pm, he said: 'I'm not going to leave this marriage no matter what happens.'",
+          "sourceId": "rs-2014",
+          "locator": "answer beginning \"She would bring home the empty buckets of filling\""
+        },
+        {
+          "kind": "words",
+          "claim": "Asked in 2000 why his wife stayed with him through his drinking years, he said: 'Well she stuck. But she made it clear that she wouldn't stick if I didn't clean up my act'; he then got sober.",
+          "sourceId": "adams-2000-transcript",
+          "locator": "answer to \"Why did she stay with you?\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Write every day, holidays included, toward a fixed daily quota.",
+      "sourceId": "parini-2000",
+      "locator": "first paragraph (quoting On Writing)"
+    },
+    {
+      "text": "Talent is common; what counts is working the talent you have to its limit.",
+      "sourceId": "npr-2013",
+      "locator": "section \"On his prolific production in writing\""
+    },
+    {
+      "text": "Creative life is short, so use all of it; polishing a page forever only makes it worse.",
+      "sourceId": "brooks-2019",
+      "locator": "answer to \"You're astoundingly prolific\" and \"Have you ever forced yourself to go slower?\""
+    },
+    {
+      "text": "Stay sober one day at a time, and admit you cannot do it alone.",
+      "sourceId": "rs-2014",
+      "locator": "answer to \"All that said, you've made it clear over the years that you still believe in God\""
+    },
+    {
+      "text": "When something hurts you, put it to work; otherwise it means nothing.",
+      "sourceId": "adams-2000-transcript",
+      "locator": "answer to \"Has the accident given you a new subject?\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "This world is lousy with talent. The idea is to work that talent and try to get to be the best person that you can, given the limits of the talent that God gave you …",
+      "sourceId": "npr-2013",
+      "locator": "section \"On his prolific production in writing\""
+    },
+    {
+      "text": "God, I can't do this by myself. Help me not to take a drink today. Help me not to take a drug today.",
+      "sourceId": "rs-2014",
+      "locator": "answer to \"All that said, you've made it clear over the years that you still believe in God\""
+    },
+    {
+      "text": "… you have to put it to work for you. Otherwise it doesn't mean anything.",
+      "sourceId": "adams-2000-transcript",
+      "locator": "answer to \"Has the accident given you a new subject?\""
+    }
+  ],
+  "definingMoment": {
+    "text": "On 19 June 1999, on his daily four-mile walk near his summer house in western Maine, he was hit by a van whose driver was turned round, pushing his dog away from a cooler. His lower right leg was broken in at least nine places, his hip was fractured and a lung collapsed; his surgeon rebuilt the leg in five long operations, and another followed in August. On 24 July, five weeks after the crash, he began to write again, in a wheelchair at a makeshift desk his wife set up in a hallway. The memoir On Writing, which he had put aside before the crash, came out in 2000 with the accident in it.",
+    "sourceIds": [
+      "ow-accident",
+      "parini-2000",
+      "adams-2000-transcript"
+    ]
+  },
+  "shadow": {
+    "text": "By his own account he was an alcoholic by the late 1970s, drinking a case of beer a night, and a heavy cocaine user for about eight years from 1978 or 1979; he hid the cocaine. His wife later told him that in those years he was hungover every morning until about two in the afternoon and drunk from five until midnight, and Tim Adams reported in 2000 that there were a couple of books from that time he cannot remember writing. In 1987 his wife dumped his empties and drug waste on the floor in front of him; she had made clear she would leave if he did not stop. He says he then spent about a year 'looking for a détente, a way I could live with booze and drugs without giving them up altogether'. After the 1999 crash he took 'a lot of Oxycontin for pain' and says he was 'pretty stoned' when he wrote the novel Dreamcatcher. In 2000 he publicly said Bryan Smith, the driver who hit him, had 'the IQ of a tomato-soup can'. In September 2025, after Charlie Kirk was killed, he posted that Kirk 'advocated stoning gays to death', then deleted it and wrote: 'I was wrong, and I apologize.'",
+    "sourceIds": [
+      "rs-2014",
+      "adams-2000",
+      "adams-2000-transcript",
+      "brockes-2013",
+      "bdn-2025"
+    ]
+  },
+  "councilQuestion": {
+    "text": "On how many days this week did you do your daily quota of your most important work?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "On Writing: A Memoir of the Craft",
+      "year": 2000
+    },
+    {
+      "title": "Carrie",
+      "year": 1974
+    },
+    {
+      "title": "Doctor Sleep",
+      "year": 2013
+    }
+  ],
+  "sources": [
+    {
+      "id": "ow-early-years",
+      "kind": "primary",
+      "title": "The early years... (extract from On Writing)",
+      "author": "Stephen King",
+      "year": 2000,
+      "publisher": "The Observer, 17 September 2000",
+      "url": "https://www.theguardian.com/books/2000/sep/17/stephenking.fiction3"
+    },
+    {
+      "id": "ow-carrie",
+      "kind": "primary",
+      "title": "Carrie: the bestseller I threw in the bin (extract from On Writing)",
+      "author": "Stephen King",
+      "year": 2000,
+      "publisher": "The Observer, 17 September 2000",
+      "url": "https://www.theguardian.com/books/2000/sep/17/stephenking.fiction"
+    },
+    {
+      "id": "ow-accident",
+      "kind": "primary",
+      "title": "The accident (extract from On Writing)",
+      "author": "Stephen King",
+      "year": 2000,
+      "publisher": "The Observer, 24 September 2000",
+      "url": "https://www.theguardian.com/books/2000/sep/24/stephenking.fiction"
+    },
+    {
+      "id": "adams-2000-transcript",
+      "kind": "primary",
+      "title": "The Stephen King interview, uncut and unpublished (transcript)",
+      "author": "Stephen King and Tim Adams",
+      "year": 2000,
+      "publisher": "The Observer, 14 September 2000",
+      "url": "https://www.theguardian.com/books/2000/sep/14/stephenking.fiction1"
+    },
+    {
+      "id": "npr-2013",
+      "kind": "primary",
+      "title": "Stephen King On Getting Scared: 'Nothing Like Your First Time' (interview with David Greene, highlights)",
+      "author": "Stephen King and NPR Staff",
+      "year": 2013,
+      "publisher": "NPR, 24 September 2013",
+      "url": "https://www.npr.org/2013/09/24/223105565/stephen-king-on-getting-scared-nothing-like-your-first-time"
+    },
+    {
+      "id": "rs-2014",
+      "kind": "primary",
+      "title": "Stephen King: The Rolling Stone Interview",
+      "author": "Andy Greene",
+      "year": 2014,
+      "publisher": "Rolling Stone, 31 October 2014",
+      "url": "https://www.rollingstone.com/culture/culture-news/stephen-king-the-rolling-stone-interview-191529/"
+    },
+    {
+      "id": "adams-2000",
+      "kind": "secondary",
+      "title": "Constant craving",
+      "author": "Tim Adams",
+      "year": 2000,
+      "publisher": "The Observer, 17 September 2000",
+      "url": "https://www.theguardian.com/books/2000/sep/17/stephenking.fiction1"
+    },
+    {
+      "id": "parini-2000",
+      "kind": "secondary",
+      "title": "King's English (review of On Writing)",
+      "author": "Jay Parini",
+      "year": 2000,
+      "publisher": "The Guardian, 7 October 2000",
+      "url": "https://www.theguardian.com/books/2000/oct/07/biography.stephenking"
+    },
+    {
+      "id": "brockes-2013",
+      "kind": "secondary",
+      "title": "Stephen King: on alcoholism and returning to the Shining",
+      "author": "Emma Brockes",
+      "year": 2013,
+      "publisher": "The Guardian, 21 September 2013",
+      "url": "https://www.theguardian.com/books/2013/sep/21/stephen-king-shining-sequel-interview"
+    },
+    {
+      "id": "flood-2013",
+      "kind": "secondary",
+      "title": "Stephen King and his wife pledge $3m to Maine library",
+      "author": "Alison Flood",
+      "year": 2013,
+      "publisher": "The Guardian, 22 March 2013",
+      "url": "https://www.theguardian.com/books/2013/mar/22/stephen-king-wife-maine-library"
+    },
+    {
+      "id": "flood-2011",
+      "kind": "secondary",
+      "title": "Stephen King to donate $70,000 to heat Maine homes",
+      "author": "Alison Flood",
+      "year": 2011,
+      "publisher": "The Guardian, 10 November 2011",
+      "url": "https://www.theguardian.com/books/2011/nov/10/stephen-king-donate-70000-maine"
+    },
+    {
+      "id": "bdn-2025",
+      "kind": "secondary",
+      "title": "Stephen King apologizes for Charlie Kirk comment that sparked outrage",
+      "author": "Karu F. Daniels (New York Daily News, via Tribune Content Agency)",
+      "year": 2025,
+      "publisher": "Bangor Daily News, 14 September 2025",
+      "url": "https://www.bangordailynews.com/2025/09/14/state/state-culture/stephen-king-apologizes-for-charlie-kirk-comment-that-sparked-outrage"
+    },
+    {
+      "id": "brooks-2019",
+      "kind": "secondary",
+      "title": "Stephen King: 'I have outlived most of my critics. It gives me great pleasure'",
+      "author": "Xan Brooks",
+      "year": 2019,
+      "publisher": "The Guardian, 7 September 2019",
+      "url": "https://www.theguardian.com/books/2019/sep/07/stephen-king-interview-the-institute"
+    },
+    {
+      "id": "burnham-bdn-2019",
+      "kind": "secondary",
+      "title": "How Stephen King's love of baseball helped generations of young Bangor athletes",
+      "author": "Emily Burnham",
+      "year": 2019,
+      "publisher": "Bangor Daily News, first published May 2019, republished 6 May 2025",
+      "url": "https://www.bangordailynews.com/2025/05/06/bangor/bangor-culture/stephen-king-little-league-baseball-bangor-athletes/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American novelist (born 1947), not a politician, office-seeker or religious founder (he campaigns for Democrats in ads and posts, but his public life is his writing); no account of sexual contact with a minor or of sexual violence by him was found; he is in, with a documented dark side: about a decade of alcohol and cocaine addiction that ended only after a 1987 family intervention, public mockery of the driver who hit him, and a false 2025 post about Charlie Kirk that he retracted."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked all five values and re-read every cited page (the three On Writing extracts in The Observer, the Adams profile and transcript, Parini, Brockes, Rolling Stone 2014, NPR 2013, the Guardian and Bangor Daily News gift reports). All five held: Sobriety and Generosity are the blind pick's words too, Discipline, Resilience and Partnership each stand on three or more sources, and the post-crash OxyContin use he describes in 2014 was treated as one lapse and added to the shadow, with his wife's account of his drinking days. The '10 pages a day' quote fell, because the book's own wording ('10' or 'ten') could not be seen; six fixes were made, among them the number of operations and a Partnership item that its source did not support.",
+    "checkedOn": "2026-11-10"
+  }
+}
