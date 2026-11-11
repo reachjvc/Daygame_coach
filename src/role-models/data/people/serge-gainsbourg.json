@@ -1,0 +1,369 @@
+{
+  "id": "serge-gainsbourg",
+  "name": "Serge Gainsbourg",
+  "born": 1928,
+  "died": 1991,
+  "category": "charisma",
+  "areaIds": [
+    "lm_relationship",
+    "lm_fun"
+  ],
+  "tagline": "A plain-faced songwriter who won lovers and crowds with wit, songs and nerve.",
+  "startedFrom": "He was born Lucien Ginzburg in Paris on 2 April 1928, the son of Russian Jewish émigrés; his father played piano in night-clubs. Under the German occupation he had to wear the yellow star, and the family got through the war in Limoges with forged papers. He trained as a painter, earned his living playing piano in bars, and put out his first album only in 1958, at 30.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 4 January 1980 in Strasbourg, with paratroopers who objected to his reggae Marseillaise in the hall, he went on stage alone, called off the concert and sang the first verse of the original anthem a cappella with a raised fist.",
+          "sourceId": "nouvelobs-2010",
+          "locator": "section 'Le concert à Strasbourg'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Jane Birkin, who watched from the side of the stage, recalled that paratroopers had threatened to smash him up, that he told his Jamaican musicians to stay in the bus and that he walked on alone and sang the original Marseillaise.",
+          "sourceId": "uncut-2017",
+          "locator": "page 5, paragraph beginning 'Every hotel we went to there were bomb alerts'"
+        },
+        {
+          "kind": "words",
+          "claim": "On TF1's Droit de réponse he rejected the paper Minute's account of the Strasbourg concert and said: 'I put the paratroopers in step.'",
+          "sourceId": "ina-1982",
+          "locator": "clip I06066649, Droit de réponse, TF1, 2 January 1982, description"
+        }
+      ]
+    },
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 11 March 1984, live on TF1's 7 sur 7, he burned a 500-franc note to protest against what he called 'le racket des impôts'.",
+          "sourceId": "sothebys-2019",
+          "locator": "lot 132, catalogue note"
+        },
+        {
+          "kind": "deed",
+          "claim": "'Je t'aime... moi non plus', his 1969 duet with Jane Birkin, became a hit while it was banned by the BBC and denounced by the Vatican.",
+          "sourceId": "telegraph-1991",
+          "locator": "paragraph beginning '\"Je t'aime\" achieved huge popularity in 1969'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His Daily Telegraph obituary says he 'enjoyed moments of spectacular public disgrace'.",
+          "sourceId": "telegraph-1991",
+          "locator": "paragraph beginning 'Though he enjoyed moments of spectacular public disgrace'"
+        },
+        {
+          "kind": "words",
+          "claim": "Interviewed by Henry Chapier on France Régions 3 in 1984, he explained his provocative side.",
+          "sourceId": "ina-1984",
+          "locator": "clip I19109745, Soir 3, 8 October 1984, description"
+        }
+      ]
+    },
+    {
+      "word": "Creativity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1979 he recorded a reggae version of the French national anthem in Kingston, Jamaica; the album Aux armes et cætera went platinum within months.",
+          "sourceId": "nouvelobs-2010",
+          "locator": "opening paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "He made the album Histoire de Melody Nelson (1971), which Larousse calls the work of 'an exceptional innovator', and wrote songs for France Gall, Brigitte Bardot, Jane Birkin, Catherine Deneuve, Isabelle Adjani and Vanessa Paradis.",
+          "sourceId": "larousse",
+          "locator": "entry 'Serge Gainsbourg', sections from 'De B.B. à Jane B.' on"
+        },
+        {
+          "kind": "witness",
+          "claim": "Contemporary Musicians quotes Independent journalist Robert Chalmers calling him 'the greatest popular musician France has ever produced'.",
+          "sourceId": "cm-brennan",
+          "locator": "opening section 'For the Record'"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He studied art at the École des Beaux-Arts from 1945, then played piano in Left Bank night-clubs, with a regular slot at Milord l'Arsouille by 1958.",
+          "sourceId": "cm-brennan",
+          "locator": "opening section"
+        },
+        {
+          "kind": "words",
+          "claim": "In a 1973 interview at home he described painting from age 13 to 30, studying under André Lhote while playing piano in the evenings to earn a living.",
+          "sourceId": "ina-1973",
+          "locator": "clip I21047375, 'Serge Gainsbourg on his debut in painting', 19 September 1973, description"
+        },
+        {
+          "kind": "witness",
+          "claim": "His Daily Telegraph obituary says he trained as a painter before working as a singer and pianist in the night-clubs of Saint-Germain-des-Prés.",
+          "sourceId": "telegraph-1991",
+          "locator": "paragraph beginning 'He trained as a painter'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not let your face decide which women you can win; let your wit and your work do it.",
+      "sourceId": "telegraph-1991",
+      "locator": "obituary of 4 March 1991, pp. 162 ff., paragraph on his divorce from Françoise Antoinette Pancrazzi ('an aesthete tormented by his own ugliness', 'an unlikely Don Juan')"
+    },
+    {
+      "text": "When people come for you, face them in person, alone if you must.",
+      "sourceId": "uncut-2017",
+      "locator": "page 5, paragraph beginning 'Every hotel we went to there were bomb alerts' (Strasbourg, 1980)"
+    },
+    {
+      "text": "Answer an attack with a bolder move, not an apology.",
+      "sourceId": "larousse",
+      "locator": "entry 'Serge Gainsbourg', paragraph on Aux armes et cætera (he bought the original manuscript of La Marseillaise at auction in Versailles on 13 December 1981)"
+    },
+    {
+      "text": "Keep at your trade for years before it pays, and earn your living on the side.",
+      "sourceId": "ina-1973",
+      "locator": "clip I21047375, 19 September 1973, description"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I put the paratroopers in step.",
+      "sourceId": "ina-1982",
+      "locator": "Droit de réponse, TF1, 2 January 1982 (clip I06066649); French: \"J'ai mis les paras au pas\"",
+      "translation": "INA Mediaclip English catalogue (translator not named)"
+    },
+    {
+      "text": "We were a public couple. We went out a lot. The trouble was, I didn't always make it back...",
+      "sourceId": "telegraph-1991",
+      "locator": "obituary of 4 March 1991, pp. 162 ff., paragraph beginning 'Birkin lived with Gainsbourg for more than 10 years'",
+      "translation": "English as printed by The Daily Telegraph, 1991 (translator and original interview not named)"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 4 January 1980, paratroopers who objected to his reggae version of the national anthem filled the hall in Strasbourg where he was to play. Jane Birkin, who watched from the side of the stage, later said they had threatened to smash him up, and there were bomb alerts at the hotels. He told his Jamaican musicians to stay in the bus, called off the concert and went on stage alone. He said he had given La Marseillaise back its original meaning, then sang the original anthem a cappella with a raised fist; by Le Nouvel Observateur's account, the paratroopers stood to attention.",
+    "sourceIds": [
+      "nouvelobs-2010",
+      "uncut-2017"
+    ]
+  },
+  "shadow": {
+    "text": "He drank heavily and kept smoking three or four packs of Gitanes a day after a heart attack in 1973. Jane Birkin's diaries (published 2018) record: 'He bashed me again and tore me down by my hair and slapped me.' On France Inter in 2018 she said that in a fight at Castel, where he hit her, she stubbed a lit cigarette out on him too; she left him in 1980. In 1984 he recorded 'Lemon Incest' with his daughter Charlotte, born in 1971; in the video they lie together on a white bed. On live television in April 1986 he made an obscene suggestion in English to Whitney Houston, and the same year he repeatedly called the singer Catherine Ringer a whore on air. From 1985, at 57 and while with his partner Bambou, he had a five-year relationship with Constance Meyer, a 16-year-old schoolgirl who says she sought him out and that nothing happened for three months. A music-history site and Paris Match Belgique (2020) describe him, drunk on a Michel Drucker TV show around 1980, holding Catherine Deneuve against her will and trying to kiss her. In 2020 the singer Lio called him a harasser of young women.",
+    "sourceIds": [
+      "telegraph-1991",
+      "spectator-2020",
+      "purepeople-2018",
+      "universalis-birkin",
+      "aeon-2021",
+      "purepeople-2017",
+      "parismatch-2020",
+      "20min-2010",
+      "purepeople-2020",
+      "histoiredeschansons"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Who stood against you this week, and did you face him in person or go around him?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "Histoire de Melody Nelson (album)",
+      "year": 1971
+    },
+    {
+      "title": "Aux armes et cætera (album)",
+      "year": 1979
+    }
+  ],
+  "sources": [
+    {
+      "id": "ina-1982",
+      "kind": "primary",
+      "title": "Serge Gainsbourg: \"I put the paratroopers in step\" (Droit de réponse, TF1, 2 January 1982)",
+      "author": "Serge Gainsbourg, interviewed on Michel Polac's programme; INA archive",
+      "year": 1982,
+      "publisher": "Institut national de l'audiovisuel",
+      "url": "https://mediaclip.ina.fr/en/i06066649-serge-gainsbourg-i-put-the-paratroopers-in-step.html"
+    },
+    {
+      "id": "ina-1973",
+      "kind": "primary",
+      "title": "Serge Gainsbourg on his debut in painting (interview by Michel Lancelot, ORTF, 19 September 1973)",
+      "author": "Serge Gainsbourg; INA archive",
+      "year": 1973,
+      "publisher": "Institut national de l'audiovisuel",
+      "url": "https://mediaclip.ina.fr/en/i21047375-serge-gainsbourg-on-his-debut-in-painting.html"
+    },
+    {
+      "id": "ina-1984",
+      "kind": "primary",
+      "title": "Serge Gainsbourg about his provocation (interview by Henry Chapier, Soir 3, 8 October 1984)",
+      "author": "Serge Gainsbourg; INA archive",
+      "year": 1984,
+      "publisher": "Institut national de l'audiovisuel",
+      "url": "https://mediaclip.ina.fr/en/i19109745-serge-gainsbourg-about-his-provocation.html"
+    },
+    {
+      "id": "telegraph-1991",
+      "kind": "secondary",
+      "title": "Serge Gainsbourg (obituary, 4 March 1991), in The Daily Telegraph Third Book of Obituaries: Entertainers",
+      "author": "The Daily Telegraph (unsigned obituary)",
+      "year": 1997,
+      "publisher": "Macmillan",
+      "url": "https://archive.org/details/dailytelegraphth0000unse"
+    },
+    {
+      "id": "cm-brennan",
+      "kind": "secondary",
+      "title": "Gainsbourg, Serge (Contemporary Musicians)",
+      "author": "Carol Brennan",
+      "year": "n.d. (cites sources to 2001)",
+      "publisher": "Gale",
+      "url": "https://www.encyclopedia.com/education/news-wires-white-papers-and-books/gainsbourg-serge"
+    },
+    {
+      "id": "larousse",
+      "kind": "secondary",
+      "title": "Serge Gainsbourg (Encyclopédie Larousse)",
+      "author": "Éditions Larousse",
+      "year": "n.d.",
+      "publisher": "Larousse",
+      "url": "https://www.larousse.fr/encyclopedie/personnage/wd/155189"
+    },
+    {
+      "id": "universalis-schmitt",
+      "kind": "secondary",
+      "title": "GAINSBOURG SERGE (1928-1991), Encyclopædia Universalis",
+      "author": "Michel P. Schmitt",
+      "year": "n.d.",
+      "publisher": "Encyclopædia Universalis",
+      "url": "https://www.universalis.fr/encyclopedie/serge-gainsbourg/"
+    },
+    {
+      "id": "universalis-birkin",
+      "kind": "secondary",
+      "title": "BIRKIN JANE (1946-2023), Encyclopædia Universalis",
+      "author": "Véronique Mortaigne",
+      "year": "n.d. (after 2023)",
+      "publisher": "Encyclopædia Universalis",
+      "url": "https://www.universalis.fr/encyclopedie/jane-birkin/"
+    },
+    {
+      "id": "nouvelobs-2010",
+      "kind": "secondary",
+      "title": "Outrage au drapeau : Gainsbourg et la Marseillaise (2 July 2010)",
+      "author": "Anne Collin, Nouvelobs.com",
+      "year": 2010,
+      "publisher": "Le Nouvel Observateur (copy on the Académie de Besançon site)",
+      "url": "https://enseignement-artistique-culturel.circo25.ac-besancon.fr/wp-content/uploads/sites/29/2016/07/Gainsbourg-et-La-Marseillaise-article-nouvelobs.pdf"
+    },
+    {
+      "id": "sothebys-2019",
+      "kind": "secondary",
+      "title": "Gainsbourg. Moitié de billet de 500F déchiré et signé, lot 132, Livres et Manuscrits",
+      "author": "Sotheby's Paris",
+      "year": 2019,
+      "publisher": "Sotheby's",
+      "url": "https://www.sothebys.com/en/auctions/ecatalogue/2019/livres-et-manuscrits-pf1903/lot.132.html"
+    },
+    {
+      "id": "spectator-2020",
+      "kind": "secondary",
+      "title": "Tears before bedtime (review of Jane Birkin, Munkey Diaries 1957-1982), 22 August 2020",
+      "author": "Roger Lewis, The Spectator",
+      "year": 2020,
+      "url": "https://www.spectator.com.au/?p=10655132"
+    },
+    {
+      "id": "aeon-2021",
+      "kind": "secondary",
+      "title": "Idealising the predator (9 December 2021)",
+      "author": "Lily Dunn, Aeon",
+      "year": 2021,
+      "url": "https://www.aeon.co/essays/how-the-french-bohemian-elite-celebrated-predatory-behaviour"
+    },
+    {
+      "id": "20min-2010",
+      "kind": "secondary",
+      "title": "Serge Gainsbourg avait une relation cachée (5 October 2010)",
+      "author": "Laurent Flückiger, 20 minutes",
+      "year": 2010,
+      "url": "https://www.20min.ch/fr/story/serge-gainsbourg-avait-une-relation-cachee-497045065002"
+    },
+    {
+      "id": "purepeople-2020",
+      "kind": "secondary",
+      "title": "Serge Gainsbourg : Sa dernière maîtresse mineure, \"C'est moi qui l'ai cherché\" (2 March 2020)",
+      "author": "Gonzague Lombard, Purepeople",
+      "year": 2020,
+      "url": "https://www.purepeople.com/article/serge-gainsbourg-sa-derniere-maitresse-mineure-c-est-moi-qui-l-ai-cherche_a377258/1"
+    },
+    {
+      "id": "parismatch-2020",
+      "kind": "secondary",
+      "title": "Lio compare Serge Gainsbourg à un \"Weinstein de la chanson\" (20 September 2020)",
+      "author": "Elodie Métral, Paris Match Belgique",
+      "year": 2020,
+      "url": "https://www.parismatch.be/actualites/people/2020/09/20/lio-compare-serge-gainsbourg-a-un-weinstein-de-la-chanson-RY73AZXZSRBLJMV227HHZVDI6I/"
+    },
+    {
+      "id": "elysee-1991",
+      "kind": "secondary",
+      "title": "Télégramme de condoléances de M. François Mitterrand à Mme Caroline von Paulus, dite Bambou (3 March 1991)",
+      "author": "François Mitterrand",
+      "year": 1991,
+      "publisher": "Présidence de la République",
+      "url": "https://www.elysee.fr/francois-mitterrand/1991/03/03/telegramme-de-condoleances-de-m-francois-mitterrand-president-de-la-republique-adresse-a-mme-caroline-von-paulus-dite-bambou-a-la-suite-du-deces-de-m-serge-gainsbourg"
+    },
+    {
+      "id": "uncut-2017",
+      "kind": "primary",
+      "title": "Jane Birkin on the music that shaped her (21 September 2017), page 5",
+      "author": "Jane Birkin, interviewed by Tom Pinnock, Uncut",
+      "year": 2017,
+      "publisher": "Uncut",
+      "url": "https://www.uncut.co.uk/features/jane-birkin-music-shaped-good-morale-bit-chopin-new-boyfriend-101834/5/"
+    },
+    {
+      "id": "purepeople-2018",
+      "kind": "secondary",
+      "title": "Jane Birkin raconte la violence dans son couple avec Serge Gainsbourg (October 2018, on her France Inter interview of 4 October 2018)",
+      "author": "Purepeople",
+      "year": 2018,
+      "url": "https://www.purepeople.com/article/jane-birkin-raconte-la-violence-dans-son-couple-avec-serge-gainsbourg_a307340/1"
+    },
+    {
+      "id": "purepeople-2017",
+      "kind": "secondary",
+      "title": "Clash Gainsbourg / Whitney Houston – Michel Drucker raconte : \"J'étais archigêné\" (20 October 2017)",
+      "author": "Julien P., Purepeople",
+      "year": 2017,
+      "url": "https://www.purepeople.com/article/clash-gainsbourg-whitney-houston-michel-drucker-raconte-j-etais-archigene_a256105/1"
+    },
+    {
+      "id": "histoiredeschansons",
+      "kind": "secondary",
+      "title": "Catherine Deneuve et Serge Gainsbourg (Dieu est un fumeur de havanes)",
+      "author": "Fabrice Lafitte, Histoire des Chansons",
+      "year": "n.d.",
+      "url": "https://www.histoiredeschansons.com/11373-2/"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real French singer-songwriter (1928-1991), dead, never held office or founded a religion. Owner case (sexual-violence, no recommendation): Histoire des Chansons (Fabrice Lafitte's music-history site) says that on a Michel Drucker TV programme, 'visiblement éméché', he held Catherine Deneuve 'malgré elle' while she tried several times to pull free and dodge his attempts to kiss her on air; Paris Match Belgique (Elodie Métral, 20 September 2020) says he tried to kiss her 'alors qu'elle ne voulait pas'. No date or programme title is given, the clip was not watched, no account by Deneuve of the moment was found, and in 2014 she called him a friend who drank and talked too much; no complaint or charge exists. Air Mail (2020) says in general terms that he fondled and insulted women; Lio (2020) called him a harasser, naming no physical act. Also shadow, not an owner case: Constance Meyer, 16 by every source when their relationship began in 1985."
+    },
+    "blindAgreement": 0.5,
+    "devilsAdvocate": "I attacked all five draft values, re-read the Telegraph obituary, Nouvel Observateur, Larousse, Universalis, INA and Sotheby's pages and every shadow source, and replaced Clayson's book (which I could not open) with Birkin's own 2017 Uncut account of Strasbourg. Partnership fell: he hit Birkin more than once by her own diaries, she left him in 1980, and only the narrow creative collaboration survives, on two sources. Courage, Boldness, Creativity and Craft held; both quotes match their printed sources. I added the Ringer and Houston dates and the Deneuve episode to the shadow and kept him flagged for the owner.",
+    "checkedOn": "2026-11-10"
+  }
+}
