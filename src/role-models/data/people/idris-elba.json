@@ -1,0 +1,305 @@
+{
+  "id": "idris-elba",
+  "name": "Idris Elba",
+  "born": 1972,
+  "died": null,
+  "category": "charisma",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset",
+    "lm_contribution"
+  ],
+  "tagline": "A Hackney boy who outlasted lean years and created the roles nobody offered him.",
+  "startedFrom": "He was born in Hackney, east London, the only child of a Sierra Leonean father who worked at the Ford car factory in Dagenham and a Ghanaian mother who worked as a clerical assistant; the family later moved to Canning Town. His parents worked long hours, so he spent a lot of time looking after himself. As a teenager a £1,500 grant from the Prince's Trust paid for his place at the National Youth Music Theatre.",
+  "values": [
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says he moved to the US because he wanted to be 'a movie star', and compares it to making champagne in Champagne instead of sparkling wine in Portsmouth.",
+          "sourceId": "guardian-2023",
+          "locator": "paragraph beginning \"Elba does not explain the decision in terms of race\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In his late twenties, already married and in regular work on British TV, he moved with his wife to Manhattan to try for a career in the US.",
+          "sourceId": "guardian-2021",
+          "locator": "paragraph beginning \"By his late 20s he was married\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Hollywood Reporter writes that his ambition is 'every bit as intense' as Donald Glover's.",
+          "sourceId": "thr-2019",
+          "locator": "paragraph beginning \"Though Elba can't yet match the Atlanta creator's\""
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Of his first four years in New York with hardly any work he says: 'That was a very, very tough time... But I never contemplated giving up.'",
+          "sourceId": "guardian-2023",
+          "locator": "paragraph beginning \"It very nearly fell flat, though\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In his lean New York years his first marriage fell apart, he worked a comedy-club door and at one point slept in his van, until he was cast in The Wire.",
+          "sourceId": "thr-2019",
+          "locator": "paragraph beginning \"So, Elba's early years in New York were lean\""
+        },
+        {
+          "kind": "words",
+          "claim": "He told Playboy he had 'three or four years of unemployment, not getting acting jobs' before The Wire, while telling himself 'I can do that'.",
+          "sourceId": "cbs-2013",
+          "locator": "paragraph beginning \"It was a wickedly tough time\""
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "The Guardian reports that since The Wire in the mid-2000s he has averaged about three films a year, alongside TV work such as a decade of Luther and two series he produced and starred in.",
+          "sourceId": "guardian-2021",
+          "locator": "paragraph beginning \"Ever since he first broke through\""
+        },
+        {
+          "kind": "words",
+          "claim": "In 2023 he called himself an 'absolute workaholic' and said the things that relax him 'end up being work'.",
+          "sourceId": "latimes-2023",
+          "locator": "paragraphs beginning \"Elba described himself as an\" and \"The things that make me relaxed\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Hollywood Reporter counted at least a dozen projects of his in development in 2019, with more added almost weekly.",
+          "sourceId": "thr-2019",
+          "locator": "paragraph beginning \"Elba has at least a dozen projects\""
+        }
+      ]
+    },
+    {
+      "word": "Creativity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Answering critics who say he does too much, he says 'creativity's a real balancer for me' and calls the arts 'the best suspension system I have for keeping me even'.",
+          "sourceId": "guardian-2021",
+          "locator": "paragraph beginning \"People have criticised me for doing a lot of things\""
+        },
+        {
+          "kind": "deed",
+          "claim": "When nobody offered him comedy roles he created one himself: he developed Turn Up Charlie with Gary Reich and pitched it to Netflix, which made it.",
+          "sourceId": "thr-2019",
+          "locator": "paragraphs beginning \"The decision to make a Netflix comedy\" and \"Once they'd fleshed out the series\""
+        },
+        {
+          "kind": "deed",
+          "claim": "He directed the film Yardie (2018) and co-created the Sky comedy In the Long Run, based on his youth, in which he plays his own father.",
+          "sourceId": "guardian-2021",
+          "locator": "paragraphs beginning \"He did get a coveted part\" and \"We talk about his most personal project\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Writer Gary Reich said of working with him: 'I could barely keep up with the stuff he was coming up with.'",
+          "sourceId": "thr-2019",
+          "locator": "paragraph beginning \"Elba's team set him up with Gary Reich\""
+        }
+      ]
+    },
+    {
+      "word": "Contribution",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 8 January 2024 he launched the Don't Stop Your Future campaign in Parliament Square, with folded outfits laid out for people killed by knife crime, and called for a ban on zombie knives and machetes.",
+          "sourceId": "lbc-2024",
+          "locator": "paragraphs beginning \"The star is launching a campaign\" and \"It will see neatly folded outfits\""
+        },
+        {
+          "kind": "words",
+          "claim": "In the campaign statement he said: 'Young people are our future, their potential deserves to be met, not taken away by violence.'",
+          "sourceId": "lbc-2024",
+          "locator": "paragraph beginning \"Young people are our future\""
+        },
+        {
+          "kind": "deed",
+          "claim": "He was knighted in the 2026 New Year Honours for services to young people; with his wife Sabrina he founded the Elba Hope Foundation, which works on knife crime, education and poverty.",
+          "sourceId": "euronews-2025",
+          "locator": "opening paragraphs"
+        },
+        {
+          "kind": "words",
+          "claim": "AP reports that he calls himself a 'product of intervention': as a teenager he was given a £1,500 Prince's Trust grant to attend the National Youth Music Theatre.",
+          "sourceId": "ap-2024",
+          "locator": "paragraph beginning \"And one of those who benefited was Elba\" (article of 12 July 2024 on his St James's Palace meeting with the King)"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "If nobody offers you the part you want, create it yourself.",
+      "sourceId": "thr-2019",
+      "locator": "paragraph beginning \"The decision to make a Netflix comedy\""
+    },
+    {
+      "text": "Aim for the best place in your field, even if you have to move to reach it.",
+      "sourceId": "guardian-2023",
+      "locator": "paragraph beginning \"Elba does not explain the decision in terms of race\""
+    },
+    {
+      "text": "Live so that you will not die thinking 'I should have done that'.",
+      "sourceId": "thr-2019",
+      "locator": "paragraph beginning \"Elba pauses to collect his thoughts\""
+    },
+    {
+      "text": "Keep a private self and a public self, like home shoes and outdoor shoes.",
+      "sourceId": "guardian-2021",
+      "locator": "paragraphs beginning \"He describes the proud, private culture\" and \"This image of the two types of shoes\""
+    },
+    {
+      "text": "If someone seems to do more than you, it is not his biology; your capabilities are the same.",
+      "sourceId": "guardian-2023",
+      "locator": "last paragraph, beginning \"But Elba downplays the notion\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "You can make sparkling wine in Portsmouth or you can make champagne in Champagne, and my ambition was to make champagne.",
+      "sourceId": "guardian-2023",
+      "locator": "paragraph beginning \"Elba does not explain the decision in terms of race\""
+    },
+    {
+      "text": "I'm going to die one day. I'm going to take that last breath, and you know what I don't want to be thinking when I do? I should've done that.",
+      "sourceId": "thr-2019",
+      "locator": "paragraph beginning \"Elba pauses to collect his thoughts\""
+    },
+    {
+      "text": "People have criticised me for doing a lot of things. For doing this, that and the other, for doing too much. But creativity's a real balancer for me.",
+      "sourceId": "guardian-2021",
+      "locator": "paragraph beginning \"People have criticised me for doing a lot of things\""
+    }
+  ],
+  "definingMoment": {
+    "text": "After moving to New York he had three or four years with little acting work; he worked as a comedy-club doorman and for a time slept in his van. With his wife pregnant, he decided that if nothing came he would go home. The day before his daughter was born in 2002 he got the part of Stringer Bell in The Wire. He spoke with an American accent the whole time he lived there; at the last audition, when he said he was from east London, the room erupted.",
+    "sourceIds": [
+      "guardian-2023",
+      "thr-2019",
+      "cbs-2013",
+      "guardian-2021"
+    ]
+  },
+  "shadow": {
+    "text": "In his Saturday Night Live monologue in March 2019 he said that while working as a New York comedy-club doorman he sold weed: 'I'm not proud of it, it's just a fact.' In July 2019 the writers Sarah Henley and Tori Allen-Martin said they had been sidelined from the play Tree after almost four years of work begun with him; Elba said on Twitter that they had declined to work on the project further and that starting again quickly with others was 'our contractual right as beholder of the original idea'. In 2023 he called himself an 'absolute workaholic' with 'unhealthy habits' his industry rewards, 'someone that can go, I'm not going to see my family for six months', and said he had been in therapy for about a year. He has been married three times.",
+    "sourceIds": [
+      "chortle-2019",
+      "thr-2019",
+      "londontheatre-2019",
+      "latimes-2023",
+      "guardian-2023"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you wait this week for someone to hand you a chance you could have made yourself?",
+    "principleIndex": 0
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "guardian-2021",
+      "kind": "primary",
+      "title": "Idris Elba: 'Man, talk about work as therapy. I would break down on set' (interview; The Guardian, reprinted in The Irish Times, 28 July 2021)",
+      "author": "Tom Lamont",
+      "year": 2021,
+      "publisher": "The Guardian / The Irish Times",
+      "url": "https://www.irishtimes.com/culture/film/idris-elba-man-talk-about-work-as-therapy-i-would-break-down-on-set-1.4631576"
+    },
+    {
+      "id": "guardian-2023",
+      "kind": "primary",
+      "title": "Idris Elba: 'Me saying I don't like to call myself a black actor is my prerogative' (interview; The Guardian, reprinted in The Irish Times, 14 March 2023)",
+      "author": "Steve Rose",
+      "year": 2023,
+      "publisher": "The Guardian / The Irish Times",
+      "url": "https://www.irishtimes.com/culture/film/2023/03/14/idris-elba-me-saying-i-dont-like-to-call-myself-a-black-actor-is-my-prerogative"
+    },
+    {
+      "id": "thr-2019",
+      "kind": "secondary",
+      "title": "Idris Elba on Bond Rumors, \"Buffet\" of a Hollywood Career (11 March 2019)",
+      "author": "Lacey Rose, The Hollywood Reporter",
+      "year": 2019,
+      "url": "https://www.hollywoodreporter.com/features/idris-elba-bond-rumors-buffet-a-hollywood-career-1193558"
+    },
+    {
+      "id": "cbs-2013",
+      "kind": "secondary",
+      "title": "Idris Elba recalls hard times before landing \"The Wire\" (17 October 2013, on his Playboy interview)",
+      "author": "Jessica Derschowitz, CBS News",
+      "year": 2013,
+      "url": "https://www.cbsnews.com/news/idris-elba-recalls-hard-times-before-landing-the-wire"
+    },
+    {
+      "id": "latimes-2023",
+      "kind": "secondary",
+      "title": "Idris Elba says he's an 'absolute workaholic' and is dealing with it by going to therapy (3 October 2023)",
+      "author": "Carlos De Loera, Los Angeles Times",
+      "year": 2023,
+      "url": "https://www.yahoo.com/entertainment/idris-elba-says-hes-absolute-172634725.html"
+    },
+    {
+      "id": "lbc-2024",
+      "kind": "secondary",
+      "title": "'I can't stay silent': Idris Elba calls for ban on 'zombie knives' and machetes in new campaign to end youth knife crime (8 January 2024)",
+      "author": "Jenny Medlicott, LBC",
+      "year": 2024,
+      "url": "https://www.lbc.co.uk/news/idris-elba-actor-uk-knife-crime-stabbings-teenagers"
+    },
+    {
+      "id": "ap-2024",
+      "kind": "secondary",
+      "title": "King Charles III hosts Idris Elba to hear from young people about the troubles they face (12 July 2024)",
+      "author": "Danica Kirka, Associated Press",
+      "year": 2024,
+      "url": "https://www.news4jax.com/entertainment/2024/07/12/king-charles-iii-hosts-idris-elba-to-hear-from-young-people-about-the-troubles-they-face/"
+    },
+    {
+      "id": "euronews-2025",
+      "kind": "secondary",
+      "title": "Arise Sir Idris: Hollywood A-lister knighted in King Charles' New Year's honours (30 December 2025)",
+      "author": "Tokunbo Salako with AP, Euronews",
+      "year": 2025,
+      "url": "https://www.euronews.com/2025/12/30/arise-sir-idris-hollywood-a-lister-knighted-in-king-charles-new-years-honours"
+    },
+    {
+      "id": "londontheatre-2019",
+      "kind": "secondary",
+      "title": "Friday Briefing: Writing scandal blooms around Tree, and how far should trigger warnings go? (5 July 2019)",
+      "author": "Mark Shenton, London Theatre",
+      "year": 2019,
+      "url": "https://www.londontheatre.co.uk/theatre-news/news/friday-briefing-writing-scandal-blooms-around-tree-and-how-far-should"
+    },
+    {
+      "id": "chortle-2019",
+      "kind": "secondary",
+      "title": "Idris Elba used to be a comedy club bouncer (10 March 2019, on his Saturday Night Live monologue of 9 March 2019)",
+      "author": "Chortle",
+      "year": 2019,
+      "url": "https://www.chortle.co.uk/punching-ups/2019/03/10/42491/idris_elba_used_to_be_a_comedy_club_bouncer"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living British actor, DJ and director (born 1972), not a politician, candidate or religious founder; his anti-knife-crime campaigning is one part of an acting career, not his public life; no account of sexual contact with a minor or of sexual violence was found; his dark side is small and documented."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value and every sentence against the saved Guardian (Irish Times reprint), Hollywood Reporter, CBS, LA Times, LBC, AP, Euronews and London Theatre texts, and searched again for misconduct and for how the Tree dispute ended. All five values held: Hard work, Creativity and Contribution are shared with the blind pick, and Ambition and Determination each rest on three separate sources; the blind pick's Resilience overlapped Determination and there was no room. Two claims were cut back to what the source says (the 'product of intervention' line is not dated to the 2024 palace visit, and the Guardian's film count does not mention music or businesses), and the Tree sentence now uses the source's word 'sidelined' and Elba's own wording.",
+    "checkedOn": "2026-11-10"
+  }
+}
