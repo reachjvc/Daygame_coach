@@ -1,0 +1,342 @@
+{
+  "id": "milton-hershey",
+  "name": "Milton Hershey",
+  "born": 1857,
+  "died": 1945,
+  "category": "builders",
+  "areaIds": [
+    "lm_money",
+    "lm_contribution"
+  ],
+  "tagline": "A candymaker who failed twice, then built a chocolate company, a town and a school",
+  "startedFrom": "He was born in 1857 on a farm in Derry Township, Pennsylvania. His father failed at one business after another, so the family moved often and he went to at least seven schools. At about 14 he was fired from a printer's apprenticeship and then sent to learn candymaking in Lancaster.",
+  "values": [
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 13 November 1918 he gave his Hershey Chocolate Company stock to the trust of the school for orphan boys, which made the school the majority owner of his businesses.",
+          "sourceId": "hca-gift",
+          "locator": "Paragraph on 13 November 1918"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1934 he said that a man cannot spend his money after he dies, \"and it has been a pleasure for me to spend mine as I have done\".",
+          "sourceId": "lebanon-1934",
+          "locator": "Lebanon Semi-Weekly News, 19 Nov. 1934 (as quoted by Milton Hershey School, 'Founders' Intent' page)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Kirkus, reviewing D'Antonio's biography, says he was \"quick to give with remarkable generosity\".",
+          "sourceId": "kirkus-2005",
+          "locator": "Closing paragraph ('In his time, in his town, Mr. Hershey could be difficult')"
+        },
+        {
+          "kind": "deed",
+          "claim": "American Heritage says that once in a while he came across someone in need and secretly paid for everything needed.",
+          "sourceId": "bongartz-1973",
+          "locator": "Passage after 'no paid vacations, medical care, or guaranteed wage' ('secretly, like George Arliss in The Millionaire')"
+        }
+      ]
+    },
+    {
+      "word": "Building things",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He broke ground for his chocolate factory on 2 March 1903, finished it by summer 1905, and had a town planned around it; a bank, a hotel, a public school, churches and parks followed, and he built a trolley line.",
+          "sourceId": "hca",
+          "locator": "Sections 'Hershey Chocolate Company' and 'Planning the Model Town'"
+        },
+        {
+          "kind": "deed",
+          "claim": "During the Depression of the 1930s more than 600 men found work in his building campaign, which included Hotel Hershey and the Community Theatre.",
+          "sourceId": "hca",
+          "locator": "Section 'Planning the Model Town' (Great Building Campaign)"
+        },
+        {
+          "kind": "witness",
+          "claim": "American Heritage says that when the Depression came he started \"a huge building-construction program that would have done credit to a good-sized city\".",
+          "sourceId": "bongartz-1973",
+          "locator": "Passage on the Depression ('a huge building-construction program that would have done credit to a good-sized city')"
+        },
+        {
+          "kind": "witness",
+          "claim": "American History magazine says that during the Depression he \"embarked on a massive building campaign\" while industry around the country ground to a halt.",
+          "sourceId": "kreiser-2009",
+          "locator": "Paragraph on the Great Depression"
+        }
+      ]
+    },
+    {
+      "word": "Legacy",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In the 1909 deed of trust he and his wife founded and endowed the school \"in perpetuity\", and the deed says all its trusts \"shall be held in perpetuity\".",
+          "sourceId": "deed-1909",
+          "locator": "Opening 'WITNESSETH' clause and paragraph 27 (Second Restated Deed of Trust)"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1923 he said: \"The only unusual thing I have done is to carry out the terms of my will while I am still alive.\"",
+          "sourceId": "telegram-1923",
+          "locator": "New York Evening Telegram, 25 Nov. 1923 (as quoted by Milton Hershey School, section 'In Milton's Words')"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Wall Street Journal wrote that he founded the school for orphan boys, \"declaring that it should operate forever\".",
+          "sourceId": "wsj-2009",
+          "locator": "Opening paragraphs"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His first candy business in Philadelphia went bankrupt in 1882 after six years and a second in New York failed by 1886; he went back to Lancaster without the money to ship his things, and the Archives call him \"discouraged but not defeated\".",
+          "sourceId": "hca",
+          "locator": "Sections 'Early Confectionery Ventures' and 'Lancaster Caramel Company'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He started the Lancaster Caramel Company in 1886, his third candy venture, after the New York failure.",
+          "sourceId": "hca-lcc",
+          "locator": "Opening paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "In New York he worked in Huyler's candy factory by day and boiled his own candy at night in his landlady's kitchen.",
+          "sourceId": "bongartz-1973",
+          "locator": "Passage on New York ('working days in Huyler's candy factory and boiling his own candy at night in his landlady's kitchen')"
+        },
+        {
+          "kind": "witness",
+          "claim": "Kirkus says he worked out his candies \"through dogged experiment\" and built his chocolate factory before he was quite sure how to make milk chocolate.",
+          "sourceId": "kirkus-2005",
+          "locator": "Middle paragraph ('In business, Hershey was a trendsetter')"
+        }
+      ]
+    },
+    {
+      "word": "Control",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "American Heritage says he personally decided which work the town needed and paid for it, fired street laborers on the spot for leaning on their shovels, and had the shop of a barber who gave him \"some sass\" hauled away.",
+          "sourceId": "bongartz-1973",
+          "locator": "Passages on his running of the town ('personally decided what work did or did not need doing'; 'leaning on their shovels'; the town barber)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Kirkus says the common view of him is a tycoon pleased to give \"as long as you did things his way\", and that he was quick to give sudden notice to employees who displeased him.",
+          "sourceId": "kirkus-2005",
+          "locator": "Opening and closing paragraphs"
+        },
+        {
+          "kind": "witness",
+          "claim": "American History magazine says some saw \"a repressive paternalism\" in his benevolence.",
+          "sourceId": "kreiser-2009",
+          "locator": "Paragraph on the Great Depression, last sentences"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When a business fails, learn the skill you lacked from someone better, then start again.",
+      "sourceId": "hca",
+      "locator": "Section 'Early Confectionery Ventures' (Denver: learned fresh-milk caramels) and 'Lancaster Caramel Company'"
+    },
+    {
+      "text": "Give your fortune away while you are alive, so you can see it work.",
+      "sourceId": "telegram-1923",
+      "locator": "New York Evening Telegram, 25 Nov. 1923 (as quoted by Milton Hershey School, section 'In Milton's Words')"
+    },
+    {
+      "text": "When hard times come, keep your people working.",
+      "sourceId": "bongartz-1973",
+      "locator": "Passage on the Depression ('with the idea of keeping his people at work')"
+    },
+    {
+      "text": "Give young people a real home and a trade so they can earn their own living, not charity.",
+      "sourceId": "liberty-1924",
+      "locator": "Liberty Magazine, 13 Sept. 1924 (as quoted by Milton Hershey School, 'Founders' Intent' page)"
+    },
+    {
+      "text": "Sell a business that works to go all in on the next thing.",
+      "sourceId": "hca",
+      "locator": "Section 'Hershey Chocolate Company' (sold the Lancaster Caramel Company in 1900 for $1 million, built the chocolate factory 1903-1905)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "After a man dies, he cannot spend his money, and it has been a pleasure for me to spend mine as I have done.",
+      "sourceId": "lebanon-1934",
+      "locator": "Lebanon Semi-Weekly News, 19 Nov. 1934 (as quoted by Milton Hershey School, 'Founders' Intent' page)"
+    },
+    {
+      "text": "The only unusual thing I have done is to carry out the terms of my will while I am still alive.",
+      "sourceId": "telegram-1923",
+      "locator": "New York Evening Telegram, 25 Nov. 1923 (as quoted by Milton Hershey School, section 'In Milton's Words')"
+    },
+    {
+      "text": "I wanted to get away from the idea of institutions and charity and compulsion.",
+      "sourceId": "liberty-1924",
+      "locator": "Liberty Magazine, 13 Sept. 1924 (as quoted by Milton Hershey School, 'Founders' Intent' page and section 'In Milton's Words')"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 13 November 1918, three years after his wife Catherine died, he gave his Hershey Chocolate Company stock to the trust of the school for orphan boys that the two of them had founded in 1909. The school became the majority owner of his businesses. The gift was not made public until 1923.",
+    "sourceIds": [
+      "hca-gift",
+      "hca"
+    ]
+  },
+  "shadow": {
+    "text": "He ran his town on his own terms: he decided which public works were done, fired street laborers on the spot for leaning on their shovels, and gave no paid vacations, medical care or guaranteed wage, according to American Heritage (1973). Kirkus, summing up Michael D'Antonio's 2006 biography, says he could be difficult and was quick to give sudden notice to employees who displeased him. The school's deed admitted only poor, white orphan boys; the first students of color came in 1968, and the race rule left the deed in 1970. In April 1937 his workers held Pennsylvania's first sit-down strike; on 7 April a crowd of about 3,000 anti-union workers and farmers stormed the plant and beat strikers. Hershey blamed the strike on \"foolish radicals\".",
+    "sourceIds": [
+      "bongartz-1973",
+      "kirkus-2005",
+      "mhs-diversity",
+      "explorepa"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What failed for you this week, and what skill would you need to learn before you try again?",
+    "principleIndex": 0
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "deed-1909",
+      "kind": "primary",
+      "title": "Milton Hershey School Deed of Trust, 15 November 1909 (Second Restated Deed of Trust, as of 15 November 1976)",
+      "author": "Milton S. Hershey and Catherine S. Hershey",
+      "year": 1976,
+      "publisher": "Milton Hershey School",
+      "url": "https://www.mhskids.org/wp-content/uploads/milton-hershey-school-deed-of-trust.pdf"
+    },
+    {
+      "id": "telegram-1923",
+      "kind": "primary",
+      "title": "Interview statement in the New York Evening Telegram, 25 Nov. 1923 (quoted on 'Milton Hershey's Gift that Amazed the World')",
+      "author": "Milton S. Hershey",
+      "year": 1923,
+      "publisher": "Milton Hershey School (quoting the New York Evening Telegram)",
+      "url": "https://www.mhskids.org/blog/the-gift-and-vision-that-amazed-the-world/"
+    },
+    {
+      "id": "liberty-1924",
+      "kind": "primary",
+      "title": "Interview in Liberty Magazine, 13 Sept. 1924 (quoted on 'Milton Hershey School Founders' Intent Achieved Through Students and Staff')",
+      "author": "Milton S. Hershey",
+      "year": 1924,
+      "publisher": "Milton Hershey School (quoting Liberty Magazine)",
+      "url": "https://mhskids.org/news/mhs-founders-intent"
+    },
+    {
+      "id": "lebanon-1934",
+      "kind": "primary",
+      "title": "Interview in the Lebanon Semi-Weekly News, 19 Nov. 1934 (quoted on 'Milton Hershey School Founders' Intent Achieved Through Students and Staff')",
+      "author": "Milton S. Hershey",
+      "year": 1934,
+      "publisher": "Milton Hershey School (quoting the Lebanon Semi-Weekly News)",
+      "url": "https://mhskids.org/news/mhs-founders-intent"
+    },
+    {
+      "id": "hca",
+      "kind": "secondary",
+      "title": "Hershey, Milton Snavely (1857-1945)",
+      "author": "Hershey Community Archives",
+      "year": "n.d.",
+      "publisher": "Hershey Community Archives",
+      "url": "https://hersheyarchives.org/encyclopedia/hershey-milton-snavely-1857-1945/"
+    },
+    {
+      "id": "hca-lcc",
+      "kind": "secondary",
+      "title": "Lancaster Caramel Company",
+      "author": "Hershey Community Archives",
+      "year": 2018,
+      "publisher": "Hershey Community Archives",
+      "url": "https://hersheyarchives.org/encyclopedia/lancaster-caramel-company/"
+    },
+    {
+      "id": "hca-gift",
+      "kind": "secondary",
+      "title": "HersheyArchives@30, Part 11: The Gift",
+      "author": "Hershey Community Archives",
+      "year": 2015,
+      "publisher": "Hershey Community Archives",
+      "url": "https://hersheyarchives.org/encyclopedia/hersheyarchives30-11-the-gift/"
+    },
+    {
+      "id": "bongartz-1973",
+      "kind": "secondary",
+      "title": "The Chocolate Camelot (American Heritage, vol. 24, no. 4, June 1973)",
+      "author": "Roy Bongartz",
+      "year": 1973,
+      "publisher": "American Heritage",
+      "url": "https://www.americanheritage.com/chocolate-camelot"
+    },
+    {
+      "id": "kirkus-2005",
+      "kind": "secondary",
+      "title": "Review of Michael D'Antonio, Hershey: Milton S. Hershey's Extraordinary Life of Wealth, Empire, and Utopian Dreams (Simon & Schuster, 2006)",
+      "author": "Kirkus Reviews",
+      "year": 2005,
+      "publisher": "Kirkus Reviews",
+      "url": "https://www.kirkusreviews.com/book-reviews/michael-dantonio/hershey/"
+    },
+    {
+      "id": "wsj-2009",
+      "kind": "secondary",
+      "title": "The School Hershey Built (Wall Street Journal, 2 Dec. 2009, republished by History News Network)",
+      "author": "The Wall Street Journal",
+      "year": 2009,
+      "publisher": "History News Network",
+      "url": "https://www.historynewsnetwork.org/article/120858"
+    },
+    {
+      "id": "explorepa",
+      "kind": "secondary",
+      "title": "Chocolate Workers Sit-Down Strike (historical marker and story)",
+      "author": "ExplorePAHistory.com (WITF and Pennsylvania Historical and Museum Commission)",
+      "year": "n.d.",
+      "publisher": "WITF",
+      "url": "https://explorepahistory.com/hmarker.php?markerId=1-A-320"
+    },
+    {
+      "id": "mhs-diversity",
+      "kind": "secondary",
+      "title": "Embracing Diversity: the MHS mission",
+      "author": "Milton Hershey School",
+      "year": "n.d.",
+      "publisher": "Milton Hershey School",
+      "url": "https://www.mhskids.org/blog/embracing-diversity-mhs-mission/"
+    },
+    {
+      "id": "kreiser-2009",
+      "kind": "secondary",
+      "title": "Pennsylvania's Utopian Candyman (American History, April 2009)",
+      "author": "Christine M. Kreiser",
+      "year": 2009,
+      "publisher": "HistoryNet",
+      "url": "https://www.historynet.com/pennsylvanias-utopian-candyman/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American businessman (1857-1945), not a politician, campaigner or founder of a religion; no account of sexual contact with anyone under 16 or of sexual violence was found; his dark side is a controlling paternalism, a school deed limited to white boys, and the violently broken 1937 strike at his factory."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I checked every claim against the Hershey Archives, American Heritage (1973), the Kirkus review of D'Antonio's biography, the school's own pages and a 2009 American History article, and searched each quote for misattribution. Resilience fell: it rested on only two sources, and the blind pick's Determination took its place with four pieces of evidence from three sources. Generosity, Building things, Legacy and Control held, Control now on three sources; all three quotes match the school's sourced pages. Three sentences were corrected, including 'kept the gift quiet', which he denied, and Kirkus's account of his firings was added to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
