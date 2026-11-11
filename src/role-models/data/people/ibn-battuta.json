@@ -1,0 +1,306 @@
+{
+  "id": "ibn-battuta",
+  "name": "Ibn Battuta",
+  "born": 1304,
+  "died": "1368 or 1369",
+  "category": "explorers",
+  "areaIds": [
+    "lm_fun",
+    "lm_mindset",
+    "lm_spirituality"
+  ],
+  "tagline": "Left home alone at 21 and kept travelling for almost thirty years, Morocco to China.",
+  "startedFrom": "He was born in Tangier, Morocco, on 24 February 1304, into a family of the Berber Luwata tribe that had produced a line of qadis (Islamic judges); Gibb infers he had the usual schooling of a religious scholar. On 14 June 1325, aged 21, he set out for Mecca alone, with no companion and no caravan. He fell ill with fever on the way, tied himself to his saddle, and wept with loneliness when he reached Tunis, where no one greeted him.",
+  "values": [
+    {
+      "word": "Travel",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says he set out 'swayed by an overmastering impulse within me' to visit the holy places, though it grieved him to leave his parents.",
+          "sourceId": "gibb-1929",
+          "locator": "Book I ch. I, p. 43"
+        },
+        {
+          "kind": "words",
+          "claim": "He says he made it a habit never, so far as possible, to travel a second time any road he had once travelled.",
+          "sourceId": "gibb-1929",
+          "locator": "Book I ch. II, p. 88"
+        },
+        {
+          "kind": "words",
+          "claim": "Looking back, he says his desire in this world 'was to travel through the earth', and that he had attained in it what no one else had, to his knowledge.",
+          "sourceId": "gibb-1929",
+          "locator": "Book I ch. II, p. 88"
+        },
+        {
+          "kind": "deed",
+          "claim": "He left Tangier on 14 June 1325 and reached Fez again on 13 November 1349, after travels that took him as far as India, the Maldives and China; he then crossed the Sahara to Mali before the book was finished in December 1355.",
+          "sourceId": "gibb-1929",
+          "locator": "pp. 43, 308, 339"
+        },
+        {
+          "kind": "witness",
+          "claim": "Gibb writes that he is the only medieval traveller known to have visited the lands of every Muslim ruler of his time.",
+          "sourceId": "gibb-1929-intro",
+          "locator": "Introduction, p. 9"
+        },
+        {
+          "kind": "witness",
+          "claim": "Bullis writes that he set out a pilgrim but grew into one of the rarest kinds of travellers: one who voyaged for the sake of voyaging.",
+          "sourceId": "aramco-bullis-2000",
+          "locator": "Part 1: From Pilgrim to Traveler"
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1341 he left the Delhi sultan's service to follow the ascetic Kamal ad-Din, came before the sultan dressed as a mendicant, refused to return to service, and asked leave to go to Mecca.",
+          "sourceId": "gibb-1929",
+          "locator": "Book II ch. VI, p. 212"
+        },
+        {
+          "kind": "deed",
+          "claim": "When the sultan had him guarded for visiting a hermit, he fasted five days, reading the whole Koran each day and taking only water.",
+          "sourceId": "gibb-1929",
+          "locator": "Book II ch. VI, p. 212"
+        },
+        {
+          "kind": "words",
+          "claim": "Ill with fever and urged to rest, he said: 'If God decrees my death, it shall be on the road with my face set toward Mecca.'",
+          "sourceId": "gibb-1929",
+          "locator": "Book I ch. I, p. 44"
+        },
+        {
+          "kind": "witness",
+          "claim": "Gibb describes him as 'controlled withal by a deep vein of piety and devotion', and his Delhi retreat as 'a genuine act of world-renunciation'.",
+          "sourceId": "gibb-1929-intro",
+          "locator": "Introduction, pp. 2, 7"
+        },
+        {
+          "kind": "witness",
+          "claim": "Bullis notes that he refers many times to reciting the entire Qur'an aloud in one day while travelling.",
+          "sourceId": "aramco-bullis-2000",
+          "locator": "Part 1: From Pilgrim to Traveler"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1342, near Koel in India, he was captured by rebels, released, and wandered about a week alone, until a stranger carried him to a village; he then urged his frightened party to go on with the mission.",
+          "sourceId": "gibb-1929",
+          "locator": "Book II ch. VII, pp. 216-223"
+        },
+        {
+          "kind": "deed",
+          "claim": "At Calicut the junk carrying the embassy sank and the other ship sailed off with his goods; left on the beach with ten dinars and his carpet, he set off for Quilon to catch it.",
+          "sourceId": "gibb-1929",
+          "locator": "Book II ch. VII, pp. 237-238"
+        },
+        {
+          "kind": "deed",
+          "claim": "Pirates off the Indian coast took everything, leaving him 'no covering but my trousers'; he went back to Calicut, where a theologian, the qadi and a merchant clothed him.",
+          "sourceId": "gibb-1929",
+          "locator": "Book II ch. IX, pp. 265-266"
+        },
+        {
+          "kind": "witness",
+          "claim": "Bullis writes that it speaks well of his resourcefulness that, after coming ashore stripped, he was well dressed again by the end of the day.",
+          "sourceId": "aramco-bullis-2000",
+          "locator": "Part 3: From Traveler to Memoirist"
+        }
+      ]
+    },
+    {
+      "word": "Adventure",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At Hinawr he asked to join a sea expedition against Sandabur (Goa) after an augury from the Koran, and when the ships came under fire from mangonels he jumped into the water with the troops, shield and sword in hand.",
+          "sourceId": "gibb-1929",
+          "locator": "Book II ch. VII, pp. 239-240"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1342 near Koel he rode out with friends after raiders, was cut off and chased, surrendered to about forty archers, and spent eight days as a fugitive before reaching a village.",
+          "sourceId": "gibb-1929",
+          "locator": "Book II ch. VII, pp. 215-221"
+        },
+        {
+          "kind": "witness",
+          "claim": "Gibb writes that, stranded at Calicut and afraid to return to Delhi, he 'chose instead to indulge his love of adventure with the independent rulers of the Malabar coast'.",
+          "sourceId": "gibb-1929-intro",
+          "locator": "Introduction, p. 7"
+        },
+        {
+          "kind": "witness",
+          "claim": "Bullis writes that he crisscrossed Anatolia 'guided, it seems clear, by little more than serendipity and impulse'.",
+          "sourceId": "aramco-bullis-2000",
+          "locator": "Part 2: From Riches to Rags"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "When he attached himself to a Delhi shaykh he withdrew from the world, 'giving all that I possessed to the poor and needy'.",
+          "sourceId": "gibb-1929",
+          "locator": "Book II ch. VI, pp. 195-196"
+        },
+        {
+          "kind": "deed",
+          "claim": "In charge of a Delhi mausoleum during a severe famine, he raised the daily food from twelve to thirty-five maunds each of flour and meat and gave it to staff, visitors and travellers.",
+          "sourceId": "gibb-1929",
+          "locator": "Book II ch. VI, p. 211"
+        },
+        {
+          "kind": "witness",
+          "claim": "Gibb calls his character 'generous to excess'.",
+          "sourceId": "gibb-1929-intro",
+          "locator": "Introduction, p. 2"
+        },
+        {
+          "kind": "witness",
+          "claim": "Bullis quotes the 15th-century scholar Muhammad ibn Marzuk: 'he was generous and well-doing'.",
+          "sourceId": "aramco-bullis-2000",
+          "locator": "Part 3: From Traveler to Memoirist"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "If no one will come with you, set out alone.",
+      "sourceId": "gibb-1929",
+      "locator": "Book I ch. I, p. 43"
+    },
+    {
+      "text": "Where you can, take a road you have not travelled before.",
+      "sourceId": "gibb-1929",
+      "locator": "Book I ch. II, p. 88"
+    },
+    {
+      "text": "Do not stop for illness or fear; if the end comes, let it find you on the road to your goal.",
+      "sourceId": "gibb-1929",
+      "locator": "Book I ch. I, p. 44"
+    },
+    {
+      "text": "When you lose everything, accept the help that is offered and go on.",
+      "sourceId": "gibb-1929",
+      "locator": "Book II ch. IX, pp. 265-266"
+    },
+    {
+      "text": "When a mission starts badly, push on instead of turning back.",
+      "sourceId": "gibb-1929",
+      "locator": "Book II ch. VII, pp. 222-223"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I set out alone, finding no companion to cheer the way with friendly intercourse, and no party of travellers with whom to associate myself.",
+      "sourceId": "gibb-1929",
+      "locator": "Book I ch. I, p. 43",
+      "translation": "H. A. R. Gibb, 1929"
+    },
+    {
+      "text": "If God decrees my death, it shall be on the road with my face set toward Mecca.",
+      "sourceId": "gibb-1929",
+      "locator": "Book I ch. I, p. 44",
+      "translation": "H. A. R. Gibb, 1929"
+    },
+    {
+      "text": "I made it a habit on my journey never, so far as possible, to cover a second time any road that I had once travelled.",
+      "sourceId": "gibb-1929",
+      "locator": "Book I ch. II, p. 88",
+      "translation": "H. A. R. Gibb, 1929"
+    },
+    {
+      "text": "For a moment I entertained the idea of spending the rest of my life in the service of this Shaykh, but my spirit, tenacious of its purpose, dissuaded me.",
+      "sourceId": "gibb-1929",
+      "locator": "Book I ch. II, p. 88",
+      "translation": "H. A. R. Gibb, 1929"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 22 July 1342 he left Delhi at the head of Sultan Muhammad's embassy to the emperor of China. Near Koel (now Aligarh) he was cut off in a skirmish with Hindu rebels, surrendered to about forty archers and was held by men ordered to kill him, until one of the band let him go. He wandered for about a week, sleeping in a grain jar and drawing water from a well with his shoe, until a stranger carried him to a village. When his companions wanted to turn back, he urged them on, and the embassy went on toward the coast.",
+    "sourceIds": [
+      "gibb-1929",
+      "aramco-bullis-2000"
+    ]
+  },
+  "shadow": {
+    "text": "He kept enslaved women as concubines: by his own account he bought Greek slave girls in Anatolia, one of his slave girls bore him a daughter on the way to India, and rulers gave him girls, two of them from captives just taken in a raid on Sumatra. During the Delhi famine a woman accused of eating a boy's heart was brought to him; he sent her to the sultan's lieutenant, who had her tested in the river and burned. As qadi of the Maldives in the 1340s he had men beaten and paraded through the bazaars for keeping divorced wives in their houses and for missing Friday prayer, and when the ruling wazir turned against him he agreed with two ministers to bring troops from the mainland to take the islands, then put the plan to the sultan of Ma'bar. He married and divorced often and left wives and children behind, among them a pregnant wife in the Maldives; in Delhi the sultan paid his debt of 55,000 dinars and the treasurer called him 'very extravagant'. Parts of his book were disbelieved in his own lifetime; Gibb notes that his editor put in passages abridged from the earlier traveller Ibn Jubayr, and Bullis writes that the Volga journey and parts of the China account look second-hand, while Gibb in 1929 judged the China chapter genuine.",
+    "sourceIds": [
+      "gibb-1929",
+      "gibb-1929-intro",
+      "aramco-bullis-2000",
+      "tolmacheva-2013"
+    ]
+  },
+  "councilQuestion": {
+    "text": "When something went wrong at the start of a plan this week, did you push on or turn back?",
+    "principleIndex": 4
+  },
+  "readings": [
+    {
+      "title": "The Travels (Rihla), titled in Gibb's translation 'A Donation to those interested in the Curiosities of the Cities and Marvels of the Ways'",
+      "year": 1355
+    }
+  ],
+  "sources": [
+    {
+      "id": "gibb-1929",
+      "kind": "primary",
+      "title": "Ibn Battuta: Travels in Asia and Africa 1325-1354 (selections, The Broadway Travellers)",
+      "author": "Ibn Battuta, dictated to Ibn Juzayy; translated and selected by H. A. R. Gibb",
+      "year": 1929,
+      "publisher": "George Routledge & Sons, London; scan on the Internet Archive (US public domain); extracts at Fordham Internet Medieval Sourcebook",
+      "url": "https://archive.org/details/in.ernet.dli.2015.39643"
+    },
+    {
+      "id": "gibb-1929-intro",
+      "kind": "secondary",
+      "title": "Introduction to Ibn Battuta: Travels in Asia and Africa 1325-1354",
+      "author": "H. A. R. Gibb",
+      "year": 1929,
+      "publisher": "George Routledge & Sons, London",
+      "url": "https://archive.org/details/in.ernet.dli.2015.39643"
+    },
+    {
+      "id": "aramco-bullis-2000",
+      "kind": "secondary",
+      "title": "The Longest Hajj: The Journeys of Ibn Battuta (Parts 1-3)",
+      "author": "Douglas Bullis",
+      "year": 2000,
+      "publisher": "Saudi Aramco World, vol. 51 no. 4, July/August 2000",
+      "url": "https://archive.aramcoworld.com/issue/200004/"
+    },
+    {
+      "id": "tolmacheva-2013",
+      "kind": "secondary",
+      "title": "Medieval Muslim Women's Travel: Defying Distance and Danger",
+      "author": "Marina Tolmacheva",
+      "year": 2013,
+      "publisher": "World History Connected, vol. 10 no. 2",
+      "url": "https://journals.gmu.edu/whc/article/download/4578/2538?inline=1"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real Moroccan traveller and qadi (1304-1368/69), long dead, not fictional, not a politician of today and not the founder of a religion; flagged because his own book records that he bought enslaved women and kept them as concubines (one bore him a daughter) and that rulers gave him girls, two of them from captives just taken in a raid, which the owner may count as sexual violence; his other dark side is shadow. Owner case facts: bought Greek slave girls (Gibb 1929 pp. 134, 136); a slave girl bore him a daughter (p. 172); slave girls given by the Delhi sultan, the Maldives wazir and the sultan of Sumatra, the last 'two girls' from raid captives, ages not given (pp. 213, 247, 302); in Delhi he received ten captive women, his companions took three 'very young' ones (Defrémery vol. 3 pp. 388-389); no source describes a specific act of force."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value against his own book in Gibb's 1929 translation (every locator is a Gibb 1929 page; Lee 1829 was not needed), Gibb's introduction and Bullis. Courage fell for want of a third independent source, and its Sandabur and Koel facts moved to Adventure, which the blind pick chose and which Gibb's 'love of adventure' and Bullis support; Belonging, also blind-picked, was not added because he left parents, wives and children again and again. Travel, Faith and Resilience held as core, and Generosity held on his giving away all he owned in Delhi, the famine kitchen, Gibb and Ibn Marzuk, though his court gifts and his 55,000-dinar debt argue the other way. All four quotes were found word for word; startedFrom now marks the schooling line as Gibb's inference, and the shadow gained the Delhi famine woman he handed over to be burned and Gibb's view on China.",
+    "checkedOn": "2026-11-10"
+  }
+}
