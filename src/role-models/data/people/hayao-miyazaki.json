@@ -1,0 +1,250 @@
+{
+  "id": "hayao-miyazaki",
+  "name": "Hayao Miyazaki",
+  "born": 1941,
+  "died": null,
+  "category": "artists",
+  "areaIds": [
+    "lm_mission"
+  ],
+  "tagline": "An animator who drew his films by hand, worked all hours and kept control of them.",
+  "startedFrom": "He was born in Tokyo in 1941, the second of four sons. His father ran a factory that made wings for Zero fighter planes, and the money from wartime contracts kept the family in comfort, but his mother was ill for years with spinal tuberculosis and he was a shy, sickly boy who took sanctuary in drawing. His son Goro says he \"wasn't dexterous\" and had to work hard for his skill; he was in his late thirties before he had his first directing credit.",
+  "values": [
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He uses some computer graphics but insists that all characters and backgrounds in his films are drawn by hand.",
+          "sourceId": "newyorker-2005",
+          "locator": "paragraph beginning 'John Lasseter told me that when the animators at Pixar get stuck'"
+        },
+        {
+          "kind": "words",
+          "claim": "In 2021 he said: \"I believe that the tool of an animator is the pencil.\"",
+          "sourceId": "nyt-2021",
+          "locator": "opening section, paragraph beginning '“I believe that the tool of an animator is the pencil,”'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times describes him as 'at once artist and artisan' who still draws most of the tens of thousands of frames in each film himself.",
+          "sourceId": "nyt-2021",
+          "locator": "opening section, first and third paragraphs"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His producer Toshio Suzuki says that in Ghibli's early years he worked from nine in the morning to four-thirty the next morning and took no holidays.",
+          "sourceId": "newyorker-2005",
+          "locator": "paragraph beginning 'Miyazaki threw himself into the project single-mindedly'"
+        },
+        {
+          "kind": "words",
+          "claim": "He told The New Yorker: \"I don't take long vacations. I don't have the time. My idea of a vacation is a nap.\"",
+          "sourceId": "newyorker-2005",
+          "locator": "paragraph beginning 'Miyazaki threw himself into the project single-mindedly'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Guardian described him in 2005 as leading 'a monastic existence (all work, no play, TV or internet)'.",
+          "sourceId": "guardian-2005",
+          "locator": "second paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Integrity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Under his 1997 Disney distribution deal he refused to grant merchandising rights, kept creative control, and resisted Harvey Weinstein's demands for cuts to Princess Mononoke.",
+          "sourceId": "guardian-2005",
+          "locator": "paragraphs beginning 'Miyazaki taps a cigarette from a silver case' and 'The director chortles'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In March 2003 he stayed away from the Oscar ceremony where Spirited Away won, saying in a handwritten statement he could not rejoice because of the sad events in the world.",
+          "sourceId": "japantimes-2003",
+          "locator": "first and second paragraphs"
+        },
+        {
+          "kind": "witness",
+          "claim": "An Academy Museum curator cites him as an auteur who 'has managed to stay true to himself'.",
+          "sourceId": "nyt-2021",
+          "locator": "opening section, paragraph beginning 'I have one hour to ask questions'"
+        }
+      ]
+    },
+    {
+      "word": "Nature",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He donated the Totoro licensing rights to a nature trust to help buy woodland near Tokyo and protect it from development.",
+          "sourceId": "newyorker-2005",
+          "locator": "paragraph beginning 'I noted that he had donated the “Totoro” licensing rights'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He picks up trash from the river on his days off, and the Totoro Fund, supported in part by donations from him and his wife, has bought more than 10 hectares of woodland for conservation.",
+          "sourceId": "nyt-2021",
+          "locator": "paragraphs beginning 'Miyazaki lives with his wife, Akemi' and 'IT IS TEMPTING'"
+        },
+        {
+          "kind": "words",
+          "claim": "In a 1988 interview he said that 'the deep forest is connected in some way to the darkness deep in my heart'.",
+          "sourceId": "nyt-2021",
+          "locator": "paragraph beginning 'There is a curious mix of fatalism and hope'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Totoro Fund, set up in April 1990 to preserve the Sayama Hills woods, says he was one of its five initial contributors, whose efforts drew donations from all across Japan.",
+          "sourceId": "totoro-fund",
+          "locator": "English page, paragraph beginning 'In April of 1990'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Draw the work by hand: the pencil is the animator's tool, not the computer.",
+      "sourceId": "nyt-2021",
+      "locator": "opening section, paragraph beginning '“I believe that the tool of an animator is the pencil,”'"
+    },
+    {
+      "text": "Before you draw something, go and look at the real thing.",
+      "sourceId": "newyorker-2005",
+      "locator": "paragraphs on the Spirited Away documentary, ending 'returning to the studio to study the video'"
+    },
+    {
+      "text": "Keep control of your work; refuse the cuts and deals that would change it.",
+      "sourceId": "guardian-2005",
+      "locator": "paragraphs beginning 'Miyazaki taps a cigarette from a silver case' and 'The director chortles'"
+    },
+    {
+      "text": "Do not split people into good and bad; treat every character with respect, foolishness included.",
+      "sourceId": "nyt-2021",
+      "locator": "paragraphs beginning 'This embrace of contradictions' and 'In a 1991 directorial memo for “Porco Rosso,”'"
+    },
+    {
+      "text": "Keep your own gloom to yourself; do not pass it on to children.",
+      "sourceId": "newyorker-2005",
+      "locator": "final paragraph"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I believe that the tool of an animator is the pencil.",
+      "sourceId": "nyt-2021",
+      "locator": "interview with Ligaya Mishan, T Magazine, 23 November 2021, opening section",
+      "translation": "Spoken in Japanese; interpreter Yuriko Banno, 2021"
+    },
+    {
+      "text": "I have been very fortunate to be able to do the same job for 40 years. That's rare in any era.",
+      "sourceId": "guardian-2005",
+      "locator": "interview with Xan Brooks, The Guardian, 14 September 2005, paragraph beginning 'And here's the thing'",
+      "translation": "English as published in The Guardian; translator not named, 2005"
+    },
+    {
+      "text": "I'm not a god who decides on what is good and bad. We as humans make mistakes.",
+      "sourceId": "nyt-2021",
+      "locator": "interview with Ligaya Mishan, T Magazine, 23 November 2021, paragraph beginning 'This embrace of contradictions'",
+      "translation": "Spoken in Japanese; interpreter Yuriko Banno, 2021"
+    },
+    {
+      "text": "I don't take long vacations. I don't have the time. My idea of a vacation is a nap.",
+      "sourceId": "newyorker-2005",
+      "locator": "Margaret Talbot, 'The Auteur of Anime', The New Yorker, 17 January 2005 issue, paragraph beginning 'Miyazaki threw himself into the project'",
+      "translation": "Spoken in Japanese through an unnamed translator, 2004"
+    }
+  ],
+  "definingMoment": {
+    "text": "In March 2003 Spirited Away won the Oscar for best animated feature. Miyazaki did not go to the ceremony in Los Angeles. In a handwritten statement he said it was regrettable that he could not \"rejoice from my heart over the prize because of the deeply sad events taking place in the world\", which The Japan Times read as a reference to the war in Iraq.",
+    "sourceIds": [
+      "japantimes-2003",
+      "nyt-2021"
+    ]
+  },
+  "shadow": {
+    "text": "He worked such hours that his son Goro rarely saw him: Goro told The New Yorker that when he was small his father came home at 2 a.m. and got up at 8, and called him \"such an absent father\". His wife Akemi, a former fellow animator, stopped working to raise their two sons at his request, and he has said she \"hasn't forgiven\" him. A Japanese TV documentary on Spirited Away shows him telling his young staff \"This is pathetic\". His mentor Isao Takahata wrote in 1996 that Miyazaki \"becomes enraged\" and that in his early days at Toei Animation he would scare colleagues by \"suddenly screaming, 'Let this damned studio burn down!'\" In 2021 The New York Times described him as \"an environmentalist who can't bear to give up his cigarettes or wheezing car\".",
+    "sourceIds": [
+      "newyorker-2005",
+      "nyt-2021"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you guess at something you could have gone and looked at first?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "Starting Point: 1979–1996",
+      "year": 1996
+    },
+    {
+      "title": "Turning Point: 1997–2008",
+      "year": 2008
+    }
+  ],
+  "sources": [
+    {
+      "id": "guardian-2005",
+      "kind": "primary",
+      "title": "A god among animators (interview with Hayao Miyazaki)",
+      "author": "Xan Brooks",
+      "year": 2005,
+      "publisher": "The Guardian",
+      "url": "https://www.theguardian.com/film/2005/sep/14/japan.awardsandprizes"
+    },
+    {
+      "id": "newyorker-2005",
+      "kind": "secondary",
+      "title": "The Auteur of Anime",
+      "author": "Margaret Talbot",
+      "year": 2005,
+      "publisher": "The New Yorker",
+      "url": "https://www.newyorker.com/magazine/2005/01/17/the-auteur-of-anime"
+    },
+    {
+      "id": "nyt-2021",
+      "kind": "secondary",
+      "title": "Hayao Miyazaki Prepares to Cast One Last Spell",
+      "author": "Ligaya Mishan",
+      "year": 2021,
+      "publisher": "The New York Times (T Magazine)",
+      "url": "https://www.nytimes.com/2021/11/23/t-magazine/hayao-miyazaki-studio-ghibli.html"
+    },
+    {
+      "id": "japantimes-2003",
+      "kind": "secondary",
+      "title": "Miyazaki mum on Oscar, citing war",
+      "author": "The Japan Times",
+      "year": 2003,
+      "publisher": "The Japan Times",
+      "url": "https://www.japantimes.co.jp/news/2003/03/25/national/miyazaki-mum-on-oscar-citing-war/"
+    },
+    {
+      "id": "totoro-fund",
+      "kind": "secondary",
+      "title": "Totoro Fund (English page)",
+      "author": "Totoro no Furusato Foundation",
+      "year": 2026,
+      "publisher": "Totoro no Furusato Foundation",
+      "url": "https://www.totoro.or.jp/english.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "ok",
+      "notes": "Real, living Japanese animator; not a politician, campaigner or religious founder; no account of sexual contact with a minor or of sexual violence found; his dark side is an absent father and a harsh temper at work."
+    },
+    "blindAgreement": 0.5,
+    "devilsAdvocate": "I attacked all five values and checked every cited sentence against the saved texts of the New Yorker, Guardian, NYT, Japan Times and nippon.com pieces. Compassion fell: only the draft picked it, it rested on two sources, and a hostile reader can set his leprosy-sanatorium visits against the rages, the harshness to staff and the absent fatherhood in the shadow. Craft and Hard work (also the blind pick's words) held, Integrity held on three sources, and Nature gained a third source in the Totoro Fund's own page. All four quotes matched; six sentences were tightened to what the sources say, and his smoking and car, which the NYT sets against his environmentalism, were added to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
