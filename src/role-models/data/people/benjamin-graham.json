@@ -1,0 +1,260 @@
+{
+  "id": "benjamin-graham",
+  "name": "Benjamin Graham",
+  "born": 1894,
+  "died": 1976,
+  "category": "money",
+  "areaIds": [
+    "lm_money",
+    "lm_mindset"
+  ],
+  "tagline": "A Wall Street analyst and teacher who taught investors to buy only with a margin of safety.",
+  "startedFrom": "He was born in London on 9 May 1894 and moved to New York with his family when he was one. His father died at 35, the family business failed within little more than a year, his mother's boarding house failed too, and the 1907 panic wiped out her small margin account. A clerical error delayed his Columbia scholarship by a semester, and to help support the family he took a full-time job at United States Express; he still graduated second in the class of 1914.",
+  "values": [
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said the two requirements for success on Wall Street are to think correctly and to think independently, and that his firm never followed the crowd.",
+          "sourceId": "butler-1976",
+          "locator": "pp. 40-41, answers on advice to a young analyst and on independent thinkers"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1929 he turned down Bernard Baruch's offer to make him a partner, because he saw no reason to be a junior partner even to Baruch.",
+          "sourceId": "kahn-milne-1977",
+          "locator": "Biographical sketch, 'Meeting the Baruchs', p. 16"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1923 he left his salaried post at a brokerage firm to manage a pool of investors' money through his own company, Grahar Corporation, and from 1926 the Benjamin Graham Joint Account.",
+          "sourceId": "kahn-milne-1977",
+          "locator": "Biographical sketch, 'Ben Becomes a Portfolio Manager', pp. 10-12"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that once you have reached a conclusion from the facts you should act on it even if others hesitate or differ, because you are neither right nor wrong because the crowd disagrees with you.",
+          "sourceId": "intelligent-investor-1973",
+          "locator": "Chapter 20, section 'To Sum Up', the fourth business rule"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Working full time for United States Express while he studied, he still graduated second in Columbia's class of 1914.",
+          "sourceId": "kahn-milne-1977",
+          "locator": "Biographical sketch, 'His Early Life', p. 2"
+        },
+        {
+          "kind": "words",
+          "claim": "He said that around 1925 he decided to learn more before writing a book, and so started teaching.",
+          "sourceId": "butler-1976",
+          "locator": "p. 35, answer to 'When did you decide to write your classic text, Security Analysis?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Jason Zweig writes that Graham taught himself Spanish to translate a novel and knew at least seven languages by the end of his life.",
+          "sourceId": "zweig-note",
+          "locator": "web page 'A Note on Benjamin Graham', paragraphs on his intellect"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He taught an evening course in security analysis at Columbia from 1928 until he retired from Wall Street in 1956, often staying after class to answer questions.",
+          "sourceId": "kahn-milne-1977",
+          "locator": "Biographical sketch, 'A Teaching Career Begins', pp. 19-20"
+        },
+        {
+          "kind": "witness",
+          "claim": "Warren Buffett wrote that he owes so much of what he knows about investing to Graham, and that his financial life changed when he bought The Intelligent Investor in 1949.",
+          "sourceId": "brk-2013-letter",
+          "locator": "section 'Some Thoughts About Investing', first paragraph and paragraph beginning 'And now back to Ben Graham'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Jason Zweig writes that John Templeton, William Ruane, Charlie Munger and Warren Buffett counted Graham as a mentor.",
+          "sourceId": "zweig-note",
+          "locator": "web page 'A Note on Benjamin Graham', opening paragraphs"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1926-1928 he fought the management of Northern Pipe Line, a former Standard Oil company, at its annual meetings, won two board seats with proxies for 38 percent of the shares, and got $70 a share paid out to shareholders.",
+          "sourceId": "kahn-milne-1977",
+          "locator": "Biographical sketch, 'The Northern Pipe Line Contest', pp. 12-14"
+        },
+        {
+          "kind": "witness",
+          "claim": "Buffett wrote that he admired Graham for having 'the guts to use current examples' in his book, leaving himself open to sneers if he was wrong.",
+          "sourceId": "brk-2013-letter",
+          "locator": "section 'Some Thoughts About Investing', paragraph beginning 'The 1949 edition of the book also recommended'"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that in the world of securities courage becomes the supreme virtue once adequate knowledge and a tested judgment are at hand.",
+          "sourceId": "intelligent-investor-1973",
+          "locator": "Chapter 20, section 'To Sum Up', the fourth business rule and the sentence after it"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Buy only when the price is well below what the thing is worth, so you have room to be wrong.",
+      "sourceId": "intelligent-investor-1973",
+      "locator": "Chapter 20, \"'Margin of Safety' as the Central Concept of Investment\", passages saying the margin of safety always depends on the price paid and is there to absorb miscalculations"
+    },
+    {
+      "text": "Find a method that suits you, then stick to it without reference to what other people do or say.",
+      "sourceId": "butler-1976",
+      "locator": "p. 40, answer to 'what advice would you have to a young man or woman'"
+    },
+    {
+      "text": "Do not borrow to invest; debt can sink you even when your judgment is right.",
+      "sourceId": "butler-1976",
+      "locator": "p. 34, answer to 'Did you see that coming at all-were you scared?'"
+    },
+    {
+      "text": "Treat a share as part of a real business and judge it as a businessman would.",
+      "sourceId": "intelligent-investor-1973",
+      "locator": "Chapter 20, section 'To Sum Up', opening paragraph"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Confronted with a like challenge to distill the secret of sound investment into three words, we venture the motto, MARGIN OF SAFETY.",
+      "sourceId": "intelligent-investor-1973",
+      "locator": "Chapter 20, \"'Margin of Safety' as the Central Concept of Investment\", opening paragraph"
+    },
+    {
+      "text": "Investment is most intelligent when it is most businesslike.",
+      "sourceId": "intelligent-investor-1973",
+      "locator": "Chapter 20, section 'To Sum Up', first sentence"
+    },
+    {
+      "text": "There are two requirements for success in Wall Street. One, you have to think correctly; and secondly, you have to think independently.",
+      "sourceId": "butler-1976",
+      "locator": "p. 41, answer to 'But there are independent thinkers on Wall Street'"
+    },
+    {
+      "text": "The main point is to have the right general principles and the character to stick to them.",
+      "sourceId": "butler-1976",
+      "locator": "p. 36, answer to 'That was the book, wasn't it?'"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1926 he read the reports pipeline companies filed with the Interstate Commerce Commission and found that Northern Pipe Line held about $95 a share in cash assets, mostly railroad bonds, while its stock sold at 65. He bought shares and asked the president to pay the spare cash to shareholders; the president told him that if he did not approve of the company's policies he should sell his shares. At the January 1927 annual meeting he had brought no one to second his motion, and the meeting adjourned. At the 1928 meeting he came with proxies for 38 percent of the shares, won two board seats, and a few weeks later the president agreed to pay out $70 a share.",
+    "sourceIds": [
+      "kahn-milne-1977"
+    ]
+  },
+  "shadow": {
+    "text": "He married three times. A 2012 USA Today review of Joe Carlen's biography calls him 'a thrice-married philanderer and an absentee dad': it says he divorced his first wife in 1937, married a young actress the next year and later his young secretary, and in later life set up house in San Diego with his dead son's French former lover while his family lived in Beverly Hills. In 1917 a margin trading account funded by his friend Algernon Tassin was called for more margin and sold at a considerable loss; he could not pay his share, and Tassin let him make it up at $60 a month. In 1919 he and his friends put money into the Savold Tire stock promotions; his biographers write that 'greed prevailed', and the issues collapsed. Before the 1929 crash he ran the Benjamin Graham Joint Account, which held his partners' money and his own, with about 44 percent borrowed money. In January 1930 a 93-year-old businessman, John Dix, told him to sell, pay off his debts and return the partners' capital; he thought the advice preposterous. The account lost 50 percent in 1930 and about 70 percent from 1929 to 1932. In the late 1920s he also helped buy a block of Unexcelled Manufacturing so that its founder-president could be replaced; his biographers write that he felt uneasy at ending the career of a man who had never done him any harm.",
+    "sourceIds": [
+      "usatoday-2012",
+      "ebsco-2024",
+      "kahn-milne-1977"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you commit to something this week without leaving yourself room to be wrong?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Intelligent Investor",
+      "year": 1949
+    },
+    {
+      "title": "Security Analysis (with David L. Dodd)",
+      "year": 1934
+    }
+  ],
+  "sources": [
+    {
+      "id": "intelligent-investor-1973",
+      "kind": "primary",
+      "title": "The Intelligent Investor, 4th revised edition (1973), Chapter 20, as reprinted in Classics: An Investor's Anthology, ed. Charles D. Ellis with James R. Vertin",
+      "author": "Benjamin Graham",
+      "year": 1989,
+      "publisher": "Dow Jones-Irwin (reprinted by permission of Harper & Row)",
+      "url": "https://archive.org/details/classicsinvestor0000unse"
+    },
+    {
+      "id": "butler-1976",
+      "kind": "primary",
+      "title": "An Hour with Mr. Graham (interview by Hartman L. Butler, Jr., La Jolla, 6 March 1976), in Benjamin Graham: The Father of Financial Analysis, Occasional Paper No. 5, pp. 33-41",
+      "author": "Benjamin Graham, interviewed by Hartman L. Butler, Jr.",
+      "year": 1977,
+      "publisher": "The Financial Analysts Research Foundation",
+      "url": "https://www.ivey.uwo.ca/media/3065497/ben-graham-father-financial-analysis.pdf"
+    },
+    {
+      "id": "kahn-milne-1977",
+      "kind": "secondary",
+      "title": "Benjamin Graham: The Father of Financial Analysis (Occasional Paper No. 5)",
+      "author": "Irving Kahn and Robert D. Milne",
+      "year": 1977,
+      "publisher": "The Financial Analysts Research Foundation",
+      "url": "https://www.ivey.uwo.ca/media/3065497/ben-graham-father-financial-analysis.pdf"
+    },
+    {
+      "id": "brk-2013-letter",
+      "kind": "secondary",
+      "title": "Berkshire Hathaway 2013 shareholder letter, section 'Some Thoughts About Investing'",
+      "author": "Warren E. Buffett",
+      "year": 2014,
+      "publisher": "Berkshire Hathaway Inc.",
+      "url": "https://www.berkshirehathaway.com/letters/2013ltr.pdf"
+    },
+    {
+      "id": "zweig-note",
+      "kind": "secondary",
+      "title": "A Note on Benjamin Graham",
+      "author": "Jason Zweig",
+      "year": "n.d.",
+      "publisher": "jasonzweig.com (author's site; Zweig edited the 2003 revised edition of The Intelligent Investor)",
+      "url": "https://jasonzweig.com/a-note-on-benjamin-graham/"
+    },
+    {
+      "id": "usatoday-2012",
+      "kind": "secondary",
+      "title": "Review: 'Einstein of Money' details life of Buffett's mentor",
+      "author": "Kathryn Canavan (special for USA Today)",
+      "year": 2012,
+      "publisher": "USA Today, as published by ABC News, 19 August 2012",
+      "url": "https://www.goodmorningamerica.com/amp/news/story/review-einstein-money-details-life-buffetts-mentor-17037538"
+    },
+    {
+      "id": "ebsco-2024",
+      "kind": "secondary",
+      "title": "Benjamin Graham (investor), Research Starters",
+      "author": "Tyler Biscontini",
+      "year": 2024,
+      "publisher": "EBSCO",
+      "url": "https://ebsco.com/research-starters/business-and-management/benjamin-graham-investor"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real person (1894-1976), Wall Street analyst, fund manager and Columbia teacher, not a politician or religious founder; no account of sexual contact with a minor or of sexual violence found; his dark side is a documented string of affairs and three marriages, a 1919 stock promotion he joined out of greed, and heavy borrowing that cost his partners about 70 percent in 1929-1932."
+    },
+    "blindAgreement": 0.5,
+    "devilsAdvocate": "I attacked every value against the Kahn and Milne monograph and its 1976 interview, the Internet Archive's own text of Intelligent Investor chapter 20, Buffett's 2013 letter, Zweig, USA Today and EBSCO. Safety fell: besides the 44 percent margin debt that lost about 70 percent in 1929-1932, the monograph records a 1917 margin call on a friend's account and the 1919 Savold Tire speculation, a pattern of losses on borrowed or speculative money before he turned cautious, so it is told in the shadow and margin of safety stays as his principle. Independence and Courage held, each with a third source from chapter 20's fourth business rule; Learning and Mentorship held; the anthology 'p. 551' was inferred, not seen, so it became a chapter-level locator.",
+    "checkedOn": "2026-11-10"
+  }
+}
