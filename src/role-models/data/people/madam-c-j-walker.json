@@ -1,0 +1,378 @@
+{
+  "id": "madam-c-j-walker",
+  "name": "Madam C. J. Walker",
+  "pronoun": "she",
+  "born": 1867,
+  "died": 1919,
+  "category": "builders",
+  "areaIds": [
+    "lm_money",
+    "lm_mission",
+    "lm_contribution"
+  ],
+  "tagline": "A laundress who built her own hair-care company and taught thousands of women to sell",
+  "startedFrom": "She was born Sarah Breedlove on 23 December 1867 on the Delta, Louisiana plantation where her parents had been enslaved; orphaned at seven, she worked in the cotton fields with her sister and had almost no schooling as a child. At 14 she married to escape an abusive brother-in-law, and at 20 she was a widow with a two-year-old daughter. In St. Louis she washed laundry for as little as $1.50 a day until she was about 38, while losing her own hair to a scalp disease.",
+  "values": [
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 1917 she told The New York Times that if she had accomplished anything in life it was because she had been willing to work hard.",
+          "sourceId": "nyt-1917",
+          "locator": "New York Times Magazine, 4 Nov. 1917, p. 4, col. 4 (as quoted by Quote Investigator)"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1919 she said that what success she had obtained was the result of many sleepless nights and real hard work.",
+          "sourceId": "dallas-express-1919",
+          "locator": "The Dallas Express, 29 Mar. 1919, p. 4, col. 7 (as quoted by Quote Investigator)"
+        },
+        {
+          "kind": "deed",
+          "claim": "To launch her products she travelled for a year and a half through the South and Southeast, selling door to door and demonstrating her treatment in churches and lodges.",
+          "sourceId": "bundles-essay",
+          "locator": "Brief Biographical Essay, paragraph beginning 'To promote her products'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Indiana Historical Society says she worked hard throughout her life and that this took a toll on her health.",
+          "sourceId": "ihs-hoosiers",
+          "locator": "Famous Hoosiers page, paragraph beginning 'Madam Walker worked hard throughout her life'"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At the National Negro Business League's 1912 convention she took the floor and introduced herself when Booker T. Washington had not included her on the podium.",
+          "sourceId": "nara-2021",
+          "locator": "Opening paragraph after the 1912 quotation"
+        },
+        {
+          "kind": "words",
+          "claim": "In the same 1912 speech she called building an industrial school in Africa 'the real ambition of my life'.",
+          "sourceId": "nnbl-1912",
+          "locator": "Speech of 23 Aug. 1912, final paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Harvard Business School's case on her, as described by HBS Working Knowledge, is built on her 'obstacles, shrewd strategic moves, ambition, and grit'.",
+          "sourceId": "hbswk-2007",
+          "locator": "Second paragraph ('How did Walker journey from the cotton fields...')"
+        },
+        {
+          "kind": "witness",
+          "claim": "Ida B. Wells called her a 'demonstration of what a black woman who has vision and ambition can really do'.",
+          "sourceId": "bundles-aaihs-2019",
+          "locator": "Paragraph beginning 'While male authors' (quoting Wells, Crusade for Justice)"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Less than a year after moving to Indianapolis in 1910 she gave $1,000 to the building fund of the city's 'colored' YMCA, and in New York she gave $5,000 to the NAACP's anti-lynching work.",
+          "sourceId": "bundles-essay",
+          "locator": "Brief Biographical Essay, paragraphs beginning 'By early 1910' and 'Walker herself moved to New York in 1916'"
+        },
+        {
+          "kind": "deed",
+          "claim": "She paid tuition for six students at Tuskegee Institute and, just before she died, changed her will to leave two-thirds of future net profits to charity.",
+          "sourceId": "nwhm-2015",
+          "locator": "Biography, last paragraph ('As her wealth increased')"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1912 she told the National Negro Business League that her object was not only to make money for herself: 'I love to use a part of what I make in trying to help others.'",
+          "sourceId": "nnbl-1912",
+          "locator": "Speech of 23 Aug. 1912, paragraph beginning 'Now my object in life'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Contemporary Black Biography calls her 'the leading black philanthropist of her day'.",
+          "sourceId": "gale-cbb",
+          "locator": "Paragraph beginning 'Walker set a good example to her saleswomen'"
+        }
+      ]
+    },
+    {
+      "word": "Self-reliance",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 1912 she said she had come from the cotton fields to the washtub and the cook kitchen and had then 'promoted myself' into manufacturing, and that she had built her own factory on her own ground.",
+          "sourceId": "nnbl-1912",
+          "locator": "Speech of 23 Aug. 1912, paragraphs beginning 'I have been trying' and 'I have built my own factory'"
+        },
+        {
+          "kind": "deed",
+          "claim": "When she could not attract big-name backers she put $10,000 of her own money into the incorporated company and made herself its sole shareholder.",
+          "sourceId": "gates-pbs-2013",
+          "locator": "Paragraph beginning 'At the same time, Walker had the foresight to incorporate in 1910'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In September 1911 she incorporated the company with herself as the sole stockholder.",
+          "sourceId": "ihs-essay",
+          "locator": "Paragraph beginning 'In 1908, after a year in Denver'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Her biographer A'Lelia Bundles writes that her three brief marriages, one ended by death and two by husbands who cheated on her, surely motivated her to be self-sufficient.",
+          "sourceId": "bundles-mentors",
+          "locator": "Third paragraph ('This is not to ignore the men in her life')"
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After a white mob killed more than three dozen Black people in East St. Louis in July 1917, she joined the Harlem leaders who took a petition for a federal anti-lynching law to the White House.",
+          "sourceId": "bundles-essay",
+          "locator": "Brief Biographical Essay, paragraph beginning 'In July 1917'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1915 she started a lawsuit against discrimination at an Indianapolis theater, and during the First World War she joined a delegation to Washington protesting the War Department's segregation policies.",
+          "sourceId": "ihs-hoosiers",
+          "locator": "Famous Hoosiers page, paragraph beginning 'Though most of her activities'"
+        },
+        {
+          "kind": "words",
+          "claim": "At her agents' 1917 convention she told them: 'We should protest until the American sense of justice is so aroused that such affairs as the East St. Louis riot be forever impossible.'",
+          "sourceId": "bundles-essay",
+          "locator": "Brief Biographical Essay, paragraph beginning 'As her business continued to grow'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Indiana Historical Society writes that she 'fought against prejudice'.",
+          "sourceId": "ihs-hoosiers",
+          "locator": "Famous Hoosiers page, paragraph beginning 'Though most of her activities'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Work hard, and once you start something, start it without doubt and keep at it.",
+      "sourceId": "nyt-1917",
+      "locator": "New York Times Magazine, 4 Nov. 1917, p. 4, col. 4 ('I never yet started anything doubtingly'; as quoted by Quote Investigator)"
+    },
+    {
+      "text": "If nobody gives you the floor, stand up, take it and show your numbers.",
+      "sourceId": "nnbl-1912",
+      "locator": "Speech of 23 Aug. 1912, opening ('you are not going to shut the door in my face') and her yearly takings; see also nara-2021, opening paragraph"
+    },
+    {
+      "text": "Grow by helping other people earn: train them to sell, and to run their own shop.",
+      "sourceId": "gates-pbs-2013",
+      "locator": "Paragraphs beginning 'Perhaps most important' and 'Careful to position herself' (brochure: 'Open your own shop; secure prosperity and freedom')"
+    },
+    {
+      "text": "Give back part of what you earn, and ask the people you lead to do the same.",
+      "sourceId": "bundles-mentors",
+      "locator": "Paragraph beginning 'In 1917, at the first national convention' ('I want my agents to feel that their first duty is to humanity')"
+    },
+    {
+      "text": "After every performance, ask how you did and how you can do better.",
+      "sourceId": "bundles-mentors",
+      "locator": "Paragraph beginning 'Kelly also served as her private tutor' (Violet Davis Reynolds' recollection)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "If I have accomplished anything in life it is because I have been willing to work hard.",
+      "sourceId": "nyt-1917",
+      "locator": "New York Times Magazine, 4 Nov. 1917, 'Wealthiest Negro Woman's Suburban Mansion', p. 4, col. 4 (as quoted by Quote Investigator)"
+    },
+    {
+      "text": "I never yet started anything doubtingly, and I have always believed in keeping at things with a vim.",
+      "sourceId": "nyt-1917",
+      "locator": "New York Times Magazine, 4 Nov. 1917, 'Wealthiest Negro Woman's Suburban Mansion', p. 4, col. 4 (as quoted by Quote Investigator)"
+    },
+    {
+      "text": "I am not ashamed of my humble beginning.",
+      "sourceId": "nnbl-1912",
+      "locator": "Speech to the 13th annual convention of the National Negro Business League, Chicago, 23 Aug. 1912"
+    },
+    {
+      "text": "I have built my own factory on my own ground.",
+      "sourceId": "nnbl-1912",
+      "locator": "Speech to the 13th annual convention of the National Negro Business League, Chicago, 23 Aug. 1912"
+    }
+  ],
+  "definingMoment": {
+    "text": "In August 1912 she went to the National Negro Business League convention in Chicago, led by Booker T. Washington, who had not put her on the podium. She took the floor anyway. She told the delegates she had started in business seven years earlier with $1.50, gave her takings year by year, and said she had come from the cotton fields to the washtub and the cook kitchen and had then promoted herself into manufacturing hair goods. She also asked for support for her plan to build an industrial school in Africa. Five years later, by the account of the National Archives and of Contemporary Black Biography, she owned and ran the largest Black-owned company in the United States.",
+    "sourceIds": [
+      "nnbl-1912",
+      "nara-2021",
+      "gale-cbb"
+    ]
+  },
+  "shadow": {
+    "text": "In 1905 and 1906 she sold Annie Turnbo Malone's Poro hair products as an agent in St. Louis and Denver. Not long after her marriage to C. J. Walker in early 1906 the two women fell out, and by April she was selling her own 'Wonderful Hair Grower', a name Henry Louis Gates calls uncomfortably close to Turnbo's. She said the formula came to her in a dream. Collectors Weekly (2015), quoting her biographer and descendant A'Lelia Bundles, reports that Malone said 'You stole my formula' and denounced Walker's business in a letter to a Denver paper, and calls Walker's ointment a slightly tweaked version of Malone's sulphur recipe; Bundles writes that the recipe had been in use for centuries and that the tie to Malone was 'more transactional than collaborative'. Her system spread the hot comb and the pressing oil Glossine. Booker T. Washington worried that hair straighteners would lead Black women to take on white ideas of beauty, and ministers denounced products like hers (Gates); the Indiana Historical Society says she worked on mixtures to grow and to straighten hair, while Bundles says she never used the words 'hair straightener' in her ads, and in 1919 she told a reporter she did not claim to straighten hair but to grow it. The Indiana Historical Society says her mansion, Villa Lewaro, cost $350,000 and strained her resources to the limit, and that its gold-leaf piano and pipe organ were not paid for in full for several years; the sociologist E. Franklin Frazier wrote in 1957 that she set a standard for 'conspicuous consumption'. Often called a millionaire, she denied it in a letter of 4 March 1918; her estate was taxed in 1922 on $509,864, and Bundles, adding in the company's value, puts her total worth above one million dollars.",
+    "sourceIds": [
+      "bundles-malone",
+      "bundles-mentors",
+      "gates-pbs-2013",
+      "cw-2015",
+      "bundles-essay",
+      "bundles-aaihs-2019",
+      "ihs-essay"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you wait to be invited when you could have stood up and taken the floor?",
+    "principleIndex": 1
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "nnbl-1912",
+      "kind": "primary",
+      "title": "Speech to the 13th annual convention of the National Negro Business League, Institutional Church, Chicago, 23 August 1912 (transcription by Speaking While Female from the League's records, Library of Congress)",
+      "author": "Madam C. J. Walker",
+      "year": 1912,
+      "url": "https://speakingwhilefemale.co/business-walker/"
+    },
+    {
+      "id": "nyt-1917",
+      "kind": "primary",
+      "title": "Wealthiest Negro Woman's Suburban Mansion (interview), The New York Times Magazine, 4 November 1917, p. 4; quoted in Quote Investigator, 'There Is No Royal and Flower Strewn Road To Success' (12 February 2021)",
+      "author": "The New York Times (interviewing Madam C. J. Walker)",
+      "year": 1917,
+      "publisher": "The New York Times",
+      "url": "https://quoteinvestigator.com/2021/02/12/flower-strewn/"
+    },
+    {
+      "id": "dallas-express-1919",
+      "kind": "primary",
+      "title": "The World's Famous Hair Culturist Puts New Toilet Articles On The Market, The Dallas Express, 29 March 1919, p. 4; quoted in Quote Investigator (12 February 2021)",
+      "author": "The Dallas Express (quoting Madam C. J. Walker)",
+      "year": 1919,
+      "url": "https://quoteinvestigator.com/2021/02/12/flower-strewn/"
+    },
+    {
+      "id": "bundles-essay",
+      "kind": "secondary",
+      "title": "Madam C.J. Walker: A Brief Biographical Essay (with FAQs), official Madam C. J. Walker website",
+      "author": "A'Lelia Bundles (biographer and great-great-granddaughter)",
+      "year": 2020,
+      "url": "https://madamcjwalker.com/about/"
+    },
+    {
+      "id": "bundles-aaihs-2019",
+      "kind": "secondary",
+      "title": "Untangling Madam C.J. Walker's Story (Black Perspectives, 24 May 2019)",
+      "author": "A'Lelia Bundles",
+      "year": 2019,
+      "publisher": "African American Intellectual History Society",
+      "url": "https://www.aaihs.org/untangling-madam-c-j-walkers-story/"
+    },
+    {
+      "id": "bundles-mentors",
+      "kind": "secondary",
+      "title": "Madam Walker's Mentors, Sister Friends & Rivals (blog post)",
+      "author": "A'Lelia Bundles",
+      "year": 2020,
+      "url": "https://aleliabundles.com/madam-walkers-mentors-sister-friends-rivals/"
+    },
+    {
+      "id": "bundles-malone",
+      "kind": "secondary",
+      "title": "The Facts about Madam C. J. Walker and Annie Malone (blog post)",
+      "author": "A'Lelia Bundles",
+      "year": 2020,
+      "url": "https://aleliabundles.com/the-facts-about-madam-c-j-walker-and-annie-malone/"
+    },
+    {
+      "id": "ihs-essay",
+      "kind": "secondary",
+      "title": "Madam C.J. Walker (essay prepared by IHS staff)",
+      "author": "Indiana Historical Society staff",
+      "year": 2018,
+      "publisher": "Indiana Historical Society",
+      "url": "https://indianahistory.org/wp-content/uploads/Madam-Walker-Essay.pdf"
+    },
+    {
+      "id": "ihs-hoosiers",
+      "kind": "secondary",
+      "title": "Madam C. J. Walker (Famous Hoosiers, educator resources)",
+      "author": "Indiana Historical Society",
+      "year": "n.d. (read 2026)",
+      "publisher": "Indiana Historical Society",
+      "url": "https://indianahistory.org/education/educator-resources/famous-hoosiers/madam-c-j-walker/"
+    },
+    {
+      "id": "gates-pbs-2013",
+      "kind": "secondary",
+      "title": "Madam Walker, the First Black American Woman to Be a Self-Made Millionaire (100 Amazing Facts About the Negro, The African Americans: Many Rivers to Cross)",
+      "author": "Henry Louis Gates Jr.",
+      "year": 2013,
+      "publisher": "PBS / The Root",
+      "url": "https://www.pbs.org/wnet/african-americans-many-rivers-to-cross/history/madam-walker-the-first-black-american-woman-to-be-a-self-made-millionaire/"
+    },
+    {
+      "id": "hbswk-2007",
+      "kind": "secondary",
+      "title": "HBS Cases: Beauty Entrepreneur Madam Walker (HBS Working Knowledge, 25 June 2007, on the case by Nancy F. Koehn et al.)",
+      "author": "Martha Lagace",
+      "year": 2007,
+      "publisher": "Harvard Business School",
+      "url": "https://www.library.hbs.edu/working-knowledge/hbs-cases-beauty-entrepreneur-madam-walker"
+    },
+    {
+      "id": "nara-2021",
+      "kind": "secondary",
+      "title": "Madam C. J. Walker's Rags-to-Riches Story Found in the Holdings of the National Archives (Pieces of History, 22 July 2021)",
+      "author": "Missy McNatt",
+      "year": 2021,
+      "publisher": "U.S. National Archives",
+      "url": "https://prologue.blogs.archives.gov/2021/07/22/madam-c-j-walkers-rags-to-riches-story-found-in-the-holdings-of-the-national-archives/"
+    },
+    {
+      "id": "nwhm-2015",
+      "kind": "secondary",
+      "title": "Madam C. J. Walker (biography)",
+      "author": "Debra Michals",
+      "year": 2015,
+      "publisher": "National Women's History Museum",
+      "url": "https://www.womenshistory.org/education-resources/biographies/madam-cj-walker"
+    },
+    {
+      "id": "gale-cbb",
+      "kind": "secondary",
+      "title": "Walker, Madame C. J. 1867-1919, in Contemporary Black Biography (via Encyclopedia.com)",
+      "author": "James J. Podesta",
+      "year": "n.d. (Gale; read 2026)",
+      "publisher": "Gale",
+      "url": "https://www.encyclopedia.com/education/news-wires-white-papers-and-books/walker-madame-c-j-1867-1919"
+    },
+    {
+      "id": "cw-2015",
+      "kind": "secondary",
+      "title": "The Sharecropper's Daughter Who Made Black Women Proud of Their Hair (Collectors Weekly, 31 August 2015; reprinted in Ms. magazine, 9 September 2015)",
+      "author": "Hunter Oatman-Stanford",
+      "year": 2015,
+      "publisher": "Collectors Weekly",
+      "url": "https://www.collectorsweekly.com/articles/madam-walker/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real early-20th-century businesswoman (1867-1919), not fictional, not a living politician or campaigner, not the founder of a religion; no account of sexual contact by her with anyone under 16 or of sexual violence by her was found; her dark side (a contested break with her former employer Annie Turnbo Malone, the hair-straightening criticism, lavish spending, the disputed 'millionaire' label) is shadow, not an owner case."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked all five draft values against the 1912 speech transcript, Quote Investigator's 1917 and 1919 newspaper texts, the National Archives, Indiana Historical Society, Gates, HBS, the National Women's History Museum and Bundles' own essays. Hard work, Generosity, Self-reliance and Justice held and match the blind pick; Ambition, picked only by the draft, held with four sources (her 1912 words, the National Archives, HBS and Ida B. Wells), so the blind pick's Mentorship was not added. All four quotes check. The shadow now adds Malone's 'You stole my formula' charge and her letter to a Denver paper, uses Gates' and the Society's exact wording, and the 'largest Black-owned company' claim is credited to its sources.",
+    "checkedOn": "2026-11-10"
+  }
+}
