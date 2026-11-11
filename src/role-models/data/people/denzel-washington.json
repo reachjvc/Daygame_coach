@@ -1,0 +1,339 @@
+{
+  "id": "denzel-washington",
+  "name": "Denzel Washington",
+  "born": 1954,
+  "died": null,
+  "category": "charisma",
+  "areaIds": [
+    "lm_spirituality",
+    "lm_mission",
+    "lm_contribution"
+  ],
+  "tagline": "An actor of faith and craft who made lifting up the next generation part of the work.",
+  "startedFrom": "He grew up in Mount Vernon, New York, the son of a Pentecostal minister who worked two jobs and a mother who ran her own beauty shop. He spent much of his childhood at the local Boys Club, and by his own account he was an uninspired student and a less gifted athlete than he wanted to be.",
+  "values": [
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In December 2024, a week before he turned 70, he was baptised and given a minister's license at Kelly Temple Church of God in Christ in Harlem.",
+          "sourceId": "variety-2024",
+          "locator": "opening paragraphs"
+        },
+        {
+          "kind": "words",
+          "claim": "He told Penn graduates that if he falls he wants to fall back on nothing 'except my faith'.",
+          "sourceId": "penn-2011",
+          "locator": "after the Nelson Mandela quote, opening of the 'Fall forward' passage"
+        },
+        {
+          "kind": "witness",
+          "claim": "The White House citation for his Presidential Medal of Freedom (January 2025) named his 'unflinching faith in God and family'.",
+          "sourceId": "fordham-2025",
+          "locator": "second paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "A Boys & Girls Club member from age five, he worked there as a day camp and sleep-away camp counsellor and by 2018 had been its national spokesperson for about 25 years.",
+          "sourceId": "cbs-2018-club",
+          "locator": "paragraphs 1-4"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2006 he published A Hand to Guide Me, stories from 74 people about their mentors, with part of the proceeds going to the Boys and Girls Clubs; he credits his Boys Club mentor Billy Thomas.",
+          "sourceId": "startribune-2006",
+          "locator": "paragraphs 2, 4, 5 and 7"
+        },
+        {
+          "kind": "witness",
+          "claim": "Former scholarship holder Eric Lawrence Taylor said Washington 'has been mentoring artists of color for a long time'.",
+          "sourceId": "fordham-2025",
+          "locator": "section 'Fordham Roots—and a Legacy of Giving Back'"
+        },
+        {
+          "kind": "words",
+          "claim": "In 2021 he said he was 'more interested in directing because I'm more interested in helping others' and that he wants to mentor young actors.",
+          "sourceId": "nyt-dowd-2021",
+          "locator": "coffee interview passage, as quoted in GetReligion, 8 Dec 2021"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Alongside some 50 films he kept returning to Broadway: Julius Caesar, Checkmates, A Raisin in the Sun, Fences (Tony for Best Actor) and The Iceman Cometh in 2018.",
+          "sourceId": "cbs-2018-iceman",
+          "locator": "paragraphs 2 and 5-6"
+        },
+        {
+          "kind": "witness",
+          "claim": "Director George C. Wolfe called him 'an incredibly skilled actor who uses all his skill set to disappear inside of the characters'.",
+          "sourceId": "cbs-2018-iceman",
+          "locator": "paragraph after the Iceman Cometh photo"
+        },
+        {
+          "kind": "witness",
+          "claim": "Tom Hanks told the New York Times: 'He is our Brando. Nicholson. Olivier.'",
+          "sourceId": "nyt-dowd-2021",
+          "locator": "as quoted in GetReligion, 8 Dec 2021, third paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "His Fordham professor Robinson Stone, who had acted with Paul Robeson, said Washington's 1977 student Othello was 'the best performance of Othello I'd ever seen'.",
+          "sourceId": "fordham-2025",
+          "locator": "section 'Fordham Roots—and a Legacy of Giving Back'"
+        }
+      ]
+    },
+    {
+      "word": "Family",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 2024 he and his daughter Katia produced the film of August Wilson's The Piano Lesson, directed by his son Malcolm and starring his son John David, with his wife Pauletta in a role.",
+          "sourceId": "npr-2024",
+          "locator": "introduction and second station break"
+        },
+        {
+          "kind": "witness",
+          "claim": "His son John David said of growing up: 'It's my dad coaching us', and that they lived 'somewhat of, I think, a normal life because that's the environment they set'.",
+          "sourceId": "npr-2024",
+          "locator": "answer on fandom and childhood memories"
+        },
+        {
+          "kind": "witness",
+          "claim": "At his baptism in December 2024 his wife Pauletta said: 'Forty-six years later, here I'm still standing next to him', and that he had set 'a great example for our children'.",
+          "sourceId": "variety-2024",
+          "locator": "paragraph on Pauletta Washington"
+        },
+        {
+          "kind": "words",
+          "claim": "In 2021 he said he had promised his 97-year-old mother before she died to 'attempt to honor her and God by living the rest of my days in a way that would make her proud'.",
+          "sourceId": "nyt-dowd-2021",
+          "locator": "coffee interview passage, as quoted in GetReligion, 8 Dec 2021"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 2011 he gave Fordham $2 million to endow the Denzel Washington Chair in Theatre and $250,000 for a theatre scholarship.",
+          "sourceId": "fordham-2025",
+          "locator": "section 'Fordham Roots—and a Legacy of Giving Back'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Portions of the proceeds of his 2006 book went to the Boys and Girls Clubs of America.",
+          "sourceId": "startribune-2006",
+          "locator": "paragraph 4"
+        },
+        {
+          "kind": "words",
+          "claim": "He told graduates to give everything they've got, 'whether it's your time, your talent, your prayers, or your treasure'.",
+          "sourceId": "penn-2011",
+          "locator": "after 'The world needs a lot'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Take the risk and expect to fail; when you fall, fall forward, not back on a safe plan.",
+      "sourceId": "penn-2011",
+      "locator": "'Fall forward' passage and closing charge"
+    },
+    {
+      "text": "Use what you have, your time, talent, prayers and money, for others now; you cannot take it with you.",
+      "sourceId": "penn-2011",
+      "locator": "after 'The world needs a lot'"
+    },
+    {
+      "text": "Judge your work by whom you lifted up, not by what you made.",
+      "sourceId": "nyt-dowd-2021",
+      "locator": "coffee interview passage, as quoted in GetReligion, 8 Dec 2021"
+    },
+    {
+      "text": "Work for the reward, not the award: enjoy praise, but do not live for it.",
+      "sourceId": "cbs-2018-iceman",
+      "locator": "answer to 'How much more is there left for Denzel Washington?'"
+    },
+    {
+      "text": "Refill your spirit every morning, because the day wears it down.",
+      "sourceId": "nyt-dowd-2021",
+      "locator": "closing passage on The Daily Word, as quoted in GetReligion, 8 Dec 2021"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "If I'm going to fall, I don't want to fall back on anything, except my faith. I want to fall… forward.",
+      "sourceId": "penn-2011",
+      "locator": "Penn Commencement Address, 16 May 2011, after the Nelson Mandela quote"
+    },
+    {
+      "text": "I'm a God-fearing man. I try not to worry. Fear is contaminated faith.",
+      "sourceId": "nyt-dowd-2021",
+      "locator": "New York Times, 4 Dec 2021, passage on the Macbeth curse (as quoted in GetReligion, 8 Dec 2021)"
+    },
+    {
+      "text": "What I do, what I make, what I made — all of that — is that going to help me on the last day of my life? It's about, Who have you lifted up? Who have we made better?",
+      "sourceId": "nyt-dowd-2021",
+      "locator": "New York Times, 4 Dec 2021, coffee interview passage (as quoted in GetReligion, 8 Dec 2021)"
+    }
+  ],
+  "definingMoment": {
+    "text": "At 20, after switching from pre-med to pre-law to journalism at Fordham, he had a 1.8 grade average one semester and the university suggested he take time off. In the summer of 1975, working as a counsellor at a YMCA camp in Connecticut, he took part in a talent show, and another counsellor told him he should act. He went back to Fordham that fall, changed his major for the last time, and in March 1977, as a senior, starred as Othello in a university production.",
+    "sourceIds": [
+      "penn-2011",
+      "fordham-2025"
+    ]
+  },
+  "shadow": {
+    "text": "By his own account to Esquire in November 2024, drinking was 'a fifteen-year pattern'. Part of it, he said, was the house his family built in 1999 with a ten-thousand-bottle wine cellar; late in those years he ordered two bottles at a time and drank both over the course of a day. He said: 'I've done a lot of damage to the body.' He stopped at 60, in late 2014. In the same interview he said: 'I shot dope just like they shot dope, but I never got strung out.' In September 2021 Ellen Pompeo said on her podcast that while directing a 2016 Grey's Anatomy episode he 'went nuts' on her when she went off-script; in January 2022 he told Variety he did not remember it. At the Cannes premiere of Highest 2 Lowest in May 2025 he pointed at a photographer and shouted at him to stop; when the photographer put his hands around his arm, he pulled away and told him again.",
+    "sourceIds": [
+      "eonline-2024",
+      "complex-2024",
+      "huffpost-2022",
+      "variety-2025"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you play it safe this week because you were afraid to fail?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "A Hand to Guide Me",
+      "year": 2006
+    }
+  ],
+  "sources": [
+    {
+      "id": "penn-2011",
+      "kind": "primary",
+      "title": "Fall Forward: Penn Commencement Address, 16 May 2011 (Almanac Vol. 57, No. 34)",
+      "author": "Denzel Washington",
+      "year": 2011,
+      "publisher": "University of Pennsylvania Almanac",
+      "url": "https://almanac.upenn.edu/archive/volumes/v57/n34/comm-washington.html"
+    },
+    {
+      "id": "nyt-dowd-2021",
+      "kind": "secondary",
+      "title": "Denzel Washington, Man on Fire",
+      "author": "Maureen Dowd",
+      "year": 2021,
+      "publisher": "The New York Times",
+      "url": "https://www.nytimes.com/2021/12/04/style/denzel-washington-man-on-fire.html"
+    },
+    {
+      "id": "cbs-2018-iceman",
+      "kind": "secondary",
+      "title": "Denzel Washington on when the work pays off",
+      "author": "Michelle Miller (CBS Sunday Morning)",
+      "year": 2018,
+      "publisher": "CBS News",
+      "url": "https://www.cbsnews.com/news/denzel-washington-the-iceman-cometh/"
+    },
+    {
+      "id": "cbs-2018-club",
+      "kind": "secondary",
+      "title": "Denzel Washington on his work with the Boys and Girls Club and the power of role models",
+      "author": "Andrea Park",
+      "year": 2018,
+      "publisher": "CBS News",
+      "url": "https://www.cbsnews.com/news/denzel-washington-on-his-work-with-the-boys-and-girls-club-and-the-power-of-role-models/"
+    },
+    {
+      "id": "startribune-2006",
+      "kind": "secondary",
+      "title": "Actor's book aims to give credit where credit is due",
+      "author": "Gregory A. Patterson",
+      "year": 2006,
+      "publisher": "Star Tribune (Minneapolis), via McClatchy-Tribune; archived by KSL",
+      "url": "https://www.ksl.com/article/737462/actors-book-aims-to-give-credit-where-credit-is-due"
+    },
+    {
+      "id": "fordham-2025",
+      "kind": "secondary",
+      "title": "Denzel Washington Awarded Presidential Medal of Freedom",
+      "author": "Ryan Stellabotte",
+      "year": 2025,
+      "publisher": "Fordham Magazine, Fordham University",
+      "url": "https://now.fordham.edu/fordham-magazine/denzel-washington-awarded-presidential-medal-of-freedom/"
+    },
+    {
+      "id": "variety-2024",
+      "kind": "secondary",
+      "title": "Denzel Washington Gets Baptised and Receives Minister License",
+      "author": "Zack Sharf",
+      "year": 2024,
+      "publisher": "Variety",
+      "url": "https://au.variety.com/2024/more/news/denzel-washington-baptised-minister-license-19354"
+    },
+    {
+      "id": "variety-2025",
+      "kind": "secondary",
+      "title": "Denzel Washington Appears to Fight Back Against Pushy Cannes Photographer and Yells 'Stop!' During Tense Red Carpet Moment",
+      "author": "Zack Sharf",
+      "year": 2025,
+      "publisher": "Variety",
+      "url": "https://variety.com/2025/film/festivals/denzel-washington-fights-cannes-photographer-1236404247/"
+    },
+    {
+      "id": "eonline-2024",
+      "kind": "secondary",
+      "title": "Denzel Washington shares he's been sober for nearly 10 years (quoting his Esquire interview of 20 Nov 2024)",
+      "author": "Tionah Lee",
+      "year": 2024,
+      "publisher": "E! Online, republished by NBC Los Angeles",
+      "url": "https://www.nbclosangeles.com/entertainment/entertainment-news/denzel-washington-shares-hes-been-sober-for-nearly-10-years/3565376/"
+    },
+    {
+      "id": "npr-2024",
+      "kind": "secondary",
+      "title": "'The Piano Lesson' was a family affair for John David and Malcolm Washington (Fresh Air transcript)",
+      "author": "Tonya Mosley",
+      "year": 2024,
+      "publisher": "NPR",
+      "url": "https://www.npr.org/2024/11/26/g-s1-35892/the-piano-lesson-was-a-family-affair-for-john-david-and-malcolm-washington"
+    },
+    {
+      "id": "complex-2024",
+      "kind": "secondary",
+      "title": "Denzel Washington Says He 'Shot Dope' But 'Never Got Strung Out' (quoting his Esquire interview by Ryan D'Agostino, Nov 2024)",
+      "author": "Trace William Cowen",
+      "year": 2024,
+      "publisher": "Complex",
+      "url": "https://www.complex.com/pop-culture/a/tracewilliamcowen/denzel-washington-drugs-alcohol"
+    },
+    {
+      "id": "huffpost-2022",
+      "kind": "secondary",
+      "title": "Denzel Washington responds to Ellen Pompeo's Grey's Anatomy story (reporting her podcast and his Variety interview)",
+      "author": "Kimberley Richards",
+      "year": 2022,
+      "publisher": "HuffPost UK",
+      "url": "https://www.huffingtonpost.co.uk/entry/ellen-pompeo-denzel-washington_uk_61d94aeee4b04b42ab80258f"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living actor and director, never a candidate or office holder, a licensed minister in an existing church, not a founder; no account of sexual contact with anyone under 16 or of sexual violence found. Shadow: about fifteen years of heavy wine drinking (his own account, 2024) and a shouting clash with a photographer at Cannes in 2025."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value and every sentence against the saved Penn speech, the GetReligion extracts of the NYT profile, the CBS, Star Tribune, Fordham, Variety and E!/NBC pages, and new NPR, Complex and HuffPost reports. Faith, Mentorship, Craft and Generosity held; Resilience fell because its evidence came from only two sources, mostly his own speech, and the blind pick's Family came in on the Piano Lesson family production, his son's and wife's words and his promise to his mother. The defining moment was tightened to his own wording (a 1.8 average one semester), the Cannes clash was put in the order the video shows, and the shadow gained his Esquire line on hard drugs and Ellen Pompeo's account of a clash on the Grey's Anatomy set, which he says he does not remember.",
+    "checkedOn": "2026-11-10"
+  }
+}
