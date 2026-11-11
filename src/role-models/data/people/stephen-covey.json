@@ -1,0 +1,293 @@
+{
+  "id": "stephen-covey",
+  "name": "Stephen Covey",
+  "born": 1932,
+  "died": 2012,
+  "category": "teachers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_family",
+    "lm_mission"
+  ],
+  "tagline": "A teacher who wrote his principles down, ran his family by them and sold them to companies around the world.",
+  "startedFrom": "He was born in Salt Lake City, Utah, in 1932 and grew up on an egg farm outside the city in a close Mormon family; his grandfather had founded the family's hotel business, Little America. In junior high a disease of the thighbones kept him on crutches for three years, so he turned from sport to debate and study. He entered the University of Utah at 16 and took a business degree there, though, Fortune reports, he more or less wasted four years playing ping-pong at his fraternity.",
+  "values": [
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "A few months into his Mormon mission in England he was taken off preaching and sent to Nottingham to train the leaders of new congregations.",
+          "sourceId": "fortune-1994",
+          "locator": "passage beginning 'Covey went off to England to serve his two-year term'"
+        },
+        {
+          "kind": "witness",
+          "claim": "BYU's alumni magazine says he quickly became one of the most popular professors on campus and helped launch the Department of Organizational Behavior.",
+          "sourceId": "byu-2012",
+          "locator": "section 'Early Influence', on his return home in 1954 and his BYU teaching"
+        },
+        {
+          "kind": "words",
+          "claim": "He told Fortune: 'I believe in this concept that you learn by teaching.'",
+          "sourceId": "fortune-1994",
+          "locator": "passage beginning 'In retrospect, that experience was the root'"
+        },
+        {
+          "kind": "witness",
+          "claim": "FranklinCovey's statement on his death, quoted by the Daily Herald, says he decided early in life that his greatest contribution and life's work would be as a teacher.",
+          "sourceId": "dailyherald-2012",
+          "locator": "article body, FranklinCovey statement"
+        }
+      ]
+    },
+    {
+      "word": "Family",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He and his wife Sandra raised nine children, kept a family mission statement on the living-room wall and held family councils on jobs, responsibilities and integrity.",
+          "sourceId": "fortune-1994",
+          "locator": "passage beginning 'Covey says his system came to him' and the quote from his son Stephen M.R. beginning 'From my earliest years'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He writes that when one of their sons was struggling, he and Sandra stopped trying to clone him in their own image or measure him against social expectations.",
+          "sourceId": "htw-1989",
+          "locator": "Part One, 'Inside-Out', the story beginning 'A few years ago, my wife Sandra and I were struggling'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His family's death notice says his greatest joy was his family, and that he gathered them for family councils where he taught them lessons.",
+          "sourceId": "deseret-family-2012",
+          "locator": "paragraph beginning 'Dad's greatest joy was his family'"
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In the closing personal note of The 7 Habits he writes that he believes correct principles are natural laws and that God is their source.",
+          "sourceId": "htw-1989",
+          "locator": "'A Personal Note', end of book"
+        },
+        {
+          "kind": "deed",
+          "claim": "At 29 he returned to Britain as a mission president to oversee the new Mormon mission in Ireland.",
+          "sourceId": "byu-2012",
+          "locator": "section 'Early Influence', sentence beginning 'Years later, twenty-nine-year-old Stephen'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Fortune reported in 1994 that he tithed and still lived in the house he bought while working at Brigham Young.",
+          "sourceId": "fortune-1994",
+          "locator": "sentence beginning 'Covey tithes, and he still lives in the house'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His family writes that on most mornings he rose early, went somewhere alone, and prayed, meditated and studied scripture, and that he called this his daily private victory.",
+          "sourceId": "deseret-family-2012",
+          "locator": "paragraph beginning 'Throughout his life, on most mornings'"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told Fortune that to found his training company he gambled everything he owned: 'my home, my cabin, trust money, all my savings -- I was hocked unbelievably.'",
+          "sourceId": "fortune-1994",
+          "locator": "sentence beginning 'In 1985, to take his message to a wider audience'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1983 he left his full-time teaching post at Brigham Young University to start the organization that became Covey Leadership Center and later FranklinCovey.",
+          "sourceId": "deseret-family-2012",
+          "locator": "paragraph beginning 'It was while serving as a missionary in England'"
+        },
+        {
+          "kind": "witness",
+          "claim": "BYU's alumni magazine says that leaving BYU in 1983 to start Stephen R. Covey and Associates was a risk that paid off.",
+          "sourceId": "byu-2012",
+          "locator": "section 'The Seven Wonders', sentence 'It was a risk, but it paid off.'"
+        }
+      ]
+    },
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told Fortune: 'There's nothing new in all this. I just built the bridge between the theory and the practice.'",
+          "sourceId": "fortune-1994",
+          "locator": "passage beginning 'And that is, by and large, the function of the CLC's'"
+        },
+        {
+          "kind": "words",
+          "claim": "After his merged company stumbled, he told BusinessWeek he was humbled by going through the kind of mistakes he wrote about, which was 'much different' from looking at them 'from some academic ivory tower'.",
+          "sourceId": "businessweek-1999",
+          "locator": "closing paragraphs, sentence beginning 'Covey says he's humbled'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His son told BYU's alumni magazine that he does not claim to have invented these ideas.",
+          "sourceId": "byu-2012",
+          "locator": "section 'Developing Habits'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His family writes that he was always surprised and embarrassed by his professional success and gave the credit to God.",
+          "sourceId": "deseret-family-2012",
+          "locator": "paragraph beginning 'It was while serving as a missionary in England', closing sentence"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Between what happens to you and what you do there is a gap: use it to choose your response, and do not blame circumstances.",
+      "sourceId": "htw-1989",
+      "locator": "Habit 1 'Be Proactive' (chapter begins p. 65), section 'Between Stimulus and Response' and the passage on 'response-ability'"
+    },
+    {
+      "text": "Write down what you want to be and to do, a personal mission statement, and measure your choices against it.",
+      "sourceId": "htw-1989",
+      "locator": "Habit 2 'Begin with the End in Mind' (chapter begins p. 95), section 'A Personal Mission Statement'"
+    },
+    {
+      "text": "Decide what matters most, then organize your time and act around those priorities.",
+      "sourceId": "htw-1989",
+      "locator": "Habit 3 'Put First Things First' (chapter begins p. 145), opening section: 'Organize and execute around priorities'"
+    },
+    {
+      "text": "Listen to understand the other person before you try to be understood.",
+      "sourceId": "htw-1989",
+      "locator": "Habit 5 'Seek First to Understand, Then to Be Understood', section 'Empathic Listening'"
+    },
+    {
+      "text": "Keep the promises you make to yourself before you try to win with other people.",
+      "sourceId": "htw-1989",
+      "locator": "Part One, 'Inside-Out' and 'The Seven Habits - An Overview' ('private victories precede public victories')"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Most people do not listen with the intent to understand; they listen with the intent to reply.",
+      "sourceId": "htw-1989",
+      "locator": "Habit 5 'Seek First to Understand, Then to Be Understood', section 'Empathic Listening' (p. 239 per Wikiquote's sourced entry)"
+    },
+    {
+      "text": "Private victories precede public victories.",
+      "sourceId": "htw-1989",
+      "locator": "Part One, 'The Seven Habits - An Overview', the passage calling Habits 1, 2 and 3 the 'Private Victories'"
+    },
+    {
+      "text": "I believe that correct principles are natural laws, and that God, the Creator and Father of us all, is the source of them, and also the source of our conscience.",
+      "sourceId": "htw-1989",
+      "locator": "'A Personal Note', end of book"
+    },
+    {
+      "text": "There's nothing new in all this. I just built the bridge between the theory and the practice.",
+      "sourceId": "fortune-1994",
+      "locator": "interview quoted in Fortune, 12 December 1994, passage beginning 'And that is, by and large, the function of the CLC's'"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1983 he left his full-time teaching job at Brigham Young University to start his own training firm, Stephen R. Covey and Associates; his family and BYU's magazine both give that year, while Fortune dates the founding of the Covey Leadership Center to 1985. He told Fortune in 1994 that he had put up his home, his cabin, trust money and all his savings to do it. His BYU classes, which already carried the embryo of the Seven Habits, had drawn 600 to 1,000 students, he said. In 1989 he published The 7 Habits of Highly Effective People.",
+    "sourceIds": [
+      "deseret-family-2012",
+      "fortune-1994",
+      "byu-2012"
+    ]
+  },
+  "shadow": {
+    "text": "Critics quoted by Fortune in 1994 said his program told employees to tend to their own souls and look past structural problems at work; Fortune summed up their view that, for firms cutting middle managers, it was a handy way to get staff to think that if they were laid off, the fault lay in themselves. Economist Jeremy Rifkin and Amherst professor Benjamin DeMott were among them. Jan Shipps, a historian of Mormonism, said the 7 Habits sounded like 'distilled advice from a Mormon pulpit'; Covey said nothing he taught was unique to his religion. When his company merged with Franklin Quest in 1997 he said they would create 'a model merger for corporate industry'. BusinessWeek reported in November 1999 that a bloated bureaucracy, poor planning and internal bickering had hit the merged company: fiscal 1999 operating earnings fell 94%, 600 of 4,200 jobs were to be cut, and after an outside investor became chairman he and Hyrum Smith were made non-executive vice-chairmen. The largest outside investor said the two 'turned out to be better salesmen than managers'.",
+    "sourceIds": [
+      "fortune-1994",
+      "businessweek-1999"
+    ]
+  },
+  "councilQuestion": {
+    "text": "When did something or someone push you this week, and did you choose your answer or just react?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The 7 Habits of Highly Effective People",
+      "year": 1989
+    },
+    {
+      "title": "The 7 Habits of Highly Effective Families",
+      "year": 1997
+    }
+  ],
+  "sources": [
+    {
+      "id": "htw-1989",
+      "kind": "primary",
+      "title": "The 7 Habits of Highly Effective People",
+      "author": "Stephen R. Covey",
+      "year": 1989,
+      "publisher": "Simon and Schuster",
+      "url": "https://archive.org/details/sevenhabitshigly00cove"
+    },
+    {
+      "id": "fortune-1994",
+      "kind": "secondary",
+      "title": "What's so effective about Stephen Covey?",
+      "author": "Timothy K. Smith",
+      "year": 1994,
+      "publisher": "Fortune, 12 December 1994",
+      "url": "https://money.cnn.com/magazines/fortune/fortune_archive/1994/12/12/80049/index.htm"
+    },
+    {
+      "id": "businessweek-1999",
+      "kind": "secondary",
+      "title": "Two Efficiency Gurus Who Failed Their Own Course",
+      "author": "Ronald Grover",
+      "year": 1999,
+      "publisher": "BusinessWeek, 8 November 1999",
+      "url": "https://www.bloomberg.com/news/articles/1999-11-07/two-efficiency-gurus-who-failed-their-own-course"
+    },
+    {
+      "id": "byu-2012",
+      "kind": "secondary",
+      "title": "The Highly Effective Person",
+      "author": "Lena M. Harper",
+      "year": 2012,
+      "publisher": "Marriott Alumni Magazine, Brigham Young University, Summer 2012",
+      "url": "https://marriott.byu.edu/magazine/feature/the-highly-effective-person"
+    },
+    {
+      "id": "deseret-family-2012",
+      "kind": "secondary",
+      "title": "Obituary: Stephen R. Covey (family death notice)",
+      "author": "The Covey family",
+      "year": 2012,
+      "publisher": "Deseret News, 19 July 2012",
+      "url": "https://www.deseret.com/2012/7/19/20710934/obituary-covey-stephen/"
+    },
+    {
+      "id": "dailyherald-2012",
+      "kind": "secondary",
+      "title": "Stephen Covey leaves legacy of teaching, family",
+      "author": "Genelle Pugmire",
+      "year": 2012,
+      "publisher": "Daily Herald (Provo), 17 July 2012",
+      "url": "https://www.heraldextra.com/news/2012/jul/17/stephen-covey-leaves-legacy-of-teaching-family/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American teacher and author (1932-2012), not fictional, never a politician or candidate, a lay member and missionary but not the founder of the Latter-day Saint church, and with no account found of sexual contact with anyone under 16 or of sexual violence; he is in, with a documented shadow: critics said his teaching made workers blame themselves and read as Mormon preaching, and his merged company stumbled badly under him."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked each value against Fortune 1994, BusinessWeek 1999, BYU's magazine, his family's notice and the 1989 book, and searched for a hidden scandal, an absent-father account and a misattributed quote; none turned up. All five draft values held on three or more sources; the blind pick's Leadership fell to BusinessWeek's account of him being moved aside as a manager, and Integrity and Learning had no room and only tribute or résumé evidence. All four quotes match the book or the interview; the founding date, a BYU claim and the shadow's cause-and-effect wording were corrected, and his 'model merger' promise was added to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
