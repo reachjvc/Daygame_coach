@@ -3,6 +3,7 @@ import { PEOPLE } from "./data/index.generated"
 import type { RoleModelPerson } from "./types"
 import { initialsOf, type RoleModelCardData, yearsLabel } from "./format"
 import { canonicalValueWord } from "./valueWords"
+import { VALUE_COLOR } from "@/src/goals/data/northStar"
 
 export { filterCards, initialsOf, possessiveOf, type RoleModelCardData, yearsLabel } from "./format"
 
@@ -40,6 +41,7 @@ export function cardOf(p: RoleModelPerson): RoleModelCardData {
     color: cat?.color ?? "#555555",
     initials: initialsOf(p.name),
     values: words.slice(0, 3),
+    valueColors: words.slice(0, 3).map((w) => VALUE_COLOR.get(w.toLowerCase()) ?? "#94a3b8"),
     search: [p.name, ...words].join(" ").toLowerCase(),
   }
 }

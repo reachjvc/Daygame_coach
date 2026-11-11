@@ -6,7 +6,7 @@ import { initialsOf } from "../format"
  * The look of every role model (portraits, movement, effects) is one later
  * decision for all of them at once, so they look alike (Plans/role-models.md,
  * D6, the owner's second rule). Until then everyone gets the same plain
- * placeholder: initials, years, the category colour as a flat background. No
+ * placeholder: initials, years, the category colour as a soft tinted background. No
  * image, no animation, no effect. The card, the profile and the Today card all
  * draw through this component, so the decision later changes this one file.
  */
@@ -29,13 +29,13 @@ export function RoleModelVisual({
         : "h-24 w-24 text-3xl"
   return (
     <div
-      className={`${box} flex shrink-0 flex-col items-center justify-center rounded-lg text-white`}
-      style={{ backgroundColor: color }}
+      className={`${box} flex shrink-0 flex-col items-center justify-center rounded-lg border`}
+      style={{ background: `linear-gradient(135deg, ${color}40, ${color}14)`, borderColor: `${color}66`, color }}
       data-testid="role-model-visual"
       aria-hidden="true"
     >
       <span className="font-semibold leading-none">{initialsOf(name)}</span>
-      {size !== "small" && <span className="mt-2 text-[11px] font-normal opacity-80">{years}</span>}
+      {size !== "small" && <span className="mt-2 text-[11px] font-normal text-white/55">{years}</span>}
     </div>
   )
 }

@@ -16,9 +16,9 @@ export const metadata = { title: "Role models" }
 
 export default function RoleModelsPage() {
   const cards = shownPeople().map(cardOf)
-  const categories = ROLE_MODEL_CATEGORIES.map((c) => ({ id: c.id, label: c.label }))
+  const categories = ROLE_MODEL_CATEGORIES.map((c) => ({ id: c.id, label: c.label, description: c.description, color: c.color }))
   return (
-    <main className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-8" data-testid="role-models-page">
+    <main className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8" data-testid="role-models-page">
       <BackLink fallback={ROUTES.plan} fallbackLabel="Plan" />
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold text-foreground">Role models</h1>

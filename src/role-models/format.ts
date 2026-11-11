@@ -41,6 +41,8 @@ export interface RoleModelCardData {
   color: string
   initials: string
   values: string[]
+  /** the life plan colour of each word in `values`, same order */
+  valueColors: string[]
   /** every value word, lower case, for search only */
   search: string
 }
