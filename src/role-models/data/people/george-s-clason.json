@@ -1,0 +1,317 @@
+{
+  "id": "george-s-clason",
+  "name": "George S. Clason",
+  "born": 1874,
+  "died": 1957,
+  "category": "money",
+  "areaIds": [
+    "lm_money",
+    "lm_mindset"
+  ],
+  "tagline": "A Denver map publisher who taught millions to keep a tenth of what they earn.",
+  "startedFrom": "He was born George Samuel Clason in Louisiana, Missouri, on 7 November 1874; no source found says what his family did or had. He attended the University of Nebraska and served in the Spanish-American War of 1898. He then moved to Denver and worked as a draughtsman for patent attorneys, mostly in mining, until he began producing his own maps for sale in 1902. By 1907 he was registering copyrights for maps of the western states under his own name in Denver.",
+  "values": [
+    {
+      "word": "Wealth",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "The Osher Map Library calls him 'a financially-minded man' who used his maps, atlases and guides to promote migration to the West.",
+          "sourceId": "osher-stately",
+          "locator": "item 24, George Samuel Clason, Sketch Map of Nevada, 1906"
+        },
+        {
+          "kind": "deed",
+          "claim": "While running his map company he began writing about thrift and saving money to build wealth, and from 1926 printed pamphlets on it that were distributed through banks, investment houses and insurance companies.",
+          "sourceId": "success-2011",
+          "locator": "paragraph beginning 'In the decade following World War I'"
+        },
+        {
+          "kind": "words",
+          "claim": "His 1930 book opens with a page of lines in praise of gold, beginning 'Gold is the background for the fullest life' and 'Gold is the medium by which earthly success is measured'.",
+          "sourceId": "rmib-1930",
+          "locator": "front matter, half-title page (scan page 9), before the title page"
+        },
+        {
+          "kind": "witness",
+          "claim": "SUCCESS magazine reports that in a 1952 Denver Post interview he said the book's success had left him financially comfortable, and that he lived on its royalties after his companies closed.",
+          "sourceId": "success-2011",
+          "locator": "paragraphs beginning 'Clason applied the wealth-building lessons' and 'In an interview with The Denver Post during a 1952 trip'"
+        }
+      ]
+    },
+    {
+      "word": "Building things",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1907 he registered copyrights in his own name, from Denver, for sketch maps of Utah, Arizona and Colorado, a map of Goldfield, Nevada, and a map of Denver and the surrounding counties.",
+          "sourceId": "cce-1907",
+          "locator": "Maps section, entries E 10461 and E 10462 (4 Mar 1907), E 10525 (16 Mar 1907), E 10677 (13 Apr 1907), E 10812 (3 May 1907)"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1915 he wrote a handbook for settlers on the free homestead land left in Colorado, published by his own Clason Map Company at 1515 Tremont Place, Denver, to be used with the company's maps of vacant homestead land.",
+          "sourceId": "homestead-1915",
+          "locator": "title page and 'A personal word by the author'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Denver Public Library says the Clason Map Company was the first company to develop maps dedicated to roads instead of railroads.",
+          "sourceId": "dpl-highway",
+          "locator": "section 'Clason Map Company (1909-early 1930s)'"
+        },
+        {
+          "kind": "deed",
+          "claim": "SUCCESS magazine says his map company published a road atlas of the United States and Canada in 1923 and brought out an updated atlas every year for nine years.",
+          "sourceId": "success-2011",
+          "locator": "paragraphs beginning 'As the 1920s economy began to boom' and 'The thorough approach to mapping highways'"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After working in Denver as a draughtsman for patent attorneys, he began producing his own maps for commercial sale in 1902 and went on to run his own map company.",
+          "sourceId": "osher-stately",
+          "locator": "item 24, George Samuel Clason, Sketch Map of Nevada, 1906"
+        },
+        {
+          "kind": "words",
+          "claim": "In his signed note to the 1915 settlers' handbook he writes that owning and living on homestead land would mean not only a good living but a chance to prosper and become independent.",
+          "sourceId": "homestead-1915",
+          "locator": "'A personal word by the author', opening pages, signed George S. Clason"
+        },
+        {
+          "kind": "witness",
+          "claim": "Quartz says that in 1930 he compiled his parables into a book and published it on his own.",
+          "sourceId": "quartz-2016",
+          "locator": "paragraph beginning 'Clason's business, like many, didn't survive the Great Depression'"
+        },
+        {
+          "kind": "deed",
+          "claim": "After his map and publishing companies ceased operation he lived on the book's royalties, and moved to Napa, California.",
+          "sourceId": "success-2011",
+          "locator": "paragraph beginning 'Clason applied the wealth-building lessons'"
+        }
+      ]
+    },
+    {
+      "word": "Achievement",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His company's Clason's Touring Atlas of the United States sold over a million copies.",
+          "sourceId": "osher-stately",
+          "locator": "item 24, George Samuel Clason, Sketch Map of Nevada, 1906"
+        },
+        {
+          "kind": "deed",
+          "claim": "Colorado's official state highway map series, issued from 1916, was produced, published and copyrighted by the Clason Map Company until around 1920.",
+          "sourceId": "dpl-highway",
+          "locator": "section 'Highway Maps Issued by Colorado 1916-1938'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Quartz reports that The Richest Man in Babylon had sold more than 2 million copies in 26 languages by 2016.",
+          "sourceId": "quartz-2016",
+          "locator": "paragraph beginning 'Clason's business, like many, didn't survive the Great Depression'"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "The Osher Map Library writes that over a decade and a half 'Clason expanded the size and range of his company exponentially'.",
+          "sourceId": "osher-stately",
+          "locator": "item 24, George Samuel Clason, Sketch Map of Nevada, 1906"
+        },
+        {
+          "kind": "deed",
+          "claim": "He later moved the company's headquarters from Denver to Chicago, where other national map firms were already located.",
+          "sourceId": "dpl-highway",
+          "locator": "section 'Clason Map Company (1909-early 1930s)'"
+        },
+        {
+          "kind": "deed",
+          "claim": "A mapmaker by trade, he moved into writing on money, and in 1930, after the crash, compiled his stories into a book to bring his advice to a larger readership.",
+          "sourceId": "success-2011",
+          "locator": "paragraphs beginning 'As he gained significant business experience' and 'After the stock market crash in 1929'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Keep at least a tenth of everything you earn for yourself before you spend the rest.",
+      "sourceId": "rmib-1930",
+      "locator": "'The Richest Man in Babylon', p. 8 (Algamish's advice to Arkad)"
+    },
+    {
+      "text": "Let your savings earn more money; do not spend what they earn.",
+      "sourceId": "rmib-1930",
+      "locator": "'The Richest Man in Babylon', p. 11 ('You do eat the children of your savings?')"
+    },
+    {
+      "text": "Take money advice from people who handle money every day, not from people in other trades.",
+      "sourceId": "rmib-1930",
+      "locator": "'The Richest Man in Babylon', p. 14 ('Counsel with wise men...' and the loss through Azmur the brickmaker)"
+    },
+    {
+      "text": "Before you lend or borrow, check carefully: a little caution costs less than a big regret.",
+      "sourceId": "rmib-1930",
+      "locator": "'The Gold Lender of Babylon', p. 31 (Mathon's carving under the lid of his token box)"
+    },
+    {
+      "text": "Treat your debts as enemies to fight: face the people you owe and pay back every one.",
+      "sourceId": "rmib-1930",
+      "locator": "'The Camel Trader of Babylon', pp. 42 and 47 (Sira's challenge; Dabasir repays every debt)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "A part of all you earn is yours to keep. It should not be less than a tenth no matter how little you earn.",
+      "sourceId": "rmib-1930",
+      "locator": "'The Richest Man in Babylon', p. 8 (spoken by Algamish to Arkad)"
+    },
+    {
+      "text": "Opportunity is a haughty goddess who wastes no time with those who are unprepared.",
+      "sourceId": "rmib-1930",
+      "locator": "'The Richest Man in Babylon', p. 12 (spoken by Arkad)"
+    },
+    {
+      "text": "Where the determination is, the way can be found.",
+      "sourceId": "rmib-1930",
+      "locator": "'The Camel Trader of Babylon', p. 47 (Dabasir's words, repeated as the story's closing motto)"
+    },
+    {
+      "text": "Better a little caution than a great regret.",
+      "sourceId": "rmib-1930",
+      "locator": "'The Gold Lender of Babylon', p. 31 (the words Mathon carved beneath the lid of his token box)"
+    }
+  ],
+  "definingMoment": {
+    "text": "The stock market crashed in 1929. In 1930 he collected his favourite money parables into a small book, The Richest Man in Babylon, and published it through his own Clason Publishing Company in Denver. His map company declared bankruptcy in 1932, but the book stayed in print and, by 2016, had sold more than two million copies in 26 languages. SUCCESS magazine reports that in 1952 he told the Denver Post the book had made him financially comfortable.",
+    "sourceIds": [
+      "success-2011",
+      "rmib-1930",
+      "osher-stately",
+      "quartz-2016"
+    ]
+  },
+  "shadow": {
+    "text": "The Clason Map Company was hit hard by the crash of 1931 and declared bankruptcy in 1932; after his map and publishing companies stopped operating, he lived on the book's royalties. By SUCCESS magazine's account of his 1952 Denver Post interview, he said he had used the book's principles throughout his lifetime, \"and now I don't need to.\" In 1955 Kirkus wrote that his 'slightly modified Biblical style' lets him 'create an illusion of great wisdom, dignity and authority'.",
+    "sourceIds": [
+      "osher-stately",
+      "success-2011",
+      "kirkus-1955"
+    ]
+  },
+  "councilQuestion": {
+    "text": "When money came in this past week, did you put a part of it aside for yourself before you spent the rest?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Richest Man in Babylon",
+      "year": 1926
+    }
+  ],
+  "sources": [
+    {
+      "id": "rmib-1930",
+      "kind": "primary",
+      "title": "The Richest Man in Babylon and Other Stories",
+      "author": "George S. Clason",
+      "year": 1930,
+      "publisher": "The Clason Publishing Co., Denver (Wikisource transcription of the 1930 printing)",
+      "url": "https://en.wikisource.org/wiki/The_Richest_Man_In_Babylon_and_Other_Stories"
+    },
+    {
+      "id": "homestead-1915",
+      "kind": "primary",
+      "title": "Free Homestead Lands of Colorado Described: A Handbook for Settlers",
+      "author": "George S. Clason",
+      "year": 1915,
+      "publisher": "The Clason Map Company, Denver (Cornell University Library copy)",
+      "url": "https://archive.org/details/cu31924013910918"
+    },
+    {
+      "id": "cce-1907",
+      "kind": "secondary",
+      "title": "Catalogue of Copyright Entries, Part 1: Books, Dramatic Compositions, Maps and Charts (new series, entries of 1907)",
+      "author": "Library of Congress, Copyright Office",
+      "year": 1907,
+      "publisher": "Government Printing Office, Washington",
+      "url": "https://archive.org/details/cataloguecopyri00conggoog"
+    },
+    {
+      "id": "success-2011",
+      "kind": "secondary",
+      "title": "Inside the Richest Man in Babylon",
+      "author": "SUCCESS staff",
+      "year": 2011,
+      "publisher": "SUCCESS magazine, 13 April 2011 (archived copy)",
+      "url": "https://web.archive.org/web/2016/http://www.success.com/article/inside-the-richest-man-in-babylon"
+    },
+    {
+      "id": "quartz-2016",
+      "kind": "secondary",
+      "title": "The world's most popular money tip came from a map-maker whose business got crushed by the Great Depression",
+      "author": "Ismat Sarah Mangla",
+      "year": 2016,
+      "publisher": "Quartz, 20 October 2016",
+      "url": "https://qz.com/813644/the-worlds-most-popular-money-tip-came-from-a-map-maker-whose-business-got-crushed-by-the-great-depression"
+    },
+    {
+      "id": "prh-author",
+      "kind": "secondary",
+      "title": "George S. Clason (author page)",
+      "author": "Penguin Random House",
+      "year": "accessed 2026",
+      "publisher": "Penguin Random House",
+      "url": "https://www.penguinrandomhouse.com/authors/233902"
+    },
+    {
+      "id": "kirkus-1955",
+      "kind": "secondary",
+      "title": "The Richest Man in Babylon (review)",
+      "author": "Kirkus Reviews",
+      "year": 1955,
+      "publisher": "Kirkus Reviews, issue of 1 April 1955",
+      "url": "https://www.kirkusreviews.com/book-reviews/george-s-clason/the-richest-man-in-babylon/"
+    },
+    {
+      "id": "osher-stately",
+      "kind": "secondary",
+      "title": "Stately Cartography: Fifty Maps of Fifty States, Section 7 (item 24: George Samuel Clason, Sketch Map of Nevada, 1906)",
+      "author": "Osher Map Library, University of Southern Maine",
+      "year": "accessed 2026",
+      "publisher": "Osher Map Library and Smith Center for Cartographic Education",
+      "url": "https://oshermaps.org/exhibitions/stately-cartography/section-7/"
+    },
+    {
+      "id": "dpl-highway",
+      "kind": "secondary",
+      "title": "Colorado State Highway Maps",
+      "author": "Denver Public Library, Western History and Genealogy",
+      "year": "accessed 2026",
+      "publisher": "Denver Public Library",
+      "url": "https://history.denverlibrary.org/research/colorado-state-highway-maps"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American map publisher and author (1874-1957), not fictional, never a politician or candidate, not the founder of a religion, and with no account found of sexual contact with anyone under 16 or of sexual violence; he is in, with a small documented dark side: his own map business did not survive the Great Depression, and a 1955 review said his Biblical style creates an illusion of wisdom and authority."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked all five draft values against the 1930 text, the 1915 handbook, the copyright catalogue, SUCCESS, Quartz, Kirkus, and two independent institutional sources found by the blind pick: the Osher Map Library and the Denver Public Library. Resilience fell because the book came out in 1930, before the 1932 bankruptcy, and no source tells how he met the failure; Discipline fell because it rested on his characters' words and one retold 1952 line whose full form is 'and now I don't need to'. Wealth, Building things and Independence held with three or more sources each, and Achievement and Ambition from the blind pick were added on the Osher and Denver library records. All four quotes matched the 1930 text; the shadow gained the 1932 bankruptcy and lost the neutral line about bank distribution.",
+    "checkedOn": "2026-11-10"
+  }
+}
