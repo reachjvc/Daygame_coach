@@ -1,0 +1,374 @@
+{
+  "id": "freddie-mercury",
+  "name": "Freddie Mercury",
+  "born": 1946,
+  "died": 1991,
+  "category": "artists",
+  "areaIds": [
+    "lm_fun",
+    "lm_mission"
+  ],
+  "tagline": "A shy Parsi from Zanzibar who became a stadium showman and kept singing while dying.",
+  "startedFrom": "He was born Farrokh Bulsara on 5 September 1946 in Zanzibar, where his father was a cashier at the High Court; his parents were Parsis from Gujarat in India. At seven he was sent to a boarding school about 50 miles from Bombay and saw his parents only one month a year. In 1964 the family left Zanzibar for a small terraced house in Feltham, near Heathrow, where his father worked; his mother wanted him to become a doctor or a lawyer, and he went to art college instead.",
+  "values": [
+    {
+      "word": "Self-expression",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 1977 he said he wanted to put his music across 'with everything: costumes and lights', and defended wearing a Nijinsky-style ballet costume on stage.",
+          "sourceId": "nme-1977",
+          "locator": "answers beginning \"I'm into this ballet thing\" and \"I want to put my music across\""
+        },
+        {
+          "kind": "deed",
+          "claim": "The Guardian's 1991 report says he once appeared with 50 sets of false bosoms while singing I Want To Break Free.",
+          "sourceId": "guardian-1991",
+          "locator": "paragraph beginning 'The band played stadium concerts'"
+        },
+        {
+          "kind": "witness",
+          "claim": "TIME's 2006 profile names his flamboyant stage costumes and high camp as marks of his music, and calls him a 'mustachioed, spandex-clad peacock'.",
+          "sourceId": "time-2006",
+          "locator": "paragraph beginning 'When you know this about Bulsara'"
+        }
+      ]
+    },
+    {
+      "word": "Creativity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 1977 he said he did not want to keep playing the same formula: 'I don't want to become stale. I want to be creative.'",
+          "sourceId": "nme-1977",
+          "locator": "answer beginning \"It's just,\" he answers simply, \"a logical thing\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Guardian (2012) says the last four years of his life were marked by 'an unprecedented burst of creativity', and quotes Tim Rice: 'He was always wanting to learn more about music.'",
+          "sourceId": "guardian-2012",
+          "locator": "paragraphs beginning 'Lyricist Tim Rice' and 'The indulgent lifestyle'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In those last years he recorded the semi-operatic album Barcelona with the soprano Montserrat Caballé, and two Queen albums that reached No 1, The Miracle (1989) and Innuendo (1991).",
+          "sourceId": "guardian-2012",
+          "locator": "paragraphs beginning 'He got his wish', 'Lyricist Tim Rice' and 'The indulgent lifestyle'"
+        },
+        {
+          "kind": "witness",
+          "claim": "A 2022 Library of Congress essay on Bohemian Rhapsody says pieces of the mini-opera had been in his head for years and calls the finished song 'a minor creative miracle'.",
+          "sourceId": "loc-2022",
+          "locator": "essay, p. 1 paragraph beginning 'In pop, innovation' and p. 2 paragraph beginning 'Of course'"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 1981 he said of performing: 'It's my work, and I'm very serious about it', and that rich or starving he wanted to 'give my all'.",
+          "sourceId": "mm-1981",
+          "locator": "answers beginning \"I don't know what it is, but it's true\" and \"You can play good when you're struggling\""
+        },
+        {
+          "kind": "deed",
+          "claim": "Between 13 and 16 May 1991, walking with a cane and unable to stand for long, he recorded his last vocal, Mother Love, in Montreux, one verse at a time with three attempts at each.",
+          "sourceId": "telegraph-2013",
+          "locator": "paragraphs beginning 'For years, fans have argued' and 'Mercury was walking with a cane'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Brian May, who was at that session, said: 'He loved making music, he lived for it', and that Mercury kept asking the band to write him more to sing.",
+          "sourceId": "telegraph-2013",
+          "locator": "paragraphs beginning '\"We all knew there wasn't much time left,\"' and 'May says: \"He just kept saying'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Producer Roy Thomas Baker recalled that, as Mercury kept adding more 'Galileos', the opera section of Bohemian Rhapsody alone took about three weeks to record, then the average time for a whole album.",
+          "sourceId": "sos-1995",
+          "locator": "Baker's account beginning \"The opera bit was getting longer\""
+        }
+      ]
+    },
+    {
+      "word": "Fun",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 1977 he said: 'I like to live life. I certainly work hard for it, and I want to have a good time. Don't deny me that.'",
+          "sourceId": "nme-1977",
+          "locator": "answer beginning \"I think I need it. I like all that.\""
+        },
+        {
+          "kind": "words",
+          "claim": "Asked in 1981 whether he was two people, shy offstage and a peacock onstage, he answered: 'I just like having fun.'",
+          "sourceId": "mm-1981",
+          "locator": "answer beginning \"I don't know what it is, but it's true\""
+        },
+        {
+          "kind": "deed",
+          "claim": "The Guardian's 1991 report says his after-show parties 'went on for days'.",
+          "sourceId": "guardian-1991",
+          "locator": "paragraph beginning 'Mercury's after-show parties'"
+        },
+        {
+          "kind": "deed",
+          "claim": "A 2012 BBC documentary shows his 39th-birthday party in Munich (1985), which his former manager John Reid remembered as 'the last days of Berlin, the last hurrah'.",
+          "sourceId": "guardian-2012",
+          "locator": "paragraph beginning 'In the BBC programme'"
+        }
+      ]
+    },
+    {
+      "word": "Humour",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 1981 he said: 'I like to ridicule myself. I don't take it too seriously', and 'The one thing that keeps me going is that I like to laugh at myself.'",
+          "sourceId": "mm-1981",
+          "locator": "answers beginning \"No, I'm not frightened by it\" and \"I wouldn't wear these clothes if I was serious\""
+        },
+        {
+          "kind": "deed",
+          "claim": "According to the director of a 2012 BBC documentary, a couple of days before he died, blind and off his medication, he told his manager to let Brian May release his single anyway: 'I might drop at any minute – what better publicity could he have?'",
+          "sourceId": "guardian-2012",
+          "locator": "paragraphs beginning 'His inscrutability was his trump card' and '\"[Guitarist] Brian May was about to release'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Justin Shirley-Smith, assistant engineer at his last sessions in 1991, said: 'He was one of the funniest people I ever encountered.'",
+          "sourceId": "telegraph-2013",
+          "locator": "paragraph beginning '\"I was surprised at how moving it was'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Whatever state you are in, rich or broke, ill or well, give everything when it is your turn to perform.",
+      "sourceId": "mm-1981",
+      "locator": "answer beginning \"You can play good when you're struggling\""
+    },
+    {
+      "text": "Do not repeat a formula that worked; try the new thing, and if it does not work, it does not work.",
+      "sourceId": "nme-1977",
+      "locator": "answers beginning \"It's just,\" he answers simply and \"That's very good,\" he chuckles"
+    },
+    {
+      "text": "Laugh at yourself and do not take your own image too seriously.",
+      "sourceId": "mm-1981",
+      "locator": "answers beginning \"No, I'm not frightened by it\" and \"I wouldn't wear these clothes if I was serious\""
+    },
+    {
+      "text": "Talent includes the business side: learn it, and make sure your work reaches people.",
+      "sourceId": "mm-1981",
+      "locator": "answers beginning \"(Laughs): No! Oh God\" and \"Yes, I think it's in the interests of most musicians\""
+    },
+    {
+      "text": "While you still can, keep making the work, and leave others what they need to finish it.",
+      "sourceId": "telegraph-2013",
+      "locator": "paragraph beginning 'May says: \"He just kept saying'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I don't want to keep playing the same formula over and over again, otherwise you just go insane. I don't want to become stale. I want to be creative.",
+      "sourceId": "nme-1977",
+      "locator": "NME, 18 June 1977 (interview by Tony Stewart); answer beginning \"It's just,\" he answers simply"
+    },
+    {
+      "text": "I mean, when I go on stage, whether I'm rich or starving, I want to give my all. I want to go on there and die for the show!",
+      "sourceId": "mm-1981",
+      "locator": "Melody Maker, 2 May 1981; answer beginning \"You can play good when you're struggling\""
+    },
+    {
+      "text": "I wouldn't wear these clothes if I was serious. The one thing that keeps me going is that I like to laugh at myself.",
+      "sourceId": "mm-1981",
+      "locator": "Melody Maker, 2 May 1981; answer beginning \"I wouldn't wear these clothes\""
+    },
+    {
+      "text": "My privacy has always been very special to me, and I am famous for my lack of interviews. Please understand this policy will continue.",
+      "sourceId": "statement-1991",
+      "locator": "statement released just after midnight, 23 November 1991, closing sentences"
+    }
+  ],
+  "definingMoment": {
+    "text": "In spring 1991 he was dying of AIDS, and the rest of Queen waited in Montreux to record whenever he felt able to come in for an hour or two. Between 13 and 16 May 1991, walking with a cane, he recorded Mother Love, his last vocal, singing one verse at a time with three attempts at each and pushing himself to go higher. Brian May finished the song for him, and the recordings he left became the album Made in Heaven. He confirmed his illness in a statement on 23 November 1991 and died at home in Kensington the next day, aged 45.",
+    "sourceIds": [
+      "telegraph-2013",
+      "smithsonian-2024",
+      "statement-1991",
+      "guardian-1991"
+    ]
+  },
+  "shadow": {
+    "text": "In 1984 Queen played a run of shows at Sun City, a resort in one of South Africa's Bantustans, against the United Nations cultural boycott of apartheid; the British Musicians' Union fined the band, and in 2021 Roger Taylor called the trip 'kind of a mistake'. His personal assistant Peter Freestone said in 2019 that Mercury used cocaine about four days a week and that Freestone bought it for him in New York, though he did not see it as an addiction; his after-show parties went on for days. In 1977 the NME's Tony Stewart reported that in Sydney the year before he had smashed a full-length mirror after having to walk 20 yards from his car to the dressing room. After his diagnosis in 1987 he and Queen's press team publicly denied that he had HIV or AIDS until the statement released the day before he died. He kept his sexuality hidden from his parents, and the Sunday Times writer Waldemar Januszczak called him not coy but 'misleading' about it in public.",
+    "sourceIds": [
+      "irishtimes-2008",
+      "louder-2021",
+      "vice-2019",
+      "guardian-1991",
+      "nme-1977",
+      "smithsonian-2024",
+      "sundaytimes-1996"
+    ]
+  },
+  "councilQuestion": {
+    "text": "When it was your turn to perform this week, where did you hold back instead of giving everything?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Bohemian Rhapsody (song, Queen)",
+      "year": 1975
+    },
+    {
+      "title": "Mr. Bad Guy (solo album)",
+      "year": 1985
+    },
+    {
+      "title": "Innuendo (album, Queen)",
+      "year": 1991
+    }
+  ],
+  "sources": [
+    {
+      "id": "nme-1977",
+      "kind": "primary",
+      "title": "Interview: 'Is This Man A Prat?', New Musical Express (18 June 1977), as reprinted on Queen's official website",
+      "author": "Freddie Mercury, interviewed by Tony Stewart",
+      "year": 1977,
+      "publisher": "New Musical Express; reprint at queenonline.com",
+      "url": "https://web.archive.org/web/20110307181549/http://www.queenonline.com:80/en/the-band/interviews/freddie-mercury/is-this-man-a-prat-/"
+    },
+    {
+      "id": "mm-1981",
+      "kind": "primary",
+      "title": "Interview: 'Man Who Would Be Queen', Melody Maker (2 May 1981), as reprinted on Queen's official website",
+      "author": "Freddie Mercury (interviewer not named in the reprint)",
+      "year": 1981,
+      "publisher": "Melody Maker; reprint at queenonline.com",
+      "url": "https://web.archive.org/web/20110307181554/http://www.queenonline.com:80/en/the-band/interviews/freddie-mercury/man-who-would-be-queen/"
+    },
+    {
+      "id": "statement-1991",
+      "kind": "primary",
+      "title": "Statement confirming his HIV and AIDS diagnosis (released 23 November 1991), as printed in Smithsonian Magazine, 'Read Freddie Mercury's Heartbreaking Announcement...' (23 November 2024)",
+      "author": "Freddie Mercury",
+      "year": 1991,
+      "publisher": "Smithsonian Magazine (reprint)",
+      "url": "https://www.smithsonianmag.com/smart-news/read-freddie-mercurys-heartbreaking-announcement-of-his-diagnosis-with-hivaids-released-on-this-date-in-1991-just-a-day-before-the-queen-frontman-died-180985325/"
+    },
+    {
+      "id": "guardian-1991",
+      "kind": "secondary",
+      "title": "Queen star dies after Aids statement (25 November 1991; From the archive)",
+      "author": "Paul Myers",
+      "year": 1991,
+      "publisher": "The Guardian",
+      "url": "https://www.theguardian.com/fromthearchive/story/0,12269,1650611,00.html"
+    },
+    {
+      "id": "guardian-2012",
+      "kind": "secondary",
+      "title": "Freddie Mercury: the great enigma (27 September 2012)",
+      "author": "Caroline Sullivan",
+      "year": 2012,
+      "publisher": "The Guardian",
+      "url": "https://www.theguardian.com/music/2012/sep/27/freddie-mercury-great-enigma"
+    },
+    {
+      "id": "telegraph-2013",
+      "kind": "secondary",
+      "title": "Inside the studio where Freddie Mercury sang his last song (1 December 2013), as reprinted on brianmay.com",
+      "author": "Cole Moreton",
+      "year": 2013,
+      "publisher": "The Sunday Telegraph",
+      "url": "https://brianmay.com/queen-news/2013/12/inside-the-studio-where-freddie-mercury-sang-his-last-song/"
+    },
+    {
+      "id": "sundaytimes-1996",
+      "kind": "secondary",
+      "title": "Star of India, Sunday Times Magazine (17 November 1996), as reprinted on Queen's official website",
+      "author": "Waldemar Januszczak",
+      "year": 1996,
+      "publisher": "The Sunday Times",
+      "url": "https://web.archive.org/web/20110307182012/http://www.queenonline.com:80/en/the-band/interviews/freddie-mercury/star-of-india/"
+    },
+    {
+      "id": "time-2006",
+      "kind": "secondary",
+      "title": "Farrokh Bulsara: As Freddie Mercury, he showed the world just how hard a Parsi boy could rock (60 Years of Asian Heroes, 2006)",
+      "author": "Liam Fitzpatrick",
+      "year": 2006,
+      "publisher": "TIME Asia",
+      "url": "https://web.archive.org/web/20081228152302/http://www.time.com/time/asia/2006/heroes/at_bulsara.html"
+    },
+    {
+      "id": "smithsonian-2024",
+      "kind": "secondary",
+      "title": "Read Freddie Mercury's Heartbreaking Announcement of His Diagnosis With HIV/AIDS, Released on This Date in 1991, Just a Day Before the Queen Frontman Died (23 November 2024)",
+      "author": "Eli Wizevich",
+      "year": 2024,
+      "publisher": "Smithsonian Magazine",
+      "url": "https://www.smithsonianmag.com/smart-news/read-freddie-mercurys-heartbreaking-announcement-of-his-diagnosis-with-hivaids-released-on-this-date-in-1991-just-a-day-before-the-queen-frontman-died-180985325/"
+    },
+    {
+      "id": "irishtimes-2008",
+      "kind": "secondary",
+      "title": "Happy birthday, dear Nelson . . . and sorry about the apartheid tour (27 June 2008)",
+      "author": "The Irish Times (column; byline not shown on the page)",
+      "year": 2008,
+      "publisher": "The Irish Times",
+      "url": "https://www.irishtimes.com/culture/happy-birthday-dear-nelson-and-sorry-about-the-apartheid-tour-1.1272858"
+    },
+    {
+      "id": "louder-2021",
+      "kind": "secondary",
+      "title": "Roger Taylor admits that Queen's cultural boycott-breaking trip to apartheid-era South Africa was 'a mistake' (2021)",
+      "author": "Louder (Classic Rock)",
+      "year": 2021,
+      "publisher": "Future plc",
+      "url": "https://www.loudersound.com/news/roger-taylor-admits-that-queens-cultural-boycott-breaking-trip-to-apartheid-era-south-africa-was-a-mistake"
+    },
+    {
+      "id": "vice-2019",
+      "kind": "secondary",
+      "title": "'There Was a Box Full of Drugs, I'd Get What He Wanted' – Freddie Mercury's PA On His Time with the Star (26 October 2019)",
+      "author": "Michael Segalov",
+      "year": 2019,
+      "publisher": "Vice",
+      "url": "https://www.vice.com/en/article/freddie-mercury-peter-freestone-interview/"
+    },
+    {
+      "id": "loc-2022",
+      "kind": "secondary",
+      "title": "'Bohemian Rhapsody'—Queen (1975), essay for the National Recording Registry (added 2022)",
+      "author": "Don Breithaupt",
+      "year": 2022,
+      "publisher": "Library of Congress, National Recording Preservation Board",
+      "url": "https://www.loc.gov/static/programs/national-recording-preservation-board/documents/Bohemian-Rhapsody_Breithaupt.pdf"
+    },
+    {
+      "id": "sos-1995",
+      "kind": "secondary",
+      "title": "Roy Thomas Baker & Gary Langan: The Making Of Queen's Bohemian Rhapsody (October 1995)",
+      "author": "Mark Cunningham",
+      "year": 1995,
+      "publisher": "Sound On Sound",
+      "url": "https://www.soundonsound.com/people/roy-thomas-baker-gary-langan-making-queens-bohemian-rhapsody"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real British singer born in Zanzibar (1946-1991), not fictional, not a politician, campaigner or founder of a religion, with no public account found of sexual contact with anyone under 16 or of sexual violence; he goes in with a documented shadow (the 1984 Sun City shows, cocaine use, and years of public denial of his illness)."
+    },
+    "blindAgreement": 0.0,
+    "devilsAdvocate": "I attacked all five values against his 1977 NME and 1981 Melody Maker interviews, the Guardian, Telegraph, Sunday Times and TIME pieces, and two sources from the blind pick (a Library of Congress essay and a 1995 Sound On Sound account). Hard work was the most exposed, given the cocaine and the days-long parties, but the three weeks spent on the Bohemian Rhapsody opera section and his last sessions in Montreux held it up; no value fell, and the blind pick's Ambition, though well sourced, found no room. All four quotes match the original texts word for word. The shadow gained the 1977 mirror-smashing report and a sharper line on his public denials, and the tagline and one principle were trimmed to what the sources say.",
+    "checkedOn": "2026-11-10"
+  }
+}
