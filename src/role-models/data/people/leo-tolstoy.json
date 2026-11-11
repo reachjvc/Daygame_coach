@@ -1,0 +1,346 @@
+{
+  "id": "leo-tolstoy",
+  "name": "Leo Tolstoy",
+  "born": 1828,
+  "died": 1910,
+  "category": "artists",
+  "areaIds": [
+    "lm_spirituality",
+    "lm_mission",
+    "lm_contribution"
+  ],
+  "tagline": "A rich count who asked what his life was for, then tried to live by the answer.",
+  "startedFrom": "He was born a count on his family's estate of Yasnaya Polyana in 1828; his mother died in 1830 and his father in 1837, and aunts brought him up. He left Kazan University in 1847 without a degree, and in 1851, to escape his card debts, he followed his elder brother to the Caucasus, where he joined the army.",
+  "values": [
+    {
+      "word": "Meaning",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In A Confession he writes that at about fifty one simple question brought him to the edge of suicide: 'What will come of my whole life?'",
+          "sourceId": "confession-maude",
+          "locator": "ch. V"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Gale encyclopedia entry says his ethical quest drove him to abandon all else to seek the ultimate meaning in life.",
+          "sourceId": "gale-enc",
+          "locator": "section 'Spiritual Crisis'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Tim Parks, reading the couple's letters, writes that his depressions took the form of a loss of purpose and that his plans always had to do with how to live.",
+          "sourceId": "lrb-parks-2018",
+          "locator": "para. beginning 'In return Lev praises her capacities'"
+        },
+        {
+          "kind": "deed",
+          "claim": "After seeing the Moscow slums during the 1882 census, in 1883 he signed his houses, estates and publishing rights over to his wife.",
+          "sourceId": "lrb-parks-2018",
+          "locator": "para. beginning 'Visiting the city’s slums'"
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In A Confession he writes that he lived only at the times when he believed in God, and ends the chapter with the rule 'Live seeking God'.",
+          "sourceId": "confession-maude",
+          "locator": "ch. XII"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1877 he visited the Optina Pustyn monastery, and then found the key to his moral system in the Gospel words 'Resist not evil'.",
+          "sourceId": "gale-enc",
+          "locator": "section 'Spiritual Crisis'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He learned Greek and Hebrew to study the Bible and rewrite it as he believed it should read.",
+          "sourceId": "lrb-parks-2018",
+          "locator": "para. beginning 'Tolstoy and Tolstaya: A Portrait of a Life in Letters offers'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times obituary describes his life as that of a man who, through an inner awakening, turned from the world to find salvation in the life of the spirit.",
+          "sourceId": "nyt-1910",
+          "locator": "section 'Leo Tolstoy's Career', para. beginning 'Students of mysticism'"
+        }
+      ]
+    },
+    {
+      "word": "Honesty",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Ending Sevastopol in May (1855), he wrote that the hero of his tale, whom he loved with all his soul, was the truth.",
+          "sourceId": "sevastopol-hapgood",
+          "locator": "'Sevastopol in May, 1855', ch. XVI, last para."
+        },
+        {
+          "kind": "deed",
+          "claim": "On 17 September 1862, six days before the wedding, he gave his fiancée his diaries of the past 15 years, affairs and gambling included.",
+          "sourceId": "lrb-parks-2018",
+          "locator": "para. beginning 'On 17 September 1862'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Sofia later wrote that she was 'shattered' by his 'excess of honesty' in showing her the diaries.",
+          "sourceId": "lrb-meek-2010",
+          "locator": "para. beginning 'Sofia Andreyevna’s voice as she writes'"
+        },
+        {
+          "kind": "words",
+          "claim": "In A Confession he lists his own wrongs in plain words: killing in war, duels, gambling, living off the peasants' labour, having them punished, and deceiving people.",
+          "sourceId": "confession-maude",
+          "locator": "ch. II"
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In the famine of 1891-92 he had started 72 soup kitchens by the end of 1891; by April 1892 there were 187, by July 246, feeding 13,000 people.",
+          "sourceId": "birukoff-1911",
+          "locator": "ch. XIV 'The Years of Famine' (pp. 124-130)"
+        },
+        {
+          "kind": "deed",
+          "claim": "He set up field kitchens to feed famine victims and helped the persecuted Dukhobor sect emigrate to Canada.",
+          "sourceId": "lrb-meek-2010",
+          "locator": "para. beginning 'Tolstoy’s thinking never stopped evolving'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He gave the money from Resurrection to fund the Doukhobors' emigration to Canada.",
+          "sourceId": "nyt-1910",
+          "locator": "section 'Leo Tolstoy's Career', para. beginning 'Early in 1900'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His translator Aylmer Maude writes that he went to Canada at Tolstoy's wish to arrange the Doukhobor migration.",
+          "sourceId": "maude-1911",
+          "locator": "Preface, para. 1"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1849 he made his first attempt to start a school for the peasant children of Yasnaya Polyana.",
+          "sourceId": "maude-1911",
+          "locator": "ch. II, '1849'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Ask what will come of what you do today and of your whole life, and do not stop until you have an answer you can live by.",
+      "sourceId": "confession-maude",
+      "locator": "ch. V"
+    },
+    {
+      "text": "Do not answer violence with violence; bear wrongs rather than repay evil with evil.",
+      "sourceId": "hindu-letter",
+      "locator": "section III, para. beginning 'Thus it went on everywhere'"
+    },
+    {
+      "text": "Live by your own work, not as a parasite on other people's labour.",
+      "sourceId": "confession-maude",
+      "locator": "ch. XIII, first para."
+    },
+    {
+      "text": "Tell the whole truth about yourself, the ugly parts included.",
+      "sourceId": "confession-maude",
+      "locator": "ch. II"
+    },
+    {
+      "text": "Live seeking God: keep up the search, even through the days of doubt.",
+      "sourceId": "confession-maude",
+      "locator": "ch. XII"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "The hero of my tale, whom I love with all the strength of my soul, whom I have tried to set forth in all his beauty, and who has always been, is, and always will be most beautiful, is—the truth.",
+      "sourceId": "sevastopol-hapgood",
+      "locator": "'Sevastopol in May, 1855', ch. XVI, last para.",
+      "translation": "Isabel F. Hapgood, 1888"
+    },
+    {
+      "text": "What will come of what I am doing to-day or shall do to-morrow? What will come of my whole life?",
+      "sourceId": "confession-maude",
+      "locator": "ch. V",
+      "translation": "Aylmer Maude, 1921"
+    },
+    {
+      "text": "Live seeking God, and then you will not live without God.",
+      "sourceId": "confession-maude",
+      "locator": "ch. XII",
+      "translation": "Aylmer Maude, 1921"
+    },
+    {
+      "text": "I cannot think of those years without horror, loathing and heartache.",
+      "sourceId": "confession-maude",
+      "locator": "ch. II",
+      "translation": "Aylmer Maude, 1921"
+    }
+  ],
+  "definingMoment": {
+    "text": "In the late 1870s, rich and famous after War and Peace and Anna Karenina, he fell into a crisis over what his life was for; in A Confession he writes that the question brought him to the edge of suicide. He visited the Optina Pustyn monastery in 1877 and then built his faith on the Gospels, above all 'Resist not evil'. He wrote A Confession between 1879 and 1882, and the censor banned it. In 1883, after seeing the Moscow slums during the census, he signed his property over to his wife.",
+    "sourceIds": [
+      "confession-maude",
+      "gale-enc",
+      "lrb-parks-2018"
+    ]
+  },
+  "shadow": {
+    "text": "Before he married he paid gipsy singers for sex, caught gonorrhoea from a prostitute and lost money and property at cards. From at least 1858 he had a liaison with Aksinya Bazykina, a married peasant woman born in 1836; when he proposed in 1862, Tim Parks writes, a married peasant woman was expecting his child, and days earlier he had 'paused in his courting of Sonya to enjoy a country girl called Sasha'. On 17 September 1862, six days before the wedding, he gave his bride, just 18, his diaries of the past 15 years; she wrote years later that she did not think she ever recovered from the shock. Sofia bore him 13 children, five of whom died before the age of ten, while she ran the estate and copied his manuscripts; after his conversion he preached chastity, yet, in Parks's words, 'continued to demand his \"marriage rights\"', and in 1884 he wrote in his diary that she would be 'a millstone around my neck' until he died. In 1883 he signed his property over to her but went on living on it with the domestic staff, which Parks says meant he had not really given anything up. When their son Vanechka died aged six in 1895, he wrote in his diary that it was 'a merciful event'. In old age he made several wills, some in secret, and in November 1910 he left her in the night; his follower Chertkov and others painted Sofia as domineering and hysterical, while the Irish Times reviewer of her diaries reads them as a moving account of events as she saw them.",
+    "sourceIds": [
+      "maude-1911",
+      "pss-48",
+      "lrb-parks-2018",
+      "lrb-meek-2010",
+      "irishtimes-2010"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you do this week that will still matter when you ask what came of your whole life?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "A Confession",
+      "year": 1882
+    },
+    {
+      "title": "The Death of Ivan Ilyich",
+      "year": 1886
+    },
+    {
+      "title": "War and Peace",
+      "year": 1869
+    }
+  ],
+  "sources": [
+    {
+      "id": "confession-maude",
+      "kind": "primary",
+      "title": "A Confession, trans. Aylmer Maude",
+      "author": "Leo Tolstoy",
+      "year": 1921,
+      "publisher": "Oxford University Press (World's Classics); text read on Wikisource and Standard Ebooks",
+      "url": "https://en.wikisource.org/wiki/A_Confession_(Maude%27s_translation)"
+    },
+    {
+      "id": "sevastopol-hapgood",
+      "kind": "primary",
+      "title": "Sevastopol, trans. Isabel F. Hapgood",
+      "author": "Leo Tolstoy",
+      "year": 1888,
+      "publisher": "Thomas Y. Crowell & Co., New York",
+      "url": "https://www.gutenberg.org/ebooks/47197"
+    },
+    {
+      "id": "hindu-letter",
+      "kind": "primary",
+      "title": "A Letter to a Hindu (dated Yasnaya Polyana, 14 December 1908), with an introduction by M. K. Gandhi",
+      "author": "Leo Tolstoy",
+      "year": 1909,
+      "url": "https://www.gutenberg.org/ebooks/7176"
+    },
+    {
+      "id": "maude-1911",
+      "kind": "secondary",
+      "title": "The Life of Tolstoy: First Fifty Years (5th edition; first edition 1908)",
+      "author": "Aylmer Maude",
+      "year": 1911,
+      "publisher": "Dodd, Mead and Company, New York",
+      "url": "https://www.gutenberg.org/ebooks/52242"
+    },
+    {
+      "id": "lrb-parks-2018",
+      "kind": "secondary",
+      "title": "No Company, No Carpets (review of Tolstoy and Tolstaya: A Portrait of a Life in Letters), London Review of Books vol. 40 no. 8, 26 April 2018",
+      "author": "Tim Parks",
+      "year": 2018,
+      "publisher": "London Review of Books",
+      "url": "https://www.lrb.co.uk/the-paper/v40/n08/tim-parks/no-company-no-carpets"
+    },
+    {
+      "id": "lrb-meek-2010",
+      "kind": "secondary",
+      "title": "Some Wild Creature (review of The Diaries of Sofia Tolstoy and other books), London Review of Books vol. 32 no. 14, 22 July 2010",
+      "author": "James Meek",
+      "year": 2010,
+      "publisher": "London Review of Books",
+      "url": "https://www.lrb.co.uk/the-paper/v32/n14/james-meek/some-wild-creature"
+    },
+    {
+      "id": "irishtimes-2010",
+      "kind": "secondary",
+      "title": "Riveting journals of a remarkable woman (review of The Diaries of Sofia Tolstoy), The Irish Times, 23 January 2010",
+      "author": "Carla King",
+      "year": 2010,
+      "publisher": "The Irish Times",
+      "url": "https://www.irishtimes.com/culture/books/riveting-journals-of-a-remarkable-woman-1.1272370"
+    },
+    {
+      "id": "nyt-1910",
+      "kind": "secondary",
+      "title": "Tolstoy Is Dead; Long Fight Over (obituary), The New York Times, 20 November 1910",
+      "author": "The New York Times (unsigned)",
+      "year": 1910,
+      "publisher": "The New York Times; transcription on Wikisource",
+      "url": "https://en.wikisource.org/wiki/The_New_York_Times/1910/11/20/Tolstoy_Is_Dead;_Long_Fight_Over"
+    },
+    {
+      "id": "gale-enc",
+      "kind": "secondary",
+      "title": "Tolstoy, Leo, in Gale Contextual Encyclopedia of World Literature",
+      "author": "Gale (editors)",
+      "year": "n.d. (online entry, read 2026-11-10)",
+      "publisher": "Gale, via Encyclopedia.com",
+      "url": "https://www.encyclopedia.com/arts/encyclopedias-almanacs-transcripts-and-maps/tolstoy-leo"
+    },
+    {
+      "id": "birukoff-1911",
+      "kind": "secondary",
+      "title": "The Life of Tolstoy",
+      "author": "Paul Birukoff",
+      "year": 1911,
+      "publisher": "Cassell, London; text on Wikisource",
+      "url": "https://en.wikisource.org/wiki/The_Life_of_Tolstoy/Chapter_14"
+    },
+    {
+      "id": "pss-48",
+      "kind": "secondary",
+      "title": "Polnoe sobranie sochinenii, vol. 48: Diaries and notebooks 1858-1880, editors' commentary",
+      "author": "L. N. Tolstoy; commentary by the editors of the Jubilee Edition",
+      "year": 1952,
+      "publisher": "Khudozhestvennaya literatura, Moscow; electronic edition by the Tolstoy Museum ('Ves Tolstoy v odin klik')",
+      "url": "https://tolstoy.ru/upload/iblock/779/77984228c87b699197c72288d57c47a6.pdf"
+    },
+    {
+      "id": "pss-54",
+      "kind": "secondary",
+      "title": "Polnoe sobranie sochinenii, vol. 54: Diaries and notebooks 1900-1903, editors' commentary",
+      "author": "L. N. Tolstoy; commentary by the editors of the Jubilee Edition",
+      "year": 1935,
+      "publisher": "Khudozhestvennaya literatura, Moscow; electronic edition by the Tolstoy Museum ('Ves Tolstoy v odin klik')",
+      "url": "https://tolstoy.ru/upload/iblock/d7e/d7e9b15e48bdfcb1f1f07fa10e641272.pdf"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "Real novelist (1828-1910), never a politician, and no living religion founded; goes to the owner because the ages of two women in his sexual record are not known. Aksinya Bazykina: born 1836, married to the peasant Ermil Bazykin, liaison with Tolstoy before his marriage (Jubilee Edition vol. 48, commentary note 227 to the diary of 13 May 1858), so about 22 when it began; not under 16. Gasha: Agafya Mikhailovna Trubetskaya, the maid of his sister Maria; the Jubilee Edition commentary (vol. 54, note 28 to the diary of January 1900) says that around 1859-1863, while still a bachelor, Tolstoy had a liaison with her and later told Sofia; Gasha herself said nothing had ever happened between them; no source found gives her age. Sasha: Parks (lrb-parks-2018) writes that days before proposing in 1862 he 'paused in his courting of Sonya to enjoy a country girl called Sasha'; no age given. A further report, that late in life he told a biographer he had seduced a virgin maid in his aunt's house who was then dismissed, was seen only in a copy that may not be lawfully cited, gives no age, and is not used. No source found describes force or coercion."
+    },
+    "blindAgreement": 0.75,
+    "devilsAdvocate": "I attacked Simplicity and Compassion against his life with Sofia and on the estate, and checked every claim against the saved texts. Simplicity fell: in 1883 he signed his property to his wife but went on living on it with numerous domestic staff, and Sofia called his wood-chopping a 'Robinson Crusoe game'; Compassion fell on the 'millstone' diary entry, his calling his son's death 'a merciful event' and his marriage record, and his famine kitchens and Doukhobor aid now stand under Service, the blind pick's word. Meaning, Faith and Honesty held, all four quotes match the named translations, Aksinya Bazykina is now named from the Jubilee Edition, and the status is flagged because no source gives the ages of the maid Gasha or the country girl Sasha.",
+    "checkedOn": "2026-11-10"
+  }
+}
