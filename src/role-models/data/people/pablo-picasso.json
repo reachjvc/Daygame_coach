@@ -1,0 +1,349 @@
+{
+  "id": "pablo-picasso",
+  "name": "Pablo Picasso",
+  "born": 1881,
+  "died": 1973,
+  "category": "artists",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A painter who kept inventing new ways to work and kept working to the end of his life.",
+  "startedFrom": "He was born in Málaga, Spain, on 25 October 1881. His father, José Ruiz, taught for small pay at the local school of arts and crafts and guided the boy's studies; apart from art, he avoided almost all ordinary schooling. At 16 he left the Madrid Academy, bored, to work on his own in Barcelona, and in his poor years he burned some of his paintings for heat.",
+  "values": [
+    {
+      "word": "Creativity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He painted Les Demoiselles d'Avignon in 1906-07; Alfred Barr of the Museum of Modern Art calls it the first cubist picture.",
+          "sourceId": "barr-1939",
+          "locator": "section 'Les Demoiselles d'Avignon', pp. 59-60"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1911 or 1912 he made a collage by gluing a piece of imitation chair caning to a still life.",
+          "sourceId": "nyt-1973",
+          "locator": "paragraph beginning 'This was also the case when Picasso added a new dimension to cubism'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said the whole world was open to young painters, 'everything waiting to be done, not just redone'.",
+          "sourceId": "zervos-1935",
+          "locator": "Barr (ed.) 1939, p. 19"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times obituary describes his 'feverish creativity and lavish talent lasting into old age'.",
+          "sourceId": "nyt-1973",
+          "locator": "paragraph beginning 'Henri Matisse and Georges Braque'"
+        }
+      ]
+    },
+    {
+      "word": "Originality",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said: 'I have a horror of copying myself.'",
+          "sourceId": "zervos-1935",
+          "locator": "Barr (ed.) 1939, p. 17"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times obituary calls him 'the most original, the most protean and the most forceful personality in the visual arts' of the century's first three quarters.",
+          "sourceId": "nyt-1973",
+          "locator": "paragraph beginning 'A genius for the ages'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Critic John Canaday wrote that his work gives a sense of 'constantly uncovering something new, of throwing it away, picking it up again, inventing'.",
+          "sourceId": "canaday-1973",
+          "locator": "paragraph beginning 'The one thing that hold's Picasso's tremendous body of work together'"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1969, aged 87, he produced 165 paintings and 45 drawings, shown at the Palace of the Popes in Avignon.",
+          "sourceId": "nyt-1973",
+          "locator": "paragraph beginning 'In 1969, his 88th year'"
+        },
+        {
+          "kind": "deed",
+          "claim": "His usual day: at 3 or 4 in the afternoon he went to his studio, often to work for 12 hours at a stretch with a break for dinner, and sometimes worked on until 2 or 3 in the morning.",
+          "sourceId": "nyt-1973",
+          "locator": "paragraph beginning 'One Picasso day was, in outline, much like the next'"
+        },
+        {
+          "kind": "witness",
+          "claim": "TIME reported that on his last evening, 7 April 1973, he left his dinner guests at 11:30 saying 'And now I must go back to work', and painted until 3 a.m.",
+          "sourceId": "time-1973",
+          "locator": "article body, paragraph on his final evening (no page numbers online)"
+        },
+        {
+          "kind": "words",
+          "claim": "He said 'Work is a necessity for man' and that he could not live without devoting all his time to art.",
+          "sourceId": "zervos-1935",
+          "locator": "Barr (ed.) 1939, pp. 15 and 19"
+        },
+        {
+          "kind": "witness",
+          "claim": "John Canaday wrote: 'But Picasso could not stop working.'",
+          "sourceId": "canaday-1973",
+          "locator": "paragraph beginning 'But Picasso could not stop working'"
+        }
+      ]
+    },
+    {
+      "word": "Passion",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said he loved art 'as the only end of my life' and that everything he did connected with it gave him intense pleasure.",
+          "sourceId": "zervos-1935",
+          "locator": "Barr (ed.) 1939, p. 19"
+        },
+        {
+          "kind": "deed",
+          "claim": "As a teenager in Barcelona he was drawing incessantly, filling sketch books with street scenes, night life, caricatures and portraits.",
+          "sourceId": "barr-1939",
+          "locator": "p. 23, paragraph beginning 'At first Picasso painted studies of beggars'"
+        },
+        {
+          "kind": "witness",
+          "claim": "John Canaday wrote that his creative energy 'welled up incessantly and demanded incessant release'.",
+          "sourceId": "canaday-1973",
+          "locator": "paragraph beginning 'But Picasso could not stop working'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Judge yourself by what you did, not by what you meant to do.",
+      "sourceId": "picasso-1923",
+      "locator": "Barr (ed.) 1939, p. 9"
+    },
+    {
+      "text": "Do not copy your own past work; take ideas from anywhere else.",
+      "sourceId": "zervos-1935",
+      "locator": "Barr (ed.) 1939, p. 17"
+    },
+    {
+      "text": "Let the idea choose the method: when something new needs a new way of working, take it up without waiting.",
+      "sourceId": "picasso-1923",
+      "locator": "Barr (ed.) 1939, p. 11"
+    },
+    {
+      "text": "Treat work as a need, not a mood: a horse does not step into the harness by itself, so set the alarm clock.",
+      "sourceId": "zervos-1935",
+      "locator": "Barr (ed.) 1939, p. 15"
+    },
+    {
+      "text": "Start from something real; you can strip it away later.",
+      "sourceId": "zervos-1935",
+      "locator": "Barr (ed.) 1939, p. 16"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "In my opinion to search means nothing in painting. To find, is the thing.",
+      "sourceId": "picasso-1923",
+      "locator": "'Picasso Speaks', The Arts, New York, May 1923; reprinted in Barr (ed.) 1939, p. 9",
+      "translation": "Spoken in Spanish to Marius de Zayas, who wrote it down; Picasso approved the manuscript; English text as published in The Arts, 1923 (translator not named)"
+    },
+    {
+      "text": "What one does is what counts and not what one had the intention of doing.",
+      "sourceId": "picasso-1923",
+      "locator": "'Picasso Speaks', The Arts, New York, May 1923; reprinted in Barr (ed.) 1939, p. 9",
+      "translation": "Spoken in Spanish to Marius de Zayas, who wrote it down; Picasso approved the manuscript; English text as published in The Arts, 1923 (translator not named)"
+    },
+    {
+      "text": "Art is a lie that makes us realize truth, at least the truth that is given us to understand.",
+      "sourceId": "picasso-1923",
+      "locator": "'Picasso Speaks', The Arts, New York, May 1923, p. 315; reprinted in Barr (ed.) 1939, p. 10",
+      "translation": "Spoken in Spanish to Marius de Zayas, who wrote it down; Picasso approved the manuscript; English text as published in The Arts, 1923 (translator not named)"
+    },
+    {
+      "text": "I have a horror of copying myself.",
+      "sourceId": "zervos-1935",
+      "locator": "'Conversation avec Picasso', Cahiers d'Art, 1935; English in Barr (ed.) 1939, p. 17",
+      "translation": "From Christian Zervos's French notes; English translation based on one by Myfanwy Evans, in Barr (ed.) 1939"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1937 the Spanish Republic asked Picasso for a large work for its pavilion at that year's Paris exhibition. On 26 April 1937 German planes bombed the Basque town of Guernica, and the bombing became his subject. In a little under six weeks he made nearly fifty sketches and studies, and Dora Maar photographed the canvas in his studio from 11 May to 4 June as he corrected poses and removed elements. The finished Guernica, about 11 feet high and 25 feet long, was made for the Spanish Pavilion; he kept it in trust for Spain, to go there only when Spain was a republic again.",
+    "sourceIds": [
+      "reina-sofia-205",
+      "reina-sofia-photos",
+      "nyt-1973"
+    ]
+  },
+  "shadow": {
+    "text": "In 1907 he and Fernande Olivier took in Raymonde, a girl from a Montmartre orphanage whom later accounts put at 13; his biographer John Richardson describes sketches Picasso made of her sitting naked, washing her feet, writes that 'young girls excited Picasso', and dates her return to the orphanage to late July. In 1927, aged 45 and married to Olga Khokhlova, he began a secret affair with Marie-Thérèse Walter, who was 17; she later told a researcher that he seduced her within a week of their first meeting, and, speaking of their relationship, used the words 'sadism, but also art which is serious'. He separated from Olga in 1935 but never divorced her. Françoise Gilot's 1964 memoir describes him bending her over the parapet of the Pont Neuf and threatening to throw her off, and she said he once held a lit cigarette to her cheek. Marie-Thérèse Walter and his second wife Jacqueline Roque both killed themselves after his death; his granddaughter Marina wrote in 2001 that he 'crushed them onto his canvas', while his grandson Olivier says no one was forced to do anything.",
+    "sourceIds": [
+      "wwh-olivier",
+      "spinoff-2018",
+      "richardson-1985",
+      "nyt-1973",
+      "lrb-2020",
+      "spectator-2023",
+      "theworld-2022",
+      "independent-2023"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you count what you meant to do instead of what you actually did?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Picasso Speaks (statement to Marius de Zayas)",
+      "year": 1923
+    },
+    {
+      "title": "Conversation avec Picasso (recorded by Christian Zervos)",
+      "year": 1935
+    }
+  ],
+  "sources": [
+    {
+      "id": "picasso-1923",
+      "kind": "primary",
+      "title": "Picasso Speaks (statement made in Spanish to Marius de Zayas, The Arts, New York, May 1923), as reprinted in Picasso: Forty Years of His Art, pp. 9-12",
+      "author": "Pablo Picasso",
+      "year": 1939,
+      "publisher": "The Museum of Modern Art",
+      "url": "https://www.moma.org/documents/moma_catalogue_2843_300061942.pdf"
+    },
+    {
+      "id": "zervos-1935",
+      "kind": "primary",
+      "title": "Conversation avec Picasso (recorded by Christian Zervos, Cahiers d'Art, 1935), English as reprinted in Picasso: Forty Years of His Art, pp. 13-20",
+      "author": "Pablo Picasso",
+      "year": 1939,
+      "publisher": "The Museum of Modern Art",
+      "url": "https://www.moma.org/documents/moma_catalogue_2843_300061942.pdf"
+    },
+    {
+      "id": "barr-1939",
+      "kind": "secondary",
+      "title": "Picasso: Forty Years of His Art (catalogue text)",
+      "author": "Alfred H. Barr, Jr. (ed.)",
+      "year": 1939,
+      "publisher": "The Museum of Modern Art",
+      "url": "https://www.moma.org/documents/moma_catalogue_2843_300061942.pdf"
+    },
+    {
+      "id": "nyt-1973",
+      "kind": "secondary",
+      "title": "Picasso: Protean and Prodigious, the Greatest Single Force in 70 Years of Art (obituary, 9 April 1973)",
+      "author": "Alden Whitman, The New York Times",
+      "year": 1973,
+      "url": "https://archive.nytimes.com/www.nytimes.com/learning/general/onthisday/bday/1025.html"
+    },
+    {
+      "id": "canaday-1973",
+      "kind": "secondary",
+      "title": "Picasso--Symbol of a Conquest in Art (9 April 1973)",
+      "author": "John Canaday, The New York Times",
+      "year": 1973,
+      "url": "https://archive.nytimes.com/www.nytimes.com/learning/general/onthisday/bday/1025.html"
+    },
+    {
+      "id": "reina-sofia-205",
+      "kind": "secondary",
+      "title": "Room 205.10: Guernica",
+      "author": "Museo Nacional Centro de Arte Reina Sofía",
+      "year": "n.d.",
+      "url": "https://museoreinasofia.es/en/collections/room-20510"
+    },
+    {
+      "id": "reina-sofia-photos",
+      "kind": "secondary",
+      "title": "Photo report of the evolution of Guernica (Dora Maar)",
+      "author": "Museo Nacional Centro de Arte Reina Sofía",
+      "year": "n.d.",
+      "url": "https://museoreinasofia.es/en/collections/artwork/photo-report-evolution-guernica"
+    },
+    {
+      "id": "richardson-1985",
+      "kind": "secondary",
+      "title": "Picasso and L'Amour Fou (The New York Review of Books, 19 December 1985)",
+      "author": "John Richardson",
+      "year": 1985,
+      "url": "https://www.nybooks.com/articles/1985/12/19/picasso-and-lamour-fou/"
+    },
+    {
+      "id": "lrb-2020",
+      "kind": "secondary",
+      "title": "The Scene on the Bridge (review of Life with Picasso; London Review of Books, vol. 42 no. 6, 19 March 2020)",
+      "author": "Lili Owen Rowlands",
+      "year": 2020,
+      "url": "https://www.lrb.co.uk/the-paper/v42/n06/lili-owen-rowlands/the-scene-on-the-bridge"
+    },
+    {
+      "id": "spectator-2023",
+      "kind": "secondary",
+      "title": "You can't cancel Picasso (The Spectator Australia, 11 November 2023)",
+      "author": "William Cook",
+      "year": 2023,
+      "url": "https://www.spectator.com.au/2023/11/you-cant-cancel-picasso/"
+    },
+    {
+      "id": "theworld-2022",
+      "kind": "secondary",
+      "title": "The Picasso paradox: Museums grapple with how to remember the artist's complicated legacy (The World, 13 October 2022)",
+      "author": "Alan Ruiz Terol",
+      "year": 2022,
+      "url": "https://theworld.org/stories/2022/10/13/picasso-paradox-museums-grapple-how-remember-artist-s-complicated-legacy"
+    },
+    {
+      "id": "independent-2023",
+      "kind": "secondary",
+      "title": "Pablo Picasso's grandson says artist's lovers 'knew' about his behaviour (The Independent, August 2023; read via Yahoo News republication)",
+      "author": "Roisin O'Connor",
+      "year": 2023,
+      "url": "https://au.news.yahoo.com/pablo-picasso-grandson-says-artist-092420812.html"
+    },
+    {
+      "id": "time-1973",
+      "kind": "secondary",
+      "title": "Art: Pablo Picasso's Last Days and Final Journey (TIME, 23 April 1973)",
+      "author": "TIME",
+      "year": 1973,
+      "url": "https://time.com/archive/6878387/art-pablo-picassos-last-days-and-final-journey/"
+    },
+    {
+      "id": "wwh-olivier",
+      "kind": "secondary",
+      "title": "Olivier, Fernande (1884-1966), in Women in World History: A Biographical Encyclopedia (Gale), summarising John Richardson, 'The Doomed Adoption', At Random, Fall 1996, pp. 46-47",
+      "author": "Barbara Morgan",
+      "year": "n.d.",
+      "publisher": "Gale (via Encyclopedia.com)",
+      "url": "https://www.encyclopedia.com/women/encyclopedias-almanacs-transcripts-and-maps/olivier-fernande-1884-1966"
+    },
+    {
+      "id": "spinoff-2018",
+      "kind": "secondary",
+      "title": "Book of the Week: Good Picasso, bad Picasso, great Picasso (review of Miles J. Unger, Picasso and the Painting That Shocked the World; The Spinoff, 19 July 2018)",
+      "author": "Anthony Byrt",
+      "year": 2018,
+      "url": "https://thespinoff.co.nz/culture/19-07-2018/book-of-the-week-good-picasso-bad-picasso-great-picasso"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real Spanish painter (1881-1973), dead, never held office or founded a religion. Owner case (under-16, no recommendation): in spring 1907 Fernande Olivier and Picasso took in Raymonde from a Montmartre orphanage; Byrt (Spinoff 2018, reviewing Unger) and Rodríguez and McAuliffe (search-inside snippets) give her age as 13, Women in World History says 'adolescent'. Richardson (as summarised in Women in World History, citing 'The Doomed Adoption', 1996) describes sketches in the Demoiselles sketchbooks of her 'sitting naked with her legs wide apart, washing her feet', writes 'Young girls excited Picasso... Fernande would have had cause for alarm', and dates the decision to return her to late July; Byrt says Richardson's vol. 2 reproduces a drawing of her with 'her crotch' visible and that Richardson and Unger call his 'fixation on the adolescent girl' dangerous. Accounts of the length of her stay differ (Richardson four months, Franck three, Mailer a week) and of the reason she was returned (Mailer: Olivier's own childhood). No source found describes sexual contact. Richardson vol. 2 and Olivier's Loving Picasso were not opened (lending-only). Also shadow: Marie-Thérèse Walter, 17 in 1927; Gilot's account of the Pont Neuf threat and a cigarette."
+    },
+    "blindAgreement": 0.5,
+    "devilsAdvocate": "I attacked all five draft values and the blind pick's Integrity, re-read the 1939 MoMA text, the NYT obituary and Canaday piece, the Reina Sofía pages and every shadow source, and searched for the 1907 Raymonde case. Curiosity fell: his own 1923 words reject searching and experiment, he avoided schooling and reading, and what the evidence shows is trying new media, not wanting to know; Integrity fell because it holds only as political steadfastness toward Franco's Spain while his dealings with the women in his life argue against it. Creativity, Originality, Hard work (now with TIME on his last night) and Passion held, and all four quotes match the 1939 text. I added the Raymonde drawings to the shadow, fixed three sentences, and flagged him: the owner sees every minors case.",
+    "checkedOn": "2026-11-10"
+  }
+}
