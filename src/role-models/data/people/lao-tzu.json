@@ -1,0 +1,226 @@
+{
+  "id": "lao-tzu",
+  "name": "Lao Tzu",
+  "born": "trad. 6th century BC",
+  "died": "unknown",
+  "category": "sages",
+  "areaIds": [
+    "lm_spirituality",
+    "lm_mindset"
+  ],
+  "tagline": "A sage who taught that the soft, the low and the still win in the end.",
+  "startedFrom": "Almost nothing about his life is certain, and some modern scholars think he never lived. The first account, written by the historian Sima Qian about 100 BC, says his name was Li Er, he came from the southern state of Chu, and he worked as keeper of the archives at the royal court of Zhou.",
+  "values": [
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He names 'shrinking from taking precedence of others' as one of his three precious things.",
+          "sourceId": "ddj-legge",
+          "locator": "ch. 67.2 (Legge 1891, p. 110)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Sima Qian says the chief aim of his studies was to keep himself concealed and remain unknown.",
+          "sourceId": "shiji-legge",
+          "locator": "Shiji ch. 63, in Legge 1891, Introduction ch. IV, p. 35"
+        },
+        {
+          "kind": "witness",
+          "claim": "SEP, translating Sima Qian, says his learning was devoted to self-effacement and not having fame.",
+          "sourceId": "sep",
+          "locator": "Section 1, The Laozi Story"
+        }
+      ]
+    },
+    {
+      "word": "Simplicity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "The book says 'simple views, and courses plain and true' would end selfish aims and many desires.",
+          "sourceId": "ddj-legge",
+          "locator": "ch. 19.2"
+        },
+        {
+          "kind": "words",
+          "claim": "He told Confucius to put away his proud air and many desires.",
+          "sourceId": "shiji-legge",
+          "locator": "Shiji ch. 63, in Legge 1891, Introduction ch. IV, p. 34"
+        },
+        {
+          "kind": "witness",
+          "claim": "SEP says the Laozi's emphasis on naturalness becomes a way of life of simplicity, calm and freedom from the tyranny of desire.",
+          "sourceId": "sep",
+          "locator": "Section 5, Approaches to the Laozi"
+        }
+      ]
+    },
+    {
+      "word": "Contentment",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "The book says there is no calamity greater than to be discontented with one's lot.",
+          "sourceId": "ddj-legge",
+          "locator": "ch. 46.2"
+        },
+        {
+          "kind": "words",
+          "claim": "The book says he who is satisfied with his lot is rich.",
+          "sourceId": "ddj-legge",
+          "locator": "ch. 33.1 (Legge 1891, p. 75)"
+        },
+        {
+          "kind": "witness",
+          "claim": "SEP says the Laozi answers false progress with a life of natural simplicity and contentment that comes from having few desires.",
+          "sourceId": "sep",
+          "locator": "Section 7, Naturalness and Nonaction"
+        }
+      ]
+    },
+    {
+      "word": "Stillness",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "The book says purity and stillness give the correct law to all under heaven.",
+          "sourceId": "ddj-legge",
+          "locator": "ch. 45.2 (Legge 1891, p. 88)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Sima Qian sums up his teaching: by doing nothing others are transformed, and right order follows from being pure and still.",
+          "sourceId": "shiji-legge",
+          "locator": "Shiji ch. 63, in Legge 1891, Introduction ch. IV, pp. 35-36"
+        },
+        {
+          "kind": "witness",
+          "claim": "IEP says the 4th-century writer Ge Hong praised Laozi's practice of stillness and wu-wei.",
+          "sourceId": "iep",
+          "locator": "Section 4, The Ongoing Laozi Myth"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When the work is done and your name starts to grow, step back.",
+      "sourceId": "ddj-legge",
+      "locator": "ch. 9.2"
+    },
+    {
+      "text": "Start hard things while they are still easy, and big things while they are still small.",
+      "sourceId": "ddj-legge",
+      "locator": "ch. 63.2"
+    },
+    {
+      "text": "Know when you have enough; wanting more is the worst fault.",
+      "sourceId": "ddj-legge",
+      "locator": "ch. 44.3, ch. 46.2"
+    },
+    {
+      "text": "To lead men, put yourself below them and behind them.",
+      "sourceId": "ddj-legge",
+      "locator": "ch. 66.1"
+    },
+    {
+      "text": "Use force only when you must, stop once the job is done, and do not boast about it.",
+      "sourceId": "ddj-legge",
+      "locator": "ch. 30.3"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "When the work is done, and one's name is becoming distinguished, to withdraw into obscurity is the way of Heaven.",
+      "sourceId": "ddj-legge",
+      "locator": "ch. 9.2 (Legge 1891, p. 53)",
+      "translation": "James Legge, 1891"
+    },
+    {
+      "text": "The tree which fills the arms grew from the tiniest sprout; the tower of nine storeys rose from a (small) heap of earth; the journey of a thousand li commenced with a single step.",
+      "sourceId": "ddj-legge",
+      "locator": "ch. 64.2 (Legge 1891, pp. 107-108)",
+      "translation": "James Legge, 1891"
+    },
+    {
+      "text": "But I have three precious things which I prize and hold fast. The first is gentleness; the second is economy; and the third is shrinking from taking precedence of others.",
+      "sourceId": "ddj-legge",
+      "locator": "ch. 67.2 (Legge 1891, p. 110)",
+      "translation": "James Legge, 1891"
+    }
+  ],
+  "definingMoment": {
+    "text": "Sima Qian says that Confucius came to the Zhou capital to ask him about the rites; Legge dates the visit to 517 BC, and a story in the Zhuangzi points to 501 BC. Lao told him: \"Put away your proud air and many desires, your insinuating habit and wild will. They are of no advantage to you.\" Sima Qian has Confucius tell his disciples afterwards that he could only compare Lao to a dragon; the IEP notes that this account may come from Zhuangzi stories it calls probably fictional. Later, seeing the Zhou dynasty decline, Lao left through the border gate; the warden asked him for a book, he wrote one of more than 5,000 characters, and no one knows where he died. Legge calls the story of the book at the gate \"doubtful and legendary\".",
+    "sourceIds": [
+      "shiji-legge",
+      "sep",
+      "iep"
+    ]
+  },
+  "shadow": {
+    "text": "The book under his name praises the ancients who used the Tao \"not to enlighten the people, but rather to make them simple and ignorant\" (chapter 65), and says the sage in government \"empties their minds, fills their bellies, weakens their wills\" (chapter 3). The philosopher Alan Chan writes that chapter 65 may mean literally that the ruler should keep the people ignorant for better control. Chapter 36 says that to overthrow a man you first raise him up, and to strip him you first give him gifts. Chapter 80's ideal small state would leave able men unused, take the people back from writing to knotted cords, and keep them from ever visiting the next state. Chan notes that the book does not rule out war entirely (chapters 67 to 69), and in 809 a Tang commentator presented it to the emperor as a treatise on military strategy. Sima Qian records that in his day Lao's followers and the Confucian scholars condemned each other.",
+    "sourceIds": [
+      "ddj-legge",
+      "sep",
+      "shiji-legge"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you put off this week while it was still small and easy to start?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "Tao Te Ching (Daodejing), also called the Laozi (attributed; likely compiled by many hands)",
+      "year": "c. 4th-3rd century BC"
+    }
+  ],
+  "sources": [
+    {
+      "id": "ddj-legge",
+      "kind": "primary",
+      "title": "The Tao Teh King, in The Texts of Taoism, part I (Sacred Books of the East, vol. 39); attributed to Lao-tze, likely a compilation",
+      "author": "Lao-tze (attributed); translated by James Legge",
+      "year": 1891,
+      "publisher": "Oxford: Clarendon Press",
+      "url": "https://archive.org/details/sacredbookschin00legggoog"
+    },
+    {
+      "id": "shiji-legge",
+      "kind": "primary",
+      "title": "Records of the Historian (Shiji), ch. 63, biography of Lao-tze, as translated in the Introduction, ch. IV, to The Texts of Taoism, part I (earliest account of his life, standing in for writing about himself)",
+      "author": "Sima Qian; translated by James Legge",
+      "year": 1891,
+      "publisher": "Oxford: Clarendon Press",
+      "url": "https://archive.org/details/sacredbookschin00legggoog"
+    },
+    {
+      "id": "sep",
+      "kind": "secondary",
+      "title": "Laozi, Stanford Encyclopedia of Philosophy",
+      "author": "Alan Chan",
+      "year": 2025,
+      "url": "https://plato.stanford.edu/entries/laozi/"
+    },
+    {
+      "id": "iep",
+      "kind": "secondary",
+      "title": "Laozi (Lao-tzu, fl. 6th cn. B.C.E.), Internet Encyclopedia of Philosophy",
+      "author": "Ronnie Littlejohn",
+      "year": "n.d.",
+      "url": "https://iep.utm.edu/laozi/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A figure of tradition whom some scholars think legendary, not a fictional character; not a living politician; no account of sexual violence or sex with a minor. Worshipped as a deity in religious Daoism, but that religion was founded by the Celestial Masters in the 2nd c. AD and SEP calls 'founder' questionable, so not treated as founder of a living religion."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I attacked each value against Legge's 1891 text, Sima Qian's account in Legge's introduction, and the Stanford and Internet encyclopedia entries, all opened and checked. Peace fell: it rested on two sources, and the book itself teaches deception in chapter 36, does not rule out war (Chan, chapters 67 to 69), and was read in 809 as a military treatise. Humility, Simplicity, Contentment and Stillness held, though every one rests on a book likely written by many hands and on a life story Legge and the IEP treat as partly legend. All three quotes were found word for word in Legge; the defining moment now says the dragon and the book at the gate are told as legend, and the shadow quotes chapter 65 for what it says, not as a direct order.",
+    "checkedOn": "2026-11-10"
+  }
+}
