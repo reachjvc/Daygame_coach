@@ -1,0 +1,340 @@
+{
+  "id": "albert-schweitzer",
+  "name": "Albert Schweitzer",
+  "born": 1875,
+  "died": 1965,
+  "category": "givers",
+  "areaIds": [
+    "lm_contribution",
+    "lm_mission"
+  ],
+  "tagline": "A famous scholar and organist who retrained as a doctor at 30 to run a hospital in Africa.",
+  "startedFrom": "He was born in 1875 in Kaysersberg, Alsace, then part of Germany, the son of a Lutheran pastor, and grew up in the village of Günsbach, where he went to the village school with the farmers' sons. He was frail as a boy and, by his own account, not a promising pupil: \"probably too much of a dreamer\".",
+  "values": [
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He gave up his post as a professor at the University of Strasbourg, his writing and his organ playing to go to Equatorial Africa as a doctor.",
+          "sourceId": "primeval-forest",
+          "locator": "ch. I, p. 1, opening paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1913 he founded his hospital at Lambaréné; he returned there in 1924 and, apart from short trips, spent the rest of his life there.",
+          "sourceId": "nobel-bio",
+          "locator": "paragraphs beginning \"Having decided to go to Africa\" and \"Schweitzer returned to Lambaréné in 1924\""
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that society must see healing the sick in the colonies as its own task, and that doctors must go out of their own free will to work for the people there.",
+          "sourceId": "primeval-forest",
+          "locator": "ch. I, p. 2, paragraph beginning \"The two or three hundred doctors\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Committee chairman said his work was dictated by the need to help, and to help where the suffering is greatest.",
+          "sourceId": "jahn-1953",
+          "locator": "paragraph beginning \"And so he helps them, heals them\""
+        },
+        {
+          "kind": "witness",
+          "claim": "His sharpest critic, Conor Cruise O'Brien, granted that when he first came to Lambaréné in 1913 he and his wife ran real risks, endured real hardships and made a real contribution to the health of the people there.",
+          "sourceId": "obrien-1964",
+          "locator": "first paragraph, sentence beginning \"When he first came to Lambaréné in 1913\""
+        }
+      ]
+    },
+    {
+      "word": "Compassion",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that a man is truly ethical only when he helps all life he is able to help and shrinks from injuring anything that lives.",
+          "sourceId": "civilization-ethics",
+          "locator": "ch. XXI, \"The Ethic of Reverence for Life\", p. 247"
+        },
+        {
+          "kind": "words",
+          "claim": "In his Nobel lecture he said compassion does not reach its true size until it takes in every living being, not only man.",
+          "sourceId": "nobel-lecture-1954",
+          "locator": "paragraph beginning \"It is convinced that compassion\""
+        },
+        {
+          "kind": "deed",
+          "claim": "As a boy, taken bird hunting by another boy, he scared the birds off before the other could shoot.",
+          "sourceId": "jahn-1953",
+          "locator": "paragraph beginning \"The son of a pastor\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Committee chairman named deep compassion for every living thing among the qualities that marked his whole life.",
+          "sourceId": "jahn-1953",
+          "locator": "paragraph beginning \"The qualities dimly discernible\""
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He used the $33,000 of his Nobel Peace Prize money to start the leprosy village at Lambaréné.",
+          "sourceId": "nobel-bio",
+          "locator": "paragraph beginning \"At Lambaréné, Schweitzer was doctor and surgeon\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Committee chairman said that on his visits to Europe he gave recitals to obtain funds for the hospital at Lambaréné, which he steadily enlarged.",
+          "sourceId": "jahn-1953",
+          "locator": "paragraph beginning \"His visits to Europe have always been marked\""
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that he paid the hospital's costs himself, with what he had earned from organ concerts and the profits of his book on Bach, while friends gave money too.",
+          "sourceId": "primeval-forest",
+          "locator": "ch. I, p. 3, paragraph beginning \"The actual expenses of the undertaking\""
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "While studying medicine he paid for it by lecturing and giving organ recitals, and in the same years finished the German edition of his Bach book.",
+          "sourceId": "jahn-1953",
+          "locator": "paragraph beginning \"The study of medicine gave him great satisfaction\""
+        },
+        {
+          "kind": "deed",
+          "claim": "At Lambaréné he was at once doctor and surgeon, pastor, village administrator, superintendent of buildings, writer and musician.",
+          "sourceId": "nobel-bio",
+          "locator": "paragraph beginning \"At Lambaréné, Schweitzer was doctor and surgeon\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Committee chairman said of his visits to Europe: \"It seems that he has no need of rest.\"",
+          "sourceId": "jahn-1953",
+          "locator": "paragraph beginning \"His visits to Europe have always been marked\""
+        }
+      ]
+    },
+    {
+      "word": "Mastery",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He took a doctorate in philosophy in 1899 and a licentiate in theology in 1900, published The Quest of the Historical Jesus in 1906, and was known internationally as a concert organist from his young manhood into his mid-eighties.",
+          "sourceId": "nobel-bio",
+          "locator": "paragraphs beginning \"Schweitzer entered into his intensive theological studies\" and \"Meanwhile he continued\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Committee chairman called him the foremost authority of his time on Bach and the outstanding interpreter of his music.",
+          "sourceId": "jahn-1953",
+          "locator": "paragraph beginning \"His years of study were rich\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Christianity Today wrote that he earned doctor's degrees in medicine, philosophy and theology and was great in diverse fields.",
+          "sourceId": "ct-1965",
+          "locator": "first and second paragraphs"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "If you have what others lack, such as health care, you owe it to the people who suffer without it.",
+      "sourceId": "primeval-forest",
+      "locator": "ch. I, pp. 1-2, the Dives and Lazarus paragraph"
+    },
+    {
+      "text": "Treat every life as worth keeping: help what you can, and harm nothing you do not have to.",
+      "sourceId": "civilization-ethics",
+      "locator": "ch. XXI, \"The Ethic of Reverence for Life\", pp. 246-247"
+    },
+    {
+      "text": "If you were spared pain, help spare someone else; do not just go back to life as before.",
+      "sourceId": "primeval-forest",
+      "locator": "ch. XI, pp. 173-174, \"The Fellowship of those who bear the Mark of Pain\""
+    },
+    {
+      "text": "Pay for your own mission with your own work, as far as you can.",
+      "sourceId": "primeval-forest",
+      "locator": "ch. I, p. 3, paragraph beginning \"The actual expenses of the undertaking\""
+    },
+    {
+      "text": "Put what you believe into practice instead of only talking about it.",
+      "sourceId": "jahn-1953",
+      "locator": "paragraph beginning \"We must try to grasp the full implications\" (Jahn quotes Out of My Life and Thought, p. 94)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "It is good to maintain and to promote life; it is bad to destroy life or to obstruct it.",
+      "sourceId": "civilization-ethics",
+      "locator": "ch. XXI, \"The Ethic of Reverence for Life\", p. 246",
+      "translation": "C. T. Campion, 1923 (2nd edition, 1929)"
+    },
+    {
+      "text": "A man is truly ethical only when he obeys the compulsion to help all life which he is able to assist, and shrinks from injuring anything that lives.",
+      "sourceId": "civilization-ethics",
+      "locator": "ch. XXI, \"The Ethic of Reverence for Life\", p. 247",
+      "translation": "C. T. Campion, 1923 (2nd edition, 1929)"
+    },
+    {
+      "text": "He who has been delivered from pain must not think he is now free again, and at liberty to take life up just as it was before, entirely forgetful of the past.",
+      "sourceId": "primeval-forest",
+      "locator": "ch. XI, p. 173",
+      "translation": "C. T. Campion, 1922"
+    },
+    {
+      "text": "It is my profound conviction that the solution lies in our rejecting war for an ethical reason; namely, that war makes us guilty of the crime of inhumanity.",
+      "sourceId": "nobel-lecture-1954",
+      "locator": "Nobel lecture \"The Problem of Peace\", Oslo, 4 November 1954, paragraph beginning \"I am well aware\"",
+      "translation": "From the French text in Les Prix Nobel en 1954; translation published in Nobel Lectures, Peace 1951-1970 (1972), translator not named"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1905, already a well-known theologian and organist, he began to study medicine, and in 1913 he qualified as a doctor. On Good Friday 1913 he left Günsbach with his wife, who had qualified as a nurse, for Lambaréné on the Ogowe River in French Equatorial Africa. He paid the costs mostly himself, from organ concerts and his book on Bach, with gifts from friends. In his first nine months there he examined close to two thousand patients.",
+    "sourceIds": [
+      "jahn-1953",
+      "nobel-bio",
+      "primeval-forest"
+    ]
+  },
+  "shadow": {
+    "text": "In his 1922 book On the Edge of the Primeval Forest he wrote that \"the negro is a child\" who must be ruled with authority, and gave his formula: \"I am your brother, it is true, but your elder brother.\" In his 1954 Nobel lecture he spoke of the \"naive nationalism\" of peoples who had recently gained independence from white rule. In 1963 Time reported that among his six doctors and 17 nurses there was not one African, and that he was training none. In 1964 Conor Cruise O'Brien wrote that to educated Africans and Afro-Americans, with a few exceptions, he stood for paternalism, condescension and resistance to change, and that he kept his hospital primitive because he believed \"simple people\" would not come to a modern one. Much of the criticism of him was aimed at the dirty and primitive conditions at Lambaréné; he answered that they made patients feel at home and that cleanliness was kept in the operating and maternity sections. In 1975 the religion scholar David Dungan wrote of his \"unconscious racism\" and \"white male paternalism\".",
+    "sourceIds": [
+      "primeval-forest",
+      "nobel-lecture-1954",
+      "time-1963",
+      "obrien-1964",
+      "ct-1965",
+      "dungan-1975"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Who near you this week needed help that you were well placed to give, and did you give it?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "On the Edge of the Primeval Forest",
+      "year": 1922
+    },
+    {
+      "title": "Out of My Life and Thought",
+      "year": 1931
+    },
+    {
+      "title": "Civilization and Ethics",
+      "year": 1923
+    }
+  ],
+  "sources": [
+    {
+      "id": "primeval-forest",
+      "kind": "primary",
+      "title": "On the Edge of the Primeval Forest: Experiences and Observations of a Doctor in Equatorial Africa",
+      "author": "Albert Schweitzer (translated by C. T. Campion)",
+      "year": 1922,
+      "publisher": "A. & C. Black, London (tenth impression, Project Gutenberg #50015)",
+      "url": "https://www.gutenberg.org/ebooks/50015"
+    },
+    {
+      "id": "civilization-ethics",
+      "kind": "primary",
+      "title": "Civilization and Ethics (The Philosophy of Civilization, Part II), 2nd edition",
+      "author": "Albert Schweitzer (translated by C. T. Campion)",
+      "year": 1929,
+      "publisher": "A. & C. Black, London (Project Gutenberg #76061)",
+      "url": "https://www.gutenberg.org/ebooks/76061"
+    },
+    {
+      "id": "nobel-lecture-1954",
+      "kind": "primary",
+      "title": "The Problem of Peace (Nobel Lecture, 4 November 1954)",
+      "author": "Albert Schweitzer",
+      "year": 1954,
+      "publisher": "Nobel Foundation; Nobel Lectures, Peace 1951-1970, ed. F. W. Haberman, Elsevier 1972",
+      "url": "https://www.nobelprize.org/prizes/peace/1952/schweitzer/lecture/"
+    },
+    {
+      "id": "nobel-bio",
+      "kind": "secondary",
+      "title": "Albert Schweitzer: Biographical",
+      "author": "Nobel Foundation",
+      "year": 1972,
+      "publisher": "Nobel Lectures, Peace 1951-1970, ed. F. W. Haberman, Elsevier; NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/peace/1952/schweitzer/biographical/"
+    },
+    {
+      "id": "jahn-1953",
+      "kind": "secondary",
+      "title": "Award Ceremony Speech, Nobel Peace Prize 1952",
+      "author": "Gunnar Jahn, Chairman of the Nobel Committee",
+      "year": 1953,
+      "publisher": "Nobel Foundation; NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/peace/1952/ceremony-speech/"
+    },
+    {
+      "id": "obrien-1964",
+      "kind": "secondary",
+      "title": "The Schweitzer Legend",
+      "author": "Conor Cruise O'Brien",
+      "year": 1964,
+      "publisher": "The New York Review of Books, 20 August 1964",
+      "url": "https://www.nybooks.com/articles/1964/08/20/the-schweitzer-legend/"
+    },
+    {
+      "id": "ct-1965",
+      "kind": "secondary",
+      "title": "Personalities: Albert Schweitzer: End of a Controversial Career",
+      "author": "Christianity Today (unsigned)",
+      "year": 1965,
+      "publisher": "Christianity Today, 24 September 1965",
+      "url": "https://www.christianitytoday.com/1965/09/personalities-albert-schweitzer-end-of-controversial-career/"
+    },
+    {
+      "id": "dungan-1975",
+      "kind": "secondary",
+      "title": "Reconsidering Albert Schweitzer",
+      "author": "David L. Dungan",
+      "year": 1975,
+      "publisher": "The Christian Century, 8 October 1975, pp. 874-877 (Religion Online)",
+      "url": "https://www.religion-online.org/?p=7740"
+    },
+    {
+      "id": "markel-2016",
+      "kind": "secondary",
+      "title": "Dr. Albert Schweitzer, a renowned medical missionary with a complicated history",
+      "author": "Howard Markel",
+      "year": 2016,
+      "publisher": "PBS NewsHour, 14 January 2016",
+      "url": "https://www.pbs.org/newshour/health/dr-albert-schweitzer-a-renowned-medical-missionary-with-a-complicated-history"
+    },
+    {
+      "id": "time-1963",
+      "kind": "secondary",
+      "title": "Africa: Albert Schweitzer: An Anachronism",
+      "author": "Time (unsigned)",
+      "year": 1963,
+      "publisher": "Time, 21 June 1963",
+      "url": "https://content.time.com/time/subscriber/article/0,33009,874897-2,00.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Alsatian theologian, organist and doctor (1875-1965) who ran a mission hospital at Lambarene in Gabon; never a politician, campaigner for office or founder of a religion; no account of sexual contact with a minor or of sexual violence was found; he is in, and his dark side is his paternalist and racist writing about Africans, a hospital critics called primitive and kept that way on purpose, and resistance to change as Africa moved to independence."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I tested Compassion and Service against his 1922 \"the negro is a child\" passage, his 1954 Nobel lecture, Time's 1963 report of no African doctors or nurses and none in training, O'Brien's 1964 review and Dungan's 1975 essay: the paternalism is a pattern over four decades, not one lapse, and it is told as such in the shadow. It argues against Respect, Humility and Fairness, which are not used, but not against Service or Compassion: no critic disputes that he treated the sick for fifty years, and O'Brien himself grants the early work a real contribution. All five draft values held (Generosity and Mastery each on three sources), the blind pick's Learning and Responsibility had no room, and all four quotes checked against Campion's text and the Nobel translation. Six passages were fixed, among them a claim that he paid for the hospital alone, which his own book contradicts.",
+    "checkedOn": "2026-11-10"
+  }
+}
