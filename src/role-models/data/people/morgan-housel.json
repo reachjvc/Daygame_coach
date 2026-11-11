@@ -1,0 +1,344 @@
+{
+  "id": "morgan-housel",
+  "name": "Morgan Housel",
+  "born": "1983 or 1984",
+  "died": null,
+  "category": "money",
+  "areaIds": [
+    "lm_money",
+    "lm_mindset"
+  ],
+  "tagline": "A finance writer who keeps room for error and uses money to buy independence.",
+  "startedFrom": "He grew up ski racing at Lake Tahoe, the youngest of three. His father started college about the month after he was born, and the family was very poor, living on grants in low-income housing, until his father became a doctor when Morgan was about 12. As a teenager on the Squaw Valley Ski Team he skied six days a week, ten months a year, and through college he parked cars as a hotel valet in Los Angeles.",
+  "values": [
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said that what nearly all people really want from money is independence and autonomy, and that this use of money is systematically overlooked.",
+          "sourceId": "ferriss-2022",
+          "locator": "The Tim Ferriss Show #576 (1 March 2022), transcript, answer beginning 'I think if there is a universal trait of money'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He and his wife paid off their house and have no mortgage, which he calls the worst financial decision they ever made on paper but the best money decision, because it gives them independence and security.",
+          "sourceId": "ferriss-2022",
+          "locator": "The Tim Ferriss Show #576 (1 March 2022), transcript, answer beginning 'I think you have to parse the difference', paragraph beginning 'And so I think, the difference between reasonable and rational'"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that few things in money are as valuable as options, and that being able to do what you want, when you want, has infinite return.",
+          "sourceId": "collab-2018",
+          "locator": "'The Psychology of Money' (1 June 2018), section 16, last paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that keeping money requires humility and an acceptance that some of what you have made is owed to luck.",
+          "sourceId": "collab-2022",
+          "locator": "'Getting Wealthy vs. Staying Wealthy' (book excerpt, 28 November 2022), paragraph beginning 'But keeping money requires the opposite of taking risk'"
+        },
+        {
+          "kind": "words",
+          "claim": "He closed his 2018 list of twenty money mistakes by naming the common cure as a preference for humility, adaptability, long time horizons and skepticism of popularity.",
+          "sourceId": "collab-2018",
+          "locator": "'The Psychology of Money' (1 June 2018), closing paragraph beginning 'If there's a common denominator'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2022 he said publicly that one regret about his book was framing the janitor-investor Ronald Read as his idol, and that he became a writer out of desperation and at first did not know how to write a good paragraph.",
+          "sourceId": "ferriss-2022",
+          "locator": "The Tim Ferriss Show #576 (1 March 2022), transcript, answers beginning 'This is probably one regret' and 'I wouldn’t say I was comfortable', and paragraph beginning 'As long as you can write your name'"
+        }
+      ]
+    },
+    {
+      "word": "Security",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After two friends died in an avalanche in 2001 his risk tolerance plunged: he drives the speed limit, obeys the seatbelt sign and invests in index funds.",
+          "sourceId": "risk-2020",
+          "locator": "'The Three Sides of Risk' (Collaborative Fund, 2020), paragraphs beginning 'My risk tolerance plunged' and 'I've been risk-averse'"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that his own money is barbelled: he takes risks with one part and is a 'terrified turtle' with the other, so that he can stay standing long enough for his risks to pay off.",
+          "sourceId": "collab-2018",
+          "locator": "'The Psychology of Money' (1 June 2018), section 16, paragraph beginning 'My own money is barbelled'"
+        },
+        {
+          "kind": "words",
+          "claim": "In The Psychology of Money he wrote that the only way to stay wealthy is some combination of frugality and paranoia, and summed up money success in one word: survival.",
+          "sourceId": "collab-2022",
+          "locator": "'Getting Wealthy vs. Staying Wealthy' (book excerpt, 28 November 2022), opening paragraphs and paragraph beginning 'If I had to summarize'"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He was a columnist and senior analyst at The Motley Fool from 2007 to August 2016 and a Wall Street Journal columnist from August 2014 to October 2015.",
+          "sourceId": "markel-8k-2021",
+          "locator": "Item 5.02, paragraph beginning 'Mr. Housel also is a frequent presenter'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Markel's proxy statement records him as a two-time winner of the Best in Business Award from the Society of American Business Editors and Writers and winner of the New York Times Sidney Award.",
+          "sourceId": "markel-proxy-2022",
+          "locator": "Proposal 1, Election of Directors, nominee table entry 'MORGAN E. HOUSEL, 38'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Wall Street Journal columnist Jason Zweig called The Psychology of Money one of the best and most original finance books in years.",
+          "sourceId": "zweig-2020",
+          "locator": "second paragraph, beginning 'To be published next month'"
+        },
+        {
+          "kind": "words",
+          "claim": "He describes his method as 'selfish writing': he writes only what he himself finds interesting.",
+          "sourceId": "ferriss-2022",
+          "locator": "The Tim Ferriss Show #576 (1 March 2022), transcript, answer beginning 'Here's how I think about content in general'"
+        }
+      ]
+    },
+    {
+      "word": "Family",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 2023 he named his three major life goals: to stay married, not to get fat, and to be there for his kids.",
+          "sourceId": "ferriss-2023",
+          "locator": "The Tim Ferriss Show #702 (2023), transcript, paragraph beginning 'I have a close friend who their relationship is not that healthy'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He and his wife paid off their house, a choice he says he cannot justify on a spreadsheet but makes because it gives them independence and security, particularly while raising their kids.",
+          "sourceId": "ferriss-2022",
+          "locator": "The Tim Ferriss Show #576 (1 March 2022), transcript, paragraph beginning 'It’s given us more joy and pleasure'"
+        },
+        {
+          "kind": "words",
+          "claim": "The day after his daughter was born he published a letter to her promising that her parents will work hard to support her, and ending 'Your parents love you.'",
+          "sourceId": "collab-2019",
+          "locator": "'Financial Advice For My New Daughter' (4 June 2019), paragraph beginning 'Your parents will work hard' and closing line"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked what independence means for him, he said he wants to wake up every morning and hang out with his kids, on his own schedule.",
+          "sourceId": "ferriss-2022",
+          "locator": "The Tim Ferriss Show #576 (1 March 2022), transcript, answer beginning 'I want to wake up every morning and hang out with my kids'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Keep room for error in money, work and nerves, so a bad surprise cannot knock you out of the game.",
+      "sourceId": "collab-2018",
+      "locator": "'The Psychology of Money' (1 June 2018), section 13; repeated in 'Ideas That Changed My Life' (7 December 2022), paragraph beginning 'Room for error is underappreciated'"
+    },
+    {
+      "text": "Take risks, but never one that could ruin you, however good the odds look.",
+      "sourceId": "collab-2018",
+      "locator": "'The Psychology of Money' (1 June 2018), section 16, paragraphs beginning 'Nassim Taleb says' and 'The idea is that you have to take risk'; acted on in 'The Three Sides of Risk' (Collaborative Fund, 2020), closing paragraphs"
+    },
+    {
+      "text": "Use money to buy control over your own time, not things to show other people.",
+      "sourceId": "ferriss-2022",
+      "locator": "The Tim Ferriss Show #576 (1 March 2022), transcript, answer beginning 'I think if there is a universal trait of money'; also 'The Psychology of Money' (1 June 2018), section 11"
+    },
+    {
+      "text": "Once you have a sound long-term plan, leave it alone: the urge to fiddle is what breaks compounding.",
+      "sourceId": "collab-2018",
+      "locator": "'The Psychology of Money' (1 June 2018), section 12, paragraph beginning 'When volatility is guaranteed and normal'"
+    },
+    {
+      "text": "Write only what you yourself find interesting, and trust that others will too.",
+      "sourceId": "ferriss-2022",
+      "locator": "The Tim Ferriss Show #576 (1 March 2022), transcript, answer beginning 'Here's how I think about content in general'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "investing is not the study of finance. It’s the study of how people behave with money.",
+      "sourceId": "collab-2018",
+      "locator": "'The Psychology of Money' (1 June 2018), introduction, paragraph beginning 'That’s because investing'"
+    },
+    {
+      "text": "Good investing is not necessarily about making good decisions. It’s about consistently not screwing up.",
+      "sourceId": "collab-2022",
+      "locator": "'Getting Wealthy vs. Staying Wealthy' (excerpt from The Psychology of Money, 28 November 2022), opening line"
+    },
+    {
+      "text": "few things in money are as valuable as options. The ability to do what you want, when you want, with who you want, and why you want, has infinite ROI.",
+      "sourceId": "collab-2018",
+      "locator": "'The Psychology of Money' (1 June 2018), section 16, last paragraph"
+    },
+    {
+      "text": "Tail-end events are all that matter.",
+      "sourceId": "risk-2020",
+      "locator": "'The Three Sides of Risk' (Collaborative Fund, 2020), second-to-last paragraph"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 21 February 2001, at 17, he skied the out-of-bounds backside of Squaw Valley with two of his best friends, Brendan Allan and Bryan Richmond, and was caught in a small avalanche that they laughed off. When they wanted a second run, he declined and offered to pick them up by truck instead. They never came down: rescuers found both buried under six feet of snow the next morning. He later wrote that his risk tolerance plunged after their deaths, and that the day taught him the rare, high-impact outcomes of risk are all that matter.",
+    "sourceIds": [
+      "risk-2020"
+    ]
+  },
+  "shadow": {
+    "text": "On 21 February 2001 he and two friends went out of bounds at Squaw Valley, which he himself describes as illegal, a form of trespassing; the two friends died there on a second run without him. Since August 2016 he has been a partner at Collaborative Fund, a venture capital firm, hired to write for it, and in 2022 he said of that writing, 'You can call it marketing if you want.' In November 2023 economist Byron Carson, writing for the American Institute for Economic Research, called The Psychology of Money 'overly simplistic' and said Housel 'consistently misuses terms like money, rationality, and wealth.'",
+    "sourceIds": [
+      "risk-2020",
+      "fortune-2016",
+      "ferriss-2022",
+      "aier-2023"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you leave yourself no room for error this week, in money, time or energy?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Psychology of Money",
+      "year": 2020
+    },
+    {
+      "title": "Same as Ever",
+      "year": 2023
+    },
+    {
+      "title": "The Art of Spending Money",
+      "year": 2025
+    }
+  ],
+  "sources": [
+    {
+      "id": "collab-2018",
+      "kind": "primary",
+      "title": "The Psychology of Money (blog essay)",
+      "author": "Morgan Housel",
+      "year": 2018,
+      "publisher": "Collaborative Fund",
+      "url": "https://collabfund.com/blog/the-psychology-of-money/"
+    },
+    {
+      "id": "collab-2022",
+      "kind": "primary",
+      "title": "Getting Wealthy vs. Staying Wealthy (excerpt from The Psychology of Money)",
+      "author": "Morgan Housel",
+      "year": 2022,
+      "publisher": "Collaborative Fund",
+      "url": "https://collabfund.com/blog/getting-wealthy-vs-staying-wealthy/"
+    },
+    {
+      "id": "collab-ideas-2022",
+      "kind": "primary",
+      "title": "Ideas That Changed My Life",
+      "author": "Morgan Housel",
+      "year": 2022,
+      "publisher": "Collaborative Fund",
+      "url": "https://collabfund.com/blog/ideas-that-changed-my-life/"
+    },
+    {
+      "id": "risk-2020",
+      "kind": "primary",
+      "title": "The Three Sides of Risk",
+      "author": "Morgan Housel",
+      "year": 2020,
+      "publisher": "Collaborative Fund",
+      "url": "https://collabfund.com/blog/the-three-sides-of-risk/"
+    },
+    {
+      "id": "ferriss-2022",
+      "kind": "primary",
+      "title": "The Tim Ferriss Show #576: Morgan Housel — The Psychology of Money, Picking the Right Game, and the $6 Million Janitor (transcript)",
+      "author": "Tim Ferriss and Morgan Housel",
+      "year": 2022,
+      "publisher": "tim.blog",
+      "url": "https://tim.blog/2022/03/05/morgan-housel-the-psychology-of-money-transcript/"
+    },
+    {
+      "id": "fortune-2016",
+      "kind": "secondary",
+      "title": "Meet the Motley Fool Who Just Joined a VC Firm",
+      "author": "Dan Primack",
+      "year": 2016,
+      "publisher": "Fortune",
+      "url": "https://fortune.com/2016/08/30/motley-fool-collaborative-fund/"
+    },
+    {
+      "id": "markel-8k-2021",
+      "kind": "secondary",
+      "title": "Form 8-K, 16 November 2021: Appointment of Morgan E. Housel to the Board of Directors",
+      "author": "Markel Corporation",
+      "year": 2021,
+      "publisher": "US Securities and Exchange Commission (EDGAR)",
+      "url": "https://www.sec.gov/Archives/edgar/data/1096343/000109634321000164/mkl-20211116.htm"
+    },
+    {
+      "id": "markel-proxy-2022",
+      "kind": "secondary",
+      "title": "Proxy Statement (DEF 14A) for the 2022 Annual Meeting",
+      "author": "Markel Corporation",
+      "year": 2022,
+      "publisher": "US Securities and Exchange Commission (EDGAR)",
+      "url": "https://www.sec.gov/Archives/edgar/data/1096343/000109634322000052/markelproxy2022document.htm"
+    },
+    {
+      "id": "zweig-2020",
+      "kind": "secondary",
+      "title": "Do You Know the Difference Between Being Rich and Being Wealthy? (The Intelligent Investor column, The Wall Street Journal, August 2020; reposted on the author's site)",
+      "author": "Jason Zweig",
+      "year": 2020,
+      "publisher": "The Wall Street Journal",
+      "url": "https://jasonzweig.com/do-you-know-the-difference-between-being-rich-and-being-wealthy/"
+    },
+    {
+      "id": "aier-2023",
+      "kind": "secondary",
+      "title": "‘The Psychology of Money’ Isn’t About Psychology or Money",
+      "author": "Byron Carson",
+      "year": 2023,
+      "publisher": "American Institute for Economic Research (The Daily Economy)",
+      "url": "https://thedailyeconomy.org/article/the-psychology-of-money-isnt-about-psychology-or-money/"
+    },
+    {
+      "id": "ferriss-2023",
+      "kind": "primary",
+      "title": "The Tim Ferriss Show #702: Morgan Housel — Contrarian Money and Writing Advice, Three Simple Goals to Guide Your Life (transcript)",
+      "author": "Tim Ferriss and Morgan Housel",
+      "year": 2023,
+      "publisher": "tim.blog",
+      "url": "https://tim.blog/2023/11/02/morgan-housel-transcript/"
+    },
+    {
+      "id": "collab-2019",
+      "kind": "primary",
+      "title": "Financial Advice For My New Daughter",
+      "author": "Morgan Housel",
+      "year": 2019,
+      "publisher": "Collaborative Fund",
+      "url": "https://collabfund.com/blog/financial-advice-for-my-new-daughter/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real, living writer and investor (born 1983 or 1984), not a politician, campaigner or religious founder; no account of sexual contact with a minor or of sexual violence found; his dark side is small: skiing out of bounds illegally as a teenager, critics who call his best-known book simplistic, and writing that is paid for by a venture capital firm."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked all five draft values against the saved texts of his Collaborative Fund essays, both Tim Ferriss transcripts, the Markel SEC filings, Fortune and the AIER review. Simplicity fell: it had two sources, and in the plain sense it is argued against by his own words that he wants a nice house and the things he wants; it survives only as plain index investing. Family from the blind pick took its place with three sources, and Independence, Humility, Security and Craft held. All four quotes matched; four fixes tightened his father's job, his role at Collaborative Fund, a Humility claim and the essay date to what the sources say.",
+    "checkedOn": "2026-11-10"
+  }
+}
