@@ -1,0 +1,306 @@
+{
+  "id": "leonidas-i",
+  "name": "Leonidas I",
+  "born": null,
+  "died": -480,
+  "category": "warriors",
+  "areaIds": [
+    "lm_mindset",
+    "lm_mission"
+  ],
+  "tagline": "A Spartan king who held the pass at Thermopylae for two days against the army of Xerxes and fell there in 480 BC.",
+  "startedFrom": "He was the third son of King Anaxandridas of Sparta, with two older brothers, Cleomenes and Dorieus, so Herodotus says he was far from expecting to become king. The throne came to him around 490-488 BC because Cleomenes died without a son, Dorieus had died in Sicily, he was older than the youngest brother Cleombrotus, and he was married to Cleomenes's daughter Gorgo. World History Encyclopedia notes that nothing is known of his commands before 480 BC.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On the last morning at Thermopylae in 480 BC, knowing that Persian troops were coming round behind him, he led his men out into the wider part of the pass and fell there fighting.",
+          "sourceId": "herodotus-macaulay",
+          "locator": "Histories 7.223-224"
+        },
+        {
+          "kind": "witness",
+          "claim": "Herodotus writes that Leonidas fell 'having proved himself a very good man'.",
+          "sourceId": "herodotus-macaulay",
+          "locator": "Histories 7.224"
+        },
+        {
+          "kind": "witness",
+          "claim": "Diodorus calls him 'a man who set great store by his courage and generalship'.",
+          "sourceId": "diodorus-oldfather",
+          "locator": "Library of History 11.4.2, Loeb vol. IV, p. 133"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica writes that he 'fell in the thickest of the fight' and that 'his heroism and devotion secured him an almost unique place in the imagination' of his own and later times.",
+          "sourceId": "eb1911",
+          "locator": "Leonidas, vol. 16, last two sentences of the article"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Herodotus writes that of all the commanders at Thermopylae, Leonidas was the one 'most held in regard' and 'leader of the whole army'.",
+          "sourceId": "herodotus-macaulay",
+          "locator": "Histories 7.204"
+        },
+        {
+          "kind": "deed",
+          "claim": "When the Persians came near and the Peloponnesians wanted to fall back to the Isthmus, he voted to stay and sent messengers to the cities asking for more troops.",
+          "sourceId": "herodotus-macaulay",
+          "locator": "Histories 7.207"
+        },
+        {
+          "kind": "deed",
+          "claim": "Diodorus writes that he 'had made careful preparation and massed the Greeks in the narrowest part of the pass' before the first Persian attack, and that the Greeks were 'exhorted to the fray by Leonidas'.",
+          "sourceId": "diodorus-oldfather",
+          "locator": "Library of History 11.6.4-11.7.1, Loeb vol. IV, p. 139"
+        },
+        {
+          "kind": "witness",
+          "claim": "Jona Lendering notes that Leonidas also ordered the mountain paths to be guarded, and takes this as a sign that the defence was seriously meant.",
+          "sourceId": "livius-lendering",
+          "locator": "section 'Xerxes' Invasion of Greece'"
+        },
+        {
+          "kind": "words",
+          "claim": "Told that apart from being king he was no different from the others, he answered that if he were no better than them, he would not be king, as Plutarch reports it.",
+          "sourceId": "plutarch-babbitt",
+          "locator": "Sayings of Spartans, Moralia 225A (Leonidas 1), Loeb vol. III, p. 347"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At Thermopylae in 480 BC, when the other Peloponnesians wanted to retreat, he voted to hold the pass, and the Greeks held it through two days of Persian attacks.",
+          "sourceId": "herodotus-macaulay",
+          "locator": "Histories 7.207, 7.210-212"
+        },
+        {
+          "kind": "deed",
+          "claim": "Diodorus writes that when, at the night council, some said the pass should be given up at once, Leonidas ordered the others away but said the Lacedaemonians 'must remain and not abandon the defence of the pass'.",
+          "sourceId": "diodorus-oldfather",
+          "locator": "Library of History 11.9.1, Loeb vol. IV, p. 145"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica writes that when Ephialtes led the Persians round by the mountain track, Leonidas divided his army, 'himself remaining in the pass'.",
+          "sourceId": "eb1911",
+          "locator": "Leonidas, vol. 16"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked whether he would risk so few men against so many, he answered that if he relied on numbers all Greece was not enough, but if on men's valour, his number would do, as Plutarch reports it.",
+          "sourceId": "plutarch-babbitt",
+          "locator": "Sayings of Spartans, Moralia 225B-C (Leonidas 8), Loeb vol. III, p. 349"
+        }
+      ]
+    },
+    {
+      "word": "Responsibility",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Herodotus, giving the account he prefers, writes that Leonidas sent the allies away 'having a care that they might not perish', and that he 'is known to have endeavoured to dismiss' the seer Megistias so that he would not die with them.",
+          "sourceId": "herodotus-macaulay",
+          "locator": "Histories 7.220-221"
+        },
+        {
+          "kind": "deed",
+          "claim": "Herodotus records that two of the 300, Eurytus and Aristodemus, had been 'dismissed from the camp by Leonidas' when they fell ill with an eye disease.",
+          "sourceId": "herodotus-macaulay",
+          "locator": "Histories 7.229"
+        },
+        {
+          "kind": "deed",
+          "claim": "Diodorus writes that he ordered the rest of the Greeks to 'depart and win safety for themselves', so that they could fight in the battles still to come.",
+          "sourceId": "diodorus-oldfather",
+          "locator": "Library of History 11.9.1, Loeb vol. IV, p. 145"
+        },
+        {
+          "kind": "words",
+          "claim": "Diodorus reports him saying that it was fitting for the leaders of Hellas to stay and die 'striving for the meed of honour'.",
+          "sourceId": "diodorus-oldfather",
+          "locator": "Library of History 11.9.1, Loeb vol. IV, p. 145"
+        },
+        {
+          "kind": "deed",
+          "claim": "Plutarch reports that, wishing to save the young men, he gave each of them a secret dispatch and sent them to the Ephors in Sparta.",
+          "sourceId": "plutarch-babbitt",
+          "locator": "Sayings of Spartans, Moralia 225E (Leonidas 15), Loeb vol. III, p. 351"
+        }
+      ]
+    },
+    {
+      "word": "Legacy",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Herodotus thinks he stayed because, if he remained, 'a great fame of him would be left behind, and the prosperity of Sparta would not be blotted out'.",
+          "sourceId": "herodotus-macaulay",
+          "locator": "Histories 7.220"
+        },
+        {
+          "kind": "witness",
+          "claim": "Diodorus writes that he was 'eagerly desirous to win both for himself and for the Spartans a garland of great glory'.",
+          "sourceId": "diodorus-oldfather",
+          "locator": "Library of History 11.9.1, Loeb vol. IV, p. 145"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked why the best men prefer a glorious death to an inglorious life, he answered, as Plutarch reports it, that they believe the one to be Nature's gift and the other within their own control.",
+          "sourceId": "plutarch-babbitt",
+          "locator": "Sayings of Spartans, Moralia 225D (Leonidas 14), Loeb vol. III, p. 351"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica writes that his heroism and devotion 'secured him an almost unique place in the imagination not only of his own but also of succeeding times'.",
+          "sourceId": "eb1911",
+          "locator": "Leonidas, vol. 16, last sentence of the article"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Earn the rank: a leader should be better than the men he leads.",
+      "sourceId": "plutarch-babbitt",
+      "locator": "Sayings of Spartans, Moralia 225A (Leonidas 1), Loeb vol. III, p. 347"
+    },
+    {
+      "text": "Judge a group by the courage of its men, not by how many they are.",
+      "sourceId": "plutarch-babbitt",
+      "locator": "Sayings of Spartans, Moralia 225B-C (Leonidas 8), Loeb vol. III, p. 349"
+    },
+    {
+      "text": "When others leave, keep the post you agreed to hold.",
+      "sourceId": "herodotus-macaulay",
+      "locator": "Histories 7.207 and 7.220"
+    },
+    {
+      "text": "Send away the people who do not have to share the danger, and carry it yourself.",
+      "sourceId": "herodotus-macaulay",
+      "locator": "Histories 7.220-221 (the allies and the seer Megistias sent away, in the account Herodotus prefers)"
+    },
+    {
+      "text": "Fight on the ground where your strengths count most and the other side's numbers count least.",
+      "sourceId": "diodorus-oldfather",
+      "locator": "Library of History 11.6.4, Loeb vol. IV, p. 139 (the Greeks massed in the narrowest part of the pass)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "But if I were no better than you others, I should not be king.",
+      "sourceId": "plutarch-babbitt",
+      "locator": "Sayings of Spartans, Moralia 225A (Leonidas 1), Loeb vol. III, p. 347 (to a man who said that apart from being king he was no different from the rest, as Plutarch reports it, c. AD 100)",
+      "translation": "Frank Cole Babbitt, 1931"
+    },
+    {
+      "text": "If you men think that I rely on numbers, then all Greece is not sufficient, for it is but a small fraction of their numbers; but if on men's valour, then this number will do.",
+      "sourceId": "plutarch-babbitt",
+      "locator": "Sayings of Spartans, Moralia 225B-C (Leonidas 8), Loeb vol. III, p. 349 (asked whether he would risk so few men against so many, as Plutarch reports it)",
+      "translation": "Frank Cole Babbitt, 1931"
+    },
+    {
+      "text": "To marry good men and bear good children.",
+      "sourceId": "plutarch-babbitt",
+      "locator": "Sayings of Spartans, Moralia 225A (Leonidas 2), Loeb vol. III, p. 347 (to his wife Gorgo, who asked for instructions as he left for Thermopylae, as Plutarch reports it)",
+      "translation": "Frank Cole Babbitt, 1931"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 480 BC Leonidas led a small Greek army to hold the narrow pass of Thermopylae against the army of the Persian king Xerxes, and for two days it threw back every attack. When a local man, Ephialtes, led Persian troops round the mountain by a path, most of the allies left. Herodotus is unsure whether they deserted or were sent away, and prefers the account that Leonidas dismissed them; he stayed with his 300 Spartans, the Thespians, who chose to stay, and the Thebans, whom he kept. On the last morning he led his men out into the wider part of the pass and fell there fighting. Herodotus says the Greeks drove the Persians back four times to recover his body; the historian Jona Lendering calls that scene 'too homeric to be true'. The 1911 Britannica notes that we know too little to judge his strategy, and Lendering reports Charles Hignett's verdict that why Leonidas stayed is 'an unsolved riddle'.",
+    "sourceIds": [
+      "herodotus-macaulay",
+      "eb1911",
+      "livius-lendering"
+    ]
+  },
+  "shadow": {
+    "text": "Herodotus writes that Leonidas had brought 400 Thebans to Thermopylae because Thebes was accused of siding with Persia, to test whether the city would send men or openly leave the alliance. When he sent the allies away in 480 BC, he kept the Thebans 'against their will', 'counting them as hostages'; they later went over to the Persians, and Xerxes had most of them branded. Diodorus instead calls these Thebans men 'of the other party' in a city divided over Persia, and says Leonidas detained only the Thespians. Leonidas was married to his niece Gorgo, the daughter of his half-brother Cleomenes, and that marriage was one reason the throne came to him. Herodotus says Cleomenes killed himself; the historian Jona Lendering calls that story suspect, suggests it may cover up a murder, and writes that if so, Leonidas's reign began with a coup.",
+    "sourceIds": [
+      "herodotus-macaulay",
+      "diodorus-oldfather",
+      "livius-lendering"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you walk away this week from something you had said you would hold?",
+    "principleIndex": 2
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "herodotus-macaulay",
+      "kind": "primary",
+      "title": "The History of Herodotus, vol. 2, books 5-9 (written c. 430 BC, about fifty years after Thermopylae; he left no writing of his own, and Herodotus is the earliest account and the one reference works build on)",
+      "author": "Herodotus, translated by G. C. Macaulay",
+      "year": 1914,
+      "publisher": "Macmillan, 3rd edition (first published 1890); Project Gutenberg e-text #2456",
+      "url": "https://www.gutenberg.org/ebooks/2456"
+    },
+    {
+      "id": "plutarch-babbitt",
+      "kind": "secondary",
+      "title": "Sayings of Spartans, in Moralia vol. III (collected c. AD 100, some 580 years after his death)",
+      "author": "Plutarch, translated by Frank Cole Babbitt",
+      "year": 1931,
+      "publisher": "Loeb Classical Library, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Plutarch/Moralia/Sayings_of_Spartans*/main.html"
+    },
+    {
+      "id": "diodorus-oldfather",
+      "kind": "secondary",
+      "title": "The Library of History, book 11, Loeb vol. IV (written c. 30 BC)",
+      "author": "Diodorus Siculus, translated by C. H. Oldfather",
+      "year": 1946,
+      "publisher": "Loeb Classical Library, via LacusCurtius",
+      "url": "https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Diodorus_Siculus/11A*.html"
+    },
+    {
+      "id": "eb1911",
+      "kind": "secondary",
+      "title": "Leonidas, Encyclopaedia Britannica, 11th edition, vol. 16",
+      "author": "Marcus Niebuhr Tod",
+      "year": 1911,
+      "publisher": "Wikisource transcription",
+      "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Leonidas"
+    },
+    {
+      "id": "livius-lendering",
+      "kind": "secondary",
+      "title": "Leonidas, Livius.org (created 2018, last modified 12 October 2020)",
+      "author": "Jona Lendering",
+      "year": 2020,
+      "publisher": "Livius.org",
+      "url": "https://www.livius.org/articles/person/leonidas/"
+    },
+    {
+      "id": "whe-cartwright",
+      "kind": "secondary",
+      "title": "Leonidas I of Sparta, World History Encyclopedia (12 May 2013)",
+      "author": "Mark Cartwright",
+      "year": 2013,
+      "publisher": "World History Encyclopedia",
+      "url": "https://www.worldhistory.org/Leonidas_I/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Spartan king (reigned c. 490-480 BC, killed at Thermopylae in 480 BC), long dead, no politician of today and no founder of a living religion; the sources are thin and late (Herodotus wrote decades after the battle, Plutarch's sayings some 580 years after it) but reference works treat him as historical; no account of sexual violence or of sex with anyone under 16 was found; his documented dark side (Thebans kept as hostages, a niece-marriage at a disputed succession) is shadow."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked all five values against Herodotus (Macaulay), Diodorus (Oldfather), Plutarch (Babbitt), the 1911 Britannica and Livius; all five held, with Lendering's point that Herodotus is unsure whether the allies deserted or were dismissed now told in the defining moment, and Determination and Responsibility each carried by three or more sources. On Plutarch's Sayings of Spartans, Babbitt's Loeb introduction says Plutarch copied the sayings from earlier books and Bad Ancient doubts only the letter exchange with Xerxes, so the three sayings no source disputes stay, labelled as Plutarch's report; Diodorus's 'to die for the freedom of all' fell, because the 1911 Britannica and Livius both argue against the deliberate-sacrifice story it belongs to. I fixed the tagline, startedFrom, the defining moment and the shadow where they said more than the sources (who stayed by choice, why the Thebans came, who was branded).",
+    "checkedOn": "2026-11-10"
+  }
+}
