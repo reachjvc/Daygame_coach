@@ -1,0 +1,301 @@
+{
+  "id": "akio-morita",
+  "name": "Akio Morita",
+  "born": 1921,
+  "died": 1999,
+  "category": "builders",
+  "areaIds": [
+    "lm_mission",
+    "lm_money"
+  ],
+  "tagline": "A sake heir who bet on his own brand and made Sony a name trusted worldwide.",
+  "startedFrom": "He was born in 1921 in Nagoya, the eldest son and heir of an old, wealthy sake-brewing family, and was groomed from the third grade to take over the business. He took a degree in physics instead, met the engineer Masaru Ibuka during wartime research on missile systems, and in 1946 the two started a radio-repair business in a bombed-out department store on a borrowed $500.",
+  "values": [
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Offered an order for 100,000 radios by Bulova, worth several times his company's total capital, he turned it down because the radios were to carry the Bulova name.",
+          "sourceId": "made-in-japan",
+          "locator": "ch. \"Selling to the World: My Learning Curve\", p. 84"
+        },
+        {
+          "kind": "deed",
+          "claim": "The Associated Press reports that, by his own account, he told engineers to make Walkmans despite the lack of market research.",
+          "sourceId": "ap-1999",
+          "locator": "paragraph beginning \"Sony began in the 1980s selling its Walkman\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Time says he traded the comfort and privilege of heir to a 14-generation sake business for the uncertainties of a start-up.",
+          "sourceId": "time-1998",
+          "locator": "page 1, paragraph beginning \"Morita had been groomed since the third grade\""
+        }
+      ]
+    },
+    {
+      "word": "Vision",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that Sony's plan is to lead the public with new products rather than ask people what they want.",
+          "sourceId": "made-in-japan",
+          "locator": "ch. \"Selling to the World: My Learning Curve\", p. 79"
+        },
+        {
+          "kind": "witness",
+          "claim": "Time says he created one of the first global corporations, seeing that a shrinking world offered great openings to a company that could think beyond its own borders.",
+          "sourceId": "time-1998",
+          "locator": "page 1, paragraph beginning \"This was in keeping with a man who created\""
+        },
+        {
+          "kind": "deed",
+          "claim": "With him as president of Sony's US subsidiary, Sony in 1970 became the first Japanese firm listed on the New York Stock Exchange.",
+          "sourceId": "ap-1999",
+          "locator": "paragraph beginning \"With Mr. Morita as president of Sony's U.S.\""
+        }
+      ]
+    },
+    {
+      "word": "Reputation",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that he refused the Bulova order because he had vowed his company would not be an original equipment maker for other companies.",
+          "sourceId": "made-in-japan",
+          "locator": "ch. \"Selling to the World: My Learning Curve\", p. 84"
+        },
+        {
+          "kind": "witness",
+          "claim": "Time says his marketing idea from the start was brand-name identification and brand responsibility, when many Japanese firms made goods sold under other companies' names.",
+          "sourceId": "time-1998",
+          "locator": "page 1, paragraph beginning \"From the outset, Morita's marketing concept\""
+        },
+        {
+          "kind": "deed",
+          "claim": "Gale's Encyclopedia of World Biography says he adopted \"Sony\" as the trademark because it was a name foreign customers could easily remember.",
+          "sourceId": "gale-encyclopedia",
+          "locator": "entry \"Akio Morita\" (Encyclopedia of World Biography), section on the Sony name"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that to win the American market he would have to move his family to the United States and experience the life of an American.",
+          "sourceId": "made-in-japan",
+          "locator": "ch. \"Selling to the World: My Learning Curve\", p. 97"
+        },
+        {
+          "kind": "deed",
+          "claim": "Time says he moved his entire family to the US in 1963, so that he would understand Americans, their market, customs and regulations.",
+          "sourceId": "time-1998",
+          "locator": "page 2 (https://content.time.com/time/subscriber/article/0,33009,989790-2,00.html), paragraph beginning \"Sony's globalization began in the U.S.\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Gale's Business Leader Profiles for Students says it was Morita who learned English and travelled the world unveiling Sony prototypes.",
+          "sourceId": "gale-encyclopedia",
+          "locator": "entry \"Morita, Akio\" (Business Leader Profiles for Students)"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In the two months before his 1993 stroke he travelled to ten places in the US and Europe, met Queen Elizabeth II, Jack Welch and Jacques Chirac, and still worked 17 days at Sony headquarters.",
+          "sourceId": "time-1998",
+          "locator": "page 1, paragraph beginning \"The best way to describe Morita's extraordinary drive\""
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that he is \"a person who loves his work\", and that even at 4 a.m. in a hotel room it is business day for some Sony person somewhere, so he can always call.",
+          "sourceId": "made-in-japan",
+          "locator": "ch. \"Selling to the World: My Learning Curve\", p. 118"
+        },
+        {
+          "kind": "deed",
+          "claim": "The Irish Times says that in the 1950s he made hundreds of visits to the US to check the latest technological developments.",
+          "sourceId": "irish-times-1999",
+          "locator": "paragraph containing \"he made hundreds of visits to the US\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Lead customers with new products instead of asking them what they want; they cannot know what is possible.",
+      "sourceId": "made-in-japan",
+      "locator": "ch. \"Selling to the World: My Learning Curve\", p. 79"
+    },
+    {
+      "text": "Build your own name: do not sell your work under someone else's brand, even for a big order.",
+      "sourceId": "made-in-japan",
+      "locator": "ch. \"Selling to the World: My Learning Curve\", p. 84"
+    },
+    {
+      "text": "Let people do what they think is right; a mistake is a lesson, but do not make the same one twice.",
+      "sourceId": "made-in-japan",
+      "locator": "ch. \"On Management: It's All in the Family\", pp. 150-151"
+    },
+    {
+      "text": "When something goes wrong, look for what caused it, not for someone to blame.",
+      "sourceId": "made-in-japan",
+      "locator": "ch. \"On Management: It's All in the Family\", pp. 149-150"
+    },
+    {
+      "text": "To win in a foreign market, go and live there and learn how its people live.",
+      "sourceId": "made-in-japan",
+      "locator": "ch. \"Selling to the World: My Learning Curve\", p. 97"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Our plan is to lead the public with new products rather than ask them what kind of products they want. The public does not know what is possible, but we do.",
+      "sourceId": "made-in-japan",
+      "locator": "ch. \"Selling to the World: My Learning Curve\", p. 79"
+    },
+    {
+      "text": "But I said then and I have said it often since: it was the best decision I ever made.",
+      "sourceId": "made-in-japan",
+      "locator": "ch. \"Selling to the World: My Learning Curve\", p. 84 (on refusing the Bulova order)"
+    },
+    {
+      "text": "Go ahead and do what you think is right. If you make a mistake, you will learn from it. Just don't make the same mistake twice.",
+      "sourceId": "made-in-japan",
+      "locator": "ch. \"On Management: It's All in the Family\", pp. 150-151"
+    },
+    {
+      "text": "I believe people work for satisfaction.",
+      "sourceId": "made-in-japan",
+      "locator": "ch. \"American and Japanese Styles: The Difference\", p. 186"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1955 his company made Japan's first transistor radio, and he went looking for American buyers. The people at Bulova liked it and offered to take 100,000 units, an order he says was worth several times the company's total capital, on one condition: the radios would carry the Bulova name. He refused, because he had vowed that his company would not be an original equipment maker for other companies. When he told the people in Tokyo, some of them thought he was foolish; he later called it the best decision he ever made.",
+    "sourceIds": [
+      "made-in-japan",
+      "ap-1999"
+    ]
+  },
+  "shadow": {
+    "text": "In 1989 he co-wrote a Japanese book with the nationalist Shintaro Ishihara, The Japan That Can Say No; his part called America's economy 'deteriorating', and a bootleg translation circulating in Washington drew anger there. Japanese embassy officials said he was embarrassed by Ishihara's blunt language, and he removed his name from the authorized American edition. Sony paid $3.4 billion for Columbia Pictures in 1989, a price many said was far too high; in November 1994 Sony wrote off $2.67 billion of goodwill, and that same week he resigned as chairman, a year after his stroke. Analysts linked the timing, Sony denied it, and the Moscow Times says president Norio Ohga masterminded the purchase. In the early 1980s Sony pushed its Beta video format and lost to VHS, which the Associated Press called his best-known gaffe. The Moscow Times wrote that he was feared in business circles for his sharp tongue, and Time's 1999 review of John Nathan's history of Sony says the book shows him as 'a mercurial leader and an insensitive father'.",
+    "sourceIds": [
+      "csm-1989",
+      "kirkus-1990",
+      "csm-1991",
+      "moscow-times-1994",
+      "ap-1999",
+      "time-1999"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did fear of a mistake stop you this week from doing what you thought was right?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "Made in Japan: Akio Morita and Sony (with Edwin M. Reingold and Mitsuko Shimomura)",
+      "year": 1986
+    }
+  ],
+  "sources": [
+    {
+      "id": "made-in-japan",
+      "kind": "primary",
+      "title": "Made in Japan: Akio Morita and Sony (autobiography, written with Edwin M. Reingold and Mitsuko Shimomura), first edition",
+      "author": "Akio Morita with Edwin M. Reingold and Mitsuko Shimomura",
+      "year": 1986,
+      "publisher": "E. P. Dutton",
+      "url": "https://archive.org/details/madeinjapanakiom00mori"
+    },
+    {
+      "id": "time-1998",
+      "kind": "secondary",
+      "title": "Akio Morita: Guru of Gadgets (Time 100, Builders and Titans, 7 December 1998)",
+      "author": "Kenichi Ohmae, Time",
+      "year": 1998,
+      "url": "https://content.time.com/time/subscriber/article/0,33009,989790,00.html"
+    },
+    {
+      "id": "ap-1999",
+      "kind": "secondary",
+      "title": "Akio Morita, Sony Founder And Visionary, Dies At 78 (Associated Press, 3 October 1999)",
+      "author": "Associated Press, in The Seattle Times",
+      "year": 1999,
+      "url": "https://archive.seattletimes.com/archive/19991003/2986725/akio-morita-sony-founder-and-visionary-dies-at-78"
+    },
+    {
+      "id": "irish-times-1999",
+      "kind": "secondary",
+      "title": "Business visionary behind Sony's success (obituary, 9 October 1999)",
+      "author": "The Irish Times",
+      "year": 1999,
+      "url": "https://www.irishtimes.com/news/business-visionary-behind-sony-s-success-1.236769"
+    },
+    {
+      "id": "moscow-times-1994",
+      "kind": "secondary",
+      "title": "Sony: End of an Era as Morita Bows Out (26 November 1994)",
+      "author": "Sebastian Moffett, The Moscow Times",
+      "year": 1994,
+      "url": "https://www.themoscowtimes.com/archive/sony-end-of-an-era-as-morita-bows-out"
+    },
+    {
+      "id": "csm-1989",
+      "kind": "secondary",
+      "title": "Japanese Book Draws Capital's Ire (13 November 1989)",
+      "author": "Amy Kaslow, The Christian Science Monitor",
+      "year": 1989,
+      "url": "https://www.csmonitor.com/layout/set/amphtml/1989/1113/abook.html"
+    },
+    {
+      "id": "csm-1991",
+      "kind": "secondary",
+      "title": "Japan and US: Commerce and Competition (8 February 1991)",
+      "author": "David R. Francis, The Christian Science Monitor",
+      "year": 1991,
+      "url": "https://www.csmonitor.com/layout/set/amphtml/1991/0208/dbno.html"
+    },
+    {
+      "id": "kirkus-1990",
+      "kind": "secondary",
+      "title": "Review of The Japan That Can Say No by Shintaro Ishihara (issue of 1 January 1990)",
+      "author": "Kirkus Reviews",
+      "year": 1990,
+      "url": "https://www.kirkusreviews.com/book-reviews/shintaro-ishihara-2/the-japan-that-can-say-no-why-japan-will-be-fir/"
+    },
+    {
+      "id": "gale-encyclopedia",
+      "kind": "secondary",
+      "title": "Akio Morita (entries from Encyclopedia of World Biography and Business Leader Profiles for Students, via Encyclopedia.com)",
+      "author": "Gale",
+      "year": "n.d. (read 2026-11-10)",
+      "publisher": "Gale",
+      "url": "https://www.encyclopedia.com/people/social-sciences-and-law/business-leaders/akio-morita"
+    },
+    {
+      "id": "time-1999",
+      "kind": "secondary",
+      "title": "Made in Japan (review of John Nathan, Sony: The Private Life, 18 October 1999)",
+      "author": "Time staff, Time",
+      "year": 1999,
+      "url": "https://time.com/archive/6955858/made-in-japan/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Japanese businessman (1921-1999), co-founder of Sony, never a politician, campaigner or religious founder; no account of sexual contact with a minor or of sexual violence was found; he is in, and his dark side is his 1989 co-authorship with Shintaro Ishihara of a book that angered Washington, Sony's costly Columbia Pictures purchase, and a sharp tongue."
+    },
+    "blindAgreement": 0.2,
+    "devilsAdvocate": "I attacked all five values against the Internet Archive text of Made in Japan, Time, the AP and Irish Times obituaries, Gale and the Moscow Times, and checked every locator; the NYT obituary could not be opened on nytimes.com, so the claims resting on its mailing-list repost were cut and replaced from Time, Gale, the Irish Times and his own book (p. 118). No value fell: each draft-only word kept three pieces of evidence from three sources, so only Vision overlaps the blind pick and Creativity, Respect, Determination and Leadership had no room. All four quotes matched the book; the shadow gained the Beta loss and the 1999 Time review's 'mercurial leader and an insensitive father', and the defining moment was cut back to what the book says.",
+    "checkedOn": "2026-11-10"
+  }
+}
