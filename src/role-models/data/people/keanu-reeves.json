@@ -1,0 +1,360 @@
+{
+  "id": "keanu-reeves",
+  "name": "Keanu Reeves",
+  "born": 1964,
+  "died": null,
+  "category": "charisma",
+  "areaIds": [
+    "lm_emotions",
+    "lm_friends"
+  ],
+  "tagline": "Lost his best friend, his daughter and her mother, and stayed kind and humble.",
+  "startedFrom": "He was born in Beirut in 1964 to an English mother and a Hawaiian-Chinese father; the family moved from Australia to New York and settled in Toronto when he was six. His father left when he was small, was gone from his life by the time he was 13, and was later jailed in Hawaii for selling heroin. He grew up with several stepfathers, was the class clown, got an agent as a teenager after a play, and, by the Guardian's account, dropped out of high school before graduating.",
+  "values": [
+    {
+      "word": "Kindness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In March 2019, when his flight from San Francisco to Burbank made an emergency landing in Bakersfield, he explained the delay to the other passengers, rode with them to Los Angeles in a minibus, and read them facts about Bakersfield on the way.",
+          "sourceId": "cbsla-2019",
+          "locator": "whole report, 26 March 2019"
+        },
+        {
+          "kind": "deed",
+          "claim": "He has gone to watch his friend Robert Longo's son play Catholic-league basketball, signed autographs for the crowd that formed, then suggested everyone sit down so the children could play.",
+          "sourceId": "gq-2019",
+          "locator": "section on Robert Longo and Johnny Mnemonic"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Guardian's Hadley Freeman writes that his co-stars regularly describe him as kind (Winona Ryder) and humble (Laurence Fishburne).",
+          "sourceId": "guardian-2019",
+          "locator": "third paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "The Guardian reports that co-star Laurence Fishburne describes him as humble.",
+          "sourceId": "guardian-2019",
+          "locator": "third paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked about his novel The Book of Elsewhere in 2024, he said: \"I didn't write a novel. China wrote a novel,\" giving the credit to his co-author China Miéville.",
+          "sourceId": "bbc-2024",
+          "locator": "passage on the collaborative process"
+        },
+        {
+          "kind": "words",
+          "claim": "He credited the audience for the John Wick films: \"We're only getting to tell these stories because of the audience. So thank you.\"",
+          "sourceId": "guardian-2019",
+          "locator": "paragraph on John Wick: Chapter 3"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "The Wall Street Journal reported in September 2001, citing an unnamed executive, that he gave his profit points on the two Matrix sequels to the special-effects and costume teams, and that he cut his own fee on The Devil's Advocate and The Replacements so the producers could afford Al Pacino and Gene Hackman.",
+          "sourceId": "abc-2001",
+          "locator": "paragraphs 2-4"
+        },
+        {
+          "kind": "deed",
+          "claim": "When John Wick: Chapter 4 finished filming in 2021, he gave the four members of his stunt team engraved Rolex Submariner watches at a dinner in Paris; two of them posted the watches online.",
+          "sourceId": "et-2021",
+          "locator": "whole report, 27 October 2021"
+        },
+        {
+          "kind": "witness",
+          "claim": "Hadley Freeman writes that two friends of hers who spent time with him in the 1990s still talk about his generosity, and that there are 'legions of stories' about his kindness, such as renegotiating his Matrix contract so the crew got a better deal.",
+          "sourceId": "guardian-2019",
+          "locator": "paragraph beginning 'Maintaining his privacy'"
+        }
+      ]
+    },
+    {
+      "word": "Friendship",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He called River Phoenix and Alex Winter \"definitely my closest friends from that era\" and said of Phoenix, who died in 1993, \"Yeah, I miss him.\"",
+          "sourceId": "guardian-2019",
+          "locator": "paragraph on My Own Private Idaho"
+        },
+        {
+          "kind": "deed",
+          "claim": "He keeps up old friendships: he visits the artist Robert Longo, who directed him in 1995, at his New York studio, and he guest-starred on Peter Stormare's TV series Swedish Dicks because the two are friends.",
+          "sourceId": "gq-2019",
+          "locator": "sections on Peter Stormare and Robert Longo"
+        },
+        {
+          "kind": "witness",
+          "claim": "Alex Winter, his co-star since their first Bill & Ted audition in the 1980s, told the Irish Times in 2020: \"We've been friends for a very long time\" and \"We've hung out together for 30 years.\"",
+          "sourceId": "irishtimes-2020",
+          "locator": "interview passage on how the two met"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In early 1995, a few months after the hit Speed, he played Hamlet on stage at the Manitoba Theatre Centre in Winnipeg, to sold-out houses every night.",
+          "sourceId": "cbc-1995",
+          "locator": "CBC-TV report of 4 February 1995"
+        },
+        {
+          "kind": "words",
+          "claim": "He told the CBC in December 1994 that since first reading Romeo and Juliet in school, \"I have enjoyed [Shakespeare] and pursued learning about it and acting in it.\"",
+          "sourceId": "cbc-1994",
+          "locator": "interview with Diana Swain, 9 December 1994"
+        },
+        {
+          "kind": "witness",
+          "claim": "Director Gus Van Sant says that before My Own Private Idaho he read all of John Rechy's City of Night and as many other Rechy books as he could find: \"He was always very thorough.\"",
+          "sourceId": "gq-2019",
+          "locator": "passage quoting Gus Van Sant"
+        },
+        {
+          "kind": "deed",
+          "claim": "Before John Wick: Chapter 2 he trained for three months in fighting, guns and driving, which the AP called \"John Wick boot camp\", building on judo and jiu-jitsu learned for the first film; he said: \"I love all the training.\"",
+          "sourceId": "ap-2017",
+          "locator": "paragraphs on the boot camp and firearms training, 9 February 2017"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Take on only the work you actually want to do, even when saying no costs you a big pay cheque.",
+      "sourceId": "guardian-2019",
+      "locator": "answer on big films and small films; paragraph on turning down Speed 2"
+    },
+    {
+      "text": "Do not try to get over grief; keep company with it, because it is the love for the person you lost.",
+      "sourceId": "guardian-2019",
+      "locator": "answer on what interests him about grief"
+    },
+    {
+      "text": "Share the reward with the people who make the work with you.",
+      "sourceId": "abc-2001",
+      "locator": "paragraphs 2-4"
+    },
+    {
+      "text": "Think about death often, so that you value your breath and the people around you.",
+      "sourceId": "bbc-2024",
+      "locator": "opening quotes"
+    },
+    {
+      "text": "Prepare fully for a role: read everything around it.",
+      "sourceId": "gq-2019",
+      "locator": "passage quoting Gus Van Sant"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I know that the ones who love us will miss us.",
+      "sourceId": "late-show-2019",
+      "locator": "official CBS clip, at 9:52, answering \"What do you think happens when we die?\""
+    },
+    {
+      "text": "Grief and loss, those are things that don't ever go away. They stay with you.",
+      "sourceId": "guardian-2019",
+      "locator": "answer on what interests him about grief"
+    },
+    {
+      "text": "Honestly, I try not to do anything I don't want to do.",
+      "sourceId": "guardian-2019",
+      "locator": "answer on whether he made big films to fund small ones"
+    },
+    {
+      "text": "I'm certainly not going to present myself as someone who gives everything away.",
+      "sourceId": "bbc-2024",
+      "locator": "last answer, on what he will do with the book's proceeds"
+    }
+  ],
+  "definingMoment": {
+    "text": "In early 1995, a few months after Speed had been a blockbuster hit for him, Reeves went to Winnipeg to play Hamlet at the Manitoba Theatre Centre. The run sold out before it opened, and more than 20,000 people saw it. He also turned down the sequel Speed 2, an offer the Guardian puts at $12 million. He told GQ in 2019 that he did not work with 20th Century Fox again until The Day the Earth Stood Still.",
+    "sourceIds": [
+      "cbc-1994",
+      "cbc-1995",
+      "guardian-2019",
+      "gq-2019"
+    ]
+  },
+  "shadow": {
+    "text": "In March 2007 a photographer, Alison Silva, said Reeves hit him with his Porsche as he drove away from a house in Rancho Palos Verdes and hurt his wrist; Reeves testified that Silva slipped and fell. In November 2008 a Los Angeles jury unanimously found Reeves not liable. His father, jailed in Hawaii after a 1992 heroin arrest, told the Honolulu Star-Bulletin in 2001 that his son never answered a letter he wrote from prison and \"wants nothing to do with me\". In 2019 Reeves said his father contacted him in the mid-1990s, \"but I didn't reach back out\", and that the drug conviction \"wasn't why I didn't get in touch.\" A film reference work notes that \"a number of critics\" have judged his acting talent slight.",
+    "sourceIds": [
+      "ap-2008",
+      "aba-2008",
+      "star-bulletin-2001",
+      "guardian-2019",
+      "idff"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Who helped you get something done this week, and how did you share the credit or the reward with them?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "BRZRKR (comic series)",
+      "year": 2021
+    },
+    {
+      "title": "The Book of Elsewhere (with China Miéville)",
+      "year": 2024
+    }
+  ],
+  "sources": [
+    {
+      "id": "late-show-2019",
+      "kind": "primary",
+      "title": "Keanu Reeves on The Late Show with Stephen Colbert (official clip 'Keanu Reeves: What It's Like To Fight On A Horse')",
+      "author": "The Late Show with Stephen Colbert, CBS",
+      "year": 2019,
+      "url": "https://www.youtube.com/watch?v=oNu6NyMkp8k"
+    },
+    {
+      "id": "cbc-1994",
+      "kind": "primary",
+      "title": "The varied resume of actor/rocker/publisher Keanu Reeves (CBC Archives, with clips of his 9 December 1994 interview with Diana Swain)",
+      "author": "CBC Archives",
+      "year": 2018,
+      "publisher": "CBC",
+      "url": "https://www.cbc.ca/archives/the-varied-resume-of-actor-rocker-publisher-keanu-reeves-1.4793104"
+    },
+    {
+      "id": "bbc-2024",
+      "kind": "primary",
+      "title": "Keanu Reeves: I'm thinking about death all the time (BBC News interview, republished by RNZ)",
+      "author": "Noor Nanji and Katie Razzall",
+      "year": 2024,
+      "publisher": "BBC News",
+      "url": "https://www.rnz.co.nz/news/world/522967/keanu-reeves-i-think-about-death-all-the-time"
+    },
+    {
+      "id": "guardian-2019",
+      "kind": "secondary",
+      "title": "Keanu Reeves: 'Grief and loss, those things don't ever go away' (Guardian interview, reprinted by the Irish Times, 21 May 2019)",
+      "author": "Hadley Freeman",
+      "year": 2019,
+      "publisher": "The Guardian",
+      "url": "https://www.irishtimes.com/culture/film/keanu-reeves-grief-and-loss-are-things-that-don-t-ever-go-away-1.3899589"
+    },
+    {
+      "id": "gq-2019",
+      "kind": "secondary",
+      "title": "The Legend of Keanu Reeves",
+      "author": "Alex Pappademas",
+      "year": 2019,
+      "publisher": "GQ",
+      "url": "https://www.gq.com/story/the-legend-of-keanu-reeves"
+    },
+    {
+      "id": "cbc-1995",
+      "kind": "secondary",
+      "title": "From the CBC archives: Keanu's excellent adventure in Winnipeg",
+      "author": "CBC News",
+      "year": 2015,
+      "publisher": "CBC",
+      "url": "https://www.cbc.ca/news/canada/manitoba/from-the-cbc-archives-keanu-s-excellent-adventure-in-winnipeg-1.2943591"
+    },
+    {
+      "id": "abc-2001",
+      "kind": "secondary",
+      "title": "Keanu Gives Up 'Matrix' Money (reporting a Wall Street Journal profile)",
+      "author": "ABC News",
+      "year": 2001,
+      "url": "https://abcnews.go.com/Entertainment/story?id=102572"
+    },
+    {
+      "id": "et-2021",
+      "kind": "secondary",
+      "title": "Keanu Reeves Gifts 'John Wick 4' Stunt Team Personalized Rolexes as a Thank You",
+      "author": "Entertainment Tonight",
+      "year": 2021,
+      "url": "https://www.etonline.com/keanu-reeves-gifts-john-wick-4-stunt-team-personalized-rolexes-as-a-thank-you-174346"
+    },
+    {
+      "id": "cbsla-2019",
+      "kind": "secondary",
+      "title": "Keanu Reeves' Excellent Adventure: Stranded Actor Joins Group On Road Trip Back To LA",
+      "author": "CBS Los Angeles",
+      "year": 2019,
+      "url": "https://www.cbsnews.com/losangeles/news/keanu-reeves-stranded-bakersfield/"
+    },
+    {
+      "id": "ap-2008",
+      "kind": "secondary",
+      "title": "Keanu Reeves Doesn't Owe Paparazzo A Dime",
+      "author": "Associated Press",
+      "year": 2008,
+      "publisher": "CBS News",
+      "url": "https://www.cbsnews.com/news/keanu-reeves-doesnt-owe-paparazzo-a-dime/"
+    },
+    {
+      "id": "aba-2008",
+      "kind": "secondary",
+      "title": "Keanu Reeves Cleared in Paparazzo Suit",
+      "author": "ABA Journal",
+      "year": 2008,
+      "url": "https://www.abajournal.com/news/article/keanu_reeves_cleared_in_paparazzo_suit"
+    },
+    {
+      "id": "star-bulletin-2001",
+      "kind": "secondary",
+      "title": "Memories of Keanu",
+      "author": "Tim Ryan",
+      "year": 2001,
+      "publisher": "Honolulu Star-Bulletin",
+      "url": "https://archives.starbulletin.com/2001/04/22/features/story1.html"
+    },
+    {
+      "id": "idff",
+      "kind": "secondary",
+      "title": "Reeves, Keanu (International Dictionary of Films and Filmmakers, via Encyclopedia.com)",
+      "author": "Joseph Milicia",
+      "year": "n.d.",
+      "publisher": "St. James Press",
+      "url": "https://www.encyclopedia.com/movies/dictionaries-thesauruses-pictures-and-press-releases/reeves-keanu"
+    },
+    {
+      "id": "irishtimes-2020",
+      "kind": "secondary",
+      "title": "Bill & Ted in middle age: 'We felt if we did it with heart, it would work'",
+      "author": "Tara Brady",
+      "year": 2020,
+      "publisher": "The Irish Times",
+      "url": "https://www.irishtimes.com/culture/film/bill-ted-in-middle-age-we-felt-if-we-did-it-with-heart-it-would-work-1.4360491"
+    },
+    {
+      "id": "ap-2017",
+      "kind": "secondary",
+      "title": "A peek into Keanu Reeves' stunt training for 'John Wick 2'",
+      "author": "Sandy Cohen",
+      "year": 2017,
+      "publisher": "Associated Press (via KSL)",
+      "url": "https://www.ksl.com/article/43131810/a-peek-into-keanu-reeves-stunt-training-for-john-wick-2"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living Canadian actor (born 1964), never a politician, campaigner or religious founder; searches found no account of sexual contact with a minor or of sexual violence, only small shadow facts (a 2007 injury claim a jury rejected, estrangement from his father, critics on his range)."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked each value and every sentence against the saved Guardian, GQ, CBC, BBC, ABC, ET, AP and court-report texts. Generosity was tested against his own 2024 line that he loves owning things and will not present himself as someone who gives everything away, and against the inflated Matrix-giveaway myths; it held on the documented crew and stunt-team gifts, as did Kindness and Humility. Friendship and Craft rested on only two outlets each and held once Alex Winter's 2020 Irish Times interview and the AP's 2017 training report were added; the blind pick's Discipline and Resilience were not added (one verified piece each, no room). Five sentences were tightened, among them the father's account (one unanswered prison letter) and Reeves's own 2019 words that he did not reach back out.",
+    "checkedOn": "2026-11-10"
+  }
+}
