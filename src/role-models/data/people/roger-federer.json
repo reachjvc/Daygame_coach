@@ -1,0 +1,353 @@
+{
+  "id": "roger-federer",
+  "name": "Roger Federer",
+  "born": 1981,
+  "died": null,
+  "category": "athletes",
+  "areaIds": [
+    "lm_fitness",
+    "lm_mindset",
+    "lm_contribution"
+  ],
+  "tagline": "A teenager who threw his racket and cried on court, learned to keep his cool, and stayed on the tour until he was 41.",
+  "startedFrom": "He grew up in Basel, Switzerland, the son of a Swiss father and a South African mother, and was a ball kid in his hometown. At 14 he left home for school in the French-speaking part of Switzerland and was horribly homesick at first, by his own account; at 16 he left school to play tennis full-time. His mother says that as a boy he would lose his temper on court and occasionally throw his racket or cry, and that his parents were angry at his behaviour.",
+  "values": [
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told Dartmouth graduates that people called his play effortless, but 'I had to work very hard... to make it look easy', training before tournaments 'when nobody was watching'.",
+          "sourceId": "dartmouth-2024",
+          "locator": "lesson one, \"'Effortless'… is a myth\""
+        },
+        {
+          "kind": "words",
+          "claim": "He told CNN that his coach Peter Carter's death in 2002 was 'somewhat of a wake-up call' and that he then 'really started to train hard'.",
+          "sourceId": "cnn-2019",
+          "locator": "section \"Wore black armband\""
+        },
+        {
+          "kind": "deed",
+          "claim": "Paganini described three training periods a year (December, February to April, summer), sometimes a fourth in autumn, each lasting at least two to three weeks.",
+          "sourceId": "swissinfo-2011",
+          "locator": "answer to \"How is Federer's physical form before Roland Garros?\""
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In July 2016, after surgery earlier that year on a torn knee meniscus, he ended his season, saying his knee and body needed proper time to fully recover.",
+          "sourceId": "si-2016",
+          "locator": "opening paragraphs and his quoted statement"
+        },
+        {
+          "kind": "deed",
+          "claim": "In January 2017, seeded 17th in his first tour event after six months out, he won the Australian Open, coming back from 3-1 down in the fifth set of the final against Rafael Nadal.",
+          "sourceId": "aljazeera-2017",
+          "locator": "paragraph beginning \"Roared on by a partisan Rod Laver Arena crowd\""
+        },
+        {
+          "kind": "words",
+          "claim": "He says that after losing the 2008 Wimbledon final and his No. 1 ranking he 'knew what I had to do... keep working. And keep competing.'",
+          "sourceId": "dartmouth-2024",
+          "locator": "lesson two, \"It's only a point\""
+        }
+      ]
+    },
+    {
+      "word": "Contribution",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He set up the Roger Federer Foundation on 24 December 2003; its first project, in 2004 in Port Elizabeth, South Africa, paid school fees, meals and uniforms.",
+          "sourceId": "federer-foundation",
+          "locator": "About page, history section"
+        },
+        {
+          "kind": "deed",
+          "claim": "In February 2020 he played Rafael Nadal before 51,954 people in Cape Town in an exhibition that raised $3.5 million for his foundation.",
+          "sourceId": "aljazeera-2020",
+          "locator": "paragraphs 1, 2 and 4"
+        },
+        {
+          "kind": "words",
+          "claim": "He says that early on he wanted 'to serve other people in other countries' and, motivated by his South African mother, started a foundation to educate children.",
+          "sourceId": "dartmouth-2024",
+          "locator": "lesson three, \"Life is bigger than the court\""
+        },
+        {
+          "kind": "witness",
+          "claim": "CNN reported in 2023 that the foundation had helped more than 2.5 million children in six countries of southern Africa and in Switzerland.",
+          "sourceId": "cnn-2023",
+          "locator": "paragraph beginning \"This year marks the 20th anniversary\""
+        }
+      ]
+    },
+    {
+      "word": "Longevity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In January 2017, aged 35, he won the Australian Open, the oldest Grand Slam winner since Ken Rosewall in 1972.",
+          "sourceId": "aljazeera-2017",
+          "locator": "paragraph beginning \"The win made Federer the first player ever\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In February 2018, aged 36, he became the oldest man ever ranked No. 1, passing Andre Agassi's record of 33.",
+          "sourceId": "espn-2018",
+          "locator": "opening paragraphs (Associated Press report, 16 February 2018)"
+        },
+        {
+          "kind": "words",
+          "claim": "When he retired in 2022 he wrote that he was 41, had played more than 1,500 matches over 24 years, and had played 'for much longer than I ever thought possible'.",
+          "sourceId": "retirement-2022",
+          "locator": "paragraphs beginning \"But I also know my body's capacities\" and \"I was given a special talent\""
+        },
+        {
+          "kind": "witness",
+          "claim": "His fitness trainer Pierre Paganini told swissinfo in 2011 that 'his longevity is incredible' and that training was spread out so he had time to recuperate.",
+          "sourceId": "swissinfo-2011",
+          "locator": "answers to \"Do you work differently with someone who is 20 than with someone who is 30?\" and \"What do you think of the 'theory of decline'\", and the answer on training periods"
+        }
+      ]
+    },
+    {
+      "word": "Family",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told Dartmouth graduates that even when he was in the top five it was important to him to have a rewarding life, 'full of travel, culture, friendships, and especially family'.",
+          "sourceId": "dartmouth-2024",
+          "locator": "lesson three, \"Life is bigger than the court\""
+        },
+        {
+          "kind": "words",
+          "claim": "His retirement letter thanks his wife Mirka, who was 'on the road with my team for over 20 years', his four children, his parents and his sister, and says seeing his family cheer from the stands is a feeling he will cherish forever.",
+          "sourceId": "retirement-2022",
+          "locator": "paragraphs from \"I would like to especially thank my amazing wife Mirka\" to \"my loving parents and my dear sister\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2023 he took all four children, his wife and his mother on a foundation trip to Lesotho, CNN reported.",
+          "sourceId": "cnn-2023",
+          "locator": "paragraph quoting \"the first time that all four children could join my wife and my mom\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do the hard work before the event, when nobody is watching; what looks easy is built there.",
+      "sourceId": "dartmouth-2024",
+      "locator": "lesson one, \"'Effortless'… is a myth\""
+    },
+    {
+      "text": "A lost point is only a point: let it go and commit fully to the next one.",
+      "sourceId": "dartmouth-2024",
+      "locator": "lesson two, \"It's only a point\""
+    },
+    {
+      "text": "Learn to win on the bad days too, when you are hurt or scared, not only when you are at your best.",
+      "sourceId": "dartmouth-2024",
+      "locator": "lesson one, passage beginning \"Then there are days when you just feel broken\""
+    },
+    {
+      "text": "Give your body the full time it needs to heal, so you can keep going for years.",
+      "sourceId": "si-2016",
+      "locator": "his statement of 26 July 2016 (\"The doctors advised that if I want to play...\")"
+    },
+    {
+      "text": "Keep a life bigger than your work: family, travel, friends and giving to others.",
+      "sourceId": "dartmouth-2024",
+      "locator": "lesson three, \"Life is bigger than the court\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "The truth is, I had to work very hard... to make it look easy.",
+      "sourceId": "dartmouth-2024",
+      "locator": "lesson one, \"'Effortless'… is a myth\" (the dots are in the official transcript)"
+    },
+    {
+      "text": "I didn't get where I got on pure talent alone. I got there by trying to outwork my opponents.",
+      "sourceId": "dartmouth-2024",
+      "locator": "lesson one, \"'Effortless'… is a myth\""
+    },
+    {
+      "text": "When you lose every second point, on average, you learn not to dwell on every shot.",
+      "sourceId": "dartmouth-2024",
+      "locator": "lesson two, \"It's only a point\""
+    },
+    {
+      "text": "I was given a special talent to play tennis, and I did it at a level that I never imagined, for much longer than I ever thought possible.",
+      "sourceId": "retirement-2022",
+      "locator": "paragraph beginning \"I was given a special talent\""
+    }
+  ],
+  "definingMoment": {
+    "text": "Early in 2016 he had surgery on a torn meniscus in his knee, hurt while giving his children a bath. In July 2016, aged 34, he ended his season, saying his doctors had told him the knee and body needed proper time to fully recover if he wanted to play injury free for another few years. In January 2017, seeded 17th in his first tour event after six months out, he reached the Australian Open final. He came back from 3-1 down in the fifth set to beat Rafael Nadal and won his 18th Grand Slam title at 35.",
+    "sourceIds": [
+      "si-2016",
+      "aljazeera-2017"
+    ]
+  },
+  "shadow": {
+    "text": "By his own account he spent years as a young player whining, swearing and throwing his racket before he learned to keep his cool; his mother said his parents were angry at his behaviour. In the 2009 US Open final, which he lost to Juan Martin del Potro, CBS microphones caught him swearing at umpire Jake Garner, and he was fined $1,500. In January 2020 he was fined $3,000 for an audible obscenity in his Australian Open quarter-final against Tennys Sandgren. That month swissinfo reported that the climate group 350.org, in a post retweeted by Greta Thunberg, had said his sponsor Credit Suisse gave $57 billion since 2016 to companies looking for new fossil fuel deposits, and had asked whether he approved. He answered that he would use his position to talk about important issues with his sponsors.",
+    "sourceIds": [
+      "dartmouth-2024",
+      "tcom-2016",
+      "bbc-2009",
+      "swissinfo-2009",
+      "swissinfo-2020b",
+      "swissinfo-2020"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which lost point did you carry into the next one this week, instead of letting it go?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "2024 Commencement Address at Dartmouth College (\"Effortless is a myth\")",
+      "year": 2024
+    }
+  ],
+  "sources": [
+    {
+      "id": "dartmouth-2024",
+      "kind": "primary",
+      "title": "2024 Commencement Address by Roger Federer (transcript, 9 June 2024)",
+      "author": "Roger Federer; published by Dartmouth Office of Communications",
+      "year": 2024,
+      "publisher": "Dartmouth College",
+      "url": "https://home.dartmouth.edu/news/2024/06/2024-commencement-address-roger-federer"
+    },
+    {
+      "id": "retirement-2022",
+      "kind": "primary",
+      "title": "Roger Federer's retirement statement (full letter, 15 September 2022)",
+      "author": "Roger Federer; text published by Reuters via The Star",
+      "year": 2022,
+      "url": "https://www.thestar.com.my/sport/tennis/2022/09/15/tennis-roger-federer039s-retirement-statement"
+    },
+    {
+      "id": "cnn-2019",
+      "kind": "primary",
+      "title": "Roger Federer's tears for former coach: 'Never broke down like this' (interview, 7 January 2019)",
+      "author": "Ravi Ubha and Christina Macfarlane, CNN",
+      "year": 2019,
+      "url": "https://edition.cnn.com/2019/01/07/tennis/federer-carter-emotion-tennis-spt-intl/index.html"
+    },
+    {
+      "id": "federer-foundation",
+      "kind": "primary",
+      "title": "About us",
+      "author": "Federer Foundation (his own foundation)",
+      "year": "accessed 2026-11-10",
+      "url": "https://www.rogerfedererfoundation.org/en/about/"
+    },
+    {
+      "id": "aljazeera-2017",
+      "kind": "secondary",
+      "title": "Australian Open: Federer beats Nadal in final (29 January 2017)",
+      "author": "Reuters, published by Al Jazeera",
+      "year": 2017,
+      "url": "https://www.aljazeera.com/sports/2017/1/29/australian-open-federer-beats-nadal-in-final"
+    },
+    {
+      "id": "espn-2018",
+      "kind": "secondary",
+      "title": "Roger Federer, 36, to become oldest No. 1 ever in ATP rankings (16 February 2018)",
+      "author": "Associated Press, published by ESPN",
+      "year": 2018,
+      "url": "https://www.espn.com/tennis/story/_/id/22468637/roger-federer-returns-top-atp-rankings-oldest-ever-36"
+    },
+    {
+      "id": "si-2016",
+      "kind": "secondary",
+      "title": "Roger Federer to miss remainder of 2016 season due to knee rehab (26 July 2016)",
+      "author": "Stanley Kay, Sports Illustrated",
+      "year": 2016,
+      "url": "https://www.si.com/tennis/2016/07/26/roger-federer-out-season-knee-rehabilitation-injury-olympics-us-open"
+    },
+    {
+      "id": "swissinfo-2011",
+      "kind": "secondary",
+      "title": "Why age is no barrier for Roger Federer (interview with Pierre Paganini, 22 May 2011)",
+      "author": "Samuel Jaberg, swissinfo.ch",
+      "year": 2011,
+      "url": "https://www.swissinfo.ch/eng/why-age-is-no-barrier-for-roger-federer/30280846"
+    },
+    {
+      "id": "aljazeera-2020",
+      "kind": "secondary",
+      "title": "Federer, Nadal shatter attendance record in 'Match in Africa' (8 February 2020)",
+      "author": "Al Jazeera",
+      "year": 2020,
+      "url": "https://www.aljazeera.com/sports/2020/2/8/federer-nadal-shatter-attendance-record-in-match-in-africa"
+    },
+    {
+      "id": "cnn-2023",
+      "kind": "secondary",
+      "title": "What Roger Federer did next (4 July 2023)",
+      "author": "Matias Grez and Christina Macfarlane, CNN",
+      "year": 2023,
+      "url": "https://edition.cnn.com/2023/07/04/sport/roger-federer-reflects-on-life-after-tennis-spt-intl"
+    },
+    {
+      "id": "tcom-2016",
+      "kind": "secondary",
+      "title": "Federer, Raonic on the art of staying calm (6 July 2016)",
+      "author": "Nina Pantic, Tennis.com",
+      "year": 2016,
+      "url": "https://www.tennis.com/baseline/articles/federer-raonic-on-the-art-of-staying-calm"
+    },
+    {
+      "id": "bbc-2009",
+      "kind": "secondary",
+      "title": "Federer fined for final outburst (17 September 2009)",
+      "author": "BBC Sport",
+      "year": 2009,
+      "url": "https://news.bbc.co.uk/sport2/hi/tennis/8262031.stm"
+    },
+    {
+      "id": "swissinfo-2009",
+      "kind": "secondary",
+      "title": "Federer fined for swearing at US Open (17 September 2009)",
+      "author": "swissinfo.ch and agencies",
+      "year": 2009,
+      "url": "https://www.swissinfo.ch/eng/federer-fined-for-swearing-at-us-open/1008542"
+    },
+    {
+      "id": "swissinfo-2020",
+      "kind": "secondary",
+      "title": "Roger Federer will donate to victims of Australia bushfires (13 January 2020)",
+      "author": "Keystone-SDA / swissinfo.ch",
+      "year": 2020,
+      "url": "https://www.swissinfo.ch/eng/life-aging/climate-action_roger-federer-will-donate-to-victims-of-australia-bushfires/45489156"
+    },
+    {
+      "id": "swissinfo-2020b",
+      "kind": "secondary",
+      "title": "Roger Federer fined for swearing at Australian Open (29 January 2020)",
+      "author": "Reuters / swissinfo.ch",
+      "year": 2020,
+      "url": "https://www.swissinfo.ch/eng/life-aging/outburst_roger-federer-fined-for-swearing-at-australian-open/45526064"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living Swiss tennis player (born 1981), never a politician, campaigner or religious founder; no account of sexual contact with a minor or of sexual violence was found; he is in, and his dark side is small: a teenage temper, a 2009 fine for swearing at an umpire, and 2020 criticism of his bank sponsor by climate activists."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked every value and re-read each cited page: the Dartmouth transcript, the Reuters text of the retirement letter, CNN, Al Jazeera, AP, SI, swissinfo, BBC and Tennis.com. Hard work, Resilience, Contribution and Longevity held; Gratitude fell because its evidence came from only two sources, and the blind pick's Family came in on the Dartmouth address, the retirement letter and CNN 2023. Two trainer claims were narrowed to what Paganini said, the tagline no longer says 'top tennis' until 41, and the shadow gained his $3,000 fine for swearing at the 2020 Australian Open.",
+    "checkedOn": "2026-11-10"
+  }
+}
