@@ -1,0 +1,339 @@
+{
+  "id": "anthony-bourdain",
+  "name": "Anthony Bourdain",
+  "born": 1956,
+  "died": 2018,
+  "category": "explorers",
+  "areaIds": [
+    "lm_fun",
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "An ex-junkie chef who, at 44, set out to eat and talk with strangers worldwide.",
+  "startedFrom": "He grew up in Leonia, New Jersey, the son of a Columbia Records executive and a New York Times copy editor, and by his own account was an angry, 'self-destructive' kid who took LSD at 13. He dropped out of Vassar after two years for the Culinary Institute of America, then spent more than twenty years as a dishwasher, line cook and chef, much of the 1980s addicted to heroin and then cocaine. Until he was 44 he saw very little of the world.",
+  "values": [
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told The New Yorker he has 'a rampaging curiosity about things', and said it was part of why his first marriage ended.",
+          "sourceId": "keefe-2017",
+          "locator": "paragraph beginning \"For a time, Bourdain tried to save the marriage\""
+        },
+        {
+          "kind": "deed",
+          "claim": "On a 1998 work trip to Tokyo he walked into the most foreign-seeming, crowded restaurant he could find, pointed at a diner's food and said 'Gimme that!'",
+          "sourceId": "keefe-2017",
+          "locator": "paragraph beginning \"In 1998, Les Halles opened a Tokyo branch\""
+        },
+        {
+          "kind": "witness",
+          "claim": "NPR critic Linda Holmes wrote that he was 'infinitely curious, literally hungry for everything', and that what drove him was 'understanding more of the world each year than he had the year before'.",
+          "sourceId": "holmes-2018",
+          "locator": "paragraphs beginning \"He was, particularly on his TV shows\" and \"So Bourdain didn't focus on\""
+        }
+      ]
+    },
+    {
+      "word": "Honesty",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1999, while a working chef, he published in The New Yorker how kitchens really run: Monday's fish bought on Friday, the worst steaks saved for diners who order well-done, bread sent back out.",
+          "sourceId": "ny-1999",
+          "locator": "paragraphs beginning \"The fish specialty is reasonably priced\", \"People who order their meat well-done\" and \"The fact is that most good kitchens\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Patrick Radden Keefe writes that Kitchen Confidential established him as 'a brash truth-teller'.",
+          "sourceId": "keefe-2017",
+          "locator": "paragraph beginning \"Before becoming famous, Bourdain spent more than two decades\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Rolling Stone wrote that Kitchen Confidential told 'with remarkable honesty' how low he sank on heroin and cocaine in the 1980s.",
+          "sourceId": "rolling-stone-2018",
+          "locator": "paragraph beginning \"For years, Bourdain battled substance abuse\""
+        },
+        {
+          "kind": "words",
+          "claim": "In 2017 he said publicly that women in his trade had not felt they could confide in him about harassment, and called it 'a personal failing'.",
+          "sourceId": "slate-2017",
+          "locator": "answer to the first question, paragraph beginning \"Just personal stories\""
+        }
+      ]
+    },
+    {
+      "word": "Adventure",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After Beirut in 2006 he took the show to Libya, Gaza and the Democratic Republic of Congo, to film how people live amid violent conflict.",
+          "sourceId": "keefe-2017",
+          "locator": "paragraph beginning \"Since visiting Beirut\""
+        },
+        {
+          "kind": "words",
+          "claim": "In 2016 he said: 'We shot in Beirut during the war and since, Congo, Gaza, post-Benghazi Libya.'",
+          "sourceId": "npr-2016",
+          "locator": "answer beginning \"Well, there's nothing actually more political than food\""
+        },
+        {
+          "kind": "deed",
+          "claim": "On the show he drank vodka before plunging into a frozen river outside St. Petersburg and speared a pig as guest of honour at a jungle longhouse in Borneo.",
+          "sourceId": "keefe-2017",
+          "locator": "paragraph beginning \"Obama was scheduled to meet\" (sentence beginning \"The secret ingredient of the show\")"
+        },
+        {
+          "kind": "witness",
+          "claim": "CNN's statement on his death named 'his love of great adventure, new friends, fine food and drink'.",
+          "sourceId": "npr-2018",
+          "locator": "paragraph beginning \"It is with extraordinary sadness\""
+        }
+      ]
+    },
+    {
+      "word": "Travel",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Until he was 44 he saw very little of the world; by early 2017 he had travelled to nearly a hundred countries and filmed 248 episodes.",
+          "sourceId": "keefe-2017",
+          "locator": "paragraphs beginning \"Until he was forty-four\" and \"Obama was scheduled to meet\""
+        },
+        {
+          "kind": "words",
+          "claim": "About his first TV travels he said: 'I felt like the whole world was opening up to me... I desperately wanted more.'",
+          "sourceId": "keefe-2017",
+          "locator": "paragraph beginning \"Putkoski was less enthused\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Linda Holmes wrote that he was 'open about the fact that he mostly had a TV show so he could travel all over the world and meet people and eat'.",
+          "sourceId": "holmes-2018",
+          "locator": "paragraph beginning \"So Bourdain didn't focus on\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Peabody judges honoured Parts Unknown in 2013 for 'expanding our palates and horizons in equal measure'.",
+          "sourceId": "npr-2018",
+          "locator": "paragraph beginning \"Peabody Award judges\""
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "For decades he worked 13-hour days as a line cook before becoming executive chef at Brasserie Les Halles.",
+          "sourceId": "irish-times-2018",
+          "locator": "paragraph beginning \"In everything he did\""
+        },
+        {
+          "kind": "deed",
+          "claim": "Writing his first novel in the early 1990s, he rose before dawn every day to write, then worked a twelve-hour restaurant shift.",
+          "sourceId": "keefe-2017",
+          "locator": "paragraph beginning \"After getting clean, around 1990\""
+        },
+        {
+          "kind": "words",
+          "claim": "He said his first dishwashing job was 'very hard work', with absolute rules, and that it was the first time he went home 'feeling respect for myself'.",
+          "sourceId": "npr-2016",
+          "locator": "answer beginning \"Yeah. Well, I started working as a dishwasher one summer\""
+        },
+        {
+          "kind": "words",
+          "claim": "While writing Kitchen Confidential he got up at 5:30 a.m. and wrote for a couple of hours before going in to work at the restaurant.",
+          "sourceId": "globe-2013",
+          "locator": "section \"Don't play to the fans\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Always show up on time: it is the first sign of respect for the people you work with.",
+      "sourceId": "globe-2013",
+      "locator": "section \"If you're not on time, you're not anything\""
+    },
+    {
+      "text": "Do nothing today that you will be ashamed of tomorrow.",
+      "sourceId": "globe-2013",
+      "locator": "paragraph beginning \"I make most of my professional decisions\""
+    },
+    {
+      "text": "To learn how people live, sit down and eat with them and ask what makes them happy, instead of interviewing them.",
+      "sourceId": "npr-2016",
+      "locator": "answer beginning \"Well, there's nothing actually more political than food\""
+    },
+    {
+      "text": "Take what your host offers: offending someone who gives you his best is worse than eating what you would rather not.",
+      "sourceId": "keefe-2017",
+      "locator": "paragraph beginning \"He has never eaten dog\""
+    },
+    {
+      "text": "Choose work by the people you will work with and the life it gives you, not only by the money.",
+      "sourceId": "globe-2013",
+      "locator": "paragraph beginning \"I make most of my professional decisions\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "In America, the professional kitchen is the last refuge of the misfit.",
+      "sourceId": "ny-1999",
+      "locator": "paragraph beginning \"In America, the professional kitchen\""
+    },
+    {
+      "text": "I have the best job in the world. If I'm unhappy, it's a failure of imagination.",
+      "sourceId": "keefe-2017",
+      "locator": "said to Keefe in September 2016; paragraph beginning \"For years, Bourdain has had a recurring dream\""
+    },
+    {
+      "text": "Having been a junkie for so many years and seeing somebody in the mirror who I was ashamed of, I try not to do anything today that I'm going to be ashamed of tomorrow.",
+      "sourceId": "globe-2013",
+      "locator": "paragraph beginning \"I make most of my professional decisions\""
+    },
+    {
+      "text": "I always, always, always show up on time.",
+      "sourceId": "globe-2013",
+      "locator": "section \"If you're not on time, you're not anything\""
+    }
+  ],
+  "definingMoment": {
+    "text": "In the summer of 2006 he flew to Beirut to film a No Reservations episode about the city's food and night life. While he was there, war broke out between Israel and Hezbollah, and he and his crew waited in a hilltop hotel to be evacuated. With no way to edit around the war, they made an episode about being stranded, showing his cameramen worrying about getting home and the local fixers worrying about the safety of loved ones. 'This is not the show we went to Lebanon to get,' he said in it. U.S. Marines finally took them out on a crowded American warship.",
+    "sourceIds": [
+      "keefe-2017"
+    ]
+  },
+  "shadow": {
+    "text": "From 1980 he was addicted to heroin; he quit it around 1987, spent several more years on cocaine and crack, and was clean around 1990. By his own account he was for a time 'an asshole' as a chef, throwing plates and cursing and screaming at waiters. As his television career began, his first marriage, to Nancy Putkoski, ended; he said of it: 'There were things that I wanted, and I was willing to really hurt somebody to have them.' He attacked other chefs in public: he said Alice Waters reminded him of the Khmer Rouge, and in 2011 told TV Guide that Paula Deen was 'the worst, most dangerous person to America'. In 2017 he said he had celebrated 'a very old, very oppressive system' in kitchens and asked whether Kitchen Confidential gave 'validation to meatheads'. On those drug years, his book editor Karen Rinaldi called him 'more of a romantic' than a hard-core addict, and his ex-wife called him 'pretty dramatic'.",
+    "sourceIds": [
+      "keefe-2017",
+      "slate-2017",
+      "ny-1999",
+      "ajc-2011"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Who did you sit down with this week and actually ask what makes them happy?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "Kitchen Confidential: Adventures in the Culinary Underbelly",
+      "year": 2000
+    },
+    {
+      "title": "A Cook's Tour",
+      "year": 2001
+    },
+    {
+      "title": "Medium Raw",
+      "year": 2010
+    }
+  ],
+  "sources": [
+    {
+      "id": "ny-1999",
+      "kind": "primary",
+      "title": "Don't Eat Before Reading This",
+      "author": "Anthony Bourdain",
+      "year": 1999,
+      "publisher": "The New Yorker (issue of 19 April 1999)",
+      "url": "https://www.newyorker.com/magazine/1999/04/19/dont-eat-before-reading-this"
+    },
+    {
+      "id": "globe-2013",
+      "kind": "primary",
+      "title": "Anthony Bourdain's 5 keys to a happy life (interview, as told to Courtney Shea)",
+      "author": "Anthony Bourdain",
+      "year": 2013,
+      "publisher": "The Globe and Mail, 28 April 2013",
+      "url": "https://www.theglobeandmail.com/life/anthony-bourdains-5-keys-to-a-happy-life/article11583437/"
+    },
+    {
+      "id": "npr-2016",
+      "kind": "primary",
+      "title": "Anthony Bourdain: The 'Fresh Air' Interview (recorded 2016 with Dave Davies, rebroadcast 16 July 2021; transcript)",
+      "author": "Anthony Bourdain and Dave Davies",
+      "year": 2021,
+      "publisher": "NPR, Fresh Air",
+      "url": "https://www.npr.org/transcripts/1016832861"
+    },
+    {
+      "id": "slate-2017",
+      "kind": "primary",
+      "title": "Anthony Bourdain Wonders What He Could Have Done (interview)",
+      "author": "Isaac Chotiner",
+      "year": 2017,
+      "publisher": "Slate, 24 October 2017",
+      "url": "https://www.slate.com/articles/news_and_politics/interrogation/2017/10/anthony_bourdain_on_weinstein_john_besh_and_meathead_restaurant_culture.html"
+    },
+    {
+      "id": "keefe-2017",
+      "kind": "secondary",
+      "title": "Anthony Bourdain's Moveable Feast",
+      "author": "Patrick Radden Keefe",
+      "year": 2017,
+      "publisher": "The New Yorker (issue of 13 February 2017)",
+      "url": "https://www.newyorker.com/magazine/2017/02/13/anthony-bourdains-moveable-feast"
+    },
+    {
+      "id": "irish-times-2018",
+      "kind": "secondary",
+      "title": "Anthony Bourdain obituary: Celebrity chef who exposed the dark corners of New York's restaurants",
+      "author": "The Irish Times",
+      "year": 2018,
+      "publisher": "The Irish Times, 9 June 2018",
+      "url": "https://www.irishtimes.com/life-and-style/people/anthony-bourdain-obituary-celebrity-chef-who-exposed-the-dark-corners-of-new-york-s-restaurants-1.3524199"
+    },
+    {
+      "id": "npr-2018",
+      "kind": "secondary",
+      "title": "Anthony Bourdain, Chef And Television Host, Has Died At 61",
+      "author": "Laurel Wamsley",
+      "year": 2018,
+      "publisher": "NPR, 8 June 2018",
+      "url": "https://www.npr.org/sections/thesalt/2018/06/08/618185381/anthony-bourdain-chef-and-television-host-has-died-at-61"
+    },
+    {
+      "id": "rolling-stone-2018",
+      "kind": "secondary",
+      "title": "Anthony Bourdain Dead at 61 of Apparent Suicide",
+      "author": "Ryan Bort",
+      "year": 2018,
+      "publisher": "Rolling Stone, 8 June 2018",
+      "url": "https://www.rollingstone.com/culture/culture-news/anthony-bourdain-dead-at-61-of-apparent-suicide-629356/"
+    },
+    {
+      "id": "holmes-2018",
+      "kind": "secondary",
+      "title": "Remembering Anthony Bourdain, Explorer And Enthusiast",
+      "author": "Linda Holmes",
+      "year": 2018,
+      "publisher": "NPR, 8 June 2018",
+      "url": "https://www.npr.org/2018/06/08/618194530/remembering-anthony-bourdain-explorer-and-enthusiast"
+    },
+    {
+      "id": "ajc-2011",
+      "kind": "secondary",
+      "title": "Anthony Bourdain calls Paula Deen 'the worst, most dangerous person to America'",
+      "author": "Rodney Ho",
+      "year": 2011,
+      "publisher": "The Atlanta Journal-Constitution, 18 August 2011 (quoting TV Guide)",
+      "url": "https://www.ajc.com/blog/radiotvtalk/anthony-bourdain-calls-paula-deen-the-worst-most-dangerous-person-america/TFojbfPOEF9TchbDMRGVtL"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American chef, writer and TV host (1956-2018), never a politician, campaigner or religious founder; no account of sexual contact with a minor or of sexual violence by him was found; he is in, with a documented dark side: heroin and cocaine addiction in the 1980s, by his own account a screaming, plate-throwing chef, and leaving his first wife for the TV life; he died by suicide in June 2018."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked all five draft values and re-read every cited passage in fresh copies of Keefe's New Yorker profile, his 1999 essay, the Fresh Air transcript, Slate, the Globe and Mail and the obituaries. Respect fell: besides his rule of honouring hosts, he threw plates at waiters, said Alice Waters reminded him of the Khmer Rouge and called Paula Deen 'the worst, most dangerous person to America', a pattern, so the public insults now sit in the shadow. Curiosity, Honesty, Adventure and Hard work held, Travel came in from the blind pick, and the tagline, defining moment and shadow were tightened to what the sources say.",
+    "checkedOn": "2026-11-10"
+  }
+}
