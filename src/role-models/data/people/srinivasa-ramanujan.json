@@ -276,10 +276,10 @@
     }
   ],
   "review": {
-    "status": "flagged",
+    "status": "validated",
     "screen": {
       "result": "owner-decides",
-      "notes": "Real, long-dead mathematician, not a politician or religious founder. Owner decision (2026-11-10): he sees every case involving a minor. Owner case (no recommendation): on 14 July 1909, aged 21, he married Janaki, nine at her betrothal (Oxford DNB) or ten (MacTutor), in a match his mother arranged; she did not live with him for about three years (until she was twelve, per MacTutor); the Oxford DNB calls their early relationship 'limited at best' and says that after his return in 1919, when she was grown, they 'may have shared something like a real marriage'. No source found reports sexual contact while she was a child (odnb-2004; mactutor-1998; seshu-aiyar-rao-1927 p. xiii)."
+      "notes": "Real, long-dead mathematician, not a politician or religious founder. Owner decision (2026-11-10): he sees every case involving a minor. Owner case (no recommendation): on 14 July 1909, aged 21, he married Janaki, nine at her betrothal (Oxford DNB) or ten (MacTutor), in a match his mother arranged; she did not live with him for about three years (until she was twelve, per MacTutor); the Oxford DNB calls their early relationship 'limited at best' and says that after his return in 1919, when she was grown, they 'may have shared something like a real marriage'. No source found reports sexual contact while she was a child (odnb-2004; mactutor-1998; seshu-aiyar-rao-1927 p. xiii). Owner 2026-11-11: In. All held-back cases are shown: a man can do dark things and still be worth respect, and times were different; the dark side stays in his shadow."
     },
     "blindAgreement": 0.6,
     "devilsAdvocate": "I attacked each value and checked every claim against the 1927 Collected Papers, Hardy's 1940 lectures, Kanigel's Oxford DNB entry and MacTutor. Self-reliance fell: Ramachandra Rao's own account says he wanted food provided 'without exertion on his part', and he sought patrons for years; Integrity fell because its evidence was caste observance, now under Devotion from the blind pick, with Passion also added. All four quotes matched the text. Fixes: the textbook and exam facts in startedFrom, who won him the Madras scholarship, and the shadow's dating, with Hardy's doubt about the English of his letters added.",

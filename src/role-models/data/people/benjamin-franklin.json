@@ -268,10 +268,10 @@
     }
   ],
   "review": {
-    "status": "flagged",
+    "status": "validated",
     "screen": {
       "result": "owner-decides",
-      "notes": "Real, long-dead scientist and printer; enslaved people for decades (shadow); his own Autobiography tells of an unwanted sexual advance in London in 1725 whose nature it does not describe, so it goes to the owner. Owner case: 1725, London, he 'attempted familiarities' with Mrs. T----, his friend James Ralph's partner who had been borrowing from him; she 'repuls'd' him 'with a proper resentment'; known only from his own account; no source calls it assault (autobio-pine ch. VI; vandoren-1938 p. 50)."
+      "notes": "Real, long-dead scientist and printer; enslaved people for decades (shadow); his own Autobiography tells of an unwanted sexual advance in London in 1725 whose nature it does not describe, so it goes to the owner. Owner case: 1725, London, he 'attempted familiarities' with Mrs. T----, his friend James Ralph's partner who had been borrowing from him; she 'repuls'd' him 'with a proper resentment'; known only from his own account; no source calls it assault (autobio-pine ch. VI; vandoren-1938 p. 50). Owner 2026-11-11: In. All held-back cases are shown: a man can do dark things and still be worth respect, and times were different; the dark side stays in his shadow."
     },
     "blindAgreement": 1.0,
     "devilsAdvocate": "I attacked each value and checked every claim against the Pine and Eliot texts of the Autobiography, Van Doren's 1938 biography and the Library of Congress, NPS and National Archives pages. Hard work fell: it rested on only two sources, and no independent third was found; Community from the blind pick took its place, with the Union Fire Company moved to it from Contribution. Discipline held despite his own admission that he never mastered Order; all four quotes matched the text. Fixes: the school-and-college order in startedFrom, an unsupported 'later' and 'for decades' in the shadow, a misread Van Doren claim, and his 'Palatine boors' passage added to the shadow.",
