@@ -1,0 +1,369 @@
+{
+  "id": "warren-beatty",
+  "name": "Warren Beatty",
+  "born": 1937,
+  "died": null,
+  "category": "charisma",
+  "areaIds": [
+    "lm_relationship",
+    "lm_family",
+    "lm_mission"
+  ],
+  "tagline": "A famous bachelor who took his time, kept control of his films and married at 54.",
+  "startedFrom": "He was born Henry Warren Beaty in Richmond, Virginia, on 30 March 1937, the son of a psychology professor and a drama teacher, and grew up in Arlington. By his own account he was shy and preferred sports; he turned down football scholarships to study drama at Northwestern, then dropped out. In 1956 he moved to New York to study acting with Stella Adler, paying his way by playing piano in bars and working construction.",
+  "values": [
+    {
+      "word": "Control",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He produced Bonnie and Clyde (1967) through his own new company, Tatira Productions, and as producer owned 40 percent of the film.",
+          "sourceId": "afi-bonnie-clyde",
+          "locator": "AFI Catalog, Bonnie and Clyde (1967), History section (8 May 1966 NYT announcement of Tatira Productions; 9 Jun 1971 news story on his forty percent)"
+        },
+        {
+          "kind": "deed",
+          "claim": "He kept the right of final cut on Reds; in April 1985 an arbitrator ruled that ABC could not cut the film for time, and the network cancelled its $6.5 million broadcast deal.",
+          "sourceId": "afi-reds",
+          "locator": "AFI Catalog, Reds (1981), History section (17-18 Apr 1985 reports of the DGA arbitration)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Frank Miller writes that, determined not to be edged out again, Beatty decided he had to produce his own films, and offered to make Bonnie and Clyde for a small salary and 40 percent of the gross.",
+          "sourceId": "tcm-miller-2010",
+          "locator": "TCM, 'The Big Idea - Bonnie and Clyde', 11 Mar 2010"
+        },
+        {
+          "kind": "witness",
+          "claim": "Judith Newman writes that he is a fan of control and precision in his speech and calls his control-freak nature self-confessed.",
+          "sourceId": "aarp-2016",
+          "locator": "AARP, 'Our Conversation with Actor Warren Beatty', 2016, paragraphs beginning 'That's because he's just finished' and 'Henry Warren Beaty'"
+        }
+      ]
+    },
+    {
+      "word": "Patience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He met a woman who had known John Reed in the Soviet Union in the late 1960s, interviewed people who knew Reed from the early 1970s, and released Reds only in December 1981.",
+          "sourceId": "afi-reds",
+          "locator": "AFI Catalog, Reds (1981), History section, opening paragraphs (22 Nov 1981 report) and release (4 Dec 1981)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The International Dictionary of Films and Filmmakers notes that his Reed project was announced as early as 1973 but reached screens in 1981, and that after Bonnie and Clyde he chose his projects slowly and with caution.",
+          "sourceId": "idff",
+          "locator": "essay, paragraphs on Bonnie and Clyde and on Reds"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked why 18 years passed between his last two films, he said he is slow at everything he does.",
+          "sourceId": "aarp-2016",
+          "locator": "AARP, 2016, paragraph beginning 'At the movie screening where we first met'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His wife, Annette Bening, said that he makes a film when he is ready and that nothing anyone said, including her, made a difference.",
+          "sourceId": "aarp-2016",
+          "locator": "AARP, 2016, paragraph beginning 'I ask Bening about the years'"
+        }
+      ]
+    },
+    {
+      "word": "Family",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said he always knew he wanted children, wanted to do it well, and wanted to do it with someone who felt the same way.",
+          "sourceId": "aarp-2016",
+          "locator": "AARP, 2016, paragraph beginning 'I always knew I wanted to have children'"
+        },
+        {
+          "kind": "words",
+          "claim": "Accepting the Thalberg Award in 2000 he named 'the sanctity of our family' among the things that do not have to change.",
+          "sourceId": "oscars-2000",
+          "locator": "Thalberg Award acceptance speech, 72nd Academy Awards, 26 Mar 2000, final paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "He has been married to the actress Annette Bening since 1992.",
+          "sourceId": "nyt-irish-2022",
+          "locator": "last paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "He married Bening after Bugsy and they had four children.",
+          "sourceId": "tcm-lobianco-2010",
+          "locator": "TCM, 'Warren Beatty Profile', 21 Jul 2010, paragraph on Bugsy"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Accepting the Oscar for directing Reds, he said the one thing he does well is getting good people, and named his writers, producers and crew.",
+          "sourceId": "oscars-1982",
+          "locator": "Best Director acceptance speech, 54th Academy Awards, 29 Mar 1982, second paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "During the shooting of Bonnie and Clyde he recruited Robert Towne to help rewrite the script, and he cast his longtime friend Michael J. Pollard.",
+          "sourceId": "afi-bonnie-clyde",
+          "locator": "AFI Catalog, Bonnie and Clyde (1967), History section (Towne credited as 'special consultant'; casting of C. W. Moss)"
+        },
+        {
+          "kind": "deed",
+          "claim": "Frank Miller writes that Beatty almost had to browbeat Arthur Penn into directing Bonnie and Clyde and kept him on the project by bringing in Robert Towne.",
+          "sourceId": "tcm-miller-2010",
+          "locator": "TCM, 'The Big Idea - Bonnie and Clyde', 11 Mar 2010"
+        },
+        {
+          "kind": "deed",
+          "claim": "On Reds he enlisted Elaine May to revise Trevor Griffiths' screenplay.",
+          "sourceId": "afi-reds",
+          "locator": "AFI Catalog, Reds (1981), History section (26 Mar 1980 report)"
+        }
+      ]
+    },
+    {
+      "word": "Excellence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On Reds he had the 'Kremlin' set rebuilt because he was unhappy with what he had shot there, and for the December 1981 preview in Los Angeles he stopped by the theatre to check its sound and projection.",
+          "sourceId": "afi-reds",
+          "locator": "AFI Catalog, Reds (1981), History section (production in London; 8 Dec 1981 report)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Lorraine LoBianco calls him an exacting director who sometimes took up to 80 takes of a single shot on Reds.",
+          "sourceId": "tcm-lobianco-2010",
+          "locator": "TCM, 'Warren Beatty Profile', 21 Jul 2010, paragraph on Reds"
+        },
+        {
+          "kind": "words",
+          "claim": "He compared rebuilding his house to making a film: the attention to detail and the sense of doing something with longevity.",
+          "sourceId": "aarp-2016",
+          "locator": "AARP, 2016, paragraph beginning 'One of those projects was rebuilding his home'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Find the best people for the job, and name them in public when you are praised.",
+      "sourceId": "oscars-1982",
+      "locator": "Best Director acceptance speech, 54th Academy Awards, 29 Mar 1982"
+    },
+    {
+      "text": "Move only when you are ready, even if the project takes years.",
+      "sourceId": "aarp-2016",
+      "locator": "AARP, 2016, paragraphs beginning 'At the movie screening' and 'I ask Bening about the years'"
+    },
+    {
+      "text": "Keep the final say over your own work, in writing, before you start.",
+      "sourceId": "afi-reds",
+      "locator": "AFI Catalog, Reds (1981), History section (final cut; 1985 arbitration)"
+    },
+    {
+      "text": "Trust your gut when you choose the person to build a life with.",
+      "sourceId": "aarp-2016",
+      "locator": "AARP, 2016, paragraph on 'the blink'"
+    },
+    {
+      "text": "Do not mislead the women you are with about what you can offer.",
+      "sourceId": "aarp-2016",
+      "locator": "AARP, 2016, paragraph beginning 'Beatty just blinks at me'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I know I do one thing well, I get good people.",
+      "sourceId": "oscars-1982",
+      "locator": "Best Director acceptance speech, 54th Academy Awards, Dorothy Chandler Pavilion, 29 Mar 1982"
+    },
+    {
+      "text": "I always knew I wanted to have children. I wanted to do it well, and I wanted to do it with someone who felt the same way.",
+      "sourceId": "aarp-2016",
+      "locator": "Interview with Judith Newman, AARP, online 16 Sep 2016"
+    },
+    {
+      "text": "The things that don't have to change for us are our reliability of friendship, the sanctity of our family, and the dignity of our work.",
+      "sourceId": "oscars-2000",
+      "locator": "Irving G. Thalberg Memorial Award acceptance speech, 72nd Academy Awards, Shrine Auditorium, 26 Mar 2000"
+    },
+    {
+      "text": "I'm slow at everything I do.",
+      "sourceId": "aarp-2016",
+      "locator": "Interview with Judith Newman, AARP, online 16 Sep 2016"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 8 May 1966 The New York Times announced that he had acquired Bonnie and Clyde to produce through his new company. Warner Bros. had little faith in the film and accepted his offer to make it for a small salary and 40 percent of the gross. He almost had to browbeat Arthur Penn into directing, and kept him on by bringing in Robert Towne to rewrite the script. The film opened on 13 August 1967; some critics attacked it and its first run ended that autumn, but it came back to theatres and its rentals passed far beyond the first projection of $4 million. By 1971 his 40 percent had earned him several million dollars.",
+    "sourceIds": [
+      "afi-bonnie-clyde",
+      "tcm-miller-2010",
+      "tcm-lobianco-2010"
+    ]
+  },
+  "shadow": {
+    "text": "For decades the press wrote about his affairs with famous women. In 2010 the biographer Peter Biskind put the number at 12,775 by what he called simple arithmetic; Beatty's lawyer said the book was not authorised and made many false assertions, and Beatty disputed the figure in 2016. In 1985 he settled out of court a suit of about $20 million against him and Paramount by two authors who said Reds used their research on Louise Bryant; by the AFI's account he had arranged a $250 contract for the material with one of them in 1973, with a promise of more after the film. In her 2024 memoir Cher wrote that she was 15 and he was 25 when, after a near collision on Sunset Boulevard, he took her to his house and kissed her, and that she kissed him back; some reports of the same episode give her age as 16. In November 2022 Kristina Charlotte Hirsch sued him in Los Angeles, saying that in 1973, when she was 14 and 15 and he was about 35, he groomed her and coerced her into sexual acts including intercourse. His representatives did not respond to requests for comment, and he was never served; in December 2023 a judge dismissed the suit after her lawyer withdrew and she missed court filings, first recorded as with prejudice and then corrected to without prejudice.",
+    "sourceIds": [
+      "tcm-lobianco-2010",
+      "biskind-irish-2010",
+      "aarp-2016",
+      "afi-reds",
+      "people-2024",
+      "abc-rnz-2024",
+      "nyt-irish-2022",
+      "huffpost-2023",
+      "mynewsla-2023"
+    ]
+  },
+  "councilQuestion": {
+    "text": "With which woman were you less than straight this week about what you wanted or could offer?",
+    "principleIndex": 4
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "aarp-2016",
+      "kind": "primary",
+      "title": "Our Conversation with Actor Warren Beatty (interview)",
+      "author": "Judith Newman, interviewing Warren Beatty",
+      "year": 2016,
+      "publisher": "AARP, online 16 September 2016",
+      "url": "https://www.aarp.org/entertainment/movies-for-grownups/warren-beatty-interview-2016/"
+    },
+    {
+      "id": "oscars-1982",
+      "kind": "primary",
+      "title": "Best Director acceptance speech for Reds, 54th Academy Awards",
+      "author": "Warren Beatty",
+      "year": 1982,
+      "publisher": "Academy of Motion Picture Arts and Sciences, Acceptance Speech Database",
+      "url": "https://aaspeechesdb.oscars.org/link/054-8/"
+    },
+    {
+      "id": "oscars-2000",
+      "kind": "primary",
+      "title": "Irving G. Thalberg Memorial Award acceptance speech, 72nd Academy Awards",
+      "author": "Warren Beatty",
+      "year": 2000,
+      "publisher": "Academy of Motion Picture Arts and Sciences, Acceptance Speech Database",
+      "url": "https://aaspeechesdb.oscars.org/link/072-25/"
+    },
+    {
+      "id": "afi-bonnie-clyde",
+      "kind": "secondary",
+      "title": "Bonnie and Clyde (1967), AFI Catalog of Feature Films",
+      "author": "American Film Institute",
+      "year": "n.d. (online)",
+      "publisher": "American Film Institute",
+      "url": "https://catalog.afi.com/Catalog/moviedetails/19356"
+    },
+    {
+      "id": "afi-reds",
+      "kind": "secondary",
+      "title": "Reds (1981), AFI Catalog of Feature Films",
+      "author": "American Film Institute",
+      "year": "n.d. (online)",
+      "publisher": "American Film Institute",
+      "url": "https://catalog.afi.com/Catalog/moviedetails/56684"
+    },
+    {
+      "id": "idff",
+      "kind": "secondary",
+      "title": "Beatty, Warren (International Dictionary of Films and Filmmakers)",
+      "author": "Doug Tomlinson, updated by Audrey E. Kupferberg and Rob Edelman",
+      "year": "n.d. (online at Encyclopedia.com, updated 2018)",
+      "publisher": "Gale",
+      "url": "https://www.encyclopedia.com/people/literature-and-arts/film-and-television-biographies/warren-beatty"
+    },
+    {
+      "id": "tcm-miller-2010",
+      "kind": "secondary",
+      "title": "The Big Idea - Bonnie and Clyde",
+      "author": "Frank Miller",
+      "year": 2010,
+      "publisher": "Turner Classic Movies",
+      "url": "https://www.tcm.com/articles/24135/the-big-idea-bonnie-and-clyde"
+    },
+    {
+      "id": "tcm-lobianco-2010",
+      "kind": "secondary",
+      "title": "Warren Beatty Profile",
+      "author": "Lorraine LoBianco",
+      "year": 2010,
+      "publisher": "Turner Classic Movies",
+      "url": "https://www.tcm.com/articles/218748/warren-beatty-profile-films-in-bold-type-will-air-on-8-9"
+    },
+    {
+      "id": "biskind-irish-2010",
+      "kind": "secondary",
+      "title": "Beatty slept with '12,775 women'",
+      "author": "Ed Pilkington (Guardian service)",
+      "year": 2010,
+      "publisher": "The Irish Times, 5 January 2010",
+      "url": "https://www.irishtimes.com/news/beatty-slept-with-12-775-women-1.1265455"
+    },
+    {
+      "id": "people-2024",
+      "kind": "secondary",
+      "title": "Cher Reveals 'Unbelievably Handsome' Warren Beatty, Then 25, Kissed Her the First Time They Met When She Was 15",
+      "author": "Ilana Kaplan",
+      "year": 2024,
+      "publisher": "People, 19 November 2024 (syndicated on AOL)",
+      "url": "https://www.aol.com/cher-reveals-unbelievably-handsome-warren-200000125.html"
+    },
+    {
+      "id": "abc-rnz-2024",
+      "kind": "secondary",
+      "title": "In part one of Cher's new memoir, the star reveals all about her childhood, her heady ascent into fame and a Salvador Dali orgy",
+      "author": "Luke Goodsell (ABC News, Australia)",
+      "year": 2024,
+      "publisher": "RNZ, 27 November 2024",
+      "url": "https://www.rnz.co.nz/news/top/535000/in-part-one-of-cher-s-new-memoir-the-star-reveals-all-about-her-childhood-her-heady-ascent-into-fame-and-a-salvador-dali-orgy"
+    },
+    {
+      "id": "nyt-irish-2022",
+      "kind": "secondary",
+      "title": "Warren Beatty accused of sexually assaulting a teenager in 1973",
+      "author": "Reggie Ugwu (The New York Times)",
+      "year": 2022,
+      "publisher": "The Irish Times, 10 November 2022",
+      "url": "https://www.irishtimes.com/culture/film/2022/11/10/warren-beatty-accused-of-sexually-assaulting-a-teenager-in-1973/"
+    },
+    {
+      "id": "huffpost-2023",
+      "kind": "secondary",
+      "title": "Lawsuit Accusing Warren Beatty Of Sexual Abuse Of Teenage Girl Dismissed By Judge",
+      "author": "Marco Margaritoff",
+      "year": 2023,
+      "publisher": "HuffPost, 16 December 2023",
+      "url": "https://www.huffpost.com/entry/lawsuit-accusing-warren-beatty-sexual-abuse-teenage-girl-dismissed-by-judge_n_657def64e4b0e142c0bddff7"
+    },
+    {
+      "id": "mynewsla-2023",
+      "kind": "secondary",
+      "title": "Clerk Corrects Description of Beatty Case Dismissal; Suit Could be Refiled",
+      "author": "MyNewsLA contributing editor",
+      "year": 2023,
+      "publisher": "MyNewsLA.com, report of 20 December 2023 (reposted 20 December 2024)",
+      "url": "https://mynewsla.com/?p=274600"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real American actor, producer and director (born 1937), not fictional, never a candidate or office-holder (McGovern campaigner 1972, talked of for 2000 but never ran), not a religious founder; owner decides because of two accounts of contact with girls under 16. Owner case (no recommendation): (1) Kristina Charlotte Hirsch sued in Los Angeles Superior Court in November 2022, saying that in 1973, when she was 14 and 15 and he was about 35, he groomed her and coerced her into sexual acts including intercourse; his representatives did not comment and he was never served; Judge Edward B. Moreton Jr. dismissed it on 15 December 2023 after her lawyer withdrew and she missed filings, first 'with prejudice', corrected to 'without prejudice'; no ruling on the facts. (2) In her 2024 memoir Cher wrote that at 15, when he was 25, he took her to his house after a near collision on Sunset Boulevard and kissed her, and that she kissed him back; ABC News gives her age as 16 (1962), and she has said 16 in earlier interviews; she describes the kiss as welcome and makes no complaint."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked each value: Patience as mere indecision, Leadership and Excellence against the Ishtar overruns and the up-to-80-takes record, Family against his marriage at 54, and opened every cited page. All five values held, with Control and Family matching the blind pick, and all four quotes were found word for word at their place. Seven sentences were tightened to what the sources say (Warner accepted his offer rather than granting the 40 percent, the Reds suit was settled by him and Greene, the lawyer said 'many' false assertions, Beatty's people did not respond rather than 'he did not comment'). Cher's 2024 memoir account of a kiss at 15, when he was 25, was confirmed in People and ABC News reporting and added to the shadow and the owner case.",
+    "checkedOn": "2026-11-10"
+  }
+}
