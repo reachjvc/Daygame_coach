@@ -1,0 +1,318 @@
+{
+  "id": "yuri-gagarin",
+  "name": "Yuri Gagarin",
+  "born": 1934,
+  "died": 1968,
+  "category": "explorers",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A farm carpenter's son and foundry apprentice who became the first human in space.",
+  "startedFrom": "He was born on 9 March 1934 in Klushino, a village west of Moscow; his father was a carpenter on a collective farm and his mother a dairymaid. When he was seven the German army overran the area, and his family was put out of their house and lived for 21 months in a mud hut. At sixteen he left for Moscow as an apprentice at a steelworks, then trained as a foundry technician in Saratov, where he learned to fly at night classes in the local aero club.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 12 April 1961 he flew Vostok 1, the first human spaceflight, which space journalist Gurbir Singh calls in BBC Future 'a very high-risk adventure'; on re-entry his capsule failed to separate cleanly and the two modules spun until the cables gave way.",
+          "sourceId": "bbc-future-2021",
+          "locator": "Yuri Gagarin: The spaceman who came in from the cold, section after Gurbir Singh's comments on the UK visit"
+        },
+        {
+          "kind": "words",
+          "claim": "In his report to the State Commission he says that while the craft spun and separation did not come, he reported by telephone that it had not separated, judged the situation was not an emergency, and sent 'everything normal' by Morse.",
+          "sourceId": "wilson-report",
+          "locator": "Report of 13 April 1961, passage on the braking engine (TDU) and the failed separation"
+        },
+        {
+          "kind": "witness",
+          "claim": "Alexander Gurshtein, once a young subordinate of Korolev, calls him 'a man of utmost personal courage' in a 1998 Times Higher Education review of Doran and Bizony's biography.",
+          "sourceId": "the-1998",
+          "locator": "Obscure orbits of Soviet stars, 18 September 1998"
+        }
+      ]
+    },
+    {
+      "word": "Passion",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "While training as a foundry technician at the Saratov Industrial Technical School, he took night classes at the Saratov Aero Club to learn to fly, then went on to military pilot school in Orenburg.",
+          "sourceId": "ebsco-2024",
+          "locator": "Early Life"
+        },
+        {
+          "kind": "words",
+          "claim": "He said that flying filled him 'with pride and gave meaning to my whole life'.",
+          "sourceId": "irish-times-2011",
+          "locator": "The man who fell to Earth, 9 April 2011"
+        },
+        {
+          "kind": "witness",
+          "claim": "General Kamanin noted on 2 March 1963 that most Soviet leaders were against risking Gagarin on another flight, but that Gagarin himself wanted to train and fly again.",
+          "sourceId": "kamanin-diaries",
+          "locator": "1963 March 2 - Plan for Cosmonaut Training"
+        },
+        {
+          "kind": "deed",
+          "claim": "After he was barred from space travel he kept logging jet flight hours, and he died on one of those training flights in March 1968.",
+          "sourceId": "bbc-future-2021",
+          "locator": "Yuri Gagarin: The spaceman who came in from the cold, closing section"
+        }
+      ]
+    },
+    {
+      "word": "Optimism",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "During the spin he worked out that he would 'land normally all the same'; later, during re-entry after the late separation, while he waited to eject, he reported: 'My mood was good'. He says the same of his mood before launch.",
+          "sourceId": "wilson-report",
+          "locator": "Report of 13 April 1961, passages on the pre-launch checks, the failed separation and re-entry before ejection"
+        },
+        {
+          "kind": "witness",
+          "claim": "His niece Tamara Filatova told the Irish Times: 'He was always happy, an optimist.'",
+          "sourceId": "irish-times-2011",
+          "locator": "The man who fell to Earth, 9 April 2011"
+        },
+        {
+          "kind": "witness",
+          "claim": "His niece Tamara Filatova told RFE/RL in 2011 that before his death he was 'filled with hope for the future, with a desire to work and fly into space again'.",
+          "sourceId": "rferl-bigg-2011",
+          "locator": "50 Years Since World Star-Struck By Space Pioneer Gagarin, 11 April 2011, closing section"
+        }
+      ]
+    },
+    {
+      "word": "Connection",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On his 1961 world tour he accepted an invitation from the foundry workers' union in Manchester, according to writer Richard Evans the only stop of the tour not arranged by a state body, and in July rode through the city in an open car in the pouring rain, saluting and smiling to the crowds.",
+          "sourceId": "bbc-2011",
+          "locator": "Yuri Gagarin: Memories of first spaceman's UK tour, 8 April 2011, sections 'Unexpected reply' and following"
+        },
+        {
+          "kind": "witness",
+          "claim": "Biographer Jamie Doran says that at Kremlin banquets Gagarin would go missing and be found outside sharing vodka with young cadets of the guard of honour: 'Those were his people.'",
+          "sourceId": "rferl-doran-2011",
+          "locator": "Interview, 11 April 2011, answer on anecdotes of his character"
+        },
+        {
+          "kind": "witness",
+          "claim": "His niece Tamara Filatova told the Irish Times that many people asked him for help and he did what he could, and that when he came home 'He had time for everyone.'",
+          "sourceId": "irish-times-2011",
+          "locator": "The man who fell to Earth, 9 April 2011"
+        },
+        {
+          "kind": "witness",
+          "claim": "Cosmonaut Viktor Gorbatko told RFE/RL: 'He was one of these people who gets along with everyone.'",
+          "sourceId": "rferl-bigg-2011",
+          "locator": "50 Years Since World Star-Struck By Space Pioneer Gagarin, 11 April 2011, section 'Rocket Ride To Fame'"
+        }
+      ]
+    },
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked by Pravda reporters after landing to speak about his 'heroic achievement', he replied that it was not so much his own as that of the Soviet people, the engineers, technicians and scientists (a line that follows the official formula of the time).",
+          "sourceId": "wilson-report",
+          "locator": "Report of 13 April 1961, closing passage on the calls after landing"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Irish Times describes him in his public role as funny, charming and patient and 'never boastful', and in the same sentence says he never missed a chance to praise Khrushchev.",
+          "sourceId": "irish-times-2011",
+          "locator": "The man who fell to Earth, 9 April 2011"
+        },
+        {
+          "kind": "witness",
+          "claim": "RFE/RL reports that his friends say fame did not change him much and he stayed 'just as modest and approachable'; Georgy Grechko recalls him jumping back in surprise when women with flowers rushed at him.",
+          "sourceId": "rferl-bigg-2011",
+          "locator": "50 Years Since World Star-Struck By Space Pioneer Gagarin, 11 April 2011, section 'Mysterious Death'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When something goes wrong, judge how bad it really is before you raise the alarm.",
+      "sourceId": "wilson-report",
+      "locator": "Report of 13 April 1961, passage on the failed separation ('I didn't want to raise any \"fuss.\"')"
+    },
+    {
+      "text": "In a tense moment, trust your equipment and do not decide in a hurry.",
+      "sourceId": "road-stars-1962",
+      "locator": "pp. 40-41 (ghost-written; as quoted by the Museum of Flight)"
+    },
+    {
+      "text": "Spend your time with ordinary people, not only with the important ones.",
+      "sourceId": "rferl-doran-2011",
+      "locator": "Interview, 11 April 2011, answer on anecdotes of his character"
+    },
+    {
+      "text": "Give the credit for your success to the team that made it possible.",
+      "sourceId": "wilson-report",
+      "locator": "Report of 13 April 1961, closing passage"
+    },
+    {
+      "text": "If you are kept on the ground, keep training until you can fly again.",
+      "sourceId": "bbc-future-2021",
+      "locator": "Yuri Gagarin: The spaceman who came in from the cold, closing section"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "What was happening was very interesting to me.",
+      "sourceId": "wilson-report",
+      "locator": "Report of 13 April 1961, passage on the spinning after the braking engine shut down",
+      "translation": "Gary Goldberg and Angela Greenfield, Wilson Center Digital Archive, 2021"
+    },
+    {
+      "text": "I judged that the situation was not an emergency.",
+      "sourceId": "wilson-report",
+      "locator": "Report of 13 April 1961, passage on the failed separation",
+      "translation": "Gary Goldberg and Angela Greenfield, Wilson Center Digital Archive, 2021"
+    },
+    {
+      "text": "When you are in the air never doubt your equipment and don't make hasty decisions",
+      "sourceId": "road-stars-1962",
+      "locator": "pp. 40-41, on his first parachute jump (ghost-written by Pravda correspondents N. Denisov and S. Borzenko; as quoted with page numbers by the Museum of Flight blog, Irene Jagla, 9 March 2018)",
+      "translation": "G. Hanna and D. Myshe, Foreign Languages Publishing House, Moscow, 1962"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 12 April 1961 he was launched alone in Vostok 1 and circled the Earth once, in about 108 minutes. After the braking engine fired, his capsule did not separate from the equipment module and spun fast, about 30 degrees a second, for some ten minutes. He noted the time, worked out he would still land in the Soviet Union, reported by telephone that separation had not occurred, and sent 'everything normal' by Morse. After the modules broke apart he ejected and came down by parachute near Saratov, then walked toward a woman and a girl and called out that he was a Soviet man and they should not be afraid.",
+    "sourceIds": [
+      "wilson-report",
+      "bbc-future-2021",
+      "ebsco-2024"
+    ]
+  },
+  "shadow": {
+    "text": "On 3 October 1961 General Kamanin wrote that Gagarin and Titov, on holiday in the Crimea, had been drinking too much and insulting others. In his entry for 11 October he records that at the resort (Foros, by Doran's account) Gagarin's wife found a bedroom door locked; a 27-year-old nurse opened it, and Gagarin had jumped from the balcony and hit his face on a curb, which left a scar over his left eyebrow. Kamanin gives the nurse's account that he had locked the door, propositioned her and started kissing her; Vokrug Sveta, citing the diary, says he had been drinking at a farewell banquet. Doran speaks instead of 'one of the maids' and a fall of two floors, and the BBC of his wife catching him in bed with another woman. Kamanin gave out that he was in hospital with exhaustion, Titov took his place at the 22nd Party Congress, and Gagarin later told the press a stone had hit him while he played with his daughter. In November Kamanin recorded that Gagarin and Titov were criticised for high living and for consorting with loose women and prostitutes. Doran says that for a time 'the drink took over'.",
+    "sourceIds": [
+      "kamanin-diaries",
+      "rferl-doran-2011",
+      "vokrug-sveta-2017",
+      "bbc-future-2021"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you raise the alarm this week before you had judged how bad things really were?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Road to the Stars (ghost-written by Pravda correspondents N. Denisov and S. Borzenko)",
+      "year": 1961
+    }
+  ],
+  "sources": [
+    {
+      "id": "wilson-report",
+      "kind": "primary",
+      "title": "Top Secret Report of Major Yuri Gagarin, 13 April 1961 (sel. and annotated by Asif Siddiqi; trans. Gary Goldberg and Angela Greenfield)",
+      "author": "Yuri Gagarin",
+      "year": 2021,
+      "publisher": "Wilson Center Digital Archive",
+      "url": "https://digitalarchive.wilsoncenter.org/document/260544"
+    },
+    {
+      "id": "road-stars-1962",
+      "kind": "primary",
+      "title": "Road to the Stars (ghost-written: literary record by Pravda correspondents N. Denisov and S. Borzenko; trans. G. Hanna and D. Myshe); quoted with page numbers by the Museum of Flight",
+      "author": "Yuri Gagarin",
+      "year": 1962,
+      "publisher": "Foreign Languages Publishing House, Moscow",
+      "url": "https://blog.museumofflight.org/top-ten-quotes-from-yuri-gagarins-biography"
+    },
+    {
+      "id": "kamanin-diaries",
+      "kind": "secondary",
+      "title": "Kamanin Diaries (English summary of N. P. Kamanin's diaries, published in Russian as Skrytyi kosmos, 1995-2001)",
+      "author": "Nikolai Kamanin; summary by Mark Wade, Encyclopedia Astronautica",
+      "year": "1995-2001",
+      "url": "https://astronautix.com/k/kamanindiaries.html"
+    },
+    {
+      "id": "bbc-future-2021",
+      "kind": "secondary",
+      "title": "Yuri Gagarin: The spaceman who came in from the cold",
+      "author": "Stephen Dowling (BBC Future)",
+      "year": 2021,
+      "url": "https://www.bbc.com/future/article/20210409-yuri-gagarin-the-spaceman-who-came-in-from-the-cold"
+    },
+    {
+      "id": "bbc-2011",
+      "kind": "secondary",
+      "title": "Yuri Gagarin: Memories of first spaceman's UK tour",
+      "author": "Katia Moskvitch (BBC News)",
+      "year": 2011,
+      "url": "https://www.bbc.co.uk/news/science-environment-12993533"
+    },
+    {
+      "id": "irish-times-2011",
+      "kind": "secondary",
+      "title": "The man who fell to Earth",
+      "author": "Dan McLaughlin (The Irish Times)",
+      "year": 2011,
+      "url": "https://www.irishtimes.com/life-and-style/people/the-man-who-fell-to-earth-1.567958"
+    },
+    {
+      "id": "rferl-doran-2011",
+      "kind": "secondary",
+      "title": "Gagarin: 'A Great Soviet Hero Who Easily Crossed Into Being A Great Russian Hero' (interview with Jamie Doran, co-author of Starman, 1998)",
+      "author": "RFE/RL (Christian Caryl)",
+      "year": 2011,
+      "url": "https://www.rferl.org/a/yury_gagarin_jamie_doran_starman_book_anniversary/3553732.html"
+    },
+    {
+      "id": "the-1998",
+      "kind": "secondary",
+      "title": "Obscure orbits of Soviet stars (review of Doran and Bizony, Starman)",
+      "author": "Alexander A. Gurshtein (Times Higher Education)",
+      "year": 1998,
+      "url": "https://www.timeshighereducation.com/books/obscure-orbits-of-soviet-stars/162537.article"
+    },
+    {
+      "id": "ebsco-2024",
+      "kind": "secondary",
+      "title": "Yuri Gagarin (EBSCO Research Starters)",
+      "author": "Summer Chick Bergen",
+      "year": 2024,
+      "url": "https://ebsco.com/research-starters/history/yuri-gagarin"
+    },
+    {
+      "id": "vokrug-sveta-2017",
+      "kind": "secondary",
+      "title": "«Поехали!»: 8 мифов и фактов о Юрии Гагарине (Vokrug Sveta no. 4, April 2017; partly updated April 2026)",
+      "author": "Maksim Artemyev",
+      "year": 2017,
+      "url": "https://www.vokrugsveta.ru/article/269122/"
+    },
+    {
+      "id": "rferl-bigg-2011",
+      "kind": "secondary",
+      "title": "50 Years Since World Star-Struck By Space Pioneer Gagarin",
+      "author": "Claire Bigg (RFE/RL)",
+      "year": 2011,
+      "url": "https://www.rferl.org/a/fifty_years_since_space_pioneer_gagarin/3553827.html"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "Real, long-dead Soviet pilot and cosmonaut; drinking, womanising and his public praise of the regime are shadow. Owner case (no recommendation): General Kamanin's diary (English summary by Mark Wade, Encyclopedia Astronautica; Russian original not opened), entry 11 October 1961, gives a 27-year-old nurse's account that at a Crimean resort Gagarin entered her room, locked the door, said 'hey, would you like to get it on?' and started kissing her, until his wife pounded on the door and he jumped from the balcony. Other accounts tell it as infidelity: Doran (RFE/RL 2011) 'a difficult situation with one of the maids'; Starman as summarised by The Space Review (2011) his wife 'suspected he was in bed with a nurse'; BBC Future (2021) 'caught by his wife in bed with another woman'; Vokrug Sveta (2017/2026) says, citing the diary, that he was tipsy after a farewell banquet and made advances to a nurse. No source found says whether the kissing was wanted, and none calls it assault; it is flagged because the one detailed account has him locking the door first. No account of sexual contact with anyone under 16 found."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked each value and re-read the report, Kamanin's diary summary, the BBC, Irish Times, RFE/RL and Vokrug Sveta pages. All five values held, but Humility now rests on friends' accounts as well as his report line, which follows the official formula, and Optimism and Connection gained a third source each; the blind pick shared only Courage and Humility. Fixes: 'My mood was good' was said during re-entry, after the spin, not during it; he did report the failed separation by telephone; the THE reviewer is Alexander Gurshtein; Road to the Stars is marked ghost-written. The shadow now gives every competing account of the October 1961 night, Kamanin's cover story and the November criticism, and the person stays flagged for the owner.",
+    "checkedOn": "2026-11-10"
+  }
+}
