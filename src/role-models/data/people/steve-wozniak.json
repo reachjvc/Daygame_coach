@@ -1,0 +1,334 @@
+{
+  "id": "steve-wozniak",
+  "name": "Steve Wozniak",
+  "born": 1950,
+  "died": null,
+  "category": "builders",
+  "areaIds": [
+    "lm_mission",
+    "lm_fun",
+    "lm_contribution"
+  ],
+  "tagline": "An engineer who designed the Apple I and Apple II, made pranks and laughter a rule of his life, and gave much of his money and time away.",
+  "startedFrom": "He was born in 1950 in San Jose, California, and grew up nearby in a stable family; his father was an engineer at Lockheed. He was shy and says other children ignored him at school. He had no money for chips, so as a teenager he designed computers only on paper, again and again, and he left university without a degree, finishing it only in 1986.",
+  "values": [
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says his whole life was about optimizing things, and that every part you save also cuts complexity, errors and the time needed to understand a design.",
+          "sourceId": "founders-at-work",
+          "locator": "answer to \"This is Homebrew right?\" (\"My whole life was basically trying to optimize things\")"
+        },
+        {
+          "kind": "deed",
+          "claim": "As a teenager he redesigned the same computers on paper each time new chips came out, to save chips, for example going from 44 to 42.",
+          "sourceId": "founders-at-work",
+          "locator": "answer to \"You were designing all of these different types of computers during high school at home, for fun?\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Invention & Technology called his first Apple computer (1976) 'a masterpiece of low-cost elegance'.",
+          "sourceId": "invtech-2002",
+          "locator": "introduction, first paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "When Apple went public in 1980 he gave five early staff who had no stock a large block of his own, about a million dollars each by his account; before the listing he had sold shares to about 40 other employees instead of to an outside investor.",
+          "sourceId": "founders-at-work",
+          "locator": "answer to \"Didn't you give away your Apple stock early on to other employees?\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1990, when the Electronic Frontier Foundation was being set up, he phoned and offered an unlimited match to Mitch Kapor's contributions.",
+          "sourceId": "eff-barlow-1990",
+          "locator": "paragraph beginning \"Several days later, the Post published the first of many newspaper stories\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Katie Hafner wrote that 'his generosity is legendary', naming San Jose's Children's Discovery Museum, its tech museum and its ballet as beneficiaries.",
+          "sourceId": "bookforum-2006",
+          "locator": "paragraph beginning \"Indeed, Woz is widely liked\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The National Inventors Hall of Fame names him the founding sponsor of the Tech Museum, Silicon Valley Ballet and the Children's Discovery Museum of San Jose.",
+          "sourceId": "nihf",
+          "locator": "inductee profile, paragraph beginning \"Throughout his life, Wozniak has been involved\""
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says that since sixth grade he wanted to be a fifth-grade teacher, and that after giving computer labs to schools he decided 'you should really give yourself' and taught computers to children and teachers.",
+          "sourceId": "npr-flatow-2006",
+          "locator": "answers after Flatow: \"An elementary school teacher.\""
+        },
+        {
+          "kind": "deed",
+          "claim": "VOA reports that he spent nine years teaching in public elementary school in the 1990s and counts that time among what he valued most.",
+          "sourceId": "voa-2007",
+          "locator": "paragraph beginning \"Steve Wozniak will always be remembered\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2002 Invention & Technology reported that he devoted most of his time to schoolchildren and had spent a lot of time and money running computer classrooms for fifth graders in San Jose.",
+          "sourceId": "invtech-2002",
+          "locator": "subtitle and question \"You've devoted a lot of time and money to running computer classrooms for fifth graders in San Jose. Why?\""
+        }
+      ]
+    },
+    {
+      "word": "Fun",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says that at about 20 he decided a laughing life was better than a successful one, and that whatever you do, even work, you should bring a fun attitude to it.",
+          "sourceId": "npr-flatow-2006",
+          "locator": "first answer, after Flatow: \"having fun is one of Steve Wozniak's prime realities about life\""
+        },
+        {
+          "kind": "words",
+          "claim": "He calls his first job, as a technician, the happiest time of his life: 'It wasn't like a job.' He tells schoolchildren how much fun his inventions have been.",
+          "sourceId": "invtech-2002",
+          "locator": "answer to \"You've devoted a lot of time and money to running computer classrooms for fifth graders in San Jose. Why?\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In high school, with no money to build computers, he designed them on paper over and over; asked whether he did it for fun, he says yes.",
+          "sourceId": "founders-at-work",
+          "locator": "answer to \"You were designing all of these different types of computers during high school at home, for fun?\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Katie Hafner writes that he lost millions on the US Festival he underwrote but counts it as the highlight of his life.",
+          "sourceId": "bookforum-2006",
+          "locator": "paragraph beginning \"Indeed, Woz is widely liked\""
+        }
+      ]
+    },
+    {
+      "word": "Humour",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says he put a lot of humour in his life, that he wanted to be funny, and that he is 'always acknowledged for my pranks and jokes nowadays'.",
+          "sourceId": "npr-flatow-2006",
+          "locator": "first answer (\"I put a lot of humor in my life\"), and the answer just before Flatow asks \"Wouldn't change anything different?\""
+        },
+        {
+          "kind": "deed",
+          "claim": "He started what NPR's Deborah Amos calls the first dial-a-joke line in the United States, and with a blue box phoned the Vatican posing as Henry Kissinger, a voice he later used on his joke line.",
+          "sourceId": "npr-amos-2006",
+          "locator": "answers to Amos on dial-a-joke and the blue box"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1967, by his own account, he hid a ticking electronic metronome rigged as a fake bomb in a friend's school locker, was sent to juvenile detention, and could not hold his laughter when the principal told how he had carried it out to the football field.",
+          "sourceId": "globalnews-2015",
+          "locator": "article body, quoting his Facebook post"
+        },
+        {
+          "kind": "witness",
+          "claim": "Hafner describes 'his long history of pulling pranks'.",
+          "sourceId": "bookforum-2006",
+          "locator": "paragraph beginning \"The writing in iWoz is, in a word, terrible\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Bring a fun attitude to whatever you do, even work; a life with more laughing than frowning beats a merely successful one.",
+      "sourceId": "npr-flatow-2006",
+      "locator": "first answer, after Flatow: \"having fun is one of Steve Wozniak's prime realities about life\""
+    },
+    {
+      "text": "Build with the fewest parts you can: fewer parts make a cleaner design you understand deeply, with fewer bugs.",
+      "sourceId": "founders-at-work",
+      "locator": "answer to \"Take me back to before you started Apple.\""
+    },
+    {
+      "text": "Be open and truthful; if you must keep something back, explain why, and never mislead people.",
+      "sourceId": "founders-at-work",
+      "locator": "answer to \"What advice would you give to hackers who are thinking about starting a company or making something on their own?\""
+    },
+    {
+      "text": "Reward the people who helped you build something, even when no one makes you.",
+      "sourceId": "founders-at-work",
+      "locator": "answer to \"Didn't you give away your Apple stock early on to other employees?\""
+    },
+    {
+      "text": "Inspire people with stories of what you did and enjoyed, not by telling them what they should do.",
+      "sourceId": "invtech-2002",
+      "locator": "answer to \"You've devoted a lot of time and money to running computer classrooms for fifth graders in San Jose. Why?\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I just believe in whatever you're going to do, even if it's work, have a little bit of fun attitude about it.",
+      "sourceId": "npr-flatow-2006",
+      "locator": "first answer, after Flatow: \"having fun is one of Steve Wozniak's prime realities about life\""
+    },
+    {
+      "text": "Laughter leads us to good places in life.",
+      "sourceId": "invtech-2002",
+      "locator": "answer to \"You've devoted a lot of time and money to running computer classrooms for fifth graders in San Jose. Why?\""
+    },
+    {
+      "text": "Know in your heart that you are a good person with good goals because that will carry over to your own self-confidence and your belief in your engineering abilities.",
+      "sourceId": "founders-at-work",
+      "locator": "answer to \"What advice would you give to hackers who are thinking about starting a company or making something on their own?\""
+    },
+    {
+      "text": "I always think in terms of minimum parts.",
+      "sourceId": "invtech-2002",
+      "locator": "answer to \"Why are your designs considered unique?\""
+    }
+  ],
+  "definingMoment": {
+    "text": "When Apple went public in 1980, he saw that five people who had worked with him from the start, among them Randy Wigginton and Chris Espinosa, had no stock. He gave each of them a large block of his own shares, by his account worth about a million dollars each. Before the listing he had also sold shares to about 40 Apple employees instead of to an outside investor; he says they each 'pretty much got a house out of it'. Mike Markkula felt some of these people did not deserve stock; Wozniak disagreed and went ahead.",
+    "sourceIds": [
+      "founders-at-work"
+    ]
+  },
+  "shadow": {
+    "text": "In 1967, by his own account, he hid a fake bomb, a ticking metronome, in a friend's school locker and was sent to juvenile detention. From 1971 he built blue boxes, devices for free long-distance calls, and he and Steve Jobs sold them door to door in Berkeley dorms; in his memoir, as Katie Hafner quotes it, he writes that blue boxes were illegal. With one he phoned the Vatican pretending to be Henry Kissinger. He paid for the US Festival rock concerts in 1982 and 1983 and, by Hafner's account, lost twenty-four million dollars. In 2018 CBS News reported complaints from students and staff of Woz U, the $13,200 coding program he launched in 2017: typo-filled lessons, pre-recorded 'live' lectures, and a former employee's account of pressure to enroll students. He declined repeated interview requests; the school's president said Wozniak reviews the curriculum. Hafner wrote that his memoir skates over uncomfortable chapters, among them his rift with Jobs, and says little about his three marriages.",
+    "sourceIds": [
+      "globalnews-2015",
+      "bookforum-2006",
+      "npr-flatow-2006",
+      "npr-amos-2006",
+      "cbs-2018"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you treat your work as a grind this week when a lighter, more playful attitude would have served you better?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "iWoz (with Gina Smith)",
+      "year": 2006
+    }
+  ],
+  "sources": [
+    {
+      "id": "iwoz-2006",
+      "kind": "primary",
+      "title": "iWoz: Computer Geek to Cult Icon: How I Invented the Personal Computer, Co-Founded Apple, and Had Fun Doing It",
+      "author": "Steve Wozniak with Gina Smith (co-written)",
+      "year": 2006,
+      "publisher": "W. W. Norton"
+    },
+    {
+      "id": "founders-at-work",
+      "kind": "primary",
+      "title": "Interview: Steve Wozniak, Co-Founder, Apple Computer (Founders at Work)",
+      "author": "Jessica Livingston (interviewer)",
+      "year": 2007,
+      "publisher": "Apress",
+      "url": "https://www.foundersatwork.com/steve-wozniak.html"
+    },
+    {
+      "id": "invtech-2002",
+      "kind": "primary",
+      "title": "\"I Thought Computers Were Just An Interesting Hobby.\" (interview, Invention & Technology, vol. 18, issue 2, Fall 2002)",
+      "author": "Jim Quinn (interviewer)",
+      "year": 2002,
+      "publisher": "American Heritage Publishing",
+      "url": "https://www.inventionandtech.com/node/86259"
+    },
+    {
+      "id": "npr-flatow-2006",
+      "kind": "primary",
+      "title": "A Chat with Computing Pioneer Steve Wozniak (Talk of the Nation: Science Friday, 29 September 2006, transcript)",
+      "author": "Ira Flatow, NPR",
+      "year": 2006,
+      "url": "https://www.npr.org/transcripts/6167297"
+    },
+    {
+      "id": "npr-amos-2006",
+      "kind": "primary",
+      "title": "Computer Pioneer Steve Wozniak Tells His Story (Morning Edition, 2 October 2006, transcript)",
+      "author": "Deborah Amos, NPR",
+      "year": 2006,
+      "url": "https://www.npr.org/transcripts/6179983"
+    },
+    {
+      "id": "bookforum-2006",
+      "kind": "secondary",
+      "title": "Hippie Versus Nerd (review of iWoz)",
+      "author": "Katie Hafner, Bookforum",
+      "year": 2006,
+      "url": "https://www.bookforum.com/print/1304/hippie-versus-nerd-501"
+    },
+    {
+      "id": "voa-2007",
+      "kind": "secondary",
+      "title": "Apple Inc.'s Co-Founder Steve Wozniak Opens the File on an Innovative Life (20 November 2007)",
+      "author": "Andrew Baroch, Voice of America",
+      "year": 2007,
+      "url": "https://www.voanews.com/a/a-13-2007-11-20-voa35-66698622/558928.html"
+    },
+    {
+      "id": "nihf",
+      "kind": "secondary",
+      "title": "Steve Wozniak (inductee profile, inducted 2000)",
+      "author": "National Inventors Hall of Fame",
+      "year": "accessed 2026-11-10",
+      "url": "https://www.invent.org/inductees/steve-wozniak"
+    },
+    {
+      "id": "eff-barlow-1990",
+      "kind": "secondary",
+      "title": "A Not Terribly Brief History of the Electronic Frontier Foundation (1990)",
+      "author": "John Perry Barlow, Electronic Frontier Foundation",
+      "year": 1990,
+      "url": "https://www.eff.org/pages/not-terribly-brief-history-electronic-frontier-foundation"
+    },
+    {
+      "id": "cbs-2018",
+      "kind": "secondary",
+      "title": "Steve Wozniak & Woz U: Some former students, employees say Apple co-founder's tech program doesn't live up to its promises (1 October 2018)",
+      "author": "Tony Dokoupil, CBS News",
+      "year": 2018,
+      "url": "https://www.cbsnews.com/news/woz-u-steve-wozniak-former-students-employees-raise-concerns/"
+    },
+    {
+      "id": "chm",
+      "kind": "secondary",
+      "title": "Steve Wozniak (biography)",
+      "author": "Computer History Museum",
+      "year": "accessed 2026-11-10",
+      "url": "https://computerhistory.org/blog/steve-wozniak/"
+    },
+    {
+      "id": "globalnews-2015",
+      "kind": "secondary",
+      "title": "Apple co-founder Steve Wozniak shares story of being arrested for a fake bomb in high school (17 September 2015)",
+      "author": "Nicole Bogart, Global News",
+      "year": 2015,
+      "url": "https://globalnews.ca/news/2226020/apple-co-founder-steve-wozniak-shares-story-of-being-arrested-for-a-fake-bomb-in-high-school"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living American engineer (born 1950), never a politician, campaigner or religious founder; searches found no credible account of sexual contact with a minor or of sexual violence by him; he is in, with a small, documented dark side."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value and every sentence against the saved Founders at Work interview, the two NPR transcripts, the Invention & Technology interview, Hafner's Bookforum review, VOA, CBS and the EFF history. Craft, Generosity, Mentorship and Fun held; Humility fell because one of its three proofs (refusing management) is, in his own words, fear of running a company, and his memoir is subtitled 'How I Invented the Personal Computer'. The blind pick's Humour came in on his own NPR words, his dial-a-joke line and the 1967 fake-bomb prank. Six claims were tightened, among them the employee share sale (before the listing, not at it), and the shadow gained the 1967 juvenile detention.",
+    "checkedOn": "2026-11-10"
+  }
+}
