@@ -1,0 +1,304 @@
+{
+  "id": "brene-brown",
+  "name": "Brené Brown",
+  "pronoun": "she",
+  "born": 1965,
+  "died": null,
+  "category": "teachers",
+  "areaIds": [
+    "lm_emotions",
+    "lm_mindset"
+  ],
+  "tagline": "A shame researcher who taught that showing yourself, flaws and all, takes courage.",
+  "startedFrom": "She was born in 1965 in San Antonio, Texas, the first child of parents who, she says, both came from 'a lot of heartache'; the family moved between New Orleans, Houston and Washington, and her parents fought. In her last year of high school her father lost the family savings in the oil bust, her parents divorced and college was put off; she spent six months working in a hostel in Brussels, then years in and out of school, and finished her first degree only in 1995. By her own account her partying in her teens and twenties went from 'fun and wild' to 'self-destructive'.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "She says the lesson of her research is that 'we must find the courage to walk into vulnerability and engage with our whole hearts'.",
+          "sourceId": "networker-2016",
+          "locator": "interview, answer on choosing the title Daring Greatly"
+        },
+        {
+          "kind": "deed",
+          "claim": "In her June 2010 TEDx talk she told a public audience that her research had led her to 'a little breakdown', about a year with a therapist, and that she hated vulnerability.",
+          "sourceId": "ted-2010",
+          "locator": "transcript, section on the breakdown and the therapist Diana"
+        },
+        {
+          "kind": "deed",
+          "claim": "When her team told her that her timelines were unrealistic and people were burned out, she came to see her problem as 'a lack of personal awareness' and admitted it to them.",
+          "sourceId": "newyorker-2021",
+          "locator": "paragraphs on the hour-long 'rumble' with her team"
+        }
+      ]
+    },
+    {
+      "word": "Sobriety",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "She stopped drinking and smoking and went to her first Alcoholics Anonymous meeting on 12 May 1996, one day after her graduation, and in 2019 wrote that she had not had a drink or a cigarette in 23 years.",
+          "sourceId": "blog-sober-2019",
+          "locator": "What Being Sober Has Meant to Me (31 May 2019), paragraphs on the genogram and the first AA meeting"
+        },
+        {
+          "kind": "words",
+          "claim": "She writes that her sobriety is not a limitation or even a 'have to', but 'a superpower'.",
+          "sourceId": "blog-sober-2019",
+          "locator": "What Being Sober Has Meant to Me (31 May 2019), opening paragraphs"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New Yorker reports that after an AA sponsor told her to stop drinking, smoking, emotional eating and trying to control her family's crises, 'she's been sober ever since'.",
+          "sourceId": "newyorker-2021",
+          "locator": "paragraph on the master's genogram and A.A."
+        },
+        {
+          "kind": "witness",
+          "claim": "Texas Monthly reported in June 2020 that she had quit drinking and smoking on the same day 24 years earlier, and that she went to Alcoholics Anonymous for a year and then left it.",
+          "sourceId": "texasmonthly-2020",
+          "locator": "paragraph beginning 'I was eager to talk to Brown about sobriety'"
+        }
+      ]
+    },
+    {
+      "word": "Authenticity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "She says she wears jeans to every talk because people must see themselves in her stories, and 'I have to be brutally authentic'.",
+          "sourceId": "networker-2016",
+          "locator": "interview, answer on the jean jacket"
+        },
+        {
+          "kind": "words",
+          "claim": "She writes that her marriage lasted because she was sober and 'trying to live an authentic, honest life rather than trying to outrun, outsmart, and numb vulnerability'.",
+          "sourceId": "blog-sober-2019",
+          "locator": "What Being Sober Has Meant to Me (31 May 2019), paragraph on the 'secret to my success'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Psychotherapy Networker's editors wrote that what resonates most with her audiences and readers is 'Brown's personal integrity and authenticity'.",
+          "sourceId": "networker-2016",
+          "locator": "profile, section 'The Power of Vulnerability', paragraph beginning 'But what seems to resonate most'"
+        }
+      ]
+    },
+    {
+      "word": "Connection",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In her 2010 talk she says that after ten years as a social worker she knew 'connection is why we're here. It's what gives purpose and meaning to our lives.'",
+          "sourceId": "ted-2010",
+          "locator": "transcript, section 'So where I started was with connection'"
+        },
+        {
+          "kind": "deed",
+          "claim": "She wrote her doctoral dissertation on connection and went on to interview 1,280 people about shame, wholeheartedness and vulnerability.",
+          "sourceId": "research-page",
+          "locator": "The Research, paragraphs on vulnerability as a core category and on the 750 women and 530 men interviewed"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New Yorker sums up her work as holding that connection is the essence of human experience and that shame is what blocks it.",
+          "sourceId": "newyorker-2021",
+          "locator": "paragraph beginning 'Connection, Brown goes on'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "You cannot numb only the painful feelings; when you numb them, you numb joy and gratitude too.",
+      "sourceId": "ted-2010",
+      "locator": "transcript, section 'you cannot selectively numb emotion'"
+    },
+    {
+      "text": "Show your feelings to people who have earned the right to hear them; vulnerability is not oversharing.",
+      "sourceId": "networker-2016",
+      "locator": "profile, section 'The Power of Vulnerability', quoting Daring Greatly"
+    },
+    {
+      "text": "When people criticise you, get curious and ask for the details before you defend yourself.",
+      "sourceId": "newyorker-2021",
+      "locator": "paragraphs on the hour-long 'rumble' with her team"
+    },
+    {
+      "text": "Say the same thing to every audience; do not change your message to please the room.",
+      "sourceId": "networker-2016",
+      "locator": "interview, answer on the jean jacket (faith organisations and corporations)"
+    },
+    {
+      "text": "Keep the basics in order—boundaries, honesty, healthy food, exercise and sleep—so that drink loses its pull.",
+      "sourceId": "blog-sober-2019",
+      "locator": "What Being Sober Has Meant to Me (31 May 2019), point 1, on the AA Big Book passage"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Maybe stories are just data with a soul.",
+      "sourceId": "ted-2010",
+      "locator": "The power of vulnerability, TEDxHouston, June 2010, opening story about the event planner"
+    },
+    {
+      "text": "You're imperfect, and you're wired for struggle, but you are worthy of love and belonging.",
+      "sourceId": "ted-2010",
+      "locator": "The power of vulnerability, TEDxHouston, June 2010, section on perfecting our children"
+    },
+    {
+      "text": "Sobriety isn't even a \"have to\"—it's a superpower.",
+      "sourceId": "blog-sober-2019",
+      "locator": "What Being Sober Has Meant to Me (31 May 2019), second paragraph"
+    },
+    {
+      "text": "I will never stop sharing my opinions and beliefs to make anyone feel better, or more comfortable, or to gain your approval.",
+      "sourceId": "blog-pause-2022a",
+      "locator": "An update on my decision to pause the podcasts (1 February 2022), closing paragraphs"
+    }
+  ],
+  "definingMoment": {
+    "text": "In June 2010 she gave a twenty-minute TEDx talk in Houston, 'The power of vulnerability'. She told the audience that her own research had led her to 'a little breakdown' and a year with a therapist that she called 'a yearlong street fight', and that she hated vulnerability. By 2016 the talk had 25.5 million views, and she later said it gave her 'one of the worst vulnerability hangovers' of her life.",
+    "sourceIds": [
+      "ted-2010",
+      "networker-2016",
+      "newyorker-2021"
+    ]
+  },
+  "shadow": {
+    "text": "Early in her company's growth, her team and her finance chief told her in an hour-long meeting that her timelines and expectations were consistently unrealistic and that people were burned out; she has written that she made unrealistic plans because she was scared and would 'offload the emotions' onto her colleagues. On 29 January 2022 she paused her two Spotify-exclusive podcasts during the dispute over Joe Rogan's COVID misinformation and was accused online of censorship; on 8 February she announced the podcasts would go on, saying her exclusive contract left her 'very few options'. In February 2024 the writer Rafia Zakaria, in Lit Hub, wrote that Brown's essay on the Israel-Hamas war put Brown's own feelings first, Israel next and Palestine at the bottom, and never used the word genocide. In 2021 The New Yorker called some of her projects 'iffy' and reported that some of her talks earned fees of ninety thousand dollars.",
+    "sourceIds": [
+      "newyorker-2021",
+      "blog-pause-2022a",
+      "blog-pause-2022b",
+      "lithub-2024"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you reach for this week to take the edge off a feeling you did not want to feel?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Gifts of Imperfection",
+      "year": 2010
+    },
+    {
+      "title": "Daring Greatly",
+      "year": 2012
+    },
+    {
+      "title": "Rising Strong",
+      "year": 2015
+    }
+  ],
+  "sources": [
+    {
+      "id": "ted-2010",
+      "kind": "primary",
+      "title": "The power of vulnerability (TEDxHouston talk, June 2010; TED transcript)",
+      "author": "Brené Brown",
+      "year": 2010,
+      "publisher": "TED",
+      "url": "https://www.ted.com/talks/brene_brown_the_power_of_vulnerability/transcript"
+    },
+    {
+      "id": "blog-sober-2019",
+      "kind": "primary",
+      "title": "What Being Sober Has Meant to Me (blog post, 31 May 2019)",
+      "author": "Brené Brown",
+      "year": 2019,
+      "url": "https://brenebrown.com/blog/2019/05/31/what-being-sober-has-meant-to-me/"
+    },
+    {
+      "id": "blog-pause-2022a",
+      "kind": "primary",
+      "title": "An update on my decision to pause the podcasts (blog post, 1 February 2022)",
+      "author": "Brené Brown",
+      "year": 2022,
+      "url": "https://brenebrown.com/articles/2022/02/01/an-update-on-my-decision-to-pause-the-podcasts"
+    },
+    {
+      "id": "blog-pause-2022b",
+      "kind": "primary",
+      "title": "Podcast update, February 8, 2022 (blog post)",
+      "author": "Brené Brown",
+      "year": 2022,
+      "url": "https://brenebrown.com/articles/2022/02/08/podcast-update-february-8-2022"
+    },
+    {
+      "id": "notlooking-2024",
+      "kind": "primary",
+      "title": "Not Looking Away: Thoughts on the Israel-Hamas War (blog post, 13 February 2024)",
+      "author": "Brené Brown",
+      "year": 2024,
+      "url": "https://brenebrown.com/articles/2024/02/13/not-looking-away/"
+    },
+    {
+      "id": "research-page",
+      "kind": "primary",
+      "title": "The Research (method page on her website, undated; read in the 21 October 2026 Internet Archive copy)",
+      "author": "Brené Brown",
+      "year": "n.d.",
+      "url": "https://brenebrown.com/the-research/"
+    },
+    {
+      "id": "networker-2016",
+      "kind": "secondary",
+      "title": "Living Brave: From Vulnerability to Daring (profile and interview, September/October 2016 issue)",
+      "author": "Mary Sykes Wylie and Rich Simon",
+      "year": 2016,
+      "publisher": "Psychotherapy Networker",
+      "url": "https://www.psychotherapynetworker.org/article/living-brave"
+    },
+    {
+      "id": "newyorker-2021",
+      "kind": "secondary",
+      "title": "Brené Brown's Empire of Emotion (print headline 'Vulnerability, Inc.', 1 November 2021 issue)",
+      "author": "Sarah Larson",
+      "year": 2021,
+      "publisher": "The New Yorker",
+      "url": "https://www.newyorker.com/magazine/2021/11/01/brene-browns-empire-of-emotion"
+    },
+    {
+      "id": "thewrap-2023",
+      "kind": "secondary",
+      "title": "Brené Brown Stops Podcasts and Ends Spotify Deal (6 January 2023)",
+      "author": "Dessi Gomez",
+      "year": 2023,
+      "publisher": "TheWrap",
+      "url": "https://www.thewrap.com/brene-brown-ends-spotify-deal-stops-unlocking-us-podcast"
+    },
+    {
+      "id": "lithub-2024",
+      "kind": "secondary",
+      "title": "Why Brené Brown's Gospel of Vulnerability Fails the World's Most Vulnerable (21 February 2024)",
+      "author": "Rafia Zakaria",
+      "year": 2024,
+      "publisher": "Literary Hub",
+      "url": "https://lithub.com/why-brene-browns-gospel-of-vulnerability-fails-the-worlds-most-vulnerable"
+    },
+    {
+      "id": "texasmonthly-2020",
+      "kind": "secondary",
+      "title": "How the Pandemic Turned Brené Brown Into America's Therapist (June 2020 issue)",
+      "author": "Sarah Hepola",
+      "year": 2020,
+      "publisher": "Texas Monthly",
+      "url": "https://www.texasmonthly.com/news-politics/pandemic-turned-brene-brown-americas-therapist/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living American social-work researcher and author (University of Houston, The Gifts of Imperfection, Daring Greatly), not a politician, campaigner or religious founder, with no credible account of sexual contact with a minor or of sexual violence found; she is in, with a documented shadow of her own management account and two public disputes."
+    },
+    "blindAgreement": 0.75,
+    "devilsAdvocate": "I attacked each value and every sentence against the saved TED transcript, her own blog posts, Psychotherapy Networker, The New Yorker, Lit Hub and a Texas Monthly profile found in this pass. Curiosity fell: all its evidence came from two sources, and TheWrap describes the 2022 podcast pause as a protest, not a pause to learn. Courage, Authenticity and Connection held as core, and Sobriety held after Texas Monthly gave a third independent source (it also reports she left AA after a year). Four sentences were tightened, among them the TED 'yearlong street fight', the 8 February 2022 return and the Lit Hub summary.",
+    "checkedOn": "2026-11-10"
+  }
+}
