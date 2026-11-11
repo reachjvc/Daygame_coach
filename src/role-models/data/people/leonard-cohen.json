@@ -1,0 +1,307 @@
+{
+  "id": "leonard-cohen",
+  "name": "Leonard Cohen",
+  "born": 1934,
+  "died": 2016,
+  "category": "artists",
+  "areaIds": [
+    "lm_mission",
+    "lm_spirituality"
+  ],
+  "tagline": "A poet who worked years on each song and went back on the road in his seventies.",
+  "startedFrom": "He was born in 1934 in Westmount, a well-off part of Montreal, into a prominent Jewish family that ran a large clothing company. His father died when he was nine. He set out to be a writer, and his poems and novels won praise but sold poorly; he was in his thirties when his first album came out in 1967, and he called himself an indifferent guitar player.",
+  "values": [
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He spent five years on 'Hallelujah', drafting dozens of verses, and years more before he settled on a final version; 'Anthem' took him ten years to write.",
+          "sourceId": "remnick-2016",
+          "locator": "paragraphs beginning 'Actually, \"Hallelujah\" had taken him five years' and 'Cohen spent nearly a year in Mumbai'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he cannot throw a verse away before he has written it, because 'the cutting of the gem has to be finished before you can see whether it shines.'",
+          "sourceId": "zollo-1992",
+          "locator": "passage beginning 'Before I can discard the verse, I have to write it'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Bob Dylan told The New Yorker that Cohen and Irving Berlin 'are incredibly crafty' and that Cohen 'is a much more savvy musician than you'd think.'",
+          "sourceId": "remnick-2016",
+          "locator": "paragraph beginning 'Dylan defended Cohen against the familiar critical reproach'"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said inspiration does not come fast and easy to him, 'So I have to work as hard as any stiff', and that he is 'happily and gratefully' fully employed.",
+          "sourceId": "zollo-1992",
+          "locator": "passages beginning 'But why shouldn't my work be hard?' and 'But I think unemployment is the great affliction of man'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Between 2008 and 2013, aged 73 to 79, he played 387 concerts around the world.",
+          "sourceId": "tce",
+          "locator": "section on the Kelley Lynch lawsuit, paragraph beginning 'To replace the money embezzled by Lynch'"
+        },
+        {
+          "kind": "witness",
+          "claim": "At 82 The New Yorker found him 'as clear-minded and hardworking as ever, soldierly in his habits', getting up well before dawn to write.",
+          "sourceId": "remnick-2016",
+          "locator": "paragraph beginning 'Cohen's songs are death-haunted'"
+        }
+      ]
+    },
+    {
+      "word": "Spirituality",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1994 he went to live at the Zen Center on Mount Baldy near Los Angeles, was ordained a Zen monk in 1996 under the name Jikan, and lived there on and off until early 1999.",
+          "sourceId": "tce",
+          "locator": "Personal Life section, paragraph beginning 'Cohen retreated to live at the Zen Center on Mount Baldy'"
+        },
+        {
+          "kind": "deed",
+          "claim": "A week after coming home from the monastery he flew to Mumbai and spent nearly a year attending daily talks with the teacher Ramesh Balsekar; in later years he studied Kabbalistic texts at a Los Angeles synagogue.",
+          "sourceId": "remnick-2016",
+          "locator": "paragraphs beginning 'In fact, Cohen was hardly done with his searching' and 'Since his days davening'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Rolling Stone's obituary calls him 'the Sabbath-observing songwriter' who never abandoned Judaism and credited Buddhism with curbing his depression.",
+          "sourceId": "rs-2016",
+          "locator": "paragraph beginning 'In 1995, Cohen halted his career'"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 2004 he found his accounts emptied and fired Kelley Lynch, his business manager of seventeen years, who had taken more than $5 million and left him without enough to retire on; he sued, and from 2008 went back on tour to replace the money.",
+          "sourceId": "tce",
+          "locator": "'Embezzled Funds and Subsequent Tours' section, paragraphs beginning 'After working together for seventeen years' and 'To replace the money embezzled by Lynch'"
+        },
+        {
+          "kind": "words",
+          "claim": "At 80 he told Rolling Stone that 'you depend on a certain resilience that is not yours to command', and that it means more at that age than at 30.",
+          "sourceId": "rs-2016",
+          "locator": "paragraph beginning 'The final act of Cohen's career began in 2005'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said the hard life of the monastery 'helps you endure, and it makes whining the least appropriate response to suffering.'",
+          "sourceId": "remnick-2016",
+          "locator": "paragraph beginning '\"Nobody goes into a Zen monastery as a tourist,\"'"
+        }
+      ]
+    },
+    {
+      "word": "Gratitude",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Accepting the Prince of Asturias Award in 2011, he said he had come 'to thank the soil and the soul of this people that has given me so much', and credited six chords from a Spanish guitar teacher as the basis of all his music.",
+          "sourceId": "asturias-2011",
+          "locator": "fourth paragraph ('I was compelled in the midst of that ordeal of packing') and paragraph beginning 'But now I disclose something'"
+        },
+        {
+          "kind": "witness",
+          "claim": "On his 2008-2013 tour, The New Yorker reports, he would take 'one knee in gratitude' on stage, and both knees to show his devotion to the audience, the musicians and the song.",
+          "sourceId": "remnick-2016",
+          "locator": "paragraph beginning 'The show that I saw, at Radio City'"
+        },
+        {
+          "kind": "words",
+          "claim": "At 82, with his health failing, he told The New Yorker that 'spiritual things, baruch Hashem' (thank God) 'have fallen into place, for which I am deeply grateful.'",
+          "sourceId": "remnick-2016",
+          "locator": "paragraph beginning 'There is probably no more touring ahead'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not wait for inspiration; work at it like any labourer.",
+      "sourceId": "zollo-1992",
+      "locator": "passage beginning 'But why shouldn't my work be hard?'"
+    },
+    {
+      "text": "Finish a draft before you judge it; you cannot see whether it is good until it is done.",
+      "sourceId": "zollo-1992",
+      "locator": "passage beginning 'Before I can discard the verse, I have to write it'"
+    },
+    {
+      "text": "Do not complain casually; when you speak about loss, do it with dignity.",
+      "sourceId": "asturias-2011",
+      "locator": "paragraph beginning 'Now, you know of my deep association and confraternity with the poet Federico García Lorca'"
+    },
+    {
+      "text": "Go back and thank the people and places that gave you your start, even late in life.",
+      "sourceId": "asturias-2011",
+      "locator": "fourth paragraph ('I was compelled in the midst of that ordeal of packing') and closing paragraphs"
+    },
+    {
+      "text": "Treat hardship as training: it should make you tougher, not make you whine.",
+      "sourceId": "remnick-2016",
+      "locator": "paragraph beginning '\"Nobody goes into a Zen monastery as a tourist,\"'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "If I knew where the good songs came from I'd go there more often.",
+      "sourceId": "asturias-2011",
+      "locator": "speech at the Prince of Asturias Awards, Oviedo, 21 October 2011, third paragraph"
+    },
+    {
+      "text": "The instructions were never to lament casually. And if one is to express the great inevitable defeat that awaits us all, it must be done within the strict confines of dignity and beauty.",
+      "sourceId": "asturias-2011",
+      "locator": "speech at the Prince of Asturias Awards, Oviedo, 21 October 2011, paragraph beginning 'Now, you know of my deep association'"
+    },
+    {
+      "text": "But why shouldn't my work be hard? Almost everybody's work is hard.",
+      "sourceId": "zollo-1992",
+      "locator": "interview with Paul Zollo, Los Angeles, 1992, passage beginning 'But why shouldn't my work be hard?'"
+    },
+    {
+      "text": "It helps you endure, and it makes whining the least appropriate response to suffering.",
+      "sourceId": "remnick-2016",
+      "locator": "interview with David Remnick, The New Yorker, issue of 17 October 2016, paragraph beginning '\"Nobody goes into a Zen monastery as a tourist,\"'"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 2004, at about 70, he found his accounts emptied: Kelley Lynch, his business manager of seventeen years, had taken more than $5 million, leaving him without enough to retire on. He fired her, sued and won, but by 2016 he had still not collected the damages. In 2008 he went back on the road after rehearsing a new band for three months, and by the end of 2013 he had played 387 concerts around the world, some close to four hours long. He said he had no interest in alcohol on that tour, and it restored his finances.",
+    "sourceIds": [
+      "tce",
+      "remnick-2016",
+      "rs-2016"
+    ]
+  },
+  "shadow": {
+    "text": "He had many lovers and was often unfaithful, and a former girlfriend, Wendy Patten Keys, says he was angry when she was not faithful to him. At 13, The New Yorker reports, he tried hypnotism on the family housekeeper, and she took off her clothes. In Michael Posner's oral history (2020), five acquaintances say Marianne Ihlen had many abortions because he did not want children, and the folk singer Julie Felix says he forced her into as many as five. The same book prints a woman's account that when she was 18 he removed her clothes and kept touching her after she asked him to stop, and an account that he asked a 14-year-old to undress for him; in 2023 Posner told the magazine Hey Alma that Cohen was never accused of coercing women into sex, and no charge or complaint about these accounts has been found. He took pot, speed and LSD on Hydra in the 1960s and took acid in his dressing room during a 1972 concert in Jerusalem, said he drank at least three bottles of Château Latour before performances on his 1993 tour, and when his Zen teacher Joshu Sasaki was accused of groping and coercing students, Cohen called him 'a very naughty guy'.",
+    "sourceIds": [
+      "telegraph-2020",
+      "kirkus-2020",
+      "globe-2020",
+      "heyalma-2023",
+      "remnick-2016"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you wait this week to feel inspired, when you could have just started the work?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Songs of Leonard Cohen (album)",
+      "year": 1967
+    },
+    {
+      "title": "Various Positions (album, with 'Hallelujah')",
+      "year": 1984
+    },
+    {
+      "title": "You Want It Darker (album)",
+      "year": 2016
+    }
+  ],
+  "sources": [
+    {
+      "id": "asturias-2011",
+      "kind": "primary",
+      "title": "Speech on receiving the Prince of Asturias Award for Letters, Oviedo (21 October 2011), text on the Foundation's laureate page",
+      "author": "Leonard Cohen",
+      "year": 2011,
+      "publisher": "Fundación Princesa de Asturias",
+      "url": "https://www.fpa.es/en/princess-of-asturias-awards/laureates/2011-leonard-cohen/?texto=discurso"
+    },
+    {
+      "id": "zollo-1992",
+      "kind": "primary",
+      "title": "Interview with Paul Zollo, Los Angeles, 1992, in Zollo's Songwriters on Songwriting; passages as printed by The Marginalian (15 July 2014)",
+      "author": "Leonard Cohen",
+      "year": 1992,
+      "url": "https://www.themarginalian.org/2014/07/15/leonard-cohen-paul-zollo-creativity/"
+    },
+    {
+      "id": "remnick-2016",
+      "kind": "secondary",
+      "title": "Leonard Cohen Makes It Darker (profile and interview; online 10 October 2016, print issue of 17 October 2016)",
+      "author": "David Remnick",
+      "year": 2016,
+      "publisher": "The New Yorker",
+      "url": "https://www.newyorker.com/magazine/2016/10/17/leonard-cohen-makes-it-darker"
+    },
+    {
+      "id": "tce",
+      "kind": "secondary",
+      "title": "Leonard Cohen (published 10 June 2012, last edited 7 May 2026)",
+      "author": "Laura Stanley",
+      "year": 2026,
+      "publisher": "The Canadian Encyclopedia (Historica Canada)",
+      "url": "https://www.thecanadianencyclopedia.ca/en/article/leonard-cohen-emc"
+    },
+    {
+      "id": "rs-2016",
+      "kind": "secondary",
+      "title": "Leonard Cohen Dead at 82 (10 November 2016)",
+      "author": "Richard Gehr",
+      "year": 2016,
+      "publisher": "Rolling Stone",
+      "url": "https://www.rollingstone.com/music/music-news/leonard-cohen-dead-at-82-113302/"
+    },
+    {
+      "id": "globe-2020",
+      "kind": "secondary",
+      "title": "Leonard Cohen's tales of seduction look different through a #MeToo lens (1 December 2020)",
+      "author": "Johanna Schneller",
+      "year": 2020,
+      "publisher": "The Globe and Mail",
+      "url": "https://www.theglobeandmail.com/arts/article-leonard-cohens-tales-of-seduction-look-different-through-a-metoo/"
+    },
+    {
+      "id": "telegraph-2020",
+      "kind": "secondary",
+      "title": "'He went through women like water': Leonard Cohen, the unlikely lothario (19 November 2020), as syndicated by Yahoo with The Telegraph's credit",
+      "author": "James Hall",
+      "year": 2020,
+      "publisher": "The Telegraph",
+      "url": "https://www.yahoo.com/lifestyle/went-women-water-leonard-cohen-153227898.html"
+    },
+    {
+      "id": "kirkus-2020",
+      "kind": "secondary",
+      "title": "Review of Michael Posner, Leonard Cohen, Untold Stories: The Early Years (2020)",
+      "author": "Kirkus Reviews",
+      "year": 2020,
+      "publisher": "Kirkus Reviews",
+      "url": "https://kirkusreviews.com/book-reviews/michael-posner/leonard-cohen-untold-stories/print"
+    },
+    {
+      "id": "heyalma-2023",
+      "kind": "secondary",
+      "title": "Leonard Cohen Was No Jewish Saint (20 March 2023), with comments from Michael Posner",
+      "author": "Eliyahu Freedman",
+      "year": 2023,
+      "publisher": "Hey Alma",
+      "url": "https://www.heyalma.com/leonard-cohen-was-no-jewish-saint"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real Canadian poet and singer (1934-2016), not a politician, campaigner or religious founder; a 2020 Globe and Mail review of Michael Posner's oral history reports a woman's account that when she was 18 he removed her clothes and kept touching her long after she asked him to stop, and the same review reports that he asked a 14-year-old to undress, so he goes to the owner. Owner case: Globe and Mail (Schneller, 1 Dec 2020) on Posner vol. 1: unnamed woman, 18, virgin, touched 'long after she asked him to stop'; he asked a 14-year-old to 'get naked'; women say he slipped a hand down their dresses while hugging; Telegraph (Hall, 19 Nov 2020): Barbara Dodge, 17 or 18, says he tried at length to seduce her; New Yorker (Remnick 2016): at 13 he hypnotised the family housekeeper, who undressed (age 15 per Hey Alma citing Posner); Posner (Hey Alma 2023): never accused of coercing women into sex; no charge or complaint found. Also listed for the owner: his 1972 poem 'the 15-year-old girls' (The Energy of Slaves) and a 1971 Rolling Stone remark 'where are the 14-year-old girls?', both seen only as quoted by Hey Alma (2023); originals not opened. Full facts and sources: research folder review.json ownerCase."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value: Spirituality against his own line that he had 'no gift for Spiritual Matters', Resilience against his lifelong depression and flights to the monastery and Mumbai, Hard work against the Hydra years of drugs and long silences, and Gratitude as stage manner. All five held on decades of record, and Gratitude gained a third piece of evidence from The New Yorker; Craft, Spirituality and Gratitude match the blind pick, which leaned on a fan-forum repost of a Guardian article that I did not use. Two fact fixes: Lynch was fired in 2004 after the accounts were found emptied, and the drug sentence now names what and when; the shadow gained the housekeeper episode from The New Yorker, and all four quotes were found at their place.",
+    "checkedOn": "2026-11-10"
+  }
+}
