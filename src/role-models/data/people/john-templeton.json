@@ -1,0 +1,359 @@
+{
+  "id": "john-templeton",
+  "name": "John Templeton",
+  "born": 1912,
+  "died": 2008,
+  "category": "money",
+  "areaIds": [
+    "lm_money",
+    "lm_spirituality",
+    "lm_contribution"
+  ],
+  "tagline": "A global investor who bought when others panicked and gave much of his fortune away.",
+  "startedFrom": "He was born on 29 November 1912 in Winchester, a small town in Tennessee, where his father was a lawyer who owned a cotton mill. He was the first person from his town to go to college. The Depression squeezed his family, so he paid part of his way through Yale himself, partly with poker winnings in the dormitory, and then went to Oxford as a Rhodes Scholar.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "When war began in Europe in 1939, he borrowed money to buy 100 shares in each of 104 companies selling at one dollar a share or less, 34 of them in bankruptcy.",
+          "sourceId": "jtf-bio",
+          "locator": "web page 'Sir John Templeton', paragraph beginning 'Templeton started his Wall Street career in 1938'"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that it is extremely difficult to go against the crowd and buy when everyone else is selling, but that buying what everyone else buys gives you the same results as everyone else.",
+          "sourceId": "templeton-1993",
+          "locator": "Rule 4, 'Buy low', p. 5 of the Franklin Templeton reprint"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that his motto through his whole investment career was that buying when others despondently sell and selling when others avidly buy 'requires the greatest of fortitude'.",
+          "sourceId": "templeton-way-2008",
+          "locator": "Foreword by Sir John Templeton, sentence beginning 'I have relied on the following motto throughout my investment career'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Billy Grassie, founder of the Metanexus Institute, told the Philadelphia Inquirer that Templeton was 'a contrarian who never followed the crowd. That's how he made his money.'",
+          "sourceId": "inquirer-2008",
+          "locator": "fifth paragraph, quotation of Billy Grassie"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "The Philadelphia Inquirer's obituary opened by calling him 'an investor and philanthropist of deep faith and inexhaustible intellectual curiosity'.",
+          "sourceId": "inquirer-2008",
+          "locator": "first paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "He once said: 'But why shouldn't I try to learn more? Why shouldn't I go to Hindu services? Why shouldn't I go to Muslim services?'",
+          "sourceId": "ct-2008",
+          "locator": "paragraph beginning 'I have no quarrel with what I learned in the Presbyterian Church'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He gave his foundation the motto 'How little we know, how eager to learn'; the foundation calls him 'a relentless questioner'.",
+          "sourceId": "jtf-bio",
+          "locator": "web page 'Sir John Templeton', paragraphs beginning 'If he had not sought new paths' and 'An unfailing optimist'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1987 he set up a foundation to fund research on questions such as free will, spirituality and 'ultimate reality'.",
+          "sourceId": "sciam-2008",
+          "locator": "paragraph beginning 'In 1987 Templeton established a foundation'"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "From his late thirties he tithed, sometimes double, giving 10 percent or more of his earnings to churches and charities.",
+          "sourceId": "templeton-plan-1987",
+          "locator": "Step 18, 'Giving as a Way of Life', opening sentence, p. 136"
+        },
+        {
+          "kind": "deed",
+          "claim": "He created the Templeton Prize (first awarded to Mother Teresa in 1973), endowed Templeton College at Oxford in 1984 and set up the John Templeton Foundation in 1987; the Queen knighted him in 1987 in recognition of his philanthropy.",
+          "sourceId": "inquirer-2008",
+          "locator": "paragraphs on the Templeton Prize, the foundation and Templeton College"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote as one of his laws of life: 'Tithing often brings prosperity and honor.'",
+          "sourceId": "laws-of-life-1994",
+          "locator": "Week Thirty-Seven, Law E, p. 278"
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He opened the annual meetings of his mutual funds with a prayer and served on the board of Princeton Theological Seminary for 42 years.",
+          "sourceId": "ct-2008",
+          "locator": "paragraphs beginning 'He commenced annual meetings with a prayer' and 'Long associated with the Presbyterian Church'"
+        },
+        {
+          "kind": "words",
+          "claim": "In his rules for investors he wrote: 'If you begin with a prayer, you can think more clearly and make fewer mistakes.'",
+          "sourceId": "templeton-1993",
+          "locator": "Rule 12, 'Begin with a prayer', p. 7 of the Franklin Templeton reprint"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Philadelphia Inquirer called him 'a devout Presbyterian' and 'an investor and philanthropist of deep faith'.",
+          "sourceId": "inquirer-2008",
+          "locator": "first paragraph and paragraph beginning 'A devout Presbyterian'"
+        },
+        {
+          "kind": "words",
+          "claim": "He once said: 'I have no quarrel with what I learned in the Presbyterian Church. I am still an enthusiastic Christian.'",
+          "sourceId": "ct-2008",
+          "locator": "paragraph beginning 'I have no quarrel with what I learned in the Presbyterian Church'"
+        }
+      ]
+    },
+    {
+      "word": "Optimism",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He made 'Do not be fearful or negative too often' his last rule, writing that for 100 years optimists had carried the day in US stocks.",
+          "sourceId": "templeton-1993",
+          "locator": "Rule 16, 'Do not be fearful or negative too often', p. 9 of the Franklin Templeton reprint"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that the time to be most optimistic is at the point of maximum pessimism.",
+          "sourceId": "templeton-way-2008",
+          "locator": "Foreword by Sir John Templeton, paragraph beginning 'One principle that I have used throughout my career'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Slate's David Plotz, a critic, described his faith as Presbyterianism married to 'a sunny Norman Vincent Peale-y optimism'.",
+          "sourceId": "slate-1997",
+          "locator": "fourth paragraph, beginning 'The octogenarian Templeton'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His foundation describes him as 'an unfailing optimist, a believer in progress'.",
+          "sourceId": "jtf-bio",
+          "locator": "web page 'Sir John Templeton', paragraph beginning 'An unfailing optimist'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Buy when most people are at their gloomiest and selling.",
+      "sourceId": "templeton-way-2008",
+      "locator": "Foreword by Sir John Templeton, paragraph beginning 'One principle that I have used throughout my career'"
+    },
+    {
+      "text": "Do not copy the crowd: if you do what everyone else does, you will get what everyone else gets.",
+      "sourceId": "templeton-1993",
+      "locator": "Rule 4, 'Buy low', p. 5 of the Franklin Templeton reprint"
+    },
+    {
+      "text": "Expect to make mistakes, forgive yourself, and turn each one into a lesson; never doing anything is the biggest mistake.",
+      "sourceId": "templeton-1993",
+      "locator": "Rule 11, 'Learn from your mistakes', p. 7 of the Franklin Templeton reprint"
+    },
+    {
+      "text": "Give away at least a tenth of what you earn.",
+      "sourceId": "templeton-plan-1987",
+      "locator": "Step 18, 'Giving as a Way of Life', opening sentence, p. 136"
+    },
+    {
+      "text": "Assume you know little, and keep asking new questions.",
+      "sourceId": "templeton-1993",
+      "locator": "Rule 14, 'An investor who has all the answers doesn't even understand all the questions', p. 8 of the Franklin Templeton reprint"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "One principle that I have used throughout my career is to invest at the point of maximum pessimism.",
+      "sourceId": "templeton-way-2008",
+      "locator": "Foreword by Sir John Templeton"
+    },
+    {
+      "text": "If you buy the same securities everyone else is buying, you will have the same results as everyone else.",
+      "sourceId": "templeton-1993",
+      "locator": "Rule 4, 'Buy low', p. 5 of the Franklin Templeton reprint"
+    },
+    {
+      "text": "An investor who has all the answers doesn't even understand all the questions.",
+      "sourceId": "templeton-1993",
+      "locator": "Rule 14 (heading), p. 8 of the Franklin Templeton reprint"
+    },
+    {
+      "text": "Humility is the gateway to understanding.",
+      "sourceId": "humble-approach-1981",
+      "locator": "Chapter VI, 'Benefits from Humility', first sentence, p. 44"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1939, when war began in Europe, he borrowed money and bought 100 shares in each of 104 companies selling at one dollar a share or less. Thirty-four of them were in bankruptcy. Only four turned out to be worthless, and he made large profits on the others when he sold them a few years later.",
+    "sourceIds": [
+      "jtf-bio",
+      "sciam-2008"
+    ]
+  },
+  "shadow": {
+    "text": "In the 1960s he gave up his US citizenship, became a British subject and moved to the Bahamas, which Scientific American calls a well-known tax haven. The Philadelphia Inquirer writes that he had grown impatient with US income and capital-gains taxes and dates the step to 1963; Religion News Service and his own publisher's chronology give 1968. In 1997 Slate's David Plotz called him a 'full-bore crank', wrote that he had turned 'his own name into a brand' and bragged that his prize would be worth more than the Nobel, and called the Templeton Foundation, which published his new book, 'a true vanity press'. When he died in 2008, Scientific American reported critics' charge that he was twisting science in religion's name.",
+    "sourceIds": [
+      "sciam-2008",
+      "inquirer-2008",
+      "ct-2008",
+      "tfp-chronology",
+      "slate-1997"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you follow the crowd this week when your own judgment pointed the other way?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "The Templeton Plan: 21 Steps to Success and Happiness (as described to James Ellison)",
+      "year": 1987
+    },
+    {
+      "title": "The Humble Approach",
+      "year": 1981
+    },
+    {
+      "title": "Discovering the Laws of Life",
+      "year": 1994
+    }
+  ],
+  "sources": [
+    {
+      "id": "templeton-1993",
+      "kind": "primary",
+      "title": "16 Rules for Investment Success (first published 1993 in World Monitor: The Christian Science Monitor Monthly; Franklin Templeton reprint TL-R16, with permission of the John Templeton Foundation)",
+      "author": "John Templeton",
+      "year": 2026,
+      "publisher": "Franklin Templeton",
+      "url": "https://www.franklintempleton.com/forms-literature/download/TL-R16"
+    },
+    {
+      "id": "templeton-way-2008",
+      "kind": "primary",
+      "title": "Foreword to Investing the Templeton Way: The Market-Beating Strategies of Value Investing's Legendary Bargain Hunter, by Lauren C. Templeton and Scott Phillips",
+      "author": "John Templeton",
+      "year": 2008,
+      "publisher": "McGraw-Hill",
+      "url": "https://archive.org/details/investingtemplet0000temp"
+    },
+    {
+      "id": "humble-approach-1981",
+      "kind": "primary",
+      "title": "The Humble Approach: Scientists Discover God",
+      "author": "John M. Templeton",
+      "year": 1981,
+      "publisher": "Seabury Press",
+      "url": "https://archive.org/details/humbleapproachsc0000temp_n4w4"
+    },
+    {
+      "id": "templeton-plan-1987",
+      "kind": "primary",
+      "title": "The Templeton Plan: 21 Steps to Success and Happiness (as described by John Marks Templeton to James Ellison; ghost-written)",
+      "author": "John Marks Templeton with James Ellison",
+      "year": 1987,
+      "publisher": "Harper & Row",
+      "url": "https://archive.org/details/templetonplan21s00temp"
+    },
+    {
+      "id": "laws-of-life-1994",
+      "kind": "primary",
+      "title": "Discovering the Laws of Life",
+      "author": "John Marks Templeton",
+      "year": 1994,
+      "publisher": "Continuum",
+      "url": "https://archive.org/details/discoveringlawso00temp"
+    },
+    {
+      "id": "inquirer-2008",
+      "kind": "secondary",
+      "title": "An investor in money and faith (obituary)",
+      "author": "David O'Reilly and Melissa Dribben",
+      "year": 2008,
+      "publisher": "The Philadelphia Inquirer, 9 July 2008",
+      "url": "https://www.inquirer.com/philly/obituaries/20080709_An_investor_in_money_and_faith.html"
+    },
+    {
+      "id": "ct-2008",
+      "kind": "secondary",
+      "title": "Philanthropist Sir John Templeton Dies at 95",
+      "author": "Benedicta Cipolla and Daniel Burke, Religion News Service",
+      "year": 2008,
+      "publisher": "Christianity Today, 9 July 2008",
+      "url": "https://www.christianitytoday.com/2008/07/philanthropist-sir-john-templeton-dies-at-95"
+    },
+    {
+      "id": "sciam-2008",
+      "kind": "secondary",
+      "title": "John Templeton, Philanthropist of Science and Religion, Dead at 95",
+      "author": "JR Minkel",
+      "year": 2008,
+      "publisher": "Scientific American, 9 July 2008",
+      "url": "https://www.scientificamerican.com/article/john-templeton-philanthro/"
+    },
+    {
+      "id": "slate-1997",
+      "kind": "secondary",
+      "title": "God's Venture Capitalist: The strange quest of Sir John Templeton",
+      "author": "David Plotz",
+      "year": 1997,
+      "publisher": "Slate, 8 June 1997",
+      "url": "https://slate.com/news-and-politics/1997/06/god-s-venture-capitalist.html"
+    },
+    {
+      "id": "jtf-bio",
+      "kind": "secondary",
+      "title": "Sir John Templeton",
+      "author": "John Templeton Foundation",
+      "year": "n.d.",
+      "publisher": "John Templeton Foundation (his own foundation; not independent)",
+      "url": "https://www.templeton.org/about/sir-john-templeton"
+    },
+    {
+      "id": "tfp-chronology",
+      "kind": "secondary",
+      "title": "Milestones in the Life of Sir John Templeton (chronology page, archived 23 July 2008)",
+      "author": "Templeton Foundation Press",
+      "year": 2008,
+      "publisher": "Templeton Foundation Press (his own publisher; not independent)",
+      "url": "https://web.archive.org/web/2008/http://www.templetonpress.org/SirJohn/chronology.asp"
+    },
+    {
+      "id": "aars-2008",
+      "kind": "secondary",
+      "title": "Sir John M. Templeton (CT & Balliol '34)",
+      "author": "Association of American Rhodes Scholars",
+      "year": 2008,
+      "publisher": "Association of American Rhodes Scholars",
+      "url": "https://www.americanrhodes.org/news-123.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real person (1912-2008), investor, fund founder and religious philanthropist, not a politician, campaigner or founder of a religion; no account of sexual contact with a minor or of sexual violence found; his dark side is that he gave up US citizenship and moved to a tax haven in the 1960s, and critics who called his religion-and-science giving a crank's vanity project."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked every value against the Franklin Templeton reprint of his 16 rules, the Internet Archive's own text of four of his books, and obituaries in the Philadelphia Inquirer, Religion News Service and Scientific American, plus Slate's hostile 1997 profile. Humility fell: his rules and his 'humble approach' show humility about knowledge, but Slate documents that he turned his name into a brand on a prize, a college, a foundation and honor rolls and bragged that his prize beat the Nobel, so in the plain sense it can be argued against strongly; the brand facts went into the shadow and 'intellectual humility' is recorded as a missing word. Curiosity, the blind pick, came in with four sources; Courage, Generosity, Faith and Optimism held, and all four quotes checked against the original text.",
+    "checkedOn": "2026-11-10"
+  }
+}
