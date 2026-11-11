@@ -1,0 +1,329 @@
+{
+  "id": "chuck-feeney",
+  "name": "Chuck Feeney",
+  "pronoun": "he",
+  "born": 1931,
+  "died": 2023,
+  "category": "givers",
+  "areaIds": [
+    "lm_contribution",
+    "lm_money"
+  ],
+  "tagline": "A duty-free tycoon who gave away nearly all his fortune in secret, while he was alive.",
+  "startedFrom": "He was born in 1931 in Elizabeth, New Jersey, into a working-class Irish-American family, the son of an insurance underwriter and a nurse, and grew up in the Great Depression. After serving in the Air Force during the Korean War he went to Cornell's hotel school on the G.I. Bill, the first in his family to go to college; short of money, he sold baskets of sandwiches to fraternities and was nicknamed \"the sandwich man\".",
+  "values": [
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In November 1984 he transferred nearly all his fortune, estimated at $500 million to $800 million, to his foundation, in secret.",
+          "sourceId": "chronicle-2007",
+          "locator": "paragraph beginning \"On an otherwise unremarkable day in November 1984\""
+        },
+        {
+          "kind": "deed",
+          "claim": "Over four decades he gave more than $8 billion through the Atlantic Philanthropies, and on 14 September 2020 he signed the papers closing it.",
+          "sourceId": "forbes-2020",
+          "locator": "paragraphs beginning \"Over the last four decades\" and \"On September 14, 2020\""
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that he cannot think of a more rewarding and fitting use of wealth than to give while one is living.",
+          "sourceId": "giving-pledge-2011",
+          "locator": "letter of 3 February 2011, second paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Irish Times says he gave away the whole of his vast fortune in his lifetime.",
+          "sourceId": "irish-times-2023",
+          "locator": "paragraph beginning \"Feeney was unique as a major, global philanthropist\""
+        },
+        {
+          "kind": "deed",
+          "claim": "When the duty-free business was sold, he set aside $26 million of the proceeds as farewell gifts to 2,400 long-term staff.",
+          "sourceId": "irish-times-2023",
+          "locator": "paragraph beginning \"Feeney's anonymity ended in 1996\""
+        }
+      ]
+    },
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "For more than two decades his giving was completely anonymous; neither his name nor his foundation's appeared on any building, professorship or program, and he resisted memorials to his giving.",
+          "sourceId": "cornell-2023",
+          "locator": "paragraph beginning \"However, for more than two decades\""
+        },
+        {
+          "kind": "deed",
+          "claim": "He gave £10 million anonymously toward a new library at Queen's University Belfast that was named for another donor who gave £4 million for the naming rights.",
+          "sourceId": "chronicle-2007",
+          "locator": "answer to \"How have Mr. Feeney's views about anonymous giving changed over the years?\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Irish Times says he never sought recognition or honours.",
+          "sourceId": "irish-times-2023",
+          "locator": "paragraph beginning \"Feeney was unique as a major, global philanthropist\""
+        }
+      ]
+    },
+    {
+      "word": "Simplicity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He flew millions of miles in economy, wore a rubber Casio watch and rarely owned a car.",
+          "sourceId": "forbes-2012",
+          "locator": "page 3, paragraph beginning \"Casual observers categorize Feeney as frugal\""
+        },
+        {
+          "kind": "words",
+          "claim": "Asked about the high life, he told Forbes he never tried it because he knew he would not like it.",
+          "sourceId": "forbes-2012",
+          "locator": "page 3, paragraph beginning \"Casual observers categorize Feeney as frugal\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Irish Times says he always travelled economy, wore a cheap watch, and owned no house, car or property.",
+          "sourceId": "irish-times-2023",
+          "locator": "paragraph beginning \"Feeney invariably travelled economy class\""
+        }
+      ]
+    },
+    {
+      "word": "Impact",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1997 he offered roughly $100 million to Ireland's universities only if the government matched it; it did, and $226 million of Atlantic grants drew $1.3 billion of government money into the system.",
+          "sourceId": "forbes-2012",
+          "locator": "page 2, paragraph beginning \"To further maximize return\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In Queensland he paid one-third of the cost of a cancer centre, which led the state and federal governments to pay the other two-thirds.",
+          "sourceId": "irish-times-2023",
+          "locator": "paragraph beginning \"A hard-headed businessman\""
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that gifts made today can have greater value and impact than gifts delayed until the needs are greater.",
+          "sourceId": "giving-pledge-2011",
+          "locator": "letter of 3 February 2011, second paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Forbes reports that he made charities compete for his money with business plans and milestones, and cut funding when a project ran off course.",
+          "sourceId": "forbes-2012",
+          "locator": "page 2, paragraph beginning \"He forces charities to compete\""
+        }
+      ]
+    },
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 2011 his foundation gave $350 million, at first anonymously, that funded much of the first phase of the Cornell Tech campus in New York.",
+          "sourceId": "cornell-2023",
+          "locator": "section \"Feeney's legacy\", first item"
+        },
+        {
+          "kind": "words",
+          "claim": "He names informed risk taking, from his business life, as one of his guides in giving.",
+          "sourceId": "giving-pledge-2011",
+          "locator": "letter of 3 February 2011, fifth paragraph (beginning \"While my approach to philanthropy\")"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer Conor O'Clery calls the 1984 gift a unique act: giving away everything, all at once, irrevocably and at middle age.",
+          "sourceId": "chronicle-2007",
+          "locator": "answer to \"Was there a watershed moment...\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Forbes says that, frugal as he was, he was ready to spend big and go for broke when the value and impact outweighed the risk.",
+          "sourceId": "forbes-2020",
+          "locator": "last paragraph, beginning \"One of Feeney's final gifts\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Irish Times says his foundation's directors once tried to restrict his 'big bets' on capital projects; after he won that struggle he made his biggest capital grant, $350 million for a tech campus in New York.",
+          "sourceId": "irish-times-2023",
+          "locator": "paragraph beginning \"At one point, directors at his foundation\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Give while you are alive: do not put off giving, or your own part in the work.",
+      "sourceId": "giving-pledge-2011",
+      "locator": "letter of 3 February 2011, second paragraph"
+    },
+    {
+      "text": "Do not keep a piece of the action for yourself: the piece you keep is the piece you will worry about.",
+      "sourceId": "forbes-2012",
+      "locator": "page 1, paragraph beginning \"Feeney embarked on this mission in 1984\""
+    },
+    {
+      "text": "Make each gift pull in more: give when others, governments included, put up money too.",
+      "sourceId": "forbes-2012",
+      "locator": "page 2, paragraph beginning \"To further maximize return\""
+    },
+    {
+      "text": "Hate waste, but spend big where the return is high.",
+      "sourceId": "forbes-2012",
+      "locator": "page 3, paragraphs beginning \"Casual observers categorize Feeney as frugal\" and \"This waste/value mind-set\""
+    },
+    {
+      "text": "Go to the people you help and see their work yourself, instead of calling them to you.",
+      "sourceId": "irish-times-2023",
+      "locator": "paragraph beginning \"Feeney spent several weeks every year in Ireland\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I cannot think of a more personally rewarding and appropriate use of wealth than to give while one is living—to personally devote oneself to meaningful efforts to improve the human condition.",
+      "sourceId": "giving-pledge-2011",
+      "locator": "letter to Bill Gates, 3 February 2011, second paragraph"
+    },
+    {
+      "text": "I concluded that if you hung on to a piece of the action for yourself you'd always be worrying about that piece.",
+      "sourceId": "forbes-2012",
+      "locator": "interview with Steven Bertoni, Forbes, 18 September 2012, page 1"
+    },
+    {
+      "text": "People used to ask me how I got my jollies, and I guess I'm happy when what I'm doing is helping people and unhappy when what I'm doing isn't helping people.",
+      "sourceId": "forbes-2012",
+      "locator": "interview with Steven Bertoni, Forbes, 18 September 2012, page 1"
+    },
+    {
+      "text": "I see little reason to delay giving when so much good can be achieved through supporting worthwhile causes today. Besides, it's a lot more fun to give while you live than to give while you are dead.",
+      "sourceId": "zero-is-the-hero",
+      "locator": "web edition, section \"Key Lessons\""
+    }
+  ],
+  "definingMoment": {
+    "text": "In November 1984 he flew to Nassau in the Bahamas and transferred his whole 38.75% stake in Duty Free Shoppers to the foundation that became the Atlantic Philanthropies. The estate was estimated at $500 million to $800 million; he kept less than $5 million for himself. Only a close inner circle knew. In 1988 Forbes still listed him among the richest Americans, worth an estimated $1.3 billion, and the secret held until January 1997, when a lawsuit over the sale of the business made it public.",
+    "sourceIds": [
+      "chronicle-2007",
+      "forbes-2012",
+      "cornell-2023",
+      "chronicle-1997"
+    ]
+  },
+  "shadow": {
+    "text": "Forbes reports that he aggressively tried to avoid taxes at every stage of his career: he set up his early business in Liechtenstein, put his Bermuda holding company in the name of his then wife, and made the 1984 transfer through a Bahamas asset swap meant to minimize disclosure and taxes; his biographer Conor O'Clery calls him \"a libertarian when it comes to tax\". Forbes also notes that he raised his family in multimillion-dollar mansions. For years his Bermuda foundations, outside US foundation law, gave in full secrecy, and charities had to agree in writing to return the money if they disclosed anything about it; in 1997 the Chronicle of Philanthropy wrote that this raised questions about whether such a donor stays accountable to the public. His relationship with his partner Bob Miller was already strained over private retail ventures in Hawaii that Miller said competed with Duty Free Shoppers; when the foundation moved in 1996 to sell its stake, Miller went to court to stop the sale, and the two never spoke again. He gave money to Sinn Féin: the Chronicle of Philanthropy reported some $280,000 in 1997, and the Irish Times says that, with White House approval, he paid $20,000 a month for three years from his foundation salary toward its Washington office. From 2009 to 2011 he fought his own foundation's board: he had Harvey Dale ask three long-serving directors to resign and, when they refused, told Dale \"You have failed\"; his long friendship with Dale, whom he had called the most influential person in his life, almost completely unravelled. An Atlantic insider told O'Clery that when he got push-back he could be \"gruff, critical, intense, elliptic\".",
+    "sourceIds": [
+      "forbes-2012",
+      "chronicle-2007",
+      "chronicle-1997",
+      "irish-times-2023",
+      "irish-times-2013"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What good thing did you put off this week, telling yourself you would do it later?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Giving Pledge letter to Bill Gates",
+      "year": 2011
+    },
+    {
+      "title": "The Billionaire Who Wasn't: How Chuck Feeney Secretly Made and Gave Away a Fortune (Conor O'Clery)",
+      "year": 2007
+    }
+  ],
+  "sources": [
+    {
+      "id": "giving-pledge-2011",
+      "kind": "primary",
+      "title": "Pledge letter to Bill Gates (3 February 2011)",
+      "author": "Charles F. Feeney",
+      "year": 2011,
+      "publisher": "The Giving Pledge",
+      "url": "https://www.givingpledge.org/pledger/charles-f-feeney/"
+    },
+    {
+      "id": "zero-is-the-hero",
+      "kind": "primary",
+      "title": "Zero Is the Hero (Insights book, web edition; statement by Chuck Feeney in the Key Lessons section)",
+      "author": "The Atlantic Philanthropies, introduction by Steven Bertoni",
+      "year": 2019,
+      "publisher": "The Atlantic Philanthropies",
+      "url": "https://www.atlanticphilanthropies.org/insights/insights-books/zero-is-the-hero"
+    },
+    {
+      "id": "forbes-2012",
+      "kind": "secondary",
+      "title": "Chuck Feeney: The Billionaire Who Is Trying To Go Broke (Forbes, 18 September 2012; print issue of 8 October 2012), Internet Archive copy",
+      "author": "Steven Bertoni, Forbes",
+      "year": 2012,
+      "url": "https://web.archive.org/web/2013/https://www.forbes.com/sites/stevenbertoni/2012/09/18/chuck-feeney-the-billionaire-who-is-trying-to-go-broke/"
+    },
+    {
+      "id": "forbes-2020",
+      "kind": "secondary",
+      "title": "The Billionaire Who Wanted To Die Broke . . . Is Now Officially Broke (Forbes, 15 September 2020), licensed reprint",
+      "author": "Steven Bertoni, Forbes",
+      "year": 2020,
+      "url": "https://www.generalatlantic.com/media-article/chuck-feeney-atlantic-philanthropies/"
+    },
+    {
+      "id": "chronicle-1997",
+      "kind": "secondary",
+      "title": "A Donor's Obsession With Secrecy (The Chronicle of Philanthropy, 6 February 1997)",
+      "author": "Jennifer Moore and Grant Williams",
+      "year": 1997,
+      "url": "https://www.philanthropy.com/news/a-donors-obsession-with-secrecy/"
+    },
+    {
+      "id": "chronicle-2007",
+      "kind": "secondary",
+      "title": "Secretive Philanthropist Breaks Long Silence (The Chronicle of Philanthropy, 18 October 2007; includes an interview with biographer Conor O'Clery), republished by The Atlantic Philanthropies",
+      "author": "Marty Michaels",
+      "year": 2007,
+      "url": "https://atlanticphilanthropies.org/?p=16743"
+    },
+    {
+      "id": "irish-times-2023",
+      "kind": "secondary",
+      "title": "Chuck Feeney obituary: Philanthropist who lived more like a Benedictine monk than a billionaire (10 October 2023)",
+      "author": "The Irish Times",
+      "year": 2023,
+      "url": "https://www.irishtimes.com/obituaries/2023/10/10/chuck-feeney-obituary-philanthropist-who-lived-more-like-a-benedictine-monk-than-a-billionaire/"
+    },
+    {
+      "id": "irish-times-2013",
+      "kind": "secondary",
+      "title": "Chuck Feeney: Fight for his fortune (The Irish Times, 24 August 2013; edited extract from the new edition of The Billionaire Who Wasn't, PublicAffairs)",
+      "author": "Conor O'Clery",
+      "year": 2013,
+      "url": "https://www.irishtimes.com/life-and-style/people/chuck-feeney-fight-for-his-fortune-1.1503565"
+    },
+    {
+      "id": "cornell-2023",
+      "kind": "secondary",
+      "title": "Chuck Feeney, Cornell's 'third founder,' dies at 92 (Cornell Chronicle, 9 October 2023)",
+      "author": "Joe Wilensky, Cornell University",
+      "year": 2023,
+      "url": "https://news.cornell.edu/stories/2023/10/chuck-feeney-cornells-third-founder-dies-92"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Irish-American businessman and philanthropist (1931-2023), co-founder of Duty Free Shoppers, never a politician, campaigner or religious founder; no account of sexual contact with a minor or of sexual violence was found; he is in, and his dark side is aggressive tax avoidance, years of offshore secret giving with gag conditions on recipients, a court fight and lifelong break with his business partner, a bitter fight with his own foundation's board, and money for Sinn Féin."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value against the Forbes, Chronicle of Philanthropy, Irish Times and Cornell texts. Nothing fell: Simplicity met the Forbes line that he raised his family in mansions, and Humility met his later honorary degree and 'Feeney Way', but both are single phases against decades of economy flights and anonymous gifts, so the mansions went into the shadow. Boldness, the draft's own pick, held with five pieces of evidence from five sources, including the Irish Times on his fight for 'big bets'. I fixed eight sentences, among them the 1997 date the secret came out, the gag condition wording and the break with Harvey Dale.",
+    "checkedOn": "2026-11-10"
+  }
+}
