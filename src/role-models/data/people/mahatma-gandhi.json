@@ -1,0 +1,348 @@
+{
+  "id": "mahatma-gandhi",
+  "name": "Mahatma Gandhi",
+  "born": 1869,
+  "died": 1948,
+  "category": "leaders",
+  "areaIds": [
+    "lm_mindset",
+    "lm_contribution"
+  ],
+  "tagline": "A shy lawyer who froze in his first case and later led India's nonviolent revolt.",
+  "startedFrom": "He was born on 2 October 1869 in Porbandar, a small princely state in western India; his father was its chief minister but had little schooling and left very little property. He was married at thirteen. As a young barrister in Bombay he stood up for his first case, could not think of one question to ask, sat down and told the client's agent to give the case to another lawyer.",
+  "values": [
+    {
+      "word": "Honesty",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At fifteen he stole a bit of gold from his brother's armlet; he then wrote out a confession, handed it to his sick father himself, asked to be punished and promised never to steal again.",
+          "sourceId": "autobiography-desai",
+          "locator": "Part I, ch. VIII, 'Stealing and Atonement'"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that truth is for him 'the sovereign principle', meaning truthfulness in thought as well as in word.",
+          "sourceId": "autobiography-desai",
+          "locator": "Introduction (dated 26 November 1925)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Rolland writes that he is 'of immaculate sincerity', that he 'never tries to hide a mistake' and that he would always set truth first, before liberty and even before his country.",
+          "sourceId": "rolland-1924",
+          "locator": "Part One, § 1 and § 4"
+        },
+        {
+          "kind": "witness",
+          "claim": "Orwell, who wrote that he never much liked Gandhi, judged that there was nothing 'he was frightened of saying or thinking'.",
+          "sourceId": "orwell-1949",
+          "locator": "'Reflections on Gandhi', last paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "After being put off a train at Maritzburg in 1893 he wrote that it would be cowardice to run back to India, and that he should try to root out colour prejudice and suffer hardships in the process.",
+          "sourceId": "autobiography-desai",
+          "locator": "Part II, ch. VIII, 'On the Way to Pretoria'"
+        },
+        {
+          "kind": "deed",
+          "claim": "When he landed at Durban after a visit to India, a crowd of angry whites stoned and kicked him until the police superintendent's wife stood between them; he then refused to prosecute anyone.",
+          "sourceId": "autobiography-desai",
+          "locator": "Part III, ch. III, 'The Test'"
+        },
+        {
+          "kind": "deed",
+          "claim": "On 7 January 1947, aged 77, he set out on foot from village to village through riot-torn Noakhali, to live among Muslim peasants who, he said, had been taught to see him as an enemy of Islam.",
+          "sourceId": "bose-1953",
+          "locator": "ch. XIV 'The Pilgrimage', p. 137; and pp. 116-117"
+        },
+        {
+          "kind": "witness",
+          "claim": "Orwell wrote that 'his natural physical courage was quite outstanding', and pointed to how lightly he was guarded when he was killed.",
+          "sourceId": "orwell-1949",
+          "locator": "'Reflections on Gandhi', third paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1906, aged 36 and married, he took a lifelong vow of brahmacharya (sexual abstinence); twenty years later he wrote of looking back on 'the twenty years of the vow'.",
+          "sourceId": "autobiography-desai",
+          "locator": "Part III, ch. VIII, 'Brahmacharya - II'"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that a vow, far from closing the door to real freedom, opened it, and that refusing to bind oneself is 'the mentality of weakness'.",
+          "sourceId": "autobiography-desai",
+          "locator": "Part III, ch. VII, 'Brahmacharya - I'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Committee's adviser Jacob Worm-Müller wrote in 1937 that he was 'undoubtedly, a good, noble and ascetic person'.",
+          "sourceId": "nobel-tonnesson",
+          "locator": "section 'First nomination for the Nobel Peace Prize'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Orwell lists 'the disciplines which Gandhi imposed on himself': no meat, no alcohol or tobacco, no spices, and the vow of chastity he took in his middle thirties.",
+          "sourceId": "orwell-1949",
+          "locator": "'Reflections on Gandhi', fifth paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Simplicity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After reading Ruskin's Unto This Last on a train in 1904 he moved his newspaper to a farm at Phoenix, fourteen miles from Durban, where everyone drew the same £3 a month, 'irrespective of colour or nationality'.",
+          "sourceId": "autobiography-desai",
+          "locator": "Part IV, ch. XVIII-XIX, 'The Magic Spell of a Book', 'The Phoenix Settlement'"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes of his 'passion for self-help and simplicity', which began when he cut his household costs and learned to wash his own collars and cut his own hair.",
+          "sourceId": "autobiography-desai",
+          "locator": "Part III, ch. IX, 'Simple Life'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Rolland describes him dressed in coarse white cloth and barefoot, living on rice and fruit, drinking only water and sleeping on the floor.",
+          "sourceId": "rolland-1924",
+          "locator": "Part One, § 1"
+        },
+        {
+          "kind": "witness",
+          "claim": "Orwell notes that the possessions he left at his death 'could be purchased for about £5'.",
+          "sourceId": "orwell-1949",
+          "locator": "'Reflections on Gandhi', fourth paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Humility",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In April 1919, a few days after calling a national day of fasting and strikes against the Rowlatt Acts, he suspended his own campaign of nonviolent resistance because protesters had turned violent.",
+          "sourceId": "king-institute",
+          "locator": "encyclopedia entry 'Gandhi, Mohandas K.', para. 4"
+        },
+        {
+          "kind": "words",
+          "claim": "He told a public meeting at Nadiad that he had made a 'Himalayan miscalculation', and writes that he never regretted the confession despite the ridicule.",
+          "sourceId": "autobiography-desai",
+          "locator": "Part V, ch. XXXIII, 'A Himalayan Miscalculation'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In February 1922, after the killings at Chauri Chaura, he had the Congress call off mass civil disobedience and wrote that the country would gain 'by my humiliation and confession of error'.",
+          "sourceId": "rolland-1924",
+          "locator": "Part Three, § 2 (quoting Young India, February 1922)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Rolland writes that he is 'modest and unassuming, to the point of sometimes seeming almost timid', and is not 'afraid to admit having been in the wrong'.",
+          "sourceId": "rolland-1924",
+          "locator": "Part One, § 1"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Look at your own mistakes through a magnifying glass and at other people's through the other end, and admit them in public.",
+      "sourceId": "autobiography-desai",
+      "locator": "Part V, ch. XXXIII, 'A Himalayan Miscalculation'"
+    },
+    {
+      "text": "Make a firm vow instead of saying you will try; the vow is what sets you free.",
+      "sourceId": "autobiography-desai",
+      "locator": "Part III, ch. VII, 'Brahmacharya - I'"
+    },
+    {
+      "text": "When you are insulted, do not run away; fight the cause of the insult, not the person, and seek redress only as far as the cause needs.",
+      "sourceId": "autobiography-desai",
+      "locator": "Part II, ch. VIII, 'On the Way to Pretoria'; Part III, ch. III, 'The Test'"
+    },
+    {
+      "text": "Do your own work with your own hands, so you depend on no one for daily needs.",
+      "sourceId": "autobiography-desai",
+      "locator": "Part III, ch. IX, 'Simple Life'"
+    },
+    {
+      "text": "Act firmly on what you now believe is true, but treat it like a scientist treats a result: open to change.",
+      "sourceId": "autobiography-desai",
+      "locator": "Introduction (dated 26 November 1925)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Let hundreds like me perish, but let truth prevail.",
+      "sourceId": "autobiography-desai",
+      "locator": "Introduction (dated 26 November 1925)",
+      "translation": "Mahadev Desai, 1927"
+    },
+    {
+      "text": "I realized that a vow, far from closing the door to real freedom, opened it.",
+      "sourceId": "autobiography-desai",
+      "locator": "Part III, ch. VII, 'Brahmacharya - I'",
+      "translation": "Mahadev Desai, 1927"
+    },
+    {
+      "text": "I have always held that it is only when one sees one's own mistakes with a convex lens, and does just the reverse in the case of others, that one is able to arrive at a just relative estimate of the two.",
+      "sourceId": "autobiography-desai",
+      "locator": "Part V, ch. XXXIII, 'A Himalayan Miscalculation'",
+      "translation": "Mahadev Desai, 1929"
+    },
+    {
+      "text": "It would be cowardice to run back to India without fulfilling my obligation.",
+      "sourceId": "autobiography-desai",
+      "locator": "Part II, ch. VIII, 'On the Way to Pretoria'",
+      "translation": "Mahadev Desai, 1927"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1893, about a week after arriving in Durban to work on a lawsuit, he was travelling first class to Pretoria when a passenger objected to his colour. At Maritzburg he refused to move to the van compartment, and a constable pushed him off the train. He sat all night in the cold, dark waiting room, weighing whether to go home, and decided that running back would be cowardice and that he should fight the colour prejudice itself. He took the next train on, and stayed in South Africa for 21 years, where he built his method of nonviolent resistance.",
+    "sourceIds": [
+      "autobiography-desai",
+      "king-institute"
+    ]
+  },
+  "shadow": {
+    "text": "In South Africa he wrote of Black Africans as beneath Indians: an 1894 open letter complained that Indians were being 'dragged down to the position of a raw Kaffir', and his 1908 prison account called African convicts 'very dirty' and said they 'live almost like animals'. In 2018 his statue at the University of Ghana was taken down after lecturers petitioned against it, citing his slurs against Africans. By his own account he once dragged his wife Kasturba to the gate, meaning to push her out of the house, when she resisted cleaning the chamber pot of a clerk born to 'untouchable' parents. In 1946-47, aged 77, he had his grandniece Manu, 19 by his own count, share his bed as part of what he called his brahmacharya 'yajna'; he announced it at a prayer meeting on 1 February 1947. Close co-workers objected and his stenographer left; his interpreter Nirmal Kumar Bose wrote that he himself would never treat a woman 'as an instrument of an experiment', and that it left 'a mark of injury' on others. Manu's diary shows her accepting it as a test; it stopped when, on Thakkar Bapa's advice, she asked him to suspend it.",
+    "sourceIds": [
+      "cwmg-1",
+      "cwmg-8",
+      "npr-2018",
+      "autobiography-desai",
+      "bose-1953",
+      "mukherjee-2022",
+      "mukherjee-2024"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which mistake did you make this week that you still have not admitted out loud?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "An Autobiography, or The Story of My Experiments with Truth",
+      "year": 1927
+    }
+  ],
+  "sources": [
+    {
+      "id": "autobiography-desai",
+      "kind": "primary",
+      "title": "An Autobiography, or The Story of My Experiments with Truth (tr. Mahadev Desai from Gujarati)",
+      "author": "M. K. Gandhi",
+      "year": "1927-29",
+      "publisher": "Navajivan; text read in the Standard Ebooks edition",
+      "url": "https://standardebooks.org/ebooks/mahatma-gandhi/the-story-of-my-experiments-with-truth/mahadev-desai/text/single-page"
+    },
+    {
+      "id": "cwmg-1",
+      "kind": "primary",
+      "title": "The Collected Works of Mahatma Gandhi, vol. I (1884-1896)",
+      "author": "M. K. Gandhi",
+      "year": 1958,
+      "publisher": "Publications Division, Government of India",
+      "url": "https://archive.org/details/in.ernet.dli.2015.100764"
+    },
+    {
+      "id": "cwmg-8",
+      "kind": "primary",
+      "title": "The Collected Works of Mahatma Gandhi, vol. VIII (January-August 1908)",
+      "author": "M. K. Gandhi",
+      "year": 1962,
+      "publisher": "Publications Division, Government of India",
+      "url": "https://archive.org/details/in.ernet.dli.2015.175005"
+    },
+    {
+      "id": "bose-1953",
+      "kind": "secondary",
+      "title": "My Days with Gandhi",
+      "author": "Nirmal Kumar Bose",
+      "year": 1953,
+      "publisher": "Nishana, Calcutta",
+      "url": "https://archive.org/details/dli.ernet.54368"
+    },
+    {
+      "id": "rolland-1924",
+      "kind": "secondary",
+      "title": "Mahatma Gandhi: The Man Who Became One with the Universal Being (tr. Catherine D. Groth)",
+      "author": "Romain Rolland",
+      "year": 1924,
+      "publisher": "The Century Co.",
+      "url": "https://www.gutenberg.org/ebooks/61575"
+    },
+    {
+      "id": "nobel-tonnesson",
+      "kind": "secondary",
+      "title": "Mahatma Gandhi, the Missing Laureate",
+      "author": "Øyvind Tønnesson, Nobelprize.org",
+      "year": 1999,
+      "url": "https://www.nobelprize.org/prizes/themes/mahatma-gandhi-the-missing-laureate/"
+    },
+    {
+      "id": "king-institute",
+      "kind": "secondary",
+      "title": "Gandhi, Mohandas K. (King Encyclopedia)",
+      "author": "Martin Luther King, Jr. Research and Education Institute, Stanford University",
+      "year": "n.d.",
+      "url": "https://kinginstitute.stanford.edu/gandhi-mohandas-k"
+    },
+    {
+      "id": "npr-2018",
+      "kind": "secondary",
+      "title": "University Of Ghana Removes Gandhi Statue After Faculty Outcry",
+      "author": "Camila Domonoske, NPR",
+      "year": 2018,
+      "url": "https://www.npr.org/2018/12/14/676691788/university-of-ghana-removes-gandhi-statue-after-faculty-outcry"
+    },
+    {
+      "id": "mukherjee-2024",
+      "kind": "secondary",
+      "title": "Always by Gandhi's Side (review of The Diary of Manu Gandhi, 1946-1948, ed. Tridip Suhrud)",
+      "author": "Rudrangshu Mukherjee, The India Forum",
+      "year": 2024,
+      "url": "https://www.theindiaforum.in/book-reviews/always-gandhis-side"
+    },
+    {
+      "id": "orwell-1949",
+      "kind": "secondary",
+      "title": "Reflections on Gandhi",
+      "author": "George Orwell",
+      "year": 1949,
+      "publisher": "Partisan Review, January 1949; text on the Orwell Foundation site",
+      "url": "https://www.orwellfoundation.com/the-orwell-foundation/orwell/essays-and-other-works/reflections-on-gandhi/"
+    },
+    {
+      "id": "mukherjee-2022",
+      "kind": "secondary",
+      "title": "Life with the Mahatma (review of The Diary of Manu Gandhi, 1943-1944, ed. Tridip Suhrud)",
+      "author": "Rudrangshu Mukherjee, The India Forum",
+      "year": 2022,
+      "url": "https://www.theindiaforum.in/article/diary-manu-gandhi"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "Owner decides; no recommendation. Flagged because I am unsure whether this counts, not because a source says it was sexual violence. Facts: Manu Gandhi (born 1927 per Suhrud 2021 and Mukherjee 2022/2024; Gandhi's own letter of 1 Feb 1947 says 19; Hazama 2017 says 17 or 17-18; Mukherjee 2024 says 20; Jad Adams via Open 2019 says 18) shared his bed from 19-20 December 1946 in Noakhali (Bose 1953 p. 115). Jad Adams says Manu and Abha (18) slept with him 'clothed and naked'; Hazama, from Manu's Gujarati diary, says they slept naked in one bed and quotes 'He caressed me with his hand, [his touch] filled with parental affection'. Gandhi announced it at prayer meetings on 1 and 3 February 1947 and asked Satish Chandra Mukherji whether anything was wrong in it (Bose pp. 154-155); he told Bose he had 'at times' let women workers use his bed as a spiritual experiment (p. 134). Narahari Parikh and Kishorlal Mashruwala objected, his stenographer Parasuram left (pp. 134-137); Bose wrote on 16 March 1947 that he would never treat a woman 'as an instrument of an experiment' and that it 'does leave a mark of injury on the personality of others' (pp. 174-175). Competing accounts: Suhrud (editor of Manu's diary) calls her a willing partner in a yajna; Mukherjee 2024 asks 'Could daughters deny/defy their mothers in the 1940s?'; Open 2019 says she looked on Gandhi as a mother and that 'the idea of coercion was alien to him'. It stopped when, on Thakkar Bapa's advice, Manu asked him to suspend it and he agreed 'for the time being' (Mukherjee 2022). No source seen gives any participant under 16, and none describes force. Full case in the research folder's screen.json."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked Humility hardest (the Nobel adviser called him 'a dictator', Orwell asked how far vanity moved him, and in 1947 he overrode his closest co-workers), and Honesty and Discipline (the goat's-milk breach of his vow, which he confessed himself). All five values held: the public reversals of 1919 and 1922 and his own confessions make admitting error a lifelong pattern, and each value now rests on Orwell (1949) or Rolland (1924) as well as the Autobiography. Five claims were fixed, chiefly the shadow: Bose wrote that he himself would never use a woman 'as an instrument', not that Gandhi did, and NPR does not say who took the Ghana statue down. Re-checked the ages: every source gives Manu 17 to 20 when the bed-sharing began, none under 16, none describes force, so the case stays with the owner.",
+    "checkedOn": "2026-11-10"
+  }
+}
