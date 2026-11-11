@@ -10,6 +10,9 @@ research folder. Your job is to break the draft, then write what survives as the
    Open the cited sources and check each `claim` and `locator` yourself. Then decide:
    - a **pattern** of contrary behaviour, or evidence that does not hold up: **drop** the value;
    - a **single lapse**: keep the value; the lapse may go in the shadow;
+   - survives only in a narrow sense (e.g. Integrity as "clean hands" while the plain reading, fair dealing,
+     can be argued against strongly): **drop** the value, keep the narrow facts as evidence elsewhere or in
+     the shadow, and record the narrow word under `missingWords`;
    - holds: keep.
 2. **Blind comparison.** Words in both draft and blind pick are *core*. A word only the draft picked stays only
    if it has at least three pieces of evidence from at least three different sources (add evidence you have
