@@ -1,0 +1,272 @@
+{
+  "id": "edward-thorp",
+  "name": "Edward Thorp",
+  "born": 1932,
+  "died": null,
+  "category": "money",
+  "areaIds": [
+    "lm_money",
+    "lm_mindset"
+  ],
+  "tagline": "A maths professor who beat blackjack, then the markets, by testing ideas and sizing risk.",
+  "startedFrom": "He was born in Chicago in 1932 and grew up in the Great Depression with, in his words, basically no money. After the family moved to Lomita, California, in 1942, he got up at 3 a.m. to deliver newspapers and spent the money on chemicals, electronics and telescopes. His high school offered little in the way of academics, so he taught himself physics, chemistry and astronomy from books.",
+  "values": [
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked how he came to gambling, he said he is a curious person and wandered into blackjack, roulette and fitness while always looking for things to understand.",
+          "sourceId": "ferriss-596",
+          "locator": "transcript, answers to 'how did gambling... enter the picture' and on health and fitness ('I wandered into health and fitness by accident')"
+        },
+        {
+          "kind": "deed",
+          "claim": "As a teenager at a school with little science teaching, he taught himself science, started a Chess Club and a Science Club, and entered the 1949 Science Talent Search with calculations of planet positions he had worked out himself.",
+          "sourceId": "uci-exhibit",
+          "locator": "page 'A Natural Talent', paragraphs on Narbonne High School and the Science Talent Search"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1960-61 he and Claude Shannon built a wearable computer to predict roulette and tested it in Las Vegas in August 1961.",
+          "sourceId": "uci-exhibit",
+          "locator": "page 'A Spin of the Wheel'"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said that after losing money on beginner mistakes he spent the summer of 1964 reading every investment book and newspaper in a Beverly Hills bookstore, and kept reading in 1965.",
+          "sourceId": "ferriss-596",
+          "locator": "transcript, answer to 'How did finance or investing enter the scene for you?'"
+        },
+        {
+          "kind": "deed",
+          "claim": "UC Irvine's timeline records that in 1964 he began teaching himself financial markets, investing and economics.",
+          "sourceId": "uci-exhibit",
+          "locator": "page 'A Career in Quantitative Finance', timeline entry 1964"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he learned physics, astronomy, mathematics and chemistry by reading books and studying on his own, and that this taught him to think things through for himself.",
+          "sourceId": "uci-exhibit",
+          "locator": "page 'A Natural Talent', quotation from his unpublished biographical sketch"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that his ideas come from sitting and thinking, academic journals, general and financial reading, networking and talking with other people, and that continuous research is advisable because competition drives returns down.",
+          "sourceId": "wilmott-2003",
+          "locator": "p. 38, 'Concluding remarks', first two paragraphs"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He described being inner-directed as having your own independent moral and ethical compass, instead of taking your values from the people around you.",
+          "sourceId": "ferriss-604",
+          "locator": "transcript, answer on The Lonely Crowd and inner-directed versus other-directed people"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1991, asked to review a client's portfolio, he concluded that Bernard Madoff's fund was a fraud, seventeen years before Madoff's arrest in 2008.",
+          "sourceId": "uci-exhibit",
+          "locator": "page 'A Career in Quantitative Finance', timeline entry 1991"
+        },
+        {
+          "kind": "deed",
+          "claim": "He checked Madoff's reported option trades against exchange records, found that most could not have happened, and told McKinsey to pull out, which it did within two months, even though Madoff was a respected industry figure.",
+          "sourceId": "ferriss-596",
+          "locator": "transcript, Madoff story beginning 'Back in 1991, I was invited to review the portfolio of McKinsey and Company'"
+        }
+      ]
+    },
+    {
+      "word": "Contentment",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said he wound down his fund once it stopped being fun, because he had enough wealth and would never spend it all, and that people who chase money without end miss that you can have enough.",
+          "sourceId": "ferriss-596",
+          "locator": "transcript, answers on 'having enough' and the Joseph Heller story"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2002 he closed his Ridgeline Partners fund, which had gained 18 percent a year over its eight years.",
+          "sourceId": "uci-exhibit",
+          "locator": "page 'A Career in Quantitative Finance', timeline entry 2002"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked by NPR why he published his blackjack system instead of making money from it, he said he expected to lead the life of an academic and thought teaching in a university would be a great life.",
+          "sourceId": "npr-2017",
+          "locator": "transcript, answer to 'why were you more interested in publishing than in making money?'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Test an idea for real, starting with small stakes, before you bet big on it.",
+      "sourceId": "wilmott-2003",
+      "locator": "pp. 34-35, 'real world verification' and list (a)-(g) of his first casino trip"
+    },
+    {
+      "text": "Size every bet so that you could live through a really bad outcome.",
+      "sourceId": "wilmott-2003",
+      "locator": "p. 35, paragraph after list (a)-(g)"
+    },
+    {
+      "text": "Check the facts yourself instead of trusting a famous name or what everyone believes.",
+      "sourceId": "ferriss-596",
+      "locator": "transcript, 'That's where thinking for yourself comes in' and the Madoff story that follows"
+    },
+    {
+      "text": "Base what you do on facts you have measured, not on hopes.",
+      "sourceId": "ferriss-604",
+      "locator": "transcript, answer on recording your weight (show-notes segment [46:23])"
+    },
+    {
+      "text": "Once you have enough, stop spending your time on work you no longer enjoy.",
+      "sourceId": "ferriss-596",
+      "locator": "transcript, answer to 'was there a particular day... Enough is enough'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "The idea, which has been valuable ever after, was to limit my bet size to a level at which I was comfortable and at which I could tolerate a really bad outcome.",
+      "sourceId": "wilmott-2003",
+      "locator": "p. 35, paragraph after list (a)-(g)"
+    },
+    {
+      "text": "Measurement is important because you want facts on which to base what you do instead of hopes, beliefs, wishes, so on.",
+      "sourceId": "ferriss-604",
+      "locator": "transcript, answer on recording your weight (show-notes segment [46:23])"
+    },
+    {
+      "text": "And that's something that people who endlessly chase money to the end don't figure out: that you can have enough and it's better than not having enough.",
+      "sourceId": "ferriss-596",
+      "locator": "transcript, end of the Joseph Heller and Kurt Vonnegut story"
+    },
+    {
+      "text": "Where do the ideas come from? Mine come from sitting and thinking, academic journals, general and financial reading, networking, and discussions with other people.",
+      "sourceId": "wilmott-2003",
+      "locator": "p. 38, 'Concluding remarks', first paragraph"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1961 the gambler Manny Kimmel offered to back a test of Thorp's blackjack system in Nevada with $100,000. Thorp cut the bankroll to $10,000. In Reno he bet $1 to $10 for the first eight hours, then raised the limits in stages before playing at $50 to $500. In 20 hours of full-scale betting he won $11,000; he had forecast about $10,000.",
+    "sourceIds": [
+      "wilmott-2003",
+      "npr-2017"
+    ]
+  },
+  "shadow": {
+    "text": "After casinos barred him in the 1960s, he kept playing in disguise: a beard, wraparound sunglasses and a Hawaiian shirt one day, then shaved, with contact lenses and a jacket and tie the next. In August 1961 he and Claude Shannon took a hidden roulette computer into Las Vegas casinos, worked by switches in the toes of the bettor's shoes, with an earpiece that played tones telling him where to bet. Princeton Newport Partners, the fund he and Jay Regan started in 1969, was charged with making bogus trades in 1984 and 1985 to claim tax losses. In July 1989 a jury convicted Regan and four other former Princeton Newport executives of racketeering and fraud; the firm had already closed at the end of 1988. Thorp ran the California office, was never charged, and says he did not know what was going on; many of the charges were overturned on appeal.",
+    "sourceIds": [
+      "uci-exhibit",
+      "time-1989",
+      "upi-1989",
+      "npr-2017",
+      "wilmott-2003"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you take a risk this week that you could not survive if it went badly?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "A Man for All Markets",
+      "year": 2017
+    },
+    {
+      "title": "Beat the Dealer",
+      "year": 1962
+    },
+    {
+      "title": "Beat the Market (with Sheen T. Kassouf)",
+      "year": 1967
+    }
+  ],
+  "sources": [
+    {
+      "id": "ferriss-596",
+      "kind": "primary",
+      "title": "The Tim Ferriss Show #596: Edward O. Thorp, A Man for All Markets (transcript, episode of 24 May 2022)",
+      "author": "Edward O. Thorp, interviewed by Tim Ferriss",
+      "year": 2022,
+      "publisher": "tim.blog",
+      "url": "https://tim.blog/2022/05/28/ed-thorp-transcript/"
+    },
+    {
+      "id": "ferriss-604",
+      "kind": "primary",
+      "title": "The Tim Ferriss Show #604: Master Investor Ed Thorp on How to Think for Yourself (transcript, episode of 28 June 2022)",
+      "author": "Edward O. Thorp, interviewed by Tim Ferriss",
+      "year": 2022,
+      "publisher": "tim.blog",
+      "url": "https://tim.blog/2022/06/30/edward-o-thorp-2-transcript/"
+    },
+    {
+      "id": "wilmott-2003",
+      "kind": "primary",
+      "title": "A Perspective on Quantitative Finance: Models for Beating the Market (Quantitative Finance Review 2003; reprinted in The Best of Wilmott, pp. 33-38)",
+      "author": "Edward O. Thorp",
+      "year": 2003,
+      "publisher": "Wilmott / John Wiley & Sons; PDF on the author's site",
+      "url": "https://www.edwardothorp.com/wp-content/uploads/2016/11/thorpwilmottqfinrev2003.pdf"
+    },
+    {
+      "id": "npr-2017",
+      "kind": "secondary",
+      "title": "Episode 749: Professor Blackjack (Planet Money, 20 January 2017, transcript)",
+      "author": "Jacob Goldstein",
+      "year": 2017,
+      "publisher": "NPR",
+      "url": "https://www.npr.org/transcripts/510810752"
+    },
+    {
+      "id": "uci-exhibit",
+      "kind": "secondary",
+      "title": "Finding the Edge: The Work and Insights of Edward O. Thorp (online exhibit, from the Edward O. Thorp Papers)",
+      "author": "UC Irvine Libraries",
+      "year": 2019,
+      "publisher": "University of California, Irvine",
+      "url": "https://exhibits.lib.uci.edu/thorp"
+    },
+    {
+      "id": "time-1989",
+      "kind": "secondary",
+      "title": "Money Angles: Too Much Firepower to Fit the Crime? (TIME, 20 November 1989)",
+      "author": "Andrew Tobias",
+      "year": 1989,
+      "publisher": "TIME",
+      "url": "https://content.time.com/time/subscriber/article/0,33009,959070,00.html"
+    },
+    {
+      "id": "upi-1989",
+      "kind": "secondary",
+      "title": "Jury reaches guilty verdicts in Princeton-Newport case (31 July 1989)",
+      "author": "United Press International",
+      "year": 1989,
+      "publisher": "UPI",
+      "url": "https://www.upi.com/Archives/1989/07/31/Jury-reaches-guilty-verdicts-in-PrincetonNewport-case/6732617860800/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real, living person (born 1932), mathematician, blackjack player and hedge fund manager, not a politician, campaigner or religious founder; no account of sexual contact with a minor or of sexual violence found; his dark side is casino deception (disguises after being barred, a hidden roulette computer) and the 1989 Princeton Newport tax-fraud convictions of his partners (he was never charged)."
+    },
+    "blindAgreement": 0.25,
+    "devilsAdvocate": "I attacked each value and every sentence against his 2003 Wilmott essay, both Tim Ferriss transcripts, the NPR Planet Money transcript, the UC Irvine exhibit, TIME and UPI. All five values held: Contentment survived the case that he kept investing for himself (he says so) and that Princeton Newport closed under indictment rather than by choice, and Learning gained a third source in his own essay. The blind pick's Fitness, Generosity, Competence and Self-reliance did not come in: there was no room, and parts rested on unlicensed reprints of a paywalled Bloomberg interview and a memoir chapter. Four claims were tightened, among them the NPR line (the 'not money-oriented' words are from a different NPR show) and the roulette computer's earpiece. At lead review Safety was dropped as well: it survives only in the narrow sense of sizing bets to survive a loss (risk control), while he kept taking bets, so under the narrow-sense rule it does not stand.",
+    "checkedOn": "2026-11-10"
+  }
+}
