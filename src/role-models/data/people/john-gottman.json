@@ -1,0 +1,327 @@
+{
+  "id": "john-gottman",
+  "name": "John Gottman",
+  "born": 1942,
+  "died": null,
+  "category": "teachers",
+  "areaIds": [
+    "lm_relationship",
+    "lm_emotions"
+  ],
+  "tagline": "A mathematician turned psychologist who measured what makes couples last.",
+  "startedFrom": "He was born in 1942 in the Dominican Republic to Jewish refugees who had fled Vienna after Hitler's 1938 invasion; about three years later the family moved to the United States, lived first in Miami, then settled in an Orthodox Jewish neighbourhood in Brooklyn. He loved mathematics and earned a master's degree in it at MIT in 1964. By his own account he came to study relationships because his own were failing.",
+  "values": [
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "As a boy in Brooklyn he set up his first lab in a closet with a microscope his parents bought him, and examined fly wings and pond scum.",
+          "sourceId": "pt-2015",
+          "locator": "paragraph on his childhood, after reading The Microbe Hunters"
+        },
+        {
+          "kind": "deed",
+          "claim": "After his MIT master's in mathematics (1964) he planned a math PhD, then switched to psychology because he found his roommate's psychology books 'a lot more interesting'.",
+          "sourceId": "onwisc-2016",
+          "locator": "section 'Sixty First Dates', first paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "In 2016 he said researchers were 'maybe 40 percent there' in understanding relationships and that the rest 'is still a mystery, and requires more research'.",
+          "sourceId": "onwisc-2016",
+          "locator": "section 'Masters of Love'"
+        }
+      ]
+    },
+    {
+      "word": "Partnership",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He married the clinical psychologist Julie Schwartz in 1987 and co-founded the Gottman Institute with her in Seattle in 1996.",
+          "sourceId": "ebsco-2017",
+          "locator": "Life's Work"
+        },
+        {
+          "kind": "deed",
+          "claim": "At their couples' seminars he and Julie sit together on stage and re-enact their own ongoing private arguments.",
+          "sourceId": "onwisc-2016",
+          "locator": "section 'Masters of Love'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Psychology Today (2015) calls Julie 'his partner in this enterprise' and reports that the two use examples from their own marriage in training and therapy.",
+          "sourceId": "pt-2015",
+          "locator": "paragraphs beginning 'For the past 18 years' and 'In their training and therapy sessions'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He tells of one night choosing to go to his sad wife instead of finishing a mystery novel he was reading, and asking her what was the matter.",
+          "sourceId": "gg-2011",
+          "locator": "section on 'sliding door' moments"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He earned a BA in mathematics (Fairleigh Dickinson, 1962), an MA in mathematics (MIT, 1964), then an MA (1967) and a PhD in clinical psychology (1971) at the University of Wisconsin-Madison.",
+          "sourceId": "ebsco-2017",
+          "locator": "Background"
+        },
+        {
+          "kind": "deed",
+          "claim": "As an undergraduate he taught calculus and analytic geometry at night school, then went on to MIT on a Woodrow Wilson Fellowship.",
+          "sourceId": "pt-2015",
+          "locator": "paragraph beginning 'As an undergrad at Fairleigh Dickinson'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He chose Wisconsin partly for its statistics department and its time series analysis, a method he later applied in his PhD thesis.",
+          "sourceId": "onwisc-2016",
+          "locator": "section 'Sixty First Dates', paragraph beginning 'I picked Wisconsin because Harry Harlow was there'"
+        },
+        {
+          "kind": "words",
+          "claim": "In a 2022 interview, when the host cited studies he did not know, he said: 'Adam, can you send me those references? I, I, I'm not familiar with them.'",
+          "sourceId": "ted-2022",
+          "locator": "transcript [00:21:25]"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He spent more than 15 years with the mathematician James Murray turning his findings into equations for his book Principia Amoris.",
+          "sourceId": "pt-2015",
+          "locator": "paragraph on Principia Amoris and James Murray"
+        },
+        {
+          "kind": "witness",
+          "claim": "Psychology Today writes that he 'painstakingly coded every reaction' in his video recordings of couples.",
+          "sourceId": "pt-2015",
+          "locator": "paragraph beginning 'To make sense of the outpouring of words'"
+        },
+        {
+          "kind": "deed",
+          "claim": "His institute lists him as author or co-author of over 250 academic articles and more than 50 books.",
+          "sourceId": "gottman-inst",
+          "locator": "About John & Julie, John's biography"
+        },
+        {
+          "kind": "witness",
+          "claim": "On Wisconsin reported in 2016 that at 74 he still saw patients, funded research and published books.",
+          "sourceId": "onwisc-2016",
+          "locator": "last paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Contribution",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "From the mid-1990s he turned his research into a practical therapy and, with Julie, teaches it to therapists and ordinary couples through the Gottman Institute.",
+          "sourceId": "pt-2015",
+          "locator": "paragraph beginning 'For the past 18 years'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Beyond scientific journals, he made his findings accessible to the general public, and the institute built training for professionals and tools for couples.",
+          "sourceId": "onwisc-2016",
+          "locator": "section 'Sixty First Dates' ('Beyond scientific journals') and section 'Masters of Love', first paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "With Julie he extended the research to how substance abuse, domestic violence, infidelity and past trauma affect couples.",
+          "sourceId": "ebsco-2017",
+          "locator": "Life's Work, paragraph on the 1996 founding of the Gottman Institute"
+        },
+        {
+          "kind": "deed",
+          "claim": "His institute says that for over 50 years he and Julie have trained clinicians and made tools for couples around the world.",
+          "sourceId": "gottman-inst",
+          "locator": "About John & Julie, paragraph beginning 'For over 50 years'"
+        },
+        {
+          "kind": "words",
+          "claim": "Speaking of his planned work with couples facing violence, affairs, PTSD or addiction, he said: 'The relationship is potentially the greatest source of healing.'",
+          "sourceId": "pt-2015",
+          "locator": "paragraph beginning 'There are still many questions to pursue'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Trust is built in small daily moments when you turn toward your partner instead of away.",
+      "sourceId": "gg-2011",
+      "locator": "section on 'sliding door' moments"
+    },
+    {
+      "text": "Measure a problem precisely, and the measurement shows you how to fix it.",
+      "sourceId": "gg-2011",
+      "locator": "paragraph beginning 'I think part of the answer involves first defining trust'"
+    },
+    {
+      "text": "Most conflicts between partners never go away, so learn to manage them rather than try to solve them.",
+      "sourceId": "npr-2024",
+      "locator": "transcript, TED talk soundbite on perpetual problems"
+    },
+    {
+      "text": "When your partner criticises you, ask to hear more instead of defending yourself.",
+      "sourceId": "ted-2022",
+      "locator": "transcript [00:12:51]"
+    },
+    {
+      "text": "In a conflict, aim for about five positive moments for every negative one.",
+      "sourceId": "ted-2022",
+      "locator": "transcript [00:30:52]"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I got interested in studying relationships 50 years ago, primarily because my relationships were failing.",
+      "sourceId": "ted-2022",
+      "locator": "transcript [00:00:56]"
+    },
+    {
+      "text": "When we measure something objectively and precisely, we automatically get a recipe for how to fix it.",
+      "sourceId": "gg-2011",
+      "locator": "paragraph beginning 'I think part of the answer involves first defining trust'"
+    },
+    {
+      "text": "Sixty-nine percent of all relationship conflict problems are perpetual, which means that they never go away.",
+      "sourceId": "npr-2024",
+      "locator": "transcript, TED talk soundbite on perpetual problems"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1986 he moved to the University of Washington, four months before term began, divorced and unlucky in love. He answered personal ads and went on sixty dates in six weeks; Julie Schwartz was the sixty-first, and they married in 1987. In 1986 he also started the Love Lab at the university, an apartment laboratory where newlyweds recruited from local marriage announcements spent 24 hours being observed. Couples who divorced within six years had turned toward their partner's bids for attention about a third of the time; couples who stayed together, 86 percent of the time.",
+    "sourceIds": [
+      "onwisc-2016",
+      "pt-2015",
+      "ebsco-2017"
+    ]
+  },
+  "shadow": {
+    "text": "His own first two marriages ended in divorce: a brief one in graduate school, and a second that fell apart in 1981 after 10 years. In 2001 psychologists Richard Heyman and Amy Smith Slep, naming his 1998 divorce study as an example, wrote that such prediction equations must be tested on new couples, and showed on archival data that their accuracy 'drops precipitously' when that is done. In 2010 writer Laurie Abraham wrote in Slate that his 'predictions' were formulas built after the couples' outcomes were already known, never tried on a fresh sample, and that he reported 'accuracy rates' without the false-positive and false-negative figures scientists use. In 2024 he still told NPR that the lab could predict 'with over 90% accuracy the future of a relationship'.",
+    "sourceIds": [
+      "pt-2015",
+      "heyman-slep-2001",
+      "abraham-slate-2010",
+      "npr-2024"
+    ]
+  },
+  "councilQuestion": {
+    "text": "When someone close to you reached for your attention this week, how often did you turn toward them instead of away?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Why Marriages Succeed or Fail",
+      "year": 1994
+    },
+    {
+      "title": "The Seven Principles for Making Marriage Work",
+      "year": 1999
+    }
+  ],
+  "sources": [
+    {
+      "id": "ted-2022",
+      "kind": "primary",
+      "title": "Re:Thinking with Adam Grant: The science of healthy relationships with John and Julie Gottman (transcript, 13 December 2022)",
+      "author": "John and Julie Gottman, interviewed by Adam Grant",
+      "year": 2022,
+      "publisher": "TED Audio Collective",
+      "url": "https://www.ted.com/podcasts/science-of-healthy-relationships-john-and-julie-gottman-transcript"
+    },
+    {
+      "id": "npr-2024",
+      "kind": "primary",
+      "title": "TED Radio Hour: How healthy couples use conflict to grow closer (transcript, 1 November 2024)",
+      "author": "John and Julie Gottman, interviewed by Manoush Zomorodi",
+      "year": 2024,
+      "publisher": "NPR",
+      "url": "https://www.npr.org/transcripts/g-s1-31249"
+    },
+    {
+      "id": "gg-2011",
+      "kind": "primary",
+      "title": "John Gottman on Trust and Betrayal (excerpt from his talk, 29 October 2011)",
+      "author": "John Gottman",
+      "year": 2011,
+      "publisher": "Greater Good Magazine, UC Berkeley",
+      "url": "https://greatergood.berkeley.edu/article/item/john_gottman_on_trust_and_betrayal"
+    },
+    {
+      "id": "gottman-inst",
+      "kind": "primary",
+      "title": "About John & Julie Gottman (his institute's own page, read 10 November 2026)",
+      "author": "The Gottman Institute",
+      "year": 2026,
+      "url": "https://www.gottman.com/about/john-julie-gottman/"
+    },
+    {
+      "id": "pt-2015",
+      "kind": "secondary",
+      "title": "The Einstein of Love (Psychology Today, September 2015)",
+      "author": "Kristin Ohlson",
+      "year": 2015,
+      "publisher": "Psychology Today",
+      "url": "https://www.psychologytoday.com/us/articles/201509/the-einstein-of-love"
+    },
+    {
+      "id": "onwisc-2016",
+      "kind": "secondary",
+      "title": "Love Is Not a Mystery (On Wisconsin, Summer 2016)",
+      "author": "Maggie Ginsberg",
+      "year": 2016,
+      "publisher": "Wisconsin Alumni Association / University of Wisconsin-Madison",
+      "url": "https://onwisconsin.uwalumni.com/love-is-not-a-mystery/"
+    },
+    {
+      "id": "ebsco-2017",
+      "kind": "secondary",
+      "title": "John Gottman (therapist) (EBSCO Research Starters)",
+      "author": "Angela Harmon",
+      "year": 2017,
+      "publisher": "EBSCO",
+      "url": "https://www.ebsco.com/research-starters/psychology/john-gottman-therapist"
+    },
+    {
+      "id": "abraham-slate-2010",
+      "kind": "secondary",
+      "title": "A dissection of John Gottman's love lab (Slate, 8 March 2010; excerpt from The Husbands and Wives Club)",
+      "author": "Laurie Abraham",
+      "year": 2010,
+      "publisher": "Slate",
+      "url": "https://slate.com/human-interest/2010/03/a-dissection-of-john-gottman-s-love-lab.html"
+    },
+    {
+      "id": "heyman-slep-2001",
+      "kind": "secondary",
+      "title": "The Hazards of Predicting Divorce Without Crossvalidation (Journal of Marriage and Family 63(2): 473-479)",
+      "author": "Richard E. Heyman and Amy M. Smith Slep",
+      "year": 2001,
+      "publisher": "National Council on Family Relations / Wiley",
+      "url": "https://doi.org/10.1111/j.1741-3737.2001.00473.x"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living American psychologist and marriage researcher (University of Washington, Gottman Institute), not a politician, campaigner or religious founder; searches found no account of sexual contact with a minor or of sexual violence, so he is in, with a documented shadow about his research claims and his own failed marriages."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I checked every claim against the saved pages, re-read the three quotes on the live TED, NPR and Greater Good pages, and searched again for criticism of his research and for any other dark side. Self-awareness fell: its evidence rests on two sources, and the draft-only rule needs three. Curiosity, Partnership, Learning and Hard work held, and the blind pick's Contribution was added on three independent sources; Humility was not added because his repeated 90 percent claims argue strongly against it. Seven facts were corrected, among them the Love Lab's year, the family's stop in Miami, and the Heyman and Slep paper, which warns about such equations rather than testing his own.",
+    "checkedOn": "2026-11-10"
+  }
+}
