@@ -1,0 +1,307 @@
+{
+  "id": "andrew-carnegie",
+  "name": "Andrew Carnegie",
+  "born": 1835,
+  "died": 1919,
+  "category": "givers",
+  "areaIds": [
+    "lm_contribution",
+    "lm_money"
+  ],
+  "tagline": "A Scottish bobbin boy who built a steel empire, then spent his last years giving it away.",
+  "startedFrom": "He was born in 1835 in Dunfermline, Scotland, the son of a hand-loom weaver whose trade the steam looms destroyed; his mother kept the family going with a small grocery shop and by mending shoes. In 1848 the family borrowed £20 to emigrate to Allegheny City, across the river from Pittsburgh, where his mother's relatives and other Scots helped them. He had had a year or two of school; his first job was as a bobbin boy in a cotton mill for $1.20 a week.",
+  "values": [
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "By 1 June 1918 his gifts and those of the Carnegie Corporation came to $350,695,653, including 2,811 free public library buildings.",
+          "sourceId": "nyt-1919",
+          "locator": "section \"Peace Foundation Summarizes Carnegie's Benefactions Up to June 1, 1918\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1911 and 1912 he gave $125 million to the Carnegie Corporation of New York, set up to give away the rest of his fortune in his life and after his death.",
+          "sourceId": "carnegie-corp",
+          "locator": "Our History page, paragraph beginning \"On the advice of Elihu Root\""
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that the duty of the man of wealth is to live modestly, provide moderately for his family, and treat all surplus income as trust funds to be used for the good of the community.",
+          "sourceId": "gospel-1901",
+          "locator": "\"The Gospel of Wealth\", p. 14 (paragraph beginning \"This, then, is held to be the duty of the man of wealth\")"
+        },
+        {
+          "kind": "witness",
+          "claim": "PBS American Experience calls him a generous philanthropist and says he gave away $350 million by the time of his death.",
+          "sourceId": "pbs-biography",
+          "locator": "opening paragraph and last paragraph of the section \"Philanthropy\""
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "As a working boy in Allegheny he borrowed books every week from Colonel Anderson's library of about 400 volumes, opened to working boys.",
+          "sourceId": "nyt-1919",
+          "locator": "paragraph beginning \"It was at this time, he afterward said\""
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that he owes Colonel Anderson a taste for literature he would not exchange for all the millions ever made.",
+          "sourceId": "autobiography-1920",
+          "locator": "ch. IV \"Colonel Anderson and Books\", p. 46"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer David Nasaw writes that in New York and London he continued his self-education and wanted to be respected as a man of letters.",
+          "sourceId": "nasaw-2006",
+          "locator": "pp. xiii-xv (extract quoted on the NPS page), paragraph beginning \"His ultimate goal\""
+        },
+        {
+          "kind": "witness",
+          "claim": "PBS calls his use of a working boys' library the start of a life-long pursuit of knowledge.",
+          "sourceId": "pbs-biography",
+          "locator": "section \"Welcome to Pittsburgh\", paragraph beginning \"Carnegie often was asked to deliver messages to the theater\""
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In a private memo of December 1868, which his editor heads as setting out his ambitions, he planned to retire at 35 on $50,000 a year and wrote, \"Whatever I engage in I must push inordinately.\"",
+          "sourceId": "autobiography-1920",
+          "locator": "ch. XI, footnote to pp. 157-158 (memorandum, St. Nicholas Hotel, New York, December 1868)"
+        },
+        {
+          "kind": "witness",
+          "claim": "PBS says that after promising in 1868 to stop working in two years, he went on making money for the next 30 years, and that by 1900 Carnegie Steel produced more steel than all of Great Britain.",
+          "sourceId": "pbs-biography",
+          "locator": "section \"Making Money and Starting a Family\", paragraph beginning \"Carnegie would continue making\", and paragraph beginning \"Still, Carnegie's steel juggernaut\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Nasaw writes that he was thrilled with his success but far from satisfied, and wanted to be as well known for his writing and intellect as for making money.",
+          "sourceId": "nasaw-2006",
+          "locator": "pp. xiii-xv (extract quoted on the NPS page), paragraphs beginning \"For the next thirty years\" and \"His ultimate goal\""
+        }
+      ]
+    },
+    {
+      "word": "Family",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that after his father's early death his mother was \"all my own\", and that he dedicated his first book \"To my favorite Heroine My Mother.\"",
+          "sourceId": "autobiography-1920",
+          "locator": "ch. I, p. 6"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that the bobbin-boy job made him \"a helper of the family, a breadwinner\".",
+          "sourceId": "autobiography-1920",
+          "locator": "ch. III \"Pittsburgh and Work\", p. 34"
+        },
+        {
+          "kind": "witness",
+          "claim": "PBS says he shared a New York hotel suite with his mother, kept his 1883 engagement to Louise Whitfield secret for her sake and married only in April 1887, after her death, and in 1901 was eager to spend more time with his wife and daughter.",
+          "sourceId": "pbs-biography",
+          "locator": "section \"Making Money and Starting a Family\", paragraphs beginning \"In 1880, Carnegie\", \"Undaunted\" and \"Still, Carnegie's steel juggernaut\""
+        },
+        {
+          "kind": "words",
+          "claim": "In 1914 he wrote that he owed a great deal to his mother, who taught him most of what he knew.",
+          "sourceId": "nyt-1919",
+          "locator": "paragraph beginning \"\\\"I owe a great deal to my mother,\\\" he wrote in 1914\""
+        }
+      ]
+    },
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He left the Pennsylvania Railroad after the Civil War, and in 1875 put in his own money and borrowed heavily to build a new steel plant near Pittsburgh.",
+          "sourceId": "pbs-biography",
+          "locator": "section \"Making Money and Starting a Family\", paragraphs beginning \"The Civil War fueled the iron industry\" and \"Carnegie would continue making\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Nasaw writes that he was never fearful of taking on a new role or task.",
+          "sourceId": "nasaw-2006",
+          "locator": "pp. xiii-xv (extract quoted on the NPS page), last paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Nasaw writes that he was the first Pittsburgh iron manufacturer to move into steel, and ploughed most of the profits back into the business to his partners' dismay.",
+          "sourceId": "nasaw-2006",
+          "locator": "pp. xiii-xv (extract quoted on the NPS page), paragraph beginning \"Meanwhile, his fortune grew and grew\""
+        },
+        {
+          "kind": "deed",
+          "claim": "The New York Times obituary says that while working for the Pennsylvania Railroad he borrowed the money for his share in a sleeping-car venture, and that after seeing the Bessemer process working in England in 1868 he brought it home to his mills.",
+          "sourceId": "nyt-1919",
+          "locator": "paragraph beginning \"but when his assessment, $217.50, came due\", and section \"Adopts Bessemer Steel Process\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Give your surplus away while you are alive; a man who dies rich has failed at the job.",
+      "sourceId": "gospel-1901",
+      "locator": "\"The Gospel of Wealth\", pp. 17-18"
+    },
+    {
+      "text": "Help people who will help themselves: build ladders such as libraries and parks, not handouts.",
+      "sourceId": "gospel-1901",
+      "locator": "\"The Gospel of Wealth\", pp. 16-17"
+    },
+    {
+      "text": "Put all your good eggs in one basket and watch that basket: master one line instead of scattering yourself.",
+      "sourceId": "autobiography-1920",
+      "locator": "ch. XII \"Business Negotiations\", p. 176"
+    },
+    {
+      "text": "Ask the people you help to carry part of the load: give a library only to a town that will pay to run it.",
+      "sourceId": "autobiography-1920",
+      "locator": "ch. IV \"Colonel Anderson and Books\", p. 47"
+    },
+    {
+      "text": "Watch costs, and the profits take care of themselves.",
+      "sourceId": "pbs-biography",
+      "locator": "section \"Making Money and Starting a Family\", paragraph beginning \"Carnegie would continue making\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "The man who dies thus rich dies disgraced.",
+      "sourceId": "gospel-1901",
+      "locator": "\"The Gospel of Wealth\" (first published as \"Wealth\", North American Review, June 1889), Century edition 1901, p. 18"
+    },
+    {
+      "text": "I have made millions since, but none of those millions gave me such happiness as my first week's earnings.",
+      "sourceId": "autobiography-1920",
+      "locator": "ch. III \"Pittsburgh and Work\", p. 34"
+    },
+    {
+      "text": "I determined that the proper policy was \"to put all good eggs in one basket and then watch that basket.\"",
+      "sourceId": "autobiography-1920",
+      "locator": "ch. XII \"Business Negotiations\", p. 176"
+    },
+    {
+      "text": "to him I owe a taste for literature which I would not exchange for all the millions that were ever amassed by man.",
+      "sourceId": "autobiography-1920",
+      "locator": "ch. IV \"Colonel Anderson and Books\", p. 46"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1901 he sold Carnegie Steel to J. P. Morgan; the company became part of U.S. Steel. He writes that, having published \"The Gospel of Wealth\", he resolved to stop accumulating and turn to distributing his fortune, though the company's profits had reached $40 million a year. On 12 March 1901 he made what he called his \"first use of surplus wealth\" for the men in his mills: $4 million in bonds for accident relief and old-age pensions, and $1 million to keep up the libraries and halls he had built for them.",
+    "sourceIds": [
+      "autobiography-1920",
+      "pbs-biography"
+    ]
+  },
+  "shadow": {
+    "text": "In 1892 his manager Henry Clay Frick set out to break the steelworkers' union at Homestead; that spring Carnegie had written to him from Britain, \"We all approve of anything you do... We are with you to the end.\" Frick locked out 3,800 men on 29 June, and on 6 July a battle between workers and about 300 armed Pinkerton agents left nearly a dozen people dead; at Frick's request the governor sent 8,500 troops. After the union gave in, strike leaders were blacklisted, and Carnegie cut wages, brought in 12-hour workdays and cut 500 jobs. In his autobiography he says he was travelling in the Scottish Highlands, blames a recently promoted superintendent and writes that \"the men were outrageously wrong\"; critics in the press and pulpit called him a hypocrite, and the St. Louis Post-Dispatch called him a coward for staying in Scotland. PBS reports that he had used Pinkerton guards to protect strikebreakers in 1887 and hired them twice in 1889, and that his steelworkers were often pushed to long hours and low wages. His biographer David Nasaw writes that his early companies won insider contracts from the Pennsylvania Railroad, with its president J. Edgar Thomson and Tom Scott as secret partners. Shortly before the panic of 1873 he refused to join a loan to save Scott's Texas Pacific railway, and later wrote that he feared Scott's early death \"can measurably be attributed to the humiliation which he had to bear.\"",
+    "sourceIds": [
+      "pbs-homestead",
+      "pbs-biography",
+      "autobiography-1920",
+      "nasaw-2006"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you scatter your effort this week instead of putting it into the one thing you want to master?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "Autobiography of Andrew Carnegie",
+      "year": 1920
+    },
+    {
+      "title": "The Gospel of Wealth (first published as \"Wealth\")",
+      "year": 1889
+    }
+  ],
+  "sources": [
+    {
+      "id": "autobiography-1920",
+      "kind": "primary",
+      "title": "Autobiography of Andrew Carnegie (ed. John C. Van Dyke), Cornell University Library scan on the Internet Archive",
+      "author": "Andrew Carnegie",
+      "year": 1920,
+      "publisher": "Houghton Mifflin",
+      "url": "https://archive.org/details/cu31924029807728"
+    },
+    {
+      "id": "gospel-1901",
+      "kind": "primary",
+      "title": "The Gospel of Wealth and Other Timely Essays (title essay first published as \"Wealth\", North American Review, June 1889), University of Toronto scan on the Internet Archive",
+      "author": "Andrew Carnegie",
+      "year": 1901,
+      "publisher": "The Century Co.",
+      "url": "https://archive.org/details/gospelofwealthot00carnuoft"
+    },
+    {
+      "id": "pbs-biography",
+      "kind": "secondary",
+      "title": "Andrew Carnegie: The Richest Man in the World, biography (American Experience)",
+      "author": "PBS American Experience (WGBH)",
+      "year": 2017,
+      "publisher": "PBS",
+      "url": "https://www.pbs.org/wgbh/americanexperience/features/carnegie-biography/"
+    },
+    {
+      "id": "pbs-homestead",
+      "kind": "secondary",
+      "title": "The Strike at Homestead Mill (American Experience)",
+      "author": "PBS American Experience (WGBH)",
+      "year": 2017,
+      "publisher": "PBS",
+      "url": "https://www.pbs.org/wgbh/americanexperience/features/carnegie-strike-homestead-mill/"
+    },
+    {
+      "id": "nyt-1919",
+      "kind": "secondary",
+      "title": "Carnegie Started as a Bobbin Boy (obituary, 12 August 1919, with the list of his benefactions), New York Times Learning Network reprint",
+      "author": "The New York Times",
+      "year": 1919,
+      "publisher": "The New York Times",
+      "url": "https://archive.nytimes.com/www.nytimes.com/learning/general/onthisday/bday/1125.html"
+    },
+    {
+      "id": "nasaw-2006",
+      "kind": "secondary",
+      "title": "Andrew Carnegie, pp. xiii-xv, as quoted at length on the National Park Service page \"Andrew Carnegie (1835-1919)\", Johnstown Flood National Memorial",
+      "author": "David Nasaw",
+      "year": 2006,
+      "publisher": "Penguin Press",
+      "url": "https://www.nps.gov/jofl/learn/historyculture/andrew-carnegie.htm"
+    },
+    {
+      "id": "carnegie-corp",
+      "kind": "secondary",
+      "title": "Our History (Carnegie Corporation of New York), Internet Archive copy",
+      "author": "Carnegie Corporation of New York",
+      "year": 2024,
+      "url": "https://web.archive.org/web/2024/https://www.carnegie.org/about/our-history/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Scottish-American steelmaker and philanthropist (1835-1919), never a politician, campaigner or religious founder; searches found no account of sexual contact with a minor or of sexual violence; he is in, and his dark side is the 1892 Homestead lockout, which he backed by cable from Scotland, the union-breaking, wage cuts and 12-hour days that followed, earlier use of Pinkerton guards, and insider railroad contracts early in his career."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked every value and checked each claim against the autobiography, the Gospel of Wealth, the 1919 New York Times obituary, PBS and Nasaw's text on the NPS page. Focus fell because it holds only as business strategy while Nasaw shows thirty years of few-hour workdays, half of each year in Britain and a second career as writer and peace campaigner; Gratitude fell for lack of a third source and because he refused to rescue his patron Tom Scott in 1873, now in the shadow. Generosity, Learning and Boldness held; the blind pick's Ambition and Family were added after their evidence checked, while its Hard work fell to Nasaw's few-hours workday and Reading was left inside Learning. All four quotes matched the 1901 and 1920 scans, the defining moment lost the claim that the 1901 pension fund was his first gift, and the shadow now names the Post-Dispatch for \"coward\".",
+    "checkedOn": "2026-11-10"
+  }
+}
