@@ -1,0 +1,385 @@
+{
+  "id": "kobe-bryant",
+  "name": "Kobe Bryant",
+  "born": 1978,
+  "died": 2020,
+  "category": "athletes",
+  "areaIds": [
+    "lm_fitness",
+    "lm_mindset",
+    "lm_mission"
+  ],
+  "tagline": "A basketball player of relentless work who played through pain and won five NBA titles.",
+  "startedFrom": "He was born in Philadelphia in 1978, the son of former NBA player Joe 'Jellybean' Bryant. In 1984, when he was six, the family moved to Italy, where his father played professionally; they lived in Rieti, Reggio Calabria, Pistoia and Reggio Emilia, and he left Italy at 13 in 1991. He went straight from Lower Merion High School near Philadelphia into the NBA in 1996, at 17.",
+  "values": [
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "At his jersey retirement on 18 December 2017 he said that getting up early and working, staying up late and working, and working when tired 'is actually the dream'.",
+          "sourceId": "si-2017",
+          "locator": "paragraph quoting the end of his halftime speech, beginning 'Those times you get up early'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Associated Press obituary describes his 'relentless, hard-edged work ethic'.",
+          "sourceId": "ap-2020",
+          "locator": "paragraph beginning 'Bryant retired as the third-leading scorer'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In the 2012-13 season, at 34, he played far more minutes than any other NBA player over 30, nearly 46 minutes a game in the seven games before his Achilles tear.",
+          "sourceId": "ap-2013",
+          "locator": "paragraph beginning 'The fourth-leading scorer in NBA history'"
+        }
+      ]
+    },
+    {
+      "word": "Winning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He won five NBA championships with the Los Angeles Lakers: 2000, 2001 and 2002 with Shaquille O'Neal, and 2009 and 2010 with Pau Gasol.",
+          "sourceId": "ap-2020",
+          "locator": "paragraphs beginning 'He teamed with Shaquille O'Neal' and 'Bryant and Gasol'"
+        },
+        {
+          "kind": "witness",
+          "claim": "NBA Commissioner Adam Silver said he showed 'what is possible when remarkable talent blends with an absolute devotion to winning'.",
+          "sourceId": "ap-2020",
+          "locator": "paragraph quoting Adam Silver"
+        },
+        {
+          "kind": "words",
+          "claim": "When the Lakers' general manager raised concerns about his minutes in 2013, he answered that the team had to get into the playoffs and he was playing.",
+          "sourceId": "ap-2013",
+          "locator": "paragraph quoting Mitch Kupchak, beginning 'I don't think Mike is at blame'"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 12 April 2013 he tore his left Achilles tendon against Golden State, stayed in to make two free throws that tied the game, and chose surgery less than 24 hours later; AP wrote that the choice suggested he was 'determined to get back on top swiftly'.",
+          "sourceId": "ap-2013",
+          "locator": "paragraphs beginning 'Bryant completely tore' and 'Bryant's foot will be immobilized'"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked later about those free throws, he said: 'You can't let your team down. If you're going to shoot them, you better make sure you make them.'",
+          "sourceId": "espn-2013",
+          "locator": "answers on the Achilles injury and the free throws"
+        },
+        {
+          "kind": "words",
+          "claim": "That night he wrote on Facebook that a new career would begin one day, but 'Today is NOT that day.'",
+          "sourceId": "ap-2013",
+          "locator": "paragraph quoting his Facebook post, beginning 'One day, the beginning'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Boston coach Doc Rivers said of the free throws that he was 'as tough as a competitor as we've seen -- ever'.",
+          "sourceId": "ap-2013",
+          "locator": "paragraph quoting Doc Rivers"
+        }
+      ]
+    },
+    {
+      "word": "Passion",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that he fell in love with basketball as a six-year-old and gave it his all, 'From my mind & body / To my spirit & soul'.",
+          "sourceId": "dear-basketball",
+          "locator": "opening stanzas, from 'From the moment' to 'To my spirit & soul'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Journalist Andrea Barocci, author of a book on his Italian years, said that at six he would run to a church playground and spend hours throwing a ball at the basket.",
+          "sourceId": "nbc-italy",
+          "locator": "paragraph quoting Andrea Barocci, beginning 'Aged 6'"
+        },
+        {
+          "kind": "deed",
+          "claim": "After retiring he opened a production company, saying he was as passionate about storytelling as about basketball, and won an Oscar in 2018 for the animated short 'Dear Basketball'.",
+          "sourceId": "ap-2020",
+          "locator": "paragraph beginning 'Bryant's future appeared to be limitless'"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "The Associated Press obituary says that after retiring he was 'coaching and mentoring basketball players around the world'.",
+          "sourceId": "ap-2020",
+          "locator": "paragraph beginning 'Bryant and his wife, Vanessa, had four daughters'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Jayson Tatum said Bryant reached out to work with him in summer 2018 and 'was always willing to give his insight and help any way he could.'",
+          "sourceId": "globe-2020",
+          "locator": "Tatum quotes on the 2018 workouts and later advice"
+        },
+        {
+          "kind": "words",
+          "claim": "In his 19th season he said of the young Lakers, 'My style is a little different with his group. It's a little more nurturing'; Jeremy Lin said he had 'taken on a mentorship role for me on the court.'",
+          "sourceId": "espn-2014",
+          "locator": "Bryant and Lin quotes"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do the work on the days you are tired and do not feel like it; that work is the dream itself, not the trophy at the end.",
+      "sourceId": "si-2017",
+      "locator": "paragraph quoting the end of his halftime speech, 18 December 2017"
+    },
+    {
+      "text": "Help your family by investing in their growth and independence, not by paying all their bills.",
+      "sourceId": "younger-self",
+      "locator": "paragraphs from 'I said INVEST' to 'Invest in their future, don't just give'"
+    },
+    {
+      "text": "Keep your parents as parents, not as the managers of your business.",
+      "sourceId": "younger-self",
+      "locator": "paragraph beginning 'The next time I write to you'"
+    },
+    {
+      "text": "When you are hurt, finish what is in front of you, then start the comeback at once.",
+      "sourceId": "ap-2013",
+      "locator": "paragraphs on the two free throws and the surgery less than 24 hours later"
+    },
+    {
+      "text": "When your body says one career is over, let it go and give the next one the same love.",
+      "sourceId": "dear-basketball",
+      "locator": "stanzas from 'But I can't love you obsessively' to 'I'm ready to let you go.'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "You asked for my hustle / I gave you my heart",
+      "sourceId": "dear-basketball",
+      "locator": "stanza beginning 'You asked for my hustle' (line breaks shown as /)"
+    },
+    {
+      "text": "Invest in their future, don't just give.",
+      "sourceId": "younger-self",
+      "locator": "paragraph standing alone after 'Understand that you are about to be the leader of the family'"
+    },
+    {
+      "text": "One day, the beginning of a new career journey will commence. Today is NOT that day.",
+      "sourceId": "ap-2013",
+      "locator": "his Facebook post of 13 April 2013, as quoted by AP"
+    },
+    {
+      "text": "I mean, as basketball players we're really supposed to shut-up and dribble but I'm glad we do a little bit more than that.",
+      "sourceId": "oscars-2018",
+      "locator": "his part of the acceptance speech, 90th Academy Awards, 4 March 2018"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 12 April 2013, aged 34 and playing nearly 46 minutes a game while the Lakers chased a playoff place, he tore his left Achilles tendon against Golden State. He stayed in the game and made two free throws that tied it. Early the next morning he wrote on Facebook: 'Today is NOT that day.' He had surgery less than 24 hours after the injury, came back, and played until 2016, scoring 60 points in his last game.",
+    "sourceIds": [
+      "ap-2013",
+      "ap-2020"
+    ]
+  },
+  "shadow": {
+    "text": "In July 2003 he was charged in Colorado with felony sexual assault after a 19-year-old hotel worker said he raped her in his room on 30 June; the same day he admitted adultery and denied the charge. The charge was dropped on 1 September 2004 when she declined to testify. That day he said in a statement that he believed the encounter was consensual, but now understood 'how she feels that she did not consent to this encounter'. Her civil suit was settled in March 2005 on terms not made public. In April 2011 the NBA fined him $100,000 for using an anti-gay slur when a referee called a technical foul on him; he said it came from frustration and was not meant to offend. His title-winning partnership with Shaquille O'Neal, which AP called 'combustible', ended with O'Neal's trade after the 2003-04 season. In May 2007, angry at a report that blamed the Lakers' troubles on his insistence on getting away from O'Neal, he said on the radio he would like to be traded, then seemed to back away from it in another interview the same day.",
+    "sourceIds": [
+      "charge-2003",
+      "espn-2020",
+      "cbsla-2020",
+      "statement-2004",
+      "cbs-2005",
+      "cbs-ap-2011",
+      "ap-2020",
+      "espn-2007"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What work did you skip this week because you were tired or did not feel like it?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Mamba Mentality: How I Play",
+      "year": 2018
+    },
+    {
+      "title": "Dear Basketball",
+      "year": 2015
+    },
+    {
+      "title": "Letter to My Younger Self",
+      "year": 2016
+    }
+  ],
+  "sources": [
+    {
+      "id": "dear-basketball",
+      "kind": "primary",
+      "title": "Dear Basketball (29 November 2015)",
+      "author": "Kobe Bryant",
+      "year": 2015,
+      "publisher": "The Players' Tribune",
+      "url": "https://www.theplayerstribune.com/articles/dear-basketball"
+    },
+    {
+      "id": "younger-self",
+      "kind": "primary",
+      "title": "Letter to My Younger Self (21 July 2016)",
+      "author": "Kobe Bryant",
+      "year": 2016,
+      "publisher": "The Players' Tribune",
+      "url": "https://www.theplayerstribune.com/articles/kobe-bryant-letter-to-my-younger-self"
+    },
+    {
+      "id": "oscars-2018",
+      "kind": "primary",
+      "title": "90th Oscars onstage speech transcript: Short Film (Animated), Dear Basketball (4 March 2018)",
+      "author": "Academy of Motion Picture Arts and Sciences (Kobe Bryant's words)",
+      "year": 2018,
+      "url": "https://www.oscars.org/press/90th-oscars-onstage-speech-transcript-short-film-animated"
+    },
+    {
+      "id": "statement-2004",
+      "kind": "primary",
+      "title": "Text of Kobe Bryant's statement released after a judge dismissed a sexual assault charge against him (2 September 2004)",
+      "author": "Kobe Bryant, via Associated Press",
+      "year": 2004,
+      "publisher": "Deseret News",
+      "url": "https://www.deseret.com/2004/9/2/19848423/bryant-s-official-statement/"
+    },
+    {
+      "id": "ap-2020",
+      "kind": "secondary",
+      "title": "Kobe Bryant dies in helicopter crash (27 January 2020)",
+      "author": "Greg Beacham, The Associated Press",
+      "year": 2020,
+      "publisher": "NBA.com",
+      "url": "https://www.nba.com/news/kobe-bryant-dies-helicopter-crash"
+    },
+    {
+      "id": "ap-2013",
+      "kind": "secondary",
+      "title": "Kobe out for season with torn Achilles tendon (13 April 2013)",
+      "author": "Associated Press",
+      "year": 2013,
+      "publisher": "Fox News",
+      "url": "https://www.foxnews.com/sports/kobe-out-for-season-with-torn-achilles-tendon"
+    },
+    {
+      "id": "nbc-italy",
+      "kind": "secondary",
+      "title": "A view of Kobe Bryant from his childhood home in Italy (27 January 2020)",
+      "author": "Claudio Lavanga, NBC News",
+      "year": 2020,
+      "url": "https://www.nbcnews.com/news/world/view-kobe-bryant-his-childhood-home-italy-n1123716"
+    },
+    {
+      "id": "si-2017",
+      "kind": "secondary",
+      "title": "Lakers retire Kobe Bryant's No. 8 and No. 24 jerseys (18 December 2017)",
+      "author": "Ben Golliver, Sports Illustrated",
+      "year": 2017,
+      "url": "https://www.si.com/nba/2017/12/18/kobe-bryant-los-angeles-lakers-jersey-retirement-staples-center"
+    },
+    {
+      "id": "espn-2020",
+      "kind": "secondary",
+      "title": "Kobe Bryant's Colorado prosecutor recalls the case that linked them (29 January 2020)",
+      "author": "Seth Wickersham, ESPN",
+      "year": 2020,
+      "url": "https://www.espn.com/nba/story/_/id/28591646"
+    },
+    {
+      "id": "charge-2003",
+      "kind": "primary",
+      "title": "Criminal complaint, People of the State of Colorado v. Kobe Bean Bryant, Eagle County (18 July 2003), as printed by Fox News",
+      "author": "Mark D. Hurlbert, District Attorney (court document)",
+      "year": 2003,
+      "url": "https://www.foxnews.com/story/raw-data-charge-against-kobe-bryant.print"
+    },
+    {
+      "id": "cbsla-2020",
+      "kind": "secondary",
+      "title": "Kobe Legacy Eclipses Rape Allegation, But Trial Still Marks NBA Legend's Darkest Hour (27 January 2020)",
+      "author": "CBS Los Angeles / City News Service",
+      "year": 2020,
+      "url": "https://www.cbsnews.com/losangeles/news/kobe-bryant-crash-death-rape-sexual-assault-trial"
+    },
+    {
+      "id": "cbs-2005",
+      "kind": "secondary",
+      "title": "Kobe Bryant Settles Sex Suit (2 March 2005)",
+      "author": "CBS News / Associated Press",
+      "year": 2005,
+      "url": "https://www.cbsnews.com/news/kobe-bryant-settles-sex-suit"
+    },
+    {
+      "id": "nation-2016",
+      "kind": "secondary",
+      "title": "Wrestling With Kobe Bryant's Forgotten Apology (19 April 2016, updated 28 January 2020)",
+      "author": "Dave Zirin, The Nation",
+      "year": 2016,
+      "url": "https://www.thenation.com/article/society/wrestling-in-with-kobe-bryants-forgotten-apology/"
+    },
+    {
+      "id": "cbs-ap-2011",
+      "kind": "secondary",
+      "title": "Kobe Bryant fined $100,000 for gay slur (14 April 2011)",
+      "author": "Edecio Martinez, CBS News / Associated Press",
+      "year": 2011,
+      "url": "https://www.cbsnews.com/news/kobe-bryant-fined-100000-for-gay-slur"
+    },
+    {
+      "id": "espn-2007",
+      "kind": "secondary",
+      "title": "Kobe wants to be traded, then backs off (30 May 2007)",
+      "author": "ESPN.com news services",
+      "year": 2007,
+      "url": "https://www.espn.com.au/nba/news/story?id=2886927"
+    },
+    {
+      "id": "espn-2013",
+      "kind": "secondary",
+      "title": "Kobe Bryant interview: The best of the rest (4 June 2013)",
+      "author": "Dave McMenamin, ESPN Los Angeles",
+      "year": 2013,
+      "url": "https://www.espn.com/blog/los-angeles/lakers/post/_/id/36713/kobe-bryant-interview-the-best-of-the-rest"
+    },
+    {
+      "id": "globe-2020",
+      "kind": "secondary",
+      "title": "Kobe Bryant was both an inspiration and a mentor to Jayson Tatum (28 January 2020)",
+      "author": "Adam Himmelsbach, The Boston Globe",
+      "year": 2020,
+      "url": "https://www.bostonglobe.com/sports/celtics/2020/01/28/kobe-bryant-was-both-inspiration-and-mentor-jayson-tatum/N07jA7PoLlyActCP5imcJN/story.html"
+    },
+    {
+      "id": "espn-2014",
+      "kind": "secondary",
+      "title": "Long a tough, chilly teammate, Kobe Bryant has mellowed and now is a mentor (13 October 2014)",
+      "author": "Arash Markazi, ESPN Los Angeles",
+      "year": 2014,
+      "url": "https://www.espn.com/blog/los-angeles/lakers/post/_/id/40163/long-a-tough-chilly-teammate-kobe-bryant-has-mellowed-and-now-is-a-mentor"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real American basketball player (1978-2020), never a politician, campaigner or religious founder; in July 2003 he was charged in Colorado with felony sexual assault of a 19-year-old hotel worker, the charge was dropped in 2004 when she would not testify, her civil suit was settled in 2005, and he issued a statement saying he now understood she did not consent, so it goes to the owner. Owner case: 30 June 2003 a 19-year-old worker at a Colorado resort said he raped her; charged 18 July 2003 with felony sexual assault; he admitted adultery, said it was consensual; charge dismissed 1 Sept 2004 when she would not testify; his statement that day: 'I now understand how she feels that she did not consent'; civil suit settled March 2005 (charge-2003, espn-2020, statement-2004, cbs-2005, cbsla-2020, nation-2016)."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value against the saved sources and new searches: Family against his 2003 adultery and the 2013 court fight over memorabilia his mother had consigned, Mentorship against his long record as a harsh teammate, Winning against the O'Neal feud and his 2007 trade demand. Family fell (two sources only, and a contested record with his parents); Resilience was folded into the blind pick's Determination, which its Achilles evidence fits better; Mentorship was added with three checked sources. All four quotes checked against the original texts; four sentences in the shadow and defining moment were corrected to match their sources. The screen stays owner-decides because of the 2003 Colorado sexual assault charge, so the file is flagged for the owner.",
+    "checkedOn": "2026-11-10"
+  }
+}
