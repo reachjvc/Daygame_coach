@@ -1,0 +1,365 @@
+{
+  "id": "elvis-presley",
+  "name": "Elvis Presley",
+  "born": 1935,
+  "died": 1977,
+  "category": "artists",
+  "areaIds": [
+    "lm_fun",
+    "lm_mission"
+  ],
+  "tagline": "A Tupelo truck driver whose voice and stage presence changed popular music.",
+  "startedFrom": "He was born on 8 January 1935 in Tupelo, Mississippi; his twin brother Jesse died at birth. The family shared a two-room house, and his father worked as a carpenter, farmer and factory worker without much success. When he was 13 they moved to Memphis, and after high school in 1953 he drove a delivery truck for Crown Electric.",
+  "values": [
+    {
+      "word": "Originality",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At Sun Records on 6 July 1954 he recorded Bill Monroe's bluegrass song 'Blue Moon of Kentucky' and Arthur Crudup's blues 'That's All Right (Mama)', which became a regional hit.",
+          "sourceId": "bakers",
+          "locator": "Baker's entry, paragraph beginning 'Elvis Presley began singing with his parents'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Contemporary Musicians says his sound, which combined country-and-western, rhythm-and-blues and gospel, 'was new', and quotes John Rockwell (New York Times) that he 'defined the style and gave it an indelible image'.",
+          "sourceId": "cm-gale",
+          "locator": "Contemporary Musicians entry (Nancy H. Evans), paragraph beginning 'country-and-western, rhythm-and-blues, and gospel, was new'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Rock & Roll Hall of Fame, which inducted him in 1986, credits him with 'a revolutionary melding of blues, country, gospel, and other roots music'.",
+          "sourceId": "rockhall",
+          "locator": "Rock & Roll Hall of Fame inductee page, section 'Signature Sound'"
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He served in the U.S. Army from 1958 to 1960, mostly in West Germany, and rose to sergeant.",
+          "sourceId": "cm-gale",
+          "locator": "Contemporary Musicians entry, 'For the Record' career list ('served in U.S. Army, 1958-60; became sergeant')"
+        },
+        {
+          "kind": "deed",
+          "claim": "His first appearance after the Army, on 25 March 1961 at Bloch Arena, Pearl Harbor, was a benefit concert for the stalled USS Arizona Memorial fund.",
+          "sourceId": "starbull-2001",
+          "locator": "Honolulu Star-Bulletin, 23 March 2001, paragraph beginning 'On March 25, 1961'"
+        },
+        {
+          "kind": "words",
+          "claim": "In his handwritten letter to President Nixon of 21 December 1970 he wrote: 'Sir, I can and will be of any service that I can to help the country out.'",
+          "sourceId": "nara-1970",
+          "locator": "Letter to President Nixon, 21 December 1970, handwritten pages 1-2 (National Archives transcript)"
+        },
+        {
+          "kind": "witness",
+          "claim": "USNI News (U.S. Naval Institute) says he 'was a patriot who genuinely believed in the cause and wanted to help' the Arizona memorial.",
+          "sourceId": "usni-2016",
+          "locator": "Scot Christenson, USNI News, 7 December 2016, paragraph beginning 'Colonel Tom Parker read about the struggling campaign'"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After the Grand Ole Opry discouraged him and Arthur Godfrey's Talent Scouts in New York turned him down, he kept touring and by the end of 1955 had a contract with RCA.",
+          "sourceId": "cm-gale",
+          "locator": "Contemporary Musicians entry, paragraph beginning 'With a musical career in the offing'"
+        },
+        {
+          "kind": "deed",
+          "claim": "After a decade of films, he returned to television with a special aired by NBC on 3 December 1968 and to live performance in Las Vegas on 31 July 1969.",
+          "sourceId": "bakers",
+          "locator": "Baker's entry, paragraphs beginning 'In 1968, with the first inkling' and 'Elvis returned to live performance on July 31, 1969'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The International Dictionary of Films and Filmmakers says that by the end of the 1960s his films and records were selling less, and that the 1968 special let him break out of his dated image and 'reintroduced himself to the public', reinvigorating his career.",
+          "sourceId": "idff",
+          "locator": "International Dictionary of Films and Filmmakers essay, paragraph beginning 'Presley was able to break out of the confines'"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "For the 1961 Pearl Harbor benefit he was not paid his usual fee of $25,000; all the money went to the memorial, and the concert raised over $64,000 against a goal of $50,000.",
+          "sourceId": "starbull-2001",
+          "locator": "Honolulu Star-Bulletin, 23 March 2001, paragraphs beginning 'The concert was scheduled' and 'Parker and Elvis had to go to Hawaii anyway'"
+        },
+        {
+          "kind": "deed",
+          "claim": "USNI News reports that he bought a $100 ticket for himself, bought dozens more for staff and patients of a military hospital, and gave $5,000 of his own.",
+          "sourceId": "usni-2016",
+          "locator": "Scot Christenson, USNI News, 7 December 2016, paragraphs beginning 'With the venue secured' and 'The benefit was a resounding success'"
+        },
+        {
+          "kind": "witness",
+          "claim": "USNI News calls the benefit concert 'Elvis's generous offer'.",
+          "sourceId": "usni-2016",
+          "locator": "Scot Christenson, USNI News, 7 December 2016, paragraph beginning 'The PWMC accepted'"
+        }
+      ]
+    },
+    {
+      "word": "Family",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In July 1953, the month after he left school, he made a private recording of 'My Happiness' at the Sun studio for his mother.",
+          "sourceId": "bakers",
+          "locator": "Baker's entry, paragraph beginning 'Elvis Presley began singing with his parents' ('in the often told story')"
+        },
+        {
+          "kind": "witness",
+          "claim": "The UXL Encyclopedia of World Biography says he grew up poor and 'grew especially close to his mother'.",
+          "sourceId": "uxl-wb",
+          "locator": "UXL entry, section 'Young Elvis and Sun Records'"
+        },
+        {
+          "kind": "deed",
+          "claim": "By 22 he had bought his parents a house on Audubon Drive in Memphis and then, in March 1957, Graceland, where he lived with his parents and his grandmother Minnie Mae.",
+          "sourceId": "history-graceland",
+          "locator": "HISTORY.com, 'Elvis Presley puts a down payment on Graceland' (This Day in History, 19 March 1957), paragraphs on the Audubon house and on who lived at Graceland"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not copy anyone: mix the music you grew up with into a sound of your own.",
+      "sourceId": "cm-gale",
+      "locator": "Contemporary Musicians entry, paragraph beginning 'country-and-western, rhythm-and-blues, and gospel, was new' (deed)"
+    },
+    {
+      "text": "When your country calls you up, serve as an ordinary soldier, without asking for special treatment.",
+      "sourceId": "starbull-2001",
+      "locator": "Honolulu Star-Bulletin, 23 March 2001, closing paragraphs (Ron Jacobs: 'Presley and Parker made no attempt to receive preferential treatment')"
+    },
+    {
+      "text": "One 'no' from the gatekeepers is not the end: keep playing until an audience answers.",
+      "sourceId": "cm-gale",
+      "locator": "Contemporary Musicians entry, paragraph beginning 'With a musical career in the offing' ('Presley persisted')"
+    },
+    {
+      "text": "When you give to a cause, give all of it: take no fee and buy your own ticket.",
+      "sourceId": "usni-2016",
+      "locator": "Scot Christenson, USNI News, 7 December 2016, paragraph beginning 'With the venue secured'"
+    },
+    {
+      "text": "When your work has gone stale, go back to your roots, choose your own songs and start again.",
+      "sourceId": "bakers",
+      "locator": "Baker's entry, paragraph beginning 'Elvis Presley returned to Memphis for the first time in 14 years' ('for which he personally chose the songs')"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I call it America and I love it.",
+      "sourceId": "nara-1970",
+      "locator": "Letter to President Nixon, 21 December 1970, end of handwritten page 1 to start of page 2 (National Archives transcript)"
+    },
+    {
+      "text": "Sir, I can and will be of any service that I can to help the country out.",
+      "sourceId": "nara-1970",
+      "locator": "Letter to President Nixon, 21 December 1970, handwritten page 2 (National Archives transcript)"
+    },
+    {
+      "text": "When I was a child, ladies and gentlemen, I was a dreamer.",
+      "sourceId": "jaycees-1971",
+      "locator": "Acceptance speech, Ten Outstanding Young Men of the Nation award, Memphis, 16 January 1971; Jerry Osborne, Elvis: Word for Word (1999), p. 188"
+    },
+    {
+      "text": "I never said anything like that, and people who know me know I wouldn't have said it.",
+      "sourceId": "jet-1957",
+      "locator": "Interview with Louie Robinson on the set of Jailhouse Rock, Jet, 1 August 1957 (as quoted by the Jim Crow Museum, Ferris State University, March 2006)"
+    }
+  ],
+  "definingMoment": {
+    "text": "By the late 1960s, after most of a decade of films that Contemporary Musicians calls 'entertaining but undistinguished', his movies and records were no longer selling as before. On 3 December 1968 NBC aired his television special, where, dressed in leather, he played bare-bones rock and roll in front of a small live audience with his old bandmates Scotty Moore and D.J. Fontana. It was one of the five highest-rated shows of the TV year. He then went back to Memphis to record From Elvis in Memphis, choosing the songs himself, and on 31 July 1969 he returned to the stage in Las Vegas.",
+    "sourceIds": [
+      "idff",
+      "bakers",
+      "cm-gale"
+    ]
+  },
+  "shadow": {
+    "text": "From the late 1960s he grew dependent on prescription drugs, mostly amphetamines and sedatives. His doctor, George Nichopoulos, admitted at a Tennessee hearing to prescribing thousands of doses of addictive pills for him, and tests after his death on 16 August 1977 found high levels of opiates and Quaaludes in his blood. Alanna Nash's 2010 biography describes him, at 21, holding private pajama parties in his bedroom in 1956 with three 14-year-old girls, tickling and kissing them; the girls told her nothing overtly sexual happened. He met Priscilla Beaulieu in West Germany in 1959, when she was 14 and he was 24, and arranged for her to live at Graceland while she was still a teenager finishing high school. Priscilla writes that he had affairs during their marriage. After she left him, she writes, he told his friends that her lover, the karate teacher Mike Stone, had to die and asked Joe Esposito to find a hit man, before he gave up the idea; she filed for divorce in 1972 and says Stone was not the reason she left.",
+    "sourceIds": [
+      "uxl-wb",
+      "pbs-2018",
+      "dailybeast-nash-2010",
+      "today-2024",
+      "fox-2025"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did one 'no' make you stop trying this week?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "Elvis Presley (album)",
+      "year": 1956
+    },
+    {
+      "title": "How Great Thou Art (album)",
+      "year": 1967
+    },
+    {
+      "title": "From Elvis in Memphis (album)",
+      "year": 1969
+    }
+  ],
+  "sources": [
+    {
+      "id": "nara-1970",
+      "kind": "primary",
+      "title": "Elvis Presley's Letter to President Richard Nixon (transcript)",
+      "author": "Elvis Presley",
+      "year": 1970,
+      "publisher": "National Archives and Records Administration, White House Central Files (handwritten, 21 December 1970)",
+      "url": "https://web.archive.org/web/20260308174845/https://www.archives.gov/exhibits/nixon-met-elvis/assets/doc_1.1_transcript.html"
+    },
+    {
+      "id": "jaycees-1971",
+      "kind": "primary",
+      "title": "Acceptance speech, Ten Outstanding Young Men of the Nation award (16 January 1971), in Elvis: Word for Word",
+      "author": "Elvis Presley (transcribed by Jerry Osborne)",
+      "year": 1999,
+      "publisher": "Jerry Osborne, Elvis: Word for Word: What He Said, Exactly As He Said It (1999), p. 188 (not read; cited via Wikiquote's sourced entry)"
+    },
+    {
+      "id": "jet-1957",
+      "kind": "primary",
+      "title": "Interview by Louie Robinson, Jet, 1 August 1957",
+      "author": "Elvis Presley, interviewed by Louie Robinson",
+      "year": 1957,
+      "publisher": "Jet, 1 August 1957 (quoted by the Jim Crow Museum, Ferris State University)",
+      "url": "https://jimcrowmuseum.ferris.edu/question/2006/march.htm"
+    },
+    {
+      "id": "cm-gale",
+      "kind": "secondary",
+      "title": "Presley, Elvis (Contemporary Musicians)",
+      "author": "Nancy H. Evans",
+      "year": "n.d. (online at Encyclopedia.com, updated 2018)",
+      "publisher": "Gale",
+      "url": "https://www.encyclopedia.com/people/literature-and-arts/music-popular-and-jazz-biographies/elvis-presley"
+    },
+    {
+      "id": "bakers",
+      "kind": "secondary",
+      "title": "Presley, Elvis (Baker's Biographical Dictionary of Musicians)",
+      "author": "Brock Helander",
+      "year": "n.d. (online at Encyclopedia.com)",
+      "url": "https://www.encyclopedia.com/arts/dictionaries-thesauruses-pictures-and-press-releases/presley-elvis"
+    },
+    {
+      "id": "idff",
+      "kind": "secondary",
+      "title": "Presley, Elvis (International Dictionary of Films and Filmmakers)",
+      "author": "Doug Tomlinson, updated by Frank Uhle",
+      "year": "n.d. (online at Encyclopedia.com)",
+      "url": "https://www.encyclopedia.com/movies/dictionaries-thesauruses-pictures-and-press-releases/presley-elvis"
+    },
+    {
+      "id": "uxl-wb",
+      "kind": "secondary",
+      "title": "Presley, Elvis (UXL Encyclopedia of World Biography)",
+      "author": "Gale editors",
+      "year": "n.d. (online at Encyclopedia.com, updated 2018)",
+      "publisher": "Gale",
+      "url": "https://www.encyclopedia.com/history/encyclopedias-almanacs-transcripts-and-maps/presley-elvis"
+    },
+    {
+      "id": "starbull-2001",
+      "kind": "secondary",
+      "title": "Elvis shook it up 40 years ago for the Arizona Memorial",
+      "author": "Burl Burlingame",
+      "year": 2001,
+      "publisher": "Honolulu Star-Bulletin, 23 March 2001",
+      "url": "https://archives.starbulletin.com/2001/03/23/features/story4.html"
+    },
+    {
+      "id": "usni-2016",
+      "kind": "secondary",
+      "title": "How Elvis Helped Save the USS Arizona Memorial",
+      "author": "Scot Christenson",
+      "year": 2016,
+      "publisher": "USNI News (U.S. Naval Institute), 7 December 2016",
+      "url": "https://news.usni.org/2016/12/07/elvis-helped-save-uss-arizona-memorial"
+    },
+    {
+      "id": "pbs-2018",
+      "kind": "secondary",
+      "title": "Elvis' addiction was the perfect prescription for an early death",
+      "author": "Howard Markel",
+      "year": 2018,
+      "publisher": "PBS NewsHour, 16 August 2018",
+      "url": "https://www.pbs.org/newshour/health/elvis-addiction-was-the-perfect-prescription-for-an-early-death"
+    },
+    {
+      "id": "today-2024",
+      "kind": "secondary",
+      "title": "What Priscilla Presley has said about her 10-year age gap with Elvis",
+      "author": "Samantha Kubota",
+      "year": 2024,
+      "publisher": "TODAY (NBC), 24 February 2024, via NBC New York",
+      "url": "https://www.nbcnewyork.com/entertainment/entertainment-news/what-priscilla-presley-has-said-about-her-10-year-age-gap-with-elvis/5165238/"
+    },
+    {
+      "id": "fox-2025",
+      "kind": "secondary",
+      "title": "Priscilla Presley says Elvis wanted to hire hit man to kill karate instructor lover",
+      "author": "Janelle Ash",
+      "year": 2025,
+      "publisher": "Fox News, 23 September 2025 (quoting Softly, As I Leave You, 2025)",
+      "url": "https://www.foxnews.com/entertainment/priscilla-presley-says-elvis-wanted-hire-hit-man-kill-karate-instructor-lover"
+    },
+    {
+      "id": "rockhall",
+      "kind": "secondary",
+      "title": "Elvis Presley (inductee page)",
+      "author": "Rock & Roll Hall of Fame",
+      "year": "n.d. (inducted 1986)",
+      "publisher": "Rock & Roll Hall of Fame and Museum",
+      "url": "https://www.rockhall.com/inductees/elvis-presley"
+    },
+    {
+      "id": "history-graceland",
+      "kind": "secondary",
+      "title": "Elvis Presley puts a down payment on Graceland",
+      "author": "HISTORY.com Editors",
+      "year": 2009,
+      "publisher": "A&E Television Networks, HISTORY.com (This Day in History, 19 March; published 16 November 2009, updated 2026)",
+      "url": "https://www.history.com/this-day-in-history/March-19/elvis-presley-puts-a-down-payment-on-graceland"
+    },
+    {
+      "id": "dailybeast-nash-2010",
+      "kind": "secondary",
+      "title": "Elvis' Pajama Party (excerpt from Baby, Let's Play House: Elvis Presley and the Women Who Loved Him, It Books, 2010)",
+      "author": "Alanna Nash",
+      "year": 2010,
+      "publisher": "The Daily Beast, 7 January 2010",
+      "url": "https://www.thedailybeast.com/elvis-pajama-party/"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real American singer and actor (1935-1977), not fictional, never a politician or candidate, not the founder of a religion; owner decides because of accounts of physical intimacy with girls under 16. Owner case: met Priscilla Beaulieu in Germany in 1959 when she was 14 and he 24; her 1985 memoir (quoted by TODAY 2024) tells of kissing and of him refusing sex because she was 'too young'; in 2023 she said 'I never had sex with him'; she lived at Graceland as a teenager and married him in 1967. Alanna Nash's 2010 biography (Daily Beast excerpt) describes 1956 bedroom 'pajama parties' with three named 14-year-old girls (kissing, tickling, lying together); the girls say nothing overtly sexual happened. Also listed: Priscilla's 2025 memoir says that in 1972 he made love to her 'forcefully, not forcibly' and that he had not forced himself on her. Full facts and sources: research folder review.json ownerCase."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value: Originality against the point that he wrote few songs and did not invent rock and roll, Resilience against his own 1950s line that he never 'overcame disappointments' and against his decline in the 1970s, Service against the Nixon letter written while he used prescription drugs, and Family against his affairs. All five held on the record; Originality gained the Rock & Roll Hall of Fame and Family gained the Graceland purchase for his parents, while Faith from the blind pick was left out for lack of room. Two fact fixes: the shadow no longer says Priscilla left him for Mike Stone, since she writes that he was not the reason, and the defining moment now credits 'undistinguished' to Contemporary Musicians rather than to critics. The shadow gained his own affairs and Alanna Nash's account of the 1956 pajama parties; all four quotes were found at their place.",
+    "checkedOn": "2026-11-10"
+  }
+}
