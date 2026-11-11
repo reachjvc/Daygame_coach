@@ -1,0 +1,339 @@
+{
+  "id": "mark-manson",
+  "name": "Mark Manson",
+  "born": 1984,
+  "died": null,
+  "category": "teachers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_relationship"
+  ],
+  "tagline": "A former pickup coach who swapped tricks for honesty, then wrote for everyone.",
+  "startedFrom": "He grew up in the Austin suburbs, where his parents' marriage fell apart in his teens and he was arrested for marijuana and expelled in eighth grade. He was a nerdy, celibate teenager. After a small music college in Denton, Texas, and a business degree at Boston University, he was working a low-level finance job in Boston, recently dumped by his high-school sweetheart.",
+  "values": [
+    {
+      "word": "Honesty",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 2011 he self-published Models: Attract Women Through Honesty, which New York Magazine describes as his psychological, emotion-based take on pickup artistry.",
+          "sourceId": "nymag-2022",
+          "locator": "paragraph beginning \"It was in a nightclub in São Paolo\" (\"In 2011, Manson self-published a book…\")"
+        },
+        {
+          "kind": "words",
+          "claim": "He told BuzzFeed News: \"I just try to write as honestly as possible.\"",
+          "sourceId": "buzzfeed-2019",
+          "locator": "closing paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Telegraph writes that he admits his pickup past because he believes honesty is the key to fulfilment.",
+          "sourceId": "telegraph-2023",
+          "locator": "paragraph beginning \"But he's honest about that\""
+        },
+        {
+          "kind": "words",
+          "claim": "He said that when he rebranded his blog as Practical Pickup under his real name, \"I started promoting honesty, vulnerability, actually giving a shit about who you're talking to\"; he dates this to 2010.",
+          "sourceId": "ferriss-2022",
+          "locator": "transcript (no timestamps), answer on the pickup years, \"I rebranded my website, my little blog as Practical Pickup\""
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He quit his day job in finance after six weeks to sell dating advice online.",
+          "sourceId": "subtle-art-post-2015",
+          "locator": "opening section, before \"Subtlety #1\""
+        },
+        {
+          "kind": "deed",
+          "claim": "From the late 2000s he spent seven itinerant years abroad, mostly in Latin America, living cheaply on money he made online.",
+          "sourceId": "nymag-2022",
+          "locator": "paragraph beginning \"In the late aughts\""
+        },
+        {
+          "kind": "words",
+          "claim": "He said: \"I'd rather be doing what I like with my time and be broke than the opposite.\"",
+          "sourceId": "sivers-2024",
+          "locator": "section on jobs he was fired from or quit"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he has \"always had a little bit of an irrational, I want to do it myself mentality\", and that he self-published his first book and has sold online courses since 2010.",
+          "sourceId": "ferriss-2022",
+          "locator": "transcript (no timestamps), answer on agents and publishers coming knocking"
+        }
+      ]
+    },
+    {
+      "word": "Reading",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He started a book club with friends for very long books, such as Parfit's Reasons and Persons, and read Chernow's biographies of Grant, Washington and Hamilton.",
+          "sourceId": "nymag-2022",
+          "locator": "paragraphs on his home office and on COVID (\"He branched out into American history\")"
+        },
+        {
+          "kind": "witness",
+          "claim": "BuzzFeed News reports that he tries to read a couple of hours a day.",
+          "sourceId": "buzzfeed-2019",
+          "locator": "paragraph beginning \"For now, he tries to read\""
+        },
+        {
+          "kind": "words",
+          "claim": "He said he has always been a bookworm and has read about self-help since he was a teenager.",
+          "sourceId": "motherjones-2016",
+          "locator": "interview answer beginning \"I'm a recovered self-help junkie\""
+        }
+      ]
+    },
+    {
+      "word": "Self-awareness",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that he pursued sex relentlessly and travelled the world to escape dozens of relationships with people he was not mature enough to handle.",
+          "sourceId": "grow-up-post",
+          "locator": "section \"Step 3: Be Willing to Die for Something\""
+        },
+        {
+          "kind": "witness",
+          "claim": "BuzzFeed News describes his whole approach as rigorous self-doubt; he calls his brand \"self-hating self-help\".",
+          "sourceId": "buzzfeed-2019",
+          "locator": "paragraph beginning \"His level of mega-popularity\""
+        },
+        {
+          "kind": "deed",
+          "claim": "When he noticed he woke up wanting to fire everybody, he took it as a sign of burnout, investigated it, and by 2022 said he had worked the least of his adult life in the past six months.",
+          "sourceId": "nymag-2022",
+          "locator": "paragraph beginning \"When he got back from New Zealand\""
+        },
+        {
+          "kind": "words",
+          "claim": "He said he spent most of his twenties \"getting my head in order, getting my baggage cleaned out, fixing my relationships, understanding my emotions, developing self-awareness\".",
+          "sourceId": "ferriss-2022",
+          "locator": "transcript (no timestamps), answer beginning \"I have always struggled with the physical health side of things\""
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said writing is the only thing he is good at and the only thing he really loves about his job.",
+          "sourceId": "motherjones-2016",
+          "locator": "paragraph beginning \"But the promise of the young web was elusive\""
+        },
+        {
+          "kind": "deed",
+          "claim": "He writes a couple of hours a day, and after critics said Subtle Art gestured at studies without citing them, he added footnotes to his next book.",
+          "sourceId": "buzzfeed-2019",
+          "locator": "paragraphs on The Subtle Art (\"I thought it was important to show that I did my homework\") and \"For now, he tries to read\""
+        },
+        {
+          "kind": "words",
+          "claim": "He said of writing: \"it's a difficult that I like, I enjoy it.\"",
+          "sourceId": "sivers-2024",
+          "locator": "section on goals and marathon training"
+        },
+        {
+          "kind": "deed",
+          "claim": "Will Smith, who had read Subtle Art, chose him to help write his memoir, Will, which Manson co-authored.",
+          "sourceId": "nymag-2022",
+          "locator": "paragraphs on Everything Is Fucked and HarperOne (\"Will Smith was looking for a writer\")"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Choose the struggle you are willing to live with, not only the reward you want.",
+      "sourceId": "question-post",
+      "locator": "whole article; \"What pain do you want in your life? What are you willing to struggle for?\""
+    },
+    {
+      "text": "Take responsibility for your problems, even the ones that are not your fault.",
+      "sourceId": "responsibility-post",
+      "locator": "whole article; \"Accepting responsibility for our problems is the first step to solving them.\""
+    },
+    {
+      "text": "Spend your care on the few things that truly matter and let the rest go.",
+      "sourceId": "subtle-art-post-2015",
+      "locator": "\"Subtlety #3: We All Have a Limited Number of Fucks to Give\""
+    },
+    {
+      "text": "With women, drop the tricks and fix how you see yourself and them.",
+      "sourceId": "sivers-2024",
+      "locator": "section on his dating-coaching years (\"a lot of it was just kind of like correcting that map\")"
+    },
+    {
+      "text": "A goal should serve you; drop one that only makes you miserable.",
+      "sourceId": "sivers-2024",
+      "locator": "section on goals and marathon training (\"Your goal should serve you, not the other way around.\")"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "What pain do you want in your life? What are you willing to struggle for?",
+      "sourceId": "question-post",
+      "locator": "opening section"
+    },
+    {
+      "text": "Fault is past tense. Responsibility is present tense.",
+      "sourceId": "responsibility-post",
+      "locator": "middle of the article, after the judge example"
+    },
+    {
+      "text": "Maturity is what happens when one learns to only give a fuck about what's truly fuckworthy.",
+      "sourceId": "subtle-art-post-2015",
+      "locator": "\"Subtlety #3: We All Have a Limited Number of Fucks to Give\""
+    },
+    {
+      "text": "I'd rather be doing what I like with my time and be broke than the opposite.",
+      "sourceId": "sivers-2024",
+      "locator": "section on jobs he was fired from or quit"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 2011, after a few years as a paid pickup coach, he self-published Models: Attract Women Through Honesty, which BuzzFeed News calls a deconstruction of the principles of pickup artistry. He said the dating advice industry was \"toxic\" and that men needed an emotionally healthy, respectful book. A year after it came out, its Amazon sales let him stop coaching and write full time.",
+    "sourceIds": [
+      "buzzfeed-2019",
+      "nymag-2022"
+    ]
+  },
+  "shadow": {
+    "text": "In the 2000s he wrote as \"Entropy\" in the pickup artist scene, then ran a paid coaching business, Practical Pickup, taking men out to bars to meet women. He has written that in his early adulthood he \"pursued sex relentlessly\" and escaped \"dozens of relationships with otherwise good people\". His 2011 book Models contains a sexual pickup line about a woman's cat and generalisations about women that BuzzFeed News called hard to read without wincing; he says some of its language is dated. After Subtle Art took off he sold a journal, an online school and a collection of NFTs that launched poorly and that he later called \"a failed experiment\"; The Telegraph wrote that he \"wrung its success for all he could\".",
+    "sourceIds": [
+      "nymag-2022",
+      "buzzfeed-2019",
+      "grow-up-post",
+      "telegraph-2023"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which problem did you blame on someone else this week instead of taking it on as yours to fix?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "The Subtle Art of Not Giving a F*ck",
+      "year": 2016
+    },
+    {
+      "title": "Models: Attract Women Through Honesty",
+      "year": 2011
+    },
+    {
+      "title": "Everything Is F*cked: A Book About Hope",
+      "year": 2019
+    }
+  ],
+  "sources": [
+    {
+      "id": "subtle-art-post-2015",
+      "kind": "primary",
+      "title": "The Subtle Art of Not Giving a Fuck (blog post, later an excerpt of the book)",
+      "author": "Mark Manson",
+      "year": 2015,
+      "publisher": "markmanson.net",
+      "url": "https://markmanson.net/not-giving-a-fuck"
+    },
+    {
+      "id": "question-post",
+      "kind": "primary",
+      "title": "The Most Important Question of Your Life (updated excerpt from The Subtle Art of Not Giving a F*ck)",
+      "author": "Mark Manson",
+      "year": 2013,
+      "publisher": "markmanson.net",
+      "url": "https://markmanson.net/question"
+    },
+    {
+      "id": "responsibility-post",
+      "kind": "primary",
+      "title": "The Responsibility/Fault Fallacy (excerpt from The Subtle Art of Not Giving a F*ck)",
+      "author": "Mark Manson",
+      "year": 2017,
+      "publisher": "markmanson.net",
+      "url": "https://markmanson.net/responsibility-fault-fallacy"
+    },
+    {
+      "id": "grow-up-post",
+      "kind": "primary",
+      "title": "How to Grow Up: A Guide to Being Human",
+      "author": "Mark Manson",
+      "year": 2018,
+      "publisher": "markmanson.net",
+      "url": "https://markmanson.net/how-to-grow-up"
+    },
+    {
+      "id": "sivers-2024",
+      "kind": "primary",
+      "title": "Mark Manson | Derek Sivers (conversation transcript, recorded for Manson's podcast)",
+      "author": "Mark Manson and Derek Sivers",
+      "year": 2024,
+      "publisher": "sive.rs",
+      "url": "https://sive.rs/2024-01-manson"
+    },
+    {
+      "id": "nymag-2022",
+      "kind": "secondary",
+      "title": "The Guru Burns Out",
+      "author": "Benjamin Wallace",
+      "year": 2022,
+      "publisher": "New York Magazine (Intelligencer)",
+      "url": "https://nymag.com/intelligencer/article/mark-manson-subtle-art-of-not-giving-a-fuck.html"
+    },
+    {
+      "id": "buzzfeed-2019",
+      "kind": "secondary",
+      "title": "The Guy Who Wrote \"Everything Is F*cked\" Actually Thinks Life Is Pretty Great",
+      "author": "Zan Romanoff",
+      "year": 2019,
+      "publisher": "BuzzFeed News",
+      "url": "https://www.buzzfeednews.com/article/zanromanoff/the-subtle-art-of-not-giving-a-fuck-mark-manson-everything"
+    },
+    {
+      "id": "telegraph-2023",
+      "kind": "secondary",
+      "title": "'Andrew Tate is scum – but I see the appeal': the author on a mission to clean up the 'manosphere'",
+      "author": "Guy Kelly",
+      "year": 2023,
+      "publisher": "The Telegraph (syndicated on Yahoo News)",
+      "url": "https://sg.news.yahoo.com/andrew-tate-scum-see-appeal-125954462.html"
+    },
+    {
+      "id": "motherjones-2016",
+      "kind": "secondary",
+      "title": "Stop Trying to Feel Awesome All the Time, Says Millennial Whisperer",
+      "author": "Kanyakrit Vongkiatkajorn",
+      "year": 2016,
+      "publisher": "Mother Jones",
+      "url": "https://www.motherjones.com/media/2016/09/mark-manson-blog-subtle-art-giving-fuck"
+    },
+    {
+      "id": "ferriss-2022",
+      "kind": "primary",
+      "title": "The Tim Ferriss Show #647: Mark Manson (transcript)",
+      "author": "Tim Ferriss and Mark Manson",
+      "year": 2022,
+      "publisher": "tim.blog",
+      "url": "https://tim.blog/2022/12/31/mark-manson-transcript/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Living self-help author, not a politician or religious founder; searches found no account of sexual contact with a minor or of sexual violence, but he spent years as a paid pickup coach and says plainly he used relationships and left many."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value and every sentence against freshly fetched copies of New York Magazine, BuzzFeed News, the Telegraph, Mother Jones, his own posts and the Sivers and Ferriss transcripts. Honesty, Independence and Self-awareness held as core, each now with his Ferriss interview as an extra source; Reading and Craft held on three or more sources each, so the blind pick's Growth and Contribution had no room. Five sentences were tightened, among them Models as a 'take on pickup' rather than a book 'against the tricks', and the shadow gained the Telegraph's line that he wrung Subtle Art's success for all he could; all four quotes checked word for word.",
+    "checkedOn": "2026-11-10"
+  }
+}
