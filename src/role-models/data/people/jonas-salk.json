@@ -1,0 +1,337 @@
+{
+  "id": "jonas-salk",
+  "name": "Jonas Salk",
+  "born": 1914,
+  "died": 1995,
+  "category": "givers",
+  "areaIds": [
+    "lm_mission",
+    "lm_contribution",
+    "lm_mindset"
+  ],
+  "tagline": "A doctor who bet on a killed-virus polio vaccine, tried it on his own family and kept going",
+  "startedFrom": "He was born in New York City in 1914, the eldest of three sons of a Jewish family; his mother came from Russia in 1901 with no schooling, and his father, who had only finished elementary school, designed blouses in the garment trade. The family lived in a Manhattan tenement. He worked after school, won scholarships, and was the first in his family to go to college.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Before the national trial he tested his polio vaccine on volunteers who had never had polio, including himself, his wife and their children.",
+          "sourceId": "salk-institute",
+          "locator": "History of Salk page, paragraph beginning 'Contrary to the era's prevailing scientific opinion'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He injected himself with an experimental influenza vaccine in 1942 and with his polio vaccine in 1952, and developed the polio vaccine from killed virus while scientific doubters said it would not work.",
+          "sourceId": "ap-1995",
+          "locator": "Paragraphs beginning 'Working at the University of Pittsburgh' and 'Salk promised to be among the first'"
+        },
+        {
+          "kind": "words",
+          "claim": "On leaving his medical school class for a year of research in biochemistry, he said: \"Nevertheless, I had the courage to do so.\"",
+          "sourceId": "aoa-1991",
+          "locator": "Answer to 'Early on in your career, was there someone who gave you an important break?'"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked how criticism from other scientists affected him, he said: \"I just plowed on. Hurt? That’s one thing. Being deterred is another thing.\"",
+          "sourceId": "aoa-1991",
+          "locator": "Answer to 'How did the criticism affect you personally?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Associated Press obituary says he \"spent a lifetime stubbornly pursuing his ideas\", first for polio and later for AIDS, \"even when they drew skepticism from other researchers\".",
+          "sourceId": "ap-1995",
+          "locator": "Paragraph beginning 'Salk spent a lifetime stubbornly pursuing his ideas'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He began work on an AIDS vaccine in his 70s and was still immersed in it when he died in 1995.",
+          "sourceId": "latimes-1995",
+          "locator": "Paragraph beginning 'Salk spent his final years trying to develop a vaccine for AIDS'"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said his work on a killed-virus vaccine was not a popularity contest: \"my curiosity drove me to find out whether it could work or not.\"",
+          "sourceId": "aoa-1991",
+          "locator": "Passage on the 'three stages of truth' (section 'Keys to success: Perseverance')"
+        },
+        {
+          "kind": "deed",
+          "claim": "In his second year of medical school he was told a killed virus could not give immunity; he asked why, got no satisfying answer, and later tested the question in an influenza laboratory and found it could.",
+          "sourceId": "aoa-1991",
+          "locator": "Answer to 'When did you first have a vision of what you might accomplish in the field you chose?'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Although he took a medical degree, he never intended to practise medicine: he was interested in biology and chemistry and wanted to do research.",
+          "sourceId": "latimes-1995",
+          "locator": "Paragraph beginning 'Although he grew up to become a doctor'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In his later decades he often woke at night to write, filled thousands of pages of philosophical thoughts, and published three books on them.",
+          "sourceId": "ap-1995",
+          "locator": "Paragraph beginning 'In recent decades'"
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said his choice of medical science came from his wish \"to be of some help to humankind, so to speak, in a larger sense than just on a one-to-one basis.\"",
+          "sourceId": "aoa-1991",
+          "locator": "Answer to 'How did you decide to become a scientist?'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He never patented the polio vaccine or made money from it, and wanted it given out as widely as possible.",
+          "sourceId": "salk-institute",
+          "locator": "History of Salk page, paragraph beginning 'In 1954, national testing began'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Wilfrid Sheed writes that he sat through so many interviews and spread the message of disease prevention \"so far and wide and indefatigably\".",
+          "sourceId": "time-1999",
+          "locator": "Page 3 of 3, first paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "The Los Angeles Times obituary calls him \"Brilliant and impatient, ambitious and irascible\".",
+          "sourceId": "latimes-1995",
+          "locator": "Paragraph beginning 'Brilliant and impatient'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Wilfrid Sheed writes of him: \"That he was fast, there was no doubt. And hungry too.\"",
+          "sourceId": "time-1999",
+          "locator": "Page 1 of 3, paragraph beginning 'That he was fast'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said that before medicine he had \"the ambition to study law, to be elected to Congress, and to try to make just laws\".",
+          "sourceId": "aoa-1991",
+          "locator": "Answer to 'How did you decide to become a scientist?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Reviewing David Oshinsky's 2005 history, Angela Matysiak writes that he \"shied away from the media yet craved publicity\".",
+          "sourceId": "mit-tr-2005",
+          "locator": "Paragraph beginning 'Salk emerges here as a complex scientist'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When an accepted claim does not make sense to you, ask why, and test it if you have a reason to think otherwise.",
+      "sourceId": "aoa-1991",
+      "locator": "Answer to 'So, it started with you doubting something that everyone else assumed was true?'"
+    },
+    {
+      "text": "Treat a failed experiment as a finding: it tells you what not to do.",
+      "sourceId": "aoa-1991",
+      "locator": "Answer to 'What things didn't work out that led you to what did work out?'"
+    },
+    {
+      "text": "Share the risk you ask of others: put yourself and your own family in the test too.",
+      "sourceId": "salk-institute",
+      "locator": "History of Salk page, paragraph beginning 'Contrary to the era's prevailing scientific opinion'"
+    },
+    {
+      "text": "Let criticism hurt if it must, but do not let it stop the work.",
+      "sourceId": "aoa-1991",
+      "locator": "Answer to 'How did the criticism affect you personally?'"
+    },
+    {
+      "text": "Before you test something on many people, try it on a smaller group, go cautiously and be ready for the unforeseen.",
+      "sourceId": "aoa-1991",
+      "locator": "Answer to 'Was it nerve-wracking when you first tested this on humans?' (the 5,000 Pittsburgh schoolchildren)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Well, the people, I would say. There is no patent. … Could you patent the sun?",
+      "sourceId": "latimes-1995",
+      "locator": "Paragraphs on the See It Now interview with Edward R. Murrow, CBS, 12 April 1955; the broadcast audio adds \"This is…\" before the last sentence (Science History Institute transcript), marked here by the ellipsis"
+    },
+    {
+      "text": "I just plowed on. Hurt? That’s one thing. Being deterred is another thing.",
+      "sourceId": "aoa-1991",
+      "locator": "Answer to 'How did the criticism affect you personally?'"
+    },
+    {
+      "text": "If you thought it was going to work, and it didn't work, that tells you as much as if it did.",
+      "sourceId": "aoa-1991",
+      "locator": "Answer to 'What things didn't work out that led you to what did work out?'"
+    },
+    {
+      "text": "Risks, I like to say, always pay off. You learn what to do, or what not to do.",
+      "sourceId": "aoa-1991",
+      "locator": "Answer to 'It sounds like a risk that really paid off.'"
+    }
+  ],
+  "definingMoment": {
+    "text": "Against the prevailing scientific opinion, he made a polio vaccine from killed virus. Before the national trial he injected it into himself, his wife, their three sons and his laboratory staff. In 1954 about 1.8 million schoolchildren took part in the field trial, and on 12 April 1955 the results showed the vaccine was safe and worked. That night Edward R. Murrow asked him on CBS television who owned the patent, and he answered: \"Well, the people, I would say. There is no patent. … Could you patent the sun?\"",
+    "sourceIds": [
+      "salk-institute",
+      "pg-2021",
+      "latimes-1995",
+      "shi-2023"
+    ]
+  },
+  "shadow": {
+    "text": "On 12 April 1955, in the speech in Ann Arbor where the trial results were announced, he did not name the colleagues in his Pittsburgh laboratory; TIME's 1999 profile says he saluted neither them nor John Enders, whose way of growing the virus had cleared the path to the vaccine. His colleague Julius Youngner said in 2005 that he felt insulted and betrayed, and in David Oshinsky's 2005 history he accuses Salk of wrongly taking credit in a paper for a test Youngner designed. Salk's son Peter said he suspected his father meant to be brief, not to slight them, and biographer Charlotte DeCroes Jacobs says he tried to mention other scientists. Reviewing Oshinsky's book, Angela Matysiak, a biographer of his rival Albert Sabin, writes that Salk could be insensitive and egotistic with his laboratory team. In the summer of 1952 he injected the vaccine into 161 children and staff at the Polk State School, an institution for children with mental disabilities; the children were wards of the state, and state officials gave the consent. Jacobs says his agreement with the polio foundation meant he could not have patented the vaccine. A 1993 US patent on HIV antigens, assigned to Immune Response Corp., the AIDS vaccine company he co-founded in 1987, names him as co-inventor.",
+    "sourceIds": [
+      "time-1999",
+      "latimes-1995",
+      "trib-2005",
+      "kqed-2015",
+      "mit-tr-2005",
+      "pg-2021",
+      "ap-1995",
+      "us-patent-5256767"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did criticism this week stop your work, not just hurt your feelings?",
+    "principleIndex": 3
+  },
+  "readings": [
+    {
+      "title": "Man Unfolding",
+      "year": 1972
+    },
+    {
+      "title": "The Survival of the Wisest",
+      "year": 1973
+    },
+    {
+      "title": "Anatomy of Reality",
+      "year": 1983
+    }
+  ],
+  "sources": [
+    {
+      "id": "aoa-1991",
+      "kind": "primary",
+      "title": "Jonas Salk, M.D. - interview, The Salk Institute, La Jolla, California, 16 May 1991",
+      "author": "Jonas Salk (interviewed by the Academy of Achievement)",
+      "year": 1991,
+      "publisher": "American Academy of Achievement",
+      "url": "https://achievement.org/achiever/jonas-salk-m-d/"
+    },
+    {
+      "id": "salk-institute",
+      "kind": "secondary",
+      "title": "History of Salk: Jonas Salk",
+      "author": "Salk Institute for Biological Studies",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.salk.edu/about/jonas-salk/"
+    },
+    {
+      "id": "latimes-1995",
+      "kind": "secondary",
+      "title": "Jonas Salk Dies; Scientist A Hero For Halting Polio (Los Angeles Times obituary, reprinted in the Spokesman-Review, 24 June 1995)",
+      "author": "Los Angeles Times",
+      "year": 1995,
+      "url": "https://www.spokesman.com/stories/1995/jun/24/jonas-salk-dies-scientist-a-hero-for-halting/"
+    },
+    {
+      "id": "ap-1995",
+      "kind": "secondary",
+      "title": "Jonas Salk, eradicator of polio, dies (Associated Press obituary, Deseret News, 24 June 1995)",
+      "author": "Associated Press",
+      "year": 1995,
+      "url": "https://www.deseret.com/1995/6/24/19179003/jonas-salk-eradicator-of-polio-dies/"
+    },
+    {
+      "id": "time-1999",
+      "kind": "secondary",
+      "title": "Jonas Salk: Virologist (TIME 100, 29 March 1999)",
+      "author": "Wilfrid Sheed",
+      "year": 1999,
+      "publisher": "TIME",
+      "url": "https://content.time.com/time/subscriber/article/0,33009,990625,00.html"
+    },
+    {
+      "id": "pg-2021",
+      "kind": "secondary",
+      "title": "Paralyzed (Pittsburgh and the polio vaccine)",
+      "author": "Laura Malt Schneiderman (Pittsburgh Post-Gazette)",
+      "year": 2021,
+      "url": "https://newsinteractive.post-gazette.com/polio"
+    },
+    {
+      "id": "trib-2005",
+      "kind": "secondary",
+      "title": "Youngner proud to be a part of history, still angered by Salk's slight (Pittsburgh Tribune-Review, 3 April 2005)",
+      "author": "Luis Fábregas and Jennifer Bails",
+      "year": 2005,
+      "url": "https://archive.triblive.com/news/youngner-proud-to-be-a-part-of-history-still-angered-by-salks-slight"
+    },
+    {
+      "id": "kqed-2015",
+      "kind": "secondary",
+      "title": "Jonas Salk: Public Hero, Professional Pariah (KQED State of Health, 17 August 2015; interview with biographer Charlotte DeCroes Jacobs)",
+      "author": "KQED",
+      "year": 2015,
+      "url": "https://www.kqed.org/stateofhealth/63035/jonas-salk-public-hero-professional-pariah"
+    },
+    {
+      "id": "mit-tr-2005",
+      "kind": "secondary",
+      "title": "The Myth of Jonas Salk (review of David Oshinsky, Polio: An American Story), MIT Technology Review, 1 July 2005",
+      "author": "Angela Matysiak",
+      "year": 2005,
+      "publisher": "MIT Technology Review",
+      "url": "https://www.technologyreview.com/2005/07/01/230689/the-myth-of-jonas-salk/"
+    },
+    {
+      "id": "shi-2023",
+      "kind": "secondary",
+      "title": "The Mouse That Changed Science (Distillations podcast transcript, with archive audio of See It Now, CBS, 12 April 1955)",
+      "author": "Science History Institute",
+      "year": "n.d. (read 2026-11-10)",
+      "publisher": "Science History Institute",
+      "url": "https://www.sciencehistory.org/stories/distillations-pod/the-mouse-that-changed-science/"
+    },
+    {
+      "id": "us-patent-5256767",
+      "kind": "primary",
+      "title": "US Patent 5,256,767, Retroviral antigens (filed 10 November 1992, granted 26 October 1993; inventors Jonas Salk and Dennis J. Carlo; assignee Immune Response Corp.)",
+      "author": "United States Patent and Trademark Office",
+      "year": 1993,
+      "publisher": "Google Patents",
+      "url": "https://patents.google.com/patent/US5256767A/en"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "ok",
+      "notes": "A real 20th-century medical scientist, dead since 1995, not a politician, campaigner or founder of a religion; searches found no account of sexual contact with anyone under 16 or of sexual violence by him (the Salk Institute harassment cases of 2018 and 2026 concern other scientists)."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I re-read every claim against the saved Academy of Achievement transcript, the two 1995 obituaries, TIME, the Post-Gazette, the Tribune-Review and KQED, and argued each value against his credit dispute, his publicity seeking and the patent story. Optimism fell: of its three pieces only his own two remarks show it, and the third (taking on AIDS in his 70s) shows determination instead; Ambition, the blind pick's word, came in on the LA Times, TIME, his own words and Matysiak's review. Courage, Determination, Curiosity and Service held. The Slate patent-lawyers claim was cut because only an SBS reprint without a licence notice carries it; the AIDS-company patent now rests on the 1993 patent record itself, and the Murrow quote now marks the words the broadcast has and the newspaper left out.",
+    "checkedOn": "2026-11-10"
+  }
+}
