@@ -1,0 +1,308 @@
+{
+  "id": "soichiro-honda",
+  "name": "Soichiro Honda",
+  "born": 1906,
+  "died": 1991,
+  "category": "builders",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "A blacksmith's son with no degree who failed, went back to school and built Honda",
+  "startedFrom": "He was born in 1906 in a village in Shizuoka Prefecture, the son of a blacksmith who later sold bicycles. He left school after elementary school, and at 15 he went to Tokyo as a live-in apprentice at the Art Shokai car repair shop.",
+  "values": [
+    {
+      "word": "Building things",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1946 he bought about 500 small army radio generator engines and, instead of just bolting them on, took each one apart, refined it, fitted it to a bicycle and test-rode it before sale.",
+          "sourceId": "honda-75-ch1",
+          "locator": "Chapter I, Section 1, 'Making a Fresh Start After the War Ended'"
+        },
+        {
+          "kind": "words",
+          "claim": "In 'The Three Joys' (1951) he called the joy of producing a joy known only to the engineer and wrote that, as an engineer himself, he was always working to make such a product.",
+          "sourceId": "three-joys-1951",
+          "locator": "Honda Monthly No. 4, 1 December 1951, paragraph 2"
+        },
+        {
+          "kind": "witness",
+          "claim": "ASME quotes a Kawashima (whom it names as his 1973 successor) saying he was not only a theorist but an expert at practical work like welding and forging; ASME credits him with more than 100 patents.",
+          "sourceId": "asme-2012",
+          "locator": "Article body, paragraphs on Art Shokai and patents"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After a series of technical failures with piston rings ran his new company out of money, at 30 he began auditing night classes in metallurgy at Hamamatsu Technical High School.",
+          "sourceId": "honda-75-ch1",
+          "locator": "Chapter I, Section 1, 'A Young Boy Who Loves to Tinker with Machines Later Starts His Own Business'"
+        },
+        {
+          "kind": "deed",
+          "claim": "After his rider finished 13th in São Paulo in 1954, far behind the European machines, he announced a trip to the United Kingdom that spring for on-the-spot study before returning in June.",
+          "sourceId": "honda-heritage-1954",
+          "locator": "Episode 'Declaring Entry in the Isle of Man TT Races / 1954', sections on São Paulo and the public announcement"
+        },
+        {
+          "kind": "witness",
+          "claim": "ASME quotes a Kawashima (whom it names as his 1973 successor) saying that at Art Shokai the young Honda learned a great deal by doing real work with real machines.",
+          "sourceId": "asme-2012",
+          "locator": "Article body, paragraph quoting Kawashima on Art Shokai"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His first order of piston rings, for Toyota, was rejected; he refined the process and built a supplier of about 2,000 employees.",
+          "sourceId": "asme-2012",
+          "locator": "Article body, paragraph on Tokai Seiki (1936)"
+        },
+        {
+          "kind": "deed",
+          "claim": "His factory was destroyed by an air raid and an earthquake at the end of the war; he sold the company and in 1946 started again with the Honda Technical Research Institute.",
+          "sourceId": "honda-75-ch1",
+          "locator": "Chapter I, Section 1, end of 'A Young Boy...' and 'Making a Fresh Start After the War Ended'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Itami Hiroyuki writes that he was unsparing and uncompromising in his work, convinced that where there is a will, there is a way.",
+          "sourceId": "nippon-2019",
+          "locator": "Section 'An Uncompromising, Passionate Leader'"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1954, with the company facing a bankruptcy crisis, he declared to his workers that Honda would enter the Isle of Man TT race to win.",
+          "sourceId": "nippon-2019",
+          "locator": "Section 'Defying the Odds'"
+        },
+        {
+          "kind": "words",
+          "claim": "The March 1954 declaration issued under his name (drafted by Takeo Fujisawa) says that since he was a small child he had dreamed of racing all over the world with a vehicle of his own making.",
+          "sourceId": "asme-2012",
+          "locator": "Article body, paragraph on March 1954 and the Isle of Man TT"
+        },
+        {
+          "kind": "witness",
+          "claim": "Kiyoshi Kawashima later said that around the 1949 launch of the Dream D-Type, Honda began talking about being number one in the world.",
+          "sourceId": "honda-75-ch1",
+          "locator": "Chapter I, Section 1, 'Founding of Honda Motor Co. Ltd.: A Full-Fledged Start as a Motorcycle Manufacturer'"
+        }
+      ]
+    },
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He moved into making cars in 1963 although the Ministry of International Trade and Industry was trying to stop new car companies.",
+          "sourceId": "asme-2012",
+          "locator": "Article body, paragraphs on 1959-1963"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1947, short of money, he insisted on costly die casting for the A-Type engine instead of cheaper sand casting.",
+          "sourceId": "honda-75-ch1",
+          "locator": "Chapter I, Section 1, 'Making a Fresh Start After the War Ended'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Itami Hiroyuki calls his announcement, made as Honda entered the car market at 57, that Honda would race in Formula One, when its only cars were mini trucks, an audacious move.",
+          "sourceId": "nippon-2019",
+          "locator": "Section 'Rushing into Competitive Racing'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not stop at looking and listening: try it yourself.",
+      "sourceId": "honda-heritage-1954",
+      "locator": "Episode 'Declaring Entry in the Isle of Man TT Races / 1954', Shozo Tsuchida's recollection of the Juno K-Type"
+    },
+    {
+      "text": "Let the product prove you; you cannot cheat with what you make.",
+      "sourceId": "honda-heritage-1991",
+      "locator": "Episode 'Hosting Orei-no-kai / 1991', section 'A Ceremony Designed to Convey His Appreciation'"
+    },
+    {
+      "text": "The buyer, not the maker or the seller, judges what your work is worth.",
+      "sourceId": "three-joys-1951",
+      "locator": "Honda Monthly No. 4, 1 December 1951, paragraph 4"
+    },
+    {
+      "text": "When the future looks uncertain, set a bigger goal, not a smaller one.",
+      "sourceId": "nippon-2019",
+      "locator": "Section 'Defying the Odds'"
+    },
+    {
+      "text": "When you fail for lack of knowledge, go and get the knowledge, at any age.",
+      "sourceId": "honda-75-ch1",
+      "locator": "Chapter I, Section 1, 'A Young Boy Who Loves to Tinker with Machines Later Starts His Own Business'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Of seeing and listening and trying, the most important is trying.",
+      "sourceId": "honda-heritage-1954",
+      "locator": "Episode 'Declaring Entry in the Isle of Man TT Races / 1954', as recalled by engineer Shozo Tsuchida (Juno K-Type work, 1953-54)",
+      "translation": "Honda Motor Co., English heritage site (n.d.)"
+    },
+    {
+      "text": "It is neither the manufacturer nor the dealer that best knows the value of the product and passes final judgment on it.",
+      "sourceId": "three-joys-1951",
+      "locator": "Honda Monthly No. 4, 1 December 1951, 'The Three Joys', paragraph 4",
+      "translation": "Honda Motor Co., English heritage site (n.d.)"
+    },
+    {
+      "text": "I have lived my life as an automobile manufacturer. How can I cause serious traffic on the day of my funeral?",
+      "sourceId": "honda-heritage-1991",
+      "locator": "Episode 'Hosting Orei-no-kai / 1991', section 'A Send-off Befitting the Father of the Company' (a saying he often repeated)",
+      "translation": "Honda Motor Co., English heritage site (n.d.)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1954 Japan slid into recession, and Itami Hiroyuki writes that Honda was facing a bankruptcy crisis. His rider had just finished 13th in São Paulo, far behind the European machines. On 20 March 1954 Honda publicly declared that it would enter the Isle of Man TT, which ASME calls the most prestigious motorcycle race in the world, with its own Japanese machine. Honda teams first raced there in 1959, finishing 6th, 7th, 8th and 11th in the 125 cc class and winning the Manufacturers' Team Award.",
+    "sourceIds": [
+      "honda-heritage-1954",
+      "nippon-2019",
+      "asme-2012"
+    ]
+  },
+  "shadow": {
+    "text": "The New York Times wrote in his 1991 obituary that as a young garage owner in Hamamatsu he spent much of his time with geisha, and once, drunk, drove off the side of a bridge with several geisha in his car; all survived. The management writer Richard Pascale, quoted by the Chicago Tribune in 1989, wrote that Honda was variously reported to have tossed a geisha out of a second-story window; a 2003 book, Honda Motorcycles, says he pushed a woman out of an open second-story window without meaning to. In 1969 he kept pushing air-cooled engines against his young engineers until his partner Takeo Fujisawa asked him whether he would stay on as president or stay with Honda as an engineer. Itami Hiroyuki writes that his passion for engineering could sometimes make him merciless and that, in his later years, his autocratic style was beginning to chafe some of the younger workers.",
+    "sourceIds": [
+      "nyt-1991",
+      "jalopnik-2022",
+      "honda-heritage-1973",
+      "nippon-2019"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you read, watch or talk about this week that you could simply have tried?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Ore no kangae (My Thoughts), essays",
+      "year": 1963
+    }
+  ],
+  "sources": [
+    {
+      "id": "three-joys-1951",
+      "kind": "primary",
+      "title": "The Three Joys (Honda Monthly No. 4, 1 December 1951), English text reproduced in Honda's heritage episode 'Maintaining an International Viewpoint / 1956'",
+      "author": "Soichiro Honda (written down from his words by editor Kamiya)",
+      "year": 1951,
+      "publisher": "Honda Motor Co., Ltd.",
+      "url": "https://global.honda/en/heritage/episodes/1956satisfaction.html"
+    },
+    {
+      "id": "honda-heritage-1954",
+      "kind": "secondary",
+      "title": "Declaring Entry in the Isle of Man TT Races / 1954 (Honda heritage episodes)",
+      "author": "Honda Motor Co., Ltd.",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://global.honda/en/heritage/episodes/1953manttrace-declaration.html"
+    },
+    {
+      "id": "honda-heritage-1973",
+      "kind": "secondary",
+      "title": "Company Leaders Honda and Fujisawa Retire; Kawashima Assumes Presidency / 1973 (Honda heritage episodes)",
+      "author": "Honda Motor Co., Ltd.",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://global.honda/en/heritage/episodes/1973companyleaders.html"
+    },
+    {
+      "id": "honda-heritage-1991",
+      "kind": "secondary",
+      "title": "Hosting \"Orei-no-kai\" / 1991 (Honda heritage episodes)",
+      "author": "Honda Motor Co., Ltd.",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://global.honda/en/heritage/episodes/1991oreinokai.html"
+    },
+    {
+      "id": "honda-75-ch1",
+      "kind": "secondary",
+      "title": "75 Years of Honda History, Chapter I: Company Management, Section 1: The Era of Founding and Pioneering",
+      "author": "Honda Motor Co., Ltd.",
+      "year": 2023,
+      "url": "https://global.honda/en/about/history-digest/75years-history/chapter1/section1/"
+    },
+    {
+      "id": "nippon-2019",
+      "kind": "secondary",
+      "title": "Honda Sōichirō: From Mechanic to Visionary Auto Magnate",
+      "author": "Itami Hiroyuki",
+      "year": 2019,
+      "publisher": "Nippon.com (Nippon Communications Foundation)",
+      "url": "https://www.nippon.com/en/articles/-/15833"
+    },
+    {
+      "id": "asme-2012",
+      "kind": "secondary",
+      "title": "Soichiro Honda",
+      "author": "Marion Hart",
+      "year": 2012,
+      "publisher": "American Society of Mechanical Engineers",
+      "url": "https://www.asme.org/engineering-topics/articles/automotive/soichiro-honda"
+    },
+    {
+      "id": "uxl-encyclopedia",
+      "kind": "secondary",
+      "title": "Honda, Soichiro (UXL Encyclopedia of World Biography, via Encyclopedia.com)",
+      "author": "UXL / Gale editors",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.encyclopedia.com/history/encyclopedias-almanacs-transcripts-and-maps/honda-soichiro"
+    },
+    {
+      "id": "nyt-1991",
+      "kind": "secondary",
+      "title": "Soichiro Honda, Auto Maker, Dies at 84 (obituary, 6 August 1991)",
+      "author": "The New York Times",
+      "year": 1991,
+      "url": "https://www.nytimes.com/1991/08/06/obituaries/soichiro-honda-auto-maker-dies-at-84.html"
+    },
+    {
+      "id": "jalopnik-2022",
+      "kind": "secondary",
+      "title": "Nobody Seems To Mention The Time Soichiro Honda Threw A Woman Out Of A Window",
+      "author": "Raphael Orlove",
+      "year": 2022,
+      "publisher": "Jalopnik",
+      "url": "https://jalopnik.com/soichiro-honda-threw-a-woman-out-of-a-window-1843203543"
+    }
+  ],
+  "likenessSources": [
+    {
+      "title": "Honda Souichiro zaikai 1964.jpg (Zaikai magazine, New Year issue, 30 January 1964)",
+      "url": "https://commons.wikimedia.org/wiki/File:Honda_Souichiro_zaikai_1964.jpg",
+      "licence": "Public domain",
+      "author": "Zaikai Kenkyusha, photographer unknown"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Japanese engineer and industrialist (1906-1991), not a politician, campaigner or founder of a religion; no account of sexual contact with anyone under 16 or of sexual violence was found, but there is documented drunk driving, a reported act of violence against a geisha, and an autocratic, stubborn streak."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked all five values against Honda's own history pages, Itami Hiroyuki (nippon.com), ASME and the NYT obituary as Jalopnik quotes it; all five held: his late stubbornness over air-cooled engines and the autocratic style Itami describes are one late episode, told in the shadow, not a pattern against Learning or Determination. The blind pick shared only Determination and Ambition; Building things, Learning and Boldness each stand on three sources, while the blind's Respect rested on a search summary and sits badly with the 'merciless' and 'autocratic' record, so it was not added. All three quotes were found word for word on Honda's pages. I fixed the ASME author (Marion Hart, not Mark Crawford), ASME's muddled Kawashima attribution, an unsourced 'sales were falling' in the defining moment, an F1 year Itami does not give, and the shadow's 'other accounts' (one book) and paraphrases of Itami.",
+    "checkedOn": "2026-11-10"
+  }
+}
