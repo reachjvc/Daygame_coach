@@ -1,0 +1,342 @@
+{
+  "id": "phil-knight",
+  "name": "Phil Knight",
+  "born": 1938,
+  "died": null,
+  "category": "builders",
+  "areaIds": [
+    "lm_mission",
+    "lm_money",
+    "lm_mindset"
+  ],
+  "tagline": "A college miler who sold shoes from his car and kept going until it became Nike",
+  "startedFrom": "He was born in Portland, Oregon, in 1938, the son of a lawyer who became a newspaper publisher. He ran middle distance for the University of Oregon with, as one profile puts it, more enthusiasm than talent, and graduated in journalism in 1959 as an indifferent student. After a year in the army he took an MBA at Stanford in 1962, then took an accounting job to please his father.",
+  "values": [
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his memoir he says that on a morning run in 1962 he told himself to keep going and not stop, whatever others called his idea.",
+          "sourceId": "shoe-dog",
+          "locator": "Opening chapter 'Dawn' (the 1962 morning run)"
+        },
+        {
+          "kind": "deed",
+          "claim": "When U.S. Customs demanded $25 million in import duties in Nike's first decade, he fought it with lawmakers for more than three years until the government settled for $9 million.",
+          "sourceId": "gsb-2017",
+          "locator": "Paragraphs on the U.S. Customs letter and the 'arcane law'"
+        },
+        {
+          "kind": "deed",
+          "claim": "From 1964 he built Blue Ribbon Sports while still working as a certified public accountant and teaching at Portland State University.",
+          "sourceId": "idbb",
+          "locator": "Paragraph beginning 'In 1964 Knight and Bill Bowerman both invested $500'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Stanford Magazine writes that he sold shoes from the back of his car at track meets, kept his day job, and persevered, convinced his cheap, high-performance shoes could beat the market leaders.",
+          "sourceId": "stanfordmag-1997",
+          "locator": "Paragraph beginning 'After returning from Japan in 1964'"
+        }
+      ]
+    },
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At his first meeting with Onitsuka's executives in Kobe he had no company; asked whom he represented, he blurted out 'Blue Ribbon Sports of Portland, Oregon' and asked to sell Tiger shoes in the United States.",
+          "sourceId": "shoe-dog",
+          "locator": "Chapter on his first trip to Japan, the meeting with Mr. Miyazaki and the Onitsuka executives"
+        },
+        {
+          "kind": "witness",
+          "claim": "The International Directory of Business Biographies says he talked himself into a distribution contract and blurted out the first name that came into his head.",
+          "sourceId": "idbb",
+          "locator": "Paragraph beginning 'Three events shaped Knight's future'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Stanford's business dean A. Michael Spence, a Nike board member, said Nike is at times feisty or counter-establishment on purpose, and that this is partly Phil.",
+          "sourceId": "stanfordmag-1997",
+          "locator": "Paragraph beginning 'But it's more than that. Nike courts controversy.'"
+        },
+        {
+          "kind": "words",
+          "claim": "At the 2014 Stanford business school graduation he told the graduates to dare to take chances, lest they leave their talent buried in the ground.",
+          "sourceId": "gsb-2014",
+          "locator": "Report of the 14 June 2014 address, paragraph beginning 'But perhaps one of Knight's most powerful observations'"
+        }
+      ]
+    },
+    {
+      "word": "Winning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After Reebok passed Nike in sales in 1987, he laid off 600 of the company's 2,000 employees and reorganised it, and Nike was back on top by 1989.",
+          "sourceId": "stanfordmag-1997",
+          "locator": "Paragraphs beginning 'But when Nike was dislodged from the top' and 'Realigned, Nike replaced Reebok'"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1996-97 he told Stanford Magazine that every six months is a new lifetime and that a company that stops to admire itself gets beaten.",
+          "sourceId": "stanfordmag-1997",
+          "locator": "Last three paragraphs (the late-night office window scene)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The International Directory of Business Biographies writes that he was vigilant to keep Nike at the top of the industry, and streamlined the company when Reebok briefly passed it in the late 1980s.",
+          "sourceId": "idbb",
+          "locator": "Paragraph beginning 'Knight was vigilant to keep Nike at the top'"
+        },
+        {
+          "kind": "words",
+          "claim": "In his memoir he writes that in the coming battles with Onitsuka and anyone else, his company would be like the runner Steve Prefontaine and compete as if their lives depended on it.",
+          "sourceId": "shoe-dog",
+          "locator": "Passage on Steve Prefontaine beginning 'In our coming battles, with Onitsuka, with whomever'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Sports Illustrated reported in 1993 that he loathed Reebok's chairman Paul Fireman and that Nike's feud with Reebok was intense.",
+          "sourceId": "si-1993",
+          "locator": "Paragraphs on Paul Fireman and the Reebok feud ('Knight clearly considers Fireman a late entry')"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In September 2013 he and his wife Penny pledged $500 million to the OHSU Knight Cancer Institute if it raised another $500 million; it did so by June 2015.",
+          "sourceId": "ohsu-2015",
+          "locator": "Opening paragraphs and the paragraph beginning 'The Knights made their challenge pledge in September 2013'"
+        },
+        {
+          "kind": "deed",
+          "claim": "The same couple had given OHSU $100 million in 2008 for Brian Druker's cancer research.",
+          "sourceId": "ohsu-2015",
+          "locator": "Paragraph beginning 'The Knights made their challenge pledge in September 2013'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He gave $105 million to the Stanford Graduate School of Business in 2006 to help build its new campus.",
+          "sourceId": "gsb-2017",
+          "locator": "Paragraph beginning 'Knight, who earned his MBA from Stanford GSB in 1962'"
+        },
+        {
+          "kind": "witness",
+          "claim": "By 2000 he had given $50 million to the University of Oregon, and its president thanked him publicly for his generosity.",
+          "sourceId": "chronicle-2000",
+          "locator": "Paragraphs 2 and 7"
+        }
+      ]
+    },
+    {
+      "word": "Building things",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 2017 he said that, unlike the college dropouts who founded Microsoft and Apple, he wrote the business plan for the company that became Nike in a class at Stanford.",
+          "sourceId": "gsb-2017",
+          "locator": "Section 'The Value of a College Education'"
+        },
+        {
+          "kind": "words",
+          "claim": "At the 2014 Stanford graduation he said that on leaving business school he knew what he wanted to do: bring to life the business plan from Frank Shallenberger's class.",
+          "sourceId": "gsb-2014",
+          "locator": "Paragraph containing 'There is a part of me that was born here'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1964 he and Bill Bowerman each put in $500 to start Blue Ribbon Sports; after disputes with Onitsuka at the end of 1971 they started their own shoe, which debuted at the 1972 Olympic trials.",
+          "sourceId": "idbb",
+          "locator": "Section 'Blue Ribbon Sports'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Stanford Magazine writes that Blue Ribbon Sports cleared $3,240 in its first year, 1964, and that Nike's revenue reached $6.5 billion in fiscal 1996.",
+          "sourceId": "stanfordmag-1997",
+          "locator": "Paragraph beginning 'Of course, you'd expect nothing less'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When others call your idea crazy, keep going and do not stop.",
+      "sourceId": "shoe-dog",
+      "locator": "Opening chapter 'Dawn' (the 1962 morning run)"
+    },
+    {
+      "text": "Look for a calling, not just a job or a career; it makes the tiredness easier to bear.",
+      "sourceId": "shoe-dog",
+      "locator": "pp. 380-381"
+    },
+    {
+      "text": "Expect setbacks: the only failure that counts is on your last try.",
+      "sourceId": "gsb-2017",
+      "locator": "Paragraph beginning 'Long before the Silicon Valley mantra of failing fast'"
+    },
+    {
+      "text": "Do not stop to admire what you built; the next six months decide.",
+      "sourceId": "stanfordmag-1997",
+      "locator": "Last three paragraphs (the late-night office window scene)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Let everyone else call your idea crazy . . . just keep going. Don't stop. Don't even think about stopping until you get there, and don't give much thought to where \"there\" is.",
+      "sourceId": "shoe-dog",
+      "locator": "Opening chapter 'Dawn' (the 1962 morning run)"
+    },
+    {
+      "text": "Seek a calling. Even if you don't know what that means, seek it.",
+      "sourceId": "shoe-dog",
+      "locator": "p. 381"
+    },
+    {
+      "text": "Every six months is a new lifetime, and you've got to worry about what's coming up to stay ahead of the curve.",
+      "sourceId": "stanfordmag-1997",
+      "locator": "Interview with Jackie Krentzman, Stanford Magazine, January/February 1997, second-to-last paragraph"
+    },
+    {
+      "text": "The Nike product has become synonymous with slave wages, forced overtime and arbitrary abuse.",
+      "sourceId": "nyt-1998",
+      "locator": "Speech at the National Press Club, Washington, 12 May 1998, as reported in The New York Times, 13 May 1998"
+    }
+  ],
+  "definingMoment": {
+    "text": "On his first trip to Japan after Stanford (1962 in some accounts, 1963 in others), he went to see the Onitsuka shoe company in Kobe. He had no company yet. When the executives asked whom he represented, he blurted out \"Blue Ribbon Sports of Portland, Oregon\" and asked to sell their Tiger shoes in America. In 1964 he and his old coach Bill Bowerman each put in $500, and he began selling the shoes from his car at track meets while keeping his accounting job.",
+    "sourceIds": [
+      "shoe-dog",
+      "idbb",
+      "stanfordmag-1997"
+    ]
+  },
+  "shadow": {
+    "text": "In the 1990s Nike, which he ran, was criticised for low pay and abuse in the Asian contractor factories that made its shoes; critics said workers earned under $2 a day in China and Vietnam and under $1 in Indonesia. In 1993 he told Sports Illustrated \"We're not gouging anybody\", and in a 1997 Stanford Magazine interview he said Nike's practices were no different from its competitors'. In a speech on 12 May 1998 he said the Nike product had become \"synonymous with slave wages, forced overtime and arbitrary abuse\"; he raised minimum hiring ages and agreed to let outside labor and human-rights groups join factory inspections, but made no pledge on wages. In April 2000 he stopped all personal giving to the University of Oregon, including a $30 million stadium pledge, because it had joined the Worker Rights Consortium, a factory-monitoring group, rather than the Fair Labor Association that he and Nike backed.",
+    "sourceIds": [
+      "nyt-1998",
+      "si-1993",
+      "stanfordmag-1997",
+      "chronicle-2000",
+      "ap-2000"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which of your plans did you slow down this week because someone called it crazy?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Shoe Dog: A Memoir by the Creator of Nike",
+      "year": 2016
+    }
+  ],
+  "sources": [
+    {
+      "id": "shoe-dog",
+      "kind": "primary",
+      "title": "Shoe Dog: A Memoir by the Creator of Nike",
+      "author": "Phil Knight",
+      "year": 2016,
+      "publisher": "Scribner",
+      "url": "https://archive.org/details/shoedogmemoirbyc0000knig"
+    },
+    {
+      "id": "stanfordmag-1997",
+      "kind": "secondary",
+      "title": "The Force Behind the Nike Empire (Stanford Magazine, January/February 1997)",
+      "author": "Jackie Krentzman",
+      "year": 1997,
+      "publisher": "Stanford Alumni Association",
+      "url": "https://stanfordmag.org/contents/the-force-behind-the-nike-empire"
+    },
+    {
+      "id": "gsb-2017",
+      "kind": "secondary",
+      "title": "Philip Knight: \"For an Entrepreneur, Every Day Is a Crisis\" (15 September 2017)",
+      "author": "Jenny Luna, Stanford Graduate School of Business",
+      "year": 2017,
+      "url": "https://www.gsb.stanford.edu/insights/philip-knight-entrepreneur-every-day-crisis"
+    },
+    {
+      "id": "idbb",
+      "kind": "secondary",
+      "title": "Knight, Philip H. 1938- (International Directory of Business Biographies, via Encyclopedia.com)",
+      "author": "Gale editors",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.encyclopedia.com/economics/news-wires-white-papers-and-books/knight-philip-h-1938"
+    },
+    {
+      "id": "ewb-gale",
+      "kind": "secondary",
+      "title": "Phil Knight (Encyclopedia of World Biography, via Encyclopedia.com)",
+      "author": "Gale editors",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.encyclopedia.com/history/encyclopedias-almanacs-transcripts-and-maps/phil-knight"
+    },
+    {
+      "id": "nyt-1998",
+      "kind": "secondary",
+      "title": "Nike Pledges to End Child Labor And Apply U.S. Rules Abroad (13 May 1998)",
+      "author": "John H. Cushman Jr., The New York Times",
+      "year": 1998,
+      "url": "https://www.nytimes.com/1998/05/13/business/international-business-nike-pledges-to-end-child-labor-and-apply-us-rules-abroad.html"
+    },
+    {
+      "id": "chronicle-2000",
+      "kind": "secondary",
+      "title": "Nike Head Halts Gifts to U. of Oregon Over Sweatshop Issue",
+      "author": "The Chronicle of Philanthropy",
+      "year": 2000,
+      "url": "https://www.philanthropy.com/news/nike-head-halts-gifts-to-u-of-oregon-over-sweatshop-issue/"
+    },
+    {
+      "id": "ap-2000",
+      "kind": "secondary",
+      "title": "Nike founder halts gifts to U. of Oregon (Associated Press, 25 April 2000)",
+      "author": "Associated Press, via Deseret News",
+      "year": 2000,
+      "url": "https://www.deseret.com/2000/4/25/19503761/nike-founder-halts-gifts-to-u-of-oregon/"
+    },
+    {
+      "id": "ohsu-2015",
+      "kind": "secondary",
+      "title": "OHSU sets fundraising record by meeting $1 billion challenge from Nike co-founder and wife (24 June 2015)",
+      "author": "Oregon Health & Science University",
+      "year": 2015,
+      "url": "https://www.ohsu.edu/xd/about/news_events/news/2015/06-25-ohsu-sets-fundraising-re.cfm"
+    },
+    {
+      "id": "si-1993",
+      "kind": "secondary",
+      "title": "Triumph of the Swoosh (Sports Illustrated, 16 August 1993)",
+      "author": "Donald Katz",
+      "year": 1993,
+      "publisher": "Sports Illustrated",
+      "url": "https://vault.si.com/vault/1993/08/16/triumph-of-the-swoosh-with-a-keen-sense-of-the-power-of-sports-and-a-genius-for-mythologizing-athletes-to-help-sell-sneakers-nike-bestrides-the-world-of-sport-like-a-marketing-colossus"
+    },
+    {
+      "id": "gsb-2014",
+      "kind": "secondary",
+      "title": "The Courage to Pursue Your Calling (16 June 2014, report of the 14 June 2014 graduation address)",
+      "author": "Stanford Graduate School of Business",
+      "year": 2014,
+      "url": "https://www.gsb.stanford.edu/experience/news-history/courage-pursue-your-calling"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real living businessman, co-founder of Nike; not a politician, campaigner or founder of a religion; searches found no account of sexual contact with anyone under 16 or of sexual violence by him, but there is a documented record on 1990s factory conditions and a withdrawn university gift."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked all five draft values against the saved Stanford Magazine, Stanford GSB, Gale, NYT, Chronicle, AP and OHSU texts, the Shoe Dog scan through Open Library search-inside, and the 1993 Sports Illustrated article itself. Learning fell: he was an indifferent student at Oregon, and its evidence was one formative stretch at Stanford plus a class paper that shows building more than learning; Building things from the blind pick took its place. Determination, Boldness, Winning and Generosity held; Winning now rests on four sources (adding Shoe Dog and Sports Illustrated), and Generosity lost Nike's corporate 3 percent, which is company money, not his. All four quotes matched; the shadow's 1993 remark is now cited to Sports Illustrated directly and its monitoring pledge is worded as the NYT gives it.",
+    "checkedOn": "2026-11-10"
+  }
+}
