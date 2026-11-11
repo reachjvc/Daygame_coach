@@ -1,0 +1,316 @@
+{
+  "id": "dan-martell",
+  "name": "Dan Martell",
+  "born": "c. 1980",
+  "died": null,
+  "category": "teachers",
+  "areaIds": [
+    "lm_mission",
+    "lm_money",
+    "lm_mindset"
+  ],
+  "tagline": "Went from jail and rehab as a teenager to building software companies, then taught others to.",
+  "startedFrom": "He grew up near Moncton, New Brunswick, in what he calls an alcoholic home, and was diagnosed with ADHD at 11. He began using drugs at 13, lived in group and foster homes, and had been jailed twice by 17. He learned to program in a youth rehab centre, and his first two companies failed by the time he was 22.",
+  "values": [
+    {
+      "word": "Building things",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He sold his first company, Spheric Technologies, in 2008, launched Clarity.fm in December 2011, and with a co-founder sold Flowtown to Demandforce.",
+          "sourceId": "entrevestor-2012",
+          "locator": "paragraphs beginning 'A consummate networker', 'Martell sold his first venture' and 'In October'"
+        },
+        {
+          "kind": "deed",
+          "claim": "Atlantic Business Magazine reported in 2013 that Clarity employed six people, took 15 per cent of each paid call and had raised a $1.6 million seed round.",
+          "sourceId": "abm-2013",
+          "locator": "paragraphs 3, 5 and 7"
+        },
+        {
+          "kind": "words",
+          "claim": "He says that after rehab he became passionate about building software and would code until two or three in the morning.",
+          "sourceId": "hse-2025",
+          "locator": "10:40-10:57"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In rehab at 18 he taught himself to program, buying every computer book he could find at the local Chapters store.",
+          "sourceId": "abm-2013",
+          "locator": "paragraphs 1-2"
+        },
+        {
+          "kind": "deed",
+          "claim": "At 23, after two failed companies, he read The E-Myth and hired a coach for about $1,500 a month to learn how business worked.",
+          "sourceId": "hse-2025",
+          "locator": "16:05-16:43"
+        },
+        {
+          "kind": "witness",
+          "claim": "Huddle reports that when he enters a new venture or industry he lists 100 people with experience he can learn from and contacts them.",
+          "sourceId": "huddle-2019",
+          "locator": "paragraph after the line on ex-addicts who worked at Portage"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "By July 2012 he had handled 700 calls himself on Clarity, his paid advice marketplace, and answered more than 1,200 questions on Sprouter.",
+          "sourceId": "entrevestor-2012",
+          "locator": "paragraph beginning 'Martell himself has handled 700'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Huddle reports that he mentors and speaks to youth at Portage and the Moncton Youth Residences and meets local entrepreneurs for lunch every two weeks.",
+          "sourceId": "huddle-2019",
+          "locator": "paragraphs on Gerry Pond and on Portage and the Moncton Youth Residences"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that 22 years after his own stay he visits the same rehab centre two to three times a year to talk with the teens there.",
+          "sourceId": "portage-speech-2019",
+          "locator": "opening section, paragraph beginning 'Now 22 years later'"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that his foundation supports Kings Club, a free mentorship and life-skills program in Kelowna for youth aged 13 to 22.",
+          "sourceId": "foundation-2026",
+          "locator": "section on Kings Club, after the list of supported organizations"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In January 2026 he and his wife, Renée Warren, gave $100,000 through the Martell Legacy Foundation to BGC Okanagan's Prevent Youth Homelessness campaign.",
+          "sourceId": "bgco-2026",
+          "locator": "opening paragraph and the paragraph quoting Martell"
+        },
+        {
+          "kind": "deed",
+          "claim": "His Martell Legacy Foundation, a registered Canadian charity named after a teenage friend he lost to drugs and alcohol, funds youth counselling, health, outdoor and mentorship groups in Kelowna.",
+          "sourceId": "foundation-2026",
+          "locator": "sections on the foundation's name and the organizations it supports"
+        },
+        {
+          "kind": "witness",
+          "claim": "Huddle reports that he donates supplies and money to Portage and the Moncton Youth Residences and helps with their fundraising.",
+          "sourceId": "huddle-2019",
+          "locator": "paragraph beginning 'Martell also brings the lessons'"
+        }
+      ]
+    },
+    {
+      "word": "Sobriety",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that Portage, the drug rehab centre, saved his life at 17.",
+          "sourceId": "life-story-2022",
+          "locator": "paragraph after 'Check out Portage Atlantic'"
+        },
+        {
+          "kind": "words",
+          "claim": "In October 2022 he wrote that he had quit drinking almost a decade earlier and had gone nearly a decade without a drop of alcohol.",
+          "sourceId": "quit-drinking-2022",
+          "locator": "opening lines and the paragraph after the template link"
+        },
+        {
+          "kind": "words",
+          "claim": "In October 2025 he wrote that he had quit drinking 4,700 days earlier, when his wife was pregnant, to break the cycle of addiction in his family.",
+          "sourceId": "quit-drinking-2025",
+          "locator": "opening line and section 'The Decision That Changed Everything'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Huddle reports that he has committed to helping the youth he speaks to at Portage and the Moncton Youth Residences toward their 'dream life' if they stay sober for at least a year after their program.",
+          "sourceId": "huddle-2019",
+          "locator": "paragraph beginning 'Martell also brings the lessons'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Work out what an hour of your time is worth, and pay someone else for any task that costs less than that.",
+      "sourceId": "hse-2025",
+      "locator": "41:22-41:37 ('buyback rate')"
+    },
+    {
+      "text": "Hire first for the jobs you hate and the things you are weak at, starting with an assistant.",
+      "sourceId": "hse-2025",
+      "locator": "33:01-33:43"
+    },
+    {
+      "text": "Treat a business problem as a problem in yourself first.",
+      "sourceId": "huddle-2019",
+      "locator": "paragraph beginning 'I tell people this all the time'"
+    },
+    {
+      "text": "Take responsibility for your own life and stop blaming other people.",
+      "sourceId": "portage-speech-2019",
+      "locator": "section 'You Have the Power to Become Extraordinary'"
+    },
+    {
+      "text": "When you start something new, find people who have done it and ask them to teach you.",
+      "sourceId": "huddle-2019",
+      "locator": "paragraph after the line on ex-addicts who worked at Portage"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I took responsibility for my own life and stopped blaming anyone else.",
+      "sourceId": "portage-speech-2019",
+      "locator": "section 'You Have the Power to Become Extraordinary'"
+    },
+    {
+      "text": "I walked in there as a broken teenager with nothing to live for and walked out of there determined to make something of myself.",
+      "sourceId": "portage-speech-2019",
+      "locator": "opening section, sentence after the one on the 11-month rehab program"
+    },
+    {
+      "text": "I tell people this all the time, business issues are personal issues that just show up in your business.",
+      "sourceId": "huddle-2019",
+      "locator": "paragraph beginning 'I tell people this all the time'"
+    },
+    {
+      "text": "If you hire people to buy back your time and you're a crappy leader, they're gonna quit.",
+      "sourceId": "hse-2025",
+      "locator": "42:38-42:51"
+    }
+  ],
+  "definingMoment": {
+    "text": "At 16 or 17 (his accounts differ) he was held in an adult jail after a high-speed chase in a stolen car. After three days in solitary for a fight, a guard named Brian took him into the guard room and told him he did not belong there; Martell says it was the first time he felt someone believed in him. He was released to Portage, a youth rehab centre in New Brunswick, for 11 months. There, in 1997 by his account, he found an old computer and a Java book while cleaning out a cabin and got it to print 'Hello World', the start of his work in software.",
+    "sourceIds": [
+      "hse-2025",
+      "portage-speech-2019",
+      "huddle-2019"
+    ]
+  },
+  "shadow": {
+    "text": "By his own accounts, as a teenager he used drugs, stole guns and, at 16 or 17, fled police in a stolen car while high, with no licence and a stolen handgun in his backpack, until he crashed into a house. At 11 he set off roman candles inside his foster home and set a couch on fire. He was jailed twice by 17, on drug-related charges according to Atlantic Business Magazine, and spent three days in solitary after a fight. In the company he started at 24 he worked 100-hour weeks and travelled 200 days a year; at about 27 his fiancée ended their engagement, and he says his brothers called him a horrible brother and his friends told him to get over himself. After rehab he went on drinking alcohol until about 2013; he writes that he was drunk when he told his wife he would quit.",
+    "sourceIds": [
+      "portage-speech-2019",
+      "life-story-2022",
+      "hse-2025",
+      "abm-2013",
+      "quit-drinking-2022"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which task did you do yourself this week that someone else could have done for less than your hour is worth?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Buy Back Your Time",
+      "year": 2023
+    }
+  ],
+  "sources": [
+    {
+      "id": "hse-2025",
+      "kind": "primary",
+      "title": "The Home Service Expert Podcast: Re-Air: Buying Back Your Time with Dan Martell (31 January 2025; PodScripts transcript timestamps)",
+      "author": "Dan Martell, interviewed by Tommy Mello",
+      "year": 2025,
+      "url": "https://podscripts.co/podcasts/the-home-service-expert-podcast/re-air-buying-back-your-time-with-dan-martell"
+    },
+    {
+      "id": "portage-speech-2019",
+      "kind": "primary",
+      "title": "Who Do You Need To Become To Get What's Next? – Speech @ Portage Rehab Center (21 October 2019)",
+      "author": "Dan Martell",
+      "year": 2019,
+      "url": "https://www.danmartell.com/becomeextraordinary/"
+    },
+    {
+      "id": "life-story-2022",
+      "kind": "primary",
+      "title": "From Drugs To Dream life: How I Became Who I Am Today (17 January 2022)",
+      "author": "Dan Martell",
+      "year": 2022,
+      "url": "https://www.danmartell.com/entrepreneur-life-story/"
+    },
+    {
+      "id": "huddle-2019",
+      "kind": "secondary",
+      "title": "How Dan Martell Went From Troubled Youth To Big Time Entrepreneur (13 June 2019)",
+      "author": "Inda Intiar",
+      "year": 2019,
+      "publisher": "Huddle.Today",
+      "url": "https://huddle.today/?p=44852"
+    },
+    {
+      "id": "abm-2013",
+      "kind": "secondary",
+      "title": "In a basic and visceral way, technology saved Dan Martell's life (19 August 2013)",
+      "author": "Alec Bruce",
+      "year": 2013,
+      "publisher": "Atlantic Business Magazine",
+      "url": "https://atlanticbusinessmagazine.ca/?p=9383"
+    },
+    {
+      "id": "entrevestor-2012",
+      "kind": "secondary",
+      "title": "Clarity Surpasses 10,000+ Calls (30 July 2012)",
+      "author": "Peter Moreira",
+      "year": 2012,
+      "publisher": "Entrevestor",
+      "url": "https://entrevestor.com/blog/clarity.fm_records_10000_calls"
+    },
+    {
+      "id": "quit-drinking-2022",
+      "kind": "primary",
+      "title": "The Real Reason I Had To Quit Drinking (10 October 2022)",
+      "author": "Dan Martell",
+      "year": 2022,
+      "url": "https://www.danmartell.com/why-i-decided-to-quit-drinking/"
+    },
+    {
+      "id": "quit-drinking-2025",
+      "kind": "primary",
+      "title": "I Quit Drinking for 4700 Days… Here's What I Learned (11 October 2025)",
+      "author": "Dan Martell",
+      "year": 2025,
+      "url": "https://www.danmartell.com/i-quit-drinking-for-4700-days-heres-what-i-learned/"
+    },
+    {
+      "id": "foundation-2026",
+      "kind": "primary",
+      "title": "Martell Legacy Foundation (foundation page, published 5 February 2026)",
+      "author": "Dan Martell",
+      "year": 2026,
+      "url": "https://www.danmartell.com/foundation/"
+    },
+    {
+      "id": "bgco-2026",
+      "kind": "secondary",
+      "title": "Dan Martell & Renée Warren Give $100k to Prevent Youth Homelessness (14 January 2026)",
+      "author": "BGC Okanagan",
+      "year": 2026,
+      "publisher": "BGC Okanagan",
+      "url": "https://www.bgco.ca/dan-martell-renee-warren-100k-prevent-youth-homelessness/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living Canadian software entrepreneur, author and business coach (Spheric Technologies, Flowtown, Clarity, SaaS Academy), not a politician, campaigner or religious founder, with no credible account of sexual contact with a minor or of sexual violence found; he is in, with a documented dark side drawn from his own accounts and two regional business publications."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked all five draft values against the sources and the blind pick, which shared Building things and Learning. Determination fell: it rested on two sources, short of the three a draft-only word needs. Sobriety held but its evidence was rewritten, because his own blog posts show he kept drinking alcohol after rehab until about 2013, which now stands in the shadow; Generosity came in from the blind pick on the BGC Okanagan gift, his foundation and Huddle. All four quotes matched their sources, and wrong paragraph locators for Entrevestor were fixed.",
+    "checkedOn": "2026-11-10"
+  }
+}
