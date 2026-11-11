@@ -1,0 +1,369 @@
+{
+  "id": "lee-kuan-yew",
+  "name": "Lee Kuan Yew",
+  "born": 1923,
+  "died": 2015,
+  "category": "leaders",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "Built a poor island into a rich, clean state, and held it with a tight grip.",
+  "startedFrom": "He was born in Singapore on 16 September 1923, the son of third-generation Chinese immigrants, and went to an English school. The Japanese occupation from 1942 cut his studies short; for three years he traded on the black market and worked for the Japanese propaganda department. After the war he studied law at Cambridge and graduated in 1949 with First Class Honours.",
+  "values": [
+    {
+      "word": "Vision",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "The BBC obituary opens by saying he led Singapore with a sense of vision and a ruthless pragmatism.",
+          "sourceId": "bbc-obituary",
+          "locator": "opening paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "He said that even in 1959 he and his colleagues could foresee a time when China would open up and become a huge economic power.",
+          "sourceId": "smc-2009",
+          "locator": "speech of 17 March 2009, paragraph beginning 'Singapore's multi-racial peoples will never be united'"
+        },
+        {
+          "kind": "deed",
+          "claim": "With no natural resources, he set out to build a highly educated work force fluent in English and reached out to foreign investors to make Singapore a manufacturing hub.",
+          "sourceId": "bbc-news-2015",
+          "locator": "paragraphs beginning 'Speaking after the split in 1965' and 'Mr Lee set about creating'"
+        }
+      ]
+    },
+    {
+      "word": "Control",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 1 February 1963 he sat on the Internal Security Council that decided the arrests of Operation Coldstore.",
+          "sourceId": "hansard-1963",
+          "locator": "statement by the Secretary of State, list of those present at the meeting"
+        },
+        {
+          "kind": "words",
+          "claim": "In 2010 he told the New York Times that he had done some nasty things, locking people up without trial, and that everything he did was for an honourable purpose.",
+          "sourceId": "mydans-2010",
+          "locator": "interview of 1 September 2010, answer to 'So you're waiting for the final verdict?'"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1971 he told the International Press Institute that freedom of the press must be subordinated to the integrity of Singapore and to the primacy of purpose of an elected government.",
+          "sourceId": "helsinki-1971",
+          "locator": "address of 9 June 1971, transcript page 13"
+        },
+        {
+          "kind": "witness",
+          "claim": "The BBC says he was criticised for his iron grip on power.",
+          "sourceId": "bbc-news-2015",
+          "locator": "third paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1986, under his government, parliament passed a law letting a minister cut the circulation of foreign publications found to be engaging in Singapore's domestic politics.",
+          "sourceId": "kirkpatrick-2015",
+          "locator": "paragraph beginning 'In 1986 Singapore's Parliament passed a law'"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said he had learned and used six languages, and that he started learning Chinese in 1955 at age 32.",
+          "sourceId": "smc-2009",
+          "locator": "speech of 17 March 2009, paragraphs beginning 'To keep a language alive' and 'And with IT digital dictionaries'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He graduated from Cambridge in 1949 with First Class Honours in Law, with a star for distinction in the final examinations.",
+          "sourceId": "pmo-bio",
+          "locator": "Biodata, Educational Qualifications, 1946 - 1949"
+        }
+      ]
+    },
+    {
+      "word": "Building things",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After independence he began a huge programme of reform, with low-cost housing and industrialisation to provide jobs; Singapore's GNP per capita grew 15-fold from 1960 to 1980.",
+          "sourceId": "bbc-obituary",
+          "locator": "sections 'Prime Minister' to 'Population control'"
+        },
+        {
+          "kind": "words",
+          "claim": "On the day of separation he said: We are going to have a multi-racial nation in Singapore. We will set the example.",
+          "sourceId": "presscon-1965",
+          "locator": "press conference of 9 August 1965, transcript page 32"
+        },
+        {
+          "kind": "witness",
+          "claim": "The BBC calls him the statesman who transformed Singapore from a small port city into a wealthy global hub.",
+          "sourceId": "bbc-news-2015",
+          "locator": "opening paragraph"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Keep your own house clean; no one else will do it for you.",
+      "sourceId": "cpib-2005",
+      "locator": "address of 28 April 2005, paragraph 28"
+    },
+    {
+      "text": "Act against wrongdoing by your own people, even a loyal friend.",
+      "sourceId": "cpib-2005",
+      "locator": "address of 28 April 2005, paragraphs 19 and 24"
+    },
+    {
+      "text": "Choose for where the world will be in decades, not for what is easy now.",
+      "sourceId": "smc-2009",
+      "locator": "speech of 17 March 2009, paragraph beginning 'Singapore's multi-racial peoples will never be united'"
+    },
+    {
+      "text": "Keep learning hard things as an adult; he started Chinese at 32.",
+      "sourceId": "smc-2009",
+      "locator": "speech of 17 March 2009, paragraph beginning 'And with IT digital dictionaries'"
+    },
+    {
+      "text": "Put the integrity of the country and the elected government's purpose above a free press.",
+      "sourceId": "helsinki-1971",
+      "locator": "address of 9 June 1971, transcript page 13"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "We have to keep our own house clean. No one else can do it for us.",
+      "sourceId": "cpib-2005",
+      "locator": "address to the World Ethics and Integrity Forum, 28 April 2005, paragraph 28"
+    },
+    {
+      "text": "We are going to have a multi-racial nation in Singapore. We will set the example.",
+      "sourceId": "presscon-1965",
+      "locator": "press conference at Broadcasting House, Singapore, 9 August 1965, transcript page 32"
+    },
+    {
+      "text": "For me, it is a moment of anguish because all my life.... you see, the whole of my adult life.... I have believed in Merger and the unity of these two territories.",
+      "sourceId": "presscon-1965",
+      "locator": "press conference at Broadcasting House, Singapore, 9 August 1965, transcript pages 21-22 (the dots are in the transcript)"
+    },
+    {
+      "text": "Freedom of the press, freedom of the news media, must be subordinated to the overriding needs of the integrity of Singapore, and to the primacy of purpose of an elected government.",
+      "sourceId": "helsinki-1971",
+      "locator": "address to the General Assembly of the International Press Institute, Helsinki, 9 June 1971, transcript page 13"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 9 August 1965 Singapore became independent after an agreement with the Malaysian government, dated 7 August, that it should leave the federation. At a press conference at noon that day he said it was a moment of anguish, because his whole adult life he had believed in merger, and the recording was stopped so he could regain his composure. Before the end of the press conference he spoke to the people of Singapore: it would be a multi-racial nation, not a Malay, Chinese or Indian one, where everybody would have his place, equal in language, culture and religion.",
+    "sourceIds": [
+      "proclamation-1965",
+      "presscon-1965",
+      "bbc-obituary"
+    ]
+  },
+  "shadow": {
+    "text": "On 1 February 1963 he sat on the Internal Security Council that decided the arrests of Operation Coldstore; the next day more than 100 opposition politicians, unionists and activists were detained without trial, and none of the security labels on them was proven in a court of law. The government says they were a communist threat; the historian Thum Pingtjin argues the operation rested on government falsehoods, and the government calls his work sophistry. Detention without trial went on under him: Human Rights Watch reported in 1989 that Chia Thye Poh had been held 22 years without charge or trial before being confined to the island of Sentosa, and that in 1987 the government had detained 22 activists without trial as a 'Marxist' conspiracy. In June 1971, at the International Press Institute in Helsinki, a British editor asked him about the manager and three journalists of the newspaper Nanyang Siang Pau, who were held without trial; he defended their handling, and in his address that day he said press freedom must be subordinated to the integrity of Singapore. He and his family won damages or settlements from the International Herald Tribune, the Wall Street Journal, the Far Eastern Economic Review, Bloomberg and the Economist. Amnesty International reported that in 1986 he said the opposition leader J. B. Jeyaretnam had to be politically 'destroyed'; in late 2000 he and other ruling-party leaders revived their 1997 defamation suits against Jeyaretnam, who was made bankrupt in January 2001 and so expelled from parliament and barred from that year's election. Amnesty noted that no ruling-party leader had ever lost a defamation suit against an opposition figure in court; Bloomberg reported that the opposition leader Chee Soon Juan was bankrupted by libel suits. He wrote that those who called his libel actions a way to silence the opposition did not understand how readily a charge of dishonesty or corruption would be believed in the region. In 2010 he said: 'I had to do some nasty things, locking fellows up without trial.'",
+    "sourceIds": [
+      "hansard-1963",
+      "lowy-2018",
+      "hrw-1989",
+      "helsinki-qa-1971",
+      "helsinki-1971",
+      "cpj-2015",
+      "amnesty-2001",
+      "sghc-2001-52",
+      "bloomberg-2015",
+      "mydans-2010",
+      "bbc-obituary"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you let a small dishonesty slide in your own life this week because no one else would check?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Singapore Story",
+      "year": 1998
+    },
+    {
+      "title": "From Third World to First: The Singapore Story, 1965-2000",
+      "year": 2000
+    }
+  ],
+  "sources": [
+    {
+      "id": "presscon-1965",
+      "kind": "primary",
+      "title": "Transcript of a press conference given by the Prime Minister of Singapore, Mr. Lee Kuan Yew, at Broadcasting House, Singapore, 9 August 1965",
+      "author": "Lee Kuan Yew",
+      "year": 1965,
+      "publisher": "National Archives of Singapore",
+      "url": "https://www.nas.gov.sg/archivesonline/data/pdfdoc/lky19650809b.pdf"
+    },
+    {
+      "id": "proclamation-1965",
+      "kind": "primary",
+      "title": "Proclamation of Singapore, 9 August 1965",
+      "author": "Lee Kuan Yew",
+      "year": 1965,
+      "publisher": "National Archives of Singapore",
+      "url": "https://www.nas.gov.sg/archivesonline/data/pdfdoc/lky19650809a.pdf"
+    },
+    {
+      "id": "helsinki-1971",
+      "kind": "primary",
+      "title": "Address to the General Assembly of the International Press Institute at Helsinki: The Mass Media and New Countries, 9 June 1971",
+      "author": "Lee Kuan Yew",
+      "year": 1971,
+      "publisher": "National Archives of Singapore",
+      "url": "https://www.nas.gov.sg/archivesonline/data/pdfdoc/lky19710609a.pdf"
+    },
+    {
+      "id": "helsinki-qa-1971",
+      "kind": "primary",
+      "title": "Transcript of the question-and-answer session following the address to the 20th General Assembly of the International Press Institute at Helsinki, 9 June 1971",
+      "author": "Lee Kuan Yew",
+      "year": 1971,
+      "publisher": "National Archives of Singapore",
+      "url": "https://www.nas.gov.sg/archivesonline/data/pdfdoc/lky19710609b.pdf"
+    },
+    {
+      "id": "cpib-2005",
+      "kind": "primary",
+      "title": "Address by Minister Mentor Lee Kuan Yew at the Asian Strategy and Leadership Institute's World Ethics and Integrity Forum 2005, 28 April 2005",
+      "author": "Lee Kuan Yew",
+      "year": 2005,
+      "publisher": "Corrupt Practices Investigation Bureau, Singapore",
+      "url": "https://www.cpib.gov.sg/press-room/address-minister-mentor-lee-kuan-yew-asian-strategy-and-leadership-institutes/"
+    },
+    {
+      "id": "smc-2009",
+      "kind": "primary",
+      "title": "Speech by Minister Mentor Lee Kuan Yew at the Speak Mandarin Campaign's 30th anniversary launch, NTUC Auditorium, 17 March 2009",
+      "author": "Lee Kuan Yew",
+      "year": 2009,
+      "publisher": "Prime Minister's Office Singapore",
+      "url": "https://www.pmo.gov.sg/Newsroom/speech-mr-lee-kuan-yew-minister-mentor-speak-mandarin-campaigns-30th-anniversary-launch"
+    },
+    {
+      "id": "hansard-1963",
+      "kind": "secondary",
+      "title": "Singapore (Detained Persons), House of Commons debate, 4 February 1963, vol 671 cc35-8",
+      "author": "UK Parliament (Hansard)",
+      "year": 1963,
+      "url": "https://api.parliament.uk/historic-hansard/commons/1963/feb/04/singapore-detained-persons"
+    },
+    {
+      "id": "bbc-news-2015",
+      "kind": "secondary",
+      "title": "Singapore's founding father Lee Kuan Yew dies at 91",
+      "author": "BBC News",
+      "year": 2015,
+      "publisher": "BBC",
+      "url": "https://www.bbc.co.uk/news/world-asia-32012346"
+    },
+    {
+      "id": "bbc-obituary",
+      "kind": "secondary",
+      "title": "Obituary: Lee Kuan Yew",
+      "author": "BBC News",
+      "year": 2015,
+      "publisher": "BBC",
+      "url": "https://www.bbc.co.uk/news/world-asia-12975980"
+    },
+    {
+      "id": "pmo-bio",
+      "kind": "secondary",
+      "title": "Mr LEE Kuan Yew, Founding Prime Minister (1959 - 1990)",
+      "author": "Prime Minister's Office Singapore",
+      "year": "undated (read 2026-11-10)",
+      "url": "https://www.pmo.gov.sg/Past-Prime-Ministers/Mr-LEE-Kuan-Yew"
+    },
+    {
+      "id": "lowy-2018",
+      "kind": "secondary",
+      "title": "Operation Coldstore: Singapore's struggle to confront history",
+      "author": "Kirsten Han",
+      "year": 2018,
+      "publisher": "Lowy Institute, The Interpreter",
+      "url": "https://www.lowyinstitute.org/the-interpreter/operation-coldstore-singapore-s-struggle-confront-history"
+    },
+    {
+      "id": "cpj-2015",
+      "kind": "secondary",
+      "title": "Lee Kuan Yew's legacy",
+      "author": "Bob Dietz and Shawn W. Crispin",
+      "year": 2015,
+      "publisher": "Committee to Protect Journalists",
+      "url": "https://cpj.org/2015/03/lee-kuan-lews-legacy/"
+    },
+    {
+      "id": "kirkpatrick-2015",
+      "kind": "secondary",
+      "title": "Lee Kuan Yew vs. the News (Wall Street Journal, 23 March 2015)",
+      "author": "Melanie Kirkpatrick",
+      "year": 2015,
+      "publisher": "Hudson Institute (reprint)",
+      "url": "https://www.hudson.org/human-rights/lee-kuan-yew-vs-the-news"
+    },
+    {
+      "id": "amnesty-2001",
+      "kind": "secondary",
+      "title": "Singapore: Defamation suits threaten Chee Soon Juan and erode freedom of expression",
+      "author": "Amnesty International UK",
+      "year": 2001,
+      "url": "https://amnesty.org.uk/press-releases/singapore-defamation-suits-threaten-chee-soon-juan-and-erode-freedom-expression"
+    },
+    {
+      "id": "sghc-2001-52",
+      "kind": "secondary",
+      "title": "Lee Kuan Yew v Joshua Benjamin Jeyaretnam [2001] SGHC 52 (High Court of Singapore, grounds of decision)",
+      "author": "High Court of Singapore",
+      "year": 2001,
+      "url": "https://elitigation.sg/gd/s/2001_SGHC_52"
+    },
+    {
+      "id": "mydans-2010",
+      "kind": "primary",
+      "title": "Transcript of Minister Mentor Lee Kuan Yew's interview with Seth Mydans of the New York Times / International Herald Tribune, 1 September 2010",
+      "author": "Lee Kuan Yew",
+      "year": 2010,
+      "publisher": "Prime Minister's Office Singapore",
+      "url": "https://www.pmo.gov.sg/newsroom/transcript-minister-mentor-lee-kuan-yews-interview-seth-mydans-new-york-times-iht-1/"
+    },
+    {
+      "id": "bloomberg-2015",
+      "kind": "secondary",
+      "title": "Lee's 'Fine City' had tough laws with clean Singapore government (Bloomberg, 26 March 2015)",
+      "author": "Andrea Tan",
+      "year": 2015,
+      "publisher": "Bloomberg (reprint in Singapore Management University newsroom archive)",
+      "url": "https://news.smu.edu.sg/sites/news.smu.edu.sg/files/newsroom-pdf/Bloomberg_20150326_1.pdf"
+    },
+    {
+      "id": "hrw-1989",
+      "kind": "secondary",
+      "title": "Human Rights Watch World Report 1989: Singapore",
+      "author": "Human Rights Watch",
+      "year": 1989,
+      "url": "https://www.hrw.org/reports/1989/WR89/Singapor.htm"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Singaporean lawyer and prime minister (1923-2015), not fictional, dead since 23 March 2015 so not a living politician, not the founder of a religion, with no account found of sexual contact with a minor or of sexual violence; he is in, with a documented dark side: detentions without trial, defamation suits against opponents and the press, and limits on the press."
+    },
+    "blindAgreement": 0.5,
+    "devilsAdvocate": "I tested Integrity against Operation Coldstore, later detentions without trial and the libel suits that bankrupted Jeyaretnam and Chee. Those are a pattern, but a pattern against fairness and open opposition, done openly and owned by him in 2010; the one charge of dishonesty, that Coldstore rested on falsehoods, is a single historian's argument the government disputes while the files stay closed, so Integrity held in its sense of clean hands, now backed by a third source (Bloomberg), and the pattern sits in full in the shadow. Vision, Learning, Control and Building things held on re-read sources; no value or quote fell; the shadow gained the 1966-89 and 1987 detentions, the 1986 'destroyed' remark and his own words on the suits and on locking people up. Integrity dropped after review by the lead: the plan's rule is that nothing goes in that can be argued against strongly, and a reader taking Integrity in its broad sense (fairness, honest dealing with opponents) can argue strongly against it given Coldstore, Chia Thye Poh and the libel suits. His record against corruption stays as fact (Wee Toon Boon, the BBC, Transparency International); 'Incorruptibility' is logged as a missing word.",
+    "checkedOn": "2026-11-10"
+  }
+}
