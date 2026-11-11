@@ -1,0 +1,333 @@
+{
+  "id": "jim-simons",
+  "name": "Jim Simons",
+  "born": 1938,
+  "died": 2024,
+  "category": "money",
+  "areaIds": [
+    "lm_money",
+    "lm_contribution"
+  ],
+  "tagline": "A mathematician who made billions by trading on data, then gave much of it to science.",
+  "startedFrom": "He was born on 25 April 1938 near Boston, the only child of a film sales representative for 20th Century Fox who later helped manage his father-in-law's shoe factory. At 14 he got a holiday job in the stockroom of a garden supply store and was soon demoted to floor sweeper because he could not remember where things went. He went on to study mathematics at MIT and finished his degree in three years; his fortune came only after he turned 40.",
+  "values": [
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "His foundation's death notice says his curiosity and lifelong passion for math and basic science inspired those around him.",
+          "sourceId": "sf-2024-death",
+          "locator": "paragraph beginning 'Jim was active in the work'"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked in 2015 about the origins of life, he said he would love to see the answer to how life began.",
+          "sourceId": "ted-2015",
+          "locator": "transcript, answer beginning 'Would love to see'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In his sixties and seventies he went back to his own mathematical research on differential characters, working with Dennis Sullivan.",
+          "sourceId": "sf-2012-science-lives",
+          "locator": "last paragraph, beginning 'Simons, now 76'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The ICIJ's 2017 profile describes him as an obsessive mathematician whose no-nonsense manner quickly turns animated when he explains a complex equation or the search for the origins of life.",
+          "sourceId": "icij-2017",
+          "locator": "paragraph beginning 'Before James Simons became a hedge fund manager'"
+        }
+      ]
+    },
+    {
+      "word": "Originality",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He made 'Do something new; don't run with the pack' the first of his five guiding principles, saying he had a chance only with a new problem in a new area.",
+          "sourceId": "simons-2020-principles",
+          "locator": "list of principles, item 1"
+        },
+        {
+          "kind": "deed",
+          "claim": "At Renaissance he avoided Wall Street veterans and hired mathematicians and scientists, trading on patterns in data instead of standard money-manager practice.",
+          "sourceId": "bloomberg-2024",
+          "locator": "paragraphs beginning 'In turning from academia' and 'At Renaissance, located'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Quant manager Theodore Aronson told Bloomberg Markets in 2008 that Simons, like Keynes and Buffett, was one of the few who truly changed how we view the markets.",
+          "sourceId": "bloomberg-2024",
+          "locator": "paragraph beginning 'There are just a few individuals'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Chronicle of Philanthropy writes that he succeeded at, and in many ways invented, quant trading: computer-driven quantitative models applied to Wall Street investing.",
+          "sourceId": "chronicle-2024",
+          "locator": "paragraph beginning 'Simons succeeded at'"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "While working as a code breaker at the Institute for Defense Analyses, he wrote a letter to the New York Times against the Vietnam War views of the institute's president, General Maxwell Taylor, and lost his job for it.",
+          "sourceId": "bloomberg-2024",
+          "locator": "paragraphs beginning 'Simons worked there for more than three years' and 'In a piece for the New York Times Magazine'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he thought the war was stupid, wrote to the Times, then told a Newsweek stringer he would do mostly his own mathematics until the war was over, and was fired minutes after his boss called Taylor.",
+          "sourceId": "ted-2015",
+          "locator": "transcript, answers beginning 'Well, how come?' and '... which were different'"
+        },
+        {
+          "kind": "deed",
+          "claim": "His foundation dates the dismissal to 1968 and says it followed a 1967 letter to the New York Times and a Newsweek interview.",
+          "sourceId": "sf-2024-life",
+          "locator": "paragraph beginning 'In 1968, he was dismissed'"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In their 2010 Giving Pledge letter he and his wife wrote that the great majority of their wealth would go to philanthropic purposes.",
+          "sourceId": "giving-pledge-2010",
+          "locator": "pledge letter, first sentence"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2023 he and his wife gave $500 million through their foundation to Stony Brook University's endowment.",
+          "sourceId": "ap-2024",
+          "locator": "paragraph beginning 'In 2023, they gave $500 million'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Chronicle of Philanthropy calls him a megaphilanthropist and reports gifts of more than $1.2 billion to Stony Brook and large gifts to the New York Genome Center, Berkeley and CUNY.",
+          "sourceId": "chronicle-2024",
+          "locator": "headline; paragraphs beginning 'The couple started small' and 'Other big gifts included'"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked how Renaissance earned its returns, he said he did it by assembling a wonderful group of people, because he knew how to hire scientists.",
+          "sourceId": "ted-2015",
+          "locator": "transcript, answers beginning 'I did it by assembling' and 'We stayed ahead of the pack'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He chaired the mathematics department at Stony Brook from 1968 to 1978.",
+          "sourceId": "ap-2024",
+          "locator": "paragraph beginning 'Simons spent some time teaching'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Bloomberg's obituary says he knew how to inspire his often quirky employees, about 300 in all, and created a sense of community at the firm.",
+          "sourceId": "bloomberg-2024",
+          "locator": "paragraph beginning 'Simons' talents extended'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not race the crowd on the same problem; look for a new problem in a new area where you have a real chance.",
+      "sourceId": "simons-2020-principles",
+      "locator": "list of principles, item 1"
+    },
+    {
+      "text": "Find the smartest people you can, and do all you can to get them on board.",
+      "sourceId": "simons-2020-principles",
+      "locator": "list of principles, item 2"
+    },
+    {
+      "text": "If a goal is worth reaching, stick with it, even when it takes much longer than you expected.",
+      "sourceId": "simons-2020-principles",
+      "locator": "list of principles, item 4"
+    },
+    {
+      "text": "Test every idea against the data and keep only what works.",
+      "sourceId": "ted-2015",
+      "locator": "transcript, answers beginning 'I did it by assembling' and 'Any one anomaly'"
+    },
+    {
+      "text": "Build up the people who do good work instead of attacking the ones who do bad work.",
+      "sourceId": "ted-2015",
+      "locator": "transcript, answer beginning 'Yeah -- instead of beating up'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I am not such a fast runner. If I am one of N people all working on the same problem, there is very little chance I will win. If I can think of a new problem in a new area, that will give me a chance.",
+      "sourceId": "simons-2020-principles",
+      "locator": "list of principles, item 1 ('Do something new; don't run with the pack')"
+    },
+    {
+      "text": "Some things take much longer than one initially expects. If the goal is worth achieving, just stick with it.",
+      "sourceId": "simons-2020-principles",
+      "locator": "list of principles, item 4 ('Don't give up easily')"
+    },
+    {
+      "text": "But that's the thing about mathematics — you never know where it's going to go.",
+      "sourceId": "ted-2015",
+      "locator": "transcript, answer beginning 'Well, it did, but I'll say about that work'"
+    },
+    {
+      "text": "instead of beating up the bad teachers, which has created morale problems all through the educational community, in particular in math and science, we focus on celebrating the good ones and giving them status.",
+      "sourceId": "ted-2015",
+      "locator": "transcript, answer beginning 'Yeah -- instead of beating up'"
+    }
+  ],
+  "definingMoment": {
+    "text": "While still chairing Stony Brook's mathematics department he traded commodities on supply and demand, and found it gut-wrenching, so he turned to mathematicians and former code breakers to look for patterns in prices. In 1978, at about 40, he left academia for good and set up his firm in a strip mall near the campus. By 1988 he had decided to base the firm's trades entirely on mathematical models. In 1990 the Medallion fund returned 56 percent after fees, and Bloomberg wrote that its performance never faltered after that.",
+    "sourceIds": [
+      "bloomberg-2024",
+      "sf-2012-science-lives",
+      "sf-2024-life"
+    ]
+  },
+  "shadow": {
+    "text": "In July 2014 a US Senate subcommittee reported that Renaissance's Medallion fund had used option deals with Barclays and Deutsche Bank to turn short-term trading profits into lower-taxed long-term gains, saving an estimated $6.8 billion in tax; Renaissance said its tax treatment was correct under current law. In September 2021 Renaissance executives agreed to settle with the IRS for as much as $7 billion, with Simons paying an additional $670 million; the board members and their spouses had to pay tax, interest and penalties, and the firm's chief executive wrote that settling avoided the risk of harsher terms in court. In 2017 the Paradise Papers showed that a Bermuda trust set up for him in 1974 held $7.25 billion in 2010 and had put off billions in US tax, which a planned transfer to a tax-exempt charity would erase; the ICIJ wrote that the trust appears to have operated legally, and Simons said payouts to his family were reported to the IRS and taxed. He eventually charged fees of 5 percent of assets and 44 percent of profits, and from 2005 kept Medallion for employees only; in 2020 it gained 76 percent while the funds open to outside investors posted double-digit losses. He smoked all his life.",
+    "sourceIds": [
+      "bloomberg-2014",
+      "reuters-2021",
+      "icij-2017",
+      "bloomberg-2024"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you run with the pack this week when you could have picked a problem nobody else was working on?",
+    "principleIndex": 0
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "ted-2015",
+      "kind": "primary",
+      "title": "A rare interview with the mathematician who cracked Wall Street (TED2015 interview with Chris Anderson, recorded 17 March 2015; transcript)",
+      "author": "Jim Simons",
+      "year": 2015,
+      "publisher": "TED",
+      "url": "https://www.ted.com/talks/jim_simons_a_rare_interview_with_the_mathematician_who_cracked_wall_street/transcript"
+    },
+    {
+      "id": "simons-2020-principles",
+      "kind": "primary",
+      "title": "My Guiding Principles (from the 'Behind the Scenes' section of the Simons Foundation's 25th anniversary book)",
+      "author": "James H. Simons",
+      "year": 2020,
+      "publisher": "Simons Foundation",
+      "url": "https://www.simonsfoundation.org/news/my-guiding-principles/"
+    },
+    {
+      "id": "giving-pledge-2010",
+      "kind": "primary",
+      "title": "Giving Pledge letter",
+      "author": "Jim and Marilyn Simons",
+      "year": 2010,
+      "publisher": "The Giving Pledge",
+      "url": "https://givingpledge.org/pledger/jim-and-marilyn-simons"
+    },
+    {
+      "id": "bloomberg-2024",
+      "kind": "secondary",
+      "title": "The 'Quant King' who shook the world of hedge funds with his secretive Renaissance Technologies has died at 86",
+      "author": "Patrick Oster and Katherine Burton, Bloomberg",
+      "year": 2024,
+      "publisher": "Bloomberg (as published by Fortune, 10 May 2024)",
+      "url": "https://fortune.com/2024/05/10/jim-simons-obituary-renaissance-technologies-quant-king/"
+    },
+    {
+      "id": "ap-2024",
+      "kind": "secondary",
+      "title": "James Simons, mathematician, philanthropist and hedge fund founder, has died",
+      "author": "Alex Veiga, Associated Press",
+      "year": 2024,
+      "publisher": "Associated Press (as published by KSAT, 10 May 2024)",
+      "url": "https://www.ksat.com/business/2024/05/10/james-simons-mathematician-philanthropist-and-hedge-fund-founder-has-died/"
+    },
+    {
+      "id": "chronicle-2024",
+      "kind": "secondary",
+      "title": "Megaphilanthropist and Science Champion Jim Simons Is Dead at 86",
+      "author": "Maria Di Mento",
+      "year": 2024,
+      "publisher": "The Chronicle of Philanthropy",
+      "url": "https://www.philanthropy.com/news/megaphilanthropist-and-science-champion-jim-simons-is-dead-at-86/"
+    },
+    {
+      "id": "bloomberg-2014",
+      "kind": "secondary",
+      "title": "Hedge Fund Dodged More Than $6 Billion Tax, Senators Say",
+      "author": "Bloomberg News",
+      "year": 2014,
+      "publisher": "Bloomberg News (as published by Financial Advisor magazine, 22 July 2014)",
+      "url": "https://www.fa-mag.com/news/hedge-fund-dodged-more-than--6-billion-tax--senators-say-18657.html"
+    },
+    {
+      "id": "reuters-2021",
+      "kind": "secondary",
+      "title": "Renaissance executives agree to pay $7 billion to settle tax dispute",
+      "author": "Reuters",
+      "year": 2021,
+      "publisher": "Reuters (as published by CNBC, 3 September 2021)",
+      "url": "https://www.cnbc.com/2021/09/03/renaissance-executives-agree-to-pay-7-billion-to-settle-tax-dispute.html"
+    },
+    {
+      "id": "icij-2017",
+      "kind": "secondary",
+      "title": "The Democratic donor and the largest private trust funds ever found (Paradise Papers)",
+      "author": "Spencer Woodman, International Consortium of Investigative Journalists",
+      "year": 2017,
+      "publisher": "The Irish Times (ICIJ partner, 7 November 2017)",
+      "url": "https://www.irishtimes.com/business/the-democratic-donor-and-the-largest-private-trust-funds-ever-found-1.3282945"
+    },
+    {
+      "id": "sf-2024-life",
+      "kind": "secondary",
+      "title": "Remembering the Life and Careers of Jim Simons",
+      "author": "Simons Foundation",
+      "year": 2024,
+      "publisher": "Simons Foundation (his own foundation; not independent)",
+      "url": "https://www.simonsfoundation.org/2024/05/10/remembering-the-life-and-careers-of-jim-simons/"
+    },
+    {
+      "id": "sf-2024-death",
+      "kind": "secondary",
+      "title": "Simons Foundation Co-Founder, Mathematician and Investor Jim Simons Dies at 86",
+      "author": "Simons Foundation",
+      "year": 2024,
+      "publisher": "Simons Foundation (his own foundation; not independent)",
+      "url": "https://www.simonsfoundation.org/2024/05/10/simons-foundation-co-founder-mathematician-and-investor-jim-simons-dies-at-86/"
+    },
+    {
+      "id": "sf-2012-science-lives",
+      "kind": "secondary",
+      "title": "Science Lives: Mathematician Jim Simons",
+      "author": "Simons Foundation",
+      "year": 2012,
+      "publisher": "Simons Foundation (his own foundation; interview-based; not independent)",
+      "url": "https://www.simonsfoundation.org/2012/09/28/simons-foundation-chair-jim-simons-on-his-career-in-mathematics/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real person (1938-2024), mathematician, hedge fund founder and philanthropist; a large Democratic donor but never a politician, campaigner or religious founder; no account of sexual contact with a minor or of sexual violence found; his dark side is documented tax avoidance (2014 Senate report, 2021 IRS settlement), a Bermuda trust that deferred US tax, and closing his best fund to outsiders."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value and every sentence against the TED 2015 transcript, his own 2020 principles essay, the Giving Pledge letter, the Bloomberg, AP, Chronicle of Philanthropy, Reuters and ICIJ reports, and his foundation's pages. All five values held: Courage survived the case that it rests on one episode in which he hedged ('when the war is over, then I'll do mostly their stuff'), because the stand cost him his job; Generosity survived the tax record, which now sits in the shadow, including the ICIJ finding that the trust's charity transfer would erase its tax bill. Originality, picked only by the draft, gained a third independent source (the Chronicle); the blind pick's Contribution did not come in for lack of room. Four claims were tightened: the order of events before 1978, the age at which he returned to research, the settlement wording, and 'never faltered', now attributed to Bloomberg.",
+    "checkedOn": "2026-11-10"
+  }
+}
