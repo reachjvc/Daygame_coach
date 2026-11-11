@@ -27,6 +27,9 @@ have seen the text at that place, in this session, or in a reference that cites 
   Google Books preview, the Internet Archive's own pages, a library's site. Never open, read or cite a pirated or
   unlicensed copy (PDF mirrors, "free download" sites, unofficial uploads), even to check a page. If the only
   way to see a passage is such a copy, treat the passage as not found and use another source or leave it out.
+  "Digital Library of India" uploads on the Internet Archive of books still in copyright count as such copies
+  (a public-domain book is fine there). The Internet Archive's lending copies are lawful only through its own
+  borrowing or search-inside, not through scanned uploads by third parties.
 
 **Quotes.** Exact words and exact place: book and section or chapter and page and edition; speech and date;
 interview with outlet and date; podcast with episode, date and (if you can) a timestamp. Checked against the
