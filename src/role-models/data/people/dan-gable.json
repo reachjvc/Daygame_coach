@@ -1,0 +1,290 @@
+{
+  "id": "dan-gable",
+  "name": "Dan Gable",
+  "born": 1948,
+  "died": null,
+  "category": "athletes",
+  "areaIds": [
+    "lm_fitness",
+    "lm_mindset"
+  ],
+  "tagline": "A wrestler who outworked everyone and turned his one college loss into Olympic gold.",
+  "startedFrom": "He was born on 25 October 1948 in Waterloo, Iowa, a blue-collar town; his father Mack sold real estate and his mother Katie kept the house. His parents drank and fought, sometimes with violence, and the police came to the house more than once. In May 1964, when he was 15, his 19-year-old sister Diane was raped and murdered in the family home by a 16-year-old local boy.",
+  "values": [
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1984, as Iowa coach, he had already run six miles before the 7 a.m. practice, called it his second workout of the day, and worked out three more times before 11 p.m.",
+          "sourceId": "si-1984",
+          "locator": "practice scene beginning \"It's 6:46 a.m., and in the Iowa wrestling room\""
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that by his first college match as a sophomore he had trained for ten thousand hours, and that 'it takes hard work to make changes in your life.'",
+          "sourceId": "awl-2015",
+          "locator": "Epilogue 'The Patience of Change', p. 137"
+        },
+        {
+          "kind": "witness",
+          "claim": "The National Wrestling Hall of Fame says 'thousands of miles of roadwork, thousands of hours of training' brought him to the 1972 Olympics.",
+          "sourceId": "nwhof",
+          "locator": "Distinguished Member biography, paragraph on the 1972 Olympics"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After his only college loss, in the 1970 NCAA final, he won the 1971 Pan American and world titles and the 1972 Olympic gold without giving up a point.",
+          "sourceId": "nwhof",
+          "locator": "Distinguished Member biography"
+        },
+        {
+          "kind": "witness",
+          "claim": "Gale's Notable Sports Figures calls him 'an incredible example of determination and drive.'",
+          "sourceId": "gale-2004",
+          "locator": "opening paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that after the Owings loss he worked out what had gone wrong and 'started to train smarter, while continuing to outwork everyone.'",
+          "sourceId": "awl-2015",
+          "locator": "chapter 'The Anatomy of Defeat', p. 48"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After his sister's murder in 1964 his parents wanted to sell the house; he begged them to stay, moved into her room, and went unbeaten through his next wrestling season.",
+          "sourceId": "espn-2013",
+          "locator": "section 'May 31, 1964, Waterloo, Iowa'"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that he moved into Diane's room the night he decided to, and that 'it never disturbed me to be in there.'",
+          "sourceId": "awl-2015",
+          "locator": "chapter 'Life Change', p. 28"
+        },
+        {
+          "kind": "words",
+          "claim": "Of his sister's death he told Sports Illustrated: 'They took my sister from me. They're not going to take my home from me.' Of the Owings loss: 'I feel like that made me stronger, a better person.'",
+          "sourceId": "si-1984",
+          "locator": "paragraph beginning \"When Diane, his sister, was murdered\""
+        }
+      ]
+    },
+    {
+      "word": "Focus",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 1984 he said: 'I don't want to be an expert in all fields... I want to be an expert in one field. Wrestling. Just wrestling.'",
+          "sourceId": "si-1984",
+          "locator": "paragraph beginning \"'I don't want to be an expert in all fields,' says Gable\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In junior high he quarterbacked an unbeaten football team and won a YMCA state backstroke title, then quit every other sport when told wrestling did not mix with anything else.",
+          "sourceId": "si-1984",
+          "locator": "paragraph beginning \"Mack helped in the process\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Gale's Notable Sports Figures says that by his sister's death in 1964 he was 'a young man with an almost complete focus on wrestling'.",
+          "sourceId": "gale-2004",
+          "locator": "section 'The Worst Sort of Motivation'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His youngest daughter, Mackie, told ESPN in 2013: 'His life was his wrestling.'",
+          "sourceId": "espn-2013",
+          "locator": "passage beginning \"Dan's obsession became theirs\""
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "As Iowa head coach from 1977 to 1997 his teams won 15 NCAA titles, with 45 individual national champions, and he coached the 1980 and 1984 US Olympic teams.",
+          "sourceId": "nwhof",
+          "locator": "Distinguished Member biography, paragraph 'Turning to coaching'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He drove a four-wheel-drive vehicle around Iowa City before dawn to pick up his wrestlers for early practice, and turned average wrestlers such as Chuck Yagla and Bruce Kinseth into NCAA champions.",
+          "sourceId": "si-1984",
+          "locator": "paragraphs on 'Devotion' and on Yagla and Kinseth"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he liked coaching better than competing: 'The thrill of victory is greater.'",
+          "sourceId": "si-1984",
+          "locator": "paragraph beginning \"Gable just has no ego to be fed\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Three-time NCAA champion Jim Zalesky said: 'He makes us believe that the most important thing we do isn't the winning but the preparation we put into winning.'",
+          "sourceId": "si-1984",
+          "locator": "paragraph beginning \"Jim Zalesky, undefeated last year at Iowa\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Keep working at a change for as long as it takes; anything worthwhile needs work.",
+      "sourceId": "awl-2015",
+      "locator": "Epilogue 'The Patience of Change', p. 137"
+    },
+    {
+      "text": "After a loss, find the detail that went wrong, then train smarter while still outworking everyone.",
+      "sourceId": "awl-2015",
+      "locator": "chapter 'The Anatomy of Defeat', p. 48"
+    },
+    {
+      "text": "Pick one field and give it all of your attention.",
+      "sourceId": "si-1984",
+      "locator": "paragraph beginning \"'I don't want to be an expert in all fields,' says Gable\""
+    },
+    {
+      "text": "Do not quit in the middle of the work; finish the session.",
+      "sourceId": "si-1984",
+      "locator": "practice scenes with Tim Riley and Pete Bush"
+    },
+    {
+      "text": "Ask nothing of the people you lead that you do not do yourself.",
+      "sourceId": "si-1984",
+      "locator": "paragraph beginning \"But Gable, in teaching wrestling, a.k.a. life\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I won 181 matches, lost one, and then got good.",
+      "sourceId": "awl-2015",
+      "locator": "chapter 'The Anatomy of Defeat', p. 48"
+    },
+    {
+      "text": "It wasn't always fun, and it was hard work, but it takes hard work to make changes in your life. Anything worthwhile is going to require work.",
+      "sourceId": "awl-2015",
+      "locator": "Epilogue 'The Patience of Change', p. 137"
+    },
+    {
+      "text": "When something means something, sacrifices are nothing.",
+      "sourceId": "si-1984",
+      "locator": "Sports Illustrated, 18 July 1984, paragraph beginning \"Gable is mystified that devotion is worth praising\""
+    },
+    {
+      "text": "In wrestling, you don't break down, you don't quit. See, that's the problem in life. It's too easy to turn on the TV and pull up the covers.",
+      "sourceId": "si-1984",
+      "locator": "Sports Illustrated, 18 July 1984, after the Tim Riley practice scene"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 28 March 1970, in the NCAA final at Evanston, Illinois, he lost 13-11 to Larry Owings, his only defeat after 181 straight high school and college wins. In his 2015 book he wrote that he worked out what had gone wrong and started to train smarter while still outworking everyone. At the 1972 Olympics in Munich he beat all six opponents without giving up a single point and won the gold medal.",
+    "sourceIds": [
+      "espn-2013",
+      "awl-2015",
+      "nwhof"
+    ]
+  },
+  "shadow": {
+    "text": "As Iowa coach he brought his losses home. In 2013 his youngest daughter, Mackie, told ESPN that 'there would be some nights at home when it was scary.' ESPN reported that he threw a mug through the Christmas tree, flipped over the kitchen table when his wife asked why he kept a problem wrestler on the team, and punched through his daughters' locked bedroom doors; it added that the girls never felt in danger, only that they needed to stay clear. In 1984 he told Sports Illustrated that his philosophy was to 'score, score, score. If that means humiliating a guy, that's tough.' The same profile shows him in a sauna, in coat and tie, with a wrestler who still had to lose half a pound before a weigh-in.",
+    "sourceIds": [
+      "espn-2013",
+      "si-1984"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you fall short this week, and what one detail will you train differently?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "A Wrestling Life: The Inspiring Stories of Dan Gable",
+      "year": 2015
+    },
+    {
+      "title": "A Wrestling Life 2: More Inspiring Stories of Dan Gable",
+      "year": 2017
+    },
+    {
+      "title": "Coaching Wrestling Successfully",
+      "year": 1999
+    }
+  ],
+  "sources": [
+    {
+      "id": "awl-2015",
+      "kind": "primary",
+      "title": "A Wrestling Life: The Inspiring Stories of Dan Gable (first person, written with Scott Schulte)",
+      "author": "Dan Gable with Scott Schulte",
+      "year": 2015,
+      "publisher": "University of Iowa Press",
+      "url": "https://archive.org/details/wrestlinglifeins0000gabl"
+    },
+    {
+      "id": "si-1984",
+      "kind": "secondary",
+      "title": "The Ultimate Winner (Sports Illustrated, 18 July 1984)",
+      "author": "Douglas S. Looney",
+      "year": 1984,
+      "publisher": "Sports Illustrated",
+      "url": "https://web.archive.org/web/20250115023047/https://vault.si.com/vault/1984/07/18/the-ultimate-winner"
+    },
+    {
+      "id": "espn-2013",
+      "kind": "secondary",
+      "title": "The Losses of Dan Gable (Outside the Lines and ESPN The Magazine, 21 August 2013)",
+      "author": "Wright Thompson",
+      "year": 2013,
+      "publisher": "ESPN",
+      "url": "https://www.espn.com/espn/feature/story/_/page/Dan-Gable/the-losses-dan-gable"
+    },
+    {
+      "id": "nwhof",
+      "kind": "secondary",
+      "title": "Dan Gable, Distinguished Member (1980) biography",
+      "author": "National Wrestling Hall of Fame",
+      "year": "n.d.",
+      "publisher": "National Wrestling Hall of Fame and Museum, Stillwater, Oklahoma",
+      "url": "https://nwhof.org/hall_of_fame/bio/38"
+    },
+    {
+      "id": "gale-2004",
+      "kind": "secondary",
+      "title": "Gable, Dan (Notable Sports Figures)",
+      "author": "Eric Lagergren",
+      "year": 2004,
+      "publisher": "Gale, via Encyclopedia.com",
+      "url": "https://www.encyclopedia.com/sports/encyclopedias-almanacs-transcripts-and-maps/gable-dan"
+    },
+    {
+      "id": "espn-classic",
+      "kind": "secondary",
+      "title": "Gable dominated as wrestler and coach (ESPN Classic, SportsCentury biography)",
+      "author": "Mike Puma",
+      "year": "n.d.",
+      "publisher": "ESPN.com",
+      "url": "https://www.espn.com/classic/biography/s/gable_dan.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real, living wrestler and coach (born 1948), not a politician (he considered a run for Iowa governor around 2001 but never ran), not a religious founder; no credible account of sexual violence or of sexual contact with anyone under 16 was found; he has a documented dark side: a violent temper at home during his coaching years and a coaching creed that accepted humiliating opponents."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value against Sports Illustrated (1984), ESPN (2013), the National Wrestling Hall of Fame, Gale and his own book, whose quoted lines and page numbers I re-read through the Internet Archive's search inside the book. Two book items had the wrong place: the 'train smarter' passage and 'then got good' are on p. 48 in 'The Anatomy of Defeat', not p. 49 in 'Making a Comeback'; p. 137 held. Hard work, Determination, Resilience and Mentorship held as core; Focus held on three independent sources after the ESPN Classic line was dropped, because its speaker wrote the 1984 SI profile. The blind pick's Winning was not added for lack of room.",
+    "checkedOn": "2026-11-10"
+  }
+}
