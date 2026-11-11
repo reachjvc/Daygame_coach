@@ -1,0 +1,312 @@
+{
+  "id": "norman-borlaug",
+  "name": "Norman Borlaug",
+  "born": 1914,
+  "died": 2009,
+  "category": "givers",
+  "areaIds": [
+    "lm_contribution",
+    "lm_mission"
+  ],
+  "tagline": "A plant breeder whose wheat helped Mexico and India grow enough grain to feed themselves",
+  "startedFrom": "He was born in 1914 in his grandfather's farmhouse near Saude, Iowa, into a community of Norwegian immigrant farmers, and walked across the fields to a one-room country school. In 1933, in the Great Depression, he left the farm for Minneapolis with 61 dollars; he failed a special entrance exam for the University of Minnesota and got in through its new General College. He paid his way with jobs such as an hour and a half of work for a breakfast of coffee, toast and prunes.",
+  "values": [
+    {
+      "word": "Contribution",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1944 he left a secure job at DuPont, which pressed him to stay, to join the Rockefeller Foundation's program to help hungry farmers in Mexico.",
+          "sourceId": "aoa-2008",
+          "locator": "Interview, 12 May 2008, answer to 'Why did you want to go to Mexico?' ('There was a lot of pressure for me to stay in Du Pont')"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1984, at 71 by The Atlantic's count, he came out of retirement to start high-yield farming projects in Africa with Ryoichi Sasakawa and Jimmy Carter, in Benin, Ethiopia, Ghana, Nigeria, Sudan, Tanzania and Togo.",
+          "sourceId": "atlantic-1997",
+          "locator": "Section 'The Green Revolution' (web page 3)"
+        },
+        {
+          "kind": "words",
+          "claim": "In his Nobel acceptance speech he spoke of 'the army of hunger fighters in which I voluntarily enlisted a quarter of a century ago for a lifetime term'.",
+          "sourceId": "nobel-acceptance-1970",
+          "locator": "Acceptance speech, Oslo, 10 December 1970, paragraph beginning 'Obviously, I am personally honored'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Committee gave him the 1970 Peace Prize because 'more than any other single person of this age, he has helped to provide bread for a hungry world'.",
+          "sourceId": "nobel-presentation-1970",
+          "locator": "Presentation speech by Aase Lionaes, 10 December 1970, paragraph beginning 'This year the Nobel Committee'"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In Mexico he spent countless hours bent over in the sun crossing wheat flowers by hand, ran a winter and a summer station far apart, drove thousands of miles on poor roads and sometimes slept in tents.",
+          "sourceId": "nyt-2009",
+          "locator": "Paragraph beginning 'He spent countless hours hunched over in the blazing Mexican sun'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In Sonora in 1945, with no tractor or horse, he strapped a draft harness around his own chest and pulled the plough himself.",
+          "sourceId": "pbs-2020",
+          "locator": "Transcript, section 'Going It Alone' (Charles C. Mann)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel biography calls him a vigorous man 'who can perform prodigies of manual labor in the fields'.",
+          "sourceId": "nobel-bio-1970",
+          "locator": "Biographical, paragraph 1, beginning 'A central figure'"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His boss George Harrar told him several times to drop his plan to breed wheat in Sonora as well; he kept asking and went with no budget, machinery or vehicle, and when told again to stop, he said he was quitting until Harrar let him go on.",
+          "sourceId": "pbs-2020",
+          "locator": "Transcript, sections 'Going It Alone' and 'The Deal With The Devil'"
+        },
+        {
+          "kind": "deed",
+          "claim": "When the seed and grain bodies of Pakistan and India first refused his high-yield wheat in the early 1960s, he stayed on, 'tirelessly repeating himself', until famine in 1965 made the governments commit to it.",
+          "sourceId": "atlantic-1997",
+          "locator": "Section 'The Lesson of the Dust Bowl' (web page 2)"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked whether he enjoyed the fight with politicians and naysayers, he said: 'Sure. Sure. Otherwise, I would've given up a long time ago'.",
+          "sourceId": "aoa-2008",
+          "locator": "Interview, 12 May 2008, question 'Is there a part of you that enjoys the fight?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Gary Toenniessen of the Rockefeller Foundation said of him: 'He knew what it was they needed to do, and he didn't give up'.",
+          "sourceId": "nyt-2009",
+          "locator": "Closing paragraphs (Toenniessen interview)"
+        }
+      ]
+    },
+    {
+      "word": "Results",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his Nobel lecture he said research in Mexico was 'production-oriented', that 'irrelevant academic butterflies were discouraged', and that the team never waited for perfect varieties.",
+          "sourceId": "nobel-lecture-1970",
+          "locator": "Nobel lecture, 11 December 1970, paragraph beginning 'Research from the outset was production-oriented' and paragraph beginning 'In Mexico, as soon as significant improvements'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel biography calls him 'an eclectic, pragmatic, goal-oriented scientist' who drops methods for more effective ones and avoids 'academic butterflies'.",
+          "sourceId": "nobel-bio-1970",
+          "locator": "Biographical, paragraph 1, beginning 'A central figure'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel presenter called him 'essentially a man of action' who, when asked for a lecture or paper, would reply: 'What would you rather have - bread or paper?'",
+          "sourceId": "nobel-presentation-1970",
+          "locator": "Presentation speech, 10 December 1970, paragraphs 'Dr. Borlaug is not only a man of ideals' and 'Dr. Borlaug prefers to teach his pupils out in the fields'"
+        },
+        {
+          "kind": "words",
+          "claim": "Of the 1984 Africa projects he said he had expected to do a few years of research first, 'but after I saw the terrible circumstances there, I said, Let's just start growing'.",
+          "sourceId": "atlantic-1997",
+          "locator": "Section 'The Green Revolution' (web page 3)"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "From 1943 to 1963 about 550 interns trained in the Rockefeller program in Mexico, where he ran the wheat work; about 200 later earned a master's degree and about thirty a doctorate abroad, and in 1961 they formed Mexico's new National Institute of Agricultural Research.",
+          "sourceId": "nobel-lecture-1970",
+          "locator": "Nobel lecture, 11 December 1970, paragraph beginning 'An in-service (intern) training component' and paragraph beginning 'Meanwhile, back in Mexico'"
+        },
+        {
+          "kind": "deed",
+          "claim": "The Nobel biography says he ran an intern program from his earliest days in Mexico, and that in the seven years before 1970 about 1,940 young scientists from some sixteen countries studied and worked at the center where he led the wheat program.",
+          "sourceId": "nobel-bio-1970",
+          "locator": "Biographical, paragraph beginning 'When the Rockefeller and Ford Foundations'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said the aim in Mexico was to train young Mexican scientists in every field of food production and hand the work to them, 'to work ourselves out of a job'.",
+          "sourceId": "aoa-2008",
+          "locator": "Interview, 12 May 2008, question 'What was the state of the program when you first crossed the Rio Grande?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel presenter called him 'an inspiring leader for the many young scientists who have been trained at the Wheat Institute in Mexico'.",
+          "sourceId": "nobel-presentation-1970",
+          "locator": "Presentation speech, 10 December 1970, paragraph 'Apart from his work as a scientist'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Use the best you have now and improve it as you go; do not wait for perfect.",
+      "sourceId": "nobel-lecture-1970",
+      "locator": "Nobel lecture, 11 December 1970, paragraph beginning 'In Mexico, as soon as significant improvements' ('We never waited for perfection in varieties or methods')"
+    },
+    {
+      "text": "Take your work out to the people who will use it, and show it yourself.",
+      "sourceId": "nobel-lecture-1970",
+      "locator": "Nobel lecture, 11 December 1970, paragraph beginning 'Farm demonstrations of new varieties' ('Farm demonstrations of new varieties and technology were made by the research scientists who had developed them')"
+    },
+    {
+      "text": "Find a way to do two rounds of work in the time others do one.",
+      "sourceId": "nobel-lecture-1970",
+      "locator": "Nobel lecture, 11 December 1970, paragraph beginning 'To accelerate progress' ('To accelerate progress... two generations of all segregating materials were grown each year')"
+    },
+    {
+      "text": "Train the local people so well that they can take the work over from you.",
+      "sourceId": "aoa-2008",
+      "locator": "Interview, 12 May 2008 ('to train young hordes of Mexican scientists... to work ourselves out of a job')"
+    },
+    {
+      "text": "Feed people first; without food, the other kinds of justice mean little.",
+      "sourceId": "nobel-lecture-1970",
+      "locator": "Nobel lecture, 11 December 1970, paragraph beginning 'Almost certainly, however, the first essential component'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "If you desire peace, cultivate justice, but at the same time cultivate the fields to produce more bread; otherwise there will be no peace.",
+      "sourceId": "nobel-lecture-1970",
+      "locator": "Nobel lecture, 'The Green Revolution, Peace, and Humanity', Oslo, 11 December 1970, paragraph beginning 'Almost certainly, however, the first essential component'"
+    },
+    {
+      "text": "We never waited for perfection in varieties or methods but used the best available each year and modified them as further improvement came to hand.",
+      "sourceId": "nobel-lecture-1970",
+      "locator": "Nobel lecture, Oslo, 11 December 1970, paragraph beginning 'In Mexico, as soon as significant improvements'"
+    },
+    {
+      "text": "Food is the moral right of all who are born into this world.",
+      "sourceId": "nobel-lecture-1970",
+      "locator": "Nobel lecture, Oslo, 11 December 1970, paragraph beginning 'Almost certainly, however, the first essential component'"
+    },
+    {
+      "text": "We may be at high tide now, but ebb tide could soon set in if we become complacent and relax our efforts.",
+      "sourceId": "nobel-acceptance-1970",
+      "locator": "Acceptance speech, Oslo, 10 December 1970, paragraph beginning 'It is true that the tide of the battle'"
+    }
+  ],
+  "definingMoment": {
+    "text": "In November 1945 he took seed from the four wheat plants that had survived a rust epidemic at Chapingo north to Sonora, to grow a second crop each year. His boss George Harrar had told him several times to drop the idea and gave him no budget, machinery or vehicle. He lived in an abandoned research station with no running water and pulled a plough himself in a harness. Breeding in two places each year cut the time for the work in half and gave wheat that grew in many places, and by the early 1960s Mexico's wheat output was six times that of the early 1940s.",
+    "sourceIds": [
+      "pbs-2020",
+      "nyt-2009"
+    ]
+  },
+  "shadow": {
+    "text": "His wheat needed heavy fertilizer and irrigation; his boss George Harrar objected in the 1940s that the Sonora work would help the larger commercial farmers there more than the poor farmers of central Mexico, and the PBS film says poor farmers were largely left behind. In 1966, during the Bihar famine, he went into the office of Indian Planning Commission head Ashok Mehta and shouted that Mehta would personally be to blame for riots; biographer Charles C. Mann describes him red-faced and slamming the table. He wrote that President Johnson's cut-off of food aid to India that year was 'toying with people's lives' but 'just what was needed'. In a 1997 interview with The Atlantic he called many Western environmental lobbyists 'elitists' who had never felt hunger. Critics say the Green Revolution pushed out small farmers and leaned too hard on chemicals; Vandana Shiva wrote in 1991 that it spread ecologically destructive practices, and historian Prakash Kumar points to damaged soil and falling water tables in parts of India; the New York Times obituary says he later accepted some environmental concerns and backed more careful use of fertilizer and pesticides.",
+    "sourceIds": [
+      "pbs-2020",
+      "atlantic-1997",
+      "nyt-2009"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you wait for a perfect plan this week instead of starting with the best one you had?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Green Revolution, Peace, and Humanity (Nobel lecture)",
+      "year": 1970
+    }
+  ],
+  "sources": [
+    {
+      "id": "nobel-lecture-1970",
+      "kind": "primary",
+      "title": "The Green Revolution, Peace, and Humanity (Nobel Lecture, 11 December 1970)",
+      "author": "Norman E. Borlaug",
+      "year": 1972,
+      "publisher": "Nobel Lectures, Peace 1951-1970, ed. Frederick W. Haberman, Elsevier, Amsterdam; text on NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/peace/1970/borlaug/lecture/"
+    },
+    {
+      "id": "nobel-acceptance-1970",
+      "kind": "primary",
+      "title": "Acceptance Speech, Nobel Peace Prize, Oslo, 10 December 1970",
+      "author": "Norman E. Borlaug",
+      "year": 1971,
+      "publisher": "Les Prix Nobel en 1970, ed. Wilhelm Odelberg, Nobel Foundation, Stockholm; text on NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/peace/1970/borlaug/acceptance-speech/"
+    },
+    {
+      "id": "aoa-2008",
+      "kind": "primary",
+      "title": "Interview with Norman E. Borlaug, Dallas, Texas, 12 May 2008",
+      "author": "Norman E. Borlaug (interviewed by the Academy of Achievement)",
+      "year": 2008,
+      "publisher": "American Academy of Achievement",
+      "url": "https://achievement.org/achiever/norman-e-borlaug/"
+    },
+    {
+      "id": "nobel-bio-1970",
+      "kind": "secondary",
+      "title": "Norman Borlaug - Biographical",
+      "author": "Nobel Foundation (Les Prix Nobel; Nobel Lectures, ed. Frederick W. Haberman)",
+      "year": 1972,
+      "publisher": "Elsevier, Amsterdam; NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/peace/1970/borlaug/biographical/"
+    },
+    {
+      "id": "nobel-presentation-1970",
+      "kind": "secondary",
+      "title": "Award Ceremony Speech, Nobel Peace Prize 1970",
+      "author": "Aase Lionaes, Chairman of the Norwegian Nobel Committee",
+      "year": 1970,
+      "publisher": "Nobel Foundation; NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/peace/1970/ceremony-speech/"
+    },
+    {
+      "id": "nyt-2009",
+      "kind": "secondary",
+      "title": "Norman Borlaug, Plant Scientist Who Fought Famine, Dies at 95",
+      "author": "Justin Gillis",
+      "year": 2009,
+      "publisher": "The New York Times, 13 September 2009",
+      "url": "https://www.nytimes.com/2009/09/14/business/energy-environment/14borlaug.html"
+    },
+    {
+      "id": "atlantic-1997",
+      "kind": "secondary",
+      "title": "Forgotten Benefactor of Humanity",
+      "author": "Gregg Easterbrook",
+      "year": 1997,
+      "publisher": "The Atlantic Monthly, January 1997",
+      "url": "https://www.theatlantic.com/magazine/archive/1997/01/forgotten-benefactor-of-humanity/306101/"
+    },
+    {
+      "id": "pbs-2020",
+      "kind": "secondary",
+      "title": "The Man Who Tried to Feed the World (American Experience, transcript)",
+      "author": "Rob Rapley (writer, director, producer)",
+      "year": 2020,
+      "publisher": "WGBH / PBS",
+      "url": "https://www.pbs.org/wgbh/americanexperience/films/man-who-tried-to-feed-the-world/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American plant breeder (1914-2009), never a politician, campaigner or founder of a religion; searches found no account of sexual contact with anyone under 16 or of sexual violence; his dark side (a Green Revolution that favoured farmers with fertilizer and water, harsh words and tactics with officials and critics) is shadow, not an owner case."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I checked every claim against the saved Nobel, Academy of Achievement, PBS, Atlantic and New York Times texts, and searched again for misattributed quotes and for any other dark side. All five values held: Contribution, Determination and Results each rest on at least three sources, and I added an Atlantic quote to Results so it no longer leans on two Nobel Foundation documents. The blind pick's Service, Impact and Humility were not added because there was no room, and Humility is argued against by his 1966 tirade and his 'elitists' remark. Eight facts and locators were corrected, among them the entrance exam, the reason he left DuPont and when he threatened to quit; a 1971 DDT lead stays out because only a paywalled Nature headline could be seen.",
+    "checkedOn": "2026-11-10"
+  }
+}
