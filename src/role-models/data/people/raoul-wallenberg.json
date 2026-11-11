@@ -1,0 +1,292 @@
+{
+  "id": "raoul-wallenberg",
+  "name": "Raoul Wallenberg",
+  "pronoun": "he",
+  "born": 1912,
+  "died": "unknown",
+  "category": "givers",
+  "areaIds": [
+    "lm_contribution",
+    "lm_mission"
+  ],
+  "tagline": "A Swedish businessman who saved Jews in Budapest in 1944 with paper, nerve and bribes.",
+  "startedFrom": "He was born in Stockholm in 1912 into the Wallenbergs, one of Sweden's most prominent financial families, but his father, a navy lieutenant, died of cancer before he was born. His grandfather Gustaf, a diplomat, pledged to support him as long as he studied and worked outside Sweden: architecture at the University of Michigan, then short jobs in Cape Town and at a bank in Haifa. Back in Sweden he worked for a Hungarian Jewish businessman's export firm; he had no experience in diplomacy when he went to Budapest at 31.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In autumn 1944, while Hungarian fascists drove tens of thousands of Budapest Jews west on foot, he went out again and again, often in person, to free people holding Swedish protective papers or forged ones from the marching columns.",
+          "sourceId": "ushmm",
+          "locator": "section 'Rescue Activities', paragraph 2"
+        },
+        {
+          "kind": "words",
+          "claim": "In his report of 22 October 1944 he wrote that after the Arrow Cross coup he spent a whole day 'in streets filled with bandits, on a lady's bicycle', and the next moving endangered staff into hiding and hauling food to them in a sack.",
+          "sourceId": "levine-1999",
+          "locator": "p. 8, Documents F (report of 22 October 1944, n. 10)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Historian Paul Levine names him as the most famous Swede who risked his life to save Jews.",
+          "sourceId": "levine-1999",
+          "locator": "p. 2, last two paragraphs"
+        }
+      ]
+    },
+    {
+      "word": "Compassion",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "With War Refugee Board and Swedish money he set up hospitals, nurseries, a soup kitchen and more than 30 'safe' houses in Budapest.",
+          "sourceId": "ushmm",
+          "locator": "section 'Rescue Activities', paragraph 1"
+        },
+        {
+          "kind": "words",
+          "claim": "In his report of 29 July 1944 he wrote that the Jews must be rid of 'the feeling that they have been forgotten' and that 'there is suffering here without limits to try to alleviate'.",
+          "sourceId": "levine-1999",
+          "locator": "p. 7, Documents D (reports of 29 July 1944, n. 7)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Levine calls him 'a man of considerable empathy and sympathy'.",
+          "sourceId": "levine-1999",
+          "locator": "p. 6, Documents D, first paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "He kept widening the circle of Jews given Swedish 'protective' passports, the Swedish-Russian report says, 'far beyond the relatively limited group with some link to Sweden'.",
+          "sourceId": "swrwg-2000",
+          "locator": "p. 35, paragraph beginning 'Shortly after his arrival'"
+        }
+      ]
+    },
+    {
+      "word": "Adventure",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "As a student in America he hitchhiked rather than take the bus, and wrote that when you travel like a hobo 'everything's different' and that hitchhiking trains you in diplomacy and tact.",
+          "sourceId": "ld-1995",
+          "locator": "p. 69 (letter from his Michigan years)"
+        },
+        {
+          "kind": "deed",
+          "claim": "After Michigan he worked briefly in South Africa and then in a bank in Haifa.",
+          "sourceId": "toi-2013",
+          "locator": "paragraph beginning 'He continued his business training'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Levine writes that his 'sense of adventure' might have been satisfied by turning up in Budapest, writing a few reports and going home, and that he chose to stay instead.",
+          "sourceId": "levine-1999",
+          "locator": "p. 8, Documents F, first paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Despite what the Swedish-Russian report calls his 'inhuman workload' in late autumn 1944, he began discussing with his close staff in November a network to help surviving Jews rebuild their lives after the war, and carried the plan with him when he left for the Soviet military headquarters.",
+          "sourceId": "swrwg-2000",
+          "locator": "p. 36, paragraph beginning 'Despite his inhuman workload'"
+        },
+        {
+          "kind": "words",
+          "claim": "On 8 December 1944 he wrote to his mother that forty of his staff had been kidnapped or beaten, yet they were 'enjoying the fight', and that he could not come home for Christmas.",
+          "sourceId": "ld-1995",
+          "locator": "pp. 276-277, letter of 8 December 1944"
+        },
+        {
+          "kind": "witness",
+          "claim": "Levine notes he could have left Budapest any time until the last days of December 1944 and 'chose, however, to do otherwise'.",
+          "sourceId": "levine-1999",
+          "locator": "p. 8, Documents F, first paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "The 2000 Swedish-Russian report says that as things got worse he was forced to negotiate directly with Adolf Eichmann and 'the worst of the Hungarian fascists', and paid bribes on a number of occasions.",
+          "sourceId": "swrwg-2000",
+          "locator": "p. 35, last paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Historian Amy Knight writes that he saved thousands both with protective passports and 'by negotiating directly with the Nazis for their freedom in exchange for money'.",
+          "sourceId": "knight-2001",
+          "locator": "paragraph 1, beginning 'On January 13, 1945'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Agnes Mandl Adachi, who worked for him, recalls him shouting at the Nazis in German that the deportees were protected, then reading names from a black book that turned out to hold none; she says he brought about a thousand people back to the safe houses.",
+          "sourceId": "ushmm-adachi",
+          "locator": "oral history transcript, passage beginning 'Raoul went after these people'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Choose work that does something positive, not work that is mostly saying no.",
+      "sourceId": "ld-1995",
+      "locator": "pp. 187-188, letter to his grandfather from Haifa, summer 1936"
+    },
+    {
+      "text": "Travel rough and talk to strangers; it trains you to deal with people.",
+      "sourceId": "ld-1995",
+      "locator": "p. 69 (letter from his Michigan years)"
+    },
+    {
+      "text": "Get the money and the organisation ready so you can act the moment it counts, without asking permission.",
+      "sourceId": "levine-1999",
+      "locator": "p. 7, report of 29 July 1944"
+    },
+    {
+      "text": "Make people in danger feel they have not been forgotten.",
+      "sourceId": "levine-1999",
+      "locator": "p. 7, report of 29 July 1944"
+    },
+    {
+      "text": "When you are free to leave a hard job, stay and see it through.",
+      "sourceId": "levine-1999",
+      "locator": "p. 8, Documents F"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "My temperament is better suited to some positive line of work than to sitting around saying no.",
+      "sourceId": "ld-1995",
+      "locator": "pp. 187-188, letter to his grandfather Gustaf Wallenberg, Haifa, summer 1936",
+      "translation": "Kjersti Board, 1995"
+    },
+    {
+      "text": "Hitchhiking gives you training in diplomacy and tact.",
+      "sourceId": "ld-1995",
+      "locator": "p. 69 (letter from his Michigan years)",
+      "translation": "Kjersti Board, 1995"
+    },
+    {
+      "text": "Among my staff alone there have been forty cases of kidnapping and beatings. On the whole we are in good spirits, however, and enjoying the fight.",
+      "sourceId": "ld-1995",
+      "locator": "p. 277, letter to his mother, Budapest, 8 December 1944",
+      "translation": "Kjersti Board, 1995"
+    },
+    {
+      "text": "We have to rid the Jews of the feeling that they have been forgotten.",
+      "sourceId": "levine-1999",
+      "locator": "p. 7, report to the Swedish Foreign Ministry of 29 July 1944 (Riksarkivet Hp 21 Eu 1092, n. 7)",
+      "translation": "as printed by Paul A. Levine, 1999; Kjersti Board's 1995 translation has the same words"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 15 October 1944 the fascist Arrow Cross seized power in Hungary with German help and restarted deportations, marching tens of thousands of Budapest Jews toward the Austrian border. His report of 22 October says that after his section lost its entire staff he spent a whole day in streets filled with bandits on a lady's bicycle, and the next moving endangered staff into hiding and carrying food to them in a sack. Through the autumn he went out again and again, often in person, to pull people with Swedish protective papers, or forged ones, out of the marching columns. The number of people in houses under Swedish protection rose to between 15,000 and 20,000.",
+    "sourceIds": [
+      "ushmm",
+      "levine-1999",
+      "swrwg-2000"
+    ]
+  },
+  "shadow": {
+    "text": "In 1941-1943, as foreign trade representative and later partner of a Swedish firm whose products went mainly to Hungary, Germany's ally, he travelled to Hungary and other countries on its business. A 2000 Swedish government report says that in Budapest he was forced to negotiate directly with Adolf Eichmann and 'the worst of the Hungarian fascists', and that it was 'unavoidable that he made use of bribes on a number of occasions'. A legation colleague called him 'naive when it came to the Russians'; on 13 January 1945 he went to meet the advancing Soviet army and was taken into custody. Historian Paul Levine writes that the numbers of lives saved linked to him 'have generally been greatly exaggerated'.",
+    "sourceIds": [
+      "swrwg-2000",
+      "ld-1995",
+      "knight-2001",
+      "levine-1999"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you wait for someone's permission when you could have got ready and acted?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "Letters and Dispatches, 1924-1944",
+      "year": 1995
+    }
+  ],
+  "sources": [
+    {
+      "id": "ld-1995",
+      "kind": "primary",
+      "title": "Letters and Dispatches, 1924-1944 (trans. Kjersti Board; published in association with the United States Holocaust Memorial Museum)",
+      "author": "Raoul Wallenberg",
+      "year": 1995,
+      "publisher": "Arcade Publishing, New York",
+      "url": "https://archive.org/details/lettersdispatche0000wall"
+    },
+    {
+      "id": "ushmm",
+      "kind": "secondary",
+      "title": "Raoul Wallenberg and the Rescue of Jews in Budapest (Holocaust Encyclopedia)",
+      "author": "United States Holocaust Memorial Museum",
+      "year": 2026,
+      "publisher": "United States Holocaust Memorial Museum",
+      "url": "https://encyclopedia.ushmm.org/content/en/article/raoul-wallenberg-and-the-rescue-of-jews-in-budapest"
+    },
+    {
+      "id": "swrwg-2000",
+      "kind": "secondary",
+      "title": "Raoul Wallenberg: Report of the Swedish-Russian Working Group",
+      "author": "Swedish Ministry for Foreign Affairs",
+      "year": 2000,
+      "publisher": "Ministry for Foreign Affairs, Stockholm",
+      "url": "https://government.se/contentassets/fcff80f3361f446da8d240e777c894f2/raoul-wallenberg--report-of-the-swedish-russian-working-group.pdf"
+    },
+    {
+      "id": "levine-1999",
+      "kind": "secondary",
+      "title": "Teaching the Hero in Holocaust History: The Cases of Raoul Wallenberg and Gösta Engzell (conference paper, 14 October 1999)",
+      "author": "Paul A. Levine",
+      "year": 1999,
+      "publisher": "Yad Vashem",
+      "url": "https://wwv.yadvashem.org/download/education/conf/Levine.pdf"
+    },
+    {
+      "id": "knight-2001",
+      "kind": "secondary",
+      "title": "The Truth About Wallenberg",
+      "author": "Amy Knight",
+      "year": 2001,
+      "publisher": "The New York Review of Books",
+      "url": "https://www.nybooks.com/articles/2001/09/20/the-truth-about-wallenberg/"
+    },
+    {
+      "id": "toi-2013",
+      "kind": "secondary",
+      "title": "Wallenberg's American chapter shaped his heroic WWII actions",
+      "author": "Miriam Shaviv",
+      "year": 2013,
+      "publisher": "The Times of Israel",
+      "url": "https://www.timesofisrael.com/wallenbergs-american-chapter-shaped-wwii-actions/"
+    },
+    {
+      "id": "ushmm-adachi",
+      "kind": "secondary",
+      "title": "Agnes Mandl Adachi describes Raoul Wallenberg's efforts to save Jews from deportation (oral history, Holocaust Encyclopedia)",
+      "author": "Agnes Mandl Adachi; United States Holocaust Memorial Museum",
+      "year": "interview date not stated",
+      "publisher": "United States Holocaust Memorial Museum",
+      "url": "https://encyclopedia.ushmm.org/content/en/oral-history/agnes-mandl-adachi-describes-raoul-wallenbergs-efforts-to-save-jews-from-deportation"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Swedish businessman and diplomat (born 1912, disappeared in Soviet custody from January 1945, fate unknown), never a politician or religious founder, with no account of sexual contact with a minor or of sexual violence found; he is in, and his shadow is his wartime trade with Hungary, the bribes he paid in Budapest, his naivety with the Soviets and the inflated rescue numbers attached to his name."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked each value against the USHMM, Swedish-Russian report, Levine and Knight texts, and re-read every Letters and Dispatches quote through the Internet Archive's own full-text search of its own lending scans. Nothing fell: his 18 July 1944 line calling Budapest's Jews 'completely apathetic' is a single harsh remark against months of rescue work, and Levine's doubts about the inflated rescue numbers stay in the shadow. Compassion, a draft-only word, gained a third source; Boldness gained an eyewitness, and the Eichmann negotiations are now attributed to the 2000 report because later historians question parts of that story. I fixed ten sentences, among them 'banking' to 'financial' families, the grandfather's pledge, the staff lost on 17 October and the date he went to the Soviet lines.",
+    "checkedOn": "2026-11-10"
+  }
+}
