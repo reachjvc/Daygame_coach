@@ -1,0 +1,306 @@
+{
+  "id": "zig-ziglar",
+  "name": "Zig Ziglar",
+  "born": 1926,
+  "died": 2012,
+  "category": "teachers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_money"
+  ],
+  "tagline": "A struggling salesman who took 18 years to make a living from speaking.",
+  "startedFrom": "He was the tenth of twelve children and grew up in Yazoo City, Mississippi. His father died when he was five, when eight of the children were still too young to work, and by his own account he was helping to support the family by the age of twelve. He entered a Navy college training program in the Second World War but never earned a degree.",
+  "values": [
+    {
+      "word": "Optimism",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "The New York Times describes his style as sound-bite optimism and says he decided that the product he sold best was his own energy and optimism.",
+          "sourceId": "nyt-2012",
+          "locator": "third paragraph ('Zig Ziglar said so, over and over') and paragraph beginning 'After a long and difficult career as a salesman'"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked whether he was ever really in debt, he said he faced bankruptcy two or three times and had always been excited, enthusiastic, optimistic and very hardworking.",
+          "sourceId": "booknotes-2002",
+          "locator": "transcript, answer to 'Were you ever really in debt?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His pastor, Jack Graham, said after his death that he was positive and hopeful, that you never heard negativity from him, and that this was how he lived, not just something he did on a platform.",
+          "sourceId": "dn-2012",
+          "locator": "paragraphs quoting Prestonwood pastor Jack Graham"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At age six, as a first-grade pupil, he began selling peanuts on the streets of Yazoo City.",
+          "sourceId": "wt-2012",
+          "locator": "paragraph beginning 'Mr. Ziglar was born Nov. 6, 1926, in Coffee County, Alabama'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said that even for a talk he had given three or four hundred times he still spent three to five hours getting ready again, rewriting his notes.",
+          "sourceId": "booknotes-2002",
+          "locator": "transcript, answer to what he would tell a young person who wants to be a great orator"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times says his formula began with preparing extensively every time.",
+          "sourceId": "nyt-2012",
+          "locator": "paragraph beginning 'He had a formula'"
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "An active Southern Baptist layman at Prestonwood Baptist Church, he served as first vice president of the Southern Baptist Convention in 1984-85.",
+          "sourceId": "bp-2012",
+          "locator": "third paragraph, beginning 'An active Southern Baptist layman'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he was born again on 4 July 1972 and that he taught a large Sunday school class 45 times a year.",
+          "sourceId": "booknotes-2002",
+          "locator": "transcript, answers to 'When did you start being so public about it?' and 'Did you ever think of becoming a minister?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His pastor, Jack Graham, wrote that the church would remember his servant heart and his passion for teaching the Word of God.",
+          "sourceId": "bp-2012",
+          "locator": "fifth paragraph, beginning 'Ziglar's pastor, Jack Graham'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Family spokesman Jay Hellwig said he was saved at 42, that he called it the turning point of his life, and that he lived his last 41 years with it as his mission.",
+          "sourceId": "dn-2012",
+          "locator": "paragraphs quoting Jay Hellwig"
+        }
+      ]
+    },
+    {
+      "word": "Love",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He and his wife Jean married in 1946 and were together for 66 years, until his death.",
+          "sourceId": "txhr-2013",
+          "locator": "clause beginning 'WHEREAS, Mr. Ziglar and his wife, Jean, married in 1946'"
+        },
+        {
+          "kind": "words",
+          "claim": "After 55 years of marriage he said they were more in love than ever, and that he opened her car door almost every time as a reminder that she was the most important person on earth to him.",
+          "sourceId": "booknotes-2002",
+          "locator": "transcript, last answer, to 'What's the secret of your marriage success'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He and Jean celebrated 66 years of marriage on the Monday before he died on Wednesday, 28 November 2012.",
+          "sourceId": "dn-2012",
+          "locator": "paragraph on survivors ('with whom he celebrated 66 years of marriage on Monday')"
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His first book, See You at the Top (1975), was rejected by 30 firms before a small Louisiana publisher took it; it went on to sell more than a quarter of a million copies.",
+          "sourceId": "wt-2012",
+          "locator": "paragraph beginning 'A onetime cookware salesman'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said his dream of speaking was born in 1952 but it took him 18 years before he could do it full-time.",
+          "sourceId": "booknotes-2002",
+          "locator": "transcript, answer to 'How long have you been speaking and motivating?'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He began speaking to sales groups in the 1950s but could not afford to do it full time until the early 1970s.",
+          "sourceId": "nyt-2012",
+          "locator": "paragraph beginning 'After a long and difficult career as a salesman'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Get what you want in life by helping enough other people get what they want.",
+      "sourceId": "booknotes-2002",
+      "locator": "transcript, answer about Sister Jessie and his philosophy ('Our whole philosophy's built around the concept')"
+    },
+    {
+      "text": "Prepare fully every time, even for a talk or task you have done hundreds of times.",
+      "sourceId": "booknotes-2002",
+      "locator": "transcript, answer to what he would tell a young person who wants to be a great orator"
+    },
+    {
+      "text": "Do not make a promise unless you also have a plan to keep it.",
+      "sourceId": "booknotes-2002",
+      "locator": "transcript, answer to 'So when you're doing your thing, what would we see?'"
+    },
+    {
+      "text": "Watch what you feed your mind, because what goes in shapes who you become.",
+      "sourceId": "syatt-1977",
+      "locator": "section 'Input Determines Output'"
+    },
+    {
+      "text": "Make the quality of your life your first goal, not your standard of living.",
+      "sourceId": "booknotes-2002",
+      "locator": "transcript, answer to 'How soon can you tell that you've got an audience that doesn't like you?'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Our whole philosophy's built around the concept that you can have everything in life you want if you will just help enough other people get what they want.",
+      "sourceId": "booknotes-2002",
+      "locator": "C-SPAN Booknotes, aired 6 October 2002, transcript, answer about Sister Jessie"
+    },
+    {
+      "text": "I never make a promise unless I give a plan to fulfill the promise.",
+      "sourceId": "booknotes-2002",
+      "locator": "C-SPAN Booknotes, aired 6 October 2002, transcript, answer to 'So when you're doing your thing, what would we see?'"
+    },
+    {
+      "text": "You are what you are and where you are because of what has gone into your mind. You can change what you are and where you are by changing what goes into your mind.",
+      "sourceId": "syatt-1977",
+      "locator": "section 'Input Determines Output'"
+    }
+  ],
+  "definingMoment": {
+    "text": "By his own account he was broke and in debt, and his career was going nowhere, when he became a born-again Christian on 4 July 1972, during a weekend visit to his home by a woman known as Sister Jessie. He then began teaching biblical principles in his talks; the Washington Times reports that he was warned this would be career suicide. He said that from then on his career took off and that for the next 30 years he never had to ask for a speaking booking.",
+    "sourceIds": [
+      "booknotes-2002",
+      "wt-2012",
+      "nyt-2012"
+    ]
+  },
+  "shadow": {
+    "text": "By his own account he spent years chasing deals: in one five-year stretch he was in 17 of them, 'looking for the easy thing', and he agreed that he had money trouble for 27 years of his marriage, facing bankruptcy two or three times without declaring it. He spent about 30 years training people in the network marketing industry and launched his own company, the Zig Ziglar Network, which was losing large sums when he closed it in December 2000. He said he handled the closure badly, telling his people in one conference call and offering them another company's opportunity in the same breath, and that he disappointed them. In 2004 the Miami New Times called him a 'corporate cheerleader' and mocked the Get Motivated seminar he was touring with as a 'rantfest' for office workers afraid of layoffs.",
+    "sourceIds": [
+      "booknotes-2002",
+      "zig-2002",
+      "mnt-2004"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which promise did you make this week without a plan to keep it?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "See You at the Top",
+      "year": 1975
+    },
+    {
+      "title": "Ziglar on Selling",
+      "year": 1991
+    },
+    {
+      "title": "Zig: The Autobiography of Zig Ziglar",
+      "year": 2002
+    }
+  ],
+  "sources": [
+    {
+      "id": "booknotes-2002",
+      "kind": "primary",
+      "title": "Booknotes interview on Zig: The Autobiography of Zig Ziglar (transcript, aired 6 October 2002)",
+      "author": "Zig Ziglar, interviewed by Brian Lamb",
+      "year": 2002,
+      "publisher": "C-SPAN",
+      "url": "https://booknotes.c-span.org/Watch/171602-1"
+    },
+    {
+      "id": "syatt-1977",
+      "kind": "primary",
+      "title": "See You at the Top",
+      "author": "Zig Ziglar",
+      "year": 1977,
+      "publisher": "Pelican Publishing (Gretna, La.)",
+      "url": "https://archive.org/details/seeyouattop00zigl_ym7"
+    },
+    {
+      "id": "zig-2002",
+      "kind": "primary",
+      "title": "Zig: The Autobiography of Zig Ziglar",
+      "author": "Zig Ziglar",
+      "year": 2002,
+      "publisher": "Doubleday / WaterBrook Press",
+      "url": "https://archive.org/details/zig00zigz"
+    },
+    {
+      "id": "nyt-2012",
+      "kind": "secondary",
+      "title": "Zig Ziglar, Motivational Speaker, Dies at 86",
+      "author": "William Yardley",
+      "year": 2012,
+      "publisher": "The New York Times",
+      "url": "https://www.nytimes.com/2012/11/29/business/zig-ziglar-86-motivational-speaker-and-author.html"
+    },
+    {
+      "id": "wt-2012",
+      "kind": "secondary",
+      "title": "Motivational maestro Zig Ziglar dies at 86",
+      "author": "Mark A. Kellner",
+      "year": 2012,
+      "publisher": "The Washington Times",
+      "url": "https://www.washingtontimes.com/news/2012/nov/28/motivational-maestro-zig-ziglar-dies-86/"
+    },
+    {
+      "id": "bp-2012",
+      "kind": "secondary",
+      "title": "Zig Ziglar, renowned layman & speaker, dies",
+      "author": "Jerry Pierce",
+      "year": 2012,
+      "publisher": "Baptist Press",
+      "url": "https://www.baptistpress.com/resource-library/news/zig-ziglar-renowned-layman-speaker-dies/"
+    },
+    {
+      "id": "txhr-2013",
+      "kind": "secondary",
+      "title": "H.R. No. 1753, 83rd Legislature, memorial resolution for Zig Ziglar",
+      "author": "Texas House of Representatives",
+      "year": 2013,
+      "url": "https://capitol.texas.gov/tlodocs/83R/billtext/html/HR01753F.htm"
+    },
+    {
+      "id": "mnt-2004",
+      "kind": "secondary",
+      "title": "Fire Away",
+      "author": "Juan Carlos Rodriguez",
+      "year": 2004,
+      "publisher": "Miami New Times (5 February 2004)",
+      "url": "https://www.miaminewtimes.com/arts-culture/fire-away-6345759/"
+    },
+    {
+      "id": "dn-2012",
+      "kind": "secondary",
+      "title": "Motivational speaker Zig Ziglar dies at age 86",
+      "author": "Deseret News",
+      "year": 2012,
+      "publisher": "Deseret News (28 November 2012)",
+      "url": "https://www.deseret.com/2012/11/28/20444909/motivational-speaker-zig-ziglar-dies-at-age-86/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American sales trainer and author (1926-2012), not fictional, never a candidate or office holder (he said in 2002 he chose not to run), a Southern Baptist layman rather than a founder of a religion, and with no account found of sexual contact with anyone under 16 or of sexual violence; he is in, with a documented but small dark side: years of chasing quick deals and debt, and a failed network marketing company whose closure he said he mishandled."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value against the Booknotes transcript, See You at the Top (1977 and 1979 Pelican scans), his 2002 autobiography and five obituaries. Hard work and Determination were tested against his own '17 deals' and 'looking for the easy thing' years; they held, since the same years show him working and his 18-year push into speaking, and that stretch stays in the shadow. Optimism, Faith, Love and Determination all now rest on three sources, Love with the Deseret News on the 66th anniversary; the blind pick's Family and Service had no room or only unverified quotes. All three quotes match; the tagline no longer calls him a 'broke cookware salesman', and the shadow no longer calls Get Motivated his own seminar or puts his 30 years of network marketing training before the launch.",
+    "checkedOn": "2026-11-10"
+  }
+}
