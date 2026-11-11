@@ -1,0 +1,310 @@
+{
+  "id": "peter-lynch",
+  "name": "Peter Lynch",
+  "born": 1944,
+  "died": null,
+  "category": "money",
+  "areaIds": [
+    "lm_money",
+    "lm_family"
+  ],
+  "tagline": "A fund manager who beat the market by studying companies others ignored.",
+  "startedFrom": "He grew up near Boston. His father, a Boston College mathematics professor, fell ill when Peter was seven and died of cancer when he was ten; his mother went out to work and raised the children. At 11 he began caddying at a golf club to help the family's finances, and a caddie scholarship helped pay for Boston College.",
+  "values": [
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked about the pressure of running Magellan, he said he loved the job but was working six days a week and that it was not even enough.",
+          "sourceId": "pbs-1997",
+          "locator": "answer to 'Is there so much pressure because you're handling so much money for other people?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Time magazine wrote that he built Magellan through 13-hour workdays.",
+          "sourceId": "time-1990",
+          "locator": "sentence beginning 'And he did it the old-fashioned way'"
+        },
+        {
+          "kind": "deed",
+          "claim": "While running Magellan he left for the office at 6 a.m. six days a week, and he said he then travelled 12 or 13 days a month.",
+          "sourceId": "irishamerica-1994",
+          "locator": "introduction, paragraph beginning 'But the price was high in terms of quality of life'; answer beginning 'Four years ago last May I stopped running Magellan'"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said he and his wife gave all the profits from his three books to charity.",
+          "sourceId": "pbs-1997",
+          "locator": "answer beginning 'I wrote three books'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1999 he and his wife Carolyn announced a gift of more than $10 million to Boston College, then the largest in its history, and in 2010 gave $10 million more to start a school leadership academy.",
+          "sourceId": "bc",
+          "locator": "section 'About Carolyn A. and Peter S. Lynch', first and fourth paragraphs"
+        },
+        {
+          "kind": "deed",
+          "claim": "For over 35 years he has helped raise scholarships for needy inner-city students at Boston's Catholic schools; through the Building Minds Scholarship Fund he has helped raise more than $365 million.",
+          "sourceId": "moaf-2025",
+          "locator": "Peter S. Lynch, 2025 Lifetime Achievement Award, third paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Family",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1990, at 46, he gave up running Magellan, citing a wish to spend more time with his family and the fact that his father had died of cancer at 46.",
+          "sourceId": "time-1990",
+          "locator": "sentence beginning 'Citing a longing to spend more time with his family'"
+        },
+        {
+          "kind": "words",
+          "claim": "In 1994 he said he had succeeded in spending more time with his family, and from June 1993 kept every Monday free to spend with his wife.",
+          "sourceId": "irishamerica-1994",
+          "locator": "answer beginning 'Four years ago last May I stopped running Magellan' and the next paragraph, 'I succeeded in spending more time with my family'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Museum of American Finance says he stopped running Magellan in 1990 to give more time to non-profit work and to his wife, Carolyn, and three daughters.",
+          "sourceId": "moaf-2025",
+          "locator": "Peter S. Lynch, 2025 Lifetime Achievement Award, third paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said he and his wife were strong Catholics who never missed church and prayed a lot together, and that his family said the rosary on Sundays in Lent and Advent.",
+          "sourceId": "irishamerica-1994",
+          "locator": "answers beginning 'I think it's very lucky that we both are strong Catholics' and 'I did a missionary trip to India'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He joined his parish council, which turned a weekly deficit around and renovated the church.",
+          "sourceId": "irishamerica-1994",
+          "locator": "answer beginning 'You can't say that the Church is just the priest'"
+        },
+        {
+          "kind": "deed",
+          "claim": "With his wife he funded the Urban Catholic Teachers Corps, and he chaired the Inner-City Scholarship Fund for 24 years, raising more than $150 million for children at inner-city Catholic schools.",
+          "sourceId": "bc",
+          "locator": "section 'About Carolyn A. and Peter S. Lynch', third paragraph; section 'About Peter Lynch', second paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Asked how Magellan did well from 1977 to 1982, he said he looked at companies others ignored, such as the small restaurant company Taco Bell, researched his stocks himself, and believed that the more companies you look at, the more interesting ones you find.",
+          "sourceId": "pbs-1997",
+          "locator": "answer to 'But the market really didn't do much between '77 and '82 ... What do you do?'"
+        },
+        {
+          "kind": "words",
+          "claim": "In 2023, at 79, he said researching stocks is fun, 'not like doing your taxes', and that 'You learn a lot.'",
+          "sourceId": "yahoo-2023",
+          "locator": "answer to 'Any parting thoughts?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Irish America wrote that he made it his business to visit every company before he invested, went to shopping malls and Gap and Limited stores, and asked people how they felt about their Chrysler minivans.",
+          "sourceId": "irishamerica-1994",
+          "locator": "introduction, paragraphs beginning 'From 1977 to 1990' and 'Lynch claims that he never had an overall strategy'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Wharton Magazine wrote that he looked for an overlooked stock in a sleeper sector and then learned as much as he could about it.",
+          "sourceId": "wharton-2007",
+          "locator": "paragraph beginning 'While running Magellan, Lynch avoided hot, fast-growth industries'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Look at many companies, not a few: the more you study, the more good ones you find.",
+      "sourceId": "pbs-1997",
+      "locator": "answer to 'But the market really didn't do much between '77 and '82 ... What do you do?'"
+    },
+    {
+      "text": "Before you buy a stock, do at least the homework you would do before buying a fridge or a house.",
+      "sourceId": "pbs-1997",
+      "locator": "answers to 'Can the little guy play with the big guy in the stock market?' and 'What does that say to you about their frame of mind?'"
+    },
+    {
+      "text": "Do not try to guess when the market will fall; expect falls and judge stocks over ten years or more.",
+      "sourceId": "pbs-1997",
+      "locator": "answers to 'Talk about market timing.' and 'The high and the low analysis.'"
+    },
+    {
+      "text": "Keep and add to your winners; a few big winners make up for your mistakes.",
+      "sourceId": "pbs-1997",
+      "locator": "answer to 'Was that your secret?'"
+    },
+    {
+      "text": "Be able to write in a few lines why you own each stock, and check that story again every few months.",
+      "sourceId": "yahoo-2023",
+      "locator": "answer to 'What would you tell a young person getting started investing in the market today about evaluating companies?'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "The person that turns over the most rocks wins the game. And that's always been my philosophy.",
+      "sourceId": "pbs-1997",
+      "locator": "answer to 'But the market really didn't do much between '77 and '82 ... What do you do?'"
+    },
+    {
+      "text": "it's sort of like watering the weeds and cutting out the flowers. You want to let the winners run.",
+      "sourceId": "pbs-1997",
+      "locator": "answer to 'Was that your secret?'"
+    },
+    {
+      "text": "I mean stomach is the key organ here. It's not the brain.",
+      "sourceId": "pbs-1997",
+      "locator": "answer to 'Talk about market timing.'"
+    },
+    {
+      "text": "My mother would say, that of those who are given a lot, a lot is expected.",
+      "sourceId": "irishamerica-1994",
+      "locator": "last answer of the interview, beginning 'My mother would say'"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1990, at 46, he announced he would stop running Magellan at the end of May. Under him the fund had grown from about $22 million to $13.3 billion, the biggest in the world. He cited a wish to spend more time with his family, and the fact that his father had died of cancer at 46. He cut his hours, gave most of his time to charity work, and from June 1993 kept every Monday free for his wife.",
+    "sourceIds": [
+      "time-1990",
+      "irishamerica-1994"
+    ]
+  },
+  "shadow": {
+    "text": "From 1999 to October 2004, while vice chairman of Fidelity, he asked two Fidelity stock traders to get him tickets to events, often sold out. Through them he got 61 tickets worth about $15,948, including eleven seats at a U2 concert and fourteen passes to the 1999 Ryder Cup, from brokers who did business with Fidelity; the traders sent trades to those brokers. He did not pay the brokers back. Each year he had signed Fidelity's Code of Ethics, which generally barred employees from taking gifts from firms doing business with the funds. On 5 March 2008 he settled with the US Securities and Exchange Commission without admitting or denying its findings, and was ordered to pay $15,948.68 plus $4,183.83 in interest. In a statement he said he never intended to do anything inappropriate and regretted making the requests.",
+    "sourceIds": [
+      "sec-2008",
+      "ap-2008"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you put money or time into this week with less homework than you would give buying a new fridge?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "One Up on Wall Street",
+      "year": 1989
+    },
+    {
+      "title": "Beating the Street",
+      "year": 1993
+    },
+    {
+      "title": "Learn to Earn",
+      "year": 1995
+    }
+  ],
+  "sources": [
+    {
+      "id": "pbs-1997",
+      "kind": "primary",
+      "title": "Interview with Peter Lynch, FRONTLINE 'Betting on the Market' (recorded mid-1996, broadcast 14 January 1997)",
+      "author": "Peter Lynch, interviewed by FRONTLINE",
+      "year": 1997,
+      "publisher": "PBS / WGBH",
+      "url": "https://www.pbs.org/wgbh/pages/frontline/shows/betting/pros/lynch.html"
+    },
+    {
+      "id": "irishamerica-1994",
+      "kind": "primary",
+      "title": "Lynch's Law (interview, September/October 1994 issue)",
+      "author": "Patricia Harty",
+      "year": 1994,
+      "publisher": "Irish America magazine",
+      "url": "https://www.irishamerica.com/1994/09/lynchs-law"
+    },
+    {
+      "id": "yahoo-2023",
+      "kind": "primary",
+      "title": "Fidelity legend Peter Lynch: 'I never said to invest in the stock market' (interview, 8 July 2023)",
+      "author": "Kerry Hannon",
+      "year": 2023,
+      "publisher": "Yahoo Finance",
+      "url": "https://ca.finance.yahoo.com/news/fidelity-legend-peter-lynch-i-never-said-to-invest-in-the-stock-market-120755736.html"
+    },
+    {
+      "id": "time-1990",
+      "kind": "secondary",
+      "title": "The Wizard Bows Out (Time, 9 April 1990)",
+      "author": "John Greenwald",
+      "year": 1990,
+      "publisher": "Time",
+      "url": "https://content.time.com/time/subscriber/article/0,33009,969804,00.html"
+    },
+    {
+      "id": "sec-2008",
+      "kind": "secondary",
+      "title": "In the Matter of Peter S. Lynch: Order Instituting Cease-and-Desist Proceedings, Making Findings, and Imposing a Cease-and-Desist Order (Investment Company Act Release No. 28189, File No. 3-12980, 5 March 2008)",
+      "author": "US Securities and Exchange Commission",
+      "year": 2008,
+      "publisher": "US Securities and Exchange Commission",
+      "url": "https://www.sec.gov/litigation/admin/2008/ic-28189.pdf"
+    },
+    {
+      "id": "ap-2008",
+      "kind": "secondary",
+      "title": "SEC penalizes Fidelity over improper gifts (5 March 2008)",
+      "author": "Associated Press",
+      "year": 2008,
+      "publisher": "Associated Press (as published by NBC News)",
+      "url": "https://www.nbcnews.com/id/wbna23491157"
+    },
+    {
+      "id": "bc",
+      "kind": "secondary",
+      "title": "About Carolyn and Peter Lynch (Lynch School of Education and Human Development)",
+      "author": "Boston College",
+      "year": "undated (read 2026-11-10)",
+      "publisher": "Boston College",
+      "url": "https://www.bc.edu/bc-web/schools/lynch-school/about/about-carolyn-and-peter-lynch.html"
+    },
+    {
+      "id": "moaf-2025",
+      "kind": "secondary",
+      "title": "Peter S. Lynch, 2025 Lifetime Achievement Award",
+      "author": "Museum of American Finance",
+      "year": 2025,
+      "publisher": "Museum of American Finance",
+      "url": "https://www.moaf.org/about/people/peter-lynch"
+    },
+    {
+      "id": "wharton-2007",
+      "kind": "secondary",
+      "title": "Stock Superstar Who Beat The Street: Peter S. Lynch, WG'68 (Anniversary Issue)",
+      "author": "Wharton Magazine",
+      "year": 2007,
+      "publisher": "The Wharton School, University of Pennsylvania",
+      "url": "https://magazine.wharton.upenn.edu/issues/anniversary-issue/stock-superstar-who-beat-the-street-peter-s-lynch-wg68/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real, living fund manager (born 1944), not a politician, campaigner or religious founder; no account of sexual contact with a minor or of sexual violence found; his documented dark side is a 2008 SEC settlement over event tickets he got through Fidelity traders from brokers."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I attacked all five draft values and re-read every locator in the FRONTLINE, Irish America, Yahoo, Boston College, Museum of American Finance, Wharton and SEC texts, and re-fetched Time 1990. Optimism fell: it rested on two sources only (FRONTLINE and Irish America), and the Irish America line is about faith in himself, not optimism. Hard work, Generosity, Family and Faith held, though Irish America says that while he ran Magellan there was never enough time for his family; Curiosity came in from the blind pick on four sources. The shadow gained the Code of Ethics he signed each year, from the SEC order.",
+    "checkedOn": "2026-11-10"
+  }
+}
