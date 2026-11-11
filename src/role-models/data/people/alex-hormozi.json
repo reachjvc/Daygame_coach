@@ -135,8 +135,8 @@
     },
     {
       "text": "Make fear specific: say what failure would actually look like and play out plan B in detail.",
-      "sourceId": "doac-2026",
-      "locator": "00:28:08 (section 'Fear Only Exists in the Vague')"
+      "sourceId": "doac-2026-yt",
+      "locator": "00:29:09 (YouTube copy of the same interview)"
     },
     {
       "text": "Keep your living costs low so you can afford to wait for a long-term goal.",
@@ -157,8 +157,8 @@
     },
     {
       "text": "Fear only exists in the vague, never in the specific.",
-      "sourceId": "doac-2026",
-      "locator": "00:28:08"
+      "sourceId": "doac-2026-yt",
+      "locator": "00:29:09"
     },
     {
       "text": "There are mistakes of picking the wrong path, but I think there are more mistakes of abandoning the right path.",
@@ -214,6 +214,14 @@
       "author": "Alex Hormozi, interviewed by Steven Bartlett",
       "year": 2026,
       "url": "https://podcasts.happyscribe.com/the-diary-of-a-ceo-with-steven-bartlett/the-man-who-made-100m-before-32-the-secret-was-to-stop-letting-them-control-me-alex-hormozi"
+    },
+    {
+      "id": "doac-2026-yt",
+      "kind": "primary",
+      "title": "The Diary Of A CEO: Alex Hormozi's Warning: Stop Chasing AI, Build This Instead! (YouTube video of the same 20 July 2026 interview; timestamps from its captions)",
+      "author": "Alex Hormozi, interviewed by Steven Bartlett",
+      "year": 2026,
+      "url": "https://www.youtube.com/watch?v=HwmwyBgzj8c"
     },
     {
       "id": "game-380",

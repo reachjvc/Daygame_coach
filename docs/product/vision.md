@@ -70,7 +70,10 @@ Rules for this file:
 19. Value prioritisation: not built at all.
 20. More customisation of goals and systems, and each must get the correct shape.
 21. More goal templates, and some reworked.
-22. Role models: to be finished — this one can wait until after launch.
+22. Role models: the library is built (2026-11-11): over 190 checked people across
+    13 categories at `/plan/role-models`, a council of up to five, used on Today and
+    in the weekly review. Still open: the look (portraits, effects) as one later
+    decision, and the owner's calls on the flagged cases.
 
 **Tracking** (`/dashboard/tracking`)
 23. Achievements are not really functional and are tied to the old system; they

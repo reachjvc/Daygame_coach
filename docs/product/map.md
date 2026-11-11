@@ -111,7 +111,10 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   note. Then field reports, daily and weekly reviews, stats, achievements,
   milestones, and a custom report builder.
 - `inner-game/` — confidence work. Values selection and ranking, shadow work,
-  peak experiences, role models.
+  peak experiences, role models (a checked library at `/plan/role-models`:
+  each person's values from the life plan word list, with sources, quotes and
+  his dark side; choose up to five as your council, used on Today, the weekly
+  review and the values step).
 - `qa/` — "Ask Coach". Answers from a retrieval system over transcribed daygame
   videos, not from the model's own knowledge. Reads the `embeddings` table the
   pipeline fills. Scores its own groundedness and confidence.
