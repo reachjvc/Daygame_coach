@@ -1,0 +1,303 @@
+{
+  "id": "coco-chanel",
+  "name": "Coco Chanel",
+  "pronoun": "she",
+  "born": 1883,
+  "died": 1971,
+  "category": "builders",
+  "areaIds": [
+    "lm_mission",
+    "lm_money",
+    "lm_mindset"
+  ],
+  "tagline": "From an orphanage to her own fashion house, and a comeback at 70 that the critics first called a flop",
+  "startedFrom": "She was born in 1883 in a hospice in Saumur, the daughter of a travelling merchant. Her mother died in February 1895, her father soon left the family, and she spent the next six years in a bleak orphanage at Aubazine; later in life she told a different story of her childhood. She worked as a shop assistant, a seamstress and a music-hall performer, and her first hat shop in Paris was paid for by her lover Étienne Balsan, with Arthur 'Boy' Capel backing the move into clothes.",
+  "values": [
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "By 1918 she had paid off her debt to her lover and backer Arthur Capel and was financially independent.",
+          "sourceId": "wwh",
+          "locator": "Paragraph beginning \"With the outbreak of World War I\""
+        },
+        {
+          "kind": "words",
+          "claim": "In her 1946 talks with Paul Morand she said: \"I hate to demean myself, to submit to anyone, to humiliate myself\".",
+          "sourceId": "spectator-2008",
+          "locator": "Review of The Allure of Chanel, passage on her pride (quoting Morand, trans. Euan Cameron)"
+        },
+        {
+          "kind": "witness",
+          "claim": "The St. James Press entry in Contemporary Fashion says she \"craved personal and financial independence\".",
+          "sourceId": "contemporary-fashion",
+          "locator": "Entry \"Chanel, Gabrielle 'Coco'\", paragraph beginning \"Despite her work and individual style\""
+        }
+      ]
+    },
+    {
+      "word": "Originality",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "When textiles were short in the First World War she turned the jersey, a sweater worn by Channel Islands sailors, into a dress.",
+          "sourceId": "wwh",
+          "locator": "Paragraph beginning \"With the shortage of textiles\""
+        },
+        {
+          "kind": "words",
+          "claim": "She told her biographer Marcel Haedrich: \"In order to be irreplaceable one must always be different.\"",
+          "sourceId": "haedrich-1972",
+          "locator": "Ch. 21, section \"She Said\", p. 255"
+        },
+        {
+          "kind": "witness",
+          "claim": "V&A curator Oriole Cullen says Chanel was \"going against the grain\" from very early on and was \"her own template\".",
+          "sourceId": "another-2023",
+          "locator": "Passages quoting Oriole Cullen"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 5 February 1954, at 70, she showed a new collection that the critics dismissed as dated; she carried on with the support of the American press, and by 1956 she was back in form.",
+          "sourceId": "wwh",
+          "locator": "Paragraph beginning \"On February 5, 1954, at age 70\""
+        },
+        {
+          "kind": "words",
+          "claim": "Of the First World War years she said: \"The war helped me. Catastrophes show what one really is.\"",
+          "sourceId": "haedrich-1972",
+          "locator": "Passage on the First World War beginning 'She said: \"The war helped me.\"' and ending \"In 1919 I woke up famous\" (text seen via Open Library search-inside of the 1972 Little, Brown edition; page not seen)"
+        },
+        {
+          "kind": "witness",
+          "claim": "TIME writes that her 1954 relaunch, though deemed a flop in Parisian couture circles, unleashed a period of innovation that produced many of her signature looks.",
+          "sourceId": "time-betts-2006",
+          "locator": "Paragraph beginning \"Some attribute her famously pared-down\""
+        }
+      ]
+    },
+    {
+      "word": "Simplicity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Her clothes did away with the corsets and padding of the women's fashion before her.",
+          "sourceId": "time-betts-2006",
+          "locator": "Paragraph beginning \"Luxury, said Coco Chanel, must\""
+        },
+        {
+          "kind": "words",
+          "claim": "Of the large, decorated hats in fashion when she started, she asked: \"How can a brain function under those things?\"",
+          "sourceId": "time-sischy-1998",
+          "locator": "Paragraph beginning \"Her boyish 'flapper' creations were\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Women in World History says she bought hats and remodelled them \"according to her minimalist tastes\".",
+          "sourceId": "wwh",
+          "locator": "Paragraph beginning \"After she began to buy hats\""
+        },
+        {
+          "kind": "witness",
+          "claim": "TIME says she made fashion that gave the wearer \"a feeling of hidden luxury rather than ostentation\".",
+          "sourceId": "time-sischy-1998",
+          "locator": "Paragraph beginning \"Coco Chanel wasn't just ahead\""
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Contemporary Fashion says she \"was ruthless in her search for success\".",
+          "sourceId": "contemporary-fashion",
+          "locator": "Entry \"Chanel, Gabrielle 'Coco'\", paragraph beginning \"Despite her work and individual style\""
+        },
+        {
+          "kind": "deed",
+          "claim": "From a hat workshop on the Rue Cambon opened in 1910 with a loan from a lover, she added a boutique in Deauville three years later, then a branch in Biarritz, and in 1921 commissioned the perfumer Ernest Beaux to make her own fragrance.",
+          "sourceId": "dpma",
+          "locator": "Ingenious Women article, paragraphs on 1910 to 1921"
+        },
+        {
+          "kind": "deed",
+          "claim": "Under the German occupation she tried to use the Nazi 'aryanisation' laws to take back control of the Chanel perfumes from the Jewish Wertheimer brothers.",
+          "sourceId": "afp-2021",
+          "locator": "Paragraph on the Wertheimers and the 'aryanisation' laws"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Earn your own money, so that no lover or patron can decide for you.",
+      "sourceId": "wwh",
+      "locator": "Paragraph beginning \"With the outbreak of World War I\" (debt to Capel paid off by 1918)"
+    },
+    {
+      "text": "To be hard to replace, do it differently from everyone else.",
+      "sourceId": "haedrich-1972",
+      "locator": "Ch. 21, section \"She Said\", p. 255"
+    },
+    {
+      "text": "Make what you yourself need: she made sports clothes because she played sports.",
+      "sourceId": "spectator-2008",
+      "locator": "Review of The Allure of Chanel, passage quoting \"the sports dress for myself; not because other women played sports, but because I did\""
+    },
+    {
+      "text": "Cut out whatever stops you moving and thinking.",
+      "sourceId": "time-sischy-1998",
+      "locator": "Paragraph beginning \"Her boyish 'flapper' creations were\""
+    },
+    {
+      "text": "When the critics pan your work, keep working and let the next seasons answer them.",
+      "sourceId": "wwh",
+      "locator": "Paragraph beginning \"On February 5, 1954, at age 70\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "In order to be irreplaceable one must always be different.",
+      "sourceId": "haedrich-1972",
+      "locator": "Ch. 21, section \"She Said\", p. 255 (French: Coco Chanel secrète, Robert Laffont 1971, ch. 21 \"Elle disait\", p. 308)",
+      "translation": "Charles Lam Markmann, 1972"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 5 February 1954, at 70 and with her couture house closed since 1939, she showed a new collection in Paris. The critics dismissed it as dated, and Paris couture circles called it a flop. She kept going with the backing of the American press, and by 1956 she was back in form. TIME writes that this return started a period of new work that produced many of her best-known designs.",
+    "sourceIds": [
+      "wwh",
+      "time-betts-2006"
+    ]
+  },
+  "shadow": {
+    "text": "During the German occupation of Paris she lived at the Ritz with Hans Günther von Dincklage, a German officer and spy 13 years younger than her, and her perfume boutique stayed open selling Chanel No. 5 to German soldiers. French Defence Ministry papers shown in a 2014 France 3 documentary list her as agent F-7124 of the Abwehr, German military intelligence, code name 'Westminster'; AFP reports that she joined in 1941 in return for her nephew's release from a German prison camp and that in April 1943 she went to Berlin to meet SS intelligence chief Walter Schellenberg about a failed peace approach to Churchill. She also tried to use the Nazi 'aryanisation' laws to take back control of the Chanel perfumes from the Jewish Wertheimer brothers, who had signed their business over to a non-Jewish businessman before fleeing France. Her biographer Hal Vaughan calls her 'a vicious anti-Semite', and TIME's Ingrid Sischy wrote in 1998 that her anti-Semitism and homophobia came out in these years; the Wertheimer family, who still own Chanel, deny that she was anti-Semitic. After the liberation in 1944 she was arrested and released (AFP says after Churchill intervened); she was not charged, and she moved to Switzerland.",
+    "sourceIds": [
+      "afp-2021",
+      "france24-2014",
+      "cbs-ap-2011",
+      "time-sischy-1998",
+      "wwh"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you let someone else's money or approval make a choice for you this week?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Allure of Chanel (her memories as told to Paul Morand)",
+      "year": 1976
+    }
+  ],
+  "sources": [
+    {
+      "id": "haedrich-1972",
+      "kind": "primary",
+      "title": "Coco Chanel: Her Life, Her Secrets (her remarks recorded by Haedrich; French original Coco Chanel secrète, 1971)",
+      "author": "Marcel Haedrich, translated by Charles Lam Markmann",
+      "year": 1972,
+      "publisher": "Little, Brown and Company",
+      "url": "https://archive.org/details/cocochanelherlif0000haed"
+    },
+    {
+      "id": "wwh",
+      "kind": "secondary",
+      "title": "Chanel, Coco (1883–1971), Women in World History: A Biographical Encyclopedia",
+      "author": "Hugh A. Stewart",
+      "year": "n.d. (read 2026)",
+      "publisher": "Gale, via Encyclopedia.com",
+      "url": "https://www.encyclopedia.com/women/encyclopedias-almanacs-transcripts-and-maps/chanel-coco-1883-1971"
+    },
+    {
+      "id": "time-sischy-1998",
+      "kind": "secondary",
+      "title": "The Designer Coco Chanel",
+      "author": "Ingrid Sischy (TIME)",
+      "year": 1998,
+      "url": "https://time.com/archive/6598163/the-designer-coco-chanel/"
+    },
+    {
+      "id": "time-betts-2006",
+      "kind": "secondary",
+      "title": "Coco Chanel",
+      "author": "Kate Betts (TIME)",
+      "year": 2006,
+      "url": "https://time.com/archive/6678981/coco-chanel/"
+    },
+    {
+      "id": "spectator-2008",
+      "kind": "secondary",
+      "title": "The New Look that never aged (review of Paul Morand, The Allure of Chanel, trans. Euan Cameron)",
+      "author": "Vicki Woods (The Spectator)",
+      "year": 2008,
+      "url": "https://spectator.com/article/the-new-look-that-never-aged/"
+    },
+    {
+      "id": "another-2023",
+      "kind": "secondary",
+      "title": "The radical history and philosophy of Coco Chanel (on the V&A exhibition Gabrielle Chanel: Fashion Manifesto)",
+      "author": "Alexander Fury (AnOther Magazine)",
+      "year": 2023,
+      "url": "https://www.anothermag.com/fashion-beauty/15125/the-radical-history-and-philosophy-of-coco-chanel-v-and-a-chanel-exhibition"
+    },
+    {
+      "id": "afp-2021",
+      "kind": "secondary",
+      "title": "Strong whiff of wartime scandal clings to Coco Chanel",
+      "author": "Agence France-Presse (France 24)",
+      "year": 2021,
+      "url": "https://www.france24.com/en/live-news/20210107-strong-whiff-of-wartime-scandal-clings-to-coco-chanel"
+    },
+    {
+      "id": "france24-2014",
+      "kind": "secondary",
+      "title": "French TV 'proves' Coco Chanel spied for the Nazis",
+      "author": "Tony Todd (France 24)",
+      "year": 2014,
+      "url": "https://www.france24.com/en/20141202-french-tv-proves-coco-chanel-spied-nazis"
+    },
+    {
+      "id": "cbs-ap-2011",
+      "kind": "secondary",
+      "title": "New book claims Coco Chanel was a Nazi spy",
+      "author": "CBS News / Associated Press",
+      "year": 2011,
+      "url": "https://www.cbsnews.com/news/new-book-claims-coco-chanel-was-a-nazi-spy/"
+    },
+    {
+      "id": "contemporary-fashion",
+      "kind": "secondary",
+      "title": "Chanel, Gabrielle 'Coco', Contemporary Fashion (St. James Press)",
+      "author": "Carol Mary Brown, updated by Sydonie Bénet",
+      "year": "n.d. (read 2026)",
+      "publisher": "Gale, via Encyclopedia.com",
+      "url": "https://www.encyclopedia.com/people/literature-and-arts/fashion-biographies/coco-chanel"
+    },
+    {
+      "id": "dpma",
+      "kind": "secondary",
+      "title": "Coco Chanel, Ingenious Women",
+      "author": "German Patent and Trade Mark Office (DPMA)",
+      "year": "n.d. (read 2026)",
+      "url": "https://www.dpma.de/english/our_office/publications/ingeniouswomen/cocochanel/index.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real fashion designer (1883-1971), not fictional, not a politician, campaigner or founder of a religion; no account of sexual contact with anyone under 16 or of sexual violence by her was found; her documented dark side (wartime life with a German intelligence officer, registration as an Abwehr agent, the attempt to use Nazi aryanisation laws against her Jewish partners, anti-Semitism as described by her biographer) is shadow, not an owner case."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I opened every cited page (Women in World History, both TIME pieces, the Spectator review, AnOther, AFP, France 24, CBS/AP, Quote Investigator, and the Haedrich text through Open Library search-inside) and argued against each value. Independence, Originality and Simplicity held as core, and Resilience held on three sources; Hard work from the blind pick fell because she did not work in fashion from 1939 to 1954, and the blind pick's Ambition came in on Contemporary Fashion, the DPMA and her aryanisation attempt. The 'war helped me' quote was dropped because its page could not be confirmed, the tagline was corrected (the comeback was the flop), and the shadow gained the boutique selling to German soldiers, Sischy's account and the Churchill release report.",
+    "checkedOn": "2026-11-10"
+  }
+}
