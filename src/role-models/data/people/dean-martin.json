@@ -1,0 +1,302 @@
+{
+  "id": "dean-martin",
+  "name": "Dean Martin",
+  "born": 1917,
+  "died": 1995,
+  "category": "charisma",
+  "areaIds": [
+    "lm_fun",
+    "lm_mindset"
+  ],
+  "tagline": "A shy steel-town boy who made looking relaxed his act and his edge.",
+  "startedFrom": "He was born Dino Paul Crocetti in 1917 in Steubenville, Ohio, a steel-mill town, the son of an Italian immigrant barber. He spoke only Italian until he was five and was laughed at in school for his accent. He dropped out in the tenth grade and worked as a boxer, a gas-station attendant, a steel-mill hand and a croupier in the town's gambling houses before he sang for money.",
+  "values": [
+    {
+      "word": "Ease",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On his TV show he walked through one rehearsal and his producer made a point of never calling him during the week; his work time on the show was put at about three hours.",
+          "sourceId": "ap-1995",
+          "locator": "paragraphs beginning 'Martin got by with a minimum of effort' and 'When Dean walks through the studio door'"
+        },
+        {
+          "kind": "words",
+          "claim": "He told Fallaci that for him acting was not work but fun, and that he did not understand actors who come home saying they are tired.",
+          "sourceId": "look-fallaci-1967",
+          "locator": "passage beginning 'Two of the greatest turnin' points in my career' (Look, 26 December 1967; The Egotists, ch. 'Dean Martin: A Very Happy Man')"
+        },
+        {
+          "kind": "witness",
+          "claim": "The St. James Encyclopedia of Popular Culture describes his 'breezy, devil-may-care style' and the vocal skill 'that came so effortlessly to him'.",
+          "sourceId": "stjames",
+          "locator": "paragraphs on the 1964 Reprise session and on The Dean Martin Show"
+        }
+      ]
+    },
+    {
+      "word": "Humour",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His stage act ran on drunk gags, such as asking his pianist at the start 'How long have I been on?'.",
+          "sourceId": "ap-1995",
+          "locator": "paragraph beginning 'He remained a top performer in the Nevada and New Jersey casinos'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In its final season his TV show featured what became known as the Dean Martin Celebrity Roasts, a take-off of the Friars Club roasts.",
+          "sourceId": "stjames",
+          "locator": "paragraph beginning 'Adding to his high profile, NBC television premiered'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he sang maybe ten songs a show and spent the rest talking and making fun of his wife, his children, his mother-in-law, himself and his drinking.",
+          "sourceId": "look-fallaci-1967",
+          "locator": "The Egotists, ch. 'Dean Martin: A Very Happy Man', passage beginning 'The rest, I talk'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Jerry Lewis wrote that George Burns 'understood the depth of my partner's comic genius', and that one of Martin's ad libs was 'not just fast but instantaneous'.",
+          "sourceId": "lewis-2005",
+          "locator": "passages 'George Burns understood the depth of my partner's comic genius' and 'Dean's ad lib had been not just fast but instantaneous'"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1956 he ended the Martin and Lewis team after refusing the part of a lowly policeman that Lewis wanted him to play in The Delicate Delinquent.",
+          "sourceId": "latimes-1995",
+          "locator": "paragraph beginning 'But the magic partnership broke up in 1956'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1962 he moved his recording to Reprise and set up his own company, Claude Productions, to keep control over his work.",
+          "sourceId": "stjames",
+          "locator": "paragraph beginning 'In 1962, Martin moved his recording career'"
+        },
+        {
+          "kind": "words",
+          "claim": "He called leaving Jerry Lewis one of the two greatest turning points of his career and said it made him a real actor.",
+          "sourceId": "look-fallaci-1967",
+          "locator": "passage beginning 'Two of the greatest turnin' points in my career' (Look, 26 December 1967)"
+        }
+      ]
+    },
+    {
+      "word": "Enjoyment",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told the Los Angeles Times that to become even half a success you have to enjoy what you do, or you become a griper.",
+          "sourceId": "latimes-1995",
+          "locator": "paragraph beginning '\"I call it a wonderful job, working in pictures\"'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He played golf every day, which kept him in fairly good shape despite ulcers.",
+          "sourceId": "latimes-1995",
+          "locator": "paragraph beginning 'Despite repeated bouts with ulcers'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His daughter Deana writes that he was playing golf every day and home every night for dinner cracking jokes, and that he loved his family, golf and women with a passion.",
+          "sourceId": "deana-2004",
+          "locator": "passage 'earning more money than he could spend, playing golf every day, and home every night for dinner cracking jokes'; passage 'he loved his family, golf, and women with a passion' (pp. 79-80)"
+        },
+        {
+          "kind": "words",
+          "claim": "He told Fallaci that for him acting 'isn't work, it is fun'; Fallaci wrote that golf was his 'real, honest love' and that he played it every morning.",
+          "sourceId": "look-fallaci-1967",
+          "locator": "passage beginning 'Two of the greatest turnin' points in my career' (Look, 26 December 1967); The Egotists, ch. 'Dean Martin: A Very Happy Man', passage 'Golf is his real, honest love'"
+        }
+      ]
+    },
+    {
+      "word": "Solitude",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In his last years he dined out alone every night; his manager Mort Viner said he loved restaurants but did not like being with a lot of people or going to parties.",
+          "sourceId": "ap-1995",
+          "locator": "paragraph beginning 'Martin spent his final years dining out alone every night'"
+        },
+        {
+          "kind": "words",
+          "claim": "He told Fallaci he had always been shy and that at a party he would go into a corner because he did not know what to say to people.",
+          "sourceId": "look-fallaci-1967",
+          "locator": "passage beginning 'I'm shy. Always been' (Look, 26 December 1967)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Biographer Nick Tosches built his book around Martin's lontananza, the emotional distance he kept from the world; Time's review quotes him: 'there could be no happiness but in waving away the world'.",
+          "sourceId": "time-corliss-1992",
+          "locator": "page 2, paragraph beginning 'Tosches goes with \"nothing.\"'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Enjoy the work, or you will turn into a complainer.",
+      "sourceId": "latimes-1995",
+      "locator": "paragraph beginning '\"I call it a wonderful job, working in pictures\"'"
+    },
+    {
+      "text": "Make yourself and your own weak spots the first joke.",
+      "sourceId": "look-fallaci-1967",
+      "locator": "The Egotists, ch. 'Dean Martin: A Very Happy Man', passage beginning 'The rest, I talk'"
+    },
+    {
+      "text": "Leave a partnership that keeps you small, even when it pays well.",
+      "sourceId": "latimes-1995",
+      "locator": "paragraphs beginning 'But the magic partnership broke up in 1956' and 'After foundering for a couple of years'"
+    },
+    {
+      "text": "When the lawyers say you cannot walk away from a deal, decide for yourself.",
+      "sourceId": "look-fallaci-1967",
+      "locator": "The Egotists (1968), ch. 'Dean Martin: A Very Happy Man', pp. 169-70, passage beginning 'When I said to Jeannie, \"I quit with Jerry\"'"
+    },
+    {
+      "text": "Prepare little and trust the moment, so the show stays fresh.",
+      "sourceId": "ap-1995",
+      "locator": "paragraphs beginning 'Martin got by with a minimum of effort' and 'Martin practiced his songs'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Two of the greatest turnin' points in my career were: first, meetin' Jerry Lewis; second, leavin' Jerry Lewis. I became a real actor because of these two things.",
+      "sourceId": "look-fallaci-1967",
+      "locator": "Look, 26 December 1967 (interview by Oriana Fallaci); The Egotists (1968), ch. 'Dean Martin: A Very Happy Man'"
+    },
+    {
+      "text": "I'm shy. Always been. See, if I walk into a party, I sort of go into a corner, 'cause I don't know what to say to people.",
+      "sourceId": "look-fallaci-1967",
+      "locator": "Look, 26 December 1967 (interview by Oriana Fallaci); The Egotists (1968), ch. 'Dean Martin: A Very Happy Man'"
+    },
+    {
+      "text": "You can learn a lot more doin' the life that I did than sittin' at a desk.",
+      "sourceId": "look-fallaci-1967",
+      "locator": "Look, 26 December 1967 (interview by Oriana Fallaci); The Egotists (1968), ch. 'Dean Martin: A Very Happy Man', answer to 'Did you ever regret quitting school?'"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 24 July 1956, ten years to the day after their first show together, as Lewis tells it, Martin and Jerry Lewis played their last night as a team at the Copacabana in New York. He had refused the part Lewis wanted him to play in The Delicate Delinquent. Lewis had drawn most of the good reviews and was expected to do better alone. Martin then took $20,000, less than he made in a week at the Sands, to act beside Marlon Brando and Montgomery Clift in The Young Lions (1958), and became the bigger star of the two in the 1960s.",
+    "sourceIds": [
+      "lewis-2005",
+      "latimes-1995",
+      "tosches-1992",
+      "brooks-1993"
+    ]
+  },
+  "shadow": {
+    "text": "In December 1948, while married to Betty McDonald with four children, he met Jeanne Biegger in Miami; Betty at first refused him a divorce, then agreed and got one in Nevada, and he married Jeanne on 1 September 1949. In 1957 he and Jeanne sued for custody of his first four children, declaring Betty an unfit mother, and a judge gave him custody by default. He sang in clubs run by gangsters, and in November 1962 he, Frank Sinatra and Sammy Davis Jr. played Sam Giancana's Villa Venice near Chicago without pay. His second wife said she divorced him after 23 years still knowing nothing about him, and his son Dean Paul said: \"I don't know him very well.\"",
+    "sourceIds": [
+      "tosches-1992",
+      "deana-2004",
+      "brooks-1993",
+      "ap-1995"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you take yourself too seriously this week, when a joke at your own expense would have worked better?",
+    "principleIndex": 1
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "look-fallaci-1967",
+      "kind": "primary",
+      "title": "Dean Martin talks about his drinking, the Mafia, Frank Sinatra, women, Bobby Kennedy (interview); reprinted as 'Dean Martin: A Very Happy Man' in The Egotists: Sixteen Surprising Interviews",
+      "author": "Dean Martin, interviewed by Oriana Fallaci",
+      "year": 1968,
+      "publisher": "Look, 26 December 1967, pp. 78-88; book edition used: Henry Regnery, Chicago, 1968 (chapter starts p. 159), read through the Internet Archive's search inside",
+      "url": "https://archive.org/details/egotistssixteens00fall"
+    },
+    {
+      "id": "latimes-1995",
+      "kind": "secondary",
+      "title": "Friends Mourn Death Of 'Dino' (Los Angeles Times obituary, with Associated Press)",
+      "author": "Los Angeles Times, reprinted by The Seattle Times",
+      "year": 1995,
+      "publisher": "The Seattle Times, 26 December 1995",
+      "url": "https://archive.seattletimes.com/archive/19951226/2159545/friends-mourn-death-of-dino"
+    },
+    {
+      "id": "ap-1995",
+      "kind": "secondary",
+      "title": "Dean Martin succumbs at age 78",
+      "author": "Associated Press",
+      "year": 1995,
+      "publisher": "Deseret News, 26 December 1995",
+      "url": "https://www.deseret.com/1995/12/26/19211850/dean-martin-succumbs-at-age-78"
+    },
+    {
+      "id": "stjames",
+      "kind": "secondary",
+      "title": "Martin, Dean (1917-1995)",
+      "author": "Jana Pendragon",
+      "year": "n.d. (online copy)",
+      "publisher": "St. James Encyclopedia of Popular Culture (Gale), via Encyclopedia.com",
+      "url": "https://www.encyclopedia.com/media/encyclopedias-almanacs-transcripts-and-maps/martin-dean-1917-1995"
+    },
+    {
+      "id": "tosches-1992",
+      "kind": "secondary",
+      "title": "Dino: Living High in the Dirty Business of Dreams",
+      "author": "Nick Tosches",
+      "year": 1992,
+      "publisher": "Doubleday, New York (read through the Internet Archive's search inside)",
+      "url": "https://archive.org/details/dinolivinghighin00tosc"
+    },
+    {
+      "id": "lewis-2005",
+      "kind": "secondary",
+      "title": "Dean and Me: A Love Story",
+      "author": "Jerry Lewis",
+      "year": 2005,
+      "publisher": "Macmillan, London (read through the Internet Archive's search inside)",
+      "url": "https://archive.org/details/deanmelovestory0000lewi"
+    },
+    {
+      "id": "deana-2004",
+      "kind": "secondary",
+      "title": "Memories Are Made of This: Dean Martin Through His Daughter's Eyes",
+      "author": "Deana Martin with Wendy Holden",
+      "year": 2004,
+      "publisher": "Three Rivers Press, New York (read through the Internet Archive's search inside)",
+      "url": "https://archive.org/details/memoriesaremadeo00dean"
+    },
+    {
+      "id": "time-corliss-1992",
+      "kind": "secondary",
+      "title": "Dealer With A Hot Hand (review of Tosches, Dino)",
+      "author": "Richard Corliss",
+      "year": 1992,
+      "publisher": "Time, 24 August 1992",
+      "url": "https://content.time.com/time/subscriber/article/0,33009,976302-2,00.html"
+    },
+    {
+      "id": "brooks-1993",
+      "kind": "secondary",
+      "title": "Review: Dino: Living High in the Dirty Business of Dreams, by Nick Tosches",
+      "author": "Tim Brooks",
+      "year": 1993,
+      "publisher": "timbrooks.net (review dated 6 September 1993)",
+      "url": "https://timbrooks.net/review-tosches-dino-living-high/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American singer, actor and comedian (1917-1995), not fictional, never a politician or candidate, not a religious founder; searches found no account of sexual contact with anyone under 16 and no account of sexual violence, so he is in, with a documented dark side (an affair that ended his first marriage, a custody suit calling his first wife unfit, work for gangster-run clubs, distance from his family)."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked each value against the books and obituaries: Ease against the ulcers and Nancy Sinatra's 'disciplined', Solitude against the Rat Pack years, Enjoyment against his grief after 1987, Independence against Lewis's 'we decided together'. All five held; Enjoyment got a third source (Fallaci), and the blind pick's Friendship and Family were not added, since his son, his second wife and Sinatra's 'little contact' later argue against them. The Monroe principle fell, because Tosches says he had not wanted to make that film anyway; the shadow lost an unsourced 'began a relationship', and the defining moment now follows Tosches and Brooks word for word.",
+    "checkedOn": "2026-11-10"
+  }
+}
