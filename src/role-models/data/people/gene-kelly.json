@@ -1,0 +1,411 @@
+{
+  "id": "gene-kelly",
+  "name": "Gene Kelly",
+  "born": 1912,
+  "died": 1996,
+  "category": "charisma",
+  "areaIds": [
+    "lm_fun",
+    "lm_fitness",
+    "lm_mission"
+  ],
+  "tagline": "Made dancing a regular man's game: athletic, joyful and built on daily work.",
+  "startedFrom": "He was born in Pittsburgh in 1912, the third of five children in a large middle-class Irish family; his father was a travelling record salesman who slid into alcoholism. His mother pushed him into dance lessons, and he and his brothers had to fight their way to and from dancing school. When the Depression took the family's money he left Penn State, studied at the University of Pittsburgh from home, paid his way digging ditches, pumping gas and working at a soda fountain, and taught in the family's dance school.",
+  "values": [
+    {
+      "word": "Originality",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In Cover Girl (1944) he danced with a mirror image of himself, and in Anchors Aweigh (1945) he danced with a cartoon mouse.",
+          "sourceId": "gale-ewb",
+          "locator": "sections 'Goes to Hollywood' and 'Experiments with film'"
+        },
+        {
+          "kind": "deed",
+          "claim": "With Stanley Donen he co-directed On the Town (1949) and shot sequences on location, a first for a musical film.",
+          "sourceId": "pbs-am-2002",
+          "locator": "paragraph beginning 'Finally, Kelly and Stanley Donen were assigned'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said he was trying to develop a dance that would be American, and chose white socks, loafers, T-shirts and blue jeans to represent the common man.",
+          "sourceId": "interview-1985",
+          "locator": "answer to 'You've always said that your style of dance was created to appeal to the common man'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The International Dictionary of Films and Filmmakers says he developed a flexible system of choreography for the camera that took camera set-ups, movement and editing into account.",
+          "sourceId": "idff",
+          "locator": "essay, first paragraph"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He said dancing is, like an athlete's work, an everyday job: you have to practise every day and stay in shape.",
+          "sourceId": "interview-1985",
+          "locator": "answer to 'What prompted your decision?' (retiring from dance)"
+        },
+        {
+          "kind": "words",
+          "claim": "In a 1982 recording he called dancing hard work: you have to punish your body so your muscles can lift a partner and your legs can jump a table.",
+          "sourceId": "npr-2012",
+          "locator": "transcript, clip introduced 'In 1982 Gene Kelly spoke about the hard work of dancing'"
+        },
+        {
+          "kind": "witness",
+          "claim": "After his death Debbie Reynolds said he taught her how to dance and how to work hard and be dedicated.",
+          "sourceId": "lat-1996",
+          "locator": "paragraph beginning '“He made me a star'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His widow Patricia Ward Kelly said he worked long hours to get the results he needed and expected others to do the same.",
+          "sourceId": "trib-2008",
+          "locator": "paragraph beginning 'But the demand he made of others'"
+        }
+      ]
+    },
+    {
+      "word": "Joy",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His most remembered dance is the title number of Singin' in the Rain (1952), splashing through puddles on a near-empty street.",
+          "sourceId": "ap-1996",
+          "locator": "paragraph beginning 'His most memorable dance'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Encyclopedia of World Biography says he communicated the joy in movement that was at the heart of all his performances.",
+          "sourceId": "gale-ewb",
+          "locator": "section 'Singin' in the Rain'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New Yorker dance critic Arlene Croce described him on screen as so entertaining, so exuberant, so excited and happy to be there.",
+          "sourceId": "npr-2012",
+          "locator": "transcript, first Arlene Croce passage"
+        },
+        {
+          "kind": "witness",
+          "claim": "At 72 he greeted the interviewer at his front door with a soft-shoe routine and a quick song.",
+          "sourceId": "interview-1985",
+          "locator": "introduction, paragraph beginning 'For this interview we met'"
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After a month of law school he quit and went on teaching dance for another six years before leaving for New York.",
+          "sourceId": "gale-ewb",
+          "locator": "Encyclopedia of World Biography text, paragraph beginning 'After graduation from the University of Pittsburgh'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said a dancer on film should always be shot from head to toe, because that is the art of dancing, and called dance doubles bad for the art.",
+          "sourceId": "interview-1985",
+          "locator": "answers to 'How can moviegoers gauge a dancer's talent?' and 'Are you referring to the use of dance doubles?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "PBS American Masters says his need for perfection was uncompromising.",
+          "sourceId": "pbs-am-2002",
+          "locator": "paragraph beginning 'Solely responsible for creating a new approach'"
+        },
+        {
+          "kind": "witness",
+          "claim": "His widow Patricia Ward Kelly said people often told stories of his perfectionism, and that the demand he made of others was the one he made of himself: be the best, create something of value.",
+          "sourceId": "trib-2008",
+          "locator": "paragraphs beginning 'People often told stories' and 'But the demand he made of others'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Patricia Ward Kelly said he was a trained classical ballet dancer and that in An American in Paris he tap-danced on the melody, which dancers do not usually do.",
+          "sourceId": "avclub-2022",
+          "locator": "interview answers on An American in Paris and his training"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In Anchors Aweigh (1945), his first film with Frank Sinatra, he taught Sinatra to dance.",
+          "sourceId": "pbs-timeline",
+          "locator": "timeline entry for Anchors Aweigh"
+        },
+        {
+          "kind": "deed",
+          "claim": "From 1991 until his death he was honorary chairman of the Pittsburgh Civic Light Opera's high-school musical theatre awards, which were named for him.",
+          "sourceId": "trib-2008",
+          "locator": "paragraph beginning 'In 1991, Pittsburgh Civic Light Opera'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Debbie Reynolds said in 1996: he made me a star and taught me how to dance.",
+          "sourceId": "lat-1996",
+          "locator": "paragraph beginning '“He made me a star'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Reynolds also said he taught her so much, not just dancing, but how to love your work and the discipline that goes with it.",
+          "sourceId": "csm-1996",
+          "locator": "second paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "After 1973 he became a frequent adviser to younger filmmakers who hoped to bring back the movie musical.",
+          "sourceId": "pbs-am-2002",
+          "locator": "paragraph beginning 'Jeanne Coyne died of leukemia in 1973'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Move like the man you are and where you come from, not like a rich man you are not.",
+      "sourceId": "interview-1985",
+      "locator": "answer to 'You've always said that your style of dance was created to appeal to the common man'"
+    },
+    {
+      "text": "Train like an athlete: practise every day and stay in shape, or don't do it at all.",
+      "sourceId": "interview-1985",
+      "locator": "answer to 'What prompted your decision?' (retiring from dance)"
+    },
+    {
+      "text": "Before you make something, give it a story: who is this man, what is his situation, how would he react.",
+      "sourceId": "interview-1985",
+      "locator": "answer to 'Do you invent a specific system for choreographing a dance?'"
+    },
+    {
+      "text": "Fight the people in charge for the work you believe in, even if it means yelling.",
+      "sourceId": "ap-1996",
+      "locator": "paragraph beginning 'We had a great group of people' (Kelly in 1994)"
+    },
+    {
+      "text": "Put your children before the big job.",
+      "sourceId": "brideson-2017",
+      "locator": "p. 377 (turned down Cabaret)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I had a sociopolitical context in front of me: I was a child of the Depression who danced in a way that would represent the common man.",
+      "sourceId": "interview-1985",
+      "locator": "\"Legends: Native Dancer\", Interview, February 1985 (reprinted online as \"New Again: Gene Kelly\"), answer to 'You've always said that your style of dance was created to appeal to the common man'"
+    },
+    {
+      "text": "If I played a tough kid on the street I couldn't go out there and get into fifth position. I had to dance like a tough kid on the street.",
+      "sourceId": "interview-1985",
+      "locator": "\"Legends: Native Dancer\", Interview, February 1985 (reprinted online as \"New Again: Gene Kelly\"), same answer"
+    },
+    {
+      "text": "And like an athlete, it's an everyday job. You have to stay in shape—unless you just want to loaf through a couple of hoofing routines.",
+      "sourceId": "interview-1985",
+      "locator": "\"Legends: Native Dancer\", Interview, February 1985 (reprinted online as \"New Again: Gene Kelly\"), answer to 'What prompted your decision?'"
+    },
+    {
+      "text": "You have to punish your body. Your muscles have to be tough enough and hard enough where you can pick up the girl.",
+      "sourceId": "npr-2012",
+      "locator": "Kelly recorded in 1982, as broadcast in NPR Morning Edition, 23 August 2012 (transcript)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1944 MGM loaned him to Columbia for Cover Girl with Rita Hayworth. With Stanley Donen as his assistant he made the 'alter ego' number, in which he danced with his own mirror image. He later said that was when he began to see you could make dances for cinema that were not just photographed stage dancing. The film made him a star, and MGM never loaned him out again.",
+    "sourceIds": [
+      "pbs-am-2002",
+      "gale-ewb"
+    ]
+  },
+  "shadow": {
+    "text": "In her 2013 memoir his Singin' in the Rain co-star Debbie Reynolds, then 19, wrote that when they filmed a kiss for the picture, which he co-directed, he took her tightly in his arms and pushed his tongue into her mouth; she wrote that it \"felt like an assault\". She also wrote that in rehearsals he criticised everything she did and never gave her a word of encouragement. Kelly had died in 1996; his widow Patricia Ward Kelly said in 2022 that most of what Reynolds said about the shoot was fabricated. Esther Williams wrote in her 1999 memoir that making Take Me Out to the Ball Game (1949) with him was \"pure misery\" and that he and Stanley Donen made her the butt of their jokes. PBS's American Masters describes him as driven by single-mindedness, a volatile temper and narcissism, and says that after 1973 he wanted to be a better father than he had been to his first daughter. He met his first wife, Betsy Blair, when she was a 16-year-old chorus dancer; she wrote that at first he only kissed her and told her she was too young for more, that they later became lovers, and that they married in 1941, when she was 17, with her father's permission.",
+    "sourceIds": [
+      "reynolds-2013",
+      "foxnews-levin-2016",
+      "ap-1996",
+      "yahoo-2022",
+      "williams-1999",
+      "pbs-am-2002",
+      "blair-2003"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you train at every day this week, the way an athlete trains, and where did you only loaf through the routine?",
+    "principleIndex": 1
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "interview-1985",
+      "kind": "primary",
+      "title": "Legends: Native Dancer (interview with Gene Kelly)",
+      "author": "Margy Rochlin",
+      "year": 1985,
+      "publisher": "Interview magazine, February 1985; reprinted online as 'New Again: Gene Kelly'",
+      "url": "https://interviewmagazine.com/film/new-again-gene-kelly"
+    },
+    {
+      "id": "npr-2012",
+      "kind": "secondary",
+      "title": "The 'Marlon Brando' Of Screen Dance, 100 Years On",
+      "author": "Susan Stamberg",
+      "year": 2012,
+      "publisher": "NPR, Morning Edition, 23 August 2012",
+      "url": "https://www.npr.org/transcripts/159786045"
+    },
+    {
+      "id": "pbs-am-2002",
+      "kind": "secondary",
+      "title": "Gene Kelly: Anatomy of a Dancer (film page)",
+      "author": "American Masters (THIRTEEN/WNET, PBS)",
+      "year": 2002,
+      "publisher": "PBS",
+      "url": "https://www.pbs.org/wnet/americanmasters/gene-kelly-anatomy-of-a-dancer/516/"
+    },
+    {
+      "id": "pbs-timeline",
+      "kind": "secondary",
+      "title": "Gene Kelly's life and career timeline",
+      "author": "American Masters (THIRTEEN/WNET, PBS)",
+      "year": "n.d. (online)",
+      "publisher": "PBS",
+      "url": "https://www.pbs.org/wnet/americanmasters/gene-kelly-career-timeline/517/"
+    },
+    {
+      "id": "gale-ewb",
+      "kind": "secondary",
+      "title": "Kelly, Gene (UXL Encyclopedia of World Biography)",
+      "author": "Gale editors",
+      "year": "n.d. (online at Encyclopedia.com)",
+      "publisher": "Gale",
+      "url": "https://www.encyclopedia.com/people/literature-and-arts/dance-biographies/gene-kelly"
+    },
+    {
+      "id": "idff",
+      "kind": "secondary",
+      "title": "Kelly, Gene (International Dictionary of Films and Filmmakers)",
+      "author": "Jerome Delameter, updated by Robert Pardi",
+      "year": "n.d. (online at Encyclopedia.com)",
+      "publisher": "Gale",
+      "url": "https://www.encyclopedia.com/people/literature-and-arts/dance-biographies/gene-kelly"
+    },
+    {
+      "id": "ap-1996",
+      "kind": "secondary",
+      "title": "Actor, Dancing Legend Gene Kelly Dead At 83 -- Famed For 'Singin' In The Rain'",
+      "author": "Associated Press",
+      "year": 1996,
+      "publisher": "The Seattle Times, 2 February 1996",
+      "url": "https://archive.seattletimes.com/archive/19960202/2311961/actor-dancing-legend-gene-kelly-dead-at-83----famed-for-singin-in-the-rain"
+    },
+    {
+      "id": "lat-1996",
+      "kind": "secondary",
+      "title": "The last dance: Gene Kelly dies peacefully in his sleep",
+      "author": "Los Angeles Times",
+      "year": 1996,
+      "publisher": "The Spokesman-Review, 3 February 1996",
+      "url": "https://www.spokesman.com/stories/1996/feb/03/the-last-dance-gene-kelly-dies-peacefully-in-his/"
+    },
+    {
+      "id": "csm-1996",
+      "kind": "secondary",
+      "title": "Gene Kelly: Soaked Shoes and Umbrella Forever",
+      "author": "Bonnie Churchill",
+      "year": 1996,
+      "publisher": "The Christian Science Monitor, 6 February 1996",
+      "url": "https://www.csmonitor.com/1996/0206/06151.html"
+    },
+    {
+      "id": "trib-2008",
+      "kind": "secondary",
+      "title": "Gene Kelly's ambition rooted in Pittsburgh",
+      "author": "Pittsburgh Tribune-Review",
+      "year": 2008,
+      "publisher": "Pittsburgh Tribune-Review, 24 August 2008",
+      "url": "https://archive.triblive.com/news/gene-kellys-ambition-rooted-in-pittsburgh"
+    },
+    {
+      "id": "brideson-2017",
+      "kind": "secondary",
+      "title": "He's Got Rhythm: The Life and Career of Gene Kelly",
+      "author": "Cynthia Brideson and Sara Brideson",
+      "year": 2017,
+      "publisher": "University Press of Kentucky",
+      "url": "https://archive.org/details/hesgotrhythmlife0000brid"
+    },
+    {
+      "id": "reynolds-2013",
+      "kind": "secondary",
+      "title": "Unsinkable: A Memoir",
+      "author": "Debbie Reynolds and Dorian Hannaway",
+      "year": 2013,
+      "publisher": "William Morrow",
+      "url": "https://archive.org/details/unsinkablememoir0000reyn_r2v6"
+    },
+    {
+      "id": "yahoo-2022",
+      "kind": "secondary",
+      "title": "Gene Kelly's widow busts the biggest 'Singin' in the Rain' myths on the classic musical's 70th anniversary",
+      "author": "Ethan Alter",
+      "year": 2022,
+      "publisher": "Yahoo Entertainment, 7 April 2022",
+      "url": "https://uk.news.yahoo.com/gene-kelly-patricia-ward-kelly-singin-in-the-rain-madonna-141403562.html"
+    },
+    {
+      "id": "blair-2003",
+      "kind": "secondary",
+      "title": "The Memory of All That: Love and Politics in New York, Hollywood, and Paris",
+      "author": "Betsy Blair",
+      "year": 2003,
+      "publisher": "Alfred A. Knopf",
+      "url": "https://archive.org/details/memoryofallthatl0000blai"
+    },
+    {
+      "id": "foxnews-levin-2016",
+      "kind": "secondary",
+      "title": "The day Debbie Reynolds told me how she learned to kiss",
+      "author": "Michael Levin",
+      "year": 2016,
+      "publisher": "Fox News (opinion), 29 December 2016",
+      "url": "https://www.foxnews.com/opinion/the-day-debbie-reynolds-told-me-how-she-learned-to-kiss"
+    },
+    {
+      "id": "williams-1999",
+      "kind": "secondary",
+      "title": "The Million Dollar Mermaid: An Autobiography",
+      "author": "Esther Williams with Digby Diehl",
+      "year": 1999,
+      "publisher": "Simon & Schuster (Harcourt paperback 2000)",
+      "url": "https://archive.org/details/milliondollarmer00will"
+    },
+    {
+      "id": "avclub-2022",
+      "kind": "secondary",
+      "title": "Gene Kelly's widow on Singin' in the Rain at 70 (interview with Patricia Ward Kelly)",
+      "author": "Todd Gilchrist",
+      "year": 2022,
+      "publisher": "The A.V. Club, 26 April 2022",
+      "url": "https://www.avclub.com/singin-in-the-rain-gene-kelly-guillermo-del-toro-annive-1848841321"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real American dancer, actor and director (1912-1996), not fictional, never a politician, campaigner or religious founder; owner decides because his Singin' in the Rain co-star Debbie Reynolds, then 19, wrote in her 2013 memoir Unsinkable that during a filmed kiss he 'shoved his tongue down my throat' and that 'It felt like an assault'; she told Fox News columnist Michael Levin the same story (29 Dec 2016). No complaint or case is known; Kelly died in 1996; his widow Patricia Ward Kelly (Yahoo, 7 Apr 2022) calls most of Reynolds' account of the shoot fabricated, without naming the kiss. Betsy Blair checked: she met him at 16; her memoir The Memory of All That (2003) says he only kissed her then and told her she was too young for more, and that they became lovers later (by May or June, after Pal Joey opened on 25 Dec 1940, so 1941, when she was 17); no source found that puts sexual contact before 16."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked every value with his harsh treatment of co-stars (Reynolds' rehearsal account, Esther Williams' 'pure misery') and checked each claim, quote and shadow sentence against the saved pages and the Internet Archive text of the memoirs. Family fell: it had only two sources, and PBS itself says he had been a lesser father to his first daughter; Craft, from the blind pick, took its place on four sources. Originality, Hard work, Joy and Mentorship held, with the co-star accounts now in the shadow, and all four quotes were found word for word. The Blair check found no sexual contact before 16: by her own memoir they became lovers in 1941, when she was 17.",
+    "checkedOn": "2026-11-10"
+  }
+}
