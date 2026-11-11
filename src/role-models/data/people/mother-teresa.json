@@ -1,0 +1,321 @@
+{
+  "id": "mother-teresa",
+  "name": "Mother Teresa",
+  "pronoun": "she",
+  "born": 1910,
+  "died": 1997,
+  "category": "givers",
+  "areaIds": [
+    "lm_contribution",
+    "lm_spirituality"
+  ],
+  "tagline": "A nun who left her convent school in 1948 to work in the slums of Calcutta, where she opened a home for the dying.",
+  "startedFrom": "She was born Agnes Gonxha Bojaxhiu in 1910 in Skopje, then in the Ottoman Empire, the youngest child of an Albanian Catholic family. Her father died when she was eight or nine, and the family lost its money; her mother took in sewing and took her along on visits to the sick and needy. At 18 she joined the Loreto Sisters and was sent to Calcutta, where from 1931 to 1948 she taught at St Mary's, a high school for girls.",
+  "values": [
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1948 she got permission to leave her convent school and work among the poorest people in the slums of Calcutta, with no funds.",
+          "sourceId": "nobel-bio",
+          "locator": "first paragraph, sentence beginning \"From 1931 to 1948 Mother Teresa taught\""
+        },
+        {
+          "kind": "deed",
+          "claim": "On 21 December 1948, her first day in the slums, she washed children's sores, cared for an old man lying sick on the road and nursed a woman dying of hunger and TB.",
+          "sourceId": "vatican-bio",
+          "locator": "paragraph beginning \"After a short course with the Medical Mission Sisters\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Committee chairman said her order added a fourth vow to the usual three: \"to give wholehearted, free service to the very poorest\".",
+          "sourceId": "sanness-1979",
+          "locator": "paragraph beginning \"She was joined by a number of former pupils\""
+        },
+        {
+          "kind": "words",
+          "claim": "In her Nobel lecture she asked people to pray that her sisters stay faithful \"to love Him and serve Him in the poor\".",
+          "sourceId": "nobel-lecture",
+          "locator": "paragraph beginning \"And so let us always meet each other with a smile\""
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "She said her sisters were not really social workers but \"contemplatives in the heart of the world\", touching the Body of Christ 24 hours a day.",
+          "sourceId": "nobel-lecture",
+          "locator": "paragraph beginning \"I believe that we are not real social workers\""
+        },
+        {
+          "kind": "deed",
+          "claim": "She started each day with the Eucharist and then went out, rosary in hand, to serve the poor.",
+          "sourceId": "vatican-bio",
+          "locator": "paragraph beginning \"After a short course with the Medical Mission Sisters\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Her letters show she felt no presence of God for nearly the last fifty years of her life, yet she abandoned neither her belief nor her work.",
+          "sourceId": "time-2007",
+          "locator": "paragraphs beginning \"And in fact, that appears to be the case\" and \"The church anticipates spiritually fallow periods\""
+        }
+      ]
+    },
+    {
+      "word": "Devotion",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Answering the criticism that she relieved the poor day to day instead of working to change society, she said: \"I am not trying to change anything. I am only trying to live my love. Let us do something beautiful for God.\"",
+          "sourceId": "macleans-1997",
+          "locator": "paragraph beginning \"While the world lauded her accomplishments\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In her last years, despite increasingly severe health problems, she kept governing her order and answering the needs of the poor; in March 1997 she blessed her newly elected successor.",
+          "sourceId": "vatican-bio",
+          "locator": "paragraph beginning \"During the last years of her life\""
+        },
+        {
+          "kind": "witness",
+          "claim": "On her death Queen Elizabeth praised her \"untiring devotion to the poor and destitute of all religions\".",
+          "sourceId": "macleans-1997",
+          "locator": "paragraph beginning \"The accolades that poured in\""
+        }
+      ]
+    },
+    {
+      "word": "Simplicity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Accepting the Nobel Prize, she said she had vowed poverty to understand the poor and chose the poverty of her people.",
+          "sourceId": "nobel-acceptance",
+          "locator": "paragraph beginning \"It is so beautiful for us\""
+        },
+        {
+          "kind": "deed",
+          "claim": "She required her sisters to live with a single change of clothes and few possessions; in the 1980s she tore out the expensive carpeting, pews and water heaters newly installed in a refurbished house given to the order in San Francisco.",
+          "sourceId": "macleans-1997",
+          "locator": "paragraph beginning \"That year, as the Vatican officially sanctioned her new order\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Committee chairman described her life and her sisters' as \"a life of strict poverty and long days and nights of toil\".",
+          "sourceId": "sanness-1979",
+          "locator": "paragraph beginning \"She and her Sisters regard their work\""
+        }
+      ]
+    },
+    {
+      "word": "Determination",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Told by a US envoy that she could not enter West Beirut under shelling, she went in the next day, after a ceasefire, with four ambulances and rescued dozens of abandoned and handicapped orphans.",
+          "sourceId": "macleans-1997",
+          "locator": "paragraph beginning \"When Malcolm Muggeridge\""
+        },
+        {
+          "kind": "deed",
+          "claim": "She kept up her work for nearly fifty years while, in her private letters, she described dryness, darkness and loneliness in prayer.",
+          "sourceId": "time-2007",
+          "locator": "paragraph beginning \"That absence seems to have started\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Maclean's wrote that she built an order of 4,500 sisters and brothers in over 100 countries with \"stubborn entrepreneurial shrewdness\", and that her \"implacable efforts\" won her papal permission to work outside the convent.",
+          "sourceId": "macleans-1997",
+          "locator": "paragraphs beginning \"Born Agnes Gonxha Bojaxhiu\" and \"In Petrie's film\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Murray Kempton, a hostile reviewer, wrote that her church superiors let slip hints that \"the insistences of Mother's self-will can be felt among the thorns\" of their calling.",
+          "sourceId": "kempton-1996",
+          "locator": "paragraph beginning \"Hitchens does not engage the mystery\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "What counts is not how much you do but how much love you put into it.",
+      "sourceId": "nobel-lecture",
+      "locator": "paragraph beginning \"There is so much suffering\""
+    },
+    {
+      "text": "Give until it costs you something, not only from what you have left over.",
+      "sourceId": "nobel-lecture",
+      "locator": "paragraph beginning \"And so let us always meet each other with a smile\""
+    },
+    {
+      "text": "Look for the lonely and unloved in your own home and street first.",
+      "sourceId": "nobel-lecture",
+      "locator": "paragraph beginning \"And so here I am talking with you\""
+    },
+    {
+      "text": "Treat the poor with respect and dignity, not pity.",
+      "sourceId": "nobel-acceptance",
+      "locator": "paragraph beginning \"In their name I accept the award\""
+    },
+    {
+      "text": "Live as poor as the people you serve.",
+      "sourceId": "macleans-1997",
+      "locator": "paragraph beginning \"That year, as the Vatican officially sanctioned her new order\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Love begins at home, and it is not how much we do, but how much love we put in the action that we do.",
+      "sourceId": "nobel-lecture",
+      "locator": "paragraph beginning \"There is so much suffering\""
+    },
+    {
+      "text": "But I don’t want you to give me from your abundance, I want that you give me until it hurts.",
+      "sourceId": "nobel-lecture",
+      "locator": "paragraph beginning \"And so let us always meet each other with a smile\""
+    },
+    {
+      "text": "Our poor people are great people, are very lovable people, they don’t need our pity and sympathy, they need our understanding love. They need our respect; they need that we treat them with dignity.",
+      "sourceId": "nobel-acceptance",
+      "locator": "paragraph beginning \"In their name I accept the award\""
+    }
+  ],
+  "definingMoment": {
+    "text": "On 10 September 1946, on a train to Darjeeling, she received what she called a \"call within a call\" to serve the poorest of the poor. After nearly two years of waiting for permission, on 17 August 1948 she left the Loreto convent in a white sari with a blue border. With only a short medical course and no money, she went into the slums for the first time on 21 December 1948, washed children's sores and nursed a woman dying of hunger and TB.",
+    "sourceIds": [
+      "vatican-bio",
+      "macleans-1997",
+      "nobel-bio"
+    ]
+  },
+  "shadow": {
+    "text": "The care in her homes is disputed. In a 1994 article in The Lancet, Robin Fox wrote that at her Calcutta home for the dying, recourse to diagnosis, treatment and pain relief was \"seldom permissible\" because \"such systematic approaches are alien to the ethos of the home\", as Murray Kempton quoted him in 1996. A 2013 review of 287 published documents by three Canadian researchers criticised her care of the sick, her political contacts and her handling of the money she raised; it reports that doctors visiting her homes found poor hygiene, inadequate food and no painkillers, and that most of the order's bank accounts were kept secret. Christopher Hitchens wrote that she herself \"checked into some of the finest and costliest clinics and hospitals in the West\" for heart trouble and old age, and Susan Shields, a former sister, told him that she taught the sisters to baptise dying patients in secret. She accepted honours from Michèle Duvalier, wife of Haiti's dictator, and a donation from the US businessman Charles Keating, convicted of fraud and racketeering in 1993 (Maclean's gives $1.75 million, Kempton $1.25 million); those convictions were overturned, and in 1999 he pleaded guilty to wire and bankruptcy fraud. In her 1979 Nobel lecture she called abortion \"the greatest destroyer of peace today\", and she opposed birth control other than natural methods.",
+    "sourceIds": [
+      "kempton-1996",
+      "larivee-2013",
+      "macleans-1997",
+      "abajournal-2014",
+      "nobel-lecture"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Who in your own home or street was lonely this week, and what did you do about it?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "Nobel Lecture",
+      "year": 1979
+    },
+    {
+      "title": "Mother Teresa: Come Be My Light (letters, ed. Brian Kolodiejchuk)",
+      "year": 2007
+    }
+  ],
+  "sources": [
+    {
+      "id": "nobel-lecture",
+      "kind": "primary",
+      "title": "Nobel Lecture, 11 December 1979",
+      "author": "Mother Teresa",
+      "year": 1997,
+      "publisher": "Nobel Lectures, Peace 1971-1980, World Scientific; NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/peace/1979/teresa/lecture/"
+    },
+    {
+      "id": "nobel-acceptance",
+      "kind": "primary",
+      "title": "Acceptance Speech, 10 December 1979, University of Oslo",
+      "author": "Mother Teresa",
+      "year": 1979,
+      "publisher": "Nobel Foundation; NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/peace/1979/teresa/acceptance-speech/"
+    },
+    {
+      "id": "nobel-bio",
+      "kind": "secondary",
+      "title": "Mother Teresa – Biographical",
+      "author": "Nobel Foundation",
+      "year": 1997,
+      "publisher": "Nobel Lectures, Peace 1971-1980, World Scientific; NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/peace/1979/teresa/biographical/"
+    },
+    {
+      "id": "sanness-1979",
+      "kind": "secondary",
+      "title": "Presentation Speech, Nobel Peace Prize 1979",
+      "author": "John Sanness, Chairman of the Norwegian Nobel Committee",
+      "year": 1997,
+      "publisher": "Nobel Lectures, Peace 1971-1980, World Scientific; NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/peace/1979/ceremony-speech/"
+    },
+    {
+      "id": "vatican-bio",
+      "kind": "secondary",
+      "title": "Mother Teresa of Calcutta (1910-1997), biography",
+      "author": "Holy See, Office for the Liturgical Celebrations",
+      "year": 2003,
+      "publisher": "vatican.va",
+      "url": "https://www.vatican.va/news_services/liturgy/saints/ns_lit_doc_20031019_madre-teresa_en.html"
+    },
+    {
+      "id": "macleans-1997",
+      "kind": "secondary",
+      "title": "Mother Teresa (originally in Maclean's, 15 September 1997)",
+      "author": "Marci McDonald",
+      "year": 2013,
+      "publisher": "The Canadian Encyclopedia, Historica Canada",
+      "url": "https://www.thecanadianencyclopedia.ca/en/article/mother-teresa"
+    },
+    {
+      "id": "time-2007",
+      "kind": "secondary",
+      "title": "Mother Teresa's Crisis of Faith",
+      "author": "David Van Biema",
+      "year": 2007,
+      "publisher": "Time, 23 August 2007",
+      "url": "https://content.time.com/time/subscriber/article/0,33009,1655720,00.html"
+    },
+    {
+      "id": "kempton-1996",
+      "kind": "secondary",
+      "title": "The Shadow Saint (review of Christopher Hitchens, The Missionary Position)",
+      "author": "Murray Kempton",
+      "year": 1996,
+      "publisher": "The New York Review of Books, 11 July 1996",
+      "url": "https://www.nybooks.com/articles/1996/07/11/the-shadow-saint/"
+    },
+    {
+      "id": "larivee-2013",
+      "kind": "secondary",
+      "title": "Mother Teresa: Anything but a saint… (press release on Larivée, Chénard and Sénéchal, Studies in Religion/Sciences religieuses 42, 2013)",
+      "author": "University of Montreal",
+      "year": 2013,
+      "publisher": "EurekAlert!, 1 March 2013",
+      "url": "https://www.eurekalert.org/news-releases/778597"
+    },
+    {
+      "id": "abajournal-2014",
+      "kind": "secondary",
+      "title": "Charles Keating, former lawyer and key figure in S&L debacle, dies at 90",
+      "author": "Debra Cassens Weiss",
+      "year": 2014,
+      "publisher": "ABA Journal, 2 April 2014",
+      "url": "https://www.abajournal.com/news/article/charles_keating_former_lawyer_and_key_figure_in_thrift_debacle_dies_at_90"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Catholic nun (1910-1997) who founded the Missionaries of Charity, a religious order inside the Catholic Church (not a religion); never a politician or campaigner for office; no account of sexual contact with a minor or of sexual violence by her was found; she is in, and her dark side is the disputed quality of care in her homes, her money and political contacts (Duvalier, Keating), and her hard line on abortion and birth control."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value against the 1994 Lancet account of her Calcutta home, the 2013 Montreal review, her own care in Western clinics, her secret money and her nearly fifty years without feeling God, and re-read every cited passage. Compassion fell: the charge that her homes withheld diagnosis and pain relief as a matter of their ethos, made by The Lancet's Robin Fox and repeated by the 2013 review, is a pattern that goes to the plain meaning of the word, so her hands-on tending now stands under Service and the critique in the shadow. Service, Faith, Simplicity and Determination held, Determination with a hostile witness (Kempton) as its third source, and the blind pick's Devotion was added; all three quotes were found word for word in her Nobel speeches. Four sentences were corrected, among them a 'twenty years' of teaching (it was 1931 to 1948) and Keating's 1993 conviction, later overturned.",
+    "checkedOn": "2026-11-10"
+  }
+}
