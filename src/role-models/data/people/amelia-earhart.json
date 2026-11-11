@@ -1,0 +1,362 @@
+{
+  "id": "amelia-earhart",
+  "name": "Amelia Earhart",
+  "pronoun": "she",
+  "born": 1897,
+  "died": 1937,
+  "category": "explorers",
+  "areaIds": [
+    "lm_fun",
+    "lm_mindset",
+    "lm_mission"
+  ],
+  "tagline": "A pilot who flew the Atlantic alone because she loved flying and wanted to",
+  "startedFrom": "She was born in 1897 in Atchison, Kansas, and spent her early years in her grandfather's house, where she went to a private school. When her father's drinking caught up with him, the family drifted around the Midwest in poor circumstances. She paid for her first flying lessons in 1921 with jobs as a telephone company clerk and a photographer.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 20-21 May 1932 she flew alone from Newfoundland to Northern Ireland; flames came out of the engine and ice on the wings forced her to fly just above the waves.",
+          "sourceId": "nasm",
+          "locator": "Section on the 1932 solo Atlantic flight ('The flight was not easy')"
+        },
+        {
+          "kind": "words",
+          "claim": "Of the 1928 flight she wrote: \"Obviously I faced the possibility of not returning when first I considered going.\"",
+          "sourceId": "hrs-1928",
+          "locator": "Ch. V, Preparations, p. 110"
+        },
+        {
+          "kind": "words",
+          "claim": "In her introduction, Marion Perkins prints verses Earhart handed her in 1927; they begin: \"Courage is the price that Life exacts for granting peace\".",
+          "sourceId": "hrs-1928",
+          "locator": "Introduction by Marion Perkins, pp. 16-17 ('One day last year ... she handed me some verses')"
+        },
+        {
+          "kind": "witness",
+          "claim": "Her biographer Doris Rich quotes the pilot Edna Gardner: \"With not enough experience, not enough [flying] hours, she had the courage to do it.\"",
+          "sourceId": "rich-1989",
+          "locator": "Smithsonian Magazine excerpt (20 July 2023), paragraph on New Orleans, May 1937"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In her 1931 letter to George Putnam before their wedding she wrote that she could not guarantee \"to endure at all times the confinement of even an attractive cage\".",
+          "sourceId": "pbs-2014",
+          "locator": "Paragraph on the Purdue copy of the letter (Purdue, Putnam Collection, b7f150i1, 7 Feb. 1931)"
+        },
+        {
+          "kind": "witness",
+          "claim": "PBS describes the letter as showing her deep misgivings that marrying Putnam would mean giving up her \"cherished independence\".",
+          "sourceId": "pbs-2014",
+          "locator": "Final paragraph on the letter"
+        },
+        {
+          "kind": "deed",
+          "claim": "She paid for her own flying lessons by working as a clerk and photographer, soloed in 1921 and bought her first airplane, a Kinner Airster.",
+          "sourceId": "nasm",
+          "locator": "Section on learning to fly (Neta Snook, Kinner Airster)"
+        },
+        {
+          "kind": "words",
+          "claim": "Before the 1928 flight she wished to check the equipment, meet the pilot and do some of the flying herself: \"The idea of going as just 'extra weight' did not appeal to me at all.\"",
+          "sourceId": "fun-1932",
+          "locator": "Ch. 4, p. 61"
+        }
+      ]
+    },
+    {
+      "word": "Fun",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "She wrote that she undertook the 1932 solo Atlantic flight \"because I loved flying\".",
+          "sourceId": "fun-1932",
+          "locator": "Ch. 17, Across the Atlantic—Solo, p. 210"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1928 she flew alone across the United States and back, the first such trip by a woman, as \"primarily a vacation\".",
+          "sourceId": "fun-1932",
+          "locator": "Ch. 6, Vagabonding, p. 89"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Encyclopedia of the Great Plains says she \"loved the beauty of flight and flew whenever she could\".",
+          "sourceId": "plains",
+          "locator": "Paragraph on her records (third paragraph from the end)"
+        },
+        {
+          "kind": "deed",
+          "claim": "On 2 January 1935 in Honolulu, while waiting to fly solo to California, she gave a talk at the University of Hawaii titled \"Flying for Fun\".",
+          "sourceId": "briand-1960",
+          "locator": "Part Two, ch. 14, Solo from Hawaii to California"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After she ground-looped and damaged the Electra on take-off at Luke Field, Honolulu, on 20 March 1937, she had it repaired and resumed the world flight, leaving Miami eastbound on 1 June 1937.",
+          "sourceId": "gray-1993",
+          "locator": "Section 'Background' (Luke Field, 20 March 1937) and 'Mistakes at Miami' (departed Miami 1 June 1937)"
+        },
+        {
+          "kind": "words",
+          "claim": "Right after the crash she told reporters she was \"more eager than ever to fly again\".",
+          "sourceId": "briand-1960",
+          "locator": "Part Three, ch. 1, Crack-up in Hawaii"
+        },
+        {
+          "kind": "witness",
+          "claim": "The National Air and Space Museum writes that she \"had the courage and drive to make another flight or reinvent herself when required\".",
+          "sourceId": "nasm-2017",
+          "locator": "Closing paragraph on her legacy"
+        }
+      ]
+    },
+    {
+      "word": "Mentorship",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "From 1935 to 1937 she lived on campus at Purdue a few weeks each semester as a career counselor for women students; Purdue's article says she \"saw it as an opportunity to help women students\".",
+          "sourceId": "purdue-stories",
+          "locator": "Section on Amelia Earhart"
+        },
+        {
+          "kind": "deed",
+          "claim": "She became the first president of the Ninety-Nines, the organization women pilots formed after the 1929 women's air derby to help one another.",
+          "sourceId": "nasm",
+          "locator": "Section on the All-Women's Air Derby and the Ninety-Nines"
+        },
+        {
+          "kind": "words",
+          "claim": "She urged women to train as meteorologists and asked a weather bureau head, \"Is there any reason why women cannot be 'weather men'?\"",
+          "sourceId": "fun-1932",
+          "locator": "Ch. 9, pp. 126-127"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Kansas Historical Society says that on public speaking tours she encouraged women to follow their dreams.",
+          "sourceId": "kansapedia",
+          "locator": "Fourth paragraph"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Face the danger once, when you decide to go; after that, stop dwelling on it.",
+      "sourceId": "hrs-1928",
+      "locator": "Ch. V, p. 110 ('Once faced and settled there really wasn't any good reason to refer to it again')"
+    },
+    {
+      "text": "Do the hard thing because you want to, and let it prove to you what you can do.",
+      "sourceId": "fun-1932",
+      "locator": "Ch. 17, p. 210 ('a proving to me, and to anyone else interested, that a woman with adequate experience could do it')"
+    },
+    {
+      "text": "Keep the right to call off a plan at any time, and do not talk about it before it is real.",
+      "sourceId": "fun-1932",
+      "locator": "Ch. 17, p. 210 ('from the start I definitely planned that I might abandon it at any time')"
+    },
+    {
+      "text": "Practise for the worst conditions until you feel sure, before you have to face them.",
+      "sourceId": "fun-1932",
+      "locator": "Ch. 17, p. 212 (blind flying 'until I felt really confident')"
+    },
+    {
+      "text": "Do not go along as extra weight: ask to do part of the work yourself.",
+      "sourceId": "fun-1932",
+      "locator": "Ch. 4, p. 61"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "As soon as we left the ground, I knew I myself had to fly.",
+      "sourceId": "fun-1932",
+      "locator": "Ch. 2, Aviation and I Get Together, p. 25"
+    },
+    {
+      "text": "It may not be all plain sailing, of course, if one chooses to step out informally over strange country visiting unfamiliar landing fields. But the fun of it is worth the price.",
+      "sourceId": "fun-1932",
+      "locator": "Ch. 6, Vagabonding, p. 96"
+    },
+    {
+      "text": "It was clear in my mind that I was undertaking the flight because I loved flying. I chose to fly the Atlantic because I wanted to.",
+      "sourceId": "fun-1932",
+      "locator": "Ch. 17, Across the Atlantic—Solo, p. 210"
+    },
+    {
+      "text": "Women must try to do things as men have tried. When they fail, their failure must be but a challenge to others.",
+      "sourceId": "purdue-note-1937",
+      "locator": "Note to George Palmer Putnam, ca. 1937, Purdue b4f49i1 (catalog description)"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 20 May 1932 she took off alone from Harbor Grace, Newfoundland, in her Lockheed Vega and landed in Northern Ireland the next morning. On the way, flames came out of the engine and ice on the wings forced her down close to the waves. Four years after crossing as a passenger, she became the first woman to fly the Atlantic alone. She wrote that she went because she loved flying and to prove that a woman with enough experience could do it.",
+    "sourceIds": [
+      "fun-1932",
+      "nasm"
+    ]
+  },
+  "shadow": {
+    "text": "In Miami in late May 1937, before the second world-flight attempt, she told a reporter that the Morse code radio set had been left off because neither she nor her navigator Fred Noonan could work a Morse key fast enough to justify its weight, and she had the plane's 250-foot trailing antenna removed. That month she twice told reporters plans that were not her real ones; her biographer Doris Rich writes that at Miami \"she lied again\". Radio expert Almon Gray wrote in 1993 that without that antenna ships could not take bearings on her plane, and that she chose a beacon frequency too high for her own direction finder. On 2 July 1937 the Coast Guard cutter Itasca heard her radio signal grow stronger near Howland Island, but she and the ship never made two-way contact. The National Air and Space Museum says that, like many long-distance pilots, she had limited navigation experience, and that she struggled with her new direction-finding radio; she and Noonan were never found.",
+    "sourceIds": [
+      "rich-1989",
+      "gray-1993",
+      "nasm-2017",
+      "nasm-2025"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which risk did you keep turning over this week instead of deciding once whether it was worth it?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Fun of It",
+      "year": 1932
+    },
+    {
+      "title": "20 Hrs. 40 Min.",
+      "year": 1928
+    },
+    {
+      "title": "Last Flight",
+      "year": 1937
+    }
+  ],
+  "sources": [
+    {
+      "id": "fun-1932",
+      "kind": "primary",
+      "title": "The Fun of It: Random Records of My Own Flying and of Women in Aviation",
+      "author": "Amelia Earhart",
+      "year": 1932,
+      "publisher": "Harcourt, Brace and Company (the printing scanned on Wikisource)",
+      "url": "https://en.wikisource.org/wiki/The_Fun_of_It"
+    },
+    {
+      "id": "hrs-1928",
+      "kind": "primary",
+      "title": "20 Hrs. 40 Min.: Our Flight in the Friendship",
+      "author": "Amelia Earhart",
+      "year": 1928,
+      "publisher": "G. P. Putnam's Sons",
+      "url": "https://www.gutenberg.org/ebooks/73448"
+    },
+    {
+      "id": "purdue-note-1937",
+      "kind": "primary",
+      "title": "Letter, 1937, to George Palmer Putnam (George Palmer Putnam Collection of Amelia Earhart Papers, b4f49i1)",
+      "author": "Amelia Earhart",
+      "year": 1937,
+      "publisher": "Purdue University Libraries, Archives and Special Collections",
+      "url": "https://earchives.lib.purdue.edu/digital/collection/earhart/id/266"
+    },
+    {
+      "id": "nasm",
+      "kind": "secondary",
+      "title": "Amelia Earhart",
+      "author": "National Air and Space Museum, Smithsonian Institution",
+      "year": "n.d. (read 2026)",
+      "url": "https://airandspace.si.edu/amelia-earhart"
+    },
+    {
+      "id": "nasm-2017",
+      "kind": "secondary",
+      "title": "Amelia Earhart: Missing for 80 Years But Not Forgotten",
+      "author": "National Air and Space Museum, Smithsonian Institution",
+      "year": 2017,
+      "url": "https://airandspace.si.edu/node/176348"
+    },
+    {
+      "id": "nasm-2025",
+      "kind": "secondary",
+      "title": "Answering Your Questions About Earhart's Disappearance ... Except the Big One",
+      "author": "National Air and Space Museum, Smithsonian Institution",
+      "year": 2025,
+      "url": "https://airandspace.si.edu/stories/editorial/answering-your-questions-about-earharts-disappearance-except-big-one"
+    },
+    {
+      "id": "gray-1993",
+      "kind": "secondary",
+      "title": "Amelia Didn't Know Radio",
+      "author": "Almon A. Gray (Naval History, vol. 7 no. 4)",
+      "year": 1993,
+      "publisher": "U.S. Naval Institute",
+      "url": "https://www.usni.org/magazines/naval-history-magazine/1993/december/amelia-didnt-know-radio"
+    },
+    {
+      "id": "rich-1989",
+      "kind": "secondary",
+      "title": "Amelia Earhart: A Biography (excerpt 'Amelia Earhart Plans Her Final Flight', Smithsonian Magazine, 20 July 2023)",
+      "author": "Doris L. Rich",
+      "year": 1989,
+      "publisher": "Smithsonian Institution Press",
+      "url": "https://www.smithsonianmag.com/blogs/smithsonian-books/2023/07/20/amelia-earhart/"
+    },
+    {
+      "id": "briand-1960",
+      "kind": "secondary",
+      "title": "Daughter of the Sky: The Story of Amelia Earhart",
+      "author": "Paul L. Briand Jr.",
+      "year": 1960,
+      "publisher": "Duell, Sloan and Pearce",
+      "url": "https://www.gutenberg.org/ebooks/70263"
+    },
+    {
+      "id": "plains",
+      "kind": "secondary",
+      "title": "Earhart, Amelia (1897-1937), Encyclopedia of the Great Plains",
+      "author": "Donald M. Goldstein",
+      "year": 2011,
+      "publisher": "University of Nebraska-Lincoln",
+      "url": "https://plainshumanities.unl.edu/encyclopedia/doc/egp.gen.011.html"
+    },
+    {
+      "id": "kansapedia",
+      "kind": "secondary",
+      "title": "Amelia Earhart (Kansapedia)",
+      "author": "Kansas Historical Society",
+      "year": 2018,
+      "url": "https://www.kansashistory.gov/kansapedia/amelia-earhart/12043"
+    },
+    {
+      "id": "pbs-2014",
+      "kind": "secondary",
+      "title": "To the Point: Earhart's Prenuptial Letter to Putnam",
+      "author": "Dylan Hayley Leavitt (Antiques Roadshow, PBS)",
+      "year": 2014,
+      "url": "https://www.pbs.org/wgbh/roadshow/articles/to-the-point-earharts-prenuptial-letter-to-putnam"
+    },
+    {
+      "id": "purdue-stories",
+      "kind": "secondary",
+      "title": "5 legendary Purdue women every Boilermaker should know",
+      "author": "Purdue University",
+      "year": "n.d. (read 2026)",
+      "url": "https://stories.purdue.edu/5-legendary-purdue-women-every-boilermaker-should-know"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real aviator (1897-1937), not fictional, not a politician, campaigner or founder of a religion; no account of sexual contact with anyone under 16 or of sexual violence by her was found; her documented dark side (radio and navigation choices on the last flight, misleading the press about her plans, paid publicity) is shadow, not an owner case."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked each value against her own books, the Smithsonian pages, Gray's 1993 radio study, Rich's biography, Briand, Purdue and the Kansas and Great Plains entries. Nothing fell: Fun needed and got a third source (her 1935 'Flying for Fun' talk), and Mentorship held on her Purdue counselling of women students; the blind pick's Determination and Adventure lost out to five better-sourced words. I fixed the courage-verses claim (Perkins does not say Earhart wrote them), the book's publisher, the Miami restart and the Itasca wording, and added her May 1937 lies to reporters to the shadow. All four quotes check against the books and the Purdue archive.",
+    "checkedOn": "2026-11-10"
+  }
+}
