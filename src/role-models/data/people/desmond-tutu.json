@@ -1,0 +1,372 @@
+{
+  "id": "desmond-tutu",
+  "name": "Desmond Tutu",
+  "born": 1931,
+  "died": 2021,
+  "category": "givers",
+  "areaIds": [
+    "lm_contribution",
+    "lm_spirituality"
+  ],
+  "tagline": "A priest who fought apartheid without hate, then chaired South Africa's truth commission.",
+  "startedFrom": "He was born in 1931 in Klerksdorp, South Africa, the son of a teacher and a domestic worker who later cleaned and cooked at a school for the blind. As a child he had polio and tuberculosis, and the family was of modest means. He wanted to be a doctor, but they could not pay for it, so he trained as a teacher.",
+  "values": [
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his Nobel lecture he said there can be no real peace in South Africa until there is first justice for everyone who lives there.",
+          "sourceId": "nobel-lecture-1984",
+          "locator": "Nobel lecture, Oslo, 11 December 1984, paragraph beginning \"There is no peace in Southern Africa\""
+        },
+        {
+          "kind": "deed",
+          "claim": "He resigned as a teacher in protest against the Bantu Education Act, and in the 1970s called for sanctions against apartheid as a peaceful way to force change.",
+          "sourceId": "uct-2021",
+          "locator": "paragraphs beginning \"The depredations of the Bantu Education Act\" and \"He became increasingly prominent\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Committee chairman said that as leader of the South African Council of Churches he set as his goal \"a democratic and just society without racial segregation\".",
+          "sourceId": "aarvik-1984",
+          "locator": "paragraph beginning \"As the dynamic leader of this Council\""
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At a funeral in July 1985 he pushed into a crowd that was beating a man accused of collaborating with the apartheid state, who had been doused with petrol, and he and other clergy saved him.",
+          "sourceId": "reuters-2021",
+          "locator": "paragraphs beginning \"At a funeral in July of that year\" and \"Accused of being an apartheid collaborator\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The University of Cape Town's obituary says he showed enormous courage in Duduza in 1985 when he led others in saving a man a crowd wanted to execute as a police spy.",
+          "sourceId": "uct-2021",
+          "locator": "paragraph beginning \"He demonstrated enormous courage\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Nobel Committee chairman called him courageous and fearless, at the front of protest marches regardless of the danger to his own life.",
+          "sourceId": "aarvik-1984",
+          "locator": "paragraph beginning \"But, although he has never learnt to hate\""
+        }
+      ]
+    },
+    {
+      "word": "Forgiveness",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his foreword to the Truth and Reconciliation Commission report he praised victims' \"willingness to forgive\" (\"It is not easy to forgive, but we have seen it happen\") and pleaded with white South Africans to answer with the same generosity.",
+          "sourceId": "trc-report-1998",
+          "locator": "Vol. 1, ch. 1, Foreword by Chairperson, paras. 71 and 73, p. 18"
+        },
+        {
+          "kind": "deed",
+          "claim": "At Yad Vashem in December 1989 he prayed for those who carried out the Holocaust and asked for help to forgive them.",
+          "sourceId": "jta-1989",
+          "locator": "paragraphs beginning \"Before leaving, Tutu sermonized\" and \"We pray for those who made it happen\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The University of Cape Town's obituary says that after retiring as archbishop in 1996 he led the Truth and Reconciliation process as a vast act of remembering, forgiving and healing.",
+          "sourceId": "uct-2021",
+          "locator": "paragraph beginning \"In the final years of apartheid\""
+        }
+      ]
+    },
+    {
+      "word": "Hope",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In a 1992 interview he said he was always hopeful, because no situation is beyond God's power to bring good out of it.",
+          "sourceId": "ct-1992",
+          "locator": "final answer, beginning \"I am always hopeful\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The University of Cape Town's obituary sums up his life as devoted to being courageous and hopeful and giving courage and hope to others.",
+          "sourceId": "uct-2021",
+          "locator": "paragraph beginning \"This is, in its way, a succinct summary\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Religion News Service obituary says he \"lived a life of moral strength, vision, and hope\" that let him serve his church and people even under persecution.",
+          "sourceId": "rns-2021",
+          "locator": "paragraph beginning \"Tutu, who was lauded as the conscience of South Africa\""
+        }
+      ]
+    },
+    {
+      "word": "Humour",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In the middle of his Nobel lecture on the cost of apartheid he told a joke about a Zambian who mocked South Africa for having a Minister of Justice.",
+          "sourceId": "nobel-lecture-1984",
+          "locator": "paragraph beginning \"Once a Zambian and a South African\""
+        },
+        {
+          "kind": "deed",
+          "claim": "He opened a 2011 sermon on Doubting Thomas with a joke against himself about walking on water to fetch P. W. Botha's hat, and a newspaper reporting that he could not swim.",
+          "sourceId": "uct-2021",
+          "locator": "paragraph beginning \"In a signature instance\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Nelson Mandela described him as \"sometimes strident, often tender, never afraid and seldom without humour\".",
+          "sourceId": "elders-profile",
+          "locator": "last paragraph of the profile, beginning \"Archbishop Tutu's ability to convey difficult messages\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not settle for a calm that leaves an injustice in place: real peace needs justice first.",
+      "sourceId": "nobel-lecture-1984",
+      "locator": "Nobel lecture, 11 December 1984, paragraph beginning \"There is no peace in Southern Africa\""
+    },
+    {
+      "text": "Face what happened in the past and say it out loud; a wound that is hidden does not heal.",
+      "sourceId": "trc-report-1998",
+      "locator": "Vol. 1, ch. 1, Foreword by Chairperson, paras. 27-28, p. 7"
+    },
+    {
+      "text": "Hold your own side to the same rules as the other side.",
+      "sourceId": "trc-report-1998",
+      "locator": "Vol. 1, ch. 1, Foreword by Chairperson, para. 41, p. 10 (he threatened to resign when the ANC said its members would not apply for amnesty) and para. 52, pp. 12-13"
+    },
+    {
+      "text": "When you fight for a good cause, keep some distance from it and keep your respect for the people on the other side.",
+      "sourceId": "ct-1992",
+      "locator": "answer beginning \"We can also be intolerant\""
+    },
+    {
+      "text": "Refill yourself through prayer, then spend yourself on other people.",
+      "sourceId": "ct-1992",
+      "locator": "answer beginning \"You see this pattern in the life of our Lord\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "There is no peace because there is no justice.",
+      "sourceId": "nobel-lecture-1984",
+      "locator": "Nobel lecture, Oslo, 11 December 1984, paragraph beginning \"There is no peace in Southern Africa\""
+    },
+    {
+      "text": "Perhaps oppression dehumanizes the oppressor as much as, if not more than, the oppressed. They need each other to become truly free, to become human.",
+      "sourceId": "nobel-lecture-1984",
+      "locator": "Nobel lecture, Oslo, 11 December 1984, paragraph beginning \"When will we learn that human beings are of infinite value\""
+    },
+    {
+      "text": "It is only by accounting for the past that we can become accountable for the future.",
+      "sourceId": "trc-report-1998",
+      "locator": "Vol. 1, ch. 1, Foreword by Chairperson, para. 28, p. 7"
+    },
+    {
+      "text": "I am always hopeful. A Christian is a prisoner of hope.",
+      "sourceId": "ct-1992",
+      "locator": "Christianity Today, 5 October 1992, final answer"
+    }
+  ],
+  "definingMoment": {
+    "text": "In July 1985, at a funeral in Duduza on the East Rand, young mourners were beating a man they accused of being a police spy; he had been doused with petrol and was about to be burned alive. Tutu, in his purple robes, pushed into the crowd with other clergy, and they saved the man. In the same month, after a woman suspected of being a spy was burned to death at another Duduza funeral, he told a crowd of more than 30,000 at KwaThema: \"If you do it again, I am going to collect my family and leave the country which I love dearly.\"",
+    "sourceIds": [
+      "reuters-2021",
+      "uct-2021",
+      "csm-1985"
+    ]
+  },
+  "shadow": {
+    "text": "In a 1984 speech at the Jewish Theological Seminary in New York, answering people who called him antisemitic, he said their sensitivity came from \"the arrogance of power because Jews are a powerful lobby in this land\". At Yad Vashem in December 1989 he said the good that could come was \"the spirit of forgiving, not forgetting\" and prayed for those who carried out the Holocaust, asking for help to forgive them; Elie Wiesel called this \"a disturbing lack of sensitivity\" toward the victims, and Rabbi Marvin Hier of the Simon Wiesenthal Center called it \"a gratuitous insult\". In a 2009 letter he wrote that \"it was the Palestinians who were paying for the horrors of the Holocaust\"; Abraham Foxman of the Anti-Defamation League once said he was not an antisemite but used examples that \"may cross the line\". At a 1997 commission hearing he begged Winnie Madikizela-Mandela to apologise for her links to the Mandela United Football Club; an Associated Press report in 2021 said the encounter \"still rankles some Black South Africans who think Tutu mistreated\" her. In 2018 the writer Ishtiyaq Shukri, abused as a child by Anglican priests in Kimberley, wrote that Tutu had \"never fully addressed\" sexual abuse in his own church; Tutu's office said he was \"mortified\" and trusted the current archbishop to hold the accused clergy to account.",
+    "sourceIds": [
+      "jta-2021",
+      "jta-1989",
+      "elders-rozett-2009",
+      "mg-2018",
+      "sowetan-2018",
+      "ap-2021"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you let your own side, or yourself, off for something you would have called out in someone else?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "No Future Without Forgiveness",
+      "year": 1999
+    },
+    {
+      "title": "The Book of Forgiving (with Mpho Tutu)",
+      "year": 2014
+    },
+    {
+      "title": "The Book of Joy (with the Dalai Lama and Douglas Abrams)",
+      "year": 2016
+    }
+  ],
+  "sources": [
+    {
+      "id": "nobel-lecture-1984",
+      "kind": "primary",
+      "title": "Nobel Lecture, 11 December 1984",
+      "author": "Desmond Tutu",
+      "year": 1997,
+      "publisher": "Nobel Lectures, Peace 1981-1990, ed. Tore Frängsmyr and Irwin Abrams, World Scientific, Singapore 1997; NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/peace/1984/tutu/lecture/"
+    },
+    {
+      "id": "trc-report-1998",
+      "kind": "primary",
+      "title": "Truth and Reconciliation Commission of South Africa Report, Volume 1, Chapter 1: Foreword by Chairperson",
+      "author": "Desmond Tutu",
+      "year": 1998,
+      "publisher": "Truth and Reconciliation Commission, presented to President Nelson Mandela on 29 October 1998; Department of Justice, South Africa",
+      "url": "https://www.justice.gov.za/trc/report/finalreport/Volume%201.pdf"
+    },
+    {
+      "id": "ct-1992",
+      "kind": "primary",
+      "title": "A Prisoner of Hope (interview with Desmond Tutu)",
+      "author": "Desmond Tutu, interviewed by Thomas Giles and Timothy Jones",
+      "year": 1992,
+      "publisher": "Christianity Today, 5 October 1992",
+      "url": "https://www.christianitytoday.com/1992/10/prisoner-of-hope/"
+    },
+    {
+      "id": "elders-rozett-2009",
+      "kind": "primary",
+      "title": "Response to an open letter from Robert Rozett",
+      "author": "Desmond Tutu",
+      "year": 2009,
+      "publisher": "The Elders, 13 September 2009",
+      "url": "https://theelders.org/news/response-open-letter-robert-rozett"
+    },
+    {
+      "id": "aarvik-1984",
+      "kind": "secondary",
+      "title": "Award Ceremony Speech, Nobel Peace Prize 1984",
+      "author": "Egil Aarvik, Chairman of the Norwegian Nobel Committee",
+      "year": 1984,
+      "publisher": "Nobel Foundation; NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/peace/1984/ceremony-speech/"
+    },
+    {
+      "id": "uct-2021",
+      "kind": "secondary",
+      "title": "Archbishop Emeritus Desmond Tutu: obituary",
+      "author": "UCT News (staff writer)",
+      "year": 2021,
+      "publisher": "University of Cape Town, 26 December 2021",
+      "url": "https://www.news.uct.ac.za/in-memoriam/desmond-tutu/-article/2021-12-26-archbishop-emeritus-desmond-tutu-obituary"
+    },
+    {
+      "id": "reuters-2021",
+      "kind": "secondary",
+      "title": "Tutu's daughter recalls 'proudest moment' when he saved man from angry mob",
+      "author": "Sisipho Skweyiya and Wendell Roelf (Reuters)",
+      "year": 2021,
+      "publisher": "Reuters, via BusinessLive, 29 December 2021",
+      "url": "https://www.businesslive.co.za/bd/national/2021-12-29-tutus-daughter-recalls-proudest-moment-when-he-saved-man-from-angry-mob/"
+    },
+    {
+      "id": "csm-1985",
+      "kind": "secondary",
+      "title": "South Africa's Tutu decries black violence",
+      "author": "Patrick Laurence",
+      "year": 1985,
+      "publisher": "The Christian Science Monitor, 24 July 1985",
+      "url": "https://www.csmonitor.com/1985/0724/ofun-f.html"
+    },
+    {
+      "id": "elders-profile",
+      "kind": "secondary",
+      "title": "Desmond Tutu (profile)",
+      "author": "The Elders",
+      "year": 2021,
+      "publisher": "The Elders",
+      "url": "https://theelders.org/profile/desmond-tutu"
+    },
+    {
+      "id": "jta-1989",
+      "kind": "secondary",
+      "title": "Jews stunned by Tutu's suggestion Holocaust perpetrators be forgiven",
+      "author": "Jewish Telegraphic Agency",
+      "year": 1989,
+      "publisher": "JTA, 28 December 1989",
+      "url": "https://www.jta.org/archive/jews-stunned-by-tutus-suggestion-holocaust-perpetrators-be-forgiven"
+    },
+    {
+      "id": "jta-2021",
+      "kind": "secondary",
+      "title": "Desmond Tutu, anti-apartheid leader who identified with Jews and criticized Israel's treatment of Palestinians, dies at 90",
+      "author": "Shira Hanau",
+      "year": 2021,
+      "publisher": "Jewish Telegraphic Agency, 26 December 2021",
+      "url": "https://www.jta.org/?p=1763150"
+    },
+    {
+      "id": "mg-2018",
+      "kind": "secondary",
+      "title": "Man accuses the Anglican Church of silencing sexual abuse",
+      "author": "Mail & Guardian",
+      "year": 2018,
+      "publisher": "Mail & Guardian, 16 March 2018",
+      "url": "https://mg.co.za/news/south-africa/2018-03-16-man-accuses-the-anglican-church-of-silencing-sexual-abuse/"
+    },
+    {
+      "id": "sowetan-2018",
+      "kind": "secondary",
+      "title": "'I'm mortified,' says Tutu as SA author reveals abuse by priests",
+      "author": "Matthew Savides",
+      "year": 2018,
+      "publisher": "Sowetan, 9 March 2018",
+      "url": "https://www.sowetanlive.co.za/news/south-africa/2018-03-09-im-mortified-says-tutu-as-sa-author-reveals-abuse-by-priests/"
+    },
+    {
+      "id": "nobel-facts",
+      "kind": "secondary",
+      "title": "Desmond Tutu: Facts",
+      "author": "Nobel Prize Outreach",
+      "year": 2026,
+      "publisher": "NobelPrize.org",
+      "url": "https://www.nobelprize.org/prizes/peace/1984/tutu/facts/"
+    },
+    {
+      "id": "rns-2021",
+      "kind": "secondary",
+      "title": "Desmond Tutu, Nobel Peace Prize-winning archbishop who fought apartheid, dies at 90",
+      "author": "Adelle M. Banks and B. Denise Hawkins (Religion News Service)",
+      "year": 2021,
+      "publisher": "Religion News Service, via Christianity Today, 26 December 2021",
+      "url": "https://www.christianitytoday.com/news/2021/december/desmond-tutu-dies-archbishop-apartheid-south-africa.html"
+    },
+    {
+      "id": "ap-2021",
+      "kind": "secondary",
+      "title": "A tense exchange highlights unsettled part of Tutu's legacy",
+      "author": "Christopher Torchia (Associated Press)",
+      "year": 2021,
+      "publisher": "Associated Press, via Yahoo News, 31 December 2021",
+      "url": "https://www.yahoo.com/news/tense-exchange-highlights-unsettled-part-071110223.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real South African Anglican archbishop (1931-2021) who led church opposition to apartheid and chaired the Truth and Reconciliation Commission; he never held or ran for office and founded no religion; no account of sexual contact with a minor or of sexual violence by him was found; he is in, and his dark side is a run of remarks about Jews, Israel and the Holocaust that Jewish leaders condemned, plus a 2018 charge that he never fully addressed sexual abuse by priests in his own church."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked Forgiveness and Justice with the critics of the truth commission (amnesty instead of trials, his handling of Winnie Madikizela-Mandela) and Hope with the weakness of its third source, a Nobel speech line about hope for South Africa rather than about him. Every value held: the commission criticism is about the process and went into the shadow, and Hope got a firmer third witness (the RNS obituary). All four quotes checked against the Nobel lecture, the TRC report and the 1992 interview. The shadow lost a wrong date on Foxman's remark (2007, not 2009) and gained the 1997 Madikizela-Mandela hearing; the blind pick's Faith had no room.",
+    "checkedOn": "2026-11-10"
+  }
+}
