@@ -1,0 +1,330 @@
+{
+  "id": "ali-abdaal",
+  "name": "Ali Abdaal",
+  "born": 1994,
+  "died": null,
+  "category": "teachers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_mission"
+  ],
+  "tagline": "A junior doctor turned YouTuber who built his work on making hard tasks fun.",
+  "startedFrom": "He was born in Pakistan and now lives in London; from the age of 12 he earned money as a freelance web designer. At school, he says, his whole identity was tied to coming top of his year. He studied medicine at Cambridge from 2012 to 2018 and started his YouTube channel in his final year, with about five views on the first day.",
+  "values": [
+    {
+      "word": "Fun",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He told Varsity in 2022 that he does not have a strong work ethic, only does things for fun, and finds a way to make a task fun when it is not.",
+          "sourceId": "varsity-2022",
+          "locator": "section headed by the pull quote 'I don't really have a strong work ethic'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2021 he tried a few part-time hospital shifts, then announced in November 2021 that he was leaving medicine for good because the hospital was nowhere near as much fun as the studio.",
+          "sourceId": "yt-2021-11",
+          "locator": "chapter 'Going part-time and why it didn't work' (00:18:12)"
+        },
+        {
+          "kind": "deed",
+          "claim": "As a junior doctor he started adding jokes to hospital discharge letters, and a GP emailed the hospital to say it was the best discharge letter he had read.",
+          "sourceId": "national-2024",
+          "locator": "paragraphs on the discharge letters, after the three energisers"
+        },
+        {
+          "kind": "witness",
+          "claim": "The National wrote in 2024 that finding the fun perhaps comes relatively easily to him, noting he used to perform magic semi-professionally.",
+          "sourceId": "national-2024",
+          "locator": "paragraph after the discharge letter story"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He took the Giving What We Can pledge to give 10% of his personal income to effective charities in 2019, and in 2024 extended it to 10% of his business's profits, projecting about $260,000 for that year.",
+          "sourceId": "yt-2024-08",
+          "locator": "opening (00:00:00) and chapter 'How much I'll donate this year' (00:10:21)"
+        },
+        {
+          "kind": "words",
+          "claim": "In March 2021 he said that because he has taken the pledge to give 10% of his income every year, he saves more lives by making money online and giving it away than by working full-time as a doctor.",
+          "sourceId": "yt-2021-03",
+          "locator": "chapter 'Reasons for Returning', c. 00:17:20-00:18:00"
+        },
+        {
+          "kind": "witness",
+          "claim": "Giving What We Can, the charity that runs the pledge, hosts his pledge club on its own site, where he asks readers to join him and the others who have pledged at least 10% of their income.",
+          "sourceId": "gwwc-club",
+          "locator": "pledge club page, banner 'Join me and ... other people who have pledged ≥10% of their income'"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He studied clinical medicine at the University of Cambridge and added an extra year to take a BA in psychology.",
+          "sourceId": "national-2024",
+          "locator": "paragraph on his Cambridge degrees"
+        },
+        {
+          "kind": "deed",
+          "claim": "He was a medical student at Cambridge from 2012 to 2018, then worked two foundation years as a doctor in East Anglia until August 2020.",
+          "sourceId": "yt-2021-03",
+          "locator": "chapter 'Logistical Context' (00:00:28)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Varsity reported in 2022 that he 'topped' the Tripos (Cambridge exam ranking) in his third year.",
+          "sourceId": "varsity-2022",
+          "locator": "paragraph on Tripos rankings"
+        },
+        {
+          "kind": "words",
+          "claim": "He said in 2024 that he loves the feeling of learning and doing interesting things, naming a two-day advanced life support course as two of the best days of his life.",
+          "sourceId": "dk-2024",
+          "locator": "transcript, his answer on whether he looked forward to Mondays as a doctor"
+        },
+        {
+          "kind": "witness",
+          "claim": "The National wrote in 2024 that he spent years reading research papers and studying the creative habits of people from Rousseau to Olympians for his book.",
+          "sourceId": "national-2024",
+          "locator": "paragraph beginning 'Despite the years spent reading mountains of research papers'"
+        }
+      ]
+    },
+    {
+      "word": "Building things",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He worked as a freelance web designer from the age of 12, taught medical school applicants through courses and his 6med website, and posted his first YouTube videos in summer 2017.",
+          "sourceId": "national-2024",
+          "locator": "paragraphs on his start in tech and on YouTube"
+        },
+        {
+          "kind": "witness",
+          "claim": "Varsity wrote in 2022 that he runs a content creation business he started while at Cambridge, alongside podcasts and a masterclass series.",
+          "sourceId": "varsity-2022",
+          "locator": "opening paragraph"
+        },
+        {
+          "kind": "words",
+          "claim": "He tells students thinking of starting a business, channel or podcast to go for it, saying he knows no one who regrets starting, even if it does not succeed.",
+          "sourceId": "varsity-2022",
+          "locator": "paragraph beginning 'But he begins with a bit of advice'"
+        }
+      ]
+    },
+    {
+      "word": "Contribution",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In September 2021 he said that what he ultimately cares about is teaching and inspiring people, and that if he could do only one thing for the rest of his life it would not be saving lives as a doctor.",
+          "sourceId": "nathan-barry-2021",
+          "locator": "episode 048 (20 September 2021), transcript on the episode page"
+        },
+        {
+          "kind": "deed",
+          "claim": "Before YouTube he taught medical school applicants through courses and his 6med website, and his first videos in 2017 covered the same topic: how to get into medicine.",
+          "sourceId": "national-2024",
+          "locator": "paragraph under 'Long, steep learning curve'"
+        },
+        {
+          "kind": "words",
+          "claim": "He said in 2024 that before every filming session he tells himself he is not filming for views or money but because he has something worth sharing that at least one person might find valuable.",
+          "sourceId": "dk-2024",
+          "locator": "transcript, his answer on the third P, 'people'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "If a task is not fun, find a way to make it fun instead of forcing yourself through it.",
+      "sourceId": "varsity-2022",
+      "locator": "section headed by the pull quote 'I don't really have a strong work ethic'"
+    },
+    {
+      "text": "Take ownership of your work even when you are the most junior person there; responsibility gives energy.",
+      "sourceId": "dk-2024",
+      "locator": "transcript, his answer on what he changed as a junior doctor"
+    },
+    {
+      "text": "Start the business, channel or project now and fix problems as you go, rather than waiting for permission.",
+      "sourceId": "varsity-2022",
+      "locator": "paragraph beginning 'But he begins with a bit of advice'"
+    },
+    {
+      "text": "Do not quit your job to follow a passion; build an exit plan in your evenings and weekends first.",
+      "sourceId": "dk-2024",
+      "locator": "transcript, his answer on quitting and exit strategies"
+    },
+    {
+      "text": "Give at least 10% of what you earn to the charities that do the most good.",
+      "sourceId": "yt-2024-08",
+      "locator": "opening (00:00:00) and chapter 'What is the 10% Pledge?' (00:00:29)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I don't really have a strong work ethic. I only really do things for fun; if it's not, I'll find a way to make it fun.",
+      "sourceId": "varsity-2022",
+      "locator": "interview with Joseph Crouch, Varsity, 12 May 2022"
+    },
+    {
+      "text": "I couldn't hustle my way to becoming a good doctor and working harder wasn't going to bring me happiness.",
+      "sourceId": "bookseller-2023",
+      "locator": "interview with Caroline Sanderson, The Bookseller, 15 September 2023, standfirst"
+    },
+    {
+      "text": "I don't need to wait for a weekend to take responsibility. I can just do that.",
+      "sourceId": "dk-2024",
+      "locator": "The Doctor's Kitchen #238 (13 March 2024), transcript, his answer on what he changed as a junior doctor"
+    },
+    {
+      "text": "If a random, normal guy making videos on the internet can do that, I think anyone can make their job a little bit more enjoyable.",
+      "sourceId": "national-2024",
+      "locator": "interview with Gillian Duncan, The National, 5 April 2024, closing paragraphs"
+    }
+  ],
+  "definingMoment": {
+    "text": "In his first year as a junior doctor, which began in 2018, he knew all the productivity techniques but still came home from work drained. On Christmas Day of that first year he decided something had to change. He noticed he had more energy after weekend shifts, when he took more responsibility, and began treating every shift as if he were the one responsible for the patients. He says this left him energy for YouTube after work. He later told a simplified version of the story in his book Feel-Good Productivity (2023), which he says grew out of finding that he could not hustle his way to becoming a good doctor.",
+    "sourceIds": [
+      "dk-2024",
+      "yt-2021-03",
+      "bookseller-2023"
+    ]
+  },
+  "shadow": {
+    "text": "In August 2020 he stopped working as a doctor at the end of his two foundation years; he says he decided this in August 2019, before the pandemic, but some people asked online how he could leave medicine in the middle of one. After a few part-time shifts in 2021 he announced in November 2021 that he was leaving medicine for good, because the hospital was much less fun than making videos. In December 2022 he said that training doctors costs the state money and that his place at medical school took one from someone who might have wanted to practise. In May 2024 he said that in 2022 and 2023, with a bigger team, many sponsored videos and courses plugged all the time, it felt as if he was making videos for the business and the money rather than because he enjoyed it.",
+    "sourceIds": [
+      "yt-2021-03",
+      "yt-2021-11",
+      "yt-2022-12",
+      "yt-2024-05"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which task did you drag yourself through this week that you could have made more fun?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Feel-Good Productivity",
+      "year": 2023
+    }
+  ],
+  "sources": [
+    {
+      "id": "dk-2024",
+      "kind": "primary",
+      "title": "The Doctor's Kitchen #238: How to be more productive and put the joy into your life with Ali Abdaal (podcast transcript, 13 March 2024)",
+      "author": "Ali Abdaal, interviewed by Rupy Aujla",
+      "year": 2024,
+      "publisher": "The Doctor's Kitchen",
+      "url": "https://thedoctorskitchen.com/podcasts/238-how-to-be-more-productive-and-put-the-joy-into-your-life-with-ali-abdaal"
+    },
+    {
+      "id": "yt-2021-03",
+      "kind": "primary",
+      "title": "Why I Left Medicine (And Why I'm Going Back) (YouTube video, 14 March 2021)",
+      "author": "Ali Abdaal",
+      "year": 2021,
+      "url": "https://www.youtube.com/watch?v=pUmuBfkqBY0"
+    },
+    {
+      "id": "yt-2021-11",
+      "kind": "primary",
+      "title": "Why I Left Medicine... Forever (YouTube video, 30 November 2021)",
+      "author": "Ali Abdaal",
+      "year": 2021,
+      "url": "https://www.youtube.com/watch?v=mZOVLrLXKCE"
+    },
+    {
+      "id": "yt-2022-12",
+      "kind": "primary",
+      "title": "My Regrets about Quitting Medicine (YouTube video, 27 December 2022)",
+      "author": "Ali Abdaal",
+      "year": 2022,
+      "url": "https://www.youtube.com/watch?v=gerkxmXAhdI"
+    },
+    {
+      "id": "yt-2024-05",
+      "kind": "primary",
+      "title": "7 Life Lessons I Know at 30 But Wish I Knew at 20 (YouTube video, 24 May 2024)",
+      "author": "Ali Abdaal",
+      "year": 2024,
+      "url": "https://www.youtube.com/watch?v=B4U7vNtXBTI"
+    },
+    {
+      "id": "yt-2024-08",
+      "kind": "primary",
+      "title": "Why I'm giving 10% of my income to charity (forever) (YouTube video, 9 August 2024)",
+      "author": "Ali Abdaal",
+      "year": 2024,
+      "url": "https://www.youtube.com/watch?v=k5-QN35AJq0"
+    },
+    {
+      "id": "national-2024",
+      "kind": "secondary",
+      "title": "Find the fun: Former doctor Ali Abdaal's prescription for achieving more at work (5 April 2024)",
+      "author": "Gillian Duncan",
+      "year": 2024,
+      "publisher": "The National (Abu Dhabi)",
+      "url": "https://www.thenationalnews.com/lifestyle/2024/04/05/find-the-fun-former-doctor-ali-abdaals-prescription-for-achieving-more-at-work"
+    },
+    {
+      "id": "varsity-2022",
+      "kind": "secondary",
+      "title": "'I was a massive nerd': YouTuber Ali Abdaal on revision, taking risks and why he wanted to top tripos (12 May 2022)",
+      "author": "Joseph Crouch",
+      "year": 2022,
+      "publisher": "Varsity (Cambridge)",
+      "url": "https://varsity.co.uk/interviews/23682"
+    },
+    {
+      "id": "bookseller-2023",
+      "kind": "secondary",
+      "title": "Ali Abdaal discusses a new type of positive productivity in his new book (author interview, 15 September 2023)",
+      "author": "Caroline Sanderson",
+      "year": 2023,
+      "publisher": "The Bookseller",
+      "url": "https://thebookseller.com/author-interviews/ali-abdaal-discusses-a-new-type-of-positive-productivity-in-his-new-book"
+    },
+    {
+      "id": "nathan-barry-2021",
+      "kind": "primary",
+      "title": "The Nathan Barry Show 048: Ali Abdaal, building multiple income streams as a content creator (podcast, 20 September 2021)",
+      "author": "Ali Abdaal, interviewed by Nathan Barry",
+      "year": 2021,
+      "publisher": "The Nathan Barry Show",
+      "url": "https://nathanbarry.com/048-ali-abdaal-building-multiple-income-streams-content-creator/"
+    },
+    {
+      "id": "gwwc-club",
+      "kind": "secondary",
+      "title": "Ali Abdaal's pledge club (Giving What We Can pledge page)",
+      "author": "Giving What We Can",
+      "year": 2026,
+      "publisher": "Giving What We Can",
+      "url": "https://www.givingwhatwecan.org/pledge/ali-abdaal-pledge-club"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living British former junior doctor turned YouTuber and author (Feel-Good Productivity, 2023), not a politician, campaigner or religious founder, with no credible account of sexual contact with a minor or of sexual violence found; he is in, with a small shadow drawn from his own accounts of leaving medicine and of chasing money in 2022-23."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked all five draft values against the saved Varsity, National and Doctor's Kitchen texts and his own video transcripts. Responsibility fell: it rested on two sources and holds only in the narrow sense of taking ownership at work, while he left medicine during the pandemic and says his place at medical school took one from someone who wanted to practise; the ownership idea stays as a principle. Fun, Learning and Building things held, Generosity held once the charity's own pledge page was added, and Contribution came in from the blind pick on his own words about teaching and his years teaching medical applicants. The defining moment no longer says the weekend-shift story is the base of his book, since he says it was cut down there; The National and The Bookseller remain as two independent secondary sources.",
+    "checkedOn": "2026-11-10"
+  }
+}
