@@ -1,0 +1,385 @@
+{
+  "id": "brunello-cucinelli",
+  "name": "Brunello Cucinelli",
+  "born": 1953,
+  "died": null,
+  "category": "builders",
+  "areaIds": [
+    "lm_mission",
+    "lm_money",
+    "lm_contribution"
+  ],
+  "tagline": "A farmer's son who built a luxury firm on above-market pay and a hard stop to the working day at 5:30.",
+  "startedFrom": "He was born in 1953 and grew up in Castel Rigone, Umbria, in a family of thirteen sharecroppers who farmed with animals and had no electricity. When he was 15 the family moved to the city, where his father did factory work and came home humiliated and in tears. He went to a high school for land surveying, dropped out of engineering at 24, and in 1978 began making coloured cashmere sweaters with a $500 loan and yarn a supplier let him pay for later.",
+  "values": [
+    {
+      "word": "Respect",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says that after seeing his father humiliated at work, he decided to live and work for the moral and economic dignity of the human being.",
+          "sourceId": "g20-2021",
+          "locator": "paragraph beginning \"As a boy, I saw my teary-eyed father\""
+        },
+        {
+          "kind": "witness",
+          "claim": "CBS reports that his idea of work comes partly from watching his father drag himself home from a back-breaking job in a cement factory.",
+          "sourceId": "cbs-2019",
+          "locator": "paragraph beginning \"So, why does Cucinelli pamper his workers?\""
+        },
+        {
+          "kind": "deed",
+          "claim": "His factory workers are paid above the market rate, get 90-minute lunch breaks and are encouraged to join theatre and choir groups.",
+          "sourceId": "globe-2017",
+          "locator": "paragraph beginning \"Brunello Cucinelli lives in Solomeo, a medieval Italian village\""
+        }
+      ]
+    },
+    {
+      "word": "Fairness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In November 2012, the year the company listed on the stock exchange, he shared about 5 million euros among its 783 employees, 6,385 euros each.",
+          "sourceId": "panorama-2012",
+          "locator": "opening paragraphs"
+        },
+        {
+          "kind": "deed",
+          "claim": "AFP reports that his Solomeo workers are paid a 20 percent premium over industry norms.",
+          "sourceId": "afp-2017",
+          "locator": "paragraph beginning \"Shareholders may grumble about the 20 percent premium\""
+        },
+        {
+          "kind": "words",
+          "claim": "In his 2012 listing speech he says he told investors that anyone expecting a profit made by harming mankind should not buy in, and that the company wanted a healthy profit that is fair and never preposterous.",
+          "sourceId": "ipo-speech-2012",
+          "locator": "paragraph beginning \"Therefore I’d like to thank everyone immensely\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Wallpaper reports that he pays his workers generously for the sector and expects them to work hard while at work.",
+          "sourceId": "wallpaper-2018",
+          "locator": "paragraph beginning \"Cucinelli's ethos is simple\""
+        }
+      ]
+    },
+    {
+      "word": "Balance",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that the one thing banned in his company is working past the agreed time, and staff are asked not to send emails after hours.",
+          "sourceId": "fair-working-life-2012",
+          "locator": "paragraph beginning \"This is the reason why in the Solomeo company\""
+        },
+        {
+          "kind": "deed",
+          "claim": "He bans his staff from working after 5:30 pm or checking email outside office hours.",
+          "sourceId": "afp-2017",
+          "locator": "paragraph beginning \"Now 63, Cucinelli has long been celebrated for\""
+        },
+        {
+          "kind": "deed",
+          "claim": "At his company it is forbidden to work after 5:30 pm, and lunch at 1 pm in the company dining hall is mandatory.",
+          "sourceId": "cbs-2019",
+          "locator": "paragraph beginning \"But forget about overtime\""
+        }
+      ]
+    },
+    {
+      "word": "Beauty",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He has poured millions into restoring the hilltop village of Solomeo, starting with the castle, and over three decades added a theatre, a library and a school of art, gardening and tailoring.",
+          "sourceId": "afp-2017",
+          "locator": "paragraph beginning \"Cucinelli has poured millions into Solomeo\""
+        },
+        {
+          "kind": "deed",
+          "claim": "He restored Solomeo's ruined church, built a 240-seat theatre, removed old warehouses from the valley and let trees grow in their place.",
+          "sourceId": "cbs-2019",
+          "locator": "paragraph beginning \"He started with Solomeo's medieval church\""
+        },
+        {
+          "kind": "words",
+          "claim": "He says he wanted a small part of the company's profits to go to beautify humanity, and calls the village park the \"Project for Beauty\".",
+          "sourceId": "g20-2021",
+          "locator": "paragraphs beginning \"I wanted a small part of the company's profits\" and \"Our business is located in Solomeo\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Wallpaper writes that everything in his world is either beautiful or ugly, and beauty is everything.",
+          "sourceId": "wallpaper-2018",
+          "locator": "paragraph beginning \"Cucinelli's ethos is simple\""
+        }
+      ]
+    },
+    {
+      "word": "Legacy",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He tells AFP he follows Marcus Aurelius: live each day as if it were your last, but plan as if for eternity.",
+          "sourceId": "afp-2017",
+          "locator": "paragraph beginning \"It is like another emperor, Marcus Aurelius, said\""
+        },
+        {
+          "kind": "words",
+          "claim": "He says the winery, the theatre and the monument he built in Solomeo will still be standing in 2,000 years.",
+          "sourceId": "wallpaper-2018",
+          "locator": "paragraph beginning \"Cucinelli shares much of Olivetti's vision\""
+        },
+        {
+          "kind": "words",
+          "claim": "At the 2012 listing he said he was looking for partners who would be true guardians of the business for the next century, and called himself a guardian, not an owner.",
+          "sourceId": "ipo-speech-2012",
+          "locator": "paragraph beginning \"We wanted to search for new partners\""
+        },
+        {
+          "kind": "deed",
+          "claim": "A foundation funded with 20 per cent of the company's profits runs the craft school and paid for restoring the old heart of the village.",
+          "sourceId": "wallpaper-2018",
+          "locator": "paragraph beginning \"The school is operated by the Cucinelli Foundation\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Make a healthy profit, but never one that harms people or their dignity.",
+      "sourceId": "ipo-speech-2012",
+      "locator": "paragraph beginning \"Therefore I’d like to thank everyone immensely\""
+    },
+    {
+      "text": "Stop work at the agreed time; do not take people's evenings with emails and calls.",
+      "sourceId": "fair-working-life-2012",
+      "locator": "paragraph beginning \"This is the reason why in the Solomeo company\""
+    },
+    {
+      "text": "Treat what you build as something you guard for those who come after, not as something you own.",
+      "sourceId": "ipo-speech-2012",
+      "locator": "paragraph beginning \"We wanted to search for new partners\""
+    },
+    {
+      "text": "Give part of what you earn back to the place and the people around you.",
+      "sourceId": "g20-2021",
+      "locator": "paragraphs beginning \"I spent the first part of my life in the country\" and \"I wanted a small part of the company's profits\""
+    },
+    {
+      "text": "Be strict and kind at once: a demanding teacher and a caring father.",
+      "sourceId": "origins",
+      "locator": "paragraph beginning \"In this sense, Saint Benedict was my brilliant role model\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "…inspired by the pain I read in those eyes, I decided that the dream of my life would be to live and work for the moral and economic dignity of the human being.",
+      "sourceId": "g20-2021",
+      "locator": "Speech to the G20, Rome, 31 October 2021, paragraph beginning \"As a boy, I saw my teary-eyed father\"",
+      "translation": "English version published by Brunello Cucinelli S.p.A. (translator not named)"
+    },
+    {
+      "text": "While I’m definitely the majority shareholder, I’m not - I repeat - an owner, but a guardian!",
+      "sourceId": "ipo-speech-2012",
+      "locator": "Speech for the listing on the stock exchange, Milan, 27 April 2012, paragraph beginning \"We wanted to search for new partners\"",
+      "translation": "English version published by Brunello Cucinelli S.p.A. (translator not named)"
+    },
+    {
+      "text": "Employers should never steal the soul of their workers by depriving them of the time they need to lead a healthy life.",
+      "sourceId": "fair-working-life-2012",
+      "locator": "paragraph beginning \"This is the reason why in the Solomeo company\"",
+      "translation": "English version published by Brunello Cucinelli S.p.A. (translator not named)"
+    },
+    {
+      "text": "I wanted a company that made healthy profits, but did so with ethics, dignity and morals",
+      "sourceId": "g20-2021",
+      "locator": "Speech to the G20, Rome, 31 October 2021, paragraph beginning \"As a boy, I saw my teary-eyed father\"",
+      "translation": "English version published by Brunello Cucinelli S.p.A. (translator not named)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1985 he began restoring Solomeo, the run-down hilltop hamlet where his wife grew up, starting with its medieval castle, which he bought as the new home of his small company. He writes that the owner agreed to sell once he understood that Cucinelli meant to keep the castle whole. Over the next three decades he spent millions on the village and added a theatre, a library, a school of art, gardening and tailoring, and two parks, one of 70 hectares growing crops.",
+    "sourceIds": [
+      "afp-2017",
+      "origins",
+      "my-life"
+    ]
+  },
+  "shadow": {
+    "text": "In September 2025 the short seller Morpheus Research, which had bet against his company's shares, said the company kept selling luxury goods in Moscow in breach of EU sanctions and had misled shareholders about it; once trading resumed the shares fell more than 17 percent. The company denied it, said it was in full compliance with EU rules and was considering legal action. In July 2026 Italian police visited the company's headquarters, one of nine luxury firms ordered to hand over documents in a Milan inquiry into two Chinese-owned workshops accused of exploiting undocumented workers; Reuters reported that none of the nine firms was under investigation, and the company said it was surprised and saddened that some of its packaging materials had been found at an unsuitable workplace. In October 2026 a video from a brand event in Shanghai showed his hand moving from the actress Liu Tao's shoulder to her waist; a Singapore outlet reported that it appeared to touch her chest, a Korean one that it appeared to touch the side of her chest, and she turned aside and stepped back. Online commenters called it harassment, and a Jimu News commentary rejected 'cultural difference' as an excuse. As of 29 October 2026 Liu Tao had made no public statement and no complaint had been filed; by 1 November the company had issued no statement.",
+    "sourceIds": [
+      "moscow-times-2025",
+      "sole24ore-2025",
+      "reuters-2026",
+      "mothership-2026",
+      "sportskhan-2026",
+      "jimu-2026",
+      "dimsum-2026"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did work eat into your evenings or rest this week, yours or someone else's?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "Il sogno di Solomeo: La mia vita e l'idea del capitalismo umanistico (The Dream of Solomeo)",
+      "year": 2018
+    }
+  ],
+  "sources": [
+    {
+      "id": "g20-2021",
+      "kind": "primary",
+      "title": "My idea of Humanistic Capitalism and Human Sustainability: speech to the G20, Rome, 31 October 2021 (English version)",
+      "author": "Brunello Cucinelli",
+      "year": 2021,
+      "publisher": "Brunello Cucinelli S.p.A., investor relations site",
+      "url": "https://investor.brunellocucinelli.com/en/humanistic-capitalism"
+    },
+    {
+      "id": "ipo-speech-2012",
+      "kind": "primary",
+      "title": "For fair and graceful growth: speech for the listing on the Exchange, Milan, 27 April 2012 (English version)",
+      "author": "Brunello Cucinelli",
+      "year": 2012,
+      "publisher": "Brunello Cucinelli S.p.A.",
+      "url": "https://www.brunellocucinelli.com/en/discorso-per-ingresso-in-borsa.html"
+    },
+    {
+      "id": "fair-working-life-2012",
+      "kind": "primary",
+      "title": "A Fair Working Life (2012, English version)",
+      "author": "Brunello Cucinelli",
+      "year": 2012,
+      "publisher": "Brunello Cucinelli S.p.A.",
+      "url": "https://www.brunellocucinelli.com/en/thoughts/a-fair-working-life.html"
+    },
+    {
+      "id": "my-life",
+      "kind": "primary",
+      "title": "My Life (autobiographical text, English version, undated; read 2026)",
+      "author": "Brunello Cucinelli",
+      "year": "undated",
+      "publisher": "Brunello Cucinelli S.p.A.",
+      "url": "https://www.brunellocucinelli.com/en/my-life.html"
+    },
+    {
+      "id": "origins",
+      "kind": "primary",
+      "title": "The Origins of the Company (autobiographical text, English version, undated; read 2026)",
+      "author": "Brunello Cucinelli",
+      "year": "undated",
+      "publisher": "Brunello Cucinelli S.p.A.",
+      "url": "https://www.brunellocucinelli.com/en/company/the-origins-of-the-company.html"
+    },
+    {
+      "id": "afp-2017",
+      "kind": "secondary",
+      "title": "Italy's philosopher tycoon shapes landscape of his legacy (AFP, 3 January 2017; now headed 'How an Italian fashion tycoon found work-life balance through philosophy')",
+      "author": "Angus MacKinnon, AFP, in The Local Italy",
+      "year": 2017,
+      "url": "https://www.thelocal.it/20170103/italys-philosopher-tycoon-shapes-landscape-of-his-legacy"
+    },
+    {
+      "id": "globe-2017",
+      "kind": "secondary",
+      "title": "Brunello Cucinelli is the philosophical leader of a cashmere empire (16 November 2017)",
+      "author": "Jeremy Freed, The Globe and Mail",
+      "year": 2017,
+      "url": "https://www.theglobeandmail.com/life/fashion-and-beauty/fashion/brunello-cucinelli-is-the-philosophical-leader-of-a-cashmereempire/article36941746/"
+    },
+    {
+      "id": "cbs-2019",
+      "kind": "secondary",
+      "title": "Brunello Cucinelli: Fashion and philosophy (CBS Sunday Morning, 19 May 2019)",
+      "author": "Tracy Smith, CBS News",
+      "year": 2019,
+      "url": "https://www.cbsnews.com/news/brunello-cucinelli-fashion-and-philosophy/"
+    },
+    {
+      "id": "wallpaper-2018",
+      "kind": "secondary",
+      "title": "Renaissance man: how Italian fashion magnate Brunello Cucinelli cashed in on cashmere (Wallpaper* 235, October 2018)",
+      "author": "Nick Compton, Wallpaper*",
+      "year": 2018,
+      "url": "https://www.wallpaper.com/fashion/renaissance-man-how-italian-fashion-magnate-brunello-cucinelli-cashed-in-on-cashmere"
+    },
+    {
+      "id": "panorama-2012",
+      "kind": "secondary",
+      "title": "Brunello Cucinelli: the \"king of cashmere\" shares profits with his employees (27 November 2012)",
+      "author": "Nathania Zevi, Panorama",
+      "year": 2012,
+      "url": "https://panorama.it/news/brunello-cucinelli-the-king-of-cashmere-shares-profits-with-his-employees"
+    },
+    {
+      "id": "moscow-times-2025",
+      "kind": "secondary",
+      "title": "Luxury firm Cucinelli chided by Italian regulators over Russia claims (AFP, 25 September 2025)",
+      "author": "AFP, in The Moscow Times",
+      "year": 2025,
+      "url": "https://themoscowtimes.com/2025/09/25/luxury-firm-cucinelli-chided-by-italian-regulators-over-russia-claims-a90629"
+    },
+    {
+      "id": "sole24ore-2025",
+      "kind": "secondary",
+      "title": "Cucinelli accuses report: Morpheus Research says Russia business violates EU sanctions (25 September 2025)",
+      "author": "Il Sole 24 Ore",
+      "year": 2025,
+      "url": "https://en.ilsole24ore.com/art/cucinelli-accuses-report-morpheus-research-russia-violates-eu-sanctions-AHWClrpC"
+    },
+    {
+      "id": "mothership-2026",
+      "kind": "secondary",
+      "title": "Chinese actress seen being touched inappropriately by luxury fashion brand founder at Shanghai event (29 October 2026)",
+      "author": "Shauna Yap, Mothership.sg",
+      "year": 2026,
+      "url": "https://mothership.sg/2026/10/liu-tao-touched-inappropriately-founder-fashion-brand-event-shanghai/"
+    },
+    {
+      "id": "sportskhan-2026",
+      "kind": "secondary",
+      "title": "Controversy grows over video of luxury brand founder's contact with an actress (1 November 2026)",
+      "author": "Kim Gam-Mi, Sports Kyunghyang",
+      "year": 2026,
+      "url": "https://sports.khan.co.kr/en/article/202611011352007"
+    },
+    {
+      "id": "dimsum-2026",
+      "kind": "secondary",
+      "title": "Opinion: the Liu Tao video and brand photocalls (29 October 2026)",
+      "author": "Dimsum Daily Newsroom",
+      "year": 2026,
+      "url": "https://www.dimsumdaily.hk/?p=648554"
+    },
+    {
+      "id": "reuters-2026",
+      "kind": "secondary",
+      "title": "Italian police visit fashion firms including Cucinelli and Moncler in labour probe (Reuters, 16 July 2026)",
+      "author": "Emilio Parodi, Reuters, on Euronext",
+      "year": 2026,
+      "url": "https://live.euronext.com/en/financial-news/italian-police-visit-fashion-firms-including-cucinelli-and-moncler-labour-probe"
+    },
+    {
+      "id": "jimu-2026",
+      "kind": "secondary",
+      "title": "Report and commentary on the Liu Tao video (28 October 2026)",
+      "author": "Jimu News (极目新闻), commentary by Qu Jing",
+      "year": 2026,
+      "url": "https://www.ctdsb.net/c1476_202610/2890225.html"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real Italian businessman (born 1953), founder of the cashmere firm Brunello Cucinelli, never a politician, campaigner or religious founder. Owner decides because of one reported case of unwanted touching: at a brand event in Shanghai on 22 October 2026 a video showed his hand moving from the actress Liu Tao's shoulder to her waist; Mothership (Singapore) reported that it appeared to touch her chest, Sports Kyunghyang (Korea) the side of her chest, and Jimu News (China) that it rested a long time between her waist and chest; she turned aside and stepped back. Online commenters called it harassment; a Jimu News commentary rejected 'cultural difference' as an excuse. Commenters also pointed to older clips with Chen Duling, Kim Yoo-jung and Eileen Gu held by the waist (commenters' claims, not accusations by the women). As of 29 October 2026 neither Liu Tao nor the company had made a public statement and no complaint had been filed (Dimsum Daily); by 1 November the company had issued none (Sports Kyunghyang); no later statement found up to 10 November 2026. No recommendation. Other shadow (not owner cases): 2025 short-seller claims of breaking EU sanctions on Russia, denied; July 2026 police document request in a Milan supply-chain labour inquiry, company not under investigation (Reuters)."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value with the Russia sanctions claims, the July 2026 police visit over a packaging supplier's workshop, the Liu Tao video and his prices for the very rich, and rechecked every claim, locator and quote against the saved texts. Respect, Fairness, Beauty and Balance held: the sanctions claims are unproven, Reuters reports the company is not under investigation in the labour inquiry, and the video is a single reported incident, now plain in the shadow. Learning fell because one of its three pieces (a library announcement) is not evidence of his own learning, and Legacy from the blind pick came in with four checked pieces. The shadow gained the July 2026 police visit, a line saying a Chinese outlet called it suspected sexual harassment was cut as unsupported, and a 'trained as a surveyor' slip was corrected.",
+    "checkedOn": "2026-11-10"
+  }
+}
