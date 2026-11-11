@@ -1,0 +1,367 @@
+{
+  "id": "georges-st-pierre",
+  "name": "Georges St-Pierre",
+  "born": 1981,
+  "died": null,
+  "category": "athletes",
+  "areaIds": [
+    "lm_fitness",
+    "lm_emotions",
+    "lm_mindset"
+  ],
+  "tagline": "A bullied farm-town boy who admitted his fear and became a two-division UFC champion.",
+  "startedFrom": "He was born on 19 May 1981 in Saint-Isidore, a farming community in Quebec, the eldest child of a carpet and flooring installer and a nursing-home worker. Older schoolmates bullied him regularly, from teasing and threats to physical abuse and theft; his father started him in karate at seven. While studying at a CEGEP and training, he worked jobs collecting garbage, resurfacing floors and as a bouncer at a Montreal nightclub.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In a May 2013 TV interview he said that walking out to fight he tries to be confident but is afraid of being knocked out, humiliated, or of having done all the work for nothing.",
+          "sourceId": "mmaweekly-2013",
+          "locator": "Inside MMA (AXS TV) interview, as reported 12 May 2013"
+        },
+        {
+          "kind": "deed",
+          "claim": "Dave Meltzer writes that he went into his first fight with Matt Hughes, his personal idol, mentally beaten, and lost; in late 2007, though a title shot was already promised him for April, he asked the UFC for the fight with Hughes and beat him.",
+          "sourceId": "meltzer-2007",
+          "locator": "Yahoo Sports, 30 December 2007"
+        },
+        {
+          "kind": "deed",
+          "claim": "After four years away he moved up a weight class and took the middleweight title from Michael Bisping at UFC 217 in November 2017.",
+          "sourceId": "cbc-2019",
+          "locator": "CBC Sports / Canadian Press, 21 February 2019"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After Matt Serra knocked him out in April 2007 he left his Canadian trainers for Greg Jackson's camp in New Mexico, began seeing a sports psychologist, and was back to winning by August 2007.",
+          "sourceId": "doyle-2007",
+          "locator": "Yahoo Sports, 26 August 2007"
+        },
+        {
+          "kind": "deed",
+          "claim": "He took the welterweight title back from Serra by TKO at UFC 83 in Montreal.",
+          "sourceId": "cbc-2019",
+          "locator": "CBC Sports / Canadian Press, 21 February 2019"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked in 2010 what his two losses taught him, he said the first taught him how to become champion and the second how to stay champion.",
+          "sourceId": "globe-2010",
+          "locator": "Globe and Mail Q&A, 9 December 2010"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Around the time his karate teacher died, when he was 16, he began training in wrestling, Brazilian jiu-jitsu, boxing and muay Thai on top of karate.",
+          "sourceId": "tce",
+          "locator": "section 'Childhood'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In late 2007, already a former champion, he was training for the Canadian Olympic trials.",
+          "sourceId": "meltzer-2007",
+          "locator": "Yahoo Sports, 30 December 2007"
+        },
+        {
+          "kind": "witness",
+          "claim": "Sherdog editor Jordan Breen told the Globe and Mail that many people think he is the best wrestler in MMA although he has no formal background in wrestling.",
+          "sourceId": "globe-2010",
+          "locator": "Globe and Mail, 9 December 2010, section 'As told to Dave McGinn'"
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his retirement statement he wrote that it takes discipline to become and stay champion, and discipline to stop while still in the best shape of your life.",
+          "sourceId": "statement-2019",
+          "locator": "official retirement statement, 21 February 2019"
+        },
+        {
+          "kind": "deed",
+          "claim": "He retired at 37 on a 13-fight winning streak, while still ranked eighth in the UFC's pound-for-pound rankings.",
+          "sourceId": "cbc-2019",
+          "locator": "CBC Sports / Canadian Press, 21 February 2019"
+        },
+        {
+          "kind": "words",
+          "claim": "In the same statement he wrote that he had always planned to leave the sport on his own terms and timing.",
+          "sourceId": "statement-2019",
+          "locator": "official retirement statement, 21 February 2019"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Canadian Encyclopedia notes he retired ranked No. 8 in the UFC's pound-for-pound ranking and with a 13-fight winning streak.",
+          "sourceId": "tce",
+          "locator": "section 'Legacy'"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "His head trainer Firas Zahabi said in 2012: 'I've never seen anybody work as hard as GSP.'",
+          "sourceId": "br-2012",
+          "locator": "Bleacher Report, 12 November 2012, Zahabi section"
+        },
+        {
+          "kind": "words",
+          "claim": "Of his four years away from competition he said: 'I was always training like I was working.'",
+          "sourceId": "si-2017",
+          "locator": "Sports Illustrated, 1 November 2017, answer to 'What's yours been like so far?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Chuck Mindenhall writes that the Serra loss turned him into 'a machine of preparation and execution', a perfectionist about readiness.",
+          "sourceId": "ringer-2019",
+          "locator": "The Ringer, 25 February 2019"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Admit your fear, then use it to sharpen your preparation.",
+      "sourceId": "mmaweekly-2013",
+      "locator": "Inside MMA (AXS TV) interview, as reported 12 May 2013"
+    },
+    {
+      "text": "After a loss, make no excuses; change how you train.",
+      "sourceId": "meltzer-2007",
+      "locator": "Yahoo Sports, 30 December 2007"
+    },
+    {
+      "text": "Get your confidence from training.",
+      "sourceId": "si-2017",
+      "locator": "Sports Illustrated, 1 November 2017, answer on training for competition and for fun"
+    },
+    {
+      "text": "Train as if it were your job, even when no fight is booked.",
+      "sourceId": "si-2017",
+      "locator": "Sports Illustrated, 1 November 2017, answer to 'What's yours been like so far?'"
+    },
+    {
+      "text": "Leave on your own terms, while you are still at the top.",
+      "sourceId": "statement-2019",
+      "locator": "official retirement statement, 21 February 2019"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "The first one taught me how to become the champion, the second one taught me how to stay the champion.",
+      "sourceId": "globe-2010",
+      "locator": "Globe and Mail Q&A, 9 December 2010, answer to 'What did you learn from those losses?'"
+    },
+    {
+      "text": "I try to be confident, but deep down inside, I'm afraid.",
+      "sourceId": "mmaweekly-2013",
+      "locator": "Inside MMA (AXS TV) interview, as reported 12 May 2013"
+    },
+    {
+      "text": "I believe confidence comes from training, so it becomes more important, even if it becomes less fun.",
+      "sourceId": "si-2017",
+      "locator": "Sports Illustrated, 1 November 2017, answer on training for competition and for fun"
+    },
+    {
+      "text": "It also takes a lot of discipline to stop while still feeling that you're in the best physical and mental shape of your life.",
+      "sourceId": "statement-2019",
+      "locator": "official retirement statement, 21 February 2019"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 7 April 2007, in his first title defence, he was knocked out by Matt Serra, a 10-1 underdog. He then left his Canadian trainers for Greg Jackson's camp and began seeing a sports psychologist. When he won the interim title from Matt Hughes in December 2007, he handed the belt to a cornerman and said the real champion was Serra. In April 2008 in Montreal he beat Serra by TKO and took the title back, then defended it nine times.",
+    "sourceIds": [
+      "cp-2013",
+      "doyle-2007",
+      "meltzer-2007",
+      "cbc-2019",
+      "tce"
+    ]
+  },
+  "shadow": {
+    "text": "At UFC 94 on 31 January 2009, Nevada officials were alerted that his cornerman Phil Nurse was rubbing Vaseline on him between rounds, and they wiped him down. B.J. Penn's camp filed a complaint saying he was greased on purpose; the commission took no formal action, and in August 2009 Nevada made foreign substances on the body a foul. On a March 2013 conference call before UFC 158 he called Nick Diaz an 'uneducated fool' and promised 'the worst beating you've ever seen on him in the UFC'. In November 2013 he won a split decision over Johny Hendricks; UFC president Dana White demanded an investigation into the judging and wanted an immediate rematch, but he left the sport and gave up his title. In December 2017 he gave up the middleweight title 33 days after winning it, without a defence, though he had said his contract called for him to fight Robert Whittaker next; White said: 'He came out, and he hand-picked Bisping and went away again.'",
+    "sourceIds": [
+      "si-2009a",
+      "si-2009b",
+      "si-2013",
+      "cp-2013",
+      "rollingstone-2017",
+      "cbc-2017",
+      "thescore-2017"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What were you afraid of this week, and did that fear make you prepare harder or make you back away?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Way of the Fight",
+      "year": 2013
+    }
+  ],
+  "sources": [
+    {
+      "id": "si-2017",
+      "kind": "primary",
+      "title": "Georges St-Pierre Talks About Returning to Octagon, Paleontology, Poutine and More (interview, Sports Illustrated, 6 November 2017 issue)",
+      "author": "Jon Wertheim, Sports Illustrated",
+      "year": 2017,
+      "url": "https://www.si.com/mma/2017/11/01/georges-st-pierre-michael-bisping-ufc-217"
+    },
+    {
+      "id": "globe-2010",
+      "kind": "primary",
+      "title": "Georges St-Pierre: Making opponents beg for mercy (phone interview, with comments by Jordan Breen)",
+      "author": "Dave McGinn, The Globe and Mail",
+      "year": 2010,
+      "url": "https://www.theglobeandmail.com/sports/more-sports/georges-st-pierre-making-opponents-beg-for-mercy/article1319298/"
+    },
+    {
+      "id": "mmaweekly-2013",
+      "kind": "primary",
+      "title": "What Drives Georges St-Pierre as He Walks Out to the UFC Octagon? ... Fear (his Inside MMA, AXS TV interview, transcribed)",
+      "author": "MMA Weekly, on Yahoo Sports",
+      "year": 2013,
+      "url": "https://sports.yahoo.com/news/drives-georges-st-pierre-walks-165321831--mma.html"
+    },
+    {
+      "id": "statement-2019",
+      "kind": "primary",
+      "title": "Georges St-Pierre issues official statement on UFC retirement (full text of his statement)",
+      "author": "Georges St-Pierre; published by MMAWeekly.com Staff on Yahoo Sports",
+      "year": 2019,
+      "url": "https://sports.yahoo.com/georges-st-pierre-issues-official-173007007.html"
+    },
+    {
+      "id": "tce",
+      "kind": "secondary",
+      "title": "Georges St-Pierre",
+      "author": "Jeremy Freeborn",
+      "year": 2026,
+      "publisher": "The Canadian Encyclopedia (Historica Canada), published 29 September 2017, last edited 30 January 2026",
+      "url": "https://www.thecanadianencyclopedia.ca/en/article/georges-st-pierre"
+    },
+    {
+      "id": "meltzer-2007",
+      "kind": "secondary",
+      "title": "Torch passed between two greats (30 December 2007)",
+      "author": "Dave Meltzer, Yahoo Sports",
+      "year": 2007,
+      "url": "https://sports.yahoo.com/dm-gsphughes123007.html"
+    },
+    {
+      "id": "doyle-2007",
+      "kind": "secondary",
+      "title": "UFC 74 notes: GSP back on track (26 August 2007)",
+      "author": "Dave Doyle, Yahoo Sports",
+      "year": 2007,
+      "url": "https://sports.yahoo.com/dd-gsp082607.html"
+    },
+    {
+      "id": "cp-2013",
+      "kind": "secondary",
+      "title": "UFC champion Georges St-Pierre no stranger to personal turmoil (18 November 2013)",
+      "author": "The Canadian Press, in The Globe and Mail",
+      "year": 2013,
+      "url": "https://www.theglobeandmail.com/sports/more-sports/a-smiling-georges-st-pierre-feeling-better-thanks-well-wishers-for-their-support/article15493658/"
+    },
+    {
+      "id": "cbc-2017",
+      "kind": "secondary",
+      "title": "GSP gives up newly won UFC crown, cites health issues (7 December 2017)",
+      "author": "Neil Davidson, The Canadian Press, on CBC Sports",
+      "year": 2017,
+      "url": "https://www.cbc.ca/sports/mma/georges-st-pierre-gives-up-ufc-title-1.4438910"
+    },
+    {
+      "id": "cbc-2019",
+      "kind": "secondary",
+      "title": "Canadian MMA star Georges St-Pierre announces his retirement (21 February 2019)",
+      "author": "The Canadian Press, on CBC Sports",
+      "year": 2019,
+      "url": "https://www.cbc.ca/sports/mma/georges-st-pierre-retirement-1.5027745"
+    },
+    {
+      "id": "si-2009a",
+      "kind": "secondary",
+      "title": "Battle continues -- Penn files formal complaint with NSAC (11 March 2009)",
+      "author": "SI Staff, Sports Illustrated",
+      "year": 2009,
+      "url": "https://www.si.com/mma/2009/03/11/penn-stpierrecomplaint"
+    },
+    {
+      "id": "si-2009b",
+      "kind": "secondary",
+      "title": "Nevada institutes 'B.J. Penn Rule' (21 August 2009)",
+      "author": "SI Staff, Sports Illustrated",
+      "year": 2009,
+      "url": "https://www.si.com/mma/2009/08/21/bj-pennrule"
+    },
+    {
+      "id": "rollingstone-2017",
+      "kind": "secondary",
+      "title": "Georges St-Pierre Vacates Belt, Ending Shortest Title Reign in UFC History (8 December 2017)",
+      "author": "Mike Bohn, Rolling Stone",
+      "year": 2017,
+      "url": "https://www.rollingstone.com/culture/culture-sports/georges-st-pierre-vacates-belt-ending-shortest-title-reign-in-ufc-history-253519/"
+    },
+    {
+      "id": "br-2012",
+      "kind": "secondary",
+      "title": "Building the Perfect Fighter: The Team Behind UFC 154 Star Georges St-Pierre (12 November 2012)",
+      "author": "Jonathan Snowden, Bleacher Report",
+      "year": 2012,
+      "url": "https://bleacherreport.com/articles/1405803-building-the-perfect-fighter-the-team-behind-ufc-champion-georges-st-pierre"
+    },
+    {
+      "id": "ringer-2019",
+      "kind": "secondary",
+      "title": "Farewell to GSP (25 February 2019)",
+      "author": "Chuck Mindenhall, The Ringer",
+      "year": 2019,
+      "url": "https://www.theringer.com/2019/02/25/mma/georges-st-pierre-ufc-retirement-retrospective"
+    },
+    {
+      "id": "si-2013",
+      "kind": "secondary",
+      "title": "If St.-Pierre vs. Diaz call was any indication, we're in for a great fight (8 March 2013)",
+      "author": "SI Staff, Sports Illustrated",
+      "year": 2013,
+      "url": "https://www.si.com/mma/2013/03/08/nick-diaz-georges-st-pierre-ufc-158"
+    },
+    {
+      "id": "thescore-2017",
+      "kind": "secondary",
+      "title": "Dana White: 'I knew' St-Pierre wouldn't defend middleweight title (10 December 2017)",
+      "author": "Alex Chippin, theScore",
+      "year": 2017,
+      "url": "https://www.thescore.com/mma/news/1443059"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living Canadian mixed martial artist and actor (born 1981), never a politician, campaigner or religious founder; searches found no account of sexual contact with anyone under 16 or of sexual violence; his dark side is a 2009 greasing dispute and two belts given up without defending them."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value and every sentence against the saved CBC, Canadian Press, SI, Yahoo, Rolling Stone and Canadian Encyclopedia texts, and searched for contrary conduct. Respect fell: his 2017 line 'I never make it personal' is contradicted by his March 2013 call insulting Nick Diaz, and his stated respect in giving up the 2017 belt is disputed by Dana White, so both facts went into the shadow. Courage, Resilience, Learning and Discipline held, critics' ducking claims (Anderson Silva, Bisping) being rivals' words, and the blind pick's Hard work came in on his coach's, The Ringer's and his own words. Three claims were tightened (bullying wording, 'be' not 'look' confident, the Hughes request dated late 2007, not December).",
+    "checkedOn": "2026-11-10"
+  }
+}
