@@ -1,0 +1,302 @@
+{
+  "id": "ashoka",
+  "name": "Ashoka",
+  "born": "c. 304 BC",
+  "died": "c. 232 BC",
+  "category": "leaders",
+  "areaIds": [
+    "lm_contribution",
+    "lm_spirituality"
+  ],
+  "tagline": "An emperor who carved the toll of his own war in stone and turned from conquest.",
+  "startedFrom": "He was a son of King Bindusara and a grandson of Chandragupta, who founded the Maurya empire of north India; the 1911 Britannica gives his mother as a lady from Champa. He was not the only heir: the Buddhist legends give his father 101 sons, and the World History Encyclopedia writes that most scholars think he was the second son of four. Tradition says he first governed for his father at Taxila and at Ujjain, and Smith dates his accession at Pataliputra (Patna) to about 273 BC.",
+  "values": [
+    {
+      "word": "Compassion",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In Rock Edict XIII he writes that the slaughter, death and deportation of people while a country is conquered are 'very painful and deplorable' to him, and that the harm done to the loved ones of the people living there is also 'considered deplorable'.",
+          "sourceId": "hultzsch-1925",
+          "locator": "Rock Edict XIII, Shahbazgarhi version, sections E-I, pp. 68-69"
+        },
+        {
+          "kind": "words",
+          "claim": "In the first Kalinga (Separate) Edict he tells his judges at Tosali: 'All men are my children', and that he wants for all men the welfare and happiness he wants for his own children.",
+          "sourceId": "hultzsch-1925",
+          "locator": "First Separate Rock Edict, Dhauli version, sections E-F, p. 95"
+        },
+        {
+          "kind": "deed",
+          "claim": "He set up medical treatment for men and for cattle across his empire and among his neighbours, and had healing herbs, roots and fruits brought in and planted where there were none.",
+          "sourceId": "hultzsch-1925",
+          "locator": "Rock Edict II, Girnar version, sections A-C, pp. 3-4"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica writes that in Kalinga he 'had been so deeply impressed by the horrors involved in warfare that he had then given up the desire for conquest'.",
+          "sourceId": "eb1911",
+          "locator": "Asoka, vol. 2, p. 764, first paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "The historian Romila Thapar says the ethic of non-violence and tolerance that moved him 'seems to have come from his sense of the value of human life', and that in Rock Edict XIII he confesses to being contrite for the suffering of the Kalinga war.",
+          "sourceId": "thapar-arora-2025",
+          "locator": "excerpt from Speaking of History (Penguin Allen Lane, 2025), Thapar's answers on Ashoka"
+        },
+        {
+          "kind": "deed",
+          "claim": "In Pillar Edict V he says that in his first twenty-six years as king he ordered the release of prisoners twenty-five times.",
+          "sourceId": "hultzsch-1925",
+          "locator": "Fifth Pillar Edict, Delhi-Topra version, section L, p. 128"
+        }
+      ]
+    },
+    {
+      "word": "Respect",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In Rock Edict XII he writes that 'other sects ought to be duly honoured in every case', and that a man who praises his own sect and blames others out of devotion to it 'injures his own sect very severely'.",
+          "sourceId": "hultzsch-1925",
+          "locator": "Rock Edict XII, Girnar version, sections E and H, p. 21"
+        },
+        {
+          "kind": "deed",
+          "claim": "In his twelfth year as king he gave the Banyan cave in the Barabar hills to the Ajivikas, an ascetic sect that was not Buddhist.",
+          "sourceId": "hultzsch-1925",
+          "locator": "First Barabar Hill cave inscription, p. 181"
+        },
+        {
+          "kind": "deed",
+          "claim": "Smith writes that he had spacious caves cut out of hard gneiss for the Ajivika naked ascetics and had the interiors polished like a mirror, and that there can be no doubt he gave to Jains and Brahmans as well.",
+          "sourceId": "smith-1920",
+          "locator": "ch. I, p. 62"
+        },
+        {
+          "kind": "witness",
+          "claim": "Smith calls 'the enlightened religious toleration which is so frequently and emphatically recommended' one of the most noticeable features of his teaching.",
+          "sourceId": "smith-1920",
+          "locator": "ch. I, p. 59"
+        },
+        {
+          "kind": "witness",
+          "claim": "Romila Thapar reads his repeated call for tolerance among the sects as a response to real conflict between them: 'Why would an emperor call for tolerance among the different sects, if tolerance was already in place and there was no violence?'",
+          "sourceId": "thapar-arora-2025",
+          "locator": "excerpt from Speaking of History (Penguin Allen Lane, 2025), Thapar's answers on Ashoka"
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In Rock Edict VI he writes that he considers it his duty to promote the welfare of all men, and that 'no duty is more important' than that.",
+          "sourceId": "hultzsch-1925",
+          "locator": "Rock Edict VI, Girnar version, sections I and K, p. 13"
+        },
+        {
+          "kind": "deed",
+          "claim": "He posted reporters everywhere with orders to bring him the affairs of the people at any time, 'while I am eating, in the harem, in the inner apartment, even at the cowpen, in the palanquin, and in the parks'.",
+          "sourceId": "hultzsch-1925",
+          "locator": "Rock Edict VI, Girnar version, sections D-E, p. 12"
+        },
+        {
+          "kind": "deed",
+          "claim": "He had banyan trees planted along the roads to give shade to cattle and men, and mango groves planted.",
+          "sourceId": "hultzsch-1925",
+          "locator": "Pillar Edict VII, Delhi-Topra, section R, p. 134"
+        },
+        {
+          "kind": "witness",
+          "claim": "The 1911 Britannica writes that his edicts either set out his ethical religion 'or describe the means adopted by the king for propagating it', such as wells, shade trees, medicinal herbs and officers to supervise charities.",
+          "sourceId": "eb1911",
+          "locator": "Asoka, vol. 2, middle of the article"
+        }
+      ]
+    },
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In Rock Edict VI he writes: 'I am never content in exerting myself and in dispatching business', and that the root of the welfare of all men is 'exertion and the dispatch of business'.",
+          "sourceId": "hultzsch-1925",
+          "locator": "Rock Edict VI, Girnar version, sections H and J, p. 13"
+        },
+        {
+          "kind": "words",
+          "claim": "In the Rupnath edict he says that for two and a half years as a lay Buddhist he 'had not been very zealous', but that for more than a year since visiting the Samgha he has been 'very zealous', and that even a lowly person can reach heaven by zeal.",
+          "sourceId": "hultzsch-1925",
+          "locator": "Rupnath rock inscription, sections B-D and G, pp. 167-168"
+        },
+        {
+          "kind": "witness",
+          "claim": "Smith writes that he loved, protected and spread his Law of Piety 'with all the energy of his temperament and all his power as a mighty sovereign'.",
+          "sourceId": "smith-1920",
+          "locator": "ch. I, p. 29"
+        },
+        {
+          "kind": "witness",
+          "claim": "Smith writes that he 'preached and propagated unceasingly' his Law of Piety, 'with amazing faith in the power of sermonizing'.",
+          "sourceId": "smith-1920",
+          "locator": "ch. I, p. 59"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When your win hurts people, count the cost out loud.",
+      "sourceId": "hultzsch-1925",
+      "locator": "Rock Edict XIII, Shahbazgarhi version, sections A-K, pp. 68-69"
+    },
+    {
+      "text": "Seek the conquest that is won by example and persuasion, not by force.",
+      "sourceId": "hultzsch-1925",
+      "locator": "Rock Edict XIII, Shahbazgarhi version, sections P and X, pp. 69-70"
+    },
+    {
+      "text": "Forgive what can be forgiven, even to someone who wronged you.",
+      "sourceId": "hultzsch-1925",
+      "locator": "Rock Edict XIII, Shahbazgarhi version, section L, p. 69"
+    },
+    {
+      "text": "Honour other people's beliefs; do not praise your own by running down theirs.",
+      "sourceId": "hultzsch-1925",
+      "locator": "Rock Edict XII, Girnar version, sections D-I, p. 21"
+    },
+    {
+      "text": "Treat the welfare of the people in your care as your first duty, and stay reachable for it at any hour.",
+      "sourceId": "hultzsch-1925",
+      "locator": "Rock Edict VI, Girnar version, sections D-K, pp. 12-13"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "All men are my children.",
+      "sourceId": "hultzsch-1925",
+      "locator": "First Separate Rock Edict, Dhauli version, section E, p. 95 (addressed to his judicial officers at Tosali in conquered Kalinga, c. 256 BC)",
+      "translation": "E. Hultzsch, 1925"
+    },
+    {
+      "text": "For no duty is more important than (promoting) the welfare of all men.",
+      "sourceId": "hultzsch-1925",
+      "locator": "Rock Edict VI, Girnar version, section K, p. 13 (c. 257 BC)",
+      "translation": "E. Hultzsch, 1925"
+    },
+    {
+      "text": "This is the repentance of Devanampriya on account of his conquest of (the country of) the Kalingas.",
+      "sourceId": "hultzsch-1925",
+      "locator": "Rock Edict XIII, Shahbazgarhi version, section D, p. 68 (c. 257 BC; Devanampriya, 'Beloved of the Gods', is his royal title)",
+      "translation": "E. Hultzsch, 1925"
+    },
+    {
+      "text": "Therefore concord alone is meritorious, (i. e.) that they should both hear and obey each other's morals.",
+      "sourceId": "hultzsch-1925",
+      "locator": "Rock Edict XII, Girnar version, section I, p. 21 (c. 257 BC)",
+      "translation": "E. Hultzsch, 1925"
+    }
+  ],
+  "definingMoment": {
+    "text": "Eight years after he was crowned, around 261 BC, his army conquered Kalinga, a kingdom on the Bay of Bengal. About four years later he had a statement carved into rocks across his empire: 150,000 people had been deported from Kalinga, 100,000 killed, and many times as many had died. In the same text he called this 'the repentance' of the king, wrote that even a hundredth or a thousandth part of that suffering would now grieve him, and asked his sons and great-grandsons not to think a new conquest should be made. Smith writes that Kalinga was the last war he started of his own choice.",
+    "sourceIds": [
+      "hultzsch-1925",
+      "smith-1920"
+    ]
+  },
+  "shadow": {
+    "text": "Around 261 BC his army conquered Kalinga; his own Rock Edict XIII says 150,000 people were deported, 100,000 killed and many times as many died, and he kept the conquered land and his army. In the same edict he warns the forest peoples inside his empire that, in spite of his repentance, he still has the power to punish them, 'in order that they may be ashamed (of their crimes) and may not be killed'; the edict was not carved in Kalinga itself, where two other edicts stand in its place. He kept the death penalty, granting condemned prisoners three days before execution (Pillar Edict IV); Smith writes that he 'seems to have maintained the stern methods of his predecessors', under whom theft and perjury were punished by mutilation, and that his detailed bans on killing animals must have pressed 'with painful harshness' on many working people. The 1911 Britannica judges it probable that his patronage of Buddhism, like Constantine's of Christianity, 'was not unalloyed with political motives'. Later Buddhist legends, the Sri Lankan chronicles and the Ashokavadana, say that before his conversion he killed 99 brothers to take the throne, cut off the heads of 500 ministers with his own sword, had 500 palace women burnt alive and built a torture prison, and that after it he had 18,000 people of Pundra Vardhana in Bengal killed in one day because a statue of the Buddha was broken there, and put a price on the head of every Brahmanical ascetic. Smith (1920) writes that the monkish authors, 'eager to enhance the glory of Buddhism', made him a monster of cruelty before his conversion, calls the tales 'of no historical value', and notes that the edicts show his brothers and sisters still alive in the middle of his reign. The World History Encyclopedia (2020) repeats the cruelty and the prison called 'Ashoka's Hell', and writes that scholars think he killed two brothers, not 99.",
+    "sourceIds": [
+      "hultzsch-1925",
+      "smith-1920",
+      "eb1911",
+      "whe-mark"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did something you won this week cost someone else, and did you say so plainly?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "The Fourteen Rock Edicts",
+      "year": "c. 257 BC"
+    },
+    {
+      "title": "The Kalinga (Separate) Rock Edicts",
+      "year": "c. 256 BC"
+    },
+    {
+      "title": "The Seven Pillar Edicts",
+      "year": "c. 243 BC"
+    }
+  ],
+  "sources": [
+    {
+      "id": "hultzsch-1925",
+      "kind": "primary",
+      "title": "Inscriptions of Asoka, new edition (Corpus Inscriptionum Indicarum, vol. I)",
+      "author": "Asoka; edited and translated by E. Hultzsch",
+      "year": 1925,
+      "publisher": "Clarendon Press, Oxford",
+      "url": "https://archive.org/details/InscriptionsOfAsoka.NewEditionByE.Hultzsch"
+    },
+    {
+      "id": "dhammika-1993",
+      "kind": "primary",
+      "title": "The Edicts of King Asoka (Wheel Publication No. 386/387)",
+      "author": "Asoka; English rendering by Ven. S. Dhammika",
+      "year": 1993,
+      "publisher": "Buddhist Publication Society, Kandy",
+      "url": "https://www.accesstoinsight.org/lib/authors/dhammika/wheel386.html"
+    },
+    {
+      "id": "smith-1920",
+      "kind": "secondary",
+      "title": "Asoka, the Buddhist Emperor of India (3rd edition)",
+      "author": "Vincent A. Smith",
+      "year": 1920,
+      "publisher": "Clarendon Press, Oxford",
+      "url": "https://archive.org/details/asokabuddhistemp00smit"
+    },
+    {
+      "id": "eb1911",
+      "kind": "secondary",
+      "title": "Asoka, Encyclopaedia Britannica, 11th edition, vol. 2",
+      "author": "T. W. Rhys Davids",
+      "year": 1910,
+      "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Asoka",
+      "publisher": "Encyclopaedia Britannica Company, Cambridge University Press; Wikisource transcription"
+    },
+    {
+      "id": "whe-mark",
+      "kind": "secondary",
+      "title": "Ashoka the Great",
+      "author": "Joshua J. Mark",
+      "year": 2020,
+      "publisher": "World History Encyclopedia",
+      "url": "https://www.worldhistory.org/Ashoka_the_Great/"
+    },
+    {
+      "id": "thapar-arora-2025",
+      "kind": "secondary",
+      "title": "Nonviolence and Tolerance in Early India (excerpt from Speaking of History: Conversations about India's Past and Present, Penguin Allen Lane, 2025)",
+      "author": "Romila Thapar and Namit Arora",
+      "year": 2025,
+      "publisher": "The Wire, 3 December 2025",
+      "url": "https://m.thewire.in/article/books/nonviolence-and-tolerance-in-early-india"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Maurya emperor of the 3rd century BC: not fictional, not a living politician, not the founder of a religion; no account of sexual contact with a minor or of sexual violence was found; his shadow is the Kalinga war he describes himself, plus violence in later Buddhist legends that historians treat as doubtful."
+    },
+    "blindAgreement": 1.0,
+    "devilsAdvocate": "I tested Compassion against Kalinga, the death penalty he kept, the threat to the forest peoples and the later legends, and checked every value against independent secondary sources (the 1911 Britannica, Smith 1920, and Romila Thapar in a 2025 book excerpt) rather than only his own edicts. Compassion, Respect, Service and Hard work held: the contrary acts come before his change or are legends Smith calls of no historical value, and the death penalty he kept now stands plainly in the shadow beside Smith's 'stern methods'. Responsibility fell: his confession was never carved in Kalinga itself, he kept the land and made no known return of the deportees, so it survives only as public remorse. The shadow gained Smith's note on mutilation, Britannica's 'political motives' and the legend of the Pundra Vardhana massacre.",
+    "checkedOn": "2026-11-10"
+  }
+}
