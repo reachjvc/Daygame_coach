@@ -1,0 +1,242 @@
+{
+  "id": "porfirio-rubirosa",
+  "name": "Porfirio Rubirosa",
+  "born": 1909,
+  "died": 1965,
+  "category": "charisma",
+  "areaIds": [
+    "lm_relationship",
+    "lm_fun"
+  ],
+  "tagline": "The Dominican diplomat and playboy who lived for women, speed and pleasure.",
+  "startedFrom": "His parents were middle-class people from the Cibao region of the Dominican Republic. His father was connected with the Dominican legation in Paris, where the boy got the equivalent of an American junior-college education. Around 1930, back in Santo Domingo, he ran two-penny amateur boxing nights in a small square and sat shirtless on a curb with a band of local idlers; by 1932 he was an army lieutenant serving as an aide to the dictator Trujillo.",
+  "values": [
+    {
+      "word": "Pleasure",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Time wrote that men explained his appeal as 'a capacity for taking infinite pains in the pursuit of pleasure', such as having the match lit before a woman's cigarette reached her lips.",
+          "sourceId": "time-1965",
+          "locator": "'International Set: Toujours Prêt', Time, 16 July 1965"
+        },
+        {
+          "kind": "deed",
+          "claim": "A friend who shared his house says they boxed, played polo and went to nightclubs and Madame Claude's brothel together, and that on his last night he stayed at New Jimmy's club until after 6 a.m.",
+          "sourceId": "taki-2005",
+          "locator": "'First-rate educator', The Spectator, 9 July 2005, p. 37"
+        },
+        {
+          "kind": "words",
+          "claim": "He summed up his life to the press as: 'I just try to make women happy.'",
+          "sourceId": "time-1956",
+          "locator": "'People', Time, 22 October 1956"
+        },
+        {
+          "kind": "witness",
+          "claim": "Time, reporting his 1947 wedding to Doris Duke, wrote: 'Around Paris nightclubs, everybody knew eager, ardent Rubi.'",
+          "sourceId": "time-1947",
+          "locator": "'National Affairs: The Pursuit of Happiness', Time, 15 September 1947"
+        },
+        {
+          "kind": "witness",
+          "claim": "Publishers Weekly's review of his biography closes: 'All Rubi knew was how to enjoy himself.'",
+          "sourceId": "pw-2005",
+          "locator": "review of Levy, The Last Playboy, closing sentence"
+        }
+      ]
+    },
+    {
+      "word": "Adventure",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He drove the Le Mans 24 Hours in 1950 and 1954 and finished second overall at the 1954 Sebring 12 Hours in a Lancia D24 with Gino Valenzano; he raced sports cars from 1950 to 1958.",
+          "sourceId": "rsc",
+          "locator": "driver archive: Le Mans 25.6.1950 and 13.6.1954; Sebring 7.3.1954"
+        },
+        {
+          "kind": "deed",
+          "claim": "During his honeymoon with Barbara Hutton, whom he married in December 1953, he disappeared and turned up some time later aboard a yacht in the Caribbean, saying he was looking for a 'fabulous treasure'.",
+          "sourceId": "time-1965",
+          "locator": "'International Set: Toujours Prêt', Time, 16 July 1965"
+        },
+        {
+          "kind": "witness",
+          "claim": "Taki, who knew him well, names 'the sense of danger whenever he was around' as one of the three things people still talked about.",
+          "sourceId": "taki-2005",
+          "locator": "'First-rate educator', The Spectator, 9 July 2005, p. 37"
+        }
+      ]
+    },
+    {
+      "word": "Wealth",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Trujillo's biographer writes that he 'appreciated the merits of marrying into wealth', and that a long career built on this lay ahead of him.",
+          "sourceId": "crassweller-1966",
+          "locator": "ch. on Trujillo's family, p. 137"
+        },
+        {
+          "kind": "deed",
+          "claim": "He married the tobacco heiress Doris Duke in Paris in September 1947.",
+          "sourceId": "time-1947",
+          "locator": "'National Affairs: The Pursuit of Happiness', Time, 15 September 1947"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1953 he became Barbara Hutton's fifth husband; gossip columnists put her unofficial settlement with him at one to five million dollars.",
+          "sourceId": "time-1965",
+          "locator": "'International Set: Toujours Prêt', Time, 16 July 1965"
+        },
+        {
+          "kind": "witness",
+          "claim": "His friend Taki writes that from the 87-day Hutton marriage he got an old Dakota airplane, his tailor bill paid and 'ready cash of about two million'.",
+          "sourceId": "taki-2005",
+          "locator": "'First-rate educator', The Spectator, 9 July 2005, p. 37"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Make a woman feel liked, not grabbed.",
+      "sourceId": "time-1965",
+      "locator": "'International Set: Toujours Prêt', Time, 16 July 1965 (his words: 'A woman does not like to be pawed. She likes to be—uh—liked.')"
+    },
+    {
+      "text": "Win people with small, early attentions, like the match already lit before her cigarette reaches her lips.",
+      "sourceId": "time-1965",
+      "locator": "'International Set: Toujours Prêt', Time, 16 July 1965"
+    },
+    {
+      "text": "Go first class, or not at all.",
+      "sourceId": "taki-2005",
+      "locator": "'First-rate educator', The Spectator, 9 July 2005, p. 37"
+    },
+    {
+      "text": "Keep the body hard: box every morning and play a hard sport every week.",
+      "sourceId": "taki-2005",
+      "locator": "'First-rate educator', The Spectator, 9 July 2005, p. 37"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I try to make women happy. A woman does not like to be pawed. She likes to be—uh—liked.",
+      "sourceId": "time-1965",
+      "locator": "'International Set: Toujours Prêt', Time, 16 July 1965"
+    },
+    {
+      "text": "Never again will I marry a woman of wealth.",
+      "sourceId": "time-1965",
+      "locator": "'International Set: Toujours Prêt', Time, 16 July 1965 (said at 44)"
+    }
+  ],
+  "definingMoment": {
+    "text": "In July 1965 his polo team had just won the French cup. He celebrated all night at New Jimmy's club in Paris and left after 6 a.m. on 5 July. Driving his Ferrari home through the Bois de Boulogne much too fast, he hit a tree and was killed.",
+    "sourceIds": [
+      "time-1965",
+      "taki-2005"
+    ]
+  },
+  "shadow": {
+    "text": "From 1932 he served the Dominican dictator Rafael Trujillo, first as an army aide and then as a diplomat, and stayed on the Dominican diplomatic payroll most of the time until Trujillo was killed in 1961; the new government fired him at its first meeting. He married Trujillo's 17-year-old daughter in 1932, and later Doris Duke in 1947 and Barbara Hutton in 1953, two of the richest women in the world. Trujillo's biographer Robert Crassweller writes that he 'appreciated the merits of marrying into wealth' and built a long career on it. In December 1953 Zsa Zsa Gabor's press agent said Rubirosa had punched her in the eye in Las Vegas after she refused to marry him; Rubirosa called it 'Just a publicity stunt'. His friend Taki writes that, while married to his last wife Odile, Rubirosa regularly visited Madame Claude's brothel with him after sending the women off shopping.",
+    "sourceIds": [
+      "time-1965",
+      "crassweller-1966",
+      "time-1947",
+      "time-1954",
+      "taki-2005"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you grab for what you wanted, when you could have made the other person feel liked?",
+    "principleIndex": 0
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "time-1956",
+      "kind": "primary",
+      "title": "People, Oct. 22, 1956 (his words to the press, as printed)",
+      "author": "Time staff, quoting Porfirio Rubirosa",
+      "year": 1956,
+      "publisher": "Time",
+      "url": "https://content.time.com/time/subscriber/article/0,33009,824505-1,00.html"
+    },
+    {
+      "id": "time-1965",
+      "kind": "secondary",
+      "title": "International Set: Toujours Prêt",
+      "author": "Time staff",
+      "year": 1965,
+      "publisher": "Time, 16 July 1965",
+      "url": "https://time.com/archive/6627817/international-set-toujours-pret/"
+    },
+    {
+      "id": "time-1954",
+      "kind": "secondary",
+      "title": "Social Notes: So Tired",
+      "author": "Time staff",
+      "year": 1954,
+      "publisher": "Time, 11 January 1954",
+      "url": "https://time.com/archive/6621655/social-notes-so-tired"
+    },
+    {
+      "id": "time-1947",
+      "kind": "secondary",
+      "title": "National Affairs: The Pursuit of Happiness",
+      "author": "Time staff",
+      "year": 1947,
+      "publisher": "Time, 15 September 1947",
+      "url": "https://time.com/archive/6784699/national-affairs-the-pursuit-of-happiness/"
+    },
+    {
+      "id": "crassweller-1966",
+      "kind": "secondary",
+      "title": "Trujillo: The Life and Times of a Caribbean Dictator",
+      "author": "Robert D. Crassweller",
+      "year": 1966,
+      "publisher": "Macmillan, New York",
+      "url": "https://archive.org/details/trujillolifetime0000robe"
+    },
+    {
+      "id": "taki-2005",
+      "kind": "secondary",
+      "title": "First-rate educator (High Life column)",
+      "author": "Taki (Taki Theodoracopulos)",
+      "year": 2005,
+      "publisher": "The Spectator, 9 July 2005, p. 37",
+      "url": "https://archive.spectator.co.uk/article/9th-july-2005/37/first-rate-educator"
+    },
+    {
+      "id": "rsc",
+      "kind": "secondary",
+      "title": "Porfirio Rubirosa (DR): driver race archive",
+      "author": "Racing Sports Cars database",
+      "year": "accessed 2026",
+      "publisher": "racingsportscars.com",
+      "url": "https://www.racingsportscars.com/driver/archive/Porfirio-Rubirosa-DR.html"
+    },
+    {
+      "id": "pw-2005",
+      "kind": "secondary",
+      "title": "Review of Shawn Levy, The Last Playboy: The High Life of Porfirio Rubirosa",
+      "author": "Publishers Weekly",
+      "year": 2005,
+      "publisher": "Publishers Weekly",
+      "url": "https://www.publishersweekly.com/9780007170593"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Dominican diplomat, racing driver and polo player (1909-1965), not fictional, never a politician running for office, campaigner or religious founder, with no account found of sexual contact with anyone under 16 or of sexual violence; he is in, with a documented dark side: thirty years in the service of the dictator Trujillo, marriages to two of the richest women alive, and Zsa Zsa Gabor's 1953 claim that he punched her in the eye."
+    },
+    "blindAgreement": 0.67,
+    "devilsAdvocate": "I reopened the three Time articles, the Spectator column, Crassweller's pages 136-137, the race database and the Publishers Weekly review, and checked every claim, quote and sentence against them. Fitness fell: daily boxing and weekly polo rest on only two sources, Taki and Time, and the all-night club life argues against it. Pleasure and Adventure are shared with the blind pick; Wealth held on four sources (Crassweller, two Time pieces, Taki) despite the Duke prenuptial contract and his last marriage to a young actress. Both quotes were found word for word in Time, 16 July 1965; the shadow now also records the brothel visits during his last marriage.",
+    "checkedOn": "2026-11-10"
+  }
+}
