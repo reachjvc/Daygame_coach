@@ -1,0 +1,264 @@
+{
+  "id": "errol-flynn",
+  "name": "Errol Flynn",
+  "born": 1909,
+  "died": 1959,
+  "category": "charisma",
+  "areaIds": [
+    "lm_fun",
+    "lm_mindset"
+  ],
+  "tagline": "A Tasmanian rebel who sailed, wrote and acted his way to a life of adventure and pleasure.",
+  "startedFrom": "He was born on 20 June 1909 in Hobart, Tasmania, the son of Theodore Flynn, a biology lecturer who became a professor. He was a rebellious boy who did not last long at several schools and was expelled from Sydney Church of England Grammar School (Shore). In 1927, after a short office job with a Sydney shipping company, he left for New Guinea.",
+  "values": [
+    {
+      "word": "Adventure",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "From 1927 in New Guinea he was in quick turn a trainee district officer, a copra plantation overseer, partner in a charter schooner business and a gold prospector.",
+          "sourceId": "adb-1981",
+          "locator": "Errol Flynn part, paragraph 1 ('Errol was born on 20 June 1909')"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that 'the adventure of it, the thought of a new experience' was something he could never resist.",
+          "sourceId": "mwww-1979",
+          "locator": "passage on a night of fantan gambling ('Did I dare do this?'), page not seen"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer writes that New Guinea offered him 'all he would ever ask of life — adventure, danger, money and a great deal of sex'.",
+          "sourceId": "freedland-1978",
+          "locator": "chapter 'In the Wake of the \"Bounty\"' (begins p. 17), opening lines after the Herbert Wilcox epigraph"
+        }
+      ]
+    },
+    {
+      "word": "Travel",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1930 he bought the cutter Sirocco in Sydney and sailed her back to New Guinea, a seven-month journey; sailing stayed a lifelong hobby.",
+          "sourceId": "adb-1981",
+          "locator": "Errol Flynn part, paragraph 1 ('He purchased the cutter Sirocco')"
+        },
+        {
+          "kind": "words",
+          "claim": "Writing of himself at seventeen, he said: 'From then on I began the wanderings that have never ceased.'",
+          "sourceId": "mwww-1979",
+          "locator": "end of Part One ('Tasmanian Devil, 1909-1927'), next to the OCR page number 43"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Australian Dictionary of Biography says that in his later years he was 'a wanderer aboard his schooner Zaca'.",
+          "sourceId": "adb-1981",
+          "locator": "Errol Flynn part, paragraph 2 (ends 'In his later years he was a wanderer')"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer writes that he later had a new yacht, the Zaca, on which he and his second wife Nora had their happiest moments; he taught her to sail.",
+          "sourceId": "freedland-1978",
+          "locator": "chapter 'The Case of the Curious Bride' (begins p. 145), passage 'By now Errol had a new yacht, the Zaca', page not seen"
+        }
+      ]
+    },
+    {
+      "word": "Creativity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He wrote columns on New Guinea life for the Sydney Bulletin, the travel book Beam Ends (1937) and the novel Showdown (1946).",
+          "sourceId": "adb-1981",
+          "locator": "Errol Flynn part, paragraphs 1 and 3"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that after Captain Blood he had 'so much belief in the validity of creation' that he decided to write a book, and wrote Beam Ends in a few months.",
+          "sourceId": "mwww-1979",
+          "locator": "passage '... a period after Captain Blood was made when I was living with Lili', page not seen"
+        },
+        {
+          "kind": "deed",
+          "claim": "Longmans, Green published Beam Ends in 1937, 241 pages, built on his own voyage.",
+          "sourceId": "freedland-1978",
+          "locator": "passage beginning 'In 1937 his book was published', page not seen"
+        }
+      ]
+    },
+    {
+      "word": "Pleasure",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote: 'One thing I always knew how to do: enjoy life.'",
+          "sourceId": "mwww-1979",
+          "locator": "passage beginning 'No pictures were coming out', page not seen"
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer opens by calling him a man known 'more as a playboy than an actor, a man's man whose principal hobby was women'.",
+          "sourceId": "freedland-1978",
+          "locator": "Acknowledgments, p. ix, first sentence"
+        },
+        {
+          "kind": "witness",
+          "claim": "A film reference work says his personal life was marked by 'brawls, amorous adventures, and other assorted hedonistic activities'.",
+          "sourceId": "idff",
+          "locator": "entry 'Flynn, Errol', biographical essay (online text, no page)"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When something scares you, move in on it and fight it until you beat it.",
+      "sourceId": "mwww-1979",
+      "locator": "passage on doing his own stunts in The Adventures of Robin Hood ('I had fear and I had to go out and meet my own fear'), page not seen"
+    },
+    {
+      "text": "Say yes to a new experience, even when you do not know where it leads.",
+      "sourceId": "mwww-1979",
+      "locator": "passage on a night of fantan gambling ('Was I stepping into something I knew nothing of?'), page not seen"
+    },
+    {
+      "text": "Turn what you have lived into something you make.",
+      "sourceId": "adb-1981",
+      "locator": "Errol Flynn part, paragraph 1: the Sirocco voyage 'became the subject of his first book Beam Ends (1937)'"
+    },
+    {
+      "text": "Enjoy life fully, even when your work is going badly.",
+      "sourceId": "mwww-1979",
+      "locator": "passage beginning 'No pictures were coming out ... So what? I had my own resources', page not seen"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "If I am afraid to do something I move in on it and try to tangle with it and lick it.",
+      "sourceId": "mwww-1979",
+      "locator": "My Wicked, Wicked Ways (Berkley 1979), passage on doing his own stunts in The Adventures of Robin Hood, page not seen"
+    },
+    {
+      "text": "But the adventure of it, the thought of a new experience — this I could never resist.",
+      "sourceId": "mwww-1979",
+      "locator": "My Wicked, Wicked Ways (Berkley 1979), passage on a night of fantan gambling, page not seen"
+    },
+    {
+      "text": "One thing I always knew how to do: enjoy life. If I have any genius it is a genius for living.",
+      "sourceId": "mwww-1979",
+      "locator": "My Wicked, Wicked Ways (Berkley 1979), passage beginning 'No pictures were coming out', page not seen"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1930 he bought the cutter Sirocco in Sydney for £1500 and sailed her up the Australian coast to New Guinea, stopping every day or two along the way and writing letters to his father. The Australian Dictionary of Biography puts the trip at seven months; his own book calls it five. In New Guinea he wrote columns for the Sydney Bulletin, and the voyage became his first book, Beam Ends, published in 1937.",
+    "sourceIds": [
+      "adb-1981",
+      "mwww-1979",
+      "freedland-1978"
+    ]
+  },
+  "shadow": {
+    "text": "In New Guinea, between 1927 and 1932, he took part in 'recruiting' plantation labourers, which he himself called 'this form of slave stealing'; his biographer Michael Freedland calls it slave trading. He left New Guinea in 1932 'notorious for unpaid debts'. In 1942 he was charged with the statutory rape of two girls: Betty Hansen, 17, and Peggy Satterlee, said to be 15 at the time, who told the court he forced himself on her twice on his yacht in August 1941. On 6 February 1943 a jury found him not guilty on all three counts after his lawyer attacked the girls' credibility. In October 1950, on the day he married Patrice Wymore in Monaco, he was served a rape complaint from the parents of Danielle Dervin, who said that in October 1949, when she was 15, he attacked her aboard his yacht; he called it blackmail, and the Monte Carlo magistrate dismissed it. In 1957 he began an affair with Beverly Aadland; in 1988 she wrote that she was 15, that the first time 'when I was saying no, no, no, he thought I meant yes' and 'He was just too strong for me', and that she then fell in love with him and stayed until his death. In his later years he was addicted to drink and narcotics.",
+    "sourceIds": [
+      "mwww-1979",
+      "freedland-1978",
+      "adb-1981",
+      "anae-2022",
+      "screenland-1953",
+      "aadland-1988"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What scared you this week, and did you move in on it or walk around it?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "My Wicked, Wicked Ways",
+      "year": 1959
+    },
+    {
+      "title": "Beam Ends",
+      "year": 1937
+    },
+    {
+      "title": "Showdown",
+      "year": 1946
+    }
+  ],
+  "sources": [
+    {
+      "id": "mwww-1979",
+      "kind": "primary",
+      "title": "My Wicked, Wicked Ways",
+      "author": "Errol Flynn (ghost-written with Earl Conrad)",
+      "year": 1979,
+      "publisher": "Berkley, New York, September 1979 edition; first published by G. P. Putnam's Sons, 1959",
+      "url": "https://archive.org/details/isbn_0425041182"
+    },
+    {
+      "id": "adb-1981",
+      "kind": "secondary",
+      "title": "Flynn, Theodore Thomson (1883-1968) and Errol Leslie (1909-1959)",
+      "author": "William Bryden",
+      "year": 1981,
+      "publisher": "Australian Dictionary of Biography, vol. 8, Melbourne University Press; online, National Centre of Biography, ANU",
+      "url": "https://adb.anu.edu.au/biography/flynn-errol-leslie-6364"
+    },
+    {
+      "id": "freedland-1978",
+      "kind": "secondary",
+      "title": "Errol Flynn",
+      "author": "Michael Freedland",
+      "year": 1978,
+      "publisher": "Arthur Barker, London",
+      "url": "https://archive.org/details/errolflynn0000free"
+    },
+    {
+      "id": "anae-2022",
+      "kind": "secondary",
+      "title": "Film Star Errol Flynn Is Acquitted of Rape",
+      "author": "Nicole Anae",
+      "year": 2022,
+      "publisher": "EBSCO Research Starters (from Great Events from History: Modern Scandals, Salem Press)",
+      "url": "https://www.ebsco.com/research-starters/history/film-star-errol-flynn-acquitted-rape"
+    },
+    {
+      "id": "aadland-1988",
+      "kind": "secondary",
+      "title": "Errol Flynn's Pretty Baby",
+      "author": "Beverly Aadland",
+      "year": 1988,
+      "publisher": "People, vol. 30 no. 16, 17 October 1988",
+      "url": "https://people.com/archive/errol-flynns-pretty-baby-vol-30-no-16/"
+    },
+    {
+      "id": "idff",
+      "kind": "secondary",
+      "title": "Flynn, Errol",
+      "author": "Stephen L. Hanson, updated by John McCarty",
+      "year": "n.d.",
+      "publisher": "International Dictionary of Films and Filmmakers (Gale), via Encyclopedia.com",
+      "url": "https://www.encyclopedia.com/people/literature-and-arts/film-and-television-biographies/errol-flynn"
+    },
+    {
+      "id": "screenland-1953",
+      "kind": "secondary",
+      "title": "Untitled news item on Flynn's legal troubles (Danielle Dervin complaint)",
+      "author": "Screenland Plus TV-Land staff",
+      "year": "1952-53",
+      "publisher": "Screenland Plus TV-Land, vol. Nov 1952 - Oct 1953 (Media History Digital Library, Lantern scan leaf 0848)",
+      "url": "https://lantern.mediahist.org/catalog/screenlandplustv57unse_0848"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real Australian-born American film actor (1909-1959), not fictional, never a politician or campaigner, not a religious founder; owner decides because of two credible accounts of sexual contact with girls under 16 that include force: Peggy Satterlee (said to be 15 in August 1941) told the 1943 trial he forced himself on her twice on his yacht (jury acquitted him on all counts, 6 Feb 1943), and Beverly Aadland wrote in People (1988) that she was 15 in 1957 when, the first time, he forced himself on her while she said no, after which she stayed with him by choice until his death. A third account found in review: in October 1950 he was served a rape complaint brought by the parents of Danielle Dervin, who said he attacked her aboard his yacht on 16 October 1949 when she was 15; he called it blackmail and the Monte Carlo magistrate dismissed it (Screenland Plus TV-Land 1952-53; Freedland 1978). Facts in review.json ownerCase; no recommendation."
+    },
+    "blindAgreement": 0.5,
+    "devilsAdvocate": "I attacked every value, checked each claim and quote against the ADB entry, the Anae trial article, Aadland's People piece and the Internet Archive full-text search of his autobiography and Freedland's biography. Fun fell: it rested on two sources and largely repeats Pleasure; the principle 'do not fake it' fell because TCM says his claim to have done all his own stunts seems unlikely. Adventure and Pleasure held and match the blind pick; Travel and Creativity held with three sources each, and all three quotes were found word for word. The shadow gained his New Guinea debts and the 1949-50 Danielle Dervin complaint, and Aadland's account now uses her own words.",
+    "checkedOn": "2026-11-10"
+  }
+}
