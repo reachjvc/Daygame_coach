@@ -1,0 +1,320 @@
+{
+  "id": "sam-walton",
+  "name": "Sam Walton",
+  "born": 1918,
+  "died": 1992,
+  "category": "builders",
+  "areaIds": [
+    "lm_money",
+    "lm_mission"
+  ],
+  "tagline": "A small-town shopkeeper who cut costs and prices and built America's biggest retailer.",
+  "startedFrom": "He was born in 1918 in Kingfisher, Oklahoma, the son of a farm appraiser and mortgage agent, and grew up in Missouri towns during the Great Depression. He milked cows, sold magazine subscriptions and delivered newspapers, and paid his own way through the University of Missouri. In 1945 he bought his first store, a Ben Franklin variety franchise in Newport, Arkansas, for $25,000: $5,000 of his own money and $20,000 borrowed from his wife's father.",
+  "values": [
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "To pay for the University of Missouri he delivered newspapers, worked as a lifeguard and waited on tables at the student union.",
+          "sourceId": "shsmo",
+          "locator": "paragraph beginning 'After he graduated from high school in 1936'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Retail consultant Walter Loeb, quoted from The New York Times, described him as a man who was at work at 4:30 in the morning.",
+          "sourceId": "pbs-2004",
+          "locator": "paragraph beginning '\"This is a man who was at work at 4:30 in the morning'"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that Wal-Mart always operated lean, with fewer people doing more, and that 'we came to work earlier and stayed later.'",
+          "sourceId": "made-in-america",
+          "locator": "ch. 15 'Thinking Small', passage beginning 'But we have always operated lean' (after p. 277)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Presenting him the Medal of Freedom, President Bush said he showed that through hard work and vision and treating people right, many good things can happen.",
+          "sourceId": "bush-1992",
+          "locator": "p. 464, paragraph beginning 'But anyway, we come here to honor a man'"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Of his first store in Newport he wrote that he learned a lesson that stayed with him all his life, 'you can learn from everybody', and that he learned most from studying the rival store manager across the street, John Dunham.",
+          "sourceId": "made-in-america",
+          "locator": "ch. 2 'Starting on a Dime', passage beginning 'learned a lesson which has stuck with me all through the years'"
+        },
+        {
+          "kind": "deed",
+          "claim": "After reading about Ben Franklin stores that had switched to customer self-service, he tried the idea in his Bentonville store, and it worked.",
+          "sourceId": "shsmo",
+          "locator": "paragraph beginning 'One of the most important ideas that Sam adopted'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Charlie Munger said in 1994 that Walton invented practically nothing but copied everything anybody else did that was smart, with more fanaticism.",
+          "sourceId": "pca-2023",
+          "locator": "Chapter Four, Talk Two (USC Marshall School of Business, 14 April 1994), paragraph beginning 'He played the chain store game harder and better'"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that in college, 'with all this competitive spirit and ambition I had back then', he even thought of one day becoming President of the United States.",
+          "sourceId": "made-in-america",
+          "locator": "ch. 2 'Starting on a Dime', passage beginning 'With all this competitive spirit and ambition'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The State Historical Society of Missouri writes that his mother instilled in him a sense of ambition that stayed with him for the rest of his life.",
+          "sourceId": "shsmo",
+          "locator": "paragraph beginning 'Samuel Moore Walton was born on March 29, 1918'"
+        },
+        {
+          "kind": "deed",
+          "claim": "From one Wal-Mart in Rogers, Arkansas, in 1962 he grew the company to 1,700 stores, and in 1991 it became the largest retailer in the United States.",
+          "sourceId": "eoa",
+          "locator": "paragraphs beginning 'Discounting was gaining popularity' and 'In 1991, Walmart Inc. became'"
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "His eighth rule for building a business is to exceed customers' expectations: 'Give them what they want—and a little more.'",
+          "sourceId": "made-in-america",
+          "locator": "ch. 17 'Running a Successful Company: Ten Rules That Worked for Me', Rule 8"
+        },
+        {
+          "kind": "deed",
+          "claim": "He had employees take a pledge to smile at, look in the eye and greet every customer who came within ten feet of them.",
+          "sourceId": "eoa",
+          "locator": "paragraph beginning 'Sam Walton was not an introspective man'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The Associated Press obituary says he used high-tech management and lots of cheerleading to sell employees on a philosophy of efficiency and service to the customer.",
+          "sourceId": "ap-1992",
+          "locator": "third paragraph, beginning 'Walton was a shrewd businessman'"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that one secret of campus leadership was the simplest thing of all: speak to people coming down the sidewalk before they speak to you.",
+          "sourceId": "made-in-america",
+          "locator": "ch. 2 'Starting on a Dime', passage beginning 'I learned early on that one of the secrets to campus leadership'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He was elected student body president at Hickman High School in Columbia, Missouri, and at the University of Missouri served as president of the honor society QEBH.",
+          "sourceId": "shsmo",
+          "locator": "paragraphs beginning 'The two brothers attended David H. Hickman High School' and 'After he graduated from high school in 1936'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He held pep rallies in his stores and led employees in Wal-Mart cheers.",
+          "sourceId": "eoa",
+          "locator": "paragraph beginning 'Sam Walton was not an introspective man'"
+        },
+        {
+          "kind": "witness",
+          "claim": "On his death the chairman of rival Sears, Edward A. Brennan, called him a great merchant, a great leader and a great competitor.",
+          "sourceId": "ap-1992",
+          "locator": "paragraph beginning '\"He was a great merchant'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Treat every dollar the business wastes as a dollar taken from the customer, and keep your costs below your rivals'.",
+      "sourceId": "made-in-america",
+      "locator": "ch. 1 'Learning to Value a Dollar', pp. 12-13; ch. 17, Rule 9"
+    },
+    {
+      "text": "Cut the price, sell far more, and earn more on the volume than you would on a high markup.",
+      "sourceId": "made-in-america",
+      "locator": "ch. 2 'Starting on a Dime', passage beginning 'Here's the simple lesson we learned'"
+    },
+    {
+      "text": "Learn from everybody, most of all from the competitor across the street.",
+      "sourceId": "made-in-america",
+      "locator": "ch. 2 'Starting on a Dime', passage beginning 'learned a lesson which has stuck with me all through the years'"
+    },
+    {
+      "text": "Take care of the people who serve your customers, and they will take care of the customers.",
+      "sourceId": "made-in-america",
+      "locator": "ch. 6 'Recruiting the Team', passage beginning 'If you want the people in the stores' (after p. 103)"
+    },
+    {
+      "text": "When everybody does it one way, look for your chance in the opposite direction.",
+      "sourceId": "made-in-america",
+      "locator": "ch. 17 'Running a Successful Company: Ten Rules That Worked for Me', Rule 10"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Every time Wal-Mart spends one dollar foolishly, it comes right out of our customers' pockets.",
+      "sourceId": "made-in-america",
+      "locator": "ch. 1 'Learning to Value a Dollar', pp. 12-13"
+    },
+    {
+      "text": "If you want the people in the stores to take care of the customers, you have to make sure you're taking care of the people in the stores.",
+      "sourceId": "made-in-america",
+      "locator": "ch. 6 'Recruiting the Team', after p. 103"
+    },
+    {
+      "text": "Swim upstream. Go the other way. Ignore the conventional wisdom.",
+      "sourceId": "made-in-america",
+      "locator": "ch. 17 'Running a Successful Company: Ten Rules That Worked for Me', Rule 10"
+    },
+    {
+      "text": "In the beginning, I was so chintzy I really didn't pay my employees very well.",
+      "sourceId": "made-in-america",
+      "locator": "ch. 9 'Building the Partnership', opening pages (before p. 163)"
+    }
+  ],
+  "definingMoment": {
+    "text": "Before 1962 he asked the Ben Franklin franchise company to cut its margins by half so he could sell at discount prices, and it said no. He went ahead on his own and opened the first Wal-Mart in Rogers, Arkansas, on 2 July 1962. Nobody else wanted to gamble on that store, so he put up 95 percent of the money; his wife Helen signed all the notes with him, and they pledged their houses and property. By 1991 Wal-Mart was the largest retailer in the United States.",
+    "sourceIds": [
+      "eoa",
+      "made-in-america",
+      "ap-1992"
+    ]
+  },
+  "shadow": {
+    "text": "He wrote in 1992 that in the early years he did not pay his employees well, apart from the managers, and that his biggest business regret was leaving hourly associates out of the first profit-sharing plan in 1970. When the Retail Clerks union tried to organize two Missouri stores in 1972, he fought the unions, in a way he called legal and aboveboard, with advice from the labor lawyer John Tate, a specialist in keeping unions out. According to the writer Rick Wartzman, a company executive told the manager of one of those stores to fire any worker caught with a union card. At the Searcy, Arkansas, distribution center in 1982, according to a Teamsters local president and to Wartzman, he told workers they would lose their profit sharing if they voted for the union, and a worker said he threatened to close the warehouse; they voted the union down, and Wartzman calls these threats illegal. A 1995 study of 34 small towns found that small businesses in towns with a Wal-Mart lost a quarter of their sales within five years. Charlie Munger said in 1994 that Walton broke other small-town merchants in the early days, and that he beat his rivals with more fanaticism and better employee manipulation.",
+    "sourceIds": [
+      "made-in-america",
+      "wartzman-2022",
+      "trimble-1990",
+      "eoa",
+      "pca-2023"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Whose way of doing things did you study closely this week, and what did you take from it?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "Sam Walton: Made in America, My Story (with John Huey)",
+      "year": 1992
+    }
+  ],
+  "sources": [
+    {
+      "id": "made-in-america",
+      "kind": "primary",
+      "title": "Sam Walton: Made in America, My Story (Bantam paperback; first published by Doubleday, 1992; written with John Huey)",
+      "author": "Sam Walton with John Huey",
+      "year": 1993,
+      "publisher": "Bantam Books",
+      "url": "https://archive.org/details/samwaltonmadeina0000walt_u2x0"
+    },
+    {
+      "id": "eoa",
+      "kind": "secondary",
+      "title": "Sam Walton (1918–1992), CALS Encyclopedia of Arkansas",
+      "author": "Kim I. Martin",
+      "year": 2025,
+      "publisher": "Central Arkansas Library System",
+      "url": "https://encyclopediaofarkansas.net/entries/samuel-moore-walton-1792/"
+    },
+    {
+      "id": "shsmo",
+      "kind": "secondary",
+      "title": "Sam and Bud Walton, Historic Missourians",
+      "author": "State Historical Society of Missouri",
+      "year": "n.d.",
+      "publisher": "State Historical Society of Missouri",
+      "url": "https://historicmissourians.shsmo.org/waltons/"
+    },
+    {
+      "id": "ap-1992",
+      "kind": "secondary",
+      "title": "Wal-Mart founder Sam Walton dies (Associated Press obituary, 6 April 1992, as printed in the Lewiston Tribune)",
+      "author": "Associated Press",
+      "year": 1992,
+      "publisher": "Lewiston Tribune",
+      "url": "https://lmtribune.com/obituaries/wal-mart-founder-sam-walton-diese47db295"
+    },
+    {
+      "id": "pbs-2004",
+      "kind": "secondary",
+      "title": "Biography: Sam Walton (20 August 2004)",
+      "author": "PBS NewsHour",
+      "year": 2004,
+      "publisher": "PBS",
+      "url": "https://www.pbs.org/newshour/economy/business-july-dec04-sam-walton_08-20"
+    },
+    {
+      "id": "bush-1992",
+      "kind": "secondary",
+      "title": "Remarks on Presenting the Presidential Medal of Freedom to Samuel M. Walton in Bentonville, Arkansas, 17 March 1992 (Public Papers of the Presidents: George H. W. Bush, 1992, Book I, pp. 464-466)",
+      "author": "George H. W. Bush",
+      "year": 1992,
+      "publisher": "U.S. Government Publishing Office",
+      "url": "https://www.govinfo.gov/content/pkg/PPP-1992-book1/html/PPP-1992-book1-doc-pg464.htm"
+    },
+    {
+      "id": "wartzman-2022",
+      "kind": "secondary",
+      "title": "Still Broke: Walmart's Remarkable Transformation and the Limits of Socially Conscious Capitalism (excerpt published by Lit Hub as 'A Brief History of the Attempts to Unionize Walmart')",
+      "author": "Rick Wartzman",
+      "year": 2022,
+      "publisher": "PublicAffairs",
+      "url": "https://lithub.com/a-brief-history-of-the-attempts-to-unionize-walmart/"
+    },
+    {
+      "id": "trimble-1990",
+      "kind": "secondary",
+      "title": "Sam Walton: The Inside Story of America's Richest Man",
+      "author": "Vance H. Trimble",
+      "year": 1990,
+      "publisher": "Dutton (Penguin)",
+      "url": "https://archive.org/details/samwaltoninsides00trim"
+    },
+    {
+      "id": "pca-2023",
+      "kind": "secondary",
+      "title": "Poor Charlie's Almanack (Stripe Press edition, full text online), Talk Two: USC Marshall School of Business, 14 April 1994",
+      "author": "Charles T. Munger; edited by Peter D. Kaufman",
+      "year": 2023,
+      "publisher": "Stripe Press",
+      "url": "https://stripe.press/poor-charlies-almanack/book"
+    }
+  ],
+  "likenessSources": [
+    {
+      "title": "SamWalton-1936.jpg (1936 Hickman High School yearbook, The Cresset)",
+      "url": "https://commons.wikimedia.org/wiki/File:SamWalton-1936.jpg",
+      "licence": "Public domain",
+      "author": "Unknown"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real businessman (1918-1992), not a politician or founder of a religion; no account of sexual contact with anyone under 16 or of sexual violence was found; his dark side is low pay in the early years, fighting unions, and Wal-Mart's damage to small-town merchants."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value, quote and sentence against his autobiography (checked through search-inside of the 1992 and 1993 editions), the Arkansas and Missouri encyclopedias, the AP obituary, the 1992 Medal of Freedom remarks, Munger's 1994 talk and Wartzman's history of Wal-Mart and the unions. Hard work, Learning, Leadership, Ambition and Service all held on three or more independent sources; the blind pick's Winning had no room, and its Partnership was not added because his own low pay, the managers-only profit sharing and his fight against unions argue strongly against it. All four quotes match the book word for word. The defining moment was tightened to what the sources say, and the shadow gained the 1972 order to fire union-card holders, the Searcy closure threat and Munger's 'employee manipulation'.",
+    "checkedOn": "2026-11-10"
+  }
+}
