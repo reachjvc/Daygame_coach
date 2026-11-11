@@ -1,0 +1,309 @@
+{
+  "id": "jackie-robinson",
+  "name": "Jackie Robinson",
+  "born": 1919,
+  "died": 1972,
+  "category": "athletes",
+  "areaIds": [
+    "lm_emotions",
+    "lm_mindset",
+    "lm_contribution"
+  ],
+  "tagline": "He broke baseball's color line by taking abuse without hitting back, then spoke out.",
+  "startedFrom": "He was born in 1919 in Cairo, Georgia, the youngest of five children of poor sharecroppers, and his father left the family six months later. In 1920 his mother moved the children to Pasadena, California, where she worked as a domestic. When the family bought a house in a mostly white neighbourhood, neighbours petitioned to get rid of them and then harassed them for years. He starred in four sports at UCLA but left before graduating because of money trouble at home.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On July 6, 1944, as an Army lieutenant at Camp Hood, Texas, he refused a driver's order to move to the back of an Army bus; he was court-martialed and acquitted.",
+          "sourceId": "ww2museum-2021",
+          "locator": "paragraphs beginning \"After a few blocks, the bus driver peered back\" and \"After four and a half hours of testimony\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In his 1947 rookie season he played on through death threats in Cincinnati and racial baiting from the Philadelphia Phillies.",
+          "sourceId": "sabr",
+          "locator": "paragraphs beginning \"He received death threats\" and \"Jackie's worst experience\""
+        },
+        {
+          "kind": "witness",
+          "claim": "His SABR biographer lists fearless and courageous among the words most often used to describe him.",
+          "sourceId": "sabr",
+          "locator": "paragraph beginning \"Among the adjectives often used\""
+        }
+      ]
+    },
+    {
+      "word": "Discipline",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1947 he kept his promise to Branch Rickey not to retaliate, even when Enos Slaughter appeared to spike him on purpose on August 20.",
+          "sourceId": "sabr",
+          "locator": "paragraph beginning \"The integration of baseball proceeded without critical incident\""
+        },
+        {
+          "kind": "witness",
+          "claim": "John Gregory Dunne writes that for his first two years with the Dodgers he kept 'both his tongue and his cool' under unrelenting abuse.",
+          "sourceId": "nyrb-1997",
+          "locator": "paragraph beginning \"For his first two years with the Dodgers\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Hall of Fame says Rickey wanted him to take the abuse without fighting back, and that he endured it 'with honor and grace'.",
+          "sourceId": "hof",
+          "locator": "paragraph beginning \"Originally a shortstop\""
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In 1958 he wrote to President Eisenhower that Black Americans could not wait 'for the hearts of men to change' and wanted their rights now.",
+          "sourceId": "eisenhower-1958",
+          "locator": "third paragraph, beginning \"17 million Negroes\""
+        },
+        {
+          "kind": "words",
+          "claim": "Before Congress in 1949 he said Black Americans would not stop fighting race discrimination 'until we've got it licked'.",
+          "sourceId": "huac-1949",
+          "locator": "p. 482, paragraph beginning \"But that doesn't mean\""
+        },
+        {
+          "kind": "deed",
+          "claim": "He chaired the NAACP's million-dollar Freedom Fund drive in 1957, founded Freedom National Bank in Harlem in 1964 and took part in the 1963 March on Washington.",
+          "sourceId": "nps-2021",
+          "locator": "paragraph beginning \"Among those who looked up to Robinson\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Dunne writes that in retirement 'the only issue that really engaged him was civil rights'.",
+          "sourceId": "nyrb-1997",
+          "locator": "paragraph beginning \"Which, in fact, it did\""
+        }
+      ]
+    },
+    {
+      "word": "Self-respect",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At Fort Riley, barred from the segregated camp baseball team, he refused to play for the camp football team even when officers pressed him.",
+          "sourceId": "sabr",
+          "locator": "paragraph beginning \"Upon returning home from Hawaii\""
+        },
+        {
+          "kind": "words",
+          "claim": "He asked Eisenhower in 1958 how Black Americans 'could have self-respect and remain patient' after the treatment they had received.",
+          "sourceId": "eisenhower-1958",
+          "locator": "second paragraph, beginning \"I respectfully remind you sir\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Dunne writes that before Rickey signed him he 'had never suffered racial indignity without lashing back'.",
+          "sourceId": "nyrb-1997",
+          "locator": "paragraph beginning \"If there was some truth in O'Malley's\""
+        }
+      ]
+    },
+    {
+      "word": "Winning",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "His manager Leo Durocher said Robinson did not just come to play: 'He came to beat you.'",
+          "sourceId": "sabr",
+          "locator": "paragraph beginning \"Throughout his career, Jackie Robinson was a fearless competitor\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1949 he won the batting title with .342, led the league with 37 steals and was named National League MVP.",
+          "sourceId": "hof",
+          "locator": "paragraph beginning \"At the end of his first season\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In the last game of 1951 he saved the game with a diving catch in the ninth and won it with a home run in the 14th, forcing a playoff.",
+          "sourceId": "sabr",
+          "locator": "paragraph beginning \"Robinson enjoyed two more superb seasons\""
+        },
+        {
+          "kind": "witness",
+          "claim": "John Gregory Dunne writes that where Joe Louis was advised never to smile after beating a white opponent, Robinson 'reveled in rubbing it in', and played 'give no quarter, take none'.",
+          "sourceId": "nyrb-1997",
+          "locator": "paragraphs beginning \"Robinson appears almost indifferent\" and \"As a ballplayer\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When you go first, take the insults without hitting back: losing your temper loses the chance for those who come after you.",
+      "sourceId": "nyrb-1997",
+      "locator": "paragraph beginning \"What Rickey intuited\""
+    },
+    {
+      "text": "Let obstacles make you fight harder, not stop.",
+      "sourceId": "tib-1952",
+      "locator": "paragraph beginning \"Whatever obstacles I found\""
+    },
+    {
+      "text": "Do not wait for other people's hearts to change before you claim what is yours.",
+      "sourceId": "eisenhower-1958",
+      "locator": "third paragraph, beginning \"17 million Negroes\""
+    },
+    {
+      "text": "Judge a complaint by whether it is true, not by who makes it.",
+      "sourceId": "huac-1949",
+      "locator": "p. 481, paragraph beginning \"And one other thing the American public ought to understand\""
+    },
+    {
+      "text": "Something good stays good only while you keep fighting its flaws.",
+      "sourceId": "tib-1952",
+      "locator": "paragraph beginning \"I believe in the human race\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Whatever obstacles I found made me fight all the harder.",
+      "sourceId": "tib-1952",
+      "locator": "paragraph beginning \"Whatever obstacles I found\""
+    },
+    {
+      "text": "I believe in the goodness of a free society. And I believe that the society can remain good only as long as we are willing to fight for it -- and to fight against whatever imperfections may exist.",
+      "sourceId": "tib-1952",
+      "locator": "paragraph beginning \"I believe in the human race\""
+    },
+    {
+      "text": "17 million Negroes cannot do as you suggest and wait for the hearts of men to change. We want to enjoy now the rights that we feel we are entitled to as Americans.",
+      "sourceId": "eisenhower-1958",
+      "locator": "letter of May 13, 1958, third paragraph"
+    },
+    {
+      "text": "Negroes were stirred up long before there was a Communist Party, and they'll stay stirred up long after the party has disappeared—unless Jim Crow has disappeared by then as well.",
+      "sourceId": "huac-1949",
+      "locator": "testimony of July 18, 1949, p. 481"
+    }
+  ],
+  "definingMoment": {
+    "text": "On April 15, 1947, he played first base for the Brooklyn Dodgers, ending more than 60 years of segregation in major league baseball. That season he got death threats, and the Philadelphia Phillies under manager Ben Chapman baited him so cruelly that he later said it brought him nearer to cracking up than ever before. He kept his promise to Branch Rickey not to fight back, even when Enos Slaughter appeared to spike him on purpose. He ended the year with the first Rookie of the Year award.",
+    "sourceIds": [
+      "sabr",
+      "hof"
+    ]
+  },
+  "shadow": {
+    "text": "On July 18, 1949, at the House Un-American Activities Committee's invitation, he testified that a remark attributed to Paul Robeson, if Robeson had made it, 'sounds very silly to me'; in his 1972 autobiography he wrote that he would reject the invitation 'if offered now'. Once his two years of restraint were over, he played rough: he fired a ball into the Milwaukee Braves' dugout at pitcher Lew Burdette and later said, 'I wanted to hit him right between the eyes'. John Gregory Dunne calls him 'a vicious bench jockey' and writes that he was condescending toward his Black teammates. In 1960 he backed Richard Nixon against John Kennedy, a choice he later wrote was not 'one of my finer ones'. Reviewing Arnold Rampersad's biography, Dunne writes that 'silence and recrimination' marked his bond with his eldest son, who came home from Vietnam addicted to drugs and died in a car crash in 1971.",
+    "sourceIds": [
+      "huac-1949",
+      "nation-2019",
+      "nyrb-1997"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which obstacle this week did you let stop you, instead of letting it make you fight harder?",
+    "principleIndex": 1
+  },
+  "readings": [
+    {
+      "title": "I Never Had It Made",
+      "year": 1972
+    }
+  ],
+  "sources": [
+    {
+      "id": "tib-1952",
+      "kind": "primary",
+      "title": "Free Minds and Hearts at Work (This I Believe essay, aired c. 1952)",
+      "author": "Jackie Robinson",
+      "year": "c. 1952",
+      "publisher": "NPR / WFAE, text published April 4, 2005",
+      "url": "https://www.wfae.org/nation-world/2005-04-04/free-minds-and-hearts-at-work"
+    },
+    {
+      "id": "eisenhower-1958",
+      "kind": "primary",
+      "title": "Letter to President Dwight D. Eisenhower, May 13, 1958 (transcribed by the National Park Service)",
+      "author": "Jackie Robinson",
+      "year": 1958,
+      "publisher": "Dwight D. Eisenhower Library, White House Central Files, Box 731, OF-142-A-3",
+      "url": "https://www.nps.gov/eise/blogs/my-dear-mr-president-jackie-robinson-and-dwight-eisenhower.htm"
+    },
+    {
+      "id": "huac-1949",
+      "kind": "primary",
+      "title": "Sworn testimony of Jack Roosevelt Robinson, July 18, 1949, in Hearings Regarding Communist Infiltration of Minority Groups, Part 1, pp. 479-483",
+      "author": "Jackie Robinson (US House Committee on Un-American Activities record)",
+      "year": 1949,
+      "publisher": "US Government Printing Office; scan at East Carolina University Digital Collections",
+      "url": "https://digital.lib.ecu.edu/60515"
+    },
+    {
+      "id": "sabr",
+      "kind": "secondary",
+      "title": "Jackie Robinson (SABR BioProject)",
+      "author": "Rick Swaine",
+      "year": 2012,
+      "publisher": "Society for American Baseball Research; adapted from Swaine, The Black Stars Who Made Baseball Whole (McFarland, 2006)",
+      "url": "https://sabr.org/bioproj/person/jackie-robinson/"
+    },
+    {
+      "id": "nyrb-1997",
+      "kind": "secondary",
+      "title": "Poet of Resentment (review of Arnold Rampersad, Jackie Robinson: A Biography, and other books)",
+      "author": "John Gregory Dunne",
+      "year": 1997,
+      "publisher": "The New York Review of Books, October 9, 1997",
+      "url": "https://www.nybooks.com/articles/1997/10/09/poet-of-resentment/"
+    },
+    {
+      "id": "ww2museum-2021",
+      "kind": "secondary",
+      "title": "United States v. Jack R. Robinson",
+      "author": "Erin Clancey",
+      "year": 2021,
+      "publisher": "The National WWII Museum",
+      "url": "https://www.nationalww2museum.org/war/articles/united-states-v-jack-r-robinson"
+    },
+    {
+      "id": "hof",
+      "kind": "secondary",
+      "title": "Robinson, Jackie (Hall of Famer page)",
+      "author": "National Baseball Hall of Fame and Museum",
+      "year": "n.d.",
+      "url": "https://baseballhall.org/hall-of-famers/robinson-jackie"
+    },
+    {
+      "id": "nps-2021",
+      "kind": "secondary",
+      "title": "\"My Dear Mr. President\": Jackie Robinson and Dwight Eisenhower",
+      "author": "Eisenhower National Historic Site, National Park Service",
+      "year": 2021,
+      "publisher": "National Park Service, February 17, 2021",
+      "url": "https://www.nps.gov/eise/blogs/my-dear-mr-president-jackie-robinson-and-dwight-eisenhower.htm"
+    },
+    {
+      "id": "nation-2019",
+      "kind": "secondary",
+      "title": "Half a Century Before Colin Kaepernick, Jackie Robinson Said, 'I Cannot Stand and Sing the Anthem.'",
+      "author": "Peter Dreier",
+      "year": 2019,
+      "publisher": "The Nation, July 18, 2019",
+      "url": "https://www.thenation.com/article/archive/huac-jackie-robinson-paul-robeson/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American baseball player and civil rights campaigner (1919-1972), dead, never an office-holder or religious founder; no account of sexual contact with a minor or of sexual violence was found; he is in, and his dark side is documented: the 1949 HUAC testimony against Paul Robeson, rough and vengeful play once his promise to Rickey ran out, the 1960 Nixon endorsement he later disowned, and a strained bond with his eldest son."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value and every sentence against freshly fetched SABR, NYRB, Hall of Fame, NPS, WFAE, Nation and WWII Museum pages and the 1949 GPO hearing record. All five values held: Courage, Justice and Discipline are shared with the blind pick, Self-respect has three sources, and Winning got a third (Dunne) and stays, so the blind pick's Excellence and Contribution found no room. All four quotes match the originals; I fixed the bus-refusal locator, his mother's job, the exact HUAC wording on Robeson, and added Dunne's bench-jockey and teammates lines to the shadow.",
+    "checkedOn": "2026-11-10"
+  }
+}
