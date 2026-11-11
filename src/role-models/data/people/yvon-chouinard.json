@@ -1,0 +1,330 @@
+{
+  "id": "yvon-chouinard",
+  "name": "Yvon Chouinard",
+  "born": 1938,
+  "died": null,
+  "category": "builders",
+  "areaIds": [
+    "lm_contribution",
+    "lm_mission",
+    "lm_money"
+  ],
+  "tagline": "A blacksmith climber who built Patagonia his own way, then gave the company away.",
+  "startedFrom": "He was born in 1938 in Lewiston, Maine, to French-Canadian parents; his father was a plumber and handyman who had left school after third grade. When the family moved to Burbank, California, he spoke no English, struggled at school and later called himself 'a loner'. He took some community-college courses but never earned a degree, sold hand-forged climbing gear from the back of his car and at times lived on dented cans of cat food.",
+  "values": [
+    {
+      "word": "Nature",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "By 1970 his company was the largest US maker of climbing hardware, but its pitons were scarring the rock; he and Tom Frost shrank the piton business and in 1972 sold removable aluminum chocks instead.",
+          "sourceId": "patagonia-history",
+          "locator": "paragraphs beginning \"By 1970, Chouinard Equipment had become the largest supplier\" and \"Fortunately, there was an alternative\""
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer David Gelles says dropping a popular product line once he found it harmed nature is a pattern in his life, from the pitons to organic cotton.",
+          "sourceId": "pbs-2025",
+          "locator": "Gelles answer beginning \"This is one of the patterns that repeats itself\""
+        },
+        {
+          "kind": "words",
+          "claim": "In his 2022 letter he says Patagonia will use the wealth it creates 'to protect the source of all wealth', nature.",
+          "sourceId": "patagonia-ownership-2022",
+          "locator": "paragraph beginning \"Instead of 'going public,' you could say we're 'going purpose.'\""
+        },
+        {
+          "kind": "deed",
+          "claim": "He took his retirement savings out of the stock market and put them into second-growth timberland, in part to protect salmon and steelhead watersheds.",
+          "sourceId": "newyorker-2016",
+          "locator": "paragraph beginning \"Over the years, the Chouinards had taken very little money out of the business\""
+        }
+      ]
+    },
+    {
+      "word": "Contribution",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1986 Patagonia committed 10 percent of profits a year to small grassroots environmental groups, later raised to 1 percent of sales, profit or not.",
+          "sourceId": "patagonia-history",
+          "locator": "paragraph beginning \"We began to make regular donations to smaller groups\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2022 he, his wife and their two children gave away their ownership of Patagonia, valued at about $3 billion, so that its profits, some $100 million a year, fund climate and land protection.",
+          "sourceId": "nyt-2022",
+          "locator": "paragraph beginning \"Rather than selling the company or taking it public\""
+        },
+        {
+          "kind": "witness",
+          "claim": "David Callahan of Inside Philanthropy told the Times the family is 'a way outlier' among billionaires, most of whom give away only a tiny share each year.",
+          "sourceId": "nyt-2022",
+          "locator": "paragraph beginning \"This family is a way outlier\""
+        },
+        {
+          "kind": "words",
+          "claim": "In 1991 he said: 'I want to use this company as a tool for social change.'",
+          "sourceId": "si-1991",
+          "locator": "paragraph beginning \"Chouinard's generosity is fueled by a deep sense of urgency\""
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1957 he bought a used coal-fired forge and an anvil from a junkyard, taught himself blacksmithing and forged his own pitons, two an hour, sold at $1.50 each.",
+          "sourceId": "patagonia-history",
+          "locator": "paragraphs beginning \"In 1957, Yvon went to a junkyard\" and \"The word spread\""
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that he started as a craftsman, making climbing gear for his friends and himself.",
+          "sourceId": "patagonia-ownership-2022",
+          "locator": "opening paragraph, \"I never wanted to be a businessman\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The climber Royal Robbins told Sports Illustrated his gear 'stood out because of its inventiveness and its quality'.",
+          "sourceId": "si-1991",
+          "locator": "paragraph beginning \"'Yvon's equipment was that much better,' says Royal Robbins\""
+        }
+      ]
+    },
+    {
+      "word": "Simplicity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "As a young climber he lived from selling gear out of his car, on dented canned cat tuna, oatmeal, potatoes and ground squirrels and porcupines he poached.",
+          "sourceId": "patagonia-history",
+          "locator": "paragraph beginning \"He supported himself selling gear from the back of his car\""
+        },
+        {
+          "kind": "witness",
+          "claim": "In 2022 the Times reported he wore raggedy old clothes, drove a beat-up Subaru and owned no computer or cellphone.",
+          "sourceId": "nyt-2022",
+          "locator": "paragraph beginning \"Even today, he wears raggedy old clothes\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2015 he fished all year with one type of fly and a reel-less tenkara rod, to show that people spend too much on gear.",
+          "sourceId": "newyorker-2016",
+          "locator": "paragraph beginning \"'Fly-fishing has become so esoteric,'\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The New Yorker called his reel-less tenkara rod the latest implement in his long-running crusade for simplicity and thrift.",
+          "sourceId": "newyorker-2016",
+          "locator": "paragraph beginning \"Chouinard spent the heart of this past summer as he often does\""
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 2022 he refused to sell Patagonia or take it public, and created a new ownership structure instead.",
+          "sourceId": "patagonia-ownership-2022",
+          "locator": "paragraphs beginning \"One option was to sell Patagonia\" and \"Another path was to take the company public\""
+        },
+        {
+          "kind": "words",
+          "claim": "He told the Times: 'I don't respect the stock market at all,' because a public company loses control and must maximize profit for shareholders.",
+          "sourceId": "nyt-2022",
+          "locator": "paragraph beginning \"I don't respect the stock market at all\""
+        },
+        {
+          "kind": "witness",
+          "claim": "His biographer David Gelles calls him an iconoclast and outsider his whole life.",
+          "sourceId": "pbs-2025",
+          "locator": "Gelles answer beginning \"And that leads to a series of other adventures\""
+        },
+        {
+          "kind": "deed",
+          "claim": "His early gear price list warned buyers not to expect speedy delivery from May to September, the months he spent climbing.",
+          "sourceId": "si-1991",
+          "locator": "paragraph beginning \"By this time he had begun putting out a catalog\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Before you make something, ask what harm it does, and pick the way that does the least, even if some customers walk away.",
+      "sourceId": "npr-2005",
+      "locator": "answers to \"You decided that you were going to make clothing that would do as little damage\" and \"Even if the customer wants an orange shirt?\""
+    },
+    {
+      "text": "Make the product so good that people want it; then you hardly need to advertise.",
+      "sourceId": "si-1991",
+      "locator": "paragraph beginning \"Breaking business rules comes as naturally to Chouinard\""
+    },
+    {
+      "text": "Hire smart, independent people, agree on the goal, then leave them free to get the work done.",
+      "sourceId": "npr-2005",
+      "locator": "answer to \"Masters of business administration...\" (\"management by absence\")"
+    },
+    {
+      "text": "Do not grow just for the sake of growing.",
+      "sourceId": "newyorker-2016",
+      "locator": "paragraph beginning \"Patagonia at the time was going through an upheaval\""
+    },
+    {
+      "text": "Give back all along the way, not only after you cash out.",
+      "sourceId": "newyorker-2016",
+      "locator": "paragraph beginning \"The Chouinards undertook an environmental audit\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I never wanted to be a businessman. I started as a craftsman, making climbing gear for my friends and myself, then got into apparel.",
+      "sourceId": "patagonia-ownership-2022",
+      "locator": "opening paragraph of the letter \"Earth is now our only shareholder\""
+    },
+    {
+      "text": "Instead of extracting value from nature and transforming it into wealth for investors, we’ll use the wealth Patagonia creates to protect the source of all wealth.",
+      "sourceId": "patagonia-ownership-2022",
+      "locator": "paragraph beginning \"Instead of 'going public,' you could say we're 'going purpose.'\""
+    },
+    {
+      "text": "…living an examined life is a real pain, let me tell you.",
+      "sourceId": "npr-2005",
+      "locator": "transcript, answer beginning \"Well, you know, we had no idea what to do, really\""
+    },
+    {
+      "text": "Now I could die tomorrow and the company is going to continue doing the right thing for the next 50 years, and I don’t have to be around.",
+      "sourceId": "nyt-2022",
+      "locator": "paragraph beginning \"I didn't know what to do with the company because I didn't ever want a company\""
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1991 he told Sports Illustrated he would not sell out and wanted Patagonia to become an environmental foundation after he and his wife were gone. In August 2022, aged 83, he and his family irrevocably moved all the company's voting stock into the Patagonia Purpose Trust, then gave the other 98 percent to the Holdfast Collective, a nonprofit. All profits not reinvested, about $100 million a year, now go to fighting climate change and protecting wild land. He had turned down selling the company or taking it public.",
+    "sourceIds": [
+      "si-1991",
+      "nyt-2022",
+      "patagonia-ownership-2022"
+    ]
+  },
+  "shadow": {
+    "text": "In 1989 Chouinard Equipment, facing four lawsuits over accidents with its gear and insurance premiums up more than 1,000 percent in three years, filed for bankruptcy protection, partly out of concern that a future claimant might go after Patagonia's assets. In 1991 Patagonia, which had grown too fast, laid off 20 percent of its staff; he later said, 'we were just growing for the sake of growing.' When Forbes first listed him as a billionaire in 2017, his biographer David Gelles says he stomped around the office screaming at people. His 2022 gift kept control of the company with his family through a trust and meant no capital gains tax, which Bloomberg estimated at over $700 million had he sold; the family paid about $17.5 million in gift tax. Law professor Ray Madoff called such moves 'highly problematic from the point of view of democracy.' Of his house on the ocean he said, 'I don't believe people should have houses on the beach. But until they change the laws I'm doing it.' His fishing companion Tom McGuane told the New Yorker, 'He lives an unpretentious life, but does it on a lot of expensive real estate.'",
+    "sourceIds": [
+      "si-1991",
+      "newyorker-2016",
+      "patagonia-history",
+      "pbs-2025",
+      "bloomberg-2022",
+      "nyt-2022"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you make, buy or choose this week without asking whether a less harmful way existed?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Let My People Go Surfing: The Education of a Reluctant Businessman",
+      "year": 2005
+    },
+    {
+      "title": "Climbing Ice",
+      "year": 1978
+    }
+  ],
+  "sources": [
+    {
+      "id": "patagonia-ownership-2022",
+      "kind": "primary",
+      "title": "Earth is now our only shareholder (letter, September 2022)",
+      "author": "Yvon Chouinard",
+      "year": 2022,
+      "publisher": "Patagonia",
+      "url": "https://www.patagonia.com/ownership/"
+    },
+    {
+      "id": "npr-2005",
+      "kind": "primary",
+      "title": "Outdoor Business Pioneer Yvon Chouinard, Part 2 (Day to Day interview, 20 October 2005)",
+      "author": "Alex Chadwick, NPR",
+      "year": 2005,
+      "url": "https://www.npr.org/transcripts/4967134"
+    },
+    {
+      "id": "patagonia-history",
+      "kind": "primary",
+      "title": "Company History (Patagonia's own account of its founder and company)",
+      "author": "Patagonia, Inc.",
+      "year": "accessed 2026-11-10",
+      "url": "https://www.patagonia.com.au/pages/company-history"
+    },
+    {
+      "id": "let-my-people-go-surfing",
+      "kind": "primary",
+      "title": "Let My People Go Surfing: The Education of a Reluctant Businessman",
+      "author": "Yvon Chouinard",
+      "year": 2005,
+      "publisher": "Penguin Press"
+    },
+    {
+      "id": "si-1991",
+      "kind": "secondary",
+      "title": "He's in his element in the elements (Sports Illustrated, 11 February 1991)",
+      "author": "John Steinbreder, Sports Illustrated",
+      "year": 1991,
+      "url": "https://vault.si.com/vault/1991/02/11/hes-in-his-element-in-the-elements-yvon-chouinard-the-man-behind-patagonia-outfitters-does-his-best-work-in-the-rugged-outdoors"
+    },
+    {
+      "id": "newyorker-2016",
+      "kind": "secondary",
+      "title": "Patagonia's Philosopher-King (The New Yorker, 19 September 2016 issue)",
+      "author": "Nick Paumgarten, The New Yorker",
+      "year": 2016,
+      "url": "https://www.newyorker.com/magazine/2016/09/19/patagonias-philosopher-king"
+    },
+    {
+      "id": "nyt-2022",
+      "kind": "secondary",
+      "title": "Billionaire No More: Patagonia Founder Gives Away the Company (14 September 2022)",
+      "author": "David Gelles, The New York Times",
+      "year": 2022,
+      "url": "https://www.nytimes.com/2022/09/14/climate/patagonia-climate-philanthropy-chouinard.html"
+    },
+    {
+      "id": "pbs-2025",
+      "kind": "secondary",
+      "title": "New book 'Dirtbag Billionaire' tells story of Patagonia's unconventional founder (PBS News Weekend, 14 December 2025)",
+      "author": "John Yang interviewing David Gelles, PBS NewsHour",
+      "year": 2025,
+      "url": "https://www.pbs.org/newshour/show/new-book-dirtbag-billionaire-tells-story-of-patagonias-unconventional-founder"
+    },
+    {
+      "id": "bloomberg-2022",
+      "kind": "secondary",
+      "title": "Patagonia billionaire who gave up company skirts $700M tax hit (Bloomberg News, republished by Accounting Today, 16 September 2022)",
+      "author": "Devon Pendleton, Bloomberg News",
+      "year": 2022,
+      "url": "https://www.accountingtoday.com/articles/patagonia-billionaire-who-gave-up-company-skirts-700m-tax-hit"
+    },
+    {
+      "id": "fortune-2022",
+      "kind": "secondary",
+      "title": "Patagonia's founder rejects his billionaire status, but he's still saving $700 million in taxes with a legal loophole (16 September 2022)",
+      "author": "Alicia Adamczyk, Fortune",
+      "year": 2022,
+      "url": "https://fortune.com/2022/09/16/patagonia-founder-legal-tax-loophole/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living American climber and businessman (born 1938) who founded Patagonia; he never held or ran for office and his public life is a company, not a political campaign or a religion; no account of sexual contact with a minor or of sexual violence was found; he is in, with a modest documented dark side."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value against the saved and re-fetched SI 1991, New Yorker 2016, NYT 2022, NPR 2005, PBS 2025 and Patagonia texts. All five held: Simplicity was the weakest, since he owns several houses including one at Hollister Ranch, but his habits (old clothes, no phone or computer, a year of fishing with one fly) are documented by three outlets, so the real-estate side went into the shadow. The blind pick's Freedom and Leaving things better found no room beside Independence and Contribution, which carry the same ground with more sources. The shadow gained the 1989 Chouinard Equipment bankruptcy and McGuane's real-estate line, and one startedFrom claim was tightened.",
+    "checkedOn": "2026-11-10"
+  }
+}
