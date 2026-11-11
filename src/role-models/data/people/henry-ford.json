@@ -1,0 +1,280 @@
+{
+  "id": "henry-ford",
+  "name": "Henry Ford",
+  "born": 1863,
+  "died": 1947,
+  "category": "builders",
+  "areaIds": [
+    "lm_mission",
+    "lm_money"
+  ],
+  "tagline": "A farm boy and self-taught mechanic who built the car ordinary families could buy.",
+  "startedFrom": "He was born on 30 July 1863 on his father's farm in what is now Dearborn, Michigan; he writes that the family was not rich but not poor, prosperous as Michigan farmers went. He disliked farm work, taught himself to repair watches, and his father wanted him to be a farmer. In December 1879, at 16, he left the farm for a machine-shop job in Detroit.",
+  "values": [
+    {
+      "word": "Vision",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He announced that he would build a motor car for the great multitude, so low in price that no man making a good salary would be unable to own one.",
+          "sourceId": "mlw-1922",
+          "locator": "ch. IV \"The Secret of Manufacturing and Serving\", p. 73"
+        },
+        {
+          "kind": "deed",
+          "claim": "He split with his partner Alexander Malcomson, who wanted expensive cars for the rich, because he wanted a car for the multitude.",
+          "sourceId": "halberstam-1986",
+          "locator": "paragraph beginning \"But he and Malcomson soon split over the direction of the company\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Lee Iacocca writes in Time that Ford cared most about mass consumption and that his vision helped create the American middle class.",
+          "sourceId": "time-1998",
+          "locator": "paragraphs beginning \"Ford instituted industrial mass production\" and \"His vision would help create\""
+        }
+      ]
+    },
+    {
+      "word": "Building things",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that as a boy his toys were all tools, and that they still were.",
+          "sourceId": "mlw-1922",
+          "locator": "ch. I \"The Beginning of Business\", p. 22"
+        },
+        {
+          "kind": "deed",
+          "claim": "On 4 June 1896 he finished and drove his first automobile, the Quadricycle.",
+          "sourceId": "pbs-timeline",
+          "locator": "entry \"June 4, 1896\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Lee Iacocca writes that Ford's strength was manufacturing, not invention, and that long before he started a car company he was an inveterate tinkerer.",
+          "sourceId": "time-1998",
+          "locator": "paragraph beginning \"Ford's great strength was the manufacturing process\""
+        }
+      ]
+    },
+    {
+      "word": "Control",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that he very shortly found he had to have control of the company, and in 1906 bought enough stock to bring his holding to 51 per cent.",
+          "sourceId": "mlw-1922",
+          "locator": "ch. III \"Starting the Real Business\", p. 52"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1912 his engineers built an improved Model T while he was in Europe; when they showed it to him, he ripped off its doors and smashed the windshield.",
+          "sourceId": "halberstam-1986",
+          "locator": "paragraph beginning \"Henry Ford's strengths eventually became his weaknesses\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In March 1919 he declared he would start a rival car company; the alarmed stockholders sold their shares, which he had secretly bought, giving his family full control.",
+          "sourceId": "pbs-timeline",
+          "locator": "entry \"March 5, 1919\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Lee Iacocca writes that Ford, and only Ford, set company policy, and that he turned on able men who launched plans he had not approved.",
+          "sourceId": "time-1998",
+          "locator": "paragraphs beginning \"In a sense Henry Ford became a prisoner\" and \"Naturally, Ford, and only Ford\""
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "His first car company, the Detroit Automobile Company, failed, and so did a second; on 16 June 1903 he incorporated his third, the Ford Motor Company.",
+          "sourceId": "henryford-casey-2021",
+          "locator": "paragraphs beginning \"Ford now demonstrated one of his most important characteristics\" and \"To revive his fortunes, Ford took bigger risks\""
+        },
+        {
+          "kind": "witness",
+          "claim": "David Halberstam writes that by November 1900 the Detroit Automobile Company had died, but Ford was as determined as ever to make his basic car and went into racing to draw attention, winning a race in 1901.",
+          "sourceId": "halberstam-1986",
+          "locator": "paragraph beginning \"Ford, however, was not satisfied\""
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that failure is only the chance to begin again more intelligently, and that the disgrace is in fearing to fail.",
+          "sourceId": "mlw-1922",
+          "locator": "Introduction \"What Is the Idea?\", pp. 19-20"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Do not fear failure: a failure is a chance to begin again with more knowledge.",
+      "sourceId": "mlw-1922",
+      "locator": "Introduction \"What Is the Idea?\", pp. 19-20"
+    },
+    {
+      "text": "Make one simple, good product and keep cutting its price until ordinary people can buy it.",
+      "sourceId": "mlw-1922",
+      "locator": "ch. IV \"The Secret of Manufacturing and Serving\", pp. 72-73"
+    },
+    {
+      "text": "Pay people well; a business built on low wages is never secure.",
+      "sourceId": "mlw-1922",
+      "locator": "ch. VIII \"Wages\", pp. 126-127"
+    },
+    {
+      "text": "Put service first; profit should be the result of good service, not its aim.",
+      "sourceId": "mlw-1922",
+      "locator": "Introduction \"What Is the Idea?\", p. 20"
+    },
+    {
+      "text": "Learn by tinkering with things; books cannot teach how everything is made.",
+      "sourceId": "mlw-1922",
+      "locator": "ch. I \"The Beginning of Business\", pp. 23-24"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Failure is only the opportunity more intelligently to begin again. There is no disgrace in honest failure; there is disgrace in fearing to fail.",
+      "sourceId": "mlw-1922",
+      "locator": "Introduction \"What Is the Idea?\", pp. 19-20"
+    },
+    {
+      "text": "Any customer can have a car painted any colour that he wants so long as it is black.",
+      "sourceId": "mlw-1922",
+      "locator": "ch. IV \"The Secret of Manufacturing and Serving\", p. 72 (his remark in 1909)"
+    },
+    {
+      "text": "There is an immense amount to be learned simply by tinkering with things.",
+      "sourceId": "mlw-1922",
+      "locator": "ch. I \"The Beginning of Business\", p. 23"
+    },
+    {
+      "text": "Thinking is the hardest work any one can do—which is probably the reason why we have so few thinkers.",
+      "sourceId": "mlw-1922",
+      "locator": "ch. XVII \"Things in General\", p. 247"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 5 January 1914 Ford Motor Company announced a five-dollar wage for an eight-hour day, about double what its workers had been paid. The moving assembly line had made the work faster but more mundane, and staff turnover had reached 370 percent. Ford wrote that the plan was an act of social justice and also that a low-wage business is always insecure. The money came with conditions: inspectors from the company's Sociological Department checked that workers did not drink, kept clean homes and saved.",
+    "sourceIds": [
+      "henryford-5day-2014",
+      "mlw-1922",
+      "pbs-timeline"
+    ]
+  },
+  "shadow": {
+    "text": "From May 1920 his weekly newspaper, The Dearborn Independent, ran an antisemitic series, 'The International Jew', and printed the forged Protocols of the Elders of Zion as fact; the articles were bound into four books and half a million copies went out through Ford dealers and subscribers, and his 1922 autobiography defends the series. After the libel suit Sapiro v. Ford ended in a mistrial in 1927, he signed an apology, published on 8 July 1927, saying he would have forbidden the articles had he known their details. Hitler praised him in Mein Kampf, and in 1938 the Nazi government gave him the Grand Cross of the German Eagle. The writer David Halberstam writes that Ford used the Sociological Department to find out whether workers drank at home or had union sympathies, and fired those who did. On 26 May 1937 his company's security men beat union organizers, among them Walter Reuther, at the River Rouge plant. Halberstam says Ford used his security chief Harry Bennett against his son Edsel and took pleasure in Edsel's humiliations; the magazine's editors add that John Dahlinger, son of a company secretary, was more than likely Ford's illegitimate son.",
+    "sourceIds": [
+      "ushmm",
+      "pbs-antisemitism",
+      "mlw-1922",
+      "pbs-timeline",
+      "reuther-overpass",
+      "halberstam-1986"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you not try this week because you were afraid it might fail?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "My Life and Work (with Samuel Crowther)",
+      "year": 1922
+    },
+    {
+      "title": "Today and Tomorrow (with Samuel Crowther)",
+      "year": 1926
+    }
+  ],
+  "sources": [
+    {
+      "id": "mlw-1922",
+      "kind": "primary",
+      "title": "My Life and Work (autobiography written in collaboration with Samuel Crowther), first edition",
+      "author": "Henry Ford in collaboration with Samuel Crowther",
+      "year": 1922,
+      "publisher": "Doubleday, Page & Company, Garden City, N.Y.",
+      "url": "https://archive.org/details/mylifework00ford_0"
+    },
+    {
+      "id": "pbs-timeline",
+      "kind": "secondary",
+      "title": "The Life of Henry Ford (timeline for the film Henry Ford), American Experience",
+      "author": "PBS / WGBH",
+      "year": 2013,
+      "url": "https://www.pbs.org/wgbh/americanexperience/features/henryford/"
+    },
+    {
+      "id": "pbs-antisemitism",
+      "kind": "secondary",
+      "title": "Ford's Anti-Semitism (with 2012 interview of historian Hasia Diner), American Experience",
+      "author": "PBS / WGBH",
+      "year": 2013,
+      "url": "https://www.pbs.org/wgbh/americanexperience/features/henryford-antisemitism/"
+    },
+    {
+      "id": "ushmm",
+      "kind": "secondary",
+      "title": "Antisemitism and Henry Ford's International Jew (Holocaust Encyclopedia)",
+      "author": "United States Holocaust Memorial Museum",
+      "year": "undated web page, read 2026",
+      "url": "https://encyclopedia.ushmm.org/content/en/article/antisemitism-and-henry-fords-international-jew"
+    },
+    {
+      "id": "henryford-casey-2021",
+      "kind": "secondary",
+      "title": "Henry Ford: Case Study of an Innovator (21 July 2021)",
+      "author": "Bob Casey, The Henry Ford (museum)",
+      "year": 2021,
+      "url": "https://thehenryford.org/explore/blog/henry-ford-case-study-of-an-innovator"
+    },
+    {
+      "id": "henryford-5day-2014",
+      "kind": "secondary",
+      "title": "Ford's Five-Dollar Day (3 January 2014)",
+      "author": "Matt Anderson, Curator of Transportation, The Henry Ford (museum)",
+      "year": 2014,
+      "url": "https://www.thehenryford.org/collections/explore/articles/fords-five-dollar-day"
+    },
+    {
+      "id": "time-1998",
+      "kind": "secondary",
+      "title": "Driving Force: Henry Ford (Time 100, Builders and Titans, 7 December 1998)",
+      "author": "Lee Iacocca, Time",
+      "year": 1998,
+      "url": "https://time.com/archive/6598181/driving-force-henry-ford"
+    },
+    {
+      "id": "halberstam-1986",
+      "kind": "secondary",
+      "title": "Citizen Ford (American Heritage, vol. 37, no. 6, October/November 1986)",
+      "author": "David Halberstam",
+      "year": 1986,
+      "url": "https://www.americanheritage.com/citizen-ford"
+    },
+    {
+      "id": "reuther-overpass",
+      "kind": "secondary",
+      "title": "The Battle of the Overpass (online exhibit)",
+      "author": "Curtis Hansen, Walter P. Reuther Library, Wayne State University",
+      "year": "undated web page, read 2026",
+      "url": "https://reuther.wayne.edu/ex/exhibits/battle.html"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American industrialist (1863-1947), founder of Ford Motor Company; he ran once for the US Senate (1918, lost), but the politician rule covers only the living; no account of sexual contact with a minor or of sexual violence was found; he is in, and his dark side is the antisemitic series his newspaper ran from 1920, the beating of union organizers by his company's security men in 1937, and his treatment of his son Edsel."
+    },
+    "blindAgreement": 0.75,
+    "devilsAdvocate": "I attacked all five draft values against the 1922 Doubleday scan of My Life and Work, Halberstam's American Heritage essay, Iacocca's Time piece, the PBS, USHMM, Reuther Library and The Henry Ford pages. Simplicity fell: it rested on two sources and holds only for the Model T's design, not for how he lived, and Halberstam counts his clinging to the T as a weakness. Vision, Building things and Control held, and Resilience held after its date-only PBS evidence was replaced by Halberstam's account of the 1900 failure; the blind pick's Determination and Impact were not added because their evidence repeats Resilience and Vision. All four quotes matched the book text, and six fixes tightened wording to the sources, including the wage being double Ford's own old pay and the shadow gaining the Sociological Department firings and the Dahlinger note.",
+    "checkedOn": "2026-11-10"
+  }
+}
