@@ -1,0 +1,385 @@
+{
+  "id": "bill-russell",
+  "name": "Bill Russell",
+  "born": 1934,
+  "died": 2022,
+  "category": "athletes",
+  "areaIds": [
+    "lm_mindset",
+    "lm_contribution",
+    "lm_friends"
+  ],
+  "tagline": "A team-first winner who stood up to racism and never worked to be liked.",
+  "startedFrom": "He was born in 1934 in segregated Louisiana; when he was eight his family moved to Oakland, California, where he grew up in the West Oakland projects. His mother died when he was 12, and his father, who had quit school to work, raised the two boys. In high school he was not much good at basketball and planned to work in the shipyards until Hal DeJulio, a former University of San Francisco player, offered him a scholarship there.",
+  "values": [
+    {
+      "word": "Winning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He won 11 NBA titles in 13 seasons with the Boston Celtics, eight of them in a row.",
+          "sourceId": "espn-2022",
+          "locator": "section on his Celtics career"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that the only statistic that mattered to his team was won and lost.",
+          "sourceId": "si-1969",
+          "locator": "paragraph beginning 'People didn't give us credit'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Frank Deford counted fourteen win-or-go-home games in his career and wrote that his team won all fourteen.",
+          "sourceId": "deford-1999",
+          "locator": "opening section, paragraph beginning 'Look, you can stand at a bar'"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1961 he led the Black Celtics in walking out of an exhibition game in Lexington, Kentucky, after a hotel coffee shop refused to serve two of them.",
+          "sourceId": "wapo-2020",
+          "locator": "account of the 1961 Lexington walkout"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1963 he went to Mississippi after the murder of civil rights leader Medgar Evers.",
+          "sourceId": "si-herring-2022",
+          "locator": "paragraph on Mississippi and the March on Washington"
+        },
+        {
+          "kind": "words",
+          "claim": "He told Red Auerbach that nothing in Lexington would keep him from taking the seven o'clock plane home.",
+          "sourceId": "red-and-me",
+          "locator": "his account of the 1961 Lexington exhibition (page not seen; Internet Archive full-text search)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Frank Deford wrote that he was unafraid and spoke out against all things, great and small, that bothered him.",
+          "sourceId": "deford-1999",
+          "locator": "paragraph beginning 'But the fires always smoldered'"
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He took part in the 1963 March on Washington.",
+          "sourceId": "loc-blog-2022",
+          "locator": "paragraph on Medgar Evers and the March on Washington"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1967 he stood with Muhammad Ali at the Cleveland Summit in support of Ali's refusal to be drafted.",
+          "sourceId": "andscape-2019",
+          "locator": "section on the 1967 Cleveland Summit"
+        },
+        {
+          "kind": "words",
+          "claim": "The day after the Lexington walkout he told reporters they had to show disapproval of such treatment or the status quo would prevail.",
+          "sourceId": "wapo-2020",
+          "locator": "quote from the day after the walkout"
+        }
+      ]
+    },
+    {
+      "word": "Self-respect",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He adopted his grandfather's rule of a line inside oneself, with his own motto: 'If you disrespect that line, you disrespect me.'",
+          "sourceId": "red-and-me",
+          "locator": "grandfather passage (page not seen; Internet Archive full-text search)"
+        },
+        {
+          "kind": "words",
+          "claim": "He said his parents' love taught him he was OK, so he never worked to be liked.",
+          "sourceId": "loc-2013",
+          "locator": "as quoted in the Library of Congress blog post 'Bill Russell: In His Own Words' (1 Aug. 2022)"
+        },
+        {
+          "kind": "deed",
+          "claim": "He refused to sign autographs, even for his own teammates, and would offer a handshake and a chat instead.",
+          "sourceId": "deford-1999",
+          "locator": "paragraphs beginning 'On the other hand' and 'Utterly dogmatic'"
+        },
+        {
+          "kind": "witness",
+          "claim": "John Thompson said doing it his way, on his own terms, mattered more to him than the hurt it caused.",
+          "sourceId": "deford-1999",
+          "locator": "paragraph beginning 'Nevertheless, when the shouting was over'"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1966 Red Auerbach named him the Celtics' coach while he kept playing, the first Black head coach in the NBA, and he won two more titles in the next three years.",
+          "sourceId": "espn-2022",
+          "locator": "section on his Celtics career"
+        },
+        {
+          "kind": "witness",
+          "claim": "Sports Illustrated named him 1968 Sportsman of the Year and wrote that he had proved he could lead athletes of both races.",
+          "sourceId": "plimpton-1968",
+          "locator": "introduction"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that as coach he made the decisions but listened a lot, and treated his players as men with ideas.",
+          "sourceId": "si-1969",
+          "locator": "paragraph beginning 'Something everybody else but Bill Russell excelled in'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Judge your game by whether the team won, not by your own numbers.",
+      "sourceId": "si-1969",
+      "locator": "paragraph beginning 'People didn't give us credit'"
+    },
+    {
+      "text": "Let each man do what he does best, and give your energy to the team.",
+      "sourceId": "deford-1999",
+      "locator": "paragraph beginning 'Russell's simple key to a successful team'"
+    },
+    {
+      "text": "Draw a line inside yourself that you let nobody cross.",
+      "sourceId": "red-and-me",
+      "locator": "grandfather passage (page not seen; Internet Archive full-text search)"
+    },
+    {
+      "text": "Some people will dislike you on sight; be yourself anyway: you are no better than anyone, and no one is better than you.",
+      "sourceId": "deford-1999",
+      "locator": "paragraph beginning 'Even more clearly, Russell recalls the gritty creed'"
+    },
+    {
+      "text": "As a leader, make the decision yourself, but listen to your men first.",
+      "sourceId": "si-1969",
+      "locator": "paragraph beginning 'Something everybody else but Bill Russell excelled in'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "There was only one statistic that was important to us—won and lost.",
+      "sourceId": "si-1969",
+      "locator": "end of the paragraph beginning 'People didn't give us credit'"
+    },
+    {
+      "text": "I do not ask for understanding. I have never worked to be understood, or accepted, or liked.",
+      "sourceId": "red-and-me",
+      "locator": "page not seen; found by Internet Archive full-text search of the HarperCollins 2009 edition"
+    },
+    {
+      "text": "If you disrespect that line, you disrespect me.",
+      "sourceId": "red-and-me",
+      "locator": "grandfather passage (page not seen; Internet Archive full-text search of the HarperCollins 2009 edition)"
+    },
+    {
+      "text": "Every so often a Celtic game would heat up so that it became more than a physical or even mental game, and would be magical.",
+      "sourceId": "second-wind",
+      "locator": "page not seen; as quoted in Jonathan Yardley's review, Sports Illustrated, 8 Oct. 1979"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1961, before the season, the Celtics went to Lexington, Kentucky, for an exhibition game. The hotel coffee shop refused to serve his Black teammates Sam Jones and Satch Sanders. Russell took the Black players to coach Red Auerbach and told him they were leaving. They flew home, and the game was played without them. The next day he told reporters they had to show their disapproval 'or else the status quo will prevail.'",
+    "sourceIds": [
+      "wapo-2020",
+      "si-herring-2022",
+      "red-and-me"
+    ]
+  },
+  "shadow": {
+    "text": "For most of his life he refused to sign autographs, even for teammates, and was cold to the press and to fans; teammate K.C. Jones said anyone who did not fit in, 'he'd just dismiss him.' In a 1969 speech he said Wilt Chamberlain had 'copped out' of Game 7 of that year's Finals after a knee injury, and Chamberlain stopped speaking to him for decades. His 1987-88 season coaching the Sacramento Kings ended midseason at 17 wins and 41 losses. In October 2013 he was arrested at Seattle's airport with a loaded handgun in his carry-on bag.",
+    "sourceIds": [
+      "deford-1999",
+      "npr-2022",
+      "ringer-macmullan-2022",
+      "inquirer-2017",
+      "espn-2022",
+      "si-golliver-2013"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where this week did you count your own numbers instead of asking whether your team won?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Second Wind: The Memoirs of an Opinionated Man (with Taylor Branch)",
+      "year": 1979
+    },
+    {
+      "title": "Red and Me: My Coach, My Lifelong Friend (with Alan Steinberg)",
+      "year": 2009
+    },
+    {
+      "title": "Go Up for Glory (with William McSweeny)",
+      "year": 1966
+    }
+  ],
+  "sources": [
+    {
+      "id": "si-1969",
+      "kind": "primary",
+      "title": "'I'm Not Involved Anymore' (his retirement statement), Sports Illustrated, 4 August 1969",
+      "author": "Bill Russell",
+      "year": 1969,
+      "publisher": "Sports Illustrated",
+      "url": "https://web.archive.org/web/2022/https://vault.si.com/vault/1969/08/04/im-not-involved-anymore"
+    },
+    {
+      "id": "red-and-me",
+      "kind": "primary",
+      "title": "Red and Me: My Coach, My Lifelong Friend",
+      "author": "Bill Russell with Alan Steinberg",
+      "year": 2009,
+      "publisher": "HarperCollins",
+      "url": "https://archive.org/details/redmemycoachmy00russ"
+    },
+    {
+      "id": "second-wind",
+      "kind": "primary",
+      "title": "Second Wind: The Memoirs of an Opinionated Man",
+      "author": "Bill Russell and Taylor Branch",
+      "year": 1979,
+      "publisher": "Random House",
+      "url": "https://archive.org/details/secondwindmemoir0000russ"
+    },
+    {
+      "id": "loc-2013",
+      "kind": "primary",
+      "title": "Oral history interview, Civil Rights History Project, Seattle, 12 May 2013 (interviewer Taylor Branch)",
+      "author": "Bill Russell",
+      "year": 2013,
+      "publisher": "Library of Congress and Smithsonian NMAAHC",
+      "url": "https://www.loc.gov/item/2015669187/"
+    },
+    {
+      "id": "loc-blog-2022",
+      "kind": "secondary",
+      "title": "Bill Russell: In His Own Words (Library of Congress blog, 1 August 2022)",
+      "author": "Neely Tucker",
+      "year": 2022,
+      "publisher": "Library of Congress",
+      "url": "https://blogs.loc.gov/loc/2022/08/bill-russell-in-his-own-words/"
+    },
+    {
+      "id": "deford-1999",
+      "kind": "secondary",
+      "title": "The Ring Leader, Sports Illustrated, 10 May 1999 (republished online 2014)",
+      "author": "Frank Deford",
+      "year": 1999,
+      "publisher": "Sports Illustrated",
+      "url": "https://www.si.com/nba/2014/08/15/bill-russell-boston-celtics-ring-leader-si-60-frank-deford"
+    },
+    {
+      "id": "plimpton-1968",
+      "kind": "secondary",
+      "title": "Sportsman of the Year: Bill Russell, Sports Illustrated, 23 December 1968",
+      "author": "George Plimpton",
+      "year": 1968,
+      "publisher": "Sports Illustrated",
+      "url": "https://web.archive.org/web/2021/https://vault.si.com/vault/1968/12/23/sportsman-of-the-year-bill-russell"
+    },
+    {
+      "id": "yardley-1979",
+      "kind": "secondary",
+      "title": "Bill Russell Writes With Candor About His Game, His Race, His Life (review of Second Wind), Sports Illustrated, 8 October 1979",
+      "author": "Jonathan Yardley",
+      "year": 1979,
+      "publisher": "Sports Illustrated",
+      "url": "https://web.archive.org/web/2021/https://vault.si.com/vault/1979/10/08/bill-russell-writes-with-candor-about-his-game-his-race-his-life"
+    },
+    {
+      "id": "espn-2022",
+      "kind": "secondary",
+      "title": "Boston Celtics great Bill Russell, 11-time NBA champion, dies at 88 (31 July 2022)",
+      "author": "ESPN News Services, with the Associated Press",
+      "year": 2022,
+      "publisher": "ESPN",
+      "url": "https://www.espn.com/nba/story/_/id/34323568"
+    },
+    {
+      "id": "npr-2022",
+      "kind": "secondary",
+      "title": "Bill Russell, basketball legend with record 11 NBA titles, dies at 88 (NPR, 31 July 2022)",
+      "author": "Tom Goldman",
+      "year": 2022,
+      "publisher": "NPR (republished by OPB)",
+      "url": "https://www.opb.org/article/2022/07/31/bill-russell-basketball-legend-with-record-11-nba-titles-dies-at-88/"
+    },
+    {
+      "id": "andscape-2019",
+      "kind": "secondary",
+      "title": "Bill Russell, activist for the ages (Andscape, July 2019)",
+      "author": "Martenzie Johnson",
+      "year": 2019,
+      "publisher": "Andscape (ESPN)",
+      "url": "https://andscape.com/features/bill-russell-activist-for-the-ages/"
+    },
+    {
+      "id": "si-herring-2022",
+      "kind": "secondary",
+      "title": "Bill Russell's Off-Court Example Is What Resonates Most, Now and Beyond (Sports Illustrated, 1 August 2022)",
+      "author": "Chris Herring",
+      "year": 2022,
+      "publisher": "Sports Illustrated",
+      "url": "https://www.si.com/nba/2022/08/01/bill-russell-celtics-racial-barriers-civil-rights"
+    },
+    {
+      "id": "wapo-2020",
+      "kind": "secondary",
+      "title": "Bill Russell, who led 1961 boycott of NBA game, salutes 2020 players' walkout (Washington Post, 27 August 2020, republished by Boston.com)",
+      "author": "Des Bieler",
+      "year": 2020,
+      "publisher": "The Washington Post",
+      "url": "https://www.boston.com/sports/boston-celtics/2020/08/27/bill-russell-nba-boycott"
+    },
+    {
+      "id": "ringer-macmullan-2022",
+      "kind": "secondary",
+      "title": "Wilt Chamberlain and Bill Russell (The Ringer, 18 March 2022)",
+      "author": "Jackie MacMullan",
+      "year": 2022,
+      "publisher": "The Ringer",
+      "url": "https://www.theringer.com/2022/03/18/sports/nba-wilt-chamberlain-bill-russell-icons-club"
+    },
+    {
+      "id": "inquirer-2017",
+      "kind": "secondary",
+      "title": "Bill Russell, Wilt Chamberlain and the Sixers-Celtics rivalry (Philadelphia Inquirer, 21 February 2017)",
+      "author": "Frank Fitzpatrick",
+      "year": 2017,
+      "publisher": "The Philadelphia Inquirer",
+      "url": "https://www.inquirer.com/sixers/bill-russell-wilt-chamberlain-sixers-celtics-rivalry-20170221.html"
+    },
+    {
+      "id": "si-golliver-2013",
+      "kind": "secondary",
+      "title": "Bill Russell arrested for carrying gun at Seattle airport (SI.com, 19 October 2013)",
+      "author": "Ben Golliver",
+      "year": 2013,
+      "publisher": "Sports Illustrated",
+      "url": "https://www.si.com/nba/2013/10/19/bill-russell-arrested-boston-celtics-gun-airport"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real American basketball player and coach (1934-2022), never a politician, campaigner or religious founder; searches found no account of sexual contact with a minor or of sexual violence; he is in, with a documented dark side of coldness to fans and press, a long public feud with Wilt Chamberlain, a failed coaching stint and a 2013 gun arrest."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked each value against Frank Deford's 1999 SI profile, his own 1969 SI statement, Red and Me (rechecked by Internet Archive full-text search), and the ESPN, NPR, Washington Post, SI, Andscape and Library of Congress pieces, all reopened. All five values held: Winning, Courage, Justice and Leadership are shared with the blind pick, and Self-respect stands on three separate sources; his Sacramento failure is a lapse in Leadership, not a pattern, and is in the shadow. All four quotes match the texts. Five claims were tightened to what the sources say (the scout, the player-coach titles, the handshake, Deford's wording, his mother's creed).",
+    "checkedOn": "2026-11-10"
+  }
+}
