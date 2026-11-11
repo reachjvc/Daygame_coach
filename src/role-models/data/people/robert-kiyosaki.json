@@ -1,0 +1,305 @@
+{
+  "id": "robert-kiyosaki",
+  "name": "Robert Kiyosaki",
+  "born": 1947,
+  "died": null,
+  "category": "money",
+  "areaIds": [
+    "lm_money",
+    "lm_mindset"
+  ],
+  "tagline": "Turned a self-published book about assets and money into a worldwide bestseller.",
+  "startedFrom": "He grew up in Hawaii, the oldest of four children; his father was an educator studying for a doctorate, and at seven Robert found his mother crying over an overdrawn bank account. His father became a public school superintendent, and by his own account Robert did badly at school and was told he could not write. He flew helicopter gunships for the Marine Corps in Vietnam, then in 1977 started a company selling nylon and Velcro surfer wallets.",
+  "values": [
+    {
+      "word": "Wealth",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says that when people tell him money is not important to them he asks if they are kidding, and that money is important to him.",
+          "sourceId": "farnoosh-2015",
+          "locator": "transcript p. 3 (money mantra question)"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2005 a Fortune reporter rode with him in one of his two Porsches; he said his books had sold 25 million copies and his company ran with 20 people, no debt and 70% margins.",
+          "sourceId": "fsb-2005",
+          "locator": "paragraphs 1 and 5"
+        },
+        {
+          "kind": "witness",
+          "claim": "In 2012 the ABA Journal reported his net worth had been estimated at $80 million.",
+          "sourceId": "aba-2012",
+          "locator": "paragraph 3"
+        }
+      ]
+    },
+    {
+      "word": "Ambition",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says seeing his mother cry over an empty bank account at seven changed his future, so that he would never be like his 'poor dad'.",
+          "sourceId": "farnoosh-2015",
+          "locator": "transcript p. 4 (money memory question)"
+        },
+        {
+          "kind": "witness",
+          "claim": "Fortune Small Business wrote that from age 9 he devoted his life to uncovering the secrets of wealth.",
+          "sourceId": "fsb-2005",
+          "locator": "paragraph 2"
+        },
+        {
+          "kind": "witness",
+          "claim": "Publishers Weekly wrote that at age nine, after learning Monopoly, he knew he was going to be wealthy.",
+          "sourceId": "pw-2017",
+          "locator": "paragraph 1"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "As a young adult he attended seminars led by Buckminster Fuller, whose writing on the economy changed the course of his life.",
+          "sourceId": "pw-2017",
+          "locator": "paragraph 1"
+        },
+        {
+          "kind": "words",
+          "claim": "Asked what he spends money on that makes life better, he answers his education: he is constantly studying and reading books.",
+          "sourceId": "farnoosh-2015",
+          "locator": "transcript p. 8"
+        },
+        {
+          "kind": "words",
+          "claim": "He gives a whole chapter of his main book to the rule 'Work to Learn - Don't Work for Money'.",
+          "sourceId": "rdpd-2000",
+          "locator": "ch. 7, Lesson Six, p. 131"
+        }
+      ]
+    },
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "When no publisher wanted Rich Dad Poor Dad, he published it himself in 1997.",
+          "sourceId": "pw-2017",
+          "locator": "paragraphs 2-3"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes that winners are not afraid of losing and that people who avoid failure also avoid success.",
+          "sourceId": "rdpd-2000",
+          "locator": "ch. 6, Lesson Five: The Rich Invent Money, pp. 124-125"
+        },
+        {
+          "kind": "words",
+          "claim": "He says most people have not yet lost a hundred thousand dollars and that is why they will not be rich.",
+          "sourceId": "farnoosh-2015",
+          "locator": "transcript p. 5 (financial failure question)"
+        }
+      ]
+    },
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says he was not eligible for the draft, asked himself 'Am I a coward or not?' when his brother joined the Air Force, and volunteered for the Marines because it was the right thing to do.",
+          "sourceId": "marforpac-2007",
+          "locator": "passage on his draft status, his brother and his enlistment (phone interview of 5 November 2007)"
+        },
+        {
+          "kind": "deed",
+          "claim": "He flew as a Marine helicopter gunship pilot with squadron HMM-264 in Vietnam from January 1972, and was met by tracer fire on his first flight.",
+          "sourceId": "marforpac-2007",
+          "locator": "passage on HMM-264 and his first flight into country"
+        },
+        {
+          "kind": "deed",
+          "claim": "The book's author note says he joined the Marine Corps and went to Vietnam as an officer and helicopter gunship pilot.",
+          "sourceId": "rdpd-2000",
+          "locator": "About the Authors (back matter)"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Learn the difference between an asset and a liability, and spend your money on assets.",
+      "sourceId": "fsb-2005",
+      "locator": "paragraph 4 (quoting Rich Dad Poor Dad)"
+    },
+    {
+      "text": "Take a job for what it teaches you, not only for the pay.",
+      "sourceId": "rdpd-2000",
+      "locator": "ch. 7, Lesson Six: Work to Learn - Don't Work for Money, p. 131"
+    },
+    {
+      "text": "Treat a loss as a lesson: failure is how you learn, not proof you should stop.",
+      "sourceId": "farnoosh-2015",
+      "locator": "transcript p. 5"
+    },
+    {
+      "text": "Listen to what you tell yourself about money, and take control of that inner talk.",
+      "sourceId": "farnoosh-2015",
+      "locator": "transcript pp. 3-4"
+    },
+    {
+      "text": "Buy a luxury only after you have bought an asset whose income pays for it.",
+      "sourceId": "farnoosh-2015",
+      "locator": "transcript p. 8 (guilty pleasure question)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Winners are not afraid of losing. But losers are. Failure is part of the process of success. People who avoid failure also avoid success.",
+      "sourceId": "rdpd-2000",
+      "locator": "ch. 6, Lesson Five: The Rich Invent Money, pp. 124-125"
+    },
+    {
+      "text": "It's not my wins, it's who I am when I'm down.",
+      "sourceId": "farnoosh-2015",
+      "locator": "transcript p. 6"
+    },
+    {
+      "text": "Many people buy a Ferrari and get poor. I buy Ferraris and get richer.",
+      "sourceId": "farnoosh-2015",
+      "locator": "transcript p. 8"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1996 he made Cashflow, a board game about money, and in 1997 he wrote a short book to help sell it. Publishers turned the book down; he says they objected to lines such as 'your house is not an asset', so he published Rich Dad Poor Dad himself. Sold at his seminars, it reached the New York Times bestseller list in 2000, which led to a full hour on Oprah Winfrey's show and a deal with Warner Books.",
+    "sourceIds": [
+      "pw-2017",
+      "slate-2002",
+      "fsb-2005"
+    ]
+  },
+  "shadow": {
+    "text": "In August 2012 his company Rich Global LLC filed for bankruptcy in Wyoming after a federal jury in Manhattan found for the Learning Annex, the seminar promoter that said he had reneged on its agreed share of profits, and the court entered a $23.7 million judgment; the CEO of his Rich Dad Co. said it would not be paid from his and his wife's personal assets. CBS News columnist Allan Roth wrote that the free Rich Dad seminar he attended in 2010 was designed to sell a $495 course, and that a hidden-camera report by Canada's CBC Marketplace showed that course was likely largely a sales pitch for courses costing up to $45,000. In 2005, asked about readers buying property at the top of the market on his advice, he told Fortune Small Business: 'I make money when the market is up, and I make money when the market is down. Now can they do that? That's another story.' His books say the rich dad was the father of his best friend, Mike; Forbes reported that no one had documented the wealth he says he made before 1997, and SmartMoney reported that both fathers are composites, as CBS News summed up in 2013. In 2007 his co-author Sharon Lechter sued him and his wife, saying they had enriched themselves and diverted assets; the case was settled in 2008 for an undisclosed sum.",
+    "sourceIds": [
+      "aba-2012",
+      "cbs-2013",
+      "fsb-2005",
+      "pubmarketplace-2008"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you tell yourself about money this week, and did it push you forward or hold you back?",
+    "principleIndex": 3
+  },
+  "readings": [
+    {
+      "title": "Rich Dad Poor Dad",
+      "year": 1997
+    },
+    {
+      "title": "Why the Rich Are Getting Richer",
+      "year": 2017
+    }
+  ],
+  "sources": [
+    {
+      "id": "rdpd-2000",
+      "kind": "primary",
+      "title": "Rich Dad, Poor Dad: What the Rich Teach Their Kids About Money That the Poor and Middle Class Do Not! (first published 1997; Warner Books edition, read through Internet Archive / Open Library search-inside)",
+      "author": "Robert T. Kiyosaki with Sharon L. Lechter",
+      "year": 2000,
+      "publisher": "Warner Books",
+      "url": "https://archive.org/details/richdadpoordadwh00kiyo"
+    },
+    {
+      "id": "farnoosh-2015",
+      "kind": "primary",
+      "title": "So Money with Farnoosh Torabi, Ep 8: Robert Kiyosaki and Getting a Second Chance (19 January 2015; official transcript PDF)",
+      "author": "Robert Kiyosaki, interviewed by Farnoosh Torabi",
+      "year": 2015,
+      "url": "https://podcast.farnoosh.tv/wp-content/uploads/2025/02/Robert-Kiyosaki-FINAL-TRANSCRIPT.pdf"
+    },
+    {
+      "id": "fsb-2005",
+      "kind": "secondary",
+      "title": "Teach Your Children Wealth (Fortune Small Business, February 2005)",
+      "author": "David Whitford",
+      "year": 2005,
+      "publisher": "Fortune Small Business / CNNMoney",
+      "url": "https://money.cnn.com/magazines/fsb/fsb_archive/2005/02/01/8250667/index.htm"
+    },
+    {
+      "id": "pw-2017",
+      "kind": "secondary",
+      "title": "BookExpo 2017: Robert Kiyosaki Is Even Richer 20 Years Later (1 June 2017)",
+      "author": "Hilary S. Kayle",
+      "year": 2017,
+      "publisher": "Publishers Weekly",
+      "url": "https://www.publishersweekly.com/pw/by-topic/industry-news/bea/article/73847-robert-kiyosaki-is-even-richer-20-years-later.html"
+    },
+    {
+      "id": "slate-2002",
+      "kind": "secondary",
+      "title": "Why millions buy Rich Dad, Poor Dad's nonsense (20 June 2002)",
+      "author": "Rob Walker",
+      "year": 2002,
+      "publisher": "Slate",
+      "url": "https://slate.com/culture/2002/06/why-millions-buy-rich-dad-poor-dad-s-nonsense.html"
+    },
+    {
+      "id": "cbs-2013",
+      "kind": "secondary",
+      "title": "Rich Dad, Poor Dad's bankrupt company (MoneyWatch, 19 January 2013)",
+      "author": "Allan Roth",
+      "year": 2013,
+      "publisher": "CBS News",
+      "url": "https://www.cbsnews.com/news/rich-dad-poor-dads-bankrupt-company/"
+    },
+    {
+      "id": "aba-2012",
+      "kind": "secondary",
+      "title": "Self-Help Guru Who Authored 'Rich Dad, Poor Dad' Hit with $24M Judgment, But Still Worth a Bundle (10 October 2012)",
+      "author": "Martha Neil",
+      "year": 2012,
+      "publisher": "ABA Journal",
+      "url": "https://www.abajournal.com/news/article/self-help_guru_who_authored_rich_dad_poor_dad_hit_with_24m_judgment_but_sti"
+    },
+    {
+      "id": "pubmarketplace-2008",
+      "kind": "secondary",
+      "title": "'Rich Dad' Suit Settled (Publishers Lunch, 4 September 2008, citing AZ Central)",
+      "author": "Michael Cader",
+      "year": 2008,
+      "publisher": "Publishers Marketplace",
+      "url": "https://lunch.publishersmarketplace.com/2008/09/rich_dad_suit_settledfor/"
+    },
+    {
+      "id": "marforpac-2007",
+      "kind": "secondary",
+      "title": "'Nam Marine, millionaire author attributes success to character development gained in Marine Corps (27 November 2007)",
+      "author": "Cpl. Luis R. Agostini",
+      "year": 2007,
+      "publisher": "U.S. Marine Corps Forces, Pacific",
+      "url": "https://www.marforpac.marines.mil/Media-Room/Pacific-Marines-Stories/Article/Article/530091/nam-marine-millionaire-author-attributes-success-to-character-development-gaine/"
+    }
+  ],
+  "likenessSources": [
+    {
+      "title": "Robert Kiyosaki by Gage Skidmore (photo, 5 September 2014)",
+      "url": "https://commons.wikimedia.org/wiki/File:Robert_Kiyosaki_by_Gage_Skidmore.jpg",
+      "licence": "CC BY-SA 3.0",
+      "author": "Gage Skidmore"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living American author, investor and seminar seller (Rich Dad Poor Dad), not a politician, campaigner or religious founder, with no credible account of sexual contact with a minor or of sexual violence found; he is in, with a documented dark side about money dealings, his seminars and his disputed 'rich dad' story."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked all four draft values against the sources and the blind pick, which shared only Wealth. Wealth, Ambition, Learning and Boldness held, each with three pieces of evidence from three sources, and Courage came in from the blind pick on the Marine Corps' own 2007 interview, which says he was draft-exempt and volunteered for Vietnam. Mentorship, Resilience and Influence from the blind pick fell for lack of independent sources. All three quotes matched the book scan and the podcast transcript; in the shadow, the seminar claim was narrowed to what CBS actually wrote and his 2005 line about his readers was added.",
+    "checkedOn": "2026-11-10"
+  }
+}
