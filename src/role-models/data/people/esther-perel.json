@@ -1,0 +1,282 @@
+{
+  "id": "esther-perel",
+  "name": "Esther Perel",
+  "pronoun": "she",
+  "born": 1958,
+  "died": null,
+  "category": "teachers",
+  "areaIds": [
+    "lm_relationship",
+    "lm_emotions"
+  ],
+  "tagline": "A couples therapist who taught that lasting desire needs space as well as closeness.",
+  "startedFrom": "She was born in Belgium in 1958, the younger child of two Polish Jews who were the only survivors of their families; her father had been in 14 labour camps and her mother in nine. After the war her parents lived for five years as illegal refugees in Belgium, then settled in Antwerp, where they ran a clothing store in a working-class Flemish neighbourhood and lived above it, in a community that had come straight from the camps. She studied in Jerusalem and came to the United States for graduate school with a return ticket she never used.",
+  "values": [
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "She says growing up among survivors made her 'counterphobic': very fearful, but living as if fearless, and taking a lot of risks.",
+          "sourceId": "npr-2017",
+          "locator": "second half, answer to 'So did it make you fearful, growing up, and afraid to take risks?'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In New York she knocked on family-therapy pioneer Salvador Minuchin's door with no introduction and asked to watch his work; he let her stay, and he became one of her main mentors.",
+          "sourceId": "psn-2017",
+          "locator": "section 'La Grande Vie', paragraph beginning 'And when she moved to New York'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2017 she began a podcast in which she counsels real couples; the New York Times calls showing sessions to a general audience a relatively new phenomenon and notes her tendency to push boundaries.",
+          "sourceId": "nyt-2023",
+          "locator": "section 'Therapy behind open doors', paragraphs beginning 'Attuned to the zeitgeist' and 'Traditional couples therapy training'"
+        },
+        {
+          "kind": "words",
+          "claim": "She writes that her first book was the first project she took on without any certainty that she could deliver.",
+          "sourceId": "perel-about",
+          "locator": "section 'A New Chapter in My Life'"
+        }
+      ]
+    },
+    {
+      "word": "Learning",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "She writes that she still learns the art of couples therapy daily and keeps studying neuroscience, attachment theory, neuro-linguistic programming and psychodrama.",
+          "sourceId": "perel-about",
+          "locator": "section 'Why I Do What I Do'"
+        },
+        {
+          "kind": "deed",
+          "claim": "With only a degree in expressive arts therapy, she signed up to train with acting teacher Stella Adler and talked her way into watching Minuchin's sessions.",
+          "sourceId": "psn-2017",
+          "locator": "section 'La Grande Vie', paragraph beginning 'And when she moved to New York'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times writes that she planned to return home after her master's degree but was hungry for further training and stayed, collecting mentors and studying with Minuchin.",
+          "sourceId": "nyt-2023",
+          "locator": "section 'Sex as cultural conversation', paragraph beginning 'She has a way of collecting mentors' and the one before it"
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "She writes that, working with refugees, she became curious how the fall of political regimes played out in the kitchens and bedrooms of the families she saw.",
+          "sourceId": "perel-about",
+          "locator": "section 'An Introduction'"
+        },
+        {
+          "kind": "deed",
+          "claim": "She says she went to Poland with her parents in 1991 to see the places they came from, and that she has interviewed them about their lives.",
+          "sourceId": "npr-2017",
+          "locator": "last answer before the closing, beginning 'Many times I - my parents'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Psychotherapy Networker writes that the key to her style is that she is always interested and makes people feel they are interesting to her.",
+          "sourceId": "psn-2017",
+          "locator": "section 'La Grande Vie', paragraph beginning 'It was in these public salons'"
+        }
+      ]
+    },
+    {
+      "word": "Vitality",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "She writes that her parents wanted not just to survive but to revive, and that from them she learned the difference between 'not being dead' and 'being alive'.",
+          "sourceId": "perel-about",
+          "locator": "section 'Where the Story Begins'"
+        },
+        {
+          "kind": "words",
+          "claim": "She says her goal is not only to keep couples together but to help them feel some joy when they wake up, because to not be dead is not the same as to be alive.",
+          "sourceId": "psn-2017",
+          "locator": "section 'La Critique', paragraph beginning 'Whatever her critics might think'"
+        },
+        {
+          "kind": "witness",
+          "claim": "The New York Times describes her in person as intimate, engaged and vivacious.",
+          "sourceId": "nyt-2023",
+          "locator": "section 'Sex as cultural conversation', first paragraph"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Keep some distance and mystery between you and your partner: desire needs space.",
+      "sourceId": "ted-2013",
+      "locator": "middle section, 'to have' and 'to want', ending 'fire needs air. Desire needs space.'"
+    },
+    {
+      "text": "Do not wait for desire to strike; in a long relationship, sex is something you plan on purpose.",
+      "sourceId": "ted-2013",
+      "locator": "closing section on 'the myth of spontaneity'"
+    },
+    {
+      "text": "Ask what shuts your own desire down, not only what your partner does wrong.",
+      "sourceId": "ted-2013",
+      "locator": "section on the questions 'I turn myself off when ...' and 'I turn myself on when ...'"
+    },
+    {
+      "text": "After an affair, ask what it meant and why it happened, not for the painful details.",
+      "sourceId": "ted-2015",
+      "locator": "section on healing, 'switch to what I call the investigative questions'"
+    },
+    {
+      "text": "Do not take monogamy for granted; talk about what it means to both of you, early.",
+      "sourceId": "npr-2017",
+      "locator": "answer to 'what is an affair?', ending 'Monogamy can no longer just be assumed.'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Fire needs air. Desire needs space.",
+      "sourceId": "ted-2013",
+      "locator": "middle section, after 'In desire, we want a bridge to cross' (TEDSalon NY2013, recorded 11 February 2013)"
+    },
+    {
+      "text": "Committed sex is premeditated sex. It's willful. It's intentional. It's focus and presence.",
+      "sourceId": "ted-2013",
+      "locator": "closing lines (TEDSalon NY2013, recorded 11 February 2013)"
+    },
+    {
+      "text": "I am very fearful, but I live as if I'm fearless. And I took a lot of risks.",
+      "sourceId": "npr-2017",
+      "locator": "Fresh Air, 13 December 2017, answer to 'So did it make you fearful, growing up, and afraid to take risks?'"
+    },
+    {
+      "text": "Your first marriage is over. Would you like to create a second one together?",
+      "sourceId": "ted-2015",
+      "locator": "closing lines (TED2015, recorded 19 March 2015)"
+    }
+  ],
+  "definingMoment": {
+    "text": "The Clinton-Lewinsky scandal sharpened her interest in infidelity: she was struck that Americans tolerated repeated divorce but not affairs. In 2003 she published a magazine article on 'erotic intelligence', arguing that the security we want from a long relationship can run counter to exciting sex. After another magazine reprinted it, she said, 'I had half a dozen agents calling me within a week'; her book Mating in Captivity came out in 2006. She writes that it was the first project she took on without any certainty that she could deliver.",
+    "sourceIds": [
+      "nyt-2023",
+      "psn-2017",
+      "perel-about"
+    ]
+  },
+  "shadow": {
+    "text": "Other couples therapists have criticised her work in strong terms. In 2017 Psychotherapy Networker reported that John Gottman wrote she had 'very little clinical sensitivity' and called clinical suggestions she made at a conference 'misguided but unethical and abusive', and that Susan Johnson, founder of Emotionally Focused Couples Therapy, said there is no evidence for her idea that affairs are growth experiences. Reviewing The State of Affairs in Time in October 2017, Belinda Luscombe called her 'a controversial couples therapist' and her solutions to betrayal 'nearly all cuckoo'. She does not hold that an affair must always be confessed; in December 2017 she told the Irish Times, 'Sometimes disclosure can be cruel, and sometimes revelation is the right thing to do.' Her podcast puts real couples' sessions before a general audience, which the New York Times wrote in 2023 is anathema to old-school therapists for whom patient privacy is sacrosanct; she has also built a media company selling online courses and a $40 card game, and cut her clinical practice to two days a week.",
+    "sourceIds": [
+      "psn-2017",
+      "time-2017",
+      "irish-2017",
+      "nyt-2023"
+    ]
+  },
+  "councilQuestion": {
+    "text": "When did you shut your own desire down this week, and what was going on in you at the time?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "Mating in Captivity",
+      "year": 2006
+    },
+    {
+      "title": "The State of Affairs: Rethinking Infidelity",
+      "year": 2017
+    },
+    {
+      "title": "The Secret to Desire in a Long-Term Relationship (TED talk)",
+      "year": 2013
+    }
+  ],
+  "sources": [
+    {
+      "id": "ted-2013",
+      "kind": "primary",
+      "title": "The secret to desire in a long-term relationship (TED talk, official transcript)",
+      "author": "Esther Perel",
+      "year": 2013,
+      "publisher": "TED, TEDSalon NY2013, recorded 11 February 2013",
+      "url": "https://www.ted.com/talks/esther_perel_the_secret_to_desire_in_a_long_term_relationship/transcript"
+    },
+    {
+      "id": "ted-2015",
+      "kind": "primary",
+      "title": "Rethinking infidelity ... a talk for anyone who has ever loved (TED talk, official transcript)",
+      "author": "Esther Perel",
+      "year": 2015,
+      "publisher": "TED, TED2015, recorded 19 March 2015",
+      "url": "https://www.ted.com/talks/esther_perel_rethinking_infidelity_a_talk_for_anyone_who_has_ever_loved/transcript"
+    },
+    {
+      "id": "npr-2017",
+      "kind": "primary",
+      "title": "As Marriage Standards Change, A Therapist Recommends 'Rethinking Infidelity' (interview, transcript)",
+      "author": "Esther Perel, interviewed by Terry Gross",
+      "year": 2017,
+      "publisher": "NPR, Fresh Air, 13 December 2017",
+      "url": "https://www.npr.org/2017/12/13/570131890/as-marriage-standards-change-a-therapist-recommends-rethinking-infidelity"
+    },
+    {
+      "id": "perel-about",
+      "kind": "primary",
+      "title": "Meet Esther (About page)",
+      "author": "Esther Perel",
+      "year": "n.d. (read 2026)",
+      "publisher": "estherperel.com",
+      "url": "https://www.estherperel.com/about"
+    },
+    {
+      "id": "nyt-2023",
+      "kind": "secondary",
+      "title": "Sex, fidelity and sales: How relationship therapist Esther Perel became a global superstar",
+      "author": "Sarah Lyall",
+      "year": 2023,
+      "publisher": "The New York Times, reprinted by The New Zealand Herald, 30 March 2023",
+      "url": "https://www.nzherald.co.nz/lifestyle/sex-fidelity-and-sales-how-relationship-therapist-esther-perel-became-a-global-superstar/JPBWV333DVBUXDYLWVCPBP52ZQ/"
+    },
+    {
+      "id": "psn-2017",
+      "kind": "secondary",
+      "title": "Everywhere at Once: Esther Perel Is Becoming Therapy's Most Visible Presence",
+      "author": "Rich Simon and Lauren Dockett",
+      "year": 2017,
+      "publisher": "Psychotherapy Networker, September/October 2017",
+      "url": "https://www.psychotherapynetworker.org/article/everywhere-once/"
+    },
+    {
+      "id": "time-2017",
+      "kind": "secondary",
+      "title": "Affairs Are Only Human — But That Shouldn't Be Your Excuse (review of The State of Affairs)",
+      "author": "Belinda Luscombe",
+      "year": 2017,
+      "publisher": "Time, 23 October 2017",
+      "url": "https://time.com/4994199/esther-perel-cheating-infidelity-relationships-marriage/"
+    },
+    {
+      "id": "irish-2017",
+      "kind": "secondary",
+      "title": "Esther Perel: 'We need a new approach to infidelity'",
+      "author": "Tanya Sweeney",
+      "year": 2017,
+      "publisher": "The Irish Times, 9 December 2017",
+      "url": "https://www.irishtimes.com/life-and-style/people/weddings/esther-perel-we-need-a-new-approach-to-infidelity-1.3309693"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living Belgian-born couples therapist, author and podcaster in New York; not a politician, campaigner or religious founder, and no credible account of sexual contact with a minor or of sexual violence by her was found; she is in, with a documented dark side of sharp professional criticism of her ideas and her commercial, public way of doing therapy."
+    },
+    "blindAgreement": 0.5,
+    "devilsAdvocate": "I attacked all five draft values against the TED and NPR transcripts, her own site, the 2023 New York Times profile, Psychotherapy Networker and a 2017 Irish Times interview. Honesty fell: it rested on candour about sex, while in the Irish Times she says confessing an affair is not always right ('Sometimes disclosure can be cruel'), so the plain reading can be argued against; that view now sits in the shadow and Candour is recorded as a missing word. Boldness, Learning, Curiosity and Vitality held, Boldness on her uninvited approach to Minuchin in New York and her 2017 podcast, with her own admission that she earlier did only what she was sure of noted. The blind pick's Empathy and Intimacy were not added: Gottman disputes her clinical sensitivity in print, and intimacy is her subject rather than a value shown in her conduct.",
+    "checkedOn": "2026-11-10"
+  }
+}
