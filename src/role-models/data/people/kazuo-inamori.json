@@ -1,0 +1,368 @@
+{
+  "id": "kazuo-inamori",
+  "name": "Kazuo Inamori",
+  "born": 1932,
+  "died": 2022,
+  "category": "builders",
+  "areaIds": [
+    "lm_mission",
+    "lm_money",
+    "lm_contribution"
+  ],
+  "tagline": "Engineer who built Kyocera and KDDI and asked himself before big decisions: is my motive virtuous or selfish?",
+  "startedFrom": "He was born in Kagoshima in 1932, one of seven children of a printer. He failed the entrance exam for the city's first junior high school at 12, caught tuberculosis at 13, and saw the family home destroyed in an air raid in 1945; at 16 he sold paper bags to help his poor family. He failed the entrance exam for pharmacology at Osaka University, studied applied chemistry at the local Kagoshima University instead, and graduated in the 1955 recession into a job at an insulator maker in Kyoto.",
+  "values": [
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In the Kyocera Philosophy he writes that real happiness comes from work, not from hobbies, and that it comes only after concentrating on work \"diligently and earnestly\".",
+          "sourceId": "kyocera-philosophy",
+          "locator": "Item \"Work Earnestly\" (words11.html)"
+        },
+        {
+          "kind": "deed",
+          "claim": "Bloomberg reports that at 77, with no airline experience, he took charge of bankrupt Japan Airlines without pay and printed a small book of his philosophy for each employee.",
+          "sourceId": "bloomberg-2015",
+          "locator": "Paragraphs beginning \"It's a view that carries weight\" and \"The secret, as Inamori tells it\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Associated Press called him a philanthropist \"singing the virtues of fairness and hard work\" and reported that he said many times you must love your work so that you end up working harder than anyone else.",
+          "sourceId": "ap-2022",
+          "locator": "First paragraph; paragraph beginning \"Inamori noted that all living things\""
+        },
+        {
+          "kind": "witness",
+          "claim": "A business history says that in Kyocera's early years, to pay off the start-up debt he would not tolerate, sales, production and development staff often worked around the clock to meet orders.",
+          "sourceId": "idch",
+          "locator": "Paragraph beginning \"From the very beginning, Inamori instilled a corporate philosophy\""
+        }
+      ]
+    },
+    {
+      "word": "Service",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "At 78 he said the principle of his existence was to serve the betterment of other people and society, and called it the highest calling for any human being.",
+          "sourceId": "shi-2010",
+          "locator": "Session 2 (13 November 2010), transcript p. 104"
+        },
+        {
+          "kind": "deed",
+          "claim": "From 1983 he served as volunteer president of Seiwajyuku, a school for young business leaders that grew to 104 branches and closed in 2019 with 14,938 members.",
+          "sourceId": "kyocera-profile",
+          "locator": "Section \"Social Activities\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Associated Press wrote that his thinking rested on pure intentions rather than greed, \"and ultimately the desire to serve society\".",
+          "sourceId": "ap-2022",
+          "locator": "Paragraph beginning \"His thoughts, which were pioneering\""
+        },
+        {
+          "kind": "words",
+          "claim": "He says Japan Airlines staff told him they felt sorry that he had come to work hard with no salary just to revive their company.",
+          "sourceId": "shi-2010",
+          "locator": "Session 2 (13 November 2010), transcript p. 102"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1984 he used his personal funds to set up the Inamori Foundation and the international Kyoto Prize.",
+          "sourceId": "kyocera-profile",
+          "locator": "Section \"Social Activities\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Andrew Carnegie Medal of Philanthropy, which he received in 2003, says he gave $200 million of his own money to found the Inamori Foundation and later another $300 million.",
+          "sourceId": "carnegie-medal",
+          "locator": "Profile, paragraph beginning \"Kazuo Inamori truly embodies the spirit of Andrew Carnegie\""
+        },
+        {
+          "kind": "words",
+          "claim": "He says the idea of the Kyoto Prize came when a professor of modest means gave him an award, and he felt embarrassed that he, much richer, was not the one giving.",
+          "sourceId": "shi-2010",
+          "locator": "Session 2 (13 November 2010), transcript pp. 66-67"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 2017 he gave 1 million shares of Kyocera stock to his old university, Kagoshima University.",
+          "sourceId": "kyocera-chronology",
+          "locator": "Chronology page 5 (index_5.html), entry 2017 (age 85)"
+        }
+      ]
+    },
+    {
+      "word": "Leadership",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Named head of bankrupt Japan Airlines in 2010 with no airline experience, he returned it to profit the next year and relisted it on the Tokyo exchange in 2012; he credits changing the staff's mentality.",
+          "sourceId": "bloomberg-2015",
+          "locator": "Paragraphs beginning \"It's a view that carries weight\" and \"The secret, as Inamori tells it\""
+        },
+        {
+          "kind": "deed",
+          "claim": "When he left the insulator maker Shofu after a dispute with his superior, several co-workers left with him, and in 1959 he founded Kyoto Ceramic with seven colleagues.",
+          "sourceId": "shi-2010",
+          "locator": "Biographical abstract (front matter, before transcript p. 1)"
+        },
+        {
+          "kind": "deed",
+          "claim": "From 1983 he led Seiwajyuku, a management school for young business leaders, as president of all its 104 branches.",
+          "sourceId": "kyocera-profile",
+          "locator": "Section \"Social Activities\""
+        },
+        {
+          "kind": "witness",
+          "claim": "Bloomberg wrote that growing Kyocera earned him the name \"god of management\" in Japan and that he influenced Japanese entrepreneurs for decades.",
+          "sourceId": "bloomberg-2022",
+          "locator": "First paragraph; paragraph beginning \"His skill in growing Kyoto Ceramic\""
+        }
+      ]
+    },
+    {
+      "word": "Spirituality",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He says a Buddhist book a neighbour left at his bedside when he had tuberculosis at about 12 or 13 \"gave rise to the spiritual aspect of my life\".",
+          "sourceId": "shi-2010",
+          "locator": "Session 1 (19 April 2010), transcript p. 10"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1997, after 38 years at the head of Kyocera, he resigned as chairman and entered the Buddhist priesthood at the Rinzai sect's Enpuku-ji temple.",
+          "sourceId": "asiatimes-2022",
+          "locator": "Paragraph beginning \"Inamori was one of Japan's most outstanding entrepreneurs\""
+        },
+        {
+          "kind": "words",
+          "claim": "At 78 he said he was a certified Buddhist monk who sometimes put on the robe and walked the streets of Japan telling passers-by about Buddhist teaching.",
+          "sourceId": "shi-2010",
+          "locator": "Session 2 (13 November 2010), transcript p. 104"
+        },
+        {
+          "kind": "witness",
+          "claim": "Bloomberg called him a Buddhist priest and reported that at Japan Airlines he set out Buddhist-inspired principles for how employees should live.",
+          "sourceId": "bloomberg-2015",
+          "locator": "Second paragraph; paragraph beginning \"The secret, as Inamori tells it\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Before a big decision, ask yourself whether your motive is good or only selfish.",
+      "sourceId": "kyocera-ddi-1984",
+      "locator": "\"Daini Denden (Now KDDI) Is Established (1984): Is My Motive Virtuous or Selfish?\", last paragraph"
+    },
+    {
+      "text": "Dream as an optimist, plan as a pessimist who lists every problem, then act as an optimist again.",
+      "sourceId": "kyocera-philosophy",
+      "locator": "Item \"Conceive Optimistically, Plan Pessimistically, and Execute Optimistically\" (words36.html)"
+    },
+    {
+      "text": "Your result is attitude times effort times ability, so effort can beat talent and a bad attitude ruins both.",
+      "sourceId": "kyocera-philosophy",
+      "locator": "Item \"The Result of Our Life or Work = Attitude x Effort x Ability\" (words43.html)"
+    },
+    {
+      "text": "When business falls, cut pay, managers' most, and keep the jobs; pay people back when it recovers.",
+      "sourceId": "shi-2010",
+      "locator": "Session 1 (19 April 2010), transcript pp. 34-35"
+    },
+    {
+      "text": "Great results come from many small, boring steps, not from one leap.",
+      "sourceId": "kyocera-philosophy",
+      "locator": "Item \"Accumulate Tedious Efforts\" (words12.html)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "The outcome of our life or work is the product of three factors: attitude, effort and ability.",
+      "sourceId": "kyocera-philosophy",
+      "locator": "Item \"The Result of Our Life or Work = Attitude x Effort x Ability\" (words43.html), first sentence",
+      "translation": "Kyocera Corporation's official English version of the Kyocera Philosophy (translator not named, n.d.)"
+    },
+    {
+      "text": "We should not forget that no great feat is accomplished overnight. It is always a step-by-step accumulation of tedious endeavors.",
+      "sourceId": "kyocera-philosophy",
+      "locator": "Item \"Accumulate Tedious Efforts\" (words12.html), last paragraph",
+      "translation": "Kyocera Corporation's official English version of the Kyocera Philosophy (translator not named, n.d.)"
+    },
+    {
+      "text": "… the principle of my existence is to serve or strive for the betterment of other people and of society. I think that's the highest calling for any human being.",
+      "sourceId": "shi-2010",
+      "locator": "Session 2 (13 November 2010), transcript p. 104",
+      "translation": "Interpreter Fujimoto at the interview, as printed in the Science History Institute transcript (2010)"
+    },
+    {
+      "text": "If you want eggs, take care of the hen. If you bully or kill the hen, it's not going to work.",
+      "sourceId": "bloomberg-2015",
+      "locator": "Interview with Bloomberg News, 23 October 2015, reported 5 November 2015, fourth paragraph",
+      "translation": "English as printed by Bloomberg News (2015); translator not named"
+    }
+  ],
+  "definingMoment": {
+    "text": "In 1984 Japan opened telephone service to competition, but no company was ready to take on NTT, a state monopoly for over 100 years. Inamori, then head of the medium-sized Kyocera, said he would do it, to bring down Japan's high long-distance call charges; before deciding, he asked himself every night whether his motive was good or selfish. He founded DDI, the first competitor to NTT, and with no land for cables it built microwave relay towers on the mountains between Tokyo and Osaka. A business history adds that the venture was partly a reply to NTT blocking Kyocera's cordless telephones the year before. DDI made its first yearly profit in the year to March 1989 and in 2000 merged into KDDI.",
+    "sourceIds": [
+      "kyocera-ddi-1984",
+      "shi-2010",
+      "idch"
+    ]
+  },
+  "shadow": {
+    "text": "His rescue of Japan Airlines cut about 16,000 jobs, roughly a third of the workforce, and Asia Times wrote that salaries and pensions were slashed, subsidiaries sold off and unions broken. On 31 December 2010, with him as chairman, JAL dismissed 165 pilots and cabin attendants chosen by age, number of sick days and other factors; 146 of them sued, and in June 2014 the Tokyo High Court ruled against 71 of the cabin attendants, finding the cuts \"necessary for the company's continued existence\". Bloomberg wrote that he \"could be ruthless\" and that in 1986 he got a young Masayoshi Son to sign over exclusive rights to a call-routing device, a deal Son said he regretted at once. A business history records that in 1985 the press criticised him for selling components directly to a US defence maker in disregard of export rules, that the same year a member of parliament accused Kyocera of illegal activity for selling a bioceramic implant from 1980 before the health ministry approved it, and that the press questioned his strict style of management.",
+    "sourceIds": [
+      "bloomberg-2022",
+      "asiatimes-2022",
+      "jt-2011",
+      "jt-2014",
+      "idch"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Which decision did you make this week without first asking whether your motive was good or only selfish?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "A Compass to Fulfillment (Ikikata)",
+      "year": 2004
+    },
+    {
+      "title": "A Passion for Success",
+      "year": 1995
+    },
+    {
+      "title": "Amoeba Management",
+      "year": 2006
+    }
+  ],
+  "sources": [
+    {
+      "id": "kyocera-philosophy",
+      "kind": "primary",
+      "title": "Kyocera Philosophy (official English pages, items words01-words78)",
+      "author": "Kazuo Inamori",
+      "year": "n.d. (read 2026-11-10)",
+      "publisher": "Kyocera Corporation",
+      "url": "https://global.kyocera.com/inamori/about/thinker/philosophy/"
+    },
+    {
+      "id": "shi-2010",
+      "kind": "primary",
+      "title": "Oral history interview with Kazuo Inamori, 19 April and 13 November 2010 (transcript, oral history no. 0664)",
+      "author": "Kazuo Inamori, interviewed by Thomas R. Tritton and Richard Ulrych",
+      "year": 2010,
+      "publisher": "Science History Institute (formerly Chemical Heritage Foundation)",
+      "url": "https://digital.sciencehistory.org/works/ij4h44r"
+    },
+    {
+      "id": "bloomberg-2015",
+      "kind": "secondary",
+      "title": "The Buddhist Priest Who Became A Billionaire By Snubbing Investors (5 November 2015, reprinted by Financial Advisor)",
+      "author": "Bloomberg News",
+      "year": 2015,
+      "url": "https://www.fa-mag.com/news/the-buddhist-priest-who-became-a-billionaire-by-snubbing-investors-23761.html"
+    },
+    {
+      "id": "kyocera-profile",
+      "kind": "secondary",
+      "title": "Profile (Official Site of Kazuo Inamori)",
+      "author": "Kyocera Corporation",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://global.kyocera.com/inamori/profile/"
+    },
+    {
+      "id": "kyocera-chronology",
+      "kind": "secondary",
+      "title": "Chronology (Official Site of Kazuo Inamori)",
+      "author": "Kyocera Corporation",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://global.kyocera.com/inamori/about/history/"
+    },
+    {
+      "id": "kyocera-ddi-1984",
+      "kind": "secondary",
+      "title": "Daini Denden (Now KDDI) Is Established (1984): Is My Motive Virtuous or Selfish? (Notable Moments)",
+      "author": "Kyocera Corporation",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://global.kyocera.com/inamori/profile/episode/episode07.html"
+    },
+    {
+      "id": "ap-2022",
+      "kind": "secondary",
+      "title": "Japanese business pioneer, philanthropist Inamori dies at 90 (30 August 2022)",
+      "author": "Yuri Kageyama, Associated Press",
+      "year": 2022,
+      "url": "https://www.wsls.com/business/2022/08/30/japanese-business-pioneer-philanthropist-inamori-dies-at-90"
+    },
+    {
+      "id": "bloomberg-2022",
+      "kind": "secondary",
+      "title": "Kazuo Inamori, Founder of Kyocera and KDDI, Dies at Age 90 (30 August 2022)",
+      "author": "Takashi Mochizuki and Yuki Furukawa, Bloomberg",
+      "year": 2022,
+      "url": "https://uk.finance.yahoo.com/news/kazuo-inamori-founder-kyocera-kddi-062513149.html"
+    },
+    {
+      "id": "idch",
+      "kind": "secondary",
+      "title": "Kyocera Corporation (International Directory of Company Histories, entry written c. 1990)",
+      "author": "International Directory of Company Histories (St. James Press), via Encyclopedia.com",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.encyclopedia.com/books/politics-and-business-magazines/kyocera-corporation-0"
+    },
+    {
+      "id": "carnegie-medal",
+      "kind": "secondary",
+      "title": "Inamori, Kazuo (2003 medalist profile)",
+      "author": "The Andrew Carnegie Medal of Philanthropy",
+      "year": "n.d. (read 2026-11-10)",
+      "url": "https://www.medalofphilanthropy.org/kazuo-inamori/"
+    },
+    {
+      "id": "jt-2011",
+      "kind": "secondary",
+      "title": "Axed pilots, cabin crews sue JAL (20 January 2011; archived copy)",
+      "author": "Mizuho Aoki, The Japan Times",
+      "year": 2011,
+      "url": "https://web.archive.org/web/20211020221302/https://www.japantimes.co.jp/news/2011/01/20/national/axed-pilots-cabin-crews-sue-jal/"
+    },
+    {
+      "id": "jt-2014",
+      "kind": "secondary",
+      "title": "Ex-JAL cabin attendants lose court ruling over dismissal (3 June 2014; archived copy)",
+      "author": "Kyodo, in The Japan Times",
+      "year": 2014,
+      "url": "https://web.archive.org/web/20140702225236/http://www.japantimes.co.jp/news/2014/06/03/national/crime-legal/ex-jal-cabin-attendants-lose-court-ruling-dismissal/"
+    },
+    {
+      "id": "asiatimes-2022",
+      "kind": "secondary",
+      "title": "Kyocera founder Kazuo Inamori dead at 90 (September 2022)",
+      "author": "Scott Foster, Asia Times",
+      "year": 2022,
+      "url": "https://asiatimes.com/2022/09/kyocera-founder-kazuo-inamori-dead-at-90/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "ok",
+      "notes": "A real Japanese engineer and businessman (1932-2022), not a politician, campaigner or founder of a religion (he was ordained in an existing Rinzai Zen temple in 1997); no account of sexual contact with anyone under 16 or of sexual violence was found."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I attacked all five draft values against the Kyocera Philosophy pages, the Science History Institute transcript, the AP, Bloomberg and Asia Times obituaries, the Japan Times court reports and the company history, and checked every locator. Fairness fell: its support was mostly his own rules and the DDI venture, while the Son contract, the implant sold before approval and the export-rule criticism argue against fair dealing; Responsibility fell because it had only two sources and the 16,000 JAL job cuts argue against its claim that he protected jobs. Hard work, Service and Generosity held, with added evidence, and Leadership and Spirituality from the blind pick took the free places with four sources checked each. All four quotes matched the original text; the shadow gained the 1985 export criticism and an exact list of the dismissal criteria.",
+    "checkedOn": "2026-11-10"
+  }
+}
