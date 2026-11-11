@@ -1,0 +1,326 @@
+{
+  "id": "john-muir",
+  "name": "John Muir",
+  "born": 1838,
+  "died": 1914,
+  "category": "explorers",
+  "areaIds": [
+    "lm_fun",
+    "lm_contribution",
+    "lm_mission"
+  ],
+  "tagline": "A farm boy who walked into the wilderness, wrote about it, and fought to keep it wild",
+  "startedFrom": "He was born in 1838 in Dunbar, Scotland, where by the age of eleven his father had made him learn most of the Bible \"by heart and by sore flesh\". That year the family emigrated to a Wisconsin farm, where from eleven to twenty-one he worked as his father's unpaid farm labourer with no formal schooling. At about eighteen he was lowered daily into a well he chipped through rock, and nearly died of gas at eighty feet.",
+  "values": [
+    {
+      "word": "Nature",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He wrote that tired, over-civilized people were finding out \"that going to the mountains is going home; that wildness is a necessity\".",
+          "sourceId": "onp-1901",
+          "locator": "ch. I, \"The Wild Parks and Forest Reservations of the West\", p. 1"
+        },
+        {
+          "kind": "deed",
+          "claim": "In the summer of 1869 he worked as a shepherd in the high Sierra around Tuolumne Meadows and began to climb and study its ranges and glaciers.",
+          "sourceId": "sc-chronology",
+          "locator": "entry 1869"
+        },
+        {
+          "kind": "witness",
+          "claim": "The National Park Service writes that he \"loved all things wild and saw humans as just one small part of nature\".",
+          "sourceId": "nps-who",
+          "locator": "section \"John Muir: A Passion for Nature\""
+        }
+      ]
+    },
+    {
+      "word": "Adventure",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "On 1 September 1867 he set out on foot from Indiana and Kentucky on a walk of about a thousand miles to the Gulf of Mexico, carrying a plant press.",
+          "sourceId": "sc-chronology",
+          "locator": "entry 1867"
+        },
+        {
+          "kind": "words",
+          "claim": "He wrote that his plan was to go south \"by the wildest, leafiest, and least trodden way I could find\".",
+          "sourceId": "tmw-1916",
+          "locator": "ch. I, p. 2"
+        },
+        {
+          "kind": "witness",
+          "claim": "The National Park Service lists his adventures: climbing a 100-foot tree in a thunderstorm, crossing a narrow ice bridge in Alaska, and a night in a blizzard on Mt. Shasta.",
+          "sourceId": "nps-who",
+          "locator": "section \"Life in the Wild\""
+        }
+      ]
+    },
+    {
+      "word": "Curiosity",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "As a farm boy allowed to rise as early as he liked, he got up at one o'clock to read and build inventions, and wrote of \"Five hours to myself!\"",
+          "sourceId": "boyhood-1913",
+          "locator": "ch. VII, pp. 246-248"
+        },
+        {
+          "kind": "deed",
+          "claim": "In September 1860 he left home to show his home-made inventions at the State Fair in Madison, Wisconsin, then enrolled at the University of Wisconsin.",
+          "sourceId": "nps-timeline",
+          "locator": "entries 1860 and 1861-1862"
+        },
+        {
+          "kind": "deed",
+          "claim": "He studied glaciers in Yosemite and Alaska; the National Park Service writes that he \"discovered glaciers in Yosemite\".",
+          "sourceId": "nps-who",
+          "locator": "section \"Life in the Wild\""
+        }
+      ]
+    },
+    {
+      "word": "Wonder",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In his 1869 journal he wrote that no Sierra landscape held anything dead or dull, and that \"everything is perfectly clean and pure and full of divine lessons\".",
+          "sourceId": "mfs-1911",
+          "locator": "ch. VI, entry for July 27, pp. 210-211"
+        },
+        {
+          "kind": "deed",
+          "claim": "On his 1867 walk he camped for days among the oaks of Bonaventure graveyard near Savannah and wrote: \"I gazed awe-stricken as one new-arrived from another world.\"",
+          "sourceId": "tmw-1916",
+          "locator": "ch. IV, \"Camping among the Tombs\", p. 69"
+        },
+        {
+          "kind": "witness",
+          "claim": "The National Park Service writes: \"A leaf, a flower, a stone—the simple beauty of nature filled John Muir with joy.\"",
+          "sourceId": "nps-who",
+          "locator": "section \"John Muir: A Passion for Nature\""
+        }
+      ]
+    },
+    {
+      "word": "Leaving things better",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1890 his two Century Magazine articles argued for a Yosemite national park, and Congress created the park a month later.",
+          "sourceId": "nps-who",
+          "locator": "section \"Sharing a Progressive Vision\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1892 he co-founded the Sierra Club and was its president for the rest of his life.",
+          "sourceId": "sc-chronology",
+          "locator": "entry 1892"
+        },
+        {
+          "kind": "words",
+          "claim": "Fighting the dam that flooded Hetch Hetchy valley, he wrote: \"Dam Hetch Hetchy! As well dam for water-tanks the people's cathedrals and churches\".",
+          "sourceId": "yosemite-1912",
+          "locator": "ch. XV, \"Hetch Hetchy Valley\", p. 262"
+        },
+        {
+          "kind": "witness",
+          "claim": "The National Park Service writes that his advocacy played a critical role in creating Sequoia (1890), Mount Rainier (1899) and Grand Canyon (1908) national parks.",
+          "sourceId": "nps-who",
+          "locator": "section \"Words into Action\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Make real time for what you love, even if it means getting up before everyone else.",
+      "sourceId": "boyhood-1913",
+      "locator": "ch. VII, pp. 246-248 (rising at one o'clock for \"five huge, solid hours\")"
+    },
+    {
+      "text": "When you choose a road, choose the wildest and least trodden one.",
+      "sourceId": "tmw-1916",
+      "locator": "ch. I, p. 2"
+    },
+    {
+      "text": "Nothing stands alone: look for how each thing is tied to everything else.",
+      "sourceId": "mfs-1911",
+      "locator": "ch. VI, entry for July 27, p. 211"
+    },
+    {
+      "text": "Life is too short to waste on work you do not care about: after nearly losing his sight he left the factory to study nature.",
+      "sourceId": "tmw-1916",
+      "locator": "Introduction by W. F. Badè, pp. xv-xvi (\"life was too brief and uncertain, and time too precious, to waste upon belts and saws\")"
+    },
+    {
+      "text": "If you love a place, fight for it in public: write, publish and organise.",
+      "sourceId": "nps-who",
+      "locator": "sections \"Sharing a Progressive Vision\" and \"Words into Action\" (1890 Century articles; Sierra Club)"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "When we try to pick out anything by itself, we find it hitched to everything else in the universe.",
+      "sourceId": "mfs-1911",
+      "locator": "ch. VI, entry for July 27, p. 211"
+    },
+    {
+      "text": "Thousands of tired, nerve-shaken, over-civilized people are beginning to find out that going to the mountains is going home; that wildness is a necessity; and that mountain parks and reservations are useful not only as fountains of timber and irrigating rivers, but as fountains of life.",
+      "sourceId": "onp-1901",
+      "locator": "ch. I, \"The Wild Parks and Forest Reservations of the West\", p. 1"
+    },
+    {
+      "text": "I bade adieu to mechanical inventions, determined to devote the rest of my life to the study of the inventions of God.",
+      "sourceId": "tmw-1916",
+      "locator": "Introduction by W. F. Badè, p. xvi (Muir's autobiographical notes, quoted)"
+    },
+    {
+      "text": "Dam Hetch Hetchy! As well dam for water-tanks the people's cathedrals and churches, for no holier temple has ever been consecrated by the heart of man.",
+      "sourceId": "yosemite-1912",
+      "locator": "ch. XV, \"Hetch Hetchy Valley\", p. 262"
+    }
+  ],
+  "definingMoment": {
+    "text": "In March 1867, working in a carriage-parts factory in Indianapolis, he was blinded by an accident and spent weeks in a dark room before his sight came back. He then gave up factory work: \"I bade adieu to mechanical inventions, determined to devote the rest of my life to the study of the inventions of God.\" On 1 September 1867 he set out on foot, with a plant press, on a walk of about a thousand miles to the Gulf of Mexico. From there he went to Cuba and in March 1868 to California, where he first saw Yosemite.",
+    "sourceIds": [
+      "sc-chronology",
+      "tmw-1916",
+      "nps-timeline"
+    ]
+  },
+  "shadow": {
+    "text": "In the journal of his 1867 walk, published in 1916, he wrote that Black cotton pickers in Georgia were \"easy-going and merry, making a great deal of noise and doing little work\", and that one white man \"would easily pick as much cotton as half a dozen Sambos and Sallies.\" In My First Summer in the Sierra (1911), drawn from his 1869 journal, he called an old Indian woman one of \"such debased fellow beings\", described a band of Mono Indians as \"queer, hairy, muffled creatures\" with dirt on their faces and wrote of his \"desperate repulsion\", and wrote of the Indians near Mono Lake: \"The worst thing about them is their uncleanliness.\" In July 2020 the Sierra Club's executive director Michael Brune wrote that Muir \"made derogatory comments about Black people and Indigenous peoples that drew on deeply harmful racist stereotypes, though his views evolved later in his life.\" His biographer Donald Worster answered that he \"could find no evidence that Muir was an out-and-out 'racist'\", and that the Mono passage ends with \"a call for interracial brotherhood\". Worster also wrote that Muir's \"greatest moral failings\", in his view, came late in life, when under the influence of rich friends such as the railroad magnate E. H. Harriman he played down his more radical ideas about justice.",
+    "sourceIds": [
+      "tmw-1916",
+      "mfs-1911",
+      "brune-2020",
+      "worster-2020"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What do you love doing, and did you give it real time this week or only the minutes left over?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "My First Summer in the Sierra",
+      "year": 1911
+    },
+    {
+      "title": "The Story of My Boyhood and Youth",
+      "year": 1913
+    },
+    {
+      "title": "A Thousand-Mile Walk to the Gulf",
+      "year": 1916
+    }
+  ],
+  "sources": [
+    {
+      "id": "mfs-1911",
+      "kind": "primary",
+      "title": "My First Summer in the Sierra (1st edition; from his 1869 journal)",
+      "author": "John Muir",
+      "year": 1911,
+      "publisher": "Houghton Mifflin",
+      "url": "https://archive.org/details/cu31924028882672"
+    },
+    {
+      "id": "boyhood-1913",
+      "kind": "primary",
+      "title": "The Story of My Boyhood and Youth (1st edition)",
+      "author": "John Muir",
+      "year": 1913,
+      "publisher": "Houghton Mifflin",
+      "url": "https://archive.org/details/cu31924024544136"
+    },
+    {
+      "id": "tmw-1916",
+      "kind": "primary",
+      "title": "A Thousand-Mile Walk to the Gulf (from his 1867 journal; edited, with an introduction, by William Frederic Badè)",
+      "author": "John Muir",
+      "year": 1916,
+      "publisher": "Houghton Mifflin",
+      "url": "https://archive.org/details/thousandmilewal00muir"
+    },
+    {
+      "id": "onp-1901",
+      "kind": "primary",
+      "title": "Our National Parks (1st edition)",
+      "author": "John Muir",
+      "year": 1901,
+      "publisher": "Houghton, Mifflin and Company",
+      "url": "https://archive.org/details/nationalparksour00muirrich"
+    },
+    {
+      "id": "yosemite-1912",
+      "kind": "primary",
+      "title": "The Yosemite (1st edition)",
+      "author": "John Muir",
+      "year": 1912,
+      "publisher": "The Century Co.",
+      "url": "https://archive.org/details/yosemite00unkngoog"
+    },
+    {
+      "id": "nps-who",
+      "kind": "secondary",
+      "title": "Who Was John Muir?",
+      "author": "National Park Service, John Muir National Historic Site",
+      "year": 2025,
+      "url": "https://www.nps.gov/jomu/learn/historyculture/who-was-john-muir.htm"
+    },
+    {
+      "id": "nps-timeline",
+      "kind": "secondary",
+      "title": "John Muir Timeline",
+      "author": "National Park Service, John Muir National Historic Site",
+      "year": 2024,
+      "url": "https://www.nps.gov/jomu/learn/historyculture/john-muir-timeline.htm"
+    },
+    {
+      "id": "sc-chronology",
+      "kind": "secondary",
+      "title": "Chronology (Timeline) of the Life and Legacy of John Muir",
+      "author": "Sierra Club John Muir Exhibit (Harold Wood, ed.)",
+      "year": "n.d. (first written 1997; read 2026-11-10)",
+      "url": "https://vault.sierraclub.org/john_muir_exhibit/life/chronology.aspx"
+    },
+    {
+      "id": "brune-2020",
+      "kind": "secondary",
+      "title": "Pulling Down Our Monuments",
+      "author": "Michael Brune, Sierra Club",
+      "year": 2020,
+      "url": "https://www.sierraclub.org/michael-brune/2020/07/john-muir-early-history-sierra-club"
+    },
+    {
+      "id": "npr-2020",
+      "kind": "secondary",
+      "title": "Sierra Club Denounces Founder John Muir For Racism",
+      "author": "Kirk Siegler, NPR",
+      "year": 2020,
+      "url": "https://www.npr.org/2020/07/22/894343467/sierra-club-denounces-founder-john-muir-for-racism"
+    },
+    {
+      "id": "worster-2020",
+      "kind": "secondary",
+      "title": "John Muir biographer: He was no white supremacist",
+      "author": "Donald E. Worster, California Sun",
+      "year": 2020,
+      "url": "https://www.californiasun.co/stories/john-muir-biographer-he-was-no-white-supremacist/"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real Scottish-American naturalist and writer (1838-1914), not fictional, never held or ran for office and founded no religion, with no account of sexual contact with a minor or of sexual violence found; his documented dark side is his published remarks about Black people (1867 journal, printed 1916) and Native Americans (1869 journal, printed 1911), which the Sierra Club's director called racist in 2020 and his biographer Donald Worster disputes as a charge of racism."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked each value, quote and sentence against his own first editions, the National Park Service, the Sierra Club chronology and the 2020 Brune and Worster pieces. Nothing fell: Wonder, the weakest, gained a third source (his Bonaventure entry), and the NPS claim that he was first to suggest ice shaped Yosemite was cut to its plain \"discovered glaciers in Yosemite\". All four quotes match the first editions word for word; the Bible line was moved to Scotland where it happened, and Worster's charge that he played down his ideas of justice around rich friends was added to the shadow. The blind pick's Freedom and Contribution were not added: Contribution repeats Leaving things better, and his eight years as a fruit rancher in the 1880s argue against Freedom.",
+    "checkedOn": "2026-11-10"
+  }
+}
