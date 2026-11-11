@@ -1,0 +1,305 @@
+{
+  "id": "james-clear",
+  "name": "James Clear",
+  "born": null,
+  "died": null,
+  "category": "teachers",
+  "areaIds": [
+    "lm_mindset",
+    "lm_mission"
+  ],
+  "tagline": "Rebuilt his life with small daily habits after a bat broke his face, then taught them.",
+  "startedFrom": "He was born and raised in Hamilton, Ohio; before he was born, his father had played minor-league baseball for the St. Louis Cardinals. In his second year of high school a classmate's bat slipped and hit him between the eyes; he had seizures, was put into a medically induced coma and could not drive for nine months. After an MBA at Ohio State he started a business in 2010 and spent two years on ideas that did not work. It took him at least 18 months to earn enough to pay his bills, and for part of that time he lived with his parents.",
+  "values": [
+    {
+      "word": "Consistency",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes that he works very hard to set clear expectations and deliver on them over and over again.",
+          "sourceId": "integrity-2014",
+          "locator": "section '2. How am I living and working with integrity now?', 'Setting clear expectations and being dependable'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He promised newsletter readers a new article every Monday and Thursday and, by March 2014, had missed that schedule once in 16 months.",
+          "sourceId": "integrity-2014",
+          "locator": "section 2, 'Setting clear expectations and being dependable'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He kept the twice-a-week schedule for nearly three years, more than 260 articles, before moving to one article a week in September 2015.",
+          "sourceId": "once-per-week-2015",
+          "locator": "opening paragraphs and section 'Why Do We Have Habits?'"
+        },
+        {
+          "kind": "words",
+          "claim": "He told Denison's student newspaper in 2018 that he had read a lot to write weekly articles for the last five or six years.",
+          "sourceId": "denisonian-2018",
+          "locator": "paragraph 9"
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After the bat injury and coma he was the only junior cut from his high-school baseball team, and rebuilt with small routines: a fixed bedtime, an hour of class preparation a day, and strength training.",
+          "sourceId": "fool-2020",
+          "locator": "transcript, his answer on his origin story (after 'I was hit in the face with a baseball bat')"
+        },
+        {
+          "kind": "deed",
+          "claim": "He went on to pitch for Denison University from 2005 to 2008, as a two-time team captain and an All-North Coast Athletic Conference selection.",
+          "sourceId": "hof-2024",
+          "locator": "biography, paragraph 1"
+        },
+        {
+          "kind": "words",
+          "claim": "He lists Resiliency (grit, toughness, perseverance) among the core values that drive his life.",
+          "sourceId": "integrity-2014",
+          "locator": "section '1. What are the core values that drive my life?'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Slate describes him as a former high-school and college athlete whose book opens with the playing-field accident that sidelined him and the regimen he used to recover.",
+          "sourceId": "slate-2024",
+          "locator": "paragraph beginning 'Clear—a former high school and college athlete'"
+        }
+      ]
+    },
+    {
+      "word": "Contribution",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He names Contribution as a core value and asks himself whether he is contributing to the world or just consuming it.",
+          "sourceId": "integrity-2016",
+          "locator": "section 1, 'IV. Contribution'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He gives 5% of after-tax profit to charity, mainly to the Against Malaria Foundation, and had provided nets for more than 250,000 people by 2024.",
+          "sourceId": "hof-2024",
+          "locator": "biography, final paragraph"
+        },
+        {
+          "kind": "deed",
+          "claim": "He began the 5% giving in 2017 and puts the total at nets for over 319,000 people.",
+          "sourceId": "about",
+          "locator": "section 'Other Interests', 'Charitable giving'"
+        },
+        {
+          "kind": "deed",
+          "claim": "From November 2012 to March 2014 he wrote 137 articles and answered more than 10,000 reader emails, all for free.",
+          "sourceId": "integrity-2014",
+          "locator": "section 2, 'Choosing service over profit'"
+        }
+      ]
+    },
+    {
+      "word": "Achievement",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "At Denison he ranks third in appearances, fifth in wins and fourth in innings pitched in program history, was named to the 2008 Academic All-America second team and was one of seven recipients of the President's Medal, the college's highest award for a graduating senior.",
+          "sourceId": "hof-2024",
+          "locator": "biography, paragraphs 1-2"
+        },
+        {
+          "kind": "witness",
+          "claim": "Slate reported in December 2024 that Atomic Habits had been on the New York Times bestseller list every week for the past five years.",
+          "sourceId": "slate-2024",
+          "locator": "paragraph beginning 'Task fragmentation and routine'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Fast Company reported in February 2024 that the book had sold 20 million copies and was then the top-selling book on Amazon across all categories.",
+          "sourceId": "fastco-2024",
+          "locator": "paragraph beginning 'Clear knows a thing or two about building good habits'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Build habits around the person you want to become: each thing you do is a vote for that identity.",
+      "sourceId": "newsletter-2020",
+      "locator": "section '3 Ideas From Me', idea on identity (from Atomic Habits ch. 2)"
+    },
+    {
+      "text": "Tell people exactly what to expect from you, then deliver it again and again.",
+      "sourceId": "integrity-2014",
+      "locator": "section 2, 'Setting clear expectations and being dependable'"
+    },
+    {
+      "text": "When you get something wrong, make it right, even when it costs you money.",
+      "sourceId": "integrity-2016",
+      "locator": "section 2 (refund of 31 July 2015)"
+    },
+    {
+      "text": "Put the mission first and the business second: serve before you sell.",
+      "sourceId": "integrity-2014",
+      "locator": "section 2, 'Choosing service over profit'"
+    },
+    {
+      "text": "Use goals to set a direction, but rely on a daily system to make progress.",
+      "sourceId": "goals-systems-2013",
+      "locator": "introduction and section 'Fall In Love With Systems'"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Every action you take is a vote for the type of person you wish to become.",
+      "sourceId": "newsletter-2020",
+      "locator": "section '3 Ideas From Me' (quoting Atomic Habits, ch. 2)"
+    },
+    {
+      "text": "I won't be perfect in this journey, but when I do screw up I will make things right.",
+      "sourceId": "integrity-2016",
+      "locator": "section 2, line from his apology letter of 31 July 2015"
+    },
+    {
+      "text": "I believe that your impact can only be as great as your willingness to serve.",
+      "sourceId": "integrity-2014",
+      "locator": "section 2, 'Choosing service over profit'"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 31 July 2015, by his own account, he wrote to the 40 people who had bought a high-priced course from him that, in his judgement, had not delivered the value it promised. He took the course down, refunded all of the money and sent each buyer a personal apology. He wrote that he had put off sending the apologies for a year. He reported it in his 2016 Integrity Report, the yearly review in which he checks his work against his stated values.",
+    "sourceIds": [
+      "integrity-2016"
+    ]
+  },
+  "shadow": {
+    "text": "The first chapter of Atomic Habits is built on the winning run of British Cycling. On publication day, 16 October 2018, he posted that he had learned of the team's doping and medical-exemption cases too late to change the story, and wrote that it was hard for him to believe the team was entirely clean. In December 2024 Slate's Laura Miller called his advice solid but said the book can become 'strangely dispiriting', and that his career advising others rests on relatively little work experience outside self-help. By his own 2016 account, he had sold a high-priced course that he judged failed to deliver what it promised, and he put off apologising to its buyers for a year before refunding them.",
+    "sourceIds": [
+      "cycling-2018",
+      "slate-2024",
+      "integrity-2016"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you get wrong this week that you have not yet made right?",
+    "principleIndex": 2
+  },
+  "readings": [
+    {
+      "title": "Atomic Habits",
+      "year": 2018
+    }
+  ],
+  "sources": [
+    {
+      "id": "fool-2020",
+      "kind": "primary",
+      "title": "Becoming Your Best Self (Rule Breaker Investing podcast, recorded 31 March 2020, published 9 April 2020; transcript)",
+      "author": "James Clear, interviewed by David Gardner",
+      "year": 2020,
+      "publisher": "The Motley Fool",
+      "url": "https://www.fool.com/investing/2020/04/09/becoming-your-best-self.aspx"
+    },
+    {
+      "id": "integrity-2014",
+      "kind": "primary",
+      "title": "My 2014 Integrity Report (25 March 2014)",
+      "author": "James Clear",
+      "year": 2014,
+      "url": "https://jamesclear.com/2014-integrity-report"
+    },
+    {
+      "id": "integrity-2016",
+      "kind": "primary",
+      "title": "My 2016 Integrity Report (7 June 2016)",
+      "author": "James Clear",
+      "year": 2016,
+      "url": "https://jamesclear.com/2016-integrity-report"
+    },
+    {
+      "id": "once-per-week-2015",
+      "kind": "primary",
+      "title": "I'm No Longer Writing Twice Per Week. Here's Why. (14 September 2015, date from his Goodreads blog mirror)",
+      "author": "James Clear",
+      "year": 2015,
+      "url": "https://jamesclear.com/once-per-week"
+    },
+    {
+      "id": "goals-systems-2013",
+      "kind": "primary",
+      "title": "Forget About Setting Goals. Focus on This Instead. (28 October 2013; later an excerpt of Atomic Habits ch. 1)",
+      "author": "James Clear",
+      "year": 2013,
+      "url": "https://jamesclear.com/goals-systems"
+    },
+    {
+      "id": "cycling-2018",
+      "kind": "primary",
+      "title": "Atomic Habits: British Cycling Update (16 October 2018)",
+      "author": "James Clear",
+      "year": 2018,
+      "url": "https://jamesclear.com/atomic-habits/cycling"
+    },
+    {
+      "id": "newsletter-2020",
+      "kind": "primary",
+      "title": "3-2-1: On taking action, changing incentives, and belonging (newsletter, 4 June 2020)",
+      "author": "James Clear",
+      "year": 2020,
+      "url": "https://jamesclear.com/3-2-1/june-4-2020"
+    },
+    {
+      "id": "about",
+      "kind": "primary",
+      "title": "About James Clear (accessed 10 November 2026)",
+      "author": "James Clear",
+      "year": 2026,
+      "url": "https://jamesclear.com/about"
+    },
+    {
+      "id": "hof-2024",
+      "kind": "secondary",
+      "title": "Academic All-America Hall of Fame: James Clear (Class of 2024)",
+      "author": "College Sports Communicators",
+      "year": 2024,
+      "url": "https://academicallamerica.com/hof.aspx?hof=171"
+    },
+    {
+      "id": "denisonian-2018",
+      "kind": "secondary",
+      "title": "James Clear '08 creates his own future (18 November 2018)",
+      "author": "Chloe Sferra",
+      "year": 2018,
+      "publisher": "The Denisonian (Denison University student newspaper)",
+      "url": "https://denisonian.com/2018/11/anl/james-clear-08-creates-his-own-future/"
+    },
+    {
+      "id": "slate-2024",
+      "kind": "secondary",
+      "title": "Atomic Habits is the self-help hit of the decade. Does it work? (30 December 2024)",
+      "author": "Laura Miller",
+      "year": 2024,
+      "publisher": "Slate",
+      "url": "https://slate.com/culture/2024/12/atomic-habits-is-the-self-help-hit-of-the-decade-does-it-work.html"
+    },
+    {
+      "id": "fastco-2024",
+      "kind": "secondary",
+      "title": "Sticking with a habit is hard. James Clear's new Atoms app is here to help (14 February 2024)",
+      "author": "Elissaveta M. Brandon",
+      "year": 2024,
+      "publisher": "Fast Company",
+      "url": "https://www.fastcompany.com/91029209/sticking-with-a-habit-is-hard-james-clears-new-atoms-app-is-here-to-help"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "A real, living American writer (Atomic Habits, JamesClear.com), not a politician, campaigner or religious founder, with no credible account of sexual contact with a minor or of sexual violence found; he is in, with a small documented shadow about the evidence behind his best-known book."
+    },
+    "blindAgreement": 0.5,
+    "devilsAdvocate": "I attacked each value against his own Integrity Reports, the Motley Fool transcript, the Hall of Fame profile, the Denisonian, Slate and Fast Company. Integrity fell because every piece of its evidence is his own account on his own site, with no independent witness; Growth fell because its deeds (honours, a reading backlog) show achievement and reading rather than growth. Consistency, Resilience and Contribution held, and the blind pick's Achievement came in on the Hall of Fame record, Slate and Fast Company. The start-from line no longer places his father's baseball career in Hamilton, and the course story now says he put off the apologies for a year.",
+    "checkedOn": "2026-11-10"
+  }
+}
