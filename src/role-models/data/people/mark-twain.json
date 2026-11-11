@@ -1,0 +1,335 @@
+{
+  "id": "mark-twain",
+  "name": "Mark Twain",
+  "born": 1835,
+  "died": 1910,
+  "category": "artists",
+  "areaIds": [
+    "lm_fun",
+    "lm_mission",
+    "lm_money"
+  ],
+  "tagline": "A river pilot turned humorist who paid back every creditor in full.",
+  "startedFrom": "He was born Samuel Clemens in Florida, Missouri, in 1835, the sixth of seven children, and grew up in the river town of Hannibal in a slave state; his father owned one enslaved person. His father died in 1847, when Sam was eleven, and soon after he left school to work as a printer's apprentice, setting type for a local newspaper.",
+  "values": [
+    {
+      "word": "Humour",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "In 1866 the Sacramento Union sent him to report from the Sandwich Islands (Hawaii); the reports were so popular that on his return he made his first lecture tour, which established him as a stage performer.",
+          "sourceId": "mth-biography",
+          "locator": "section 'Twain's Young Adult Life'"
+        },
+        {
+          "kind": "deed",
+          "claim": "His tongue-in-cheek travel letters from the 1867 steamship tour of Europe and the Holy Land became his first book, The Innocents Abroad (1869).",
+          "sourceId": "mth-biography",
+          "locator": "section 'Twain's Young Adult Life'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Paine quotes W. D. Howells's 1882 Century Magazine appreciation: 'Mark Twain transcends all other American humorists in the universal qualities.'",
+          "sourceId": "paine-1912",
+          "locator": "ch. CXXXIX, 'Financial and Literary'"
+        }
+      ]
+    },
+    {
+      "word": "Responsibility",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "In a statement printed in the San Francisco Examiner on 17 August 1895 he said the law would let him start free but 'I intend the lectures as well as the property for the creditors.'",
+          "sourceId": "uva-examiner-1895",
+          "locator": "'Mark Twain to Pay All', statement prepared with his nephew Samuel E. Moffett"
+        },
+        {
+          "kind": "words",
+          "claim": "Leaving on his 1895 world lecture tour to pay the debts of his failed publishing firm, he told the press that the law would let him start free but 'honor is a harder master than the law. It cannot compromise for less than 100 cents on the dollar'.",
+          "sourceId": "paine-1912",
+          "locator": "ch. CXCI, parting statement to the press, August 1895"
+        },
+        {
+          "kind": "deed",
+          "claim": "The creditors had agreed to take fifty cents on the dollar; by the end of January 1898 he had earned enough to make the final payment and pay all 96 creditors in full.",
+          "sourceId": "paine-1912",
+          "locator": "ch. CLXXXVIII 'Failure'; ch. CC 'Mark Twain Pays His Debts'; ch. CCXII (96 creditors)"
+        },
+        {
+          "kind": "deed",
+          "claim": "To economize and pay back his debts the family moved to Europe in 1891, and after his publishing company failed in 1894 he set out on a worldwide lecture tour to earn the money.",
+          "sourceId": "mth-biography",
+          "locator": "section 'Twain's Financial Ruin and Subsequent Travels'"
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After meeting him at Yale in autumn 1885, he paid the expenses of Warner McGuinn, one of the first Black law students there, for the rest of his studies; McGuinn became a Baltimore lawyer and a mentor to Thurgood Marshall.",
+          "sourceId": "fishkin-2025",
+          "locator": "section on Warner McGuinn and the Kent Club"
+        },
+        {
+          "kind": "deed",
+          "claim": "From 1901 until his death he served as a vice president of the Anti-Imperialist League.",
+          "sourceId": "mth-biography",
+          "locator": "section 'Twain's Financial Ruin and Subsequent Travels'"
+        },
+        {
+          "kind": "words",
+          "claim": "In 'To the Person Sitting in Darkness' (February 1901) he wrote that in the Philippines 'we have crushed a deceived and confiding people; we have turned against the weak and the friendless who trusted us'.",
+          "sourceId": "darkness-1901",
+          "locator": "the imagined explanation to the Person Sitting in Darkness, near the end"
+        }
+      ]
+    },
+    {
+      "word": "Travel",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He crossed the frontier by stagecoach to Nevada in 1861, reported from Hawaii in 1866, sailed to Europe and the Holy Land in 1867, and from 1891 to 1900 travelled with his family throughout the world.",
+          "sourceId": "mth-biography",
+          "locator": "sections 'Twain's Young Adult Life' and 'Twain's Financial Ruin and Subsequent Travels'"
+        },
+        {
+          "kind": "words",
+          "claim": "He closed his first book: 'Travel is fatal to prejudice, bigotry and narrow-mindedness, and many of our people need it sorely on these accounts.'",
+          "sourceId": "innocents-1869",
+          "locator": "Conclusion"
+        }
+      ]
+    },
+    {
+      "word": "Mastery",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "From April 1857 he learned the river as a cub under the pilot Horace Bixby on the Paul Jones.",
+          "sourceId": "paine-1912",
+          "locator": "ch. XXII 'The Old Call of the River'"
+        },
+        {
+          "kind": "deed",
+          "claim": "He got his pilot's licence on 9 April 1859, two years after he started, and worked the river between St. Louis and New Orleans, as cub and then licensed pilot, until May 1861.",
+          "sourceId": "mtp-steamboat-calendar",
+          "locator": "introduction and note on the license date"
+        },
+        {
+          "kind": "words",
+          "claim": "He agreed to pay Bixby five hundred dollars out of his first wages to be taught 'twelve or thirteen hundred miles' of the river, and later wrote that he had 'mastered the language of this water' and knew its every feature 'as familiarly as I knew the letters of the alphabet'.",
+          "sourceId": "lotm-1883",
+          "locator": "ch. 6 and ch. 9"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Pay what you owe in full, even when the law would let you off with less.",
+      "sourceId": "paine-1912",
+      "locator": "ch. CXCI, parting statement to the press, August 1895"
+    },
+    {
+      "text": "Go and see other places; it breaks the prejudices you grew up with.",
+      "sourceId": "innocents-1869",
+      "locator": "Conclusion"
+    },
+    {
+      "text": "Learn a hard trade detail by detail until you know it by heart.",
+      "sourceId": "lotm-1883",
+      "locator": "ch. 6 and ch. 9"
+    },
+    {
+      "text": "Say it out loud when your own country does wrong, even if some call you a traitor.",
+      "sourceId": "darkness-1901",
+      "locator": "whole essay; reprinted by the Anti-Imperialist League of New York"
+    },
+    {
+      "text": "When you are not sure what to say, tell the truth.",
+      "sourceId": "equator-1897",
+      "locator": "ch. II, motto from Pudd'nhead Wilson's New Calendar"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Travel is fatal to prejudice, bigotry and narrow-mindedness, and many of our people need it sorely on these accounts.",
+      "sourceId": "innocents-1869",
+      "locator": "Conclusion"
+    },
+    {
+      "text": "But I am not a business man, and honor is a harder master than the law. It cannot compromise for less than 100 cents on the dollar and its debts never outlaw.",
+      "sourceId": "paine-1912",
+      "locator": "ch. CXCI, his parting statement to the press before sailing on the world lecture tour, August 1895"
+    },
+    {
+      "text": "Everything human is pathetic. The secret source of Humor itself is not joy but sorrow. There is no humor in heaven.",
+      "sourceId": "equator-1897",
+      "locator": "ch. X, motto from Pudd'nhead Wilson's New Calendar"
+    },
+    {
+      "text": "When in doubt, tell the truth.",
+      "sourceId": "equator-1897",
+      "locator": "ch. II, motto from Pudd'nhead Wilson's New Calendar"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 18 April 1894 his publishing firm, Charles L. Webster & Co., failed, leaving debts to 96 creditors, who agreed to take fifty cents on the dollar. He said he would pay the rest. In August 1895, nearly sixty and in poor health, he left on a lecture tour around the world, telling the press that 'honor is a harder master than the law.' By the end of January 1898 he had paid every creditor in full.",
+    "sourceIds": [
+      "paine-1912",
+      "mth-biography"
+    ]
+  },
+  "shadow": {
+    "text": "In 1861 he joined the Marion Rangers, a volunteer Confederate unit, and quit after two weeks. In Roughing It (1872) he called the Goshute people 'the wretchedest type of mankind I have ever seen' and 'inferior to all races of savages on our continent'. From 1905, in his seventies, he gathered a circle of girls aged about ten to sixteen, his 'angel-fish', wrote them letters full of 'blots' (kisses) and invited them to his house; biographer Hamlin Hill (1973) suggested 'improper comments or even actions' toward a fifteen-year-old in 1910 on evidence he called 'scanty', while John Cooley, who collected all the letters, found no evidence of impropriety. In 1909 he dismissed his secretary Isabel Lyon and his manager Ralph Ashcroft for what he saw as dishonesty and wrote a long private attack on them; Hill called it 'a geyser of bias, vindictiveness, and innuendo', while Karen Lystra (2004) set out evidence from his financial records that supports the charge of dishonesty.",
+    "sourceIds": [
+      "mth-biography",
+      "roughing-it-1872",
+      "simon-2017",
+      "trombley-2017",
+      "mtp-ashcroft-lyon"
+    ]
+  },
+  "councilQuestion": {
+    "text": "What did you owe someone this week, in money or in word, that you paid only in part because nobody could make you pay it all?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Adventures of Huckleberry Finn",
+      "year": 1884
+    },
+    {
+      "title": "Life on the Mississippi",
+      "year": 1883
+    },
+    {
+      "title": "The Innocents Abroad",
+      "year": 1869
+    }
+  ],
+  "sources": [
+    {
+      "id": "innocents-1869",
+      "kind": "primary",
+      "title": "The Innocents Abroad (Project Gutenberg #3176, from the 1869 first edition)",
+      "author": "Mark Twain",
+      "year": 1869,
+      "publisher": "American Publishing Company",
+      "url": "https://www.gutenberg.org/ebooks/3176"
+    },
+    {
+      "id": "lotm-1883",
+      "kind": "primary",
+      "title": "Life on the Mississippi (Project Gutenberg #245)",
+      "author": "Mark Twain",
+      "year": 1883,
+      "url": "https://www.gutenberg.org/ebooks/245"
+    },
+    {
+      "id": "roughing-it-1872",
+      "kind": "primary",
+      "title": "Roughing It (Project Gutenberg #3177)",
+      "author": "Mark Twain",
+      "year": 1872,
+      "url": "https://www.gutenberg.org/ebooks/3177"
+    },
+    {
+      "id": "equator-1897",
+      "kind": "primary",
+      "title": "Following the Equator: A Journey Around the World (Project Gutenberg #2895)",
+      "author": "Mark Twain",
+      "year": 1897,
+      "url": "https://www.gutenberg.org/ebooks/2895"
+    },
+    {
+      "id": "darkness-1901",
+      "kind": "primary",
+      "title": "To the Person Sitting in Darkness (North American Review, February 1901; Anti-Imperialist League of New York reprint, Project Gutenberg #62636)",
+      "author": "Mark Twain",
+      "year": 1901,
+      "url": "https://www.gutenberg.org/ebooks/62636"
+    },
+    {
+      "id": "uva-examiner-1895",
+      "kind": "primary",
+      "title": "'Mark Twain to Pay All' (San Francisco Examiner, 17 August 1895), in Mark Twain in His Times, University of Virginia Library",
+      "author": "Mark Twain (with Samuel E. Moffett)",
+      "year": 1895,
+      "url": "https://twain.lib.virginia.edu/onstage/moffett.html"
+    },
+    {
+      "id": "paine-1912",
+      "kind": "secondary",
+      "title": "Mark Twain: A Biography (3 vols; Project Gutenberg #2988)",
+      "author": "Albert Bigelow Paine",
+      "year": 1912,
+      "publisher": "Harper & Brothers",
+      "url": "https://www.gutenberg.org/ebooks/2988"
+    },
+    {
+      "id": "mth-biography",
+      "kind": "secondary",
+      "title": "Biography (Mark Twain)",
+      "author": "The Mark Twain House & Museum, Hartford",
+      "year": "n.d.",
+      "url": "https://marktwainhouse.org/about/mark-twain/biography/"
+    },
+    {
+      "id": "fishkin-2025",
+      "kind": "secondary",
+      "title": "Mark Twain's adventures at Yale (Yale Alumni Magazine, Nov/Dec 2025)",
+      "author": "Shelley Fisher Fishkin",
+      "year": 2025,
+      "url": "https://yalealumnimagazine.org/articles/6142-mark-twain-s-adventures-at-yale"
+    },
+    {
+      "id": "simon-2017",
+      "kind": "secondary",
+      "title": "Mark Twain's Disturbing Passion for Collecting Young Girls (The Paris Review; excerpted from Lost Girls: The Invention of the Flapper, Reaktion Books)",
+      "author": "Linda Simon",
+      "year": 2017,
+      "url": "https://www.theparisreview.org/blog/2017/11/28/mark-twains-disturbing-passion-for-collecting-young-girls/"
+    },
+    {
+      "id": "trombley-2017",
+      "kind": "secondary",
+      "title": "A Disturbing Passion? : Mark Twain & The Angelfish (Center for Mark Twain Studies, Elmira College)",
+      "author": "Laura Skandera Trombley",
+      "year": 2017,
+      "url": "https://marktwainstudies.com/the-study/a-disturbing-passion-mark-twain-the-angelfish/"
+    },
+    {
+      "id": "mtp-ashcroft-lyon",
+      "kind": "secondary",
+      "title": "Editorial Preface (The Ashcroft-Lyon Manuscript), Autobiography of Mark Twain, Mark Twain Project Online",
+      "author": "Mark Twain Project, University of California",
+      "year": "n.d.",
+      "publisher": "University of California Press",
+      "url": "https://marktwainproject.org/writings/autobiography3/autobio_supplements/ashcroft-lyon_ms/autobio3_ashcroft-lyon_intro/"
+    },
+    {
+      "id": "mtp-steamboat-calendar",
+      "kind": "secondary",
+      "title": "Steamboat Calendar: Clemens's Piloting Assignments, 1857-1861 (The Letters of Mark Twain, Mark Twain Project Online)",
+      "author": "Mark Twain Project, University of California",
+      "year": "n.d.",
+      "publisher": "University of California Press",
+      "url": "https://marktwainproject.org/letters/supplementary/mtdp00100/"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "Real writer who died in 1910, not a politician or religious founder; in his seventies he befriended girls of about ten to sixteen (his 'angel-fish'), and one biographer suggested improper conduct toward a fifteen-year-old on what he called scanty evidence, so it goes to the owner; the rest of his dark side is shadow. Owner case: 1905-1910 'angel-fish' circle, letters with 'blots' (kisses), visits ended by Clara in 1908; Hill (1973) suggested 'improper comments or even actions' toward Helen Allen, 15, in April 1910 on 'scanty evidence'; Cooley found no impropriety; no source reports sexual contact (simon-2017; trombley-2017)."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I checked every claim against the Gutenberg texts of Paine, Life on the Mississippi, Following the Equator, Roughing It and Innocents Abroad, the Mark Twain House and Mark Twain Project pages, and the 1895 Examiner statement. Integrity fell to Responsibility: its evidence is the debt repayment alone, while his dealings with Lyon, Ashcroft and his partner Webster are argued against strongly, so the blind pick's narrower word took its place. Humour, Justice and Travel held on both picks, and Mastery held after its licence date was corrected from Paine's 9 September 1858 to the Mark Twain Project's 9 April 1859. All four quotes match the original texts; the status is flagged because of the angel-fish case, which goes to the owner.",
+    "checkedOn": "2026-11-10"
+  }
+}
