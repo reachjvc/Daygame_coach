@@ -1,0 +1,319 @@
+{
+  "id": "maya-angelou",
+  "name": "Maya Angelou",
+  "pronoun": "she",
+  "born": 1928,
+  "died": 2014,
+  "category": "artists",
+  "areaIds": [
+    "lm_mission",
+    "lm_mindset"
+  ],
+  "tagline": "Writer who stopped speaking for years as a girl, then made her voice her life's work.",
+  "startedFrom": "She was born Marguerite Johnson in St. Louis in 1928. When her parents' marriage ended, she and her brother were sent, aged 3 and 4, to their father's mother, who owned a general store in Stamps, Arkansas, in the Jim Crow South. At 7 or 8 she was raped by her mother's boyfriend; after the man was killed she stopped speaking for about five years, and at 16 she was an unmarried mother.",
+  "values": [
+    {
+      "word": "Courage",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "She said she was convinced that courage is the most important of all the virtues, because without it you cannot practise any other virtue consistently.",
+          "sourceId": "aoa",
+          "locator": "answer beginning \"I suppose courage would be the first of his many wondrous and wonderful qualities\""
+        },
+        {
+          "kind": "deed",
+          "claim": "In I Know Why the Caged Bird Sings (1969) she wrote openly about being raped as a child; many schools tried to ban the book for it.",
+          "sourceId": "nwhm",
+          "locator": "paragraph beginning \"In 1969, Angelou published I Know Why the Caged Bird Sings\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The writer Kim McLarin says she spoke courageously and openly about rape and abuse at a time when these were not often spoken aloud.",
+          "sourceId": "wgbh-2014",
+          "locator": "paragraph beginning \"She spoke so courageously and so forthrightly\""
+        }
+      ]
+    },
+    {
+      "word": "Resilience",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After the rape and the killing of the man she stopped talking for five years, read widely in that time, spoke again at twelve and a half, and finished top of her eighth-grade class.",
+          "sourceId": "pf",
+          "locator": "paragraph beginning \"Angelou's most famous work, I Know Why the Caged Bird Sings (1969)\""
+        },
+        {
+          "kind": "words",
+          "claim": "Her poem Still I Rise (1978) says that whatever others do to her, she will rise.",
+          "sourceId": "still-i-rise",
+          "locator": "first stanza"
+        },
+        {
+          "kind": "witness",
+          "claim": "Kim McLarin says she showed that a person could not only overcome trauma but transcend it and go on to an incredible life.",
+          "sourceId": "wgbh-2014",
+          "locator": "paragraph beginning \"Maya Angelou was one of the first black women to speak very personably\""
+        }
+      ]
+    },
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "She said it takes her forever to make her writing look easy, and that she works at the language until it sings.",
+          "sourceId": "paris-review-1990",
+          "locator": "answer beginning \"I have kept a hotel room in every town I've ever lived in\""
+        },
+        {
+          "kind": "deed",
+          "claim": "When writing she rented a hotel room with everything taken off the walls, was there by 6 a.m. and worked until about noon or one.",
+          "sourceId": "smithsonian-2003",
+          "locator": "answer beginning \"I keep a hotel room here in Winston when I'm writing\""
+        },
+        {
+          "kind": "words",
+          "claim": "She said that of nine pages written in a morning she might keep two and a half or three after reading them that evening.",
+          "sourceId": "paris-review-1990",
+          "locator": "answer beginning \"I write in the morning and then go home about midday\""
+        },
+        {
+          "kind": "words",
+          "claim": "In 2013 she said she still rented a hotel room by the month to write in, went there around 6:30 in the morning, and read and edited that morning's work at home later in the day.",
+          "sourceId": "daily-beast-2013",
+          "locator": "answers beginning \"And headgear! Ha! It was head ties, not headgear!\" and \"Usually a deck of cards and some crossword puzzles\""
+        }
+      ]
+    },
+    {
+      "word": "Reading",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "She told students to read ceaselessly, to make a list in the library and read from A onwards.",
+          "sourceId": "aoa",
+          "locator": "paragraph beginning \"Read ceaselessly\""
+        },
+        {
+          "kind": "deed",
+          "claim": "As a girl in Arkansas she memorized works by Shakespeare and Poe.",
+          "sourceId": "nwhm",
+          "locator": "paragraph beginning \"Angelou's interest in the written word\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The Poetry Foundation says that in her silent years she read Hughes, Du Bois, Dunbar, Shakespeare, Dickens and Poe and developed a love for language.",
+          "sourceId": "pf",
+          "locator": "paragraph beginning \"Angelou's most famous work, I Know Why the Caged Bird Sings (1969)\""
+        }
+      ]
+    },
+    {
+      "word": "Justice",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "She followed Bayard Rustin as coordinator of the New York office of Martin Luther King's Southern Christian Leadership Conference.",
+          "sourceId": "nyt-2014",
+          "locator": "paragraph beginning \"Ms. Angelou later settled in New York\""
+        },
+        {
+          "kind": "words",
+          "claim": "She said equal rights, fair play and justice are like the air: we all have them or none of us has them.",
+          "sourceId": "aoa",
+          "locator": "answer beginning \"Yes, I have. Yes. A black person grows up in this country\""
+        },
+        {
+          "kind": "witness",
+          "claim": "The National Women's History Museum records her as active in the Civil Rights Movement and northern coordinator of the SCLC.",
+          "sourceId": "nwhm",
+          "locator": "paragraph beginning \"In 1950, African American writers in New York City\""
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Build courage little by little: first walk out when people talk hate, until you can say out loud that you will not have it.",
+      "sourceId": "aoa",
+      "locator": "paragraph beginning \"I will not sit in a group of black friends and hear racial pejoratives\""
+    },
+    {
+      "text": "Work on your craft until it looks easy, and know when it is the best you can do, then stop.",
+      "sourceId": "paris-review-1990",
+      "locator": "answers beginning \"I have kept a hotel room in every town\" and \"I know when it's the best I can do\""
+    },
+    {
+      "text": "Read all the time, and read aloud so you hear what language can do.",
+      "sourceId": "aoa",
+      "locator": "paragraphs beginning \"Read ceaselessly\" and \"Oh yes, yes. They lift my heart\""
+    },
+    {
+      "text": "If a door is shut to you, ask again every day until it opens.",
+      "sourceId": "nwhm",
+      "locator": "paragraph beginning \"When war broke out, Angelou applied to join the Women's Army Corps\""
+    },
+    {
+      "text": "Set your goals just beyond your reach and keep stretching toward them.",
+      "sourceId": "aoa",
+      "locator": "answer beginning \"Yes, there are wonderful women\""
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Courage is the most important of all the virtues, because without courage you can't practice any other virtues consistently.",
+      "sourceId": "aoa",
+      "locator": "first answer, on Dr. King (\"Dr. King was a human being\")"
+    },
+    {
+      "text": "I know when it's the best I can do. It may not be the best there is.",
+      "sourceId": "paris-review-1990",
+      "locator": "answer to \"How do you know when it's what you want?\""
+    },
+    {
+      "text": "You may trod me in the very dirt / But still, like dust, I'll rise.",
+      "sourceId": "still-i-rise",
+      "locator": "first stanza, lines 3-4"
+    }
+  ],
+  "definingMoment": {
+    "text": "Her friend James Baldwin and the Random House editor Robert Loomis urged her to write her life story; she said no at first, then wrote it. I Know Why the Caged Bird Sings came out in 1969. In it she told plainly how her mother's boyfriend raped her when she was 7 or 8, and how she stopped speaking for years after. The book became a best seller and was nominated for a National Book Award, and many schools tried to ban it for its account of sexual abuse.",
+    "sourceIds": [
+      "pf",
+      "nyt-2014",
+      "nwhm"
+    ]
+  },
+  "shadow": {
+    "text": "After her son was born she supported him through odd jobs and, as she wrote in her memoirs, short stints as a prostitute and a madam; in Gather Together in My Name (1974) she tells of being madam for two prostitutes. Her memoirs use techniques of fiction and some details, such as her age, change from book to book; she was also cagey about how many times she married, at least three according to the New York Times. Some reviewers called her memoir style facile and solipsistic, and in 2002 the linguist John McWhorter wrote in The New Republic that the honesty of her memoirs grows formulaic from the second book on. In 1991 she wrote a New York Times op-ed, I Dare to Hope, supporting Clarence Thomas's nomination to the Supreme Court; that year Anita Hill accused Thomas of sexual harassment. Charles Ogletree, Hill's lawyer, disagreed with her, and the writer Kim McLarin calls it the only blur on her life.",
+    "sourceIds": [
+      "nyt-2014",
+      "paris-review-1990",
+      "pf",
+      "tnr-2002",
+      "wgbh-2014"
+    ]
+  },
+  "councilQuestion": {
+    "text": "When someone near you said something this week that you will not stand for, did you stay quiet, walk out, or say so?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "I Know Why the Caged Bird Sings",
+      "year": 1969
+    },
+    {
+      "title": "And Still I Rise",
+      "year": 1978
+    },
+    {
+      "title": "Wouldn't Take Nothing for My Journey Now",
+      "year": 1993
+    }
+  ],
+  "sources": [
+    {
+      "id": "aoa",
+      "kind": "primary",
+      "title": "Maya Angelou interview (condensed from Achievement Television broadcasts of 1991, 1994 and 1997; page dated January 22, 1997)",
+      "author": "Maya Angelou",
+      "year": 1997,
+      "publisher": "American Academy of Achievement",
+      "url": "https://achievement.org/achiever/maya-angelou/"
+    },
+    {
+      "id": "paris-review-1990",
+      "kind": "primary",
+      "title": "Maya Angelou, The Art of Fiction No. 119 (Issue 116, Fall 1990)",
+      "author": "Maya Angelou, interviewed by George Plimpton",
+      "year": 1990,
+      "publisher": "The Paris Review",
+      "url": "https://www.theparisreview.org/interviews/2279/the-art-of-fiction-no-119-maya-angelou"
+    },
+    {
+      "id": "smithsonian-2003",
+      "kind": "primary",
+      "title": "Growing Up Maya Angelou (interview, April 2003)",
+      "author": "Maya Angelou, interviewed by Lucinda Moore",
+      "year": 2003,
+      "publisher": "Smithsonian Magazine",
+      "url": "https://www.smithsonianmag.com/arts-culture/growing-up-maya-angelou-79582387/"
+    },
+    {
+      "id": "still-i-rise",
+      "kind": "primary",
+      "title": "Still I Rise, in And Still I Rise",
+      "author": "Maya Angelou",
+      "year": 1978,
+      "publisher": "Random House (text as reprinted by the Poetry Foundation)",
+      "url": "https://www.poetryfoundation.org/poems/46446/still-i-rise"
+    },
+    {
+      "id": "daily-beast-2013",
+      "kind": "primary",
+      "title": "Maya Angelou: How I Write (interview, 10 April 2013)",
+      "author": "Maya Angelou, interviewed by Noah Charney",
+      "year": 2013,
+      "publisher": "The Daily Beast",
+      "url": "https://www.thedailybeast.com/maya-angelou-how-i-write/"
+    },
+    {
+      "id": "nyt-2014",
+      "kind": "secondary",
+      "title": "Maya Angelou, Lyrical Witness of the Jim Crow South, Dies at 86",
+      "author": "Margalit Fox",
+      "year": 2014,
+      "publisher": "The New York Times",
+      "url": "https://www.nytimes.com/2014/05/29/arts/maya-angelou-lyrical-witness-of-the-jim-crow-south-dies-at-86.html"
+    },
+    {
+      "id": "pf",
+      "kind": "secondary",
+      "title": "Maya Angelou (poet biography)",
+      "author": "Poetry Foundation editors",
+      "year": "undated, read 2026",
+      "publisher": "Poetry Foundation",
+      "url": "https://www.poetryfoundation.org/poets/maya-angelou"
+    },
+    {
+      "id": "nwhm",
+      "kind": "secondary",
+      "title": "Maya Angelou",
+      "author": "Kelly A. Spring, updated by Mariana Brandman",
+      "year": 2021,
+      "publisher": "National Women's History Museum",
+      "url": "https://www.womenshistory.org/education-resources/biographies/maya-angelou"
+    },
+    {
+      "id": "wgbh-2014",
+      "kind": "secondary",
+      "title": "Reconciling Maya Angelou's Legacy With Her Support Of Clarence Thomas",
+      "author": "Phillip Martin",
+      "year": 2014,
+      "publisher": "WGBH News",
+      "url": "https://www.wgbh.org/news/local/2014-05-29/reconciling-maya-angelous-legacy-with-her-support-of-clarence-thomas"
+    },
+    {
+      "id": "tnr-2002",
+      "kind": "secondary",
+      "title": "Saint Maya (review of A Song Flung Up to Heaven, 20 May 2002)",
+      "author": "John McWhorter",
+      "year": 2002,
+      "publisher": "The New Republic",
+      "url": "https://newrepublic.com/article/saint-maya"
+    }
+  ],
+  "review": {
+    "status": "validated",
+    "screen": {
+      "result": "shadow",
+      "notes": "Real person, died 2014, never held or ran for office and founded no religion; no account found of her having sexual contact with anyone under 16 or committing sexual violence (she was the victim of a rape at 7 or 8); a real but adult shadow is documented."
+    },
+    "blindAgreement": 0.8,
+    "devilsAdvocate": "I checked every value, quote and sentence against the saved texts of the Academy of Achievement interview, the Paris Review and Smithsonian interviews, the NYT obituary, the Poetry Foundation and museum biographies and WGBH, and searched for critics, finding John McWhorter's 2002 New Republic review. No value fell: Courage, Resilience, Reading and Justice are shared with the blind pick, and Craft, picked only by the draft, held once a 2013 Daily Beast interview gave it a third source; her Thomas op-ed is a single act, not a pattern against Justice. All three quotes match their texts. Seven fixes were made, mainly that she stopped speaking after the man's killing rather than after the rape, and the shadow now dates the madam story correctly, adds McWhorter and no longer implies the op-ed answered Hill's accusation.",
+    "checkedOn": "2026-11-10"
+  }
+}
