@@ -1,0 +1,347 @@
+{
+  "id": "steve-mcqueen",
+  "name": "Steve McQueen",
+  "born": 1930,
+  "died": 1980,
+  "category": "charisma",
+  "areaIds": [
+    "lm_fun",
+    "lm_mission",
+    "lm_contribution"
+  ],
+  "tagline": "A reform-school kid who learned a trade, raced hard and went back to help his old school.",
+  "startedFrom": "He was born in March 1930 in Indiana; his father, a former stunt pilot, left the family when he was six months old, and he was raised for a time on an uncle's ranch in Slater, Missouri. Back with his mother, he joined a street gang, stole hubcaps and was beaten by his stepfather. At fourteen he was sent to the California Junior Boys' Republic, a reform school in Chino, and he left it in 1946 with a ninth-grade education.",
+  "values": [
+    {
+      "word": "Craft",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He entered Sanford Meisner's Neighborhood Playhouse in New York in 1952, also studied with Herbert Berghof, and was accepted into the Actors Studio.",
+          "sourceId": "scribner",
+          "locator": "Scribner Encyclopedia of American Lives entry, paragraph on New York and acting study"
+        },
+        {
+          "kind": "words",
+          "claim": "Of his three years on the TV western Wanted: Dead or Alive he said they were hard, 'but I learned my trade and it gave me discipline'.",
+          "sourceId": "time-1963",
+          "locator": "Time, 28 June 1963, 'Actors: The Mild One', second paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "The St. James Encyclopedia of Popular Culture says he enrolled at the Neighborhood Playhouse and 'began earnestly to work at learning the craft of acting', and was one of five students out of 2,000 applicants chosen for the Actors Studio.",
+          "sourceId": "st-james",
+          "locator": "entry, paragraph beginning 'When he was introduced to famed drama coach Sanford Meisner'"
+        }
+      ]
+    },
+    {
+      "word": "Boldness",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Filming The War Lover in England, he was told by studio lawyers he would be sued for the film's whole $3 million cost if a racing injury held up production; he ignored them, raced, and drove the Sebring twelve-hour race for the British Motor Corporation.",
+          "sourceId": "scribner",
+          "locator": "Scribner Encyclopedia of American Lives entry, paragraph on The War Lover (1962) and racing"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1964 he rode for the first official American team in the International Six Day Trial, an off-road motorcycle competition, and in 1999 he was inducted into the Motorcycle Hall of Fame.",
+          "sourceId": "va-2023",
+          "locator": "VA News, #VeteranOfTheDay, 10 Jan 2023, paragraph beginning 'Aside from acting'"
+        },
+        {
+          "kind": "deed",
+          "claim": "In 1963 he rode a two-day, 500-mile dirt-bike race across the Mojave Desert and led his amateur class for most of it until his bike broke down three miles from the finish.",
+          "sourceId": "time-2014",
+          "locator": "Time.com, 'LIFE With Steve McQueen', Ben Cosgrove, 2014, captions on the desert race"
+        },
+        {
+          "kind": "words",
+          "claim": "He said slipstreaming around a turn in the middle of the pack is what separates the men from the boys, and that life is a lot like racing.",
+          "sourceId": "time-1963",
+          "locator": "Time, 28 June 1963, 'Actors: The Mild One', paragraph beginning 'Slipstreamin' around a turn'"
+        }
+      ]
+    },
+    {
+      "word": "Generosity",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "After he became a star he set up a scholarship programme at Boys Republic and visited the school often.",
+          "sourceId": "scribner",
+          "locator": "Scribner Encyclopedia of American Lives entry, paragraph on Boys' Republic"
+        },
+        {
+          "kind": "deed",
+          "claim": "Boys Republic says that at the height of his film career he visited often and used his contacts, friends and the film studios to help the school's needs.",
+          "sourceId": "boys-republic",
+          "locator": "Boys Republic website, page 'Steve McQueen Car Show', opening paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "The US Department of Veterans Affairs writes that he tried to help everyone he encountered and made various donations to Boys Republic in gratitude for its impact on his life.",
+          "sourceId": "va-2023",
+          "locator": "VA News, #VeteranOfTheDay, 10 Jan 2023, passage beginning 'Throughout his life, he cared for those who were in need'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Turner Classic Movies' profile says he called the reform school 'a good experience that straightened me out' and donated money and clothing to it on a regular basis.",
+          "sourceId": "tcm-profile",
+          "locator": "TCM, Jeremy Arnold, 'Steve McQueen Profile', 20 Jul 2010, passage on the reform school"
+        }
+      ]
+    },
+    {
+      "word": "Passion",
+      "evidence": [
+        {
+          "kind": "witness",
+          "claim": "Turner Classic Movies writes that his fascination with motor racing often took precedence over his interest in acting.",
+          "sourceId": "tcm-lemans",
+          "locator": "TCM, Kimberly Lindbergs, 'Le Mans', 20 Jul 2010, opening paragraphs"
+        },
+        {
+          "kind": "deed",
+          "claim": "He came second at Sebring in 1970 in his own three-litre Porsche 908, sharing it with Peter Revson, and insisted on racing authenticity, with no Hollywood gimmicks, in his film Le Mans.",
+          "sourceId": "motorsport-2010",
+          "locator": "Motor Sport, Eoin Young, 'Did he lose the plot?', August 2010, p. 74"
+        },
+        {
+          "kind": "words",
+          "claim": "He drove that 1970 Sebring race on a foot broken in a motorcycle race, saying: 'I busted it in six places, and I'd already said I'd drive, so…'",
+          "sourceId": "therace-2020",
+          "locator": "The Race, Matt Beer, 'The Hollywood-ready story of the 1970 12 Hours of Sebring', 22 Mar 2020, passage on the broken foot"
+        },
+        {
+          "kind": "witness",
+          "claim": "The US Department of Veterans Affairs writes that he was passionate about cars and motorcycles, competed in car and motorcycle races and collected motorcycles.",
+          "sourceId": "va-2023",
+          "locator": "VA News, #VeteranOfTheDay, 10 Jan 2023, paragraph beginning 'Aside from acting'"
+        }
+      ]
+    },
+    {
+      "word": "Independence",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "He formed his own company, Solar Productions, to produce his films and exert more creative control over them.",
+          "sourceId": "scribner",
+          "locator": "Scribner Encyclopedia of American Lives entry, paragraph on Solar Productions"
+        },
+        {
+          "kind": "words",
+          "claim": "'An actor is a puppet,' he once said, 'manipulated by a dozen other people.'",
+          "sourceId": "tcm-profile",
+          "locator": "TCM, Jeremy Arnold, 'Steve McQueen Profile', 20 Jul 2010"
+        },
+        {
+          "kind": "deed",
+          "claim": "On Le Mans he oversaw every aspect of the production, including the script, photography, stunts, casting and the hiring of the crew.",
+          "sourceId": "tcm-lemans",
+          "locator": "TCM, Kimberly Lindbergs, 'Le Mans', 20 Jul 2010, paragraph on the production"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "Stay loose, and when you have to push hard, push smoothly.",
+      "sourceId": "time-1963",
+      "locator": "Time, 28 June 1963, 'Actors: The Mild One', paragraph beginning 'Slipstreamin' around a turn' (advice from Stirling Moss he repeats)"
+    },
+    {
+      "text": "Learn your trade through the hard years: the steady work itself gives you discipline.",
+      "sourceId": "time-1963",
+      "locator": "Time, 28 June 1963, 'Actors: The Mild One', second paragraph"
+    },
+    {
+      "text": "Go back to the place that took you in when you were lost, and use what you gained to help it.",
+      "sourceId": "scribner",
+      "locator": "Scribner Encyclopedia of American Lives entry, paragraph on Boys' Republic"
+    },
+    {
+      "text": "Own the company that makes your work, so the creative choices stay yours.",
+      "sourceId": "scribner",
+      "locator": "Scribner Encyclopedia of American Lives entry, paragraph on 1963 (formed Solar Productions to produce his films and exert more creative control)"
+    },
+    {
+      "text": "Do the thing you love even when the people paying you warn you off it.",
+      "sourceId": "scribner",
+      "locator": "Scribner Encyclopedia of American Lives entry, paragraph on The War Lover (1962) and racing"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "Life's a lot like racing. I used to want to charge right through the pack. Moss gave me some good advice: 'Stay loose. When you have to charge, be a smooth charger.'",
+      "sourceId": "time-1963",
+      "locator": "Time, 28 June 1963, 'Actors: The Mild One', paragraph beginning 'Slipstreamin' around a turn'"
+    },
+    {
+      "text": "three hard mother-grabbin' years, but I learned my trade and it gave me discipline.",
+      "sourceId": "time-1963",
+      "locator": "Time, 28 June 1963, 'Actors: The Mild One', second paragraph (on Wanted: Dead or Alive)"
+    },
+    {
+      "text": "God is my kids, my old lady, green grass, trees, machines and animals",
+      "sourceId": "time-1963",
+      "locator": "Time, 28 June 1963, 'Actors: The Mild One', paragraph beginning 'Now 34'"
+    }
+  ],
+  "definingMoment": {
+    "text": "After his honourable discharge from the Marines in 1950 he went to New York. In 1952 he entered Sanford Meisner's Neighborhood Playhouse, and with the help of the G.I. Bill he won a scholarship to the Herbert Berghof Studio. He was later one of five applicants out of 2,000 accepted into the Actors Studio, and he later said New York showed him a way of life where people talked out their problems instead of punching you. In 1956 he replaced Ben Gazzara on Broadway in A Hatful of Rain.",
+    "sourceIds": [
+      "scribner",
+      "time-1963",
+      "st-james",
+      "va-2023"
+    ]
+  },
+  "shadow": {
+    "text": "In her 1986 memoir My Husband, My Friend, his first wife Neile Adams wrote that after she admitted an affair with a European Oscar winner, he held a gun on her and, in the Associated Press's words, 'exacted the story of the transgression between slaps'. The Kirkus review of the book says she had that affair after a dozen years of abuse, that afterwards he 'went violently Jekyll-Hyde' for the rest of the marriage, slapping her when he had taken drugs or drink, and that the book describes his cocaine addiction, heavy marijuana use and infidelity; Fox News, reporting the AP's account, dates his first affair to 1957, with the actress Lita Milan. They divorced in 1972. His second wife, Ali MacGraw, wrote in her 1991 memoir that he forbade her to work and had her sign a prenuptial agreement that left her penniless after their divorce in 1978. Turner Classic Movies' profile calls him 'a terror to directors - demanding, abrasive, and threatening'. In the Marines he was demoted to private at least seven times and spent 41 days in the brig for going absent without leave.",
+    "sourceIds": [
+      "fox-2019",
+      "kirkus-1986",
+      "pw-1991",
+      "tcm-profile",
+      "va-2023",
+      "st-james"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you charge at something this week, and did you stay loose enough to do it smoothly?",
+    "principleIndex": 0
+  },
+  "readings": [],
+  "sources": [
+    {
+      "id": "time-1963",
+      "kind": "primary",
+      "title": "Actors: The Mild One (profile with interview quotations)",
+      "author": "Time (unsigned)",
+      "year": 1963,
+      "publisher": "Time, 28 June 1963",
+      "url": "https://time.com/archive/6812695/actors-the-mild-one/"
+    },
+    {
+      "id": "scribner",
+      "kind": "secondary",
+      "title": "McQueen, Steve (Scribner Encyclopedia of American Lives, Thematic Series: The 1960s)",
+      "author": "Scribner editors (entry unsigned online)",
+      "year": 2003,
+      "publisher": "Charles Scribner's Sons, online at Encyclopedia.com",
+      "url": "https://www.encyclopedia.com/humanities/encyclopedias-almanacs-transcripts-and-maps/mcqueen-steve"
+    },
+    {
+      "id": "st-james",
+      "kind": "secondary",
+      "title": "McQueen, Steve (1930-1980) (St. James Encyclopedia of Popular Culture)",
+      "author": "St. James Press editors (entry unsigned online)",
+      "year": "n.d. (online at Encyclopedia.com)",
+      "publisher": "St. James Press / Gale",
+      "url": "https://www.encyclopedia.com/media/encyclopedias-almanacs-transcripts-and-maps/mcqueen-steve-1930-1980"
+    },
+    {
+      "id": "va-2023",
+      "kind": "secondary",
+      "title": "#VeteranOfTheDay Marine Corps Veteran Steve McQueen",
+      "author": "VA News (U.S. Department of Veterans Affairs)",
+      "year": 2023,
+      "publisher": "U.S. Department of Veterans Affairs, 10 January 2023",
+      "url": "https://news.va.gov/114620/veteranoftheday-marine-corps-steve-mcqueen/"
+    },
+    {
+      "id": "time-2014",
+      "kind": "secondary",
+      "title": "LIFE With Steve McQueen: Photos of the King of Cool in 1963",
+      "author": "Ben Cosgrove",
+      "year": 2014,
+      "publisher": "Time.com",
+      "url": "https://time.com/3490078/life-with-steve-mcqueen-photos-of-the-king-of-cool-in-1963/"
+    },
+    {
+      "id": "boys-republic",
+      "kind": "secondary",
+      "title": "Steve McQueen Car Show",
+      "author": "Boys Republic",
+      "year": "n.d. (read 2026)",
+      "publisher": "Boys Republic, Chino Hills, California",
+      "url": "https://boysrepublic.org/pages/steve-mcqueen-car-show"
+    },
+    {
+      "id": "kirkus-1986",
+      "kind": "secondary",
+      "title": "Review of My Husband, My Friend by Neile McQueen Toffel",
+      "author": "Kirkus Reviews",
+      "year": "1985/1986 (Kirkus lists issue 1 Jan 1985, release 16 Jan 1985; the book's catalogue date is 1986)",
+      "publisher": "Kirkus Reviews",
+      "url": "https://www.kirkusreviews.com/book-reviews/a/neile-mcqueen-toffel/my-husband-my-friend"
+    },
+    {
+      "id": "fox-2019",
+      "kind": "secondary",
+      "title": "Steve McQueen's ex-wife Neile Adams blamed free love for failed marriage",
+      "author": "Stephanie Nolasco",
+      "year": 2019,
+      "publisher": "Fox News, 5 March 2019 (reports the Associated Press's 1986 account of her book)",
+      "url": "https://www.foxnews.com/entertainment/steve-mcqueens-ex-wife-neile-adams-blamed-free-love-for-failed-marriage"
+    },
+    {
+      "id": "pw-1991",
+      "kind": "secondary",
+      "title": "Review of Moving Pictures: An Autobiography by Ali MacGraw",
+      "author": "Publishers Weekly",
+      "year": 1991,
+      "publisher": "Publishers Weekly, 1 April 1991",
+      "url": "https://www.publishersweekly.com/9780553072709"
+    },
+    {
+      "id": "tcm-profile",
+      "kind": "secondary",
+      "title": "Steve McQueen Profile (\"If I hadn't made it as an actor, I might have wound up as a hood.\")",
+      "author": "Jeremy Arnold",
+      "year": 2010,
+      "publisher": "Turner Classic Movies, 20 July 2010",
+      "url": "https://www.tcm.com/articles/31494/steve-mc-queen-profile"
+    },
+    {
+      "id": "tcm-lemans",
+      "kind": "secondary",
+      "title": "Le Mans",
+      "author": "Kimberly Lindbergs",
+      "year": 2010,
+      "publisher": "Turner Classic Movies, 20 July 2010",
+      "url": "https://www.tcm.com/articles/333788/le-mans"
+    },
+    {
+      "id": "motorsport-2010",
+      "kind": "secondary",
+      "title": "Did he lose the plot?",
+      "author": "Eoin Young",
+      "year": 2010,
+      "publisher": "Motor Sport, August 2010, p. 74",
+      "url": "https://www.motorsportmagazine.com/archive/article/august-2010/74/did-he-lose-the-plot"
+    },
+    {
+      "id": "therace-2020",
+      "kind": "secondary",
+      "title": "The Hollywood-ready story of the 1970 12 Hours of Sebring",
+      "author": "Matt Beer",
+      "year": 2020,
+      "publisher": "The Race, 22 March 2020",
+      "url": "https://www.the-race.com/gt/the-hollywood-ready-story-of-the-1970-12-hours-of-sebring/"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real American film actor (1930-1980), not fictional, never a politician, campaigner or religious founder; flagged only because a 2010 biography by Michael Munn quotes McQueen himself describing slapping a woman during sex harder than she wanted; the rest of his dark side (Neile Adams's memoir of a gun and slaps, Ali MacGraw's account of control, a brig term) is shadow. Owner case: Munn, Steve McQueen: Living on the Edge (2010): McQueen, in the first person, says a woman he took to his room asked to be hurt a little and he slapped her harder than she wanted, then told her to leave; woman unnamed, no date, one source only, Munn's reliability questioned."
+    },
+    "blindAgreement": 0.6,
+    "devilsAdvocate": "I attacked every value and re-read Time 1963, the Scribner and St. James entries, VA News, the LIFE photo essay, Kirkus, Fox/AP, Publishers Weekly and the blind pick's TCM, Motor Sport and The Race pages. Nature fell: two sources only, and its key line lists machines beside trees; Determination and Control from the blind pick had no room, and the 'terror to directors' line went to the shadow. Craft, Boldness and Generosity held, Passion and Independence came in from the blind pick with three or four sources each, and all three Time 1963 quotes were found word for word. The shadow was corrected: Kirkus says years of abuse came before Neile Adams's affair, not only after it.",
+    "checkedOn": "2026-11-10"
+  }
+}
