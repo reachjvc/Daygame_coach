@@ -1,0 +1,311 @@
+{
+  "id": "michelangelo",
+  "name": "Michelangelo",
+  "born": 1475,
+  "died": 1564,
+  "category": "artists",
+  "areaIds": [
+    "lm_mission",
+    "lm_family"
+  ],
+  "tagline": "A sculptor who worked to exhaustion, asked for bigger tasks, and carried his family.",
+  "startedFrom": "He was born on 6 March 1475 at Caprese, where his father Lodovico was serving a six-month term as the town's podestà, and was put out to nurse with a stonecutter's wife at the family farm in Settignano. His father sent him to a grammar school; when he kept drawing instead, his father and uncles, who held the craft in contempt, often beat him. On 1 April 1488 his father bound him for three years to the painter Domenico Ghirlandaio.",
+  "values": [
+    {
+      "word": "Hard work",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "Writing from Rome to his brother Buonarroto while painting the Sistine ceiling, he says he lives in great distress and utmost bodily fatigue and has not even time to eat what he needs.",
+          "sourceId": "milanesi-1875",
+          "locator": "letter LXXX, to Buonarroto, Rome, 17 October 1509"
+        },
+        {
+          "kind": "deed",
+          "claim": "He signed the contract for the Sistine Chapel ceiling on 8 May 1508, finished the first half by August 1510, and completed it by 31 October 1512.",
+          "sourceId": "vatican-ceiling",
+          "locator": "section 'Ceiling'"
+        },
+        {
+          "kind": "witness",
+          "claim": "Condivi, who knew him, writes that from a child he was a hard worker, adding study to his gifts.",
+          "sourceId": "condivi-1553",
+          "locator": "sect. LVI"
+        },
+        {
+          "kind": "witness",
+          "claim": "Condivi writes that at work he was mostly content with a piece of bread, which he ate while he laboured.",
+          "sourceId": "condivi-1553",
+          "locator": "sect. LXVI"
+        }
+      ]
+    },
+    {
+      "word": "Mastery",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "As a young man in Florence he was given a room and bodies by the Prior of Santo Spirito to study anatomy, and kept at it until he had mastered it.",
+          "sourceId": "condivi-1553",
+          "locator": "sect. XIII"
+        },
+        {
+          "kind": "witness",
+          "claim": "Condivi writes that men who spent their whole lives on anatomy hardly knew as much of it as he did, for the needs of painting and sculpture.",
+          "sourceId": "condivi-1553",
+          "locator": "sect. LVI"
+        },
+        {
+          "kind": "witness",
+          "claim": "The National Gallery calls him the first artist recognised by his contemporaries as a genius, and the only one of whom it was claimed in his lifetime that he surpassed antiquity.",
+          "sourceId": "natgallery",
+          "locator": "artist biography, first paragraph"
+        },
+        {
+          "kind": "witness",
+          "claim": "Vasari writes that he made anatomical studies countless times, dissecting bodies of men and of animals, and that those who study nothing else do not know more.",
+          "sourceId": "vasari-1915",
+          "locator": "Life of Michelagnolo, paragraph beginning 'Michelagnolo was much inclined to the labours of art'"
+        }
+      ]
+    },
+    {
+      "word": "Family",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes to his brother Giovan Simone that for twelve years he has toiled around Italy, worn out his body and risked his life, all to help his family.",
+          "sourceId": "milanesi-1875",
+          "locator": "letter CXXVII, to Giovan Simone, Rome, July 1508 (postscript)"
+        },
+        {
+          "kind": "deed",
+          "claim": "His letters home from Rome in these years are full of land bought for the family, money sent, and plans to set his brother Buonarroto up in business.",
+          "sourceId": "symonds-1893",
+          "locator": "vol. I, ch. V, sect. VIII, p. 224"
+        },
+        {
+          "kind": "witness",
+          "claim": "Symonds writes that through his whole long career he was the mainstay of his father and a father to his younger brothers.",
+          "sourceId": "symonds-1893",
+          "locator": "vol. I, ch. I, sect. III, p. 9"
+        },
+        {
+          "kind": "witness",
+          "claim": "Symonds writes that, careless of his own health and comfort, he spent his earnings for the welfare of his brothers.",
+          "sourceId": "symonds-1893",
+          "locator": "vol. I, ch. VI, p. 309"
+        }
+      ]
+    },
+    {
+      "word": "Faith",
+      "evidence": [
+        {
+          "kind": "deed",
+          "claim": "Made chief architect of St Peter's in 1547, he declined the stipend and worked on the church without pay until his death.",
+          "sourceId": "symonds-1893",
+          "locator": "vol. II, ch. XIII, sect. VI, p. 213"
+        },
+        {
+          "kind": "witness",
+          "claim": "Vasari writes that he asked for the papal brief to state that he served in the building for the love of God and without any reward, and that he refused the salary the Pope sent him.",
+          "sourceId": "vasari-1915",
+          "locator": "Life of Michelagnolo, paragraph on Paul III's motu-proprio for St Peter's"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes to his nephew that he will not leave the building of St Peter's, because he serves for the love of God and has all his hope in Him.",
+          "sourceId": "milanesi-1875",
+          "locator": "letter CCCV, to Lionardo, Rome, 1 July 1557"
+        },
+        {
+          "kind": "words",
+          "claim": "He writes to Vasari that leaving St Peter's before the dome was vaulted would ruin it and be a great sin to his soul.",
+          "sourceId": "milanesi-1875",
+          "locator": "letter CDLXXV, to Giorgio Vasari, Rome, 11 May 1555"
+        }
+      ]
+    },
+    {
+      "word": "Solitude",
+      "evidence": [
+        {
+          "kind": "words",
+          "claim": "He writes from Rome in 1509 that he has no friends of any kind and wants none.",
+          "sourceId": "milanesi-1875",
+          "locator": "letter LXXX, to Buonarroto, Rome, 17 October 1509"
+        },
+        {
+          "kind": "witness",
+          "claim": "Condivi writes that as a young man he almost withdrew from the company of men, that company annoyed him, and that he was never less alone than when alone.",
+          "sourceId": "condivi-1553",
+          "locator": "sect. LXII"
+        },
+        {
+          "kind": "witness",
+          "claim": "Vasari writes that he delighted in solitude, because his art claimed all his thoughts.",
+          "sourceId": "vasari-1915",
+          "locator": "Life of Michelagnolo, paragraph beginning 'No one should think it strange that Michelagnolo delighted in solitude'"
+        }
+      ]
+    }
+  ],
+  "principles": [
+    {
+      "text": "When the plan you are given is too small, say so and ask to do the bigger thing.",
+      "sourceId": "milanesi-1875",
+      "locator": "letter CCCLXXXIII, to Giovan Francesco Fattucci, Florence, January 1524 (the Sistine plan of twelve Apostles 'cosa povera')"
+    },
+    {
+      "text": "Learn from the real thing yourself, not from other men's work.",
+      "sourceId": "condivi-1553",
+      "locator": "sect. LVI"
+    },
+    {
+      "text": "Put the work first, even before food and comfort.",
+      "sourceId": "condivi-1553",
+      "locator": "sect. LXVI"
+    },
+    {
+      "text": "Clear your head before you work: a troubled mind makes bad work.",
+      "sourceId": "milanesi-1875",
+      "locator": "letter CDXXXV, to a Monsignore, Rome, October 1542"
+    },
+    {
+      "text": "Use what you earn to lift your family.",
+      "sourceId": "milanesi-1875",
+      "locator": "letter CXXVII, to Giovan Simone, Rome, July 1508"
+    }
+  ],
+  "quotes": [
+    {
+      "text": "I answer that one paints with the brain and not with the hands; and he who has not his brains at his command produces work that shames him.",
+      "sourceId": "milanesi-1875",
+      "locator": "letter CDXXXV, to a Monsignore, Rome, October 1542 (English: Symonds 1893, vol. II, p. 70)",
+      "translation": "John Addington Symonds, 1893"
+    },
+    {
+      "text": "I live here in great distress and the utmost bodily fatigue, have no friends, and seek none. I have not even time enough to eat what I require.",
+      "sourceId": "milanesi-1875",
+      "locator": "letter LXXX, to Buonarroto, Rome, 17 October 1509 (English: Symonds 1893, vol. I, p. 221)",
+      "translation": "John Addington Symonds, 1893"
+    },
+    {
+      "text": "I have gone these twelve years past drudging about through Italy, borne every shame, suffered every hardship, worn my body out in every toil, put my life to a thousand hazards, and all with the sole purpose of helping the fortunes of my family.",
+      "sourceId": "milanesi-1875",
+      "locator": "letter CXXVII, to Giovan Simone, Rome, July 1508, postscript (English: Symonds 1893, vol. I, p. 226)",
+      "translation": "John Addington Symonds, 1893"
+    },
+    {
+      "text": "Come then, Giovanni, try / To succour my dead pictures and my fame; / Since foul I fare and painting is my shame.",
+      "sourceId": "symonds-1878",
+      "locator": "Sonnet V, 'To Giovanni da Pistoja: On the Painting of the Sistine Chapel', last three lines",
+      "translation": "John Addington Symonds, 1878"
+    }
+  ],
+  "definingMoment": {
+    "text": "On 8 May 1508 he signed a contract to paint twelve Apostles on the Sistine Chapel ceiling. He told Pope Julius II that the plan would turn out a poor thing, and the Pope gave him a new commission to paint what he liked. The work took four years: the first half was done by August 1510 and the whole by 31 October 1512. In a sonnet to a friend he described his body bent like a bow, and Condivi says that afterwards he could for a time read only by holding the page above his head.",
+    "sourceIds": [
+      "vatican-ceiling",
+      "milanesi-1875",
+      "symonds-1878",
+      "symonds-1893"
+    ]
+  },
+  "shadow": {
+    "text": "Around 1496, at Lorenzo di Pierfrancesco de' Medici's suggestion, he made a marble Cupid look buried and old, and it was sold in Rome to a cardinal as an antique. In July 1508 he wrote to his brother Giovan Simone that he was 'a beast' and threatened to come to Florence and ruin him for threatening their father. On 21 September 1529, while in charge of Florence's fortifications during the siege, he left the city without leave for Venice; the government took away his office and pay, and when he came back in November he was barred from the Grand Council for three years. After the Medici took the city in 1530 he hid, then finished the Medici tombs for Pope Clement VII, out of fear of the Pope more than love for the Medici, Condivi says. In 1542 the Duke of Urbino's agents accused him of lending out money he had been paid for the tomb of Julius II, a work begun in 1505 that, the National Gallery says, dogged him until 1545.",
+    "sourceIds": [
+      "condivi-1553",
+      "milanesi-1875",
+      "symonds-1893",
+      "natgallery"
+    ]
+  },
+  "councilQuestion": {
+    "text": "Where did you accept a plan this week that you knew was too small, without saying so?",
+    "principleIndex": 0
+  },
+  "readings": [
+    {
+      "title": "Poems (Rime)",
+      "year": 1623
+    },
+    {
+      "title": "Letters (Le lettere, ed. Milanesi)",
+      "year": 1875
+    }
+  ],
+  "sources": [
+    {
+      "id": "milanesi-1875",
+      "kind": "primary",
+      "title": "Le lettere di Michelangelo Buonarroti, coi ricordi ed i contratti artistici",
+      "author": "Michelangelo Buonarroti, ed. Gaetano Milanesi",
+      "year": 1875,
+      "publisher": "Successori Le Monnier, Florence",
+      "url": "https://www.gutenberg.org/ebooks/46599"
+    },
+    {
+      "id": "symonds-1878",
+      "kind": "primary",
+      "title": "The Sonnets of Michael Angelo Buonarroti and Tommaso Campanella, now for the first time translated into rhymed English",
+      "author": "Michelangelo Buonarroti, trans. John Addington Symonds",
+      "year": 1878,
+      "url": "https://www.gutenberg.org/ebooks/10314"
+    },
+    {
+      "id": "symonds-1893",
+      "kind": "secondary",
+      "title": "The Life of Michelangelo Buonarroti (2 vols)",
+      "author": "John Addington Symonds",
+      "year": 1893,
+      "publisher": "John C. Nimmo, London",
+      "url": "https://archive.org/details/lifemichelangel01symogoog"
+    },
+    {
+      "id": "condivi-1553",
+      "kind": "secondary",
+      "title": "The Life of Michael Angelo Buonarroti (1553), in Charles Holroyd, Michael Angelo Buonarroti",
+      "author": "Ascanio Condivi, trans. Charles Holroyd",
+      "year": 1903,
+      "publisher": "Duckworth, London",
+      "url": "https://www.gutenberg.org/ebooks/19332"
+    },
+    {
+      "id": "vasari-1915",
+      "kind": "secondary",
+      "title": "Lives of the Most Eminent Painters, Sculptors and Architects, vol. IX: Michelagnolo Buonarroti",
+      "author": "Giorgio Vasari, trans. Gaston du C. de Vere",
+      "year": 1915,
+      "publisher": "Philip Lee Warner for the Medici Society, London",
+      "url": "https://www.gutenberg.org/ebooks/32362"
+    },
+    {
+      "id": "vatican-ceiling",
+      "kind": "secondary",
+      "title": "Sistine Chapel: Ceiling",
+      "author": "Vatican Museums",
+      "year": "undated",
+      "url": "https://www.museivaticani.va/content/museivaticani/en/collezioni/musei/cappella-sistina/volta.html"
+    },
+    {
+      "id": "natgallery",
+      "kind": "secondary",
+      "title": "Michelangelo (1475 - 1564)",
+      "author": "The National Gallery, London",
+      "year": "undated",
+      "url": "https://www.nationalgallery.org.uk/artists/michelangelo"
+    }
+  ],
+  "review": {
+    "status": "flagged",
+    "screen": {
+      "result": "owner-decides",
+      "notes": "A real, long-dead artist, not a politician or religious founder. He goes to the owner because of one case where the boy's age and the meaning of the lines are both in doubt. Cecchino dei Bracci, nephew of his friend Luigi del Riccio, died in Rome on 8 January: Voelker (Italique III, 2000, pp. 23-44, paras. 1 and 17) gives 1544, aged fifteen; Symonds 1893 gives 1542 in one place and 'at the age of sixteen, on January 8, 1545' in another (vol. II ch. XII); Giovanni Dall'Orto's entry gives born 1525, died 1542, and says the Latin tomb inscription calls him not yet 17. For del Riccio, Michelangelo wrote some fifty epitaphs in Cecchino's voice. A variant of epitaph 197 ('La carne terra') reads 'fan fede a quel ch'i' fu' gratia nel lecto, / che abbracc[i]aua e 'n che l'anima uiue' (roughly: bear witness for him how I was grace in bed, whom he embraced). Voelker (paras. 27-28, 40, note 49) reads the variant as carnal and comic, with Cecchino the one embracing, and notes Michelangelo's comment on it ('cosa morale', possibly ironic); Dall'Orto and Rictor Norton read it as showing a sexual side to Michelangelo's attachment; Norton says Michelangelo told del Riccio to burn the lines, which Voelker does not report. The lines do not say whom 'quel' means: del Riccio or Michelangelo. Symonds presents the passion as del Riccio's, and Michelangelo's sonnet to del Riccio says he had scarcely seen the boy before he died. Others checked: Tommaso de' Cavalieri, met 1532, usually given as born about 1509 (about 23); Wikipedia reports that Warren Kirkendale put his birth about 1520 (a boy of twelve in 1532), not checked in Kirkendale's book; Gayford (2013, as quoted there) calls a physical affair unlikely; no account of contact found. Gherardo Perini (c. 1520-25) and Febo di Poggio (1533-34): ages not found, called young men; no account of contact found. In a 1518 letter to Niccolo Quaratesi (Milanesi CCCLIII) he refuses a man's son as an apprentice after the father said that if he saw the boy he would take him not only into his house but into his bed. Apprentices Pietro Urbano, Antonio Mini (born 1506) and Urbino: no account found. No account of sexual violence found. Other dark side (faked antique, letter to his brother, leaving besieged Florence, Julius tomb money dispute) is shadow."
+    },
+    "blindAgreement": 0.4,
+    "devilsAdvocate": "I attacked all five values against Condivi, Vasari, Symonds and the letters, and re-checked the under-16 screen across every young man named in his life. All five values held: Mastery now rests on three sources with Vasari's anatomy passage added, and Solitude holds as Condivi frames it, a withdrawal for work while he kept a few close friends; the blind pick's Devotion, Craft and Simplicity did not displace them. All four quotes matched the Italian letters and Symonds' wording; two claims were cut back because Condivi says he slept in his clothes for fear of cramp, not for work. The Cecchino dei Bracci epitaph variant, a boy given as fifteen or sixteen, turns him from shadow to an owner case.",
+    "checkedOn": "2026-11-10"
+  }
+}
