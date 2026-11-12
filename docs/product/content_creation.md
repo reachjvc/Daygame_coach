@@ -105,6 +105,14 @@ interesting to the viewer, and feasible to make.
 - Go narrow; one clear viewer every time. Experiment formats ("I tried X
   for N days") outperform.
 
+## Ingredients that give a video weight (2026-11-12)
+
+When the core and beats stand, check which kinds the video lacks, gather
+those, then make title and thumbnail from what was found: counterexamples,
+allies who say it too, science or numbers, own proof, stakes, an analogy,
+a surprise, a visual set piece, an open loop, a joke, a viewer task, real
+viewer voices, a callback ending.
+
 ## Open questions
 
 Raised by the Senior on 2026-11-10, not yet decided:
