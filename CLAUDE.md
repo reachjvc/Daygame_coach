@@ -37,6 +37,10 @@ or account that can), deleting real data, and anything that cannot be undone.
 This overrides any plan. A plan opens with these items, in plain words.
 
 - Check the thing itself (the page, the output, the data), never a stand-in.
+- Quality always wins. No shortcuts: never offer a cheaper or quicker
+  version of something the owner has already seen done well (e.g. his
+  ChatGPT-made Marcus portrait sets the bar for role model pictures). If
+  the quality route needs his account, time or money, say so and ask.
 - Commit and push your own work without being asked.
 - Flag security risks when you see them, unasked.
 - Show, don't only tell. The owner likes seeing work on a visual page he can
