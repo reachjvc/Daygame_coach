@@ -5,6 +5,12 @@ Written 2026-11-11, from your 43 notes on the "The Finished Video" page
 `Plans/conversation-map-social-stoic.md` (Phases 2–6) and absorbs
 `Plans/transcript-quality.md` (Phases 0–2), which was never run.
 
+## Status (2026-11-12)
+
+- Phase 0a done. 0b and 0c run; results page: https://claude.ai/artifact/CeXKs1KWgC97bwZFiLVyXF
+- 0b speakers wait for the owner's marks on https://claude.ai/artifact/5ZePdZuah7biEuCBwtdtqM
+- Then Phase 0d. Work files are outside the repo in `~/.cache/daygame-research/gold/`.
+
 ## Owner items
 
 - **Money:** none. Everything runs on this PC (RTX 4060, 8 GB) and the Claude
