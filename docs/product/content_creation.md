@@ -79,6 +79,11 @@ repo. Read it before working on that video.
    (owner): a short compilation of known people saying "success is saying
    no", zoomed into from the page.
 
+## Next video (owner, 2026-11-12)
+
+After video one, the next video is one of: famous people's routines and how
+much they work, or visualization practices and the science behind them.
+
 ## The bar
 
 A really meaningful video of high quality: interesting to the owner,
