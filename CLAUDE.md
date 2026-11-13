@@ -1,51 +1,34 @@
 # daygame-coach
 
-Next.js + TypeScript + Supabase. Slices in `src/<slice>/`, routes in `app/`,
-Python video pipeline in `scripts/training-data/`.
-
 A subscription web app that helps a man get better with women, plus a
-life-improvement half. **Nobody has paid and the owner is the only user**, so
-the live database holds the owner's own data. Size recommendations for that
-stage. What a user can reach: `docs/product/map.md`; where it is going:
-`docs/product/vision.md`.
+life-improvement half. Nobody has paid and the owner is the only user, so the
+live database holds his own data. Size recommendations for that stage.
+Product map: `docs/product/map.md`; direction: `docs/product/vision.md`.
 
-## Commands
+## Rules
 
-- `npm run dev` — localhost:3000.
-- `npm test` (Vitest), `npm run test:e2e` (Playwright). The pre-commit hook
-  runs `npm test` and refuses the commit on failure.
-- `npm run build` — keep `--webpack`; the default bundler exhausts WSL memory.
-
-## Gotchas
-
+- Mobile first: build every screen for phone width, then widen for desktop.
+  A screen is not done until it works on a phone.
 - Other Claude sessions share this working tree. Commit with
   `git commit --only <paths>`; never `git add -A` or `git stash`.
-- One branch: `main`, which is the live site, so every push deploys.
-- DB access goes through `src/db/*Repo.ts`. Test writes against the live
-  database go inside `begin; … rollback;`.
-
-## Design
-
-Mobile first. Design and build every screen for phone width first, then
-widen it for desktop. A screen is not done until it works on a phone.
+- `main` is the live site; every push deploys. Commit and push your own work
+  without being asked.
+- `npm run build` keeps `--webpack`; the default bundler exhausts WSL memory.
+- Test writes against the live database go inside `begin; … rollback;`.
+- Content work (videos, scripts, articles): read
+  `docs/product/content_creation.md` first.
 
 ## Working with the owner
 
-The owner is not a programmer. Decide technical questions yourself; report in
-plain words. A report opens with "is it done?": answer that first (done / built
-/ live / not yet, and what is left), then any doubts.
+He is not a programmer. Decide technical questions yourself; report in plain
+words, opening with whether it is done (done / live / not yet, what is left).
 
-Only the owner decides, beforehand: spending money (also through a token, key
-or account that can), deleting real data, and anything that cannot be undone.
-This overrides any plan. A plan opens with these items, in plain words.
+Only he decides, beforehand: spending money (also through a token, key or
+account that can), deleting real data, and anything that cannot be undone.
 
 - Check the thing itself (the page, the output, the data), never a stand-in.
 - Quality always wins. Never offer a cheaper or quicker version of something
-  the owner has already seen done well.
-- Commit and push your own work without being asked.
-- Flag security risks when you see them, unasked.
-- Content creation (YouTube, videos, scripts, articles): start by reading
-  `docs/product/content_creation.md`.
+  he has already seen done well.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
