@@ -21,10 +21,13 @@ stage. What a user can reach: `docs/product/map.md`; where it is going:
 - Other Claude sessions share this working tree. Commit with
   `git commit --only <paths>`; never `git add -A` or `git stash`.
 - One branch: `main`, which is the live site, so every push deploys.
-  `training-rebuild` was retired on 2026-10-24; a plan that says to push
-  there means `main`.
 - DB access goes through `src/db/*Repo.ts`. Test writes against the live
   database go inside `begin; … rollback;`.
+
+## Design
+
+Mobile first. Design and build every screen for phone width first, then
+widen it for desktop. A screen is not done until it works on a phone.
 
 ## Working with the owner
 
@@ -37,19 +40,12 @@ or account that can), deleting real data, and anything that cannot be undone.
 This overrides any plan. A plan opens with these items, in plain words.
 
 - Check the thing itself (the page, the output, the data), never a stand-in.
-- Quality always wins. No shortcuts: never offer a cheaper or quicker
-  version of something the owner has already seen done well (e.g. his
-  ChatGPT-made Marcus portrait sets the bar for role model pictures). If
-  the quality route needs his account, time or money, say so and ask.
+- Quality always wins. Never offer a cheaper or quicker version of something
+  the owner has already seen done well.
 - Commit and push your own work without being asked.
 - Flag security risks when you see them, unasked.
-- Show, don't only tell. The owner likes seeing work on a visual page he can
-  act on, like the naming board he marks Yes/Maybe/No
-  (https://claude.ai/artifact/DSD8J1PJt4533EPytGD9v4). For choices,
-  comparisons and plans, try different visual forms, not only chat text.
-- Content creation (YouTube, videos, scripts, articles for an audience):
-  always start by reading `docs/product/content_creation.md`. It holds the
-  idea and the two personas (Senior and Doer) to answer in.
+- Content creation (YouTube, videos, scripts, articles): start by reading
+  `docs/product/content_creation.md`.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
