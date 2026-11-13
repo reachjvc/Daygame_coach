@@ -10,6 +10,9 @@ Written 2026-11-11, from your 43 notes on the "The Finished Video" page
 - Phase 0a done. 0b and 0c run; results page: https://claude.ai/artifact/CeXKs1KWgC97bwZFiLVyXF
 - 0b speakers wait for the owner's marks on https://claude.ai/artifact/5ZePdZuah7biEuCBwtdtqM
 - Then Phase 0d. Work files are outside the repo in `~/.cache/daygame-research/gold/`.
+- 2026-11-13: Phases 0b and 0c are replaced by `Plans/video-capture-bakeoff.md`
+  (words, speakers, body language, situation, tone, tested link by link).
+  This plan resumes at Phase 1 when that one ends; its Phase 9 does 0d.
 
 ## Owner items
 
