@@ -36,6 +36,18 @@ const gymRunning = (): TimetrackState =>
   baseState({ entries: [mail, { ...shape, stop: null, duration: -epochSeconds(shape.start) }] })
 const GYM_STOP = "2026-08-10T10:30:00.000Z"
 
+/**
+ * HOW LONG THE REAL-TIME TEST WAITS, AND WHY SO LONG.
+ *
+ * The first test runs on real timers: the screen's first exchange with the
+ * account takes about 5.7 s even alone (its own retry and check waits), and
+ * each wait used to allow 5 s. It passed on a quiet machine and failed in the
+ * full suite or beside a `next dev` (2026-11-14: "Unable to find … /^Saved/",
+ * the badge still "Saving 1…"). Nothing here measures speed, so the waits are
+ * generous and the test's own limit covers all three.
+ */
+const WAIT = { timeout: 20_000 }
+
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
@@ -50,13 +62,13 @@ beforeEach(() => {
 })
 
 describe("a new tab beside one of the previous build", () => {
-  test("takes the Stop the older tab tells it, and sends it", async () => {
+  test("takes the Stop the older tab tells it, and sends it", { timeout: 70_000 }, async () => {
     const account = fakeAccount(stateToRows(gymRunning(), USER), { userId: USER })
     vi.stubGlobal("fetch", vi.fn(account.fetch))
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(gymRunning()))
     window.history.replaceState(null, "", "/time")
     render(<TimetrackScreen account={USER} />)
-    await screen.findByRole("button", { name: /^Saved/ }, { timeout: 5_000 })
+    await screen.findByRole("button", { name: /^Saved/ }, WAIT)
 
     // the older tab stops Gym and tells the others the way the previous build did: no owner
     const stopped = stopTimer(gymRunning(), GYM_STOP).state
@@ -64,12 +76,8 @@ describe("a new tab beside one of the previous build", () => {
     older.postMessage({ kind: "state", serialised: JSON.stringify(stopped), id: "older-tab", base: null })
     older.close()
 
-    await waitFor(() => expect(within(screen.getByRole("main")).getByRole("button", { name: "Start timer" })).toBeInTheDocument(), {
-      timeout: 5_000,
-    })
-    await waitFor(() => expect(account.entry("gym")?.stopped_at, "the older tab's Stop never reached the account").toBe(GYM_STOP), {
-      timeout: 5_000,
-    })
+    await waitFor(() => expect(within(screen.getByRole("main")).getByRole("button", { name: "Start timer" })).toBeInTheDocument(), WAIT)
+    await waitFor(() => expect(account.entry("gym")?.stopped_at, "the older tab's Stop never reached the account").toBe(GYM_STOP), WAIT)
   })
 
   test("leaves a queued row it never held in the shared queue", async () => {
