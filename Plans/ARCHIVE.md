@@ -6,6 +6,7 @@ Code comments still name some of them. To read one, run
 
 | Plan | Why it went | Read it at |
 |---|---|---|
+| plan-progress-percent.md | Finished 2026-11-14: Phases 1–4 live (Today shows "Your plan is N % done", rings fill by percentage, Everything lists every step). His plan read 45 % on the day. | ea048b1d |
 | time-log-phone.md | Finished 2026-11-14: Phases 0–8 live (phone fixes, the frame, sheet, list, calendar, reports/settings, rename to Time Log, audit fixes). The owner's three phone checks are below. | b61a4736 |
 | life-plan-rebuild.md | Finished 2026-11-10: Phases 1–7, Q4 and the wheel live; owner accepted every card on the sign-off page in chat ("ill jsut accept all ur recommendations"). | 88ca5fe6 |
 | time-tracker-leftovers.md | Finished: Phases 1–5 live; the last two limits it noted were fixed in 7516348e. | 7516348e |
