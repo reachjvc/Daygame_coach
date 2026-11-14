@@ -195,6 +195,13 @@ Depends on 1.
 - Acceptance: screenshots at 390 px and 1280 px of the rail open and of
   Everything, for an empty, a half and a full test plan; the ring, the "n of
   m" and the card agree for each.
+- **Done 2026-11-14, commit 61a95abd.** Shots at 390 and 1280 of the rail
+  and Everything for an empty (0 %), half (50 %) and full (100 %) test plan;
+  every ring's aria-label, the rail line, the Edit-your-plan total, the card
+  and the Everything rows matched `planProgress` computed beside them. Page
+  width stays 390. The line under each blurb is "71 % · 3 of 7 ladder
+  questions answered" style, from `PROGRESS_COPY.railLine`; on a step
+  `stepState` calls empty there is no line (the Phase 1 question).
 
 ### Phase 4: check the real thing, ship
 - Repeat the B1 probe against the live plan: expect 45 % (or the figure his
@@ -205,6 +212,12 @@ Depends on 1.
   the pushed commit.
 - Report to the owner in plain words: live or not, his percentage, and the
   screenshots.
+- **Done 2026-11-14, live build 61a95abd.** Probe repeated read-only: 45 %,
+  most left Values & identity ("0 of 3 values ranked"). Per step: North star
+  50, Your 10s 100, Systems 27, Experiences 50, Season 87, Values 0,
+  Everything 0. The table above says 28 and 88: those were rounded to
+  nearest, the screen rounds down. `npm test` 613 of 613, typecheck ratchet,
+  due-now and landing e2e specs green.
 
 ## Ground rules for the executing session
 
