@@ -646,6 +646,23 @@ Depends on: Phases 5–8.
   Pose-only rules miss her stop and walking-on in one clip (tracks switch
   people); a picture-reader check on top is needed. The rebuilt subtitle
   transcript's timings run up to 1–2 s off the speech.
+- 2026-11-14 provisional probe scores (against the unchecked draft key, so
+  the order may move once the owner marks the Listen tab; `capture/runs_score_P1.csv`,
+  `code/score_all.py`). Words: the joint MOSS model is best overall (9% word
+  error, her words 19%), then Voxtral and YouTube's own captions (23–24% on her
+  words); the rebuilt-subtitle text scores best on her words but the draft key
+  leans on it, so that is not yet fair. Sound prep before Whisper: vocals
+  separation (htdemucs) helps a little; DeepFilter and MossFormer2 hurt badly
+  (they cut her voice). Speakers: MOSS's own labels put 16% of words on the
+  wrong person, DiariZen 19–21%, pyannote community-1 23%; pyannote 3.1 on
+  prepped sound collapses to one speaker. Voice prints find her lines (39–41 of
+  42) but also tag much of his speech as not-him. Face-based active speaker
+  (Light-ASD) fails: her face is blurred. First fusion (`code/fuse.py`: words
+  from one run, speakers voted across runs, named by the voice print) does not
+  yet beat MOSS alone (19% vs 16%).
+- GPU runs go through `code/gpu_guard.py` (capture folder): while the owner's
+  game is in a match, workers run a quarter of the time and are stopped if video
+  memory gets near full; full speed otherwise.
 
 ## Execution prompts
 
