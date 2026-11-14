@@ -226,7 +226,7 @@ describe("one click on the running time", () => {
     await mount(withRunning())
     fireEvent.focus(duration())
     fireEvent.click(within(box()).getByRole("button", { name: "Stop at…" }))
-    expect(screen.getByRole("dialog", { name: /Stopped at/ })).toBeTruthy()
+    expect(screen.getByRole("dialog", { name: /^Stop at…$/ })).toBeTruthy()
   })
 })
 

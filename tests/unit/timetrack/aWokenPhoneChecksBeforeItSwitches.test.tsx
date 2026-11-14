@@ -151,7 +151,7 @@ describe("a Stop at… confirmed while the phone is still checking", () => {
     render(<TogglLab />)
     await wait(50)
     fireEvent.click(main().getByRole("button", { name: "Stop at…" }))
-    const picker = within(screen.getByRole("dialog", { name: "Stopped at…" }))
+    const picker = within(screen.getByRole("dialog", { name: "Stop at…" }))
     const box = picker.getByLabelText("Time")
     fireEvent.focus(box)
     fireEvent.change(box, { target: { value: "1130" } })

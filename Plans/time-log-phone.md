@@ -215,6 +215,21 @@ Reference shots: `before/A-05`, `A-06-stopat`, `A-08`, `A-17`, `A-19`,
 | 3.10 | "Create a new project" inline: the name box is full width on its own line and the buttons sit under it. Today it is 118px and the hint reads "Name your p". | inline project form in `pickers.tsx` | phone only |
 | 3.11 | Uppercase plus `tracking-wide` is used only for small section labels (TODAY, YESTERDAY), never for buttons (DISCARD ENTRY becomes "Discard entry"). | `EntrySheet.tsx:598, 904, 912` | phone only |
 
+**Done 2026-11-14.** Walked at 390×844 and 360×740; shots in `shots/phase-3/after/`.
+- 3.1: Stop · Stop at… · Switched at… is one row under the chips: y 283–327 at 360×740, no scrolling.
+- 3.2: two boxes (time, date words), a tap opens that box's wheels with a "Type start/end" field above them, a second tap closes them; running End reads "now", not tappable; "Edit duration" heading and link gone. Differed: the wheels start open on an existing entry (end for finished, start for running) as before, so "move the start back and Done" stays 4 taps; a new entry's sheet opens with them folded. Typing a time is now in the open box's panel, not in the box itself.
+- 3.3: "Set to last stop time" and "Round stop time" are small outlined sentence-case buttons, hidden when they cannot act (no Round on a running entry).
+- 3.4: boxes read "Today", "Yesterday", "Wed, 11 Nov" (`formatDayHeader`).
+- 3.5 (PC too, wording): Stop at… on the phone steps −15 −5 +5 +15 with the 5/15/30 min and 1 h ago chips; its title says "Stop at…" on phone and PC (was "Stopped at…"). The PC keeps −5 −1 +1 +5.
+- 3.6: the new-timer sheet's button says "Start"; ⊕ still says "Create".
+- 3.7: Billable chip and "Created with… · last updated" hidden in the phone sheet.
+- 3.8: project picker and task rows 44px on a phone.
+- 3.9: tags open as a full-width list in the sheet with "Search or add a tag" on top, nothing focused (keyboard stays down), 44px rows, Done.
+- 3.10: "Name your project" is full width (358px at 390), buttons under it.
+- 3.11: no uppercase buttons left in the sheet.
+- Guard tests changed on purpose: sheet order (Stop row now under the chips, no Billable), the "typeable chip" test became "a box opens its wheels; a second tap closes them", Create → Start for a new timer, and the "Stopped at…" dialog name → "Stop at…".
+- PC check `shots/pc-after-3`: only the Stop at… title changed.
+
 ### Phase 4: The list, the run bar and the toasts
 
 Reference shots: `before/A-04-list`, `A-16-rowmenu`, `A-20-swipeleft`,

@@ -182,6 +182,8 @@ export function ProjectPicker({
                       }}
                       className={cn(
                         "flex w-full items-center gap-2 pl-9 pr-3 py-1 text-left text-xs text-muted-foreground hover:bg-secondary/60",
+                        // 44px on a phone, as every picker row (Plans/time-log-phone.md 3.8)
+                        "min-h-11 sm:min-h-0",
                         candidateTask.id === taskId && "text-primary",
                       )}
                     >

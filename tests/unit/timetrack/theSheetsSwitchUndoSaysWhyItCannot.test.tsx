@@ -67,7 +67,7 @@ test("Undo after a third timer started says so, and changes nothing", () => {
     )
   }
   render(<Shell />)
-  fireEvent.click(screen.getByRole("button", { name: "Create" }))
+  fireEvent.click(screen.getByRole("button", { name: "Start" }))
   const switched = pushToast.mock.calls.find(([text]) => String(text).startsWith("Stopped “Gym”"))
   expect(switched, "no switch toast").toBeDefined()
   // a third timer, from the other device, before Undo is pressed

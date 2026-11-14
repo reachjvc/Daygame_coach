@@ -33,6 +33,7 @@ import {
   unreadableTimeMessage,
 } from "../timetrackFormatService"
 import type { EntryDraft, IsoDateTime, TimeFormat, TimetrackState } from "../types"
+import { useIsMobile } from "../hooks/useIsMobile"
 import { MomentDrums, SKIPPED_HOUR } from "./Drums"
 import { Modal } from "./primitives"
 
@@ -43,6 +44,17 @@ export interface MomentControl {
   earliest: IsoDateTime | null
   latest: IsoDateTime
 }
+
+/**
+ * ONE SET OF STEPS ON THE PHONE (Plans/time-log-phone.md 3.5): −15 −5 +5 +15,
+ * as the entry sheet's. The PC keeps its −5 −1 +1 +5.
+ */
+const PHONE_STEPS: { minutes: number; text: string; label: string }[] = [
+  { minutes: -15, text: "−15", label: "15 minutes earlier" },
+  { minutes: -5, text: "−5", label: "5 minutes earlier" },
+  { minutes: 5, text: "+5", label: "5 minutes later" },
+  { minutes: 15, text: "+15", label: "15 minutes later" },
+]
 
 const STEPS: { minutes: number; text: string; label: string }[] = [
   { minutes: -5, text: "−5", label: "5 minutes earlier" },
@@ -75,6 +87,7 @@ export function MomentPicker({
    * until all four digits are in, and reading it at "11" would jump the
    * moment to eleven o'clock on the way.
    */
+  const isMobile = useIsMobile()
   const [typed, setTyped] = useState<string | null>(null)
   const [unreadable, setUnreadable] = useState<string | null>(null)
   const shown = formatTimeOfDay(value, timeFormat)
@@ -101,7 +114,7 @@ export function MomentPicker({
   const step = (minutes: number) => set(isoFromEpochSeconds(epochSeconds(value) + minutes * 60))
   const todayKey = dateKey(latest)
   const stepButton = (index: number) => {
-    const { minutes, text, label } = STEPS[index]
+    const { minutes, text, label } = (isMobile ? PHONE_STEPS : STEPS)[index]
     return (
       <Button
         type="button"
@@ -179,7 +192,8 @@ export type MomentKind = "switch" | "stop" | "start"
 
 const TITLES: Record<MomentKind, string> = {
   switch: "Switched at…",
-  stop: "Stopped at…",
+  // the button says "Stop at…", and so does the screen it opens (3.5, PC too)
+  stop: "Stop at…",
   start: "Started at…",
 }
 

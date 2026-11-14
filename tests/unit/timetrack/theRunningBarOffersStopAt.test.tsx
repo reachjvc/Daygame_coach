@@ -80,7 +80,7 @@ describe("the running timer bar", () => {
     const { latest, pushToast } = open()
 
     fireEvent.click(screen.getByRole("button", { name: "Stop at…" }))
-    const picker = within(screen.getByRole("dialog", { name: "Stopped at…" }))
+    const picker = within(screen.getByRole("dialog", { name: "Stop at…" }))
     expect(picker.queryByLabelText("Switched to"), "Stopped at… asked for a next entry").toBeNull()
     const box = picker.getByLabelText("Time")
     fireEvent.focus(box)
@@ -101,7 +101,7 @@ describe("the running timer bar", () => {
   test("Stop at… has the drums (Phase 5): two hours back on the hour drum is 12:30, and after now is refused in words", () => {
     const { latest } = open()
     fireEvent.click(screen.getByRole("button", { name: "Stop at…" }))
-    const picker = within(screen.getByRole("dialog", { name: "Stopped at…" }))
+    const picker = within(screen.getByRole("dialog", { name: "Stop at…" }))
     const hour = picker.getByRole("listbox", { name: "Hour" })
 
     fireEvent.keyDown(hour, { key: "ArrowDown" })
@@ -118,8 +118,8 @@ describe("the running timer bar", () => {
   test("Stopped at… is in the ⋮ menu as well", () => {
     open()
     fireEvent.click(screen.getByRole("button", { name: "More timer actions" }))
-    fireEvent.click(screen.getByRole("button", { name: "Stopped at…" }))
+    fireEvent.click(screen.getByRole("button", { name: "Stop at…" }))
 
-    expect(screen.getByRole("dialog", { name: "Stopped at…" })).toBeInTheDocument()
+    expect(screen.getByRole("dialog", { name: "Stop at…" })).toBeInTheDocument()
   })
 })

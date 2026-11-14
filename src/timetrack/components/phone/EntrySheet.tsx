@@ -27,11 +27,10 @@ import { useContext, useEffect, useMemo, useRef, useState, type KeyboardEvent, t
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import type { PushToast } from "../../hooks/useTimetrack"
-import { IconAuto, IconClose, IconDelete, IconEdit, IconMenu, IconMoney, IconStop, IconTag, IconTimer } from "../../icons"
+import { IconAuto, IconClose, IconDelete, IconEdit, IconMenu, IconStop, IconTag } from "../../icons"
 import {
   SHEET_DURATION_HINT,
   changesBetween,
-  chipDate,
   createFromSheet,
   edgeBounds,
   entryDraftOf,
@@ -64,7 +63,7 @@ import {
   dateKey,
   epochSeconds,
   formatClock,
-  formatDate,
+  formatDayHeader,
   formatIdleSpan,
   formatTimeOfDay,
   isoFromEpochSeconds,
@@ -84,7 +83,7 @@ import type { AfterCheck } from "../afterCheck"
 import { MomentDrums } from "../Drums"
 import type { MomentKind } from "../MomentPicker"
 import { announceNeighbours, undoOrSay } from "../neighbourNotice"
-import { DescriptionField, ProjectPicker, TagPicker } from "../pickers"
+import { DescriptionField, ProjectPicker } from "../pickers"
 import { ColorDot, DayPicker, Dropdown, touchRow, usableBand } from "../primitives"
 import { landOnCurrent, type SetState } from "./landOnCurrent"
 import { deleteWithUndo } from "./PhoneEntryList"
@@ -190,6 +189,12 @@ export function EntrySheet({
   const format = state.user.timeFormat
 
   const [edge, setEdge] = useState<Edge>(() => (base?.stop === null ? "start" : "stop"))
+  /**
+   * The wheels, for the box last tapped; a second tap on it closes them
+   * (Plans/time-log-phone.md 3.2). Open at first on an existing entry, as
+   * before, so "move the start back and Done" stays four taps; a new entry's
+   * sheet opens with them folded.
+   */
   const [drumsOpen, setDrumsOpen] = useState(!isNew)
   const [asking, setAsking] = useState(false)
   const offerUndo = useContext(UndoContext)
@@ -200,9 +205,9 @@ export function EntrySheet({
    */
   const [notice, setNotice] = useState<string | null>(null)
   const refuse = (text: string) => setNotice(text)
-  /** one tap on a chip makes it typeable: its input takes the focus, its time selected (findability 2026-11-05) */
-  const focusChip = useRef<Edge | null>(null)
   const [moving, setMoving] = useState(false)
+  /** the tag list, drawn in the sheet (Plans/time-log-phone.md 3.9) */
+  const [tagsOpen, setTagsOpen] = useState(false)
   /** the "@ Add a project" chip's asks (`DescriptionField`'s `askProject`) */
   const [askProject, setAskProject] = useState(0)
   /** "Create a new project" with no name typed: the name it asks for */
@@ -469,74 +474,91 @@ export function EntrySheet({
   const selected: Edge = running && edge === "stop" ? "start" : edge
   const selectedIso = selected === "start" ? shown.start : shown.stop!
 
+  /**
+   * ONE "START → END" BLOCK (Plans/time-log-phone.md 3.2, 3.4). Two boxes, the
+   * same for a new entry and an existing one; a tap opens the wheels for that
+   * box and a second tap closes them. The date reads "Today", "Yesterday" or
+   * "Thu, 12 Nov", never "11-13". A running entry's end reads "now" and is not
+   * a box to tap.
+   */
   const chip = (which: Edge) => {
     const iso = which === "start" ? shown.start : shown.stop
     const label = which === "start" ? "Start" : "End"
     if (iso === null) {
-      // a running entry's end is "now", with no date, as Toggl's is [H25 help_14 f012]
       return (
-        <span data-testid="end-chip" className="flex min-h-12 items-center justify-center rounded-lg px-3 text-sm tabular-nums">
-          {formatTimeOfDay(isoFromEpochSeconds(Math.max(nowSec, ownSecond)), format)}
+        <span
+          data-testid="end-chip"
+          aria-label="End: now, still running"
+          className="flex min-h-14 flex-col items-center justify-center rounded-lg border border-dashed border-border px-2 text-sm text-muted-foreground"
+        >
+          now
         </span>
       )
     }
     const time = formatTimeOfDay(iso, format)
-    const date = chipDate(dateKey(iso), state.user.dateFormat)
-    if (which === selected) {
-      return (
-        <div className="flex min-h-12 items-center gap-1 rounded-lg border border-primary bg-primary/10 px-2">
-          <input
-            ref={(input) => {
-              if (!input || focusChip.current !== which) return
-              focusChip.current = null
-              input.focus()
-              input.select()
-            }}
-            aria-label={`${label} time`}
-            inputMode="numeric"
-            value={chipText ?? time}
-            onFocus={(event) => {
-              putChip(event.currentTarget.value)
-              event.currentTarget.select()
-            }}
-            onChange={(event) => putChip(event.target.value)}
-            onBlur={commitChip}
-            onKeyDown={keys(commitChip, () => putChip(null))}
-            // the whole chip's height is the field: it was a 23px strip inside a 44px box (alpha fast-time-03)
-            className="-my-px h-12 w-full min-w-0 bg-transparent text-center text-sm tabular-nums outline-none"
-          />
-          <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{date}</span>
-        </div>
-      )
-    }
+    const date = formatDayHeader(dateKey(iso), dateKey(nowIso))
+    const open = drumsOpen && which === selected
     return (
       <button
         type="button"
         aria-label={`${label}: ${time} ${date}`}
+        aria-expanded={open}
         onClick={() => {
           commitChip()
-          focusChip.current = which
+          if (open) {
+            setDrumsOpen(false)
+            return
+          }
           setEdge(which)
+          setDrumsOpen(true)
         }}
-        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-border px-2 text-sm tabular-nums hover:bg-secondary/60"
+        className={cn(
+          "flex min-h-14 w-full flex-col items-center justify-center rounded-lg border px-2 tabular-nums",
+          open ? "border-primary bg-primary/10" : "border-border hover:bg-secondary/60",
+        )}
       >
-        {time}
+        <span className="text-lg font-medium leading-tight">{time}</span>
         <span className="text-xs text-muted-foreground">{date}</span>
       </button>
     )
   }
 
-  const textLink = (label: string, enabled: boolean, run: () => void) => (
-    <button
-      type="button"
-      disabled={!enabled}
-      onClick={run}
-      // 48px, Toggl Android's (Material) size: these were 36 (alpha fast-time-03)
-      className="mt-1 min-h-12 w-full whitespace-nowrap rounded px-0.5 text-[10px] font-semibold uppercase text-primary disabled:text-muted-foreground disabled:opacity-60"
-    >
-      {label}
-    </button>
-  )
+  /** the open box's time, typed: what the chip's own field used to take (findability 2026-11-05) */
+  const typedTime = () => {
+    const iso = selected === "start" ? shown.start : shown.stop
+    if (iso === null) return null
+    const label = selected === "start" ? "Start" : "End"
+    return (
+      <label className="flex items-center justify-center gap-2 pb-1 text-xs text-muted-foreground">
+        Type {label.toLowerCase()}
+        <input
+          aria-label={`${label} time`}
+          inputMode="numeric"
+          value={chipText ?? formatTimeOfDay(iso, format)}
+          onFocus={(event) => {
+            putChip(event.currentTarget.value)
+            event.currentTarget.select()
+          }}
+          onChange={(event) => putChip(event.target.value)}
+          onBlur={commitChip}
+          onKeyDown={keys(commitChip, () => putChip(null))}
+          className="h-11 w-24 rounded-md border border-border bg-background/60 text-center text-base tabular-nums text-foreground outline-none"
+        />
+      </label>
+    )
+  }
+
+  /** "Set to last stop time", "Round stop time": small outlined buttons, shown only when they can do something (3.3) */
+  const textLink = (label: string, enabled: boolean, run: () => void) =>
+    enabled ? (
+      <button
+        type="button"
+        onClick={run}
+        className="mt-1.5 min-h-11 w-full rounded-md border border-border px-1 text-xs text-foreground hover:bg-secondary/60"
+      >
+        {label}
+      </button>
+    ) : null
 
   const menuItems: { label: string; run: () => void; pressed?: boolean }[] = [
     ...(shown.stop !== null || epochSeconds(shown.start) <= nowSec
@@ -628,9 +650,10 @@ export function EntrySheet({
           <button
             type="button"
             onClick={done}
-            className="min-h-11 rounded-md px-3 text-sm font-semibold uppercase tracking-wide text-primary hover:bg-secondary"
+            className="min-h-11 rounded-md px-3 text-base font-semibold text-primary hover:bg-secondary"
           >
-            {isNew ? "Create" : "Done"}
+            {/* a timer not yet started says what the tap does (3.6); sentence case, as every button (3.11) */}
+            {target.mode === "start" ? "Start" : isNew ? "Create" : "Done"}
           </button>
         </div>
 
@@ -744,7 +767,51 @@ export function EntrySheet({
                 </button>
               )}
             </div>
-            <TagPicker
+            <button
+              type="button"
+              aria-expanded={tagsOpen}
+              onClick={() => setTagsOpen((open) => !open)}
+              className={cn(
+                "flex min-h-11 items-center gap-1.5 rounded-full border border-border px-3 text-sm",
+                tagNames.length ? "bg-secondary" : "text-muted-foreground",
+              )}
+            >
+              <IconTag className="size-3.5" />
+              <span className="max-w-[160px] truncate">{tagNames.length ? tagNames.join(", ") : "Add tags"}</span>
+            </button>
+            {/* Billable is a PC thing: hidden on the phone (D2, 3.7); the entry keeps its value */}
+          </div>
+
+          {/* running: Stop, Stop at… and Switched at… right under the name and chips,
+              seen without scrolling at 360×740 (D-SWITCHED, Plans/time-log-phone.md 3.1) */}
+          {target.mode === "edit" && running && (
+            <div className="pb-3">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={stopNow}
+                  className="flex h-11 items-center gap-2 rounded-full bg-destructive px-4 text-sm font-semibold text-white shadow-md"
+                >
+                  <IconStop className="size-4 fill-current" />
+                  Stop
+                </button>
+                <Button type="button" variant="outline" className="h-11 flex-1 px-2" onClick={() => moment("stop")}>
+                  Stop at…
+                </Button>
+                <Button type="button" variant="outline" className="h-11 flex-1 px-2" onClick={() => moment("switch")}>
+                  Switched at…
+                </Button>
+              </div>
+              {forgotten && (
+                <p className="pt-2 text-xs text-muted-foreground">
+                  Running for {formatIdleSpan(forgotten.hours * 3600)}. Forgot to stop it? Stop at… ends it where the work did.
+                </p>
+              )}
+            </div>
+          )}
+
+          {tagsOpen && (
+            <SheetTagList
               state={state}
               tagIds={shown.tagIds}
               onChange={(tagIds) => edit((d) => ({ ...d, tagIds }))}
@@ -753,42 +820,21 @@ export function EntrySheet({
                 setState(layOnto(state, made.state))
                 edit((d) => ({ ...d, tagIds: [...new Set([...d.tagIds, made.id])] }))
               }}
-              renderTrigger={() => (
-                <span
-                  className={cn(
-                    "flex min-h-11 items-center gap-1.5 rounded-full border border-border px-3 text-sm",
-                    tagNames.length ? "bg-secondary" : "text-muted-foreground",
-                  )}
-                >
-                  <IconTag className="size-3.5" />
-                  <span className="max-w-[160px] truncate">{tagNames.length ? tagNames.join(", ") : "Add tags"}</span>
-                </span>
-              )}
+              onDone={() => setTagsOpen(false)}
             />
-            <button
-              type="button"
-              aria-pressed={shown.billable}
-              onClick={() => edit((d) => ({ ...d, billable: !d.billable }))}
-              className={cn(
-                "flex min-h-11 items-center gap-1.5 rounded-full border border-border px-3 text-sm",
-                shown.billable ? "bg-secondary text-foreground" : "text-muted-foreground",
-              )}
-            >
-              <IconMoney className="size-3.5" />
-              Billable
-            </button>
-          </div>
-
+          )}
           {namingProject !== null && (
-            <div className="flex items-center gap-2 pb-3">
+            // the name on its own full-width line, the buttons under it (3.10): it was 118px, "Name your p"
+            <div className="grid gap-2 pb-3">
               <input
                 aria-label="New project name"
                 placeholder="Name your project"
                 autoFocus
                 value={namingProject}
                 onChange={(event) => setNamingProject(event.target.value)}
-                className="h-11 min-w-0 flex-1 rounded-md border border-border bg-background/60 px-3 text-base outline-none"
+                className="h-11 w-full min-w-0 rounded-md border border-border bg-background/60 px-3 text-base outline-none"
               />
+              <div className="flex justify-end gap-2">
               <Button
                 type="button"
                 className="h-11"
@@ -805,6 +851,7 @@ export function EntrySheet({
               <Button type="button" variant="ghost" className="h-11" onClick={() => setNamingProject(null)}>
                 Cancel
               </Button>
+              </div>
             </div>
           )}
           {pickingProject && (
@@ -823,13 +870,8 @@ export function EntrySheet({
               renderTrigger={() => <span className="sr-only">Project and task</span>}
             />
           )}
-          {/* Edit duration: start → end, the two shortcuts, the drums where Toggl's wheel is */}
-          <section aria-label="Edit duration" className="rounded-xl bg-secondary/40 p-3">
-            {!isNew && (
-              <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                <IconTimer className="size-3.5" /> Edit duration
-              </p>
-            )}
+          {/* Start → End: two boxes, a tap opens that box's wheels (3.2); the shortcuts under them (3.3) */}
+          <section aria-label="Start and end" className="rounded-xl bg-secondary/40 p-3">
             {shown.duronly && <p className="mb-2 text-xs text-muted-foreground">Duration only: the list hides its start and end.</p>}
             <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2">
               <div>
@@ -840,26 +882,16 @@ export function EntrySheet({
                   show(moved, (d) => ({ ...d, start: lastStop }))
                 })}
               </div>
-              <span className="flex min-h-12 items-center text-muted-foreground">→</span>
+              <span className="flex min-h-14 items-center text-muted-foreground">→</span>
               <div>
                 {chip("stop")}
                 {textLink("Round stop time", rounded !== null, () => rounded && edit((d) => ({ ...d, stop: rounded })))}
               </div>
             </div>
 
-            {isNew && (
-              <button
-                type="button"
-                aria-expanded={drumsOpen}
-                onClick={() => setDrumsOpen((open) => !open)}
-                className="mt-1 flex min-h-11 items-center gap-1 text-sm font-medium text-primary"
-              >
-                <span aria-hidden className={cn("transition-transform", drumsOpen && "rotate-90")}>›</span> Edit duration
-              </button>
-            )}
-
             {drumsOpen && (
               <div className="pt-2">
+                {typedTime()}
                 <MomentDrums
                   key={selected}
                   label={selected === "start" ? "Start" : "End"}
@@ -899,33 +931,6 @@ export function EntrySheet({
             )}
           </section>
 
-          {/* running: the big Stop, with the owner's Stop at… and Switched at… beside it (D-SWITCHED) */}
-          {target.mode === "edit" && running && (
-            <div className="pt-4">
-              <div className="flex items-center justify-center gap-6">
-                <button type="button" onClick={stopNow} className="flex flex-col items-center gap-1 text-sm font-medium">
-                  <span className="flex size-16 items-center justify-center rounded-full bg-destructive text-white shadow-md">
-                    <IconStop className="size-6 fill-current" />
-                  </span>
-                  Stop
-                </button>
-                <div className="flex flex-col gap-1">
-                  <Button type="button" variant="outline" className="h-11" onClick={() => moment("stop")}>
-                    Stop at…
-                  </Button>
-                  <Button type="button" variant="outline" className="h-11" onClick={() => moment("switch")}>
-                    Switched at…
-                  </Button>
-                </div>
-              </div>
-              {forgotten && (
-                <p className="pt-2 text-center text-xs text-muted-foreground">
-                  Running for {formatIdleSpan(forgotten.hours * 3600)}. Forgot to stop it? Stop at… ends it where the work did.
-                </p>
-              )}
-            </div>
-          )}
-
           <div className="mt-4 border-t border-border pt-2">
             {target.mode === "edit" ? (
               <button
@@ -934,7 +939,7 @@ export function EntrySheet({
                   deleteWithUndo(state, [target.entryId], setState, pushToast, offerUndo)
                   onClose()
                 }}
-                className="flex min-h-11 w-full items-center justify-center gap-2 text-sm font-semibold uppercase tracking-wide text-destructive"
+                className="flex min-h-11 w-full items-center justify-center gap-2 text-sm font-semibold text-destructive"
               >
                 <IconDelete className="size-4" /> Delete time entry
               </button>
@@ -942,18 +947,12 @@ export function EntrySheet({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex min-h-11 w-full items-center justify-center text-sm font-semibold uppercase tracking-wide text-destructive"
+                className="flex min-h-11 w-full items-center justify-center text-sm font-semibold text-destructive"
               >
                 Discard entry
               </button>
             )}
-            {entry && (
-              <p className="pt-1 text-center text-[11px] text-muted-foreground">
-                Created with {entry.createdWith}
-                {entry.sourceEventId ? " · imported from a calendar event" : ""} · last updated {formatDate(dateKey(entry.at), state.user.dateFormat)}{" "}
-                {formatTimeOfDay(entry.at, format)}
-              </p>
-            )}
+            {/* "Created with … · last updated …" is hidden on the phone (D2, 3.7) */}
           </div>
         </div>
       </div>
@@ -1007,4 +1006,84 @@ export function EntrySheet({
     const moved = probe.state.entries.find((e) => e.id === target.entryId)
     if (moved) edit((d) => ({ ...d, start: moved.start, stop: moved.stop }))
   }
+}
+
+/**
+ * THE TAGS, INSIDE THE SHEET (Plans/time-log-phone.md 3.9). A floating picker
+ * was 256px wide and focused its search at once, so the keyboard came up and
+ * covered half the list. Here it is a full-width list under the chips with the
+ * search on top, and the keyboard stays down until the search is tapped.
+ */
+function SheetTagList({
+  state,
+  tagIds,
+  onChange,
+  onCreateTag,
+  onDone,
+}: {
+  state: TimetrackState
+  tagIds: Id[]
+  onChange: (tagIds: Id[]) => void
+  onCreateTag: (name: string) => void
+  onDone: () => void
+}) {
+  const [query, setQuery] = useState("")
+  const typed = query.trim()
+  const visible = state.tags.filter((t) => !typed || t.name.toLowerCase().includes(typed.toLowerCase()))
+  const isNew = typed !== "" && !state.tags.some((t) => t.name.toLowerCase() === typed.toLowerCase())
+  return (
+    <div role="group" aria-label="Tags" className="mb-3 rounded-xl border border-border">
+      <div className="flex items-center gap-2 border-b border-border p-2">
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key !== "Enter" || !isNew) return
+            event.preventDefault()
+            onCreateTag(typed)
+            setQuery("")
+          }}
+          placeholder="Search or add a tag"
+          aria-label="Search or add a tag"
+          className="h-11 min-w-0 flex-1 rounded-md border border-border bg-background/60 px-3 text-base outline-none"
+        />
+        <Button type="button" variant="ghost" className="h-11 px-3" onClick={onDone}>
+          Done
+        </Button>
+      </div>
+      <div className="max-h-64 overflow-y-auto py-1">
+        {visible.map((tag) => {
+          const on = tagIds.includes(tag.id)
+          return (
+            <button
+              key={tag.id}
+              type="button"
+              role="checkbox"
+              aria-checked={on}
+              onClick={() => onChange(on ? tagIds.filter((id) => id !== tag.id) : [...tagIds, tag.id])}
+              className="flex min-h-11 w-full items-center gap-3 px-3 text-left text-sm hover:bg-secondary/60"
+            >
+              <span className={cn("flex size-5 shrink-0 items-center justify-center rounded border", on ? "border-primary bg-primary text-primary-foreground" : "border-border")}>
+                {on && <span aria-hidden>✓</span>}
+              </span>
+              <span className="truncate"># {tag.name}</span>
+            </button>
+          )
+        })}
+        {visible.length === 0 && !isNew && <p className="px-3 py-3 text-xs text-muted-foreground">{state.tags.length === 0 ? "No tags yet: type a name to add one" : "No tag matches"}</p>}
+        {isNew && (
+          <button
+            type="button"
+            onClick={() => {
+              onCreateTag(typed)
+              setQuery("")
+            }}
+            className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-primary hover:bg-secondary/60"
+          >
+            + Create “{typed}”
+          </button>
+        )}
+      </div>
+    </div>
+  )
 }

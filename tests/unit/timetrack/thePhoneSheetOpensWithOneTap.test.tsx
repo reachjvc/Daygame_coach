@@ -105,21 +105,26 @@ describe("one tap on the running bar", () => {
       s.getByPlaceholderText("I’m working on…"),
       s.getByRole("button", { name: /Alpha/ }),
       s.getByRole("button", { name: /Add tags/ }),
-      s.getByRole("button", { name: /Billable/ }),
-      s.getByRole("textbox", { name: "Start time" }),
-      s.getByRole("listbox", { name: "Start hour" }),
-      s.getByRole("button", { name: "15 minutes earlier" }),
+      // Stop, Stop at… and Switched at… right under the chips (Plans/time-log-phone.md 3.1, 2026-11-14)
       s.getByRole("button", { name: "Stop" }),
       s.getByRole("button", { name: "Stop at…" }),
       s.getByRole("button", { name: "Switched at…" }),
+      s.getByRole("button", { name: /^Start: 11:00/ }),
+      s.getByRole("textbox", { name: "Start time" }),
+      s.getByRole("listbox", { name: "Start hour" }),
+      s.getByRole("button", { name: "15 minutes earlier" }),
       s.getByRole("button", { name: "Delete time entry" }),
     ]
+    // Billable and the "Created with…" line are PC things (D2, 3.7)
+    expect(s.queryByRole("button", { name: /Billable/ })).toBeNull()
+    expect(s.queryByText(/Created with/)).toBeNull()
     for (let i = 1; i < order.length; i++) {
       expect(order[i - 1].compareDocumentPosition(order[i]) & Node.DOCUMENT_POSITION_FOLLOWING, `item ${i} out of order`).toBeTruthy()
     }
-    // a running entry's end is the clock as it runs, with no date, as Toggl's (H25 help_14 f012)
+    // a running entry's end reads "now" and is no box to tap (3.2)
     const end = s.getByTestId("end-chip")
-    expect(end.textContent).toBe("12:00")
+    expect(end.textContent).toBe("now")
+    expect(end.tagName).not.toBe("BUTTON")
     expect(s.getByText("1:00:00")).toBeTruthy()
   })
 
@@ -145,7 +150,7 @@ describe("one tap on the running bar", () => {
     await open(runningCall())
     fireEvent.click(within(bar()).getByRole("button", { name: "Edit the running time entry" }))
     fireEvent.click(inSheet().getByRole("button", { name: "Stop at…" }))
-    const picker = screen.getByRole("dialog", { name: "Stopped at…" })
+    const picker = screen.getByRole("dialog", { name: "Stop at…" })
     fireEvent.click(within(picker).getByRole("button", { name: "15 min ago" }))
     fireEvent.click(within(picker).getByRole("button", { name: /^Stop at/ }))
     await waitFor(() => expect(stored().entries.find((e) => e.description === "Call")?.stop).toBe(at("11:45")))
@@ -237,13 +242,17 @@ describe("one tap on a row", () => {
     await waitFor(() => expect(stored().entries.find((e) => e.id === "1")).toMatchObject({ start: at("08:30"), stop: at("09:00") }))
   })
 
-  test("one tap on a time chip selects it and makes it typeable, its time selected so typing replaces it", async () => {
+  test("a tap on a box opens its wheels and its typed time; a second tap closes them (3.2, 2026-11-14)", async () => {
     await open(finished())
     fireEvent.click(within(screen.getByRole("main")).getByText("Email"))
-    fireEvent.click(inSheet().getByRole("button", { name: /^Start/ }))
+    const startBox = inSheet().getByRole("button", { name: /^Start: 08:00 Today/ })
+    fireEvent.click(startBox)
+    expect(inSheet().getByRole("listbox", { name: "Start hour" })).toBeTruthy()
     const start = inSheet().getByRole("textbox", { name: "Start time" }) as HTMLInputElement
-    expect(document.activeElement).toBe(start)
+    fireEvent.focus(start)
     expect([start.selectionStart, start.selectionEnd]).toEqual([0, start.value.length])
+    fireEvent.click(inSheet().getByRole("button", { name: /^Start: 08:00 Today/ }))
+    expect(inSheet().queryByRole("listbox", { name: "Start hour" })).toBeNull()
   })
 
   test("a typed end before the start is refused in Toggl's words, and the end stays", async () => {
@@ -294,19 +303,20 @@ describe("one tap on a row", () => {
 })
 
 describe("a new entry", () => {
-  test("I'm working on… opens CREATE, already counting from the tap", async () => {
+  test("I'm working on… opens START, already counting from the tap", async () => {
     await open(finished())
     fireEvent.click(within(bar()).getByRole("button", { name: /working on/ }))
     const s = inSheet()
-    expect(s.getByRole("button", { name: "Create" })).toBeTruthy()
+    // a timer not yet started says Start (3.6, 2026-11-14)
+    expect(s.getByRole("button", { name: "Start" })).toBeTruthy()
     expect(s.getByText("0:00:00")).toBeTruthy()
-    // the drums are folded behind Edit duration here, as in Toggl's start sheet
+    // the wheels are folded until the Start box is tapped (3.2)
     expect(s.queryByRole("listbox", { name: "Start hour" })).toBeNull()
-    expect(s.getByRole("button", { name: /Edit duration/ })).toBeTruthy()
+    expect(s.getByRole("button", { name: /^Start: 12:00 Today/ })).toBeTruthy()
 
     vi.setSystemTime(new Date(2026, 7, 10, 12, 0, 20))
     fireEvent.change(s.getByPlaceholderText("I’m working on…"), { target: { value: "Design website" } })
-    fireEvent.click(s.getByRole("button", { name: "Create" }))
+    fireEvent.click(s.getByRole("button", { name: "Start" }))
     await waitFor(() => expect(runningNow()).toMatchObject({ description: "Design website", start: NOW.toISOString() }))
   })
 
