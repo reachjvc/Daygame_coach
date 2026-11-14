@@ -51,6 +51,7 @@ import type { EntryDraft, Id, IsoDate, AlertEvent, ReportConfig, TimeEntry, Time
 import { AfterCheckContext, type AfterCheck } from "../afterCheck"
 import { AlertsBell } from "../AlertsBell"
 import { undoOrSay } from "../neighbourNotice"
+import { useBackCloses } from "../../hooks/useBackCloses"
 import { undoStopAt } from "../../timeFixService"
 import { SignedOutBanner } from "../SignedOutBanner"
 import { useMomentActions } from "../useMomentActions"
@@ -250,6 +251,21 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
   /** Reports: Toggl's short screen, or "Details", the full reports (D-PHONE-REPORTS) */
   const [reportsDetails, setReportsDetails] = useState(false)
   const reportsDownload = useRef<(() => void) | null>(null)
+  /**
+   * DETAILS IS A STEP IN THE HISTORY (audit 2026-11-14, b04): Android's Back
+   * left the tracker from it. Opening pushes a step on the same address;
+   * Back, or "‹ Back to the short report", takes it away.
+   */
+  const openDetails = () => {
+    window.history.pushState({ timetrack: "report-details" }, "", window.location.href)
+    setReportsDetails(true)
+  }
+  useEffect(() => {
+    if (!reportsDetails) return
+    const onPop = () => setReportsDetails(false)
+    window.addEventListener("popstate", onPop)
+    return () => window.removeEventListener("popstate", onPop)
+  }, [reportsDetails])
   /** a block a held finger made: its sheet opens with the name ready to type (audit findability, Phase 8) */
   const nameFor = useRef<Id | null>(null)
   /**
@@ -301,6 +317,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
   /** the calendar block whose panel is open (D-PHONE-CAL) */
   const [blockId, setBlockId] = useState<Id | null>(null)
   const block = screen === "calendar" && blockId ? (state.entries.find((e) => e.id === blockId && !e.serverDeletedAt) ?? null) : null
+  useBackCloses(block !== null, () => setBlockId(null))
 
   // --- the sheet, and Back ----------------------------------------------------
 
@@ -320,6 +337,8 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
   const [shownEdit, setShownEdit] = useState<Id | null>(editId)
   if (shownEdit !== editId) {
     if (shownEdit !== null && editId === null && !closing.current && dirty.current) setBackedOut({ mode: "edit", entryId: shownEdit })
+    // Back on a held block's sheet with nothing changed takes the block away, as ✕ does (audit 2026-11-14, b06)
+    else if (shownEdit !== null && editId === null && !closing.current && held.current?.id === shownEdit) setHeldClosed(shownEdit)
     closing.current = false
     setShownEdit(editId)
   }
@@ -409,7 +428,9 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
     return () => window.removeEventListener("popstate", onPop)
   }, [])
   const backToTab = () => {
-    if (stepsAway.current === 1) {
+    // inside a Settings section its own step is on top: one Back would only reach the list
+    const subStep = (window.history.state as { timetrack?: string } | null)?.timetrack === "settings-section"
+    if (stepsAway.current === 1 && !subStep) {
       window.history.back()
       return
     }
@@ -660,14 +681,14 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
                         }
                       : config,
                   )
-                  setReportsDetails(true)
+                  openDetails()
                 }}
               />
             )}
             {/* "Details": today's full reports, every tab kept (D-PHONE-REPORTS) */}
             {screen === "reports" && reportsDetails && (
               <>
-                <Button variant="ghost" size="sm" className="h-11 px-1" onClick={() => setReportsDetails(false)}>
+                <Button variant="ghost" size="sm" className="h-11 px-1" onClick={() => window.history.back()}>
                   ‹ Back to the short report
                 </Button>
                 <ReportsView

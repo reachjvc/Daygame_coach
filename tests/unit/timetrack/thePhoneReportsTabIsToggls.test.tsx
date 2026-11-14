@@ -139,8 +139,9 @@ describe("the Reports tab", () => {
     fireEvent.click(main().getByRole("button", { name: "Details" }))
     for (const tab of ["Summary", "Detailed"]) expect(main().getAllByRole("button", { name: tab }).length).toBeGreaterThan(0)
     for (const tab of ["Workload", "Profitability", "My reports"]) expect(main().queryAllByRole("button", { name: tab })).toHaveLength(0)
+    // a step in the history since 2026-11-14 (audit b04): the button steps back, as Android's Back does
     fireEvent.click(main().getByRole("button", { name: /Back to the short report/ }))
-    expect(main().getByRole("region", { name: "Tracked hours" })).toBeTruthy()
+    expect(await main().findByRole("region", { name: "Tracked hours" })).toBeTruthy()
   })
 
   test("⬇ downloads the range", async () => {

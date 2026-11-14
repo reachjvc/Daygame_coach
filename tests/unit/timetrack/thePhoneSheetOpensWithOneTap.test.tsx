@@ -332,3 +332,45 @@ describe("a new entry", () => {
     )
   })
 })
+
+/**
+ * WHAT THE ADVERSARIAL AUDIT OF 2026-11-14 FOUND (Plans/time-log-phone.md,
+ * Phase 8): a sheet's ⋮ dropped what was typed, a double tap on ■ started a
+ * blank timer, and the sheet's Stop had no Undo.
+ */
+describe("the audit's fixes", () => {
+  test("⋮ Duplicate keeps the name typed in the sheet, on both copies", async () => {
+    await open(finished())
+    fireEvent.click(within(screen.getByRole("main")).getByText("Email"))
+    fireEvent.change(inSheet().getByPlaceholderText("I’ve worked on…"), { target: { value: "Emails to Ana" } })
+    fireEvent.click(inSheet().getByRole("button", { name: "More options" }))
+    fireEvent.click(screen.getByRole("button", { name: "Duplicate" }))
+    await waitFor(() => expect(stored().entries.filter((e) => e.description === "Emails to Ana")).toHaveLength(2))
+    expect(stored().entries.some((e) => e.description === "Email")).toBe(false)
+  })
+
+  test("a double tap on the bar's ■ stops the timer and starts nothing", async () => {
+    await open(runningCall())
+    // let the bar settle after it first drew, as a person reading it would
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 800))
+    })
+    fireEvent.click(within(bar()).getByRole("button", { name: "Stop timer" }))
+    // the second tap of the pair lands on the ▶ drawn in its place
+    const start = await within(bar()).findByRole("button", { name: "Start timer" })
+    fireEvent.click(start)
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    })
+    expect(runningNow()).toBeUndefined()
+  })
+
+  test("Stop in the sheet offers Undo, which runs it again", async () => {
+    await open(runningCall())
+    fireEvent.click(within(bar()).getByRole("button", { name: "Edit the running time entry" }))
+    fireEvent.click(inSheet().getByRole("button", { name: "Stop" }))
+    await waitFor(() => expect(runningNow()).toBeUndefined())
+    fireEvent.click(within(screen.getByTestId("undo-bar")).getByRole("button", { name: /Undo/ }))
+    await waitFor(() => expect(runningNow()?.description).toBe("Call"))
+  })
+})

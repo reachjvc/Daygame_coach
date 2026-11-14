@@ -57,7 +57,10 @@ import { undoOrSay } from "../neighbourNotice"
 import { EmptyState, plannedStripes } from "../primitives"
 import { type SetState } from "./landOnCurrent"
 import { UndoContext, type OfferUndo } from "./undoContext"
-import { ProjectLine } from "./RunBar"
+import { ProjectLine, TAP_SETTLE_MS } from "./RunBar"
+
+/** the list's last ▶ or swipe-continue: shared by every row, since the rows move under the finger */
+const continueSettled = { at: 0 }
 
 interface ListProps {
   state: TimetrackState
@@ -466,7 +469,13 @@ const PhoneRow = memo(function PhoneRow({
 
   const open = () => (grouped ? onToggleExpand?.() : onEditEntry(entry))
 
-  const continueIt = () =>
+  // ▶: one tap, one continue. A double tap continued twice, or a second row that slid under the finger (audit 2026-11-14, b03)
+  const tapContinue = () => {
+    if (performance.now() < continueSettled.at) return
+    continueSettled.at = performance.now() + TAP_SETTLE_MS
+    continueIt()
+  }
+  const continueIt = () => {
     // held until the check lands, stamped at the tap (D2, bug audit A6)
     afterCheck((base, tappedAt) => {
       const result = continueEntry(base, entry.id, tappedAt)
@@ -485,6 +494,7 @@ const PhoneRow = memo(function PhoneRow({
         )
       }
     })
+  }
 
   const ids = row ? row.entries.map((e) => e.id) : [entry.id]
   const offerUndo = useContext(UndoContext)
@@ -633,7 +643,7 @@ const PhoneRow = memo(function PhoneRow({
       ) : (
         <button
           type="button"
-          onClick={continueIt}
+          onClick={tapContinue}
           aria-label="Continue this entry"
           className="flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary/60"
         >

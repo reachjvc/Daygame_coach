@@ -3,7 +3,7 @@
 **Written 2026-11-14.** The owner said the time tracker "has become, i fear, more
 broken, particularly on my phone in the app", asked for a new name, and asked
 for a plan a lesser model can carry out in phases.
-**Status: in progress (2026-11-14). Phase notes are under each phase.**
+**Status: done 2026-11-14, Phases 0–8 live. Phase notes are under each phase.**
 
 ## In plain words
 
@@ -364,6 +364,17 @@ The tab names (Timer · Calendar · Reports) stay (C2).
    - a wheel swipe (B3);
    - one screenshot of the list, to check the letter gaps (B4).
 6. Move this plan to `Plans/ARCHIVE.md` per memory `plans-archive`.
+
+**Done 2026-11-14.**
+- Real `/time`, signed in on the local test stack, at 390×844, 360×740 and 1280×800: see Phase 7 (`shots/real-p7/`).
+- Tap counts, re-measured in the lab (`work/taps.js`, `shots/phase-8/taps/`): start a named timer 2 (idle bar, Start); fix a forgotten timer 4 (= 4); change the start and end of a finished entry 6 (was 8); rename 3 (= 3); change project 4 (= 4); add a 1:30 entry that just ended 3 taps plus typing, giving 20:05–21:35; delete and Undo: a 40% swipe and 1 tap (= 2, was a 75% swipe); this week's report 1; calendar: hold, name, Done, then hold-drag to move and to resize. No task takes more taps than before.
+- PC: `shots/pc-after-8` vs `pc-before` shows clocks and the rename only.
+- Adversarial audit, three fresh agents (reports in `audit/`):
+  - **PC unchanged** (`audit/pc.md`, 44 screens plus 900px): 0 differences outside the allowed list.
+  - **Bugs** (`audit/bugs.md`): 7 confirmed, all fixed except where said: (1) a held finger turned the End wheel of the sheet it opened, saving a 24.5 h entry; fixed at the root: the sheet ignores the opening finger's touch click for 400 ms, and a held block's wheels start folded; (2) ⋮ Duplicate, Split and Go to dropped unsaved edits; they now save first; (3) a double tap on ■ or ▶ acted twice; the bar and ▶ take one tap per 700 ms after a change; (4) Back on a held block left a junk entry; now removed as with ✕; (5) a typed Start then Done did nothing the first time, because a shortcut appeared and moved Done; the shortcut's room is kept; (6) Back left the tracker from report Details, a report's day or project, the date sheet, a Settings section and the calendar block panel; each is now a history step (`hooks/useBackCloses.ts`). **Not fixed:** Back from the Stop at… / Switched at… pickers still leaves the tracker; a history step there raced the sheet's own step and closed the picker at once, so it was reverted; (7) the sheet's Stop now offers Undo; End now + Done still does not.
+  - **Findability** (`audit/findability.md`): every task found; Projects, create project 4 taps behind ⚙. Fixed: Duplicate and Split now say so in a toast; the tag list's button says "Close" (two "Done" showed); the Reports Projects/Clients switch is 44px. **Left as found, not in this plan:** Pomodoro has no Stop on its own screen; Projects sit only behind ⚙; the phone calendar shows 4–5 hours until zoomed out; a past entry that overlaps the running timer gets no overlap mark and its time counts twice in the day total; the new-timer sheet's clock counts before Start (Toggl's way, D-START); the project page from a report row shows a filter badge, not the project's name.
+- Guard tests for the audit fixes: `thePhoneSheetOpensWithOneTap` ("the audit's fixes": ⋮ Duplicate keeps a typed name; a double tap on ■ starts nothing; Stop in the sheet offers Undo).
+- Unit suite 7159/7159, type ratchet "88, none new" before the last push. The e2e suite was not run in this plan (its four files changed only the tracker's name).
 
 ## Execution prompt for the next session
 

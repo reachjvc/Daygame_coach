@@ -15,6 +15,8 @@
  * The same bar on every tab, as Toggl's is on its Calendar.
  */
 
+import { useEffect, useRef } from "react"
+
 import { cn } from "@/lib/utils"
 import { IconMoney, IconStart, IconStop } from "../../icons"
 import { formatClock, formatTimeOfDay } from "../../timetrackFormatService"
@@ -24,6 +26,8 @@ import { ColorDot } from "../primitives"
 
 /** Toggl's placeholders, with the typographic apostrophe the rest of the slice uses */
 export const WORKING_ON = "I’m working on…"
+/** how long after a change or a tap the bar's ■ and ▶ wait before taking another tap */
+export const TAP_SETTLE_MS = 700
 export const WORKED_ON = "I’ve worked on…"
 
 /** "● Alpha • Acme": a project and its client; nothing at all with no project, as Toggl leaves that line empty */
@@ -62,6 +66,27 @@ export function RunBar({
   onStart: () => void
   onStop: () => void
 }) {
+  /**
+   * ONE TAP IS ONE ACTION (audit 2026-11-14, b03). A quick double tap on ■
+   * stopped the timer and then hit the ▶ drawn in its place: a blank timer
+   * started. Likewise a sheet's Start followed by a tap on the new ■. For a
+   * moment after the bar changes between running and idle, or after a tap on
+   * it, a tap on ■ or ▶ is ignored.
+   */
+  const settled = useRef(0)
+  const runningId = running?.id ?? null
+  const firstId = useRef(runningId)
+  useEffect(() => {
+    // not on first drawing: a tap the moment the app opens is meant
+    if (firstId.current === runningId) return
+    firstId.current = runningId
+    settled.current = performance.now() + TAP_SETTLE_MS
+  }, [runningId])
+  const once = (act: () => void) => () => {
+    if (performance.now() < settled.current) return
+    settled.current = performance.now() + TAP_SETTLE_MS
+    act()
+  }
   if (running) {
     return (
       <div className="flex items-center gap-2 px-3 py-2">
@@ -80,7 +105,7 @@ export function RunBar({
         {/* one tap stops it [V1 4:33]; 56px, the size of the thing a thumb is reaching for */}
         <button
           type="button"
-          onClick={onStop}
+          onClick={once(onStop)}
           aria-label="Stop timer"
           className="flex size-14 shrink-0 items-center justify-center rounded-full bg-destructive text-white shadow-md active:scale-95"
         >
@@ -103,7 +128,7 @@ export function RunBar({
       </button>
       <button
         type="button"
-        onClick={onStart}
+        onClick={once(onStart)}
         aria-label="Start timer"
         className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md active:scale-95"
       >

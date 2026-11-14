@@ -18,6 +18,7 @@ import { useState, type MutableRefObject } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { IconDown, IconNext, IconPrev } from "../../icons"
+import { useBackCloses } from "../../hooks/useBackCloses"
 import { downloadFile } from "../../importExportService"
 import { buildSummary, emptyFilters, formatMetric, presetRange, summaryToCsv, type DatePreset } from "../../reportsService"
 import { addDays, dateKey, dateKeyToDate, eachDay, formatCompact, formatDuration, formatRangeShort, monthStartOf, weekStartOf } from "../../timetrackFormatService"
@@ -56,6 +57,7 @@ export function PhoneReports({
   const [choice, setChoice] = useState<Choice>({ preset: "this_week" })
   const [groupBy, setGroupBy] = useState<"project" | "client">("project")
   const [sheetOpen, setSheetOpen] = useState(false)
+  useBackCloses(sheetOpen, () => setSheetOpen(false))
   const range = "preset" in choice ? presetRange(choice.preset, todayKey, state.user.weekStart) : choice.range
   const label = "preset" in choice ? PRESETS.find((p) => p.id === choice.preset)!.label : formatRangeShort(range.start, range.end)
 
@@ -145,7 +147,7 @@ export function PhoneReports({
                 role="radio"
                 aria-checked={groupBy === id}
                 onClick={() => setGroupBy(id)}
-                className={cn("min-h-9 rounded-md px-3 text-xs font-medium", groupBy === id ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
+                className={cn("min-h-11 rounded-md px-3 text-xs font-medium", groupBy === id ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
               >
                 {name}
               </button>

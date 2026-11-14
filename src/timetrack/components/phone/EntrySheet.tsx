@@ -58,7 +58,7 @@ import {
 } from "../../phoneSheetService"
 import { serverNow, serverNowIso } from "../../serverClock"
 import { layOnto } from "../../tabMergeService"
-import { entryAfter } from "../../timeFixService"
+import { entryAfter, undoStopAt } from "../../timeFixService"
 import {
   LONG_ENTRY_SECONDS,
   dateKey,
@@ -110,6 +110,9 @@ const NUDGES: { minutes: number; text: string; label: string }[] = [
   { minutes: 5, text: "+5", label: "5 minutes later" },
   { minutes: 15, text: "+15", label: "15 minutes later" },
 ]
+
+/** how long after opening a click is taken as the opening finger's, not a tap (b07) */
+const OPENING_CLICK_MS = 400
 
 const FOCUSABLE = 'input:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
@@ -204,7 +207,11 @@ export function EntrySheet({
    * before, so "move the start back and Done" stays four taps; a new entry's
    * sheet opens with them folded.
    */
-  const [drumsOpen, setDrumsOpen] = useState(!isNew)
+  // folded too for a block a held finger just made: the finger lifting turned the End wheel (audit 2026-11-14, b07)
+  const [drumsOpen, setDrumsOpen] = useState(!isNew && !focusName)
+  const openedAtMs = useRef(Date.now())
+  /** a finger went down on the sheet itself since it opened: its clicks are taps */
+  const pressedHere = useRef(false)
   const [asking, setAsking] = useState(false)
   const offerUndo = useContext(UndoContext)
   /**
@@ -449,6 +456,12 @@ export function EntrySheet({
       )
     }, { keep: { kind: "stop", seen: id } })
     onClose()
+    // the same Undo as the bar's ■ (Plans/time-log-phone.md 4.6; audit 2026-11-14, b08)
+    offerUndo?.(
+      `Stopped “${shown.description.trim() || "(no description)"}”`,
+      () => undoOrSay(latestState, (current) => undoStopAt(current, id, serverNowIso()), setState, pushToast),
+      [id],
+    )
   }
 
   /** Stop at… and Switched at…: what was changed here is saved first, then the moment is asked */
@@ -558,6 +571,7 @@ export function EntrySheet({
   }
 
   /** "Set to last stop time", "Round stop time": small outlined buttons, shown only when they can do something (3.3) */
+  // hidden, but its room kept: a shortcut appearing after a typed time grew the sheet and moved Done from under the finger (audit 2026-11-14, b01)
   const textLink = (label: string, enabled: boolean, run: () => void) =>
     enabled ? (
       <button
@@ -567,7 +581,35 @@ export function EntrySheet({
       >
         {label}
       </button>
-    ) : null
+    ) : (
+      <span aria-hidden className="mt-1.5 block min-h-11" />
+    )
+
+  /**
+   * WHAT WAS CHANGED HERE IS SAVED BEFORE A ⋮ ACTION (audit 2026-11-14, b02).
+   * Duplicate, Split and Go to acted on the stored entry and closed the sheet,
+   * dropping a typed name or a moved time without a word. Answers the workspace
+   * with the edit in it, or null when the edit is refused (said in the sheet).
+   */
+  function saveFirst(): TimetrackState | null {
+    if (target.mode !== "edit") return state
+    const settled = settle(shown!)
+    if (!settled.draft) {
+      refuse(settled.refusal)
+      return null
+    }
+    const changesNow = changesBetween(base!, settled.draft)
+    if (Object.keys(changesNow).length === 0) return state
+    const id = target.entryId
+    const result = saveEdit(state, id, changesNow, serverNowIso())
+    if (result.violations[0]) {
+      refuse(result.violations[0].message)
+      return null
+    }
+    setState((current) => saveEdit(current, id, changesNow, serverNowIso()).state)
+    dirtyRef.current = false
+    return result.state
+  }
 
   const menuItems: { label: string; run: () => void; pressed?: boolean }[] = [
     ...(shown.stop !== null || epochSeconds(shown.start) <= nowSec
@@ -588,10 +630,13 @@ export function EntrySheet({
           {
             label: "Duplicate",
             run: () => {
-              const result = duplicateEntry(state, entry.id, serverNowIso())
+              const saved = saveFirst()
+              if (!saved) return
+              const result = duplicateEntry(saved, entry.id, serverNowIso())
               if (result.violations.length > 0) refuse(result.violations[0].message)
               else {
-                setState(layOnto(state, result.state))
+                setState((current) => duplicateEntry(current, entry.id, serverNowIso()).state)
+                pushToast(`Duplicated “${saved.entries.find((e) => e.id === entry.id)?.description.trim() || "(no description)"}”`)
                 onClose()
               }
             },
@@ -601,10 +646,16 @@ export function EntrySheet({
                 {
                   label: "Split in two",
                   run: () => {
-                    const result = splitEntry(state, entry.id, null, serverNowIso())
+                    const saved = saveFirst()
+                    if (!saved) return
+                    const result = splitEntry(saved, entry.id, null, serverNowIso())
                     if (result.error) refuse(result.error)
                     else {
-                      setState(layOnto(state, result.state))
+                      setState((current) => {
+                        const split = splitEntry(current, entry.id, null, serverNowIso())
+                        return split.error ? current : split.state
+                      })
+                      pushToast("Split in two halves")
                       onClose()
                     }
                   },
@@ -620,6 +671,7 @@ export function EntrySheet({
                 {
                   label: `Go to ${state.projects.find((p) => p.id === entry.projectId)?.name ?? "project"}`,
                   run: () => {
+                    if (!saveFirst()) return
                     const projectId = entry.projectId!
                     onClose()
                     onGoToProject(projectId)
@@ -640,6 +692,18 @@ export function EntrySheet({
       aria-modal="true"
       aria-label={title}
       tabIndex={-1}
+      // THE FINGER THAT OPENED IT IS NOT A TAP ON IT (audit 2026-11-14, b07): a held finger
+      // making a calendar block lifts over the sheet that just opened, and its click turned
+      // the End wheel or closed the sheet. Clicks in its first moments are not taken.
+      onPointerDownCapture={() => {
+        pressedHere.current = true
+      }}
+      onClickCapture={(event) => {
+        const native = event.nativeEvent as MouseEvent & { pointerType?: string }
+        if (pressedHere.current || native.pointerType !== "touch" || Date.now() - openedAtMs.current >= OPENING_CLICK_MS) return
+        event.stopPropagation()
+        event.preventDefault()
+      }}
       onKeyDown={(event) => {
         if (event.key === "Escape" && !event.defaultPrevented) {
           event.preventDefault()
@@ -1107,8 +1171,9 @@ function SheetTagList({
           aria-label="Search or add a tag"
           className="h-11 min-w-0 flex-1 rounded-md border border-border bg-background/60 px-3 text-base outline-none"
         />
+        {/* "Close", not a second "Done" beside the sheet's own (findability audit 2026-11-14) */}
         <Button type="button" variant="ghost" className="h-11 px-3" onClick={onDone}>
-          Done
+          Close
         </Button>
       </div>
       <div className="max-h-64 overflow-y-auto py-1">

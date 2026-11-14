@@ -7,7 +7,7 @@
  * import/export.
  */
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -114,6 +114,13 @@ export function SettingsView({
    * with "‹ Settings" back to the list. The PC keeps its tabs.
    */
   const [listing, setListing] = useState(listFirst)
+  // a section opened from the list is a step in the history, so Back returns to the list (audit 2026-11-14, b04)
+  useEffect(() => {
+    if (!isMobile || listing || !listFirst) return
+    const onPop = () => setListing(true)
+    window.addEventListener("popstate", onPop)
+    return () => window.removeEventListener("popstate", onPop)
+  }, [isMobile, listing, listFirst])
   if (isMobile && listing) {
     return (
       <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
@@ -122,6 +129,7 @@ export function SettingsView({
             <button
               type="button"
               onClick={() => {
+                window.history.pushState({ timetrack: "settings-section" }, "", window.location.href)
                 setTab(section.id)
                 setListing(false)
               }}
@@ -143,7 +151,7 @@ export function SettingsView({
       {isMobile ? (
         <div className="flex items-center gap-2">
           {listFirst && (
-            <Button variant="ghost" size="sm" className="-ml-2 h-11 px-2" onClick={() => setListing(true)}>
+            <Button variant="ghost" size="sm" className="-ml-2 h-11 px-2" onClick={() => window.history.back()}>
               ‹ Settings
             </Button>
           )}
