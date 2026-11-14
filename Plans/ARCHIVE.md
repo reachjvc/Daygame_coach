@@ -6,6 +6,7 @@ Code comments still name some of them. To read one, run
 
 | Plan | Why it went | Read it at |
 |---|---|---|
+| time-log-phone.md | Finished 2026-11-14: Phases 0–8 live (phone fixes, the frame, sheet, list, calendar, reports/settings, rename to Time Log, audit fixes). The owner's three phone checks are below. | b61a4736 |
 | life-plan-rebuild.md | Finished 2026-11-10: Phases 1–7, Q4 and the wheel live; owner accepted every card on the sign-off page in chat ("ill jsut accept all ur recommendations"). | 88ca5fe6 |
 | time-tracker-leftovers.md | Finished: Phases 1–5 live; the last two limits it noted were fixed in 7516348e. | 7516348e |
 | toggl-parity.md | Finished: Phases 0–8 live; its last bugs were done through time-tracker-leftovers.md. | 7516348e |
@@ -31,3 +32,9 @@ Code comments still name some of them. To read one, run
    should show the new name within a few seconds.
 4. **A Stop while it checks.** Take the phone out after a while, tap Stop while the badge says Checking…,
    and lock the phone at once. Open the tracker again: the timer should be stopped at the time you tapped.
+
+## Still worth trying on your phone (from time-log-phone.md)
+
+1. **The keyboard.** Open an entry and tap its name: the whole sheet should sit above the keyboard.
+2. **The wheels.** Open an entry, tap its Start box and swipe the hour wheel up and down.
+3. **Letter gaps.** Send one screenshot of the Timer list: do labels like "YESTERDAY" show gaps inside words?
