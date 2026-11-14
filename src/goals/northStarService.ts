@@ -41,7 +41,7 @@ import {
   WRITE_FALLBACK_QUESTION,
   WRITE_PHRASES,
 } from "@/src/goals/data/northStar"
-import { AREA_LIBRARY_PILLAR, TAB_ORDER } from "@/src/goals/data/northStar"
+import { AREA_LIBRARY_PILLAR, SCORED_TABS, TAB_ORDER } from "@/src/goals/data/northStar"
 import { SEASON_ANSWER_KEYS } from "@/src/goals/seasonAnswers"
 import {
   GUIDE_QUESTION_ORDER,
@@ -4333,6 +4333,136 @@ export function stepState(plan: NsPlan, tab: NorthStarTabId, account: NsAccount 
 /** Every step's state at once, for the rail. */
 export function stepStates(plan: NsPlan, account: NsAccount = NO_ACCOUNT): Record<NorthStarTabId, NsStepState> {
   return Object.fromEntries(TAB_ORDER.map((tab: NorthStarTabId) => [tab, stepState(plan, tab, account)])) as Record<NorthStarTabId, NsStepState>
+}
+
+/**
+ * HOW FAR THROUGH A STEP, as a number, for the ring and the plan's percentage
+ * (Plans/plan-progress-percent.md).
+ *
+ * The parts mirror `stepState`'s rules box for box, and the weights inside a
+ * step add to 1. `stepState` stays the one definition of done: `fraction` is 1
+ * exactly when the step is done, and 0 whenever the step is empty — the ring
+ * and the number may never contradict each other.
+ */
+export interface NsStepPart {
+  label: string
+  have: number
+  of: number
+  /** This part's share of the step; a step's weights add to 1. */
+  weight: number
+}
+
+export interface NsStepProgress {
+  /** 0..1. 1 exactly when stepState(...) === "done". */
+  fraction: number
+  /** The parts, for "3 of 8" and the breakdown. */
+  parts: NsStepPart[]
+}
+
+function stepParts(plan: NsPlan, tab: NorthStarTabId, account: NsAccount): NsStepPart[] {
+  const filled = (key: string) => answerOf(plan, key).trim().length > 0
+  const box = (label: string, done: boolean, weight: number): NsStepPart => ({ label, have: done ? 1 : 0, of: 1, weight })
+
+  if (tab === "star") {
+    return [
+      box("North star paragraph", plan.northStar.trim().length > 0, 1 / 2),
+      { label: "Ladder questions answered", have: rungsAnswered(plan), of: VISION_RUNGS.length, weight: 1 / 2 },
+    ]
+  }
+
+  if (tab === "now") {
+    const n = plan.areas.length
+    const rated = ratedAreaCount(plan, todayISO())
+    const pictured = plan.areas.filter((a) => areaReview(plan, a.id).ten.trim().length > 0).length
+    return [
+      { label: "Areas rated", have: rated, of: n, weight: 1 / 2 },
+      { label: "Areas with a 10 written", have: pictured, of: n, weight: 1 / 2 },
+    ]
+  }
+
+  if (tab === "milestones") {
+    const milestones = milestoneGoals(plan)
+    if (milestones.length === 0) return [{ label: "Write your first milestone", have: 0, of: 1, weight: 1 }]
+    return [
+      { label: "Milestones with a why", have: milestones.filter(goalHasWhy).length, of: milestones.length, weight: 1 / 2 },
+      { label: "Milestones with a date", have: milestones.filter((g) => !!g.targetDate).length, of: milestones.length, weight: 1 / 2 },
+    ]
+  }
+
+  if (tab === "systems") {
+    const n = milestoneGoals(plan).length
+    if (n === 0) {
+      const anySystem = systemGoals(plan).length > 0 || plan.routines.some((r) => r.steps.length > 0)
+      return [box("Something running", anySystem, 1)]
+    }
+    return [{ label: "Milestones with something running at them", have: n - milestonesWithoutSystems(plan).length, of: n, weight: 1 }]
+  }
+
+  if (tab === "focus") {
+    const w = 1 / 8
+    return [
+      box("Season areas chosen", plan.seasonAreaIds.length > 0, w),
+      box("Focus area picked", plan.seasonFocusId != null, w),
+      box("One-thing sentence", account.hasOneThing, w),
+      box("Why", filled(ONE_ANSWERS.why), w),
+      box("Cost", filled(ONE_ANSWERS.cost), w),
+      box("Identity", filled(ONE_ANSWERS.identity), w),
+      box("Values", filled(ONE_ANSWERS.values), w),
+      box("A goal serving the one thing", plan.goals.some((g) => g.servesOneThing), w),
+    ]
+  }
+
+  if (tab === "values") {
+    return [{ label: "Values ranked", have: Math.min(plan.values.length, 3), of: 3, weight: 1 }]
+  }
+
+  if (tab === "recap") {
+    const said = filled(COMMIT_KEY)
+    // The date only counts once there is a sentence for it to be on: stepState
+    // calls a date with no sentence empty.
+    return [box("Commitment sentence", said, 1 / 2), box("Its date", said && filled(COMMIT_DATE_KEY), 1 / 2)]
+  }
+
+  return []
+}
+
+export function stepProgress(plan: NsPlan, tab: NorthStarTabId, account: NsAccount = NO_ACCOUNT): NsStepProgress {
+  const parts = stepParts(plan, tab, account)
+  const state = stepState(plan, tab, account)
+  if (state === "done") return { fraction: 1, parts }
+  /* EMPTY IS ZERO, whatever the boxes say. The season step can hold its four
+     answers (why, cost, identity, values) and still be empty to stepState,
+     which only looks for the sentence, the goal and the areas; the number
+     follows the ring, never the other way round. */
+  if (state === "empty") return { fraction: 0, parts }
+  const raw = parts.reduce((sum, p) => sum + (p.of > 0 ? p.weight * Math.min(p.have, p.of) / p.of : 0), 0)
+  return { fraction: Math.max(0, Math.min(1, raw)), parts }
+}
+
+export interface NsPlanProgress {
+  /** 0..100, rounded down: 99.6 shows 99, never a false 100. */
+  percent: number
+  steps: Record<NorthStarTabId, NsStepProgress>
+  /** The scored step with the most left; ties go to the earlier step. Null at 100 %. */
+  mostLeft: NorthStarTabId | null
+}
+
+/** The plan's total: the average of the scored steps, each counting the same. */
+export function planProgress(plan: NsPlan, account: NsAccount = NO_ACCOUNT): NsPlanProgress {
+  const steps = Object.fromEntries(SCORED_TABS.map((tab) => [tab, stepProgress(plan, tab, account)])) as Record<NorthStarTabId, NsStepProgress>
+  const ordered = TAB_ORDER.filter((tab) => SCORED_TABS.includes(tab))
+  const mean = ordered.reduce((sum, tab) => sum + steps[tab].fraction, 0) / ordered.length
+  let mostLeft: NorthStarTabId | null = null
+  for (const tab of ordered) {
+    const left = 1 - steps[tab].fraction
+    if (left > 0 && (mostLeft === null || left > 1 - steps[mostLeft].fraction)) mostLeft = tab
+  }
+  return { percent: percentDown(mean), steps, mostLeft }
+}
+
+/** A 0..1 fraction as a whole percentage, rounded down, robust to float noise (0.29 * 100 = 28.999…). */
+export function percentDown(fraction: number): number {
+  return Math.max(0, Math.min(100, Math.floor(fraction * 100 + 1e-9)))
 }
 
 /**
