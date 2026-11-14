@@ -242,8 +242,13 @@ model's own. Score: her short replies found or missed.
 - Voxtral Mini 3B (8-bit);
 - Granite Speech 3.3 (2b, or 8b in 4-bit);
 - the old WhisperX run;
+- added by the 2026-11 research (`capture/research-2026-11.md`): Qwen3-ASR
+  1.7B and 0.6B, Cohere Transcribe (gated, owner click), Granite Speech 4.1 2B
+  and 5.0 470M, Nemotron 3.5 Transcribe (GGUF with CPU offload), and two models
+  that give words and speakers in one pass: MOSS-Transcribe-Diarize 0.9B and
+  VibeVoice-ASR (BitNet; 8.7B only in 4-bit);
 - YouTube automatic captions;
-- Q1 cloud yardstick, if allowed.
+- Q1 cloud yardstick: owner said no paid tests; skipped.
 
 Settings for the two best Whisper-type models, one change at a time:
 - beam 5 versus 10;
@@ -294,6 +299,14 @@ vote. Its output never changes words.
 skipped-with-reason, on all 8 clips.
 
 ### Phase 3: build the answer key (owner: 45–60 minutes)
+
+**Probe first (owner suggestion, 2026-11-14).** Before the full key, build the
+key for one 3-minute probe: the coffee-shop set 0:10–3:10 (clip P1 in
+`clips.json`; it holds 2 of the 5 flagged places and the café noise). The
+owner listens to P1 only (about 15 minutes). Every Phase 2 method is scored on
+P1 by cutting its G2 output to that span. Only the best 3 per link go on to
+the other 7 clips, and new or slow methods are tried on P1 first. Then the
+full key (steps 1–5) is built for the finalists' disputes only.
 
 Depends on: Phase 2.
 
