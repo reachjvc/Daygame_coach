@@ -179,6 +179,13 @@ Depends on 1.
 - Acceptance: unit + that e2e spec green; on a phone-size (390 px) screenshot
   of Today with a half-filled test account, the card reads right and nothing
   overflows.
+- **Done 2026-11-14, commit dc6f2c94.** Due-now e2e spec 3 of 3 green;
+  390 px and 1280 px shots of a half plan (50 %) and a nearly full one (98 %,
+  no one-thing sentence on the test account) read right, page width stays
+  390. Copy for what is left lives in `PROGRESS_COPY.detail` (data/northStar),
+  Phase 3 reuses it. The two life-plan e2e specs had been failing since
+  2026-11-10 (they looked for `aria-current="page"`, the rail says `"step"`);
+  fixed in the same commit.
 
 ### Phase 3: the step list and Everything
 Depends on 1.
