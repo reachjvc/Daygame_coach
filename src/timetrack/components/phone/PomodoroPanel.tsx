@@ -52,17 +52,40 @@ export function PomodoroPanel({
         </span>
         <span className="text-5xl font-semibold tabular-nums">{formatClock(left)}</span>
         {pomodoro.cycles > 0 && <span className="text-xs text-muted-foreground">{pomodoro.cycles} done</span>}
-        {!settings.enabled ? (
-          <p className="max-w-xs text-xs text-muted-foreground">Turn on Pomodoro below: each timer then runs for a focus period and stops for a break.</p>
-        ) : running ? (
+        {/* ONE CLEAR START (Plans/time-log-phone.md 6.7). Off, it used to say "turn
+            on Pomodoro below"; Start now turns it on and starts the focus period. */}
+        {running && settings.enabled ? (
           <p className="max-w-xs text-xs text-muted-foreground">The running timer stops when the focus period ends.</p>
+        ) : running ? (
+          <Button className="mt-1 h-12 min-w-[200px] text-base" onClick={() => set({ enabled: true })}>
+            <IconStart className="size-4" /> Start Pomodoro
+          </Button>
         ) : (
-          <Button className="mt-1 h-11 min-w-[160px]" onClick={onStart}>
-            <IconStart className="size-4" /> Start session
+          <Button
+            className="mt-1 h-12 min-w-[200px] text-base"
+            onClick={async () => {
+              if (!settings.enabled) {
+                if (settings.notify) await requestNotificationPermission()
+                set({ enabled: true })
+              }
+              onStart()
+            }}
+          >
+            <IconStart className="size-4" /> Start
           </Button>
         )}
+        <p className="max-w-xs text-xs text-muted-foreground">
+          {settings.workMinutes} minutes of focus, then a {settings.breakMinutes}-minute break.
+        </p>
       </div>
 
+      {/* the lengths and switches, folded under "Settings" (6.7) */}
+      <details className="group rounded-xl border border-border bg-card">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between px-4 text-sm font-medium">
+          Settings
+          <span aria-hidden className="text-muted-foreground transition-transform group-open:rotate-90">›</span>
+        </summary>
+        <div className="px-1 pb-1">
       <SectionCard title="Pomodoro settings">
         <ToggleRow
           label="Use Pomodoro"
@@ -110,6 +133,8 @@ export function PomodoroPanel({
           }}
         />
       </SectionCard>
+        </div>
+      </details>
     </div>
   )
 }

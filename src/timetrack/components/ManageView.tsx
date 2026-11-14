@@ -38,6 +38,7 @@ import {
 import type { MemberRole, TimetrackState } from "../types"
 import { NameField } from "./NameField"
 import { MiniSelect } from "./pickers"
+import { useIsMobile } from "../hooks/useIsMobile"
 import { ConfirmButton, EmptyState, SectionCard, Segmented } from "./primitives"
 
 type ManageTab = "clients" | "tags" | "team"
@@ -81,20 +82,22 @@ export function ManageView({
   tab: ManageTab
   setTab: (tab: ManageTab) => void
 }) {
+  const isMobile = useIsMobile()
   return (
     <div className="space-y-4">
       <Segmented
-        value={tab}
+        value={tab === "team" && isMobile ? "clients" : tab}
         onChange={setTab}
+        // Team is PC work: hidden on a phone (D2, Plans/time-log-phone.md 6.5)
         options={[
           { id: "clients", label: "Clients" },
           { id: "tags", label: "Tags" },
-          { id: "team", label: "Team" },
+          ...(isMobile ? [] : [{ id: "team" as const, label: "Team" }]),
         ]}
       />
-      {tab === "clients" && <ClientsPanel state={state} setState={setState} nowSec={nowSec} />}
+      {(tab === "clients" || (tab === "team" && isMobile)) && <ClientsPanel state={state} setState={setState} nowSec={nowSec} />}
       {tab === "tags" && <TagsPanel state={state} setState={setState} />}
-      {tab === "team" && <TeamPanel state={state} setState={setState} nowSec={nowSec} pushToast={pushToast} />}
+      {tab === "team" && !isMobile && <TeamPanel state={state} setState={setState} nowSec={nowSec} pushToast={pushToast} />}
     </div>
   )
 }

@@ -36,11 +36,13 @@ export function buildProjectDashboard(
    * monthly project. `projectPeriodAt` steps months as months.
    */
   periodOffset = 0,
+  /** a fixed range instead of the project's own period: the phone's "This month" (Plans/time-log-phone.md 6.3) */
+  range?: { start: IsoDate; end: IsoDate },
 ): ProjectDashboard | null {
   const project = state.projects.find((p) => p.id === projectId)
   if (!project) return null
 
-  const period = projectPeriodAt(project, todayKey, periodOffset)
+  const period = range ?? projectPeriodAt(project, todayKey, periodOffset)
   if (!period) return null
   const projectEntries = liveEntries(state).filter((e) => e.projectId === projectId)
   const entries = entriesInRange(projectEntries, period.start, period.end, nowSec)

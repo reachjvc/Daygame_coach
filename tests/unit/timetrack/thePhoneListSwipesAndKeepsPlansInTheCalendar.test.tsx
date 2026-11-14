@@ -136,6 +136,8 @@ describe("a row swiped", () => {
     await open(history())
     fireEvent.click(screen.getByRole("button", { name: "Settings and more" }))
     fireEvent.click(within(screen.getByRole("dialog", { name: "Settings and more" })).getByRole("button", { name: "Settings" }))
+    // Settings on a phone is a list of sections (Plans/time-log-phone.md 6.4)
+    fireEvent.click(screen.getByRole("button", { name: /^Profile/ }))
     const toggle = screen.getByRole("switch", { name: "Swipe actions" })
     expect(toggle.getAttribute("aria-checked")).toBe("true")
     fireEvent.click(toggle)

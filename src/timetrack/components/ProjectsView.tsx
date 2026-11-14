@@ -17,14 +17,24 @@ import { useAddField } from "../hooks/useAddField"
 import { IconAdd, IconAlert, IconArchive, IconDelete, IconEdit, IconTrend } from "../icons"
 import { buildProjectDashboard, paceVerdict, periodDaysRemaining } from "../projectDashboardService"
 import {
+  addDays,
   dateKey,
+  dateKeyToDate,
   formatCompact,
   formatDate,
   formatDuration,
   formatMoney,
+  monthStartOf,
   parseDurationInput,
   plural,
 } from "../timetrackFormatService"
+import { useIsMobile } from "../hooks/useIsMobile"
+
+/** The first of the month `months` from the one `key` is in */
+function addMonthsTo(key: string, months: number): string {
+  const d = dateKeyToDate(key)
+  return dateKey(new Date(d.getFullYear(), d.getMonth() + months, 1))
+}
 import { layOnto } from "../tabMergeService"
 import {
   addClient,
@@ -222,18 +232,25 @@ export function ProjectsView({
       ) : (
         <>
         {/* phones: one card per project */}
-        <ul className="space-y-2 sm:hidden">
+        {/* COMPACT ROWS: dot, name, this month's hours (Plans/time-log-phone.md 6.3) */}
+        <p className="flex justify-between px-1 text-xs text-muted-foreground sm:hidden">
+          <span>Project</span>
+          <span>This month</span>
+        </p>
+        <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card sm:hidden">
           {projects.map((project) => {
-            const period = projectTrackedRange(state, project, todayKey)
+            const thisMonth = monthStartOf(todayKey)
             const tracked = secondsInRangeOf(
               liveEntries(state).filter((e) => e.projectId === project.id),
-              period.start,
-              period.end,
+              thisMonth,
+              addDays(monthStartOf(addDays(thisMonth, 40)), -1),
               nowSec,
             )
             const estimate = projectEstimateSeconds(state, project)
+            const client = state.clients.find((c) => c.id === project.clientId)?.name ?? null
+            const extra = [client, project.template ? "template" : null, project.recurring ? project.recurringPeriod : null].filter(Boolean).join(" · ")
             return (
-              <li key={project.id} className="rounded-lg border border-border bg-card p-3">
+              <li key={project.id} className="px-3 py-1">
                 <div className="flex items-center gap-2">
                   <ColorDot color={project.color} />
                   <button
@@ -251,11 +268,8 @@ export function ProjectsView({
                     <IconEdit className="size-4" />
                   </Button>
                 </div>
-                <p className="mt-1 truncate text-xs text-muted-foreground">
-                  {state.clients.find((c) => c.id === project.clientId)?.name ?? "No client"}
-                  {project.template && " · template"}
-                  {project.recurring && ` · ${project.recurringPeriod}`}
-                </p>
+                {/* the client, template or recurring line only when there is one: "No client" said nothing */}
+                {extra && <p className="-mt-1 truncate pb-1 pl-5 text-xs text-muted-foreground">{extra}</p>}
                 {estimate && (
                   <div className="mt-2 space-y-1">
                     <ProgressBar value={tracked} max={estimate} color={project.color} />
@@ -864,12 +878,22 @@ function ProjectDashboardPanel({
    * disabled at the ends instead of inventing one. There is a Next now as well; before,
    * the only way forward was `Current`.
    */
-  const hasPrevious = projectPeriodAt(project, todayKey, periodOffset - 1) !== null
-  const hasNext = periodOffset < 0 && projectPeriodAt(project, todayKey, periodOffset + 1) !== null
+  /**
+   * ON A PHONE, THIS MONTH (Plans/time-log-phone.md 6.3). A project that does
+   * not recur has one period, its whole life, which read as a long blank chart;
+   * the phone steps whole months instead. A recurring one keeps its periods.
+   */
+  const isMobile = useIsMobile()
+  const byMonth = isMobile && !project.recurring
+  const monthStart = monthStartOf(addMonthsTo(todayKey, periodOffset))
+  const monthRange = { start: monthStart, end: addDays(monthStartOf(addDays(monthStart, 40)), -1) }
+  const hasPrevious = byMonth ? true : projectPeriodAt(project, todayKey, periodOffset - 1) !== null
+  const hasNext = periodOffset < 0 && (byMonth || projectPeriodAt(project, todayKey, periodOffset + 1) !== null)
 
-  const dashboard = buildProjectDashboard(state, project.id, todayKey, nowSec, periodOffset)
+  const dashboard = buildProjectDashboard(state, project.id, todayKey, nowSec, periodOffset, byMonth ? monthRange : undefined)
   if (!dashboard) return <EmptyState title="Project not found" />
 
+  const moneless = dashboard.revenue === 0 && dashboard.cost === 0 && !dashboard.fixedFee
   const verdict = paceVerdict(dashboard, todayKey)
   const daysLeft = periodDaysRemaining(dashboard, todayKey)
   const currency = project.currency
@@ -939,15 +963,21 @@ function ProjectDashboardPanel({
           }
           tone={dashboard.completionPct >= 100 ? "negative" : "default"}
         />
-        <StatTile label="Revenue" value={formatMoney(dashboard.revenue, currency)} sub={`cost ${formatMoney(dashboard.cost, currency)}`} />
-        <StatTile
-          label="Profit"
-          value={formatMoney(dashboard.profit, currency)}
-          sub={dashboard.fixedFee ? `fixed fee ${formatMoney(dashboard.fixedFee, currency)}` : undefined}
-          tone={dashboard.profit >= 0 ? "positive" : "negative"}
-        />
+        {/* revenue and profit hidden on a phone while they are nothing (6.3) */}
+        {!(isMobile && moneless) && (
+          <>
+            <StatTile label="Revenue" value={formatMoney(dashboard.revenue, currency)} sub={`cost ${formatMoney(dashboard.cost, currency)}`} />
+            <StatTile
+              label="Profit"
+              value={formatMoney(dashboard.profit, currency)}
+              sub={dashboard.fixedFee ? `fixed fee ${formatMoney(dashboard.fixedFee, currency)}` : undefined}
+              tone={dashboard.profit >= 0 ? "positive" : "negative"}
+            />
+          </>
+        )}
       </div>
 
+      {!(isMobile && dashboard.trackedSeconds === 0) && (
       <SectionCard
         title="Burn-up and forecast"
         /**
@@ -978,6 +1008,7 @@ function ProjectDashboardPanel({
           formatValue={(value) => formatCompact(value)}
         />
       </SectionCard>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <SectionCard title="By task">

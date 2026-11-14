@@ -158,7 +158,14 @@ export function SyncBadge({
   check,
   nowMs,
   onCheck,
+  compact = false,
 }: {
+  /**
+   * The phone's header (Plans/time-log-phone.md 6.6): nothing at all when
+   * everything is saved, and the short word ("Offline", "Saving…", "Not
+   * saved") beside the dot whenever it is not.
+   */
+  compact?: boolean
   status: SyncStatus
   pending: number
   check: CheckState
@@ -169,6 +176,7 @@ export function SyncBadge({
 }) {
   const shown = describeBadge(status, pending, check, nowMs)
   if (!shown) return null
+  if (compact && status === "synced" && shown.tone === "quiet") return null
 
   const tone =
     shown.tone === "quiet"
@@ -221,7 +229,7 @@ export function SyncBadge({
           does, and this is the control whose whole job is saying where your work
           is. When space runs out it is the BACK LABEL that gives way — see the
           header, which is `min-w-0` for exactly that. */}
-      <span className={cn(settled && "sr-only sm:not-sr-only")}>{shown.label}</span>
+      <span className={cn(settled && "sr-only sm:not-sr-only")}>{compact ? shown.short : shown.label}</span>
     </button>
   )
 }

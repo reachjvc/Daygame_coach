@@ -296,6 +296,17 @@ Reference shots: `before/B-22`, `B-24`, `B-26-*`, `B-31`…`B-44`, `A-37-pomodor
 | 6.6 | Header icons on the phone:<br>• D2: the bell shows only when an alert has fired;<br>• ⊕ shows only on Timer and Calendar;<br>• the sync dot shows a short word beside it ("Offline", "Saving…", "Not saved") whenever it is not in sync, and nothing when all is saved. | `PhoneTracker.tsx` header | phone only |
 | 6.7 | Pomodoro: a clear Start button under "Ready? 0:25:00". Settings for the lengths go under a "Settings" fold. | `phone/PomodoroPanel.tsx` | phone only |
 
+**Done 2026-11-14.** Walked at 390×844 and 360×740; shots in `shots/phase-6/after/`.
+- 6.1: phone Details shows Summary and Detailed only; Billable hours and Amount cards hide until any rate exists (workspace, member or project); the header keeps ⬇ inside Details, and it downloads what Details shows (`ReportsView` `downloadRef`).
+- 6.2: day bars are stacked by project; today's bar has a ring and an orange label; a bar opens Detailed on that day, a project row opens Detailed filtered to that project; the donut's centre total is gone (the total shows once, above). Date-range sheet unchanged.
+- 6.3: Projects list rows are dot · name · this month's hours (53px), with a "This month" heading; the client/template/recurring line shows only when there is one. A non-recurring project's page on the phone shows this month and steps whole months; Revenue/Profit tiles hide while they are zero, the burn-up hides while nothing is tracked in the month. Differed: the project page's header line still says "No client" (only the list was named).
+- 6.4: Settings on the phone is a list of five sections with a one-line hint each; a section opens with "‹ Settings" back to the list; ⚙ › Import and export opens that section directly, titled "Import/export" (it was cut to "Import and…").
+- 6.5: no Team on the phone (Clients and Tags remain).
+- 6.6: the bell shows only once an alert has fired; ⊕ only on Timer and Calendar; ⬇ on Reports; the sync badge shows nothing when synced and its short word ("Offline", "Saving…", "Not saved") otherwise. The lab is "This device only", so its dot stays.
+- 6.7: Pomodoro has one big Start (turns Pomodoro on and starts; "Start Pomodoro" while a timer already runs), a line with the lengths, and the settings folded under "Settings".
+- Guard tests changed on purpose: Details tabs on a phone; the Swipe actions switch is reached through Settings › Profile.
+- PC check `shots/pc-after-6`: clocks only.
+
 ### Phase 7: Rename to Time Log (PC and phone)
 
 Replace the visible name "Time" / "Time tracker" with **Time Log**. Leave

@@ -133,10 +133,12 @@ describe("the Reports tab", () => {
     expect(main().getByText("Acme")).toBeTruthy()
   })
 
-  test("Details opens the full reports, every tab kept", async () => {
+  // changed on purpose 2026-11-14 (D2, Plans/time-log-phone.md 6.1): the phone's Details has Summary and Detailed only
+  test("Details opens the full reports, Summary and Detailed on a phone", async () => {
     await openReports(week())
     fireEvent.click(main().getByRole("button", { name: "Details" }))
-    for (const tab of ["Summary", "Detailed", "Workload", "Profitability"]) expect(main().getAllByRole("button", { name: tab }).length).toBeGreaterThan(0)
+    for (const tab of ["Summary", "Detailed"]) expect(main().getAllByRole("button", { name: tab }).length).toBeGreaterThan(0)
+    for (const tab of ["Workload", "Profitability", "My reports"]) expect(main().queryAllByRole("button", { name: tab })).toHaveLength(0)
     fireEvent.click(main().getByRole("button", { name: /Back to the short report/ }))
     expect(main().getByRole("region", { name: "Tracked hours" })).toBeTruthy()
   })

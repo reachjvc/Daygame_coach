@@ -28,6 +28,7 @@ import {
 } from "../config"
 import { googleEventsToEvents, icsToEvents } from "../calendarService"
 import { useAddField } from "../hooks/useAddField"
+import { useIsMobile } from "../hooks/useIsMobile"
 import { IconAdd, IconAlert, IconCalendar, IconDelete, IconExport, IconImport, IconSpinner } from "../icons"
 import {
   addDays,
@@ -69,6 +70,15 @@ import { ColorDot, ConfirmButton, EmptyState, Field, SectionCard, Segmented, Tog
 
 type SettingsTab = "profile" | "workspace" | "automation" | "integrations" | "data"
 
+/** The phone's list of sections, each with what is in it (6.4) */
+const SETTINGS_SECTIONS: { id: SettingsTab; label: string; hint: string }[] = [
+  { id: "profile", label: "Profile", hint: "Time and date formats, week start, grouping" },
+  { id: "workspace", label: "Workspace", hint: "Rounding, rates, required fields, locks" },
+  { id: "automation", label: "Automation", hint: "Reminders, idle detection, autotrackers" },
+  { id: "integrations", label: "Integrations", hint: "Calendars, webhooks" },
+  { id: "data", label: "Import and export", hint: "Back up, restore, import a CSV" },
+]
+
 export function SettingsView({
   state,
   setState,
@@ -81,7 +91,10 @@ export function SettingsView({
   setTab,
   syncStatus,
   onUploadEverything,
+  listFirst = false,
 }: {
+  /** on a phone, open on the list of sections rather than one of them (Plans/time-log-phone.md 6.4) */
+  listFirst?: boolean
   state: TimetrackState
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
   nowSec: number
@@ -94,19 +107,61 @@ export function SettingsView({
   tab: SettingsTab
   setTab: (tab: SettingsTab) => void
 }) {
+  const isMobile = useIsMobile()
+  /**
+   * ON A PHONE, A LIST OF SECTIONS (Plans/time-log-phone.md 6.4). The tab strip
+   * ran off the screen at "Integrations"; each section now opens on its own
+   * with "‹ Settings" back to the list. The PC keeps its tabs.
+   */
+  const [listing, setListing] = useState(listFirst)
+  if (isMobile && listing) {
+    return (
+      <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+        {SETTINGS_SECTIONS.map((section) => (
+          <li key={section.id}>
+            <button
+              type="button"
+              onClick={() => {
+                setTab(section.id)
+                setListing(false)
+              }}
+              className="flex min-h-14 w-full items-center gap-3 px-4 text-left"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium">{section.label}</span>
+                <span className="block truncate text-xs text-muted-foreground">{section.hint}</span>
+              </span>
+              <span aria-hidden className="text-muted-foreground">›</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    )
+  }
   return (
     <div className="space-y-4">
-      <Segmented
-        value={tab}
-        onChange={setTab}
-        options={[
-          { id: "profile", label: "Profile" },
-          { id: "workspace", label: "Workspace" },
-          { id: "automation", label: "Automation" },
-          { id: "integrations", label: "Integrations" },
-          { id: "data", label: "Data" },
-        ]}
-      />
+      {isMobile ? (
+        <div className="flex items-center gap-2">
+          {listFirst && (
+            <Button variant="ghost" size="sm" className="-ml-2 h-11 px-2" onClick={() => setListing(true)}>
+              ‹ Settings
+            </Button>
+          )}
+          <h3 className="text-base font-semibold">{SETTINGS_SECTIONS.find((s) => s.id === tab)?.label}</h3>
+        </div>
+      ) : (
+        <Segmented
+          value={tab}
+          onChange={setTab}
+          options={[
+            { id: "profile", label: "Profile" },
+            { id: "workspace", label: "Workspace" },
+            { id: "automation", label: "Automation" },
+            { id: "integrations", label: "Integrations" },
+            { id: "data", label: "Data" },
+          ]}
+        />
+      )}
 
       {tab === "profile" && <ProfilePanel state={state} setState={setState} />}
       {tab === "workspace" && <WorkspacePanel state={state} setState={setState} />}

@@ -977,10 +977,16 @@ export function DonutChart({
   slices,
   formatValue,
   size = 180,
+  hideTotal = false,
+  onPick,
 }: {
   slices: { key: string; label: string; color: string | null; value: number }[]
   formatValue: (value: number) => string
   size?: number
+  /** the phone's short report says the total once, above (Plans/time-log-phone.md 6.2) */
+  hideTotal?: boolean
+  /** a row tapped: the phone opens Detailed on it (6.2) */
+  onPick?: (key: string) => void
 }) {
   const total = slices.reduce((sum, s) => sum + s.value, 0)
   const radius = size / 2 - 10
@@ -1015,20 +1021,34 @@ export function DonutChart({
             return element
           })}
         </g>
-        <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="fill-foreground text-sm font-semibold">
-          {formatValue(total)}
-        </text>
+        {!hideTotal && (
+          <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="fill-foreground text-sm font-semibold">
+            {formatValue(total)}
+          </text>
+        )}
       </svg>
       <ul className="w-full flex-1 space-y-1 sm:min-w-[160px]">
         {/* every one: the list stopped at eight with no line for the rest, and for a month of 41 projects covered 35% of the time (heavy-history audit, Phase 8) */}
         {slices.map((slice) => (
           <li key={slice.key} className="flex items-center gap-2 text-xs">
-            <ColorDot color={slice.color} />
-            <span className="flex-1 truncate">{slice.label}</span>
-            <span className="tabular-nums text-muted-foreground">{formatValue(slice.value)}</span>
-            <span className="w-10 text-right tabular-nums text-muted-foreground">
-              {Math.round((slice.value / total) * 100)}%
-            </span>
+            {onPick ? (
+              <button type="button" onClick={() => onPick(slice.key)} className="flex min-h-11 w-full items-center gap-2 text-left">
+                <ColorDot color={slice.color} />
+                <span className="flex-1 truncate">{slice.label}</span>
+                <span className="tabular-nums text-muted-foreground">{formatValue(slice.value)}</span>
+                <span className="w-10 text-right tabular-nums text-muted-foreground">{Math.round((slice.value / total) * 100)}%</span>
+                <span aria-hidden className="text-muted-foreground">›</span>
+              </button>
+            ) : (
+              <>
+                <ColorDot color={slice.color} />
+                <span className="flex-1 truncate">{slice.label}</span>
+                <span className="tabular-nums text-muted-foreground">{formatValue(slice.value)}</span>
+                <span className="w-10 text-right tabular-nums text-muted-foreground">
+                  {Math.round((slice.value / total) * 100)}%
+                </span>
+              </>
+            )}
           </li>
         ))}
       </ul>

@@ -82,6 +82,7 @@ import type {
   TimetrackState,
   WorkloadReport,
 } from "../types"
+import { useIsMobile } from "../hooks/useIsMobile"
 import { MiniSelect } from "./pickers"
 import { CheckOption, ColorDot, DonutChart, Dropdown, EmptyState, Modal, ProgressBar, SectionCard, StackedBarChart, StatTile } from "./primitives"
 
@@ -110,6 +111,7 @@ export function ReportsView({
   config,
   setConfig,
   pushToast,
+  downloadRef,
 }: {
   state: TimetrackState
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
@@ -117,6 +119,8 @@ export function ReportsView({
   config: ReportConfig
   setConfig: (config: ReportConfig) => void
   pushToast: (text: string, tone?: "info" | "error") => void
+  /** the phone header's ⬇ inside Details downloads what is shown (Plans/time-log-phone.md 6.1) */
+  downloadRef?: { current: (() => void) | null }
 }) {
   const currency = state.workspace.defaultCurrency
   const todayKey = dateKey(new Date(nowSec * 1000))
@@ -173,6 +177,12 @@ export function ReportsView({
     setConfig({ ...config, filters: { ...filters, range: clampRange(filters.range, config.filters.range) } })
   }
 
+  const isMobile = useIsMobile()
+  /**
+   * ON A PHONE, SUMMARY AND DETAILED ONLY (D2, Plans/time-log-phone.md 6.1).
+   * Workload, Profitability and My reports are PC work; the PC keeps all five.
+   */
+  const tabs = isMobile ? TABS.filter((tab) => tab.id === "summary" || tab.id === "detailed") : TABS
   const exportCurrent = (kind: "csv" | "json" | "print") => {
     const stamp = `${config.filters.range.start}_${config.filters.range.end}`
     if (kind === "print") {
@@ -209,12 +219,13 @@ export function ReportsView({
     else downloadFile(`summary-${stamp}.csv`, summaryToCsv(summary, groupingLabel), "text/csv")
     pushToast("Report exported")
   }
+  if (downloadRef) downloadRef.current = () => exportCurrent("csv")
 
   return (
     <div className="space-y-4">
       {/* tabs */}
       <div className="-mx-3 flex items-center gap-1 overflow-x-auto border-b border-border px-3 sm:mx-0 sm:flex-wrap sm:px-0">
-        {TABS.map((tab) => (
+        {tabs.map((tab) => (
           <button
             key={tab.id}
             type="button"
@@ -702,6 +713,16 @@ function SummaryTab({
 }) {
   const [expanded, setExpanded] = useState<string[]>([])
   const format = state.user.durationFormat
+  /**
+   * Billable hours and Amount are hidden on a phone until some rate exists
+   * (D2, 6.1): with no rate they only ever read 0:00:00 and EUR 0.00.
+   */
+  const isMobile = useIsMobile()
+  const anyRate =
+    state.workspace.defaultHourlyRate != null ||
+    state.members.some((m) => m.hourlyRate != null) ||
+    state.projects.some((p) => p.rate != null)
+  const moneyHidden = isMobile && !anyRate
 
   const chartData = report.buckets.map((bucket) => {
     const value =
@@ -766,7 +787,7 @@ function SummaryTab({
         </Dropdown>
       </div>
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-        {config.summaryMetrics.map((metric) => {
+        {config.summaryMetrics.filter((metric) => !moneyHidden || (metric !== "billable" && metric !== "revenue")).map((metric) => {
           const { value, kind } = metricValue(report, metric)
           const definition = SUMMARY_METRICS.find((m) => m.id === metric)!
           return (

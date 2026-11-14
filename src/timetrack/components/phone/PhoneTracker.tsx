@@ -136,7 +136,8 @@ const TABS: { id: Section; label: string; icon: typeof IconTimer }[] = [
 
 function titleOf(screen: Section, manageTab: ManageTab, settingsTab: SettingsTab): string {
   if (screen === "manage") return manageTab === "tags" ? "Tags" : manageTab === "team" ? "Team" : "Clients"
-  if (screen === "settings") return settingsTab === "data" ? "Import and export" : "Settings"
+  // "Import/export": the full words were cut to "Import and…" beside the icons (6.4)
+  if (screen === "settings") return settingsTab === "data" ? "Import/export" : "Settings"
   return { timer: "Timer", calendar: "Calendar", reports: "Reports", projects: "Projects" }[screen]
 }
 
@@ -241,6 +242,8 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
   const clearOfBar = barHeight !== null ? `${barHeight + 16}px` : "calc(var(--panel-bottom-inset, 9rem) + 1rem)"
   const [view, setView] = useState<"list" | "pomodoro">("list")
   const [menuOpen, setMenuOpen] = useState(false)
+  /** how Settings was opened: from ⚙ "Settings" its list of sections, otherwise the section itself (6.4) */
+  const [settingsEntry, setSettingsEntry] = useState({ list: true, visit: 0 })
   const [selected, setSelected] = useState<Id[] | null>(null)
   /** the day the Calendar tab shows; "See in calendar" on a planned day goes there */
   const [calendarDay, setCalendarDay] = useState<IsoDate | null>(null)
@@ -424,8 +427,8 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
     { label: "Projects", icon: IconProjects, run: () => go("projects") },
     { label: "Clients", icon: IconClient, run: () => (lab.setManageTab("clients"), go("manage")) },
     { label: "Tags", icon: IconTag, run: () => (lab.setManageTab("tags"), go("manage")) },
-    { label: "Settings", icon: IconSettings, run: () => (lab.setSettingsTab("profile"), go("settings")) },
-    { label: "Import and export", icon: IconImport, run: () => (lab.setSettingsTab("data"), go("settings")) },
+    { label: "Settings", icon: IconSettings, run: () => (lab.setSettingsTab("profile"), setSettingsEntry((n) => ({ list: true, visit: n.visit + 1 })), go("settings")) },
+    { label: "Import and export", icon: IconImport, run: () => (lab.setSettingsTab("data"), setSettingsEntry((n) => ({ list: false, visit: n.visit + 1 })), go("settings")) },
   ]
 
   const next = lab.nextDraft.description.trim()
@@ -491,6 +494,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
           <div className="ml-auto flex shrink-0 items-center">
             {/* a dot says nothing by itself: a tap says what it means, in the PC badge's words, and checks (findability, 2026-11-05) */}
             <SyncBadge
+              compact
               status={sync.status}
               pending={sync.pendingCount}
               check={sync.check}
@@ -502,7 +506,8 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
               }}
             />
             {/* Reports has ⬇ where the Timer has ⊕, as Toggl's does [H25 help_28] */}
-            {screen === "reports" && !reportsDetails ? (
+            {/* Reports keeps ⬇ inside Details too (6.1); ⊕ only on Timer and Calendar (6.6) */}
+            {screen === "reports" ? (
               <button
                 type="button"
                 onClick={() => reportsDownload.current?.()}
@@ -512,7 +517,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
               >
                 <IconExport className="size-5" />
               </button>
-            ) : (
+            ) : screen === "timer" || screen === "calendar" ? (
               <button
                 type="button"
                 onClick={() => openNew("manual")}
@@ -522,8 +527,9 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
               >
                 <IconAdd className="size-5 rounded-full border-2 border-current p-0.5" />
               </button>
-            )}
-            <AlertsBell state={state} setState={setState} unread={lab.unreadAlerts} />
+            ) : null}
+            {/* the bell only once an alert has fired (D2, 6.6); the PC always shows it */}
+            {state.alerts.length > 0 && <AlertsBell state={state} setState={setState} unread={lab.unreadAlerts} />}
             <button
               type="button"
               onClick={() => setMenuOpen(true)}
@@ -630,6 +636,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
                   lab.openEntry(entry)
                 }}
                 onOpenIntegrations={() => {
+                  setSettingsEntry((n) => ({ list: false, visit: n.visit + 1 }))
                   lab.setSettingsTab("integrations")
                   go("settings")
                 }}
@@ -642,8 +649,17 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
                 nowSec={nowSec}
                 config={lab.reportConfig}
                 downloadRef={reportsDownload}
-                onDetails={(range) => {
-                  lab.setReportConfig((config) => (config ? { ...config, filters: { ...config.filters, range } } : config))
+                onDetails={(range, detailed) => {
+                  // a bar or a project row opens Detailed on that day or project (6.2); "Details" keeps the tab
+                  lab.setReportConfig((config) =>
+                    config
+                      ? {
+                          ...config,
+                          ...(detailed ? { tab: "detailed" as const } : {}),
+                          filters: { ...config.filters, range, projectIds: detailed?.projectId ? [detailed.projectId] : detailed ? [] : config.filters.projectIds },
+                        }
+                      : config,
+                  )
                   setReportsDetails(true)
                 }}
               />
@@ -654,7 +670,15 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
                 <Button variant="ghost" size="sm" className="h-11 px-1" onClick={() => setReportsDetails(false)}>
                   ‹ Back to the short report
                 </Button>
-                <ReportsView state={state} setState={setState} nowSec={nowSec} config={lab.reportConfig} setConfig={lab.setReportConfig} pushToast={pushToast} />
+                <ReportsView
+                  state={state}
+                  setState={setState}
+                  nowSec={nowSec}
+                  config={lab.reportConfig}
+                  setConfig={lab.setReportConfig}
+                  pushToast={pushToast}
+                  downloadRef={reportsDownload}
+                />
               </>
             )}
             {screen === "projects" && (
@@ -672,6 +696,8 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
             )}
             {screen === "settings" && (
               <SettingsView
+                key={settingsEntry.visit}
+                listFirst={settingsEntry.list}
                 state={state}
                 setState={setState}
                 nowSec={nowSec}

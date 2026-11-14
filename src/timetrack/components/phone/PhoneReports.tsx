@@ -22,7 +22,7 @@ import { downloadFile } from "../../importExportService"
 import { buildSummary, emptyFilters, formatMetric, presetRange, summaryToCsv, type DatePreset } from "../../reportsService"
 import { addDays, dateKey, dateKeyToDate, eachDay, formatCompact, formatDuration, formatRangeShort, monthStartOf, weekStartOf } from "../../timetrackFormatService"
 import type { DateRange, IsoDate, ReportConfig, TimetrackState } from "../../types"
-import { DonutChart, StackedBarChart } from "../primitives"
+import { DonutChart } from "../primitives"
 
 const PRESETS: { id: DatePreset; label: string }[] = [
   { id: "today", label: "Today" },
@@ -47,8 +47,8 @@ export function PhoneReports({
   nowSec: number
   /** the full reports' settings: rounding and the rest carry over */
   config: ReportConfig
-  /** "Details": the full reports, on this range */
-  onDetails: (range: DateRange) => void
+  /** "Details": the full reports, on this range; a bar or a project row opens Detailed on it (6.2) */
+  onDetails: (range: DateRange, detailed?: { projectId?: string | null }) => void
   /** the header's ⬇ calls this */
   downloadRef: MutableRefObject<(() => void) | null>
 }) {
@@ -69,7 +69,8 @@ export function PhoneReports({
       subGrouping: null,
       chartMetric: "time",
       chartInterval: "day",
-      chartStackBy: null,
+      // the bars are coloured by project (Plans/time-log-phone.md 6.2)
+      chartStackBy: "project",
       pieGroupBy: groupBy,
     },
     nowSec,
@@ -121,10 +122,10 @@ export function PhoneReports({
       </section>
 
       <section aria-label="By day" className="rounded-xl border border-border bg-card p-3">
-        <StackedBarChart
-          data={summary.buckets.map((bucket) => ({ key: bucket.key, label: bucket.label, total: bucket.seconds, segments: [] }))}
-          formatValue={formatCompact}
-          height={140}
+        <DayBars
+          buckets={summary.buckets}
+          todayKey={todayKey}
+          onPick={(day) => onDetails({ start: day, end: day }, {})}
         />
       </section>
 
@@ -151,7 +152,14 @@ export function PhoneReports({
             ))}
           </div>
         </div>
-        <DonutChart slices={summary.pie.map((slice) => ({ key: slice.key, label: slice.label, color: slice.color, value: slice.seconds }))} formatValue={duration} />
+        <DonutChart
+          slices={summary.pie.map((slice) => ({ key: slice.key, label: slice.label, color: slice.color, value: slice.seconds }))}
+          formatValue={duration}
+          hideTotal
+          onPick={(key) =>
+            onDetails(range, groupBy === "project" && key.startsWith("project:") && key !== "project:none" ? { projectId: key.slice("project:".length) } : {})
+          }
+        />
       </section>
 
       {sheetOpen && (
@@ -273,6 +281,53 @@ function DateSheet({
         })}
       </div>
       </div>
+    </div>
+  )
+}
+
+/**
+ * THE DAYS AS BARS, EACH COLOURED BY ITS PROJECTS (Plans/time-log-phone.md
+ * 6.2). Today's bar is marked; a tap on a bar opens Detailed on that day.
+ */
+function DayBars({
+  buckets,
+  todayKey,
+  onPick,
+}: {
+  buckets: { key: string; label: string; seconds: number; segments: { key: string; label: string; color: string | null; value: number }[] }[]
+  todayKey: IsoDate
+  onPick: (day: IsoDate) => void
+}) {
+  const height = 140
+  const max = Math.max(1, ...buckets.map((b) => b.seconds))
+  return (
+    <div className="flex items-end gap-1" style={{ height }}>
+      {buckets.map((bucket) => {
+        const barHeight = (bucket.seconds / max) * (height - 48)
+        const today = bucket.key === todayKey
+        return (
+          <button
+            key={bucket.key}
+            type="button"
+            onClick={() => onPick(bucket.key)}
+            aria-label={`${bucket.label}: ${formatCompact(bucket.seconds)}${today ? ", today" : ""}. Show its entries`}
+            className="flex min-w-[18px] flex-1 flex-col items-center justify-end gap-1"
+          >
+            <span className={cn("text-[10px] tabular-nums text-muted-foreground", bucket.seconds === 0 && "opacity-0")}>{formatCompact(bucket.seconds)}</span>
+            <span className={cn("flex w-full flex-col justify-end overflow-hidden rounded-t", today && "ring-2 ring-primary ring-offset-1 ring-offset-card")} style={{ height: barHeight }}>
+              {bucket.segments.map((segment) => (
+                <span
+                  key={segment.key}
+                  style={{ height: `${bucket.seconds > 0 ? (segment.value / bucket.seconds) * 100 : 0}%`, backgroundColor: segment.color ?? "var(--primary)" }}
+                  className="block w-full"
+                />
+              ))}
+            </span>
+            {bucket.seconds === 0 && <span className="h-[2px] w-full rounded bg-border" />}
+            <span className={cn("w-full truncate text-center text-[10px]", today ? "font-semibold text-primary" : "text-muted-foreground")}>{bucket.label}</span>
+          </button>
+        )
+      })}
     </div>
   )
 }
