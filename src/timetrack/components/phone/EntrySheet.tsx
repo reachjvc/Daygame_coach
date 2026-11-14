@@ -85,7 +85,7 @@ import { MomentDrums } from "../Drums"
 import type { MomentKind } from "../MomentPicker"
 import { announceNeighbours, undoOrSay } from "../neighbourNotice"
 import { DescriptionField, ProjectPicker, TagPicker } from "../pickers"
-import { ColorDot, DayPicker, Dropdown, touchRow } from "../primitives"
+import { ColorDot, DayPicker, Dropdown, touchRow, usableBand } from "../primitives"
 import { landOnCurrent, type SetState } from "./landOnCurrent"
 import { deleteWithUndo } from "./PhoneEntryList"
 import { UndoContext } from "./undoContext"
@@ -231,6 +231,35 @@ export function EntrySheet({
     pushToast("That time entry was deleted", "info")
     onClose()
   }, [gone, onClose, pushToast])
+
+  /**
+   * ABOVE THE KEYBOARD (Plans/time-log-phone.md 2.1). Android's keyboard
+   * shrinks only the visual viewport, so the sheet, pinned to the bottom of the
+   * layout viewport, sat half under it. While the visible part is clearly
+   * shorter than the page (a keyboard, not a toolbar), the sheet is placed in
+   * the band `usableBand` gives, the pickers' own measure.
+   */
+  const [band, setBand] = useState<{ top: number; height: number } | null>(null)
+  useEffect(() => {
+    const visual = window.visualViewport
+    if (!visual) return
+    const measure = () => {
+      const keyboard = document.documentElement.clientHeight - visual.height > 120
+      if (!keyboard) {
+        setBand((was) => (was === null ? was : null))
+        return
+      }
+      const { top, bottom } = usableBand()
+      setBand((was) => (was && was.top === top && was.height === bottom - top ? was : { top, height: bottom - top }))
+    }
+    measure()
+    visual.addEventListener("resize", measure)
+    visual.addEventListener("scroll", measure)
+    return () => {
+      visual.removeEventListener("resize", measure)
+      visual.removeEventListener("scroll", measure)
+    }
+  }, [])
 
   /** A dialog keeps the keyboard: in on open, Tab wraps, and back where it was on close (as `Modal` does) */
   const dialogRef = useRef<HTMLDivElement | null>(null)
@@ -549,11 +578,15 @@ export function EntrySheet({
           first.focus()
         }
       }}
+      style={band ? { top: band.top, height: band.height, bottom: "auto" } : undefined}
       className="fixed inset-0 z-[9600] flex flex-col justify-end bg-black/60 outline-none"
     >
       {/* the list stays in view above it, as Toggl's does */}
-      <button type="button" aria-hidden tabIndex={-1} className="min-h-[8dvh] flex-1 cursor-default" onClick={close} />
-      <div className="flex max-h-[92dvh] flex-col rounded-t-2xl border-t border-border bg-card shadow-2xl">
+      <button type="button" aria-hidden tabIndex={-1} className={cn("flex-1 cursor-default", band ? "min-h-0" : "min-h-[8dvh]")} onClick={close} />
+      <div
+        style={band ? { maxHeight: band.height } : undefined}
+        className="flex max-h-[92dvh] flex-col rounded-t-2xl border-t border-border bg-card shadow-2xl"
+      >
         <div aria-hidden className="mx-auto mt-2 h-1 w-10 rounded-full bg-muted-foreground/40" />
         <div className="flex items-center gap-1 px-2 pt-1">
           <button type="button" onClick={close} aria-label="Close" className="flex size-11 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary">

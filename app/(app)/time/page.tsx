@@ -14,6 +14,13 @@ import { TimetrackScreen } from "@/src/timetrack/components/TimetrackScreen"
 export const metadata = { title: "Time" }
 
 /**
+ * The phone's status bar in the tracker header's colour (`bg-card`, the same
+ * in both themes), so the installed app's top reads as one band
+ * (Plans/time-log-phone.md 2.4). PC browsers ignore it.
+ */
+export const viewport = { themeColor: "#1f2937" }
+
+/**
  * The time tracker's real address. `/test/toggl` renders the same components as
  * a sandbox; this is the one a signed-in person visits.
  *

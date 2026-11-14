@@ -130,7 +130,7 @@ function bottomInset(): number {
  * moves it is a pinch-zoom, which would need `offsetLeft` handling in the
  * clamp below, and is not a case this was able to be tested against.
  */
-function usableBand(): { top: number; bottom: number } {
+export function usableBand(): { top: number; bottom: number } {
   const layoutBottom = document.documentElement.clientHeight
   const visual = typeof window === "undefined" ? null : window.visualViewport
   const top = visual ? visual.offsetTop : 0

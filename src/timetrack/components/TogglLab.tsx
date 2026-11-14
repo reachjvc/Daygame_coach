@@ -32,6 +32,7 @@ import {
 } from "../icons"
 import { BottomSheet, OVER_SHEET, SheetRow } from "@/components/BottomSheet"
 import { useTimetrackSync } from "../hooks/useTimetrackSync"
+import { useNewBuild } from "../hooks/useNewBuild"
 import { AfterCheckContext, type AfterCheck, type KeptTap } from "./afterCheck"
 import { stopAt, undoStopAt } from "../timeFixService"
 import { undoOrSay } from "./neighbourNotice"
@@ -228,6 +229,8 @@ export function TogglLab({
     account,
     fromAnotherTab,
   })
+  /** the server runs a newer build: reloaded when safe, otherwise offered (Plans/time-log-phone.md 2.2) */
+  const newBuild = useNewBuild(sync.pendingCount)
 
   /**
    * Tell every dropdown how much of the bottom of the screen this bar occupies.
@@ -1077,6 +1080,7 @@ export function TogglLab({
             goBack,
             bottomBarRef,
             unreadAlerts,
+            newBuild,
           }}
         />
       ) : (<>
@@ -1171,6 +1175,11 @@ export function TogglLab({
         </div>
 
       </header>
+      {newBuild.ready && (
+        <button type="button" onClick={newBuild.reload} className="block w-full border-b border-border bg-primary/10 px-4 py-1.5 text-center text-xs text-foreground">
+          Updated · Tap to reload
+        </button>
+      )}
 
       {/* On a PC the sections are down the left, beside everything under the header (Phase 5, D-PC-SHELL) */}
       <div className="sm:flex">

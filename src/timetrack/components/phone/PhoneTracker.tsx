@@ -112,6 +112,8 @@ export interface PhoneLab {
   goBack: (event: React.MouseEvent<HTMLAnchorElement>) => void
   bottomBarRef: (bar: HTMLElement | null) => void | (() => void)
   unreadAlerts: AlertEvent[]
+  /** a newer build waits to be loaded (`useNewBuild`) */
+  newBuild: { ready: boolean; reload: () => void }
 }
 
 const TABS: { id: Section; label: string; icon: typeof IconTimer }[] = [
@@ -221,6 +223,19 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
    * made; `heldClosed` asks, once the save from Done has landed, whether it is
    * still exactly that.
    */
+  /**
+   * NO PULL-TO-REFRESH BY ACCIDENT (Plans/time-log-phone.md 2.5). A drag down
+   * at the top of the list or calendar reloaded the page in the installed
+   * app. Only while the phone tracker is on screen; the PC never draws it.
+   */
+  useEffect(() => {
+    const root = document.documentElement
+    const was = root.style.overscrollBehaviorY
+    root.style.overscrollBehaviorY = "contain"
+    return () => {
+      root.style.overscrollBehaviorY = was
+    }
+  }, [])
   const held = useRef<TimeEntry | null>(null)
   const [heldClosed, setHeldClosed] = useState<Id | null>(null)
   useEffect(() => {
@@ -382,7 +397,8 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
 
   return (
     <UndoContext.Provider value={offerUndo}>
-      <header className="sticky top-0 z-[9500] border-b border-border bg-card/95 backdrop-blur">
+      {/* below the phone's status bar in the installed app (Plans/time-log-phone.md 2.3) */}
+      <header className="sticky top-0 z-[9500] border-b border-border bg-card/95 pt-[env(safe-area-inset-top)] backdrop-blur">
         {/* ONE ROW, ALWAYS. The sync badge keeps its words while it saves or is
             offline ("Saving 1…"); a row that wrapped then grew by a line and
             moved everything under it — a finger holding the calendar landed
@@ -626,6 +642,11 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
         data-bottom-block
         className="fixed inset-x-0 bottom-0 z-[9500] border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
       >
+        {lab.newBuild.ready && (
+          <button type="button" onClick={lab.newBuild.reload} className="block min-h-9 w-full border-b border-border bg-primary/10 px-3 text-center text-xs">
+            Updated · Tap to reload
+          </button>
+        )}
         {undo && (
           <div data-testid="undo-bar" role="status" className="flex items-center gap-2 border-b border-border px-3 py-1.5 text-sm">
             <span className="min-w-0 flex-1">{undo.text}</span>

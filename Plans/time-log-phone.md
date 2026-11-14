@@ -187,6 +187,15 @@ for the named function if a line has moved.
 | 2.5 | `overscroll-behavior-y: contain` on the tracker's root, below `sm` only. | `PhoneTracker.tsx` root | phone only |
 | 2.6 | Manifest shortcuts: "Start timer" → `/time`, and "Calendar" → `/time?view=calendar`. Keep the icons from the existing icon set. | `app/manifest.ts` | none |
 
+**Done 2026-11-14.** Shots in `shots/phase-2/after/`; before shot `before/A-28-kbd-existing`.
+- 2.1: the sheet reads `visualViewport` and, while the visible part is more than 120px shorter than the page, sits in `usableBand()` (now exported). Tested with a stubbed visual viewport (B2): at 390×844 with a 364px keyboard the sheet spans 0–480 and the name field is at 107–151; at 360×740 with 300px, 0–440. The real keyboard waits for the owner's phone (B2).
+- 2.2 (PC too): `hooks/useNewBuild.ts`, used in `TogglLab` (so both `/time` and the lab get it; differed from the plan, which said `TimetrackScreen`). "Something open" is any `role=dialog/alertdialog` on the page; "waiting" is the sync badge's `pendingCount`. Faked healthz: no sheet → reloaded; sheet open → no reload, bar "Updated · Tap to reload" above the run bar. Unit test `aNewBuildLoadsWhenSafe` (4 cases).
+- 2.3: `pt-[env(safe-area-inset-top)]` on the phone header (0 in a headless browser; needs the installed app to show).
+- 2.4: `viewport.themeColor` `#1f2937` (`--card`, the same in both themes) on `/time`. Checked in Phase 8 on the real route.
+- 2.5: `overscroll-behavior-y: contain` on `<html>` while the phone tracker is mounted (`contain` on phone, `auto` on PC). Differed: set on `<html>`, since the page itself scrolls, not the tracker's root.
+- 2.6: manifest `shortcuts` "Start timer" → `/time`, "Calendar" → `/time?view=calendar`, with `icon-192.png`.
+- PC check `shots/pc-after-2`: clocks only.
+
 ### Phase 3: The entry sheet and the pickers
 
 Reference shots: `before/A-05`, `A-06-stopat`, `A-08`, `A-17`, `A-19`,

@@ -44,6 +44,15 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: "portrait",
     background_color: "#0b1120",
     theme_color: "#0b1120",
+    /**
+     * A long press on the installed icon offers these (Plans/time-log-phone.md
+     * 2.6, C4): one tap to the timer or the calendar, while the app itself
+     * still opens on the dashboard.
+     */
+    shortcuts: [
+      { name: "Start timer", short_name: "Timer", url: ROUTES.time, icons: [{ src: "/icon-192.png", sizes: "192x192", type: "image/png" }] },
+      { name: "Calendar", short_name: "Calendar", url: `${ROUTES.time}?view=calendar`, icons: [{ src: "/icon-192.png", sizes: "192x192", type: "image/png" }] },
+    ],
     icons: [
       { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
