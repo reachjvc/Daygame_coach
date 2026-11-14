@@ -1,0 +1,306 @@
+# Time Log on a phone: rename and make it pleasant to use
+
+**Written 2026-11-14.** The owner said the time tracker "has become, i fear, more
+broken, particularly on my phone in the app", asked for a new name, and asked
+for a plan a lesser model can carry out in phases.
+**Status: not started.**
+
+## In plain words
+
+On a phone, the tracker works but is full of rough edges. Some of them are real
+breakage that writes wrong time:
+
+- adding a past entry with ⊕ and typing a length puts it in the future;
+- an accidental hold on the calendar leaves a 30-minute junk entry;
+- shortening one entry silently stretches the next one;
+- the report page slides sideways;
+- the ← in Projects or Settings throws you out of the tracker altogether.
+
+The rest is clumsy or ugly:
+
+- the keyboard covers half the entry sheet, and the project list covers the name you are typing;
+- rows are tall and only about five fit on screen;
+- buttons are tiny spaced capitals that do not look like buttons, and dates read "11-13";
+- the calendar opens at 07:00 instead of now and shows about four hours;
+- PC-only things like money, team and billable crowd the screens.
+
+The installed app can also keep running yesterday's code for days.
+
+The plan fixes the breakage first, then the frame around the app, then each
+screen, then renames it to **Time Log**. It ends with a hard check on a phone
+and a PC. **Nothing changes on the PC except where it makes the PC better or
+more like the phone** (the owner's rule for this plan).
+
+## Decisions already made by the owner (2026-11-14)
+
+| ID | Question | Answer |
+|---|---|---|
+| D1 | New name (10 offered: Timer, Hours, Clock In, Logbook, Punch Card, Stopwatch, Time Log, Hourglass, Ledger, Tally) | **Time Log** |
+| D2 | May the phone hide Week view, the Workload/Profitability/My reports tabs, Billable, the bell when no alert exists, the ⋮ on each row (its actions move into the entry's own ⋮), the Team tab, and the "Created with… last updated" footer? The PC keeps all of them. | **Yes, hide all** |
+| D3 | Pulling an entry's edge away from its neighbour: stretch the neighbour (today) or leave a gap? | **Leave a gap.** Pushing an edge *into* a neighbour still moves it, with Undo. Applies to PC and phone. |
+
+Nothing in this plan costs money, deletes real data, changes the database or is
+irreversible. No owner approval is needed during execution.
+
+## Decisions taken by Claude (veto any of them)
+
+| ID | Decision | Why | Cost if wrong |
+|---|---|---|---|
+| C1 | Rename only words people see. Code names (`timetrack`, `TogglLab`, `/time`, storage keys) stay. | A code rename touches about 40 files, the sync and tests, for no visible gain. | None visible. |
+| C2 | The tab inside the tracker stays "Timer" (Timer · Calendar · Reports). The app is Time Log and the tab is Timer. | Toggl's own words. The tab is the stopwatch screen, and the app is the whole log. | A one-word change later. |
+| C3 | Keyboard fix is local to the tracker's sheet (`visualViewport`), not the site-wide `interactive-widget` meta. | The meta changes every page's bottom bars, a site-wide change for a tracker problem. | Other pages keep their own keyboard behaviour. |
+| C4 | The installed app keeps opening on Home (`start_url` unchanged), and gains long-press shortcuts "Start timer" and "Calendar". | Adds a 1-tap way in without changing what the owner signed off in the navigation plan. | None. |
+| C5 | A new build is loaded only when it is safe: no sheet open and nothing waiting to sync. Otherwise a small "Updated, tap to reload" bar shows. | A reload with unsynced changes could lose a tap. | One extra tap now and then. |
+| C6 | Week view is replaced by nothing on the phone (Day view only). | D2. Toggl's phone calendar is a day view with a week strip. | Week view stays on the PC. |
+
+## Blockers (each tried once on 2026-11-13/14)
+
+| ID | What | Attempted, and the result | Blocks | Recommendation |
+|---|---|---|---|---|
+| B1 | The Playwright MCP browser is used by another session | `browser_run_code_unsafe` returned "Browser is already in use for …mcp-chrome-for-testing…" | nothing | Use the plain Playwright helper `~/.cache/daygame-research/time-log-phone/lib.js` (headless, touch, 390×844). |
+| B2 | The real Android keyboard and the installed (standalone) mode cannot be emulated | Tried with a 390×480 window as a stand-in keyboard. Standalone display mode and the keyboard's visual viewport are not available headless. | the proof for Phase 2 | Test with the 480-high window. The owner confirms on his phone after Phase 2 ships, as one line in the report. |
+| B3 | Swiping the time wheels by touch could not be confirmed | A synthetic CDP flick did not move the wheels; taps on −5/+5 did. | nothing (wheels untouched by this plan) | Do not change the wheels' gesture code. The owner checks the wheels on his phone. |
+| B4 | Letter gaps in spaced capitals ("ST OP T IME", "YEST ERDAY") | Seen in every headless shot with Geist and `uppercase tracking-wide`. Not known whether his phone shows it. | nothing | Phase 3 drops spaced capitals from buttons anyway. Ask the owner for one phone screenshot in the final report. |
+| B5 | The real signed-in `/time` | Run on the local test stack with a throwaway account (worktree, port 3417). It draws the same screens as the lab `/test/toggl`; Back steps through sections and sheets correctly. | nothing | Work in the lab; run the real route once in Phase 8. |
+
+## Evidence
+
+All screenshots, the seeding helper and seed data are in
+`~/.cache/daygame-research/time-log-phone/` (not /tmp, which is wiped on a crash):
+
+- `lib.js` gives `phone({state, w, h})`, `shot(p, name)` and `controls(p)` (every visible control with its position and size).
+- `state-seed.json` holds 6 projects, 3 tags, 68 entries over 12 days, one overlap and one running timer, dated around 2026-11-13. Shift the dates if they are stale.
+- `before/` holds 96 shots: `01–03` first look, `A-*` list and sheet, `B-*` calendar, reports and settings, `c*` the real route.
+
+Tap counts measured 2026-11-13 (phone, lab):
+
+| Task | Taps |
+|---|---|
+| Fix a forgotten timer (bar → Stop at… → "1 h ago" → Stop at) | 4 |
+| Change the start and end of a finished entry | 8 |
+| Rename an entry | 3 |
+| Change an entry's project | 4 |
+| Delete, then Undo | 2, but the swipe needs 75% of the row width |
+| From app launch to a running timer | 2 (Home → Time Log tile → ▶) |
+
+## Ground rules for the executing session
+
+1. **Phone first, PC protected.** The phone layout is below 640px (`sm:`).
+   Files under `src/timetrack/components/phone/` and the `phone*Service.ts`
+   files are phone-only. Every other file is shared with the PC: `CalendarView`,
+   `ReportsView`, `pickers`, `primitives`, `SettingsView`, `ProjectsView`,
+   `EntryList`, `TimetrackScreen`, `TogglLab`, `timeFixService`, `MomentPicker`
+   and `Drums`. In a shared file, gate each phone change on the existing
+   `isMobile` flag or on `sm:` classes. Only D3, the rename, and the items
+   marked **PC too** may change the PC.
+2. **PC before/after check every phase.** Before a phase, take 1280×800 shots
+   of every PC screen whose files the phase touches. Take them again after. Any
+   difference not in the phase's list is a regression to fix before shipping.
+3. **Work in a git worktree.** Read memory `worktree-e2e-servers`: `next dev
+   --webpack`, own port, test-stack env, never `.env.local`. Ship each phase as
+   one fast-forward to `main`, which deploys live. Batch commits: about 60
+   pushes a day hits the Vercel rate limit. After the push, check the live
+   `healthz` buildId.
+4. **Never touch the live database.** Browser checks use the lab
+   `localhost:<port>/test/toggl`, signed out, with localStorage seeded from
+   `state-seed.json`.
+5. **Commits.** `git commit --only <paths>`; never `git add -A` or `git
+   stash`. Run the typecheck ratchet before every push (memory
+   `typecheck-before-push`). Stop dev servers first, because WSL runs out of
+   memory. Unit tests must stay green. Change a guard test only on purpose,
+   and keep its reason.
+6. **A phase is done** only after these four things:
+   - every listed item has been walked by hand on a 390×844 and a 360×740 touch screen, and at 390×480 for keyboard items;
+   - a screenshot of each item, before and after, is in `shots/phase-N/`;
+   - the PC check (rule 2) passes;
+   - the tap-count table is re-measured if the phase touched those flows.
+
+   If a common flow got harder, that is a regression even with green tests
+   (memory `review-means-feel-look-bugs`).
+7. **Do not invent features.** Fix what is listed. If an item turns out wrong
+   or impossible, write what you found under the phase and move on. Never
+   remove anything not listed in D2 (memory `no-removal-until-owner-says`).
+
+## Phases
+
+Each phase ships alone. File and line numbers were right on 2026-11-13. Search
+for the named function if a line has moved.
+
+### Phase 0: Set up and measure (no ship)
+
+1. Make the worktree. Copy `lib.js` and seed into a work folder in
+   `~/.cache/daygame-research/time-log-phone/`.
+2. Take the PC baseline. At 1280×800, shoot every PC screen:
+   - Timer in List view and in Calendar view;
+   - Reports;
+   - Projects, Clients and Tags;
+   - each Settings tab;
+   - an open entry box;
+   - the Stop at… box.
+
+   Save them to `pc-before/`.
+3. Re-run the tap counts above, to confirm today's numbers.
+4. Fix a flaky guard first. On 2026-11-14,
+   `tests/unit/timetrack/aChangeFromAnOlderPageIsNotLost.test.tsx` ("takes
+   the Stop the older tab tells it, and sends it") failed twice in the full
+   `npx vitest run` but passed alone. The pre-commit hook runs the full suite
+   and blocks every commit, so find why it depends on load or order and make
+   it reliable. Keep what it guards; do not skip it.
+
+### Phase 1: Things that write wrong time or trap you (broken)
+
+| # | Fix | Where | PC? |
+|---|---|---|---|
+| 1.1 | ⊕ "add a past entry": typing a length keeps the **end** (now) and moves the start back. Today it keeps the start and pushes the end into the future (21:10 + 1:30 → 22:40, a planned entry). Rule: for a new finished draft whose end is within 1 minute of now, keep the end. | `withDuration`, `src/timetrack/phoneSheetService.ts:292` | phone only |
+| 1.2 | Calendar hold-to-create: if the sheet for a block made by a hold is closed with no change, remove that block. Today ✕ keeps a 30-min "(no description)" entry (68 → 69 entries, day total +30 min). | `onCreated`, `CalendarView.tsx:589-609`, phone branch | phone only |
+| 1.3 | D3: pulling an edge **away** from a touching neighbour leaves a gap. Pushing **into** a neighbour still moves it, with the Undo toast. Add a unit test for both directions. | `withNeighbours`, `src/timetrack/timeFixService.ts:297`; `neighbourNotice.ts:62` | **PC too** (owner yes) |
+| 1.4 | Reports › Details › Summary no longer widens the page to 478px. Add `grid-cols-1` to the grid and `min-w-0` to its items. Check that no page in the tracker scrolls sideways at 360px: `document.documentElement.scrollWidth === innerWidth`. | `ReportsView.tsx:827` | **PC too** (no visible change expected) |
+| 1.5 | On the Projects, Clients/Tags, Settings and Import screens, the header ← goes back to the tab you came from and is labelled "← Timer" (or that tab's name). Only on Timer, Calendar and Reports does it say "← Home". The bottom tab you came from stays highlighted. | `TimetrackScreen.tsx:122`, `PhoneTracker.tsx` header | phone only |
+| 1.6 | "New project" opens with the Name field visible and focused. Focus with `preventScroll` after the sheet has opened, or set the body's `scrollTop` to 0. | `ProjectsView.tsx:507`, `primitives.tsx:559` | phone only |
+| 1.7 | The @ and # lists never cover the field being typed in, nor the sheet header. On a phone, draw the list in the flow of the sheet, right under the name field and pushing the content down, not as a floating portal. Test at 390×480. | `pickers.tsx:748-752` (`panelStyle`) | phone only |
+
+### Phase 2: The installed app's frame
+
+| # | Fix | Where | PC? |
+|---|---|---|---|
+| 2.1 | While the keyboard is open, the entry sheet sits above it. Read `window.visualViewport` (height and offsetTop) while the sheet is open, and set the sheet's bottom offset and max-height from it. The same helper already exists for the pickers (`usableBand()`, `primitives.tsx:133`): reuse it. | `phone/EntrySheet.tsx:553-556` | phone only |
+| 2.2 | New-build check. On `visibilitychange` to visible, fetch `/api/healthz` and compare its buildId with this page's. If they differ and no sheet is open and nothing waits to sync (the sync badge's own count), reload. Otherwise show a slim "Updated · Tap to reload" bar above the run bar. | new small hook in `src/timetrack/hooks/`, used by `TimetrackScreen` | **PC too** (the PC gets fresh code too) |
+| 2.3 | Header top safe area: add `pt-[env(safe-area-inset-top)]` to the phone header. | `PhoneTracker.tsx:325` | phone only |
+| 2.4 | Status-bar colour matches the tracker header. Add `export const viewport = { themeColor: <the header's background colour> }` to `app/(app)/time/page.tsx`, checking both themes. | `app/(app)/time/page.tsx` | phone only (PC browsers ignore it) |
+| 2.5 | `overscroll-behavior-y: contain` on the tracker's root, below `sm` only. | `PhoneTracker.tsx` root | phone only |
+| 2.6 | Manifest shortcuts: "Start timer" → `/time`, and "Calendar" → `/time?view=calendar`. Keep the icons from the existing icon set. | `app/manifest.ts` | none |
+
+### Phase 3: The entry sheet and the pickers
+
+Reference shots: `before/A-05`, `A-06-stopat`, `A-08`, `A-17`, `A-19`,
+`A-25-plus`, `A-36-360-running`, `02-workingon-tapped`.
+
+| # | Fix | Where | PC? |
+|---|---|---|---|
+| 3.1 | Running entry: the Stop / Stop at… / Switched at… row moves right under the name and the project/tag chips, so it is visible at 360×740 without scrolling. | `phone/EntrySheet.tsx` (stop row vs time section around line 794) | phone only |
+| 3.2 | One "Start → End" block, the same for new and existing entries. Two boxes. Tapping a box opens the wheels for that box; tapping it again closes them. Remove the mislabelled "Edit duration" heading and the "› Edit duration" link. The length stays editable through the ✎ beside the big clock. On a running entry, the End box reads "now" and is not tappable. | `EntrySheet.tsx:193` (`drumsOpen = !isNew`), lines 794-826 | phone only |
+| 3.3 | "Set to last stop time" and "Round stop time" become normal small outlined buttons in sentence case. Hide each when it cannot do anything; today "Round stop time" even shows on a running entry. | `EntrySheet.tsx:801-813` (`textLink`) | phone only |
+| 3.4 | The date in the time boxes reads "Today", "Yesterday" or "Thu 12 Nov", never "11-13". Use the existing date-words formatter in `timetrackFormatService.ts`. | the time box component in the sheet | phone only |
+| 3.5 | One set of step buttons everywhere on the phone: −15 −5 +5 +15, plus the "5 / 15 / 30 min ago, 1 h ago" chips on Stop at…. One wording: the button says "Stop at…" and the screen title says "Stop at…". | sheet + Stop at… screen | **PC too** for the wording only, if the PC says "Stopped at…" |
+| 3.6 | The new-timer sheet's top-right button says **START** while the timer has not started. CREATE stays for ⊕ past entries. | `EntrySheet.tsx:598` | phone only |
+| 3.7 | D2: Billable is hidden on the phone, and the "Created with… · last updated…" footer is hidden on the phone. | `EntrySheet.tsx` | phone only |
+| 3.8 | Picker rows are at least 44px on a phone (`touchRow`). | `pickers.tsx:766-770` | phone only |
+| 3.9 | The tag picker on a phone is a full-width list inside the sheet with search on top. It opens **without** focusing the search box, so the keyboard stays down until the search box is tapped. | `pickers.tsx` around line 306 | phone only |
+| 3.10 | "Create a new project" inline: the name box is full width on its own line and the buttons sit under it. Today it is 118px and the hint reads "Name your p". | inline project form in `pickers.tsx` | phone only |
+| 3.11 | Uppercase plus `tracking-wide` is used only for small section labels (TODAY, YESTERDAY), never for buttons (DISCARD ENTRY becomes "Discard entry"). | `EntrySheet.tsx:598, 904, 912` | phone only |
+
+### Phase 4: The list, the run bar and the toasts
+
+Reference shots: `before/A-04-list`, `A-16-rowmenu`, `A-20-swipeleft`,
+`A-23-continuebtn`, `A-34-360-list`, `A-38-fix`, `A-41-barstop`, `c06`.
+
+| # | Fix | Where | PC? |
+|---|---|---|---|
+| 4.1 | Compact rows of about 56px, so at least 8 fit at 390×844:<br>• line 1 is the name on the left and the length on the right;<br>• line 2 is the project dot and name with tags on the left, and the time range on the right;<br>• ▶ (continue) is a 44px target at the far right.<br>A grouped row shows its first start and last end. | row face, `phone/PhoneEntryList.tsx` around line 560 | phone only |
+| 4.2 | D2: no ⋮ on rows. Every action from the row ⋮ that the sheet's ⋮ lacks moves into the sheet's ⋮. PC-only items (Copy start link, Select) are dropped on the phone. | `PhoneEntryList.tsx`, `EntrySheet.tsx` ⋮ menu | phone only |
+| 4.3 | The running entry shows at the top of today as a row reading "Reading · since 19:10" with a live length. The run bar shows the project dot and "since 19:10" under the name. With only a running entry and nothing else, the empty area says what to do next (shot `c06`). | `PhoneEntryList.tsx`, `phone/RunBar.tsx` | phone only |
+| 4.4 | Swipe triggers at 40% of the row width or on a fast flick. The coloured "Continue" or "Delete" label fills in as the threshold is passed. | `SWIPE_FRACTION`, `phoneListService.ts:39-43` | phone only |
+| 4.5 | One toast style for delete, continue, fix and neighbour moves:<br>• one toast at a time, with the newest replacing the old;<br>• names cut to 30 characters with "…";<br>• sentence case "Undo";<br>• close and Undo targets at least 44px.<br>The toast never covers the run bar. | the tracker's toast/Undo components (find through `useUndo` / `undoContext.ts`) | phone only; **PC too** for the 44px close target only |
+| 4.6 | Stopping from the run bar gets the same Undo toast as continue and delete. | `RunBar.tsx` | phone only |
+
+### Phase 5: Calendar
+
+Reference shots: `before/B-02-cal`, `B-03-cal-pagescrolled`, `B-11-cal-360`,
+`B-12-resize`, `B-15-week`.
+
+| # | Fix | Where | PC? |
+|---|---|---|---|
+| 5.1 | For today, the calendar opens scrolled so that now sits about one third down, as the PC already does. Remove the `!isMobile` guard for today. | `CalendarView.tsx:325` | phone only (copies the PC) |
+| 5.2 | The grid fills the height left between the header and the run bar (`dvh` based). The page itself does not scroll on the Calendar tab. Remove the `max-h-[70vh]` cap on the phone. | `CalendarView.tsx:860` | phone only |
+| 5.3 | "Connect calendar" moves to Settings › Integrations on the phone. The two-line hint shows until dismissed once (✕, remembered in localStorage inside try/catch). | `CalendarView.tsx:802-806` | phone only |
+| 5.4 | D2: Day\|Week toggle hidden on the phone; Day only. | `CalendarView.tsx` | phone only |
+| 5.5 | Block labels 12px on the phone (today 10px). | `CalendarView.tsx:1025` | phone only |
+| 5.6 | − / + zoom on the phone, copied from the PC, so the owner can fit a whole working day. | `CalendarView.tsx:820` (`!isMobile`) | phone only (copies the PC) |
+| 5.7 | When a block's panel is open, the grid scrolls so the block's bottom resize handle stays above the panel. | phone calendar panel | phone only |
+| 5.8 | Keep the drag-to-move and swipe-to-change-day as they are. They work well. | (no change) | — |
+
+### Phase 6: Reports, Projects, Settings, header icons, Pomodoro
+
+Reference shots: `before/B-22`, `B-24`, `B-26-*`, `B-31`…`B-44`, `A-37-pomodoro`.
+
+| # | Fix | Where | PC? |
+|---|---|---|---|
+| 6.1 | D2: Details on the phone shows only Summary and Detailed. The Billable hours and Amount cards hide until any rate exists. The header keeps the Download icon inside Details instead of switching to ⊕. | `ReportsView.tsx`, `phone/PhoneReports.tsx` | phone only |
+| 6.2 | Short report:<br>• bars are coloured by project (stacked);<br>• today's bar is marked;<br>• tapping a bar or a project row opens Detailed filtered to that day or project;<br>• the total shows once (drop the donut-centre copy).<br>Keep the date-range sheet as it is. | `phone/PhoneReports.tsx` | phone only |
+| 6.3 | Projects list:<br>• compact rows of dot, name and this month's hours;<br>• no "No client" line.<br>Project page on the phone:<br>• default period "This month";<br>• revenue, profit and burn-up hidden when they are empty or zero. | `ProjectsView.tsx`, `projectDashboardService.ts` | phone only |
+| 6.4 | Settings on the phone is a list of sections (Profile, Workspace, Automation, Integrations, Data). Each opens its own screen with "←", instead of a tab strip that runs off screen. The title shows "Import and export" in full, wrapping or shortening to "Import/export". | `SettingsView.tsx` | phone only |
+| 6.5 | D2: the Team tab is hidden on the phone (Clients and Tags remain). | `ManageView.tsx` | phone only |
+| 6.6 | Header icons on the phone:<br>• D2: the bell shows only when an alert has fired;<br>• ⊕ shows only on Timer and Calendar;<br>• the sync dot shows a short word beside it ("Offline", "Saving…", "Not saved") whenever it is not in sync, and nothing when all is saved. | `PhoneTracker.tsx` header | phone only |
+| 6.7 | Pomodoro: a clear Start button under "Ready? 0:25:00". Settings for the lengths go under a "Settings" fold. | `phone/PomodoroPanel.tsx` | phone only |
+
+### Phase 7: Rename to Time Log (PC and phone)
+
+Replace the visible name "Time" / "Time tracker" with **Time Log**. Leave
+"Time & energy audit", unrelated "Time" labels (admin table, session detail)
+and code identifiers alone.
+
+Known places (grep again; this list is from 2026-11-14):
+
+- `components/navTabs.ts:171`: `label: "Time Log"`. Short label `"Time Log"` if it fits the phone tile, otherwise `"Log"`. Check at 360px.
+- `src/hometab/components/HomeCards.tsx:104`: card title.
+- `app/(app)/time/page.tsx:14`: `metadata.title`.
+- `src/timetrack/components/TimetrackScreen.tsx:107`, `TrackerLoading.tsx:53`, `TogglLab.tsx:1115`, `phone/PhoneTracker.tsx:349` (sr-only h1), `app/test/toggl/page.tsx:36`.
+- `src/timetrack/runningTimerService.ts:116` and `hooks/useTimetrack.ts:803`: notification fallback "Time tracker" becomes "Time Log".
+- `src/timetrack/config.ts:243`: check what this label is before changing it.
+- `docs/product/map.md`: the `timetrack/` entry and the nav lines that say "Time".
+- Tests: update e2e/unit tests that find the tracker by the name "Time". Keep their reasons.
+
+The tab names (Timer · Calendar · Reports) stay (C2).
+
+### Phase 8: Prove it (no new features)
+
+1. Run the real `/time` signed in on the local test stack (finding B5) at 390×844 and 1280×800.
+2. Walk the everyday tasks on the phone and re-measure the tap-count table:
+   - start a named timer;
+   - fix a forgotten timer;
+   - change the start and end of a finished entry;
+   - rename;
+   - change project;
+   - add a past entry of 1:30 that ended now;
+   - delete and Undo;
+   - create, move and resize a calendar block;
+   - read this week's report.
+
+   No task may take more taps than before.
+3. Repeat the PC check against `pc-before/`. Every difference must be one listed above as **PC too** or the rename.
+4. Adversarial audit (memory `prove-fixes-with-adversarial-audit`). Run three fresh agents with no access to this plan's conclusions:
+   - **bugs**: break the changed flows;
+   - **findability**: can a first-time user find each action on the phone;
+   - **PC unchanged**: diff the PC screens.
+
+   Fix what they confirm, then re-walk.
+5. Report to the owner in plain words:
+   - done or not;
+   - the before/after tap table;
+   - phone screenshots of the common flows, before and after, on one short artifact page (memory `short-artifacts`).
+
+   Ask him for three things on his phone:
+   - the keyboard with the entry sheet (B2);
+   - a wheel swipe (B3);
+   - one screenshot of the list, to check the letter gaps (B4).
+6. Move this plan to `Plans/ARCHIVE.md` per memory `plans-archive`.
+
+## Execution prompt for the next session
+
+> Carry out `Plans/time-log-phone.md`, Phases 0 through 8, in order. Read the
+> whole plan first, then the memories it names (worktree-e2e-servers,
+> typecheck-before-push, review-means-feel-look-bugs,
+> prove-fixes-with-adversarial-audit, no-removal-until-owner-says,
+> vercel-late-deploy-rollback). The owner's decisions D1–D3 are final; do not
+> ask him again. Work in a git worktree, ship each phase as one fast-forward to
+> main, and never touch the live database. Use the lab at /test/toggl seeded
+> from ~/.cache/daygame-research/time-log-phone/state-seed.json with the
+> Playwright helper lib.js there (not the MCP browser). The rule above all
+> others: nothing may change on the PC except the items marked "PC too" and
+> the rename. Prove that with the before/after PC screenshots every phase.
+> A phase is done only when you have walked each item by hand at 390×844 and
+> 360×740 (and 390×480 for keyboard items) and looked at the screenshots
+> yourself. Under each phase in the plan, write what you did, what you found
+> that differed from the plan, and the commit. If an item proves wrong or
+> impossible, note it and continue; never stop to ask unless something would
+> delete real data or cost money.
