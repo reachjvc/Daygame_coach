@@ -244,6 +244,17 @@ Reference shots: `before/A-04-list`, `A-16-rowmenu`, `A-20-swipeleft`,
 | 4.5 | One toast style for delete, continue, fix and neighbour moves:<br>• one toast at a time, with the newest replacing the old;<br>• names cut to 30 characters with "…";<br>• sentence case "Undo";<br>• close and Undo targets at least 44px.<br>The toast never covers the run bar. | the tracker's toast/Undo components (find through `useUndo` / `undoContext.ts`) | phone only; **PC too** for the 44px close target only |
 | 4.6 | Stopping from the run bar gets the same Undo toast as continue and delete. | `RunBar.tsx` | phone only |
 
+**Done 2026-11-14.** Walked at 390×844 and 360×740; shots in `shots/phase-4/after/`.
+- 4.1: rows are 56px, two lines (name · length / project, tags · times), ▶ 44×44 at the far right. 8 rows fit fully at 390×844 (with the running row on top), 6 at 360×740. A grouped row shows its first start and last end (the seed has no groups; covered by code, not seen).
+- 4.2: no ⋮ on phone rows. The sheet's ⋮ gained Duplicate, Split in two (finished entries over 10 min), Add/Remove favorite and Go to <project>; Copy start link and Select are gone from the phone (so the phone's bulk select has no way in now, as D2 implies).
+- 4.3: the running entry heads today as "Writing script · since 20:55" with its live length; tap opens its sheet. The run bar shows "Content  since 20:55". With only a running entry the list says "Only this timer so far today. Tap ■ below to stop it, or ⊕ above to add time you already worked."
+- 4.4: swipe acts at 40% of the row or on a flick (≥48px at ≥0.6px/ms); the label is pale before that and fills in once letting go would act (not armed at 30%, armed at 45%).
+- 4.5: on a phone the shell's toasts and the delete Undo are one bar in the bottom block above the run bar (never over it), one at a time, newest replaces; names cut to 30 characters ("Client call about the very lo…"); "Undo" sentence case; Undo and ✕ 44px. PC too: the floating toast's ✕ is 44×44 with no change to the toast's look.
+- 4.6: ■ on the run bar now offers "Stopped “…” · Undo"; Undo runs it again from its own start.
+- Guard tests changed on purpose: swipe threshold (75% → 40% and flick), "a running-only day shows nothing" became the running row and its hint, "a row's ⋮ holds…" became "no row ⋮; the sheet's ⋮ holds…".
+- Tap counts: delete and Undo is 2 taps with a 40% swipe (was 75%).
+- PC check `shots/pc-after-4`: clocks only, and the toast ✕ hit area.
+
 ### Phase 5: Calendar
 
 Reference shots: `before/B-02-cal`, `B-03-cal-pagescrolled`, `B-11-cal-360`,

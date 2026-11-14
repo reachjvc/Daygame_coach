@@ -27,7 +27,7 @@ import { BottomSheet, SheetRow } from "@/components/BottomSheet"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { ErrorBoundary } from "@/src/shared/components/ErrorBoundary"
-import type { PushToast } from "../../hooks/useTimetrack"
+import type { PushToast, ToastMessage } from "../../hooks/useTimetrack"
 import type { useTimetrackSync } from "../../hooks/useTimetrackSync"
 import {
   IconAdd,
@@ -50,6 +50,8 @@ import type { Section } from "../../trackerAddressService"
 import type { EntryDraft, Id, IsoDate, AlertEvent, ReportConfig, TimeEntry, TimetrackState } from "../../types"
 import { AfterCheckContext, type AfterCheck } from "../afterCheck"
 import { AlertsBell } from "../AlertsBell"
+import { undoOrSay } from "../neighbourNotice"
+import { undoStopAt } from "../../timeFixService"
 import { SignedOutBanner } from "../SignedOutBanner"
 import { useMomentActions } from "../useMomentActions"
 import { UNDO_WAITS_MS, UndoContext } from "./undoContext"
@@ -114,6 +116,16 @@ export interface PhoneLab {
   unreadAlerts: AlertEvent[]
   /** a newer build waits to be loaded (`useNewBuild`) */
   newBuild: { ready: boolean; reload: () => void }
+  /** the shell's toasts: on a phone the newest is drawn here, in the bottom block (4.5) */
+  toasts: ToastMessage[]
+  dismissToast: (id: number) => void
+}
+
+/** A name in a toast is cut to 30 characters (Plans/time-log-phone.md 4.5) */
+export function shortNames(text: string): string {
+  return text.replace(/([“‘])([^”’]+)([”’])/g, (whole, open: string, name: string, close: string) =>
+    name.length > 30 ? `${open}${name.slice(0, 29).trimEnd()}…${close}` : whole,
+  )
 }
 
 const TABS: { id: Section; label: string; icon: typeof IconTimer }[] = [
@@ -145,7 +157,30 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
   /** the workspace as it is now, for an Undo pressed after the sheet that offered it closed */
   const latestState = useRef(state)
   latestState.current = state
-  const offerUndo = useCallback((text: string, run: () => void, ids: string[]) => setUndo({ key: ++undoCount.current, text, run, ids }), [])
+  /**
+   * ONE TOAST AT A TIME, THE NEWEST (Plans/time-log-phone.md 4.5). A delete's
+   * Undo (here) and the shell's toasts (a continue, a fix, a neighbour moved)
+   * were two kinds in two places, and could stack. Each new one replaces the
+   * one before, in the bottom block above the bar, so none covers it.
+   */
+  const toastsNow = useRef(lab.toasts)
+  toastsNow.current = lab.toasts
+  const { dismissToast } = lab
+  const offerUndo = useCallback(
+    (text: string, run: () => void, ids: string[]) => {
+      for (const toast of toastsNow.current) dismissToast(toast.id)
+      setUndo({ key: ++undoCount.current, text, run, ids })
+    },
+    [dismissToast],
+  )
+  const newestToast = lab.toasts.length > 0 ? lab.toasts[lab.toasts.length - 1] : null
+  const toastSeen = useRef<number | null>(null)
+  useEffect(() => {
+    if (!newestToast || newestToast.id === toastSeen.current) return
+    toastSeen.current = newestToast.id
+    setUndo(null)
+    for (const toast of toastsNow.current) if (toast.id !== newestToast.id) dismissToast(toast.id)
+  }, [newestToast, dismissToast])
   const setState: SetState = useCallback(
     (updater) => {
       setUndo(null)
@@ -394,6 +429,24 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
   ]
 
   const next = lab.nextDraft.description.trim()
+
+  /**
+   * ■ ON THE BAR, WITH THE SAME UNDO AS CONTINUE AND DELETE (Plans/time-log-phone.md
+   * 4.6): a stop by a slipped thumb was a trip into the entry to clear its end.
+   * Undo runs it again from its own start (`undoStopAt`), unless another timer
+   * has started since, which it says.
+   */
+  const stopWithUndo = () => {
+    const stopping = running
+    lab.stopTracking()
+    if (!stopping) return
+    const name = stopping.description.trim() || "(no description)"
+    offerUndo(
+      `Stopped “${name}”`,
+      () => undoOrSay(() => latestState.current, (current) => undoStopAt(current, stopping.id, serverNowIso()), setState, pushToast),
+      [stopping.id],
+    )
+  }
 
   return (
     <UndoContext.Provider value={offerUndo}>
@@ -647,13 +700,13 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
             Updated · Tap to reload
           </button>
         )}
-        {undo && (
-          <div data-testid="undo-bar" role="status" className="flex items-center gap-2 border-b border-border px-3 py-1.5 text-sm">
-            <span className="min-w-0 flex-1">{undo.text}</span>
+        {undo ? (
+          <div data-testid="undo-bar" role="status" className="flex items-center gap-1 border-b border-border py-0.5 pl-3 text-sm">
+            <span className="min-w-0 flex-1">{shortNames(undo.text)}</span>
             <Button
               size="sm"
               variant="ghost"
-              className="h-11 font-semibold uppercase tracking-wide text-primary"
+              className="h-11 px-3 font-semibold text-primary"
               onClick={() => {
                 const run = undo.run
                 setUndo(null)
@@ -662,10 +715,54 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
             >
               <IconUndo className="size-4" /> Undo
             </Button>
-            <button type="button" aria-label="Dismiss" onClick={() => setUndo(null)} className={cn(touchTarget, "text-muted-foreground")}>
+            <button type="button" aria-label="Dismiss" onClick={() => setUndo(null)} className="flex size-11 shrink-0 items-center justify-center text-muted-foreground">
               <IconClose className="size-4" />
             </button>
           </div>
+        ) : (
+          newestToast && (
+            <div
+              data-testid="toast-bar"
+              role="status"
+              className={cn(
+                "flex flex-wrap items-center gap-x-1 border-b border-border py-0.5 pl-3 text-sm",
+                newestToast.tone === "error" && "bg-destructive/15",
+              )}
+            >
+              <span className="min-w-0 flex-1 py-2">{shortNames(newestToast.text)}</span>
+              <span className="ml-auto flex items-center">
+                {newestToast.undo && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-11 px-3 font-semibold text-primary"
+                    onClick={() => {
+                      newestToast.undo?.()
+                      dismissToast(newestToast.id)
+                    }}
+                  >
+                    {!newestToast.second && <IconUndo className="size-4" />} {shortNames(newestToast.undoLabel ?? "Undo")}
+                  </Button>
+                )}
+                {newestToast.second && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-11 px-3"
+                    onClick={() => {
+                      newestToast.second?.run()
+                      dismissToast(newestToast.id)
+                    }}
+                  >
+                    {newestToast.second.label}
+                  </Button>
+                )}
+                <button type="button" aria-label="Dismiss" onClick={() => dismissToast(newestToast.id)} className="flex size-11 shrink-0 items-center justify-center text-muted-foreground">
+                  <IconClose className="size-4" />
+                </button>
+              </span>
+            </div>
+          )
         )}
         {selected !== null && (
           <BulkBar
@@ -736,7 +833,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
             onOpenRunning={() => running && lab.openEntry(running)}
             onOpenNew={() => openNew("start")}
             onStart={() => lab.startTracking()}
-            onStop={lab.stopTracking}
+            onStop={stopWithUndo}
           />
         </div>
         )}
@@ -782,6 +879,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
           focusName={target.mode === "edit" && nameFor.current === target.entryId}
           backedOut={backedOut !== null}
           onClose={closeSheet}
+          onGoToProject={lab.goToProject}
           onKeepEditing={keepEditing}
           onMoment={(kind, draft) => {
             closeSheet()

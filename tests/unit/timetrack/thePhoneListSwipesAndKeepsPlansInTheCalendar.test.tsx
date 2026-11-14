@@ -83,10 +83,16 @@ afterEach(() => {
 })
 
 describe("the swipe, as rules", () => {
-  test("only past three quarters of the row, and only when clearly sideways", () => {
-    expect(swipeAction(300, ROW_WIDTH)).toBe("continue")
-    expect(swipeAction(299, ROW_WIDTH)).toBeNull()
-    expect(swipeAction(-300, ROW_WIDTH)).toBe("delete")
+  // 40% or a fast flick since 2026-11-14 (Plans/time-log-phone.md 4.4; it was Toggl's 75%)
+  test("only past 40% of the row or on a fast flick, and only when clearly sideways", () => {
+    expect(swipeAction(0.4 * ROW_WIDTH, ROW_WIDTH)).toBe("continue")
+    expect(swipeAction(0.4 * ROW_WIDTH - 1, ROW_WIDTH)).toBeNull()
+    expect(swipeAction(-0.4 * ROW_WIDTH, ROW_WIDTH)).toBe("delete")
+    // a flick: 60px in 50ms acts; the same 60px over half a second does not
+    expect(swipeAction(60, ROW_WIDTH, 50)).toBe("continue")
+    expect(swipeAction(-60, ROW_WIDTH, 50)).toBe("delete")
+    expect(swipeAction(60, ROW_WIDTH, 500)).toBeNull()
+    expect(swipeAction(30, ROW_WIDTH, 10), "too short to be a flick").toBeNull()
     expect(swipeAxis(4, 3)).toBeNull()
     expect(swipeAxis(40, 10)).toBe("x")
     expect(swipeAxis(30, 40)).toBe("y")
@@ -118,7 +124,7 @@ describe("a row swiped", () => {
 
   test("half way does nothing, and a scroll up or down never moves it", async () => {
     await open(history())
-    swipe(row("Email"), 200)
+    swipe(row("Email"), 0.3 * ROW_WIDTH)
     swipe(row("Email"), 80, 300)
     swipe(row("Email"), -60, -300)
     expect(stored().entries.filter((e) => e.stop === null)).toHaveLength(0)
@@ -205,11 +211,13 @@ describe("what the findability run stumbled on", () => {
     expect(within(row("Email")).getByRole("button", { name: "Continue this entry" })).toBeTruthy()
   })
 
-  test("a group whose only live member runs shows nothing until it stops", async () => {
+  // changed on purpose 2026-11-14 (Plans/time-log-phone.md 4.3): the running entry heads its day, and alone it says what next
+  test("a timer running alone heads today as its own row, and says what to do next", async () => {
     const copy = startTimer(baseState({ entries: [] }), { description: "Gym", projectId: null, taskId: null, tagIds: [], billable: false }, new Date(2026, 7, 10, 11, 30).toISOString()).state
     await open(copy)
-    expect(main().queryByText("Gym")).toBeNull()
-    expect(main().queryByText("Today")).toBeNull()
+    expect(main().getByRole("button", { name: "Running: Gym, since 11:30" })).toBeTruthy()
+    expect(main().getByText("Today")).toBeTruthy()
+    expect(main().getByText(/Only this timer so far today/)).toBeTruthy()
   })
 
   test("the sync dot is named, and a tap says what it means", async () => {

@@ -4,7 +4,7 @@
  *
  * Swipe a row right to continue it, left to delete it, as Toggl's Android
  * list does [H25 #04; SRC `MainRecyclerViewTouchCallback`]: the row follows the
- * finger and acts only past 75% of its width, so a half swipe is nothing. A
+ * finger and acts past 40% of its width or on a fast flick (Toggl's is 75%). A
  * finger that sets off up or down is a scroll and the row never moves.
  *
  * Planned entries — ones that have not begun — are in the calendar and not in
@@ -19,8 +19,15 @@ import type { DayGroup, EntryRow } from "./types"
 
 /** How far a finger may drift before it is going somewhere */
 export const ROW_SLOP_PX = 10
-/** Toggl's threshold: three quarters of the row's width [SRC] */
-export const SWIPE_FRACTION = 0.75
+/**
+ * HOW FAR A ROW MUST GO: 40% OF ITS WIDTH, OR A FAST FLICK
+ * (Plans/time-log-phone.md 4.4, 2026-11-14). Toggl's three quarters [SRC]
+ * meant dragging a thumb almost across a phone; the owner found it hard.
+ */
+export const SWIPE_FRACTION = 0.4
+/** A flick: this fast (px per millisecond) and at least this far acts, short of 40% */
+export const FLICK_SPEED = 0.6
+export const FLICK_MIN_PX = 48
 
 export type SwipeAxis = "x" | "y" | null
 export type SwipeAction = "continue" | "delete" | null
@@ -35,12 +42,18 @@ export function swipeAxis(dx: number, dy: number): SwipeAxis {
   return Math.abs(dx) > 1.5 * Math.abs(dy) ? "x" : "y"
 }
 
-/** What letting go does: right past 75% continues, left past 75% deletes, anything less springs back */
-export function swipeAction(dx: number, width: number): SwipeAction {
+/** What letting go does: right past 40% (or a flick) continues, left deletes, anything less springs back */
+export function swipeAction(dx: number, width: number, msTaken = Infinity): SwipeAction {
   if (width <= 0) return null
-  if (dx >= SWIPE_FRACTION * width) return "continue"
-  if (dx <= -SWIPE_FRACTION * width) return "delete"
+  const flick = Math.abs(dx) >= FLICK_MIN_PX && msTaken > 0 && Math.abs(dx) / msTaken >= FLICK_SPEED
+  if (dx >= SWIPE_FRACTION * width || (flick && dx > 0)) return "continue"
+  if (dx <= -SWIPE_FRACTION * width || (flick && dx < 0)) return "delete"
   return null
+}
+
+/** Has the drag passed the line where letting go acts: the label fills in (4.4) */
+export function swipeArmed(dx: number, width: number): boolean {
+  return width > 0 && Math.abs(dx) >= SWIPE_FRACTION * width
 }
 
 /**

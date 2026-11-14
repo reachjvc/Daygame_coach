@@ -21,19 +21,8 @@ import { Fragment, memo, useContext, useMemo, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { MIN_SPLIT_SECONDS } from "../../config"
 import type { PushToast } from "../../hooks/useTimetrack"
-import {
-  IconDelete,
-  IconDuplicate,
-  IconEdit,
-  IconFavorite,
-  IconLink,
-  IconMenu,
-  IconMoney,
-  IconSplit,
-  IconStart,
-} from "../../icons"
+import { IconMoney, IconStart } from "../../icons"
 import { serverNowIso } from "../../serverClock"
 import { layOnto } from "../../tabMergeService"
 import { jointsOf, type Joint } from "../../timeFixService"
@@ -53,25 +42,19 @@ import { timerList } from "../../timerListService"
 import {
   continueEntry,
   deleteEntries,
-  draftOf,
-  duplicateEntry,
   entrySeconds,
-  findFavorite,
   isPlanned,
   isRunning,
   restoreEntries,
-  splitEntry,
-  startLinkFor,
   tagNames,
-  toggleFavorite,
   undoDisplacement,
 } from "../../timetrackService"
-import { listedRows, swipeAction, swipeAxis, type SwipeAxis } from "../../phoneListService"
+import { listedRows, swipeAction, swipeArmed, swipeAxis, type SwipeAxis } from "../../phoneListService"
 import type { DayGroup, EntryRow, Id, IsoDate, TimeEntry, TimetrackState } from "../../types"
 import type { AfterCheck } from "../afterCheck"
 import { JointMark } from "../EntryList"
 import { undoOrSay } from "../neighbourNotice"
-import { ColorDot, Dropdown, EmptyState, plannedStripes, touchRow, touchTarget } from "../primitives"
+import { EmptyState, plannedStripes } from "../primitives"
 import { type SetState } from "./landOnCurrent"
 import { UndoContext, type OfferUndo } from "./undoContext"
 import { ProjectLine } from "./RunBar"
@@ -251,8 +234,9 @@ const PhoneDay = memo(function PhoneDay({ group, todayKey, nowSec, state, expand
   const format = state.user.durationFormat
   // planned entries are in the calendar, not here, until they start (D-PLANNED)
   const rows = listedRows(group, nowSec)
-  // a day whose only entry is the running one is the bar's until it stops
-  if (rows.length === 0 && group.plannedSeconds === 0) return null
+  // the running entry heads its day as a row of its own (4.3)
+  const runningHere = group.rows.flatMap((row) => row.entries).find((entry) => isRunning(entry)) ?? null
+  if (rows.length === 0 && group.plannedSeconds === 0 && !runningHere) return null
 
   const jointBelow = (index: number): Joint | null => {
     const later = rows[index]
@@ -299,7 +283,16 @@ const PhoneDay = memo(function PhoneDay({ group, todayKey, nowSec, state, expand
           {group.plannedSeconds > 0 && ` · ${formatDuration(group.plannedSeconds, format)} planned`}
         </span>
       </div>
-      {rows.length === 0 ? (
+      {runningHere && (
+        <RunningRow
+          entry={runningHere}
+          state={state}
+          nowSec={nowSec}
+          onOpen={() => actions.onEditEntry(runningHere)}
+          alone={rows.length === 0}
+        />
+      )}
+      {rows.length === 0 && runningHere ? null : rows.length === 0 ? (
         <div className="flex items-center justify-between rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
           <span>Only planned entries: they show here once they start.</span>
           <Button variant="ghost" size="sm" className="h-11 shrink-0" onClick={() => actions.onSeeInCalendar(group.date)}>
@@ -443,14 +436,12 @@ const PhoneRow = memo(function PhoneRow({
   pushToast,
   afterCheck,
   onEditEntry,
-  onGoToProject,
   latest,
   selecting,
   checked,
   onCheck,
   expanded,
   onToggleExpand,
-  onStartSelecting,
   swipes,
 }: PhoneRowProps) {
   const running = isRunning(entry)
@@ -462,7 +453,16 @@ const PhoneRow = memo(function PhoneRow({
   const endMark = endDayMark(shownOn, entry.stop)
   const format = state.user.timeFormat
   const tags = tagNames(state, entry.tagIds)
-  const project = state.projects.find((p) => p.id === entry.projectId)
+
+  /** the times the row shows: a group's first start and last end (4.1) */
+  const span = entry.duronly
+    ? null
+    : grouped && row
+      ? {
+          start: row.entries.reduce((first, e) => (e.start < first ? e.start : first), row.entries[0].start),
+          stop: row.entries.some((e) => e.stop === null) ? null : row.entries.reduce((last, e) => (e.stop! > last ? e.stop! : last), row.entries[0].stop!),
+        }
+      : { start: entry.start, stop: entry.stop }
 
   const open = () => (grouped ? onToggleExpand?.() : onEditEntry(entry))
 
@@ -496,12 +496,15 @@ const PhoneRow = memo(function PhoneRow({
    * width acts; less springs back. A mouse does not swipe.
    */
   const [offset, setOffset] = useState(0)
-  const press = useRef<{ id: number; x: number; y: number; axis: SwipeAxis; width: number } | null>(null)
+  const press = useRef<{ id: number; x: number; y: number; axis: SwipeAxis; width: number; at: number } | null>(null)
+  const [rowWidth, setRowWidth] = useState(0)
   const swallowClick = useRef(false)
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     swallowClick.current = false
     if (!swipes || event.pointerType === "mouse") return
-    press.current = { id: event.pointerId, x: event.clientX, y: event.clientY, axis: null, width: event.currentTarget.getBoundingClientRect().width }
+    const width = event.currentTarget.getBoundingClientRect().width
+    press.current = { id: event.pointerId, x: event.clientX, y: event.clientY, axis: null, width, at: Date.now() }
+    setRowWidth(width)
   }
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     const held = press.current
@@ -520,7 +523,7 @@ const PhoneRow = memo(function PhoneRow({
     if (!held || event.pointerId !== held.id || held.axis !== "x") return
     swallowClick.current = true
     setOffset(0)
-    const action = swipeAction(event.clientX - held.x, held.width)
+    const action = swipeAction(event.clientX - held.x, held.width, Date.now() - held.at)
     if (action === "continue" && !running) continueIt()
     else if (action === "delete") deleteWithUndo(latest(), ids, setState, pushToast, offerUndo)
   }
@@ -546,11 +549,16 @@ const PhoneRow = memo(function PhoneRow({
       }}
     >
       {offset !== 0 && (
+        // pale until letting go would act, then filled in (4.4)
         <div
           aria-hidden
+          data-swipe-armed={swipeArmed(offset, rowWidth) || undefined}
           className={cn(
-            "absolute inset-0 flex items-center px-4 text-sm font-semibold text-white",
-            offset > 0 ? "justify-start bg-primary" : "justify-end bg-destructive",
+            "absolute inset-0 flex items-center px-4 text-sm font-semibold transition-colors",
+            offset > 0 ? "justify-start" : "justify-end",
+            swipeArmed(offset, rowWidth)
+              ? cn("text-white", offset > 0 ? "bg-primary" : "bg-destructive")
+              : cn("text-foreground/70", offset > 0 ? "bg-primary/25" : "bg-destructive/25"),
           )}
         >
           {offset > 0 ? "Continue" : "Delete"}
@@ -558,7 +566,10 @@ const PhoneRow = memo(function PhoneRow({
       )}
     <div
       data-swipe-face
-      className={cn("relative flex items-center gap-1 bg-card py-1.5 pl-3 pr-1", nested && "pl-8", running && "bg-primary/5")}
+      // ABOUT 56PX, TWO LINES (Plans/time-log-phone.md 4.1): the name and its
+      // length, then the project and tags and the times; ▶ at the far right.
+      // Rows were 75px and about five fitted on a phone.
+      className={cn("relative flex min-h-14 items-center gap-1 bg-card py-1 pl-3 pr-0.5", nested && "pl-8", running && "bg-primary/5")}
       style={{ ...(planned ? plannedStripes : {}), transform: `translateX(${offset}px)` }}
     >
       {selecting && (
@@ -572,7 +583,7 @@ const PhoneRow = memo(function PhoneRow({
           onClick={onToggleExpand}
           aria-label={expanded ? "Collapse group" : "Expand group"}
           aria-expanded={expanded}
-          className="flex size-11 shrink-0 items-center justify-center"
+          className="-ml-2 flex size-11 shrink-0 items-center justify-center"
         >
           <span className="flex size-6 items-center justify-center rounded border border-border text-[11px] font-semibold">{row!.entries.length}</span>
         </button>
@@ -584,22 +595,29 @@ const PhoneRow = memo(function PhoneRow({
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") (selecting ? onCheck : open)()
         }}
-        className="min-w-0 flex-1 py-1 text-left"
+        className="min-w-0 flex-1 py-0.5 text-left"
       >
-        <span className={cn("block truncate text-sm", !entry.description.trim() && "text-muted-foreground")}>
-          {entry.description.trim() || "Add description"}
+        <span className="flex items-baseline gap-2">
+          <span className={cn("min-w-0 flex-1 truncate text-sm", !entry.description.trim() && "text-muted-foreground")}>
+            {entry.description.trim() || "Add description"}
+          </span>
+          <span className="flex shrink-0 items-center gap-1 text-sm tabular-nums">
+            {planned && <span className="text-xs text-muted-foreground">planned</span>}
+            {entry.billable && <IconMoney aria-label="Billable" className="size-3.5 text-muted-foreground" />}
+            {running ? formatClock(seconds) : formatDuration(seconds, state.user.durationFormat)}
+          </span>
         </span>
         <span className="mt-0.5 flex items-center gap-1.5">
           <ProjectLine state={state} entry={entry} className="min-w-0 shrink" />
           {tags.length > 0 && <span className="min-w-0 shrink truncate text-xs text-muted-foreground"># {tags.join(", ")}</span>}
-          {!grouped && !entry.duronly && (
+          {span && (
             <span className="ml-auto shrink-0 pl-1 text-[11px] tabular-nums text-muted-foreground">
               {continued && (
                 <span data-continued className="mr-1 text-primary">
                   {continued}
                 </span>
               )}
-              {formatTimeOfDay(entry.start, format)}–{entry.stop ? formatTimeOfDay(entry.stop, format) : "now"}
+              {formatTimeOfDay(span.start, format)}–{span.stop ? formatTimeOfDay(span.stop, format) : "now"}
               {endMark && (
                 <span data-end-day className="ml-1 text-primary">
                   {endMark}
@@ -609,156 +627,57 @@ const PhoneRow = memo(function PhoneRow({
           )}
         </span>
       </div>
-      <div className="flex shrink-0 flex-col items-end">
-        <span className="flex items-center gap-1 px-1 text-sm tabular-nums">
-          {planned && <span className="text-xs text-muted-foreground">planned</span>}
-          {entry.billable && <IconMoney aria-label="Billable" className="size-3.5 text-muted-foreground" />}
-          {running ? formatClock(seconds) : formatDuration(seconds, state.user.durationFormat)}
-        </span>
-        {/* not on the running row: the bar at the bottom is that timer's control, and a ▷ here read as one (findability, 2026-11-05) */}
-        {running ? (
-          <span className="-mb-1.5 h-12 w-12" />
-        ) : (
-          // 48px, Toggl Android's (Material) size: it was 44x36 (alpha fast-time-03)
-          <button
-            type="button"
-            onClick={continueIt}
-            aria-label="Continue this entry"
-            className="-mb-1.5 flex size-12 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary/60"
-          >
-            <IconStart className="size-4" />
-          </button>
-        )}
-      </div>
-      <RowMenu
-        entry={entry}
-        ids={ids}
-        state={state}
-        setState={setState}
-        pushToast={pushToast}
-        running={running}
-        project={project}
-        onEdit={() => onEditEntry(entry)}
-        onGoToProject={onGoToProject}
-        onSelect={onStartSelecting}
-        latest={latest}
-      />
+      {/* not on the running row: the bar at the bottom is that timer's control (findability, 2026-11-05) */}
+      {running ? (
+        <span className="size-11 shrink-0" />
+      ) : (
+        <button
+          type="button"
+          onClick={continueIt}
+          aria-label="Continue this entry"
+          className="flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary/60"
+        >
+          <IconStart className="size-4" />
+        </button>
+      )}
+      {/* no ⋮ on a phone row (D2, 4.2): its actions are in the entry's own ⋮ */}
     </div>
     </div>
   )
 }, rowPropsEqual)
 
-/** The row's ⋮: today's extras, which Toggl's phone rows do not have, kept one tap away */
-function RowMenu({
-  entry,
-  ids,
-  state,
-  setState,
-  pushToast,
-  running,
-  project,
-  onEdit,
-  onGoToProject,
-  onSelect,
-  latest,
-}: {
-  entry: TimeEntry
-  ids: Id[]
-  state: TimetrackState
-  setState: SetState
-  pushToast: PushToast
-  running: boolean
-  project: TimetrackState["projects"][number] | undefined
-  onEdit: () => void
-  onGoToProject: (projectId: Id) => void
-  onSelect: (ids: Id[]) => void
-  latest: () => TimetrackState
-}) {
-  const favorite = Boolean(findFavorite(state, draftOf(entry)))
-  const offerUndo = useContext(UndoContext)
-  const items: { label: string; icon: React.ReactNode; run: () => void; disabled?: boolean; hint?: string; destructive?: boolean }[] = [
-    { label: "Edit details…", icon: <IconEdit className="size-3.5" />, run: onEdit },
-    {
-      label: "Duplicate",
-      icon: <IconDuplicate className="size-3.5" />,
-      run: () => {
-        const drawn = latest()
-        const result = duplicateEntry(drawn, entry.id, serverNowIso())
-        if (result.violations.length > 0) pushToast(result.violations[0].message, "error")
-        else setState(layOnto(drawn, result.state))
-      },
-    },
-    {
-      label: "Split in two",
-      icon: <IconSplit className="size-3.5" />,
-      disabled: running || entry.duration <= MIN_SPLIT_SECONDS,
-      hint: entry.duration <= MIN_SPLIT_SECONDS ? "Needs > 10 min" : undefined,
-      run: () => {
-        const drawn = latest()
-        const result = splitEntry(drawn, entry.id, null, serverNowIso())
-        if (result.error) pushToast(result.error, "error")
-        else setState(layOnto(drawn, result.state))
-      },
-    },
-    {
-      label: favorite ? "Remove favorite" : "Add to favorites",
-      icon: <IconFavorite className="size-3.5" />,
-      run: () => setState((current) => toggleFavorite(current, draftOf(entry), serverNowIso())),
-    },
-    {
-      label: "Copy start link",
-      icon: <IconLink className="size-3.5" />,
-      run: () => {
-        navigator.clipboard?.writeText(startLinkFor(entry, window.location.origin, window.location.pathname))
-        pushToast("Start link copied to clipboard")
-      },
-    },
-    ...(project ? [{ label: `Go to ${project.name}`, icon: <ColorDot color={project.color} />, run: () => onGoToProject(project.id) }] : []),
-    { label: "Select", icon: <input type="checkbox" readOnly checked={false} tabIndex={-1} aria-hidden className="size-3.5" />, run: () => onSelect(ids) },
-    {
-      label: "Delete",
-      icon: <IconDelete className="size-3.5" />,
-      destructive: true,
-      run: () => deleteWithUndo(latest(), ids, setState, pushToast, offerUndo),
-    },
-  ]
+/**
+ * THE RUNNING ENTRY AT THE TOP OF ITS DAY (Plans/time-log-phone.md 4.3):
+ * "Reading · since 19:10" and its length counting. It was the bar's alone,
+ * and a day with only a timer running looked empty. A tap opens its sheet;
+ * Stop stays on the bar. Alone in the list, it says what to do next.
+ */
+function RunningRow({ entry, state, nowSec, onOpen, alone }: { entry: TimeEntry; state: TimetrackState; nowSec: number; onOpen: () => void; alone: boolean }) {
   return (
-    <Dropdown
-      align="right"
-      width="w-52"
-      ariaLabel="More actions for this time entry"
-      trigger={() => (
-        <span className={cn(touchTarget, "rounded-md text-muted-foreground hover:bg-secondary/60")}>
-          <IconMenu className="size-5" />
+    <div className="mb-1">
+      <button
+        type="button"
+        onClick={onOpen}
+        aria-label={`Running: ${entry.description.trim() || "(no description)"}, since ${formatTimeOfDay(entry.start, state.user.timeFormat)}`}
+        className="flex min-h-14 w-full items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1 text-left"
+      >
+        <span className="relative flex size-2.5 shrink-0">
+          <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-60 motion-reduce:hidden" />
+          <span className="relative inline-flex size-2.5 rounded-full bg-primary" />
         </span>
+        <span className="min-w-0 flex-1">
+          <span className={cn("block truncate text-sm", !entry.description.trim() && "text-muted-foreground")}>
+            {entry.description.trim() || "(no description)"} · since {formatTimeOfDay(entry.start, state.user.timeFormat)}
+          </span>
+          <ProjectLine state={state} entry={entry} className="mt-0.5" />
+        </span>
+        <span className="shrink-0 text-sm font-semibold tabular-nums">{formatClock(entrySeconds(entry, nowSec))}</span>
+      </button>
+      {alone && (
+        <p className="px-1 pt-2 text-xs text-muted-foreground">
+          Only this timer so far today. Tap ■ below to stop it, or ⊕ above to add time you already worked.
+        </p>
       )}
-    >
-      {(close) => (
-        <div className="py-1 text-sm">
-          {items.map((item) => (
-            <Fragment key={item.label}>
-              {item.destructive && <div className="my-1 h-px bg-border" />}
-              <button
-                type="button"
-                disabled={item.disabled}
-                onClick={() => {
-                  close()
-                  item.run()
-                }}
-                className={cn(
-                  "flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-secondary/60 disabled:opacity-40",
-                  touchRow,
-                  item.destructive && "text-destructive",
-                )}
-              >
-                {item.icon}
-                <span className="flex-1">{item.label}</span>
-                {item.hint && <span className="text-[10px] text-muted-foreground">{item.hint}</span>}
-              </button>
-            </Fragment>
-          ))}
-        </div>
-      )}
-    </Dropdown>
+    </div>
   )
 }

@@ -122,14 +122,19 @@ describe("the list", () => {
     expect(main.queryByLabelText("Group similar entries")).toBeNull()
   })
 
-  test("a row's ⋮ still holds Duplicate, Split, favorites, the start link, Select and Delete", async () => {
+  // changed on purpose 2026-11-14 (D2, Plans/time-log-phone.md 4.2): no ⋮ on a phone row; its actions are in the entry's own ⋮
+  test("a row has no ⋮; Duplicate, Split, favorites and Delete are in the entry's own sheet", async () => {
     asPhone()
     await open(withHistory())
-    fireEvent.click(within(screen.getByRole("main")).getAllByRole("button", { name: "More actions for this time entry" })[0])
+    expect(within(screen.getByRole("main")).queryAllByRole("button", { name: "More actions for this time entry" })).toHaveLength(0)
+    fireEvent.click(within(screen.getByRole("main")).getAllByRole("button", { name: /Email|Write report|Deep work/ })[0])
+    const sheet = screen.getByRole("dialog", { name: "Time entry" })
+    fireEvent.click(within(sheet).getByRole("button", { name: "More options" }))
     const menu = document.querySelector("[data-dropdown-panel]") as HTMLElement
-    for (const name of ["Duplicate", "Split in two", "Add to favorites", "Copy start link", "Select", "Delete"]) {
+    for (const name of ["Duplicate", "Split in two", "Add to favorites"]) {
       expect(within(menu).getByRole("button", { name: new RegExp(name) }), name).toBeTruthy()
     }
+    expect(within(sheet).getByRole("button", { name: "Delete time entry" })).toBeTruthy()
   })
 })
 

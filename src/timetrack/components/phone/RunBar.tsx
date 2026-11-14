@@ -17,7 +17,7 @@
 
 import { cn } from "@/lib/utils"
 import { IconMoney, IconStart, IconStop } from "../../icons"
-import { formatClock } from "../../timetrackFormatService"
+import { formatClock, formatTimeOfDay } from "../../timetrackFormatService"
 import { clientById, entrySeconds, projectById } from "../../timetrackService"
 import type { EntryDraft, TimeEntry, TimetrackState } from "../../types"
 import { ColorDot } from "../primitives"
@@ -70,9 +70,11 @@ export function RunBar({
           <span className={cn("block truncate text-sm leading-snug", !running.description.trim() && "text-muted-foreground")}>
             {running.description.trim() || "+ Add description"}
           </span>
+          {/* the project's dot and when it began (Plans/time-log-phone.md 4.3) */}
           <span className="flex min-h-4 items-center gap-2">
-            <ProjectLine state={state} entry={running} />
+            <ProjectLine state={state} entry={running} className="shrink" />
             {running.billable && <IconMoney aria-label="Billable" className="size-3.5 shrink-0 text-muted-foreground" />}
+            <span className="shrink-0 text-xs text-muted-foreground">since {formatTimeOfDay(running.start, state.user.timeFormat)}</span>
           </span>
         </button>
         {/* one tap stops it [V1 4:33]; 56px, the size of the thing a thumb is reaching for */}

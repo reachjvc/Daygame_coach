@@ -1081,6 +1081,8 @@ export function TogglLab({
             bottomBarRef,
             unreadAlerts,
             newBuild,
+            toasts,
+            dismissToast,
           }}
         />
       ) : (<>
@@ -1451,7 +1453,8 @@ export function TogglLab({
         aria-live="polite"
         className="pointer-events-none fixed bottom-[calc(var(--panel-bottom-inset,4rem)+0.5rem)] left-1/2 z-[9550] flex w-full max-w-md -translate-x-1/2 sm:z-[9700] flex-col gap-2 px-3 sm:bottom-4 sm:px-4"
       >
-        {toasts.map((toast) => {
+        {/* on a phone the one toast is drawn in the bottom block, above the bar (Plans/time-log-phone.md 4.5) */}
+        {(isMobile ? [] : toasts).map((toast) => {
           /**
            * A question's two answers do not fit beside it on a phone, and nor
            * does one long answer — "Keep ‘Email’ as it was" squeezed the
@@ -1496,11 +1499,12 @@ export function TogglLab({
                 {toast.second.label}
               </Button>
             )}
+            {/* 44px to hit, on the PC too (4.5); the negative margin keeps the toast's height */}
             <button
               type="button"
               aria-label="Dismiss"
               onClick={() => dismissToast(toast.id)}
-              className="text-muted-foreground hover:text-foreground"
+              className="-my-2 -mr-2 flex size-11 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground"
             >
               <IconClose className="size-3.5" />
             </button>

@@ -27,6 +27,7 @@ import { useContext, useEffect, useMemo, useRef, useState, type KeyboardEvent, t
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import type { PushToast } from "../../hooks/useTimetrack"
+import { MIN_SPLIT_SECONDS } from "../../config"
 import { IconAuto, IconClose, IconDelete, IconEdit, IconMenu, IconStop, IconTag } from "../../icons"
 import {
   SHEET_DURATION_HINT,
@@ -72,10 +73,15 @@ import {
   applyAutotracker,
   createProject,
   createTag,
+  draftOf,
+  duplicateEntry,
+  findFavorite,
   forgottenTimer,
   matchAutotracker,
   moveEntryToDay,
+  splitEntry,
   stopTimer,
+  toggleFavorite,
   undoDisplacement,
 } from "../../timetrackService"
 import type { EntryDraft, Id, IsoDateTime, TimetrackState } from "../../types"
@@ -120,6 +126,7 @@ export function EntrySheet({
   onClose,
   onKeepEditing,
   onMoment,
+  onGoToProject,
   focusName = false,
 }: {
   target: SheetTarget
@@ -145,6 +152,8 @@ export function EntrySheet({
   onKeepEditing: () => void
   /** Stop at…, Switched at…, Started at…: the shell closes this and opens the moment picker */
   onMoment: (kind: MomentKind, draft: EntryDraft) => void
+  /** ⋮ "Go to <project>", once the row's ⋮ (4.2) */
+  onGoToProject?: (projectId: Id) => void
   /** the name takes the focus, as for a new entry: a block a held finger just made */
   focusName?: boolean
 }) {
@@ -569,6 +578,57 @@ export function EntrySheet({
     ...(target.mode === "edit" ? [{ label: "Move to another day…", run: () => setMoving(true) }] : []),
     ...(target.mode === "start" ? [{ label: "Started at…", run: () => moment("start") }] : []),
     { label: "Project and task…", run: () => setPickingProject(true) },
+    /**
+     * WHAT THE ROW'S ⋮ HAD (Plans/time-log-phone.md 4.2, D2). The phone's rows
+     * lost their ⋮; what it held that this one lacked is here, on the saved
+     * entry. Copy start link and Select are PC things and stay there.
+     */
+    ...(entry
+      ? [
+          {
+            label: "Duplicate",
+            run: () => {
+              const result = duplicateEntry(state, entry.id, serverNowIso())
+              if (result.violations.length > 0) refuse(result.violations[0].message)
+              else {
+                setState(layOnto(state, result.state))
+                onClose()
+              }
+            },
+          },
+          ...(entry.stop !== null && entry.duration > MIN_SPLIT_SECONDS
+            ? [
+                {
+                  label: "Split in two",
+                  run: () => {
+                    const result = splitEntry(state, entry.id, null, serverNowIso())
+                    if (result.error) refuse(result.error)
+                    else {
+                      setState(layOnto(state, result.state))
+                      onClose()
+                    }
+                  },
+                },
+              ]
+            : []),
+          {
+            label: findFavorite(state, draftOf(entry)) ? "Remove favorite" : "Add to favorites",
+            run: () => setState((current) => toggleFavorite(current, draftOf(entry), serverNowIso())),
+          },
+          ...(entry.projectId && onGoToProject
+            ? [
+                {
+                  label: `Go to ${state.projects.find((p) => p.id === entry.projectId)?.name ?? "project"}`,
+                  run: () => {
+                    const projectId = entry.projectId!
+                    onClose()
+                    onGoToProject(projectId)
+                  },
+                },
+              ]
+            : []),
+        ]
+      : []),
   ]
 
   const title = isNew ? "New time entry" : "Time entry"
