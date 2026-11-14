@@ -330,10 +330,28 @@ describe("the Calendar tab", () => {
     const sheet = await screen.findByRole("dialog", { name: "Time entry" })
     const name = within(sheet).getByPlaceholderText("I’ve worked on…")
     await waitFor(() => expect(document.activeElement).toBe(name))
-    // closed without a name, the block stays, as before
+    // closed with nothing changed, an accidental hold leaves no junk entry
+    // (changed on purpose 2026-11-14, Plans/time-log-phone.md 1.2: it used to stay)
     fireEvent.click(within(sheet).getByRole("button", { name: "Close" }))
     await waitFor(() => expect(screen.queryByRole("dialog", { name: "Time entry" })).toBeNull())
-    expect(stored().entries.filter((e) => !e.serverDeletedAt)).toHaveLength(1)
+    await waitFor(() => expect(stored().entries.filter((e) => !e.serverDeletedAt)).toHaveLength(0))
+  })
+
+  test("a held block given a name and saved stays", async () => {
+    await openTab(baseState({ entries: [] }))
+    const column = document.querySelector<HTMLElement>("[data-day-column]")!
+    const touch = { pointerId: 9, pointerType: "touch", isPrimary: true, clientX: 150, button: 0 }
+    fireEvent.pointerDown(column, { ...touch, clientY: y(10) })
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, LONG_PRESS_MS + 60))
+    })
+    fireEvent.pointerUp(column, { ...touch, clientY: y(10) })
+    const sheet = await screen.findByRole("dialog", { name: "Time entry" })
+    fireEvent.change(within(sheet).getByPlaceholderText("I’ve worked on…"), { target: { value: "Reading" } })
+    fireEvent.click(within(sheet).getByRole("button", { name: /^(Done|Save)$/i }))
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Time entry" })).toBeNull())
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(stored().entries.filter((e) => !e.serverDeletedAt).map((e) => e.description)).toEqual(["Reading"])
   })
 
   test("a tap on the name in the block's panel opens the sheet, as Edit does", async () => {

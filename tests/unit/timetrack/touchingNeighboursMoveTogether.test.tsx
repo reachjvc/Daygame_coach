@@ -12,6 +12,12 @@
  *
  * The eleven cases are the plan's own (DECISIONS, Q3), in its order. Then the
  * three places it happens: the sheet, the list row and the calendar's resize.
+ *
+ * CHANGED ON PURPOSE 2026-11-14 (D3 in Plans/time-log-phone.md): an edge
+ * pulled AWAY from its neighbour now leaves a gap; the owner found shortening
+ * one entry silently stretched the next. Only an edge pushed INTO the
+ * neighbour moves it, with the way back. The cases that pulled away now say
+ * the neighbour stays, and each has a pushed-in twin that still moves it.
  */
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
@@ -51,14 +57,32 @@ const forgotToSwitch = () =>
   baseState({ entries: [exact("a", at(4, 9, 0), at(4, 14, 30), "Deep work"), exact("b", at(4, 14, 30), at(4, 15, 0), "Email")] })
 
 describe("the eleven cases (Q3)", () => {
-  test("1. forgot to switch: A's end set to 11:55 takes B's start to 11:55", () => {
+  test("1. A's end pulled back to 11:55 leaves a gap: B stays where it started (D3)", () => {
     const result = endTo(forgotToSwitch(), "a", at(4, 11, 55))
 
     expect(result.violations).toEqual([])
     expect(find(result.state, "a").stop).toBe(at(4, 11, 55))
-    expect(find(result.state, "b").start).toBe(at(4, 11, 55))
-    expect(find(result.state, "b").duration).toBe(3 * 3600 + 5 * 60)
-    expect(result.moved).toEqual([{ entryId: "b", description: "Email", edge: "start", from: at(4, 14, 30), to: at(4, 11, 55) }])
+    expect(find(result.state, "b").start).toBe(at(4, 14, 30))
+    expect(find(result.state, "b").duration).toBe(30 * 60)
+    expect(result.moved).toEqual([])
+  })
+
+  test("1b. A's end pushed into B, to 14:45, takes B's start to 14:45", () => {
+    const result = endTo(forgotToSwitch(), "a", at(4, 14, 45))
+
+    expect(result.violations).toEqual([])
+    expect(find(result.state, "a").stop).toBe(at(4, 14, 45))
+    expect(find(result.state, "b").start).toBe(at(4, 14, 45))
+    expect(result.moved).toEqual([{ entryId: "b", description: "Email", edge: "start", from: at(4, 14, 30), to: at(4, 14, 45) }])
+  })
+
+  test("1c. a start pulled away from the entry before leaves a gap too (D3)", () => {
+    const state = baseState({ entries: [exact("z", at(4, 8, 0), at(4, 9, 0), "Email"), exact("a", at(4, 9, 0), at(4, 10, 0), "Deep work")] })
+    const result = startTo(state, "a", at(4, 9, 20))
+
+    expect(find(result.state, "a").start).toBe(at(4, 9, 20))
+    expect(find(result.state, "z").stop).toBe(at(4, 9, 0))
+    expect(result.moved).toEqual([])
   })
 
   test("2. a lunch gap: entries that did not touch stay apart", () => {
@@ -95,16 +119,19 @@ describe("the eleven cases (Q3)", () => {
     expect(almost.held.map((h) => h.entryId)).toEqual(["b"])
   })
 
-  test("5. B is running: its start moves and it keeps running, three hours and five minutes long by now", () => {
+  test("5. B is running: pushed into, its start moves and it keeps running, twenty minutes long by now", () => {
     const finished = baseState({ entries: [exact("a", at(4, 9, 0), at(4, 14, 30), "Deep work")] })
     const running = startTimer(finished, { description: "Email", projectId: null, taskId: null, tagIds: [], billable: false }, at(4, 14, 30)).state
     const now = at(4, 15, 0)
 
-    const result = endTo(running, "a", at(4, 11, 55), now)
+    const result = endTo(running, "a", at(4, 14, 40), now)
 
     const email = runningEntry(result.state)!
-    expect(email.start).toBe(at(4, 11, 55))
-    expect(entrySeconds(email, epochSeconds(now))).toBe(3 * 3600 + 5 * 60)
+    expect(email.start).toBe(at(4, 14, 40))
+    expect(entrySeconds(email, epochSeconds(now))).toBe(20 * 60)
+
+    // pulled away, the running one keeps its start (D3)
+    expect(runningEntry(endTo(running, "a", at(4, 11, 55), now).state)!.start).toBe(at(4, 14, 30))
   })
 
   test("6. A's start moved earlier takes the end of Z, before it", () => {
@@ -129,10 +156,10 @@ describe("the eleven cases (Q3)", () => {
   test("8. two devices: stopped at 17:05:12 on the phone and started at 17:05:40 on the PC still touch", () => {
     const now = at(4, 18, 0)
     const state = baseState({ entries: [exact("a", at(4, 16, 0), at(4, 17, 5, 12), "Gym"), exact("b", at(4, 17, 5, 40), at(4, 17, 30), "Shower")] })
-    expect(find(endTo(state, "a", at(4, 17, 0), now).state, "b").start).toBe(at(4, 17, 0))
+    expect(find(endTo(state, "a", at(4, 17, 10), now).state, "b").start).toBe(at(4, 17, 10))
 
     const apart = baseState({ entries: [exact("a", at(4, 16, 0), at(4, 17, 5, 12), "Gym"), exact("b", at(4, 17, 6, 13), at(4, 17, 30), "Shower")] })
-    expect(find(endTo(apart, "a", at(4, 17, 0), now).state, "b").start, "61 seconds apart is not touching").toBe(at(4, 17, 6, 13))
+    expect(find(endTo(apart, "a", at(4, 17, 6, 0), now).state, "b").start, "61 seconds apart is not touching").toBe(at(4, 17, 6, 13))
   })
 
   test("9. never across midnight, and never for a duration-only entry", () => {
@@ -149,17 +176,17 @@ describe("the eleven cases (Q3)", () => {
   })
 
   test("10. Keep ‘B’ as it was puts B back and leaves A's change alone", () => {
-    const result = endTo(forgotToSwitch(), "a", at(4, 11, 55))
+    const result = endTo(forgotToSwitch(), "a", at(4, 14, 45))
     const kept = keepNeighbour(result.state, result.moved[0], NOW)
 
     expect(kept.violations).toEqual([])
     expect(find(kept.state, "b").start).toBe(at(4, 14, 30))
-    expect(find(kept.state, "a").stop).toBe(at(4, 11, 55))
+    expect(find(kept.state, "a").stop).toBe(at(4, 14, 45))
   })
 
   test("11. both rows go out as changes, each under its own version check", () => {
     const before = forgotToSwitch()
-    const after = endTo(before, "a", at(4, 11, 55)).state
+    const after = endTo(before, "a", at(4, 14, 45)).state
 
     const diff = diffRows(stateToRows(before, "user-1"), stateToRows(after, "user-1"), NOW)
 
@@ -205,7 +232,7 @@ afterEach(() => {
 })
 
 describe("in the detail sheet", () => {
-  test("an end typed as 11:55 takes Email's start along, and says so with the way back", () => {
+  test("an end typed as 14:45 takes Email's start along, and says so with the way back", () => {
     const initial = forgotToSwitch()
     const { setState, stored } = holder(initial)
     const pushToast = vi.fn()
@@ -213,14 +240,14 @@ describe("in the detail sheet", () => {
       <EntryDetailModalBody entry={find(initial, "a")} state={initial} setState={setState} pushToast={pushToast} nowSec={epochSeconds(NOW)} />,
     )
 
-    typeInto(view.container.querySelector('input[aria-label="End time"]')!, "1155")
+    typeInto(view.container.querySelector('input[aria-label="End time"]')!, "1445")
 
-    expect(stored("b").start).toBe(at(4, 11, 55))
-    expect(pushToast).toHaveBeenCalledWith("Also moved ‘Email’ to start 11:55", "info", expect.any(Function), "Keep ‘Email’ as it was")
+    expect(stored("b").start).toBe(at(4, 14, 45))
+    expect(pushToast).toHaveBeenCalledWith("Also moved ‘Email’ to start 14:45", "info", expect.any(Function), "Keep ‘Email’ as it was")
     const keep = pushToast.mock.calls.find((call) => String(call[0]).startsWith("Also moved"))![2] as () => void
     keep()
     expect(stored("b").start).toBe(at(4, 14, 30))
-    expect(stored("a").stop).toBe(at(4, 11, 55))
+    expect(stored("a").stop).toBe(at(4, 14, 45))
   })
 
   test("a neighbour that would shrink under a minute is left, and the toast says where to fix it", () => {
@@ -237,15 +264,22 @@ describe("in the detail sheet", () => {
     expect(pushToast).toHaveBeenCalledWith("Left ‘Slip’ as it was: it would have been under a minute. The overlap is marked in the list.", "info")
   })
 
-  test("the one-tap −5 on an end is an end edit too", () => {
+  test("the one-tap +5 on an end is an end edit too, and −5 leaves a gap (D3)", () => {
     const initial = forgotToSwitch()
     const { setState, stored } = holder(initial)
-    render(<EntryDetailModalBody entry={find(initial, "a")} state={initial} setState={setState} pushToast={vi.fn()} nowSec={epochSeconds(NOW)} />)
+    const view = render(<EntryDetailModalBody entry={find(initial, "a")} state={initial} setState={setState} pushToast={vi.fn()} nowSec={epochSeconds(NOW)} />)
 
+    fireEvent.click(screen.getByRole("button", { name: "End 5 minutes later" }))
+
+    expect(stored("a").stop).toBe(at(4, 14, 35))
+    expect(stored("b").start).toBe(at(4, 14, 35))
+
+    view.unmount()
+    const again = holder(initial)
+    render(<EntryDetailModalBody entry={find(initial, "a")} state={initial} setState={again.setState} pushToast={vi.fn()} nowSec={epochSeconds(NOW)} />)
     fireEvent.click(screen.getByRole("button", { name: "End 5 minutes earlier" }))
-
-    expect(stored("a").stop).toBe(at(4, 14, 25))
-    expect(stored("b").start).toBe(at(4, 14, 25))
+    expect(again.stored("a").stop).toBe(at(4, 14, 25))
+    expect(again.stored("b").start).toBe(at(4, 14, 30))
   })
 })
 
@@ -257,11 +291,11 @@ describe("in the list", () => {
     render(<EntryList state={initial} setState={setState} nowSec={epochSeconds(NOW)} pushToast={pushToast} onEditEntry={() => {}} />)
 
     const end = screen.getAllByLabelText("End time").find((input) => (input as HTMLInputElement).value === "14:30")!
-    typeInto(end, "1155")
+    typeInto(end, "1445")
 
-    expect(stored("a").stop).toBe(at(4, 11, 55))
-    expect(stored("b").start).toBe(at(4, 11, 55))
-    expect(pushToast).toHaveBeenCalledWith("Also moved ‘Email’ to start 11:55", "info", expect.any(Function), "Keep ‘Email’ as it was")
+    expect(stored("a").stop).toBe(at(4, 14, 45))
+    expect(stored("b").start).toBe(at(4, 14, 45))
+    expect(pushToast).toHaveBeenCalledWith("Also moved ‘Email’ to start 14:45", "info", expect.any(Function), "Keep ‘Email’ as it was")
   })
 })
 
@@ -281,17 +315,28 @@ describe("in the calendar", () => {
     return { block, column, stored, pushToast }
   }
 
-  test("dragging Deep work's bottom edge up to 11:55 takes Email's start along", () => {
+  test("dragging Deep work's bottom edge down to 14:45 takes Email's start along", () => {
     const { block, column, stored, pushToast } = calendar(forgotToSwitch())
 
-    // the bottom 8px of a 330-minute block is the resize handle; 2 h 35 min up takes 14:30 to 11:55
+    // the bottom 8px of a 330-minute block is the resize handle; 15 min down takes 14:30 to 14:45
+    fireEvent.pointerDown(block, { ...mouse, clientY: 305 })
+    fireEvent.pointerMove(column, { ...mouse, clientY: 305 + 15 * minuteHeight })
+    fireEvent.pointerUp(column, { ...mouse, clientY: 305 + 15 * minuteHeight })
+
+    expect(stored("a").stop).toBe(at(4, 14, 45))
+    expect(stored("b").start).toBe(at(4, 14, 45))
+    expect(pushToast).toHaveBeenCalledWith("Also moved ‘Email’ to start 14:45", "info", expect.any(Function), "Keep ‘Email’ as it was")
+  })
+
+  test("dragging Deep work's bottom edge up to 11:55 leaves Email where it was (D3)", () => {
+    const { block, column, stored } = calendar(forgotToSwitch())
+
     fireEvent.pointerDown(block, { ...mouse, clientY: 305 })
     fireEvent.pointerMove(column, { ...mouse, clientY: 305 - 155 * minuteHeight })
     fireEvent.pointerUp(column, { ...mouse, clientY: 305 - 155 * minuteHeight })
 
     expect(stored("a").stop).toBe(at(4, 11, 55))
-    expect(stored("b").start).toBe(at(4, 11, 55))
-    expect(pushToast).toHaveBeenCalledWith("Also moved ‘Email’ to start 11:55", "info", expect.any(Function), "Keep ‘Email’ as it was")
+    expect(stored("b").start).toBe(at(4, 14, 30))
   })
 
   test("dragging the whole block moves it alone", () => {

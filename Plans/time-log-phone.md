@@ -3,7 +3,7 @@
 **Written 2026-11-14.** The owner said the time tracker "has become, i fear, more
 broken, particularly on my phone in the app", asked for a new name, and asked
 for a plan a lesser model can carry out in phases.
-**Status: not started.**
+**Status: in progress (2026-11-14). Phase notes are under each phase.**
 
 ## In plain words
 
@@ -147,6 +147,13 @@ for the named function if a line has moved.
    and blocks every commit, so find why it depends on load or order and make
    it reliable. Keep what it guards; do not skip it.
 
+**Done 2026-11-14.**
+- Worktree `~/.cache/daygame-research/time-log-phone/wt` (branch `tlp`), lab on port 3417 against the test stack. `lib.js` now fixes the browser clock at 2026-11-13 21:35 Copenhagen and strips the sync route's `Date` header (the tracker corrects its clock from it, which undid the fixed clock), so shots repeat. It adds `lab()`, `pc()` and a `work/pcall.sh` that shoots 15 PC screens and diffs them against `shots/pc-before/` (`work/pcdiff.py`). The only differences between two runs of unchanged code are the ticking clocks and pulsing badges.
+- Differed from the plan: the PC's Stop at… box is opened from the running time box (top bar), and its title reads "Stopped at…" (3.5 PC wording applies).
+- Tap counts: not re-run here. The table above (2026-11-13) stays the baseline; Phase 8 measures against it.
+- Flaky guard: the test waited 5 s for "Saved", which takes about 5.7 s even alone (built-in retry and check waits), so it failed under load. Waits are 20 s each inside a 70 s limit; what it guards is unchanged. Commit 3dca7d8b, shipped with Phase 1.
+- Also seen under load (not fixed, untouched by this plan so far): `aRunningSecondRedrawsOneDayOfThePhoneList` and `aStopClearsTheBar` fail now and then in the full suite and pass alone.
+
 ### Phase 1: Things that write wrong time or trap you (broken)
 
 | # | Fix | Where | PC? |
@@ -158,6 +165,16 @@ for the named function if a line has moved.
 | 1.5 | On the Projects, Clients/Tags, Settings and Import screens, the header ← goes back to the tab you came from and is labelled "← Timer" (or that tab's name). Only on Timer, Calendar and Reports does it say "← Home". The bottom tab you came from stays highlighted. | `TimetrackScreen.tsx:122`, `PhoneTracker.tsx` header | phone only |
 | 1.6 | "New project" opens with the Name field visible and focused. Focus with `preventScroll` after the sheet has opened, or set the body's `scrollTop` to 0. | `ProjectsView.tsx:507`, `primitives.tsx:559` | phone only |
 | 1.7 | The @ and # lists never cover the field being typed in, nor the sheet header. On a phone, draw the list in the flow of the sheet, right under the name field and pushing the content down, not as a floating portal. Test at 390×480. | `pickers.tsx:748-752` (`panelStyle`) | phone only |
+
+**Done 2026-11-14.** Walked at 390×844 and 360×740 (1.7 also at 390×480); shots in `shots/phase-1/after/`, before shots are `before/A-25-plus`, `B-06/B-07`, `B-27`, `c05`, `B-43/B-44`, `A-29/A-30`.
+- 1.1: ⊕, ✎, typed 130 → 20:05–21:35 (end kept at now). `withDuration` takes `{ isNew }`; unit test added.
+- 1.2: hold → 69 entries, ✕ → 68 again at both sizes. A held block named and saved stays (new test). The guard that said "closed without a name, the block stays" was changed on purpose.
+- 1.3 (PC too): pulling an edge away now leaves a gap; pushing in still moves the neighbour with "Keep … as it was". Ten guard tests that pulled away were changed on purpose to say the gap, each with a pushed-in twin (touchingNeighbours, aNeighbourAlreadyInPlace, anUndoOfTwoChanges, theCalendarFollowsAFinger).
+- 1.4: `scrollWidth === innerWidth` on Timer, Calendar, Reports, Details, Projects, Clients and Settings at 390 and 360. Details' own tab strip still scrolls inside itself (fine; Phase 6 trims it).
+- 1.5: Projects/Clients/Tags/Settings/Import show "← Calendar" (or Timer/Reports) and the tab stays lit; ← steps back in history when one step away, otherwise goes to the tab.
+- 1.6: Name visible and focused at the top (y=105) on open. Differed from the plan: fixed in `ProjectsView` (focus after the frame, `preventScroll`, body scrolled to top), not in `primitives`. The PC behaves as before.
+- 1.7: on a phone the @ and # lists are drawn in the sheet under the name field (field 146–190, list 194–386 at 390×480); rows 44px (3.8 done here for this list).
+- PC check: `shots/pc-after-1` vs `pc-before`: only clocks and badges differ.
 
 ### Phase 2: The installed app's frame
 

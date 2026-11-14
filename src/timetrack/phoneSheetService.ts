@@ -279,26 +279,37 @@ export function typeDuration(prev: { raw: string; shown: string }, value: string
   return { raw, shown: raw }
 }
 
+/** How near now a new entry's end must be for a typed length to keep it (`withDuration`) */
+export const END_IS_NOW_MS = 60_000
+
 /**
  * A typed length, applied. A finished entry keeps its start and ends that
  * long after it. A running one keeps the rule the timer has always had
  * (`setRunningElapsed`): longer than it has run moves its start back — "I
  * started 90 minutes ago" — and shorter ends it there — "I forgot to stop it
  * after an hour", which is what the forgotten-timer warning tells you to type.
+ *
+ * A NEW PAST ENTRY THAT ENDS NOW KEEPS ITS END (Plans/time-log-phone.md 1.1).
+ * ⊕ opens a finished draft ending now: "I did 1:30 just now". Keeping the
+ * start put the end in the future (21:10 + 1:30 → 22:40, a planned entry).
+ * With `isNew` and an end within a minute of now, the start moves back.
  */
-export function withDuration(draft: SheetDraft, seconds: number, nowIso: IsoDateTime): SheetResult {
+export function withDuration(draft: SheetDraft, seconds: number, nowIso: IsoDateTime, opts: { isNew?: boolean } = {}): SheetResult {
   if (seconds > MAX_SHEET_SECONDS) return { refusal: SHEET_REFUSALS.tooLong }
   if (seconds < 0) return { refusal: UNREADABLE_DURATION }
+  if (draft.stop !== null && opts.isNew && Math.abs(ms(draft.stop) - ms(nowIso)) <= END_IS_NOW_MS) {
+    return { draft: { ...draft, start: isoAt(ms(draft.stop) - seconds * 1000) } }
+  }
   if (draft.stop !== null) return { draft: { ...draft, stop: isoAt(ms(draft.start) + seconds * 1000) } }
   const ran = Math.floor((ms(nowIso) - ms(draft.start)) / 1000)
   if (seconds >= ran) return { draft: { ...draft, start: isoAt(ms(nowIso) - seconds * 1000) } }
   return { draft: { ...draft, stop: isoAt(ms(draft.start) + seconds * 1000) } }
 }
 
-export function typeDurationInto(draft: SheetDraft, raw: string, nowIso: IsoDateTime): SheetResult {
+export function typeDurationInto(draft: SheetDraft, raw: string, nowIso: IsoDateTime, opts: { isNew?: boolean } = {}): SheetResult {
   const seconds = readTypedDuration(raw)
   if (seconds === null) return { refusal: UNREADABLE_DURATION }
-  return withDuration(draft, seconds, nowIso)
+  return withDuration(draft, seconds, nowIso, opts)
 }
 
 // ---------------------------------------------------------------------------

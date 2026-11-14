@@ -285,7 +285,21 @@ describe("a finger held on a block", () => {
     const view = calendar(day())
     const deep = view.block("Deep work")
 
-    // 45 minutes up from wherever on the edge the finger landed
+    // 15 minutes down, into Email, from wherever on the edge the finger landed
+    const fromY = deep.top + deep.height - 3
+    view.finger.down(deep.el, fromY)
+    view.finger.hold()
+    view.finger.slide(fromY, fromY + 15 * MINUTE_PX, 9)
+    view.finger.up(fromY + 15 * MINUTE_PX)
+
+    expect(find(view.latest(), "a").stop).toBe(at(4, 11, 15))
+    expect(find(view.latest(), "b").start).toBe(at(4, 11, 15))
+  })
+
+  test("by its bottom edge pulled up, leaves a gap: the next entry keeps its start (D3)", () => {
+    const view = calendar(day())
+    const deep = view.block("Deep work")
+
     const fromY = deep.top + deep.height - 3
     view.finger.down(deep.el, fromY)
     view.finger.hold()
@@ -293,7 +307,7 @@ describe("a finger held on a block", () => {
     view.finger.up(fromY - 45 * MINUTE_PX)
 
     expect(find(view.latest(), "a").stop).toBe(at(4, 10, 15))
-    expect(find(view.latest(), "b").start).toBe(at(4, 10, 15))
+    expect(find(view.latest(), "b").start).toBe(at(4, 11, 0))
   })
 
   test("is drawn where the finger has taken it before it is dropped, and a planned one stays striped", () => {

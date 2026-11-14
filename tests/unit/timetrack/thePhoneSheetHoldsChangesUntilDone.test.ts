@@ -102,6 +102,17 @@ describe("digits typed into the big duration fill from the right", () => {
     expect(typeDurationInto(finished, "130", NOW).draft).toMatchObject({ start: at(DAY, "09:00"), stop: at(DAY, "10:30") })
   })
 
+  test("a new past entry ending now keeps its end and moves its start back (⊕, 1.1)", () => {
+    // 21:10 + 1:30 used to end at 22:40, in the future
+    const endsNow = { ...sheetDraftOf(entry(1, DAY, "11:50", "12:00")), stop: NOW }
+    expect(typeDurationInto(endsNow, "130", NOW, { isNew: true }).draft).toMatchObject({ start: at(DAY, "10:30"), stop: NOW })
+    // an end further than a minute from now is a past entry with a chosen end: the start stays
+    const earlier = sheetDraftOf(entry(1, DAY, "09:00", "10:00"))
+    expect(typeDurationInto(earlier, "130", NOW, { isNew: true }).draft).toMatchObject({ start: at(DAY, "09:00"), stop: at(DAY, "10:30") })
+    // an existing entry that happens to end now keeps its start, as before
+    expect(typeDurationInto(endsNow, "130", NOW).draft).toMatchObject({ start: at(DAY, "11:50") })
+  })
+
   test("on a running one, longer moves its start back and shorter ends it there", () => {
     const running = { ...sheetDraftOf(entry(1, DAY, "11:00", "12:00")), stop: null }
     expect(typeDurationInto(running, "200", NOW).draft).toMatchObject({ start: at(DAY, "10:00"), stop: null })

@@ -163,7 +163,7 @@ describe("in the list", () => {
 describe("Keep ‘B’ as it was", () => {
   test("refused by a lock set since, says why and leaves B where it moved to", () => {
     const state = baseState({ entries: [exact("a", at(3, 9, 0), at(3, 14, 30), "Deep work"), exact("b", at(3, 14, 30), at(3, 15, 0), "Email")] })
-    const moved = withNeighbours(state, "a", NOW, (base) => updateEntry(base, "a", { stop: at(3, 11, 55) }, NOW))
+    const moved = withNeighbours(state, "a", NOW, (base) => updateEntry(base, "a", { stop: at(3, 14, 45) }, NOW))
     expect(moved.moved).toHaveLength(1)
 
     let current = lockUpToYesterday(moved.state)
@@ -177,6 +177,6 @@ describe("Keep ‘B’ as it was", () => {
     keep()
 
     expect(pushToast).toHaveBeenLastCalledWith(LOCKED, "error")
-    expect(current.entries.find((e) => e.id === "b")?.start).toBe(at(3, 11, 55))
+    expect(current.entries.find((e) => e.id === "b")?.start).toBe(at(3, 14, 45))
   })
 })

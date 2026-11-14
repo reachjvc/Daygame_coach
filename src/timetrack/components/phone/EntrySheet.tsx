@@ -265,7 +265,7 @@ export function EntrySheet({
     }
     const box = typingRef.current
     if (box && box.raw.trim() !== "") {
-      const typed = typeDurationInto(next, box.raw, serverNowIso())
+      const typed = typeDurationInto(next, box.raw, serverNowIso(), { isNew })
       if (!typed.draft) return typed
       next = typed.draft
     }
@@ -288,7 +288,7 @@ export function EntrySheet({
     const box = typingRef.current
     putTyping(null)
     if (!box || box.raw.trim() === "") return
-    const typed = typeDurationInto(shown, box.raw, serverNowIso())
+    const typed = typeDurationInto(shown, box.raw, serverNowIso(), { isNew })
     show(typed, (d) => (typed.draft ? { ...d, start: typed.draft.start, stop: typed.draft.stop } : d))
   }
 

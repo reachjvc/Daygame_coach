@@ -16,6 +16,7 @@ import { projectGroups } from "../pickerService"
 import { activeToken, projectsForDescription, removeToken, searchProjects } from "../timetrackService"
 import { inlineChoices, type InlineChoice } from "../inlineChoicesService"
 import type { Id, TimetrackState } from "../types"
+import { useIsMobile } from "../hooks/useIsMobile"
 import {
   CheckOption,
   ColorDot,
@@ -564,6 +565,7 @@ export function DescriptionField({
   const panelRef = useRef<HTMLDivElement | null>(null)
   const [token, setToken] = useState<ReturnType<typeof activeToken>>(null)
   const [highlight, setHighlight] = useState(0)
+  const isMobile = useIsMobile()
   const wrapperRef = useClickOutside<HTMLDivElement>(() => setToken(null), panelRef)
   // createPortal needs document, which does not exist during server rendering
   const [mounted, setMounted] = useState(false)
@@ -727,31 +729,16 @@ export function DescriptionField({
     }
   }
 
-  return (
-    <div ref={wrapperRef} className={cn("relative flex-1", className)}>
-      <input
-        ref={inputRef}
-        autoFocus={autoFocus}
-        value={value}
-        placeholder={placeholder}
-        onChange={(event) => {
-          onChange(event.target.value)
-          syncToken(event.target.value, event.target.selectionStart ?? event.target.value.length)
-        }}
-        onKeyUp={(event) => syncToken(value, event.currentTarget.selectionStart ?? value.length)}
-        onKeyDown={handleKeyDown}
-        onBlur={onBlur}
-        // text-base on a phone, not text-sm: iOS Safari zooms the whole page when
-        // you tap a field under 16px, and this is the most-tapped field in the app
-        className="h-11 w-full bg-transparent text-base outline-none placeholder:text-muted-foreground sm:h-10 sm:text-sm"
-      />
-      {suggestionsOpen && createPortal(
-        <div
-          ref={panelRef}
-          data-dropdown-panel=""
-          style={panelStyle(suggestionPosition)}
-          className="fixed z-[9650] w-72 max-w-[calc(100vw-1.5rem)] overflow-y-auto overflow-x-hidden rounded-md border border-border bg-card shadow-xl"
-        >
+  const suggestionPanel = (
+    <div
+      ref={panelRef}
+      data-dropdown-panel=""
+      style={isMobile ? undefined : panelStyle(suggestionPosition)}
+      className={cn(
+        "overflow-y-auto overflow-x-hidden rounded-md border border-border bg-card",
+        isMobile ? "relative mt-1 max-h-[40vh] w-full" : "fixed z-[9650] w-72 max-w-[calc(100vw-1.5rem)] shadow-xl",
+      )}
+    >
           <p className="border-b border-border px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
             {offeringTags ? <>Tags · #{token?.query}</> : token ? <>Projects · @{token.query}</> : <>Set project to</>}
           </p>
@@ -768,6 +755,7 @@ export function DescriptionField({
               onClick={() => choose(suggestion.id)}
               className={cn(
                 "flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm",
+                isMobile && "min-h-11",
                 index === highlight ? "bg-secondary" : "hover:bg-secondary/60",
               )}
             >
@@ -788,9 +776,32 @@ export function DescriptionField({
           <p className="border-t border-border px-3 py-1.5 text-[10px] text-muted-foreground">
             <span className="font-medium">@</span> a project · <span className="font-medium">#</span> a tag
           </p>
-        </div>,
-        document.body,
-      )}
+    </div>
+  )
+
+  return (
+    <div ref={wrapperRef} className={cn("relative flex-1", className)}>
+      <input
+        ref={inputRef}
+        autoFocus={autoFocus}
+        value={value}
+        placeholder={placeholder}
+        onChange={(event) => {
+          onChange(event.target.value)
+          syncToken(event.target.value, event.target.selectionStart ?? event.target.value.length)
+        }}
+        onKeyUp={(event) => syncToken(value, event.currentTarget.selectionStart ?? value.length)}
+        onKeyDown={handleKeyDown}
+        onBlur={onBlur}
+        // text-base on a phone, not text-sm: iOS Safari zooms the whole page when
+        // you tap a field under 16px, and this is the most-tapped field in the app
+        className="h-11 w-full bg-transparent text-base outline-none placeholder:text-muted-foreground sm:h-10 sm:text-sm"
+      />
+      {/* ON A PHONE THE LIST IS PART OF THE SHEET (Plans/time-log-phone.md 1.7).
+          Floating, it was placed in the band the keyboard left and covered the
+          name being typed and the sheet's header. Drawn in the flow, right under
+          the field, it pushes the rest down and covers nothing. */}
+      {suggestionsOpen && (isMobile ? suggestionPanel : createPortal(suggestionPanel, document.body))}
     </div>
   )
 }

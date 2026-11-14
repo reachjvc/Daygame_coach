@@ -329,6 +329,14 @@ export function withNeighbours<R extends { state: TimetrackState; violations: Sa
    */
   const neighbourEdge = edge === "stop" ? neighbour.start : neighbour.stop
   if (neighbourEdge !== null && epochMillis(neighbourEdge) === epochMillis(newEdge)) return alone
+  /**
+   * PULLED AWAY, IT LEAVES A GAP (D3 in Plans/time-log-phone.md, the owner,
+   * 2026-11-14). Shortening an entry used to stretch the touching one to fill
+   * the room, silently writing time nobody worked. Only an edge pushed INTO
+   * its neighbour moves it, with the Undo toast.
+   */
+  const pulledAway = edge === "stop" ? epochMillis(newEdge) < epochMillis(oldEdge) : epochMillis(newEdge) > epochMillis(oldEdge)
+  if (pulledAway) return alone
 
   const start = edge === "stop" ? newEdge : neighbour.start
   const end = edge === "stop" ? (neighbour.stop ?? nowIso) : newEdge

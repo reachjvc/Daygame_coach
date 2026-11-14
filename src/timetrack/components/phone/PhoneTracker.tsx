@@ -45,7 +45,7 @@ import {
 } from "../../icons"
 import { serverNowIso } from "../../serverClock"
 import { dateKey, formatClock, plural } from "../../timetrackFormatService"
-import { bulkEditEntries, emptyDraft, toggleFavorite } from "../../timetrackService"
+import { bulkEditEntries, deleteEntries, emptyDraft, toggleFavorite } from "../../timetrackService"
 import type { Section } from "../../trackerAddressService"
 import type { EntryDraft, Id, IsoDate, AlertEvent, ReportConfig, TimeEntry, TimetrackState } from "../../types"
 import { AfterCheckContext, type AfterCheck } from "../afterCheck"
@@ -212,6 +212,39 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
   const reportsDownload = useRef<(() => void) | null>(null)
   /** a block a held finger made: its sheet opens with the name ready to type (audit findability, Phase 8) */
   const nameFor = useRef<Id | null>(null)
+  /**
+   * A HELD BLOCK CLOSED UNCHANGED IS TAKEN AWAY AGAIN (Plans/time-log-phone.md 1.2).
+   *
+   * A hold on the grid makes the block and opens its sheet. Closed with ✕ or
+   * Done and nothing changed, it stayed as a 30-minute "(no description)"
+   * entry, a junk entry from an accidental hold. `held` is the block as it was
+   * made; `heldClosed` asks, once the save from Done has landed, whether it is
+   * still exactly that.
+   */
+  const held = useRef<TimeEntry | null>(null)
+  const [heldClosed, setHeldClosed] = useState<Id | null>(null)
+  useEffect(() => {
+    if (heldClosed === null) return
+    setHeldClosed(null)
+    const made = held.current
+    held.current = null
+    if (!made || made.id !== heldClosed) return
+    const now = state.entries.find((e) => e.id === made.id && !e.serverDeletedAt)
+    const same =
+      now &&
+      now.description === made.description &&
+      now.projectId === made.projectId &&
+      now.taskId === made.taskId &&
+      now.start === made.start &&
+      now.stop === made.stop &&
+      now.billable === made.billable &&
+      now.tagIds.join() === made.tagIds.join()
+    if (!same) return
+    setState((current) => {
+      const removed = deleteEntries(current, [made.id], serverNowIso())
+      return removed.violations.length === 0 ? removed.state : current
+    })
+  }, [heldClosed, state, setState])
   /** the calendar block whose panel is open (D-PHONE-CAL) */
   const [blockId, setBlockId] = useState<Id | null>(null)
   const block = screen === "calendar" && blockId ? (state.entries.find((e) => e.id === blockId && !e.serverDeletedAt) ?? null) : null
@@ -259,6 +292,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
   }
 
   const closeSheet = useCallback(() => {
+    if (held.current && held.current.id === editId) setHeldClosed(editId)
     nameFor.current = null
     dirty.current = false
     if (backedOut) {
@@ -303,7 +337,33 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
   // --- the pieces -------------------------------------------------------------
 
   const title = titleOf(screen, lab.manageTab, lab.settingsTab)
+  /**
+   * THE TAB YOU CAME FROM (Plans/time-log-phone.md 1.5). Projects, Clients,
+   * Tags, Settings and Import are opened from ⚙ over one of the three tabs; their
+   * ← went to Home and threw you out of the tracker. Now it goes back to that
+   * tab, says its name, and the tab stays lit underneath.
+   */
+  const mainTab = TABS.some((t) => t.id === screen)
+  const fromTab = useRef<Section>("timer")
+  if (mainTab) fromTab.current = screen
+  /** history steps pushed since leaving that tab: one step back is Back's own, more is a fresh step */
+  const stepsAway = useRef(0)
+  useEffect(() => {
+    const onPop = () => {
+      stepsAway.current = 0
+    }
+    window.addEventListener("popstate", onPop)
+    return () => window.removeEventListener("popstate", onPop)
+  }, [])
+  const backToTab = () => {
+    if (stepsAway.current === 1) {
+      window.history.back()
+      return
+    }
+    go(fromTab.current)
+  }
   const go = (section: Section) => {
+    if (section !== screen) stepsAway.current = TABS.some((t) => t.id === section) ? 0 : stepsAway.current + 1
     setMenuOpen(false)
     setBlockId(null)
     setReportsDetails(false)
@@ -337,14 +397,25 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
               line instead of being cut. Flex shrinks in proportion to weight
               times width, so at 100 the title still lost a pixel and showed
               "Repor…"; at 10000 the link gives up all the room it can first. */}
-          <Link
-            href={lab.backHref}
-            onClick={lab.goBack}
-            className={cn(BACK_LINK_CLASS, "h-11 min-w-8 shrink-[10000] flex-wrap content-start overflow-hidden")}
-          >
-            <span className="shrink-0 leading-[2.75rem]">←</span>
-            <span className="max-w-[96px] truncate leading-[2.75rem]">{lab.backText}</span>
-          </Link>
+          {mainTab ? (
+            <Link
+              href={lab.backHref}
+              onClick={lab.goBack}
+              className={cn(BACK_LINK_CLASS, "h-11 min-w-8 shrink-[10000] flex-wrap content-start overflow-hidden")}
+            >
+              <span className="shrink-0 leading-[2.75rem]">←</span>
+              <span className="max-w-[96px] truncate leading-[2.75rem]">{lab.backText}</span>
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={backToTab}
+              className={cn(BACK_LINK_CLASS, "h-11 min-w-8 shrink-[10000] flex-wrap content-start overflow-hidden")}
+            >
+              <span className="shrink-0 leading-[2.75rem]">←</span>
+              <span className="max-w-[96px] truncate leading-[2.75rem]">{TABS.find((t) => t.id === fromTab.current)?.label ?? "Timer"}</span>
+            </button>
+          )}
           {/* the page's one heading, for a screen reader and the browser tests; the title below says where you are */}
           <h1 className="sr-only">Time</h1>
           <h2 className="min-w-0 shrink truncate text-xl font-semibold">{title}</h2>
@@ -486,6 +557,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
                 onCreated={(entry) => {
                   setBlockId(null)
                   nameFor.current = entry.id
+                  held.current = entry
                   lab.openEntry(entry)
                 }}
                 onOpenIntegrations={() => {
@@ -650,13 +722,13 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
         <nav aria-label="Sections" className="flex border-t border-border">
           {TABS.map((tab) => {
             const Icon = tab.icon
-            const active = screen === tab.id
+            const active = screen === tab.id || (!mainTab && fromTab.current === tab.id)
             return (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => go(tab.id)}
-                aria-current={active ? "page" : undefined}
+                aria-current={screen === tab.id ? "page" : undefined}
                 className={cn("flex min-h-11 flex-1 flex-col items-center gap-0.5 py-1.5 text-xs font-medium", active ? "text-primary" : "text-muted-foreground")}
               >
                 <Icon className="size-5" />

@@ -6,7 +6,7 @@
  * tasks, template flag) and the project dashboard with forecast.
  */
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -450,6 +450,25 @@ function ProjectDialog({
     setState((current) => createTask(current, { projectId: project.id, name }, new Date().toISOString()).state)
   })
   const tasks = project ? state.tasks.filter((t) => t.projectId === project.id) : []
+  /**
+   * THE NAME IS SEEN AND READY (Plans/time-log-phone.md 1.6). `autoFocus` ran
+   * while the phone's sheet was still sliding in, and the browser scrolled the
+   * sheet's body to bring the field "into view": "New project" opened on
+   * Client, its Name field scrolled away. Focused once the sheet has opened,
+   * without scrolling, and the body put back at its top.
+   */
+  const nameRef = useRef<HTMLInputElement | null>(null)
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      const input = nameRef.current
+      if (!input) return
+      input.focus({ preventScroll: true })
+      let scroller = input.parentElement
+      while (scroller && scroller.scrollHeight <= scroller.clientHeight) scroller = scroller.parentElement
+      if (scroller && scroller !== document.documentElement && scroller !== document.body) scroller.scrollTop = 0
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [])
 
   const save = () => {
     const estimateSeconds = estimateInput.trim() ? parseDurationInput(`${estimateInput}h`) : null
@@ -504,7 +523,7 @@ function ProjectDialog({
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Name">
-          <Input value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} autoFocus />
+          <Input ref={nameRef} value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
         </Field>
         <Field label="Client">
           {/* makes a client too, as Toggl Track's project dialog does (Phase 8 findability) */}

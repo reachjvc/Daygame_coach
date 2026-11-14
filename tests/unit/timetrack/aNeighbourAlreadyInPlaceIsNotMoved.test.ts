@@ -65,10 +65,11 @@ describe("an edge that lands on its neighbour", () => {
   })
 
   test("a neighbour half a second away still follows: the same means the same millisecond", () => {
-    const state = overlapBySeconds(at(4, 11, 55, 10, 500))
-    const result = withNeighbours(state, "a", NOW, (base) => updateEntry(base, "a", { stop: at(4, 11, 55, 10) }, NOW))
+    // pushed into Email (D3, 2026-11-14: an edge pulled away no longer moves its neighbour)
+    const state = overlapBySeconds(at(4, 11, 55, 40, 500))
+    const result = withNeighbours(state, "a", NOW, (base) => updateEntry(base, "a", { stop: at(4, 11, 55, 41) }, NOW))
 
     expect(result.moved.map((m) => m.entryId)).toEqual(["b"])
-    expect(find(result.state, "b").start).toBe(at(4, 11, 55, 10))
+    expect(find(result.state, "b").start).toBe(at(4, 11, 55, 41))
   })
 })
