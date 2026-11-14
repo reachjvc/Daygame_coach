@@ -113,7 +113,7 @@ export function runningPayload(entry: TimerRow, timezone: string, now: Date, opt
   const name = timerName(entry)
   return {
     title: `● ${name} · since ${sinceLabel(entry.startedAt, timezone, now)}`,
-    body: options.alert ? "Running for over 6 h. Still going?" : entry.description.trim() && entry.projectName ? entry.projectName : "Time tracker",
+    body: options.alert ? "Running for over 6 h. Still going?" : entry.description.trim() && entry.projectName ? entry.projectName : "Time Log",
     url: TIMER_URL,
     tag: TIMER_TAG,
     kind: "timetrack-running",

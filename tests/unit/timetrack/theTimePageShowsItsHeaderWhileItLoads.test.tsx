@@ -19,7 +19,7 @@ afterEach(() => cleanup())
 
 test("the loading screen has the tracker's header, its way back and a word about what is coming", () => {
   render(<TimeLoading />)
-  expect(screen.getByRole("heading", { name: "Time" })).toBeTruthy()
+  expect(screen.getByRole("heading", { name: "Time Log" })).toBeTruthy()
   const back = screen.getByRole("link", { name: /Home/ }) // the Dashboard, named Home since 2026-11-10
   expect(back.getAttribute("href")).toBe(ROUTES.dashboard)
   expect(screen.getByText("Loading your time…")).toBeTruthy()

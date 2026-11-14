@@ -42,7 +42,7 @@ function visited(paths: string[]) {
 }
 
 function backControl(): HTMLAnchorElement {
-  const header = screen.getByRole("heading", { name: "Time" }).closest("header")!
+  const header = screen.getByRole("heading", { name: "Time Log" }).closest("header")!
   const link = [...header.querySelectorAll("a")].find((a) => a.textContent?.includes("←"))
   expect(link, "no back control in the tracker's header").toBeTruthy()
   return link as HTMLAnchorElement
@@ -121,12 +121,12 @@ describe("on the PC, under the app's header", () => {
     await mount(<TimetrackScreen account="user-1" />)
     expect(backControl().className.split(/\s+/)).toContain("sm:hidden")
     // still the page's heading: hidden from sight, not removed
-    expect(screen.getByRole("heading", { name: "Time" }).className.split(/\s+/)).toContain("sm:sr-only")
+    expect(screen.getByRole("heading", { name: "Time Log" }).className.split(/\s+/)).toContain("sm:sr-only")
   })
 
   test("the lab page has no app header above it, so it keeps its own row everywhere", async () => {
     await mount(<TogglLab />, "/test/toggl")
     expect(backControl().className.split(/\s+/)).not.toContain("sm:hidden")
-    expect(screen.getByRole("heading", { name: "Time" }).className.split(/\s+/)).not.toContain("sm:sr-only")
+    expect(screen.getByRole("heading", { name: "Time Log" }).className.split(/\s+/)).not.toContain("sm:sr-only")
   })
 })

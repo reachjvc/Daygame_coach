@@ -50,7 +50,7 @@ export function TrackerLoading({
             <span className="shrink-0">←</span>
             <span className="max-w-[112px] truncate">{backLabel}</span>
           </Link>
-          <h1 className="shrink-0 text-sm font-semibold">Time</h1>
+          <h1 className="shrink-0 text-sm font-semibold">Time Log</h1>
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-3 pt-6 sm:px-4">

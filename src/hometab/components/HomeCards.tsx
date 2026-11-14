@@ -101,7 +101,7 @@ export async function TimeCard({ userId, timezone }: { userId: string; timezone:
   const running = await watchTimer(userId)
   const now = running?.find((r) => !r.stoppedAt && !r.deletedAt) ?? null
   return (
-    <HomeCard title="Time" testId="home-time-card">
+    <HomeCard title="Time Log" testId="home-time-card">
       <p className="mb-3 text-base font-medium text-foreground">
         {running === null
           ? "Your timer could not be read just now."
@@ -110,7 +110,7 @@ export async function TimeCard({ userId, timezone }: { userId: string; timezone:
             : "No timer running"}
       </p>
       <Button asChild size="sm" variant={now ? "default" : "secondary"}>
-        <Link href={ROUTES.time}>{now ? "Open the timer" : "Open Time"}</Link>
+        <Link href={ROUTES.time}>{now ? "Open the timer" : "Open Time Log"}</Link>
       </Button>
     </HomeCard>
   )

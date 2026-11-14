@@ -489,7 +489,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
             </button>
           )}
           {/* the page's one heading, for a screen reader and the browser tests; the title below says where you are */}
-          <h1 className="sr-only">Time</h1>
+          <h1 className="sr-only">Time Log</h1>
           <h2 className="min-w-0 shrink truncate text-xl font-semibold">{title}</h2>
           <div className="ml-auto flex shrink-0 items-center">
             {/* a dot says nothing by itself: a tap says what it means, in the PC badge's words, and checks (findability, 2026-11-05) */}

@@ -47,7 +47,8 @@ assuming anything is in the product.
 The navigation is the honest map, and it lives in `components/navTabs.ts`.
 
 Bottom tab bar: **Dashboard · Training · Tracking · Your plan · Scenarios**,
-plus a "More" sheet holding **Time · Time & energy audit · Ask Coach · Articles · Settings**.
+plus a "More" sheet holding **Time Log · Time & energy audit · Ask Coach · Articles · Settings**.
+(The time tracker is named **Time Log** since 2026-11-14, Plans/time-log-phone.md; its code keeps `timetrack` and `/time`.)
 
 **"Your plan" is Life Mastery, a tab since 2026-10-15** on the owner's word,
 taking Time's place because a seventh item runs off-screen on every phone up to
@@ -209,7 +210,7 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   2026-09-23 with the blue-grey component kit it was written in; saved weeks
   moved from inside Life Mastery to rows under the running programs, where they
   can finally be started.
-- `timetrack/` — a Toggl Track clone, at `/time`. Nineteen tables of
+- `timetrack/` — **Time Log**, a Toggl Track clone, at `/time`. Nineteen tables of
   its own: workspaces, projects, tags, reports, alerts, webhooks. Ids are made
   on the device so two offline devices cannot collide. Since 2026-11-04
   (Plans/time-tracker-like-toggl.md, Phases 4–6): "Switched at…" and "Stopped
@@ -230,6 +231,13 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   view inside Timer, a box under the running time (Start, Stop at…, Switched
   at…), a calendar box for new and clicked blocks, and Toggl's picker words.
   Settings › First tab picks the tab a phone opens on.
+  Since 2026-11-14 (Plans/time-log-phone.md) the phone is trimmed for one hand:
+  56px two-line rows, the running entry at the top of its day, no row ⋮ (its
+  actions are in the sheet's ⋮), one toast at a time above the bar, a Start → End
+  pair of boxes that open the wheels, a calendar that fills the screen with − / +
+  zoom and Day only, Settings as a list of sections, and Workload, Profitability,
+  My reports, Team, Billable and Week view left to the PC. Pulling an entry's edge
+  away from its neighbour leaves a gap (phone and PC); pushing into it moves it.
 - `health/` — weight, sleep, nutrition, workouts. Rolling averages, plateau and
   trend detection, personal records, cross-domain correlation. Its **dedicated
   trackers** are test-only (`WeightTracker`, `SleepTracker`, `NutritionTracker`,

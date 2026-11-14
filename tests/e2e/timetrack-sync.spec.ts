@@ -101,7 +101,7 @@ test.describe('time is kept on the server, not just in one browser', { tag: '@ph
     await openFreshTracker(page)
 
     // the browser tab, which used to inherit the root's marketing title
-    await expect.poll(() => page.title(), { timeout: 10_000 }).toBe('Time')
+    await expect.poll(() => page.title(), { timeout: 10_000 }).toBe('Time Log')
 
     // the way out. On a phone it is the tracker's own back control, which used to
     // be a 20x36px arrow with no label; from 640px up it is the app's header,

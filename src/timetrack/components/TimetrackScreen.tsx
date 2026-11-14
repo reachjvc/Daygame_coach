@@ -104,7 +104,7 @@ export function TimetrackScreen({ account }: { account: string }) {
   if (loggedOut) {
     return (
       <main className="mx-auto max-w-md p-6 text-sm text-muted-foreground">
-        <h1 className="mb-2 text-base font-semibold text-foreground">Time</h1>
+        <h1 className="mb-2 text-base font-semibold text-foreground">Time Log</h1>
         <p>
           {loggedOut === "here" ? "You logged out." : "You logged out in another tab."} This browser no longer keeps your
           time.

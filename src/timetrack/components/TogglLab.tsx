@@ -1118,7 +1118,7 @@ export function TogglLab({
           {/* Under the app's header on the PC the title is only read aloud, not
               removed: the page still needs its one heading, and the browser
               tests find the tracker by it at every width */}
-          <h1 className={cn("shrink-0 text-sm font-semibold", underAppHeader && "sm:sr-only")}>Time</h1>
+          <h1 className={cn("shrink-0 text-sm font-semibold", underAppHeader && "sm:sr-only")}>Time Log</h1>
           {/* on a PC the sections are down the left (`PcSidebar`) */}
           {!underAppHeader && <span className="hidden truncate text-xs text-muted-foreground sm:inline">{state.workspace.name}</span>}
 

@@ -42,7 +42,7 @@ async function arrive() {
 }
 
 function header(): string {
-  return screen.getByRole("heading", { name: "Time" }).closest("header")?.textContent ?? ""
+  return screen.getByRole("heading", { name: "Time Log" }).closest("header")?.textContent ?? ""
 }
 
 beforeEach(() => {

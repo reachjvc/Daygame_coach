@@ -326,6 +326,12 @@ Known places (grep again; this list is from 2026-11-14):
 
 The tab names (Timer · Calendar · Reports) stay (C2).
 
+**Done 2026-11-14.** Checked signed in on the local test stack (throwaway account `tlp-phase7@example.test`) at 390×844, 360×740 and 1280×800; shots in `shots/real-p7/`.
+- Renamed: the Home tile and the More/All tools label (`navTabs.ts`, "Time Log" as both label and short: it fits the 360px tile, 54px wide), the Home card title and its "Open Time Log" button, the page title and the tab's idle title, the tracker's heading (PC header, phone sr-only, loading header, logged-out page, lab page), and the notification fallback "Time Log". `config.ts:243` is the chart metric "Time" (unrelated) and stayed. `docs/product/map.md` names Time Log.
+- Tests that found the tracker by its heading or title now say "Time Log": 5 unit files, 4 e2e files (the e2e suite was not run here; the change is the heading and title name only).
+- Also seen on the real route: `/time` serves `<meta name="theme-color" content="#1f2937">` (2.4), and the phone header shows no sync dot when everything is saved (6.6).
+- PC check `shots/pc-after-7`: only the "Time" → "Time Log" title and the clocks.
+
 ### Phase 8: Prove it (no new features)
 
 1. Run the real `/time` signed in on the local test stack (finding B5) at 390×844 and 1280×800.

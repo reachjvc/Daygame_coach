@@ -168,7 +168,7 @@ export interface Tool {
  */
 export const TOOLS: readonly Tool[] = [
   { id: "training", label: "Training", short: "Training", icon: Dumbbell, href: ROUTES.training, group: "life", access: "open", tile: true },
-  { id: "time", label: "Time", short: "Time", icon: Timer, href: ROUTES.time, group: "life", access: "open", tile: true },
+  { id: "time", label: "Time Log", short: "Time Log", icon: Timer, href: ROUTES.time, group: "life", access: "open", tile: true },
   { id: "scenarios", label: "Scenarios", short: "Scenarios", icon: Swords, href: ROUTES.scenarios, group: "dating", access: "preview", tile: true },
   { id: "audit", label: "Time & energy audit", short: "Audit", icon: BatteryCharging, href: ROUTES.audit, group: "life", access: "open", tile: true },
   { id: "coach", label: "Ask Coach", short: "Coach", icon: HelpCircle, href: ROUTES.coach, group: "dating", access: "paid", tile: true },

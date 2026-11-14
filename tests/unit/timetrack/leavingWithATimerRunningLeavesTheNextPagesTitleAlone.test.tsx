@@ -31,7 +31,7 @@ beforeEach(() => {
     new Date(2026, 10, 3, 14, 0).toISOString(),
   ).state
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(withTimer))
-  document.title = "Time"
+  document.title = "Time Log"
 })
 
 afterEach(() => {
@@ -62,5 +62,5 @@ test("stopping the timer while you are still here puts the tracker's name back",
   await screen.findAllByLabelText("Stop timer")
   screen.getAllByLabelText("Stop timer")[0].click()
   await screen.findAllByLabelText("Start timer")
-  expect(document.title).toBe("Time")
+  expect(document.title).toBe("Time Log")
 })

@@ -550,7 +550,7 @@ test.describe('time tracker on a phone', () => {
 
     // the section is in the address, so a reload keeps it
     await page.reload({ waitUntil: 'domcontentloaded' })
-    await page.getByRole('heading', { name: 'Time', exact: true }).waitFor({ timeout: 30_000 })
+    await page.getByRole('heading', { name: 'Time Log', exact: true }).waitFor({ timeout: 30_000 })
     const current = page.locator('nav[aria-label="Sections"] button[aria-current="page"]')
     await expect(current).toHaveText('Reports')
     expect(await page.title()).not.toMatch(/\/test\//)

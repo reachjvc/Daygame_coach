@@ -37,7 +37,7 @@ import {
  * the running entry is shown in this one.
  */
 function trackerHeader(page: Page) {
-  return page.getByRole('banner').filter({ has: page.getByRole('heading', { name: 'Time', exact: true }) })
+  return page.getByRole('banner').filter({ has: page.getByRole('heading', { name: 'Time Log', exact: true }) })
 }
 
 /**
@@ -195,7 +195,7 @@ test.describe('Toggl-style time tracker', () => {
     await blur(page)
     await page.keyboard.press('s')
     await expect(trackerHeader(page)).not.toContainText('E2E entry')
-    await expect(page).toHaveTitle('Time')
+    await expect(page).toHaveTitle('Time Log')
   })
 
   test('keyboard shortcuts continue the last entry', async ({ page }) => {
@@ -535,7 +535,7 @@ test.describe('Toggl-style time tracker', () => {
       if (message.type() === 'error' || message.type() === 'warning') secondSaid.push(`${message.type()}: ${message.text()}`)
     })
     await second.goto(TRACKER, { waitUntil: 'domcontentloaded' })
-    await second.getByRole('heading', { name: 'Time', exact: true }).waitFor({ timeout: 30_000 })
+    await second.getByRole('heading', { name: 'Time Log', exact: true }).waitFor({ timeout: 30_000 })
     await expect(second.locator('main input[value="from tab A"]').first()).toBeVisible({ timeout: 20_000 })
 
     // now track in the second tab and watch the first one follow

@@ -11,7 +11,7 @@ import { TimetrackScreen } from "@/src/timetrack/components/TimetrackScreen"
  * declared none. `useTimetrack` replaces it with the running clock while a
  * timer is going, and puts this back when it stops.
  */
-export const metadata = { title: "Time" }
+export const metadata = { title: "Time Log" }
 
 /**
  * The phone's status bar in the tracker header's colour (`bg-card`, the same

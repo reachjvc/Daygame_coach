@@ -33,9 +33,9 @@ export default function TogglTestPage() {
   if (owned) {
     return (
       <main className="mx-auto max-w-md p-6 text-sm text-muted-foreground">
-        <h1 className="mb-2 text-base font-semibold text-foreground">Time</h1>
+        <h1 className="mb-2 text-base font-semibold text-foreground">Time Log</h1>
         <p>
-          This browser holds a signed-in account&apos;s time tracker, so the lab does not show it. Open Time from the app,
+          This browser holds a signed-in account&apos;s time tracker, so the lab does not show it. Open Time Log from the app,
           or log out first to use the lab.
         </p>
       </main>

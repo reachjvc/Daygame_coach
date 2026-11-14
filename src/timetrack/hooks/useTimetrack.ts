@@ -513,7 +513,7 @@ export function useTimetrack({ account }: { account?: string } = {}) {
     if (typeof document === "undefined") return
     // What the tab says when nothing is tracking. It named a lab page, on a
     // tab somebody has open all day.
-    const base = "Time"
+    const base = "Time Log"
     if (!running) {
       document.title = base
       titleWritten.current = base
@@ -541,7 +541,7 @@ export function useTimetrack({ account }: { account?: string } = {}) {
   useEffect(
     () => () => {
       if (typeof document === "undefined") return
-      if (titleWritten.current !== null && document.title === titleWritten.current) document.title = "Time"
+      if (titleWritten.current !== null && document.title === titleWritten.current) document.title = "Time Log"
     },
     [],
   )
@@ -800,7 +800,7 @@ export function useTimetrack({ account }: { account?: string } = {}) {
             id: newId(),
             start: new Date(startedAt + serverOffset()).toISOString(),
             end: serverNowIso(),
-            label: document.title.split(" · ").pop() ?? "Time tracker",
+            label: document.title.split(" · ").pop() ?? "Time Log",
             converted: false,
           },
           ...current.timeline,

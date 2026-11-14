@@ -92,7 +92,7 @@ describe("the header", () => {
     expect(within(top).getByRole("button", { name: "Add a past time entry" })).toBeTruthy()
     expect(within(top).getByRole("button", { name: "Settings and more" })).toBeTruthy()
     // the page still has its one heading, for the browser tests and a screen reader
-    expect(screen.getByRole("heading", { name: /^Time$/ })).toBeTruthy()
+    expect(screen.getByRole("heading", { name: /^Time Log$/ })).toBeTruthy()
   })
 
   test("has List view and Pomodoro, and Pomodoro lives there", async () => {

@@ -69,7 +69,7 @@ export async function savedToAccount(page: Page, timeout = 20_000): Promise<void
 /** Open the tracker and wait until it has heard from the account */
 export async function openTracker(page: Page): Promise<void> {
   await page.goto(TRACKER, { waitUntil: 'domcontentloaded' })
-  await page.getByRole('heading', { name: 'Time', exact: true }).waitFor({ timeout: 30_000 })
+  await page.getByRole('heading', { name: 'Time Log', exact: true }).waitFor({ timeout: 30_000 })
   await savedToAccount(page)
 }
 
