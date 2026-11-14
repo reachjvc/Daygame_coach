@@ -628,6 +628,24 @@ Depends on: Phases 5–8.
   yardstick only on a free tier with no billing, and only if he makes the key;
   otherwise skipped and logged as skipped). Q2–Q6 accepted. B2 click: steps
   sent; Phase 0 re-checks the 403 and logs the result.
+- 2026-11-14: Phase 0 done (community-1 access now 200; 7 newer models found
+  and added; G6–G8 and H1–H3 picked; scorer frozen, self-test passes). G8
+  swapped: the first pick is age-restricted on YouTube (needs a signed-in
+  cookie, not used). Phase 1 done for the 8 tuning clips (format choice
+  logged; YouTube also offers a loudness-squashed "DRC" audio copy, tested
+  as a variant). Phase 2 on the probe: 30+ word runs, 13 speaker runs, 6
+  sound preps, coach voice print (2 embeddings), close-mic quality (SQUIM)
+  and lips-on-screen (Light-ASD). Not yet run: Kyutai, VibeVoice, Cohere
+  (gated), Nemotron 3.5 (needs CPU offload), NeMo MSDD, TitaNet. Gold Check
+  page live with Listen (probe, 53 lines), Scene (88 fields) and Look (42
+  clips) tabs; waiting on the owner's marks.
+- Findings so far: the editors blur the women's faces in almost every clip,
+  so face-based reads (smile, gaze, age, her lips) are mostly unavailable;
+  body language must come from posture and movement. She is visible for
+  well under half of some sets (cutaways, back to camera, far shots).
+  Pose-only rules miss her stop and walking-on in one clip (tracks switch
+  people); a picture-reader check on top is needed. The rebuilt subtitle
+  transcript's timings run up to 1–2 s off the speech.
 
 ## Execution prompts
 
