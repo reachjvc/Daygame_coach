@@ -636,8 +636,13 @@ export const REVIEW_PERIOD_COPY = {
 type ProgressPart = { label: string; have: number; of: number; weight: number }
 const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
 export const PROGRESS_COPY = {
-  ofTotal: (have: number, of: number) => `${have} of ${of}`,
   percent: (percent: number) => `${percent} %`,
+  total: (percent: number) => `Your plan is ${percent} % done`,
+  /** Under a step's blurb on the rail: its percentage and what is left. */
+  railLine(fraction: number, parts: ProgressPart[]): string {
+    const pct = Math.max(0, Math.min(100, Math.floor(fraction * 100 + 1e-9)))
+    return fraction >= 1 ? "100 %, every box filled" : `${pct} % · ${PROGRESS_COPY.detail(parts)}`
+  },
   detail(parts: ProgressPart[]): string {
     const left = (p: ProgressPart) => (p.of > 0 ? p.weight * (1 - Math.min(p.have, p.of) / p.of) : 0)
     const worst = parts.reduce<ProgressPart | null>((best, p) => (best === null || left(p) > left(best) ? p : best), null)
@@ -655,7 +660,7 @@ export const DUE_COPY = {
   heading: "Due now",
   notNow: "Not now",
   done: "Done",
-  finishSetup: (percent: number, label: string, detail: string) => ({ title: `Your plan is ${percent} % done`, detail: `Most left: ${label}, ${detail}.` }),
+  finishSetup: (percent: number, label: string, detail: string) => ({ title: PROGRESS_COPY.total(percent), detail: `Most left: ${label}, ${detail}.` }),
   week: (period: string) => ({ title: "Weekly review", detail: `Look back at ${period}.` }),
   month: (period: string) => ({ title: "Monthly review", detail: `Go through ${period}, goal by goal.` }),
   quarter: (period: string) => ({ title: "Quarterly review", detail: `Look back at ${period}, then set the next one.` }),
@@ -921,8 +926,10 @@ export const USE_STEPS: NorthStarTabId[] = ["today", "review", "journal", "track
 /** The steps that build the plan: TAB_ORDER without the use steps, in TAB_ORDER's order. */
 export const BUILD_STEPS: NorthStarTabId[] = TAB_ORDER.filter((t) => !USE_STEPS.includes(t))
 export const RAIL_COPY = {
-  editPlan: (n: number) => `Edit your plan · ${n} steps`,
-  phoneStep: (i: number, n: number, label: string) => `Step ${i} of ${n} · ${label}`,
+  editPlan: (n: number, percent: number) => `Edit your plan · ${n} steps · ${percent} %`,
+  /** `percent` only on a step that carries a ring (SCORED_TABS); null leaves it off. */
+  phoneStep: (i: number, n: number, label: string, percent: number | null = null) =>
+    `Step ${i} of ${n} · ${label}${percent === null ? "" : ` · ${percent} %`}`,
   phoneUse: (label: string) => `${label} · all steps`,
 }
 

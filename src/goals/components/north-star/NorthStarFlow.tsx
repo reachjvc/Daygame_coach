@@ -1596,9 +1596,18 @@ export function NorthStarFlow({
           {/* No dot on the fork: there is nothing on it to fill in,
               and a dot there would be scoring somebody on having
               chosen a door. */}
-          {SCORED_TABS.includes(id) && <StepDot state={state} label={TAB_LABELS[id]} />}
+          {SCORED_TABS.includes(id) && <StepDot state={state} fraction={planPct.steps[id].fraction} label={TAB_LABELS[id]} />}
         </span>
         <span className="block text-[11px] text-zinc-500 mt-1">{TAB_BLURBS[id]}</span>
+        {/* What is left, in a few words, under the blurb. Not on an empty step:
+            its ring says nothing is written, and a count beside it of answers
+            the ring does not score (the season's four, before its sentence)
+            would contradict it. */}
+        {SCORED_TABS.includes(id) && state !== "empty" && (
+          <span className="block text-[11px] text-amber-200/70 mt-1 tabular-nums">
+            {PROGRESS_COPY.railLine(planPct.steps[id].fraction, planPct.steps[id].parts)}
+          </span>
+        )}
       </button>
     )
   }
@@ -1769,13 +1778,13 @@ export function NorthStarFlow({
 
         {/* The rail. Every tab is reachable at any time: on a phone behind one line,
             and once the plan is in use the setup steps behind "Edit your plan". */}
-        <button ref={railToggleRef} type="button" className="sm:hidden w-full mb-3 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-left text-sm text-zinc-200" aria-expanded={railOpen} aria-controls="plan-sections" onClick={() => setRailOpen((o) => !o)}>{inUse && USE_STEPS.includes(tab) ? RAIL_COPY.phoneUse(TAB_LABELS[tab]) : RAIL_COPY.phoneStep(TAB_ORDER.indexOf(tab) + 1, TAB_ORDER.length, TAB_LABELS[tab])} <span aria-hidden>▾</span></button>
+        <button ref={railToggleRef} type="button" className="sm:hidden w-full mb-3 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-left text-sm text-zinc-200" aria-expanded={railOpen} aria-controls="plan-sections" onClick={() => setRailOpen((o) => !o)}>{inUse && USE_STEPS.includes(tab) ? RAIL_COPY.phoneUse(TAB_LABELS[tab]) : RAIL_COPY.phoneStep(TAB_ORDER.indexOf(tab) + 1, TAB_ORDER.length, TAB_LABELS[tab], SCORED_TABS.includes(tab) ? ns.percentDown(planPct.steps[tab].fraction) : null)} <span aria-hidden>▾</span></button>
         <nav id="plan-sections" aria-label="Sections" className={`${railOpen ? "grid" : "hidden"} sm:grid gap-2 sm:grid-cols-2 lg:grid-cols-4 mb-8`}>
           {inUse ? (
             <>
               {USE_STEPS.map(card)}
               <div className="col-span-full">
-                <button type="button" aria-expanded={showBuild} onClick={() => setBuildOpen((o) => !o)} className="text-[12px] text-zinc-400 hover:text-zinc-100 py-1">{RAIL_COPY.editPlan(BUILD_STEPS.length)} <span aria-hidden>{showBuild ? "▴" : "▾"}</span></button>
+                <button type="button" aria-expanded={showBuild} onClick={() => setBuildOpen((o) => !o)} className="text-[12px] text-zinc-400 hover:text-zinc-100 py-1">{RAIL_COPY.editPlan(BUILD_STEPS.length, planPct.percent)} <span aria-hidden>{showBuild ? "▴" : "▾"}</span></button>
               </div>
               {showBuild && BUILD_STEPS.map(card)}
             </>
@@ -2072,6 +2081,9 @@ export function NorthStarFlow({
              dump laid out — the star, the reason, the identity, the
              affirmations, the values in order, the areas, the goals, the
              routines — with every block editable where it stands. */
+          <>
+          {/* How far the plan is, step by step (Plans/plan-progress-percent.md, Phase 3). */}
+          <PlanProgressList progress={planPct} onGo={(t) => setTab(t)} />
           <RecapTab
             plan={plan}
             today={today}
@@ -2124,6 +2136,7 @@ export function NorthStarFlow({
               </CommitTab>
             }
           />
+          </>
         ) : tab === "track" ? (
           /* The weeks at a glance, and the pointer to Today, where goals are
              counted since Q4 of Plans/life-plan-rebuild.md. */
@@ -2336,22 +2349,70 @@ function ErrandRibbon({
  * every box this step asks for is filled. Amber rather than green — green is
  * the colour of "you are finished", and the middle state is the common one.
  */
-function StepDot({ state, label }: { state: ns.NsStepState; label: string }) {
+function StepDot({ state, fraction, label }: { state: ns.NsStepState; fraction: number; label: string }) {
+  const pct = ns.percentDown(fraction)
   const said =
-    state === "done" ? `${label}: every box filled` : state === "started" ? `${label}: in progress` : `${label}: nothing written yet`
+    state === "done" ? `${label}: every box filled, 100 %` : state === "started" ? `${label}: in progress, ${pct} %` : `${label}: nothing written yet`
+  // A ring that fills as the step does (Plans/plan-progress-percent.md):
+  // the arc starts at twelve o'clock and runs clockwise.
+  const r = 6
+  const around = 2 * Math.PI * r
   return (
-    <svg viewBox="0 0 16 16" className="size-3.5 shrink-0" role="img" aria-label={said}>
+    <svg viewBox="0 0 16 16" className="size-4 shrink-0" role="img" aria-label={said}>
       <title>{said}</title>
-      <circle
-        cx="8"
-        cy="8"
-        r="6"
-        fill={state === "done" ? "rgb(251 191 36 / 0.9)" : "none"}
-        stroke={state === "empty" ? "rgb(113 113 122 / 0.7)" : "rgb(251 191 36 / 0.85)"}
-        strokeWidth="1.5"
-      />
-      {state === "started" && <circle cx="8" cy="8" r="2.5" fill="rgb(251 191 36 / 0.9)" />}
+      <circle cx="8" cy="8" r={r} fill={state === "done" ? "rgb(251 191 36 / 0.9)" : "none"} stroke="rgb(113 113 122 / 0.55)" strokeWidth="2" />
+      {state === "started" && (
+        <circle
+          cx="8"
+          cy="8"
+          r={r}
+          fill="none"
+          stroke="rgb(251 191 36 / 0.9)"
+          strokeWidth="2"
+          strokeDasharray={`${Math.max(fraction, 0.04) * around} ${around}`}
+          transform="rotate(-90 8 8)"
+        />
+      )}
+      {state === "done" && <circle cx="8" cy="8" r={r} fill="none" stroke="rgb(251 191 36 / 0.9)" strokeWidth="2" />}
     </svg>
+  )
+}
+
+/**
+ * THE PLAN, STEP BY STEP, at the top of Everything: the total, then one row
+ * per scored step with its bar and percentage, each a link to the step.
+ */
+function PlanProgressList({ progress, onGo }: { progress: ns.NsPlanProgress; onGo: (tab: NorthStarTabId) => void }) {
+  return (
+    <section data-testid="plan-progress" className="mb-6 rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-4 sm:px-5">
+      <h2 className="text-sm font-semibold text-zinc-100">{PROGRESS_COPY.total(progress.percent)}</h2>
+      <div
+        role="progressbar"
+        aria-label={PROGRESS_COPY.total(progress.percent)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={progress.percent}
+        className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-zinc-800"
+      >
+        <div className="h-full rounded-full bg-amber-400" style={{ width: `${progress.percent}%` }} />
+      </div>
+      <ul className="mt-3 divide-y divide-white/5">
+        {SCORED_TABS.map((tab) => {
+          const pct = ns.percentDown(progress.steps[tab].fraction)
+          return (
+            <li key={tab}>
+              <button type="button" onClick={() => onGo(tab)} className="flex w-full items-center gap-3 py-2 text-left hover:bg-white/[0.03] rounded-md">
+                <span className="w-28 shrink-0 truncate text-[12.5px] text-zinc-200 sm:w-40">{TAB_LABELS[tab]}</span>
+                <span aria-hidden className="h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-zinc-800">
+                  <span className="block h-full rounded-full bg-amber-400/80" style={{ width: `${pct}%` }} />
+                </span>
+                <span className="w-10 shrink-0 text-right text-[12px] tabular-nums text-zinc-400">{PROGRESS_COPY.percent(pct)}</span>
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </section>
   )
 }
 

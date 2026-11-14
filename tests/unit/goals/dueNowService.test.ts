@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest"
 import { addGoal, emptyNsPlan, planProgress, setAnswer, setNorthStar, setValues, updateGoal } from "@/src/goals/northStarService"
-import { periodOf, writeReview, parsePeriodParam } from "@/src/goals/reviewService"
-import { dueNow, dueWeekPeriod, type DueCard, type DueOptions, type DuePlanProgress } from "@/src/goals/dueNowService"
-import { PROGRESS_COPY } from "@/src/goals/data/northStar"
+import { periodOf, writeReview } from "@/src/goals/reviewService"
+import { dueNow, type DueCard, type DueOptions, type DuePlanProgress } from "@/src/goals/dueNowService"
+import { PROGRESS_COPY, RAIL_COPY } from "@/src/goals/data/northStar"
 import { COMMIT_DATE_KEY, COMMIT_KEY } from "@/src/goals/data/northStarStart"
 import type { NsPlan } from "@/src/goals/types"
 
@@ -165,5 +165,18 @@ describe("what is left, in words", () => {
   it("on a step of single boxes, counts them and names the next", () => {
     const parts = ["Season areas", "Focus area", "One-thing sentence"].map((label, i) => ({ label, have: i === 1 ? 0 : 1, of: 1, weight: 1 / 3 }))
     expect(PROGRESS_COPY.detail(parts)).toBe("2 of 3 done, next: focus area")
+  })
+})
+
+describe("the rail's percentages", () => {
+  it("puts the percentage and what is left under a step, and says when it is full", () => {
+    expect(PROGRESS_COPY.railLine(2 / 3, [{ label: "Values ranked", have: 2, of: 3, weight: 1 }])).toBe("66 % · 2 of 3 values ranked")
+    expect(PROGRESS_COPY.railLine(1, [{ label: "Values ranked", have: 3, of: 3, weight: 1 }])).toBe("100 %, every box filled")
+  })
+
+  it("adds the total to Edit your plan, and a step's own to the phone header only on scored steps", () => {
+    expect(RAIL_COPY.editPlan(8, 45)).toBe("Edit your plan · 8 steps · 45 %")
+    expect(RAIL_COPY.phoneStep(1, 12, "North star", 50)).toBe("Step 1 of 12 · North star · 50 %")
+    expect(RAIL_COPY.phoneStep(3, 12, "Where to start")).toBe("Step 3 of 12 · Where to start")
   })
 })
