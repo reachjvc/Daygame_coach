@@ -10,7 +10,7 @@ Video ids, coach names and the clip list are private, in
 ## For you first (owner items)
 
 - **Money:** none. Everything runs on this PC and on the Claude subscription.
-  One optional question about money is Q1 below.
+  Owner 2026-11-14: no paid tests; anything free is fine (Q1).
 - **Deleting data:** none. Old outputs stay where they are; new work goes in
   a new folder.
 - **Cannot be undone:** nothing.
@@ -611,6 +611,10 @@ Depends on: Phases 5–8.
 
 - 2026-11-13: plan written. Blockers tried. Waiting on: the owner's answers to
   Q1–Q6 (silence means the recommendations stand) and the B2 click.
+- 2026-11-14: owner answers: Q1 no paid tests, free tools only (a cloud
+  yardstick only on a free tier with no billing, and only if he makes the key;
+  otherwise skipped and logged as skipped). Q2–Q6 accepted. B2 click: steps
+  sent; Phase 0 re-checks the 403 and logs the result.
 
 ## Execution prompts
 
