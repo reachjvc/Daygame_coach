@@ -84,6 +84,12 @@ repo. Read it before working on that video.
 After video one, the next video is one of: famous people's routines and how
 much they work, or visualization practices and the science behind them.
 
+## Viewer (owner, 2026-11-14)
+
+The viewer is a 30-year-old professional, not a teenager scrolling TikTok.
+The tone is calm, confident and premium, like a well-made explainer, not a
+reel.
+
 ## The bar
 
 A really meaningful video of high quality: interesting to the owner,
