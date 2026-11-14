@@ -152,6 +152,18 @@ Values comes first.)
     `fraction===1 ⇔ stepState==="done"`, `stepState==="empty" ⇒ fraction===0`;
   - rounding: 0.996 shows 99.
 - Acceptance: `npm test` green; `node scripts/typecheck-ratchet.mjs` passes.
+- **Done 2026-11-14, commit d40e329f.** Tests in
+  `tests/unit/goals/planProgress.test.ts` (invariant over 400 generated plans).
+  `percentDown` is exported beside `planProgress` for the card in Phase 2.
+- **Difference from the table, code's stepState wins:** the season step
+  (`focus`) can hold its four answers (why, cost, identity, values) and still
+  be `empty` to `stepState`, which only looks at the one-thing sentence, a
+  serving goal and the season areas. The 8-part count alone would give 50 %
+  there. `stepProgress` returns 0 for any step `stepState` calls empty and 1
+  for any step it calls done; the parts still list what is written, so a
+  Phase 3 "n of m" line can show "4 of 8" next to a 0 % ring. Phase 3 should
+  decide whether that line follows the fraction (show nothing when empty) or
+  the parts.
 
 ### Phase 2: Today's card
 Depends on 1.
