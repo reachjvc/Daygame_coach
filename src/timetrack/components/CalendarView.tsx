@@ -12,7 +12,7 @@
  * for `LONG_PRESS_MS` first, so scrolling and the day swipe stay the page's.
  */
 
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -80,7 +80,7 @@ import {
   updateEntry,
 } from "../timetrackService"
 import type { CalendarEvent, EntryDraft, Id, IsoDate, IsoDateTime, TimeEntry, TimetrackState } from "../types"
-import { ColorDot, Dropdown, Segmented, plannedStripes } from "./primitives"
+import { ColorDot, Dropdown, plannedStripes } from "./primitives"
 
 /** "workweek" is Toggl Track's "5 days": Monday to Friday of the week shown */
 type Range = "day" | "workweek" | "week"
@@ -175,6 +175,9 @@ function tick() {
   if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return
   navigator.vibrate(5)
 }
+
+/** The phone calendar's how-to line was dismissed once (5.3) */
+const HINT_GONE_KEY = "timetrack:calendar-hint-gone"
 
 export function CalendarView({
   state,
@@ -312,6 +315,31 @@ export function CalendarView({
    * Open on the working hours instead of midnight: scroll to an hour before the
    * earliest thing shown, falling back to an hour before now.
    */
+  /** the phone's how-to line, until its ✕ (Plans/time-log-phone.md 5.3) */
+  const [hintShown, setHintShown] = useState(() => {
+    try {
+      return typeof window === "undefined" || window.localStorage.getItem(HINT_GONE_KEY) !== "1"
+    } catch {
+      return true
+    }
+  })
+  /**
+   * THE PHONE'S GRID FILLS THE SCREEN DOWN TO THE BAR (5.2). Its window was
+   * 70vh, a guess: on a tall phone it ended mid-screen, on a short one the page
+   * scrolled under a finger dragging a block. Where the grid starts on the page
+   * is measured; the bar's height comes from `--phone-bar` (`PhoneTracker`).
+   */
+  const [gridTop, setGridTop] = useState<number | null>(null)
+  useLayoutEffect(() => {
+    if (!phone) return
+    const measure = () => {
+      const grid = scrollRef.current
+      if (grid) setGridTop(Math.round(grid.getBoundingClientRect().top + window.scrollY))
+    }
+    measure()
+    window.addEventListener("resize", measure)
+    return () => window.removeEventListener("resize", measure)
+  }, [phone, hintShown])
   useEffect(() => {
     const container = scrollRef.current
     if (!container) return
@@ -321,7 +349,8 @@ export function CalendarView({
      * the morning, the rule below put the now line off the screen. About a
      * third of the way down, so what came just before is in view too.
      */
-    if (!isMobile && days.includes(todayKey)) {
+    // and on a phone too, since 2026-11-14: it opened at 07:00 with now out of sight (Plans/time-log-phone.md 5.1)
+    if (days.includes(todayKey)) {
       const nowMinutes = minutesIntoDay(new Date(nowSec * 1000).toISOString())
       container.scrollTop = Math.max(0, nowMinutes * minuteHeight - container.clientHeight / 3)
       return
@@ -334,7 +363,7 @@ export function CalendarView({
     // The extra 10px keeps the topmost hour label from being clipped
     container.scrollTop = Math.max(0, (earliest - 60) * minuteHeight - 10)
     // Only re-anchor when the visible range or zoom changes, not every tick
-  }, [days[0], days.length, minuteHeight]) // deps intentionally narrow: see comment above
+  }, [days[0], days.length, minuteHeight, gridTop]) // deps intentionally narrow: see comment above; gridTop, once the phone's grid has its height
 
   const minutesAt = (clientY: number, column: HTMLElement, snap?: number): number =>
     snapMinutes((clientY - column.getBoundingClientRect().top) / minuteHeight, snap)
@@ -705,6 +734,27 @@ export function CalendarView({
       : grid.querySelector<HTMLElement>("[data-preview]")
   }, [boxTarget])
 
+  /**
+   * A CHOSEN BLOCK'S BOTTOM EDGE STAYS IN SIGHT (5.7). Its panel takes the
+   * bar's place and is taller, so the grid gets shorter; the block's resize
+   * handle could end up under the panel. The grid scrolls it back into view.
+   */
+  const chosen = phone?.selectedId ?? null
+  useEffect(() => {
+    if (!chosen) return
+    const frame = requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const grid = scrollRef.current
+        const block = grid?.querySelector<HTMLElement>(`[data-entry-id="${CSS.escape(chosen)}"]`)
+        if (!grid || !block) return
+        const visibleBottom = grid.getBoundingClientRect().bottom
+        const blockBottom = block.getBoundingClientRect().bottom
+        if (blockBottom > visibleBottom - 12) grid.scrollTop += blockBottom - visibleBottom + 24
+      }),
+    )
+    return () => cancelAnimationFrame(frame)
+  }, [chosen])
+
   const zoomIndex = CALENDAR_ZOOMS.findIndex((z) => z.id === zoom)
   const stepZoom = (direction: -1 | 1) => {
     const next = CALENDAR_ZOOMS[zoomIndex + direction]
@@ -746,18 +796,24 @@ export function CalendarView({
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
           {isMobile ? (
-            <Segmented
-              size="sm"
-              value={range === "workweek" ? "week" : range}
-              onChange={(next) => {
-                setRangeTouched(true)
-                setRange(next)
-              }}
-              options={[
-                { id: "day", label: "Day" },
-                { id: "week", label: "Week" },
-              ]}
-            />
+            /* THE PHONE: Day only (D2, 5.4), with the PC's − / + zoom so a whole
+               working day can fit (5.6); "Connect calendar" lives in
+               Settings › Integrations (5.3) */
+            <div className="flex items-center gap-1" role="group" aria-label="Zoom">
+              <Button variant="outline" size="icon-sm" className="size-11" onClick={() => stepZoom(-1)} disabled={zoomIndex <= 0} aria-label="Zoom out">
+                −
+              </Button>
+              <Button
+                variant="outline"
+                size="icon-sm"
+                className="size-11"
+                onClick={() => stepZoom(1)}
+                disabled={zoomIndex >= CALENDAR_ZOOMS.length - 1}
+                aria-label="Zoom in"
+              >
+                +
+              </Button>
+            </div>
           ) : (
             // Toggl Track's "Week view ▾" with Week / 5 days / Day (D-PC-CAL)
             <Dropdown
@@ -792,18 +848,38 @@ export function CalendarView({
               )}
             </Dropdown>
           )}
-          <Button variant="outline" size="sm" onClick={onOpenIntegrations}>
-            <IconCalendar className="size-4" />
-            {enabledCalendars.length > 0 ? `${enabledCalendars.length} calendar${enabledCalendars.length > 1 ? "s" : ""}` : "Connect calendar"}
-          </Button>
+          {!isMobile && (
+            <Button variant="outline" size="sm" onClick={onOpenIntegrations}>
+              <IconCalendar className="size-4" />
+              {enabledCalendars.length > 0 ? `${enabledCalendars.length} calendar${enabledCalendars.length > 1 ? "s" : ""}` : "Connect calendar"}
+            </Button>
+          )}
         </div>
       </div>
 
-      {phone && (
-        <p className="text-[11px] text-muted-foreground">
-          Hold empty space to add a block · hold a block to move it, or an edge to resize · tap one to choose it.
-          {range === "day" && " Swipe sideways for another day."}
-        </p>
+      {phone && hintShown && (
+        // shown until its ✕ is tapped once (5.3)
+        <div className="flex items-start gap-1">
+          <p className="flex-1 pt-1 text-[11px] text-muted-foreground">
+            Hold empty space to add a block · hold a block to move it, or an edge to resize · tap one to choose it.
+            {range === "day" && " Swipe sideways for another day."}
+          </p>
+          <button
+            type="button"
+            aria-label="Hide this hint"
+            onClick={() => {
+              setHintShown(false)
+              try {
+                window.localStorage.setItem(HINT_GONE_KEY, "1")
+              } catch {
+                // private mode: hidden for this visit only
+              }
+            }}
+            className="-mr-2 -mt-2 flex size-11 shrink-0 items-center justify-center text-muted-foreground"
+          >
+            ✕
+          </button>
+        </div>
       )}
       <div className="overflow-hidden rounded-lg border border-border bg-card">
         {/* day headers: on the phone's day view its own day line says this (`PhoneCalendar`) */}
@@ -857,8 +933,12 @@ export function CalendarView({
         <div
           ref={scrollRef}
           data-calendar-scroll
-          className="max-h-[70vh] overflow-auto"
-          style={{ touchAction: range === "day" ? "pan-y pinch-zoom" : "pan-x pan-y pinch-zoom" }}
+          // the phone's grid fills what is left above the bar, and the page does not scroll (5.2)
+          className={phone ? "overflow-auto" : "max-h-[70vh] overflow-auto"}
+          style={{
+            touchAction: range === "day" ? "pan-y pinch-zoom" : "pan-x pan-y pinch-zoom",
+            ...(phone && gridTop !== null ? { height: `calc(100dvh - ${gridTop}px - var(--phone-bar, 7rem) - 1rem - 1px)`, minHeight: 240 } : {}),
+          }}
         >
           <div
             className={cn(
@@ -1024,7 +1104,10 @@ export function CalendarView({
                           }
                         }}
                         className={cn(
-                          "absolute z-10 cursor-grab overflow-hidden rounded border-l-2 px-1 py-0.5 text-[10px] leading-tight outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                          // 12px on a phone, where it is read at arm's length (5.5); 10px on the PC. Before
+                          // `leading-tight`: tailwind-merge drops a line height that comes before a size.
+                          isMobile ? "text-xs" : "text-[10px]",
+                          "absolute z-10 cursor-grab overflow-hidden rounded border-l-2 px-1 py-0.5 leading-tight outline-none focus-visible:ring-2 focus-visible:ring-primary",
                           isRunning(entry) && !held && "animate-pulse",
                           held && "z-30 shadow-lg ring-1 ring-primary",
                           selected && "z-20 ring-2 ring-primary",

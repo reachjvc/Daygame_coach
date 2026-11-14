@@ -271,6 +271,17 @@ Reference shots: `before/B-02-cal`, `B-03-cal-pagescrolled`, `B-11-cal-360`,
 | 5.7 | When a block's panel is open, the grid scrolls so the block's bottom resize handle stays above the panel. | phone calendar panel | phone only |
 | 5.8 | Keep the drag-to-move and swipe-to-change-day as they are. They work well. | (no change) | — |
 
+**Done 2026-11-14.** Walked at 390×844 and 360×740; shots in `shots/phase-5/after/`.
+- 5.1: today opens with now about a third down, as on the PC (at 21:35 the grid is at its end, so now sits lower: there is no more day to show).
+- 5.2: the grid is measured and fills down to the bar (`calc(100dvh − its top − --phone-bar − 1rem − 1px)`); the page itself scrolls 0px on the Calendar tab at both sizes. The 70vh cap and PhoneTracker's own cap are gone on the phone.
+- 5.3: "Connect calendar" is not on the phone's calendar (Settings › Integrations has it). The how-to line has a ✕ and stays hidden after a reload (`timetrack:calendar-hint-gone`, inside try/catch).
+- 5.4: no Day | Week on the phone.
+- 5.5: block labels 12px on the phone, 10px on the PC. Found and fixed in passing: putting the size class after `leading-tight` made tailwind-merge drop the line height, which changed the PC blocks; the size now comes first.
+- 5.6: − / + zoom (44px) on the phone; two taps on − show 11:00–23:00 (13 hours) at 390×844.
+- 5.7: after choosing a block, the grid scrolls so its bottom edge sits above the panel (block bottom 488, grid bottom 594, panel 610).
+- 5.8: swipe to the next day and drag still work.
+- PC check `shots/pc-after-5`: clocks only.
+
 ### Phase 6: Reports, Projects, Settings, header icons, Pomodoro
 
 Reference shots: `before/B-22`, `B-24`, `B-26-*`, `B-31`…`B-44`, `A-37-pomodoro`.

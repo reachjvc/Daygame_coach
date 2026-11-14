@@ -608,7 +608,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
                  The top of the window is below the header and the day controls,
                  about 14rem down. */
               <div
-                className="[&_[data-calendar-scroll]]:max-h-[calc(100dvh-var(--phone-bar,7rem)-14rem)]"
+                
                 style={{ "--phone-bar": barHeight !== null ? `${barHeight}px` : undefined } as React.CSSProperties}
               >
               <PhoneCalendar
