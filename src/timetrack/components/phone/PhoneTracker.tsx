@@ -281,13 +281,20 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
    * NO PULL-TO-REFRESH BY ACCIDENT (Plans/time-log-phone.md 2.5). A drag down
    * at the top of the list or calendar reloaded the page in the installed
    * app. Only while the phone tracker is on screen; the PC never draws it.
+   *
+   * On <body> too: on Android Chrome (emulated Pixel 7, 2026-11-14), the value on
+   * <html> alone still let a pull reload the page, 2 out of 2 times, and
+   * that threw away an open sheet's unsaved edits. With <body> set as well,
+   * 4 out of 4 pulls left the page alone.
    */
   useEffect(() => {
-    const root = document.documentElement
-    const was = root.style.overscrollBehaviorY
-    root.style.overscrollBehaviorY = "contain"
+    const roots = [document.documentElement, document.body]
+    const was = roots.map((el) => el.style.overscrollBehaviorY)
+    for (const el of roots) el.style.overscrollBehaviorY = "contain"
     return () => {
-      root.style.overscrollBehaviorY = was
+      roots.forEach((el, i) => {
+        el.style.overscrollBehaviorY = was[i]
+      })
     }
   }, [])
   const held = useRef<TimeEntry | null>(null)
