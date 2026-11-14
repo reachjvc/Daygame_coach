@@ -59,7 +59,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { ArrowLeft, Check, ChevronDown } from "lucide-react"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
 import type { HabitRampStep, MilestoneLadderConfig, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsGoalStatus, NsPlace, NsPlan, NsRoutineProgram, LinkedProgram, VisionGoalType } from "@/src/goals/types"
-import { COMMIT_EDIT_COPY, ERRAND_COPY, OLD_SHARED_PLAN_KEYS, planCacheKey, BUILD_STEPS, RAIL_COPY, RECAP_COMMIT_ANCHOR, SCORED_TABS, stepFor, TAB_BLURBS, TAB_LABELS, TAB_ORDER, TODO_COPY, USE_STEPS } from "@/src/goals/data/northStar"
+import { COMMIT_EDIT_COPY, ERRAND_COPY, OLD_SHARED_PLAN_KEYS, planCacheKey, BUILD_STEPS, PROGRESS_COPY, RAIL_COPY, RECAP_COMMIT_ANCHOR, SCORED_TABS, stepFor, TAB_BLURBS, TAB_LABELS, TAB_ORDER, TODO_COPY, USE_STEPS } from "@/src/goals/data/northStar"
 import { planInUse } from "@/src/goals/planLanding"
 import type { RoutineNeed } from "@/src/goals/data/northStarBuild"
 import type { GuideQuestionId } from "@/src/goals/data/northStarGuide"
@@ -93,10 +93,9 @@ import { AreaGoalsDialog } from "./AreaGoalsDialog"
 import { ReviewTab } from "./ReviewTab"
 import { PeriodReviewTab } from "./PeriodReviewTab"
 import { appendToReview, rateArea, removeReview, reviewIdFor, writeReview, type ReviewPeriod } from "@/src/goals/reviewService"
-import { DEFAULT_REVIEW_DAY, REMINDER_WAIT_MS, dueNow, nextSetupStep, type DueCard } from "@/src/goals/dueNowService"
+import { DEFAULT_REVIEW_DAY, REMINDER_WAIT_MS, dueNow, type DueCard } from "@/src/goals/dueNowService"
 import type { Reminder } from "@/src/db/lifePlanRemindersRepo"
 import { DueNow } from "@/src/goals/components/north-star/DueNow"
-import { COMMIT_DATE_KEY } from "@/src/goals/data/northStarStart"
 import { CommitTab } from "./CommitTab"
 import { ValuesSoFar } from "./ValuesSoFar"
 import { ValuesWork } from "./ValuesWork"
@@ -1078,9 +1077,18 @@ export function NorthStarFlow({
 
   const progress = ns.nsProgress(plan, account)
   const states = ns.stepStates(plan, account)
-  const committed = ns.answerOf(plan, COMMIT_DATE_KEY).trim() !== ""
+  // The plan's percentage (Plans/plan-progress-percent.md): the card on Today, the rings and Everything read this one.
+  const planPct = ns.planProgress(plan, account)
   const dueCards = decision !== null && today
-    ? dueNow(plan, today, { reviewDay: reminder?.reviewDay ?? DEFAULT_REVIEW_DAY, hidden: hiddenDue, nextStep: nextSetupStep(committed, states) })
+    ? dueNow(plan, today, {
+        reviewDay: reminder?.reviewDay ?? DEFAULT_REVIEW_DAY,
+        hidden: hiddenDue,
+        progress: {
+          percent: planPct.percent,
+          mostLeft: planPct.mostLeft,
+          mostLeftDetail: planPct.mostLeft ? PROGRESS_COPY.detail(planPct.steps[planPct.mostLeft].parts) : "",
+        },
+      })
     : []
   const dueWeek = dueCards.find((c) => c.kind === "week")
   // Before the account's plan has loaded, the server's answer, so the cards do not jump.

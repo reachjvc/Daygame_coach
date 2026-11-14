@@ -1,14 +1,14 @@
 import { describe, it, expect } from "vitest"
-import { addGoal, emptyNsPlan, updateGoal } from "@/src/goals/northStarService"
+import { addGoal, emptyNsPlan, planProgress, setAnswer, setNorthStar, setValues, updateGoal } from "@/src/goals/northStarService"
 import { periodOf, writeReview, parsePeriodParam } from "@/src/goals/reviewService"
-import { dueNow, dueWeekPeriod, nextSetupStep, type DueCard, type DueOptions } from "@/src/goals/dueNowService"
-import { BUILD_STEPS, SCORED_TABS } from "@/src/goals/data/northStar"
-import type { NorthStarTabId, NsPlan } from "@/src/goals/types"
-import type { NsStepState } from "@/src/goals/northStarService"
+import { dueNow, dueWeekPeriod, type DueCard, type DueOptions, type DuePlanProgress } from "@/src/goals/dueNowService"
+import { PROGRESS_COPY } from "@/src/goals/data/northStar"
+import { COMMIT_DATE_KEY, COMMIT_KEY } from "@/src/goals/data/northStarStart"
+import type { NsPlan } from "@/src/goals/types"
 
 /** 2026-11-09 is a Monday. */
 const AREA = emptyNsPlan().areas[0].id
-const opts = (over: Partial<DueOptions> = {}): DueOptions => ({ reviewDay: 7, hidden: new Set(), nextStep: null, ...over })
+const opts = (over: Partial<DueOptions> = {}): DueOptions => ({ reviewDay: 7, hidden: new Set(), progress: null, ...over })
 const kinds = (cards: DueCard[]) => cards.map((c) => c.kind)
 const periodOfCard = (c: DueCard | undefined) => (c && "tab" in c.go ? c.go.period : undefined)
 const withSeason = (plan: NsPlan, endsOn: string | null): NsPlan => ({ ...plan, season: { id: "s1", startedOn: "2026-08-01", endsOn, sentence: "Get fit" } })
@@ -113,49 +113,57 @@ describe("the season and goals cards", () => {
     expect(cards[0].title).toBe("2 goals passed their date")
   })
 
-  it("an unfinished plan points at the next step", () => {
-    const cards = dueNow(emptyNsPlan(), "2026-11-18", opts({ nextStep: "now" }))
+})
+
+/** What the plan page hands the cards: the plan's own progress, worked out by planProgress. */
+function progressOf(plan: NsPlan): DuePlanProgress {
+  const p = planProgress(plan)
+  return { percent: p.percent, mostLeft: p.mostLeft, mostLeftDetail: p.mostLeft ? PROGRESS_COPY.detail(p.steps[p.mostLeft].parts) : "" }
+}
+
+describe("the plan's percentage card", () => {
+  it("says how much of the plan is done and opens the step with the most left", () => {
+    // North star 1/2, values 1/3, the rest 0: 11 %. Your 10s is the first step at 0 %.
+    const plan = setValues(setNorthStar(emptyNsPlan(), "A paragraph.", "2026-11-18T09:00:00.000Z"), ["Freedom"], "2026-11-18T09:00:00.000Z")
+    const cards = dueNow(plan, "2026-11-18", opts({ progress: progressOf(plan) }))
     expect(kinds(cards)).toEqual(["finish-setup"])
-    expect(cards[0].detail).toBe("Next: step 2, Your 10s.")
+    expect(cards[0].title).toBe("Your plan is 11 % done")
+    expect(cards[0].detail).toBe("Most left: Your 10s, 0 of 12 areas rated.")
+    expect(cards[0].go).toEqual({ tab: "now" })
+    expect(cards[0].percent).toBe(11)
+    expect(cards[0].key).toBe("finish-setup:2026-11-16")
+  })
+
+  it("stays after the commitment is dated while steps are unfinished", () => {
+    let plan = setAnswer(emptyNsPlan(), COMMIT_KEY, "I am doing this", "2026-11-18T09:00:00.000Z")
+    plan = setAnswer(plan, COMMIT_DATE_KEY, "2026-11-18", "2026-11-18T09:00:00.000Z")
+    expect(kinds(dueNow(plan, "2026-11-18", opts({ progress: progressOf(plan) })))).toEqual(["finish-setup"])
+  })
+
+  it("goes at 100 %, and without a progress there is no card", () => {
+    expect(kinds(dueNow(emptyNsPlan(), "2026-11-18", opts({ progress: { percent: 100, mostLeft: null, mostLeftDetail: "" } })))).toEqual([])
+    expect(kinds(dueNow(emptyNsPlan(), "2026-11-18", opts()))).toEqual([])
+  })
+
+  it("is hidden by Not now for the week", () => {
+    const plan = emptyNsPlan()
+    expect(kinds(dueNow(plan, "2026-11-18", opts({ progress: progressOf(plan), hidden: new Set(["finish-setup:2026-11-16"]) })))).toEqual([])
   })
 })
 
-describe("the next setup step", () => {
-  it("is none once committed", () => {
-    expect(nextSetupStep(true, {})).toBeNull()
+describe("what is left, in words", () => {
+  it("names the part with the most missing", () => {
+    expect(PROGRESS_COPY.detail([{ label: "Values ranked", have: 0, of: 3, weight: 1 }])).toBe("0 of 3 values ranked")
+    expect(
+      PROGRESS_COPY.detail([
+        { label: "North star paragraph", have: 0, of: 1, weight: 1 / 2 },
+        { label: "Ladder questions answered", have: 7, of: 7, weight: 1 / 2 },
+      ]),
+    ).toBe("north star paragraph still to write")
   })
 
-  it("is the first scored setup step not done", () => {
-    expect(nextSetupStep(false, { star: "done", now: "started" })).toBe("now")
-  })
-
-  it("is Everything when every other scored setup step is done, and none once that is too", () => {
-    const scored = BUILD_STEPS.filter((t) => SCORED_TABS.includes(t))
-    const allDone = Object.fromEntries(scored.map((t) => [t, "done"])) as Partial<Record<NorthStarTabId, NsStepState>>
-    const withoutRecap = { ...allDone, recap: "started" as const }
-    expect(scored).toContain("recap")
-    expect(nextSetupStep(false, withoutRecap)).toBe("recap")
-    expect(nextSetupStep(false, allDone)).toBe("recap")
-  })
-})
-
-describe("a period in the address", () => {
-  it("reads a week that starts on its Monday", () => {
-    expect(parsePeriodParam("week-2026-11-09")).toEqual(periodOf("week", "2026-11-09"))
-  })
-  it("refuses a week that does not start on its first day", () => {
-    expect(parsePeriodParam("week-2026-11-10")).toBeNull()
-  })
-  it("refuses a day that does not exist, without throwing", () => {
-    expect(parsePeriodParam("week-2026-02-31")).toBeNull()
-  })
-  it("refuses a kind nobody can start", () => {
-    expect(parsePeriodParam("fortnight-2026-11-09")).toBeNull()
-  })
-  it("is null with nothing given", () => {
-    expect(parsePeriodParam(undefined)).toBeNull()
-  })
-  it("the review link names the same week as the card", () => {
-    expect(dueWeekPeriod("2026-11-16", 7)).toEqual(periodOf("week", "2026-11-09"))
+  it("on a step of single boxes, counts them and names the next", () => {
+    const parts = ["Season areas", "Focus area", "One-thing sentence"].map((label, i) => ({ label, have: i === 1 ? 0 : 1, of: 1, weight: 1 / 3 }))
+    expect(PROGRESS_COPY.detail(parts)).toBe("2 of 3 done, next: focus area")
   })
 })

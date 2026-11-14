@@ -14,8 +14,7 @@ import { daysBetweenDateKeys, dateKeyLabel } from "@/src/shared/dateUtils"
 import { periodOf, periodLabel, reviewFor, isWrittenReview, type ReviewPeriod } from "./reviewService"
 import { isActive } from "./goalStatus"
 import type { NsPlan, NorthStarTabId } from "./types"
-import type { NsStepState } from "./northStarService"
-import { DUE_COPY, BUILD_STEPS, SCORED_TABS, TAB_LABELS, TAB_ORDER } from "./data/northStar"
+import { DUE_COPY, TAB_LABELS } from "./data/northStar"
 
 export const DEFAULT_REVIEW_DAY = 7 // ISO weekday, 7 = Sunday (Q2: the app's pick, not Stefan's)
 export const DUE_MAX = 3
@@ -28,8 +27,15 @@ export const REMINDER_WAIT_MS = 2000
 export type DueKind = "finish-setup" | "season-ended" | "season-ending" | "new-year" | "year" | "quarter" | "month" | "week" | "goals-passed"
 export type DueGo = { tab: NorthStarTabId; period?: ReviewPeriod } | { goalId: string }
 /** `key` names this card for this period; "Not now" hides that key, and the next period has a new one. */
-export interface DueCard { kind: DueKind; key: string; title: string; detail: string; go: DueGo }
-export interface DueOptions { reviewDay: number; hidden: ReadonlySet<string>; nextStep: NorthStarTabId | null }
+/** `percent` rides on the finish-setup card only, for its bar. */
+export interface DueCard { kind: DueKind; key: string; title: string; detail: string; go: DueGo; percent?: number }
+/**
+ * How far the plan is (Plans/plan-progress-percent.md): the total, the step
+ * with the most left and a few words on what is left there. Null when the
+ * caller has not worked it out, which shows no finish-setup card.
+ */
+export interface DuePlanProgress { percent: number; mostLeft: NorthStarTabId | null; mostLeftDetail: string }
+export interface DueOptions { reviewDay: number; hidden: ReadonlySet<string>; progress: DuePlanProgress | null }
 
 /** 1 = Monday … 7 = Sunday, for a date key. */
 export function isoWeekday(day: string): number {
@@ -46,13 +52,6 @@ export function dueWeekPeriod(today: string, reviewDay: number): ReviewPeriod {
   return reviewDay >= 5 ? periodOf("week", D) : periodOf("week", addDays(D, -7))
 }
 
-/** The first setup step not yet done, then Everything (commit lives there); null once committed. */
-export function nextSetupStep(committed: boolean, states: Partial<Record<NorthStarTabId, NsStepState>>): NorthStarTabId | null {
-  if (committed) return null
-  const next = BUILD_STEPS.find((t) => SCORED_TABS.includes(t) && states[t] !== "done")
-  return next ?? "recap"
-}
-
 const written = (plan: NsPlan, p: ReviewPeriod) => {
   const r = reviewFor(plan, p)
   return r !== null && isWrittenReview(r)
@@ -67,9 +66,11 @@ export function dueNow(plan: NsPlan, today: string, opts: DueOptions): DueCard[]
 
   const cards: DueCard[] = []
 
-  const next = opts.nextStep
-  if (next !== null) {
-    cards.push({ kind: "finish-setup", key: `finish-setup:${weekKey}`, ...DUE_COPY.finishSetup(TAB_ORDER.indexOf(next) + 1, TAB_LABELS[next]), go: { tab: next } })
+  // Shown until the plan is whole, committed or not: the point is to see what is left (Q3).
+  const progress = opts.progress
+  if (progress !== null && progress.percent < 100 && progress.mostLeft !== null) {
+    const { percent, mostLeft, mostLeftDetail } = progress
+    cards.push({ kind: "finish-setup", key: `finish-setup:${weekKey}`, ...DUE_COPY.finishSetup(percent, TAB_LABELS[mostLeft], mostLeftDetail), go: { tab: mostLeft }, percent })
   }
 
   const s = plan.season

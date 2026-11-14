@@ -626,11 +626,36 @@ export const REVIEW_PERIOD_COPY = {
 } as const
 
 /** The "Due now" cards on top of Today (Plans/life-plan-after-setup.md, Phase 3). */
+/**
+ * WHAT IS LEFT IN ONE STEP, in a few words (Plans/plan-progress-percent.md).
+ *
+ * Names the part with the most missing, weighted as the step weighs it: "0 of
+ * 3 values ranked", "north star paragraph still to write". A step made only of
+ * single boxes says how many are done and which comes next.
+ */
+type ProgressPart = { label: string; have: number; of: number; weight: number }
+const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
+export const PROGRESS_COPY = {
+  ofTotal: (have: number, of: number) => `${have} of ${of}`,
+  percent: (percent: number) => `${percent} %`,
+  detail(parts: ProgressPart[]): string {
+    const left = (p: ProgressPart) => (p.of > 0 ? p.weight * (1 - Math.min(p.have, p.of) / p.of) : 0)
+    const worst = parts.reduce<ProgressPart | null>((best, p) => (best === null || left(p) > left(best) ? p : best), null)
+    if (worst === null) return ""
+    if (parts.length > 2 && parts.every((p) => p.of === 1)) {
+      const done = parts.filter((p) => p.have >= 1).length
+      return `${done} of ${parts.length} done, next: ${lowerFirst(worst.label)}`
+    }
+    if (worst.of === 1) return `${lowerFirst(worst.label)} still to write`
+    return `${Math.min(worst.have, worst.of)} of ${worst.of} ${lowerFirst(worst.label)}`
+  },
+}
+
 export const DUE_COPY = {
   heading: "Due now",
   notNow: "Not now",
   done: "Done",
-  finishSetup: (n: number, label: string) => ({ title: "Finish your plan", detail: `Next: step ${n}, ${label}.` }),
+  finishSetup: (percent: number, label: string, detail: string) => ({ title: `Your plan is ${percent} % done`, detail: `Most left: ${label}, ${detail}.` }),
   week: (period: string) => ({ title: "Weekly review", detail: `Look back at ${period}.` }),
   month: (period: string) => ({ title: "Monthly review", detail: `Go through ${period}, goal by goal.` }),
   quarter: (period: string) => ({ title: "Quarterly review", detail: `Look back at ${period}, then set the next one.` }),

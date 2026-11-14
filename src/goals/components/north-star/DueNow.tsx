@@ -19,6 +19,19 @@ export function DueNow({ cards, onGo, onHide }: { cards: DueCard[]; onGo: (c: Du
           <li key={c.key} data-testid={`due-${c.kind}`} className="flex items-center gap-2">
             <button type="button" className="flex-1 min-w-0 text-left" onClick={() => onGo(c)}>
               <span className="block text-[13px] text-zinc-100">{c.title}</span>
+              {c.percent !== undefined && (
+                // How far the plan is (Plans/plan-progress-percent.md): on the finish-setup card only.
+                <span
+                  role="progressbar"
+                  aria-label={c.title}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={c.percent}
+                  className="mt-1 mb-0.5 block h-1.5 w-full overflow-hidden rounded-full bg-zinc-800"
+                >
+                  <span className="block h-full rounded-full bg-amber-400" style={{ width: `${c.percent}%` }} />
+                </span>
+              )}
               <span className="block text-[11.5px] text-zinc-400">{c.detail}</span>
             </button>
             <button type="button" className="shrink-0 text-[11px] text-zinc-500 hover:text-zinc-200" onClick={() => onHide(c)}>

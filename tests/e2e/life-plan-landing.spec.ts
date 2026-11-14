@@ -15,7 +15,7 @@ import { periodLabel, periodOf } from "@/src/goals/reviewService"
  * worker's tests, so every test seeds its own plan first.
  */
 
-const current = (page: Page) => page.getByRole("navigation", { name: "Sections" }).locator('[aria-current="page"]')
+const current = (page: Page) => page.getByRole("navigation", { name: "Sections" }).locator('[aria-current="step"]')
 const inUse = () => planWithSteps([{ id: "s1", title: "Stretch", daysPerWeek: 7 }])
 
 test.describe("where the plan opens", () => {

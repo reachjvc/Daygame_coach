@@ -4382,7 +4382,7 @@ function stepParts(plan: NsPlan, tab: NorthStarTabId, account: NsAccount): NsSte
 
   if (tab === "milestones") {
     const milestones = milestoneGoals(plan)
-    if (milestones.length === 0) return [{ label: "Write your first milestone", have: 0, of: 1, weight: 1 }]
+    if (milestones.length === 0) return [{ label: "First milestone", have: 0, of: 1, weight: 1 }]
     return [
       { label: "Milestones with a why", have: milestones.filter(goalHasWhy).length, of: milestones.length, weight: 1 / 2 },
       { label: "Milestones with a date", have: milestones.filter((g) => !!g.targetDate).length, of: milestones.length, weight: 1 / 2 },
@@ -4393,7 +4393,7 @@ function stepParts(plan: NsPlan, tab: NorthStarTabId, account: NsAccount): NsSte
     const n = milestoneGoals(plan).length
     if (n === 0) {
       const anySystem = systemGoals(plan).length > 0 || plan.routines.some((r) => r.steps.length > 0)
-      return [box("Something running", anySystem, 1)]
+      return [box("A system or routine", anySystem, 1)]
     }
     return [{ label: "Milestones with something running at them", have: n - milestonesWithoutSystems(plan).length, of: n, weight: 1 }]
   }
@@ -4401,13 +4401,13 @@ function stepParts(plan: NsPlan, tab: NorthStarTabId, account: NsAccount): NsSte
   if (tab === "focus") {
     const w = 1 / 8
     return [
-      box("Season areas chosen", plan.seasonAreaIds.length > 0, w),
-      box("Focus area picked", plan.seasonFocusId != null, w),
+      box("Season areas", plan.seasonAreaIds.length > 0, w),
+      box("Focus area", plan.seasonFocusId != null, w),
       box("One-thing sentence", account.hasOneThing, w),
-      box("Why", filled(ONE_ANSWERS.why), w),
-      box("Cost", filled(ONE_ANSWERS.cost), w),
-      box("Identity", filled(ONE_ANSWERS.identity), w),
-      box("Values", filled(ONE_ANSWERS.values), w),
+      box("Its why", filled(ONE_ANSWERS.why), w),
+      box("Its cost", filled(ONE_ANSWERS.cost), w),
+      box("Who it makes you", filled(ONE_ANSWERS.identity), w),
+      box("The values it serves", filled(ONE_ANSWERS.values), w),
       box("A goal serving the one thing", plan.goals.some((g) => g.servesOneThing), w),
     ]
   }
@@ -4420,7 +4420,7 @@ function stepParts(plan: NsPlan, tab: NorthStarTabId, account: NsAccount): NsSte
     const said = filled(COMMIT_KEY)
     // The date only counts once there is a sentence for it to be on: stepState
     // calls a date with no sentence empty.
-    return [box("Commitment sentence", said, 1 / 2), box("Its date", said && filled(COMMIT_DATE_KEY), 1 / 2)]
+    return [box("Commitment sentence", said, 1 / 2), box("Commitment date", said && filled(COMMIT_DATE_KEY), 1 / 2)]
   }
 
   return []

@@ -109,7 +109,7 @@ describe("the plan's percentage", () => {
   })
 
   it("scores milestones on their whys and dates, and asks for a first one when there are none", () => {
-    expect(stepProgress(emptyNsPlan(), "milestones")).toEqual({ fraction: 0, parts: [{ label: "Write your first milestone", have: 0, of: 1, weight: 1 }] })
+    expect(stepProgress(emptyNsPlan(), "milestones")).toEqual({ fraction: 0, parts: [{ label: "First milestone", have: 0, of: 1, weight: 1 }] })
     let plan = withMilestone(emptyNsPlan(), true, false)
     plan = withMilestone(plan, false, true)
     expect(stepProgress(plan, "milestones").fraction).toBe(0.5)

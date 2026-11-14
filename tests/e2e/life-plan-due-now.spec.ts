@@ -11,20 +11,23 @@ import { seedLifePlan, planWithSteps } from "./helpers/lifePlan"
  * DUE NOW, ON TOP OF TODAY (Plans/life-plan-after-setup.md, Phase 3).
  *
  * Through the real page and a test account: an unfinished plan leads with
- * "Finish your plan" and "Not now" keeps it hidden across a reload; an ended
+ * "Your plan is N % done" and "Not now" keeps it hidden across a reload; an ended
  * season shows; and a review link that names a week opens that week.
  */
 
-const current = (page: Page) => page.getByRole("navigation", { name: "Sections" }).locator('[aria-current="page"]')
+const current = (page: Page) => page.getByRole("navigation", { name: "Sections" }).locator('[aria-current="step"]')
 const plain = () => planWithSteps([{ id: "s1", title: "Stretch", daysPerWeek: 7 }])
 
 test.describe("Due now", () => {
-  test("an unfinished plan shows Finish your plan first, and Not now hides it", async ({ page, account }) => {
+  test("an unfinished plan shows its percentage first, and Not now hides it", async ({ page, account }) => {
     await seedLifePlan(page, account.id, plain())
     await page.goto(ROUTES.plan)
     const first = page.getByTestId("due-now").locator("li").first()
     await expect(first).toHaveAttribute("data-testid", "due-finish-setup")
-    await expect(first).toContainText("step 1, North star")
+    // Only a routine is written: Systems is full, the other six steps empty, 14 %.
+    await expect(first).toContainText(/Your plan is 14 % done/)
+    await expect(first).toContainText("Most left: North star")
+    await expect(first.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "14")
     await first.getByRole("button").first().click()
     await expect(current(page)).toContainText("North star")
 
