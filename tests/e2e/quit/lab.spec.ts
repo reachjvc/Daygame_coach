@@ -3,7 +3,7 @@
  *
  * Signed out, 390x844: the index lists every tool and variant, each variant
  * opens with no console errors, and without `?preview=1` the lab is a 404.
- * The dummy variant proves the lab store over a reload. Read-only.
+ * Read-only.
  */
 
 import { test, expect, SIGNED_OUT } from "../fixtures/test"
@@ -55,19 +55,9 @@ for (const id of LAB_TOOL_IDS) {
   }
 }
 
-test("dummy variant writes and reads the lab store", async ({ page }) => {
-  await page.goto("/quit/lab/sos/dummy?preview=1")
-  await expect(page.getByText("Lab works")).toBeVisible()
-  await expect(page.getByTestId("lab-dummy-value")).toContainText("none yet")
-  await page.getByRole("button", { name: "Write a value" }).click()
-  await expect(page.getByTestId("lab-dummy-value")).toContainText("hello from the lab store")
-  await page.reload()
-  await expect(page.getByTestId("lab-dummy-value")).toContainText("hello from the lab store")
-})
-
 test("without preview the lab answers 404", async ({ page }) => {
   expect((await page.goto("/quit/lab"))?.status()).toBe(404)
-  expect((await page.goto("/quit/lab/sos/dummy"))?.status()).toBe(404)
+  expect((await page.goto("/quit/lab/sos/a"))?.status()).toBe(404)
 })
 
 test("unknown tool or variant answers 404", async ({ page }) => {

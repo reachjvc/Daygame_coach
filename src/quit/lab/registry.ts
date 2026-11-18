@@ -7,7 +7,10 @@ import { PastTool } from "../tools/past/PastTool"
 import { SlipTool } from "../tools/slip/SlipTool"
 import { SosTool } from "../tools/sos/SosTool"
 import { SymptomsTool } from "../tools/symptoms/SymptomsTool"
-import { DummySos } from "./DummySos"
+import { SosA } from "./sos/a/SosA"
+import { SosC } from "./sos/c/SosC"
+import { SosD } from "./sos/d/SosD"
+import { SosE } from "./sos/e/SosE"
 
 export const LAB_TOOL_IDS = [
   "sos",
@@ -34,7 +37,7 @@ export interface LabVariant {
   Component: ComponentType<LabProps>
   addiction: string
   label: string
-  kind: "copy" | "best" | "current" | "dummy"
+  kind: "copy" | "best" | "current"
 }
 
 const CURRENT_LABEL = "Current (wave 1)"
@@ -51,7 +54,10 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
     name: "Craving SOS",
     variants: {
       current: current(SosTool),
-      dummy: { Component: DummySos, addiction: "nicotine", label: "Store check", kind: "dummy" },
+      a: { Component: SosA, addiction: "alcohol", label: "Copy A", kind: "copy" },
+      c: { Component: SosC, addiction: "nicotine", label: "Copy C", kind: "copy" },
+      d: { Component: SosD, addiction: "nicotine", label: "Copy D", kind: "copy" },
+      e: { Component: SosE, addiction: "nicotine", label: "Copy E", kind: "copy" },
     },
   },
   progress: { name: "Progress home", variants: {} },

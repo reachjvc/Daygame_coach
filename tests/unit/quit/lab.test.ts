@@ -19,7 +19,7 @@ describe("lab registry", () => {
         expect(typeof v.Component).toBe("function")
         expect(v.label.length).toBeGreaterThan(0)
         expect(v.addiction.length).toBeGreaterThan(0)
-        expect(["copy", "best", "current", "dummy"]).toContain(v.kind)
+        expect(["copy", "best", "current"]).toContain(v.kind)
       }
     }
   })
@@ -34,9 +34,9 @@ describe("lab store", () => {
         data[k] = v
       },
     }))
-    store.set("sos", "dummy", "probe", "x")
-    expect(store.get("sos", "dummy", "probe")).toBe("x")
-    expect(JSON.parse(data[LAB_STORE_KEY])).toEqual({ "sos/dummy/probe": "x" })
+    store.set("sos", "a", "probe", "x")
+    expect(store.get("sos", "a", "probe")).toBe("x")
+    expect(JSON.parse(data[LAB_STORE_KEY])).toEqual({ "sos/a/probe": "x" })
 
     const broken = createLabStore(() => ({
       getItem: () => {
