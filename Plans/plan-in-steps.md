@@ -31,6 +31,14 @@ His answers the same day, which shape everything below:
   - The owner's eight areas are the default, with the "Switch areas" fold on the copy.
   - The extra modules show "Coming soon". Today, Track and Journal link to `/plan/sandbox`.
   - The owner's real row counts are unchanged after his first copy-space visit (927/927).
+- **Phase 7 live** on 2026-11-18 (`00fd279b`):
+  - All ten extra modules.
+  - The new Today, Track and Journal at `/plan/new/…`, and the check-in run. "How great did life feel
+    today?" is on Today.
+  - e2e `plan-new-extras` and `plan-new` pass. The owner's real rows are still 927/927, unchanged.
+- **Phase 5:** built. The Opus review said "apply after fixes"; the fixes are in progress on branch
+  `plan-engine`. Live order, with a hard gate: backup → migration 1 → deploy → wait until `/api/healthz`
+  shows the new buildId → migration 2.
 - **Phase 3 live** on 2026-11-18 (`55d50455`):
   - Two Opus review rounds; the must-fix items were fixed. Plan e2e 39/39.
   - Still open, for Phase 5: an edit typed during an open save is lost on a hard close, and a start-empty
