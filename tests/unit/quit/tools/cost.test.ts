@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { computeCost, defaultPerDay, formatUsd, parseAmount, pickCostSwap } from "@/src/quit/tools/cost/logic"
-import { groupNumbers, groupOf } from "@/src/quit/tools/how/logic"
+import { groupNumbers, groupOf, isSameNumber } from "@/src/quit/tools/how/logic"
 import { makeValid } from "../fixtures/valid"
 
 describe("computeCost", () => {
@@ -81,15 +81,27 @@ describe("how groups", () => {
     expect(groupOf("quit-status")).toBe("how")
     expect(groupOf("helps-talk")).toBe("helps")
     expect(groupOf("after-body")).toBe("after")
-    expect(groupOf("hope-lifetime")).toBe("other")
+    expect(groupOf("hope-lifetime")).toBe("hope")
+    expect(groupOf("misc-x")).toBe("other")
   })
 
-  it("orders who, how and quit, helps, after, other; data order inside", () => {
+  it("orders hope-, who, how and quit, helps, after, other; data order inside", () => {
     const base = makeValid().numbers[0]
-    const kinds = ["after-a", "other-x", "helps-a", "quit-a", "who-a", "how-a", "helps-b"]
+    const kinds = ["after-a", "other-x", "helps-a", "quit-a", "who-a", "hope-lifetime", "how-a", "helps-b"]
     const groups = groupNumbers(kinds.map((kind) => ({ ...base, kind })))
-    expect(groups.map((g) => g.group)).toEqual(["who", "how", "helps", "after", "other"])
-    expect(groups[1].items.map((n) => n.kind)).toEqual(["quit-a", "how-a"])
-    expect(groups[2].items.map((n) => n.kind)).toEqual(["helps-a", "helps-b"])
+    expect(groups.map((g) => g.group)).toEqual(["hope", "who", "how", "helps", "after", "other"])
+    expect(groups[0].items.map((n) => n.kind)).toEqual(["hope-lifetime"])
+    expect(groups[2].items.map((n) => n.kind)).toEqual(["quit-a", "how-a"])
+    expect(groups[3].items.map((n) => n.kind)).toEqual(["helps-a", "helps-b"])
+  })
+
+  it("leaves out a number equal to the hope number, so it shows once", () => {
+    const base = makeValid().numbers[0]
+    const hope = { ...base, kind: "hope-free-now", big: "19 in 100", headline: "H" }
+    const numbers = [{ ...hope }, { ...base, kind: "hope-lifetime" }, { ...base, kind: "hope-free-now", big: "20 in 100", headline: "H" }]
+    const all = groupNumbers(numbers, hope).flatMap((g) => g.items)
+    expect(all.map((n) => `${n.kind}/${n.big}`)).toEqual([`hope-lifetime/${base.big}`, "hope-free-now/20 in 100"])
+    expect(isSameNumber(hope, hope)).toBe(true)
+    expect(isSameNumber(base, null)).toBe(false)
   })
 })

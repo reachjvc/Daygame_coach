@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Chips, ClearAnswers, EvidenceChip, OneQuestion, PrimaryButton, SourceTap, SourcesFold } from "../../components/kit"
@@ -40,6 +40,16 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
   }, [store, addiction, beliefs, known, sp.get("need")])
 
   const picked = state ? cleanNeeds(state.picked ?? pre, known) : []
+  // A link with ?need= starts the pick again from that need.
+  const queryNeed = sp.get("need")
+  const appliedNeed = useRef<string | null>(null)
+  useEffect(() => {
+    if (!state || !queryNeed || appliedNeed.current === queryNeed) return
+    appliedNeed.current = queryNeed
+    const fromLink = cleanNeeds(queryNeed.split(","), known)
+    if (fromLink.length > 0) update((s) => ({ ...s, picked: fromLink, done: 0 }))
+  }, [state, queryNeed, known, update])
+
   const total = 1 + picked.length
   const first = (state?.done ?? 0) + 1
   const { screen, go, reset, isResult } = useScreens(first, total)

@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import { count } from "../count"
 import { useQuitStore } from "../store"
 import { clampScreen } from "./common"
@@ -66,7 +66,6 @@ export function useCarry() {
  * Screen `total + 1` is the result.
  */
 export function useScreens(firstUnanswered: number, total: number) {
-  const router = useRouter()
   const pathname = usePathname()
   const sp = useSearchParams()
   const screen = clampScreen(sp.get("s"), firstUnanswered, total)
@@ -81,8 +80,9 @@ export function useScreens(firstUnanswered: number, total: number) {
     },
     [sp, pathname],
   )
-  const go = useCallback((n: number) => router.push(hrefFor(n)), [router, hrefFor])
-  const reset = useCallback(() => router.replace(hrefFor(null)), [router, hrefFor])
+  // Native history calls: Next syncs useSearchParams with them and no server round trip is needed.
+  const go = useCallback((n: number) => window.history.pushState(null, "", hrefFor(n)), [hrefFor])
+  const reset = useCallback(() => window.history.replaceState(null, "", hrefFor(null)), [hrefFor])
   return { screen, go, reset, isResult: screen === total + 1 }
 }
 

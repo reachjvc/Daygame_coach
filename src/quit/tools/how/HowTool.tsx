@@ -22,7 +22,7 @@ export function HowTool({ addiction, data }: ToolProps) {
   }, [addiction])
 
   if (!numbers || numbers.length === 0) return <NotReady />
-  const groups = groupNumbers(numbers)
+  const groups = groupNumbers(numbers, hope)
   const noteRefs: QuitRef[] = note ? realRefs(note.refs) : []
   const all = uniqueRefs([
     ...(hope ? [hope.ref, ...(hope.alsoRef ?? [])] : []),
@@ -35,8 +35,8 @@ export function HowTool({ addiction, data }: ToolProps) {
         {hope && <NumberCard n={hope} big />}
         {groups.map((g) => (
           <section key={g.group} data-testid={`group-${g.group}`}>
-            <h2 className="text-lg font-semibold">{t.how.groups[g.group]}</h2>
-            <div className="mt-2 flex flex-col gap-4">
+            {g.group !== "hope" && <h2 className="text-lg font-semibold">{t.how.groups[g.group]}</h2>}
+            <div className={g.group === "hope" ? "flex flex-col gap-4" : "mt-2 flex flex-col gap-4"}>
               {g.items.map((n, i) => (
                 <NumberCard key={`${n.kind}-${i}`} n={n} />
               ))}
