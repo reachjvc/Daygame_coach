@@ -4,6 +4,8 @@ Written 2026-11-18 from a strategy session with the owner (private notes:
 `~/.cache/daygame-research/hormozi-persona/session-log.md`). Status: **A1–A6 approved 2026-11-18; Phase 0 running.** Phase 0 kit (messages, log, terms line, Instagram checklist): `~/.cache/daygame-research/first-1000/phase0-kit.md`.
 Deadline: **$1,000 collected by Monday 1 February 2027.**
 Day-by-day checklist (owner ticks tasks; db `checks/<date>` + `notes`): https://claude.ai/artifact/FJPtUMkjkJnEtwvn5J6M1t
+**Standing rule:** any session that changes what the owner should do updates the coming days on that page the same turn (db `days/<date>`: `{tasks}` / `{add, remove}` / `{note}`).
+Outreach (where to reach men who want to quit, and the morning comment list): `Plans/find-the-men.md`. It replaces "comment on 10 niche posts".
 
 ## What was decided in the session
 
