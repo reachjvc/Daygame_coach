@@ -17,7 +17,7 @@ import { AUDIT_QUEUE_KEY, emptyAuditQueue, enqueueAnswers, enqueueDelete, unsent
 import type { AuditAnswer } from "@/src/audit/types"
 
 const signedOut = vi.hoisted(() => ({ count: 0 }))
-vi.mock("@/app/actions/auth", () => ({ signOut: async () => void (signedOut.count += 1) }))
+vi.mock("@/src/db/signOutRequest", () => ({ signOut: async () => void (signedOut.count += 1) }))
 
 const OWNER = "user-1"
 const waiting: AuditAnswer = {

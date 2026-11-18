@@ -18,7 +18,7 @@ import { AUDIT_QUEUE_KEY, emptyAuditQueue, enqueueAnswers, writeAuditQueue } fro
 import type { AuditAnswer } from "@/src/audit/types"
 
 const server = vi.hoisted(() => ({ signOut: vi.fn(), order: [] as string[] }))
-vi.mock("@/app/actions/auth", () => ({ signOut: server.signOut }))
+vi.mock("@/src/db/signOutRequest", () => ({ signOut: server.signOut }))
 
 const noSignal = () => Promise.reject(new TypeError("Failed to fetch"))
 

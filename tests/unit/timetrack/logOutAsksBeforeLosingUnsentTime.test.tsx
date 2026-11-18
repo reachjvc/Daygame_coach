@@ -30,7 +30,7 @@ import { fakeAccount } from "./fakeAccount"
 import { baseState, entry } from "./helpers"
 
 const signedOut = vi.hoisted(() => ({ count: 0 }))
-vi.mock("@/app/actions/auth", () => ({ signOut: async () => void (signedOut.count += 1) }))
+vi.mock("@/src/db/signOutRequest", () => ({ signOut: async () => void (signedOut.count += 1) }))
 
 const OWNER = "user-1"
 const shape = entry("gym", "2026-08-10", "09:00", "10:00", { description: "Gym" })

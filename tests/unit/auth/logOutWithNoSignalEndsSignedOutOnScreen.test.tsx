@@ -14,7 +14,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 import { LogOutButton } from "@/components/LogOutButton"
 
 const server = vi.hoisted(() => ({ signOut: vi.fn() }))
-vi.mock("@/app/actions/auth", () => ({ signOut: server.signOut }))
+vi.mock("@/src/db/signOutRequest", () => ({ signOut: server.signOut }))
 
 const noSignal = () => Promise.reject(new TypeError("Failed to fetch"))
 const wait = (ms: number) => act(async () => void (await vi.advanceTimersByTimeAsync(ms)))

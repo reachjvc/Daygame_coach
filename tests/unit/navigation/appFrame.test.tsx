@@ -21,7 +21,7 @@ import { ROUTES } from "@/src/shared/routes"
 let path: string = ROUTES.dashboard
 vi.mock("next/navigation", () => ({ usePathname: () => path, useRouter: () => ({ push: vi.fn() }) }))
 // The real action talks to Supabase on the server. Rendering only needs it to exist.
-vi.mock("@/app/actions/auth", () => ({ signOut: vi.fn() }))
+vi.mock("@/src/db/signOutRequest", () => ({ signOut: vi.fn() }))
 
 afterEach(() => cleanup())
 

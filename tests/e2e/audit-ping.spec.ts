@@ -298,8 +298,8 @@ test.describe("answering a ping @phone", () => {
       // the delete is on the phone from the tap, not only on screen
       expect(await page.evaluate(() => localStorage.getItem("audit-queue-v1"))).toContain("notBefore")
       await pressLogOut(page)
-      // signed out: the front page, or the sign-in page when the screen Log Out was pressed on (the You tab on a phone) saw the session go first
-      await expect.poll(() => new URL(page.url()).pathname, { timeout: 30_000 }).toMatch(/^\/(auth\/login)?$/)
+      // signed out: always the front page, on a phone's You tab as on the desktop header (F9)
+      await expect.poll(() => new URL(page.url()).pathname, { timeout: 30_000 }).toBe("/")
       await expect.poll(async () => (await slotsOf(throwawayAccount.id, run)).length, { timeout: 15_000 }).toBe(0)
       expect(await page.evaluate(() => localStorage.getItem("audit-queue-v1"))).toBeNull()
     } finally {

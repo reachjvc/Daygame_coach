@@ -24,7 +24,7 @@
 import { useCallback, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 
-import { signOut } from "@/app/actions/auth"
+import { signOut } from "@/src/db/signOutRequest"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog"
 import { unsentAuditChanges, unsentAuditDeletes } from "@/src/audit/auditQueue"

@@ -131,7 +131,8 @@ test.describe("audit across devices @phone", () => {
   // The header's Log Out loads its code late (components/LazyLogOutButton.tsx). Somebody who
   // loses signal before ever touching it must still get the real Log Out, which names what is waiting.
   test("01: signal lost before Log Out was ever touched, the waiting answer is still named and kept", async ({ browser, throwawayAccount }, info) => {
-    test.skip(info.project.name.includes("phone"), "a phone has no header; its Log Out sits on the You tab and is not loaded late")
+    // the header (and its late-loaded Log Out) is drawn from 640 px up; narrower, Log Out sits on the You tab, which cannot load offline
+    test.skip((info.project.use.viewport?.width ?? 1280) < 640, "below 640 px (an iPhone or a Pixel) there is no header; Log Out sits on the You tab, which cannot load offline, and is not loaded late")
     const context = await browser.newContext({ ...info.project.use, storageState: SIGNED_OUT, baseURL: info.project.use.baseURL })
     try {
       const page = await context.newPage()

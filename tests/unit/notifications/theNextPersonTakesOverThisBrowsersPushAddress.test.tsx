@@ -30,7 +30,7 @@ import AppLayout from "@/app/(app)/layout"
 import { claimThisDevice } from "@/src/notifications/pushClient"
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/dashboard", useRouter: () => ({ push: vi.fn() }) }))
-vi.mock("@/app/actions/auth", () => ({ signOut: vi.fn() }))
+vi.mock("@/src/db/signOutRequest", () => ({ signOut: vi.fn() }))
 
 const ENDPOINT = "https://fcm.googleapis.com/fcm/send/abc123"
 
