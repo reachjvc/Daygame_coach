@@ -625,7 +625,7 @@ test.describe('Toggl-style time tracker', () => {
     const asked = page.getByRole('dialog', { name: 'New time entry' })
     if (await page.getByRole('navigation', { name: 'Tracker' }).isVisible()) await asked.getByRole('button', { name: 'Add time entry' }).click()
     const block = page.locator('[data-entry-block]')
-    await expect(block).toHaveAccessibleName('(no description), 10:00 to 11:30, planned')
+    await expect(block).toHaveAccessibleName('Gym, 10:00 to 11:30, planned')
 
     // by its body, 15 minutes later
     column = await calendarColumn(page)
@@ -658,7 +658,7 @@ test.describe('Toggl-style time tracker', () => {
     await expect(sheet).toBeVisible()
 
     await savedToAccount(page)
-    expect(await entriesOnAccount(page)).toEqual([''])
+    expect(await entriesOnAccount(page)).toEqual(['Gym'])
   })
 })
 
@@ -713,14 +713,16 @@ const dayHeader = (page: Page) => page.locator('[data-day-header]').first().loca
 
 /**
  * A block a held finger made opens its sheet with the name ready to type, as
- * Toggl opens its editor (audit findability, Phase 8). Closed with ✕ and
- * nothing changed, the block is taken away again (audit b06, b61a4736); Done
- * keeps it as it was made.
+ * Toggl opens its editor (audit findability, Phase 8). Closed with nothing
+ * changed, ✕ or Done, the block is taken away again (audit b06, b61a4736), so
+ * the test names it.
  */
-async function closeNewBlockSheet(page: Page, scrollBackTo: number) {
+async function closeNewBlockSheet(page: Page, scrollBackTo: number, name: string) {
   const sheet = page.getByRole('dialog', { name: 'Time entry', exact: true })
   await expect(sheet, 'a block made by holding did not open its sheet').toBeVisible()
   await expect(sheet.getByPlaceholder(/worked on|working on/)).toBeFocused()
+  // a block nothing was changed on is taken away on Done as well (audit b06): it gets its name
+  await sheet.getByPlaceholder(/worked on|working on/).fill(name)
   await sheet.getByRole('button', { name: 'Done', exact: true }).click()
   await expect(sheet).toBeHidden()
   // the grid comes back drawn from the top of the day; put it where the finger was working
@@ -792,10 +794,10 @@ test.describe('the calendar by touch, on an Android phone @phone', () => {
     await expect(preview).toHaveText('10:00–11:30 · 1h 30m')
     await expect(preview, 'a planned block lost its stripes while drawn').toHaveAttribute('data-planned', 'true')
     await finger.up()
-    await closeNewBlockSheet(page, 9 * 60 + 15)
+    await closeNewBlockSheet(page, 9 * 60 + 15, 'Gym')
 
     const block = page.locator('[data-entry-block]')
-    await expect(block).toHaveAccessibleName('(no description), 10:00 to 11:30, planned')
+    await expect(block).toHaveAccessibleName('Gym, 10:00 to 11:30, planned')
     await expect(block).toHaveCSS('background-image', /repeating-linear-gradient/)
     // a fresh account shows durations as 0:47:06, Toggl's default (Plans/toggl-parity.md, Phase 7)
     await expect(dayHeader(page).nth(1)).toHaveText('0:00:00')
@@ -803,7 +805,7 @@ test.describe('the calendar by touch, on an Android phone @phone', () => {
     expect(await page.evaluate(() => (window as unknown as { __ticks: number[] }).__ticks)).toEqual(Array(7).fill(5))
 
     await savedToAccount(page)
-    expect(await entriesOnAccount(page)).toEqual([''])
+    expect(await entriesOnAccount(page)).toEqual(['Gym'])
 
     // back on today, by a swipe: its total is what it was
     const swipeY = column.yAt(12 * 60)
@@ -832,13 +834,13 @@ test.describe('the calendar by touch, on an Android phone @phone', () => {
       await expect(page.locator('[data-preview]')).toBeVisible()
       await finger.slide({ x: column.x, y: column.yAt(from) }, { x: column.x, y: column.yAt(to) }, (to - from) / 5)
       await finger.up()
-      await closeNewBlockSheet(page, 9 * 60)
+      await closeNewBlockSheet(page, 9 * 60, 'Block')
     }
     // two blocks that touch: 10:00–11:00, then 11:00–11:30
     await make(10 * 60, 11 * 60)
     await make(11 * 60, 11 * 60 + 30)
-    await expect(page.getByRole('button', { name: /^\(no description\), 10:00 to 11:00/ })).toBeVisible()
-    const second = page.getByRole('button', { name: /^\(no description\), 11:00 to 11:30/ })
+    await expect(page.getByRole('button', { name: /^Block, 10:00 to 11:00/ })).toBeVisible()
+    const second = page.getByRole('button', { name: /^Block, 11:00 to 11:30/ })
     await expect(second).toBeVisible()
 
     /** Hold a block at this height inside it, wait for the hold to take, and drag it this many minutes */
@@ -853,20 +855,20 @@ test.describe('the calendar by touch, on an Android phone @phone', () => {
 
     // its top edge 15 minutes up: the entry that ended where it started ends there too (D12)
     await holdAndDrag(second, (box) => box.y + 4, -15)
-    await expect(page.getByRole('button', { name: /^\(no description\), 10:45 to 11:30/ })).toBeVisible()
-    await expect(page.getByRole('button', { name: /^\(no description\), 10:00 to 10:45/ })).toBeVisible()
-    await expect(page.getByText('Also moved ‘(no description)’ to end 10:45')).toBeVisible()
+    await expect(page.getByRole('button', { name: /^Block, 10:45 to 11:30/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /^Block, 10:00 to 10:45/ })).toBeVisible()
+    await expect(page.getByText('Also moved ‘Block’ to end 10:45')).toBeVisible()
 
     // its bottom edge 15 minutes down
-    const moved = page.getByRole('button', { name: /^\(no description\), 10:45 to 11:30/ })
+    const moved = page.getByRole('button', { name: /^Block, 10:45 to 11:30/ })
     await holdAndDrag(moved, (box) => box.y + box.height - 4, 15)
-    await expect(page.getByRole('button', { name: /^\(no description\), 10:45 to 11:45/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /^Block, 10:45 to 11:45/ })).toBeVisible()
 
     // the first one by its body, 30 minutes earlier: it moves alone
-    const early = page.getByRole('button', { name: /^\(no description\), 10:00 to 10:45/ })
+    const early = page.getByRole('button', { name: /^Block, 10:00 to 10:45/ })
     await holdAndDrag(early, (box) => box.y + box.height / 2, -30)
-    await expect(page.getByRole('button', { name: /^\(no description\), 09:30 to 10:15/ })).toBeVisible()
-    await expect(page.getByRole('button', { name: /^\(no description\), 10:45 to 11:45/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /^Block, 09:30 to 10:15/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /^Block, 10:45 to 11:45/ })).toBeVisible()
     await savedToAccount(page)
   })
 
