@@ -12,7 +12,7 @@ const RING_RADII = [13, 24, 36]
 
 function Rings({ index }: { index: number }) {
   return (
-    <svg viewBox="0 0 100 100" className="mx-auto size-32" aria-hidden="true" data-testid={`b-ring-${index}`}>
+    <svg viewBox="0 0 100 100" className="mx-auto size-28" aria-hidden="true" data-testid={`b-ring-${index}`}>
       {[44, 30, 16].map((r) => (
         <circle key={r} cx="50" cy="50" r={r} fill="none" strokeWidth="1" className="stroke-border" />
       ))}
@@ -37,35 +37,47 @@ export function IfthenB() {
   const [screen, setScreen] = useState(0)
   return (
     <div data-testid="ifthen-b" data-screen={screen} className="pb-6">
-      <div className="mb-3">
-        <Tabs id="b-screen" items={ibText.screens} value={screen} onChange={setScreen} />
+      <div className="mb-3 flex items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <Tabs id="b-screen" items={ibText.screens} value={screen} onChange={setScreen} />
+        </div>
+        <InferredTag />
       </div>
       {screen === 0 ? <Circles /> : screen === 1 ? <Survey onBack={() => setScreen(0)} /> : <Analyze onBack={() => setScreen(1)} onClose={() => setScreen(0)} />}
     </div>
   )
 }
 
+const CARD_POS = [
+  "left-6 top-[340px] w-44 -rotate-[18deg]",
+  "left-[210px] top-[290px] w-44",
+  "left-[165px] top-12 w-44 rotate-6",
+]
+
 function Circles() {
-  const tilt = ["-rotate-2", "rotate-1", "-rotate-1"]
   return (
-    <section data-testid="b-circles" className="flex flex-col gap-4 overflow-hidden px-3 py-3">
-      {ibText.circles.map((c, i) => (
-        <div key={c.name} data-testid={`b-card-${i}`} className={`rounded-2xl border border-border bg-card p-4 ${tilt[i]}`}>
-          <Rings index={i} />
-          <div className="mt-2 text-xs text-muted-foreground">{c.label}</div>
-          <div className="text-lg font-bold">{c.name}</div>
-          {i === 2 && (
-            <div data-testid="b-habit-tile" className="mt-3 flex flex-col gap-1 rounded-lg border border-teal-500 p-3 text-sm">
-              <span className="font-semibold">{ibText.habitLabel}</span>
-              <span className="flex flex-wrap items-center gap-2">
-                <NotSourced />
-                <span className="text-muted-foreground">{ibText.habitOf}</span>
-              </span>
-              <Placeholder />
-            </div>
-          )}
-        </div>
-      ))}
+    <section data-testid="b-circles" className="relative h-[620px] w-full overflow-hidden">
+      <div data-testid="b-habit-tile" className="absolute left-0 top-3 z-10 flex w-36 flex-col gap-1 rounded-xl border border-teal-500 bg-background p-3 text-sm">
+        <span className="font-semibold">{ibText.habitLabel}</span>
+        <NotSourced />
+        <span className="text-xs text-muted-foreground">{ibText.habitOf}</span>
+      </div>
+      <span data-testid="b-pill-verdict" className="absolute left-[140px] top-6 z-30 rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-teal-900">
+        {ibText.verdict}
+      </span>
+      <span data-testid="b-pill-extra" className="absolute left-[140px] top-[80px] z-10 rounded-full bg-teal-600 px-4 py-1 text-xs">
+        {"—"}
+      </span>
+      {[0, 1, 2].map((i) => {
+        const c = ibText.circles[i]
+        return (
+          <div key={c.name} data-testid={`b-card-${i}`} className={`absolute rounded-2xl border border-border bg-card p-3 ${CARD_POS[i]}`}>
+            <Rings index={i} />
+            <div className="mt-1 text-xs text-muted-foreground">{c.label}</div>
+            <div className="text-lg font-bold">{c.name}</div>
+          </div>
+        )
+      })}
     </section>
   )
 }
@@ -124,7 +136,8 @@ function Analyze({ onBack, onClose }: { onBack: () => void; onClose: () => void 
     setAdding(false)
   }
   return (
-    <section data-testid="b-analyze" className="flex flex-col gap-4 rounded-xl bg-teal-950 p-4 text-teal-50">
+    <section data-testid="b-analyze" className="flex flex-col gap-4 pb-16">
+      <div className="flex flex-col gap-4 rounded-xl bg-teal-950 p-4 pb-24 text-teal-50">
       <div className="flex items-center gap-2">
         <button type="button" data-testid="b-an-back" aria-label={ibText.back} onClick={onBack} className="inline-flex size-11 shrink-0 items-center justify-center text-xl text-teal-300">
           {"‹"}
@@ -163,7 +176,8 @@ function Analyze({ onBack, onClose }: { onBack: () => void; onClose: () => void 
           <InferredTag />
         </div>
       )}
-      <div data-testid="b-resilience" className="flex flex-col gap-2 rounded-xl bg-card p-4 text-foreground">
+      </div>
+      <div data-testid="b-resilience" className="relative z-10 -mt-20 ml-14 flex flex-col gap-2 rounded-xl border border-border bg-card p-4 text-foreground shadow-lg">
         <div data-testid="b-resilience-word" className="text-center font-semibold">
           {level === null ? ibText.resilient : <span className="text-sm font-normal text-muted-foreground">{sharedText.notSeen}</span>}
         </div>

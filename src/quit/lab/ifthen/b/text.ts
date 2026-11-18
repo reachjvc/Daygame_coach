@@ -10,6 +10,7 @@ export const ibText = {
   ],
   habitLabel: "A self-care habit",
   habitOf: "of the weekly target",
+  verdict: "On track",
   surveyPill: "Boundaries",
   surveyTitle: "Environment",
   statements: [

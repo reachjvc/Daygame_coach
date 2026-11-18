@@ -79,6 +79,14 @@ export type BuilderExtras = {
   /** Adds a printable plan screen. */
   printView?: boolean
   labels?: { needOne: string; viewPlan: string; planTitle: string; print: string; back: string }
+  /** Neutral line under the landing heading, in place of the default. */
+  landText?: string
+  /** Shown instead of "-" for amounts nothing was typed for. */
+  dash?: string
+  /** Small inferred tag next to navigation that this copy added and the product never showed, and on the vape path. */
+  tagNav?: string
+  /** More results sections (tips link, contact placeholders, setback steps, edit link). */
+  more?: { tips: string; contactNote: string; stepsTitle: string; steps: readonly string[]; edit: string }
 }
 
 export function Builder({ data, ns = E_NS, extras = {} }: { data: LabProps["data"]; ns?: Ns; extras?: BuilderExtras }) {
@@ -97,6 +105,7 @@ export function Builder({ data, ns = E_NS, extras = {} }: { data: LabProps["data
   const [results, setResults] = useState(false)
   const [printing, setPrinting] = useState(false)
   const [err, setErr] = useState(false)
+  const [tips, setTips] = useState(false)
   const [src, setSrc] = useState(false)
   const [card, setCard] = useState(0)
   const [now, setNow] = useState(0)
@@ -106,7 +115,7 @@ export function Builder({ data, ns = E_NS, extras = {} }: { data: LabProps["data
   const typed = cigs !== "" && price !== ""
   const sav = savingsFor(Number(cigs) || 0, Number(price) || 0)
   const packRef = (Array.isArray(data.units) ? data.units : []).find((u) => u.id === "cigarettes")?.priceRefs.find((r) => /20-cigarette/.test(r.quote ?? ""))
-  const money = (n: number) => (typed ? fmtMoney(n) : "-")
+  const money = (n: number) => (typed ? fmtMoney(n) : (extras.dash ?? "-"))
   const groupsPicked = eText.groups.map((g, gi) => ({ title: g.title, items: g.items.filter((_, i) => trig.includes(`${gi}-${i}`)) })).filter((g) => g.items.length > 0)
   const distractList = [...eText.distract.items.filter((_, i) => dis.includes(String(i))), ...(dis.includes("other") ? [other || eText.distract.other] : [])]
   const supList = eText.support.items.filter((_, i) => sup.includes(String(i)))
@@ -145,6 +154,7 @@ export function Builder({ data, ns = E_NS, extras = {} }: { data: LabProps["data
           <button type="button" data-testid="screen-back" onClick={() => setResults(false)} className="inline-flex min-h-11 items-center text-sm text-muted-foreground underline">
             {eText.backToAnswers}
           </button>
+          {extras.tagNav && <InferredTag />}
         </div>
         <h2 className="text-xl font-semibold">{eText.resultsTitle}</h2>
         <section data-testid="e-res-date" className="flex flex-col gap-2">
@@ -220,12 +230,43 @@ export function Builder({ data, ns = E_NS, extras = {} }: { data: LabProps["data
           </div>
         </section>
         <PlanList testId="e-cravings" title={eText.cravings} line={eText.cravingsText} sub={eText.myStrategies} items={distractList} />
+        {extras.more && (
+          <div className="flex flex-col gap-2">
+            <button type="button" data-testid="e-more-tips" aria-expanded={tips} onClick={() => setTips(!tips)} className="inline-flex min-h-11 items-center self-start text-sm text-sky-400 underline">
+              {extras.more.tips}
+            </button>
+            {tips && <Placeholder />}
+          </div>
+        )}
         <PlanList testId="e-team" title={eText.supportTitle} items={supList} />
-        <PlanList testId="e-experts" title={eText.expertTitle} items={expList} />
+        {extras.more ? (
+          <section data-testid="e-experts" className="flex flex-col gap-1">
+            <h3 className="font-semibold">{eText.expertTitle}</h3>
+            {expList.length === 0 && <p className="text-sm text-muted-foreground">{eText.none}</p>}
+            {expList.map((x) => (
+              <div key={x} data-testid="e-expert-row" className="flex flex-col gap-1 rounded-md border border-border bg-card p-2 text-sm">
+                <span>{x}</span>
+                <span className="rounded border border-dashed border-border px-2 py-1 text-xs text-muted-foreground">{extras.more?.contactNote}</span>
+              </div>
+            ))}
+          </section>
+        ) : (
+          <PlanList testId="e-experts" title={eText.expertTitle} items={expList} />
+        )}
         <PlanList testId="e-reasons" title={eText.reasonsReminder} items={reasonList} />
         <section className="flex flex-col gap-1">
           <h3 className="font-semibold">{eText.setbacks}</h3>
           <p className="text-sm text-muted-foreground">{eText.setbackText}</p>
+          {extras.more && (
+            <div data-testid="e-setback-steps">
+              <p className="text-sm font-medium">{extras.more.stepsTitle}</p>
+              <ul className="list-disc pl-5 text-sm">
+                {extras.more.steps.map((x) => (
+                  <li key={x}>{x}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
         {extras.printView && extras.labels && (
           <button type="button" data-testid="e-view-plan" onClick={() => setPrinting(true)} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 font-medium">
@@ -235,6 +276,11 @@ export function Builder({ data, ns = E_NS, extras = {} }: { data: LabProps["data
         <a data-testid="e-download" href={`data:text/plain;charset=utf-8,${encodeURIComponent(planText())}`} download="my-quit-plan.txt" className="inline-flex min-h-12 items-center justify-center rounded-md bg-primary px-4 font-medium text-primary-foreground">
           {eText.download}
         </a>
+        {extras.more && (
+          <button type="button" data-testid="e-edit-plan" onClick={() => setResults(false)} className="inline-flex min-h-12 items-center justify-center rounded-md border border-border bg-card px-4 font-medium">
+            {extras.more.edit}
+          </button>
+        )}
       </article>
     )
   }
@@ -244,12 +290,17 @@ export function Builder({ data, ns = E_NS, extras = {} }: { data: LabProps["data
       <section data-testid="e-landing" className="flex flex-col gap-3">
         <h1 className="text-2xl font-semibold">{eText.landTitle}</h1>
         <Card>
-          <p className="mb-3 text-sm">{eText.landText}</p>
+          <p className="mb-3 text-sm">{extras.landText ?? eText.landText}</p>
           <p className="mb-2 font-medium">{eText.typeQ}</p>
           <div role="radiogroup" className="flex flex-col gap-2">
             {(["cig", "vape"] as const).map((t) => (
               <button key={t} type="button" role="radio" aria-checked={type === t} data-testid={`e-type-${t}`} onClick={() => setType(t)} className={`min-h-12 rounded-md border px-4 font-medium ${type === t ? "border-teal-500 bg-teal-600 text-white" : "border-border bg-card"}`}>
                 {eText.types[t]}
+                {t === "vape" && extras.tagNav && (
+                  <span className="ml-2">
+                    <InferredTag />
+                  </span>
+                )}
               </button>
             ))}
           </div>

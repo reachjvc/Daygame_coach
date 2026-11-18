@@ -33,8 +33,11 @@ export function IfthenC() {
     setScreen(i === 0 ? "list" : "urge")
   }
   const tabs = (
-    <div className="mb-3">
-      <Tabs id="c-tab" items={icText.screens} value={tab} onChange={go} />
+    <div className="mb-3 flex items-center gap-2">
+      <div className="min-w-0 flex-1">
+        <Tabs id="c-tab" items={icText.screens} value={tab} onChange={go} />
+      </div>
+      <InferredTag />
     </div>
   )
 
