@@ -1,14 +1,17 @@
+import { cleanup } from '@testing-library/react'
 import { afterEach } from 'vitest'
 
 /**
  * THE DOM PROJECT SHARES ONE JSDOM ACROSS FILES, SO EACH TEST LEAVES IT EMPTY.
  *
  * Files in it use no module mocks, fake clocks or stubbed globals (vitest.config.ts
- * sorts them). Testing Library already unmounts after each test; this clears what
+ * sorts them). It unmounts what Testing Library rendered and clears what
  * a test may leave in the page itself, so the next file starts from a blank browser.
  */
 afterEach(() => {
-  document.body.innerHTML = ''
+  // Testing Library registers its own cleanup once, when it is first imported;
+  // a later file in the same worker reuses that import and gets none.
+  cleanup()
   document.documentElement.removeAttribute('style')
   document.documentElement.removeAttribute('class')
   window.localStorage.clear()

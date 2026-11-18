@@ -100,8 +100,9 @@ jobs:
       - name: Dependency audit ratchet
         run: npm run audit:ratchet
 
+      # Half of the unit suite; the other half is the `unit-2` job.
       - name: Unit tests
-        run: npm test
+        run: npm test -- --shard=1/2
 
       # The database tests run against a throwaway local Supabase built from
       # production's own schema (scripts/db/test-stack.mjs; tests/db/) — row
@@ -126,6 +127,27 @@ jobs:
         run: |
           echo "Staging publishing is off: see blockers B-GH and B-GHCR in Plans/caddy-deploy-and-cicd.md" >> "$GITHUB_STEP_SUMMARY"
 
+  # The other half of the unit suite. One job ran all of it in 162 s on a
+  # 4-vCPU runner (CI 44371247603), so `checks` runs shard 1/2 and this job
+  # runs shard 2/2 beside it. Plans/tests-green-and-fast.md, Phase 3 / Q3;
+  # Phase 4 gives the jobs their final shape. The image jobs wait for both.
+  unit-2:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test -- --shard=2/2
+
   # ===========================================================================
   # THE STAGING IMAGE. After the checks above pass on a push to
   # main, and only when the repository variable STAGING_PUBLISH is
@@ -146,7 +168,7 @@ jobs:
   # (tests/unit/ci/pipelineRules.test.ts). Plans/caddy-deploy-and-cicd.md, step 4.3.
   # ===========================================================================
   image-staging:
-    needs: checks
+    needs: [checks, unit-2]
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.STAGING_PUBLISH == 'on' }}
     runs-on: ubuntu-24.04
     environment: staging
@@ -192,8 +214,8 @@ jobs:
   # Plans/caddy-deploy-and-cicd.md, Phase 5 step 5.
   # ===========================================================================
   image-production:
-    needs: checks
-    if: ${{ !cancelled() && needs.checks.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.PRODUCTION_PUBLISH == 'on' }}
+    needs: [checks, unit-2]
+    if: ${{ !cancelled() && needs.checks.result == 'success' && needs.unit-2.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.PRODUCTION_PUBLISH == 'on' }}
     runs-on: ubuntu-24.04
     environment: production
     concurrency:
