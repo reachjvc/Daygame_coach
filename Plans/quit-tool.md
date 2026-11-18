@@ -857,6 +857,15 @@ live.json stays `[]`.
    phone project against the live URL, read-only: counts only); add the Black Box page link to
    `/quit/nicotine` (Phase 3 question 7); tell the first-1000 session the tools are live.
 
+**Audit record (2026-11-18, production build of 84d833b6 on the test stack):** A signed-out 14 (1 local
+data-loss: two tabs overwrite each other's answers; 2 wrong-fact: cost silently capped at $100 a unit, `past`
+showing stale endings after "never tried"; 4 broken-flow; 7 cosmetic). B signed-in 4 (2 data-loss: a double tap
+on sos "Yes" files two close calls and Undo removes one; 1 wrong-fact: "Saved" shown when the session had
+expired; 1 cosmetic). C privacy/security 7 (2 privacy: the top need travels in `?need=`, the share card carries
+the count; 1 wrong-fact on the privacy page; count route accepts cross-site form posts; 3 cosmetic). No XSS, no
+answers in logs, count and card routes held. Findings and specs: `~/.cache/daygame-research/quit-tool/audit/`;
+planner decisions: `audit/fix-brief.md`. Fix build running.
+
 ### Phase 8: wave 3, the account program — brief Opus, build Sonnet (after the owner's yes to tables)
 
 1. Migration `supabase/migrations/<timestamp>_quit_program.sql`, RLS owner-only: `quit_plans` (id, user_id,
