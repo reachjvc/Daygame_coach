@@ -1,0 +1,23 @@
+/** Reader text shared by the Progress home copies. */
+export const sharedText = {
+  inferredTag: "inferred",
+  notSeen: "Not seen in public material",
+  notSourced: "number not sourced yet",
+  back: "Back",
+  close: "Close",
+  save: "Save",
+  cancel: "Cancel",
+  placeholderScreen: "This screen was never shown in public material.",
+  setupTitle: "Start here",
+  setupLine: "See the screens filled in at once, or enter your own start date and amounts.",
+  seedBtn: "Start with example data",
+  ownBtn: "Set up my own",
+  ownTitle: "Your start and amounts",
+  startOver: "Start over",
+  days: "days",
+  hours: "hours",
+  minutes: "minutes",
+  seconds: "seconds",
+  weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+} as const

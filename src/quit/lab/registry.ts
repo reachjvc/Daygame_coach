@@ -12,6 +12,11 @@ import { SosC } from "./sos/c/SosC"
 import { SosD } from "./sos/d/SosD"
 import { SosBest } from "./sos/best/SosBest"
 import { SosE } from "./sos/e/SosE"
+import { ProgressA } from "./progress/a/ProgressA"
+import { ProgressB } from "./progress/b/ProgressB"
+import { ProgressC } from "./progress/c/ProgressC"
+import { ProgressD } from "./progress/d/ProgressD"
+import { ProgressE } from "./progress/e/ProgressE"
 
 export const LAB_TOOL_IDS = [
   "sos",
@@ -62,7 +67,16 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       best: { Component: SosBest, addiction: "nicotine", label: "Improved", kind: "best" },
     },
   },
-  progress: { name: "Progress home", variants: {} },
+  progress: {
+    name: "Progress home",
+    variants: {
+      a: { Component: ProgressA, addiction: "alcohol", label: "Copy A", kind: "copy" },
+      b: { Component: ProgressB, addiction: "nicotine", label: "Copy B", kind: "copy" },
+      c: { Component: ProgressC, addiction: "alcohol", label: "Copy C", kind: "copy" },
+      d: { Component: ProgressD, addiction: "nicotine", label: "Copy D", kind: "copy" },
+      e: { Component: ProgressE, addiction: "alcohol", label: "Copy E", kind: "copy" },
+    },
+  },
   timeline: { name: "Health timeline", variants: { current: current(SymptomsTool) } },
   quitdate: { name: "Quit date and plan", variants: {} },
   beliefs: { name: "Belief test", variants: { current: current(BeliefsTool) } },
