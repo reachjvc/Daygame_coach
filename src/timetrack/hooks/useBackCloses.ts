@@ -27,7 +27,21 @@ export function useBackCloses(open: boolean, close: () => void): void {
     return () => {
       window.removeEventListener("popstate", onPop)
       const state = window.history.state as { marker?: string } | null
-      if (!popped && state?.marker === marker) window.history.back()
+      if (popped) return
+      if (state?.marker === marker) {
+        window.history.back()
+        return
+      }
+      // Something was stacked on top of the step (the calendar block's Edit opens a
+      // sheet, which closes the panel under itself). The step cannot be taken out from
+      // under it, so it is skipped when Back arrives on it: otherwise that Back press
+      // changes nothing on screen (Plans/time-log-phone.md, audit b04).
+      const skip = () => {
+        if ((window.history.state as { marker?: string } | null)?.marker !== marker) return
+        window.removeEventListener("popstate", skip)
+        window.history.back()
+      }
+      window.addEventListener("popstate", skip)
     }
   }, [open])
 }
