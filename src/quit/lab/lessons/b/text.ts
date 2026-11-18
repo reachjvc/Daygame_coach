@@ -1,0 +1,106 @@
+/** Reader text of Daily lessons copy B. */
+export const bText = {
+  tabs: ["Daily tasks", "Toolkit", "Community", "Discover", "Me"],
+  coinsLabel: "Coins",
+  menuLabel: "Menu",
+  bookmarksLabel: "Saved",
+  greeting: ["Good morning", "Good afternoon", "Good evening"],
+  streakLabel: "Day streak",
+  today: "Today",
+  dayChip: (n: number) => `Day ${n}`,
+  tasksTitle: "Daily tasks",
+  tasksSub: "Work through today's three tasks, one after the other.",
+  tasksDone: "Daily tasks completed",
+  bonus: "Bonus task",
+  collapse: "Show or hide the tasks",
+  banner: "A month-off guide",
+  bannerBtn: "Explore",
+  tasks: [
+    { title: "Repeating a small thing", kind: "reading", mins: 3 },
+    { title: "Line of the day", kind: "quote", mins: 1 },
+    { title: "Write your own lines", kind: "affirm", mins: 5 },
+  ],
+  locked: "Locked",
+  lockedTask: "Locked until the task above is done",
+  // reading
+  readingBar: "Daily reading",
+  readingTitle: "Repeating a small thing",
+  pages: [
+    {
+      heads: ["A path across a field"],
+      body: [
+        "Picture a field with no path through it. The first time you cross, you leave almost no mark.",
+        "Think of one small thing you do on most days. Say it to yourself in a single plain sentence.",
+      ],
+    },
+    {
+      heads: ["Today's choice"],
+      body: [
+        "Pick one small action you would be glad to repeat tomorrow. Keep it small enough that you can do it even on a tired day.",
+        "Write the action down where you will see it later.",
+      ],
+    },
+    {
+      heads: ["Carry it with you"],
+      body: [
+        "Before you close this page, say your action out loud once.",
+        "Tomorrow, come back and notice whether you did it. There is nothing to score. Just notice.",
+      ],
+    },
+  ],
+  howFind: "How did you find this lesson?",
+  // quote
+  quoteBar: "Line of the day",
+  quoteLine: "Begin where you stand. One small act, done today, still counts.",
+  favourite: "Favourite",
+  saveImage: "Save as image",
+  imageFile: "line-of-the-day.png",
+  // affirmation sheet
+  affirmBar: "Write your own lines",
+  affirmPrompt: "Think of the choices you want to be able to make without a drink. Write a short line in the first person for each one. For example: \"I choose what goes in my glass.\" Or: \"I can say no and stay calm.\"",
+  affirmHint: "What are your thoughts?",
+  affirmNext: "Next",
+  affirmDone: "Done",
+  affirmEntryPrompt: "Write your line or lines here.",
+  // day complete
+  dcLine1: "I have finished day",
+  dcLine2: "of this journey. I keep showing up.",
+  dcLine3: "Congratulations on finishing your daily tasks.",
+  dcReward: "+ 50 coins",
+  // coins
+  walletTitle: "Coins",
+  tabStore: "Store",
+  tabHistory: "History",
+  courses: "Courses",
+  goodies: "Digital goodies",
+  courseCard: { kind: "Course", days: "5 days", title: "A moderation plan", cat: "Physical health" },
+  giftTile: "Gift card",
+  filters: ["All", "Redeemed", "Earned"],
+  historyRows: {
+    open: "Daily app open",
+    day: "All daily tasks done",
+  },
+  // course
+  courseTitle: "A moderation plan",
+  courseCategory: "Physical health",
+  usersDone: "users completed",
+  daysRating: "5 days",
+  beginCourse: "Begin course",
+  aboutCourse: "About this course",
+  courseProgress: (n: number) => `${n} of 5 days`,
+  courseHead: "Course",
+  courseLine: "One module a day keeps the pace easy.",
+  modules: ["Moderation basics", "Keeping track", "An honest look back"],
+  moduleDay: (n: number) => `Day ${n}`,
+  begin: "Begin",
+  completed: "Completed",
+  courseDayBar: "Course day",
+  // guide
+  guideTag: "Informational guide",
+  guideTitle: "A month off drink: a guide",
+  guideBy: "Editorial team",
+  guideMenu: "Contents",
+  // generic
+  placeholderTitle: "Screen",
+  toolkitTitle: "Toolkit",
+} as const

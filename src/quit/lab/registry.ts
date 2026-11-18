@@ -33,6 +33,10 @@ import { CheckinA } from "./checkin/a/CheckinA"
 import { CheckinB } from "./checkin/b/CheckinB"
 import { CheckinC } from "./checkin/c/CheckinC"
 import { CheckinD } from "./checkin/d/CheckinD"
+import { LessonsB } from "./lessons/b/LessonsB"
+import { LessonsC } from "./lessons/c/LessonsC"
+import { LessonsD } from "./lessons/d/LessonsD"
+import { LessonsE } from "./lessons/e/LessonsE"
 import { BeliefsBest } from "./beliefs/best/BeliefsBest"
 import { CostB } from "./cost/b/CostB"
 import { CostC } from "./cost/c/CostC"
@@ -162,7 +166,15 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       best: { Component: DiaryBest, addiction: "nicotine", label: "Improved", kind: "best" },
     },
   },
-  lessons: { name: "Daily lessons", variants: {} },
+  lessons: {
+    name: "Daily lessons",
+    variants: {
+      b: { Component: LessonsB, addiction: "alcohol", label: "Copy B", kind: "copy" },
+      c: { Component: LessonsC, addiction: "porn", label: "Copy C", kind: "copy" },
+      d: { Component: LessonsD, addiction: "nicotine", label: "Copy D", kind: "copy" },
+      e: { Component: LessonsE, addiction: "porn", label: "Copy E", kind: "copy" },
+    },
+  },
   cost: {
     name: "Cost and savings",
     variants: {
