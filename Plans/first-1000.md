@@ -1,7 +1,7 @@
 # First $1,000: content, a quit offer, and the quit tool
 
 Written 2026-11-18 from a strategy session with the owner (private notes:
-`~/.cache/daygame-research/hormozi-persona/session-log.md`). Status: **agreed in principle, not started.**
+`~/.cache/daygame-research/hormozi-persona/session-log.md`). Status: **A1–A6 approved 2026-11-18; Phase 0 running.** Phase 0 kit (messages, log, terms line, Instagram checklist): `~/.cache/daygame-research/first-1000/phase0-kit.md`.
 Deadline: **$1,000 collected by Monday 1 February 2027.**
 
 ## What was decided in the session
@@ -29,7 +29,7 @@ Deadline: **$1,000 collected by Monday 1 February 2027.**
 - **New Year is the lever.** 1 January is the biggest quit date of the year. A "Quit in January" group
   starts **Monday 4 January**, sold from 15 December, with 10 spots (his real capacity).
 
-## OWNER-ONLY: one ask, answered before Phase 0 ends
+## OWNER-ONLY: one ask — ANSWERED 2026-11-18: "yes all of these are fine" (A1–A6 as recommended)
 
 | # | Decision | Recommendation | Why |
 |---|---|---|---|
