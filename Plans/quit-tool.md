@@ -436,7 +436,24 @@ never words, exercises or audio.
 - **Decisions are not yours** (the build model's): write them under "Questions from the build" and carry on.
 - Reports to the owner open with whether it is done, in plain words.
 
-## /goal prompts (start the session with `claude --model sonnet`; Phase 0 and the briefs on Opus)
+## The one prompt to run it all (owner, 2026-11-18)
+
+Start in the project folder with `claude --model opus` and paste:
+
+> /goal Execute Plans/quit-tool.md for nicotine, Phases 0 to 7, so wave 1 is live by 20 Dec 2026. You are the
+> planner and reviewer only: do Phase 0 yourself, then for each phase write its brief into the plan and hand
+> ALL building to subagents with model "sonnet" and isolation "worktree", all fact-checking of numbers and
+> proofs to subagents with model "opus", and mechanical checks (validator, tests, typecheck ratchet, screenshot
+> checklists) to subagents with model "haiku". Do not write app code yourself. After each phase: read the
+> subagent's diff and its acceptance results, send it back with exact fixes if anything fails, then
+> fast-forward main, push, and update the status line at the top of the plan. Follow Part 5's ground rules and
+> memory. Stop only for the owner-only items (one message at the start) or an acceptance check still failing
+> after two fix rounds; otherwise keep going phase by phase.
+
+After 20 Dec, the same prompt with "Phases 8 to 10" continues the account program, wave 2 and the other
+addictions.
+
+## /goal prompts per phase (if run one at a time; build sessions on `claude --model sonnet`, briefs on Opus)
 
 - Phase 0 (Opus): "/goal Run Plans/quit-tool.md Phase 0: one owner message, read the menu mock's likes and
   notes into Part 2, baselines, reading list. Then write the Phase 1 brief."
