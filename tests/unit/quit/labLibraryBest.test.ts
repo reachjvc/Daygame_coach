@@ -77,7 +77,7 @@ describe("built from the data files", () => {
   const nic = getAddiction("nicotine")!
   const built = buildItems(nic)
   it("nicotine fills every section; every fact-like item has sources", () => {
-    for (const s of ["helps", "true", "expect", "outside"] as const) expect(built[s]).not.toBeNull()
+    for (const s of ["helps", "true", "expect", "outside", "numbers"] as const) expect(built[s]).not.toBeNull()
     for (const i of allItems(built).filter((x) => !x.idea)) expect(i.refs.length).toBeGreaterThan(0)
   })
   it("what helps: sourced swaps strong first, unsourced swaps last as ideas", () => {
@@ -87,10 +87,22 @@ describe("built from the data files", () => {
     expect(h.slice(firstIdea).every((x) => x.idea)).toBe(true)
     expect(h[0].evidence).toBe("strong")
   })
-  it("other addictions have no usable content yet", () => {
+  it("other addictions: only numbers so far, the rest content coming", () => {
     for (const id of ["alcohol", "weed", "porn"] as const) {
       const b = buildItems(getAddiction(id)!)
-      expect(allItems(b)).toEqual([])
+      expect([b.helps, b.true, b.expect, b.outside]).toEqual([null, null, null, null])
+      expect(b.numbers!.length).toBeGreaterThan(0)
     }
+  })
+  it("numbers: hope first, each with a source and its number card data", () => {
+    const n = built.numbers!
+    expect(n[0].number).toEqual(nic.hope)
+    expect(n.every((x) => x.refs.length > 0 && x.number)).toBe(true)
+    expect(new Set(n.map((x) => x.id)).size).toBe(n.length)
+  })
+  it("numbers are searchable by their headline", () => {
+    const first = built.numbers![1]
+    const word = first.title.split(/\s+/).find((w) => w.length > 5)!
+    expect(searchItems(allItems(built), word).map((i) => i.id)).toContain(first.id)
   })
 })

@@ -2,7 +2,6 @@
 export const bestText = {
   addictionLabel: "Pick what you are working on",
   addictions: { nicotine: "Nicotine", alcohol: "Alcohol", weed: "Weed", porn: "Porn" } as Record<string, string>,
-  title: "Library",
   contentComing: "content coming",
   tabs: ["Library", "Saved"] as const,
   searchLabel: "Search the library",
@@ -12,7 +11,7 @@ export const bestText = {
   resultsLabel: "Results",
   categories: "Sections",
   all: "All",
-  sections: { helps: "What helps", true: "True or not?", expect: "What to expect", outside: "Help outside the app" },
+  sections: { helps: "What helps", true: "True or not?", expect: "What to expect", outside: "Help outside the app", numbers: "Numbers" },
   ideas: "Ideas to try",
   ideasNote: "No source listed for these.",
   peak: "Peak",

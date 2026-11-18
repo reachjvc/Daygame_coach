@@ -32,7 +32,7 @@ test("improved Library: sections, sources, quiz cards, search, save, read, switc
   await page.goto("/quit/lab/library/best?preview=1")
 
   // all four sections are on the page
-  for (const s of ["helps", "true", "expect", "outside"]) await expect(page.getByTestId(`section-${s}`)).toBeVisible()
+  for (const s of ["helps", "true", "expect", "outside", "numbers"]) await expect(page.getByTestId(`section-${s}`)).toBeVisible()
   await shot("sections")
 
   // what helps: strong first, a chip, sources on tap
@@ -70,6 +70,15 @@ test("improved Library: sections, sources, quiz cards, search, save, read, switc
   await page.getByTestId("section-outside").scrollIntoViewIfNeeded()
   await shot("outside")
 
+  // numbers: the wave-1 card, basis on tap, sources on tap
+  const num = page.getByTestId("section-numbers").getByTestId("item-numbers").first()
+  await num.scrollIntoViewIfNeeded()
+  await num.getByText(/based on/i).click()
+  await expect(num.locator("dl")).toBeVisible()
+  await num.getByRole("button", { name: /source/i }).click()
+  await expect(num.getByRole("link").first()).toBeVisible()
+  await shot("numbers")
+
   // category chip filters
   await page.getByTestId("cat-expect").click()
   await expect(page.getByTestId("section-helps")).toHaveCount(0)
@@ -78,6 +87,18 @@ test("improved Library: sections, sources, quiz cards, search, save, read, switc
 
   // read time wording
   await expect(page.getByTestId("read-time").first()).toHaveText(/^about \d+ min read$/)
+
+  // a number is searchable by its headline, opens, saves
+  const headline = (await num.locator("p").nth(1).innerText()).split(/\s+/).find((w) => /^[a-z]{6,}$/i.test(w))!
+  await page.getByTestId("search").fill(headline)
+  await page.getByTestId("result").filter({ hasText: "Numbers" }).first().click()
+  await expect(page.getByTestId("item-view").getByTestId("item-numbers")).toBeVisible()
+  await page.getByTestId("save-btn").click()
+  await page.getByTestId("lib-tab-1").click()
+  await expect(page.getByTestId("saved-list").getByTestId("item-numbers")).toHaveCount(1)
+  await page.getByTestId("save-btn").click()
+  await page.getByTestId("lib-tab-0").click()
+  await page.getByTestId("search-clear").click()
 
   // search a word, open the result
   await page.getByTestId("search").fill("quitline")

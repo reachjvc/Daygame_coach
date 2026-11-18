@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { NumberCard } from "../../../components/NumberCard"
 import { getAddiction } from "../../../data"
 import { EvidenceChip, SourceTap } from "../../../components/kit"
 import type { QuitAddictionId } from "../../../types"
@@ -52,6 +53,27 @@ function ItemCard({ item, marks }: { item: LibItem; marks: Marks }) {
   const isSaved = marks.saved.includes(item.id)
   const isRead = marks.read.includes(item.id)
   const isFact = item.section === "true"
+  const footer = (
+    <div className="flex flex-wrap items-center gap-2 border-t border-border pt-2">
+      <span data-testid="read-time" className="mr-auto text-xs text-muted-foreground">
+        {t.readTime(readMinutes(item))}
+      </span>
+      <button type="button" data-testid="read-btn" aria-pressed={isRead} onClick={() => marks.toggleRead(item.id)} className={`min-h-11 rounded-full border px-3 text-sm ${isRead ? "border-primary bg-primary/30" : "border-border"}`}>
+        {isRead ? t.read : t.markRead}
+      </button>
+      <button type="button" data-testid="save-btn" aria-pressed={isSaved} aria-label={isSaved ? t.unsave : t.save} onClick={() => marks.toggleSaved(item.id)} className={`inline-flex size-11 items-center justify-center rounded-full border border-border text-lg ${isSaved ? "bg-primary/40" : "bg-card"}`}>
+        {"🔖"}
+      </button>
+    </div>
+  )
+  if (item.number) {
+    return (
+      <div data-testid="item-numbers" data-item-id={item.id} className="flex flex-col gap-2">
+        <NumberCard n={item.number} />
+        {footer}
+      </div>
+    )
+  }
   return (
     <article data-testid={`item-${item.section}`} data-item-id={item.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3">
       {item.section === "helps" && <h3 className="text-sm text-muted-foreground">{item.title}</h3>}
@@ -93,17 +115,7 @@ function ItemCard({ item, marks }: { item: LibItem; marks: Marks }) {
           {!item.idea && <SourceTap refs={item.refs} />}
         </>
       )}
-      <div className="flex flex-wrap items-center gap-2 border-t border-border pt-2">
-        <span data-testid="read-time" className="mr-auto text-xs text-muted-foreground">
-          {t.readTime(readMinutes(item))}
-        </span>
-        <button type="button" data-testid="read-btn" aria-pressed={isRead} onClick={() => marks.toggleRead(item.id)} className={`min-h-11 rounded-full border px-3 text-sm ${isRead ? "border-primary bg-primary/30" : "border-border"}`}>
-          {isRead ? t.read : t.markRead}
-        </button>
-        <button type="button" data-testid="save-btn" aria-pressed={isSaved} aria-label={isSaved ? t.unsave : t.save} onClick={() => marks.toggleSaved(item.id)} className={`inline-flex size-11 items-center justify-center rounded-full border border-border text-lg ${isSaved ? "bg-primary/40" : "bg-card"}`}>
-          {"🔖"}
-        </button>
-      </div>
+      {footer}
     </article>
   )
 }
@@ -227,7 +239,6 @@ export function LibraryBest({ addiction: initial }: LabProps) {
   return (
     <div data-testid="library-best" className="flex flex-col gap-4">
       <Switcher value={id} onChange={(next) => { setChosen(next); setOpen(null); setQuery("") }} />
-      <h2 className="text-xl font-semibold">{t.title}</h2>
       <Tabs id="lib-tab" items={t.tabs} value={tab} onChange={(i) => { setTab(i); setOpen(null) }} />
       {tab === 0 && !openItem && (
         <div className="flex items-center gap-2">

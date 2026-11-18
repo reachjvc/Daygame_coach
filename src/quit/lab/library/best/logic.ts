@@ -1,8 +1,9 @@
 import { usable, realRefs } from "../../../tools/common"
-import type { Evidence, QuitAddiction, QuitBesides, QuitFact, QuitNeed, QuitRef, QuitSymptomCourse } from "../../../types"
+import { groupNumbers } from "../../../tools/how/logic"
+import type { Evidence, QuitAddiction, QuitBesides, QuitFact, QuitNeed, QuitNumber, QuitRef, QuitSymptomCourse } from "../../../types"
 
-export type SectionId = "helps" | "true" | "expect" | "outside"
-export const SECTION_ORDER: SectionId[] = ["helps", "true", "expect", "outside"]
+export type SectionId = "helps" | "true" | "expect" | "outside" | "numbers"
+export const SECTION_ORDER: SectionId[] = ["helps", "true", "expect", "outside", "numbers"]
 
 export interface LibItem {
   /** Unique across addictions: `<addiction>:<data id>`. */
@@ -21,6 +22,8 @@ export interface LibItem {
   peak?: string | null
   lasts?: string
   link?: string
+  /** Numbers: the checked number, shown by the wave-1 number card. */
+  number?: QuitNumber
 }
 
 const RANK: Record<Evidence, number> = { strong: 0, moderate: 1, weak: 2, none: 3 }
@@ -55,6 +58,7 @@ export interface Built {
   true: LibItem[] | null
   expect: LibItem[] | null
   outside: LibItem[] | null
+  numbers: LibItem[] | null
   expectNote: string | null
 }
 
@@ -78,10 +82,21 @@ export function buildItems(data: QuitAddiction): Built {
     const refs = realRefs(b.refs)
     return { id: `${data.id}:${b.id}`, section: "outside", title: b.text, text: b.text, refs, idea: !sourced(refs), link: b.link }
   })
+  const all = usable<QuitNumber[]>(data.numbers) ?? []
+  const hope = usable<QuitNumber>(data.hope)
+  const ordered = [...(hope && all.length ? [hope] : []), ...groupNumbers(all, hope).flatMap((g) => g.items)].filter((n) => n.ref)
+  const numbers = ordered.map((n, i): LibItem => ({
+    id: `${data.id}:number-${n.kind}-${i}`,
+    section: "numbers",
+    title: n.headline,
+    text: [n.big, n.mirror, n.counted].join(" "),
+    refs: [n.ref, ...(n.alsoRef ?? [])],
+    number: n,
+  }))
   const helps = [...sortByEvidence(swaps.filter((s) => !s.idea)), ...swaps.filter((s) => s.idea)]
   const note = usable<string>(data.symptomCourseNote)
   const orNull = (x: LibItem[]) => (x.length ? x : null)
-  return { helps: orNull(helps), true: orNull(facts), expect: orNull(course), outside: orNull(outside), expectNote: note && course.length ? note : null }
+  return { helps: orNull(helps), true: orNull(facts), expect: orNull(course), outside: orNull(outside), numbers: orNull(numbers), expectNote: note && course.length ? note : null }
 }
 
 export function allItems(b: Built): LibItem[] {
