@@ -48,7 +48,6 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
       .map((b) => usable<string>(b.need))
       .filter((n): n is string => n !== null)
     return preselectNeeds(linkNeed, topNeeds, known)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store, addiction, beliefs, known, linkNeed])
 
   const picked = state ? cleanNeeds(state.picked ?? pre, known) : []

@@ -29,7 +29,7 @@ export function useSignedIn(patient = false): boolean | null {
       if (timer) clearTimeout(timer)
       ctl.abort()
     }
-  }, [])
+  }, [patient])
   return signedIn
 }
 
