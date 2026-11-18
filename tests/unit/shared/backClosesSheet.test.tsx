@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import * as React from 'react'
 import { describe, test, expect, vi, afterEach, beforeEach } from 'vitest'
-import { render, screen, cleanup, fireEvent, act } from '@testing-library/react'
+import { render, screen, cleanup, fireEvent, act, waitFor } from '@testing-library/react'
 
 import { BottomSheet } from '@/components/BottomSheet'
 import { HistoryBarrierProvider } from '@/src/shared/HistoryBarrierContext'
@@ -13,11 +13,17 @@ afterEach(cleanup)
 
 /** Where the browser is: the page's own entry is `{ page }`. */
 const at = () => (window.history.state as { page?: string; __barrier?: number } | null) ?? {}
-/** A Back press, and the popstate it fires (jsdom fires it a task later). */
+/**
+ * A Back press, and the popstate it fires (jsdom fires it a task later). It
+ * waits for that popstate itself rather than a fixed 20 ms, which was too short
+ * once under a loaded full run.
+ */
 async function back() {
   await act(async () => {
+    const popped = new Promise<void>((resolve) => window.addEventListener('popstate', () => resolve(), { once: true }))
     window.history.back()
-    await new Promise((r) => setTimeout(r, 20))
+    await popped
+    await new Promise((r) => setTimeout(r, 0))
   })
 }
 const settle = () => act(async () => { await new Promise((r) => setTimeout(r, 20)) })
@@ -93,11 +99,14 @@ describe.each([
     render(<Page />)
     fireEvent.click(screen.getByRole('button', { name: 'Open' }))
     await settle()
+    // wait for the step the open sheet took, so Close has a step to remove
+    await waitFor(() => expect(at().__barrier).toBeDefined())
     fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    // the step comes off through a history traversal that lands a task later
+    await waitFor(() => expect(at().__barrier).toBeUndefined())
     await settle()
     expect(screen.queryByTestId('sheet')).not.toBeInTheDocument()
     expect(at().page).toBe('b')
-    expect(at().__barrier).toBeUndefined()
 
     // the next Back is a real one: it goes to page a, and nothing reopens
     await back()

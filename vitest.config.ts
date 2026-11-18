@@ -1,6 +1,32 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import fs from 'fs'
+
+/**
+ * FILES THAT NEED THEIR OWN MODULE CACHE, FOUND BY WHAT THEY DO.
+ *
+ * Vitest cannot split projects by pragma, so the config reads each test file
+ * once. A file lands in the isolated project when it asks for a browser
+ * (`// @vitest-environment jsdom`) or replaces modules, clocks or globals (`vi.mock`, `vi.resetModules`,
+ * `vi.useFakeTimers`, `vi.setSystemTime`, `vi.stubGlobal`, `vi.stubEnv`,
+ * `vi.doMock`). A file that replaces a module must not share a cache: a repo
+ * module imported earlier by another file keeps that file's replacement
+ * (2026-11-18: `rePush`, `climbsDoNotRoll` and three more failed only in a
+ * full run). New files sort themselves; there is no list to keep.
+ */
+function walk(dir: string): string[] {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const full = path.join(dir, e.name)
+    if (e.isDirectory()) return e.name === 'node_modules' ? [] : walk(full)
+    return /\.test\.tsx?$/.test(e.name) ? [full] : []
+  })
+}
+const excluded = /[\\/]tests[\\/](integration|manual)[\\/]/
+const isolatedFiles = walk(path.resolve(__dirname, 'tests'))
+  .filter((f) => !excluded.test(f))
+  .filter((f) => /@vitest-environment\s+jsdom|\bvi\.(mock|doMock|resetModules|useFakeTimers|setSystemTime|stubGlobal|stubEnv)\(/.test(fs.readFileSync(f, 'utf8')))
+  .map((f) => path.relative(__dirname, f).split(path.sep).join('/'))
 
 export default defineConfig({
   plugins: [react()],
@@ -43,11 +69,31 @@ export default defineConfig({
      * DOM — by what a file does, not by its extension.
      */
     environment: 'node',
-    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
+    /**
+     * TWO PROJECTS. `node` SHARES ONE MODULE CACHE PER WORKER; `isolated` DOES NOT.
+     *
+     * Most of the unit time was importing the same modules again for every
+     * file. Node files do not touch `window`, so they skip the per-file reset.
+     * jsdom and mocking files keep it: they patch globals, timers and the DOM.
+     */
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'node',
+          isolate: false,
+          include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
+          exclude: ['tests/integration/**/*', 'tests/manual/**/*', 'node_modules/**/*', ...isolatedFiles],
+        },
+      },
+      {
+        extends: true,
+        test: { name: 'isolated', isolate: true, include: isolatedFiles },
+      },
+    ],
     // tests/manual/** talks to the REAL project database and creates and deletes
     // its own accounts. It is never part of `npm test` — run it deliberately with
     // `npx vitest run --config vitest.manual.config.ts`.
-    exclude: ['tests/integration/**/*', 'tests/manual/**/*', 'node_modules/**/*'],
     globals: true,
     /**
      * NOT THE DEFAULT 5s, because nothing here is measuring speed.
