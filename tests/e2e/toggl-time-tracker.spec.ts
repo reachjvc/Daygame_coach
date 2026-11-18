@@ -713,14 +713,15 @@ const dayHeader = (page: Page) => page.locator('[data-day-header]').first().loca
 
 /**
  * A block a held finger made opens its sheet with the name ready to type, as
- * Toggl opens its editor (audit findability, Phase 8). Closed with nothing
- * typed, the block stays as it was made.
+ * Toggl opens its editor (audit findability, Phase 8). Closed with ✕ and
+ * nothing changed, the block is taken away again (audit b06, b61a4736); Done
+ * keeps it as it was made.
  */
 async function closeNewBlockSheet(page: Page) {
   const sheet = page.getByRole('dialog', { name: 'Time entry', exact: true })
   await expect(sheet, 'a block made by holding did not open its sheet').toBeVisible()
   await expect(sheet.getByPlaceholder(/worked on|working on/)).toBeFocused()
-  await sheet.getByRole('button', { name: 'Close', exact: true }).click()
+  await sheet.getByRole('button', { name: 'Done', exact: true }).click()
   await expect(sheet).toBeHidden()
 }
 
