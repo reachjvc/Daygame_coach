@@ -198,7 +198,7 @@ describe("the hidden account", () => {
     const sandbox = await sandboxOf(owner)
     await expect(asOwner((q) => q("insert into public.plan_sandboxes (owner_id) values ($1)", [sandbox.userId]))).rejects.toThrow(/cannot be a copy space/)
     // A row cannot name itself.
-    await expect(asOwner((q) => q("update public.plan_sandboxes set sandbox_user_id = owner_id where owner_id = $1", [owner.id]))).rejects.toThrow(/plan_sandboxes_not_itself/)
+    await expect(asOwner((q) => q("update public.plan_sandboxes set sandbox_user_id = owner_id where owner_id = $1", [owner.id]))).rejects.toThrow(/cannot be an owner/)
     // Deleting the hidden account leaves the row, empty, and the next use makes a new one.
     await admin().auth.admin.deleteUser(sandbox.userId)
     const [row] = await asOwner((q) => q("select sandbox_user_id from public.plan_sandboxes where owner_id = $1", [owner.id]))
