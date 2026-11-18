@@ -25,6 +25,16 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
 }
 
 /**
+ * jsdom has no `Element.prototype.scrollIntoView` (real browsers all do). Code
+ * that calls it on mount (timetrack `Segmented`) threw in a file that ran after
+ * one which had stubbed and then removed its own copy. Defined once here, before
+ * any file runs, as a no-op: a file that stubs it still can, nothing removes this.
+ */
+if (typeof Element !== 'undefined' && typeof Element.prototype.scrollIntoView !== 'function') {
+  Element.prototype.scrollIntoView = function scrollIntoView() {}
+}
+
+/**
  * EVERY FILE HANDS THE NEXT ONE REAL CLOCKS, REAL GLOBALS AND UNSPIED MODULES.
  *
  * The `node` and `dom` projects run many files in one worker without a fresh
