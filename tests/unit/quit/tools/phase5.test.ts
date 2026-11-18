@@ -5,7 +5,7 @@ import { endingForBelief, endingForEnding, laterDay, reportAt, shiftDay, slipDay
 import { currentSwap, firstUnanswered as sosFirst, formatClock, minutesGone, needForBelief, remainingMs, WAIT_MS, EMPTY_SOS } from "@/src/quit/tools/sos/logic"
 import { firstUnanswered as slipFirst, keepLine, EMPTY_SLIP } from "@/src/quit/tools/slip/logic"
 import { helpFor, listable, symptomLabel } from "@/src/quit/tools/symptoms/logic"
-import { NO_RESET } from "@/src/quit/validate"
+import { NO_RESET, validateAddiction } from "@/src/quit/validate"
 import type { QuitAddictionFull } from "@/src/quit/types"
 
 const data = nicotine as unknown as QuitAddictionFull
@@ -106,10 +106,28 @@ describe("endings map to the Black Box", () => {
     expect(endingForEnding("zzz", endings)).toBe("other")
     expect(endingForEnding(null, endings)).toBe("other")
   })
-  it("maps a belief only when an ending has the same id, else other", () => {
-    expect(endingForBelief("stress", endings)).toBe("stress")
-    expect(endingForBelief("b1", endings)).toBe("other")
-    expect(endingForBelief(null, endings)).toBe("other")
+  it("maps a belief through its own blackBoxEnding, else other", () => {
+    const beliefs = [
+      { id: "x1", blackBoxEnding: "justone" as const },
+      { id: "x2" },
+    ]
+    expect(endingForBelief("x1", beliefs)).toBe("justone")
+    expect(endingForBelief("x2", beliefs)).toBe("other")
+    expect(endingForBelief("zzz", beliefs)).toBe("other")
+    expect(endingForBelief(null, beliefs)).toBe("other")
+  })
+  it("nicotine sets blackBoxEnding on b3, b4, b10 and b12 only", () => {
+    const set = Object.fromEntries(data.beliefs.filter((b) => b.blackBoxEnding).map((b) => [b.id, b.blackBoxEnding]))
+    expect(set).toEqual({ b3: "stress", b4: "justone", b10: "drink", b12: "stress" })
+    expect(endingForBelief("b4", data.beliefs)).toBe("justone")
+    expect(endingForBelief("b1", data.beliefs)).toBe("other")
+  })
+  it("the validator rejects an unknown blackBoxEnding", () => {
+    const d = structuredClone(data)
+    ;(d.beliefs[0] as { blackBoxEnding?: string }).blackBoxEnding = "nope"
+    expect(validateAddiction(d, { live: true }).map((i) => i.rule)).toContain("ending")
+    ;(d.beliefs[0] as { blackBoxEnding?: string }).blackBoxEnding = "stress"
+    expect(validateAddiction(d, { live: true }).map((i) => i.rule)).not.toContain("ending")
   })
   it("every nicotine ending has a Black Box ending", () => {
     for (const e of data.endings) expect(endingForEnding(e.id, data.endings)).toBe(e.blackBoxEnding)
@@ -170,6 +188,12 @@ describe("symptom guide", () => {
       ...Object.values(data.symptomWords),
     ]
     for (const s of shown) expect(s).not.toMatch(BAN)
+  })
+  it("help rows do not repeat the timing that the course row gives", () => {
+    const TIMING = /peaks? in (the first )?week|first week peak|gone by weeks|fades (by|within) weeks/i
+    for (const h of data.symptomHelp.filter((x) => x.symptom !== "sleep")) expect(h.text).not.toMatch(TIMING)
+    const edited = data.symptomHelp.filter((h) => (h as { editNote?: string }).editNote)
+    expect(edited.map((h) => h.symptom)).toEqual(["anxious", "low-mood", "brain-fog", "irritable"])
   })
   it("has the four sleep rules", () => {
     expect(tooltext.symptoms.sleepRules).toHaveLength(4)

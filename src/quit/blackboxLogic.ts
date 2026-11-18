@@ -1,11 +1,11 @@
 import type { ViceEndingId } from "@/src/vice/types"
-import type { QuitEnding } from "./types"
+import type { QuitBelief, QuitEnding } from "./types"
 import { localDate } from "./tools/common"
 
-/** The Black Box ending of a belief: the `endings` entry with the same id, else "other". */
-export function endingForBelief(beliefId: string | null, endings: Pick<QuitEnding, "id" | "blackBoxEnding">[]): ViceEndingId {
+/** The Black Box ending of a thought: the belief's `blackBoxEnding`, else "other". */
+export function endingForBelief(beliefId: string | null, beliefs: Pick<QuitBelief, "id" | "blackBoxEnding">[]): ViceEndingId {
   if (!beliefId) return "other"
-  return endings.find((e) => e.id === beliefId)?.blackBoxEnding ?? "other"
+  return beliefs.find((b) => b.id === beliefId)?.blackBoxEnding ?? "other"
 }
 
 /** The Black Box ending of an `endings` entry picked on the slip tool, else "other". */

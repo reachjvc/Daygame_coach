@@ -697,6 +697,7 @@
       "scene": "Your phone buzzes with bad news and your hand is already in your pocket.",
       "short": "It calms me down",
       "need": "relief",
+      "blackBoxEnding": "stress",
       "limiting": "A cigarette is the only thing that calms me down.",
       "counterpart": "Smoking creates the stress it seems to relieve. Quitting is what calms me down.",
       "whenThought": "When stress brings the thought, write it down, and next to it: “Smoking creates the stress it seems to relieve.” Then take ten slow breaths or a two-minute walk before you decide anything.",
@@ -726,6 +727,7 @@
       "scene": "A friend holds out their vape at the party. It’s only one hit.",
       "short": "Just one won't hurt",
       "need": "substance",
+      "blackBoxEnding": "justone",
       "limiting": "Just one won’t hurt. I’m still quit.",
       "counterpart": "There’s no “just one”. One is how quit turns into smoking again.",
       "whenThought": "Answer it like a non-smoker, “No thanks, I don’t,” and leave the room for five minutes. Then text someone who knows you're quitting that the thought came and you said no.",
@@ -931,6 +933,7 @@
       "scene": "You’re three drinks in, outside the bar, and someone holds out a pack or a vape.",
       "short": "Only on drinking nights",
       "need": "reward",
+      "blackBoxEnding": "drink",
       "limiting": "I only smoke when I drink. That doesn’t really count.",
       "counterpart": "Drinks are where my quit is easiest to lose. Those nights get a plan.",
       "whenThought": "Say “I’m good, thanks” before you think about it, then move to the other side of the group.",
@@ -999,6 +1002,7 @@
       "scene": "You open your calendar, see a busy month, and push your quit day back again.",
       "short": "I'll quit when it calms down",
       "need": "relief",
+      "blackBoxEnding": "stress",
       "limiting": "I’ll quit when things calm down.",
       "counterpart": "There is no calm week coming. A date soon beats a date someday.",
       "whenThought": "Open your calendar and put a marker on the nearest day you can, right now.",
@@ -1781,7 +1785,8 @@
     },
     {
       "symptom": "anxious",
-      "text": "Peaks in the first week, fades by weeks 2 to 4. Anxiety improves more in people who quit than in people who keep smoking.",
+      "text": "Anxiety improves more in people who quit than in people who keep smoking.",
+      "editNote": "2026-11-18: timing sentence removed; shown from symptomCourse",
       "evidence": "weak",
       "refs": [
         {
@@ -1809,7 +1814,8 @@
     },
     {
       "symptom": "low-mood",
-      "text": "Same stretch: first week peak, gone by weeks 2 to 4. Low mood improves more in people who quit.",
+      "text": "Low mood improves more in people who quit.",
+      "editNote": "2026-11-18: timing sentence removed; shown from symptomCourse",
       "evidence": "weak",
       "refs": [
         {
@@ -1837,7 +1843,8 @@
     },
     {
       "symptom": "brain-fog",
-      "text": "Trouble concentrating peaks in week one and fades within weeks. Work in short blocks. Take a brisk 15-minute walk, then start the task 10 minutes later.",
+      "text": "Work in short blocks. Take a brisk 15-minute walk, then start the task 10 minutes later.",
+      "editNote": "2026-11-18: timing sentence removed; shown from symptomCourse",
       "evidence": "weak",
       "refs": [
         {
@@ -1865,7 +1872,8 @@
     },
     {
       "symptom": "irritable",
-      "text": "Anger and impatience peak in week one. Exercise cut withdrawal symptoms in all 12 lab studies that compared it with sitting still.",
+      "text": "Exercise cut withdrawal symptoms in all 12 lab studies that compared it with sitting still.",
+      "editNote": "2026-11-18: timing sentence removed; shown from symptomCourse",
       "evidence": "moderate",
       "refs": [
         {

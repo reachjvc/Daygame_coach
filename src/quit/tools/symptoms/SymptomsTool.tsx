@@ -104,7 +104,6 @@ function Inner({ addiction, rows, help, words, note }: InnerProps) {
         <p data-testid="symptom-eases" className="mt-1 font-medium">
           {fill(t.symptoms.eases, { lasts: row.lasts })}
         </p>
-        <p className="mt-2 text-base">{row.text}</p>
         <div className="mt-2">
           <EvidenceChip evidence={row.evidence} />
         </div>

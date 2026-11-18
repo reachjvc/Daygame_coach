@@ -16,7 +16,7 @@ import nicotineJson from "../../../src/quit/data/nicotine.json"
 import tooltextJson from "../../../src/quit/data/tooltext.json"
 
 const data = nicotineJson as unknown as {
-  beliefs: { id: string; short: string; need: string; counterpart: string }[]
+  beliefs: { id: string; short: string; need: string; counterpart: string; blackBoxEnding?: string }[]
   needs: { id: string; name: string; swaps: { id: string; text: string }[] }[]
   endings: { id: string; label: string }[]
   tapeForward: string[]
@@ -143,7 +143,7 @@ test.describe("quit wave 1 part 2, signed out @phone", () => {
     await page.getByTestId("symptom-sleep").click()
     await expect(page.getByTestId("symptom-worst")).toHaveText(`Worst: ${sleep.peak}`)
     await expect(page.getByTestId("symptom-eases")).toHaveText(`Usually eases: ${sleep.lasts}`)
-    await expect(page.getByTestId("symptom-detail")).toContainText(sleep.text)
+    await expect(page.getByTestId("symptom-detail")).not.toContainText(sleep.text)
     await expect(page.getByTestId("symptom-help").first()).toContainText(data.symptomHelp.find((h) => h.symptom === "sleep")!.text)
     await expect(page.getByTestId("sleep-rules").locator("li")).toHaveCount(4)
     await expect(page.getByTestId("symptom-detail")).toContainText(data.symptomCourseNote)
@@ -289,7 +289,7 @@ test.describe("quit wave 1 part 2, signed in with a living run @phone", () => {
     const report = rows.reports.find((r) => !r.deleted_at)!
     expect(report.went_through).toBe(false)
     expect(report.thought).toBe(BELIEF.short)
-    expect(report.ending).toBe("other")
+    expect(report.ending).toBe(BELIEF.blackBoxEnding)
     expect(report.did_instead).toBe(NEED.swaps[0].text)
     expect(rows.attempts.find((a) => !a.deleted_at)!.ended_on).toBeNull()
 

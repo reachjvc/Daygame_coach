@@ -9,7 +9,7 @@ import { endingForBelief } from "../../blackboxLogic"
 import { ROUTES } from "@/src/shared/routes"
 import { useQuitStore } from "../../store"
 import { tooltext as t } from "../../tooltext"
-import type { QuitBelief, QuitEnding, QuitNeed, ToolProps } from "../../types"
+import type { QuitBelief, QuitNeed, ToolProps } from "../../types"
 import { realRefs, usable } from "../common"
 import type { GivesState } from "../gives/logic"
 import { useCarry, useDoneCount, useScreens, useStartCount, useToolState } from "../hooks"
@@ -31,21 +31,19 @@ import {
 export function SosTool({ addiction, data }: ToolProps) {
   const beliefs = usable<QuitBelief[]>(data.beliefs)
   const needs = usable<QuitNeed[]>(data.needs)
-  const endings = usable<QuitEnding[]>(data.endings)
   const tape = usable<string[]>(data.tapeForward)
-  if (!beliefs || !needs || needs.length === 0 || !endings || !tape) return <NotReady />
-  return <Inner addiction={addiction} beliefs={beliefs} needs={needs} endings={endings} tape={tape} />
+  if (!beliefs || !needs || needs.length === 0 || !tape) return <NotReady />
+  return <Inner addiction={addiction} beliefs={beliefs} needs={needs} tape={tape} />
 }
 
 interface InnerProps {
   addiction: string
   beliefs: QuitBelief[]
   needs: QuitNeed[]
-  endings: QuitEnding[]
   tape: string[]
 }
 
-function Inner({ addiction, beliefs, needs, endings, tape }: InnerProps) {
+function Inner({ addiction, beliefs, needs, tape }: InnerProps) {
   const store = useQuitStore()
   const carry = useCarry()
   const { state, update, clear } = useToolState<SosState>(addiction, "sos", EMPTY_SOS)
@@ -194,7 +192,7 @@ function Inner({ addiction, beliefs, needs, endings, tape }: InnerProps) {
         reportId = bb.fileCloseCall({
           at: nowInBrowser(),
           thought: belief ? (usable<string>(belief.short) ?? "") : "",
-          ending: endingForBelief(state.belief, endings),
+          ending: endingForBelief(state.belief, beliefs),
           didInstead: currentSwap(need, rated, state.swapIdx)?.text ?? "",
         })
         failed = reportId === null

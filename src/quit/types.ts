@@ -1,5 +1,8 @@
 import type { ViceEndingId } from "@/src/vice/types"
 
+/** Every Black Box ending family a belief may point to. */
+export const BLACKBOX_ENDING_IDS = ["fine", "justone", "drink", "stress", "faded", "other"] as const satisfies readonly ViceEndingId[]
+
 export const QUIT_ADDICTION_IDS = ["nicotine", "weed", "porn", "alcohol", "scrolling", "gambling"] as const
 export type QuitAddictionId = (typeof QUIT_ADDICTION_IDS)[number]
 
@@ -103,6 +106,8 @@ export interface QuitBelief {
   refs: QuitRef[]
   weak?: string | null
   ownWords?: boolean
+  /** The Black Box ending family a thought of this belief belongs to; absent means "other". */
+  blackBoxEnding?: ViceEndingId
   /** Set when the planner changed an imported belief; says what and why. */
   editNote?: string
   check?: Check
@@ -170,6 +175,8 @@ export interface QuitSymptomHelp {
   text: string
   evidence: Evidence
   refs: QuitRef[]
+  /** Set when the planner changed the row; says what and why. */
+  editNote?: string
 }
 
 export interface QuitCostSwap {

@@ -5,7 +5,7 @@
  * The regexes are copied from docs/research/addiction-one-pagers/board/build_v3.py.
  */
 import { getAddiction, liveIds } from "./data"
-import { NEED_IDS, SEVERITIES, TODO } from "./types"
+import { BLACKBOX_ENDING_IDS, NEED_IDS, SEVERITIES, TODO } from "./types"
 import type { QuitAddiction } from "./types"
 
 export interface Issue {
@@ -234,6 +234,14 @@ function ruleModeration(c: Ctx) {
   })
 }
 
+function ruleBeliefEnding(c: Ctx) {
+  arr(c.data.beliefs).forEach((raw, i) => {
+    const e = obj(raw).blackBoxEnding
+    if (e !== undefined && !(BLACKBOX_ENDING_IDS as readonly unknown[]).includes(e))
+      c.add(`beliefs[${i}].blackBoxEnding`, "ending", "blackBoxEnding must be a known Black Box ending id")
+  })
+}
+
 function ruleDanger(c: Ctx) {
   const dg = obj(c.data.danger)
   if (dg.level === "none" && dg.line !== null && dg.line !== undefined)
@@ -283,6 +291,7 @@ export function validateAddiction(data: unknown, opts: { live: boolean } = { liv
   ruleRegex(c, "founder", FOUNDER, "founder voice", FOUNDER_EXEMPT)
   ruleDollar(c)
   ruleModeration(c)
+  ruleBeliefEnding(c)
   ruleDanger(c)
   ruleForecast(c)
   ruleDoNotAvoid(c)
