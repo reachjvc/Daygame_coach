@@ -1,9 +1,9 @@
 # Quit tool: a free menu of quit tools, then a 90-day program
 
 Written 2026-11-18, rewritten the same day after three research rounds and the owner's menu idea. Status:
-**Phases 0, 1, 2, 3, 6 live 2026-11-18 (data + validator; checked nicotine content; menu, frame, count route;
-privacy + coaching pages; nothing shows until `live.json` lists nicotine). Phase 4 in fix round 1; Phase 5
-next; `curve` waits for the owner's reaction to mock v2; Phase 7 needs his privacy contact email.** Replaces the "one page per addiction" frame of the addiction one-pagers
+**Phases 0, 1, 2, 3, 4, 6 live 2026-11-18 (data + validator; checked nicotine content; menu, frame, count route;
+privacy + coaching pages; beliefs, gives, past, cost, how; nothing shows until `live.json` lists nicotine).
+Phase 5 building; `curve` waits for the owner's reaction to mock v2; Phase 7 needs his privacy contact email.** Replaces the "one page per addiction" frame of the addiction one-pagers
 (docs/research/addiction-one-pagers/); their research, rules and checked numbers are reused, the page form is not.
 
 **Scheduled by `Plans/first-1000.md` (2026-11-18):** the free nicotine tools ship by **20 Dec 2026** so New Year
@@ -990,6 +990,11 @@ Phase 3 (answered by the planner, 2026-11-18):
 7. `/quit` exempt from the two navigation guards: accepted; Phase 7 adds a link from the app (the vice
    module's Black Box page) to `/quit/nicotine` once live.
 8. Phase 4 onward runs the quit specs on the phone project too.
+
+Phase 4 (planner, 2026-11-18): accepted as built — `ToolProps = {addiction, data, present}`; a short "Your list
+for this week" result for `gives`; card tags by `checked`, else dependent/disorder/treatment/resolved = "Checked
+as hooked"; `cost` has no curve button until `curve` exists; in-page steps use `history.pushState` (router.push
+refetched the page); in-page Back = browser Back; blocked storage keeps answers per tool visit only.
 
 Phase 6 (planner, 2026-11-18): no "delete my account" button exists; the email route is enough for wave 1 (the
 free tools need no account). **Owner item before Phase 7 ships: a contact email for privacy and deletion
