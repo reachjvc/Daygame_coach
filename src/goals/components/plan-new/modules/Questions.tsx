@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { ROUTES } from "@/src/shared/routes"
 import { useState } from "react"
 import { questionsCopy } from "@/src/goals/planSteps/copy/questions"
 import { readAllCopy } from "@/src/goals/planSteps/copy/home"
@@ -141,7 +142,7 @@ function Kind({ id }: { id: string }) {
           <Pick options={options} value={source ? [source] : []} onChange={(v) => setSource(v[0] ?? "")} testPrefix="source" />
         </div>
       )}
-      {kind === "go" && <Line label={questionsCopy.kind.go_label} value={source} onChange={setSource} placeholder={questionsCopy.kind.go_placeholder} max={200} testId="go-link" />}
+      {kind === "go" && <Line label={questionsCopy.kind.go_label} value={source} onChange={setSource} placeholder={`${ROUTES.planNew}/${questionsCopy.kind.go_placeholder}`} max={200} testId="go-link" />}
     </Frame>
   )
 }

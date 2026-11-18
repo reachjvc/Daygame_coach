@@ -5,6 +5,7 @@ import { useId, useState, type ReactNode } from "react"
 import { usePlanNew } from "../PlanNewContext"
 import { GrownText, Line, btnQuiet, card, dateText, inputCls, linkQuiet, SaveIndicator, Chip } from "../ui"
 import { homeHref } from "@/src/goals/planSteps/planRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { commonCopy } from "@/src/goals/planSteps/copy/common"
 import { todayCopy } from "@/src/goals/planSteps/copy/daily"
 import { setDayNumber, setJournalEntry, setDayNote } from "@/src/goals/northStarService"
@@ -132,7 +133,7 @@ export function Fields({ fields, date }: { fields: NsDailyField[]; date: string 
           ) : null
         }
         const path = f.readSourceId
-        return path && path.startsWith("/plan/new") ? (
+        return path && path.startsWith(ROUTES.planNew) ? (
           <Link key={f.id} href={path} className={btnQuiet}>{f.label}</Link>
         ) : null
       })}

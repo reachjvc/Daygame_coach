@@ -53,7 +53,7 @@ export const questionsCopy = {
     "go": "A link to a page",
     "read_pick": "What should it show?",
     "go_label": "Link",
-    "go_placeholder": "/plan/new/track"
+    "go_placeholder": "track"
   },
   "done": {
     "title": "Your journal questions",
