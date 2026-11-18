@@ -1,9 +1,11 @@
 # Quit tool: a free menu of quit tools, then a 90-day program
 
 Written 2026-11-18, rewritten the same day after three research rounds and the owner's menu idea. Status:
-**Phases 0–6 live 2026-11-18 except `curve` (held for the owner's reaction to mock v2): data, checked
-nicotine content, menu, beliefs, gives, past, cost, how, sos, symptoms, slip, privacy, coaching. Nothing shows
-until `live.json` lists nicotine. Phase 7 (audit, ship) running; shipping needs his privacy contact email.** Replaces the "one page per addiction" frame of the addiction one-pagers
+**Phases 0–6 and Phase 7 steps 1–4 done 2026-11-18 (all on main, hidden): data, checked nicotine content,
+menu, beliefs, gives, past, cost, how, sos, symptoms, slip, privacy, coaching; audit (25 findings fixed), Opus
+review (fix round 2 done), phone walk on the emulator. Owner review page: https://claude.ai/artifact/7jhShQpzv9bAmQKdfPBfYE
+(db `likes`, `notes`, keyed by tool id). Step 5 (ship) waits for his privacy contact email; `curve` waits for
+his notes on mock v2.** Replaces the "one page per addiction" frame of the addiction one-pagers
 (docs/research/addiction-one-pagers/); their research, rules and checked numbers are reused, the page form is not.
 
 **Scheduled by `Plans/first-1000.md` (2026-11-18):** the free nicotine tools ship by **20 Dec 2026** so New Year
@@ -870,6 +872,11 @@ hole; two sos edge bugs (a pending close call filed after "No" or Clear; a stale
 mount, cost typos with no message: fix round 2. Sign-up ignores `?next=` (it hard-codes `/redirect`), so the
 "mostly free" band links to `/plan` and the login guard carries `next`; making sign-up honour `next` needs the
 live Supabase redirect allow-list checked first (later, not this plan).
+Phone walk (Android emulator, real Chrome + Gboard, production build): nothing broke, overlapped or hid behind
+the keyboard. To fix with his notes: four tap targets under 44 px (in-page Back 33 px wide, the "1" tries chip
+40 px, the slip result's "Pick your swaps" link and the privacy page's coach link 21 px high).
+Next.js 16.4.1: `next build` and `next dev` print a security advisory for this version and stop once (a retry
+continues); an upgrade is a dependency change for the owner to approve, not part of this plan.
 
 ### Phase 8: wave 3, the account program — brief Opus, build Sonnet (after the owner's yes to tables)
 
