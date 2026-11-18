@@ -28,7 +28,7 @@ export const dText = {
   segment: (n: number) => `Rate ${n} of 5`,
   // notes
   noteDate: (d: string) => d,
-  notePlaceholder: "Start writing...",
+  notePlaceholder: "Start writing…",
   hintsHeading: "Hints to get you started:",
   hints: ["Today I am grateful for...", "Right now I feel...", "My cravings today were...", "Something others should know...", "Today has been...", "Today I learned..."],
   hintChip: (n: number) => `Hint ${n}`,

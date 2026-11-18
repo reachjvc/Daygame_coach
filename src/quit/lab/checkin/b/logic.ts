@@ -63,10 +63,10 @@ export function gap(inv: Inventory | undefined): number | null {
 
 export function seedJournal(today: string): Entry[] {
   return [
-    { id: "j1", date: addDays(today, -1), title: "Rough evening, got through it", body: "Around six the pull was strong. I walked it off and called a friend instead." },
-    { id: "j2", date: addDays(today, -4), title: "Grateful", body: "Slept well, cooked a real dinner, no noise in my head." },
-    { id: "j3", date: addDays(today, -9), title: "A milestone week", body: "Seven days in a row of marking each day. It feels plain, in a good way." },
-    { id: "j4", date: addDays(today, -20), title: "What changed", body: "Mornings are mine now. I use them to train before work." },
-    { id: "j5", date: addDays(today, -33), title: "Start", body: "Wrote down why I am doing this and put the page by my bed." },
+    { id: "j1", date: addDays(today, -1), title: "Rough evening, got through it", body: "Around six the pull was strong. I walked it off and called a friend instead, and by the time we hung up the evening felt ordinary again, which was all I wanted from it." },
+    { id: "j2", date: addDays(today, -4), title: "Grateful", body: "Slept well, cooked a real dinner, and sat on the balcony afterwards with no noise in my head at all. A plain evening, and I am grateful for plain evenings." },
+    { id: "j3", date: addDays(today, -9), title: "A milestone week", body: "Seven days in a row of marking each day. It feels plain, in a good way, like brushing my teeth. Nobody noticed but I did, and that is enough for now." },
+    { id: "j4", date: addDays(today, -20), title: "What changed", body: "Mornings are mine now. I use them to train before work, and the day starts with something I chose instead of something I regret." },
+    { id: "j5", date: addDays(today, -33), title: "Start", body: "Wrote down why I am doing this and put the page by my bed, where I will see it first thing and last thing, every single day from now on." },
   ]
 }

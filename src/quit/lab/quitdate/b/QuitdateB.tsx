@@ -17,7 +17,7 @@ const OFFSETS = [0, 1, -1, 3, 0, 2, -1]
 
 /** Copy B: goal fork, motivations, typical week day by day, starting curve, weekly plan table, challenge, calendar. */
 export function QuitdateB() {
-  const [goal, setGoal] = useLabState<BGoal | null>("quitdate", "b", "goal", null)
+  const [, setGoal] = useLabState<BGoal | null>("quitdate", "b", "goal", null)
   const [motives, setMotives] = useLabState<number[]>("quitdate", "b", "motives", [])
   const [top, setTop] = useLabState<number | null>("quitdate", "b", "top", null)
   const [typical, setTypical] = useLabState<(number | null)[]>("quitdate", "b", "typical", Array(7).fill(null))

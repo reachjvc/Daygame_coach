@@ -58,7 +58,7 @@ function Main({ seeded, today }: { seeded: boolean; today: string }) {
     } else setScreen((["dashboard", "calendar", "log", "progress", "settings"] as const)[i])
   }
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col pb-16">
       {screen === "dashboard" && <OtherScreen title={dText.tabTitles[0]} onBack={null} />}
       {screen === "progress" && <OtherScreen title={dText.tabTitles[1]} onBack={null} />}
       {screen === "calendar" && <CalendarView days={days} today={today} onDay={openDay} />}
@@ -187,12 +187,12 @@ function NoteEditor({ date, note, onClose }: { date: string; note: string; onClo
   const [text, setText] = useState(note)
   return (
     <section data-testid="d-notes" className="flex flex-col gap-3">
-      <div className="flex items-center justify-between rounded-xl bg-amber-400 px-2 text-slate-900">
-        <button type="button" data-testid="d-notes-close" onClick={() => onClose(text)} className="min-h-11 px-2 font-semibold">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center rounded-xl bg-amber-400 px-2 text-slate-900">
+        <button type="button" data-testid="d-notes-close" onClick={() => onClose(text)} className="min-h-11 justify-self-start px-2 font-semibold">
           {ckText.close}
         </button>
-        <p className="font-semibold">{fullDate(date)}</p>
-        <span className="w-16" aria-hidden="true" />
+        <p data-testid="d-notes-date" className="text-center font-semibold">{fullDate(date)}</p>
+        <span aria-hidden="true" />
       </div>
       <textarea data-testid="d-notes-text" value={text} placeholder={dText.notePlaceholder} aria-label={dText.notePlaceholder} onChange={(e) => setText(e.target.value)} className="min-h-40 w-full rounded-md border border-border bg-background p-3" />
       <p className="text-sm font-semibold">{dText.hintsHeading}</p>
@@ -219,7 +219,6 @@ function CalendarView({ days, today, onDay }: { days: DaysD; today: string; onDa
     <section data-testid="d-calendar" className="flex flex-col gap-3">
       <h2 className="text-lg font-semibold">{dText.calendarTitle}</h2>
       <Tabs items={dText.modes} value={mode} onChange={setMode} id="d-mode" scroll />
-      {mode === 2 && <div className="flex justify-end"><InferredTag /></div>}
       {months.map((ym) => {
         const d = new Date(keyToMs(`${ym}-01`))
         const avg = monthAverage(days, ym)

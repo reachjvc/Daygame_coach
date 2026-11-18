@@ -103,14 +103,13 @@ function Main({ seeded, today }: { seeded: boolean; today: string }) {
         <section data-testid="b-expect" data-mode={mode} className="flex min-h-[70vh] flex-col items-center gap-4">
           <div className="flex w-full items-center justify-between">
             <RoundBtn label={ckText.back} testId="screen-back" onClick={() => go("inventory")}>{"←"}</RoundBtn>
-            <InferredTag />
+            {mode === "evening" ? <InferredTag /> : <span />}
             <RoundBtn label={ckText.close} testId="b-expect-close" onClick={() => go("inventory")}>{"×"}</RoundBtn>
           </div>
           <h2 className="mt-4 text-center text-2xl font-bold">{mode === "morning" ? bText.expectQ : bText.resultQ}</h2>
           <p className="text-muted-foreground">{bText.hardDay}</p>
           <VSlider value={value} onChange={setValue} />
           <p className="text-muted-foreground">{bText.easyDay}</p>
-          <p className="text-xs text-muted-foreground">{bText.directionNote}</p>
           <div className="mt-auto w-full">
             <PrimaryButton testId="b-expect-next" onClick={() => go("invnote")}>
               {ckText.next}
@@ -178,10 +177,13 @@ function Clock({ days, checkins, today, onCheckin, onClose, onGear }: { days: nu
         <RoundBtn label={bText.closeLabel} testId="b-clock-close" onClick={onClose}>{"×"}</RoundBtn>
         <RoundBtn label={bText.settingsLabel} testId="b-clock-gear" onClick={onGear}>{"⚙"}</RoundBtn>
       </div>
-      <Ring value={0.75} size={220} stroke={14} testId="b-ring">
-        <span data-testid="b-days" className="text-6xl font-bold">{days}</span>
-        <span className="text-sm text-muted-foreground">{bText.daysWord}</span>
-      </Ring>
+      <div className="relative">
+        <Ring value={0.75} size={220} stroke={14} testId="b-ring">
+          <span data-testid="b-days" className="text-6xl font-bold">{days}</span>
+          <span className="text-sm text-muted-foreground">{bText.daysWord}</span>
+        </Ring>
+        <span aria-hidden="true" data-testid="b-ring-dot" className="absolute left-1/2 top-0 size-4 -translate-x-1/2 rounded-full border-2 border-background bg-sky-300" />
+      </div>
       <p className="text-lg font-semibold">{bText.clockName}</p>
       <hr className="w-full border-border" />
       <div className="flex w-full items-center justify-between gap-2">
@@ -207,7 +209,13 @@ function Clock({ days, checkins, today, onCheckin, onClose, onGear }: { days: nu
                 <span className="relative">{done ? bText.checkedIn : bText.holdLabel}</span>
               </button>
               <p className="text-center text-xs text-muted-foreground">{done ? bText.checkedInLine : bText.holdLine}</p>
-              {done && <p data-testid="b-checkin-streak" className="text-xs text-muted-foreground">{bText.clockStreak(checkinStreak(checkins, today))}</p>}
+              {!done && <InferredTag />}
+              {done && (
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <p data-testid="b-checkin-streak" className="text-xs text-muted-foreground">{bText.clockStreak(checkinStreak(checkins, today))}</p>
+                  <InferredTag />
+                </div>
+              )}
             </>
           ) : (
             <div className="w-full">
@@ -329,9 +337,11 @@ function JournalList({ entries, onBack, onOpen, onNew }: { entries: Entry[]; onB
           </div>
         )
       })}
-      <button type="button" data-testid="b-journal-new" aria-label={bText.addEntry} onClick={onNew} className="fixed bottom-6 right-4 z-10 inline-flex size-14 items-center justify-center rounded-full bg-primary text-2xl text-primary-foreground">
-        {"+"}
-      </button>
+      <div className="pointer-events-none sticky bottom-6 -mt-9 flex justify-end pr-3">
+        <button type="button" data-testid="b-journal-new" aria-label={bText.addEntry} onClick={onNew} className="pointer-events-auto inline-flex size-14 items-center justify-center rounded-full bg-primary text-2xl text-primary-foreground shadow-lg">
+          {"+"}
+        </button>
+      </div>
     </section>
   )
 }

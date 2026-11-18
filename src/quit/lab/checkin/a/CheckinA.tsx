@@ -16,7 +16,7 @@ const REMINDERS: Reminder[] = [
   { on: true, time: "08:00" },
   { on: true, time: "21:00" },
 ]
-const KEYS = ["days", "work", "reminders"]
+const KEYS = ["days", "work", "reminders", "photos"]
 
 /** Copy A: daily pledge sheet, Today checklist, end-of-day review, History. */
 export function CheckinA() {
@@ -56,7 +56,7 @@ function Main({ seeded, today }: { seeded: boolean; today: string }) {
   const tabbed = ["today", "history", "notes", "calendar", "stats", "reminders", "challenge", "motivation", "other", "menu", "profile"].includes(screen)
 
   return (
-    <div className="flex flex-col">
+    <div className={`flex flex-col ${tabbed ? "pb-16" : ""}`}>
       {screen === "today" && <Today days={days} today={today} streak={streak} go={go} onReview={() => (setReviewDate(today), go("review"))} />}
       {screen === "pledge" && <Pledge today={today} onClose={() => go("today")} onConfirm={() => (patch(today, (d) => ({ ...d, pledge: true })), go("card"))} />}
       {screen === "card" && <MessageCard today={today} onClose={() => go("today")} onGear={() => go("cardsettings")} />}
@@ -177,7 +177,14 @@ function Circle({ on }: { on: boolean }) {
 
 function Pledge({ today, onClose, onConfirm }: { today: string; onClose: () => void; onConfirm: () => void }) {
   const [dot, setDot] = useState(0)
+  const [photos, setPhotos] = useLabState<string[]>("checkin", "a", "photos", [])
   const track = useRef<HTMLDivElement>(null)
+  const addPhoto = (f: File | undefined) => {
+    if (!f) return
+    const r = new FileReader()
+    r.onload = () => typeof r.result === "string" && setPhotos([...photos, r.result])
+    r.readAsDataURL(f)
+  }
   const weekday = ckText.weekdaysLong[new Date(keyToMs(today)).getDay()]
   const tint = ["bg-violet-500/25", "bg-emerald-500/25", "bg-sky-500/25"]
   const scrollTo = (i: number) => {
@@ -221,7 +228,15 @@ function Pledge({ today, onClose, onConfirm }: { today: string; onClose: () => v
             {r}
           </div>
         ))}
+        {photos.map((src, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={i} data-testid="a-reason-photo" src={src} alt={aText.photoAlt} className="mb-2 h-28 w-full break-inside-avoid rounded-lg object-cover" />
+        ))}
       </div>
+      <label className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-md border border-dashed border-border px-3 text-sm text-muted-foreground">
+        {aText.addPhoto}
+        <input type="file" accept="image/*" data-testid="a-reason-photo-input" className="sr-only" onChange={(e) => addPhoto(e.target.files?.[0])} />
+      </label>
       <div className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-md bg-background/95 p-3">
         <PrimaryButton testId="a-pledge-confirm" onClick={onConfirm}>
           {aText.pledgeButton}
@@ -401,9 +416,13 @@ function History({ days, today, onOpen, onMenu }: { days: DaysA; today: string; 
                 <dl className="mt-2 grid grid-cols-[6rem_1fr] gap-y-1 text-sm">
                   <dt className="text-muted-foreground">{aText.rowDifficulty}</dt>
                   <dd data-testid="a-day-diff">
-                    <span aria-hidden="true" className={["text-emerald-400", "text-sky-400", "text-slate-400", "text-amber-400", "text-rose-400"][d.review.difficulty]}>
-                      {["●", "■", "◆", "▲", "✖"][d.review.difficulty]}{" "}
-                    </span>
+                    {d.review.difficulty < 3 ? (
+                      <span aria-hidden="true" className={["text-emerald-400", "text-sky-400", "text-slate-400"][d.review.difficulty]}>
+                        {aText.difficultyShapes[d.review.difficulty]}{" "}
+                      </span>
+                    ) : (
+                      <span aria-hidden="true" className="mr-1 inline-block size-3 rounded-sm border border-dashed border-muted-foreground align-middle" />
+                    )}
                     {aText.difficulty[d.review.difficulty]}
                   </dd>
                   {d.review.mood !== null && (
@@ -420,7 +439,6 @@ function History({ days, today, onOpen, onMenu }: { days: DaysA; today: string; 
                   )}
                 </dl>
               )}
-              {!d && <p className="mt-2 text-sm text-muted-foreground">{aText.emptyDay}</p>}
             </button>
           </div>
         )

@@ -34,6 +34,7 @@ function Main({ seeded, today }: { seeded: boolean; today: string }) {
     return (
       <Flow
         today={today}
+        days={days}
         onExit={() => setFlow(false)}
         onSave={(c) => setDays({ ...days, [today]: c })}
       />
@@ -53,8 +54,6 @@ function Main({ seeded, today }: { seeded: boolean; today: string }) {
 function Home({ days, today, toured, onTour, onStart }: { days: DaysC; today: string; toured: boolean; onTour: () => void; onStart: () => void }) {
   const [step, setStep] = useState(0)
   const touring = !toured
-  const points = pointsOf(days)
-  const streak = checkinStreak(days, today)
   const dim = (i: number) => (touring && step !== i ? "opacity-40" : touring ? "ring-2 ring-sky-400 rounded-lg" : "")
   const bubble = (i: number) =>
     touring && step === i ? (
@@ -73,20 +72,7 @@ function Home({ days, today, toured, onTour, onStart }: { days: DaysC; today: st
   return (
     <section data-testid="c-home" className="flex flex-col gap-3">
       <div className={dim(0)}>
-        <div data-testid="c-stats" className="grid grid-cols-3 gap-2 rounded-lg bg-blue-950 p-3 text-center">
-          <div>
-            <p className="text-xs text-sky-200">{cText.points}</p>
-            <p data-testid="c-points" className="text-lg font-bold">{points}</p>
-          </div>
-          <div>
-            <p className="text-xs text-sky-200">{cText.streakLabel}</p>
-            <p data-testid="c-streak" className="text-lg font-bold">{streak}</p>
-          </div>
-          <div>
-            <p className="text-xs text-sky-200">{cText.rank}</p>
-            <p data-testid="c-rank" className="text-lg font-bold">{cText.ranks[rankIndex(points)]}</p>
-          </div>
-        </div>
+        <Stats days={days} today={today} />
         {bubble(0)}
       </div>
       <div>
@@ -117,6 +103,26 @@ function Home({ days, today, toured, onTour, onStart }: { days: DaysC; today: st
   )
 }
 
+function Stats({ days, today }: { days: DaysC; today: string }) {
+  const points = pointsOf(days)
+  return (
+    <div data-testid="c-stats" className="grid grid-cols-3 gap-2 rounded-lg bg-blue-950 p-3 text-center">
+      <div>
+        <p className="text-xs text-sky-200">{cText.points}</p>
+        <p data-testid="c-points" className="text-lg font-bold">{points}</p>
+      </div>
+      <div>
+        <p className="text-xs text-sky-200">{cText.streakLabel}</p>
+        <p data-testid="c-streak" className="text-lg font-bold">{checkinStreak(days, today)}</p>
+      </div>
+      <div>
+        <p className="text-xs text-sky-200">{cText.rank}</p>
+        <p data-testid="c-rank" className="text-lg font-bold">{cText.ranks[rankIndex(points)]}</p>
+      </div>
+    </div>
+  )
+}
+
 function Scale({ labels, onPick, inferredAt = [], value }: { labels: readonly string[]; onPick: (i: number) => void; inferredAt?: number[]; value?: number }) {
   return (
     <div className="mx-auto flex w-full max-w-60 flex-col gap-2">
@@ -134,7 +140,7 @@ function Chips({ options, value, onChange, tone, hiddenNote }: { options: readon
   const on = tone === "blue" ? "border-sky-500 bg-sky-600 text-white" : "border-amber-500 bg-amber-600 text-white"
   const off = tone === "blue" ? "border-sky-500 text-sky-300" : "border-amber-500 text-amber-300"
   return (
-    <div data-testid="c-chips" className="flex flex-col gap-2 pb-20">
+    <div data-testid="c-chips" className="flex flex-col gap-2">
       {options.map((o) => (
         <button key={o} type="button" data-testid={`c-chip-${o}`} aria-pressed={value.includes(o)} onClick={() => onChange(value.includes(o) ? value.filter((v) => v !== o) : [...value, o])} className={`min-h-11 rounded-full border px-4 text-left ${value.includes(o) ? on : off}`}>
           {o}
@@ -145,7 +151,8 @@ function Chips({ options, value, onChange, tone, hiddenNote }: { options: readon
   )
 }
 
-function Flow({ today, onExit, onSave }: { today: string; onExit: () => void; onSave: (c: CheckC) => void }) {
+function Flow({ today, days: daysNow, onExit, onSave }: { today: string; days: DaysC; onExit: () => void; onSave: (c: CheckC) => void }) {
+  const [days] = useState(daysNow)
   const [draft, setDraft] = useState<CheckC>(EMPTY)
   const [outcome, setOutcome] = useState<Outcome | null>(null)
   const [step, setStep] = useState<Step>("howdid")
@@ -173,12 +180,20 @@ function Flow({ today, onExit, onSave }: { today: string; onExit: () => void; on
   }
   useEffect(() => {
     if (phase !== "saving") return
-    const t = setTimeout(() => {
+    const first = setTimeout(() => {
       setToasts([cText.toastReward(POINTS_PER_CHECKIN)])
       setPhase("toasts")
     }, 900)
-    return () => clearTimeout(t)
+    return () => clearTimeout(first)
   }, [phase])
+  useEffect(() => {
+    if (phase !== "toasts") return
+    if (rankIndex(pointsOf({ ...days, [today]: EMPTY })) <= rankIndex(pointsOf(days))) return
+    const second = setTimeout(() => setToasts((t) => [...t, cText.toastRank(cText.ranks[1])]), 600)
+    return () => clearTimeout(second)
+  }, [phase, days, today])
+  const after = { ...days, [today]: EMPTY }
+  const shown = phase === "toasts" ? after : days
   const area = step.startsWith("r") && step !== "howdid" ? Number(step.slice(1)) : -1
   const fill = progressOf(steps, step)
   const date = new Date(keyToMs(today))
@@ -271,6 +286,7 @@ function Flow({ today, onExit, onSave }: { today: string; onExit: () => void; on
       )}
       {phase === "ask" && step === "journal" && <JournalStep draft={draft} onChange={setDraft} onNext={finish} />}
 
+      {phase !== "ask" && <Stats days={shown} today={today} />}
       {phase === "saving" && (
         <div data-testid="c-saving" aria-busy="true" className="flex flex-col items-center gap-3 py-8">
           <span className="size-16 animate-pulse rounded-full bg-muted" />
@@ -298,7 +314,7 @@ function Flow({ today, onExit, onSave }: { today: string; onExit: () => void; on
 
 function NextBar({ onNext }: { onNext: () => void }) {
   return (
-    <div className="sticky bottom-2 z-10">
+    <div className="mt-2">
       <PrimaryButton testId="c-next" onClick={onNext}>
         {ckText.next}
       </PrimaryButton>
@@ -312,6 +328,7 @@ function JournalStep({ draft, onChange, onNext }: { draft: CheckC; onChange: (c:
     const el = ref.current
     if (!el) return
     const { selectionStart: a, selectionEnd: b } = el
+    if (a === b) return
     const body = draft.body
     onChange({ ...draft, body: `${body.slice(0, a)}${mark}${body.slice(a, b)}${mark}${body.slice(b)}` })
   }
@@ -385,13 +402,9 @@ function Analytics({ days, today }: { days: DaysC; today: string }) {
   const [open, setOpen] = useState<string | null>(null)
   const nextYm = monthOf(addDays(`${ym}-28`, 7))
   const d = new Date(keyToMs(`${ym}-01`))
-  const sel = open ? days[open] : undefined
   return (
     <section data-testid="c-analytics" className="flex flex-col gap-3">
-      <div className="flex items-center gap-2">
-        <h2 className="flex-1 text-lg font-semibold">{cText.analyticsTitle}</h2>
-        <InferredTag />
-      </div>
+      <h2 className="text-lg font-semibold">{cText.analyticsTitle}</h2>
       <div className="flex items-center justify-between">
         <button type="button" data-testid="c-prev" aria-label={cText.prevMonth} onClick={() => setYm(prevMonth(ym))} className="inline-flex size-11 items-center justify-center">{"‹"}</button>
         <p data-testid="c-month" className="font-semibold">{`${ckText.months[d.getMonth()]} ${d.getFullYear()}`}</p>
@@ -419,25 +432,23 @@ function Analytics({ days, today }: { days: DaysC; today: string }) {
         <span><span className="text-amber-400">{"●"}</span> {cText.dayAmber}</span>
         <span><span>{"○"}</span> {cText.dayNone}</span>
       </div>
+      <p data-testid="c-number-meaning" className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        {cText.numberMeaning}
+        <InferredTag />
+      </p>
       <p className="font-semibold">{cText.monthlyData}</p>
       <Placeholder />
       {open && (
         <Card testId="c-day-card">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <p className="font-semibold">{cText.dayTitle(open)}</p>
+            <InferredTag />
             <button type="button" data-testid="c-day-close" onClick={() => setOpen(null)} className="min-h-11 px-2 text-sm underline">{cText.dayClose}</button>
           </div>
-          {sel ? (
-            <ul className="mt-1 text-sm">
-              <li>{`${cText.dayScore}: ${dayScore(sel)}`}</li>
-              <li>{`${cText.dayUrges}: ${cText.urgeScale[sel.urges]}`}</li>
-              <li>{`${cText.dayEmotion}: ${cText.emotionScale[sel.emotion]}`}</li>
-              {sel.positive.length > 0 && <li>{`${cText.dayPositive}: ${sel.positive.join(", ")}`}</li>}
-              {sel.negative.length > 0 && <li>{`${cText.dayNegative}: ${sel.negative.join(", ")}`}</li>}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted-foreground">{cText.dayNoneLine}</p>
-          )}
+          <div className="mt-2 flex flex-col gap-2">
+            <Placeholder />
+            <Placeholder />
+          </div>
         </Card>
       )}
     </section>

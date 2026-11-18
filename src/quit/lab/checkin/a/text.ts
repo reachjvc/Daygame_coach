@@ -98,5 +98,7 @@ export const aText = {
   // other tabs
   otherTabs: ["Progress", "Community", "Support"],
   difficultyPlaceholder: "Shape not seen",
+  addPhoto: "Add a photo tile",
+  photoAlt: "Reason photo",
   faceNote: "The mood faces are a guess.",
 } as const

@@ -220,7 +220,7 @@ interface MainProps {
 }
 
 function Main(p: MainProps) {
-  const { setup, unit, slips, spends, targets } = p
+  const { setup, slips, spends } = p
   const now = useNow(30_000)
   const today = dayKey(now)
   const startKey = dayKey(setup.startMs)
@@ -282,7 +282,7 @@ type HomeProps = MainProps & {
   openSlip: (day: string) => void
 }
 
-function Home({ setup, unit, st, today, startKey, perDay, spent, money, slips, slipForm, setSlipForm, slipDone, onSlipSaved, openSlip }: HomeProps) {
+function Home({ setup, unit, st, today, startKey, perDay, spent, money, slipForm, setSlipForm, slipDone, onSlipSaved, openSlip }: HomeProps) {
   const [open, setOpen] = useState<string | null>(null)
   const toggle = (k: string) => setOpen((o) => (o === k ? null : k))
   const units = Math.round(setup.perDay * st.total * 100) / 100
