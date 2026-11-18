@@ -132,6 +132,8 @@ function buildGraph() {
       route === "/" ||
       TAB_ROUTES.includes(route) ||
       route.startsWith("/auth/") ||
+      // Public quit tools: entered from outside (posts, "Comment QUIT" links).
+      route === "/quit" ||
       route.includes("[") ||
       isGate ||
       isRedirectShim(file) ||

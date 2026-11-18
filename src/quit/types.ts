@@ -279,3 +279,55 @@ export interface QuitOffer {
   paymentLinkUrl: string | null
   donationLine: string | null
 }
+
+/** Reader text of the menu screen (`src/quit/data/menu.json`). */
+export interface QuitMenuTool {
+  id: QuitToolId
+  /** `{lies}` is replaced by the addiction's `lies` line. */
+  name: string
+  line: string
+  /** A number means minutes; a string is shown as is; null shows nothing. */
+  minutes: number | string | null
+  account: "none" | "free" | "paid"
+  wave: 1 | 2 | 3
+  href?: string
+}
+
+export interface QuitMenu {
+  addictions: Record<QuitAddictionId, { title: string; lies: string; switcher: string }>
+  sosBar: string
+  accountPills: { free: string; paid: string }
+  coming: Record<"2" | "3", string>
+  groups: { id: string; name: string; tools: QuitMenuTool[] }[]
+  newHere: { text: string; tool: QuitToolId }
+}
+
+/** Reader text of the shared frame (`src/quit/data/frame.json`). */
+export interface QuitFrameText {
+  siteName: string
+  back: string
+  cravingNow: string
+  freeTools: string
+  coaching: string
+  privacy: string
+  sources: string
+  comingSoon: string
+  backToMenu: string
+  notFoundTitle: string
+  notFoundText: string
+  notFoundLink: string
+  pickTitle: string
+  pickLine: string
+  comingLater: string
+  preview: string
+  switcherLabel: string
+  minutes: string
+  progress: string
+}
+
+/** What a tool component receives. */
+export interface ToolProps {
+  addiction: QuitAddictionId
+  data: QuitAddiction
+  present: boolean
+}

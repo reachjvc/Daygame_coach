@@ -136,3 +136,17 @@ describe("isUnder", () => {
     expect(isUnder("/dashboards", "/dashboard")).toBe(false)
   })
 })
+
+describe("isPublicPage: the quit tools and the privacy page", () => {
+  it("opens /quit, what lies below it, and /privacy", () => {
+    for (const p of ["/quit", "/quit/nicotine", "/quit/nicotine/beliefs", "/privacy"]) {
+      expect(isPublicPage(p), p).toBe(true)
+    }
+  })
+
+  it("keeps look-alike addresses private", () => {
+    for (const p of ["/quitx", "/plan/quit-vice", "/privacyx"]) {
+      expect(isPublicPage(p), p).toBe(false)
+    }
+  })
+})

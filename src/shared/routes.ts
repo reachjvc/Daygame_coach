@@ -128,7 +128,13 @@ export function isUnder(pathname: string, prefix: string): boolean {
  * and `app/test/layout.tsx` answers 404 in production whoever asks.
  */
 export function isPublicPage(pathname: string): boolean {
-  return pathname === "/" || isUnder(pathname, "/auth") || isUnder(pathname, "/test")
+  return (
+    pathname === "/" ||
+    isUnder(pathname, "/auth") ||
+    isUnder(pathname, "/test") ||
+    isUnder(pathname, "/quit") ||
+    isUnder(pathname, "/privacy")
+  )
 }
 
 /**

@@ -1,0 +1,232 @@
+{
+  "addictions": {
+    "nicotine": {
+      "title": "Quit nicotine",
+      "lies": "The 12 lies nicotine tells you",
+      "switcher": "Nicotine"
+    },
+    "weed": {
+      "title": "Quit weed",
+      "lies": "The 12 lies weed tells you",
+      "switcher": "Weed"
+    },
+    "porn": {
+      "title": "Quit porn",
+      "lies": "The 12 lies porn tells you",
+      "switcher": "Porn"
+    },
+    "alcohol": {
+      "title": "Quit drinking",
+      "lies": "The 12 lies alcohol tells you",
+      "switcher": "Alcohol"
+    },
+    "scrolling": {
+      "title": "Quit scrolling",
+      "lies": "The 12 lies your phone tells you",
+      "switcher": "Phone"
+    },
+    "gambling": {
+      "title": "Quit gambling",
+      "lies": "The 12 lies betting tells you",
+      "switcher": "Gambling"
+    }
+  },
+  "sosBar": "Craving now?",
+  "accountPills": {
+    "free": "Free account",
+    "paid": "Paid"
+  },
+  "coming": {
+    "2": "Coming in January",
+    "3": "Coming early 2027, with a free account"
+  },
+  "groups": [
+    {
+      "id": "understand",
+      "name": "Understand it",
+      "tools": [
+        {
+          "id": "beliefs",
+          "name": "{lies}",
+          "line": "Rate 12 beliefs. See the answer to the ones that hold you.",
+          "minutes": 3,
+          "account": "none",
+          "wave": 1
+        },
+        {
+          "id": "gives",
+          "name": "What it gives you",
+          "line": "Name what it does for you. Get swaps that give you 80% of it.",
+          "minutes": 2,
+          "account": "none",
+          "wave": 1
+        },
+        {
+          "id": "past",
+          "name": "Your past attempts",
+          "line": "How often you tried, what lasted, what ended it.",
+          "minutes": 2,
+          "account": "none",
+          "wave": 1
+        },
+        {
+          "id": "cost",
+          "name": "What it costs you",
+          "line": "Your money and hours a year, and over 10 years.",
+          "minutes": 1,
+          "account": "none",
+          "wave": 1
+        },
+        {
+          "id": "how",
+          "name": "How people quit",
+          "line": "Who gets free, what helps. Every number with its source.",
+          "minutes": 2,
+          "account": "none",
+          "wave": 1
+        }
+      ]
+    },
+    {
+      "id": "plan",
+      "name": "Plan it",
+      "tools": [
+        {
+          "id": "curve",
+          "name": "Your quit curve",
+          "line": "Your day 1, and the hard days drawn on your calendar.",
+          "minutes": 3,
+          "account": "none",
+          "wave": 1
+        },
+        {
+          "id": "ifthen",
+          "name": "If-then cards",
+          "line": "Your 3 risky moments, and what you do instead.",
+          "minutes": 2,
+          "account": "none",
+          "wave": 2
+        },
+        {
+          "id": "clear",
+          "name": "Clear-out list",
+          "line": "What to remove before day 1.",
+          "minutes": 5,
+          "account": "none",
+          "wave": 2
+        },
+        {
+          "id": "stake",
+          "name": "Money on the line",
+          "line": "A friend holds your money. Keep your date, get it back.",
+          "minutes": 2,
+          "account": "none",
+          "wave": 2
+        },
+        {
+          "id": "tell",
+          "name": "Tell someone",
+          "line": "Send your date to one person who doesn't use.",
+          "minutes": 1,
+          "account": "none",
+          "wave": 2
+        }
+      ]
+    },
+    {
+      "id": "through",
+      "name": "Get through it",
+      "tools": [
+        {
+          "id": "sos",
+          "name": "Craving now?",
+          "line": "Name the voice. Get the answer, a swap, a 10-minute wait.",
+          "minutes": "1–10",
+          "account": "none",
+          "wave": 1
+        },
+        {
+          "id": "symptoms",
+          "name": "Symptom guide",
+          "line": "Bad sleep, irritable, hungry, foggy: what helps, when it fades.",
+          "minutes": 2,
+          "account": "none",
+          "wave": 1
+        },
+        {
+          "id": "checkin",
+          "name": "Daily check-in",
+          "line": "30 seconds a day for the first 2 weeks.",
+          "minutes": "30 s",
+          "account": "free",
+          "wave": 3
+        },
+        {
+          "id": "lesson",
+          "name": "Today's lesson",
+          "line": "3 minutes a day at your hour. 90 days.",
+          "minutes": 3,
+          "account": "free",
+          "wave": 3
+        }
+      ]
+    },
+    {
+      "id": "stay",
+      "name": "Stay free",
+      "tools": [
+        {
+          "id": "record",
+          "name": "Your record",
+          "line": "Every clear day counts. Close calls beaten. Never resets.",
+          "minutes": null,
+          "account": "free",
+          "wave": 3
+        },
+        {
+          "id": "slip",
+          "name": "Slipped? Restart today",
+          "line": "3 taps, then back through steps 1–3.",
+          "minutes": 2,
+          "account": "none",
+          "wave": 1
+        },
+        {
+          "id": "identity",
+          "name": "Who you are now",
+          "line": "One sentence, one tap each morning.",
+          "minutes": "5 s",
+          "account": "free",
+          "wave": 3
+        }
+      ]
+    },
+    {
+      "id": "help",
+      "name": "Get help (optional)",
+      "tools": [
+        {
+          "id": "besides",
+          "name": "What helps besides apps",
+          "line": "What quitters credit most, with free links.",
+          "minutes": 2,
+          "account": "none",
+          "wave": 2
+        },
+        {
+          "id": "coach",
+          "name": "Talk to a coach",
+          "line": "30 days, one to one.",
+          "minutes": null,
+          "account": "paid",
+          "wave": 2,
+          "href": "/quit/coaching"
+        }
+      ]
+    }
+  ],
+  "newHere": {
+    "text": "New here? Most start with the 12 lies test.",
+    "tool": "beliefs"
+  }
+}
