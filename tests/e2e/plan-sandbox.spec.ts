@@ -323,23 +323,27 @@ test.describe("the copy space page", () => {
     await expect.poll(() => page.url()).toContain(`${ROUTES.planSandbox}?step=review`)
 
     // Copy, then reset, then reload: always the copy space, always with its banner.
+    const reopened = () => page.waitForEvent("load", { timeout: RELOAD })
     await page.getByTestId("plan-sandbox-copy").click()
+    let loaded = reopened()
     await page.getByTestId("plan-sandbox-confirm").click()
-    await expect(page.getByRole("button", { name: /Review/ }).first()).toBeVisible({ timeout: RELOAD })
-    await expect.poll(here, { timeout: RELOAD }).toBe(ROUTES.planSandbox)
+    await loaded
+    expect(here()).toBe(ROUTES.planSandbox)
     expect(page.url()).toContain("step=review")
-    await expect(page.getByTestId("plan-sandbox-banner")).toBeVisible()
-    await page.getByTestId("plan-sandbox-new").click()
-    await page.getByTestId("plan-sandbox-confirm").click()
     await expect(page.getByTestId("plan-sandbox-banner")).toBeVisible({ timeout: RELOAD })
-    await expect.poll(here, { timeout: RELOAD }).toBe(ROUTES.planSandbox)
+    await page.getByTestId("plan-sandbox-new").click()
+    loaded = reopened()
+    await page.getByTestId("plan-sandbox-confirm").click()
+    await loaded
+    expect(here()).toBe(ROUTES.planSandbox)
+    await expect(page.getByTestId("plan-sandbox-banner")).toBeVisible({ timeout: RELOAD })
     await page.reload()
     await expect(page.getByTestId("plan-sandbox-banner")).toBeVisible({ timeout: RELOAD })
     expect(here()).toBe(ROUTES.planSandbox)
     expect(await fingerprint(account.id)).toEqual(ownerBefore)
   })
 
-  test("a copy that fails leaves the copy space empty and says so; two at once cannot interleave", async ({ page, account }) => {
+  test("a copy or reset holds the copy space while it runs, so two cannot interleave", async ({ page, account }) => {
     await page.goto(`${ROUTES.planSandbox}?step=star`)
     const sandboxId = (await sandboxIdOf(account.id))!
     await rows("update public.plan_sandboxes set busy_since = now() where owner_id = $1", [account.id])
