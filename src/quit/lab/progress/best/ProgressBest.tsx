@@ -337,7 +337,7 @@ function Home({ setup, unit, st, today, startKey, perDay, spent, money, slips, s
           )}
           {unit && (
             <Card testId="tile-price" onClick={() => toggle("price")}>
-              <span className="block break-words text-xs text-muted-foreground">{t.tilePrice(cap(unit.one))}</span>
+              <span className="block break-words text-xs text-muted-foreground">{t.tilePrice(unit.one)}</span>
               <span className="block text-base font-semibold tabular-nums">{fmtMoney(setup.price)}</span>
             </Card>
           )}

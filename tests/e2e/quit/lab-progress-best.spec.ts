@@ -61,6 +61,7 @@ test("improved progress: setup, home, slip, money, target, milestones, calendar,
   await expect(page.getByTestId("tile-money")).toContainText("$62.40")
   await expect(page.getByTestId("tile-units")).toContainText("120")
   await expect(page.getByTestId("tile-units")).toContainText("Cigarettes not used")
+  await expect(page.getByTestId("tile-price")).toContainText("Price per cigarette")
   await expect(page.getByTestId("tile-price")).toContainText("$0.52")
   await page.getByTestId("tile-money").click()
   await expect(page.getByTestId("formula-money")).toContainText("$5.20 a day × 12 clear days")
