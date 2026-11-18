@@ -1,6 +1,6 @@
 # Quit tools, copied from the best: one phase per tool
 
-Written 2026-11-18 (Opus, planning session). Status: **running. Phases 0–8 done (lessons best a7b25888). Phases 9 (cost, copies + best), 11 (copies) on main with this batch; Phase 10 copies on main, `best` brief written; Phase 12 copies in fix round 1; Phase 13 copies building. Pushes batched hourly (CI queue).**
+Written 2026-11-18 (Opus, planning session). Status: **running. All 13 tools' copies done (Phases 1–13 Step C). Improved (`best`) done for Phases 1–10; Phases 11–13 `best` building. Phase 14 review page next. Pushes batched hourly.**
 
 ## Why this plan exists
 
@@ -366,6 +366,62 @@ Copies a, b built. No product has the full tool, so `best` builds it from the pl
 6. Addiction switcher; where `endings`/`helped` are missing, chips fall back to free text only.
 7. Any sentence stating a fact (e.g. that most people need several tries) needs a source from the data file or
    goes out; Opus fact-check before merge if one is added.
+
+### Phase 11 Step D brief: `ifthen/best` (2026-11-18)
+
+Copies a, b, c on main. The pairing no product does (overlap "ideas for best") on the evidence review's
+volitional-help-sheet form (private `quit-tool/evidence-tools.md` §5.4: pick a situation, pick a response):
+1. **Pick his situations** (copy a's preset list, short): the data file's `riskyMoments`, with his top two endings
+   from past/best's handoff (`past/best/handoff-endings`) pre-ticked if present; "something else" free text.
+2. **For each situation, pick one "then"** from the data file's `responses` and `needs` swaps (with evidence chips
+   and sources where the data has them), or write his own. The sentence builds live: "If <situation>, then I
+   <do X>." Never a "won't" plan: the builder offers only things to do, and a typed "won't / not / stop" gets a
+   plain nudge to name what he will do instead (the review found negated plans backfire; the basis on tap).
+3. **His plan** as cards, one per pair, editable, reorderable; "show these on my SOS screen" stores the pairs at
+   `ifthen/best/pairs` for SOS to read later (a plain "used in: SOS" line until it does).
+4. **Importance and confidence 1–10** (copy c's best piece) once for the whole plan, and a check-in date; on that
+   date the plan opens with "Did these work?" per card (kept / change).
+5. Paper beat online in one review: a "print or save as an image" view of the cards (plain page, no print button
+   inside the frame needed beyond a "Save as image" if the platform allows; else a print-friendly screen).
+6. Addiction switcher; where `riskyMoments`/`responses` are missing, free text only.
+7. Evidence lines (if-then plans and quitting; negated plans backfire; paper vs online) only with sources from
+   the review's S-list, each fetched and quoted; **Opus fact-check** before merge.
+
+### Phase 12 Step D brief: `accountability/best` (2026-11-18)
+
+Copies a, b, e built. From `accountability/overlap.md` and the evidence review (private `evidence-tools.md` §5.1
+and the partner-support line; S48 Notley 2025 PMID 39799985, S49 Halpern 2015 PMID 25970009, S50 Giné 2010 AEJ
+Applied, S52 Faseru 2018 PMID 30101972). The site never holds money and never sends anything itself:
+1. **One person, his choice of how much they see** (copy a's ally, made private-first): a name, and per item a
+   switch for what goes in a message (clear days count, slips yes/no, today's check-in). Default: only clear days.
+2. **He sends it himself** (copy b's chat, without our server): a ready message he copies or shares from his own
+   phone (Web Share where the browser allows it, else copy). A weekly reminder screen to send it (stored only).
+3. **"Tempted" in one tap** (copy b's ping): a prewritten "Can you call me in the next 10 minutes?" he copies or
+   shares; his own words editable.
+4. **Money on the line, held by someone else** (copy e's stake, without us holding money): goal, end date, amount,
+   who holds the money (a person he names), where it goes if he slips (a cause he names), the referee (same or
+   another person), and a one-page agreement he copies or saves as an image. A report screen where he says how
+   it went; the referee confirms in a message he sends. Big plain line: "This site never holds or moves money."
+5. Evidence lines, each with source on tap: money for staying quit raises quitting (Cochrane); few people take a
+   deposit scheme but among those who do it worked (RCTs); partner-support programmes did not raise quitting
+   (Cochrane), so the partner is offered as optional help, not as a method. **Opus fact-check** before merge.
+6. Addiction switcher (wording only); studied-in-smokers tags; hidden for porn where the studies are smokers only.
+
+### Phase 13 Step D brief: `library/best` (2026-11-18)
+
+Copies a–e built (in the batch). Our checked content only: the data file's `facts` (myth / fact with explain and
+refs), `keyFacts`, `besides` (outside help with refs), `needs` swaps (with evidence and refs), `symptomCourse`,
+and the wave-1 `how` tool (current):
+1. **One library page** (copy b's sections, copy e's categories): sections "What helps" (swaps sorted by
+   evidence: strong, moderate, then the rest), "True or not?" (the `facts` as tap-to-reveal cards, copy e's quick
+   cards), "What to expect" (the `symptomCourse` lines), "Help outside the app" (`besides`).
+2. **Every item has its sources on tap** and an evidence chip where the data has one; nothing without a source
+   is shown as fact.
+3. **Search** over all items (titles and text), a plain result list; **saved** items (copy a's bookmark) with a
+   "Saved" tab; read marks.
+4. Read time per item ("about N min read", words/200).
+5. Addiction switcher; where a field is missing, that section says "content coming".
+6. No new text beyond section titles and controls; no new claims.
 
 ---
 
