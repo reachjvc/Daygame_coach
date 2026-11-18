@@ -250,13 +250,6 @@ test.describe('time tracker on a phone', () => {
   test('no visible control on any screen is too small to tap', async ({ page }) => {
     await openFreshTracker(page)
 
-    // a grouped row, expanded: the state in which a 28px group chip once survived this
-    await trackEntry(page, 'a row to measure')
-    await trackEntry(page, 'a row to measure')
-    const expand = page.getByRole('button', { name: /Expand group/ })
-    await expect(expand, 'the fixture did not produce a grouped row').toBeVisible()
-    await expand.click()
-    await expect(page.getByRole('button', { name: /Collapse group/ })).toBeVisible()
 
     const tooSmall = (selector: string) =>
       page.evaluate((sel) => {
@@ -284,6 +277,22 @@ test.describe('time tracker on a phone', () => {
         return found
       }, selector)
 
+    await trackEntry(page, 'a row for the sheet')
+    // the sheet: a state you have to enter, not a place you navigate to
+    const sheet = await openFirstEntry(page)
+    const sheetFound = await tooSmall(TAPPABLE)
+    expect(sheetFound, `the entry sheet has controls under 44px: ${JSON.stringify(sheetFound)}`).toEqual([])
+    await sheet.getByRole('button', { name: 'Close' }).click()
+    await expect(sheet).toBeHidden()
+
+    // a grouped row, expanded: the state in which a 28px group chip once survived this
+    await trackEntry(page, 'a row to measure')
+    await trackEntry(page, 'a row to measure')
+    const expand = page.getByRole('button', { name: /Expand group/ })
+    await expect(expand, 'the fixture did not produce a grouped row').toBeVisible()
+    await expand.click()
+    await expect(page.getByRole('button', { name: /Collapse group/ })).toBeVisible()
+
     for (const screen of ALL_SCREENS) {
       if (screen !== 'Timer') await goTo(page, screen)
       await painted(page)
@@ -291,11 +300,6 @@ test.describe('time tracker on a phone', () => {
       expect(found, `${screen} has controls under 44px: ${JSON.stringify(found)}`).toEqual([])
     }
 
-    // the sheets: a state you have to enter, not a place you navigate to
-    await goTo(page, 'Timer')
-    await openFirstEntry(page)
-    const sheet = await tooSmall(TAPPABLE)
-    expect(sheet, `the entry sheet has controls under 44px: ${JSON.stringify(sheet)}`).toEqual([])
   })
 
   /**
