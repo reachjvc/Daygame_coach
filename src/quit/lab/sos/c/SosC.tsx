@@ -193,6 +193,13 @@ function Breathe({ onBack }: { onBack: () => void }) {
     setHeld(false)
     setProgress(0)
   }
+  if (progress >= 1) {
+    return (
+      <div data-testid="breathe-end" className="flex flex-col gap-4">
+        <PlaceholderScreen title={cText.breatheEndTitle} onBack={up} />
+      </div>
+    )
+  }
   return (
     <section data-testid="breathe" className="relative flex min-h-[calc(100dvh-7rem)] flex-col gap-6 overflow-hidden rounded-lg bg-[#1f3a7a] p-4 text-white">
       <div className="flex items-center gap-2">
@@ -200,7 +207,6 @@ function Breathe({ onBack }: { onBack: () => void }) {
           {"‹ "}
           {cText.breatheBack}
         </button>
-        <InferredTag />
       </div>
       <div className="flex flex-1 items-center justify-center">
         <div
@@ -239,7 +245,6 @@ function Breathe({ onBack }: { onBack: () => void }) {
           style={{ left: `calc(50% - 1.75rem + ${(progress * 40).toFixed(1)}%)`, transform: "translateY(-50%)" }}
         />
       </div>
-      <p className="text-center text-xs text-white/70">{cText.holdMotion}</p>
     </section>
   )
 }

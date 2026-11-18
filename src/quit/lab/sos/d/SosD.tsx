@@ -1,10 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { Cigarette, Droplet, Heart, PencilLine, Shield, ThumbsUp, Zap, type LucideIcon } from "lucide-react"
 import { InferredTag, Placeholder, PlaceholderScreen } from "../shared/Bits"
 import { useInterval } from "../shared/hooks"
 import { sharedText } from "../shared/text"
 import { useLabState } from "../../store"
+import { shakeDetected } from "./shake"
 import { dText, FACES } from "./text"
 
 type Mode = "feel" | "overcame" | "smoked"
@@ -29,7 +31,16 @@ const TILE_STYLE = {
   substitutes: "bg-card border-border",
 } as const
 
-const ICON: Record<string, string> = { overcame: "◇", smoked: "ϟ", memory: "✎", breathe: "♡", motivated: "👍", substitutes: "▯", letgo: "◇", water: "💧" }
+const ICON: Record<string, LucideIcon> = {
+  overcame: Shield,
+  smoked: Zap,
+  memory: PencilLine,
+  breathe: Heart,
+  motivated: ThumbsUp,
+  substitutes: Cigarette,
+  letgo: Shield,
+  water: Droplet,
+}
 
 /** Copy D: panel of six tiles, then strength, feeling and context, then strategy tiles. */
 export function SosD() {
@@ -131,6 +142,10 @@ export function SosD() {
   }
 }
 
+function Icon({ icon: I }: { icon: LucideIcon }) {
+  return <I className="size-6" aria-hidden="true" />
+}
+
 function Panel({ onFeel, onBegin, onOpen }: { onFeel: () => void; onBegin: (m: Mode) => void; onOpen: (s: Screen) => void }) {
   const tiles: { id: keyof typeof TILE_STYLE; label: string; tap: () => void }[] = [
     { id: "overcame", label: dText.tiles.overcame, tap: () => onBegin("overcame") },
@@ -148,9 +163,7 @@ function Panel({ onFeel, onBegin, onOpen }: { onFeel: () => void; onBegin: (m: M
       <div className="grid grid-cols-2 gap-3">
         {tiles.map((t) => (
           <button key={t.id} type="button" data-testid={`tile-${t.id}`} onClick={t.tap} className={`flex min-h-28 flex-col justify-between rounded-lg border p-3 text-left text-sm font-medium ${TILE_STYLE[t.id]}`}>
-            <span className="text-xl" aria-hidden="true">
-              {ICON[t.id]}
-            </span>
+            <Icon icon={ICON[t.id]} />
             <span>{t.label}</span>
           </button>
         ))}
@@ -321,9 +334,7 @@ function Strategies({ onBack, onPick }: { onBack: () => void; onPick: (id: strin
       <div className="grid grid-cols-2 gap-3">
         {cards.map((c) => (
           <button key={c.id} type="button" data-testid={`strategy-${c.id}`} onClick={() => onPick(c.id)} className={`flex min-h-32 flex-col justify-between rounded-xl border p-3 text-left text-sm font-medium transition-transform active:-translate-y-1 active:rotate-1 ${c.cls}`}>
-            <span className="text-xl" aria-hidden="true">
-              {ICON[c.id] ?? "◇"}
-            </span>
+            <Icon icon={ICON[c.id] ?? Shield} />
             <span>{c.label}</span>
           </button>
         ))}
@@ -340,11 +351,9 @@ function Motivated({ onBack, onDone }: { onBack: () => void; onDone: () => void 
   useEffect(() => {
     let last = 0
     const onMotion = (e: DeviceMotionEvent) => {
-      const a = e.accelerationIncludingGravity
-      if (!a) return
-      const mag = Math.abs(a.x ?? 0) + Math.abs(a.y ?? 0) + Math.abs(a.z ?? 0)
-      if (mag > 35 && Date.now() - last > 1000) {
-        last = Date.now()
+      const now = Date.now()
+      if (shakeDetected(e.accelerationIncludingGravity, now, last)) {
+        last = now
         setN((x) => x + 1)
       }
     }
@@ -361,9 +370,7 @@ function Motivated({ onBack, onDone }: { onBack: () => void; onDone: () => void 
       <Top onBack={onBack} />
       <h2 className="text-2xl font-bold text-orange-300">{dText.cardHeading}</h2>
       <div className="flex min-h-64 flex-col justify-between rounded-2xl border border-orange-300/40 bg-orange-400/20 p-4">
-        <span className="text-2xl" aria-hidden="true">
-          {"👍"}
-        </span>
+        <Icon icon={ThumbsUp} />
         <Placeholder />
         <p data-testid="card-count" className="text-xs text-muted-foreground">
           {dText.cardCount} {n}

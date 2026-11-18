@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Placeholder, PlaceholderScreen } from "../shared/Bits"
+import { NotSourced, Placeholder, PlaceholderScreen } from "../shared/Bits"
 import { shares } from "../shared/clock"
 import { useLabState } from "../../store"
 import { bump, nextIndex, pieSlices } from "./pie"
@@ -50,6 +50,10 @@ export function SosE() {
           <Cravings counts={counts} pct={pct} onTap={tap} />
         ) : tab === 0 && sub === 2 ? (
           <Reasons />
+        ) : tab === 1 && sub === 2 ? (
+          <Tips />
+        ) : tab === 2 && sub === 1 ? (
+          <Tasks />
         ) : (
           <PlaceholderScreen title={eText.otherTitle} onBack={null} />
         )}
@@ -63,7 +67,7 @@ export function SosE() {
             data-testid={`tab-${i}`}
             onClick={() => {
               setTab(i)
-              setSub(i === 2 ? 0 : i === 0 ? 2 : 0)
+              setSub(i === 2 ? 0 : 2)
             }}
             className={`flex min-h-12 flex-col items-center justify-center text-[11px] ${i === tab ? "text-orange-400" : "text-white/50"}`}
           >
@@ -175,6 +179,62 @@ function Reasons() {
           {eText.giveReason}
         </button>
       </div>
+    </div>
+  )
+}
+
+function Tips() {
+  return (
+    <div data-testid="tips" className="flex flex-col gap-4">
+      <div className="rounded-lg border border-white/10 p-3">
+        <h2 className="text-right text-xl">{eText.tipsTitle}</h2>
+        <p className="mt-2 text-sm text-white/70">{eText.tipsLine}</p>
+      </div>
+      <div className="flex flex-col gap-3 rounded-lg border border-white/10 p-3">
+        <div className="flex items-start gap-3">
+          <span className="flex size-14 shrink-0 flex-col items-center justify-center rounded-lg border border-white/15 text-xs">
+            {eText.tipLabel}
+            <span className="text-xl text-orange-400">{"1"}</span>
+          </span>
+          <h3 className="flex-1 text-right text-base">{eText.tipTitle}</h3>
+        </div>
+        <p className="text-sm">
+          {eText.tipBodyBefore} <NotSourced />
+          {eText.tipBodyAfter}
+        </p>
+        <p className="text-sm">{eText.tipBody2}</p>
+      </div>
+      <Placeholder />
+    </div>
+  )
+}
+
+function Tasks() {
+  const [done, setDone] = useLabState<boolean>("sos", "e", "task1", false)
+  return (
+    <div data-testid="tasks" className="flex flex-col gap-4">
+      <div className="rounded-lg border border-white/10 p-3">
+        <h2 className="text-right text-xl">{eText.tasksTitle}</h2>
+        <p className="mt-2 text-sm text-white/70">{eText.tasksLine}</p>
+      </div>
+      <div className="flex flex-col gap-3 rounded-lg border border-white/10 p-3">
+        <div className="flex items-start gap-3">
+          <span className="flex size-14 shrink-0 flex-col items-center justify-center rounded-lg border border-white/15 text-xs">
+            {eText.dayLabel}
+            <span className="text-xl text-orange-400">{"1"}</span>
+          </span>
+          <h3 className="flex-1 text-right text-base">{eText.taskTitle}</h3>
+        </div>
+        {eText.taskBody.map((p) => (
+          <p key={p} className="text-sm">
+            {p}
+          </p>
+        ))}
+        <button type="button" data-testid="task-tick" aria-pressed={done} aria-label={eText.taskDone} onClick={() => setDone(!done)} className={`inline-flex size-12 items-center justify-center self-center rounded-lg border text-xl ${done ? "border-orange-400 bg-orange-400/20 text-orange-400" : "border-white/15 text-white/40"}`}>
+          {"✓"}
+        </button>
+      </div>
+      <Placeholder />
     </div>
   )
 }

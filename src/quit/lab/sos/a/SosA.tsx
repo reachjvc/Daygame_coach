@@ -320,7 +320,6 @@ function Breathing({ onDone, onBack }: { onDone: () => void; onBack: () => void 
         <button type="button" onClick={onBack} aria-label={aText.breathTitle} data-testid="breath-back" className="inline-flex size-11 items-center justify-center text-xl">
           {"←"}
         </button>
-        <InferredTag />
       </div>
       <p data-testid="breath-clock" className="text-4xl font-semibold tabular-nums">
         {formatClock(left)}
@@ -341,7 +340,6 @@ function Meditation({ onBack }: { onBack: () => void }) {
           {"←"}
         </button>
         <h2 className="flex-1 text-lg font-semibold">{aText.meditationTitle}</h2>
-        <InferredTag />
       </div>
       <p className="text-sm text-muted-foreground">{aText.meditationLength}</p>
       <input type="range" min={0} max={MEDITATION_SECONDS} value={elapsed} onChange={(e) => setElapsed(Number(e.target.value))} aria-label={aText.meditationTitle} className="h-11 w-full accent-primary" />
@@ -377,7 +375,6 @@ function Tapping({ onBack }: { onBack: () => void }) {
           {"←"}
         </button>
         <h2 className="flex-1 text-lg font-semibold">{aText.tappingTitle}</h2>
-        <InferredTag />
       </div>
       <svg viewBox="0 0 100 100" className="mx-auto h-72" role="img" aria-label={aText.tappingTitle}>
         <circle cx="50" cy="16" r="9" fill="none" stroke="currentColor" strokeWidth="1" />
@@ -391,9 +388,12 @@ function Tapping({ onBack }: { onBack: () => void }) {
           </g>
         ))}
       </svg>
-      <button type="button" data-testid="tap-next" onClick={() => setStep((s) => (s + 1) % TAP_POINTS.length)} className="inline-flex min-h-12 items-center justify-center rounded-md bg-primary px-4 text-primary-foreground">
-        {aText.tapNext}
-      </button>
+      <div className="flex items-center gap-2">
+        <button type="button" data-testid="tap-next" onClick={() => setStep((s) => (s + 1) % TAP_POINTS.length)} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-md bg-primary px-4 text-primary-foreground">
+          {aText.tapNext}
+        </button>
+        <InferredTag />
+      </div>
     </section>
   )
 }

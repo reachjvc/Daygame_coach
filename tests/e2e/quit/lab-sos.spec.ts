@@ -7,7 +7,7 @@
  * the database.
  */
 
-import { mkdirSync } from "node:fs"
+import { mkdirSync, rmSync } from "node:fs"
 import { homedir } from "node:os"
 import path from "node:path"
 import type { Page } from "@playwright/test"
@@ -19,11 +19,13 @@ const SHOTS = path.join(homedir(), ".cache/daygame-research/quit-copy/sos/shots-
 
 function shooter(page: Page, letter: string) {
   const dir = path.join(SHOTS, letter)
+  rmSync(dir, { recursive: true, force: true })
   mkdirSync(dir, { recursive: true })
   let n = 0
   return async (name: string) => {
     n++
-    await page.screenshot({ path: path.join(dir, `${String(n).padStart(2, "0")}-${name}.png`) })
+    // the dev-server badge is not part of the app: hide it in the picture only
+    await page.screenshot({ path: path.join(dir, `${String(n).padStart(2, "0")}-${name}.png`), style: "nextjs-portal { display: none !important }" })
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
   }
 }
@@ -106,16 +108,19 @@ test("copy A: toolkit, craving mode with games, leave ritual, side tools", async
   await page.getByTestId("tile-breath").click()
   await expect(page.getByTestId("breath-clock")).toHaveText(/^0[45]:\d\d$/)
   await expect(page.getByTestId("orb-word")).toHaveText("Inhale")
+  await expect(page.getByTestId("inferred-tag")).toHaveCount(0)
   await shot("breathing")
   await expect(page.getByTestId("orb-word")).toHaveText("Exhale", { timeout: 6000 })
   await page.getByTestId("breath-back").click()
   await page.getByTestId("tile-meditation").click()
   await page.getByTestId("meditation-play").click()
+  await expect(page.getByTestId("inferred-tag")).toHaveCount(0)
   await shot("meditation")
   await page.getByRole("button", { name: "Settle your mind" }).first().click()
   await page.getByTestId("tile-tapping").click()
   await page.getByTestId("tap-next").click()
   await expect(page.getByTestId("tap-point-1")).toHaveAttribute("data-on", "true")
+  await expect(page.getByTestId("inferred-tag")).toHaveCount(1)
   await shot("tapping")
   await page.getByRole("button", { name: "Tapping guide" }).first().click()
   await page.getByTestId("see-all").click()
@@ -149,8 +154,10 @@ test("copy C: home, snake game, hold-to-breathe, discover strip", async ({ page 
   await page.clock.runFor(2000)
   expect(await head.getAttribute("x")).toBe(frozenX)
   await expect(page.getByTestId("time")).toHaveText("03:00")
-  await shot("snake-paused")
+  await expect(page.getByTestId("inferred-tag")).toBeVisible()
+  await shot("snake-paused-inferred")
   await page.getByTestId("pause").click()
+  await expect(page.getByTestId("inferred-tag")).toHaveCount(0)
   await page.getByTestId("dpad-up").click()
   await page.clock.runFor(450)
   await expect(head).toHaveAttribute("y", "5.05")
@@ -180,14 +187,22 @@ test("copy C: home, snake game, hold-to-breathe, discover strip", async ({ page 
   await page.getByTestId("cravings-breathe").click()
   const knob = page.getByTestId("knob")
   await expect(page.getByTestId("breathe-text")).toHaveText("Hold the button")
+  await expect(page.getByTestId("inferred-tag")).toHaveCount(0)
   await shot("breathe-ready")
   const box = (await knob.boundingBox())!
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
   await page.mouse.down()
   await expect(page.getByTestId("face")).toHaveAttribute("data-held", "true")
   await expect(page.getByTestId("breathe-text")).toHaveText("Breathe out slowly")
+  await expect(page.getByTestId("inferred-tag")).toHaveCount(0)
   await shot("breathe-holding")
+  // holding to the end of the exhale opens the end screen (never seen, so inferred)
+  await page.clock.runFor(7000)
+  await expect(page.getByTestId("breathe-end")).toBeVisible()
+  await expect(page.getByTestId("inferred-tag")).toBeVisible()
+  await shot("breathe-end-inferred")
   await page.mouse.up()
+  await page.getByRole("button", { name: "Back" }).first().click()
   await expect(page.getByTestId("face")).toHaveAttribute("data-held", "false")
   await page.getByTestId("breathe-back").click()
   await page.getByTestId("tab-1").click()
@@ -231,6 +246,11 @@ test("copy D: panel, strength and feeling, context, strategies, outcome", async 
   await expect(page.getByTestId("card-count")).toHaveText("Card 1")
   await page.getByTestId("draw-card").click()
   await expect(page.getByTestId("card-count")).toHaveText("Card 2")
+  // a real shake: a strong motion event draws another card; a gentle one does not
+  await page.evaluate(() => window.dispatchEvent(Object.assign(new Event("devicemotion"), { accelerationIncludingGravity: { x: 2, y: 9.8, z: 1 } })))
+  await expect(page.getByTestId("card-count")).toHaveText("Card 2")
+  await page.evaluate(() => window.dispatchEvent(Object.assign(new Event("devicemotion"), { accelerationIncludingGravity: { x: 30, y: 20, z: 10 } })))
+  await expect(page.getByTestId("card-count")).toHaveText("Card 3")
   await shot("motivation-card")
   await page.getByTestId("strategy-done").click()
   await expect(page.getByTestId("outcome")).toBeVisible()
@@ -256,6 +276,8 @@ test("copy D: panel, strength and feeling, context, strategies, outcome", async 
   await page.getByRole("button", { name: "Back" }).click()
   await page.getByTestId("strategy-water").click()
   await expect(page.getByTestId("placeholder-screen")).toBeVisible()
+  await expect(page.getByTestId("inferred-tag")).toBeVisible()
+  await shot("strategy-water-inferred")
   await page.getByRole("button", { name: "Back" }).click()
   await page.getByTestId("back").click()
   await page.getByTestId("back").click()
@@ -331,8 +353,20 @@ test("copy E: situation list with pie, solution sheet, reasons", async ({ page }
   await expect(page.getByTestId("placeholder-screen")).toBeVisible()
   await shot("motivation-first-icon-inferred")
   await page.getByTestId("tab-1").click()
+  await expect(page.getByTestId("tips")).toBeVisible()
+  await expect(page.getByTestId("not-sourced")).toBeVisible()
+  await shot("top-tips")
+  await page.getByTestId("sub-0").click()
   await expect(page.getByTestId("placeholder-screen")).toBeVisible()
   await page.getByTestId("tab-2").click()
+  await expect(page.getByTestId("cravings")).toBeVisible()
+  await page.getByTestId("sub-1").click()
+  await expect(page.getByTestId("tasks")).toBeVisible()
+  await expect(page.getByTestId("task-tick")).toHaveAttribute("aria-pressed", "false")
+  await page.getByTestId("task-tick").click()
+  await expect(page.getByTestId("task-tick")).toHaveAttribute("aria-pressed", "true")
+  await shot("tasks")
+  await page.getByTestId("sub-0").click()
   await expect(page.getByTestId("cravings")).toBeVisible()
   // counts survive a reload
   await page.reload()

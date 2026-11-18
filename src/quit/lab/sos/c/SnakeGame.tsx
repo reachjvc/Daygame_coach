@@ -95,6 +95,11 @@ export function SnakeGame({ onBack }: { onBack: () => void }) {
   )
   return (
     <section data-testid="snake" className="flex min-h-[calc(100dvh-7rem)] flex-col gap-3 rounded-lg bg-black p-3 text-white">
+      {paused && (
+        <div data-testid="pause-screen" className="flex items-center gap-2">
+          <InferredTag />
+        </div>
+      )}
       <button type="button" data-testid="snake-back" onClick={onBack} className="inline-flex min-h-11 items-center self-start text-sm text-white/70 underline">
         {cText.gameBack}
       </button>

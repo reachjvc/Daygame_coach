@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { addTile, canMove, move, newBoard, slideRow } from "@/src/quit/lab/sos/a/game2048"
 import { COLS, FOOD_COUNT, FOOD_POINTS, newSnake, step, turn } from "@/src/quit/lab/sos/c/snake"
 import { bump, nextIndex, pieSlices } from "@/src/quit/lab/sos/e/pie"
+import { shakeDetected } from "@/src/quit/lab/sos/d/shake"
 import { formatClock, holdProgress, shares } from "@/src/quit/lab/sos/shared/clock"
 
 const fixed = (v: number) => () => v
@@ -103,5 +104,16 @@ describe("clock, shares, hold and pie", () => {
     expect(pieSlices([3], 10)).toHaveLength(1)
     expect(bump([1, 0], 1, -1)).toEqual([1, 0])
     expect(nextIndex(1, 2)).toBe(0)
+  })
+})
+
+describe("shake detection", () => {
+  it("fires on a strong motion once per pause, never on gravity alone or no data", () => {
+    expect(shakeDetected({ x: 2, y: 9.8, z: 1 }, 5000, 0)).toBe(false)
+    expect(shakeDetected({ x: 30, y: 20, z: 10 }, 5000, 0)).toBe(true)
+    expect(shakeDetected({ x: 30, y: 20, z: 10 }, 5500, 5000)).toBe(false)
+    expect(shakeDetected({ x: 30, y: 20, z: 10 }, 6100, 5000)).toBe(true)
+    expect(shakeDetected(null, 5000, 0)).toBe(false)
+    expect(shakeDetected({ x: null, y: null, z: null }, 5000, 0)).toBe(false)
   })
 })

@@ -33,7 +33,7 @@ export const cText = {
 
   holdTitle: "Hold the button",
   holdBreathe: "Breathe out slowly",
-  holdMotion: "Motion of the knob and face while held is inferred.",
+  breatheEndTitle: "Breathing finished",
   breatheBack: "Back",
 
   discoverTitle: "Discover",
