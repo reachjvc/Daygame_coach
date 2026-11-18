@@ -132,27 +132,50 @@ async function createHiddenAccount(ownerId: string): Promise<string> {
   return sandboxId
 }
 
+/** One mint at a time per hidden account on this server: see `mint`. */
+const MINTING = new Map<string, Promise<SupabaseClient>>()
+
+/** Tries before a mint is given up on. A magic link is single-use and a newer link for the same account voids an older one, so two servers minting at once can void each other. */
+const MINT_TRIES = 4
+
 /** A client signed in as the hidden account, from a cached or freshly minted session. */
 async function sandboxClient(sandboxId: string): Promise<SupabaseClient> {
   const cached = CACHE.get(sandboxId)
   if (cached && cached.expiresAt - REFRESH_MARGIN_MS > Date.now()) return cached.client
+  // Concurrent requests share one mint: each new link voids the one before it.
+  const running = MINTING.get(sandboxId)
+  if (running) return running
+  const minting = mint(sandboxId).finally(() => MINTING.delete(sandboxId))
+  MINTING.set(sandboxId, minting)
+  return minting
+}
 
+async function mint(sandboxId: string): Promise<SupabaseClient> {
   const admin = createAdminSupabaseClient()
   const user = await admin.auth.admin.getUserById(sandboxId)
   const email = user.data.user?.email
   if (user.error || !email) throw new Error("The copy space account cannot be found")
-  const link = await admin.auth.admin.generateLink({ type: "magiclink", email })
-  const tokenHash = link.data?.properties?.hashed_token
-  if (link.error || !tokenHash) throw new Error(`Failed to open the copy space: ${link.error?.message}`)
 
-  const client = anonClient()
-  const opened = await client.auth.verifyOtp({ token_hash: tokenHash, type: "magiclink" })
-  // Belt and braces: the session must be the hidden account's, or nothing is returned.
-  if (opened.error || !opened.data.session || opened.data.user?.id !== sandboxId) {
-    throw new Error(`Failed to sign in to the copy space: ${opened.error?.message ?? "wrong account"}`)
+  let failure = "unknown"
+  for (let attempt = 0; attempt < MINT_TRIES; attempt++) {
+    // Another server minting for the same account at the same moment voids this link: wait a beat and take a new one.
+    if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, 100 + Math.random() * 300))
+    const link = await admin.auth.admin.generateLink({ type: "magiclink", email })
+    const tokenHash = link.data?.properties?.hashed_token
+    if (link.error || !tokenHash) {
+      failure = link.error?.message ?? "no link"
+      continue
+    }
+    const client = anonClient()
+    const opened = await client.auth.verifyOtp({ token_hash: tokenHash, type: "magiclink" })
+    // Belt and braces: the session must be the hidden account's, or nothing is returned.
+    if (!opened.error && opened.data.session && opened.data.user?.id === sandboxId) {
+      CACHE.set(sandboxId, { client, expiresAt: Date.now() + opened.data.session.expires_in * 1000 })
+      return client
+    }
+    failure = opened.error?.message ?? "wrong account"
   }
-  CACHE.set(sandboxId, { client, expiresAt: Date.now() + opened.data.session.expires_in * 1000 })
-  return client
+  throw new Error(`Failed to sign in to the copy space: ${failure}`)
 }
 
 /** True when the signed-in account has a copy space (a row, even before its hidden account exists). Never throws. */
