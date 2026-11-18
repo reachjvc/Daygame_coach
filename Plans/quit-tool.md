@@ -160,6 +160,8 @@ A read page: hope number, then who gets free, what helps, how quitting goes (the
 passes the validator.
 
 **`curve` — Your quit curve** (wave 1, no account, P7 P8 P9 P12 P19)
+Visual mock for the owner (2026-11-18): https://claude.ai/artifact/F9kYB9LmiFq2e1ssFRzCkK (db `notes`, `likes`,
+keys how/chart/cards/plan/ask). Read its notes before the Phase 5 `curve` brief.
 As before: four questions (how much, cost, what it gives, day 1: chips, nearest first: "in 3 days", "next Monday", "in 2
 weeks", or a date up to 6 weeks out; never today; under them one small sourced line "Sooner tends to work
 better" (the near-date evidence, evidence-tools §4)), a 2-second
