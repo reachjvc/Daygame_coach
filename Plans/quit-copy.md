@@ -1,6 +1,6 @@
 # Quit tools, copied from the best: one phase per tool
 
-Written 2026-11-18 (Opus, planning session). Status: **running. Phases 0, 1, 2 done (progress best 514ce1fd). Phase 3 copies on main (aea37aa4), `best` building. Phase 4 copies building. Step B passed for Phases 3–13. B1 round 2 in progress (live still 500).**
+Written 2026-11-18 (Opus, planning session). Status: **running. Phases 0–3 done (timeline best 04b80266, fact-checked). B1 fixed (7c78d5bc): live lab answers 200. Phase 4 copies in Step E. Step B passed for Phases 4–13.**
 
 ## Why this plan exists
 
@@ -62,7 +62,7 @@ nicotine content, the validator, privacy and coaching pages, the audit fixes) is
 
 | ID | What | Attempted, and what it returned | Blocks | Recommendation |
 |---|---|---|---|---|
-| B1 | **Cause found 2026-11-18** (owner logged in as the right account, jonas879-8953): the root layout's internal router-context import needs pages-router files Vercel's trace leaves out; fix = `outputFileTracingIncludes`. Live site answers 500 on `/` and every `/quit` page (`/privacy`, `/auth/login` are 200) | `curl` on build 134d39d1: `/`, `/quit`, `/quit/nicotine?preview=1`, `/quit/coaching` → 500. Same as `first-1000.md` B1 (Vercel only; local production builds give 200). `vercel login` done; `vercel inspect daygame-coach.vercel.app` → "Can't find the deployment … under reachjvc-1930s-projects" | "Try it" links on the review page | Owner item 1, then Phase 0 reads the function log and fixes it |
+| B1 | **FIXED 2026-11-18 (7c78d5bc)**: an absolute internal import bypassed Next's server rewrite and loaded the pages-router copy; a server-only externals rule now maps it to the app-router copy; live `/`, `/quit`, `/quit/lab/*` answer 200. **Cause found 2026-11-18** (owner logged in as the right account, jonas879-8953): the root layout's internal router-context import needs pages-router files Vercel's trace leaves out; fix = `outputFileTracingIncludes`. Live site answers 500 on `/` and every `/quit` page (`/privacy`, `/auth/login` are 200) | `curl` on build 134d39d1: `/`, `/quit`, `/quit/nicotine?preview=1`, `/quit/coaching` → 500. Same as `first-1000.md` B1 (Vercel only; local production builds give 200). `vercel login` done; `vercel inspect daygame-coach.vercel.app` → "Can't find the deployment … under reachjvc-1930s-projects" | "Try it" links on the review page | Owner item 1, then Phase 0 reads the function log and fixes it |
 | B2 | Competitor material behind accounts | Census Table 2b: six studied products ban copying or competitor use; one bans scripted capture | Screens never shown publicly | Public material only; mark unseen screens "inferred" |
 | B3 | Repo is public | Memory `repo-is-public`; `quit-tool.md` Part 5 | Names, shots, quotes in commits | Neutral variant ids; private map and shots in `~/.cache/daygame-research/quit-copy/` |
 | B4 | Next.js 16.4.1 security advisory stops `next build` / `next dev` once | Seen in every build today; a rerun continues | Nothing (rerun) | Owner decides on the upgrade separately; builders rerun, never upgrade |
