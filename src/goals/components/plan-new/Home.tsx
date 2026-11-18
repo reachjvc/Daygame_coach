@@ -15,6 +15,7 @@ import { firstTarget, type ModuleStatus } from "@/src/goals/planSteps/planStatus
 import { protectedId, goalsOfTier, weeklyItems } from "@/src/goals/planSteps/planFacts"
 import { fill, plural } from "@/src/goals/planSteps/text"
 import { ROUTES } from "@/src/shared/routes"
+import { BackLink } from "@/components/BackLink"
 import { addDaysISO } from "@/src/goals/northStarService"
 import { usePlanNew } from "./PlanNewContext"
 import { btnPrimary, card, dateText, linkQuiet } from "./ui"
@@ -57,7 +58,8 @@ export function Home() {
 
   return (
     <div className="mx-auto w-full max-w-xl space-y-6 px-4 pb-16" data-testid="plan-home">
-      <header>
+      <header className="space-y-2">
+        <BackLink fallback={ROUTES.settings} fallbackLabel="Settings" />
         <h1 className="text-2xl font-semibold text-zinc-50">{homeCopy.title}</h1>
       </header>
 

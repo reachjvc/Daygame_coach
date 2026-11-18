@@ -324,4 +324,15 @@ From the data audit. They change nothing he sees except error wording.
 
 ## Questions from the build
 
-(none yet)
+From Phase 6 (the home and the core modules). None blocks; each is a bit left out or held in a stand-in until the save engine and the migration land.
+
+- **New columns not added (no migration in Phase 6).** A goal's level (`tier`), a hidden area (`archived_at`), the daily rating's 1–5 scale and its area (`scale_max`, area link), and the check-in day are kept as `start:new:*` answer rows (`src/goals/planSteps/planFacts.ts`). When the migration lands, only those helpers change.
+- **Season close take-away.** Needs `cadence = 'season'`. Kept as a `start:new:season-take:<id>` answer instead.
+- **Protected step.** The plan's own load keeps only a goal or area id in the season focus, so a protected routine step is kept as `start:new:protected`.
+- **Check-in settings and the phone reminder.** The copy cannot read or write `life_plan_reminders` (the copy-space guard blocks it, D7), so the day, hour and phone choice are kept as answers. The "Remind you on your phone?" switch stores the choice and sends nothing.
+- **Goal readings ("where you are now" as today's reading).** Needs the day route; the store sends only the plan half. The ladder start is stored; no day reading is written.
+- **Ready-made goal sets** (`goals/start`, `goals/sets`) left out: the old set data is keyed to the old pillars, not to areas, and its titles still need the "Clean days" wording. Core 4 opens straight on "write my own".
+- **Big goal with no area.** The plan's load drops a goal whose area is unknown, so an unfiled big goal sits under the first area and carries an "unfiled" marker; the `direction.big-area` reason reads that marker.
+- **Extra modules** are listed as "coming" rows; Next up runs rules 1–4 and 7 only (rules 5 and 6 need the extras' status).
+- **Save engine.** `usePlanStore` sends each change at once through the existing client calls (one save at a time, last change always lands, Retry on failure). The outbox, replay and re-read on focus are Phase 5.
+

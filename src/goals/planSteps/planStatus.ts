@@ -78,8 +78,6 @@ export interface PlanStatusInput {
 
 const key = (id: string) => id.replace(/-/g, "_")
 
-type ReasonDraft = Omit<PlanReason, "module" | "text" | "href">
-
 function reason(module: CoreId, texts: Record<string, string>, id: string, kind: "missing" | "check", target: string, itemId?: string): PlanReason {
   const short = id.split(".")[1]
   return { id, module, kind, target, ...(itemId ? { itemId } : {}), text: texts[key(short)] ?? id, href: screenHref(target) }

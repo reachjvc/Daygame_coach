@@ -22,6 +22,18 @@ export function PlanSandboxCard() {
         </span>
         <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
       </Link>
+      <Link
+        href={ROUTES.planNew}
+        className="flex min-h-12 items-center gap-3 border-t border-border px-4 py-3 hover:bg-muted/40"
+        data-testid="plan-new-card-link"
+      >
+        <FlaskConical className="size-5 shrink-0 text-primary" aria-hidden />
+        <span className="flex-1 text-sm text-foreground">
+          New version of the plan
+          <span className="block text-xs text-muted-foreground">The plan in steps, on the same copy. Your real plan is not touched.</span>
+        </span>
+        <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+      </Link>
     </section>
   )
 }

@@ -57,7 +57,7 @@ export function createPlanStore(deps: PlanStoreDeps): PlanStore {
       rows = server.rows
       ids = server.ids
       const base = server.plan ?? deps.initialPlan()
-      const plan = days ? { ...base, daily: days.daily, logged: days.logged, notes: days.notes, journal: days.journal, numbers: days.numbers } : base
+      const plan = days ? { ...base, daily: days.daily, logged: days.logged, notes: days.notes, journal: days.journal, numbers: days.numbers ?? {} } : base
       set({ plan, loaded: true, status: "saved", waiting: 0, note: "" })
     })()
     return loading
