@@ -67,6 +67,7 @@ import { LibraryB } from "./library/b/LibraryB"
 import { LibraryC } from "./library/c/LibraryC"
 import { LibraryD } from "./library/d/LibraryD"
 import { LibraryE } from "./library/e/LibraryE"
+import { LibraryBest } from "./library/best/LibraryBest"
 
 export const LAB_TOOL_IDS = [
   "sos",
@@ -236,6 +237,7 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       c: { Component: LibraryC, addiction: "porn", label: "Copy C", kind: "copy" },
       d: { Component: LibraryD, addiction: "weed", label: "Copy D", kind: "copy" },
       e: { Component: LibraryE, addiction: "nicotine", label: "Copy E", kind: "copy" },
+      best: { Component: LibraryBest, addiction: "nicotine", label: "Improved", kind: "best" },
     },
   },
 }
