@@ -11,16 +11,19 @@ import { NotReady } from "../NotReady"
 import {
   AFTER_SLIP,
   buildResult,
+  chooseTries,
   EMPTY_PAST,
   firstScreenComplete,
   firstUnanswered,
   LAST_ENDED,
   MAX_ENDINGS,
+  parsePast,
   slipLine,
   STRETCH_UNITS,
   totalScreens,
   TRIES,
   type PastState,
+  type Tries,
 } from "./logic"
 
 /** Your past attempts: what ended each try and what helped. */
@@ -49,10 +52,10 @@ interface InnerProps {
 }
 
 function Inner({ addiction, endings, helped, tries, planSteps }: InnerProps) {
-  const { state, update, clear } = useToolState<PastState>(addiction, "past", EMPTY_PAST)
+  const { state, update, clear } = useToolState<PastState>(addiction, "past", EMPTY_PAST, parsePast)
   const total = totalScreens(state?.tries ?? null)
   const first = state ? firstUnanswered(state) : 1
-  const { screen, go, back: goBack, reset, isResult } = useScreens(first, total)
+  const { screen, go, back: goBack, reset, isResult } = useScreens(first, total, state !== null)
   const started = useStartCount(addiction, "past")
   useDoneCount(addiction, "past", state !== null && isResult)
   const slip = useMemo(() => slipLine(planSteps), [planSteps])
@@ -106,7 +109,7 @@ function Inner({ addiction, endings, helped, tries, planSteps }: InnerProps) {
             </ul>
           </section>
         )}
-        {state.afterSlip === "gaveUp" && slip && (
+        {state.tries !== "0" && state.afterSlip === "gaveUp" && slip && (
           <p data-testid="slip-line" className="rounded-lg border border-primary p-4 text-base font-medium">
             {slip}
           </p>
@@ -133,7 +136,7 @@ function Inner({ addiction, endings, helped, tries, planSteps }: InnerProps) {
             value={state.tries ? [state.tries] : []}
             onChange={([id]) => {
               started()
-              update((s) => ({ ...s, tries: id as PastState["tries"] }))
+              update((s) => chooseTries(s, id as Tries))
             }}
           />
           {state.tries !== null && state.tries !== "0" && (

@@ -1,4 +1,5 @@
 import type { QuitBand, QuitBelief } from "../../types"
+import { pickRecord } from "../common"
 
 export interface BeliefsState {
   /** beliefId -> 1..5 */
@@ -8,6 +9,15 @@ export interface BeliefsState {
 }
 
 export const EMPTY_BELIEFS: BeliefsState = { ratings: {}, facts: {} }
+
+/** Saved state, checked: bad ratings and answers are dropped. */
+export function parseBeliefs(x: unknown): BeliefsState {
+  const o = (typeof x === "object" && x !== null ? x : {}) as Record<string, unknown>
+  return {
+    ratings: pickRecord(o.ratings, (v): v is number => typeof v === "number" && Number.isInteger(v) && v >= 1 && v <= 5),
+    facts: pickRecord(o.facts, (v): v is boolean => typeof v === "boolean"),
+  }
+}
 
 export const MAX_TOP = 3
 export const MAX_HELD = 12

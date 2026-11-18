@@ -8,13 +8,14 @@ import type { ViceAttempt, ViceEndingId } from "@/src/vice/types"
 import { laterDay } from "./blackboxLogic"
 
 /** null while unknown; true when the visitor has an account session. Never blocks the tool. */
-export function useSignedIn(): boolean | null {
+export function useSignedIn(patient = false): boolean | null {
   const [signedIn, setSignedIn] = useState<boolean | null>(null)
   useEffect(() => {
     let cancelled = false
     const ctl = new AbortController()
     // A slow answer counts as signed out after 4 seconds, so no button waits for it for ever.
-    const timer = setTimeout(() => ctl.abort(), 4000)
+    // `patient` waits for the answer however long it takes (the craving tool files when it comes).
+    const timer = patient ? null : setTimeout(() => ctl.abort(), 4000)
     fetch("/api/whoami", { credentials: "same-origin", signal: ctl.signal })
       .then((r) => {
         if (!cancelled) setSignedIn(r.status === 200)
@@ -22,10 +23,10 @@ export function useSignedIn(): boolean | null {
       .catch(() => {
         if (!cancelled) setSignedIn(false)
       })
-      .finally(() => clearTimeout(timer))
+      .finally(() => timer && clearTimeout(timer))
     return () => {
       cancelled = true
-      clearTimeout(timer)
+      if (timer) clearTimeout(timer)
       ctl.abort()
     }
   }, [])
@@ -55,6 +56,11 @@ export interface QuitBlackBoxApi {
   fileCloseCall: (input: CloseCallInput) => string | null
   /** Files a lapse (ends the run); the new report id, or null when refused. */
   fileSlip: (input: SlipInput) => string | null
+  /**
+   * Where a filed report is on its way to the account: `saving` until the server answers,
+   * `saved` once it has it, `local` when it could not be sent (signed out meanwhile, no network).
+   */
+  status: (reportId: string) => "saving" | "saved" | "local"
   /** Takes a report back out; false when refused. */
   undo: (reportId: string) => boolean
 }
@@ -67,7 +73,7 @@ const EMPTY_FIELDS = { closeness: null, withWhom: "", where: "", factors: [] as 
  */
 export function useQuitBlackBox(viceId: string): QuitBlackBoxApi {
   const { record, update, ready, today } = useBlackBox()
-  useBlackBoxSync({ record, update, ready })
+  const sync = useBlackBoxSync({ record, update, ready })
   const latest = useRef(record)
   latest.current = record
 
@@ -119,9 +125,19 @@ export function useQuitBlackBox(viceId: string): QuitBlackBoxApi {
     [update],
   )
 
+  const status = useCallback(
+    (reportId: string): "saving" | "saved" | "local" => {
+      // The tool's copy of this api can be one render behind the filing: it does not know the report yet.
+      if (!record.reports.some((r) => r.id === reportId)) return "saving"
+      if (sync.state === "failed" || sync.state === "offline" || sync.state === "unreachable") return "local"
+      return sync.state === "synced" && sync.pending === 0 ? "saved" : "saving"
+    },
+    [record, sync.state, sync.pending],
+  )
+
   return useMemo(
-    () => ({ ready, run, today, fileCloseCall, fileSlip, undo }),
-    [ready, run, today, fileCloseCall, fileSlip, undo],
+    () => ({ ready, run, today, fileCloseCall, fileSlip, status, undo }),
+    [ready, run, today, fileCloseCall, fileSlip, status, undo],
   )
 }
 

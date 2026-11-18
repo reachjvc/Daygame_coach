@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { CoachingCost } from "@/src/quit/components/CoachingCost"
 import { addictionFromParam, catchText, coachingLabels, coachingText, priceText, stepsText } from "@/src/quit/coaching"
+import { isFlag } from "@/src/quit/menu"
 import { canBuy, getOffer } from "@/src/quit/offer"
 
 export const metadata = { title: coachingText.title }
@@ -9,7 +10,7 @@ export default async function CoachingPage({ searchParams }: { searchParams: Pro
   const sp = await searchParams
   const addiction = addictionFromParam(sp.a)
   const offer = getOffer()
-  const about = catchText(addiction, sp.preview === "1")
+  const about = catchText(addiction, isFlag(sp.preview))
   return (
     <div className="pb-8">
       <h1 className="text-2xl font-semibold leading-tight">{coachingText.title}</h1>

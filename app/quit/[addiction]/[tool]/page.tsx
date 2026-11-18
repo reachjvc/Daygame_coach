@@ -3,7 +3,7 @@ import { notFound } from "next/navigation"
 import { ComingSoon } from "@/src/quit/components/ComingSoon"
 import { ToolFrame } from "@/src/quit/components/ToolFrame"
 import { getAddiction } from "@/src/quit/data"
-import { findMenuTool, isViewable, menu, toolName } from "@/src/quit/menu"
+import { findMenuTool, isFlag, isViewable, menu, toolName } from "@/src/quit/menu"
 import { TOOL_REGISTRY } from "@/src/quit/tools/registry"
 import { QUIT_TOOL_IDS, type QuitToolId } from "@/src/quit/types"
 
@@ -16,8 +16,8 @@ export default async function QuitToolPage({
 }) {
   const { addiction, tool } = await params
   const sp = await searchParams
-  const preview = sp.preview === "1"
-  const present = sp.present === "1"
+  const preview = isFlag(sp.preview)
+  const present = isFlag(sp.present)
   if (!isViewable(addiction, preview)) notFound()
   if (!(QUIT_TOOL_IDS as readonly string[]).includes(tool)) notFound()
   const entry = TOOL_REGISTRY[tool as QuitToolId]

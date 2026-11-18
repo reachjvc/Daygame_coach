@@ -71,7 +71,8 @@
     "linkCopied": "Link copied",
     "saveImage": "Save the image",
     "bandLink": "Go on from here",
-    "next": "What it gives you"
+    "next": "What it gives you",
+    "bandFreeLink": "Make your free plan"
   },
   "gives": {
     "pickQuestion": "What does it give you? Pick 1 to 3.",
@@ -139,7 +140,8 @@
     "hoursLine": "{n} hours a year",
     "basis": "Worked out at 52 weeks a year, with no price rise.",
     "swapNow": "Every year that is {text}.",
-    "swapIn": "In {n} years that is {text}."
+    "swapIn": "In {n} years that is {text}.",
+    "range": "Between {min} and {max}"
   },
   "how": {
     "groups": {
@@ -171,7 +173,9 @@
     "keepRecord": "Keep a record in your Black Box",
     "undo": "Undo",
     "undone": "Taken back out of your Black Box.",
-    "notSaved": "Could not save this one in your Black Box."
+    "notSaved": "Could not save this one in your Black Box.",
+    "saving": "Saving to your Black Box...",
+    "localOnly": "Saved on this phone only. Sign in again to send it to your account."
   },
   "sos": {
     "voiceQuestion": "What is the voice saying?",
@@ -240,6 +244,7 @@
     "day1Set": "Day 1: {day}",
     "saved": "Saved in your Black Box",
     "startNew": "Start the new run in your Black Box",
-    "toMenu": "Back to the menu"
+    "toMenu": "Back to the menu",
+    "datedToday": "Dated today: your run started today."
   }
 }

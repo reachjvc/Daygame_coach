@@ -99,7 +99,11 @@ export function useBlackBoxSync({
    * it would be writing over, so it writes nothing.
    */
   const push = useCallback(async (from?: BlackBoxRecord) => {
-    if (!canPush(decision.current)) return
+    if (!canPush(decision.current)) {
+      // After a failed first read, unsent rows are held here: say that, not "syncing".
+      if (decision.current !== null) setState(navigator.onLine ? "unreachable" : "offline")
+      return
+    }
     // `from` EXISTS BECAUSE `latest.current` IS ONE RENDER BEHIND.
     //
     // The load effect merges and then pushes. `update()` schedules a React

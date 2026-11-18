@@ -41,6 +41,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ addi
         <div style={{ display: "flex", fontSize: 36, color: "#a1a1aa" }}>{`/quit/${addiction}/beliefs`}</div>
       </div>
     ),
-    { width: 1080, height: 1350 },
+    { width: 1080, height: 1350, headers: { "Cache-Control": "public, max-age=86400" } },
   )
 }

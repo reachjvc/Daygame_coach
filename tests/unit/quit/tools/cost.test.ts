@@ -26,7 +26,7 @@ describe("computeCost", () => {
   it("rounds money to the cent without float noise", () => {
     const r = computeCost({ perDay: 3, daysPerWeek: 7, priceUsd: 0.52, minutesPerUnit: null })
     expect(r.yearUsd).toBe(567.84)
-    expect(r.tenYearUsd).toBe(5678.4)
+    expect(r.tenYearUsd).toBe(5680) // 10 x the $568 year shown
   })
 
   it("formats whole dollars", () => {
@@ -45,7 +45,10 @@ describe("parseAmount", () => {
   it("parses, clamps and rejects junk", () => {
     expect(parseAmount("0.52", 0, 100)).toBe(0.52)
     expect(parseAmount("2,5", 0, 100)).toBe(2.5)
-    expect(parseAmount("250", 0, 100)).toBe(100)
+    expect(parseAmount("250", 0, 100)).toBeNull() // never clamped
+    expect(parseAmount("-5", 0, 100)).toBeNull()
+    expect(parseAmount("1e2", 0, 100)).toBe(100)
+    expect(parseAmount("1e3", 0, 100)).toBeNull()
     expect(parseAmount("", 0, 100)).toBeNull()
     expect(parseAmount("abc", 0, 100)).toBeNull()
     expect(parseAmount(".", 0, 100)).toBeNull()

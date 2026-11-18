@@ -3,32 +3,44 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 import { count } from "../count"
-import { useQuitStore } from "../store"
+import { QUIT_STORE_KEY, useQuitStore } from "../store"
 import { clampScreen } from "./common"
 
 /**
  * A tool's saved answers. `state` is null until the browser has read them
  * (the server render never shows answers), then `update` saves each change.
+ * `parse` checks the stored shape and gives an empty state for anything bad.
+ *
+ * Each save starts from what storage holds right now, not from this tab's
+ * copy, so a second tab's answers are kept; a change made in another tab is
+ * picked up through the `storage` event.
  */
-export function useToolState<T extends object>(addiction: string, tool: string, initial: T) {
+export function useToolState<T extends object>(addiction: string, tool: string, initial: T, parse: (stored: unknown) => T) {
   const store = useQuitStore()
   const [state, setState] = useState<T | null>(null)
   const latest = useRef<T>(initial)
   const initialRef = useRef(initial)
+  const parseRef = useRef(parse)
 
   useEffect(() => {
-    const stored = store.get(addiction, tool)
-    const merged =
-      stored && typeof stored === "object" && !Array.isArray(stored)
-        ? ({ ...initialRef.current, ...(stored as object) } as T)
-        : initialRef.current
-    latest.current = merged
-    setState(merged)
+    const read = () => {
+      const next = parseRef.current(store.get(addiction, tool))
+      latest.current = next
+      setState(next)
+    }
+    read()
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === null || e.key === QUIT_STORE_KEY) read()
+    }
+    window.addEventListener("storage", onStorage)
+    return () => window.removeEventListener("storage", onStorage)
   }, [store, addiction, tool])
 
   const update = useCallback(
     (fn: (s: T) => T) => {
-      const next = fn(latest.current)
+      const stored = store.get(addiction, tool)
+      const base = stored === undefined ? latest.current : parseRef.current(stored)
+      const next = fn(base)
       latest.current = next
       store.set(addiction, tool, next)
       setState(next)
@@ -51,7 +63,7 @@ export function useCarry() {
   return useCallback(
     (path: string, extra?: Record<string, string>) => {
       const p = new URLSearchParams()
-      for (const k of ["preview", "present"]) if (sp.get(k) === "1") p.set(k, "1")
+      for (const k of ["preview", "present"]) if (sp.getAll(k).includes("1")) p.set(k, "1")
       for (const [k, v] of Object.entries(extra ?? {})) p.set(k, v)
       const q = p.toString()
       return q ? `${path}?${q}` : path
@@ -65,7 +77,7 @@ export function useCarry() {
  * A missing or out-of-range `s` lands on the first unanswered screen.
  * Screen `total + 1` is the result.
  */
-export function useScreens(firstUnanswered: number, total: number) {
+export function useScreens(firstUnanswered: number, total: number, ready = true) {
   const pathname = usePathname()
   const sp = useSearchParams()
   const screen = clampScreen(sp.get("s"), firstUnanswered, total)
@@ -81,9 +93,16 @@ export function useScreens(firstUnanswered: number, total: number) {
     [sp, pathname],
   )
   // The screens of the history entries made in this visit, and where we are in them.
-  const trail = useRef<{ stack: number[]; idx: number }>({ stack: [screen], idx: 0 })
+  // It starts only once the saved answers are read: before that the screen is a guess,
+  // and a wrong first entry made Back step into an entry that showed the same screen twice.
+  const trail = useRef<{ stack: number[]; idx: number } | null>(null)
   useEffect(() => {
+    if (!ready) return
     const t = trail.current
+    if (!t) {
+      trail.current = { stack: [screen], idx: 0 }
+      return
+    }
     if (t.stack[t.idx] === screen) return
     if (t.stack[t.idx - 1] === screen) t.idx -= 1
     else if (t.stack[t.idx + 1] === screen) t.idx += 1
@@ -91,7 +110,22 @@ export function useScreens(firstUnanswered: number, total: number) {
       t.stack = [...t.stack.slice(0, t.idx + 1), screen]
       t.idx += 1
     }
-  }, [screen])
+  }, [screen, ready])
+
+  // A new screen takes focus, so a keyboard or screen-reader reader starts at its top.
+  const shown = useRef<number | null>(null)
+  useEffect(() => {
+    if (!ready) return
+    const first = shown.current === null
+    const changed = shown.current !== screen
+    shown.current = screen
+    if (first || !changed) return
+    const el = document.querySelector<HTMLElement>('[data-testid="question"], [data-testid="result"]')
+    if (!el) return
+    if (!el.hasAttribute("tabindex")) el.tabIndex = -1
+    el.style.outline = "none"
+    el.focus({ preventScroll: true })
+  }, [screen, ready])
 
   // Native history calls: Next syncs useSearchParams with them and no server round trip is needed.
   const go = useCallback((n: number) => window.history.pushState(null, "", hrefFor(n)), [hrefFor])
@@ -103,7 +137,7 @@ export function useScreens(firstUnanswered: number, total: number) {
   const back = useCallback(() => {
     const t = trail.current
     const prev = screen - 1
-    if (prev < 1) return
+    if (prev < 1 || !t) return
     if (t.stack[t.idx - 1] === prev) {
       window.history.back()
       return

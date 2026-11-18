@@ -43,6 +43,12 @@ export function findMenuTool(toolId: string): QuitMenuTool | null {
 }
 
 /** Carries `?preview=1` along the links of a previewed menu. */
-export function previewSuffix(preview: boolean): string {
-  return preview ? "?preview=1" : ""
+export function previewSuffix(preview: boolean, present = false): string {
+  const parts = [preview ? "preview=1" : "", present ? "present=1" : ""].filter(Boolean)
+  return parts.length > 0 ? `?${parts.join("&")}` : ""
+}
+
+/** A `?name=1` flag from a page's search params; a repeated flag (`?preview=1&preview=1`) counts once. */
+export function isFlag(value: string | string[] | undefined): boolean {
+  return Array.isArray(value) ? value.includes("1") : value === "1"
 }

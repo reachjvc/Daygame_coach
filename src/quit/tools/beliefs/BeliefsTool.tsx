@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { useSignedIn } from "../../blackbox"
 import Link from "next/link"
 import { ClearAnswers, CountedLine, OneQuestion, PrimaryButton, SourceTap, SourcesFold } from "../../components/kit"
 import { fill, tooltext as t } from "../../tooltext"
@@ -8,7 +9,7 @@ import type { QuitBand, QuitBelief, QuitFact, QuitNeed, ToolProps } from "../../
 import { realRefs, uniqueRefs, usable } from "../common"
 import { useCarry, useDoneCount, useScreens, useStartCount, useToolState } from "../hooks"
 import { NotReady } from "../NotReady"
-import { bandFor, EMPTY_BELIEFS, firstUnanswered, heldCount, seeThrough, shareUrl, topBeliefs, type BeliefsState } from "./logic"
+import { bandFor, EMPTY_BELIEFS, firstUnanswered, heldCount, parseBeliefs, seeThrough, shareUrl, topBeliefs, type BeliefsState } from "./logic"
 
 /** The 12 lies test: 12 ratings, 3 facts, then the result. */
 export function BeliefsTool({ addiction, data }: ToolProps) {
@@ -33,10 +34,10 @@ interface InnerProps {
 }
 
 function Inner({ addiction, name, beliefs, facts, bands, needs }: InnerProps) {
-  const { state, update, clear } = useToolState<BeliefsState>(addiction, "beliefs", EMPTY_BELIEFS)
+  const { state, update, clear } = useToolState<BeliefsState>(addiction, "beliefs", EMPTY_BELIEFS, parseBeliefs)
   const total = beliefs.length + facts.length
   const first = state ? firstUnanswered(state, beliefs, facts) : 1
-  const { screen, go, back: goBack, reset, isResult } = useScreens(first, total)
+  const { screen, go, back: goBack, reset, isResult } = useScreens(first, total, state !== null)
   const started = useStartCount(addiction, "beliefs")
   useDoneCount(addiction, "beliefs", state !== null && isResult)
 
@@ -212,7 +213,7 @@ function Result({ addiction, name, state, beliefs, bands, needs, onClear }: Resu
                   <p>{usable<string>(b.test)}</p>
                   {need && (
                     <Link
-                      href={carry(`/quit/${addiction}/gives`, { need: need.id })}
+                      href={`${carry(`/quit/${addiction}/gives`)}#need=${encodeURIComponent(need.id)}`}
                       className="mt-3 inline-flex min-h-11 items-center text-primary underline"
                     >
                       {fill(t.beliefs.needLink, { need: need.name })}
@@ -229,11 +230,7 @@ function Result({ addiction, name, state, beliefs, bands, needs, onClear }: Resu
             <p className="mt-1 text-sm text-muted-foreground">{fill(t.beliefs.heldLine, slots)}</p>
             <p className="mt-2 text-xl font-semibold text-primary">{band.label}</p>
             <p>{band.text}</p>
-            {band.link && (
-              <Link href={band.link} className="mt-2 inline-flex min-h-11 items-center text-primary underline">
-                {t.beliefs.bandLink}
-              </Link>
-            )}
+            {band.link && <BandLink link={band.link} carryTo={carry} />}
           </section>
         )}
         <section className="flex flex-col gap-2">
@@ -269,5 +266,26 @@ function Result({ addiction, name, state, beliefs, bands, needs, onClear }: Resu
       </div>
       <SourcesFold refs={refs} />
     </>
+  )
+}
+
+const SIGN_UP = "/auth/sign-up?next=/plan"
+
+/** The band's way on. The free plan link goes to sign-up for a signed-out reader, to the plan for a signed-in one. */
+function BandLink({ link, carryTo }: { link: string; carryTo: (path: string) => string }) {
+  if (link === "/plan") return <FreePlanLink />
+  return (
+    <Link href={link.startsWith("/quit") ? carryTo(link) : link} className="mt-2 inline-flex min-h-11 items-center text-primary underline">
+      {t.beliefs.bandLink}
+    </Link>
+  )
+}
+
+function FreePlanLink() {
+  const signedIn = useSignedIn()
+  return (
+    <Link href={signedIn === true ? "/plan" : SIGN_UP} data-testid="band-free-link" className="mt-2 inline-flex min-h-11 items-center text-primary underline">
+      {t.beliefs.bandFreeLink}
+    </Link>
   )
 }

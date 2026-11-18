@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { AddictionSwitcher, ViewCount } from "@/src/quit/components/MenuClient"
 import {
   frame,
+  isFlag,
   isViewable,
   menu,
   minutesText,
@@ -19,7 +20,7 @@ export default async function QuitMenuPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const { addiction } = await params
-  const preview = (await searchParams).preview === "1"
+  const preview = isFlag((await searchParams).preview)
   if (!isViewable(addiction, preview)) notFound()
   const q = previewSuffix(preview)
   const options = viewableIds(preview).map((id) => ({ id, label: menu.addictions[id].switcher }))

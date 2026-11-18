@@ -5,7 +5,7 @@ import { SRC_PATTERN, type CountStep } from "./countValidate"
 const SRC_KEY = "quit-src"
 
 function isPresent(): boolean {
-  return new URLSearchParams(window.location.search).get("present") === "1"
+  return new URLSearchParams(window.location.search).getAll("present").includes("1")
 }
 
 /** The campaign tag from the page URL, kept for the visit in sessionStorage. */

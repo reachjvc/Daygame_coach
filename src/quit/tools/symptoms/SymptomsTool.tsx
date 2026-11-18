@@ -89,7 +89,8 @@ function Inner({ addiction, rows, help, words, note }: InnerProps) {
     )
   }
 
-  const rowHelp = helpFor(row.symptom, help)
+  // The four-rule sleep card below answers sleep, so the single help row for it stays hidden.
+  const rowHelp = row.symptom === "sleep" ? [] : helpFor(row.symptom, help)
   const refs = uniqueRefs([...realRefs(row.refs), ...rowHelp.flatMap((h) => realRefs(h.refs))])
   return (
     <div data-testid="symptom-detail" className="flex flex-col gap-4">

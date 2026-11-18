@@ -11,6 +11,10 @@
           "factRef": "4. Browser storage keys: quit-v1 (localStorage), src/quit/store.ts 'kept in this browser only'"
         },
         {
+          "text": "If you tap Save the image, the number of beliefs you rated high (0 to 12) is part of the image's web address.",
+          "factRef": "Card route app/quit/[addiction]/card/route.tsx: ?held=N in the request URL"
+        },
+        {
           "text": "When you open a tool or finish a step, the site counts it without your answers. It is sent only which addiction, which tool and which step. If the link you came from carries a short tag, that tag is kept for that visit only.",
           "factRef": "5. /api/quit/count (payload addiction, tool, step, optional src; quit-src in sessionStorage, section 4)"
         },

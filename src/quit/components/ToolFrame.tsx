@@ -20,12 +20,13 @@ interface ToolFrameProps {
 /** Header, back, progress and footer shared by every quit tool. */
 export function ToolFrame({ addiction, title, step, of, present = false, preview = false, hideCraving = false, children }: ToolFrameProps) {
   const q = previewSuffix(preview)
+  const back = previewSuffix(preview, present)
   const showBar = step !== undefined && of !== undefined && of > 0
   return (
     <div data-present={present ? "true" : undefined} style={present ? { zoom: 1.4 } : undefined} className="pb-8">
       <header className="mb-4">
         <Link
-          href={`/quit/${addiction}${q}`}
+          href={`/quit/${addiction}${back}`}
           className="inline-flex min-h-11 items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="size-4" aria-hidden />

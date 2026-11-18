@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { BlackBoxBridge } from "../../components/BlackBoxBridge"
 import { Chips, ClearAnswers, OneQuestion, PrimaryButton, SourcesFold } from "../../components/kit"
@@ -11,11 +11,11 @@ import { useQuitStore } from "../../store"
 import { fill, tooltext as t } from "../../tooltext"
 import type { QuitBelief, QuitEnding, QuitNeed, QuitPlanStep, ToolProps } from "../../types"
 import { localDate, usable } from "../common"
-import { topBeliefs, type BeliefsState } from "../beliefs/logic"
-import type { GivesState } from "../gives/logic"
+import { parseBeliefs, topBeliefs } from "../beliefs/logic"
+import { parseGives } from "../gives/logic"
 import { useCarry, useDoneCount, useScreens, useStartCount, useToolState } from "../hooks"
 import { NotReady } from "../NotReady"
-import { EMPTY_SLIP, firstUnanswered, keepLine, MAX_OWN, OTHER, SLIP_WHEN, type SlipState } from "./logic"
+import { EMPTY_SLIP, firstUnanswered, keepLine, MAX_OWN, OTHER, parseSlip, SLIP_WHEN, type SlipState } from "./logic"
 
 /** Slipped? Three taps, then back through steps 1 to 3 with a new day 1. */
 export function SlipTool({ addiction, data }: ToolProps) {
@@ -44,17 +44,24 @@ interface InnerProps {
 function Inner({ addiction, beliefs, endings, needs, planSteps }: InnerProps) {
   const store = useQuitStore()
   const carry = useCarry()
-  const { state, update, clear } = useToolState<SlipState>(addiction, "slip", EMPTY_SLIP)
+  const { state, update, clear } = useToolState<SlipState>(addiction, "slip", EMPTY_SLIP, parseSlip)
   const signedIn = useSignedIn()
   const [bb, setBb] = useState<QuitBlackBoxApi | null>(null)
   const onApi = useCallback((api: QuitBlackBoxApi) => setBb(api), [])
   const [undone, setUndone] = useState(false)
   const [refused, setRefused] = useState(false)
+  const [datedToday, setDatedToday] = useState(false)
+  // One tap on Continue per visit to the last question: a double tap files one lapse.
+  const filing = useRef(false)
 
   const first = state ? firstUnanswered(state) : 1
-  const { screen, go, back: goBack, reset, isResult } = useScreens(first, 3)
+  const { screen, go, back: goBack, reset, isResult } = useScreens(first, 3, state !== null)
   const started = useStartCount(addiction, "slip")
   useDoneCount(addiction, "slip", state !== null && isResult)
+
+  useEffect(() => {
+    if (screen !== 3) filing.current = false
+  }, [screen])
 
   const bridge = signedIn ? <BlackBoxBridge viceId={addiction} onApi={onApi} /> : null
   // A signed-in visitor waits the moment it takes the Black Box to load before filing or undoing.
@@ -116,10 +123,15 @@ function Inner({ addiction, beliefs, endings, needs, planSteps }: InnerProps) {
       { id: OTHER, label: t.slip.somethingElse },
     ]
     const finish = () => {
+      if (filing.current) return
+      filing.current = true
       let reportId: string | null = null
       let failed = false
-      if (bb && bb.run && state.when) {
+      let moved = false
+      // A lapse already filed from this run and not taken back is not filed twice.
+      if (bb && bb.run && state.when && state.reportId === null) {
         const today = localDate()
+        moved = bb.run.startedOn === today && slipDay(state.when, today) < today
         const told = beliefs.find((b) => b.id === state.told)
         reportId = bb.fileSlip({
           at: reportAt(slipDay(state.when, today), today, nowInBrowser()),
@@ -129,8 +141,9 @@ function Inner({ addiction, beliefs, endings, needs, planSteps }: InnerProps) {
         failed = reportId === null
       }
       setRefused(failed)
+      setDatedToday(moved && !failed)
       setUndone(false)
-      pass({ reportId })
+      pass(state.reportId !== null ? {} : { reportId })
     }
     return (
       <>
@@ -163,14 +176,12 @@ function Inner({ addiction, beliefs, endings, needs, planSteps }: InnerProps) {
     )
   }
 
-  const bStored = store.get(addiction, "beliefs") as Partial<BeliefsState> | undefined
-  const ratings = bStored && typeof bStored === "object" && bStored.ratings ? bStored.ratings : {}
-  const top = topBeliefs(ratings, beliefs)
-  const gStored = store.get(addiction, "gives") as Partial<GivesState> | undefined
-  const tried = gStored && typeof gStored === "object" && gStored.tried ? gStored.tried : {}
+  const top = topBeliefs(parseBeliefs(store.get(addiction, "beliefs")).ratings, beliefs)
+  const tried = parseGives(store.get(addiction, "gives")).tried
   const swaps = needs.flatMap((n) => n.swaps).filter((s) => tried[s.id])
   const today = localDate()
-  const day1 = state.newDay1 === "today" ? today : state.newDay1 === "tomorrow" ? shiftDay(today, 1) : null
+  // The date is fixed when the reader chooses; an older save without one falls back to the choice read today.
+  const day1 = state.newDay1On ?? (state.newDay1 === "today" ? today : state.newDay1 === "tomorrow" ? shiftDay(today, 1) : null)
   const keep = keepLine(planSteps)
   const filed = state.reportId !== null && !undone
 
@@ -179,7 +190,14 @@ function Inner({ addiction, beliefs, endings, needs, planSteps }: InnerProps) {
       {bridge}
       {filed && (
         <div data-testid="slip-saved" className="rounded-lg border border-primary p-4">
-          <p className="font-medium">{t.slip.saved}</p>
+          <p data-testid="slip-saved-text" className="font-medium">
+            {state.reportId && bb ? (bb.status(state.reportId) === "saved" ? t.slip.saved : bb.status(state.reportId) === "local" ? t.blackbox.localOnly : t.blackbox.saving) : t.blackbox.saving}
+          </p>
+          {datedToday && (
+            <p data-testid="slip-dated-today" className="mt-1 text-sm">
+              {t.slip.datedToday}
+            </p>
+          )}
           <div className="mt-1 flex flex-wrap gap-x-4">
             <button
               type="button"
@@ -257,7 +275,13 @@ function Inner({ addiction, beliefs, endings, needs, planSteps }: InnerProps) {
               { id: "tomorrow", label: t.slip.day1Tomorrow },
             ]}
             value={state.newDay1 ? [state.newDay1] : []}
-            onChange={(next) => update((s) => ({ ...s, newDay1: next[0] as SlipState["newDay1"] }))}
+            onChange={(next) =>
+              update((s) => ({
+                ...s,
+                newDay1: next[0] as SlipState["newDay1"],
+                newDay1On: next[0] === "tomorrow" ? shiftDay(localDate(), 1) : localDate(),
+              }))
+            }
           />
         </div>
         {day1 && (
@@ -280,6 +304,7 @@ function Inner({ addiction, beliefs, endings, needs, planSteps }: InnerProps) {
           reset()
           setUndone(false)
           setRefused(false)
+          setDatedToday(false)
         }}
       />
       <SourcesFold refs={[]} />

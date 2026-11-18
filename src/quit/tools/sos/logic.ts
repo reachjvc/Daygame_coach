@@ -1,4 +1,5 @@
 import type { QuitBelief, QuitNeed, QuitSwap } from "../../types"
+import { isObj, pickBool, pickInt, pickStr } from "../common"
 import { orderSwaps } from "../gives/logic"
 
 export const WAIT_MS = 10 * 60 * 1000
@@ -67,4 +68,20 @@ export function currentSwap(need: Pick<QuitNeed, "swaps"> | undefined, rated: Re
 /** First screen without an answer (1 to 5; 5 is the result). */
 export function firstUnanswered(s: SosState): number {
   return Math.min(s.done, 4) + 1
+}
+
+/** Saved state, checked. */
+export function parseSos(x: unknown): SosState {
+  const o = isObj(x) ? x : {}
+  const w = o.waitStartedAt
+  return {
+    done: pickInt(o.done, 0, 4, 0),
+    belief: pickStr(o.belief, null),
+    need: pickStr(o.need, null),
+    swapIdx: pickInt(o.swapIdx, 0, 1000, 0),
+    waitStartedAt: typeof w === "number" && Number.isFinite(w) && w > 0 ? w : null,
+    sound: pickBool(o.sound, false),
+    passed: pickBool(o.passed, null),
+    reportId: pickStr(o.reportId, null),
+  }
 }

@@ -4,14 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { BlackBoxBridge } from "../../components/BlackBoxBridge"
 import { Chips, ClearAnswers, EvidenceChip, OneQuestion, PrimaryButton, SourceTap, SourcesFold } from "../../components/kit"
-import { nowInBrowser, useSignedIn, type QuitBlackBoxApi } from "../../blackbox"
+import { nowInBrowser, useSignedIn, type CloseCallInput, type QuitBlackBoxApi } from "../../blackbox"
 import { endingForBelief } from "../../blackboxLogic"
 import { ROUTES } from "@/src/shared/routes"
 import { useQuitStore } from "../../store"
 import { tooltext as t } from "../../tooltext"
 import type { QuitBelief, QuitNeed, ToolProps } from "../../types"
 import { realRefs, usable } from "../common"
-import type { GivesState } from "../gives/logic"
+import { parseGives } from "../gives/logic"
 import { useCarry, useDoneCount, useScreens, useStartCount, useToolState } from "../hooks"
 import { NotReady } from "../NotReady"
 import {
@@ -22,6 +22,7 @@ import {
   minutesGone,
   needForBelief,
   OTHER,
+  parseSos,
   remainingMs,
   WAIT_MS,
   type SosState,
@@ -46,27 +47,48 @@ interface InnerProps {
 function Inner({ addiction, beliefs, needs, tape }: InnerProps) {
   const store = useQuitStore()
   const carry = useCarry()
-  const { state, update, clear } = useToolState<SosState>(addiction, "sos", EMPTY_SOS)
-  const signedIn = useSignedIn()
+  const { state, update, clear } = useToolState<SosState>(addiction, "sos", EMPTY_SOS, parseSos)
+  const signedIn = useSignedIn(true)
   const [bb, setBb] = useState<QuitBlackBoxApi | null>(null)
   const onApi = useCallback((api: QuitBlackBoxApi) => setBb(api), [])
   const [undone, setUndone] = useState(false)
   const [refused, setRefused] = useState(false)
+  // The close call waiting for the sign-in answer; filed once, the moment it says signed in.
+  const [want, setWant] = useState<CloseCallInput | null>(null)
+  // One tap per visit to the question: a double tap files one close call.
+  const answered = useRef(false)
 
   const first = state ? firstUnanswered(state) : 1
-  const { screen, go, back: goBack, reset, isResult } = useScreens(first, 4)
+  const { screen, go, back: goBack, reset, isResult } = useScreens(first, 4, state !== null)
   const started = useStartCount(addiction, "sos")
   useDoneCount(addiction, "sos", state !== null && isResult)
 
   const bridge = signedIn ? <BlackBoxBridge viceId={addiction} onApi={onApi} /> : null
-  // A signed-in visitor waits the moment it takes the Black Box to load before filing or undoing.
+  // Yes never waits: the answer shows at once and the filing follows when the Black Box is ready.
   const bbLoading = signedIn === null || (signedIn && !(bb && bb.ready))
+
+  useEffect(() => {
+    if (!want) return
+    if (signedIn === false) {
+      setWant(null)
+      return
+    }
+    if (signedIn !== true || !bb || !bb.ready) return
+    setWant(null)
+    if (!bb.run) return
+    const id = bb.fileCloseCall(want)
+    setRefused(id === null)
+    update((s) => ({ ...s, reportId: id }))
+  }, [want, signedIn, bb, update])
+
+  useEffect(() => {
+    if (screen !== 4) answered.current = false
+  }, [screen])
   if (!state) return null
   const back = screen > 1 ? goBack : null
   const belief = beliefs.find((b) => b.id === state.belief) ?? null
   const need = needs.find((n) => n.id === state.need)
-  const stored = store.get(addiction, "gives") as Partial<GivesState> | undefined
-  const rated = stored && typeof stored === "object" && stored.rated ? stored.rated : {}
+  const rated = parseGives(store.get(addiction, "gives")).rated
 
   const pass = (patch: Partial<SosState> = {}) => {
     update((s) => ({ ...s, ...patch, done: Math.max(s.done, screen) }))
@@ -186,27 +208,27 @@ function Inner({ addiction, beliefs, needs, tape }: InnerProps) {
 
   if (screen === 4) {
     const answer = (passed: boolean) => {
-      let reportId: string | null = null
-      let failed = false
-      if (passed && bb && bb.run) {
-        reportId = bb.fileCloseCall({
+      if (answered.current) return
+      answered.current = true
+      // A close call already filed on this run and not taken back is not filed twice.
+      if (passed && state.reportId === null) {
+        setWant({
           at: nowInBrowser(),
           thought: belief ? (usable<string>(belief.short) ?? "") : "",
           ending: endingForBelief(state.belief, beliefs),
           didInstead: currentSwap(need, rated, state.swapIdx)?.text ?? "",
         })
-        failed = reportId === null
       }
-      setRefused(failed)
+      setRefused(false)
       setUndone(false)
-      pass({ passed, reportId, waitStartedAt: null })
+      pass({ passed, waitStartedAt: null })
     }
     return (
       <>
         {bridge}
         <OneQuestion step={4} total={4} onBack={back}>
           <p className="text-xl font-semibold">{t.sos.toQuestion}</p>
-          <PrimaryButton testId="sos-yes" disabled={bbLoading} onClick={() => answer(true)}>
+          <PrimaryButton testId="sos-yes" onClick={() => answer(true)}>
             {t.sos.yes}
           </PrimaryButton>
           <button
@@ -231,7 +253,9 @@ function Inner({ addiction, beliefs, needs, tape }: InnerProps) {
         <>
           {filed && (
             <div data-testid="sos-saved" className="rounded-lg border border-primary p-4">
-              <p className="font-medium">{t.sos.savedClose}</p>
+              <p data-testid="sos-saved-text" className="font-medium">
+                {state.reportId && bb ? (bb.status(state.reportId) === "saved" ? t.sos.savedClose : bb.status(state.reportId) === "local" ? t.blackbox.localOnly : t.blackbox.saving) : t.blackbox.saving}
+              </p>
               <button
                 type="button"
                 data-testid="sos-undo"
@@ -255,7 +279,7 @@ function Inner({ addiction, beliefs, needs, tape }: InnerProps) {
               {t.blackbox.keepRecord}
             </Link>
           )}
-          {!filed && !undone && signedIn !== true && <p data-testid="sos-next-time">{t.sos.nextTime}</p>}
+          {!filed && !undone && signedIn === false && <p data-testid="sos-next-time">{t.sos.nextTime}</p>}
         </>
       ) : (
         <>

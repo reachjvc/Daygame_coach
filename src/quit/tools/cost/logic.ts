@@ -1,4 +1,5 @@
 import type { QuitCostSwap } from "../../types"
+import { isObj, pickInt, pickStr } from "../common"
 
 export const WEEKS_PER_YEAR = 52
 export const MAX_PER_DAY = 200
@@ -40,7 +41,8 @@ export function computeCost(i: CostInput): CostResult {
   const yearUsd = round2(perYear * i.priceUsd)
   return {
     yearUsd,
-    tenYearUsd: round2(perYear * i.priceUsd * 10),
+    // Ten times the whole-dollar year figure the reader sees.
+    tenYearUsd: Math.round(yearUsd) * 10,
     hoursYear: i.minutesPerUnit === null ? null : Math.round(((perYear * i.minutesPerUnit) / 60) * 10) / 10,
   }
 }
@@ -49,13 +51,39 @@ export function defaultPerDay(unitId: string | null): number {
   return unitId === "cigarettes" ? 10 : 1
 }
 
-/** A typed number, clamped to the range; empty or junk gives null. */
+/** A typed number inside the range (`1e2` is 100); empty, junk or out of range gives null. Never clamps. */
 export function parseAmount(raw: string, min: number, max: number): number | null {
   const s = raw.trim().replace(",", ".")
-  if (s === "" || !/^\d*\.?\d*$/.test(s) || s === ".") return null
+  if (!/^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(s)) return null
   const n = Number(s)
-  if (!Number.isFinite(n)) return null
-  return round2(Math.min(max, Math.max(min, n)))
+  if (!Number.isFinite(n) || n < min || n > max) return null
+  return round2(n)
+}
+
+/** True when something is typed but it is not a usable number in range (so the field says why). */
+export function amountOutOfRange(raw: string, min: number, max: number): boolean {
+  return raw.trim() !== "" && parseAmount(raw, min, max) === null
+}
+
+/** Saved state, checked. */
+export function parseCost(x: unknown): CostState {
+  const o = isObj(x) ? x : {}
+  const r = o.result
+  const num = (v: unknown) => typeof v === "number" && Number.isFinite(v)
+  const result =
+    isObj(r) && num(r.yearUsd) && num(r.tenYearUsd) && (r.hoursYear === null || num(r.hoursYear))
+      ? ({ yearUsd: r.yearUsd, tenYearUsd: r.tenYearUsd, hoursYear: r.hoursYear } as CostResult)
+      : null
+  const perDay = typeof o.perDay === "number" && Number.isFinite(o.perDay) && o.perDay >= 0 && o.perDay <= MAX_PER_DAY ? o.perDay : null
+  return {
+    done: pickInt(o.done, 0, 3, 0),
+    unit: pickStr(o.unit, null),
+    perDay,
+    daysPerWeek: pickInt(o.daysPerWeek, 1, 7, 7),
+    price: pickStr(o.price, ""),
+    minutes: pickStr(o.minutes, ""),
+    result,
+  }
 }
 
 /**

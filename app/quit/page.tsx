@@ -1,11 +1,11 @@
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 import { isLive } from "@/src/quit/data"
-import { frame, menu, previewSuffix, viewableIds } from "@/src/quit/menu"
+import { frame, isFlag, menu, previewSuffix, viewableIds } from "@/src/quit/menu"
 import { QUIT_ADDICTION_IDS } from "@/src/quit/types"
 
 export default async function QuitHome({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const preview = (await searchParams).preview === "1"
+  const preview = isFlag((await searchParams).preview)
   const open = viewableIds(preview)
   const later = QUIT_ADDICTION_IDS.filter((id) => !open.includes(id))
   const q = previewSuffix(preview)

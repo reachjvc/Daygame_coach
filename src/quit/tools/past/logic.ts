@@ -1,6 +1,7 @@
 import type { ViceEndingId } from "@/src/vice/types"
 import type { QuitEnding, QuitPlanStep } from "../../types"
 import { isTodo } from "../../types"
+import { isObj, pickInt, pickOne, pickStrings } from "../common"
 
 export const TRIES = ["0", "1", "2-3", "4-9", "10+"] as const
 export type Tries = (typeof TRIES)[number]
@@ -46,6 +47,39 @@ export const EMPTY_PAST: PastState = {
   helped: [],
   afterSlip: null,
   result: null,
+}
+
+/** Saved state, checked. */
+export function parsePast(x: unknown): PastState {
+  const o = isObj(x) ? x : {}
+  let result: PastResult | null = null
+  const r = o.result
+  if (isObj(r) && Array.isArray(r.riskyEndings) && Array.isArray(r.keep)) {
+    const w = r.dangerWindow
+    result = {
+      longestDays: typeof r.longestDays === "number" && Number.isFinite(r.longestDays) ? r.longestDays : null,
+      dangerWindow: isObj(w) && Number.isFinite(w.from) && Number.isFinite(w.to) ? { from: w.from as number, to: w.to as number } : null,
+      riskyEndings: pickStrings(r.riskyEndings, []),
+      keep: pickStrings(r.keep, []),
+    }
+  }
+  return {
+    done: pickInt(o.done, 0, 4, 0),
+    tries: pickOne(o.tries, TRIES, null),
+    stretchN: pickInt(o.stretchN, 1, 99, 1),
+    stretchUnit: pickOne(o.stretchUnit, STRETCH_UNITS, null),
+    lastEnded: pickOne(o.lastEnded, LAST_ENDED, null),
+    endings: pickStrings(o.endings, []),
+    helped: pickStrings(o.helped, []),
+    afterSlip: pickOne(o.afterSlip, AFTER_SLIP, null),
+    result,
+  }
+}
+
+/** Picking "never tried" clears every later answer, so none of them can show on the result. */
+export function chooseTries(s: PastState, tries: Tries): PastState {
+  if (tries !== "0") return { ...s, tries }
+  return { ...EMPTY_PAST, done: s.done, tries }
 }
 
 /** Screens a run has: one when he has never tried, else four. */
@@ -103,7 +137,7 @@ export function buildResult(s: PastState): PastResult {
   return {
     longestDays: n ? longestDays(n.n, n.unit) : null,
     dangerWindow: n ? dangerWindow(n.n, n.unit) : null,
-    riskyEndings: s.endings.slice(0, 2),
-    keep: s.helped,
+    riskyEndings: s.tries === "0" ? [] : s.endings.slice(0, 2),
+    keep: s.tries === "0" ? [] : s.helped,
   }
 }

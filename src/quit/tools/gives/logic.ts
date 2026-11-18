@@ -1,4 +1,5 @@
 import { NEED_IDS, type QuitSwap } from "../../types"
+import { isDay, isObj, pickInt, pickRecord, pickStrings } from "../common"
 
 export const MAX_NEEDS = 3
 
@@ -14,6 +15,23 @@ export interface GivesState {
 }
 
 export const EMPTY_GIVES: GivesState = { done: 0, picked: null, tried: {}, rated: {} }
+
+/** Saved state, checked. */
+export function parseGives(x: unknown): GivesState {
+  const o = isObj(x) ? x : {}
+  const tried: GivesState["tried"] = {}
+  if (isObj(o.tried)) {
+    for (const [k, v] of Object.entries(o.tried)) {
+      if (isObj(v) && typeof v.swapId === "string" && isDay(v.triedOn)) tried[k] = { swapId: v.swapId, triedOn: v.triedOn }
+    }
+  }
+  return {
+    done: pickInt(o.done, 0, 20, 0),
+    picked: pickStrings(o.picked, null),
+    tried,
+    rated: pickRecord(o.rated, (v): v is number => typeof v === "number" && v >= 0 && v <= 100),
+  }
+}
 
 /** Keeps known need ids, once each, at most 3. */
 export function cleanNeeds(ids: string[], known: readonly string[] = NEED_IDS): string[] {

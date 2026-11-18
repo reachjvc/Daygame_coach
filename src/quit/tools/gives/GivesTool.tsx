@@ -2,16 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
 import { Chips, ClearAnswers, EvidenceChip, OneQuestion, PrimaryButton, SourceTap, SourcesFold } from "../../components/kit"
 import { useQuitStore } from "../../store"
 import { fill, tooltext as t } from "../../tooltext"
 import type { QuitBelief, QuitNeed, QuitSwap, ToolProps } from "../../types"
 import { localDate, realRefs, uniqueRefs, usable } from "../common"
-import { topBeliefs, type BeliefsState } from "../beliefs/logic"
+import { parseBeliefs, topBeliefs } from "../beliefs/logic"
 import { useCarry, useDoneCount, useScreens, useStartCount, useToolState } from "../hooks"
 import { NotReady } from "../NotReady"
-import { cleanNeeds, EMPTY_GIVES, MAX_NEEDS, needsRating, orderSwaps, preselectNeeds, type GivesState } from "./logic"
+import { cleanNeeds, EMPTY_GIVES, MAX_NEEDS, needsRating, orderSwaps, parseGives, preselectNeeds, type GivesState } from "./logic"
 
 /** What it gives you: pick 1 to 3 needs, then three swaps for each. */
 export function GivesTool({ addiction, data }: ToolProps) {
@@ -23,25 +22,38 @@ export function GivesTool({ addiction, data }: ToolProps) {
 
 function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNeed[]; beliefs: QuitBelief[] }) {
   const store = useQuitStore()
-  const sp = useSearchParams()
   const carry = useCarry()
-  const { state, update, clear } = useToolState<GivesState>(addiction, "gives", EMPTY_GIVES)
+  const { state, update, clear } = useToolState<GivesState>(addiction, "gives", EMPTY_GIVES, parseGives)
   const known = useMemo(() => needs.map((n) => n.id as string), [needs])
+
+  // The need a link points to travels in the address after the #, which the browser never sends to the server.
+  // An old link with ?need= is read once and its address rewritten to the # form.
+  const [linkNeed, setLinkNeed] = useState<string | null>(null)
+  useEffect(() => {
+    const fromHash = new URLSearchParams(window.location.hash.replace(/^#/, "")).get("need")
+    const url = new URL(window.location.href)
+    const fromQuery = url.searchParams.get("need")
+    const need = fromHash ?? fromQuery
+    if (fromQuery !== null) {
+      url.searchParams.delete("need")
+      window.history.replaceState(null, "", `${url.pathname}${url.search}${need ? `#need=${encodeURIComponent(need)}` : ""}`)
+    }
+    setLinkNeed(need)
+  }, [])
 
   // The needs picked so far; before any choice, the preselection.
   const pre = useMemo(() => {
-    const stored = store.get(addiction, "beliefs") as Partial<BeliefsState> | undefined
-    const ratings = stored && typeof stored === "object" && stored.ratings ? stored.ratings : {}
+    const ratings = parseBeliefs(store.get(addiction, "beliefs")).ratings
     const topNeeds = topBeliefs(ratings, beliefs)
       .map((b) => usable<string>(b.need))
       .filter((n): n is string => n !== null)
-    return preselectNeeds(sp.get("need"), topNeeds, known)
+    return preselectNeeds(linkNeed, topNeeds, known)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store, addiction, beliefs, known, sp.get("need")])
+  }, [store, addiction, beliefs, known, linkNeed])
 
   const picked = state ? cleanNeeds(state.picked ?? pre, known) : []
   // A link with ?need= starts the pick again from that need.
-  const queryNeed = sp.get("need")
+  const queryNeed = linkNeed
   const appliedNeed = useRef<string | null>(null)
   useEffect(() => {
     if (!state || !queryNeed || appliedNeed.current === queryNeed) return
@@ -52,7 +64,7 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
 
   const total = 1 + picked.length
   const first = (state?.done ?? 0) + 1
-  const { screen, go, back: goBack, reset, isResult } = useScreens(first, total)
+  const { screen, go, back: goBack, reset, isResult } = useScreens(first, total, state !== null)
   const started = useStartCount(addiction, "gives")
   useDoneCount(addiction, "gives", state !== null && isResult)
 
