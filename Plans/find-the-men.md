@@ -1,6 +1,6 @@
 # Find the men: where to reach men who want to quit nicotine, then a morning list
 
-Written 2026-11-18. Status: **plan written; Phase 0 not started.** Part of `Plans/first-1000.md`. It replaces
+Written 2026-11-18. Status: **Phase 0 done 2026-11-18 (scorecard: https://claude.ai/artifact/5SqYSv3Kup5SMvDQj5RRWn); Phase 1 running (queue: https://claude.ai/artifact/49KLP6bzdETbvS4q8pPKLj).** Part of `Plans/first-1000.md`. It replaces
 that plan's "comment on 10 niche posts" task.
 
 ## In plain words
@@ -34,7 +34,10 @@ It runs in this order, and nothing gets built before the step before it has prov
 | YouTube Shorts comments (yt-dlp) | **Yes**: 11 read from a sample Short | Newest first is possible |
 | Phone ping | Possible: the session tool `PushNotification`, the app's own web push, or a scheduled routine. To be tested | — |
 
-## OWNER-ONLY: answer once, at the start of Phase 0
+## OWNER-ONLY: answer once, at the start of Phase 0 — ANSWERED 2026-11-18
+
+Q1 yes, read-only. Q2 yes, Reddit account today. Q3 "online in a chat, but free": a claude.ai routine that
+posts in a chat with a phone push, the same shape as his existing reminder routine.
 
 | # | Question | Recommendation |
 |---|---|---|
@@ -50,10 +53,11 @@ a paid service or an API key, it stops and says so.
 | ID | What | Attempted, and what it returned | Blocks | Recommendation |
 |---|---|---|---|---|
 | B1 | reddit.com JSON blocked | `curl …/r/QuitVaping/new.json` → 403 for 4 forums | — | Use arctic-shift (works) |
-| B2 | Instagram comments need a login | Playwright, logged out, on a Reel: caption and "73 comments" count shown, text behind the login wall | Instagram scanning | Q1 |
-| B3 | TikTok comments | `yt-dlp --write-comments` on a 1.4M-view video → 0 comments | TikTok scanning | Phase 0 tries one other route. If none works, drop it |
-| B4 | Morning automation | Not tried yet: routines (`RemoteTrigger`), local timer, app web push. Each needs a dry run | Phase 2 | Phase 2 tries them in that order |
+| B2 | Instagram comments need a login | Playwright, logged out, on a Reel: caption and "73 comments" count shown, text behind the login wall | Instagram scanning | Q1 yes. 2026-11-18: no VNC and no sudo here, so a login page streams a headless browser to http://localhost:7801; a GET-only reader (`ig-rig/ig-read.mjs`, 250 calls/day cap) uses the saved login. Waiting for his login |
+| B3 | TikTok comments | `yt-dlp --write-comments` on a 1.4M-view video → 0 comments | TikTok scanning | 2026-11-18: `tiktok.com/api/comment/list/?aweme_id=…` works logged out, but no search and no newest-first. Not measured; dropped for now |
+| B4 | Morning automation | Not tried yet: routines (`RemoteTrigger`), local timer, app web push. Each needs a dry run | Phase 2 | Phase 2 tries them in that order. 2026-11-18: his existing claude.ai reminder routine posts in a chat with `notifications.push`; copy that shape (Q3) |
 | B5 | Forum quotes are health disclosures and the repo is public | Memory "repo is public" | All phases | Queue content lives only in the artifact database and in `~/.cache/daygame-research/find-the-men/`. Never in git |
+| B6 | New Reddit accounts are often hidden by AutoModerator (karma/age) | Not measurable without posting | Phase 1 | Each posted comment is looked up in the archive: missing or `[removed]` = hidden. Then slow down and keep to the friendliest forum until the account has karma |
 
 ## PHASES
 
@@ -79,6 +83,22 @@ Opus then checks 5 rows from each agent against the source itself, and writes a 
 the answer to Q1–Q3. **Gate:** no building before the owner has seen it. Recommendations count as accepted
 unless he flags one (memory "no marking everything").
 
+**Result (2026-11-18).** Counted over 7 days (11–18 Nov) from the arctic-shift archive; Opus re-pulled 5 forums and
+the totals matched the agent's within 1 post. Score = intent posts/day × visibility × fit ÷ risk.
+
+| # | Channel | Intent posts/day (strict, broad) | First reply (median) | Score |
+|---|---|---|---|---|
+| 1 | r/stopsmoking | 23.0, 29.3 | 0.5 h | 12.9 |
+| 2 | r/QuitVaping | 16.1, 19.9 | 0.8 h | 10.9 |
+| 3 | r/QuittingZyn | 11.4, 14.4 | 0.9 h | 9.7 |
+| 4 | r/QuitSmokingJourney | 8.7, 13.6 | 75% never answered, 643 members | 2.4 |
+| 5 | YouTube comments (21 quit videos) | 1.6 | 66% unanswered (1 video) | 0.6 |
+
+Not measured: Instagram (comments, tags and search need a login; login page built, waiting for his login),
+TikTok (comments readable logged out via `api/comment/list`, but no search), Facebook, Discord, quit apps.
+Dead or no quit posts: r/QuitZyn, r/Zyn (closed), r/Snus, r/Vaping, r/NicotinePouch, r/DippingTobacco.
+Full table and method: `~/.cache/daygame-research/find-the-men/channels.md`.
+
 ### Phase 1: three-day hand test (depends on 0)
 
 - Each morning, a Sonnet agent fills the **comment queue**: 10 items from the top channels, posted in the last
@@ -92,6 +112,8 @@ unless he flags one (memory "no marking everything").
 
 **Gate (after 3 days, about 30 comments):** keep a channel only if it gave **at least 3 replies back, or 1
 DM**. Drop the others and write down why.
+With three forums sharing about 30 comments, each gets about 10, so the queue page judges each forum at the
+same rate: at least 1 reply per 10 comments, or any DM.
 
 ### Phase 2: automate the morning list (depends on 1)
 
