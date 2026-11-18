@@ -1,6 +1,6 @@
 # Quit tools, copied from the best: one phase per tool
 
-Written 2026-11-18 (Opus, planning session). Status: **running. Phases 0–3 done. Phase 4 `best` in fact-check. Phase 5 copies on main (07e8da2a), `best` brief written. Phase 6 copies in fix round 1. Phase 7 copies building. B1 fixed.**
+Written 2026-11-18 (Opus, planning session). Status: **running. Phases 0–4 done (quitdate best 4c4a6bcd, fact-checked). Phase 5 copies on main, `best` building. Phase 6 copies on main. Phase 7 copies building. B1 fixed. Lint ratchet runs before every push; pushes batched (CI queue, 2026-11-18).**
 
 ## Why this plan exists
 
