@@ -196,6 +196,53 @@ describe("the browser tests that CI actually runs", () => {
   })
 })
 
+describe("which phone and how many workers (Plans/tests-green-and-fast.md, Phase 5)", () => {
+  const lanesIn = (job: string) => new Set(SHARDS.filter((s) => s.job === job).map((s) => s.lane))
+  const project = (name: string) => PROJECTS.find((p) => p.name === name)
+
+  test("every push runs the Android phone; the iPhone runs at night", () => {
+    // D1: the owner's phone is Android and Chromium is faster in CI.
+    expect(project("android")?.use?.defaultBrowserType).toBe("chromium")
+    expect(project("timing-android")?.use?.defaultBrowserType).toBe("chromium")
+    expect([...lanesIn("lanes")].filter((l) => /android|phone/.test(l)).sort()).toEqual(["android", "sweep-phone", "timing-android"])
+    expect([...lanesIn("nightly")].filter((l) => /android|phone/.test(l)).sort()).toEqual(["phone", "timing-phone"])
+    expect(project("phone")?.use?.defaultBrowserType).toBe("webkit")
+  })
+
+  test("the Chromium lanes run three workers in CI, and a broken lane stops after 15 failures", () => {
+    expect(playwrightConfig.workers).toBe(process.env.CI ? 3 : undefined)
+    expect(project("desktop")?.workers, "desktop takes the config's three").toBeUndefined()
+    expect(project("android")?.workers, "android takes the config's three").toBeUndefined()
+    // D3: stop a red lane early instead of retrying each test for 19 minutes.
+    expect(playwrightConfig.maxFailures).toBe(process.env.CI ? 15 : undefined)
+  })
+
+  test("every browser job caches the Next build and the Playwright browsers", () => {
+    for (const job of browserJobs) {
+      const steps = /steps: \*lane-steps/.test(e2eJobs[job] ?? "") ? e2eJobs["lanes"] : (e2eJobs[job] ?? "")
+      expect(steps, `${job}: no Next build cache`).toContain("path: .next-e2e/cache")
+      expect(steps, `${job}: Next cache key`).toContain(
+        "key: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}",
+      )
+      expect(steps, `${job}: no browser cache`).toContain("path: ~/.cache/ms-playwright")
+      expect(steps.indexOf("path: ~/.cache/ms-playwright"), `${job}: browsers cached after the install`).toBeLessThan(
+        steps.indexOf("npx playwright install"),
+      )
+    }
+  })
+
+  test("main push runs share one group, so a newer push replaces a pending run and never a running one", () => {
+    // B8: a dozen main pushes in an hour queued a dozen eleven-job runs.
+    // GitHub cancels only the PENDING run of a group when cancel-in-progress
+    // is false; ci.yml's staging job treats such a cancellation as superseded.
+    const group = e2e.match(/^ {2}group: (.*)$/m)?.[1] ?? ""
+    expect(group).toBe("e2e-${{ github.event_name }}-${{ github.ref }}")
+    expect(group, "a per-run id in the group makes every main run its own group, so none is replaced").not.toContain("run_id")
+    const cancel = e2e.match(/^ {2}cancel-in-progress: (.*)$/m)?.[1] ?? ""
+    expect(cancel, "main runs that have started must finish").toContain("github.ref != 'refs/heads/main'")
+  })
+})
+
 describe("the duration ratchet watches what CI runs", () => {
   /**
    * scripts/ci/durations.mjs fails a suite that has no green run, but only at

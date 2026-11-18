@@ -20,14 +20,24 @@
  * another branch at the same commit, or the nightly run (the other engines),
  * may be newer, and waiting on it would time out. Exit 0 only for a run that finished with `success`; a
  * failure, a cancellation, no run at all, or the timeout exit 1.
+ *
+ * ONE EXCEPTION: SUPERSEDED. e2e.yml lets a newer main push cancel the older
+ * run that is still PENDING (not started), so a burst of main pushes does not
+ * queue a burst of eleven-job runs (Plans/tests-green-and-fast.md, B8). When
+ * the run for this commit ended `cancelled` and main's tip is no longer this
+ * commit, the commit was replaced, not rejected: the job ends successfully,
+ * says so, and tells the next step not to publish (`superseded=true` in
+ * GITHUB_OUTPUT). A cancellation while this commit is still main's tip, or
+ * when main's tip cannot be read, still fails. Every other non-success fails.
  */
 
+import { appendFileSync } from "node:fs"
 import { pathToFileURL } from "node:url"
 
 /**
  * @param {Array<{path: string, head_sha: string, head_branch: string, status: string, conclusion: string|null, created_at: string, html_url: string, event: string}>} runs
  * @param {{ sha: string, path: string, branch: string }} want
- * @returns {{ state: "none" | "wait" | "pass" | "fail", detail: string }}
+ * @returns {{ state: "none" | "wait" | "pass" | "fail", detail: string, cancelled?: boolean }}
  */
 export function decide(runs, { sha, path, branch }) {
   const mine = runs
@@ -37,7 +47,27 @@ export function decide(runs, { sha, path, branch }) {
   const run = mine[0]
   if (run.status !== "completed") return { state: "wait", detail: `${path} is ${run.status}: ${run.html_url}` }
   if (run.conclusion === "success") return { state: "pass", detail: `${path} passed: ${run.html_url}` }
-  return { state: "fail", detail: `${path} finished with ${run.conclusion}: ${run.html_url}` }
+  return {
+    state: "fail",
+    detail: `${path} finished with ${run.conclusion}: ${run.html_url}`,
+    cancelled: run.conclusion === "cancelled",
+  }
+}
+
+/** The commit a branch points at right now, from the API. */
+async function fetchTip({ repository, branch, token }) {
+  const url = `https://api.github.com/repos/${repository}/git/ref/heads/${branch}`
+  const res = await fetch(url, {
+    headers: {
+      accept: "application/vnd.github+json",
+      authorization: `Bearer ${token}`,
+      "x-github-api-version": "2022-11-28",
+    },
+  })
+  if (!res.ok) throw new Error(`GitHub API answered ${res.status} for ${url}`)
+  const sha = (await res.json())?.object?.sha
+  if (typeof sha !== "string" || !sha) throw new Error("GitHub API answer has no object.sha")
+  return sha
 }
 
 async function fetchRuns({ repository, sha, token }) {
@@ -58,6 +88,8 @@ async function fetchRuns({ repository, sha, token }) {
 /**
  * @param {object} o
  * @param {() => Promise<Array<object>>} o.getRuns
+ * @param {() => Promise<string>} [o.getTip] the branch's current commit; without it a cancellation always fails
+ * @param {() => void} [o.onSuperseded] called when the run was cancelled because the branch moved on
  * @param {{ sha: string, path: string }} o.want
  * @param {number} o.timeoutMs
  * @param {number} o.pollMs
@@ -66,7 +98,7 @@ async function fetchRuns({ repository, sha, token }) {
  * @param {(line: string) => void} o.log
  * @returns {Promise<boolean>}
  */
-export async function awaitWorkflow({ getRuns, want, timeoutMs, pollMs, sleep, now, log }) {
+export async function awaitWorkflow({ getRuns, getTip, onSuperseded, want, timeoutMs, pollMs, sleep, now, log }) {
   const deadline = now() + timeoutMs
   let apiFailures = 0
   let last = ""
@@ -84,7 +116,21 @@ export async function awaitWorkflow({ getRuns, want, timeoutMs, pollMs, sleep, n
     if (verdict.detail !== last) log(verdict.detail)
     last = verdict.detail
     if (verdict.state === "pass") return true
-    if (verdict.state === "fail") return false
+    if (verdict.state === "fail") {
+      if (verdict.cancelled && getTip) {
+        try {
+          const tip = await getTip()
+          if (tip !== want.sha) {
+            log(`superseded: ${want.path} was cancelled and ${want.branch} has moved on to ${tip}; nothing is published for ${want.sha}`)
+            onSuperseded?.()
+            return true
+          }
+        } catch (error) {
+          log(`could not read the tip of ${want.branch} (${error.message}); treating the cancellation as a failure`)
+        }
+      }
+      return false
+    }
     if (now() + pollMs > deadline) {
       log(`gave up after ${Math.round(timeoutMs / 60000)} minutes: ${verdict.detail}`)
       return false
@@ -102,6 +148,11 @@ async function main() {
   const path = process.env.WORKFLOW_PATH || ".github/workflows/e2e.yml"
   const ok = await awaitWorkflow({
     getRuns: () => fetchRuns({ repository, sha, token }),
+    getTip: () => fetchTip({ repository, branch, token }),
+    onSuperseded: () => {
+      // Tells the steps after this one (ci.yml's image-staging) not to publish.
+      if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, "superseded=true\n")
+    },
     want: { sha, path, branch },
     timeoutMs: Number(process.env.TIMEOUT_MINUTES || 45) * 60_000,
     pollMs: Number(process.env.POLL_SECONDS || 30) * 1000,

@@ -144,3 +144,66 @@ describe("awaitWorkflow", () => {
     expect(calls).toBe(3)
   })
 })
+
+describe("a run cancelled because main moved on (superseded)", () => {
+  const clock = () => {
+    let t = 0
+    return { now: () => t, sleep: async (ms: number) => void (t += ms) }
+  }
+  const cancelled = [run({ conclusion: "cancelled" })]
+  const go = async (opts: { getTip?: () => Promise<string>; runs?: Array<object> }) => {
+    const lines: string[] = []
+    let superseded = false
+    const ok = await awaitWorkflow({
+      getRuns: async () => opts.runs ?? cancelled,
+      getTip: opts.getTip,
+      onSuperseded: () => void (superseded = true),
+      want,
+      timeoutMs: 60_000,
+      pollMs: 30_000,
+      ...clock(),
+      log: (l) => void lines.push(l),
+    })
+    return { ok, superseded, lines }
+  }
+
+  it("ends successfully, says so, and flags that nothing is to be published", async () => {
+    const r = await go({ getTip: async () => "b".repeat(40) })
+    expect(r.ok).toBe(true)
+    expect(r.superseded).toBe(true)
+    expect(r.lines.join("\n")).toMatch(/superseded/)
+  })
+
+  it("still fails when the cancelled commit is still main's tip", async () => {
+    const r = await go({ getTip: async () => SHA })
+    expect(r.ok).toBe(false)
+    expect(r.superseded).toBe(false)
+  })
+
+  it("still fails when main's tip cannot be read", async () => {
+    const r = await go({
+      getTip: async () => {
+        throw new Error("502")
+      },
+    })
+    expect(r.ok).toBe(false)
+    expect(r.superseded).toBe(false)
+  })
+
+  it("still fails when it was told nothing about main's tip", async () => {
+    expect((await go({})).ok).toBe(false)
+  })
+
+  it("only a cancellation can be superseded: a red run on a commit main has left is still red", async () => {
+    for (const conclusion of ["failure", "timed_out", "skipped", "neutral", "action_required"]) {
+      const r = await go({ runs: [run({ conclusion })], getTip: async () => "b".repeat(40) })
+      expect(r.ok, conclusion).toBe(false)
+      expect(r.superseded, conclusion).toBe(false)
+    }
+  })
+
+  it("decide marks a cancellation, and only that, as one", () => {
+    expect(decide(cancelled, want).cancelled).toBe(true)
+    expect(decide([run({ conclusion: "failure" })], want).cancelled).toBe(false)
+  })
+})

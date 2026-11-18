@@ -208,12 +208,18 @@ jobs:
         with:
           node-version-file: .nvmrc
 
+      # e2e.yml cancels a main run that is still pending when a newer main push
+      # arrives. If this commit's run ended that way and main has moved on, the
+      # commit was superseded, not rejected: this step succeeds, says so, and
+      # sets `superseded=true` so nothing is published for it.
       - name: Wait for the browser tests on this commit
+        id: wait
         run: node scripts/ci/await-workflow.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build, prove and publish the staging image
+        if: ${{ steps.wait.outputs.superseded != 'true' }}
         uses: ./.github/actions/publish-image
         with:
           package: daygame-coach-staging
