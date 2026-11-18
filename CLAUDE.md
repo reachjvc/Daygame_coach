@@ -15,8 +15,9 @@ Product map: `docs/product/map.md`; direction: `docs/product/vision.md`.
   without being asked.
 - `npm run build` keeps `--webpack`; the default bundler exhausts WSL memory.
 - Test writes against the live database go inside `begin; … rollback;`.
-- Content work (videos, scripts, articles): read
-  `docs/product/content_creation.md` first.
+- Content work (videos, scripts, articles), whenever he asks to work on
+  content: read `docs/product/content_creation.md` first (what is going on
+  now), then `docs/product/content_creation_process.md` (how we make it).
 
 ## Working with the owner
 

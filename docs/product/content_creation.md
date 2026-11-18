@@ -1,7 +1,23 @@
 # Content creation
 
 Read this file first whenever the conversation is about content creation
-(YouTube, videos, scripts, articles made for an audience).
+(YouTube, videos, scripts, articles made for an audience). How we make the
+content (the workflow, still being worked out) is in
+`docs/product/content_creation_process.md`; read that next.
+
+## Going on now (keep this list current)
+
+- **Video 01, "The one thing"**: an Instagram Reel of about 2 minutes, with a
+  YouTube version. The private working file is
+  `~/.cache/daygame-research/content/video-01-one-thing.md`.
+  - Script v3 is ready.
+  - The owner records the voiceover; it is on his checklist for 2026-11-19.
+  - Hook: first ideas round done as rough sketches. He liked the calendar
+    and the quest log, and maybe several animation styles in one video.
+  - Next: per-scene choices in the finished look (see the process file).
+- **The process itself**: being worked out on video 01. About 40% there
+  (owner, 2026-11-18).
+- **After video 01**: see "Next video" below.
 
 ## The idea (owner, 2026-11-10)
 
@@ -130,22 +146,8 @@ Raised by the Senior on 2026-11-10, not yet decided:
   phone. The present mode has to be designed for the video frame.
 - Moving through a page live while speaking is hard to do cleanly. Likely
   answer: the page advances one beat per key press, like slides.
-- Video one is the pilot: log the hours per step, then decide the pipeline.
 - `docs/product/brand.md` (name status, campaign line) applies to anything
   published.
-
-## Process learnings (owner, 2026-11-18)
-
-- Claude can make quite nice animations.
-- Rounds where Claude has to guess the single most valuable thing to add or
-  remove are not efficient. A good process for content creation is not found
-  yet.
-- Likely better: more handholding, and he sees frames of what Claude intends
-  to make before Claude spends hours making it.
-- With all of the script, or more of it, Claude can make better animations.
-- In general, early on: much more variance. A bunch of quite different
-  ideas, because something completely different could be the ideal; plus
-  close cousins of what he already likes, as iterations.
 
 ## Decisions
 
