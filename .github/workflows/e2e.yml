@@ -45,6 +45,11 @@ on:
 permissions:
   contents: read
 
+# onnxruntime-node (via @huggingface/transformers) downloads CUDA binaries on Linux during npm ci;
+# the v1.21.0 GPU archive is gone from GitHub (404, 2026-11-18) and nothing here uses a GPU.
+env:
+  ONNXRUNTIME_NODE_INSTALL_CUDA: skip
+
 # A newer push to the same branch stops the older run: its answer is about a
 # commit nobody is looking at. Never on main, whose runs ci.yml's staging job
 # waits for, and never the nightly run.

@@ -24,6 +24,11 @@ permissions:
   # The duration ratchet reads earlier runs' job and step times.
   actions: read
 
+# onnxruntime-node (via @huggingface/transformers) downloads CUDA binaries on Linux during npm ci;
+# the v1.21.0 GPU archive is gone from GitHub (404, 2026-11-18) and nothing here uses a GPU.
+env:
+  ONNXRUNTIME_NODE_INSTALL_CUDA: skip
+
 jobs:
   # The crisis numbers in src/vice/data/help.ts must have been checked by a
   # person in the last 90 days. The test says why it fails rather than warns,
