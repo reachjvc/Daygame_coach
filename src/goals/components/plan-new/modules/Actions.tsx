@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useState } from "react"
 import { actionsCopy } from "@/src/goals/planSteps/copy/actions"
 import { commonCopy } from "@/src/goals/planSteps/copy/common"
-import { activeSeasonGoals, itemsServingSeason, weeklyItems } from "@/src/goals/planSteps/planFacts"
+import { protectedId, activeSeasonGoals, itemsServingSeason, weeklyItems } from "@/src/goals/planSteps/planFacts"
 import { addAction, addSubStep, linkStepToGoal, removeAction, removeSubStep, setPracticeLoad, setProtected, setStepDays, updateAction } from "@/src/goals/planSteps/planChanges"
 import { ideasFor } from "@/src/goals/planSteps/areaThemes"
 import { homeHref, screenHref } from "@/src/goals/planSteps/planRoutes"
@@ -171,7 +171,7 @@ function Protect() {
   const { plan, change } = usePlanNew()
   const nav = useNav("actions/done")
   const items = weeklyItems(plan)
-  const [id, setId] = useState<string | null>(plan.seasonFocusId && items.some((i) => i.id === plan.seasonFocusId) ? plan.seasonFocusId : null)
+  const [id, setId] = useState<string | null>(items.some((i) => i.id === protectedId(plan)) ? protectedId(plan) : null)
   if (items.length === 0) return <NeedsFirst eyebrow={actionsCopy.name} kind="weekly_action" href={screenHref("actions/goal")} back={homeHref()} />
   const commit = () => change((p) => setProtected(p, id))
   return (
@@ -239,10 +239,10 @@ function Done() {
       {goals.map((g) => (
         <section key={g.id} className="space-y-2" data-testid={`done-actions-${g.id}`}>
           <h2 className="text-sm font-semibold text-zinc-300">{g.title}</h2>
-          {g.type === "habit_ramp" && <Row label="" href={nav.change(`actions/goal/${g.id}`)}>{fill(d.times, { n: g.perWeek ?? g.daysPerWeek })}{plan.seasonFocusId === g.id && ` · ${d.protected_badge}`}</Row>}
+          {g.type === "habit_ramp" && <Row label="" href={nav.change(`actions/goal/${g.id}`)}>{fill(d.times, { n: g.perWeek ?? g.daysPerWeek })}{protectedId(plan) === g.id && ` · ${d.protected_badge}`}</Row>}
           {stepsServing(plan, g.id).map((s) => (
             <Row key={s.id} label="" href={nav.change(`actions/goal/${g.id}`)}>
-              <span className="block">{s.title}{plan.seasonFocusId === s.id && <span className="ml-2 rounded-full border border-violet-400/50 px-2 text-xs text-violet-200">{d.protected_badge}</span>}</span>
+              <span className="block">{s.title}{protectedId(plan) === s.id && <span className="ml-2 rounded-full border border-violet-400/50 px-2 text-xs text-violet-200">{d.protected_badge}</span>}</span>
               <span className="block text-xs text-zinc-400">{fill(d.times, { n: s.daysPerWeek })} {dayLine(s)}</span>
               <Link href={screenHref(`actions/sub/${s.id}`)} className="text-xs text-zinc-400 underline">{d.checklist_link}</Link>
             </Row>

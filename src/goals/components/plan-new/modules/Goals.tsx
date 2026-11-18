@@ -64,7 +64,8 @@ function runOf(goal: NsGoal, hasBigger: boolean): string[] {
 
 function useRun(id: string, here: string) {
   const { plan } = usePlanNew()
-  const goal = plan.goals.find((g) => g.id === id)!
+  const goal = plan.goals.find((g) => g.id === id)
+  if (!goal) return { dots: { n: 1, m: 6 }, next: "goals/list", prev: null as string | null }
   const hasBigger = [...goalsOfTier(plan, "life"), ...goalsOfTier(plan, "become")].length > 0
   const run = runOf(goal, hasBigger)
   const i = Math.max(0, run.indexOf(here))
@@ -88,7 +89,7 @@ function What({ id }: { id: string | null }) {
   const [title, setTitle] = useState(goal?.title ?? "")
   const [areaId, setAreaId] = useState(goal?.areaId ?? defaultArea)
   const run = useRun(id ?? "", "what")
-  const dots = id ? run.dots : { n: 1, m: 6 }
+  const dots = run.dots
   const feeds = search.get("feeds")
   const go = () => {
     const t = title.trim()

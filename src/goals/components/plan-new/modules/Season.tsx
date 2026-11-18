@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useState } from "react"
 import { seasonCopy, seasonCloseCopy } from "@/src/goals/planSteps/copy/season"
 import { commonCopy } from "@/src/goals/planSteps/copy/common"
-import { activeAreas, activeSeasonGoals, goalsOfTier, seasonTakeKey } from "@/src/goals/planSteps/planFacts"
+import { protectedId, activeAreas, activeSeasonGoals, goalsOfTier, seasonTakeKey } from "@/src/goals/planSteps/planFacts"
 import {
   closeSeason, sayYes, setSeasonAreas, setSeasonBigGoals, setSeasonEnd, setSeasonFocusSentence, setSeasonWhy, takeYesBack, type CloseChoice,
 } from "@/src/goals/planSteps/planChanges"
@@ -262,7 +262,7 @@ function Done() {
   const s = plan.season
   const big = goalsOfTier(plan, "life").filter((g) => g.servesOneThing)
   const areaNames = plan.seasonAreaIds.map((id) => plan.areas.find((a) => a.id === id)?.label).filter(Boolean)
-  const focus = plan.seasonFocusId
+  const focus = protectedId(plan)
   const focusTitle =
     plan.goals.find((g) => g.id === focus)?.title ?? plan.routines.flatMap((r) => r.steps).find((x) => x.id === focus)?.title
   return (
@@ -375,14 +375,14 @@ function Brought({ chrome }: { chrome: { eyebrow: string; dots: { n: number; m: 
   const achieved = plan.goals.filter((g) => g.status === "achieved" && g.statusOn && g.statusOn >= since).length
   const season = plan.goals.filter((g) => g.servesOneThing)
   const rungs = season.flatMap((g) => g.checkpoints).filter((c) => c.done && (!c.doneOn || c.doneOn >= since)).length
-  const protectedId = plan.seasonFocusId
+  const protectedKey = protectedId(plan)
   const weeks = new Set<string>()
   const allWeeks = new Set<string>()
   for (let d = since; d <= today; d = addDaysISO(d, 1)) {
     const dt = new Date(`${d}T00:00:00`)
     const monday = addDaysISO(d, -((dt.getDay() + 6) % 7))
     allWeeks.add(monday)
-    if (protectedId && (plan.logged[d] ?? []).includes(protectedId)) weeks.add(monday)
+    if (protectedKey && (plan.logged[d] ?? []).includes(protectedKey)) weeks.add(monday)
   }
   const practice = season.filter((g) => g.type === "habit_ramp").map((g) => ({
     g, total: Object.entries(plan.numbers).reduce((sum, [d, m]) => (d >= since ? sum + (m[g.id] ?? 0) : sum), 0),
@@ -393,7 +393,7 @@ function Brought({ chrome }: { chrome: { eyebrow: string; dots: { n: number; m: 
       <ul className={`${card} space-y-1 text-sm text-zinc-200`}>
         <li>{plural(seasonCloseCopy.brought, "achieved", achieved)}</li>
         <li>{plural(seasonCloseCopy.brought, "rungs", rungs)}</li>
-        {protectedId && <li>{fill(seasonCloseCopy.brought.protected_kept, { n: weeks.size, m: allWeeks.size })}</li>}
+        {protectedKey && <li>{fill(seasonCloseCopy.brought.protected_kept, { n: weeks.size, m: allWeeks.size })}</li>}
         {practice.map((p) => <li key={p.g.id}>{fill(seasonCloseCopy.brought.practice_total, { goal: p.g.title, n: p.total })}</li>)}
       </ul>
       {nothing && <p className="text-sm text-zinc-400">{seasonCloseCopy.brought.empty}</p>}

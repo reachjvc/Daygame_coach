@@ -12,7 +12,7 @@ import { reviewCopy } from "@/src/goals/planSteps/copy/review"
 import { commonCopy } from "@/src/goals/planSteps/copy/common"
 import { CORE_IDS, EXTRA_IDS, screenHref, readHref, type CoreId } from "@/src/goals/planSteps/planRoutes"
 import { firstTarget, type ModuleStatus } from "@/src/goals/planSteps/planStatus"
-import { goalsOfTier, weeklyItems } from "@/src/goals/planSteps/planFacts"
+import { protectedId, goalsOfTier, weeklyItems } from "@/src/goals/planSteps/planFacts"
 import { fill, plural } from "@/src/goals/planSteps/text"
 import { ROUTES } from "@/src/shared/routes"
 import { addDaysISO } from "@/src/goals/northStarService"
@@ -34,7 +34,7 @@ export function Home() {
   if (!store.loaded) return <p className="px-4 text-sm text-zinc-500">…</p>
 
   const daysLeft = plan.season?.endsOn ? Math.round((Date.parse(plan.season.endsOn) - Date.parse(today)) / 86_400_000) : null
-  const protectedItem = weeklyItems(plan).find((i) => i.id === plan.seasonFocusId)
+  const protectedItem = weeklyItems(plan).find((i) => i.id === protectedId(plan))
   const monday = (() => {
     const d = new Date(`${today}T00:00:00`)
     return addDaysISO(today, -((d.getDay() + 6) % 7))

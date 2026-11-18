@@ -33,6 +33,7 @@ export function createPlanStore(deps: PlanStoreDeps): PlanStore {
   let dirty = false
   let pump: Promise<boolean> | null = null
   let loading: Promise<void> | null = null
+  let read = false
 
   const set = (patch: Partial<PlanStoreState>) => {
     state = { ...state, ...patch }
@@ -40,10 +41,12 @@ export function createPlanStore(deps: PlanStoreDeps): PlanStore {
   }
 
   const load = (): Promise<void> => {
+    if (read) return Promise.resolve()
     if (loading) return loading
     loading = (async () => {
       const [server, days] = await Promise.all([deps.fetchPlan(), deps.fetchDays()])
       loading = null
+      read = server !== undefined
       // A read that failed is "nobody knows", never "empty": nothing may be saved over it.
       if (server === undefined) {
         set({ loaded: true, status: "offline", note: deps.messages.offline })
@@ -140,7 +143,7 @@ export function createPlanStore(deps: PlanStoreDeps): PlanStore {
     async retry() {
       if (state.status === "offline") {
         set({ status: "loading", note: "" })
-        loading = null
+        read = false
         await load()
         return state.status !== "offline"
       }
@@ -149,7 +152,7 @@ export function createPlanStore(deps: PlanStoreDeps): PlanStore {
     },
     async reload() {
       await flush()
-      loading = null
+      read = false
       set({ status: "loading" })
       await load()
     },

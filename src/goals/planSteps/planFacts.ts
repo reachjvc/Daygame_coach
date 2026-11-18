@@ -18,10 +18,24 @@ export const AREAS_DESCRIBED_KEY = `${NEW_PREFIX}areas-described`
 export const CHECKIN_DAY_KEY = `${NEW_PREFIX}checkin-day`
 export const CHECKIN_HOUR_KEY = `${NEW_PREFIX}checkin-hour`
 export const CHECKIN_PHONE_KEY = `${NEW_PREFIX}checkin-phone`
+export const foldedKey = (oldAreaId: string) => `${NEW_PREFIX}folded:${oldAreaId}`
+export const ratingScaleKey = (fieldId: string) => `${NEW_PREFIX}rating-scale:${fieldId}`
+export const ratingAreaKey = (fieldId: string) => `${NEW_PREFIX}rating-area:${fieldId}`
+export const ratingLabelsKey = (fieldId: string) => `${NEW_PREFIX}rating-labels:${fieldId}`
 export const tierKey = (goalId: string) => `${NEW_PREFIX}tier:${goalId}`
 export const unfiledKey = (goalId: string) => `${NEW_PREFIX}unfiled:${goalId}`
 export const seasonTakeKey = (seasonId: string) => `${NEW_PREFIX}season-take:${seasonId}`
 export const SEASON_YES_ON_KEY = `${NEW_PREFIX}season-yes-season`
+
+export const PROTECTED_KEY = `${NEW_PREFIX}protected`
+
+/**
+ * What this season protects. A goal's id can live in the plan's own focus field; a routine step's id cannot (the
+ * plan's load drops it), so a protected step is kept as an answer. One reader for both.
+ */
+export function protectedId(plan: NsPlan): string | null {
+  return plan.answers[PROTECTED_KEY]?.trim() || plan.seasonFocusId || null
+}
 
 export type GoalTier = "life" | "become" | "season"
 

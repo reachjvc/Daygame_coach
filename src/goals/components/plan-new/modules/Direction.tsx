@@ -10,7 +10,7 @@ import {
   addBigGoal, addGrowthGoal, dropGoal, fileBigGoal, renameGoal, setGoalWhy, setPicture, setStarWhy, startNewNorthStar,
 } from "@/src/goals/planSteps/planChanges"
 import { directionNotes } from "@/src/goals/planSteps/earlierNotes"
-import { ideasFor } from "@/src/goals/planSteps/areaThemes"
+import { ideasFor, northStarIdeaFor } from "@/src/goals/planSteps/areaThemes"
 import { homeHref, screenHref } from "@/src/goals/planSteps/planRoutes"
 import { fill } from "@/src/goals/planSteps/text"
 import type { NsGoal } from "@/src/goals/types"
@@ -90,7 +90,8 @@ function Picture() {
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">{directionCopy.stuck.ideas_heading}</p>
             {areas.map((a) => {
-              const ideas = ideasFor(a, directionCopy.ideas_per_area)
+              const own = northStarIdeaFor(a)
+              const ideas = [...(own ? [own] : []), ...ideasFor(a, directionCopy.ideas_per_area)]
               return ideas.length ? (
                 <div key={a.id} className="mt-2">
                   <p className="text-xs text-zinc-400">{a.label}</p>

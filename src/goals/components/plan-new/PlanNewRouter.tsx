@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { CORE_IDS, type CoreId, homeHref } from "@/src/goals/planSteps/planRoutes"
-import { commonCopy } from "@/src/goals/planSteps/copy/common"
+import { commonCopy, saveCopy } from "@/src/goals/planSteps/copy/common"
 import { Home } from "./Home"
 import { ReadAll } from "./ReadAll"
 import { AreasModule } from "./modules/Areas"
@@ -28,7 +28,7 @@ export function PlanNewRouter({ slug }: { slug: string[] }) {
     return (
       <div className="mx-auto max-w-xl space-y-3 px-4" role="alert">
         <p className="text-sm text-rose-300">{store.note}</p>
-        <button type="button" className={btnQuiet} onClick={() => void store.retry()}>{commonCopy.back}</button>
+        <button type="button" className={btnQuiet} onClick={() => void store.retry()}>{saveCopy.retry}</button>
       </div>
     )
   }

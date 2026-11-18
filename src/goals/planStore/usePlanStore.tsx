@@ -15,12 +15,31 @@ import { fetchLifePlan, newNodeId, saveLifePlanChanges, startLifePlan } from "@/
 import { fetchDayRecord } from "@/src/goals/lifePlanDayClient"
 import { guardSandboxRequests, onAccountChanged, ACCOUNT_CHANGED_MESSAGE } from "@/src/goals/planAccount"
 import { emptyNsPlan } from "@/src/goals/northStarService"
+import { PLAN_AREAS, DEFAULT_RATING } from "@/src/goals/planSteps/copy/planAreas"
+import { ratingAreaKey, ratingLabelsKey, ratingScaleKey } from "@/src/goals/planSteps/planFacts"
 import { createPlanStore, type PlanStoreDeps } from "./createPlanStore"
 import type { PlanStore, PlanStoreState } from "./types"
 
-/** The plan an account with nothing starts from: his areas as they are, and no routines until the person adds some. */
+/**
+ * The plan an account with nothing starts from: the eight areas the owner picked, no routines until
+ * the person adds some, and one daily rating (1 to 5) on Feeling about life. The rating's scale and
+ * area have no column yet, so they are kept as the plan's own `start:` answers (`planFacts.ts`).
+ */
 export function newAccountPlan(): NsPlan {
-  return { ...emptyNsPlan(), routines: [] }
+  const base = emptyNsPlan()
+  const seq = base.seq + 1
+  return {
+    ...base,
+    routines: [],
+    areas: PLAN_AREAS.map((a) => ({ id: a.id, label: a.label, sublabel: a.covers, color: a.color, custom: false })),
+    fields: [{ id: DEFAULT_RATING.id, label: DEFAULT_RATING.question, targetId: null, kind: "number", readSourceId: null }],
+    answers: {
+      [ratingScaleKey(DEFAULT_RATING.id)]: String(DEFAULT_RATING.scale),
+      [ratingAreaKey(DEFAULT_RATING.id)]: DEFAULT_RATING.areaId,
+      [ratingLabelsKey(DEFAULT_RATING.id)]: `${DEFAULT_RATING.lowLabel}|${DEFAULT_RATING.highLabel}`,
+    },
+    seq,
+  }
 }
 
 export function realDeps(account: string): PlanStoreDeps {

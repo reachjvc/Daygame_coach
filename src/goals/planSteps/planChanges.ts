@@ -16,7 +16,7 @@ import { SEASON_ANSWER_KEYS } from "@/src/goals/seasonAnswers"
 import { addDays } from "@/src/goals/oneThingService"
 import { periodOf, reviewIdFor } from "@/src/goals/reviewService"
 import {
-  AREAS_DESCRIBED_KEY, CHECKIN_DAY_KEY, CHECKIN_HOUR_KEY, CHECKIN_PHONE_KEY, HIDDEN_AREAS_KEY, activeAreas, hiddenAreaIds, seasonTakeKey, tierKey, unfiledKey, type GoalTier,
+  AREAS_DESCRIBED_KEY, PROTECTED_KEY, CHECKIN_DAY_KEY, CHECKIN_HOUR_KEY, CHECKIN_PHONE_KEY, HIDDEN_AREAS_KEY, activeAreas, hiddenAreaIds, seasonTakeKey, tierKey, unfiledKey, type GoalTier,
 } from "./planFacts"
 
 export { setNorthStar, startNewNorthStar, removeAction, updateAction, addAction, addSubStep, removeSubStep, linkStepToGoal, updateStep }
@@ -189,6 +189,7 @@ export function closeSeason(plan: NsPlan, today: string, take: string, choices: 
     return { ...g, servesOneThing: false }
   })
   const answers = { ...plan.answers, ...cleared }
+  delete answers[PROTECTED_KEY]
   if (take.trim()) answers[seasonTakeKey(s.id)] = take.trim()
   return {
     ...plan,
@@ -370,7 +371,9 @@ export function addToSeason(plan: NsPlan, id: string): NsPlan {
 // ------------------------------------------------------------------ actions
 
 export function setProtected(plan: NsPlan, id: string | null): NsPlan {
-  return { ...plan, seasonFocusId: id, updatedAt: new Date().toISOString() }
+  const isGoal = id != null && plan.goals.some((g) => g.id === id)
+  const next = { ...plan, seasonFocusId: isGoal ? id : null, updatedAt: new Date().toISOString() }
+  return withAnswers(next, { [PROTECTED_KEY]: id && !isGoal ? id : null })
 }
 
 export function setStepDays(plan: NsPlan, stepId: string, days: number[], startMin: number | null): NsPlan {

@@ -16,7 +16,7 @@ import { isoWeekday } from "@/src/goals/dueNowService"
 import { addDays } from "@/src/goals/oneThingService"
 import { periodOf } from "@/src/goals/reviewService"
 import {
-  activeAreas, activeSeasonGoals, carriesOldDescription, checkinSettings, goalsOfTier, hiddenAreaIds, isActive, isUnfiled,
+  activeAreas, activeSeasonGoals, protectedId, carriesOldDescription, checkinSettings, goalsOfTier, hiddenAreaIds, isActive, isUnfiled,
   itemsServingSeason, numbersComplete, weeklyItems, AREAS_DESCRIBED_KEY, type RemindersRow,
 } from "./planFacts"
 import { CORE_IDS, screenHref, type CoreId } from "./planRoutes"
@@ -164,7 +164,7 @@ function actionsModule(plan: NsPlan): { started: boolean; reasons: PlanReason[] 
     if (!items.some((i) => i.kind === "step" && i.serves.includes(g.id))) add("actions.goal-bare", "check", `actions/goal/${g.id}`, g.id)
   }
   if (plan.season) {
-    const f = plan.seasonFocusId
+    const f = protectedId(plan)
     const exists = f != null && items.some((i) => i.id === f)
     if (!exists) add("actions.protect", "check", "actions/protect")
   }

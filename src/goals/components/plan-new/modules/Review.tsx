@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useState } from "react"
 import { reviewCopy } from "@/src/goals/planSteps/copy/review"
 import { commonCopy } from "@/src/goals/planSteps/copy/common"
-import { activeSeasonGoals, checkinSettings, weeklyItems, type WeeklyItem } from "@/src/goals/planSteps/planFacts"
+import { protectedId, activeSeasonGoals, checkinSettings, weeklyItems, type WeeklyItem } from "@/src/goals/planSteps/planFacts"
 import { dueCheckinWeek } from "@/src/goals/planSteps/planStatus"
 import { nudgeWeekly, setCheckin, setRungReward, writeWeek } from "@/src/goals/planSteps/planChanges"
 import { homeHref, screenHref } from "@/src/goals/planSteps/planRoutes"
@@ -156,7 +156,7 @@ function weekFacts(plan: NsPlan, today: string, hour: number): WeekFacts {
     const done = days.filter((d) => (plan.logged[d] ?? []).includes(item.id)).length
     const goal = plan.goals.find((g) => g.id === item.id)
     const step = plan.routines.flatMap((r) => r.steps).find((x) => x.id === item.id)
-    return { item, done, planned: goal ? goal.perWeek ?? goal.daysPerWeek : step?.daysPerWeek ?? 0, protected: plan.seasonFocusId === item.id }
+    return { item, done, planned: goal ? goal.perWeek ?? goal.daysPerWeek : step?.daysPerWeek ?? 0, protected: protectedId(plan) === item.id }
   })
   items.sort((a, b) => Number(b.protected) - Number(a.protected))
   return { monday, sunday: addDaysISO(monday, 6), items }
@@ -180,7 +180,11 @@ function Run({ step }: { step: string }) {
   const prev = visible[here - 1]
   const chrome = { eyebrow: reviewCopy.name, dots, back: { href: prev ? screenHref(`review/run/${prev}`) : screenHref("review/done") } }
   const started = plan.reviews.some((r) => r.id === `week-${facts.monday}`)
-  const ensure = () => { if (!started) change((p) => writeWeek(p, facts.monday, today, {})) }
+  // The week's numbers are what keeps the check-in row (a row with no words is not kept by the plan's own save).
+  const summary = facts.items.length
+    ? facts.items.map((f) => `${f.item.title}: ${fill(reviewCopy.run.week.done_of_planned, { done: f.done, planned: f.planned })}`)
+    : [reviewCopy.run.week.empty]
+  const ensure = () => { if (!started) change((p) => writeWeek(p, facts.monday, today, { nextOutcomes: summary.join("\n") })) }
   const r = reviewCopy.run
 
   if (step === "rungs") {
@@ -220,7 +224,7 @@ function Run({ step }: { step: string }) {
                 if (moved.from !== moved.to) lines.push(fill(r.next.change_line, { item: f.item.title, from: moved.from, to: moved.to }))
                 acc = moved.plan
               }
-              return writeWeek(acc, facts.monday, today, { nextOutcomes: lines.join("\n") })
+              return writeWeek(acc, facts.monday, today, { nextOutcomes: [...summary, ...lines].join("\n") })
             })
             go("done")
           },
@@ -317,7 +321,7 @@ function Slipped({ chrome, monday, onNext }: { chrome: { eyebrow: string; dots: 
   const [text, setText] = useState(week?.lessons ?? "")
   const commit = () => change((p) => writeWeek(p, monday, today, { lessons: text }))
   return (
-    <Frame {...chrome} testId="run-slipped" title={s.title} help={s.help} next={{ onClick: () => { commit(); onNext() } }} skip={{ onClick: () => { change((p) => writeWeek(p, monday, today, {})); onNext() } }}>
+    <Frame {...chrome} testId="run-slipped" title={s.title} help={s.help} next={{ onClick: () => { commit(); onNext() } }} skip={{ onClick: onNext }}>
       <GrownText label={s.field_label} value={text} onChange={setText} placeholder={s.placeholder} max={3000} rows={3} testId="slipped-text" />
     </Frame>
   )

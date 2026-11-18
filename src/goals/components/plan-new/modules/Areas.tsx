@@ -8,7 +8,9 @@ import Link from "next/link"
 import { homeHref } from "@/src/goals/planSteps/planRoutes"
 import { usePlanNew } from "../PlanNewContext"
 import { useNav } from "../nav"
-import { DoneScreen } from "../shared"
+import { DoneScreen, EarlierBlock } from "../shared"
+import { areasSwitchCopy } from "@/src/goals/planSteps/copy/planAreas"
+import { foldAreas, foldedNotes, matchOldAreas } from "@/src/goals/planSteps/foldAreas"
 import { Chip, Frame, GrownText, Line, Row, TapOrder, btnQuiet, card, linkQuiet } from "../ui"
 
 export function AreasModule({ segs }: { segs: string[] }) {
@@ -18,6 +20,37 @@ export function AreasModule({ segs }: { segs: string[] }) {
   if (screen === "order") return <Order />
   if (screen === "done") return <Done />
   return <Pick />
+}
+
+/** Not in the words file: the plain line that names areas the switch leaves alone. */
+const LEFT_ALONE = "These stay as they are:"
+
+function SwitchAreas() {
+  const { plan, change } = usePlanNew()
+  const [asking, setAsking] = useState(false)
+  const [done, setDone] = useState(false)
+  const match = matchOldAreas(plan)
+  if (done) return <p className="text-sm text-emerald-200" role="status" data-testid="switch-done">{areasSwitchCopy.done_toast}</p>
+  if (Object.keys(match.mapping).length === 0) return null
+  return (
+    <section className={card} data-testid="switch-areas">
+      <h2 className="text-sm font-semibold text-zinc-100">{areasSwitchCopy.action}</h2>
+      <p className="mt-1 text-xs text-zinc-400">{areasSwitchCopy.help}</p>
+      {asking ? (
+        <div className="mt-3 space-y-2" role="alertdialog" aria-label={areasSwitchCopy.confirm_title}>
+          <p className="text-sm font-medium text-zinc-100">{areasSwitchCopy.confirm_title}</p>
+          <p className="text-sm text-zinc-300">{areasSwitchCopy.confirm_body}</p>
+          {match.unmatched.length > 0 && <p className="text-sm text-amber-200" data-testid="switch-unmatched">{LEFT_ALONE} {match.unmatched.map((a) => a.label).join(", ")}</p>}
+          <div className="flex gap-2">
+            <button type="button" className={btnQuiet} data-testid="switch-yes" onClick={() => { change((p) => foldAreas(p, matchOldAreas(p).mapping)); setAsking(false); setDone(true) }}>{areasSwitchCopy.confirm_yes}</button>
+            <button type="button" className={btnQuiet} onClick={() => setAsking(false)}>{areasSwitchCopy.cancel}</button>
+          </div>
+        </div>
+      ) : (
+        <button type="button" className={`${btnQuiet} mt-3`} data-testid="switch-go" onClick={() => setAsking(true)}>{areasSwitchCopy.button}</button>
+      )}
+    </section>
+  )
 }
 
 function stepsOf(count: number): number {
@@ -93,6 +126,7 @@ function Pick() {
       next={{ disabled: tooFew || blank, onClick: () => nav.go(`areas/describe`) }}
       later={{ href: homeHref() }}
     >
+      <SwitchAreas />
       <ul className="space-y-2">{active.map((a) => row(a.id, a.label, true))}</ul>
       {tooFew && <p className="text-sm text-amber-300" role="status">{areasCopy.pick.error_few}</p>}
       {blank && <p className="text-sm text-amber-300" role="status">{areasCopy.pick.error_blank}</p>}
@@ -187,6 +221,8 @@ function Done() {
       {hidden.length > 0 && (
         <Row label={areasCopy.done.hidden_label}>{hidden.map((a) => a.label).join(", ")}</Row>
       )}
+      <SwitchAreas />
+      <EarlierBlock notes={active.flatMap((a) => foldedNotes(plan, a.id).map((n) => ({ topic: `${a.label} (${n.from})`, text: n.text })))} topics={{}} />
       <div className="flex gap-4">
         <Link className={linkQuiet} href={nav.change("areas/describe")}>{areasCopy.describe.field_label}</Link>
         {active.length >= 3 && <Link className={linkQuiet} href={nav.change("areas/order")}>{areasCopy.order.title}</Link>}
