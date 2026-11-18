@@ -54,7 +54,8 @@ for (const colorScheme of ["dark", "light"] as const) {
         if (!href.startsWith("/quit/nicotine/")) continue
         const res = await page.goto(href)
         expect(res?.status(), href).toBe(200)
-        await expect(page.getByTestId("coming-soon"), href).toBeVisible()
+        await expect(page.locator("h1"), href).toBeVisible()
+        await expect(page.locator("body"), href).not.toContainText(/could not load|Application error/)
         await noSidewaysScroll(page)
       }
     })

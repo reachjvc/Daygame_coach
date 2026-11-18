@@ -144,7 +144,8 @@ test.describe("quit wave 1 part 2, signed out @phone", () => {
     await expect(page.getByTestId("symptom-worst")).toHaveText(`Worst: ${sleep.peak}`)
     await expect(page.getByTestId("symptom-eases")).toHaveText(`Usually eases: ${sleep.lasts}`)
     await expect(page.getByTestId("symptom-detail")).not.toContainText(sleep.text)
-    await expect(page.getByTestId("symptom-help").first()).toContainText(data.symptomHelp.find((h) => h.symptom === "sleep")!.text)
+    // the four rules below answer sleep, so its single help row is hidden
+    await expect(page.getByTestId("symptom-help")).toHaveCount(0)
     await expect(page.getByTestId("sleep-rules").locator("li")).toHaveCount(4)
     await expect(page.getByTestId("symptom-detail")).toContainText(data.symptomCourseNote)
     await expect(page.getByTestId("symptom-detail")).toContainText(t.evidence.weak)

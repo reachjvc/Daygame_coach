@@ -271,7 +271,8 @@ test.describe("quit wave 1 part 1 @phone", () => {
     await shot(page, "cost-result")
     const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("quit-v1") ?? "{}").nicotine.cost.result)
     expect(stored.yearUsd).toBeGreaterThan(0)
-    expect(stored.tenYearUsd).toBeCloseTo(stored.yearUsd * 10, 1)
+    // ten years = ten times the whole-dollar year figure the reader sees
+    expect(stored.tenYearUsd).toBe(Math.round(stored.yearUsd) * 10)
   })
 
   test("how shows every number card, hope first", async ({ page }) => {
