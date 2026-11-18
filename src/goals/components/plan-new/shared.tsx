@@ -4,18 +4,17 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState, type ReactNode } from "react"
 import { commonCopy, doneSummaryCopy, earlierNotesCopy } from "@/src/goals/planSteps/copy/common"
-import type { CoreId } from "@/src/goals/planSteps/planRoutes"
-import { homeHref, screenHref } from "@/src/goals/planSteps/planRoutes"
+import type { ModuleId } from "@/src/goals/planSteps/planRoutes"
+import { homeHref, screenHref, todayHref, isExtraId } from "@/src/goals/planSteps/planRoutes"
 import type { EarlierNote } from "@/src/goals/planSteps/earlierNotes"
-import { ROUTES } from "@/src/shared/routes"
 import { usePlanNew } from "./PlanNewContext"
 import { Frame, btnQuiet, card, linkQuiet } from "./ui"
 
 /** The Done summary frame every module ends on: reasons first, then what was made, then what to do next. */
-export function DoneScreen({ module, eyebrow, title, children }: { module: CoreId; eyebrow: string; title: string; children: ReactNode }) {
+export function DoneScreen({ module, eyebrow, title, children }: { module: ModuleId; eyebrow: string; title: string; children: ReactNode }) {
   const { status } = usePlanNew()
   const router = useRouter()
-  const reasons = status.modules[module].reasons
+  const reasons = (isExtraId(module) ? status.extras[module] : status.modules[module]).reasons
   const next = status.nextUp
   return (
     <Frame
@@ -25,7 +24,7 @@ export function DoneScreen({ module, eyebrow, title, children }: { module: CoreI
       back={{ href: homeHref() }}
       next={{
         label: next ? doneSummaryCopy.next_button : doneSummaryCopy.next_button_none,
-        onClick: () => router.push(next ? next.href : `${ROUTES.planSandbox}?step=today`),
+        onClick: () => router.push(next ? next.href : todayHref()),
       }}
     >
       {reasons.length > 0 && (

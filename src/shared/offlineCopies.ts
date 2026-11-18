@@ -99,7 +99,7 @@ export function forgetPlanCopies(): void {
     const keys: string[] = []
     for (let i = 0; i < store.length; i++) {
       const key = store.key(i)
-      if (key && (key.startsWith("north-star-v1") || key.startsWith("plan-due-hidden:"))) keys.push(key)
+      if (key && (key.startsWith("north-star-v1") || key.startsWith("plan-due-hidden:") || key.startsWith("plan-next-hidden:"))) keys.push(key)
     }
     for (const key of keys) store.removeItem(key)
   } catch {

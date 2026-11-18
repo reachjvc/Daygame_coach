@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useState } from "react"
 import { homeCopy } from "@/src/goals/planSteps/copy/home"
 import { extrasCopy } from "@/src/goals/planSteps/copy/extras"
 import { areasCopy } from "@/src/goals/planSteps/copy/areas"
@@ -10,8 +11,9 @@ import { goalsCopy } from "@/src/goals/planSteps/copy/goals"
 import { actionsCopy } from "@/src/goals/planSteps/copy/actions"
 import { reviewCopy } from "@/src/goals/planSteps/copy/review"
 import { commonCopy } from "@/src/goals/planSteps/copy/common"
-import { CORE_IDS, EXTRA_IDS, screenHref, readHref, type CoreId } from "@/src/goals/planSteps/planRoutes"
+import { CORE_IDS, EXTRA_IDS, type ExtraId, screenHref, readHref, isExtraId, todayHref, trackHref, journalHref, type CoreId } from "@/src/goals/planSteps/planRoutes"
 import { firstTarget, type ModuleStatus } from "@/src/goals/planSteps/planStatus"
+import { extraFirstTarget } from "@/src/goals/planSteps/extraStatus"
 import { protectedId, goalsOfTier, weeklyItems } from "@/src/goals/planSteps/planFacts"
 import { fill, plural } from "@/src/goals/planSteps/text"
 import { ROUTES } from "@/src/shared/routes"
@@ -31,7 +33,9 @@ const chipTone = {
 } as const
 
 export function Home() {
-  const { plan, status, today, store } = usePlanNew()
+  const { plan, status, today, store, hideSuggestion: hide } = usePlanNew()
+  const [toast, setToast] = useState(false)
+  const hideSuggestion = (id: ExtraId) => { hide(id); setToast(true) }
   if (!store.loaded) return <p className="px-4 text-sm text-zinc-500">…</p>
 
   const daysLeft = plan.season?.endsOn ? Math.round((Date.parse(plan.season.endsOn) - Date.parse(today)) / 86_400_000) : null
@@ -54,7 +58,8 @@ export function Home() {
   ].filter((l) => !l.startsWith("0 "))
 
   const next = status.nextUp
-  const nextName = next ? CORE_COPY[next.module].name : ""
+  const nextName = next ? (isExtraId(next.module) ? extrasCopy[next.module].name : CORE_COPY[next.module].name) : ""
+  const nextState = next ? (isExtraId(next.module) ? status.extras[next.module].started : status.modules[next.module].started) : false
 
   return (
     <div className="mx-auto w-full max-w-xl space-y-6 px-4 pb-16" data-testid="plan-home">
@@ -88,19 +93,26 @@ export function Home() {
             <p className="mt-1 text-lg font-semibold text-zinc-50">{nextName}</p>
             <p className="mt-1 text-sm text-zinc-300">{fill(homeCopy.next_up.job_prefix, { job: next.job })}</p>
             <Link href={next.href} className={`${btnPrimary} mt-3`} data-testid="next-up-go">
-              {status.modules[next.module].started ? homeCopy.next_up.continue : homeCopy.next_up.start}
+              {nextState ? homeCopy.next_up.continue : homeCopy.next_up.start}
             </Link>
+            {next.rule === "suggest" && isExtraId(next.module) && (
+              <button type="button" className={`${linkQuiet} ml-2 mt-3`} onClick={() => hideSuggestion(next.module as ExtraId)} data-testid="next-up-not-now">
+                {homeCopy.next_up.not_now}
+              </button>
+            )}
           </>
         ) : (
           <>
             <p className="text-xs font-medium uppercase tracking-wide text-violet-300">{homeCopy.next_up.all_set_heading}</p>
             <p className="mt-1 text-sm text-zinc-300">{homeCopy.next_up.all_set_job}</p>
-            <Link href={`${ROUTES.planSandbox}?step=today`} className={`${btnPrimary} mt-3`} data-testid="next-up-today">
+            <Link href={todayHref()} className={`${btnPrimary} mt-3`} data-testid="next-up-today">
               {homeCopy.next_up.all_set_button}
             </Link>
           </>
         )}
       </section>
+
+      {toast && <p className="text-sm text-emerald-200" role="status" data-testid="hidden-toast">{homeCopy.next_up.hidden_toast}</p>}
 
       <section aria-label={homeCopy.core_heading}>
         <h2 className="mb-2 text-sm font-semibold text-zinc-300">{homeCopy.core_heading}</h2>
@@ -115,13 +127,7 @@ export function Home() {
         <h2 className="mb-2 text-sm font-semibold text-zinc-300">{homeCopy.extra_heading}</h2>
         <ul className="space-y-2">
           {EXTRA_IDS.map((id) => (
-            <li key={id} className={`${card} flex items-start justify-between gap-3 opacity-70`} data-testid={`extra-${id}`}>
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-zinc-200">{extrasCopy[id].name}</p>
-                <p className="text-xs text-zinc-500">{extrasCopy[id].what_you_get}</p>
-              </div>
-              <span className="shrink-0 rounded-full border border-white/10 px-2.5 py-1 text-xs text-zinc-500">{comingSoon}</span>
-            </li>
+            <ExtraRow key={id} id={id} onHide={hideSuggestion} />
           ))}
         </ul>
       </section>
@@ -129,9 +135,9 @@ export function Home() {
       <section aria-label={homeCopy.daily_heading}>
         <h2 className="mb-2 text-sm font-semibold text-zinc-300">{homeCopy.daily_heading}</h2>
         <div className="grid grid-cols-2 gap-2">
-          <Link href={`${ROUTES.planSandbox}?step=today`} className={`${btnPrimary}`} data-testid="daily-today">{homeCopy.daily_today}</Link>
-          <Link href={`${ROUTES.planSandbox}?step=track`} className={`${btnPrimary}`}>{homeCopy.daily_track}</Link>
-          <Link href={`${ROUTES.planSandbox}?step=journal`} className={`${btnPrimary}`}>{homeCopy.daily_journal}</Link>
+          <Link href={todayHref()} className={`${btnPrimary}`} data-testid="daily-today">{homeCopy.daily_today}</Link>
+          <Link href={trackHref()} className={`${btnPrimary}`}>{homeCopy.daily_track}</Link>
+          <Link href={journalHref()} className={`${btnPrimary}`}>{homeCopy.daily_journal}</Link>
           <Link href={screenHref("review/done")} className={`${btnPrimary} relative`} data-testid="daily-review">
             {homeCopy.daily_review}
             {status.modules.review.reasons.some((r) => r.id === "review.due") && (
@@ -151,8 +157,46 @@ export function Home() {
   )
 }
 
-/** Not in the words file: a plain label for a module that opens nothing yet. */
-const comingSoon = "Coming soon"
+function ExtraRow({ id, onHide }: { id: ExtraId; onHide: (id: ExtraId) => void }) {
+  const { plan, status } = usePlanNew()
+  const m = status.extras[id]
+  const href = screenHref(m.started ? `${id}/done` : extraFirstTarget(id, plan))
+  const first = m.reasons[0]
+  const suggested = status.nextUp?.rule === "suggest" && status.nextUp.module === id
+  return (
+    <li className={card} data-testid={`extra-${id}`} data-state={m.state}>
+      <Link href={href} className="block" data-testid={`extra-${id}-open`}>
+        <p className="text-sm font-medium text-zinc-100">{extrasCopy[id].name}</p>
+        <p className="text-xs text-zinc-500">{extrasCopy[id].what_you_get}</p>
+      </Link>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {m.state === "needs-a-look" && first ? (
+          <Link
+            href={first.href}
+            className={`inline-flex min-h-11 max-w-full items-center rounded-lg border px-3 py-2 text-left text-xs ${chipTone["needs-a-look"]}`}
+            data-testid={`extra-${id}-chip`}
+            data-reason={first.id}
+          >
+            <span>
+              <span className="font-semibold">{homeCopy.status.needs_look}</span>
+              <span className="block">{first.text}</span>
+              {m.reasons.length > 1 && <span className="block opacity-80">{fill(homeCopy.status.and_more, { n: m.reasons.length - 1 })}</span>}
+            </span>
+          </Link>
+        ) : (
+          <span className={`inline-flex min-h-8 items-center rounded-full border px-3 text-xs ${chipTone[m.state]}`} data-testid={`extra-${id}-chip`}>
+            {m.state === "done" ? homeCopy.status.done : homeCopy.status.not_started}
+          </span>
+        )}
+        {suggested && (
+          <button type="button" className={linkQuiet} onClick={() => onHide(id)} data-testid={`extra-${id}-not-now`}>
+            {homeCopy.next_up.not_now}
+          </button>
+        )}
+      </div>
+    </li>
+  )
+}
 
 function CoreRow({ id, n, m, firstOpen }: { id: CoreId; n: number; m: ModuleStatus; firstOpen: string }) {
   const { plan, status } = usePlanNew()

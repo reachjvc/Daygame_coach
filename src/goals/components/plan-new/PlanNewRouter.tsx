@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { CORE_IDS, type CoreId, homeHref } from "@/src/goals/planSteps/planRoutes"
+import { CORE_IDS, EXTRA_IDS, type CoreId, type ExtraId, homeHref } from "@/src/goals/planSteps/planRoutes"
 import { commonCopy, saveCopy } from "@/src/goals/planSteps/copy/common"
 import { Home } from "./Home"
 import { ReadAll } from "./ReadAll"
@@ -11,11 +11,29 @@ import { SeasonModule } from "./modules/Season"
 import { GoalsModule } from "./modules/Goals"
 import { ActionsModule } from "./modules/Actions"
 import { ReviewModule } from "./modules/Review"
+import { StandingModule } from "./modules/Standing"
+import { ValuesModule } from "./modules/Values"
+import { IdentityModule } from "./modules/Identity"
+import { ExperiencesModule } from "./modules/Experiences"
+import { ObstaclesModule } from "./modules/Obstacles"
+import { RoutinesModule } from "./modules/Routines"
+import { QuestionsModule } from "./modules/Questions"
+import { RoleModelsModule } from "./modules/RoleModels"
+import { QuitModule } from "./modules/Quit"
+import { SelfRatingsModule } from "./modules/SelfRatings"
+import { TodayPage } from "./daily/Today"
+import { TrackPage } from "./daily/Track"
+import { JournalPage } from "./daily/Journal"
 import { usePlanNew } from "./PlanNewContext"
 import { btnQuiet } from "./ui"
 
 const MODULES: Record<CoreId, (p: { segs: string[] }) => React.JSX.Element> = {
   areas: AreasModule, direction: DirectionModule, season: SeasonModule, goals: GoalsModule, actions: ActionsModule, review: ReviewModule,
+}
+
+const EXTRA_MODULES: Record<ExtraId, (p: { segs: string[] }) => React.JSX.Element> = {
+  standing: StandingModule, values: ValuesModule, identity: IdentityModule, experiences: ExperiencesModule, obstacles: ObstaclesModule,
+  routines: RoutinesModule, questions: QuestionsModule, rolemodels: RoleModelsModule, quit: QuitModule, selfratings: SelfRatingsModule,
 }
 
 export function PlanNewRouter({ slug }: { slug: string[] }) {
@@ -38,6 +56,13 @@ export function PlanNewRouter({ slug }: { slug: string[] }) {
     const Module = MODULES[first as CoreId]
     return <Module segs={slug.slice(1)} />
   }
+  if ((EXTRA_IDS as readonly string[]).includes(first)) {
+    const Module = EXTRA_MODULES[first as ExtraId]
+    return <Module segs={slug.slice(1)} />
+  }
+  if (first === "today") return <TodayPage />
+  if (first === "track") return <TrackPage />
+  if (first === "journal") return <JournalPage />
   return (
     <div className="mx-auto max-w-xl px-4">
       <Link href={homeHref()} className={btnQuiet}>{commonCopy.plan_home}</Link>

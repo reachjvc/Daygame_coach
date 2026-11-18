@@ -9,6 +9,7 @@
  */
 
 import { DEFAULT_AREAS } from "@/src/goals/data/northStar"
+import { readSource } from "@/src/goals/northStarTrackService"
 import type { NsArea, NsGoal, NsPlan, NsRoutineStep } from "@/src/goals/types"
 
 const NEW_PREFIX = "start:new:"
@@ -156,4 +157,79 @@ export function growthProgress(plan: NsPlan, growthId: string): number | null {
   const rungs = feeders.flatMap((g) => g.checkpoints)
   if (rungs.length === 0) return null
   return Math.round((rungs.filter((c) => c.done).length / rungs.length) * 100)
+}
+
+// ------------------------------------------------------------------ extra modules
+
+/** The routines the Extra "Routines" module is about: every routine except the plan's own actions list. */
+export const isExtraRoutine = (r: { blueprintId: string }) => r.blueprintId !== "actions"
+
+const sameWord = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase()
+
+/** Active goals whose own list of values holds this value. */
+export function goalsServingValue(plan: NsPlan, value: string): NsGoal[] {
+  return plan.goals.filter((g) => isActive(g) && g.values.some((v) => sameWord(v, value)))
+}
+
+/** The values that matter most: the first three of the chosen list, in its order. */
+export const topValues = (plan: NsPlan): string[] => plan.values.slice(0, 3)
+
+/** The line a person wrote about where they stand in an area. */
+export const standingLine = (plan: NsPlan, areaId: string): string => plan.review[areaId]?.snapshot?.trim() ?? ""
+
+/** A goal that is a quit: an active abstinence goal. */
+export const isQuitGoal = (g: NsGoal) => isActive(g) && g.isAbstinence
+
+export function quitGoals(plan: NsPlan): NsGoal[] {
+  return plan.goals.filter(isQuitGoal)
+}
+
+/** Every obstacle of an active goal, with the goal it hangs on. */
+export function activeObstacles(plan: NsPlan): { goal: NsGoal; obstacle: NsGoal["obstacles"][number] }[] {
+  return plan.goals.filter(isActive).flatMap((goal) => goal.obstacles.map((obstacle) => ({ goal, obstacle })))
+}
+
+/** The scale of a number question: 5, 10, or null for a plain number. */
+export function fieldScale(plan: NsPlan, fieldId: string): 5 | 10 | null {
+  const raw = plan.answers[ratingScaleKey(fieldId)]
+  return raw === "5" ? 5 : raw === "10" ? 10 : null
+}
+
+/** The unit of a plain-number question. */
+export const fieldUnitKey = (fieldId: string) => `${NEW_PREFIX}rating-unit:${fieldId}`
+
+/** The people in the lineup (role-model ids, in order), the values taken from each, and the week's pick. */
+export const LINEUP_KEY = `${NEW_PREFIX}lineup`
+export const lineupTakeKey = (personId: string) => `${NEW_PREFIX}lineup-take:${personId}`
+export const LINEUP_WEEK_VALUE_KEY = `${NEW_PREFIX}lineup-week-value`
+export const LINEUP_WEEK_OF_KEY = `${NEW_PREFIX}lineup-week-of`
+export const LINEUP_REMIND_KEY = `${NEW_PREFIX}lineup-remind`
+export const LINEUP_HOUR_KEY = `${NEW_PREFIX}lineup-hour`
+export const lineupMarkKey = (date: string) => `${NEW_PREFIX}lineup-mark:${date}`
+
+export function lineupIds(plan: NsPlan): string[] {
+  return (plan.answers[LINEUP_KEY] ?? "").split(",").map((s) => s.trim()).filter(Boolean).slice(0, 5)
+}
+
+export function lineupTaken(plan: NsPlan, personId: string): string[] {
+  return (plan.answers[lineupTakeKey(personId)] ?? "").split("|").map((s) => s.trim()).filter(Boolean)
+}
+
+/** The ids a read question may name, with the label shown for each. Ids match the ones the plan's own reader knows. */
+export function readOptionIds(plan: NsPlan): { id: string; text: string }[] {
+  const out: { id: string; text: string }[] = []
+  const push = (id: string, text: string) => { if (text.trim()) out.push({ id, text: text.trim() }) }
+  push("star", plan.northStar)
+  push("answer:identity_total", plan.answers["identity_total"] ?? "")
+  push("answer:affirmations", plan.answers["affirmations"] ?? "")
+  push("values", plan.values.map((v, i) => `${i + 1}. ${v}`).join("\n"))
+  return out
+}
+
+/** The text a read question or a step's "opens" link shows, or null when what it names is empty or gone. */
+export function readText(plan: NsPlan, id: string | null): string | null {
+  if (!id) return null
+  const own = readOptionIds(plan).find((o) => o.id === id)
+  if (own) return own.text
+  return readSource(plan, id)?.text ?? null
 }
