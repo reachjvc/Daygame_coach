@@ -42,6 +42,7 @@ export const READ_IN_CODE = {
   NEXT_DIST_DIR: { kind: "build", why: "a second dev server's own .next folder" },
   NEXT_OUTPUT: { kind: "build", why: "\"standalone\" switches on the self-hosted build (infra/Dockerfile)" },
   NODE_ENV: { kind: "platform", why: "set by Next" },
+  NEXT_RUNTIME: { kind: "platform", why: "set by Next: \"nodejs\" or \"edge\"; instrumentation.ts reads it" },
   SUPABASE_SERVICE_ROLE_KEY: { kind: "required", why: "error reports, tracking, embeddings and backups write with it" },
   ADMIN_SECRET_KEY: { kind: "optional", why: "the /api/admin endpoints; unset, every admin request is refused" },
   STRIPE_SECRET_KEY: { kind: "optional", why: "payments; unset, src/settings/stripe.ts says Stripe is not configured" },
