@@ -31,6 +31,8 @@ const KNOWN_SKIPS: Record<string, string> = {
     "a service worker registers only in a production build; under `next dev` there is none to test",
   "tests/e2e/audit-offline-pings.spec.ts › prove-slow-02: before an audit, with no device known, nothing about pings is offered offline":
     "a service worker registers only in a production build; under `next dev` there is none to test",
+  "tests/e2e/audit-devices.spec.ts › 01: signal lost before Log Out was ever touched, the waiting answer is still named and kept":
+    "a phone has no header; its Log Out sits on the You tab and is not loaded late",
   "tests/e2e/audit-devices.spec.ts › 04: a ping tapped with no signal opens the answer sheet, and plain /audit can be answered":
     "a service worker registers only in a production build; under `next dev` there is none to test",
   "tests/e2e/programs-live-format.spec.ts › describe: the live workout, opened with no signal":

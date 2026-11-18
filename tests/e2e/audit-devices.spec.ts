@@ -144,7 +144,17 @@ test.describe("audit across devices @phone", () => {
       await page.keyboard.press("Escape")
       await expect(page.getByTestId("audit-waiting")).toBeVisible()
       // no hover, no focus on Log Out so far: only the page's own idle fetch can have brought its code
-      await page.waitForTimeout(FETCH_AFTER_MS + 3000)
+      // Waits for a script requested from FETCH_AFTER_MS after the page loaded: that is the idle fetch.
+      await expect
+        .poll(
+          () =>
+            page.evaluate((after) => {
+              const loaded = (performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming).loadEventEnd
+              return performance.getEntriesByType("resource").some((e) => (e as PerformanceResourceTiming).initiatorType !== "fetch" && e.startTime > loaded + after - 500 && /\.js(\?|$)/.test(e.name))
+            }, FETCH_AFTER_MS),
+          { timeout: FETCH_AFTER_MS + 30_000 },
+        )
+        .toBe(true)
       await page.waitForLoadState("networkidle")
       await context.setOffline(true)
       await pressLogOut(page)
