@@ -9,6 +9,7 @@
  */
 
 import { sendToPerson, type PushPayload } from "@/src/notifications/pushService"
+import { isSandboxUser } from "@/src/db/planSandbox"
 import { ROUTES } from "@/src/shared/routes"
 import { closeSend, openSend } from "@/src/db/notificationsRepo"
 import { remindersDueAsServer, weekReviewWrittenAsServer, type Reminder } from "@/src/db/lifePlanRemindersRepo"
@@ -39,6 +40,11 @@ export async function runPlanReviewClock(now = new Date()): Promise<{ sent: numb
   const result = { sent: 0, skipped: 0, failed: 0 }
   const rows = await remindersDueAsServer(200, now)
   for (const row of rows) {
+    // A copy-space account gets no reminder and no record of one (D7).
+    if (await isSandboxUser(row.user_id)) {
+      result.skipped++
+      continue
+    }
     try {
       const p = dueWeekPeriod(row.local_day, row.review_day)
       const entryId = reminderEntryId(row.user_id, row.local_day)

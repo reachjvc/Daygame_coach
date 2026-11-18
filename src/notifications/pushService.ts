@@ -21,6 +21,7 @@
  */
 
 import webpush from "web-push"
+import { isSandboxUser } from "@/src/db/planSandbox"
 import {
   closeSend,
   devicesForSending,
@@ -163,6 +164,11 @@ export async function sendToPerson(
   now: Date = new Date(),
   options: { entryId?: string } = {},
 ): Promise<SendResult> {
+  // A copy-space account (src/db/planSandbox.ts) gets no push of any kind, however its
+  // reminder rows or devices came to be (Plans/plan-in-steps.md, D7). Every sender
+  // reaches a phone only through here.
+  if (await isSandboxUser(userId)) return { sendId: null, devices: 0, delivered: 0, removed: 0 }
+
   const vapid = await pushKeys()
   if (!vapid) throw new PushNotConfigured()
 
