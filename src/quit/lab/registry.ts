@@ -33,6 +33,7 @@ import { CheckinA } from "./checkin/a/CheckinA"
 import { CheckinB } from "./checkin/b/CheckinB"
 import { CheckinC } from "./checkin/c/CheckinC"
 import { CheckinD } from "./checkin/d/CheckinD"
+import { BeliefsBest } from "./beliefs/best/BeliefsBest"
 import { ProgressBest } from "./progress/best/ProgressBest"
 import { QuitdateBest } from "./quitdate/best/QuitdateBest"
 import { TimelineBest } from "./timeline/best/TimelineBest"
@@ -126,6 +127,7 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       a: { Component: BeliefsA, addiction: "alcohol", label: "Copy A", kind: "copy" },
       b: { Component: BeliefsB, addiction: "nicotine", label: "Copy B", kind: "copy" },
       c: { Component: BeliefsC, addiction: "alcohol", label: "Copy C", kind: "copy" },
+      best: { Component: BeliefsBest, addiction: "nicotine", label: "Improved", kind: "best" },
     },
   },
   checkin: {
