@@ -10,4 +10,7 @@ export const tlText = {
   stateProgress: "In progress",
   stateLocked: "Not started",
   doneCount: (done: number, total: number) => `${done} of ${total} reached`,
+  otherTool: "Part of another tool, not copied here",
+  back: "Back",
+  shareTitle: "Share",
 } as const

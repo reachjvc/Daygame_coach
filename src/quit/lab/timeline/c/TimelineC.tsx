@@ -50,7 +50,7 @@ function Main({ setup, now }: { setup: TimelineSetup; now: number }) {
   }
   return (
     <section data-testid="screen-stats" className="flex flex-col gap-4">
-      <Head title={cText.statsTitle} />
+      <Head title={cText.statsTitle} onBack={() => setMore(false)} />
       <div className="flex flex-col gap-3">
         <h3 className="border-b-2 border-green-500 pb-1 text-base font-semibold">{cText.improvements}</h3>
         <div className="grid grid-cols-3 gap-2">

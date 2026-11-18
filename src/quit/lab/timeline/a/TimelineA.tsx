@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Head, NotSourced, PlaceholderScreen, ShareBtn } from "../../progress/shared/Bits"
+import { BottomNav, Head, IconBtn, NotSourced, Placeholder, PlaceholderScreen } from "../../progress/shared/Bits"
 import { ColorRing, ExampleDurationLine } from "../shared/Bits"
 import { TimelineGate } from "../shared/Bits"
 import { fill, type TimelineSetup } from "../shared/logic"
@@ -9,7 +9,7 @@ import { A_CARD_KEYS, A_ITEMS } from "./logic"
 import { aText } from "./text"
 
 type Key = keyof typeof aText.names
-type Screen = { name: "dash" } | { name: "health" } | { name: "detail"; key: Key }
+type Screen = { name: "dash" } | { name: "health" } | { name: "share" } | { name: "tab"; index: number } | { name: "detail"; key: Key }
 
 const RING = "stroke-green-500"
 
@@ -25,11 +25,25 @@ export function TimelineA() {
 function Main({ setup, now }: { setup: TimelineSetup; now: number }) {
   const [screen, setScreen] = useState<Screen>({ name: "dash" })
   const value = (key: Key) => fill(setup, A_ITEMS.find((m) => m.key === key)!, now)
+  const nav = <BottomNav id="a-nav" items={aText.tabs} value={screen.name === "tab" ? screen.index : 0} onChange={(i) => setScreen(i === 0 ? { name: "dash" } : { name: "tab", index: i })} />
   if (screen.name === "detail") return <PlaceholderScreen title={`${aText.names[screen.key]}: ${aText.detailSuffix}`} onBack={() => setScreen({ name: "health" })} />
+  if (screen.name === "share") return <PlaceholderScreen title={aText.shareTitle} onBack={() => setScreen({ name: "health" })} />
+  if (screen.name === "tab") {
+    return (
+      <div className="flex flex-col">
+        <PlaceholderScreen title={aText.tabs[screen.index]} onBack={() => setScreen({ name: "dash" })} />
+        {nav}
+      </div>
+    )
+  }
   if (screen.name === "health") {
     return (
       <section data-testid="screen-health" className="flex flex-col gap-4">
-        <Head title={aText.healthTitle} onBack={() => setScreen({ name: "dash" })} right={<ShareBtn text={aText.shareMsg} testId="a-share" />} />
+        <Head title={aText.healthTitle} onBack={() => setScreen({ name: "dash" })} right={
+            <IconBtn label={aText.share} onClick={() => setScreen({ name: "share" })} testId="a-share">
+              {"↗"}
+            </IconBtn>
+          } />
         <p className="text-center text-sm text-muted-foreground">{aText.intro}</p>
         <ExampleDurationLine setup={setup} />
         {A_ITEMS.map((m) => {
@@ -51,6 +65,7 @@ function Main({ setup, now }: { setup: TimelineSetup; now: number }) {
     )
   }
   return (
+    <div className="flex flex-col">
     <section data-testid="screen-dash" className="flex flex-col gap-3">
       <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3">
         <h2 className="text-base font-semibold">{aText.dashTitle}</h2>
@@ -68,6 +83,12 @@ function Main({ setup, now }: { setup: TimelineSetup; now: number }) {
           {aText.explore}
         </button>
       </div>
+      <div data-testid="a-mission" className="flex flex-col gap-2 rounded-lg bg-blue-950 p-3 text-white">
+        <h3 className="text-base font-semibold">{aText.mission}</h3>
+        <Placeholder />
+      </div>
     </section>
+    {nav}
+    </div>
   )
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { IconBtn, NotSourced, Placeholder, PlaceholderScreen, ShareBtn } from "../../progress/shared/Bits"
+import { IconBtn, NotSourced, Placeholder, PlaceholderScreen } from "../../progress/shared/Bits"
 import { Bar, ExampleDurationLine, TimelineGate } from "../shared/Bits"
 import { countdown, fill, remainingMs, type TimelineSetup } from "../shared/logic"
 import { tlText } from "../shared/text"
@@ -9,7 +9,7 @@ import { E_ITEMS } from "./logic"
 import { eText } from "./text"
 
 type Key = keyof typeof eText.names
-type Screen = "list" | "menu" | "settings" | "info"
+type Screen = "list" | "menu" | "settings" | "info" | "share"
 
 /** Copy E: symptom cards with a bar and a live countdown that ticks every second. */
 export function TimelineE() {
@@ -25,6 +25,7 @@ function Main({ setup, now }: { setup: TimelineSetup; now: number }) {
   const back = () => setScreen("list")
   if (screen === "menu") return <PlaceholderScreen title={eText.menuTitle} onBack={back} />
   if (screen === "settings") return <PlaceholderScreen title={eText.settingsTitle} onBack={back} />
+  if (screen === "share") return <PlaceholderScreen title={eText.shareTitle} onBack={back} />
   if (screen === "info") return <PlaceholderScreen title={eText.infoTitle} onBack={back} />
   return (
     <section data-testid="screen-list" className="flex flex-col gap-3">
@@ -35,11 +36,13 @@ function Main({ setup, now }: { setup: TimelineSetup; now: number }) {
         <IconBtn label={eText.settings} onClick={() => setScreen("settings")} testId="e-settings">
           {"⚙"}
         </IconBtn>
-        <h2 className="min-w-0 flex-1 truncate text-center text-base font-semibold">{eText.title}</h2>
+        <h2 className="min-w-0 flex-1 text-center text-base font-semibold leading-tight">{eText.title}</h2>
         <IconBtn label={eText.info} onClick={() => setScreen("info")} testId="e-info">
           {"i"}
         </IconBtn>
-        <ShareBtn text={eText.shareMsg} testId="e-share" />
+        <IconBtn label={eText.share} onClick={() => setScreen("share")} testId="e-share">
+          {"↗"}
+        </IconBtn>
       </div>
       <ExampleDurationLine setup={setup} />
       {E_ITEMS.map((m) => {

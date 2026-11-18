@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { BottomNav, NotSourced, Placeholder, PlaceholderScreen } from "../../progress/shared/Bits"
-import { Bar, ExampleDurationLine, TimelineGate } from "../shared/Bits"
+import { Bar, ExampleDurationLine, OtherToolScreen, TimelineGate } from "../shared/Bits"
 import { fill, type TimelineSetup } from "../shared/logic"
 import { D_ITEMS } from "./logic"
 import { dText } from "./text"
@@ -25,7 +25,7 @@ function Main({ setup, now }: { setup: TimelineSetup; now: number }) {
   if (tab !== 1) {
     return (
       <div className="flex flex-col">
-        <PlaceholderScreen title={dText.tabs[tab]} onBack={() => setTab(1)} />
+        {tab === 0 ? <OtherToolScreen title={dText.tabs[0]} onBack={() => setTab(1)} /> : <PlaceholderScreen title={dText.tabs[tab]} onBack={() => setTab(1)} />}
         {nav}
       </div>
     )
@@ -68,7 +68,7 @@ function Main({ setup, now }: { setup: TimelineSetup; now: number }) {
             <Placeholder />
           </>
         ) : (
-          <PlaceholderScreen title={sub === 1 ? dText.knowledgeTitle : dText.tipsTitle} onBack={() => setSub(0)} />
+          <OtherToolScreen title={sub === 1 ? dText.knowledgeTitle : dText.tipsTitle} onBack={() => setSub(0)} />
         )}
       </section>
       {nav}

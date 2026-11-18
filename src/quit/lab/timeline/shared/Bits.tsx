@@ -36,6 +36,21 @@ export function ColorRing({ value, size, strokeW, stroke, children, testId }: { 
   )
 }
 
+/** A screen the shots show but that belongs to another tool: no inferred tag. */
+export function OtherToolScreen({ title, onBack }: { title: string; onBack: () => void }) {
+  return (
+    <section data-testid="other-tool-screen" className="flex flex-col gap-3">
+      <div className="flex items-center gap-2">
+        <button type="button" data-testid="screen-back" onClick={onBack} className="inline-flex min-h-11 items-center text-sm text-muted-foreground underline">
+          {tlText.back}
+        </button>
+        <h2 className="flex-1 text-lg font-semibold">{title}</h2>
+      </div>
+      <div className="flex min-h-11 items-center justify-center rounded-md border border-dashed border-border px-3 py-3 text-center text-sm text-muted-foreground">{tlText.otherTool}</div>
+    </section>
+  )
+}
+
 /** A bar; `fillClass` is a full Tailwind background class. */
 export function Bar({ value, fillClass, testId, height = "h-2.5" }: { value: number; fillClass: string; testId?: string; height?: string }) {
   const v = Math.min(1, Math.max(0, value))

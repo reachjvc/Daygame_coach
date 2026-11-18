@@ -1,10 +1,10 @@
 export const eText = {
-  title: "Withdrawal",
+  title: "Health stats",
   menu: "Menu",
   settings: "Settings",
   info: "About this list",
   share: "Share",
-  shareMsg: "My withdrawal is fading.",
+  shareTitle: "Share",
   names: { dreams: "Vivid dreams", chills: "Chills" },
   glyphs: { dreams: "☾", chills: "❄" },
   usual: "Usual length",

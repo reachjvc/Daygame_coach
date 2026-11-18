@@ -5,7 +5,9 @@ export const aText = {
   intro: "Watch your body get closer to normal.",
   share: "Share",
   back: "Back",
-  shareMsg: "My body is recovering.",
+  shareTitle: "Share",
+  mission: "Today's mission",
+  tabs: ["Dashboard", "Support", "Mission", "Diary", "Cravings"],
   names: {
     pulse: "Pulse rate",
     oxygen: "Oxygen levels",
