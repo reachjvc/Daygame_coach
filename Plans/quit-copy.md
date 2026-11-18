@@ -1,6 +1,6 @@
 # Quit tools, copied from the best: one phase per tool
 
-Written 2026-11-18 (Opus, planning session). Status: **running. Phases 0–5 done (beliefs best on main). Phase 6 copies on main, `best` in polish. Phase 7 copies on main (4cbd9bd2), `best` brief written. Phases 8–9 copies building. B1 fixed.**
+Written 2026-11-18 (Opus, planning session). Status: **running. Phases 0–8 done (lessons best a7b25888). Phases 9 (cost, copies + best), 11 (copies) on main with this batch; Phase 10 copies on main, `best` brief written; Phase 12 copies in fix round 1; Phase 13 copies building. Pushes batched hourly (CI queue).**
 
 ## Why this plan exists
 
@@ -309,6 +309,63 @@ Copies b, c, d, e on main (4cbd9bd2). From `diary/overlap.md` and our rules:
    "Example data" with 20 labelled entries.
 7. No new factual claims expected (help cards come from the data file); any sentence stating a fact goes to an
    Opus fact-check.
+
+### Phase 8 Step D brief: `lessons/best` (2026-11-18)
+
+Copies b, c, d, e built (fix round 1 running). From `lessons/overlap.md` (the shell) and the nicotine data file's
+17 checked lessons (`lessons[]`: day from −3, beliefId, title, body, exercise, refs):
+1. **One small unit a day, one tap from the top** (all copies): "Today" shows the lesson for his day number
+   (from his quit date in the lab store, or a day picker in the lab), its read time in minutes (computed from the
+   word count), the body, then the `exercise` with a note box (copy a's mission loop), and one "Done" button.
+2. **Within the day:** read → do the exercise → done, the exercise unlocked after reading (copy b's sequence),
+   nothing else locked; any past day can be opened from a day list ("days or weeks" before day 1 are the setup
+   days −3 to 0).
+3. **The arc** (copy d's finite program): a plain day list with done marks and "Day N" for his place; no badges,
+   no points, no confetti; done = a plain line "Saved. Tomorrow: <next title>."
+4. **Sources** under each lesson that has refs (SourceTap); the `beliefId` link opens the matching belief card
+   from the belief test.
+5. **A missed or slipped day** never resets: the arc continues from his day number; a line "You can read any day
+   again" (copy d's restart path, without the competitor's line).
+6. **Thumbs on each lesson** ("more like this / less like this", copy b/c) stored for the owner's review.
+7. Reminder time setting (stored only). Addiction switcher; where `lessons` is missing, "content coming".
+8. All lesson text comes from the data file (checked); no new claims. A lab-only "set day" control (tagged)
+   lets the owner see any day.
+
+### Phase 9 Step D brief: `cost/best` (2026-11-18)
+
+Copies b, c, e built (in the batch). From `cost/overlap.md` and our rules:
+1. **Setup in one screen** (copy c's seen setup, made shorter): which product (the data file's `units`: cigarettes,
+   disposable vapes, pouches…), how many per day (empty until typed), price per unit prefilled from its checked
+   `defaultPriceUsd` with the source on tap and an edit pencil; the start date (past dates allowed).
+2. **The basis always visible** (the gap no competitor fills): under every money figure, one line "based on: N a
+   day × $X each, since <date>", tap for the full formula.
+3. **Per day, week, month, year and 10 years** (copy e's tiles), no inflation unless he types a yearly rise.
+4. **Honest net money** (a product not copied): money kept minus what he spent on the habit or replacements since
+   the start, as visible rows he can add to (copy c's relapse spend).
+5. **Goals that fill in order** (copy b) with copy d's equation line ("kept − bought = available"), time to reach
+   at his rate, and "bought" deducting the price. Suggestions from the data file's `costSwaps` as one-tap item
+   names only: their prices carry no source, so he types the price.
+6. Addiction switcher: where `units` is missing, he types money per day directly (as progress/best does).
+7. No new factual claims; prices only from the data file with their sources; any new sentence stating a fact
+   goes to an Opus fact-check.
+
+### Phase 10 Step D brief: `past/best` (2026-11-18)
+
+Copies a, b built. No product has the full tool, so `best` builds it from the plan's earlier design
+(`quit-tool/evidence-tools.md` §2.2 "Your past tries", private) and the data file's `endings` / `helped`:
+1. **List his past tries** (copy b's periods made richer): per try: when (month/year, rough is fine), how long it
+   lasted (days/weeks/months), how (method chips), what ended it (the data file's `endings` as chips + free text),
+   what helped (`helped` chips + free text). Each field optional; one try saves in under a minute.
+2. **His own pattern** (copy a's mirror, honest): the longest run, the most common ending, what helped most often,
+   and "most of your tries ended in days X–Y" when ≥2 tries have lengths; every line with its count of tries.
+3. **Carry it forward:** his top two endings become prefilled if-then cards (link to `ifthen`), his danger window
+   is offered to the quit-date tool, his "helped" list feeds the SOS shelf order (stored in the lab store keys
+   other variants read; if they don't read them yet, show the handoff as a plain "used in" line).
+4. A bar chart of try lengths (copy b) with the average line, labelled with his own counts.
+5. Never blames: no "failed attempt" wording; a try is "a try".
+6. Addiction switcher; where `endings`/`helped` are missing, chips fall back to free text only.
+7. Any sentence stating a fact (e.g. that most people need several tries) needs a source from the data file or
+   goes out; Opus fact-check before merge if one is added.
 
 ---
 
