@@ -1,6 +1,6 @@
 # Quit tools, copied from the best: one phase per tool
 
-Written 2026-11-18 (Opus, planning session). Status: **running (started 2026-11-18). Phase 0 building; Phases 1–2 Step A researching. B1 still blocked: Vercel CLI logged out on 2026-11-18, owner item 1 open.**
+Written 2026-11-18 (Opus, planning session). Status: **running. Phase 0 done (lab frame live on main, 8f3e2ee3; B1 still blocked: Vercel CLI logged out, owner item 1). Step B passed for Phases 1, 2, 3, 5; Phase 1 copies building; research running for Phases 4 and 6.**
 
 ## Why this plan exists
 
@@ -98,6 +98,32 @@ nicotine content, the validator, privacy and coaching pages, the audit fixes) is
 - Research kit (Sonnet, with Phase 1 Step A): `~/.cache/daygame-research/quit-copy/` with `variants.json`
   (`{tool: {letter: {product, addiction, platform}}}`), `kit/` (store-shot fetch reusing census `gp.py`/`iap.py`,
   `frames.sh` = yt-dlp + ffmpeg scene-change frames), `spec-template.md`.
+
+### Phases 1–2 Step B verdicts and Step C brief (2026-11-18)
+
+- Phase 0: frame built (9 files: registry, store, LabFrame, index and variant pages, unit + e2e tests); current
+  variants registered for sos, timeline, beliefs, diary, cost, past, library.
+- Phase 1 (sos) Step B: copies **a, c, d, e** pass. **b dropped** to "other products' pieces": 2 of 7 screens seen,
+  so a copy would be mostly guessed. Kit made: `kit/` (store and Play shots, frames.sh, spec-template.md).
+- Phase 2 (progress) Step B: copies **a–e** pass (savings screen of a checked against its shot, figure for figure).
+- Step C rules for every copy, from here on:
+  1. `seen` screens: built screen for screen, control for control.
+  2. `inferred` screens: built only with the elements the spec states as fact; every guessed label, list item or
+     card is a dashed placeholder tile reading "Not seen in public material". Each inferred screen carries a small
+     "inferred" tag at the top so the review page and the owner can tell.
+  3. Counts and formulas the spec derived from screenshots (e.g. per-day spend × whole days) are used as derived.
+     Health, craving-length and "time won back" figures without a source show "number not sourced yet".
+  4. Store the user's inputs in `quit-lab-v1` via `useLabState(<tool>, <letter>, key, initial)`.
+  5. Text lives in a `text.ts` per variant (the `noHardcodedText` test); our own words from the spec summary.
+  6. Sounds and vibration only where the spec marks them seen.
+- Phase 3 (timeline) Step B: copies **a–e** pass; public material is thin (1–3 seen screens each), inferred parts
+  follow rule 2. The day calendar (census row 8) is not copied twice: it is part of progress copies c and e.
+  No health item in any copy cites a source, so every health figure in the copies shows "number not sourced yet";
+  the improved version uses our checked `symptomCourse` data.
+- Phase 5 (beliefs) Step B: copies **a, b, c** pass (b has the only true rate-your-beliefs quiz; its result is an
+  email, so our copy shows it on the page). **d and e dropped**: sign-up questionnaires with no belief result (one
+  ends at a price page, one at an "approved" page), so a copy would be a different tool; their belief-adjacent
+  screens (pain reframe, capability question) go into overlap for `best`.
 
 ---
 
