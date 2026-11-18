@@ -170,6 +170,13 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
   lessons: {
     name: "Daily lessons",
     variants: {
+      b: { Component: LessonsB, addiction: "alcohol", label: "Copy B", kind: "copy" },
+      c: { Component: LessonsC, addiction: "porn", label: "Copy C", kind: "copy" },
+      d: { Component: LessonsD, addiction: "nicotine", label: "Copy D", kind: "copy" },
+      e: { Component: LessonsE, addiction: "porn", label: "Copy E", kind: "copy" },
+      best: { Component: LessonsBest, addiction: "nicotine", label: "Improved", kind: "best" },
+    },
+  },
   cost: {
     name: "Cost and savings",
     variants: {
