@@ -644,6 +644,8 @@ the owner's reaction to its visual mock (his note 2026-11-18); `sos`, `symptoms`
 4. **`checkin`**: days 1–14 daily, then weekly; days 15, 30, 90 re-rate the top 3 beliefs and show the change.
 5. **`lesson`**: 3 prep + 14 daily + weekly to 90 (28 total), each {day, beliefId, title, body ≤ 180 words,
    exercise ≤ 40 words, refs}; days 15–90 written and checked as Phase 2.
+   Owner note relayed 2026-11-18: lessons are written clean-room from about 10 books and 5 tools (source
+   readers write idea notes; writers never see source text; no close paraphrase).
 6. **`identity`**: one line written once; a morning tap "still true today".
 7. Nudges `runQuitNudgeClock`: evening before day 1, morning of day 1, evening of day 3, the lesson hour, 30
    minutes before his moment (P3), if-then cards at their hour; quiet hours; one sent-log row per send.
