@@ -73,7 +73,8 @@ test.describe('time on a phone: header, report labels and tap targets', () => {
     }
     await sheet.getByRole('button', { name: /^Start: / }).click()
     const start = sheet.getByRole('textbox', { name: 'Start time' })
-    await expect(start).toBeFocused()
+    // the drums open, not the keyboard: the typed box is there to tap, not focused for you (87a47248)
+    await expect(start).toBeVisible()
     const s = await size(start)
     expect(s.height, `start time box is ${s.width}x${s.height}`).toBeGreaterThanOrEqual(48)
   })
