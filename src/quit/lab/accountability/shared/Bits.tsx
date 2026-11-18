@@ -53,9 +53,12 @@ export function Hub({ items, onOpen, id }: { items: readonly HubItem[]; onOpen: 
 /** Back-to-hub button shown above every screen. */
 export function ToHub({ onClick }: { onClick: () => void }) {
   return (
-    <button type="button" data-testid="to-hub" onClick={onClick} className="mb-2 inline-flex min-h-11 items-center text-sm text-muted-foreground underline">
-      {acText.backToList}
-    </button>
+    <div className="mb-2 flex items-center gap-2">
+      <button type="button" data-testid="to-hub" onClick={onClick} className="inline-flex min-h-11 items-center text-sm text-muted-foreground underline">
+        {acText.backToList}
+      </button>
+      <LabTag />
+    </div>
   )
 }
 

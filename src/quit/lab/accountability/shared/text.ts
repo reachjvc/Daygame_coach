@@ -3,6 +3,8 @@ export const acText = {
   notBuiltMoney: "not built: the site never holds money",
   notCopiedSignup: "not copied: sign-up gate",
   notCopiedCommunity: "not copied: community feature, out of scope",
+  notCopiedSales: "not copied: sales",
+  signupNote: "Lab: no account is created, nothing is sent.",
   nothingSent: "In the lab nothing is sent.",
   labOnly: "lab only",
   hubTitle: "Screens",

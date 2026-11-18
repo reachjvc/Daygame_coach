@@ -66,9 +66,9 @@ export interface Msg {
 export function seedMessages(now: number): Msg[] {
   const m = (id: string, mine: boolean, text: string, minAgo: number): Msg => ({ id, mine, text, at: now - minAgo * 60_000 })
   return [
-    m("m1", false, "Great to see your clock keep going. How are you feeling?", 40),
-    m("m2", true, "Calmer than I thought I would be. The mornings help.", 33),
-    m("m3", false, "Glad to hear it. Check in with me tomorrow?", 20),
-    m("m4", true, "Yes, after breakfast.", 12),
+    m("m1", false, "Checking in.", 40),
+    m("m2", true, "Here.", 33),
+    m("m3", false, "Good.", 20),
+    m("m4", true, "Talk later.", 12),
   ]
 }

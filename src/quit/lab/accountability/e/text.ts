@@ -109,8 +109,6 @@ export const aeText = {
   requiredLine: "Required this period",
   needUnset: "not set",
   countLabel: "Count",
-  less: "Less",
-  more: "More",
   sendReport: "Send report",
   journalEntry: "Journal entry",
   attach: "Attach a picture",

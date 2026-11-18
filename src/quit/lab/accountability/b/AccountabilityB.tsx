@@ -23,7 +23,7 @@ import {
 } from "./logic"
 import { abText as t } from "./text"
 
-type Screen = "hub" | "home" | "clocks" | "clock" | "clocksettings" | "addclock" | "profile" | "chat" | "chatmenu" | "connect" | "request" | "share" | "tempted" | "tokens" | "token" | "other" | "notifications"
+type Screen = "hub" | "photo" | "home" | "clocks" | "clock" | "clocksettings" | "addclock" | "profile" | "chat" | "chatmenu" | "connect" | "request" | "share" | "tempted" | "tokens" | "token" | "other" | "notifications"
 
 /** A coloured ring with the day count inside and a dot riding on the edge. */
 function ClockRing({ c, days, size = 150, testId, onClick }: { c: ClockData; days: number; size?: number; testId: string; onClick?: () => void }) {
@@ -110,6 +110,7 @@ function Main() {
   return (
     <div data-testid="accountability-b" data-screen={screen} className="flex flex-col">
       {screen !== "hub" && <ToHub onClick={hub} />}
+      {sample && screen !== "hub" && <ExampleBar onClear={clearExample} />}
       {screen === "hub" && <Hub id="b" items={t.screens} onOpen={(id) => go(id as Screen)} />}
 
       {screen === "home" && (
@@ -136,7 +137,6 @@ function Main() {
 
       {screen === "clocks" && (
         <section data-testid="b-clocks" className="flex flex-col gap-3">
-          {sample && <ExampleBar onClear={clearExample} />}
           <Head title={t.clocksTitle} onBack={() => go("home")} />
           <div role="tablist" className="grid grid-cols-2 gap-1 rounded-full border border-border bg-card p-1">
             {t.tabs.map((label, i) => (
@@ -226,11 +226,15 @@ function Main() {
             <button type="button" data-testid="b-chat-btn" aria-label={t.chatBtn} onClick={() => go("chat")} className="inline-flex size-12 items-center justify-center rounded-md border border-border bg-card">{"✉"}</button>
           </div>
           <p className="self-start text-sm text-muted-foreground">{t.publicClocks}</p>
-          <div className="grid w-full grid-cols-2 gap-y-4">
-            {seedPartnerClocks(today).map((c) => (
-              <ClockRing key={c.id} c={c} days={clockDayCount(c, today)} testId={`b-profile-${c.id}`} size={150} />
-            ))}
-          </div>
+          {sample ? (
+            <div className="grid w-full grid-cols-2 gap-y-4">
+              {seedPartnerClocks(today).map((c) => (
+                <ClockRing key={c.id} c={c} days={clockDayCount(c, today)} testId={`b-profile-${c.id}`} size={150} />
+              ))}
+            </div>
+          ) : (
+            <Placeholder />
+          )}
         </section>
       )}
 
@@ -254,20 +258,16 @@ function Main() {
 
       {screen === "chat" && (
         <section data-testid="b-chat" className="flex min-h-[70vh] flex-col gap-2">
-          {sample && <ExampleBar onClear={clearExample} />}
           <div className="flex items-center gap-2">
             <button type="button" data-testid="b-chat-back" aria-label={t.chatBack} onClick={() => go("profile")} className="inline-flex size-11 items-center justify-center text-xl">{"←"}</button>
             <h2 className="min-w-0 flex-1 truncate text-center text-base font-semibold">{t.partnerName}</h2>
-            <div className="flex flex-col items-center">
-              <button type="button" data-testid="b-chat-menu" aria-label={t.chatMenu} onClick={() => go("chatmenu")} className="inline-flex size-11 items-center justify-center text-xl">{"⋮"}</button>
-              <InferredTag />
-            </div>
+            <button type="button" data-testid="b-chat-menu" aria-label={t.chatMenu} onClick={() => go("chatmenu")} className="inline-flex size-11 items-center justify-center text-xl">{"⋮"}</button>
           </div>
           <p className="text-center text-xs text-muted-foreground">{t.chatToday}</p>
           <div className="flex flex-1 flex-col gap-2" data-testid="b-bubbles">
             {chat.map((m) => (
               <div key={m.id} className={`flex flex-col ${m.mine ? "items-end" : "items-start"}`}>
-                <span className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${m.mine ? "bg-blue-600 text-white" : "bg-card"}`}>{m.photo ? t.chatPhoto : m.text}</span>
+                <span className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${m.mine ? "bg-blue-600 text-white" : "bg-card"}`}>{m.text}</span>
                 <span className="text-xs text-muted-foreground">{timeLabel(m.at)}</span>
               </div>
             ))}
@@ -279,10 +279,13 @@ function Main() {
               type="button"
               data-testid="b-camera"
               aria-label={t.chatCamera}
-              onClick={() => setMsgs([...chat, { id: `m${chat.length + 1}`, mine: true, text: "", at: Date.now(), photo: true }])}
+              onClick={() => go("photo")}
               className="inline-flex size-11 shrink-0 items-center justify-center text-blue-500"
             >
-              {"◉"}
+              <svg width="26" height="22" viewBox="0 0 26 22" aria-hidden="true" className="fill-none stroke-current" strokeWidth="2">
+                <path d="M2 6h5l2-3h8l2 3h5v14H2z" />
+                <circle cx="13" cy="13" r="4" />
+              </svg>
             </button>
             <input data-testid="b-input" value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder={t.chatPlaceholder} aria-label={t.chatPlaceholder} className="min-h-11 min-w-0 flex-1 rounded-full border border-border bg-background px-4 text-base" />
             <button type="button" data-testid="b-send" disabled={draft.trim() === ""} onClick={send} className={`inline-flex min-h-11 shrink-0 items-center rounded-lg px-3 text-sm font-medium ${draft.trim() === "" ? "bg-muted text-muted-foreground" : "bg-blue-600 text-white"}`}>
@@ -291,6 +294,7 @@ function Main() {
           </div>
         </section>
       )}
+      {screen === "photo" && <div data-testid="b-photo"><PlaceholderScreen title={t.chatCamera} onBack={() => go("chat")} /></div>}
       {screen === "chatmenu" && <div data-testid="b-chatmenu"><PlaceholderScreen title={t.chatMenuTitle} onBack={() => go("chat")} /></div>}
 
       {screen === "connect" && (
@@ -356,6 +360,8 @@ function Main() {
           <dl className="grid w-full grid-cols-2 gap-x-3 gap-y-1 text-sm">
             <dt className="text-muted-foreground">{t.tokenClock}</dt>
             <dd>{mine?.name ?? t.clockName}</dd>
+            <dt className="text-muted-foreground">{t.tokenType}</dt>
+            <dd data-testid="b-token-type">{t.tokenTypes[tokenIdx]}</dd>
             <dt className="text-muted-foreground">{t.tokenStart}</dt>
             <dd data-testid="b-token-start">{mine?.start ?? today}</dd>
             <dt className="text-muted-foreground">{t.tokenEarned}</dt>

@@ -70,7 +70,8 @@ function Main() {
   const [supDraft, setSupDraft] = useState("")
   const [amount, setAmount] = useState("")
   const [stakeNext, setStakeNext] = useState(false)
-  const [count, setCount] = useState(0)
+  const [countText, setCountText] = useState("")
+  const count = Number(countText || 0)
   const [note, setNote] = useState("")
   const [attached, setAttached] = useState(false)
   const [sent, setSent] = useState(false)
@@ -97,7 +98,7 @@ function Main() {
   }
   const open = (id: string) => {
     setSent(false)
-    setCount(0)
+    setCountText("")
     setNote("")
     setAttached(false)
     setTarget("cur")
@@ -442,11 +443,15 @@ function Main() {
             <p className="font-semibold">{cur.goal}</p>
             <p className="text-sm text-muted-foreground">{t.periodLabel}: {addDays(cur.start, 7 * cur.reports.length)} - {addDays(cur.start, 7 * (cur.reports.length + 1)) > cur.end ? cur.end : addDays(cur.start, 7 * (cur.reports.length + 1))}</p>
             <p data-testid="e-required-line" className="text-sm">{t.requiredLine}: {cur.required === "" ? t.needUnset : cur.required}</p>
-            <div className="flex items-center gap-3">
-              <button type="button" data-testid="e-less" aria-label={t.less} onClick={() => setCount(Math.max(0, count - 1))} className="inline-flex size-11 items-center justify-center rounded-full border border-border text-xl">{"−"}</button>
-              <div data-testid="e-count" aria-label={t.countLabel} className="flex size-24 items-center justify-center rounded-full bg-neutral-800 text-3xl font-bold text-white">{count}</div>
-              <button type="button" data-testid="e-more" aria-label={t.more} onClick={() => setCount(count + 1)} className="inline-flex size-11 items-center justify-center rounded-full border border-border text-xl">{"+"}</button>
-            </div>
+            <input
+              data-testid="e-count"
+              aria-label={t.countLabel}
+              inputMode="numeric"
+              placeholder="0"
+              value={countText}
+              onChange={(e) => setCountText(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))}
+              className="size-24 rounded-full bg-neutral-800 text-center text-3xl font-bold text-white placeholder:text-neutral-500"
+            />
             <button type="button" data-testid="e-send-report" onClick={sendReport} disabled={sent} className="inline-flex min-h-12 items-center rounded-full bg-red-500 px-8 text-white disabled:opacity-50">{t.sendReport}</button>
             {sent && <p data-testid="e-report-sent" className="text-sm">{cur.referee.status === "invited" ? t.reportSent : t.reportSentHonor}</p>}
             <div className="flex w-full items-center gap-2">
@@ -469,6 +474,7 @@ function Main() {
               <InferredTag />
             </div>
             <p className="text-sm text-muted-foreground">{t.refereeViewLine}</p>
+            <p className="text-xs text-muted-foreground">{acText.nothingSent}</p>
             {cur.reports.length === 0 && <p className="text-sm">{t.noReports}</p>}
             {cur.reports.map((r, i) => (
               <Card key={r.period} testId={`e-rv-${i}`} className="flex flex-col gap-2">

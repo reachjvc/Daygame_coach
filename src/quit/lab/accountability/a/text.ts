@@ -2,6 +2,7 @@
 export const aaText = {
   screens: [
     { id: "signup", label: "Sign-up, 7 steps", inferred: false },
+    { id: "welcome", label: "Welcome", inferred: false },
     { id: "install", label: "Steps to install", inferred: false },
     { id: "health", label: "Protection health", inferred: false },
     { id: "add", label: "Add an ally", inferred: false },
@@ -14,14 +15,44 @@ export const aaText = {
   ],
   // sign-up
   signupSteps: [
-    { title: "Your name", line: "Whose account this is." },
-    { title: "Hello", line: "A greeting before the account steps." },
-    { title: "Your email", line: "The address the account is tied to." },
-    { title: "Secure your account", line: "A one-time code is sent to confirm the address." },
-    { title: "Username and password", line: "How you sign in." },
-    { title: "A security question", line: "How support could verify you." },
-    { title: "Choose your plan", line: "Monthly, yearly or lifetime." },
+    { title: "Your name", line: "Use your own name, whether you set this up for yourself or to help someone else." },
+    { title: "Nice to meet you", line: "Thanks for joining this journey." },
+    { title: "Your email", line: "This email is tied to the account, so check it is yours." },
+    { title: "Let's secure your account", line: "A one-time code was sent to this address:" },
+    { title: "Almost there", line: "Create a username and a password." },
+    { title: "Secure your account", line: "Pick a question that helps verify who you are if you ever need help." },
+    { title: "Choose your plan", line: "Choose monthly or yearly pricing for a free first stretch. Lifetime has no free stretch." },
   ],
+  firstName: "First name",
+  lastName: "Last name",
+  whyImportant: "Why is this important?",
+  greetingFree: "A free first stretch comes next:",
+  emailLabel: "Email",
+  codeLabel: "Enter your code",
+  codeHelp: "Check your spam folder.",
+  resend: "Send a new code",
+  resendDone: "A new code would be sent. Nothing is sent in the lab.",
+  startOver: "Start over with a different email",
+  usernameLabel: "Create your username",
+  usernameHelp: "Choose a good one. You cannot change it later.",
+  passwordLabel: "Create your password",
+  passwordHelp: "The password must not contain your name.",
+  showPassword: "Show password",
+  hidePassword: "Hide password",
+  securityLabel: "Select a security question",
+  securityInfo: "About the security question",
+  securityOptions: [
+    "What was the name of your first boss?",
+    "What was your first car's make and model?",
+    "As a child, what did you want to be when you grew up?",
+    "What was the name of your favourite childhood teacher?",
+  ],
+  answerLabel: "Security answer",
+  closeSignup: "Close the sign-up",
+  maskEmail: (e: string) => {
+    const [name, domain] = e.split("@")
+    return `${(name ?? "")[0] ?? ""}${"*".repeat(Math.max(0, (name ?? "").length - 1))}@${domain ?? ""}`
+  },
   stepOf: (n: number, total: number) => `${n}/${total}`,
   progressLabel: "Sign-up progress",
   planCards: ["Monthly", "Yearly", "Lifetime"],
@@ -29,6 +60,12 @@ export const aaText = {
   promoRow: "I have a promo code",
   promoLabel: "Promo code",
   planSelected: "Selected",
+  // welcome
+  welcomeTitle: "Welcome",
+  welcomeUsers: "People who have joined",
+  welcomeQuote: "Review quote",
+  welcomeHave: "I already have an account",
+  welcomeGo: "Continue",
   // install
   installTitle: "Steps to install",
   installRows: [
@@ -71,7 +108,8 @@ export const aaText = {
   acceptGetApp: "Get the ally app",
   // activity
   activityTitle: "Activity summary",
-  allyName: "Member",
+  allyName: "Example member",
+  avatarLabel: "Profile",
   backLabel: "Back",
   flaggedOnly: "Highlighted only",
   searchLabel: "Search",
