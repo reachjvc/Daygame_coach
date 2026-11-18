@@ -1,5 +1,6 @@
 "use client"
 
+import { Trash2 } from "lucide-react"
 import { useState } from "react"
 import { useLabState } from "../../store"
 import { PrimaryButton } from "../../../components/kit"
@@ -394,7 +395,7 @@ function Day({ day, entry, onSave, onBack }: { day: string; entry: Entry | null;
         right={
           <>
             <button type="button" data-testid="c-day-delete" aria-label={cText.trash} onClick={() => onSave(null)} className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-card">
-              {"⌫"}
+              <Trash2 aria-hidden="true" className="size-5" />
             </button>
             <button type="button" data-testid="c-day-save" aria-label={cText.saveEntry} onClick={() => onSave({ rating, mood, text, photo })} className="inline-flex size-11 items-center justify-center rounded-full border border-primary bg-primary text-primary-foreground">
               {"✓"}

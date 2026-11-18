@@ -44,9 +44,7 @@ export const dText = {
   healthTitle: "Health",
   healthRows: ["Your heart rate and blood pressure go back to normal.", "The carbon monoxide in your blood drops to normal.", "Your risk of lung cancer falls over the years."],
   healthCard: "Detail",
-  healthScaleEnd: "100",
   healthOf: "/8",
   expand: "Open",
   collapse: "Close",
-  decor: "☀",
 }

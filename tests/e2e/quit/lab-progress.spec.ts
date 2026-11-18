@@ -7,7 +7,7 @@
  * Everything lives in this browser's storage, so the test writes nothing to the live database.
  */
 
-import { mkdirSync } from "node:fs"
+import { mkdirSync, readFileSync } from "node:fs"
 import { homedir } from "node:os"
 import path from "node:path"
 import { test, expect, SIGNED_OUT } from "../fixtures/test"
@@ -16,7 +16,7 @@ import type { Page } from "@playwright/test"
 test.use({ storageState: SIGNED_OUT, viewport: { width: 390, height: 844 }, colorScheme: "dark" })
 
 const SHOTS = path.join(homedir(), ".cache/daygame-research/quit-copy/progress/shots-ours")
-const PIXEL = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAEBgIApD5fRAAAAABJRU5ErkJggg==", "base64")
+const PHOTO = readFileSync(path.join(process.cwd(), "tests/e2e/fixtures/photo-tile.png"))
 
 async function start(page: Page, letter: string) {
   const errors: string[] = []
@@ -131,6 +131,8 @@ test("copy A: stacked bars, habits, savings, milestones, pledge, quote", async (
   await expect(page.getByTestId("screen-feed")).toBeVisible()
   await page.getByTestId("a-chip-4").click()
   await expect(page.getByTestId("a-chip-4")).toHaveAttribute("aria-selected", "true")
+  await expect(page.getByTestId("fade-row")).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
   await shot(page, "a", "milestones")
 
   await page.getByTestId("a-nav-1").click()
@@ -157,7 +159,7 @@ test("copy A: stacked bars, habits, savings, milestones, pledge, quote", async (
   await page.getByTestId("a-reason-input").fill("More mornings")
   await page.getByTestId("a-reason-add").click()
   await expect(page.getByTestId("a-reasons")).toContainText("More mornings")
-  await page.getByTestId("a-reason-photo-input").setInputFiles({ name: "p.png", mimeType: "image/png", buffer: PIXEL })
+  await page.getByTestId("a-reason-photo-input").setInputFiles({ name: "p.png", mimeType: "image/png", buffer: PHOTO })
   await expect(page.getByTestId("a-reason-photo")).toHaveCount(1)
   await shot(page, "a", "pledge")
   await page.getByTestId("a-pledge-sentence").click()
@@ -298,6 +300,8 @@ test("copy C: counter modes, milestones, statistics, calendar, journal, history"
   await page.getByTestId("c-menu-1").click()
   await expect(page.getByTestId("c-stat-line")).toContainText("3 habits and 7 stretches")
   await expect(page.getByTestId("c-pie")).toBeVisible()
+  await expect(page.getByTestId("fade-row")).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
   await shot(page, "c", "statistics")
   await page.getByTestId("c-filter").click()
   await expect(page.getByTestId("c-filter-panel")).toBeVisible()
@@ -317,7 +321,7 @@ test("copy C: counter modes, milestones, statistics, calendar, journal, history"
   await page.getByTestId("c-rating").fill("2")
   await page.getByTestId("c-mood").selectOption("Low")
   await page.getByTestId("c-day-text").fill("A heavy day.")
-  await page.getByTestId("c-photo-input").setInputFiles({ name: "p.png", mimeType: "image/png", buffer: PIXEL })
+  await page.getByTestId("c-photo-input").setInputFiles({ name: "p.png", mimeType: "image/png", buffer: PHOTO })
   await expect(page.getByTestId("c-photo-remove")).toBeVisible()
   await shot(page, "c", "day")
   await page.getByTestId("c-day-save").click()
@@ -376,10 +380,11 @@ test("copy D: home, achievements, health", async ({ page }) => {
   await expect(page.getByTestId("d-health-2")).toBeVisible()
   await expect(page.getByTestId("d-health-count").getByTestId("not-sourced")).toBeVisible()
   await expect(page.getByTestId("d-health-bar-0")).toBeVisible()
+  await expect(page.getByTestId("screen-health")).not.toContainText("100")
   await expect(page.getByTestId("d-health-chevron-0")).toBeVisible()
   await shot(page, "d", "health")
   await page.getByTestId("d-health-0").click()
-  await expect(page.getByTestId("d-health-ring-0")).toBeVisible()
+  await expect(page.getByTestId("d-health-ring-0").getByTestId("not-sourced")).toBeVisible()
   await shot(page, "d", "health-open")
   await page.getByTestId("d-nav-0").click()
   await expect(page.getByTestId("d-overall")).toBeVisible()

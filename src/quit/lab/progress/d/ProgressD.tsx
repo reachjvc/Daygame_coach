@@ -190,9 +190,6 @@ function Health() {
               </span>
               {open === i ? (
                 <span data-testid={`d-health-ring-${i}`} className="relative flex justify-center py-2">
-                  <span aria-hidden="true" className="absolute left-4 top-0 text-xl">
-                    {dText.decor}
-                  </span>
                   <Ring value={0} size={110} stroke={10}>
                     <NotSourced />
                   </Ring>
@@ -200,8 +197,9 @@ function Health() {
               ) : (
                 <span className="flex items-center gap-2">
                   <NotSourced />
-                  <span data-testid={`d-health-bar-${i}`} className="h-2 flex-1 rounded-full bg-muted" />
-                  <span className="text-xs text-muted-foreground">{dText.healthScaleEnd}</span>
+                  <span data-testid={`d-health-bar-${i}`} data-fill="0" className="relative h-3 flex-1 overflow-hidden rounded-full border border-dashed border-muted-foreground/60 bg-transparent">
+                    <span className="absolute inset-y-0 left-0 bg-primary" style={{ width: "0%" }} />
+                  </span>
                 </span>
               )}
             </button>

@@ -68,23 +68,40 @@ export function Head({ title, onBack, right, inferred }: { title: string; onBack
   )
 }
 
+/** A sideways-scrolling row with a fade on the right edge, so it reads as "more to scroll". */
+export function FadeRow({ children, className = "", role }: { children: React.ReactNode; className?: string; role?: string }) {
+  return (
+    <div className="relative" data-testid="fade-row">
+      <div role={role} className={`flex overflow-x-auto pr-8 ${className}`}>
+        {children}
+      </div>
+      <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent" />
+    </div>
+  )
+}
+
 /** A row of pill tabs. */
 export function Tabs({ items, value, onChange, id, scroll }: { items: readonly string[]; value: number; onChange: (i: number) => void; id: string; scroll?: boolean }) {
-  return (
-    <div role="tablist" className={`flex gap-1.5 ${scroll ? "overflow-x-auto" : ""}`}>
-      {items.map((label, i) => (
-        <button
-          key={label}
-          type="button"
-          role="tab"
-          aria-selected={i === value}
-          data-testid={`${id}-${i}`}
-          onClick={() => onChange(i)}
-          className={`inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border px-3.5 text-sm ${scroll ? "" : "flex-1"} ${i === value ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground"}`}
-        >
-          {label}
-        </button>
-      ))}
+  const buttons = items.map((label, i) => (
+    <button
+      key={label}
+      type="button"
+      role="tab"
+      aria-selected={i === value}
+      data-testid={`${id}-${i}`}
+      onClick={() => onChange(i)}
+      className={`inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border px-3.5 text-sm ${scroll ? "" : "flex-1"} ${i === value ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground"}`}
+    >
+      {label}
+    </button>
+  ))
+  return scroll ? (
+    <FadeRow role="tablist" className="gap-1.5">
+      {buttons}
+    </FadeRow>
+  ) : (
+    <div role="tablist" className="flex gap-1.5">
+      {buttons}
     </div>
   )
 }
@@ -117,7 +134,7 @@ export function Ring({ value, size = 160, stroke = 12, children, testId }: { val
   return (
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }} data-testid={testId} data-value={v.toFixed(3)}>
       <svg width={size} height={size} className="-rotate-90" aria-hidden="true">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} className="stroke-muted" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} className="stroke-border" />
         <circle
           cx={size / 2}
           cy={size / 2}

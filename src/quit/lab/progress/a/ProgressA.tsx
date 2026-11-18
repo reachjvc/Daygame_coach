@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useLabState } from "../../store"
 import { PrimaryButton } from "../../../components/kit"
-import { Card, Head, IconBtn, InferredTag, NumField, Placeholder, PlaceholderScreen, Tabs, BottomNav } from "../shared/Bits"
+import { Card, FadeRow, Head, IconBtn, InferredTag, NumField, Placeholder, PlaceholderScreen, Tabs, BottomNav } from "../shared/Bits"
 import { addDays, billCount, dayKey, fmtMoney, HOUR, MIN, monthly, splitElapsed, yearly } from "../shared/calc"
 import { useNow } from "../shared/clock"
 import { SetupGate, StartOver, seedStart, type SetupField } from "../shared/Setup"
@@ -333,7 +333,7 @@ function Feed({ habit, now }: { habit: Habit; now: number }) {
   return (
     <section data-testid="screen-feed" className="flex flex-col gap-3">
       <Head title={`${aText.feedTitle} - ${habit.name}`} />
-      <div className="flex gap-1.5 overflow-x-auto" role="tablist">
+      <FadeRow role="tablist" className="gap-1.5">
         {[...reachedNames.slice(-3).reverse(), -1].map((i) => (
           <button
             key={i}
@@ -347,7 +347,7 @@ function Feed({ habit, now }: { habit: Habit; now: number }) {
             {i === -1 ? aText.feedAll : aText.milestoneNames[i]}
           </button>
         ))}
-      </div>
+      </FadeRow>
       <p className="text-sm text-muted-foreground">{aText.feedLine}</p>
       <Placeholder />
       <p className="text-xs text-muted-foreground">{aText.feedOut}</p>
