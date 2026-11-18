@@ -60,6 +60,11 @@ import { AccountabilityA } from "./accountability/a/AccountabilityA"
 import { AccountabilityB } from "./accountability/b/AccountabilityB"
 import { AccountabilityE } from "./accountability/e/AccountabilityE"
 import { TimelineBest } from "./timeline/best/TimelineBest"
+import { LibraryA } from "./library/a/LibraryA"
+import { LibraryB } from "./library/b/LibraryB"
+import { LibraryC } from "./library/c/LibraryC"
+import { LibraryD } from "./library/d/LibraryD"
+import { LibraryE } from "./library/e/LibraryE"
 
 export const LAB_TOOL_IDS = [
   "sos",
@@ -218,7 +223,17 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       e: { Component: AccountabilityE, addiction: "nicotine", label: "Copy E", kind: "copy" },
     },
   },
-  library: { name: "Library", variants: { current: current(HowTool) } },
+  library: {
+    name: "Library",
+    variants: {
+      current: current(HowTool),
+      a: { Component: LibraryA, addiction: "alcohol", label: "Copy A", kind: "copy" },
+      b: { Component: LibraryB, addiction: "nicotine", label: "Copy B", kind: "copy" },
+      c: { Component: LibraryC, addiction: "porn", label: "Copy C", kind: "copy" },
+      d: { Component: LibraryD, addiction: "weed", label: "Copy D", kind: "copy" },
+      e: { Component: LibraryE, addiction: "nicotine", label: "Copy E", kind: "copy" },
+    },
+  },
 }
 
 export function isLabTool(x: string): x is LabToolId {

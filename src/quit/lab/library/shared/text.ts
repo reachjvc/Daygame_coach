@@ -1,0 +1,21 @@
+/** Reader text shared by the Library copies. */
+export const lbText = {
+  articleTile: "Not copied: article",
+  mediaTile: "Not copied: video",
+  textTile: "Not copied: text",
+  labOnly: "lab only",
+  labSearch: "Search",
+  labSaved: "Saved items",
+  save: "Save for later",
+  saved: "Saved",
+  unsave: "Remove from saved",
+  share: "Share",
+  back: "Back",
+  close: "Close",
+  more: "Next card",
+  prev: "Previous card",
+  of: (a: number, b: number) => `${a} of ${b}`,
+  searchField: "Search",
+  searchGo: "Search",
+  pic: "Picture",
+} as const
