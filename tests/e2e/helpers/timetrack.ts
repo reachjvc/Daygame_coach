@@ -212,12 +212,8 @@ export async function trackEntry(page: Page, description: string): Promise<void>
   // A Stop tapped while the page is checking the account is held until the check ends (D2):
   // wait for the badge to stop saying so. (Not for "Saved": some tests track while offline.)
   await expect(page.locator('header').getByRole('button', { name: /^Checking/ })).toHaveCount(0)
-  // A tap on a phone's bar right after it changed is ignored on purpose (RunBar TAP_SETTLE_MS),
-  // so, as a person would, tap again until the entry is stopped.
-  await expect(async () => {
-    if (await stop.isVisible()) await stop.click()
-    await expect(entryInList(page, description).first()).toBeVisible({ timeout: 3_000 })
-  }).toPass({ timeout: 20_000 })
+  await tapStop(page)
+  await expect(entryInList(page, description).first()).toBeVisible({ timeout: 15_000 })
   await expect(timerButton(page, 'Start timer')).toBeVisible()
 }
 
