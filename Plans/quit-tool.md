@@ -696,6 +696,64 @@ with `nicotine.json`/`tooltext.json` and lists any text found in neither.
 Per Part 2. Signed-in parts use a test account on the test stack, never the owner's. **`curve` waits** for
 the owner's reaction to its visual mock (his note 2026-11-18); `sos`, `symptoms`, `slip` go first.
 
+#### Phase 5 brief (Opus, 2026-11-18) — `sos`, `symptoms`, `slip` (curve later)
+
+Same shared rules as the Phase 4 brief (folders, tooltext, `noHardcodedText`, store, counts, `?s=N`).
+
+**Signed-in link to the Black Box (sos and slip only).** `src/quit/blackbox.ts`: `useSignedIn()` (GET
+`/api/whoami` once; 200 → signed in; anything else → signed out; never blocks the tool) and
+`useQuitBlackBox(viceId)` built on `useBlackBox()` + `useBlackBoxSync()` from `src/vice/blackbox/`: returns
+the living attempt for `viceId` with `endedOn === null` (or null), `fileCloseCall(input)`, `fileSlip(input)`
+(both `fileReport`), and `undo(reportId)` (`removeReport`). Signed out → none of this loads and nothing is
+sent. Signed in with no living run → the result shows a link "Keep a record in your Black Box"
+(`ROUTES.quitVice`) instead of filing. Never touch the owner's account in tests: a test account on the test
+stack.
+
+**`sos` — Craving now?** Screen 1 "What is the voice saying?": chips from every belief's `short` plus
+"Something else". Screen 2 "What does it want to give you?": need chips, preselected from the chosen
+belief's `need`. Screen 3, one scroll: the belief's `counterpart` (left out for "Something else"); one swap
+for the need (`orderSwaps` with the `gives` ratings; "Another one" cycles the 3); "Move 5" (tooltext: walk
+or take stairs for 5 minutes); the 4 `tapeForward` lines; "Wait 10 minutes" starts a calm countdown
+(mm:ss, a ring that empties; start time stored so reload/background keeps the right time; "Sound" toggle
+off by default plays one soft WebAudio tone per minute; `prefers-reduced-motion` → no ring animation;
+"Stop waiting" ends it early). Screen 4 "Did it pass?": Yes → signed in with a run: `fileCloseCall`
+(`wentThrough: false`, `ending` from the belief's matching `endings` entry or `"other"`, `thought` = the
+`short`, `didInstead` = the swap text, other fields empty) and "Saved as a close call you beat" with Undo;
+signed out → "Next time: name the voice sooner" plus the menu link. No → link to `slip`. No line anywhere
+promises how long a craving lasts: tooltext for `sos` passes a unit test banning `/lasts?|will pass|passes
+in|\d+ minutes to pass|go(es)? away in/i`. The frame hides its own "Craving now?" link on this tool.
+
+**`symptoms` — Symptom guide.** List of the symptom keys in `felt.bins[*].symptoms` that reach ≥ 10 in 100
+posts in at least one counted bin (n ≥ 25), in `symptomWords` labels, sorted by their peak share. Tap one:
+`symptomSummary(key, felt)` → `{peakLabel, peakPer100, spanFrom, spanTo, fadesLabel | null}`: counted bins
+only (n ≥ 25), peak = highest share (earliest wins a tie), span = the contiguous bins around the peak with
+share ≥ 0.8 × peak, fades = the first later bin with share ≤ 0.5 × peak (null → "no clear easing in the
+posts"). Shown as "Most mentioned <span>: <peakPer100> in 100 posts" and "Down to half by <fadesLabel>"
+(tooltext). Then its `symptomHelp` rows with `EvidenceChip` and `SourceTap`; for `sleep` the four-rule card
+from tooltext. A basis fold: post count, forums, years, every `felt.bias` line (RULEBOOK rule 20). Every
+figure is computed; a unit test checks `symptomSummary` against hand-computed values for 3 nicotine keys
+(write the expected values by reading the JSON yourself, in the test, with a comment showing the
+arithmetic) and an all-zero key.
+
+**`slip` — Slipped? Restart today.** Screen 1 when (today / yesterday / earlier this week); 2 what was going
+on (`endings`); 3 what you told yourself (belief `short` chips + "Something else" with an optional text field,
+≤ 80 chars). Result, the owner's step 3: "Back through steps 1–3": (1) his top beliefs from the `beliefs`
+store with their counterparts, or a link to take the test; (2) his swaps from `gives`, or a link; (3) a new
+day 1: chips Today / Tomorrow (stored as `slip.newDay1`); then the sentence from `planSteps[2].text` that
+starts "Every day you keep" as written. Signed in with a run: `fileSlip` (`wentThrough: true`, `at` from
+screen 1, `ending` mapped through `endings[].blackBoxEnding`, `thought`), "Saved in your Black Box" + Undo,
+and a link to start the new run there. tooltext for `slip` passes the `no-reset` regex and
+`/start (again|over) from|lost (it all|your)|blew it|failed/i`.
+
+**Acceptance:** unit tests (symptomSummary, sos text ban, slip text ban, endings mapping, countdown remaining
+maths incl. a reload 4 minutes in); full suite vs baseline; typecheck; eslint; Playwright
+`tests/e2e/quit/wave1-part2.spec.ts` at 390×844: signed out sos run to "Did it pass?" (fake the clock with
+`page.clock`), symptoms list + one symptom, slip run; signed in (test-stack test user, the repo's existing
+e2e auth helper) with a living nicotine run seeded through the Black Box UI or its store: sos "Yes" files a
+close call that the Black Box page shows, Undo removes it; slip files a lapse that ends the run, Undo brings
+it back. Screenshots to `~/.cache/daygame-research/quit-tool/shots/phase5/`; Haiku text-vs-data check as
+Phase 4.
+
 ### Phase 6: privacy page and coach page — brief Opus, build Sonnet
 
 `/privacy` (what is kept, what never is, how to delete; marked as a draft he reads; not legal advice) and
