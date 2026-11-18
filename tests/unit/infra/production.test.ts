@@ -302,10 +302,12 @@ describe("the production jobs", () => {
   const verify = jobs["verify-production"]
 
   it("publish only after green checks, on a push to main, when switched on", () => {
-    expect(image.needs).toBe("checks")
+    // both halves of the unit suite: `checks` runs shard 1/2, `unit-2` runs 2/2
+    expect(image.needs).toEqual(["checks", "unit-2"])
     for (const part of [
       "!cancelled()",
       "needs.checks.result == 'success'",
+      "needs.unit-2.result == 'success'",
       "github.event_name == 'push'",
       "github.ref == 'refs/heads/main'",
       "vars.PRODUCTION_PUBLISH == 'on'",
