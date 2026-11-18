@@ -138,3 +138,7 @@ Raised by the Senior on 2026-11-10, not yet decided:
 
 - The script starts as the owner talking the idea through on a recording;
   Claude transcribes and shapes it (2026-11-10).
+- Videos about the site's free quit tools are about the viewer's problem,
+  not the feature; the tool is the page he moves through, and he fills it in
+  live on camera. Each ends on the free tool, never a sale. Plan:
+  `Plans/quit-tool.md` (owner agreed 2026-11-18).
