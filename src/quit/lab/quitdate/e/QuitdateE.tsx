@@ -30,7 +30,7 @@ export function QuitdateE({ data }: LabProps) {
   )
 }
 
-function CalendarMenu({ dateKey }: { dateKey: string | null }) {
+export function CalendarMenu({ dateKey }: { dateKey: string | null }) {
   const [open, setOpen] = useState(false)
   const ics = dateKey ? `data:text/calendar;charset=utf-8,${encodeURIComponent(icsFor(dateKey, eText.calTitle))}` : ""
   return (
@@ -71,20 +71,32 @@ function Section({ n, children, testId }: { n: number; children: React.ReactNode
   )
 }
 
-function Builder({ data }: { data: LabProps["data"] }) {
-  const [type, setType] = useLabState<Type | null>("quitdate", "e", "type", null)
-  const [choice, setChoice] = useLabState<DateChoice | null>("quitdate", "e", "choice", null)
-  const [picked, setPicked] = useLabState<string>("quitdate", "e", "picked", "")
-  const [cigs, setCigs] = useLabState<string>("quitdate", "e", "cigs", "")
-  const [price, setPrice] = useLabState<string>("quitdate", "e", "price", "")
-  const [reasons, setReasons] = useLabState<string[]>("quitdate", "e", "reasons", [])
-  const [trig, setTrig] = useLabState<string[]>("quitdate", "e", "triggers", [])
-  const [sup, setSup] = useLabState<string[]>("quitdate", "e", "support", [])
-  const [exp, setExp] = useLabState<string[]>("quitdate", "e", "experts", [])
-  const [dis, setDis] = useLabState<string[]>("quitdate", "e", "distract", [])
-  const [other, setOther] = useLabState<string>("quitdate", "e", "otherWay", "")
-  const [ticks, setTicks] = useLabState<boolean[]>("quitdate", "e", "ticks", [true, false, false, false, false, false, false, false])
+export type Ns = readonly [string, string]
+const E_NS: Ns = ["quitdate", "e"]
+export type BuilderExtras = {
+  /** Needs one pick in each strategy group before the plan opens (copy of a different product's rule). */
+  needEachGroup?: boolean
+  /** Adds a printable plan screen. */
+  printView?: boolean
+  labels?: { needOne: string; viewPlan: string; planTitle: string; print: string; back: string }
+}
+
+export function Builder({ data, ns = E_NS, extras = {} }: { data: LabProps["data"]; ns?: Ns; extras?: BuilderExtras }) {
+  const [type, setType] = useLabState<Type | null>(ns[0], ns[1], "type", null)
+  const [choice, setChoice] = useLabState<DateChoice | null>(ns[0], ns[1], "choice", null)
+  const [picked, setPicked] = useLabState<string>(ns[0], ns[1], "picked", "")
+  const [cigs, setCigs] = useLabState<string>(ns[0], ns[1], "cigs", "")
+  const [price, setPrice] = useLabState<string>(ns[0], ns[1], "price", "")
+  const [reasons, setReasons] = useLabState<string[]>(ns[0], ns[1], "reasons", [])
+  const [trig, setTrig] = useLabState<string[]>(ns[0], ns[1], "triggers", [])
+  const [sup, setSup] = useLabState<string[]>(ns[0], ns[1], "support", [])
+  const [exp, setExp] = useLabState<string[]>(ns[0], ns[1], "experts", [])
+  const [dis, setDis] = useLabState<string[]>(ns[0], ns[1], "distract", [])
+  const [other, setOther] = useLabState<string>(ns[0], ns[1], "otherWay", "")
+  const [ticks, setTicks] = useLabState<boolean[]>(ns[0], ns[1], "ticks", [true, false, false, false, false, false, false, false])
   const [results, setResults] = useState(false)
+  const [printing, setPrinting] = useState(false)
+  const [err, setErr] = useState(false)
   const [src, setSrc] = useState(false)
   const [card, setCard] = useState(0)
   const [now, setNow] = useState(0)
@@ -103,6 +115,27 @@ function Builder({ data }: { data: LabProps["data"] }) {
 
   const planText = () =>
     [eText.resultsTitle, `${eText.myDate}: ${fmtDate(dateKey)}`, `${eText.savingsTitle}: ${sav.week} / ${sav.month} / ${sav.year}`, `${eText.reasonsReminder}: ${reasonList.join("; ")}`, `${eText.myTriggers}: ${groupsPicked.flatMap((g) => g.items).join("; ")}`, `${eText.myStrategies}: ${distractList.join("; ")}`, `${eText.supportTitle}: ${supList.join("; ")}`, `${eText.expertTitle}: ${expList.join("; ")}`].join("\n")
+
+  if (results && printing && extras.labels) {
+    const L = extras.labels
+    return (
+      <article data-testid="e-print" className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <button type="button" data-testid="e-print-back" onClick={() => setPrinting(false)} className="inline-flex min-h-11 items-center text-sm text-muted-foreground underline">
+            {L.back}
+          </button>
+          <InferredTag />
+        </div>
+        <h2 className="text-lg font-semibold">{L.planTitle}</h2>
+        <div data-testid="e-print-page" className="whitespace-pre-wrap break-words rounded-md border border-border bg-card p-3 text-sm">
+          {planText()}
+        </div>
+        <PrimaryButton testId="e-print-go" onClick={() => window.print()}>
+          {L.print}
+        </PrimaryButton>
+      </article>
+    )
+  }
 
   if (results) {
     const cur = groupsPicked[Math.min(card, Math.max(0, groupsPicked.length - 1))]
@@ -194,6 +227,11 @@ function Builder({ data }: { data: LabProps["data"] }) {
           <h3 className="font-semibold">{eText.setbacks}</h3>
           <p className="text-sm text-muted-foreground">{eText.setbackText}</p>
         </section>
+        {extras.printView && extras.labels && (
+          <button type="button" data-testid="e-view-plan" onClick={() => setPrinting(true)} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 font-medium">
+            {extras.labels.viewPlan} <InferredTag />
+          </button>
+        )}
         <a data-testid="e-download" href={`data:text/plain;charset=utf-8,${encodeURIComponent(planText())}`} download="my-quit-plan.txt" className="inline-flex min-h-12 items-center justify-center rounded-md bg-primary px-4 font-medium text-primary-foreground">
           {eText.download}
         </a>
@@ -292,6 +330,11 @@ function Builder({ data }: { data: LabProps["data"] }) {
           </Section>
           <Section n={5} testId="e-step-5">
             <p className="text-sm text-muted-foreground">{eText.setupText}</p>
+            {err && extras.labels && (
+              <p data-testid="e-need-one" role="alert" className="rounded-md border border-red-500 bg-red-950/40 p-3 text-sm">
+                {extras.labels.needOne}
+              </p>
+            )}
             {(
               [
                 ["sup", eText.support, sup, setSup],
@@ -318,7 +361,14 @@ function Builder({ data }: { data: LabProps["data"] }) {
           </Section>
           <section data-testid="e-ready" className="flex flex-col items-center gap-3 rounded-lg border border-border bg-card p-4 text-center">
             <h2 className="text-lg font-semibold">{eText.readyTitle}</h2>
-            <PrimaryButton testId="e-letsgo" onClick={() => setResults(true)}>
+            <PrimaryButton
+              testId="e-letsgo"
+              onClick={() => {
+                if (extras.needEachGroup && (sup.length === 0 || exp.length === 0 || dis.length === 0)) return setErr(true)
+                setErr(false)
+                setResults(true)
+              }}
+            >
               {eText.letsGo}
             </PrimaryButton>
           </section>
@@ -349,14 +399,14 @@ function PlanList({ testId, title, line, sub, items }: { testId: string; title: 
 
 type AppScreen = { name: "tab" } | { name: "other"; title: string } | { name: "badge" } | { name: "age" }
 
-function App({ onBuilder }: { onBuilder: () => void }) {
+export function App({ onBuilder, ns = E_NS }: { onBuilder: () => void; ns?: Ns }) {
   const [tab, setTab] = useState(3)
   const [screen, setScreen] = useState<AppScreen>({ name: "tab" })
-  const [choice] = useLabState<DateChoice | null>("quitdate", "e", "choice", null)
-  const [picked] = useLabState<string>("quitdate", "e", "picked", "")
-  const [own, setOwn] = useLabState<string>("quitdate", "e", "appDate", "")
-  const [reasons] = useLabState<string[]>("quitdate", "e", "reasons", [])
-  const [trig] = useLabState<string[]>("quitdate", "e", "triggers", [])
+  const [choice] = useLabState<DateChoice | null>(ns[0], ns[1], "choice", null)
+  const [picked] = useLabState<string>(ns[0], ns[1], "picked", "")
+  const [own, setOwn] = useLabState<string>(ns[0], ns[1], "appDate", "")
+  const [reasons] = useLabState<string[]>(ns[0], ns[1], "reasons", [])
+  const [trig] = useLabState<string[]>(ns[0], ns[1], "triggers", [])
   const [now, setNow] = useState(0)
   const [editing, setEditing] = useState(false)
   const [start] = useState(() => Date.now())

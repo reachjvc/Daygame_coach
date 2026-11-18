@@ -52,6 +52,9 @@ import { QuitdateBest } from "./quitdate/best/QuitdateBest"
 import { LessonsBest } from "./lessons/best/LessonsBest"
 import { PastA } from "./past/a/PastA"
 import { PastB } from "./past/b/PastB"
+import { IfthenA } from "./ifthen/a/IfthenA"
+import { IfthenB } from "./ifthen/b/IfthenB"
+import { IfthenC } from "./ifthen/c/IfthenC"
 import { TimelineBest } from "./timeline/best/TimelineBest"
 
 export const LAB_TOOL_IDS = [
@@ -194,7 +197,14 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       b: { Component: PastB, addiction: "alcohol", label: "Copy B", kind: "copy" },
     },
   },
-  ifthen: { name: "If-then plan", variants: {} },
+  ifthen: {
+    name: "If-then plan",
+    variants: {
+      a: { Component: IfthenA, addiction: "nicotine", label: "Copy A", kind: "copy" },
+      b: { Component: IfthenB, addiction: "porn", label: "Copy B", kind: "copy" },
+      c: { Component: IfthenC, addiction: "alcohol", label: "Copy C", kind: "copy" },
+    },
+  },
   accountability: { name: "Accountability", variants: {} },
   library: { name: "Library", variants: { current: current(HowTool) } },
 }
