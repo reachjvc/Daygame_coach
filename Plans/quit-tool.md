@@ -1,7 +1,8 @@
 # Quit tool: a free menu of quit tools, then a 90-day program
 
 Written 2026-11-18, rewritten the same day after three research rounds and the owner's menu idea. Status:
-**Phase 0 done, Phase 1 live 2026-11-18 (types, importer, validator); Phase 2 (nicotine content) running.** Replaces the "one page per addiction" frame of the addiction one-pagers
+**Phases 0, 1, 3 live 2026-11-18 (data + validator; menu, frame, count route; `/quit` shows nothing live until
+`live.json` lists nicotine). Phase 2 (nicotine content) running; Phase 6 facts step running.** Replaces the "one page per addiction" frame of the addiction one-pagers
 (docs/research/addiction-one-pagers/); their research, rules and checked numbers are reused, the page form is not.
 
 **Scheduled by `Plans/first-1000.md` (2026-11-18):** the free nicotine tools ship by **20 Dec 2026** so New Year
@@ -929,4 +930,15 @@ addictions.
 
 ## Questions from the build
 
-(none yet)
+Phase 1 (answered by the planner, 2026-11-18): there are 19 tool ids, not 20 (the brief is corrected).
+Importer keeps only typed fields; forum-harvest refs get `url: ""` and are fixed in Phase 2.
+
+Phase 3 (answered by the planner, 2026-11-18):
+1. 19 rows, not 20: right.
+2–3. `/quit/coaching` and `/privacy` 404 until Phase 6; nothing is live before Phase 7, so that is fine.
+4. An unbuilt wave-1 tool says "Coming soon" with no date: right (it never shows once Phase 7 ships).
+5. `?present=1` with CSS `zoom` 1.4: accepted.
+6. `?preview=1` carried through links: accepted.
+7. `/quit` exempt from the two navigation guards: accepted; Phase 7 adds a link from the app (the vice
+   module's Black Box page) to `/quit/nicotine` once live.
+8. Phase 4 onward runs the quit specs on the phone project too.
