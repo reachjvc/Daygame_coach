@@ -23,7 +23,7 @@ by phase. The execution prompt is at the end.
 | What | Now | Target |
 |---|---|---|
 | `npm ci` in every CI job | fails: onnxruntime GPU download 404 | passes |
-| Pre-commit on this PC | the whole unit suite (613 files; 216 s in CI) | ≤ 30 s for a typical commit |
+| Pre-commit on this PC | the whole unit suite (613 files; 216 s in CI); this PC 2026-11-18: 53 s wall (613 files, 0 failed) | ≤ 30 s for a typical commit |
 | CI `checks` job, wall | 454 s (unit 217 s, DB 93 s, typecheck 62 s, lint 29 s) | ≤ 240 s |
 | Unit suite | 216 s: import 123 s, jsdom environment 128 s (baseline 97 s) | ≤ 100 s total CPU-wall in CI |
 | E2E on a main push, wall | 18–21 min (red phone shard 1/2: 1,152 s) | ≤ 6 min green; a red run stops ≤ 10 min |
@@ -33,6 +33,7 @@ by phase. The execution prompt is at the end.
 
 Last green CI and E2E: 2026-11-05 16:11 UTC. Last green nightly: 2026-10-30.
 Evidence runs: CI 43601945915, 44279935097; E2E 44079593390 (nightly), 43601945901; nightly 44096960629.
+Start SHA: 9813183b (main, 2026-11-18).
 
 ## Failure groups (evidence from the runs above)
 
@@ -116,6 +117,8 @@ command and its deciding output line are quoted under the phase as a **Status** 
 3. Record the start SHA in this plan.
 
 Accept: worktree exists on branch `tests-green`; local unit time written down.
+
+**Status:** done 2026-11-18. Worktree ~/.cache/daygame-research/tests-green/wt on branch tests-green; `time npx vitest run --reporter=dot`: real 0m53.191s; Test Files 613 passed (613); Tests 7168 passed | 1 skipped (7169); Duration 52.73s (transform 35.72s, setup 40.29s, import 166.13s, tests 336.08s, environment 135.58s).
 
 ## Phase 1 — Install works again (F0) · XS · haiku
 
