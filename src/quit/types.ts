@@ -56,6 +56,8 @@ export interface QuitRef {
   quote?: string
   fetched?: boolean
   fetchedOn?: string
+  /** True when the quote was cut to its first 30 words. */
+  quoteTrimmed?: boolean
 }
 
 export interface Check {
@@ -101,6 +103,8 @@ export interface QuitBelief {
   refs: QuitRef[]
   weak?: string | null
   ownWords?: boolean
+  /** Set when the planner changed an imported belief; says what and why. */
+  editNote?: string
   check?: Check
 }
 
@@ -149,6 +153,16 @@ export interface QuitClearItem {
   text: string
   removes: string
   link?: string
+}
+
+export interface QuitSymptomCourse {
+  symptom: string
+  peak: string | null
+  lasts: string
+  text: string
+  evidence: Evidence
+  refs: QuitRef[]
+  check?: Check
 }
 
 export interface QuitSymptomHelp {
@@ -257,6 +271,8 @@ export interface QuitAddictionFull {
   clearOut: QuitClearItem[]
   symptomWords: Record<string, string>
   symptomHelp: QuitSymptomHelp[]
+  symptomCourse: QuitSymptomCourse[]
+  symptomCourseNote: string
   tapeForward: string[]
   costSwaps: QuitCostSwap[]
   besides: QuitBesides[]

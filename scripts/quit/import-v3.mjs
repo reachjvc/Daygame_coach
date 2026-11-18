@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Writes src/quit/data/<id>.json from docs/research/addiction-one-pagers/08-v3.
-// Missing fields are the string "TODO". `--check` compares instead of writing (exit 1 on difference).
+// Missing fields are the string "TODO". Files with no "TODO" at all are filled and left alone. `--check` compares instead of writing (exit 1 on difference).
 import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
@@ -155,6 +155,8 @@ function build([v3id, id, name]) {
     clearOut: TODO,
     symptomWords,
     symptomHelp: TODO,
+    symptomCourse: TODO,
+    symptomCourseNote: TODO,
     tapeForward: TODO,
     costSwaps: TODO,
     besides: TODO,
@@ -173,6 +175,9 @@ function countTodos(x) {
   return 0
 }
 
+// A data file with no "TODO" anywhere is filled content: never overwritten, never compared.
+const isFilled = (file) => fs.existsSync(file) && countTodos(JSON.parse(fs.readFileSync(file, "utf8"))) === 0
+
 const check = process.argv.includes("--check")
 let diffs = 0
 for (const pilot of PILOTS) {
@@ -180,6 +185,10 @@ for (const pilot of PILOTS) {
   const text = JSON.stringify(data, null, 2) + "\n"
   const file = path.join(OUT, `${data.id}.json`)
   const topTodo = Object.entries(data).filter(([, v]) => v === TODO).length
+  if (isFilled(file)) {
+    console.log(`skipped ${data.id}: filled`)
+    continue
+  }
   console.log(`${data.id}: ${countTodos(data)} TODO values (${topTodo} whole fields)`)
   if (check) {
     const cur = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : null

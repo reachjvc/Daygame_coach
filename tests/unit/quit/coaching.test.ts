@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { addictionFromParam, catchText, formatUsd, priceText, stepsText, yearlyCost } from "@/src/quit/coaching"
+import { getAddiction } from "@/src/quit/data"
 import { canBuy } from "@/src/quit/offer"
 import { isAddictionId } from "@/src/quit/menu"
 import { visibleItems, privacyDoc } from "@/src/quit/privacyText"
@@ -41,7 +42,10 @@ describe("cost line from the store", () => {
 
 describe("catch paragraph", () => {
   it("treats TODO as absent", () => {
-    expect(catchText("nicotine")).toBeNull()
+    expect(catchText("weed", true)).toBeNull()
+  })
+  it("returns the text once the file has it", () => {
+    expect(catchText("nicotine")).toBe(getAddiction("nicotine")?.catch)
   })
   it("is absent for an addiction that is not viewable", () => {
     expect(catchText("gambling")).toBeNull()

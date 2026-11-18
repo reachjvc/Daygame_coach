@@ -69,6 +69,8 @@ export function makeValid(): QuitAddictionFull {
     clearOut: [{ id: "c1", text: "Throw out the tea bags", removes: "tea bags" }],
     symptomWords: { craving: "Cravings" },
     symptomHelp: [{ symptom: "craving", text: "Walk or drink water.", evidence: "moderate", refs: [ref] }],
+    symptomCourse: [{ symptom: "irritable", peak: "first week", lasts: "2 to 4 weeks", text: "Irritability peaks in week one.", evidence: "moderate", refs: [ref] }],
+    symptomCourseNote: "These studies are almost all of cigarette smokers.",
     tapeForward: ["Week one", "Week two", "Month one", "Month three"],
     costSwaps: [{ usd: 5, text: "A cinema ticket." }],
     besides: [{ id: "s1", text: "Talk to a friend." }],

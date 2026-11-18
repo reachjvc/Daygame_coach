@@ -16,18 +16,20 @@ describe("live files", () => {
     expect(validateLive()).toEqual([])
   })
 
+  it("the finished nicotine file passes every rule as live", () => {
+    expect(validateAddiction(getAddiction("nicotine"), { live: true })).toEqual([])
+  })
+
   it("a draft file fails as live, naming each TODO", () => {
-    const nicotine = getAddiction("nicotine")
-    expect(nicotine).not.toBeNull()
-    const issues = validateAddiction(nicotine, { live: true })
+    const issues = validateAddiction(getAddiction("weed"), { live: true })
     const todo = issues.filter((i) => i.rule === "todo")
     const paths = todo.map((i) => i.path)
-    for (const p of ["beliefs[0].need", "needs", "lessons", "catch", "units"]) expect(paths).toContain(p)
+    for (const p of ["beliefs[0].need", "needs", "lessons", "catch", "units", "symptomCourse"]) expect(paths).toContain(p)
     for (const i of todo) expect(i.message).toContain(i.path)
   })
 
   it("a draft file reports no TODO when not live", () => {
-    const issues = validateAddiction(getAddiction("nicotine"), { live: false })
+    const issues = validateAddiction(getAddiction("weed"), { live: false })
     expect(issues.filter((i) => i.rule === "todo")).toEqual([])
   })
 })
@@ -91,6 +93,16 @@ describe("importer and offer", () => {
     })
     expect(r.stderr).toBe("")
     expect(r.status).toBe(0)
+  })
+
+  it("import-v3 skips a file that has no TODO", () => {
+    const r = spawnSync("node", ["scripts/quit/import-v3.mjs", "--check"], {
+      cwd: path.resolve(__dirname, "../../.."),
+      env: { ...process.env, NODE_ENV: "test" },
+      encoding: "utf8",
+    })
+    expect(r.stdout).toContain("skipped nicotine: filled")
+    expect(r.stdout).not.toContain("skipped weed")
   })
 
   it("canBuy is false while there is no payment link", () => {

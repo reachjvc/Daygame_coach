@@ -1,8 +1,80 @@
 {
   "id": "nicotine",
   "name": "Smoking or vaping",
-  "units": "TODO",
-  "costKind": "TODO",
+  "units": [
+    {
+      "id": "cigarettes",
+      "one": "cigarette",
+      "many": "cigarettes",
+      "defaultPriceUsd": 0.52,
+      "defaultMinutesPerUnit": null,
+      "priceRefs": [
+        {
+          "cite": "Tobacco Insider, USA: Cigarette Prices (posted 26 Aug 2026)",
+          "url": "https://tobaccoinsider.com/usa-cigarette-prices/",
+          "quote": "The average price for a mainstream brand ranges from $7.95 in North Carolina to $14.85 in New York, with a national unweighted average of $10.34",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Tobacco Insider, USA: Cigarette Prices (posted 26 Aug 2026)",
+          "url": "https://tobaccoinsider.com/usa-cigarette-prices/",
+          "quote": "The price of a 20-cigarette pack varies significantly across U.S. states and localities",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "id": "vape",
+      "one": "disposable vape",
+      "many": "disposable vapes",
+      "defaultPriceUsd": 14.07,
+      "defaultMinutesPerUnit": null,
+      "priceRefs": [
+        {
+          "cite": "Diaz MC, Silver NA, Bertrand A, Schillo BA (2025). Bigger, stronger and cheaper: growth in e-cigarette market driven by disposable devices. Tobacco Control 34(1):65-70.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/37536928/",
+          "pmid": "37536928",
+          "quote": "average unit prices increased 165.7% from US$8.49 to US$14.07",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "id": "pouches",
+      "one": "can of pouches",
+      "many": "cans of pouches",
+      "defaultPriceUsd": 5.64,
+      "defaultMinutesPerUnit": null,
+      "priceRefs": [
+        {
+          "cite": "Tobacco Insider, How much are Zyns? (posted 12 Sep 2025)",
+          "url": "https://tobaccoinsider.com/how-much-are-zyns/",
+          "quote": "$5.64. That is how much the Manufacturer’s Suggested Retail Price (MSRP) is for a can of ZYN in the USA.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    }
+  ],
+  "costKind": "money+time",
   "danger": {
     "level": "none",
     "line": null,
@@ -207,8 +279,9 @@
         "cite": "Lindson N, Klemperer E, Hong B, Ordóñez-Mena JM, Aveyard P (2019). Smoking reduction interventions for smoking cessation. Cochrane Database of Systematic Reviews.",
         "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6953262/",
         "pmid": "31565800",
-        "quote": "Risk with abrupt quitting | Risk with reduction to quit … Smoking cessation (≥ 6‐month follow‐up) | 12 per 100 | 12 per 100 (11 to 14) … 9219 (22 RCTs)",
-        "fetched": true
+        "quote": "Risk with abrupt quitting | Risk with reduction to quit … Smoking cessation (≥ 6‐month follow‐up) | 12 per 100 | 12 per 100 (11 to 14) … 9219 (22…",
+        "fetched": true,
+        "quoteTrimmed": true
       },
       "check": {
         "by": "revision checker a (nicotine)",
@@ -550,18 +623,22 @@
       }
     }
   ],
-  "keyFacts": "TODO",
+  "keyFacts": [
+    "Withdrawal peaks in the first week and is gone within 10 days to 4 weeks, depending on the study.",
+    "In 12 lab studies, smokers who exercised briefly had weaker cravings than smokers who sat still.",
+    "Cravings set off by triggers were stronger at day 35 than at day 7 in smokers paid to abstain."
+  ],
   "beliefs": [
     {
       "id": "b1",
       "kind": "stuck",
-      "scene": "TODO",
-      "short": "TODO",
-      "need": "TODO",
+      "scene": "Day three of another try, you light one and think: too late for me.",
+      "short": "I've smoked too long",
+      "need": "confidence",
       "limiting": "I’ve smoked too long. It’s too late.",
       "counterpart": "Most people hooked on nicotine get free in the end. I’m not waiting years.",
       "whenThought": "Write the thought down, and next to it: “Most people hooked on nicotine get free in the end.” Then read the proof under it once and do the next step of the plan below.",
-      "test": "One evening this week, go out with no cigarettes, vape or pouches on you, as if you’d already quit. On the way home, name what you actually missed.",
+      "test": "This week, write down the longest you have gone without it since you started, and what was going on in that stretch.",
       "proof": "Male British doctors who stopped smoking as late as 60 still gained about 3 years of life, on average.",
       "severity": "users",
       "counted": "male doctors who smoked, not checked for addiction",
@@ -586,13 +663,13 @@
     {
       "id": "b2",
       "kind": "hard",
-      "scene": "TODO",
-      "short": "TODO",
-      "need": "TODO",
+      "scene": "You picture day two without it, and your stomach drops.",
+      "short": "I can't take withdrawal",
+      "need": "substance",
       "limiting": "Quitting will be hell. I can’t handle the withdrawal.",
       "counterpart": "I’ve got through rougher weeks than this. And this one ends.",
       "whenThought": "Write the thought down, and next to it: “I’ve got through rougher weeks than this. And this one ends.” Still using? Do the next step of the plan. Already off it? Name the urge, “there is a craving,” and walk or drink water until it fades.",
-      "test": "Still using? Go without nicotine one ordinary morning this week, until noon. Already off it? Wait for your next strong urge. Either way, time the urge on your phone until it fades.",
+      "test": "This week, time your next strong urge on your phone, from the moment it starts until it fades. Write down the minutes.",
       "proof": "In smokers who stopped, anger, anxiety, low mood, restlessness and poor sleep peaked in the first week and were gone by week 2–4.",
       "severity": "users",
       "counted": "smokers who stopped, not checked for addiction",
@@ -615,16 +692,16 @@
     {
       "id": "b3",
       "kind": "need",
-      "scene": "TODO",
-      "short": "TODO",
-      "need": "TODO",
+      "scene": "Your phone buzzes with bad news and your hand is already in your pocket.",
+      "short": "It calms me down",
+      "need": "relief",
       "limiting": "A cigarette is the only thing that calms me down.",
       "counterpart": "Smoking creates the stress it seems to relieve. Quitting is what calms me down.",
       "whenThought": "When stress brings the thought, write it down, and next to it: “Smoking creates the stress it seems to relieve.” Then take ten slow breaths or a two-minute walk before you decide anything.",
-      "test": "The next time something stresses you this week, leave the nicotine and walk for ten minutes. Rate the stress 0–10 before and after, and compare.",
+      "test": "The next time something stresses you this week, rate it 0–10, note what you did, and rate it again ten minutes later.",
       "proof": "In 469 heavily hooked heart patients who wanted to stop, stress fell more over a year in those who stayed off than in those who kept smoking.",
       "severity": "treatment",
-      "counted": null,
+      "counted": "heart patients given quit help, heavily hooked on nicotine",
       "refs": [
         {
           "cite": "Hajek P, Taylor T, McRobbie H (2010). The effect of stopping smoking on perceived stress levels. Addiction 105(8):1466-71.",
@@ -644,13 +721,13 @@
     {
       "id": "b4",
       "kind": "moderation",
-      "scene": "TODO",
-      "short": "TODO",
-      "need": "TODO",
+      "scene": "A friend holds out their vape at the party. It’s only one hit.",
+      "short": "Just one won't hurt",
+      "need": "substance",
       "limiting": "Just one won’t hurt. I’m still quit.",
       "counterpart": "There’s no “just one”. One is how quit turns into smoking again.",
-      "whenThought": "Answer it like a non-smoker, “No thanks, I don’t,” and leave the room for five minutes. Then text the person you told your date that the thought came and you said no.",
-      "test": "The next time the “just one” thought comes this week, turn that one down and leave the room for five minutes. An hour later, check: is the pull bigger or smaller?",
+      "whenThought": "Answer it like a non-smoker, “No thanks, I don’t,” and leave the room for five minutes. Then text someone who knows you're quitting that the thought came and you said no.",
+      "test": "Each time the “just one” thought shows up this week, write down the time and what set it off.",
       "proof": "Of daily smokers on a nicotine patch who smoked at all in their second week off, 83 in 100 were smoking at 6 months.",
       "severity": "heavy",
       "counted": "daily smokers in patch trials, not checked for addiction",
@@ -669,18 +746,19 @@
         "on": "2026-11-09",
         "verdict": "ok",
         "notes": "checked after revision: corrections applied to beliefs[3].test"
-      }
+      },
+      "editNote": "2026-11-18: reference to a screen the tool does not show replaced; meaning kept"
     },
     {
       "id": "b5",
       "kind": "harmless",
-      "scene": "TODO",
-      "short": "TODO",
-      "need": "TODO",
+      "scene": "You swap cigarettes for a vape and tell yourself you're done.",
+      "short": "It's basically harmless",
+      "need": "substance",
       "limiting": "Vapes and pouches are basically harmless.",
       "counterpart": "Switching is a step down, not a way out.",
-      "whenThought": "Write the thought down, and next to it: “Switching is a step down, not a way out.” Then reread the vape line in step 5 of the plan below.",
-      "test": "Leave the vape or pouches at home for one afternoon this week. Count how often your hand goes to the pocket where it usually sits.",
+      "whenThought": "Write the thought down, and next to it: “Switching is a step down, not a way out.” Switched to a vape? Then the vape is what you're quitting: give it a date too.",
+      "test": "On one ordinary afternoon this week, count every time you reach for the vape or pouches. Write the number down.",
       "proof": "In 3,446 ex-smokers who now only vape, dependence on the vape rose with liquid strength: lowest on nicotine-free liquid, highest at 13 mg/ml or more.",
       "severity": "users",
       "counted": "ex-smokers who now only vape, not checked for addiction",
@@ -698,16 +776,949 @@
         "on": "2026-11-09",
         "verdict": "ok",
         "notes": "checked after revision"
+      },
+      "editNote": "2026-11-18: reference to a screen the tool does not show replaced; meaning kept"
+    },
+    {
+      "id": "b6",
+      "kind": "need",
+      "scene": "You open the laptop to a hard task and take one hit before the first line.",
+      "short": "I can't focus without it",
+      "need": "focus",
+      "limiting": "I can't concentrate without nicotine.",
+      "counterpart": "The boost is real but small, and the fog from stopping fades within weeks.",
+      "whenThought": "Write the first line of the task, badly, before you decide anything about nicotine.",
+      "test": "For three work blocks this week, write down how long you stayed on task and whether you used nicotine just before. Compare the three.",
+      "proof": "Across 41 lab studies, nicotine gave real but small gains in attention and memory. Trouble concentrating after stopping lasts 2–4 weeks.",
+      "severity": "users",
+      "counted": "lab volunteers and smokers who stopped, not checked for addiction",
+      "refs": [
+        {
+          "cite": "Heishman SJ, Kleykamp BA, Singleton EG (2010). Meta-analysis of the acute effects of nicotine and smoking on human performance. Psychopharmacology 210(4):453-69.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20414766/",
+          "pmid": "20414766",
+          "quote": "short-term episodic memory-accuracy, and working memory-RT (effect size range = 0.16 to 0.44).",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Heishman SJ, Kleykamp BA, Singleton EG (2010). Meta-analysis of the acute effects of nicotine and smoking on human performance. Psychopharmacology 210(4):453-69.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20414766/",
+          "pmid": "20414766",
+          "quote": "likely represent true performance enhancement",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "quote": "Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "weak": "Single-dose lab studies and one reviewer’s judgement of quitting; not a study of people who quit.",
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "id": "b7",
+      "kind": "need",
+      "scene": "It’s 3 pm, the call drags on, and you look for a reason to step out.",
+      "short": "It’s something to do",
+      "need": "boredom",
+      "limiting": "Smoking is just something to do when I’m bored.",
+      "counterpart": "Boredom is a gap, and a cigarette is only one thing that fills it.",
+      "whenThought": "Stand up and change rooms. Give it three minutes before you decide.",
+      "test": "Write down three things you can start in under a minute. Next time you are bored this week, do the first one and note whether the pull got smaller.",
+      "proof": "Students who played Tetris for three minutes rated their cravings, nicotine among them, 13.9 points lower out of 100.",
+      "severity": "users",
+      "counted": "students with cravings for drugs, food or activities, not checked for addiction",
+      "refs": [
+        {
+          "cite": "Skorka-Brown J, Andrade J, Whalley B, May J (2015). Playing Tetris decreases drug and other cravings in real world settings. Addictive Behaviors 51:165-70.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/26275843/",
+          "pmid": "26275843",
+          "quote": "Playing Tetris decreased craving strength for drugs (alcohol, nicotine, caffeine), food and drink, and activities (sex, exercise, gaming), with a mean reduction of 13.9 percentage points",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "weak": "31 students over one week; cravings of all kinds, not only nicotine.",
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "id": "b8",
+      "kind": "need",
+      "scene": "The group heads outside for a break, and you go along to talk.",
+      "short": "Breaks are where I talk",
+      "need": "connection",
+      "limiting": "Smoke breaks are where I talk to people.",
+      "counterpart": "I keep the break and the people. The cigarette was never the point.",
+      "whenThought": "Bring a coffee or gum to the break and ask the first person you see about their day.",
+      "test": "Text one person from your break group this week and suggest a coffee somewhere else. Notice whether the talking needs a cigarette.",
+      "proof": "In a long US study of 12,067 people, a person’s own chances of smoking fell by 36% when a friend quit.",
+      "severity": "users",
+      "counted": "adults in one US town, smokers or not, not checked for addiction",
+      "refs": [
+        {
+          "cite": "Christakis NA, Fowler JH (2008). The collective dynamics of smoking in a large social network. New England Journal of Medicine 358(21):2249-58.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18499567/",
+          "pmid": "18499567",
+          "quote": "Smoking cessation by a friend decreased the chances by 36%",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "weak": "Shows quitting spreads between friends; it does not test whether break-time talk survives.",
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "id": "b9",
+      "kind": "need",
+      "scene": "It’s late, the day is done, and the last hit is how it ends.",
+      "short": "It helps me sleep",
+      "need": "sleep",
+      "limiting": "A last cigarette or vape helps me wind down and sleep.",
+      "counterpart": "Nicotine cuts my sleep short. The rough nights after stopping are temporary.",
+      "whenThought": "Get up and brush your teeth. Then decide whether you still want it.",
+      "test": "For the next three nights, write down the time of your last nicotine, the time you fell asleep and how rested you feel. Compare the three.",
+      "proof": "In a sleep lab, 44 smokers took longer to fall asleep and slept for a shorter period than 44 never-smokers of the same age and sex.",
+      "severity": "heavy",
+      "counted": "heavy smokers, about 21 a day, not checked for addiction",
+      "refs": [
+        {
+          "cite": "Jaehne A et al (2012). How smoking affects sleep: a polysomnographical analysis. Sleep Medicine 13(10):1286-92.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/23026505/",
+          "pmid": "23026505",
+          "quote": "Smokers had a shorter sleep period time, longer sleep latency, higher rapid eye movement sleep density, more sleep apneas and leg movements in sleep than non-smokers.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "quote": "Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "weak": "A snapshot of 44 smokers, not people who quit.",
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "id": "b10",
+      "kind": "moderation",
+      "scene": "You’re three drinks in, outside the bar, and someone holds out a pack or a vape.",
+      "short": "Only on drinking nights",
+      "need": "reward",
+      "limiting": "I only smoke when I drink. That doesn’t really count.",
+      "counterpart": "Drinks are where my quit is easiest to lose. Those nights get a plan.",
+      "whenThought": "Say “I’m good, thanks” before you think about it, then move to the other side of the group.",
+      "test": "Before your next night out this week, write down your plan for the first offer: the exact words and who you will say them to.",
+      "proof": "In the first 7 days of quitting, 300 women who smoked had more urges and more slips on occasions when they had been drinking.",
+      "severity": "treatment",
+      "counted": "women in a quit-treatment study, not checked for addiction",
+      "refs": [
+        {
+          "cite": "Lam CY, Businelle MS, Aigner CJ et al (2014). Individual and combined effects of multiple high-risk triggers on postcessation smoking urge and lapse. Nicotine & Tobacco Research 16(5):569-75.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/24323569/",
+          "pmid": "24323569",
+          "quote": "Alcohol consumption, presence of others smoking, and negative affect were, independently and in combination, associated with increase in smoking urge and lapse.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "weak": "All 300 were women, and the abstract gives no share of slips that happened while drinking, so no N in 100 is given.",
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "id": "b11",
+      "kind": "hard",
+      "scene": "You press your stomach in the mirror and think: quitting means gaining.",
+      "short": "I'll put on weight",
+      "need": "confidence",
+      "limiting": "If I quit, I’ll put on weight.",
+      "counterpart": "Weight is a risk I can plan for, and most of it comes in the first three months.",
+      "whenThought": "Put a piece of fruit or something you like within reach, then go for a short walk.",
+      "test": "For the next week, write down what you eat each day without changing any of it.",
+      "proof": "A year after quitting, an estimated 53 in 100 unaided quitters had lost weight or gained less than 5 kg.",
+      "severity": "treatment",
+      "counted": "quitters in quit trials, not checked for addiction",
+      "refs": [
+        {
+          "cite": "Aubin HJ, Farley A, Lycett D, Lahmek P, Aveyard P (2012). Weight gain in smokers after quitting cigarettes: meta-analysis. BMJ 345:e4439.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/22782848/",
+          "pmid": "22782848",
+          "quote": "16%, 37%, 34%, and 13% of untreated quitters lost weight, and gained less than 5 kg, gained 5-10 kg, and gained more than 10 kg, respectively",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Aubin HJ, Farley A, Lycett D, Lahmek P, Aveyard P (2012). Weight gain in smokers after quitting cigarettes: meta-analysis. BMJ 345:e4439.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/22782848/",
+          "pmid": "22782848",
+          "quote": "most weight gain occurs within three months of quitting",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "weak": "Worked out from average weight changes in trials, not counted person by person; the other 47 in 100 gained 5 kg or more.",
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "id": "b12",
+      "kind": "stuck",
+      "scene": "You open your calendar, see a busy month, and push your quit day back again.",
+      "short": "I'll quit when it calms down",
+      "need": "relief",
+      "limiting": "I’ll quit when things calm down.",
+      "counterpart": "There is no calm week coming. A date soon beats a date someday.",
+      "whenThought": "Open your calendar and put a marker on the nearest day you can, right now.",
+      "test": "Look back at the last four weeks of your calendar and count the calm days. Then mark a quit day inside the next few weeks.",
+      "proof": "In a trial of smokers who chose their own quit day, the model expected 40 in 100 who chose week 1 to be off at 6 months, against 4 in 100 for week 13.",
+      "severity": "treatment",
+      "counted": "smokers in a quit trial, not checked for addiction",
+      "refs": [
+        {
+          "cite": "Anesi GL et al (2017). Time to selected quit date and subsequent rates of sustained smoking abstinence. Journal of Behavioral Medicine 40(6):989-97.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/28639106/",
+          "pmid": "28639106",
+          "quote": "the probability of being abstinent at 6 months if the participant selected a quit date in weeks 1, 5, 10, and 13 were 39.6, 22.6, 10.9, and 4.3%, respectively",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "weak": "Estimated by a model from 1,848 smokers; people who picked later days may differ in other ways.",
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
       }
     }
   ],
-  "facts": "TODO",
-  "needs": "TODO",
-  "endings": "TODO",
-  "helped": "TODO",
-  "riskyMoments": "TODO",
-  "responses": "TODO",
-  "clearOut": "TODO",
+  "facts": [
+    {
+      "id": "f1",
+      "statement": "A patch alone works as well as a patch plus gum or lozenge.",
+      "answer": false,
+      "explain": "Combining a patch with a fast-acting form (gum, lozenge, spray) gave higher long-term quit rates than one form alone, in 16 trials.",
+      "severity": "treatment",
+      "counted": "smokers in quit trials, not checked for addiction",
+      "refs": [
+        {
+          "cite": "Lindson N et al (2023). Different doses, durations and modes of delivery of nicotine replacement therapy for smoking cessation. Cochrane Database of Systematic Reviews.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/37335995/",
+          "pmid": "37335995",
+          "quote": "combination NRT (fast-acting form plus patch) results in higher long-term quit rates than single form",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "id": "f2",
+      "statement": "People who quit smoking end up more anxious and more depressed than people who keep smoking.",
+      "answer": false,
+      "explain": "In 15 studies of anxiety and 34 of depression, symptoms improved more in people who quit than in people who kept smoking. These are observational studies, so treat it as likely, not proven.",
+      "severity": "users",
+      "counted": "adults who smoked, in studies, not checked for addiction",
+      "refs": [
+        {
+          "cite": "Taylor GM et al (2021). Smoking cessation for improving mental health. Cochrane Database of Systematic Reviews 3:CD013522.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/33687070/",
+          "pmid": "33687070",
+          "quote": "smoking cessation was associated with an improvement in mental health symptoms compared with continuing to smoke",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "id": "f3",
+      "statement": "Most quit tries that fail end in the first 8 days.",
+      "answer": true,
+      "explain": "In studies of smokers quitting without help, most relapse came in the first 8 days. The first week is the one to guard.",
+      "severity": "users",
+      "counted": "smokers quitting on their own, not checked for addiction",
+      "refs": [
+        {
+          "cite": "Hughes JR, Keely J, Naud S (2004). Shape of the relapse curve and long-term abstinence among untreated smokers. Addiction 99(1):29-38.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/14678060/",
+          "pmid": "14678060",
+          "quote": "most relapse occurs in the first 8 days",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    }
+  ],
+  "needs": [
+    {
+      "id": "relief",
+      "name": "Relief",
+      "swaps": [
+        {
+          "id": "relief-1",
+          "text": "Walk or climb stairs for five minutes",
+          "evidence": "strong",
+          "refs": [
+            {
+              "cite": "Taylor AH, Ussher MH, Faulkner G (2007). The acute effects of exercise on cigarette cravings, withdrawal symptoms, affect and smoking behaviour: a systematic review. Addiction 102(4):534-43.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/17286639/",
+              "pmid": "17286639",
+              "quote": "remained reduced for up to 50 minutes after exercise",
+              "fetched": true,
+              "fetchedOn": "2026-11-18"
+            },
+            {
+              "cite": "Haasova M et al (2013). The acute effects of physical activity on cigarette cravings: systematic review and meta-analysis with individual participant data. Addiction 108(1):26-37.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/22861822/",
+              "pmid": "22861822",
+              "quote": "There is strong evidence that physical activity acutely reduces cigarette craving.",
+              "fetched": true,
+              "fetchedOn": "2026-11-18"
+            }
+          ],
+          "check": {
+            "by": "quit-tool checker (opus)",
+            "on": "2026-11-18",
+            "verdict": "ok"
+          }
+        },
+        {
+          "id": "relief-2",
+          "text": "Ten slow breaths before you decide anything",
+          "evidence": "none",
+          "refs": []
+        },
+        {
+          "id": "relief-3",
+          "text": "Text one person what is stressing you",
+          "evidence": "none",
+          "refs": []
+        }
+      ]
+    },
+    {
+      "id": "reward",
+      "name": "Reward",
+      "swaps": [
+        {
+          "id": "reward-1",
+          "text": "Put money with a friend; earn it back",
+          "evidence": "weak",
+          "refs": [
+            {
+              "cite": "Halpern SD et al (2015). Randomized trial of four financial-incentive programs for smoking cessation. New England Journal of Medicine 372(22):2108-17.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/25970009/",
+              "pmid": "25970009",
+              "quote": "rates of sustained abstinence from smoking through 6 months were higher with each of the four incentive programs (range, 9.4 to 16.0%) than with usual care (6.0%)",
+              "fetched": true,
+              "fetchedOn": "2026-11-18"
+            },
+            {
+              "cite": "Notley C et al (2025). Incentives for smoking cessation. Cochrane Database of Systematic Reviews.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/39799985/",
+              "pmid": "39799985",
+              "quote": "there is high-certainty evidence that incentives improve smoking",
+              "fetched": true,
+              "fetchedOn": "2026-11-18"
+            }
+          ],
+          "check": {
+            "by": "quit-tool checker (opus)",
+            "on": "2026-11-18",
+            "verdict": "ok"
+          }
+        },
+        {
+          "id": "reward-2",
+          "text": "Plan one thing you enjoy for your hardest hour",
+          "evidence": "weak",
+          "refs": [
+            {
+              "cite": "Daughters SB et al (2018). The effect of a behavioral activation treatment for substance use on post-treatment abstinence: a randomized controlled trial. Addiction 113(3):535-44.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/28963853/",
+              "pmid": "28963853",
+              "quote": "LETS ACT had significantly higher abstinence rates at 3 months",
+              "fetched": true,
+              "fetchedOn": "2026-11-18"
+            }
+          ],
+          "check": {
+            "by": "quit-tool checker (opus)",
+            "on": "2026-11-18",
+            "verdict": "ok"
+          }
+        },
+        {
+          "id": "reward-3",
+          "text": "Gum or a mint right after meals",
+          "evidence": "none",
+          "refs": []
+        }
+      ]
+    },
+    {
+      "id": "boredom",
+      "name": "Something to do",
+      "swaps": [
+        {
+          "id": "boredom-1",
+          "text": "Schedule three things for your empty hour",
+          "evidence": "weak",
+          "refs": [
+            {
+              "cite": "Daughters SB et al (2018). The effect of a behavioral activation treatment for substance use on post-treatment abstinence: a randomized controlled trial. Addiction 113(3):535-44.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/28963853/",
+              "pmid": "28963853",
+              "quote": "LETS ACT had significantly higher abstinence rates at 3 months",
+              "fetched": true,
+              "fetchedOn": "2026-11-18"
+            }
+          ],
+          "check": {
+            "by": "quit-tool checker (opus)",
+            "on": "2026-11-18",
+            "verdict": "ok"
+          }
+        },
+        {
+          "id": "boredom-2",
+          "text": "Play three minutes of Tetris",
+          "evidence": "weak",
+          "refs": [
+            {
+              "cite": "Skorka-Brown J, Andrade J, Whalley B, May J (2015). Playing Tetris decreases drug and other cravings in real world settings. Addictive Behaviors 51:165-70.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/26275843/",
+              "pmid": "26275843",
+              "quote": "Playing Tetris decreased craving strength for drugs (alcohol, nicotine, caffeine), food and drink, and activities (sex, exercise, gaming), with a mean reduction of 13.9 percentage points",
+              "fetched": true,
+              "fetchedOn": "2026-11-18"
+            }
+          ],
+          "check": {
+            "by": "quit-tool checker (opus)",
+            "on": "2026-11-18",
+            "verdict": "ok"
+          }
+        },
+        {
+          "id": "boredom-3",
+          "text": "Keep toothpicks, seeds or gum for your hands",
+          "evidence": "none",
+          "refs": []
+        }
+      ]
+    },
+    {
+      "id": "connection",
+      "name": "People",
+      "swaps": [
+        {
+          "id": "connection-1",
+          "text": "Add one friend who doesn’t smoke to your week",
+          "evidence": "weak",
+          "refs": [
+            {
+              "cite": "Litt MD, Kadden RM, Kabela-Cormier E, Petry N (2007). Changing network support for drinking: initial findings from the network support project. Journal of Consulting and Clinical Psychology 75(4):542-55.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/17663609/",
+              "pmid": "17663609",
+              "quote": "with both NS conditions yielding better outcomes than the CaseM condition",
+              "fetched": true,
+              "fetchedOn": "2026-11-18"
+            }
+          ],
+          "check": {
+            "by": "quit-tool checker (opus)",
+            "on": "2026-11-18",
+            "verdict": "ok"
+          }
+        },
+        {
+          "id": "connection-2",
+          "text": "Keep the break and the people; drop the nicotine",
+          "evidence": "none",
+          "refs": []
+        },
+        {
+          "id": "connection-3",
+          "text": "Bring a coffee or gum to the break",
+          "evidence": "none",
+          "refs": []
+        }
+      ]
+    },
+    {
+      "id": "sleep",
+      "name": "Sleep",
+      "swaps": [
+        {
+          "id": "sleep-1",
+          "text": "Same wake-up time every day, weekends too",
+          "evidence": "weak",
+          "refs": [
+            {
+              "cite": "Miller MB et al (2023). Effect of cognitive behavioral therapy for insomnia on alcohol treatment outcomes among US veterans: a randomized clinical trial. JAMA Psychiatry 80(9):905-13.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/37342036/",
+              "pmid": "37342036",
+              "quote": "CBT-I outperformed sleep hygiene in reducing insomnia symptoms and alcohol-related problems over time",
+              "fetched": true,
+              "fetchedOn": "2026-11-18"
+            }
+          ],
+          "check": {
+            "by": "quit-tool checker (opus)",
+            "on": "2026-11-18",
+            "verdict": "ok"
+          }
+        },
+        {
+          "id": "sleep-2",
+          "text": "A hot shower as the last thing before bed",
+          "evidence": "none",
+          "refs": []
+        },
+        {
+          "id": "sleep-3",
+          "text": "Ten minutes of a paper book, lights low",
+          "evidence": "none",
+          "refs": []
+        }
+      ]
+    },
+    {
+      "id": "focus",
+      "name": "Focus",
+      "swaps": [
+        {
+          "id": "focus-1",
+          "text": "Brisk 15-minute walk, then start the task 10 minutes later",
+          "evidence": "weak",
+          "refs": [
+            {
+              "cite": "Chang YK, Labban JD, Gapin JI, Etnier JL (2012). The effects of acute exercise on cognitive performance: a meta-analysis. Brain Research 1453:87-101.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/22480735/",
+              "pmid": "22480735",
+              "quote": "the effects of acute exercise on cognitive performance are generally small",
+              "fetched": true,
+              "fetchedOn": "2026-11-18"
+            }
+          ],
+          "check": {
+            "by": "quit-tool checker (opus)",
+            "on": "2026-11-18",
+            "verdict": "ok"
+          }
+        },
+        {
+          "id": "focus-2",
+          "text": "Work in short blocks, with breaks away from the screen",
+          "evidence": "none",
+          "refs": []
+        },
+        {
+          "id": "focus-3",
+          "text": "Write the one task down before you start",
+          "evidence": "none",
+          "refs": []
+        }
+      ]
+    },
+    {
+      "id": "confidence",
+      "name": "Confidence",
+      "swaps": [
+        {
+          "id": "confidence-1",
+          "text": "Say “I don’t smoke”, not “I’m trying to quit”",
+          "evidence": "weak",
+          "refs": [
+            {
+              "cite": "Black N et al (2020). Behaviour change techniques associated with smoking cessation in intervention and comparator groups of randomized controlled trials. Addiction 115(11):2008-20.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/32196796/",
+              "pmid": "32196796",
+              "quote": "commitment, social reward, identity associated with changed behaviour",
+              "fetched": true,
+              "fetchedOn": "2026-11-18"
+            }
+          ],
+          "check": {
+            "by": "quit-tool checker (opus)",
+            "on": "2026-11-18",
+            "verdict": "ok"
+          }
+        },
+        {
+          "id": "confidence-2",
+          "text": "Mark each smoke-free day on a calendar",
+          "evidence": "weak",
+          "refs": [
+            {
+              "cite": "Harkin B et al (2016). Does monitoring goal progress promote goal attainment? A meta-analysis of the experimental evidence. Psychological Bulletin 142(2):198-229.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/26479070/",
+              "pmid": "26479070",
+              "quote": "progress monitoring had larger effects on goal attainment when the outcomes were reported or made public",
+              "fetched": true,
+              "fetchedOn": "2026-11-18"
+            }
+          ],
+          "check": {
+            "by": "quit-tool checker (opus)",
+            "on": "2026-11-18",
+            "verdict": "ok"
+          }
+        },
+        {
+          "id": "confidence-3",
+          "text": "Write a letter from your day-90 self",
+          "evidence": "weak",
+          "refs": [
+            {
+              "cite": "van Gelder JL, Hershfield HE, Nordgren LF (2013). Vividness of the future self predicts delinquency. Psychological Science 24(6):974-80.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/23592649/",
+              "pmid": "23592649",
+              "quote": "those who wrote a letter to their future self were less inclined to make delinquent choices",
+              "fetched": true,
+              "fetchedOn": "2026-11-18"
+            }
+          ],
+          "check": {
+            "by": "quit-tool checker (opus)",
+            "on": "2026-11-18",
+            "verdict": "ok"
+          }
+        }
+      ]
+    },
+    {
+      "id": "substance",
+      "name": "The nicotine itself",
+      "swaps": [
+        {
+          "id": "substance-1",
+          "text": "Patch plus gum or lozenge, used together",
+          "evidence": "strong",
+          "refs": [
+            {
+              "cite": "Lindson N et al (2023). Different doses, durations and modes of delivery of nicotine replacement therapy for smoking cessation. Cochrane Database of Systematic Reviews.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/37335995/",
+              "pmid": "37335995",
+              "quote": "combination NRT (fast-acting form plus patch) results in higher long-term quit rates than single form",
+              "fetched": true,
+              "fetchedOn": "2026-11-18"
+            },
+            {
+              "cite": "Hartmann-Boyce J et al (2018). Nicotine replacement therapy versus control for smoking cessation. Cochrane Database of Systematic Reviews 5:CD000146.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/29852054/",
+              "pmid": "29852054",
+              "quote": "NRTs increase the rate of quitting by 50% to 60%, regardless of setting",
+              "fetched": true,
+              "fetchedOn": "2026-11-18"
+            }
+          ],
+          "check": {
+            "by": "quit-tool checker (opus)",
+            "on": "2026-11-18",
+            "verdict": "ok"
+          }
+        },
+        {
+          "id": "substance-2",
+          "text": "Ask a doctor about varenicline, a quit pill",
+          "evidence": "strong",
+          "refs": [
+            {
+              "cite": "Livingstone-Banks J et al (2023). Nicotine receptor partial agonists for smoking cessation. Cochrane Database of Systematic Reviews 5:CD006103.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/37142273/",
+              "pmid": "37142273",
+              "quote": "high-certainty evidence that varenicline helps more people to quit than placebo",
+              "fetched": true,
+              "fetchedOn": "2026-11-18"
+            }
+          ],
+          "check": {
+            "by": "quit-tool checker (opus)",
+            "on": "2026-11-18",
+            "verdict": "ok"
+          }
+        },
+        {
+          "id": "substance-3",
+          "text": "Keep gum or mints for the hand-to-mouth habit",
+          "evidence": "none",
+          "refs": []
+        }
+      ]
+    }
+  ],
+  "endings": [
+    {
+      "id": "stress",
+      "label": "A bad day or stress",
+      "blackBoxEnding": "stress"
+    },
+    {
+      "id": "offered",
+      "label": "Someone offered one",
+      "blackBoxEnding": "drink"
+    },
+    {
+      "id": "right-there",
+      "label": "It was right there",
+      "blackBoxEnding": "other"
+    },
+    {
+      "id": "just-one",
+      "label": "The “just one” thought",
+      "blackBoxEnding": "justone"
+    },
+    {
+      "id": "empty-evening",
+      "label": "An empty evening",
+      "blackBoxEnding": "other"
+    },
+    {
+      "id": "no-sleep",
+      "label": "I couldn’t sleep",
+      "blackBoxEnding": "other"
+    },
+    {
+      "id": "drinks",
+      "label": "Drinks or a night out",
+      "blackBoxEnding": "drink"
+    },
+    {
+      "id": "celebration",
+      "label": "A celebration",
+      "blackBoxEnding": "drink"
+    },
+    {
+      "id": "fight",
+      "label": "A fight",
+      "blackBoxEnding": "stress"
+    },
+    {
+      "id": "boredom",
+      "label": "Boredom",
+      "blackBoxEnding": "faded"
+    },
+    {
+      "id": "other",
+      "label": "Something else",
+      "blackBoxEnding": "other"
+    }
+  ],
+  "helped": [
+    {
+      "id": "supply",
+      "label": "Got rid of the supply"
+    },
+    {
+      "id": "told",
+      "label": "Told someone"
+    },
+    {
+      "id": "busy",
+      "label": "Kept busy"
+    },
+    {
+      "id": "moved",
+      "label": "Moved or exercised"
+    },
+    {
+      "id": "nrt",
+      "label": "Patches, gum or lozenges"
+    },
+    {
+      "id": "count",
+      "label": "Counted the days"
+    },
+    {
+      "id": "reasons",
+      "label": "Wrote down why I wanted to stop"
+    },
+    {
+      "id": "group",
+      "label": "A group or a person"
+    },
+    {
+      "id": "water",
+      "label": "Water, gum or a snack"
+    }
+  ],
+  "riskyMoments": [
+    {
+      "id": "after-food",
+      "label": "After a meal"
+    },
+    {
+      "id": "coffee",
+      "label": "With a coffee"
+    },
+    {
+      "id": "drinks",
+      "label": "When I’m drinking"
+    },
+    {
+      "id": "work-break",
+      "label": "On a work break"
+    },
+    {
+      "id": "stress",
+      "label": "When I’m stressed"
+    },
+    {
+      "id": "bored",
+      "label": "When I’m bored"
+    },
+    {
+      "id": "others-smoking",
+      "label": "Around people who smoke"
+    },
+    {
+      "id": "late-night",
+      "label": "Late at night, alone"
+    },
+    {
+      "id": "waking",
+      "label": "Right after waking up"
+    },
+    {
+      "id": "driving",
+      "label": "In the car"
+    }
+  ],
+  "responses": [
+    {
+      "id": "move5",
+      "text": "Walk or climb stairs for five minutes"
+    },
+    {
+      "id": "water",
+      "text": "Drink a glass of water, slowly"
+    },
+    {
+      "id": "gum",
+      "text": "Chew gum or suck a mint"
+    },
+    {
+      "id": "breathe",
+      "text": "Take ten slow breaths"
+    },
+    {
+      "id": "leave",
+      "text": "Leave the room and go outside without it"
+    },
+    {
+      "id": "text",
+      "text": "Text one person who doesn’t smoke"
+    },
+    {
+      "id": "puzzle",
+      "text": "Play a three-minute block puzzle"
+    },
+    {
+      "id": "teeth",
+      "text": "Brush your teeth"
+    },
+    {
+      "id": "reasons",
+      "text": "Look at the money you have kept so far"
+    },
+    {
+      "id": "craving",
+      "text": "Tap “Craving now?” at the bottom of any page"
+    }
+  ],
+  "clearOut": [
+    {
+      "id": "packs",
+      "text": "Throw out every pack, vape and pouch can",
+      "removes": "the supply within reach"
+    },
+    {
+      "id": "spares",
+      "text": "Check the car, jackets and bags for spares",
+      "removes": "the forgotten stash"
+    },
+    {
+      "id": "lighters",
+      "text": "Bin lighters, ashtrays, chargers and empty vapes",
+      "removes": "the objects that cue the habit"
+    },
+    {
+      "id": "subs",
+      "text": "Cancel any vape or pouch subscriptions and auto-reorders",
+      "removes": "the delivery you can’t stop at 2 am"
+    },
+    {
+      "id": "cards",
+      "text": "Remove your saved card from vape and pouch shops",
+      "removes": "one-tap buying; hard to undo, not impossible"
+    },
+    {
+      "id": "contacts",
+      "text": "Delete the vape and pouch shop apps and numbers",
+      "removes": "the shortcut to a refill"
+    },
+    {
+      "id": "home",
+      "text": "Make your home and car smoke-free, vape-free",
+      "removes": "the places where using is allowed"
+    },
+    {
+      "id": "clothes",
+      "text": "If you smoke: wash the clothes and car seats that smell of smoke",
+      "removes": "the smell cue"
+    },
+    {
+      "id": "stock",
+      "text": "Buy patches, gum or lozenges before day 1 if you use them",
+      "removes": "the gap between the urge and the help"
+    }
+  ],
   "symptomWords": {
     "craving": "Cravings",
     "anxious": "Anxiety",
@@ -737,10 +1748,329 @@
     "money": "Money saved",
     "relationships": "Better relationships"
   },
-  "symptomHelp": "TODO",
-  "tapeForward": "TODO",
-  "costSwaps": "TODO",
-  "besides": "TODO",
+  "symptomHelp": [
+    {
+      "symptom": "craving",
+      "text": "Move for five minutes: a brisk walk or stairs. In lab studies, cravings and withdrawal eased after exercise.",
+      "evidence": "strong",
+      "refs": [
+        {
+          "cite": "Taylor AH, Ussher MH, Faulkner G (2007). The acute effects of exercise on cigarette cravings, withdrawal symptoms, affect and smoking behaviour: a systematic review. Addiction 102(4):534-43.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17286639/",
+          "pmid": "17286639",
+          "quote": "remained reduced for up to 50 minutes after exercise",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Haasova M et al (2013). The acute effects of physical activity on cigarette cravings: systematic review and meta-analysis with individual participant data. Addiction 108(1):26-37.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/22861822/",
+          "pmid": "22861822",
+          "quote": "There is strong evidence that physical activity acutely reduces cigarette craving.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "symptom": "anxious",
+      "text": "Peaks in the first week, fades by weeks 2 to 4. Anxiety improves more in people who quit than in people who keep smoking.",
+      "evidence": "weak",
+      "refs": [
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "quote": "Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Taylor GM et al (2021). Smoking cessation for improving mental health. Cochrane Database of Systematic Reviews 3:CD013522.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/33687070/",
+          "pmid": "33687070",
+          "quote": "smoking cessation was associated with an improvement in mental health symptoms compared with continuing to smoke",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "symptom": "low-mood",
+      "text": "Same stretch: first week peak, gone by weeks 2 to 4. Low mood improves more in people who quit.",
+      "evidence": "weak",
+      "refs": [
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "quote": "Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Taylor GM et al (2021). Smoking cessation for improving mental health. Cochrane Database of Systematic Reviews 3:CD013522.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/33687070/",
+          "pmid": "33687070",
+          "quote": "smoking cessation was associated with an improvement in mental health symptoms compared with continuing to smoke",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "symptom": "brain-fog",
+      "text": "Trouble concentrating peaks in week one and fades within weeks. Work in short blocks. Take a brisk 15-minute walk, then start the task 10 minutes later.",
+      "evidence": "weak",
+      "refs": [
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "quote": "Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Chang YK, Labban JD, Gapin JI, Etnier JL (2012). The effects of acute exercise on cognitive performance: a meta-analysis. Brain Research 1453:87-101.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/22480735/",
+          "pmid": "22480735",
+          "quote": "the effects of acute exercise on cognitive performance are generally small",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "symptom": "irritable",
+      "text": "Anger and impatience peak in week one. Exercise cut withdrawal symptoms in all 12 lab studies that compared it with sitting still.",
+      "evidence": "moderate",
+      "refs": [
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "quote": "Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Taylor AH, Ussher MH, Faulkner G (2007). The acute effects of exercise on cigarette cravings, withdrawal symptoms, affect and smoking behaviour: a systematic review. Addiction 102(4):534-43.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17286639/",
+          "pmid": "17286639",
+          "quote": "All 12 studies that compared a bout of exercise with a passive condition reported a positive effect on cigarette cravings, withdrawal symptoms and smoking behaviour.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "symptom": "sleep",
+      "text": "Same wake-up time daily. Bed for sleep only. Up after 20 minutes awake. Worst in the first week, can last 2 to 4 weeks.",
+      "evidence": "weak",
+      "refs": [
+        {
+          "cite": "Miller MB et al (2023). Effect of cognitive behavioral therapy for insomnia on alcohol treatment outcomes among US veterans: a randomized clinical trial. JAMA Psychiatry 80(9):905-13.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/37342036/",
+          "pmid": "37342036",
+          "quote": "CBT-I outperformed sleep hygiene in reducing insomnia symptoms and alcohol-related problems over time",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "quote": "Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    }
+  ],
+  "tapeForward": [
+    "Right after, you’re already doing the maths on the next one.",
+    "Tonight you’re counting how many more, and the day you kept feels smaller.",
+    "Tomorrow the first one comes before the coffee.",
+    "The date you set moves again, and you’re back to bargaining."
+  ],
+  "costSwaps": [
+    {
+      "usd": 150,
+      "text": "a new pair of running shoes"
+    },
+    {
+      "usd": 250,
+      "text": "a smartwatch"
+    },
+    {
+      "usd": 1200,
+      "text": "this year’s flagship phone"
+    },
+    {
+      "usd": 5900,
+      "text": "a brand-new sport bike"
+    },
+    {
+      "usd": 14600,
+      "text": "a jet ski"
+    },
+    {
+      "usd": 23300,
+      "text": "a brand-new compact car"
+    }
+  ],
+  "besides": [
+    {
+      "id": "quitline-us",
+      "text": "US: call 1-800-QUIT-NOW. It connects you to your state’s free quitline.",
+      "link": "https://smokefree.gov/talk-to-an-expert",
+      "refs": [
+        {
+          "cite": "Smokefree.gov, Speak to an Expert (US National Cancer Institute)",
+          "url": "https://smokefree.gov/talk-to-an-expert",
+          "quote": "Phone Quitlines are free, anonymous telephone counseling services.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Smokefree.gov, Speak to an Expert (US National Cancer Institute)",
+          "url": "https://smokefree.gov/talk-to-an-expert",
+          "quote": "1-800-QUIT-NOW ( 1-800-784-8669 ) Call this number to connect directly to your state’s quitline.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ]
+    },
+    {
+      "id": "quitline-uk",
+      "text": "England: call the free Smokefree National Helpline on 0300 123 1044.",
+      "link": "https://www.nhs.uk/live-well/quit-smoking/nhs-stop-smoking-services-help-you-quit/",
+      "refs": [
+        {
+          "cite": "NHS, NHS stop smoking services help you quit",
+          "url": "https://www.nhs.uk/live-well/quit-smoking/nhs-stop-smoking-services-help-you-quit/",
+          "quote": "Call the free Smokefree National Helpline on 0300 123 1044",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ]
+    },
+    {
+      "id": "smokefree-gov",
+      "text": "Smokefree.gov builds a free quit plan and sends daily quit texts.",
+      "link": "https://smokefree.gov/",
+      "refs": [
+        {
+          "cite": "Smokefree.gov home page (US National Cancer Institute)",
+          "url": "https://smokefree.gov/",
+          "quote": "We'll help you build a quit plan, get support, and keep going.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Smokefree.gov home page (US National Cancer Institute)",
+          "url": "https://smokefree.gov/",
+          "quote": "Get free* daily text messages with encouragement, advice, and tips to help you quit smoking.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ]
+    },
+    {
+      "id": "nhs-services",
+      "text": "England: local stop smoking services are free.",
+      "link": "https://www.nhs.uk/live-well/quit-smoking/nhs-stop-smoking-services-help-you-quit/",
+      "refs": [
+        {
+          "cite": "NHS, NHS stop smoking services help you quit",
+          "url": "https://www.nhs.uk/live-well/quit-smoking/nhs-stop-smoking-services-help-you-quit/",
+          "quote": "Local stop smoking services are free and can improve your chances of quitting for good.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ]
+    },
+    {
+      "id": "forum",
+      "text": "The main forum: r/stopsmoking on Reddit. For vapes, r/QuitVaping.",
+      "link": "https://www.reddit.com/r/stopsmoking/"
+    },
+    {
+      "id": "combo-nrt",
+      "text": "Patch plus gum or lozenge beats one form alone. Use both, from day 1.",
+      "link": "https://pubmed.ncbi.nlm.nih.gov/37335995/",
+      "refs": [
+        {
+          "cite": "Lindson N et al (2023). Different doses, durations and modes of delivery of nicotine replacement therapy for smoking cessation. Cochrane Database of Systematic Reviews.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/37335995/",
+          "pmid": "37335995",
+          "quote": "combination NRT (fast-acting form plus patch) results in higher long-term quit rates than single form",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ]
+    },
+    {
+      "id": "exercise",
+      "text": "Move five minutes when the craving hits. It lowers the urge.",
+      "link": "https://pubmed.ncbi.nlm.nih.gov/17286639/",
+      "refs": [
+        {
+          "cite": "Taylor AH, Ussher MH, Faulkner G (2007). The acute effects of exercise on cigarette cravings, withdrawal symptoms, affect and smoking behaviour: a systematic review. Addiction 102(4):534-43.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17286639/",
+          "pmid": "17286639",
+          "quote": "remained reduced for up to 50 minutes after exercise",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ]
+    },
+    {
+      "id": "tell-one",
+      "text": "Tell one person your day 1, and check in with them on day 3.",
+      "refs": [
+        {
+          "cite": "Harkin B et al (2016). Does monitoring goal progress promote goal attainment? A meta-analysis of the experimental evidence. Psychological Bulletin 142(2):198-229.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/26479070/",
+          "pmid": "26479070",
+          "quote": "progress monitoring had larger effects on goal attainment when the outcomes were reported or made public",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ]
+    }
+  ],
   "felt": {
     "forums": [
       "r/stopsmoking",
@@ -751,9 +2081,9 @@
     "postsSampled": 1046,
     "bias": [
       "People who post are not everyone who quits. People who find it easy have little reason to post.",
-      "People post more when it is hard, so the curve likely runs higher than for quitters in general.",
+      "People post more when it is hard, so hard things are named more often here than by quitters in general.",
       "Later days are mostly milestone posts; people who slipped earlier are no longer counted there.",
-      "Scores come from AI readers of the posts, not from the writers themselves."
+      "What each post mentions was tagged by AI readers, not by the people who wrote it."
     ],
     "bins": [
       {
@@ -1313,9 +2643,351 @@
       }
     ]
   },
-  "lessons": "TODO",
-  "bands": "TODO",
-  "catch": "TODO",
+  "lessons": [
+    {
+      "day": -3,
+      "beliefId": "b12",
+      "title": "Pick the day",
+      "body": "There is no calm week coming. Waiting for one is how a month turns into a year. Open your calendar and pick the nearest day that is not a disaster, in days or at most a few weeks. In one trial of 1,848 smokers who chose their own quit day, a model expected 40 in 100 who picked week 1 to be off at 6 months, against 4 in 100 for week 13. Write the date where you can see it, and tell one person. The next three days are setup, not quitting. Keep using nicotine the way you always do.",
+      "exercise": "Write the date down. Under it, write the one thing most likely to make that day hard, and one thing to do about it.",
+      "refs": [
+        {
+          "cite": "Anesi GL et al (2017). Time to selected quit date and subsequent rates of sustained smoking abstinence. Journal of Behavioral Medicine 40(6):989-97.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/28639106/",
+          "pmid": "28639106",
+          "quote": "the probability of being abstinent at 6 months if the participant selected a quit date in weeks 1, 5, 10, and 13 were 39.6, 22.6, 10.9, and 4.3%, respectively",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ]
+    },
+    {
+      "day": -2,
+      "beliefId": "b3",
+      "title": "What it gives you",
+      "body": "Nicotine seems to give you a pause, a hit of calm, something for your hands. Most of the calm is relief from the tension and irritability that build while nicotine runs low. Today, write down what you think it gives you: calm, focus, a break, company. Do not change anything yet. Each time you reach for it, add one line: the time, where you are, what you wanted. Ten minutes later, ask: did it give me that, or did it just stop the itch?",
+      "exercise": "Write your top three “it gives me…” lines. Under each, write one thing that could give you about 80% of it.",
+      "refs": [
+        {
+          "cite": "Parrott AC (1999). Does cigarette smoking cause stress? American Psychologist 54(10):817-20.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/10540594/",
+          "pmid": "10540594",
+          "quote": "the apparent relaxant effect of smoking only reflects the reversal of the tension and irritability that develop during nicotine depletion",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ]
+    },
+    {
+      "day": -1,
+      "beliefId": "b4",
+      "title": "The night before",
+      "body": "Tonight is setup. Throw out every pack, vape and pouch can, plus the lighters and ashtrays. Check the car, your jackets and your bags for spares. If you use patches, gum or lozenges, put them within reach. Tomorrow there is no “just one”. Among daily smokers on a nicotine patch who smoked at all in week 2, 83 in 100 were smoking six months later. The first two weeks are the ones to guard.",
+      "exercise": "Do the clear-out now: packs, vapes, lighters, spares. Text one person the time you plan to start tomorrow.",
+      "refs": [
+        {
+          "cite": "Kenford SL, Fiore MC, Jorenby DE, Smith SS, Wetter D, Baker TB (1994). Predicting smoking cessation: who will quit with and without the nicotine patch. JAMA 271(8):589-94.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/8301790/",
+          "pmid": "8301790",
+          "quote": "Among active nicotine patch patients who smoked at all during week 2 after quitting, 83% and 97% (studies 1 and 2, respectively) were smoking at 6-month follow-up.",
+          "fetched": true
+        }
+      ]
+    },
+    {
+      "day": 1,
+      "beliefId": "b2",
+      "title": "Day 1: the first day",
+      "body": "Today the symptoms are on their way up: in smokers who stopped, they peaked within the first week. A craving is a wave, not an order. Name it: “there is a craving.” Move for five minutes, drink water, watch the clock, and let it pass. Do not plan the next ninety days. Plan the next hour. Mark the day when it ends.",
+      "exercise": "Each time an urge hits, write the time and one line on what set it off. Then walk for five minutes.",
+      "refs": [
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "quote": "Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ]
+    },
+    {
+      "day": 2,
+      "beliefId": "b3",
+      "title": "Day 2: move five minutes",
+      "body": "In all 12 lab studies that compared it with sitting still, a short bout of exercise cut cravings and withdrawal symptoms. Most of those smokers had stopped just for the study. A brisk walk, a flight of stairs, or pressing your palms together hard for five minutes all count. Use it before the urge peaks, not after you give in.",
+      "exercise": "Pick your five-minute move now. Do it once today, even without an urge, so you know where the stairs or the loop are.",
+      "refs": [
+        {
+          "cite": "Taylor AH, Ussher MH, Faulkner G (2007). The acute effects of exercise on cigarette cravings, withdrawal symptoms, affect and smoking behaviour: a systematic review. Addiction 102(4):534-43.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17286639/",
+          "pmid": "17286639",
+          "quote": "All 12 studies that compared a bout of exercise with a passive condition reported a positive effect on cigarette cravings, withdrawal symptoms and smoking behaviour.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ]
+    },
+    {
+      "day": 3,
+      "beliefId": "b6",
+      "title": "Day 3: the fog",
+      "body": "Trouble concentrating is a real withdrawal symptom. It peaks in the first week and fades within weeks. Nicotine’s own boost to attention is small, so you are not losing a superpower. Work in short blocks, write the task down before you start, and walk for five minutes between blocks. Judge your focus in a month, not today.",
+      "exercise": "Write tomorrow’s one important task on paper tonight. Work on it in two 25-minute blocks.",
+      "refs": [
+        {
+          "cite": "Heishman SJ, Kleykamp BA, Singleton EG (2010). Meta-analysis of the acute effects of nicotine and smoking on human performance. Psychopharmacology 210(4):453-69.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20414766/",
+          "pmid": "20414766",
+          "quote": "short-term episodic memory-accuracy, and working memory-RT (effect size range = 0.16 to 0.44).",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "quote": "Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ]
+    },
+    {
+      "day": 4,
+      "beliefId": "b9",
+      "title": "Day 4: the nights",
+      "body": "Sleep is often worst in the first week. Same wake-up time every day, weekends too. Use the bed for sleep only. If you are awake after about 20 minutes, get up, keep the light low, and go back when sleepy. Smokers take longer to fall asleep and sleep less, so the nights after this stretch have room to improve.",
+      "exercise": "Set an alarm for the same time tomorrow. Tonight, write down when you got into bed and when you fell asleep.",
+      "refs": [
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "quote": "Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Miller MB et al (2023). Effect of cognitive behavioral therapy for insomnia on alcohol treatment outcomes among US veterans: a randomized clinical trial. JAMA Psychiatry 80(9):905-13.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/37342036/",
+          "pmid": "37342036",
+          "quote": "CBT-I outperformed sleep hygiene in reducing insomnia symptoms and alcohol-related problems over time",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Jaehne A et al (2012). How smoking affects sleep: a polysomnographical analysis. Sleep Medicine 13(10):1286-92.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/23026505/",
+          "pmid": "23026505",
+          "quote": "Smokers had a shorter sleep period time, longer sleep latency, higher rapid eye movement sleep density, more sleep apneas and leg movements in sleep than non-smokers.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ]
+    },
+    {
+      "day": 5,
+      "beliefId": "b7",
+      "title": "Day 5: the empty hour",
+      "body": "Boredom is a gap. The cigarette or vape used to fill it in seconds. Plan the gap instead. Pick the hour that was most automatic and put three things in it: one you enjoy, one that gets something done, one with a person. In a field study, three minutes of a block puzzle cut craving by 13.9 points on a 0 to 100 scale. That is a small, real tool.",
+      "exercise": "Pick your emptiest hour. Write three things for it and put the first one in your calendar for today.",
+      "refs": [
+        {
+          "cite": "Skorka-Brown J, Andrade J, Whalley B, May J (2015). Playing Tetris decreases drug and other cravings in real world settings. Addictive Behaviors 51:165-70.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/26275843/",
+          "pmid": "26275843",
+          "quote": "Playing Tetris decreased craving strength for drugs (alcohol, nicotine, caffeine), food and drink, and activities (sex, exercise, gaming), with a mean reduction of 13.9 percentage points",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ]
+    },
+    {
+      "day": 6,
+      "beliefId": "b8",
+      "title": "Day 6: the break",
+      "body": "Keep the break and the people. Skip the nicotine. Bring a coffee or gum, stand where you always stand, and talk about the same things. In a large long-term study of 12,067 people, when a friend quit, a person’s own chances of smoking fell by 36%.",
+      "exercise": "Tell one person from the break group today that you stopped. Ask for a coffee somewhere that is not the smoking spot.",
+      "refs": [
+        {
+          "cite": "Christakis NA, Fowler JH (2008). The collective dynamics of smoking in a large social network. New England Journal of Medicine 358(21):2249-58.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/18499567/",
+          "pmid": "18499567",
+          "quote": "Smoking cessation by a friend decreased the chances by 36%",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ]
+    },
+    {
+      "day": 7,
+      "beliefId": "b2",
+      "title": "Day 7: a week",
+      "body": "The withdrawal symptoms that peak in week one are now past their peak. In a daily-diary study of smokers who quit, mood, attention and restlessness were back to normal within 10 days; a review puts the end at 2 to 4 weeks. Mark the day on your calendar.",
+      "exercise": "Write down the three moments this week that felt hardest. Next to each, write what you did.",
+      "refs": [
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "quote": "Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Shiffman S, Patten C, Gwaltney C et al (2006). Natural history of nicotine withdrawal. Addiction 101(12):1822-32.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17156182/",
+          "pmid": "17156182",
+          "quote": "All symptoms returned to baseline levels within 10 days of quitting.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ]
+    },
+    {
+      "day": 8,
+      "beliefId": "b4",
+      "title": "Day 8: not one",
+      "body": "This is the week where “just one” gets loud. It sounds reasonable because you have done well. Answer it like a non-smoker: “No thanks, I don’t.” Leave the room for five minutes.",
+      "exercise": "Write the exact sentence to say if someone offers. Say it out loud twice.",
+      "refs": []
+    },
+    {
+      "day": 9,
+      "beliefId": "b10",
+      "title": "Day 9: drinks",
+      "body": "In the first week of quitting, 300 women who smoked had more urges and more slips on occasions when they had been drinking. You do not have to give up the night. Give it a plan: the exact words for the first offer, and a person who knows.",
+      "exercise": "Write your plan for the next night out: the first-offer sentence, who you tell, and when you leave.",
+      "refs": [
+        {
+          "cite": "Lam CY, Businelle MS, Aigner CJ et al (2014). Individual and combined effects of multiple high-risk triggers on postcessation smoking urge and lapse. Nicotine & Tobacco Research 16(5):569-75.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/24323569/",
+          "pmid": "24323569",
+          "quote": "Alcohol consumption, presence of others smoking, and negative affect were, independently and in combination, associated with increase in smoking urge and lapse.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ]
+    },
+    {
+      "day": 10,
+      "beliefId": "b11",
+      "title": "Day 10: the scale",
+      "body": "Most weight gain after quitting comes in the first three months. After a year, an estimated 53 in 100 unaided quitters had lost weight or gained under 5 kg; the rest gained more. Regular meals, a snack you like and a daily walk make it easier to plan for. Do not diet this month. One thing at a time.",
+      "exercise": "Write three meals and a snack for tomorrow. Do not weigh yourself.",
+      "refs": [
+        {
+          "cite": "Aubin HJ, Farley A, Lycett D, Lahmek P, Aveyard P (2012). Weight gain in smokers after quitting cigarettes: meta-analysis. BMJ 345:e4439.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/22782848/",
+          "pmid": "22782848",
+          "quote": "16%, 37%, 34%, and 13% of untreated quitters lost weight, and gained less than 5 kg, gained 5-10 kg, and gained more than 10 kg, respectively",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Aubin HJ, Farley A, Lycett D, Lahmek P, Aveyard P (2012). Weight gain in smokers after quitting cigarettes: meta-analysis. BMJ 345:e4439.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/22782848/",
+          "pmid": "22782848",
+          "quote": "most weight gain occurs within three months of quitting",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ]
+    },
+    {
+      "day": 11,
+      "beliefId": "b5",
+      "title": "Day 11: do not switch",
+      "body": "A vape or pouch does not end the habit. It moves it. In 3,446 ex-smokers who only vaped, dependence rose with the strength of the liquid. If you switched, the thing to quit now is the vape or the pouch, with its own date and the same steps. If you did not, keep it that way.",
+      "exercise": "If you switched, write the date for quitting that too. If not, write what to say to yourself when you see one.",
+      "refs": [
+        {
+          "cite": "Foulds J, Veldheer S, Yingst J, Hrabovsky S, Wilson SJ, Nichols TT, Eissenberg T (2015). Development of a questionnaire for assessing dependence on electronic cigarettes among a large sample of ex-smoking e-cigarette users. Nicotine & Tobacco Research 17(2):186-92.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/25332459/",
+          "pmid": "25332459",
+          "quote": "E-cig dependence appears to vary by product characteristics and liquid nicotine concentration, and it may increase over time.",
+          "fetched": true
+        }
+      ]
+    },
+    {
+      "day": 12,
+      "beliefId": "b1",
+      "title": "Day 12: too late",
+      "body": "Male British doctors who stopped smoking as late as 60 still gained about 3 years of life, on average. Put the days you have kept so far next to the thought.",
+      "exercise": "Write the thought “it’s too late”. Under it, write how many days you have kept so far.",
+      "refs": [
+        {
+          "cite": "Doll R, Peto R, Boreham J, Sutherland I (2004). Mortality in relation to smoking: 50 years' observations on male British doctors. BMJ 328(7455):1519.",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC437139/",
+          "pmid": "15213107",
+          "quote": "Cessation at age 60, 50, 40, or 30 years gained, respectively, about 3, 6, 9, or 10 years of life expectancy.",
+          "fetched": true,
+          "fetchedOn": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "day": 13,
+      "beliefId": "b3",
+      "title": "Day 13: stress",
+      "body": "In 469 heavily hooked heart patients who wanted to stop, stress fell more over a year in those who stayed off than in those who kept smoking. When stress hits today, walk ten minutes before deciding anything.",
+      "exercise": "Next time you feel stress, rate it 0 to 10, walk for ten minutes, rate it again. Write both numbers.",
+      "refs": [
+        {
+          "cite": "Hajek P, Taylor T, McRobbie H (2010). The effect of stopping smoking on perceived stress levels. Addiction 105(8):1466-71.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20528815/",
+          "pmid": "20528815",
+          "quote": "abstainers recorded a significantly larger decrease in perceived stress than continuing smokers",
+          "fetched": true
+        }
+      ]
+    },
+    {
+      "day": 14,
+      "beliefId": "b12",
+      "title": "Day 14: two weeks",
+      "body": "Two weeks. Symptoms that peaked in week one are fading. Withdrawal keeps fading over the next two weeks, and more of the pull now comes from cues and moments, so the work shifts to your moments and your swaps. Keep marking days. Choose your next date: day 30.",
+      "exercise": "Mark day 14 on your calendar. Write the date for day 30 next to it, and one thing to do that day.",
+      "refs": [
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "quote": "Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ]
+    }
+  ],
+  "bands": [
+    {
+      "id": "free",
+      "min": 0,
+      "max": 2,
+      "label": "Mostly free",
+      "text": "Few of these twelve hold you. Set a date and run the plan.",
+      "link": "/plan"
+    },
+    {
+      "id": "some",
+      "min": 3,
+      "max": 6,
+      "label": "Some hold you",
+      "text": "Several of these still have a grip. Work through your top three results, then set your date."
+    },
+    {
+      "id": "hooked",
+      "min": 7,
+      "max": 12,
+      "label": "Held by most",
+      "text": "Most of these hold you. Work through your top three results, then open What it gives you and set a day 1.",
+      "link": "/quit/nicotine/gives"
+    }
+  ],
+  "catch": "The tools are free and need no account. What you answer stays on your phone until you choose to save it. Coaching is paid and optional, and nothing here needs it. There are no ads, and nothing you enter is sold.",
   "planSteps": [
     {
       "title": "Name what it does for you",
@@ -1421,5 +3093,210 @@
         "counted": "smokers in quit trials who wanted to stop, not checked for addiction"
       }
     }
-  ]
+  ],
+  "symptomCourse": [
+    {
+      "symptom": "irritable",
+      "peak": "first week",
+      "lasts": "2 to 4 weeks in a review; about 10 days in a diary study",
+      "text": "Anger and impatience peak in week one. Gone within 10 days to 4 weeks, depending on the study.",
+      "evidence": "moderate",
+      "refs": [
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "quote": "Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Shiffman S, Patten C, Gwaltney C et al (2006). Natural history of nicotine withdrawal. Addiction 101(12):1822-32.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17156182/",
+          "pmid": "17156182",
+          "quote": "All symptoms returned to baseline levels within 10 days of quitting.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "symptom": "anxious",
+      "peak": "first week",
+      "lasts": "2 to 4 weeks in a review; about 10 days in a diary study",
+      "text": "Anxiety peaks in week one. Gone within 10 days to 4 weeks, depending on the study.",
+      "evidence": "moderate",
+      "refs": [
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "quote": "Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Shiffman S, Patten C, Gwaltney C et al (2006). Natural history of nicotine withdrawal. Addiction 101(12):1822-32.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17156182/",
+          "pmid": "17156182",
+          "quote": "All symptoms returned to baseline levels within 10 days of quitting.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "symptom": "low-mood",
+      "peak": "first week",
+      "lasts": "2 to 4 weeks in a review; about 10 days in a diary study",
+      "text": "Low mood peaks in week one. Gone within 10 days to 4 weeks, depending on the study.",
+      "evidence": "moderate",
+      "refs": [
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "quote": "Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Shiffman S, Patten C, Gwaltney C et al (2006). Natural history of nicotine withdrawal. Addiction 101(12):1822-32.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17156182/",
+          "pmid": "17156182",
+          "quote": "All symptoms returned to baseline levels within 10 days of quitting.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "symptom": "brain-fog",
+      "peak": "first week",
+      "lasts": "2 to 4 weeks in a review; about 10 days in a diary study",
+      "text": "Trouble concentrating peaks in week one. Gone within 10 days to 4 weeks, depending on the study.",
+      "evidence": "moderate",
+      "refs": [
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "quote": "Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Shiffman S, Patten C, Gwaltney C et al (2006). Natural history of nicotine withdrawal. Addiction 101(12):1822-32.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17156182/",
+          "pmid": "17156182",
+          "quote": "All symptoms returned to baseline levels within 10 days of quitting.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "symptom": "restless",
+      "peak": "first week",
+      "lasts": "2 to 4 weeks in a review; about 10 days in a diary study",
+      "text": "Restlessness peaks in week one. Gone within 10 days to 4 weeks, depending on the study.",
+      "evidence": "moderate",
+      "refs": [
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "quote": "Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Shiffman S, Patten C, Gwaltney C et al (2006). Natural history of nicotine withdrawal. Addiction 101(12):1822-32.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17156182/",
+          "pmid": "17156182",
+          "quote": "All symptoms returned to baseline levels within 10 days of quitting.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "symptom": "sleep",
+      "peak": "first week",
+      "lasts": "2 to 4 weeks in a review; no clear change in a diary study",
+      "text": "Insomnia peaks in week one and can last 2–4 weeks. A diary study saw no clear change in sleep after quitting, so nights may vary.",
+      "evidence": "weak",
+      "refs": [
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "quote": "Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Shiffman S, Patten C, Gwaltney C et al (2006). Natural history of nicotine withdrawal. Addiction 101(12):1822-32.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17156182/",
+          "pmid": "17156182",
+          "quote": "All variables except arousal and sleep disturbance showed change over time.",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    },
+    {
+      "symptom": "cue-craving",
+      "peak": null,
+      "lasts": "still rising at day 35, the last day tested",
+      "text": "In a lab test, cravings set off by triggers were stronger at day 35 than at day 7 in smokers paid to abstain. The study stopped there.",
+      "evidence": "weak",
+      "refs": [
+        {
+          "cite": "Bedi G, Preston KL, Epstein DH et al (2011). Incubation of cue-induced cigarette craving during abstinence in human smokers. Biological Psychiatry 69(7):708-11.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20817135/",
+          "pmid": "20817135",
+          "quote": "Cue-induced craving was greater in Group 3 (35-day) compared with Group 1 (7-day).",
+          "fetched": true,
+          "fetchedOn": "2026-11-18"
+        }
+      ],
+      "check": {
+        "by": "quit-tool checker (opus)",
+        "on": "2026-11-18",
+        "verdict": "ok"
+      }
+    }
+  ],
+  "symptomCourseNote": "These studies are almost all of cigarette smokers. Vapes and pouches are less studied."
 }

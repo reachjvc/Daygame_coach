@@ -49,7 +49,7 @@ const NOT_AVOID = /^(I\s+)?(won'?t|will not|not|avoid|never|don'?t|stop)\b/i
 /** Keys whose content is a source, an id or a tag, not text the reader reads. */
 const NOT_READER_KEYS = new Set([
   "refs", "ref", "alsoRef", "priceRefs", "basis", "check", "id", "kind", "severity", "evidence",
-  "blackBoxEnding", "link", "url", "level", "costKind", "beliefId", "symptom", "need",
+  "editNote", "blackBoxEnding", "link", "url", "level", "costKind", "beliefId", "symptom", "need",
 ])
 /** Reader's own voice or the owner's words: exempt from the founder rule. */
 const FOUNDER_EXEMPT = /^(tapeForward|responses|riskyMoments|endings|helped|planSteps)\b|^beliefs\[\d+\]\.(limiting|counterpart)$/
@@ -106,6 +106,7 @@ function ruleWords(c: Ctx) {
     lim(`${path}.headline`, n.headline, 22)
     lim(`${path}.counted`, n.counted, 12)
   }
+  arr(d.symptomCourse).forEach((r, i) => lim(`symptomCourse[${i}].text`, obj(r).text, 30))
   arr(d.lessons).forEach((l, i) => {
     lim(`lessons[${i}].body`, obj(l).body, 180)
     lim(`lessons[${i}].exercise`, obj(l).exercise, 40)
@@ -152,6 +153,13 @@ function ruleBasis(c: Ctx) {
     if (!["strong", "moderate", "weak", "none"].includes(String(x.evidence)))
       c.add(`symptomHelp[${i}].evidence`, "basis", `symptomHelp[${i}] has no evidence grade`)
     if (!hasRef(x.refs)) c.add(`symptomHelp[${i}].refs`, "basis", `symptomHelp[${i}] has no source`)
+  })
+  arr(d.symptomCourse).forEach((raw, i) => {
+    const x = obj(raw)
+    if (!["strong", "moderate", "weak", "none"].includes(String(x.evidence)))
+      c.add(`symptomCourse[${i}].evidence`, "basis", `symptomCourse[${i}] has no evidence grade`)
+    if (!hasRef(x.refs)) c.add(`symptomCourse[${i}].refs`, "basis", `symptomCourse[${i}] has no source`)
+    if (x.symptom === "tired") c.add(`symptomCourse[${i}].symptom`, "basis", `symptomCourse[${i}] is "tired", which has no time-course source`)
   })
   arr(d.needs).forEach((n, i) =>
     arr(obj(n).swaps).forEach((raw, j) => {
