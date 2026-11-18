@@ -38,6 +38,7 @@ import { DiaryB } from "./diary/b/DiaryB"
 import { DiaryC } from "./diary/c/DiaryC"
 import { DiaryD } from "./diary/d/DiaryD"
 import { DiaryE } from "./diary/e/DiaryE"
+import { DiaryBest } from "./diary/best/DiaryBest"
 import { CheckinBest } from "./checkin/best/CheckinBest"
 import { ProgressBest } from "./progress/best/ProgressBest"
 import { QuitdateBest } from "./quitdate/best/QuitdateBest"
@@ -153,6 +154,7 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       c: { Component: DiaryC, addiction: "weed", label: "Copy C", kind: "copy" },
       d: { Component: DiaryD, addiction: "nicotine", label: "Copy D", kind: "copy" },
       e: { Component: DiaryE, addiction: "nicotine", label: "Copy E", kind: "copy" },
+      best: { Component: DiaryBest, addiction: "nicotine", label: "Improved", kind: "best" },
     },
   },
   lessons: { name: "Daily lessons", variants: {} },
