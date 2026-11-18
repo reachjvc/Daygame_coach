@@ -68,8 +68,10 @@ How it ran: each group in its own worktree, specs checked locally one at a time 
 | F5 | Not red | The test carries `test.fail` for a known product bug (e1a68550): a resent sign-up confirmation link lands on `/auth/login?error=missing_code` because `resend()` sends no PKCE challenge. Outside this plan; see B6. |
 | F6 | Outdated tests | The refusal now also carries the stored answer (565ccb2a); the newer answer still wins. Mute snaps to the quarter the label names (b3aad6b1), so "1 h" is 45–60 min. |
 | F8 | Outdated test | The way out of the Time Log is labelled Home (f2b5bf58). |
-| F9 | Product bug (in progress) | On a phone, Log Out from the You tab lands on `/` or `/auth/login` depending on a race (`audit.spec.ts:396`, run 44334854794). Must land on `/` every time. |
-| F10 | Outdated test (in progress) | The new offline-before-Log-Out test must skip on every phone-sized project, not only `phone` (failed on android). |
+| F9 | Product bug, fixed | On a phone, Log Out from the You tab landed on `/` or `/auth/login` by a race: the `signOut` server action re-rendered the page without a session, and the proxy sent it to sign-in before Log Out's own move to `/`. Sign-out is now a POST to `app/api/auth/sign-out/route.ts`; `audit-ping.spec.ts:287` is strict `/` again. |
+| F10 | Outdated test, fixed | The offline-before-Log-Out test skips by viewport (< 640 px, no header Log Out), so Android skips it too. |
+| F11 | Flaky test, fixed | `audit-sheet-fit.spec.ts:103` read the stretch card's heading once while the sheet slid in (0.2 s); it now polls. Passed and failed on the same code (E2E 44354834713 green, 44342184859 red). |
+| F12 | Same cause as F0, open | CI `image-staging` (main only), step "Build, prove and publish the staging image": `npm ci` inside the Docker build downloads the onnxruntime GPU archive (404); the workflow env does not reach `docker build` (CI 44355863885, 44354834509). |
 
 Open, for the owner: the phone week strip's day buttons are 40 px wide (49 px tall); seven days and two
 44 px arrows do not fit 390 px otherwise. The tap-size test allows ≥ 38 px wide there.
@@ -126,7 +128,7 @@ New tests are welcome where a fix had none: one spec or unit test per real bug f
 
 | Test (file:line, title) | Kind | Replaced by / reason | Green run without it |
 |---|---|---|---|
-| `tests/e2e/mobile/mobile-toggl.spec.ts:181` "bulk selection is opt-in, so checkboxes do not clutter the list" | (c) | The phone has no way into bulk Select any more: removed on purpose in a8c52299 (time-log-phone 4.2 / D2, "Copy start link and Select are gone from the phone"). Not about data, sync, offline, sign-in or privacy | pending |
+| `tests/e2e/mobile/mobile-toggl.spec.ts:181` "bulk selection is opt-in, so checkboxes do not clutter the list" | (c) | The phone has no way into bulk Select any more: removed on purpose in a8c52299 (time-log-phone 4.2 / D2, "Copy start link and Select are gone from the phone"). Not about data, sync, offline, sign-in or privacy | E2E 44356834908 (cb504cfa), every lane green |
 
 ---
 
@@ -202,6 +204,8 @@ Merge each group's branch into `tests-green` when its specs pass on GitHub. Ship
 
 Accept: one `workflow_dispatch` E2E run on `tests-green` with every lane green except at most flaky
 tests that passed on retry, and the flaky ones listed; CI green on the same commit. Quote both run ids.
+
+**Status:** done 2026-11-18. `gh workflow run e2e.yml --ref tests-green` → E2E 44356834908 on cb504cfa: `conclusion success`, all 14 lanes success (android 1/1 776 s, phone 2/2 1,894 s), no flaky tests in the logs. CI 44356833798 on cb504cfa: `checks: success`. Shipped to main in two batches (1234fc96, 134d39d1); main E2E 44355864103 on 134d39d1 success. Remaining: F12 (staging image build) and B7 cleared by its owner (E2E 44354834713 on 7dfba7b7 success).
 
 ## Phase 3 — Faster unit tests and pre-commit · M · sonnet
 
