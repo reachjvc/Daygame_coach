@@ -53,6 +53,7 @@ import { QuitdateBest } from "./quitdate/best/QuitdateBest"
 import { LessonsBest } from "./lessons/best/LessonsBest"
 import { PastA } from "./past/a/PastA"
 import { PastB } from "./past/b/PastB"
+import { PastBest } from "./past/best/PastBest"
 import { IfthenA } from "./ifthen/a/IfthenA"
 import { IfthenB } from "./ifthen/b/IfthenB"
 import { IfthenC } from "./ifthen/c/IfthenC"
@@ -205,6 +206,7 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       current: current(PastTool),
       a: { Component: PastA, addiction: "porn", label: "Copy A", kind: "copy" },
       b: { Component: PastB, addiction: "alcohol", label: "Copy B", kind: "copy" },
+      best: { Component: PastBest, addiction: "nicotine", label: "Improved", kind: "best" },
     },
   },
   ifthen: {
