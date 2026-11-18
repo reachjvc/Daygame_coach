@@ -827,6 +827,36 @@ sign-up shows the privacy link. Screenshots to `shots/phase6/`.
 5. Ship: nicotine in `live.json`, typecheck ratchet, push `main`, signed-out phone walk on the live site,
    `/api/healthz` build id. Tell first-1000's session the tools are live (its Phase 3 links to them).
 
+#### Phase 7 brief (Opus, 2026-11-18) — prove it, then ship nicotine wave 1
+
+Scope shipped: the menu, `beliefs`, `gives`, `past`, `cost`, `how`, `sos`, `symptoms`, `slip`, `/privacy`,
+`/quit/coaching`. `curve` ships only if its brief and build are done by then (owner's mock reaction); otherwise
+its row says "Coming soon" and every link to it is hidden (`cost`'s curve button, the Start line).
+Ship gate (owner items): a privacy contact email in `contact.json`. Without it, everything else is merged and
+live.json stays `[]`.
+
+1. **Phone walk (Sonnet):** Android emulator rig (memory `android-emulator-rig.md`: `phone.sh boot`, real
+   Chrome 113, Gboard; `phone.sh stop` when done) against a worktree production build (`npm run build` keeps
+   `--webpack`; `next start -p <port>`), plus Playwright phone + desktop: every tool start to result, light and
+   dark scheme, signed out and signed in (test-stack user). Screenshots of every screen to `shots/phase7/`.
+2. **Adversarial audit (3 Sonnet agents, one theme each, each bug reproduced twice with a failing spec):**
+   (a) signed-out reader: back/forward mid-tool, reload on every screen, two tabs, storage blocked, odd and
+   huge inputs, time zones (`page.clock`, Copenhagen and New York, DST day), `?s=` tampering, `?preview`;
+   (b) signed-in Black Box links: sos close call and slip lapse, undo, two devices (two contexts, one account),
+   no living run, a run on another vice; (c) privacy and security: answers in URLs, referrers or logs, the
+   count route (bad bodies, size, rate, `src` injection), the card route (`held` fuzzing), XSS through data or
+   query params, external links (`rel="noopener"`), headers. Findings to `~/.cache/daygame-research/quit-tool/
+   audit-phase7.md` with counts by severity.
+3. **Fixes (Sonnet, worktree)** for every confirmed bug, each with its spec green; then **code review and
+   security review (Opus)** of the fixes on the explicit `<start>..HEAD` range (memory: `/security-review`
+   needs origin/HEAD, use a subagent).
+4. **Owner review page (artifact):** the screens as phone shots, each with 👍 and a visible note box (memory
+   `review-boards-note-log.md`), exceptions only; published, link posted in chat, never opened on his screen.
+5. **Ship:** `live.json` = `["nicotine"]`; full vitest, typecheck ratchet, lint ratchet; ff `main`, push;
+   wait for Vercel (`/api/healthz` buildId = the commit); signed-out phone walk on the live site (Playwright
+   phone project against the live URL, read-only: counts only); add the Black Box page link to
+   `/quit/nicotine` (Phase 3 question 7); tell the first-1000 session the tools are live.
+
 ### Phase 8: wave 3, the account program — brief Opus, build Sonnet (after the owner's yes to tables)
 
 1. Migration `supabase/migrations/<timestamp>_quit_program.sql`, RLS owner-only: `quit_plans` (id, user_id,
