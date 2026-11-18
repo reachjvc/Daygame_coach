@@ -1,6 +1,6 @@
 # Quit tools, copied from the best: one phase per tool
 
-Written 2026-11-18 (Opus, planning session). Status: **running. Phase 0 done. Phase 1 done (10f1bc62). Phase 2 copies a–e on main (920d4776), `best` building. Phase 3 copies building. Step B passed for Phases 3–13. B1 round 2 in progress (live still 500).**
+Written 2026-11-18 (Opus, planning session). Status: **running. Phases 0, 1, 2 done (progress best 514ce1fd). Phase 3 copies on main (aea37aa4), `best` building. Phase 4 copies building. Step B passed for Phases 3–13. B1 round 2 in progress (live still 500).**
 
 ## Why this plan exists
 
@@ -198,6 +198,29 @@ Copies a–e on main (920d4776). The improved version, from `progress/overlap.md
    data" option like the copies. Addiction switcher from the data files; units word from the data file (`units`).
 8. Rules: every number his own input or derived from it, shown with its formula on tap; no unsourced figure; no
    founder "I"; phone first.
+
+### Phase 3 Step D brief: `timeline/best` (2026-11-18)
+
+Copies a–e on main (aea37aa4). The owner left no notes on curve mock v2 (db empty 2026-11-18), so the plan's
+science rule decides: timing from studies, as ranges, each with its source; no per-item health claim without a
+checked source.
+1. **Header:** day N since his quit date (set once; or "Example data"), and a plain count of how many of the
+   symptoms are past the end of their study range.
+2. **Withdrawal view first** (copy e's best piece, made honest): one card per `symptomCourse` row: the symptom in
+   plain words, a horizontal day band showing the studied range (peak window, then "gone by" range drawn as a
+   fading span from the shorter to the longer study figure), a marker at his day N, the data file's sentence, and
+   the sources on tap. No single-day countdown and no percent with decimals: the studies give ranges.
+   Cue-triggered craving gets its own card: "still rising at day 35, the last day tested", band open-ended.
+   The data file's note ("studies are almost all of cigarette smokers") sits under the list.
+3. **A 6-week strip** (the calendar link no competitor has): days 1–42 with the week-1 peak shaded and his day
+   marked, so he sees hard days before they come.
+4. **Body recovery list** (what copies a–d lead with): shown only for items with a checked source in the data file;
+   there are none yet, so the section is one line "content coming: checked body-recovery timings" — never the
+   competitors' unsourced items.
+5. Addiction switcher; an addiction without `symptomCourse` shows "content coming".
+6. The day ranges drawn on the bands are numbers we derive from the sources' words ("first week", "2 to 4 weeks",
+   "about 10 days"): the builder lists each derived number in its report and an **Opus fact-check** compares them
+   with the cited quotes before merge.
 
 ---
 
