@@ -54,7 +54,7 @@ describe("timeline progress maths", () => {
 describe("timeline registry", () => {
   it("has copies a to e with valid addictions", () => {
     const v = LAB.timeline.variants
-    expect(Object.keys(v).sort()).toEqual(["a", "b", "c", "current", "d", "e"])
+    expect(Object.keys(v).sort()).toEqual(["a", "b", "best", "c", "current", "d", "e"])
     for (const l of ["a", "b", "c", "d", "e"]) {
       expect(v[l].kind).toBe("copy")
       expect(v[l].label).toBe(`Copy ${l.toUpperCase()}`)
