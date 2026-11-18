@@ -334,8 +334,9 @@ first person (only `offer.json` may hold "I"). Nicotine's footer line (clozapine
      beliefs rated 4 or 5; Q5 ranges).
    - `QuitPlanStep {title; text; do: string[]; proof?: {text; refs; severity; counted?; weak?; ownWords?}}`.
    - `QuitDanger {level: "none"|"danger"; line: string|null; refs: QuitRef[]}`.
-   - `QuitAddiction`: `id, name, unit {one, many}, costKind: "money"|"money+time"|"time"|"money+hours",
-     defaultUnitPriceUsd: number|null, defaultMinutesPerUnit: number|null, danger, footerNote: {text, refs}|null,
+   - `QuitUnit {id; one; many; defaultPriceUsd: number|null; defaultMinutesPerUnit: number|null;
+     priceRefs: QuitRef[]}` (nicotine: cigarettes, vape days, pouches).
+   - `QuitAddiction`: `id, name, units: QuitUnit[], costKind: "money"|"money+time"|"time"|"money+hours", danger, footerNote: {text, refs}|null,
      hope: QuitNumber|null, numbers: QuitNumber[], keyFacts: string[], beliefs, facts, needs, endings, helped,
      riskyMoments, responses, clearOut, symptomWords: Record<string,string>, symptomHelp, tapeForward: string[],
      costSwaps, besides, felt: QuitFelt|null, lessons, bands, catch: string, planSteps: QuitPlanStep[]`.
@@ -358,7 +359,7 @@ first person (only `offer.json` may hold "I"). Nicotine's footer line (clozapine
    the page's `researchRefsToAdd`/06 `globalRefs` where they are ids; unresolved → `"TODO"`); `footerNote` ←
    `footerProposal`; `danger` ← `{level: id==="alcohol" ? "danger" : "none", line: alcohol ? "TODO" : null, refs: []}`;
    `name` ← `VICES` label in `src/vice/data/vices.ts` (hard-code the four: "Smoking or vaping", "Weed", "Porn",
-   "Drinking"); every other field `"TODO"`. Prints a per-file count of TODO fields.
+   "Drinking"); `units` and every other field `"TODO"`. Prints a per-file count of TODO fields.
 3. Run it once; commit the four outputs. `src/quit/data/live.json` = `[]`.
 4. `src/quit/data/offer.json` = `{"coachingPriceUsd": 200, "days": 30, "guaranteeLine": "If you're not
    nicotine-free in 30 days, I keep working with you free until you are.", "paymentLinkUrl": null,
@@ -381,7 +382,8 @@ first person (only `offer.json` may hold "I"). Nicotine's footer line (clozapine
    - `founder`: `\bI quit\b`, `\bwhen I\b`, `\bmy story\b` (case-insensitive) in any reader text. Belief
      `limiting`/`counterpart`, `tapeForward`, `responses`, `riskyMoments`, `endings`, `helped` are the
      reader's own voice and exempt; `planSteps` are the owner's words and exempt.
-   - `dollar`: `$` anywhere except `costSwaps[].text`.
+   - `dollar`: `$` anywhere in a data file (amounts are numbers: `usd`, `defaultPriceUsd`). Every unit with a
+     `defaultPriceUsd` has ≥ 1 `priceRefs` entry (`basis` rule).
    - `moderation`: a belief matching `MOD_WORDS` (build_v3.py) must be `kind: "moderation"`; a moderation
      belief's severity must be in `MOD_OK` or its `counted` contains "not checked".
    - `danger`: `danger.line` must be null when `level: "none"`, non-empty when `"danger"`.
@@ -427,6 +429,90 @@ putting `"nicotine"` in `live.json` makes `validateLive()` fail naming TODO path
 4. Drafts and verdicts in `~/.cache/daygame-research/quit-tool/nicotine/` (private).
 
 Acceptance: validator passes with nicotine live; no open items from either checker or critic.
+
+#### Phase 2 brief (Opus, 2026-11-18) — the nicotine content, by recipe
+
+Work folder (private, never committed): `~/.cache/daygame-research/quit-tool/nicotine/`. The committed result
+is only `src/quit/data/nicotine.json`. Every round's file is kept (`draft-1.json`, `verdicts-1.json`, …).
+
+**Step A, writer (Sonnet subagent).** Starts from the Phase 1 `src/quit/data/nicotine.json` and fills every
+`"TODO"`, writing `draft-1.json` (a full `QuitAddiction`) and `claims-1.md` (one row per sourced item: path,
+claim, url, quote ≤ 30 words copied from the page it fetched, date). Reads first: RULEBOOK.md (all), SCHEMA.md,
+`06-template.json` (the five steps), `08-v3/felt/nicotine.json`, `~/.cache/daygame-research/quit-tool/
+evidence-tools.md` (§1, §3.2, §4, §5), `loved-features.md` (voice of what users love), memory files
+`brand-edge-not-safety-first.md`, `numbers-show-their-basis.md`, `reality-not-saints.md`. Rules:
+- The five existing beliefs (`b1`–`b5`): `limiting`, `counterpart`, `proof`, `refs`, `check` stay word for
+  word (rule 25). Add only `scene`, `short`, `need`.
+- Seven new beliefs `b6`–`b12`, picked from: focus/work ("I can't concentrate without it"), boredom ("it's
+  something to do"), social/breaks ("smoke breaks are where I talk to people"), weight ("I'll put on weight"),
+  identity ("I'm just a smoker"), timing ("I'll quit when things calm down"), drinking ("only when I drink" →
+  `moderation`), sleep or mornings, "vaping is how I quit smoking" (answer: switching keeps nicotine; never
+  says vapes are as harmful as cigarettes). Each new belief: one of each kind is not required; `need` from
+  the 8 ids; `counterpart` is something he can genuinely believe (rule 22); `whenThought` is a small act at
+  the moment the thought shows up on its own; `test` is a this-week test that never sends him into the hard
+  thing on purpose; `proof` ≤ 40 words, one figure per line, "N in 100", sourced, never repeating a number
+  already in `numbers` or `hope` (rule 22, G2); severity + counted per rule 3.
+- `scene` (≤ 16 words) is a moment he recognises, second person, present tense ("Your phone buzzes with bad
+  news and your hand is already in your pocket."). `short` (≤ 6 words) is the voice's line, used as a chip
+  in `sos` ("It calms me down").
+- `facts`: 3 true-or-false statements where most smokers guess wrong, each with `explain` ≤ 40 words + ref.
+- `needs`: all 8, each 3 swaps, best evidence first, grades from evidence-tools §3.2 and §5 only (a swap with
+  no study is `evidence: "none"`, refs `[]`). Text ≤ 10 words, a "do", plain.
+- `units`: cigarettes, vape days, pouches; `defaultPriceUsd` per unit from a fetched public US source (state
+  average pack price, a major retailer's listed price); `priceRefs` say what it is; `defaultMinutesPerUnit`
+  for cigarettes from a source (time per cigarette), else null. `costKind: "money+time"`.
+- `endings` (10, Part 2 `past` list) each mapped to a `ViceEndingId` (stress→stress, "just one"→justone,
+  someone offered/celebration/drinking→drink, faded/boredom→faded, it was right there/empty evening/
+  couldn't sleep/a fight→other or stress as fits; write the map in claims-1.md); `helped` (8–10);
+  `riskyMoments` (10, from felt data + evidence §5.7); `responses` (10, each a "do", Move 5 first).
+- `clearOut` (8–12), the hard-but-not-impossible blocker rule; `symptomWords` keep the imported labels;
+  `symptomHelp`: one row for each of the 6 symptoms named most in the felt bins, plus the sleep card (four
+  rules, Part 2 `symptoms`), evidence graded.
+- `tapeForward`: 4 lines, second person, the moment after "just one" played forward, no sermon.
+- `costSwaps`: 6, rising `usd` (about 100 → 20,000), everyday things a man would want, `usd` rounded, each
+  backed in claims-1.md by a fetched typical price; text has no `$`.
+- `besides`: free help only (national quit lines for the US and UK, the free official quit sites, the main
+  forum by name, combination NRT done right with its Cochrane ref, exercise for the craving, telling one
+  person). No affiliate links.
+- `keyFacts`: 3–4 one-line facts for the top of the menu (P11, P13), each sourced in claims-1.md (e.g.
+  nicotine withdrawal is not dangerous; when it peaks).
+- `bands`: Q5 ranges; `free` links to `/plan`. `catch`: ≤ 80 words, true against Part 2 (the tools are free,
+  no account; answers stay on his phone until he saves; coaching is paid and optional; no ads, nothing sold).
+- `lessons`: 3 prep (days −3..−1) + 14 daily (days 1–14), each tied to a `beliefId`, body ≤ 180 words,
+  exercise ≤ 40 words, plain, edge, sourced where they state a fact.
+- Voice everywhere: plain, short, edge, for the 98%; no "!", no cheering, no screening, no sermon, no founder
+  "I", no "reset"/"back to zero", no forecasts of success, no death tolls. Copy no forum post, review or book
+  sentence (the repo is public); counts from the felt data may be used.
+- Run `validateAddiction(draft, {live: true})` (write a throwaway script in the work folder that imports
+  `src/quit/validate.ts` with `npx tsx`) and fix until it returns `[]` except `check` fields.
+
+**Step B, checker (Opus subagent, fresh, never sees the writer's reasoning).** Gets `draft-1.json` and
+`claims-1.md` only. Fetches every url again (`research@example.com` where an API asks for an email); for each
+claim: does the quote appear on the page word for word, does the claim say what the source says, is the
+group/severity/counted right, is the n the n behind that figure, is the evidence grade right, is it "N in
+100". Writes `verdicts-1.json`: `[{path, verdict: ok|fix|drop, reason, fix?}]` for every sourced item, and a
+`voice` list of rule breaks it noticed (rule number + path).
+
+**Step C.** Writer applies every fix/drop (`draft-2.json`); checker re-checks only changed items
+(`verdicts-2.json`). Repeat at most once more. Items still not `ok` are dropped or replaced by a weaker
+honest version (`evidence: "none"`).
+
+**Step D, critics (parallel).** Owner-lens critic (Opus): RULEBOOK + `docs/research/addiction-one-pagers/
+README.md` round notes + memory `notes-are-fixes-not-rules.md`, `brand-edge-not-safety-first.md`,
+`reality-not-saints.md`; lists anything the owner has objected to before, with path. Cold reader (Sonnet):
+a 27-year-old man who vapes daily and tried to stop twice; sees only the reader text (a flat dump of
+scenes, shorts, counterparts, whenThought, test, swaps, facts, tapeForward, lessons); says per item what he
+understood, what felt preachy, what he'd skip, and explains each number back. Writer fixes; changed sourced
+items go back to the checker.
+
+**Step E, commit (Sonnet, worktree).** Copy the final into `src/quit/data/nicotine.json`; each sourced item
+gets `check: {by: "quit-tool checker (opus)", on: <date>, verdict: "ok"}`; add a test in
+`tests/unit/quit/validate.test.ts`: `validateAddiction(getAddiction("nicotine"), {live: true})` returns `[]`.
+`live.json` stays `[]` until Phase 7.
+
+**Acceptance (Haiku):** that test green; `npx vitest run tests/unit/quit`; typecheck ratchet; `python3
+docs/research/addiction-one-pagers/board/check_privacy.py src/quit/data/nicotine.json` passes (rule 30: no
+8-word run from any harvested forum post).
 
 ### Phase 3: the menu screen and the shared frame — brief Opus, build Sonnet
 
