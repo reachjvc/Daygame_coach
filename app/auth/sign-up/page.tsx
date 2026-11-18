@@ -203,6 +203,11 @@ export default function SignUpPage() {
                   <Button type="submit" className="w-full" disabled={isLoading} data-testid="signup-submit-button">
                     {isLoading ? "Creating account..." : "Sign up"}
                   </Button>
+                  <p className="-mt-3 text-center text-xs text-muted-foreground">
+                    <Link href="/privacy" className="underline underline-offset-4" data-testid="signup-privacy-link">
+                      What we keep about you
+                    </Link>
+                  </p>
                 </div>
                 <div className="mt-4 text-center text-sm">
                   Already have an account?{" "}

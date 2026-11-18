@@ -1,0 +1,18 @@
+{
+  "privacy": {
+    "backToTools": "Free quit tools",
+    "coachingLink": "30 days with a coach",
+    "askThroughCoaching": "Ask through the coaching page and we delete it within 30 days."
+  },
+  "coaching": {
+    "whatHeading": "What the 30 days are",
+    "priceLabel": "Price",
+    "costLabel": "What it costs you a year",
+    "buy": "Book your 30 days",
+    "soon": "Booking opens soon.",
+    "stripeLine": "Payment goes through Stripe. This site stores nothing about it.",
+    "newTab": "Opens in a new tab",
+    "freeTools": "Free quit tools",
+    "privacy": "Privacy"
+  }
+}

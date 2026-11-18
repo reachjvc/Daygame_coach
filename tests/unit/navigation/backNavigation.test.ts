@@ -93,7 +93,7 @@ describe("every screen has a way back", () => {
       if (route.startsWith("/auth/")) { skipped[route] = "pre-login"; continue }
       // The public quit tools are their own small site outside the app frame:
       // the layout's site-name link and the tool frame's Back link lead out.
-      if (route === "/quit" || route.startsWith("/quit/")) { skipped[route] = "public quit tools, own frame"; continue }
+      if (route === "/quit" || route.startsWith("/quit/") || route === "/privacy") { skipped[route] = "public quit tools and privacy page, own frame"; continue }
       if (isRedirectShim(file)) { skipped[route] = "redirect shim, no UI"; continue }
 
       checked.push(route)

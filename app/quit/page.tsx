@@ -41,6 +41,11 @@ export default async function QuitHome({ searchParams }: { searchParams: Promise
           </ul>
         </>
       )}
+      <p className="mt-8 border-t border-border pt-2 text-sm">
+        <Link href="/privacy" className="flex min-h-11 items-center">
+          {frame.privacy}
+        </Link>
+      </p>
     </div>
   )
 }

@@ -1,0 +1,130 @@
+{
+  "title": "Privacy",
+  "draftLine": "Draft, 2026-11-18. Not legal advice.",
+  "sections": [
+    {
+      "id": "phone",
+      "heading": "What stays on your phone",
+      "items": [
+        {
+          "text": "The quit tools keep your answers in this browser only, under the name quit-v1. They are not sent to us.",
+          "factRef": "4. Browser storage keys: quit-v1 (localStorage), src/quit/store.ts 'kept in this browser only'"
+        },
+        {
+          "text": "When you open a tool or finish a step, the site counts it without your answers. It is sent only which addiction, which tool and which step. If the link you came from carries a short tag, that tag is kept for that visit only.",
+          "factRef": "5. /api/quit/count (payload addiction, tool, step, optional src; quit-src in sessionStorage, section 4)"
+        },
+        {
+          "text": "If your browser blocks storage, the tools still work until you close the page.",
+          "factRef": "4. Browser storage keys: quit-v1, in-memory fallback if storage blocked"
+        },
+        {
+          "text": "The Black Box also keeps its record on your device, including what you type into it.",
+          "factRef": "4. Browser storage keys: vice-blackbox-v1 (whole Black Box record incl. typed thoughts)"
+        },
+        {
+          "text": "To remove all of this, clear this site's data in your browser settings.",
+          "factRef": "12. Local-only data (signed out): removed by clearing site data"
+        }
+      ]
+    },
+    {
+      "id": "account",
+      "heading": "What we keep when you make an account",
+      "items": [
+        {
+          "text": "Your email, your password (handled by our login provider), your name and the time zone of your browser.",
+          "factRef": "1. Accounts and login: sign-up collects email, password, full name, timezone (app/auth/sign-up/page.tsx)"
+        },
+        {
+          "text": "What you type into the parts of the site you use while signed in, such as the Black Box, the plan and journal, the time and energy audit, the time tracker, workouts and health logs, and the training tracking.",
+          "factRef": "3. Database tables a signed-in user writes (vice_reports, life_plan_*, audit_*, timetrack_*, workout and health tables, sessions/approaches)"
+        },
+        {
+          "text": "Things you delete inside the site are hidden, not erased, until your account is deleted.",
+          "factRef": "3. Vice / quit: deletes are soft (deleted_at set, row kept), app/api/black-box/route.ts"
+        },
+        {
+          "text": "For a payment, we keep the payment ids and the amount, not your card details.",
+          "factRef": "3. purchases table (stripe ids, product, amount_cents, status); 9. Stripe: no card data in code"
+        },
+        {
+          "text": "Our log of AI features keeps which feature ran, the model, token counts and cost. It does not keep what you wrote.",
+          "factRef": "Planner check 2026-11-18: live ai_usage_logs has no column for chat text"
+        },
+        {
+          "text": "When the site crashes, it sends a short error report with the page path and a build number. Typed text, emails and address parts are scrubbed first. If you are signed in the report carries your account id.",
+          "factRef": "6. Error reporting: fields, scrub in src/shared/errorScrubService.ts, userId if signed in"
+        },
+        {
+          "text": "The only cookies we set are the ones that keep you signed in.",
+          "factRef": "2. Cookies: only Supabase auth session cookies"
+        }
+      ]
+    },
+    {
+      "id": "never",
+      "heading": "What we never do",
+      "items": [
+        {
+          "text": "We never sell your data.",
+          "factRef": "Owner promise in the Phase 6 brief (not a code fact); 9. no ad or analytics scripts found"
+        },
+        {
+          "text": "We show no ads and run no tracking or analytics scripts on this site.",
+          "factRef": "9. Analytics, tracking scripts: none found"
+        },
+        {
+          "text": "We never show your answers to anyone.",
+          "factRef": "Owner promise in the Phase 6 brief (not a code fact); 5. count route carries no answers"
+        }
+      ]
+    },
+    {
+      "id": "processors",
+      "heading": "Who handles it for us",
+      "items": [
+        {
+          "text": "Vercel hosts the site. Supabase holds the database and the login. Both may keep their own server logs of requests.",
+          "factRef": "10. Processors and hosting; 11. Platform request logs outside the repo"
+        },
+        {
+          "text": "Stripe handles payments.",
+          "factRef": "9. Stripe: src/settings/stripe.ts, purchases table"
+        },
+        {
+          "text": "Anthropic receives the text you type into the AI practice chats, which are for paying members only.",
+          "factRef": "8. AI providers: Anthropic via src/scenarios/keepitgoing/chat.ts, premium-only routes"
+        },
+        {
+          "text": "If you turn on notifications, your browser maker's push service delivers them.",
+          "factRef": "7. Push notifications: web-push to the browser vendor's service"
+        },
+        {
+          "text": "The free quit tools call no AI service.",
+          "factRef": "8. The quit tools (src/quit/) call no AI"
+        }
+      ]
+    },
+    {
+      "id": "delete",
+      "heading": "How to delete it",
+      "items": [
+        {
+          "text": "Data in your browser: clear this site's data in your browser settings.",
+          "factRef": "12. Local-only data (signed out): removed by clearing site data"
+        },
+        {
+          "text": "Your account: there is no delete button yet. Email {email} and we delete your account and everything in it within 30 days. Crash reports are kept without your account id.",
+          "when": "email",
+          "factRef": "12. No delete flow exists; deleting the user removes all rows with a cascade, error_reports.user_id is set to null"
+        },
+        {
+          "textKey": "askThroughCoaching",
+          "when": "noEmail",
+          "factRef": "12. No delete flow exists; deleting the user removes all rows with a cascade, error_reports.user_id is set to null"
+        }
+      ]
+    }
+  ]
+}
