@@ -24,9 +24,16 @@ export function hardcodedText(source: string): string[] {
     if (ts.isJsxText(node)) {
       const t = node.text.trim()
       if (/\p{L}{2,}/u.test(t)) found.push(t)
-    } else if (ts.isJsxAttribute(node) && node.initializer && ts.isStringLiteral(node.initializer)) {
+    } else if (ts.isJsxAttribute(node) && node.initializer) {
+      const init = node.initializer
+      // prop="text" and prop={"text"} / prop={`text`}
+      const literal = ts.isStringLiteral(init)
+        ? init
+        : ts.isJsxExpression(init) && init.expression && (ts.isStringLiteral(init.expression) || ts.isNoSubstitutionTemplateLiteral(init.expression))
+          ? init.expression
+          : null
       const name = node.name.getText(sf)
-      if (PROPS.includes(name) && /\p{L}{2,}/u.test(node.initializer.text)) found.push(`${name}="${node.initializer.text}"`)
+      if (literal && PROPS.includes(name) && /\p{L}{2,}/u.test(literal.text)) found.push(`${name}="${literal.text}"`)
     }
     ts.forEachChild(node, visit)
   }
@@ -38,6 +45,8 @@ describe("no hard-coded reader text in quit and privacy components", () => {
   it("catches text nodes and literal props", () => {
     expect(hardcodedText("<p>Hello there</p>")).toEqual(["Hello there"])
     expect(hardcodedText('<input aria-label="Name" />')).toEqual(['aria-label="Name"'])
+    expect(hardcodedText('<img alt={"A photo"} />')).toEqual(['alt="A photo"'])
+    expect(hardcodedText('<span aria-label={t.x}>{"+"}</span>')).toEqual([])
     expect(hardcodedText("<p>{frame.back}</p>")).toEqual([])
   })
   for (const root of ROOTS) {
