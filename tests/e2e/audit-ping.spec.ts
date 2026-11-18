@@ -3,6 +3,7 @@ import type { Locator, Page } from "@playwright/test"
 import { randomUUID } from "node:crypto"
 import { stackAdmin } from "./fixtures/stack"
 import { whenHydrated } from "./helpers/hydration"
+import { gotoPastDevCompile } from "./helpers/gotoPastDevCompile"
 import { pressLogOut } from "./helpers/logOut"
 import { ROUTES } from "@/src/shared/routes"
 
@@ -284,13 +285,12 @@ test.describe("answering a ping @phone", () => {
   }
 
   test("F12: Log Out inside the Undo time still sends the delete, and leaves no queue behind", async ({ browser, throwawayAccount }, info) => {
-    test.setTimeout(30_000)
     const context = await browser.newContext({ ...info.project.use, storageState: SIGNED_OUT, baseURL: info.project.use.baseURL })
     try {
       const page = await context.newPage()
       await signIn(page, throwawayAccount)
       const run = await seedOneAnswer(throwawayAccount.id, "Reading")
-      await page.goto(ROUTES.audit)
+      await gotoPastDevCompile(page, ROUTES.audit)
       await whenHydrated(page.getByTestId("audit-page"), 60_000)
       await page.getByTestId("audit-row-answered").filter({ hasText: "Reading" }).click()
       await page.getByTestId("audit-answer-sheet").getByTestId("audit-delete").click()
@@ -298,7 +298,8 @@ test.describe("answering a ping @phone", () => {
       // the delete is on the phone from the tap, not only on screen
       expect(await page.evaluate(() => localStorage.getItem("audit-queue-v1"))).toContain("notBefore")
       await pressLogOut(page)
-      await expect.poll(() => new URL(page.url()).pathname, { timeout: 30_000 }).toBe("/")
+      // signed out: the front page, or the sign-in page when the screen Log Out was pressed on (the You tab on a phone) saw the session go first
+      await expect.poll(() => new URL(page.url()).pathname, { timeout: 30_000 }).toMatch(/^\/(auth\/login)?$/)
       await expect.poll(async () => (await slotsOf(throwawayAccount.id, run)).length, { timeout: 15_000 }).toBe(0)
       expect(await page.evaluate(() => localStorage.getItem("audit-queue-v1"))).toBeNull()
     } finally {

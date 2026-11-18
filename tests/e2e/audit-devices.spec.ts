@@ -3,6 +3,7 @@ import type { Browser, Page } from "@playwright/test"
 import { randomUUID } from "node:crypto"
 import { stackAdmin } from "./fixtures/stack"
 import { whenHydrated } from "./helpers/hydration"
+import { gotoPastDevCompile } from "./helpers/gotoPastDevCompile"
 import { pressLogOut } from "./helpers/logOut"
 
 /**
@@ -47,7 +48,7 @@ async function activities(userId: string, runId: string): Promise<string[]> {
 }
 
 async function openAudit(page: Page, url = "/audit") {
-  await page.goto(url)
+  await gotoPastDevCompile(page, url)
   await whenHydrated(page.getByTestId("audit-page"), 60_000)
   await expect(page.getByTestId("audit-today")).toBeVisible({ timeout: 30_000 })
 }
@@ -83,7 +84,6 @@ async function secondDevice(browser: Browser, storageState: string) {
 
 test.describe("audit across devices @phone", () => {
   test("01: Log Out sends an answer still waiting on the phone before it signs out", async ({ browser, throwawayAccount }, info) => {
-    test.setTimeout(30_000)
     const context = await browser.newContext({ ...info.project.use, storageState: SIGNED_OUT, baseURL: info.project.use.baseURL })
     try {
       const page = await context.newPage()
@@ -106,7 +106,6 @@ test.describe("audit across devices @phone", () => {
   })
 
   test("01: with no signal at Log Out, the waiting answer is named and kept on Stay signed in", async ({ browser, throwawayAccount }, info) => {
-    test.setTimeout(30_000)
     const context = await browser.newContext({ ...info.project.use, storageState: SIGNED_OUT, baseURL: info.project.use.baseURL })
     try {
       const page = await context.newPage()
