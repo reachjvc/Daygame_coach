@@ -10,7 +10,7 @@
  *   Back closed the sheet behind it and left the question on screen.
  */
 import * as React from 'react'
-import { describe, test, expect, vi, afterEach, beforeEach } from 'vitest'
+import { describe, test, expect, vi, afterEach, afterAll, beforeAll, beforeEach } from 'vitest'
 import { render, screen, cleanup, fireEvent, act } from '@testing-library/react'
 
 import { BottomSheet } from '@/components/BottomSheet'
@@ -29,13 +29,47 @@ afterEach(() => {
 })
 
 const at = () => (window.history.state as { page?: string; __barrier?: number } | null) ?? {}
+/**
+ * History moves a task later (jsdom fires popstate asynchronously). These tests
+ * used to sleep a fixed 20 ms for that, too short once under a loaded full run.
+ * Each traversal now registers a promise that settles on its popstate (or after
+ * 500 ms for one that moves nowhere and so fires none); `settle` and `back`
+ * wait for those, then one more task for the handlers the popstate started.
+ */
+let traversals: Promise<void>[] = []
+const realHistory = { back: window.history.back, forward: window.history.forward, go: window.history.go }
+beforeAll(() => {
+  for (const name of ['back', 'forward', 'go'] as const) {
+    const real = realHistory[name].bind(window.history) as (delta?: number) => void
+    window.history[name] = ((delta?: number) => {
+      traversals.push(
+        new Promise<void>((resolve) => {
+          const done = () => { window.removeEventListener('popstate', done); resolve() }
+          window.addEventListener('popstate', done)
+          setTimeout(done, 500)
+        }),
+      )
+      real(delta)
+    }) as never
+  }
+})
+afterAll(() => Object.assign(window.history, realHistory))
+async function idle() {
+  // handlers may start further traversals, so look again until none is waiting
+  while (traversals.length) {
+    const waiting = traversals
+    traversals = []
+    await Promise.all(waiting)
+  }
+  await new Promise((r) => setTimeout(r, 0))
+}
 async function back() {
   await act(async () => {
     window.history.back()
-    await new Promise((r) => setTimeout(r, 20))
+    await idle()
   })
 }
-const settle = () => act(async () => { await new Promise((r) => setTimeout(r, 20)) })
+const settle = () => act(async () => { await idle() })
 
 beforeEach(() => {
   window.history.replaceState({ page: 'a' }, '', '/a')
