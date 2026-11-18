@@ -1,6 +1,6 @@
 # Quit tools, copied from the best: one phase per tool
 
-Written 2026-11-18 (Opus, planning session). Status: **plan written; not started.**
+Written 2026-11-18 (Opus, planning session). Status: **running (started 2026-11-18). Phase 0 building; Phases 1–2 Step A researching. B1 still blocked: Vercel CLI logged out on 2026-11-18, owner item 1 open.**
 
 ## Why this plan exists
 
@@ -24,11 +24,15 @@ nicotine content, the validator, privacy and coaching pages, the audit fixes) is
 
 ## What "copy" means here (the line we hold)
 
-- **Copied 1:1:** what each screen does, the order of screens, every control, every state, how many taps, what is
-  asked, what is shown after, timings, sounds and vibration, what is saved. Ideas, methods and flows are free to
-  copy.
-- **Not copied:** their words, art, icons, photos, audio and brand. Our copy says the same things in our words, in
-  our styling (the app's dark theme and components). Words, art and recordings are protected; several of their
+- **Copied 1:1, fully working:** what each screen does, the order of screens, every control, every state, how many
+  taps, what is asked, what is shown after, timings, what is saved, and **every feature's behaviour**: a breathing
+  circle breathes at the same pace, a game is playable, a ring fills, a counter ticks, a sound plays at the same
+  moment, the phone vibrates where theirs does. Owner, 2026-11-18: "you must copy the features too, so i can see if
+  theyre cool … you cannot then excuse yourself". A static picture, a "coming soon" or a text description in place
+  of a working feature is a failed copy.
+- **Redrawn, not lifted:** their exact words, drawings, icons, photos, sound files and brand. Our copy says the same
+  things in our words, draws the same animation in our styling (the app's dark theme and components), and makes its
+  own sounds (Web Audio tones) that play at the same moments. Words, art and recordings are protected; several of their
   terms of service also forbid copying content (census Table 2b).
 - **Only public material is used**: store screenshots and listings, product websites, help-centre articles and
   their images, public YouTube walkthroughs (frames), reviews, and the 660 funnel screenshots taken in the earlier
@@ -38,10 +42,18 @@ nicotine content, the validator, privacy and coaching pages, the audit fixes) is
   (`a`, `b`, `c` …); the id-to-product map lives only in `~/.cache/daygame-research/quit-copy/variants.json`. The
   owner's review page is private and may show their screenshots next to ours.
 
+## Owner answers (2026-11-18)
+
+- A few competitors per tool is fine (Q1 stands: up to 5). Copies must work, animations and games included.
+- Community feed, AI chat coach and blockers left out (Q2). No paid apps bought now.
+- He runs the one prompt below in a new chat.
+
 ## Owner-only items (asked once, in the message that hands over this plan)
 
 1. **The Vercel account that owns the live site.** The login approved on 2026-11-18 (`reachjvc-1930`) sees only an
-   old project `v0-ai-daygame-coach`; `daygame-coach.vercel.app` is under another account. Needed to read the live
+   old project `v0-ai-daygame-coach`; `daygame-coach.vercel.app` is under another account. A second device login was
+   started for the other account (CLI in the planning session's scratchpad); if it was approved, Phase 0 finds the
+   CLI logged in (`vercel whoami`), else Phase 0 starts a new device login and posts its link in chat once. Needed to read the live
    crash (see B1) so he can try every variant on his phone.
 2. **The privacy contact email** (still open from `quit-tool.md`): needed only when a tool goes public.
 3. **Optional:** buying one or two paid apps to screen-record. Not needed; public material covers every tool here.
@@ -65,6 +77,27 @@ nicotine content, the validator, privacy and coaching pages, the audit fixes) is
 | Q4 Copies need an account? | No. Every copy keeps its data in the browser (`quit-lab-v1`), even where the original needs an account | Build accounts | Faster; the improved version decides accounts later |
 | Q5 Addiction of the improved version | Built from the addiction data files (`src/quit/data/<id>.json`), filled for nicotine; other addictions render where their content exists and say "content coming" where it doesn't | One version per addiction now | Content for weed/porn/alcohol is `quit-tool.md` Phase 10 |
 | Q6 Where variants live | `/quit/lab/<tool>/<variant>` (public address, hidden: `?preview=1` like nicotine, `noindex`) so he can open them on his phone | Under `/test` (404 in production) | He couldn't try them |
+
+## Phase briefs (written by the planning session before each phase starts)
+
+### Phase 0 brief (2026-11-18)
+
+- B1: blocked (Vercel CLI logged out; owner item 1). Skipped; the rest of Phase 0 continues.
+- Build (Sonnet, worktree): `app/quit/lab/page.tsx` (index), `app/quit/lab/[tool]/[variant]/page.tsx`,
+  `src/quit/lab/registry.ts`, `src/quit/lab/store.ts`, `src/quit/lab/LabFrame.tsx`. Static `lab` beats the
+  `[addiction]` segment. Without `?preview=1` every lab page calls `notFound()` (local and production alike);
+  `export const metadata = { robots: { index: false, follow: false } }` on both pages. Registry shape:
+  `LAB: Record<LabToolId, { name: string; variants: Record<string, { Component; addiction: string; label: string;
+  kind: "copy" | "best" | "current" }> }>`, with `LabToolId` = `sos | progress | timeline | quitdate | beliefs |
+  checkin | diary | lessons | cost | past | ifthen | accountability | library`. Variant `current` wraps the wave-1
+  component with nicotine data: sos→sos, timeline→symptoms, beliefs→beliefs, diary→slip, cost→cost, past→past,
+  library→how. One variant `dummy` under `sos` (a single screen "Lab works") proves the frame.
+  Store: `quit-lab-v1` in localStorage, namespaced `<tool>/<variant>/<key>`, same try/catch rules as `src/quit/store.ts`.
+- Tests: unit test that every registry entry has a component and label; e2e that `/quit/lab?preview=1` lists every
+  tool and variant, each opens without console errors at 390×844, and `/quit/lab` without preview is 404.
+- Research kit (Sonnet, with Phase 1 Step A): `~/.cache/daygame-research/quit-copy/` with `variants.json`
+  (`{tool: {letter: {product, addiction, platform}}}`), `kit/` (store-shot fetch reusing census `gp.py`/`iap.py`,
+  `frames.sh` = yt-dlp + ffmpeg scene-change frames), `spec-template.md`.
 
 ---
 
@@ -113,7 +146,9 @@ must have its shot; nothing invented without `inferred`; enough detail that a bu
 with exact gaps (at most two rounds).
 
 **Step C — copies (Sonnet, worktree).** One variant per spec at `/quit/lab/<tool>/<letter>`, in
-`src/quit/lab/<tool>/<letter>/`: screen for screen, control for control, same order, same states, same taps; the
+`src/quit/lab/<tool>/<letter>/`: screen for screen, control for control, same order, same states, same taps; every
+moving or interactive feature working as in the original (animation pace, game rules, sound and vibration moments),
+built with CSS/SVG/canvas and Web Audio — never a still or a description in its place; the
 original's addiction; our tokens and components; our words (each line rewritten from the spec's summary, never
 from a screenshot); data in `quit-lab-v1`; numbers it shows: only where our data file has a checked figure for the
 same thing, else the copy shows the same element with a visible "number not sourced yet" placeholder (we never
@@ -128,7 +163,8 @@ is written by Sonnet and every new number or claim is fact-checked by an Opus su
 
 **Step E — checks (Haiku).** Screenshot every screen of every variant at 390×844, dark, into
 `~/.cache/daygame-research/quit-copy/<tool>/shots-ours/<letter>/`; tick each spec screen as present or missing;
-check no horizontal scroll; grep the diff for any product name in `variants.json`. Missing screens go back to Step C.
+check no horizontal scroll; for each animated or interactive feature in the spec, a short screen recording (Playwright
+video) proves it moves or plays as specified; grep the diff for any product name in `variants.json`. Missing screens go back to Step C.
 
 **Step F — merge.** Opus reads the diff and the checks; vitest, typecheck ratchet, e2e for the tool on phone and
 desktop; fast-forward `main`, push, update this file's status line.
