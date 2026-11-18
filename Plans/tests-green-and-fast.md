@@ -20,12 +20,12 @@ by phase. The execution prompt is at the end.
 
 ## Facts measured 2026-11-18
 
-| What | Now | Target |
-|---|---|---|
+| What | Now | Target | Now (after) |
+|---|---|---|---|
 | `npm ci` in every CI job | fails: onnxruntime GPU download 404 | passes |
-| Pre-commit on this PC | the whole unit suite (613 files; 216 s in CI); this PC 2026-11-18: 53 s wall (613 files, 0 failed) | ≤ 30 s for a typical commit |
+| Pre-commit on this PC | the whole unit suite (613 files; 216 s in CI); this PC 2026-11-18: 53 s wall (613 files, 0 failed) | ≤ 30 s for a typical commit | related tests only: 1.8–28.4 s for one `src/` file, 0.3 s for a doc; full suite (config files) 34.5 s |
 | CI `checks` job, wall | 454 s (unit 217 s, DB 93 s, typecheck 62 s, lint 29 s) | ≤ 240 s |
-| Unit suite | 216 s: import 123 s, jsdom environment 128 s (baseline 97 s) | ≤ 100 s total CPU-wall in CI |
+| Unit suite | 216 s: import 123 s, jsdom environment 128 s (baseline 97 s) | ≤ 100 s total CPU-wall in CI | two shards in parallel: 47 s + 65 s, then 39 s + 40 s (CI 44394669123) |
 | E2E on a main push, wall | 18–21 min (red phone shard 1/2: 1,152 s) | ≤ 6 min green; a red run stops ≤ 10 min |
 | E2E per green shard | 330–560 s (backend 28 s, build+start ~77 s, browsers 16–62 s) | ≤ 300 s |
 | Nightly Android lane | 136 tests, 1 worker, killed at its 45 min limit | ≤ 15 min |
@@ -71,7 +71,8 @@ How it ran: each group in its own worktree, specs checked locally one at a time 
 | F9 | Product bug, fixed | On a phone, Log Out from the You tab landed on `/` or `/auth/login` by a race: the `signOut` server action re-rendered the page without a session, and the proxy sent it to sign-in before Log Out's own move to `/`. Sign-out is now a POST to `app/api/auth/sign-out/route.ts`; `audit-ping.spec.ts:287` is strict `/` again. |
 | F10 | Outdated test, fixed | The offline-before-Log-Out test skips by viewport (< 640 px, no header Log Out), so Android skips it too. |
 | F11 | Flaky test, fixed | `audit-sheet-fit.spec.ts:103` read the stretch card's heading once while the sheet slid in (0.2 s); it now polls. Passed and failed on the same code (E2E 44354834713 green, 44342184859 red). |
-| F12 | Same cause as F0, open | CI `image-staging` (main only), step "Build, prove and publish the staging image": `npm ci` inside the Docker build downloads the onnxruntime GPU archive (404); the workflow env does not reach `docker build` (CI 44355863885, 44354834509). |
+| F12 | Same cause as F0, fixed | CI `image-staging` (main only): `npm ci` inside the Docker build downloaded the onnxruntime GPU archive (404); the workflow env does not reach `docker build`. `infra/Dockerfile` now sets `ONNXRUNTIME_NODE_INSTALL_CUDA=skip` on that `npm ci` (a62a1295); CI 44368770269 re-run: `image-staging: success`. |
+| F13 | Another session's break, fixed | Main CI red from 19:29 (CI 44383715199): `runtimeEnv.test.ts` found `NEXT_RUNTIME` read in `instrumentation.ts` (e3e334f6, 03dcb915, b7539500, error-reporting work) but not listed in `scripts/check-runtime-env.mjs`. Listed as `platform` (32f5f28e). |
 
 Open, for the owner: the phone week strip's day buttons are 40 px wide (49 px tall); seven days and two
 44 px arrows do not fit 390 px otherwise. The tap-size test allows ≥ 38 px wide there.
@@ -237,6 +238,8 @@ tests that passed on retry, and the flaky ones listed; CI green on the same comm
 
 Accept: CI unit step ≤ 100 s, or Q3's second shard added and each shard ≤ 70 s. A typical
 `src/` commit's pre-commit takes ≤ 30 s on this PC. Quote all numbers.
+
+**Status:** done 2026-11-18 (third worker; the first failed twice: 162 s in one job, then 94 s per shard). CI 44394669123 on 73de11b7, `Unit tests` step: attempt 1 `checks` (shard 1/2) 47 s (`Duration 45.85s`), `unit-2` (shard 2/2) 65 s (`Duration 63.82s`); attempt 2 39 s / 40 s. Before: 216–217 s in one job. Kept: three vitest projects (`node` and `dom` share their worker, only `vi.mock`/`vi.doMock`/`vi.resetModules` files stay isolated, 253 → 115), `tests/setup.ts` restores clocks, stubs, spies and replaced globals after each file, an even-shards sequencer, four flaky unit tests made deterministic. Dropped: `pool: 'threads'`, `deps.optimizer`, `--maxWorkers=4` (no gain). Pre-commit (`time sh .husky/pre-commit`, load `ok`): leaf `src/audit/pingService.ts` 1 test 1.8 s; `auditService.ts` 68 tests 13.3 s; `usePushDevice.ts` 80 tests 18.7 s; `src/shared/dateUtils.ts` (most imported) 257 tests 28.4 s; doc 0.3 s; `vitest.config.ts` full suite 34.5 s. Related tests come from `scripts/related-tests.mjs` (static import lookup, 0.3 s) instead of `vitest related` (~20 s overhead). Note: `docs/testing/durations.json` row `checks › Unit tests` now times shard 1 only (Phase 4 renames it).
 
 ## Phase 4 — CI jobs side by side · S · sonnet
 
