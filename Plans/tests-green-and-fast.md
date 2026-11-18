@@ -47,10 +47,9 @@ Start SHA: 9813183b (main, 2026-11-18).
 | F5 | 2: phone 2/2 and desktop 3/4 (run 44284506582), still red | password-reset "resend confirmation" @phone | `tests/e2e/password-reset.spec.ts:123`; seen 11-14, check if still red |
 | F6 | 2, Database tests job of CI 44284506640 | `auditAnswersFromManyDevices` "keeps a newer answer from another device when an older offline one arrives": expected 3 rows, got 4; `auditPings` "'mute' mutes for one hour": `expected 2763890 to be greater than or equal to 3540000` | the first one is a data-loss shape: treat as a product bug until proven otherwise; the second looks like a clock margin |
 | F7 | 1, nightly (not run in Phase 1) | duration ratchet: suites with no green run | clears when F0–F6 are fixed; baselines must then be met (unit 97 s × 1.3 = 126 s) |
+| F8 | 1, desktop 4/4 and phone 2/2 (run 44284506582) | `timetrack-sync.spec.ts:100` "the product route is dressed as part of this app, not as a lab page @phone": `header:visible` link `Dashboard` not found in 5 s | Navigation rebuilt (option E, 2026-11-10): check whether the product-route header changed on purpose; update the test or restore the link |
 
 New failures may appear once F0 is fixed, because nothing has run since 11-17. Add them as F8, F9 and so on.
-
-| F8 | 1, desktop 4/4 and phone 2/2 (run 44284506582) | `timetrack-sync.spec.ts:100` "the product route is dressed as part of this app, not as a lab page @phone": `header:visible` link `Dashboard` not found in 5 s | Navigation rebuilt (option E, 2026-11-10): check whether the product-route header changed on purpose; update the test or restore the link |
 
 Runs after Phase 1: CI 44284506640, E2E 44284506582 (sha b70788dd). Install passed in both.
 
