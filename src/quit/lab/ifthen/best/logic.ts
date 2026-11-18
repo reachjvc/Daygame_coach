@@ -149,13 +149,18 @@ export interface Situation {
 }
 
 /**
- * His top two endings from the past-tries tool, as situations. Accepts strings or `{id,label|text}`;
+ * His top two endings from the past-tries tool, as situations. Accepts `{addiction, items}` (items used only for the same addiction) or a bare array of strings or `{id,label|text}`;
  * an entry matching a list moment (by id or words) becomes that moment, else his own situation. Anything else gives [].
  */
-export function handoffSituations(raw: unknown, moments: { id: string; label: string }[]): Situation[] {
-  if (!Array.isArray(raw)) return []
+export function handoffSituations(raw: unknown, moments: { id: string; label: string }[], addiction: string): Situation[] {
+  let list: unknown = raw
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    const o = raw as Record<string, unknown>
+    list = o.addiction === addiction ? o.items : null
+  }
+  if (!Array.isArray(list)) return []
   const out: Situation[] = []
-  for (const x of raw) {
+  for (const x of list) {
     let id = ""
     let label = ""
     if (typeof x === "string") {

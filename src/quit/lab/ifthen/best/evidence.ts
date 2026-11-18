@@ -52,7 +52,7 @@ export const EVIDENCE = {
   /** Step 1: do if-then plans help people quit. */
   quitting: {
     id: "quitting",
-    text: "Across 12 studies of people trying to quit smoking, those who made if-then plans quit more often: about 11 in 100 against 5 in 100 without one.",
+    text: "Across 12 studies of people trying to quit smoking, people asked to make if-then plans quit more often: about 11 in 100 against 5 in 100 without one.",
     basis: {
       who: "People trying to quit smoking, in 12 studies",
       n: "12 studies; the abstract does not give the number of people",
@@ -78,11 +78,11 @@ export const EVIDENCE = {
   /** Step 2: list format against free wording, alcohol. */
   format: {
     id: "format",
-    text: "In a review of 16 alcohol studies, plans made by picking a response from a list cut weekly drinking more than plans in the usual if-then wording (-0.34 against -0.07). The plans had no effect on heavy drinking episodes.",
+    text: "In a review of 16 alcohol studies, plans made by picking a response from a list cut weekly drinking by a small amount. Plans in the usual if-then wording made no clear difference. If-then plans did not reduce heavy drinking sessions.",
     basis: {
       who: "Community and university samples in studies of drinking",
       n: "16 studies; the abstract does not give the number of people",
-      design: "Systematic review and meta-analysis. The numbers are differences in weekly drinking between groups with and without plans (lower is less drinking); the list format result has a wide margin (-0.60 to -0.07). Effects got smaller over time.",
+      design: "Systematic review and meta-analysis. The list result is a small effect with a wide margin (from almost none to medium). The two formats were compared across studies, not inside one trial. Effects got smaller over time.",
       when: "Published 2023, searched to March 2021",
     },
     studiedIn: "drinkers",
@@ -91,7 +91,7 @@ export const EVIDENCE = {
   /** Plan screen: paper against online. */
   paper: {
     id: "paper",
-    text: "In the same review, plans filled in on paper cut weekly drinking more than plans filled in online (-0.26 against -0.04).",
+    text: "In the same review, plans filled in on paper cut weekly drinking by a small amount. Plans filled in online made no clear difference.",
     basis: {
       who: "Community and university samples in studies of drinking",
       n: "16 studies; the abstract does not give the number of people",
@@ -104,7 +104,7 @@ export const EVIDENCE = {
   /** Under a typed "then" that names something he will not do. */
   negation: {
     id: "negation",
-    text: "In studies of eating habits, plans of the form \"if this, then not that\" made the habit stronger than plans that named something to do instead.",
+    text: "In studies of eating habits, plans of the form \"if this, then not that\" backfired. They made the habit stronger than having no plan, or a plan that named something to do instead.",
     basis: {
       who: "Not stated in the abstract; the paper is about unhealthy eating habits, not drugs",
       n: "Not stated in the abstract",

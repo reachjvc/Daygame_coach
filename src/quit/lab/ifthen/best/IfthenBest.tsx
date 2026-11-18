@@ -85,7 +85,7 @@ function Flow({ id, data }: { id: QuitAddictionId; data: QuitAddiction | null })
   const [idx, setIdx] = useState(0)
 
   const effStep: Step = step ?? (mine.length > 0 ? "plan" : "pick")
-  const fromHandoff = mine.length === 0 ? handoffSituations(handoff, moments ?? []) : []
+  const fromHandoff = mine.length === 0 ? handoffSituations(handoff, moments ?? [], id) : []
   const picked: Situation[] = sel ?? (mine.length > 0 ? [] : fromHandoff)
   const key = (s: Situation) => s.label.trim().toLowerCase()
   const choiceFor = (s: Situation): Choice => {

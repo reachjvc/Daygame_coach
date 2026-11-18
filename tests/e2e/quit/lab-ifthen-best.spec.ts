@@ -165,7 +165,7 @@ test("two moments, a listed then and a typed then, the nudge, the plan, check-in
 
 test("the plan is stored at ifthen/best/pairs and a past-tries handoff pre-ticks two moments", async ({ page }) => {
   await page.addInitScript(() => {
-    localStorage.setItem("quit-lab-v1", JSON.stringify({ "past/best/handoff-endings": ["stress", "late-night", "bored"] }))
+    localStorage.setItem("quit-lab-v1", JSON.stringify({ "past/best/handoff-endings": { addiction: "nicotine", items: [{ id: "stress", label: "Stress" }, { id: "late-night", label: "Late at night, alone" }, { id: "bored", label: "Bored" }] } }))
   })
   await open(page)
   await expect(page.getByTestId("prefilled")).toBeVisible()

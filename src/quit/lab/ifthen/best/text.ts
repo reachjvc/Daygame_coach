@@ -18,7 +18,7 @@ export const bestText = {
   exampleClear: "Clear example",
 
   pickTitle: "Where does it pull hardest?",
-  pickLine: "Tick the moments you want a plan for. Two or three is a good start.",
+  pickLine: "Tick the moments you want a plan for. Start with the ones that pull hardest.",
   prefilled: "Two are ticked from your past tries. Change them if they are wrong.",
   customLabel: "Something else",
   customPlaceholder: "A moment in your own words",

@@ -87,16 +87,31 @@ describe("check-in due logic", () => {
 describe("handoff from past tries", () => {
   const moments = [{ id: "stress", label: "When I’m stressed" }]
   it("handles empty or odd values", () => {
-    expect(handoffSituations([], moments)).toEqual([])
-    expect(handoffSituations(undefined, moments)).toEqual([])
-    expect(handoffSituations([5, null], moments)).toEqual([])
+    expect(handoffSituations([], moments, "nicotine")).toEqual([])
+    expect(handoffSituations(undefined, moments, "nicotine")).toEqual([])
+    expect(handoffSituations([5, null], moments, "nicotine")).toEqual([])
   })
   it("matches list moments by id or words, keeps the rest as his own, takes two", () => {
-    const got = handoffSituations(["stress", { label: "A night out" }, "third"], moments)
+    const got = handoffSituations(["stress", { label: "A night out" }, "third"], moments, "nicotine")
     expect(got).toEqual([
       { label: "When I’m stressed", custom: false },
       { label: "A night out", custom: true },
     ])
+  })
+})
+
+describe("handoff object form", () => {
+  const moments = [{ id: "stress", label: "When I’m stressed" }]
+  const obj = { addiction: "nicotine", items: [{ id: "stress", label: "Stress" }, { id: "empty-evening", label: "An empty evening" }, { id: "x", label: "Third" }] }
+  it("uses items for the same addiction, top two", () => {
+    expect(handoffSituations(obj, moments, "nicotine")).toEqual([
+      { label: "When I’m stressed", custom: false },
+      { label: "An empty evening", custom: true },
+    ])
+  })
+  it("ignores items of another addiction", () => {
+    expect(handoffSituations(obj, moments, "alcohol")).toEqual([])
+    expect(handoffSituations({ addiction: "nicotine" }, moments, "nicotine")).toEqual([])
   })
 })
 
