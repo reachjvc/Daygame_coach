@@ -591,6 +591,13 @@ test.describe('Toggl-style time tracker', () => {
     await expect(page).toHaveURL(/\?view=calendar$/)
     await expect(current()).toHaveText('Calendar')
 
+    // the block stays selected under the sheet, and has its own step: Back deselects it (b61a4736)
+    const panel = page.getByRole('region', { name: 'Selected time entry' })
+    await expect(panel).toBeVisible()
+    await page.goBack()
+    await expect(panel).toBeHidden()
+    await expect(current()).toHaveText('Calendar')
+
     await page.goBack()
     await expect(current()).toHaveText('Timer')
     await expect(page).toHaveURL(new RegExp(`${TRACKER}$`))
@@ -744,7 +751,8 @@ async function tapTomorrow(page: Page) {
 async function openPhoneCalendar(page: Page) {
   // dispatchEvent: under `next dev` the dev-tools badge sits over a corner of the bar
   await page.getByRole('navigation', { name: 'Sections' }).getByRole('button', { name: 'Calendar' }).dispatchEvent('click')
-  await expect(page.locator('main').getByRole('button', { name: 'Day', exact: true })).toHaveAttribute('data-active', 'true')
+  // the phone's calendar is one day with the week strip above it; there is no Day | Week switch (Plans/toggl-parity.md Phase 4)
+  await expect(page.locator('main [data-day-header]')).toBeVisible()
 }
 
 /**

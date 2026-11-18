@@ -180,6 +180,24 @@ export async function expectRunningName(page: Page, description: string): Promis
 }
 
 /**
+ * Tap Stop until the timer has stopped, and answer when the tap that did it was made.
+ * A tap on the phone's bar right after it changed is ignored on purpose (RunBar
+ * TAP_SETTLE_MS), so, as a person would, tap again.
+ */
+export async function tapStop(page: Page): Promise<number> {
+  let pressedAt = 0
+  await expect(async () => {
+    const stop = timerButton(page, 'Stop timer')
+    if (await stop.isVisible()) {
+      pressedAt = await page.evaluate(() => Date.now())
+      await stop.click()
+    }
+    await expect(timerButton(page, 'Start timer')).toBeVisible({ timeout: 3_000 })
+  }).toPass({ timeout: 20_000 })
+  return pressedAt
+}
+
+/**
  * Track one short entry through the timer bar.
  *
  * It runs until the clock in the tab title has ticked past 0:00:00, so the

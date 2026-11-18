@@ -29,6 +29,7 @@ import {
   reopenFromAccount,
   deleteEntry,
   savedToAccount,
+  tapStop,
   startNamed,
   timerButton,
   trackEntry,
@@ -431,9 +432,7 @@ test.describe('the owner\'s overlap: started on the PC, stopped on the phone', (
       await expect(stop, 'the phone never showed the timer the PC started').toBeVisible({ timeout: 20_000 })
       await expectRunningName(phone, 'Gym')
 
-      const pressedAt = await phone.evaluate(() => Date.now())
-      await stop.click()
-      await expect(timerButton(phone, 'Start timer')).toBeVisible()
+      const pressedAt = await tapStop(phone)
       await savedToAccount(phone)
 
       // the PC, looked at again, shows it stopped within seconds, at the phone's time
@@ -571,8 +570,7 @@ test.describe('the owner\'s overlap, with no signal and with a PC that has not c
       await expect(stopButton(phone)).toBeVisible()
 
       // after the gym: Stop on the phone, then Shower
-      await stopButton(phone).click()
-      await expect(startButton(phone)).toBeVisible()
+      await tapStop(phone)
       await startNamed(phone, 'Shower')
       await expect(stopButton(phone)).toBeVisible()
       await savedToAccount(phone)
