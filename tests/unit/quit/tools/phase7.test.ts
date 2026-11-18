@@ -109,3 +109,10 @@ describe("count route", () => {
     expect((await post({ "content-type": "application/json", origin: "https://evil.example" })).status).toBe(403)
   })
 })
+
+describe("parseAmount never returns minus zero", () => {
+  it("-0 is 0", async () => {
+    const { parseAmount } = await import("@/src/quit/tools/cost/logic")
+    expect(Object.is(parseAmount("-0", 0, 100), 0)).toBe(true)
+  })
+})

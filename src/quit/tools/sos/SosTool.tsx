@@ -44,13 +44,23 @@ interface InnerProps {
   tape: string[]
 }
 
-function Inner({ addiction, beliefs, needs, tape }: InnerProps) {
+function Inner(props: InnerProps) {
+  const signedIn = useSignedIn(true)
+  const [bb, setBb] = useState<QuitBlackBoxApi | null>(null)
+  const onApi = useCallback((api: QuitBlackBoxApi | null) => setBb(api), [])
+  // The Black Box bridge sits at one fixed place, so moving between screens never remounts it.
+  return (
+    <>
+      {signedIn ? <BlackBoxBridge viceId={props.addiction} onApi={onApi} /> : null}
+      <Screens {...props} signedIn={signedIn} bb={bb} />
+    </>
+  )
+}
+
+function Screens({ addiction, beliefs, needs, tape, signedIn, bb }: InnerProps & { signedIn: boolean | null; bb: QuitBlackBoxApi | null }) {
   const store = useQuitStore()
   const carry = useCarry()
   const { state, update, clear } = useToolState<SosState>(addiction, "sos", EMPTY_SOS, parseSos)
-  const signedIn = useSignedIn(true)
-  const [bb, setBb] = useState<QuitBlackBoxApi | null>(null)
-  const onApi = useCallback((api: QuitBlackBoxApi) => setBb(api), [])
   const [undone, setUndone] = useState(false)
   const [refused, setRefused] = useState(false)
   // The close call waiting for the sign-in answer; filed once, the moment it says signed in.
@@ -63,7 +73,6 @@ function Inner({ addiction, beliefs, needs, tape }: InnerProps) {
   const started = useStartCount(addiction, "sos")
   useDoneCount(addiction, "sos", state !== null && isResult)
 
-  const bridge = signedIn ? <BlackBoxBridge viceId={addiction} onApi={onApi} /> : null
   // Yes never waits: the answer shows at once and the filing follows when the Black Box is ready.
   const bbLoading = signedIn === null || (signedIn && !(bb && bb.ready))
 
@@ -74,12 +83,17 @@ function Inner({ addiction, beliefs, needs, tape }: InnerProps) {
       return
     }
     if (signedIn !== true || !bb || !bb.ready) return
+    // Only an answer that is still "yes" is filed: a Back and a No, or Clear, cancel it.
+    if (parseSos(store.get(addiction, "sos")).passed !== true) {
+      setWant(null)
+      return
+    }
     setWant(null)
     if (!bb.run) return
     const id = bb.fileCloseCall(want)
     setRefused(id === null)
     update((s) => ({ ...s, reportId: id }))
-  }, [want, signedIn, bb, update])
+  }, [want, signedIn, bb, update, store, addiction])
 
   useEffect(() => {
     if (screen !== 4) answered.current = false
@@ -102,7 +116,6 @@ function Inner({ addiction, beliefs, needs, tape }: InnerProps) {
     ]
     return (
       <>
-        {bridge}
         <OneQuestion step={1} total={4} onBack={null}>
           <p className="font-medium">{t.sos.voiceQuestion}</p>
           <Chips
@@ -126,7 +139,6 @@ function Inner({ addiction, beliefs, needs, tape }: InnerProps) {
   if (screen === 2) {
     return (
       <>
-        {bridge}
         <OneQuestion step={2} total={4} onBack={back}>
           <p className="font-medium">{t.sos.wantQuestion}</p>
           <Chips
@@ -148,7 +160,6 @@ function Inner({ addiction, beliefs, needs, tape }: InnerProps) {
     const swap = currentSwap(need, rated, state.swapIdx)
     return (
       <>
-        {bridge}
         <OneQuestion step={3} total={4} onBack={back}>
           {belief && (
             <section data-testid="sos-counterpart">
@@ -210,8 +221,9 @@ function Inner({ addiction, beliefs, needs, tape }: InnerProps) {
     const answer = (passed: boolean) => {
       if (answered.current) return
       answered.current = true
+      setWant(null)
       // A close call already filed on this run and not taken back is not filed twice.
-      if (passed && state.reportId === null) {
+      if (passed && !(state.reportId !== null && bb?.has(state.reportId))) {
         setWant({
           at: nowInBrowser(),
           thought: belief ? (usable<string>(belief.short) ?? "") : "",
@@ -225,7 +237,6 @@ function Inner({ addiction, beliefs, needs, tape }: InnerProps) {
     }
     return (
       <>
-        {bridge}
         <OneQuestion step={4} total={4} onBack={back}>
           <p className="text-xl font-semibold">{t.sos.toQuestion}</p>
           <PrimaryButton testId="sos-yes" onClick={() => answer(true)}>
@@ -248,7 +259,6 @@ function Inner({ addiction, beliefs, needs, tape }: InnerProps) {
   const filed = state.reportId !== null && !undone
   return (
     <div data-testid="result" className="flex flex-col gap-4">
-      {bridge}
       {state.passed ? (
         <>
           {filed && (
@@ -298,6 +308,7 @@ function Inner({ addiction, beliefs, needs, tape }: InnerProps) {
       </Link>
       <ClearAnswers
         onClear={() => {
+          setWant(null)
           clear()
           reset()
           setUndone(false)

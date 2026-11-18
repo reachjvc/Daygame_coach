@@ -57,7 +57,8 @@ export function parseAmount(raw: string, min: number, max: number): number | nul
   if (!/^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(s)) return null
   const n = Number(s)
   if (!Number.isFinite(n) || n < min || n > max) return null
-  return round2(n)
+  const r = round2(n)
+  return r === 0 ? 0 : r // never -0
 }
 
 /** True when something is typed but it is not a usable number in range (so the field says why). */

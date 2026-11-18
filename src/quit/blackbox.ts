@@ -61,6 +61,8 @@ export interface QuitBlackBoxApi {
    * `saved` once it has it, `local` when it could not be sent (signed out meanwhile, no network).
    */
   status: (reportId: string) => "saving" | "saved" | "local"
+  /** True when the record still holds a living report with this id against the current living run. */
+  has: (reportId: string) => boolean
   /** Takes a report back out; false when refused. */
   undo: (reportId: string) => boolean
 }
@@ -125,6 +127,11 @@ export function useQuitBlackBox(viceId: string): QuitBlackBoxApi {
     [update],
   )
 
+  const has = useCallback(
+    (reportId: string): boolean => run !== null && record.reports.some((r) => r.id === reportId && !r.deletedAt && r.attemptId === run.id),
+    [record, run],
+  )
+
   const status = useCallback(
     (reportId: string): "saving" | "saved" | "local" => {
       // The tool's copy of this api can be one render behind the filing: it does not know the report yet.
@@ -136,8 +143,8 @@ export function useQuitBlackBox(viceId: string): QuitBlackBoxApi {
   )
 
   return useMemo(
-    () => ({ ready, run, today, fileCloseCall, fileSlip, status, undo }),
-    [ready, run, today, fileCloseCall, fileSlip, status, undo],
+    () => ({ ready, run, today, fileCloseCall, fileSlip, status, has, undo }),
+    [ready, run, today, fileCloseCall, fileSlip, status, has, undo],
   )
 }
 

@@ -298,7 +298,7 @@ test.describe("quit wave 1 part 2, signed in with a living run @phone", () => {
     // the Black Box page itself holds the close call in its own record
     await page.goto("/plan/quit-vice")
     await page.locator('[data-hydrated="true"]').waitFor({ timeout: 20000 })
-    const local = await page.evaluate(() => JSON.parse(window.localStorage.getItem("vice-blackbox-v1") ?? "{}").reports.length as number)
+    const local = await page.evaluate(() => (JSON.parse(window.localStorage.getItem("vice-blackbox-v1") ?? "{}").reports as { deletedAt: string | null }[]).filter((r) => !r.deletedAt).length)
     expect(local).toBe(1)
 
     await page.goto(`${A}/sos`)

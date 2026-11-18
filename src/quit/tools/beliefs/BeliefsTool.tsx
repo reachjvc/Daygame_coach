@@ -1,7 +1,6 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { useSignedIn } from "../../blackbox"
 import { ROUTES } from "@/src/shared/routes"
 import Link from "next/link"
 import { ClearAnswers, CountedLine, OneQuestion, PrimaryButton, SourceTap, SourcesFold } from "../../components/kit"
@@ -270,23 +269,18 @@ function Result({ addiction, name, state, beliefs, bands, needs, onClear }: Resu
   )
 }
 
-const SIGN_UP = `/auth/sign-up?next=${ROUTES.plan}`
-
-/** The band's way on. The free plan link goes to sign-up for a signed-out reader, to the plan for a signed-in one. */
+/** The band's way on. The free plan link goes to /plan for everyone; the site sends a signed-out reader to log in first. */
 function BandLink({ link, carryTo }: { link: string; carryTo: (path: string) => string }) {
-  if (link === ROUTES.plan) return <FreePlanLink />
+  if (link === ROUTES.plan) {
+    return (
+      <Link href={ROUTES.plan} data-testid="band-free-link" className="mt-2 inline-flex min-h-11 items-center text-primary underline">
+        {t.beliefs.bandFreeLink}
+      </Link>
+    )
+  }
   return (
     <Link href={link.startsWith("/quit") ? carryTo(link) : link} className="mt-2 inline-flex min-h-11 items-center text-primary underline">
       {t.beliefs.bandLink}
-    </Link>
-  )
-}
-
-function FreePlanLink() {
-  const signedIn = useSignedIn()
-  return (
-    <Link href={signedIn === true ? ROUTES.plan : SIGN_UP} data-testid="band-free-link" className="mt-2 inline-flex min-h-11 items-center text-primary underline">
-      {t.beliefs.bandFreeLink}
     </Link>
   )
 }

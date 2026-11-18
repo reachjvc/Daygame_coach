@@ -71,6 +71,13 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
     await expect(page.getByTestId("year-cost")).toHaveText("$364,000")
   })
 
+  test("a box of text the browser cannot read as a number gets the range message too", async ({ page }) => {
+    await toPrice(page)
+    await page.getByTestId("cost-price").pressSequentially("12e")
+    await expect(page.getByTestId("cost-price-error")).toBeVisible()
+    await expect(page.getByTestId("cost-continue")).toBeDisabled()
+  })
+
   test("A15 Enter in the price field finishes cost", async ({ page }) => {
     await toPrice(page)
     await page.getByTestId("cost-price").fill("0.6")
@@ -131,7 +138,8 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
     await rateAll(page, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
     const link = page.getByTestId("band-free-link")
     await expect(link).toHaveText(t.beliefs.bandFreeLink)
-    await expect(link).toHaveAttribute("href", "/auth/sign-up?next=/plan")
+    // the site sends a signed-out reader to log in first, then on to the plan
+    await expect(link).toHaveAttribute("href", "/plan")
   })
 
   test("A12 two tabs on beliefs do not wipe each other's answers", async ({ browser }) => {

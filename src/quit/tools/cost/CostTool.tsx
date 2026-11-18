@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Chips, ClearAnswers, OneQuestion, PrimaryButton, SourcesFold, Stepper } from "../../components/kit"
 import { fill, tooltext as t } from "../../tooltext"
 import type { QuitCostSwap, QuitUnit, ToolProps } from "../../types"
@@ -31,6 +32,8 @@ export function CostTool({ addiction, data }: ToolProps) {
 
 function Inner({ addiction, units, swaps }: { addiction: string; units: QuitUnit[]; swaps: QuitCostSwap[] }) {
   const { state, update, clear } = useToolState<CostState>(addiction, "cost", EMPTY_COST, parseCost)
+  // A box holding text the browser cannot read as a number ("12e", "1,50") reports an empty value; it still needs the message.
+  const [badInput, setBadInput] = useState({ price: false, minutes: false })
   const hasMinutes = (u: QuitUnit | undefined) => u?.defaultMinutesPerUnit != null
   const unit = units.find((u) => u.id === state?.unit)
   const total = 3
@@ -134,8 +137,8 @@ function Inner({ addiction, units, swaps }: { addiction: string; units: QuitUnit
   const price = parseAmount(state.price, 0, MAX_PRICE)
   const minutes = hasMinutes(unit) ? parseAmount(state.minutes, 0, MAX_MINUTES) : null
   const valid = price !== null && (!hasMinutes(unit) || minutes !== null)
-  const priceBad = amountOutOfRange(state.price, 0, MAX_PRICE)
-  const minutesBad = hasMinutes(unit) && amountOutOfRange(state.minutes, 0, MAX_MINUTES)
+  const priceBad = badInput.price || amountOutOfRange(state.price, 0, MAX_PRICE)
+  const minutesBad = hasMinutes(unit) && (badInput.minutes || amountOutOfRange(state.minutes, 0, MAX_MINUTES))
   const finish = () => {
     if (!valid) return
     pass({
@@ -168,7 +171,11 @@ function Inner({ addiction, units, swaps }: { addiction: string; units: QuitUnit
           max={MAX_PRICE}
           step={0.01}
           value={state.price}
-          onChange={(e) => update((s) => ({ ...s, price: e.target.value }))}
+          onChange={(e) => {
+            const v = e.target.value
+            setBadInput((b) => ({ ...b, price: e.target.validity.badInput }))
+            update((s) => ({ ...s, price: v }))
+          }}
           onKeyDown={onEnter}
           aria-invalid={priceBad || undefined}
           aria-describedby={priceBad ? "cost-price-error" : undefined}
@@ -193,7 +200,11 @@ function Inner({ addiction, units, swaps }: { addiction: string; units: QuitUnit
               max={MAX_MINUTES}
               step={1}
               value={state.minutes}
-              onChange={(e) => update((s) => ({ ...s, minutes: e.target.value }))}
+              onChange={(e) => {
+                const v = e.target.value
+                setBadInput((b) => ({ ...b, minutes: e.target.validity.badInput }))
+                update((s) => ({ ...s, minutes: v }))
+              }}
               onKeyDown={onEnter}
               aria-invalid={minutesBad || undefined}
               aria-describedby={minutesBad ? "cost-minutes-error" : undefined}

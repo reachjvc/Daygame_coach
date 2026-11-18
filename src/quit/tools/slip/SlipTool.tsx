@@ -41,13 +41,23 @@ interface InnerProps {
   planSteps: QuitPlanStep[] | null
 }
 
-function Inner({ addiction, beliefs, endings, needs, planSteps }: InnerProps) {
+function Inner(props: InnerProps) {
+  const signedIn = useSignedIn()
+  const [bb, setBb] = useState<QuitBlackBoxApi | null>(null)
+  const onApi = useCallback((api: QuitBlackBoxApi | null) => setBb(api), [])
+  // The Black Box bridge sits at one fixed place, so moving between screens never remounts it.
+  return (
+    <>
+      {signedIn ? <BlackBoxBridge viceId={props.addiction} onApi={onApi} /> : null}
+      <Screens {...props} signedIn={signedIn} bb={bb} />
+    </>
+  )
+}
+
+function Screens({ addiction, beliefs, endings, needs, planSteps, signedIn, bb }: InnerProps & { signedIn: boolean | null; bb: QuitBlackBoxApi | null }) {
   const store = useQuitStore()
   const carry = useCarry()
   const { state, update, clear } = useToolState<SlipState>(addiction, "slip", EMPTY_SLIP, parseSlip)
-  const signedIn = useSignedIn()
-  const [bb, setBb] = useState<QuitBlackBoxApi | null>(null)
-  const onApi = useCallback((api: QuitBlackBoxApi) => setBb(api), [])
   const [undone, setUndone] = useState(false)
   const [refused, setRefused] = useState(false)
   const [datedToday, setDatedToday] = useState(false)
@@ -63,7 +73,6 @@ function Inner({ addiction, beliefs, endings, needs, planSteps }: InnerProps) {
     if (screen !== 3) filing.current = false
   }, [screen])
 
-  const bridge = signedIn ? <BlackBoxBridge viceId={addiction} onApi={onApi} /> : null
   // A signed-in visitor waits the moment it takes the Black Box to load before filing or undoing.
   const bbLoading = signedIn === null || (signedIn && !(bb && bb.ready))
   if (!state) return null
@@ -129,7 +138,7 @@ function Inner({ addiction, beliefs, endings, needs, planSteps }: InnerProps) {
       let failed = false
       let moved = false
       // A lapse already filed from this run and not taken back is not filed twice.
-      if (bb && bb.run && state.when && state.reportId === null) {
+      if (bb && bb.run && state.when && !(state.reportId !== null && bb.has(state.reportId))) {
         const today = localDate()
         moved = bb.run.startedOn === today && slipDay(state.when, today) < today
         const told = beliefs.find((b) => b.id === state.told)
@@ -143,11 +152,10 @@ function Inner({ addiction, beliefs, endings, needs, planSteps }: InnerProps) {
       setRefused(failed)
       setDatedToday(moved && !failed)
       setUndone(false)
-      pass(state.reportId !== null ? {} : { reportId })
+      pass(reportId === null && state.reportId !== null && bb?.has(state.reportId) ? {} : { reportId })
     }
     return (
       <>
-        {bridge}
         <OneQuestion step={3} total={3} onBack={back}>
           <p className="font-medium">{t.slip.toldQuestion}</p>
           <Chips
@@ -187,7 +195,6 @@ function Inner({ addiction, beliefs, endings, needs, planSteps }: InnerProps) {
 
   return (
     <div data-testid="result" className="flex flex-col gap-5">
-      {bridge}
       {filed && (
         <div data-testid="slip-saved" className="rounded-lg border border-primary p-4">
           <p data-testid="slip-saved-text" className="font-medium">

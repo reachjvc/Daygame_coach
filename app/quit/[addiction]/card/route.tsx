@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og"
 import type { NextRequest } from "next/server"
 import { getAddiction } from "@/src/quit/data"
-import { frame, isViewable } from "@/src/quit/menu"
+import { frame, isFlag, isViewable } from "@/src/quit/menu"
 import { parseHeld } from "@/src/quit/tools/beliefs/logic"
 import { usable } from "@/src/quit/tools/common"
 import { fill, tooltext } from "@/src/quit/tooltext"
@@ -10,7 +10,7 @@ import type { QuitBelief } from "@/src/quit/types"
 /** The share image of the lies test: the count only, nothing about the reader. */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ addiction: string }> }) {
   const { addiction } = await params
-  const preview = req.nextUrl.searchParams.get("preview") === "1"
+  const preview = isFlag(req.nextUrl.searchParams.getAll("preview"))
   if (!isViewable(addiction, preview)) return new Response(null, { status: 404 })
   const held = parseHeld(req.nextUrl.searchParams.get("held"))
   if (held === null) return new Response(null, { status: 400 })
