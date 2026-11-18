@@ -12,13 +12,15 @@
     { "workflow": "e2e.yml", "job": "desktop 3/4", "seconds": 265 },
     { "workflow": "e2e.yml", "job": "desktop 4/4", "seconds": 268 },
     { "workflow": "e2e.yml", "job": "timing 1/1", "seconds": 252 },
+    { "workflow": "e2e.yml", "job": "android 1/2", "seconds": 331 },
+    { "workflow": "e2e.yml", "job": "android 2/2", "seconds": 311 },
+    { "workflow": "e2e.yml", "job": "timing-android 1/1", "seconds": 272 },
     { "workflow": "e2e.yml", "job": "phone 1/2", "seconds": 331 },
     { "workflow": "e2e.yml", "job": "phone 2/2", "seconds": 311 },
     { "workflow": "e2e.yml", "job": "timing-phone 1/1", "seconds": 272 },
     { "workflow": "e2e.yml", "job": "sweep-phone 1/1", "seconds": 348 },
     { "workflow": "e2e.yml", "job": "firefox 1/1", "seconds": 277 },
     { "workflow": "e2e.yml", "job": "webkit 1/1", "seconds": 345 },
-    { "workflow": "e2e.yml", "job": "android 1/1", "seconds": 389 },
     { "workflow": "e2e.yml", "job": "sweep-webkit 1/1", "seconds": 381 }
   ]
 }

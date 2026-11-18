@@ -28,7 +28,7 @@ type Job = {
   environment?: string | { name: string }
   needs?: string | string[]
   concurrency?: unknown
-  steps?: Array<{ uses?: string; run?: string; with?: Record<string, unknown>; env?: Record<string, unknown> }>
+  steps?: Array<{ id?: string; if?: string; uses?: string; run?: string; with?: Record<string, unknown>; env?: Record<string, unknown> }>
 }
 type Workflow = {
   on: Record<string, unknown> | string | string[]
@@ -219,6 +219,14 @@ describe("the staging image job", () => {
     const build = steps.findIndex((st) => st.uses === "./.github/actions/publish-image")
     expect(wait).toBeGreaterThan(-1)
     expect(build).toBeGreaterThan(wait)
+  })
+
+  it("does not publish a commit whose browser run was superseded, and does not fail for it", () => {
+    const steps = job.steps ?? []
+    const wait = steps.find((st) => st.run === "node scripts/ci/await-workflow.mjs")!
+    const build = steps.find((st) => st.uses === "./.github/actions/publish-image")!
+    expect(wait.id, "the wait step needs an id so the build step can read its output").toBe("wait")
+    expect(String(build.if)).toContain("steps.wait.outputs.superseded != 'true'")
   })
 
   it("never creates the package itself: from this public repository it would come out public", () => {

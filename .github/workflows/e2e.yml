@@ -10,7 +10,8 @@ name: E2E Tests
 #   main and beta, and  split into shards that run side by side.
 #   pushes to them
 #   nightly, on demand  `nightly`: the other engines (Q5) — Firefox, desktop
-#                       Safari, Android, and the route sweep on Safari.
+#                       Safari, the iPhone (WebKit), and the route sweep on Safari.
+#                       The per-push phone is Android (Pixel 7, Chromium).
 #
 # Until 2026-10-13 a full pass was 1,169 browser tests, one at a time, on three
 # shared accounts in the live database: 3h45m, and red. Every test now signs in
@@ -51,10 +52,19 @@ env:
   ONNXRUNTIME_NODE_INSTALL_CUDA: skip
 
 # A newer push to the same branch stops the older run: its answer is about a
-# commit nobody is looking at. Never on main, whose runs ci.yml's staging job
-# waits for, and never the nightly run.
+# commit nobody is looking at. Never the nightly run.
+#
+# MAIN: all main push runs share ONE group and never cancel a RUNNING run
+# (`cancel-in-progress: false`). GitHub then keeps at most one running and one
+# pending run per group and cancels the older PENDING one when a newer main
+# push arrives (2026-11-18, B8: a dozen main pushes in an hour queued a dozen
+# eleven-job runs on the free runner pool). A run that has started always
+# finishes, so ci.yml's staging job still gets a verdict for any commit that
+# began; for a commit whose run was cancelled while pending because main moved
+# on, scripts/ci/await-workflow.mjs ends staging successfully without
+# publishing ("superseded"). Any other non-success still fails it.
 concurrency:
-  group: e2e-${{ github.event_name }}-${{ github.ref }}${{ github.ref == 'refs/heads/main' && format('-{0}', github.run_id) || '' }}
+  group: e2e-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: ${{ (github.event_name == 'push' || github.event_name == 'pull_request') && github.ref != 'refs/heads/main' }}
 
 jobs:
@@ -91,6 +101,30 @@ jobs:
           cache: 'npm'
 
       - run: npm ci
+
+      # Playwright's own browser download, kept between runs. Keyed on the
+      # Playwright version npm ci just installed (it is in package-lock.json)
+      # and the engine; `install` below skips the download when this hit.
+      - name: Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache the Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}-chromium
+
+      # The production build's cache (NEXT_DIST_DIR is .next-e2e, set in
+      # playwright.config.ts): a hit skips most of the ~90 s compile. A miss on
+      # this commit restores the newest one for the same lockfile.
+      - name: Cache the Next build
+        uses: actions/cache@v4
+        with:
+          path: .next-e2e/cache
+          key: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
@@ -138,9 +172,9 @@ jobs:
           - { lane: desktop, shard: 3/4, browser: chromium }
           - { lane: desktop, shard: 4/4, browser: chromium }
           - { lane: timing, shard: 1/1, browser: chromium }
-          - { lane: phone, shard: 1/2, browser: webkit }
-          - { lane: phone, shard: 2/2, browser: webkit }
-          - { lane: timing-phone, shard: 1/1, browser: webkit }
+          - { lane: android, shard: 1/2, browser: chromium }
+          - { lane: android, shard: 2/2, browser: chromium }
+          - { lane: timing-android, shard: 1/1, browser: chromium }
           - { lane: sweep-phone, shard: 1/1, browser: webkit }
     steps: &lane-steps
       # FIRST, BEFORE ANYTHING TOUCHES THE NETWORK. The test backend's ports
@@ -163,6 +197,30 @@ jobs:
           cache: 'npm'
 
       - run: npm ci
+
+      # Playwright's own browser download, kept between runs. Keyed on the
+      # Playwright version npm ci just installed (it is in package-lock.json)
+      # and the engine; `install` below skips the download when this hit.
+      - name: Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache the Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}-${{ matrix.browser }}
+
+      # The production build's cache (NEXT_DIST_DIR is .next-e2e, set in
+      # playwright.config.ts): a hit skips most of the ~90 s compile. A miss on
+      # this commit restores the newest one for the same lockfile.
+      - name: Cache the Next build
+        uses: actions/cache@v4
+        with:
+          path: .next-e2e/cache
+          key: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps ${{ matrix.browser }}
@@ -202,7 +260,9 @@ jobs:
         include:
           - { lane: firefox, shard: 1/1, browser: firefox }
           - { lane: webkit, shard: 1/1, browser: webkit }
-          - { lane: android, shard: 1/1, browser: chromium }
+          - { lane: phone, shard: 1/2, browser: webkit }
+          - { lane: phone, shard: 2/2, browser: webkit }
+          - { lane: timing-phone, shard: 1/1, browser: webkit }
           - { lane: sweep-webkit, shard: 1/1, browser: webkit }
     steps: *lane-steps
 

@@ -79,8 +79,8 @@ const LOCAL_HTTPS = /^https:\/\/(localhost|127\.0\.0\.1|[a-z0-9-]+\.localhost)(:
  * `mobile\/` selects a whole folder and `@engine` one test or, as a describe's
  * tag, one file. None of them may match a project's name.
  *
- *   @phone   also run on the phones: the iPhone on every pull request, Android
- *            nightly. Everything under mobile/ is a phone test already.
+ *   @phone   also run on the phones: Android (Pixel 7, Chromium) on every pull
+ *            request, the iPhone (WebKit, Safari's cookies) nightly. Everything under mobile/ is a phone test already.
  *   @engine  also run on the other desktop engines, nightly: Firefox and Safari.
  *            Layout, focus, timers and storage events — where engines differ.
  *            The rest is the same JavaScript everywhere and Chromium proves it.
@@ -108,8 +108,13 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   // One retry (Q6): a test that fails twice is red. Two hid flakes.
   retries: process.env.CI ? 1 : 0,
-  // Two, because each CI runner also hosts the test backend and the app.
-  workers: process.env.CI ? 2 : undefined,
+  // Three under CI for the Chromium lanes (desktop, android); the iPhone and
+  // engine lanes set their own below. Each CI runner also hosts the test
+  // backend and the app.
+  workers: process.env.CI ? 3 : undefined,
+  // A broken lane stops after 15 failures instead of retrying every test for
+  // 19 minutes (Plans/tests-green-and-fast.md, D3). Per shard, not per run.
+  maxFailures: process.env.CI ? 15 : undefined,
   // Under CI each shard writes a blob, and e2e.yml's `report` job merges them
   // into one HTML report; `list` is the job's own log.
   reporter: process.env.CI ? [['blob'], ['list']] : 'html',
@@ -153,23 +158,23 @@ export default defineConfig({
     /**
      * A workout is logged in a gym, on a phone, and the tracker is used on one:
      * the first phone runs found a sync badge hidden below 640px, an entry menu
-     * opening under the bottom bar, a page 2264px tall. The iPhone is WebKit,
-     * so this is also the pull-request lane for Safari's cookie handling, which
-     * the sign-up confirmation link depends on.
+     * opening under the bottom bar, a page 2264px tall. The owner's phone is
+     * Android, so this is the pull-request phone (Plans/tests-green-and-fast.md,
+     * D1): Chromium, faster in CI than WebKit.
      */
     {
-      name: 'phone',
+      name: 'android',
       testIgnore: SWEEPS,
       grep: PHONE,
       grepInvert: TIMING,
-      use: { ...devices['iPhone 14'] },
+      use: { ...devices['Pixel 7'] },
     },
     {
-      name: 'timing-phone',
+      name: 'timing-android',
       testIgnore: SWEEPS,
       grep: PHONE_TIMING,
       workers: 1,
-      use: { ...devices['iPhone 14'] },
+      use: { ...devices['Pixel 7'] },
     },
     {
       name: 'sweep-desktop',
@@ -184,7 +189,7 @@ export default defineConfig({
       use: { ...devices['iPhone 14'] },
     },
 
-    // === Nightly (Q5): the other engines ===
+    // === Nightly (Q5): the other engines and the iPhone ===
     // One worker each: they are small, and they carry the @timing tests that
     // are engine-sensitive (a background tab's timers differ by engine).
     {
@@ -201,12 +206,25 @@ export default defineConfig({
       workers: 1,
       use: { ...devices['Desktop Safari'] },
     },
+    /**
+     * The iPhone, nightly: WebKit is where Safari's cookie handling lives, which
+     * the sign-up confirmation link depends on. Two workers: WebKit on a CI
+     * runner does not take a third.
+     */
     {
-      name: 'android',
+      name: 'phone',
       testIgnore: SWEEPS,
       grep: PHONE,
+      grepInvert: TIMING,
+      workers: process.env.CI ? 2 : undefined,
+      use: { ...devices['iPhone 14'] },
+    },
+    {
+      name: 'timing-phone',
+      testIgnore: SWEEPS,
+      grep: PHONE_TIMING,
       workers: 1,
-      use: { ...devices['Pixel 7'] },
+      use: { ...devices['iPhone 14'] },
     },
     {
       name: 'sweep-webkit',
