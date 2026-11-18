@@ -174,10 +174,10 @@ describe("copy E", () => {
 })
 
 describe("registry", () => {
-  it("registers copies a to e of progress with valid addictions", () => {
-    expect(Object.keys(LAB.progress.variants)).toEqual(["a", "b", "c", "d", "e"])
-    for (const v of Object.values(LAB.progress.variants)) {
-      expect(v.kind).toBe("copy")
+  it("registers copies a to e and the improved variant of progress with valid addictions", () => {
+    expect(Object.keys(LAB.progress.variants)).toEqual(["a", "b", "c", "d", "e", "best"])
+    for (const [id, v] of Object.entries(LAB.progress.variants)) {
+      expect(v.kind).toBe(id === "best" ? "best" : "copy")
       expect(isAddictionId(v.addiction)).toBe(true)
     }
     expect(LAB.progress.variants.a.label).toBe("Copy A")
