@@ -44,7 +44,7 @@ Deadline: **$1,000 collected by Monday 1 February 2027.**
 
 | ID | What | Attempted, and what it returned | Blocks | Recommendation |
 |---|---|---|---|---|
-| B1 | Live home page `/` errors | curl with a phone browser agent: `/` → **500**, `/auth/login` 200, healthz ok (build b70788dd) | Bio link, sales | Agent sent to find the cause and fix it if small. Re-check before Phase 1 |
+| B1 | Live home page `/` errors | curl with a phone browser agent: `/` → **500**, `/auth/login` 200, healthz ok (build b70788dd). Agent: the server-side HTML render of the client tree fails ON VERCEL ONLY. Locally a dev build and a prod `--webpack` build both give 200. The `vercel` CLI is logged out, so the real exception can't be read yet | Bio link, sales | Owner runs `npx vercel login` once (or opens the function log for `/` in the dashboard). Then read the exception and fix it. Must be fixed before Phase 1 |
 | B2 | Nobody can pay | `src/home/components/Checkout.tsx` says "Payments/Stripe are not migrated…". No webhook writes `has_purchased` | Phase 3 sales | A3: a Payment Link for coaching. The app subscription waits |
 | B3 | Instagram account | Not attempted: only he can create it (his phone, his email, 2FA) | Phase 1 | Phase 0 checklist below |
 | B4 | Handle availability | Not checked: checking means sending his name to Instagram | Phase 0 | He checks in the app while signing up (10 seconds) |
