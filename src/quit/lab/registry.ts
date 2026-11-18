@@ -57,6 +57,7 @@ import { PastBest } from "./past/best/PastBest"
 import { IfthenA } from "./ifthen/a/IfthenA"
 import { IfthenB } from "./ifthen/b/IfthenB"
 import { IfthenC } from "./ifthen/c/IfthenC"
+import { IfthenBest } from "./ifthen/best/IfthenBest"
 import { AccountabilityA } from "./accountability/a/AccountabilityA"
 import { AccountabilityB } from "./accountability/b/AccountabilityB"
 import { AccountabilityE } from "./accountability/e/AccountabilityE"
@@ -215,6 +216,7 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       a: { Component: IfthenA, addiction: "nicotine", label: "Copy A", kind: "copy" },
       b: { Component: IfthenB, addiction: "porn", label: "Copy B", kind: "copy" },
       c: { Component: IfthenC, addiction: "alcohol", label: "Copy C", kind: "copy" },
+      best: { Component: IfthenBest, addiction: "nicotine", label: "Improved", kind: "best" },
     },
   },
   accountability: {

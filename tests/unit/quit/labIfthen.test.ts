@@ -4,10 +4,10 @@ import { isAddictionId } from "@/src/quit/menu"
 import { EMPTY_PLAN, hasContent, parseScale } from "@/src/quit/lab/ifthen/c/logic"
 
 describe("ifthen registry", () => {
-  it("has copies a, b, c with valid addictions", () => {
-    expect(Object.keys(LAB.ifthen.variants)).toEqual(["a", "b", "c"])
+  it("has copies a, b, c and the improved variant with valid addictions", () => {
+    expect(Object.keys(LAB.ifthen.variants)).toEqual(["a", "b", "c", "best"])
     for (const v of Object.values(LAB.ifthen.variants)) {
-      expect(v.kind).toBe("copy")
+      expect(v.kind).toBe(v === LAB.ifthen.variants.best ? "best" : "copy")
       expect(isAddictionId(v.addiction)).toBe(true)
     }
     expect(LAB.ifthen.variants.a.label).toBe("Copy A")
