@@ -22,6 +22,12 @@ His answers the same day, which shape everything below:
   - The nightly timer runs at 03:00.
   - The restore was proved against the local stack.
   - Recovering the key from OneDrive into a clean keyring works, and a wrong passphrase is refused.
+- **Phase 6 live** on 2026-11-18 (`97127775`) at `/plan/new`, on the copy space:
+  - The plan home and Core modules 1–6, built on `planStatus()` and the `usePlanStore()` interface.
+  - The owner's eight areas are the default, with the "Switch areas" fold on the copy.
+  - The extra modules show "Coming soon". Today, Track and Journal link to `/plan/sandbox`.
+  - The owner's real row counts are unchanged after his first copy-space visit (927/927).
+- **Phase 3** is built; the review's fixes are in progress (branch `plan-p3`).
 - **Phase 4:**
   - 4.1 job spec written (private, `spec/job-spec.md`). All 171 old jobs have a home: 93 kept, 26 in a new
     form, 52 replaced by original forms.
