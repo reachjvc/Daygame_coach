@@ -43,8 +43,8 @@ export function useSaved(letter: string): [string[], (id: string) => void] {
 
 export function SaveBtn({ on, onClick, testId = "save-btn" }: { on: boolean; onClick: () => void; testId?: string }) {
   return (
-    <button type="button" data-testid={testId} aria-pressed={on} aria-label={on ? lbText.unsave : lbText.save} onClick={onClick} className="inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-card text-lg">
-      {on ? "★" : "☆"}
+    <button type="button" data-testid={testId} aria-pressed={on} aria-label={on ? lbText.unsave : lbText.save} onClick={onClick} className={`inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-border text-lg ${on ? "bg-primary/40" : "bg-card"}`}>
+      {"🔖"}
     </button>
   )
 }
@@ -71,6 +71,28 @@ export function ItemPage({ title, onBack, inferred, right, testId = "item-page",
       {children ?? <ArticleTile />}
     </section>
   )
+}
+
+/** A visible "Share" control: opens the share sheet where the browser has one. */
+export function LabelledShare({ text, label, testId }: { text: string; label: string; testId?: string }) {
+  const share = () => {
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) void navigator.share({ text }).catch(() => undefined)
+    } catch {
+      // no share sheet here
+    }
+  }
+  return (
+    <button type="button" data-testid={testId} onClick={share} className="inline-flex min-h-11 items-center gap-1 rounded-full border border-border bg-card px-4 text-sm">
+      <span aria-hidden="true">{"↗"}</span>
+      {label}
+    </button>
+  )
+}
+
+/** Tiny dashed tile standing where a name or host would be. */
+export function NameTile({ text }: { text: string }) {
+  return <span data-testid="name-tile" className="inline-block rounded border border-dashed border-border px-1.5 py-0.5 text-xs text-muted-foreground">{text}</span>
 }
 
 /** Lab-only entries to the two screens no public material shows. */

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useLabState } from "../../store"
 import { FixedNav, NavSpace } from "../../lessons/shared/Bits"
 import { FadeRow, InferredTag, NotSourced, Placeholder, PlaceholderScreen } from "../../progress/shared/Bits"
 import { ArticleTile, BackBtn, ItemPage, LabInferredLinks, Pic } from "../shared/Bits"
@@ -9,7 +10,7 @@ import { ldText } from "./text"
 type Screen =
   | { k: "tabs" }
   | { k: "group"; i: number }
-  | { k: "item"; title: string }
+  | { k: "item"; title: string; from?: number }
   | { k: "detail"; title: string }
   | { k: "tips" }
   | { k: "article"; title: string }
@@ -23,6 +24,7 @@ export function LibraryD() {
   const [phase, setPhase] = useState(2)
   const [screen, setScreen] = useState<Screen>(TABS)
   const [sources, setSources] = useState(false)
+  const [read, setRead] = useLabState<number[]>("library", "d", "read", [])
   const go = (s: Screen) => setScreen(s)
   const home = () => go(TABS)
 
@@ -38,14 +40,14 @@ export function LibraryD() {
           <NotSourced />
         </div>
         <div className="flex items-center gap-3"><span className="text-3xl font-bold"><NotSourced /></span></div>
-        <div className="h-2 rounded bg-border" />
+        <div className="h-2 rounded bg-border"><div data-testid="d-group-bar" data-read={read.length} className="h-2 rounded bg-emerald-600" style={{ width: `${screen.i === 1 ? (read.length / ldText.rows.length) * 100 : 0}%` }} /></div>
         <ArticleTile text={ldText.bodyIntro} />
         {screen.i === 1 ? (
           ldText.rows.map((r, i) => (
-            <button key={r} type="button" data-testid={`d-row-${i}`} onClick={() => go({ k: "item", title: r })} className="flex min-h-16 items-center gap-3 rounded-xl bg-emerald-900/50 p-3 text-left">
+            <button key={r} type="button" data-testid={`d-row-${i}`} onClick={() => { if (!read.includes(i)) setRead([...read, i]); go({ k: "item", title: r, from: screen.i }) }} className={`flex min-h-16 items-center gap-3 rounded-xl p-3 text-left ${read.includes(i) ? "bg-emerald-900/50" : "bg-card"}`}>
               <Pic tone={2} className="size-12" />
               <span className="flex-1 text-center font-medium">{r}</span>
-              <span aria-hidden="true">{"✔ ›"}</span>
+              <span aria-hidden="true">{read.includes(i) ? "✔ ›" : "›"}</span>
             </button>
           ))
         ) : (
@@ -61,12 +63,11 @@ export function LibraryD() {
     body = (
       <section data-testid="d-item" className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <BackBtn onClick={() => { setSources(false); home() }} />
+          <BackBtn onClick={() => { setSources(false); if (screen.from !== undefined) go({ k: "group", i: screen.from }); else home() }} />
           <button type="button" data-testid="d-sources" onClick={() => setSources(!sources)} className="min-h-11 rounded-full border border-border bg-card px-4 text-sm">{ldText.sources}</button>
         </div>
         {sources && (
-          <div data-testid="d-sources-panel" className="flex flex-col gap-2">
-            <InferredTag />
+          <div data-testid="d-sources-panel">
             <Placeholder />
           </div>
         )}

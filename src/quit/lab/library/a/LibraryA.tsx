@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import { FixedNav, NavSpace } from "../../lessons/shared/Bits"
-import { FadeRow, InferredTag, NotSourced, Placeholder, PlaceholderScreen } from "../../progress/shared/Bits"
+import { FadeRow, InferredTag, NotSourced, Placeholder, PlaceholderScreen, ShareBtn } from "../../progress/shared/Bits"
 import { useLabState } from "../../store"
-import { ArticleTile, BackBtn, ItemPage, LabInferredLinks, Pic, SaveBtn, useSaved } from "../shared/Bits"
+import { ArticleTile, BackBtn, ItemPage, LabInferredLinks, NameTile, Pic, SaveBtn, useSaved } from "../shared/Bits"
 import { lbText } from "../shared/text"
 import { laText } from "./text"
 
@@ -100,8 +100,9 @@ export function LibraryA() {
     const n = st.courseDone.length
     body = (
       <section data-testid="a-course" className="flex flex-col gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2">
           <BackBtn onClick={() => { setTab(3); setDTab(1); home() }} />
+          <span data-testid="a-course-coins" className="inline-flex min-h-11 items-center gap-1 rounded-full border border-border bg-card px-3 text-sm" aria-label={laText.coins}><span className="text-amber-400">{"●"}</span><NotSourced /></span>
         </div>
         {!st.begun ? (
           <>
@@ -109,7 +110,7 @@ export function LibraryA() {
             <p className="text-xs font-semibold uppercase tracking-wide text-sky-300">{laText.courseCategory}</p>
             <h2 className="text-2xl font-bold text-sky-200">{laText.courseTitle}</h2>
             <div className="flex flex-wrap items-center gap-2 text-sm"><NotSourced /><span>{laText.usersDone}</span></div>
-            <div className="flex flex-wrap items-center gap-2 text-sm"><span>{`5 ${laText.courseDays}`}</span><NotSourced /><span aria-hidden="true" className="ml-auto text-amber-400">{"●"}</span><NotSourced /></div>
+            <div className="flex flex-wrap items-center gap-3 text-sm"><span>{`⏱ 5 ${laText.courseDays}`}</span><span className="inline-flex items-center gap-1" aria-label={laText.rating}><span aria-hidden="true" className="text-amber-400">{"★"}</span><NotSourced /></span></div>
             <button type="button" data-testid="a-course-begin" onClick={() => update({ begun: true })} className="min-h-12 rounded-full bg-indigo-700 px-4 font-medium text-white">{laText.beginCourse}</button>
             <h3 className="font-semibold">{laText.aboutCourse}</h3>
             <ArticleTile />
@@ -173,7 +174,7 @@ export function LibraryA() {
       <section data-testid="a-guide" className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <button type="button" data-testid="a-guide-close" aria-label={laText.guideClose} onClick={home} className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-card">{"✕"}</button>
-          <button type="button" data-testid="a-guide-save" aria-pressed={saved.includes("guide")} aria-label={saved.includes("guide") ? lbText.unsave : lbText.save} onClick={() => toggle("guide")} className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-card">{saved.includes("guide") ? "★" : "☆"}</button>
+          <ShareBtn text={laText.guideTitle} testId="a-guide-share" />
         </div>
         <div className="rounded-lg bg-gradient-to-br from-pink-700/60 to-purple-800/60 p-4">
           <span className="rounded-full bg-purple-700 px-2 py-0.5 text-xs text-white">{laText.guideTag}</span>
@@ -278,8 +279,8 @@ export function LibraryA() {
           <p className="text-sm text-muted-foreground">{laText.cravingsLine}</p>
           <FadeRow className="gap-3">
             {laText.cravingCards.map((c, i) => (
-              <button key={c} type="button" data-testid={`a-tk-craving-${i}`} onClick={() => go({ k: "item", id: `tk-c-${i}`, title: c })} className="flex w-40 shrink-0 flex-col gap-1 text-left">
-                <Pic tone={i} className="h-24 w-40" />
+              <button key={c} type="button" data-testid={`a-tk-craving-${i}`} onClick={() => go({ k: "item", id: `tk-c-${i}`, title: c })} className="flex w-60 shrink-0 flex-col gap-1 text-left">
+                <Pic tone={i} className="h-28 w-60" />
                 <span className="text-sm font-medium">{c}</span>
               </button>
             ))}
@@ -288,8 +289,8 @@ export function LibraryA() {
           <p className="text-sm text-muted-foreground">{laText.mindLine}</p>
           <FadeRow className="gap-3">
             {laText.mindCards.map((c, i) => (
-              <button key={c} type="button" data-testid={`a-tk-mind-${i}`} onClick={() => go({ k: "item", id: `tk-m-${i}`, title: c })} className="flex w-40 shrink-0 flex-col gap-1 text-left">
-                <Pic tone={i + 2} className="h-24 w-40" />
+              <button key={c} type="button" data-testid={`a-tk-mind-${i}`} onClick={() => go({ k: "item", id: `tk-m-${i}`, title: c })} className="flex w-60 shrink-0 flex-col gap-1 text-left">
+                <Pic tone={i + 2} className="h-28 w-60" />
                 <span className="text-sm font-medium">{c}</span>
               </button>
             ))}
@@ -304,8 +305,8 @@ export function LibraryA() {
             <span className="inline-flex min-h-11 items-center gap-1 rounded-full border border-border bg-card px-3 text-sm"><span className="text-amber-400">{"●"}</span><NotSourced /></span>
           </div>
           <FadeRow role="tablist" className="gap-4 border-b border-border">
-            {[...laText.discoverTabs, laText.fourthTab].map((t, i) => (
-              <button key={t} type="button" role="tab" aria-selected={dTab === i} data-testid={`a-dtab-${i}`} onClick={() => setDTab(i)} className={`min-h-11 shrink-0 border-b-2 px-1 text-sm ${dTab === i ? "border-sky-400 font-semibold text-sky-300" : "border-transparent text-muted-foreground"} ${i === 3 ? "border-dashed" : ""}`}>{t}</button>
+            {[...laText.discoverTabs, lbText.dashTab].map((t, i) => (
+              <button key={`${t}-${i}`} type="button" role="tab" aria-selected={dTab === i} data-testid={`a-dtab-${i}`} onClick={() => setDTab(i)} className={`min-h-11 shrink-0 border-b-2 px-1 text-sm ${dTab === i ? "border-sky-400 font-semibold text-sky-300" : "border-transparent text-muted-foreground"} ${i === 3 ? "min-w-14 border-dashed border-border" : ""}`}>{t}</button>
             ))}
           </FadeRow>
           {dTab === 0 && (
@@ -317,7 +318,7 @@ export function LibraryA() {
                   <div key={m} className="flex w-52 shrink-0 flex-col items-center gap-1 rounded-xl border border-border bg-card p-3 text-center">
                     <div className="flex w-full justify-start"><NotSourced /></div>
                     <Pic tone={i} className="size-14" round />
-                    <span className="text-sm">{laText.hostName}</span>
+                    <NameTile text={lbText.hostTile} />
                     <NotSourced />
                     <span className="font-medium">{m}</span>
                     <span className="text-xs text-muted-foreground">{laText.virtual}</span>

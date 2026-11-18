@@ -18,4 +18,10 @@ export const lbText = {
   searchField: "Search",
   searchGo: "Search",
   pic: "Picture",
+  shareThis: "Share this",
+  shareLabel: "Share",
+  nameTile: "Not copied: name",
+  hostTile: "Not copied: host",
+  dashTab: "…",
+  otherTool: "part of another tool",
 } as const

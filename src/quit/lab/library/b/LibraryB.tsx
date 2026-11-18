@@ -2,10 +2,10 @@
 
 import { useState } from "react"
 import { FixedNav, NavSpace } from "../../lessons/shared/Bits"
-import { InferredTag, Placeholder, PlaceholderScreen, ShareBtn } from "../../progress/shared/Bits"
+import { InferredTag, Placeholder, PlaceholderScreen } from "../../progress/shared/Bits"
 import { SnakeGame } from "../../sos/c/SnakeGame"
 import { useLabState } from "../../store"
-import { ArticleTile, BackBtn, ItemPage, LabInferredLinks, Pic, Row } from "../shared/Bits"
+import { ArticleTile, BackBtn, ItemPage, LabInferredLinks, LabelledShare, NameTile, Pic, Row } from "../shared/Bits"
 import { lbText } from "../shared/text"
 import { lbbText } from "./text"
 
@@ -97,13 +97,18 @@ export function LibraryB() {
         <p className="text-xs text-muted-foreground">{lbbText.cats.cravings}</p>
         <ArticleTile />
         <div className="flex flex-wrap items-center gap-2">
-          <ShareBtn text={c.title} testId="b-craving-share" />
+          <LabelledShare text={c.title} label={lbText.shareThis} testId="b-craving-share" />
           {c.game && <button type="button" data-testid="b-play" onClick={() => go({ k: "game" })} className="min-h-11 rounded-full bg-indigo-700 px-4 text-sm text-white">{lbbText.playGame}</button>}
         </div>
       </ItemPage>
     )
   } else if (screen.k === "game") {
-    body = <SnakeGame onBack={home} />
+    body = (
+      <div className="flex flex-col gap-2">
+        <span data-testid="b-other-tool" className="inline-flex w-fit items-center rounded-full border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground">{lbText.otherTool}</span>
+        <SnakeGame onBack={home} />
+      </div>
+    )
   } else if (screen.k === "stories") {
     body = (
       <section data-testid="b-stories-page" className="flex flex-col gap-3">
@@ -144,7 +149,6 @@ export function LibraryB() {
     body = (
       <section data-testid="b-search" className="flex flex-col gap-3">
         <div className="flex items-center gap-2"><BackBtn onClick={home} /><h2 className="flex-1 text-lg font-semibold">{lbbText.searchTitle}</h2><InferredTag /></div>
-        <p className="text-sm text-muted-foreground">{screen.q || lbbText.searchEmpty}</p>
         <Placeholder />
       </section>
     )
@@ -161,9 +165,9 @@ export function LibraryB() {
           <input data-testid="b-search-field" value={q} onChange={(e) => setQ(e.target.value)} placeholder={lbbText.searchPlaceholder} aria-label={lbbText.searchPlaceholder} className="min-h-11 min-w-0 flex-1 rounded-md border border-border bg-background px-3" />
           <button type="submit" data-testid="b-search-go" aria-label={lbbText.searchGo} className="inline-flex size-11 shrink-0 items-center justify-center rounded-md bg-sky-700 text-white">{"⌕"}</button>
         </form>
-        <div role="tablist" className="flex gap-1 overflow-x-auto border-b border-border [scrollbar-width:none]">
+        <div role="tablist" className="flex border-b border-border">
           {lbbText.strip.map((s, i) => (
-            <button key={s} type="button" role="tab" aria-selected={strip === i} data-testid={`b-strip-${i}`} onClick={() => setStrip(i)} className={`min-h-11 shrink-0 border-b-2 px-2 text-xs font-semibold ${strip === i ? "border-sky-400 text-sky-300" : "border-transparent text-muted-foreground"}`}>{s}</button>
+            <button key={s} type="button" role="tab" aria-selected={strip === i} data-testid={`b-strip-${i}`} onClick={() => setStrip(i)} className={`min-h-11 flex-1 border-b-2 px-1 text-xs font-semibold ${strip === i ? "border-sky-400 text-sky-300" : "border-transparent text-muted-foreground"}`}>{s}</button>
           ))}
         </div>
         {strip === 0 && (
@@ -275,7 +279,7 @@ export function LibraryB() {
 function Story({ i }: { i: number }) {
   return (
     <div data-testid="b-story" className="flex flex-col gap-1 rounded-xl border border-border bg-card p-3">
-      <div className="flex items-center gap-2"><Pic tone={i} className="size-10" round /><span className="text-xs text-muted-foreground">{lbbText.storyName}</span></div>
+      <div className="flex items-center gap-2"><Pic tone={i} className="size-10" round /><NameTile text={lbText.nameTile} /></div>
       <p className="font-bold">{lbbText.stories[i]}</p>
       <ArticleTile text={lbText.textTile} />
     </div>

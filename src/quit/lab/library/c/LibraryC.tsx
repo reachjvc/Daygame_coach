@@ -125,7 +125,6 @@ export function LibraryC() {
         <div className="flex items-center gap-2"><BackBtn onClick={root} /><h2 className="flex-1 text-lg font-semibold">{lcText.lockedTitle}</h2></div>
         <Pic tone={view.i} className="h-28" />
         <p className="font-semibold">{j.title}</p>
-        <p className="text-sm text-muted-foreground">{lcText.lockedNote}</p>
         <ArticleTile text={lcText.notBuilt} />
       </section>
     )
@@ -158,9 +157,9 @@ export function LibraryC() {
                   <Pic tone={i} className="h-20 w-full" />
                   <span className="text-xs text-muted-foreground">{lcText.tag}</span>
                   <span className="font-semibold">{j.title}</span>
-                  {j.sub ? <span className="text-xs text-muted-foreground">{j.sub}</span> : <span className="rounded border border-dashed border-border px-1 py-0.5 text-xs text-muted-foreground">{lcText.subTile}</span>}
+                  {j.sub ? <span className="text-xs text-muted-foreground">{j.sub}</span> : <span className="flex flex-wrap items-center gap-1"><span className="rounded border border-dashed border-border px-1 py-0.5 text-xs text-muted-foreground">{lcText.subTile}</span><InferredTag /></span>}
                   {!j.free && (
-                    <span className="flex items-center gap-1 text-xs"><span aria-hidden="true">{"🔒"}</span>{lcText.lockedLabel}{i === 1 && <InferredTag />}</span>
+                    <span className="flex flex-wrap items-center gap-1 text-xs"><span aria-hidden="true">{"🔒"}</span>{lcText.lockedLabel}<InferredTag /></span>
                   )}
                 </button>
               ))}

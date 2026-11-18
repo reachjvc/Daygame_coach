@@ -1,11 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { FixedNav, NavSpace } from "../../lessons/shared/Bits"
-import { InferredTag, Placeholder, PlaceholderScreen, ShareBtn, Tabs } from "../../progress/shared/Bits"
-import { iaText } from "../../ifthen/a/text"
+import { NavSpace } from "../../lessons/shared/Bits"
+import { InferredTag, Placeholder, PlaceholderScreen, Tabs } from "../../progress/shared/Bits"
 import { useLabState } from "../../store"
-import { ArticleTile, ItemPage, LabInferredLinks, LabOnlyTag, Pic, Row, useSaved } from "../shared/Bits"
+import { ArticleTile, ItemPage, LabInferredLinks, LabOnlyTag, LabelledShare, Pic, Row, useSaved } from "../shared/Bits"
+import { lbText } from "../shared/text"
 import { leText } from "./text"
 
 type Page = { k: "tools" } | { k: "challenges" } | { k: "cravings" } | { k: "article" } | { k: "item"; title: string }
@@ -51,7 +51,7 @@ function AppE() {
       <section data-testid="e-explore" className="flex flex-col gap-3">
         <h2 className="rounded-md bg-indigo-950 px-3 py-3 text-lg font-bold text-white">{leText.appTitle}</h2>
         <div role="tablist" className="grid grid-cols-4 overflow-hidden rounded-md border border-border">
-          {iaText.exploreTabs.map((x, i) => (
+          {leText.exploreTabs.map((x, i) => (
             <button key={x} type="button" role="tab" aria-selected={deck === i} data-testid={`e-deck-${i}`} onClick={() => setDeck(i)} className={`min-h-11 text-xs font-semibold ${deck === i ? "bg-sky-700 text-white" : "bg-card"}`}>{x}</button>
           ))}
         </div>
@@ -64,7 +64,7 @@ function AppE() {
                 <div className="flex min-h-40 items-center justify-center rounded-md border border-dashed border-white/40 px-3 text-center text-sm text-white/80">{leText.cardTile}</div>
                 <div className="flex flex-wrap gap-2">
                   <button type="button" data-testid={`e-add-${c}`} aria-pressed={on} onClick={() => toggle(id)} className="inline-flex min-h-11 items-center gap-1 rounded-full bg-black/30 px-3 text-sm text-white">{on ? leText.added : leText.addToKit}</button>
-                  <ShareBtn text={iaText.exploreTabs[deck]} testId={`e-share-${c}`} />
+                  <LabelledShare text={leText.exploreTabs[deck]} label={lbText.shareLabel} testId={`e-share-${c}`} />
                 </div>
               </div>
             )
@@ -77,10 +77,10 @@ function AppE() {
       <section data-testid="e-kit" className="flex flex-col gap-3">
         <div className="flex items-start gap-2">
           <div className="min-w-0 flex-1">
-            <div data-testid="e-kit-count" className="text-2xl font-bold text-red-400">{iaText.kitCount}</div>
-            <div className="text-sm">{iaText.kitHead}</div>
+            <div data-testid="e-kit-count" className="text-2xl font-bold text-red-400">{leText.kitCount}</div>
+            <div className="text-sm">{leText.kitHead}</div>
           </div>
-          <button type="button" data-testid="e-edit-profile" onClick={() => setOther(leText.otherTitles.profile)} className="min-h-11 shrink-0 text-sm text-sky-400 underline">{iaText.editProfile}</button>
+          <button type="button" data-testid="e-edit-profile" onClick={() => setOther(leText.otherTitles.profile)} className="inline-flex min-h-11 shrink-0 items-center gap-2 text-sm text-sky-400"><span aria-hidden="true" className="inline-flex size-9 items-center justify-center rounded-full bg-card text-lg">{"👤"}</span>{leText.editProfile}</button>
         </div>
         <div className="flex flex-col gap-2 rounded-xl bg-card p-3">
           <div className="flex min-h-24 items-center justify-center rounded-md border border-dashed border-border px-3 text-center text-sm text-muted-foreground">{leText.kitTile}</div>
@@ -90,16 +90,16 @@ function AppE() {
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-2"><h3 className="font-semibold">{iaText.favorites}</h3><InferredTag /></div>
-        {iaText.favRows.map((r, i) => (
+        <h3 className="font-semibold">{leText.favorites}</h3>
+        {leText.favRows.map((r, i) => (
           <button key={r} type="button" data-testid={`e-fav-${i}`} onClick={() => setOther(leText.otherTitles.favourites)} className="flex min-h-14 items-center gap-3 rounded-xl border border-border bg-card p-2 text-left">
-            <span aria-hidden="true" className="inline-flex size-10 items-center justify-center rounded-full bg-sky-900/50">{iaText.profileIcons[i]}</span>
+            <span aria-hidden="true" className="inline-flex size-10 items-center justify-center rounded-full bg-sky-900/50">{leText.favIcons[i]}</span>
             <span className="min-w-0 flex-1 font-medium">{r}</span>
-            <span data-testid={`e-fav-count-${i}`} className="text-sm tabular-nums">{rowCount(i)}</span>
+            <span className="flex items-center gap-1"><span data-testid={`e-fav-count-${i}`} className="text-sm tabular-nums">{rowCount(i)}</span>{rowCount(i) > 0 && <InferredTag />}</span>
             <span aria-hidden="true" className="inline-flex size-8 items-center justify-center rounded-full bg-orange-500 text-white">{"›"}</span>
           </button>
         ))}
-        <button type="button" data-testid="e-view-fav" onClick={() => setOther(leText.otherTitles.favourites)} className="min-h-12 rounded-md bg-card px-4 font-medium">{iaText.viewFavorites}</button>
+        <button type="button" data-testid="e-view-fav" onClick={() => setOther(leText.otherTitles.favourites)} className="min-h-12 rounded-md bg-card px-4 font-medium">{leText.viewFavorites}</button>
         <LabInferredLinks search={false} onSearch={() => undefined} onSaved={() => setOther(leText.otherTitles.saved)} />
       </section>
     )
@@ -107,26 +107,41 @@ function AppE() {
     body = (
       <section data-testid="e-home" className="flex flex-col gap-4">
         <div className="rounded-md bg-card px-3 py-2">
-          <div className="text-xs text-sky-400">{iaText.joined}</div>
+          <div className="text-xs text-sky-400">{leText.joined}</div>
           <div data-testid="e-joined" className="font-semibold tabular-nums">{leText.joinedTick(Math.floor(t / 86400), Math.floor((t % 86400) / 3600), Math.floor((t % 3600) / 60), t % 60)}</div>
         </div>
-        <h2 className="text-center text-xl font-bold">{iaText.whatsUp}</h2>
+        <h2 className="text-center text-xl font-bold">{leText.whatsUp}</h2>
         <div className="flex flex-wrap justify-center gap-3">
-          {iaText.homeButtons.map((b, i) => (
+          {leText.homeButtons.map((b, i) => (
             <button key={b} type="button" data-testid={`e-home-btn-${i}`} onClick={() => setOther(leText.otherTitles.deck)} className="flex size-24 basis-24 items-center justify-center rounded-full border-2 border-sky-500 bg-card p-2 text-center text-sm font-semibold leading-tight">{b}</button>
           ))}
         </div>
-        <div className="text-sm font-semibold text-sky-400">{iaText.didYouKnow}</div>
+        <div className="text-sm font-semibold text-sky-400">{leText.didYouKnow}</div>
         <div className="rounded-md border border-dashed border-border px-3 py-3 text-center text-sm text-muted-foreground">{leText.didTile}</div>
       </section>
     )
   } else {
-    body = <PlaceholderScreen title={iaText.appTabs[tab]} onBack={null} />
+    body = <PlaceholderScreen title={leText.appTabs[tab]} onBack={null} />
   }
   return (
     <div data-testid="e-app">
       {body}
-      <FixedNav items={iaText.appTabs} value={tab} onChange={setTab} id="e-tab" />
+      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background pb-[env(safe-area-inset-bottom)]">
+        <div className="mx-auto grid max-w-[640px] grid-cols-5 items-end">
+          {leText.appTabs.map((label, i) => (
+            <button key={label} type="button" data-testid={`e-tab-${i}`} aria-current={i === tab} onClick={() => setTab(i)} className={i === 2 ? "relative -mt-5 flex min-h-16 flex-col items-center justify-end pb-1 text-[11px] leading-tight" : `min-h-14 px-0.5 text-[11px] leading-tight ${i === tab ? "font-semibold text-primary" : "text-muted-foreground"}`}>
+              {i === 2 ? (
+                <>
+                  <span data-testid="e-home-raised" className={`absolute -top-1 flex size-14 items-center justify-center rounded-full border-4 border-background text-xl text-white ${tab === 2 ? "bg-orange-500" : "bg-sky-700"}`}>{"⌂"}</span>
+                  <span className={`mt-12 ${tab === 2 ? "font-semibold text-primary" : "text-muted-foreground"}`}>{label}</span>
+                </>
+              ) : (
+                label
+              )}
+            </button>
+          ))}
+        </div>
+      </nav>
       <NavSpace />
     </div>
   )
@@ -206,7 +221,6 @@ function WebE() {
         <h1 className="text-2xl font-bold">{leText.articleTitle}</h1>
         <div className="flex items-center gap-2">
           <button type="button" data-testid="e-lang" onClick={() => setOther(leText.otherTitles.lang)} className="min-h-11 rounded-md bg-sky-700 px-4 text-sm text-white">{leText.lang}</button>
-          <InferredTag />
         </div>
         <h2 className="text-lg font-bold">{leText.keyPoints}</h2>
         <ArticleTile />
@@ -235,7 +249,7 @@ function WebE() {
           </div>
           <ArticleTile text={leText.summaryTile} />
           <div className="flex flex-wrap gap-2">
-            <ShareBtn text={leText.quitNotes} testId="e-note-share" />
+            <LabelledShare text={leText.quitNotes} label={lbText.shareLabel} testId="e-note-share" />
             <a data-testid="e-note-email" href={`mailto:?subject=${encodeURIComponent(leText.emailSubject)}&body=${encodeURIComponent(notes.join("\n"))}`} className="inline-flex min-h-11 items-center rounded-full border border-border px-4 text-sm">{leText.email}</a>
           </div>
         </div>
