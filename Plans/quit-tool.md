@@ -675,7 +675,8 @@ each (prefilled, 0–120). Result: `yearCost = amount × daysPerWeek × 52 × pr
 stated), ten years = ×10 (no inflation, said in a small line), hours a year when minutes exist; formatted
 with `Intl.NumberFormat("en-US", {style: "currency", currency: "USD", maximumFractionDigits: 0})`; one
 `costSwaps` line: the largest swap with `usd ≤ yearCost`, else the smallest with "in N years" (N =
-⌈usd/yearCost⌉, only when ≤ 10). The price and ten-year figure are stored for `coach`. Tests: maths, zero use,
+⌈usd/yearCost⌉, only when ≤ 10). The result is stored as `quit-v1[a].cost.result = {yearUsd, tenYearUsd,
+hoursYear | null}` for `coach` (Phase 6 reads exactly this). Tests: maths, zero use,
 the 200 × 100 maximum, the swap pick, rounding.
 
 **`how`** — a read page: `hope` first as a big `NumberCard`, then `numbers` grouped by kind prefix in this
@@ -779,7 +780,8 @@ none exists, say so). Each fact with its file path. The planner reads it before 
   from a new `src/quit/data/contact.json` field `privacyEmail: null` — while null the line says "Ask through
   the coach page" and the Questions section gets the item), a dated line "Draft, 2026-11-18. Not legal
   advice." All text in `src/quit/data/privacy.json`; every sentence must match a line in privacy-facts.md
-  (the planner checks this one by one before merge).
+  (the planner checks this one by one before merge). Facts file written 2026-11-18: no account-delete flow
+  exists (so the email fallback applies) and live `ai_usage_logs` holds no chat text.
 - `app/quit/coaching/page.tsx` (public; `coaching` must not collide with `[addiction]`: add a static
   segment, and a unit test that `coaching` is not an addiction id): `?a=<addiction>` (default nicotine) for
   the cost line. Content from `offer.json` + `src/quit/data/coaching.json`: title "30 days with a coach",
