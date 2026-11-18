@@ -1,5 +1,9 @@
 # Quit tool: free tools that bring a man in, then a 90-day program
 
+**Scheduled by `Plans/first-1000.md` (2026-11-18):** nicotine Phases 1–5 and the Phase 8 checks ship by
+20 Dec 2026, so New Year quitters can use them. The program (Phase 6) comes after. Coaching money goes through
+a Stripe Payment Link if the owner says yes (first-1000 A3); this plan's own code still adds no payment system.
+
 Written 2026-11-18. Status: **plan written; not started.** Replaces the "one page per addiction" frame of the
 addiction one-pagers (docs/research/addiction-one-pagers/). Their research, rules and checked numbers are reused
 here; the page form is not.
