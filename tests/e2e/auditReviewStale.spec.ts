@@ -194,7 +194,7 @@ test.describe("a stale review on a second device", () => {
   })
 })
 
-test("best hours for the hardest work are the weekday daygame and coding hours, with the rule said @phone", async ({ page, account }) => {
+test("best hours for the hardest work are the weekday daygame and coding hours, with the rule said", async ({ page, account }) => {
   await seedTwoWeeks(account.id)
   await openReview(page)
   const week = page.getByTestId("perfect-week")
