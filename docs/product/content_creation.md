@@ -134,6 +134,16 @@ Raised by the Senior on 2026-11-10, not yet decided:
 - `docs/product/brand.md` (name status, campaign line) applies to anything
   published.
 
+## Process learnings (owner, 2026-11-18)
+
+- Claude can make quite nice animations.
+- Rounds where Claude has to guess the single most valuable thing to add or
+  remove are not efficient. A good process for content creation is not found
+  yet.
+- Likely better: more handholding, and he sees frames of what Claude intends
+  to make before Claude spends hours making it.
+- With all of the script, or more of it, Claude can make better animations.
+
 ## Decisions
 
 - The script starts as the owner talking the idea through on a recording;
