@@ -22,6 +22,7 @@
  * somebody loses an evening's work without ever seeing an error.
  */
 
+import type { SupabaseClient } from "@supabase/supabase-js"
 import { createServerSupabaseClient } from "./supabase"
 import { readAllRows } from "./paging"
 import type { PlanChanges } from "./lifePlanTypes"
@@ -79,8 +80,8 @@ const STALE = "55000"
  * Separate from reading the plan because the id is needed BEFORE the mapper can
  * run — the mapper stamps `plan_id` on every row it builds.
  */
-export async function ensureLifePlan(userId: string): Promise<{ id: string; revision: number; seq: number }> {
-  const supabase = await createServerSupabaseClient()
+export async function ensureLifePlan(userId: string, client?: SupabaseClient): Promise<{ id: string; revision: number; seq: number }> {
+  const supabase = client ?? (await createServerSupabaseClient())
 
   const existing = await supabase
     .from("life_plans")
@@ -120,8 +121,8 @@ export async function ensureLifePlan(userId: string): Promise<{ id: string; revi
  *
  * Here rather than in `lifePlanDayRepo` so that `life_plans` keeps one owner.
  */
-export async function findLifePlanId(userId: string): Promise<string | null> {
-  const supabase = await createServerSupabaseClient()
+export async function findLifePlanId(userId: string, client?: SupabaseClient): Promise<string | null> {
+  const supabase = client ?? (await createServerSupabaseClient())
   const { data, error } = await supabase
     .from("life_plans")
     .select("id")
@@ -135,9 +136,9 @@ export async function findLifePlanId(userId: string): Promise<string | null> {
  * True when the plan has something to do: one goal being worked on, or one routine step.
  * Never throws: on any error the page opens as it did before (North star). That is deliberate.
  */
-export async function planIsInUse(userId: string): Promise<boolean> {
+export async function planIsInUse(userId: string, client?: SupabaseClient): Promise<boolean> {
   try {
-    const supabase = await createServerSupabaseClient()
+    const supabase = client ?? (await createServerSupabaseClient())
     const goals = await supabase.from("life_plan_goals").select("id", { count: "exact", head: true })
       .eq("user_id", userId).eq("status", "active")
     if (!goals.error && (goals.count ?? 0) > 0) return true
@@ -157,8 +158,8 @@ export async function planIsInUse(userId: string): Promise<boolean> {
  * make "no plan" indistinguishable from "a plan that failed to load", and the
  * flow would then save the empty one over the real one.
  */
-export async function readLifePlan(userId: string): Promise<StoredPlan | null> {
-  const supabase = await createServerSupabaseClient()
+export async function readLifePlan(userId: string, client?: SupabaseClient): Promise<StoredPlan | null> {
+  const supabase = client ?? (await createServerSupabaseClient())
 
   const plan = await supabase
     .from("life_plans")
@@ -286,8 +287,9 @@ export async function applyLifePlanChanges(
   changes: PlanChanges,
   expectedRevision: number,
   userId: string,
+  client?: SupabaseClient,
 ): Promise<number> {
-  const supabase = await createServerSupabaseClient()
+  const supabase = client ?? (await createServerSupabaseClient())
 
   const upsert: Record<string, unknown[]> = {}
   for (const [table, rows] of Object.entries(changes.upsert)) {
@@ -307,4 +309,16 @@ export async function applyLifePlanChanges(
     throw new Error("The plan save returned no revision, so it cannot be trusted to have run.")
   }
   return data
+}
+
+/**
+ * Remove the account's plan row. Every plan and day table hangs off it with
+ * ON DELETE CASCADE, so the whole plan and every day go with it. Row security
+ * lets a session delete only its own. Used for the copy space's reset; nothing
+ * on a real account calls it.
+ */
+export async function deleteLifePlan(userId: string, client?: SupabaseClient): Promise<void> {
+  const supabase = client ?? (await createServerSupabaseClient())
+  const { error } = await supabase.from("life_plans").delete().eq("user_id", userId)
+  if (error) throw new Error(`Failed to remove the plan: ${error.message}`)
 }

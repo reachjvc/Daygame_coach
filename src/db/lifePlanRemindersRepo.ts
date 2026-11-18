@@ -7,6 +7,7 @@
  * two reads go through the service role, because the clock has no session.
  */
 
+import type { SupabaseClient } from "@supabase/supabase-js"
 import { createAdminSupabaseClient, createServerSupabaseClient } from "./supabase"
 
 export interface Reminder { pushOn: boolean; reviewDay: number; reviewHour: number }
@@ -14,8 +15,8 @@ export interface Reminder { pushOn: boolean; reviewDay: number; reviewHour: numb
 /** The table's own defaults: off, Sunday, 19:00. */
 const DEFAULT_REMINDER: Reminder = { pushOn: false, reviewDay: 7, reviewHour: 19 }
 
-export async function readReminder(userId: string): Promise<Reminder> {
-  const supabase = await createServerSupabaseClient()
+export async function readReminder(userId: string, client?: SupabaseClient): Promise<Reminder> {
+  const supabase = client ?? (await createServerSupabaseClient())
   const { data, error } = await supabase
     .from("life_plan_reminders")
     .select("push_on, review_day, review_hour")
@@ -28,14 +29,20 @@ export async function readReminder(userId: string): Promise<Reminder> {
 }
 
 /** Writes only the keys given; a missing one keeps its stored value, or the table default on a new row. */
-export async function writeReminder(userId: string, patch: Partial<Reminder>): Promise<void> {
+export async function writeReminder(userId: string, patch: Partial<Reminder>, client?: SupabaseClient): Promise<void> {
   const row: Record<string, unknown> = { user_id: userId, updated_at: new Date().toISOString() }
   if (patch.pushOn !== undefined) row.push_on = patch.pushOn
   if (patch.reviewDay !== undefined) row.review_day = patch.reviewDay
   if (patch.reviewHour !== undefined) row.review_hour = patch.reviewHour
-  const supabase = await createServerSupabaseClient()
+  const supabase = client ?? (await createServerSupabaseClient())
   const { error } = await supabase.from("life_plan_reminders").upsert(row, { onConflict: "user_id" })
   if (error) throw new Error(`Failed to save your reminder: ${error.message}`)
+}
+
+/** Remove the signed-in client's reminder row (the copy space's reset). */
+export async function deleteReminder(userId: string, client: SupabaseClient): Promise<void> {
+  const { error } = await client.from("life_plan_reminders").delete().eq("user_id", userId)
+  if (error) throw new Error(`Failed to remove the reminder: ${error.message}`)
 }
 
 export interface ReminderDue { user_id: string; local_day: string; review_day: number }

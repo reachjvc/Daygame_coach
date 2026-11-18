@@ -51,17 +51,19 @@ export async function requireAuth(req?: Request): Promise<AuthResult> {
   }
 
   if (await namesAnotherAccount(req, user.id)) {
-    return {
-      success: false,
-      response: NextResponse.json(
-        // `accountChanged`: what the time tracker's sender reads a 409 by (useTimetrackSync).
-        { error: "This page was opened for another account. Reload it.", accountChanged: true },
-        { status: 409, headers: { [ACCOUNT_CHANGED_HEADER]: "1" } },
-      ),
-    }
+    return { success: false, response: accountChangedResponse() }
   }
 
   return { success: true, userId: user.id, email: user.email, supabase }
+}
+
+/** The refusal for a request naming another account than the one it is served as. */
+export function accountChangedResponse(): NextResponse {
+  return NextResponse.json(
+    // `accountChanged`: what the time tracker's sender reads a 409 by (useTimetrackSync).
+    { error: "This page was opened for another account. Reload it.", accountChanged: true },
+    { status: 409, headers: { [ACCOUNT_CHANGED_HEADER]: "1" } },
+  )
 }
 
 /** True when the request names an account other than `userId` (see `requireAuth`). */

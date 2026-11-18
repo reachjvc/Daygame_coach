@@ -33,6 +33,7 @@
  * without either erasing the other's.
  */
 
+import type { SupabaseClient } from "@supabase/supabase-js"
 import { createServerSupabaseClient } from "./supabase"
 import { readAllRows } from "./paging"
 import type {
@@ -52,8 +53,8 @@ import type {
  * the UUIDs; resolving them is the server's job, so a day write cannot be
  * rejected for a foreign key the browser could not have known about.
  */
-export async function readNodeIds(userId: string, planId: string): Promise<Map<string, string>> {
-  const supabase = await createServerSupabaseClient()
+export async function readNodeIds(userId: string, planId: string, client?: SupabaseClient): Promise<Map<string, string>> {
+  const supabase = client ?? (await createServerSupabaseClient())
   const rows = await readAllRows<{ id: string; local_id: string }>("the plan's ids", (from, to) =>
     supabase
       .from("life_plan_nodes")
@@ -67,8 +68,8 @@ export async function readNodeIds(userId: string, planId: string): Promise<Map<s
 }
 
 /** Every day this plan has, with what was rated, ticked and written on each. */
-export async function readDayRows(userId: string, planId: string): Promise<DayRows> {
-  const supabase = await createServerSupabaseClient()
+export async function readDayRows(userId: string, planId: string, client?: SupabaseClient): Promise<DayRows> {
+  const supabase = client ?? (await createServerSupabaseClient())
 
   const days = await readAllRows<DayRow>("your days", (from, to) =>
     supabase
@@ -152,8 +153,9 @@ export async function saveDay(
   planId: string,
   patch: DayPatch,
   ids: Map<string, string>,
+  client?: SupabaseClient,
 ): Promise<void> {
-  const supabase = await createServerSupabaseClient()
+  const supabase = client ?? (await createServerSupabaseClient())
 
   // The day row first, and its note only when the patch carries one — an
   // omitted note must not blank a line somebody wrote on another device.
@@ -255,4 +257,30 @@ export async function saveDay(
       if (error) throw new Error(`Failed to clear what you wrote: ${error.message}`)
     }
   }
+}
+
+/** Rows per insert: well under PostgREST's request size, and a year of ratings is a few chunks. */
+const INSERT_CHUNK = 500
+
+/**
+ * Write whole day rows as they are, ids and all, with the client given.
+ *
+ * Only for the copy space (`planSandboxCopy`), which has already remapped every
+ * id into the new account's own. Not `saveDay`: that works from a patch, and a
+ * patch cannot say an empty day, a journal line's `asked`, or a day's id. The
+ * order is the foreign keys': days first, then what hangs off them. Row
+ * security still decides what the client may write.
+ */
+export async function insertDayRows(rows: DayRows, client: SupabaseClient): Promise<void> {
+  const put = async (table: string, list: unknown[]) => {
+    for (let i = 0; i < list.length; i += INSERT_CHUNK) {
+      const { error } = await client.from(table).insert(list.slice(i, i + INSERT_CHUNK))
+      if (error) throw new Error(`Failed to copy ${table}: ${error.message}`)
+    }
+  }
+  await put("life_plan_days", rows.days)
+  await put("life_plan_day_ratings", rows.ratings)
+  await put("life_plan_day_ticks", rows.ticks)
+  await put("life_plan_day_journal", rows.journal)
+  await put("life_plan_day_numbers", rows.numbers ?? [])
 }
