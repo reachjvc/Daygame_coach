@@ -26,6 +26,9 @@ import { TimelineB } from "./timeline/b/TimelineB"
 import { TimelineC } from "./timeline/c/TimelineC"
 import { TimelineD } from "./timeline/d/TimelineD"
 import { TimelineE } from "./timeline/e/TimelineE"
+import { BeliefsA } from "./beliefs/a/BeliefsA"
+import { BeliefsB } from "./beliefs/b/BeliefsB"
+import { BeliefsC } from "./beliefs/c/BeliefsC"
 import { ProgressBest } from "./progress/best/ProgressBest"
 import { TimelineBest } from "./timeline/best/TimelineBest"
 
@@ -110,7 +113,15 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       e: { Component: QuitdateE, addiction: "nicotine", label: "Copy E", kind: "copy" },
     },
   },
-  beliefs: { name: "Belief test", variants: { current: current(BeliefsTool) } },
+  beliefs: {
+    name: "Belief test",
+    variants: {
+      current: current(BeliefsTool),
+      a: { Component: BeliefsA, addiction: "alcohol", label: "Copy A", kind: "copy" },
+      b: { Component: BeliefsB, addiction: "nicotine", label: "Copy B", kind: "copy" },
+      c: { Component: BeliefsC, addiction: "alcohol", label: "Copy C", kind: "copy" },
+    },
+  },
   checkin: { name: "Daily check-in", variants: {} },
   diary: { name: "Craving and slip diary", variants: { current: current(SlipTool) } },
   lessons: { name: "Daily lessons", variants: {} },
