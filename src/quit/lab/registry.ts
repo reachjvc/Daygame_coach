@@ -30,6 +30,7 @@ import { BeliefsA } from "./beliefs/a/BeliefsA"
 import { BeliefsB } from "./beliefs/b/BeliefsB"
 import { BeliefsC } from "./beliefs/c/BeliefsC"
 import { ProgressBest } from "./progress/best/ProgressBest"
+import { QuitdateBest } from "./quitdate/best/QuitdateBest"
 import { TimelineBest } from "./timeline/best/TimelineBest"
 
 export const LAB_TOOL_IDS = [
@@ -111,6 +112,7 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       b: { Component: QuitdateB, addiction: "alcohol", label: "Copy B", kind: "copy" },
       d: { Component: QuitdateD, addiction: "nicotine", label: "Copy D", kind: "copy" },
       e: { Component: QuitdateE, addiction: "nicotine", label: "Copy E", kind: "copy" },
+      best: { Component: QuitdateBest, addiction: "nicotine", label: "Improved", kind: "best" },
     },
   },
   beliefs: {

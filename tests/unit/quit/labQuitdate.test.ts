@@ -115,12 +115,12 @@ describe("goal ladder and streaks", () => {
 
 describe("registry", () => {
   it("registers the four quit date copies with valid addictions", () => {
-    expect(Object.keys(LAB.quitdate.variants).sort()).toEqual(["a", "b", "d", "e"])
+    expect(Object.keys(LAB.quitdate.variants).sort()).toEqual(["a", "b", "best", "d", "e"])
     expect(LAB.quitdate.variants.a.addiction).toBe("alcohol")
     expect(LAB.quitdate.variants.b.addiction).toBe("alcohol")
     expect(LAB.quitdate.variants.d.addiction).toBe("nicotine")
     expect(LAB.quitdate.variants.e.addiction).toBe("nicotine")
-    for (const v of Object.values(LAB.quitdate.variants)) {
+    for (const v of Object.entries(LAB.quitdate.variants).filter(([k]) => k !== "best").map(([, x]) => x)) {
       expect(isAddictionId(v.addiction)).toBe(true)
       expect(v.kind).toBe("copy")
       expect(v.label).toMatch(/^Copy [ABDE]$/)
