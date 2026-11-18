@@ -748,6 +748,39 @@ picture 0.66 (edited text, as expected).
 5. Test the lean recipe on the same 23 owner-checked lines plus the
    P1 11: it must match or beat the wide recipe before it replaces it.
 
+### Phase 10 result: lean recipe (2026-11-18, evening)
+
+Built and tested on the same 21 clips plus the probe:
+- **Words:** the joint speech+speaker model's lines as skeleton, plus the 4 best speech models and the
+  on-screen subtitles where they exist. The Whisper variants and sound-prep runs are dropped.
+- **Voice layer:** man/woman per quarter second. Pitch decides first (190 Hz and up = woman, under 170 Hz
+  = man); a voice classifier settles the middle. On the probe it gets 87% of moments right; the
+  classifier alone gets only 57-73%.
+- **Split-voice layer:** the clip is split into two voice tracks and the best speech model runs on each.
+  Her short replies under his talk show up on her track.
+- **Never drop:** words the other voice's track heard inside a line, and single words two machines heard
+  outside every line, become must-handle items. A judge adds each as a line or lists it as "unplaced" with
+  a reason. A check fails any draft that stops early or loses 6+ skeleton words in a row.
+
+Scores:
+
+| Key | Old wide recipe | Lean recipe |
+|---|---|---|
+| Owner's 25 big-test answers | 19, 20 | 24, 24 |
+| Probe, line present with the right speaker | 11, 8 | 10, 9 |
+
+- **Big test:** the one miss left is a second man taken for the coach, which the owner was unsure of
+  himself.
+- **Probe wording:** exact wording is weaker. The old probe drafts started from edited subtitles; the
+  lean recipe starts from the machine skeleton, so short overlapped replies lose words ("Close." for
+  "Close, honestly close.").
+
+Open: the check-page selection. With both judges now splitting lines, 307 of 1406 lines come up for the
+owner to listen to: 100 unplaced items, 99 lines where the judges disagree on who speaks, 79 lines a judge
+was unsure of, 15 hidden spot checks and 14 lines where the judges heard different words. Next: align the
+two judges' lines before comparing, merge repeated items, and rank the rest, without dropping any heard
+speech.
+
 ## Execution prompts
 
 One session per phase. Each starts with:

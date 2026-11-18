@@ -33,6 +33,12 @@ import { CheckinA } from "./checkin/a/CheckinA"
 import { CheckinB } from "./checkin/b/CheckinB"
 import { CheckinC } from "./checkin/c/CheckinC"
 import { CheckinD } from "./checkin/d/CheckinD"
+import { BeliefsBest } from "./beliefs/best/BeliefsBest"
+import { DiaryB } from "./diary/b/DiaryB"
+import { DiaryC } from "./diary/c/DiaryC"
+import { DiaryD } from "./diary/d/DiaryD"
+import { DiaryE } from "./diary/e/DiaryE"
+import { CheckinBest } from "./checkin/best/CheckinBest"
 import { ProgressBest } from "./progress/best/ProgressBest"
 import { QuitdateBest } from "./quitdate/best/QuitdateBest"
 import { TimelineBest } from "./timeline/best/TimelineBest"
@@ -126,6 +132,7 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       a: { Component: BeliefsA, addiction: "alcohol", label: "Copy A", kind: "copy" },
       b: { Component: BeliefsB, addiction: "nicotine", label: "Copy B", kind: "copy" },
       c: { Component: BeliefsC, addiction: "alcohol", label: "Copy C", kind: "copy" },
+      best: { Component: BeliefsBest, addiction: "nicotine", label: "Improved", kind: "best" },
     },
   },
   checkin: {
@@ -135,9 +142,19 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       b: { Component: CheckinB, addiction: "alcohol", label: "Copy B", kind: "copy" },
       c: { Component: CheckinC, addiction: "porn", label: "Copy C", kind: "copy" },
       d: { Component: CheckinD, addiction: "alcohol", label: "Copy D", kind: "copy" },
+      best: { Component: CheckinBest, addiction: "nicotine", label: "Improved", kind: "best" },
     },
   },
-  diary: { name: "Craving and slip diary", variants: { current: current(SlipTool) } },
+  diary: {
+    name: "Craving and slip diary",
+    variants: {
+      current: current(SlipTool),
+      b: { Component: DiaryB, addiction: "nicotine", label: "Copy B", kind: "copy" },
+      c: { Component: DiaryC, addiction: "weed", label: "Copy C", kind: "copy" },
+      d: { Component: DiaryD, addiction: "nicotine", label: "Copy D", kind: "copy" },
+      e: { Component: DiaryE, addiction: "nicotine", label: "Copy E", kind: "copy" },
+    },
+  },
   lessons: { name: "Daily lessons", variants: {} },
   cost: { name: "Cost and savings", variants: { current: current(CostTool) } },
   past: { name: "Past attempts", variants: { current: current(PastTool) } },
