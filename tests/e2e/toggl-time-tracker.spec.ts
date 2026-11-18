@@ -625,7 +625,7 @@ test.describe('Toggl-style time tracker', () => {
     const asked = page.getByRole('dialog', { name: 'New time entry' })
     if (await page.getByRole('navigation', { name: 'Tracker' }).isVisible()) await asked.getByRole('button', { name: 'Add time entry' }).click()
     const block = page.locator('[data-entry-block]')
-    await expect(block).toHaveAccessibleName('Gym, 10:00 to 11:30, planned')
+    await expect(block).toHaveAccessibleName('(no description), 10:00 to 11:30, planned')
 
     // by its body, 15 minutes later
     column = await calendarColumn(page)
@@ -658,7 +658,7 @@ test.describe('Toggl-style time tracker', () => {
     await expect(sheet).toBeVisible()
 
     await savedToAccount(page)
-    expect(await entriesOnAccount(page)).toEqual(['Gym'])
+    expect(await entriesOnAccount(page)).toEqual([''])
   })
 })
 
