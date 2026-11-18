@@ -12,7 +12,7 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react"
 import type { NsPlan } from "@/src/goals/types"
 import { fetchLifePlan, newNodeId, saveLifePlanChanges, startLifePlan } from "@/src/goals/lifePlanClient"
-import { fetchDayRecord } from "@/src/goals/lifePlanDayClient"
+import { fetchDayRecord, saveDayCatchingUp } from "@/src/goals/lifePlanDayClient"
 import { guardSandboxRequests, onAccountChanged, ACCOUNT_CHANGED_MESSAGE } from "@/src/goals/planAccount"
 import { emptyNsPlan } from "@/src/goals/northStarService"
 import { PLAN_AREAS, DEFAULT_RATING } from "@/src/goals/planSteps/copy/planAreas"
@@ -48,6 +48,7 @@ export function realDeps(account: string): PlanStoreDeps {
     fetchDays: () => fetchDayRecord(account),
     startPlan: () => startLifePlan(account),
     savePlan: (before, after, planId, revision, ids) => saveLifePlanChanges(before, after, planId, revision, ids, newNodeId, account),
+    saveDay: (patch, savePlanFirst) => saveDayCatchingUp(patch, savePlanFirst, account),
     initialPlan: newAccountPlan,
     messages: {
       offline: "Your plan could not be reached, so nothing is saved. Reload to try again.",
@@ -87,6 +88,7 @@ const loadingState: PlanStoreState = { plan: newAccountPlan(), loaded: false, st
 
 export interface UsePlanStore extends PlanStoreState {
   update: PlanStore["update"]
+  updateDay: PlanStore["updateDay"]
   flush: PlanStore["flush"]
   retry: PlanStore["retry"]
   reload: PlanStore["reload"]
@@ -103,6 +105,7 @@ export function usePlanStore(): UsePlanStore {
   const none = useMemo(
     () => ({
       update: () => {},
+      updateDay: () => {},
       flush: async () => false,
       retry: async () => false,
       reload: async () => {},

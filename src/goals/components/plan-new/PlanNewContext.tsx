@@ -1,12 +1,27 @@
 "use client"
 
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
 import { useSearchParams } from "next/navigation"
 import type { NsPlan } from "@/src/goals/types"
 import { usePlanStore, type UsePlanStore } from "@/src/goals/planStore"
 import { planStatus, type PlanStatus } from "@/src/goals/planSteps/planStatus"
 import { todayISO } from "@/src/goals/northStarService"
 import { ROUTES } from "@/src/shared/routes"
+import { EXTRA_IDS, type ExtraId } from "@/src/goals/planSteps/planRoutes"
+
+const HIDE_DAYS = 7
+const hideKey = (account: string, id: string) => `plan-next-hidden:${account}:${id}`
+
+function readHidden(account: string): ExtraId[] {
+  const out: ExtraId[] = []
+  try {
+    for (const id of EXTRA_IDS) {
+      const until = Number(window.localStorage.getItem(hideKey(account, id)))
+      if (until > Date.now()) out.push(id)
+    }
+  } catch { /* storage refused: nothing hidden */ }
+  return out
+}
 
 export interface PlanNew {
   plan: NsPlan
@@ -17,17 +32,25 @@ export interface PlanNew {
   status: PlanStatus
   /** Where a Change link came from; Next returns there instead of going on. */
   from: string | null
+  /** Hide a suggestion for 7 days on this device. */
+  hideSuggestion: (id: ExtraId) => void
 }
 
 const Ctx = createContext<PlanNew | null>(null)
 
-export function PlanNewProvider({ children }: { children: ReactNode }) {
+export function PlanNewProvider({ children, account }: { children: ReactNode; account: string }) {
   const store = usePlanStore()
   const [today] = useState(() => todayISO())
-  const status = useMemo(() => planStatus({ plan: store.plan, today, hour: new Date().getHours() }), [store.plan, today])
+  const [hidden, setHidden] = useState<ExtraId[]>([])
+  useEffect(() => setHidden(readHidden(account)), [account])
+  const hideSuggestion = useCallback((id: ExtraId) => {
+    try { window.localStorage.setItem(hideKey(account, id), String(Date.now() + HIDE_DAYS * 86_400_000)) } catch { /* storage refused: hidden until reload */ }
+    setHidden((h) => (h.includes(id) ? h : [...h, id]))
+  }, [account])
+  const status = useMemo(() => planStatus({ plan: store.plan, today, hour: new Date().getHours(), hidden }), [store.plan, today, hidden])
   const value = useMemo<PlanNew>(
-    () => ({ plan: store.plan, store, change: store.update, today, status, from: null }),
-    [store, today, status],
+    () => ({ plan: store.plan, store, change: store.update, today, status, from: null, hideSuggestion }),
+    [store, today, status, hideSuggestion],
   )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

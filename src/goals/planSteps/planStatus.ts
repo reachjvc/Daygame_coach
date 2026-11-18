@@ -6,9 +6,8 @@
  * the plan suggests doing next. Built exactly from the job spec's module
  * tables; nothing else in the new version decides what is missing.
  *
- * Extra modules are not computed yet (a later phase): the Next up order below
- * runs rules 1 to 4 and 7 of the spec's algorithm, and rules 5 and 6 (extra
- * modules) wait for them.
+ * The extra modules are computed beside the core ones (`extraStatus.ts`), and the
+ * Next up order below runs every rule of the spec's algorithm, 1 to 7.
  */
 
 import type { NsPlan } from "@/src/goals/types"
@@ -19,7 +18,19 @@ import {
   activeAreas, activeSeasonGoals, protectedId, carriesOldDescription, checkinSettings, goalsOfTier, hiddenAreaIds, isActive, isUnfiled,
   itemsServingSeason, numbersComplete, weeklyItems, AREAS_DESCRIBED_KEY, type RemindersRow,
 } from "./planFacts"
-import { CORE_IDS, screenHref, type CoreId } from "./planRoutes"
+import { CORE_IDS, EXTRA_IDS, screenHref, type CoreId, type ExtraId, type ModuleId } from "./planRoutes"
+import { extraModules, extraFirstTarget } from "./extraStatus"
+import { fill as fillText } from "./text"
+import { standingCopy } from "./copy/standing"
+import { valuesCopy } from "./copy/values"
+import { identityCopy } from "./copy/identity"
+import { experiencesCopy } from "./copy/experiences"
+import { obstaclesCopy } from "./copy/obstacles"
+import { routinesCopy } from "./copy/routines"
+import { questionsCopy } from "./copy/questions"
+import { rolemodelsCopy } from "./copy/rolemodels"
+import { quitCopy } from "./copy/quit"
+import { selfratingsCopy } from "./copy/selfratings"
 import { areasCopy } from "./copy/areas"
 import { directionCopy } from "./copy/direction"
 import { seasonCopy } from "./copy/season"
@@ -33,7 +44,7 @@ export type ModuleState = "not-started" | "done" | "needs-a-look"
 export interface PlanReason {
   /** `areas.few`, `season.ended`, … the spec's ids. */
   id: string
-  module: CoreId
+  module: ModuleId
   kind: "missing" | "check"
   itemId?: string
   /** The route of the one screen that fixes it, without the base: `areas/pick`. */
@@ -51,18 +62,26 @@ export interface ModuleStatus {
 }
 
 export interface NextUp {
-  module: CoreId
+  module: ModuleId
   target: string
   href: string
   /** Which rule of the spec picked it. */
-  rule: "build" | "review-due" | "season-ended" | "check"
+  rule: "build" | "review-due" | "season-ended" | "check" | "extra-look" | "suggest"
   reasonId: string | null
   /** The lower-case job line, ready for "Next: {job}". */
   job: string
 }
 
+/** An extra module: always open, so it has no lock. */
+export interface ExtraStatus {
+  state: ModuleState
+  started: boolean
+  reasons: PlanReason[]
+}
+
 export interface PlanStatus {
   modules: Record<CoreId, ModuleStatus>
+  extras: Record<ExtraId, ExtraStatus>
   nextUp: NextUp | null
 }
 
@@ -74,6 +93,8 @@ export interface PlanStatusInput {
   hour: number
   /** The reminders row, when one can be read. The copy space has none and keeps the check-in day in the plan. */
   reminders?: RemindersRow | null
+  /** Extra modules whose suggestion the person hid on this device (Next up rule 6 skips them). */
+  hidden?: readonly ExtraId[]
 }
 
 const key = (id: string) => id.replace(/-/g, "_")
@@ -252,6 +273,43 @@ export function jobOf(target: string, plan: NsPlan): string {
       if (a === "days") return actionsCopy.days.job
       return fill(actionsCopy.goal.job, goalTitle(b))
     }
+    case "standing": return fillText(standingCopy.area.job, { area: plan.areas.find((x) => x.id === a)?.label || "this area" })
+    case "values": {
+      if (a === "add") return valuesCopy.add.job
+      if (a === "most") return valuesCopy.most.job
+      if (a && b === "where") return fillText(valuesCopy.where.job, { value: decodeURIComponent(a) })
+      return valuesCopy.found.job
+    }
+    case "identity": return a === "lines" ? identityCopy.lines.job : a === "when" ? identityCopy.when.job : identityCopy.who.job
+    case "experiences": return a === "chase" ? experiencesCopy.chase.job : experiencesCopy.list.job
+    case "obstacles": {
+      const obstacle = plan.goals.flatMap((g) => g.obstacles).find((o) => o.id === a)
+      if (b === "then") return fillText(obstaclesCopy.then.job, { obstacle: obstacle?.what ?? "" })
+      return a === "help" ? obstaclesCopy.help.job : obstaclesCopy.what.job
+    }
+    case "routines": {
+      const routine = plan.routines.find((r) => r.id === a)
+      const name = routine?.label ?? ""
+      if (b === "steps") return fillText(routinesCopy.steps.job, { routine: name })
+      if (b === "when") return fillText(routinesCopy.when.job, { routine: name })
+      if (b === "split") return routinesCopy.split.job
+      if (b === "serves") return fillText(routinesCopy.serves.job, { routine: name })
+      return routinesCopy.pick.job
+    }
+    case "questions": {
+      const q = plan.fields.find((f) => f.id === a)?.label ?? ""
+      if (b === "where") return fillText(questionsCopy.where.job, { question: q })
+      if (b === "kind") return fillText(questionsCopy.kind.job, { question: q })
+      return questionsCopy.pick.job
+    }
+    case "rolemodels": return a === "week" ? rolemodelsCopy.week.job : a === "remind" ? rolemodelsCopy.remind.job : b === "take" ? rolemodelsCopy.take.job.replace("{name}", "them") : rolemodelsCopy.pick.job
+    case "quit": return a === "days" ? quitCopy.days.job : a === "urge" ? quitCopy.urge.job : quitCopy.what.job
+    case "selfratings": {
+      const q = plan.fields.find((f) => f.id === a)?.label ?? ""
+      if (b === "scale") return fillText(selfratingsCopy.scale.job, { question: q })
+      if (b === "where") return fillText(selfratingsCopy.where.job, { question: q })
+      return selfratingsCopy.pick.job
+    }
     case "review": return a === "run" ? homeCopy.next_up.job_review_due : a === "time" ? reviewCopy.time.job : a === "phone" ? reviewCopy.phone.job : reviewCopy.day.job
   }
   return ""
@@ -277,11 +335,29 @@ export function planStatus(input: PlanStatusInput): PlanStatus {
     if (firstUnfinished === null && (!started || reasons.some((r) => r.kind === "missing"))) firstUnfinished = id
   }
 
-  return { modules, nextUp: pickNextUp(modules, plan) }
+  const rawExtras = extraModules(plan, today)
+  const extras = {} as Record<ExtraId, ExtraStatus>
+  for (const id of EXTRA_IDS) {
+    const { started, reasons } = rawExtras[id]
+    // A module nobody started carries no reasons: a fresh account is never nagged about what it never opened.
+    const shown = started ? reasons : []
+    extras[id] = { state: !started ? "not-started" : shown.length === 0 ? "done" : "needs-a-look", started, reasons: shown }
+  }
+
+  return { modules, extras, nextUp: pickNextUp(modules, extras, plan, input.hidden ?? []) }
 }
 
-function pickNextUp(modules: Record<CoreId, ModuleStatus>, plan: NsPlan): NextUp | null {
-  const make = (module: CoreId, target: string, rule: NextUp["rule"], reasonId: string | null): NextUp => ({
+/** The order the suggestion (rule 6) walks. */
+export const SUGGESTION_ORDER: readonly ExtraId[] = ["routines", "obstacles", "experiences", "values", "identity", "standing", "questions", "selfratings", "rolemodels", "quit"]
+
+function slipped(plan: NsPlan): boolean {
+  const weeks = plan.reviews.filter((r) => r.cadence === "week")
+  const latest = weeks.reduce<(typeof weeks)[number] | null>((a, r) => (!a || r.periodStart > a.periodStart ? r : a), null)
+  return Boolean(latest?.lessons.trim())
+}
+
+function pickNextUp(modules: Record<CoreId, ModuleStatus>, extras: Record<ExtraId, ExtraStatus>, plan: NsPlan, hidden: readonly ExtraId[]): NextUp | null {
+  const make = (module: ModuleId, target: string, rule: NextUp["rule"], reasonId: string | null): NextUp => ({
     module, target, href: screenHref(target), rule, reasonId, job: jobOf(target, plan),
   })
   // 1. The first core module that is not started or is missing something.
@@ -301,6 +377,16 @@ function pickNextUp(modules: Record<CoreId, ModuleStatus>, plan: NsPlan): NextUp
   for (const id of CORE_IDS) {
     const check = modules[id].reasons.find((r) => r.kind === "check")
     if (check) return make(id, check.target, "check", check.id)
+  }
+  // 5. The first extra module with something worth a look.
+  for (const id of EXTRA_IDS) {
+    const r = extras[id].reasons[0]
+    if (r) return make(id, r.target, "extra-look", r.id)
+  }
+  // 6. A suggestion: the first extra not started and not hidden. Something slipped last week: What could stop you first.
+  const order = slipped(plan) ? (["obstacles", ...SUGGESTION_ORDER.filter((x) => x !== "obstacles")] as ExtraId[]) : [...SUGGESTION_ORDER]
+  for (const id of order) {
+    if (!extras[id].started && !hidden.includes(id)) return make(id, extraFirstTarget(id, plan), "suggest", null)
   }
   // 7. Nothing.
   return null

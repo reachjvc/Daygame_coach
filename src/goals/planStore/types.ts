@@ -28,6 +28,12 @@ export interface PlanStore {
   subscribe(listener: () => void): () => void
   /** Change the plan. The screen sees the change at once; the save starts at once and never blocks the caller. */
   update(change: (plan: NsPlan) => NsPlan): void
+  /**
+   * Change the day half of the plan (ticks, counts, readings, ratings, answers, the day note). The screen sees it at
+   * once; the day is sent on its own route, one day at a time, and the plan is saved first when the account has not
+   * got an id yet. Never touches the plan's own rows.
+   */
+  updateDay(change: (plan: NsPlan) => NsPlan): void
   /** Resolve when everything changed so far is confirmed (true) or could not be saved (false). */
   flush(): Promise<boolean>
   /** Try again after a failure. */

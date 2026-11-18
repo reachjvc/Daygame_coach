@@ -53,7 +53,8 @@ describe("planStatus: states", () => {
     const { plan } = builtPlan()
     const s = status(plan)
     for (const [id, m] of Object.entries(s.modules)) expect(m.state, id).toBe("done")
-    expect(s.nextUp).toBeNull()
+    // With the core done the plan only suggests an extra module (rule 6), never a core one.
+    expect(s.nextUp?.rule).toBe("suggest")
   })
 })
 

@@ -16,9 +16,15 @@ export function screenHref(target: string): string {
 
 export const homeHref = () => ROUTES.planNew
 export const readHref = () => `${ROUTES.planNew}/read`
-export const todayHref = () => `${ROUTES.planSandbox}?step=today`
+export const todayHref = () => `${ROUTES.planNew}/today`
+export const trackHref = () => `${ROUTES.planNew}/track`
+export const journalHref = () => `${ROUTES.planNew}/journal`
+
+export type ModuleId = CoreId | ExtraId
 
 export function moduleOfTarget(target: string): CoreId | null {
   const first = target.split("/")[0]
   return (CORE_IDS as readonly string[]).includes(first) ? (first as CoreId) : null
 }
+
+export const isExtraId = (id: string): id is ExtraId => (EXTRA_IDS as readonly string[]).includes(id)

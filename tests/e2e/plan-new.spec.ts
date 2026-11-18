@@ -337,7 +337,7 @@ test.describe("the new version of the plan", () => {
     const states = async () => Object.fromEntries(await Promise.all(["areas", "direction", "season", "goals", "actions", "review"].map(async (m) => [m, await tid(page, `core-${m}`).getAttribute("data-state")])))
     const before = await states()
     expect(before, JSON.stringify(before)).toEqual({ areas: "done", direction: "done", season: "done", goals: "done", actions: "done", review: "done" })
-    await expect(tid(page, "next-up")).toContainText("All set")
+    await expect(tid(page, "next-up")).toContainText("pick your routines")
     await look(page, "home-built")
     await page.reload({ timeout: NAV })
     await expect(tid(page, "plan-home")).toBeVisible({ timeout: NAV })
