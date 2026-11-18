@@ -191,6 +191,9 @@ export async function trackEntry(page: Page, description: string): Promise<void>
   const stop = timerButton(page, 'Stop timer')
   await stop.waitFor({ timeout: 15_000 })
   await expect.poll(() => page.title(), { timeout: 10_000 }).toMatch(/^(?!0:00:00)\d+:\d\d:\d\d · /)
+  // A Stop tapped while the page is still checking the account or sending the Start is held (D2),
+  // so wait for the real state a person would see: everything saved.
+  await savedToAccount(page)
   await stop.click()
   await expect(entryInList(page, description).first()).toBeVisible({ timeout: 15_000 })
   await expect(timerButton(page, 'Start timer')).toBeVisible()
