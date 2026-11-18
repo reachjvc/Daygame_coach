@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { notFound } from "next/navigation"
 import { ComingSoon } from "@/src/quit/components/ComingSoon"
 import { ToolFrame } from "@/src/quit/components/ToolFrame"
@@ -35,7 +36,9 @@ export default async function QuitToolPage({
   const { Component } = entry
   return (
     <ToolFrame addiction={addiction} title={name} present={present} preview={preview} hideCraving={tool === "sos"}>
-      <Component addiction={addiction} data={data} present={present} />
+      <Suspense>
+        <Component addiction={addiction} data={data} present={present} />
+      </Suspense>
     </ToolFrame>
   )
 }

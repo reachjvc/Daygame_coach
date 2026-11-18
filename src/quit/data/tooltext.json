@@ -1,4 +1,156 @@
 {
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "continue": "Continue",
+    "done": "Done",
+    "clear": "Clear my answers",
+    "cleared": "Answers cleared.",
+    "loading": "Loading",
+    "notReady": "This tool has no content for this topic yet.",
+    "counted": "Counted:",
+    "basedOn": "Based on",
+    "source": "Source",
+    "hideSource": "Hide source",
+    "openSource": "Open the source",
+    "sourcesTitle": "Sources",
+    "noSources": "Nothing on this screen needs a source.",
+    "less": "Less",
+    "more": "More",
+    "stepLabel": "Question {n} of {total}",
+    "basis": {
+      "design": "Study",
+      "who": "Who",
+      "n": "How many",
+      "where": "Where",
+      "when": "When",
+      "measured": "What was measured",
+      "caveat": "Caveat"
+    }
+  },
+  "tags": {
+    "hooked": "Checked as hooked",
+    "not": "Not checked for addiction"
+  },
+  "chips": {
+    "projection": "Worked out, not counted",
+    "pooled": "Average across studies"
+  },
+  "evidence": {
+    "strong": "Strong evidence",
+    "moderate": "Some evidence",
+    "weak": "Weak evidence",
+    "none": "Not tested"
+  },
+  "beliefs": {
+    "rate": "How much is this you?",
+    "ratings": [
+      "Not me",
+      "A bit",
+      "Somewhat",
+      "Mostly",
+      "That’s me"
+    ],
+    "factTrue": "True",
+    "factFalse": "False",
+    "factRight": "Right.",
+    "factWrong": "Not quite.",
+    "seeThrough": "You already see through these",
+    "topHeading": "These hold you most",
+    "noTop": "None of the twelve hold you much.",
+    "thoughtLabel": "The thought",
+    "counterLabel": "The other side",
+    "proofLabel": "The proof",
+    "whenLabel": "When this thought comes",
+    "testLabel": "Test it this week",
+    "needLink": "What it gives you: {need}",
+    "bandHeading": "Where you are",
+    "heldLine": "{n} of {total} hold you",
+    "share": "Share my result",
+    "shareTitle": "{name}: the lies test",
+    "shareText": "I believed {n} of {name}’s {total} lies.",
+    "linkCopied": "Link copied",
+    "saveImage": "Save the image",
+    "bandLink": "Go on from here",
+    "next": "What it gives you"
+  },
+  "gives": {
+    "pickQuestion": "What does it give you? Pick 1 to 3.",
+    "pickMax": "Three is the most. Untick one to change.",
+    "quotesHeading": "What you tell yourself",
+    "swapsHeading": "Swaps",
+    "tryIt": "Try this one this week",
+    "tried": "On your list for this week",
+    "rateQuestion": "How much of it did that give you?",
+    "save": "Save",
+    "saved": "{n}% of it. Saved.",
+    "ratingValue": "{n}%",
+    "resultHeading": "Your list for this week",
+    "emptyResult": "Nothing on the list yet.",
+    "nextNeed": "Next",
+    "finish": "See my list",
+    "toMenu": "Back to the menu"
+  },
+  "past": {
+    "triesQuestion": "How many times have you tried to quit?",
+    "tries": {
+      "0": "0",
+      "1": "1",
+      "2-3": "2–3",
+      "4-9": "4–9",
+      "10+": "10+"
+    },
+    "stretchQuestion": "What is the longest you stayed off?",
+    "stretchUnits": {
+      "days": "Days",
+      "weeks": "Weeks",
+      "months": "Months",
+      "years": "Years"
+    },
+    "lastQuestion": "When did the last try end?",
+    "lastEnded": {
+      "month": "This month",
+      "year": "This year",
+      "longer": "Longer ago"
+    },
+    "endingsQuestion": "What ended it? Pick up to 3.",
+    "helpedQuestion": "What helped while it lasted?",
+    "slipQuestion": "After the first slip, what went through your head?",
+    "slip": {
+      "gaveUp": "I gave up",
+      "restarted": "I started again the same day",
+      "justOnce": "“Just this once”",
+      "dontRemember": "I don’t remember"
+    },
+    "longestEnded": "Your longest try ended around day {n}",
+    "window": "Days {from} to {to} are your window to watch.",
+    "riskyHeading": "Risky moments for your if-then cards",
+    "keepHeading": "Keep these in your plan",
+    "noTries": "No tries yet. The next tools are for the first one."
+  },
+  "cost": {
+    "unitQuestion": "What do you use?",
+    "amountQuestion": "How much?",
+    "perDay": "A day",
+    "daysPerWeek": "Days a week",
+    "priceQuestion": "What does one {unit} cost, in USD?",
+    "minutesQuestion": "How many minutes does one {unit} take?",
+    "yearLabel": "In one year",
+    "tenYearLabel": "In ten years",
+    "hoursLine": "{n} hours a year",
+    "basis": "Worked out at 52 weeks a year, with no price rise.",
+    "swapNow": "Every year that is {text}.",
+    "swapIn": "In {n} years that is {text}."
+  },
+  "how": {
+    "groups": {
+      "who": "Who gets free",
+      "how": "How quitting goes",
+      "helps": "What helps",
+      "after": "What happens after",
+      "other": "More"
+    }
+  },
   "privacy": {
     "backToTools": "Free quit tools",
     "coachingLink": "30 days with a coach",

@@ -1,4 +1,9 @@
 import type { ComponentType } from "react"
+import { BeliefsTool } from "./beliefs/BeliefsTool"
+import { CostTool } from "./cost/CostTool"
+import { GivesTool } from "./gives/GivesTool"
+import { HowTool } from "./how/HowTool"
+import { PastTool } from "./past/PastTool"
 import type { QuitToolId, ToolProps } from "../types"
 
 export interface ToolEntry {
@@ -8,11 +13,11 @@ export interface ToolEntry {
 
 /** Later phases fill `Component`; until then every tool shows the coming-soon state. */
 export const TOOL_REGISTRY: Record<QuitToolId, ToolEntry> = {
-  beliefs: { wave: 1, Component: null },
-  gives: { wave: 1, Component: null },
-  past: { wave: 1, Component: null },
-  cost: { wave: 1, Component: null },
-  how: { wave: 1, Component: null },
+  beliefs: { wave: 1, Component: BeliefsTool },
+  gives: { wave: 1, Component: GivesTool },
+  past: { wave: 1, Component: PastTool },
+  cost: { wave: 1, Component: CostTool },
+  how: { wave: 1, Component: HowTool },
   curve: { wave: 1, Component: null },
   ifthen: { wave: 2, Component: null },
   clear: { wave: 2, Component: null },
