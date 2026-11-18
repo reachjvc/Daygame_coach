@@ -124,7 +124,7 @@ export const onPhone = (page: Page) => (page.viewportSize()?.width ?? 1280) < 64
 export const timerButton = (page: Page, name: 'Start timer' | 'Stop timer') =>
   onPhone(page) ? page.getByTestId('run-bar').getByRole('button', { name }) : page.locator('main').getByRole('button', { name })
 
-/** Start a timer called `description`: typed and Start on a PC; "I'm working on…", the name and CREATE on a phone */
+/** Start a timer called `description`: typed and Start on a PC; "I'm working on…", the name and the sheet's Start on a phone */
 export async function startNamed(page: Page, description: string): Promise<void> {
   if (!onPhone(page)) {
     await page.getByPlaceholder('What are you working on?').fill(description)
@@ -134,7 +134,7 @@ export async function startNamed(page: Page, description: string): Promise<void>
   await page.getByTestId('run-bar').getByRole('button', { name: /working on/ }).click()
   const sheet = page.getByRole('dialog', { name: 'New time entry' })
   await sheet.getByPlaceholder('I’m working on…').fill(description)
-  await sheet.getByRole('button', { name: 'Create' }).click()
+  await sheet.getByRole('button', { name: 'Start', exact: true }).click()
   await expect(sheet).toBeHidden()
 }
 
