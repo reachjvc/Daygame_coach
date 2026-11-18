@@ -1,6 +1,6 @@
 # Quit tools, copied from the best: one phase per tool
 
-Written 2026-11-18 (Opus, planning session). Status: **running. Phases 0–3 done (timeline best 04b80266, fact-checked). B1 fixed (7c78d5bc): live lab answers 200. Phase 4 copies in Step E. Step B passed for Phases 4–13.**
+Written 2026-11-18 (Opus, planning session). Status: **running. Phases 0–3 done. Phase 4 copies on main (9d6e1273), `best` building. Phase 5 copies in Step E. Phase 6 copies building. B1 fixed (live lab 200). Review page generator ready (private).**
 
 ## Why this plan exists
 
@@ -221,6 +221,30 @@ checked source.
 6. The day ranges drawn on the bands are numbers we derive from the sources' words ("first week", "2 to 4 weeks",
    "about 10 days"): the builder lists each derived number in its report and an **Opus fact-check** compares them
    with the cited quotes before merge.
+
+### Phase 4 Step D brief: `quitdate/best` (2026-11-18)
+
+Copies a, b, d, e on main (9d6e1273). From `quitdate/overlap.md`, the earlier evidence review (private
+`quit-tool/evidence-tools.md` §4 and §5.2: S21 Lindson-Hawley 2016 PMID 26975007, S22 Lindson 2019 PMID 31565800,
+S23 Hughes 2011 PMID 21908460, S24 Cobb 2014 PMID 24534139, S25 Anesi 2017 PMID 28639106) and his step 3 ("a date
+ahead, some days or weeks out is fine"):
+1. **One short form, goal first** (every copy): what he wants (stop for good / a break of a set length, copy a's
+   fork with a second line per option), then the date. No taper path: the evidence review found abrupt no worse
+   and in one large trial better; "not ready yet" (copy e) is the third answer and leads to step 1 of his plan
+   (keep using while logging) with a nudge to pick a date later.
+2. **Near date first** (copy e's picker, made nearer): chips "in 3 days", "this weekend", "next Monday",
+   "in 2 weeks", plus a date field; past 14 days a plain line "Dates far ahead went with fewer quits in one large
+   trial" with its basis one tap away. Never "today" as the default chip (his "days or weeks").
+3. **A break has a length** (copy a's pace, copy d's countdown): 1, 2, 4 weeks or a set date; a live countdown to
+   the end on the result.
+4. **Result page** (copy e's results + copy d's ladder): his date and days to go; add-to-calendar (Google link +
+   .ics, as copy e); a short get-ready checklist taken from his plan steps (`planSteps` in the data file);
+   a ladder of near goals after the date (1 day, 3 days, 1 week, 2 weeks, 1 month) with a countdown to the next.
+5. **Never reset:** after the date, past runs stay listed (copy d's streak list) beside the total clear days.
+6. Addiction switcher; the date flow works for every addiction; nicotine-only evidence lines say "studied in
+   smokers" and are hidden for porn.
+7. Every number with its basis. The date-distance line and any abrupt-vs-gradual line are new claims: the builder
+   lists each sentence with its source, and an **Opus fact-check** compares them with the abstracts before merge.
 
 ---
 
