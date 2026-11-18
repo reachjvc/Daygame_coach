@@ -1,7 +1,7 @@
 # Quit tool: a free menu of quit tools, then a 90-day program
 
 Written 2026-11-18, rewritten the same day after three research rounds and the owner's menu idea. Status:
-**Phase 0 done 2026-11-18 (owner asked; mock had no notes); Phase 1 building.** Replaces the "one page per addiction" frame of the addiction one-pagers
+**Phase 0 done, Phase 1 live 2026-11-18 (types, importer, validator); Phase 2 (nicotine content) running.** Replaces the "one page per addiction" frame of the addiction one-pagers
 (docs/research/addiction-one-pagers/); their research, rules and checked numbers are reused, the page form is not.
 
 **Scheduled by `Plans/first-1000.md` (2026-11-18):** the free nicotine tools ship by **20 Dec 2026** so New Year
@@ -321,7 +321,7 @@ first person (only `offer.json` may hold "I"). Nicotine's footer line (clozapine
 
 1. `src/quit/types.ts` — exported types, no runtime code except the `as const` id lists:
    - `QUIT_ADDICTION_IDS = ["nicotine","weed","porn","alcohol","scrolling","gambling"] as const`;
-     `QuitAddictionId`. `QUIT_TOOL_IDS` = the 20 tool ids of Part 1's table; `QuitToolId`.
+     `QuitAddictionId`. `QUIT_TOOL_IDS` = the 19 tool ids of Part 1's table; `QuitToolId`.
    - `Severity` = the 8 RULEBOOK rule 3 tags. `Evidence = "strong"|"moderate"|"weak"|"none"`.
    - `QuitRef {cite: string; url: string; pmid?: string; quote?: string; fetched?: boolean; fetchedOn?: string}`.
    - `Check {by: string; on: string; verdict: "ok"|"fix"|"drop"; notes?: string}`.
