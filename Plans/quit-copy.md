@@ -1,6 +1,6 @@
 # Quit tools, copied from the best: one phase per tool
 
-Written 2026-11-18 (Opus, planning session). Status: **running. Phases 0–3 done. Phase 4 copies on main (9d6e1273), `best` building. Phase 5 copies in Step E. Phase 6 copies building. B1 fixed (live lab 200). Review page generator ready (private).**
+Written 2026-11-18 (Opus, planning session). Status: **running. Phases 0–3 done. Phase 4 `best` in fact-check. Phase 5 copies on main (07e8da2a), `best` brief written. Phase 6 copies in fix round 1. Phase 7 copies building. B1 fixed.**
 
 ## Why this plan exists
 
@@ -245,6 +245,28 @@ ahead, some days or weeks out is fine"):
    smokers" and are hidden for porn.
 7. Every number with its basis. The date-distance line and any abrupt-vs-gradual line are new claims: the builder
    lists each sentence with its source, and an **Opus fact-check** compares them with the abstracts before merge.
+
+### Phase 5 Step D brief: `beliefs/best` (2026-11-18)
+
+Copies a, b, c on main (07e8da2a). From `beliefs/overlap.md` ("what the app shows back is weak everywhere":
+our gap) and the nicotine data's 12 checked beliefs (`beliefs[]`: scene, limiting, counterpart, whenThought,
+test, proof, refs, need; `bands`):
+1. **No gate, result on the page** (every copy gates it). One belief per screen with a progress bar and Back.
+2. **Rate each belief 1–5, agree to disagree** (copy b's best piece), shown as the belief in his own voice
+   (`limiting`), with the `scene` line above it. Answer moves on (no Next tap).
+3. **Reply right after each answer he agrees with (4–5)** (copy b's per-answer rebuttal, made kind): the
+   `counterpart` and one line of `proof` with its source on tap. Disagree (1–2) moves on silently.
+4. **Name the fears** (copy a's best piece): before the results, a multi-select of the beliefs of kind `hard`
+   and `stuck` as fears, with a kind reply to "none of these" (copy a).
+5. **One last question** (copy e's best piece): "Do you believe you can stop?" yes / not sure / no, shown on the
+   result next to his answers, never scored.
+6. **Result:** how many of the twelve hold him (4–5) with the `bands` line; his top three as cards (limiting →
+   counterpart, `whenThought` as "when this thought comes", this week's `test`), each with sources; the `need`
+   behind each linked to its swaps (current tool's `gives` logic). No score, no radar, no comparison with others.
+7. Saved on the phone; "take it again" keeps the earlier result beside the new one (date-stamped), so he sees
+   change. Addiction switcher; where `beliefs` is missing, "content coming".
+8. All belief text comes from the data file (already checked); no new claims expected. Any new sentence that
+   states a fact goes to an Opus fact-check before merge.
 
 ---
 
