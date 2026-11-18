@@ -1,6 +1,6 @@
 # Quit tools, copied from the best: one phase per tool
 
-Written 2026-11-18 (Opus, planning session). Status: **running. Phase 0 done (8f3e2ee3). Phase 1 done: copies a, c, d, e + `best` on main (10f1bc62). Phase 2 copies in fix round 1. Step B passed for Phases 3–12; Phase 13 researching. B1 cause found, fix building (Vercel account jonas879-8953).**
+Written 2026-11-18 (Opus, planning session). Status: **running. Phase 0 done. Phase 1 done (10f1bc62). Phase 2 copies a–e on main (920d4776), `best` building. Phase 3 copies building. Step B passed for Phases 3–13. B1 round 2 in progress (live still 500).**
 
 ## Why this plan exists
 
@@ -148,6 +148,10 @@ nicotine content, the validator, privacy and coaching pages, the audit fixes) is
 - Phase 12 (accountability) Step B: copies **a, b, e** pass (a: partner sign-up, activity summary, check-in;
   b: partners and clock check-in; e: the only real stake flow, its payment, charge and payout screens shown as
   "not built: the site never holds money"). **c, d dropped** (thin; c is mostly a leaderboard).
+- Phase 13 (library) Step B: copies **a–e** pass (6–14 seen screens each; the shell only, article content never
+  copied). No pick shows a search-results or saved-items screen: those are inferred (rule 2) everywhere.
+- B1 round 1 (c084d633, trace includes) deployed: still 500, next missing file `react/jsx-runtime`. Round 2:
+  find why the server bundle takes the pages-router context; reproduce with the standalone build.
 
 ### Phase 1 Step D brief: `sos/best` (2026-11-18)
 
@@ -172,6 +176,28 @@ Copies a, c, d, e are on main (c9982f21). The improved version, from `sos/overla
    field is missing for an addiction, that tool says "content coming".
 7. Rules: every number with basis and source; no streak, nothing resets; no screening; no founder "I"; phone first.
    New text is our own; any new factual claim goes to an Opus fact-check before merge.
+
+### Phase 2 Step D brief: `progress/best` (2026-11-18)
+
+Copies a–e on main (920d4776). The improved version, from `progress/overlap.md` and our rules:
+1. **Never resets:** the big figure is **total clear days**; under it "current run" and "best run" side by side
+   (copy e's best piece). A slip adds a stretch to a stretch list (length + his note; copy c's best piece);
+   nothing is wiped.
+2. **One row of tiles** under it (copy d): money kept, units not used, plus one tile per addiction from its data
+   file where a checked figure exists. No time-won-back tile and no calorie tile (unsourced in every copy).
+3. **Money page:** the per-day amount he typed shown beside the total with an edit pencil (copy a); period tabs
+   (day, week, month, year; copy e); projections per month and year from the same rate (copy a); minus what he
+   spent on the habit or replacements (copy b); the formula line with his real inputs.
+4. **A named target** for the money (copy b's wishlist): one or more items with price, filled in order, progress bar
+   and days to go at his rate.
+5. **Milestones**, not cheering: a plain ladder of clear-day counts (1, 3, 7, 14, 30, 60, 90, 180, 365) and money
+   amounts, reached ones listed with the date; no badge art, no exclamation marks, no feature-use badges.
+6. **Calendar** of clear days and slips (copy c/e), slip days marked without red alarm styling.
+7. Setup in one screen: start date, which unit (from the data file's `units`), units per day (empty until typed),
+   price per unit prefilled from the unit's checked `defaultPriceUsd` with its source on tap, editable; an "Example
+   data" option like the copies. Addiction switcher from the data files; units word from the data file (`units`).
+8. Rules: every number his own input or derived from it, shown with its formula on tap; no unsourced figure; no
+   founder "I"; phone first.
 
 ---
 
