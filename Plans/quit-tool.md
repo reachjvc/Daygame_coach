@@ -1,11 +1,10 @@
 # Quit tool: a free menu of quit tools, then a 90-day program
 
 Written 2026-11-18, rewritten the same day after three research rounds and the owner's menu idea. Status:
-**Phases 0–6 and Phase 7 steps 1–4 done 2026-11-18 (all on main, hidden): data, checked nicotine content,
-menu, beliefs, gives, past, cost, how, sos, symptoms, slip, privacy, coaching; audit (25 findings fixed), Opus
-review (fix round 2 done), phone walk on the emulator. Owner review page: https://claude.ai/artifact/7jhShQpzv9bAmQKdfPBfYE
-(db `likes`, `notes`, keyed by tool id). Step 5 (ship) waits for his privacy contact email; `curve` waits for
-his notes on mock v2.** Replaces the "one page per addiction" frame of the addiction one-pagers
+**Phases 0–6 and Phase 7 steps 1–4 done 2026-11-18 (all on main, hidden). Phase 7 step 5 (ship) is replaced
+by `Plans/quit-copy.md` (owner, 2026-11-18: copy every competitor's version of each tool, improve it, and let him
+pick per tool); the wave-1 tools become each tool's variant "current". Ship waits for his picks and his privacy
+contact email.** Replaces the "one page per addiction" frame of the addiction one-pagers
 (docs/research/addiction-one-pagers/); their research, rules and checked numbers are reused, the page form is not.
 
 **Scheduled by `Plans/first-1000.md` (2026-11-18):** the free nicotine tools ship by **20 Dec 2026** so New Year
