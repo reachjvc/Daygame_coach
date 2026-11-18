@@ -37,13 +37,13 @@ const COUNTED_KEYS: Record<string, RegExp> = {
 }
 const MOD_OK = new Set(["dependent", "resolved", "disorder", "treatment"])
 const MOD_WORDS = /just one|one quick|handle it|in control|under control|moderate|a little|only on weekends/i
-const SCREEN = /is this you|are you addicted|take the test|\bquiz\b|screener|do you have a problem|sound like you/i
-const CHEER = /you'?ve got this|you got this|you can do it|proud of you|amazing|journey|\bstay strong\b|!/i
+export const SCREEN = /is this you|are you addicted|take the test|\bquiz\b|screener|do you have a problem|sound like you/i
+export const CHEER = /you'?ve got this|you got this|you can do it|proud of you|amazing|journey|\bstay strong\b|!/i
 const TOLL = /\bdeaths?\b|\bdied\b|million|billion/i
 // ---- from the Phase 1 brief
-const FOUNDER = /\bI quit\b|\bwhen I\b|\bmy story\b/i
-const FORECAST = /you will|chance of success|likely to succeed|will succeed/i
-const NO_RESET = /\breset\b|back to zero|start over from day 0|day zero/i
+export const FOUNDER = /\bI quit\b|\bwhen I\b|\bmy story\b/i
+export const FORECAST = /you will|chance of success|likely to succeed|will succeed/i
+export const NO_RESET = /\breset\b|back to zero|start over from day 0|day zero/i
 const NOT_AVOID = /^(I\s+)?(won'?t|will not|not|avoid|never|don'?t|stop)\b/i
 
 /** Keys whose content is a source, an id or a tag, not text the reader reads. */

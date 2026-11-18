@@ -14,7 +14,6 @@
     "hideSource": "Hide source",
     "openSource": "Open the source",
     "sourcesTitle": "Sources",
-    "noSources": "Nothing on this screen needs a source.",
     "less": "Less",
     "more": "More",
     "stepLabel": "Question {n} of {total}",
@@ -43,7 +42,7 @@
     "none": "Not tested"
   },
   "beliefs": {
-    "rate": "How much is this you?",
+    "rate": "How much do you believe this?",
     "ratings": [
       "Not me",
       "A bit",

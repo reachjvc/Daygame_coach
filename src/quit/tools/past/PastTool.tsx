@@ -52,13 +52,13 @@ function Inner({ addiction, endings, helped, tries, planSteps }: InnerProps) {
   const { state, update, clear } = useToolState<PastState>(addiction, "past", EMPTY_PAST)
   const total = totalScreens(state?.tries ?? null)
   const first = state ? firstUnanswered(state) : 1
-  const { screen, go, reset, isResult } = useScreens(first, total)
+  const { screen, go, back: goBack, reset, isResult } = useScreens(first, total)
   const started = useStartCount(addiction, "past")
   useDoneCount(addiction, "past", state !== null && isResult)
   const slip = useMemo(() => slipLine(planSteps), [planSteps])
 
   if (!state) return null
-  const back = screen > 1 ? () => go(screen - 1) : null
+  const back = screen > 1 ? goBack : null
 
   const pass = (patch: Partial<PastState> = {}, last = false) => {
     update((s) => {

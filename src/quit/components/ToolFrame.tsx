@@ -71,7 +71,7 @@ export function ToolFrame({ addiction, title, step, of, present = false, preview
                 {frame.privacy}
               </Link>
             </li>
-            <li>
+            <li className="hidden [body:has(#sources)_&]:block">
               <a href="#sources" className="flex min-h-11 items-center">
                 {frame.sources}
               </a>

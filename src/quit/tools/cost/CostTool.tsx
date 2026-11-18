@@ -32,12 +32,12 @@ function Inner({ addiction, units, swaps }: { addiction: string; units: QuitUnit
   const hasMinutes = (u: QuitUnit | undefined) => u?.defaultMinutesPerUnit != null
   const unit = units.find((u) => u.id === state?.unit)
   const total = 3
-  const { screen, go, reset, isResult } = useScreens((state?.done ?? 0) + 1, total)
+  const { screen, go, back: goBack, reset, isResult } = useScreens((state?.done ?? 0) + 1, total)
   const started = useStartCount(addiction, "cost")
   useDoneCount(addiction, "cost", state !== null && isResult)
 
   if (!state) return null
-  const back = screen > 1 ? () => go(screen - 1) : null
+  const back = screen > 1 ? goBack : null
   const pass = (patch: Partial<CostState> = {}) => {
     update((s) => ({ ...s, ...patch, done: Math.max(s.done, screen) }))
     go(screen + 1)

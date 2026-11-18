@@ -112,8 +112,27 @@ test.describe("quit wave 1 part 1 @phone", () => {
     await page.goBack()
     await expect(page.getByTestId("scene")).toHaveText(data.beliefs[3].scene)
     await expect(page.getByTestId("rate-3")).toHaveAttribute("aria-checked", "true")
+  })
+
+  test("in-page Back acts like the browser Back and adds no history entry", async ({ page }) => {
+    await page.goto(`${A}/beliefs`)
+    await runBeliefs(page, RATINGS, { stopAfter: 4 })
+    await expect(page.getByTestId("scene")).toHaveText(data.beliefs[4].scene)
     await page.getByTestId("screen-back").click()
+    await expect(page.getByTestId("scene")).toHaveText(data.beliefs[3].scene)
+    await page.goBack()
     await expect(page.getByTestId("scene")).toHaveText(data.beliefs[2].scene)
+  })
+
+  test("in-page Back after a reload rewrites the entry instead of adding one", async ({ page }) => {
+    await page.goto(`${A}/beliefs`)
+    await runBeliefs(page, RATINGS, { stopAfter: 4 })
+    await page.reload()
+    await expect(page.getByTestId("scene")).toHaveText(data.beliefs[4].scene)
+    const before = await page.evaluate(() => history.length)
+    await page.getByTestId("screen-back").click()
+    await expect(page.getByTestId("scene")).toHaveText(data.beliefs[3].scene)
+    expect(await page.evaluate(() => history.length)).toBe(before)
   })
 
   test("the lies test still reaches the result when localStorage throws", async ({ page }) => {
@@ -268,6 +287,13 @@ test.describe("quit wave 1 part 1 @phone", () => {
     await shot(page, "how-based-on")
     await page.getByRole("button", { name: t.common.source, exact: true }).first().click()
     await expect(page.getByRole("link", { name: t.common.openSource }).first()).toHaveAttribute("target", "_blank")
+  })
+
+  test("the sources fold and its footer link show only when the screen has sources", async ({ page }) => {
+    await page.goto(`${A}/beliefs`)
+    await expect(page.getByTestId("scene")).toBeVisible()
+    await expect(page.locator("details#sources")).toHaveCount(0)
+    await expect(page.getByRole("link", { name: frameJson.sources, exact: true })).toBeHidden()
   })
 
   test("the sources link in the footer opens the sources fold", async ({ page }) => {

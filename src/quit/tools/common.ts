@@ -23,8 +23,8 @@ export function uniqueRefs(refs: QuitRef[]): QuitRef[] {
   return out
 }
 
-/** RULEBOOK rule 2: severities whose source counted people checked as hooked. */
-const HOOKED_SEVERITIES: readonly Severity[] = ["dependent", "disorder"]
+/** RULEBOOK rules 2 and 3: severities whose source counted people with a problem; the rest are not checked for addiction. */
+const HOOKED_SEVERITIES: readonly Severity[] = ["dependent", "disorder", "treatment", "resolved"]
 
 /** The one tag on a number card: `checked` decides, else the severity. */
 export function checkedTag(n: Pick<QuitNumber, "checked" | "severity">): "hooked" | "not" {

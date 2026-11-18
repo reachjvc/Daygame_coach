@@ -80,10 +80,38 @@ export function useScreens(firstUnanswered: number, total: number) {
     },
     [sp, pathname],
   )
+  // The screens of the history entries made in this visit, and where we are in them.
+  const trail = useRef<{ stack: number[]; idx: number }>({ stack: [screen], idx: 0 })
+  useEffect(() => {
+    const t = trail.current
+    if (t.stack[t.idx] === screen) return
+    if (t.stack[t.idx - 1] === screen) t.idx -= 1
+    else if (t.stack[t.idx + 1] === screen) t.idx += 1
+    else {
+      t.stack = [...t.stack.slice(0, t.idx + 1), screen]
+      t.idx += 1
+    }
+  }, [screen])
+
   // Native history calls: Next syncs useSearchParams with them and no server round trip is needed.
   const go = useCallback((n: number) => window.history.pushState(null, "", hrefFor(n)), [hrefFor])
-  const reset = useCallback(() => window.history.replaceState(null, "", hrefFor(null)), [hrefFor])
-  return { screen, go, reset, isResult: screen === total + 1 }
+  const reset = useCallback(() => {
+    trail.current = { stack: [1], idx: 0 }
+    window.history.replaceState(null, "", hrefFor(null))
+  }, [hrefFor])
+  /** Like the browser's Back: steps back in history when the previous screen is the previous entry, else rewrites this entry. Never adds one. */
+  const back = useCallback(() => {
+    const t = trail.current
+    const prev = screen - 1
+    if (prev < 1) return
+    if (t.stack[t.idx - 1] === prev) {
+      window.history.back()
+      return
+    }
+    t.stack[t.idx] = prev
+    window.history.replaceState(null, "", hrefFor(prev))
+  }, [screen, hrefFor])
+  return { screen, go, back, reset, isResult: screen === total + 1 }
 }
 
 /** Counts `start` once, on the first answer of a visit that had none. */

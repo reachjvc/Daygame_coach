@@ -166,6 +166,7 @@ export function SourcesFold({ refs }: { refs: QuitRef[] }) {
     window.addEventListener("hashchange", check)
     return () => window.removeEventListener("hashchange", check)
   }, [])
+  if (refs.length === 0) return null
   return (
     <details
       id="sources"
@@ -174,22 +175,18 @@ export function SourcesFold({ refs }: { refs: QuitRef[] }) {
       className="mt-8 rounded-md border border-border bg-card p-3 text-sm"
     >
       <summary className="flex min-h-11 cursor-pointer items-center font-medium">{t.common.sourcesTitle}</summary>
-      {refs.length === 0 ? (
-        <p className="text-muted-foreground">{t.common.noSources}</p>
-      ) : (
-        <ul className="flex flex-col gap-3">
-          {refs.map((r, i) => (
-            <li key={`${r.url}-${i}`}>
-              <p>{r.cite}</p>
-              {r.url && (
-                <a href={r.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center break-all text-primary underline">
-                  {t.common.openSource}
-                </a>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul className="flex flex-col gap-3">
+        {refs.map((r, i) => (
+          <li key={`${r.url}-${i}`}>
+            <p>{r.cite}</p>
+            {r.url && (
+              <a href={r.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center break-all text-primary underline">
+                {t.common.openSource}
+              </a>
+            )}
+          </li>
+        ))}
+      </ul>
     </details>
   )
 }

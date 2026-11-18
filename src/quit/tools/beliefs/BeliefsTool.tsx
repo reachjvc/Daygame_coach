@@ -36,7 +36,7 @@ function Inner({ addiction, name, beliefs, facts, bands, needs }: InnerProps) {
   const { state, update, clear } = useToolState<BeliefsState>(addiction, "beliefs", EMPTY_BELIEFS)
   const total = beliefs.length + facts.length
   const first = state ? firstUnanswered(state, beliefs, facts) : 1
-  const { screen, go, reset, isResult } = useScreens(first, total)
+  const { screen, go, back: goBack, reset, isResult } = useScreens(first, total)
   const started = useStartCount(addiction, "beliefs")
   useDoneCount(addiction, "beliefs", state !== null && isResult)
 
@@ -59,7 +59,7 @@ function Inner({ addiction, name, beliefs, facts, bands, needs }: InnerProps) {
     )
   }
 
-  const back = screen > 1 ? () => go(screen - 1) : null
+  const back = screen > 1 ? goBack : null
 
   if (screen <= beliefs.length) {
     const b = beliefs[screen - 1]

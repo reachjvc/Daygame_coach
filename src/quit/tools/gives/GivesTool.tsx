@@ -52,12 +52,12 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
 
   const total = 1 + picked.length
   const first = (state?.done ?? 0) + 1
-  const { screen, go, reset, isResult } = useScreens(first, total)
+  const { screen, go, back: goBack, reset, isResult } = useScreens(first, total)
   const started = useStartCount(addiction, "gives")
   useDoneCount(addiction, "gives", state !== null && isResult)
 
   if (!state) return null
-  const back = screen > 1 ? () => go(screen - 1) : null
+  const back = screen > 1 ? goBack : null
   const today = localDate()
 
   if (screen === 1) {
