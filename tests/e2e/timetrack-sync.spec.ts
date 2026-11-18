@@ -27,6 +27,7 @@ import {
   readState,
   renameRunning,
   reopenFromAccount,
+  deleteEntry,
   savedToAccount,
   startNamed,
   timerButton,
@@ -257,16 +258,7 @@ test.describe('time is kept on the server, not just in one browser', { tag: '@ph
       'to be deleted',
     )
 
-    await page.getByRole('button', { name: 'More actions for this time entry' }).first().click()
-
-    // Scoped to the menu that is open, not to any button labelled "Delete" on
-    // the page. On a phone the menu scrolls, and an unscoped match picked a
-    // different one — the test then reported a working deletion as broken.
-    const menu = page.locator('[data-dropdown-panel]')
-    await expect(menu).toBeVisible()
-    const remove = menu.getByRole('button', { name: 'Delete' })
-    await remove.scrollIntoViewIfNeeded()
-    await remove.click()
+    await deleteEntry(page, 'to be deleted')
 
     // The entry must travel as a tombstone, not simply stop being sent. A
     // device that was offline during the deletion would otherwise see a row it

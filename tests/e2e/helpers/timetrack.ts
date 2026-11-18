@@ -112,6 +112,27 @@ export const entryInList = (page: Page, description: string) =>
   page.locator(`ul.divide-y li:has(input[value="${description}"]), ul.divide-y li:has-text("${description}")`)
 
 /**
+ * Delete the entry called `description`, whichever layout is on screen: the row's "..."
+ * menu on a PC; on a phone a tap opens the entry's sheet, which ends in "Delete time entry".
+ */
+export async function deleteEntry(page: Page, description: string): Promise<void> {
+  if (!onPhone(page)) {
+    await page.getByRole('button', { name: 'More actions for this time entry' }).first().click()
+    // Scoped to the menu that is open, not to any button labelled "Delete" on the page.
+    const menu = page.locator('[data-dropdown-panel]')
+    await expect(menu).toBeVisible()
+    const remove = menu.getByRole('button', { name: 'Delete' })
+    await remove.scrollIntoViewIfNeeded()
+    await remove.click()
+    return
+  }
+  await entryInList(page, description).first().getByText(description).first().click()
+  const sheet = page.getByRole('dialog', { name: 'Time entry' })
+  await sheet.getByRole('button', { name: 'Delete time entry' }).click()
+  await expect(sheet).toBeHidden()
+}
+
+/**
  * BELOW 640px THE TRACKER DRAWS ITS PHONE SCREENS (Plans/toggl-parity.md
  * Phases 1–2): Start and Stop are the round buttons of the bar at the bottom,
  * a name is typed in the sheet "I'm working on…" opens, and a running timer's
