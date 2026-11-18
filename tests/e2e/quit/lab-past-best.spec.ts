@@ -114,12 +114,16 @@ test("improved past: tries, pattern, window, handoff, edit, delete, example, swi
     await page.getByTestId(`switch-${a}`).click()
     await expect(page.getByTestId("example-bar")).toBeVisible()
     await page.getByTestId("example-clear").click()
-    await page.getByTestId("add-try").click()
-    await expect(page.getByTestId("chips-coming")).toBeVisible()
-    await page.getByTestId("f-ended-text").fill("a bad night")
-    await page.getByTestId("f-len").fill("3")
-    await page.getByTestId("f-save").click()
-    await expect(page.getByTestId("pattern-ending")).toContainText("a bad night")
+    for (const [i, text] of ["a bad night", "A bad night"].entries()) {
+      await page.getByTestId("add-try").click()
+      await expect(page.getByTestId("chips-coming")).toBeVisible()
+      await page.getByTestId("f-ended-text").fill(text)
+      await page.getByTestId("f-len").fill("3")
+      await page.getByTestId("f-save").click()
+      if (i === 0) await expect(page.getByTestId("pattern-ending")).toHaveCount(0)
+    }
+    await expect(page.getByTestId("pattern-window")).toHaveText("Most of your tries ended on day 3. 2 of 2 tries with a length.")
+    await expect(page.getByTestId("pattern-ending")).toHaveText("Most common ending: a bad night. 2 of 2 tries naming an ending.")
     await shot(`switch-${a}`)
   }
   expect(errors).toEqual([])

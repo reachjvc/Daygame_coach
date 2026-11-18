@@ -29,7 +29,7 @@ export const bestText = {
   noRepeatEnding: "Each try ended differently so far.",
   windowHow: "How is this worked out?",
   windowWhy: "The shortest span of days that holds more than half of your tries.",
-  windowLine: (from: number, to: number, k: number, n: number) => `Most of your tries ended in days ${from}–${to}. ${k} of ${n} tries with a length.`,
+  windowLine: (from: number, to: number, k: number, n: number) => `${from === to ? `Most of your tries ended on day ${from}.` : `Most of your tries ended in days ${from}–${to}.`} ${k} of ${n} tries with a length.`,
   windowNeed: "Two tries with a length show the days most of them ended in.",
   roughNote: "Weeks count as 7 days and months as 30.",
   usedIn: "Used in: if-then plan, quit date, SOS",

@@ -129,3 +129,10 @@ describe("top repeated", () => {
     expect(bestText.commonHelped(["A", "B", "C"], 2, 5)).toContain("A, B and C")
   })
 })
+
+describe("window wording", () => {
+  it("one day reads as a day, a span as days", () => {
+    expect(bestText.windowLine(3, 3, 2, 2)).toBe("Most of your tries ended on day 3. 2 of 2 tries with a length.")
+    expect(bestText.windowLine(5, 14, 2, 2)).toBe("Most of your tries ended in days 5–14. 2 of 2 tries with a length.")
+  })
+})
