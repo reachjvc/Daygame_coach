@@ -1,0 +1,1440 @@
+{
+  "id": "weed",
+  "name": "Weed",
+  "units": "TODO",
+  "costKind": "TODO",
+  "danger": {
+    "level": "none",
+    "line": null,
+    "refs": []
+  },
+  "footerNote": null,
+  "hope": {
+    "kind": "hope-free-now",
+    "big": "65 in 100",
+    "headline": "About 65 in 100 Americans ever hooked on weed were already free of every sign of it when asked.",
+    "mirror": "You think being hooked on weed is just who you are now.",
+    "severity": "dependent",
+    "counted": "people who had ever been hooked on weed",
+    "basis": {
+      "design": "a national US survey, face-to-face interviews, one snapshot",
+      "who": "US adults who had ever met the doctors' older checklist for being hooked on weed (3 or more of 7 signs within a year); how much they used is not reported",
+      "n": "530 adults ever hooked on weed (of 43,093 surveyed); 344 of them were free by the interview",
+      "where": "USA",
+      "when": "2001–2002",
+      "measured": "Whether the signs of being hooked had finally stopped and never come back, as people recalled it. Free here means no signs of being hooked any more; it does not have to mean never using."
+    },
+    "caveat": "Some of the other 186 may still get free later. The authors say people may over-report getting free, and people in prison or hospital weren't asked. Weed was weaker in 2001 than today. For people treated for weed, a slip after two weeks off led most back to 4+ days a week (see the 71 in 100 card's caveat).",
+    "projection": false,
+    "checked": "hooked",
+    "weak": null,
+    "ref": {
+      "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+      "pmid": "21077975",
+      "quote": "Cannabis Dependence (N=530) … Cannabis remission (N=344)",
+      "fetched": true
+    },
+    "check": {
+      "by": "revision checker a (cannabis)",
+      "on": "2026-11-09",
+      "verdict": "ok",
+      "notes": "checked after revision"
+    }
+  },
+  "numbers": [
+    {
+      "kind": "hope-free-now",
+      "big": "65 in 100",
+      "headline": "About 65 in 100 Americans ever hooked on weed were already free of every sign of it when asked.",
+      "mirror": "You think being hooked on weed is just who you are now.",
+      "severity": "dependent",
+      "counted": "people who had ever been hooked on weed",
+      "basis": {
+        "design": "a national US survey, face-to-face interviews, one snapshot",
+        "who": "US adults who had ever met the doctors' older checklist for being hooked on weed (3 or more of 7 signs within a year); how much they used is not reported",
+        "n": "530 adults ever hooked on weed (of 43,093 surveyed); 344 of them were free by the interview",
+        "where": "USA",
+        "when": "2001–2002",
+        "measured": "Whether the signs of being hooked had finally stopped and never come back, as people recalled it. Free here means no signs of being hooked any more; it does not have to mean never using."
+      },
+      "caveat": "Some of the other 186 may still get free later. The authors say people may over-report getting free, and people in prison or hospital weren't asked. Weed was weaker in 2001 than today. For people treated for weed, a slip after two weeks off led most back to 4+ days a week (see the 71 in 100 card's caveat).",
+      "projection": false,
+      "checked": "hooked",
+      "weak": null,
+      "ref": {
+        "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+        "pmid": "21077975",
+        "quote": "Cannabis Dependence (N=530) … Cannabis remission (N=344)",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (cannabis)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "hope-lifetime",
+      "big": "97 in 100",
+      "headline": "97 in 100 Americans ever hooked on weed are projected to get free of it at some point in their lives.",
+      "mirror": "You think you've smoked too long to ever get free.",
+      "severity": "dependent",
+      "counted": "people who had ever been hooked on weed",
+      "basis": {
+        "design": "a national US survey, face-to-face interviews; ages recalled, then a statistical model projects the share over a whole life",
+        "who": "US adults who had ever met the doctors' older checklist for being hooked on weed; how much they used is not reported",
+        "n": "530 adults ever hooked on weed (of 43,093 surveyed)",
+        "where": "USA",
+        "when": "2001–2002",
+        "measured": "The age when the signs of being hooked first appeared and the age when they finally stopped and never came back, as recalled. From these ages the model projects the share free by the end of life. The model puts about 66 in 100 free within 10 years."
+      },
+      "caveat": "A model, not a head count: about 65 in 100 were free when asked. People in prison or hospital weren't surveyed. Free means no signs of being hooked, not never using. Men got free more slowly than women. For people treated for weed, a slip after two weeks off led most back to 4+ days a week (see the 71 in 100 card's caveat).",
+      "projection": true,
+      "checked": "hooked",
+      "weak": null,
+      "ref": {
+        "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+        "pmid": "21077975",
+        "quote": "Lifetime cumulative probability estimates of dependence remission were … 97.2% for cannabis",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (cannabis)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "who-years",
+      "big": "6 years",
+      "headline": "Half of Americans ever hooked on weed are projected to be free of it about 6 years after first getting hooked.",
+      "mirror": "You think getting free of weed takes decades.",
+      "severity": "dependent",
+      "counted": "people who had ever been hooked on weed",
+      "basis": {
+        "design": "a national US survey, face-to-face interviews; ages recalled and modelled over a lifetime",
+        "who": "US adults who had ever met the doctors' older checklist for being hooked on weed; how much they used is not reported",
+        "n": "530 adults who had ever been hooked (of 43,093 surveyed); 344 of them had got free",
+        "where": "USA",
+        "when": "2001–2002",
+        "measured": "The age when the signs of being hooked first appeared, and the age when they finally stopped and never came back, as people recalled it. Getting free here means no signs of being hooked any more; it does not have to mean never using."
+      },
+      "caveat": "A projection from recalled ages, not a head count. Those not free by year 6 kept getting free later: the same model projects 97 in 100 in a lifetime. People in prisons and hospitals weren't asked. Men got free more slowly than women. Weed was weaker in 2001 than today.",
+      "projection": true,
+      "checked": "hooked",
+      "timeIsResult": true,
+      "weak": null,
+      "ref": {
+        "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+        "pmid": "21077975",
+        "quote": "Half of the cases of … cannabis … dependence remitted approximately … 6 … years after dependence onset",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (cannabis)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "who-age",
+      "big": "Age 29",
+      "headline": "Americans who beat a weed problem were about 29, on average, when it ended.",
+      "mirror": "You think if you haven't stopped by now, you never will.",
+      "severity": "resolved",
+      "counted": "people who say they beat a weed problem",
+      "basis": {
+        "design": "national survey (National Recovery Survey), one snapshot, answered online",
+        "who": "US adults who said they used to have a substance problem but no longer do, and named weed as the main one; how much they used is not reported. Many also had a past problem with another substance.",
+        "n": "About 220 of the 2,002 people surveyed named weed as their main problem (217 people as counted; 11 in 100 once the survey adjusts its counts to match the US population)",
+        "where": "USA",
+        "when": "July–August 2016",
+        "measured": "Age when the problem ended, as people remembered it. On average they first used weed at 15 and weekly at about 17. The paper puts the time from their first use of any substance to the end of the problem at about 12 years."
+      },
+      "caveat": "An average age, not a cut-off: the likely range for the average is about 26 to 31. It counts only people who said they got free. People judged their own problem: in the whole survey only about 17 in 100 had ever been diagnosed, so milder cases are mixed in.",
+      "projection": false,
+      "checked": "not",
+      "weak": "Self-judged problem",
+      "ref": {
+        "cite": "Kelly JF, Greene MC, Bergman BG (2018). Is recovery from cannabis use problems different from alcohol and other drugs? Results from a national probability-based sample of the United States adult population. International Journal of Drug Policy.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5992615/",
+        "pmid": "29287223",
+        "quote": "The average age at problem resolution was also significantly younger for CAN (M = 28.87 years; 99% CI: 26.46, 31.29)",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (cannabis)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "how-alone",
+      "big": "54 in 100",
+      "headline": "Of Americans who beat a weed problem, about 54 in 100 used no help at all: no groups, treatment or medicine.",
+      "mirror": "You want to stop on your own, without rehab or meetings.",
+      "severity": "resolved",
+      "counted": "people who say they beat a weed problem",
+      "basis": {
+        "design": "national survey (National Recovery Survey), one snapshot, answered online",
+        "who": "US adults who said they used to have a substance problem but no longer do, and named weed as the main one; how much they used is not reported. Many also had a past problem with another substance.",
+        "n": "About 220 of the 2,002 people surveyed named weed as their main problem (217 people as counted; 11 in 100 once the survey adjusts its counts to match the US population)",
+        "where": "USA",
+        "when": "July–August 2016",
+        "measured": "Ever used, at any point: mutual-help groups (such as Marijuana Anonymous), outpatient or inpatient treatment, anti-craving medicine, or recovery services such as sober living. 45.8 in 100 had used one or more; about 54 in 100 used none."
+      },
+      "caveat": "Help could be one meeting or years of treatment. It doesn't show which route worked better; people with worse problems used help more. It rests on about 220 people, so the true share could be about 11 points either way (roughly 43 to 65 in 100). People judged their own problem: in the whole survey only about 17 in 100 had ever been diagnosed, so milder cases are mixed in.",
+      "projection": false,
+      "checked": "not",
+      "weak": "Self-judged problem",
+      "ref": {
+        "cite": "Kelly JF, Bergman B, Hoeppner BB, Vilsaint C, White WL (2017). Prevalence and pathways of recovery from drug and alcohol problems in the United States population: implications for practice, research, and policy. Drug and Alcohol Dependence.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6076174/",
+        "pmid": "29055821",
+        "quote": "Cannabis (e.g., marijuana, hashish) 45.8",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (cannabis)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "how-tries",
+      "big": "2 tries",
+      "headline": "Half of Americans who beat a weed problem needed 2 serious tries or fewer.",
+      "mirror": "You've tried to stop before and think you've failed for good.",
+      "severity": "resolved",
+      "counted": "people who say they beat a weed problem",
+      "basis": {
+        "design": "national survey (National Recovery Survey), one snapshot, answered online",
+        "who": "US adults who said they used to have a substance problem but no longer do, and named weed as the main one; how much they used is not reported. Many also had a past problem with another substance.",
+        "n": "About 220 of the 2,002 people surveyed named weed as their main problem (217 people as counted; 11 in 100 once the survey adjusts its counts to match the US population)",
+        "where": "USA",
+        "when": "July–August 2016",
+        "measured": "Number of serious tries before the problem was resolved, as people remembered it, counting everyone, including people who reported no serious try at all. A quarter needed 1 try or none; a quarter needed 4 or more."
+      },
+      "caveat": "Counts only people who succeeded, from memory. The average was higher, about 5, because a few needed many. The question asked about tries before they overcame it, so some may not have counted the try that worked. People judged their own problem: in the whole survey only about 17 in 100 had ever been diagnosed, so milder cases are mixed in.",
+      "projection": false,
+      "checked": "not",
+      "weak": "Self-judged problem",
+      "ref": {
+        "cite": "Kelly JF, Greene MC, Bergman BG, White WL, Hoeppner BB (2019). How many recovery attempts does it take to successfully resolve an alcohol or drug problem? Estimates and correlates from a national study of recovering U.S. adults. Alcoholism: Clinical and Experimental Research.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6602820/",
+        "pmid": "31090945",
+        "quote": "Mean (SD) Median (IQR) Min, max … Cannabis 4.62 (8.41) 2 (1, 4) 0, 100",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (cannabis)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "how-abrupt",
+      "big": "85 in 100",
+      "headline": "Of daily users trying to change on their own, 85 in 100 tried cutting down at some point.",
+      "mirror": "You keep trying to cut down instead of stopping, and think it's just you.",
+      "severity": "heavy",
+      "counted": "daily weed users, not checked for addiction by a doctor",
+      "basis": {
+        "design": "daily phone check-ins for 3 months, then a survey at 6 months",
+        "who": "daily or near-daily weed users (5+ days a week) planning to stop or cut down on their own, not in treatment; half men, average age 32. 75 in 100 met a self-report checklist for a weed problem, mild cases included.",
+        "n": "193 people",
+        "where": "USA (recruited nationwide, mostly online)",
+        "when": "2010–2012",
+        "measured": "Each day: weed use, and whether they were trying to stop or cut down. 85 in 100 tried cutting down at some point and 46 in 100 tried stopping. At 6 months, 8 in 100 had not used weed in the last month."
+      },
+      "caveat": "Volunteers paid for daily calls, not a random sample. Almost every try to stop or cut down lasted under a week. Only 10 people (about 6 in 100 of those who tried) sought treatment. More days of cutting down or stopping went with fewer signs of being hooked later. It does not show that cutting down works better or worse than stopping.",
+      "projection": false,
+      "checked": "not",
+      "weak": "Daily users, paid volunteers",
+      "ref": {
+        "cite": "Hughes JR, Naud S, Budney AJ, Fingar JR, Callas PW (2016). Attempts to stop or reduce daily cannabis use: an intensive natural history study. Psychology of Addictive Behaviors.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4877269/",
+        "pmid": "26828641",
+        "quote": "Most (85%) participants made an intentional reduction attempt during the study.",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (cannabis)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "helps-medicine",
+      "big": "27 vs 26 in 100",
+      "headline": "On a THC medicine, about 27 in 100 are expected off weed when treatment ends; on a dummy pill, 26 in 100.",
+      "mirror": "You've hoped a doctor could give you a pill to quit.",
+      "severity": "treatment",
+      "counted": "people in medicine trials for a weed problem",
+      "basis": {
+        "design": "a review of 37 trials, each splitting people by chance",
+        "who": "people diagnosed as hooked on weed, or likely to be; how much they used is not reported; mostly adults, and most trials were mostly men",
+        "n": "290 people in 4 trials of THC medicines (the review covers 3,201 people in 37 trials)",
+        "where": "mostly USA (29 trials), also Australia, Israel, Canada and the UK",
+        "when": "searched to May 2024; published 2025",
+        "measured": "Being off weed at the end of treatment, THC medicine against a dummy; both groups also had talk therapy. THC medicines give weed's own active chemical in a set dose; single studies suggest they can ease withdrawal and craving. The supplement NAC: 41 in 100 vs 35 in 100 (2 trials, 270 people), also no clear difference. CBD (1 trial, 68 people) may make little or no difference; anti-seizure medicines (1 trial, 29 people) were tested too little to tell."
+      },
+      "caveat": "26 in 100 is the typical rate on a dummy pill in these trials; 27 in 100 is that rate times the review's combined effect. No medicine is approved to treat weed addiction. This is not proof that none can help: most were tested in only a few small trials, and the review says all are still experimental. For THC medicines and NAC, it rates the no-better result as moderately certain.",
+      "projection": true,
+      "checked": "hooked",
+      "weak": null,
+      "ref": {
+        "cite": "Spiga F, Parkhouse T, Tang VM, Savović J, Le Foll B, Nielsen S (2025). Pharmacotherapies for cannabis use disorder. Cochrane Database of Systematic Reviews.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12481667/",
+        "pmid": "41025421",
+        "quote": "Participants abstinent at end of treatment: Risk with placebo + psychotherapy \"262 per 1000\"; Risk with THC preparation + psychotherapy \"270 per 1000 (184 to 396)\"",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (cannabis)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "how-with-help",
+      "big": "23 in 100",
+      "headline": "At check-ups over 4 months after starting talk therapy for weed, 23 in 100 had not used it in the past month.",
+      "mirror": "You wonder if therapy is worth it after failing alone.",
+      "severity": "treatment",
+      "counted": "people in therapy trials for a weed problem",
+      "basis": {
+        "design": "a review of 23 trials, each splitting people by chance",
+        "who": "adults treated as outpatients or in the community who had a weed problem, used weed near daily, or were seeking treatment for it",
+        "n": "the 8 trials that reported how many were off weed (the review's 23 trials had 4,045 people; the head count behind these averages is not stated)",
+        "where": "15 trials in the USA; others in Australia, Germany, Switzerland, Canada, Brazil and Ireland",
+        "when": "studies published before July 2015; review 2016",
+        "measured": "Off weed means no use in the month before the check-up, as people reported it; about half of all the trials checked reports with urine tests or people close to them. The 23 in 100 is the average in the 8 trials that counted this, at check-ups more than 4 months on (37 in 100 at the end of treatment). Groups given little or no treatment (such as waiting for treatment later) averaged 12 in 100 at their last check-up, but the review does not say from which trials or at what time, so the two are not a fair comparison. Therapy was about 7 sessions over 12 weeks."
+      },
+      "caveat": "Averages across trials, not one head count, and the last check-up came at different times. In the 6 trials that could be combined (1,166 people), more were off weed at about 4 months with therapy than without, but the review calls that evidence weak. No kind of therapy clearly worked at 9 months or later. In the short term, more than 4 sessions over more than a month did better than shorter therapy; adding rewards for clean urine tests cut smoking days further in 5 of 6 trials.",
+      "projection": false,
+      "pooled": true,
+      "checked": "not",
+      "weak": "No like-for-like comparison",
+      "ref": {
+        "cite": "Gates PJ, Sabioni P, Copeland J, Le Foll B, Gowing L (2016). Psychosocial interventions for cannabis use disorder. Cochrane Database of Systematic Reviews.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4914383/",
+        "pmid": "27149547",
+        "quote": "to 23% at follow‐up of longer than four months. In contrast, an average of 12% of those in control conditions reported PPA at final follow‐up.",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (cannabis)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "how-withdrawal",
+      "big": "Day 2–6",
+      "headline": "In heavy users who stopped, withdrawal usually peaked on days 2–6, then eased.",
+      "mirror": "You're on day 3, restless and sleepless, and fear it won't end.",
+      "severity": "heavy",
+      "counted": "heavy weed users, not checked for addiction",
+      "basis": {
+        "design": "a 50-day outpatient study: 5 days of usual use, then 45 days off",
+        "who": "frequent, heavy weed users; how much they used is not reported; plus ex-users for comparison",
+        "n": "18 heavy users (and 12 ex-users for comparison)",
+        "where": "Vermont, USA",
+        "when": "published 2003",
+        "measured": "Daily ratings of aggression, anger, anxiety, appetite, weight, irritability, restlessness, shakiness, sleep problems and stomach pain. Symptoms usually started on days 1–3, and most lasted 4–14 days."
+      },
+      "caveat": "Small study of 18 people. These are typical times, and 'most' effects, not all: irritability and anger often peak later, past the first week. Your days can differ.",
+      "projection": false,
+      "checked": "not",
+      "timeIsResult": true,
+      "weak": "18 people",
+      "ref": {
+        "cite": "Budney AJ, Moore BA, Vandrey RG, Hughes JR (2003). The time course and significance of cannabis withdrawal. Journal of Abnormal Psychology.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/12943018/",
+        "pmid": "12943018",
+        "quote": "Onset typically occurred between Days 1-3, peak effects between Days 2-6, and most effects lasted 4-14 days.",
+        "fetched": true
+      },
+      "alsoRef": [
+        {
+          "cite": "Hesse M, Thylstrup B (2013). Time-course of the DSM-5 cannabis withdrawal symptoms in poly-substance abusers. BMC Psychiatry 13:258.",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4015312/",
+          "pmid": "24118963",
+          "quote": "In the later phase of withdrawal came irritability/anger, and vivid, unpleasant dreams, with peaks later than a week after cessation.",
+          "fetched": true
+        }
+      ],
+      "check": {
+        "by": "revision checker a (cannabis)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "how-withdrawal",
+      "big": "47 in 100",
+      "headline": "About 47 in 100 regular or hooked weed users got withdrawal when they stopped, across 47 studies.",
+      "mirror": "You got cranky and sleepless last time and think it's just you.",
+      "severity": "heavy",
+      "counted": "regular weed users, many not checked for addiction",
+      "basis": {
+        "design": "a review that pooled 47 studies",
+        "who": "people who used weed regularly (each study set its own bar for 'regular') or were hooked on it; 69 in 100 men, typical age about 30",
+        "n": "23,518 people in 47 studies",
+        "where": "several countries",
+        "when": "studies up to June 2019; published 2020",
+        "measured": "Share who met the criteria for weed withdrawal on a tested checklist. The 47 in 100 is the review's pooled average of the studies' own rates. Counting every person instead, about 28 in 100 had it (6,469 people), because the biggest studies were general surveys, where rates were lowest."
+      },
+      "caveat": "It depends who is asked: about 17 in 100 in general surveys, 54 in 100 in outpatient clinics, 87 in 100 in inpatient units. Daily users had it more often.",
+      "projection": false,
+      "pooled": true,
+      "checked": "not",
+      "weak": null,
+      "ref": {
+        "cite": "Bahji A, Stephenson C, Tyo R, et al. (2020). Prevalence of cannabis withdrawal symptoms among people with regular or dependent use of cannabinoids: a systematic review and meta-analysis. JAMA Network Open.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/32271390/",
+        "pmid": "32271390",
+        "quote": "The overall pooled prevalence of CWS was 47% (6469 of 23 518) (95% CI, 41%-52%)",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (cannabis)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "how-slips",
+      "big": "71 in 100",
+      "headline": "Of people in treatment for weed who had stopped, 71 in 100 smoked again within 6 months.",
+      "mirror": "You slipped once and think you're the only one who can't.",
+      "severity": "dependent",
+      "counted": "people hooked on weed, in treatment, who got two weeks off",
+      "basis": {
+        "design": "follow-up of an outpatient treatment group",
+        "who": "adults in outpatient treatment for marijuana dependence who reached at least 2 weeks without weed; how much they used before is not reported",
+        "n": "82 adults in outpatient treatment",
+        "where": "Vermont, USA",
+        "when": "published 2003",
+        "measured": "First use of any weed (a slip), and return to heavier use (4+ days in any 7 days), over 6 months. On average the first slip came about 73 days in."
+      },
+      "caveat": "A slip often led further: most of those who slipped went back to using 4+ days in a week, and early slips led there more often. Only 82 people from one programme, studied over 20 years ago.",
+      "projection": false,
+      "checked": "hooked",
+      "weak": "82 people, one programme, old study",
+      "ref": {
+        "cite": "Moore BA, Budney AJ (2003). Relapse in outpatient treatment for marijuana dependence. Journal of Substance Abuse Treatment.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/14629990/",
+        "pmid": "14629990",
+        "quote": "Seventy-one percent used marijuana at least once (i.e., lapsed) within 6 months of initial abstinence, averaging 73 days (SD = 50) till lapsing.",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (cannabis)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "after-first-month",
+      "big": "72 hours",
+      "headline": "Young frequent users off weed for more than 72 hours scored about the same on thinking tests as people who barely used.",
+      "mirror": "You're afraid you've fried your brain for good.",
+      "severity": "heavy",
+      "counted": "frequent young weed users, not checked for addiction",
+      "basis": {
+        "design": "a review that pooled 69 studies",
+        "who": "frequent or heavy weed users (how much they used is not reported) in studies whose average age was 26 or under (users' average age 20.6, about 68 in 100 male, across all 69 studies) vs people who had barely used",
+        "n": "928 people, users and comparison people together, in the 15 studies that required more than 72 hours off (of 69 studies in the review)",
+        "where": "several countries",
+        "when": "studies up to May 2017; published 2018",
+        "measured": "Scores on memory, attention and other thinking tests."
+      },
+      "caveat": "Compares groups at one moment; it does not follow the same people. Young users only, so it says nothing about decades of smoking.",
+      "projection": false,
+      "pooled": true,
+      "checked": "not",
+      "timeIsResult": true,
+      "weak": "Young users, not followed over time",
+      "ref": {
+        "cite": "Scott JC, Slomiak ST, Jones JD, et al. (2018). Association of cannabis with cognitive functioning in adolescents and young adults: a systematic review and meta-analysis. JAMA Psychiatry.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/29710074/",
+        "pmid": "29710074",
+        "quote": "studies requiring an abstinence period longer than 72 hours (15 studies; n = 928) had an overall effect size (d, -0.08 ...) that was not significantly different from 0",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (cannabis)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "after-first-month",
+      "big": "Week 1",
+      "headline": "Learning and remembering words got better in young regular users who stopped for a month, mostly in the first week.",
+      "mirror": "You feel foggy and fear your memory won't come back.",
+      "severity": "heavy",
+      "counted": "regular weed users aged 16 to 25; addiction not reported",
+      "basis": {
+        "design": "a fair test, split by chance: 4 weeks off weed vs carrying on",
+        "who": "regular users aged 16–25 from the community and a high school, using on about 55 of the last 90 days",
+        "n": "62 asked to stop for a month, with rewards for clean urine tests, vs 26 who kept using (55 stayed off all 30 days)",
+        "where": "Boston, USA",
+        "when": "2015–2016",
+        "measured": "memory and attention tests at the start and every week for 4 weeks"
+      },
+      "caveat": "Memory improved more than in those who kept using; attention improved the same in both groups. Young users only. A weed-problem questionnaire was taken at the start, but the study reports no diagnosis and does not say how many were hooked. It could not say whether school or work results improved.",
+      "projection": false,
+      "checked": "not",
+      "timeIsResult": true,
+      "weak": "Small trial of young users",
+      "ref": {
+        "cite": "Schuster RM, Gilman J, Schoenfeld D, et al. (2018). One month of cannabis abstinence in adolescents and young adults is associated with improved memory. Journal of Clinical Psychiatry.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/30408351/",
+        "pmid": "30408351",
+        "quote": "There was an effect of abstinence on verbal memory (P = .002) ... driven by improved verbal learning in the first week of abstinence.",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (cannabis)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "after-mood",
+      "big": "+12 points",
+      "headline": "In a weed treatment trial, those who had stopped rated life quality 12 points higher, out of 100, than those still smoking.",
+      "mirror": "You fear life without weed will feel flat and empty.",
+      "severity": "dependent",
+      "counted": "people hooked on weed, in a treatment trial",
+      "basis": {
+        "design": "a later look at data from an 11-week medicine trial (a two-drug combination vs dummy pills)",
+        "who": "adults seeking treatment who met the doctors' older checklist for being hooked on weed; all smoked daily",
+        "n": "52 people analysed (of 62 who rated their life at the end; 29 of those 62 were off weed in the last 2 weeks)",
+        "where": "New York, USA",
+        "when": "published 2018",
+        "measured": "A standard life-quality questionnaire (enjoyment and satisfaction across daily life), scored as a share of the top score, at the end of the trial, allowing for each person's score at the start. They started at about 64 out of 100. Off weed means no use in the last 2 weeks, as people reported."
+      },
+      "caveat": "A link, not proof: people whose lives were going better may have found it easier to stop. The authors call the gap big enough to matter. Fewer smoking days also went with better life quality; smoking smaller amounts did not. One small trial.",
+      "projection": false,
+      "checked": "hooked",
+      "weak": "52 people, one trial",
+      "ref": {
+        "cite": "Brezing CA, Choi CJ, Pavlicova M, Brooks D, Mahony AL, Mariani JJ, Levin FR (2018). Abstinence and reduced frequency of use are associated with improvements in quality of life among treatment-seekers with cannabis use disorder. American Journal on Addictions 27(2):101-107.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5846101/",
+        "pmid": "29457671",
+        "quote": "For individuals who were abstinent, their QLES-Q-SF scores were higher by 6.78 points (12%), correlating with greater than one standard deviation of improvement as seen in community samples",
+        "fetched": true
+      },
+      "alsoRef": [
+        {
+          "cite": "Brezing CA, Choi CJ, Pavlicova M, Brooks D, Mahony AL, Mariani JJ, Levin FR (2018). Abstinence and reduced frequency of use are associated with improvements in quality of life among treatment-seekers with cannabis use disorder. American Journal on Addictions 27(2):101-107.",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5846101/",
+          "pmid": "29457671",
+          "quote": "This is a clinically meaningful improvement as supported by previous studies examining changes in QLES-Q-SF during treatment",
+          "fetched": true
+        }
+      ],
+      "check": {
+        "by": "revision checker a (cannabis)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "after-mood",
+      "big": "12 weeks",
+      "headline": "In a 12-week weed treatment trial, anxiety eased for people who smoked on fewer days; quitters were not counted on their own.",
+      "mirror": "You smoke to calm your nerves and fear less weed means more anxiety.",
+      "severity": "dependent",
+      "counted": "people hooked on weed, in a treatment trial",
+      "basis": {
+        "design": "a later look at data from a 12-week medicine trial",
+        "who": "adults aged 18–50 who met the doctors' older checklist for being hooked on weed, using on about 26 of the last 30 days at the start, in a 12-week medicine trial (a medicine called NAC or a dummy pill; both groups were also in a reward programme)",
+        "n": "302 adults (152 whose use went down, 150 whose use went up); the fuller analysis, which allowed for other substance use, had 219 of them",
+        "where": "USA (six sites)",
+        "when": "January 2014 – April 2015 (published 2017)",
+        "measured": "changes in anxiety, depression, sleep quality and quality of life, next to changes in weed use"
+      },
+      "caveat": "This is using less, not stopping: the study sorts people by whether their weed days went down or up, and does not count quitters on their own. The gains are measured against those whose use went up. Better sleep showed only in the fuller analysis of 219 people, which allowed for other substance use. Using less was not linked with better quality of life in 12 weeks. The changes were small, and it is a link, not proof. For people treated for weed, a slip after two weeks off led most of them back to 4+ days a week (see the 71 in 100 card's caveat).",
+      "projection": false,
+      "checked": "hooked",
+      "timeIsResult": true,
+      "weak": "Using less, not quitting; small changes",
+      "ref": {
+        "cite": "Hser YI, Mooney LJ, Huang D, et al. (2017). Reductions in cannabis use are associated with improvements in anxiety, depression, and sleep quality, but not quality of life. Journal of Substance Abuse Treatment.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5607644/",
+        "pmid": "28847455",
+        "quote": "These results indicate a longitudinal relationship between reductions in cannabis use and improvements in anxiety, depression, and sleep quality.",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (cannabis)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    }
+  ],
+  "keyFacts": "TODO",
+  "beliefs": [
+    {
+      "id": "b1",
+      "kind": "stuck",
+      "scene": "TODO",
+      "short": "TODO",
+      "need": "TODO",
+      "limiting": "I’ve smoked for years. I’m stuck.",
+      "counterpart": "Most people hooked on weed get free in the end. I’m doing it now.",
+      "whenThought": "Write the thought down, and next to it: “Most people hooked on weed get free in the end.” Then read the proof under it once and do the next step of the plan below.",
+      "test": "Pick one day this week and live it as a man already getting free: no weed from waking to bed, with the evening planned before it starts. Before you sleep, name one thing the day gave you.",
+      "proof": "In men who had smoked weed daily for years, 12 on average, the brain receptors weed dulls were back to normal in most areas after about 4 weeks off. Years smoked made no difference to the rise.",
+      "severity": "heavy",
+      "counted": "men who smoked daily, not checked for addiction",
+      "refs": [
+        {
+          "cite": "Hirvonen J, Goodwin RS, Li CT, Terry GE, Zoghbi SS, Morse C, Pike VW, Volkow ND, Huestis MA, Innis RB (2012). Reversible and regionally selective downregulation of brain cannabinoid CB1 receptors in chronic daily cannabis smokers. Molecular Psychiatry 17(6):642-649.",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3223558/",
+          "pmid": "21747398",
+          "quote": "Even in these heavy smokers, binding returned to normal levels in most regions after ~4 weeks of abstinence.",
+          "fetched": true,
+          "fetchedOn": "2026-11-09"
+        }
+      ],
+      "weak": "Small: 14 men scanned twice, kept off weed on a locked unit; one memory area had not come back; it measures brain receptors, not cravings.",
+      "check": {
+        "by": "revision checker a (cannabis)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision: corrections applied to beliefs[0].proofNote"
+      }
+    },
+    {
+      "id": "b2",
+      "kind": "hard",
+      "scene": "TODO",
+      "short": "TODO",
+      "need": "TODO",
+      "limiting": "I can’t handle quitting. Last time I barely lasted three days.",
+      "counterpart": "It’s a few hard weeks, not forever. I’ve got through hard weeks before.",
+      "whenThought": "Write the thought down, and next to it one hard week you got through and what carried you. Still smoking? Do the next step of the plan, not the whole quit. Already off it? Text one person who knows you’ve stopped that today is hard.",
+      "test": "One evening this week, spend the hour you’d usually smoke on something hard and physical: a run, a workout, a long uphill walk. Guess first how hard it will be, out of 10. Afterwards, put the real score next to your guess.",
+      "proof": "A review of weed withdrawal finds few risks from the withdrawal itself; in heavy users some signs last up to 3 weeks or more, and poor sleep can go on for several weeks.",
+      "severity": "heavy",
+      "counted": null,
+      "refs": [
+        {
+          "cite": "Connor JP, Stjepanović D, Budney AJ, Le Foll B, Hall WD (2022). Clinical management of cannabis withdrawal. Addiction 117(7):2075-2095.",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9110555/",
+          "pmid": "34791767",
+          "quote": "There are few risks related directly to cannabis withdrawal.",
+          "fetched": true,
+          "fetchedOn": "2026-11-09"
+        }
+      ],
+      "check": {
+        "by": "revision checker a (cannabis)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision: corrections applied to beliefs[1].test"
+      }
+    },
+    {
+      "id": "b3",
+      "kind": "moderation",
+      "scene": "TODO",
+      "short": "TODO",
+      "need": "TODO",
+      "limiting": "Day 10, I feel fine. Now I can handle it.",
+      "counterpart": "Feeling fine means the withdrawal is over, not that I’m in control again.",
+      "whenThought": "Write the thought down, and next to it: “Feeling fine means the withdrawal is over, not that I’m in control again.” Then say “I don’t smoke” and get out of the room for ten minutes.",
+      "test": "This week, the next time “just one” comes up, from a friend or in your own head, answer “I don’t smoke” and leave the room for ten minutes. Then see if the pull is still there.",
+      "proof": "Of people treated for weed who slipped after 2+ weeks off, most went back to smoking 4+ days a week.",
+      "severity": "dependent",
+      "counted": null,
+      "refs": [
+        {
+          "cite": "Moore BA, Budney AJ (2003). Relapse in outpatient treatment for marijuana dependence. Journal of Substance Abuse Treatment 25(2):85-9.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/14629990/",
+          "pmid": "14629990",
+          "quote": "Similarly, 71% of those who lapsed, relapsed to heavier use defined as at least 4 days of marijuana use in any 7-day period.",
+          "fetched": true
+        }
+      ],
+      "check": {
+        "by": "revision checker a (cannabis)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "id": "b4",
+      "kind": "need",
+      "scene": "TODO",
+      "short": "TODO",
+      "need": "TODO",
+      "limiting": "Weed is the only thing that gets me to sleep.",
+      "counterpart": "Weed knocks me out. It doesn’t give me good sleep.",
+      "whenThought": "Write the thought down, and next to it: “Weed knocks me out. It doesn’t give me good sleep.” Then do your step 2 sleep routine: screens out of the bed, same wake-up time tomorrow.",
+      "test": "Still smoking? Pick one night this week with nothing early the next day. Skip the evening smoke, keep your bedtime, phone outside the bedroom. Expect to take longer to fall asleep. Already off it? Keep the same bedtime and phone rule one night. In the morning, check two things: did you dream, and how clear is your head?",
+      "proof": "Of 302 adults hooked on weed starting treatment, 69 in 100 slept poorly.",
+      "severity": "dependent",
+      "counted": null,
+      "refs": [
+        {
+          "cite": "Hser YI, Mooney LJ, Huang D, Zhu Y, Tomko RL, McClure E, et al. (2017). Reductions in cannabis use are associated with improvements in anxiety, depression, and sleep quality, but not quality of life. Journal of Substance Abuse Treatment 81:53-58.",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5607644/",
+          "pmid": "28847455",
+          "quote": "A high percentage (68.9%) of the study sample reported poor sleep quality.",
+          "fetched": true
+        }
+      ],
+      "check": {
+        "by": "revision checker a (cannabis)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    }
+  ],
+  "facts": "TODO",
+  "needs": "TODO",
+  "endings": "TODO",
+  "helped": "TODO",
+  "riskyMoments": "TODO",
+  "responses": "TODO",
+  "clearOut": "TODO",
+  "symptomWords": {
+    "craving": "Cravings",
+    "anxious": "Anxiety",
+    "low-mood": "Low mood",
+    "sleep": "Bad sleep",
+    "tired": "Tiredness",
+    "brain-fog": "Brain fog",
+    "stomach-appetite": "Stomach / appetite",
+    "sweats-shakes": "Sweats or shakes",
+    "headache": "Headaches",
+    "restless": "Restlessness",
+    "bored": "Boredom",
+    "lonely": "Loneliness",
+    "body-pain": "Aches",
+    "libido-low": "No sex drive",
+    "libido-high": "Strong sexual urges",
+    "irritable": "Short temper",
+    "dreams": "Vivid dreams",
+    "better-mood": "Better mood",
+    "better-sleep": "Better sleep",
+    "clear-head": "A clearer head",
+    "body-health": "Feeling healthier",
+    "energy": "More energy",
+    "confidence": "More confidence",
+    "proud": "Feeling proud",
+    "libido-back": "Sex drive back",
+    "money": "Money saved",
+    "relationships": "Better relationships"
+  },
+  "symptomHelp": "TODO",
+  "tapeForward": "TODO",
+  "costSwaps": "TODO",
+  "besides": "TODO",
+  "felt": {
+    "forums": [
+      "r/leaves"
+    ],
+    "years": "2021–2025",
+    "postsUsed": 801,
+    "postsSampled": 1050,
+    "bias": [
+      "People who post are not everyone who quits. People who find it easy have little reason to post.",
+      "People post more when it is hard, so the curve likely runs higher than for quitters in general.",
+      "Later days are mostly milestone posts; people who slipped earlier are no longer counted there.",
+      "Scores come from AI readers of the posts, not from the writers themselves."
+    ],
+    "bins": [
+      {
+        "label": "Day 1",
+        "from": 1,
+        "to": 1,
+        "n": 29,
+        "symptoms": {
+          "anxious": 0.379,
+          "body-pain": 0.069,
+          "bored": 0,
+          "brain-fog": 0.069,
+          "craving": 0.207,
+          "dreams": 0.034,
+          "headache": 0,
+          "irritable": 0.138,
+          "libido-high": 0,
+          "libido-low": 0,
+          "lonely": 0.069,
+          "low-mood": 0.207,
+          "restless": 0,
+          "sleep": 0.172,
+          "stomach-appetite": 0.379,
+          "sweats-shakes": 0.207,
+          "tired": 0.172
+        },
+        "positives": {
+          "better-mood": 0,
+          "better-sleep": 0,
+          "body-health": 0,
+          "clear-head": 0.034,
+          "confidence": 0,
+          "energy": 0,
+          "libido-back": 0,
+          "money": 0,
+          "proud": 0,
+          "relationships": 0
+        }
+      },
+      {
+        "label": "Day 2",
+        "from": 2,
+        "to": 2,
+        "n": 51,
+        "symptoms": {
+          "anxious": 0.294,
+          "body-pain": 0,
+          "bored": 0.196,
+          "brain-fog": 0.059,
+          "craving": 0.275,
+          "dreams": 0.098,
+          "headache": 0.078,
+          "irritable": 0.157,
+          "libido-high": 0,
+          "libido-low": 0,
+          "lonely": 0.039,
+          "low-mood": 0.216,
+          "restless": 0.098,
+          "sleep": 0.137,
+          "stomach-appetite": 0.196,
+          "sweats-shakes": 0.176,
+          "tired": 0.098
+        },
+        "positives": {
+          "better-mood": 0.137,
+          "better-sleep": 0.039,
+          "body-health": 0,
+          "clear-head": 0.02,
+          "confidence": 0,
+          "energy": 0.02,
+          "libido-back": 0,
+          "money": 0.039,
+          "proud": 0.078,
+          "relationships": 0
+        }
+      },
+      {
+        "label": "Day 3",
+        "from": 3,
+        "to": 3,
+        "n": 64,
+        "symptoms": {
+          "anxious": 0.312,
+          "body-pain": 0.031,
+          "bored": 0.047,
+          "brain-fog": 0.125,
+          "craving": 0.219,
+          "dreams": 0.094,
+          "headache": 0.062,
+          "irritable": 0.219,
+          "libido-high": 0,
+          "libido-low": 0,
+          "lonely": 0.047,
+          "low-mood": 0.219,
+          "restless": 0.031,
+          "sleep": 0.25,
+          "stomach-appetite": 0.328,
+          "sweats-shakes": 0.141,
+          "tired": 0.141
+        },
+        "positives": {
+          "better-mood": 0.047,
+          "better-sleep": 0,
+          "body-health": 0.016,
+          "clear-head": 0.047,
+          "confidence": 0.031,
+          "energy": 0.016,
+          "libido-back": 0,
+          "money": 0.016,
+          "proud": 0.031,
+          "relationships": 0.016
+        }
+      },
+      {
+        "label": "Days 4–5",
+        "from": 4,
+        "to": 5,
+        "n": 58,
+        "symptoms": {
+          "anxious": 0.379,
+          "body-pain": 0.069,
+          "bored": 0.017,
+          "brain-fog": 0,
+          "craving": 0.31,
+          "dreams": 0.069,
+          "headache": 0.052,
+          "irritable": 0.069,
+          "libido-high": 0,
+          "libido-low": 0,
+          "lonely": 0.034,
+          "low-mood": 0.259,
+          "restless": 0,
+          "sleep": 0.241,
+          "stomach-appetite": 0.19,
+          "sweats-shakes": 0.052,
+          "tired": 0.172
+        },
+        "positives": {
+          "better-mood": 0.155,
+          "better-sleep": 0,
+          "body-health": 0.069,
+          "clear-head": 0.103,
+          "confidence": 0,
+          "energy": 0.052,
+          "libido-back": 0,
+          "money": 0.034,
+          "proud": 0.086,
+          "relationships": 0.017
+        }
+      },
+      {
+        "label": "Days 6–7",
+        "from": 6,
+        "to": 7,
+        "n": 59,
+        "symptoms": {
+          "anxious": 0.271,
+          "body-pain": 0.068,
+          "bored": 0.034,
+          "brain-fog": 0.068,
+          "craving": 0.339,
+          "dreams": 0.085,
+          "headache": 0,
+          "irritable": 0.169,
+          "libido-high": 0,
+          "libido-low": 0.017,
+          "lonely": 0.017,
+          "low-mood": 0.237,
+          "restless": 0,
+          "sleep": 0.169,
+          "stomach-appetite": 0.22,
+          "sweats-shakes": 0.034,
+          "tired": 0.119
+        },
+        "positives": {
+          "better-mood": 0.119,
+          "better-sleep": 0.085,
+          "body-health": 0,
+          "clear-head": 0.085,
+          "confidence": 0.017,
+          "energy": 0.068,
+          "libido-back": 0,
+          "money": 0.034,
+          "proud": 0.119,
+          "relationships": 0.034
+        }
+      },
+      {
+        "label": "Days 8–10",
+        "from": 8,
+        "to": 10,
+        "n": 58,
+        "symptoms": {
+          "anxious": 0.31,
+          "body-pain": 0.052,
+          "bored": 0.086,
+          "brain-fog": 0.052,
+          "craving": 0.31,
+          "dreams": 0.138,
+          "headache": 0.052,
+          "irritable": 0.138,
+          "libido-high": 0,
+          "libido-low": 0,
+          "lonely": 0.086,
+          "low-mood": 0.207,
+          "restless": 0,
+          "sleep": 0.103,
+          "stomach-appetite": 0.155,
+          "sweats-shakes": 0.138,
+          "tired": 0.155
+        },
+        "positives": {
+          "better-mood": 0.19,
+          "better-sleep": 0.034,
+          "body-health": 0.052,
+          "clear-head": 0.069,
+          "confidence": 0.069,
+          "energy": 0.069,
+          "libido-back": 0,
+          "money": 0,
+          "proud": 0.069,
+          "relationships": 0.052
+        }
+      },
+      {
+        "label": "Days 11–14",
+        "from": 11,
+        "to": 14,
+        "n": 55,
+        "symptoms": {
+          "anxious": 0.218,
+          "body-pain": 0.091,
+          "bored": 0.073,
+          "brain-fog": 0.164,
+          "craving": 0.291,
+          "dreams": 0.127,
+          "headache": 0.036,
+          "irritable": 0.127,
+          "libido-high": 0,
+          "libido-low": 0.018,
+          "lonely": 0.055,
+          "low-mood": 0.273,
+          "restless": 0.018,
+          "sleep": 0.109,
+          "stomach-appetite": 0.145,
+          "sweats-shakes": 0.109,
+          "tired": 0.091
+        },
+        "positives": {
+          "better-mood": 0.273,
+          "better-sleep": 0.145,
+          "body-health": 0.073,
+          "clear-head": 0.109,
+          "confidence": 0.055,
+          "energy": 0.073,
+          "libido-back": 0.018,
+          "money": 0.036,
+          "proud": 0.182,
+          "relationships": 0.073
+        }
+      },
+      {
+        "label": "Week 3",
+        "from": 15,
+        "to": 21,
+        "n": 61,
+        "symptoms": {
+          "anxious": 0.18,
+          "body-pain": 0.016,
+          "bored": 0.016,
+          "brain-fog": 0.033,
+          "craving": 0.213,
+          "dreams": 0.098,
+          "headache": 0.033,
+          "irritable": 0.066,
+          "libido-high": 0,
+          "libido-low": 0.016,
+          "lonely": 0.033,
+          "low-mood": 0.131,
+          "restless": 0.016,
+          "sleep": 0.164,
+          "stomach-appetite": 0.098,
+          "sweats-shakes": 0.033,
+          "tired": 0.197
+        },
+        "positives": {
+          "better-mood": 0.18,
+          "better-sleep": 0.131,
+          "body-health": 0.066,
+          "clear-head": 0.164,
+          "confidence": 0.066,
+          "energy": 0.066,
+          "libido-back": 0.033,
+          "money": 0.016,
+          "proud": 0.082,
+          "relationships": 0.016
+        }
+      },
+      {
+        "label": "Week 4",
+        "from": 22,
+        "to": 30,
+        "n": 57,
+        "symptoms": {
+          "anxious": 0.298,
+          "body-pain": 0,
+          "bored": 0.018,
+          "brain-fog": 0.088,
+          "craving": 0.263,
+          "dreams": 0.175,
+          "headache": 0.018,
+          "irritable": 0.053,
+          "libido-high": 0,
+          "libido-low": 0,
+          "lonely": 0.053,
+          "low-mood": 0.351,
+          "restless": 0.053,
+          "sleep": 0.175,
+          "stomach-appetite": 0.053,
+          "sweats-shakes": 0.035,
+          "tired": 0.14
+        },
+        "positives": {
+          "better-mood": 0.211,
+          "better-sleep": 0.053,
+          "body-health": 0.053,
+          "clear-head": 0.105,
+          "confidence": 0.07,
+          "energy": 0.053,
+          "libido-back": 0,
+          "money": 0.053,
+          "proud": 0.175,
+          "relationships": 0.053
+        }
+      },
+      {
+        "label": "Days 31–45",
+        "from": 31,
+        "to": 45,
+        "n": 60,
+        "symptoms": {
+          "anxious": 0.233,
+          "body-pain": 0.083,
+          "bored": 0.033,
+          "brain-fog": 0.05,
+          "craving": 0.25,
+          "dreams": 0.133,
+          "headache": 0.017,
+          "irritable": 0.117,
+          "libido-high": 0.017,
+          "libido-low": 0,
+          "lonely": 0.033,
+          "low-mood": 0.367,
+          "restless": 0.033,
+          "sleep": 0.1,
+          "stomach-appetite": 0.05,
+          "sweats-shakes": 0.05,
+          "tired": 0.117
+        },
+        "positives": {
+          "better-mood": 0.267,
+          "better-sleep": 0.083,
+          "body-health": 0.033,
+          "clear-head": 0.183,
+          "confidence": 0.05,
+          "energy": 0.033,
+          "libido-back": 0,
+          "money": 0.017,
+          "proud": 0.167,
+          "relationships": 0.05
+        }
+      },
+      {
+        "label": "Days 46–60",
+        "from": 46,
+        "to": 60,
+        "n": 47,
+        "symptoms": {
+          "anxious": 0.191,
+          "body-pain": 0,
+          "bored": 0,
+          "brain-fog": 0.085,
+          "craving": 0.34,
+          "dreams": 0.043,
+          "headache": 0,
+          "irritable": 0.021,
+          "libido-high": 0,
+          "libido-low": 0,
+          "lonely": 0.043,
+          "low-mood": 0.255,
+          "restless": 0,
+          "sleep": 0.149,
+          "stomach-appetite": 0.085,
+          "sweats-shakes": 0,
+          "tired": 0.085
+        },
+        "positives": {
+          "better-mood": 0.34,
+          "better-sleep": 0.085,
+          "body-health": 0.085,
+          "clear-head": 0.128,
+          "confidence": 0.064,
+          "energy": 0.064,
+          "libido-back": 0.021,
+          "money": 0.085,
+          "proud": 0.064,
+          "relationships": 0.043
+        }
+      },
+      {
+        "label": "Month 3",
+        "from": 61,
+        "to": 90,
+        "n": 58,
+        "symptoms": {
+          "anxious": 0.155,
+          "body-pain": 0.017,
+          "bored": 0.017,
+          "brain-fog": 0.069,
+          "craving": 0.448,
+          "dreams": 0.121,
+          "headache": 0.017,
+          "irritable": 0.052,
+          "libido-high": 0,
+          "libido-low": 0.017,
+          "lonely": 0.034,
+          "low-mood": 0.241,
+          "restless": 0,
+          "sleep": 0.103,
+          "stomach-appetite": 0.086,
+          "sweats-shakes": 0,
+          "tired": 0.121
+        },
+        "positives": {
+          "better-mood": 0.207,
+          "better-sleep": 0.121,
+          "body-health": 0.121,
+          "clear-head": 0.172,
+          "confidence": 0.086,
+          "energy": 0.086,
+          "libido-back": 0,
+          "money": 0.017,
+          "proud": 0.19,
+          "relationships": 0.121
+        }
+      },
+      {
+        "label": "Months 4–6",
+        "from": 91,
+        "to": 180,
+        "n": 57,
+        "symptoms": {
+          "anxious": 0.175,
+          "body-pain": 0.018,
+          "bored": 0.035,
+          "brain-fog": 0.105,
+          "craving": 0.421,
+          "dreams": 0.053,
+          "headache": 0.053,
+          "irritable": 0.053,
+          "libido-high": 0,
+          "libido-low": 0,
+          "lonely": 0.088,
+          "low-mood": 0.298,
+          "restless": 0,
+          "sleep": 0.053,
+          "stomach-appetite": 0,
+          "sweats-shakes": 0,
+          "tired": 0.053
+        },
+        "positives": {
+          "better-mood": 0.193,
+          "better-sleep": 0.105,
+          "body-health": 0.105,
+          "clear-head": 0.088,
+          "confidence": 0.035,
+          "energy": 0.018,
+          "libido-back": 0,
+          "money": 0.035,
+          "proud": 0.211,
+          "relationships": 0.053
+        }
+      },
+      {
+        "label": "Months 7–12",
+        "from": 181,
+        "to": 364,
+        "n": 51,
+        "symptoms": {
+          "anxious": 0.098,
+          "body-pain": 0.02,
+          "bored": 0.059,
+          "brain-fog": 0.039,
+          "craving": 0.51,
+          "dreams": 0.098,
+          "headache": 0,
+          "irritable": 0.059,
+          "libido-high": 0,
+          "libido-low": 0,
+          "lonely": 0.059,
+          "low-mood": 0.216,
+          "restless": 0,
+          "sleep": 0.039,
+          "stomach-appetite": 0.039,
+          "sweats-shakes": 0,
+          "tired": 0.039
+        },
+        "positives": {
+          "better-mood": 0.275,
+          "better-sleep": 0.078,
+          "body-health": 0.118,
+          "clear-head": 0.137,
+          "confidence": 0.078,
+          "energy": 0.078,
+          "libido-back": 0,
+          "money": 0.039,
+          "proud": 0.098,
+          "relationships": 0.176
+        }
+      },
+      {
+        "label": "Year 2+",
+        "from": 365,
+        "to": null,
+        "n": 36,
+        "symptoms": {
+          "anxious": 0.028,
+          "body-pain": 0.056,
+          "bored": 0,
+          "brain-fog": 0,
+          "craving": 0.222,
+          "dreams": 0.028,
+          "headache": 0,
+          "irritable": 0,
+          "libido-high": 0,
+          "libido-low": 0,
+          "lonely": 0,
+          "low-mood": 0.028,
+          "restless": 0,
+          "sleep": 0.056,
+          "stomach-appetite": 0,
+          "sweats-shakes": 0,
+          "tired": 0.028
+        },
+        "positives": {
+          "better-mood": 0.25,
+          "better-sleep": 0.056,
+          "body-health": 0.083,
+          "clear-head": 0.222,
+          "confidence": 0.139,
+          "energy": 0.083,
+          "libido-back": 0,
+          "money": 0.083,
+          "proud": 0.056,
+          "relationships": 0.111
+        }
+      }
+    ]
+  },
+  "lessons": "TODO",
+  "bands": "TODO",
+  "catch": "TODO",
+  "planSteps": [
+    {
+      "title": "Name what it does for you",
+      "text": "Identify what beliefs are driving your weed smoking. Find a positive reframe (the table above).",
+      "do": [
+        "Still smoking? Smoke as usual for a few days while you log; don’t cut down yet.",
+        "When one of the thoughts above comes up this week, do the step under it. Don’t go looking for it.",
+        "Already stopped? Don’t start smoking again to do this step: write it from memory.",
+        "Allow it. No guilt while you log: you’re investigating, not failing.",
+        "Write down what weed does for you: sleep, boredom, anxiety, fun.",
+        "Before each smoke, note the time, where you are and what you want from it.",
+        "After it, note whether it gave you that, and for how long.",
+        "Each thing weed does for you is a belief. Set each one against the beliefs above."
+      ]
+    },
+    {
+      "title": "Find your 80% swaps",
+      "text": "Find “80%” alternatives: if you think weed smoking relaxes you, find something that meets 80% of that need, like reading, a show, or talking to a friend.",
+      "do": [
+        "Sleep: same wake-up time every day, no screens in bed.",
+        "Evenings: plan your first 14 evenings off weed in advance: gym, cooking, a friend, a game.",
+        "Anxiety: a walk or a hard workout when it spikes.",
+        "Boredom: two things that keep your hands busy, ready before your quit date (step 3).",
+        "Keep the ritual, swap the joint: same break, same balcony, tea or a walk instead.",
+        "For each need on your step 1 list, write one swap. 80% of the effect is enough."
+      ],
+      "proof": {
+        "text": "Of 25 long-time daily smokers who quit without treatment for a year or more, the most common things that kept them off were avoiding situations where they smoked, a changed routine and new interests.",
+        "refs": [
+          {
+            "cite": "Ellingstad TP, Sobell LC, Sobell MB, Eickleberry L, Golden CJ (2006). Self-change: a pathway to cannabis abuse resolution. Addictive Behaviors 31(3):519-30.",
+            "url": "https://pubmed.ncbi.nlm.nih.gov/15967588/",
+            "pmid": "15967588",
+            "quote": "The most common reported maintenance factors were avoidance of situations in which cannabis was used, changes in lifestyle, and the development of non-cannabis-related interests.",
+            "fetched": true
+          }
+        ],
+        "severity": "disorder",
+        "counted": "daily users with a weed problem, mild cases included, who quit alone",
+        "weak": "25 people"
+      }
+    },
+    {
+      "title": "Pick the date. Three months, one thing.",
+      "text": "Set a date (some days or weeks ahead) and make this the one thing for the next three months. Every day you keep that promise to yourself is a complete success. If you slip, go back through steps 1–3.",
+      "do": [
+        "Pick a date a few days to a few weeks out and put it in your calendar. Still smoking? Smoke as usual until then. Already off it? Today is your date.",
+        "Throw out the stash, grinder and papers. Delete the dealer’s number.",
+        "Expect cravings for months, not only the first week. Keep the plan going after the hard first days.",
+        "For three months, weed is the one thing. No new diet, no new life plan.",
+        "Mark each day off on a calendar.",
+        "Slip? Go back through steps 1–3 on paper, the same day. Don’t go back to using as usual for days first."
+      ],
+      "proof": {
+        "text": "In r/leaves posts with a day count, cravings still came up in 46 in 100 posts in months 4–12.",
+        "refs": [
+          {
+            "cite": "Posts on r/leaves with a day count, 2021-2025, tagged for this page",
+            "url": "",
+            "quote": "cravings, share of posts by graph stage, Days 2–3 to Months 4–12: 24, 32, 30, 24, 29, 45, 46 in 100 (115, 117, 113, 118, 107, 58, 108 posts)",
+            "fetched": true
+          }
+        ],
+        "severity": "self-hooked"
+      }
+    },
+    {
+      "title": "Live as if you’ve already quit",
+      "text": "From that day on, act, think and feel as if you have already quit. Ask yourself: “why would I smoke, when I’ve been weed-free for a year already and I enjoy my life so much more now?”",
+      "do": [
+        "When someone offers, say “I don’t smoke”, not “I’m taking a break”.",
+        "Notice the “I can moderate now” thought, and treat it as a symptom.",
+        "When the urge hits, say “there is a craving”, not “I need to smoke”. Then watch it.",
+        "Rate it 0 to 10 and watch it drop. You don’t have to fight it or obey it.",
+        "Expect “just one” once you feel fine. Decide your answer now, not at the party.",
+        "Tell the people you smoke with that you’ve stopped. Not paused: stopped."
+      ]
+    },
+    {
+      "title": "Get help that works (optional)",
+      "text": "Get help (optional): friends, family, therapy, rehab, 12-step groups, or 1-on-1 help from me.",
+      "do": [
+        "Look for talk therapy (CBT) with motivation sessions, over a month or more.",
+        "Ask about programmes that reward clean tests.",
+        "Help is a tool, not a verdict. Use what works, drop what doesn’t.",
+        "Free and quick: one friend who quit, an online quit group, a Marijuana Anonymous meeting.",
+        "A few meetings can be enough. You don’t sign up for life."
+      ],
+      "proof": {
+        "text": "Averaged across eight therapy trials for a weed problem, 23 in 100 given talk therapy had not used weed in the past month at check-ups over four months on.",
+        "refs": [
+          {
+            "cite": "Gates PJ, Sabioni P, Copeland J, Le Foll B, Gowing L (2016). Psychosocial interventions for cannabis use disorder. Cochrane Database of Systematic Reviews.",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4914383/",
+            "pmid": "27149547",
+            "quote": "to 23% at follow‐up of longer than four months. In contrast, an average of 12% of those in control conditions reported PPA at final follow‐up.",
+            "fetched": true
+          }
+        ],
+        "severity": "treatment"
+      }
+    }
+  ]
+}

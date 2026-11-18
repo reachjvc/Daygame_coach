@@ -1,0 +1,1425 @@
+{
+  "id": "nicotine",
+  "name": "Smoking or vaping",
+  "units": "TODO",
+  "costKind": "TODO",
+  "danger": {
+    "level": "none",
+    "line": null,
+    "refs": []
+  },
+  "footerNote": {
+    "text": "On clozapine, olanzapine or theophylline? Tell your prescriber before you stop smoking or switch to a vape or pouches: tobacco smoke speeds their breakdown, so the dose may need to come down once smoking stops.",
+    "refs": [
+      {
+        "cite": "Kroon LA (2007). Drug interactions with smoking. American Journal of Health-System Pharmacy 64(18):1917-21.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/17823102/",
+        "pmid": "17823102",
+        "quote": "upon smoking cessation, smokers may require a reduction in the dosage of an interacting medication."
+      }
+    ]
+  },
+  "hope": {
+    "kind": "hope-free-now",
+    "big": "About 19 in 100",
+    "headline": "About 19 in 100 Americans ever hooked on nicotine were already free of it when asked.",
+    "mirror": "You think nobody hooked like you ever really gets free.",
+    "severity": "dependent",
+    "counted": "people ever hooked on nicotine",
+    "basis": {
+      "design": "a national US survey, face-to-face interviews, one snapshot",
+      "who": "US adults who had ever met the criteria for nicotine dependence (3 or more of 7 signs within one year), before vaping was common; how much they used is not reported",
+      "n": "1,300 who were free, of 6,937 ever hooked (43,093 adults surveyed)",
+      "where": "US",
+      "when": "2001–2002",
+      "measured": "Whether, by the interview, the person had finally stopped having any sign of being hooked, with none coming back, as they recalled it. Head counts, not adjusted to match the whole US population."
+    },
+    "caveat": "A snapshot at the interview, not a lifetime share. 'Free' means no signs of being hooked left, not always nicotine-free. The authors say people tend to over-report getting free, and men got free less often than women. People in prison or hospital were not asked.",
+    "projection": false,
+    "checked": "hooked",
+    "weak": null,
+    "ref": {
+      "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction 106(3):657-69.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+      "pmid": "21077975",
+      "quote": "lifetime history of dependence on nicotine (n=6,937) … Nicotine remission (N=1,300)",
+      "fetched": true
+    },
+    "check": {
+      "by": "revision checker a (nicotine)",
+      "on": "2026-11-09",
+      "verdict": "ok",
+      "notes": "checked after revision"
+    }
+  },
+  "numbers": [
+    {
+      "kind": "hope-free-now",
+      "big": "About 19 in 100",
+      "headline": "About 19 in 100 Americans ever hooked on nicotine were already free of it when asked.",
+      "mirror": "You think nobody hooked like you ever really gets free.",
+      "severity": "dependent",
+      "counted": "people ever hooked on nicotine",
+      "basis": {
+        "design": "a national US survey, face-to-face interviews, one snapshot",
+        "who": "US adults who had ever met the criteria for nicotine dependence (3 or more of 7 signs within one year), before vaping was common; how much they used is not reported",
+        "n": "1,300 who were free, of 6,937 ever hooked (43,093 adults surveyed)",
+        "where": "US",
+        "when": "2001–2002",
+        "measured": "Whether, by the interview, the person had finally stopped having any sign of being hooked, with none coming back, as they recalled it. Head counts, not adjusted to match the whole US population."
+      },
+      "caveat": "A snapshot at the interview, not a lifetime share. 'Free' means no signs of being hooked left, not always nicotine-free. The authors say people tend to over-report getting free, and men got free less often than women. People in prison or hospital were not asked.",
+      "projection": false,
+      "checked": "hooked",
+      "weak": null,
+      "ref": {
+        "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction 106(3):657-69.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+        "pmid": "21077975",
+        "quote": "lifetime history of dependence on nicotine (n=6,937) … Nicotine remission (N=1,300)",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "hope-lifetime",
+      "big": "84 in 100",
+      "headline": "About 84 in 100 Americans ever hooked on nicotine are projected to get free of it in their lifetime.",
+      "mirror": "You've smoked so long you think it's too late for you.",
+      "severity": "dependent",
+      "counted": "people ever hooked on nicotine",
+      "basis": {
+        "design": "a national US survey, face-to-face interviews; ages recalled, then a statistical model projected the share over a whole life",
+        "who": "US adults who had ever met the criteria for nicotine dependence (3 or more of 7 signs within one year), before vaping was common; how much they used is not reported",
+        "n": "6,937 adults ever hooked (of 43,093 surveyed)",
+        "where": "US",
+        "when": "2001–2002",
+        "measured": "The age when the signs first appeared and the age when they finally stopped and never came back, as people recalled it. From those ages the model projects the share free over a whole life. The model puts 3 in 100 free within a year of getting hooked and about 18 in 100 within 10 years."
+      },
+      "caveat": "'Free' means no signs of being hooked left, not that they never touched it again. Men got free less often than women. People in prison or hospital weren't surveyed.",
+      "projection": true,
+      "checked": "hooked",
+      "weak": null,
+      "ref": {
+        "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction 106(3):657-69.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+        "pmid": "21077975",
+        "quote": "Lifetime cumulative probability estimates of dependence remission were 83.7% for nicotine",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "how-tries",
+      "big": "About 30",
+      "headline": "For daily smokers in Ontario, a model put the expected number of tries before one lasted a year at about 30.",
+      "mirror": "You've failed so many times you think you're the exception.",
+      "severity": "heavy",
+      "counted": "daily smokers who tried to quit, not checked for addiction",
+      "basis": {
+        "design": "the same smokers surveyed about every 6 months for up to 3 years; a model turned tries into tries per success, letting each later try have a lower chance",
+        "who": "adult daily smokers in Ontario who made a quit try during follow-up",
+        "n": "1,092 daily smokers (of 1,277 smokers who tried to quit)",
+        "where": "Ontario, Canada",
+        "when": "interviews 2005–2011",
+        "measured": "Quit tries, and quits that lasted a year or more, during follow-up. The authors' preferred model gave 29.5 for daily smokers (29.6 for everyone). Other ways of counting gave about 7, 20 and 142. Of the tries seen during the study, the first had the best chance of lasting (11 in 100), the second 5 in 100; counting earlier tries from people's lives, the best chances came after several tries."
+      },
+      "caveat": "An average from a model, pulled up by the people who struggle most; it is not what every smoker needs. These were daily smokers never checked for addiction, and the answer swings from about 7 to 142 depending on how tries are counted. Self-report, cigarette smokers only.",
+      "projection": true,
+      "checked": "not",
+      "weak": "Loose: 7 to 142 by other counts",
+      "ref": {
+        "cite": "Chaiton M, Diemert L, Cohen JE, et al. (2016). Estimating the number of quit attempts it takes to quit smoking successfully in a longitudinal cohort of smokers. BMJ Open.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4908897/",
+        "pmid": "27288378",
+        "quote": "Overall (n=1277) | Daily (n=1092) | Occasional (n=185) … Life table, observed quit success rates … 29.6 | 29.5 | 11.4",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "how-slips",
+      "big": "3–5 in 100",
+      "headline": "Of quit tries made without help, 3–5 in 100 lasted six months to a year.",
+      "mirror": "You slipped within days and think you're weaker than other smokers.",
+      "severity": "users",
+      "counted": "smokers trying to quit on their own, not checked for addiction",
+      "basis": {
+        "design": "a review of studies (too few and too mixed to combine)",
+        "who": "smokers trying to quit without treatment; how much they smoked is not reported in the review's summary",
+        "n": "For 3–5 in 100: 15 studies or study groups (a summary of 10 earlier studies, 2 more studies and 3 untreated groups). For eight days: 8 relapse curves from 2 studies and 5 untreated groups. Number of people not stated in the review's summary.",
+        "where": "Countries not listed in the review's summary",
+        "when": "studies before 2004",
+        "measured": "Share still not smoking 6 to 12 months after one quit attempt, and when relapse happens (8 relapse curves)."
+      },
+      "caveat": "Most relapses came within the first eight days. This is per attempt, not per person: it does not show how many succeed on a later try. The smokers were never checked for addiction, and the studies are old and too mixed to combine.",
+      "projection": false,
+      "checked": "not",
+      "weak": "Ordinary smokers; no head count stated",
+      "ref": {
+        "cite": "Hughes JR, Keely J, Naud S (2004). Shape of the relapse curve and long-term abstinence among untreated smokers. Addiction.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/14678060/",
+        "pmid": "14678060",
+        "quote": "3-5% of self-quitters achieve prolonged abstinence for 6-12 month after a given quit attempt.",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "helps-stop-vs-cut",
+      "big": "12 vs 12 in 100",
+      "headline": "Expected off six months later: 12 in 100 who cut down first, the same 12 in 100 who stopped at once.",
+      "mirror": "You can't face stopping all at once, so you never start.",
+      "severity": "treatment",
+      "counted": "smokers in quit trials who wanted to stop, not checked for addiction",
+      "basis": {
+        "design": "a review of trials; this figure combines 22 trials that split people by chance",
+        "who": "people who smoke cigarettes and were willing to join a quit trial, most of them adults, about 23 cigarettes a day on average",
+        "n": "9,219 people in 22 trials (of 51 trials with 22,509 people in the review)",
+        "where": "29 of the review's 51 trials in the USA, most others in Europe and China; most recruited volunteers through ads",
+        "when": "searched to October 2018; published 2019",
+        "measured": "Not smoking at 6 months or longer: a plan to cut down before quitting, against quitting on a set day. Cutting down with varenicline or fast nicotine (gum, lozenge) may work better than cutting down alone."
+      },
+      "caveat": "Cutting down here is a step on the way to stopping, not smoking less for good. The 12 in 100 is the review's typical rate across its trials, not one group's count. One large English trial (697 smokers, all given nicotine replacement and nurse support) found stopping at once did better: 22 in 100 against about 16 in 100 still off at 6 months.",
+      "projection": true,
+      "checked": "not",
+      "ref": {
+        "cite": "Lindson N, Klemperer E, Hong B, Ordóñez-Mena JM, Aveyard P (2019). Smoking reduction interventions for smoking cessation. Cochrane Database of Systematic Reviews.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6953262/",
+        "pmid": "31565800",
+        "quote": "Risk with abrupt quitting | Risk with reduction to quit … Smoking cessation (≥ 6‐month follow‐up) | 12 per 100 | 12 per 100 (11 to 14) … 9219 (22 RCTs)",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "helps-medicine",
+      "big": "23 vs 10 in 100",
+      "headline": "On varenicline, a prescription pill, about 23 in 100 smokers are expected to stay off six months; on a dummy, 10.",
+      "mirror": "You doubt a quit pill makes any real difference.",
+      "severity": "treatment",
+      "counted": "smokers in quit trials who wanted to stop, not checked for addiction",
+      "basis": {
+        "design": "a review of trials; this figure combines 41 trials that split people by chance",
+        "who": "adult smokers who wanted to stop; how much they smoked is not reported for this figure",
+        "n": "17,395 people in 41 trials",
+        "where": "of the review's 75 trials, 28 in the USA; others in Canada, Europe, Asia and Australia, some across several countries",
+        "when": "searched to April 2022; published 2023",
+        "measured": "Not smoking at 6 months or longer, by each trial's strictest definition, with a lab check such as a breath test where the trial did one; varenicline against a dummy pill. The review's exact figures: 230 and 99 in 1,000."
+      },
+      "caveat": "The 10 in 100 is the typical rate in the trials' dummy-pill groups; the 23 in 100 is worked out from it with the review's combined effect, not counted in one group. Prescription only. Serious side effects were reported a little more often than with a dummy pill or no pill: 3.3 in 100 vs 2.7 in 100. Mostly tested in cigarette smokers, not vapers. It still leaves most people smoking at six months.",
+      "projection": true,
+      "checked": "not",
+      "ref": {
+        "cite": "Livingstone-Banks J, Fanshawe TR, Thomas KH, et al. (2023). Nicotine receptor partial agonists for smoking cessation. Cochrane Database of Systematic Reviews.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10169257/",
+        "pmid": "37142273",
+        "quote": "Smoking abstinence at longest follow‐up (6+ months) (varenicline vs placebo) | 99 per 1000 | 230 per 1000 (213 to 249) | RR 2.32 (2.15 to 2.51)",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "helps-talk",
+      "big": "11 vs 7 in 100",
+      "headline": "One-to-one counselling: about 11 in 100 smokers expected to stay off six months, against 7 in 100 with brief advice.",
+      "mirror": "You think talking to someone about smoking won't change anything.",
+      "severity": "treatment",
+      "counted": "smokers in counselling trials, not checked for addiction or wish to quit",
+      "basis": {
+        "design": "a review of trials; this figure combines 27 trials that split people by chance",
+        "who": "smokers in trials where no one was offered quit medicine (pregnant women and teen-only trials left out); across the review, 19 of 49 trials recruited hospital patients, and the review did not require people to want to quit; how much they smoked is not reported for this figure",
+        "n": "11,100 people in 27 trials (of 49 trials, about 19,000 people, in the review)",
+        "where": "30 of the review's 49 trials in the USA; most others in Europe, some in Australia and Asia",
+        "when": "searched to May 2016; published 2017",
+        "measured": "Not smoking at least six months later: face-to-face counselling of 10 minutes or more (most much longer, many with follow-up calls) against brief advice, usual care or leaflets. The review's table gives 11 in 100 for counselling, likely between 10 and 12."
+      },
+      "caveat": "The review worked these out from its combined trials, taking 7 in 100 as a typical brief-advice group; neither is one group's count. When everyone also had nicotine replacement, counselling added less.",
+      "projection": true,
+      "checked": "not",
+      "ref": {
+        "cite": "Lancaster T, Stead LF (2017). Individual behavioural counselling for smoking cessation. Cochrane Database of Systematic Reviews.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6464359/",
+        "pmid": "28361496",
+        "quote": "Numbers quit in control condition | Numbers quit after individual counselling … No systematic pharmacotherapy … 7 per 100 | 11 per 100 (10 to 12)",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "after-first-month",
+      "big": "Week 1",
+      "headline": "Anxiety fell from the first week off, in people hooked on nicotine who stayed off.",
+      "mirror": "You think quitting will leave you on edge for weeks.",
+      "severity": "dependent",
+      "counted": "people hooked on nicotine who stayed off four weeks",
+      "basis": {
+        "design": "a quit-smoking trial; anxiety rated before and after quit day",
+        "who": "smokers who met the criteria for nicotine dependence and tried to stop; how much they smoked is not reported in the paper's summary",
+        "n": "70 who stayed off for all 4 weeks (of 101 who tried)",
+        "where": "The authors worked at St George's Hospital Medical School, London",
+        "when": "published 1997",
+        "measured": "Anxiety by a single rating and a standard anxiety questionnaire, from 2 weeks before quit day to 4 weeks after. Only people with no slip at all counted as off."
+      },
+      "caveat": "It shows anxiety fell in those who stayed off, not how much. One small trial from the 1990s. People who slipped are not in this count. They were in a quit trial, so may have had support or medicine. Reviews count anxiety among withdrawal signs that peak in week 1 (belief 2); in this trial, among people who stayed off, it was already falling by then.",
+      "projection": false,
+      "checked": "hooked",
+      "timeIsResult": true,
+      "weak": "Small: 70 people, one trial",
+      "ref": {
+        "cite": "West R, Hajek P (1997). What happens to anxiety levels on giving up smoking? American Journal of Psychiatry 154(11):1589-92.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/9356569/",
+        "pmid": "9356569",
+        "quote": "There was no evidence of an increase in anxiety following smoking cessation. However, there was a significant decrease in anxiety from the first week of abstinence.",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "after-mood",
+      "big": "Years 1 and 3",
+      "headline": "Quitters rated their life and mood better than people who kept smoking, one and three years on.",
+      "mirror": "You worry life will feel empty without cigarettes.",
+      "severity": "treatment",
+      "counted": "smokers in a quit trial; addiction scored, not required to join",
+      "basis": {
+        "design": "the same people followed 3 years, inside a quit-smoking trial",
+        "who": "adult smokers of 10 or more cigarettes a day who wanted to quit; all got six counselling sessions and quit medicine or a dummy pill (about 58 in 100 women); their average score on an addiction test (Fagerström) was about 5 out of 10, middling",
+        "n": "376 quitters vs 649 smokers at year 1; 359 vs 640 at year 3 (1,504 started)",
+        "where": "Madison and Milwaukee, Wisconsin, US",
+        "when": "joined 2005–2007, followed 3 years",
+        "measured": "Quality of life, health-related quality of life, mood, relationship satisfaction and stressful events; smoking checked by a lab test. Quitters also had fewer stressors by year 3."
+      },
+      "caveat": "Quitters weren't chosen at random, so they may differ in other ways: they already rated their life a little higher before quitting. Life satisfaction slipped for everyone, but less for quitters; the authors call the differences modest. Quitting made no difference to marriage satisfaction.",
+      "projection": false,
+      "checked": "not",
+      "timeIsResult": true,
+      "weak": "Small differences, the authors say",
+      "ref": {
+        "cite": "Piper ME, Kenford S, Fiore MC, Baker TB (2012). Smoking cessation and quality of life: changes in life satisfaction over 3 years following a quit attempt. Annals of Behavioral Medicine.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/22160762/",
+        "pmid": "22160762",
+        "quote": "Compared with continuing smokers, quitters showed improved global QOL, HR-QOL, and affect at years 1 and 3 and fewer stressors by year 3.",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "who-years",
+      "big": "26 years",
+      "headline": "Half of Americans ever hooked on nicotine are projected to be free about 26 years after it began.",
+      "mirror": "You've smoked since your teens and think you're a lifer.",
+      "severity": "dependent",
+      "counted": "people ever hooked on nicotine",
+      "basis": {
+        "design": "a national US survey, face-to-face interviews; ages recalled, then a statistical model projected the pace over a lifetime",
+        "who": "adults who had ever been dependent on nicotine; how much they used is not reported",
+        "n": "6,937 adults who had ever been hooked (of 43,093 surveyed); 1,300 of them had got free",
+        "where": "US",
+        "when": "2001–2002",
+        "measured": "The age when the signs of being hooked first appeared, and the age when they finally stopped and never came back, as people recalled it. Getting free here means no signs of being hooked any more; it does not have to mean never using. The model puts 3 in 100 free within the first year and about 18 in 100 within 10 years."
+      },
+      "caveat": "The study projects that about 84 in 100 get free at some point in life; that is a model, not a head count, built from ages people recalled over decades. People in prisons or hospitals weren't surveyed. Men got free more slowly than women. Surveyed before vaping; the paper doesn't say which tobacco products people used.",
+      "projection": true,
+      "checked": "hooked",
+      "timeIsResult": true,
+      "weak": "Built on recalled ages",
+      "ref": {
+        "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction 106(3):657-69.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+        "pmid": "21077975",
+        "quote": "Half of the cases of nicotine … dependence remitted approximately 26 … years after dependence onset",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "helps-reward",
+      "big": "10 vs 7 in 100",
+      "headline": "With rewards for staying off, about 10 in 100 smokers are expected to be off six months later; without, 7 in 100.",
+      "mirror": "You'd quit faster if something real was on the line.",
+      "severity": "treatment",
+      "counted": "smokers in quit trials, rewarded for staying off, not checked for addiction",
+      "basis": {
+        "design": "a review of trials; this figure combines 39 trials that split people by chance",
+        "who": "adults who smoke (not pregnant), in workplaces, clinics and communities; how much they smoked is not reported for this figure",
+        "n": "18,303 people in 39 trials",
+        "where": "33 of the review's 48 trials were in the USA, most others in Europe",
+        "when": "searched to November 2023; published 2025",
+        "measured": "Not smoking at the last check, 6 months or later: cash, vouchers, or money people put down themselves and won back, against no rewards. Leaving out trials still paying at that check gave about the same gain, so it lasted after rewards stopped."
+      },
+      "caveat": "The 7 in 100 is the typical rate in the trials' no-reward groups; the 10 in 100 is the review's summary figure, worked out from it with the combined effect (its table gives 108 in 1,000), not counted in one group. In most trials a program ran the rewards and checked people's breath or urine. A private bet with a friend was not what was tested.",
+      "projection": true,
+      "checked": "not",
+      "ref": {
+        "cite": "Notley C, Gentry S, Livingstone-Banks J, Bauld L, Perera R, Conde M, Hartmann-Boyce J (2025). Incentives for smoking cessation. Cochrane Database of Systematic Reviews.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11725379/",
+        "pmid": "39799985",
+        "quote": "For every 100 people who received financial incentives, 10 people were likely to successfully quit smoking at six months or longer, compared to 7 in 100",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "after-body",
+      "big": "4–5 kg",
+      "headline": "Quitters gained 4–5 kg on average in the first year.",
+      "mirror": "You fear the weight will keep piling on once you quit.",
+      "severity": "treatment",
+      "counted": "people who stayed quit in quit trials, not checked for addiction",
+      "basis": {
+        "design": "a review combining 62 studies",
+        "who": "people who stayed quit in quit-smoking trials, with or without medication; how much they smoked is not reported for this figure",
+        "n": "514 quitters without medication at 12 months, in 25 studies; with medication, 1,138 on nicotine replacement (19 studies), 183 on bupropion (5) and 174 on varenicline (3)",
+        "where": "59 of 62 trials in North America, Europe or Australia",
+        "when": "review published 2012",
+        "measured": "Weight change from quit day to 1, 2, 3, 6 and 12 months. Quitters without medication gained about 2.9 kg by month 3, 4.2 kg by month 6 and 4.7 kg by month 12. For them at 12 months, the authors estimated from the averages and spreads, not by counting people: 16 in 100 lost weight, 37 in 100 gained under 5 kg, 34 in 100 gained 5–10 kg, 13 in 100 gained over 10 kg."
+      },
+      "caveat": "An average; it varies a lot between people. Measured in cigarette smokers in trials, not in vapers.",
+      "projection": false,
+      "pooled": true,
+      "checked": "not",
+      "weak": null,
+      "ref": {
+        "cite": "Aubin HJ, Farley A, Lycett D, Lahmek P, Aveyard P (2012). Weight gain in smokers after quitting cigarettes: meta-analysis. BMJ.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/22782848/",
+        "pmid": "22782848",
+        "quote": "Smoking cessation is associated with a mean increase of 4-5 kg in body weight after 12 months of abstinence, and most weight gain occurs within three months of quitting.",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "after-body",
+      "big": "At least 25 in 100",
+      "headline": "Of men with erection problems who quit smoking, at least 25 in 100 improved a year later; none who kept smoking did.",
+      "mirror": "You think what smoking did to your sex life won't come back.",
+      "severity": "treatment",
+      "counted": "men with erection problems seeking quit help, not checked for addiction",
+      "basis": {
+        "design": "the same men followed 1 year, not a trial",
+        "who": "male smokers with erection problems and no other known cause, who asked for nicotine replacement; how much they smoked is not reported",
+        "n": "118 men who quit (163 who kept smoking)",
+        "where": "Tehran, Iran",
+        "when": "Followed 1 year; published 2004",
+        "measured": "A standard erection score, before and after one year."
+      },
+      "caveat": "Small, not a trial: one study in Tehran. Older men and men with severe problems improved less.",
+      "projection": false,
+      "checked": "not",
+      "weak": "Small: 118 men, one study",
+      "ref": {
+        "cite": "Pourmand G, Alidaee MR, Rasuli S, Maleki A, Mehrsai A (2004). Do cigarette smokers with erectile dysfunction benefit from stopping?: a prospective study. BJU International.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/15610111/",
+        "pmid": "15610111",
+        "quote": "After 1 year the ED status improved in > or = 25% of ex-smokers but in none of the current smokers",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "quit-status",
+      "big": "81 in 100",
+      "headline": "Of Americans who ever had a nicotine problem, mild cases included, about 81 in 100 had never used any help for it.",
+      "mirror": "You don't want pills, patches or a group, and think that's unusual.",
+      "severity": "disorder",
+      "counted": "people who ever had a nicotine problem, mild cases included",
+      "basis": {
+        "design": "a national US survey, interviews, one snapshot",
+        "who": "US adults who had ever met the criteria for a nicotine problem, mild, moderate or severe; people still hooked and people free alike; how much they used is not reported",
+        "n": "Head count not stated; about 28 in 100 of the 36,309 adults surveyed had ever had the problem",
+        "where": "US",
+        "when": "2012–2013",
+        "measured": "Whether they had ever used any help for tobacco or nicotine: prescribed medicine, nicotine patches, gum or lozenges, counselling, a support group or chat room, e-cigarettes, acupuncture or meditation, or anything else. The survey gives 18.8 in 100 who had; about 81 in 100 is the rest. Shares adjusted to match the US population. Past-year problem: 20 in 100 US adults; ever: about 28 in 100. Severe cases: about 28 in 100 had used help."
+      },
+      "caveat": "It counts everyone who ever had the problem, including people still hooked, so it does not show how many got free without help. Most of them still had it in the year before the survey. People with worse problems used help more often.",
+      "projection": false,
+      "checked": "hooked",
+      "weak": "No head count stated",
+      "ref": {
+        "cite": "Chou SP, Goldstein RB, Smith SM, Huang B, Ruan WJ, Zhang H, Jung J, Saha TD, Pickering RP, Grant BF (2016). The epidemiology of DSM-5 nicotine use disorder: results from the National Epidemiologic Survey on Alcohol and Related Conditions-III. Journal of Clinical Psychiatry 77(10):1404-12.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8154113/",
+        "pmid": "27135834",
+        "quote": "Treatment was utilized by 20.3% of respondents with 12-month and 18.8% with lifetime NUD.",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "after-lasting",
+      "big": "90 in 100",
+      "headline": "Of quitters still off a year after quit day, about 90 in 100 stayed off one more year, on average.",
+      "mirror": "You think even a year off won't stick.",
+      "severity": "treatment",
+      "counted": "people still off a year into quit-medicine trials, not checked for addiction",
+      "basis": {
+        "design": "a review combining 8 trials of nicotine medicines that split people by chance, followed 2 to 6 years after quit day",
+        "who": "adult smokers who quit in nicotine gum, patch or nasal spray trials and were still off at one year; no trial treatment after the first year; how much they smoked is not reported for this figure",
+        "n": "31 to 96 people off at one year per trial (4 to 33 per group), in 8 trials; one trial with far higher rates was left out of the 10 in 100",
+        "where": "Countries not stated",
+        "when": "trials published 1988–2003; review published 2008",
+        "measured": "Of people off at one year (breath test in all but one trial), how many went back to smoking in each later year. The review gives about 10 in 100 going back each year; the other 90 stayed off. At that rate, the authors work out, about 41 in 100 would be back after 5 more years. A national US health survey follow-up from 1982–84, in the US Surgeon General's 1990 report, found 14 and 10 in 100 went back in years 2 and 3, then under 5 in 100 a year."
+      },
+      "caveat": "A share per year, not for good: the yearly losses add up over time. Small groups, so the share going back each year could be anywhere from 5 to 17 in 100. All were cigarette smokers in trials of nicotine medicines.",
+      "projection": false,
+      "pooled": true,
+      "checked": "not",
+      "weak": "Small trials",
+      "ref": {
+        "cite": "Hughes JR, Peters EN, Naud S (2008). Relapse to smoking after 1 year of abstinence: a meta-analysis. Addictive Behaviors 33(12):1516-20.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2577779/",
+        "pmid": "18706769",
+        "quote": "a meta-analysis estimated the annual incidence of relapse after 1 yr to be 10%; however, the small sample sizes resulted in a wide 95% confidence interval (5–17%)",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    }
+  ],
+  "keyFacts": "TODO",
+  "beliefs": [
+    {
+      "id": "b1",
+      "kind": "stuck",
+      "scene": "TODO",
+      "short": "TODO",
+      "need": "TODO",
+      "limiting": "I’ve smoked too long. It’s too late.",
+      "counterpart": "Most people hooked on nicotine get free in the end. I’m not waiting years.",
+      "whenThought": "Write the thought down, and next to it: “Most people hooked on nicotine get free in the end.” Then read the proof under it once and do the next step of the plan below.",
+      "test": "One evening this week, go out with no cigarettes, vape or pouches on you, as if you’d already quit. On the way home, name what you actually missed.",
+      "proof": "Male British doctors who stopped smoking as late as 60 still gained about 3 years of life, on average.",
+      "severity": "users",
+      "counted": "male doctors who smoked, not checked for addiction",
+      "refs": [
+        {
+          "cite": "Doll R, Peto R, Boreham J, Sutherland I (2004). Mortality in relation to smoking: 50 years' observations on male British doctors. BMJ 328(7455):1519.",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC437139/",
+          "pmid": "15213107",
+          "quote": "Cessation at age 60, 50, 40, or 30 years gained, respectively, about 3, 6, 9, or 10 years of life expectancy.",
+          "fetched": true,
+          "fetchedOn": "2026-11-09"
+        }
+      ],
+      "weak": "It counts years of life gained, not who got free; men born 1900–1930, followed 50 years.",
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "id": "b2",
+      "kind": "hard",
+      "scene": "TODO",
+      "short": "TODO",
+      "need": "TODO",
+      "limiting": "Quitting will be hell. I can’t handle the withdrawal.",
+      "counterpart": "I’ve got through rougher weeks than this. And this one ends.",
+      "whenThought": "Write the thought down, and next to it: “I’ve got through rougher weeks than this. And this one ends.” Still using? Do the next step of the plan. Already off it? Name the urge, “there is a craving,” and walk or drink water until it fades.",
+      "test": "Still using? Go without nicotine one ordinary morning this week, until noon. Already off it? Wait for your next strong urge. Either way, time the urge on your phone until it fades.",
+      "proof": "In smokers who stopped, anger, anxiety, low mood, restlessness and poor sleep peaked in the first week and were gone by week 2–4.",
+      "severity": "users",
+      "counted": "smokers who stopped, not checked for addiction",
+      "refs": [
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "quote": "Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.",
+          "fetched": true
+        }
+      ],
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "id": "b3",
+      "kind": "need",
+      "scene": "TODO",
+      "short": "TODO",
+      "need": "TODO",
+      "limiting": "A cigarette is the only thing that calms me down.",
+      "counterpart": "Smoking creates the stress it seems to relieve. Quitting is what calms me down.",
+      "whenThought": "When stress brings the thought, write it down, and next to it: “Smoking creates the stress it seems to relieve.” Then take ten slow breaths or a two-minute walk before you decide anything.",
+      "test": "The next time something stresses you this week, leave the nicotine and walk for ten minutes. Rate the stress 0–10 before and after, and compare.",
+      "proof": "In 469 heavily hooked heart patients who wanted to stop, stress fell more over a year in those who stayed off than in those who kept smoking.",
+      "severity": "treatment",
+      "counted": null,
+      "refs": [
+        {
+          "cite": "Hajek P, Taylor T, McRobbie H (2010). The effect of stopping smoking on perceived stress levels. Addiction 105(8):1466-71.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20528815/",
+          "pmid": "20528815",
+          "quote": "abstainers recorded a significantly larger decrease in perceived stress than continuing smokers",
+          "fetched": true
+        }
+      ],
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision: corrections applied to beliefs[2].test"
+      }
+    },
+    {
+      "id": "b4",
+      "kind": "moderation",
+      "scene": "TODO",
+      "short": "TODO",
+      "need": "TODO",
+      "limiting": "Just one won’t hurt. I’m still quit.",
+      "counterpart": "There’s no “just one”. One is how quit turns into smoking again.",
+      "whenThought": "Answer it like a non-smoker, “No thanks, I don’t,” and leave the room for five minutes. Then text the person you told your date that the thought came and you said no.",
+      "test": "The next time the “just one” thought comes this week, turn that one down and leave the room for five minutes. An hour later, check: is the pull bigger or smaller?",
+      "proof": "Of daily smokers on a nicotine patch who smoked at all in their second week off, 83 in 100 were smoking at 6 months.",
+      "severity": "heavy",
+      "counted": "daily smokers in patch trials, not checked for addiction",
+      "refs": [
+        {
+          "cite": "Kenford SL, Fiore MC, Jorenby DE, Smith SS, Wetter D, Baker TB (1994). Predicting smoking cessation: who will quit with and without the nicotine patch. JAMA 271(8):589-94.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/8301790/",
+          "pmid": "8301790",
+          "quote": "Among active nicotine patch patients who smoked at all during week 2 after quitting, 83% and 97% (studies 1 and 2, respectively) were smoking at 6-month follow-up.",
+          "fetched": true
+        }
+      ],
+      "weak": "No study of people hooked on it",
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision: corrections applied to beliefs[3].test"
+      }
+    },
+    {
+      "id": "b5",
+      "kind": "harmless",
+      "scene": "TODO",
+      "short": "TODO",
+      "need": "TODO",
+      "limiting": "Vapes and pouches are basically harmless.",
+      "counterpart": "Switching is a step down, not a way out.",
+      "whenThought": "Write the thought down, and next to it: “Switching is a step down, not a way out.” Then reread the vape line in step 5 of the plan below.",
+      "test": "Leave the vape or pouches at home for one afternoon this week. Count how often your hand goes to the pocket where it usually sits.",
+      "proof": "In 3,446 ex-smokers who now only vape, dependence on the vape rose with liquid strength: lowest on nicotine-free liquid, highest at 13 mg/ml or more.",
+      "severity": "users",
+      "counted": "ex-smokers who now only vape, not checked for addiction",
+      "refs": [
+        {
+          "cite": "Foulds J, Veldheer S, Yingst J, Hrabovsky S, Wilson SJ, Nichols TT, Eissenberg T (2015). Development of a questionnaire for assessing dependence on electronic cigarettes among a large sample of ex-smoking e-cigarette users. Nicotine & Tobacco Research 17(2):186-92.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/25332459/",
+          "pmid": "25332459",
+          "quote": "E-cig dependence appears to vary by product characteristics and liquid nicotine concentration, and it may increase over time.",
+          "fetched": true
+        }
+      ],
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    }
+  ],
+  "facts": "TODO",
+  "needs": "TODO",
+  "endings": "TODO",
+  "helped": "TODO",
+  "riskyMoments": "TODO",
+  "responses": "TODO",
+  "clearOut": "TODO",
+  "symptomWords": {
+    "craving": "Cravings",
+    "anxious": "Anxiety",
+    "low-mood": "Low mood",
+    "sleep": "Bad sleep",
+    "tired": "Tiredness",
+    "brain-fog": "Brain fog",
+    "stomach-appetite": "Stomach / appetite",
+    "sweats-shakes": "Sweats or shakes",
+    "headache": "Headaches",
+    "restless": "Restlessness",
+    "bored": "Boredom",
+    "lonely": "Loneliness",
+    "body-pain": "Aches",
+    "libido-low": "No sex drive",
+    "libido-high": "Strong sexual urges",
+    "irritable": "Short temper",
+    "dreams": "Vivid dreams",
+    "better-mood": "Better mood",
+    "better-sleep": "Better sleep",
+    "clear-head": "A clearer head",
+    "body-health": "Feeling healthier",
+    "energy": "More energy",
+    "confidence": "More confidence",
+    "proud": "Feeling proud",
+    "libido-back": "Sex drive back",
+    "money": "Money saved",
+    "relationships": "Better relationships"
+  },
+  "symptomHelp": "TODO",
+  "tapeForward": "TODO",
+  "costSwaps": "TODO",
+  "besides": "TODO",
+  "felt": {
+    "forums": [
+      "r/stopsmoking",
+      "r/QuitVaping"
+    ],
+    "years": "2021–2025",
+    "postsUsed": 758,
+    "postsSampled": 1046,
+    "bias": [
+      "People who post are not everyone who quits. People who find it easy have little reason to post.",
+      "People post more when it is hard, so the curve likely runs higher than for quitters in general.",
+      "Later days are mostly milestone posts; people who slipped earlier are no longer counted there.",
+      "Scores come from AI readers of the posts, not from the writers themselves."
+    ],
+    "bins": [
+      {
+        "label": "Day 1",
+        "from": 1,
+        "to": 1,
+        "n": 38,
+        "symptoms": {
+          "anxious": 0.184,
+          "body-pain": 0.026,
+          "bored": 0,
+          "brain-fog": 0.079,
+          "craving": 0.684,
+          "dreams": 0.026,
+          "headache": 0.105,
+          "irritable": 0.053,
+          "libido-high": 0,
+          "libido-low": 0,
+          "lonely": 0,
+          "low-mood": 0.132,
+          "restless": 0.053,
+          "sleep": 0.053,
+          "stomach-appetite": 0.079,
+          "sweats-shakes": 0.026,
+          "tired": 0.026
+        },
+        "positives": {
+          "better-mood": 0.053,
+          "better-sleep": 0.026,
+          "body-health": 0.026,
+          "clear-head": 0,
+          "confidence": 0.026,
+          "energy": 0.026,
+          "libido-back": 0,
+          "money": 0,
+          "proud": 0.026,
+          "relationships": 0
+        }
+      },
+      {
+        "label": "Day 2",
+        "from": 2,
+        "to": 2,
+        "n": 50,
+        "symptoms": {
+          "anxious": 0.1,
+          "body-pain": 0.06,
+          "bored": 0.06,
+          "brain-fog": 0.22,
+          "craving": 0.54,
+          "dreams": 0,
+          "headache": 0.04,
+          "irritable": 0.1,
+          "libido-high": 0,
+          "libido-low": 0,
+          "lonely": 0,
+          "low-mood": 0.12,
+          "restless": 0.02,
+          "sleep": 0.06,
+          "stomach-appetite": 0.12,
+          "sweats-shakes": 0.04,
+          "tired": 0.18
+        },
+        "positives": {
+          "better-mood": 0.08,
+          "better-sleep": 0,
+          "body-health": 0.08,
+          "clear-head": 0,
+          "confidence": 0.02,
+          "energy": 0,
+          "libido-back": 0,
+          "money": 0,
+          "proud": 0.06,
+          "relationships": 0
+        }
+      },
+      {
+        "label": "Day 3",
+        "from": 3,
+        "to": 3,
+        "n": 58,
+        "symptoms": {
+          "anxious": 0.172,
+          "body-pain": 0.069,
+          "bored": 0,
+          "brain-fog": 0.103,
+          "craving": 0.586,
+          "dreams": 0.017,
+          "headache": 0.052,
+          "irritable": 0.172,
+          "libido-high": 0,
+          "libido-low": 0,
+          "lonely": 0,
+          "low-mood": 0.19,
+          "restless": 0.034,
+          "sleep": 0.086,
+          "stomach-appetite": 0.086,
+          "sweats-shakes": 0.069,
+          "tired": 0.086
+        },
+        "positives": {
+          "better-mood": 0.121,
+          "better-sleep": 0,
+          "body-health": 0.069,
+          "clear-head": 0.034,
+          "confidence": 0.069,
+          "energy": 0.034,
+          "libido-back": 0,
+          "money": 0,
+          "proud": 0.138,
+          "relationships": 0
+        }
+      },
+      {
+        "label": "Days 4–5",
+        "from": 4,
+        "to": 5,
+        "n": 61,
+        "symptoms": {
+          "anxious": 0.328,
+          "body-pain": 0.131,
+          "bored": 0.016,
+          "brain-fog": 0.082,
+          "craving": 0.475,
+          "dreams": 0.033,
+          "headache": 0.066,
+          "irritable": 0.148,
+          "libido-high": 0,
+          "libido-low": 0,
+          "lonely": 0.016,
+          "low-mood": 0.23,
+          "restless": 0.049,
+          "sleep": 0.098,
+          "stomach-appetite": 0.098,
+          "sweats-shakes": 0.066,
+          "tired": 0.049
+        },
+        "positives": {
+          "better-mood": 0.082,
+          "better-sleep": 0,
+          "body-health": 0.066,
+          "clear-head": 0.016,
+          "confidence": 0.033,
+          "energy": 0.016,
+          "libido-back": 0,
+          "money": 0,
+          "proud": 0.082,
+          "relationships": 0
+        }
+      },
+      {
+        "label": "Days 6–7",
+        "from": 6,
+        "to": 7,
+        "n": 61,
+        "symptoms": {
+          "anxious": 0.098,
+          "body-pain": 0.049,
+          "bored": 0,
+          "brain-fog": 0.098,
+          "craving": 0.525,
+          "dreams": 0,
+          "headache": 0,
+          "irritable": 0.082,
+          "libido-high": 0.016,
+          "libido-low": 0,
+          "lonely": 0,
+          "low-mood": 0.131,
+          "restless": 0.016,
+          "sleep": 0.115,
+          "stomach-appetite": 0.098,
+          "sweats-shakes": 0,
+          "tired": 0.066
+        },
+        "positives": {
+          "better-mood": 0.164,
+          "better-sleep": 0.016,
+          "body-health": 0.115,
+          "clear-head": 0.016,
+          "confidence": 0.016,
+          "energy": 0.066,
+          "libido-back": 0,
+          "money": 0.016,
+          "proud": 0.066,
+          "relationships": 0
+        }
+      },
+      {
+        "label": "Days 8–10",
+        "from": 8,
+        "to": 10,
+        "n": 57,
+        "symptoms": {
+          "anxious": 0.246,
+          "body-pain": 0.105,
+          "bored": 0.035,
+          "brain-fog": 0.07,
+          "craving": 0.456,
+          "dreams": 0.018,
+          "headache": 0.018,
+          "irritable": 0.053,
+          "libido-high": 0.018,
+          "libido-low": 0.018,
+          "lonely": 0.018,
+          "low-mood": 0.228,
+          "restless": 0.018,
+          "sleep": 0.035,
+          "stomach-appetite": 0.123,
+          "sweats-shakes": 0,
+          "tired": 0.158
+        },
+        "positives": {
+          "better-mood": 0.14,
+          "better-sleep": 0.088,
+          "body-health": 0.123,
+          "clear-head": 0,
+          "confidence": 0.07,
+          "energy": 0.035,
+          "libido-back": 0,
+          "money": 0,
+          "proud": 0.158,
+          "relationships": 0
+        }
+      },
+      {
+        "label": "Days 11–14",
+        "from": 11,
+        "to": 14,
+        "n": 55,
+        "symptoms": {
+          "anxious": 0.127,
+          "body-pain": 0.018,
+          "bored": 0.018,
+          "brain-fog": 0.145,
+          "craving": 0.509,
+          "dreams": 0,
+          "headache": 0.036,
+          "irritable": 0.091,
+          "libido-high": 0,
+          "libido-low": 0,
+          "lonely": 0,
+          "low-mood": 0.164,
+          "restless": 0.018,
+          "sleep": 0.091,
+          "stomach-appetite": 0.055,
+          "sweats-shakes": 0,
+          "tired": 0.073
+        },
+        "positives": {
+          "better-mood": 0.2,
+          "better-sleep": 0.018,
+          "body-health": 0.127,
+          "clear-head": 0.055,
+          "confidence": 0.091,
+          "energy": 0.091,
+          "libido-back": 0,
+          "money": 0.036,
+          "proud": 0.164,
+          "relationships": 0.018
+        }
+      },
+      {
+        "label": "Week 3",
+        "from": 15,
+        "to": 21,
+        "n": 58,
+        "symptoms": {
+          "anxious": 0.155,
+          "body-pain": 0.103,
+          "bored": 0.017,
+          "brain-fog": 0.069,
+          "craving": 0.397,
+          "dreams": 0,
+          "headache": 0.034,
+          "irritable": 0.138,
+          "libido-high": 0,
+          "libido-low": 0,
+          "lonely": 0.017,
+          "low-mood": 0.224,
+          "restless": 0,
+          "sleep": 0.069,
+          "stomach-appetite": 0.103,
+          "sweats-shakes": 0.034,
+          "tired": 0.207
+        },
+        "positives": {
+          "better-mood": 0.121,
+          "better-sleep": 0,
+          "body-health": 0.086,
+          "clear-head": 0.017,
+          "confidence": 0.034,
+          "energy": 0.017,
+          "libido-back": 0,
+          "money": 0.034,
+          "proud": 0.224,
+          "relationships": 0.017
+        }
+      },
+      {
+        "label": "Week 4",
+        "from": 22,
+        "to": 30,
+        "n": 55,
+        "symptoms": {
+          "anxious": 0.2,
+          "body-pain": 0.073,
+          "bored": 0.036,
+          "brain-fog": 0.055,
+          "craving": 0.382,
+          "dreams": 0.018,
+          "headache": 0,
+          "irritable": 0.055,
+          "libido-high": 0,
+          "libido-low": 0,
+          "lonely": 0.018,
+          "low-mood": 0.255,
+          "restless": 0,
+          "sleep": 0.018,
+          "stomach-appetite": 0.055,
+          "sweats-shakes": 0,
+          "tired": 0.055
+        },
+        "positives": {
+          "better-mood": 0.164,
+          "better-sleep": 0.036,
+          "body-health": 0.109,
+          "clear-head": 0.055,
+          "confidence": 0.018,
+          "energy": 0.073,
+          "libido-back": 0,
+          "money": 0.018,
+          "proud": 0.127,
+          "relationships": 0
+        }
+      },
+      {
+        "label": "Days 31–45",
+        "from": 31,
+        "to": 45,
+        "n": 56,
+        "symptoms": {
+          "anxious": 0.232,
+          "body-pain": 0.089,
+          "bored": 0,
+          "brain-fog": 0.089,
+          "craving": 0.357,
+          "dreams": 0.054,
+          "headache": 0.036,
+          "irritable": 0.107,
+          "libido-high": 0,
+          "libido-low": 0.018,
+          "lonely": 0,
+          "low-mood": 0.179,
+          "restless": 0,
+          "sleep": 0.071,
+          "stomach-appetite": 0.107,
+          "sweats-shakes": 0,
+          "tired": 0.089
+        },
+        "positives": {
+          "better-mood": 0.196,
+          "better-sleep": 0.036,
+          "body-health": 0.125,
+          "clear-head": 0,
+          "confidence": 0.054,
+          "energy": 0.054,
+          "libido-back": 0.018,
+          "money": 0.036,
+          "proud": 0.089,
+          "relationships": 0
+        }
+      },
+      {
+        "label": "Days 46–60",
+        "from": 46,
+        "to": 60,
+        "n": 49,
+        "symptoms": {
+          "anxious": 0.184,
+          "body-pain": 0.143,
+          "bored": 0.02,
+          "brain-fog": 0.082,
+          "craving": 0.408,
+          "dreams": 0,
+          "headache": 0.041,
+          "irritable": 0.102,
+          "libido-high": 0,
+          "libido-low": 0,
+          "lonely": 0.02,
+          "low-mood": 0.245,
+          "restless": 0,
+          "sleep": 0,
+          "stomach-appetite": 0.041,
+          "sweats-shakes": 0,
+          "tired": 0.041
+        },
+        "positives": {
+          "better-mood": 0.061,
+          "better-sleep": 0.02,
+          "body-health": 0.163,
+          "clear-head": 0.02,
+          "confidence": 0.041,
+          "energy": 0.02,
+          "libido-back": 0,
+          "money": 0.041,
+          "proud": 0.184,
+          "relationships": 0
+        }
+      },
+      {
+        "label": "Month 3",
+        "from": 61,
+        "to": 90,
+        "n": 50,
+        "symptoms": {
+          "anxious": 0.24,
+          "body-pain": 0.06,
+          "bored": 0.02,
+          "brain-fog": 0.1,
+          "craving": 0.44,
+          "dreams": 0.02,
+          "headache": 0.02,
+          "irritable": 0,
+          "libido-high": 0,
+          "libido-low": 0.02,
+          "lonely": 0.04,
+          "low-mood": 0.16,
+          "restless": 0.02,
+          "sleep": 0.06,
+          "stomach-appetite": 0.04,
+          "sweats-shakes": 0,
+          "tired": 0.08
+        },
+        "positives": {
+          "better-mood": 0.06,
+          "better-sleep": 0,
+          "body-health": 0.16,
+          "clear-head": 0.06,
+          "confidence": 0.02,
+          "energy": 0.02,
+          "libido-back": 0,
+          "money": 0.06,
+          "proud": 0.26,
+          "relationships": 0
+        }
+      },
+      {
+        "label": "Months 4–6",
+        "from": 91,
+        "to": 180,
+        "n": 43,
+        "symptoms": {
+          "anxious": 0.233,
+          "body-pain": 0.023,
+          "bored": 0.023,
+          "brain-fog": 0.07,
+          "craving": 0.326,
+          "dreams": 0.07,
+          "headache": 0,
+          "irritable": 0.07,
+          "libido-high": 0.023,
+          "libido-low": 0,
+          "lonely": 0,
+          "low-mood": 0.14,
+          "restless": 0.047,
+          "sleep": 0.023,
+          "stomach-appetite": 0.093,
+          "sweats-shakes": 0,
+          "tired": 0.07
+        },
+        "positives": {
+          "better-mood": 0.209,
+          "better-sleep": 0.07,
+          "body-health": 0.186,
+          "clear-head": 0,
+          "confidence": 0.163,
+          "energy": 0.047,
+          "libido-back": 0.047,
+          "money": 0.023,
+          "proud": 0.14,
+          "relationships": 0
+        }
+      },
+      {
+        "label": "Months 7–12",
+        "from": 181,
+        "to": 364,
+        "n": 36,
+        "symptoms": {
+          "anxious": 0.111,
+          "body-pain": 0.028,
+          "bored": 0,
+          "brain-fog": 0,
+          "craving": 0.417,
+          "dreams": 0.111,
+          "headache": 0,
+          "irritable": 0.028,
+          "libido-high": 0,
+          "libido-low": 0.028,
+          "lonely": 0,
+          "low-mood": 0.083,
+          "restless": 0,
+          "sleep": 0.028,
+          "stomach-appetite": 0.028,
+          "sweats-shakes": 0.028,
+          "tired": 0.028
+        },
+        "positives": {
+          "better-mood": 0.222,
+          "better-sleep": 0.083,
+          "body-health": 0.167,
+          "clear-head": 0.028,
+          "confidence": 0,
+          "energy": 0.083,
+          "libido-back": 0,
+          "money": 0.028,
+          "proud": 0.222,
+          "relationships": 0
+        }
+      },
+      {
+        "label": "Year 2+",
+        "from": 365,
+        "to": null,
+        "n": 31,
+        "symptoms": {
+          "anxious": 0.032,
+          "body-pain": 0,
+          "bored": 0,
+          "brain-fog": 0.032,
+          "craving": 0.452,
+          "dreams": 0.129,
+          "headache": 0,
+          "irritable": 0,
+          "libido-high": 0,
+          "libido-low": 0,
+          "lonely": 0,
+          "low-mood": 0.129,
+          "restless": 0,
+          "sleep": 0,
+          "stomach-appetite": 0,
+          "sweats-shakes": 0,
+          "tired": 0
+        },
+        "positives": {
+          "better-mood": 0.065,
+          "better-sleep": 0,
+          "body-health": 0.161,
+          "clear-head": 0,
+          "confidence": 0.032,
+          "energy": 0.032,
+          "libido-back": 0,
+          "money": 0.097,
+          "proud": 0.129,
+          "relationships": 0
+        }
+      }
+    ]
+  },
+  "lessons": "TODO",
+  "bands": "TODO",
+  "catch": "TODO",
+  "planSteps": [
+    {
+      "title": "Name what it does for you",
+      "text": "Identify what beliefs are driving your smoking. Find a positive reframe (the table above).",
+      "do": [
+        "Still using? Don’t quit yet. For the next few days, use it the way you always do.",
+        "When one of the thoughts above comes up, do the step under it. Don’t go looking for it.",
+        "Already stopped? Don’t start again to do this step: write it from memory.",
+        "Allow it. No guilt, no promises. You’re studying it, not fighting it.",
+        "Write down what you think nicotine gives you: calm, focus, a break.",
+        "Each time, write one line: the time, where you are, what you wanted from it.",
+        "Ten minutes after each one, ask: did it give me that, or did it just stop the itch?",
+        "Most of it is relief from the itch nicotine itself made. Set each one against the beliefs above."
+      ]
+    },
+    {
+      "title": "Find your 80% swaps",
+      "text": "Find “80%” alternatives: if you think smoking calms you down, find something that meets 80% of that need, like reading, a show, or talking to a friend.",
+      "do": [
+        "Take each line from step 1 and find something that gives you about 80% of it.",
+        "Breaks: step outside anyway, without it. Walk, drink water.",
+        "Coffee: change the place or the time, and keep the change past the first month.",
+        "Hands and mouth: gum, a toothpick, seeds.",
+        "Vape or pouch at the desk: put mints, sugar-free gum or a cold drink in the same spot.",
+        "Stress: ten slow breaths or a two-minute walk before you decide anything."
+      ]
+    },
+    {
+      "title": "Pick the date. Three months, one thing.",
+      "text": "Set a date (some days or weeks ahead) and make this the one thing for the next three months. Every day you keep that promise to yourself is a complete success. If you slip, go back through steps 1–3.",
+      "do": [
+        "Pick a date a few days to a few weeks out. Write it down and tell one person. Already off it? Today is your date.",
+        "Throw out every pack, vape and pouch the night before.",
+        "For three months, nicotine is the one thing. Leave the gym, the diet and the rest of your life as they are.",
+        "Treat the first two weeks as the test: not one puff.",
+        "Mark every day you keep on a calendar.",
+        "Slip? Go back through steps 1–3 on paper, the same day. Don’t go back to using as usual for days first."
+      ],
+      "proof": {
+        "text": "In older studies of smokers quitting without help, most relapses came in the first 8 days.",
+        "refs": [
+          {
+            "cite": "Hughes JR, Keely J, Naud S (2004). Shape of the relapse curve and long-term abstinence among untreated smokers. Addiction 99(1):29-38.",
+            "url": "https://pubmed.ncbi.nlm.nih.gov/14678060/",
+            "pmid": "14678060",
+            "quote": "The existing eight relapse curves from two studies of self-quitters and five no-treatment control groups indicate most relapse occurs in the first 8 days.",
+            "fetched": true
+          }
+        ],
+        "severity": "users",
+        "counted": "smokers quitting on their own, not checked for addiction"
+      }
+    },
+    {
+      "title": "Live as if you’ve already quit",
+      "text": "From that day on, act, think and feel as if you have already quit. Ask yourself: “why would I smoke or vape, when I’ve been nicotine-free for a year already and I enjoy my life so much more now?”",
+      "do": [
+        "Say “I don’t smoke”, not “I’m trying to quit”.",
+        "When the urge comes, name it: “there is a craving”, not “I need one”.",
+        "When the urge comes with coffee or a drink, it’s the habit asking, not your body.",
+        "Offered one? Answer like a non-smoker: “No thanks, I don’t.” No story, no excuse.",
+        "At the old moments (after food, on a break), do what a non-smoker does there: nothing."
+      ],
+      "proof": {
+        "text": "A year on, 8 in 100 ex-smokers who called themselves non-smokers were smoking again, against about 71 in 100 of the few who still said ‘a smoker trying to quit’.",
+        "refs": [
+          {
+            "cite": "Callaghan L, Yong HH, Borland R, Cummings KM, Hitchman SC, Fong GT (2021). What kind of smoking identity following quitting would elevate smokers relapse risk? Addictive Behaviors 112:106654.",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7572756/",
+            "pmid": "32977267",
+            "quote": "‘A smoker trying to quit’ at baseline (Wave 9) had the highest rates of relapse (71.4%) at follow-up survey (Wave 10), followed by … non-smokers (8%)",
+            "fetched": true
+          }
+        ],
+        "severity": "users",
+        "counted": "ex-smokers in Australia and the UK, not checked for addiction",
+        "weak": "Only 14 people still called themselves a smoker trying to quit"
+      }
+    },
+    {
+      "title": "Get help that works (optional)",
+      "text": "Get help (optional): friends, family, therapy, rehab, 12-step groups, or 1-on-1 help from me.",
+      "do": [
+        "Help is a tool, not a must. Use it to make the date stick, not to put it off.",
+        "Ask a doctor about varenicline, a prescription quit pill.",
+        "Or use a patch plus gum or lozenge, not just one.",
+        "Switching cigarettes for a vape? Then the vape is what you're quitting: set its date now and run steps 1–4 on it.",
+        "Quitting a vape? Ask a doctor whether varenicline fits: two small trials suggest it may help vapers stop.",
+        "Put money on it: give a friend a sum to hand back at month 3."
+      ],
+      "proof": {
+        "text": "In trials of smokers who wanted to stop, about 23 in 100 on varenicline, a prescription pill, are expected to stay off cigarettes six months or more; on a dummy pill, about 10.",
+        "refs": [
+          {
+            "cite": "Livingstone-Banks J, Fanshawe TR, Thomas KH, Theodoulou A, Hajizadeh A, Hartman L, Lindson N (2023). Nicotine receptor partial agonists for smoking cessation. Cochrane Database of Systematic Reviews 5:CD006103.",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10169257/",
+            "pmid": "37142273",
+            "quote": "Smoking abstinence at longest follow‐up (6+ months) (varenicline vs placebo) | 99 per 1000 | 230 per 1000 (213 to 249) | RR 2.32 (2.15 to 2.51)",
+            "fetched": true
+          }
+        ],
+        "severity": "treatment",
+        "counted": "smokers in quit trials who wanted to stop, not checked for addiction"
+      }
+    }
+  ]
+}

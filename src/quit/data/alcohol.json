@@ -1,0 +1,1535 @@
+{
+  "id": "alcohol",
+  "name": "Drinking",
+  "units": "TODO",
+  "costKind": "TODO",
+  "danger": {
+    "level": "danger",
+    "line": "TODO",
+    "refs": []
+  },
+  "footerNote": {
+    "text": "Drinking heavily every day (UK doctors draw the line at about 15 units a day: 8 to 9 US drinks, 5 to 7 pints of beer, or 1.5 bottles of wine), shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? Talk to a doctor before you stop or cut back sharply: seizures can come 8–48 hours later, and each withdrawal can be worse. A seizure, confusion, seeing or hearing things, or visible shaking after you stop or cut down is an emergency: call an ambulance.",
+    "refs": [
+      "TODO",
+      "TODO",
+      {
+        "cite": "NHS (2026). Alcohol-use disorder. nhs.uk (page last reviewed 24 April 2026).",
+        "url": "https://www.nhs.uk/conditions/alcohol-use-disorder/",
+        "pmid": "",
+        "quote": "Call 999 or go to A&E if: You or someone else has severe withdrawal symptoms after stopping drinking alcohol, such as: shaking visibly"
+      },
+      {
+        "cite": "NHS (2026). Alcohol support. nhs.uk (page last reviewed 17 August 2026).",
+        "url": "https://www.nhs.uk/live-well/alcohol-advice/alcohol-support/",
+        "pmid": "",
+        "quote": "The sorts of mild or moderate withdrawal symptoms that suggest you may need medicine include: anxiety after waking sweating and mild tremors nausea or retching in the morning"
+      }
+    ]
+  },
+  "hope": {
+    "kind": "hope-free-now",
+    "big": "42 in 100",
+    "headline": "42 in 100 Americans ever hooked on alcohol were already free of every sign of it when interviewed.",
+    "mirror": "You think people who drank like you never really get free.",
+    "severity": "dependent",
+    "counted": "people who had ever been hooked on alcohol",
+    "basis": {
+      "design": "a national US survey, face-to-face interviews; a head count on the day of the interview, not a model",
+      "who": "adults who had ever met the doctors' criteria for alcohol dependence (at least 3 of 7 signs in the same year); how much they drank is not reported",
+      "n": "4,781 adults who had ever been hooked (of 43,093 surveyed); 2,008 of them had got free",
+      "where": "US",
+      "when": "2001–2002",
+      "measured": "Whether each person had stopped having every sign of being hooked, with none coming back, by the day of the interview. That is 42 in 100 of them."
+    },
+    "caveat": "Free here means no signs of being hooked any more, not never drinking; for people once hooked, light drinking brought problems back far more often than none (the “7 vs 27 in 100” card). A raw head count of the people asked, not adjusted to match the whole US. The authors say people tend to over-report getting free, and people aged 18–29 got free less often.",
+    "projection": false,
+    "checked": "hooked",
+    "weak": null,
+    "ref": {
+      "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+      "pmid": "21077975",
+      "quote": "subsample of respondents with lifetime history of dependence on … alcohol (n=4,781) … Alcohol remission (N=2,008)",
+      "fetched": true
+    },
+    "check": {
+      "by": "revision checker a (alcohol)",
+      "on": "2026-11-09",
+      "verdict": "ok",
+      "notes": "checked after revision"
+    }
+  },
+  "numbers": [
+    {
+      "kind": "hope-free-now",
+      "big": "42 in 100",
+      "headline": "42 in 100 Americans ever hooked on alcohol were already free of every sign of it when interviewed.",
+      "mirror": "You think people who drank like you never really get free.",
+      "severity": "dependent",
+      "counted": "people who had ever been hooked on alcohol",
+      "basis": {
+        "design": "a national US survey, face-to-face interviews; a head count on the day of the interview, not a model",
+        "who": "adults who had ever met the doctors' criteria for alcohol dependence (at least 3 of 7 signs in the same year); how much they drank is not reported",
+        "n": "4,781 adults who had ever been hooked (of 43,093 surveyed); 2,008 of them had got free",
+        "where": "US",
+        "when": "2001–2002",
+        "measured": "Whether each person had stopped having every sign of being hooked, with none coming back, by the day of the interview. That is 42 in 100 of them."
+      },
+      "caveat": "Free here means no signs of being hooked any more, not never drinking; for people once hooked, light drinking brought problems back far more often than none (the “7 vs 27 in 100” card). A raw head count of the people asked, not adjusted to match the whole US. The authors say people tend to over-report getting free, and people aged 18–29 got free less often.",
+      "projection": false,
+      "checked": "hooked",
+      "weak": null,
+      "ref": {
+        "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+        "pmid": "21077975",
+        "quote": "subsample of respondents with lifetime history of dependence on … alcohol (n=4,781) … Alcohol remission (N=2,008)",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "hope-lifetime",
+      "big": "About 91 in 100",
+      "headline": "Of Americans ever hooked on alcohol, about 91 in 100 are projected to get free of it at some point in life.",
+      "mirror": "You've been drinking for years and think you're stuck with it.",
+      "severity": "dependent",
+      "counted": "people who had ever been hooked on alcohol",
+      "basis": {
+        "design": "a national US survey, face-to-face interviews; recalled ages fed into a standard statistical model that projects over a whole life",
+        "who": "adults who had ever met the doctors' criteria for alcohol dependence; how much they drank is not reported",
+        "n": "4,781 adults who had ever been hooked (of 43,093 surveyed); 2,008 of them had already got free",
+        "where": "US",
+        "when": "2001–2002",
+        "measured": "The age each person was first hooked and the age every sign of it stopped for good, as they recalled it; a model projects the share free over a whole life. Projected free within 10 years: about 37 in 100. The study gives 90.6 in 100, shown here as about 91."
+      },
+      "caveat": "A model from the ages people gave, not a head count: 42 in 100 were free when asked. People in prison or hospital weren't asked. Men got free less often than women.",
+      "projection": true,
+      "checked": "hooked",
+      "weak": null,
+      "ref": {
+        "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+        "pmid": "21077975",
+        "quote": "Lifetime cumulative probability estimates of dependence remission were … 90.6% for alcohol",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision: corrections applied to numbers[1].basis.measured"
+      }
+    },
+    {
+      "kind": "who-years",
+      "big": "14 years",
+      "headline": "Half of Americans ever hooked on alcohol are projected to be free of it about 14 years after they got hooked.",
+      "mirror": "You've been drinking hard for ten years and think it's too late.",
+      "severity": "dependent",
+      "counted": "people who had ever been hooked on alcohol",
+      "basis": {
+        "design": "a national US survey, face-to-face interviews; ages recalled and modelled over a lifetime",
+        "who": "adults who had ever been dependent on alcohol; how much they drank is not reported",
+        "n": "4,781 adults who had ever been hooked (of 43,093 surveyed); 2,008 of them had got free",
+        "where": "US",
+        "when": "2001–2002",
+        "measured": "The age when the signs of being hooked first appeared, and the age when they finally stopped and never came back, as people recalled it. Getting free here means no signs of being hooked any more; it does not have to mean never drinking."
+      },
+      "caveat": "The clock starts when the person first got hooked, not at the first drink. A model from the ages people gave, not a head count. People in prisons and hospitals weren't asked. Men got free more slowly than women.",
+      "projection": true,
+      "checked": "hooked",
+      "timeIsResult": true,
+      "weak": null,
+      "ref": {
+        "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+        "pmid": "21077975",
+        "quote": "Half of the cases of … alcohol … dependence remitted approximately … 14 … years after dependence onset",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "who-age",
+      "big": "Age 38",
+      "headline": "Americans who beat a drinking problem were about 38, on average, when it ended.",
+      "mirror": "You think the ones who get free do it young.",
+      "severity": "resolved",
+      "counted": "people who say they beat a drinking problem",
+      "basis": {
+        "design": "national survey (National Recovery Survey), one snapshot",
+        "who": "adults who said they used to have a problem with alcohol or drugs but no longer do, and named alcohol as the main one; how much they drank is not reported",
+        "n": "About 1,000 people whose main problem was alcohol (about half of the 2,002 surveyed who had beaten a drinking or drug problem)",
+        "where": "US",
+        "when": "July–August 2016",
+        "measured": "Age when the problem ended, as people remembered it. On average they first drank at about 15 and weekly from about 19, and their drinking career, as the study counts it, lasted about 18 years."
+      },
+      "caveat": "An average, not a cut-off: many got free younger or older. It counts only people who say they got free. Each person judged his own problem, and most in this survey were never diagnosed, so milder cases are mixed in. Free here is each person’s own judgment, not always never drinking again. For people once hooked, problems came back for 7 in 100 who stopped and 27 in 100 who drank lightly (the “7 vs 27 in 100” card).",
+      "projection": false,
+      "checked": "not",
+      "weak": "Self-judged problem",
+      "ref": {
+        "cite": "Kelly JF, Greene MC, Bergman BG (2018). Is recovery from cannabis use problems different from alcohol and other drugs? Results from a national probability-based sample of the United States adult population. International Journal of Drug Policy.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5992615/",
+        "pmid": "29287223",
+        "quote": "The average age at problem resolution was also significantly younger for … relative to ALC (M = 37.86 years; 99% CI: 36.50, 39.21)",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "who-life-event",
+      "big": "×2.2",
+      "headline": "Americans hooked on alcohol were 2.2 times as likely to quit and get free in the 3 years after a first child.",
+      "mirror": "You're becoming a dad and want this to be when you stop.",
+      "severity": "dependent",
+      "counted": "people hooked on alcohol before the past year",
+      "basis": {
+        "design": "a national US survey, face-to-face interviews; life events dated from memory",
+        "who": "adults whose alcohol dependence began before the past year; how much they drank is not reported",
+        "n": "4,422 adults who had been hooked (of 43,093 surveyed)",
+        "where": "US",
+        "when": "2001–2002",
+        "measured": "How the chance of getting free changed in the years after finishing school, starting full-time work, marrying, a marriage ending and becoming a parent. In the 3 years after a first marriage began or ended, getting free while still drinking within low-risk limits also became more likely; for people still hooked 3 or more years after either, it became less likely."
+      },
+      "caveat": "A link, not proof: people ready to change may also be the ones starting families. Men and women together; the summary gives no figure for men alone. 'Quit and get free' means free of every sign and not drinking.",
+      "projection": false,
+      "checked": "hooked",
+      "weak": null,
+      "ref": {
+        "cite": "Dawson DA, Grant BF, Stinson FS, Chou PS (2006). Maturing out of alcohol dependence: the impact of transitional life events. Journal of Studies on Alcohol.",
+        "url": "https://europepmc.org/article/MED/16568565",
+        "pmid": "16568565",
+        "quote": "The likelihood of AR was more than doubled in the 3 years after first becoming a parent (HRR = 2.22)",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "how-alone",
+      "big": "44 in 100",
+      "headline": "Of Americans who beat a drinking problem, about 44 in 100 used no help at all: no groups, treatment or medicine.",
+      "mirror": "You want to stop on your own, without rehab or meetings.",
+      "severity": "resolved",
+      "counted": "people who say they beat a drinking problem",
+      "basis": {
+        "design": "national survey (National Recovery Survey), one snapshot",
+        "who": "adults who said they used to have a problem with alcohol or drugs but no longer do, and named alcohol as the main one; how much they drank is not reported",
+        "n": "About 1,000 people whose main problem was alcohol (about half of the 2,002 surveyed who had beaten a drinking or drug problem)",
+        "where": "US",
+        "when": "July–August 2016",
+        "measured": "Ever used, at any point: mutual-help groups (such as AA), treatment, anti-craving or anti-relapse medicine, or recovery services such as sober living. 55.9 in 100 of the alcohol group had used at least one, so about 44 in 100 used none."
+      },
+      "caveat": "'No help' means none of those four kinds; some may have had other support, such as a family doctor. Help could be one meeting years ago or years of treatment. It doesn't show which route worked better; people with worse problems used help more. Each person judged his own problem, and most in this survey were never diagnosed, so milder cases are mixed in. Drinking heavily every day, shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? Don't stop alone: read Before you stop now.",
+      "projection": false,
+      "checked": "not",
+      "weak": "Self-judged problem",
+      "ref": {
+        "cite": "Kelly JF, Bergman B, Hoeppner BB, Vilsaint C, White WL (2017). Prevalence and pathways of recovery from drug and alcohol problems in the United States population: implications for practice, research, and policy. Drug and Alcohol Dependence.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6076174/",
+        "pmid": "29055821",
+        "quote": "Factors associated with choosing assisted (54%) vs. unassisted problem resolution. … Alcohol 55.9",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "how-tries",
+      "big": "2 tries",
+      "headline": "Half of Americans who beat a drinking problem needed 2 serious tries or fewer.",
+      "mirror": "You've tried to stop before and think you've failed for good.",
+      "severity": "resolved",
+      "counted": "people who say they beat a drinking problem",
+      "basis": {
+        "design": "national survey (National Recovery Survey), one snapshot",
+        "who": "adults who said they used to have a problem with alcohol or drugs but no longer do, and named alcohol as the main one; how much they drank is not reported",
+        "n": "About 1,000 people whose main problem was alcohol (about half of the 2,002 surveyed who had beaten a drinking or drug problem)",
+        "where": "US",
+        "when": "July–August 2016",
+        "measured": "Number of serious tries before the problem was resolved, as people remembered it. Each person counted his own 'serious attempts'; the survey did not define one. Half needed 2 or fewer, and about 75 in 100 needed 4 or fewer. The most anyone in the alcohol group reported was 100, which pulls the average up to about 5."
+      },
+      "caveat": "Counts only people who succeeded, from memory. People who reported no serious try count as 0; some may not have counted the try that worked. It does not promise that the next try works. Each person judged his own problem, and most in this survey were never diagnosed, so milder cases are mixed in.",
+      "projection": false,
+      "checked": "not",
+      "weak": "Self-judged problem",
+      "ref": {
+        "cite": "Kelly JF, Greene MC, Bergman BG, White WL, Hoeppner BB (2019). How many recovery attempts does it take to successfully resolve an alcohol or drug problem? Estimates and correlates from a national study of recovering U.S. adults. Alcoholism: Clinical and Experimental Research.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6602820/",
+        "pmid": "31090945",
+        "quote": "Mean (SD) Median (IQR) Min, max … Primary substance … Alcohol 5.38 (13.45) 2 (1, 4) 0, 100",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "after-lasting",
+      "big": "25 in 100",
+      "headline": "In the year after treatment for a drinking problem, 25 in 100 did not drink at all.",
+      "mirror": "You think almost nobody stays off drink for a whole year after getting help.",
+      "severity": "treatment",
+      "counted": "people treated for a drinking problem",
+      "basis": {
+        "design": "review pooling seven large multisite treatment studies",
+        "who": "adults treated for alcoholism, which the review defines broadly as alcohol use disorders; how much they drank before is not reported",
+        "n": "Seven large studies run at many US treatment sites; no head count is stated.",
+        "where": "US",
+        "when": "studies published before 2001; review published 2001",
+        "measured": "Drinking in the 12 months after treatment, averaged across the studies: 25 in 100 didn't drink at all, and another 10 in 100 drank moderately without problems. Some results were estimated with formulas because the studies measured different things."
+      },
+      "caveat": "The rest drank less, which this card does not count as the result: as a group they went without drink on 3 days in 4 and drank 87% less. An average for a group, not a promise for one person. It does not show when slips happened. The 10 in 100 who drank moderately were people treated for any drinking problem, mild ones included; for people once hooked, light drinking brought problems back far more often than none (the “7 vs 27 in 100” card).",
+      "projection": false,
+      "pooled": true,
+      "checked": "hooked",
+      "weak": "Some results estimated, no head count",
+      "ref": {
+        "cite": "Miller WR, Walters ST, Bennett ME (2001). How effective is alcoholism treatment in the United States? Journal of Studies on Alcohol 62(2):211-220.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/11327187/",
+        "pmid": "11327187",
+        "quote": "The remaining clients, as a group, showed substantial improvement, abstaining on 3 days out of 4 and reducing their overall alcohol consumption by 87%, on average.",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "helps-stop-vs-cut",
+      "big": "7 vs 27 in 100",
+      "headline": "Of people who beat alcohol addiction, problems came back for 7 in 100 who stopped drinking and 27 in 100 light drinkers.",
+      "mirror": "You've been off it a while and think you could drink normally now.",
+      "severity": "dependent",
+      "counted": "people once hooked on alcohol, free of it when first asked",
+      "basis": {
+        "design": "a national US survey, the same people interviewed twice, 3 years apart",
+        "who": "adults fully free of alcohol dependence when first asked; how much they drank is not reported",
+        "n": "645 light drinkers and 696 non-drinkers (of 1,772 re-interviewed, all free of dependence when first asked)",
+        "where": "US",
+        "when": "2001–2002 and 2004–2005",
+        "measured": "Any sign of a drinking problem coming back by the second interview: light drinkers against non-drinkers. Light means drinking with no signs of a problem and, for men, fewer than 14 drinks a week and never 5 or more in a day. Of those who had no signs but drank more than that, 51 in 100 had problems back."
+      },
+      "caveat": "Not a trial: people chose whether to drink. Allowing for other differences between the groups, light drinkers still had problems come back far more often. Full dependence came back in 4.0 in 100 light drinkers and 2.9 in 100 non-drinkers, a small gap that grew after allowing for other differences. For people aged 18–34 and people free under 5 years, the gap wasn't clear, which does not make light drinking safe for them: the young slid back most either way.",
+      "projection": false,
+      "checked": "hooked",
+      "weak": null,
+      "ref": {
+        "cite": "Dawson DA, Goldstein RB, Grant BF (2007). Rates and correlates of relapse among individuals in remission from DSM-IV alcohol dependence: a 3-year follow-up. Alcoholism: Clinical and Experimental Research.",
+        "url": "https://europepmc.org/article/MED/18034696",
+        "pmid": "18034696",
+        "quote": "By Wave 2, 51.0% of the Wave 1 asymptomatic risk drinkers had experienced the recurrence of AUD symptoms, compared with 27.2% of low-risk drinkers and 7.3% of abstainers.",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "helps-medicine",
+      "big": "36 vs 23 in 100",
+      "headline": "36 in 100 on acamprosate, a prescription pill, stayed fully off drink; 23 in 100 on a dummy pill.",
+      "mirror": "You didn't know a pill could help you stay stopped.",
+      "severity": "treatment",
+      "counted": "people in treatment trials, hooked on alcohol, just after detox",
+      "basis": {
+        "design": "a review pooling 17 trials in which chance decided who got acamprosate and who got a dummy pill",
+        "who": "adults hooked on alcohol who had just been through detox; how much they drank is not reported",
+        "n": "4,087 people in 17 trials; 53 in 100 of them got acamprosate",
+        "where": "Trials from several countries; the review also used the drug maker's own reports of its European trials",
+        "when": "trials published before 2004; review published 2004",
+        "measured": "Not drinking at all for the first 6 months, acamprosate against a dummy pill. A larger 2014 review of 16 trials (4,847 people) measured any return to drinking and put the gap at about 9 in 100."
+      },
+      "caveat": "It helps people stay stopped after detox; it does not stop the drinking for you. A modest effect: most people on it still drank at some point in those months. The 2004 review also used the drug maker's own reports. In the 4 trials of the 2014 review least open to bias, the gap was small and not clear. It needs a prescription.",
+      "projection": false,
+      "pooled": true,
+      "checked": "hooked",
+      "weak": "Drug maker's data; best trials unclear",
+      "ref": {
+        "cite": "Mann K, Lehert P, Morgan MY (2004). The efficacy of acamprosate in the maintenance of abstinence in alcohol-dependent individuals: results of a meta-analysis. Alcoholism: Clinical and Experimental Research 28(1):51-63.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/14745302/",
+        "pmid": "14745302",
+        "quote": "Continuous abstinence rates at 6 months were significantly higher in the acamprosate-treated patients (acamprosate, 36.1%; placebo, 23.4%",
+        "fetched": true
+      },
+      "alsoRef": [
+        {
+          "cite": "Jonas DE, Amick HR, Feltner C, et al. (2014). Pharmacotherapy for adults with alcohol use disorders in outpatient settings: a systematic review and meta-analysis. JAMA.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/24825644/",
+          "pmid": "24825644",
+          "quote": "The NNT to prevent return to any drinking for acamprosate was 12 (95% CI, 8 to 26; risk difference [RD], -0.09; 95% CI, -0.14 to -0.04)",
+          "fetched": true
+        }
+      ],
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "helps-talk",
+      "big": "42 vs 35 in 100",
+      "headline": "About 42 in 100 given AA-linked therapy are expected fully off drink a year on; 35 in 100 given other therapy.",
+      "mirror": "You think AA is the last thing that would work for you.",
+      "severity": "treatment",
+      "counted": "people in treatment trials for a drinking problem",
+      "basis": {
+        "design": "a review of trials; this figure pools 2 trials in which chance decided who got which therapy",
+        "who": "adults with an alcohol use disorder (mild cases included) who weren't forced into treatment; how much they drank is not reported",
+        "n": "1,936 people in 2 trials (of 27 studies with 10,565 people in the review)",
+        "where": "US (the largest trial in this comparison ran at US clinics)",
+        "when": "searched to August 2019; published 2020",
+        "measured": "Not drinking at all over the stretch counted at the 12-month check (in the smaller trial, the 90 days before it): therapy from a manual that gets people going to AA meetings, against other set therapies, such as therapy that trains new thinking habits. The gap held at 24 and 36 months."
+      },
+      "caveat": "35 in 100 is the review's typical rate on other therapy, and 42 in 100 is that rate times the review's combined effect. A head-to-head test against other proven therapy, not against no help, so the gain is modest: about 7 more in 100. It tests a therapist steering you into AA, not AA alone. On how much people drank when they did drink, AA-based help did about as well as other therapy, not better.",
+      "projection": true,
+      "checked": "hooked",
+      "weak": null,
+      "ref": {
+        "cite": "Kelly JF, Humphreys K, Ferri M (2020). Alcoholics Anonymous and other 12-step programs for alcohol use disorder. Cochrane Database of Systematic Reviews.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7065341/",
+        "pmid": "32159228",
+        "quote": "Proportion of participants (%) completely abstinent Follow‐up: 12 months Study population RR 1.21 (1.03 to 1.42) 1936 (2 RCTs) … 345 per 1000 418 per 1000",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "helps-early-help",
+      "big": "62 vs 43 in 100",
+      "headline": "62 in 100 help-seekers who got treatment or AA in the first year were free three years on; 43 in 100 without.",
+      "mirror": "You wonder whether getting help early changes anything.",
+      "severity": "treatment",
+      "counted": "people seeking help for a drinking problem for the first time",
+      "basis": {
+        "design": "the same people followed for 16 years",
+        "who": "adults with a drinking problem, never treated before, who had just contacted a referral centre or detox; they drank about 12.5 ounces of pure alcohol on a typical drinking day (about 20 US standard drinks); average age 33.5, half men",
+        "n": "362 who got help vs 99 who didn't (461 in all)",
+        "where": "US",
+        "when": "Followed 16 years; published 2006",
+        "measured": "Help: treatment or AA in the first year after first seeking help. Free at 3 years: no drinking or moderate drinking in each of the past 6 months, no drinking problems, no intoxication in the past month. Of those free at 3 years, 60.5 in 100 without help and 42.9 in 100 with help slid back by year 16."
+      },
+      "caveat": "Not a trial: people chose whether to get help, so they may differ in other ways. Only 99 people got no help. Slipping back was common in both groups. Free here includes moderate drinking; for people once hooked, light drinking brought problems back far more often than none (the “7 vs 27 in 100” card).",
+      "projection": false,
+      "checked": "hooked",
+      "weak": "Small no-help group; not a trial",
+      "ref": {
+        "cite": "Moos RH, Moos BS (2006). Rates and predictors of relapse after natural and treated remission from alcohol use disorders. Addiction.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC1976118/",
+        "pmid": "16445550",
+        "quote": "By the 3-year follow-up, 62.4% of individuals in the helped group were remitted, compared with only 43.4% of individuals in the no help group",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "after-first-month",
+      "big": "26% lower",
+      "headline": "Regular drinkers who stopped for one month had insulin resistance, an early step toward diabetes, about 26% lower.",
+      "mirror": "You wonder what your first month off does for your body.",
+      "severity": "heavy",
+      "counted": "regular drinkers, not checked for addiction; known addicts kept out",
+      "basis": {
+        "design": "the same people measured before and after one month; they chose whether to stop (not a trial)",
+        "who": "healthy men and women drinking more than 64 g of alcohol a week (men) or 48 g (women), about 258 g a week on average (about 18 US standard drinks); average age about 45; anyone known to be hooked on alcohol was kept out",
+        "n": "86 people who stopped had the insulin test before and after (94 stopped in all; 47 kept drinking, for comparison)",
+        "where": "London, UK",
+        "when": "Published 2018; the paper doesn't give the study dates",
+        "measured": "Blood tests, blood pressure and weight before and after one month. The group that kept drinking showed no clear change. Blood pressure was also about 6 to 7% lower, and weight 1.5% lower."
+      },
+      "caveat": "Small study, not a trial. People known to be hooked on alcohol were kept out, and nothing shows how long the gains last if drinking resumes.",
+      "projection": false,
+      "checked": "not",
+      "weak": "Small study, drinkers not hooked",
+      "ref": {
+        "cite": "Mehta G, Macdonald S, Cronberg A, et al. (2018). Short-term abstinence from alcohol and changes in cardiovascular risk factors, liver function tests and cancer-related growth factors: a prospective observational study. BMJ Open.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5942469/",
+        "pmid": "29730627",
+        "quote": "HOMA score (−25.9%, IQR −48.6% to +0.3%), systolic BP (−6.6%, IQR −11.8% to 0.0%) … weight (−1.5%, IQR −2.9% to −0.4%)",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "after-body",
+      "big": "45 in 100",
+      "headline": "After a week off, 45 in 100 heavy drinkers in hospital to stop showed a real drop on a liver scan.",
+      "mirror": "You think the damage is done, so stopping now won't change much.",
+      "severity": "treatment",
+      "counted": "people in hospital to stop heavy drinking",
+      "basis": {
+        "design": "a study following each patient: scanned on arrival and again a week later",
+        "who": "patients admitted to a liver and addiction unit to stop drinking; typical intake 150 g of alcohol a day (about 11 US standard drinks)",
+        "n": "137 patients; 62 of them had a clear drop",
+        "where": "Paris, France",
+        "when": "2007–2010",
+        "measured": "How stiff the liver is on a standard liver scan doctors use to judge scarring, on arrival and after 7 days without alcohol. For the typical patient the reading fell from 7.2 to 6.1; the estimated scarring stage fell for 23 in 100."
+      },
+      "caveat": "The scan reads how stiff the liver is, which rises with scarring and with inflammation. The authors take the quick drop as a sign that inflammation, not just scarring, was pushing the reading up. 'A real drop' means a drop larger than chance; about 43 in 100 showed no clear change and 12 in 100 got a worse reading. It says nothing about how people felt.",
+      "projection": false,
+      "checked": "hooked",
+      "weak": null,
+      "ref": {
+        "cite": "Trabut JB, Thépot V, Nalpas B, et al. (2012). Rapid decline of liver stiffness following alcohol withdrawal in heavy drinkers. Alcoholism: Clinical and Experimental Research 36(8):1407-1411.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/22404692/",
+        "pmid": "22404692",
+        "quote": "LS decreased significantly in 62 patients (45.3%), and there was a reduction in the estimated stage of fibrosis in 32 (23.3%).",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "after-mood",
+      "big": "42 to 6 in 100",
+      "headline": "Of men treated in hospital for drinking, 42 in 100 were clearly depressed on arrival; after a month off, 6 in 100.",
+      "mirror": "You feel low without a drink and fear it will never lift.",
+      "severity": "treatment",
+      "counted": "men in hospital treatment for alcoholism",
+      "basis": {
+        "design": "the same men followed through 4 weeks of hospital treatment",
+        "who": "men with alcoholism and no earlier major psychiatric disorder ('primary alcoholics'); how much they drank is not reported",
+        "n": "191 men",
+        "where": "US (the authors were at the San Diego Veterans Administration Medical Center)",
+        "when": "published 1988; study dates unknown",
+        "measured": "A standard depression score within 48 hours of arrival and at each of the 4 weeks; 'clearly depressed' means a score of 20 or more. The biggest drop came in week 2."
+      },
+      "caveat": "Men with a separate, earlier depression were left out, so this is mostly low mood that drinking itself causes. It does not show how mood goes after the first month.",
+      "projection": false,
+      "checked": "hooked",
+      "weak": null,
+      "ref": {
+        "cite": "Brown SA, Schuckit MA (1988). Changes in depression among abstinent alcoholics. Journal of Studies on Alcohol 49(5):412-417.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/3216643/",
+        "pmid": "3216643",
+        "quote": "42% of alcoholics have clinically significant levels of depression (Hamilton greater than or equal to 20) at intake but only 6% remain clinically depressed at Week 4.",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "quit-status",
+      "big": "75 in 100",
+      "headline": "Of Americans hooked on alcohol before the past year, 75 in 100 were no longer hooked in the past year.",
+      "mirror": "You think once you're hooked, you stay hooked for life.",
+      "severity": "dependent",
+      "counted": "people hooked on alcohol before the past year",
+      "basis": {
+        "design": "a national US survey, face-to-face interviews",
+        "who": "adults whose alcohol dependence began before the past year; how much they drank is not reported",
+        "n": "4,422 adults who had been hooked before the past year (of 43,093 surveyed)",
+        "where": "US",
+        "when": "2001–2002",
+        "measured": "Past-year status: still hooked 25.0 in 100, so 75 in 100 no longer were. Of everyone: some signs left 27.3 in 100, risky drinking without signs 11.8, low-risk drinking 17.7, not drinking 18.2 (about 48 in 100 with no signs left). Only 25.5 in 100 had ever had any treatment."
+      },
+      "caveat": "It does not show that the untreated did as well as the treated. 'No longer hooked' includes people with some signs left or risky drinking. The 42 in 100 at the top of the page counts only people with no signs left, among everyone ever hooked, including people hooked within the past year, so it is a different share. Low-risk drinking here is not a route for someone once hooked: light drinking brought problems back far more often than none (the “7 vs 27 in 100” card).",
+      "projection": false,
+      "checked": "hooked",
+      "weak": null,
+      "ref": {
+        "cite": "Dawson DA, Grant BF, Stinson FS, Chou PS, Huang B, Ruan WJ (2005). Recovery from DSM-IV alcohol dependence: United States, 2001-2002. Addiction.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/15733237/",
+        "pmid": "15733237",
+        "quote": "Of people classified with PPY alcohol dependence, 25.0% were still classified as dependent in the past year … Only 25.5% of people with PPY dependence ever received treatment.",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "how-withdrawal",
+      "big": "2–7 days",
+      "headline": "Mild withdrawal (shakes, nausea, anxiety) often passes within 2–7 days of the last drink.",
+      "mirror": "You fear the shakes and sweats will go on for weeks.",
+      "severity": "disorder",
+      "counted": "patients with a drinking problem, mild cases included",
+      "basis": {
+        "design": "a review of studies on alcohol withdrawal and its treatment, written by doctors",
+        "who": "patients with an alcohol use disorder (a drinking problem, mild cases included); how much they drank is not reported",
+        "n": "No head count; 'up to half' is the review's rough figure, drawn from earlier studies.",
+        "where": "studies from several countries; review written in Italy and the US",
+        "when": "published 2015",
+        "measured": "Up to half of patients with a drinking problem get withdrawal symptoms. Whether withdrawal comes on when drinking stops or drops, and how long the milder form lasts: shakes, nausea, anxiety and low mood. It usually starts 6–24 hours after the last drink."
+      },
+      "caveat": "'Up to half' is a ceiling, not an exact share. It does not cover the rarer severe form, which the timeline shows. Some symptoms can linger for weeks to months after the first days. Shaky, sweaty or sick after you stop or cut back, drinking heavily every day, or had a seizure or the DTs before? Read Before you stop now.",
+      "projection": false,
+      "checked": "hooked",
+      "timeIsResult": true,
+      "weak": "Rough figure, not a count",
+      "ref": {
+        "cite": "Mirijello A, D'Angelo C, Ferrulli A, Vassallo G, Antonelli M, Caputo F, Leggio L, Gasbarrini A, Addolorato G (2015). Identification and management of alcohol withdrawal syndrome. Drugs 75(4):353-365.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4978420/",
+        "pmid": "25666543",
+        "quote": "Up to 50% of AUD patients experience withdrawal symptoms … The mild-moderate form of AWS is often self-managed by patients or disappears within 2–7 days from the last drink",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "kind": "after-lasting",
+      "big": "6 years",
+      "headline": "Well-being climbed steeply for about the first 6 years after beating a drinking or drug problem, then kept rising more slowly.",
+      "mirror": "You wonder if sober life ever gets better than this.",
+      "severity": "resolved",
+      "counted": "people who say they beat a drinking or drug problem",
+      "basis": {
+        "design": "national survey (National Recovery Survey), one snapshot",
+        "who": "adults who said they used to have an alcohol or drug problem but no longer do; how much they used is not reported",
+        "n": "1,879 adults whose problem ended within the last 40 years (of 2,002 in the survey); about 60 in 100 of them named alcohol as their main problem",
+        "where": "US",
+        "when": "July–August 2016",
+        "measured": "Quality of life, happiness, self-esteem, recovery resources and distress, compared across people 0 to 40 years past their problem. The steep climb eased at about 6 years for self-esteem, 8 for quality of life and 11 for happiness."
+      },
+      "caveat": "Happiness and self-esteem dipped in the first year before rising. Different people at different stages, not the same people followed, and only people still free were asked, so those who went back are missing from the later years.",
+      "projection": false,
+      "checked": "not",
+      "timeIsResult": true,
+      "weak": "Self-judged problem; drink and drugs mixed",
+      "ref": {
+        "cite": "Kelly JF, Greene MC, Bergman BG (2018). Beyond abstinence: changes in indices of quality of life with time in recovery in a nationally representative sample of U.S. adults. Alcoholism: Clinical and Experimental Research.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5880708/",
+        "pmid": "29473966",
+        "quote": "In general, in the 40-year horizon there were initially steep increases in indices of well-being (and steep drops in distress), during the first 6 years, followed by shallower increases.",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    }
+  ],
+  "keyFacts": "TODO",
+  "beliefs": [
+    {
+      "id": "b1",
+      "kind": "stuck",
+      "scene": "TODO",
+      "short": "TODO",
+      "need": "TODO",
+      "limiting": "I’ve been drinking for years. I’m stuck with it.",
+      "counterpart": "Most people hooked on alcohol get free in the end. I’m doing it now.",
+      "whenThought": "Write the thought down, and next to it: “Most people hooked on alcohol get free in the end.” Then read the proof under it once and do the next step of the plan below.",
+      "test": "This week, ask one person who used to drink hard and doesn’t now how they got out. Listen for whether they once felt as stuck as you do.",
+      "proof": "In men followed for decades from their youth, those with a drinking problem who had stayed off drink for 5 years rarely went back to it.",
+      "severity": "disorder",
+      "counted": "men with a drinking problem, mild cases included",
+      "refs": [
+        {
+          "cite": "Vaillant GE (1996). A long-term follow-up of male alcohol abuse. Archives of General Psychiatry 53(3):243-249.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/8611061/",
+          "pmid": "8611061",
+          "quote": "After abstinence had been maintained for 5 years, relapse was rare.",
+          "fetched": true,
+          "fetchedOn": "2026-11-09"
+        }
+      ],
+      "weak": "One study of men from Boston and Harvard, followed since 1940; the summary gives no count of how many stayed off 5 years.",
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "id": "b2",
+      "kind": "stuck",
+      "scene": "TODO",
+      "short": "TODO",
+      "need": "TODO",
+      "limiting": "I’ve tried to stop before. I always go back.",
+      "counterpart": "Each try showed me where it breaks. I know more now than I did the first time.",
+      "whenThought": "After a slip, or when the thought comes, write one line: where the last try broke (a day, a place, a person) and one thing you’ll do there next time. Then go back to step 3 of the plan the same day.",
+      "test": "Write one line: where your last try ended (a day, a place, a person). This week, plan for it: a soft drink ordered first, a time to leave. Don’t seek it out; when it comes, see how far the plan carries you.",
+      "proof": "Of people treated for drinking who slipped in the year after, only 6 in 100 went on drinking heavily and often.",
+      "severity": "treatment",
+      "counted": "people in treatment for drinking who slipped afterwards",
+      "refs": [
+        {
+          "cite": "Witkiewitz K, Masyn KE (2008). Drinking trajectories following an initial lapse. Psychology of Addictive Behaviors 22(2):157-167.",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2721008/",
+          "pmid": "18540713",
+          "quote": "Only a small percentage (6%) of individuals displayed a frequent heavy drinking trajectory.",
+          "fetched": true,
+          "fetchedOn": "2026-11-09"
+        }
+      ],
+      "weak": "One US study of 563 people in community treatment (published 2008); 395 slipped; the groups come from a statistical model over 7 months after the slip.",
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision: corrections applied to beliefs[1].proof, beliefs[1].severity, beliefs[1].counted, beliefs[1].weak, beliefs[1].refs, beliefs[1].proofNote, beliefs[1].wasR7"
+      }
+    },
+    {
+      "id": "b3",
+      "kind": "hard",
+      "scene": "TODO",
+      "short": "TODO",
+      "need": "TODO",
+      "limiting": "Stopping will be hell. I won’t get through it.",
+      "counterpart": "I’ve got through hard weeks before. This is a few hard weeks, not a hard life.",
+      "whenThought": "Write down one hard week you got through and what carried you; if you drink heavily every day, are shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before, read Before you stop now.",
+      "test": "Write down one hard week you got through, and what carried you. Still drinking? Drinking heavily every day, shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? Skip the dry evening and read Before you stop now. If not, spend one evening you'd usually drink on a long walk, no drink. Already off it? Take that walk when the next pull comes. Rate the pull at the start and the end: 0 is none, 10 is can’t hold on.",
+      "proof": "In a study of men in hospital treatment for drinking, with no earlier major mental illness, low mood lifted fast once they stopped; the biggest lift came in week 2.",
+      "severity": "treatment",
+      "counted": null,
+      "refs": [
+        {
+          "cite": "Brown SA, Schuckit MA (1988). Changes in depression among abstinent alcoholics. Journal of Studies on Alcohol.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/3216643/",
+          "pmid": "3216643",
+          "quote": "Depressive symptoms of alcoholics abate quickly with the largest reduction in scores at Week 2.",
+          "fetched": true
+        },
+        {
+          "cite": "Brown SA, Schuckit MA (1988). Changes in depression among abstinent alcoholics. Journal of Studies on Alcohol.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/3216643/",
+          "pmid": "3216643",
+          "quote": "depressive symptoms among male primary alcoholics (no preexisting major psychiatric disorder) were studied throughout inpatient treatment for alcoholism",
+          "fetched": true
+        }
+      ],
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "id": "b4",
+      "kind": "need",
+      "scene": "TODO",
+      "short": "TODO",
+      "need": "TODO",
+      "limiting": "I need a drink to unwind after work.",
+      "counterpart": "Drinking takes the edge off for a while. It takes my sleep, and sleep is what would unwind me.",
+      "whenThought": "Write the thought down, and next to it: “It takes my sleep, and sleep is what would unwind me.” Then take your unwinding swap from step 2 before you pour; if you drink heavily every day, are shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before, read Before you stop now.",
+      "test": "Still drinking? Drinking heavily every day, shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? Skip the night without drink and read Before you stop now. Otherwise, on three nights this week note how long you took to fall asleep and how often you woke; set a night you drank against one you didn’t. Already off it? Note the same for three nights and set it against how you slept when you drank.",
+      "proof": "In sleep-lab studies of men treated for alcoholism, drink did not reliably help them sleep: while drinking, they often took longer to fall asleep and slept less.",
+      "severity": "treatment",
+      "counted": null,
+      "refs": [
+        {
+          "cite": "Brower KJ (2001). Alcohol's effects on sleep in alcoholics. Alcohol Research & Health.",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2778757/",
+          "pmid": "11584550",
+          "quote": "Several research groups in the 1970s and early 1980s used polysomnography to study the sleep of male alcoholics undergoing inpatient alcoholism treatment, both following alcohol administration and during alcohol withdrawal",
+          "fetched": true
+        },
+        {
+          "cite": "Brower KJ (2001). Alcohol's effects on sleep in alcoholics. Alcohol Research & Health.",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2778757/",
+          "pmid": "11584550",
+          "quote": "alcohol is not a reliably effective sedative among alcoholic patients. For example, as discussed earlier, alcohol may prolong sleep latency and decrease total sleep time in alcoholics",
+          "fetched": true
+        },
+        {
+          "cite": "Brower KJ (2001). Alcohol's effects on sleep in alcoholics. Alcohol Research & Health.",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2778757/",
+          "pmid": "11584550",
+          "quote": "During both drinking periods and withdrawal, alcoholics commonly experience problems falling asleep and decreased total sleep time.",
+          "fetched": true
+        }
+      ],
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
+      "id": "b5",
+      "kind": "moderation",
+      "scene": "TODO",
+      "short": "TODO",
+      "need": "TODO",
+      "limiting": "I’ve got it under control now. I can handle just one.",
+      "counterpart": "I’ve tried “just one” before. I know where it went.",
+      "whenThought": "Answer it the way a non-drinker would, “I don’t drink,” and get out of the room or the place for a few minutes. Then text the person you told your date.",
+      "test": "This week, the next time someone offers you just one, turn it down: say “I don’t drink” and order something else. Time how long the pull lasts after you say it.",
+      "proof": "Of people diagnosed alcoholic and treated at US medical and psychiatric facilities, only 1.6 in 100 had become steady moderate drinkers when traced years later.",
+      "severity": "treatment",
+      "counted": null,
+      "refs": [
+        {
+          "cite": "Helzer JE, Robins LN, Taylor JR, Carey K, Miller RH, Combs-Orme T, Farmer A (1985). The extent of long-term moderate drinking among alcoholics discharged from medical and psychiatric treatment facilities. New England Journal of Medicine 312(26):1678-1682.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/4000215/",
+          "pmid": "4000215",
+          "quote": "Only 1.6 per cent of the subjects met our definition of stable moderate drinking at follow-up",
+          "fetched": true,
+          "fetchedOn": "2026-11-09"
+        }
+      ],
+      "weak": "1,289 people treated in 1973–1975 and traced 5 to 7 years later; 83 in 100 of them were found.",
+      "check": {
+        "by": "revision checker a (alcohol)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    }
+  ],
+  "facts": "TODO",
+  "needs": "TODO",
+  "endings": "TODO",
+  "helped": "TODO",
+  "riskyMoments": "TODO",
+  "responses": "TODO",
+  "clearOut": "TODO",
+  "symptomWords": {
+    "craving": "Cravings",
+    "anxious": "Anxiety",
+    "low-mood": "Low mood",
+    "sleep": "Bad sleep",
+    "tired": "Tiredness",
+    "brain-fog": "Brain fog",
+    "stomach-appetite": "Stomach / appetite",
+    "sweats-shakes": "Sweats or shakes",
+    "headache": "Headaches",
+    "restless": "Restlessness",
+    "bored": "Boredom",
+    "lonely": "Loneliness",
+    "body-pain": "Aches",
+    "libido-low": "No sex drive",
+    "libido-high": "Strong sexual urges",
+    "irritable": "Short temper",
+    "dreams": "Vivid dreams",
+    "better-mood": "Better mood",
+    "better-sleep": "Better sleep",
+    "clear-head": "A clearer head",
+    "body-health": "Feeling healthier",
+    "energy": "More energy",
+    "confidence": "More confidence",
+    "proud": "Feeling proud",
+    "libido-back": "Sex drive back",
+    "money": "Money saved",
+    "relationships": "Better relationships"
+  },
+  "symptomHelp": "TODO",
+  "tapeForward": "TODO",
+  "costSwaps": "TODO",
+  "besides": "TODO",
+  "felt": {
+    "forums": [
+      "r/stopdrinking"
+    ],
+    "years": "2021–2025",
+    "postsUsed": 605,
+    "postsSampled": 1050,
+    "bias": [
+      "People who post are not everyone who quits. People who find it easy have little reason to post.",
+      "People post more when it is hard, so the curve likely runs higher than for quitters in general.",
+      "Later days are mostly milestone posts; people who slipped earlier are no longer counted there.",
+      "Scores come from AI readers of the posts, not from the writers themselves."
+    ],
+    "bins": [
+      {
+        "label": "Day 1",
+        "from": 1,
+        "to": 1,
+        "n": 15,
+        "symptoms": {
+          "anxious": 0.4,
+          "body-pain": 0,
+          "bored": 0.067,
+          "brain-fog": 0,
+          "craving": 0.4,
+          "dreams": 0,
+          "headache": 0,
+          "irritable": 0,
+          "libido-low": 0,
+          "lonely": 0,
+          "low-mood": 0.133,
+          "restless": 0,
+          "sleep": 0.2,
+          "stomach-appetite": 0.2,
+          "sweats-shakes": 0.133,
+          "tired": 0.133
+        },
+        "positives": {
+          "better-mood": 0.067,
+          "better-sleep": 0,
+          "body-health": 0,
+          "clear-head": 0,
+          "confidence": 0.067,
+          "energy": 0.067,
+          "libido-back": 0,
+          "money": 0,
+          "proud": 0.067,
+          "relationships": 0
+        }
+      },
+      {
+        "label": "Day 2",
+        "from": 2,
+        "to": 2,
+        "n": 40,
+        "symptoms": {
+          "anxious": 0.35,
+          "body-pain": 0.075,
+          "bored": 0.025,
+          "brain-fog": 0.025,
+          "craving": 0.275,
+          "dreams": 0.05,
+          "headache": 0.025,
+          "irritable": 0,
+          "libido-low": 0,
+          "lonely": 0.025,
+          "low-mood": 0.3,
+          "restless": 0,
+          "sleep": 0.075,
+          "stomach-appetite": 0.025,
+          "sweats-shakes": 0.05,
+          "tired": 0.125
+        },
+        "positives": {
+          "better-mood": 0.125,
+          "better-sleep": 0.125,
+          "body-health": 0.025,
+          "clear-head": 0.025,
+          "confidence": 0,
+          "energy": 0.025,
+          "libido-back": 0,
+          "money": 0,
+          "proud": 0.075,
+          "relationships": 0
+        }
+      },
+      {
+        "label": "Day 3",
+        "from": 3,
+        "to": 3,
+        "n": 46,
+        "symptoms": {
+          "anxious": 0.217,
+          "body-pain": 0,
+          "bored": 0.022,
+          "brain-fog": 0.022,
+          "craving": 0.304,
+          "dreams": 0,
+          "headache": 0.065,
+          "irritable": 0.043,
+          "libido-low": 0,
+          "lonely": 0.043,
+          "low-mood": 0.348,
+          "restless": 0.022,
+          "sleep": 0.109,
+          "stomach-appetite": 0.13,
+          "sweats-shakes": 0.043,
+          "tired": 0.13
+        },
+        "positives": {
+          "better-mood": 0.087,
+          "better-sleep": 0.087,
+          "body-health": 0.065,
+          "clear-head": 0.109,
+          "confidence": 0.022,
+          "energy": 0.109,
+          "libido-back": 0,
+          "money": 0,
+          "proud": 0.043,
+          "relationships": 0
+        }
+      },
+      {
+        "label": "Days 4–5",
+        "from": 4,
+        "to": 5,
+        "n": 51,
+        "symptoms": {
+          "anxious": 0.235,
+          "body-pain": 0.039,
+          "bored": 0.02,
+          "brain-fog": 0.098,
+          "craving": 0.353,
+          "dreams": 0.039,
+          "headache": 0.059,
+          "irritable": 0.039,
+          "libido-low": 0,
+          "lonely": 0.039,
+          "low-mood": 0.176,
+          "restless": 0.039,
+          "sleep": 0.137,
+          "stomach-appetite": 0.098,
+          "sweats-shakes": 0.039,
+          "tired": 0.157
+        },
+        "positives": {
+          "better-mood": 0.294,
+          "better-sleep": 0.078,
+          "body-health": 0.078,
+          "clear-head": 0.059,
+          "confidence": 0.059,
+          "energy": 0.137,
+          "libido-back": 0,
+          "money": 0,
+          "proud": 0.137,
+          "relationships": 0
+        }
+      },
+      {
+        "label": "Days 6–7",
+        "from": 6,
+        "to": 7,
+        "n": 53,
+        "symptoms": {
+          "anxious": 0.17,
+          "body-pain": 0.019,
+          "bored": 0.094,
+          "brain-fog": 0,
+          "craving": 0.434,
+          "dreams": 0.038,
+          "headache": 0,
+          "irritable": 0.019,
+          "libido-low": 0,
+          "lonely": 0.094,
+          "low-mood": 0.17,
+          "restless": 0.019,
+          "sleep": 0.075,
+          "stomach-appetite": 0.057,
+          "sweats-shakes": 0.038,
+          "tired": 0.075
+        },
+        "positives": {
+          "better-mood": 0.321,
+          "better-sleep": 0.075,
+          "body-health": 0.019,
+          "clear-head": 0.094,
+          "confidence": 0.094,
+          "energy": 0.151,
+          "libido-back": 0,
+          "money": 0.019,
+          "proud": 0.17,
+          "relationships": 0.075
+        }
+      },
+      {
+        "label": "Days 8–10",
+        "from": 8,
+        "to": 10,
+        "n": 46,
+        "symptoms": {
+          "anxious": 0.174,
+          "body-pain": 0.022,
+          "bored": 0.065,
+          "brain-fog": 0.022,
+          "craving": 0.326,
+          "dreams": 0.043,
+          "headache": 0.022,
+          "irritable": 0.087,
+          "libido-low": 0.022,
+          "lonely": 0.022,
+          "low-mood": 0.239,
+          "restless": 0.022,
+          "sleep": 0.109,
+          "stomach-appetite": 0,
+          "sweats-shakes": 0,
+          "tired": 0.109
+        },
+        "positives": {
+          "better-mood": 0.13,
+          "better-sleep": 0.152,
+          "body-health": 0.109,
+          "clear-head": 0.065,
+          "confidence": 0,
+          "energy": 0.109,
+          "libido-back": 0.022,
+          "money": 0.043,
+          "proud": 0.109,
+          "relationships": 0.043
+        }
+      },
+      {
+        "label": "Days 11–14",
+        "from": 11,
+        "to": 14,
+        "n": 51,
+        "symptoms": {
+          "anxious": 0.176,
+          "body-pain": 0.02,
+          "bored": 0,
+          "brain-fog": 0,
+          "craving": 0.294,
+          "dreams": 0.078,
+          "headache": 0.039,
+          "irritable": 0.02,
+          "libido-low": 0,
+          "lonely": 0,
+          "low-mood": 0.176,
+          "restless": 0,
+          "sleep": 0.059,
+          "stomach-appetite": 0.02,
+          "sweats-shakes": 0,
+          "tired": 0.118
+        },
+        "positives": {
+          "better-mood": 0.373,
+          "better-sleep": 0.118,
+          "body-health": 0.137,
+          "clear-head": 0.137,
+          "confidence": 0.039,
+          "energy": 0.118,
+          "libido-back": 0,
+          "money": 0,
+          "proud": 0.118,
+          "relationships": 0.039
+        }
+      },
+      {
+        "label": "Week 3",
+        "from": 15,
+        "to": 21,
+        "n": 52,
+        "symptoms": {
+          "anxious": 0.173,
+          "body-pain": 0,
+          "bored": 0.019,
+          "brain-fog": 0.077,
+          "craving": 0.365,
+          "dreams": 0.019,
+          "headache": 0.038,
+          "irritable": 0.038,
+          "libido-low": 0,
+          "lonely": 0,
+          "low-mood": 0.135,
+          "restless": 0.019,
+          "sleep": 0.077,
+          "stomach-appetite": 0.096,
+          "sweats-shakes": 0.019,
+          "tired": 0.077
+        },
+        "positives": {
+          "better-mood": 0.192,
+          "better-sleep": 0.096,
+          "body-health": 0.192,
+          "clear-head": 0.096,
+          "confidence": 0.019,
+          "energy": 0.135,
+          "libido-back": 0,
+          "money": 0.058,
+          "proud": 0.173,
+          "relationships": 0.077
+        }
+      },
+      {
+        "label": "Week 4",
+        "from": 22,
+        "to": 30,
+        "n": 48,
+        "symptoms": {
+          "anxious": 0.167,
+          "body-pain": 0,
+          "bored": 0.042,
+          "brain-fog": 0,
+          "craving": 0.333,
+          "dreams": 0.042,
+          "headache": 0,
+          "irritable": 0.042,
+          "libido-low": 0,
+          "lonely": 0.146,
+          "low-mood": 0.188,
+          "restless": 0,
+          "sleep": 0.042,
+          "stomach-appetite": 0,
+          "sweats-shakes": 0,
+          "tired": 0.062
+        },
+        "positives": {
+          "better-mood": 0.208,
+          "better-sleep": 0.104,
+          "body-health": 0.146,
+          "clear-head": 0,
+          "confidence": 0.021,
+          "energy": 0.042,
+          "libido-back": 0.021,
+          "money": 0.021,
+          "proud": 0.229,
+          "relationships": 0.146
+        }
+      },
+      {
+        "label": "Days 31–45",
+        "from": 31,
+        "to": 45,
+        "n": 35,
+        "symptoms": {
+          "anxious": 0.229,
+          "body-pain": 0.029,
+          "bored": 0.086,
+          "brain-fog": 0,
+          "craving": 0.514,
+          "dreams": 0.057,
+          "headache": 0.057,
+          "irritable": 0.029,
+          "libido-low": 0,
+          "lonely": 0.029,
+          "low-mood": 0.114,
+          "restless": 0,
+          "sleep": 0,
+          "stomach-appetite": 0.057,
+          "sweats-shakes": 0,
+          "tired": 0.029
+        },
+        "positives": {
+          "better-mood": 0.2,
+          "better-sleep": 0.057,
+          "body-health": 0.143,
+          "clear-head": 0.029,
+          "confidence": 0.086,
+          "energy": 0.086,
+          "libido-back": 0,
+          "money": 0.029,
+          "proud": 0.057,
+          "relationships": 0
+        }
+      },
+      {
+        "label": "Days 46–60",
+        "from": 46,
+        "to": 60,
+        "n": 36,
+        "symptoms": {
+          "anxious": 0.111,
+          "body-pain": 0.028,
+          "bored": 0.028,
+          "brain-fog": 0,
+          "craving": 0.167,
+          "dreams": 0,
+          "headache": 0,
+          "irritable": 0.056,
+          "libido-low": 0,
+          "lonely": 0.083,
+          "low-mood": 0.25,
+          "restless": 0.028,
+          "sleep": 0.056,
+          "stomach-appetite": 0.139,
+          "sweats-shakes": 0.028,
+          "tired": 0.139
+        },
+        "positives": {
+          "better-mood": 0.278,
+          "better-sleep": 0,
+          "body-health": 0.056,
+          "clear-head": 0.083,
+          "confidence": 0.139,
+          "energy": 0.028,
+          "libido-back": 0,
+          "money": 0.028,
+          "proud": 0.167,
+          "relationships": 0.083
+        }
+      },
+      {
+        "label": "Month 3",
+        "from": 61,
+        "to": 90,
+        "n": 32,
+        "symptoms": {
+          "anxious": 0.281,
+          "body-pain": 0.062,
+          "bored": 0.094,
+          "brain-fog": 0.062,
+          "craving": 0.312,
+          "dreams": 0,
+          "headache": 0,
+          "irritable": 0,
+          "libido-low": 0,
+          "lonely": 0.094,
+          "low-mood": 0.25,
+          "restless": 0,
+          "sleep": 0.062,
+          "stomach-appetite": 0,
+          "sweats-shakes": 0,
+          "tired": 0.062
+        },
+        "positives": {
+          "better-mood": 0.25,
+          "better-sleep": 0.094,
+          "body-health": 0.156,
+          "clear-head": 0.094,
+          "confidence": 0.031,
+          "energy": 0.062,
+          "libido-back": 0,
+          "money": 0.062,
+          "proud": 0.25,
+          "relationships": 0.094
+        }
+      },
+      {
+        "label": "Months 4–6",
+        "from": 91,
+        "to": 180,
+        "n": 43,
+        "symptoms": {
+          "anxious": 0.326,
+          "body-pain": 0.023,
+          "bored": 0.07,
+          "brain-fog": 0,
+          "craving": 0.256,
+          "dreams": 0.07,
+          "headache": 0,
+          "irritable": 0.07,
+          "libido-low": 0,
+          "lonely": 0.07,
+          "low-mood": 0.256,
+          "restless": 0,
+          "sleep": 0.023,
+          "stomach-appetite": 0,
+          "sweats-shakes": 0,
+          "tired": 0.023
+        },
+        "positives": {
+          "better-mood": 0.186,
+          "better-sleep": 0.023,
+          "body-health": 0.07,
+          "clear-head": 0.07,
+          "confidence": 0.163,
+          "energy": 0,
+          "libido-back": 0,
+          "money": 0.023,
+          "proud": 0.163,
+          "relationships": 0.116
+        }
+      },
+      {
+        "label": "Months 7–12",
+        "from": 181,
+        "to": 364,
+        "n": 32,
+        "symptoms": {
+          "anxious": 0.219,
+          "body-pain": 0,
+          "bored": 0.031,
+          "brain-fog": 0,
+          "craving": 0.375,
+          "dreams": 0.062,
+          "headache": 0,
+          "irritable": 0,
+          "libido-low": 0,
+          "lonely": 0.125,
+          "low-mood": 0.281,
+          "restless": 0,
+          "sleep": 0,
+          "stomach-appetite": 0,
+          "sweats-shakes": 0,
+          "tired": 0
+        },
+        "positives": {
+          "better-mood": 0.125,
+          "better-sleep": 0,
+          "body-health": 0.094,
+          "clear-head": 0.156,
+          "confidence": 0.125,
+          "energy": 0.031,
+          "libido-back": 0,
+          "money": 0.031,
+          "proud": 0.094,
+          "relationships": 0.125
+        }
+      },
+      {
+        "label": "Year 2+",
+        "from": 365,
+        "to": null,
+        "n": 25,
+        "symptoms": {
+          "anxious": 0.04,
+          "body-pain": 0,
+          "bored": 0.04,
+          "brain-fog": 0,
+          "craving": 0.24,
+          "dreams": 0,
+          "headache": 0,
+          "irritable": 0.04,
+          "libido-low": 0.04,
+          "lonely": 0.04,
+          "low-mood": 0.12,
+          "restless": 0,
+          "sleep": 0,
+          "stomach-appetite": 0,
+          "sweats-shakes": 0,
+          "tired": 0
+        },
+        "positives": {
+          "better-mood": 0.44,
+          "better-sleep": 0.08,
+          "body-health": 0.28,
+          "clear-head": 0.08,
+          "confidence": 0.04,
+          "energy": 0.08,
+          "libido-back": 0,
+          "money": 0.12,
+          "proud": 0.2,
+          "relationships": 0.12
+        }
+      }
+    ]
+  },
+  "lessons": "TODO",
+  "bands": "TODO",
+  "catch": "TODO",
+  "planSteps": [
+    {
+      "title": "Name what it does for you",
+      "text": "Identify what beliefs are driving your drinking. Find a positive reframe (the table above).",
+      "do": [
+        "Still drinking? Don’t stop yet. This week, drink as you normally do, and watch it.",
+        "When one of the thoughts above comes up this week, do the step under it. Don’t go looking for it.",
+        "Already stopped? Don’t start drinking again to do this step: write it from memory.",
+        "Write down what drinking does for you: unwinding, sleep, confidence, fun with friends.",
+        "Before each drink, note the time, the place and what you want from it. Next morning, note whether you got it.",
+        "Allow it. No guilt and no promises this week. You’re finding out, not judging.",
+        "Look at each reason up close: does drinking give you that, or take it back by morning?",
+        "Each one is a belief. Start with the beliefs above."
+      ]
+    },
+    {
+      "title": "Find your 80% swaps",
+      "text": "Find “80%” alternatives: if you think drinking relaxes you, find something that meets 80% of that need, like reading, a show, or talking to a friend.",
+      "do": [
+        "Unwinding: a walk, a shower, a hard workout, a show.",
+        "Going out: a soft drink or soda water in your hand, ordered first, before anyone asks. Alcohol-free beer only if it doesn’t bring on the pull.",
+        "Friends: see the ones you’d enjoy sober; meet them for food, sport or coffee.",
+        "Sleep: same bedtime every night, a hot shower, no phone in bed. Expect light sleep at first; it mends slowly.",
+        "Confidence: arrive early, before the room fills, and start one conversation while you’re fresh.",
+        "Home: keep a cold soft drink you like in the fridge for the hour you’d pour one."
+      ]
+    },
+    {
+      "title": "Pick the date. Three months, one thing.",
+      "text": "Set a date (some days or weeks ahead) and make this the one thing for the next three months. Every day you keep that promise to yourself is a complete success. If you slip, go back through steps 1–3.",
+      "do": [
+        "Drinking heavily every day, shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? See a doctor before you set the date, and stop with them, not alone.",
+        "Clear the house of drink the day before.",
+        "Tell one person the date. Already off it? Today is your date.",
+        "Plan every Friday for the first two months: where you’ll be, and what you’ll drink instead.",
+        "One thing only: no new diet and no other big change for these three months. A walk or a workout as a swap is fine.",
+        "Slip? Don’t wait for Monday, and don’t go back to days of normal drinking: the same day, ask what that drink gave you."
+      ],
+      "proof": {
+        "text": "In r/stopdrinking posts with a day count, cravings still came up in 31 in 100 posts in months 4–12.",
+        "refs": [
+          {
+            "cite": "Posts on r/stopdrinking with a day count, 2021-2025, tagged for this page",
+            "url": "",
+            "quote": "cravings, share of posts by graph stage, Days 2–3 to Months 4–12: 29, 39, 31, 35, 34, 31, 31 in 100 (86, 104, 97, 100, 71, 32, 75 posts)",
+            "fetched": true
+          }
+        ],
+        "severity": "self-hooked"
+      }
+    },
+    {
+      "title": "Live as if you’ve already quit",
+      "text": "From that day on, act, think and feel as if you have already quit. Ask yourself: “why would I drink, when I’ve been sober for a year already and I enjoy my life so much more now?”",
+      "do": [
+        "When “just one” comes, answer the way a non-drinker would: “I don’t drink.”",
+        "When the urge comes, name it: “there is a craving.” Not “I want a drink.” Not “I need one.”",
+        "Then watch it like weather. Notice when it peaks and when it fades.",
+        "Feel fine and think “maybe it wasn’t that bad”? That’s the quitting working, not proof you never had to.",
+        "Unsure what to do? Ask what the man a year sober would do tonight, and do that.",
+        "Count the mornings you wake up clear, not the days you missed."
+      ]
+    },
+    {
+      "title": "Get help that works (optional)",
+      "text": "Get help (optional): friends, family, therapy, rehab, 12-step groups, or 1-on-1 help from me.",
+      "do": [
+        "Ask a doctor about acamprosate or naltrexone, two prescription pills that help some people stay stopped.",
+        "Try AA or another group that meets weekly.",
+        "Use help as a tool for a stretch, not a new identity. Keep what works, drop the rest.",
+        "Ask one friend to check in with you on Fridays for the first two months.",
+        "Slipped more than once? Add one kind of help you haven’t tried, and ask step 1’s questions again the same day, not after days of normal drinking."
+      ],
+      "proof": {
+        "text": "On average across trials after detox, 36 in 100 people hooked on alcohol stayed fully off drink for six months on acamprosate; 23 in 100 on a dummy pill.",
+        "refs": [
+          {
+            "cite": "Mann K, Lehert P, Morgan MY (2004). The efficacy of acamprosate in the maintenance of abstinence in alcohol-dependent individuals: results of a meta-analysis. Alcoholism: Clinical and Experimental Research 28(1):51-63.",
+            "url": "https://pubmed.ncbi.nlm.nih.gov/14745302/",
+            "pmid": "14745302",
+            "quote": "Continuous abstinence rates at 6 months were significantly higher in the acamprosate-treated patients (acamprosate, 36.1%; placebo, 23.4%",
+            "fetched": true
+          }
+        ],
+        "severity": "treatment"
+      }
+    }
+  ]
+}

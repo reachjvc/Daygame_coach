@@ -1,0 +1,281 @@
+import type { ViceEndingId } from "@/src/vice/types"
+
+export const QUIT_ADDICTION_IDS = ["nicotine", "weed", "porn", "alcohol", "scrolling", "gambling"] as const
+export type QuitAddictionId = (typeof QUIT_ADDICTION_IDS)[number]
+
+/** The tool ids of the menu (Plans/quit-tool.md, Part 1 table). */
+export const QUIT_TOOL_IDS = [
+  "beliefs",
+  "gives",
+  "past",
+  "cost",
+  "how",
+  "curve",
+  "ifthen",
+  "clear",
+  "stake",
+  "tell",
+  "sos",
+  "symptoms",
+  "checkin",
+  "lesson",
+  "record",
+  "slip",
+  "identity",
+  "besides",
+  "coach",
+] as const
+export type QuitToolId = (typeof QUIT_TOOL_IDS)[number]
+
+/** RULEBOOK rule 3 tags. */
+export const SEVERITIES = [
+  "dependent",
+  "disorder",
+  "treatment",
+  "resolved",
+  "self-hooked",
+  "heavy",
+  "users",
+  "screened",
+] as const
+export type Severity = (typeof SEVERITIES)[number]
+export type Evidence = "strong" | "moderate" | "weak" | "none"
+
+export const NEED_IDS = ["relief", "reward", "boredom", "connection", "sleep", "focus", "confidence", "substance"] as const
+export type QuitNeedId = (typeof NEED_IDS)[number]
+
+export const TODO = "TODO" as const
+export type Todo = typeof TODO
+export type Draftable<T> = T | Todo
+export const isTodo = (x: unknown): x is Todo => x === TODO
+
+export interface QuitRef {
+  cite: string
+  url: string
+  pmid?: string
+  quote?: string
+  fetched?: boolean
+  fetchedOn?: string
+}
+
+export interface Check {
+  by: string
+  on: string
+  verdict: "ok" | "fix" | "drop"
+  notes?: string
+}
+
+export interface QuitNumber {
+  kind: string
+  big: string
+  headline: string
+  mirror: string
+  severity: Severity
+  counted: string
+  basis: { design: string; who: string; n: string; where: string; when: string; measured: string }
+  caveat: string
+  projection?: boolean
+  pooled?: boolean
+  checked?: "hooked" | "not"
+  timeIsResult?: boolean
+  weak?: string | null
+  ref: QuitRef
+  alsoRef?: QuitRef[]
+  check?: Check
+}
+
+export interface QuitBelief {
+  id: string
+  kind: "stuck" | "hard" | "need" | "harmless" | "moderation" | "identity"
+  scene: Draftable<string>
+  short: Draftable<string>
+  /** A QuitNeed id. */
+  need: Draftable<string>
+  limiting: string
+  counterpart: string
+  whenThought: string
+  test: Draftable<string>
+  proof: string
+  severity: Severity
+  counted: string | null
+  refs: QuitRef[]
+  weak?: string | null
+  ownWords?: boolean
+  check?: Check
+}
+
+export interface QuitFact {
+  id: string
+  statement: string
+  answer: boolean
+  explain: string
+  severity: Severity
+  counted: string | null
+  refs: QuitRef[]
+  check?: Check
+}
+
+export interface QuitSwap {
+  id: string
+  text: string
+  evidence: Evidence
+  refs: QuitRef[]
+}
+
+export interface QuitNeed {
+  id: QuitNeedId
+  name: string
+  swaps: QuitSwap[]
+}
+
+export interface QuitEnding {
+  id: string
+  label: string
+  blackBoxEnding: ViceEndingId
+}
+
+export interface QuitOption {
+  id: string
+  label: string
+}
+
+export interface QuitResponse {
+  id: string
+  text: string
+}
+
+export interface QuitClearItem {
+  id: string
+  text: string
+  removes: string
+  link?: string
+}
+
+export interface QuitSymptomHelp {
+  symptom: string
+  text: string
+  evidence: Evidence
+  refs: QuitRef[]
+}
+
+export interface QuitCostSwap {
+  usd: number
+  text: string
+}
+
+export interface QuitBesides {
+  id: string
+  text: string
+  link?: string
+  refs?: QuitRef[]
+}
+
+export interface QuitFeltBin {
+  label: string
+  from: number
+  to: number
+  n: number
+  symptoms: Record<string, number>
+  positives: Record<string, number>
+}
+
+export interface QuitFelt {
+  forums: string[]
+  years: string
+  postsUsed: number
+  postsSampled: number
+  bias: string[]
+  bins: QuitFeltBin[]
+}
+
+export interface QuitLesson {
+  /** -3..-1 prep, 1..90 */
+  day: number
+  beliefId: string
+  title: string
+  body: string
+  exercise: string
+  refs: QuitRef[]
+}
+
+export interface QuitBand {
+  id: "free" | "some" | "hooked"
+  /** Count of beliefs rated 4 or 5. */
+  min: number
+  max: number
+  label: string
+  text: string
+  link?: string
+}
+
+export interface QuitPlanStep {
+  title: string
+  text: string
+  do: Draftable<string[]>
+  proof?: {
+    text: string
+    refs: Draftable<QuitRef>[]
+    severity: Draftable<Severity>
+    counted?: string
+    weak?: string
+    ownWords?: boolean
+  }
+}
+
+export interface QuitDanger {
+  level: "none" | "danger"
+  line: Draftable<string> | null
+  refs: QuitRef[]
+}
+
+export interface QuitUnit {
+  id: string
+  one: string
+  many: string
+  defaultPriceUsd: number | null
+  defaultMinutesPerUnit: number | null
+  priceRefs: QuitRef[]
+}
+
+export interface QuitAddictionFull {
+  id: QuitAddictionId
+  name: string
+  units: QuitUnit[]
+  costKind: "money" | "money+time" | "time" | "money+hours"
+  danger: QuitDanger
+  footerNote: { text: string; refs: Draftable<QuitRef>[] } | null
+  hope: QuitNumber | null
+  numbers: QuitNumber[]
+  keyFacts: string[]
+  beliefs: QuitBelief[]
+  facts: QuitFact[]
+  needs: QuitNeed[]
+  endings: QuitEnding[]
+  helped: QuitOption[]
+  riskyMoments: QuitOption[]
+  responses: QuitResponse[]
+  clearOut: QuitClearItem[]
+  symptomWords: Record<string, string>
+  symptomHelp: QuitSymptomHelp[]
+  tapeForward: string[]
+  costSwaps: QuitCostSwap[]
+  besides: QuitBesides[]
+  felt: QuitFelt | null
+  lessons: QuitLesson[]
+  bands: QuitBand[]
+  catch: string
+  planSteps: QuitPlanStep[]
+}
+
+/** Any top-level field may be "TODO" in a draft (non-live) file. */
+export type QuitAddiction = {
+  [K in keyof QuitAddictionFull]: K extends "id" | "name" ? QuitAddictionFull[K] : Draftable<QuitAddictionFull[K]>
+}
+
+export interface QuitOffer {
+  coachingPriceUsd: number
+  days: number
+  guaranteeLine: string
+  paymentLinkUrl: string | null
+  donationLine: string | null
+}
