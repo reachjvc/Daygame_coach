@@ -19,9 +19,15 @@ Rules for this file:
    "come back here 10 years from now and say, 'I did it'" (7,000 likes, Team
    Fearless), in `docs/research/change-your-life/02-comment-language-bank.md`.
 
-## The name: where it stands (2026-10-16)
+## The name: decided (2026-11-18)
 
-Nothing is decided. What the owner said:
+**10K Days Club, on 10kdaysclub.com.** The owner, 2026-11-18: "The name of the website must change to
+10kdaysclub.com, so all branding should reflect this broader market now. This means, the landing page should not
+say AI daygame coaching." The rebrand is planned in `Plans/rebrand-10kdaysclub.md`.
+
+## The name: where it stood (2026-10-16)
+
+What the owner said then:
 
 - He likes his surname, **Vindahl**, and is fine with the brand pointing to it.
   The channel and the business can share the name or not.
