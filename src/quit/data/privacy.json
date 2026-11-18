@@ -93,8 +93,16 @@
           "factRef": "9. Stripe: src/settings/stripe.ts, purchases table"
         },
         {
-          "text": "Anthropic receives the text you type into the AI practice chats, which are for paying members only.",
-          "factRef": "8. AI providers: Anthropic via src/scenarios/keepitgoing/chat.ts, premium-only routes"
+          "text": "Some AI features for paying members send the text you type to an AI model to answer it: the practice chats, the scenario lab, the coach Q&A and the values exercise.",
+          "factRef": "8. AI providers that receive user-typed text (Anthropic chat/scenario lab, Ollama Q&A and value inference; premium-only routes)"
+        },
+        {
+          "text": "The practice chats and the scenario lab use Anthropic's models. The coach Q&A and the values exercise use a separate model service we set up.",
+          "factRef": "8. Ollama via OLLAMA_API_URL; host not verified"
+        },
+        {
+          "text": "If you connect a calendar link or a webhook in the time tracker, the site contacts the address you gave.",
+          "factRef": "9. Server-side outbound calls: user-supplied calendar URLs (src/timetrack/calendarSyncService.ts:114) and webhooks (timetrack_webhooks)"
         },
         {
           "text": "If you turn on notifications, your browser maker's push service delivers them.",
