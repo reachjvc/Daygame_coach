@@ -759,6 +759,45 @@ Phase 4.
 `/privacy` (what is kept, what never is, how to delete; marked as a draft he reads; not legal advice) and
 `/quit/coaching` per Part 2. Linked from every quit page and sign-up. Pulled forward by first-1000.
 
+#### Phase 6 brief (Opus, 2026-11-18) — `/privacy` and `/quit/coaching`
+
+**Step 1, facts first (Sonnet subagent, read-only).** Before any page text: list what this site actually
+keeps, from the code, into `~/.cache/daygame-research/quit-tool/privacy-facts.md`: every Supabase table a
+signed-in user writes (from `supabase/migrations/`), what the quit tools keep in the browser (`quit-v1`,
+`quit-src`, the Black Box keys), what `/api/quit/count` stores (nothing until Phase 8), error reporting
+(`src/shared/components/ErrorReporting.tsx` and where it sends), push subscriptions, any AI provider calls
+that receive user text (`src/api_ai/`, `app/api/*`), hosting (Vercel) and database (Supabase) as
+processors, cookies set (Supabase auth), and how an account is deleted today (find the settings flow; if
+none exists, say so). Each fact with its file path. The planner reads it before Step 2.
+
+**Step 2, pages (Sonnet, worktree).**
+- `app/privacy/page.tsx` (public: `isPublicPage` already covers `/privacy`): plain sections "What stays on
+  your phone", "What we keep when you make an account", "What we never do" (sell data, ads, show your
+  answers to anyone), "Who handles it for us" (the processors from Step 1), "How to delete it" (the real
+  flow from Step 1; if there is none, "Email us and it is deleted within 30 days" with a `mailto:` taken
+  from a new `src/quit/data/contact.json` field `privacyEmail: null` — while null the line says "Ask through
+  the coach page" and the Questions section gets the item), a dated line "Draft, 2026-11-18. Not legal
+  advice." All text in `src/quit/data/privacy.json`; every sentence must match a line in privacy-facts.md
+  (the planner checks this one by one before merge).
+- `app/quit/coaching/page.tsx` (public; `coaching` must not collide with `[addiction]`: add a static
+  segment, and a unit test that `coaching` is not an addiction id): `?a=<addiction>` (default nicotine) for
+  the cost line. Content from `offer.json` + `src/quit/data/coaching.json`: title "30 days with a coach",
+  what the 30 days are (from first-1000 Phase 2: a 20-minute start call by video, then a daily check-in by
+  text, for 30 days), price `$200` formatted from `coachingPriceUsd`, the guarantee line as written, the
+  `catch` paragraph of the addiction, his yearly cost from the `cost` store when present ("What it costs
+  you a year: $X", P1), and the button only when `canBuy()` (opens `paymentLinkUrl` in a new tab; a line
+  "Payment goes through Stripe. This site stores nothing about it."). While `paymentLinkUrl` is null: no
+  button, the tooltext line "Booking opens soon." `donationLine` shows only when non-null. No countdowns,
+  no "spots left".
+- Link `/privacy` from: the `ToolFrame` footer (already), `/quit`, the coaching page, and the sign-up page
+  (`app/auth/` sign-up form: one small line under the button; read it first and change nothing else).
+- The `coach` menu row already links here.
+
+**Acceptance:** unit tests (offer null → no button; donation null → hidden; cost line from store; route
+collision); `noHardcodedText` covers the new pages; full suite vs baseline; typecheck; eslint; Playwright at
+390×844 signed out: `/privacy` and `/quit/coaching` load, no horizontal scroll, no Stripe link while null,
+sign-up shows the privacy link. Screenshots to `shots/phase6/`.
+
 ### Phase 7: prove it, then ship nicotine wave 1 (target 20 Dec) — audits Sonnet ×3, review Opus
 
 1. Phone walk on the Android emulator rig and Playwright, light and dark, signed out and in.
