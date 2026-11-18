@@ -166,5 +166,80 @@
     "newTab": "Opens in a new tab",
     "freeTools": "Free quit tools",
     "privacy": "Privacy"
+  },
+  "blackbox": {
+    "keepRecord": "Keep a record in your Black Box",
+    "undo": "Undo",
+    "undone": "Taken back out of your Black Box.",
+    "notSaved": "Could not save this one in your Black Box."
+  },
+  "sos": {
+    "voiceQuestion": "What is the voice saying?",
+    "somethingElse": "Something else",
+    "wantQuestion": "What does it want to give you?",
+    "otherSide": "The other side",
+    "swapHeading": "Try this instead",
+    "anotherOne": "Another one",
+    "move5Heading": "Move 5",
+    "move5": "Walk or take the stairs for 5 minutes.",
+    "tapeHeading": "If you light it",
+    "waitStart": "Wait 10 minutes",
+    "waitStop": "Stop waiting",
+    "waitDone": "The 10 minutes are up.",
+    "waitLabel": "Time left",
+    "soundOn": "Sound on",
+    "soundOff": "Sound off",
+    "soundLabel": "Sound",
+    "next": "Did it pass?",
+    "toQuestion": "Did it pass?",
+    "yes": "Yes",
+    "no": "Not yet",
+    "savedClose": "Saved as a close call you beat",
+    "nextTime": "Next time: name the voice sooner",
+    "notPassed": "That is a hard one. A slip is not the end of the road.",
+    "slipLink": "Slipped? Restart today",
+    "toMenu": "Back to the menu"
+  },
+  "symptoms": {
+    "intro": "Tap one to see what the studies say.",
+    "worst": "Worst: {peak}",
+    "eases": "Usually eases: {lasts}",
+    "helpHeading": "What helps",
+    "sleepHeading": "Four rules for sleep",
+    "sleepRules": [
+      "Get up at the same time every day, whatever the night was like.",
+      "Use the bed for sleep only.",
+      "If you are still awake after 20 minutes, get up and come back when sleepy.",
+      "It is worst in the first 1 to 2 weeks."
+    ],
+    "cueCraving": "Cravings set off by cues",
+    "backToList": "All symptoms",
+    "noPeak": "No clear peak"
+  },
+  "slip": {
+    "whenQuestion": "When was it?",
+    "when": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "week": "Earlier this week"
+    },
+    "wentQuestion": "What was going on?",
+    "toldQuestion": "What did you tell yourself?",
+    "somethingElse": "Something else",
+    "ownWords": "In your words (optional)",
+    "resultHeading": "Back through steps 1 to 3",
+    "step1": "Your top lies",
+    "step1None": "You have not taken the lies test yet.",
+    "step1Link": "Take the lies test",
+    "step2": "Your swaps",
+    "step2None": "You have not picked swaps yet.",
+    "step2Link": "Pick your swaps",
+    "step3": "A new day 1",
+    "day1Today": "Today",
+    "day1Tomorrow": "Tomorrow",
+    "day1Set": "Day 1: {day}",
+    "saved": "Saved in your Black Box",
+    "startNew": "Start the new run in your Black Box",
+    "toMenu": "Back to the menu"
   }
 }

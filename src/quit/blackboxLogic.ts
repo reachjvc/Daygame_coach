@@ -1,0 +1,44 @@
+import type { ViceEndingId } from "@/src/vice/types"
+import type { QuitEnding } from "./types"
+import { localDate } from "./tools/common"
+
+/** The Black Box ending of a belief: the `endings` entry with the same id, else "other". */
+export function endingForBelief(beliefId: string | null, endings: Pick<QuitEnding, "id" | "blackBoxEnding">[]): ViceEndingId {
+  if (!beliefId) return "other"
+  return endings.find((e) => e.id === beliefId)?.blackBoxEnding ?? "other"
+}
+
+/** The Black Box ending of an `endings` entry picked on the slip tool, else "other". */
+export function endingForEnding(endingId: string | null, endings: Pick<QuitEnding, "id" | "blackBoxEnding">[]): ViceEndingId {
+  if (!endingId) return "other"
+  return endings.find((e) => e.id === endingId)?.blackBoxEnding ?? "other"
+}
+
+/** A local day moved by whole days. */
+export function shiftDay(day: string, delta: number): string {
+  const [y, m, d] = day.split("-").map(Number)
+  return localDate(new Date(y, m - 1, d + delta))
+}
+
+export type SlipWhen = "today" | "yesterday" | "week"
+
+/** The day of a slip: today, yesterday, or two days ago for "earlier this week". */
+export function slipDay(when: SlipWhen, today: string): string {
+  return when === "today" ? today : shiftDay(today, when === "yesterday" ? -1 : -2)
+}
+
+/** The later of two calendar days (a lapse may not predate what the run already holds). */
+export function laterDay(a: string, b: string): string {
+  return a >= b ? a : b
+}
+
+/** A report moment: today keeps the real time, any other day is filed at noon. */
+export function reportAt(day: string, today: string, nowText: string): string {
+  return day === today ? nowText : `${day}T12:00:00`
+}
+
+/** The thought text of a slip: the belief line, or the reader's own words (at most 80 characters). */
+export function slipThought(short: string | null, own: string): string {
+  const text = short ?? own.trim()
+  return text.slice(0, 80)
+}

@@ -4,6 +4,9 @@ import { CostTool } from "./cost/CostTool"
 import { GivesTool } from "./gives/GivesTool"
 import { HowTool } from "./how/HowTool"
 import { PastTool } from "./past/PastTool"
+import { SlipTool } from "./slip/SlipTool"
+import { SosTool } from "./sos/SosTool"
+import { SymptomsTool } from "./symptoms/SymptomsTool"
 import type { QuitToolId, ToolProps } from "../types"
 
 export interface ToolEntry {
@@ -23,12 +26,12 @@ export const TOOL_REGISTRY: Record<QuitToolId, ToolEntry> = {
   clear: { wave: 2, Component: null },
   stake: { wave: 2, Component: null },
   tell: { wave: 2, Component: null },
-  sos: { wave: 1, Component: null },
-  symptoms: { wave: 1, Component: null },
+  sos: { wave: 1, Component: SosTool },
+  symptoms: { wave: 1, Component: SymptomsTool },
   checkin: { wave: 3, Component: null },
   lesson: { wave: 3, Component: null },
   record: { wave: 3, Component: null },
-  slip: { wave: 1, Component: null },
+  slip: { wave: 1, Component: SlipTool },
   identity: { wave: 3, Component: null },
   besides: { wave: 2, Component: null },
   coach: { wave: 2, Component: null },
