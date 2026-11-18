@@ -38,6 +38,26 @@ const nextConfig = {
     unoptimized: true,
   },
   /**
+   * VERCEL'S FILE TRACE DROPS THE PAGES-ROUTER CONTEXT FILES.
+   *
+   * src/shared/HistoryBarrierContext.tsx (used by the root layout) imports
+   * AppRouterContext from "next/dist/shared/lib/app-router-context.shared-runtime".
+   * In the server bundle Next resolves that to
+   * next/dist/server/route-modules/pages/vendored/contexts/app-router-context,
+   * which requires ../../module.compiled.js, which requires
+   * next/dist/compiled/next-server/pages.runtime.prod.js. Those are loaded
+   * dynamically, so the trace misses them and every dynamic page 500s on Vercel
+   * with "Cannot find module". Local `next start` works because node_modules is
+   * complete. Force them into every route's trace.
+   */
+  outputFileTracingIncludes: {
+    "/*": [
+      "./node_modules/next/dist/server/route-modules/pages/vendored/contexts/**",
+      "./node_modules/next/dist/server/route-modules/pages/module.compiled.js",
+      "./node_modules/next/dist/compiled/next-server/pages.runtime.prod.js",
+    ],
+  },
+  /**
    * THE DEV BUBBLE SAT ON A TAB PEOPLE TAP.
    *
    * At 390px `elementFromPoint` over the time tracker's "Timer" tab returned
