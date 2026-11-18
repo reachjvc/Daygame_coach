@@ -1,9 +1,9 @@
 # Quit tool: a free menu of quit tools, then a 90-day program
 
 Written 2026-11-18, rewritten the same day after three research rounds and the owner's menu idea. Status:
-**Phases 0, 1, 2, 3, 4, 6 live 2026-11-18 (data + validator; checked nicotine content; menu, frame, count route;
-privacy + coaching pages; beliefs, gives, past, cost, how; nothing shows until `live.json` lists nicotine).
-Phase 5 building; `curve` waits for the owner's reaction to mock v2; Phase 7 needs his privacy contact email.** Replaces the "one page per addiction" frame of the addiction one-pagers
+**Phases 0–6 live 2026-11-18 except `curve` (held for the owner's reaction to mock v2): data, checked
+nicotine content, menu, beliefs, gives, past, cost, how, sos, symptoms, slip, privacy, coaching. Nothing shows
+until `live.json` lists nicotine. Phase 7 (audit, ship) running; shipping needs his privacy contact email.** Replaces the "one page per addiction" frame of the addiction one-pagers
 (docs/research/addiction-one-pagers/); their research, rules and checked numbers are reused, the page form is not.
 
 **Scheduled by `Plans/first-1000.md` (2026-11-18):** the free nicotine tools ship by **20 Dec 2026** so New Year
@@ -990,6 +990,10 @@ Phase 3 (answered by the planner, 2026-11-18):
 7. `/quit` exempt from the two navigation guards: accepted; Phase 7 adds a link from the app (the vice
    module's Black Box page) to `/quit/nicotine` once live.
 8. Phase 4 onward runs the quit specs on the phone project too.
+
+Phase 5 (planner, 2026-11-18): beliefs carry an optional `blackBoxEnding` (b3, b12 stress; b4 justone; b10
+drink) used by `sos`; the symptom screen shows timing once; Phase 7 fix list: the `sleep` help row repeats the
+four-rule sleep card on the same screen (hide the row when the card shows).
 
 Phase 4 (planner, 2026-11-18): accepted as built — `ToolProps = {addiction, data, present}`; a short "Your list
 for this week" result for `gives`; card tags by `checked`, else dependent/disorder/treatment/resolved = "Checked
