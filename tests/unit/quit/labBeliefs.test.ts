@@ -40,15 +40,15 @@ describe("copy A score (inferred formula)", () => {
 })
 
 describe("copy B", () => {
-  it("fills the bar 11 per step", () => {
-    expect([1, 3, 4, 5, 6, 7, 8, 9].map(barPercent)).toEqual([11, 33, 44, 55, 66, 77, 88, 100])
+  it("fills the bar evenly over 8 steps", () => {
+    expect([1, 2, 3, 4, 5, 6, 7, 8].map(barPercent)).toEqual([12, 25, 37, 50, 62, 75, 87, 100])
   })
   it("requires every statement on a belief page", () => {
     const f = { ratings: { relax: 2, concentrate: 2 }, know: {} }
-    expect(stepComplete(4, f)).toBe(false)
-    expect(stepComplete(4, { ...f, ratings: { ...f.ratings, boredom: 3 } })).toBe(true)
-    expect(stepComplete(3, { ratings: {}, know: {}, amount: 0 })).toBe(false)
-    expect(stepComplete(3, { ratings: {}, know: {}, amount: 0, tried: false })).toBe(true)
+    expect(stepComplete(3, f)).toBe(false)
+    expect(stepComplete(3, { ...f, ratings: { ...f.ratings, boredom: 3 } })).toBe(true)
+    expect(stepComplete(2, { ratings: {}, know: {}, amount: 0 })).toBe(false)
+    expect(stepComplete(2, { ratings: {}, know: {}, amount: 0, tried: false })).toBe(true)
   })
   it("marks only the one answer with a shown key", () => {
     expect(knowMark("when", 1)).toBe("right")

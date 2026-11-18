@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { InferredTag, NotSourced, Placeholder } from "../../progress/shared/Bits"
+import { sharedText } from "../../progress/shared/text"
 import { useLabState } from "../../store"
 import { NotCopied, PickCard, toggled } from "../shared/Bits"
 import { bsText } from "../shared/text"
@@ -70,11 +71,11 @@ export function BeliefsA() {
           <div aria-hidden="true" className="flex size-16 items-center justify-center self-center rounded-full bg-yellow-200/20 text-3xl">
             {"🧠"}
           </div>
-          <h2 className="text-xl font-semibold">{aText.explainerTitle}</h2>
-          <p className="flex items-center gap-2 text-sm text-muted-foreground">
-            {aText.explainerLine}
+          <h2 className="flex items-center gap-2 text-xl font-semibold">
+            {aText.explainerTitle}
             <InferredTag />
-          </p>
+          </h2>
+          <p className="text-sm text-muted-foreground">{aText.explainerLine}</p>
           <p className="text-sm">{aText.explainerBody1}</p>
           <p className="text-sm">
             {aText.explainerBody2} <strong className="text-red-400">{aText.explainerRed}</strong>.
@@ -85,7 +86,6 @@ export function BeliefsA() {
           <p className="flex flex-wrap items-center gap-2 text-sm">
             {aText.explainerDays} <NotSourced />
           </p>
-          <p className="text-xs text-muted-foreground">{aText.explainerInferred}</p>
           <Pill testId="a-explainer-cta" onClick={() => setScreen("areas")}>
             {aText.explainerCta}
           </Pill>
@@ -110,6 +110,7 @@ export function BeliefsA() {
               testId={`a-fear-${id}`}
               title={aText.fears[id].title}
               line={i < FEARS_SEEN ? aText.fears[id].line : undefined}
+              unseenLine={i < FEARS_SEEN ? undefined : sharedText.notSeen}
               checked={fears.includes(id)}
               onToggle={() => setFears(toggled(fears, id))}
             />
@@ -120,11 +121,7 @@ export function BeliefsA() {
       {screen === "result" && <Result answers={answers} onNext={() => setScreen("teaser")} />}
       {screen === "teaser" && (
         <section data-testid="screen-teaser" className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <h2 className="flex-1 text-xl font-semibold">{aText.teaserTitle}</h2>
-            <InferredTag />
-          </div>
-          <p className="text-xs text-muted-foreground">{aText.teaserInferred}</p>
+          <h2 className="text-xl font-semibold">{aText.teaserTitle}</h2>
           <div className="grid grid-cols-3 gap-2 rounded-md border border-primary/50 p-2">
             {aText.teaserBox.map((l) => (
               <div key={l} className="flex flex-col items-center gap-1 text-center text-xs">
@@ -133,12 +130,17 @@ export function BeliefsA() {
               </div>
             ))}
           </div>
-          {aText.teaserWeeks.map((w) => (
-            <div key={w} className="flex flex-col gap-1">
-              <span className="text-sm font-semibold">{w}</span>
-              <Placeholder />
+          <div data-testid="a-matched" className="flex flex-col gap-1 rounded-md border border-border bg-card p-3 text-sm">
+            <span className="font-semibold">{aText.matched}</span>
+            {triggers.length === 0 ? <span className="text-muted-foreground">{aText.matchedNone}</span> : triggers.map((t) => <span key={t}>{aText.triggers[t as keyof typeof aText.triggers].title}</span>)}
+          </div>
+          {aText.weekRows.map((w) => (
+            <div key={w.title} data-testid="a-week" className="flex flex-col gap-0.5">
+              <span className="text-sm font-semibold">{w.title}</span>
+              <span className="text-sm text-muted-foreground">{w.line}</span>
             </div>
           ))}
+          <p data-testid="a-next-approach" className="text-center text-xs text-muted-foreground">{aText.nextApproach}</p>
           <Pill testId="a-teaser-cta" onClick={() => setScreen("paywall")}>
             {aText.teaserCta}
           </Pill>

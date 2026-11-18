@@ -30,8 +30,8 @@ export function knowMark(id: KnowId, pick: number | undefined): Mark {
   return pick === key ? "right" : "wrong"
 }
 
-export const STEPS = 9
-/** The bar fills 11% per step (11, 22, ... 100). */
+export const STEPS = 8
+/** The bar fills evenly per step (12, 25, 37 ... 100); the original had 9 steps, the copy leaves out the details step. */
 export function barPercent(step: number): number {
   return Math.min(100, Math.floor((step * 100) / STEPS))
 }
@@ -57,10 +57,10 @@ export interface Form {
   know: Partial<Record<KnowId, number>>
 }
 
-/** Required questions answered on a step (steps 1, 2 and 9 have none to check here). */
+/** Required questions answered on a step (steps 1 and 8 have none to check). Step 2 is the history, 3-5 the beliefs, 6-7 the knowledge. */
 export function stepComplete(step: number, f: Form): boolean {
-  if (step === 3) return f.amount !== undefined && f.tried !== undefined
-  if (step >= 4 && step <= 6) return BELIEF_PAGES[step - 4].every((b) => f.ratings[b] !== undefined)
-  if (step === 7 || step === 8) return KNOW_PAGES[step - 7].every((k) => f.know[k] !== undefined)
+  if (step === 2) return f.amount !== undefined && f.tried !== undefined
+  if (step >= 3 && step <= 5) return BELIEF_PAGES[step - 3].every((b) => f.ratings[b] !== undefined)
+  if (step === 6 || step === 7) return KNOW_PAGES[step - 6].every((k) => f.know[k] !== undefined)
   return true
 }

@@ -4,11 +4,12 @@ import { useState } from "react"
 import type { LabProps } from "../../registry"
 import type { QuitUnit } from "../../../types"
 import { usable } from "../../../tools/common"
-import { InferredTag, NotSourced } from "../../progress/shared/Bits"
+import { SourceTap } from "../../../components/kit"
+import { InferredTag, NotSourced, Placeholder } from "../../progress/shared/Bits"
 import { useLabState } from "../../store"
 import { NotCopied } from "../shared/Bits"
 import { bsText } from "../shared/text"
-import { BELIEFS, BELIEF_PAGES, KNOW, KNOW_PAGES, STEPS, barPercent, knowMark, stepComplete, yearCostUsd, type BeliefId, type Form, type KnowId } from "./logic"
+import { BELIEFS, BELIEF_PAGES, KNOW, KNOW_PAGES, STEPS, barPercent, knowMark, perDay, stepComplete, yearCostUsd, type BeliefId, type Form, type KnowId } from "./logic"
 import { bText } from "./text"
 
 const EMPTY: Form = { ratings: {}, know: {} }
@@ -17,10 +18,9 @@ const EMPTY: Form = { ratings: {}, know: {} }
 export function BeliefsB({ data }: LabProps) {
   const [step, setStep] = useLabState<number>("beliefs", "b", "step", 1)
   const [form, setForm] = useLabState<Form>("beliefs", "b", "form", EMPTY)
-  const [robot, setRobot] = useState(false)
   const [error, setError] = useState(false)
   const [done, setDone] = useLabState<boolean>("beliefs", "b", "done", false)
-  const price = usable<QuitUnit[]>(data.units)?.find((u) => u.id === "cigarettes")?.defaultPriceUsd ?? 0
+  const unit = usable<QuitUnit[]>(data.units)?.find((u) => u.id === "cigarettes")
   const patch = (p: Partial<Form>) => setForm({ ...form, ...p })
 
   const go = (n: number) => {
@@ -35,12 +35,7 @@ export function BeliefsB({ data }: LabProps) {
   if (done) {
     return (
       <div data-testid="beliefs-b" data-screen="result">
-        <Result form={form} price={price} onRestart={() => {
-          setForm(EMPTY)
-          setDone(false)
-          setRobot(false)
-          go(1)
-        }} />
+        <Result form={form} unit={unit} />
       </div>
     )
   }
@@ -67,24 +62,6 @@ export function BeliefsB({ data }: LabProps) {
       )}
 
       {step === 2 && (
-        <section data-testid="b-details" className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <h2 className="flex-1 text-lg font-semibold">{bText.detailsTitle}</h2>
-            <InferredTag />
-          </div>
-          <p className="text-xs text-muted-foreground">{bText.inferredNote}</p>
-          {(Object.keys(bText.detailsFields) as (keyof typeof bText.detailsFields)[]).map((k) => (
-            <label key={k} className="flex flex-col gap-1 text-sm">
-              {bText.detailsFields[k]}
-              <input data-testid={`b-details-${k}`} className="min-h-11 rounded-md border border-border bg-background px-2" />
-            </label>
-          ))}
-          <p className="text-sm text-muted-foreground">{bText.detailsGate}</p>
-          <NotCopied label={bsText.notCopiedGate} testId="b-gate" />
-        </section>
-      )}
-
-      {step === 3 && (
         <section data-testid="b-history" className="flex flex-col gap-4">
           <h2 className="text-lg font-semibold">{bText.historyTitle}</h2>
           <Radios id="amount" label={bText.amountLabel} required options={bText.amounts} value={form.amount} onPick={(i) => patch({ amount: i })} />
@@ -109,37 +86,32 @@ export function BeliefsB({ data }: LabProps) {
         </section>
       )}
 
-      {step >= 4 && step <= 6 && (
-        <section data-testid={`b-beliefs-${step - 3}`} className="flex flex-col gap-4">
+      {step >= 3 && step <= 5 && (
+        <section data-testid={`b-beliefs-${step - 2}`} className="flex flex-col gap-4">
           <p className="text-center text-sm">{bText.rankLine}</p>
           <p className="border-b border-border pb-3 text-center text-sm font-semibold">{bText.legend}</p>
-          {BELIEF_PAGES[step - 4].map((b) => (
+          {BELIEF_PAGES[step - 3].map((b) => (
             <Radios key={b} id={`belief-${b}`} label={bText.beliefs[b]} required options={["1", "2", "3", "4", "5"]} value={form.ratings[b] === undefined ? undefined : form.ratings[b]! - 1} onPick={(i) => patch({ ratings: { ...form.ratings, [b]: i + 1 } })} />
           ))}
         </section>
       )}
 
-      {(step === 7 || step === 8) && (
-        <section data-testid={`b-know-${step - 6}`} className="flex flex-col gap-4">
-          {KNOW_PAGES[step - 7].map((k) => (
+      {(step === 6 || step === 7) && (
+        <section data-testid={`b-know-${step - 5}`} className="flex flex-col gap-4">
+          {KNOW_PAGES[step - 6].map((k) => (
             <Radios key={k} id={`know-${k}`} label={bText.know[k].q} required options={bText.know[k].opts} value={form.know[k]} onPick={(i) => patch({ know: { ...form.know, [k]: i } })} />
           ))}
         </section>
       )}
 
-      {step === 9 && (
-        <section data-testid="b-submit" className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">{bText.submitTitle}</h2>
-          <p className="text-sm">{bText.submitLine}</p>
-          <label className="flex min-h-11 items-center gap-3 rounded-md border border-border bg-card px-3 text-sm">
-            <input type="checkbox" data-testid="b-captcha" checked={robot} onChange={(e) => setRobot(e.target.checked)} className="size-5" />
-            {bText.captcha}
-          </label>
-          <p className="text-xs text-muted-foreground">{bText.captchaNote}</p>
+      {step === 8 && (
+        <section data-testid="b-finish" className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold">{bText.finishTitle}</h2>
+          <p className="text-sm">{bText.finishLine}</p>
         </section>
       )}
 
-      {error && (
+      {error && !stepComplete(step, form) && (
         <p data-testid="b-error" className="flex items-center gap-2 text-sm text-red-400">
           {bsText.required}
           <InferredTag />
@@ -153,15 +125,9 @@ export function BeliefsB({ data }: LabProps) {
         ) : (
           <span />
         )}
-        {step < STEPS ? (
-          <button type="button" data-testid="b-next" onClick={next} className="min-h-12 rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground">
-            {bText.next}
-          </button>
-        ) : (
-          <button type="button" data-testid="b-submit-btn" disabled={!robot} onClick={() => setDone(true)} className="min-h-12 rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground disabled:opacity-40">
-            {bText.submit}
-          </button>
-        )}
+        <button type="button" data-testid="b-next" onClick={step < STEPS ? next : () => setDone(true)} className="min-h-12 rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground">
+          {bText.next}
+        </button>
       </div>
     </div>
   )
@@ -188,8 +154,9 @@ function Radios({ id, label, options, value, onPick, required }: { id: string; l
   )
 }
 
-function Result({ form, price, onRestart }: { form: Form; price: number; onRestart: () => void }) {
+function Result({ form, unit }: { form: Form; unit: QuitUnit | undefined }) {
   const [copied, setCopied] = useState(false)
+  const price = unit?.defaultPriceUsd ?? 0
   const cost = yearCostUsd(form.amount, price)
   const text = () =>
     [bText.resultTitle, ...BELIEFS.map((b) => `${bText.beliefs[b]} ${bText.yourAnswer} ${form.ratings[b] ?? "-"}. ${bText.rebuttals[b]}`)].join("\n")
@@ -223,9 +190,10 @@ function Result({ form, price, onRestart }: { form: Form; price: number; onResta
               </span>
               <span className="flex flex-wrap items-center gap-2">
                 {bText.rightAnswer}:{" "}
-                {k === "when" ? bText.rightWhen : <NotSourced />}
+                {k === "when" ? bText.know.when.opts[1] : <NotSourced />}
                 {k === "stimulant" && <InferredTag />}
               </span>
+              {k === "when" && <Placeholder />}
               <span className="text-xs text-muted-foreground">{bText.marks[mark]}</span>
             </div>
           )
@@ -233,7 +201,12 @@ function Result({ form, price, onRestart }: { form: Form; price: number; onResta
       </div>
       <div data-testid="b-cost" className="rounded-xl border border-border bg-card p-3 text-sm">
         {cost === undefined ? bText.costNone : <p className="font-semibold">{bText.costLine(`$${cost.toLocaleString("en-US")}`)}</p>}
-        <p className="mt-1 text-xs text-muted-foreground">{bText.costBasis}</p>
+        {cost !== undefined && (
+          <p data-testid="b-cost-basis" className="mt-1 text-xs text-muted-foreground">
+            {bText.costBasis(perDay(form.amount) ?? 0, `$${price.toFixed(2)}`)}
+          </p>
+        )}
+        {unit && <SourceTap refs={unit.priceRefs} />}
       </div>
       <NotCopied label={bsText.notCopiedSales} testId="b-sales" />
       <button
@@ -246,9 +219,6 @@ function Result({ form, price, onRestart }: { form: Form; price: number; onResta
         className="min-h-12 rounded-md border border-border bg-card px-4 text-sm font-semibold"
       >
         {copied ? bText.copied : bText.copyBtn}
-      </button>
-      <button type="button" data-testid="b-restart" onClick={onRestart} className="inline-flex min-h-11 items-center self-start text-sm text-muted-foreground underline">
-        {bText.startOver}
       </button>
     </section>
   )

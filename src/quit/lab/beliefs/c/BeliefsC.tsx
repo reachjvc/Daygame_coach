@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { BottomNav, InferredTag, PlaceholderScreen } from "../../progress/shared/Bits"
+import { BottomNav, InferredTag, Placeholder, PlaceholderScreen } from "../../progress/shared/Bits"
 import { useLabState } from "../../store"
 import { NotCopied, toggled } from "../shared/Bits"
 import { bsText } from "../shared/text"
@@ -96,8 +96,14 @@ export function BeliefsC() {
         </button>
         <p className="font-serif text-2xl italic text-orange-400">{info.name}</p>
         {p !== cText.personaSeen && <InferredTag />}
-        <p className="font-semibold">{info.line}</p>
-        <p className="text-sm text-muted-foreground">{info.body}</p>
+        {p === cText.personaSeen ? (
+          <>
+            <p className="font-semibold">{info.line}</p>
+            <p className="text-sm text-muted-foreground">{info.body}</p>
+          </>
+        ) : (
+          <Placeholder />
+        )}
         <p className="text-sm font-semibold">{cText.resultNote}</p>
         {cText.resultCards.map((c, i) => (
           <div key={c} className="flex flex-col gap-1 rounded-lg border border-border bg-card p-3 text-left text-sm">
@@ -161,9 +167,10 @@ export function BeliefsC() {
             </button>
           ))}
         </div>
-        <p data-testid="c-insight" data-key={key} className="text-sm">
-          {t}: {cText.insights[key]}
-        </p>
+        <div data-testid="c-insight" data-key={key} className="flex flex-col gap-1 text-sm">
+          <span>{t}</span>
+          {insightSeen(step) ? <span>{cText.insights[key as "afterWork" | "six"]}</span> : <Placeholder />}
+        </div>
         {!insightSeen(step) && (
           <p className="flex items-center gap-2 text-xs text-green-100/80">
             <InferredTag />
@@ -230,7 +237,7 @@ export function BeliefsC() {
           </button>
           <div data-testid="c-why-card" className="rounded-xl border border-border bg-card p-3 text-sm">
             <p className="font-semibold">{cText.yourWhy}</p>
-            <p className="text-muted-foreground">{whySaved && why ? why : cText.yourWhyEmpty}</p>
+            <Placeholder />
           </div>
         </section>
       )}

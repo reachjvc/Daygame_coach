@@ -13,6 +13,7 @@ export function NotCopied({ label, testId = "not-copied" }: { label: string; tes
 export function PickCard({
   title,
   line,
+  unseenLine,
   checked,
   onToggle,
   testId,
@@ -21,6 +22,8 @@ export function PickCard({
 }: {
   title: string
   line?: string
+  /** Text of a dashed tile shown in place of a description that was never seen. */
+  unseenLine?: string
   checked: boolean
   onToggle: () => void
   testId: string
@@ -40,6 +43,7 @@ export function PickCard({
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="text-sm font-semibold">{title}</span>
         {line && <span className="text-sm text-muted-foreground">{line}</span>}
+        {unseenLine && <span data-testid="unseen-line" className="mt-1 rounded border border-dashed border-border px-2 py-1 text-xs text-muted-foreground">{unseenLine}</span>}
       </span>
       <span aria-hidden="true" className={`flex size-6 shrink-0 items-center justify-center border ${radio ? "rounded-full" : "rounded"} ${checked ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>
         {checked ? "✓" : ""}

@@ -45,7 +45,6 @@ export const aText = {
   explainerBoxNone: "If this is one of your triggers, you are likely feeling this in the small hours.",
   explainerDays: "People who stop say it eases within",
   explainerCta: "Show me my habit loop",
-  explainerInferred: "Topic follows the goal area; the seen runs used sleep.",
 
   areasTitle: "Where does drinking hit you hardest?",
   areasLine: "Tell us what you want back. We put these first in your plan.",
@@ -70,13 +69,13 @@ export const aText = {
     ritual: { title: "I really enjoy the ritual", line: "" },
   },
 
-  resultLabel: "YOUR SCORE",
+  resultLabel: "EXAMPLE SCORE",
   outOf: "/ 100",
   startingPoint: "Your starting point. Here is where you can grow.",
   scoreBasis: "How this is calculated",
-  scoreInferred: "Our own formula: the original never showed theirs.",
+  scoreInferred: "Example score, formula not public",
   standoutTitle: (name: string) => `${name}: your standout`,
-  standoutBody: "This is your foundation. It means you already understand your patterns better than most people who start here.",
+  standoutBody: "This is the area where you scored highest.",
   dimsLabel: "YOUR 6 DIMENSIONS",
   dims: {
     awareness: "Self-awareness",
@@ -93,9 +92,15 @@ export const aText = {
 
   teaserTitle: "Your 90-day plan",
   teaserBox: ["Weight change", "Money saved", "Calories avoided"],
-  teaserWeeks: ["Week 1", "Weeks 2 to 4", "Months 2 and 3"],
   teaserCta: "Build my plan",
-  teaserInferred: "Only summarised in public material.",
+  matched: "Matched to your triggers",
+  matchedNone: "No triggers picked.",
+  weekRows: [
+    { title: "Week 1", line: "Settle in and get through the first days." },
+    { title: "Weeks 2 to 4", line: "Build momentum and learn your patterns." },
+    { title: "Months 2 and 3", line: "Make the change stick." },
+  ],
+  nextApproach: "Next: choose your approach",
   paywallTitle: "Your plan",
   paywallBack: "Back to results",
 } as const
