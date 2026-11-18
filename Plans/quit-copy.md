@@ -63,7 +63,7 @@ nicotine content, the validator, privacy and coaching pages, the audit fixes) is
 | ID | What | Attempted, and what it returned | Blocks | Recommendation |
 |---|---|---|---|---|
 | B1 | Live site answers 500 on `/` and every `/quit` page (`/privacy`, `/auth/login` are 200) | `curl` on build 134d39d1: `/`, `/quit`, `/quit/nicotine?preview=1`, `/quit/coaching` → 500. Same as `first-1000.md` B1 (Vercel only; local production builds give 200). `vercel login` done; `vercel inspect daygame-coach.vercel.app` → "Can't find the deployment … under reachjvc-1930s-projects" | "Try it" links on the review page | Owner item 1, then Phase 0 reads the function log and fixes it |
-| B2 | Competitor material behind accounts | Census Table 2b: This Naked Mind, Flamy, Reframe, QuitSure, Sunnyside, Relay ban copying or competitor use; Brainbuddy bans scripted capture | Screens never shown publicly | Public material only; mark unseen screens "inferred" |
+| B2 | Competitor material behind accounts | Census Table 2b: six studied products ban copying or competitor use; one bans scripted capture | Screens never shown publicly | Public material only; mark unseen screens "inferred" |
 | B3 | Repo is public | Memory `repo-is-public`; `quit-tool.md` Part 5 | Names, shots, quotes in commits | Neutral variant ids; private map and shots in `~/.cache/daygame-research/quit-copy/` |
 | B4 | Next.js 16.4.1 security advisory stops `next build` / `next dev` once | Seen in every build today; a rerun continues | Nothing (rerun) | Owner decides on the upgrade separately; builders rerun, never upgrade |
 
@@ -124,6 +124,15 @@ nicotine content, the validator, privacy and coaching pages, the audit fixes) is
   email, so our copy shows it on the page). **d and e dropped**: sign-up questionnaires with no belief result (one
   ends at a price page, one at an "approved" page), so a copy would be a different tool; their belief-adjacent
   screens (pain reframe, capability question) go into overlap for `best`.
+- Phase 4 (quitdate) Step B: copies **a, b, d, e** pass. **c dropped** (only its goal form is public). Only e has a
+  real quit-date picker; a and b are goal forks with weekly plans; d's date entry is inferred (rule 2). Unsourced
+  success percentages in b and the savings figure in a show "number not sourced yet". The no-date steady-limit
+  path seen in a small app goes to overlap for `best`.
+- Phase 6 (checkin) Step B: copies **a, b, c, d** pass (c fully seen; b half seen, but the seen half is its core:
+  hold-to-check-in and the expected-difficulty slider). **e dropped** (2 screens seen).
+- Phase 7 (diary) Step B: copies **b, c, d, e** pass. **a dropped** (2 seen, 4 inferred). d's log screens are the
+  same product's craving flow already built as sos/d: the diary copy reuses those components and adds its own
+  stats; e is picked over a bigger app because it has the trigger chart.
 
 ---
 
@@ -203,12 +212,12 @@ desktop; fast-forward `main`, push, update this file's status line.
 | 2 | **Progress home** (clean time, money saved, units not used, time regained, badges, total days + best streak) | 1, 2, 4, 5, 6, 79 | none (wave 3 `record`) | Our improved version keeps "never resets" (total clear days + best run) |
 | 3 | **Health and withdrawal timeline** | 86 health-recovery timeline, 8 calendar of days | `symptoms` | Improved version uses `symptomCourse` (study timing) and the curve mock v2 ideas; his notes on that mock feed this phase |
 | 4 | **Quit date and plan** | 50 quit date and method, finite goal, goal type | none (`curve` held) | Near date first (evidence); his "days or weeks" wording stays |
-| 5 | **Belief test** | 45 belief/fear quiz | `beliefs` | Public material: Allen Carr's public quiz and funnel shots, Reframe funnel shots, QuitSure store shots |
+| 5 | **Belief test** | 45 belief/fear quiz | `beliefs` | Public material: public web quizzes and funnel shots, store shots (named in the private research folder) |
 | 6 | **Daily check-in** (pledge, difficulty, mood, journal) | 32 daily check-in, journal, mood tracker | none (wave 3 `checkin`) | |
 | 7 | **Craving and slip diary + trigger chart** | 10 craving/slip log, 26 trigger chart | `slip` | |
 | 8 | **Daily lesson program** | 39 daily lesson program, 53 real-life missions, quote/tip of the day | none (wave 3 `lesson`) | Copy the program's shell and delivery with 3 sample lessons each; lesson content later, clean-room (owner note) |
 | 9 | **Cost calculator and savings goal** | 2 money saved (input side), 3 savings goal | `cost` | |
-| 10 | **Past attempts** | the census "rare" list item 1 (Relay, QuitSure, Quitzilla, EasyQuit, Flamy) | `past` | |
+| 10 | **Past attempts** | the census "rare" list item 1 (five products; names in the private census) | `past` | |
 | 11 | **If-then and relapse-prevention plan** | the "paid-only small tools" (if-then, three circles, letter to self) | none (wave 2 `ifthen`) | |
 | 12 | **Accountability partner and stake** | 65 accountability partner, deposit contracts | none (wave 2 `tell`, `stake`) | The site never holds money (unchanged) |
 | 13 | **Library and what helps** | 41 article/video library | `how` (+ wave 2 `besides`) | |
