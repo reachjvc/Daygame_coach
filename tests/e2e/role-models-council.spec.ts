@@ -17,6 +17,24 @@ import { planWithSteps, seedLifePlan, thisWeeksReview } from "./helpers/lifePlan
 const people = shownPeople()
 const API = "/api/role-models/council"
 
+/**
+ * A worker's tests share one account (fixtures/test.ts), so a council built by
+ * one test is still there for the next. Each test starts from an empty one.
+ */
+async function emptyTheCouncil(page: Page) {
+  const read = await page.request.get(API)
+  expect(read.status(), await read.text()).toBe(200)
+  const { members } = (await read.json()) as { members: { roleModelId: string }[] }
+  for (const m of members) {
+    const res = await page.request.delete(`${API}?id=${m.roleModelId}`)
+    expect(res.status(), await res.text()).toBe(200)
+  }
+}
+
+test.beforeEach(async ({ page }) => {
+  await emptyTheCouncil(page)
+})
+
 async function add(page: Page, id: string, takenValues: string[]) {
   const res = await page.request.put(API, { data: { roleModelId: id, takenValues } })
   expect(res.status(), await res.text()).toBe(200)

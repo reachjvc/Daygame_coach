@@ -94,7 +94,7 @@ function FilterChip({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`min-h-9 rounded-lg px-3 text-sm font-medium ${
+      className={`min-h-11 rounded-lg px-3 text-sm font-medium ${
         active ? (color ? "text-white" : "bg-white text-zinc-900") : "bg-zinc-800 text-white/60 hover:bg-zinc-700 hover:text-white"
       }`}
       style={active && color ? { backgroundColor: color } : undefined}

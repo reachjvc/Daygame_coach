@@ -19,7 +19,11 @@ export default function RoleModelsPage() {
   const categories = ROLE_MODEL_CATEGORIES.map((c) => ({ id: c.id, label: c.label, description: c.description, color: c.color }))
   return (
     <main className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8" data-testid="role-models-page">
-      <BackLink fallback={ROUTES.plan} fallbackLabel="Plan" />
+      <BackLink
+        fallback={ROUTES.plan}
+        fallbackLabel="Plan"
+        className="inline-flex min-h-11 items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      />
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold text-foreground">Role models</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">

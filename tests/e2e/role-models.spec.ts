@@ -39,7 +39,10 @@ test.describe("role model library @phone", () => {
     await page.goBack()
     await expect(page).toHaveURL(new RegExp(`${ROLE_MODELS_HREF}$`))
     await expect(page.locator('[data-testid^="role-model-card-"]')).toHaveCount(shown.length)
-    expect(await page.evaluate(() => document.getAnimations().length)).toBe(0)
+    // The card under the pointer glows on hover (c5de0596, the old gallery's look): that is a
+    // 300 ms transition by design. Take the pointer away and it must settle to nothing moving.
+    await page.mouse.move(0, 0)
+    await expect.poll(() => page.evaluate(() => document.getAnimations().length)).toBe(0)
   })
 
   test("a person who is not validated has no page", async ({ page }) => {
@@ -64,7 +67,13 @@ test.describe("role model library @phone", () => {
       const res = performance.getEntriesByType("resource") as PerformanceResourceTiming[]
       return [...nav, ...res].reduce((sum, e) => sum + (e.transferSize || e.encodedBodySize || 0), 0)
     })
-    console.log(`role models first screen: ${Math.round(bytes / 1024)} KB`)
+    const parts = await page.evaluate(() =>
+      ([...performance.getEntriesByType("navigation"), ...performance.getEntriesByType("resource")] as PerformanceResourceTiming[])
+        .map((e) => ({ url: e.name.replace(location.origin, ""), bytes: e.transferSize || e.encodedBodySize || 0 }))
+        .sort((a, b) => b.bytes - a.bytes)
+        .slice(0, 40),
+    )
+    console.log(`role models first screen: ${Math.round(bytes / 1024)} KB; biggest: ${parts.filter((p) => p.bytes > 3000).map((p) => `${Math.round(p.bytes / 1024)} KB ${p.url.slice(0, 60)}`).join(" | ")}`)
     expect(bytes).toBeLessThan(300 * 1024)
   })
 })
