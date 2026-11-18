@@ -55,6 +55,12 @@ export const ROUTES = {
    */
   plan: "/plan",
   /**
+   * The copy space: today's plan flow on a hidden second account that holds a COPY
+   * of the signed-in account's plan (`src/db/planSandbox.ts`). Only an account
+   * with a `plan_sandboxes` row may open it; every other account gets a 404.
+   */
+  planSandbox: "/plan/sandbox",
+  /**
    * The quit-a-vice module's front door: **the Black Box** since 2026-09-20.
    *
    * On 2026-09-20 this address stopped being the old hub and became a

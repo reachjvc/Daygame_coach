@@ -15,12 +15,12 @@
 
 import type { DayPatch } from "@/src/db/lifePlanDayTypes"
 import type { DayRecord } from "./lifePlanDayService"
-import { ACCOUNT_CHANGED_MESSAGE, accountHeaders, refusedForAccount } from "./planAccount"
+import { ACCOUNT_CHANGED_MESSAGE, accountHeaders, planApiUrl, refusedForAccount } from "./planAccount"
 
 /** The account's day half, or `undefined` when it could not be read. */
 export async function fetchDayRecord(account: string): Promise<DayRecord | undefined> {
   try {
-    const res = await fetch("/api/life-plan/day", { headers: accountHeaders(account) })
+    const res = await fetch(planApiUrl("/api/life-plan/day", account), { headers: accountHeaders(account) })
     if (refusedForAccount(res, account) || !res.ok) return undefined
     const body = (await res.json()) as Partial<DayRecord>
     return {
@@ -48,7 +48,7 @@ export type DaySaveOutcome =
 /** Send one day. Only the keys present are changed. */
 export async function saveDayFromBrowser(patch: DayPatch, account: string): Promise<DaySaveOutcome> {
   try {
-    const res = await fetch("/api/life-plan/day", {
+    const res = await fetch(planApiUrl("/api/life-plan/day", account), {
       method: "PUT",
       headers: { "Content-Type": "application/json", ...accountHeaders(account) },
       body: JSON.stringify(patch),
@@ -105,7 +105,7 @@ export async function saveDayCatchingUp(
  */
 export function sendDayOnLeave(patch: DayPatch, account: string): void {
   try {
-    void fetch("/api/life-plan/day", {
+    void fetch(planApiUrl("/api/life-plan/day", account), {
       method: "PUT",
       headers: { "Content-Type": "application/json", ...accountHeaders(account) },
       body: JSON.stringify(patch),

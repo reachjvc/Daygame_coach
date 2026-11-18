@@ -16,7 +16,7 @@ import type { NsPlan } from "./types"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
 import { planToRows, rowsToPlan } from "./lifePlanMapper"
 import { diffPlanRows, nothingChanged, type PlanChanges } from "./lifePlanDiff"
-import { ACCOUNT_CHANGED_MESSAGE, accountHeaders, refusedForAccount } from "./planAccount"
+import { ACCOUNT_CHANGED_MESSAGE, accountHeaders, planApiUrl, refusedForAccount } from "./planAccount"
 
 /**
  * Half the browser's cap on requests that outlive their page (64 KiB for all
@@ -45,7 +45,7 @@ export interface LoadedPlan {
  */
 export async function fetchLifePlan(account: string): Promise<LoadedPlan | undefined> {
   try {
-    const res = await fetch("/api/life-plan", { headers: accountHeaders(account) })
+    const res = await fetch(planApiUrl("/api/life-plan", account), { headers: accountHeaders(account) })
     if (refusedForAccount(res, account) || !res.ok) return undefined
     const body = (await res.json()) as {
       plan: PlanRows | null
@@ -73,7 +73,7 @@ export async function startLifePlan(account: string): Promise<{ id: string; revi
     // Not `keepalive`: the save that fills the row comes after this answer, and
     // a page that has gone never sends it. An empty row is filled from this
     // browser's copy on the next visit (`decideOnLoad`), so nothing is lost.
-    const res = await fetch("/api/life-plan", { method: "POST", headers: accountHeaders(account) })
+    const res = await fetch(planApiUrl("/api/life-plan", account), { method: "POST", headers: accountHeaders(account) })
     if (refusedForAccount(res, account) || !res.ok) return undefined
     return (await res.json()) as { id: string; revision: number }
   } catch {
@@ -152,7 +152,7 @@ export async function saveLifePlanChanges(
 
   try {
     const sent = JSON.stringify({ changes, revision })
-    const res = await fetch("/api/life-plan", {
+    const res = await fetch(planApiUrl("/api/life-plan", account), {
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...accountHeaders(account) },
       body: sent,

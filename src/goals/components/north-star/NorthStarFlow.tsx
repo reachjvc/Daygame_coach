@@ -55,7 +55,7 @@
  * /test/vision-plan.
  */
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { ArrowLeft, Check, ChevronDown } from "lucide-react"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
 import type { HabitRampStep, MilestoneLadderConfig, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsGoalStatus, NsPlace, NsPlan, NsRoutineProgram, LinkedProgram, VisionGoalType } from "@/src/goals/types"
@@ -68,7 +68,7 @@ import * as nsTrack from "@/src/goals/northStarTrackService"
 import { fetchLifePlan, newNodeId, saveLifePlanChanges, startLifePlan } from "@/src/goals/lifePlanClient"
 import { LIFE_PLAN_IMPORTED_KEY, NOTHING_TO_SHOW, SAVE_DEBOUNCE_MS, canSave, decideOnLoad, planHalfAfterLoad, planHasNothingWritten, sendableFingerprint, syncNotice, type SyncDecision, type SyncState } from "@/src/goals/lifePlanSync"
 import { fetchDayRecord, saveDayCatchingUp, sendDayOnLeave } from "@/src/goals/lifePlanDayClient"
-import { ACCOUNT_CHANGED_MESSAGE, nameEveryRequest, onAccountChanged } from "@/src/goals/planAccount"
+import { ACCOUNT_CHANGED_MESSAGE, guardSandboxRequests, nameEveryRequest, onAccountChanged } from "@/src/goals/planAccount"
 import { NO_TRAINING_TICKS, stepTick, stepTickedByHand, trainingTicks } from "@/src/goals/dayTicks"
 import { useLoad } from "@/src/shared/useLoad"
 import type { SessionType } from "@/src/health/types"
@@ -139,9 +139,19 @@ export function NorthStarFlow({
   timezone = "UTC",
   initialInUse = false,
   initialPeriod = null,
+  sandbox = false,
+  banner = null,
 }: {
   /** Whose plan this is. The browser's copy is kept under it, so it is never another account's. */
   userId: string
+  /**
+   * This is the copy space page (`/plan/sandbox`): `userId` is the HIDDEN
+   * account's id, and every request is aimed at it or never sent
+   * (`guardSandboxRequests`). The weekly reminder settings are not shown.
+   */
+  sandbox?: boolean
+  /** Drawn at the very top of the page, above the back link (the copy space's banner). */
+  banner?: ReactNode
   backHref?: string
   backLabel?: string
   /**
@@ -274,7 +284,7 @@ export function NorthStarFlow({
   useEffect(() => onAccountChanged(userId, () => setOtherAccount(true)), [userId])
   // Everything else this page draws (the old goals list on Track, its forms) names the account too.
   // A layout effect, so it is in place before any child's first request.
-  useLayoutEffect(() => nameEveryRequest(userId), [userId])
+  useLayoutEffect(() => (sandbox ? guardSandboxRequests(userId) : nameEveryRequest(userId)), [userId, sandbox])
   /**
    * The decision `lifePlanSync` actually made, kept so `canSave` is asked about
    * it rather than about one invented at the call site.
@@ -290,7 +300,12 @@ export function NorthStarFlow({
   // The weekly reminder's settings, once the account has answered; on any failure it stays null and the block is not shown.
   const decided = decision !== null
   useEffect(() => {
+    // The copy space has no reminder: nothing is read or switched on for it.
     if (!decided) return
+    if (sandbox) {
+      const settled = window.setTimeout(() => setReminderSettled(true), 0)
+      return () => window.clearTimeout(settled)
+    }
     let cancelled = false
     // Settled on any answer, a failure, or after REMINDER_WAIT_MS, so a slow or failed fetch never holds Review back.
     const settle = () => { if (!cancelled) setReminderSettled(true) }
@@ -300,7 +315,7 @@ export function NorthStarFlow({
       .catch(() => { /* no reminder block: the review still works */ })
       .finally(() => { window.clearTimeout(wait); settle() })
     return () => { cancelled = true; window.clearTimeout(wait) }
-  }, [decided])
+  }, [decided, sandbox])
   /**
    * The rows last accepted by the server, as text.
    *
@@ -1693,6 +1708,7 @@ export function NorthStarFlow({
       {siteBar && <SiteHeader />}
       {siteBar && stepNav}
       <div className={`max-w-5xl mx-auto px-6 py-10 ${siteBar ? "pb-tab-bar sm:pb-28" : "pb-28"}`}>
+        {banner}
         <div className="flex items-center justify-between gap-3 mb-6">
           {/* The props stay, as the fallback: a return address on the link
               wins, so arriving here from the tracking page goes back there. */}
@@ -2059,7 +2075,7 @@ export function NorthStarFlow({
               key={reviewPeriod ? reviewIdFor(reviewPeriod) : "now"}
               initialPeriod={reviewPeriod ?? (dueWeek && "period" in dueWeek.go ? dueWeek.go.period ?? null : null)}
               reminder={reminder}
-              onReminderChange={setReminder}
+              onReminderChange={sandbox ? undefined : setReminder}
               plan={plan}
               today={today}
               ticks={ticks}

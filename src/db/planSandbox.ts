@@ -155,6 +155,15 @@ async function sandboxClient(sandboxId: string): Promise<SupabaseClient> {
   return client
 }
 
+/** True when the signed-in account has a copy space (a row, even before its hidden account exists). Never throws. */
+export async function hasPlanSandbox(session: Session): Promise<boolean> {
+  try {
+    return (await ownRow(session)) !== null
+  } catch {
+    return false
+  }
+}
+
 /**
  * The account a plan request acts on, and a client acting as it.
  *

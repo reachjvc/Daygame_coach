@@ -8,17 +8,21 @@
  * is the failure this exists to avoid.
  *
  * The day tables are not reachable from here; they get their own route.
+ *
+ * `?target=sandbox` acts on the signed-in account's hidden copy space instead
+ * of the account itself (`src/db/planSandbox.ts`); no other value is accepted
+ * and a user id never is.
  */
 
 import { NextResponse } from "next/server"
-import { requireAuth } from "@/src/db/auth"
+import { requirePlanTarget } from "@/src/db/planSandbox"
 import { applyLifePlanChanges, ensureLifePlan, readLifePlan, StalePlanError } from "@/src/db/lifePlanRepo"
 export async function GET(req: Request) {
-  const auth = await requireAuth(req)
+  const auth = await requirePlanTarget(req)
   if (!auth.success) return auth.response
 
   try {
-    const stored = await readLifePlan(auth.userId)
+    const stored = await readLifePlan(auth.userId, auth.supabase)
     // Null is a real answer: a new account has no plan and the flow starts
     // empty. It is NOT an empty plan, because the two must stay tellable apart.
     return NextResponse.json(stored ? { plan: stored.rows, revision: stored.revision } : { plan: null })
@@ -30,7 +34,7 @@ export async function GET(req: Request) {
 
 /** Save only what changed. The database refuses any table outside the plan. */
 export async function PATCH(req: Request) {
-  const auth = await requireAuth(req)
+  const auth = await requirePlanTarget(req)
   if (!auth.success) return auth.response
 
   const body = await req.json().catch(() => null)
@@ -43,7 +47,7 @@ export async function PATCH(req: Request) {
   }
 
   try {
-    const revision = await applyLifePlanChanges(changes, body.revision, auth.userId)
+    const revision = await applyLifePlanChanges(changes, body.revision, auth.userId, auth.supabase)
     return NextResponse.json({ revision })
   } catch (error) {
     if (error instanceof StalePlanError) {
@@ -56,11 +60,11 @@ export async function PATCH(req: Request) {
 
 /** Start a plan for an account that has none, so the flow has an id to save against. */
 export async function POST(req: Request) {
-  const auth = await requireAuth(req)
+  const auth = await requirePlanTarget(req)
   if (!auth.success) return auth.response
 
   try {
-    return NextResponse.json(await ensureLifePlan(auth.userId))
+    return NextResponse.json(await ensureLifePlan(auth.userId, auth.supabase))
   } catch (error) {
     console.error("[life-plan] start failed", error)
     return NextResponse.json({ error: "Could not start your plan" }, { status: 500 })

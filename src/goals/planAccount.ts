@@ -83,3 +83,75 @@ export function nameEveryRequest(account: string): () => void {
     if (globalThis.fetch === named) globalThis.fetch = original
   }
 }
+
+/**
+ * THE COPY SPACE PAGE (`/plan/sandbox`, `src/db/planSandbox.ts`).
+ *
+ * That page runs the same flow on a hidden account that a signed-in account
+ * owns, so it names the HIDDEN account's id (never the signed-in one's) and
+ * every request it makes must either act on the hidden account or not happen:
+ *
+ *   - the plan and day routes get `?target=sandbox`, whatever the caller wrote,
+ *     so no call from this page can reach the signed-in account's own plan;
+ *   - the copy space's own routes pass;
+ *   - sign-out and crash reports pass untouched (they carry no plan data);
+ *   - every OTHER request that is not a read (reminders, push devices,
+ *     training, the role-model council, goals) never leaves the browser: it
+ *     is answered 403 here. Reads go out naming the hidden account, which every
+ *     route behind `requireAuth` refuses as "another account" (409), so what
+ *     they would have shown is never the owner's.
+ *
+ * A guard in the browser is not the security boundary, which is the database:
+ * the hidden account's rows are reachable only through the server's session for
+ * it. This is what makes the page's own behaviour safe to look at.
+ */
+const sandboxAccounts = new Set<string>()
+
+/** True when `account` is a copy space page's account (so plan calls name the target). */
+export function isSandboxAccount(account: string): boolean {
+  return sandboxAccounts.has(account)
+}
+
+/** The plan routes the copy space page may call, as itself. */
+const SANDBOX_PLAN_PATHS = /^\/api\/life-plan(\/day)?$/
+const SANDBOX_OWN_PATHS = /^\/api\/plan-sandbox\/(copy|reset)$/
+const PASS_UNTOUCHED = /^\/api\/(auth\/sign-out|errors)$/
+const READS = new Set(["GET", "HEAD"])
+
+/** A plan or day route's address, aimed at the copy space. */
+export function planApiUrl(path: string, account: string): string {
+  return sandboxAccounts.has(account) ? `${path}?target=sandbox` : path
+}
+
+/** Put the guard in place for `account` (a hidden account's id). Returns the undo. */
+export function guardSandboxRequests(account: string): () => void {
+  sandboxAccounts.add(account)
+  const original = globalThis.fetch
+  let active = true
+  const guarded: typeof fetch = async (input, init) => {
+    if (!active || !ownApi(input)) return original(input, init)
+    const raw = typeof input === "string" ? input : input instanceof URL ? input.href : input.url
+    const url = new URL(raw, window.location.href)
+    if (PASS_UNTOUCHED.test(url.pathname)) return original(input, init)
+
+    const method = (init?.method ?? (input instanceof Request ? input.method : "GET")).toUpperCase()
+    const aimed = SANDBOX_PLAN_PATHS.test(url.pathname) || SANDBOX_OWN_PATHS.test(url.pathname)
+    if (!aimed && !READS.has(method)) {
+      return new Response(JSON.stringify({ error: "Not available in the copy space" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      })
+    }
+    if (SANDBOX_PLAN_PATHS.test(url.pathname)) url.searchParams.set("target", "sandbox")
+
+    const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined))
+    headers.set(PAGE_ACCOUNT_HEADER, account)
+    const target = input instanceof Request ? new Request(url.href, input) : url.href
+    return original(target, { ...init, headers })
+  }
+  globalThis.fetch = guarded
+  return () => {
+    active = false
+    if (globalThis.fetch === guarded) globalThis.fetch = original
+  }
+}
