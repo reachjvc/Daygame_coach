@@ -1,6 +1,7 @@
 import { test, expect } from "./fixtures/test"
 import { cardOf, shownPeople } from "@/src/role-models/catalog"
 import { ROLE_MODELS_HREF } from "@/src/role-models/routes"
+import { whenHydrated } from "./helpers/hydration"
 
 /**
  * THE ROLE MODEL LIBRARY (Plans/role-models.md, Phase 5). @phone
@@ -19,6 +20,9 @@ test.describe("role model library @phone", () => {
     await page.goto(ROLE_MODELS_HREF)
     await expect(page.getByTestId("role-models-page")).toBeVisible()
     await expect(page.locator('[data-testid^="role-model-card-"]')).toHaveCount(shown.length)
+
+    // Typing before React owns the box filters nothing (the typed word is lost on hydration).
+    await whenHydrated(page.getByTestId("role-model-search"))
 
     // Search by a value word: only the people holding it stay.
     const word = shown[0].search.split(" ").find((w) => shown.some((c) => !c.search.includes(w))) ?? shown[0].values[0].toLowerCase()
