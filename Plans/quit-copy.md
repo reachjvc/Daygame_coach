@@ -1,6 +1,6 @@
 # Quit tools, copied from the best: one phase per tool
 
-Written 2026-11-18 (Opus, planning session). Status: **running. All 13 tools' copies done (Phases 1–13 Step C). Improved (`best`) done for Phases 1–10; Phases 11–13 `best` building. Phase 14 review page next. Pushes batched hourly.**
+Written 2026-11-18 (Opus, planning session). Status: **running. All copies done. `best` done for Phases 1–11 and 13; Phase 12 `best` in fact-check. Phase 14 review page in progress. Pushes batched hourly.**
 
 ## Why this plan exists
 
