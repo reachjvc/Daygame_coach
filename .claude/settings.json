@@ -55,5 +55,18 @@
       "Bash(git push -f:*)",
       "Bash(supabase db reset:*)"
     ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/ci/main-status.mjs",
+            "timeout": 8
+          }
+        ]
+      }
+    ]
   }
 }
