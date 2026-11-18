@@ -95,11 +95,7 @@ export const aText = {
   teaserCta: "Build my plan",
   matched: "Matched to your triggers",
   matchedNone: "No triggers picked.",
-  weekRows: [
-    { title: "Week 1", line: "Settle in and get through the first days." },
-    { title: "Weeks 2 to 4", line: "Build momentum and learn your patterns." },
-    { title: "Months 2 and 3", line: "Make the change stick." },
-  ],
+  weekRows: [{ title: "Week 1" }, { title: "Weeks 2 to 4" }, { title: "Months 2 and 3" }],
   nextApproach: "Next: choose your approach",
   paywallTitle: "Your plan",
   paywallBack: "Back to results",

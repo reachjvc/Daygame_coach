@@ -137,7 +137,7 @@ export function BeliefsA() {
           {aText.weekRows.map((w) => (
             <div key={w.title} data-testid="a-week" className="flex flex-col gap-0.5">
               <span className="text-sm font-semibold">{w.title}</span>
-              <span className="text-sm text-muted-foreground">{w.line}</span>
+              <Placeholder />
             </div>
           ))}
           <p data-testid="a-next-approach" className="text-center text-xs text-muted-foreground">{aText.nextApproach}</p>

@@ -106,6 +106,7 @@ test("copy A: triggers to plan teaser, score counts up, radar draws, the none re
   expect(await page.getByTestId("not-sourced").count()).toBe(3)
   await expect(page.getByTestId("a-matched")).toContainText("Stress or worry")
   await expect(page.getByTestId("a-week")).toHaveCount(3)
+  await expect(page.getByTestId("a-week").first().getByTestId("placeholder")).toHaveText("Not seen in public material")
   await expect(page.getByTestId("a-next-approach")).toBeVisible()
   await expect(page.getByTestId("inferred-tag")).toHaveCount(0)
   await shot(page, "a", "plan-teaser")
