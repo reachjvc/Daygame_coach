@@ -75,6 +75,7 @@ import type { SessionType } from "@/src/health/types"
 import type { DayPatch } from "@/src/db/lifePlanDayTypes"
 import { emptyDayRecord, keepEditsMadeWhileLoading, patchesBetween, recordIsEmpty, recordOf, recordToPatches, type DayRecord } from "@/src/goals/lifePlanDayService"
 import { reconcileProgramReference } from "@/src/goals/programReferenceService"
+import { PlanBasePathContext } from "./planBasePath"
 import { StarTab } from "./StarTab"
 import { NowTab } from "./NowTab"
 import { FocusTab } from "./FocusTab"
@@ -140,8 +141,11 @@ export function NorthStarFlow({
   initialInUse = false,
   initialPeriod = null,
   sandbox = false,
+  basePath = ROUTES.plan,
   banner = null,
 }: {
+  /** The address this flow lives at: `/plan`, or `/plan/sandbox` for the copy space. Every address the flow writes starts from it. */
+  basePath?: string
   /** Whose plan this is. The browser's copy is kept under it, so it is never another account's. */
   userId: string
   /**
@@ -213,11 +217,11 @@ export function NorthStarFlow({
     setRailOpen(false)
     setReviewPeriod(null)
     try {
-      window.history.replaceState(null, "", `${ROUTES.plan}?step=${next}`)
+      window.history.replaceState(null, "", `${basePath}?step=${next}`)
     } catch {
       /* The step still changes; only the address is left behind. */
     }
-  }, [])
+  }, [basePath])
   // The fold follows the step: arriving on a setup step opens it, arriving on a use step closes it.
   useEffect(() => { setBuildOpen(BUILD_STEPS.includes(tab)) }, [tab])
   const railToggleRef = useRef<HTMLButtonElement>(null)
@@ -1704,6 +1708,7 @@ export function NorthStarFlow({
   )
 
   return (
+    <PlanBasePathContext.Provider value={basePath}>
     <div className={`min-h-screen bg-zinc-950 text-white ${siteBar ? sidebarOffset(false) : ""}`}>
       {siteBar && <SiteHeader />}
       {siteBar && stepNav}
@@ -2286,6 +2291,7 @@ export function NorthStarFlow({
       {!siteBar && stepNav}
       {siteBar && <MobileTabBar force />}
     </div>
+    </PlanBasePathContext.Provider>
   )
 }
 

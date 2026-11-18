@@ -39,6 +39,7 @@ import { libraryStepsInStack, presetCost, routineCoverage, routineIsUntouched, r
 import { Peek } from "./Peek"
 import { ROUTES } from "@/src/shared/routes"
 import { withReturn } from "@/src/shared/returnTo"
+import { usePlanBasePath } from "./planBasePath"
 
 const WEEKDAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -623,9 +624,10 @@ export function RoutineCard({
  * codebase keeps relearning.
  */
 function TrainingWeek({ linked }: { linked: LinkedProgram }) {
+  const base = usePlanBasePath()
   const change = (
     <Link
-      href={withReturn(ROUTES.training, `${ROUTES.plan}?step=systems`)}
+      href={withReturn(ROUTES.training, `${base}?step=systems`)}
       className="inline-flex min-h-11 items-center text-[12px] text-zinc-300 underline underline-offset-4 hover:text-white"
     >
       Change on the Training page ›

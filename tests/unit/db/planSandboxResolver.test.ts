@@ -31,6 +31,7 @@ let claimResult: { data: unknown[]; error: null } = { data: [{ sandbox_user_id: 
 let winnerRow: { sandbox_user_id: string | null } | null = { sandbox_user_id: HIDDEN }
 let verifyUserId = HIDDEN
 let lookupFails = false
+let realUser: { email: string; app_metadata: Record<string, unknown> } | null = null
 let lookupRows: unknown[] = [{ owner_id: OWNER }]
 
 const admin = {
@@ -44,7 +45,7 @@ const admin = {
         calls.deleted.push(id)
         return { error: null }
       }),
-      getUserById: vi.fn(async () => ({ data: { user: { email: "plan-sandbox-x@sandbox.invalid" } }, error: null })),
+      getUserById: vi.fn(async () => ({ data: { user: realUser ?? { email: "plan-sandbox-x@sandbox.invalid", app_metadata: { plan_sandbox: true } } }, error: null })),
       generateLink: vi.fn(async (args: { email: string }) => {
         calls.links.push(args.email)
         return { data: { properties: { hashed_token: "hash" } }, error: null }
@@ -119,6 +120,7 @@ beforeEach(() => {
   winnerRow = { sandbox_user_id: HIDDEN }
   verifyUserId = HIDDEN
   lookupFails = false
+  realUser = null
   lookupRows = [{ owner_id: OWNER }]
   vi.clearAllMocks()
   process.env.NEXT_PUBLIC_SUPABASE_URL = "http://stack"
@@ -157,6 +159,20 @@ describe("resolving a plan target", () => {
     verifyUserId = OTHER
     const s = sessionWithRow({ sandbox_user_id: "00000000-0000-4000-8000-0000000000d4" })
     await expect(resolvePlanTarget(s, "sandbox")).rejects.toThrow(/wrong account|sign in to the copy space/)
+  })
+
+  it("never mints for an account that is not plainly a hidden one, whatever the row says", async () => {
+    const REAL = "00000000-0000-4000-8000-0000000000e5"
+    for (const user of [
+      { email: "jo@example.com", app_metadata: {} },
+      { email: "jo@example.com", app_metadata: { plan_sandbox: true } },
+      { email: "plan-sandbox-x@sandbox.invalid", app_metadata: {} },
+      { email: "plan-sandbox-x@sandbox.invalid", app_metadata: { plan_sandbox: "true" } },
+    ]) {
+      realUser = user
+      await expect(resolvePlanTarget(sessionWithRow({ sandbox_user_id: REAL }), "sandbox")).rejects.toThrow(/not a copy space account/)
+    }
+    expect(admin.auth.admin.generateLink).not.toHaveBeenCalled()
   })
 
   it("makes the hidden account on first use: undeliverable address, no password, claimed only while still empty", async () => {
@@ -261,11 +277,14 @@ describe("a plan route's sign-in and target", () => {
 })
 
 describe("senders", () => {
-  it("know a hidden account, and a failed lookup counts as one", async () => {
+  it("know a hidden account; a failed lookup is logged and thrown, never taken for either answer", async () => {
     expect(await isSandboxUser(HIDDEN)).toBe(true)
     lookupRows = []
     expect(await isSandboxUser(OWNER)).toBe(false)
     lookupFails = true
-    expect(await isSandboxUser(OWNER)).toBe(true)
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {})
+    await expect(isSandboxUser(OWNER)).rejects.toThrow(/look up the copy space/)
+    expect(logged).toHaveBeenCalled()
+    logged.mockRestore()
   })
 })

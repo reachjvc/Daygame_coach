@@ -21,7 +21,13 @@ const repo = vi.hoisted(() => ({
 }))
 vi.mock("@/src/db/notificationsRepo", () => repo)
 vi.mock("web-push", () => ({ default: { sendNotification: vi.fn(), setVapidDetails: vi.fn() } }))
-vi.mock("@/src/db/planSandbox", () => ({ isSandboxUser: async (id: string) => id === HIDDEN }))
+const lookup = vi.hoisted(() => ({ fails: false }))
+vi.mock("@/src/db/planSandbox", () => ({
+  isSandboxUser: async (id: string) => {
+    if (lookup.fails) throw new Error("lookup down")
+    return id === HIDDEN
+  },
+}))
 
 const reminders = vi.hoisted(() => ({
   remindersDueAsServer: vi.fn(),
@@ -36,7 +42,10 @@ import { sendToPerson } from "@/src/notifications/pushService"
 import { runPlanReviewClock } from "@/src/goals/reviewReminderService"
 import { runCouncilReminderClock } from "@/src/role-models/councilReminderService"
 
-beforeEach(() => vi.clearAllMocks())
+beforeEach(() => {
+  vi.clearAllMocks()
+  lookup.fails = false
+})
 
 describe("sendToPerson", () => {
   it.each(["test", "plan-review", "council-daily", "audit-ping", "timetrack-running", "timetrack-alert"] as const)(
@@ -71,5 +80,18 @@ describe("the clocks", () => {
     expect(out).toEqual({ sent: 0, skipped: 1, failed: 0 })
     expect(repo.openSend).not.toHaveBeenCalled()
     expect(council.readCouncilAsServer).not.toHaveBeenCalled()
+  })
+
+  it("a failed lookup counts one item as failed and does not stop the clock, or send", async () => {
+    lookup.fails = true
+    reminders.remindersDueAsServer.mockResolvedValue([
+      { user_id: REAL, local_day: "2026-11-15", review_day: 7 },
+      { user_id: HIDDEN, local_day: "2026-11-15", review_day: 7 },
+    ])
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {})
+    const out = await runPlanReviewClock(new Date("2026-11-15T18:05:00Z"))
+    logged.mockRestore()
+    expect(out).toEqual({ sent: 0, skipped: 0, failed: 2 })
+    expect(repo.openSend).not.toHaveBeenCalled()
   })
 })

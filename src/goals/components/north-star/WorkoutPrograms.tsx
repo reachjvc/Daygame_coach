@@ -47,10 +47,10 @@ import {
 import { DONE } from "@/src/programs/forLifeMastery"
 import { withReturn } from "@/src/shared/returnTo"
 import { ROUTES } from "@/src/shared/routes"
+import { usePlanBasePath } from "./planBasePath"
 import type { NsRoutineProgram } from "@/src/goals/types"
 
 /** Where "back" goes from anything this card links to. */
-const HERE = `${ROUTES.plan}?step=templates`
 
 const PROGRAMS = `${ROUTES.training}?view=programs`
 const BUILD = `${ROUTES.training}?view=build`
@@ -81,6 +81,7 @@ export function TrainingProgramCard({
   onRetry,
   now,
 }: TrainingProgramCardProps) {
+  const base = usePlanBasePath()
   const heading = (
     <p className="text-xs uppercase tracking-wide text-muted-foreground">Training program</p>
   )
@@ -117,6 +118,8 @@ export function TrainingProgramCard({
     }
   }
 
+  // Back from the Training page lands on the page this card is on: /plan, or the copy space.
+  const HERE = `${base}?step=templates`
   const change = (id: string) => withReturn(`${PROGRAMS}&program=${id}`, HERE)
 
   /**

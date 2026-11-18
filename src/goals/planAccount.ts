@@ -97,7 +97,7 @@ export function nameEveryRequest(account: string): () => void {
  *   - sign-out and crash reports pass untouched (they carry no plan data);
  *   - every OTHER request that is not a read (reminders, push devices,
  *     training, the role-model council, goals) never leaves the browser: it
- *     is answered 403 here. Reads go out naming the hidden account, which every
+ *     fails here like a dropped connection (a TypeError, as fetch itself would), never as a refusal a sender might file as final. Reads go out naming the hidden account, which every
  *     route behind `requireAuth` refuses as "another account" (409), so what
  *     they would have shown is never the owner's.
  *
@@ -137,10 +137,9 @@ export function guardSandboxRequests(account: string): () => void {
     const method = (init?.method ?? (input instanceof Request ? input.method : "GET")).toUpperCase()
     const aimed = SANDBOX_PLAN_PATHS.test(url.pathname) || SANDBOX_OWN_PATHS.test(url.pathname)
     if (!aimed && !READS.has(method)) {
-      return new Response(JSON.stringify({ error: "Not available in the copy space" }), {
-        status: 403,
-        headers: { "Content-Type": "application/json" },
-      })
+      // Looks like the network being down, not like the server saying no: a sender that
+      // retries after a failure (the audit queue, notifications) keeps what it could not send.
+      throw new TypeError("Blocked in the copy space")
     }
     if (SANDBOX_PLAN_PATHS.test(url.pathname)) url.searchParams.set("target", "sandbox")
 

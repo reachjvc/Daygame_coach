@@ -7,7 +7,7 @@
  */
 
 import { NextResponse } from "next/server"
-import { requirePlanTarget } from "@/src/db/planSandbox"
+import { requirePlanTarget, SandboxBusyError, withSandboxBusy } from "@/src/db/planSandbox"
 import { resetSandbox } from "@/src/db/planSandboxCopy"
 
 export async function POST(req: Request) {
@@ -18,9 +18,10 @@ export async function POST(req: Request) {
   const auth = await requirePlanTarget(req, "sandbox")
   if (!auth.success) return auth.response
   try {
-    await resetSandbox(auth)
+    await withSandboxBusy(auth.ownerId, () => resetSandbox(auth))
     return NextResponse.json({ reset: true })
   } catch (error) {
+    if (error instanceof SandboxBusyError) return NextResponse.json({ error: "The copy space is busy. Try again in a moment." }, { status: 409 })
     console.error("[plan-sandbox] reset failed", error instanceof Error ? error.message : "unknown")
     return NextResponse.json({ error: "Could not empty the copy space" }, { status: 500 })
   }

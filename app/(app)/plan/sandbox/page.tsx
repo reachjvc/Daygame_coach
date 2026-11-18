@@ -55,6 +55,7 @@ export default async function PlanSandboxPage({
       key={sandbox.userId}
       userId={sandbox.userId}
       sandbox
+      basePath={ROUTES.planSandbox}
       banner={<PlanSandboxBanner sandboxId={sandbox.userId} />}
       backHref={ROUTES.settings}
       backLabel="Settings"

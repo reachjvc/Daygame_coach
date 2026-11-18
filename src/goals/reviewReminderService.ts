@@ -40,12 +40,12 @@ export async function runPlanReviewClock(now = new Date()): Promise<{ sent: numb
   const result = { sent: 0, skipped: 0, failed: 0 }
   const rows = await remindersDueAsServer(200, now)
   for (const row of rows) {
-    // A copy-space account gets no reminder and no record of one (D7).
-    if (await isSandboxUser(row.user_id)) {
-      result.skipped++
-      continue
-    }
     try {
+      // A copy-space account gets no reminder and no record of one (D7).
+      if (await isSandboxUser(row.user_id)) {
+        result.skipped++
+        continue
+      }
       const p = dueWeekPeriod(row.local_day, row.review_day)
       const entryId = reminderEntryId(row.user_id, row.local_day)
       if (await weekReviewWrittenAsServer(row.user_id, p.start)) {

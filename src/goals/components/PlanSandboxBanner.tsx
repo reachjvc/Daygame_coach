@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { LIFE_PLAN_IMPORTED_KEY } from "@/src/goals/lifePlanSync"
+import { ROUTES } from "@/src/shared/routes"
 import { planCacheKey } from "@/src/goals/data/northStar"
 
 type Action = "copy" | "reset"
@@ -29,7 +30,7 @@ const ASK: Record<Action, { button: string; sure: string; yes: string; route: st
  * goes through the page's own guard (`guardSandboxRequests`), which names the
  * hidden account; the server acts only on the signed-in account's own copy
  * space. After it, this browser's saved copy of the hidden account's plan is
- * dropped, so the page reloads from what the database now holds and not from a
+ * dropped, so the page opens again from what the database now holds and not from a
  * leftover (a leftover would be imported straight back into an emptied space).
  */
 export function PlanSandboxBanner({ sandboxId }: { sandboxId: string }) {
@@ -42,7 +43,10 @@ export function PlanSandboxBanner({ sandboxId }: { sandboxId: string }) {
     setError("")
     try {
       const res = await fetch(ASK[action].route, { method: "POST" })
-      if (!res.ok) throw new Error(String(res.status))
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null
+        throw new Error(body?.error ?? "That did not work. Nothing was changed in your real plan. Try again.")
+      }
       try {
         window.localStorage.removeItem(planCacheKey(sandboxId))
         window.localStorage.removeItem(`plan-due-hidden:${sandboxId}`)
@@ -50,9 +54,11 @@ export function PlanSandboxBanner({ sandboxId }: { sandboxId: string }) {
       } catch {
         /* storage refused: the reload below still reads the database */
       }
-      window.location.reload()
-    } catch {
-      setError("That did not work. Nothing was changed in your real plan. Try again.")
+      // Always the copy space's own address, whatever the bar says now (never a reload of whatever is there).
+      const step = new URLSearchParams(window.location.search).get("step")
+      window.location.assign(step ? `${ROUTES.planSandbox}?step=${encodeURIComponent(step)}` : ROUTES.planSandbox)
+    } catch (e) {
+      setError(e instanceof Error && e.message.length > 3 ? e.message : "That did not work. Nothing was changed in your real plan. Try again.")
       setBusy(false)
       setAsking(null)
     }

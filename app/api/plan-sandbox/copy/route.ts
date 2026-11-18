@@ -9,8 +9,8 @@
  */
 
 import { NextResponse } from "next/server"
-import { copyIntoSandbox } from "@/src/db/planSandboxCopy"
-import { requirePlanTarget } from "@/src/db/planSandbox"
+import { copyIntoSandbox, resetSandbox } from "@/src/db/planSandboxCopy"
+import { requirePlanTarget, SandboxBusyError, withSandboxBusy } from "@/src/db/planSandbox"
 import { createServerSupabaseClient } from "@/src/db/supabase"
 
 export async function POST(req: Request) {
@@ -21,11 +21,27 @@ export async function POST(req: Request) {
   const auth = await requirePlanTarget(req, "sandbox")
   if (!auth.success) return auth.response
   try {
-    const owner = { userId: auth.ownerId, supabase: await createServerSupabaseClient() }
-    const copied = await copyIntoSandbox(owner, auth)
+    // One copy or reset at a time per owner: two tabs cannot interleave.
+    const copied = await withSandboxBusy(auth.ownerId, async () => {
+      const owner = { userId: auth.ownerId, supabase: await createServerSupabaseClient() }
+      try {
+        return await copyIntoSandbox(owner, auth)
+      } catch (error) {
+        // Half a copy is worse than none: leave the copy space empty, and say so.
+        console.error("[plan-sandbox] copy failed", error instanceof Error ? error.message : "unknown")
+        await resetSandbox(auth).catch(() => {})
+        throw new CopyFailed()
+      }
+    })
     return NextResponse.json({ copied })
   } catch (error) {
+    if (error instanceof SandboxBusyError) return NextResponse.json({ error: "The copy space is busy. Try again in a moment." }, { status: 409 })
+    if (error instanceof CopyFailed) {
+      return NextResponse.json({ error: "The copy did not finish, so the copy space was emptied. Your real plan is not touched. Try again." }, { status: 500 })
+    }
     console.error("[plan-sandbox] copy failed", error instanceof Error ? error.message : "unknown")
     return NextResponse.json({ error: "Could not copy your plan in" }, { status: 500 })
   }
 }
+
+class CopyFailed extends Error {}

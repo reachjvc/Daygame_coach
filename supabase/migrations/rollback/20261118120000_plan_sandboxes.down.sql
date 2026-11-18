@@ -4,3 +4,4 @@
 -- plan and day rows):
 --   select sandbox_user_id from public.plan_sandboxes where sandbox_user_id is not null;
 drop table if exists public.plan_sandboxes;
+drop function if exists public.plan_sandboxes_keep_apart();

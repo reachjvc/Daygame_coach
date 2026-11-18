@@ -23,7 +23,7 @@ import { applyLifePlanChanges, ensureLifePlan, readLifePlan } from "@/src/db/lif
 import { readDayRows, readNodeIds, saveDay } from "@/src/db/lifePlanDayRepo"
 import { readReminder, writeReminder } from "@/src/db/lifePlanRemindersRepo"
 import { registerDevice } from "@/src/db/notificationsRepo"
-import { isSandboxUser, resolvePlanTarget, SandboxNotFoundError, type ResolvedPlanTarget } from "@/src/db/planSandbox"
+import { isSandboxUser, resolvePlanTarget, SandboxBusyError, SandboxNotFoundError, withSandboxBusy, type ResolvedPlanTarget } from "@/src/db/planSandbox"
 import { copyIntoSandbox, resetSandbox } from "@/src/db/planSandboxCopy"
 import { MAPPED_COLUMNS, NULLED_COLUMNS, canonicalDays, canonicalPlan } from "@/src/goals/planSandboxCopy"
 import { PLAN_ROW_KEYS } from "@/src/db/lifePlanTypes"
@@ -168,19 +168,63 @@ describe("the hidden account", () => {
     await expect(resolvePlanTarget({ userId: sandbox.userId, supabase: sandbox.supabase }, "sandbox")).rejects.toBeInstanceOf(SandboxNotFoundError)
   })
 
-  it("the schema holds no uuid column the copy does not know about", async () => {
+  it("the schema holds no uuid, uuid[] or json column the copy does not know about", async () => {
     const cols = await asOwner((q) =>
       q(
-        `select table_name, column_name from information_schema.columns
-          where table_schema = 'public' and table_name like 'life_plan%' and udt_name = 'uuid'`,
+        `select table_name, column_name, udt_name from information_schema.columns
+          where table_schema = 'public' and table_name like 'life_plan%' and udt_name in ('uuid', '_uuid', 'json', 'jsonb')`,
       ),
     )
     const known = new Set<string>([...MAPPED_COLUMNS, ...NULLED_COLUMNS, "user_id"])
-    const unknown = cols.filter((c) => !known.has(c.column_name as string)).map((c) => `${c.table_name}.${c.column_name}`)
-    expect(unknown, "a uuid column the id remap does not rewrite: add it to MAPPED_COLUMNS or NULLED_COLUMNS").toEqual([])
+    const ids = cols.filter((c) => c.udt_name === "uuid" || c.udt_name === "_uuid")
+    const unknownIds = ids.filter((c) => !known.has(c.column_name as string)).map((c) => `${c.table_name}.${c.column_name}`)
+    expect(unknownIds, "a uuid column the id remap does not rewrite: add it to MAPPED_COLUMNS or NULLED_COLUMNS").toEqual([])
+    expect(ids.filter((c) => c.udt_name === "_uuid").map((c) => `${c.table_name}.${c.column_name}`), "a uuid[] column: the remap maps single values only").toEqual([])
+    // Json columns are copied verbatim, which is right only while they hold no ids. These two hold numbers (the ladder and the ramp).
+    const json = cols.filter((c) => c.udt_name === "json" || c.udt_name === "jsonb").map((c) => `${c.table_name}.${c.column_name}`).sort()
+    expect(json, "a json column nobody has checked for ids").toEqual(["life_plan_goals.ladder", "life_plan_goals.ramp_steps"])
     // And the list holds nothing the schema does not have, so it cannot rot unnoticed.
-    const present = new Set(cols.map((c) => c.column_name as string))
+    const present = new Set(ids.map((c) => c.column_name as string))
     for (const c of [...MAPPED_COLUMNS, ...NULLED_COLUMNS]) expect(present.has(c), `${c} is not a uuid column any more`).toBe(true)
+  })
+
+  it("the pointer cannot name an owner, an owner cannot be a hidden account, a deleted hidden account empties the pointer", async () => {
+    const { owner } = await arrangeOwner("sbx-apart")
+    const other = await newUser("sbx-apart-other")
+    await asOwner((q) => q("insert into public.plan_sandboxes (owner_id) values ($1)", [other.id]))
+    // Pointing a row at somebody who is an owner is refused.
+    await expect(asOwner((q) => q("update public.plan_sandboxes set sandbox_user_id = $1 where owner_id = $2", [other.id, owner.id]))).rejects.toThrow(/cannot be an owner/)
+    // Making a hidden account an owner is refused.
+    const sandbox = await sandboxOf(owner)
+    await expect(asOwner((q) => q("insert into public.plan_sandboxes (owner_id) values ($1)", [sandbox.userId]))).rejects.toThrow(/cannot be a copy space/)
+    // A row cannot name itself.
+    await expect(asOwner((q) => q("update public.plan_sandboxes set sandbox_user_id = owner_id where owner_id = $1", [owner.id]))).rejects.toThrow()
+    // Deleting the hidden account leaves the row, empty, and the next use makes a new one.
+    await admin().auth.admin.deleteUser(sandbox.userId)
+    const [row] = await asOwner((q) => q("select sandbox_user_id from public.plan_sandboxes where owner_id = $1", [owner.id]))
+    expect(row.sandbox_user_id).toBeNull()
+    const again = await sandboxOf(owner)
+    expect(again.userId).not.toBe(sandbox.userId)
+  })
+
+  it("never opens a session for an account that is not a hidden one, even if its row says so", async () => {
+    const owner = await newUser("sbx-pointed")
+    const victim = await newUser("sbx-victim")
+    await asOwner((q) => q("insert into public.plan_sandboxes (owner_id, sandbox_user_id) values ($1, $2)", [owner.id, victim.id]))
+    await expect(sandboxOf(owner)).rejects.toThrow(/not a copy space account/)
+  })
+
+  it("lets one copy or reset hold the copy space at a time", async () => {
+    const { owner } = await arrangeOwner("sbx-busy")
+    const sandbox = await sandboxOf(owner)
+    let release!: () => void
+    const held = withSandboxBusy(owner.id, () => new Promise<void>((resolve) => (release = resolve)))
+    await new Promise((r) => setTimeout(r, 300))
+    await expect(withSandboxBusy(owner.id, async () => "second")).rejects.toBeInstanceOf(SandboxBusyError)
+    release()
+    await held
+    expect(await withSandboxBusy(owner.id, async () => "third")).toBe("third")
+    expect(sandbox.userId).toBeTruthy()
   })
 })
 

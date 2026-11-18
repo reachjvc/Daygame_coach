@@ -155,6 +155,12 @@ async function mint(sandboxId: string): Promise<SupabaseClient> {
   const user = await admin.auth.admin.getUserById(sandboxId)
   const email = user.data.user?.email
   if (user.error || !email) throw new Error("The copy space account cannot be found")
+  // The row is only a pointer. Never mint a session for an account that is not
+  // plainly a hidden copy-space account, whatever the row says: a real person's
+  // id in `sandbox_user_id` must not turn into a session for them.
+  if (user.data.user?.app_metadata?.plan_sandbox !== true || !email.endsWith("@sandbox.invalid")) {
+    throw new Error("Refusing to open an account that is not a copy space account")
+  }
 
   let failure = "unknown"
   for (let attempt = 0; attempt < MINT_TRIES; attempt++) {
@@ -263,7 +269,11 @@ export async function requirePlanTarget(req: Request, forceTarget?: PlanTarget):
 /**
  * True when `userId` is a hidden copy-space account. For senders and crons,
  * which have no session: they skip it (Plans/plan-in-steps.md, D7).
- * A failed lookup says true, so a failure never sends a reminder to one.
+ *
+ * A failed lookup is logged and THROWN, never answered either way: "yes" would
+ * silently stop everyone's reminders while the database is unreachable, and
+ * "no" could remind a copy space. The clocks count a throw as a failed item and
+ * try again on their next tick.
  */
 export async function isSandboxUser(userId: string): Promise<boolean> {
   const { data, error } = await createAdminSupabaseClient()
@@ -271,6 +281,44 @@ export async function isSandboxUser(userId: string): Promise<boolean> {
     .select("owner_id")
     .eq("sandbox_user_id", userId)
     .limit(1)
-  if (error) return true
+  if (error) {
+    console.error("[plan-sandbox] could not tell whether an account is a copy space", error.message)
+    throw new Error(`Failed to look up the copy space: ${error.message}`)
+  }
   return (data ?? []).length > 0
+}
+
+/** Thrown when another copy or reset of the same copy space is still running. Answered 409. */
+export class SandboxBusyError extends Error {
+  constructor() {
+    super("The copy space is busy")
+    this.name = "SandboxBusyError"
+  }
+}
+
+/** A claim older than this is a crashed run's and may be taken over. */
+const BUSY_STALE_SECONDS = 120
+
+/**
+ * Run `work` while holding the owner's copy space, so two tabs (or two servers)
+ * cannot interleave a copy and a reset. The claim is a timestamp on the owner's
+ * own `plan_sandboxes` row, taken with one conditional update; it is released
+ * when `work` ends, however it ends.
+ */
+export async function withSandboxBusy<T>(ownerId: string, work: () => Promise<T>): Promise<T> {
+  const admin = createAdminSupabaseClient()
+  const cutoff = new Date(Date.now() - BUSY_STALE_SECONDS * 1000).toISOString()
+  const claimed = await admin
+    .from("plan_sandboxes")
+    .update({ busy_since: new Date().toISOString() })
+    .eq("owner_id", ownerId)
+    .or(`busy_since.is.null,busy_since.lt.${cutoff}`)
+    .select("owner_id")
+  if (claimed.error) throw new Error(`Failed to claim the copy space: ${claimed.error.message}`)
+  if ((claimed.data ?? []).length === 0) throw new SandboxBusyError()
+  try {
+    return await work()
+  } finally {
+    await admin.from("plan_sandboxes").update({ busy_since: null }).eq("owner_id", ownerId)
+  }
 }

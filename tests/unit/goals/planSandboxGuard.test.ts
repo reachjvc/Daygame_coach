@@ -47,7 +47,7 @@ describe("the copy space page's requests", () => {
     expect(sent[0].url.searchParams.getAll("target")).toEqual(["sandbox"])
   })
 
-  it("never sends a write to any other route: it is answered 403 in the browser", async () => {
+  it("never sends a write to any other route: it fails like a dropped connection, not a refusal", async () => {
     const writes: [string, string][] = [
       ["/api/life-plan/reminders", "PUT"],
       ["/api/notifications/devices", "POST"],
@@ -61,8 +61,7 @@ describe("the copy space page's requests", () => {
       ["/api/settings/time-preferences", "PUT"],
     ]
     for (const [path, method] of writes) {
-      const res = await fetch(path, { method, body: "{}" })
-      expect(res.status, `${method} ${path}`).toBe(403)
+      await expect(fetch(path, { method, body: "{}" }), `${method} ${path}`).rejects.toBeInstanceOf(TypeError)
     }
     expect(sent).toEqual([])
   })

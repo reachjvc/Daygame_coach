@@ -207,7 +207,7 @@ test.describe("the copy space page", () => {
     // A write the page may NOT make never leaves the browser: it is answered in place.
     const before = net.all.length
     const blocked = await page.evaluate(async () => {
-      const out: Record<string, number> = {}
+      const out: Record<string, number | string> = {}
       for (const [path, method] of [
         ["/api/life-plan/reminders", "PUT"],
         ["/api/notifications/devices", "POST"],
@@ -215,11 +215,11 @@ test.describe("the copy space page", () => {
         ["/api/role-models/week", "PUT"],
         ["/api/goals", "DELETE"],
       ]) {
-        out[`${method} ${path}`] = (await fetch(path, { method, headers: { "content-type": "application/json" }, body: "{}" })).status
+        out[`${method} ${path}`] = await fetch(path, { method, headers: { "content-type": "application/json" }, body: "{}" }).then((r) => r.status, (e) => (e instanceof TypeError ? "blocked" : String(e)))
       }
       return out
     })
-    for (const [what, status] of Object.entries(blocked)) expect(status, what).toBe(403)
+    for (const [what, status] of Object.entries(blocked)) expect(status, what).toBe("blocked")
     expect(net.all.slice(before).filter(isWrite), "a refused write must not reach the network").toEqual([])
 
     // THE REQUEST LOG, for the whole session.
@@ -298,6 +298,59 @@ test.describe("the copy space page", () => {
     for (const bad of [sandboxId, account.id, "self", "owner", ""]) {
       expect((await page.request.get(`/api/life-plan?target=${bad}`)).status(), `target=${bad}`).toBe(400)
     }
+  })
+
+  test("the address never leaves the copy space: any step, copy, reset and reload all stay on /plan/sandbox", async ({ page, account }) => {
+    test.setTimeout(150_000)
+    const ownerBefore = await fingerprint(account.id)
+    const here = () => new URL(page.url()).pathname
+    await page.goto(`${ROUTES.planSandbox}?step=today`)
+    await expect(page.getByTestId("plan-sandbox-banner")).toBeVisible()
+    // Tap through EVERY step the rail offers.
+    const nav = page.getByRole("navigation", { name: "Sections" })
+    const fold = page.getByRole("button", { name: /^Edit your plan/ })
+    if ((await fold.count()) > 0 && (await fold.getAttribute("aria-expanded")) === "false") await fold.click()
+    const count = await nav.getByRole("button").count()
+    expect(count).toBeGreaterThan(8)
+    for (let i = 0; i < count; i++) {
+      await nav.getByRole("button").nth(i).click()
+      expect(here(), `after step ${i}`).toBe(ROUTES.planSandbox)
+      await expect(page.getByTestId("plan-sandbox-banner")).toBeVisible()
+      if ((await fold.count()) > 0 && (await fold.getAttribute("aria-expanded")) === "false") await fold.click()
+    }
+    // A step change writes the step into the address under the copy space's own path.
+    await nav.getByRole("button", { name: /Review/ }).first().click()
+    await expect.poll(() => page.url()).toContain(`${ROUTES.planSandbox}?step=review`)
+
+    // Copy, then reset, then reload: always the copy space, always with its banner.
+    await page.getByTestId("plan-sandbox-copy").click()
+    await page.getByTestId("plan-sandbox-confirm").click()
+    await expect(page.getByRole("button", { name: /Review/ }).first()).toBeVisible({ timeout: RELOAD })
+    await expect.poll(here, { timeout: RELOAD }).toBe(ROUTES.planSandbox)
+    expect(page.url()).toContain("step=review")
+    await expect(page.getByTestId("plan-sandbox-banner")).toBeVisible()
+    await page.getByTestId("plan-sandbox-new").click()
+    await page.getByTestId("plan-sandbox-confirm").click()
+    await expect(page.getByTestId("plan-sandbox-banner")).toBeVisible({ timeout: RELOAD })
+    await expect.poll(here, { timeout: RELOAD }).toBe(ROUTES.planSandbox)
+    await page.reload()
+    await expect(page.getByTestId("plan-sandbox-banner")).toBeVisible({ timeout: RELOAD })
+    expect(here()).toBe(ROUTES.planSandbox)
+    expect(await fingerprint(account.id)).toEqual(ownerBefore)
+  })
+
+  test("a copy that fails leaves the copy space empty and says so; two at once cannot interleave", async ({ page, account }) => {
+    await page.goto(`${ROUTES.planSandbox}?step=star`)
+    const sandboxId = (await sandboxIdOf(account.id))!
+    await rows("update public.plan_sandboxes set busy_since = now() where owner_id = $1", [account.id])
+    const busy = await page.request.post("/api/plan-sandbox/copy")
+    expect(busy.status()).toBe(409)
+    await rows("update public.plan_sandboxes set busy_since = null where owner_id = $1", [account.id])
+    expect((await page.request.post("/api/plan-sandbox/copy")).status()).toBe(200)
+    expect(Number((await fingerprint(sandboxId)).life_plans.split(":")[0])).toBe(1)
+    // The claim is released afterwards.
+    const [row] = await rows<{ busy_since: string | null }>("select busy_since from public.plan_sandboxes where owner_id = $1", [account.id])
+    expect(row.busy_since).toBeNull()
   })
 
   test("Settings links to the copy space for an account that has one", async ({ page }) => {

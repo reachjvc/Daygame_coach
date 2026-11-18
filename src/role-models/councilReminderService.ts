@@ -74,12 +74,12 @@ export async function runCouncilReminderClock(now = new Date()): Promise<{ sent:
   const result = { sent: 0, skipped: 0, failed: 0 }
   const rows = await councilRemindersDueAsServer(200, now)
   for (const row of rows) {
-    // A copy-space account gets no reminder and no record of one (D7).
-    if (await isSandboxUser(row.user_id)) {
-      result.skipped++
-      continue
-    }
     try {
+      // A copy-space account gets no reminder and no record of one (D7).
+      if (await isSandboxUser(row.user_id)) {
+        result.skipped++
+        continue
+      }
       const entryId = councilReminderEntryId(row.user_id, row.local_day)
       const members = visibleCouncil(await readCouncilAsServer(row.user_id))
       const member = memberForDay(members, row.local_day)
