@@ -191,7 +191,7 @@ function EntryForm({ onClose, onSave }: { onClose: () => void; onSave: (e: Entry
       <section className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3">
         <div className="flex items-center gap-3">
           <h3 className="flex-1 text-sm font-semibold">{pbText.relapseTitle}</h3>
-          <button type="button" role="switch" aria-checked={relapse} aria-label={pbText.relapseTitle} data-testid="b-entry-relapse" onClick={() => setRelapse(!relapse)} className={`relative inline-flex h-11 w-16 shrink-0 items-center rounded-full ${relapse ? "bg-primary" : "bg-muted"}`}>
+          <button type="button" role="switch" aria-checked={relapse} aria-label={pbText.relapseTitle} data-testid="b-entry-relapse" onClick={() => setRelapse(!relapse)} className={`relative inline-flex h-11 w-16 shrink-0 items-center rounded-full ${relapse ? "bg-primary" : "bg-foreground/20"}`}>
             <span className={`absolute size-8 rounded-full bg-white transition-all ${relapse ? "left-7" : "left-1"}`} />
           </button>
         </div>
@@ -308,7 +308,7 @@ function ProgressTab({ list, entries, now, ex, onGoal }: { list: ReturnType<type
               {row.map((day, i) => (
                 <span key={i} data-testid={day && marks.has(day) ? "b-cal-relapse" : day ? "b-cal-day" : undefined} className="relative flex h-9 items-center justify-center">
                   {day > 0 && (
-                    <span className={`flex size-8 items-center justify-center rounded-full text-xs ${marks.has(day) ? "bg-rose-500 text-white" : "bg-muted"}`}>
+                    <span className={`flex size-8 items-center justify-center rounded-full text-xs ${marks.has(day) ? "bg-rose-500 text-white" : "bg-foreground/20"}`}>
                       {marks.has(day) ? pbText.relapseMark : day}
                     </span>
                   )}

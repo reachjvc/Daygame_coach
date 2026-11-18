@@ -250,6 +250,7 @@ test("copy B: last time, slip entry with relapse and spend, periods chart, progr
   await page.getByTestId("b-entry-relapse").click()
   await expect(page.getByTestId("b-spend")).toBeVisible()
   await expect(page.getByTestId("b-amount")).toHaveValue("$0")
+  await shot(page, "b", "entry-relapse-empty")
   await page.getByTestId("b-chip-100").click()
   await expect(page.getByTestId("b-amount")).toHaveValue("$100")
   await page.getByTestId("b-amount").fill("75")
