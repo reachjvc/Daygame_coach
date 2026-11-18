@@ -143,6 +143,9 @@ Raised by the Senior on 2026-11-10, not yet decided:
 - Likely better: more handholding, and he sees frames of what Claude intends
   to make before Claude spends hours making it.
 - With all of the script, or more of it, Claude can make better animations.
+- In general, early on: much more variance. A bunch of quite different
+  ideas, because something completely different could be the ideal; plus
+  close cousins of what he already likes, as iterations.
 
 ## Decisions
 
