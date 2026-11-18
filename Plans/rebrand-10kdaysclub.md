@@ -135,6 +135,13 @@ address is never deleted.
 
 **Done when:** tag on GitHub, backup counts match, settings file and screenshots exist.
 
+**Progress 2026-11-18 (owner asked for the data save first):** steps 2 and 3 are done.
+- Backup: `~/dg-backups/full-2026-11-18/` (schema, roles, data dump, JSON per table, README with restore
+  steps). It covers all 99 tables plus login accounts; every count was checked.
+- Encrypted copy: OneDrive `daygame-backups/full-2026-11-18.tar.gz.gpg`.
+- Settings: `settings-before-auth.json` and `settings-before-vault.json` in the same folder.
+- Steps 1 (tag) and 4 (screenshots) wait for his "go".
+
 ### Phase 1 — The words (Sonnet builds; every text below is decided, the builder decides none)
 
 Work in a worktree, ship by fast-forward (memory `shared-checkout-tool-quirks`).
