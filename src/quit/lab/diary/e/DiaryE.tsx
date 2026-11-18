@@ -67,6 +67,12 @@ export function DiaryE() {
         <Tabs items={eText.tabs} value={screen === "stats" ? 0 : 1} onChange={(i) => setScreen(i === 0 ? "stats" : "history")} id="e-tab" />
         {screen === "stats" ? (
           <>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-semibold">{eText.topTriggersLabel}</span>
+              <button type="button" data-testid="e-list-icon" aria-label={eText.historyIcon} onClick={() => setScreen("history")} className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-card text-lg">
+                {"☰"}
+              </button>
+            </div>
             <Donut
               testId="e-donut"
               slices={shares.map((s) => ({ key: s.key, label: eText.triggers[Number(s.key)], count: s.count, color: COLORS[Number(s.key)], value: `${pctText(s.count, total, 1)}%` }))}
@@ -155,9 +161,10 @@ export function DiaryE() {
                   setMenu(false)
                   setScreen("new")
                 }}
-                className="min-h-11 whitespace-nowrap rounded-md px-4 text-sm"
+                className="flex min-h-11 items-center gap-2 whitespace-nowrap rounded-md px-4 text-sm"
               >
                 {eText.addEntry}
+                <InferredTag />
               </button>
             </div>
           )}
@@ -188,8 +195,8 @@ export function DiaryE() {
           ))}
         </div>
         <Placeholder />
-        <input data-testid="e-title" aria-label={eText.titleLabel} value={title} onChange={(e) => setTitle(e.target.value)} className="min-h-11 rounded-md border border-border bg-background px-3 text-sm" />
-        <textarea data-testid="e-body" aria-label={eText.bodyLabel} value={body} onChange={(e) => setBody(e.target.value)} rows={4} className="rounded-md border border-border bg-background p-3 text-sm" />
+        <input data-testid="e-title" aria-label={eText.titleLabel} placeholder={eText.titleHint} value={title} onChange={(e) => setTitle(e.target.value)} className="min-h-11 rounded-md border border-border bg-background px-3 text-sm" />
+        <textarea data-testid="e-body" aria-label={eText.bodyLabel} placeholder={eText.bodyHint} value={body} onChange={(e) => setBody(e.target.value)} rows={4} className="rounded-md border border-border bg-background p-3 text-sm" />
         <button type="button" data-testid="e-note-save" onClick={saveNote} className="min-h-12 rounded-md bg-primary px-4 text-primary-foreground">
           {eText.addSave}
         </button>

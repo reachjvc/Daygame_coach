@@ -14,11 +14,11 @@ export interface DonutSlice {
 }
 
 /**
- * Ring chart. Slices run clockwise from the top, in the order given. Labels sit on the slice;
- * small slices put theirs just outside so they never collide.
+ * Ring chart. Slices run clockwise from the top, in the order given. A slice carries its words
+ * only where they fit; every slice is listed with its percent in a legend under the ring.
  */
 export function Donut({ slices, centre, testId, onPick, picked, innerRatio = 0.5 }: { slices: DonutSlice[]; centre?: React.ReactNode; testId?: string; onPick?: (key: string) => void; picked?: string | null; innerRatio?: number }) {
-  const r1 = 125
+  const r1 = 140
   const r0 = r1 * innerRatio
   const total = slices.reduce((a, s) => a + s.count, 0)
   const arcs = ringArcs(
@@ -26,55 +26,49 @@ export function Donut({ slices, centre, testId, onPick, picked, innerRatio = 0.5
     r0,
     r1,
   )
-  // labels: on the slice when it is big enough, else just outside; outside labels on one side keep 26 units apart
-  interface Place {
-    x: number
-    y: number
-    lx: number
-    anchor: "start" | "middle" | "end"
-  }
-  const place = new Map<number, Place>()
-  const outside: { index: number; x: number; y: number; right: boolean }[] = []
-  for (const a of arcs) {
-    const small = slices[a.index].count / total < 0.085
-    if (!small) {
-      const rl = (r0 + r1) / 2
-      place.set(a.index, { x: rl * Math.cos(a.mid), y: rl * Math.sin(a.mid), lx: 0, anchor: "middle" })
-    } else {
-      const x = (r1 + 22) * Math.cos(a.mid)
-      outside.push({ index: a.index, x, y: (r1 + 22) * Math.sin(a.mid), right: x >= 0 })
-    }
-  }
-  for (const side of [true, false]) {
-    const row = outside.filter((o) => o.right === side).sort((p, q) => p.y - q.y)
-    row.forEach((o, i) => {
-      if (i > 0) o.y = Math.max(o.y, row[i - 1].y + 27)
-      place.set(o.index, { x: o.x, y: o.y, lx: o.x + (side ? -3 : 3), anchor: side ? "start" : "end" })
-    })
-  }
+  const rl = (r0 + r1) / 2
   return (
-    <div className="relative mx-auto w-full max-w-[420px]" data-testid={testId} data-total={total}>
-      <svg viewBox="-235 -185 470 370" className="w-full" role="img" aria-hidden="false">
-        {total === 0 && <circle r={(r0 + r1) / 2} fill="none" strokeWidth={r1 - r0} className="stroke-border" />}
-        {arcs.map((a) => {
-          const s = slices[a.index]
-          const small = s.count / total < 0.085
-          const p = place.get(a.index)!
-          return (
-            <g key={s.key} data-testid={testId ? `${testId}-slice-${s.key}` : undefined} data-count={s.count} data-value={s.value} onClick={onPick ? () => onPick(s.key) : undefined} opacity={picked && picked !== s.key ? 0.45 : 1} style={onPick ? { cursor: "pointer" } : undefined}>
-              <path d={a.path} fill={s.color} fillRule="evenodd" stroke="#1f1f1f" strokeWidth={1.5} />
-              {small && <line x1={(r1 - 2) * Math.cos(a.mid)} y1={(r1 - 2) * Math.sin(a.mid)} x2={p.lx} y2={p.y - 4} className="stroke-muted-foreground" strokeWidth={0.8} />}
-              <text x={p.x} y={p.y - 3} textAnchor={p.anchor} fontSize={12} className={small ? "fill-foreground" : ""} fill={small ? undefined : "#161616"}>
-                {s.value}
-              </text>
-              <text x={p.x} y={p.y + 10} textAnchor={p.anchor} fontSize={11} className={small ? "fill-muted-foreground" : ""} fill={small ? undefined : "#161616"}>
-                {s.label}
-              </text>
-            </g>
-          )
-        })}
-      </svg>
-      {centre && <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-24 text-center text-sm">{centre}</div>}
+    <div className="mx-auto w-full max-w-[380px]" data-testid={testId} data-total={total}>
+      <div className="relative">
+        <svg viewBox="-150 -150 300 300" className="w-full" role="img" aria-hidden="false">
+          {total === 0 && <circle r={rl} fill="none" strokeWidth={r1 - r0} className="stroke-border" />}
+          {arcs.map((a) => {
+            const s = slices[a.index]
+            const arc = (s.count / total) * Math.PI * 2 * rl
+            const showValue = arc > 30
+            const showName = arc > s.label.length * 6.4 + 10
+            const x = rl * Math.cos(a.mid)
+            const y = rl * Math.sin(a.mid)
+            return (
+              <g key={s.key} data-testid={testId ? `${testId}-slice-${s.key}` : undefined} data-count={s.count} data-value={s.value} onClick={onPick ? () => onPick(s.key) : undefined} opacity={picked && picked !== s.key ? 0.45 : 1} style={onPick ? { cursor: "pointer" } : undefined}>
+                <path d={a.path} fill={s.color} fillRule="evenodd" stroke="#1f1f1f" strokeWidth={1.5} />
+                {showValue && (
+                  <text x={x} y={showName ? y - 3 : y + 4} textAnchor="middle" fontSize={12} fontWeight={600} fill="#161616">
+                    {s.value}
+                  </text>
+                )}
+                {showValue && showName && (
+                  <text x={x} y={y + 10} textAnchor="middle" fontSize={11} fill="#161616">
+                    {s.label}
+                  </text>
+                )}
+              </g>
+            )
+          })}
+        </svg>
+        {centre && <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-[27%] text-center text-sm">{centre}</div>}
+      </div>
+      {slices.length > 0 && (
+        <ul data-testid={testId ? `${testId}-legend` : undefined} className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
+          {slices.map((s) => (
+            <li key={s.key} className="flex min-h-8 items-center gap-2">
+              <span aria-hidden="true" className="size-3 shrink-0 rounded-sm" style={{ background: s.color }} />
+              <span className="min-w-0 flex-1 truncate">{s.label}</span>
+              <span className="shrink-0 font-semibold">{s.value}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

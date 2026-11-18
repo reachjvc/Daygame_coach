@@ -228,6 +228,7 @@ export function StrengthFeeling({
   setFeeling,
   onBack,
   onNext,
+  tagNext,
 }: {
   strength: number
   setStrength: (n: number) => void
@@ -235,6 +236,7 @@ export function StrengthFeeling({
   setFeeling: (n: number) => void
   onBack: () => void
   onNext: () => void
+  tagNext?: boolean
 }) {
   const pct = ((strength - 1) / 9) * 100
   return (
@@ -279,14 +281,21 @@ export function StrengthFeeling({
           ))}
         </div>
       </div>
-      <button type="button" data-testid="next" disabled={feeling === null} onClick={onNext} className="min-h-12 rounded-md bg-primary px-4 text-primary-foreground disabled:opacity-40">
-        {dText.next}
-      </button>
+      <div className="flex flex-col gap-1">
+        {tagNext && (
+          <div>
+            <InferredTag />
+          </div>
+        )}
+        <button type="button" data-testid="next" disabled={feeling === null} onClick={onNext} className="min-h-12 rounded-md bg-primary px-4 text-primary-foreground disabled:opacity-40">
+          {dText.next}
+        </button>
+      </div>
     </div>
   )
 }
 
-export function Context({ context, setContext, onBack, onNext }: { context: number | null; setContext: (n: number) => void; onBack: () => void; onNext: () => void }) {
+export function Context({ context, setContext, onBack, onNext, tagNext }: { context: number | null; setContext: (n: number) => void; onBack: () => void; onNext: () => void; tagNext?: boolean }) {
   return (
     <div data-testid="context" className="flex flex-col gap-4">
       <Top onBack={onBack} />
@@ -318,9 +327,16 @@ export function Context({ context, setContext, onBack, onNext }: { context: numb
           <Placeholder />
         </li>
       </ul>
-      <button type="button" data-testid="next" disabled={context === null} onClick={onNext} className="min-h-12 rounded-md bg-primary px-4 text-primary-foreground disabled:opacity-40">
-        {dText.next}
-      </button>
+      <div className="flex flex-col gap-1">
+        {tagNext && (
+          <div>
+            <InferredTag />
+          </div>
+        )}
+        <button type="button" data-testid="next" disabled={context === null} onClick={onNext} className="min-h-12 rounded-md bg-primary px-4 text-primary-foreground disabled:opacity-40">
+          {dText.next}
+        </button>
+      </div>
     </div>
   )
 }

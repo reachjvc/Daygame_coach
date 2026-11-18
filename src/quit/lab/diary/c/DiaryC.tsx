@@ -6,7 +6,7 @@ import { Donut, Dropdown, LineChart } from "../shared/Bits"
 import { useDiary } from "../shared/hooks"
 import { axisMax, dayKey, dotDate, pct, pctText, slashDate, weekOf } from "../shared/logic"
 import { dyText } from "../shared/text"
-import { type CheckIn, insightNumbers, intensitySeries, meanIntensity, moodShares, mostCommonMood, seedCheckIns, sorted, upsert, urgesSeries } from "./logic"
+import { type CheckIn, insightNumbers, intensitySeries, meanIntensity, moodShares, seedCheckIns, sorted, upsert, urgesSeries } from "./logic"
 import { cText } from "./text"
 
 type Screen = "tabs" | "checkin" | "trigger" | "withdrawal" | "moodchart" | "trends" | "urges" | "intensity" | "insights"
@@ -82,6 +82,7 @@ export function DiaryC() {
   const entries = sorted(diary.items)
   const todayKey = dayKey(diary.now)
   const week = weekOf(diary.now)
+  const nextWeek = weekOf(diary.now + 7 * 86_400_000)
   const done = new Set(entries.map((e) => e.date))
   const root = (children: React.ReactNode) => (
     <div data-testid="diary-c" data-screen={screen === "tabs" ? ["timer", "stats", "health", "entries", "achievements"][tab] : screen}>
@@ -190,7 +191,7 @@ export function DiaryC() {
     const only = mFilter === 0 ? null : mFilter - 1
     const shares = moodShares(entries, only)
     const total = shares.reduce((a, s) => a + s.count, 0)
-    const top = mostCommonMood(entries)
+    const top = moodShares(entries, only)[0]?.key ?? null
     return root(
       <section className="flex flex-col gap-3" data-testid="c-trends">
         <Head title={cText.trendsTitle} onBack={() => toTabs(3)} />
@@ -214,7 +215,7 @@ export function DiaryC() {
             <Face />
             <div>
               <p className="font-semibold">{cText.mostCommon}</p>
-              <p className="text-sm text-muted-foreground">{top === null ? cText.noMoods : cText.mostCommonLine(cText.moods[top])}</p>
+              <p className="text-sm text-muted-foreground">{top === null ? cText.noMoods : cText.mostCommonLine(cText.moods[Number(top)])}</p>
             </div>
           </div>
         </div>
@@ -235,7 +236,7 @@ export function DiaryC() {
           ))}
         </div>
         <div className="rounded-lg border border-border bg-card p-2">
-          <LineChart testId="c-line" grid points={series.map((s) => ({ label: slashDate(s.date), value: s.value }))} yMin={0} yMax={axisMax(series.map((s) => s.value), 6)} valueText={(v) => v.toFixed(2)} />
+          <LineChart testId="c-line" grid points={series.map((s) => ({ label: slashDate(s.date), value: s.value }))} yMin={0} yMax={axisMax(series.map((s) => s.value), 6)} valueText={(v) => (seg === 0 ? String(v) : v.toFixed(1))} />
         </div>
       </section>,
     )
@@ -339,6 +340,13 @@ export function DiaryC() {
               )
             })}
           </div>
+          <div className="grid grid-cols-7 items-center text-center text-muted-foreground" data-testid="c-next-week">
+            {nextWeek.map((k) => (
+              <span key={k} className="mx-auto inline-flex size-10 items-center justify-center">
+                {Number(k.slice(8))}
+              </span>
+            ))}
+          </div>
           <div className="flex min-h-11 items-center justify-center rounded-md border border-dashed border-border px-3 py-3 text-center text-sm text-muted-foreground">{dyText.otherTool}</div>
           <button type="button" data-testid="c-checkin" onClick={startCheckIn} className="min-h-12 rounded-md bg-primary px-4 text-primary-foreground">
             {cText.checkInButton}
@@ -364,7 +372,7 @@ export function DiaryC() {
               </button>
             ))}
           </div>
-          {entries.length === 0 && <p className="text-sm text-muted-foreground">{dyText.noEntries}</p>}
+          {entries.length === 0 ? <p className="text-sm text-muted-foreground">{dyText.noEntries}</p> : <p data-testid="c-entry-count" data-count={entries.length} className="text-sm text-muted-foreground">{cText.entryCount(entries.length)}</p>}
           <ul className="flex flex-col gap-2" data-testid="c-entry-list">
             {[...entries].reverse().map((e) => (
               <li key={e.date} data-testid={`c-entry-${e.date}`} className="flex flex-col gap-0.5 rounded-lg border border-border bg-card p-3 text-sm">

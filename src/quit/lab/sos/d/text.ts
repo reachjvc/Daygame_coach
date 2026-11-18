@@ -16,7 +16,7 @@ export const dText = {
   feelQuestion: "How do you feel?",
   feelings: ["Stressed", "Lonely", "Happy", "Bored", "Excited", "Down", "Angry", "Anxious"],
   contextQuestion: "What is going on around you?",
-  contexts: ["Having a drink", "Just had an argument", "Going to bed", "Taking a break"],
+  contexts: ["Having a drink", "Just had an argument", "Going to bed", "Taking a break", "Scrolling on my phone"],
   next: "Next",
   altHeading: "I choose an alternative",
   altQuestion: "Which way do you want to get through this craving?",

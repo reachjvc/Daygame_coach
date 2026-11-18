@@ -1,6 +1,6 @@
 /** Reader text of Craving diary copy C. */
 export const cText = {
-  navItems: ["Timer", "Stats", "Health", "Entries", "Achievements"],
+  navItems: ["Timer", "Stats", "Health", "Entries", "Badges"],
   checkIn: "Check-in",
   checkInButton: "Check in",
   didSmoke: "Did you smoke?",
@@ -49,6 +49,7 @@ export const cText = {
   outOf: "/10",
   insightsTitle: "Insights",
   recsTitle: "Recommendations",
+  entryCount: (n: number) => `${n} ${n === 1 ? "check-in" : "check-ins"}`,
   noData: "Check in a few times to see insights.",
   streak: (n: number) => `You have had ${n} ${n === 1 ? "day" : "days"} in a row with no urges.`,
   urgeDays: (a: number, b: number) => `You logged urges on ${a} of ${b} check-in days.`,

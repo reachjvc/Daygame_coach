@@ -44,11 +44,14 @@ export function DiaryD() {
         <Panel onBegin={begin} onOpen={() => setScreen("other")} />
         <button type="button" data-testid="d-to-log" onClick={() => setScreen("history")} className="inline-flex min-h-11 items-center justify-center text-sm text-muted-foreground underline">
           {ddText.toLog}
+          <span className="ml-2">
+            <InferredTag />
+          </span>
         </button>
       </div>
     )
-  else if (screen === "strength") body = <StrengthFeeling strength={strength} setStrength={setStrength} feeling={feeling} setFeeling={setFeeling} onBack={toPanel} onNext={() => setScreen("context")} />
-  else if (screen === "context") body = <Context context={context} setContext={setContext} onBack={() => setScreen("strength")} onNext={save} />
+  else if (screen === "strength") body = <StrengthFeeling strength={strength} setStrength={setStrength} feeling={feeling} setFeeling={setFeeling} onBack={toPanel} onNext={() => setScreen("context")} tagNext />
+  else if (screen === "context") body = <Context context={context} setContext={setContext} onBack={() => setScreen("strength")} onNext={save} tagNext />
   else if (screen === "other")
     body = (
       <div className="flex flex-col gap-3">
