@@ -30,8 +30,16 @@ for (const id of LAB_TOOL_IDS) {
   for (const vid of Object.keys(LAB[id].variants)) {
     test(`variant ${id}/${vid} opens without console errors`, async ({ page }) => {
       const errors: string[] = []
+      // Signed out, the app asks two account endpoints and they answer 401 by design (the same on
+      // /quit/nicotine/how); the browser logs each as a console error. Any other failed request counts.
+      const SIGNED_OUT_PROBES = new Set(["/api/whoami", "/api/settings/time-preferences"])
+      let probes401 = 0
+      page.on("response", (r) => {
+        if (r.status() === 401 && SIGNED_OUT_PROBES.has(new URL(r.url()).pathname)) probes401++
+      })
+      const logged: string[] = []
       page.on("console", (m) => {
-        if (m.type() === "error") errors.push(m.text())
+        if (m.type() === "error") logged.push(m.text())
       })
       page.on("pageerror", (e) => errors.push(e.message))
       const res = await page.goto(`/quit/lab/${id}/${vid}?preview=1`)
@@ -40,7 +48,9 @@ for (const id of LAB_TOOL_IDS) {
       await expect(page.getByTestId("lab-variant-label")).toHaveText(LAB[id].variants[vid].label)
       await page.waitForLoadState("networkidle")
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
-      expect(errors).toEqual([])
+      const is401 = (t: string) => /status of 401/.test(t)
+      const unexplained = [...logged.filter((t) => !is401(t)), ...logged.filter(is401).slice(probes401)]
+      expect([...errors, ...unexplained]).toEqual([])
     })
   }
 }

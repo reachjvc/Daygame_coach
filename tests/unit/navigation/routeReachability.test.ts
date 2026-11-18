@@ -134,6 +134,8 @@ function buildGraph() {
       route.startsWith("/auth/") ||
       // Public quit tools: entered from outside (posts, "Comment QUIT" links).
       route === "/quit" ||
+      // The quit lab index: hidden (`?preview=1`, noindex), opened by address on the owner's phone.
+      route === "/quit/lab" ||
       route.includes("[") ||
       isGate ||
       isRedirectShim(file) ||
