@@ -162,7 +162,8 @@ function Body({ id, seeded, today }: { id: QuitAddictionId; seeded: boolean; tod
             <p data-testid="count-checked" data-n={counts.checkedIn} className="mt-1 text-sm">
               {t.checkedIn(counts.checkedIn)}
             </p>
-            <p data-testid="count-clear" data-n={counts.clear} className="text-sm">
+            <p className="text-xs text-muted-foreground">{t.checkedNote}</p>
+            <p data-testid="count-clear" data-n={counts.clear} className="mt-1 text-sm">
               {t.clearDays(counts.clear)}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">{t.neverResets}</p>
@@ -387,7 +388,27 @@ function MonthView({ id, days, today, words }: { id: QuitAddictionId; days: Best
   const [picked, setPicked] = useState<string | null>(null)
   const counts = monthCounts(days, ym)
   const [y, m] = ym.split("-").map(Number)
-  const legend = [t.legendClear, t.legendHard, t.legendFeelings, t.legendNotes][mode]
+  const none: readonly [string, string] = ["border-border bg-card", t.legendNone]
+  const legends: (readonly [string, string])[][] = [
+    [
+      ["border-transparent bg-primary/80", t.legendClear],
+      ["border-border bg-muted-foreground/30", t.legendSlip],
+      none,
+    ],
+    [
+      ["border-transparent bg-primary/20", t.legendEasy],
+      ["border-transparent bg-primary/60", t.legendMiddle],
+      ["border-transparent bg-primary", t.legendVeryHard],
+      none,
+    ],
+    [
+      ["border-transparent bg-primary/20", t.legendFew],
+      ["border-transparent bg-primary", t.legendMany],
+      none,
+    ],
+    [["border-transparent bg-primary/20", t.legendNotes], none],
+  ]
+  const legend = legends[mode]
   return (
     <section data-testid="tab-month" className="flex flex-col gap-3">
       <Tabs items={t.modes} value={mode} onChange={setMode} id="mode" scroll />
@@ -402,8 +423,22 @@ function MonthView({ id, days, today, words }: { id: QuitAddictionId; days: Best
           {"›"}
         </button>
       </div>
-      <p data-testid="month-counts-line" className="text-sm text-muted-foreground">
-        {`${t.checkedIn(counts.checkedIn)}. ${t.clearDays(counts.clear)}`}
+      <div data-testid="month-counts-line" className="grid grid-cols-2 gap-2">
+        <div className="rounded-lg border border-border bg-card p-3">
+          <p className="text-2xl font-semibold" data-testid="month-checked" data-n={counts.checkedIn}>
+            {counts.checkedIn}
+          </p>
+          <p className="text-sm text-muted-foreground">{t.checkedInShort}</p>
+        </div>
+        <div className="rounded-lg border border-border bg-card p-3">
+          <p className="text-2xl font-semibold" data-testid="month-clear" data-n={counts.clear}>
+            {counts.clear}
+          </p>
+          <p className="text-sm text-muted-foreground">{t.clearDaysShort}</p>
+        </div>
+      </div>
+      <p data-testid="checked-note" className="text-xs text-muted-foreground">
+        {t.checkedNote}
       </p>
       <div data-testid="grid" data-mode={MODES[mode]} className="grid grid-cols-7 gap-1">
         {t.weekdays.map((w) => (
@@ -414,7 +449,7 @@ function MonthView({ id, days, today, words }: { id: QuitAddictionId; days: Best
         {monthGrid(ym).map((key, idx) => {
           if (!key) return <span key={`b${idx}`} />
           const c = cellLevel(days[key], MODES[mode])
-          const tone = c.state === "slip" ? "border-border bg-muted text-muted-foreground" : c.state === "none" ? "border-border bg-card" : `border-transparent ${LEVEL_BG[c.state === "clear" ? 4 : c.level]} text-foreground`
+          const tone = c.state === "slip" ? "border-border bg-muted-foreground/30 text-foreground" : c.state === "none" ? "border-border bg-card" : `border-transparent ${LEVEL_BG[c.state === "clear" ? 4 : c.level]} text-foreground`
           return (
             <button
               key={key}
@@ -424,7 +459,8 @@ function MonthView({ id, days, today, words }: { id: QuitAddictionId; days: Best
               data-level={c.level}
               aria-pressed={picked === key}
               onClick={() => setPicked(key)}
-              className={`flex min-h-11 flex-col items-center justify-center rounded-md border text-xs ${tone} ${picked === key ? "ring-2 ring-primary" : ""}`}
+              className={`flex min-h-11 flex-col items-center justify-center rounded-md border text-xs ${tone} ${key === today ? "outline outline-2 -outline-offset-2 outline-foreground" : ""} ${picked === key ? "ring-2 ring-primary" : ""}`}
+              data-today={key === today}
             >
               <span>{Number(key.slice(8))}</span>
               {c.state !== "none" && mode === 1 ? <span className="font-semibold">{c.level}</span> : null}
@@ -434,7 +470,20 @@ function MonthView({ id, days, today, words }: { id: QuitAddictionId; days: Best
           )
         })}
       </div>
-      <p className="text-xs text-muted-foreground">{mode === 0 ? `${t.legendClear}, ${t.legendSlip.toLowerCase()} (grey), ${t.legendNone.toLowerCase()} (empty)` : legend}</p>
+      <ul data-testid="legend" className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">
+        {legend.map(([swatch, label]) => (
+          <li key={label} className="flex items-center gap-1.5">
+            <span aria-hidden="true" className={`inline-flex size-5 items-center justify-center rounded border text-[10px] text-foreground ${swatch}`}>
+              {label === t.legendNotes ? "•" : ""}
+            </span>
+            <span>{label}</span>
+          </li>
+        ))}
+        <li className="flex items-center gap-1.5">
+          <span aria-hidden="true" className="inline-block size-5 rounded border border-border bg-card outline outline-2 -outline-offset-2 outline-foreground" />
+          <span>{t.legendToday}</span>
+        </li>
+      </ul>
       {picked ? <DaySummary id={id} date={picked} day={days[picked]} words={words} testId="day-summary" /> : <p className="text-sm text-muted-foreground">{t.pickDay}</p>}
     </section>
   )
