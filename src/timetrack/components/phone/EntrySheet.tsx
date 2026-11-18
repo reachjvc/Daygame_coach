@@ -577,12 +577,12 @@ export function EntrySheet({
       <button
         type="button"
         onClick={run}
-        className="mt-1.5 min-h-11 w-full rounded-md border border-border px-1 text-xs text-foreground hover:bg-secondary/60"
+        className="mt-1.5 min-h-12 w-full rounded-md border border-border px-1 text-xs text-foreground hover:bg-secondary/60"
       >
         {label}
       </button>
     ) : (
-      <span aria-hidden className="mt-1.5 block min-h-11" />
+      <span aria-hidden className="mt-1.5 block min-h-12" />
     )
 
   /**
