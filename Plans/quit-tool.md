@@ -1,7 +1,7 @@
 # Quit tool: a free menu of quit tools, then a 90-day program
 
 Written 2026-11-18, rewritten the same day after three research rounds and the owner's menu idea. Status:
-**plan written; not started.** Replaces the "one page per addiction" frame of the addiction one-pagers
+**Phase 0 done 2026-11-18 (owner asked; mock had no notes); Phase 1 building.** Replaces the "one page per addiction" frame of the addiction one-pagers
 (docs/research/addiction-one-pagers/); their research, rules and checked numbers are reused, the page form is not.
 
 **Scheduled by `Plans/first-1000.md` (2026-11-18):** the free nicotine tools ship by **20 Dec 2026** so New Year
@@ -296,6 +296,120 @@ checks pass AND a phone walk of that phase's screens.
    "chance of success"); "won't/avoid/not" responses in `responses`; "reset"/"back to zero" anywhere.
 
 Acceptance: validator passes with `live.json` empty and fails, naming each TODO, with nicotine listed.
+
+#### Phase 1 brief (Opus, 2026-11-18) — build exactly this, decide nothing
+
+Phase 0 findings this brief rests on: the menu mock's `likes` and `notes` were empty on 2026-11-18 (nothing to
+fold in). The v3 belief's `test` field is the "When this thought comes" step (rule 22) and `testR7` is the
+real-life test; the five-step slots come from `06-template.json` `pages[id=<v3 id>].subs`, overridden by
+`SUBS_V3` in `board/build_v3.py` line 58. The guarantee line is the owner's own offer text and stays in
+first person (only `offer.json` may hold "I"). Nicotine's footer line (clozapine/olanzapine, v3
+`footerProposal`) is a `footerNote`, not a danger line: nicotine's `danger.level` is `"none"`.
+
+**Files (all new):**
+
+1. `src/quit/types.ts` — exported types, no runtime code except the `as const` id lists:
+   - `QUIT_ADDICTION_IDS = ["nicotine","weed","porn","alcohol","scrolling","gambling"] as const`;
+     `QuitAddictionId`. `QUIT_TOOL_IDS` = the 20 tool ids of Part 1's table; `QuitToolId`.
+   - `Severity` = the 8 RULEBOOK rule 3 tags. `Evidence = "strong"|"moderate"|"weak"|"none"`.
+   - `QuitRef {cite: string; url: string; pmid?: string; quote?: string; fetched?: boolean; fetchedOn?: string}`.
+   - `Check {by: string; on: string; verdict: "ok"|"fix"|"drop"; notes?: string}`.
+   - `QuitNumber` = the SCHEMA.md "A number" shape (kind, big, headline, mirror, severity, counted, basis
+     {design, who, n, where, when, measured}, caveat, projection?, pooled?, checked?, timeIsResult?, weak?,
+     ref: QuitRef, alsoRef?, check?).
+   - `QuitBelief {id; kind: "stuck"|"hard"|"need"|"harmless"|"moderation"|"identity"; scene; short; need;
+     limiting; counterpart; whenThought; test; proof; severity; counted: string|null; refs: QuitRef[];
+     weak?: string|null; ownWords?: boolean; check?: Check}` (`need` is a `QuitNeed.id`).
+   - `QuitFact {id; statement; answer: boolean; explain; severity; counted: string|null; refs; check?}`.
+   - `QuitSwap {id; text; evidence: Evidence; refs: QuitRef[]}`; `QuitNeed {id; name; swaps: QuitSwap[]}`;
+     need ids fixed: `relief, reward, boredom, connection, sleep, focus, confidence, substance`.
+   - `QuitEnding {id; label; blackBoxEnding: ViceEndingId}` (import `ViceEndingId` from `src/vice/types.ts`).
+   - `QuitOption {id; label}` for `helped`, `riskyMoments`; `QuitResponse {id; text}`.
+   - `QuitClearItem {id; text; removes; link?: string}`; `QuitSymptomHelp {symptom; text; evidence; refs}`;
+     `QuitCostSwap {usd: number; text}`; `QuitBesides {id; text; link?: string; refs?: QuitRef[]}`.
+   - `QuitFelt {forums: string[]; years: string; postsUsed: number; postsSampled: number; bias: string[];
+     bins: {label; from; to; n; symptoms: Record<string,number>; positives: Record<string,number>}[]}`.
+   - `QuitLesson {day: number /* -3..-1 prep, 1..90 */; beliefId; title; body; exercise; refs}`.
+   - `QuitBand {id: "free"|"some"|"hooked"; min: number; max: number; label; text; link?: string}` (count of
+     beliefs rated 4 or 5; Q5 ranges).
+   - `QuitPlanStep {title; text; do: string[]; proof?: {text; refs; severity; counted?; weak?; ownWords?}}`.
+   - `QuitDanger {level: "none"|"danger"; line: string|null; refs: QuitRef[]}`.
+   - `QuitAddiction`: `id, name, unit {one, many}, costKind: "money"|"money+time"|"time"|"money+hours",
+     defaultUnitPriceUsd: number|null, defaultMinutesPerUnit: number|null, danger, footerNote: {text, refs}|null,
+     hope: QuitNumber|null, numbers: QuitNumber[], keyFacts: string[], beliefs, facts, needs, endings, helped,
+     riskyMoments, responses, clearOut, symptomWords: Record<string,string>, symptomHelp, tapeForward: string[],
+     costSwaps, besides, felt: QuitFelt|null, lessons, bands, catch: string, planSteps: QuitPlanStep[]`.
+     Any field may hold the string `"TODO"` in a non-live file: type it as `T | "TODO"` through a
+     `Draftable<T>` helper, and export `isTodo(x)`.
+   - `QuitOffer {coachingPriceUsd: number; days: number; guaranteeLine: string; paymentLinkUrl: string|null;
+     donationLine: string|null}`.
+
+2. `scripts/quit/import-v3.mjs` (plain Node, no deps): for v3 ids `nicotine, cannabis, porn, alcohol` writes
+   `src/quit/data/<id>.json` (`cannabis` → `weed`), 2-space JSON, trailing newline, deterministic (running it
+   twice gives no diff). Maps: `numbers` ← v3 `numbers` minus the internal keys `was, wasR6, wasR7,
+   changeNote, editNote, origin, rev*`; `hope` ← the number of kind `hope-free-now` (else null); `beliefs` ←
+   v3 beliefs with `id` = `b1`…`b5`, `whenThought` ← `test`, `test` ← `testR7` (fallback `"TODO"`), `scene`,
+   `short`, `need` = `"TODO"`, internal keys dropped; `felt` ← `felt/<v3 id>.json` (`forums`, `years:
+   "2021–2025"` from `harvest`, `postsUsed` ← `nUsed`, `postsSampled` ← `nSampled`, `bias` ← `biases`,
+   bins keep only label/from/to/n/symptoms/positives); `symptomWords` ← the `HARD` and `GOOD` maps (line ~342
+   ) in `board/build_v3.py`, parsed with a regex, label only; `planSteps` ← `06-template.json`
+   `planTitles` + `plan` with `{thing}`, `{need}`, `{verb}`, `{free}` filled from that page's `subs` merged
+   with `SUBS_V3`, HTML tags stripped, `do`/`proof` from v3 `plan[i]` (proof refs resolved to full refs from
+   the page's `researchRefsToAdd`/06 `globalRefs` where they are ids; unresolved → `"TODO"`); `footerNote` ←
+   `footerProposal`; `danger` ← `{level: id==="alcohol" ? "danger" : "none", line: alcohol ? "TODO" : null, refs: []}`;
+   `name` ← `VICES` label in `src/vice/data/vices.ts` (hard-code the four: "Smoking or vaping", "Weed", "Porn",
+   "Drinking"); every other field `"TODO"`. Prints a per-file count of TODO fields.
+3. Run it once; commit the four outputs. `src/quit/data/live.json` = `[]`.
+4. `src/quit/data/offer.json` = `{"coachingPriceUsd": 200, "days": 30, "guaranteeLine": "If you're not
+   nicotine-free in 30 days, I keep working with you free until you are.", "paymentLinkUrl": null,
+   "donationLine": null}`. `src/quit/offer.ts` exports `getOffer()` and `canBuy() = paymentLinkUrl !== null`.
+5. `src/quit/data/index.ts`: static imports of the JSON files; `getAddiction(id): QuitAddiction | null`,
+   `liveIds(): QuitAddictionId[]`, `isLive(id)`.
+6. `src/quit/validate.ts`: `validateAddiction(data, opts?: {live: boolean}): Issue[]` with `Issue {path:
+   string /* e.g. "beliefs[2].scene" */; rule: string; message: string}`, and `validateLive(): Issue[]`
+   (all files in `live.json`). Rules (each its own small function, each with a `rule` id):
+   - `todo`: any `"TODO"` string at any depth, path named. Only reported when `live: true`.
+   - `words`: scene ≤ 16, short ≤ 6, proof ≤ 40, swap text ≤ 10, mirror ≤ 14, quote ≤ 30, counted ≤ 12,
+     headline ≤ 22, lesson body ≤ 180, lesson exercise ≤ 40 (word = whitespace-split token).
+   - `basis`: every number has severity (known tag), counted, ref.url, and basis who/n/where/when/measured
+     and caveat; every belief, fact and symptomHelp has severity-or-evidence plus ≥ 1 ref; every swap has
+     evidence and (unless `evidence: "none"`) ≥ 1 ref; counts: beliefs 12, facts 3, needs 8, tapeForward 4,
+     planSteps 5, bands cover 0–12 without gaps or overlap.
+   - `counted-words`: rule 3 key words per tag (copy `COUNTED_KEYS` from `build_v3.py` (after `OFF_READER`) exactly).
+   - `screening`: rule 1 list (`SCREEN` in build_v3.py) + "sound like you", in all reader text.
+   - `cheer`: `CHEER` from build_v3.py + "!" in reader text.
+   - `founder`: `\bI quit\b`, `\bwhen I\b`, `\bmy story\b` (case-insensitive) in any reader text. Belief
+     `limiting`/`counterpart`, `tapeForward`, `responses`, `riskyMoments`, `endings`, `helped` are the
+     reader's own voice and exempt; `planSteps` are the owner's words and exempt.
+   - `dollar`: `$` anywhere except `costSwaps[].text`.
+   - `moderation`: a belief matching `MOD_WORDS` (build_v3.py) must be `kind: "moderation"`; a moderation
+     belief's severity must be in `MOD_OK` or its `counted` contains "not checked".
+   - `danger`: `danger.line` must be null when `level: "none"`, non-empty when `"danger"`.
+   - `forecast`: "you will", "chance of success", "likely to succeed", "will succeed" in `endings`, `helped`,
+     and any field under a `past` key, and in `lessons`.
+   - `do-not-avoid`: a `responses[].text` whose first verb after an optional "I " is won't/not/avoid/never/
+     don't/stop (regex `^(I\s+)?(won'?t|will not|not|avoid|never|don'?t|stop)\b`, case-insensitive).
+   - `no-reset`: `reset`, `back to zero`, `start over from day 0`, `day zero` anywhere.
+   - `toll`: `TOLL` from build_v3.py in number text.
+   "Reader text" = every string field except: `refs`/`ref`/`alsoRef` objects, `basis`, `check`, `id`,
+   `kind`, `severity`, `evidence`, `blackBoxEnding`, `symptomWords` keys, `link`, `url`.
+7. `tests/unit/quit/validate.test.ts`:
+   - `validateLive()` returns `[]` (live.json is empty now).
+   - For nicotine with `live: true`: the issues include `rule: "todo"` with paths naming each TODO field
+     (assert at least `beliefs[0].need`, `needs`, `lessons`, `catch`), and the message lists the path.
+   - One minimal valid fixture (`tests/unit/quit/fixtures/valid.ts`, a complete small `QuitAddiction` built
+     to pass every rule) returns `[]`; then one test per rule mutating that fixture to break exactly that
+     rule and asserting exactly that rule id fires.
+   - Importer determinism: run `node scripts/quit/import-v3.mjs --check` (a flag that compares instead of
+     writing and exits 1 on difference) via `spawnSync` with env including `NODE_ENV: "test"`.
+   - `canBuy()` is false.
+
+**Out of scope:** no routes, no components, no reader text written (Phase 2 writes the content).
+
+**Acceptance (Haiku checks):** `npx vitest run tests/unit/quit` green; full `npx vitest run` no new failures
+against the baseline in `~/.cache/daygame-research/quit-tool/baseline-2026-11-18.md`; `node
+scripts/typecheck-ratchet.mjs` passes; `npx eslint src/quit scripts/quit tests/unit/quit` clean; temporarily
+putting `"nicotine"` in `live.json` makes `validateLive()` fail naming TODO paths (then revert).
 
 ### Phase 2: nicotine content — writer Sonnet, checker Opus, critics Opus + Sonnet
 
