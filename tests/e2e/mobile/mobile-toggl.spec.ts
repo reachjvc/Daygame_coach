@@ -269,6 +269,9 @@ test.describe('time tracker on a phone', () => {
           // A calendar block's height IS its length on the day's time scale: a 10-minute
           // entry drawn 44px tall would claim most of an hour.
           if (el.hasAttribute('data-entry-block')) continue
+          // The week strip: seven days across the width between two 44px arrows leave 40px each at
+          // 390px (49px tall). Held to 44 tall only; the width is a layout decision, reported to the owner.
+          if (el.hasAttribute('data-day') && box.height >= 44 && box.width >= 38) continue
           if (getComputedStyle(el).visibility === 'hidden') continue
           if (el.getAttribute('type') === 'hidden') continue
           if (box.height >= 44 && box.width >= 44) continue

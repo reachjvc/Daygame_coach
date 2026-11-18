@@ -564,7 +564,7 @@ export function EntrySheet({
           onChange={(event) => putChip(event.target.value)}
           onBlur={commitChip}
           onKeyDown={keys(commitChip, () => putChip(null))}
-          className="h-11 w-24 rounded-md border border-border bg-background/60 text-center text-base tabular-nums text-foreground outline-none"
+          className="h-12 w-24 rounded-md border border-border bg-background/60 text-center text-base tabular-nums text-foreground outline-none"
         />
       </label>
     )
