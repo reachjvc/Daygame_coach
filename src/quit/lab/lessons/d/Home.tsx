@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Card, Head, NotSourced, Placeholder, PlaceholderScreen, ShareBtn } from "../../progress/shared/Bits"
-import { CardPager } from "../shared/Bits"
+import { Card, Head, InferredTag, NotSourced, Placeholder, PlaceholderScreen, ShareBtn } from "../../progress/shared/Bits"
+import { CardPager, SampleTag } from "../shared/Bits"
 import { arcFraction, weekOf } from "../shared/logic"
 import { lsText } from "../shared/text"
 import { money } from "./logic"
@@ -40,7 +40,7 @@ function Tile() {
 /** The home tab: badge row, day arc, figures, weekly guide, game, reasons, health, cravings, stories, tips. */
 export function Home({ s, day, saved, bestNow, onGo }: { s: DState; day: number; saved: number | null; bestNow: number; onGo: Go }) {
   const week = weekOf(day)
-  const reasons = [...s.motiv.map((i) => dText.motivOptions[i]), ...(s.motivText ? [s.motivText] : [])]
+  const reasons = [...s.motiv.map((i) => dText.motivOptions[i]), ...s.extra]
   const savedText = money(saved)
   return (
     <div data-testid="d-home" className="flex flex-col gap-3">
@@ -150,9 +150,13 @@ export function Guide({ week, onBack, onGo }: { week: number; onBack: () => void
   if (week > 2) return <PlaceholderScreen title={dText.weekTitle(week)} onBack={onBack} />
   return (
     <section data-testid="d-guide" data-week={week} className="flex flex-col gap-3">
-      <button type="button" data-testid="screen-back" aria-label={lsText.back} onClick={onBack} className="inline-flex min-h-11 items-center self-start text-sm underline">{dText.back}</button>
+      <div className="flex items-center gap-2">
+        <button type="button" data-testid="screen-back" aria-label={lsText.back} onClick={onBack} className="inline-flex min-h-11 items-center self-start text-sm underline">{dText.back}</button>
+        {week === 2 && <InferredTag />}
+      </div>
       <Art week={week} />
       <div className="mt-6 flex flex-col gap-3">
+        <SampleTag />
         <p className="text-sm text-muted-foreground">{dText.guideLabel}</p>
         <h2 className="text-3xl font-bold">{dText.weekTitle(week)}</h2>
         {dText.guideBody[week - 1].map((p) => (
@@ -174,11 +178,11 @@ export function MissionRow({ onGo }: { onGo: Go }) {
       id="d-missions"
       count={5}
       render={(i) =>
-        i < 3 ? (
+        i === 0 || i === 2 ? (
           <button type="button" data-testid={`d-mission-${i}`} onClick={() => onGo("mission", i)} className="flex w-full flex-col gap-2 rounded-lg border border-border bg-card p-2 text-left">
             <Tile />
             <span className="text-xs text-muted-foreground">{dText.missionLabel}</span>
-            <span className="font-semibold">{dText.missionTitles[i]}</span>
+            <span className="font-semibold">{dText.missionTitles[i === 0 ? 0 : 1]}</span>
           </button>
         ) : (
           <Placeholder className="min-h-32" />
@@ -192,10 +196,11 @@ export function MissionRow({ onGo }: { onGo: Go }) {
 export function Mission({ i, onBack }: { i: number; onBack: () => void }) {
   return (
     <section data-testid="d-mission" className="flex flex-col gap-3">
-      <Head title={dText.missionTitles[i] ?? dText.missionLabel} onBack={onBack} inferred />
+      <Head title={dText.missionTitles[i === 2 ? 1 : 0]} onBack={onBack} inferred />
       <Tile />
       {i === 0 ? (
         <div data-testid="d-mission-lesson" className="flex flex-col gap-2">
+          <SampleTag />
           {dText.missionPrompt.map((p) => (
             <p key={p} className="text-sm leading-relaxed">{p}</p>
           ))}

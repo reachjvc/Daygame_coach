@@ -11,8 +11,8 @@ import { cText } from "./text"
 const SESSION_SECONDS = 180
 const TICK_MS = 150
 
-/** The timed snake game: four arrow buttons (or swipe, or keys), score, pause, a session clock. */
-export function SnakeGame({ onBack }: { onBack: () => void }) {
+/** The snake game: four arrow buttons (or swipe, or keys), score, pause, a session clock that counts down, or up with `countUp`. */
+export function SnakeGame({ onBack, countUp = false }: { onBack: () => void; countUp?: boolean }) {
   const [total, setTotal] = useLabState<number>("sos", "c", "total", 0)
   const [state, setState] = useState<SnakeState>(() => newSnake(Math.random))
   const [left, setLeft] = useState(SESSION_SECONDS)
@@ -21,7 +21,7 @@ export function SnakeGame({ onBack }: { onBack: () => void }) {
   const counted = useRef(false)
   const swipe = useRef<{ x: number; y: number } | null>(null)
 
-  const ended = !state.alive || left <= 0
+  const ended = !state.alive || (!countUp && left <= 0)
   const running = !ended && !paused
 
   useInterval(() => setState((s) => step(s, dirRef.current, Math.random)), running ? TICK_MS : null)
@@ -151,7 +151,7 @@ export function SnakeGame({ onBack }: { onBack: () => void }) {
         <div className="text-right">
           <div className="text-xs text-white/70">{cText.time}</div>
           <div data-testid="time" className="text-2xl font-semibold tabular-nums">
-            {formatClock(left)}
+            {formatClock(countUp ? SESSION_SECONDS - left : left)}
           </div>
         </div>
       </div>

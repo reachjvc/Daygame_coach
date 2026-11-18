@@ -16,4 +16,5 @@ export const lsText = {
   bookmark: "Save for later",
   dismiss: "Dismiss",
   loading: "Loading",
+  sample: "Sample lesson, our words",
 } as const

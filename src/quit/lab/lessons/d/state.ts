@@ -19,6 +19,7 @@ export interface DState {
   buddy: string
   motiv: number[]
   motivText: string
+  extra: string[]
   ecig: string
   quitMs: number
   skips: number
@@ -46,6 +47,7 @@ export const INITIAL_D: DState = {
   buddy: "",
   motiv: [],
   motivText: "",
+  extra: [],
   ecig: "",
   quitMs: 0,
   skips: 0,

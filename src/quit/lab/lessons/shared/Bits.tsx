@@ -65,11 +65,48 @@ export function Flame({ size = 40, flicker = false }: { size?: number; flicker?:
   )
 }
 
+/** Small label that marks a lesson as ours, so it is never taken for copied content. */
+export function SampleTag() {
+  return (
+    <span data-testid="sample-tag" className="inline-flex w-fit items-center rounded-full border border-border bg-card px-2 py-0.5 text-xs text-muted-foreground">
+      {lsText.sample}
+    </span>
+  )
+}
+
+/** Tab bar fixed to the bottom of the screen. Pages that use it end in `<NavSpace />` so nothing rests under it. */
+export function FixedNav({ items, value, onChange, id }: { items: readonly string[]; value: number; onChange: (i: number) => void; id: string }) {
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background pb-[env(safe-area-inset-bottom)]">
+      <div className="mx-auto grid max-w-[640px]" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+        {items.map((label, i) => (
+          <button
+            key={label}
+            type="button"
+            data-testid={`${id}-${i}`}
+            aria-current={i === value}
+            onClick={() => onChange(i)}
+            className={`min-h-14 break-words px-0.5 text-[11px] leading-tight ${i === value ? "font-semibold text-primary" : "text-muted-foreground"}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </nav>
+  )
+}
+
+/** Blank space the height of the fixed tab bar. */
+export function NavSpace() {
+  return <div aria-hidden="true" className="h-20" />
+}
+
 /** Bottom sheet over a dimmed page. */
-export function Sheet({ children, onClose, testId, closeLabel }: { children: React.ReactNode; onClose?: () => void; testId: string; closeLabel?: string }) {
+export function Sheet({ children, onClose, testId, closeLabel, handle }: { children: React.ReactNode; onClose?: () => void; testId: string; closeLabel?: string; handle?: boolean }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60">
       <div data-testid={testId} role="dialog" aria-modal="true" className="relative max-h-[88dvh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-border bg-card p-4">
+        {handle && <span data-testid="grab-handle" aria-hidden="true" className="mx-auto mb-2 block h-1 w-10 rounded-full bg-border" />}
         {onClose && (
           <button type="button" data-testid={`${testId}-close`} aria-label={closeLabel ?? lsText.close} onClick={onClose} className="absolute right-2 top-2 z-10 inline-flex size-11 items-center justify-center rounded-full text-lg">
             {"✕"}

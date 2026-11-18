@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react"
 import { OtherScreen } from "../../checkin/shared/Bits"
-import { Card, FadeRow, Head, NotSourced, Placeholder, PlaceholderScreen, ShareBtn, BottomNav, Tabs } from "../../progress/shared/Bits"
+import { ckText } from "../../checkin/shared/text"
+import { Card, FadeRow, Head, NotSourced, Placeholder, PlaceholderScreen, ShareBtn, Tabs } from "../../progress/shared/Bits"
 import { sharedText } from "../../progress/shared/text"
-import { Confetti, Flame, Sheet, SkipBar, useLessonState } from "../shared/Bits"
+import { Confetti, FixedNav, Flame, NavSpace, SampleTag, Sheet, SkipBar, useLessonState } from "../shared/Bits"
 import { dayNumber, moduleOpen, streakEnding, taskOpen } from "../shared/logic"
 import { lsText } from "../shared/text"
 import { bText } from "./text"
@@ -46,6 +47,22 @@ const INITIAL: BState = {
 }
 
 type Screen = "home" | "reading" | "quote" | "affirm" | "wallet" | "course" | "courseday" | "guide" | "chip" | "menu" | "saved" | "bonus" | "toolkit" | "tab"
+
+const dateLine = () => {
+  const d = new Date()
+  return `${ckText.weekdaysLong[d.getDay()]}, ${sharedText.months[d.getMonth()]} ${d.getDate()}`
+}
+
+/** Header with a centred title, a back button and an optional right slot. */
+function BHead({ title, onBack, right }: { title: string; onBack: () => void; right?: React.ReactNode }) {
+  return (
+    <div className="mb-1 flex items-center gap-2">
+      <button type="button" data-testid="screen-back" aria-label={lsText.back} onClick={onBack} className="inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-card text-lg">{"‹"}</button>
+      <h2 data-testid="b-head-title" className="min-w-0 flex-1 truncate text-center text-lg font-semibold">{title}</h2>
+      <div className="flex min-w-11 shrink-0 justify-end gap-1">{right}</div>
+    </div>
+  )
+}
 
 const hourGreeting = () => {
   const h = new Date().getHours()
@@ -115,7 +132,7 @@ export function LessonsB() {
   } else if (screen === "courseday") {
     body = (
       <section data-testid="b-courseday" className="flex flex-col gap-3">
-        <Head title={bText.modules[module - 1] ?? bText.courseDayBar} onBack={() => setScreen("course")} />
+        <BHead title={bText.modules[module - 1] ?? bText.courseDayBar} onBack={() => setScreen("course")} right={<button type="button" data-testid="b-courseday-mark" aria-label={lsText.bookmark} className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-card">{"🔖"}</button>} />
         <p className="text-center text-xs text-muted-foreground">{lsText.minRead(3)}</p>
         <Illustration />
         <Placeholder />
@@ -173,7 +190,10 @@ export function LessonsB() {
         {tab === 0 ? (
           <>
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-2xl font-bold">{hourGreeting()}</h2>
+              <div>
+                <p data-testid="b-date" className="text-sm text-muted-foreground">{dateLine()}</p>
+                <h2 className="text-2xl font-bold">{hourGreeting()}</h2>
+              </div>
               <div data-testid="b-streak" data-days={streak} className="flex size-24 shrink-0 flex-col items-center justify-center rounded-[40%] bg-indigo-800 text-white">
                 <span className="text-3xl font-bold">{streak}</span>
                 <span className="text-xs">{bText.streakLabel}</span>
@@ -214,9 +234,10 @@ export function LessonsB() {
     <div data-testid="lessons-b" className="flex flex-col gap-3">
       <SkipBar day={day} onSkip={() => update((c) => ({ skips: c.skips + 1 }))} />
       {body}
-      {showNav && <BottomNav items={bText.tabs} value={tab} onChange={setTab} id="b-tab" />}
+      {showNav && <FixedNav items={bText.tabs} value={tab} onChange={setTab} id="b-tab" />}
+      {showNav && <NavSpace />}
       {sheet && (
-        <Sheet testId="b-daydone" onClose={() => setSheet(false)}>
+        <Sheet testId="b-daydone" onClose={() => setSheet(false)} handle>
           <div className="relative flex flex-col items-center gap-2 overflow-hidden py-6 text-center">
             <Confetti />
             <p className="text-sm">{bText.dcLine1}</p>
@@ -307,6 +328,7 @@ function TaskCard({
               className={`flex min-h-16 w-full items-center gap-3 rounded-lg border border-border p-3 text-left ${current ? "bg-card shadow-md" : "opacity-70"}`}
             >
               <span aria-hidden="true" className="w-6 text-center">{done ? "✔" : current ? "◉" : "🔒"}</span>
+              <span aria-hidden="true" data-testid={`b-task-icon-${i}`} className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-sky-900/50">{t.icon}</span>
               <span>
                 <span className="block font-medium">{t.title}</span>
                 <span className="block text-xs text-muted-foreground">{open || done ? lsText.minRead(t.mins) : bText.lockedTask}</span>
@@ -335,13 +357,17 @@ function Reading({ page, setPage, thumb, onThumb, onBack, onComplete }: { page: 
   const last = page === bText.pages.length - 1
   return (
     <section data-testid="b-reading" data-page={page} className="flex flex-col gap-3">
-      <Head title={bText.readingBar} onBack={onBack} right={<button type="button" data-testid="b-reading-mark" aria-label={lsText.bookmark} className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-card">{"🔖"}</button>} />
+      <BHead title={bText.readingBar} onBack={onBack} right={<button type="button" data-testid="b-reading-mark" aria-label={lsText.bookmark} className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-card">{"🔖"}</button>} />
       {page === 0 && (
         <>
+          <SampleTag />
           <h3 className="text-center text-xl font-bold">{bText.readingTitle}</h3>
           <p className="text-center text-xs text-muted-foreground">{lsText.minRead(3)}</p>
           <Illustration />
-          <Placeholder />
+          <div data-testid="b-pullquote" className="flex flex-col gap-2 rounded-lg border-l-4 border-sky-500 pl-2">
+            <Placeholder />
+            <Placeholder />
+          </div>
         </>
       )}
       {p.heads.map((h) => (
@@ -426,8 +452,10 @@ function Quote({ fav, onFav, onBack, onComplete }: { fav: boolean; onFav: () => 
           <ShareBtn text={bText.quoteLine} testId="b-quote-share" />
         </>
       } />
-      <div className="flex flex-1 items-center justify-center px-2 text-center">
+      <SampleTag />
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 px-2 text-center">
         <p className="text-2xl font-bold">{bText.quoteLine}</p>
+        <Placeholder className="w-40" />
       </div>
       <div className="flex items-center gap-2">
         <button
@@ -459,6 +487,7 @@ function Affirm({ initial, onClose, onDone }: { initial: string; onClose: () => 
     <Sheet testId="b-affirm" onClose={onClose}>
       <div className="flex flex-col gap-3 pt-8" data-step={step}>
         <h3 className="text-center font-semibold">{bText.affirmBar}</h3>
+        <SampleTag />
         <div className="h-1 rounded bg-border"><div className="h-1 rounded bg-sky-400" style={{ width: step === 0 ? "33%" : step === 1 ? "66%" : "100%" }} /></div>
         {step === 0 && (
           <>
@@ -499,7 +528,7 @@ function Wallet({ s, onBack, onCourse }: { s: BState; onBack: () => void; onCour
             <button type="button" data-testid="b-course-card" onClick={onCourse} className="flex w-60 shrink-0 flex-col gap-1 rounded-lg border border-border bg-card p-2 text-left">
               <span className="text-xs text-muted-foreground">{bText.courseCard.kind} · {bText.courseCard.days}</span>
               <Illustration />
-              <NotSourced />
+              <span className="flex items-center gap-1"><span aria-hidden="true" className="text-amber-400">{"●"}</span><NotSourced /></span>
               <span className="font-semibold">{bText.courseCard.title}</span>
               <span className="text-xs text-muted-foreground">{bText.courseCard.cat}</span>
               <NotSourced />
@@ -535,13 +564,13 @@ function Wallet({ s, onBack, onCourse }: { s: BState; onBack: () => void; onCour
 function Course({ course, day, onBack, onBegin, onModule }: { course: { startDay: number; completed: number[] } | null; day: number; onBack: () => void; onBegin: () => void; onModule: (k: number) => void }) {
   const [ready, setReady] = useState(false)
   useEffect(() => {
-    const id = setTimeout(() => setReady(true), 1000)
+    const id = setTimeout(() => setReady(true), 1500)
     return () => clearTimeout(id)
   }, [])
   const done = course?.completed.length ?? 0
   return (
     <section data-testid="b-course" className="flex flex-col gap-3">
-      <Head title={bText.courseTitle} onBack={onBack} />
+      <Head title={bText.courseTitle} onBack={onBack} right={!course && !ready ? <span data-testid="b-course-spin" aria-hidden="true" className="inline-block size-5 animate-spin rounded-full border-2 border-border border-t-sky-400" /> : undefined} />
       {!course ? (
         <>
           <Illustration />
@@ -566,7 +595,9 @@ function Course({ course, day, onBack, onBegin, onModule }: { course: { startDay
             const open = moduleOpen(k, course.startDay, day, course.completed)
             const finished = course.completed.includes(k)
             return (
-              <div key={k} data-testid={`b-module-${k}`} data-state={finished ? "done" : open ? "open" : "locked"} className="flex min-h-16 items-center justify-between gap-2 rounded-lg border border-border p-3">
+              <div key={k} className="flex flex-col gap-1">
+              {k > 1 && <span data-testid="b-connector" aria-hidden="true" className="mx-auto h-4 border-l-2 border-dotted border-muted-foreground" />}
+              <div data-testid={`b-module-${k}`} data-state={finished ? "done" : open ? "open" : "locked"} className="flex min-h-16 items-center justify-between gap-2 rounded-lg border border-border p-3">
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">{bText.moduleDay(k)}</p>
                   {k <= 3 ? <p className="font-medium">{bText.modules[k - 1]}</p> : <Placeholder />}
@@ -580,6 +611,7 @@ function Course({ course, day, onBack, onBegin, onModule }: { course: { startDay
                 ) : (
                   <span className="text-xs text-muted-foreground">{`🔒 ${bText.locked}`}</span>
                 )}
+              </div>
               </div>
             )
           })}

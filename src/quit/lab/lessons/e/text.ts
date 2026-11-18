@@ -54,7 +54,8 @@ export const eText = {
   complete: "Complete",
   // meditations
   medTitle: "Meditations",
-  medLine: "Short audio practices for common moments.",
+  medLine: "Audio practices for common moments.",
+  medLength: "Length of each practice",
   medNames: ["Calm", "Scattered", "Sadness", "Frustration", "Starting again", "Panic", "Winding down"],
   medBodies: {
     "0": ["Sit comfortably and let your shoulders drop.", "Breathe out a little slower than you breathe in. Stay for a few breaths."],

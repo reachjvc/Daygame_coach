@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { BottomNav, PlaceholderScreen } from "../../progress/shared/Bits"
+import { PlaceholderScreen } from "../../progress/shared/Bits"
 import { SnakeGame } from "../../sos/c/SnakeGame"
 import { labStore } from "../../store"
-import { SkipBar, Sheet, useLessonState } from "../shared/Bits"
+import { FixedNav, NavSpace, SkipBar, Sheet, useLessonState } from "../shared/Bits"
 import { dayNumber, savedAmount } from "../shared/logic"
 import { CravingCard, GameStart, Guide, Home, Mission, StoriesPage, TipForm, TipsPage } from "./Home"
 import { countEarned, earnedBadges } from "./logic"
@@ -30,7 +30,7 @@ export function LessonsD() {
   const [helped, setHelped] = useState(false)
   const day = dayNumber(s.quitMs, Date.now(), s.skips)
   const saved = savedAmount(s.perDay, s.packCost, day)
-  const earned = earnedBadges({ day, saved, buddy: !!s.buddy, reminders: s.notif, reasons: s.motiv.length > 0 || !!s.motivText, played: s.played })
+  const earned = earnedBadges({ day, saved, buddy: !!s.buddy, reminders: s.notif, reasons: s.motiv.length > 0 || s.extra.length > 0, played: s.played })
   const bestNow = Math.max(s.best, day)
 
   useEffect(() => {
@@ -91,7 +91,7 @@ export function LessonsD() {
   else if (cur.k === "mission") body = <Mission i={cur.n} onBack={back} />
   else if (cur.k === "craving") body = <CravingCard i={cur.n} onBack={back} onGo={go} />
   else if (cur.k === "gamestart") body = <GameStart onBack={back} onStart={() => { update({ played: true }); go("game") }} onGo={go} />
-  else if (cur.k === "game") body = <SnakeGame onBack={() => { setHelped(true); setStack([]); setCur(ROOT) }} />
+  else if (cur.k === "game") body = <SnakeGame countUp onBack={() => { setHelped(true); setStack([]); setCur(ROOT) }} />
   else if (cur.k === "tips") body = <TipsPage onBack={back} onGo={go} />
   else if (cur.k === "tipform") body = <TipForm onBack={back} onSave={(title, b) => { update({ tips: [...s.tips, { title, body: b }] }); back() }} />
   else if (cur.k === "stories") body = <StoriesPage onBack={back} />
@@ -121,7 +121,8 @@ export function LessonsD() {
     <div data-testid="lessons-d" className="flex flex-col gap-3">
       <SkipBar day={day} onSkip={skip} />
       {body}
-      {nav && <BottomNav items={dText.tabs} value={tab} onChange={setTab} id="d-tab" />}
+      {nav && <FixedNav items={dText.tabs} value={tab} onChange={setTab} id="d-tab" />}
+      {nav && <NavSpace />}
       {ask && <AskSheet onNo={() => update({ askedDay: day })} onYes={() => { update({ askedDay: day }); setCur({ k: "relapse", n: 0 }) }} />}
       {eight && <EightDays day={day} saved={saved} badges={countEarned(earned)} onClose={() => update({ day8Shown: true })} />}
       {helped && (

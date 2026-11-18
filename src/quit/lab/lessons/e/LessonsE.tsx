@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { OtherScreen } from "../../checkin/shared/Bits"
 import { Card, Head, InferredTag, NotSourced, Placeholder, PlaceholderScreen, Tabs } from "../../progress/shared/Bits"
 import { qdText } from "../../quitdate/shared/text"
-import { Sheet, SkipBar, useLessonState } from "../shared/Bits"
+import { SampleTag, Sheet, SkipBar, useLessonState } from "../shared/Bits"
 import { dayNumber, journeyDayOpen } from "../shared/logic"
 import { eText } from "./text"
 
@@ -169,6 +169,7 @@ export function LessonsE() {
               <>
                 <h3 className="text-xl font-bold">{eText.medTitle}</h3>
                 <p className="text-sm text-muted-foreground">{eText.medLine}</p>
+                <div data-testid="e-med-duration" className="flex items-center gap-2 text-sm"><span>{eText.medLength}</span><NotSourced /></div>
                 <div className="grid grid-cols-2 gap-2">
                   {eText.medNames.map((n, i) => (
                     <button key={n} type="button" data-testid={`e-med-${i}`} onClick={() => setView({ k: "med", n: i })} className="flex min-h-28 flex-col items-center justify-center gap-2 rounded-lg border border-border bg-card p-2 text-center">
@@ -261,6 +262,7 @@ function DayPage({ comments, onComment, onBack, onComplete }: { comments: string
       <h2 className="text-3xl font-bold">{eText.dayTitle}</h2>
       <p className="text-sm text-muted-foreground">{eText.typeLine}</p>
       <Player seconds={VIDEO_SECONDS} />
+      <SampleTag />
       <h3 className="font-semibold">{eText.notesHead}</h3>
       {eText.notes.map((n) => (
         <p key={n} className="text-sm leading-relaxed">{n}</p>
@@ -288,6 +290,7 @@ function Meditation({ n, onBack }: { n: number; onBack: () => void }) {
     <section data-testid="e-med" className="flex flex-col gap-3">
       <Head title={eText.medNames[n]} onBack={onBack} inferred />
       <Player seconds={null} audio />
+      <SampleTag />
       {body.map((p) => (
         <p key={p} data-testid="e-med-line" className="text-sm leading-relaxed">{p}</p>
       ))}

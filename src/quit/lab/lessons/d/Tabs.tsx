@@ -275,7 +275,8 @@ export function Relapse({ days, saved, onGo }: { days: number; saved: number | n
         <>
           <h2 className="text-2xl font-bold">{dText.relapseTitle}</h2>
           <p>{dText.relapseLine}</p>
-          <Placeholder className="min-h-24" />
+          <h3 className="font-semibold">{dText.stories}</h3>
+          <CardPager id="d-relapse-stories" count={3} render={() => <Placeholder className="min-h-28" />} />
           <button type="button" data-testid="d-relapse-next" onClick={() => setStep(1)} className={btn}>{dText.continue}</button>
         </>
       )}

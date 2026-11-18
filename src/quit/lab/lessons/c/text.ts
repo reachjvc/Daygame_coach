@@ -44,11 +44,10 @@ export const cText = {
   // thought control
   thoughtTitle: "Thought control",
   sectionWhy: "Why",
-  sectionDo: "In practice",
+  sectionBenefits: "Benefits",
   sectionHow: "How",
   thoughtWhy: "One minute to practise letting a thought go by without chasing it.",
-  thoughtDo: ["Notice a thought as it shows up.", "Let it pass without following it."],
-  thoughtHow: "You will be shown an object and a countdown starts. Try not to think of the object until the countdown ends.",
+  thoughtHow: "An object appears and a timer runs. Keep it out of your mind until the timer ends.",
   dontThink: "Do not think about...",
   object: "The red door",
   forSeconds: "For 60 seconds",

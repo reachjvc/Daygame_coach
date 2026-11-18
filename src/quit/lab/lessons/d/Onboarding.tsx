@@ -169,7 +169,11 @@ export function Signup({ s, update, onDone }: { s: DState; update: (p: Partial<D
             {dText.addPhoto}
             <input type="file" accept="image/*" aria-label={dText.photoLabel} className="sr-only" />
           </label>
-          <button type="button" data-testid="d-step-next" onClick={next} className={btn}>{dText.addMotiv}</button>
+          <button type="button" data-testid="d-motiv-add" disabled={!s.motivText.trim()} onClick={() => update({ extra: [...s.extra, s.motivText.trim()], motivText: "" })} className={ghost}>{dText.addMotiv}</button>
+          {s.extra.map((x) => (
+            <p key={x} data-testid="d-motiv-added" className="rounded-md border border-border px-3 py-2 text-sm">{x}</p>
+          ))}
+          <button type="button" data-testid="d-step-next" onClick={() => { if (s.motivText.trim()) update({ extra: [...s.extra, s.motivText.trim()], motivText: "" }); next() }} className={btn}>{dText.continue}</button>
         </>
       )}
       {step === 7 && (

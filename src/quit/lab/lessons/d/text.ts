@@ -111,7 +111,7 @@ export const dText = {
   missionsHead: "Your weekly missions",
   missionsLine: "Small things to try this week.",
   missionLabel: "Missions",
-  missionTitles: ["Find your spark", "Try what suits you", "Shift your routine"],
+  missionTitles: ["Find your spark", "Vary your day"],
   viewMissions: "View all missions",
   missionPrompt: ["Think of one person or one image that makes you want to keep going.", "Write a line about it and keep it where you can see it."],
   // game
@@ -126,7 +126,7 @@ export const dText = {
   moodTitle: "How do you feel today?",
   moods: ["I feel great", "I am doing OK", "I could feel better", "I am really struggling"],
   moodFaces: ["😀", "🙂", "😐", "😟"],
-  moodAfter: ["Good to know you are doing well.", "Good to know you are doing OK.", "Thank you for saying so. Remind yourself why you started.", "Thank you for saying so. Remind yourself why you started."],
+  moodAfter: ["Good to know you are doing well.", "Good to know you are doing OK.", "That is honest. Take a moment to remember why you began.", "Thank you for saying so. Be gentle with yourself today, and remind yourself why you started."],
   goProgress: "Go back to progress",
   // progress
   progressTitle: "Progress",
@@ -177,8 +177,8 @@ export const dText = {
   shareBuddyBtn: "Share this with my quit buddy",
   // relapse
   askSince: "Have you smoked since we last saw you?",
-  relapseTitle: "It is OK. You are only human.",
-  relapseLine: "Setbacks happen to many people who stop. You can start again.",
+  relapseTitle: "A slip is not the end.",
+  relapseLine: "You can start again whenever you are ready.",
   lastSmoked: "When did you last smoke?",
   readyAgain: "Get ready to try again",
   lookAchieved: "Look at everything you achieved",

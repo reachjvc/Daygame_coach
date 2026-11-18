@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react"
 import { OtherScreen } from "../../checkin/shared/Bits"
-import { BottomNav, NotSourced, Placeholder, PlaceholderScreen } from "../../progress/shared/Bits"
-import { Confetti, Flame, SkipBar, useLessonState } from "../shared/Bits"
+import { NotSourced, Placeholder, PlaceholderScreen } from "../../progress/shared/Bits"
+import { Confetti, FixedNav, Flame, NavSpace, SampleTag, SkipBar, useLessonState } from "../shared/Bits"
 import { breatheIn, dayNumber, splitHours, streakHours, taskOpen, TEMPO_SECONDS } from "../shared/logic"
 import { lsText } from "../shared/text"
 import { cText } from "./text"
@@ -80,7 +80,8 @@ export function LessonsC() {
       <section data-testid="c-routine" className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
           <button type="button" data-testid="screen-back" aria-label={lsText.back} onClick={() => setScreen("home")} className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-card text-lg">{"‹"}</button>
-          <h2 className="text-2xl font-bold">{cText.routineTitle}</h2>
+          <h2 className="flex-1 text-2xl font-bold">{cText.routineTitle}</h2>
+          <span data-testid="c-routine-pill" className="rounded-full border border-border px-3 py-1 text-xs">{cText.routinePill(Math.min(4, routineDone.filter(Boolean).length + 1), 4)}</span>
         </div>
         {cText.routineRows.map((r, i) => {
           const done = routineDone[i]
@@ -223,7 +224,19 @@ export function LessonsC() {
         }}
       />
       {body}
-      {screen === "home" && <BottomNav items={cText.tabs} value={tab} onChange={setTab} id="c-tab" />}
+      {screen === "home" && <FixedNav items={cText.tabs} value={tab} onChange={setTab} id="c-tab" />}
+      {screen === "home" && <NavSpace />}
+    </div>
+  )
+}
+
+/** "Benefits": the labels are claims, so they stay dashed tiles. */
+function Benefits() {
+  return (
+    <div data-testid="c-benefits" className="flex flex-col gap-2">
+      <h3 className="font-bold">{cText.sectionBenefits}</h3>
+      <Placeholder />
+      <Placeholder />
     </div>
   )
 }
@@ -269,12 +282,10 @@ function Thought({ onBack, onDone }: { onBack: () => void; onDone: () => void })
     <section data-testid="c-thought" className="flex min-h-[70dvh] flex-col gap-3 rounded-2xl bg-orange-500 p-4 text-black">
       <Bar title={cText.thoughtTitle} onBack={onBack} pill={cText.routinePill(1, 4)} />
       <div className="h-1 rounded bg-black/20"><div className="h-1 w-1/4 rounded bg-black/70" /></div>
+      <SampleTag />
       <h3 className="font-bold">{cText.sectionWhy}</h3>
       <p className="text-sm">{cText.thoughtWhy}</p>
-      <h3 className="font-bold">{cText.sectionDo}</h3>
-      {cText.thoughtDo.map((t) => (
-        <p key={t} className="rounded-lg bg-black/10 p-2 text-sm">{t}</p>
-      ))}
+      <Benefits />
       <h3 className="font-bold">{cText.sectionHow}</h3>
       <p className="text-sm">{cText.thoughtHow}</p>
       <button type="button" data-testid="c-thought-begin" onClick={() => setRun(true)} className="mt-auto min-h-12 rounded-full bg-white px-4 font-medium">
@@ -336,11 +347,14 @@ function Breathe({ tempo, sound, onTempo, onSound, onBack, onDone }: { tempo: nu
       <section data-testid="c-breathe-intro" className="flex min-h-[70dvh] flex-col gap-3 rounded-2xl bg-violet-600 p-4 text-white">
         <Bar title={cText.breatheTitle} onBack={onBack} />
         <div className="flex h-32 items-center justify-center" aria-hidden="true"><span className="size-24 rounded-full bg-white/30" /></div>
+        <SampleTag />
         <p className="font-semibold">{cText.breatheLabel}</p>
+        <div data-testid="c-breathe-label-bar" className="h-1 rounded bg-white/30"><div className="h-1 w-1/3 rounded bg-white" /></div>
         <p className="text-sm">{`${cText.duration}: ${cText.fourMinutes}`}</p>
         <h3 className="font-bold">{cText.sectionWhy}</h3>
         <p className="text-sm">{cText.breatheWhy}</p>
-        <h3 className="font-bold">{cText.sectionDo}</h3>
+        <Benefits />
+        <h3 className="font-bold">{cText.sectionHow}</h3>
         {cText.breatheDo.map((t) => (
           <p key={t} className="rounded-lg bg-black/20 p-2 text-sm">{t}</p>
         ))}
@@ -409,12 +423,15 @@ function DidYou({ onBack, onDone }: { onBack: () => void; onDone: () => void }) 
         </>
       ) : (
         <>
+          <Placeholder />
+          <SampleTag />
           <h3 className="text-lg font-bold">{cText.didCard}</h3>
           {cText.didBody.map((t) => (
             <p key={t} className="text-sm">{t}</p>
           ))}
           <h3 className="font-bold">{cText.sectionWhy}</h3>
           <p className="text-sm">{cText.didWhy}</p>
+          <Benefits />
           <button type="button" data-testid="c-did-complete" onClick={onDone} className="mt-auto min-h-12 rounded-full bg-white px-4 font-medium text-black">
             {cText.complete}
           </button>
@@ -457,6 +474,7 @@ function Complete({ name, thumb, onThumb, onContinue }: { name: string; thumb?: 
       <Confetti />
       <span className="text-6xl" aria-hidden="true">{"🎉"}</span>
       <h2 className="text-3xl font-bold">{cText.wellDone}</h2>
+      <Placeholder className="w-40" />
       <p>{cText.wellLine}</p>
       <span className="rounded-full bg-black/20 px-4 py-1 text-sm">{cText.practised(name)}</span>
       <div className="mt-6 flex gap-3">
