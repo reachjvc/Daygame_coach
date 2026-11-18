@@ -61,6 +61,8 @@ function Inner({ addiction, beliefs, needs, endings, tape }: InnerProps) {
   useDoneCount(addiction, "sos", state !== null && isResult)
 
   const bridge = signedIn ? <BlackBoxBridge viceId={addiction} onApi={onApi} /> : null
+  // A signed-in visitor waits the moment it takes the Black Box to load before filing or undoing.
+  const bbLoading = signedIn === null || (signedIn && !(bb && bb.ready))
   if (!state) return null
   const back = screen > 1 ? goBack : null
   const belief = beliefs.find((b) => b.id === state.belief) ?? null
@@ -206,7 +208,7 @@ function Inner({ addiction, beliefs, needs, endings, tape }: InnerProps) {
         {bridge}
         <OneQuestion step={4} total={4} onBack={back}>
           <p className="text-xl font-semibold">{t.sos.toQuestion}</p>
-          <PrimaryButton testId="sos-yes" onClick={() => answer(true)}>
+          <PrimaryButton testId="sos-yes" disabled={bbLoading} onClick={() => answer(true)}>
             {t.sos.yes}
           </PrimaryButton>
           <button
@@ -235,13 +237,14 @@ function Inner({ addiction, beliefs, needs, endings, tape }: InnerProps) {
               <button
                 type="button"
                 data-testid="sos-undo"
+                disabled={bbLoading}
                 onClick={() => {
                   if (bb && state.reportId && bb.undo(state.reportId)) {
                     setUndone(true)
                     update((s) => ({ ...s, reportId: null }))
                   }
                 }}
-                className="mt-2 inline-flex min-h-11 items-center text-primary underline"
+                className="mt-2 inline-flex min-h-11 items-center text-primary underline disabled:opacity-40"
               >
                 {t.blackbox.undo}
               </button>

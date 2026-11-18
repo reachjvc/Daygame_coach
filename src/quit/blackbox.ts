@@ -12,15 +12,21 @@ export function useSignedIn(): boolean | null {
   const [signedIn, setSignedIn] = useState<boolean | null>(null)
   useEffect(() => {
     let cancelled = false
-    fetch("/api/whoami", { credentials: "same-origin" })
+    const ctl = new AbortController()
+    // A slow answer counts as signed out after 4 seconds, so no button waits for it for ever.
+    const timer = setTimeout(() => ctl.abort(), 4000)
+    fetch("/api/whoami", { credentials: "same-origin", signal: ctl.signal })
       .then((r) => {
         if (!cancelled) setSignedIn(r.status === 200)
       })
       .catch(() => {
         if (!cancelled) setSignedIn(false)
       })
+      .finally(() => clearTimeout(timer))
     return () => {
       cancelled = true
+      clearTimeout(timer)
+      ctl.abort()
     }
   }, [])
   return signedIn

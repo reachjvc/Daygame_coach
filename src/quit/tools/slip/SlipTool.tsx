@@ -57,6 +57,8 @@ function Inner({ addiction, beliefs, endings, needs, planSteps }: InnerProps) {
   useDoneCount(addiction, "slip", state !== null && isResult)
 
   const bridge = signedIn ? <BlackBoxBridge viceId={addiction} onApi={onApi} /> : null
+  // A signed-in visitor waits the moment it takes the Black Box to load before filing or undoing.
+  const bbLoading = signedIn === null || (signedIn && !(bb && bb.ready))
   if (!state) return null
   const back = screen > 1 ? goBack : null
 
@@ -152,7 +154,7 @@ function Inner({ addiction, beliefs, endings, needs, planSteps }: InnerProps) {
               className="min-h-12 w-full rounded-md border border-border bg-card px-3 text-base"
             />
           )}
-          <PrimaryButton testId="slip-finish" disabled={state.told === null} onClick={finish}>
+          <PrimaryButton testId="slip-finish" disabled={state.told === null || bbLoading} onClick={finish}>
             {t.common.continue}
           </PrimaryButton>
         </OneQuestion>
@@ -182,13 +184,14 @@ function Inner({ addiction, beliefs, endings, needs, planSteps }: InnerProps) {
             <button
               type="button"
               data-testid="slip-undo"
+              disabled={bbLoading}
               onClick={() => {
                 if (bb && state.reportId && bb.undo(state.reportId)) {
                   setUndone(true)
                   update((s) => ({ ...s, reportId: null }))
                 }
               }}
-              className="inline-flex min-h-11 items-center text-primary underline"
+              className="inline-flex min-h-11 items-center text-primary underline disabled:opacity-40"
             >
               {t.blackbox.undo}
             </button>
