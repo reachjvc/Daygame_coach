@@ -109,12 +109,12 @@ test.describe('time is kept on the server, not just in one browser', { tag: '@ph
     if ((page.viewportSize()?.width ?? 0) < 640) {
       const back = page.locator('header:visible a').first()
       await expect(back).toHaveAttribute('href', ROUTES.dashboard)
-      await expect(back).toContainText('Dashboard')
+      await expect(back).toContainText('Home')
       await expect
         .poll(async () => (await back.boundingBox())?.height ?? 0, { timeout: 10_000 })
         .toBeGreaterThanOrEqual(36)
     } else {
-      await expect(page.locator('header:visible').getByRole('link', { name: 'Dashboard' }).first()).toBeVisible()
+      await expect(page.locator('header:visible').getByRole('link', { name: 'Home' }).first()).toBeVisible()
     }
 
     // ONE bottom bar. The tracker draws its own sections and the app's tab bar

@@ -455,19 +455,22 @@ test("the bottom bar is on /programs, and the column does not shrink on the way 
   page,
 }) => {
   /**
-   * "Training" is one of the five tabs in the bottom bar, and it was the one
-   * destination in the app that rendered no bar — so the way back out vanished
-   * the moment you used it. The live screen is the deliberate exception:
-   * `RestBar` owns that bottom edge.
+   * The bar must be on /training: it was the one destination in the app that
+   * rendered no bar, so the way back out vanished the moment you used it. The
+   * live screen is the deliberate exception: `RestBar` owns that bottom edge.
+   *
+   * Training stopped being a tab on 2026-11-10 (f2b5bf58, site navigation
+   * Phase 2: the bar is Home, Plan, Activity, You; Training is a tile on Home).
+   * So the bar cannot say "you are on Training" any more; what it must still do
+   * is offer the way out, Home, and not claim Home is where you are.
    */
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto(ROUTES.training, { waitUntil: "networkidle" })
 
-  await expect(page.getByTestId("mobile-tab-bar")).toBeVisible()
-  await expect(
-    page.getByRole("link", { name: "Training" }).first(),
-    "and it knows you are already here"
-  ).toHaveAttribute("aria-current", "page")
+  const bar = page.getByTestId("mobile-tab-bar")
+  await expect(bar).toBeVisible()
+  await expect(bar.getByRole("link", { name: "Home" }), "the way out is in the bar").toBeVisible()
+  await expect(bar.locator('[aria-current="page"]'), "no tab claims to be this page").toHaveCount(0)
 
   // THE WIDTH DOES NOT JUMP. Training was max-w-3xl and the workout screen
   // max-w-2xl, so the column narrowed again the moment you pressed Start.
