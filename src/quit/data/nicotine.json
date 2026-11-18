@@ -3280,7 +3280,7 @@
         }
       ],
       "check": {
-        "by": "quit-tool checker (opus)",
+        "by": "quit-copy fact-check (opus)",
         "on": "2026-11-18",
         "verdict": "ok"
       }
@@ -3302,7 +3302,7 @@
         }
       ],
       "check": {
-        "by": "quit-tool checker (opus)",
+        "by": "quit-copy fact-check (opus)",
         "on": "2026-11-18",
         "verdict": "ok"
       }
