@@ -36,6 +36,14 @@ His own words, 2026-11-18:
 - Quality always wins. Never offer a cheaper or quicker version of something
   he has already seen done well.
 
+His own words, 2026-11-18 (later), rules he asked for:
+- Before proposing a process or way of working, research it fresh: what
+  people actually do now, especially with AI (recent videos, posts, guides).
+  Say which parts are checked and which are from memory.
+- Anything for him to look at goes on an artifact page, never a local file
+  path. Notes on those pages save by themselves as he types; he never has to
+  press Save.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
