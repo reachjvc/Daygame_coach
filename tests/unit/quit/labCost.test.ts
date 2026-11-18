@@ -11,7 +11,7 @@ const NOW = new Date(2026, 10, 18, 12, 0, 0).getTime()
 
 describe("cost registry", () => {
   it("registers copies b, c, e with valid addictions and keeps current", () => {
-    expect(Object.keys(LAB.cost.variants).sort()).toEqual(["b", "c", "current", "e"])
+    expect(Object.keys(LAB.cost.variants).sort()).toEqual(["b", "best", "c", "current", "e"])
     for (const id of ["b", "c", "e"]) {
       expect(LAB.cost.variants[id].kind).toBe("copy")
       expect(LAB.cost.variants[id].label).toBe(`Copy ${id.toUpperCase()}`)

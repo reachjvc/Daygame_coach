@@ -41,6 +41,7 @@ import { BeliefsBest } from "./beliefs/best/BeliefsBest"
 import { CostB } from "./cost/b/CostB"
 import { CostC } from "./cost/c/CostC"
 import { CostE } from "./cost/e/CostE"
+import { CostBest } from "./cost/best/CostBest"
 import { DiaryB } from "./diary/b/DiaryB"
 import { DiaryC } from "./diary/c/DiaryC"
 import { DiaryD } from "./diary/d/DiaryD"
@@ -187,6 +188,7 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       b: { Component: CostB, addiction: "nicotine", label: "Copy B", kind: "copy" },
       c: { Component: CostC, addiction: "nicotine", label: "Copy C", kind: "copy" },
       e: { Component: CostE, addiction: "nicotine", label: "Copy E", kind: "copy" },
+      best: { Component: CostBest, addiction: "nicotine", label: "Improved", kind: "best" },
     },
   },
   past: {
