@@ -127,7 +127,14 @@ jobs:
             next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: |
+          npx playwright install chromium
+          # The system libraries come from apt, whose mirror was throttled to
+          # 67 kB/s under load (E2E 44405093527: WebKit's 126 MB took 31 minutes,
+          # Chromium's 10 minutes on three jobs). The runner image already has
+          # what Chromium needs, so install them only when the browser will not
+          # start without them.
+          node -e "require('@playwright/test')['chromium'].launch().then((b) => b.close())" || npx playwright install-deps chromium
 
       # playwright.config.ts starts the test backend with this exact CLI
       # version; scripts/db/test-stack.mjs refuses any other.
@@ -223,7 +230,14 @@ jobs:
             next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps ${{ matrix.browser }}
+        run: |
+          npx playwright install ${{ matrix.browser }}
+          # The system libraries come from apt, whose mirror was throttled to
+          # 67 kB/s under load (E2E 44405093527: WebKit's 126 MB took 31 minutes,
+          # Chromium's 10 minutes on three jobs). The runner image already has
+          # what Chromium needs, so install them only when the browser will not
+          # start without them.
+          node -e "require('@playwright/test')['${{ matrix.browser }}'].launch().then((b) => b.close())" || npx playwright install-deps ${{ matrix.browser }}
 
       - uses: supabase/setup-cli@v1
         with:
