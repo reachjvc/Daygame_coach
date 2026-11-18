@@ -10,6 +10,7 @@ import { SymptomsTool } from "../tools/symptoms/SymptomsTool"
 import { SosA } from "./sos/a/SosA"
 import { SosC } from "./sos/c/SosC"
 import { SosD } from "./sos/d/SosD"
+import { SosBest } from "./sos/best/SosBest"
 import { SosE } from "./sos/e/SosE"
 
 export const LAB_TOOL_IDS = [
@@ -58,6 +59,7 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       c: { Component: SosC, addiction: "nicotine", label: "Copy C", kind: "copy" },
       d: { Component: SosD, addiction: "nicotine", label: "Copy D", kind: "copy" },
       e: { Component: SosE, addiction: "nicotine", label: "Copy E", kind: "copy" },
+      best: { Component: SosBest, addiction: "nicotine", label: "Improved", kind: "best" },
     },
   },
   progress: { name: "Progress home", variants: {} },
