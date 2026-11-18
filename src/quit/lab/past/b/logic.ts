@@ -24,7 +24,7 @@ const MIN = 60_000
 /** Example habit data, labelled as such on every screen. Lengths in days of the finished stretches. */
 export const EXAMPLE_STRETCH_DAYS = [6.2, 6.9, 9.4, 8.8, 4.6, 9.7, 7.3, 8.6]
 export const EXAMPLE_CURRENT_MS = 19 * DAY + 18 * HOUR + 23 * MIN
-export const EXAMPLE_PER_DAY_USD = 6
+export const EXAMPLE_PER_DAY_USD = 7
 export const EXAMPLE_GOAL_DAYS = 90
 export const EXAMPLE_GOAL_PRICE_USD = 30
 
