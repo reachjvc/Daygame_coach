@@ -133,13 +133,16 @@ async function startInWeek(page: Page, week: number, { open = true } = {}) {
 
 const lift = (page: Page, slot: string) => page.getByTestId(`lift-${D}_${slot}`)
 
+// Only the tests about signal, offline storage and the stored page carry @phone. The
+// rest check text and saved data in the phone viewport (startInWeek sets it) and run
+// on desktop too; the Android and iPhone runs added nothing (Plans/tests-green-and-fast.md, R-DEL a).
 test.describe("the live screen, for a program in the new format", () => {
-  test("names the week, its phase and a deload week", { tag: ["@phone"] }, async ({ page }) => {
+  test("names the week, its phase and a deload week", async ({ page }) => {
     await startInWeek(page, 3)
     await expect(page.getByTestId("live-week")).toHaveText("Week 3 of 12 · Base · deload week")
   })
 
-  test("names a test week", { tag: ["@phone"] }, async ({ page }) => {
+  test("names a test week", async ({ page }) => {
     await startInWeek(page, 12)
     await expect(page.getByTestId("live-week")).toHaveText("Week 12 of 12 · Peak · test week")
     // And week 12's own top set: 1–5 reps at RPE 9.
@@ -177,7 +180,7 @@ test.describe("the live screen, for a program in the new format", () => {
     expect(top).toMatchObject({ weight: 105, reps: 4, slotId: `${D}_bench`, setGroupId: "top" })
   })
 
-  test("adds sets up to the top of a range, then says the range is done", { tag: ["@phone"] }, async ({ page }) => {
+  test("adds sets up to the top of a range, then says the range is done", async ({ page }) => {
     await startInWeek(page, 1)
     const bench = lift(page, "bench")
     await expect(bench.getByTestId("set-row-4")).toBeVisible()
@@ -189,7 +192,7 @@ test.describe("the live screen, for a program in the new format", () => {
     await expect(bench.getByTestId(`add-set-${D}_bench`)).toHaveCount(0)
   })
 
-  test("offers the scheme's options; 10 × 3 replaces 3 × 10", { tag: ["@phone"] }, async ({ page }) => {
+  test("offers the scheme's options; 10 × 3 replaces 3 × 10", async ({ page }) => {
     await startInWeek(page, 1)
     const squat = lift(page, "squat")
     await expect(squat.getByTestId("set-row-4")).toBeVisible()
@@ -221,7 +224,7 @@ test.describe("the live screen, for a program in the new format", () => {
     await expect(again.getByTestId(`options-locked-${D}_squat`)).toHaveText("Kept for today: sets are done.")
   })
 
-  test("a choice of lift: a set done as Front Squat is logged as Front Squat, on the slot's own numbers", { tag: ["@phone"] }, async ({ page }) => {
+  test("a choice of lift: a set done as Front Squat is logged as Front Squat, on the slot's own numbers", async ({ page }) => {
     await startInWeek(page, 1)
     const squat = lift(page, "squat")
     await squat.getByTestId(`choice-${D}_squat-1`).click()
@@ -240,14 +243,14 @@ test.describe("the live screen, for a program in the new format", () => {
       .toEqual([`Front Squat|${D}_squat`])
   })
 
-  test("says the cap on the last set, and only there", { tag: ["@phone"] }, async ({ page }) => {
+  test("says the cap on the last set, and only there", async ({ page }) => {
     await startInWeek(page, 1)
     const press = lift(page, "press")
     await expect(press.getByTestId("set-hint-4")).toHaveText("by feel · ≤ RPE 9")
     await expect(press.getByTestId("set-hint-3")).toHaveText("by feel")
   })
 
-  test("takes an RPE in half steps", { tag: ["@phone"] }, async ({ page }) => {
+  test("takes an RPE in half steps", async ({ page }) => {
     await startInWeek(page, 1)
     const press = lift(page, "press")
     await press.getByTestId("set-menu-1").click()
@@ -270,7 +273,7 @@ test.describe("the live screen, for a program in the new format", () => {
       .toEqual([8.5])
   })
 
-  test("a finished program offers to run it again or pick another", { tag: ["@phone"] }, async ({ page }) => {
+  test("a finished program offers to run it again or pick another", async ({ page }) => {
     await startInWeek(page, 13, { open: false })
     await page.reload({ waitUntil: "networkidle" })
     const done = page.getByTestId("program-complete")
