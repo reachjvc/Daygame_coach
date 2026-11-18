@@ -31,7 +31,16 @@ His answers the same day, which shape everything below:
   - The owner's eight areas are the default, with the "Switch areas" fold on the copy.
   - The extra modules show "Coming soon". Today, Track and Journal link to `/plan/sandbox`.
   - The owner's real row counts are unchanged after his first copy-space visit (927/927).
-- **Phase 3** is built; the review's fixes are in progress (branch `plan-p3`).
+- **Phase 3 live** on 2026-11-18 (`55d50455`):
+  - Two Opus review rounds; the must-fix items were fixed. Plan e2e 39/39.
+  - Still open, for Phase 5: an edit typed during an open save is lost on a hard close, and a start-empty
+    import that stops partway can drop the rest. The second review's low findings 2–9 are noted in the
+    review output.
+- **Not ours, found on the way:**
+  - `npm audit`: Next 16.4.1 has two moderate advisories (`use cache`/`unstable_cache`, which the app does
+    not use; fixed in 16.4.6).
+  - High: `zod`, `undici`, `sharp`, `@huggingface/transformers`.
+  - The dependency upgrade is the owner's call.
 - **Phase 4:**
   - 4.1 job spec written (private, `spec/job-spec.md`). All 171 old jobs have a home: 93 kept, 26 in a new
     form, 52 replaced by original forms.
