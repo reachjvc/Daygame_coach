@@ -80,6 +80,11 @@ describe("timeline best: bands match the data file", () => {
       expect(r.lasts.includes("about 10 days") || r.symptom === "sleep").toBe(true)
     }
   })
+  it("only the three mood rows carry the overall-mood note; cue craving has a tested segment 7 to 35", () => {
+    const withNote = rows.filter((r) => bandFor("nicotine", r.symptom)!.moodScore).map((r) => r.symptom)
+    expect(withNote.sort()).toEqual(["anxious", "irritable", "low-mood"])
+    expect(bandFor("nicotine", "cue-craving")).toMatchObject({ tested: [7, 35], openFrom: 35 })
+  })
   it("other addictions have no bands and the data has no course yet", () => {
     for (const a of ["alcohol", "weed", "porn"]) expect(Object.keys(bandsOf(a))).toEqual([])
   })

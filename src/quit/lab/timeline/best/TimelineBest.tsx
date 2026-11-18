@@ -209,6 +209,10 @@ function Legend() {
         {t.legendGone}
       </li>
       <li className="flex items-center gap-1.5">
+        <span aria-hidden className="inline-block h-3 w-5 rounded-sm bg-primary/70" style={{ backgroundImage: "repeating-linear-gradient(135deg, transparent 0 4px, rgba(0,0,0,0.25) 4px 6px)" }} />
+        {t.legendTested}
+      </li>
+      <li className="flex items-center gap-1.5">
         <span aria-hidden className="inline-block h-4 w-0.5 bg-foreground" />
         {t.legendDay}
       </li>
@@ -236,7 +240,8 @@ function BandView({ symptom, band, day }: { symptom: string; band: Band; day: nu
   const phase = phaseOf(band, day)
   const peak = band.peak ? span(band.peak[0], band.peak[1]) : null
   const gone = band.gone ? span(band.gone[0], band.gone[1]) : null
-  const open = band.openFrom !== null ? span(band.openFrom, BAND_DAYS) : null
+  const open = band.openFrom !== null && band.openFrom < BAND_DAYS ? span(band.openFrom + 1, BAND_DAYS) : null
+  const tested = band.tested ? span(band.tested[0], band.tested[1]) : null
   return (
     <div className="mt-3" data-testid={`band-${symptom}`} data-phase={phase}>
       <div className="relative h-8 rounded-md bg-muted" role="img" aria-label={t.bandLabel}>
@@ -248,6 +253,13 @@ function BandView({ symptom, band, day }: { symptom: string; band: Band; day: nu
           />
         )}
         {peak && <div data-testid={`band-peak-${symptom}`} className="absolute inset-y-1 rounded-sm bg-primary" style={{ left: `${peak.left}%`, width: `${peak.width}%` }} />}
+        {tested && (
+          <div
+            data-testid={`band-tested-${symptom}`}
+            className="absolute inset-y-1 rounded-sm bg-primary/70"
+            style={{ left: `${tested.left}%`, width: `${tested.width}%`, backgroundImage: "repeating-linear-gradient(135deg, transparent 0 4px, rgba(0,0,0,0.25) 4px 6px)" }}
+          />
+        )}
         {open && (
           <div
             data-testid={`band-open-${symptom}`}
@@ -265,7 +277,7 @@ function BandView({ symptom, band, day }: { symptom: string; band: Band; day: nu
       </div>
       <p className="mt-1 text-sm text-muted-foreground">
         {band.peak ? t.peakLine(band.peak[0], band.peak[1]) : t.noPeak}{" "}
-        {band.gone && (band.diaryNoChange ? t.goneLineReview(band.gone[0], band.gone[1]) : t.goneLine(band.gone[0], band.gone[1]))}
+        {band.gone && (band.diaryNoChange ? t.goneLineReview(band.gone[0], band.gone[1]) : band.moodScore ? t.goneLineMood(band.gone[0], band.gone[1]) : t.goneLine(band.gone[0], band.gone[1]))}
         {band.diaryNoChange && ` ${t.diaryNoChange}`}
         {band.openFrom !== null && t.openLine(band.openFrom)}
       </p>

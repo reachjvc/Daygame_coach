@@ -82,7 +82,9 @@ test("set a quit date: header day and count, cards with band, marker and sources
   await expect(irritable).toContainText("Short temper")
   await expect(irritable).toContainText("Gone within 10 days to 4 weeks, depending on the study.")
   await expect(irritable).toContainText("Peak window: days 1 to 7.")
-  await expect(irritable).toContainText("Gone between day 10 and day 28 in the studies.")
+  await expect(irritable).toContainText("Gone between day 10 and day 28 in the studies. The day-10 study measured overall bad mood, not this feeling alone.")
+  await expect(page.getByTestId("card-restless")).toContainText("Gone between day 10 and day 28 in the studies.")
+  await expect(page.getByTestId("card-restless")).not.toContainText("overall bad mood")
   await expect(page.getByTestId("phase-irritable")).toHaveText("You are on day 12. That is inside the range where studies saw it gone.")
   // sleep says what the diary study saw
   await expect(page.getByTestId("card-sleep")).toContainText("A diary study saw no clear change.")
@@ -92,7 +94,8 @@ test("set a quit date: header day and count, cards with band, marker and sources
   await expect(cue.getByTestId("band-open-cue-craving")).toBeVisible()
   await expect(cue.getByTestId("band-peak-cue-craving")).toHaveCount(0)
   await expect(cue).toContainText("Cravings set off by cues")
-  await expect(cue).toContainText("Tested up to day 35. Still rising then, no end known.")
+  await expect(cue).toContainText("Tested up to day 35. Stronger then than at day 7 or 14 on some measures. Not tested later, so no end known.")
+  await expect(cue.getByTestId("band-tested-cue-craving")).toBeVisible()
   await expect(page.getByTestId("course-note")).toContainText("almost all of cigarette smokers")
 
   // sources on tap

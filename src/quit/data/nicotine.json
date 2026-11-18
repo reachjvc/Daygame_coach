@@ -3259,7 +3259,7 @@
       "symptom": "sleep",
       "peak": "first week",
       "lasts": "2 to 4 weeks in a review; no clear change in a diary study",
-      "text": "Insomnia peaks in week one and can last 2–4 weeks. A diary study saw no clear change in sleep after quitting, so nights may vary.",
+      "text": "Insomnia peaks in week one and can last 2–4 weeks, in a review. A diary study saw no clear change in sleep after quitting.",
       "evidence": "weak",
       "refs": [
         {
@@ -3288,7 +3288,7 @@
     {
       "symptom": "cue-craving",
       "peak": null,
-      "lasts": "still rising at day 35, the last day tested",
+      "lasts": "stronger at day 35 than at day 7 or 14 on some measures; not tested after day 35",
       "text": "In a lab test, cravings set off by triggers were stronger at day 35 than at day 7 in smokers paid to abstain. The study stopped there.",
       "evidence": "weak",
       "refs": [
