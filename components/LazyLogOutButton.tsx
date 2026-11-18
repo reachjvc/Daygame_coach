@@ -1,5 +1,6 @@
 "use client"
 
+import { createPortal } from "react-dom"
 import { Component, lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 
 /**
@@ -25,6 +26,7 @@ import { Component, lazy, Suspense, useEffect, useMemo, useRef, useState, type R
  * second press tries again. Nothing is removed; it is only loaded later.
  */
 
+import { isChunkFetchFailure } from "./chunkFetchFailure"
 import { FETCH_AFTER_MS } from "./logOutFetchDelay"
 
 type Press = { onClick: () => void; busy: boolean }
@@ -79,9 +81,17 @@ export function LazyLogOutButton({ children }: { children: (press: Press) => Rea
           setAttempt((n) => n + 1)
         },
       })}
-      <span role="alert" data-testid="log-out-not-loaded" className="sr-only">
+      {/* Seen, not only heard. Fixed to the screen through a portal (the header is blurred, which would pin a fixed child to itself), so nothing in the header moves; above the phone's tab bar */}
+      {createPortal(
+      <p
+        role="alert"
+        data-testid="log-out-not-loaded"
+        className="fixed inset-x-4 bottom-20 z-[60] rounded-md border border-destructive/40 bg-card px-3 py-2 text-sm text-destructive shadow-lg sm:inset-x-auto sm:bottom-4 sm:right-4 sm:max-w-sm"
+      >
         Log Out could not load, probably because there is no signal. You are still signed in and nothing was lost. Press Log Out to try again.
-      </span>
+      </p>,
+      document.body,
+      )}
     </>
   )
   return (
@@ -93,13 +103,14 @@ export function LazyLogOutButton({ children }: { children: (press: Press) => Rea
   )
 }
 
-/** Catches only the fetch of the real button's code failing; a fresh `key` starts it again. */
-class FailedToLoad extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
-  state = { failed: false }
-  static getDerivedStateFromError() {
-    return { failed: true }
+/** Catches only the fetch of the real button's code failing; any other error goes on to the error page. A fresh `key` starts again. */
+class FailedToLoad extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean; other: unknown }> {
+  state = { failed: false, other: null as unknown }
+  static getDerivedStateFromError(error: unknown) {
+    return isChunkFetchFailure(error) ? { failed: true, other: null } : { failed: false, other: error ?? new Error("Log Out failed") }
   }
   render() {
+    if (this.state.other) throw this.state.other
     return this.state.failed ? this.props.fallback : this.props.children
   }
 }
