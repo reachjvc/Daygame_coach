@@ -110,7 +110,8 @@ function actsOnCopySpace(r: Seen, sandboxId: string): boolean {
   return (aimed || own) && r.account === sandboxId
 }
 
-const isWrite = (r: Seen) => !["GET", "HEAD", "OPTIONS"].includes(r.method)
+/** `next dev` symbolicates errors by POSTing to itself; it is the dev server's tooling, not the app, and does not exist in a build. */
+const isWrite = (r: Seen) => !["GET", "HEAD", "OPTIONS"].includes(r.method) && !r.url.pathname.startsWith("/__nextjs_")
 
 test.describe("the copy space page", () => {
   test.beforeEach(async ({ page, account }) => {
@@ -166,6 +167,8 @@ test.describe("the copy space page", () => {
     const ownerBefore = await fingerprint(account.id)
     const net = record(page)
     const responses: PwResponse[] = []
+    const errors: string[] = []
+    page.on("pageerror", (e) => errors.push(e.message))
     page.on("response", (r) => responses.push(r))
 
     await page.goto(`${ROUTES.planSandbox}?step=star`)
@@ -192,7 +195,10 @@ test.describe("the copy space page", () => {
       await expect(page.getByTestId("plan-sandbox-banner")).toBeVisible()
       await page.waitForTimeout(600)
     }
+    // Hydrated (the page's guard is in place) once it has read its plan.
+    const hydrated = page.waitForResponse((r) => r.url().includes("/api/life-plan?target=sandbox") && r.request().method() === "GET")
     await page.goto(`${ROUTES.planSandbox}?step=review`)
+    await hydrated
     // The weekly reminder, which would switch on push for an account, is not offered here.
     await expect(page.getByText(/reminder/i).filter({ hasText: /switch on|turn on|remind me/i })).toHaveCount(0)
     await expect(page.getByTestId("plan-sandbox-banner")).toBeVisible()
@@ -218,7 +224,7 @@ test.describe("the copy space page", () => {
     // THE REQUEST LOG, for the whole session.
     net.stop()
     const writes = net.all.filter(isWrite)
-    expect(writes.length, "the session wrote something, so this proves something").toBeGreaterThan(3)
+    expect(writes.map((w) => w.url.pathname).sort(), "a copy, a plan save and a day save, so this proves something").toEqual(["/api/life-plan", "/api/life-plan/day", "/api/plan-sandbox/copy"])
     const stray = writes.filter((w) => !actsOnCopySpace(w, sandboxId)).map((w) => `${w.method} ${w.url.pathname}${w.url.search} as ${w.account}`)
     expect(stray, "every write targets the copy space").toEqual([])
     // The plan and day reads of the page are aimed at the copy space too, and never name the owner.
@@ -233,6 +239,8 @@ test.describe("the copy space page", () => {
     // Nothing went to another site as a write either.
     const origin = new URL(page.url()).origin
     expect(writes.filter((w) => w.url.origin !== origin).map((w) => w.url.href)).toEqual([])
+
+    expect(errors, "the page threw").toEqual([])
 
     // THE COPY MOVED; THE OWNER DID NOT.
     const stars = await rows<{ text: string }>("select text from public.life_plan_north_stars where user_id = $1 and ended_on is null", [sandboxId])
