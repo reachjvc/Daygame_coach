@@ -175,6 +175,12 @@ strength or length; they may give words people use, risky moments, questions ask
 helped (checked against studies), and the good side, without numbers. No minute promise for one craving. A
 rebuilt visual mock goes to him before `curve` is built; the parts of the spec above that use felt shares are
 replaced by this paragraph.
+Mock v2 (same URL, 2026-11-18; notes saved with `v: "v2"`, keys how, chart, cards, year, minutes, say, plan,
+ask) draws shapes only, "timing and direction, not exact strength", from Shiffman 2006 (PMID 17156182), Hughes
+2007 (17365764; craving not evaluated there), Ussher 2013 (23052572: everyday urges fade over 52 weeks; at 26
+weeks 13 in 100 of the abstainers asked still had strong urges, n=66), Bedi 2011 (20817135: cue craving did not
+decrease to day 35). The `curve` brief is written only after his v2 notes are read; `symptomCourse` gets an
+everyday-urge row from Ussher 2013 then (checker first).
 As before: four questions (how much, cost, what it gives, day 1: chips, nearest first: "in 3 days", "next Monday", "in 2
 weeks", or a date up to 6 weeks out; never today; under them one small sourced line "Sooner tends to work
 better" (the near-date evidence, evidence-tools §4)), a 2-second
