@@ -1,8 +1,9 @@
 # Quit tool: a free menu of quit tools, then a 90-day program
 
 Written 2026-11-18, rewritten the same day after three research rounds and the owner's menu idea. Status:
-**Phases 0, 1, 3 live 2026-11-18 (data + validator; menu, frame, count route; `/quit` shows nothing live until
-`live.json` lists nicotine). Phase 2 (nicotine content) running; Phase 6 facts step running.** Replaces the "one page per addiction" frame of the addiction one-pagers
+**Phases 0, 1, 3, 6 live 2026-11-18 (data + validator; menu, frame, count route; privacy + coaching pages;
+nothing shows until `live.json` lists nicotine). Phase 2 in its last writer round; Phase 4 building; `curve`
+waits for the owner's reaction to the rebuilt mock.** Replaces the "one page per addiction" frame of the addiction one-pagers
 (docs/research/addiction-one-pagers/); their research, rules and checked numbers are reused, the page form is not.
 
 **Scheduled by `Plans/first-1000.md` (2026-11-18):** the free nicotine tools ship by **20 Dec 2026** so New Year
@@ -953,3 +954,9 @@ Phase 3 (answered by the planner, 2026-11-18):
 7. `/quit` exempt from the two navigation guards: accepted; Phase 7 adds a link from the app (the vice
    module's Black Box page) to `/quit/nicotine` once live.
 8. Phase 4 onward runs the quit specs on the phone project too.
+
+Phase 6 (planner, 2026-11-18): no "delete my account" button exists; the email route is enough for wave 1 (the
+free tools need no account). **Owner item before Phase 7 ships: a contact email for privacy and deletion
+(`src/quit/data/contact.json` `privacyEmail`).** Every privacy sentence was checked against
+`~/.cache/daygame-research/quit-tool/privacy-facts.md`; two gaps (the self-run AI model, time-tracker calendar
+and webhook calls) were added.
