@@ -46,13 +46,17 @@ test.describe('time on a phone: header, report labels and tap targets', () => {
     }
 
     const byDay = page.getByRole('region', { name: 'By day' }).or(page.locator('section[aria-label="By day"]'))
-    await expect(byDay).toContainText('<1m')
-    await expect(byDay).not.toContainText(/(^|\s)0m/)
+    // Other days have nothing tracked and say "0m" truthfully; the day with seconds in it must not.
+    const today = byDay.getByRole('button', { name: /today/ })
+    await expect(today).toContainText('<1m')
+    await expect(today).not.toContainText(/(^|\s)0m/)
     await context.setOffline(false)
   })
 
   test('the entry sheet and the row ▶ are at least 48px tall', async ({ page }) => {
     await openFreshTracker(page)
+    // "Set to last stop time" is shown only when an earlier entry gives it a time to set (87a47248, 3.3)
+    await trackEntry(page, 'earlier')
     await trackEntry(page, 'measured')
 
     const row = entryInList(page, 'measured').first()
@@ -61,7 +65,7 @@ test.describe('time on a phone: header, report labels and tap targets', () => {
     expect(c.height, `▶ is ${c.width}x${c.height}`).toBeGreaterThanOrEqual(48)
     expect(c.width, `▶ is ${c.width}x${c.height}`).toBeGreaterThanOrEqual(48)
 
-    await page.locator('main li div[role="button"]').first().click()
+    await entryInList(page, 'measured').first().locator('div[role="button"]').first().click()
     const sheet = page.getByRole('dialog', { name: 'Time entry' })
     for (const name of [/set to last stop time/i, /round stop time/i]) {
       const s = await size(sheet.getByRole('button', { name }))
