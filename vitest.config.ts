@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config'
+import { BaseSequencer, type TestSpecification } from 'vitest/node'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import fs from 'fs'
@@ -7,13 +8,17 @@ import fs from 'fs'
  * FILES THAT NEED THEIR OWN MODULE CACHE, FOUND BY WHAT THEY DO.
  *
  * Vitest cannot split projects by pragma, so the config reads each test file
- * once. A file lands in the isolated project when it asks for a browser
- * (`// @vitest-environment jsdom`) or replaces modules, clocks or globals (`vi.mock`, `vi.resetModules`,
- * `vi.useFakeTimers`, `vi.setSystemTime`, `vi.stubGlobal`, `vi.stubEnv`,
- * `vi.doMock`). A file that replaces a module must not share a cache: a repo
- * module imported earlier by another file keeps that file's replacement
- * (2026-11-18: `rePush`, `climbsDoNotRoll` and three more failed only in a
- * full run). New files sort themselves; there is no list to keep.
+ * once. A file lands in the isolated project when it replaces modules
+ * (`vi.mock`, `vi.doMock`, `vi.resetModules`). Such a file must not share a
+ * cache: a repo module imported earlier by another file keeps that file's
+ * replacement (2026-11-18: `rePush`, `climbsDoNotRoll` and three more failed
+ * only in a full run). New files sort themselves; there is no list to keep.
+ *
+ * Fake clocks, a set system time, stubbed globals and env vars, and spies do
+ * not need a fresh module cache: tests/setup.ts undoes them after each file's
+ * last test. Until 2026-11-18 those files were isolated too, which cost each
+ * of them its own jsdom and its own imports (Phase 3 of
+ * Plans/tests-green-and-fast.md).
  */
 function walk(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
@@ -23,14 +28,53 @@ function walk(dir: string): string[] {
   })
 }
 const excluded = /[\\/]tests[\\/](integration|manual)[\\/]/
-const LEAKS = /\bvi\.(mock|doMock|resetModules|useFakeTimers|setSystemTime|stubGlobal|stubEnv)\(/
+const LEAKS = /\bvi\.(mock|doMock|resetModules)\(/
 const sources = walk(path.resolve(__dirname, 'tests'))
   .filter((f) => !excluded.test(f))
   .map((f) => ({ file: path.relative(__dirname, f).split(path.sep).join('/'), text: fs.readFileSync(f, 'utf8') }))
 const wantsDom = (t: string) => /@vitest-environment\s+jsdom/.test(t)
 const isolatedFiles = sources.filter((x) => LEAKS.test(x.text)).map((x) => x.file)
-/** A browser, and nothing that replaces modules, clocks or globals: shares one jsdom per worker. */
+/** A browser, and no replaced modules: shares one jsdom per worker. */
 const domFiles = sources.filter((x) => wantsDom(x.text) && !LEAKS.test(x.text)).map((x) => x.file)
+
+/**
+ * CI SHARDS OF EQUAL WORK, NOT ONLY OF EQUAL FILE COUNT.
+ *
+ * `--shard=i/n` (ci.yml) splits the files by a hash of their path, so one
+ * shard can draw more of the expensive kind: a file that replaces modules
+ * builds its own module cache, and in a browser its own jsdom too. On
+ * 2026-11-18 the hash gave shard 1 27 such browser files and shard 2 18. This
+ * deals each kind out separately, biggest file first, each to the shard that
+ * has the fewest of that kind so far (then the fewest bytes), so every shard
+ * gets the same mix. It depends only on the files in the checkout, so every
+ * CI job computes the same split. Used only with `--shard`: a custom sequencer
+ * replaces the one `--sequence.shuffle` picks, and shuffling the file order
+ * is how a leak between files is found.
+ */
+const sharded = process.argv.some((arg) => arg.startsWith('--shard'))
+const kindOf = new Map(
+  sources.map((x) => [x.file, `${LEAKS.test(x.text) ? 'isolated' : 'shared'}-${wantsDom(x.text) ? 'dom' : 'node'}`]),
+)
+class EvenShards extends BaseSequencer {
+  async shard(files: TestSpecification[]): Promise<TestSpecification[]> {
+    const { index, count } = this.ctx.config.shard!
+    const rel = (spec: TestSpecification) => path.relative(__dirname, spec.moduleId).split(path.sep).join('/')
+    const rows = files.map((spec) => {
+      const file = rel(spec)
+      return { spec, file, kind: `${spec.project.name}:${kindOf.get(file) ?? 'other'}`, size: fs.statSync(spec.moduleId).size }
+    })
+    rows.sort((a, b) => (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : b.size - a.size || (a.file < b.file ? -1 : 1)))
+    const shards = Array.from({ length: count }, () => ({ specs: [] as TestSpecification[], kinds: new Map<string, number>(), bytes: 0 }))
+    for (const row of rows) {
+      const n = (s: (typeof shards)[number]) => s.kinds.get(row.kind) ?? 0
+      const target = shards.reduce((best, s) => (n(s) < n(best) || (n(s) === n(best) && s.bytes < best.bytes) ? s : best))
+      target.specs.push(row.spec)
+      target.kinds.set(row.kind, n(target) + 1)
+      target.bytes += row.size
+    }
+    return shards[index - 1].specs
+  }
+}
 
 export default defineConfig({
   plugins: [react()],
@@ -62,6 +106,7 @@ export default defineConfig({
      * used in, so the assertion means the same thing everywhere.
      */
     env: { TZ: 'Europe/Copenhagen' },
+    ...(sharded ? { sequence: { sequencer: EvenShards } } : {}),
     /**
      * NODE BY DEFAULT; A FILE THAT RENDERS ASKS FOR A BROWSER.
      *
@@ -74,11 +119,13 @@ export default defineConfig({
      */
     environment: 'node',
     /**
-     * TWO PROJECTS. `node` SHARES ONE MODULE CACHE PER WORKER; `isolated` DOES NOT.
+     * THREE PROJECTS. `node` AND `dom` SHARE ONE MODULE CACHE PER WORKER; `isolated` DOES NOT.
      *
      * Most of the unit time was importing the same modules again for every
-     * file. Node files do not touch `window`, so they skip the per-file reset.
-     * jsdom and mocking files keep it: they patch globals, timers and the DOM.
+     * file, and building a fresh jsdom for every browser file. Files that
+     * replace no module skip both; tests/setup.ts and tests/setupDom.ts reset
+     * what one file could leave for the next. Files that replace modules keep
+     * the per-file reset.
      */
     projects: [
       {
