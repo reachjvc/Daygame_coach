@@ -7,7 +7,7 @@ import { countEarned, earnedBadges, money, monthCells } from "@/src/quit/lab/les
 describe("lessons registry", () => {
   it("registers copies b to e (not a) with valid addictions", () => {
     expect(Object.keys(LAB.lessons.variants).filter((k) => k !== "best").sort()).toEqual(["b", "c", "d", "e"])
-    for (const v of Object.values(LAB.lessons.variants)) {
+    for (const v of Object.values(LAB.lessons.variants).filter((v) => v.kind !== "best")) {
       expect(v.kind).toBe("copy")
       expect(isAddictionId(v.addiction)).toBe(true)
     }
