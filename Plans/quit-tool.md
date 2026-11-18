@@ -49,15 +49,22 @@ More than paid apps sell, given free, and still easy to find your way around on 
 https://claude.ai/artifact/N6isH3tC391NxHWoJ8ppRV (his 👍 and notes are in its db: collections `likes`,
 `notes`, keyed by tool id; read them before Phase 3).
 
-The menu screen `/quit/<addiction>`: the title and an addiction switcher; a **"Start here"** box with 3 tools
-(6 minutes); then 5 groups; and a **"Craving now?"** bar always at the bottom. Each row: name, one line, time,
-and a pill saying *No account*, *Free account* or *Paid*.
+The menu screen `/quit/<addiction>`: the title and an addiction switcher; one line "New here? Most start with
+the 12 lies test." (a link to `beliefs`); then the 5 groups, the only list; and a **"Craving now?"** bar always
+at the bottom. Each row: name, one line, time, and a pill only where one is needed: *Free account* or *Paid*
+(no "No account" pill).
+
+**Owner's menu notes (2026-11-18, mock db; 👍 on every other tool), folded in:** no "No account" pill, no
+"Start here" box (it repeated "Understand it"); no "men"/"man" in tool names (`how` = "How people quit",
+`tell` = "Tell someone"); day 1 "some days or weeks out is fine" (Q8 below); `clear` "not sure if useful"
+(wave 2, built last); `curve` "dunno how this would work" (a visual mock goes to him first; `curve` is not
+built until his reaction is written here); price: he is weighing a small membership ($1.99–2.99 a month),
+undecided: wave 1 stays free, no payment code, an open question for Phase 8.
 
 | Group | Tool (id) | Account | Wave |
 |---|---|---|---|
-| Start here | The 12 lies test (`beliefs`), What it gives you (`gives`), Your quit curve (`curve`) | none | 1 |
-| Understand it | `beliefs`, `gives`, Your past attempts (`past`), What it costs you (`cost`), How men quit (`how`) | none | 1 |
-| Plan it | `curve` (with day 1), If-then cards (`ifthen`), Clear-out list (`clear`), Money on the line (`stake`), Tell one man (`tell`) | none | curve 1, rest 2 |
+| Understand it | `beliefs`, `gives`, Your past attempts (`past`), What it costs you (`cost`), How people quit (`how`) | none | 1 |
+| Plan it | `curve` (with day 1), If-then cards (`ifthen`), Clear-out list (`clear`), Money on the line (`stake`), Tell someone (`tell`) | none | curve 1, rest 2 |
 | Get through it | Craving now? (`sos`), Symptom guide (`symptoms`), Daily check-in (`checkin`), Today's lesson (`lesson`) | sos, symptoms none; checkin, lesson free account | sos, symptoms 1; rest 3 |
 | Stay free | Your record (`record`), Slipped? Restart today (`slip`), Who you are now (`identity`) | slip none; record, identity free account | slip 1; rest 3 |
 | Get help | What helps besides apps (`besides`), Talk to a coach (`coach`) | none / paid | 2 |
@@ -147,14 +154,15 @@ session. Result: a year and ten years in dollars and hours; one concrete compari
 `[{usd, text}]`, e.g. "a week in Lisbon"); "Use it in your quit curve" button. The number reappears next to
 the coaching price on `/quit/coaching`. Done when: maths unit-tested; no invented prices.
 
-**`how` — How men quit** (wave 1, no account)
+**`how` — How people quit** (wave 1, no account)
 A read page: hope number, then who gets free, what helps, how quitting goes (the checked number cards from
 `08-v3/pages/<id>.json`), each with basis and source. No screening, no death tolls. Done when: every card
 passes the validator.
 
 **`curve` — Your quit curve** (wave 1, no account, P7 P8 P9 P12 P19)
-As before: four questions (how much, cost, what it gives, day 1: chips "in 3 days", "next Monday", "in 2
-weeks" or a date; **never today and never more than 14 days out**: the near-date evidence), a 2-second
+As before: four questions (how much, cost, what it gives, day 1: chips, nearest first: "in 3 days", "next Monday", "in 2
+weeks", or a date up to 6 weeks out; never today; under them one small sourced line "Sooner tends to work
+better" (the near-date evidence, evidence-tools §4)), a 2-second
 screen saying what it combines (his answers + N posts + checked numbers). Result: yearly cost; symptom lines
 (share of posts naming each, as settled in round 8) on HIS weekdays to day 90, "hardest stretch" where
 craving's share peaks; his danger window from `past` if any; "you are here" once day 1 passed; the 3
@@ -186,7 +194,7 @@ message to the friend with his day 1, day 30 and day 90 and the rule ("one slip 
 same day = it goes"). Copy button and share sheet (`navigator.share` where it exists). The site never holds or
 moves money; it says so on the screen. Done when: no payment code anywhere; copy text unit-tested.
 
-**`tell` — Tell one man** (wave 2, no account)
+**`tell` — Tell someone** (wave 2, no account)
 One person who doesn't use; a link to a small page showing his day 1 and "check on him on day 3" with an
 `.ics` for the friend. Nothing stored on the server (the date travels in the link hash).
 
@@ -250,9 +258,10 @@ page (P14): "Do it privately" / "30 days with a coach". Privacy page `/privacy` 
 | Q5 Bands | 0–2 "mostly free", 3–6 "some hooks", 7–12 "hooked", in the data file | Score /100 | Data, easy to retune |
 | Q6 Save before an account | Browser only (`quit-v1`) until he saves | Server, anonymous | Nothing about his habit leaves the phone without an account |
 | Q7 "You vs others" | Later: 200+ saved tests and opt-in only | Now | Needs real data to be honest |
-| Q8 Day 1 range | Within 14 days, never today | His wording "days or weeks" | Asked on the menu mock (item `step3`); his step text in the tool stays his words until he changes it |
+| Q8 Day 1 range | **Answered 2026-11-18** (mock note `step3`: "some days or weeks out is fine"): up to 6 weeks, never today, nearest chips first, "Sooner tends to work better" with its source; his step text unchanged | — | — |
 | Q9 Streaks | Total clear days + close calls beaten; never reset | Classic streak | Users report streak shame after one slip |
 | Q10 Community feed, AI coach | None | Build them | A feed needs moderation; AI coaches are the worst-rated feature |
+| Q12 Membership fee | Open (his note 2026-11-18: maybe $1.99–2.99 a month): wave 1 free, no payment code; decide before Phase 8 | — | — |
 | Q11 Wave 2 before or after 20 Dec | After, except `coach` if the January group is sold through the site | All before | Too much for 20 Dec on one build session |
 
 ---
@@ -521,10 +530,73 @@ docs/research/addiction-one-pagers/board/check_privacy.py src/quit/data/nicotine
    sources), `?present=1` mode (Part 4), `isPublicPage` + unit test, unknown id → 404.
 2. `POST /api/quit/count {addiction, tool, step, src?}`: whitelisted names only; `src` is a short campaign tag
    from the link (`?src=ig-012`), letters/digits/dash, ≤ 20 chars. Until Phase 8's table exists, a no-op.
-3. "Start here" remembers which of its 3 tools are done (local) and shows the next one.
+3. (Dropped by the owner's menu note, 2026-11-18: no "Start here" box; one "New here?" line instead.)
 
 Acceptance: Playwright at 390×844: menu loads signed out, every row opens its tool or a "coming soon" state
 for wave 2/3 tools that says when; no horizontal scroll; dark and light.
+
+#### Phase 3 brief (Opus, 2026-11-18) — menu, frame, count route
+
+Reads first: `node_modules/next/dist/docs/` guides for the App Router pages, layouts, dynamic segments
+(`params` is a Promise in this Next), `notFound`, route handlers, `generateStaticParams`, metadata;
+`proxy.ts`, `src/shared/routes.ts`, `tests/unit/navigation/proxyPrivateByDefault.test.ts`, `app/globals.css`
+(tokens; the app is dark only: there is no light theme, so "dark and light" in the acceptance means the page
+is unchanged and readable under `prefers-color-scheme: light`), `components/ui/` (reuse its Button etc.),
+`components/BackLink.tsx`.
+
+**Files:**
+1. `src/quit/data/menu.json` ← copy `~/.cache/daygame-research/quit-tool/menu/menu-from-mock.json` without
+   `_note`. Types for it in `src/quit/types.ts` (`QuitMenu`). Every reader string on the quit pages comes
+   from `menu.json`, `src/quit/data/frame.json` (new: footer labels "Craving now?", "Free tools", "30 days
+   with a coach", "Privacy", "Sources", "Back", "Coming soon", 404 text) or the addiction data file; no
+   reader text in components.
+2. `app/quit/layout.tsx`: outside `(app)` (no tab bar, no sign-in). Minimal header: site name linking to
+   `/quit`. Uses the app tokens. Max width 640 px centred, 16 px side padding, safe-area insets.
+3. `app/quit/page.tsx`: list of addictions; live ones (`liveIds()`) first as big rows linking to
+   `/quit/<id>`; the rest under "Coming later" without links. While `live.json` is empty, every addiction is
+   "Coming later" in production; in development and test (`process.env.NODE_ENV !== "production"`) or with
+   `?preview=1`, non-live addictions that have a data file are shown as links marked "Preview". Same rule
+   decides whether `/quit/[addiction]` answers 404.
+4. `app/quit/[addiction]/page.tsx`: the menu. Title (`addictions[id].title`), a `<select>` addiction switcher
+   (live + previewable ids; navigates on change), the "New here?" line (link to `/quit/<id>/beliefs`),
+   5 groups (`groups[]`): row = name (with `{lies}` filled), line, minutes (number → "N min"; string as is;
+   null → nothing), pill only for `account: "free"|"paid"`. Wave-1 rows link to `/quit/<id>/<tool>`; wave 2/3
+   rows link too but open the coming-soon state. `coach` row links to `href`. Sticky "Craving now?" bar at
+   the bottom (links to `/quit/<id>/sos`), not covering the last row (bottom padding), respects the safe-area
+   inset. Unknown id or non-previewable → `notFound()`.
+5. `app/quit/[addiction]/[tool]/page.tsx`: looks up the tool in `src/quit/tools/registry.ts` (`{[toolId]:
+   {wave, Component: React.ComponentType<ToolProps> | null}}`, all `null` for now). Null or wave > 1 →
+   `ComingSoon` (tool name, its line, `coming[wave]` text, link back to the menu). Unknown tool → 404.
+6. `src/quit/components/ToolFrame.tsx`: header (Back → menu, title, optional progress bar `step/of`),
+   children, footer: "Craving now?" (hidden on the `sos` tool), the two doors (`/quit/<a>` and
+   `/quit/coaching`), Privacy (`/privacy`), "Sources" (an anchor `#sources` that tools fill). `?present=1`
+   (Part 4): no footer, no counts, type scaled 1.4×, `data-present` on the root for later phases. Export a
+   `useQuitStore()` hook in `src/quit/store.ts`: `localStorage` key `quit-v1`, shape
+   `{[addiction]: {[tool]: unknown}}`, every read/write in try/catch, in-memory fallback, `get(a, tool)`,
+   `set(a, tool, value)`, `clear(a, tool)`; unit tests with storage throwing.
+7. `isPublicPage`: add `isUnder(pathname, "/quit")` and `isUnder(pathname, "/privacy")`; extend the routes
+   unit test (`/quit`, `/quit/nicotine/beliefs`, `/privacy` public; `/quitx`, `/plan/quit-vice` private).
+   API routes skip the proxy already (matcher), so `/api/quit/count` needs nothing there.
+8. `app/api/quit/count/route.ts` (POST): body `{addiction, tool, step, src?}`; `addiction` ∈ ids, `tool` ∈
+   `QUIT_TOOL_IDS` or `"menu"`, `step` ∈ `"view"|"start"|"done"`, `src` matches `^[a-z0-9-]{1,20}$`; else
+   400. Body over 1 KB → 413. Valid → 204 and nothing stored (Phase 8 adds the table). No cookies, no IP,
+   no logging of the body. `src/quit/count.ts` client helper `count(addiction, tool, step)`: reads `src` from
+   the page URL once (kept in `sessionStorage` `quit-src`, try/catch), `navigator.sendBeacon` with fetch
+   fallback, never throws, does nothing in `?present=1`. The menu sends `view`. Unit tests for the
+   validation.
+9. Playwright spec `tests/e2e/quit/menu.spec.ts`, 390×844, signed out: `/quit` loads; `/quit/nicotine`
+   (preview in dev) shows the 5 groups and all 20 rows; no element wider than the viewport
+   (`document.documentElement.scrollWidth <= 390`); every row's link answers 200 and shows either a tool or
+   the coming-soon text; `/quit/nope` is 404; the sos bar does not cover the last row when scrolled to the
+   bottom; the same with `colorScheme: "light"`. Follow the repo's e2e rules (look at an existing spec and
+   `tests/unit/ci/e2e-isolation.test.ts` for what specs must do: timed sleeps, listed skips).
+
+**Acceptance (Haiku):** unit tests green (new + full suite vs baseline), typecheck ratchet, eslint on changed
+files, the Playwright spec green against a worktree dev server (memory "Worktree e2e servers": `next dev
+--webpack -p <free port>`, `NEXT_DIST_DIR=.next-quit`, test-stack env, `--workers=1`, own `--output`),
+plus screenshots of `/quit` and `/quit/nicotine` at 390×844 saved to `~/.cache/daygame-research/
+quit-tool/shots/phase3/` and checked against this list: title, switcher, New-here line, 5 group headings,
+pills only on Free account/Paid rows, sos bar visible, no "No account", no "Start here", no "men".
 
 ### Phase 4: wave 1, part 1 — `beliefs`, `gives`, `past`, `cost`, `how` — brief Opus, build Sonnet
 
@@ -533,7 +605,8 @@ screen's text matches the data file (no hard-coded reader text in components).
 
 ### Phase 5: wave 1, part 2 — `curve`, `sos`, `symptoms`, `slip` — brief Opus, build Sonnet
 
-Per Part 2. Signed-in parts use a test account on the test stack, never the owner's.
+Per Part 2. Signed-in parts use a test account on the test stack, never the owner's. **`curve` waits** for
+the owner's reaction to its visual mock (his note 2026-11-18); `sos`, `symptoms`, `slip` go first.
 
 ### Phase 6: privacy page and coach page — brief Opus, build Sonnet
 
