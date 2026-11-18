@@ -848,9 +848,23 @@ export function NorthStarFlow({
          * makes the plan row itself). `undefined` is a failed read, which stays
          * unknown. The browser's own days, if it has any, are then the changes
          * against this empty record, which is the import.
+         *
+         * THE ACCOUNT HAS DAYS BUT NO PLAN ROW (another device ticked first):
+         * the page takes the union. The account's days are the base and every
+         * day this browser holds goes on top (an empty `atLoad` counts them all
+         * as this visit's), so the save sends only sets and never a clear. No
+         * counted ids: with an empty `atLoad` a count would be ADDED to the
+         * account's, counting twice; this browser's number wins instead.
+         * Acking the account's days without putting them in the page would
+         * send a clear for every account cell this browser lacks.
          */
         if (days) {
-          ackDays(recordIsEmpty(days) ? emptyDayRecord() : days)
+          if (recordIsEmpty(days)) {
+            ackDays(emptyDayRecord())
+          } else {
+            setPlan((current) => ({ ...current, ...keepEditsMadeWhileLoading(days, emptyDayRecord(), recordOf(current)) }))
+            ackDays(days)
+          }
           setDayBaseline((n) => n + 1)
         }
         return
