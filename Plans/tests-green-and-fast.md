@@ -53,6 +53,29 @@ New failures may appear once F0 is fixed, because nothing has run since 11-17. A
 
 Runs after Phase 1: CI 44284506640, E2E 44284506582 (sha b70788dd). Install passed in both.
 
+### Phase 2 results per group (foreman, 2026-11-18)
+
+How it ran: each group in its own worktree, specs checked locally one at a time through a shared lock
+(`~/.cache/daygame-research/tests-green/run-spec.sh`, B2 method), then all groups merged on
+`tests-green` and proven by one dispatched GitHub run per batch (B4: no per-group pushes).
+
+| ID | Decision | What changed |
+|---|---|---|
+| F1 | Outdated test, plus two product bugs | The phone header shows nothing when all is saved on purpose (8da8dd4b, time-log-phone 6.6); `savedToAccount` now also finds hidden "Saved." text kept for screen readers. Behind it: phone sheet says Start not Create (87a47248), phone delete goes through the sheet, "Import and export" (8da8dd4b), Stop taps retried because the run bar ignores a tap right after it changes (`TAP_SETTLE_MS`). **Product bugs fixed:** phone Back spent one press on a dead step after editing a calendar block (`useBackCloses`, b61a4736); entry sheet shortcuts, typed time box and row ▶ were 44 px, owner finding F27 says 48 px; entry row tap area 42 → 44 px. `mobile-toggl.spec.ts` ported to the Time Log phone layout (17 tests). |
+| F2 | Outdated test | The tests pressed a phone "More" button removed in f2b5bf58; Log Out is on the You tab now (`helpers/logOut.ts`). Log Out already sends or names a waiting answer within 5 s. `test.setTimeout(150_000)` removed (project default 60 s; the flow takes 8–17 s). |
+| F3 | Outdated tests, plus a product bug and a lighter shell | Council tests shared one account per worker, so each now starts from an empty council; hover glow is a 300 ms transition by design (c5de0596). **Product bug fixed:** filter chips (36 px) and back link (20 px) under the 44 px phone target. **Budget (D4):** the page itself was ~63 KB; the shell every signed-in page loads carried ~75 KB for Log Out (time-tracker sync, Supabase client, audit queue; imports added 2026-11-10). The header's Log Out now loads its code on approach, press or 6 s after load; offline before it loaded, a press says so visibly and loses nothing (new desktop e2e). Mono font not preloaded; cards do not prefetch profiles; card data trimmed. `/plan/role-models` 471 → 296 KB (phone 298), `/dashboard` 612 → 575, `/plan` 707 → 677 (local production build). |
+| F4 | Outdated test | Training stopped being a tab (f2b5bf58); the test checks the bar shows on /training with Home as the way out and no tab marked current. |
+| F5 | Not red | The test carries `test.fail` for a known product bug (e1a68550): a resent sign-up confirmation link lands on `/auth/login?error=missing_code` because `resend()` sends no PKCE challenge. Outside this plan; see B6. |
+| F6 | Outdated tests | The refusal now also carries the stored answer (565ccb2a); the newer answer still wins. Mute snaps to the quarter the label names (b3aad6b1), so "1 h" is 45–60 min. |
+| F8 | Outdated test | The way out of the Time Log is labelled Home (f2b5bf58). |
+| F9 | Product bug (in progress) | On a phone, Log Out from the You tab lands on `/` or `/auth/login` depending on a race (`audit.spec.ts:396`, run 44334854794). Must land on `/` every time. |
+| F10 | Outdated test (in progress) | The new offline-before-Log-Out test must skip on every phone-sized project, not only `phone` (failed on android). |
+
+Open, for the owner: the phone week strip's day buttons are 40 px wide (49 px tall); seven days and two
+44 px arrows do not fit 390 px otherwise. The tap-size test allows ≥ 38 px wide there.
+Unit tests that failed once under local load and pass alone (Phase 3 input): `backClosesSheet`,
+`aChangeFromAnOlderPageIsNotLost`, `aRunningSecondRedrawsOneDayOfThePhoneList`.
+
 ## Blockers, each tried once
 
 | ID | What | Tried, result | Blocks | Recommendation |
@@ -62,6 +85,7 @@ Runs after Phase 1: CI 44284506640, E2E 44284506582 (sha b70788dd). Install pass
 | B3 | The permission classifier refused `package.json`/lockfile edits in the shared folder before | memory `shared-checkout-tool-quirks` | any dependency change | No step here needs one. If one turns out to, ask the owner once, then go on |
 | B4 | Vercel's limit is about 60 deploys a day, and every branch push makes a preview | memory `vercel-late-deploy-rollback` | pushes | Push the work branch at most once per finished step; ≤ 15 pushes a day for this plan |
 | B5 | Bigger GitHub runners cost money | public repo: 4-core runners are free | nothing | Never switch `runs-on` to a paid size |
+| B6 | Resent sign-up confirmation link fails (`resend()` sends no PKCE challenge; supabase-js 2.91 has no option) | Checked in Phase 2 (F5): still fails with `test.fail` removed | nothing here (test is marked `test.fail`) | Outside this plan: a design choice (fragment-reading confirm page, or resend as `signInWithOtp`). Schedule separately |
 
 ## Decisions (taken; the owner can veto)
 
@@ -101,7 +125,7 @@ New tests are welcome where a fix had none: one spec or unit test per real bug f
 
 | Test (file:line, title) | Kind | Replaced by / reason | Green run without it |
 |---|---|---|---|
-| | | | |
+| `tests/e2e/mobile/mobile-toggl.spec.ts:181` "bulk selection is opt-in, so checkboxes do not clutter the list" | (c) | The phone has no way into bulk Select any more: removed on purpose in a8c52299 (time-log-phone 4.2 / D2, "Copy start link and Select are gone from the phone"). Not about data, sync, offline, sign-in or privacy | pending |
 
 ---
 
