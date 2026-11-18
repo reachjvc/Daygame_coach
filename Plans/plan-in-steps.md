@@ -16,7 +16,26 @@ His answers the same day, which shape everything below:
   areas, but i need to look them over again and decide". Y5: asked what the 10 were (answered in chat).
   Y6 yes.
 
-**Status: Phases 1–4 started 2026-11-18.**
+**Status:**
+- **Phase 1 live** on 2026-11-18 (`02278590`):
+  - The first backup is in `~/dg-backups/nightly/` and OneDrive: 32 tables, 2,231 rows, 4 accounts.
+  - The nightly timer runs at 03:00.
+  - The restore was proved against the local stack.
+  - Recovering the key from OneDrive into a clean keyring works, and a wrong passphrase is refused.
+- **Phase 4:**
+  - 4.1 job spec written (private, `spec/job-spec.md`). All 171 old jobs have a home: 93 kept, 26 in a new
+    form, 52 replaced by original forms.
+  - 4.3 areas page published 2026-11-18: https://claude.ai/artifact/WzWoej19QPwSe42fXk5YBY. Its database
+    holds `pick/choice` and `notes`/`likes` per block. Read it before applying areas.
+  - 4.2 words written by a writer who saw no sources (private, `spec/words.md`). After two checker rounds:
+    0 must-change. Builder rules are in `spec/builder-notes.md`.
+- **Phase 2 live** on 2026-11-18 (`4f9128e4`):
+  - The migration `20261118120000_plan_sandboxes` is applied, and the owner's row is inserted.
+  - An Opus security review found 1 high, 2 medium and 5 low findings. All were fixed, including H1: the
+    address bar must stay on `/plan/sandbox`.
+  - Tests: e2e 27/27 (including the normal-/plan specs), integration 16/16.
+  - The owner's real row counts before first use (32 tables, 927 rows) are in
+    `~/.cache/daygame-research/plan-steps/owner-counts-before.json`, made with `live/counts.py`.
 
 ## Where the facts come from
 
