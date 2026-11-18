@@ -163,6 +163,17 @@ passes the validator.
 **`curve` — Your quit curve** (wave 1, no account, P7 P8 P9 P12 P19)
 Visual mock for the owner (2026-11-18): https://claude.ai/artifact/F9kYB9LmiFq2e1ssFRzCkK (db `notes`, `likes`,
 keys how/chart/cards/plan/ask). Read its notes before the Phase 5 `curve` brief.
+**Owner note 2026-11-18 (relayed by the one-pagers session): rebuild `curve` and `symptoms` on science, not
+forum mention-rates** ("it should be based on science, how long the craving lasts for etc. I am not sure how
+we would correctly use forum posts"). So: the hard days come from study timing (Hughes 2007 review of 120
+studies: irritability, anxiety, low mood, poor concentration, impatience, insomnia, restlessness peak in week 1
+and last 2–4 weeks; tiredness is not a withdrawal effect; Shiffman 2006 diary study n=214: back to baseline in
+about 10 days; cue-triggered craving stronger at day 35 than day 7, S35: a marker around weeks 5–8), each line
+labelled with its source and "studies are almost all of cigarette smokers". Forum posts never give a share,
+strength or length; they may give words people use, risky moments, questions asked on day N, ideas for what
+helped (checked against studies), and the good side, without numbers. No minute promise for one craving. A
+rebuilt visual mock goes to him before `curve` is built; the parts of the spec above that use felt shares are
+replaced by this paragraph.
 As before: four questions (how much, cost, what it gives, day 1: chips, nearest first: "in 3 days", "next Monday", "in 2
 weeks", or a date up to 6 weeks out; never today; under them one small sourced line "Sooner tends to work
 better" (the near-date evidence, evidence-tools §4)), a 2-second
@@ -242,7 +253,7 @@ page (P14): "Do it privately" / "30 days with a coach". Privacy page `/privacy` 
 | B2 | No payment code | Searched for stripe/payment libraries: none; `Checkout.tsx` says payments are not migrated | coach | The owner's Payment Link (first-1000 A3), a plain link |
 | B3 | No email sending | No mail library; only Supabase sign-in emails | 5, 8 | `.ics` files, share links and push instead; email is a later plan |
 | B4 | Timed nudges | `app/api/notifications/tick/route.ts` runs every minute (pg_cron) with quiet hours | 8 | Add `runQuitNudgeClock`, idempotent through a sent-log table |
-| B5 | Felt data | `08-v3/felt/*.json`: nicotine 758 posts (38–61 per bin), weed 801, porn 534, alcohol 605; phone and gambling none | curve, symptoms | Phone and gambling wait for their research step (Phase 10) |
+| B5 | Felt data (2026-11-18: no longer drawn as shares; see `curve`) | `08-v3/felt/*.json`: nicotine 758 posts (38–61 per bin), weed 801, porn 534, alcohol 605; phone and gambling none | curve, symptoms | Phone and gambling wait for their research step (Phase 10) |
 | B6 | Share card and wallpaper images | `ImageResponse` doc present in `node_modules/next/dist/docs/01-app/03-api-reference/04-functions/image-response.md`; wallpaper drawn in the browser on a canvas | 4, 6 | As specified |
 | B7 | Live database change | Not tried: owner's yes first (Phase 0 item 1); method in memory "Live DB backup and apply" | 8 | Ask in the Phase 0 message |
 | B8 | Black Box ids and endings | `vices.ts` ids: nicotine, weed, porn, alcohol, scrolling, gambling, junk; `ViceEndingId` = fine, justone, drink, stress, faded, other | past, sos, slip | Map quit-tool endings onto these; extend only with a migration |
@@ -312,8 +323,9 @@ Acceptance: validator passes with `live.json` empty and fails, naming each TODO,
 #### Phase 1 brief (Opus, 2026-11-18) — build exactly this, decide nothing
 
 Phase 0 findings this brief rests on: the menu mock's `likes` and `notes` were empty on 2026-11-18 (nothing to
-fold in). The v3 belief's `test` field is the "When this thought comes" step (rule 22) and `testR7` is the
-real-life test; the five-step slots come from `06-template.json` `pages[id=<v3 id>].subs`, overridden by
+fold in). The v3 belief's `test` field is the "When this thought comes" step (rule 22); `testR7` is the round-7
+test the owner REJECTED on 9 Nov (it sent him into the hard thing), imported by mistake and replaced in Phase 2
+round 3 (correction 2026-11-18); the five-step slots come from `06-template.json` `pages[id=<v3 id>].subs`, overridden by
 `SUBS_V3` in `board/build_v3.py` line 58. The guarantee line is the owner's own offer text and stays in
 first person (only `offer.json` may hold "I"). Nicotine's footer line (clozapine/olanzapine, v3
 `footerProposal`) is a `footerNote`, not a danger line: nicotine's `danger.level` is `"none"`.
@@ -725,17 +737,13 @@ signed out → "Next time: name the voice sooner" plus the menu link. No → lin
 promises how long a craving lasts: tooltext for `sos` passes a unit test banning `/lasts?|will pass|passes
 in|\d+ minutes to pass|go(es)? away in/i`. The frame hides its own "Craving now?" link on this tool.
 
-**`symptoms` — Symptom guide.** List of the symptom keys in `felt.bins[*].symptoms` that reach ≥ 10 in 100
-posts in at least one counted bin (n ≥ 25), in `symptomWords` labels, sorted by their peak share. Tap one:
-`symptomSummary(key, felt)` → `{peakLabel, peakPer100, spanFrom, spanTo, fadesLabel | null}`: counted bins
-only (n ≥ 25), peak = highest share (earliest wins a tie), span = the contiguous bins around the peak with
-share ≥ 0.8 × peak, fades = the first later bin with share ≤ 0.5 × peak (null → "no clear easing in the
-posts"). Shown as "Most mentioned <span>: <peakPer100> in 100 posts" and "Down to half by <fadesLabel>"
-(tooltext). Then its `symptomHelp` rows with `EvidenceChip` and `SourceTap`; for `sleep` the four-rule card
-from tooltext. A basis fold: post count, forums, years, every `felt.bias` line (RULEBOOK rule 20). Every
-figure is computed; a unit test checks `symptomSummary` against hand-computed values for 3 nicotine keys
-(write the expected values by reading the JSON yourself, in the test, with a comment showing the
-arithmetic) and an all-zero key.
+**`symptoms` — Symptom guide** (rewritten 2026-11-18 after the owner's "based on science" note). List: one
+row per `symptomCourse` entry (data field added in Phase 2 round 3), in data order, labelled with
+`symptomWords`. Tap one: "Worst: <peak>", "Usually eases: <lasts>" and its `text`, each with `SourceTap` and
+`EvidenceChip`; then its `symptomHelp` rows; for `sleep` the four-rule card from tooltext; the
+`symptomCourseNote` caveat once at the bottom. No forum share, post count or "in 100 posts" anywhere on the
+screen (unit test on the rendered text and on tooltext: `/in 100 posts|posts mention|of posts/i` fails). A
+unit test that every `symptomCourse` row has ≥ 1 ref and that no row's key is `tired`.
 
 **`slip` — Slipped? Restart today.** Screen 1 when (today / yesterday / earlier this week); 2 what was going
 on (`endings`); 3 what you told yourself (belief `short` chips + "Something else" with an optional text field,
@@ -747,7 +755,7 @@ screen 1, `ending` mapped through `endings[].blackBoxEnding`, `thought`), "Saved
 and a link to start the new run there. tooltext for `slip` passes the `no-reset` regex and
 `/start (again|over) from|lost (it all|your)|blew it|failed/i`.
 
-**Acceptance:** unit tests (symptomSummary, sos text ban, slip text ban, endings mapping, countdown remaining
+**Acceptance:** unit tests (symptomCourse rendering, sos text ban, slip text ban, endings mapping, countdown remaining
 maths incl. a reload 4 minutes in); full suite vs baseline; typecheck; eslint; Playwright
 `tests/e2e/quit/wave1-part2.spec.ts` at 390×844: signed out sos run to "Did it pass?" (fake the clock with
 `page.clock`), symptoms list + one symptom, slip run; signed in (test-stack test user, the repo's existing
@@ -932,7 +940,8 @@ addictions.
 
 ## Questions from the build
 
-Phase 1 (answered by the planner, 2026-11-18): there are 19 tool ids, not 20 (the brief is corrected).
+Phase 1 (answered by the planner, 2026-11-18): `how` skips the `numbers` entry equal to `hope` and puts `hope-` kinds
+right under it (owner-lens critic, rule 10). There are 19 tool ids, not 20 (the brief is corrected).
 Importer keeps only typed fields; forum-harvest refs get `url: ""` and are fixed in Phase 2.
 
 Phase 3 (answered by the planner, 2026-11-18):
