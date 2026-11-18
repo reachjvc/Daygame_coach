@@ -1,57 +1,57 @@
 /**
- * Phone-viewport coverage for the time tracker, on the product route.
+ * Phone-viewport coverage for the Time Log, on the product route.
  *
  * Runs in the `phone` lane (iPhone 14) on pull requests and in `android`
- * (Pixel 7) nightly. It guards the things that actually broke at
- * 390px: page-width overflow, the bottom tab bar, the compact entry rows, the
- * report filter sheet and touch-target sizes.
+ * (Pixel 7) nightly. It guards the things that actually broke at 390px:
+ * page-width overflow, the bottom bar, the compact entry rows, tap-target
+ * sizes and the iOS zoom floor.
  *
- * It ran signed OUT against `/test/toggl`, a lab copy of the same components
- * that returns 404 in the production build CI runs, and on three phone projects
- * of which two were the same iPhone. Signed in, the workspace is the account's
- * — the worker's own — so each test starts from an emptied account
- * (helpers/timetrack.ts).
+ * Written for the Time Log phone layout (Plans/time-log-phone.md): three tabs
+ * (Timer, Calendar, Reports) with the run bar above them, "Settings and more"
+ * (Projects, Clients, Tags, Settings, Import and export) in the header, and one
+ * entry sheet for everything an entry can be asked.
+ *
+ * It signs in as the worker's own account, so each test starts from an
+ * emptied account (helpers/timetrack.ts).
  */
 
-import { type Page } from '@playwright/test'
+import { type Locator, type Page } from '@playwright/test'
 import { test, expect } from '../fixtures/test'
-import { STORAGE_KEY, TRACKER, openFreshTracker, openTracker, readState, trackEntry } from '../helpers/timetrack'
+import { STORAGE_KEY, TRACKER, openFreshTracker, openTracker, readState, startNamed, tapStop, trackEntry } from '../helpers/timetrack'
 
-/**
- * The bottom bar is `position: fixed`; Playwright's mobile emulation measures
- * actionability against the layout viewport, so a plain click can report a
- * false interception. The element's own hit-test is asserted separately below.
- */
-const tab = (page: Page, name: string) => page.getByRole('navigation').getByRole('button', { name, exact: true })
+/** The three tabs of the bar at the bottom */
+const tab = (page: Page, name: string) => page.getByRole('navigation', { name: 'Sections' }).getByRole('button', { name, exact: true })
 
-/** The two sections that live behind "More" on a phone, not in the bar */
-const BEHIND_MORE = ['Manage', 'Settings']
+/** What ⚙ "Settings and more" opens, and the title the header then shows */
+const BEHIND_MENU: Record<string, string> = {
+  Projects: 'Projects',
+  Clients: 'Clients',
+  Tags: 'Tags',
+  Settings: 'Settings',
+  'Import and export': 'Import/export',
+}
 
 /** Something only that screen draws, so arriving there is a thing to wait for */
-const SCREEN_READY: Record<string, (page: Page) => ReturnType<Page['locator']>> = {
-  Timer: (page) => page.getByPlaceholder('What are you working on?'),
-  Calendar: (page) => page.locator('main').getByRole('button', { name: 'Day', exact: true }),
-  Reports: (page) => page.locator('main').getByText(/total hours/i).first(),
-  Projects: (page) => page.locator('main').getByRole('button', { name: 'Archived', exact: true }),
-  Manage: (page) => page.locator('main').getByRole('button', { name: 'Clients', exact: true }),
-  Settings: (page) => page.locator('main').getByRole('button', { name: 'Profile', exact: true }),
+const SCREEN_READY: Record<string, (page: Page) => Locator> = {
+  Timer: (page) => page.getByTestId('run-bar'),
+  Calendar: (page) => page.locator('main [data-day-header]').first(),
+  Reports: (page) => page.getByRole('region', { name: 'Tracked hours' }),
 }
+
+const ALL_SCREENS = ['Timer', 'Calendar', 'Reports', ...Object.keys(BEHIND_MENU)]
 
 async function goTo(page: Page, name: string) {
   await page.evaluate(() => window.scrollTo(0, 0))
-  // dispatchEvent, not click(): in `next dev` the dev-tools badge sits in a
-  // bottom corner and covers part of the bar. That overlay does not exist in a
-  // production build, and the bar's own hit-test is asserted separately.
-  if (BEHIND_MORE.includes(name)) {
-    await tab(page, 'More').dispatchEvent('click')
-    // a real click here on purpose: the sheet's rows have to be tappable, and
-    // Playwright refuses a click on an element something else is covering.
-    // The sheet was drawn under this very bar the first time it was wired up.
-    await page.getByRole('dialog').getByRole('button', { name, exact: true }).click()
-    await expect(page.getByRole('dialog')).toHaveCount(0)
-  } else {
-    await tab(page, name).dispatchEvent('click')
+  if (name in BEHIND_MENU) {
+    await page.getByRole('button', { name: 'Settings and more' }).click()
+    // a real click on purpose: the sheet's rows have to be tappable
+    await page.getByRole('dialog', { name: 'Settings and more' }).getByRole('button', { name, exact: true }).click()
+    await expect(page.getByRole('banner').getByRole('heading', { level: 2 })).toHaveText(BEHIND_MENU[name])
+    return
   }
+  // dispatchEvent, not click(): in `next dev` the dev-tools badge sits in a bottom corner
+  // and covers part of the bar. That overlay does not exist in a production build.
+  await tab(page, name).dispatchEvent('click')
   await expect(SCREEN_READY[name](page)).toBeVisible()
 }
 
@@ -65,6 +65,24 @@ const pageOverflow = (page: Page) =>
     innerWidth: window.innerWidth,
   }))
 
+/** Open the sheet of the first entry in the list */
+async function openFirstEntry(page: Page) {
+  await page.locator('main li div[role="button"]').first().click()
+  const sheet = page.getByRole('dialog', { name: 'Time entry', exact: true })
+  await expect(sheet).toBeVisible()
+  return sheet
+}
+
+/** A project, made the way a person makes one on a phone: ⚙, Projects, New project */
+async function makeProject(page: Page, name: string) {
+  await goTo(page, 'Projects')
+  await page.getByRole('button', { name: 'New project' }).click()
+  await page.getByLabel('Name', { exact: true }).fill(name)
+  await page.getByRole('button', { name: 'Create project' }).click()
+  await expect(page.getByText(name).first()).toBeVisible()
+  await goTo(page, 'Timer')
+}
+
 // No serial mode: each worker signs in to an account of its own and every test
 // empties it first, so these may run side by side.
 test.describe('time tracker on a phone', () => {
@@ -72,7 +90,7 @@ test.describe('time tracker on a phone', () => {
     await openFreshTracker(page)
     await trackEntry(page, 'phone entry')
 
-    for (const screen of ['Timer', 'Calendar', 'Reports', 'Projects', 'Manage', 'Settings']) {
+    for (const screen of ALL_SCREENS) {
       if (screen !== 'Timer') await goTo(page, screen)
       const { scrollWidth, innerWidth } = await pageOverflow(page)
       expect(scrollWidth, `${screen} overflows horizontally`).toBeLessThanOrEqual(innerWidth + 1)
@@ -82,32 +100,24 @@ test.describe('time tracker on a phone', () => {
   /**
    * THE SAME SCREENS, WITH A TIMER RUNNING, which is the state the test above
    * never sees: it stops its timer inside `trackEntry` before it navigates.
-   *
-   * The running pill only renders in the header on the five screens that are not
-   * Timer, so it was never on screen while anything measured width — and it
-   * pushed the alerts bell 28px off a 390px viewport whenever the sync badge was
-   * also keeping its words, which it does whenever there is something to say.
+   * With the badge keeping its words (offline) and the run bar showing the
+   * timer, the header once pushed its bell off a 390px screen.
    */
   test('every screen still fits while a timer is running', async ({ page, context }) => {
     await openFreshTracker(page)
-
-    await page.getByPlaceholder('What are you working on?').fill('a timer left running')
-    await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
-    await expect(page.locator('main').getByRole('button', { name: 'Stop timer' })).toBeVisible()
+    await startNamed(page, 'a timer left running')
+    await expect(page.getByTestId('run-bar').getByRole('button', { name: 'Stop timer' })).toBeVisible()
 
     // OFFLINE, so the badge keeps its words ("Offline · 1 waiting") for every
-    // measurement. Signed in, it is a bare dot once saved and words only while
-    // a save is in flight — so measuring "whenever" measured whichever state
-    // the save happened to be in, and the widest one is the one that matters.
+    // measurement. Online it shows nothing once saved, and words only while a
+    // save is in flight, so the widest state is the one to measure.
     await context.setOffline(true)
     try {
-      await expect(page.locator('header').getByRole('button', { name: /^Offline/ })).toBeVisible()
-      for (const screen of ['Timer', 'Calendar', 'Reports', 'Projects', 'Manage', 'Settings']) {
+      await expect(page.getByRole('banner').getByRole('button', { name: /^Offline/ })).toBeVisible()
+      for (const screen of ALL_SCREENS) {
         if (screen !== 'Timer') await goTo(page, screen)
-        // the pill is what makes this different from the test above
-        if (screen !== 'Timer') {
-          await expect(page.locator('header').getByRole('button', { name: 'Stop the running timer' })).toBeVisible()
-        }
+        // the bar with the running timer is what makes this different from the test above
+        await expect(page.getByTestId('run-bar').getByRole('button', { name: 'Stop timer' })).toBeVisible()
         const { scrollWidth, innerWidth } = await pageOverflow(page)
         expect(scrollWidth, `${screen} overflows horizontally with a timer running`).toBeLessThanOrEqual(innerWidth + 1)
       }
@@ -119,7 +129,7 @@ test.describe('time tracker on a phone', () => {
   test('the bottom tab bar is present, reachable and switches screens', async ({ page }) => {
     await openFreshTracker(page)
 
-    const bar = page.locator('nav[aria-label="Sections"]')
+    const bar = page.getByRole('navigation', { name: 'Sections' })
     await expect(bar).toBeVisible()
 
     // it sits at the bottom of the viewport and hit-tests to itself
@@ -133,27 +143,21 @@ test.describe('time tracker on a phone', () => {
     expect(ownsItsPixels.ownedByNav).toBe(true)
 
     await goTo(page, 'Reports')
-    await expect(page.locator('main')).toContainText(/total hours/i)
+    await expect(page.locator('main')).toContainText(/tracked hours|total hours/i)
     await goTo(page, 'Timer')
-    await expect(page.getByPlaceholder('What are you working on?')).toBeVisible()
+    await expect(page.getByTestId('run-bar').getByRole('button', { name: /working on/ })).toBeVisible()
   })
 
-  test('entry rows are compact and open the detail sheet on tap', async ({ page }) => {
+  test('entry rows are compact and open the entry sheet on tap', async ({ page }) => {
     await openFreshTracker(page)
     await trackEntry(page, 'phone entry')
 
-    const firstRow = page.locator('ul.divide-y > li').first()
-    await firstRow.locator('[role="button"]').first().click()
-    await expect(page.getByText('Time entry details')).toBeVisible()
+    const sheet = await openFirstEntry(page)
+    await expect(sheet.getByPlaceholder(/worked on|working on/)).toHaveValue('phone entry')
 
-    // the sheet fills the screen rather than floating in a corner
-    const sheet = await page.evaluate(() => {
-      const heading = [...document.querySelectorAll('h3')].find((h) => h.textContent === 'Time entry details')
-      const panel = heading?.closest('div.flex')?.parentElement
-      const rect = panel!.getBoundingClientRect()
-      return { width: Math.round(rect.width), viewport: window.innerWidth }
-    })
-    expect(sheet.width).toBeGreaterThanOrEqual(sheet.viewport - 2)
+    // the sheet fills the screen's width rather than floating in a corner
+    const { width, viewport } = await sheet.evaluate((el) => ({ width: Math.round(el.getBoundingClientRect().width), viewport: window.innerWidth }))
+    expect(width).toBeGreaterThanOrEqual(viewport - 2)
   })
 
   test('a grouped entry can be expanded on a phone, not just on a desktop', async ({ page }) => {
@@ -168,7 +172,7 @@ test.describe('time tracker on a phone', () => {
     const box = await badge.boundingBox()
     expect(box!.height, 'the group toggle is too short to tap').toBeGreaterThanOrEqual(44)
 
-    const rows = page.locator('ul.divide-y li')
+    const rows = page.locator('main ul.divide-y li')
     const collapsed = await rows.count()
     await badge.click()
     await expect(page.getByRole('button', { name: 'Collapse group' })).toBeVisible()
@@ -178,44 +182,22 @@ test.describe('time tracker on a phone', () => {
     await expect.poll(() => rows.count()).toBe(collapsed)
   })
 
-  test('bulk selection is opt-in, so checkboxes do not clutter the list', async ({ page }) => {
-    await openFreshTracker(page)
-    await trackEntry(page, 'phone entry')
-
-    const boxes = page.locator('input[aria-label="Select time entry"]')
-    await expect(boxes).toHaveCount(0)
-    await page.getByRole('button', { name: 'Select' }).first().click()
-    await expect.poll(() => boxes.count()).toBeGreaterThan(0)
-  })
-
-  test('report filters live in a sheet instead of a wall of controls', async ({ page }) => {
-    await openFreshTracker(page)
-    await trackEntry(page, 'phone entry')
-    await goTo(page, 'Reports')
-
-    await page.getByRole('button', { name: /Filters/ }).click()
-    await expect(page.getByText('Report settings')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Projects' }).first()).toBeVisible()
-  })
-
-  test('the calendar opens on a single day rather than a seven-column grid', async ({ page }) => {
+  test('the calendar opens on a single day with a week strip, not a seven-column grid', async ({ page }) => {
     await openFreshTracker(page)
     await goTo(page, 'Calendar')
 
-    await expect(page.locator('main').getByRole('button', { name: 'Day', exact: true })).toHaveAttribute(
-      'data-active',
-      'true',
-    )
+    await expect(page.getByRole('group', { name: 'Week' }).getByRole('button', { pressed: true })).toHaveCount(1)
+    await expect(page.locator('main [data-day-column]')).toHaveCount(1)
     const { scrollWidth, innerWidth } = await pageOverflow(page)
     expect(scrollWidth).toBeLessThanOrEqual(innerWidth + 1)
   })
 
   test('no field is small enough to make iOS zoom the page when tapped', async ({ page }) => {
     await openFreshTracker(page)
+    await trackEntry(page, 'a row for the sheet')
 
     // Safari zooms the whole page when you tap an input under 16px, and the
-    // page never zooms back. The main timer field was 14px, as were ten
-    // dropdowns across Reports and Settings.
+    // page never zooms back.
     const tooSmall = async () =>
       page.evaluate(() => {
         const found: { label: string; px: number }[] = []
@@ -233,71 +215,47 @@ test.describe('time tracker on a phone', () => {
         return found
       })
 
-    for (const screen of ['Timer', 'Calendar', 'Reports', 'Projects', 'Manage', 'Settings']) {
+    for (const screen of ALL_SCREENS) {
       if (screen !== 'Timer') await goTo(page, screen)
       const found = await tooSmall()
       expect(found, `${screen} has fields under 16px: ${JSON.stringify(found)}`).toEqual([])
     }
+
+    // and the sheet, a state to enter rather than a place to navigate to
+    await goTo(page, 'Timer')
+    await openFirstEntry(page)
+    const found = await tooSmall()
+    expect(found, `the entry sheet has fields under 16px: ${JSON.stringify(found)}`).toEqual([])
   })
 
   /**
-   * THE CLASS GUARD — and the two blind spots it shipped with, which are the
-   * reason it is written this way now.
-   *
-   * The first version queried `button` and nothing else, and visited only the
-   * default state of each screen. Between them those two holes hid: every
-   * `<select>` in the slice at 40px, the running-timer stop button at 36px on
-   * five of the six screens, seven reminder weekday toggles at 22px, four
-   * timesheet actions at 28px, the project card's own name at 36px, and the
-   * group-similar label at 36px. The guard reported all clear the whole time.
-   *
-   * So: every kind of thing a thumb can hit, in every tab of every screen, with
-   * the row in the states it can be in. And the target measured is the EFFECTIVE
-   * one — a 16px checkbox inside a 44px label is fine, because the label is what
-   * you hit — rather than the control's own box.
-   *
-   * Text inputs are in here too: this app's own `Input` is `h-11 sm:h-9`, so
-   * 44px on a phone is a decision the project already made.
+   * THE CLASS GUARD: every kind of thing a thumb can hit, on every screen and in the
+   * entry sheet. The target measured is the EFFECTIVE one: a 16px checkbox inside a
+   * 44px label is fine, because the label is what you hit.
    */
   const TAPPABLE = 'button, select, textarea, a[href], input, [role=button], [role=switch], summary'
 
-  /** Which tabs live inside each screen, since the bar only gets you to the screen */
-  const INNER_TABS: Record<string, string[]> = {
-    Timer: [],
-    Calendar: [],
-    Reports: ['Summary', 'Detailed', 'Workload', 'Profitability', 'My reports'],
-    Projects: ['Active', 'Archived', 'Templates'],
-    Manage: ['Clients', 'Tags', 'Team'],
-    Settings: ['Profile', 'Workspace', 'Automation', 'Integrations', 'Data'],
-  }
-
-  test('no visible control on any screen or tab is too small to tap', async ({ page }) => {
+  test('no visible control on any screen is too small to tap', async ({ page }) => {
     await openFreshTracker(page)
 
-    // a grouped row, expanded, with selection on: the states the first version
-    // of this never saw, which is how a 28px group chip survived it
+    // a grouped row, expanded: the state in which a 28px group chip once survived this
     await trackEntry(page, 'a row to measure')
     await trackEntry(page, 'a row to measure')
     const expand = page.getByRole('button', { name: /Expand group/ })
     await expect(expand, 'the fixture did not produce a grouped row').toBeVisible()
     await expand.click()
     await expect(page.getByRole('button', { name: /Collapse group/ })).toBeVisible()
-    await page.locator('main').getByRole('button', { name: 'Select', exact: true }).first().click()
-    await expect.poll(() => page.locator('input[aria-label="Select time entry"]').count()).toBeGreaterThan(0)
 
     const tooSmall = (selector: string) =>
       page.evaluate((sel) => {
         const found: { what: string; label: string; size: string }[] = []
         for (const el of document.querySelectorAll(sel)) {
           // a form control's target is its label when it has one
-          const target =
-            el.tagName === 'INPUT' ? ((el.closest('label') as HTMLElement | null) ?? el) : (el as HTMLElement)
+          const target = el.tagName === 'INPUT' ? ((el.closest('label') as HTMLElement | null) ?? el) : (el as HTMLElement)
           const box = target.getBoundingClientRect()
           if (!box.width || !box.height) continue
-          // A calendar block's height IS its length on the day's time scale:
-          // a 10-minute entry drawn 44px tall would claim most of an hour. It
-          // has always been tapped as drawn; it only became a `role=button`
-          // in Phase 6, so a keyboard and a screen reader can reach it.
+          // A calendar block's height IS its length on the day's time scale: a 10-minute
+          // entry drawn 44px tall would claim most of an hour.
           if (el.hasAttribute('data-entry-block')) continue
           if (getComputedStyle(el).visibility === 'hidden') continue
           if (el.getAttribute('type') === 'hidden') continue
@@ -311,64 +269,34 @@ test.describe('time tracker on a phone', () => {
         return found
       }, selector)
 
-    const openInnerTab = (label: string) =>
-      page.evaluate((t) => {
-        const button = [...document.querySelectorAll('main button')].find((b) => (b as HTMLElement).innerText.trim() === t)
-        if (button) (button as HTMLElement).click()
-        return Boolean(button)
-      }, label)
-
-    for (const screen of ['Timer', 'Calendar', 'Reports', 'Projects', 'Manage', 'Settings']) {
+    for (const screen of ALL_SCREENS) {
       if (screen !== 'Timer') await goTo(page, screen)
-
-      const places = [`${screen} (as opened)`, ...INNER_TABS[screen].map((t) => `${screen} › ${t}`)]
-      for (const place of places) {
-        const inner = place.includes(' › ') ? place.split(' › ')[1] : null
-        if (inner && !(await openInnerTab(inner))) continue
-        // The inner tabs mark nothing as selected (no aria-selected, no
-        // aria-current), so "the tab has opened" is the frame after the click
-        // having been drawn.
-        if (inner) await painted(page)
-
-        const found = await tooSmall(TAPPABLE)
-        expect(found, `${place} has controls under 44px: ${JSON.stringify(found)}`).toEqual([])
-      }
+      await painted(page)
+      const found = await tooSmall(TAPPABLE)
+      expect(found, `${screen} has controls under 44px: ${JSON.stringify(found)}`).toEqual([])
     }
 
-    // manual mode has three inputs the timer mode does not
+    // the sheets: a state you have to enter, not a place you navigate to
     await goTo(page, 'Timer')
-    const modeToggle = page.locator('main').getByRole('button', { name: 'Toggle timer or manual mode' })
-    await modeToggle.click()
-    await expect(page.locator('main').getByRole('button', { name: 'Start timer' })).toHaveCount(0)
-    const manual = await tooSmall(TAPPABLE)
-    expect(manual, `manual mode has controls under 44px: ${JSON.stringify(manual)}`).toEqual([])
-
-    /**
-     * AND THE MODALS, which are screens this never opened. Looking at the entry
-     * sheet by eye found a 16px-tall checkbox row and a sync badge that had
-     * become 24px wide — neither on any screen the loop above visits, because a
-     * sheet is a state you have to enter, not a place you navigate to.
-     */
-    await modeToggle.click()
-    await expect(page.locator('main').getByRole('button', { name: 'Start timer' })).toBeVisible()
-    await page.locator('main li div[role="button"]').first().click()
-    await expect(page.getByText('Time entry details')).toBeVisible()
+    await openFirstEntry(page)
     const sheet = await tooSmall(TAPPABLE)
     expect(sheet, `the entry sheet has controls under 44px: ${JSON.stringify(sheet)}`).toEqual([])
   })
 
   /**
-   * A favourite used to be permanent on a phone. Its × was `hidden … sm:flex`,
-   * and the only other way to un-favourite something is the star in the timer
-   * bar, which acts on the draft — so it only works while the draft still
-   * matches that favourite exactly.
+   * A favourite used to be permanent on a phone: nothing there could remove it. It is
+   * added from the entry's own sheet, removed with the × on its chip, and the removal
+   * says so and can be undone.
    */
   test('a favourite can be removed on a phone, and putting it back is one tap', async ({ page }) => {
     await openFreshTracker(page)
     const favourites = async () => (await readState(page)).favorites.length
 
-    await page.getByPlaceholder('What are you working on?').fill('a favourite')
-    await page.locator('main').getByRole('button', { name: 'Toggle favorite' }).click()
+    await trackEntry(page, 'a favourite')
+    const sheet = await openFirstEntry(page)
+    await sheet.getByRole('button', { name: 'More options' }).click()
+    await page.getByRole('button', { name: 'Add to favorites' }).click()
+    await sheet.getByRole('button', { name: 'Done' }).click()
     await expect.poll(favourites).toBe(1)
 
     // a real click, which Playwright refuses on a hidden or covered element
@@ -380,10 +308,9 @@ test.describe('time tracker on a phone', () => {
   })
 
   /**
-   * "Continue" sits 8px from the row's own tap area and 4px from the entry
-   * menu. Hitting it while a timer runs ends that timer — the right rule, but it
-   * used to happen in silence, and a timer that stopped without being mentioned
-   * surfaces days later as a total that is wrong.
+   * "Continue" sits next to the row's own tap area. Hitting it while a timer runs
+   * ends that timer, the right rule, but it used to happen in silence, and a timer
+   * that stopped without being mentioned surfaces days later as a wrong total.
    */
   test('a tap that stops the timer you were running says so, and can be undone', async ({ page }) => {
     await openFreshTracker(page)
@@ -395,8 +322,7 @@ test.describe('time tracker on a phone', () => {
         return state.entries.find((e: { duration: number }) => e.duration < 0)?.description ?? null
       }, STORAGE_KEY)
 
-    await page.getByPlaceholder('What are you working on?').fill('what I am doing now')
-    await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
+    await startNamed(page, 'what I am doing now')
     await expect.poll(running).toBe('what I am doing now')
 
     await page.getByRole('button', { name: 'Continue this entry' }).last().click()
@@ -410,12 +336,16 @@ test.describe('time tracker on a phone', () => {
   test('primary controls are large enough to tap', async ({ page }) => {
     await openFreshTracker(page)
 
-    const startButton = page.locator('main').getByRole('button', { name: 'Start timer' }).first()
-    const startBox = await startButton.boundingBox()
-    expect(startBox!.height, 'the start button is too short to tap').toBeGreaterThanOrEqual(36)
+    // the bar's two buttons: the name, and the round start
+    const bar = page.getByTestId('run-bar')
+    for (const name of [/working on/, 'Start timer']) {
+      const box = await bar.getByRole('button', { name }).boundingBox()
+      expect(box!.height, `${name} is too short to tap`).toBeGreaterThanOrEqual(44)
+      expect(box!.width, `${name} is too narrow to tap`).toBeGreaterThanOrEqual(44)
+    }
 
     // every tab in the bottom bar
-    const tabs = page.locator('nav[aria-label="Sections"] button')
+    const tabs = page.getByRole('navigation', { name: 'Sections' }).getByRole('button')
     for (let i = 0; i < (await tabs.count()); i++) {
       const box = await tabs.nth(i).boundingBox()
       expect(box!.height).toBeGreaterThanOrEqual(44)
@@ -428,12 +358,12 @@ test.describe('time tracker on a phone', () => {
    *
    * The bar wrote to the draft and nothing wrote the draft onto the entry that
    * was already running, so everything entered after pressing Start was shown
-   * back to you and then discarded. On a phone there was no repair: the
-   * inline-editable row that saves you on a desktop is `hidden sm:grid`.
+   * back to you and then discarded. On a phone the running entry's sheet is the
+   * only place to fill it in.
    */
   test('what you fill in after pressing Start is what gets saved', async ({ page }) => {
     await openFreshTracker(page)
-    const bar = page.locator('main > div').first()
+    await makeProject(page, 'Writing')
 
     /** The running entry, as this browser holds it */
     const runningEntry = () =>
@@ -444,36 +374,28 @@ test.describe('time tracker on a phone', () => {
         return {
           description: entry.description,
           project: state.projects.find((p: { id: string }) => p.id === entry.projectId)?.name ?? null,
-          billable: entry.billable,
         }
       }, STORAGE_KEY)
 
-    // a project to reach for later
-    await bar.getByRole('button', { name: 'Project', exact: true }).click()
-    await page.getByPlaceholder(/Search by project, task or client/).fill('Writing')
-    await page.getByRole('button', { name: /Create/ }).click()
-    await bar.getByRole('button', { name: 'Writing', exact: true }).click()
-    await page.getByRole('button', { name: 'No project', exact: true }).click()
-    await expect(bar.getByRole('button', { name: 'Project', exact: true })).toBeVisible()
-
-    // start FIRST, fill in AFTER — the order this app is used in
-    await bar.getByRole('button', { name: 'Start timer' }).click()
+    // start FIRST, fill in AFTER: the order this app is used in
+    await page.getByTestId('run-bar').getByRole('button', { name: 'Start timer' }).click()
+    const bar = page.getByTestId('run-bar')
     await expect(bar.getByRole('button', { name: 'Stop timer' })).toBeVisible()
 
-    await page.getByPlaceholder('What are you working on?').fill('morning pages')
-    // past the commit pause: the running entry has taken the words
-    await expect.poll(async () => (await runningEntry())?.description).toBe('morning pages')
-
-    await bar.getByRole('button', { name: 'Project', exact: true }).click()
+    await bar.getByRole('button', { name: 'Edit the running time entry' }).click()
+    const sheet = page.getByRole('dialog', { name: 'Time entry', exact: true })
+    await sheet.getByPlaceholder(/worked on|working on/).fill('morning pages')
+    await sheet.getByRole('button', { name: 'More options' }).click()
+    await page.getByRole('button', { name: 'Project and task…' }).click()
     await page.getByPlaceholder(/Search by project, task or client/).fill('wri')
     await page.getByRole('button', { name: 'Writing', exact: true }).last().click()
+    await sheet.getByRole('button', { name: 'Done' }).click()
+    await expect(sheet).toBeHidden()
+
+    await expect.poll(async () => (await runningEntry())?.description).toBe('morning pages')
     await expect.poll(async () => (await runningEntry())?.project).toBe('Writing')
 
-    await bar.getByRole('button', { name: 'Non-billable' }).click()
-    await expect.poll(async () => (await runningEntry())?.billable).toBe(true)
-
-    await bar.getByRole('button', { name: 'Stop timer' }).click()
-    await expect(bar.getByRole('button', { name: 'Start timer' })).toBeVisible()
+    await tapStop(page)
 
     const saved = await page.evaluate((key) => {
       const state = JSON.parse(window.localStorage.getItem(key)!)
@@ -481,29 +403,21 @@ test.describe('time tracker on a phone', () => {
       return {
         description: entry.description,
         project: state.projects.find((p: { id: string }) => p.id === entry.projectId)?.name ?? null,
-        billable: entry.billable,
       }
     }, STORAGE_KEY)
 
     expect(saved.description, 'the description was thrown away').toBe('morning pages')
     expect(saved.project, 'the project was thrown away').toBe('Writing')
-    expect(saved.billable, 'billable was thrown away').toBe(true)
   })
 
   test('typing a project name in the description box offers the project', async ({ page }) => {
     await openFreshTracker(page)
-    const bar = page.locator('main > div').first()
+    await makeProject(page, 'Writing')
 
-    await bar.getByRole('button', { name: 'Project', exact: true }).click()
-    await page.getByPlaceholder(/Search by project, task or client/).fill('Writing')
-    await page.getByRole('button', { name: /Create/ }).click()
-    await bar.getByRole('button', { name: 'Writing', exact: true }).click()
-    await page.getByRole('button', { name: 'No project', exact: true }).click()
-    await expect(bar.getByRole('button', { name: 'Project', exact: true })).toBeVisible()
-
-    // no `@` typed: the grammar was invisible at this width, so plain text has
-    // to work on its own
-    await page.getByPlaceholder('What are you working on?').fill('wri')
+    await page.getByTestId('run-bar').getByRole('button', { name: /working on/ }).click()
+    const sheet = page.getByRole('dialog', { name: 'New time entry' })
+    // no `@` typed: the grammar is invisible at this width, so plain text has to work on its own
+    await sheet.getByPlaceholder(/worked on|working on/).fill('wri')
 
     const panel = page.locator('[data-dropdown-panel]')
     await expect(panel).toBeVisible()
@@ -511,37 +425,35 @@ test.describe('time tracker on a phone', () => {
 
     await panel.getByRole('button', { name: 'Writing' }).click()
     // the words are the description somebody meant to write; only the project is set
-    await expect(bar.getByRole('button', { name: 'Writing', exact: true })).toBeVisible()
-    await expect(page.getByPlaceholder('What are you working on?')).toHaveValue('wri')
+    await expect(sheet.getByRole('button', { name: 'Writing' }).first()).toBeVisible()
+    await expect(sheet.getByPlaceholder(/worked on|working on/)).toHaveValue('wri')
   })
 
-  test('the section bar is five items with readable labels, and the way out says where it goes', async ({ page }) => {
+  test('the section bar is three items with readable labels, and the way out says where it goes', async ({ page }) => {
     await openFreshTracker(page)
 
-    const tabs = page.locator('nav[aria-label="Sections"] button')
-    await expect(tabs).toHaveCount(5)
-    for (let i = 0; i < 5; i++) {
+    const tabs = page.getByRole('navigation', { name: 'Sections' }).getByRole('button')
+    await expect(tabs).toHaveCount(3)
+    for (let i = 0; i < 3; i++) {
       const size = await tabs.nth(i).evaluate((el) => parseFloat(getComputedStyle(el).fontSize))
       // the app's own tab bar set 12px as its floor, deliberately
       expect(size, 'a section label is below the app-wide 12px floor').toBeGreaterThanOrEqual(12)
     }
 
-    // `:visible`: the app's own header is in the page too since Time shows it on
-    // the PC, and on a phone it is there but hidden, so plain `header a` found it
+    // `:visible`: the app's own header is in the page too, and on a phone it is there but hidden
     const back = page.locator('header:visible a').first()
     const box = await back.boundingBox()
     expect(box!.height, 'the only way out of the tracker is under 44px').toBeGreaterThanOrEqual(44)
     expect((await back.innerText()).trim(), 'the way out is an unlabelled arrow').not.toBe('←')
   })
 
-  test('the sections behind More can actually be tapped', async ({ page }) => {
+  test('the sections behind the menu can actually be tapped', async ({ page }) => {
     await openFreshTracker(page)
-    // goTo uses a real click for these, which Playwright refuses if anything
-    // covers them — the sheet was drawn under the nav bar the first time
+    // goTo uses a real click for these, which Playwright refuses if anything covers them
     await goTo(page, 'Settings')
     await expect(page.locator('main')).toContainText(/Profile|Workspace|Automation/)
-    await goTo(page, 'Manage')
-    await expect(page.locator('main')).toContainText(/Clients|Tags|Team/)
+    await goTo(page, 'Clients')
+    await expect(page.locator('main')).toContainText(/Clients/)
   })
 
   test('a reload stays on its section, Time itself opens on Timer, and the tab does not name a lab page', async ({ page }) => {
@@ -551,7 +463,7 @@ test.describe('time tracker on a phone', () => {
     // the section is in the address, so a reload keeps it
     await page.reload({ waitUntil: 'domcontentloaded' })
     await page.getByRole('heading', { name: 'Time Log', exact: true }).waitFor({ timeout: 30_000 })
-    const current = page.locator('nav[aria-label="Sections"] button[aria-current="page"]')
+    const current = page.getByRole('navigation', { name: 'Sections' }).locator('button[aria-current="page"]')
     await expect(current).toHaveText('Reports')
     expect(await page.title()).not.toMatch(/\/test\//)
 
