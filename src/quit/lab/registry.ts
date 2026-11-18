@@ -56,6 +56,9 @@ import { PastB } from "./past/b/PastB"
 import { IfthenA } from "./ifthen/a/IfthenA"
 import { IfthenB } from "./ifthen/b/IfthenB"
 import { IfthenC } from "./ifthen/c/IfthenC"
+import { AccountabilityA } from "./accountability/a/AccountabilityA"
+import { AccountabilityB } from "./accountability/b/AccountabilityB"
+import { AccountabilityE } from "./accountability/e/AccountabilityE"
 import { TimelineBest } from "./timeline/best/TimelineBest"
 
 export const LAB_TOOL_IDS = [
@@ -207,7 +210,14 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       c: { Component: IfthenC, addiction: "alcohol", label: "Copy C", kind: "copy" },
     },
   },
-  accountability: { name: "Accountability", variants: {} },
+  accountability: {
+    name: "Accountability",
+    variants: {
+      a: { Component: AccountabilityA, addiction: "porn", label: "Copy A", kind: "copy" },
+      b: { Component: AccountabilityB, addiction: "alcohol", label: "Copy B", kind: "copy" },
+      e: { Component: AccountabilityE, addiction: "nicotine", label: "Copy E", kind: "copy" },
+    },
+  },
   library: { name: "Library", variants: { current: current(HowTool) } },
 }
 

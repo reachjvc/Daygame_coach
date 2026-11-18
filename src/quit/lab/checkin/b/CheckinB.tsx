@@ -142,7 +142,7 @@ function PlaceholderInfo({ onBack }: { onBack: () => void }) {
   )
 }
 
-function Clock({ days, checkins, today, onCheckin, onClose, onGear }: { days: number; checkins: string[]; today: string; onCheckin: () => void; onClose: () => void; onGear: () => void }) {
+export function Clock({ days, checkins, today, onCheckin, onClose, onGear }: { days: number; checkins: string[]; today: string; onCheckin: () => void; onClose: () => void; onGear: () => void }) {
   const [page, setPage] = useState(0)
   const [fill, setFill] = useState(0)
   const startedAt = useRef<number | null>(null)

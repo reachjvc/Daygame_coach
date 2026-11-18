@@ -1,0 +1,436 @@
+/**
+ * THE ACCOUNTABILITY COPIES, WALKED ON A PHONE.
+ *
+ * Signed out, 390x844, dark: one test per copy (a, b, e) walks every screen of its spec in order.
+ * Each screen is shot into ~/.cache/daygame-research/quit-copy/accountability/shots-ours/<letter>/.
+ * Everything lives in this browser's storage; nothing is sent anywhere.
+ */
+
+import { mkdirSync, rmSync } from "node:fs"
+import { homedir } from "node:os"
+import path from "node:path"
+import { test, expect, SIGNED_OUT } from "../fixtures/test"
+import type { Page } from "@playwright/test"
+
+test.use({ storageState: SIGNED_OUT, viewport: { width: 390, height: 844 }, colorScheme: "dark" })
+
+const SHOTS = path.join(homedir(), ".cache/daygame-research/quit-copy/accountability/shots-ours")
+
+let n = 0
+async function shot(page: Page, letter: string, name: string) {
+  n += 1
+  const dir = path.join(SHOTS, letter)
+  mkdirSync(dir, { recursive: true })
+  await page.addStyleTag({ content: "nextjs-portal{display:none !important}" })
+  await page.screenshot({ path: path.join(dir, `${String(n).padStart(2, "0")}-${name}.png`), fullPage: true })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+}
+
+async function open(page: Page, letter: string) {
+  n = 0
+  rmSync(path.join(SHOTS, letter), { recursive: true, force: true })
+  const errors: string[] = []
+  page.on("pageerror", (e) => errors.push(e.message))
+  const requests: string[] = []
+  page.on("request", (r) => requests.push(r.url()))
+  const res = await page.goto(`/quit/lab/accountability/${letter}?preview=1`)
+  expect(res?.status()).toBe(200)
+  await expect(page.getByTestId(`accountability-${letter}`)).toBeVisible()
+  return { errors, requests }
+}
+
+const root = (page: Page, l: string) => page.getByTestId(`accountability-${l}`)
+const screenIs = (page: Page, l: string, id: string) => expect(root(page, l)).toHaveAttribute("data-screen", id)
+async function toScreen(page: Page, l: string, id: string) {
+  await page.getByTestId("to-hub").click()
+  await screenIs(page, l, "hub")
+  await page.getByTestId(`hub-${id}`).click()
+  await screenIs(page, l, id)
+}
+
+test("copy A: sign-up gate, install, health, add and accept an ally, activity feed, check-in, remove", async ({ page }) => {
+  const { errors } = await open(page, "a")
+  const R = (id: string) => screenIs(page, "a", id)
+
+  await R("hub")
+  await shot(page, "a", "screen-list")
+
+  // seven sign-up steps, each a sign-up gate; the plan step shows no sourced prices and no money
+  await page.getByTestId("hub-signup").click()
+  for (let i = 1; i <= 6; i++) {
+    await expect(page.getByTestId("a-step-count")).toHaveText(`${i}/7`)
+    await expect(page.getByTestId("a-gate")).toContainText("not copied: sign-up gate")
+    await shot(page, "a", `signup-${i}`)
+    await page.getByTestId("a-next").click()
+  }
+  await expect(page.getByTestId("a-step-count")).toHaveText("7/7")
+  await expect(page.getByTestId("not-sourced")).toHaveCount(3)
+  await expect(page.getByTestId("a-next")).toBeDisabled()
+  await page.getByTestId("a-promo-row").click()
+  await expect(page.getByTestId("a-promo")).toHaveValue("")
+  await page.getByTestId("a-plan-1").click()
+  await expect(page.getByTestId("a-plan-1")).toHaveAttribute("aria-checked", "true")
+  await shot(page, "a", "signup-7-plan")
+  await page.getByTestId("a-next").click()
+  await expect(page.getByTestId("a-money")).toContainText("not built: the site never holds money")
+  await shot(page, "a", "signup-7-not-built")
+
+  // install checklist, then the health list: red cards flip to green with Fix now
+  await toScreen(page, "a", "install")
+  await expect(page.getByTestId("a-install").locator("li")).toHaveCount(4)
+  await shot(page, "a", "install-steps")
+  await page.getByTestId("a-start-install").click()
+  await R("health")
+  await expect(page.getByTestId("a-health-state-notifications")).toHaveText("Off")
+  await shot(page, "a", "health-red")
+  await page.getByTestId("a-fix-notifications").click()
+  await page.getByTestId("a-fix-extension").click()
+  await expect(page.getByTestId("a-all-ok")).toBeVisible()
+  await shot(page, "a", "health-green")
+
+  // accepting before inviting is not possible
+  await toScreen(page, "a", "accept")
+  await expect(page.getByTestId("a-accept-none")).toBeVisible()
+  await shot(page, "a", "accept-no-invite")
+
+  // add an ally: fields start empty, send is simulated
+  await toScreen(page, "a", "add")
+  await expect(page.getByTestId("a-add-name")).toHaveValue("")
+  await expect(page.getByTestId("a-add-email")).toHaveValue("")
+  await expect(page.getByTestId("a-add-send")).toBeDisabled()
+  await shot(page, "a", "add-ally-empty")
+  await page.getByTestId("a-add-name").fill("Test Ally")
+  await page.getByTestId("a-add-email").fill("ally@example.test")
+  await page.getByTestId("a-add-send").click()
+  await expect(page.getByTestId("a-ally-status")).toContainText("Waiting")
+  await expect(page.getByTestId("a-add-done")).toContainText("In the lab nothing is sent.")
+  await shot(page, "a", "add-ally-pending")
+
+  // the ally accepts (simulated); account creation is a gate
+  await toScreen(page, "a", "accept")
+  await expect(page.getByTestId("a-accept-gate")).toContainText("not copied: sign-up gate")
+  await shot(page, "a", "accept-invite")
+  await page.getByTestId("a-accept-btn").click()
+  await expect(page.getByTestId("a-accept-done")).toBeVisible()
+  await shot(page, "a", "accept-done")
+
+  // the ally's activity feed: filter, search, delete
+  await toScreen(page, "a", "activity")
+  await expect(page.getByTestId("example-bar")).toBeVisible()
+  await expect(page.locator("[data-testid^=a-card-]")).toHaveCount(4)
+  await shot(page, "a", "activity-summary")
+  await page.getByTestId("a-flagged").check()
+  await expect(page.locator("[data-testid^=a-card-]")).toHaveCount(2)
+  await shot(page, "a", "activity-flagged-only")
+  await page.getByTestId("a-flagged").uncheck()
+  await page.getByTestId("a-search").click()
+  await expect(page.getByTestId("a-search-input")).toHaveValue("")
+  await page.getByTestId("a-search-input").fill("album")
+  await expect(page.locator("[data-testid^=a-card-]")).toHaveCount(1)
+  await shot(page, "a", "activity-search")
+  await page.getByTestId("a-search-input").fill("zzzz")
+  await expect(page.getByTestId("a-empty")).toBeVisible()
+  await shot(page, "a", "activity-empty")
+  await page.getByTestId("a-search-input").fill("")
+  await page.getByTestId("a-del-f1").click()
+  await expect(page.locator("[data-testid^=a-card-]")).toHaveCount(3)
+  await page.getByTestId("a-filter").click()
+  await expect(page.getByTestId("a-filters").getByTestId("placeholder")).toHaveCount(1)
+  await shot(page, "a", "activity-filter-unseen")
+  await page.getByTestId("screen-back").click()
+  await page.getByTestId("a-chat").click()
+  await expect(page.getByTestId("a-chat-screen").getByTestId("inferred-tag")).toBeVisible()
+  await shot(page, "a", "activity-chat-unseen")
+
+  // daily check-in raises the streak
+  await toScreen(page, "a", "checkin")
+  await expect(page.getByTestId("a-start-checkin")).toHaveText("Start check-in")
+  await shot(page, "a", "daily-checkin")
+  await page.getByTestId("a-start-checkin").click()
+  await expect(page.getByTestId("a-checkin-run").getByTestId("placeholder")).toBeVisible()
+  await shot(page, "a", "checkin-run-unseen")
+  await page.getByTestId("a-checkin-done").click()
+  await expect(page.getByTestId("a-start-checkin")).toHaveText("Checked in today")
+  await shot(page, "a", "daily-checkin-done")
+
+  await toScreen(page, "a", "community")
+  await expect(page.getByTestId("a-community-tile")).toContainText("not copied")
+  await shot(page, "a", "community-not-copied")
+
+  // remove the ally with a confirm step
+  await toScreen(page, "a", "remove")
+  await page.getByTestId("a-remove-btn").click()
+  await shot(page, "a", "remove-confirm")
+  await page.getByTestId("a-remove-yes").click()
+  await expect(page.getByTestId("a-remove-none")).toBeVisible()
+  await shot(page, "a", "remove-done")
+
+  await toScreen(page, "a", "alerts")
+  await expect(page.getByTestId("placeholder")).toBeVisible()
+  await shot(page, "a", "ally-alerts-unseen")
+  expect(errors).toEqual([])
+})
+
+test("copy B: home grid, clocks, hold-to-check-in, profile, chat, partner request, tokens", async ({ page }) => {
+  const { errors } = await open(page, "b")
+  const R = (id: string) => screenIs(page, "b", id)
+  await R("hub")
+  await shot(page, "b", "screen-list")
+
+  await page.getByTestId("hub-home").click()
+  await expect(page.locator("[data-testid^=b-tile-]")).toHaveCount(9)
+  await shot(page, "b", "home-grid")
+  await page.getByTestId("b-tile-3").click()
+  await expect(page.getByTestId("not-built")).toContainText("not copied")
+  await shot(page, "b", "home-other-tool")
+  await page.getByTestId("screen-back").click()
+  await page.getByTestId("b-tile-0").click()
+
+  await R("clocks")
+  await expect(page.locator("[data-testid^=b-clock-c]:not([data-testid$=-days])")).toHaveCount(4)
+  await shot(page, "b", "clocks-mine")
+  await page.getByTestId("b-tab-1").click()
+  await shot(page, "b", "clocks-following")
+  await page.getByTestId("b-partner-view").click()
+  await expect(page.getByTestId("b-partner-state")).toHaveText("Not checked in today")
+  await shot(page, "b", "clocks-partner-view")
+  await page.getByTestId("b-tab-0").click()
+  await page.getByTestId("b-add").click()
+  await expect(page.getByTestId("b-addclock").getByTestId("inferred-tag")).toBeVisible()
+  await shot(page, "b", "add-clock-unseen")
+
+  // hold to check in: a short press does nothing, a full hold checks in
+  await toScreen(page, "b", "clock")
+  const hold = page.getByTestId("b-hold")
+  await expect(hold).toHaveAttribute("data-done", "false")
+  await hold.dispatchEvent("pointerdown")
+  await page.waitForTimeout(300)
+  await hold.dispatchEvent("pointerup")
+  await expect(hold).toHaveAttribute("data-done", "false")
+  await shot(page, "b", "clock-detail")
+  await hold.dispatchEvent("pointerdown")
+  await expect(hold).toHaveAttribute("data-done", "true", { timeout: 4000 })
+  await expect(page.getByTestId("b-stat-resets")).toHaveText("0")
+  await expect(page.getByTestId("not-sourced")).toBeVisible()
+  await shot(page, "b", "clock-checked-in")
+  await page.getByTestId("b-clock-gear").click()
+  await expect(page.getByTestId("b-clocksettings").getByTestId("inferred-tag")).toBeVisible()
+  await shot(page, "b", "clock-settings-unseen")
+
+  // the partner sees the check-in
+  await toScreen(page, "b", "clocks")
+  await page.getByTestId("b-tab-1").click()
+  await expect(page.getByTestId("b-partner-view")).toHaveAttribute("aria-pressed", "true")
+  await expect(page.getByTestId("b-partner-state")).toHaveText("Checked in today")
+  await shot(page, "b", "partner-view-checked")
+
+  // profile and partner request
+  await toScreen(page, "b", "profile")
+  await shot(page, "b", "profile")
+  await page.getByTestId("b-partners-btn").click()
+  await R("request")
+  await expect(page.getByTestId("placeholder")).toBeVisible()
+  await shot(page, "b", "request-before")
+  await page.getByTestId("b-request-send").click()
+  await expect(page.getByTestId("b-request-pending")).toBeVisible()
+  await shot(page, "b", "request-pending")
+
+  // chat
+  await toScreen(page, "b", "chat")
+  await expect(page.locator("[data-testid=b-bubbles] > div")).toHaveCount(5)
+  await expect(page.getByTestId("b-input")).toHaveValue("")
+  await expect(page.getByTestId("b-send")).toBeDisabled()
+  await shot(page, "b", "chat")
+  await page.getByTestId("b-input").fill("See you tomorrow")
+  await expect(page.getByTestId("b-send")).toBeEnabled()
+  await page.getByTestId("b-send").click()
+  await expect(page.locator("[data-testid=b-bubbles] > div")).toHaveCount(6)
+  await page.getByTestId("b-camera").click()
+  await expect(page.locator("[data-testid=b-bubbles] > div")).toHaveCount(7)
+  await shot(page, "b", "chat-sent")
+  await page.getByTestId("b-chat-menu").click()
+  await expect(page.getByTestId("b-chatmenu").getByTestId("inferred-tag")).toBeVisible()
+  await shot(page, "b", "chat-menu-unseen")
+
+  for (const [id, shotName] of [["connect", "connect"], ["share", "share-clocks"], ["tempted", "tempted"]] as const) {
+    await toScreen(page, "b", id)
+    await expect(page.getByTestId("placeholder").first()).toBeVisible()
+    await shot(page, "b", `${shotName}-unseen`)
+  }
+
+  // milestone tokens: earned ones open a page, locked ones do not
+  await toScreen(page, "b", "tokens")
+  await expect(page.getByTestId("b-token-0")).toHaveAttribute("data-earned", "1")
+  await expect(page.getByTestId("b-token-5")).toHaveAttribute("data-earned", "0")
+  await shot(page, "b", "tokens")
+  await page.getByTestId("b-token-5").click()
+  await expect(page.getByTestId("b-tokens")).toBeVisible()
+  await page.getByTestId("b-token-2").click()
+  await expect(page.getByTestId("b-token-page")).toBeVisible()
+  await expect(page.getByTestId("b-token-earned")).not.toBeEmpty()
+  await page.getByTestId("b-token-share").click()
+  await expect(page.getByTestId("b-token-note")).toContainText("In the lab nothing is sent.")
+  await shot(page, "b", "token-congrats")
+  expect(errors).toEqual([])
+})
+
+test("copy E: list, create, referee, supporters, stakes (no money), commitment, report, referee view, journal, privacy, outcome, home", async ({ page }) => {
+  const { errors } = await open(page, "e")
+  const R = (id: string) => screenIs(page, "e", id)
+  await R("hub")
+  await shot(page, "e", "screen-list")
+
+  await page.getByTestId("hub-list").click()
+  await expect(page.locator("[data-testid^=e-card-c], [data-testid=e-card-ex1]")).toHaveCount(1)
+  await shot(page, "e", "commitments-list")
+  await page.getByTestId("e-tab-1").click()
+  await shot(page, "e", "commitments-complete")
+
+  // create: every field starts empty; the stake step ends in a not-built tile
+  await page.getByTestId("e-create").click()
+  await R("create")
+  await expect(page.getByTestId("e-goal")).toHaveValue("")
+  await shot(page, "e", "create-1-goal")
+  await page.getByTestId("e-cat-Exercise").click()
+  await page.getByTestId("e-goal").fill("My own goal")
+  await page.getByTestId("e-wiz-next").click()
+  await expect(page.getByTestId("e-start")).toHaveValue("")
+  await expect(page.getByTestId("e-end")).toHaveValue("")
+  await shot(page, "e", "create-2-dates")
+  await page.getByTestId("e-start").fill("2026-11-01")
+  await page.getByTestId("e-end").fill("2026-12-13")
+  await page.getByTestId("e-wiz-next").click()
+  await expect(page.getByTestId("e-required")).toHaveValue("")
+  await page.getByTestId("e-required").fill("3")
+  await shot(page, "e", "create-3-type")
+  await page.getByTestId("e-wiz-next").click()
+  await expect(page.getByTestId("e-finish")).toBeEnabled()
+  await shot(page, "e", "create-4-optional")
+
+  await page.getByTestId("e-opt-referee").click()
+  await expect(page.getByTestId("e-referee-field")).toHaveValue("")
+  await expect(page.getByTestId("e-referee-send")).toBeDisabled()
+  await shot(page, "e", "referee-invite-empty")
+  await page.getByTestId("e-referee-field").fill("referee@example.test")
+  await page.getByTestId("e-referee-send").click()
+  await expect(page.getByTestId("e-referee-status")).toContainText("Awaiting a response")
+  await shot(page, "e", "referee-invited")
+  await page.getByTestId("e-referee-close").click()
+
+  await page.getByTestId("e-opt-supporters").click()
+  await expect(page.getByTestId("e-supporter-field")).toHaveValue("")
+  await page.getByTestId("e-supporter-field").fill("friend@example.test")
+  await page.getByTestId("e-supporter-add").click()
+  await expect(page.getByTestId("e-supporter-list")).toContainText("friend@example.test")
+  await page.getByTestId("e-community").check()
+  await shot(page, "e", "supporters")
+  await page.getByTestId("e-supporters-done").click()
+
+  await page.getByTestId("e-opt-stakes").click()
+  await expect(page.getByTestId("e-amount")).toHaveValue("")
+  await expect(page.getByTestId("e-stakes-next")).toBeDisabled()
+  await expect(page.getByTestId("not-sourced")).toHaveCount(2)
+  await shot(page, "e", "stakes-empty")
+  await page.getByTestId("e-amount").fill("4")
+  await expect(page.getByTestId("e-total")).toHaveText("$24.00")
+  await page.getByTestId("e-recipient-charity").click()
+  await expect(page.getByTestId("e-stakes").getByTestId("placeholder")).toHaveCount(1)
+  await page.getByTestId("e-stakes-info").click()
+  await expect(page.getByTestId("e-stakes-info-tile")).toBeVisible()
+  await page.getByTestId("e-recipient-friend").click()
+  await expect(page.getByTestId("e-friend")).toHaveValue("")
+  await shot(page, "e", "stakes-friend")
+  await page.getByTestId("e-stakes-next").click()
+  await expect(page.getByTestId("e-pay-tile")).toContainText("not built: the site never holds money")
+  await shot(page, "e", "stakes-not-built")
+  await page.getByTestId("e-stakes-done").click()
+  await page.getByTestId("e-finish").click()
+
+  await R("commitment")
+  await expect(page.getByTestId("e-goal-title")).toHaveText("My own goal")
+  await shot(page, "e", "commitment-page")
+  await page.getByTestId("e-lock").click()
+  await R("privacy")
+  await expect(page.getByTestId("e-privacy-who")).toHaveText("Everyone")
+  await shot(page, "e", "privacy")
+  await page.getByTestId("e-privacy-back").click()
+
+  // report: count steps, send, then the referee view (lab only) overrules
+  await page.getByTestId("e-record").click()
+  await R("report")
+  await expect(page.getByTestId("e-note")).toHaveValue("")
+  await expect(page.getByTestId("e-required-line")).toContainText("3")
+  await shot(page, "e", "report-empty")
+  await page.getByTestId("e-more").click()
+  await page.getByTestId("e-more").click()
+  await expect(page.getByTestId("e-count")).toHaveText("2")
+  await page.getByTestId("e-attach").click()
+  await page.getByTestId("e-note").fill("A note")
+  await page.getByTestId("e-send-report").click()
+  await expect(page.getByTestId("e-report-sent")).toContainText("Awaiting the referee")
+  await shot(page, "e", "report-sent")
+  await toScreen(page, "e", "refereeview")
+  await expect(page.getByTestId("e-rv-verdict-0")).toHaveText("Awaiting")
+  await shot(page, "e", "referee-view")
+  await page.getByTestId("e-rv-proof-0").click()
+  await page.getByTestId("e-rv-confirm-0").click()
+  await expect(page.getByTestId("e-rv-verdict-0")).toHaveText("Confirmed")
+  await toScreen(page, "e", "outcome")
+  await expect(page.getByTestId("e-outcome-mark-0")).toContainText("Unsuccessful")
+  await expect(page.getByTestId("e-charge-tile")).toContainText("not built: the site never holds money")
+  await shot(page, "e", "outcome")
+  await toScreen(page, "e", "collect")
+  await expect(page.getByTestId("e-collect-tile")).toContainText("not built")
+  await shot(page, "e", "collect-not-built")
+
+  // journal and the picture editor
+  await toScreen(page, "e", "journal")
+  await page.getByTestId("e-msg").fill("First note")
+  await page.getByTestId("e-msg-send").click()
+  await expect(page.getByTestId("e-thread")).toContainText("First note")
+  await shot(page, "e", "journal")
+  await page.getByTestId("e-camera").click()
+  await R("editor")
+  const canvas = page.getByTestId("e-canvas")
+  const box = (await canvas.boundingBox())!
+  const sample = () => canvas.evaluate((c: HTMLCanvasElement) => Array.from(c.getContext("2d")!.getImageData(0, 0, c.width, c.height).data).filter((v, i) => i % 4 === 0 && v > 200).length)
+  const before = await sample()
+  await page.mouse.move(box.x + 40, box.y + 40)
+  await page.mouse.down()
+  await page.mouse.move(box.x + 200, box.y + 120, { steps: 8 })
+  await page.mouse.up()
+  expect(await sample()).toBeGreaterThan(before)
+  await shot(page, "e", "photo-editor-draw")
+  await page.getByTestId("e-tool-crop").click()
+  await expect(page.getByTestId("e-editor").getByTestId("placeholder")).toBeVisible()
+  await shot(page, "e", "photo-editor-crop-unseen")
+  await page.getByTestId("e-send-picture").click()
+  await R("journal")
+  await expect(page.getByTestId("e-thread")).toContainText("Picture shared")
+  await shot(page, "e", "journal-picture")
+
+  // the incentive tiles and the details page
+  await toScreen(page, "e", "together")
+  await expect(page.getByTestId("e-inc-total")).toHaveText("$24.00")
+  await expect(page.getByTestId("e-inc-forfeited")).toHaveText("$4.00")
+  await expect(page.getByTestId("e-inc-remaining")).toHaveText("$20.00")
+  await page.getByTestId("e-leaderboard-go").click()
+  await expect(page.getByTestId("e-leaderboard-tile")).toContainText("not copied")
+  await shot(page, "e", "home-incentives")
+  await page.getByTestId("e-open-details").click()
+  await R("details")
+  await expect(page.getByTestId("e-pie")).toHaveAttribute("data-failed", "1")
+  await expect(page.getByTestId("e-calendar")).toBeVisible()
+  await shot(page, "e", "details-summary")
+  await page.getByTestId("e-dtab-1").click()
+  await expect(page.getByTestId("e-details").getByTestId("placeholder")).toBeVisible()
+  await shot(page, "e", "details-timeline-unseen")
+
+  // stakes are locked once the commitment exists
+  await page.getByTestId("to-hub").click()
+  await page.getByTestId("hub-stakes").click()
+  await expect(page.getByTestId("e-amount")).toBeDisabled()
+  await expect(page.getByTestId("e-stakes-locked")).toBeVisible()
+  await shot(page, "e", "stakes-locked")
+  expect(errors).toEqual([])
+})

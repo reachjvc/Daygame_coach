@@ -1,0 +1,20 @@
+/** Reader text shared by the Accountability copies. */
+export const acText = {
+  notBuiltMoney: "not built: the site never holds money",
+  notCopiedSignup: "not copied: sign-up gate",
+  notCopiedCommunity: "not copied: community feature, out of scope",
+  nothingSent: "In the lab nothing is sent.",
+  labOnly: "lab only",
+  hubTitle: "Screens",
+  hubLine: "Pick a screen to open it. This list is lab navigation, not part of the original.",
+  back: "Back",
+  backToList: "Back to the screen list",
+  close: "Close",
+  send: "Send",
+  save: "Save",
+  cancel: "Cancel",
+  next: "Next",
+  exampleLabel: "Example data",
+  clearExample: "Clear example",
+  numberNotSourced: "number not sourced yet",
+} as const
