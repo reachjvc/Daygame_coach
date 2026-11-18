@@ -9,8 +9,8 @@ import { useLabState } from "../../store"
 import { shakeDetected } from "./shake"
 import { dText, FACES } from "./text"
 
-type Mode = "feel" | "overcame" | "smoked"
-type Screen = "panel" | "strength" | "context" | "strategies" | "motivated" | "breathe" | "letgo" | "water" | "memory" | "substitutes" | "outcome" | "saved"
+export type Mode = "feel" | "overcame" | "smoked"
+export type Screen = "panel" | "strength" | "context" | "strategies" | "motivated" | "breathe" | "letgo" | "water" | "memory" | "substitutes" | "outcome" | "saved"
 
 interface Entry {
   at: number
@@ -146,7 +146,7 @@ function Icon({ icon: I }: { icon: LucideIcon }) {
   return <I className="size-6" aria-hidden="true" />
 }
 
-function Panel({ onFeel, onBegin, onOpen }: { onFeel: () => void; onBegin: (m: Mode) => void; onOpen: (s: Screen) => void }) {
+export function Panel({ onFeel, onBegin, onOpen }: { onFeel?: () => void; onBegin: (m: Mode) => void; onOpen: (s: Screen) => void }) {
   const tiles: { id: keyof typeof TILE_STYLE; label: string; tap: () => void }[] = [
     { id: "overcame", label: dText.tiles.overcame, tap: () => onBegin("overcame") },
     { id: "smoked", label: dText.tiles.smoked, tap: () => onBegin("smoked") },
@@ -157,9 +157,15 @@ function Panel({ onFeel, onBegin, onOpen }: { onFeel: () => void; onBegin: (m: M
   ]
   return (
     <div data-testid="panel" className="flex flex-col gap-3">
-      <button type="button" data-testid="feel-bar" onClick={onFeel} className="flex min-h-28 items-end rounded-lg bg-emerald-500 p-4 text-left text-lg font-semibold text-white">
-        {dText.panelBar}
-      </button>
+      {onFeel ? (
+        <button type="button" data-testid="feel-bar" onClick={onFeel} className="flex min-h-28 items-end rounded-lg bg-emerald-500 p-4 text-left text-lg font-semibold text-white">
+          {dText.panelBar}
+        </button>
+      ) : (
+        <div data-testid="feel-bar" className="flex min-h-28 items-end rounded-lg bg-emerald-500 p-4 text-left text-lg font-semibold text-white">
+          {dText.panelBar}
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3">
         {tiles.map((t) => (
           <button key={t.id} type="button" data-testid={`tile-${t.id}`} onClick={t.tap} className={`flex min-h-28 flex-col justify-between rounded-lg border p-3 text-left text-sm font-medium ${TILE_STYLE[t.id]}`}>
@@ -215,7 +221,7 @@ function Face({ index, on }: { index: number; on: boolean }) {
   )
 }
 
-function StrengthFeeling({
+export function StrengthFeeling({
   strength,
   setStrength,
   feeling,
@@ -280,7 +286,7 @@ function StrengthFeeling({
   )
 }
 
-function Context({ context, setContext, onBack, onNext }: { context: number | null; setContext: (n: number) => void; onBack: () => void; onNext: () => void }) {
+export function Context({ context, setContext, onBack, onNext }: { context: number | null; setContext: (n: number) => void; onBack: () => void; onNext: () => void }) {
   return (
     <div data-testid="context" className="flex flex-col gap-4">
       <Top onBack={onBack} />
