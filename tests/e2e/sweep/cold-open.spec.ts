@@ -152,6 +152,9 @@ const NOT_SWEPT: Record<string, string> = {
     "its whole purpose is an open workout, and a sweep that has to start one is not a read. " +
     "route-sweep.spec.ts opens it on an account with none",
   "/redirect": "a redirect shim with no page of its own",
+  "/quit/lab":
+    "the owner's hidden review lab: answers 404 without ?preview=1 by design; " +
+    "tests/e2e/quit/lab.spec.ts opens it with the flag and checks the 404 without it",
 }
 
 const ON_DISK = staticRoutes().map((r) => r.route)
