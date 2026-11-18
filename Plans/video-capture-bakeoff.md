@@ -708,6 +708,46 @@ dropping Voxtral and DiariZen to cut GPU time; (d) count videos with on-screen
 subtitles and test the no-subtitle path on them; (e) one driver script for
 steps 1–4 that runs under `code/gpu_guard.py`.
 
+### Big test result (2026-11-18)
+
+5 videos, 21 clips, 48 min, 1289 lines. Recipe: 16 word-timed speech
+models, the joint speech+speaker model's lines as the skeleton, 7 speaker
+machines, two independent Sonnet judges. Flagged: 79 lines where the
+judges disagree on who or both doubt (tier 1), 108 lighter doubts
+(tier 2). The owner checked a random 23 (14 tier 1, 5 tier 2, 4 sure).
+
+- Sure lines: 4 of 4 right.
+- Words: right on every checked line except one partly unclear phrase.
+- Who: wrong on about 4 of the 23, all in crosstalk or one-word replies
+  ("Yeah.", "I am."), plus one second man taken for him.
+- Missing lines: 3 short replies the machines dropped where people
+  overlap.
+
+Owner verdict: quality is high; the test is concluded. Errors are about
+who speaks in crosstalk, which is plain to a human ear (man vs woman,
+plus context).
+
+Machine ranking on the 1157 lines both judges agree on (mean word match,
+share far off): Qwen3-ASR 1.7B 0.84/5%, Parakeet TDT v3 (NeMo) 0.83/6%,
+Canary 1B v2 0.82/7%, Parakeet v3 0.81/8%; the Whisper variants
+0.75–0.78 with 9–15% far off; YouTube auto 0.71; subtitles read from the
+picture 0.66 (edited text, as expected).
+
+### Next: lean production recipe (Phase 10)
+
+1. Words: keep the top 4 above plus the joint model's skeleton; drop the
+   Whisper variants and sound-prep runs (they add noise and GPU time).
+2. Conflicts: the two-judge rule stays; a line goes to a human only when
+   the judges disagree on who or both doubt the words.
+3. Who: add a voice layer. Per word span, measure pitch and a
+   man/woman voice classifier, plus the coach voice print, and give the
+   judges that as a vote. Target: the crosstalk and one-word reply cases
+   above.
+4. Short replies under overlap: run a second pass on overlap stretches
+   (separated voices) so dropped "Yeah." / "I am." lines come back.
+5. Test the lean recipe on the same 23 owner-checked lines plus the
+   P1 11: it must match or beat the wide recipe before it replaces it.
+
 ## Execution prompts
 
 One session per phase. Each starts with:
