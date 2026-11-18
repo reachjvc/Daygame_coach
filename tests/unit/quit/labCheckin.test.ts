@@ -11,11 +11,12 @@ import { dayAverage, dryCount, monthAverage, noteCount, oneDecimal, seedDaysD, u
 const TODAY = dayKey(new Date(2026, 10, 18, 12).getTime())
 
 describe("checkin registry", () => {
-  it("has copies a to d, no e, with addictions the site knows", () => {
+  it("has copies a to d, no e, and the improved one, with addictions the site knows", () => {
     const v = LAB.checkin.variants
-    expect(Object.keys(v).sort()).toEqual(["a", "b", "c", "d"])
+    expect(Object.keys(v).sort()).toEqual(["a", "b", "best", "c", "d"])
+    expect(v.best.kind).toBe("best")
     for (const x of Object.values(v)) {
-      expect(x.kind).toBe("copy")
+      if (x !== v.best) expect(x.kind).toBe("copy")
       expect(isAddictionId(x.addiction)).toBe(true)
     }
     expect(v.a.label).toBe("Copy A")

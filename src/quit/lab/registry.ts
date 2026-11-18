@@ -38,6 +38,7 @@ import { DiaryB } from "./diary/b/DiaryB"
 import { DiaryC } from "./diary/c/DiaryC"
 import { DiaryD } from "./diary/d/DiaryD"
 import { DiaryE } from "./diary/e/DiaryE"
+import { CheckinBest } from "./checkin/best/CheckinBest"
 import { ProgressBest } from "./progress/best/ProgressBest"
 import { QuitdateBest } from "./quitdate/best/QuitdateBest"
 import { TimelineBest } from "./timeline/best/TimelineBest"
@@ -141,6 +142,7 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       b: { Component: CheckinB, addiction: "alcohol", label: "Copy B", kind: "copy" },
       c: { Component: CheckinC, addiction: "porn", label: "Copy C", kind: "copy" },
       d: { Component: CheckinD, addiction: "alcohol", label: "Copy D", kind: "copy" },
+      best: { Component: CheckinBest, addiction: "nicotine", label: "Improved", kind: "best" },
     },
   },
   diary: {
