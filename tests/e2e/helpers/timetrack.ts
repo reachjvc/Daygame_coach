@@ -61,9 +61,14 @@ export async function clearAccount(page: Page): Promise<void> {
   }
 }
 
-/** The sync badge says everything is on the account. Its words are in the label at every width. */
+/**
+ * The sync badge says everything is on the account. On a PC its words are the label of a
+ * button; on a phone the header shows nothing when all is saved (Plans/time-log-phone.md
+ * 6.6, commit 8da8dd4b), so the same words are there for a screen reader as hidden text.
+ */
 export async function savedToAccount(page: Page, timeout = 20_000): Promise<void> {
-  await expect(page.locator('header').getByRole('button', { name: /^Saved\./ })).toBeVisible({ timeout })
+  const header = page.locator('header')
+  await expect(header.getByRole('button', { name: /^Saved\./ }).or(header.getByText(/^Saved\./))).toBeVisible({ timeout })
 }
 
 /** Open the tracker and wait until it has heard from the account */

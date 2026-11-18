@@ -176,7 +176,11 @@ export function SyncBadge({
 }) {
   const shown = describeBadge(status, pending, check, nowMs)
   if (!shown) return null
-  if (compact && status === "synced" && shown.tone === "quiet") return null
+  // Nothing to see on a phone when all is saved (Plans/time-log-phone.md 6.6), but a
+  // screen reader still hears it, and the browser suite waits on these words
+  // (`savedToAccount` in tests/e2e/helpers/timetrack.ts). No live region: the sentence
+  // would be read out again every minute.
+  if (compact && status === "synced" && shown.tone === "quiet") return <span className="sr-only">Saved. {shown.title}</span>
 
   const tone =
     shown.tone === "quiet"
