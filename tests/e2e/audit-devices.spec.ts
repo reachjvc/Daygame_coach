@@ -5,6 +5,7 @@ import { stackAdmin } from "./fixtures/stack"
 import { whenHydrated } from "./helpers/hydration"
 import { gotoPastDevCompile } from "./helpers/gotoPastDevCompile"
 import { pressLogOut } from "./helpers/logOut"
+import { FETCH_AFTER_MS } from "@/components/logOutFetchDelay"
 
 /**
  * THE AUDIT ACROSS DEVICES, SIGNAL AND ZONES — alpha test findings of
@@ -121,6 +122,37 @@ test.describe("audit across devices @phone", () => {
       await expect(page.getByTestId("log-out-unsent")).toContainText("1 change hasn't reached your account yet", { timeout: 15_000 })
       await page.getByTestId("log-out-stay").click()
       expect(await page.evaluate(() => localStorage.getItem("audit-queue-v1"))).toContain("Approached in the metro")
+      expect(await activities(throwawayAccount.id, runId)).toEqual([])
+    } finally {
+      await context.close()
+    }
+  })
+
+  // The header's Log Out loads its code late (components/LazyLogOutButton.tsx). Somebody who
+  // loses signal before ever touching it must still get the real Log Out, which names what is waiting.
+  test("01: signal lost before Log Out was ever touched, the waiting answer is still named and kept", async ({ browser, throwawayAccount }, info) => {
+    test.skip(info.project.name.includes("phone"), "a phone has no header; its Log Out sits on the You tab and is not loaded late")
+    const context = await browser.newContext({ ...info.project.use, storageState: SIGNED_OUT, baseURL: info.project.use.baseURL })
+    try {
+      const page = await context.newPage()
+      await signIn(page, throwawayAccount)
+      await inCopenhagen(page)
+      const runId = await seedRun(throwawayAccount.id)
+      await openAudit(page)
+      await page.route("**/api/audit/slots", (route) => route.abort("internetdisconnected"))
+      await answerGap(page, labelOf(qStart(Date.now()) - 2 * Q), "Approached in the metro")
+      await page.keyboard.press("Escape")
+      await expect(page.getByTestId("audit-waiting")).toBeVisible()
+      // no hover, no focus on Log Out so far: only the page's own idle fetch can have brought its code
+      await page.waitForTimeout(FETCH_AFTER_MS + 3000)
+      await page.waitForLoadState("networkidle")
+      await context.setOffline(true)
+      await pressLogOut(page)
+      await expect(page.getByTestId("log-out-unsent")).toContainText("1 change hasn't reached your account yet", { timeout: 15_000 })
+      await expect(page.getByTestId("log-out-not-loaded")).toHaveCount(0)
+      await page.getByTestId("log-out-stay").click()
+      expect(await page.evaluate(() => localStorage.getItem("audit-queue-v1"))).toContain("Approached in the metro")
+      await context.setOffline(false)
       expect(await activities(throwawayAccount.id, runId)).toEqual([])
     } finally {
       await context.close()
