@@ -127,6 +127,18 @@ export function searchParamNames(file: string): string[] {
     names.add(get[1])
   }
 
+  // const sp = await searchParams … sp.preview   /   (await searchParams).preview
+  // Pages typed `Record<string, string | string[] | undefined>` (the /quit
+  // pages) declare no names in the type; the names are where they are read.
+  const aliases = ["searchParams"]
+  for (const alias of src.matchAll(/const\s+(\w+)\s*=\s*await\s+searchParams\b/g)) aliases.push(alias[1])
+  for (const alias of aliases) {
+    for (const read of src.matchAll(new RegExp(`\\b${alias}\\.(\\w+)`, "g"))) {
+      if (read[1] !== "get" && read[1] !== "then") names.add(read[1])
+    }
+  }
+  for (const read of src.matchAll(/\(\s*await\s+searchParams\s*\)\.(\w+)/g)) names.add(read[1])
+
   return [...names].sort()
 }
 

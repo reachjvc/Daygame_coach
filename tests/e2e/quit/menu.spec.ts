@@ -7,6 +7,7 @@
  */
 
 import { test, expect, SIGNED_OUT } from "../fixtures/test"
+import { quitUrl, NICOTINE_HIDDEN_WITHOUT_PREVIEW } from "../helpers/quit"
 import type { Page } from "@playwright/test"
 import { QUIT_TOOL_IDS } from "../../../src/quit/types"
 
@@ -22,14 +23,14 @@ for (const colorScheme of ["dark", "light"] as const) {
     test.use({ colorScheme })
 
     test("/quit lists the addictions", async ({ page }) => {
-      const res = await page.goto("/quit")
+      const res = await page.goto(quitUrl("/quit"))
       expect(res?.status()).toBe(200)
       await expect(page.getByRole("link", { name: "Quit nicotine" })).toBeVisible()
       await noSidewaysScroll(page)
     })
 
     test("the nicotine menu shows 5 groups and every row, no sideways scroll", async ({ page }) => {
-      const res = await page.goto("/quit/nicotine")
+      const res = await page.goto(quitUrl("/quit/nicotine"))
       expect(res?.status()).toBe(200)
       await expect(page.getByRole("heading", { level: 1, name: "Quit nicotine" })).toBeVisible()
       await expect(page.getByRole("combobox", { name: "Quit what?" })).toBeVisible()
@@ -45,7 +46,7 @@ for (const colorScheme of ["dark", "light"] as const) {
     })
 
     test("every row opens a tool or its coming-soon state", async ({ page }) => {
-      await page.goto("/quit/nicotine")
+      await page.goto(quitUrl("/quit/nicotine"))
       const hrefs = await page
         .locator('[data-testid^="row-"]')
         .evaluateAll((els) => els.map((e) => (e as HTMLAnchorElement).getAttribute("href") ?? ""))
@@ -61,7 +62,7 @@ for (const colorScheme of ["dark", "light"] as const) {
     })
 
     test("the craving bar does not cover the last row", async ({ page }) => {
-      await page.goto("/quit/nicotine")
+      await page.goto(quitUrl("/quit/nicotine"))
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
       const bar = page.getByTestId("sos-bar")
       await expect(bar).toBeVisible()
@@ -73,13 +74,22 @@ for (const colorScheme of ["dark", "light"] as const) {
   })
 }
 
+test("without ?preview=1 /quit shows what production shows: nicotine has no link and no page until live.json lists it", async ({ page }) => {
+  const res = await page.goto("/quit")
+  expect(res?.status()).toBe(200)
+  await expect(page.getByRole("link", { name: "Quit nicotine" })).toHaveCount(NICOTINE_HIDDEN_WITHOUT_PREVIEW ? 0 : 1)
+  await expect(page.getByText("Quit nicotine")).toBeVisible()
+  expect((await page.goto("/quit/nicotine"))?.status()).toBe(NICOTINE_HIDDEN_WITHOUT_PREVIEW ? 404 : 200)
+  expect((await page.goto("/quit/nicotine?preview=1"))?.status()).toBe(200)
+})
+
 test("an unknown addiction or tool is 404", async ({ page }) => {
-  expect((await page.goto("/quit/nope"))?.status()).toBe(404)
-  expect((await page.goto("/quit/nicotine/nope"))?.status()).toBe(404)
+  expect((await page.goto(quitUrl("/quit/nope")))?.status()).toBe(404)
+  expect((await page.goto(quitUrl("/quit/nicotine/nope")))?.status()).toBe(404)
 })
 
 test("?present=1 hides the footer", async ({ page }) => {
-  await page.goto("/quit/nicotine/past?present=1")
+  await page.goto(quitUrl("/quit/nicotine/past?present=1"))
   await expect(page.locator('[data-present="true"]')).toBeVisible()
   await expect(page.getByText("Privacy")).toHaveCount(0)
 })

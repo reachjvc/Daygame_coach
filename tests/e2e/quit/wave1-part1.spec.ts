@@ -9,6 +9,7 @@
  */
 
 import { test, expect, SIGNED_OUT } from "../fixtures/test"
+import { quitUrl } from "../helpers/quit"
 import type { Page } from "@playwright/test"
 import nicotineJson from "../../../src/quit/data/nicotine.json"
 import frameJson from "../../../src/quit/data/frame.json"
@@ -66,7 +67,7 @@ test.describe("quit wave 1 part 1 @phone", () => {
   const RATINGS = [5, 4, 4, 3, 2, 1, 1, 1, 1, 1, 1, 1]
 
   test("a full lies test reaches the result with top 3, band and a card image", async ({ page, request }) => {
-    await page.goto(`${A}/beliefs`)
+    await page.goto(quitUrl(`${A}/beliefs`))
     await runBeliefs(page, RATINGS)
     await expect(page.getByTestId("result")).toBeVisible()
     await noSideways(page)
@@ -84,29 +85,29 @@ test.describe("quit wave 1 part 1 @phone", () => {
     await expect(page.getByTestId("band")).toContainText(band.label)
 
     const href = await page.getByTestId("save-image").getAttribute("href")
-    expect(href).toBe(`${A}/card?held=${held}`)
+    expect(href).toBe(`${A}/card?preview=1&held=${held}`)
     const img = await request.get(href!)
     expect(img.status()).toBe(200)
     expect(img.headers()["content-type"]).toContain("image/png")
-    expect((await request.get(`${A}/card?held=13`)).status()).toBe(400)
-    expect((await request.get(`${A}/card`)).status()).toBe(400)
-    expect((await request.get(`/quit/nope/card?held=3`)).status()).toBe(404)
+    expect((await request.get(quitUrl(`${A}/card?held=13`))).status()).toBe(400)
+    expect((await request.get(quitUrl(`${A}/card`))).status()).toBe(400)
+    expect((await request.get(quitUrl("/quit/nope/card?held=3"))).status()).toBe(404)
   })
 
   test("reload on screen 7 resumes at 7 and out-of-range s goes to the first unanswered", async ({ page }) => {
-    await page.goto(`${A}/beliefs`)
+    await page.goto(quitUrl(`${A}/beliefs`))
     await runBeliefs(page, RATINGS, { stopAfter: 6 })
     await expect(page.getByTestId("scene")).toHaveText(data.beliefs[6].scene)
     await page.reload()
     await expect(page.getByTestId("scene")).toHaveText(data.beliefs[6].scene)
-    await page.goto(`${A}/beliefs?s=99`)
+    await page.goto(quitUrl(`${A}/beliefs?s=99`))
     await expect(page.getByTestId("scene")).toHaveText(data.beliefs[6].scene)
-    await page.goto(`${A}/beliefs?s=abc`)
+    await page.goto(quitUrl(`${A}/beliefs?s=abc`))
     await expect(page.getByTestId("scene")).toHaveText(data.beliefs[6].scene)
   })
 
   test("the browser Back button from screen 5 shows screen 4", async ({ page }) => {
-    await page.goto(`${A}/beliefs`)
+    await page.goto(quitUrl(`${A}/beliefs`))
     await runBeliefs(page, RATINGS, { stopAfter: 4 })
     await expect(page.getByTestId("scene")).toHaveText(data.beliefs[4].scene)
     await page.goBack()
@@ -115,7 +116,7 @@ test.describe("quit wave 1 part 1 @phone", () => {
   })
 
   test("in-page Back acts like the browser Back and adds no history entry", async ({ page }) => {
-    await page.goto(`${A}/beliefs`)
+    await page.goto(quitUrl(`${A}/beliefs`))
     await runBeliefs(page, RATINGS, { stopAfter: 4 })
     await expect(page.getByTestId("scene")).toHaveText(data.beliefs[4].scene)
     await page.getByTestId("screen-back").click()
@@ -125,7 +126,7 @@ test.describe("quit wave 1 part 1 @phone", () => {
   })
 
   test("in-page Back after a reload rewrites the entry instead of adding one", async ({ page }) => {
-    await page.goto(`${A}/beliefs`)
+    await page.goto(quitUrl(`${A}/beliefs`))
     await runBeliefs(page, RATINGS, { stopAfter: 4 })
     await page.reload()
     await expect(page.getByTestId("scene")).toHaveText(data.beliefs[4].scene)
@@ -143,21 +144,21 @@ test.describe("quit wave 1 part 1 @phone", () => {
         },
       })
     })
-    await page.goto(`${A}/beliefs`)
+    await page.goto(quitUrl(`${A}/beliefs`))
     await runBeliefs(page, RATINGS)
     await expect(page.getByTestId("result")).toBeVisible()
     await expect(page.getByTestId("top-belief")).toHaveCount(3)
   })
 
   test("clearing answers on the result starts the test again", async ({ page }) => {
-    await page.goto(`${A}/beliefs`)
+    await page.goto(quitUrl(`${A}/beliefs`))
     await runBeliefs(page, RATINGS)
     await page.getByTestId("clear-answers").click()
     await expect(page.getByTestId("scene")).toHaveText(data.beliefs[0].scene)
   })
 
   test("gives is preselected from the lies test, and ?need= wins", async ({ page }) => {
-    await page.goto(`${A}/beliefs`)
+    await page.goto(quitUrl(`${A}/beliefs`))
     await runBeliefs(page, RATINGS)
     await page.getByTestId("next-gives").click()
     await expect(page.getByTestId(`chip-${data.beliefs[0].need}`)).toHaveAttribute("aria-checked", "true")
@@ -173,17 +174,17 @@ test.describe("quit wave 1 part 1 @phone", () => {
     await expect(page.getByText(t.gives.tried)).toBeVisible()
 
     const other = data.needs.find((n) => n.id !== data.beliefs[0].need)!
-    await page.goto(`${A}/gives?need=${other.id}`)
+    await page.goto(quitUrl(`${A}/gives?need=${other.id}`))
     await expect(page.getByTestId(`chip-${other.id}`)).toHaveAttribute("aria-checked", "true")
     await expect(page.getByTestId(`chip-${data.beliefs[0].need}`)).toHaveAttribute("aria-checked", "false")
     await page.evaluate(() => localStorage.clear())
-    await page.goto(`${A}/gives?need=nonsense`)
+    await page.goto(quitUrl(`${A}/gives?need=nonsense`))
     await expect(page.getByTestId("gives-continue")).toBeDisabled()
   })
 
   test("a swap tried on an earlier day shows the slider and saving reorders the swaps", async ({ page }) => {
     const need = data.needs[0]
-    await page.goto(`${A}/gives`)
+    await page.goto(quitUrl(`${A}/gives`))
     await page.evaluate(
       ({ need, swap }) => {
         localStorage.setItem(
@@ -193,7 +194,7 @@ test.describe("quit wave 1 part 1 @phone", () => {
       },
       { need: need.id, swap: need.swaps[1].id },
     )
-    await page.goto(`${A}/gives?s=2`)
+    await page.goto(quitUrl(`${A}/gives?s=2`))
     await expect(page.getByText(t.gives.rateQuestion)).toBeVisible()
     await expect(page.getByTestId("swap").nth(0)).toHaveAttribute("data-swap", need.swaps[0].id)
     await page.getByTestId("rate-slider").fill("100")
@@ -203,7 +204,7 @@ test.describe("quit wave 1 part 1 @phone", () => {
   })
 
   test("past with tries 0 goes straight to the result", async ({ page }) => {
-    await page.goto(`${A}/past`)
+    await page.goto(quitUrl(`${A}/past`))
     await page.getByTestId("chip-0").click()
     await page.getByTestId("past-continue").click()
     await expect(page.getByTestId("result")).toContainText(t.past.noTries)
@@ -212,7 +213,7 @@ test.describe("quit wave 1 part 1 @phone", () => {
   })
 
   test("past with all screens shows the window, two risky moments, what helped and the slip line", async ({ page }) => {
-    await page.goto(`${A}/past`)
+    await page.goto(quitUrl(`${A}/past`))
     await page.getByTestId("chip-2-3").click()
     await page.getByTestId("chip-weeks").click()
     await page.getByTestId("chip-year").click()
@@ -254,7 +255,7 @@ test.describe("quit wave 1 part 1 @phone", () => {
 
   test("cost with the defaults shows a dollar figure", async ({ page }) => {
     const unit = data.units[0]
-    await page.goto(`${A}/cost`)
+    await page.goto(quitUrl(`${A}/cost`))
     await page.getByTestId(`chip-${unit.id}`).click()
     await shot(page, "cost-unit")
     await page.getByTestId("cost-continue").click()
@@ -276,7 +277,7 @@ test.describe("quit wave 1 part 1 @phone", () => {
   })
 
   test("how shows every number card, hope first", async ({ page }) => {
-    await page.goto(`${A}/how`)
+    await page.goto(quitUrl(`${A}/how`))
     const cards = page.locator('[data-testid^="number-"]')
     const expectedCards = data.numbers.filter((n) => !(data.hope && n.kind === data.hope.kind && n.big === data.hope.big && n.headline === data.hope.headline)).length + (data.hope ? 1 : 0)
     await expect(cards).toHaveCount(expectedCards)
@@ -291,14 +292,14 @@ test.describe("quit wave 1 part 1 @phone", () => {
   })
 
   test("the sources fold and its footer link show only when the screen has sources", async ({ page }) => {
-    await page.goto(`${A}/beliefs`)
+    await page.goto(quitUrl(`${A}/beliefs`))
     await expect(page.getByTestId("scene")).toBeVisible()
     await expect(page.locator("details#sources")).toHaveCount(0)
     await expect(page.getByRole("link", { name: frameJson.sources, exact: true })).toBeHidden()
   })
 
   test("the sources link in the footer opens the sources fold", async ({ page }) => {
-    await page.goto(`${A}/how`)
+    await page.goto(quitUrl(`${A}/how`))
     await page.getByRole("link", { name: frameJson.sources, exact: true }).click()
     await expect(page.locator("details#sources")).toHaveAttribute("open", "")
   })

@@ -4,6 +4,7 @@
  */
 
 import { test, expect, SIGNED_OUT } from "../fixtures/test"
+import { quitUrl } from "../helpers/quit"
 import type { Page } from "@playwright/test"
 import { mkdirSync } from "node:fs"
 
@@ -34,7 +35,7 @@ test("@phone /privacy loads with its five sections and the draft line", async ({
 })
 
 test("@phone /quit/coaching has no Stripe link or buy button while the link is null", async ({ page }) => {
-  const res = await page.goto("/quit/coaching")
+  const res = await page.goto(quitUrl("/quit/coaching"))
   expect(res?.status()).toBe(200)
   await expect(page.getByRole("heading", { level: 1, name: "30 days with a coach" })).toBeVisible()
   await expect(page.getByTestId("coaching-price")).toContainText("$200")
@@ -50,14 +51,14 @@ test("@phone /quit/coaching shows his yearly cost from the store", async ({ page
   await page.addInitScript(() => {
     localStorage.setItem("quit-v1", JSON.stringify({ nicotine: { cost: { result: { yearUsd: 1825, tenYearUsd: 18250, hoursYear: null } } } }))
   })
-  await page.goto("/quit/coaching")
+  await page.goto(quitUrl("/quit/coaching"))
   await expect(page.getByTestId("coaching-cost")).toHaveText("What it costs you a year: $1,825")
   await noSidewaysScroll(page)
   await shot(page, "coaching-cost")
 })
 
 test("@phone /quit links to privacy and sign-up shows the privacy link", async ({ page }) => {
-  await page.goto("/quit")
+  await page.goto(quitUrl("/quit"))
   await expect(page.getByRole("link", { name: "Privacy" })).toBeVisible()
   await page.goto("/auth/sign-up")
   const link = page.getByTestId("signup-privacy-link")

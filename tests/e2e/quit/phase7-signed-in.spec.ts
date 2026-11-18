@@ -8,6 +8,7 @@
 
 import { randomUUID } from "node:crypto"
 import { test, expect } from "../fixtures/test"
+import { quitUrl } from "../helpers/quit"
 import type { Page } from "@playwright/test"
 import nicotineJson from "../../../src/quit/data/nicotine.json"
 import tooltextJson from "../../../src/quit/data/tooltext.json"
@@ -41,7 +42,7 @@ async function rows(page: Page): Promise<Rows> {
 const liveReports = (r: Rows) => r.reports.filter((x) => !x.deleted_at)
 
 async function seed(page: Page, startOffset: number) {
-  await page.goto(`${A}/symptoms`)
+  await page.goto(quitUrl(`${A}/symptoms`))
   const r = await rows(page)
   if (r.attempts.length || r.reports.length) {
     const buried = new Date(Date.now() + 5000).toISOString()
@@ -56,14 +57,14 @@ async function seed(page: Page, startOffset: number) {
   await expect.poll(async () => (await rows(page)).attempts.filter((a) => !a.deleted_at).length, { timeout: 20000 }).toBeLessThanOrEqual(1)
 }
 async function sosToQuestion(page: Page) {
-  await page.goto(`${A}/sos`)
+  await page.goto(quitUrl(`${A}/sos`))
   await page.getByTestId("chip-b4").click()
   await page.getByTestId("sos-continue").click()
   await page.getByTestId("sos-continue").click()
   await page.getByTestId("sos-to-question").click()
 }
 async function slipTo(page: Page, when: string) {
-  await page.goto(`${A}/slip`)
+  await page.goto(quitUrl(`${A}/slip`))
   await page.getByTestId(`chip-${when}`).click()
   await page.getByTestId("slip-continue").click()
   await page.getByTestId(`chip-${data.endings[0].id}`).click()
@@ -153,7 +154,7 @@ test.describe("quit phase 7 fixes, signed in @phone", () => {
       },
       [newRun, dayOffset(0)],
     )
-    await page.goto(`${A}/slip?s=3`)
+    await page.goto(quitUrl(`${A}/slip?s=3`))
     await page.getByTestId("slip-finish").click()
     await expect.poll(async () => liveReports(await rows(page)).filter((x) => x.attempt_id === newRun).length, { timeout: 25000 }).toBe(1)
   })

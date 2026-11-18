@@ -7,6 +7,7 @@
  */
 
 import { test, expect, SIGNED_OUT } from "../fixtures/test"
+import { quitUrl } from "../helpers/quit"
 import type { Page } from "@playwright/test"
 import nicotineJson from "../../../src/quit/data/nicotine.json"
 import tooltextJson from "../../../src/quit/data/tooltext.json"
@@ -34,14 +35,14 @@ async function rateAll(page: Page, ratings: number[]) {
 }
 
 async function toPrice(page: Page) {
-  await page.goto(`${A}/cost`)
+  await page.goto(quitUrl(`${A}/cost`))
   await page.getByTestId("chip-cigarettes").click()
   await page.getByTestId("cost-continue").click()
   await page.getByTestId("cost-continue").click()
 }
 
 async function slipToLast(page: Page) {
-  await page.goto(`${A}/slip`)
+  await page.goto(quitUrl(`${A}/slip`))
   await page.getByTestId("chip-today").click()
   await page.getByTestId("slip-continue").click()
   await page.getByTestId(`chip-${D.endings[0].id}`).click()
@@ -101,7 +102,7 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
   })
 
   test("A44 never tried after earlier answers shows no leftover endings, window or gave-up line", async ({ page }) => {
-    await page.goto(`${A}/past`)
+    await page.goto(quitUrl(`${A}/past`))
     await page.getByTestId("chip-2-3").click()
     await page.getByTestId("chip-days").click()
     await page.getByTestId("chip-month").click()
@@ -113,7 +114,7 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
     await page.getByTestId("chip-gaveUp").click()
     await page.getByTestId("past-continue").click()
     await expect(page.getByTestId("risky")).toBeVisible()
-    await page.goto(`${A}/past?s=1`)
+    await page.goto(quitUrl(`${A}/past?s=1`))
     await page.getByTestId("chip-0").click()
     await page.getByTestId("past-continue").click()
     await expect(page.getByTestId("result")).toBeVisible()
@@ -134,7 +135,7 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
   })
 
   test("A76 the mostly-free band links to a page a signed-out reader can open", async ({ page }) => {
-    await page.goto(`${A}/beliefs?preview=1`)
+    await page.goto(quitUrl(`${A}/beliefs?preview=1`))
     await rateAll(page, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
     const link = page.getByTestId("band-free-link")
     await expect(link).toHaveText(t.beliefs.bandFreeLink)
@@ -146,8 +147,8 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
     const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } })
     const a = await ctx.newPage()
     const b = await ctx.newPage()
-    await a.goto(`${A}/beliefs`)
-    await b.goto(`${A}/beliefs`)
+    await a.goto(quitUrl(`${A}/beliefs`))
+    await b.goto(quitUrl(`${A}/beliefs`))
     await expect(b.getByTestId("scene")).toBeVisible()
     for (let i = 0; i < 4; i++) await a.getByTestId("rate-3").click()
     // tab B heard the change and now shows the next unanswered question
@@ -162,7 +163,7 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
     const errors: string[] = []
     // WebKit reports a fetch cut short by a page change as an "access control" error; that is not a page fault
     page.on("pageerror", (e) => !/access control/.test(e.message) && errors.push(e.message))
-    await page.goto(`${A}/symptoms`)
+    await page.goto(quitUrl(`${A}/symptoms`))
     await page.evaluate(() =>
       localStorage.setItem(
         "quit-v1",
@@ -179,7 +180,7 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
       ),
     )
     for (const tool of ["beliefs", "gives", "past", "slip", "cost", "sos"]) {
-      await page.goto(`${A}/${tool}`)
+      await page.goto(quitUrl(`${A}/${tool}`))
       await expect(page.locator("h1")).toBeVisible()
       await expect(page.locator("body")).not.toContainText(/could not load|Application error|NaN/)
     }
@@ -187,7 +188,7 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
   })
 
   test("A02 in-page Back after a reload never shows the same screen twice", async ({ page }) => {
-    await page.goto(`${A}/beliefs`)
+    await page.goto(quitUrl(`${A}/beliefs`))
     await page.getByTestId("rate-3").click()
     await page.getByTestId("rate-3").click()
     await page.reload()
@@ -200,7 +201,7 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
   })
 
   test("A14 focus moves to the new screen after an answer and after Next on a fact", async ({ page }) => {
-    await page.goto(`${A}/beliefs`)
+    await page.goto(quitUrl(`${A}/beliefs`))
     await page.getByTestId("rate-3").focus()
     await page.keyboard.press("Enter")
     await expect(page.getByTestId("scene")).toHaveText(D.beliefs[1].scene)
@@ -217,7 +218,7 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
       await new Promise((r) => setTimeout(r, 6000))
       await route.abort()
     })
-    await page.goto(`${A}/sos`)
+    await page.goto(quitUrl(`${A}/sos`))
     await page.getByTestId("chip-b1").click()
     await page.getByTestId("sos-continue").click()
     await page.getByTestId("sos-continue").click()
@@ -229,19 +230,19 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
   })
 
   test("A70 A72 A77 present and preview are carried; a repeated preview counts", async ({ page, request }) => {
-    await page.goto(`${A}/cost?preview=1&present=1`)
+    await page.goto(quitUrl(`${A}/cost?preview=1&present=1`))
     expect(await page.locator("header a").evaluateAll((as) => as.map((a) => a.getAttribute("href")).join(" "))).toContain("present=1")
-    await page.goto(`${A}/beliefs?preview=1`)
+    await page.goto(quitUrl(`${A}/beliefs?preview=1`))
     await rateAll(page, [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5])
     const hrefs = await page.locator("main a[href^='/quit']").evaluateAll((as) => as.map((a) => a.getAttribute("href")!))
     expect(hrefs.filter((h) => !h.includes("preview=1") && !h.startsWith("/quit/coaching"))).toEqual([])
-    expect((await request.get(`${A}/beliefs?preview=1&preview=1`)).status()).toBe(200)
+    expect((await request.get(quitUrl(`${A}/beliefs?preview=1&preview=1`))).status()).toBe(200)
   })
 
   test("C1 the need link keeps the need after the # so it never reaches the server", async ({ page }) => {
     const sent: string[] = []
     page.on("request", (r) => sent.push(r.url()))
-    await page.goto(`${A}/beliefs?preview=1`)
+    await page.goto(quitUrl(`${A}/beliefs?preview=1`))
     await rateAll(page, [5, 4, 4, 3, 2, 1, 1, 1, 1, 1, 1, 1])
     await page.locator('a[href*="#need="]').first().click()
     await page.waitForURL(/\/gives/)
@@ -254,7 +255,7 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
   })
 
   test("C1 an old ?need= link still works and its address becomes the # form", async ({ page }) => {
-    await page.goto(`${A}/gives?preview=1&need=sleep`)
+    await page.goto(quitUrl(`${A}/gives?preview=1&need=sleep`))
     await expect(page.getByTestId("chip-sleep")).toHaveAttribute("aria-checked", "true")
     await expect.poll(() => new URL(page.url()).search).not.toMatch(/need=/)
     expect(new URL(page.url()).hash).toBe("#need=sleep")
@@ -275,18 +276,18 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
 
   test("C4 the page itself still counts a view in the browser", async ({ page }) => {
     const done = page.waitForResponse((r) => r.url().includes("/api/quit/count"))
-    await page.goto(`${A}/how`)
+    await page.goto(quitUrl(`${A}/how`))
     expect((await done).status()).toBe(204)
   })
 
   test("C6 the share card can be cached for a day", async ({ request }) => {
-    const res = await request.get(`${A}/card?held=5&preview=1`)
+    const res = await request.get(quitUrl(`${A}/card?held=5&preview=1`))
     expect(res.status()).toBe(200)
     expect(res.headers()["cache-control"]).toBe("public, max-age=86400")
   })
 
   test("sleep symptom shows the four rules and no separate help row", async ({ page }) => {
-    await page.goto(`${A}/symptoms?symptom=sleep`)
+    await page.goto(quitUrl(`${A}/symptoms?symptom=sleep`))
     await expect(page.getByTestId("sleep-rules")).toBeVisible()
     await expect(page.getByTestId("symptom-help")).toHaveCount(0)
   })

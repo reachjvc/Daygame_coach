@@ -11,6 +11,7 @@
 
 import { randomUUID } from "node:crypto"
 import { test, expect, SIGNED_OUT } from "../fixtures/test"
+import { quitUrl } from "../helpers/quit"
 import type { Page } from "@playwright/test"
 import nicotineJson from "../../../src/quit/data/nicotine.json"
 import tooltextJson from "../../../src/quit/data/tooltext.json"
@@ -43,7 +44,7 @@ async function shot(page: Page, name: string) {
 
 /** sos screens 1 to 3 for BELIEF, ending on the craving screen. */
 async function sosToScreen3(page: Page) {
-  await page.goto(`${A}/sos`)
+  await page.goto(quitUrl(`${A}/sos`))
   await expect(page.getByTestId("chip-other")).toBeVisible()
   for (const b of data.beliefs) await expect(page.getByTestId(`chip-${b.id}`)).toHaveText(b.short)
   await noSideways(page)
@@ -133,7 +134,7 @@ test.describe("quit wave 1 part 2, signed out @phone", () => {
   })
 
   test("symptom guide: list, one symptom, sleep rules, no forum share", async ({ page }) => {
-    await page.goto(`${A}/symptoms`)
+    await page.goto(quitUrl(`${A}/symptoms`))
     const list = page.getByTestId("symptom-list")
     await expect(list.locator("button")).toHaveCount(data.symptomCourse.length)
     await expect(page.getByTestId("symptom-tired")).toHaveCount(0)
@@ -163,7 +164,7 @@ test.describe("quit wave 1 part 2, signed out @phone", () => {
   })
 
   test("slip run: three taps, steps 1 to 3, a new day 1", async ({ page }) => {
-    await page.goto(`${A}/slip`)
+    await page.goto(quitUrl(`${A}/slip`))
     await expect(page.getByTestId(`chip-${"today"}`)).toHaveText(t.slip.when.today)
     await shot(page, "slip-1-when")
     await page.getByTestId("chip-yesterday").click()
@@ -194,7 +195,7 @@ test.describe("quit wave 1 part 2, signed out @phone", () => {
   })
 
   test("slip result lists his top lies and swaps when he took those tools", async ({ page }) => {
-    await page.goto(`${A}/slip`)
+    await page.goto(quitUrl(`${A}/slip`))
     await page.evaluate(
       ({ top, swap }) => {
         window.localStorage.setItem(
@@ -266,7 +267,7 @@ async function emptyAccount(page: Page) {
 }
 
 async function seedRun(page: Page) {
-  await page.goto(`${A}/symptoms`)
+  await page.goto(quitUrl(`${A}/symptoms`))
   await emptyAccount(page)
   await page.evaluate((r) => {
     window.localStorage.setItem("vice-blackbox-v1", JSON.stringify(r))
@@ -301,7 +302,7 @@ test.describe("quit wave 1 part 2, signed in with a living run @phone", () => {
     const local = await page.evaluate(() => (JSON.parse(window.localStorage.getItem("vice-blackbox-v1") ?? "{}").reports as { deletedAt: string | null }[]).filter((r) => !r.deletedAt).length)
     expect(local).toBe(1)
 
-    await page.goto(`${A}/sos`)
+    await page.goto(quitUrl(`${A}/sos`))
     await expect(page.getByTestId("sos-saved")).toBeVisible()
     await page.getByTestId("sos-undo").click()
     await expect(page.getByTestId("sos-undone")).toHaveText(t.blackbox.undone)
@@ -312,7 +313,7 @@ test.describe("quit wave 1 part 2, signed in with a living run @phone", () => {
 
   test("a slip ends the run in the Black Box, and Undo brings it back", async ({ page }) => {
     await seedRun(page)
-    await page.goto(`${A}/slip`)
+    await page.goto(quitUrl(`${A}/slip`))
     await page.getByTestId("chip-today").click()
     await page.getByTestId("slip-continue").click()
     await page.getByTestId(`chip-${data.endings[0].id}`).click()
@@ -339,7 +340,7 @@ test.describe("quit wave 1 part 2, signed in with a living run @phone", () => {
   })
 
   test("signed in without a run: a link to keep a record, nothing filed", async ({ page }) => {
-    await page.goto(`${A}/symptoms`)
+    await page.goto(quitUrl(`${A}/symptoms`))
     await emptyAccount(page)
     await page.evaluate(() => window.localStorage.removeItem("vice-blackbox-v1"))
     await sosToScreen3(page)
