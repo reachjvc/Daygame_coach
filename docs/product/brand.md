@@ -187,3 +187,8 @@ Nothing is decided. What the owner said:
   .com and .app were free but @10kmornings on YouTube was taken. Claude's pick:
   10K Days Club, because day counts are how quitting is measured, a life is
   about 27 years of 10,000 days, and "day" echoes daygame.
+- **Instagram, checked 2026-11-18** (from the public profile pages, which show
+  no account for a free name; only trying the name in the app is final):
+  @10kdaysclub, @the10kdaysclub, @10kdays.club and @10kdays_club were free.
+  @10kdays is an existing account named "10kDays". @vindahl belongs to another
+  person.
