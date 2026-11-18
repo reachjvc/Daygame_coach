@@ -94,6 +94,13 @@ export function helpedCounts(tries: readonly Try[], helped: readonly Option[]) {
   return tally(tries, (t) => ({ ids: t.helped, text: t.helpedText }), helped)
 }
 
+/** The items tied at the top count, only when that count is 2 or more; null when nothing repeats. */
+export function topRepeated(items: readonly Counted[]): { labels: string[]; count: number } | null {
+  const top = items[0]?.count ?? 0
+  if (top < 2) return null
+  return { labels: items.filter((i) => i.count === top).map((i) => i.label), count: top }
+}
+
 /**
  * The days most tries ended in: the narrowest run of sorted lengths holding more than half of them.
  * Needs two tries with lengths. The earlier window wins a tie.

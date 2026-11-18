@@ -66,12 +66,15 @@ test("improved past: tries, pattern, window, handoff, edit, delete, example, swi
   await page.getByTestId("f-unit").selectOption("weeks")
   await page.getByTestId("f-save").click()
   await expect(page.getByTestId("pattern-longest")).toContainText("Longest run: 14 days. From 2 tries with a length.")
-  await expect(page.getByTestId("pattern-ending")).toContainText("1 of 1 try naming an ending")
-  await expect(page.getByTestId("pattern-helped")).toContainText("1 of 1 try naming what helped")
+  // nothing repeats yet: no most-common lines
+  await expect(page.getByTestId("pattern-ending")).toHaveCount(0)
+  await expect(page.getByTestId("pattern-helped")).toHaveCount(0)
   await expect(page.getByTestId("pattern-window")).toContainText("Most of your tries ended in days 5–14. 2 of 2 tries with a length.")
   await expect(page.getByTestId("pattern")).toContainText("Weeks count as 7 days")
   await expect(page.getByTestId("chart-avg")).toContainText("Average: 9.5 days · 2 tries with a length")
   await expect(page.getByTestId("bar-1")).toHaveAttribute("aria-label", "Try 2: 14 days")
+  await page.getByTestId("window-how").click()
+  await expect(page.getByTestId("window-why")).toHaveText("The shortest span of days that holds more than half of your tries.")
   await shot("two-tries")
 
   // handoff saved to the lab store
@@ -79,6 +82,16 @@ test("improved past: tries, pattern, window, handoff, edit, delete, example, swi
   expect(stored["past/best/handoff-window"]).toMatchObject({ addiction: "nicotine", from: 5, to: 14 })
   expect(stored["past/best/handoff-endings"].items[0].id).toBe("stress")
   expect(stored["past/best/handoff-helped"].items[0].id).toBe("told")
+
+  // a third try repeats the first one's ending and helper
+  await page.getByTestId("add-try").click()
+  await page.getByTestId("f-len").fill("6")
+  await page.getByTestId("f-ended").getByTestId("chip-stress").click()
+  await page.getByTestId("f-helped").getByTestId("chip-told").click()
+  await page.getByTestId("f-save").click()
+  await expect(page.getByTestId("pattern-ending")).toHaveText("Most common ending: A bad day or stress. 2 of 2 tries naming an ending.")
+  await expect(page.getByTestId("pattern-helped")).toHaveText("Helped most often: Told someone. 2 of 2 tries naming what helped.")
+  await expect(page.getByTestId("pattern-window")).toContainText("days 5–6. 2 of 3 tries with a length.")
 
   // edit the second try, then delete the first
   await page.getByTestId("try-1-edit").click()
@@ -89,8 +102,8 @@ test("improved past: tries, pattern, window, handoff, edit, delete, example, swi
   await page.getByTestId("try-0-delete").click()
   await shot("confirm-delete")
   await page.getByTestId("try-0-confirm").click()
-  await expect(page.getByTestId("try-list").locator("li")).toHaveCount(1)
-  await expect(page.getByTestId("pattern-window")).toHaveCount(0)
+  await expect(page.getByTestId("try-list").locator("li")).toHaveCount(2)
+  await expect(page.getByTestId("pattern-window")).toContainText("days 6–8.")
 
   // survives a reload
   await page.reload()
@@ -114,4 +127,7 @@ test("improved past: tries, pattern, window, handoff, edit, delete, example, swi
   // desktop width
   await page.setViewportSize({ width: 1280, height: 800 })
   await expect(page.getByTestId("pattern")).toBeVisible()
+  await page.addStyleTag({ content: "nextjs-portal{display:none !important}" })
+  await page.screenshot({ path: path.join(DIR, "09-desktop-1280.png"), fullPage: true })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1280)
 })

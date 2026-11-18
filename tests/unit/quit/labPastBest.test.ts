@@ -11,6 +11,7 @@ import {
   handoffOf,
   helpedCounts,
   longestRun,
+  topRepeated,
   tryDays,
   type LenUnit,
   type Try,
@@ -105,5 +106,26 @@ describe("handoff", () => {
     expect(h.endings.map((e) => e.id)).toEqual(["stress", "offered"])
     expect(h.window).toEqual({ from: 5, to: 6 })
     expect(h.helped).toEqual([{ id: "told", label: "Told" }])
+  })
+})
+
+describe("top repeated", () => {
+  const tries = [
+    mk("a", 3, "days", { ended: ["stress"], helped: ["told"] }),
+    mk("b", 5, "days", { ended: ["offered"], helped: ["busy"] }),
+  ]
+  it("nothing repeats: null for endings and helped", () => {
+    expect(topRepeated(endingCounts(tries, OPTS).items)).toBeNull()
+    expect(topRepeated(helpedCounts(tries, [{ id: "busy", label: "Busy" }, { id: "told", label: "Told" }]).items)).toBeNull()
+  })
+  it("one leader needs a count of 2", () => {
+    const more = [...tries, mk("c", 4, "days", { ended: ["stress"] })]
+    expect(topRepeated(endingCounts(more, OPTS).items)).toEqual({ labels: ["Stress"], count: 2 })
+  })
+  it("a tie at the top names all of them", () => {
+    const four = [...tries, mk("c", 4, "days", { ended: ["stress", "offered"] })]
+    expect(topRepeated(endingCounts(four, OPTS).items)).toEqual({ labels: ["Stress", "Offered"], count: 2 })
+    expect(bestText.commonEnding(["A", "B"], 2, 3)).toBe("Most common endings: A and B. 2 tries each, of 3 naming an ending.")
+    expect(bestText.commonHelped(["A", "B", "C"], 2, 5)).toContain("A, B and C")
   })
 })

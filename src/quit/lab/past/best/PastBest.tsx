@@ -23,6 +23,7 @@ import {
   hasContent,
   helpedCounts,
   longestRun,
+  topRepeated,
   tryDays,
   usesRoughUnits,
   type Handoff,
@@ -199,6 +200,9 @@ function Pattern({ tries, endings, helped, hasHandoff }: { tries: Try[]; endings
   const e = endingCounts(tries, endings)
   const h = helpedCounts(tries, helped)
   const w = dangerWindow(tries)
+  const topE = topRepeated(e.items)
+  const topH = topRepeated(h.items)
+  const [why, setWhy] = useState(false)
   const empty = !longest && e.items.length === 0 && h.items.length === 0
   return (
     <section data-testid="pattern" className={section}>
@@ -209,20 +213,32 @@ function Pattern({ tries, endings, helped, hasHandoff }: { tries: Try[]; endings
           {t.longest(daysText(longest.days), longest.of)}
         </p>
       )}
-      {e.items[0] && (
+      {topE ? (
         <p data-testid="pattern-ending" className="text-sm">
-          {t.commonEnding(e.items[0].label, e.items[0].count, e.triesNaming)}
+          {t.commonEnding(topE.labels, topE.count, e.triesNaming)}
         </p>
+      ) : (
+        e.triesNaming >= 2 && (
+          <p data-testid="pattern-ending" className="text-sm">
+            {t.noRepeatEnding}
+          </p>
+        )
       )}
-      {h.items[0] && (
+      {topH && (
         <p data-testid="pattern-helped" className="text-sm">
-          {t.commonHelped(h.items[0].label, h.items[0].count, h.triesNaming)}
+          {t.commonHelped(topH.labels, topH.count, h.triesNaming)}
         </p>
       )}
       {w ? (
-        <p data-testid="pattern-window" className="text-sm font-medium">
-          {t.windowLine(w.from, w.to, w.count, w.of)}
-        </p>
+        <div className="flex flex-col">
+          <p data-testid="pattern-window" className="text-sm font-medium">
+            {t.windowLine(w.from, w.to, w.count, w.of)}
+          </p>
+          <button type="button" data-testid="window-how" aria-expanded={why} onClick={() => setWhy(!why)} className="inline-flex min-h-11 items-center self-start text-sm text-primary underline">
+            {t.windowHow}
+          </button>
+          {why && <p data-testid="window-why" className="text-xs text-muted-foreground">{t.windowWhy}</p>}
+        </div>
       ) : (
         longest && <p className="text-sm text-muted-foreground">{t.windowNeed}</p>
       )}
