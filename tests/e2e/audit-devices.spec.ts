@@ -3,6 +3,7 @@ import type { Browser, Page } from "@playwright/test"
 import { randomUUID } from "node:crypto"
 import { stackAdmin } from "./fixtures/stack"
 import { whenHydrated } from "./helpers/hydration"
+import { pressLogOut } from "./helpers/logOut"
 
 /**
  * THE AUDIT ACROSS DEVICES, SIGNAL AND ZONES — alpha test findings of
@@ -82,7 +83,7 @@ async function secondDevice(browser: Browser, storageState: string) {
 
 test.describe("audit across devices @phone", () => {
   test("01: Log Out sends an answer still waiting on the phone before it signs out", async ({ browser, throwawayAccount }, info) => {
-    test.setTimeout(150_000)
+    test.setTimeout(30_000)
     const context = await browser.newContext({ ...info.project.use, storageState: SIGNED_OUT, baseURL: info.project.use.baseURL })
     try {
       const page = await context.newPage()
@@ -97,12 +98,7 @@ test.describe("audit across devices @phone", () => {
       // signal is back, but he is on another page now
       await page.unroute("**/api/audit/slots")
       await page.goto("/dashboard", { waitUntil: "domcontentloaded" })
-      const header = page.getByTestId("header-logout-button")
-      if (await header.isVisible()) await header.click()
-      else {
-        await page.getByRole("button", { name: "More" }).first().click()
-        await page.getByRole("dialog", { name: "More" }).getByRole("button", { name: "Log Out" }).click()
-      }
+      await pressLogOut(page)
       await expect.poll(() => activities(throwawayAccount.id, runId), { timeout: 15_000 }).toEqual(["Approached in the metro"])
     } finally {
       await context.close()
@@ -110,7 +106,7 @@ test.describe("audit across devices @phone", () => {
   })
 
   test("01: with no signal at Log Out, the waiting answer is named and kept on Stay signed in", async ({ browser, throwawayAccount }, info) => {
-    test.setTimeout(150_000)
+    test.setTimeout(30_000)
     const context = await browser.newContext({ ...info.project.use, storageState: SIGNED_OUT, baseURL: info.project.use.baseURL })
     try {
       const page = await context.newPage()
@@ -122,12 +118,7 @@ test.describe("audit across devices @phone", () => {
       await answerGap(page, labelOf(qStart(Date.now()) - 2 * Q), "Approached in the metro")
       await page.keyboard.press("Escape")
       await expect(page.getByTestId("audit-waiting")).toBeVisible()
-      const header = page.getByTestId("header-logout-button")
-      if (await header.isVisible()) await header.click()
-      else {
-        await page.getByRole("button", { name: "More" }).first().click()
-        await page.getByRole("dialog", { name: "More" }).getByRole("button", { name: "Log Out" }).click()
-      }
+      await pressLogOut(page)
       await expect(page.getByTestId("log-out-unsent")).toContainText("1 change hasn't reached your account yet", { timeout: 15_000 })
       await page.getByTestId("log-out-stay").click()
       expect(await page.evaluate(() => localStorage.getItem("audit-queue-v1"))).toContain("Approached in the metro")

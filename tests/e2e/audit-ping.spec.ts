@@ -3,6 +3,7 @@ import type { Locator, Page } from "@playwright/test"
 import { randomUUID } from "node:crypto"
 import { stackAdmin } from "./fixtures/stack"
 import { whenHydrated } from "./helpers/hydration"
+import { pressLogOut } from "./helpers/logOut"
 import { ROUTES } from "@/src/shared/routes"
 
 /**
@@ -283,7 +284,7 @@ test.describe("answering a ping @phone", () => {
   }
 
   test("F12: Log Out inside the Undo time still sends the delete, and leaves no queue behind", async ({ browser, throwawayAccount }, info) => {
-    test.setTimeout(150_000)
+    test.setTimeout(30_000)
     const context = await browser.newContext({ ...info.project.use, storageState: SIGNED_OUT, baseURL: info.project.use.baseURL })
     try {
       const page = await context.newPage()
@@ -296,12 +297,7 @@ test.describe("answering a ping @phone", () => {
       await expect(page.getByTestId("audit-undo")).toBeVisible()
       // the delete is on the phone from the tap, not only on screen
       expect(await page.evaluate(() => localStorage.getItem("audit-queue-v1"))).toContain("notBefore")
-      const header = page.getByTestId("header-logout-button")
-      if (await header.isVisible()) await header.click()
-      else {
-        await page.getByRole("button", { name: "More" }).first().click()
-        await page.getByRole("dialog", { name: "More" }).getByRole("button", { name: "Log Out" }).click()
-      }
+      await pressLogOut(page)
       await expect.poll(() => new URL(page.url()).pathname, { timeout: 30_000 }).toBe("/")
       await expect.poll(async () => (await slotsOf(throwawayAccount.id, run)).length, { timeout: 15_000 }).toBe(0)
       expect(await page.evaluate(() => localStorage.getItem("audit-queue-v1"))).toBeNull()
