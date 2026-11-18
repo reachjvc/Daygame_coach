@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test"
 import { randomUUID } from "node:crypto"
 import { stackAdmin } from "./fixtures/stack"
 import { whenHydrated } from "./helpers/hydration"
+import { gotoPastDevCompile } from "./helpers/gotoPastDevCompile"
 import { ROUTES } from "@/src/shared/routes"
 
 /**
@@ -69,7 +70,8 @@ async function seedTimeEntry(userId: string, description: string, from: number, 
 }
 
 async function openAudit(page: Page): Promise<void> {
-  await page.goto(ROUTES.audit)
+  // right after sign-in the dashboard's first dev compile can still be landing and interrupts this goto
+  await gotoPastDevCompile(page, ROUTES.audit)
   await whenHydrated(page.getByTestId("audit-page"), 60_000)
 }
 
