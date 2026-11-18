@@ -80,7 +80,7 @@ function shardsOf(job: string, body: string): Shard[] {
     browser: m[4],
   }))
   const literal = [...body.matchAll(/--project=([\w-]+)/g)].map((m) => {
-    const installs = body.match(/playwright install --with-deps ([\w ]+)/)?.[1].trim() ?? ""
+    const installs = body.match(/playwright install(?: --with-deps)? ([\w ]+)/)?.[1].trim() ?? ""
     return { job, lane: m[1], shard: 1, of: 1, browser: installs }
   })
   return [...matrix, ...literal]
@@ -228,6 +228,15 @@ describe("which phone and how many workers (Plans/tests-green-and-fast.md, Phase
       expect(steps.indexOf("path: ~/.cache/ms-playwright"), `${job}: browsers cached after the install`).toBeLessThan(
         steps.indexOf("npx playwright install"),
       )
+    }
+  })
+
+  test("system libraries are installed only when the browser will not start without them, and then for sure", () => {
+    // apt's mirror was throttled to 67 kB/s under load (E2E 44405093527), so the
+    // install is a fallback; but a browser that cannot start must never be run.
+    for (const job of browserJobs) {
+      const steps = /steps: \*lane-steps/.test(e2eJobs[job] ?? "") ? e2eJobs["lanes"] : (e2eJobs[job] ?? "")
+      expect(steps, `${job}: no launch check with an install-deps fallback`).toMatch(/\.launch\(\)[^\n]*\|\| npx playwright install-deps /)
     }
   })
 
