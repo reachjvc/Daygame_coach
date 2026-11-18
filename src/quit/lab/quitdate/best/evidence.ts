@@ -55,12 +55,12 @@ export const EVIDENCE = {
   /** Shown beside a date more than 14 days ahead. */
   dateFar: {
     id: "dateFar",
-    text: "Dates far ahead went with fewer quits in one large trial.",
+    text: "In one large study of smokers, those who picked a later quit date were less often smoke-free 6 months on: about 40% with a date in week 1, 23% in week 5.",
     basis: {
-      who: "Smokers in a financial-incentive trial who picked a quit date 0 to 90 days out",
+      who: "Smokers in a trial of money rewards for quitting (or usual care) who picked their own quit date 0 to 90 days out",
       n: "1,848",
       design:
-        "Secondary analysis of a randomized trial; people chose their own date, so this shows a link, not a cause. Model estimate of being abstinent at 6 months: 39.6% for a date in week 1, 22.6% week 5, 10.9% week 10, 4.3% week 13.",
+        "Planned secondary analysis of a randomized trial; the date itself was not randomized. Model estimate (adjusted for other factors).",
       when: "Published 2017",
     },
     studiedIn: "smokers",
@@ -69,11 +69,11 @@ export const EVIDENCE = {
   /** Under the date-far line: two other studies that disagree. */
   dateOthers: {
     id: "dateOthers",
-    text: "Two other studies of smokers disagree: one found later dates went with less success, one found date timing did not predict quitting.",
+    text: "A second study of smokers also found later dates went with less success. A third, of smokers using an online quit-date tool, found the date's timing did not predict quitting.",
     basis: {
       who: "Smokers trying to quit",
-      n: "Not stated in the first abstract; 825 in the second",
-      design: "Both are secondary analyses of trials, not trials of the date itself. The first says whether the link is causal is unclear.",
+      n: "Not stated in the first abstract; 427 of the 825 in the second's trial set a quit date ahead and were compared.",
+      design: "Both are secondary analyses of trials; the quit date was not randomized in either. In the first, dates fell 1 to 5 weeks out, and the authors say whether the link is causal is unclear. The second measured quitting at 3 months.",
       when: "Published 2011 and 2014",
     },
     studiedIn: "smokers",
@@ -82,11 +82,11 @@ export const EVIDENCE = {
   /** Under "stop for good": why there is no step-down path. */
   abrupt: {
     id: "abrupt",
-    text: "No step-down path here. In one trial, people who quit at once did better than people who cut down first; a review of 22 studies found no difference between the two.",
+    text: "No step-down path here. In one trial, quitting at once beat cutting down first; a review of 22 studies found the two worked about the same.",
     basis: {
       who: "Adult smokers with tobacco addiction in English primary care (trial); people who smoke, 22 studies (review)",
       n: "697 (trial); 9,219 (review)",
-      design: "Randomized trial, both groups had nurse support and nicotine replacement; Cochrane review of randomized trials, moderate certainty",
+      design: "Randomized trial: the cut-down group cut by 75% over the 2 weeks before quit day; both groups had nurse support and nicotine replacement; checked at 4 weeks and 6 months. Cochrane review of randomized trials (it includes this trial), moderate certainty, quitting checked at 6 months or later.",
       when: "Published 2016 and 2019",
     },
     studiedIn: "smokers",

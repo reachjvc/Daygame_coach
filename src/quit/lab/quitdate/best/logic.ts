@@ -27,7 +27,7 @@ export function chipDate(chip: ChipId, todayKey: string): string {
 }
 
 /** Days ahead beyond which the date-distance line shows. */
-export const FAR_DAYS = 14
+export const FAR_DAYS = 7
 export const isFar = (dateKey: string | null, nowMs: number) => dateKey !== null && daysAhead(dateKey, nowMs) > FAR_DAYS
 
 export type BreakLen = "w1" | "w2" | "w4" | "set"

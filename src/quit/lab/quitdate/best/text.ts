@@ -6,7 +6,7 @@ export const bestText = {
   back: "Back",
   continue: "Continue",
   title: "Quit date and plan",
-  line: "Pick what you want, then a date. Some days or weeks out is fine.",
+  line: "Pick what you want, then a date: some days or weeks out.",
 
   goalTitle: "What do you want?",
   goalStop: "Stop for good",
@@ -80,7 +80,7 @@ export const bestText = {
 
   laterTitle: "Not ready yet",
   laterLine: "That is a fine answer. Start with step 1 below and pick a date when you are ready.",
-  laterNudge: "Pick a date later: some days or weeks out is fine.",
+  laterNudge: "Pick a date when you are ready.",
   laterPick: "Pick a date now",
   laterStep: "Step 1",
   stepsComing: "content coming: step 1 for this addiction",

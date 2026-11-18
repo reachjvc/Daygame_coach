@@ -23,15 +23,15 @@ describe("quitdate best: chip dates from a fixed today", () => {
 
 describe("quitdate best: far-date warning", () => {
   const now = at(2026, 10, 18)
-  it("shows only past 14 days ahead", () => {
-    expect(isFar("2026-12-02", now)).toBe(false)
-    expect(isFar("2026-12-03", now)).toBe(true)
+  it("shows only past 7 days ahead", () => {
+    expect(isFar("2026-11-25", now)).toBe(false)
+    expect(isFar("2026-11-26", now)).toBe(true)
     expect(isFar("2026-12-08", now)).toBe(true)
     expect(isFar(null, now)).toBe(false)
   })
   it("states one evidence line with basis, studied in smokers, and sources with quotes", () => {
     const e = EVIDENCE.dateFar
-    expect(e.text).toBe("Dates far ahead went with fewer quits in one large trial.")
+    expect(e.text).toBe("In one large study of smokers, those who picked a later quit date were less often smoke-free 6 months on: about 40% with a date in week 1, 23% in week 5.")
     expect(e.studiedIn).toBe("smokers")
     expect(e.basis.n).toBe("1,848")
     for (const ev of Object.values(EVIDENCE)) for (const r of ev.refs) expect(r.quote && r.pmid && r.url).toBeTruthy()
