@@ -1,5 +1,5 @@
 import { test, expect } from "./fixtures/test"
-import { cardOf, shownPeople } from "@/src/role-models/catalog"
+import { cardOf, searchTextOf, shownPeople } from "@/src/role-models/catalog"
 import { ROLE_MODELS_HREF } from "@/src/role-models/routes"
 import { whenHydrated } from "./helpers/hydration"
 
@@ -25,8 +25,8 @@ test.describe("role model library @phone", () => {
     await whenHydrated(page.getByTestId("role-model-search"))
 
     // Search by a value word: only the people holding it stay.
-    const word = shown[0].search.split(" ").find((w) => shown.some((c) => !c.search.includes(w))) ?? shown[0].values[0].toLowerCase()
-    const expected = shown.filter((c) => c.search.includes(word))
+    const word = searchTextOf(shown[0]).split(" ").find((w) => shown.some((c) => !searchTextOf(c).includes(w))) ?? shown[0].values[0].toLowerCase()
+    const expected = shown.filter((c) => searchTextOf(c).includes(word))
     await page.getByTestId("role-model-search").fill(word)
     await expect(page.locator('[data-testid^="role-model-card-"]')).toHaveCount(expected.length)
     await page.getByTestId("role-model-search").fill("")

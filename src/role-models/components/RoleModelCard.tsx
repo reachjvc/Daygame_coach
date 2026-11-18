@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-import type { RoleModelCardData } from "../format"
+import { initialsOf, type RoleModelCardData } from "../format"
 import { roleModelHref } from "../routes"
 
 /**
@@ -29,7 +29,7 @@ export function RoleModelCard({ card }: { card: RoleModelCardData }) {
         aria-hidden="true"
       >
         <span className="text-5xl font-bold opacity-60" style={{ color: c }}>
-          {card.initials}
+          {initialsOf(card.name)}
         </span>
         <span className="absolute right-3 top-2 text-[11px] text-white/45">{card.years}</span>
         <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-b from-transparent to-zinc-900/80" />

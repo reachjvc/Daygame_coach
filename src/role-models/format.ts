@@ -39,18 +39,22 @@ export interface RoleModelCardData {
   category: RoleModelCategoryId
   categoryLabel: string
   color: string
-  initials: string
   values: string[]
   /** the life plan colour of each word in `values`, same order */
   valueColors: string[]
-  /** every value word, lower case, for search only */
-  search: string
+  /** the value words after the three in `values`, for search only (the name and `values` are searched too) */
+  moreWords: string[]
+}
+
+/** Everything a search looks at on a card: the name and every value word, lower case. */
+export function searchTextOf(c: Pick<RoleModelCardData, "name" | "values" | "moreWords">): string {
+  return [c.name, ...c.values, ...c.moreWords].join(" ").toLowerCase()
 }
 
 /** Cards matching a search (name or any value word) and a category; an empty query matches all. */
 export function filterCards(cards: readonly RoleModelCardData[], query: string, category: string | null): RoleModelCardData[] {
   const q = query.trim().toLowerCase()
-  return cards.filter((c) => (!category || c.category === category) && (!q || c.search.includes(q)))
+  return cards.filter((c) => (!category || c.category === category) && (!q || searchTextOf(c).includes(q)))
 }
 
 /** "his" or "her", for headings like "His shadow". */

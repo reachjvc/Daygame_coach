@@ -1,11 +1,11 @@
 import { ROLE_MODEL_CATEGORY_MAP, type RoleModelCategoryId } from "./categories"
 import { PEOPLE } from "./data/index.generated"
 import type { RoleModelPerson } from "./types"
-import { initialsOf, type RoleModelCardData, yearsLabel } from "./format"
+import { type RoleModelCardData, yearsLabel } from "./format"
 import { canonicalValueWord } from "./valueWords"
 import { VALUE_COLOR } from "@/src/goals/data/northStar"
 
-export { filterCards, initialsOf, possessiveOf, type RoleModelCardData, yearsLabel } from "./format"
+export { filterCards, initialsOf, searchTextOf, possessiveOf, type RoleModelCardData, yearsLabel } from "./format"
 
 /**
  * Reads of the catalogue. The files are bundled at build time (D1), so nothing
@@ -39,10 +39,9 @@ export function cardOf(p: RoleModelPerson): RoleModelCardData {
     category: p.category as RoleModelCategoryId,
     categoryLabel: cat?.label ?? p.category,
     color: cat?.color ?? "#555555",
-    initials: initialsOf(p.name),
     values: words.slice(0, 3),
     valueColors: words.slice(0, 3).map((w) => VALUE_COLOR.get(w.toLowerCase()) ?? "#94a3b8"),
-    search: [p.name, ...words].join(" ").toLowerCase(),
+    moreWords: words.slice(3),
   }
 }
 
