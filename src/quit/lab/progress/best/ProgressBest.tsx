@@ -34,6 +34,9 @@ type Screen = "home" | "money" | "milestones" | "calendar"
 const SCREENS: Screen[] = ["home", "money", "milestones", "calendar"]
 
 /** `12 Nov 2026` from a day key. */
+/** Capital first letter, for a unit word that starts a label. */
+const cap = (w: string) => (w ? w[0].toUpperCase() + w.slice(1) : w)
+
 const fmtDay = (key: string) => {
   const [y, m, d] = key.split("-").map(Number)
   return `${d} ${t.months[m - 1].slice(0, 3)} ${y}`
@@ -62,13 +65,7 @@ export function ProgressBest({ addiction: initial }: LabProps) {
           </button>
         ))}
       </div>
-      {units.length === 0 ? (
-        <p data-testid="content-coming" className="rounded-md border border-dashed border-border px-3 py-3 text-sm text-muted-foreground">
-          {t.contentComing}
-        </p>
-      ) : (
-        <Gate key={id} id={id} units={units} />
-      )}
+      <Gate key={id} id={id} units={units} />
     </div>
   )
 }
@@ -93,14 +90,14 @@ function Gate({ id, units }: { id: string; units: QuitUnit[] }) {
   }
   const seed = () => {
     const now = Date.now()
-    const u = units[0]
+    const u = units[0] ?? null
     setSlips([{ day: dayKey(now - 9 * DAY), note: t.exampleNote }])
     setTargets([{ id: "t1", name: t.exampleTarget, price: 150 }])
-    setSetup({ startMs: now - 23 * DAY, unitId: u.id, perDay: 10, price: u.defaultPriceUsd ?? 0, priceOwn: 0, seeded: 1 })
+    setSetup(u ? { startMs: now - 23 * DAY, unitId: u.id, perDay: 10, price: u.defaultPriceUsd ?? 0, priceOwn: 0, seeded: 1 } : { startMs: now - 23 * DAY, unitId: "", perDay: 1, price: 8, priceOwn: 1, seeded: 1 })
   }
 
   if (setup) {
-    const unit = units.find((u) => u.id === setup.unitId) ?? units[0]
+    const unit = units.length === 0 ? null : (units.find((u) => u.id === setup.unitId) ?? units[0])
     return (
       <>
         {setup.seeded === 1 && <ExampleBar onClear={clear} />}
@@ -124,8 +121,8 @@ function Gate({ id, units }: { id: string; units: QuitUnit[] }) {
   }
 
   if (form) {
-    const unit = units.find((u) => u.id === form.unitId) ?? units[0]
-    const own = Number.isFinite(form.price) && form.price !== unit.defaultPriceUsd
+    const unit = units.length === 0 ? null : (units.find((u) => u.id === form.unitId) ?? units[0])
+    const own = unit !== null && Number.isFinite(form.price) && form.price !== unit.defaultPriceUsd
     return (
       <section data-testid="setup-form" className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">{t.formTitle}</h2>
@@ -140,6 +137,13 @@ function Gate({ id, units }: { id: string; units: QuitUnit[] }) {
             className="min-h-11 rounded-md border border-border bg-background px-2"
           />
         </label>
+        {unit === null ? (
+          <>
+            <NumField label={t.fMoneyPerDay} value={form.price} step={0.01} testId="setup-money" onChange={(n) => setForm({ ...form, price: n })} />
+            <p className="text-xs text-muted-foreground">{t.fMoneyPerDayHint}</p>
+          </>
+        ) : (
+          <>
         <div role="radiogroup" aria-label={t.fUnit} className="flex flex-wrap gap-2">
           {units.map((u) => (
             <button
@@ -166,11 +170,17 @@ function Gate({ id, units }: { id: string; units: QuitUnit[] }) {
             <SourceTap refs={unit.priceRefs} />
           </div>
         )}
+          </>
+        )}
         <PrimaryButton
           testId="setup-save"
-          disabled={!Number.isFinite(form.price)}
+          disabled={unit !== null && !Number.isFinite(form.price)}
           onClick={() =>
-            setSetup({ startMs: form.startMs, unitId: form.unitId, perDay: Number.isFinite(form.perDay) ? form.perDay : 0, price: form.price, priceOwn: own ? 1 : 0, seeded: 0 })
+            setSetup(
+              unit === null
+                ? { startMs: form.startMs, unitId: "", perDay: Number.isFinite(form.price) && form.price > 0 ? 1 : 0, price: Number.isFinite(form.price) ? form.price : 0, priceOwn: 1, seeded: 0 }
+                : { startMs: form.startMs, unitId: form.unitId, perDay: Number.isFinite(form.perDay) ? form.perDay : 0, price: form.price, priceOwn: own ? 1 : 0, seeded: 0 },
+            )
           }
         >
           {t.save}
@@ -185,7 +195,7 @@ function Gate({ id, units }: { id: string; units: QuitUnit[] }) {
       <p className="text-sm text-muted-foreground">{t.setupLine}</p>
       <PrimaryButton
         testId="setup-own-btn"
-        onClick={() => setForm({ startMs: Date.now(), unitId: units[0].id, perDay: NaN, price: units[0].defaultPriceUsd ?? NaN })}
+        onClick={() => setForm({ startMs: Date.now(), unitId: units[0]?.id ?? "", perDay: NaN, price: units[0]?.defaultPriceUsd ?? NaN })}
       >
         {t.ownBtn}
       </PrimaryButton>
@@ -198,7 +208,7 @@ function Gate({ id, units }: { id: string; units: QuitUnit[] }) {
 
 interface MainProps {
   setup: BestSetup
-  unit: QuitUnit
+  unit: QuitUnit | null
   setSetup: (s: BestSetup) => void
   slips: Slip[]
   setSlips: (s: Slip[]) => void
@@ -314,31 +324,40 @@ function Home({ setup, unit, st, today, startKey, perDay, spent, money, slips, s
         )}
         <p className="text-xs text-muted-foreground">{t.tapForFormula}</p>
 
-        <div role="group" aria-label={t.tilesLabel} data-testid="tiles" className="grid grid-cols-3 gap-2">
+        <div role="group" aria-label={t.tilesLabel} data-testid="tiles" className={`grid gap-2 ${unit ? "grid-cols-3" : "grid-cols-1"}`}>
           <Card testId="tile-money" onClick={() => toggle("money")}>
             <span className="block text-xs text-muted-foreground">{t.tileMoney}</span>
             <span className="block text-base font-semibold tabular-nums">{hasRate ? fmtMoney(money) : "–"}</span>
           </Card>
-          <Card testId="tile-units" onClick={() => toggle("units")}>
-            <span className="block break-words text-xs text-muted-foreground first-letter:uppercase">{t.tileUnits(unit.many)}</span>
-            <span className="block text-base font-semibold tabular-nums">{hasRate ? units : "–"}</span>
-          </Card>
-          <Card testId="tile-price" onClick={() => toggle("price")}>
-            <span className="block break-words text-xs text-muted-foreground">{t.tilePrice(unit.one)}</span>
-            <span className="block text-base font-semibold tabular-nums">{fmtMoney(setup.price)}</span>
-          </Card>
+          {unit && (
+            <Card testId="tile-units" onClick={() => toggle("units")}>
+              <span className="block break-words text-xs text-muted-foreground">{t.tileUnits(cap(unit.many))}</span>
+              <span className="block text-base font-semibold tabular-nums">{hasRate ? units : "–"}</span>
+            </Card>
+          )}
+          {unit && (
+            <Card testId="tile-price" onClick={() => toggle("price")}>
+              <span className="block break-words text-xs text-muted-foreground">{t.tilePrice(cap(unit.one))}</span>
+              <span className="block text-base font-semibold tabular-nums">{fmtMoney(setup.price)}</span>
+            </Card>
+          )}
         </div>
+        {!unit && (
+          <p data-testid="tiles-coming" className="text-xs text-muted-foreground">
+            {t.tilesComing}
+          </p>
+        )}
         {open === "money" && (
           <p data-testid="formula-money" className="text-sm text-muted-foreground">
             {hasRate ? t.tileMoneyFormula(fmtMoney(perDay), st.total, fmtMoney(spent), fmtMoney(money)) : t.tileNeeds}
           </p>
         )}
-        {open === "units" && (
+        {unit && open === "units" && (
           <p data-testid="formula-units" className="text-sm text-muted-foreground">
             {hasRate ? t.tileUnitsFormula(setup.perDay, st.total, units, unit.many) : t.tileNeeds}
           </p>
         )}
-        {open === "price" && (
+        {unit && open === "price" && (
           <div data-testid="formula-price" className="text-sm text-muted-foreground">
             <p>{setup.priceOwn ? t.priceOwn : t.tilePriceNote}</p>
             {!setup.priceOwn && <SourceTap refs={unit.priceRefs} />}
@@ -435,8 +454,8 @@ function Money(p: MainProps & { today: string; startKey: string; perDay: number;
   const filled = fillTargets(targets, money, perDay)
   const saveEdit = () => {
     if (!edit) return
-    const price = Number.isFinite(edit.price) ? edit.price : setup.price
-    p.setSetup({ ...setup, perDay: Number.isFinite(edit.perDay) ? edit.perDay : 0, price, priceOwn: price !== unit.defaultPriceUsd ? 1 : 0 })
+    const price = Number.isFinite(edit.price) ? edit.price : unit ? setup.price : 0
+    p.setSetup({ ...setup, perDay: unit ? (Number.isFinite(edit.perDay) ? edit.perDay : 0) : price > 0 ? 1 : 0, price, priceOwn: unit && price === unit.defaultPriceUsd ? 0 : 1 })
     setEdit(null)
   }
   return (
@@ -459,14 +478,14 @@ function Money(p: MainProps & { today: string; startKey: string; perDay: number;
           <div className="min-w-0">
             <span className="block text-xs text-muted-foreground">{t.perDayLabel}</span>
             <span data-testid="per-day" className="block text-base font-semibold">
-              {hasRate ? t.perDayShown(fmtMoney(perDay), setup.perDay, unit.many, fmtMoney(setup.price)) : t.perDayEmpty}
+              {hasRate ? (unit ? t.perDayShown(fmtMoney(perDay), setup.perDay, unit.many, fmtMoney(setup.price)) : t.perDayTyped(fmtMoney(perDay))) : t.perDayEmpty}
             </span>
           </div>
           <button
             type="button"
             data-testid="per-day-edit"
             aria-label={t.editPerDay}
-            onClick={() => setEdit({ perDay: setup.perDay || NaN, price: setup.price })}
+            onClick={() => setEdit({ perDay: setup.perDay || NaN, price: unit || setup.price > 0 ? setup.price : NaN })}
             className="inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-card"
           >
             {"✎"}
@@ -474,8 +493,8 @@ function Money(p: MainProps & { today: string; startKey: string; perDay: number;
         </div>
         {edit && (
           <div data-testid="per-day-form" className="mt-2 flex flex-col gap-1">
-            <NumField label={t.editUnits} value={edit.perDay} testId="edit-perday" step={1} onChange={(n) => setEdit({ ...edit, perDay: n })} />
-            <NumField label={t.editPrice} value={edit.price} testId="edit-price" step={0.01} onChange={(n) => setEdit({ ...edit, price: n })} />
+            {unit && <NumField label={t.editUnits} value={edit.perDay} testId="edit-perday" step={1} onChange={(n) => setEdit({ ...edit, perDay: n })} />}
+            <NumField label={unit ? t.editPrice : t.fMoneyPerDay} value={edit.price} testId="edit-price" step={0.01} onChange={(n) => setEdit({ ...edit, price: n })} />
             <div className="flex gap-2">
               <PrimaryButton testId="edit-save" onClick={saveEdit}>
                 {t.editSave}
