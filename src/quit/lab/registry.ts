@@ -29,6 +29,10 @@ import { TimelineE } from "./timeline/e/TimelineE"
 import { BeliefsA } from "./beliefs/a/BeliefsA"
 import { BeliefsB } from "./beliefs/b/BeliefsB"
 import { BeliefsC } from "./beliefs/c/BeliefsC"
+import { CheckinA } from "./checkin/a/CheckinA"
+import { CheckinB } from "./checkin/b/CheckinB"
+import { CheckinC } from "./checkin/c/CheckinC"
+import { CheckinD } from "./checkin/d/CheckinD"
 import { ProgressBest } from "./progress/best/ProgressBest"
 import { QuitdateBest } from "./quitdate/best/QuitdateBest"
 import { TimelineBest } from "./timeline/best/TimelineBest"
@@ -124,7 +128,15 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       c: { Component: BeliefsC, addiction: "alcohol", label: "Copy C", kind: "copy" },
     },
   },
-  checkin: { name: "Daily check-in", variants: {} },
+  checkin: {
+    name: "Daily check-in",
+    variants: {
+      a: { Component: CheckinA, addiction: "alcohol", label: "Copy A", kind: "copy" },
+      b: { Component: CheckinB, addiction: "alcohol", label: "Copy B", kind: "copy" },
+      c: { Component: CheckinC, addiction: "porn", label: "Copy C", kind: "copy" },
+      d: { Component: CheckinD, addiction: "alcohol", label: "Copy D", kind: "copy" },
+    },
+  },
   diary: { name: "Craving and slip diary", variants: { current: current(SlipTool) } },
   lessons: { name: "Daily lessons", variants: {} },
   cost: { name: "Cost and savings", variants: { current: current(CostTool) } },
