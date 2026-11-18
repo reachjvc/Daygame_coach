@@ -745,7 +745,7 @@ async function openPhoneCalendar(page: Page) {
   // dispatchEvent: under `next dev` the dev-tools badge sits over a corner of the bar
   await page.getByRole('navigation', { name: 'Sections' }).getByRole('button', { name: 'Calendar' }).dispatchEvent('click')
   // the phone's calendar is one day with the week strip above it; there is no Day | Week switch (Plans/toggl-parity.md Phase 4)
-  await expect(page.locator('main [data-day-header]')).toBeVisible()
+  await expect(page.locator('main [data-day-header]').first()).toBeVisible()
 }
 
 /**
