@@ -42,6 +42,8 @@ import { DiaryBest } from "./diary/best/DiaryBest"
 import { CheckinBest } from "./checkin/best/CheckinBest"
 import { ProgressBest } from "./progress/best/ProgressBest"
 import { QuitdateBest } from "./quitdate/best/QuitdateBest"
+import { PastA } from "./past/a/PastA"
+import { PastB } from "./past/b/PastB"
 import { TimelineBest } from "./timeline/best/TimelineBest"
 
 export const LAB_TOOL_IDS = [
@@ -159,7 +161,14 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
   },
   lessons: { name: "Daily lessons", variants: {} },
   cost: { name: "Cost and savings", variants: { current: current(CostTool) } },
-  past: { name: "Past attempts", variants: { current: current(PastTool) } },
+  past: {
+    name: "Past attempts",
+    variants: {
+      current: current(PastTool),
+      a: { Component: PastA, addiction: "porn", label: "Copy A", kind: "copy" },
+      b: { Component: PastB, addiction: "alcohol", label: "Copy B", kind: "copy" },
+    },
+  },
   ifthen: { name: "If-then plan", variants: {} },
   accountability: { name: "Accountability", variants: {} },
   library: { name: "Library", variants: { current: current(HowTool) } },
