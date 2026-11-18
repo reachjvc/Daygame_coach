@@ -182,6 +182,18 @@ test.describe('time tracker on a phone', () => {
     await expect.poll(() => rows.count()).toBe(collapsed)
   })
 
+  test('report filters live in a sheet instead of a wall of controls', async ({ page }) => {
+    await openFreshTracker(page)
+    await trackEntry(page, 'phone entry')
+    await goTo(page, 'Reports')
+
+    // Detailed is reached by tapping today's bar (Plans/time-log-phone.md 6.2)
+    await page.getByRole('region', { name: 'By day' }).getByRole('button', { name: /today/ }).click()
+    await page.getByRole('button', { name: /Filters/ }).click()
+    await expect(page.getByText('Report settings')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Projects' }).first()).toBeVisible()
+  })
+
   test('the calendar opens on a single day with a week strip, not a seven-column grid', async ({ page }) => {
     await openFreshTracker(page)
     await goTo(page, 'Calendar')

@@ -605,7 +605,7 @@ const PhoneRow = memo(function PhoneRow({
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") (selecting ? onCheck : open)()
         }}
-        className="min-w-0 flex-1 py-0.5 text-left"
+        className="flex min-h-11 min-w-0 flex-1 flex-col justify-center py-0.5 text-left"
       >
         <span className="flex items-baseline gap-2">
           <span className={cn("min-w-0 flex-1 truncate text-sm", !entry.description.trim() && "text-muted-foreground")}>
