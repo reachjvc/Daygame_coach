@@ -24,6 +24,10 @@ import { fileURLToPath } from 'node:url'
 const SKIP_DIRS = new Set(['node_modules', '.next', '.git', 'docs', 'Plans', 'public', 'supabase', 'infra', 'data', 'new_new_clean_attempt'])
 const CODE = /\.(tsx?|mjs|js|json)$/
 const EXTENSIONS = ['.ts', '.tsx', '.js', '.mjs', '.json']
+// `import type { X } from …` and `export type … from …` vanish when TypeScript
+// compiles, so a test that only borrows a type does not run the file; vitest's
+// own graph skips them too. `import { type X, y }` still loads `y` and counts.
+const TYPE_ONLY = /^\s*(?:import|export)\s+type\s[^;]*?\bfrom\s*(['"])[^'"\n]+\1/gm
 const SPECIFIER =
   /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+|\brequire\s*\(\s*|\bvi\.(?:mock|doMock|importActual|importMock)\s*\(\s*)(['"])([^'"\n]+)\1/g
 
@@ -62,7 +66,7 @@ export function relatedTests(staged, root = process.cwd()) {
   const importedBy = new Map()
   for (const file of files) {
     if (file.endsWith('.json')) continue
-    const text = fs.readFileSync(path.join(root, file), 'utf8')
+    const text = fs.readFileSync(path.join(root, file), 'utf8').replace(TYPE_ONLY, '')
     for (const match of text.matchAll(SPECIFIER)) {
       const target = resolve(match[2], file)
       if (!target) continue

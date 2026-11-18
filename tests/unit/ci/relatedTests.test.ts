@@ -11,7 +11,6 @@ import os from 'node:os'
 import path from 'node:path'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 
-// @ts-expect-error a plain .mjs script
 import { relatedTests } from '../../../scripts/related-tests.mjs'
 
 let root: string
@@ -33,6 +32,10 @@ beforeAll(() => {
   write('src/d/data.json', '{}')
   write('src/d/readsJson.ts', "import data from './data.json'\nexport default data")
   write('src/e/alone.ts', 'export const alone = 1')
+  write('src/f/shape.ts', 'export type Shape = { a: number }\nexport const shapeValue = 1')
+  write('src/f/typeUser.ts', "import type { Shape } from './shape'\nexport const t: Shape = { a: 1 }")
+  write('src/f/reExport.ts', "export type { Shape } from './shape'")
+  write('src/f/mixedUser.ts', "import { type Shape, shapeValue } from './shape'\nexport const m: Shape = { a: shapeValue }")
   write('tests/unit/direct.test.ts', "import { leaf } from '@/src/a/leaf'")
   write('tests/unit/transitive.test.tsx', "import { top } from '@/src/a/top'")
   write('tests/unit/viaIndex.test.ts', "import { u } from '@/src/b/user'")
@@ -40,6 +43,8 @@ beforeAll(() => {
   write('tests/unit/viaMock.test.ts', "import { vi } from 'vitest'\nvi.mock('@/src/d/mocked', () => ({}))")
   write('tests/unit/viaJson.test.ts', "import d from '@/src/d/readsJson'")
   write('tests/unit/unrelated.test.ts', "import { x } from 'some-package'")
+  write('tests/unit/viaTypeOnly.test.ts', "import { t } from '@/src/f/typeUser'\nimport type { Shape } from '@/src/f/reExport'")
+  write('tests/unit/viaMixed.test.ts', "import { m } from '@/src/f/mixedUser'")
   write('tests/e2e/browser.spec.ts', "import { leaf } from '@/src/a/leaf'")
   write('tests/e2e/helper.test.ts', "import { leaf } from '@/src/a/leaf'")
   write('node_modules/pkg/index.ts', "import { leaf } from '@/src/a/leaf'")
@@ -63,6 +68,11 @@ describe('which tests a staged file reaches', () => {
 
   test('a data file a source file imports reaches the tests of that source file', () => {
     expect(relatedTests(['src/d/data.json'], root)).toEqual(['tests/unit/viaJson.test.ts'])
+  })
+
+  test('a type-only import does not run the file it names; an import that also takes a value does', () => {
+    expect(relatedTests(['src/f/shape.ts'], root)).toEqual(['tests/unit/viaMixed.test.ts'])
+    expect(relatedTests(['src/f/typeUser.ts'], root)).toEqual(['tests/unit/viaTypeOnly.test.ts'])
   })
 
   test('a staged test file is itself run', () => {
