@@ -191,9 +191,10 @@ test.describe("the copy space page", () => {
 
     // The other tabs, so every child component mounts and shows what it fetches: review (reminder block), systems (training), track, journal, area dialogs.
     for (const step of ["review", "journal", "track", "systems", "focus", "now"]) {
+      const read = page.waitForResponse((r) => r.url().includes("/api/life-plan?target=sandbox") && r.request().method() === "GET")
       await page.goto(`${ROUTES.planSandbox}?step=${step}`)
+      await read
       await expect(page.getByTestId("plan-sandbox-banner")).toBeVisible()
-      await page.waitForTimeout(600)
     }
     // Hydrated (the page's guard is in place) once it has read its plan.
     const hydrated = page.waitForResponse((r) => r.url().includes("/api/life-plan?target=sandbox") && r.request().method() === "GET")

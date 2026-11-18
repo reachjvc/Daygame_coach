@@ -5,6 +5,10 @@
  * new one and rewrite every column that names one, consistently. Proved here on
  * the one full plan (every table has rows), in memory; the integration test
  * proves the same through a real database and row security.
+
+ * The write functions the copy uses, proved against the real schema in
+ * tests/integration/repos/planSandbox.integration.test.ts: insertDayRows,
+ * deleteReminder, deleteLifePlan.
  */
 import { describe, it, expect } from "vitest"
 import { randomUUID } from "node:crypto"
