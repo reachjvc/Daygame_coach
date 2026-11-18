@@ -23,6 +23,7 @@ import { TimelineC } from "./timeline/c/TimelineC"
 import { TimelineD } from "./timeline/d/TimelineD"
 import { TimelineE } from "./timeline/e/TimelineE"
 import { ProgressBest } from "./progress/best/ProgressBest"
+import { TimelineBest } from "./timeline/best/TimelineBest"
 
 export const LAB_TOOL_IDS = [
   "sos",
@@ -93,6 +94,7 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       c: { Component: TimelineC, addiction: "nicotine", label: "Copy C", kind: "copy" },
       d: { Component: TimelineD, addiction: "nicotine", label: "Copy D", kind: "copy" },
       e: { Component: TimelineE, addiction: "weed", label: "Copy E", kind: "copy" },
+      best: { Component: TimelineBest, addiction: "nicotine", label: "Improved", kind: "best" },
     },
   },
   quitdate: { name: "Quit date and plan", variants: {} },
