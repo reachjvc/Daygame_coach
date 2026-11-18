@@ -1,6 +1,6 @@
 # Quit tools, copied from the best: one phase per tool
 
-Written 2026-11-18 (Opus, planning session). Status: **running. Phase 0 done (lab frame live on main, 8f3e2ee3; B1 still blocked: Vercel CLI logged out, owner item 1). Step B passed for Phases 1, 2, 3, 5; Phase 1 copies building; research running for Phases 4 and 6.**
+Written 2026-11-18 (Opus, planning session). Status: **running. Phase 0 done (lab frame live on main, 8f3e2ee3; Phase 1 copies a, c, d, e live c9982f21, `best` building; B1 still blocked: Vercel CLI logged out, owner item 1). Step B passed for Phases 1, 2, 3, 5; Phase 1 copies building; research running for Phases 4 and 6.**
 
 ## Why this plan exists
 
@@ -133,6 +133,42 @@ nicotine content, the validator, privacy and coaching pages, the audit fixes) is
 - Phase 7 (diary) Step B: copies **b, c, d, e** pass. **a dropped** (2 seen, 4 inferred). d's log screens are the
   same product's craving flow already built as sos/d: the diary copy reuses those components and adds its own
   stats; e is picked over a bigger app because it has the trigger chart.
+- Phase 9 (cost) Step B: copies **b, c, e** pass (c: the only public first-run cost setup; e: a public web
+  calculator walked in full; b: savings goals page seen). **a and d dropped**: input screens never public, a copy
+  would be mostly placeholders; their goal displays are already in progress copies.
+- Phase 8 (lessons) Step B: copies **b, c, d, e** pass (d: the whole 28-day shell walked on video; b: day chips,
+  locked tasks, 3-page lesson, day-complete). **a dropped** (its missions tab never seen). Copies carry 3 sample
+  lessons each in our own words; outcome percentages show "number not sourced yet".
+- Phase 10 (past) Step B: copies **a, b** pass (a: sign-up history questions incl. a screen that mirrors his own
+  relapse number; b: slip entry, abstinence-periods chart). **c, d dropped** (half or more guessed). No product
+  has the full past-attempts tool (method, why it ended, what helped), so `best` builds that part from our rules.
+- Phase 11 (ifthen) Step B: copies **a, c** pass (a: a public plan-builder walked in full; c: a public worksheet).
+  **b cut to its three seen screens** (three-circles cards, boundaries survey, feeling chips); nothing inferred of
+  b is built. The tool is paywalled almost everywhere, so a full if-then builder is ours to design in `best`.
+
+### Phase 1 Step D brief: `sos/best` (2026-11-18)
+
+Copies a, c, d, e are on main (c9982f21). The improved version, from `sos/overlap.md` and our rules:
+1. **Help first, one tap.** Opening it shows the tool shelf at once; no question comes before help (four of five
+   copies give help in 1–2 taps; the one that asks three questions first is the slowest).
+2. **A wait the user chooses** (5, 10 or 15 minutes; 10 preselected) as a visible ring countdown that runs while he
+   uses any tool. Labelled as a tool ("give it ten minutes"), never as how long a craving lasts (three copies
+   give three different unsourced lengths).
+3. **Shelf of tools**, each one tap: hold-to-breathe (his own breath drives the circle: copy c's best piece);
+   bubble wrap (zero rules: the best piece of a product not copied); a block puzzle (2048 kind); "move for five
+   minutes" with its checked source (exercise and cravings, `needs` refs in the data file); help for this moment:
+   pick the situation from `riskyMoments`, get one card at a time from `responses`/`needs` swaps with a next arrow
+   (copy e's best piece); his own reasons and money kept (from the lab store if set, else a short prompt).
+4. **Afterwards, two taps at most:** "Did you smoke/use?" yes / no. No fireworks, no cheering: a plain line of what
+   he did. Yes leads to a no-blame note and the diary; nothing resets. Optional one-row log: strength 1–10 and the
+   situation (copy d's data idea, but after help, never before); a second log within 5 minutes updates the first
+   instead of counting twice (copy d's complaint).
+5. **His own pattern:** under the shelf, a small bar list of his logged situations (copy e's pie as a bar list,
+   readable on a phone), from 3 logs on; before that, a line saying it appears after three.
+6. **Addiction switcher** at the top (nicotine, alcohol, weed, porn from `src/quit/data/<id>.json`); where a data
+   field is missing for an addiction, that tool says "content coming".
+7. Rules: every number with basis and source; no streak, nothing resets; no screening; no founder "I"; phone first.
+   New text is our own; any new factual claim goes to an Opus fact-check before merge.
 
 ---
 
