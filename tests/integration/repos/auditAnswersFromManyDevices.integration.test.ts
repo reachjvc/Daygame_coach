@@ -73,7 +73,11 @@ describe("saving a phone's waiting answers", () => {
     expect((await save([answer(p.run.id, slotAt, { activity: "Laptop newer", answeredAt: new Date().toISOString() })])).body.stored).toBe(1)
     const old = answer(p.run.id, slotAt, { activity: "Phone old", answeredAt: phoneAnsweredAt })
     const res = await save([old])
-    expect(res.body.refused).toEqual([{ id: old.id, error: "Changed on another device since", retry: false }])
+    // The refusal also carries the answer the quarter holds, so the card can show it (565ccb2a).
+    expect(res.body.refused).toEqual([
+      { id: old.id, error: "Changed on another device since", retry: false, stored: expect.objectContaining({ activity: "Laptop newer" }) },
+    ])
+    expect(res.body.stored).toBe(0)
     expect((await readSlots(p.user.id, p.run.id))[0].activity).toBe("Laptop newer")
   })
 

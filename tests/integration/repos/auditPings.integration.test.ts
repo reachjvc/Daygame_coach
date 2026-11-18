@@ -185,8 +185,11 @@ describe("the ping's buttons (POST /api/audit/ping)", () => {
     expect(res.status).toBe(200)
     expect(res.body.body).toMatch(/^Muted until \d\d:\d\d$/)
     const muted = Date.parse((await readRuns(p.user.id))[0].mutedUntil!)
-    expect(muted - before).toBeGreaterThanOrEqual(59 * 60_000)
-    expect(muted - before).toBeLessThanOrEqual(61 * 60_000)
+    // A mute ends on the quarter at or before now + 1 h, the tick "Muted until hh:mm" names
+    // (muteUntil, b3aad6b1): 45 to 60 minutes after the tap, never longer, and never inside the hour's last quarter.
+    expect(muted % QUARTER_MS).toBe(0)
+    expect(muted - before).toBeGreaterThanOrEqual(45 * 60_000)
+    expect(muted - before).toBeLessThanOrEqual(60 * 60_000 + 1_000)
   })
 
   it("refuses another person's send", async () => {
