@@ -22,7 +22,9 @@ ARG NODE_IMAGE=node:24.21.0-trixie-slim@sha256:173f125896c3b47ddf056734c7ea789d0
 FROM ${NODE_IMAGE} AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN HUSKY=0 npm ci --no-audit --no-fund
+# onnxruntime-node downloads CUDA binaries during npm ci; the v1.21.0 GPU archive is gone
+# from GitHub (404, 2026-11-18) and nothing here uses a GPU. Same skip as ci.yml.
+RUN HUSKY=0 ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm ci --no-audit --no-fund
 
 # --- build ---------------------------------------------------------------------
 FROM ${NODE_IMAGE} AS build
