@@ -180,8 +180,8 @@ function Remind() {
       skip={{ onClick: () => nav.go("rolemodels/done") }}
     >
       <ChipRow>
-        <Chip on={on} testId="remind-on" onClick={() => setOn(true)}>{rolemodelsCopy.remind["true"]}</Chip>
-        <Chip on={!on} testId="remind-off" onClick={() => setOn(false)}>{rolemodelsCopy.remind["false"]}</Chip>
+        <Chip on={on} testId="remind-on" onClick={() => setOn(true)}>{rolemodelsCopy.remind.on}</Chip>
+        <Chip on={!on} testId="remind-off" onClick={() => setOn(false)}>{rolemodelsCopy.remind.off}</Chip>
       </ChipRow>
       {on && (
         <div>

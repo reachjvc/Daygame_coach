@@ -75,7 +75,7 @@ function routines(plan: NsPlan): ExtraRaw {
   const reasons: PlanReason[] = []
   for (const r of mine) {
     if (r.steps.length === 0) reasons.push(make("routines", "routines.empty", "check", `routines/${r.id}/steps`, r.id))
-    else if (r.kind === "sequence" && r.daysPerWeek <= 0 && r.steps.every((s) => s.days.length === 0 && s.daysPerWeek <= 0)) {
+    else if (r.kind === "sequence" && r.daysPerWeek <= 0 && r.steps.every((s) => s.days.length === 0)) {
       reasons.push(make("routines", "routines.no-days", "check", `routines/${r.id}/when`, r.id))
     }
     if (r.steps.some((s) => s.goesTo && readText(plan, s.goesTo) === null)) reasons.push(make("routines", "routines.dead-link", "check", `routines/${r.id}/steps`, r.id))

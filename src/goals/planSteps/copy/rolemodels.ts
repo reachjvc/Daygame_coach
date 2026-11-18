@@ -23,8 +23,8 @@ export const rolemodelsCopy = {
   "remind": {
     "job": "choose a daily reminder",
     "title": "Want a daily reminder?",
-    "true": "On",
-    "false": "Off",
+    "on": "On",
+    "off": "Off",
     "hour_label": "At what hour?",
     "copy_note": "This copy never sends reminders."
   },
