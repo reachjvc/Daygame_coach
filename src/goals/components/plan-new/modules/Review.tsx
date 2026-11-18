@@ -3,6 +3,10 @@
 import Link from "next/link"
 import { useState } from "react"
 import { reviewCopy } from "@/src/goals/planSteps/copy/review"
+import { reviewPageCopy } from "@/src/goals/planSteps/copy/daily"
+import { lineupIds } from "@/src/goals/planSteps/planFacts"
+import { shownPerson } from "@/src/role-models/catalog"
+import { memberForDay } from "@/src/role-models/councilTypes"
 import { commonCopy } from "@/src/goals/planSteps/copy/common"
 import { protectedId, activeSeasonGoals, checkinSettings, weeklyItems, type WeeklyItem } from "@/src/goals/planSteps/planFacts"
 import { dueCheckinWeek } from "@/src/goals/planSteps/planStatus"
@@ -20,7 +24,13 @@ type Choice = "keep" | "up" | "down"
 
 export function ReviewModule({ segs }: { segs: string[] }) {
   const { status } = usePlanNew()
-  const first = segs[0] ?? (status.modules.review.started ? "done" : "day")
+  // Opening Review with no screen named: set it up, or run the check-in when it is due, else the summary.
+  if (segs.length === 0) {
+    if (!status.modules.review.started) return <NeedsSetup />
+    if (status.modules.review.reasons.some((r) => r.id === "review.due")) return <Run step="week" />
+    return <Done />
+  }
+  const first = segs[0]
   if (first === "time") return <Time />
   if (first === "phone") return <Phone />
   if (first === "run") return <Run step={segs[1] ?? "week"} />
@@ -29,6 +39,14 @@ export function ReviewModule({ segs }: { segs: string[] }) {
 }
 
 const SETUP_TOTAL = 3
+
+function NeedsSetup() {
+  return (
+    <Frame testId="review-setup-needed" eyebrow={reviewCopy.name} title={reviewPageCopy.title} help={reviewPageCopy.setup_needed} back={{ href: homeHref() }}>
+      <Link href={screenHref("review/day")} className={btnPrimary} data-testid="review-setup-go">{reviewPageCopy.setup_button}</Link>
+    </Frame>
+  )
+}
 
 function Day() {
   const { plan, change } = usePlanNew()
@@ -122,6 +140,11 @@ function Done() {
         </Row>
       )}
       <Link href={nav.change("review/time")} className={linkQuiet}>{reviewCopy.time.title}</Link>
+      {s && !due && (
+        <p className="text-sm text-zinc-400" data-testid="review-not-due">
+          {fill(reviewPageCopy.not_due, { day: weekdayName(s.reviewDay, "long"), time: hourText(s.reviewHour) })}
+        </p>
+      )}
       {due && (
         <Link href={screenHref("review/run/week")} className={btnPrimary} data-testid="start-run">{reviewCopy.reasons.due}</Link>
       )}
@@ -203,7 +226,7 @@ function Run({ step }: { step: string }) {
     )
   }
   if (step === "slipped") {
-    return <Slipped chrome={chrome} monday={facts.monday} onNext={() => go(nextOf())} />
+    return <Slipped chrome={chrome} monday={facts.monday} slipped={slipped} onNext={() => go(nextOf())} />
   }
   if (step === "next") {
     return (
@@ -314,15 +337,25 @@ function RungRow({ text, reward, onReward }: { text: string; reward: string; onR
   )
 }
 
-function Slipped({ chrome, monday, onNext }: { chrome: { eyebrow: string; dots: { n: number; m: number }; back: { href: string } }; monday: string; onNext: () => void }) {
+function Slipped({ chrome, monday, slipped, onNext }: { chrome: { eyebrow: string; dots: { n: number; m: number }; back: { href: string } }; monday: string; slipped: WeekFacts["items"]; onNext: () => void }) {
   const { plan, change, today } = usePlanNew()
   const s = reviewCopy.run.slipped
   const week = plan.reviews.find((r) => r.id === `week-${monday}`)
   const [text, setText] = useState(week?.lessons ?? "")
   const commit = () => change((p) => writeWeek(p, monday, today, { lessons: text }))
+  const hint = shownPerson(memberForDay(lineupIds(plan), today) ?? "")?.name ?? ""
   return (
     <Frame {...chrome} testId="run-slipped" title={s.title} help={s.help} next={{ onClick: () => { commit(); onNext() } }} skip={{ onClick: onNext }}>
       <GrownText label={s.field_label} value={text} onChange={setText} placeholder={s.placeholder} max={3000} rows={3} testId="slipped-text" />
+      <ul className="space-y-2" data-testid="slipped-items">
+        {slipped.map((f) => (
+          <li key={f.item.id} className={`${card} flex items-center justify-between gap-3`}>
+            <span className="min-w-0 break-words text-sm text-zinc-100">{f.item.title}</span>
+            <Link href={screenHref(`obstacles/what?goal=${f.item.serves[0] ?? ""}`)} className={`${linkQuiet} shrink-0`} data-testid={`plan-for-${f.item.id}`}>{s.plan_for_it}</Link>
+          </li>
+        ))}
+      </ul>
+      {hint && <p className="text-sm text-violet-200" data-testid="lineup-hint">{fill(s.lineup_hint, { name: hint })}</p>}
     </Frame>
   )
 }
