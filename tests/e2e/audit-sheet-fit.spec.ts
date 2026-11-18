@@ -114,7 +114,8 @@ test.describe("the answer sheet fits the phone @phone", () => {
     const stretch = cards.first()
     await expect(stretch.locator("h3")).toContainText(`${clock(gym[0])}–${clock(newest + Q)} · this ping · 4 quarters · from Time: Gym`)
     await expect(stretch.getByTestId("audit-activity")).toHaveValue("Gym")
-    expect(await inView(page, stretch.locator("h3"))).toBe(true)
+    // polled: the sheet slides in over 0.2 s (animate-slide-up), and a slow runner measured it mid-slide
+    await expect.poll(() => inView(page, stretch.locator("h3")), { timeout: 5_000 }).toBe(true)
     await shot(page, "time-stretch-card")
 
     await stretch.getByTestId("audit-split").click()
