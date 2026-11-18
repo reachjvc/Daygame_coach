@@ -17,6 +17,10 @@ import { ProgressB } from "./progress/b/ProgressB"
 import { ProgressC } from "./progress/c/ProgressC"
 import { ProgressD } from "./progress/d/ProgressD"
 import { ProgressE } from "./progress/e/ProgressE"
+import { QuitdateA } from "./quitdate/a/QuitdateA"
+import { QuitdateB } from "./quitdate/b/QuitdateB"
+import { QuitdateD } from "./quitdate/d/QuitdateD"
+import { QuitdateE } from "./quitdate/e/QuitdateE"
 import { TimelineA } from "./timeline/a/TimelineA"
 import { TimelineB } from "./timeline/b/TimelineB"
 import { TimelineC } from "./timeline/c/TimelineC"
@@ -97,7 +101,15 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       best: { Component: TimelineBest, addiction: "nicotine", label: "Improved", kind: "best" },
     },
   },
-  quitdate: { name: "Quit date and plan", variants: {} },
+  quitdate: {
+    name: "Quit date and plan",
+    variants: {
+      a: { Component: QuitdateA, addiction: "alcohol", label: "Copy A", kind: "copy" },
+      b: { Component: QuitdateB, addiction: "alcohol", label: "Copy B", kind: "copy" },
+      d: { Component: QuitdateD, addiction: "nicotine", label: "Copy D", kind: "copy" },
+      e: { Component: QuitdateE, addiction: "nicotine", label: "Copy E", kind: "copy" },
+    },
+  },
   beliefs: { name: "Belief test", variants: { current: current(BeliefsTool) } },
   checkin: { name: "Daily check-in", variants: {} },
   diary: { name: "Craving and slip diary", variants: { current: current(SlipTool) } },
