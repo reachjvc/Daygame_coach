@@ -27,6 +27,16 @@ His answers the same day, which shape everything below:
     form, 52 replaced by original forms.
   - 4.3 areas page published 2026-11-18: https://claude.ai/artifact/WzWoej19QPwSe42fXk5YBY. Its database
     holds `pick/choice` and `notes`/`likes` per block. Read it before applying areas.
+  - **Areas decided** on 2026-11-18 from his marks on the page:
+    - His note on the twelve-to-seven table: "mostly right", except Emotions. In his words: *"'emotions'
+      i think this one could be named something like 'feeling about life' … Ultimately, i want to live a
+      life that feels great, so it seems like this should be tracked"*.
+    - He liked "One list for the whole app".
+    - Read as option A plus his change. The eight areas, in order: Dating & Daygame, Health & Appearance,
+      Career & Finances, Social Life, Personal Growth, **Feeling about life**, Lifestyle,
+      Vices & Elimination.
+    - Feeling about life gets a daily rating on Today; this is his concept item 21.
+    - He saved no radio pick; the recommendation counts.
   - 4.2 words written by a writer who saw no sources (private, `spec/words.md`). After two checker rounds:
     0 must-change. Builder rules are in `spec/builder-notes.md`.
 - **Phase 2 live** on 2026-11-18 (`4f9128e4`):
