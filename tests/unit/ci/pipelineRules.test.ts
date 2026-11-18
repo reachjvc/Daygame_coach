@@ -99,8 +99,8 @@ describe("ci.yml says what it may do, and stops its own stale runs", () => {
   })
 
   it("scans the whole history for secrets and fails on a finding", () => {
-    const checks = ci.jobs.checks
-    expect(checks, "ci.yml has a `checks` job").toBeDefined()
+    const checks = ci.jobs.static
+    expect(checks, "ci.yml has a `static` job").toBeDefined()
     const checkout = (checks.steps ?? []).find((s) => s.uses?.startsWith("actions/checkout@"))
     expect(checkout?.with?.["fetch-depth"]).toBe(0)
     const scan = (checks.steps ?? []).find((s) => s.run?.includes("gitleaks"))
@@ -109,7 +109,7 @@ describe("ci.yml says what it may do, and stops its own stale runs", () => {
   })
 
   it("runs the dependency audit ratchet", () => {
-    expect((ci.jobs.checks.steps ?? []).some((s) => s.run === "npm run audit:ratchet")).toBe(true)
+    expect((ci.jobs.static.steps ?? []).some((s) => s.run === "npm run audit:ratchet")).toBe(true)
   })
 })
 
@@ -170,18 +170,31 @@ jobs:
   })
 })
 
-describe("the unit suite runs in two shards, and publishing waits for both", () => {
+describe("the unit suite runs in two shards, and publishing waits for every check job", () => {
   const stepRun = (job: Job, name: string) => (job.steps ?? []).find((st) => (st as { name?: string }).name === name)?.run
 
-  it("`checks` runs shard 1/2 and `unit-2` runs shard 2/2, so no half is left out", () => {
-    expect(ci.jobs["unit-2"], "ci.yml has a unit-2 job").toBeDefined()
-    expect(stepRun(ci.jobs.checks, "Unit tests")).toBe("npm test -- --shard=1/2")
-    expect(stepRun(ci.jobs["unit-2"], "Unit tests")).toBe("npm test -- --shard=2/2")
+  it("`unit` runs shards 1/2 and 2/2 as a matrix, so no half is left out", () => {
+    const unit = ci.jobs.unit as Job & { strategy?: { matrix?: { shard?: string[] } } }
+    expect(unit, "ci.yml has a unit job").toBeDefined()
+    expect(unit.strategy?.matrix?.shard).toEqual(["1/2", "2/2"])
+    expect(stepRun(unit, "Unit tests")).toBe("npm test -- --shard=${{ matrix.shard }}")
   })
 
-  it("is awaited by both image jobs, and production checks its result", () => {
-    for (const name of ["image-staging", "image-production"]) expect(ci.jobs[name].needs, name).toContain("unit-2")
-    expect(ci.jobs["image-production"].if).toContain("needs.unit-2.result == 'success'")
+  it("the check jobs are static, unit and database, side by side: none waits for another", () => {
+    for (const name of ["static", "unit", "database"]) {
+      expect(ci.jobs[name], `ci.yml has a ${name} job`).toBeDefined()
+      expect(ci.jobs[name].needs, `${name} waits for another job`).toBeUndefined()
+    }
+    expect(ci.jobs.checks, "the old one-job `checks` is back").toBeUndefined()
+  })
+
+  it("is awaited by both image jobs, and production checks every result", () => {
+    for (const name of ["image-staging", "image-production"]) {
+      expect(ci.jobs[name].needs, name).toEqual(["static", "unit", "database"])
+    }
+    for (const job of ["static", "unit", "database"]) {
+      expect(ci.jobs["image-production"].if).toContain(`needs.${job}.result == 'success'`)
+    }
   })
 })
 
@@ -192,7 +205,7 @@ describe("the staging image job", () => {
 
   it("runs only after the checks, only for a push to main, only when switched on", () => {
     expect(job, "ci.yml has an image-staging job").toBeDefined()
-    expect(job.needs).toEqual(["checks", "unit-2"])
+    expect(job.needs).toEqual(["static", "unit", "database"])
     expect(job.if).toContain("github.event_name == 'push'")
     expect(job.if).toContain("github.ref == 'refs/heads/main'")
     expect(job.if).toContain("vars.STAGING_PUBLISH == 'on'")
@@ -239,7 +252,7 @@ describe("the staging image job", () => {
   })
 
   it("says so in the run summary while publishing is switched off", () => {
-    const off = (ci.jobs.checks.steps ?? []).find((st) => st.run?.includes("Staging publishing is off: see blockers"))
-    expect(off, "the checks job no longer reports that staging publishing is off").toBeDefined()
+    const off = (ci.jobs.static.steps ?? []).find((st) => st.run?.includes("Staging publishing is off: see blockers"))
+    expect(off, "the static job no longer reports that staging publishing is off").toBeDefined()
   })
 })

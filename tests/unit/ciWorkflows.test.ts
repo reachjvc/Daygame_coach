@@ -218,7 +218,8 @@ describe("the duration ratchet watches what CI runs", () => {
         continue
       }
       const shard = SHARDS.find((x) => `${x.lane} ${x.shard}/${x.of}` === s.job)
-      const plain = jobs(yaml)[s.job]
+      const unitShard = s.workflow === "ci.yml" && /^unit [12]\/2$/.test(s.job)
+      const plain = unitShard ? jobs(yaml)["unit"] : jobs(yaml)[s.job]
       if (!shard && plain === undefined) missing.push(`${s.workflow} › ${s.job}: no such job`)
       if (s.step && !(plain ?? "").includes(`- name: ${s.step}\n`)) missing.push(`${s.workflow} › ${s.job} › ${s.step}: no such step`)
       if (!(s.seconds > 0)) missing.push(`${s.workflow} › ${s.job}: no baseline`)
@@ -241,7 +242,10 @@ describe("the duration ratchet watches what CI runs", () => {
       expect(e2eJobs[job]).toMatch(/^ {4}name: \$\{\{ matrix\.lane \}\} \$\{\{ matrix\.shard \}\}$/m)
     }
     expect(e2eJobs["e2e-fast"]).not.toMatch(/^ {4}name:/m)
-    expect(jobs(ci)["checks"]).not.toMatch(/^ {4}name:/m)
+    // ci.yml: a job with no `name:` shows as its key; `unit` is a matrix of two shards.
+    for (const job of ["static", "database"]) expect(jobs(ci)[job]).not.toMatch(/^ {4}name:/m)
+    expect(jobs(ci)["unit"]).toMatch(/^ {4}name: unit \$\{\{ matrix\.shard \}\}$/m)
+    expect(jobs(ci)["unit"]).toMatch(/shard: \['1\/2', '2\/2'\]/)
   })
 
   test("every browser shard has a baseline", () => {
@@ -281,7 +285,7 @@ describe("when CI runs at all", () => {
     const range = `${Math.min(...ports)}-${Math.max(...ports)}`
 
     const starters: [string, string][] = [
-      ["ci.yml checks", jobs(ci)["checks"] ?? ""],
+      ["ci.yml database", jobs(ci)["database"] ?? ""],
       ...browserJobs.map((job): [string, string] => [
         `e2e.yml ${job}`,
         /steps: \*lane-steps/.test(e2eJobs[job] ?? "") ? e2eJobs["lanes"] : (e2eJobs[job] ?? ""),

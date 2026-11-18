@@ -27,29 +27,25 @@ env:
 # finish last and paint the branch with a stale result. main is the exception:
 # a production run may sit waiting for the owner's approval, so runs on main
 # get a group of their own and never cancel or queue each other.
+# Why not one shared main group with cancel-in-progress: false, so that a
+# queued run gives way to a newer push (B8, Plans/tests-green-and-fast.md)? A
+# run whose image-production job waits for approval stays "in progress" for
+# days, and would hold the group: every later main run would sit pending behind
+# it and be cancelled by the next push, so main would get no CI at all.
 concurrency:
   group: ci-${{ github.event_name }}-${{ github.ref }}${{ github.ref == 'refs/heads/main' && format('-{0}', github.run_id) || '' }}
   cancel-in-progress: ${{ (github.event_name == 'push' || github.event_name == 'pull_request') && github.ref != 'refs/heads/main' }}
 
 jobs:
-  checks:
-    # Pinned, not ubuntu-latest: that label moves to Ubuntu 26.04 from
-    # 2026-10-19, and browser dependencies and Docker on a new OS release are
-    # what break first. Moving to 26.04 is a deliberate change for later.
+  # Three jobs side by side instead of one long one (Plans/tests-green-and-fast.md,
+  # Phase 4): the wall time of a run is the slowest of them, not their sum. The
+  # image jobs below wait for all of them. Pinned, not ubuntu-latest: that label
+  # moves to Ubuntu 26.04 from 2026-10-19, and browser dependencies and Docker on
+  # a new OS release are what break first. Moving to 26.04 is a deliberate change
+  # for later.
+  static:
     runs-on: ubuntu-24.04
     steps:
-      # FIRST, BEFORE ANYTHING TOUCHES THE NETWORK. The test backend's ports
-      # (55320-55329, tests/db/supabase/config.toml) sit inside Linux's
-      # ephemeral range, so any outbound connection — checkout, npm ci, the
-      # browser and image downloads — can take one, and holds it while open
-      # and for a minute after it closes. Run 38731303670 lost a shard to
-      # "0.0.0.0:55324 ... address already in use"; reserving the range after
-      # npm ci was too late (run 38858666954, 55322). Reserved first, the
-      # kernel never hands them out. ciWorkflows.test.ts keeps the range in
-      # step with config.toml and this step first.
-      - name: Keep the test backend's ports out of the ephemeral range
-        run: sudo sysctl -w net.ipv4.ip_local_reserved_ports=55320-55329
-
       - uses: actions/checkout@v7
         with:
           # The whole history: the secret scan reads every commit, and the
@@ -100,9 +96,65 @@ jobs:
       - name: Dependency audit ratchet
         run: npm run audit:ratchet
 
-      # Half of the unit suite; the other half is the `unit-2` job.
+      # Visible, not silent: when staging publishing is switched off, the run
+      # says so and says why, instead of the image job simply not appearing.
+      - name: Staging publishing is off
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.STAGING_PUBLISH != 'on' }}
+        run: |
+          echo "Staging publishing is off: see blockers B-GH and B-GHCR in Plans/caddy-deploy-and-cicd.md" >> "$GITHUB_STEP_SUMMARY"
+
+  # The unit suite in two halves, each on its own runner (one job ran all of it
+  # in 162 s on a 4-vCPU runner, CI 44371247603; two halves take 40-65 s).
+  # The halves come from the even-shards sequencer in vitest.config.ts.
+  # The job's display name is `unit 1/2` and `unit 2/2`, which is what
+  # docs/testing/durations.json looks for.
+  unit:
+    name: unit ${{ matrix.shard }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ['1/2', '2/2']
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Unit tests
-        run: npm test -- --shard=1/2
+        run: npm test -- --shard=${{ matrix.shard }}
+
+  database:
+    runs-on: ubuntu-24.04
+    steps:
+      # FIRST, BEFORE ANYTHING TOUCHES THE NETWORK. The test backend's ports
+      # (55320-55329, tests/db/supabase/config.toml) sit inside Linux's
+      # ephemeral range, so any outbound connection — checkout, npm ci, the
+      # browser and image downloads — can take one, and holds it while open
+      # and for a minute after it closes. Run 38731303670 lost a shard to
+      # "0.0.0.0:55324 ... address already in use"; reserving the range after
+      # npm ci was too late (run 38858666954, 55322). Reserved first, the
+      # kernel never hands them out. ciWorkflows.test.ts keeps the range in
+      # step with config.toml and this step first.
+      - name: Keep the test backend's ports out of the ephemeral range
+        run: sudo sysctl -w net.ipv4.ip_local_reserved_ports=55320-55329
+
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
 
       # The database tests run against a throwaway local Supabase built from
       # production's own schema (scripts/db/test-stack.mjs; tests/db/) — row
@@ -120,36 +172,8 @@ jobs:
         run: npm run test:integration
         timeout-minutes: 15
 
-      # Visible, not silent: when staging publishing is switched off, the run
-      # says so and says why, instead of the image job simply not appearing.
-      - name: Staging publishing is off
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.STAGING_PUBLISH != 'on' }}
-        run: |
-          echo "Staging publishing is off: see blockers B-GH and B-GHCR in Plans/caddy-deploy-and-cicd.md" >> "$GITHUB_STEP_SUMMARY"
-
-  # The other half of the unit suite. One job ran all of it in 162 s on a
-  # 4-vCPU runner (CI 44371247603), so `checks` runs shard 1/2 and this job
-  # runs shard 2/2 beside it. Plans/tests-green-and-fast.md, Phase 3 / Q3;
-  # Phase 4 gives the jobs their final shape. The image jobs wait for both.
-  unit-2:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Unit tests
-        run: npm test -- --shard=2/2
-
   # ===========================================================================
-  # THE STAGING IMAGE. After the checks above pass on a push to
+  # THE STAGING IMAGE. After the three check jobs above pass on a push to
   # main, and only when the repository variable STAGING_PUBLISH is
   # `on` (a job's own `if:` cannot read environment variables).
   #
@@ -168,7 +192,7 @@ jobs:
   # (tests/unit/ci/pipelineRules.test.ts). Plans/caddy-deploy-and-cicd.md, step 4.3.
   # ===========================================================================
   image-staging:
-    needs: [checks, unit-2]
+    needs: [static, unit, database]
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.STAGING_PUBLISH == 'on' }}
     runs-on: ubuntu-24.04
     environment: staging
@@ -214,8 +238,8 @@ jobs:
   # Plans/caddy-deploy-and-cicd.md, Phase 5 step 5.
   # ===========================================================================
   image-production:
-    needs: [checks, unit-2]
-    if: ${{ !cancelled() && needs.checks.result == 'success' && needs.unit-2.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.PRODUCTION_PUBLISH == 'on' }}
+    needs: [static, unit, database]
+    if: ${{ !cancelled() && needs.static.result == 'success' && needs.unit.result == 'success' && needs.database.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.PRODUCTION_PUBLISH == 'on' }}
     runs-on: ubuntu-24.04
     environment: production
     concurrency:
