@@ -38,24 +38,36 @@ const nextConfig = {
     unoptimized: true,
   },
   /**
-   * VERCEL'S FILE TRACE DROPS THE PAGES-ROUTER CONTEXT FILES.
+   * THE ROOT LAYOUT'S ROUTER IMPORT MUST USE THE APP-PAGE CONTEXT (live 500).
    *
-   * src/shared/HistoryBarrierContext.tsx (used by the root layout) imports
-   * AppRouterContext from "next/dist/shared/lib/app-router-context.shared-runtime".
-   * In the server bundle Next resolves that to
-   * next/dist/server/route-modules/pages/vendored/contexts/app-router-context,
-   * which requires ../../module.compiled.js, which requires
-   * next/dist/compiled/next-server/pages.runtime.prod.js. Those are loaded
-   * dynamically, so the trace misses them and every dynamic page 500s on Vercel
-   * with "Cannot find module". Local `next start` works because node_modules is
-   * complete. Force them into every route's trace.
+   * src/shared/HistoryBarrierContext.tsx imports AppRouterContext from
+   * "next/dist/shared/lib/app-router-context.shared-runtime". Next's own
+   * server-side rewrite of `.shared-runtime` imports only matches relative
+   * requests ("./x.shared-runtime"), so this absolute one is left as a plain
+   * external `require()`. At run time Next's require hook sends any such
+   * require to the PAGES-router copy (route-modules/pages/vendored/contexts),
+   * which loads pages.runtime.prod.js and, through it, root react. Vercel's
+   * file trace includes neither, so every dynamic page threw "Cannot find
+   * module". For the server SSR/RSC layers, require the app-page copy instead
+   * (the one Next picks for its own imports there). It does not end in
+   * `.shared-runtime`, so the hook leaves it alone, and the file trace finds
+   * it. The browser build is untouched. The function is async because webpack
+   * only reads a Promise result from an externals function; a plain return
+   * value is ignored and the build silently never finishes.
    */
-  outputFileTracingIncludes: {
-    "/*": [
-      "./node_modules/next/dist/server/route-modules/pages/vendored/contexts/**",
-      "./node_modules/next/dist/server/route-modules/pages/module.compiled.js",
-      "./node_modules/next/dist/compiled/next-server/pages.runtime.prod.js",
-    ],
+  webpack: (config, { isServer, nextRuntime }) => {
+    if (isServer && nextRuntime === "nodejs" && Array.isArray(config.externals)) {
+      config.externals.unshift(async ({ request, contextInfo }) => {
+        const layer = contextInfo?.issuerLayer
+        if (
+          request === "next/dist/shared/lib/app-router-context.shared-runtime" &&
+          (layer === "ssr" || layer === "rsc")
+        ) {
+          return "commonjs next/dist/server/route-modules/app-page/vendored/contexts/app-router-context"
+        }
+      })
+    }
+    return config
   },
   /**
    * THE DEV BUBBLE SAT ON A TAB PEOPLE TAP.
