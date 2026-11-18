@@ -27,6 +27,10 @@ now (rule in `CLAUDE.md`).
 - Maybe Claude storyboards more, he approves some or several scenes, and
   Claude creates those.
 - A few different animation styles in one video may work.
+- After the scene 1 test (4 moving options): still not there. Too few
+  choices, and each choice was not specific enough. Judging is still hard.
+  What does work: the rounds produce good ideas that may be usable in
+  general, beyond this video.
 
 ## What others do (researched 2026-11-18)
 
@@ -65,6 +69,8 @@ Creators working with AI (2026 posts and 15 YouTube videos):
 - **Seven still frames of one idea:** useful, but only one option.
 - **Rough sketches, 8 ideas x 3 frames:** he liked two (calendar, quest
   log), but sketches are hard to judge.
+- **4 moving options for one scene, in the finished look:** too few, and not
+  specific enough. But it gave good ideas.
 
 ## Proposed next version (Claude, proposed, not decided)
 
