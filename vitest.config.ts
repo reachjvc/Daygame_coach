@@ -23,10 +23,14 @@ function walk(dir: string): string[] {
   })
 }
 const excluded = /[\\/]tests[\\/](integration|manual)[\\/]/
-const isolatedFiles = walk(path.resolve(__dirname, 'tests'))
+const LEAKS = /\bvi\.(mock|doMock|resetModules|useFakeTimers|setSystemTime|stubGlobal|stubEnv)\(/
+const sources = walk(path.resolve(__dirname, 'tests'))
   .filter((f) => !excluded.test(f))
-  .filter((f) => /@vitest-environment\s+jsdom|\bvi\.(mock|doMock|resetModules|useFakeTimers|setSystemTime|stubGlobal|stubEnv)\(/.test(fs.readFileSync(f, 'utf8')))
-  .map((f) => path.relative(__dirname, f).split(path.sep).join('/'))
+  .map((f) => ({ file: path.relative(__dirname, f).split(path.sep).join('/'), text: fs.readFileSync(f, 'utf8') }))
+const wantsDom = (t: string) => /@vitest-environment\s+jsdom/.test(t)
+const isolatedFiles = sources.filter((x) => LEAKS.test(x.text)).map((x) => x.file)
+/** A browser, and nothing that replaces modules, clocks or globals: shares one jsdom per worker. */
+const domFiles = sources.filter((x) => wantsDom(x.text) && !LEAKS.test(x.text)).map((x) => x.file)
 
 export default defineConfig({
   plugins: [react()],
@@ -83,7 +87,17 @@ export default defineConfig({
           name: 'node',
           isolate: false,
           include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
-          exclude: ['tests/integration/**/*', 'tests/manual/**/*', 'node_modules/**/*', ...isolatedFiles],
+          exclude: ['tests/integration/**/*', 'tests/manual/**/*', 'node_modules/**/*', ...isolatedFiles, ...domFiles],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'dom',
+          environment: 'jsdom',
+          isolate: false,
+          include: domFiles,
+          setupFiles: [path.resolve(__dirname, './tests/setupDom.ts')],
         },
       },
       {
