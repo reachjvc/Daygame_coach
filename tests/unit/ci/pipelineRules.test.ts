@@ -170,6 +170,21 @@ jobs:
   })
 })
 
+describe("the unit suite runs in two shards, and publishing waits for both", () => {
+  const stepRun = (job: Job, name: string) => (job.steps ?? []).find((st) => (st as { name?: string }).name === name)?.run
+
+  it("`checks` runs shard 1/2 and `unit-2` runs shard 2/2, so no half is left out", () => {
+    expect(ci.jobs["unit-2"], "ci.yml has a unit-2 job").toBeDefined()
+    expect(stepRun(ci.jobs.checks, "Unit tests")).toBe("npm test -- --shard=1/2")
+    expect(stepRun(ci.jobs["unit-2"], "Unit tests")).toBe("npm test -- --shard=2/2")
+  })
+
+  it("is awaited by both image jobs, and production checks its result", () => {
+    for (const name of ["image-staging", "image-production"]) expect(ci.jobs[name].needs, name).toContain("unit-2")
+    expect(ci.jobs["image-production"].if).toContain("needs.unit-2.result == 'success'")
+  })
+})
+
 describe("the staging image job", () => {
   const job = ci.jobs["image-staging"]
   const publish = loadAction("./.github/actions/publish-image")
@@ -177,7 +192,7 @@ describe("the staging image job", () => {
 
   it("runs only after the checks, only for a push to main, only when switched on", () => {
     expect(job, "ci.yml has an image-staging job").toBeDefined()
-    expect(job.needs).toBe("checks")
+    expect(job.needs).toEqual(["checks", "unit-2"])
     expect(job.if).toContain("github.event_name == 'push'")
     expect(job.if).toContain("github.ref == 'refs/heads/main'")
     expect(job.if).toContain("vars.STAGING_PUBLISH == 'on'")
