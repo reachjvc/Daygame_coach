@@ -39,16 +39,20 @@ Start SHA: 9813183b (main, 2026-11-18).
 
 | ID | Tests | What fails | First lead |
 |---|---|---|---|
-| F0 | all jobs | `npm error Error: Failed to download the binaries: 404 Not Found.` in `onnxruntime-node` (via `@huggingface/transformers@3.8.1`) | Its install script skips with env `ONNXRUNTIME_NODE_INSTALL_CUDA=skip` |
-| F1 | ~40, phone, timing-phone, desktop 4/4 | `locator('header').getByRole('button', { name: /^Saved\./ })` not found | `tests/e2e/helpers/timetrack.ts:66` `savedToAccount`; badge moved in the Time Log phone commits (8da8dd4b, 246ff664, b61a4736) |
-| F2 | 3, phone | audit Log Out tests hit their 150 s limit: `browserContext.close: Test ended.` | `tests/e2e/audit-devices.spec.ts:84,112`, `audit-ping.spec.ts:285`; maybe a real bug: Log Out hangs on WebKit |
-| F3 | 5 + sweep | role models: gallery test expects 0, gets 5; first screen 482,433 B, budget 307,200; empty council still shows `council-today`; area people order (Lincoln before Ziglar); sweep `/plan/role-models` | `tests/e2e/role-models*.spec.ts`; the library grew to 194 people on 2026-11-11 |
-| F4 | 1 | `getByRole('link', { name: 'Training' })` has no `aria-current="page"` on /programs | `tests/e2e/programs-past-workout.spec.ts:454`; navigation rebuilt (option E) 2026-11-10 |
-| F5 | 1, desktop | password-reset "resend confirmation" @phone | `tests/e2e/password-reset.spec.ts:123`; seen 11-14, check if still red |
-| F6 | 2, DB | `auditAnswersFromManyDevices`: newer answer from another device overwritten (expected 3 rows, got 4); `auditPings` mute: `3394628 >= 3540000` | the first one is a data-loss shape: treat as a product bug until proven otherwise; the second looks like a clock margin |
-| F7 | 1, nightly | duration ratchet: suites with no green run | clears when F0–F6 are fixed; baselines must then be met (unit 97 s × 1.3 = 126 s) |
+| F0 | all jobs | Fixed in Phase 1 (commit b70788dd): `npm ci` passes in every job of CI 44284506640 and E2E 44284506582. Was `npm error Error: Failed to download the binaries: 404 Not Found.` in `onnxruntime-node` | Env `ONNXRUNTIME_NODE_INSTALL_CUDA=skip` in all three workflows |
+| F1 | 42 test-instances (retries excluded): phone 2/2 (38 error lines), phone 1/2 (22), desktop 4/4 (18), timing-phone 1/1 (6). Files: `mobile/mobile-toggl`, `timetrack-sync`, `toggl-time-tracker`, `timetrack-edge-cases`, `mobile/mobile-time-polish` | Every error is `locator('header').getByRole('button', { name: /^Saved\./ })` not found, no other error (run 44284506582) | `tests/e2e/helpers/timetrack.ts:66` `savedToAccount`; badge moved in the Time Log phone commits (8da8dd4b, 246ff664, b61a4736) |
+| F2 | 3, phone 1/2 | audit Log Out tests hit their 150 s limit: `browserContext.close: Test ended.` (run 44284506582: `audit-devices` 84 and 112, `audit-ping` 285) | `tests/e2e/audit-devices.spec.ts:84,112`, `audit-ping.spec.ts:285`; maybe a real bug: Log Out hangs on WebKit |
+| F3 | 7 + sweep: `role-models.spec.ts:17,50`, `role-models-council.spec.ts:67,88,136`, `sweep/route-sweep.spec.ts:101` (`/plan/role-models`) | role models (run 44284506582, desktop 3/4, desktop 4/4, phone 2/2, sweep-phone 1/1): gallery expects 0, gets 5; first screen over 307,200 B (`toBeLessThan(300 * 1024)`); empty council still shows a card; area people order (Lincoln before Ziglar); sweep `/plan/role-models` | `tests/e2e/role-models*.spec.ts`; the library grew to 194 people on 2026-11-11 |
+| F4 | 1, desktop 3/4 | `getByRole('link', { name: 'Training' })` has no `aria-current="page"` on /programs (run 44284506582) | `tests/e2e/programs-past-workout.spec.ts:454`; navigation rebuilt (option E) 2026-11-10 |
+| F5 | 2: phone 2/2 and desktop 3/4 (run 44284506582), still red | password-reset "resend confirmation" @phone | `tests/e2e/password-reset.spec.ts:123`; seen 11-14, check if still red |
+| F6 | 2, Database tests job of CI 44284506640 | `auditAnswersFromManyDevices` "keeps a newer answer from another device when an older offline one arrives": expected 3 rows, got 4; `auditPings` "'mute' mutes for one hour": `expected 2763890 to be greater than or equal to 3540000` | the first one is a data-loss shape: treat as a product bug until proven otherwise; the second looks like a clock margin |
+| F7 | 1, nightly (not run in Phase 1) | duration ratchet: suites with no green run | clears when F0–F6 are fixed; baselines must then be met (unit 97 s × 1.3 = 126 s) |
 
 New failures may appear once F0 is fixed, because nothing has run since 11-17. Add them as F8, F9 and so on.
+
+| F8 | 1, desktop 4/4 and phone 2/2 (run 44284506582) | `timetrack-sync.spec.ts:100` "the product route is dressed as part of this app, not as a lab page @phone": `header:visible` link `Dashboard` not found in 5 s | Navigation rebuilt (option E, 2026-11-10): check whether the product-route header changed on purpose; update the test or restore the link |
+
+Runs after Phase 1: CI 44284506640, E2E 44284506582 (sha b70788dd). Install passed in both.
 
 ## Blockers, each tried once
 
@@ -135,6 +139,8 @@ Accept: worktree exists on branch `tests-green`; local unit time written down.
 
 Accept: the next CI run's "Install dependencies" step passes (quote `gh run view <id> --json jobs`).
 Then copy the new list of failures into F-rows. Anything not listed above becomes F8+.
+
+**Status:** done 2026-11-18. Commit b70788dd (on main). CI 44284506640, checks job, `Install dependencies`: success (image-staging, verify-production, image-production skipped; checks failed on Database tests only). E2E 44284506582: `Install dependencies` success in e2e-fast, timing-phone 1/1, phone 1/2, phone 2/2, desktop 1/4 to 4/4, timing 1/1, sweep-phone 1/1 (the 1/1 nightly lanes not in this run). Remaining red: F1, F2, F3, F4, F5, F6, F8.
 
 ## Phase 2 — Make every test green (F1–F6, F8+) · L · sonnet, one agent per group
 
