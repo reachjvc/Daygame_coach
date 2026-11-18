@@ -69,14 +69,18 @@ describe("the phone list with every day open and a timer running", () => {
       onSelect: () => {},
     }
     // the parent makes "See in calendar" afresh every render, as PhoneTracker does
-    const { rerender } = render(<PhoneEntryList {...props} nowSec={NOW_SEC} onSeeInCalendar={() => {}} />)
+    const { rerender, container } = render(<PhoneEntryList {...props} nowSec={NOW_SEC} onSeeInCalendar={() => {}} />)
+    // By text, not by role: a role query works out the accessible name of every
+    // node on the page, which on 51 open days took most of this test's time and
+    // pushed it past its limit on a loaded machine.
+    const loadMore = () => screen.queryByText(/Load more days/)?.closest("button") ?? null
     for (let i = 0; i < 10; i++) {
-      const more = screen.queryByRole("button", { name: /Load more days/ })
+      const more = loadMore()
       if (!more) break
       act(() => fireEvent.click(more))
     }
-    expect(screen.queryByRole("button", { name: /Load more days/ })).toBeNull()
-    expect(screen.getAllByRole("heading", { level: 3 }).length, "every day is open").toBe(51)
+    expect(loadMore()).toBeNull()
+    expect(container.querySelectorAll("h3").length, "every day is open").toBe(51)
 
     drawn.days = []
     rerender(<PhoneEntryList {...props} nowSec={NOW_SEC + 1} onSeeInCalendar={() => {}} />)
