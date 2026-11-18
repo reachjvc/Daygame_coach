@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import {
   TIME_GOALS,
   breakStreak,
-  caloriesPerYear,
   changeChip,
   dayShade,
   daysUntil,
@@ -13,15 +12,11 @@ import {
   longestMs,
   monthGrid,
   nextTimeGoal,
-  ninetyDayCalories,
   quitDateFor,
   recommendedApproach,
   reductionTarget,
   savingsFor,
   sortStreaks,
-  spendPerMonth,
-  spendPerYear,
-  suggestedWeek,
   sum,
 } from "@/src/quit/lab/quitdate/shared/logic"
 import { LAB } from "@/src/quit/lab/registry"
@@ -52,13 +47,7 @@ describe("quit date choices", () => {
   })
 })
 
-describe("drink plan numbers", () => {
-  it("derives the yearly figures as the spec derives them", () => {
-    expect(caloriesPerYear(12)).toBe(93_600)
-    expect(spendPerYear(12)).toBe(4_992)
-    expect(spendPerMonth(12)).toBe(416)
-    expect(ninetyDayCalories(12)).toBe(23_400)
-  })
+describe("drink plan choices", () => {
   it("recommends only where the shots show it", () => {
     expect(recommendedApproach("cut")).toBe("gradual")
     expect(recommendedApproach("break")).toBe("reset")
@@ -68,12 +57,10 @@ describe("drink plan numbers", () => {
 })
 
 describe("weekly table", () => {
-  it("suggests one under the typical day, or zero", () => {
-    expect(suggestedWeek("less", [0, 1, 3, 6])).toEqual([0, 0, 2, 5])
-    expect(suggestedWeek("zero", [4, 5])).toEqual([0, 0])
+  it("sums the typical week and skips blanks", () => {
     expect(sum([1, 2, Number.NaN, 3])).toBe(6)
   })
-  it("shows the change chip", () => {
+  it("shows the change chip against his typical day", () => {
     expect(changeChip(null, 2)).toEqual({ kind: "equal", label: "-" })
     expect(changeChip(2, 2).kind).toBe("equal")
     expect(changeChip(0, 1)).toEqual({ kind: "lower", label: "-1" })

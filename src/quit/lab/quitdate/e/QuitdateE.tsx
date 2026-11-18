@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react"
 import { PrimaryButton } from "../../../components/kit"
 import { fmtMoney } from "../../progress/shared/calc"
-import { BottomNav, Card, Head, InferredTag, Placeholder, PlaceholderScreen, Tabs } from "../../progress/shared/Bits"
+import { Card, Head, InferredTag, Placeholder, PlaceholderScreen, Tabs } from "../../progress/shared/Bits"
 import { OtherToolScreen } from "../../timeline/shared/Bits"
 import { useLabState } from "../../store"
+import type { ToolProps as LabProps } from "../../../types"
 import { CheckRow } from "../shared/Bits"
 import { googleCalendarUrl, icsFor, quitDateFor, savingsFor, type DateChoice } from "../shared/logic"
 import { eText } from "./text"
@@ -17,14 +18,14 @@ const toggle = (list: string[], id: string) => (list.includes(id) ? list.filter(
 const fmtDate = (key: string | null) => (key ? new Date(`${key}T00:00:00`).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : eText.noDate)
 
 /** Copy E: quit date picker and the five-step plan builder with its results page, plus the app's progress, profile and home. */
-export function QuitdateE() {
+export function QuitdateE({ data }: LabProps) {
   const [view, setView] = useState(0)
   return (
     <div data-testid="quitdate-e">
       <div className="mb-3">
         <Tabs id="e-view" items={eText.views} value={view} onChange={setView} />
       </div>
-      {view === 0 ? <Builder /> : <App onBuilder={() => setView(0)} />}
+      {view === 0 ? <Builder data={data} /> : <App onBuilder={() => setView(0)} />}
     </div>
   )
 }
@@ -70,7 +71,7 @@ function Section({ n, children, testId }: { n: number; children: React.ReactNode
   )
 }
 
-function Builder() {
+function Builder({ data }: { data: LabProps["data"] }) {
   const [type, setType] = useLabState<Type | null>("quitdate", "e", "type", null)
   const [choice, setChoice] = useLabState<DateChoice | null>("quitdate", "e", "choice", null)
   const [picked, setPicked] = useLabState<string>("quitdate", "e", "picked", "")
@@ -84,12 +85,16 @@ function Builder() {
   const [other, setOther] = useLabState<string>("quitdate", "e", "otherWay", "")
   const [ticks, setTicks] = useLabState<boolean[]>("quitdate", "e", "ticks", [true, false, false, false, false, false, false, false])
   const [results, setResults] = useState(false)
+  const [src, setSrc] = useState(false)
   const [card, setCard] = useState(0)
   const [now, setNow] = useState(0)
   useEffect(() => setNow(Date.now()), [])
 
   const dateKey = now ? quitDateFor(choice, picked, now) : null
+  const typed = cigs !== "" && price !== ""
   const sav = savingsFor(Number(cigs) || 0, Number(price) || 0)
+  const packRef = (Array.isArray(data.units) ? data.units : []).find((u) => u.id === "cigarettes")?.priceRefs.find((r) => /20-cigarette/.test(r.quote ?? ""))
+  const money = (n: number) => (typed ? fmtMoney(n) : "-")
   const groupsPicked = eText.groups.map((g, gi) => ({ title: g.title, items: g.items.filter((_, i) => trig.includes(`${gi}-${i}`)) })).filter((g) => g.items.length > 0)
   const distractList = [...eText.distract.items.filter((_, i) => dis.includes(String(i))), ...(dis.includes("other") ? [other || eText.distract.other] : [])]
   const supList = eText.support.items.filter((_, i) => sup.includes(String(i)))
@@ -115,12 +120,10 @@ function Builder() {
             {fmtDate(dateKey)}
           </div>
           <CalendarMenu dateKey={dateKey} />
-          <Placeholder />
         </section>
         <Card testId="e-savings">
           <div className="mb-1 flex items-center gap-2">
             <h3 className="flex-1 font-semibold">{eText.savingsTitle}</h3>
-            <InferredTag />
           </div>
           <p className="mb-2 text-sm text-muted-foreground">{eText.savingsText}</p>
           <ul className="flex flex-col gap-1 text-sm">
@@ -128,11 +131,19 @@ function Builder() {
               <li key={r} className="flex justify-between">
                 <span>{r}</span>
                 <span data-testid={`e-save-${i}`} className="tabular-nums">
-                  {fmtMoney([sav.week, sav.month, sav.year][i])}
+                  {money([sav.week, sav.month, sav.year][i])}
                 </span>
               </li>
             ))}
           </ul>
+          <button type="button" data-testid="e-source-btn" aria-expanded={src} onClick={() => setSrc(!src)} className="mt-2 inline-flex min-h-11 items-center text-xs underline">
+            {eText.sourceBtn}
+          </button>
+          {src && (
+            <p data-testid="e-source" className="text-xs text-muted-foreground">
+              {eText.sourceLine} {packRef ? `${packRef.cite}: "${packRef.quote}"` : ""}
+            </p>
+          )}
         </Card>
         <section data-testid="e-getready" className="flex flex-col gap-2 rounded-lg bg-primary/10 p-3">
           <h3 className="font-semibold">{eText.readyTo}</h3>
@@ -144,10 +155,7 @@ function Builder() {
           ))}
         </section>
         <section data-testid="e-understand" className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <h3 className="flex-1 font-semibold">{eText.understand}</h3>
-            <InferredTag />
-          </div>
+          <h3 className="font-semibold">{eText.understand}</h3>
           <p className="text-sm text-muted-foreground">{eText.understandText}</p>
           <ul className="list-disc pl-5 text-sm">
             {eText.questions.map((q) => (
@@ -155,26 +163,28 @@ function Builder() {
             ))}
           </ul>
           <h4 className="font-medium">{eText.myTriggers}</h4>
-          {groupsPicked.length === 0 ? (
-            <Placeholder />
-          ) : (
-            <div className="flex items-center gap-2">
-              <button type="button" data-testid="e-prev" aria-label={eText.prevCard} disabled={card === 0} onClick={() => setCard(card - 1)} className="inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-card disabled:opacity-40">
-                {"‹"}
-              </button>
-              <Card testId="e-trigger-card" className="min-w-0 flex-1">
-                <div className="font-semibold">{cur.title}</div>
-                <ul className="list-disc pl-5 text-sm">
-                  {cur.items.map((it) => (
-                    <li key={it}>{it}</li>
-                  ))}
-                </ul>
-              </Card>
-              <button type="button" data-testid="e-next" aria-label={eText.nextCard} disabled={card >= groupsPicked.length - 1} onClick={() => setCard(card + 1)} className="inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-card disabled:opacity-40">
-                {"›"}
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <button type="button" data-testid="e-prev" aria-label={eText.prevCard} disabled={card === 0} onClick={() => setCard(card - 1)} className="inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-card disabled:opacity-40">
+              {"‹"}
+            </button>
+            <Card testId="e-trigger-card" className="min-w-0 flex-1">
+              {cur ? (
+                <>
+                  <div className="font-semibold">{cur.title}</div>
+                  <ul className="list-disc pl-5 text-sm">
+                    {cur.items.map((it) => (
+                      <li key={it}>{it}</li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <div className="text-sm text-muted-foreground">{eText.none}</div>
+              )}
+            </Card>
+            <button type="button" data-testid="e-next" aria-label={eText.nextCard} disabled={card >= groupsPicked.length - 1} onClick={() => setCard(card + 1)} className="inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-card disabled:opacity-40">
+              {"›"}
+            </button>
+          </div>
         </section>
         <PlanList testId="e-cravings" title={eText.cravings} line={eText.cravingsText} sub={eText.myStrategies} items={distractList} />
         <PlanList testId="e-team" title={eText.supportTitle} items={supList} />
@@ -464,7 +474,18 @@ function App({ onBuilder }: { onBuilder: () => void }) {
   return (
     <div data-testid="e-app" className="flex flex-col">
       {page}
-      <BottomNav id="e-nav" items={eText.appTabs} value={tab} onChange={setTab} />
+      <nav className="sticky bottom-0 z-10 mt-4 grid grid-cols-5 items-end border-t border-border bg-background">
+        {eText.appTabs.map((label, i) => (
+          <button key={label} type="button" data-testid={`e-nav-${i}`} aria-current={i === tab} onClick={() => setTab(i)} className={`flex min-h-12 flex-col items-center justify-end gap-0.5 break-words px-0.5 pb-1 text-[11px] leading-tight ${i === tab ? "font-semibold text-primary" : "text-muted-foreground"}`}>
+            {i === 2 && (
+              <span data-testid="e-home-alert" aria-hidden="true" className="-mt-5 inline-flex size-11 items-center justify-center rounded-full bg-red-600 text-lg text-white">
+                {"⚠"}
+              </span>
+            )}
+            {label}
+          </button>
+        ))}
+      </nav>
     </div>
   )
 }

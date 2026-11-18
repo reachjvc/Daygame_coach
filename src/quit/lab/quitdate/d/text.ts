@@ -46,6 +46,8 @@ export const dText = {
   healthImp: "Health improvements",
   rings: ["Lungs", "Heart", "Brain"],
   healthAch: "Health achievements",
+  heartTitle: "A month in",
+  heartLine: "Your heart is getting some relief:",
   goalsCard: "Goals",
   monthOne: "1 month",
   monthOneText: "One month done. Keep the run going.",

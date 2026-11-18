@@ -2,12 +2,12 @@
 
 import { useState } from "react"
 import { PrimaryButton } from "../../../components/kit"
-import { fmtMoney, dayKey, addDays, keyToMs } from "../../progress/shared/calc"
+import { dayKey, addDays, keyToMs } from "../../progress/shared/calc"
 import { Card, InferredTag, NotSourced, Placeholder, PlaceholderScreen, Tabs } from "../../progress/shared/Bits"
 import { sharedText } from "../../progress/shared/text"
 import { useLabState } from "../../store"
 import { OptionCard, QHead, StepDots } from "../shared/Bits"
-import { CHECKPOINTS, caloriesPerYear, ninetyDayCalories, recommendedApproach, showsPace, spendPerMonth, spendPerYear, type Approach, type Goal, type Pace } from "../shared/logic"
+import { CHECKPOINTS, recommendedApproach, showsPace, type Approach, type Goal, type Pace } from "../shared/logic"
 import { qdText } from "../shared/text"
 import { aText } from "./text"
 
@@ -120,17 +120,24 @@ export function QuitdateA() {
   } else if (screen === "cost") {
     body = (
       <section data-testid="a-cost" className="flex flex-col gap-3">
-        <QHead title={aText.costTitle} onBack={onBack} />
+        <QHead title={aText.costTitle} onBack={onBack} right={<span aria-hidden="true" className="text-2xl">{"💡"}</span>} />
         <p className="text-sm text-muted-foreground">{aText.costLine}</p>
         <div className="grid grid-cols-2 gap-2">
           <Card testId="a-cost-cal">
-            <div className="text-xl font-semibold tabular-nums">{caloriesPerYear(drinks).toLocaleString("en-US")}</div>
-            <div className="text-xs text-muted-foreground">{aText.caloriesLabel}</div>
+            <NotSourced />
+            <div className="mt-1 text-xs text-muted-foreground">{aText.caloriesLabel}</div>
+            <div data-testid="a-cost-weight" className="mt-2 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+              <NotSourced /> {aText.weightLine}
+            </div>
           </Card>
           <Card testId="a-cost-money">
-            <div className="text-xl font-semibold tabular-nums">{fmtMoney(spendPerYear(drinks)).replace(".00", "")}</div>
-            <div className="text-xs text-muted-foreground">{aText.spendLabel}</div>
+            <NotSourced />
+            <div className="mt-1 text-xs text-muted-foreground">{aText.spendLabel}</div>
+            <div className="mt-2 text-xs text-muted-foreground">{aText.spendLine}</div>
           </Card>
+        </div>
+        <div data-testid="a-cost-note" className="rounded-lg border border-sky-700 bg-sky-950/40 p-3 text-sm">
+          {aText.costNote}
         </div>
         <PrimaryButton testId="a-continue" onClick={() => go("plan")}>
           {aText.showMore}
@@ -154,8 +161,8 @@ export function QuitdateA() {
               <div className="mt-1 text-muted-foreground">{aText.saved}</div>
             </div>
             <div>
-              <div data-testid="a-proj-cal" className="text-base font-semibold tabular-nums">
-                {ninetyDayCalories(drinks).toLocaleString("en-US")}
+              <div data-testid="a-proj-cal">
+                <NotSourced />
               </div>
               <div className="mt-1 text-muted-foreground">{aText.fewerCalories}</div>
             </div>
@@ -177,7 +184,13 @@ export function QuitdateA() {
             {i === 0 && (
               <div className="mt-2">
                 <div className="mb-1 text-xs text-muted-foreground">{aText.triggersStrip}</div>
-                <Placeholder />
+                <div data-testid="a-triggers-strip" className="flex flex-wrap gap-1.5">
+                  {[goal ? aText.goals[goal].label : null, `${drinks} ${aText.stripDrinks}`, length ? aText.lengths.find((l) => l.id === length)?.label : null].filter(Boolean).map((c) => (
+                    <span key={c} className="rounded-full border border-border px-2 py-0.5 text-xs">
+                      {c}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
             {i >= 2 && (
@@ -259,8 +272,8 @@ export function QuitdateA() {
             </div>
             <div className="flex items-center justify-between gap-3">
               <dt className="text-muted-foreground">{aText.triggerRow}</dt>
-              <dd>
-                <InferredTag />
+              <dd data-testid="a-ready-trigger" className="font-medium">
+                {aText.triggerValue}
               </dd>
             </div>
             <div className="flex items-center justify-between gap-3">
@@ -271,6 +284,9 @@ export function QuitdateA() {
             </div>
           </dl>
         </Card>
+        <p data-testid="a-sleep-line" className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
+          {aText.sleepLine} <NotSourced />
+        </p>
         <Card testId="a-technique">
           <h3 className="text-sm text-muted-foreground">{aText.technique}</h3>
           <div className="font-semibold">{aText.techniqueName}</div>
@@ -311,13 +327,31 @@ export function QuitdateA() {
         </div>
         <Card testId="a-compare">
           <div className="text-sm text-muted-foreground">{aText.compareSpend}</div>
-          <div data-testid="a-compare-spend" className="text-lg font-semibold tabular-nums">
-            {"$"}
-            {spendPerMonth(drinks)} {aText.perMonth}
+          <div data-testid="a-compare-spend" className="flex flex-wrap items-center gap-1.5 text-lg font-semibold">
+            <NotSourced /> <span className="text-sm font-normal text-muted-foreground">{aText.perMonth}</span>
+          </div>
+          <div data-testid="a-compare-app" className="mt-1 text-sm text-muted-foreground">
+            {aText.comparePlan} {"—"}
           </div>
         </Card>
         <h3 className="font-semibold">{aText.plansLabel}</h3>
-        <NotCopiedInline />
+        <div data-testid="a-payment-block" className="flex flex-col gap-2 opacity-60">
+          <NotCopiedInline />
+          {aText.planCards.map((c) => (
+            <div key={c} data-testid="a-price-card" className="flex min-h-14 items-center justify-between rounded-lg border border-border bg-card px-3 text-sm">
+              <span>{c}</span>
+              <span>{"—"}</span>
+            </div>
+          ))}
+          <ul className="flex flex-col gap-1 text-xs text-muted-foreground">
+            {aText.ticks.map((t) => (
+              <li key={t}>{"✓ "}{t}</li>
+            ))}
+          </ul>
+          <button type="button" disabled data-testid="a-not-now" className="inline-flex min-h-11 items-center justify-center text-sm underline">
+            {aText.notNow}
+          </button>
+        </div>
         <PrimaryButton testId="a-continue" onClick={() => go("tracker")}>
           {aText.toTracker}
         </PrimaryButton>
@@ -374,9 +408,11 @@ export function QuitdateA() {
         <Card testId="a-mystats">
           <h3 className="mb-1 font-semibold">{aText.myStats}</h3>
           <div className="text-sm">
-            {aText.moneySaved} <span className="font-semibold tabular-nums">{"$0"}</span>
+            {aText.moneySaved} <NotSourced />
           </div>
-          <div className="text-xs text-muted-foreground">{"$0 "}{aText.sinceYesterday}</div>
+          <div className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+            <NotSourced /> {aText.sinceYesterday}
+          </div>
           <div className="mt-2 flex flex-wrap items-center gap-1.5 text-sm">
             {aText.sugarCalories} <NotSourced />
           </div>

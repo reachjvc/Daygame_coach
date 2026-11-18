@@ -2,11 +2,11 @@
 
 import { useState } from "react"
 import { PrimaryButton } from "../../../components/kit"
-import { BottomNav, Card, NotSourced, Placeholder, PlaceholderScreen } from "../../progress/shared/Bits"
+import { BottomNav, Card, InferredTag, NotSourced, Placeholder, PlaceholderScreen } from "../../progress/shared/Bits"
 import { sharedText } from "../../progress/shared/text"
 import { useLabState } from "../../store"
 import { NotCopied, CheckRow, QHead } from "../shared/Bits"
-import { changeChip, curvePoints, dayShade, monthGrid, sum, suggestedWeek, type BGoal, type Shade } from "../shared/logic"
+import { changeChip, curvePoints, dayShade, monthGrid, sum, type BGoal, type Shade } from "../shared/logic"
 import { qdText } from "../shared/text"
 import { bText } from "./text"
 
@@ -28,9 +28,10 @@ export function QuitdateB() {
   const [tab, setTab] = useState(0)
   const [monthOffset, setMonthOffset] = useState(0)
   const [jump, setJump] = useState(false)
+  const [menu, setMenu] = useState(false)
 
   const typicalNums = typical.map((n) => n ?? 0)
-  const suggested = suggestedWeek(goal, typicalNums)
+  const base = typicalNums
   const total = sum(typicalNums)
 
   const toTop = () => {
@@ -181,15 +182,15 @@ export function QuitdateB() {
           <NotSourced />
         </div>
         <p className="text-sm text-muted-foreground">{bText.curveLine}</p>
-        <div className="relative">
-          <svg viewBox={`0 0 ${W} ${H}`} className="h-40 w-full" aria-hidden="true">
+        <div>
+          <div data-testid="b-curve-start" className="mb-1 inline-block rounded-md border border-border bg-card px-2 py-1 text-xs">
+            {bText.curveStart}: {total} {bText.curveUnit}
+          </div>
+          <svg viewBox={`-12 -12 ${W + 24} ${H + 24}`} className="h-40 w-full" aria-hidden="true">
             <path d={`${line} L${W} ${H} L0 ${H} Z`} className="fill-primary/25" />
             <path d={line} className="fill-none stroke-primary" strokeWidth={2} />
             <circle cx={0} cy={pts[0].y * H} r={5} className="fill-primary" />
           </svg>
-          <div data-testid="b-curve-start" className="absolute left-2 top-2 rounded-md border border-border bg-card px-2 py-1 text-xs">
-            {bText.curveStart}: {total} {bText.curveUnit}
-          </div>
         </div>
         <PrimaryButton testId="b-continue" onClick={() => setScreen("onway")}>
           {qdText.continue}
@@ -221,7 +222,7 @@ export function QuitdateB() {
     if (tab === 0) {
       page = (
         <section data-testid="b-plan" className="flex flex-col gap-3">
-          <QHead title={bText.planTitle} inferred />
+          <QHead title={bText.planTitle} />
           <p className="text-xs text-muted-foreground">{bText.planNote}</p>
           <div className="grid grid-cols-[3rem_2.5rem_1fr_2.75rem] items-center gap-x-1 gap-y-2 text-sm">
             <span />
@@ -229,13 +230,13 @@ export function QuitdateB() {
             <span className="text-center text-xs text-muted-foreground">{bText.planHead.plan}</span>
             <span className="text-center text-xs text-muted-foreground">{bText.planHead.change}</span>
             {qdText.weekdaysShort.map((d, i) => {
-              const chip = changeChip(plan[i], suggested[i])
+              const chip = changeChip(plan[i], base[i])
               const val = plan[i]
               return (
                 <div key={d} data-testid={`b-row-${i}`} className="contents">
                   <span>{d}</span>
-                  <span data-testid={`b-suggested-${i}`} className="text-center tabular-nums">
-                    {suggested[i]}
+                  <span data-testid={`b-suggested-${i}`} className="mx-auto inline-flex size-9 items-center justify-center rounded-md border border-dashed border-border text-xs text-muted-foreground">
+                    {"—"}
                   </span>
                   <div className="flex items-center justify-center gap-1.5">
                     <button type="button" data-testid={`b-minus-${i}`} aria-label={bText.less} disabled={val === null || val <= 0} onClick={() => setPlanDay(i, (val ?? 0) - 1)} className="inline-flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-40">
@@ -244,7 +245,7 @@ export function QuitdateB() {
                     <span data-testid={`b-plan-${i}`} className="inline-flex size-11 items-center justify-center rounded-md bg-card tabular-nums">
                       {val === null ? "-" : val}
                     </span>
-                    <button type="button" data-testid={`b-plus-${i}`} aria-label={bText.more} onClick={() => setPlanDay(i, val === null ? suggested[i] : val + 1)} className="inline-flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                    <button type="button" data-testid={`b-plus-${i}`} aria-label={bText.more} onClick={() => setPlanDay(i, val === null ? base[i] : val + 1)} className="inline-flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground">
                       {"+"}
                     </button>
                   </div>
@@ -258,10 +259,10 @@ export function QuitdateB() {
         </section>
       )
     } else if (tab === 1) {
-      const base = new Date()
-      const m = new Date(base.getFullYear(), base.getMonth() + monthOffset, 1)
+      const nowDate = new Date()
+      const m = new Date(nowDate.getFullYear(), nowDate.getMonth() + monthOffset, 1)
       const cells = monthGrid(m.getFullYear(), m.getMonth())
-      const sg = suggested
+      const sg = base
       const planOf = (i: number) => plan[i] ?? sg[i]
       const isPast = (d: number) => new Date(m.getFullYear(), m.getMonth(), d).getTime() <= Date.now()
       page = (
@@ -319,6 +320,13 @@ export function QuitdateB() {
               </span>
             </div>
           </Card>
+          <div className="flex items-center justify-end gap-2">
+            {menu && <InferredTag />}
+            <button type="button" data-testid="b-menu" aria-label={bText.menu} onClick={() => setMenu(!menu)} className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-card">
+              {"⋯"}
+            </button>
+          </div>
+          {menu && <Placeholder />}
           <Card testId="b-gauge">
             <svg viewBox="0 0 120 64" className="mx-auto h-24 w-48" aria-hidden="true">
               <path d="M10 60 A50 50 0 0 1 110 60" fill="none" strokeWidth={10} strokeDasharray="4 4" className="stroke-border" />

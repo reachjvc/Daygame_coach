@@ -36,7 +36,7 @@ export const eText = {
     "Hard to find places to smoke",
     "A baby is on the way",
   ],
-  triggersText: "Certain places, situations and feelings make it hard to stay smokefree. Find what makes you want to smoke, and strategies follow.",
+  triggersText: "Certain places, situations and feelings make it hard to stay off cigarettes. Find what makes you want to smoke, and strategies follow.",
   groups: [
     { title: "Social situations", items: ["Being offered a cigarette", "Drinking alcohol or going to a bar", "A party or social event", "Being around others who smoke", "Seeing someone else smoke", "Smelling smoke"] },
     { title: "Nicotine withdrawal", items: ["Irritable if I have not smoked in a while", "Restless or jumpy", "Strong cravings", "Hard to concentrate", "Waking up in the morning"] },
@@ -67,8 +67,10 @@ export const eText = {
   noDate: "No date set",
   dateMessage: "A message about how near the date is",
   savingsTitle: "My savings",
+  sourceBtn: "Where the pack size comes from",
+  sourceLine: "The savings count a pack of 20 cigarettes. Source:",
   savingsText: "Think about the specific things you will do with the money.",
-  saveRows: ["1 week smokefree", "1 month smokefree", "1 year smokefree"],
+  saveRows: ["1 week without cigarettes", "1 month without cigarettes", "1 year without cigarettes"],
   readyTo: "Get ready to quit",
   checks: [
     { t: "Complete your quit plan", d: "You already took the first step." },

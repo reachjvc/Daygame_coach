@@ -30,7 +30,7 @@ export function googleCalendarUrl(dateKey: string, title: string): string {
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${d}/${end}`
 }
 
-/** Savings from cigarettes a day and pack price; a pack of 20 is assumed (inferred). */
+/** Savings from cigarettes a day and pack price; the 20-cigarette pack is in the nicotine data file. */
 export const PACK_SIZE = 20
 export function savingsFor(perDay: number, packPrice: number) {
   const perDayMoney = (Math.max(0, perDay) / PACK_SIZE) * Math.max(0, packPrice)
@@ -39,14 +39,6 @@ export function savingsFor(perDay: number, packPrice: number) {
 }
 
 /* ---------- drinks plans (copies a and b) ---------- */
-
-export const CAL_PER_DRINK = 150
-export const COST_PER_DRINK = 8
-export const caloriesPerYear = (perWeek: number) => perWeek * 52 * CAL_PER_DRINK
-export const spendPerYear = (perWeek: number) => perWeek * 52 * COST_PER_DRINK
-export const spendPerMonth = (perWeek: number) => Math.round((perWeek * 52 * COST_PER_DRINK) / 12)
-/** A full stop for 90 days is a quarter of the year's calories. */
-export const ninetyDayCalories = (perWeek: number) => Math.round(caloriesPerYear(perWeek) / 4)
 
 export type Goal = "cut" | "break" | "curious" | "stop"
 export type Approach = "gradual" | "reset" | "mindful"
@@ -73,16 +65,10 @@ export const sum = (xs: readonly number[]) => xs.reduce((a, b) => a + (Number.is
 
 export type BGoal = "less" | "zero" | "unsure"
 
-/** Inferred rule: one under the typical day for "drink less", none for "zero". */
-export function suggestedWeek(goal: BGoal | null, typical: readonly number[]): number[] {
-  if (goal === "zero") return typical.map(() => 0)
-  return typical.map((n) => Math.max(0, n - 1))
-}
-
 export type Chip = { kind: "equal" | "lower" | "higher"; label: string }
-export function changeChip(plan: number | null, suggested: number): Chip {
-  if (plan === null || plan === suggested) return { kind: "equal", label: "-" }
-  const d = plan - suggested
+export function changeChip(plan: number | null, base: number): Chip {
+  if (plan === null || plan === base) return { kind: "equal", label: "-" }
+  const d = plan - base
   return d < 0 ? { kind: "lower", label: String(d) } : { kind: "higher", label: `+${d}` }
 }
 

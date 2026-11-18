@@ -18,6 +18,8 @@ interface Setup {
 type Screen = "home" | "goals" | "streaks" | "stats" | "tracker" | "quitdate" | "reduction" | "money" | "resources" | "buddy" | "detail" | "settings"
 const SORTS: StreakSort[] = ["recent", "oldest", "best"]
 const BUDDIES = [1, 2, 5]
+/** The goal tiles the shots show; the 2-months goal is only the countdown target. */
+const TILE_GOALS = TIME_GOALS.filter((g) => g.key !== "mo2")
 
 const longDate = (ms: number) => new Date(ms).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
 
@@ -125,8 +127,8 @@ function Main({ setup, now, onReset }: { setup: Setup; now: number; onReset: () 
   const days = elapsed / DAY
   const saved = perDay * days
   const next = nextTimeGoal(elapsed)
-  const reached = reachedTimeGoals(elapsed)
-  const totalGoals = TIME_GOALS.length + BUDDIES.length
+  const reached = reachedTimeGoals(elapsed).filter((g) => g.key !== "mo2")
+  const totalGoals = TILE_GOALS.length + BUDDIES.length
   const longest = longestMs(past, elapsed)
   const goBack = () => setScreen(screen === "money" || screen === "resources" || screen === "buddy" || screen === "detail" ? (screen === "buddy" ? "goals" : screen === "detail" ? "stats" : "home") : screen === "settings" ? "tracker" : "home")
   const span = (ms: number) => longSpan(ms, { d: dText.units.d, h: dText.units.h, m: dText.units.m, s: dText.units.s })
@@ -166,7 +168,7 @@ function Main({ setup, now, onReset }: { setup: Setup; now: number; onReset: () 
           )}
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {TIME_GOALS.map((g) => {
+          {TILE_GOALS.map((g) => {
             const done = elapsed >= g.ms
             return (
               <div key={g.key} data-testid={`d-goal-${g.key}`} data-earned={done} className={`flex aspect-square flex-col items-center justify-between rounded-xl p-3 ${done ? "bg-green-700 text-white" : "bg-border text-muted-foreground"}`}>
@@ -271,7 +273,17 @@ function Main({ setup, now, onReset }: { setup: Setup; now: number; onReset: () 
         </div>
         <h3 className="font-semibold">{dText.healthAch}</h3>
         <Card>
-          <NotSourced />
+          <div className="flex items-center gap-3">
+            <span aria-hidden="true" className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-green-700 text-white">
+              {"♥"}
+            </span>
+            <div>
+              <div className="font-semibold">{dText.heartTitle}</div>
+              <div data-testid="d-heart-line" className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
+                {dText.heartLine} <NotSourced />
+              </div>
+            </div>
+          </div>
           <button type="button" data-testid="d-more-health" onClick={() => setScreen("detail")} className="mt-2 inline-flex min-h-11 items-center text-sm underline">
             {dText.viewMore}
           </button>
