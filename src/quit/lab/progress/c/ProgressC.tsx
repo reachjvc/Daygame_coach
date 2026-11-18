@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useLabState } from "../../store"
 import { PrimaryButton } from "../../../components/kit"
-import { Card, Head, InferredTag, NotSourced, NumField, Placeholder, PlaceholderScreen, Tabs } from "../shared/Bits"
+import { Card, Head, IconBtn, InferredTag, NotSourced, NumField, Placeholder, PlaceholderScreen, ShareBtn, Tabs } from "../shared/Bits"
 import { DAY, HOUR, dayKey, fmtMoney, keyToMs, splitElapsed, ymdhms } from "../shared/calc"
 import { useNow } from "../shared/clock"
 import { SetupGate, StartOver, seedStart, type SetupField } from "../shared/Setup"
@@ -47,9 +47,10 @@ export function ProgressC() {
     <div data-testid="progress-c">
       <SetupGate<Setup>
         letter="c"
+        keys={["setup", "habits", "sel", "mode", "personal", "journal"]}
         fields={FIELDS}
-        seed={(now) => ({ startMs: seedStart(now, 9 * HOUR + 43 * 60_000), perDay: 8, seeded: 1 })}
-        own={(now) => ({ startMs: now, perDay: 8, seeded: 0 })}
+        seed={(now) => ({ startMs: seedStart(now, 9 * HOUR + 43 * 60_000), perDay: 28, seeded: 1 })}
+        own={(now) => ({ startMs: now, perDay: NaN, seeded: 0 })}
       >
         {(setup, startOver) => (
           <>
@@ -71,7 +72,7 @@ function Main({ setup }: { setup: Setup }) {
     (setup.seeded
       ? seedHabits(born, setup.startMs, setup.perDay, cText.habitNames, cText.seedNotes)
       : [{ id: "alc", name: cText.habitSingle, perDay: setup.perDay, stretches: [{ startMs: setup.startMs, endMs: null, note: "" }] }])
-  const [sel, setSel] = useLabState<number>("progress", "c", "sel", 0)
+  const [sel, setSel] = useLabState<number>("progress", "c", "sel", setup.seeded ? 1 : 0)
   const [mode, setMode] = useLabState<number>("progress", "c", "mode", 0)
   const [personal, setPersonal] = useLabState<Record<string, Goal[]>>("progress", "c", "personal", {})
   const [journalStored, setJournal] = useLabState<Record<string, Record<string, Entry>> | null>("progress", "c", "journal", null)
@@ -177,6 +178,11 @@ function Counter({ habits, sel, setSel, now, mode, setMode, goals, go, onJournal
             </p>
           </>
         )}
+        {m >= 1 && m <= 3 && (
+          <p data-testid="c-money" className="text-xl font-semibold tabular-nums">
+            {fmtMoney(Math.round(habit.perDay * (elapsed / DAY) * 100) / 100)}
+          </p>
+        )}
         {m === 1 && big((elapsed / DAY).toFixed(2), cText.daysWord)}
         {m === 2 && big(Math.floor(hours).toLocaleString("en-US"), cText.hoursWord)}
         {m === 3 && big(Math.floor(elapsed / 60_000).toLocaleString("en-US"), cText.minutesWord)}
@@ -195,7 +201,7 @@ function Milestones({ habit, goals, now, personal, onAdd, onBack }: { habit: CHa
   const [tab, setTab] = useState(0)
   const [open, setOpen] = useState<Goal | null>(null)
   const [name, setName] = useState("")
-  const [days, setDays] = useState(10)
+  const [days, setDays] = useState(NaN)
   const run = current(habit)
   const hours = (now - run.startMs) / HOUR
   const list = tab === 0 ? goals.filter((g) => !personal.includes(g)) : personal
@@ -236,7 +242,10 @@ function Milestones({ habit, goals, now, personal, onAdd, onBack }: { habit: CHa
       </ul>
       {open && (
         <div data-testid="c-reached" className="flex flex-col items-center gap-3 rounded-lg border border-primary bg-card p-4 text-center">
-          <p className="text-sm text-muted-foreground">{cText.msReached}</p>
+          <div className="flex w-full items-center justify-between">
+            <p className="text-sm text-muted-foreground">{cText.msReached}</p>
+            <ShareBtn text={cText.shareMsg(open.name)} testId="c-reached-share" />
+          </div>
           <p className="text-xs text-muted-foreground">{dateOf(open)}</p>
           <div className="flex size-32 items-center justify-center rounded-full border-4 border-amber-400 bg-amber-400/15 p-3 text-sm font-bold">{cText.msCoin(open.name)}</div>
           <button type="button" data-testid="c-reached-close" onClick={() => setOpen(null)} className="min-h-11 px-4 text-sm underline">
@@ -250,12 +259,19 @@ function Milestones({ habit, goals, now, personal, onAdd, onBack }: { habit: CHa
 
 function Stats({ habits, now, onBack }: { habits: CHabit[]; now: number; onBack: () => void }) {
   const [tab, setTab] = useState(1)
+  const [panel, setPanel] = useState(false)
   const vals = habits.map((h) => habitSavings(h, now))
   const slices = pieSlices(vals)
   const r = 15.9155
   return (
     <section data-testid="screen-stats" className="flex flex-col gap-3">
-      <Head title={cText.statsTitle} onBack={onBack} />
+      <Head title={cText.statsTitle} onBack={onBack} right={<IconBtn label={cText.filter} onClick={() => setPanel(!panel)} testId="c-filter">{"⚲"}</IconBtn>} />
+      {panel && (
+        <div data-testid="c-filter-panel" className="flex flex-col gap-2">
+          <InferredTag />
+          <Placeholder />
+        </div>
+      )}
       <Tabs items={cText.statsTabs} value={tab} id="c-stat-tab" onChange={setTab} scroll />
       {tab !== 1 ? (
         <div className="flex flex-col gap-2">
@@ -294,6 +310,7 @@ function Stats({ habits, now, onBack }: { habits: CHabit[]; now: number; onBack:
 function Calendar({ habit, goals, now, journal, onPick, onBack }: { habit: CHabit; goals: Goal[]; now: number; journal: Record<string, Entry>; onPick: (k: string) => void; onBack: () => void }) {
   const t = new Date(now)
   const [ym, setYm] = useState({ y: t.getFullYear(), m: t.getMonth() })
+  const [more, setMore] = useState(false)
   const tags = dayTags(habit, goals, now, cText.resetN)
   const first = new Date(ym.y, ym.m, 1)
   const count = new Date(ym.y, ym.m + 1, 0).getDate()
@@ -304,7 +321,13 @@ function Calendar({ habit, goals, now, journal, onPick, onBack }: { habit: CHabi
   }
   return (
     <section data-testid="screen-calendar" className="flex flex-col gap-3">
-      <Head title={cText.calTitle} onBack={onBack} />
+      <Head title={cText.calTitle} onBack={onBack} right={<IconBtn label={cText.moreMenu} onClick={() => setMore(!more)} testId="c-cal-more">{"…"}</IconBtn>} />
+      {more && (
+        <div data-testid="c-cal-more-panel" className="flex flex-col gap-2">
+          <InferredTag />
+          <Placeholder />
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <button type="button" data-testid="c-cal-prev" aria-label={cText.calPrev} onClick={() => step(-1)} className="size-11 rounded-full border border-border bg-card">
           {"‹"}
@@ -371,7 +394,7 @@ function Day({ day, entry, onSave, onBack }: { day: string; entry: Entry | null;
         right={
           <>
             <button type="button" data-testid="c-day-delete" aria-label={cText.trash} onClick={() => onSave(null)} className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-card">
-              {"✕"}
+              {"⌫"}
             </button>
             <button type="button" data-testid="c-day-save" aria-label={cText.saveEntry} onClick={() => onSave({ rating, mood, text, photo })} className="inline-flex size-11 items-center justify-center rounded-full border border-primary bg-primary text-primary-foreground">
               {"✓"}

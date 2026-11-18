@@ -1,4 +1,4 @@
-import { cigMoney, cigsAvoided, fracDays, monthly, weekly, yearly } from "../shared/calc"
+import { monthly, weekly, wholeDays, yearly } from "../shared/calc"
 
 export type BSetup = {
   startMs: number
@@ -17,19 +17,22 @@ export interface Craving {
 
 export const perDay = (s: BSetup) => (s.cigsPerDay / Math.max(1, s.packSize)) * s.packPrice
 
+/** Cigarettes not smoked: whole days times the per-day count. */
 export function notSmoked(s: BSetup, now: number): number {
-  return cigsAvoided(s.cigsPerDay, fracDays(s.startMs, now))
+  return wholeDays(s.startMs, now) * s.cigsPerDay
 }
 
-/** Money kept: cigarettes not smoked at pack price, minus what he spent on cigarettes and on replacements since. */
+const round2 = (n: number) => Math.round(n * 100) / 100
+
+/** Money kept: whole days without smoking times the daily rate, minus what he spent on cigarettes and on replacements since. */
 export function savedMoney(s: BSetup, now: number, spentCigs: number, spentNrt: number): number {
-  return Math.round((cigMoney(notSmoked(s, now), s.packPrice, s.packSize) - spentCigs - spentNrt) * 100) / 100
+  return round2(wholeDays(s.startMs, now) * perDay(s) - spentCigs - spentNrt)
 }
 
 /** Period rows from the same daily rate. */
 export function periods(s: BSetup) {
   const d = perDay(s)
-  return { day: Math.round(d * 100) / 100, week: weekly(d), month: monthly(d), year: yearly(d) }
+  return { day: round2(d), week: weekly(d), month: monthly(d), year: yearly(d) }
 }
 
 export const TIME_LADDER = [1, 7, 30, 90, 365] as const

@@ -3,13 +3,13 @@
 import { useState } from "react"
 import { useLabState } from "../../store"
 import { PrimaryButton, Stepper } from "../../../components/kit"
-import { BottomNav, Card, Head, NotSourced, NumField, Placeholder, PlaceholderScreen, Ring, Tabs } from "../shared/Bits"
+import { Card, Head, IconBtn, InferredTag, NotSourced, NumField, Placeholder, PlaceholderScreen, Ring, Tabs } from "../shared/Bits"
 import { dayKey, fmtMoney, keyToMs, unitsOf } from "../shared/calc"
 import { useNow } from "../shared/clock"
 import { SetupGate, StartOver, seedStart, type SetupField } from "../shared/Setup"
 import { sharedText } from "../shared/text"
 import { eText } from "./text"
-import { DEFAULT_ABV, EMPTY_WB, ROUGH_COST, SIZES, TOTAL_LADDER, GOAL_LADDER, badgesOf, dash, dayCost, dayUnits, seedLog, wbAverage, type DayRec, type Drink, type DrinkKind, type ESetup, type Place, type Wellbeing } from "./logic"
+import { EMPTY_WB, EXAMPLE_PER_UNIT, EXAMPLE_WEEK_UNITS, SIZES, TOTAL_LADDER, GOAL_LADDER, badgesOf, dash, dayCost, dayUnits, seedLog, wbAverage, type DayRec, type Drink, type DrinkKind, type ESetup, type Place, type Wellbeing } from "./logic"
 
 type Screen = "dash" | "log" | "add" | "day" | "calendar" | "badges" | "note" | "baseline" | "streak" | "nextgoal" | "progress" | "settings"
 
@@ -27,9 +27,10 @@ export function ProgressE() {
     <div data-testid="progress-e">
       <SetupGate<ESetup>
         letter="e"
+        keys={["setup", "days", "base"]}
         fields={FIELDS}
-        seed={(now) => ({ startMs: seedStart(now), baseUnits: 28, baseCost: 40, seeded: 1 })}
-        own={(now) => ({ startMs: now, baseUnits: 28, baseCost: 40, seeded: 0 })}
+        seed={(now) => ({ startMs: seedStart(now), baseUnits: EXAMPLE_WEEK_UNITS, baseCost: Math.round(EXAMPLE_WEEK_UNITS * EXAMPLE_PER_UNIT * 100) / 100, seeded: 1 })}
+        own={(now) => ({ startMs: now, baseUnits: NaN, baseCost: NaN, seeded: 0 })}
       >
         {(setup, startOver) => (
           <>
@@ -47,15 +48,16 @@ function Main({ setup }: { setup: ESetup }) {
   const today = dayKey(now)
   const startKey = dayKey(setup.startMs)
   const [stored, setStored] = useLabState<Record<string, DayRec> | null>("progress", "e", "days", null)
-  const [seedBase] = useState(() => (setup.seeded ? seedLog(dayKey(Date.now()), startKey, eText.seedNote) : {}))
+  const [seedBase] = useState(() => (setup.seeded ? seedLog(dayKey(Date.now()), startKey) : {}))
   const days = stored ?? seedBase
   const [base, setBase] = useLabState<{ units: number; cost: number }>("progress", "e", "base", { units: setup.baseUnits, cost: setup.baseCost })
   const [screen, setScreen] = useState<Screen>("dash")
   const [open, setOpen] = useState(today)
+  const [from, setFrom] = useState<Screen>("dash")
   const go = (s: Screen) => setScreen(s)
   const setDay = (k: string, rec: DayRec) => setStored({ ...days, [k]: rec })
   const eff: ESetup = { ...setup, baseUnits: base.units, baseCost: base.cost }
-  const showDay = (k: string) => (setOpen(k), go("day"))
+  const showDay = (k: string, via: Screen = "dash") => (setOpen(k), setFrom(via), go("day"))
   const nav = screen === "calendar" ? 1 : screen === "log" || screen === "add" ? 2 : screen === "progress" ? 3 : screen === "settings" ? 4 : 0
   const navTo = (i: number) => {
     if (i === 2) {
@@ -76,7 +78,7 @@ function Main({ setup }: { setup: ESetup }) {
       {screen === "dash" && <Dash days={days} setup={eff} today={today} startKey={startKey} go={go} />}
       {screen === "log" && (
         <section data-testid="screen-log" className="flex flex-col gap-3">
-          <Head title={eText.logTitle} onBack={() => go("dash")} />
+          <Head title={eText.logTitle} onBack={() => go("dash")} inferred />
           <PrimaryButton testId="e-log-dry" onClick={() => (logDry(today), showDay(today))}>
             {eText.logDry}
           </PrimaryButton>
@@ -85,9 +87,9 @@ function Main({ setup }: { setup: ESetup }) {
           </button>
         </section>
       )}
-      {screen === "add" && <AddDrink day={open} onBack={() => go("log")} onAdd={(d) => addDrink(open, d)} />}
-      {screen === "day" && <Day day={open} rec={rec} onBack={() => go("dash")} onDry={() => logDry(open)} onDrink={() => go("add")} onWb={(w) => setDay(open, { ...(rec ?? blank()), wb: w })} onNote={() => go("note")} />}
-      {screen === "calendar" && <Calendar days={days} today={today} startKey={startKey} onPick={(k) => (setOpen(k), go("day"))} />}
+      {screen === "add" && <AddDrink day={open} example={setup.seeded === 1} onBack={() => go(rec ? "day" : "log")} onAdd={(d) => addDrink(open, d)} />}
+      {screen === "day" && <Day day={open} rec={rec} onClose={() => go(from)} onDry={() => logDry(open)} onDrink={() => go("add")} onWb={(w) => setDay(open, { ...(rec ?? blank()), wb: w })} onNote={() => go("note")} />}
+      {screen === "calendar" && <Calendar days={days} today={today} startKey={startKey} onPick={(k) => showDay(k, "calendar")} />}
       {screen === "badges" && <Badges days={days} onBack={() => go("dash")} />}
       {screen === "note" && <Note day={open} value={rec?.note ?? ""} onClose={() => go("day")} onSave={(t) => (setDay(open, { ...(rec ?? blank()), note: t }), go("day"))} />}
       {screen === "baseline" && (
@@ -102,7 +104,7 @@ function Main({ setup }: { setup: ESetup }) {
       {screen === "nextgoal" && <PlaceholderScreen title={eText.nextGoalTitle} onBack={() => go("dash")} />}
       {screen === "progress" && <PlaceholderScreen title={eText.progressTitle} onBack={null} />}
       {screen === "settings" && <PlaceholderScreen title={eText.settingsTitle} onBack={null} />}
-      {(screen === "dash" || screen === "calendar" || screen === "log" || screen === "progress" || screen === "settings") && <BottomNav id="e-nav" items={eText.nav} value={nav} onChange={navTo} />}
+      {(screen === "dash" || screen === "calendar" || screen === "log" || screen === "progress" || screen === "settings") && <Nav value={nav} onChange={navTo} />}
     </div>
   )
 }
@@ -163,19 +165,19 @@ function Dash({ days, setup, today, startKey, go }: { days: Record<string, DayRe
   )
 }
 
-function AddDrink({ day, onBack, onAdd }: { day: string; onBack: () => void; onAdd: (d: Drink) => void }) {
-  const [place, setPlace] = useState<Place>("shop")
-  const [kind, setKind] = useState<DrinkKind>("cider")
-  const [size, setSize] = useState(1)
-  const [abv, setAbv] = useState(DEFAULT_ABV.cider)
-  const [qty, setQty] = useState(1)
-  const [cost, setCost] = useState<number | null>(null)
+function AddDrink({ day, example, onBack, onAdd }: { day: string; example: boolean; onBack: () => void; onAdd: (d: Drink) => void }) {
+  // Example data uses what the public add-drink screen shows: shop bought, cider, half pint, 5.5%, one.
+  const [place, setPlace] = useState<Place | null>(example ? "shop" : null)
+  const [kind, setKind] = useState<DrinkKind | null>(example ? "cider" : null)
+  const [size, setSize] = useState<number | null>(example ? 0 : null)
+  const [abv, setAbv] = useState(example ? 5.5 : NaN)
+  const [qty, setQty] = useState(example ? 1 : 0)
+  const [cost, setCost] = useState(NaN)
   const kinds: DrinkKind[] = ["beer", "cider", "wine"]
   const places: Place[] = ["shop", "bar"]
-  const ml = SIZES[kind][size].ml
-  const rough = ROUGH_COST[place]
-  const use = cost ?? rough
-  const wheel = [-0.2, -0.1, 0, 0.1, 0.2].map((s) => Math.round((abv + s) * 10) / 10).filter((v) => v > 0)
+  const ml = kind !== null && size !== null ? SIZES[kind][size].ml : 0
+  const valid = place !== null && kind !== null && size !== null && abv > 0 && qty >= 1 && Number.isFinite(cost) && cost >= 0
+  const wheel = Number.isFinite(abv) ? [-0.2, -0.1, 0, 0.1, 0.2].map((s) => Math.round((abv + s) * 10) / 10).filter((v) => v > 0) : []
   const pill = (on: boolean) => `min-h-11 flex-1 rounded-md border px-2 text-sm ${on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`
   return (
     <section data-testid="screen-add" data-day={day} className="flex flex-col gap-3">
@@ -189,27 +191,22 @@ function AddDrink({ day, onBack, onAdd }: { day: string; onBack: () => void; onA
       </div>
       <div className="flex gap-2">
         {kinds.map((k, i) => (
-          <button
-            key={k}
-            type="button"
-            aria-pressed={kind === k}
-            data-testid={`e-kind-${k}`}
-            onClick={() => (setKind(k), setSize(1), setAbv(DEFAULT_ABV[k]))}
-            className={pill(kind === k)}
-          >
+          <button key={k} type="button" aria-pressed={kind === k} data-testid={`e-kind-${k}`} onClick={() => (setKind(k), setSize(null))} className={pill(kind === k)}>
             {eText.kinds[i]}
           </button>
         ))}
       </div>
-      <div className="flex gap-2">
-        {SIZES[kind].map((_, i) => (
-          <button key={i} type="button" aria-pressed={size === i} data-testid={`e-size-${i}`} onClick={() => setSize(i)} className={pill(size === i)}>
-            {eText.sizeLabels[kind][i]}
-          </button>
-        ))}
-      </div>
-      <div>
-        <p className="mb-1 text-sm font-medium">{eText.strength}</p>
+      {kind && (
+        <div className="flex gap-2">
+          {SIZES[kind].map((_, i) => (
+            <button key={i} type="button" aria-pressed={size === i} data-testid={`e-size-${i}`} onClick={() => setSize(i)} className={pill(size === i)}>
+              {eText.sizeLabels[kind][i]}
+            </button>
+          ))}
+        </div>
+      )}
+      <NumField label={eText.strengthPct} value={abv} step={0.1} testId="e-abv" onChange={setAbv} />
+      {wheel.length > 0 && (
         <div className="flex items-center justify-center gap-1" data-testid="e-wheel">
           <button type="button" aria-label={eText.strengthDown} data-testid="e-abv-down" onClick={() => setAbv(Math.max(0.5, Math.round((abv - 0.1) * 10) / 10))} className="size-11 rounded-full border border-border">
             {"‹"}
@@ -223,23 +220,23 @@ function AddDrink({ day, onBack, onAdd }: { day: string; onBack: () => void; onA
             {"›"}
           </button>
         </div>
-      </div>
+      )}
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">{eText.quantity}</span>
-        <Stepper value={qty} min={1} max={20} onChange={setQty} label={eText.quantity} />
+        <Stepper value={qty} min={0} max={20} onChange={setQty} label={eText.quantity} />
       </div>
-      <NumField label={`${eText.costPer} (${cost === null ? eText.costRough : eText.costOwn})`} value={use} step={0.5} testId="e-cost" onChange={(n) => setCost(Number.isFinite(n) ? n : 0)} />
+      <NumField label={eText.costPer} value={cost} step={0.5} testId="e-cost" onChange={setCost} />
       <p data-testid="e-units-line" className="text-sm text-muted-foreground">
-        {eText.unitsLine(unitsOf(ml, abv, qty))}
+        {valid ? eText.unitsLine(unitsOf(ml, abv, qty)) : ""}
       </p>
-      <PrimaryButton testId="e-add-drink" onClick={() => onAdd({ kind, place, ml, abv, qty, cost: use })}>
+      <PrimaryButton testId="e-add-drink" disabled={!valid} onClick={() => valid && onAdd({ kind, place, ml, abv, qty, cost })}>
         {eText.addBtn}
       </PrimaryButton>
     </section>
   )
 }
 
-function Day({ day, rec, onBack, onDry, onDrink, onWb, onNote }: { day: string; rec: DayRec | undefined; onBack: () => void; onDry: () => void; onDrink: () => void; onWb: (w: Wellbeing) => void; onNote: () => void }) {
+function Day({ day, rec, onClose, onDry, onDrink, onWb, onNote }: { day: string; rec: DayRec | undefined; onClose: () => void; onDry: () => void; onDrink: () => void; onWb: (w: Wellbeing) => void; onNote: () => void }) {
   const [sheet, setSheet] = useState<{ idx: number; all: boolean } | null>(null)
   const d = new Date(keyToMs(day))
   const title = `${d.getDate()} ${sharedText.months[d.getMonth()].slice(0, 3)} ${d.getFullYear()}`
@@ -251,7 +248,7 @@ function Day({ day, rec, onBack, onDry, onDrink, onWb, onNote }: { day: string; 
   }
   return (
     <section data-testid="screen-day" data-day={day} className="flex flex-col gap-3">
-      <Head title={title} onBack={onBack} />
+      <Head title={title} right={<IconBtn label={sharedText.close} onClick={onClose} testId="e-day-close">{"✕"}</IconBtn>} />
       <p data-testid="e-day-state" className="text-xl font-semibold">
         {!rec ? eText.dayNone : rec.status === "dry" ? eText.dayDry : eText.dayDrank}
       </p>
@@ -298,12 +295,23 @@ function Day({ day, rec, onBack, onDry, onDrink, onWb, onNote }: { day: string; 
           </div>
         </div>
       )}
-      <Card>
-        <p className="font-medium">{rec?.note ? eText.noteAdded : eText.noNote}</p>
-        <button type="button" data-testid="e-note-open" onClick={onNote} className="mt-1 min-h-11 rounded-md border border-border px-3 text-sm">
-          {rec?.note ? eText.viewEdit : eText.addNote}
+      {rec?.note ? (
+        <Card testId="e-note-card">
+          <p className="flex items-center gap-2 font-medium">
+            <span aria-hidden="true" className="inline-flex size-6 items-center justify-center rounded-full border-2 border-pink-400 text-xs">
+              {"✓"}
+            </span>
+            {eText.noteAdded}
+          </p>
+          <button type="button" data-testid="e-note-open" onClick={onNote} className="mt-1 min-h-11 rounded-md border border-border px-3 text-sm">
+            {eText.viewEdit}
+          </button>
+        </Card>
+      ) : (
+        <button type="button" data-testid="e-note-open" onClick={onNote} className="min-h-11 rounded-md border border-border bg-card px-3 text-sm">
+          {eText.addNote}
         </button>
-      </Card>
+      )}
     </section>
   )
 }
@@ -311,6 +319,7 @@ function Day({ day, rec, onBack, onDry, onDrink, onWb, onNote }: { day: string; 
 function Calendar({ days, today, startKey, onPick }: { days: Record<string, DayRec>; today: string; startKey: string; onPick: (k: string) => void }) {
   const [view, setView] = useState(0)
   const [help, setHelp] = useState(false)
+  const [sync, setSync] = useState(false)
   const months: { y: number; m: number }[] = []
   const t = new Date(keyToMs(today))
   const s = new Date(keyToMs(startKey))
@@ -321,7 +330,18 @@ function Calendar({ days, today, startKey, onPick }: { days: Record<string, DayR
   }
   return (
     <section data-testid="screen-calendar" className="flex flex-col gap-3">
-      <Head title={eText.calTitle} right={<button type="button" data-testid="e-cal-help" aria-label={eText.calHelp} onClick={() => setHelp(!help)} className="inline-flex size-11 items-center justify-center rounded-full border border-border">{eText.help}</button>} />
+      <Head title={eText.calTitle} right={<><IconBtn label={eText.syncLabel} onClick={() => setSync(!sync)} testId="e-cal-sync">{"⟳"}</IconBtn><button type="button" data-testid="e-cal-help" aria-label={eText.calHelp} onClick={() => setHelp(!help)} className="inline-flex size-11 items-center justify-center rounded-full border border-border">{eText.help}</button></>} />
+      {sync && (
+        <div data-testid="e-sync-panel" className="flex flex-col gap-2">
+          <InferredTag />
+          <Placeholder />
+        </div>
+      )}
+      {(view === 1 || view === 3) && (
+        <div>
+          <InferredTag />
+        </div>
+      )}
       {help && <p data-testid="e-cal-help-text" className="rounded-md border border-border bg-card p-2 text-sm">{eText.calHelpText}</p>}
       <Tabs items={eText.calViews} value={view} id="e-cal-view" onChange={setView} scroll />
       {months.map(({ y, m }) => {
@@ -411,7 +431,6 @@ function Badges({ days, onBack }: { days: Record<string, DayRec>; onBack: () => 
         <h3 className="mb-2 font-semibold">{eText.famMissions}</h3>
         <div className="flex gap-2 overflow-x-auto">
           {circle("m0", eText.missionName, b.mission)}
-          <Placeholder className="size-[4.5rem] shrink-0 rounded-full px-1 text-[10px]" />
           {counter("e-count-missions", b.mission ? 1 : 0, 1)}
         </div>
       </div>
@@ -442,7 +461,28 @@ function Note({ day, value, onClose, onSave }: { day: string; value: string; onC
           </button>
         ))}
       </div>
-      <p className="text-xs text-muted-foreground">{eText.noteLock}</p>
+      <p className="flex items-center gap-2 text-xs text-muted-foreground">
+        <span role="img" aria-label={eText.lockLabel}>{"🔒"}</span>
+        {eText.noteLock}
+      </p>
     </section>
+  )
+}
+
+function Nav({ value, onChange }: { value: number; onChange: (i: number) => void }) {
+  return (
+    <nav className="sticky bottom-0 z-10 mt-4 grid grid-cols-5 items-center border-t border-border bg-background">
+      {eText.nav.map((label, i) =>
+        i === 2 ? (
+          <button key={label} type="button" data-testid="e-nav-2" aria-label={eText.logPlus} onClick={() => onChange(2)} className="mx-auto -mt-5 inline-flex size-14 items-center justify-center rounded-full bg-primary text-3xl text-primary-foreground shadow-lg">
+            {"+"}
+          </button>
+        ) : (
+          <button key={label} type="button" data-testid={`e-nav-${i}`} aria-current={i === value} onClick={() => onChange(i)} className={`min-h-12 break-words px-0.5 text-[11px] leading-tight ${i === value ? "font-semibold text-primary" : "text-muted-foreground"}`}>
+            {label}
+          </button>
+        ),
+      )}
+    </nav>
   )
 }

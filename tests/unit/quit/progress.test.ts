@@ -72,6 +72,12 @@ describe("copy B", () => {
     expect(savedMoney(s, NOW, 0, 0)).toBe(100)
     expect(savedMoney(s, NOW, 5, 12)).toBe(83)
   })
+  it("the total reconciles with the inputs: whole days x daily rate - spend", () => {
+    const x = { startMs: NOW - (23 * DAY + 5 * 3600e3), cigsPerDay: 15, packSize: 20, packPrice: 5.76, seeded: 1 }
+    expect(periods(x).day).toBe(4.32)
+    expect(savedMoney(x, NOW, 0, 0)).toBe(99.36)
+    expect(savedMoney(x, NOW, 1.5, 2)).toBe(95.86)
+  })
   it("period rows share one daily rate", () => {
     expect(periods(s)).toEqual({ day: 10, week: 70, month: 304.17, year: 3650 })
   })
@@ -100,11 +106,11 @@ describe("copy C", () => {
   const names: [string, string, string] = ["x", "y", "z"]
   const habits = seedHabits(NOW, NOW - 23 * DAY, 8, names, ["n"])
   it("savings sum every stretch so a reset never erases money", () => {
-    const alc = habits[0]
+    const alc = habits[1]
     expect(alc.stretches).toHaveLength(5)
     expect(totalDays(alc, NOW)).toBeCloseTo(19 + 27 + 42 + 7 + 23, 5)
-    expect(allSavings(habits, NOW)).toBeGreaterThan(8 * 118)
-    expect(stretchCount(habits)).toBe(8)
+    expect(allSavings(habits, NOW)).toBeCloseTo(8 * (118 + 35.23 + 34.64), 1)
+    expect(stretchCount(habits)).toBe(7)
   })
   it("pie slices add up to one", () => {
     const s = pieSlices([1, 2, 1])
@@ -113,10 +119,10 @@ describe("copy C", () => {
     expect(pieSlices([0, 0]).every((x) => x.frac === 0)).toBe(true)
   })
   it("tags put milestone names and resets on their days", () => {
-    const tags = dayTags(habits[0], [{ name: "Day one", hours: 24 }], NOW, (n) => `Reset #${n}`)
+    const tags = dayTags(habits[1], [{ name: "Day one", hours: 24 }], NOW, (n) => `Reset #${n}`)
     const resetDays = Object.values(tags).flat().filter((t) => t.startsWith("Reset"))
     expect(resetDays).toEqual(["Reset #1", "Reset #2", "Reset #3", "Reset #4"])
-    expect(tags[dayKey(habits[0].stretches[4].startMs + DAY)]).toContain("Day one")
+    expect(tags[dayKey(habits[1].stretches[4].startMs + DAY)]).toContain("Day one")
   })
   it("next goal is the first above the running hours", () => {
     expect(nextGoal([{ name: "a", hours: 5 }, { name: "b", hours: 24 }], 6)?.name).toBe("b")
@@ -125,12 +131,12 @@ describe("copy C", () => {
 })
 
 describe("copy D", () => {
-  const s = { startMs: NOW - 17.18 * DAY, cigsPerDay: 15, packSize: 20, packPrice: 6 }
+  const s = { startMs: NOW - 17.18 * DAY, cigsPerDay: 15, packSize: 20, packPrice: 5.76, seeded: 1 }
   it("overall row and achievements", () => {
     const o = overall(s, NOW)
     expect(o.days).toBe(17)
     expect(o.cigs).toBe(257)
-    expect(o.money).toBe(77.1)
+    expect(o.money).toBe(74.02)
     const a = achievements(o)
     expect(unlockedCount(a)).toBe(3)
     expect(a.find((x) => x.id === "life")?.state).toBe("unsourced")
@@ -140,8 +146,8 @@ describe("copy D", () => {
 
 describe("copy E", () => {
   const today = "2026-11-18"
-  const setup = { startMs: new Date(2026, 10, 1).getTime(), baseUnits: 28, baseCost: 70, seeded: 1 }
-  const log = seedLog(today, "2026-11-01", "note")
+  const setup = { startMs: new Date(2026, 10, 1).getTime(), baseUnits: 14, baseCost: 20.16, seeded: 1 }
+  const log = seedLog(today, "2026-11-01")
   it("period starts", () => {
     expect(periodStart(1, today, "2026-01-01")).toBe("2026-11-16")
     expect(periodStart(2, today, "2026-01-01")).toBe("2026-11-01")
@@ -153,9 +159,9 @@ describe("copy E", () => {
     expect(d.dry).toBe(15)
     expect(d.best).toBe(8)
     expect(d.current).toBe(7)
-    // 17 logged days: baseline 4 units and 10 money a day, minus two drinking days of 3.1 units and 5 money each
-    expect(d.units).toBeCloseTo(17 * 4 - 2 * 3.1, 1)
-    expect(d.money).toBeCloseTo(17 * 10 - 10, 2)
+    // 17 logged days: baseline 2 units and 2.88 money a day, minus two drinking days of 1.6 units and 2.30 money each
+    expect(d.units).toBeCloseTo(17 * 2 - 2 * 1.6, 1)
+    expect(d.money).toBeCloseTo(17 * 2.88 - 2 * 2.3, 2)
     expect(dash({}, setup, 0, today, "2026-11-01").money).toBe(0)
   })
   it("badges count total dry days; a slip keeps them", () => {
@@ -163,7 +169,7 @@ describe("copy E", () => {
     expect(b.totalDry).toBe(15)
     expect(b.total).toBe(3)
     expect(b.mission).toBe(true)
-    expect(dayUnits(log[addDays(today, -8)])).toBe(3.1)
+    expect(dayUnits(log[addDays(today, -8)])).toBe(1.6)
   })
 })
 

@@ -96,7 +96,7 @@ export function dayTags(h: CHabit, goals: Goal[], now: number, resetLabel: (n: n
   return out
 }
 
-/** The example habits: alcohol with four resets, smoking with one, pills with none. */
+/** The example habits, tabs in the order the screens show them: smoking, alcohol (four resets), pills. */
 export function seedHabits(now: number, startMs: number, perDay: number, names: [string, string, string], notes: string[]): CHabit[] {
   const lens = [19, 27, 42, 7]
   const finishedList: Stretch[] = []
@@ -107,10 +107,11 @@ export function seedHabits(now: number, startMs: number, perDay: number, names: 
     finishedList.unshift({ startMs: start, endMs: end, note: notes[i % notes.length] })
     cursor = start - DAY
   })
+  // Stretch counts follow the public statistics page: seven in all (five here, one each for the others).
   return [
-    { id: "alc", name: names[0], perDay, stretches: [...finishedList, { startMs, endMs: null, note: "" }] },
-    { id: "smk", name: names[1], perDay: round2(perDay * 0.75), stretches: [{ startMs: now - 50 * DAY, endMs: now - 36 * DAY, note: notes[0] }, { startMs: now - 35 * DAY, endMs: null, note: "" }] },
-    { id: "pil", name: names[2], perDay, stretches: [{ startMs: now - 28 * DAY, endMs: null, note: "" }] },
+    { id: "smk", name: names[0], perDay, stretches: [{ startMs: now - 35.23 * DAY, endMs: null, note: "" }] },
+    { id: "alc", name: names[1], perDay, stretches: [...finishedList, { startMs, endMs: null, note: "" }] },
+    { id: "pil", name: names[2], perDay, stretches: [{ startMs: now - 34.64 * DAY, endMs: null, note: "" }] },
   ]
 }
 

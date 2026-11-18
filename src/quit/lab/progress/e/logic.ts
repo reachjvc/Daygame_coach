@@ -44,9 +44,10 @@ export const SIZES: Record<DrinkKind, { ml: number }[]> = {
   cider: [{ ml: 284 }, { ml: 568 }, { ml: 440 }],
   wine: [{ ml: 125 }, { ml: 175 }, { ml: 250 }],
 }
-export const DEFAULT_ABV: Record<DrinkKind, number> = { beer: 4.5, cider: 5.5, wine: 12.5 }
-/** A rough cost of one drink before he types his own: shop-bought or bar. */
-export const ROUGH_COST: Record<Place, number> = { shop: 2.5, bar: 6 }
+/** Example data only: money per alcohol unit read off the public dashboard (143 money / 99 units). */
+export const EXAMPLE_PER_UNIT = 1.44
+/** Example data only: the published weekly guideline of 14 units. */
+export const EXAMPLE_WEEK_UNITS = 14
 
 export const dayUnits = (r: DayRec) => Math.round(r.drinks.reduce((s, d) => s + unitsOf(d.ml, d.abv, d.qty), 0) * 10) / 10
 export const dayCost = (r: DayRec) => r.drinks.reduce((s, d) => s + d.cost * d.qty, 0)
@@ -129,19 +130,16 @@ export function wbAverage(w: Wellbeing): number {
   return v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0
 }
 
-/** The example log: dry days from the start to yesterday, two drinking days, a few wellbeing marks and one note. */
-export function seedLog(today: string, startKey: string, note: string): Record<string, DayRec> {
+/** The example log: dry days from the start to yesterday and two drinking days (a half pint of cider, priced at the example per-unit figure). */
+export function seedLog(today: string, startKey: string): Record<string, DayRec> {
   const out: Record<string, DayRec> = {}
   for (let k = startKey; k < today; k = addDays(k, 1)) {
     out[k] = { status: "dry", drinks: [], wb: EMPTY_WB, note: "" }
   }
+  const units = unitsOf(284, 5.5, 1)
   for (const n of [17, 8]) {
     const k = addDays(today, -n)
-    if (out[k]) out[k] = { status: "drank", drinks: [{ kind: "cider", place: "shop", ml: 568, abv: 5.5, qty: 1, cost: 5 }], wb: EMPTY_WB, note: "" }
+    if (out[k]) out[k] = { status: "drank", drinks: [{ kind: "cider", place: "shop", ml: 284, abv: 5.5, qty: 1, cost: Math.round(units * EXAMPLE_PER_UNIT * 100) / 100 }], wb: EMPTY_WB, note: "" }
   }
-  const k2 = addDays(today, -3)
-  if (out[k2]) out[k2] = { ...out[k2], wb: { mood: 4, energy: 3, sleep: 4, cravings: 2 }, note }
-  const k3 = addDays(today, -2)
-  if (out[k3]) out[k3] = { ...out[k3], wb: { mood: 3, energy: 4, sleep: 3, cravings: 1 } }
   return out
 }

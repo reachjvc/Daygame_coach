@@ -5,6 +5,8 @@ export type DSetup = {
   cigsPerDay: number
   packSize: number
   packPrice: number
+  /** 1 when started with the example data. */
+  seeded: number
 }
 
 export interface Overall {
@@ -33,6 +35,8 @@ export function achievements(o: Overall): Ach[] {
     { id: "c10", state: o.cigs >= 10 ? "unlocked" : "locked" },
     { id: "life", state: "unsourced" },
     { id: "d1", state: o.days >= 1 ? "unlocked" : "locked" },
+    { id: "x1", state: "locked" },
+    { id: "x2", state: "locked" },
   ]
 }
 

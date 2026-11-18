@@ -34,6 +34,8 @@ export const dText = {
     { id: "c10", title: "A quiet evening", req: "10 cigarettes avoided" },
     { id: "life", title: "Spare hour", req: "1 hour of life regained" },
     { id: "d1", title: "First full day", req: "1 day without smoking" },
+    { id: "x1", title: "Shed layers", req: null },
+    { id: "x2", title: "Jump about", req: null },
   ],
   unlocked: "Unlocked",
   lockedWord: "Locked",
@@ -42,4 +44,9 @@ export const dText = {
   healthTitle: "Health",
   healthRows: ["Your heart rate and blood pressure go back to normal.", "The carbon monoxide in your blood drops to normal.", "Your risk of lung cancer falls over the years."],
   healthCard: "Detail",
+  healthScaleEnd: "100",
+  healthOf: "/8",
+  expand: "Open",
+  collapse: "Close",
+  decor: "☀",
 }

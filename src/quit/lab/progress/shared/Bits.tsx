@@ -100,7 +100,7 @@ export function BottomNav({ items, value, onChange, id }: { items: readonly stri
           data-testid={`${id}-${i}`}
           aria-current={i === value}
           onClick={() => onChange(i)}
-          className={`min-h-12 truncate px-1 text-xs ${i === value ? "font-semibold text-primary" : "text-muted-foreground"}`}
+          className={`min-h-12 break-words px-0.5 text-[11px] leading-tight ${i === value ? "font-semibold text-primary" : "text-muted-foreground"}`}
         >
           {label}
         </button>
@@ -166,5 +166,42 @@ export function NumField({ label, value, onChange, step = 1, testId, min = 0 }: 
         className="min-h-11 w-28 rounded-md border border-border bg-background px-2 text-right"
       />
     </label>
+  )
+}
+
+/** Small bar shown on every screen while the example data is active. */
+export function ExampleBar({ onClear }: { onClear: () => void }) {
+  return (
+    <div data-testid="example-bar" className="mb-3 flex items-center justify-between gap-2 rounded-md border border-dashed border-border px-3 py-1 text-xs text-muted-foreground">
+      <span>{sharedText.exampleLabel}</span>
+      <button type="button" data-testid="example-clear" onClick={onClear} className="inline-flex min-h-11 items-center underline">
+        {sharedText.clearExample}
+      </button>
+    </div>
+  )
+}
+
+/** Share icon: opens the share sheet where the browser has one; otherwise does nothing. */
+export function ShareBtn({ text, testId }: { text: string; testId?: string }) {
+  const share = () => {
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) void navigator.share({ text }).catch(() => undefined)
+    } catch {
+      // no share sheet here
+    }
+  }
+  return (
+    <button type="button" data-testid={testId} aria-label={sharedText.share} onClick={share} className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-card">
+      {"↗"}
+    </button>
+  )
+}
+
+/** Round icon button. */
+export function IconBtn({ label, onClick, children, testId }: { label: string; onClick: () => void; children: React.ReactNode; testId?: string }) {
+  return (
+    <button type="button" data-testid={testId} aria-label={label} onClick={onClick} className="inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-card">
+      {children}
+    </button>
   )
 }

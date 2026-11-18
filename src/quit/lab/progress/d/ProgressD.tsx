@@ -23,9 +23,10 @@ export function ProgressD() {
     <div data-testid="progress-d">
       <SetupGate<DSetup>
         letter="d"
+        keys={["setup"]}
         fields={FIELDS}
-        seed={(now) => ({ startMs: seedStart(now, 4 * 3_600_000 + 23 * 60_000), cigsPerDay: 15, packSize: 20, packPrice: 6 })}
-        own={(now) => ({ startMs: now, cigsPerDay: 10, packSize: 20, packPrice: 6 })}
+        seed={(now) => ({ startMs: seedStart(now, 4 * 3_600_000 + 23 * 60_000), cigsPerDay: 15, packSize: 20, packPrice: 5.76, seeded: 1 })}
+        own={(now) => ({ startMs: now, cigsPerDay: NaN, packSize: NaN, packPrice: NaN, seeded: 0 })}
       >
         {(setup, startOver) => (
           <>
@@ -154,13 +155,11 @@ function Achievements({ o }: { o: ReturnType<typeof overall> }) {
                 {a.state === "unlocked" ? "✓" : ""}
               </span>
               <p className="pr-6 font-semibold">{c.title}</p>
-              <p className="text-sm text-muted-foreground">{c.req}</p>
+              {c.req ? <p className="text-sm text-muted-foreground">{c.req}</p> : <Placeholder className="min-h-0 text-xs" />}
               {a.state === "unsourced" && <NotSourced />}
             </div>
           )
         })}
-        <Placeholder className="min-h-32" />
-        <Placeholder className="min-h-32" />
       </div>
     </section>
   )
@@ -170,22 +169,39 @@ function Health() {
   const [open, setOpen] = useState<number | null>(null)
   return (
     <section data-testid="screen-health" className="flex flex-col gap-3">
-      <Head title={dText.healthTitle} right={<NotSourced />} />
+      <Head
+        title={dText.healthTitle}
+        right={
+          <span data-testid="d-health-count" className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1 text-sm">
+            <NotSourced />
+            {dText.healthOf}
+          </span>
+        }
+      />
       <ul className="flex flex-col gap-2">
         {dText.healthRows.map((r, i) => (
           <li key={r}>
             <button type="button" data-testid={`d-health-${i}`} aria-expanded={open === i} onClick={() => setOpen(open === i ? null : i)} className="flex min-h-14 w-full flex-col gap-2 rounded-lg border border-border bg-card p-3 text-left text-sm">
-              <span>{r}</span>
+              <span className="flex items-start gap-2">
+                <span className="flex-1">{r}</span>
+                <span aria-hidden="true" data-testid={`d-health-chevron-${i}`}>
+                  {open === i ? "⌃" : "⌄"}
+                </span>
+              </span>
               {open === i ? (
-                <span data-testid={`d-health-ring-${i}`} className="flex justify-center py-2">
+                <span data-testid={`d-health-ring-${i}`} className="relative flex justify-center py-2">
+                  <span aria-hidden="true" className="absolute left-4 top-0 text-xl">
+                    {dText.decor}
+                  </span>
                   <Ring value={0} size={110} stroke={10}>
                     <NotSourced />
                   </Ring>
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  <span className="h-2 flex-1 rounded-full bg-muted" />
                   <NotSourced />
+                  <span data-testid={`d-health-bar-${i}`} className="h-2 flex-1 rounded-full bg-muted" />
+                  <span className="text-xs text-muted-foreground">{dText.healthScaleEnd}</span>
                 </span>
               )}
             </button>

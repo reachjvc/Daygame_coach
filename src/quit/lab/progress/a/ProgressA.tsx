@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useLabState } from "../../store"
 import { PrimaryButton } from "../../../components/kit"
-import { Card, Head, InferredTag, NumField, Placeholder, PlaceholderScreen, Tabs, BottomNav } from "../shared/Bits"
+import { Card, Head, IconBtn, InferredTag, NumField, Placeholder, PlaceholderScreen, Tabs, BottomNav } from "../shared/Bits"
 import { addDays, billCount, dayKey, fmtMoney, HOUR, MIN, monthly, splitElapsed, yearly } from "../shared/calc"
 import { useNow } from "../shared/clock"
 import { SetupGate, StartOver, seedStart, type SetupField } from "../shared/Setup"
@@ -12,12 +12,12 @@ import { aText } from "./text"
 import { buildHabits, daysBarFill, lastMilestone, MILESTONE_DAYS, pledgeStreak, totals, type Habit } from "./logic"
 
 type Setup = { startMs: number; perDay: number; calPerDay: number; seeded: number }
-type Screen = "summary" | "drawer" | "savings" | "feed" | "today" | "pledge" | "quote" | "review" | "editlist" | "add" | "stats" | "calendar" | "settings"
+type Screen = "summary" | "drawer" | "savings" | "feed" | "today" | "pledge" | "quote" | "review" | "editlist" | "add" | "stats" | "calendar" | "settings" | "profile" | "habitnav" | "currency" | "qsettings"
 
 const FIELDS: SetupField[] = [
   { key: "startMs", label: aText.fStart, kind: "date" },
   { key: "perDay", label: aText.fPerDay, kind: "number", step: 0.5 },
-  { key: "calPerDay", label: aText.fCal, kind: "number", step: 10 },
+  { key: "calPerDay", label: aText.fCal, kind: "number", step: 10, optional: true },
 ]
 
 const BAR_TINT = ["bg-emerald-500/80", "bg-sky-500/80", "bg-blue-500/80", "bg-violet-500/80"]
@@ -28,9 +28,10 @@ export function ProgressA() {
     <div data-testid="progress-a">
       <SetupGate<Setup>
         letter="a"
+        keys={["setup", "sel", "added", "rates", "pledged", "workbook", "reasons", "photos"]}
         fields={FIELDS}
         seed={(now) => ({ startMs: seedStart(now, 8 * HOUR + 29 * MIN), perDay: 8, calPerDay: 150, seeded: 1 })}
-        own={(now) => ({ startMs: now, perDay: 8, calPerDay: 0, seeded: 0 })}
+        own={(now) => ({ startMs: now, perDay: NaN, calPerDay: NaN, seeded: 0 })}
       >
         {(setup, startOver) => (
           <>
@@ -69,12 +70,16 @@ function Main({ setup }: { setup: Setup }) {
       {screen === "drawer" && <Drawer habits={habits} sel={sel} now={now} onPick={(i) => (setSel(i), go("summary"))} go={go} onBack={back} />}
       {screen === "editlist" && <PlaceholderScreen title={aText.editListTitle} onBack={() => go("drawer")} />}
       {screen === "add" && <AddHabit onBack={() => go("drawer")} onSave={(h) => (setAdded([...added, h]), setSel(habits.length), go("summary"))} index={added.length} now={now} />}
-      {screen === "savings" && <Savings habit={habit} now={now} onBack={back} onRate={(n) => setRates({ ...rates, [habit.id]: n })} />}
+      {screen === "savings" && <Savings habit={habit} now={now} onBack={back} onGear={() => go("currency")} onRate={(n) => setRates({ ...rates, [habit.id]: n })} />}
       {screen === "feed" && <Feed habit={habit} now={now} />}
       {screen === "today" && <Today pledged={allPledges} today={today} go={go} />}
       {screen === "pledge" && <Pledge today={today} now={now} onBack={() => go("today")} onConfirm={() => (setPledged([...pledged, today]), go("today"))} done={allPledges.includes(today)} />}
       {screen === "review" && <PlaceholderScreen title={aText.reviewTitle} onBack={() => go("today")} />}
-      {screen === "quote" && <Quote now={now} onClose={back} />}
+      {screen === "quote" && <Quote now={now} onClose={back} onSettings={() => go("qsettings")} />}
+      {screen === "profile" && <PlaceholderScreen title={aText.profileTitle} onBack={back} />}
+      {screen === "habitnav" && <PlaceholderScreen title={aText.habitNavTitle} onBack={back} />}
+      {screen === "currency" && <PlaceholderScreen title={aText.currencyTitle} onBack={() => go("savings")} />}
+      {screen === "qsettings" && <PlaceholderScreen title={aText.quoteSettingsTitle} onBack={() => go("quote")} />}
       {(screen === "summary" || screen === "today" || screen === "feed" || screen === "quote") && <BottomNav id="a-nav" items={aText.nav} value={nav} onChange={navTo} />}
     </div>
   )
@@ -99,9 +104,16 @@ function SummaryShell({ habit, screen, go, now }: { habit: Habit; screen: Screen
         <button type="button" data-testid="a-menu" aria-label={aText.menuLabel} onClick={() => go("drawer")} className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-card text-lg">
           {"☰"}
         </button>
-        <h2 data-testid="a-habit-name" className="min-w-0 flex-1 truncate text-lg font-semibold">
+        <h2 data-testid="a-habit-name" className="min-w-0 truncate text-lg font-semibold">
           {habit.name}
         </h2>
+        <IconBtn label={aText.habitNavLabel} onClick={() => go("habitnav")} testId="a-habit-chevron">
+          {"»"}
+        </IconBtn>
+        <span className="flex-1" />
+        <IconBtn label={aText.profile} onClick={() => go("profile")} testId="a-profile">
+          {"☺"}
+        </IconBtn>
       </div>
       <Tabs items={aText.tabs} value={idx} id="a-tab" onChange={(i) => go((["summary", "stats", "calendar", "settings"] as const)[i])} />
       {screen !== "summary" ? (
@@ -205,7 +217,7 @@ function Drawer({ habits, sel, now, onPick, go, onBack }: { habits: Habit[]; sel
 
 function AddHabit({ onBack, onSave, index, now }: { onBack: () => void; onSave: (h: Habit) => void; index: number; now: number }) {
   const [name, setName] = useState("")
-  const [perDay, setPerDay] = useState(8)
+  const [perDay, setPerDay] = useState(NaN)
   return (
     <section data-testid="screen-add" className="flex flex-col gap-2">
       <Head title={aText.addTitle} onBack={onBack} inferred />
@@ -221,7 +233,7 @@ function AddHabit({ onBack, onSave, index, now }: { onBack: () => void; onSave: 
   )
 }
 
-function Savings({ habit, now, onBack, onRate }: { habit: Habit; now: number; onBack: () => void; onRate: (n: number) => void }) {
+function Savings({ habit, now, onBack, onGear, onRate }: { habit: Habit; now: number; onBack: () => void; onGear: () => void; onRate: (n: number) => void }) {
   const [tab, setTab] = useState(0)
   const [editing, setEditing] = useState(false)
   const t = totals(habit, now)
@@ -232,8 +244,13 @@ function Savings({ habit, now, onBack, onRate }: { habit: Habit; now: number; on
   const bills = billCount(t.money)
   return (
     <section data-testid="screen-savings" className="flex flex-col gap-3">
-      <Head title={aText.savingsTitle(habit.name)} onBack={onBack} />
+      <Head title={aText.savingsTitle(habit.name)} onBack={onBack} right={<IconBtn label={aText.settingsLabel} onClick={onGear} testId="a-sav-gear">{"⚙"}</IconBtn>} />
       <Tabs items={[aText.money, aText.calories]} value={tab} id="a-sav-tab" onChange={setTab} />
+      {!money && (
+        <div>
+          <InferredTag />
+        </div>
+      )}
       <h3 className="text-base font-semibold">{money ? aText.currentSavings : aText.currentCalories}</h3>
       <p data-testid="a-total" className="text-4xl font-bold tabular-nums">
         {fmt(total)}
@@ -360,7 +377,7 @@ function Today({ pledged, today, go }: { pledged: string[]; today: string; go: (
             <p className="font-medium">{aText.challengeTitle}</p>
             <div data-testid="a-segments" data-filled={streak} className="my-2 flex gap-1">
               {Array.from({ length: 7 }, (_, i) => (
-                <span key={i} className={`h-3 flex-1 rounded-full ${i < streak ? "bg-emerald-500/80" : "bg-muted"}`} />
+                <span key={i} data-testid={`a-seg-${i}`} data-on={i < streak} className={`h-4 flex-1 rounded-full border ${i < streak ? "border-emerald-500 bg-emerald-500/80" : "border-border bg-muted"}`} />
               ))}
             </div>
             <p data-testid="a-challenge-line" className="text-sm text-muted-foreground">
@@ -406,11 +423,18 @@ function Today({ pledged, today, go }: { pledged: string[]; today: string; go: (
 function Pledge({ today, now, onBack, onConfirm, done }: { today: string; now: number; onBack: () => void; onConfirm: () => void; done: boolean }) {
   const [dot, setDot] = useState(0)
   const [reasons, setReasons] = useLabState<string[]>("progress", "a", "reasons", [...aText.reasonsSeed])
+  const [photos, setPhotos] = useLabState<string[]>("progress", "a", "photos", [])
   const [draft, setDraft] = useState("")
+  const addPhoto = (f: File | undefined) => {
+    if (!f) return
+    const r = new FileReader()
+    r.onload = () => typeof r.result === "string" && setPhotos([...photos, r.result])
+    r.readAsDataURL(f)
+  }
   const weekday = new Date(now).toLocaleDateString("en-US", { weekday: "long" })
   return (
     <section data-testid="screen-pledge" data-date={today} className="flex flex-col gap-3">
-      <Head title={aText.pledgeFor(weekday)} onBack={onBack} inferred />
+      <Head title={aText.pledgeFor(weekday)} onBack={onBack} />
       <button type="button" data-testid="a-pledge-sentence" onClick={onConfirm} className="min-h-16 rounded-lg bg-card px-4 py-4 text-left text-lg font-bold">
         {aText.pledgeSentences[dot]}
       </button>
@@ -429,7 +453,15 @@ function Pledge({ today, now, onBack, onConfirm, done }: { today: string; now: n
             {r}
           </div>
         ))}
+        {photos.map((src, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={i} data-testid="a-reason-photo" src={src} alt={aText.photoAlt} className="h-24 w-full rounded-lg object-cover" />
+        ))}
       </div>
+      <label className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-md border border-dashed border-border px-3 text-sm text-muted-foreground">
+        {aText.addPhoto}
+        <input type="file" accept="image/*" data-testid="a-reason-photo-input" className="sr-only" onChange={(e) => addPhoto(e.target.files?.[0])} />
+      </label>
       <div className="flex gap-2">
         <input data-testid="a-reason-input" value={draft} placeholder={aText.reasonPlaceholder} aria-label={aText.reasonPlaceholder} onChange={(e) => setDraft(e.target.value)} className="min-h-11 min-w-0 flex-1 rounded-md border border-border bg-background px-2" />
         <button
@@ -446,7 +478,7 @@ function Pledge({ today, now, onBack, onConfirm, done }: { today: string; now: n
   )
 }
 
-function Quote({ now, onClose }: { now: number; onClose: () => void }) {
+function Quote({ now, onClose, onSettings }: { now: number; onClose: () => void; onSettings: () => void }) {
   const d = new Date(now)
   const q = aText.quotes[Math.floor(now / 86_400_000) % aText.quotes.length]
   const share = () => {
@@ -463,11 +495,16 @@ function Quote({ now, onClose }: { now: number; onClose: () => void }) {
           {"✕"}
         </button>
         <h2 className="flex-1 text-sm font-semibold">{aText.quoteTitle}</h2>
-        <span className="size-11" />
+        <IconBtn label={aText.settingsLabel} onClick={onSettings} testId="a-quote-gear">
+          {"⚙"}
+        </IconBtn>
       </div>
       <p className="text-sm text-muted-foreground">{`${aText.months[d.getMonth()]} ${d.getDate()}`}</p>
       <p data-testid="a-quote" className="text-2xl font-semibold leading-snug">
         {q}
+      </p>
+      <p data-testid="a-quote-author" className="text-sm text-muted-foreground">
+        {aText.quoteAuthor}
       </p>
       <button type="button" data-testid="a-share" onClick={share} className="min-h-11 rounded-md border border-border px-4 text-sm">
         {aText.share}

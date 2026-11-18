@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { PrimaryButton } from "../../../components/kit"
-import { useLabState } from "../../store"
+import { labStore, useLabState } from "../../store"
 import { DAY, dayKey, keyToMs } from "./calc"
-import { InferredTag, NumField } from "./Bits"
+import { ExampleBar, InferredTag, NumField } from "./Bits"
 import { sharedText } from "./text"
 
 export type SetupValues = Record<string, number>
@@ -15,14 +15,18 @@ export interface SetupField {
   /** "date" holds a start time in ms; "number" a plain amount. */
   kind: "date" | "number"
   step?: number
+  /** An empty field is allowed and saved as 0. */
+  optional?: boolean
 }
 
 interface GateProps<T extends SetupValues> {
   letter: string
+  /** Store keys of the copy, wiped on "Clear example" and "Start over". */
+  keys: string[]
   fields: SetupField[]
   /** Values for "Start with example data" (start date 23 days ago and so on). */
   seed: (now: number) => T
-  /** Defaults shown in the "my own" form. */
+  /** Defaults shown in the "my own" form: numbers stay NaN so the fields start empty. */
   own: (now: number) => T
   children: (setup: T, startOver: () => void) => React.ReactNode
 }
@@ -32,16 +36,27 @@ interface GateProps<T extends SetupValues> {
  * the lab store under `setup`. Setup screens were never seen in public material, so the
  * screen carries the inferred tag and asks only what the spec says the app stores.
  */
-export function SetupGate<T extends SetupValues>({ letter, fields, seed, own, children }: GateProps<T>) {
+export function SetupGate<T extends SetupValues>({ letter, keys, fields, seed, own, children }: GateProps<T>) {
   const [setup, setSetup] = useLabState<T | null>("progress", letter, "setup", null)
   const [mounted, setMounted] = useState(false)
   const [form, setForm] = useState<T | null>(null)
   useEffect(() => setMounted(true), [])
   if (!mounted) return null
-  if (setup) return <>{children(setup, () => setSetup(null))}</>
+  const clear = () => {
+    for (const k of keys) labStore().set("progress", letter, k, undefined)
+    setSetup(null)
+  }
+  if (setup) {
+    return (
+      <>
+        {setup.seeded === 1 && <ExampleBar onClear={clear} />}
+        {children(setup, clear)}
+      </>
+    )
+  }
 
   if (form) {
-    const ok = fields.every((f) => Number.isFinite(form[f.key]))
+    const ok = fields.every((f) => f.optional || Number.isFinite(form[f.key]))
     return (
       <section data-testid="setup-own" className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
@@ -65,7 +80,15 @@ export function SetupGate<T extends SetupValues>({ letter, fields, seed, own, ch
             <NumField key={f.key} label={f.label} value={form[f.key]} step={f.step} testId={`setup-${f.key}`} onChange={(n) => setForm({ ...form, [f.key]: n })} />
           ),
         )}
-        <PrimaryButton testId="setup-save" disabled={!ok} onClick={() => setSetup(form)}>
+        <PrimaryButton
+          testId="setup-save"
+          disabled={!ok}
+          onClick={() => {
+            const out = { ...form }
+            for (const f of fields) if (!Number.isFinite(out[f.key])) (out as SetupValues)[f.key] = 0
+            setSetup(out)
+          }}
+        >
           {sharedText.save}
         </PrimaryButton>
       </section>

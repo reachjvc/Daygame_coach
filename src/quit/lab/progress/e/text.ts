@@ -40,8 +40,7 @@ export const eText = {
   strengthUp: "Higher strength",
   quantity: "Quantity",
   costPer: "Cost per drink",
-  costRough: "rough average",
-  costOwn: "your own figure",
+  strengthPct: "Strength (%)",
   addBtn: "Add drink",
   unitsLine: (u: number) => `${u} units`,
   // day
@@ -85,6 +84,9 @@ export const eText = {
   noteChips: ["I am grateful for...", "I am feeling...", "My cravings have been...", "I wish people knew...", "Today has been...", "I have learnt..."],
   notePlaceholder: "Start writing...",
   noteLock: "Your notes stay on this device and are not sent anywhere.",
-  seedNote: "Quiet evening. I read instead of having a drink.",
   help: "?",
+  syncLabel: "Sync",
+  syncTitle: "Sync",
+  lockLabel: "Private",
+  logPlus: "Log"
 }
