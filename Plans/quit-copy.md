@@ -1,6 +1,6 @@
 # Quit tools, copied from the best: one phase per tool
 
-Written 2026-11-18 (Opus, planning session). Status: **running. Phase 0 done (lab frame live on main, 8f3e2ee3; Phase 1 copies a, c, d, e live c9982f21, `best` building; B1 still blocked: Vercel CLI logged out, owner item 1). Step B passed for Phases 1, 2, 3, 5; Phase 1 copies building; research running for Phases 4 and 6.**
+Written 2026-11-18 (Opus, planning session). Status: **running. Phase 0 done (8f3e2ee3). Phase 1 done: copies a, c, d, e + `best` on main (10f1bc62). Phase 2 copies in fix round 1. Step B passed for Phases 3–12; Phase 13 researching. B1 cause found, fix building (Vercel account jonas879-8953).**
 
 ## Why this plan exists
 
@@ -62,7 +62,7 @@ nicotine content, the validator, privacy and coaching pages, the audit fixes) is
 
 | ID | What | Attempted, and what it returned | Blocks | Recommendation |
 |---|---|---|---|---|
-| B1 | Live site answers 500 on `/` and every `/quit` page (`/privacy`, `/auth/login` are 200) | `curl` on build 134d39d1: `/`, `/quit`, `/quit/nicotine?preview=1`, `/quit/coaching` → 500. Same as `first-1000.md` B1 (Vercel only; local production builds give 200). `vercel login` done; `vercel inspect daygame-coach.vercel.app` → "Can't find the deployment … under reachjvc-1930s-projects" | "Try it" links on the review page | Owner item 1, then Phase 0 reads the function log and fixes it |
+| B1 | **Cause found 2026-11-18** (owner logged in as the right account, jonas879-8953): the root layout's internal router-context import needs pages-router files Vercel's trace leaves out; fix = `outputFileTracingIncludes`. Live site answers 500 on `/` and every `/quit` page (`/privacy`, `/auth/login` are 200) | `curl` on build 134d39d1: `/`, `/quit`, `/quit/nicotine?preview=1`, `/quit/coaching` → 500. Same as `first-1000.md` B1 (Vercel only; local production builds give 200). `vercel login` done; `vercel inspect daygame-coach.vercel.app` → "Can't find the deployment … under reachjvc-1930s-projects" | "Try it" links on the review page | Owner item 1, then Phase 0 reads the function log and fixes it |
 | B2 | Competitor material behind accounts | Census Table 2b: six studied products ban copying or competitor use; one bans scripted capture | Screens never shown publicly | Public material only; mark unseen screens "inferred" |
 | B3 | Repo is public | Memory `repo-is-public`; `quit-tool.md` Part 5 | Names, shots, quotes in commits | Neutral variant ids; private map and shots in `~/.cache/daygame-research/quit-copy/` |
 | B4 | Next.js 16.4.1 security advisory stops `next build` / `next dev` once | Seen in every build today; a rerun continues | Nothing (rerun) | Owner decides on the upgrade separately; builders rerun, never upgrade |
@@ -145,6 +145,9 @@ nicotine content, the validator, privacy and coaching pages, the audit fixes) is
 - Phase 11 (ifthen) Step B: copies **a, c** pass (a: a public plan-builder walked in full; c: a public worksheet).
   **b cut to its three seen screens** (three-circles cards, boundaries survey, feeling chips); nothing inferred of
   b is built. The tool is paywalled almost everywhere, so a full if-then builder is ours to design in `best`.
+- Phase 12 (accountability) Step B: copies **a, b, e** pass (a: partner sign-up, activity summary, check-in;
+  b: partners and clock check-in; e: the only real stake flow, its payment, charge and payout screens shown as
+  "not built: the site never holds money"). **c, d dropped** (thin; c is mostly a leaderboard).
 
 ### Phase 1 Step D brief: `sos/best` (2026-11-18)
 
