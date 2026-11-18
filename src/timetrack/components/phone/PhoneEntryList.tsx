@@ -639,13 +639,13 @@ const PhoneRow = memo(function PhoneRow({
       </div>
       {/* not on the running row: the bar at the bottom is that timer's control (findability, 2026-11-05) */}
       {running ? (
-        <span className="size-11 shrink-0" />
+        <span className="size-12 shrink-0" />
       ) : (
         <button
           type="button"
           onClick={tapContinue}
           aria-label="Continue this entry"
-          className="flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary/60"
+          className="flex size-12 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary/60"
         >
           <IconStart className="size-4" />
         </button>

@@ -88,7 +88,7 @@ test.describe('edge cases', { tag: '@phone' }, () => {
   test('"Not now" is not a one-way door', async ({ page }) => {
     await openFreshTracker(page)
     await goToSettings(page)
-    await page.getByRole('button', { name: 'Data', exact: true }).click()
+    await page.getByRole('button', { name: /^(Data|Import and export)\b/ }).click()
     await expect(page.getByRole('button', { name: /Upload this browser/ })).toBeVisible({ timeout: 10_000 })
   })
 })
