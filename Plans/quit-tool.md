@@ -605,6 +605,92 @@ pills only on Free account/Paid rows, sos bar visible, no "No account", no "Star
 Per Part 2. Acceptance per tool as written there, plus a phone walk (Sonnet) and a Haiku check that every
 screen's text matches the data file (no hard-coded reader text in components).
 
+#### Phase 4 brief (Opus, 2026-11-18) — `beliefs`, `gives`, `past`, `cost`, `how`
+
+**Shared for all five (and every later tool):**
+- One folder per tool: `src/quit/tools/<id>/` with `logic.ts` (pure functions, no React, unit-tested in
+  `tests/unit/quit/tools/<id>.test.ts`) and `<Name>Tool.tsx` (client component, `ToolProps = {addiction:
+  QuitAddiction; present: boolean}`); register it in `src/quit/tools/registry.ts`.
+- UI labels (buttons, headings, rating labels, evidence words) live in `src/quit/data/tooltext.json`, keyed by
+  tool, with `{name}`, `{n}` slots; content comes from the addiction file. A unit test
+  `tests/unit/quit/noHardcodedText.test.ts` scans every `.tsx` under `src/quit/` and `app/quit/` and fails on
+  a JSX text node or string literal prop (`aria-label`, `placeholder`, `title`, `alt`) holding two or more
+  letters that is not read from data (allow-list: none; use tooltext for aria labels too).
+- Shared components in `src/quit/components/`: `NumberCard` (big figure, headline, Counted line, one tag
+  "Checked as hooked" / "Not checked for addiction" from `checked` else severity per RULEBOOK rule 2, chips
+  for `projection` "Worked out, not counted", `pooled` "Average across studies", `weak` line; a "Based on"
+  fold with design/who/n/where/when/measured, caveat and `SourceTap`), `SourceTap` (tap → cite, quote, link
+  opening in a new tab; P22), `CountedLine`, `Chips`, `Stepper`, `OneQuestion` (one question per screen,
+  progress from `ToolFrame`), `EvidenceChip` (strong "Strong evidence", moderate "Some evidence", weak "Weak
+  evidence", none "Not tested").
+- Each tool lists the refs it showed in the frame's `#sources` fold. Each tool sends `count(a, tool,
+  "start")` on its first answer and `"done"` on its result screen.
+- State in `useQuitStore()` (`quit-v1`) under the tool id; a reload resumes at the first unanswered screen;
+  a "Clear my answers" button on each result screen (never the word "reset").
+- Back on screen N goes to screen N−1 (in-page), and the browser Back button does the same (push a `?s=N`
+  search param per screen with `router.push`, read it on load; an out-of-range `s` goes to the first
+  unanswered screen).
+
+**`beliefs`** — screens 1–12: the belief's `scene`, 5 buttons (tooltext ratings, values 1–5); 13–15: a fact's
+`statement`, True / False, then its answer, `explain`, Counted line and `SourceTap`, Next. Result screen:
+1. "Already see through" — the `short` of each belief rated 1–2, in data order (left out if none).
+2. Top beliefs — `topBeliefs(ratings)`: ratings ≥ 3, sorted by rating desc then data order, at most 3. Each:
+   `limiting` → `counterpart`, `proof` + CountedLine + SourceTap, "When this thought comes" `whenThought`,
+   "Test it this week" `test`, and a link "What it gives you: <need name>" to `/quit/<a>/gives?need=<id>`.
+3. Band — `held = count(rating ≥ 4)`, `bandFor(held, bands)`; label and text; `link` shown when present.
+4. Share — "Share my result": `navigator.share({title, text: tooltext share line with {n}, url:
+   /quit/<a>/beliefs})`, fallback copies the URL and says "Link copied". "Save the image" links to
+   `/quit/<a>/card?held=N`.
+5. Next: "What it gives you" → `/quit/<a>/gives` (its needs prefilled from the top beliefs).
+`app/quit/[addiction]/card/route.tsx`: `ImageResponse` (read the `image-response.md` doc), 1080×1350, the
+tooltext card line ("I believed {n} of {name}'s 12 lies") and the site name; `held` must be an integer 0–12,
+else 400; unknown or non-previewable addiction 404. Tests: scoring, ties by order, all 1s (no top, band
+free), all 5s, bands at 2/3/6/7/12, share URL, card param validation.
+
+**`gives`** — screen 1: pick 1–3 needs (8 chips, `needs[].name`; preselected from `?need=` or from the
+`beliefs` result's top beliefs' needs, at most 3). Screen per picked need: the `limiting` lines of beliefs
+with that need (quoted), then its 3 swaps in `orderSwaps(swaps, ratings)` order, each with `EvidenceChip`
+and "Try this one this week" (stores `{swapId, triedOn}`). A swap tried before today shows the slider "How
+much of it did that give you?" 0–100 (step 10) with Save. `orderSwaps`: rated ≥ 60 first by pct desc, then
+unrated in data order, then 30–59, then < 30. Tests: preselect from beliefs, `?need=` wins, slider
+reorders, unknown need ids ignored.
+
+**`past`** — screen 1: tries (chips 0, 1, 2–3, 4–9, 10+); longest stretch (number stepper 1–99 + unit chips
+days/weeks/months/years); when the last one ended (chips: this month, this year, longer ago). Tries = 0 →
+straight to the result. Screen 2: what ended it, up to 3 (`endings`). Screen 3: what helped (`helped`,
+multi). Screen 4: after the first slip (tooltext chips: gave up / restarted the same day / "just this once" /
+don't remember). Result: the `how-tries` number from `numbers` as a `NumberCard` (left out if the file has
+none); `dangerWindow(longest)`: days or weeks ≤ 8 weeks → "Your longest try ended around day N" and the
+window days ⌈N/2⌉–N (stored for `curve`); months/years → no window; his top 2 endings as "Risky moments
+for your if-then cards" (stored for `ifthen`); what helped as "Keep these in your plan" (stored); "gave up"
+→ the line from `planSteps[2].text` that starts "If you slip". No forecast anywhere (validator covers data;
+tooltext for this tool gets the same `forecast` regex in a unit test). `toBlackBoxEndings(ids, endings)`
+maps to `ViceEndingId` (test). Black Box history writing is deferred to Phase 8.
+
+**`cost`** — screen 1: what you use (`units[]` chips); screen 2: how many a day (stepper 0–200, default 10
+for cigarettes, 1 for others), days a week (1–7, default 7); screen 3: price per unit in USD (number field
+prefilled with `defaultPriceUsd`, 0–100, 2 decimals) and, when the unit has `defaultMinutesPerUnit`, minutes
+each (prefilled, 0–120). Result: `yearCost = amount × daysPerWeek × 52 × price` (52, not 52.18: simple and
+stated), ten years = ×10 (no inflation, said in a small line), hours a year when minutes exist; formatted
+with `Intl.NumberFormat("en-US", {style: "currency", currency: "USD", maximumFractionDigits: 0})`; one
+`costSwaps` line: the largest swap with `usd ≤ yearCost`, else the smallest with "in N years" (N =
+⌈usd/yearCost⌉, only when ≤ 10). The price and ten-year figure are stored for `coach`. Tests: maths, zero use,
+the 200 × 100 maximum, the swap pick, rounding.
+
+**`how`** — a read page: `hope` first as a big `NumberCard`, then `numbers` grouped by kind prefix in this
+order: `who-`, `how-`/`quit-`, `helps-`, `after-`; group headings from tooltext; anything else last. No
+screening, no death tolls (validator). `footerNote` as one small line at the end when present.
+
+**Acceptance (Haiku + Sonnet phone walk):** unit tests above; `noHardcodedText` green; full suite vs
+baseline; typecheck ratchet; eslint on changed files; Playwright `tests/e2e/quit/wave1-part1.spec.ts` at
+390×844 signed out: a full `beliefs` run to the result (top 3 shown, band shown, card URL answers an image),
+reload on screen 7 resumes at 7, browser Back from screen 5 shows screen 4, `gives` preselected from that
+run, a `past` run with tries 0 and one with all screens, `cost` with defaults shows a dollar figure, `how`
+shows every number card; the same `beliefs` run with `localStorage` throwing (an `addInitScript` that
+replaces it) still reaches the result; no horizontal scroll on any screen. Screenshots of every screen
+type to `~/.cache/daygame-research/quit-tool/shots/phase4/`; a Haiku agent compares each screenshot's text
+with `nicotine.json`/`tooltext.json` and lists any text found in neither.
+
 ### Phase 5: wave 1, part 2 — `curve`, `sos`, `symptoms`, `slip` — brief Opus, build Sonnet
 
 Per Part 2. Signed-in parts use a test account on the test stack, never the owner's. **`curve` waits** for
