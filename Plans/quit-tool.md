@@ -864,7 +864,12 @@ on sos "Yes" files two close calls and Undo removes one; 1 wrong-fact: "Saved" s
 expired; 1 cosmetic). C privacy/security 7 (2 privacy: the top need travels in `?need=`, the share card carries
 the count; 1 wrong-fact on the privacy page; count route accepts cross-site form posts; 3 cosmetic). No XSS, no
 answers in logs, count and card routes held. Findings and specs: `~/.cache/daygame-research/quit-tool/audit/`;
-planner decisions: `audit/fix-brief.md`. Fix build running.
+planner decisions: `audit/fix-brief.md`. All 25 fixed except two accepted (blocked storage does not prefill the
+next tool; the app-wide signed-out ClockSync call). Opus code + security review of the fixes: no exploitable
+hole; two sos edge bugs (a pending close call filed after "No" or Clear; a stale report id), a fragile bridge
+mount, cost typos with no message: fix round 2. Sign-up ignores `?next=` (it hard-codes `/redirect`), so the
+"mostly free" band links to `/plan` and the login guard carries `next`; making sign-up honour `next` needs the
+live Supabase redirect allow-list checked first (later, not this plan).
 
 ### Phase 8: wave 3, the account program — brief Opus, build Sonnet (after the owner's yes to tables)
 
