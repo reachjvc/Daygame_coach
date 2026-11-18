@@ -13,6 +13,7 @@ export type StepId =
   | "consider"
   | "open"
   | "acct"
+  | "reflect"
   | "group"
   | "time"
   | "zoom"
@@ -52,6 +53,7 @@ export function sequence(a: Answers): StepId[] {
     follow,
     "open",
     "acct",
+    "reflect",
     "group",
     "time",
     "zoom",

@@ -5,6 +5,7 @@ import { EMPTY_ANSWERS, barPercent, canContinue, sequence, validCount } from "@/
 import {
   EXAMPLE_CURRENT_MS,
   averageMs,
+  avgShare,
   barShares,
   durationText,
   exampleData,
@@ -84,6 +85,15 @@ describe("copy B stretches", () => {
   it("formats length as days, hours, minutes", () => {
     expect(durationText(EXAMPLE_CURRENT_MS)).toBe("19 days, 18 hr, 23 min")
     expect(durationText(0)).toBe("0 days, 0 hr, 0 min")
+  })
+  it("the average line sits inside the chart and matches the bars", () => {
+    expect(avgShare([])).toBeNull()
+    const two = stretches(NOW - 20 * DAY, [rel(NOW - 1000)], NOW)
+    expect(avgShare(two)).toBe(1)
+    const list = stretches(NOW - 20 * DAY, [rel(NOW - 12 * DAY), rel(NOW - 5 * DAY)], NOW)
+    expect(avgShare(list)).toBeCloseTo(7.5 / 8, 5)
+    const bars = barShares(list)
+    expect(avgShare(list)).toBeLessThanOrEqual(Math.max(...bars))
   })
   it("bar shares top out at 1", () => {
     const s = barShares(stretches(NOW - 20 * DAY, [rel(NOW - 12 * DAY)], NOW))

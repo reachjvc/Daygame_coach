@@ -154,3 +154,10 @@ export function clockText(ms: number): string {
   const p = (n: number) => String(n).padStart(2, "0")
   return `${d} d ${p(Math.floor((s % 86400) / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}`
 }
+
+/** Where the average line sits on the chart, 0 to 1 of the tallest bar; null when there is no average. */
+export function avgShare(list: readonly Stretch[]): number | null {
+  if (list.length === 0) return null
+  const max = Math.max(1, ...list.map((s) => s.ms))
+  return Math.min(1, averageMs(list) / max)
+}

@@ -70,8 +70,11 @@ export function PastA() {
                     aria-checked={on}
                     data-testid={`a-opt-${i}`}
                     onClick={() => pick(i)}
-                    className={`min-h-14 w-full rounded-xl border px-4 py-3 text-left text-sm ${on ? "border-primary bg-primary/15" : "border-border bg-card"}`}
+                    className={`flex min-h-14 w-full items-center rounded-xl border px-4 py-3 text-left text-sm ${on ? "border-primary bg-primary/15" : "border-border bg-card"}`}
                   >
+                    {id === "who" && (
+                      <span aria-hidden="true" className={`mr-3 inline-block size-5 shrink-0 rounded-full border align-middle ${on ? "border-primary bg-primary" : "border-border"}`} />
+                    )}
                     {o}
                   </button>
                 )
@@ -148,12 +151,12 @@ export function PastA() {
         {id === "pain" && (
           <section data-testid="a-pain" className="flex flex-col gap-3">
             <h2 className="text-2xl font-bold">{paText.painTitle}</h2>
+            <p className="text-sm text-muted-foreground">{paText.painSub}</p>
             <div className="flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-xl bg-black text-sm text-white" data-testid="a-video">
               <span aria-hidden="true" className="size-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
               {paText.videoLoading}
             </div>
             <p className="text-base font-semibold">{paText.painLine}</p>
-            <p className="text-sm text-muted-foreground">{paText.painLine2}</p>
             <svg viewBox="0 0 200 110" role="img" aria-label={paText.iceLabel} className="h-28 w-full" data-testid="a-iceberg">
               <line x1="0" y1="40" x2="200" y2="40" className="stroke-border" strokeWidth="1" strokeDasharray="4 3" />
               <path d="M85 40 L100 12 L115 40 Z" className="fill-muted stroke-border" strokeWidth="1" />
@@ -172,6 +175,17 @@ export function PastA() {
           <section data-testid="a-consider" className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <h2 className="flex-1 text-lg font-semibold">{paText.considerTitle}</h2>
+              <InferredTag />
+            </div>
+            <Placeholder />
+            <Placeholder />
+          </section>
+        )}
+
+        {id === "reflect" && (
+          <section data-testid="a-reflect" className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <h2 className="flex-1 text-lg font-semibold">{paText.reflectTitle}</h2>
               <InferredTag />
             </div>
             <Placeholder />
