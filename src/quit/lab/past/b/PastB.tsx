@@ -93,7 +93,7 @@ function Inner({ data, setData, phase, setPhase }: { data: Data; setData: (d: Da
     <div data-testid="past-b" data-screen={["progress", "periods", "savings", "reasons"][tab]} className="flex flex-col gap-3">
       {data.ex && <ExampleBar onClear={clearExample} />}
       <div className="flex items-start gap-2" data-testid="b-nav-box">
-        <div role="tablist" className="grid min-w-0 flex-1 grid-cols-2 gap-1.5">
+        <div role="tablist" className="grid min-w-0 flex-1 grid-cols-4 gap-1">
           {pbText.tabs.map((label, i) => (
             <button
               key={label}
@@ -102,7 +102,7 @@ function Inner({ data, setData, phase, setPhase }: { data: Data; setData: (d: Da
               aria-selected={i === tab}
               data-testid={`b-tab-${i}`}
               onClick={() => setTab(i)}
-              className={`inline-flex min-h-11 items-center justify-center rounded-full border px-3 text-sm ${i === tab ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}
+              className={`inline-flex min-h-11 min-w-0 items-center justify-center rounded-full border px-1 text-xs ${i === tab ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}
             >
               {label}
             </button>

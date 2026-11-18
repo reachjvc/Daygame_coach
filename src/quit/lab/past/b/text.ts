@@ -10,7 +10,7 @@ export const pbText = {
   habit: "Alcohol",
   share: "Share",
   more: "More",
-  tabs: ["Progress", "Abstinence periods", "Savings", "Reasons to quit"],
+  tabs: ["Progress", "Periods", "Savings", "Reasons"],
   newEntry: "New entry",
   addEntry: "New entry",
   whenTitle: "When did it happen?",
