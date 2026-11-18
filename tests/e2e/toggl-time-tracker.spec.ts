@@ -717,12 +717,14 @@ const dayHeader = (page: Page) => page.locator('[data-day-header]').first().loca
  * nothing changed, the block is taken away again (audit b06, b61a4736); Done
  * keeps it as it was made.
  */
-async function closeNewBlockSheet(page: Page) {
+async function closeNewBlockSheet(page: Page, scrollBackTo: number) {
   const sheet = page.getByRole('dialog', { name: 'Time entry', exact: true })
   await expect(sheet, 'a block made by holding did not open its sheet').toBeVisible()
   await expect(sheet.getByPlaceholder(/worked on|working on/)).toBeFocused()
   await sheet.getByRole('button', { name: 'Done', exact: true }).click()
   await expect(sheet).toBeHidden()
+  // the grid comes back drawn from the top of the day; put it where the finger was working
+  await scrollCalendarTo(page, scrollBackTo)
 }
 
 /**
@@ -790,7 +792,7 @@ test.describe('the calendar by touch, on an Android phone @phone', () => {
     await expect(preview).toHaveText('10:00–11:30 · 1h 30m')
     await expect(preview, 'a planned block lost its stripes while drawn').toHaveAttribute('data-planned', 'true')
     await finger.up()
-    await closeNewBlockSheet(page)
+    await closeNewBlockSheet(page, 9 * 60 + 15)
 
     const block = page.locator('[data-entry-block]')
     await expect(block).toHaveAccessibleName('(no description), 10:00 to 11:30, planned')
@@ -830,7 +832,7 @@ test.describe('the calendar by touch, on an Android phone @phone', () => {
       await expect(page.locator('[data-preview]')).toBeVisible()
       await finger.slide({ x: column.x, y: column.yAt(from) }, { x: column.x, y: column.yAt(to) }, (to - from) / 5)
       await finger.up()
-      await closeNewBlockSheet(page)
+      await closeNewBlockSheet(page, 9 * 60)
     }
     // two blocks that touch: 10:00–11:00, then 11:00–11:30
     await make(10 * 60, 11 * 60)
