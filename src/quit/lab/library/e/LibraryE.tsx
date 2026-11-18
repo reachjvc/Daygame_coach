@@ -126,14 +126,14 @@ function AppE() {
   return (
     <div data-testid="e-app">
       {body}
-      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background pb-[env(safe-area-inset-bottom)]">
+      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] pt-8">
         <div className="mx-auto grid max-w-[640px] grid-cols-5 items-end">
           {leText.appTabs.map((label, i) => (
-            <button key={label} type="button" data-testid={`e-tab-${i}`} aria-current={i === tab} onClick={() => setTab(i)} className={i === 2 ? "relative -mt-5 flex min-h-16 flex-col items-center justify-end pb-1 text-[11px] leading-tight" : `min-h-14 px-0.5 text-[11px] leading-tight ${i === tab ? "font-semibold text-primary" : "text-muted-foreground"}`}>
+            <button key={label} type="button" data-testid={`e-tab-${i}`} aria-current={i === tab} onClick={() => setTab(i)} className={i === 2 ? "relative flex min-h-14 flex-col items-center justify-end pb-1 text-[11px] leading-tight" : `min-h-14 px-0.5 text-[11px] leading-tight ${i === tab ? "font-semibold text-primary" : "text-muted-foreground"}`}>
               {i === 2 ? (
                 <>
-                  <span data-testid="e-home-raised" className={`absolute -top-1 flex size-14 items-center justify-center rounded-full border-4 border-background text-xl text-white ${tab === 2 ? "bg-orange-500" : "bg-sky-700"}`}>{"⌂"}</span>
-                  <span className={`mt-12 ${tab === 2 ? "font-semibold text-primary" : "text-muted-foreground"}`}>{label}</span>
+                  <span data-testid="e-home-raised" className={`absolute -top-8 flex size-14 items-center justify-center rounded-full border-4 border-background text-xl text-white ${tab === 2 ? "bg-orange-500" : "bg-sky-700"}`}>{"⌂"}</span>
+                  <span className={`mt-6 ${tab === 2 ? "font-semibold text-primary" : "text-muted-foreground"}`}>{label}</span>
                 </>
               ) : (
                 label
@@ -143,6 +143,7 @@ function AppE() {
         </div>
       </nav>
       <NavSpace />
+      <div aria-hidden="true" className="h-4" />
     </div>
   )
 }
