@@ -31,6 +31,14 @@ now (rule in `CLAUDE.md`).
   choices, and each choice was not specific enough. Judging is still hard.
   What does work: the rounds produce good ideas that may be usable in
   general, beyond this video.
+- He likes the idea bank: every visual world we build becomes a reusable
+  piece. He likes testing out different processes.
+
+## Idea bank
+
+Private folder `~/.cache/daygame-research/content/bank/`: one reusable
+animation per visual world (calendar, quest log, blocks, moving words, …),
+each with a second-by-second description. Later videos pick from it.
 
 ## What others do (researched 2026-11-18)
 

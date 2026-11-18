@@ -5,6 +5,12 @@ Read this file first whenever the conversation is about content creation
 content (the workflow, still being worked out) is in
 `docs/product/content_creation_process.md`; read that next.
 
+First step of any content work, without being asked (owner, 2026-11-18):
+read the notes and likes on every page listed in
+`~/.cache/daygame-research/content/video-01/notes-seen.md` (add new pages
+there), act on the new ones, and record them as read. He should never have to
+say "I left notes".
+
 ## Going on now (keep this list current)
 
 - **Video 01, "The one thing"**: an Instagram Reel of about 2 minutes, with a
