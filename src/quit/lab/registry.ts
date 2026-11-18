@@ -17,6 +17,11 @@ import { ProgressB } from "./progress/b/ProgressB"
 import { ProgressC } from "./progress/c/ProgressC"
 import { ProgressD } from "./progress/d/ProgressD"
 import { ProgressE } from "./progress/e/ProgressE"
+import { TimelineA } from "./timeline/a/TimelineA"
+import { TimelineB } from "./timeline/b/TimelineB"
+import { TimelineC } from "./timeline/c/TimelineC"
+import { TimelineD } from "./timeline/d/TimelineD"
+import { TimelineE } from "./timeline/e/TimelineE"
 
 export const LAB_TOOL_IDS = [
   "sos",
@@ -77,7 +82,17 @@ export const LAB: Record<LabToolId, { name: string; variants: Record<string, Lab
       e: { Component: ProgressE, addiction: "alcohol", label: "Copy E", kind: "copy" },
     },
   },
-  timeline: { name: "Health timeline", variants: { current: current(SymptomsTool) } },
+  timeline: {
+    name: "Health timeline",
+    variants: {
+      current: current(SymptomsTool),
+      a: { Component: TimelineA, addiction: "nicotine", label: "Copy A", kind: "copy" },
+      b: { Component: TimelineB, addiction: "nicotine", label: "Copy B", kind: "copy" },
+      c: { Component: TimelineC, addiction: "nicotine", label: "Copy C", kind: "copy" },
+      d: { Component: TimelineD, addiction: "nicotine", label: "Copy D", kind: "copy" },
+      e: { Component: TimelineE, addiction: "weed", label: "Copy E", kind: "copy" },
+    },
+  },
   quitdate: { name: "Quit date and plan", variants: {} },
   beliefs: { name: "Belief test", variants: { current: current(BeliefsTool) } },
   checkin: { name: "Daily check-in", variants: {} },

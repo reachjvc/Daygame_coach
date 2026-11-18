@@ -1,0 +1,32 @@
+export const aText = {
+  dashTitle: "Health improvements",
+  explore: "Explore",
+  healthTitle: "Health",
+  intro: "Watch your body get closer to normal.",
+  share: "Share",
+  back: "Back",
+  shareMsg: "My body is recovering.",
+  names: {
+    pulse: "Pulse rate",
+    oxygen: "Oxygen levels",
+    co: "Carbon monoxide level",
+    lung: "Lung cancer risk",
+    attack: "Heart attack risk",
+    disease: "Heart disease risk",
+  },
+  tileLabels: {
+    lung: "Lower risk of lung cancer",
+    attack: "Lower risk of a heart attack",
+    disease: "Lower risk of heart disease",
+  },
+  sentences: {
+    pulse: "Your pulse rate should be back to normal.",
+    oxygen: "Your oxygen levels should be back to normal.",
+    co: "The carbon monoxide in your body should be back to normal.",
+    lung: "Your risk of lung cancer should be falling.",
+    attack: "Your risk of a heart attack should be falling.",
+    disease: "Your risk of heart disease should be falling.",
+  },
+  detailSuffix: "detail",
+  timePoint: "Time point",
+} as const

@@ -1,0 +1,17 @@
+export const eText = {
+  title: "Withdrawal",
+  menu: "Menu",
+  settings: "Settings",
+  info: "About this list",
+  share: "Share",
+  shareMsg: "My withdrawal is fading.",
+  names: { dreams: "Vivid dreams", chills: "Chills" },
+  glyphs: { dreams: "☾", chills: "❄" },
+  usual: "Usual length",
+  yours: "Your length",
+  menuTitle: "Menu",
+  settingsTitle: "Your use level",
+  infoTitle: "About this list",
+  tips: "Tips",
+  done: "Done",
+} as const
