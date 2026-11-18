@@ -174,3 +174,16 @@ Nothing is decided. What the owner said:
   the sentence he wants to be able to say, and bring it back to him after 1, 5
   and 10 years. The audience already does this by hand ("I'll be back in a year
   to see what's changed", 4,200 likes).
+- **10K riffs, checked 2026-11-18** (he asked for forms of 10K Reps that do not
+  read as fitness and cover dating, quitting and life). 10kreps.com is still
+  registered to the other app (renews 2026-12-29, site live). In the App Store,
+  "REPS Club", "The Rep Club" and "Rep Club" are all Health & Fitness apps, so
+  any "reps" name reads as gym. "10K" alone also means a 10 km run (Couch to
+  10K, 10K Runner). Taken as .com: 10khours (plus three "10K Hours" App Store
+  apps), 10kdays, 10kchoices, 10kmoments, 10ksteps, 10klife, 10000days,
+  1000days, 4000weeks. Free on .com, .app and the YouTube handle, with no App
+  Store app of that name: 10K Days Club, 10K Hours Club, 10K Comebacks, 10K
+  Promises, 10K Firsts, 10K Tries, 10K Decisions, 10K Better Days. 10kmornings
+  .com and .app were free but @10kmornings on YouTube was taken. Claude's pick:
+  10K Days Club, because day counts are how quitting is measured, a life is
+  about 27 years of 10,000 days, and "day" echoes daygame.
