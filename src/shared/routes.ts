@@ -61,6 +61,12 @@ export const ROUTES = {
    */
   planSandbox: "/plan/sandbox",
   /**
+   * The new version of the plan (Plans/plan-in-steps.md, Phase 6): the plan home and the
+   * core modules, run on the copy space and never on the signed-in account's own plan.
+   * Same gate as the copy space: only an account with a `plan_sandboxes` row; anyone else gets a 404.
+   */
+  planNew: "/plan/new",
+  /**
    * The quit-a-vice module's front door: **the Black Box** since 2026-09-20.
    *
    * On 2026-09-20 this address stopped being the old hub and became a

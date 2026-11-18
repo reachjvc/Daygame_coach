@@ -4,6 +4,7 @@ import { useState } from "react"
 import { LIFE_PLAN_IMPORTED_KEY } from "@/src/goals/lifePlanSync"
 import { ROUTES } from "@/src/shared/routes"
 import { planCacheKey } from "@/src/goals/data/northStar"
+import { copySpaceCopy } from "@/src/goals/planSteps/copy/copySpace"
 
 type Action = "copy" | "reset"
 
@@ -33,7 +34,17 @@ const ASK: Record<Action, { button: string; sure: string; yes: string; route: st
  * dropped, so the page opens again from what the database now holds and not from a
  * leftover (a leftover would be imported straight back into an emptied space).
  */
-export function PlanSandboxBanner({ sandboxId }: { sandboxId: string }) {
+export function PlanSandboxBanner({ sandboxId, basePath = ROUTES.planSandbox, wording = "sandbox" }: { sandboxId: string; basePath?: string; wording?: "sandbox" | "new" }) {
+  const fresh = wording === "new"
+  const words = {
+    line: fresh ? copySpaceCopy.line : "Copy space — your real plan is not touched",
+    copy: fresh ? copySpaceCopy.recopy_button : ASK.copy.button,
+    reset: fresh ? copySpaceCopy.fresh_button : ASK.reset.button,
+    sure: (a: Action) => (fresh ? (a === "copy" ? `${copySpaceCopy.recopy_confirm_title} ${copySpaceCopy.recopy_confirm_body}` : `${copySpaceCopy.fresh_confirm_title} ${copySpaceCopy.fresh_confirm_body}`) : ASK[a].sure),
+    yes: (a: Action) => (fresh ? (a === "copy" ? copySpaceCopy.recopy_confirm_yes : copySpaceCopy.fresh_confirm_yes) : ASK[a].yes),
+    working: (a: Action) => (fresh ? (a === "copy" ? copySpaceCopy.recopy_working : copySpaceCopy.fresh_working) : "Working…"),
+    cancel: fresh ? copySpaceCopy.cancel : "Cancel",
+  }
   const [asking, setAsking] = useState<Action | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
@@ -56,7 +67,7 @@ export function PlanSandboxBanner({ sandboxId }: { sandboxId: string }) {
       }
       // Always the copy space's own address, whatever the bar says now (never a reload of whatever is there).
       const step = new URLSearchParams(window.location.search).get("step")
-      window.location.assign(step ? `${ROUTES.planSandbox}?step=${encodeURIComponent(step)}` : ROUTES.planSandbox)
+      window.location.assign(step && basePath === ROUTES.planSandbox ? `${basePath}?step=${encodeURIComponent(step)}` : basePath)
     } catch (e) {
       setError(e instanceof Error && e.message.length > 3 ? e.message : "That did not work. Nothing was changed in your real plan. Try again.")
       setBusy(false)
@@ -66,10 +77,10 @@ export function PlanSandboxBanner({ sandboxId }: { sandboxId: string }) {
 
   return (
     <div className="mb-6 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-amber-50" data-testid="plan-sandbox-banner" role="region" aria-label="Copy space">
-      <p className="text-sm font-semibold">Copy space — your real plan is not touched</p>
+      <p className="text-sm font-semibold">{words.line}</p>
       {asking ? (
         <div className="mt-3 space-y-3">
-          <p className="text-sm text-amber-100/90" data-testid="plan-sandbox-sure">{ASK[asking].sure}</p>
+          <p className="text-sm text-amber-100/90" data-testid="plan-sandbox-sure">{words.sure(asking)}</p>
           <div className="flex flex-col gap-2 sm:flex-row">
             <button
               type="button"
@@ -78,7 +89,7 @@ export function PlanSandboxBanner({ sandboxId }: { sandboxId: string }) {
               className="min-h-11 rounded-lg bg-amber-400 px-4 text-sm font-semibold text-zinc-950 disabled:opacity-60"
               data-testid="plan-sandbox-confirm"
             >
-              {busy ? "Working…" : ASK[asking].yes}
+              {busy ? words.working(asking) : words.yes(asking)}
             </button>
             <button
               type="button"
@@ -87,7 +98,7 @@ export function PlanSandboxBanner({ sandboxId }: { sandboxId: string }) {
               className="min-h-11 rounded-lg border border-amber-400/40 px-4 text-sm text-amber-100 disabled:opacity-60"
               data-testid="plan-sandbox-cancel"
             >
-              Cancel
+              {words.cancel}
             </button>
           </div>
         </div>
@@ -99,7 +110,7 @@ export function PlanSandboxBanner({ sandboxId }: { sandboxId: string }) {
             className="min-h-11 rounded-lg border border-amber-400/50 px-4 text-sm font-medium text-amber-50 hover:bg-amber-400/10"
             data-testid="plan-sandbox-copy"
           >
-            {ASK.copy.button}
+            {words.copy}
           </button>
           <button
             type="button"
@@ -107,7 +118,7 @@ export function PlanSandboxBanner({ sandboxId }: { sandboxId: string }) {
             className="min-h-11 rounded-lg border border-amber-400/50 px-4 text-sm font-medium text-amber-50 hover:bg-amber-400/10"
             data-testid="plan-sandbox-new"
           >
-            {ASK.reset.button}
+            {words.reset}
           </button>
         </div>
       )}
