@@ -3,6 +3,7 @@
 Written 2026-11-18 from a strategy session with the owner (private notes:
 `~/.cache/daygame-research/hormozi-persona/session-log.md`). Status: **A1–A6 approved 2026-11-18; Phase 0 running.** Phase 0 kit (messages, log, terms line, Instagram checklist): `~/.cache/daygame-research/first-1000/phase0-kit.md`.
 Deadline: **$1,000 collected by Monday 1 February 2027.**
+Day-by-day checklist (owner ticks tasks; db `checks/<date>` + `notes`): https://claude.ai/artifact/FJPtUMkjkJnEtwvn5J6M1t
 
 ## What was decided in the session
 
@@ -56,7 +57,7 @@ Deadline: **$1,000 collected by Monday 1 February 2027.**
 
 ## PHASES
 
-### Phase 0: setup (Wed 19 – Fri 21 Nov, about 10 hours)
+### Phase 0: setup (Wed 18 – Sat 21 Nov, about 4 hours a day)
 
 He does:
 1. Answer A1–A6 in one message.
@@ -81,11 +82,11 @@ Claude does, in parallel:
 Done when: the account exists, the first 3 scripts are rewritten, the editor is installed, and the owner
 decisions are answered.
 
-### Phase 1: first posts (Sat 22 – Sun 30 Nov)
+### Phase 1: first posts (Sun 22 – Mon 30 Nov)
 
 - **Post 1 takes 4–6 hours:** script, ten takes, editing, captions. That's normal and it's budgeted. Posts 2–3
   take about 3 hours each, and by post 5 aim for about 90 minutes.
-- Pace: posts 1–3 one every other day. From Thursday 27 Nov, one a day.
+- Pace: posts 1–3 one every other day. Post 01 on Sun 22 Nov, 02 on Tue 24, 03 on Thu 26; from Friday 27 Nov, one a day (post 50 lands Tue 12 Jan).
 - Batch filming: Sunday films 3–4 posts, weekdays edit and post.
 - Every post ends: "Comment QUIT and I'll send you my plan." He answers every comment and DMs everyone who
   comments, up to the cap.
