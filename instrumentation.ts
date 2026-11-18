@@ -33,7 +33,9 @@ async function record(error: Error, route: string, where: string, userAgent: str
         fingerprint: print,
         message,
         stack,
-        componentStack: scrubText(where, 2000),
+        // A missing module's name is code, not anything a person typed; the
+        // quote scrubber would hide it, so it is kept here without quotes.
+        componentStack: scrubText(`${where}${missingModule(error)}`, 2000),
         route: `server:${scrubRoute(route)}`,
         userAgent: userAgent.slice(0, 300),
         release: process.env.NEXT_PUBLIC_BUILD_ID ?? "unknown",
@@ -47,6 +49,11 @@ async function record(error: Error, route: string, where: string, userAgent: str
 }
 
 const lastRecorded = new Map<string, number>()
+
+function missingModule(error: Error): string {
+  const name = /Cannot find module '([^']+)'/.exec(error.message)?.[1]
+  return name ? ` missing module: ${name}` : ""
+}
 
 export function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return
