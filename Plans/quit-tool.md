@@ -1,9 +1,9 @@
 # Quit tool: a free menu of quit tools, then a 90-day program
 
 Written 2026-11-18, rewritten the same day after three research rounds and the owner's menu idea. Status:
-**Phases 0, 1, 3, 6 live 2026-11-18 (data + validator; menu, frame, count route; privacy + coaching pages;
-nothing shows until `live.json` lists nicotine). Phase 2 in its last writer round; Phase 4 building; `curve`
-waits for the owner's reaction to the rebuilt mock.** Replaces the "one page per addiction" frame of the addiction one-pagers
+**Phases 0, 1, 2, 3, 6 live 2026-11-18 (data + validator; checked nicotine content; menu, frame, count route;
+privacy + coaching pages; nothing shows until `live.json` lists nicotine). Phase 4 in fix round 1; Phase 5
+next; `curve` waits for the owner's reaction to mock v2; Phase 7 needs his privacy contact email.** Replaces the "one page per addiction" frame of the addiction one-pagers
 (docs/research/addiction-one-pagers/); their research, rules and checked numbers are reused, the page form is not.
 
 **Scheduled by `Plans/first-1000.md` (2026-11-18):** the free nicotine tools ship by **20 Dec 2026** so New Year
