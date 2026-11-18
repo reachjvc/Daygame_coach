@@ -11,6 +11,7 @@ export const bText = {
   emptyHint: "Fill in the settings tab to start counting.",
   formulaTitle: "Working",
   formula: (cigs: number, price: string, pack: number, total: string) => `${cigs} cigarettes x ${price} / ${pack} per pack = ${total}`,
+  roundNote: "Whole cigarettes and percents are rounded down.",
   goalsTitle: "Savings goals",
   goalsLine: "Enter up to three things you are saving for. The money you keep fills the first goal, then the next, so you can watch each one come closer.",
   goalPlaceholder: "Enter savings goal ...",

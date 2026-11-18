@@ -28,6 +28,15 @@ function Dots({ at }: { at: number }) {
   )
 }
 
+const PAD = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "⌫"]
+
+/** Digits and at most one dot. */
+function cleanDecimal(text: string): string {
+  const t = text.replace(/[^\d.]/g, "")
+  const i = t.indexOf(".")
+  return i === -1 ? t : t.slice(0, i + 1) + t.slice(i + 1).replace(/\./g, "")
+}
+
 function fmtDateTime(ms: number): string {
   return new Date(ms).toLocaleString("en-US", { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })
 }
@@ -51,6 +60,7 @@ export function CostC() {
   const [ph, setPh] = useState<{ title: string; back: Screen }>({ title: "", back: "habit" })
   const [pdate, setPdate] = useState("")
   const [newReward, setNewReward] = useState<{ name: string; price: number | null }>({ name: "", price: null })
+  const [entryTime, setEntryTime] = useState(false)
   const [entry, setEntry] = useState<{ when: string; note: string; relapse: boolean; spend: number | null }>({ when: "", note: "", relapse: false, spend: null })
   useEffect(() => setMounted(true), [])
   const now = useNow(1000)
@@ -196,20 +206,16 @@ export function CostC() {
           {cText.next}
         </PrimaryButton>
         {dialog !== null && (
-          <div data-testid="c-dialog" className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 pt-24">
-            <div className="flex w-full max-w-sm flex-col gap-3 rounded-xl border border-border bg-background p-4">
+          <div data-testid="c-dialog" className="fixed inset-0 z-50 flex flex-col items-center justify-between bg-black/60 pt-16">
+            <div className="flex w-[calc(100%-2rem)] max-w-sm flex-col gap-3 rounded-xl border border-border bg-background p-4">
               <p className="text-center font-semibold">{cText.dialogTitle}</p>
               <input
                 data-testid="c-dialog-input"
                 aria-label={cText.spendInput}
-                inputMode="decimal"
+                inputMode="none"
                 autoFocus
                 value={dialog}
-                onChange={(e) => {
-                  const t = e.target.value.replace(/[^\d.]/g, "")
-                  const i = t.indexOf(".")
-                  setDialog(i === -1 ? t : t.slice(0, i + 1) + t.slice(i + 1).replace(/\./g, ""))
-                }}
+                onChange={(e) => setDialog(cleanDecimal(e.target.value))}
                 className="min-h-11 w-full rounded-md border border-border bg-card px-2"
               />
               <div className="flex gap-2">
@@ -229,6 +235,20 @@ export function CostC() {
                   {cText.save}
                 </button>
               </div>
+            </div>
+            <div data-testid="c-pad" className="grid w-full grid-cols-3 gap-px border-t border-border bg-border">
+              {PAD.map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  data-testid={`c-pad-${k === "." ? "dot" : k === "⌫" ? "back" : k}`}
+                  aria-label={k === "." ? cText.padDot : k === "⌫" ? cText.padBack : undefined}
+                  onClick={() => setDialog(k === "⌫" ? dialog.slice(0, -1) : cleanDecimal(dialog + k))}
+                  className="min-h-14 bg-background text-xl font-semibold"
+                >
+                  {k}
+                </button>
+              ))}
             </div>
           </div>
         )}
@@ -253,7 +273,6 @@ export function CostC() {
         <p className="text-center text-lg font-medium">{cText.lastQuestion}</p>
         <div className="flex items-center justify-center gap-2">
           <input type="datetime-local" data-testid="c-last-input" aria-label={cText.lastField} value={lastInput} max={toLocalInput(now)} onChange={(e) => setLastInput(e.target.value)} className="min-h-12 rounded-lg border border-border bg-card px-3 text-primary" />
-          <InferredTag />
         </div>
         {Number.isFinite(fromLocalInput(lastInput)) && (
           <p data-testid="c-last-text" className="text-center text-sm text-muted-foreground">
@@ -378,6 +397,17 @@ export function CostC() {
             <div className="mt-3 flex flex-col gap-2" data-testid="c-entry-spend-block">
               <p className="text-sm font-medium">{cText.howMuch}</p>
               <p className="text-xs text-muted-foreground">{cText.deductLine}</p>
+              <div role="tablist" className="flex gap-1.5">
+                {[cText.money, cText.time].map((l, i) => (
+                  <button key={l} type="button" role="tab" aria-selected={entryTime === (i === 1)} data-testid={`c-entry-mode-${i}`} onClick={() => setEntryTime(i === 1)} className={`min-h-11 flex-1 rounded-full border text-sm ${entryTime === (i === 1) ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background"}`}>
+                    {l}
+                  </button>
+                ))}
+              </div>
+              {entryTime ? (
+                <Placeholder />
+              ) : (
+                <>
               <div className="flex gap-2">
                 {cText.chips.map((c) => (
                   <button key={c} type="button" data-testid={`c-chip-${c}`} onClick={() => setEntry({ ...entry, spend: c })} className="min-h-11 flex-1 rounded-full border border-border bg-background text-sm">
@@ -386,10 +416,12 @@ export function CostC() {
                   </button>
                 ))}
               </div>
-              <div className="flex items-center justify-center gap-1 text-2xl font-semibold text-primary">
+              <div className="flex items-center justify-center gap-1 rounded-xl border border-border bg-background py-4 text-5xl font-bold text-primary">
                 <span>{"$"}</span>
-                <NumInput value={entry.spend} onChange={(n) => setEntry({ ...entry, spend: n })} testId="c-entry-spend" label={cText.entryAmount} placeholder="0" className="w-32 text-2xl" />
+                <NumInput value={entry.spend} onChange={(n) => setEntry({ ...entry, spend: n })} testId="c-entry-spend" label={cText.entryAmount} placeholder="0" className="!min-h-16 w-44 !border-0 !bg-transparent text-5xl" />
               </div>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -455,6 +487,7 @@ export function CostC() {
             </button>
             {formula && (
               <div data-testid="c-formula" className="flex flex-col gap-1 rounded-md border border-border bg-card p-2 text-xs">
+                <p>{cText.roundNote}</p>
                 <p>{cText.balanceFormula(fmtMoney2(total), fmtMoney2(purchasedTotal(rewards)), fmtMoney2(relapseSpend(entries)), fmtMoney2(balance))}</p>
                 <p>{cText.sinceFormula(fmtMoney2(habit.spend), ((now - lastRestart(habit, entries, now)) / DAY).toFixed(2), fmtMoney2(since))}</p>
                 {rewards.map((r) => (
@@ -489,6 +522,7 @@ export function CostC() {
                 <div className="h-2 overflow-hidden rounded-full bg-border">
                   <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
                 </div>
+                {(r.bought || pct === 100) && (
                 <div className="flex min-h-11 items-center justify-between gap-2">
                   <span className="text-sm text-muted-foreground">{pct === 100 && !r.bought ? cText.available : ""}</span>
                   {r.bought ? (
@@ -499,18 +533,24 @@ export function CostC() {
                     </button>
                   ) : null}
                 </div>
+                )}
               </div>
             )
           })}
           <div className="flex gap-2">
             <button type="button" data-testid="c-to-entry" onClick={() => {
               setEntry({ when: toLocalInput(Date.now()), note: "", relapse: false, spend: null })
+              setEntryTime(false)
               go("entry")
             }} className="min-h-11 flex-1 rounded-md border border-border bg-card text-sm">
               {cText.toEntry}
             </button>
+            <InferredTag />
           </div>
-          <StartOver onClick={startOver} />
+          <div className="flex items-center gap-2">
+            <StartOver onClick={startOver} />
+            <InferredTag />
+          </div>
         </div>
       )}
 

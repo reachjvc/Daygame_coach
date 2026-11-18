@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { PrimaryButton } from "../../../components/kit"
-import { BottomNav, ExampleBar, InferredTag } from "../../progress/shared/Bits"
+import { BottomNav, ExampleBar, InferredTag, Placeholder } from "../../progress/shared/Bits"
 import { DAY } from "../../progress/shared/calc"
 import { useNow } from "../../progress/shared/clock"
 import { useLabState } from "../../store"
@@ -95,7 +95,7 @@ export function CostB() {
               </button>
               {showFormula && (
                 <p data-testid="b-formula" className="rounded-md border border-border bg-card p-2 text-sm">
-                  {bText.formula(cigs, fmtMoney2(perPack), packSize, fmtMoney2(money))}
+                  {bText.formula(cigs, fmtMoney2(perPack), packSize, fmtMoney2(money))} {bText.roundNote}
                 </p>
               )}
             </div>
@@ -151,6 +151,12 @@ export function CostB() {
                       {shares[i].pct === null ? "" : `${shares[i].pct}%`}
                     </span>
                   </div>
+                  {shares[i].pct === 100 && (
+                    <div data-testid={`b-reached-${i}`} className="flex items-center gap-2">
+                      <InferredTag />
+                      <Placeholder className="flex-1" />
+                    </div>
+                  )}
                   <div className="flex gap-2">
                     <input
                       data-testid={`b-name-${i}`}
@@ -177,7 +183,8 @@ export function CostB() {
                       {bText.cascadeFormula(
                         fmtMoney2(money),
                         goals.flatMap((g, i) => (shares[i].pct === null ? [] : [bText.cascadePart(i + 1, fmtMoney2(shares[i].funded), fmtMoney2(g.price ?? 0), shares[i].pct ?? 0)])),
-                      )}
+                      )}{" "}
+                      {bText.roundNote}
                     </p>
                   )}
                 </div>
@@ -219,9 +226,14 @@ export function CostB() {
             <span>{bText.fPrice}</span>
             <NumInput value={setup.packPrice} onChange={(n) => setSetup({ ...setup, packPrice: n, ex: 0 })} testId="b-set-price" step={0.5} label={bText.fPrice} className="w-28" />
           </label>
-          <PrimaryButton testId="b-seed" onClick={seed}>
-            {costText.useExample}
-          </PrimaryButton>
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <PrimaryButton testId="b-seed" onClick={seed}>
+                {costText.useExample}
+              </PrimaryButton>
+            </div>
+            <InferredTag />
+          </div>
         </section>
       )}
 

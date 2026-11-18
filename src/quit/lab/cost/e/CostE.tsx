@@ -2,14 +2,14 @@
 
 import { useEffect, useRef, useState } from "react"
 import { PrimaryButton } from "../../../components/kit"
-import { Card, ExampleBar, Head, NotSourced, Placeholder, PlaceholderScreen, Ring, Tabs } from "../../progress/shared/Bits"
+import { Card, ExampleBar, Head, InferredTag, NotSourced, Placeholder, PlaceholderScreen, Ring, Tabs } from "../../progress/shared/Bits"
 import { DAY, splitElapsed } from "../../progress/shared/calc"
 import { useNow } from "../../progress/shared/clock"
 import { useLabState } from "../../store"
 import { NumInput } from "../shared/NumInput"
 import { fmtMoney2, fmtMoneyShort, fromLocalInput, toLocalInput } from "../shared/logic"
 import { costText } from "../shared/text"
-import { Arc270, Flame, FallingBills, SavingsChart, useCountUp } from "./parts"
+import { Arc270, Flame, SavingsChart, useCountUp } from "./parts"
 import { FIELDS, TAB_IDS, countdown, dailyCost, goalPct, perMonth, perTenYears, perYear, reachTime, savedOver, savedSoFar, unitsNot, type TabId, type Values } from "./logic"
 import { eText } from "./text"
 
@@ -49,6 +49,7 @@ export function CostE() {
   const [sub, setSub] = useState<Sub>("home")
   const [cheer, setCheer] = useState(false)
   const [formula, setFormula] = useState(false)
+  const [info, setInfo] = useState<"life" | "total" | null>(null)
   const [mounted, setMounted] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => setMounted(true), [])
@@ -74,7 +75,7 @@ export function CostE() {
     patch({ vals: { ...st.vals, [tabId]: { ...vals, [key]: n } }, ex: 0 })
   }
   const fillExample = () =>
-    setSt({ ...EMPTY, screen: st.screen, tab: 0, vals: { ...EMPTY.vals, cigarettes: { perDay: 20, price: 8, pack: 20 } }, start: Date.now() - 72 * DAY, goal: { name: eText.exampleGoal, price: 1200 }, ex: 1 })
+    setSt({ ...EMPTY, screen: st.screen, tab: 0, vals: { ...EMPTY.vals, cigarettes: { perDay: 15, price: 9, pack: 20 } }, start: Date.now() - 40 * DAY, goal: { name: eText.exampleGoal, price: 900 }, ex: 1 })
   const clearExample = () => setSt({ ...EMPTY, screen: st.screen })
 
   const rate = st.inflOn ? (st.rate ?? 0) / 100 : 0
@@ -297,10 +298,19 @@ export function CostE() {
       {st.screen === 1 && sub === "home" && (
         <section className="flex flex-col gap-3" data-testid="e-home">
           <Card>
-            <p className="text-sm text-muted-foreground">{eText.appSmokeFree}</p>
-            <p data-testid="e-smoke-free" className="text-2xl font-bold">
-              {sf.days} {eText.appDays} {sf.hours} {eText.appHours} {sf.minutes} {eText.appMinutes}
-            </p>
+            <p className="text-center text-sm font-medium">{eText.appSmokeFree}</p>
+            <div data-testid="e-smoke-free" className="mt-1 grid grid-cols-3 text-center">
+              {[
+                [sf.days, eText.appDays],
+                [sf.hours, eText.appHours],
+                [sf.minutes, eText.appMinutes],
+              ].map(([v, l]) => (
+                <div key={l}>
+                  <p className="text-4xl font-extrabold">{v}</p>
+                  <p className="text-xs text-muted-foreground">{l}</p>
+                </div>
+              ))}
+            </div>
             <label className="mt-2 flex min-h-11 items-center justify-between gap-3 text-sm">
               <span>{eText.appQuitDate}</span>
               <input
@@ -315,6 +325,7 @@ export function CostE() {
                 className="min-h-11 rounded-md border border-border bg-background px-2"
               />
             </label>
+            <Dots count={2} />
           </Card>
           <div className="grid grid-cols-2 gap-2">
             <Card>
@@ -323,22 +334,30 @@ export function CostE() {
                 {cigsNot}
               </p>
             </Card>
-            <Card>
-              <p className="text-xs text-muted-foreground">{eText.appLife}</p>
-              <NotSourced />
-            </Card>
+            <div className="relative">
+              <Card>
+                <p className="text-xs text-muted-foreground">{eText.appLife}</p>
+                <NotSourced />
+              </Card>
+              <button type="button" data-testid="e-life-info" aria-label={eText.appInfo} onClick={() => setInfo(info === "life" ? null : "life")} className="absolute right-0 top-0 inline-flex size-11 items-center justify-center text-sm">
+                <span className="inline-flex size-6 items-center justify-center rounded-full border border-border">{"i"}</span>
+              </button>
+            </div>
           </div>
-          <button type="button" data-testid="e-total" data-value={saved} onClick={() => setSub("goal")} className="flex min-h-14 w-full items-center justify-between gap-2 rounded-lg border border-border bg-card p-3 text-left">
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm text-muted-foreground">{eText.appTotal}</span>
-              <span data-testid="e-total-value" className="block text-3xl font-bold">
+          {info === "life" && <div data-testid="e-info-tile"><Placeholder /></div>}
+          <div className="relative">
+            <button type="button" data-testid="e-total" data-value={saved} onClick={() => setSub("goal")} className="flex min-h-24 w-full flex-col items-center justify-center gap-1 rounded-lg border border-border bg-card p-3 text-center">
+              <span data-testid="e-total-value" className="text-4xl font-bold">
                 {fmtMoney2(saved)}
               </span>
-            </span>
-            <span aria-label={eText.appInfo} className="inline-flex size-8 items-center justify-center rounded-full border border-border text-sm">
-              {"i"}
-            </span>
-          </button>
+              <span className="text-sm text-muted-foreground">{eText.appTotal}</span>
+              <Dots count={4} />
+            </button>
+            <button type="button" data-testid="e-total-info" aria-label={eText.appInfo} onClick={() => setInfo(info === "total" ? null : "total")} className="absolute left-0 top-0 inline-flex size-11 items-center justify-center text-sm">
+              <span className="inline-flex size-6 items-center justify-center rounded-full border border-border">{"i"}</span>
+            </button>
+          </div>
+          {info === "total" && <div data-testid="e-info-tile"><Placeholder /></div>}
           <div className="grid grid-cols-3 gap-2" data-testid="e-rings">
             <Card>
               <Ring value={pct / 100} size={72} stroke={8} testId="e-ring-savings">
@@ -360,27 +379,44 @@ export function CostE() {
               <NotSourced />
             </Card>
           </div>
-          <div>
-            <p className="mb-1 text-sm font-medium">{eText.appMilestones}</p>
-            <Placeholder />
-          </div>
-          <div className="flex gap-2">
+          <Card testId="e-milestones">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-sm font-medium">{eText.appMilestones}</p>
+              <NotSourced />
+            </div>
+            <div className="flex items-center" aria-hidden="true">
+              {Array.from({ length: 7 }, (_, i) => (
+                <div key={i} className="flex flex-1 items-center last:flex-none">
+                  <span data-testid="e-milestone" className="size-5 shrink-0 rounded-full border border-dashed border-muted-foreground" />
+                  {i < 6 && <span className="h-0 flex-1 border-t border-dashed border-border" />}
+                </div>
+              ))}
+            </div>
+          </Card>
+          <div className="flex items-center gap-2">
             <button type="button" data-testid="e-to-edit" onClick={() => setSub("edit")} className="min-h-11 flex-1 rounded-md border border-border bg-card px-2 text-sm">
               {eText.appEditLink}
             </button>
+            <InferredTag />
             <button type="button" data-testid="e-to-setup" onClick={() => setSub("setup")} className="min-h-11 flex-1 rounded-md border border-border bg-card px-2 text-sm">
               {eText.appSetupLink}
             </button>
+            <InferredTag />
           </div>
-          <PrimaryButton testId="e-example" onClick={fillExample}>
-            {costText.useExample}
-          </PrimaryButton>
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <PrimaryButton testId="e-example" onClick={fillExample}>
+                {costText.useExample}
+              </PrimaryButton>
+            </div>
+            <InferredTag />
+          </div>
         </section>
       )}
 
       {st.screen === 1 && sub === "goal" && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/60" data-testid="e-goal">
-          <div className="relative max-h-[92dvh] overflow-y-auto rounded-t-2xl border-t border-border bg-background p-3 pb-36">
+          <div className="relative max-h-[92dvh] overflow-y-auto rounded-t-2xl border-t border-border bg-background p-3 pb-10">
             <div className="flex items-center justify-between">
               <button type="button" data-testid="e-goal-close" aria-label={eText.goalClose} onClick={() => setSub("home")} className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-card text-lg">
                 {"✕"}
@@ -415,7 +451,6 @@ export function CostE() {
             ) : (
               <p className="mt-2 text-center text-xs text-muted-foreground">{eText.goalFormulaNoRate}</p>
             )}
-            <FallingBills />
           </div>
         </div>
       )}
@@ -439,6 +474,17 @@ export function CostE() {
       )}
 
       {st.screen === 1 && sub === "setup" && <PlaceholderScreen title={eText.setupTitle} onBack={() => setSub("home")} />}
+    </div>
+  )
+}
+
+/** Pager dots: the first one is lit. */
+function Dots({ count }: { count: number }) {
+  return (
+    <div aria-hidden="true" data-testid="e-dots" className="mt-2 flex justify-center gap-1.5">
+      {Array.from({ length: count }, (_, i) => (
+        <span key={i} className={`size-1.5 rounded-full ${i === 0 ? "bg-primary" : "bg-border"}`} />
+      ))}
     </div>
   )
 }

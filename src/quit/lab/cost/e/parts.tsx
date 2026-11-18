@@ -72,22 +72,6 @@ export function Arc270({ value, size = 220, stroke = 16, children, testId }: { v
   )
 }
 
-const BILLS = [8, 24, 40, 58, 74, 88]
-
-/** Decoration: small bills drifting down behind the goal figures. */
-export function FallingBills() {
-  return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-32 overflow-hidden">
-      <style>{"@keyframes e-fall{from{transform:translateY(-30px) rotate(-12deg)}to{transform:translateY(150px) rotate(14deg)}}"}</style>
-      {BILLS.map((x, i) => (
-        <span key={x} className="absolute flex h-5 w-9 items-center justify-center rounded border border-border bg-card text-[10px] text-primary" style={{ left: `${x}%`, top: 0, animation: `e-fall ${3 + (i % 3)}s linear ${i * 0.5}s infinite` }}>
-          {"$"}
-        </span>
-      ))}
-    </div>
-  )
-}
-
 /** 20-year line chart: filled area under the line, a dot at 10 years, ticks every 5 years. */
 export function SavingsChart({ yearly, rate }: { yearly: number; rate: number }) {
   const W = 320

@@ -18,13 +18,15 @@ export function parseTyped(text: string): number {
 
 /** Money as the calculator prints it: two decimals under 100, whole numbers (with thousands) from 100 up. */
 export function fmtMoneyShort(n: number, symbol = "$"): string {
-  const v = Math.abs(n) < 100 ? n.toFixed(2) : Math.round(n).toLocaleString("en-US")
-  return `${symbol}${v}`
+  const a = Math.abs(n)
+  const v = a < 100 ? a.toFixed(2) : Math.round(a).toLocaleString("en-US")
+  return `${n < 0 && Number(v.replace(/,/g, "")) !== 0 ? "-" : ""}${symbol}${v}`
 }
 
 /** Two decimals always, with thousands separators. */
 export function fmtMoney2(n: number, symbol = "$"): string {
-  return `${symbol}${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  const v = Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return `${n < 0 && Number(v.replace(/,/g, "")) !== 0 ? "-" : ""}${symbol}${v}`
 }
 
 /** `YYYY-MM-DDTHH:mm` in local time, the value format of a datetime-local input. */

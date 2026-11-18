@@ -83,11 +83,11 @@ export const eText = {
   goalCountdown: (d: number, h: number) => `${d} days · ${h} hrs`,
   goalOf: (price: string) => `of ${price} saved`,
   goalFormula: (saved: string, price: string, pct: number, left: string, daily: string, d: number, h: number) =>
-    `${saved} / ${price} = ${pct}%. Left: ${left} / ${daily} per day = ${d} days ${h} hrs`,
+    `${saved} / ${price} = ${pct}% (rounded to the nearest whole number). Left: ${left} / ${daily} per day = ${d} days ${h} hrs`,
   goalFormulaNoRate: "Type your cost on the calculator to see the time left.",
   editTitle: "Savings goal",
   editName: "Goal name",
   editPrice: "Goal price",
   setupTitle: "Cost setup",
-  exampleGoal: "Trip",
+  exampleGoal: "Camera",
 } as const
