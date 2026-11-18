@@ -9,9 +9,8 @@ that these files did not put there, except the secrets file.* A restored backup
 is only worth something if the machine it is restored onto can be rebuilt, so
 the backup plan is only as good as the machine plan.
 
-The plan that owns this work, including its blockers and its decisions, is
-`Plans/caddy-deploy-and-cicd.md` (it replaced `docs/plans/local-deploy-and-cd-pipeline.md`
-on 2026-10-13).
+The plan that built this, `Plans/caddy-deploy-and-cicd.md`, was removed on
+2026-11-18 when hosting was reopened (read it with `git show 0d687eb7:Plans/caddy-deploy-and-cicd.md`).
 
 ## Run it
 

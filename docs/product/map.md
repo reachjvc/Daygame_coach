@@ -335,10 +335,9 @@ the truthful record of what exists.
 - **One branch, `main`**, and it is the live site: every push deploys.
   `training-rebuild`, where all work landed until then, was retired on
   2026-10-24 at `7ceb7769`; an older plan that says to push there means `main`.
-- **Leaving Vercel and Supabase for Hetzner** — decided 2026-09-17, provider
-  settled 2026-09-27 on the friend's recommendation and not reopened. Read D1 in
-  `docs/plans/own-platform-and-app.md`'s DECISIONS table and the memory note
-  before any hosting, database or auth work.
+- **Hosting is open again** (owner, 2026-11-18): the site is on Vercel, the
+  database and login on Supabase. The Hetzner decision and its plans were
+  deleted that day. See vision item 36.
 - **Life Mastery persistence** — the plan and the day half are both on the
   account as of 2026-09-23, and the dashboard tells the truth as of 2026-09-24
   (`docs/plans/life-mastery-everything-saves.md`, M0–M2 built, M5 done). The

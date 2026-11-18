@@ -14,8 +14,8 @@ the site itself, names the cause, and fixes every instance.
 **Where it sits.** Part of vision item 38 ("Dashboard, front page, settings and every other page need
 another pass") and item 12 ("It works on a phone and in a browser"). It finishes item 32
 ("Preferences onboarding moves … into daygame / Scenarios where it belongs"), which moved the form
-but not its address. It stays compatible with D8 of `docs/plans/own-platform-and-app.md` (the phone
-app is Capacitor with bundled assets), and it builds on `Plans/tests-worth-their-keep.md`,
+but not its address. It stays compatible with a phone app
+that bundles its pages (Capacitor with bundled assets), and it builds on `Plans/tests-worth-their-keep.md`,
 which is cutting the test suite in this same checkout (B-PEER-TREE).
 
 ---
@@ -1272,7 +1272,7 @@ const TEST_IDS: Record<string, string> = {
   [ROUTES.settings]: "header-settings-link",
 }
 
-/** The signed-in app's navigation. No server data, by design (D8 of own-platform-and-app.md). */
+/** The signed-in app's navigation. No server data, by design: a phone app would bundle these pages. */
 export function AppFrame({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   if (HIDDEN_ROUTE_PREFIXES.some((p) => isUnder(pathname, p))) return <>{children}</>

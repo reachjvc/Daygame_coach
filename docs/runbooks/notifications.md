@@ -155,4 +155,4 @@ the exposed schemas in the Supabase dashboard.**
 
 Run a timer on the new server that does what the job does: once a minute, if anything is due, `POST` the tick
 address with the secret. Then `select cron.unschedule('notifications-clock');`. The address, the secret and the
-rules stay the same (`docs/plans/own-platform-and-app.md`).
+rules stay the same.

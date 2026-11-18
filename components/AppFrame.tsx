@@ -38,8 +38,8 @@ const ITEMS = TABS
  * that draw only their own phone bar (`PHONE_BAR_HIDDEN_PREFIXES`, the time
  * tracker) keep the laptop header and lose the phone bar.
  *
- * NO SERVER DATA, BY DESIGN. The phone app bundles these pages (D8 of
- * docs/plans/own-platform-and-app.md), where server-only code does not run.
+ * NO SERVER DATA, BY DESIGN. A phone app would bundle these pages, where
+ * server-only code does not run.
  * Who may see what stays with each page and the proxy; this is navigation only.
  *
  * Icons: the laptop sidebar shows the phone bar's icon beside each place (one
