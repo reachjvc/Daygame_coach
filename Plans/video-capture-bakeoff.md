@@ -662,9 +662,51 @@ Depends on: Phases 5–8.
   from one run, speakers voted across runs, named by the voice print) does not
   yet beat MOSS alone (5% vs 2%). The full batch (every method on all 8
   tuning clips) finished 2026-11-14; scoring it needs the full key (Phase 3 step 5).
+- 2026-11-18 owner listened to the probe page and found the draft key
+  "super correct". So the best method so far is the one that made it: the
+  editor's on-screen subtitles read from frames, plus words from many speech
+  machines and speaker votes, merged line by line by a judge model that marks
+  its doubts. Test on the probe, measured against that draft (so partly
+  circular until the owner checks the doubtful lines):
+  - small machine set (MOSS, Qwen3-ASR 1.7B, Voxtral, YouTube captions,
+    Whisper large-v3 on separated vocals; DiariZen, pyannote community-1,
+    voice print) + subtitle skeleton + judge: 4–5% of words differ, 2%
+    speaker error, 39 of 42 of her lines found. Sonnet as judge is as good as
+    Opus.
+  - same machines without the subtitle skeleton: 8% differ, 34–35 of 42 of
+    her lines. MOSS alone: 9%. The on-screen subtitles carry her words.
+  - GPU cost of the small set: about 3.8 min per audio minute; Voxtral and
+    DiariZen are two thirds of it (next test: drop them).
+  - Bug fixed: the bundle read voice-print votes backwards (the most-talk
+    rule renamed its him/not-him labels).
+  Recipe for all videos and the open steps: "Production recipe" below.
+- Listen pages: every line is a full card (owner 2026-11-18), no grey rows.
 - GPU runs go through `code/gpu_guard.py` (capture folder): while the owner's
   game is in a match, workers run a quarter of the time and are stopped if video
   memory gets near full; full speed otherwise.
+
+## Production recipe (draft, 2026-11-18)
+
+Per video, for the conversation parts only (not the whole video):
+
+1. Download audio and video (`code/fetch.py`).
+2. Read the editor's burned-in subtitles from frames (picture reader) and
+   rebuild a line skeleton with times. Only works where the editor put
+   subtitles on screen; check how many videos have them before relying on it.
+3. Run the speech machines: MOSS (words and speakers), Qwen3-ASR 1.7B,
+   Voxtral, YouTube's own captions, Whisper large-v3 on vocals separated with
+   htdemucs; speakers from DiariZen, pyannote community-1 and the coach's
+   voice print.
+4. Build the bundle (`code/prep_listen.py bundle`) and let a judge model
+   (Sonnet) write the lines with doubt marks.
+5. Owner listens only to the few lines marked doubtful; everything else is
+   taken as is.
+
+Open before it runs on all videos: (a) owner check of the doubtful probe
+lines; (b) repeat the test on two more clips with the full key; (c) try
+dropping Voxtral and DiariZen to cut GPU time; (d) count videos with on-screen
+subtitles and test the no-subtitle path on them; (e) one driver script for
+steps 1–4 that runs under `code/gpu_guard.py`.
 
 ## Execution prompts
 
