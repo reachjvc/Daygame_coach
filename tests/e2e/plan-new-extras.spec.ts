@@ -75,7 +75,8 @@ async function look(page: Page, name: string): Promise<void> {
     Array.from(document.querySelectorAll<HTMLElement>("button, a[href]:not([href='/settings']), [role=button], input[type=checkbox]"))
       .filter((el) => {
         const r = el.getBoundingClientRect()
-        return r.width > 0 && r.height > 0 && r.height < 40 && !el.closest("[data-skip-size]")
+        if (el instanceof HTMLInputElement && el.closest("label")?.getBoundingClientRect().height! >= 44) return false
+        return r.width > 0 && r.height > 0 && r.height < 40
       })
       .map((el) => `${el.tagName}:${(el.textContent ?? "").trim().slice(0, 24)}:${Math.round(el.getBoundingClientRect().height)}`),
   )
@@ -396,13 +397,15 @@ test.describe("the extra modules and the daily side", () => {
     await expect(tid(page, "run-week")).toBeVisible({ timeout: NAV })
     await look(page, "review-run-week")
     await next(page)
-    for (let guard = 0; guard < 4 && !(await tid(page, "run-done").isVisible()); guard++) {
+    for (let guard = 0; guard < 5; guard++) {
       const frame = page.locator('[data-testid^="run-"]').first()
       await expect(frame).toBeVisible()
       const name = (await frame.getAttribute("data-testid")) ?? "run"
+      if (name === "run-done") break
       await look(page, `review-${name}`)
-      if (await tid(page, "skip").count()) await tid(page, "skip").click()
+      if (await tid(page, "skip").count()) await tid(page, "skip").click({ timeout: 10_000 }).catch(() => undefined)
       else await next(page)
+      await page.waitForFunction((prev) => document.querySelector('[data-testid^="run-"]')?.getAttribute("data-testid") !== prev, name, { timeout: 30_000 })
     }
     await expect(tid(page, "run-done")).toBeVisible({ timeout: NAV })
     await look(page, "review-run-done")

@@ -91,7 +91,7 @@ function When() {
       {!hasMorning && (
         <p className="text-sm text-zinc-400">
           {w.no_morning}{" "}
-          <Link href={screenHref("routines/pick")} className="underline" data-testid="when-add-routine">{w.add_routine}</Link>
+          <Link href={screenHref("routines/pick")} className="inline-flex min-h-11 items-center underline" data-testid="when-add-routine">{w.add_routine}</Link>
         </p>
       )}
       <Chip on={star} testId="when-star" disabled={where === "none"} onClick={() => setStar(!star)}>{w.include_star}</Chip>
