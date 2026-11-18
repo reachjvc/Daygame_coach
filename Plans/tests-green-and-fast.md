@@ -1,0 +1,308 @@
+# Tests green and fast
+
+Written 2026-11-18. Every automatic check has been red since 2026-11-05. This plan makes them green
+again, keeps them green, and cuts the time the tests take. Built so a smaller model can run it phase
+by phase. The execution prompt is at the end.
+
+## In plain words
+
+- **Today nothing runs at all.** The test machine cannot install the app: one add-on tries to download
+  a GPU file that GitHub no longer has. One line fixes it (Phase 1).
+- **Underneath, about 55 tests fail for 7 reasons.** The biggest one is a single helper that waits for a
+  "Saved." badge in the Time Log header, and that badge moved during the phone work. That alone breaks
+  about 40 tests. The rest are role models, training navigation, check-in Log Out on a phone, and two
+  database tests (Phase 2).
+- **Slow because red, and slow anyway.** A red phone shard takes 19 minutes, because every broken test
+  waits its full timeout twice. The unit tests take 3.6 minutes, double their October time, and every
+  commit on this PC runs all of them first. Phases 3 to 5 cut each of these.
+- **Never silently red again.** Every Claude session will see a one-line warning at start when main is
+  red (Phase 6).
+
+## Facts measured 2026-11-18
+
+| What | Now | Target |
+|---|---|---|
+| `npm ci` in every CI job | fails: onnxruntime GPU download 404 | passes |
+| Pre-commit on this PC | the whole unit suite (613 files; 216 s in CI) | ≤ 30 s for a typical commit |
+| CI `checks` job, wall | 454 s (unit 217 s, DB 93 s, typecheck 62 s, lint 29 s) | ≤ 240 s |
+| Unit suite | 216 s: import 123 s, jsdom environment 128 s (baseline 97 s) | ≤ 100 s total CPU-wall in CI |
+| E2E on a main push, wall | 18–21 min (red phone shard 1/2: 1,152 s) | ≤ 6 min green; a red run stops ≤ 10 min |
+| E2E per green shard | 330–560 s (backend 28 s, build+start ~77 s, browsers 16–62 s) | ≤ 300 s |
+| Nightly Android lane | 136 tests, 1 worker, killed at its 45 min limit | ≤ 15 min |
+| Nightly checks | red (duration ratchet: no green runs) | green |
+
+Last green CI and E2E: 2026-11-05 16:11 UTC. Last green nightly: 2026-10-30.
+Evidence runs: CI 43601945915, 44279935097; E2E 44079593390 (nightly), 43601945901; nightly 44096960629.
+
+## Failure groups (evidence from the runs above)
+
+| ID | Tests | What fails | First lead |
+|---|---|---|---|
+| F0 | all jobs | `npm error Error: Failed to download the binaries: 404 Not Found.` in `onnxruntime-node` (via `@huggingface/transformers@3.8.1`) | Its install script skips with env `ONNXRUNTIME_NODE_INSTALL_CUDA=skip` |
+| F1 | ~40, phone, timing-phone, desktop 4/4 | `locator('header').getByRole('button', { name: /^Saved\./ })` not found | `tests/e2e/helpers/timetrack.ts:66` `savedToAccount`; badge moved in the Time Log phone commits (8da8dd4b, 246ff664, b61a4736) |
+| F2 | 3, phone | audit Log Out tests hit their 150 s limit: `browserContext.close: Test ended.` | `tests/e2e/audit-devices.spec.ts:84,112`, `audit-ping.spec.ts:285`; maybe a real bug: Log Out hangs on WebKit |
+| F3 | 5 + sweep | role models: gallery test expects 0, gets 5; first screen 482,433 B, budget 307,200; empty council still shows `council-today`; area people order (Lincoln before Ziglar); sweep `/plan/role-models` | `tests/e2e/role-models*.spec.ts`; the library grew to 194 people on 2026-11-11 |
+| F4 | 1 | `getByRole('link', { name: 'Training' })` has no `aria-current="page"` on /programs | `tests/e2e/programs-past-workout.spec.ts:454`; navigation rebuilt (option E) 2026-11-10 |
+| F5 | 1, desktop | password-reset "resend confirmation" @phone | `tests/e2e/password-reset.spec.ts:123`; seen 11-14, check if still red |
+| F6 | 2, DB | `auditAnswersFromManyDevices`: newer answer from another device overwritten (expected 3 rows, got 4); `auditPings` mute: `3394628 >= 3540000` | the first one is a data-loss shape: treat as a product bug until proven otherwise; the second looks like a clock margin |
+| F7 | 1, nightly | duration ratchet: suites with no green run | clears when F0–F6 are fixed; baselines must then be met (unit 97 s × 1.3 = 126 s) |
+
+New failures may appear once F0 is fixed, because nothing has run since 11-17. Add them as F8, F9 and so on.
+
+## Blockers, each tried once
+
+| ID | What | Tried, result | Blocks | Recommendation |
+|---|---|---|---|---|
+| B1 | onnxruntime GPU file gone | `curl -I -L …/v1.21.0/onnxruntime-linux-x64-gpu-1.21.0.tgz` returned 404 | everything | Phase 1: set the env var at the top of all three workflows. No owner step |
+| B2 | One shared local test database (`supabase_db_daygame-tests`, up 3 days). Local e2e or integration runs can reset it under other sessions | `docker ps` shows it shared | local repro | Run lanes on GitHub (`gh workflow run e2e.yml --ref <branch>`). Run locally only one spec at a time, by memory `worktree-e2e-servers` (`E2E_STACK_ENV` preset, `--workers=1`) |
+| B3 | The permission classifier refused `package.json`/lockfile edits in the shared folder before | memory `shared-checkout-tool-quirks` | any dependency change | No step here needs one. If one turns out to, ask the owner once, then go on |
+| B4 | Vercel's limit is about 60 deploys a day, and every branch push makes a preview | memory `vercel-late-deploy-rollback` | pushes | Push the work branch at most once per finished step; ≤ 15 pushes a day for this plan |
+| B5 | Bigger GitHub runners cost money | public repo: 4-core runners are free | nothing | Never switch `runs-on` to a paid size |
+
+## Decisions (taken; the owner can veto)
+
+- **D1. Android on every push, iPhone nightly.** The owner's phone is Android (memory `time-log-phone-plan`).
+  Chromium runs faster than WebKit in CI. The iPhone lane keeps Safari's cookie checks, once a night.
+- **D2. Pre-commit runs only the tests related to the staged files.** CI still runs everything.
+  The full suite runs before commit only when config or setup files are staged.
+- **D3. A red run stops early.** `maxFailures` is set per shard in CI, so a broken lane stops after 15
+  failures instead of retrying for 19 minutes.
+- **D4. The 300 KB first-screen budget for role models stays.** Mobile data matters on his phone, so the
+  page is made lighter rather than the test removed.
+- **D5. Tests may be removed, under rule R-DEL below.** Every removal goes in the removal log.
+
+## Questions, each with a recommendation (the recommendation counts as accepted)
+
+| Question | Recommendation | Alternative | Cost if wrong |
+|---|---|---|---|
+| Q1 Should F2 and F6 count as product bugs? | Yes, until the run proves otherwise. Both are about answers surviving Log Out or a second device | Treat them as test timing | A lost check-in answer reaches the owner |
+| Q2 Should the red-main warning also stop pushes? | No. A warning at session start only. Pushes deploy the site, and a hard stop would block urgent fixes | Hard stop | Main stays red one more day |
+| Q3 Should the unit suite get a second CI job (sharding)? | Yes, if Phase 3's config levers alone do not reach the 100 s target | One job | 20 s of `npm ci` per extra job |
+
+## Rule R-DEL: when a test may be removed
+
+A test may be deleted only when **all** of these hold, written in the removal log:
+1. It is in one of these kinds: (a) a duplicate of a unit or integration test that checks the same
+   thing (name the other test); (b) it asserts on machine speed, network timing or animation frames, not
+   on behaviour, and cannot be made deterministic with a fake clock; (c) it checks a screen or text that
+   no longer exists on purpose (cite the commit that removed it).
+2. It is **not** about lost data, sync between devices, offline queues, sign-in or out, payments, or privacy.
+   Those are fixed, never deleted.
+3. A run without it is green, and the removal log row says which run.
+
+A brittle test that fails kind 1 or 2 gets fixed: wait for a real state (a request, a label), never a sleep.
+New tests are welcome where a fix had none: one spec or unit test per real bug found.
+
+### Removal log
+
+| Test (file:line, title) | Kind | Replaced by / reason | Green run without it |
+|---|---|---|---|
+| | | | |
+
+---
+
+# PHASES
+
+Each phase lists a model hint for the foreman (see Part 2). Every acceptance check is run, and the
+command and its deciding output line are quoted under the phase as a **Status** line.
+
+## Phase 0 — Rig and baseline · S · haiku
+
+1. `git worktree add -b tests-green ~/.cache/daygame-research/tests-green/wt main`, then symlink
+   `node_modules` from the main checkout. Work and commit only there (memory `tmp-wiped-on-crash`: not /tmp).
+2. Measure the pre-commit time on this PC: `time npx vitest run --reporter=dot` in the worktree (check
+   `~/.cache/daygame-research/tools/load.sh` first; if it says `game`, wait). Write the number in the
+   facts table.
+3. Record the start SHA in this plan.
+
+Accept: worktree exists on branch `tests-green`; local unit time written down.
+
+## Phase 1 — Install works again (F0) · XS · haiku
+
+1. In `.github/workflows/ci.yml`, `e2e.yml` and `nightly.yml` add, at top level after `permissions:`:
+   ```yaml
+   # onnxruntime-node (via @huggingface/transformers) downloads CUDA binaries on Linux during npm ci;
+   # the v1.21.0 GPU archive is gone from GitHub (404, 2026-11-18) and nothing here uses a GPU.
+   env:
+     ONNXRUNTIME_NODE_INSTALL_CUDA: skip
+   ```
+2. `npx vitest run tests/unit/ciWorkflows.test.ts tests/unit/ci/` must stay green. If a test forbids a
+   top-level `env:`, put the variable on the `npm ci` steps instead.
+3. Ship to main right away: everything else depends on it. Rebase, ff-merge, push (Part 2).
+
+Accept: the next CI run's "Install dependencies" step passes (quote `gh run view <id> --json jobs`).
+Then copy the new list of failures into F-rows. Anything not listed above becomes F8+.
+
+## Phase 2 — Make every test green (F1–F6, F8+) · L · sonnet, one agent per group
+
+Groups touch different files, so they can run as parallel agents, each in its **own** worktree branched
+from `tests-green` (at most as many as `load.sh` allows; CI does the heavy running, so 3–4 is fine).
+For every group:
+
+1. Reproduce once from CI logs: `gh run view <id> --log-failed | grep -A30 '<test title>'`.
+2. Find what changed: `git log --oneline -S '<old text or testid>' -- src tests` and read that commit.
+3. Decide, and write one line why: **product bug** (behaviour the owner relies on broke, so fix `src/`
+   and keep the test) or **outdated test** (the product changed on purpose, so update the test and cite
+   the commit). Unsure counts as a product bug.
+4. Run the single spec locally only by the B2 method, or push the branch and run
+   `gh workflow run e2e.yml --ref <branch>` and read that run.
+
+Group notes:
+- **F1:** fix `savedToAccount` (`tests/e2e/helpers/timetrack.ts:65`) to find the badge where the phone and
+  desktop layouts now put it. Prefer a role/name over `header` scoping. One fix, about 40 tests.
+  Check that the badge still says "Saved." to the user on a phone. If it no longer shows at all, that is a product bug.
+- **F2:** open the Log Out flow with a waiting answer on WebKit. If Log Out waits forever for a send,
+  that is a product bug: Log Out must send or name the waiting answer within a few seconds. Bring
+  `test.setTimeout(150_000)` down to what the flow really needs (≤ 30 s) once fixed.
+- **F3:** five failures, read each. Budget: lazy-load images below the first screen or page the gallery
+  until the first screen transfers < 300 KB (D4). Empty council showing a card: product bug. Area order:
+  check what "your council first" means in `src/` before changing either side.
+- **F4:** find what the new navigation marks as current on /programs. Update the test if the nav changed on purpose.
+- **F5:** first check whether it is still red after Phase 1.
+- **F6:** `tests/integration/repos/auditAnswersFromManyDevices.integration.test.ts`. A newer answer must win
+  over an older offline one, so fix the repo or SQL. `auditPings` mute: if the margin is a clock race,
+  use a fixed `now` or a tolerance of seconds, not minutes. Run integration tests only by memory
+  `integration-tests-without-stack-up`.
+
+Merge each group's branch into `tests-green` when its specs pass on GitHub. Ship to main in batches
+(≤ 1 push per 20 min).
+
+Accept: one `workflow_dispatch` E2E run on `tests-green` with every lane green except at most flaky
+tests that passed on retry, and the flaky ones listed; CI green on the same commit. Quote both run ids.
+
+## Phase 3 — Faster unit tests and pre-commit · M · sonnet
+
+1. Per-file times: `npx vitest run --reporter=json --outputFile=$HOME/.cache/daygame-research/tests-green/unit.json`.
+   List the 20 slowest files and the share of time spent on jsdom files (`// @vitest-environment jsdom`).
+2. Try these levers one at a time. Keep a lever only if the suite stays green twice in a row and gets
+   faster; write the before/after seconds:
+   a. Split `vitest.config.ts` into two `test.projects`: `node` (default files) with `isolate: false`, and
+      `dom` (files with the jsdom pragma) keeping isolation. A node file that leaks state between files
+      shows up as a failure. Fix its leak, or move it to the isolated project.
+   b. `pool: 'threads'` for the node project.
+   c. In the 20 slowest files: real `setTimeout` waits become `vi.useFakeTimers()`; big fixtures build once
+      per file (`beforeAll`), not per test.
+3. Pre-commit (`.husky/pre-commit`), D2:
+   ```sh
+   staged=$(git diff --cached --name-only --diff-filter=ACMR)
+   # Config, setup or workflow changes can break any test: run all of them.
+   if echo "$staged" | grep -qE '^(vitest\.config\.ts|tests/setup\.ts|tests/__mocks__/|package(-lock)?\.json|tsconfig\.json|\.github/|docs/testing/|playwright\.config\.ts)'; then
+     npm test -- --reporter=dot || exit 1
+   else
+     code=$(echo "$staged" | grep -E '\.(ts|tsx|mjs|js)$')
+     [ -z "$code" ] && exit 0
+     npx vitest related --run --reporter=dot $code || exit 1
+   fi
+   ```
+   Keep the existing comments in that file. Test it with three throwaway commits on the work branch: a
+   `src/` file, a doc only, and `vitest.config.ts`. Time each one.
+
+Accept: CI unit step ≤ 100 s, or Q3's second shard added and each shard ≤ 70 s. A typical
+`src/` commit's pre-commit takes ≤ 30 s on this PC. Quote all numbers.
+
+## Phase 4 — CI jobs side by side · S · sonnet
+
+1. Split `ci.yml`'s `checks` into parallel jobs: `static` (secret scan, lint ratchet, typecheck ratchet,
+   audit ratchet), `unit` (one or two shards, from Phase 3), `database`. Keep the port-reservation step
+   first in every job that starts the backend. `image-staging` and `image-production` need all three
+   (`needs: [static, unit, database]`, and their `if:` checks each result).
+2. Update `tests/unit/ciWorkflows.test.ts` and `tests/unit/ci/pipelineRules.test.ts` to the new shape.
+   Keep what they protect (no secrets, port step first, publish needs green checks). Never delete one of their assertions without a replacement.
+3. Rename the two `ci.yml` rows in `docs/testing/durations.json` to the new job names in this same commit.
+
+Accept: one CI run where the wall time from first job start to last job end is ≤ 240 s. Quote it.
+
+## Phase 5 — Faster browser lanes · M · sonnet
+
+Measure every lever with one dispatched run before and one after. Keep it only if green and faster.
+1. **Next build cache** in each lane: `actions/cache` on `.next-e2e/cache` (the `NEXT_DIST_DIR` the config
+   sets), key `next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}`, restore
+   prefix `next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-`.
+2. **Browser cache:** cache `~/.cache/ms-playwright`, keyed on the Playwright version in the lockfile. Then run
+   `npx playwright install --with-deps <browser>`. It skips the download when the browser is already cached.
+3. **D1:** the per-push phone lane becomes `android` (Pixel 7, Chromium): `workers` 2 and 2 shards. `phone`
+   (iPhone) moves to the nightly matrix. `timing-phone` follows Android (add a timing-android project if needed).
+   Update `ciWorkflows.test.ts` and the `durations.json` rows in the same commit.
+4. **Workers 2 → 3** in CI for `desktop` and `android`. Run the lanes twice. Keep 3 only if no new flake
+   appears. Then rebalance the shard counts so every shard is ≤ 300 s.
+5. **D3:** in `playwright.config.ts`, `maxFailures: process.env.CI ? 15 : undefined`.
+6. **Duplicates (R-DEL a):** list tests that run on desktop and phone but check nothing about layout
+   (`@phone` on pure data or API flows). Drop the `@phone` tag where the phone run adds nothing; they still
+   run on desktop. Log each one.
+7. `tests/e2e/helpers/*`: replace any fixed `waitForTimeout` with a wait on a real state where you find
+   one. `e2eSleepsAreTimed` lists them.
+
+Accept: a dispatched run where every push lane shard is ≤ 300 s and the whole E2E run on a main push
+takes ≤ 6 min wall. The nightly lanes each finish in ≤ 15 min. Quote the job times
+(`gh run view <id> --json jobs`).
+
+## Phase 6 — Never silently red again · S · sonnet
+
+1. `scripts/ci/main-status.mjs`: uses `gh run list --branch main --limit 20 --json`. Prints one line when
+   main's latest CI or E2E run is red, for example `main is red since <date>: <workflow> <job> (run <id>)`.
+   Prints nothing when green. Exits 0 always, and within 5 s, also when offline or when `gh` is missing.
+   Add a unit test for the parsing.
+2. Add it as a `SessionStart` hook in the project's `.claude/settings.json` (use the update-config skill).
+   Hook output reaches the session as context.
+3. Add one line to `CLAUDE.md` under Rules: "If the session-start line says main is red, fix it first or
+   name who broke it."
+
+Accept: with a red run in the API the hook prints the line, and with a green one it prints nothing. Quote both.
+
+## Phase 7 — Prove it · M · sonnet + a fresh reviewer
+
+1. Three main pushes in a row with CI and E2E green, then one nightly E2E and nightly checks green.
+2. Lower each `durations.json` baseline to the new slowest green time (they may only fall), in one commit.
+3. Run `/code-review` on `<start SHA>..HEAD` through a fresh subagent that did not write the fixes. Fix or
+   record every finding.
+4. Remove the worktrees and run `git worktree prune`. Archive this plan into `Plans/ARCHIVE.md` (memory `plans-archive`).
+5. Report to the owner, in plain words, starting with any doubt: what is green, the before and after
+   times from the facts table, the bugs found in the product, the tests removed and why.
+
+Accept: the run ids for step 1 quoted; the facts table has a "Now (after)" column filled in.
+
+---
+
+# PART 2 — Rules for the executing session
+
+- **Foreman and workers.** The session that runs this prompt is the foreman. It does no phase work
+  itself. It starts one background `Agent` per phase or group with `model: "sonnet"`, and `"haiku"` where a
+  phase says so or for reading CI logs. Each brief names the phase, its acceptance check, this Part 2,
+  and the worktree. The foreman checks every acceptance itself (reads the run in the API, the diff,
+  the numbers) before the next phase starts. When a worker's result fails its acceptance twice, the
+  foreman sends the same phase once more to a `model: "opus"` agent.
+- Shared checkout: work only in worktrees under `~/.cache/daygame-research/tests-green/`. Never
+  `git add -A`, `git stash` or `--no-verify` on main. Ship by memory `shared-checkout-tool-quirks` item 5:
+  rebase onto main, run `npx vitest run`, run `node scripts/typecheck-ratchet.mjs` (memory
+  `typecheck-before-push`), then `git merge --ff-only` from the main checkout and `git push origin main`.
+- Never run `test-stack.mjs up`, the full integration suite or the full e2e suite locally (B2). GitHub runs them.
+- Load: run `~/.cache/daygame-research/tools/load.sh` before heavy local work. `game` means one worker
+  and no browsers.
+- Never spend money: no paid runners, no paid services. Never touch the live database.
+- Never weaken an assertion about data, sync, sign-in or privacy to make it pass (R-DEL 2).
+- Every phase ends with a **Status** line in this plan (done, with the decisive command output, or
+  `blocked: <ID>` with the exact message). Commit the plan with the work.
+- The repo is public: no personal data in commits or logs.
+
+---
+
+# EXECUTION PROMPT
+
+Paste into a new Claude Code session in this folder (any model; it delegates down):
+
+```
+/goal Execute Plans/tests-green-and-fast.md from the first phase without a Status line through Phase 7.
+Read first: that whole plan (Part 2 is binding), CLAUDE.md and your memory index.
+You are the foreman: do no phase work yourself. For each phase (and each F-group in Phase 2) start a
+background Agent with model "sonnet" ("haiku" where the phase says so), in its own worktree under
+~/.cache/daygame-research/tests-green/, briefed with the phase text, its acceptance check and Part 2.
+Run independent F-groups in parallel, as many as tools/load.sh allows. Before starting the next phase,
+check each acceptance yourself against the thing itself: the GitHub run in the API, the diff, the
+measured seconds. If a worker fails the same acceptance twice, give that phase once to a model "opus" agent.
+Done means: three main pushes in a row with CI and E2E green, the nightly E2E and nightly checks green,
+the facts table has its after-numbers, the removal log is filled in, /code-review was run by a fresh
+agent on start..HEAD, worktrees are pruned, and the plan is archived. Escape: a blocker outside this
+plan (quote the job, step and commit author) is recorded in the blocker table and counts as met. Re-run
+the same failing CI at most twice. Commit and push your own work. End with the Phase 7 report in plain
+words for a non-programmer, starting with any doubt.
+```
