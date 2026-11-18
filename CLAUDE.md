@@ -26,6 +26,12 @@ words, opening with whether it is done (done / live / not yet, what is left).
 Only he decides, beforehand: spending money (also through a token, key or
 account that can), deleting real data, and anything that cannot be undone.
 
+His own words, 2026-11-18:
+- Make no new rules (in memory, CLAUDE.md, plans or anywhere else) unless he
+  says to.
+- Nothing Claude discussed, recommended or wrote down counts as confirmed by
+  him until he says so. Mark it "proposed", not "decided".
+
 - Check the thing itself (the page, the output, the data), never a stand-in.
 - Quality always wins. Never offer a cheaper or quicker version of something
   he has already seen done well.
