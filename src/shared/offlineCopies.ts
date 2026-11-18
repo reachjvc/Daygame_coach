@@ -78,6 +78,35 @@ export async function forgetStoredPages(): Promise<void> {
   }
 }
 
+/**
+ * THE LIFE PLAN'S COPY IN THIS BROWSER. `north-star-v1:<user>` holds the whole
+ * plan and the day half, journal included, and `plan-due-hidden:<user>` what
+ * was hidden on Today. The app never shows one account's copy to another, but
+ * on a shared or public computer it can be read in the developer tools, so
+ * sign-out removes every key of those families, whichever account named them.
+ *
+ * Log Out asks the open plan page to send what it holds BEFORE it signs out
+ * (`flushPlanPage`, called from LogOutButton), because after sign-out a send is
+ * refused; what is still unsent after that is named in the Log Out dialog, and
+ * only "Log out anyway" wipes it. A sign-out the person did not choose
+ * (`keepUnsentTime`, a password reset) keeps these copies, as it keeps the
+ * tracker's unsent changes: they are theirs, and no other account is shown or
+ * sent them (the keys name the account).
+ */
+export function forgetPlanCopies(): void {
+  try {
+    const store = window.localStorage
+    const keys: string[] = []
+    for (let i = 0; i < store.length; i++) {
+      const key = store.key(i)
+      if (key && (key.startsWith("north-star-v1") || key.startsWith("plan-due-hidden:"))) keys.push(key)
+    }
+    for (const key of keys) store.removeItem(key)
+  } catch {
+    // Storage blocked: nothing was kept there to forget.
+  }
+}
+
 export async function forgetOfflineCopies({
   keepUnsentTime = false,
   deviceForgotten = false,
@@ -95,6 +124,7 @@ export async function forgetOfflineCopies({
   await forgetTimerOnThisDevice()
   // The audit's answers waiting for signal name what the person did and how it felt.
   forgetAuditOnThisDevice()
+  if (!keepUnsentTime) forgetPlanCopies()
   try {
     window.localStorage.removeItem("thoughts-queue-v1")
     window.localStorage.removeItem("thoughts-view-v1")

@@ -17,6 +17,7 @@
 import { NextResponse } from "next/server"
 import { requirePlanTarget } from "@/src/db/planSandbox"
 import { applyLifePlanChanges, ensureLifePlan, readLifePlan, StalePlanError } from "@/src/db/lifePlanRepo"
+import { findPlanBreach, limitMessage } from "@/src/goals/planLimits"
 export async function GET(req: Request) {
   const auth = await requirePlanTarget(req)
   if (!auth.success) return auth.response
@@ -45,6 +46,11 @@ export async function PATCH(req: Request) {
   ) {
     return NextResponse.json({ error: "Send the changes and the revision you read" }, { status: 400 })
   }
+
+  // A text over its cap is refused here, by name, before the database's own
+  // CHECK would answer 500 and the page would retry the same save for ever.
+  const breach = findPlanBreach(changes)
+  if (breach) return NextResponse.json({ error: limitMessage(breach), ...breach }, { status: 422 })
 
   try {
     const revision = await applyLifePlanChanges(changes, body.revision, auth.userId, auth.supabase)

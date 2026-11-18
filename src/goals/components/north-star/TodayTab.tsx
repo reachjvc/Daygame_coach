@@ -39,6 +39,7 @@ import { ACHIEVEMENT_COPY, DAY_NOTE_SAVED, GOES_TO_COPY, STEP_DAYS_COPY, TODAY_C
 import { goalAchievements } from "@/src/goals/planAchievementsService"
 import { cadenceLabel, destination, destinations, fieldTargets, groupLogged, groupSummary, readSource, readSources, standingItems, stepsDue, todayItems, todayProgress, trackGroups, type TodayItem } from "@/src/goals/northStarTrackService"
 import { stepTickedByHand, type TrainingTicks } from "@/src/goals/dayTicks"
+import { DAY_TEXT_LIMITS, planLimit } from "@/src/goals/planLimits"
 import { DAY_NUMBER_LIMIT, dailyFieldsFor, dailyRating, dayNumber, formatTargetDate, isSystem, journalEntry, journalHistory, numberHistory, subStepProgress, subStepsFor } from "@/src/goals/northStarService"
 import { dateKeyLabel } from "@/src/shared/dateUtils"
 import { ScoreRow } from "./ScoreRow"
@@ -501,6 +502,7 @@ function Asks({
           autoFocus
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
+          maxLength={planLimit("steps", "asks")}
           onKeyDown={(e) => {
             if (e.key === "Escape") return setEditing(false)
             if (e.key !== "Enter" || !draft.trim()) return
@@ -606,6 +608,7 @@ function SubStepRow({
       <input
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
+        maxLength={planLimit("sub_steps", "title")}
         onBlur={() => draft.trim() && draft !== sub.title && onRename(draft.trim())}
         onKeyDown={(e) => {
           if (e.key !== "Enter") return
@@ -697,6 +700,7 @@ function SubSteps({
         value={draft}
         autoFocus={adding}
         onChange={(e) => setDraft(e.target.value)}
+        maxLength={planLimit("sub_steps", "title")}
         onKeyDown={(e) => {
           if (e.key !== "Enter") return
           e.preventDefault()
@@ -1516,6 +1520,7 @@ export function TodayTab({
             rows={3}
             value={note}
             onChange={(e) => setNote(e.target.value)}
+            maxLength={DAY_TEXT_LIMITS.note.max}
             onBlur={() => onNote(note)}
             placeholder={TODAY_COPY.notePlaceholder}
             className="w-full rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2 text-[12.5px] text-zinc-200 placeholder:text-zinc-600 focus:border-white/30 focus:outline-none resize-y"
@@ -1547,6 +1552,7 @@ export function TodayTab({
                 <input
                   value={field.label}
                   onChange={(e) => onRenameField(field.id, e.target.value)}
+                  maxLength={planLimit("fields", "label")}
                   placeholder={TODAY_COPY.fieldLabelPlaceholder}
                   aria-label={TODAY_COPY.fieldLabelAria}
                   className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-1.5 text-[12.5px] text-zinc-200 placeholder:text-zinc-600 focus:border-white/30 focus:outline-none"

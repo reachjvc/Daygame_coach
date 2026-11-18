@@ -29,6 +29,7 @@ import {
 import { seasonFocus, wheelRatings } from "@/src/goals/northStarService"
 import { ratedAreaCount } from "@/src/goals/reviewService"
 import { AreaWheel } from "./AreaWheel"
+import { planLimit } from "@/src/goals/planLimits"
 
 export interface AreaHandlers {
   onUpdateArea: (areaId: string, patch: Partial<Omit<NsArea, "id" | "custom">>) => void
@@ -172,6 +173,7 @@ function AddArea({ plan, onAdd }: { plan: NsPlan; onAdd: (label: string) => void
           onKeyDown={(e) => { if (e.key === "Enter") add(draft) }}
           placeholder="Name another area of your life"
           aria-label="Name another area of your life"
+          maxLength={planLimit("areas", "label")}
           className="flex-1 min-w-0 bg-transparent border-b border-white/10 focus:border-violet-400/40 text-[13px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none py-0.5 transition-colors"
         />
       </div>

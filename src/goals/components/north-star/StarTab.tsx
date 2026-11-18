@@ -22,6 +22,7 @@
  * without saying so first.
  */
 
+import { planLimit } from "@/src/goals/planLimits"
 import { useState } from "react"
 // Only utility icons here on purpose. Every semantic icon in this project
 // already carries a meaning somewhere else, and reusing one in a new context
@@ -74,6 +75,7 @@ function StarQuestion({ prompt, plan, onAnswer }: {
         id={`star-${prompt.id}`}
         value={answerOf(plan, prompt.id)}
         onChange={(e) => onAnswer(prompt.id, e.target.value)}
+        maxLength={planLimit("answers", "body")}
         placeholder={prompt.placeholder}
         rows={prompt.list ? 4 : 3}
         aria-label={prompt.question}
@@ -161,6 +163,7 @@ export function StarTab({
           id={STAR_ANCHOR}
           value={plan.northStar}
           onChange={(e) => onStar(e.target.value)}
+          maxLength={planLimit("north_stars", "text")}
           placeholder={NORTH_STAR_SCREEN.placeholder}
           rows={12}
           aria-label="Your north star"

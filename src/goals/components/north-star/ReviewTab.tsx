@@ -14,6 +14,7 @@
  * the interesting part.
  */
 
+import { planLimit } from "@/src/goals/planLimits"
 import { useState } from "react"
 import { Check, ChevronDown } from "lucide-react"
 import type { NsArea, NsPlan, NsReview } from "@/src/goals/types"
@@ -118,6 +119,7 @@ export function ReviewTab({ plan, today, handlers, valuesHandlers, values = true
                 id={`prompt-${p.id}`}
                 value={answerOf(plan, p.id)}
                 onChange={(e) => handlers.onAnswer(p.id, e.target.value)}
+                maxLength={planLimit("answers", "body")}
                 placeholder={p.placeholder}
                 rows={p.list ? 4 : 3}
                 aria-label={p.question}

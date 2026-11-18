@@ -16,16 +16,17 @@ import type { NsPlan } from "./types"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
 import { planToRows, rowsToPlan } from "./lifePlanMapper"
 import { diffPlanRows, nothingChanged, type PlanChanges } from "./lifePlanDiff"
+import { claimKeepalive } from "./keepaliveBudget"
 import { ACCOUNT_CHANGED_MESSAGE, accountHeaders, planApiUrl, refusedForAccount } from "./planAccount"
 
 /**
- * Half the browser's cap on requests that outlive their page (64 KiB for all
- * of a page's at once), leaving the rest for the day's changes sent beside it.
- * A save this small goes `keepalive`, so one sent as the page closes still
- * lands; a bigger one (a first import) goes as a plain request, because
- * `keepalive` over the cap is refused outright.
+ * A plan save goes `keepalive` when it fits the page's shared budget
+ * (`keepaliveBudget.ts`: 64 KiB in total across the page's requests that
+ * outlive it), so one sent as the page closes still lands; one that does not
+ * fit (a first import) goes as a plain request, because `keepalive` over the
+ * cap is refused outright. It is not split: a plan save is one locked step on
+ * one revision, and two halves could land apart.
  */
-const KEEPALIVE_BYTES = 32_000
 
 export interface LoadedPlan {
   /** The plan row's id, when there is one. Null when the account has none. */
@@ -107,7 +108,12 @@ export type SaveOutcome =
   | { ok: true; revision: number; ids: Map<string, string>; rows?: PlanRows }
   /** Somebody else's device saved first. Never merged, always reported. */
   | { ok: false; stale: true }
-  | { ok: false; stale: false; message: string }
+  /**
+   * `limit` is set when the same save can never succeed (the server named a
+   * text over its cap with 422, or the plan itself is refused): the page says
+   * why and waits for an edit instead of retrying.
+   */
+  | { ok: false; stale: false; message: string; limit?: true }
 
 /**
  * Send only what changed since the account last accepted the plan.
@@ -146,23 +152,26 @@ export async function saveLifePlanChanges(
     changes = diffPlanRows(before, rows)
   } catch (error) {
     // The mapper refuses a plan whose parts share an id, naming the id.
-    return { ok: false, stale: false, message: error instanceof Error ? error.message : "This plan could not be saved." }
+    // The same plan would be refused again, so the page waits for an edit rather than retrying.
+    return { ok: false, stale: false, message: error instanceof Error ? error.message : "This plan could not be saved.", limit: true }
   }
   if (nothingChanged(changes)) return { ok: true, revision, ids, rows: before ?? rows }
 
   try {
     const sent = JSON.stringify({ changes, revision })
+    const release = claimKeepalive(new Blob([sent]).size)
     const res = await fetch(planApiUrl("/api/life-plan", account), {
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...accountHeaders(account) },
       body: sent,
-      keepalive: new Blob([sent]).size <= KEEPALIVE_BYTES,
-    })
+      keepalive: release !== null,
+    }).finally(() => release?.())
     if (refusedForAccount(res, account)) return { ok: false, stale: false, message: ACCOUNT_CHANGED_MESSAGE }
     if (res.status === 409) return { ok: false, stale: true }
     if (!res.ok) {
       const body = (await res.json().catch(() => null)) as { error?: string } | null
-      return { ok: false, stale: false, message: body?.error ?? "The last change could not be saved." }
+      const message = body?.error ?? "The last change could not be saved."
+      return res.status === 422 ? { ok: false, stale: false, message, limit: true } : { ok: false, stale: false, message }
     }
     const body = (await res.json()) as { revision: number }
     return { ok: true, revision: body.revision, ids, rows }

@@ -40,6 +40,7 @@ import { Peek } from "./Peek"
 import { ROUTES } from "@/src/shared/routes"
 import { withReturn } from "@/src/shared/returnTo"
 import { usePlanBasePath } from "./planBasePath"
+import { planLimit } from "@/src/goals/planLimits"
 
 const WEEKDAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -202,6 +203,7 @@ export function RoutineCard({
               value={routine.label}
               onChange={(e) => handlers.onRename(routine.id, e.target.value)}
               aria-label={`Name for the ${routine.label} routine`}
+              maxLength={planLimit("routines", "label")}
               className="w-full bg-transparent text-sm font-medium text-zinc-100 focus:outline-none border-b border-transparent focus:border-white/25 py-0.5"
             />
           ) : (
@@ -443,6 +445,7 @@ export function RoutineCard({
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustom() } }}
                   placeholder="Your own step"
                   aria-label={`Add your own step to ${routine.label}`}
+                  maxLength={planLimit("steps", "title")}
                   className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[11.5px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/30"
                 />
                 {sequence ? (
@@ -847,6 +850,7 @@ function SplitDesigner({ routine, color, handlers }: { routine: NsRoutine; color
               autoFocus
               value={naming?.value ?? ""}
               placeholder="Upper Body, Legs, Conditioning…"
+              maxLength={planLimit("split_days", "name")}
               onChange={(e) =>
                 setNaming((was) => (was ? { ...was, value: e.target.value, problem: null } : was))
               }

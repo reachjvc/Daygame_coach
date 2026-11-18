@@ -57,6 +57,7 @@ import {
 import { MilestoneBuilder } from "./GoalCard"
 import { MilestoneCurveEditor } from "../MilestoneCurveEditor"
 import type { GuideHandlers } from "./GuidedBuild"
+import { planLimit } from "@/src/goals/planLimits"
 
 export function AreaBuilder({ plan, today, handlers, areaId: controlledId, only, onGoToOtherHalf, intake = true }: {
   plan: NsPlan
@@ -210,6 +211,7 @@ export function AreaBuilder({ plan, today, handlers, areaId: controlledId, only,
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add() } }}
           placeholder={copy.placeholder(half === "systems" ? example.action : example.want)}
           aria-label={copy.title(area.label)}
+          maxLength={planLimit("goals", "title")}
           className="min-w-0 flex-1 bg-transparent border-b border-white/15 focus:border-white/35 text-[13px] text-zinc-100 placeholder:text-zinc-700 focus:outline-none py-1.5 transition-colors"
         />
         <button
@@ -376,6 +378,7 @@ export function AreaWants({ plan, area, handlers }: {
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add() } }}
           placeholder={BUILDER_COPY.wantsPlaceholder(example.want)}
           aria-label={BUILDER_COPY.title(area.label)}
+          maxLength={planLimit("goals", "title")}
           className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[13px] text-zinc-100 placeholder:text-zinc-700 focus:outline-none focus:border-white/30 transition-colors"
         />
         <button

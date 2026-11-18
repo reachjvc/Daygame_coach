@@ -26,6 +26,7 @@
  * 07:00, and the tick is the same tick.
  */
 
+import { DAY_TEXT_LIMITS, planLimit } from "@/src/goals/planLimits"
 import { useMemo, useState } from "react"
 import { ChevronDown, Plus, Trash2 } from "lucide-react"
 import type { NsPlan } from "@/src/goals/types"
@@ -90,6 +91,7 @@ function Box({
         rows={3}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
+        maxLength={DAY_TEXT_LIMITS.journal.max}
         onBlur={() => commit(draft)}
         placeholder={TODAY_COPY.fieldPlaceholder}
         className="w-full mt-2 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2 text-[12.5px] text-zinc-200 placeholder:text-zinc-600 focus:border-white/30 focus:outline-none resize-y"
@@ -200,6 +202,7 @@ export function JournalTab({
             rows={3}
             value={note}
             onChange={(e) => setNote(e.target.value)}
+            maxLength={DAY_TEXT_LIMITS.note.max}
             onBlur={() => note !== (plan.notes[today] ?? "") && onNote(note)}
             placeholder={JOURNAL_COPY.notePlaceholder}
             className="w-full mt-2 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2 text-[12.5px] text-zinc-200 placeholder:text-zinc-600 focus:border-white/30 focus:outline-none resize-y"
@@ -246,6 +249,7 @@ export function JournalTab({
             id="journal-own"
             value={own}
             onChange={(e) => setOwn(e.target.value)}
+            maxLength={planLimit("fields", "label")}
             onKeyDown={(e) => {
               if (e.key !== "Enter" || !own.trim()) return
               e.preventDefault()

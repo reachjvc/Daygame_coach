@@ -35,6 +35,7 @@ export function SentenceBox({
   rows = 2,
   id,
   className,
+  maxLength,
 }: {
   value: string
   onChange: (text: string) => void
@@ -45,6 +46,8 @@ export function SentenceBox({
   rows?: number
   id?: string
   className?: string
+  /** The database cap for this text (`src/goals/planLimits.ts`); typing stops there, a longer value is never cut. */
+  maxLength?: number
 }) {
   const [focused, setFocused] = useState(false)
   const [kept, setKept] = useState(false)
@@ -75,6 +78,7 @@ export function SentenceBox({
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         rows={rows}
+        maxLength={maxLength}
         placeholder={placeholder}
         aria-label={label}
         className={className ?? "w-full rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[13px] text-zinc-100 placeholder:text-zinc-700 focus:outline-none focus:border-white/30 transition-colors leading-relaxed resize-y"}

@@ -29,6 +29,7 @@
  * same component the commit step reads back, with the flow's handlers on it.
  */
 
+import { planLimit } from "@/src/goals/planLimits"
 import { useState } from "react"
 // Utility icons only. Every semantic icon in this project already means
 // something somewhere else, and reusing one in a new context needs sign-off.
@@ -175,6 +176,7 @@ function Answer({
         <textarea
           value={answerOf(plan, prompt.id)}
           onChange={(e) => onAnswer(prompt.id, e.target.value)}
+          maxLength={planLimit("answers", "body")}
           placeholder={prompt.placeholder}
           rows={asLines ? 5 : 4}
           aria-label={prompt.question}
@@ -454,6 +456,7 @@ export function RecapTab({
             <textarea
               value={plan.northStar}
               onChange={(e) => handlers.onStar(e.target.value)}
+              maxLength={planLimit("north_stars", "text")}
               placeholder={NORTH_STAR_SCREEN.placeholder}
               rows={12}
               aria-label={RECAP_COPY.starTitle}
@@ -520,6 +523,7 @@ export function RecapTab({
                 <textarea
                   value={answerOf(plan, key)}
                   onChange={(e) => handlers.onAnswer(key, e.target.value)}
+                  maxLength={planLimit("answers", "body")}
                   rows={3}
                   aria-label={label}
                   className="w-full mt-1.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 resize-y transition-colors"
@@ -783,6 +787,7 @@ export function RecapTab({
               <textarea
                 value={answerOf(plan, COMMIT_KEY)}
                 onChange={(e) => handlers.onAnswer(COMMIT_KEY, e.target.value)}
+                maxLength={planLimit("answers", "body")}
                 rows={3}
                 aria-label={RECAP_COPY.commitTitle}
                 className="w-full mt-1.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 resize-y transition-colors"

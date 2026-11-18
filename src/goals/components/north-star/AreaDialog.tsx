@@ -40,6 +40,7 @@ import { TagList } from "./GoalCard"
 import { ValueBrowser } from "./ValueBrowser"
 import { AreaPeople } from "@/src/role-models/components/AreaPeople"
 import { SentenceBox } from "./SentenceBox"
+import { planLimit } from "@/src/goals/planLimits"
 
 export function AreaDialog({
   area,
@@ -135,6 +136,7 @@ export function AreaDialog({
                 onBlur={() => setRenaming(false)}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") setRenaming(false) }}
                 aria-label={`Name for the ${area.label} area`}
+                maxLength={planLimit("areas", "label")}
                 className="min-w-0 flex-1 bg-transparent text-lg font-semibold text-white border-b border-white/30 focus:outline-none focus:border-white/60 py-0.5"
               />
             ) : (
@@ -185,6 +187,7 @@ export function AreaDialog({
             <textarea
               value={review.ten}
               onChange={(e) => onAreaReview(area.id, { ten: e.target.value })}
+              maxLength={planLimit("areas", "review_ten")}
               placeholder={example ?? AREA_REVIEW_COPY.ten.placeholder}
               rows={3}
               aria-label={`What a 10 looks like in ${area.label}`}
@@ -288,6 +291,7 @@ export function AreaDialog({
             <SentenceBox
               value={review.purpose}
               onChange={(text) => onAreaReview(area.id, { purpose: text })}
+              maxLength={planLimit("areas", "review_purpose")}
               placeholder={AREA_REVIEW_COPY.purpose.placeholder}
               label={`Why ${area.label} matters to you`}
               className="w-full mt-1.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 resize-y transition-colors"
@@ -331,6 +335,7 @@ export function AreaDialog({
               <input
                 value={review.identity}
                 onChange={(e) => onAreaReview(area.id, { identity: e.target.value })}
+                maxLength={planLimit("areas", "review_identity")}
                 placeholder="I am…"
                 aria-label={`Who you are in ${area.label}`}
                 className="w-full mt-1.5 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/30 transition-colors"

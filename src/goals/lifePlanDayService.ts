@@ -351,6 +351,49 @@ export function keepEditsMadeWhileLoading(
   return merged
 }
 
+/**
+ * `record` with one patch applied: what the account holds once it has accepted
+ * that patch. The day save acknowledges patch by patch with it, so a save that
+ * is refused for one day does not make the others look unsaved, and one that
+ * lands late never resets the baseline to older data.
+ */
+export function recordAfterPatch(record: DayRecord, patch: DayPatch): DayRecord {
+  const { date } = patch
+  /** `map` with `key` set to `value`, or left out when `value` is empty. */
+  const put = <T,>(map: Record<string, T>, key: string, value: T | undefined): Record<string, T> => {
+    const rest = Object.fromEntries(Object.entries(map).filter(([k]) => k !== key))
+    return value === undefined ? rest : { ...rest, [key]: value }
+  }
+  const emptyOr = <T extends object>(day: T): T | undefined => (Object.keys(day).length > 0 ? day : undefined)
+
+  let { daily, logged, notes, journal } = record
+  let numbers = record.numbers ?? {}
+  if (patch.note !== undefined) {
+    notes = put(notes, date, patch.note === null || patch.note === "" ? undefined : patch.note)
+  }
+  if (patch.ratings) {
+    const day = { ...(daily[date] ?? {}) }
+    for (const [id, v] of Object.entries(patch.ratings)) Object.assign(day, { [id]: v })
+    daily = put(daily, date, emptyOr(Object.fromEntries(Object.entries(day).filter(([, v]) => v !== null)) as Record<string, number>))
+  }
+  if (patch.ticks) {
+    const ticks = patch.ticks
+    const kept = (logged[date] ?? []).filter((id) => ticks[id] === undefined)
+    const added = Object.entries(ticks).filter(([, on]) => on).map(([id]) => id)
+    const day = [...kept, ...added]
+    logged = put(logged, date, day.length > 0 ? day : undefined)
+  }
+  if (patch.journal) {
+    const day = { ...(journal[date] ?? {}), ...patch.journal }
+    journal = put(journal, date, emptyOr(Object.fromEntries(Object.entries(day).filter(([, text]) => text !== ""))))
+  }
+  if (patch.numbers) {
+    const day = { ...(numbers[date] ?? {}), ...patch.numbers }
+    numbers = put(numbers, date, emptyOr(Object.fromEntries(Object.entries(day).filter(([, v]) => v !== null)) as Record<string, number>))
+  }
+  return { daily, logged, notes, journal, numbers }
+}
+
 export function patchesBetween(before: DayRecord, after: DayRecord): DayPatch[] {
   const dates = new Set([
     ...Object.keys(before.daily), ...Object.keys(after.daily),

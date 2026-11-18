@@ -22,6 +22,7 @@
  * strange thing to put after a plan and before nothing.
  */
 
+import { planLimit } from "@/src/goals/planLimits"
 import { useState } from "react"
 import { Check } from "lucide-react"
 import type { NsPlan } from "@/src/goals/types"
@@ -105,6 +106,7 @@ export function CommitTab({
         <textarea
           value={commitment}
           onChange={(e) => handlers.onAnswer(COMMIT_KEY, e.target.value)}
+          maxLength={planLimit("answers", "body")}
           rows={3}
           placeholder={COMMIT_COPY.commitPlaceholder}
           aria-label={COMMIT_COPY.commitTitle}

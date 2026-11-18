@@ -276,12 +276,28 @@ export function syncNotice(state: SyncState): string {
     case "stale":
       return "This plan changed on another device. Reload to see it — nothing here has been saved."
     case "offline":
-      return "Your plan could not be reached. You can keep working; nothing is being saved."
+      return "Your plan could not be reached. Nothing here is being saved. Reload to try again."
     case "failed":
-      return "The last change could not be saved. Your work is still here on this device."
+      return "Not saved. Keep this page open; it retries."
     default:
       return ""
   }
 }
 
 export type SyncState = "unknown" | "saved" | "saving" | "failed" | "stale" | "offline"
+
+/**
+ * The revision to remember after a save or a read: never lower than the one
+ * already held. A save that found nothing to send reports the revision it was
+ * handed, which may be older than one a later save moved the page to, and
+ * lowering it would make the next save quote a stale revision and be refused
+ * as another device's (409), which stops the page saving for good.
+ */
+export function nextRevision(held: number, reported: number): number {
+  return reported > held ? reported : held
+}
+
+/** The wait before the nth failed save in a row is tried again: 4 s, 8 s, 16 s, ... at most a minute. */
+export function backoffMs(failures: number): number {
+  return Math.min(60_000, SAVE_DEBOUNCE_MS * 2 ** Math.max(0, failures - 1))
+}

@@ -33,6 +33,7 @@
  * Sources and quotes: docs/research/life-mastery/values-and-identity.md.
  */
 
+import { planLimit } from "@/src/goals/planLimits"
 import { useState, type ReactNode } from "react"
 import Link from "next/link"
 // ChevronDown for the disclosure. Reordering is a drag now, so it wears
@@ -413,6 +414,7 @@ export function ValuesWork({ plan, handlers, mode }: {
                             autoFocus
                             value={drillDraft}
                             onChange={(e) => setDrillDraft(e.target.value)}
+                            maxLength={planLimit("values", "value")}
                             onKeyDown={(e) => { if (e.key === "Enter") finishDrill(value, "replace") }}
                             placeholder="Freedom, security, connection…"
                             aria-label={VALUES_MEANS.question(value)}

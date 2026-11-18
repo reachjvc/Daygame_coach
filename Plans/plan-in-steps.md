@@ -17,6 +17,10 @@ His answers the same day, which shape everything below:
   Y6 yes.
 
 **Status:**
+- **Phase 3 built** on branch `plan-p3` (not merged). Known and left for the Phase 5 outbox: an edit typed
+  during an open save is still lost on a hard close (the browser kills the page before that save lands),
+  and a copy of the plan kept in the browser can still be dropped on the next load when the account holds a
+  newer plan (items 3 and 6 of the Opus review).
 - **Phase 1 live** on 2026-11-18 (`02278590`):
   - The first backup is in `~/dg-backups/nightly/` and OneDrive: 32 tables, 2,231 rows, 4 accounts.
   - The nightly timer runs at 03:00.

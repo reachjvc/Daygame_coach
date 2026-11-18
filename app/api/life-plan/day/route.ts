@@ -24,6 +24,7 @@ import { getUserTimezone } from "@/src/db/settingsRepo"
 import { getTodayInTimezone } from "@/src/shared/dateUtils"
 import { dayRowsToRecord, emptyDayRecord, fitAsked, unknownIds, whyNotWritable } from "@/src/goals/lifePlanDayService"
 import type { DayPatch } from "@/src/db/lifePlanDayTypes"
+import { findDayBreach, limitMessage } from "@/src/goals/planLimits"
 
 export async function GET(req: Request) {
   const auth = await requirePlanTarget(req)
@@ -49,6 +50,9 @@ export async function PUT(req: Request) {
   if (!patch || typeof patch.date !== "string") {
     return NextResponse.json({ error: "Send a day" }, { status: 400 })
   }
+  // Over a cap: 422 naming the field, so the page can say which and wait for an edit.
+  const breach = findDayBreach(patch)
+  if (breach) return NextResponse.json({ error: limitMessage(breach), ...breach }, { status: 422 })
   try {
     // The account's calendar day, never the server's and never the browser's
     // unchecked word. A failure here is loud: a silent "UTC" would file a whole

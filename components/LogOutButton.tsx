@@ -31,6 +31,7 @@ import { unsentAuditChanges, unsentAuditDeletes } from "@/src/audit/auditQueue"
 import { forgetSessionInThisBrowser } from "@/src/db/authCookies"
 import { forgetThisDevice } from "@/src/notifications/pushClient"
 import { sendWaitingAudit, type AuditSendOutcome } from "@/src/audit/sendWaitingAudit"
+import { flushPlanPage, unsentPlanChanges } from "@/src/goals/planFlush"
 import { forgetOfflineCopies } from "@/src/shared/offlineCopies"
 import { SendTrackerChanges } from "@/src/timetrack/components/SendTrackerChanges"
 import { sendTrackerChangesNow, unsentTrackerChanges } from "@/src/timetrack/hooks/useTimetrackSync"
@@ -93,6 +94,9 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
     setOwnSender(false)
     setPhase({ kind: "leaving" })
     startTransition(async () => {
+      // The plan page holds edits for a few seconds before sending. Sign-out
+      // comes next and a send after it is refused, so it goes first.
+      await Promise.race([flushPlanPage(), new Promise((done) => setTimeout(done, SEND_BEFORE_LOG_OUT_MS))])
       await forgetThisDevice()
       await Promise.race([signOut().catch(() => null), new Promise((done) => setTimeout(done, SEND_BEFORE_LOG_OUT_MS))])
       forgetSessionInThisBrowser()
@@ -129,7 +133,7 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
   }, [])
 
   const unsent = useCallback(
-    () => (stranger.current ? 0 : unsentTrackerChanges()) + (auditStranger.current ? 0 : unsentAuditChanges()),
+    () => (stranger.current ? 0 : unsentTrackerChanges()) + (auditStranger.current ? 0 : unsentAuditChanges()) + unsentPlanChanges(),
     [],
   )
 
@@ -141,6 +145,8 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
     auditNotDeleted.current = []
     auditUndoSent.current = 0
     auditFinal.current = false
+    // Ask the open plan page to send what it holds; the loop below waits for it.
+    void flushPlanPage()
     if (unsent() === 0) {
       leave()
       return

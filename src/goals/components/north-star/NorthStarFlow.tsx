@@ -66,14 +66,15 @@ import type { GuideQuestionId } from "@/src/goals/data/northStarGuide"
 import * as ns from "@/src/goals/northStarService"
 import * as nsTrack from "@/src/goals/northStarTrackService"
 import { fetchLifePlan, newNodeId, saveLifePlanChanges, startLifePlan } from "@/src/goals/lifePlanClient"
-import { LIFE_PLAN_IMPORTED_KEY, NOTHING_TO_SHOW, SAVE_DEBOUNCE_MS, canSave, decideOnLoad, planHalfAfterLoad, planHasNothingWritten, sendableFingerprint, syncNotice, type SyncDecision, type SyncState } from "@/src/goals/lifePlanSync"
+import { LIFE_PLAN_IMPORTED_KEY, NOTHING_TO_SHOW, SAVE_DEBOUNCE_MS, canSave, backoffMs, decideOnLoad, nextRevision, planHalfAfterLoad, planHasNothingWritten, sendableFingerprint, syncNotice, type SyncDecision, type SyncState } from "@/src/goals/lifePlanSync"
 import { fetchDayRecord, saveDayCatchingUp, sendDayOnLeave } from "@/src/goals/lifePlanDayClient"
+import { registerPlanPage } from "@/src/goals/planFlush"
 import { ACCOUNT_CHANGED_MESSAGE, guardSandboxRequests, nameEveryRequest, onAccountChanged } from "@/src/goals/planAccount"
 import { NO_TRAINING_TICKS, stepTick, stepTickedByHand, trainingTicks } from "@/src/goals/dayTicks"
 import { useLoad } from "@/src/shared/useLoad"
 import type { SessionType } from "@/src/health/types"
 import type { DayPatch } from "@/src/db/lifePlanDayTypes"
-import { emptyDayRecord, keepEditsMadeWhileLoading, patchesBetween, recordIsEmpty, recordOf, recordToPatches, type DayRecord } from "@/src/goals/lifePlanDayService"
+import { recordAfterPatch, emptyDayRecord, keepEditsMadeWhileLoading, patchesBetween, recordIsEmpty, recordOf, recordToPatches, type DayRecord } from "@/src/goals/lifePlanDayService"
 import { reconcileProgramReference } from "@/src/goals/programReferenceService"
 import { PlanBasePathContext } from "./planBasePath"
 import { StarTab } from "./StarTab"
@@ -374,6 +375,12 @@ export function NorthStarFlow({
    */
   const pendingDays = useRef<DayPatch[]>([])
   /**
+   * Bumped when the day baseline is set on a path that changes no other state
+   * (`start-empty`), so the day save, which refused to run while the baseline
+   * was null, looks again: a note typed before the read landed is then sent.
+   */
+  const [dayBaseline, setDayBaseline] = useState(0)
+  /**
    * THE PLAN SAVE WAITING ON ITS TIMER, as a way to send it now; null when
    * nothing is waiting.
    *
@@ -396,6 +403,48 @@ export function NorthStarFlow({
    */
   const planSaveInFlight = useRef<Promise<void> | null>(null)
   const saveRun = useRef(0)
+  /**
+   * The plan or day that the server refused for a text over its cap (422).
+   * The same save can never succeed, so nothing is sent again until an edit
+   * changes it; the note naming the field stays on screen meanwhile.
+   */
+  const blockedPlan = useRef<string | null>(null)
+  /** Day patches (as text) the server refused for a text over its cap; each waits for an edit to that day. */
+  const blockedDays = useRef<Set<string>>(new Set())
+  /**
+   * THE PLAN, THE ACCOUNT'S ROW AND ITS REVISION AS THE SAVES SEE THEM NOW.
+   * A save runs seconds after the render that armed it and a day save runs
+   * beside a plan save, so reading them from a closure sends an old revision
+   * (refused as another device's) or an old plan. The state copies stay, for
+   * the effects that must run when they move. The revision never goes down.
+   */
+  const planLive = useRef<NsPlan>(plan)
+  planLive.current = plan
+  const planIdRef = useRef<string | null>(null)
+  const revisionRef = useRef(0)
+  const adoptPlanId = useCallback((id: string) => {
+    planIdRef.current = id
+    setPlanId(id)
+  }, [])
+  const moveRevision = useCallback((reported: number) => {
+    const next = nextRevision(revisionRef.current, reported)
+    revisionRef.current = next
+    setRevision(next)
+  }, [])
+  /** Failed saves in a row, so a failing save backs off (4 s, 8 s, 16 s ... at most a minute) instead of retrying at once. */
+  const planFailures = useRef(0)
+  const dayFailures = useRef(0)
+  /** The day saves, one after the other: two at once could land in either order. */
+  const dayChain = useRef<Promise<void>>(Promise.resolve())
+  const dayRetry = useRef<number | null>(null)
+  const serverStateRef = useRef<SyncState>("unknown")
+  const otherAccountRef = useRef(false)
+  serverStateRef.current = serverState
+  otherAccountRef.current = otherAccount
+  /** The day save waiting on its timer, as a way to send it at once. */
+  const dayNow = useRef<(() => void) | null>(null)
+  /** A Next or Done came while a save was open: the next save goes at once, not after the wait. */
+  const sendAsap = useRef(false)
   /** What this browser held on the way in, captured once for the import. */
   const browserCopy = useRef<NsPlan | null>(null)
   /**
@@ -732,8 +781,8 @@ export function NorthStarFlow({
       if (server?.ids) for (const [local, id] of server.ids) nodeIds.set(local, id)
 
       if (decision.kind === "use-server" && server?.planId) {
-        setPlanId(server.planId)
-        setRevision(decision.revision)
+        adoptPlanId(server.planId)
+        moveRevision(decision.revision)
         /**
          * THE ACCOUNT'S DAYS WIN, once there are any.
          *
@@ -792,6 +841,18 @@ export function NorthStarFlow({
       // something to save, and not before.
       if (decision.kind === "start-empty") {
         setServerState("unknown")
+        /**
+         * THE ACCOUNT HAS NO DAYS EITHER, when the read answered. The day save
+         * refuses to run while its baseline is null, so a new account's first
+         * visit never sent a tick, rating, note or journal line (the day route
+         * makes the plan row itself). `undefined` is a failed read, which stays
+         * unknown. The browser's own days, if it has any, are then the changes
+         * against this empty record, which is the import.
+         */
+        if (days) {
+          ackDays(recordIsEmpty(days) ? emptyDayRecord() : days)
+          setDayBaseline((n) => n + 1)
+        }
         return
       }
 
@@ -812,8 +873,8 @@ export function NorthStarFlow({
         setServerNote(syncNotice("stale"))
         return
       }
-      setPlanId(started.id)
-      setRevision(started.revision)
+      adoptPlanId(started.id)
+      moveRevision(started.revision)
 
       /**
        * THE DAY HALF COMES ALONG, as on a plan read from the account. Nothing
@@ -874,7 +935,7 @@ export function NorthStarFlow({
     if (serverState === "stale" || serverState === "offline" || otherAccount) return
     // One save at a time. Without this the "saving" state change re-enters this
     // effect and arms a second timer while the first request is still open.
-    if (serverState === "saving") return
+    const saving = serverState === "saving"
     // Nothing written yet: no save, and no plan row either — unless this IS the
     // clear, in which case an empty plan is the thing to send.
     if (ns.planIsUntouched(plan) && !clearOnce.current) return
@@ -882,7 +943,12 @@ export function NorthStarFlow({
     // day note and a journal line all make a new plan object and none of them
     // travels in this request; sending it anyway moved the revision and made
     // the other device stale for nothing.
-    if (fingerprint === lastSent.current) return
+    if (fingerprint === lastSent.current) {
+      sendAsap.current = false
+      return
+    }
+    // Refused for a text over its cap, and not edited since: it would only be refused again.
+    if (fingerprint === blockedPlan.current) return
     const send = () => {
       // `savePlanNow` (a tick naming a part not saved yet) holds the revision; a
       // second save now would be refused as stale. Wait for it: if it lands, the
@@ -896,12 +962,17 @@ export function NorthStarFlow({
         return
       }
       planOnLeave.current = null
+      // What this save carries is fixed here: an edit typed while it is in
+      // flight is not on the account when it lands, and must not be marked so.
+      const sentPlan = planLive.current
+      const sentFingerprint = sendableFingerprint(sentPlan)
       setServerState("saving")
       void holdOpen(planSaveInFlight, (async () => {
         // The row is made HERE, the first time there is something to put in it,
         // rather than on every visit to the page.
-        let id = planId
-        let rev = revision
+        // From the refs, not from this render: the revision and the row may
+        // have moved since the render that armed this send.
+        let id = planIdRef.current
         if (!id) {
           const started = await startLifePlan(userId)
           if (!started) {
@@ -912,29 +983,48 @@ export function NorthStarFlow({
           // No row at the read; one that has been saved into since is another device's.
           if (started.revision !== 0) return { ok: false, stale: true } as const
           id = started.id
-          rev = started.revision
-          setPlanId(started.id)
-          setRevision(started.revision)
+          adoptPlanId(started.id)
+          moveRevision(started.revision)
         }
-        return saveLifePlanChanges(lastSentRows.current, plan, id, rev, nodeIds, newNodeId, userId)
+        return saveLifePlanChanges(lastSentRows.current, sentPlan, id, revisionRef.current, nodeIds, newNodeId, userId)
       })()).then((out) => {
         if (!out) return
         if (out.ok) {
           // Recorded only on success, so a failed save is retried rather than
           // remembered as sent.
-          lastSent.current = fingerprint
+          lastSent.current = sentFingerprint
           lastSentRows.current = out.rows ?? null
           clearOnce.current = false
-          setRevision(out.revision)
+          planFailures.current = 0
+          moveRevision(out.revision)
           setServerState("saved")
           setServerNote("")
           return
         }
+        if (!out.stale && out.limit) blockedPlan.current = sentFingerprint
+        else if (!out.stale) planFailures.current++
         setServerState(out.stale ? "stale" : "failed")
-        setServerNote(out.stale ? syncNotice("stale") : out.message)
+        // Said as it is: a refusal that waits for an edit names its reason; any
+        // other failure is tried again with a growing wait, and says so.
+        setServerNote(out.stale ? syncNotice("stale") : out.limit ? out.message : syncNotice("failed"))
       })
     }
-    const timer = window.setTimeout(send, SAVE_DEBOUNCE_MS)
+    if (saving) {
+      // A save is open and this edit came after it. No timer: the open save's
+      // answer re-runs this effect with the revision it returned, and a hidden
+      // page (or a Next or Done pressed meanwhile) then sends at once. Sending
+      // from THIS run would quote the revision the open save is about to move,
+      // and be refused as stale. Found by hiding the page with a save open.
+      return
+    }
+    // A page that is hidden has no more typing to wait for: it may be closed any
+    // moment, so what is unsent goes now. This is what carries an edit made
+    // while a save was open, once that save has landed and this effect re-runs.
+    const asap = sendAsap.current || document.visibilityState === "hidden"
+    sendAsap.current = false
+    // After a failure the wait grows (4 s, 8 s, 16 s ... a minute at most),
+    // visible or hidden: a hidden page used to retry about once a second.
+    const timer = window.setTimeout(send, planFailures.current > 0 ? backoffMs(planFailures.current) : asap ? 0 : SAVE_DEBOUNCE_MS)
     // Closing or hiding the page sends it now rather than losing it; see `planOnLeave`.
     planOnLeave.current = () => {
       window.clearTimeout(timer)
@@ -944,7 +1034,7 @@ export function NorthStarFlow({
     // the back button) unmounts it with no `pagehide`, and the leave effect's
     // own clean-up sends what is waiting. A re-run clears it at its start.
     return () => window.clearTimeout(timer)
-  }, [plan, planId, revision, loaded, serverState, nodeIds, decision, otherAccount, userId])
+  }, [plan, planId, revision, loaded, serverState, nodeIds, decision, otherAccount, userId, adoptPlanId, moveRevision])
 
   /**
    * IS THERE WORK THE ACCOUNT HAS NOT ACCEPTED?
@@ -974,31 +1064,39 @@ export function NorthStarFlow({
    */
   const savePlanNow = useCallback(async (): Promise<boolean> => {
     // One plan save at a time: both would carry the same revision (`planSaveInFlight`).
-    // The one that is open may be carrying this very plan, in which case the day can go.
-    const open = planSaveInFlight.current
-    if (open) {
-      await open
-      return lastSent.current === sendableFingerprint(plan)
-    }
-    return holdOpen(planSaveInFlight, (async () => {
-      let id = planId
-      let rev = revision
-      if (!id) {
-        const started = await startLifePlan(userId)
-        if (!started || started.revision !== 0) return false
-        id = started.id
-        rev = started.revision
-        setPlanId(started.id)
-        setRevision(started.revision)
+    // A save that is open may be carrying an older plan than this one, so after
+    // it settles look again rather than assume it covered everything.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const open = planSaveInFlight.current
+      if (open) {
+        await open
+        continue
       }
-      const out = await saveLifePlanChanges(lastSentRows.current, plan, id, rev, nodeIds, newNodeId, userId)
-      if (!out.ok) return false
-      lastSent.current = sendableFingerprint(plan)
-      lastSentRows.current = out.rows ?? null
-      setRevision(out.revision)
-      return true
-    })())
-  }, [plan, planId, revision, nodeIds, userId])
+      const sentPlan = planLive.current
+      const sentFingerprint = sendableFingerprint(sentPlan)
+      if (sentFingerprint === lastSent.current) return true
+      const landed = await holdOpen(planSaveInFlight, (async () => {
+        let id = planIdRef.current
+        if (!id) {
+          const started = await startLifePlan(userId)
+          if (!started || started.revision !== 0) return false
+          id = started.id
+          adoptPlanId(started.id)
+          moveRevision(started.revision)
+        }
+        const out = await saveLifePlanChanges(lastSentRows.current, sentPlan, id, revisionRef.current, nodeIds, newNodeId, userId)
+        if (!out.ok) return false
+        lastSent.current = sentFingerprint
+        lastSentRows.current = out.rows ?? null
+        moveRevision(out.revision)
+        return true
+      })())
+      if (!landed) return false
+    }
+    return sendableFingerprint(planLive.current) === lastSent.current
+  }, [nodeIds, userId, adoptPlanId, moveRevision])
+  const savePlanNowRef = useRef(savePlanNow)
+  savePlanNowRef.current = savePlanNow
 
   /**
    * YOUR DAY, SENT A FEW SECONDS AFTER YOU CHANGE IT.
@@ -1017,32 +1115,100 @@ export function NorthStarFlow({
    * not been read: a diff against nothing would read every tick already stored
    * as new and send the whole history back.
    */
+  /**
+   * ONE DAY SAVE AT A TIME, each started from the account as it is NOW.
+   *
+   * Two at once (the timer's and a Next pressed meanwhile) could land in either
+   * order, leaving the account with the older value and the page believing the
+   * newer one saved. So each run waits for the one before it, works out what to
+   * send from the plan and the account's days at that moment, and
+   * acknowledges each day as the account accepts it (`recordAfterPatch`), never the
+   * whole record. A day refused for a text over its cap is named and skipped;
+   * the others still go. Any other failure is tried again after a growing wait.
+   */
+  const runDay = useCallback((): Promise<void> => {
+    const next = dayChain.current.then(async () => {
+      if (dayRetry.current !== null) {
+        window.clearTimeout(dayRetry.current)
+        dayRetry.current = null
+      }
+      if (accountDays.current === null) return
+      if (serverStateRef.current === "offline" || otherAccountRef.current) return
+      const patches = patchesBetween(accountDays.current, recordOf(planLive.current)).filter((p) => !blockedDays.current.has(JSON.stringify(p)))
+      let failed = false
+      for (const patch of patches) {
+        const out = await saveDayCatchingUp(patch, () => savePlanNowRef.current(), userId)
+        if (out.ok) {
+          accountDays.current = recordAfterPatch(accountDays.current!, patch)
+          continue
+        }
+        if (!out.planBehind && out.limit) {
+          blockedDays.current.add(JSON.stringify(patch))
+          setServerNote(out.message)
+          continue
+        }
+        failed = true
+        setServerNote(out.planBehind ? syncNotice("failed") : `${out.message} Keep this page open; it retries.`)
+        break
+      }
+      if (!failed) {
+        dayFailures.current = 0
+        pendingDays.current = patchesBetween(accountDays.current, recordOf(planLive.current)).filter((p) => !blockedDays.current.has(JSON.stringify(p)))
+        if (patches.length > 0 && blockedDays.current.size === 0) setServerNote("")
+        return
+      }
+      dayFailures.current++
+      dayRetry.current = window.setTimeout(() => void runDay(), backoffMs(dayFailures.current))
+    })
+    dayChain.current = next.catch(() => {})
+    return dayChain.current
+  }, [userId])
+  useEffect(() => () => { if (dayRetry.current !== null) window.clearTimeout(dayRetry.current) }, [])
+
+  /**
+   * WHAT LOG OUT NEEDS FROM THIS PAGE (`src/goals/planFlush.ts`): send what is
+   * waiting and wait for the answer, and say how much the account still has not
+   * accepted. Counted from the same facts the saves use, so the two cannot
+   * disagree.
+   */
+  const decisionRef = useRef<SyncDecision | null>(null)
+  decisionRef.current = decision
+  const loadedRef = useRef(false)
+  loadedRef.current = loaded
   useEffect(() => {
+    const planWaiting = () =>
+      canSave(decisionRef.current, loadedRef.current) &&
+      serverStateRef.current !== "offline" && !otherAccountRef.current &&
+      !(ns.planIsUntouched(planLive.current) && !clearOnce.current) &&
+      sendableFingerprint(planLive.current) !== lastSent.current
+    const daysWaiting = () =>
+      accountDays.current === null ? 0 : patchesBetween(accountDays.current, recordOf(planLive.current)).length
+    return registerPlanPage({
+      flush: async () => {
+        if (planWaiting()) await savePlanNowRef.current()
+        await runDay()
+      },
+      unsent: () => (planWaiting() ? 1 : 0) + daysWaiting(),
+    })
+  }, [runDay])
+
+  useEffect(() => {
+    // Whatever was waiting is replaced by this run; it re-arms below if there is more.
+    dayNow.current = null
     if (!loaded || accountDays.current === null) return
     if (serverState === "offline" || otherAccount) return
-    const after = recordOf(plan)
-    const patches = patchesBetween(accountDays.current, after)
+    const patches = patchesBetween(accountDays.current, recordOf(plan)).filter((p) => !blockedDays.current.has(JSON.stringify(p)))
     pendingDays.current = patches
     if (patches.length === 0) return
 
-    const timer = window.setTimeout(() => {
-      void (async () => {
-        for (const patch of patches) {
-          const out = await saveDayCatchingUp(patch, savePlanNow, userId)
-          if (!out.ok) {
-            setServerNote(out.planBehind ? syncNotice("failed") : out.message)
-            return
-          }
-        }
-        // Recorded only when every day in the batch landed, so a failure is
-        // retried on the next change rather than remembered as saved.
-        ackDays(after)
-        if (pendingDays.current === patches) pendingDays.current = []
-        setServerNote("")
-      })()
-    }, SAVE_DEBOUNCE_MS)
+    const timer = window.setTimeout(() => void runDay(), dayFailures.current > 0 ? backoffMs(dayFailures.current) : document.visibilityState === "hidden" ? 0 : SAVE_DEBOUNCE_MS)
+    // A step change, a Done and the like send it now (`flushNow` below).
+    dayNow.current = () => {
+      window.clearTimeout(timer)
+      void runDay()
+    }
     return () => window.clearTimeout(timer)
-  }, [plan, loaded, serverState, savePlanNow, ackDays, otherAccount, userId])
+  }, [plan, loaded, serverState, runDay, otherAccount, dayBaseline])
 
   /*
    * What is waiting goes out the moment the page is hidden or left, both
@@ -1067,6 +1233,21 @@ export function NorthStarFlow({
       for (const patch of pendingDays.current) sendDayOnLeave(patch, userId)
     }
   }, [userId])
+
+  /**
+   * SAVE NOW, not in four seconds, when the person finishes something: Next, a
+   * step change, Done or closing a sheet. All of those change the step or
+   * close one of the sheets below, so one effect on those covers them. What is
+   * waiting (the plan's timer, the day's timer) is sent at once, the same
+   * saves as ever, only earlier. Declared after the save effects so that an
+   * edit and the change it came with, made in one batch, are both armed first.
+   * The walk lost twelve areas in the four-second wait.
+   */
+  useEffect(() => {
+    if (planSaveInFlight.current) sendAsap.current = true
+    planOnLeave.current?.()
+    dayNow.current?.()
+  }, [tab, nowAreaId, planAreaId, nowGoalId, openRoutineId])
 
   /**
    * THE ONE THING, READ ONCE FOR THE WHOLE FLOW.

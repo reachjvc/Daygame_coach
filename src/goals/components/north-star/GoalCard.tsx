@@ -76,6 +76,8 @@ import { GoalAchievements } from "./Achievements"
 import { GoalReadings } from "./GoalReadings"
 import { takesReadings } from "@/src/goals/goalReadings"
 import { NO_TRAINING_TICKS, type TrainingTicks } from "@/src/goals/dayTicks"
+import { planLimit } from "@/src/goals/planLimits"
+import { LimitCounter } from "./LimitCounter"
 
 const formatShortDay = (key: string) => dateKeyLabel(key, { day: "numeric", month: "short" })
 
@@ -201,8 +203,10 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
             value={goal.title}
             onChange={(e) => handlers.onUpdate(goal.id, { title: e.target.value })}
             aria-label="Goal"
+            maxLength={planLimit("goals", "title")}
             className="w-full bg-transparent border-b border-transparent hover:border-white/10 focus:border-white/25 text-sm text-zinc-100 focus:outline-none py-0.5 transition-colors"
           />
+          <LimitCounter value={goal.title} max={planLimit("goals", "title") ?? 500} label="Goal title" />
           <span className="flex items-center gap-1.5 text-[10px] text-zinc-600 mt-0.5">
             <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
             {area?.label ?? ""}
@@ -235,6 +239,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
             <input
               value={goal.unit}
               onChange={(e) => handlers.onUpdate(goal.id, { unit: e.target.value })}
+              maxLength={planLimit("goals", "unit")}
               placeholder="unit"
               aria-label={`Unit for ${goal.title}`}
               className="w-16 bg-white/5 border border-white/10 rounded-md px-1.5 py-1 text-[11px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/25"
@@ -586,6 +591,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
             <textarea
               value={goal.why}
               onChange={(e) => handlers.onUpdate(goal.id, { why: e.target.value })}
+              maxLength={planLimit("goals", "why")}
               placeholder="Write it the way you would say it out loud"
               rows={3}
               aria-label={`Why you want: ${goal.title}`}
@@ -614,6 +620,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
             <SentenceBox
               value={goal.painWhy}
               onChange={(text) => handlers.onUpdate(goal.id, { painWhy: text })}
+              maxLength={planLimit("goals", "pain_why")}
               placeholder="What it takes from you if next year looks like this one"
               label={`What it costs you to skip: ${goal.title}`}
               className="w-full mt-2 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 resize-y transition-colors"
@@ -659,6 +666,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
               id={`sentence-${goal.id}`}
               value={goal.sentence}
               onChange={(e) => handlers.onUpdate(goal.id, { sentence: e.target.value })}
+              maxLength={planLimit("goals", "sentence")}
               placeholder="I will easily…"
               className="w-full mt-1.5 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 transition-colors"
             />
@@ -668,6 +676,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
                 id={`feeling-${goal.id}`}
                 value={goal.feeling}
                 onChange={(e) => handlers.onUpdate(goal.id, { feeling: e.target.value })}
+                maxLength={planLimit("goals", "feeling")}
                 placeholder="the feeling it creates. Unstoppable energy, quiet confidence"
                 className="flex-1 min-w-0 bg-transparent border-b border-white/10 focus:border-white/30 text-[12px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none py-0.5 transition-colors"
               />
@@ -730,6 +739,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
                 id={`reward-${goal.id}`}
                 value={goal.reward}
                 onChange={(e) => handlers.onUpdate(goal.id, { reward: e.target.value })}
+                maxLength={planLimit("goals", "reward")}
                 placeholder="The trip, the thing, the day off"
                 className="w-full rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/25 transition-colors"
               />
@@ -740,6 +750,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
                 id={`stake-${goal.id}`}
                 value={goal.stake}
                 onChange={(e) => handlers.onUpdate(goal.id, { stake: e.target.value })}
+                maxLength={planLimit("goals", "stake")}
                 placeholder="Something you would genuinely rather not"
                 className="w-full rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/25 transition-colors"
               />
@@ -987,6 +998,7 @@ function Checkpoints({ goal, color, today, handlers }: { goal: NsGoal; color: st
                 <input
                   value={c.title}
                   onChange={(e) => handlers.onUpdateCheckpoint(goal.id, c.id, { title: e.target.value })}
+                  maxLength={planLimit("checkpoints", "title")}
                   aria-label="Checkpoint"
                   className={`flex-1 min-w-0 bg-transparent border-b border-transparent hover:border-white/10 focus:border-white/25 text-[12.5px] focus:outline-none py-0.5 transition-colors ${c.done ? "text-zinc-500 line-through" : "text-zinc-200"}`}
                 />
@@ -1007,6 +1019,7 @@ function Checkpoints({ goal, color, today, handlers }: { goal: NsGoal; color: st
                 <input
                   value={c.celebration ?? ""}
                   onChange={(e) => handlers.onUpdateCheckpoint(goal.id, c.id, { celebration: e.target.value })}
+                  maxLength={planLimit("checkpoints", "celebration")}
                   placeholder={MILESTONE_COPY.celebratePlaceholder}
                   aria-label={`${MILESTONE_COPY.celebrate}: ${c.title}`}
                   className="w-full ml-6 mt-0.5 bg-transparent border-b border-transparent hover:border-white/10 focus:border-white/25 text-[11px] text-zinc-400 placeholder:text-zinc-700 focus:outline-none py-0.5 transition-colors"
@@ -1271,6 +1284,7 @@ function ObstacleBlock({ goal, color, handlers }: { goal: NsGoal; color: string;
                 <input
                   value={o.what}
                   onChange={(e) => handlers.onUpdateObstacle(goal.id, o.id, { what: e.target.value })}
+                  maxLength={planLimit("obstacles", "what")}
                   aria-label="What could stop you"
                   className="flex-1 min-w-0 bg-transparent text-[12.5px] text-zinc-200 focus:outline-none border-b border-transparent focus:border-white/25 py-0.5"
                 />
@@ -1283,6 +1297,7 @@ function ObstacleBlock({ goal, color, handlers }: { goal: NsGoal; color: string;
               <input
                 value={o.counter}
                 onChange={(e) => handlers.onUpdateObstacle(goal.id, o.id, { counter: e.target.value })}
+                maxLength={planLimit("obstacles", "counter")}
                 placeholder={OBSTACLE_COUNTER_QUESTION}
                 aria-label={`What you will do when "${o.what}" happens`}
                 className="w-full mt-1 rounded-md border border-white/10 bg-white/[0.02] px-2 py-1 text-[11.5px] text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-white/25"
@@ -1346,6 +1361,7 @@ function BeliefBlock({ goal, color, handlers }: { goal: NsGoal; color: string; h
                 <input
                   value={b.old}
                   onChange={(e) => handlers.onUpdateBelief(goal.id, b.id, { old: e.target.value })}
+                  maxLength={planLimit("beliefs", "old")}
                   aria-label={BELIEF_STEP_COPY.old.label}
                   placeholder={BELIEF_STEP_COPY.old.placeholder}
                   className="flex-1 min-w-0 bg-transparent text-[12.5px] text-zinc-200 focus:outline-none border-b border-transparent focus:border-white/25 py-0.5"
@@ -1382,6 +1398,7 @@ function BeliefBlock({ goal, color, handlers }: { goal: NsGoal; color: string; h
                     <SentenceBox
                       value={b.evidence}
                       onChange={(text) => handlers.onUpdateBelief(goal.id, b.id, { evidence: text })}
+                      maxLength={planLimit("beliefs", "evidence")}
                       placeholder={BELIEF_STEP_COPY.evidence.placeholder}
                       label={BELIEF_STEP_COPY.evidence.label}
                       className="w-full mt-1 rounded-md border border-white/10 bg-white/[0.02] px-2 py-1 text-[11.5px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/25 resize-y"
@@ -1392,6 +1409,7 @@ function BeliefBlock({ goal, color, handlers }: { goal: NsGoal; color: string; h
                     <input
                       value={b.replacement}
                       onChange={(e) => handlers.onUpdateBelief(goal.id, b.id, { replacement: e.target.value })}
+                      maxLength={planLimit("beliefs", "replacement")}
                       placeholder={BELIEF_STEP_COPY.replacement.placeholder}
                       aria-label={BELIEF_STEP_COPY.replacement.label}
                       className="w-full mt-1 rounded-md border border-white/10 bg-white/[0.02] px-2 py-1 text-[11.5px] text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-white/25"
@@ -1745,6 +1763,7 @@ function ActionBlock({ goal, plan, color, needsAction, handlers }: {
                   value={h.title}
                   onChange={(e) => handlers.onUpdateAction(goal.id, h.id, { title: e.target.value })}
                   aria-label="Action"
+                  maxLength={planLimit("steps", "title")}
                   className="flex-1 min-w-0 bg-transparent border-b border-transparent hover:border-white/10 focus:border-white/25 text-[12.5px] text-zinc-200 focus:outline-none py-0.5 transition-colors"
                 />
                 {h.ownDays ? (

@@ -22,6 +22,7 @@
  * Health. The Add button waits for those.
  */
 
+import { planLimit } from "@/src/goals/planLimits"
 import { useMemo, useState } from "react"
 import { X } from "lucide-react"
 import type { NsPlan } from "@/src/goals/types"
@@ -156,6 +157,7 @@ export function IdealDayRamp({
       <textarea
         value={text}
         onChange={(e) => handlers.onAnswer(IDEAL_DAY_KEY, e.target.value)}
+        maxLength={planLimit("answers", "body")}
         rows={9}
         placeholder={IDEAL_DAY_COPY.placeholder}
         aria-label={IDEAL_DAY_COPY.title}
