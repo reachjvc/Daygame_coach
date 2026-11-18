@@ -36,7 +36,7 @@ export function CouncilStrip({ cards }: { cards: RoleModelCardData[] }) {
           return (
             <li key={m.roleModelId} className="flex items-center gap-3" data-testid={`council-member-${m.roleModelId}`}>
               <RoleModelVisual name={c.name} years={c.years} color={c.color} size="small" />
-              <Link href={roleModelHref(c.id)} className="min-w-0 flex-1">
+              <Link href={roleModelHref(c.id)} prefetch={false} className="min-w-0 flex-1">
                 <span className="block text-sm font-medium text-foreground">{c.name}</span>
                 <span className="block truncate text-xs text-muted-foreground">You take: {m.takenValues.join(", ")}</span>
               </Link>

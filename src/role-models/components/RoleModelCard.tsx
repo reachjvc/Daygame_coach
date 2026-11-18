@@ -17,6 +17,8 @@ export function RoleModelCard({ card }: { card: RoleModelCardData }) {
   return (
     <Link
       href={roleModelHref(card.id)}
+      // 232 profiles: prefetching each one that scrolls into view costs the phone data nobody asked for
+      prefetch={false}
       className="group flex flex-col overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-zinc-800/50 to-zinc-900 text-left outline-none transition-[border-color,box-shadow] duration-300 hover:border-[var(--cat)] hover:shadow-[0_8px_32px_var(--cat-glow)] focus-visible:ring-2 focus-visible:ring-[var(--cat)]"
       style={{ ["--cat" as string]: `${c}99`, ["--cat-glow" as string]: `${c}33` }}
       data-testid={`role-model-card-${card.id}`}
