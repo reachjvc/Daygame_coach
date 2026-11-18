@@ -1,6 +1,6 @@
 # Quit tools, copied from the best: one phase per tool
 
-Written 2026-11-18 (Opus, planning session). Status: **running. Phases 0–4 done (quitdate best 4c4a6bcd, fact-checked). Phase 5 copies on main, `best` building. Phase 6 copies on main. Phase 7 copies building. B1 fixed. Lint ratchet runs before every push; pushes batched (CI queue, 2026-11-18).**
+Written 2026-11-18 (Opus, planning session). Status: **running. Phases 0–5 done (beliefs best on main). Phase 6 copies on main, `best` in polish. Phase 7 copies on main (4cbd9bd2), `best` brief written. Phases 8–9 copies building. B1 fixed.**
 
 ## Why this plan exists
 
@@ -267,6 +267,48 @@ test, proof, refs, need; `bands`):
    change. Addiction switcher; where `beliefs` is missing, "content coming".
 8. All belief text comes from the data file (already checked); no new claims expected. Any new sentence that
    states a fact goes to an Opus fact-check before merge.
+
+### Phase 6 Step D brief: `checkin/best` (2026-11-18)
+
+Copies a–d on main (226c8aa4). From `checkin/overlap.md` ("raw material for best") and our rules:
+1. **Two short moments a day, both optional** (copy a's split): morning = a one-line pledge in his own words
+   plus "how hard do you expect today?" (copy b's forecast slider, 1–5 with words at both ends); evening = how
+   it went (clear / slipped), how hard it was (same scale, so forecast and result sit side by side), urges
+   (1–5), what he felt (chips from the data file's `symptomWords`, hard ones and good ones in two groups, copy c),
+   one optional note with a "only on this phone" privacy line (copy d). One question per screen, Back on every
+   step. Forgot yesterday? A "fill in yesterday" entry (copy e's look-back).
+2. **Never resets:** "days checked in this month" and "clear days this month", no streak, no points, no ranks,
+   no cheering. A slip day is a plain grey cell, not red.
+3. **His month:** a calendar with modes (clear days / how hard / feelings / notes, copy d), tap a day for its
+   three-line summary (copy a's History card).
+4. **His pattern, honest** (copy c's insight, made honest): from 14 check-ins on, one line per pattern found in
+   HIS days ("On the 6 days you expected it to be hard, you slipped on 1; on the other 9 days, on 2"), always
+   with both day counts, never a percent, never "more likely", and a line that it is his own days, not a study.
+5. **Reminders:** a settings screen with morning and evening times (stored only; no push in the lab).
+6. Addiction switcher (wording only: "smoke / use / drink / watch"); feelings chips fall back to a short neutral
+   set where `symptomWords` is missing. "Example data" with 20 labelled days so month and pattern are filled.
+7. No new factual claims expected; any sentence stating a fact goes to an Opus fact-check.
+
+### Phase 7 Step D brief: `diary/best` (2026-11-18)
+
+Copies b, c, d, e on main (4cbd9bd2). From `diary/overlap.md` and our rules:
+1. **Log in two taps, more if he wants** (copy d's feel, copy b's speed): strength 1–10, then the situation
+   (`riskyMoments` from the data file), then optional feeling chips (`symptomWords`), what he did (the `responses`
+   and swaps he tried, from the SOS shelf too) and "did you smoke/use?" yes / no (copy a's required answer, as a
+   plain answer, never a failure screen). Save is reachable after the second tap. "Log a past craving" with a
+   time picker (an idea from a product not copied).
+2. **Tip at once** (copy b's best piece): after saving, the matching help card for that situation from the data
+   file, with its source if it has one.
+3. **Two tabs: history and patterns** (the pair seen across copies a/b): history = a day diary (cravings count,
+   mean strength, a slip marked plainly) with edit and delete on each entry; patterns = his own entries by
+   situation (bar list, not a donut: readable on a phone), by time of day, by weekday, and "what you did and how
+   often you got through" per move, every line with its count of entries.
+4. **Never resets:** a slip is an entry like any other; no streak.
+5. Patterns appear from 5 entries; below that a line saying so. No percent below 10 entries (counts only).
+6. Addiction switcher; where `riskyMoments` or `responses` are missing, "content coming" for those pieces only.
+   "Example data" with 20 labelled entries.
+7. No new factual claims expected (help cards come from the data file); any sentence stating a fact goes to an
+   Opus fact-check.
 
 ---
 
