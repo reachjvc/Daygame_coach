@@ -13,6 +13,7 @@ Product map: `docs/product/map.md`; direction: `docs/product/vision.md`.
   `git commit --only <paths>`; never `git add -A` or `git stash`.
 - `main` is the live site; every push deploys. Commit and push your own work
   without being asked.
+- If the session-start line says main is red, fix it first or name who broke it.
 - `npm run build` keeps `--webpack`; the default bundler exhausts WSL memory.
 - Test writes against the live database go inside `begin; … rollback;`.
 - Content work (videos, scripts, articles), whenever he asks to work on
