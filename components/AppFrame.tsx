@@ -5,7 +5,7 @@ import { LogOut } from "lucide-react"
 import { usePathname } from "next/navigation"
 import type { ReactNode } from "react"
 import { AppLogo } from "@/components/AppLogo"
-import { LogOutButton } from "@/components/LogOutButton"
+import { LazyLogOutButton } from "@/components/LazyLogOutButton"
 import { MobileTabBar } from "@/components/MobileTabBar"
 import { Button } from "@/components/ui/button"
 import { HIDDEN_ROUTE_PREFIXES, PHONE_BAR_HIDDEN_PREFIXES, TABS, isActive } from "@/components/navTabs"
@@ -136,7 +136,7 @@ export function SiteHeader({ folded = false }: { folded?: boolean } = {}) {
           {/* What this browser kept for opening pages with no signal goes
               first, and what has not reached the account yet is sent or
               asked about before it goes (LogOutButton). */}
-          <LogOutButton>
+          <LazyLogOutButton>
             {({ onClick, busy }) => (
               <Button
                 variant="ghost"
@@ -152,7 +152,7 @@ export function SiteHeader({ folded = false }: { folded?: boolean } = {}) {
                 <span className={label}>Log Out</span>
               </Button>
             )}
-          </LogOutButton>
+          </LazyLogOutButton>
           {process.env.NODE_ENV === "development" && (
             <Button asChild variant="ghost" size="sm" className={`shrink-0 text-amber-500 hover:text-amber-400 lg:justify-start ${folded ? "lg:hidden" : ""}`}>
               <Link href="/test">Test Pages</Link>

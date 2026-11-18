@@ -14,6 +14,9 @@ const geistSans = Geist({
 })
 
 const geistMono = Geist_Mono({
+  // Not preloaded: the first screen of most pages draws no monospace text, and a
+  // preloaded font is downloaded whether it is used or not (about 23 KB).
+  preload: false,
   subsets: ["latin"],
   variable: "--font-geist-mono",
 })
