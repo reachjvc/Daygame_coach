@@ -165,7 +165,7 @@ function ExtraRow({ id, onHide }: { id: ExtraId; onHide: (id: ExtraId) => void }
   const suggested = status.nextUp?.rule === "suggest" && status.nextUp.module === id
   return (
     <li className={card} data-testid={`extra-${id}`} data-state={m.state}>
-      <Link href={href} className="block" data-testid={`extra-${id}-open`}>
+      <Link href={href} className="block min-h-11" data-testid={`extra-${id}-open`}>
         <p className="text-sm font-medium text-zinc-100">{extrasCopy[id].name}</p>
         <p className="text-xs text-zinc-500">{extrasCopy[id].what_you_get}</p>
       </Link>
@@ -207,7 +207,7 @@ function CoreRow({ id, n, m, firstOpen }: { id: CoreId; n: number; m: ModuleStat
   void status
   return (
     <li className={card} data-testid={`core-${id}`} data-state={locked ? "locked" : m.state}>
-      <Link href={href} className="block" data-testid={`core-${id}-open`}>
+      <Link href={href} className="block min-h-11" data-testid={`core-${id}-open`}>
         <div className="flex items-start gap-3">
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs text-zinc-300">{n}</span>
           <div className="min-w-0">
