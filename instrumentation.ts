@@ -10,26 +10,32 @@ import type { Instrumentation } from "next"
  * 500 on the live site with no trace anywhere. This puts the server's own error
  * in the same `error_reports` table, marked `server:` in the route.
  *
+ * Some failures never reach `onRequestError`: Next catches an error outside
+ * React's render itself, draws its fallback page and only logs the error. So
+ * `register` also records any Error the server passes to `console.error`, at
+ * most once a minute per fault per server instance.
+ *
  * Never throws: a failure to record must not turn into a second failure.
  */
-export const onRequestError: Instrumentation.onRequestError = async (err, request, context) => {
-  if (process.env.NEXT_RUNTIME !== "nodejs") return
+async function record(error: Error, route: string, where: string, userAgent: string): Promise<void> {
   try {
     const { recordErrorReports } = await import("@/src/db/errorReportRepo")
     const { fingerprint, scrubRoute, scrubText } = await import("@/src/shared/errorScrubService")
-    const error = err instanceof Error ? err : new Error(String(err))
-    const digest = typeof err === "object" && err !== null && "digest" in err ? String(err.digest) : ""
+    const digest = "digest" in error ? String((error as { digest?: unknown }).digest) : ""
     const message = scrubText(`${error.name}: ${error.message}${digest ? ` (digest ${digest})` : ""}`, 1000) ?? "Unknown server error"
     const stack = scrubText(error.stack ?? null, 4000)
-    const ua = request.headers["user-agent"]
+    const print = fingerprint(message, stack)
+    const now = Date.now()
+    if ((lastRecorded.get(print) ?? 0) > now - 60_000) return
+    lastRecorded.set(print, now)
     await recordErrorReports([
       {
-        fingerprint: fingerprint(message, stack),
+        fingerprint: print,
         message,
         stack,
-        componentStack: scrubText(`${context.routeType} ${context.routePath} ${"renderSource" in context ? String(context.renderSource) : ""}`, 2000),
-        route: `server:${scrubRoute(request.path)}`,
-        userAgent: (Array.isArray(ua) ? ua[0] : (ua ?? "")).slice(0, 300),
+        componentStack: scrubText(where, 2000),
+        route: `server:${scrubRoute(route)}`,
+        userAgent: userAgent.slice(0, 300),
         release: process.env.NEXT_PUBLIC_BUILD_ID ?? "unknown",
         severity: "error",
         userId: null,
@@ -38,4 +44,26 @@ export const onRequestError: Instrumentation.onRequestError = async (err, reques
   } catch {
     // Recording is best effort; the request has already failed on its own.
   }
+}
+
+const lastRecorded = new Map<string, number>()
+
+export function register() {
+  if (process.env.NEXT_RUNTIME !== "nodejs") return
+  const original = console.error.bind(console)
+  console.error = (...args: unknown[]) => {
+    original(...args)
+    const error = args.find((a): a is Error => a instanceof Error)
+    if (!error) return
+    const context = args.filter((a) => typeof a === "string").join(" ")
+    void record(error, "console.error", context, "")
+  }
+}
+
+export const onRequestError: Instrumentation.onRequestError = async (err, request, context) => {
+  if (process.env.NEXT_RUNTIME !== "nodejs") return
+  const error = err instanceof Error ? err : new Error(String(err))
+  const ua = request.headers["user-agent"]
+  const where = `${context.routeType} ${context.routePath} ${"renderSource" in context ? String(context.renderSource) : ""}`
+  await record(error, request.path, where, Array.isArray(ua) ? (ua[0] ?? "") : (ua ?? ""))
 }
