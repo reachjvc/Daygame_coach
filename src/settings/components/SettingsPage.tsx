@@ -3,6 +3,7 @@
 import { useState, useTransition, useMemo, useRef, useEffect, type ReactNode } from "react"
 import { LogOutButton } from "@/components/LogOutButton"
 import { ROUTES } from "@/src/shared/routes"
+import { facetFor } from "@/src/shared/facets"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
@@ -315,7 +316,11 @@ export function SettingsPage({
               </CardContent>
             </Card>
 
-            <TrainingSettingsCard initial={training} onSave={onUpdateTraining} />
+            {/* Training is a Life tool: its card takes the Life colour even on You
+                (rule R2, docs/product/look.md). */}
+            <div data-facet={facetFor(ROUTES.training)}>
+              <TrainingSettingsCard initial={training} onSave={onUpdateTraining} />
+            </div>
 
             {/* Stats. "Your Progress" put aside by the rebrand, 2026-11-19 (Levels & XP
                 not tracked yet): flip SHOW_PROGRESS to bring it back. */}

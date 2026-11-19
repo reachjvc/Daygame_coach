@@ -897,6 +897,13 @@ bar "Home · Plan · You".
 
 ## Questions from the build
 
+- **Phase 7 review (Opus, 2026-11-19), the findings that need his word** (full list `~/.cache/daygame-research/rebrand/review-p7.md`). Fixed without asking: the Training card on You now takes Life gold. Left as they are on purpose: red overlap lines on the Time Log (red = a real problem), the Black Box's amber sync box and orange "I did it" (Quit's own tool, quit-finish's area).
+  1. **/privacy** sits under "Free quit tools" and its only data-delete route links to `/quit/coaching`, which quit-finish put behind preview (`076f4a38`), so the link is a 404. Proposed: privacy becomes an umbrella page (10K Days Club header, back to the front page) and the delete request points to the privacy email. Words needed.
+  2. **You page:** tabs "Profile | Scenarios | Dating | Billing" and a "Your Preferences" dating card on Profile. Proposed: one Dating tab holding Scenarios + dating preferences, last; Billing words for all three parts. Moves, not removals.
+  3. **/pricing:** red "SAVE" ribbons and the old sales lines ("Best for committed learners", "Get Instant Access"). Proposed: ribbons in the umbrella orange; new words when prices are set (his to set).
+  4. **/terms** does not exist (signed out it goes to Log in). Needed before anyone pays.
+  5. Not on screen yet: "Health × Daygame" (`src/health/components/CorrelationPanel.tsx`, test page only) and "Dating & Daygame" first in `src/goals/data/lifeAreas.ts` / `planAreas.ts` (old goal pickers, /plan/new; planAreas is his own pick).
+
 - **Home's "Tools with a lock open once you subscribe. / See plans" box** (2026-11-19, Phase 6): Home has no locked tile
   any more, so the box talked about locks nobody sees there. **He said "you can do both" (2026-11-19): dropped, `0d5cc450`.**
 - **Next.js security notice** (2026-11-19): `next dev` stops once with "Your version of Next.js is affected by a known
