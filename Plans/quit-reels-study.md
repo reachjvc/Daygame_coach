@@ -1,6 +1,6 @@
 # Quit reels study: what worked for 25 quit accounts, and what we can remake
 
-Written 2026-11-19. Status (2026-11-19): **Phase 1 done** (follow page https://claude.ai/artifact/9qxAP3PUfFQUbSfh1DUD91). **YouTube side of Phases 2–4 done**: 240 Shorts from 16 channels that hit at least 3x, grouped into patterns. The remake board is https://claude.ai/artifact/Eb5B32Vh2EBvpC7uqbxWKE (notes, likes). **Instagram side waits for his login.**
+Written 2026-11-19. Status (2026-11-19, late): **Phases 1–4 done for YouTube and Instagram.** Follow page https://claude.ai/artifact/9qxAP3PUfFQUbSfh1DUD91 (counts checked). Remake board https://claude.ai/artifact/Eb5B32Vh2EBvpC7uqbxWKE: 231 Instagram reels (from 3,156 read) and 185 YouTube Shorts that hit at least 3x, in 10 patterns, 3 of them new from Instagram. Next: read his notes and likes on both pages. Instagram transcripts not pulled; captions were used.
 Feeds the next reels in `docs/product/content_creation.md`.
 
 ## In plain words
@@ -38,8 +38,8 @@ it can bring a few profile visits. This only pays once his own profile has reels
 
 | ID | What | Attempted, and what it returned | Blocks | Recommendation |
 |---|---|---|---|---|
-| B1 | Logged out, Instagram shows only followers and about 12 captions: no views, no dates | 2026-11-18 probe (find-the-men agent B); `ig-read.mjs whoami` on 2026-11-19 returned `logged_in: false` | Phase 2 | He logs in at http://localhost:7801 (read-only browser, started 2026-11-19, task `iglogin` on his daily page) |
-| B3 | Instagram stopped answering this PC's logged-out reads after about 45 profiles (2026-11-19) | Retried for about 25 minutes by the Phase 1 agent; WebFetch also hit the login wall | Follower checks | Check counts through the logged-in reader (`ig-read.mjs reels <handle>`, added 2026-11-19) |
+| B1 | Logged out, Instagram shows only followers and about 12 captions: no views, no dates | 2026-11-18 probe (find-the-men agent B); `ig-read.mjs whoami` on 2026-11-19 returned `logged_in: false` | Phase 2 | Solved 2026-11-19: password login failed in the rig, so he pasted his own browser session into it |
+| B3 | Instagram stopped answering this PC's logged-out reads after about 45 profiles (2026-11-19) | Retried for about 25 minutes by the Phase 1 agent; WebFetch also hit the login wall | Follower checks | Solved 2026-11-19: direct API calls still got HTTP 429 when logged in; a scroll-only reader of the normal pages worked |
 | B2 | Graphics card nearly full (7.9 of 8.2 GB used, 2026-11-19 at the time of the check) | `nvidia-smi` | Phase 3 transcription | Run speech-to-text on the CPU, or wait until the card is free; gpu_guard rule applies |
 
 ## OPEN QUESTIONS
