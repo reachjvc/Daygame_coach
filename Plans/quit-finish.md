@@ -543,6 +543,159 @@ S2 Tool 2's "About $X kept since <date>" counts from the new day 1 after a slip 
 recommendation: Tool 3 sums money over all runs, and Tool 2 keeps its line. S3 the wave-1 `endings` list stays in the
 data file (past attempts uses it) but this tool no longer asks it.
 
+### Tool 6: What you'll feel, and when — brief (Opus, 2026-11-19) — build exactly this, decide nothing
+
+Model: Sonnet builds in a worktree; Opus writes the sourced text (`content.ts`, below) and reads the diff. Address:
+`/quit/nicotine/symptoms` (the menu id `symptoms` stays, so no id, type or route changes; proposed T1). Rebuilds the
+wave-1 Symptom guide in place in `src/quit/tools/symptoms/`; reuses `bands.ts` and the band drawing of lab
+`timeline/best` (copied into the tool folder; lab files never edited). Nicotine only: no addiction switcher (C21).
+One scrolling page, not a wizard: it is a reference he comes back to. Desktop (1280): the page column, as Tools 1–4.
+All choices below are **proposed**; the recommendation is the option described.
+
+**Menu row:** name **"What you'll feel, and when"**, line **"Day by day: what most people feel, how long it lasts,
+what helps."** (the old line promised "hungry", which the tool did not have: B16), group "Get through it", wave 1,
+`account: "none"`. Added to `liveTools.json` when built.
+
+**Data: it asks nothing.**
+- Day 1 = the start of the living nicotine run in the Black Box (`useQuitBlackBox` / `useLocalQuitBlackBox`,
+  bridged as `DateTool.tsx` does, `useSignedIn(false, true)`); else the shared record's `quitDate` when the goal is
+  stop or break; else no day. The same rule as Your quit date, so both show the same "Day N" (C3).
+- After a slip with no living run and no record date later than the slip day: no day number, one line "No run going
+  since your slip on Wed 29 Oct." and "Slipped? Restart today" as a link when `slip` is live, else plain text.
+- It never starts a run, files nothing, and writes nothing (no example data, so nothing to wipe: C16, C29).
+- Day count: calendar days, the quit day is day 1 (as Tool 1). Refreshed each minute and on tab focus.
+
+**New sourced text: `src/quit/tools/symptoms/content.ts`** (written by Opus before the build; every quote fetched
+from the PubMed abstract on 2026-11-19, copies in `~/.cache/daygame-research/quit-finish/timeline-src/`). The
+data file's `symptomCourse`, `symptomWords`, `symptomCourseNote` and `numbers` stay the source for what they hold;
+the data file's `symptomHelp` sleep row (Miller 2023, a CBT-I trial in veterans with alcohol problems: B18
+population mismatch) and the Taylor 2007 line under "Short temper" (B, a stretch) are not shown. Proposed T2: move
+`content.ts` into `nicotine.json` with validator rules once the other tools stop editing that file today.
+
+**Screens (one page, top to bottom):**
+
+1. **Your day** (card at the top).
+   - Day known: "Day 23" large, line "Counted from Thu, Oct 30, your day 1." Then **one "Right now" line** by
+     phase (plain words, C28; no "range where studies saw it gone"):
+     - days 1–7: "The hardest week for most. Mood, focus, sleep and restlessness peak now, and cravings are at their
+       strongest."
+     - days 8–28: "For most, mood and focus settle somewhere between day 10 and week 4. Hunger and cravings set off
+       by places can last longer."
+     - days 29–42: "You are past the 4 weeks the studies give for mood, focus and sleep. Cravings set off by places
+       and moments can still be strong around day 35."
+     - day 43 on: "Everyday urges keep fading over months. A year on, none of the people still off in one study had
+       strong urges; about a third still had some."
+   - Future date: "3 days to go. Day 1 is Sun, Nov 22." and "Here is what most people feel in the first weeks."
+   - No date: "Pick your day 1 to see where you are." with Your quit date as a link (it is live) and the rest of the
+     page as general information, no marker.
+   - Under it, one link "See the hard days on your calendar" to Your quit date (live). The lab's six-week strip is
+     not carried over: Tool 1's calendar already shows those days (C3: three calendar views).
+2. **Five symptom cards** (C12: the five identical cards become one grouped card). Each card: title, a "Now" pill
+   when his day is inside its peak or fade range, the band (42-day axis as lab `best`, his day as a marker; the
+   cravings card uses its own small time line, below), one "You are on day N: <phase words>" line, then
+   **What helps** (folded `<details>`, open by default on phones only for the card with the Now pill), then
+   "Based on" (basis box: who, how many, design, when, caveat) and the sources tap.
+   - **a. Cravings** (new, B16). Time line with marks Week 1 · Week 4 · Month 6 · Month 12: "Strongest in the first
+     weeks. Their strength did not drop until week 4 in one small study. Then they fade over months: at 6 months 13
+     in 100 of those still off had strong urges; at 12 months none did, and about 34 in 100 still had some."
+     Basis: Ussher 2013 (452 smokers quitting with support and no medicine; asked at weeks 1, 2, 3, 4, 26, 52 while
+     still off: 197, 156, 139, 131, 66, 38 people; London) and West 1987 (52 clinic clients on nicotine gum, 4
+     weeks). Caveat: "People who slipped dropped out of the later counts, so the late numbers describe those who
+     stayed off." Helps: **Craving now?** (link, live) and **Move** (Haasova 2013 line from the data file, moved
+     here from the hidden `craving` help row; without the "five minutes" and the Taylor "50 minutes" quote, as in
+     Tool 2).
+   - **b. Cravings set off by places and moments** (was "Cravings set off by cues"). Band as lab `best` (tested days
+     7–35, open after). Phase words fixed (C13): days 1–6 "Not tested before day 7."; 7–35 "Within the days tested.";
+     after 35 "Past the last day tested: no end known." No "Usually eases" label and no "No clear peak" mid-sentence
+     (B17). The open end is drawn as a flat dashed bar, not a fade, so it does not read as falling (C28, rule 19).
+     Helps: "What to do right here" in Craving now? (link, live: the place cards), and "If-then plan" as plain text
+     until `ifthen` is live, then a link.
+   - **c. Mood and focus** (short temper, anxiety, low mood, brain fog, restlessness in one card; C12, B27). One
+     band (peak days 1–7, gone between day 10 and day 28). Basis box carries the single-author caveat of Hughes 2007
+     (C28) and the Shiffman 2006 n (214) with "measured overall bad mood as one score". A **"Not for everyone"**
+     line: "In 96 women paid to stay off for 31 days, low mood, tension, anger and irritability had not come back to
+     normal by day 31." (Gilbert 2002). Helps (one list for the card, then per feeling):
+     - All five: Move. "Exercise eased withdrawal symptoms overall in all 12 lab studies that compared it with
+       sitting still." (Taylor 2007; now on the group, where the quote fits.)
+     - Anxiety: the data file's number `after-first-month` (West & Hajek 1997, anxiety fell from week 1 in those who
+       stayed off) shown as a NumberCard, with the line "This disagrees with the review above: in this trial anxiety
+       did not rise." Plus the data file's anxiety help row (Taylor 2021).
+     - Low mood: the data file's low-mood help row (Taylor 2021).
+     - Brain fog: the data file's brain-fog help row (short blocks; Chang 2012, "effects are generally small").
+     - Caffeine (cigarette smokers only): "If you drank coffee every day while smoking, try about half your usual
+       amount. In 162 smokers who quit and kept their usual caffeine, caffeine levels had doubled by week 3. Cutting
+       it out entirely made people more tired for the first 3 days and did not ease other symptoms." Basis: Swanson
+       1997; why smokers only: Kroon 2007 (the speed-up comes from the smoke, not the nicotine), "So this does not
+       apply if you only vaped or used pouches." "About half" is our arithmetic from "doubled", said so in the basis.
+   - **d. Sleep.** Band as lab `best` (review: peak days 1–7, can last to day 28; the diary study saw no clear
+     change, said in one line). Helps: **Three steps for sleep** (B18): "Get up at the same time every day,
+     whatever the night was like." · "Use the bed only for sleep." · "Awake for about 20 minutes? Get up, do
+     something quiet, come back when sleepy." Basis: Edinger 2021 (American Academy of Sleep Medicine guideline,
+     "stimulus control" suggested for adults with long-lasting insomnia; not tested in people quitting: said in
+     the caveat). The old rule 4 ("It is worst in the first 1 to 2 weeks") is dropped: it was not a step and
+     disagreed with the card. The caffeine line, shown here too.
+   - **e. Hunger and weight** (new, B16). No band (no day range is known); a line: "Hunger can stay up for weeks.
+     It outlasted the other symptoms in a study of 147 people over 4 weeks, and appetite was still up at day 31 in
+     the study of 96 women." Then the data file's number on weight (`after-body` 4–5 kg, Aubin 2012) as a
+     NumberCard, with its "most of it in the first three months" line. Helps: "Move every day. In 3 small trials
+     (182 people), exercise programmes meant about 2 kg less gain a year later. Low certainty." and "No diet plan
+     this month: in 2 trials (522 people), detailed weight-loss lessons without personal support did not cut weight
+     gain and went with fewer people staying off." Basis: Hartmann-Boyce 2021 (Cochrane review; "no intervention
+     with moderate certainty of a clinically useful effect on long-term weight gain").
+   - Under the cards, one line: "Also possible, less studied: constipation, cough, dizziness, more dreams, mouth
+     ulcers." (Hughes 2007 "may be abstinence effects"; sources tap.)
+3. **What gets better, and when** (replaces the empty "Body recovery" box, C14). A short list in time order; each
+   row: when, one line, who it applies to, basis tap. Rows:
+   - "Within a day, cigarettes only": "Carbon monoxide in your breath halves about every 4.5 hours after the last
+     cigarette." Basis: Sandberg 2011 (6 smokers measured hourly for a day, plus 57 smokers on three visits;
+     Stockholm). Caveat: "Vapes and pouches make no carbon monoxide." No "heart rate in 20 minutes" claims.
+   - "From week 1": anxiety fell (the `after-first-month` number, by reference: "see Mood and focus").
+   - "First year, cigarettes only": "Lung function improved in people who quit; it got worse in those who kept
+     smoking." Basis: Tashkin 1996, Lung Health Study (5,733 smokers aged 35–60 with early lung disease; US and
+     Canada). Caveat: "Smokers with early lung disease; the size of the gain is not in the summary we quote."
+   - "Over a year": stress fell more in those who stayed off (Hajek 2010, from the data file's belief b3 ref and
+     its `proof`/`weak` lines).
+   - "A year on": the `after-body` erection number (Pourmand 2004) as a NumberCard.
+   - "Years 1 and 3": the `after-mood` number (Piper 2012) as a NumberCard.
+   - One line under the list: the data file's `symptomCourseNote` ("almost all of cigarette smokers…").
+4. **Sources** fold (every ref on the page, once, `uniqueRefs`).
+
+No link to a tool that is not live (`isLiveTool`): Craving now?, Your quit date, Slipped? are live today; If-then
+plan is plain text until it is. Every number carries its basis on the page (who, how many, design, when, caveat).
+
+**Report items for this tool** (review B, C, E, 2026-11-19), each answered above: B16 (cravings and hunger missing,
+menu promised hungry), B17 (cue-craving label contradicts, "No clear peak" capital, no help), B18 (sleep rules
+unsourced, wrong population, rule 4), B27 (copy-paste list, academic wording, restlessness had no help), C12 (five
+identical cards), C13 (cue craving days 1–6), C14 (empty Body recovery), C21 (switcher), C28 (researcher-speak,
+"0 of 6 symptoms are past the end" on day 1: that count line is dropped, Hughes caveat, fading open end), C29
+("Change quit date" wipe: the tool keeps no date of its own), C3 (its own unshared date), F1 #9 (empty rings with
+own data: no made-up durations anywhere), E overlap (library "What to expect" repeats this tool: library is not
+built; Tool 12 links here instead of repeating it — proposed). Not taken from `best`: the switcher, its own date
+setup and example data, "Change quit date", the six-week strip, the "N of 6 past the end" count.
+
+**Acceptance (Playwright `tests/e2e/quit/symptoms.spec.ts`, 390x844 touch and 1280x800, clock fixed; screenshots
+looked at):**
+1. No date: "Pick your day 1" line with a link to `/quit/nicotine/date`; five cards with bands and no marker; no
+   "Now" pill.
+2. Record date 3 days ahead (goal stop): "3 days to go"; no marker.
+3. Living Black Box run started 4 days ago (seeded in `vice-blackbox-v1`): "Day 5", days 1–7 line, markers at day 5,
+   Now pills on Mood and focus and Sleep, cue card "Not tested before day 7.".
+4. Record date 20 days ago and no run: "Day 21" (same as Your quit date shows for that record), 8–28 line.
+5. Day 36: cue card "Past the last day tested"; day 400: the months line; the cravings time line marks month 12.
+6. Run ended by a slip, no later date: the "No run going since your slip on …" line, no marker.
+7. Every "What helps" and "Based on" opens; every source link has an href; no "TODO", "undefined" or "content
+   coming" text anywhere.
+8. Storage (`quit-v1`, `vice-blackbox-v1`) is byte-for-byte unchanged after a full visit.
+9. No console error, no sideways scroll at 390, every tap target at least 44 px; the menu row opens it; a
+   production build links nothing that needs `?preview=1`.
+10. Then the three-reviewer check and fix rounds; status "waiting for you".
+
+**Proposed (owner may veto):** T1 keep the address `/quit/nicotine/symptoms`; alternative `/timeline` (a new id in
+types, menu, registry, validator). T2 the new sourced text lives in the tool's `content.ts` for now; alternative
+put it in `nicotine.json` today. T3 the six-week strip is left to Your quit date's calendar; alternative show it
+here too. T4 "What gets better" uses only checked studies, so it has no 20-minute or 12-hour rows that popular
+lists have; alternative add the US Surgeon General's list with its own caveats.
+
 ### Tool 8: Daily check-in — brief (Opus, 2026-11-19) — build exactly this, decide nothing
 
 Model: Sonnet builds in a worktree; Opus reads the diff. Address: `/quit/nicotine/checkin` (menu row id `checkin`
