@@ -1,7 +1,7 @@
 import { test, expect, signIn, SIGNED_OUT } from "./fixtures/test"
 import { urlOf } from "@/tests/support/appRoutes"
 import { ROUTES } from "@/src/shared/routes"
-import { TOOLS, ALL_TOOLS_TILE } from "@/components/navTabs"
+import { TOOLS, ALL_TOOLS_TILE, DATING_TILE } from "@/components/navTabs"
 import { grantPurchase } from "./helpers/purchase"
 import { SELECTORS } from "./helpers/selectors"
 
@@ -31,6 +31,11 @@ test("every tile on Home and every row in All tools opens its page", async ({ pa
   }
   await page.goto(ROUTES.dashboard, { timeout: AUTH_TIMEOUT })
   await Promise.all([
+    page.waitForURL(urlOf(DATING_TILE.href, "$"), { timeout: AUTH_TIMEOUT }),
+    page.getByTestId(SELECTORS.dashboard.tile(DATING_TILE.id)).click(),
+  ])
+  await page.goto(ROUTES.dashboard, { timeout: AUTH_TIMEOUT })
+  await Promise.all([
     page.waitForURL(urlOf(ALL_TOOLS_TILE.href, "$"), { timeout: AUTH_TIMEOUT }),
     page.getByTestId(SELECTORS.dashboard.tile("all")).click(),
   ])
@@ -43,23 +48,24 @@ test("every tile on Home and every row in All tools opens its page", async ({ pa
 
 test.describe("a throwaway account", () => {
   test.use({ storageState: SIGNED_OUT })
-  test("the Coach tile opens the plans for someone who has not paid, and Coach for a payer", async ({
+  test("the Coach row opens the prices for someone who has not paid, and Coach for a payer", async ({
     page,
     throwawayAccount: account,
   }) => {
     await signIn(page, account)
-    await page.goto(ROUTES.dashboard, { timeout: AUTH_TIMEOUT })
-    const coach = page.getByTestId(SELECTORS.dashboard.tile("coach"))
+    // Ask Coach left Home's tiles for the Dating tile (Plans/rebrand-10kdaysclub.md, Phase 6); its row is in All tools.
+    await page.goto(ROUTES.tools, { timeout: AUTH_TIMEOUT })
+    const coach = page.getByTestId("tools-row-coach")
     await expect(coach).toHaveAttribute("data-access", "locked", {
       timeout: AUTH_TIMEOUT,
     })
     await expect(coach).toHaveAttribute("href", "/pricing")
 
     await grantPurchase(account.id)
-    await page.goto(ROUTES.dashboard, { timeout: AUTH_TIMEOUT })
+    await page.goto(ROUTES.tools, { timeout: AUTH_TIMEOUT })
     await expect(coach).toHaveAttribute("data-access", "open", {
       timeout: AUTH_TIMEOUT,
     })
-    await Promise.all([page.waitForURL(urlOf(ROUTES.coach, "(\\?from=|$)") /* the tile carries Home as the way back */, { timeout: AUTH_TIMEOUT }), coach.click()])
+    await Promise.all([page.waitForURL(urlOf(ROUTES.coach, "(\\?from=|$)") /* the row carries All tools as the way back */, { timeout: AUTH_TIMEOUT }), coach.click()])
   })
 })

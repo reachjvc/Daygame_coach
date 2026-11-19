@@ -3,7 +3,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { createServerSupabaseClient, getProfile } from "@/src/db/server"
 import { getUserTimezone } from "@/src/db/settingsRepo"
-import { ALL_TOOLS_TILE, TOOLS } from "@/components/navTabs"
+import { ALL_TOOLS_TILE, DATING_TILE, TOOLS } from "@/components/navTabs"
 import { TrainingCard } from "@/src/programs/components/TrainingCard"
 import { ROUTES } from "@/src/shared/routes"
 import { facetFor } from "@/src/shared/facets"
@@ -55,6 +55,7 @@ export async function HomePage() {
         {TOOLS.filter((t) => t.tile).map((t) => (
           <ToolTile key={t.id} id={t.id} label={t.short} icon={t.icon} access={tileAccess(t, viewer, ROUTES.dashboard)} href={t.href} />
         ))}
+        <ToolTile id={DATING_TILE.id} label={DATING_TILE.label} icon={DATING_TILE.icon} access={{ state: "open", href: DATING_TILE.href }} href={DATING_TILE.href} />
         <ToolTile id="all" label={ALL_TOOLS_TILE.label} icon={ALL_TOOLS_TILE.icon} access={{ state: "open", href: ALL_TOOLS_TILE.href }} href={ALL_TOOLS_TILE.href} />
       </nav>
 

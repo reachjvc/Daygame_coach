@@ -7,20 +7,25 @@ import { tileAccess, type ToolViewer } from "../tileAccess"
 import { ROUTES } from "@/src/shared/routes"
 import { facetFor } from "@/src/shared/facets"
 
+/** W50: Life, Quit, Dating, in that order (Plans/rebrand-10kdaysclub.md, Phase 6). */
 const GROUPS: { id: Tool["group"]; title: string }[] = [
-  { id: "dating", title: "Dating" },
   { id: "life", title: "Life" },
+  { id: "quit", title: "Quit" },
+  { id: "dating", title: "Dating" },
 ]
 
 /**
- * ALL TOOLS: EVERY TOOL IN ONE LIST, IN TWO GROUPS.
+ * ALL TOOLS: EVERY TOOL IN ONE LIST, IN THREE GROUPS.
+ *
+ * With `group`, one part only: the Dating tile on Home opens `/tools/dating`
+ * (W51), the same rows under their own heading.
  *
  * It replaced the phone's More sheet and the laptop header's row of ten
  * links, neither of which had Inner Game or the Black Box. Grab's "All" tile
  * opens the same kind of page. The ☆ that puts a tool on Home comes in Phase 6
  * of Plans/site-navigation-build.md.
  */
-export async function ToolsPage() {
+export async function ToolsPage({ group }: { group?: Tool["group"] } = {}) {
   const supabase = await createServerSupabaseClient()
   const {
     data: { user },
@@ -28,18 +33,29 @@ export async function ToolsPage() {
   if (!user) redirect("/auth/login")
   const profile = await getProfile(user.id)
   const viewer: ToolViewer = { has_purchased: profile?.has_purchased ?? false }
+  const groups = group ? GROUPS.filter((g) => g.id === group) : GROUPS
+  const from = group === "dating" ? ROUTES.datingTools : ROUTES.tools
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 sm:px-8 sm:py-10" data-testid="tools-page">
-      <h1 className="mb-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">All tools</h1>
-      <p className="mb-6 text-sm text-muted-foreground">Everything in the app. A lock means it opens once you subscribe.</p>
-      <div className="grid gap-8 md:grid-cols-2">
-        {GROUPS.map((g) => (
-          <section key={g.id} aria-labelledby={`tools-${g.id}`} data-testid={`tools-group-${g.id}`}>
-            <h2 id={`tools-${g.id}`} className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{g.title}</h2>
+      {group === "dating" ? (
+        <>
+          <h1 className="mb-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Dating</h1>
+          <p className="mb-6 text-sm text-muted-foreground">Practise at home, go out, look back.</p>
+        </>
+      ) : (
+        <>
+          <h1 className="mb-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">All tools</h1>
+          <p className="mb-6 text-sm text-muted-foreground">Everything in the app. A lock means it opens once you subscribe.</p>
+        </>
+      )}
+      <div className={`grid gap-8 ${group ? "" : "md:grid-cols-2"}`}>
+        {groups.map((g) => (
+          <section key={g.id} aria-labelledby={group ? undefined : `tools-${g.id}`} aria-label={group ? g.title : undefined} data-testid={`tools-group-${g.id}`}>
+            {!group && <h2 id={`tools-${g.id}`} className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{g.title}</h2>}
             <ul className="divide-y divide-border rounded-xl border border-border bg-card">
               {TOOLS.filter((t) => t.group === g.id).map((t) => {
-                const access = tileAccess(t, viewer, ROUTES.tools)
+                const access = tileAccess(t, viewer, from)
                 return (
                   <li key={t.id}>
                     <Link href={access.href} className="flex min-h-12 items-center gap-3 px-4 py-3 hover:bg-muted/40" data-testid={`tools-row-${t.id}`} data-access={access.state} data-facet={facetFor(t.href)}>

@@ -110,7 +110,7 @@ describe("settings toggles: a save must not freeze the page", () => {
     })
     renderSettings({ onUpdateSandboxSettings })
 
-    await openTab(/sandbox/i)
+    await openTab(/scenarios/i)
 
     await user().click(screen.getByTestId("sandbox-toggle-enableBadWeather"))
     // First save is deliberately NOT resolved yet: this is the window in which
@@ -140,7 +140,7 @@ describe("settings toggles: a save must not freeze the page", () => {
       }),
     })
 
-    await openTab(/sandbox/i)
+    await openTab(/scenarios/i)
 
     const bad = screen.getByTestId("sandbox-toggle-enableBadWeather")
     const hot = screen.getByTestId("sandbox-toggle-enableHotWeather")
@@ -163,7 +163,7 @@ describe("settings toggles: a save must not freeze the page", () => {
       }),
     })
 
-    await openTab(/sandbox/i)
+    await openTab(/scenarios/i)
     await user().click(screen.getByTestId("sandbox-toggle-enableBadWeather"))
 
     // Still saving. Nothing else on this tab may be dead.
@@ -190,10 +190,10 @@ describe("settings toggles: a save must not freeze the page", () => {
       }),
     })
 
-    await openTab(/sandbox/i)
+    await openTab(/scenarios/i)
     await user().click(screen.getByTestId("sandbox-toggle-enableBadWeather"))
 
-    await openTab(/game/i)
+    await openTab(/^dating$/i)
     await user().click(screen.getByRole("button", { name: /advanced/i }))
 
     inFlight.release()
@@ -213,7 +213,7 @@ describe("settings toggles: a save must not freeze the page", () => {
     const onUpdateVoiceLanguage = vi.fn(async () => {})
     renderSettings({ onUpdateDifficulty, onUpdateVoiceLanguage })
 
-    await openTab(/game/i)
+    await openTab(/^dating$/i)
     await user().click(screen.getByRole("button", { name: /advanced/i }))
     await user().click(screen.getByRole("button", { name: /danish/i }))
 
@@ -233,7 +233,7 @@ describe("settings toggles: a save must not freeze the page", () => {
       }),
     })
 
-    await openTab(/sandbox/i)
+    await openTab(/scenarios/i)
     expect(screen.getByTestId("settings-save-status")).toHaveTextContent("")
 
     await user().click(screen.getByTestId("sandbox-toggle-enableBadWeather"))
@@ -259,7 +259,7 @@ describe("settings toggles: what must still be protected", () => {
       }),
     })
 
-    await openTab(/sandbox/i)
+    await openTab(/scenarios/i)
     await user().click(screen.getByTestId("sandbox-reset-button"))
     await user().click(screen.getByRole("button", { name: /reset settings/i }))
 
@@ -281,7 +281,7 @@ describe("settings toggles: what must still be protected", () => {
       }),
     })
 
-    await openTab(/sandbox/i)
+    await openTab(/scenarios/i)
     await user().click(screen.getByTestId("sandbox-toggle-enableBadWeather"))
 
     expect(screen.getByTestId("sandbox-reset-button")).toBeEnabled()

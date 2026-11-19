@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { optionalUserId } from "@/src/db/auth"
 import { TrackingAuthProvider } from "./TrackingAuthContext"
@@ -5,6 +6,8 @@ import { VoiceLanguageProvider } from "@/src/tracking/components/VoiceLanguageCo
 import { DEFAULT_VOICE_LANGUAGE } from "@/src/tracking/config"
 import { getVoiceLanguage } from "@/src/db/settingsRepo"
 import { checkSchema } from "@/src/db/schemaCheck"
+
+export const metadata: Metadata = { title: "The Field" }
 
 /**
  * THE ID THIS LAYOUT HANDS DOWN IS A VERIFIED ONE.

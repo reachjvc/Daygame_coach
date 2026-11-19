@@ -61,17 +61,23 @@ export async function PlanCard({ userId }: { userId: string }) {
  * Session button is the one Tracking has, same address and same autostart.
  * A session already running is offered first, because starting a second one
  * is never what somebody standing in the street meant.
+ *
+ * Only for someone who has ever logged a field session (Plans/rebrand-10kdaysclub.md,
+ * Phase 6): it is a dating card, and Home is everyone's. Read from the same
+ * counters the card already loads (`total_sessions`), so no extra query. If
+ * the counters cannot be read, the card shows and says so, as before.
  */
 export async function FieldCard({ userId }: { userId: string }) {
   const [stats, active] = await Promise.all([
     getTrackingStatsForDisplay(userId).catch(() => null),
     getActiveSession(userId).catch(() => null),
   ])
+  if (stats && stats.total_sessions === 0 && !active) return null
   const line = stats
     ? `${stats.current_week_approaches} approach${stats.current_week_approaches === 1 ? "" : "es"} in ${stats.current_week_sessions} session${stats.current_week_sessions === 1 ? "" : "s"} this week`
     : "Your numbers could not be read just now."
   return (
-    <HomeCard title="Field" testId="home-field-card" href={ROUTES.tracking}>
+    <HomeCard title="The Field" testId="home-field-card" href={ROUTES.tracking}>
       <p className="mb-3 text-base font-medium text-foreground">{active ? "A session is running" : line}</p>
       <div className="flex flex-wrap gap-2">
         {active ? (
@@ -87,7 +93,7 @@ export async function FieldCard({ userId }: { userId: string }) {
           </Button>
         )}
         <Button asChild size="sm" variant="ghost">
-          <Link href={ROUTES.tracking}>See your stats</Link>
+          <Link href={ROUTES.tracking}>Open The Field</Link>
         </Button>
       </div>
     </HomeCard>

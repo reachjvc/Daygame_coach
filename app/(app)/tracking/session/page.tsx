@@ -14,7 +14,7 @@ export default function SessionPage() {
           Continue button — so leaving is recoverable and a screen you cannot
           leave is not. */}
       <div className="max-w-4xl mx-auto px-4 pt-6">
-        <BackLink fallback={ROUTES.tracking} fallbackLabel="Activity" />
+        <BackLink fallback={ROUTES.tracking} fallbackLabel="The Field" />
       </div>
       <SessionTrackerPage userId={userId} />
     </>

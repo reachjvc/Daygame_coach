@@ -32,16 +32,16 @@ describe("the current tab", () => {
     expect(currentTabs()).toEqual(["You"])
   })
 
-  it("is named on Activity, which is Tracking under its new name", () => {
-    path = ROUTES.trackingHistory
+  it("is named on Home, which is the Dashboard's address", () => {
+    path = ROUTES.dashboard
     render(<MobileTabBar />)
-    expect(currentTabs()).toEqual(["Activity"])
+    expect(currentTabs()).toEqual(["Home"])
   })
 
   it("is exactly one tab, never several", () => {
     // `/dashboard/tracking` starts with `/dashboard`, so a prefix match on
     // both would mark two tabs at once and say nothing useful.
-    path = ROUTES.tracking
+    path = ROUTES.dashboard
     render(<MobileTabBar />)
     expect(currentTabs()).toHaveLength(1)
   })
@@ -57,7 +57,7 @@ describe("the current tab", () => {
     // Home, copied from Grab, whose bar does not light up for a service either
     // (Plans/site-navigation-build.md, Phase 2). Marking Home there would
     // say you are on a page you are not on.
-    for (const route of [ROUTES.training, ROUTES.scenarioPreferences]) {
+    for (const route of [ROUTES.training, ROUTES.scenarioPreferences, ROUTES.tracking]) {
       path = route
       const { unmount } = render(<MobileTabBar />)
       expect(currentTabs()).toEqual([])

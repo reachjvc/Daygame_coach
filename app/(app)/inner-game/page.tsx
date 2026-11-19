@@ -1,6 +1,9 @@
+import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { createServerSupabaseClient } from "@/src/db/server"
 import { InnerGamePage } from "@/src/inner-game"
+
+export const metadata: Metadata = { title: "Inner Game" }
 
 export default async function DashboardInnerGamePage() {
   const supabase = await createServerSupabaseClient()

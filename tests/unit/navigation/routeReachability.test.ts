@@ -149,6 +149,14 @@ function buildGraph() {
   return { doors, edges, mustReach }
 }
 
+/**
+ * Pages put aside on purpose: hidden from every menu, still open by their
+ * address, one line away from coming back. Each names who put it aside.
+ */
+const PUT_ASIDE = new Set<string>([
+  ROUTES.articles, // Plans/rebrand-10kdaysclub.md, Phase 6 (2026-11-19): an empty "coming soon" page
+])
+
 describe("every page has a way in", () => {
   const { doors, edges, mustReach } = buildGraph()
 
@@ -174,7 +182,7 @@ describe("every page has a way in", () => {
 
   it("every product route is reached from a page that is itself reached", () => {
     const reached = reachedRoutes()
-    const orphans = mustReach.filter((r) => !reached.has(r))
+    const orphans = mustReach.filter((r) => !reached.has(r) && !PUT_ASIDE.has(r))
     expect(
       orphans,
       `no way in to: ${orphans.join(", ")} — link it from a page people already reach, ` +

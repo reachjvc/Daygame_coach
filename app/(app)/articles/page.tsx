@@ -1,6 +1,9 @@
+import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { createServerSupabaseClient } from "@/src/db/server"
 import { ArticlesPage } from "@/src/articles"
+
+export const metadata: Metadata = { title: "Articles" }
 
 export default async function DashboardArticlesPage() {
   const supabase = await createServerSupabaseClient()

@@ -41,6 +41,8 @@ export const ROUTES = {
    * (Plans/site-navigation-build.md). Opened from the last tile on Home.
    */
   tools: "/tools",
+  /** All tools, Dating only: where the Dating tile on Home leads (Plans/rebrand-10kdaysclub.md, Phase 6). */
+  datingTools: "/tools/dating",
   training: "/training",
   liveWorkout: "/training/live",
   /**

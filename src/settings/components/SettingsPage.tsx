@@ -67,6 +67,9 @@ interface SettingsPageClientProps extends SettingsPageProps {
   datingAnswers?: ReactNode
 }
 
+/** "Your Progress" on the Profile tab, put aside by the rebrand (2026-11-19). */
+const SHOW_PROGRESS = false
+
 export function SettingsPage({
   user,
   profile,
@@ -248,7 +251,6 @@ export function SettingsPage({
             )}
           </LogOutButton>
         </div>
-        {datingAnswers}
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
             <TabsTrigger value="profile" className="gap-2" data-testid="settings-tab-profile">
@@ -257,11 +259,11 @@ export function SettingsPage({
             </TabsTrigger>
             <TabsTrigger value="sandbox" className="gap-2" data-testid="settings-tab-sandbox">
               <Sliders className="h-4 w-4" />
-              <span className="hidden sm:inline">Sandbox</span>
+              <span className="hidden sm:inline">Scenarios</span>
             </TabsTrigger>
             <TabsTrigger value="game" className="gap-2">
               <CircleDot className="h-4 w-4" />
-              <span className="hidden sm:inline">Game</span>
+              <span className="hidden sm:inline">Dating</span>
             </TabsTrigger>
             <TabsTrigger value="subscription" className="gap-2">
               <CreditCard className="h-4 w-4" />
@@ -315,7 +317,9 @@ export function SettingsPage({
 
             <TrainingSettingsCard initial={training} onSave={onUpdateTraining} />
 
-            {/* Stats */}
+            {/* Stats. "Your Progress" put aside by the rebrand, 2026-11-19 (Levels & XP
+                not tracked yet): flip SHOW_PROGRESS to bring it back. */}
+            {SHOW_PROGRESS && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -345,64 +349,7 @@ export function SettingsPage({
                 </div>
               </CardContent>
             </Card>
-
-            {/* Preferences Summary */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  Your Preferences
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <Label className="text-muted-foreground">Age Range</Label>
-                    <p className="mt-1 font-medium">
-                      {profile.age_range_start || 18} - {profile.age_range_end || 35} years
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Primary Region</Label>
-                    <p className="mt-1 font-medium capitalize">
-                      {profile.preferred_region?.replace(/-/g, " ") || "Not set"}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Archetypes</Label>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {profile.archetype && (
-                        <Badge variant="secondary" className="capitalize">
-                          {profile.archetype.replace(/_/g, " ")}
-                        </Badge>
-                      )}
-                      {profile.secondary_archetype && (
-                        <Badge variant="outline" className="capitalize">
-                          {profile.secondary_archetype.replace(/_/g, " ")}
-                        </Badge>
-                      )}
-                      {profile.tertiary_archetype && (
-                        <Badge variant="outline" className="capitalize">
-                          {profile.tertiary_archetype.replace(/_/g, " ")}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  <ComingSoon
-                    variant="row"
-                    title="Experience level"
-                    description="Replaced by levels that track what you do."
-                  />
-                </div>
-                <div className="pt-2">
-                  {/* `asChild`, so the LINK *is* the button. A <button> inside
-                      an <a> is invalid HTML and reads as two nested controls. */}
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={ROUTES.scenarioPreferences}>Edit Preferences</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            )}
 
             {/* Timezone */}
             <Card>
@@ -480,6 +427,71 @@ export function SettingsPage({
                 </div>
               </CardContent>
             </Card>
+
+            {/* DATING, LAST (Plans/rebrand-10kdaysclub.md, Phase 6): the dating questions
+                and preferences opened this page; You is everyone's, so they come after
+                the account's own settings. */}
+            <section className="space-y-6" aria-labelledby="you-dating" data-testid="you-dating">
+              <h2 id="you-dating" className="text-lg font-semibold">Dating</h2>
+              {datingAnswers}
+              {/* Preferences Summary */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    Your Preferences
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <Label className="text-muted-foreground">Age Range</Label>
+                      <p className="mt-1 font-medium">
+                        {profile.age_range_start || 18} - {profile.age_range_end || 35} years
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Primary Region</Label>
+                      <p className="mt-1 font-medium capitalize">
+                        {profile.preferred_region?.replace(/-/g, " ") || "Not set"}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Archetypes</Label>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {profile.archetype && (
+                          <Badge variant="secondary" className="capitalize">
+                            {profile.archetype.replace(/_/g, " ")}
+                          </Badge>
+                        )}
+                        {profile.secondary_archetype && (
+                          <Badge variant="outline" className="capitalize">
+                            {profile.secondary_archetype.replace(/_/g, " ")}
+                          </Badge>
+                        )}
+                        {profile.tertiary_archetype && (
+                          <Badge variant="outline" className="capitalize">
+                            {profile.tertiary_archetype.replace(/_/g, " ")}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    <ComingSoon
+                      variant="row"
+                      title="Experience level"
+                      description="Replaced by levels that track what you do."
+                    />
+                  </div>
+                  <div className="pt-2">
+                    {/* `asChild`, so the LINK *is* the button. A <button> inside
+                        an <a> is invalid HTML and reads as two nested controls. */}
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={ROUTES.scenarioPreferences}>Edit Preferences</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
           </TabsContent>
 
           {/* Sandbox Tab */}
@@ -876,11 +888,10 @@ export function SettingsPage({
                 </CardHeader>
                 <CardContent>
                   <p className="mb-4 text-muted-foreground">
-                    You don't have an active subscription. Subscribe to unlock unlimited
-                    practice scenarios.
+                    Subscribe to unlock Scenarios, Ask Coach and Inner Game.
                   </p>
                   <Button asChild>
-                    <Link href={ROUTES.pricing}>View Plans</Link>
+                    <Link href={ROUTES.pricing}>See prices</Link>
                   </Button>
                 </CardContent>
               </Card>

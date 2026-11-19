@@ -1,4 +1,4 @@
-import { LayoutDashboard, BarChart3, Dumbbell, Swords, HelpCircle, BookOpen, Timer, ScrollText, BatteryCharging, Brain, Box, Footprints, Grid2x2, Heart, MessageCircle, UserRound, type LucideIcon } from "lucide-react"
+import { LayoutDashboard, Dumbbell, Swords, HelpCircle, Timer, ScrollText, BatteryCharging, Brain, Box, Footprints, Grid2x2, Heart, NotebookPen, UserRound, type LucideIcon } from "lucide-react"
 import { ROUTES, isUnder } from "@/src/shared/routes"
 
 /**
@@ -25,7 +25,8 @@ import { ROUTES, isUnder } from "@/src/shared/routes"
 const ROUTE_LABELS_LIFE_MASTERY = "Plan"
 
 /**
- * THE BAR: HOME · PLAN · ACTIVITY · YOU (option E, Plans/site-navigation-build.md).
+ * THE BAR: HOME · PLAN · YOU (option E, Plans/site-navigation-build.md; Activity left the
+ * bar in Plans/rebrand-10kdaysclub.md, Phase 6, and became The Field, inside Dating).
  *
  * Copied from Grab: Home holds the tools as tiles, and the bar holds only the
  * few places you return to. Every tool that had a tab or a row in the More
@@ -51,7 +52,6 @@ export const TABS = [
    * `NorthStarFlow`, `USE_STEPS`).
    */
   { label: ROUTE_LABELS_LIFE_MASTERY, icon: ScrollText, href: ROUTES.plan, exact: false, testId: "tab-your-plan" },
-  { label: "Activity", icon: BarChart3, href: ROUTES.tracking, exact: false, testId: "tab-tracking" },
   { label: "You", icon: UserRound, href: ROUTES.settings, exact: false, testId: "tab-you" },
 ] as const
 
@@ -111,12 +111,13 @@ export const PHONE_BAR_HIDDEN_PREFIXES: string[] = [ROUTES.time]
 export const TAB_ROUTES: string[] = [
   ...TABS.map((t) => t.href),
   ROUTES.tools,
+  ROUTES.datingTools,
+  ROUTES.tracking,
   ROUTES.training,
   ROUTES.scenarios,
   ROUTES.time,
   ROUTES.audit,
   ROUTES.coach,
-  ROUTES.articles,
   ROUTES.innerGame,
 ]
 
@@ -139,7 +140,8 @@ export interface Tool {
   short: string
   icon: LucideIcon
   href: string
-  group: "dating" | "life"
+  /** The part of the site it belongs to, in All tools (Plans/rebrand-10kdaysclub.md, Phase 6). */
+  group: "life" | "quit" | "dating"
   access: ToolAccess
   /** A tile on Home by default. The owner's own ☆ pins come in Phase 6. */
   tile: boolean
@@ -169,24 +171,33 @@ export interface Tool {
 export const TOOLS: readonly Tool[] = [
   { id: "training", label: "Training", short: "Training", icon: Dumbbell, href: ROUTES.training, group: "life", access: "open", tile: true },
   { id: "time", label: "Time Log", short: "Time Log", icon: Timer, href: ROUTES.time, group: "life", access: "open", tile: true },
-  { id: "scenarios", label: "Scenarios", short: "Scenarios", icon: Swords, href: ROUTES.scenarios, group: "dating", access: "preview", tile: true },
   { id: "audit", label: "Time & energy audit", short: "Audit", icon: BatteryCharging, href: ROUTES.audit, group: "life", access: "open", tile: true },
-  { id: "coach", label: "Ask Coach", short: "Coach", icon: HelpCircle, href: ROUTES.coach, group: "dating", access: "paid", tile: true },
-  { id: "inner-game", label: "Inner Game", short: "Inner Game", icon: Brain, href: ROUTES.innerGame, group: "dating", access: "preview", tile: true },
-  { id: "black-box", label: "Black Box", short: "Black Box", icon: Box, href: ROUTES.quitVice, group: "life", access: "open", tile: true },
-  { id: "field", label: "Field session", short: "Field", icon: Footprints, href: ROUTES.trackingSession, group: "dating", access: "open", tile: false },
-  { id: "articles", label: "Articles", short: "Articles", icon: BookOpen, href: ROUTES.articles, group: "dating", access: "open", tile: false },
+  { id: "daily", label: "Daily reflection", short: "Reflect", icon: NotebookPen, href: ROUTES.trackingDaily, group: "life", access: "open", tile: false },
+  { id: "black-box", label: "Black Box", short: "Black Box", icon: Box, href: ROUTES.quitVice, group: "quit", access: "open", tile: true },
+  // Scenarios, Ask Coach and Inner Game left Home for the one Dating tile (DATING_TILE below).
+  { id: "scenarios", label: "Scenarios", short: "Scenarios", icon: Swords, href: ROUTES.scenarios, group: "dating", access: "preview", tile: false },
+  { id: "coach", label: "Ask Coach", short: "Coach", icon: HelpCircle, href: ROUTES.coach, group: "dating", access: "paid", tile: false },
+  { id: "inner-game", label: "Inner Game", short: "Inner Game", icon: Brain, href: ROUTES.innerGame, group: "dating", access: "preview", tile: false },
+  // Was "Field session" at /tracking/session; that tracker opens from The Field's own "Start Session".
+  { id: "field", label: "The Field", short: "The Field", icon: Footprints, href: ROUTES.tracking, group: "dating", access: "open", tile: false },
+  // "Articles" put aside by the rebrand, 2026-11-19: an empty "coming soon" page. /articles still opens by its address.
   { id: "dating-answers", label: "Your dating answers", short: "Answers", icon: Heart, href: ROUTES.scenarioPreferences, group: "dating", access: "open", tile: false },
 ]
 
 /**
  * Things that are announced but not built, shown greyed in All tools so the
- * list says what is coming. Only what the app already promised: the
- * Dashboard's "Cold Approach · Coming Soon" card.
+ * list says what is coming.
  */
 export const COMING_TOOLS: readonly { label: string; icon: LucideIcon; group: Tool["group"] }[] = [
-  { label: "Cold Approach", icon: MessageCircle, group: "dating" },
+  // "Cold Approach" put aside by the rebrand, 2026-11-19.
 ]
+
+/**
+ * The Dating tile on Home: one door to the dating tools (`/tools/dating`), in
+ * place of three dating tiles (Plans/rebrand-10kdaysclub.md, Phase 6). Drawn
+ * before All tools; not a row in All tools, whose Dating group lists the tools.
+ */
+export const DATING_TILE = { id: "dating", label: "Dating", icon: Heart, href: ROUTES.datingTools } as const
 
 /** The last tile on Home. */
 export const ALL_TOOLS_TILE = { label: "All tools", icon: Grid2x2, href: ROUTES.tools } as const
@@ -198,6 +209,7 @@ export const ROUTE_LABELS: Record<string, string> = {
   ...Object.fromEntries(TOOLS.map((t) => [t.href, t.label])),
   ...Object.fromEntries(TABS.map((t) => [t.href, t.label])),
   [ROUTES.tools]: "All tools",
+  [ROUTES.datingTools]: "Dating",
   [ROUTES.trackingHistory]: "History",
   [ROUTES.plan]: ROUTE_LABELS_LIFE_MASTERY,
   [ROUTES.training]: "Training",

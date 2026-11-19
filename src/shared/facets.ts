@@ -26,12 +26,8 @@ export const FACET_LABEL: Record<Exclude<Facet, "brand">, string> = {
   dating: "Dating",
 }
 
-/**
- * The quit tools' front page is not in `ROUTES` (it lives with those tools,
- * `app/quit`); the Dating tools page joins `ROUTES` in Phase 6.
- */
+/** The quit tools' front page is not in `ROUTES`: it lives with those tools, `app/quit`. */
 const QUIT_DOOR = "/quit"
-const DATING_TOOLS = `${ROUTES.tools}/dating`
 
 /** Order matters: the exceptions (quit-vice under plan, daily under tracking) come first. */
 const MAP: readonly (readonly [string, Facet])[] = [
@@ -44,7 +40,7 @@ const MAP: readonly (readonly [string, Facet])[] = [
   [ROUTES.time, "life"],
   [ROUTES.audit, "life"],
   [ROUTES.dating, "dating"],
-  [DATING_TOOLS, "dating"],
+  [ROUTES.datingTools, "dating"],
   [ROUTES.scenarios, "dating"],
   [ROUTES.coach, "dating"],
   [ROUTES.innerGame, "dating"],

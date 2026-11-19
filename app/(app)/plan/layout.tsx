@@ -1,6 +1,12 @@
+import { BRAND } from "@/src/shared/brand"
+import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { createServerSupabaseClient } from "@/src/db/server"
 import { ROUTES } from "@/src/shared/routes"
+
+/* A template too: a plain string here would drop the brand suffix from the
+   pages below that name themselves (the Black Box). */
+export const metadata: Metadata = { title: { default: "Your plan", template: "%s · " + BRAND.name } }
 
 /**
  * THE GATE, once, for the flow and everything under it.

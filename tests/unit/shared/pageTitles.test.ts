@@ -28,32 +28,7 @@ const KEEP_DEFAULT = new Set([
  * Pages whose titles land in Phases 5 and 6 of Plans/rebrand-10kdaysclub.md.
  * Each phase empties its share; when this set is empty, delete it.
  */
-const TITLES_COME_LATER = new Set([
-  "app/(app)/articles",
-  "app/(app)/coach",
-  "app/(app)/dashboard",
-  "app/(app)/inner-game",
-  "app/(app)/plan",
-  "app/(app)/plan/new",
-  "app/(app)/plan/new/[...slug]",
-  "app/(app)/plan/quit-vice",
-  "app/(app)/plan/sandbox",
-  "app/(app)/scenarios",
-  "app/(app)/scenarios/preferences",
-  "app/(app)/scenarios/preferences/archetypes",
-  "app/(app)/settings",
-  "app/(app)/tools",
-  "app/(app)/tracking",
-  "app/(app)/tracking/daily",
-  "app/(app)/tracking/history",
-  "app/(app)/tracking/report",
-  "app/(app)/tracking/review",
-  "app/(app)/tracking/session",
-  "app/(app)/tracking/session/[id]",
-  "app/(app)/training",
-  "app/(app)/training/live",
-  "app/(app)/training/workout/[id]",
-])
+const TITLES_COME_LATER = new Set<string>([])
 
 function pageDirs(): string[] {
   const out: string[] = []

@@ -1,7 +1,10 @@
+import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { PAYWALL_HREF } from "@/src/hometab"
 import { createServerSupabaseClient } from "@/src/db/server"
 import { QAPage } from "@/src/qa"
+
+export const metadata: Metadata = { title: "Ask Coach" }
 
 export default async function DashboardQAPage() {
   const supabase = await createServerSupabaseClient()

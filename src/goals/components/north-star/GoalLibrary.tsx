@@ -28,6 +28,7 @@ import {
   templatesFor,
 } from "@/src/goals/northStarService"
 import { Peek } from "./Peek"
+import { AREA_OFFERS } from "@/src/goals/data/northStarBuild"
 
 const SHAPE_ICON: Record<string, string> = { milestone_ladder: "🎯", habit_ramp: "🔁", achievement: "🏁" }
 
@@ -50,6 +51,18 @@ function targetDetail(target: FrameworkTarget, valueOverride?: number): string {
   return shape.checkpointTitles.length > 0 ? `${shape.checkpointTitles.length} steps` : "done or not"
 }
 
+/**
+ * AREAS THE CATALOGUE HAS NOTHING FOR, NOT EVEN BY ACCIDENT.
+ *
+ * Family and Friends map to the relations pillar (`AREA_LIBRARY_PILLAR`), and
+ * every objective on that pillar is about dating: Get a Girlfriend, Date
+ * Abundantly, Build Inner Game. So the goal list offered "Get a Girlfriend" as
+ * the one goal for your family (Plans/rebrand-10kdaysclub.md, Phase 6). The
+ * board's practices already say so (`AREA_OFFERS`); here the library says the
+ * same note instead of listing the pillar.
+ */
+export const NO_CATALOGUE_AREAS: ReadonlySet<string> = new Set(["lm_family", "lm_friends"])
+
 export function GoalLibrary({ area, plan, onAddTarget, onAddTemplate }: {
   area: NsArea
   plan: NsPlan
@@ -62,6 +75,15 @@ export function GoalLibrary({ area, plan, onAddTarget, onAddTemplate }: {
   const [picked, setPicked] = useState<string | null>(null)
   const pillarId = seeded ?? picked
   const [level, setLevel] = useState(1)
+
+  if (NO_CATALOGUE_AREAS.has(area.id)) {
+    return (
+      <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3" data-testid="goal-library-none">
+        <p className="text-[12px] text-foreground">{LIBRARY_COPY.title}</p>
+        <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{AREA_OFFERS[area.id]?.note}</p>
+      </div>
+    )
+  }
 
   if (!pillarId) {
     return (

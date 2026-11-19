@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { ROUTES } from "@/src/shared/routes"
 import { createServerSupabaseClient, getProfile } from "@/src/db/server"
@@ -17,6 +18,8 @@ import {
   openBillingPortal,
   updateTrainingSettings,
 } from "@/src/settings/actions"
+
+export const metadata: Metadata = { title: "You" }
 
 export default async function SettingsPageWrapper() {
   const supabase = await createServerSupabaseClient()
