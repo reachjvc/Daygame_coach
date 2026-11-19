@@ -16,6 +16,7 @@
  * UI at all, or a pre-login page. Add a tab and its route exempts itself.
  */
 
+import { ROUTES } from "@/src/shared/routes"
 import { describe, it, expect } from "vitest"
 import * as fs from "fs"
 import * as path from "path"
@@ -94,6 +95,10 @@ describe("every screen has a way back", () => {
       // The public quit tools are their own small site outside the app frame:
       // the layout's site-name link and the tool frame's Back link lead out.
       if (route === "/quit" || route.startsWith("/quit/") || route === "/privacy") { skipped[route] = "public quit tools and privacy page, own frame"; continue }
+      // The front page's doors and Prices (Plans/rebrand-10kdaysclub.md, Phase 5): like `/`,
+      // they wear `PublicShell`, which draws the app frame signed in and the sales header
+      // (logo home, sign in) signed out.
+      if (route === ROUTES.life || route === ROUTES.dating || route === ROUTES.pricing) { skipped[route] = "public door page, PublicShell frame"; continue }
       if (isRedirectShim(file)) { skipped[route] = "redirect shim, no UI"; continue }
 
       checked.push(route)

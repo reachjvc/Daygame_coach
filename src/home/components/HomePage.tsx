@@ -1,211 +1,129 @@
 "use client"
 
 import { useEffect } from "react"
-import { CheckCircle2, MessageCircle, BarChart3, Zap, Swords } from "lucide-react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { Compass, Heart, Unlink, type LucideIcon } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { AppFrame } from "@/components/AppFrame"
-import { AppHeader } from "@/components/AppHeader"
-import { CheckoutButton } from "@/src/home/components/CheckoutButton"
-import { PRODUCTS } from "@/src/home/products"
-import { BRAND } from "@/src/shared/brand"
+import { PublicShell } from "@/src/home/components/PublicShell"
+import { facetFor } from "@/src/shared/facets"
+import { ROUTES } from "@/src/shared/routes"
 
 interface HomePageProps {
   isLoggedIn?: boolean
 }
 
+const QUIT_DOOR = "/quit"
+const SIGN_UP = "/auth/sign-up"
+const LOG_IN = "/auth/login"
+
+/** The three doors (W13). Each wears the colour of the part it opens (rule R2). */
+const DOORS: { id: string; title: string; text: string; button: string; href: string; icon: LucideIcon }[] = [
+  {
+    id: "life",
+    title: "Life",
+    text: "Decide what you want in each part of your life, then live it: your plan, your days, your training, your time.",
+    button: "See the life tools",
+    href: ROUTES.life,
+    icon: Compass,
+  },
+  {
+    id: "quit",
+    title: "Quit",
+    text: "Free tools for the hard moments of quitting, and a private record of every try.",
+    button: "Quit something",
+    href: QUIT_DOOR,
+    icon: Unlink,
+  },
+  {
+    id: "dating",
+    title: "Dating",
+    text: "Practise conversations with an AI that answers like a real person, then go out and log what happens.",
+    button: "See the dating tools",
+    href: ROUTES.dating,
+    icon: Heart,
+  },
+]
+
 /**
- * The sales page. Signed in, it wears the app's frame like every other page,
- * so its navigation cannot drift from the tab bar's; signed out, it has the
- * sales header (sign in, get started) and nothing else.
+ * THE FRONT PAGE: the umbrella, with three doors (Plans/rebrand-10kdaysclub.md,
+ * Phase 5; words W10–W14). The old front page, all dating, lives on as the
+ * Dating door (`DatingPage`), and its prices on their own page (`/pricing`).
  */
 export function HomePage({ isLoggedIn = false }: HomePageProps) {
-  /* AT THE PLANS WHEN ASKED FOR THEM. A locked tile, "See plans" and Ask
-     Coach for a non-payer all send people to `/#pricing`. The browser's own
-     jump to the anchor did not happen (a client navigation into this page,
-     or a redirect), so somebody who tapped a lock landed on the hero and saw
-     no prices (Plans/site-navigation-build.md, Phase 4 audit). */
+  const router = useRouter()
+  /* The prices used to sit on this page at `#pricing`, and old links, bookmarks
+     and the installed app may still ask for them there. Send them on. */
   useEffect(() => {
     const go = () => {
-      if (window.location.hash === "#pricing") document.getElementById("pricing")?.scrollIntoView()
+      if (window.location.hash === "#pricing") router.replace(ROUTES.pricing)
     }
-    const frame = requestAnimationFrame(go)
+    go()
     window.addEventListener("hashchange", go)
-    return () => {
-      cancelAnimationFrame(frame)
-      window.removeEventListener("hashchange", go)
-    }
-  }, [])
+    return () => window.removeEventListener("hashchange", go)
+  }, [router])
 
-  const page = (
-    <div className="min-h-dvh bg-background">
-      {!isLoggedIn && <AppHeader />}
-
-      {/* Hero Section */}
-      <section className="w-full py-24 lg:py-32">
-        <div className="mx-auto max-w-6xl px-4 sm:px-8 text-center">
-          <Badge className="mb-6 bg-primary/10 text-primary border-primary/20" variant="outline">
-            <Zap className="size-3 mr-1" />
-            AI-Powered Training
-          </Badge>
-          <h1 className="text-balance text-5xl font-bold tracking-tight lg:text-7xl mb-6 text-foreground">
-            Master Daygame From <span className="text-primary">Home</span>
+  return (
+    <PublicShell isLoggedIn={isLoggedIn}>
+      <section className="w-full py-16 sm:py-24">
+        <div className="mx-auto max-w-3xl px-4 text-center sm:px-8">
+          <p className="mb-4 text-sm text-muted-foreground">10,000 days is about 27 years.</p>
+          <h1 className="mb-6 text-balance text-4xl font-bold tracking-tight text-foreground sm:text-6xl">
+            Ten years from now, you might be able to say… <span className="text-primary">I DID IT.</span>
           </h1>
-          <p className="text-pretty text-xl text-muted-foreground mb-12 mx-auto leading-relaxed">
-            Practice your approach and conversation skills with our AI coach. Get real-time feedback, build confidence,
-            and improve your social interactions without the pressure.
+          <p className="mx-auto mb-10 text-pretty text-lg leading-relaxed text-muted-foreground">
+            Plan the life you want, build the habits that get you there, quit what holds you back, and get better at
+            dating. One day at a time.
           </p>
-
-          {/* Hero Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            {/* Instant Access */}
-            <CheckoutButton productId={PRODUCTS[2].id} className="px-6 py-3 text-base min-h-[44px]" />
-
-            {/* View Pricing */}
-            <Button
-              variant="outline"
-              onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })}
-              className="px-6 py-3 text-base min-h-[44px] border-border text-foreground hover:bg-card bg-transparent"
-            >
-              View Pricing
+          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button asChild size="lg" className="min-h-11 px-6" data-testid="front-start">
+              <Link href={SIGN_UP}>Start free</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="min-h-11 px-6">
+              <Link href={LOG_IN}>Log in</Link>
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="w-full py-8 bg-card/30">
+      <section className="w-full pb-16" aria-labelledby="doors-title">
         <div className="mx-auto max-w-6xl px-4 sm:px-8">
-          <h2 className="text-balance text-3xl font-bold text-center mb-16 text-foreground">
-            Why Practice With AI?
+          <h2 id="doors-title" className="mb-6 text-balance text-center text-2xl font-bold text-foreground sm:text-3xl">
+            Where do you want to start?
           </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="p-4 sm:p-6 bg-card border-border">
-              <MessageCircle className="size-12 text-primary mb-4" />
-              <h3 className="font-semibold text-xl mb-3 text-foreground">Realistic Conversations</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Practice with AI that responds like real people. Build your conversational skills in a safe environment.
-              </p>
-            </Card>
-
-            <Card className="p-4 sm:p-6 bg-card border-border">
-              <Swords className="size-12 text-primary mb-4" />
-              <h3 className="font-semibold text-xl mb-3 text-foreground">Scenario-Based Training</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Choose from various scenarios: coffee shops, parks, bookstores. Practice different approaches and styles.
-              </p>
-            </Card>
-
-            <Card className="p-4 sm:p-6 bg-card border-border">
-              <BarChart3 className="size-12 text-primary mb-4" />
-              <h3 className="font-semibold text-xl mb-3 text-foreground">Instant Feedback</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Get immediate coaching on your openers, conversation flow, and vibe. Learn what works and what doesn't.
-              </p>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section id="pricing" className="w-full py-24">
-        <div className="mx-auto max-w-6xl px-4 sm:px-8">
-          <h2 className="text-balance text-3xl font-bold text-center mb-4 text-foreground">
-            Choose Your Plan
-          </h2>
-          <p className="text-center text-muted-foreground mb-12">All plans include unlimited access. Cancel anytime.</p>
-          <div className="grid md:grid-cols-3 gap-8">
-            {PRODUCTS.map((product) => (
+          <div className="grid gap-4 md:grid-cols-3">
+            {DOORS.map((d) => (
               <Card
-                key={product.id}
-                className={`p-8 bg-card border-border relative overflow-hidden flex flex-col justify-between ${
-                  product.id === "yearly-subscription" ? "ring-2 ring-primary" : ""
-                }`}
+                key={d.id}
+                className="flex flex-col gap-3 border-t-4 border-t-primary p-5 sm:p-6"
+                data-facet={facetFor(d.href)}
+                data-testid={`door-${d.id}`}
               >
-                {/* Savings badge */}
-                {product.savingsPercentage && (
-                  <div className="absolute -top-12 -right-12 w-48 h-48 rotate-45">
-                    <div
-                      className="bg-accent text-accent-foreground text-[11px] font-bold py-3 text-center shadow-lg"
-                      style={{ transform: "translateY(48px)" }}
-                    >
-                      SAVE {product.savingsPercentage}%
-                    </div>
-                  </div>
-                )}
-                {product.id === "yearly-subscription" && (
-                  <Badge className="absolute top-4 left-4 bg-primary text-primary-foreground z-10">Best Value</Badge>
-                )}
-
-                {/* Indhold */}
-                <div className="flex flex-col h-full">
-                  <div className="text-center mb-4">
-                    <h3 className="text-2xl font-bold mb-2 text-foreground">{product.name}</h3>
-                    <p className="text-muted-foreground text-sm mb-4">{product.description}</p>
-                    <div className="text-5xl font-bold mb-2 text-foreground">
-                      ${(product.priceInCents / 100).toFixed(0)}
-                    </div>
-                    <p className="text-muted-foreground">
-                      {product.intervalCount > 1 ? `Every ${product.intervalCount} months` : `Per ${product.interval}`}
-                    </p>
-                    <p className="text-primary text-sm mt-2 font-semibold" style={{ minHeight: "1.25rem" }}>
-                      {product.savingsPercentage
-                        ? `$${(
-                            product.priceInCents /
-                            100 /
-                            (product.interval === "year" ? 12 : product.intervalCount)
-                          ).toFixed(2)}/mo`
-                        : null}
-                    </p>
-                  </div>
-
-                  {/* Features */}
-                  <ul className="space-y-4 mb-8">
-                    {product.features.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-3">
-                        <CheckCircle2 className="size-6 text-primary shrink-0 mt-0.5" />
-                        <span className="leading-relaxed text-foreground">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {/* Checkout knap nederst */}
-                  <CheckoutButton productId={product.id} className="mt-auto" />
+                <div className="flex items-center gap-3">
+                  <d.icon className="size-7 text-primary" aria-hidden />
+                  <h3 className="text-xl font-semibold text-foreground">{d.title}</h3>
                 </div>
+                <p className="flex-1 leading-relaxed text-muted-foreground">{d.text}</p>
+                <Button asChild className="min-h-11 self-start">
+                  <Link href={d.href}>{d.button}</Link>
+                </Button>
               </Card>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="w-full py-24 bg-primary text-primary-foreground my-12 rounded-lg">
-        <div className="mx-auto max-w-6xl px-4 sm:px-8 text-center">
-          <h2 className="text-balance text-3xl font-bold mb-6">Ready to Build Your Confidence?</h2>
-          <p className="text-pretty text-lg mb-8 opacity-90 leading-relaxed">
-            Practise at home, then take it to the street.
-          </p>
-          <CheckoutButton productId={PRODUCTS[2].id} />
+      <section className="w-full pb-20">
+        <div className="mx-auto max-w-3xl px-4 text-center sm:px-8">
+          <h2 className="mb-3 text-balance text-2xl font-bold text-foreground sm:text-3xl">Day one is today.</h2>
+          <p className="mb-8 text-muted-foreground">Every day you count is one of the 10,000.</p>
+          <Button asChild size="lg" className="min-h-11 px-6">
+            <Link href={SIGN_UP}>Start free</Link>
+          </Button>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="border-t border-border py-8 bg-card">
-        <div className="mx-auto max-w-6xl">
-          {/* The footer used to link to /setup ("Stripe Setup Guide") and /dev
-              ("Developer Access"). Both are notes-to-self, both were on the
-              public home page, and both return 404 on the live site -- checked
-              2026-09-09. A visitor's first page offered them two broken links
-              to internal tooling. There are no such routes to fix, so the links
-              go. */}
-          <div className="text-center text-sm text-muted-foreground">
-            <p>&copy; 2026 {BRAND.name}</p>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </PublicShell>
   )
-  return isLoggedIn ? <AppFrame>{page}</AppFrame> : page
 }

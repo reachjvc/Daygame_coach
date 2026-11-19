@@ -10,7 +10,7 @@
  * - A signed-out visitor is sent to sign in; there is no visitor view.
  * - Someone signed up but not subscribed was once sent to /auth/sign-up for
  *   the account they had just made (walked with a real account 2026-09-04).
- *   A locked thing sends them to the plans, `/#pricing`.
+ *   A locked thing sends them to the prices page, `/pricing`.
  * - A payer's tiles open the tools themselves, never the plans.
  *
  * And one new: Ask Coach turns away anyone who has not paid with no word

@@ -1,11 +1,13 @@
 import type { Tool } from "@/components/navTabs"
 import { withReturn } from "@/src/shared/returnTo"
+import { ROUTES } from "@/src/shared/routes"
 
 /**
- * Where a locked tool sends somebody: the plans on the front page. They have
+ * Where a locked tool sends somebody: the prices page (it was `/#pricing` on the
+ * front page until Plans/rebrand-10kdaysclub.md, Phase 5). They have
  * an account, so not to sign-up — the Dashboard learned that one the hard way.
  */
-export const PAYWALL_HREF = "/#pricing"
+export const PAYWALL_HREF = ROUTES.pricing
 
 /** What Home and All tools need to know about who is looking. Nothing more. */
 export interface ToolViewer {

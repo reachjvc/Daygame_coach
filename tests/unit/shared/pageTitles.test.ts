@@ -53,8 +53,6 @@ const TITLES_COME_LATER = new Set([
   "app/(app)/training",
   "app/(app)/training/live",
   "app/(app)/training/workout/[id]",
-  "app/auth/login",
-  "app/auth/sign-up",
 ])
 
 function pageDirs(): string[] {

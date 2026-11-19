@@ -53,7 +53,7 @@ test.describe("a throwaway account", () => {
     await expect(coach).toHaveAttribute("data-access", "locked", {
       timeout: AUTH_TIMEOUT,
     })
-    await expect(coach).toHaveAttribute("href", "/#pricing")
+    await expect(coach).toHaveAttribute("href", "/pricing")
 
     await grantPurchase(account.id)
     await page.goto(ROUTES.dashboard, { timeout: AUTH_TIMEOUT })

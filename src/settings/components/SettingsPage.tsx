@@ -880,7 +880,7 @@ export function SettingsPage({
                     practice scenarios.
                   </p>
                   <Button asChild>
-                    <Link href="/">View Plans</Link>
+                    <Link href={ROUTES.pricing}>View Plans</Link>
                   </Button>
                 </CardContent>
               </Card>

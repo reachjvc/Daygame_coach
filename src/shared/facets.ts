@@ -27,13 +27,10 @@ export const FACET_LABEL: Record<Exclude<Facet, "brand">, string> = {
 }
 
 /**
- * Public pages outside `ROUTES` (that file holds signed-in pages only). The
- * three part doors and the prices page join `ROUTES` when they are built
- * (Phase 5); until then their addresses are named once, here.
+ * The quit tools' front page is not in `ROUTES` (it lives with those tools,
+ * `app/quit`); the Dating tools page joins `ROUTES` in Phase 6.
  */
 const QUIT_DOOR = "/quit"
-const LIFE_DOOR = "/life"
-const DATING_DOOR = "/dating"
 const DATING_TOOLS = `${ROUTES.tools}/dating`
 
 /** Order matters: the exceptions (quit-vice under plan, daily under tracking) come first. */
@@ -41,12 +38,12 @@ const MAP: readonly (readonly [string, Facet])[] = [
   [ROUTES.quitVice, "quit"],
   [QUIT_DOOR, "quit"],
   [ROUTES.trackingDaily, "life"],
-  [LIFE_DOOR, "life"],
+  [ROUTES.life, "life"],
   [ROUTES.plan, "life"],
   [ROUTES.training, "life"],
   [ROUTES.time, "life"],
   [ROUTES.audit, "life"],
-  [DATING_DOOR, "dating"],
+  [ROUTES.dating, "dating"],
   [DATING_TOOLS, "dating"],
   [ROUTES.scenarios, "dating"],
   [ROUTES.coach, "dating"],

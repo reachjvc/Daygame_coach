@@ -87,6 +87,14 @@ export const ROUTES = {
   quitVice: "/plan/quit-vice",
   /** The role model library (Plans/role-models.md); each person at `/plan/role-models/<id>`. */
   roleModels: "/plan/role-models",
+  /**
+   * The front page's three doors and the prices page (Plans/rebrand-10kdaysclub.md,
+   * Phase 5). Public, so they are also in `isPublicPage` below. The Quit door is
+   * `/quit`, the free quit tools' own front page, which lives with those tools.
+   */
+  life: "/life",
+  dating: "/dating",
+  pricing: "/pricing",
 } as const
 
 /** One tracking session's own page. */
@@ -145,7 +153,10 @@ export function isPublicPage(pathname: string): boolean {
     isUnder(pathname, "/auth") ||
     isUnder(pathname, "/test") ||
     isUnder(pathname, "/quit") ||
-    isUnder(pathname, "/privacy")
+    isUnder(pathname, "/privacy") ||
+    isUnder(pathname, ROUTES.life) ||
+    isUnder(pathname, ROUTES.dating) ||
+    isUnder(pathname, ROUTES.pricing)
   )
 }
 

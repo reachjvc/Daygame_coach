@@ -240,7 +240,7 @@ export function WelcomeCard({
               className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/20"
               size="lg"
             >
-              <Link href="/#pricing">See pricing</Link>
+              <Link href={ROUTES.pricing}>See prices</Link>
             </Button>
           ) : (
             <Button

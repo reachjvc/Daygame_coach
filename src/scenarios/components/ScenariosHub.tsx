@@ -2,7 +2,8 @@
 
 import { useState, useCallback } from "react";
 import { useHistoryBarrier } from "@/src/shared/HistoryBarrierContext";
-import Link from "next/link";
+import Link from "next/link"
+import { ROUTES } from "@/src/shared/routes";
 import {
   ChevronDown,
   ChevronRight,
@@ -201,7 +202,7 @@ export function ScenariosHub({
                     <a> is invalid HTML, and `w-full` moves onto the button
                     because that is what renders the anchor now. */}
                 <Button className="w-full" asChild>
-                  <Link href="/#pricing">See pricing</Link>
+                  <Link href={ROUTES.pricing}>See prices</Link>
                 </Button>
               </div>
             </div>
@@ -424,11 +425,9 @@ export function ScenariosHub({
       {isPreviewMode && (
         <div className="text-center p-4 sm:p-8 bg-primary/5 border border-primary/20 rounded-lg">
           <h3 className="text-xl font-bold text-foreground mb-2">Ready to Start Practicing?</h3>
-          <p className="text-muted-foreground mb-6">
-            Sign up to unlock all scenarios and start improving your conversation skills today.
-          </p>
+          <p className="text-muted-foreground mb-6">Subscribe to unlock every scenario.</p>
           <Button size="lg" asChild>
-            <Link href="/auth/sign-up">Get Started Free</Link>
+            <Link href={ROUTES.pricing}>See prices</Link>
           </Button>
         </div>
       )}
