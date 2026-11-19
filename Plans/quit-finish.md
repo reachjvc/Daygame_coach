@@ -36,7 +36,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | 5 | The 12 lies test | wave-1 `beliefs` | from `beliefs/best`: a reply per belief, "can you stop?", earlier results | not started |
 | 6 | What you'll feel, and when | lab `timeline/best` | wave-1 `symptoms` (what helps per symptom) | not started |
 | 7 | If-then plan | lab `ifthen/best` | — | not started |
-| 8 | Daily check-in | lab `checkin/best` | slip question from `diary/best` | not started |
+| 8 | Daily check-in | lab `checkin/best` | slip question from `diary/best` | building |
 | 9 | What it costs you | wave-1 `cost` | per-pack price and live update (copy e); money setup from the shared record | not started |
 | 10 | Your past attempts | lab `past/best` | wave-1's "many tries are normal" number and "after the first slip" question | not started |
 | 11 | Today's lesson | lab `lessons/best` | — | not started |
@@ -538,6 +538,137 @@ same number; alternative "days without it" (slip day not counted), which disagre
 S2 Tool 2's "About $X kept since <date>" counts from the new day 1 after a slip (it reads `record.quitDate`);
 recommendation: Tool 3 sums money over all runs, and Tool 2 keeps its line. S3 the wave-1 `endings` list stays in the
 data file (past attempts uses it) but this tool no longer asks it.
+
+### Tool 8: Daily check-in — brief (Opus, 2026-11-19) — build exactly this, decide nothing
+
+Model: Sonnet builds in a worktree; Opus reads the diff. Address: `/quit/nicotine/checkin` (menu row id `checkin`
+exists). Built from lab `checkin/best` (`src/quit/lab/checkin/best/*`, `checkin/shared/*`): move what is reused into
+`src/quit/tools/checkin/`; never edit lab files. Folded in: the slip question of lab `diary/best` ("Did you smoke?"),
+which here files the slip in the **Black Box**, the same way Tool 2's "Yes" does, and hands the rest to Tool 4.
+Nicotine only: no addiction switcher. One question per screen on phones, a progress bar, in-page Back, browser Back
+steps back, reload resumes, a double tap never skips a screen or files twice. Desktop (1280): the same screens in the
+page column, like Tools 1 to 4. All choices below are **proposed**; the recommendation is the first option each time.
+
+**Menu row:** name **"Daily check-in"**, line **"Morning: how hard will today be? Evening: how did it go?"** (the
+old "30 seconds a day for the first 2 weeks" had no basis), `account: "none"`, wave 1 in `menu.json` and
+`src/quit/tools/registry.ts`; add `checkin` to `liveTools.json` when built.
+
+**Data: it asks nothing another tool asks, and has one slip owner (review D6).**
+- Its own answers are kept in the `quit-v1` store under the tool key **`checkin`**: `{ days: Record<ISO day, Day>,
+  draft: {kind, date, step, answers} | null }`, `Day = { pledge?, forecast?: 1-5, slipped?: boolean, hard?: 1-5,
+  urges?: 1-5, feelings?: string[], note?: string, slipReportId?: string }`. A parse function drops bad parts (unit
+  tests). One line on the Today tab: "Your check-ins are kept on this phone." (B1).
+- **Slips go to the Black Box**, for every visitor: `BlackBoxBridge` signed in, `LocalBlackBoxBridge` signed out,
+  `useSignedIn(true, true)` (no `/api/whoami` 401 signed out), exactly as `SosTool.tsx` mounts them. Filing waits
+  until the Black Box is `settled`.
+- A day that already holds a living Black Box slip (filed by Craving now?, Slipped? Restart today, or the Black Box
+  page) is never asked "Did you smoke?": the evening opens with "Your slip on Thu 19 Nov is in your record." and goes
+  on to the next question; the day counts as slipped everywhere in this tool.
+- It starts no runs and ends none except by `fileSlip` (Tool 1 and Tool 4 own runs). It reads the unit from the shared
+  record only for the verb (`didYouUse` / `useVerb` in `src/quit/wording.ts`: smoke / vape / use a pouch, "use it"
+  with no unit).
+
+**The slip question (from diary/best, review D4: the one answer that matters goes first).**
+Evening step 1 is **"Did you <verb> today?"** ("…that day?" when filling a past day, review D13): **No, a clear
+day** / **Yes, I <past verb>**. The answer is saved at once (no Next needed to keep it).
+- **Yes, with a living run** → `fileSlip({ at: reportAt(day, today, nowInBrowser()), thought: "", ending:
+  endingForBelief(null, beliefs) })`; the id is kept as the day's `slipReportId`. Under the question:
+  "A slip doesn't undo the days before." (Tool 2's line), the save status line as Tool 2 ("Saved on this phone." /
+  "Saved to your account." / "Saving to your Black Box..."), **Undo** while the screen is open, and the link
+  **"Slipped? Restart today"** to `/quit/nicotine/slip` when `isLiveTool("slip")`, else Tool 2's plain step text.
+  Tool 4 then sees case B (the latest run ended with a slip) and asks only where, the voice and a new day 1, so this
+  tool never asks where or the voice (no question twice).
+- **Yes, the Black Box refuses** (the day is before the run's start or before its latest report) or **no living run**
+  → kept in the check-in only, with one line: "You had no run going that day, so nothing was saved as a slip."
+- **Changing Yes → No** for a day with a `slipReportId`: `undo(id)`; when undo is refused (a later run exists),
+  the answer stays Yes with the line "This slip is in your Black Box; remove it there." and a link to the Black Box
+  page only when that page is public, else plain text.
+- One filing per day: a ref guard plus `has(slipReportId)` (Tool 4's rule).
+
+**Screens** (a tab row at the top: **Today · Month · Pattern · Reminders**, each with a lucide icon and a 14 px or
+larger label, at least 44 px high; each tab is a history entry `?tab=month`, so Back returns to the previous tab and
+reload stays; no heading intro lines, rule 6, review D24):
+1. **Today.** The date as "Thu 19 Nov" (the format Tool 4 uses; review D32). Two cards with icons (lucide `Sun`,
+   `Moon`; review D35): **Morning** (pledge and forecast, or "Not done yet", button Start / Change) and **Evening**
+   (result, how hard, or "Not done yet", button Start / Change). "Fill in yesterday, Wed 18 Nov" only when yesterday
+   has no evening answer **and** he has at least one earlier entry (review D14: not on the first day). **This month**
+   card: days checked in, clear days, and the line "A slip or a missed day does not reset anything. Each month is
+   counted on its own." On days 1 to 7 of a month the card also shows last month's two numbers (review D30).
+2. **Morning flow** (2 screens): "Your pledge for today" (one line, up to 140 characters, optional, label visible) →
+   "How hard do you expect today to be?" (worded 5-step scale: Easy / Fairly easy / In between / Hard / Very hard,
+   each with its number). Save.
+3. **Evening flow** (up to 5 screens): Did you <verb>? (above) → "How hard was today?" (same worded scale; "This
+   morning you expected: Hard (4)" only when a forecast exists, review D13) → "How strong were the urges?" (same
+   scale) → "What did you feel?" (a short list of its own, 10 chips: Stressed, Bored, Tired, Restless, Low,
+   Short-tempered, Lonely · Calm, Proud, Clear-headed; review D15: the 27 symptom words included things that are not
+   feelings) → "A note, if you want one" (textarea, 500 characters, `break-words`). From step 2 on each screen has
+   **Next** and **Done for today** (saves what is answered and goes to the done screen; review D16). The draft is
+   saved on every tap, so a reload resumes on the same screen with the answers (review D16). For a past day every
+   question says "that day", never "today" (D13).
+4. **Done screen.** "Saved for Thu 19 Nov" and the day's summary (outcome, expected vs it was, urges, feelings, pledge,
+   note). Back to today.
+5. **Month.** Month grid, Monday first, Prev / Next (from the month of his first entry, or this month, to this month),
+   counts for that month. Mode chips **Clear days · How hard · Feelings · Notes** that wrap at 390 px, never cut off
+   behind a fade (review D31). Slip days from the Black Box show as slipped even without a check-in. Tap a day: its
+   summary and, for any day from 60 days back to today, **Fill in this day** / **Change** (opens the evening flow for
+   that day; review D14). Future days are not tappable.
+6. **Pattern.** Only lines that can predict: the morning forecast (review D17: urges and feelings are answered the
+   same evening as the slip, so "proud → no slip" is the result, not a pattern). From 14 evenings with a result
+   ("Pattern lines start once you have 14 check-ins with a result. You have 3."): "On the 6 days you expected it to be
+   hard, you slipped on 2; on the other 10 days, on 1." when each side has 3 or more days and the shares differ, else
+   "No pattern yet". Plus the pairs line ("Of 12 days with a forecast and a result, it was harder than you expected on
+   4, easier on 5 and the same on 3."). One line under: "These lines count only your own days. They are not a study."
+   Urges and feelings are not compared.
+7. **Reminders.** No notifications are possible, so a stored time alone does nothing (review D23 for lessons, same
+   flaw). Two time fields (morning 08:00, evening 21:00) and **Add to calendar**: an .ics download with two daily
+   repeating events (`RRULE:FREQ=DAILY`), titles "Morning check-in" / "Evening check-in", a link to the tool in the
+   description, DTSTAMP = tap time (build it like Tool 1's `icsFor`), and a Google Calendar link for each. Times kept
+   in the tool store.
+
+**Before any entry:** the Today tab as above (empty cards), plus **See an example**: every tab filled from the lab's
+20-day seed held in memory only, with a bar on every screen "Example. Nothing here is yours, and nothing is saved."
+and **Leave the example**. Nothing in the example touches storage or the Black Box (review D1: the lab's "Load example
+data" wiped his own days in one tap). The example never files a slip.
+
+**Report items for this tool** (review D, A, E, F1, 2026-11-19), each answered above: D1 (example wiped his data),
+D4 (slip question buried), D6 (three slip logs, two situation lists, same feelings list twice: one slip owner, the
+Black Box; feelings list of its own), D13 (yesterday flow said "today"), D14 (missed days could never be filled;
+look-back on day one), D15 (27 chips, not feelings), D16 (5 screens, no early save, reload lost answers), D17
+(circular pattern lines), D24 (intro line under the heading), D30 (1st of the month shows 0), D31 (cut-off chip), D32
+(date format), D35 (no icon or colour), A4 (menu row was "Coming soon"), A21/B32 (signed-out 401), D23 analogue
+(reminder that never reminds). Not taken from `best`: the addiction switcher, "Load example data" / "Clear example",
+the 27-word feelings list, urges and feelings pattern lines, the time-only reminders.
+
+**Acceptance (Playwright `tests/e2e/quit/checkin.spec.ts`, 390x844 touch and 1280x800, clock fixed; screenshots
+looked at):**
+1. Fresh: Today shows two empty cards, no "Fill in yesterday"; See an example fills Month and Pattern (pattern lines
+   show); Leave the example → empty, and `quit-v1` and the Black Box key in localStorage are unchanged.
+2. Morning: pledge "No smoking at the bar" + Hard (4) → Today shows both; reload keeps them.
+3. Evening with a living run (seed the browser Black Box, run started 10 days ago): Yes → slip in the Black Box for
+   today, the run ended; status "Saved on this phone."; Undo → slip gone, run living; Yes again → one slip only after
+   a double tap.
+4. Slip link: with `slip` live it goes to `/quit/nicotine/slip`, which shows Tool 4's case B (once Tool 4 is on main).
+5. A slip filed by Craving now? today → the evening does not ask "Did you smoke?" and shows "Your slip on … is in your
+   record."
+6. No run: Yes → the "nothing was saved as a slip" line, Black Box untouched.
+7. Evening: answer step 1, tap Done for today → done screen; reload mid-flow on step 3 resumes on step 3 with answers.
+8. Yesterday flow: every question says "that day"; a cell 20 days back → Fill in this day works; a future cell is not
+   tappable.
+9. Month at 390: all four mode chips fully visible; on the 3rd of a month last month's numbers show.
+10. Pattern: 14 evenings seeded → the forecast line shows with its four numbers; no feelings or urges line.
+11. Reminders: the .ics parses (two VEVENTs, each `RRULE:FREQ=DAILY`, DTSTAMP within a minute of now).
+12. Vape unit → "Did you vape today?"; no unit → "Did you use it today?".
+13. Signed in on the test stack: the slip reaches `/api/black-box`.
+14. No console error; no sideways scroll; tap targets at least 44 px; a 300-character unbroken note does not widen the
+    page; the menu row opens the tool; tabs: Back returns to the previous tab, reload stays.
+15. Then the three-reviewer check and fix rounds; status "waiting for you".
+
+**Proposed (owner may veto):** K1 the check-in files slips in the Black Box and links to Slipped? Restart today for
+where, the voice and a new day 1; alternative: ask those here too (the same questions in two tools). K2 a "Yes" with
+no run going is kept in the check-in only; alternative: start a run first (but this tool would then own runs, which
+Tools 1 and 4 do). K3 pattern lines only from the morning forecast; alternative: keep the lab's urges and feelings
+lines with a "same evening" caveat. K4 reminders as calendar events, since the site cannot send notifications;
+alternative: drop the tab. K5 its own 10 feelings, not the 27 symptom words.
 
 ## Done
 
