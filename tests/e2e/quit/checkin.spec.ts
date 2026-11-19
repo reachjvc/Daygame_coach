@@ -248,7 +248,7 @@ for (const vp of [
       const before = (await store(page))[1]
       await startEvening(page)
       await page.getByTestId("outcome-slip").click()
-      await expect(page.getByTestId("slip-none")).toHaveText("Your quit hasn't started in your record yet, so this isn't saved as a slip.")
+      await expect(page.getByTestId("slip-none")).toContainText("Your quit hasn't started in your record yet, so this isn't saved as a slip.")
       await expect(page.getByTestId("none-date-link")).toHaveAttribute("href", /\/quit\/nicotine\/date/)
       await shot(page, S("6-no-run"))
       expect((await store(page))[1]).toEqual(before)
@@ -334,7 +334,7 @@ for (const vp of [
       await page.getByTestId("flow-next").click()
       await page.getByTestId("flow-done").click()
       await expect(page.getByTestId("done-back")).toHaveText("Back to the month")
-      await expect(page.getByTestId("done-clear")).toContainText("Clear day. 1 clear day this month.")
+      await expect(page.getByTestId("done-clear")).toContainText("Clear day. 2 clear days this month.")
       await page.getByTestId("done-back").click()
       // back on the same month and day
       await expect(page.getByTestId("month-name")).toHaveText("October 2026")

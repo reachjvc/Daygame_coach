@@ -1883,6 +1883,16 @@ targets or "what you could buy" here: Tool 3 holds targets.
 - The Black Box page (`/plan/quit-vice`) is not public, so "This slip is in your Black Box; remove it there." is plain text; the link appears by itself once `isPublicPage` says the page is public.
 - Pattern: the pairs line shows only once the 14-result gate is passed (the brief lists it under the same condition).
 - Tests: one e2e spec runs both widths; the full `typecheck-ratchet` was killed (exit 143, the RAM guard) four times, so only the changed files were type-checked.
+- Round 1 review fixes (Tool 8, 2026-11-20), choices made where the list was silent:
+  - A fourth no-slip line, for a day inside a still-living run that already holds a later entry: "Your record already has a later entry, so this day isn't saved as a slip." (the three given cases do not cover it).
+  - The Yes and No buttons wait for the Black Box (`bb.settled`) and show "Loading your record…" meanwhile; the status line has its own "Saved in this browser." and "Saved in this browser only. Sign in again to send it to your account." (Tool 2's shared "on this phone" text is not used here).
+  - Main button on Today: before 12:00 on the browser clock with no morning saved it is the morning one; otherwise the evening one while the evening has no slip answer and no "how hard". A slip that is only in the Black Box closes the evening (no main button).
+  - Month, day and mode live in the address (`m`, `day`, `mode`); a flow opened from Month carries `f=month`, so the done button reads "Back to the month". After Done the flow's history entries are walked back and replaced by the done screen; entries after it (forward) are not cleared.
+  - Counts, last month and the 14-result gate use his own stored answers only; the calendar and day summary also show Black Box slip days. The "Fill in yesterday" offer still treats a Black Box slip as that day's answer.
+  - Old saved feeling words (tired, low, clear-headed) are still accepted and keep their labels; the chip list is the new ten.
+  - The example fills today's morning (promise and Hard (4)), so it shows 18 days checked in.
+  - Question for the shared fallback: with no unit `src/quit/wording.ts` still says "use it" / "Did you use it?" (Tool 2 and others). This tool says "use nicotine" in its own text only. Proposed: change the shared fallback the same way.
+  - Gates for this round: scoped tsc over src/quit, app/quit, tests/unit/quit and the check-in spec; vitest on the check-in unit file only (33 tests); eslint; the check-in e2e spec at both widths (31 passed). Not run: the rest of tests/unit/quit and menu.spec (per the new rules).
 
 ### From the Tool 3 build (Sonnet and Opus, 2026-11-19)
 
