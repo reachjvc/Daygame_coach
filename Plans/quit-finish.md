@@ -29,7 +29,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | # | Tool (menu name) | Built from | Folded in (nothing deleted; lab stays hidden) | Status |
 |---|---|---|---|---|
 | 0 | The frame: menu, shared record, page titles, links | wave-1 menu | — | live f9190770 (no owner check: it has no screens of its own) |
-| 1 | Your quit date | lab `quitdate/best` | copy e's plan steps; the old "quit curve" hard-days calendar (mock F9kYB9… v2, study timing only) | building |
+| 1 | Your quit date | lab `quitdate/best` | copy e's plan steps; the old "quit curve" hard-days calendar (mock F9kYB9… v2, study timing only) | waiting for you |
 | 2 | Craving now? | lab `sos/best` | wave-1's voice step and "other side" answer; the craving log of `diary/best` | waiting for you |
 | 3 | Your record (progress, money kept) | lab `progress/best` | the live counter feel of copies d and e | not started |
 | 4 | Slipped? Restart today | wave-1 `slip` | slips go into the shared record; clean runs never reset | not started |
