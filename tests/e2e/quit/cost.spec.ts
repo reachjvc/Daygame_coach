@@ -11,7 +11,7 @@ import { test, expect, SIGNED_OUT } from "../fixtures/test"
 import { quitUrl } from "../helpers/quit"
 
 const URL = quitUrl("/quit/nicotine/cost")
-const SHOTS = process.env.COST_SHOTS_DIR ?? "/home/jonaswsl/.cache/daygame-research/quit-finish/cost-shots"
+const SHOTS = process.env.COST_SHOTS_DIR ?? "/tmp/cost-shots"
 mkdirSync(SHOTS, { recursive: true })
 
 test.use({ storageState: SIGNED_OUT, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
