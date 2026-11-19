@@ -684,6 +684,7 @@ Depends on: Phases 5–8.
 - GPU runs go through `code/gpu_guard.py` (capture folder): while the owner's
   game is in a match, workers run a quarter of the time and are stopped if video
   memory gets near full; full speed otherwise.
+- 2026-11-19 (evening): Phase 12 batch running on 148 sets (inventory re-counted that morning, up from 67). Changes after the WSL crash: one YouTube download at a time with retries (age-restricted videos skipped at once); two graphics-card lanes with a gated model start (card use about 35% to 80-93%); each set finished as soon as its group is done. Settler v8 (owner 2026-11-19): a man talking is the coach by default; machine-only "other man" lines stay "him" and go on a side list (`prod/side/`); frozen test PASS. 18 sets done. Next layer: Plans/labels-layer.md.
 
 ## Production recipe (draft, 2026-11-18)
 
