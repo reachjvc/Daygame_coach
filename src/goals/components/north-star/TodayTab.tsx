@@ -334,7 +334,7 @@ function GoField({
           aria-label={TODAY_COPY.fieldGoDoneAria(label)}
         />
         <span className="min-w-0 flex-1">
-          <span className={`block text-[12.5px] truncate ${done ? "text-zinc-500 line-through" : "text-zinc-200"}`}>{label}</span>
+          <span className={`block text-[12.5px] break-words sm:truncate ${done ? "text-zinc-500 line-through" : "text-zinc-200"}`}>{label}</span>
           <span className="block text-[10.5px] text-zinc-500 truncate">
             {source ? `${source.group} · ${source.label}` : field.readSourceId ? TODAY_COPY.fieldSourceMissing : TODAY_COPY.fieldGoUnset}
           </span>
@@ -394,7 +394,7 @@ function GoesTo({
   if (picking) {
     return (
       <div className="px-5 pb-2 pl-[3.25rem] flex flex-wrap items-center gap-2">
-        <label className="flex items-center gap-1.5 text-[10.5px] text-zinc-500">
+        <label className="flex min-w-0 max-w-full items-center gap-1.5 text-[10.5px] text-zinc-500">
           {GOES_TO_COPY.pick}
           <select
             autoFocus
@@ -404,7 +404,7 @@ function GoesTo({
               setPicking(false)
             }}
             aria-label={GOES_TO_COPY.setAria(title)}
-            className="max-w-[16rem] rounded-lg border border-white/10 bg-zinc-900 px-2 py-1.5 text-[11.5px] text-zinc-200 focus:border-white/30 focus:outline-none"
+            className="min-w-0 max-w-full sm:max-w-[16rem] rounded-lg border border-white/10 bg-zinc-900 px-2 py-1.5 text-[11.5px] text-zinc-200 focus:border-white/30 focus:outline-none"
           >
             <option value="">{GOES_TO_COPY.nowhere}</option>
             {groups.map((group) => (
@@ -512,7 +512,7 @@ function Asks({
           }}
           placeholder={TODAY_COPY.askPlaceholder}
           aria-label={TODAY_COPY.askEditAria(title)}
-          className="min-w-[14rem] flex-1 rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-1.5 text-[11.5px] text-zinc-200 placeholder:text-zinc-600 focus:border-white/30 focus:outline-none"
+          className="min-w-0 sm:min-w-[14rem] flex-1 rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-1.5 text-[11.5px] text-zinc-200 placeholder:text-zinc-600 focus:border-white/30 focus:outline-none"
         />
         <button
           disabled={!draft.trim()}
@@ -1162,7 +1162,7 @@ export function TodayTab({
             />
             <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: activity.areaColor }} />
             <span className="min-w-0 flex-1">
-              <span className={`block text-[12.5px] truncate ${item.done ? "text-zinc-500 line-through" : "text-zinc-200"}`}>
+              <span className={`block text-[12.5px] break-words sm:truncate ${item.done ? "text-zinc-500 line-through" : "text-zinc-200"}`}>
                 {activity.title}
               </span>
               {/* The routine name is the header this row sits under now, so
@@ -1213,7 +1213,7 @@ export function TodayTab({
               onClick={() => onOpenGoal(activity.id)}
               title={TODAY_COPY.openGoal(activity.title)}
               aria-label={TODAY_COPY.openGoal(activity.title)}
-              className="block max-w-full text-left text-[12.5px] text-zinc-200 truncate hover:text-white hover:underline underline-offset-2 decoration-white/30 transition-colors"
+              className="block max-w-full text-left text-[12.5px] text-zinc-200 break-words sm:truncate hover:text-white hover:underline underline-offset-2 decoration-white/30 transition-colors"
             >
               {activity.title}
             </button>
@@ -1434,7 +1434,7 @@ export function TodayTab({
                         />
                         <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: item.areaColor }} />
                         <span className="min-w-0 flex-1">
-                          <span className={`block text-[12.5px] truncate ${item.done ? "text-zinc-500 line-through" : "text-zinc-200"}`}>
+                          <span className={`block text-[12.5px] break-words sm:truncate ${item.done ? "text-zinc-500 line-through" : "text-zinc-200"}`}>
                             {item.title}
                           </span>
                           {item.areaLabel && <span className="block text-[10.5px] text-zinc-500 truncate">{item.areaLabel}</span>}
@@ -1462,7 +1462,7 @@ export function TodayTab({
                             onClick={() => onOpenGoal(item.id)}
                             title={TODAY_COPY.openGoal(item.title)}
                             aria-label={TODAY_COPY.openGoal(item.title)}
-                            className="block max-w-full text-left text-[12.5px] text-zinc-300 truncate hover:text-white hover:underline underline-offset-2 decoration-white/30 transition-colors"
+                            className="block max-w-full text-left text-[12.5px] text-zinc-300 break-words sm:truncate hover:text-white hover:underline underline-offset-2 decoration-white/30 transition-colors"
                           >
                             {item.title}
                           </button>
@@ -1560,7 +1560,7 @@ export function TodayTab({
                 {/* WHICH DIRECTION IT RUNS. Everything else about a field is
                     the same either way, so it is one dropdown and not two
                     kinds of thing to add. */}
-                <label className="flex items-center gap-1.5 text-[10.5px] text-zinc-500">
+                <label className="flex min-w-0 max-w-full items-center gap-1.5 text-[10.5px] text-zinc-500">
                   {TODAY_COPY.fieldKindLabel}
                   <select
                     value={field.kind}
@@ -1581,12 +1581,12 @@ export function TodayTab({
                     changes, because "shows" and "goes to" are not the same
                     promise. */}
                 {(field.kind === "read" || field.kind === "go") && (
-                  <label className="flex items-center gap-1.5 text-[10.5px] text-zinc-500">
+                  <label className="flex min-w-0 max-w-full items-center gap-1.5 text-[10.5px] text-zinc-500">
                     {field.kind === "go" ? TODAY_COPY.fieldGoes : TODAY_COPY.fieldShows}
                     <select
                       value={field.readSourceId ?? ""}
                       onChange={(e) => onFieldSource(field.id, e.target.value || null)}
-                      className="max-w-[16rem] rounded-lg border border-white/10 bg-zinc-900 px-2 py-1.5 text-[11.5px] text-zinc-200 focus:border-white/30 focus:outline-none"
+                      className="min-w-0 max-w-full sm:max-w-[16rem] rounded-lg border border-white/10 bg-zinc-900 px-2 py-1.5 text-[11.5px] text-zinc-200 focus:border-white/30 focus:outline-none"
                     >
                       <option value="">{field.kind === "go" ? TODAY_COPY.fieldGoesNothing : TODAY_COPY.fieldShowsNothing}</option>
                       {(field.kind === "go" ? placeGroups : sourceGroups).map((group) => (
@@ -1601,7 +1601,7 @@ export function TodayTab({
                     </select>
                   </label>
                 )}
-                <label className="flex items-center gap-1.5 text-[10.5px] text-zinc-500">
+                <label className="flex min-w-0 max-w-full items-center gap-1.5 text-[10.5px] text-zinc-500">
                   {TODAY_COPY.fieldAttachedTo}
                   <select
                     value={field.targetId ?? ""}

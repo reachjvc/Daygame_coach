@@ -42,16 +42,16 @@ export function PlanStepNav({
   const tabIndex = TAB_ORDER.indexOf(tab)
   return (
       <div className={siteBar ? "sticky top-0 z-30 bg-zinc-950/90 backdrop-blur-sm border-b border-white/10" : "sticky bottom-0 bg-zinc-950/90 backdrop-blur-sm border-t border-white/10"}>
-        <div className={`max-w-5xl mx-auto flex items-center justify-between gap-3 ${siteBar ? "px-4 py-2 sm:px-6 sm:py-3" : "px-6 py-3"}`}>
+        <div className={`max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-x-3 ${siteBar ? "px-4 py-2 sm:px-6 sm:py-3" : "gap-y-1 px-6 py-3"}`}>
           {tabIndex > 0 ? (
-            <button onClick={() => setTab(TAB_ORDER[tabIndex - 1])} data-testid={testIds ? "back" : undefined} className="text-xs text-zinc-400 hover:text-white transition-colors">
+            <button onClick={() => setTab(TAB_ORDER[tabIndex - 1])} data-testid={testIds ? "back" : undefined} className="text-xs text-zinc-400 hover:text-white transition-colors whitespace-nowrap">
               ← {TAB_LABELS[TAB_ORDER[tabIndex - 1]]}
             </button>
           ) : <span />}
           {/* What is actually happening to what you typed, said plainly and
               with the off switch next to it. A copy going to a server is not a
               thing to bury in a privacy policy nobody opens. */}
-          <span className="text-[11px] text-zinc-600 text-center min-w-0">
+          <span className="order-last basis-full text-[11px] text-zinc-600 text-center min-w-0 sm:order-none sm:basis-auto">
             {/* WHAT HAPPENED TO THE PLAN ITSELF comes first and in amber, above
                 the line about the improvement copy. They are different facts
                 and the one people need is "is my work safe", not "was a

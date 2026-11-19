@@ -205,7 +205,7 @@ export function GoalOverview({ plan, today, onOpenGoal, onSetPriority, onMovePri
                 className="w-full flex items-center gap-2 px-5 py-2 border-t border-white/[0.07] bg-white/[0.02] text-left hover:bg-white/[0.04] disabled:cursor-default transition-colors"
               >
                 <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: routine.color }} />
-                <span className="text-[11.5px] font-medium text-zinc-200 min-w-0 truncate">{routine.label}</span>
+                <span className="text-[11.5px] font-medium text-zinc-200 min-w-0 break-words sm:truncate">{routine.label}</span>
                 <span className="text-[10px] text-zinc-500 tabular-nums shrink-0">
                   {OVERVIEW_COPY.routineRate(routine.steps.length, routine.kind === "sequence" ? routine.daysPerWeek : null)}
                 </span>
@@ -214,7 +214,7 @@ export function GoalOverview({ plan, today, onOpenGoal, onSetPriority, onMovePri
               <ul>
                 {routine.steps.map((step) => (
                   <li key={`${routine.id}:${step.id}`} className="flex items-center gap-2.5 pl-9 pr-5 py-1.5 border-t border-white/[0.05]">
-                    <span className="min-w-0 flex-1 text-[12.5px] text-zinc-300 truncate">{step.title}</span>
+                    <span className="min-w-0 flex-1 text-[12.5px] text-zinc-300 break-words sm:truncate">{step.title}</span>
                     <span className="shrink-0 text-[10px] text-zinc-600 tabular-nums">{step.daysPerWeek}×/wk</span>
                   </li>
                 ))}
@@ -302,7 +302,7 @@ function GoalRow({ plan, goal, area, rank, total, today, onOpen, onSetPriority, 
   const actionCount = goalActions(plan, goal.id).length
 
   return (
-    <li className="flex items-center gap-2.5 px-5 py-2.5 border-b border-white/[0.07] last:border-b-0 hover:bg-white/[0.02] transition-colors">
+    <li className="flex flex-wrap sm:flex-nowrap items-center gap-x-2.5 gap-y-1 px-5 py-2.5 border-b border-white/[0.07] last:border-b-0 hover:bg-white/[0.02] transition-colors">
       {/* The badge stays a live control here. Seeing every goal ranked together
           is the moment you actually want to change the order. */}
       <PriorityBadge
@@ -314,8 +314,8 @@ function GoalRow({ plan, goal, area, rank, total, today, onOpen, onSetPriority, 
         onMove={(d) => onMovePriority(goal.id, d)}
       />
       <span className="text-[11px] shrink-0" aria-hidden>{TYPE_ICON[goal.type]}</span>
-      <button onClick={onOpen} className="min-w-0 flex-1 text-left group">
-        <span className="block text-[13px] text-zinc-100 group-hover:text-white transition-colors truncate">
+      <button onClick={onOpen} className="min-w-0 flex-1 basis-40 sm:basis-auto text-left group">
+        <span className="block text-[13px] text-zinc-100 group-hover:text-white transition-colors break-words sm:truncate">
           {goal.sentence.trim() || goal.title}
         </span>
         <span className="flex items-center gap-1.5 text-[10px] text-zinc-600">

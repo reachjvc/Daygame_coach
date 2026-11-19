@@ -99,16 +99,16 @@ function EvidenceRow({ plan, row, onAdd, onGoTo }: {
 }) {
   return (
     <li className="rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         {row.rank !== null && (
           <span className="text-[11px] tabular-nums text-zinc-500 w-4 shrink-0">{row.rank}.</span>
         )}
-        <span className="text-[13px] text-zinc-100 min-w-0 truncate">{row.value}</span>
+        <span className="text-[13px] text-zinc-100 min-w-0 max-w-full truncate">{row.value}</span>
         {/* The weight, right-aligned in a fixed column so eleven rows can be
             ranked down the edge without reading a word of any of them. */}
         <span className="ml-auto flex items-center gap-2 shrink-0">
           <AreaDots plan={plan} areaIds={row.areas} />
-          <span className={`text-[10.5px] tabular-nums text-right ${row.chosen ? "text-zinc-400" : "text-zinc-600"} w-[104px]`}>
+          <span className={`text-[10.5px] tabular-nums text-right ${row.chosen ? "text-zinc-400" : "text-zinc-600"} sm:w-[104px]`}>
             {VALUES_EVIDENCE.count(row.areas.length, row.hits)}
           </span>
           {onAdd && (

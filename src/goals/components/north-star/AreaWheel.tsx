@@ -20,6 +20,7 @@
  * clickable thing on the page did nothing.
  */
 
+import { useLayoutEffect, useRef, useState } from "react"
 import type { NsArea } from "@/src/goals/types"
 
 const C = 195
@@ -36,6 +37,26 @@ function wedge(startDeg: number, endDeg: number, r: number): string {
   const [x2, y2] = polar(C, C, r, endDeg)
   const large = endDeg - startDeg > 180 ? 1 : 0
   return `M ${C} ${C} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`
+}
+
+/** A wheel drawn narrower than this (a phone) is drawn again so its labels are read at a usable size. */
+const NARROW_BELOW = 360
+/** The size a label and its line under it should be read at on screen, in px. */
+const READ_LABEL = 10.5
+const READ_SUB = 9.5
+
+/** Two lines at most: split at the space that leaves the shorter longer line, each line cut at 12 characters. */
+function labelLines(label: string): string[] {
+  const cut = (t: string) => (t.length > 12 ? `${t.slice(0, 11)}…` : t)
+  if (label.length <= 12 || !label.includes(" ")) return [cut(label)]
+  let best = [label]
+  let bestMax = Infinity
+  for (let i = label.indexOf(" "); i !== -1; i = label.indexOf(" ", i + 1)) {
+    const pair = [label.slice(0, i), label.slice(i + 1)]
+    const max = Math.max(pair[0].length, pair[1].length)
+    if (max < bestMax) { best = pair; bestMax = max }
+  }
+  return best.map(cut)
 }
 
 export function AreaWheel({
@@ -75,6 +96,21 @@ export function AreaWheel({
   subMode?: "rating" | "goals" | "season"
 }) {
   const picked = selectedIds ?? []
+  // How wide the wheel is actually drawn. Narrow (a phone): the labels get bigger in the wheel's own units so they
+  // are read at READ_LABEL px, and a long name goes on two lines. Wide: exactly as it was.
+  const svgRef = useRef<SVGSVGElement | null>(null)
+  const [drawnWidth, setDrawnWidth] = useState<number | null>(null)
+  useLayoutEffect(() => {
+    const el = svgRef.current
+    if (!el) return
+    const measure = () => setDrawnWidth(el.getBoundingClientRect().width)
+    measure()
+    if (typeof ResizeObserver === "undefined") return
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  const narrow = drawnWidth !== null && drawnWidth > 0 && drawnWidth < NARROW_BELOW
   const n = Math.max(1, areas.length)
   const seg = 360 / n
   const rated = areas.filter((a) => ratings[a.id] != null)
@@ -90,7 +126,7 @@ export function AreaWheel({
    * things. Measuring instead means the box is tight for four areas and still
    * correct for nine.
    */
-  const box = (() => {
+  const geometry = (labelFont: number, subFont: number) => {
     const PAD = 6
     let minX = C - R
     let maxX = C + R
@@ -101,21 +137,48 @@ export function AreaWheel({
       const [lx, ly] = polar(C, C, R + 17, mid)
       const cos = Math.cos(((mid - 90) * Math.PI) / 180)
       const anchor = cos > 0.25 ? "start" : cos < -0.25 ? "end" : "middle"
-      const label = a.label.length > 16 ? 16 : a.label.length
-      // ~5.4px per character at the 9.5px label size. An estimate is fine: it
-      // only ever adds slack, and slack here is a few pixels of margin.
-      const w = Math.max(label, 10) * 5.4
+      let w: number
+      let top = ly - 7
+      let bottom = ly + 16
+      if (narrow) {
+        const lines = labelLines(a.label)
+        const chars = Math.max(...lines.map((l) => l.length), 7)
+        w = chars * 0.56 * labelFont
+        const rows = lines.length + 1
+        const lh = labelFont * 1.2
+        top = ly - (rows * lh) / 2
+        bottom = ly + (rows * lh) / 2 + 2
+        void subFont
+      } else {
+        const label = a.label.length > 16 ? 16 : a.label.length
+        // ~5.4px per character at the 9.5px label size. An estimate is fine: it
+        // only ever adds slack, and slack here is a few pixels of margin.
+        w = Math.max(label, 10) * 5.4
+      }
       const x0 = anchor === "start" ? lx : anchor === "end" ? lx - w : lx - w / 2
       minX = Math.min(minX, x0)
       maxX = Math.max(maxX, x0 + w)
-      minY = Math.min(minY, ly - 7)
-      maxY = Math.max(maxY, ly + 16)
+      minY = Math.min(minY, top)
+      maxY = Math.max(maxY, bottom)
     })
-    return `${(minX - PAD).toFixed(1)} ${(minY - PAD).toFixed(1)} ${(maxX - minX + PAD * 2).toFixed(1)} ${(maxY - minY + PAD * 2).toFixed(1)}`
-  })()
+    return { x: minX - PAD, y: minY - PAD, w: maxX - minX + PAD * 2, h: maxY - minY + PAD * 2 }
+  }
+  // Narrow: find the label size (in wheel units) that reads at READ_LABEL px once the whole wheel is scaled to fit.
+  let labelFont = 9.5
+  let subFont = 8.5
+  if (narrow) {
+    for (let k = 0; k < 8; k++) {
+      const scale = (drawnWidth as number) / geometry(labelFont, subFont).w
+      labelFont = Math.min(20, Math.max(9.5, READ_LABEL / scale))
+      subFont = Math.min(18, Math.max(8.5, READ_SUB / scale))
+    }
+  }
+  const g = geometry(labelFont, subFont)
+  const box = `${g.x.toFixed(1)} ${g.y.toFixed(1)} ${g.w.toFixed(1)} ${g.h.toFixed(1)}`
 
   return (
     <svg
+      ref={svgRef}
       viewBox={box}
       className="w-full max-w-[380px] h-auto mx-auto block"
       role="group"
@@ -210,31 +273,71 @@ export function AreaWheel({
                 className="pointer-events-none"
               />
             )}
-            <text
-              x={lx.toFixed(2)}
-              y={ly.toFixed(2)}
-              textAnchor={anchor}
-              dominantBaseline="middle"
-              fontSize="9.5"
-              fontWeight={active ? 700 : 500}
-              fill={active ? "#fff" : "#e4e4e7"}
-              onClick={() => onPick(a.id)}
-              className="cursor-pointer"
-            >
-              {label}
-            </text>
-            <text
-              x={lx.toFixed(2)}
-              y={(ly + 11).toFixed(2)}
-              textAnchor={anchor}
-              dominantBaseline="middle"
-              fontSize="8.5"
-              fill={subColor}
-              onClick={() => onPick(a.id)}
-              className="cursor-pointer tabular-nums"
-            >
-              {sub}
-            </text>
+            {narrow ? (() => {
+              const lines = labelLines(a.label)
+              const lh = labelFont * 1.2
+              const rows = lines.length + 1
+              const y0 = ly - ((rows - 1) * lh) / 2
+              return (
+                <>
+                  <text
+                    x={lx.toFixed(2)}
+                    y={y0.toFixed(2)}
+                    textAnchor={anchor}
+                    dominantBaseline="middle"
+                    fontSize={labelFont.toFixed(2)}
+                    fontWeight={active ? 700 : 500}
+                    fill={active ? "#fff" : "#e4e4e7"}
+                    onClick={() => onPick(a.id)}
+                    className="cursor-pointer"
+                  >
+                    {lines.map((line, k) => (
+                      <tspan key={k} x={lx.toFixed(2)} dy={k === 0 ? 0 : lh.toFixed(2)}>{line}</tspan>
+                    ))}
+                  </text>
+                  <text
+                    x={lx.toFixed(2)}
+                    y={(y0 + lines.length * lh).toFixed(2)}
+                    textAnchor={anchor}
+                    dominantBaseline="middle"
+                    fontSize={subFont.toFixed(2)}
+                    fill={subColor}
+                    onClick={() => onPick(a.id)}
+                    className="cursor-pointer tabular-nums"
+                  >
+                    {sub}
+                  </text>
+                </>
+              )
+            })() : (
+              <>
+                <text
+                  x={lx.toFixed(2)}
+                  y={ly.toFixed(2)}
+                  textAnchor={anchor}
+                  dominantBaseline="middle"
+                  fontSize="9.5"
+                  fontWeight={active ? 700 : 500}
+                  fill={active ? "#fff" : "#e4e4e7"}
+                  onClick={() => onPick(a.id)}
+                  className="cursor-pointer"
+                >
+                  {label}
+                </text>
+                <text
+                  x={lx.toFixed(2)}
+                  y={(ly + 11).toFixed(2)}
+                  textAnchor={anchor}
+                  dominantBaseline="middle"
+                  fontSize="8.5"
+                  fill={subColor}
+                  onClick={() => onPick(a.id)}
+                  className="cursor-pointer tabular-nums"
+                >
+                  {sub}
+                </text>
+              </>
+            )}
           </g>
         )
       })}
@@ -248,10 +351,10 @@ export function AreaWheel({
       })}
 
       <circle cx={C} cy={C} r="31" fill="#09090b" stroke="rgba(255,255,255,0.18)" strokeWidth="1" className="pointer-events-none" />
-      <text x={C} y={C - 4} textAnchor="middle" fontSize="17" fontWeight="700" fill="#fff" className="tabular-nums pointer-events-none">
+      <text x={C} y={C - 4} textAnchor="middle" fontSize={narrow ? (17 * Math.min(1.3, labelFont / 9.5)).toFixed(1) : "17"} fontWeight="700" fill="#fff" className="tabular-nums pointer-events-none">
         {avg != null ? avg : areas.length}
       </text>
-      <text x={C} y={C + 12} textAnchor="middle" fontSize="7.5" fill="#a1a1aa" letterSpacing="1" className="pointer-events-none">
+      <text x={C} y={C + 12} textAnchor="middle" fontSize={narrow ? ((9 * labelFont) / READ_LABEL).toFixed(1) : "7.5"} fill="#a1a1aa" letterSpacing={narrow ? "0.3" : "1"} className="pointer-events-none">
         {avg != null ? "AVG / 10" : (centreLabel ?? "AREAS")}
       </text>
     </svg>

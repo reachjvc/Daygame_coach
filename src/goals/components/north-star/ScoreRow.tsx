@@ -22,14 +22,14 @@ export function ScoreRow({ label, value, color, ariaLabel, onPick }: {
           </span>
         </p>
       )}
-      <div className="flex flex-wrap gap-1">
+      <div className="grid grid-cols-11 gap-1 sm:flex sm:flex-wrap">
         {Array.from({ length: 11 }, (_, n) => (
           <button
             key={n}
             onClick={() => onPick(n)}
             aria-pressed={value === n}
             aria-label={ariaLabel(n)}
-            className="size-6 rounded-md border text-[10.5px] tabular-nums transition-colors hover:border-white/40"
+            className="h-6 w-full min-w-0 sm:w-6 rounded-md border text-[10.5px] tabular-nums transition-colors hover:border-white/40"
             style={
               value === n
                 ? { backgroundColor: color, borderColor: color, color: "#09090b" }
