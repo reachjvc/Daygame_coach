@@ -163,7 +163,7 @@ export async function abandonSession(sessionId: string): Promise<SessionRow> {
     is_active: false,
     duration_minutes: durationMinutes,
     total_approaches: session.approaches.length,
-    end_reason: 'abandoned',
+    end_reason: 'completed',
   })
 }
 
