@@ -58,11 +58,9 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { ArrowLeft, Check, ChevronDown } from "lucide-react"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
-import type { HabitRampStep, MilestoneLadderConfig, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsGoalStatus, NsPlace, NsPlan, NsRoutineProgram, LinkedProgram, VisionGoalType } from "@/src/goals/types"
+import type { NorthStarTabId, NsPlace, NsPlan } from "@/src/goals/types"
 import { COMMIT_EDIT_COPY, ERRAND_COPY, OLD_SHARED_PLAN_KEYS, planCacheKey, BUILD_STEPS, PROGRESS_COPY, RAIL_COPY, RECAP_COMMIT_ANCHOR, SCORED_TABS, stepFor, TAB_BLURBS, TAB_LABELS, TAB_ORDER, TODO_COPY, USE_STEPS } from "@/src/goals/data/northStar"
 import { planInUse } from "@/src/goals/planLanding"
-import type { RoutineNeed } from "@/src/goals/data/northStarBuild"
-import type { GuideQuestionId } from "@/src/goals/data/northStarGuide"
 import * as ns from "@/src/goals/northStarService"
 import * as nsTrack from "@/src/goals/northStarTrackService"
 import { fetchLifePlan, newNodeId, saveLifePlanChanges, startLifePlan } from "@/src/goals/lifePlanClient"
@@ -70,21 +68,19 @@ import { LIFE_PLAN_IMPORTED_KEY, NOTHING_TO_SHOW, SAVE_DEBOUNCE_MS, canSave, bac
 import { fetchDayRecord, saveDayCatchingUp, sendDayOnLeave } from "@/src/goals/lifePlanDayClient"
 import { registerPlanPage } from "@/src/goals/planFlush"
 import { ACCOUNT_CHANGED_MESSAGE, guardSandboxRequests, nameEveryRequest, onAccountChanged } from "@/src/goals/planAccount"
-import { NO_TRAINING_TICKS, stepTick, stepTickedByHand, trainingTicks } from "@/src/goals/dayTicks"
-import { useLoad } from "@/src/shared/useLoad"
-import type { SessionType } from "@/src/health/types"
+import { stepTick } from "@/src/goals/dayTicks"
 import type { DayPatch } from "@/src/db/lifePlanDayTypes"
 import { recordAfterPatch, emptyDayRecord, keepEditsMadeWhileLoading, patchesBetween, recordIsEmpty, recordOf, recordToPatches, type DayRecord } from "@/src/goals/lifePlanDayService"
-import { reconcileProgramReference } from "@/src/goals/programReferenceService"
 import { PlanBasePathContext } from "./planBasePath"
 import { StarTab } from "./StarTab"
 import { NowTab } from "./NowTab"
 import { FocusTab } from "./FocusTab"
-import { MilestonesTab, SystemLinks, type SystemHandlers } from "./MilestonesTab"
+import { MilestonesTab, SystemLinks } from "./MilestonesTab"
 import { GoalOverview } from "./GoalOverview"
 import { BuildBoard } from "./BuildBoard"
-import { OneThingTab, type OneThingTabHandlers } from "./OneThingTab"
-import { useOneThing } from "./useOneThing"
+import { OneThingTab } from "./OneThingTab"
+import { usePlanReads } from "./usePlanReads"
+import { usePlanWriters } from "./usePlanWriters"
 import type { NsAccount } from "@/src/goals/types"
 import { PathPicker } from "./PathPicker"
 import { TrackTab } from "./TrackTab"
@@ -94,26 +90,19 @@ import { AreaDialog } from "./AreaDialog"
 import { AreaGoalsDialog } from "./AreaGoalsDialog"
 import { ReviewTab } from "./ReviewTab"
 import { PeriodReviewTab } from "./PeriodReviewTab"
-import { appendToReview, rateArea, removeReview, reviewIdFor, writeReview, type ReviewPeriod } from "@/src/goals/reviewService"
+import { appendToReview, removeReview, reviewIdFor, writeReview, type ReviewPeriod } from "@/src/goals/reviewService"
 import { DEFAULT_REVIEW_DAY, REMINDER_WAIT_MS, dueNow, type DueCard } from "@/src/goals/dueNowService"
 import type { Reminder } from "@/src/db/lifePlanRemindersRepo"
 import { DueNow } from "@/src/goals/components/north-star/DueNow"
 import { CommitTab } from "./CommitTab"
 import { ValuesSoFar } from "./ValuesSoFar"
 import { ValuesWork } from "./ValuesWork"
-import { RecapTab, type RecapHandlers } from "./RecapTab"
+import { RecapTab } from "./RecapTab"
 import { BackLink } from "@/components/BackLink"
 import { SiteHeader, sidebarOffset } from "@/components/AppFrame"
 import { MobileTabBar } from "@/components/MobileTabBar"
 import { getTodayInTimezone } from "@/src/shared/dateUtils"
 import { ROUTES } from "@/src/shared/routes"
-// ONE DOOR into the gym slice — see src/programs/forLifeMastery.ts.
-import {
-  useActiveEnrollments,
-  enrollmentName,
-  describeTrainingWeek,
-  getProgram,
-} from "@/src/programs/forLifeMastery"
 
 /** Mark `slot` as holding an open save until `work` settles (`planSaveInFlight`). */
 function holdOpen<T>(slot: { current: Promise<void> | null }, work: Promise<T>): Promise<T> {
@@ -548,133 +537,16 @@ export function NorthStarFlow({
     setLoaded(true)
   }, [])
 
-  /**
-   * WHAT IS ACTUALLY RUNNING, and what the plan believes.
-   *
-   * Everything the Systems step says about the training week is derived here,
-   * from the database, and handed down — the card itself reaches into the gym
-   * slice for nothing.
-   */
   const {
-    enrollments,
-    loading: programsLoading,
-    error: programsError,
-    refresh: refreshPrograms,
-  } = useActiveEnrollments()
-  /**
-   * The read, in one object, because that is what the reconciliation takes.
-   *
-   * A NEW OBJECT EVERY RENDER WOULD RE-RUN THE EFFECT BELOW FOREVER: its
-   * dependency list holds `plan`, and an effect that calls `setPlan` with a
-   * dependency it recreates each render is a loop. Memoised on the three facts
-   * it carries.
-   */
-  const programRead = useMemo(
-    () => ({ enrollments, loading: programsLoading, error: programsError }),
-    [enrollments, programsLoading, programsError]
-  )
-
-  /**
-   * THE PLAN RECONCILES AGAINST THE DATABASE EVERY TIME IT OPENS.
-   *
-   * End a program on the Training page, or start one on your phone, and the
-   * reference in this browser is wrong until this runs.
-   *
-   * THE "SUCCESSFUL READ" GUARD IS NO LONGER HERE. It was an early return in
-   * this effect — `if (programsLoading || programsError) return` — which is the
-   * one place a test could not reach it and the next caller had to remember it.
-   * `reconcileProgramReference` takes the whole read and owns that rule now,
-   * with a test of its own for each of the two states.
-   */
-  /**
-   * WHAT THE RECONCILIATION DID, kept for one telling.
-   *
-   * Not stored in the plan: "we adopted this" is a fact about this page load,
-   * not about somebody's life, and a notice that survives a reload is a notice
-   * nobody can dismiss.
-   */
-  const [adopted, setAdopted] = useState<NsRoutineProgram | null>(null)
-  const [endedProgram, setEndedProgram] = useState<NsRoutineProgram | null>(null)
-
-  useEffect(() => {
-    if (!loaded) return
-    // Returns the same object when nothing changed, so this does not write to
-    // storage on every mount.
-    setPlan((p) => {
-      const out = reconcileProgramReference(p, programRead)
-      if (out.adopted) setAdopted(out.adopted)
-      if (out.ended) setEndedProgram(out.ended)
-      return out.plan
-    })
-    /**
-     * `plan` IS A DEPENDENCY, and leaving it out lost the adoption.
-     *
-     * Two effects own `plan`, and the load order decided the answer. This one
-     * ran the moment the enrollment list arrived; the account's plan arrives
-     * from a SEPARATE request and lands as a wholesale `setPlan(decision.plan)`
-     * at the end of an async load — which threw the reference away, and with
-     * `plan` out of the list nothing ever re-adopted. So starting a program on
-     * your phone and opening the laptop left the Systems step saying nothing
-     * was linked, for as long as the tab stayed open: the exact scenario
-     * `tests/e2e/life-mastery-program-link.spec.ts` was written to catch. It
-     * caught it the day the shared test account acquired a plan row — before
-     * that the load had nothing to overwrite with, and the bug was invisible.
-     *
-     * It terminates because `reconcileProgramReference` returns the SAME object
-     * when nothing changed, so the re-run after an adoption is a no-op and
-     * React bails out of the render. Both of its writing paths settle in one
-     * step: an adoption leaves the reference referenced, and a detach leaves
-     * nothing referenced.
-     */
-  }, [loaded, programRead, plan])
-
-  /** The five states the Systems step can be in about its training week. */
-  const linkedProgram = useMemo((): LinkedProgram => {
-    if (programsLoading) return { state: "loading" }
-    if (programsError) return { state: "failed" }
-    const referenced = plan.routines.find((r) => r.blueprintId === "workout")?.program?.enrollmentId
-    const enrollment = referenced ? enrollments.find((e) => e.id === referenced) : undefined
-    // A reference dropped on THIS load, said once. The next load has no
-    // `endedProgram` and the week is the person's own again.
-    if (!enrollment && endedProgram) return { state: "ended" }
-    if (!enrollment) return { state: "none" }
-    if (enrollments.length > 1) return { state: "several", count: enrollments.length }
-    const program = getProgram(enrollment.program_id)
-    return {
-      state: "linked",
-      name: enrollmentName(enrollment),
-      // Read from the enrollment's OWN schedule, so a swapped lift or a renamed
-      // day is what it says.
-      week: program ? describeTrainingWeek(program, enrollment) : "",
-    }
-  }, [plan, enrollments, programsLoading, programsError, endedProgram])
-
-  /**
-   * TODAY KEEPS UP WITH THE CLOCK.
-   *
-   * It used to be read once, in the mount effect, and never again — so a tab
-   * left open across midnight went on ticking yesterday. This flow is the one
-   * people leave open: it is where the morning routine gets ticked off.
-   *
-   * Polled rather than timed to the exact boundary because a sleeping laptop
-   * does not fire a timer set eleven hours ago, and `visibilitychange` catches
-   * the case that matters most — picking the phone up the next morning.
-   */
-  useEffect(() => {
-    if (!loaded) return
-    const check = () => setToday((was) => {
-      const now = getTodayInTimezone(timezone)
-      return now === was ? was : now
-    })
-    const timer = window.setInterval(check, 60_000)
-    document.addEventListener("visibilitychange", check)
-    window.addEventListener("focus", check)
-    return () => {
-      window.clearInterval(timer)
-      document.removeEventListener("visibilitychange", check)
-      window.removeEventListener("focus", check)
-    }
-  }, [loaded, timezone])
+    refreshPrograms,
+    programRead,
+    adopted,
+    endedProgram,
+    linkedProgram,
+    oneThing,
+    workouts,
+    ticks,
+  } = usePlanReads({ plan, setPlan, loaded, today, setToday, timezone, decision })
 
   /**
    * The browser's copy, rewritten on every change.
@@ -1264,19 +1136,6 @@ export function NorthStarFlow({
   }, [tab, nowAreaId, planAreaId, nowGoalId, openRoutineId])
 
   /**
-   * THE ONE THING, READ ONCE FOR THE WHOLE FLOW.
-   *
-   * It is on the account and the plan keeps no copy of it, so every screen that
-   * shows it — the step, the echo on Focus, the recap, the build step's banner
-   * — is handed this rather than fetching its own or reading a stale draft.
-   * The rail is scored off it too: `hasOneThing` is what makes the step ring
-   * fill, which is why somebody signing in on a new phone sees their finished
-   * step as finished.
-   */
-  // Drawn only once the account has answered: until then the plan on screen is
-  // this browser's copy, and the read replaces it, a sentence saved in between too.
-  const oneThing = useOneThing(plan, setPlan, today, timezone, loaded && decision !== null && decision.kind !== "stay-local")
-  /**
    * UNSAVED TEXT IN THE ONE THING BOX, held here so it survives leaving the
    * step and coming back — the rail unmounts whichever tab is not showing.
    *
@@ -1312,218 +1171,33 @@ export function NorthStarFlow({
   const readBack = loaded && today ? ns.planAsText(plan, today) : ""
   const todos = loaded && today ? ns.planTodos(plan) : []
 
-  const starHandlers = {
-    onStar: useCallback((text: string) => setPlan((p) => ns.setNorthStar(p, text)), []),
-    onHorizon: useCallback((years: number) => setPlan((p) => ns.setHorizon(p, years)), []),
-    onRung: useCallback((rungId: string, text: string) => setPlan((p) => ns.setRung(p, rungId, text)), []),
-    onAnswer: useCallback((promptId: string, text: string) => setPlan((p) => ns.setAnswer(p, promptId, text)), []),
-    // The account's today, as everywhere on this page, so the dates match the day rows.
-    onNewNorthStar: useCallback(() => setPlan((p) => ns.startNewNorthStar(p, today || undefined)), [today]),
-  }
+  const {
+    starHandlers,
+    valuesHandlers,
+    areaHandlers,
+    routineHandlers,
+    removePlanGoal,
+    goalHandlers,
+    focusHandlers,
+    reviewHandlers,
+    recapHandlers,
+    setSeasonFocus,
+    addGoal,
+    addTarget,
+    addTemplate,
+    oneThingHandlers,
+    systemHandlers,
+    boardHandlers,
+    guideHandlers,
+    valuesSoFarWriters,
+    onAddSystemsRequirement,
+    todayWriters,
+    journalWriters,
+    onQuickAdd,
+    commitHandlers,
+    onTrackToggleStep,
+  } = usePlanWriters({ setPlan, today, setTab, setPlanAreaId, setNowGoalId, setOpenRoutineId })
 
-  /** The values exercise: two lists, and the four ways the order can change. */
-  const valuesHandlers = useMemo(() => ({
-    onCurrentValues: (values: string[]) => setPlan((p) => ns.setCurrentValues(p, values)),
-    onValues: (values: string[]) => setPlan((p) => ns.setValues(p, values)),
-    // A drop passes the index it landed on, not a direction, so a long drag
-    // slides the rows between along instead of swapping the two ends.
-    onMoveValue: (value: string, toIndex: number) => setPlan((p) => ns.moveValueTo(p, value, toIndex)),
-    onRankAbove: (winner: string, loser: string) => setPlan((p) => ns.rankValueAbove(p, winner, loser)),
-  }), [])
-
-  const areaHandlers = useMemo(() => ({
-    onUpdateArea: (areaId: string, patch: Partial<Omit<NsArea, "id" | "custom">>) => setPlan((p) => ns.updateArea(p, areaId, patch)),
-    onAddArea: (label: string) => setPlan((p) => ns.addArea(p, label)),
-    onRemoveArea: (areaId: string) => setPlan((p) => ns.removeArea(p, areaId)),
-    onAddRoutine: (blueprintId: string) => setPlan((p) => ns.addRoutine(p, blueprintId)),
-  }), [])
-
-  const routineHandlers = useMemo(() => ({
-    onRename: (id: string, label: string) => setPlan((p) => ns.updateRoutine(p, id, { label })),
-    onArea: (id: string, areaId: string | null) => setPlan((p) => ns.updateRoutine(p, id, { areaId })),
-    onServes: (id: string, areaIds: string[]) => setPlan((p) => ns.setRoutineServes(p, id, areaIds)),
-    onToggleStep: (id: string, stepId: string) => setPlan((p) => ns.toggleRoutineStep(p, id, stepId)),
-    onAddCustomStep: (id: string, title: string, minutes: number, daysPerWeek: number) => setPlan((p) => ns.addCustomStep(p, id, title, minutes, daysPerWeek)),
-    onRemoveStep: (id: string, stepId: string) => setPlan((p) => ns.removeStep(p, id, stepId)),
-    onStepDays: (id: string, stepId: string, daysPerWeek: number) => setPlan((p) => ns.updateStep(p, id, stepId, { daysPerWeek })),
-    /* The step's own time of day is kept: choosing Tuesday should not lose
-       "07:00". `placeStep` keeps daysPerWeek in step with the days. */
-    onStepWeekdays: (id: string, stepId: string, days: number[]) =>
-      setPlan((p) => {
-        const startMin = p.routines.find((r) => r.id === id)?.steps.find((s) => s.id === stepId)?.startMin ?? null
-        return ns.placeStep(p, id, stepId, days, startMin)
-      }),
-    onStepMinutes: (id: string, stepId: string, minutes: number) => setPlan((p) => ns.updateStep(p, id, stepId, { minutes })),
-    onMoveStep: (id: string, index: number, dir: -1 | 1) => setPlan((p) => ns.moveStep(p, id, index, dir)),
-    onPreset: (id: string, presetId: string) => setPlan((p) => ns.applyRoutinePreset(p, id, presetId)),
-    onClearSteps: (id: string) => setPlan((p) => ns.clearRoutineSteps(p, id)),
-    onDays: (id: string, daysPerWeek: number) => setPlan((p) => ns.updateRoutine(p, id, { daysPerWeek })),
-    onRemoveRoutine: (id: string) => setPlan((p) => ns.removeRoutine(p, id)),
-    onApplySplit: (id: string, splitId: string) => setPlan((p) => ns.applySplit(p, id, splitId)),
-    onAddSplitDay: (id: string) => setPlan((p) => ns.addSplitDay(p, id)),
-    onRenameSplitDay: (id: string, dayId: string, name: string) => setPlan((p) => ns.renameSplitDay(p, id, dayId, name)),
-    onMoveSplitDay: (id: string, index: number, dir: -1 | 1) => setPlan((p) => ns.moveSplitDay(p, id, index, dir)),
-    onRemoveSplitDay: (id: string, dayId: string) => setPlan((p) => ns.removeSplitDay(p, id, dayId)),
-    onClearSplit: (id: string) => setPlan((p) => ns.clearSplit(p, id)),
-  }), [])
-
-  /**
-   * REMOVING A PLAN GOAL, IN ONE PLACE. Five call sites each wrote it, so
-   * "what deleting a goal means" was stated five times and could be changed in
-   * four of them. It means one thing now.
-   */
-  const removePlanGoal = useCallback((goalId: string) => setPlan((p) => ns.removeGoal(p, goalId)), [])
-
-  const goalHandlers = useMemo(() => ({
-    onUpdate: (id: string, patch: Partial<Omit<NsGoal, "id">>) => setPlan((p) => ns.updateGoal(p, id, patch)),
-    onUpdateGoal: (id: string, patch: { title: string }) => setPlan((p) => ns.updateGoal(p, id, patch)),
-    onSetType: (id: string, type: VisionGoalType) => setPlan((p) => ns.setGoalType(p, id, type)),
-    onRemove: removePlanGoal,
-    onLadder: (id: string, ladder: MilestoneLadderConfig) => setPlan((p) => ns.setLadder(p, id, ladder)),
-    onRamp: (id: string, steps: HabitRampStep[] | null) => setPlan((p) => ns.setRamp(p, id, steps)),
-    onReading: (id: string, date: string, value: number | null) => setPlan((p) => ns.setGoalReading(p, date, id, value)),
-    onSetStatus: (id: string, status: NsGoalStatus, date: string) => setPlan((p) => ns.setGoalStatus(p, id, status, date)),
-    onDateSteps: (id: string, date: string) => setPlan((p) => ns.dateSteps(p, id, date)),
-    onTickCheckpoint: (id: string, checkpointId: string, done: boolean, date: string) => setPlan((p) => ns.setCheckpointDone(p, id, checkpointId, done, date)),
-    onLink: (fromId: string, toId: string) => setPlan((p) => ns.linkGoal(p, fromId, toId)),
-    onUnlink: (fromId: string, toId: string) => setPlan((p) => ns.unlinkGoal(p, fromId, toId)),
-    onAddObstacle: (id: string, what: string) => setPlan((p) => ns.addObstacle(p, id, what)),
-    onUpdateObstacle: (id: string, obstacleId: string, patch: { what?: string; counter?: string }) => setPlan((p) => ns.updateObstacle(p, id, obstacleId, patch)),
-    onRemoveObstacle: (id: string, obstacleId: string) => setPlan((p) => ns.removeObstacle(p, id, obstacleId)),
-    onAddBelief: (id: string, old: string) => setPlan((p) => ns.addBelief(p, id, old)),
-    onUpdateBelief: (id: string, beliefId: string, patch: { old?: string; useful?: boolean | null; evidence?: string; replacement?: string }) =>
-      setPlan((p) => ns.updateBelief(p, id, beliefId, patch)),
-    onRemoveBelief: (id: string, beliefId: string) => setPlan((p) => ns.removeBelief(p, id, beliefId)),
-    onAddCheckpoint: (id: string, title: string) => setPlan((p) => ns.addCheckpoint(p, id, title)),
-    onUpdateCheckpoint: (id: string, checkpointId: string, patch: { title?: string; done?: boolean; celebration?: string }) => setPlan((p) => ns.updateCheckpoint(p, id, checkpointId, patch)),
-    onSetMilestones: (id: string, spec: { from: number; to: number; count: number; unit?: string; prefix?: string }) => setPlan((p) => ns.setMilestones(p, id, spec)),
-    onSetProgression: (id: string, rungs: string[]) => setPlan((p) => ns.setProgression(p, id, rungs)),
-    onRemoveCheckpoint: (id: string, checkpointId: string) => setPlan((p) => ns.removeCheckpoint(p, id, checkpointId)),
-    onSetPriority: (id: string, rank: number) => setPlan((p) => ns.setGoalPriority(p, id, rank)),
-    onMovePriority: (id: string, dir: -1 | 1) => setPlan((p) => ns.moveGoalPriority(p, id, dir)),
-    onAddAction: (id: string, title: string, daysPerWeek: number) => setPlan((p) => ns.addAction(p, id, title, daysPerWeek)),
-    onUpdateAction: (id: string, habitId: string, patch: { title?: string; daysPerWeek?: number }) => setPlan((p) => ns.updateAction(p, id, habitId, patch)),
-    onRemoveAction: (id: string, habitId: string) => setPlan((p) => ns.removeAction(p, id, habitId)),
-    onAddReasons: (id: string, text: string) => setPlan((p) => ns.addReasons(p, id, text)),
-    onRemoveReason: (id: string, index: number) => setPlan((p) => ns.removeReason(p, id, index)),
-    onSetMetric: (id: string, metric: "daily_area" | null) => setPlan((p) => ns.setGoalMetric(p, id, metric)),
-    onSetServes: (id: string, areaIds: string[]) => setPlan((p) => ns.setGoalServes(p, id, areaIds)),
-    onSeasonFocus: (id: string) => setPlan((p) => ns.setSeasonFocus(p, id)),
-    onGoToTab: (t: NorthStarTabId) => setTab(t),
-  }), [])
-
-  /**
-   * The focus tab: which areas, the one thing, what order.
-   *
-   * Every one of these already existed — the area picker was the guide's first
-   * step, the one thing was a banner on the goals tab, the order was the
-   * priority list at the bottom of it. What is new is that they are in one
-   * place and that place is a tab of its own.
-   */
-  const focusHandlers = useMemo(() => ({
-    onRemoveGoal: removePlanGoal,
-    onOpenRoutine: (routineId: string) => { setPlanAreaId(null); setOpenRoutineId(routineId); setTab("systems") },
-    onToggleArea: (areaId: string) => setPlan((p) => ns.toggleSeasonArea(p, areaId)),
-    onAddArea: (label: string) => setPlan((p) => ns.addArea(p, label)),
-    onSeasonFocus: (id: string) => setPlan((p) => ns.setSeasonFocus(p, id)),
-    onAnswer: (key: string, text: string) => setPlan((p) => ns.setAnswer(p, key, text)),
-    onSetPriority: (id: string, rank: number) => setPlan((p) => ns.setGoalPriority(p, id, rank)),
-    onMovePriority: (id: string, dir: -1 | 1) => setPlan((p) => ns.moveGoalPriority(p, id, dir)),
-    onGoToTab: (t: NorthStarTabId) => setTab(t),
-  }), [])
-
-  const reviewHandlers = useMemo(() => ({
-    onAreaReview: (areaId: string, patch: Partial<NsAreaReview>) => setPlan((p) => ns.setAreaReview(p, areaId, patch)),
-    onRate: (date: string, areaId: string, value: number | null) => setPlan((p) => rateArea(p, areaId, value, date)),
-    onDailyRating: (date: string, areaId: string, score: number) => setPlan((p) => ns.setDailyRating(p, date, areaId, score)),
-    onAnswer: (promptId: string, text: string) => setPlan((p) => ns.setAnswer(p, promptId, text)),
-    onGoToGoals: () => setTab("milestones"),
-    onGoToNow: () => setTab("now"),
-  }), [])
-
-  /**
-   * The last step's handlers. Every one of them already exists on another step
-   * — this is the same writing, on the page that reads it back, because the
-   * moment somebody notices a value they no longer hold is the moment they are
-   * reading the list, not the moment they next reach step ten.
-   */
-  const recapHandlers = useMemo<RecapHandlers>(() => ({
-    onStar: (text: string) => setPlan((p) => ns.setNorthStar(p, text)),
-    onHorizon: (years: number) => setPlan((p) => ns.setHorizon(p, years)),
-    onAnswer: (promptId: string, text: string) => setPlan((p) => ns.setAnswer(p, promptId, text)),
-    onAreaReview: (areaId: string, patch: Partial<NsAreaReview>) => setPlan((p) => ns.setAreaReview(p, areaId, patch)),
-    onAddExperiences: (text: string) => setPlan((p) => ns.addExperiences(p, text)),
-    onToggleExperience: (id: string) => setPlan((p) => ns.toggleExperienceDone(p, id, today ?? ns.todayISO())),
-    onRemoveExperience: (id: string) => setPlan((p) => ns.removeExperience(p, id)),
-    /**
-     * The tick, and the two writes behind it.
-     *
-     * Ticking goes to the SAME store the Today step ticks into — the day's log
-     * on the plan, keyed by step id — so reading the north star here and
-     * reading it there are one event, not two tallies that drift apart.
-     *
-     * Starting one does both halves in a press: turn the step on in the routine
-     * it belongs to, then tick today, because somebody pressing it has just
-     * read the thing and today's is already done.
-     */
-    onTickPractice: (stepId: string) =>
-      setPlan((p) => nsTrack.toggleStepLogged(p, today ?? ns.todayISO(), stepId)),
-    onTrackPractice: (blueprintId: string, libraryStepId: string) =>
-      setPlan((p) => {
-        const tracked = ns.trackPractice(p, blueprintId, libraryStepId)
-        // Unchanged means the library moved under us; ticking a step that is
-        // not there would write a log line nothing can ever show.
-        if (tracked === p) return p
-        // THE STEP'S OWN ID, NOT THE LIBRARY'S. `trackPractice` mints a counter
-        // id for the new step and parks the library's name in `libraryStepId`;
-        // ticking the name wrote a log line no row could match, so the box just
-        // pressed drew itself unticked.
-        const stepId = ns.stepIdForLibraryStep(tracked, blueprintId, libraryStepId)
-        if (!stepId) return tracked
-        // BY HAND, because this decides whether to WRITE. A tick the training
-        // log derived is not in `plan.logged`, so asking the merged question
-        // here would skip the write and leave nothing behind when the log
-        // moves on.
-        return stepTickedByHand(tracked, today ?? ns.todayISO(), stepId)
-          ? tracked
-          : nsTrack.toggleStepLogged(tracked, today ?? ns.todayISO(), stepId)
-      }),
-  }), [today])
-
-  /**
-   * WHAT YOU ACTUALLY DID, from the training log — READ ONCE, FOR EVERY TAB.
-   *
-   * The ticks on a step like "Strength session" lived only in the plan, so a
-   * week with three finished gym sessions showed zero against it until
-   * somebody ticked it by hand: two records of one workout, kept apart and
-   * free to disagree, with the ignored one being the record of what actually
-   * happened.
-   *
-   * It is read HERE rather than inside the Track tab, where it used to live,
-   * because four surfaces answer "is this done today" and only one of them
-   * could see it from there. One read, one answer, handed down.
-   *
-   * Nine days rather than seven: the grid shows eight columns and the server
-   * cuts the history by ITS day, so a person far enough east or west needs the
-   * extra one to have their whole week.
-   */
-  const workouts = useLoad<Array<{ logged_at: string; session_type: SessionType }>>(
-    "/api/health/workout?days=9",
-    (body) => (Array.isArray(body) ? (body as Array<{ logged_at: string; session_type: SessionType }>) : [])
-  )
-
-  /**
-   * A FAILED READ IS NOT AN UNTRAINED WEEK.
-   *
-   * `NO_TRAINING_TICKS` while the log is loading or refused, and the schedule
-   * says so on screen — a silent empty log would draw somebody's trained week
-   * as a blank one, which is the "plausible number when the computation
-   * failed" shape this project keeps paying for.
-   */
-  const ticks = useMemo(
-    () => (workouts.state === "ready" ? trainingTicks(plan, workouts.data, timezone) : NO_TRAINING_TICKS),
-    [workouts, plan, timezone]
-  )
 
   /** The two halves of one area, and the move between them. */
   const openAreaGoals = useCallback((areaId: string) => {
@@ -1540,161 +1214,7 @@ export function NorthStarFlow({
     setTab("now")
   }, [])
 
-  const setSeasonFocus = useCallback((id: string) => setPlan((p) => ns.setSeasonFocus(p, id)), [])
 
-  const addGoal = useCallback((areaId: string, title: string, type: VisionGoalType) => {
-    setPlan((p) => ns.addGoal(p, areaId, title, type))
-  }, [])
-
-  const addTarget = useCallback((areaId: string, targetId: string) => {
-    setPlan((p) => ns.addGoalFromTarget(p, areaId, targetId))
-  }, [])
-
-  const addTemplate = useCallback((areaId: string, templateId: string, levelIndex: number) => {
-    setPlan((p) => ns.addGoalsFromTemplate(p, areaId, templateId, levelIndex))
-  }, [])
-
-  /**
-   * The board's own handlers.
-   *
-   * The two that are new are the cascade: `onApplyNeed` puts the routine a goal
-   * set runs on into the stack, and `onTogglePractice` turns a routine step on
-   * from inside an area, adding the routine if the stack has not got one. Both
-   * go through the same service functions the routine cards use, so a routine
-   * built from a goal and a routine built by hand are the same object.
-   */
-  /** Step 3. The requirements are real goals, so these are goal writers. */
-  const oneThingHandlers = useMemo<OneThingTabHandlers>(() => ({
-    onAnswer: (key: string, text: string) => setPlan((p) => ns.setAnswer(p, key, text)),
-    onSeasonFocus: (id: string) => setPlan((p) => ns.setSeasonFocus(p, id)),
-    onAddRequirement: (title: string, areaId: string | undefined, type: VisionGoalType) =>
-      setPlan((p) => ns.addOneThingRequirement(p, title, areaId, type)),
-    onMarkServes: (goalId: string, on: boolean) => setPlan((p) => ns.markServesOneThing(p, goalId, on)),
-    onRemoveGoal: removePlanGoal,
-    onGoToTab: (t: NorthStarTabId) => setTab(t),
-    onToggleOneThingArea: (areaId: string) => setPlan((p) => ns.toggleOneThingArea(p, areaId)),
-  }), [])
-
-    const systemHandlers = useMemo<SystemHandlers>(() => ({
-    /* Taking a step off a goal follows the goal card's rule (`removeAction`):
-       a step in an actions routine that then serves nothing is removed, not
-       left behind serving no goal; any other step is only unlinked. */
-    onLinkStep: (routineId: string, stepId: string, goalId: string, on: boolean) =>
-      setPlan((p) => (on ? ns.linkStepToGoal(p, routineId, stepId, goalId, true) : ns.removeAction(p, goalId, stepId))),
-    onLinkGoal: (fromId: string, toId: string, on: boolean) =>
-      setPlan((p) => (on ? ns.linkGoal(p, fromId, toId) : ns.unlinkGoal(p, fromId, toId))),
-    onAddSystemMilestone: (routineId: string, id: "hours" | "sessions" | "streak", areaId?: string) =>
-      setPlan((p) => ns.addSystemMilestone(p, routineId, id, areaId)),
-  }), [])
-
-  const boardHandlers = useMemo(() => ({
-    onAddTemplate: (areaId: string, templateId: string, level: number) =>
-      setPlan((p) => ns.addGoalsFromTemplate(p, areaId, templateId, level)),
-    onRemoveTemplate: (areaId: string, templateId: string) => setPlan((p) => ns.removeTemplateGoals(p, areaId, templateId)),
-    onAddTarget: (areaId: string, targetId: string) => setPlan((p) => ns.addGoalFromTarget(p, areaId, targetId)),
-    onApplyNeed: (need: RoutineNeed) => setPlan((p) => ns.applyRoutineNeed(p, need)),
-    onTogglePractice: (blueprintId: string, stepId: string, on: boolean) =>
-      setPlan((p) => (on ? ns.addPractice(p, blueprintId, stepId) : ns.removePractice(p, blueprintId, stepId))),
-    onSeasonFocus: (areaId: string) => setPlan((p) => ns.setSeasonFocus(p, areaId)),
-    onOpenArea: (areaId: string) => { setPlanAreaId(areaId); setNowGoalId(null) },
-    // Same writer the build steps use, so a line typed in the catalogue is a
-    // real goal in that area rather than a note that lives on this page.
-    onAddOwn: (areaId: string, text: string) => setPlan((p) => ns.addGoalsFromDump(p, areaId, text)),
-    /**
-     * `onProgramStarted` and `onProgramEnded` WERE HERE, and they were the
-     * reason the plan only ever learned about a program THIS browser had
-     * started. Nothing starts or ends a program from this page any more, and
-     * the reconciliation above learns it from the database instead — which is
-     * the same answer on the phone, the laptop, and a browser whose storage was
-     * cleared.
-     */
-  }), [])
-
-  /**
-   * The guide's handlers.
-   *
-   * Every answer also marks its question asked, which is why they are separate
-   * calls rather than one generic `answer(goalId, question, value)`: what "date"
-   * writes and what "why" writes are different fields with different shapes, and
-   * flattening that would put a switch inside the service to undo it again.
-   */
-  const guideHandlers = useMemo(() => ({
-    onToggleArea: (areaId: string) => setPlan((p) => ns.toggleSeasonArea(p, areaId)),
-    onAddArea: (label: string) => setPlan((p) => ns.addArea(p, label)),
-    onAddDump: (areaId: string, text: string) => setPlan((p) => ns.addGoalsFromDump(p, areaId, text)),
-    /**
-     * The five doors in.
-     *
-     * `onAnswer` is the same store the review prompts use, which is why the
-     * ideal day and the five questions survive a refresh without a new field on
-     * the plan: they are answers to questions, and there is already a place
-     * answers live.
-     */
-    onAnswer: (key: string, text: string) => setPlan((p) => ns.setAnswer(p, key, text)),
-    onGoToTab: (t: NorthStarTabId) => setTab(t),
-    onAddIdealDay: (placements: ns.IdealDayPlacement[]) => setPlan((p) => ns.addIdealDay(p, placements)),
-    onAddBlock: (routineId: string, title: string, minutes: number, days: number[], startMin: number) =>
-      setPlan((p) => ns.addCustomStep(p, routineId, title, minutes, days.length, undefined, { days, startMin })),
-    onPlaceStep: (routineId: string, stepId: string, days: number[], startMin: number | null) =>
-      setPlan((p) => ns.placeStep(p, routineId, stepId, days, startMin)),
-    onUpdateStep: (routineId: string, stepId: string, patch: { title?: string; minutes?: number }) =>
-      setPlan((p) => ns.updateStep(p, routineId, stepId, patch)),
-    onRemoveStep: (routineId: string, stepId: string) => setPlan((p) => ns.removeStep(p, routineId, stepId)),
-    /** The list that is not goals. */
-    onAddExperiences: (text: string, areaId: string | null) => setPlan((p) => ns.addExperiences(p, text, areaId)),
-    // `today` is the ACCOUNT's day; the fallback is for the single render
-    // before the effect sets it, as everywhere else in this file.
-    onToggleExperience: (id: string) => setPlan((p) => ns.toggleExperienceDone(p, id, today ?? ns.todayISO())),
-    onPromoteExperience: (id: string, areaId: string) => setPlan((p) => ns.promoteExperience(p, id, areaId)),
-    onUpdateExperience: (id: string, patch: { areaId?: string | null; title?: string }) => setPlan((p) => ns.updateExperience(p, id, patch)),
-    onRemoveExperience: (id: string) => setPlan((p) => ns.removeExperience(p, id)),
-    onAddTemplate: (areaId: string, templateId: string, level: number) =>
-      setPlan((p) => ns.addGoalsFromTemplate(p, areaId, templateId, level)),
-    onAddTarget: (areaId: string, targetId: string) => setPlan((p) => ns.addGoalFromTarget(p, areaId, targetId)),
-    onApplyNeed: (need: RoutineNeed) => setPlan((p) => ns.applyRoutineNeed(p, need)),
-    onTogglePractice: (blueprintId: string, stepId: string, on: boolean) =>
-      setPlan((p) => (on ? ns.addPractice(p, blueprintId, stepId) : ns.removePractice(p, blueprintId, stepId))),
-    onRemoveGoal: removePlanGoal,
-    onRemoveTemplate: (areaId: string, templateId: string) => setPlan((p) => ns.removeTemplateGoals(p, areaId, templateId)),
-    onLadder: (goalId: string, ladder: MilestoneLadderConfig) => setPlan((p) => ns.setLadder(p, goalId, ladder)),
-    onProgression: (goalId: string, rungs: string[]) => setPlan((p) => ns.setProgression(p, goalId, rungs)),
-    onDateSteps: (goalId: string, today: string) => setPlan((p) => ns.dateSteps(p, goalId, today)),
-    onMilestones: (goalId: string, spec: { from: number; to: number; count: number; unit?: string; prefix?: string }) =>
-      setPlan((p) => ns.setMilestones(p, goalId, spec)),
-    onUpdateGoal: (goalId: string, patch: { title: string }) => setPlan((p) => ns.updateGoal(p, goalId, patch)),
-    onLadderStart: (goalId: string, start: number) => setPlan((p) => ns.setLadderStart(p, goalId, start)),
-    onAction: (goalId: string, title: string, daysPerWeek: number) =>
-      setPlan((p) => ns.markAsked(ns.addAction(p, goalId, title, daysPerWeek), goalId, "actions")),
-    onDate: (goalId: string, date: string) =>
-      setPlan((p) => ns.markAsked(ns.updateGoal(p, goalId, { targetDate: date || null }), goalId, "date")),
-    onText: (goalId: string, field: "why" | "painWhy", text: string) =>
-      setPlan((p) => ns.markAsked(ns.updateGoal(p, goalId, { [field]: text }), goalId, field === "why" ? "why" : "cost")),
-    onControllable: (goalId: string, title: string) =>
-      setPlan((p) => ns.markAsked(ns.addControllableGoal(p, goalId, title), goalId, "control")),
-    onSkip: (goalId: string, question: GuideQuestionId) => setPlan((p) => ns.markAsked(p, goalId, question)),
-    /** The builder finishes a goal in place rather than through the queue. */
-    onRemoveAction: (goalId: string, habitId: string) => setPlan((p) => ns.removeAction(p, goalId, habitId)),
-    onSetType: (goalId: string, type: VisionGoalType) => setPlan((p) => ns.setGoalType(p, goalId, type)),
-    onDriverDays: (goalId: string, daysPerWeek: number) => setPlan((p) => ns.updateGoal(p, goalId, { daysPerWeek })),
-    onDriverCount: (goalId: string, count: number | null, unit: string) =>
-      setPlan((p) => ns.updateGoal(p, goalId, { perWeek: count, unit })),
-    /**
-     * A climb whose sentence carried no number.
-     *
-     * "One muscle up" is a target with nothing to parse, and it is exactly the
-     * case somebody wants rungs for. The start stays 0 until they say where
-     * they are, which is the next question the row asks.
-     */
-    onSetTarget: (goalId: string, target: number, unit: string) =>
-      setPlan((p) => ns.updateGoal(p, goalId, {
-        unit: unit.trim(),
-        ladder: { start: 0, target, steps: 4, curveTension: 0, controlPoints: [], pins: [] },
-      })),
-    onOpenArea: (areaId: string) => { setPlanAreaId(areaId); setNowGoalId(null) },
-    // Same writer the build steps use, so a line typed in the catalogue is a
-    // real goal in that area rather than a note that lives on this page.
-    onAddOwn: (areaId: string, text: string) => setPlan((p) => ns.addGoalsFromDump(p, areaId, text)),
-  }), [])
 
   /**
    * The partial reset: goals, their order, the season, the one thing.
@@ -2112,8 +1632,7 @@ export function NorthStarFlow({
             onAddRoutine={areaHandlers.onAddRoutine}
             openRoutineId={openRoutineId}
             setOpenRoutineId={setOpenRoutineId}
-            onAddRequirement={(title: string, type: VisionGoalType) =>
-              setPlan((p) => ns.addOneThingRequirement(p, title, undefined, type))}
+            onAddRequirement={onAddSystemsRequirement}
             onGoToTab={(t: NorthStarTabId) => setTab(t)}
             oneThing={oneThingBody}
           />
@@ -2128,8 +1647,7 @@ export function NorthStarFlow({
                 away. */}
             <ValuesSoFar
               plan={plan}
-              onAdd={(value) => setPlan((p) => ns.setValues(p, [...p.values, value]))}
-              onAddAll={(values) => setPlan((p) => ns.setValues(p, [...p.values, ...values]))}
+              {...valuesSoFarWriters}
               onGoTo={(mention) => {
                 if (mention.goalId && mention.areaId) {
                   setNowAreaId(null)
@@ -2156,45 +1674,7 @@ export function NorthStarFlow({
               ticks={ticks}
               plan={plan}
               today={today ?? ns.todayISO()}
-              /* A goal's count on the day, in the day half (Q4 of
-                 Plans/life-plan-rebuild.md); it went to the old goals table. */
-              onCountGoal={(goalId, by) => setPlan((p) => ns.countGoal(p, today ?? ns.todayISO(), goalId, by))}
-              onTickStep={(goalId, checkpointId) => setPlan((p) => ns.setCheckpointDone(p, goalId, checkpointId, true, today ?? ns.todayISO()))}
-              onToggleStep={(stepId) => setPlan((p) => nsTrack.toggleStepLogged(p, today ?? ns.todayISO(), stepId))}
-              /* The experience's own store, the same one the Experiences step
-                 writes — a thing you wanted to have done is ticked once, and
-                 which screen you were on when you ticked it does not matter. */
-              onToggleExperience={(id) => setPlan((p) => ns.toggleExperienceDone(p, id, today ?? ns.todayISO()))}
-              /* The SAME store the wheel's rating uses, so a day rated here
-                 moves the rolling average step 2 reads back. Two screens
-                 asking one question, not two questions. */
-              onRate={(areaId, score) =>
-                setPlan((p) =>
-                  ns.dailyRating(p, today ?? ns.todayISO(), areaId) === score
-                    ? ns.clearDailyRating(p, today ?? ns.todayISO(), areaId)
-                    : ns.setDailyRating(p, today ?? ns.todayISO(), areaId, score)
-                )
-              }
-              onNote={(text) => setPlan((p) => ns.setDayNote(p, today ?? ns.todayISO(), text))}
-              /* The user's own questions. Declared on the plan, answered by
-                 date — so renaming one later leaves every answer under it
-                 alone, and deleting one takes its answers with it rather than
-                 leaving dated text nothing can label. */
-              onAddField={(targetId) => setPlan((p) => ns.addDailyField(p, targetId))}
-              onRenameField={(id, label) => setPlan((p) => ns.renameDailyField(p, id, label))}
-              onMoveField={(id, targetId) => setPlan((p) => ns.moveDailyField(p, id, targetId))}
-              onRemoveField={(id) => setPlan((p) => ns.removeDailyField(p, id))}
-              onWriteField={(fieldId, text) => setPlan((p) => ns.setJournalEntry(p, today ?? ns.todayISO(), fieldId, text))}
-              onNumberField={(fieldId, value) => setPlan((p) => ns.setDayNumber(p, today ?? ns.todayISO(), fieldId, value))}
-              onFieldKind={(id, kind) => setPlan((p) => ns.setDailyFieldKind(p, id, kind))}
-              onFieldSource={(id, sourceId) => setPlan((p) => ns.setDailyFieldSource(p, id, sourceId))}
-              /* The to-do list under a bigger weekly thing. Its ticks go
-                 through `onToggleStep` above — one store for what got done
-                 today, whether the thing was a step or a step of a step. */
-              onAddSubStep={(targetId, title) => setPlan((p) => ns.addSubStep(p, targetId, title))}
-              onRenameSubStep={(id, title) => setPlan((p) => ns.renameSubStep(p, id, title))}
-              onMoveSubStep={(id, delta) => setPlan((p) => ns.moveSubStep(p, id, delta))}
-              onRemoveSubStep={(id) => setPlan((p) => ns.removeSubStep(p, id))}
+              {...todayWriters}
               /* The same jump the wheel and the area dialogs make: the routine
                  opens expanded on the step that edits it, rather than leaving
                  somebody to find it again. */
@@ -2233,12 +1713,6 @@ export function NorthStarFlow({
                   backAnchor: `row-${step.id}`,
                 })
               }}
-              onStepGoesTo={(routineId, stepId, sourceId) =>
-                setPlan((p) => ns.updateStep(p, routineId, stepId, { goesTo: sourceId }))
-              }
-              /* Silencing a step's question, from the box it draws. Nothing
-                 already written under it is touched — see `setStepAsks`. */
-              onStepAsks={(routineId, stepId, question) => setPlan((p) => ns.setStepAsks(p, routineId, stepId, question))}
               /* A row that IS a goal, opened as one — and brought back. */
               onOpenGoal={openGoalFromToday}
               onGoToTab={(t) => setTab(t)}
@@ -2254,14 +1728,7 @@ export function NorthStarFlow({
           <JournalTab
             plan={plan}
             today={today ?? ns.todayISO()}
-            onWriteField={(id, text) => setPlan((p) => ns.setJournalEntry(p, today ?? ns.todayISO(), id, text))}
-            onNote={(text) => setPlan((p) => ns.setDayNote(p, today ?? ns.todayISO(), text))}
-            /* A question added here hangs off the day rather than off a row:
-               nothing on this page is about one step, and re-homing it is a
-               dropdown away on Today. */
-            onAddQuestion={(question) => setPlan((p) => ns.addDailyField(p, null, question))}
-            onRemoveField={(id) => setPlan((p) => ns.removeDailyField(p, id))}
-            onStepAsks={(routineId, stepId, question) => setPlan((p) => ns.setStepAsks(p, routineId, stepId, question))}
+            {...journalWriters}
           />
         ) : tab === "review" ? (
           /* LOOKING BACK, a week, month, quarter or year at a time (Phase 5
@@ -2312,7 +1779,7 @@ export function NorthStarFlow({
             oneThing={oneThingBody}
             goals={
               <>
-                <QuickAdd plan={plan} onAdd={(areaId, text) => setPlan((p) => ns.addGoalsFromDump(p, areaId, text))} />
+                <QuickAdd plan={plan} onAdd={onQuickAdd} />
                 <GoalOverview
                   plan={plan}
                   today={today}
@@ -2334,7 +1801,7 @@ export function NorthStarFlow({
                 plan={plan}
                 today={today}
                 onOpenToday={() => setTab("today")}
-                handlers={{ onAnswer: (key, text) => setPlan((p) => ns.setAnswer(p, key, text)) }}
+                handlers={commitHandlers}
                 tools={
                   /* WHAT IS POINTED AT WHAT, the same view the systems step
                      has. Reading the plan back is exactly when "nothing is
@@ -2362,10 +1829,7 @@ export function NorthStarFlow({
               ticks={ticks}
               logUnavailable={workouts.state === "failed"}
               onRetryLog={workouts.state === "failed" ? workouts.retry : undefined}
-              /* The SAME tick the Today step writes. The schedule shows
-                 today's morning routine here too, and two screens showing one
-                 routine must not keep two answers to "did you read it". */
-              onToggleStep={(stepId) => setPlan((p) => nsTrack.toggleStepLogged(p, today ?? ns.todayISO(), stepId))}
+              onToggleStep={onTrackToggleStep}
               onGoToToday={() => setTab("today")}
             />
         ) : null}
