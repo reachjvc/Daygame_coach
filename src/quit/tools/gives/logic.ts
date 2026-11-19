@@ -1,5 +1,5 @@
 import { addDays } from "../../record"
-import { NEED_IDS, type QuitSwap } from "../../types"
+import { NEED_IDS, type QuitNeed, type QuitSwap } from "../../types"
 import { isDay, isObj, pickInt, pickRecord, pickStrings } from "../common"
 
 export const MAX_NEEDS = 3
@@ -68,6 +68,17 @@ export function parseGives(x: unknown): GivesState {
 /** Trimmed, spaces collapsed, at most 60 characters. */
 export function tidy(text: string): string {
   return text.replace(/\s+/g, " ").trim().slice(0, MAX_TEXT).trim()
+}
+
+/** First letter upper case, for his own words shown as a heading (stored as typed). */
+export function cap(text: string): string {
+  return text ? text.charAt(0).toUpperCase() + text.slice(1) : text
+}
+
+/** Would `addOwn` refuse this text because the same swap is already there? */
+export function isDuplicateOwn(list: { text: string }[], text: string): boolean {
+  const t = tidy(text).toLowerCase()
+  return t !== "" && list.some((x) => x.text.toLowerCase() === t)
 }
 
 /** Keeps known need ids ("own" too), once each, at most 3. */
@@ -149,14 +160,10 @@ export const RATINGS = [
   { value: 100, label: "All of it" },
 ] as const
 
-/** The button a stored number belongs to (a wave-1 slider value goes to the nearest one). */
+/** The button a stored number belongs to: under 13 None, 13-37 A little, 38-59 About half, 60-89 Most of it, 90 or more All of it. */
 export function ratingIndex(pct: number | undefined): number | null {
   if (typeof pct !== "number") return null
-  let best = 0
-  RATINGS.forEach((r, i) => {
-    if (Math.abs(r.value - pct) < Math.abs(RATINGS[best].value - pct)) best = i
-  })
-  return best
+  return pct < 13 ? 0 : pct < 38 ? 1 : pct < 60 ? 2 : pct < 90 ? 3 : 4
 }
 
 /** Tapping a button sets it; tapping the chosen one again clears it. */
@@ -167,7 +174,7 @@ export function rate(rated: Record<string, number>, swapId: string, value: numbe
   return next
 }
 
-/** True when the rating shows on the "Most of it" or "All of it" button. */
+/** True when the rating shows on the "Most of it" or "All of it" button (60 or more, the same line orderSwaps uses). */
 export const isEightyPercent = (pct: number | undefined): boolean => (ratingIndex(pct) ?? 0) >= 3
 
 /* ---------- the lies test ---------- */
@@ -210,6 +217,29 @@ export function remindText(url: string): string {
   return `Tell the tool how much of it each swap gave you: ${url}`
 }
 
+/** RFC 5545: a line is at most 75 octets; a longer one continues on the next line after CRLF and one space. */
+export function foldLine(line: string): string {
+  const enc = new TextEncoder()
+  if (enc.encode(line).length <= 75) return line
+  const parts: string[] = []
+  let cur = ""
+  let size = 0
+  let limit = 75
+  for (const ch of line) {
+    const n = enc.encode(ch).length
+    if (size + n > limit) {
+      parts.push(cur)
+      cur = ""
+      size = 0
+      limit = 74
+    }
+    cur += ch
+    size += n
+  }
+  parts.push(cur)
+  return parts.join("\r\n ")
+}
+
 function stamp(now: Date): string {
   return now.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z")
 }
@@ -237,10 +267,44 @@ export function ratingIcs(today: string, now: Date, url: string): string {
     "END:VEVENT",
     "END:VCALENDAR",
     "",
-  ].join("\r\n")
+  ]
+    .map(foldLine)
+    .join("\r\n")
 }
 
 export function ratingGoogleUrl(today: string, url: string): string {
   const d = compact(remindDay(today))
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(REMIND_TITLE)}&dates=${d}T190000/${d}T193000&details=${encodeURIComponent(remindText(url))}`
+}
+
+/* ---------- the list on the result ---------- */
+
+export const ALSO = "also"
+
+export interface ListItem {
+  id: string
+  text: string
+  /** YYYY-MM-DD he put it on the list */
+  since: string
+  kind: "own" | "swap"
+  /** The need it belongs to ("own" for Something else). */
+  need: string
+}
+
+export interface ListGroup {
+  /** A picked need id, "own", or ALSO for swaps of needs that are no longer picked. */
+  id: string
+  items: ListItem[]
+}
+
+/** His list by picked need (own swaps first, then data swaps in `orderSwaps` order), then what is on it for needs he no longer picks. */
+export function listGroups(state: GivesState, picked: string[], needs: QuitNeed[]): ListGroup[] {
+  const own = (need: string): ListItem[] => (state.own[need] ?? []).map((o) => ({ id: o.id, text: o.text, since: o.addedOn, kind: "own", need }))
+  const data = (n: QuitNeed): ListItem[] =>
+    orderSwaps(n.swaps.filter((s) => state.tried[s.id]), state.rated).map((s) => ({ id: s.id, text: s.text, since: state.tried[s.id].triedOn, kind: "swap", need: n.id }))
+  const groups: ListGroup[] = picked.map((id) => ({ id, items: [...own(id), ...(id === OWN ? [] : data(needs.find((n) => n.id === id) ?? { id, name: id, swaps: [] } as unknown as QuitNeed))] }))
+  const also: ListItem[] = []
+  for (const n of needs) if (!picked.includes(n.id)) also.push(...own(n.id), ...data(n))
+  if (!picked.includes(OWN)) also.push(...own(OWN))
+  return [...groups, { id: ALSO, items: also }]
 }

@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest"
 import {
   addOwn,
   addTried,
+  cap,
   cleanNeeds,
+  foldLine,
+  isDuplicateOwn,
+  isEightyPercent,
+  listGroups,
+  ALSO,
   EMPTY_GIVES,
   firstScreen,
   orderSwaps,
@@ -138,9 +144,12 @@ describe("own swaps", () => {
 })
 
 describe("rating", () => {
-  it("maps the five buttons to 0, 25, 50, 80, 100 and a wave-1 value to the nearest", () => {
+  it("maps the five buttons to 0, 25, 50, 80, 100 and any other value by band (under 13, 13-37, 38-59, 60-89, 90 and up)", () => {
     expect([0, 25, 50, 80, 100].map(ratingIndex)).toEqual([0, 1, 2, 3, 4])
-    expect(ratingIndex(70)).toBe(3)
+    expect([12, 13, 37, 38, 59, 60, 89, 90].map(ratingIndex)).toEqual([0, 1, 1, 2, 2, 3, 3, 4])
+    expect(isEightyPercent(59)).toBe(false)
+    expect(isEightyPercent(60)).toBe(true)
+    expect(isEightyPercent(undefined)).toBe(false)
     expect(ratingIndex(undefined)).toBeNull()
   })
 
@@ -153,6 +162,50 @@ describe("rating", () => {
 
   it("a Most of it rating puts the swap first", () => {
     expect(orderSwaps(swaps, rate({}, "c", 80)).map((s) => s.id)).toEqual(["c", "a", "b"])
+  })
+})
+
+describe("own swap helpers", () => {
+  it("cap raises only the first letter", () => {
+    expect(cap("a reason")).toBe("A reason")
+    expect(cap("")).toBe("")
+  })
+  it("finds a repeat ignoring case and spaces", () => {
+    expect(isDuplicateOwn([{ text: "Call my brother" }], "  call  my brother ")).toBe(true)
+    expect(isDuplicateOwn([{ text: "Call my brother" }], "Call my sister")).toBe(false)
+    expect(isDuplicateOwn([], "")).toBe(false)
+  })
+})
+
+describe("listGroups", () => {
+  const needs = [
+    { id: "relief", name: "Relief", swaps: [swap("r1"), swap("r2")] },
+    { id: "reward", name: "Reward", swaps: [swap("w1")] },
+  ] as unknown as Parameters<typeof listGroups>[2]
+  it("groups by picked need and puts swaps and own swaps of unpicked needs under 'also'", () => {
+    let s = addTried(addTried(addTried(EMPTY_GIVES, "r1", "2026-11-19"), "r2", "2026-11-19"), "w1", "2026-11-19")
+    s = addOwn(s, "reward", "Walk", "2026-11-19", 1)
+    s = addOwn(s, "own", "Step out", "2026-11-19", 2)
+    const g = listGroups(s, ["relief"], needs)
+    expect(g.map((x) => x.id)).toEqual(["relief", ALSO])
+    expect(g[0].items.map((i) => i.id)).toEqual(["r1", "r2"])
+    expect(g[1].items.map((i) => i.text)).toEqual(["Walk", "w1", "Step out"])
+    expect(listGroups(s, ["relief", "reward", "own"], needs).at(-1)!.items).toEqual([])
+  })
+})
+
+describe("foldLine", () => {
+  it("leaves short lines alone and folds long ones at 75 octets with a leading space", () => {
+    expect(foldLine("SUMMARY:x")).toBe("SUMMARY:x")
+    const long = "DESCRIPTION:" + "é".repeat(100)
+    const folded = foldLine(long)
+    for (const l of folded.split("\r\n")) expect(new TextEncoder().encode(l).length).toBeLessThanOrEqual(75)
+    expect(folded.split("\r\n").slice(1).every((l) => l.startsWith(" "))).toBe(true)
+    expect(folded.replace(/\r\n /g, "")).toBe(long)
+  })
+  it("the reminder file has no line over 75 octets", () => {
+    const text = ratingIcs("2026-11-19", new Date("2026-11-19T10:00:00Z"), "https://example.org/quit/nicotine/gives")
+    expect(text.split("\r\n").every((l) => new TextEncoder().encode(l).length <= 75)).toBe(true)
   })
 })
 
@@ -195,7 +248,7 @@ describe("reminder file", () => {
     expect(text).toContain("DTSTAMP:20261119T100000Z")
     expect(text).toContain("SUMMARY:Rate your swaps")
     expect(text).toContain("TRIGGER:PT0S")
-    expect(text).toContain(url.replace(/,/g, "\\,"))
+    expect(text.replace(/\r\n /g, "")).toContain(url.replace(/,/g, "\\,"))
     expect(text).not.toContain("preview=1")
     expect(text.split("\r\n").every((l) => !l.includes("\n"))).toBe(true)
   })

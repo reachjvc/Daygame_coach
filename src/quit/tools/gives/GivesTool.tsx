@@ -21,9 +21,14 @@ import {
   RATINGS,
   addOwn,
   addTried,
+  cap,
   cleanNeeds,
   firstScreen,
+  isDuplicateOwn,
+  ALSO,
   isEightyPercent,
+  listGroups,
+  type ListItem,
   orderSwaps,
   parseGives,
   preselectNeeds,
@@ -110,7 +115,7 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
   if (!state) return null
   const back = screen > 1 ? goBack : null
   const today = localDate()
-  const needName = (id: string) => (id === OWN ? (state.ownNeed ?? t.gives.otherName) : (needs.find((n) => n.id === id)?.name ?? id))
+  const needName = (id: string) => (id === OWN ? cap(state.ownNeed ?? t.gives.otherName) : (needs.find((n) => n.id === id)?.name ?? id))
 
   if (screen === 1) {
     return (
@@ -127,6 +132,12 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
           onOwnNeed={(text) => update((s) => ({ ...s, ownNeed: text.slice(0, MAX_TEXT) }))}
           onContinue={() =>
             move(1, () => {
+              // The pick screen gets its own address, so browser Back lands on it and not on the furthest screen.
+              const u = new URL(window.location.href)
+              if (u.searchParams.get("s") === null) {
+                u.searchParams.set("s", "1")
+                window.history.replaceState(null, "", `${u.pathname}${u.search}${u.hash}`)
+              }
               update((s) => ({ ...s, picked, ownNeed: s.ownNeed ? tidy(s.ownNeed) : s.ownNeed, done: Math.max(s.done, 1) }))
               go(2)
             })
@@ -151,7 +162,7 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
       <>
         <OneQuestion step={screen} total={total} onBack={back}>
           <header>
-            <h2 data-testid="need-heading" className="text-xl font-semibold">
+            <h2 data-testid="need-heading" className="break-words text-xl font-semibold">
               {needName(id)}
             </h2>
             {need?.line && <p className="text-sm text-muted-foreground">{need.line}</p>}
@@ -166,16 +177,9 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
               </ul>
             </section>
           )}
-          <OwnSwaps
-            need={id}
-            list={own}
-            onAdd={(text) => update((s) => addOwn(s, id, text, today, Date.now()))}
-            onRemove={(sid) => update((s) => removeOwn(s, id, sid))}
-          />
           {swaps.length > 0 && (
             <section>
-              <h3 className="text-sm text-muted-foreground">{t.gives.swapsHeading}</h3>
-              <ul className="mt-2 flex flex-col gap-3">
+              <ul className="flex flex-col gap-3">
                 {swaps.map((s) => (
                   <SwapCard
                     key={s.id}
@@ -190,6 +194,12 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
               </ul>
             </section>
           )}
+          <OwnSwaps
+            need={id}
+            list={own}
+            onAdd={(text) => update((s) => addOwn(s, id, text, today, Date.now()))}
+            onRemove={(sid) => update((s) => removeOwn(s, id, sid))}
+          />
           <PrimaryButton
             testId="gives-next"
             onClick={() =>
@@ -217,6 +227,7 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
       today={today}
       carry={carry}
       onRate={(sid, value) => update((s) => ({ ...s, rated: rate(s.rated, sid, value) }))}
+      onRemove={(it) => update((s) => (it.kind === "own" ? removeOwn(s, it.need, it.id) : removeTried(s, it.id)))}
       onGo={(id) => move(screen, () => go(picked.indexOf(id) + 2))}
       onChange={() => move(screen, () => go(1))}
       onStartAgain={() => {
@@ -291,6 +302,11 @@ function PickScreen(props: {
           />
         </label>
       )}
+      {needsText && (
+        <p data-testid="own-need-hint" className="text-sm text-muted-foreground">
+          {t.gives.ownNeedHint}
+        </p>
+      )}
       {full && <p data-testid="pick-max" className="text-sm text-muted-foreground">{t.gives.pickMax}</p>}
       <PrimaryButton testId="gives-continue" disabled={picked.length === 0 || needsText} onClick={props.onContinue}>
         {t.common.continue}
@@ -325,14 +341,19 @@ function SwapCard({ swap, onList, onToggle }: { swap: QuitSwap; onList: boolean;
 function OwnSwaps({ need, list, onAdd, onRemove }: { need: string; list: { id: string; text: string }[]; onAdd: (text: string) => void; onRemove: (id: string) => void }) {
   const [text, setText] = useState("")
   const full = list.length >= MAX_OWN_PER_NEED
+  const [dup, setDup] = useState(false)
   const submit = () => {
     if (tidy(text) === "" || full) return
+    if (isDuplicateOwn(list, text)) {
+      setDup(true)
+      return
+    }
     onAdd(text)
     setText("")
   }
   return (
     <section data-testid="own-swaps" className="flex flex-col gap-2">
-      <h3 className="text-sm text-muted-foreground">{t.gives.ownHeading}</h3>
+      {list.length > 0 && <h3 className="text-sm text-muted-foreground">{t.gives.ownHeading}</h3>}
       {list.length > 0 && (
         <ul className="flex flex-col gap-2">
           {list.map((o) => (
@@ -365,13 +386,21 @@ function OwnSwaps({ need, list, onAdd, onRemove }: { need: string; list: { id: s
               type="text"
               value={text}
               maxLength={MAX_TEXT}
-              onChange={(e) => setText(e.target.value)}
+              onChange={(e) => {
+                setText(e.target.value)
+                setDup(false)
+              }}
               className="min-h-11 min-w-0 flex-1 rounded-md border border-border bg-background px-3 text-base"
             />
             <button type="submit" data-testid="own-add" disabled={tidy(text) === ""} className="inline-flex min-h-11 shrink-0 items-center rounded-md border border-primary px-4 text-primary disabled:opacity-40">
               {t.gives.ownAdd}
             </button>
           </div>
+          {dup && (
+            <p data-testid="own-dup" className="text-sm text-muted-foreground">
+              {t.gives.ownDuplicate}
+            </p>
+          )}
         </form>
       )}
     </section>
@@ -389,6 +418,7 @@ function ResultScreen(props: {
   today: string
   carry: (path: string) => string
   onRate: (swapId: string, value: number) => void
+  onRemove: (item: ListItem) => void
   onGo: (needId: string) => void
   onChange: () => void
   onStartAgain: () => void
@@ -399,14 +429,12 @@ function ResultScreen(props: {
   useEffect(() => setOrigin(window.location.origin), [])
   const address = `${origin}/quit/${addiction}/gives`
 
-  const groups = picked.map((id) => {
-    const data = id === OWN ? [] : orderSwaps((needs.find((n) => n.id === id)?.swaps ?? []).filter((s) => state.tried[s.id]), state.rated)
-    const items = [
-      ...(state.own[id] ?? []).map((o) => ({ id: o.id, text: o.text, since: o.addedOn })),
-      ...data.map((s) => ({ id: s.id, text: s.text, since: state.tried[s.id].triedOn })),
-    ]
-    return { id, items }
-  })
+  // The order is worked out once, when the result shows, so a card does not jump when it is rated.
+  const [order] = useState(() => listGroups(state, picked, needs).map((g) => g.items.map((i) => i.id)))
+  const live = listGroups(state, picked, needs)
+  const rank = new Map(order.flat().map((id, i) => [id, i]))
+  const groups = live.map((g) => ({ ...g, items: [...g.items].sort((a, b) => (rank.get(a.id) ?? 1e6) - (rank.get(b.id) ?? 1e6)) }))
+  const total = groups.reduce((n, g) => n + g.items.length, 0)
   const allRefs = uniqueRefs(picked.flatMap((id) => (needs.find((n) => n.id === id)?.swaps ?? []).filter((s) => state.tried[s.id]).flatMap((s) => realRefs(s.refs))))
 
   const download = () => {
@@ -422,63 +450,76 @@ function ResultScreen(props: {
   }
 
   const linkClass = "inline-flex min-h-11 items-center rounded-md border border-border bg-card px-4 text-sm"
+  const card = (it: ListItem, removable: boolean) => {
+    const sel = ratingIndex(state.rated[it.id])
+    return (
+      <li key={it.id} data-testid="listed" data-swap={it.id} className="rounded-lg border border-border bg-card p-3">
+        <p className="break-words text-base">{it.text}</p>
+        {it.since < today && <p className="text-sm text-muted-foreground">{fill(t.gives.since, { day: fmt(it.since) })}</p>}
+        <div role="radiogroup" aria-label={t.gives.rateQuestion} className="mt-2 grid grid-cols-5 gap-1">
+          {RATINGS.map((r, i) => (
+            <button
+              key={r.value}
+              type="button"
+              role="radio"
+              aria-checked={sel === i}
+              data-testid={`rate-${r.value}`}
+              onClick={() => props.onRate(it.id, r.value)}
+              className={`inline-flex min-h-11 items-center justify-center rounded-md border px-1 text-center text-sm leading-tight ${sel === i ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background"}`}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+        {isEightyPercent(state.rated[it.id]) && (
+          <p data-testid="mark-80" className="mt-2 inline-flex rounded-full border border-primary px-2.5 py-0.5 text-xs font-medium text-primary">
+            {t.gives.mark80}
+          </p>
+        )}
+        {sel !== null && sel <= 1 && !removable && (
+          <p className="mt-1">
+            <button type="button" data-testid="try-another" onClick={() => props.onGo(it.need === "own" ? OWN : it.need)} className="inline-flex min-h-11 items-center text-sm text-primary underline">
+              {t.gives.another}
+            </button>
+          </p>
+        )}
+        {removable && (
+          <p className="mt-1">
+            <button type="button" data-testid="listed-remove" onClick={() => props.onRemove(it)} className="inline-flex min-h-11 items-center text-sm underline">
+              {t.gives.ownRemove}
+            </button>
+          </p>
+        )}
+      </li>
+    )
+  }
+
+  const outlineButton = "inline-flex min-h-11 items-center justify-center rounded-md border border-primary px-4 text-sm font-medium text-primary"
   return (
     <div data-testid="result" className="flex flex-col gap-5">
       <h2 className="text-xl font-semibold">{t.gives.resultHeading}</h2>
-      {groups.map((g) => (
-        <section key={g.id} data-testid="result-need" data-need={g.id} className="flex flex-col gap-2">
-          <h3 className="break-words text-sm font-semibold text-muted-foreground">{props.needName(g.id)}</h3>
-          {g.items.length === 0 ? (
-            <p data-testid="need-empty" className="text-sm">
-              {fill(t.gives.emptyNeed, { need: props.needName(g.id) })}{" "}
-              <button type="button" data-testid="empty-link" onClick={() => props.onGo(g.id)} className="inline-flex min-h-11 items-center text-primary underline">
-                {t.gives.emptyLink}
-              </button>
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {g.items.map((it) => {
-                const sel = ratingIndex(state.rated[it.id])
-                return (
-                  <li key={it.id} data-testid="listed" data-swap={it.id} className="rounded-lg border border-border bg-card p-3">
-                    <p className="break-words text-base">{it.text}</p>
-                    <p className="text-sm text-muted-foreground">{fill(t.gives.since, { day: fmt(it.since) })}</p>
-                    <p id={`rq-${it.id}`} className="mt-2 text-sm">{t.gives.rateQuestion}</p>
-                    <div role="radiogroup" aria-labelledby={`rq-${it.id}`} className="mt-1 grid grid-cols-3 gap-2 sm:grid-cols-5">
-                      {RATINGS.map((r, i) => (
-                        <button
-                          key={r.value}
-                          type="button"
-                          role="radio"
-                          aria-checked={sel === i}
-                          data-testid={`rate-${r.value}`}
-                          onClick={() => props.onRate(it.id, r.value)}
-                          className={`inline-flex min-h-11 items-center rounded-md border px-3 text-sm ${sel === i ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background"}`}
-                        >
-                          {r.label}
-                        </button>
-                      ))}
-                    </div>
-                    {isEightyPercent(state.rated[it.id]) && (
-                      <p data-testid="mark-80" className="mt-2 inline-flex rounded-full border border-primary px-2.5 py-0.5 text-xs font-medium text-primary">
-                        {t.gives.mark80}
-                      </p>
-                    )}
-                    {sel !== null && sel <= 1 && (
-                      <p className="mt-1">
-                        <button type="button" data-testid="try-another" onClick={() => props.onGo(g.id)} className="inline-flex min-h-11 items-center text-sm text-primary underline">
-                          {t.gives.another}
-                        </button>
-                      </p>
-                    )}
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-        </section>
-      ))}
+      {total > 0 && <p data-testid="rate-question" className="text-sm">{t.gives.rateQuestion}</p>}
+      {groups.map((g) => {
+        const isAlso = g.id === ALSO
+        if (isAlso && g.items.length === 0) return null
+        return (
+          <section key={g.id} data-testid={isAlso ? "result-also" : "result-need"} data-need={g.id} className="flex flex-col gap-2">
+            <h3 className="break-words text-sm font-semibold text-muted-foreground">{isAlso ? t.gives.alsoHeading : props.needName(g.id)}</h3>
+            {g.items.length === 0 ? (
+              <div data-testid="need-empty" className="flex flex-col items-start gap-2 text-sm">
+                <p>{fill(t.gives.emptyNeed, { need: props.needName(g.id) })}</p>
+                <button type="button" data-testid="empty-link" onClick={() => props.onGo(g.id)} className={outlineButton}>
+                  {t.gives.emptyLink}
+                </button>
+              </div>
+            ) : (
+              <ul className="flex flex-col gap-3">{g.items.map((it) => card(it, isAlso))}</ul>
+            )}
+          </section>
+        )
+      })}
 
+      {total > 0 && (
       <section className="flex flex-col gap-2">
         <h3 className="text-base font-semibold">{t.gives.remindTitle}</h3>
         <div className="flex flex-wrap gap-2">
@@ -491,6 +532,7 @@ function ResultScreen(props: {
         </div>
         <p className="text-sm text-muted-foreground">{t.gives.remindNote}</p>
       </section>
+      )}
 
       {(isLiveTool("sos") || isLiveTool("date")) && (
         <section className="flex flex-col gap-2">

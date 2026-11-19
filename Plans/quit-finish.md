@@ -716,7 +716,7 @@ A11: the old line promised "80%" as if it were a result). `account: "none"`, wav
      the only section (no data swaps, no quotes).
    - Next / on the last need "See my list". A tap within 250 ms of a screen move is ignored and the button only moves
      from the screen it was drawn on (A28: the double tap pushed `?s=3` twice). Browser Back from screen N shows N−1.
-3. **Result: "Your 80% swaps"** (`data-testid="result"`; the heading is his step 2 title, so "80%" is his aim, not a
+3. **Result: "Find your 80% swaps"** (`data-testid="result"`; the heading is his step 2 title, so "80%" is his aim, not a
    promise; under the heading nothing, rule 6).
    - Grouped by need (need name as a small heading, in the order picked). Each swap on his list: the text, "On your
      list since Wed, Nov 19", and the rating row **"Tried it? How much of it did it give you?"** with five buttons:
@@ -758,7 +758,7 @@ script):**
   Haasova ref stays (Tool 2's Move tile reads it).
 - b11 "I'll put on weight" now has need `substance` (Tool 5 handed this to Tool 13; A19, D28: under Confidence it read
   as if weight gives confidence; under "The nicotine itself" it sits next to patch plus gum).
-- Of 24 swaps: 3 strong, 1 some, 7 weak, 13 not tested. A11 answered: the grades are honest, and the rating loop is
+- Of 24 swaps: 3 strong, 1 some, 8 weak, 12 not tested. A11 answered: the grades are honest, and the rating loop is
   how he finds which ones give him most of it; no new swap without a source that fits.
 
 **Saved state** (`quit-v1`, tool `gives`, parsed by `parseGives`, which stays compatible): `done`, `picked` (need ids,
@@ -1590,7 +1590,8 @@ targets or "what you could buy" here: Tool 3 holds targets.
 - Opening rule: the brief says "picks but no list -> screen 2". The shared screen clamp only lets a reader open screens up to the first unanswered one, so with no list yet, Next would have been blocked. Built: no list shows the screen after the last one passed; a list, or a walk to the last need, shows the result (which then reads "Nothing on your list for <need> yet." for an empty need).
 - A wave-1 slider rating (any 0 to 100) shows on the nearest of the five buttons; a rating that lands on "Most of it" or "All of it" gets the "80% swap" mark.
 - `tests/e2e/quit/menu.spec.ts` "the nicotine menu shows 5 groups" fails on main as well as here: it expects a "Free account" pill, but no live tool has `account` other than "none". Not touched.
-- Rating buttons sit in a 3-column grid on phones (5 in a row from 640 px), so no single button wraps alone.
+- Rating buttons: one row of five on every width (round 1 replaced the 3-column grid).
+- Review round 1 (2026-11-19): fixed Back to the pick screen, long own-need heading, cards jumping on rating, swaps of unpicked needs, duplicate own swap message, rating bands, small Hide toggle, .ics folding; result says the rating question once, one row of five buttons, no reminder on an empty list; need screens show the swaps before the own-swap field; data: reward-1 caveat split by programme, spouse figure on connection-1, 8 sessions on MacPherson, warm shower 1–2 hours before bed (Haghayegh 2019, weak), gum or mints for the mouth habit, b10 under People. Not fixed: slip does not show own swaps (Tool 4's screen; proposed for it), the two Back buttons and the full progress bar on screen 1 (shared with the date tool), the page-level Sources fold (shared kit).
 
 ### From the Tool 11 build (Opus, 2026-11-19)
 
