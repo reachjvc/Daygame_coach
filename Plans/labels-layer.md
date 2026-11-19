@@ -250,3 +250,19 @@ One session per line:
 
 - 2026-11-19: plan written (proposed). 18 sets finished on settler v8; the
   first 10 are all from coach A.
+- 2026-11-19: Phase 0 done (proposed). Guide v1 (2,750 words) copies the stage
+  rulebook and the move list, adds "he answers" from the owner's note M2 and a
+  10-value her-signal list from rule M3. Schema and split frozen; dry run on 20
+  lines of B1 returned valid JSON. Correction: the set with his Beat Map notes
+  is not one of the 10, so his notes serve as worked examples only (details in
+  the private sources file).
+- 2026-11-19: Phase 1 done. Both labellers (Opus, Sonnet) labelled all 10 sets
+  (1,501 lines). Agreement, all 10 sets (alpha / percent): stage 0.74 / 81%,
+  move 0.82 / 84%, her signal 0.73 / 79%, second stage yes/no 0.38 / 92%;
+  same hook point in 7 of 10 sets. Held-out stage agreement is lower (0.63 /
+  72%). 545 lines disagree; 26 carry a rare label. Her signal "laughs" is
+  almost never used (the models pick "plays along").
+- 2026-11-19: Phase 2 done. Round 1 page live (3 whole sets + 59 cards: 40
+  disputed, 9 rare, 10 spot checks), tested with a fake store incl. a failed
+  save; task added to his daily page for 2026-11-20. Next: Phase 3 after his
+  marks.
