@@ -2,6 +2,7 @@ import type { BlackBoxRecord } from "@/src/vice/types"
 import { forVice, runLanes, stats } from "@/src/vice/blackboxService"
 import { addDays, isIsoDay } from "../../record"
 import { DAY_MS, amountPerDay, dayStartMs, moneyKept, round2, totalCleanMs, calPos, dayPos, windowFrom, type MoneyRun } from "../../money"
+import { parseTyped, type Typed } from "../date/logic"
 import { daysBetween, mondayIndex } from "../date/logic"
 
 export { daysBetween, mondayIndex }
@@ -45,6 +46,8 @@ export interface RecordView {
   /** Oldest first. */
   runs: RunView[]
   total: number
+  /** Clean days counted once each (a day held by two runs once): the milestones and the next step count from this. */
+  uniqueTotal: number
   /** Days of the living run; null when none lives. */
   current: number | null
   best: number
@@ -88,6 +91,7 @@ export function viewOf(box: BlackBoxRecord, viceId: string, today: string): Reco
   return {
     runs,
     total: s.totalCleanDays,
+    uniqueTotal: uniqueDays.length,
     current: s.currentDays,
     best: s.longestDays,
     closeCalls: s.closeCallsSurvived,
@@ -116,11 +120,14 @@ export interface Target {
 
 /* ---------- periods ---------- */
 
-/** Spending dated inside the window (from the local day the window starts on). */
+/**
+ * Spending dated inside the window. A spend has a day and no hour, so it counts when its day begins at or after the
+ * moment the window starts: the same start moment as the clean time.
+ */
 export function spentInPeriod(spends: Spend[], days: number | null, nowMs: number): number {
   if (days === null) return round2(spends.reduce((n, s) => n + s.amount, 0))
-  const from = addDays(dayKeyOf(nowMs), -days)
-  return round2(spends.filter((s) => s.day >= from).reduce((n, s) => n + s.amount, 0))
+  const from = windowFrom(days, nowMs)
+  return round2(spends.filter((s) => dayPos(s.day) >= from).reduce((n, s) => n + s.amount, 0))
 }
 
 export function dayKeyOf(ms: number): string {
@@ -153,7 +160,7 @@ export interface DayStep {
 export function dayMilestones(view: RecordView, today: string): DayStep[] {
   return DAY_LADDER.map((t) => {
     const date = view.cleanDays[t - 1] ?? null
-    const toGo = Math.max(0, t - view.total)
+    const toGo = Math.max(0, t - view.uniqueTotal)
     return { threshold: t, date, toGo, projected: date === null && view.current !== null ? addDays(today, toGo) : null }
   })
 }
@@ -340,4 +347,23 @@ export function elapsedSince(startDay: string, nowMs: number): number {
 export function toCents(value: number): number | null {
   const v = Math.round(value * 100) / 100
   return v >= 0.01 ? v : null
+}
+
+/** A count shown to the reader: at most 2 decimals, no trailing zeros ("0.43", "10"). */
+export function fmtCount(n: number): string {
+  return String(Math.round(n * 100) / 100)
+}
+
+export type Amount = Typed | { kind: "big" }
+
+/**
+ * A number typed in this tool's inputs. "1,000" and "1,000.50" are thousands separators (a comma followed by exactly
+ * three digits); "7,50" is 7.50. A number above the limit is "big", so the error can name the limit.
+ */
+export function parseAmount(text: string, max: number): Amount {
+  const t = text.trim()
+  const plain = /^\d{1,3}(,\d{3})+(\.\d+)?$/.test(t) ? t.replace(/,/g, "") : t
+  const r = parseTyped(plain, max)
+  if (r.kind === "bad" && /^\d*[.,]?\d+$|^\d+[.,]$/.test(plain) && Number(plain.replace(",", ".")) > max) return { kind: "big" }
+  return r
 }

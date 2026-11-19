@@ -13,14 +13,16 @@ const cmp = (a: [number, number], b: [number, number]) => a[0] * 12 + a[1] - (b[
 export function CalendarTab({ ctx }: { ctx: RecordCtx }) {
   const { view, today } = ctx
   const span = monthSpan(view, today)
-  const [month, setMonth] = useState<[number, number]>(span.last)
+  // Until he moves to another month, the calendar follows today (across a month end the ring moves with it).
+  const [moved, setMoved] = useState<[number, number] | null>(null)
+  const month = moved ?? span.last
   const [picked, setPicked] = useState<string | null>(null)
   const thisYear = Number(today.slice(0, 4))
   const atFirst = cmp(month, span.first) <= 0
   const atLast = cmp(month, span.last) >= 0
   const step = (d: number) => {
     const n = month[0] * 12 + month[1] + d
-    setMonth([Math.floor(n / 12), n % 12])
+    setMoved([Math.floor(n / 12), n % 12])
   }
   const info = picked ? dayInfo(picked, view, today) : null
   return (
@@ -66,10 +68,10 @@ export function CalendarTab({ ctx }: { ctx: RecordCtx }) {
                   data-state={st}
                   data-today={i.today ? "true" : "false"}
                   data-close={i.closeCalls.length > 0 ? "true" : "false"}
-                  aria-label={t.calDayLabel(fmtDay(day), st === "clean" ? t.stateClean : st === "slip" ? t.stateSlip : t.stateOther, i.closeCalls.length > 0)}
+                  aria-label={t.calDayLabel(fmtDay(day, today), st === "clean" ? t.stateClean : st === "slip" ? t.stateSlip : t.stateOther, i.closeCalls.length > 0)}
                   aria-pressed={picked === day}
                   onClick={() => setPicked(day)}
-                  className={`relative flex size-full min-h-11 items-center justify-center rounded-md text-base tabular-nums ${cls} ${i.today ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : ""} ${picked === day ? "outline outline-2 outline-primary" : ""}`}
+                  className={`relative flex size-full min-h-11 items-center justify-center rounded-md text-base tabular-nums ${cls} ${i.today ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : ""} ${picked === day ? "outline outline-[3px] outline-offset-[3px] outline-foreground" : ""}`}
                 >
                   {label}
                   {i.closeCalls.length > 0 && <span aria-hidden="true" className={`absolute bottom-1 size-1.5 rounded-full ${st === "clean" ? "bg-primary-foreground" : "bg-foreground"}`} />}
@@ -101,7 +103,7 @@ export function CalendarTab({ ctx }: { ctx: RecordCtx }) {
         {!info && <p className="text-muted-foreground">{t.calPick}</p>}
         {info && (
           <>
-            <p className="text-sm text-muted-foreground">{fmtDay(info.day)}</p>
+            <p className="text-sm text-muted-foreground">{fmtDay(info.day, today)}</p>
             {info.clean && info.slips.length === 0 && <p>{t.calClean(info.clean.dayNo, fmtShort(info.clean.runStart, thisYear))}</p>}
             {info.slips.map((s, k) => (
               <p key={`s${k}`}>{t.calSlip(s)}</p>

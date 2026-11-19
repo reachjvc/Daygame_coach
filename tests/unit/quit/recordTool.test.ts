@@ -18,12 +18,15 @@ import {
   splitElapsed,
   toCents,
   elapsedSince,
+  fmtCount,
+  parseAmount,
   viewOf,
   type RecordView,
 } from "@/src/quit/tools/record/logic"
 import { exampleFor } from "@/src/quit/tools/record/example"
 import { parseRecordTool } from "@/src/quit/tools/record/state"
 import { DAY_MS } from "@/src/quit/money"
+import { fmtDay } from "@/src/quit/tools/record/fmt"
 
 const STAMP = "2026-01-01T00:00:00.000Z"
 const run = (id: string, start: string, end: string | null, by: string | null, viceId = "nicotine"): ViceAttempt => ({ id, viceId, label: "x", startedOn: start, startedBy: "", structure: [], endedOn: end, endedByReportId: by, updatedAt: STAMP, deletedAt: null })
@@ -260,5 +263,55 @@ describe("robustness and cents", () => {
   it("the counter counts from 00:00 of the first day on the calendar line", () => {
     expect(elapsedSince("2026-11-12", new Date(2026, 10, 19, 10, 0, 1).getTime())).toBe(7 * 86_400_000 + 10 * 3_600_000 + 1000)
     expect(elapsedSince("2026-11-25", new Date(2026, 10, 19).getTime())).toBe(0)
+  })
+})
+
+describe("one count for the milestones and the next step", () => {
+  it("uses the de-duplicated list; the ring keeps the Black Box total", () => {
+    const two: BlackBoxRecord = { version: 1, attempts: [run("a", "2026-11-10", "2026-11-12", "s"), run("b", "2026-11-12", null, null)], reports: [rep("s", "a", "2026-11-12", true, "")] }
+    const v = viewOf(two, "nicotine", TODAY)
+    expect(v.total).toBe(11)
+    expect(v.uniqueTotal).toBe(10)
+    const steps = dayMilestones(v, TODAY)
+    expect(steps.find((x) => x.threshold === 14)).toMatchObject({ toGo: 4, projected: "2026-11-23" })
+    expect(steps.find((x) => x.threshold === 7)?.date).toBe(v.cleanDays[6])
+  })
+})
+
+describe("numbers typed in the tool's inputs", () => {
+  it("a comma followed by three digits is a thousands separator, 7,50 is 7.50", () => {
+    expect(parseAmount("1,000", 100_000)).toEqual({ kind: "ok", value: 1000 })
+    expect(parseAmount("12,345.50", 100_000)).toEqual({ kind: "ok", value: 12345.5 })
+    expect(parseAmount("7,50", 1000)).toEqual({ kind: "ok", value: 7.5 })
+    expect(parseAmount("0,5", 500)).toEqual({ kind: "ok", value: 0.5 })
+    expect(parseAmount("", 500)).toEqual({ kind: "empty" })
+    expect(parseAmount("abc", 500)).toEqual({ kind: "bad" })
+    expect(parseAmount("1,00,0", 500)).toEqual({ kind: "bad" })
+  })
+  it("a number above the limit is big, so the error can name the limit", () => {
+    expect(parseAmount("501", 500)).toEqual({ kind: "big" })
+    expect(parseAmount("1,001", 1000)).toEqual({ kind: "big" })
+    expect(parseAmount("100001", 100_000)).toEqual({ kind: "big" })
+    expect(parseAmount("-5", 500)).toEqual({ kind: "bad" })
+  })
+  it("counts shown are at most 2 decimals", () => {
+    expect(fmtCount(0.42857142857142855)).toBe("0.43")
+    expect(fmtCount(10)).toBe("10")
+    expect(fmtCount(7.5)).toBe("7.5")
+  })
+})
+
+describe("dates outside this year show the year", () => {
+  it("fmtDay", () => {
+    expect(fmtDay("2026-11-12", "2026-11-19")).toBe("Thu, Nov 12")
+    expect(fmtDay("2027-10-04", "2026-11-19")).toBe("Mon, Oct 4, 2027")
+  })
+})
+
+describe("spending inside a window starts where the clean time starts", () => {
+  const spends = [{ id: "a", day: "2026-11-12", amount: 5, note: "" }, { id: "b", day: "2026-11-13", amount: 7, note: "" }]
+  it("a spend dated on the start day counts only when the window starts at midnight", () => {
+    expect(spentInPeriod(spends, 7, new Date(2026, 10, 19, 10).getTime())).toBe(7)
+    expect(spentInPeriod(spends, 7, new Date(2026, 10, 19, 0, 0, 0).getTime())).toBe(12)
   })
 })

@@ -1,14 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Info } from "lucide-react"
 import { addDays } from "../../record"
 import { isLiveTool } from "../../menu"
 import { amountPerDay, fmtMoney, unitsNotUsed } from "../../money"
 import type { RecordCtx } from "./ctx"
+import { PriceBasis } from "./Bits"
 import { fmtDay, fmtShort } from "./fmt"
-import { daysText, elapsedSince, moneyFor, moneyRuns, nextDayStep, ringFill, splitElapsed } from "./logic"
+import { daysText, elapsedSince, fmtCount, moneyFor, moneyRuns, nextDayStep, ringFill, splitElapsed } from "./logic"
 import { recordText as t } from "./text"
 
 const R = 88
@@ -46,8 +47,8 @@ function Ring({ total, running, open, onToggle }: { total: number; running: bool
 /** A tile that opens its basis when tapped. */
 function Tile({ id, label, value, sub, open, onToggle, children }: { id: string; label: string; value: string; sub?: string; open: boolean; onToggle: () => void; children?: React.ReactNode }) {
   return (
-    <div data-testid={`tile-${id}`} className="rounded-lg border border-border bg-card">
-      <button type="button" aria-expanded={open} onClick={onToggle} className="relative flex min-h-16 w-full flex-col items-start justify-center gap-0.5 p-3 pr-9 text-left">
+    <div data-testid={`tile-${id}`} className="flex flex-col rounded-lg border border-border bg-card">
+      <button type="button" aria-expanded={open} onClick={onToggle} className="relative flex min-h-16 w-full flex-1 flex-col items-start justify-center gap-0.5 p-3 pr-9 text-left">
         <span className="text-sm text-muted-foreground">{label}</span>
         <span data-testid={`tile-${id}-value`} className="break-words text-2xl font-semibold tabular-nums">
           {value}
@@ -55,7 +56,7 @@ function Tile({ id, label, value, sub, open, onToggle, children }: { id: string;
         {sub && <span className="break-words text-sm text-muted-foreground">{sub}</span>}
         <Info className="absolute right-3 top-3 size-4 text-muted-foreground" aria-hidden />
       </button>
-      {open && (
+      {open && children && (
         <div data-testid={`tile-${id}-formula`} className="flex flex-col gap-1 break-words border-t border-border p-3 text-sm text-muted-foreground">
           {children}
         </div>
@@ -64,12 +65,26 @@ function Tile({ id, label, value, sub, open, onToggle, children }: { id: string;
   )
 }
 
+/** True from 640 px wide: the tiles sit in a row and one shared panel opens below them. */
+function useWide(): boolean {
+  const [wide, setWide] = useState(false)
+  useEffect(() => {
+    const q = window.matchMedia("(min-width: 640px)")
+    const on = () => setWide(q.matches)
+    on()
+    q.addEventListener("change", on)
+    return () => q.removeEventListener("change", on)
+  }, [])
+  return wide
+}
+
 export function HomeTab({ ctx }: { ctx: RecordCtx }) {
   const { view, today, nowMs, unit, unitData, record } = ctx
   const [openCard, setOpenCard] = useState<string | null>(null)
   const [counterOpen, setCounterOpen] = useState(false)
   const [ringOpen, setRingOpen] = useState(false)
   const toggleCard = (id: string) => setOpenCard((c) => (c === id ? null : id))
+  const wide = useWide()
   const live = view.runs.find((r) => r.live) ?? null
   const thisYear = Number(today.slice(0, 4))
   const runs = moneyRuns(view.runs)
@@ -78,24 +93,52 @@ export function HomeTab({ ctx }: { ctx: RecordCtx }) {
   const units = unit ? unitsNotUsed(runs, nowMs, unit.perDay) : null
   const many = unitData?.many ?? ""
   const word = unit?.perDay === 1 ? (unitData?.one ?? many) : many
+  const perDayText = unit?.perDay == null ? "" : fmtCount(unit.perDay)
   const hasNumbers = pm.money !== null
   const slipOpen = isLiveTool("slip")
   const dateOpen = isLiveTool("date")
   const breakEnd = record.goal === "break" ? record.breakEnd : null
-  const next = nextDayStep(view.total)
-  const toGo = next === null ? 0 : next - view.total
+  const next = nextDayStep(view.uniqueTotal)
+  const toGo = next === null ? 0 : next - view.uniqueTotal
   const elapsed = live ? splitElapsed(elapsedSince(live.start, nowMs)) : null
   const pad = (n: number) => String(n).padStart(2, "0")
 
-  const moneyFormula = pm.money !== null && unit && unit.perDay !== null ? t.moneyFormula(unit.perDay, word, fmtMoney(unit.priceUsd), daysText(pm.cleanDays), fmtMoney(pm.spent), fmtMoney(pm.money)) : ""
-  const unitsFormula = units !== null && unit && unit.perDay !== null ? t.unitsFormula(unit.perDay, word, daysText(pm.cleanDays), units, many) : ""
-  const perDayLine = unit && rate !== null && unit.perDay !== null ? t.perDayLine(unit.perDay, word, fmtMoney(unit.priceUsd), fmtMoney(Math.round(rate * 100) / 100)) : ""
+  const moneyFormula = pm.money !== null && unit && unit.perDay !== null ? t.moneyFormula(perDayText, word, fmtMoney(unit.priceUsd), daysText(pm.cleanDays), pm.spent !== 0 ? fmtMoney(pm.spent) : null, fmtMoney(pm.money)) : ""
+  const unitsFormula = units !== null && unit && unit.perDay !== null ? t.unitsFormula(perDayText, word, daysText(pm.cleanDays), units, many) : ""
+  const perDayLine = unit && rate !== null && unit.perDay !== null ? t.perDayLine(perDayText, word, fmtMoney(unit.priceUsd), fmtMoney(Math.round(rate * 100) / 100)) : ""
 
   const cards = [
-    ["run", t.cardRun, view.current, t.cardRunBasis(view.current ?? 0), (n: number) => t.cardDays(n)],
-    ["best", t.cardBest, view.best, t.cardBestBasis(view.best), (n: number) => t.cardDays(n)],
-    ["close", t.cardClose, view.closeCalls, t.cardCloseBasis(view.closeCalls), (n: number) => t.cardTimes(n)],
+    ["run", t.cardRun, view.current, t.cardRunBasis(view.current ?? 0), (n: number) => t.cardDays(n), t.noneNow],
+    ["best", t.cardBest, view.best, t.cardBestBasis(view.best), (n: number) => t.cardDays(n), t.cardNone],
+    ["close", t.cardClose, view.closeCalls, t.cardCloseBasis(view.closeCalls), (n: number) => t.cardTimes(n), t.noneYet],
   ] as const
+
+  /** What each tile shows when it is open; null when it has nothing to say (no numbers yet). */
+  const panels: Record<string, React.ReactNode> = {
+    "t-money": hasNumbers ? (
+      <>
+        <span data-testid="money-formula">{moneyFormula}</span>
+        <span>{t.cleanTimeLine}</span>
+      </>
+    ) : null,
+    "t-units": units !== null ? (
+      <>
+        <span data-testid="units-formula">{unitsFormula}</span>
+        <span>{t.cleanTimeLine}</span>
+      </>
+    ) : null,
+    "t-price": unit ? (
+      <>
+        <PriceBasis unitId={unit.id} typed={unit.priceBasis === "typed"} testId="price-basis" />
+        {perDayLine && <span data-testid="price-formula">{perDayLine}</span>}
+        {!ctx.readOnly && (
+          <button type="button" data-testid="price-change" onClick={() => ctx.openChange()} className="inline-flex min-h-11 items-center self-start text-primary underline">
+            {t.change}
+          </button>
+        )}
+      </>
+    ) : null,
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -129,7 +172,7 @@ export function HomeTab({ ctx }: { ctx: RecordCtx }) {
                 ))}
               </span>
               <span data-testid="counter-day" className="text-sm text-muted-foreground">
-                {t.dayLine(live.days, fmtDay(live.start))}
+                {t.dayLine(live.days, fmtDay(live.start, today))}
               </span>
               <Info className="absolute right-0 top-1 size-4 text-muted-foreground" aria-hidden />
             </button>
@@ -159,11 +202,11 @@ export function HomeTab({ ctx }: { ctx: RecordCtx }) {
         {breakEnd &&
           (breakEnd > today ? (
             <p data-testid="break-line" className="text-center text-sm text-muted-foreground">
-              {t.breakEnds(fmtDay(breakEnd))}
+              {t.breakEnds(fmtDay(breakEnd, today))}
             </p>
           ) : (
             <p data-testid="break-line" className="text-center text-sm text-muted-foreground">
-              {t.breakEnded(fmtDay(breakEnd))}{" "}
+              {t.breakEnded(fmtDay(breakEnd, today))}{" "}
               {dateOpen && (
                 <Link href={ctx.carry(`/quit/${ctx.addiction}/date`)} className="inline-flex min-h-11 items-center text-primary underline">
                   {t.breakToDate}
@@ -175,7 +218,7 @@ export function HomeTab({ ctx }: { ctx: RecordCtx }) {
 
       <section aria-label={t.cardRun} className="flex flex-col gap-2">
         <div className="grid grid-cols-3 items-stretch gap-2">
-          {cards.map(([id, label, n, , unitWord]) => (
+          {cards.map(([id, label, n, , unitWord, none]) => (
             <button
               key={id}
               type="button"
@@ -186,10 +229,10 @@ export function HomeTab({ ctx }: { ctx: RecordCtx }) {
             >
               <span className="pr-4 text-sm leading-tight text-muted-foreground">{label}</span>
               <span className="mt-auto flex flex-col">
-                <span data-testid={`card-${id}-value`} className="text-2xl font-semibold leading-none tabular-nums">
-                  {n === null ? t.cardNone : n}
+                <span data-testid={`card-${id}-value`} className={`${n === null || n === 0 ? "text-lg" : "text-2xl"} font-semibold leading-none tabular-nums`}>
+                  {n === null || n === 0 ? none : n}
                 </span>
-                <span className="text-xs text-muted-foreground">{unitWord(n ?? 0)}</span>
+                {n !== null && n !== 0 && <span className="text-xs text-muted-foreground">{unitWord(n)}</span>}
               </span>
               <Info className="absolute right-2 top-2 size-4 text-muted-foreground" aria-hidden />
             </button>
@@ -202,51 +245,32 @@ export function HomeTab({ ctx }: { ctx: RecordCtx }) {
         )}
       </section>
 
-      <section aria-label={t.tileMoney} className="grid items-start gap-2 sm:grid-cols-3">
-        <Tile id="money" label={t.tileMoney} value={hasNumbers ? fmtMoney(pm.money as number) : t.tileDash} sub={hasNumbers && (pm.money as number) < 0 ? t.negativeLine : undefined} open={openCard === "t-money"} onToggle={() => toggleCard("t-money")}>
-          {hasNumbers ? (
-            <>
-              <span data-testid="money-formula">{moneyFormula}</span>
-              <span>{t.cleanTimeLine}</span>
-            </>
-          ) : (
-            <NeedNumbers ctx={ctx} />
-          )}
-        </Tile>
-        <Tile id="units" label={unitData ? t.unitsTile(unitData.many, unitData.id) : t.unitsTileNone} value={units !== null ? String(units) : t.tileDash} open={openCard === "t-units"} onToggle={() => toggleCard("t-units")}>
-          {units !== null ? (
-            <>
-              <span data-testid="units-formula">{unitsFormula}</span>
-              <span>{t.cleanTimeLine}</span>
-            </>
-          ) : (
-            <NeedNumbers ctx={ctx} />
-          )}
-        </Tile>
-        <Tile id="price" label={t.tilePrice} value={unit ? fmtMoney(unit.priceUsd) : t.tileDash} open={openCard === "t-price"} onToggle={() => toggleCard("t-price")}>
-          {unit ? (
-            <>
-              <span data-testid="price-basis">{unit.priceBasis === "typed" ? t.priceOwn : (t.priceBasis[unit.id] ?? "")}</span>
-              {perDayLine && <span data-testid="price-formula">{perDayLine}</span>}
-              {!ctx.readOnly && (
-                <button type="button" data-testid="price-change" onClick={() => ctx.openChange()} className="inline-flex min-h-11 items-center self-start text-primary underline">
-                  {t.change}
-                </button>
-              )}
-            </>
-          ) : (
-            <NeedNumbers ctx={ctx} />
-          )}
-        </Tile>
+      <section aria-label={t.tileMoney} className="flex flex-col gap-2">
+        <div className="grid gap-2 sm:grid-cols-3 sm:items-stretch">
+          <Tile id="money" label={t.tileMoney} value={hasNumbers ? fmtMoney(pm.money as number) : t.tileDash} sub={hasNumbers ? ((pm.money as number) < 0 ? t.negativeLine : undefined) : t.noNumbersLine} open={openCard === "t-money"} onToggle={() => toggleCard("t-money")}>
+            {!wide && panels["t-money"]}
+          </Tile>
+          <Tile id="units" label={units !== null && unitData ? t.unitsTile(unitData.many, unitData.id) : t.unitsTileNone} value={units !== null ? String(units) : t.tileDash} sub={units === null ? t.noNumbersLine : undefined} open={openCard === "t-units"} onToggle={() => toggleCard("t-units")}>
+            {!wide && panels["t-units"]}
+          </Tile>
+          <Tile id="price" label={t.tilePrice} value={unit ? fmtMoney(unit.priceUsd) : t.tileDash} sub={unit ? undefined : t.noNumbersLine} open={openCard === "t-price"} onToggle={() => toggleCard("t-price")}>
+            {!wide && panels["t-price"]}
+          </Tile>
+        </div>
+        {wide && openCard && panels[openCard] && (
+          <div data-testid={`tile-${openCard.slice(2)}-formula`} className="flex flex-col gap-1 break-words rounded-lg border border-border bg-card p-3 text-sm text-muted-foreground">
+            {panels[openCard]}
+          </div>
+        )}
         {!hasNumbers && !ctx.readOnly && (
-          <button type="button" data-testid="add-numbers" onClick={() => ctx.openTab("money")} className="inline-flex min-h-11 items-center self-start text-primary underline sm:col-span-3">
+          <button type="button" data-testid="add-numbers" onClick={() => ctx.openTab("money")} className="inline-flex min-h-11 items-center self-start text-primary underline">
             {t.addNumbers}
           </button>
         )}
       </section>
 
       <p data-testid="next-step" className="text-base">
-        {next === null ? t.allSteps : live ? t.nextStep(next, fmtDay(addDays(today, toGo))) : t.nextStepNoRun(next, toGo)}
+        {next === null ? t.allSteps : live ? t.nextStep(next, fmtDay(addDays(today, toGo), today)) : t.nextStepNoRun(next, toGo)}
       </p>
 
       <section aria-label={t.runsTitle} className="flex flex-col gap-2">
@@ -268,15 +292,5 @@ export function HomeTab({ ctx }: { ctx: RecordCtx }) {
         <p className="text-sm text-muted-foreground">{t.runsLine}</p>
       </section>
     </div>
-  )
-}
-
-/** Shown where a number needs the count a day and the price: a way to the Money screen. */
-function NeedNumbers({ ctx }: { ctx: RecordCtx }) {
-  if (ctx.readOnly) return null
-  return (
-    <button type="button" onClick={() => ctx.openTab("money")} className="inline-flex min-h-11 items-center self-start text-primary underline">
-      {t.addNumbers}
-    </button>
   )
 }

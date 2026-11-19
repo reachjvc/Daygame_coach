@@ -80,11 +80,12 @@ function Screens({ addiction, units, box }: { addiction: string; units: QuitUnit
   const [targetOpen, setTargetOpen] = useState(false)
   const [goneSpends, setGoneSpends] = useState<Gone<Spend>[]>([])
   const [goneTargets, setGoneTargets] = useState<Gone<Target>[]>([])
-  const lastTap = useRef(0)
-  const tap = useCallback((fn: () => void) => {
+  const lastTap = useRef<Map<string, number>>(new Map())
+  const tap = useCallback((key: string, fn: () => void) => {
     const now = Date.now()
-    if (now - lastTap.current < 400) return
-    lastTap.current = now
+    const last = lastTap.current.get(key)
+    if (last !== undefined && now - last < 400) return
+    lastTap.current.set(key, now)
     fn()
   }, [])
   const ui: RecordUi = { period, setPeriod, editing, setEditing, saved, setSaved, spendOpen, setSpendOpen, targetOpen, setTargetOpen, goneSpends, setGoneSpends, goneTargets, setGoneTargets, tap }
@@ -101,8 +102,9 @@ function Screens({ addiction, units, box }: { addiction: string; units: QuitUnit
   useEffect(() => {
     if (!box || !box.settled || !start || tried.current === start) return
     tried.current = start
-    if (!box.startRun(start)) setRefused(true)
-  }, [box, start])
+    // `today` ticks, so a page left open past midnight starts the run on the day it arrives.
+    if (!box.startRun(start, today)) setRefused(true)
+  }, [box, start, today])
 
   const hrefFor = useCallback(
     (change: (p: URLSearchParams) => void) => {
@@ -212,7 +214,7 @@ function Screens({ addiction, units, box }: { addiction: string; units: QuitUnit
             {" "}
             {t.futureDays(daysBetween(today, rec.record.quitDate))}
           </h2>
-          <p data-testid="future-line">{t.futureLine(fmtDay(rec.record.quitDate))}</p>
+          <p data-testid="future-line">{t.futureLine(fmtDay(rec.record.quitDate, today))}</p>
         </>
       ) : (
         <>

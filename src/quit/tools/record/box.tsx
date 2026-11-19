@@ -14,18 +14,18 @@ export interface RecordBox {
   /** Safe to start a run: the copy is read and, signed in, the account has answered (or could not). */
   settled: boolean
   record: BlackBoxRecord
-  /** Starts a living run on `day` (today or past). True when a run lives afterwards. */
-  startRun: (day: string) => boolean
+  /** Starts a living run on `day` (today or past, `today` being the page's own ticking today). True when a run lives afterwards. */
+  startRun: (day: string, today: string) => boolean
 }
 
 type Core = ReturnType<typeof useBlackBox>
 
 function useBox(viceId: string, core: Core, sync: { state: string } | null): RecordBox {
-  const { record, update, ready, today } = core
+  const { record, update, ready } = core
   const latest = useRef(record)
   latest.current = record
   const startRun = useCallback(
-    (day: string): boolean => {
+    (day: string, today: string): boolean => {
       const cur = latest.current
       const next = startRunOn(cur, viceId, day, today)
       if (next === cur) return living(cur.attempts).some((a) => a.viceId === viceId && a.endedOn === null)
@@ -33,7 +33,7 @@ function useBox(viceId: string, core: Core, sync: { state: string } | null): Rec
       update(() => next)
       return true
     },
-    [update, viceId, today],
+    [update, viceId],
   )
   const settled = ready && (sync === null || isSettled(sync.state as Parameters<typeof isSettled>[0]))
   return useMemo(() => ({ ready, settled, record, startRun }), [ready, settled, record, startRun])

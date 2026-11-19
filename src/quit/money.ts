@@ -33,10 +33,13 @@ function keyOf(ms: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 }
 
-/** A real instant on the calendar line: its day plus the time since local 00:00. */
+/**
+ * A real instant on the calendar line: its day plus the wall clock of that day (hours, minutes, seconds as the clock
+ * on the wall shows them). A day with 23 or 25 real hours is still one day, so "10:00 the day after" is always 1 d 10 h.
+ */
 export function calPos(ms: number): number {
-  const key = keyOf(ms)
-  return dayPos(key) + (ms - dayStartMs(key))
+  const d = new Date(ms)
+  return dayPos(keyOf(ms)) + ((d.getHours() * 60 + d.getMinutes()) * 60 + d.getSeconds()) * 1000 + d.getMilliseconds()
 }
 
 /** The start of a rolling window of `days` ending now, on the calendar line; `-Infinity` for the whole time. */

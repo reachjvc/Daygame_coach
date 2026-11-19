@@ -123,3 +123,48 @@ describe("a clock change does not move clean time", () => {
     }
   })
 })
+
+describe("wall clock across a clock change (Copenhagen, 25 Oct 2026 and spring 2026)", () => {
+  const was = process.env.TZ
+  const at2 = (y: number, m: number, d: number, h: number, mi = 0, sec = 0) => new Date(y, m - 1, d, h, mi, sec).getTime()
+  const withTz = (tz: string, fn: () => void) => {
+    process.env.TZ = tz
+    try {
+      fn()
+    } finally {
+      if (was === undefined) delete process.env.TZ
+      else process.env.TZ = was
+    }
+  }
+  it("10:00 on the day after the autumn change is 1 d 10 h; 10:00 the day after that is 2 d 10 h", () => {
+    withTz("Europe/Copenhagen", () => {
+      const run = { start: "2026-10-25", end: null }
+      expect(cleanMs(run, at2(2026, 10, 26, 10))).toBe(DAY_MS + 10 * 3_600_000)
+      expect(cleanMs(run, at2(2026, 10, 27, 10))).toBe(2 * DAY_MS + 10 * 3_600_000)
+      // on the 25-hour day itself the clock reads what the wall shows
+      expect(cleanMs({ start: "2026-10-24", end: null }, at2(2026, 10, 25, 10))).toBe(DAY_MS + 10 * 3_600_000)
+    })
+  })
+  it("never runs backwards from one hour to the next outside the repeated hour", () => {
+    withTz("Europe/Copenhagen", () => {
+      const run = { start: "2026-10-23", end: null }
+      let prev = -1
+      for (let h = 0; h < 96; h++) {
+        const t = at2(2026, 10, 24, 0) + h * 3_600_000
+        const hr = new Date(t).getHours()
+        const v = cleanMs(run, t)
+        // the hour 02:00 to 03:00 happens twice on 25 Oct: the wall clock repeats, so only compare outside it
+        if (new Date(t).getDate() !== 25 || hr < 2 || hr > 3) {
+          expect(v).toBeGreaterThanOrEqual(prev)
+          prev = v
+        }
+      }
+    })
+  })
+  it("spring: 10:00 the day after the change is 1 d 10 h", () => {
+    withTz("Europe/Copenhagen", () => {
+      expect(cleanMs({ start: "2026-03-29", end: null }, at2(2026, 3, 30, 10))).toBe(DAY_MS + 10 * 3_600_000)
+      expect(cleanMs({ start: "2026-03-28", end: null }, at2(2026, 3, 29, 10))).toBe(DAY_MS + 10 * 3_600_000)
+    })
+  })
+})

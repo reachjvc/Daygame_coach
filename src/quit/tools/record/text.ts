@@ -5,6 +5,10 @@ export const recordText = {
   topLine: "Every clean day counts. Nothing here resets.",
 
   refuse: "You already have a run on those days, so no new run was started.",
+  useQuestion: "What do you use?",
+  noNumbersLine: "Add your numbers to see this.",
+  noneNow: "None now",
+  noneYet: "None yet",
 
   /* before day 1 */
   emptyTitle: "Your record starts on your quit date.",
@@ -26,20 +30,19 @@ export const recordText = {
   ringStep: (total: number, next: number) => `${total} of ${next} days to the next step`,
   ringAllDone: "Every step reached",
   ringBasis: "Every day of every run, added up, the day of a slip too. The ring fills toward the next step: 1, 3, 7, 14, 30, 60, 90, 180, 365.",
-  counterLabel: "This run",
-  counterTap: "Counted from 00:00 on the first day of this run. The tool does not know the hour you stopped.",
+  counterLabel: "Clean time this run",
+  counterTap: "Counted from midnight on this run's first day; the hour you stopped is not saved.",
   counterUnits: { d: "days", h: "hours", m: "min", s: "sec" },
   dayLine: (n: number, since: string) => `Day ${n} · since ${since}`,
   breakEnds: (label: string) => `Break: ends ${label}.`,
   breakEnded: (label: string) => `Your break ended on ${label}.`,
   breakToDate: "Your quit date",
-  noRun: (total: number) => `Your ${total} clean ${total === 1 ? "day still counts" : "days still count"}.`,
-  noRunTitle: "No run going.",
+  noRun: (total: number) => `No run going. Your ${total} clean ${total === 1 ? "day still counts" : "days still count"}.`,
   noRunSlip: "Slipped? Restart today",
   noRunDate: "Pick a new day 1 in Your quit date",
   noRunPlain: "Pick a new day 1 in Your quit date.",
 
-  cardRun: "This run",
+  cardRun: "Days this run",
   cardBest: "Best run",
   cardClose: "Close calls beaten",
   cardRunBasis: (n: number) => `Days of the run going now, first and last day both counted: ${n}.`,
@@ -55,23 +58,32 @@ export const recordText = {
   addNumbers: "Add your numbers",
   tileDash: "–",
   priceOwn: "Your own price.",
-  /** Where the default price comes from, per unit: this tool's own wording. */
+  /** Where the default price comes from, per unit: this tool's own wording. `more` sits behind a "More" toggle. */
   priceBasis: {
-    cigarettes:
-      "$0.52 unless you type your own: the plain average of US state prices for a mainstream pack of 20, $10.34, where each state counts the same, divided by 20 (Tobacco Insider, posted 26 Aug 2026). Counted by how many packs each state sells, the average is $9.95 ($0.50 each). Packs run from $7.95 (North Carolina) to $14.85 (New York).",
-    vape: "$14.07 unless you type your own: the average price paid for one disposable vape in US shops and gas stations in the 4 weeks to 3 Sep 2022, counted by sales (Diaz and others, Tobacco Control, 2025). Online and vape-shop sales are left out, and prices may have changed since.",
-    pouches:
-      "$5.64 unless you type your own: the price ZYN's maker suggests for one can in the US (Tobacco Insider, posted 12 Sep 2025; later on the same page it says $5.69). The same page lists single cans online from $3.49.",
-  } as Record<string, string>,
-  perDayLine: (perDay: number, word: string, price: string, amount: string) => `${perDay} ${word} a day × ${price} = ${amount} a day`,
-  moneyFormula: (perDay: number, word: string, price: string, days: string, spent: string, total: string) =>
-    `${perDay} ${word} a day × ${price} × ${days} of clean time − ${spent} spent = about ${total}`,
-  unitsFormula: (perDay: number, word: string, days: string, n: number, many: string) => `${perDay} ${word} a day × ${days} = about ${n} ${many}`,
+    cigarettes: {
+      short: "$0.52: a pack of 20 averages $10.34 across US states (each state counts the same), divided by 20. Tobacco Insider, posted 26 Aug 2026.",
+      more: "Counted by how many packs each state sells, the average is $9.95 ($0.50 each). Packs cost $7.95 (North Carolina) to $14.85 (New York).",
+    },
+    vape: {
+      short: "$14.07: the average price of one disposable vape in US shops and gas stations, 4 weeks to 3 Sep 2022 (Diaz and others, Tobacco Control, 2025).",
+      more: "Counted by sales. Online and vape-shop sales are left out, and prices may have changed since.",
+    },
+    pouches: {
+      short: "$5.64: the price ZYN's maker suggests for one can in the US (Tobacco Insider, posted 12 Sep 2025).",
+      more: "Later on the same page it says $5.69, and single cans online from $3.49. Prices may have changed since.",
+    },
+  } as Record<string, { short: string; more: string }>,
+  priceMore: "More",
+  priceLess: "Less",
+  perDayLine: (perDay: string, word: string, price: string, amount: string) => `${perDay} ${word} a day × ${price} = ${amount} a day`,
+  moneyFormula: (perDay: string, word: string, price: string, days: string, spent: string | null, total: string) =>
+    `${perDay} ${word} a day × ${price} × ${days} of clean time${spent ? ` − ${spent} spent` : ""} = about ${total}`,
+  unitsFormula: (perDay: string, word: string, days: string, n: number, many: string) => `${perDay} ${word} a day × ${days} = about ${n} ${many}`,
   /** "Cigarettes not smoked (about)". */
   unitsTile: (many: string, unitId: string) => `${many[0].toUpperCase()}${many.slice(1)} not ${unitId === "cigarettes" ? "smoked" : "used"} (about)`,
   unitsTileNone: "Not used (about)",
   negativeLine: "Spending is more than the money kept so far.",
-  cleanTimeLine: "Clean time runs from 00:00 of each run's first day to now; the day of a slip is left out.",
+  cleanTimeLine: "Clean time: from midnight of each run's first day to now, slip days left out.",
 
   nextStep: (n: number, date: string) => `Next: ${n} clean days, on ${date} if this run keeps going.`,
   nextStepNoRun: (n: number, toGo: number) => `Next: ${n} clean days, ${toGo} to go.`,
@@ -98,6 +110,9 @@ export const recordText = {
   cancel: "Cancel",
   saved: "Saved.",
   badNumber: "Type a number, like 7.50",
+  bigCount: "Up to 500 a day.",
+  bigPrice: "Up to $1,000.",
+  bigAmount: "Up to $100,000.",
   aboveZeroCount: "Type a number above 0, or leave the count empty",
   aboveZeroPrice: "Type a number above 0, like 7.50",
   savedNote: "Saved in your quit record. Your quit date shows the same numbers.",
@@ -129,7 +144,7 @@ export const recordText = {
   targetNone: "No targets yet.",
   targetFunded: (a: string, b: string) => `${a} of ${b}`,
   targetDone: "Reached.",
-  targetDays: (n: number, missing: string, rate: string) => `${n === 1 ? "1 day" : `${n} days`} to go at ${rate} a day (${missing} still missing).`,
+  targetDays: (n: number, missing: string, rate: string, live: boolean) => `about ${n === 1 ? "1 clean day" : `${n} clean days`} at your rate of ${rate} a day${live ? "" : ", once a new run starts"} (${missing} still missing).`,
   targetNoRate: "Add your numbers to see the days to go.",
 
   /* milestones */
@@ -141,7 +156,7 @@ export const recordText = {
   reachedToday: (date: string) => `Reached today, ${date}`,
   toGoDays: (n: number) => (n === 1 ? "1 clean day to go" : `${n} clean days to go`),
   toGoOn: (n: number, date: string) => `${n === 1 ? "1 clean day to go" : `${n} clean days to go`}, on ${date} if this run keeps going`,
-  atRate: (n: number) => `about ${n === 1 ? "1 day" : `${n} days`} at your rate`,
+  atRate: (n: number, live: boolean, rate: string) => `about ${n === 1 ? "1 clean day" : `${n} clean days`} at your rate of ${rate} a day${live ? "" : ", once a new run starts"}`,
   noRateMilestone: "Add your numbers to see this.",
 
   /* calendar */

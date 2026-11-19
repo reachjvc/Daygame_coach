@@ -4,11 +4,12 @@ import { useState } from "react"
 import { Chips } from "../../components/kit"
 import { addDays } from "../../record"
 import { amountPerDay, fmtMoney } from "../../money"
-import { MAX_PER_DAY, MAX_PRICE, parseTyped } from "../date/logic"
+import { MAX_PER_DAY, MAX_PRICE } from "../date/logic"
 import { dateText } from "../date/text"
 import type { RecordCtx } from "./ctx"
 import { fmtShort } from "./fmt"
-import { PERIODS, daysText, moneyFor, moneyRuns } from "./logic"
+import { PriceBasis } from "./Bits"
+import { PERIODS, daysText, fmtCount, moneyFor, moneyRuns, parseAmount } from "./logic"
 import { SpendBlock, TargetsBlock } from "./MoneyLists"
 import { recordText as t } from "./text"
 
@@ -16,14 +17,14 @@ import { recordText as t } from "./text"
 function AmountForm({ ctx }: { ctx: RecordCtx }) {
   const { ui } = ctx
   const [unitId, setUnitId] = useState<string | null>(ctx.unit?.id ?? null)
-  const [perDay, setPerDay] = useState(ctx.unit?.perDay == null ? "" : String(ctx.unit.perDay))
+  const [perDay, setPerDay] = useState(ctx.unit?.perDay == null ? "" : fmtCount(ctx.unit.perDay))
   const [price, setPrice] = useState(ctx.unit ? String(ctx.unit.priceUsd) : "")
   const unit = ctx.units.find((u) => u.id === unitId) ?? null
-  const count = parseTyped(perDay, MAX_PER_DAY)
-  const priceP = parseTyped(price, MAX_PRICE)
+  const count = parseAmount(perDay, MAX_PER_DAY)
+  const priceP = parseAmount(price, MAX_PRICE)
   const countZero = count.kind === "ok" && count.value === 0
   const priceZero = priceP.kind === "ok" && priceP.value === 0
-  const bad = count.kind === "bad" || priceP.kind === "bad" || countZero || priceZero
+  const bad = count.kind === "bad" || count.kind === "big" || priceP.kind === "bad" || priceP.kind === "big" || countZero || priceZero
   const save = () => {
     if (!unit || bad) return
     const priceUsd = priceP.kind === "ok" ? priceP.value : (unit.defaultPriceUsd ?? 0)
@@ -37,9 +38,10 @@ function AmountForm({ ctx }: { ctx: RecordCtx }) {
       className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3"
       onSubmit={(e) => {
         e.preventDefault()
-        ui.tap(save)
+        ui.tap("amount-save", save)
       }}
     >
+      {!ctx.unit && <p className="font-medium">{t.useQuestion}</p>}
       {!ctx.unit && (
         <Chips
           label={dateText.useTitle}
@@ -59,19 +61,21 @@ function AmountForm({ ctx }: { ctx: RecordCtx }) {
             <input type="text" inputMode="decimal" data-testid="amount-perday" value={perDay} maxLength={8} onChange={(e) => setPerDay(e.target.value)} className="min-h-12 w-full rounded-md border border-border bg-background px-3 text-base" />
             <span className="text-muted-foreground">{dateText.perDayHelp}</span>
             <span className="text-muted-foreground">{t.perDayHint}</span>
-            {(count.kind === "bad" || countZero) && (
+            {(count.kind === "bad" || count.kind === "big" || countZero) && (
               <span data-testid="amount-error-perday" role="alert">
-                {countZero ? t.aboveZeroCount : t.badNumber}
+                {countZero ? t.aboveZeroCount : count.kind === "big" ? t.bigCount : t.badNumber}
               </span>
             )}
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium">{dateText.priceLabel(unit.one)}</span>
             <input type="text" inputMode="decimal" data-testid="amount-price" value={price} maxLength={8} onChange={(e) => setPrice(e.target.value)} className="min-h-12 w-full rounded-md border border-border bg-background px-3 text-base" />
-            <span className="break-words text-muted-foreground">{t.priceBasis[unit.id] ?? ""}</span>
-            {(priceP.kind === "bad" || priceZero) && (
+            <span className="break-words text-muted-foreground">
+              <PriceBasis unitId={unit.id} typed={false} testId="form-price-basis" />
+            </span>
+            {(priceP.kind === "bad" || priceP.kind === "big" || priceZero) && (
               <span data-testid="amount-error-price" role="alert">
-                {priceZero ? t.aboveZeroPrice : t.badNumber}
+                {priceZero ? t.aboveZeroPrice : priceP.kind === "big" ? t.bigPrice : t.badNumber}
               </span>
             )}
           </label>
@@ -100,7 +104,7 @@ export function MoneyTab({ ctx }: { ctx: RecordCtx }) {
   const word = unit?.perDay === 1 ? (unitData?.one ?? many) : many
   const thisYear = Number(today.slice(0, 4))
   const fromLabel = days === null ? (ctx.view.runs.length > 0 ? fmtShort(ctx.view.runs[0].start, thisYear) : "") : fmtShort(addDays(today, -days), thisYear)
-  const formula = pm.money !== null && unit && unit.perDay !== null ? t.moneyFormula(unit.perDay, word, fmtMoney(unit.priceUsd), daysText(pm.cleanDays), fmtMoney(pm.spent), fmtMoney(pm.money)) : ""
+  const formula = pm.money !== null && unit && unit.perDay !== null ? t.moneyFormula(fmtCount(unit.perDay), word, fmtMoney(unit.priceUsd), daysText(pm.cleanDays), pm.spent !== 0 ? fmtMoney(pm.spent) : null, fmtMoney(pm.money)) : ""
   // The projections use the rate as it is shown (to the cent), so the shown sum is exact.
   const monthly = rateShown === null ? null : Math.round(((rateShown * 365) / 12) * 100) / 100
   const yearly = rateShown === null ? null : Math.round(rateShown * 365 * 100) / 100
@@ -140,7 +144,7 @@ export function MoneyTab({ ctx }: { ctx: RecordCtx }) {
               <p className="mt-1 break-words text-sm text-muted-foreground">{t.cleanTimeLine}</p>
             </>
           )}
-          {fromLabel && <p className="mt-1 break-words text-sm text-muted-foreground">{t.periodBasis(fromLabel)}</p>}
+          {days !== null && fromLabel && <p className="mt-1 break-words text-sm text-muted-foreground">{t.periodBasis(fromLabel)}</p>}
         </div>
       </section>
 
@@ -148,7 +152,7 @@ export function MoneyTab({ ctx }: { ctx: RecordCtx }) {
         <h2 className="text-lg font-semibold">{t.amountTitle}</h2>
         {unit && unit.perDay !== null && rateShown !== null ? (
           <p data-testid="amount-line" className="break-words text-base">
-            {t.perDayLine(unit.perDay, word, fmtMoney(unit.priceUsd), fmtMoney(rateShown))}
+            {t.perDayLine(fmtCount(unit.perDay), word, fmtMoney(unit.priceUsd), fmtMoney(rateShown))}
           </p>
         ) : unit ? (
           <p data-testid="amount-line" className="break-words text-base text-muted-foreground">

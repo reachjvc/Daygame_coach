@@ -2,10 +2,9 @@
 
 import { useState } from "react"
 import { amountPerDay, fmtMoney } from "../../money"
-import { parseTyped } from "../date/logic"
 import type { Gone, RecordCtx } from "./ctx"
 import { fmtShort } from "./fmt"
-import { MAX_NOTE, MAX_SPEND, MAX_TARGET, fillTargets, moneyFor, moneyRuns, toCents, type FilledTarget, type Spend } from "./logic"
+import { MAX_NOTE, MAX_SPEND, MAX_TARGET, fillTargets, moneyFor, moneyRuns, parseAmount, toCents, type FilledTarget, type Spend } from "./logic"
 import { newId } from "./state"
 import { recordText as t } from "./text"
 
@@ -37,16 +36,16 @@ export function SpendBlock({ ctx }: { ctx: RecordCtx }) {
   const { ui } = ctx
   const [amount, setAmount] = useState("")
   const [note, setNote] = useState("")
-  const [error, setError] = useState(false)
+  const [error, setError] = useState<"bad" | "big" | null>(null)
   const thisYear = Number(ctx.today.slice(0, 4))
   const add = () => {
-    const p = parseTyped(amount, MAX_SPEND)
+    const p = parseAmount(amount, MAX_SPEND)
     const cents = p.kind === "ok" ? toCents(p.value) : null
-    if (cents === null) return setError(true)
+    if (cents === null) return setError(p.kind === "big" ? "big" : "bad")
     ctx.actions.addSpend({ id: newId(), day: ctx.today, amount: cents, note: note.trim().slice(0, MAX_NOTE) })
     setAmount("")
     setNote("")
-    setError(false)
+    setError(null)
     ui.setSpendOpen(false)
   }
   const gone = ui.goneSpends.map((g) => ({ item: g.item, index: g.index, label: g.item.note }))
@@ -65,7 +64,7 @@ export function SpendBlock({ ctx }: { ctx: RecordCtx }) {
                   type="button"
                   data-testid="spend-remove"
                   onClick={() =>
-                    ui.tap(() => {
+                    ui.tap(`row-${r.item.id}`, () => {
                       const s = r.item
                       ui.setGoneSpends((g) => (g.some((x) => x.item.id === s.id) ? g : [...g, { item: s, index: ctx.spends.findIndex((x) => x.id === s.id) }]))
                       ctx.actions.removeSpend(s.id)
@@ -82,7 +81,7 @@ export function SpendBlock({ ctx }: { ctx: RecordCtx }) {
               key={`gone-${r.gone.item.id}`}
               what={r.gone.label}
               onUndo={() =>
-                ui.tap(() => {
+                ui.tap(`row-${r.gone.item.id}`, () => {
                   const g = ui.goneSpends.find((x) => x.item.id === r.gone.item.id)
                   if (!g) return
                   ctx.actions.restoreSpend(g.item, g.index)
@@ -100,7 +99,7 @@ export function SpendBlock({ ctx }: { ctx: RecordCtx }) {
             className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3"
             onSubmit={(e) => {
               e.preventDefault()
-              ui.tap(add)
+              ui.tap("spend-add", add)
             }}
           >
             <label className="flex flex-col gap-1 text-sm">
@@ -114,7 +113,7 @@ export function SpendBlock({ ctx }: { ctx: RecordCtx }) {
             </label>
             {error && (
               <p data-testid="spend-error" role="alert" className="text-sm">
-                {t.badNumber}
+                {error === "big" ? t.bigAmount : t.badNumber}
               </p>
             )}
             <div className="flex gap-2">
@@ -139,16 +138,16 @@ export function TargetsBlock({ ctx }: { ctx: RecordCtx }) {
   const { ui } = ctx
   const [name, setName] = useState("")
   const [price, setPrice] = useState("")
-  const [error, setError] = useState<"name" | "price" | null>(null)
+  const [error, setError] = useState<"name" | "price" | "big" | null>(null)
   const runs = moneyRuns(ctx.view.runs)
   const pm = moneyFor(runs, ctx.unit, ctx.spends, ctx.nowMs, null)
   const rate = amountPerDay(ctx.unit?.perDay, ctx.unit?.priceUsd)
   const filled = fillTargets(ctx.targets, pm.money ?? 0, rate)
   const add = () => {
-    const p = parseTyped(price, MAX_TARGET)
+    const p = parseAmount(price, MAX_TARGET)
     if (name.trim() === "") return setError("name")
     const cents = p.kind === "ok" ? toCents(p.value) : null
-    if (cents === null) return setError("price")
+    if (cents === null) return setError(p.kind === "big" ? "big" : "price")
     ctx.actions.addTarget({ id: newId(), name: name.trim().slice(0, MAX_NOTE), price: cents })
     setName("")
     setPrice("")
@@ -172,7 +171,7 @@ export function TargetsBlock({ ctx }: { ctx: RecordCtx }) {
                 key={`gone-${r.gone.item.id}`}
                 what={r.gone.label}
                 onUndo={() =>
-                  ui.tap(() => {
+                  ui.tap(`row-${r.gone.item.id}`, () => {
                     const g = ui.goneTargets.find((x) => x.item.id === r.gone.item.id)
                     if (!g) return
                     ctx.actions.restoreTarget(g.item, g.index)
@@ -194,7 +193,7 @@ export function TargetsBlock({ ctx }: { ctx: RecordCtx }) {
                     type="button"
                     data-testid="target-remove"
                     onClick={() =>
-                      ui.tap(() => {
+                      ui.tap(`row-${f.target.id}`, () => {
                         const x = f.target
                         ui.setGoneTargets((g) => (g.some((y) => y.item.id === x.id) ? g : [...g, { item: x, index: ctx.targets.findIndex((y) => y.id === x.id) }]))
                         ctx.actions.removeTarget(x.id)
@@ -211,7 +210,7 @@ export function TargetsBlock({ ctx }: { ctx: RecordCtx }) {
               </div>
               <p className="text-sm text-muted-foreground">{t.targetFunded(fmtMoney(f.funded), fmtMoney(f.target.price))}</p>
               <p data-testid="target-days" className="break-words text-sm text-muted-foreground">
-                {f.done ? t.targetDone : f.daysToGo !== null && rate !== null ? t.targetDays(f.daysToGo, fmtMoney(f.missing), fmtMoney(rate)) : t.targetNoRate}
+                {f.done ? t.targetDone : f.daysToGo !== null && rate !== null ? t.targetDays(f.daysToGo, fmtMoney(f.missing), fmtMoney(rate), ctx.view.runs.some((x) => x.live)) : t.targetNoRate}
               </p>
             </li>
           )
@@ -224,7 +223,7 @@ export function TargetsBlock({ ctx }: { ctx: RecordCtx }) {
             className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3"
             onSubmit={(e) => {
               e.preventDefault()
-              ui.tap(add)
+              ui.tap("target-add", add)
             }}
           >
             <label className="flex flex-col gap-1 text-sm">
@@ -237,7 +236,7 @@ export function TargetsBlock({ ctx }: { ctx: RecordCtx }) {
             </label>
             {error && (
               <p data-testid="target-error" role="alert" className="text-sm">
-                {error === "name" ? t.targetNameError : t.badNumber}
+                {error === "name" ? t.targetNameError : error === "big" ? t.bigAmount : t.badNumber}
               </p>
             )}
             <div className="flex gap-2">

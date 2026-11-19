@@ -26,8 +26,8 @@ export interface RecordUi {
   setGoneSpends: Dispatch<SetStateAction<Gone<Spend>[]>>
   goneTargets: Gone<Target>[]
   setGoneTargets: Dispatch<SetStateAction<Gone<Target>[]>>
-  /** Runs `fn` unless another guarded tap happened in the last 400 ms (a double tap acts once). */
-  tap: (fn: () => void) => void
+  /** Runs `fn` unless the same action (`key`) ran in the last 400 ms: a double tap acts once. */
+  tap: (key: string, fn: () => void) => void
 }
 
 /** What every screen of the record reads. One value per second, so every number on a screen agrees. */
