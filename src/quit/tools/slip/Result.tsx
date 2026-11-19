@@ -35,7 +35,7 @@ export interface ResultProps {
   day1Options: ("today" | "tomorrow")[]
   day1: Day1 | null
   day1On: string | null
-  /** Case C with a quit date already planned ahead: that day, offered as a "Keep" chip. */
+  /** A quit date already planned ahead (not set by this tool): that day, offered as a "Keep" chip. */
   keepDay: string | null
   /** Tomorrow's day, set when only Tomorrow is possible (shown as a statement, not a chip). */
   forcedDay: string | null

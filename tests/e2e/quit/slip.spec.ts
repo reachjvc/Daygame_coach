@@ -576,6 +576,16 @@ test.describe("slipped, signed out @phone", () => {
     await expect(page.getByTestId("day1-note")).toHaveText(t.keepNote)
   })
 
+  test("12c a run going and a quit date planned ahead: Keep is chosen after the slip, nothing new starts", async ({ page }) => {
+    await open(page, { box: box([attempt(-20)]), record: { quitDate: day(3), goal: "stop" } })
+    await toResult(page)
+    await expect(page.getByTestId("day1-keep")).toHaveText(`Keep ${words(day(3))}`)
+    await expect(page.getByTestId("day1-keep")).toHaveAttribute("aria-checked", "true")
+    expect(await quitDate(page)).toBe(day(3))
+    // the old run ended with the slip; no new run was started
+    expect((await liveRuns(page)).filter((a) => a.endedOn === null)).toHaveLength(0)
+  })
+
   test("13 nothing to show back: the plain fallbacks", async ({ page }) => {
     await open(page, RUN20())
     await toResult(page)

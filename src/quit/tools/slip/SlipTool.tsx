@@ -148,9 +148,9 @@ function Screens({ addiction, beliefs, moments, swaps, needs, signedIn, bb }: In
     const d = defaultDay1(report.at.slice(0, 10), todayIso(), rec.record.quitDate, state.ownDate)
     if (d) applyRef.current(d)
   }, [state, prepared, bb, isResult, undone, rec.record.quitDate])
-  // Case C with a quit date already planned ahead: the plan is kept until Today or Tomorrow is tapped.
+  // A quit date already planned ahead (any case): the plan is kept until Today or Tomorrow is tapped.
   useEffect(() => {
-    if (!state || !prepared || !isResult || undone || state.kase !== "C" || state.day1 !== null) return
+    if (!state || !prepared || !isResult || undone || state.kase === null || state.day1 !== null || state.quitBefore) return
     const planned = rec.record.quitDate
     if (planned && planned > todayIso()) update((s) => ({ ...s, day1: "keep", day1On: planned }))
   }, [state, prepared, isResult, undone, rec.record.quitDate, update])
@@ -390,12 +390,12 @@ function Screens({ addiction, beliefs, moments, swaps, needs, signedIn, bb }: In
     return tooltext.blackbox.saving
   })()
 
-  // Case C with a quit date planned ahead (before this tool changed it): offered as "Keep".
+  // A quit date planned ahead (before this tool changed it), in any case: offered as "Keep" and chosen until he taps another.
   const plannedDate = state.quitBefore ? state.quitBefore.date : rec.record.quitDate
-  const keepDay = state.kase === "C" && plannedDate && plannedDate > today ? plannedDate : null
+  const keepDay = plannedDate && plannedDate > today ? plannedDate : null
   const options = day1Options(slipDay, today)
   // Only Tomorrow is possible (the slip is today): said as a plain line, not offered as a lone chip.
-  const forcedDay = state.kase !== "C" && options.length === 1 ? day1Day("tomorrow", today) : null
+  const forcedDay = state.kase !== "C" && options.length === 1 && !keepDay ? day1Day("tomorrow", today) : null
   const chooseDay1 = (d: Day1) => {
     if (d === state.day1) return
     setSwitchRefused(false)
