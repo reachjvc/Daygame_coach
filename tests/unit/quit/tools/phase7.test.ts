@@ -3,7 +3,6 @@ import { createQuitStore, QUIT_STORE_KEY, type StorageLike } from "@/src/quit/st
 import { amountOutOfRange, computeCost, EMPTY_COST, parseCost } from "@/src/quit/tools/cost/logic"
 import { EMPTY_BELIEFS, parseBeliefs } from "@/src/quit/tools/beliefs/logic"
 import { EMPTY_GIVES, parseGives } from "@/src/quit/tools/gives/logic"
-import { buildResult, chooseTries, EMPTY_PAST, parsePast } from "@/src/quit/tools/past/logic"
 import { EMPTY_SLIP, parseSlip } from "@/src/quit/tools/slip/logic"
 import { EMPTY_SOS, parseSos } from "@/src/quit/tools/sos/logic"
 import { isFlag, previewSuffix } from "@/src/quit/menu"
@@ -18,9 +17,6 @@ describe("bad saved data falls back to empty, never NaN", () => {
   })
   it("gives", () => {
     for (const j of JUNK) expect(parseGives(j)).toEqual(EMPTY_GIVES)
-  })
-  it("past", () => {
-    for (const j of JUNK) expect(parsePast(j)).toEqual(EMPTY_PAST)
   })
   it("cost", () => {
     for (const j of JUNK) expect(parseCost(j)).toEqual(EMPTY_COST)
@@ -50,18 +46,6 @@ describe("cost fixes", () => {
     expect(amountOutOfRange("-5", 0, 100)).toBe(true)
     expect(amountOutOfRange("1e2", 0, 100)).toBe(false)
     expect(amountOutOfRange("", 0, 100)).toBe(false)
-  })
-})
-
-describe("past: never tried", () => {
-  it("clears every later answer and the result ignores stale ones", () => {
-    const full = { ...EMPTY_PAST, done: 4, tries: "2-3" as const, stretchUnit: "days" as const, endings: ["a"], helped: ["h"], afterSlip: "gaveUp" as const }
-    const zero = chooseTries(full, "0")
-    expect(zero).toEqual({ ...EMPTY_PAST, done: 4, tries: "0" })
-    const stale = buildResult({ ...full, tries: "0" })
-    expect(stale.riskyEndings).toEqual([])
-    expect(stale.keep).toEqual([])
-    expect(stale.longestDays).toBeNull()
   })
 })
 

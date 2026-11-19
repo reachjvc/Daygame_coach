@@ -133,43 +133,6 @@
     "finish": "See my list",
     "toMenu": "Back to the menu"
   },
-  "past": {
-    "triesQuestion": "How many times have you tried to quit?",
-    "tries": {
-      "0": "0",
-      "1": "1",
-      "2-3": "2–3",
-      "4-9": "4–9",
-      "10+": "10+"
-    },
-    "stretchQuestion": "What is the longest you stayed off?",
-    "stretchUnits": {
-      "days": "Days",
-      "weeks": "Weeks",
-      "months": "Months",
-      "years": "Years"
-    },
-    "lastQuestion": "When did the last try end?",
-    "lastEnded": {
-      "month": "This month",
-      "year": "This year",
-      "longer": "Longer ago"
-    },
-    "endingsQuestion": "What ended it? Pick up to 3.",
-    "helpedQuestion": "What helped while it lasted?",
-    "slipQuestion": "After the first slip, what went through your head?",
-    "slip": {
-      "gaveUp": "I gave up",
-      "restarted": "I started again the same day",
-      "justOnce": "“Just this once”",
-      "dontRemember": "I don’t remember"
-    },
-    "longestEnded": "Your longest try ended around day {n}",
-    "window": "Days {from} to {to} are your window to watch.",
-    "riskyHeading": "Risky moments for your if-then cards",
-    "keepHeading": "Keep these in your plan",
-    "noTries": "No tries yet. The next tools are for the first one."
-  },
   "cost": {
     "unitQuestion": "What do you use?",
     "amountQuestion": "How much?",

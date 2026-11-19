@@ -1,8 +1,8 @@
 /**
  * QUIT TOOLS, WAVE 1 PART 1, OPENED COLD ON A PHONE.
  *
- * Signed out, 390x844: the lies test (beliefs), what it gives you (gives), your
- * past attempts (past), what it costs you (cost) and how people quit (how).
+ * Signed out, 390x844: the lies test (beliefs), what it gives you (gives),
+ * what it costs you (cost) and how people quit (how).
  * Every text the test expects is read from the data files at run time, so it
  * holds for any valid content. Read-only: nothing is written to a server.
  * With QUIT_SHOTS_DIR set it also saves a screenshot of each screen type.
@@ -213,56 +213,6 @@ test.describe("quit wave 1 part 1 @phone", () => {
     await page.getByTestId("rate-save").click()
     await expect(page.getByTestId("swap").nth(0)).toHaveAttribute("data-swap", need.swaps[1].id)
     await shot(page, "gives-slider")
-  })
-
-  test("past with tries 0 goes straight to the result", async ({ page }) => {
-    await page.goto(quitUrl(`${A}/past`))
-    await page.getByTestId("chip-0").click()
-    await page.getByTestId("past-continue").click()
-    await expect(page.getByTestId("result")).toContainText(t.past.noTries)
-    await noSideways(page)
-    await shot(page, "past-result-zero")
-  })
-
-  test("past with all screens shows the window, two risky moments, what helped and the slip line", async ({ page }) => {
-    await page.goto(quitUrl(`${A}/past`))
-    await page.getByTestId("chip-2-3").click()
-    await page.getByTestId("chip-weeks").click()
-    await page.getByTestId("chip-year").click()
-    await shot(page, "past-screen1")
-    await page.getByTestId("past-continue").click()
-    for (const e of data.endings.slice(0, 3)) await page.getByTestId(`chip-${e.id}`).click()
-    await shot(page, "past-endings")
-    await page.getByTestId("past-continue").click()
-    await page.getByTestId(`chip-${data.helped[0].id}`).click()
-    await page.getByTestId("past-continue").click()
-    await page.getByTestId("chip-gaveUp").click()
-    await page.getByTestId("past-continue").click()
-    const result = page.getByTestId("result")
-    await expect(result).toBeVisible()
-    await expect(page.getByTestId("longest")).toContainText(t.past.longestEnded.replace("{n}", "7"))
-    await expect(page.getByTestId("longest")).toContainText(t.past.window.replace("{from}", "4").replace("{to}", "7"))
-    const risky = page.getByTestId("risky").locator("li")
-    await expect(risky).toHaveCount(2)
-    await expect(risky.nth(0)).toHaveText(data.endings[0].label)
-    await expect(page.getByTestId("keep")).toContainText(data.helped[0].label)
-    const line = data.planSteps[2]?.text.match(/If you slip[^.!?]*[.!?]?/)?.[0]
-    if (line) await expect(page.getByTestId("slip-line")).toHaveText(line)
-    else await expect(page.getByTestId("slip-line")).toHaveCount(0)
-    await noSideways(page)
-    await shot(page, "past-result")
-    // months or years: no window
-    await page.getByTestId("clear-answers").click()
-    await page.getByTestId("chip-4-9").click()
-    await page.getByTestId("chip-months").click()
-    await page.getByTestId("chip-longer").click()
-    await page.getByTestId("past-continue").click()
-    await page.getByTestId("past-continue").click()
-    await page.getByTestId("past-continue").click()
-    await page.getByTestId("chip-restarted").click()
-    await page.getByTestId("past-continue").click()
-    await expect(page.getByTestId("longest")).toHaveCount(0)
-    await expect(page.getByTestId("slip-line")).toHaveCount(0)
   })
 
   test("cost with the defaults shows a dollar figure", async ({ page }) => {
