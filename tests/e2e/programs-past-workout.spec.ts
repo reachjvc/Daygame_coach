@@ -23,6 +23,7 @@ import { openTab } from "./helpers/trainingTabs"
 import { whenHydrated } from "./helpers/hydration"
 import { seedFinishedWorkout } from "./helpers/seedWorkout"
 import { guardTrainingAccount, resetAndEnroll } from "./helpers/training.helper"
+import { addDays, dayIn } from "./helpers/accountClock"
 
 /** Refuses to run as anybody but a throwaway fixture account — see the helper. */
 guardTrainingAccount()
@@ -61,11 +62,13 @@ async function reset(page: Page): Promise<void> {
   expect(out, "reset left the account in the wrong state").toEqual([])
 }
 
-/** Two days ago at 18:00, as a `datetime-local` string. */
-function twoDaysAgoAt18(): { local: string; day: string } {
-  const d = new Date(Date.now() - 2 * 24 * 3600 * 1000)
-  const p = (n: number) => String(n).padStart(2, "0")
-  const day = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+/**
+ * Two days ago at 18:00 on the account's calendar, as a `datetime-local` string.
+ * The app reads that time on the account's clock, not the browser's or the
+ * runner's (helpers/accountClock.ts).
+ */
+function twoDaysAgoAt18(zone: string): { local: string; day: string } {
+  const day = addDays(dayIn(zone), -2)
   return { local: `${day}T18:00`, day }
 }
 
@@ -88,8 +91,9 @@ test.beforeEach(async ({ page }) => {
 
 test("History opens the live screen at the time you choose, and it knows it is the past", async ({
   page,
+  accountTimezone,
 }) => {
-  const { local, day } = twoDaysAgoAt18()
+  const { local, day } = twoDaysAgoAt18(accountTimezone)
 
   await page.goto(ROUTES.training, { waitUntil: "networkidle" })
   await openTab(page, "history")
@@ -139,13 +143,14 @@ test("History opens the live screen at the time you choose, and it knows it is t
     return live?.startedAt as string | undefined
   })
   expect(started).toBeTruthy()
-  expect(new Date(started!).toISOString().slice(0, 10)).toBe(day)
+  expect(dayIn(accountTimezone, new Date(started!).getTime())).toBe(day)
 })
 
 test("a program session from before the program started is refused, in the dialog", async ({
   page,
+  accountTimezone,
 }) => {
-  const { local } = twoDaysAgoAt18()
+  const { local } = twoDaysAgoAt18(accountTimezone)
 
   await page.goto(ROUTES.training, { waitUntil: "networkidle" })
   await openTab(page, "history")
