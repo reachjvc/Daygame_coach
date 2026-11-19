@@ -74,7 +74,6 @@ async function shot(page: Page, name: string) {
       return
     } catch (e) {
       if (i === 2) throw e
-      await page.waitForTimeout(300)
     }
   }
 }

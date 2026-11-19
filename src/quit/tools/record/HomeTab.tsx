@@ -176,7 +176,7 @@ export function HomeTab({ ctx }: { ctx: RecordCtx }) {
         )}
       </section>
 
-      <section aria-label={t.tileMoney} className="grid gap-2 sm:grid-cols-3">
+      <section aria-label={t.tileMoney} className="grid items-start gap-2 sm:grid-cols-3">
         <Tile id="money" label={t.tileMoney} value={hasNumbers ? fmtMoney(pm.money as number) : t.tileDash} sub={hasNumbers ? (pm.money as number) < 0 ? t.negativeLine : undefined : undefined} open={openCard === "t-money"} onToggle={() => toggleCard("t-money")}>
           {hasNumbers ? (
             <>
