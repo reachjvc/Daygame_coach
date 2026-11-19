@@ -1947,7 +1947,7 @@
     },
     {
       "id": "others-smoking",
-      "label": "Around people who smoke"
+      "label": "Around people who smoke or vape"
     },
     {
       "id": "late-night",
@@ -1967,14 +1967,14 @@
       "momentId": "after-food",
       "cards": [
         "Get up from the table and clear your plate.",
-        "Brush your teeth or have a mint right now.",
+        "Brush your teeth or have a mint.",
         "Walk around the block before you sit down again."
       ]
     },
     {
       "momentId": "coffee",
       "cards": [
-        "Drink it somewhere else today: another room, standing, or away from where you used.",
+        "Drink it somewhere else today: another room, standing, or away from your usual spot.",
         "Have gum or a mint with it.",
         "When the cup is empty, get up and start the next thing."
       ]
@@ -2006,7 +2006,7 @@
     {
       "momentId": "bored",
       "cards": [
-        "Pop bubbles or play the block puzzle here for a few minutes.",
+        "Pop bubbles or play a short puzzle game for a few minutes.",
         "Do one small job you've put off: a dish, an email, a call.",
         "Give your hands something: gum, a toothpick, a pen."
       ]
@@ -2063,11 +2063,11 @@
     },
     {
       "id": "leave",
-      "text": "Leave the room and go outside without it"
+      "text": "Leave the room and go outside, without your nicotine"
     },
     {
       "id": "text",
-      "text": "Text one person who doesn’t smoke"
+      "text": "Text one person who doesn’t use nicotine"
     },
     {
       "id": "puzzle",
