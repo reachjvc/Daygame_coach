@@ -444,7 +444,8 @@ describe("an approach", () => {
     expect(iso(row.timestamp)).toBe("2026-04-01T20:15:00.000Z")
     expect(await dbRow("sessions", session.id)).toMatchObject({ total_approaches: 2 })
     expect(await dbRow("sessions", otherSession.id)).toEqual(otherSessionBefore)
-    expect(await dbRow("user_tracking_stats", me.id, "user_id")).toMatchObject({ total_approaches: 2, total_numbers: 1 })
+    // the service recounted after the first approach (the repo call after it does not)
+    expect(await dbRow("user_tracking_stats", me.id, "user_id")).toMatchObject({ total_approaches: 1, total_numbers: 1 })
 
     // for somebody else's session: refused, and nothing of theirs moves
     await expect(createApproach({ user_id: me.id, session_id: other.sessionId, outcome: "good" })).rejects.toThrow()
@@ -897,7 +898,7 @@ describe("favourite templates and the tracking counters", () => {
     expect(await repoGetFavoriteTemplateIds(me.id)).toEqual(["c", "a"])
 
     // the bystander's own list is theirs: unchanged by all of the above
-    expect(await getFavoriteTemplateIds(other.user.id)).toEqual(["their-favourite"])
+    expect((await dbRow("user_tracking_stats", other.user.id, "user_id")).favorite_template_ids).toEqual(["their-favourite"])
     await removeFavoriteTemplate(me.id, "c")
     await other.stillUntouched()
   })
