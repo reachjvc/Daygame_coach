@@ -13,7 +13,6 @@ import { quitUrl } from "../helpers/quit"
 import type { Page } from "@playwright/test"
 import nicotineJson from "../../../src/quit/data/nicotine.json"
 import frameJson from "../../../src/quit/data/frame.json"
-import tooltextJson from "../../../src/quit/data/tooltext.json"
 
 const data = nicotineJson as unknown as {
   name: string
