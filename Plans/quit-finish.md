@@ -119,6 +119,71 @@ Acceptance: unit tests for 1 and 2; Playwright at 390x844 and 1280x800 on live a
 are greyed and not links; menu → any link → back never shows a 404 with `?preview=1`; `curl /quit/coaching` → 404;
 no console error on `/quit/nicotine?preview=1` signed out; typecheck ratchet green.
 
+### Tool 1: Your quit date — brief (Opus, 2026-11-19) — build exactly this, decide nothing
+
+Model: Sonnet builds in a worktree after Tool 0 is on `main` (it needs `src/quit/record.ts`); Opus reads the diff.
+Address: `/quit/nicotine/date`. Menu: the row `curve` ("Your quit curve") becomes `date`, name **"Your quit date"**,
+line **"Pick day 1. See the hard days on your calendar."**, group "Plan it", no pill. Built from lab `quitdate/best`
+(`src/quit/lab/quitdate/best/*`, `shared/*`): move what is reused into `src/quit/tools/date/`; leave the lab files
+untouched. Nicotine only: no addiction switcher. One question per screen on phones, a progress bar, in-page Back;
+browser Back steps back; reload resumes on the same screen; a double tap never skips a screen (the 12 lies test bug).
+Desktop (1280): same screens in a centred column about 560 px wide.
+
+**Screens**
+
+1. **What do you want?** Stop for good / Take a break / Not ready yet (texts from `bestText`).
+2. **(Stop) Which day?** Chips in date order: **Today** (sub-line "Already off it? Today is your date."), Tomorrow,
+   In 3 days, This weekend, Next Monday, In 2 weeks (skip a chip that falls on the same day as an earlier one). Then
+   "Or pick a date": allowed from 1 year back ("I already stopped on…") to 42 days ahead. Past 28 days ahead, one
+   plain information line (not a warning) from `evidence.ts` with its basis box: the Anesi line, and the Hughes &
+   Callas line reworded to what the abstract says (later dates went with fewer quit attempts and more early lapses; the
+   6-month result was only a trend). No line for dates up to 28 days.
+3. **(Break) How long?** 1 week / 2 weeks / 4 weeks / a set date (as `best`), start date as screen 2.
+4. **What do you use?** Cigarettes / Vape / Pouches (units from `nicotine.json`), "About how many a day?" (number, or
+   "skip"), and the price per pack / per vape / per tin, prefilled from the data file with one basis line under it
+   (source name and date; the vape price says it is from 2022). Commas and dots both work as decimal mark ("7,50" =
+   7.50). Saved to `record.unit`. Skippable; asked here once, read later by cost and record.
+5. **Your plan.** His five steps from `planSteps` as five short cards: title, one line, and the "do" lines folded
+   under "What to do". Step 3 shows his date. Never a tick box for "Pick the date". A tool name inside a step is a link
+   only when that tool is in `finished.json`; otherwise plain text. Fix the data text: step 1 "(the table above)" →
+   "(the 12 lies test)"; "When one of the thoughts above comes up" → "When one of those thoughts comes up".
+6. **Result: Your quit date.** The date large; "3 days to go." / "Today is day 1." / "Day 23."; **Add to calendar**:
+   Google link and an .ics download, event title **"Day 1"** (neutral on a shared calendar), a reminder the evening
+   before at 19:00 (VALARM), DTSTAMP = the time it was made. Below: **the hard days**, a 6-week calendar from the date
+   (week rows, Monday first, today ringed), with three marked stretches and a basis box each: days 1–7 "hardest days
+   for most" (Hughes 2007, single-author review: say so); most withdrawal back to normal within about 10 days
+   (Shiffman 2006 diary study, n as in the data file); cue cravings can still be strong around day 35 (Bedi 2011, paid
+   abstainers, tested at days 7, 14, 35 only: no claim about days 1–6). No minute or hour promise for one craving.
+   Then "Change my date" and "Back to the menu".
+7. **Not ready yet.** His step 1 with its "do" lines (fixed as in 5) and "Pick a date when you are ready" (goes to 2).
+
+**Data (shared record, `src/quit/record.ts` from Tool 0):** add `goal: "stop"|"break"|"later"|null` and
+`breakEnd: ISO date|null`; write `quitDate`, `goal`, `breakEnd`, `unit`. **Changing an existing date** asks first
+("Change your date? Your clean days so far stay counted.") and goes through `setQuitDate`, which never removes a run.
+No slip button and no runs list here (they belong to tools 3 and 4); if the date is past, show "Day N" only.
+
+**Also fix:** "Make your free plan" in the 12 lies test (wave-1 and lab) points to `/quit/nicotine/date` instead of
+`/plan` (review A6, D).
+
+**Acceptance (Playwright on live with `?preview=1`, 390x844 touch and 1280x800, screenshots looked at):**
+1. Fresh: Stop → Today → Vape, 1 a day, price kept → plan → result shows "Today is day 1.", calendar from today with
+   today ringed, three stretches with basis boxes.
+2. Stop → In 3 days → result "3 days to go.", calendar starts at that date; chips are in date order on every weekday
+   (unit test for each weekday).
+3. Pick a date 30 days ahead → the information line shows; 20 days ahead → no line; 43 days ahead not allowed.
+4. With a past date set and runs in the record, "Change my date" asks first and every run is still there after (unit
+   test on `setQuitDate` + one browser check).
+5. Break → 2 weeks → result shows the end date and the countdown; with the clock past the end → "The break has
+   ended" with Stop for good / Another break / Not now.
+6. Not ready → step 1, no "above"/"table above" text anywhere on the page.
+7. Price "7,50" saves 7.50; empty count is allowed; "abc" shows "Type a number, like 7.50".
+8. Reload on every screen resumes there; browser Back steps back one screen; double tap on any answer moves one
+   screen.
+9. The .ics file parses (one VEVENT, one VALARM, DTSTAMP within a minute of now, SUMMARY "Day 1").
+10. No console error; no sideways scroll; every tap target at least 44 px; the menu row "Your quit date" opens it.
+11. Then the three-reviewer check (recipe step 3) and fix rounds; when clean, add `date` to `finished.json` and set
+    the status to "waiting for you".
+
 ## Done
 
 (none yet)
