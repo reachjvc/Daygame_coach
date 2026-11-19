@@ -789,12 +789,12 @@
       "need": "substance",
       "blackBoxEnding": "justone",
       "limiting": "Just one won’t hurt. I’m still quit.",
-      "counterpart": "There’s no “just one”. In the first weeks, one is how most quits turn back into using.",
+      "counterpart": "“Just one” is rarely just one. In those trials, most who smoked at all in week two were smoking again at six months.",
       "whenThought": "Answer it like a non-smoker, “No thanks, I don’t,” and leave the room for five minutes. Then text someone who knows you’re quitting that the thought came and you said no.",
       "test": "Each time the “just one” thought shows up this week, write down the time and what set it off.",
       "proof": "Of daily smokers on a nicotine patch who smoked at all in week 2, 17 in 100 were off at 6 months, against 46 in 100 of those who stayed clear.",
       "severity": "heavy",
-      "counted": "one patch trial, 88 smokers, not checked for addiction",
+      "counted": "one patch trial, 88 smokers; addiction scored, not checked to pick them",
       "refs": [
         {
           "cite": "Kenford SL, Fiore MC, Jorenby DE, Smith SS, Wetter D, Baker TB (1994). Predicting smoking cessation: who will quit with and without the nicotine patch. JAMA 271(8):589-94.",
@@ -817,6 +817,14 @@
           "pmid": "8301790",
           "fetched": true,
           "quote": "Two independent randomized, double-blind, placebo-controlled studies",
+          "fetchedOn": "2026-11-19"
+        },
+        {
+          "cite": "Kenford SL, Fiore MC, Jorenby DE, Smith SS, Wetter D, Baker TB (1994). Predicting smoking cessation: who will quit with and without the nicotine patch. JAMA 271(8):589-94.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/8301790/",
+          "pmid": "8301790",
+          "fetched": true,
+          "quote": "Pretreatment markers, such as the Fagerstrom Tolerance Questionnaire score",
           "fetchedOn": "2026-11-19"
         }
       ],
