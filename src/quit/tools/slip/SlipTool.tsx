@@ -111,6 +111,17 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
   const { screen, go, back: goBack, reset, isResult } = useScreens(first, total, state !== null && prepared)
   useDoneCount(addiction, "slip", state !== null && prepared && isResult)
 
+  if (undone) {
+    return (
+      <div className="flex flex-col gap-4">
+        <p data-testid="slip-undone">{tooltext.blackbox.undone}</p>
+        <Link href={carry(`/quit/${addiction}`)} data-testid="to-menu" className="inline-flex min-h-11 items-center text-primary underline">
+          {t.toMenu}
+        </Link>
+      </div>
+    )
+  }
+
   if (!state || !prepared || !bb || state.kase === null) return null
   const today = todayIso()
   const steps = state.steps
@@ -163,17 +174,6 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
     const r = bb.reports.find((x) => x.id === state.slipId)
     return r ? fill(t.inRecord, { day: dayWords(r.at.slice(0, 10)) }) : null
   })()
-
-  if (undone) {
-    return (
-      <div className="flex flex-col gap-4">
-        <p data-testid="slip-undone">{tooltext.blackbox.undone}</p>
-        <Link href={carry(`/quit/${addiction}`)} data-testid="to-menu" className="inline-flex min-h-11 items-center text-primary underline">
-          {t.toMenu}
-        </Link>
-      </div>
-    )
-  }
 
   const bLine = inRecord && (
     <p data-testid="slip-in-record" className="text-sm text-muted-foreground">
