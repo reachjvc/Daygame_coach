@@ -7,6 +7,8 @@ import { liesInSentence } from "@/src/quit/tools/beliefs/flow"
 import { parseHeld } from "@/src/quit/tools/beliefs/logic"
 import { fill, tooltext } from "@/src/quit/tooltext"
 
+const MUTED = "#a1a1aa"
+
 /** The share image of the lies test: the count only, nothing about the reader. Without `held` it asks the question (the page's own preview image). */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ addiction: string }> }) {
   const { addiction } = await params
@@ -33,7 +35,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ addi
           padding: 90,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 40, color: "#a1a1aa" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 40, color: MUTED }}>
           <BrandMark size={72} className="" />
           {frame.siteName}
         </div>
@@ -41,7 +43,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ addi
           <div style={{ display: "flex", fontSize: 360, fontWeight: 700, lineHeight: 1, color: "#a78bfa" }}>{held === null ? "?" : held}</div>
           <div style={{ display: "flex", fontSize: 72, fontWeight: 700, lineHeight: 1.15, marginTop: 30 }}>{line}</div>
         </div>
-        <div style={{ display: "flex", fontSize: 36, color: "#a1a1aa" }}>{`${req.nextUrl.host}/quit/${addiction}/beliefs`}</div>
+        <div style={{ display: "flex", fontSize: 36, color: MUTED }}>{`${req.nextUrl.host}/quit/${addiction}/beliefs`}</div>
       </div>
     ),
     { width: 1080, height: 1350, headers: { "Cache-Control": "public, max-age=86400" } },

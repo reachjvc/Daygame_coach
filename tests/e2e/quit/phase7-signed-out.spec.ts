@@ -11,6 +11,9 @@ import { quitUrl } from "../helpers/quit"
 import type { Page } from "@playwright/test"
 import nicotineJson from "../../../src/quit/data/nicotine.json"
 import tooltextJson from "../../../src/quit/data/tooltext.json"
+import finishedJson from "../../../src/quit/data/finished.json"
+
+const finished = finishedJson as string[]
 
 const D = nicotineJson as unknown as {
   beliefs: { id: string; scene: string }[]
@@ -26,12 +29,22 @@ async function noSideways(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 }
 
+/** A tap within 250 ms of a move is ignored by the lies test, so each tap waits a little first. */
+async function tapId(page: Page, id: string) {
+  await page.clock.runFor(300)
+  await page.getByTestId(id).click()
+}
+
 async function rateAll(page: Page, ratings: number[]) {
-  for (let i = 0; i < 12; i++) await page.getByTestId(`rate-${ratings[i]}`).click()
-  for (let i = 0; i < D.facts.length; i++) {
-    await page.getByTestId("fact-true").click()
-    await page.getByTestId("fact-next").click()
+  for (let i = 0; i < 12; i++) {
+    await tapId(page, `rate-${ratings[i]}`)
+    if (ratings[i] >= 4) await tapId(page, "reply-next")
   }
+  for (let i = 0; i < D.facts.length; i++) {
+    await tapId(page, "fact-true")
+    await tapId(page, "fact-next")
+  }
+  await tapId(page, "canstop-unsure")
 }
 
 async function toPrice(page: Page) {
@@ -42,6 +55,8 @@ async function toPrice(page: Page) {
 }
 
 test.describe("quit phase 7 fixes, signed out @phone", () => {
+  // the lies test ignores a tap within 250 ms of a move; the tests move the page clock on between taps
+  test.beforeEach(({ page }) => page.clock.install())
   test("A24 A26 A27 a price over the cap, negative or junk is refused with the range and Done stays off", async ({ page }) => {
     await toPrice(page)
     const range = t.cost.range.replace("{min}", "0").replace("{max}", "100")
@@ -114,10 +129,11 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
     expect(stored.afterSlip).toBeNull()
   })
 
-  test("A76 the mostly-free band links to a page a signed-out reader can open", async ({ page }) => {
+  test("A76 the band link goes to a page a signed-out reader can open, and shows only while the date tool is finished", async ({ page }) => {
     await page.goto(quitUrl(`${A}/beliefs?preview=1`))
     await rateAll(page, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-    const link = page.getByTestId("band-free-link")
+    const link = page.getByTestId("band-link")
+    if (!finished.includes("date")) return expect(link).toHaveCount(0)
     await expect(link).toHaveText(t.beliefs.bandFreeLink)
     // the quit date tool needs no sign-in; the preview flag travels with the link
     await expect(link).toHaveAttribute("href", "/quit/nicotine/date?preview=1")
@@ -127,14 +143,20 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
     const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } })
     const a = await ctx.newPage()
     const b = await ctx.newPage()
+    await a.clock.install()
+    await b.clock.install()
     await a.goto(quitUrl(`${A}/beliefs`))
     await b.goto(quitUrl(`${A}/beliefs`))
     await expect(b.getByTestId("scene")).toBeVisible()
-    for (let i = 0; i < 4; i++) await a.getByTestId("rate-3").click()
+    for (let i = 0; i < 4; i++) {
+      await a.clock.runFor(300)
+      await a.getByTestId("rate-3").click()
+    }
     // tab B heard the change and now shows the next unanswered question
     await expect(b.getByTestId("scene")).toHaveText(D.beliefs[4].scene)
+    await b.clock.runFor(300)
     await b.getByTestId("rate-5").click()
-    const ratings = await b.evaluate(() => JSON.parse(localStorage.getItem("quit-v1")!).nicotine.beliefs.ratings)
+    const ratings = await b.evaluate(() => JSON.parse(localStorage.getItem("quit-v1")!).nicotine.beliefs.draft.ratings)
     expect(ratings).toEqual({ b1: 3, b2: 3, b3: 3, b4: 3, b5: 5 })
     await ctx.close()
   })
@@ -169,8 +191,8 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
 
   test("A02 in-page Back after a reload never shows the same screen twice", async ({ page }) => {
     await page.goto(quitUrl(`${A}/beliefs`))
-    await page.getByTestId("rate-3").click()
-    await page.getByTestId("rate-3").click()
+    await tapId(page, "rate-3")
+    await tapId(page, "rate-3")
     await page.reload()
     await expect(page.getByTestId("scene")).toHaveText(D.beliefs[2].scene)
     await page.getByTestId("screen-back").click()
@@ -186,8 +208,9 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
     await page.keyboard.press("Enter")
     await expect(page.getByTestId("scene")).toHaveText(D.beliefs[1].scene)
     await expect(page.getByTestId("question")).toBeFocused()
-    for (let i = 1; i < 12; i++) await page.getByTestId("rate-3").click()
-    await page.getByTestId("fact-true").click()
+    for (let i = 1; i < 12; i++) await tapId(page, "rate-3")
+    await tapId(page, "fact-true")
+    await page.clock.runFor(300)
     await page.getByTestId("fact-next").focus()
     await page.keyboard.press("Enter")
     await expect(page.getByTestId("question")).toBeFocused()
@@ -208,6 +231,8 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
     page.on("request", (r) => sent.push(r.url()))
     await page.goto(quitUrl(`${A}/beliefs?preview=1`))
     await rateAll(page, [5, 4, 4, 3, 2, 1, 1, 1, 1, 1, 1, 1])
+    // the lies test links to gives only once gives is finished
+    if (!finished.includes("gives")) return expect(page.locator('a[href*="#need="]')).toHaveCount(0)
     await page.locator('a[href*="#need="]').first().click()
     await page.waitForURL(/\/gives/)
     const url = page.url()

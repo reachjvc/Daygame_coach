@@ -28,7 +28,7 @@ import {
 } from "./flow"
 
 /** The 12 lies test: 12 ratings (a reply after each 4 or 5), 3 facts, "can you stop?", then the result. */
-export function BeliefsTool({ addiction, data }: ToolProps) {
+export function BeliefsTool({ addiction, data, present }: ToolProps) {
   const beliefs = usable<QuitBelief[]>(data.beliefs)
   const facts = usable<QuitFact[]>(data.facts)
   const bands = usable<QuitBand[]>(data.bands)
@@ -37,11 +37,13 @@ export function BeliefsTool({ addiction, data }: ToolProps) {
     beliefs !== null && beliefs.length > 0 && facts !== null && bands !== null && needs !== null &&
     beliefs.every((b) => usable<string>(b.scene) !== null && usable<string>(b.short) !== null)
   if (!ok) return <NotReady />
-  return <Inner addiction={addiction} beliefs={beliefs} facts={facts} bands={bands} needs={needs} />
+  return <Inner addiction={addiction} present={present} beliefs={beliefs} facts={facts} bands={bands} needs={needs} />
 }
 
 interface InnerProps {
   addiction: string
+  /** Present mode is zoomed, so the question is drawn tighter to keep all five answers on one screen. */
+  present: boolean
   beliefs: QuitBelief[]
   facts: QuitFact[]
   bands: QuitBand[]
@@ -50,7 +52,7 @@ interface InnerProps {
 
 const RATING_WORDS = t.beliefs.ratings
 
-function Inner({ addiction, beliefs, facts, bands, needs }: InnerProps) {
+function Inner({ addiction, present, beliefs, facts, bands, needs }: InnerProps) {
   const ids = useMemo(() => beliefs.map((b) => b.id), [beliefs])
   const parse = useCallback((x: unknown) => parseFull(x, ids), [ids])
   const { state, update, clear } = useToolState<BeliefsFull>(addiction, "beliefs", EMPTY_FULL, parse)
@@ -171,12 +173,12 @@ function Inner({ addiction, beliefs, facts, bands, needs }: InnerProps) {
     return (
       <>
         <OneQuestion step={qn} total={qTotal} onBack={back} showStep>
-          <p data-testid="scene" className="text-sm text-muted-foreground">
+          <p data-testid="scene" className={`text-muted-foreground ${present ? "text-xs leading-snug" : "text-sm"}`}>
             {usable<string>(b.scene)}
           </p>
-          <blockquote data-testid="limiting" className="text-2xl font-medium leading-snug">{`“${b.limiting}”`}</blockquote>
-          <p className="font-medium">{t.beliefs.rateQuestion}</p>
-          <div role="radiogroup" aria-label={t.beliefs.rateQuestion} className="flex flex-col gap-2">
+          <blockquote data-testid="limiting" className={`font-medium leading-snug ${present ? "text-lg" : "text-2xl"}`}>{`“${b.limiting}”`}</blockquote>
+          <p className={`font-medium ${present ? "-mb-1 text-sm" : ""}`}>{t.beliefs.rateQuestion}</p>
+          <div role="radiogroup" aria-label={t.beliefs.rateQuestion} className={`flex flex-col ${present ? "gap-1" : "gap-2"}`}>
             {RATING_WORDS.map((label, i) => (
               <button
                 key={label}
@@ -194,7 +196,7 @@ function Inner({ addiction, beliefs, facts, bands, needs }: InnerProps) {
                     go(next.findIndex((x) => x.kind === "q" && x.i === cur.i) + 2)
                   })
                 }
-                className={`min-h-12 rounded-md border px-4 text-left text-base ${current === i + 1 ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}
+                className={`rounded-md border px-4 text-left text-base ${present ? "min-h-11" : "min-h-12"} ${current === i + 1 ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}
               >
                 {label}
               </button>

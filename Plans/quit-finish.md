@@ -1143,3 +1143,21 @@ only. B207 voice chips ordered by his ratings: for Tool 2.
 - Old tests removed: the three wave-1 slip tests in wave1-part2.spec.ts, all of phase7-signed-in.spec.ts (every test there was about the wave-1 slip), the "A62" test in phase7-signed-out.spec.ts, and the keepLine/resume unit tests in phase5.test.ts. slip.spec.ts covers their points (double tap, one filing, local-only/saved status, fixed day 1).
 - `slip` was added to liveTools.json at ship time (Opus), so the menu row and the links from the date and craving tools open it.
 - Not run: `node scripts/typecheck-ratchet.mjs` was killed (exit 143, memory pressure from other sessions) three times; a scoped `tsc -p` over src/quit, app/quit and the quit tests is clean.
+
+### From the Tool 5 build (Sonnet, 2026-11-19)
+
+- Opus data had three ref quotes over the 30-word rule (beliefs[8] 31, facts[0] 33, facts[1] 31 words), so the live-file validator test failed. Trimmed leading words only (still word for word; every number in `n` is still in its quote). Please have the checker re-read those three.
+- Brief wording "Write it down where you will see it in the first week." matches the forecast rule (`you will`). Built as "where you can see it". Proposed: keep.
+- "How much is this you?" matches the screening rule (`is this you`). Kept the brief's wording and allowed that one string in `tests/unit/quit/tools/common.test.ts`.
+- Present mode at 390x844 (zoom 1.4) did not fit five answers; in present mode only, the thought is text-lg, the scene text-xs and the buttons 44 px with a 4 px gap.
+- The ratings keys `rate`, `needLink`, `bandLink` in tooltext.json stay (the lab variant reads them); the tool uses new keys (`rateQuestion`, `swapsLink`, ...).
+- `shareText` and `shareTitle` changed to the `{lies}` form; the card route and the page use the menu's `lies` name.
+- Taken time on a result is the time of the last answer (not `startedAt`, which is kept in the draft only).
+- Opening with a finished result and no draft always shows the result, whatever `?s=` says. After the last answer the URL is rewritten to no `s`; browser Back from the result lands on the same result.
+- "Take it again" creates an empty draft at once (so a reload resumes the retake); "Stop and keep my last result" with no new answer drops it without asking.
+- Share prefetches the card PNG when the result shows, so the share sheet opens straight from the tap; Save the image reuses it.
+- Earlier results: Delete only on the earlier ones, not on the newest. Earlier-result top thoughts show only when something was rated 4 or 5.
+- Band link shows only while its tool is in finished.json; wording "Set your date" / "Make your free plan" (band free) / "See your quit date" (record has a date, any band). In this tree finished.json is empty, so the e2e specs expect no band link, no need links and no "What it gives you" button; they flip by themselves when `date` / `gives` are listed.
+- A wave-1 save with all 12 ratings becomes a result even if the facts were half answered (no can-stop answer, so no can-stop block). A partial one becomes the draft and the saved `ratings` stay empty until a test is finished.
+- `OneQuestion` in the kit got an optional `showStep` prop ("Question N of 16"). Replies show the bar but no step text.
+- Results screen has a "Back to the menu" link at the end; the card's bottom line uses the request host.

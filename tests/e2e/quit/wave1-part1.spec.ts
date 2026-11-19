@@ -32,6 +32,8 @@ const t = tooltextJson
 
 test.use({ storageState: SIGNED_OUT, viewport: { width: 390, height: 844 } })
 test.describe("quit wave 1 part 1 @phone", () => {
+  // the lies test ignores a tap within 250 ms of a move; the tests move the page clock on between taps
+  test.beforeEach(({ page }) => page.clock.install())
   const A = "/quit/nicotine"
 
   async function noSideways(page: Page) {
@@ -43,28 +45,38 @@ test.describe("quit wave 1 part 1 @phone", () => {
     if (dir) await page.screenshot({ path: `${dir}/${name}.png`, fullPage: true })
   }
 
-  /** Rates belief 1..12 and answers the facts; stops when `stopAfter` screens are done. */
+  /** A tap within 250 ms of a move is ignored by the tool, so each tap waits a little first. */
+  async function tap(page: Page, id: string) {
+    await page.clock.runFor(300)
+    await page.getByTestId(id).click()
+  }
+
+  /** Rates belief 1..12 (a 4 or 5 shows its reply, which is left), answers the facts, then "can you stop?"; stops when `stopAfter` screens are done. */
   async function runBeliefs(page: Page, ratings: number[], opts: { stopAfter?: number } = {}) {
     const stop = opts.stopAfter ?? 12 + data.facts.length
     for (let i = 0; i < Math.min(stop, 12); i++) {
       await expect(page.getByTestId("scene")).toHaveText(data.beliefs[i].scene)
       await noSideways(page)
       if (i === 0) await shot(page, "beliefs-rating")
-      await page.getByTestId(`rate-${ratings[i]}`).click()
+      await tap(page, `rate-${ratings[i]}`)
+      if (ratings[i] >= 4) await tap(page, "reply-next")
     }
     for (let i = 0; i < data.facts.length && 12 + i < stop; i++) {
       await expect(page.getByTestId("fact-statement")).toHaveText(data.facts[i].statement)
       if (i === 0) await shot(page, "beliefs-fact-question")
-      await page.getByTestId("fact-true").click()
+      await tap(page, "fact-true")
       await expect(page.getByTestId("fact-answer")).toContainText(data.facts[i].explain)
       await noSideways(page)
       if (i === 0) await shot(page, "beliefs-fact-answer")
-      await page.getByTestId("fact-next").click()
+      await tap(page, "fact-next")
     }
+    if (stop >= 12 + data.facts.length) await tap(page, "canstop-unsure")
   }
 
   // belief 1 = 5, beliefs 2 and 3 = 4, belief 4 = 3, belief 5 = 2, the rest 1
   const RATINGS = [5, 4, 4, 3, 2, 1, 1, 1, 1, 1, 1, 1]
+  // no 4 or 5: no reply screens, so Back walks plain question to question
+  const FLAT = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
 
   test("a full lies test reaches the result with top 3, band and a card image", async ({ page, request }) => {
     await page.goto(quitUrl(`${A}/beliefs`))
@@ -84,13 +96,11 @@ test.describe("quit wave 1 part 1 @phone", () => {
     const band = data.bands.find((b) => held >= b.min && held <= b.max)!
     await expect(page.getByTestId("band")).toContainText(band.label)
 
-    const href = await page.getByTestId("save-image").getAttribute("href")
-    expect(href).toBe(`${A}/card?preview=1&held=${held}`)
-    const img = await request.get(href!)
+    await expect(page.getByTestId("save-image")).toBeVisible()
+    const img = await request.get(quitUrl(`${A}/card?held=${held}`))
     expect(img.status()).toBe(200)
     expect(img.headers()["content-type"]).toContain("image/png")
     expect((await request.get(quitUrl(`${A}/card?held=13`))).status()).toBe(400)
-    expect((await request.get(quitUrl(`${A}/card`))).status()).toBe(400)
     expect((await request.get(quitUrl("/quit/nope/card?held=3"))).status()).toBe(404)
   })
 
@@ -108,7 +118,7 @@ test.describe("quit wave 1 part 1 @phone", () => {
 
   test("the browser Back button from screen 5 shows screen 4", async ({ page }) => {
     await page.goto(quitUrl(`${A}/beliefs`))
-    await runBeliefs(page, RATINGS, { stopAfter: 4 })
+    await runBeliefs(page, FLAT, { stopAfter: 4 })
     await expect(page.getByTestId("scene")).toHaveText(data.beliefs[4].scene)
     await page.goBack()
     await expect(page.getByTestId("scene")).toHaveText(data.beliefs[3].scene)
@@ -117,7 +127,7 @@ test.describe("quit wave 1 part 1 @phone", () => {
 
   test("in-page Back acts like the browser Back and adds no history entry", async ({ page }) => {
     await page.goto(quitUrl(`${A}/beliefs`))
-    await runBeliefs(page, RATINGS, { stopAfter: 4 })
+    await runBeliefs(page, FLAT, { stopAfter: 4 })
     await expect(page.getByTestId("scene")).toHaveText(data.beliefs[4].scene)
     await page.getByTestId("screen-back").click()
     await expect(page.getByTestId("scene")).toHaveText(data.beliefs[3].scene)
@@ -127,7 +137,7 @@ test.describe("quit wave 1 part 1 @phone", () => {
 
   test("in-page Back after a reload rewrites the entry instead of adding one", async ({ page }) => {
     await page.goto(quitUrl(`${A}/beliefs`))
-    await runBeliefs(page, RATINGS, { stopAfter: 4 })
+    await runBeliefs(page, FLAT, { stopAfter: 4 })
     await page.reload()
     await expect(page.getByTestId("scene")).toHaveText(data.beliefs[4].scene)
     const before = await page.evaluate(() => history.length)
@@ -154,13 +164,15 @@ test.describe("quit wave 1 part 1 @phone", () => {
     await page.goto(quitUrl(`${A}/beliefs`))
     await runBeliefs(page, RATINGS)
     await page.getByTestId("clear-answers").click()
+    await page.getByTestId("clear-yes").click()
     await expect(page.getByTestId("scene")).toHaveText(data.beliefs[0].scene)
   })
 
   test("gives is preselected from the lies test, and ?need= wins", async ({ page }) => {
     await page.goto(quitUrl(`${A}/beliefs`))
     await runBeliefs(page, RATINGS)
-    await page.getByTestId("next-gives").click()
+    // the lies test links to gives only once gives is finished; the saved ratings are read either way
+    await page.goto(quitUrl(`${A}/gives`))
     await expect(page.getByTestId(`chip-${data.beliefs[0].need}`)).toHaveAttribute("aria-checked", "true")
     await noSideways(page)
     await shot(page, "gives-pick")
