@@ -86,6 +86,9 @@ His notes on the decision page, the same morning:
 - **General:** *"Some things will be difficult for you to oneshot. And it is difficult for me to just explain in
   words in an artifact like this. What i would prefer is to see a few different examples of how it could be
   done, in the real (new) tool, and how it would affect the whole sequence of things happening."*
+- **On the rebrand before/after page** (2026-11-19 evening, "Your plan"; copied here from
+  `Plans/rebrand-round-2.md`): *"probably like the one on the left slightly more, but this also just needs to look
+  more interactive and cool"*
 
 ---
 

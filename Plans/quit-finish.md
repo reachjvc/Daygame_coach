@@ -80,6 +80,10 @@ tapped. Finished tools live at `/quit/nicotine/<tool>` (behind `?preview=1` unti
 | B2 | Privacy contact email | `src/quit/data/contact.json` → `{"privacyEmail": null}` | Public release, deletion path | Ask at release, not before |
 | B3 | Coaching price and guarantee wording | `quit-tool.md` records $200 and the guarantee; later he was "not sure about the prices" | Talk to a coach | Page stays hidden (tool 0 gates it) |
 
+His note on the rebrand before/after page (2026-11-19 evening, "Talk to a coach"; copied here from
+`Plans/rebrand-round-2.md`): *"i liked the one on the left more, but theres nothing here now"*. The page is
+hidden on purpose (B3).
+
 ## OPEN QUESTIONS (proposed; he may veto)
 
 | Question | Decision | Alternative | Cost if wrong |
