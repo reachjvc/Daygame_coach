@@ -47,7 +47,7 @@ export function RealStepView(): ReactNode {
 
   switch (tab) {
     case "star":
-      return <StarTab plan={plan} {...r.starHandlers} onNext={() => setTab("now")} />
+      return <StarTab plan={plan} {...r.starHandlers} onNext={() => setTab("now")} hideNext={r.framed} />
 
     case "now":
       return (
@@ -59,6 +59,7 @@ export function RealStepView(): ReactNode {
           areaHandlers={r.areaHandlers}
           onSeasonFocus={r.setSeasonFocus}
           onNext={() => setTab("pick")}
+          hideNext={r.framed}
         />
       )
 
@@ -111,6 +112,7 @@ export function RealStepView(): ReactNode {
             handlers={r.focusHandlers}
             onOpenGoal={(areaId, goalId) => { r.setPlanAreaId(areaId); r.setNowGoalId(goalId); setTab("milestones") }}
             onNext={() => setTab("milestones")}
+            hideNext={r.framed}
             // The sentence is just above, in the same step: no echo of it here.
             oneThing={null}
           />

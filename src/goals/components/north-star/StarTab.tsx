@@ -98,6 +98,7 @@ export function StarTab({
   onAnswer,
   onNewNorthStar,
   onNext,
+  hideNext = false,
 }: {
   plan: NsPlan
   onStar: (text: string) => void
@@ -107,6 +108,8 @@ export function StarTab({
   onRung: (rungId: string, text: string) => void
   onAnswer: (promptId: string, text: string) => void
   onNext: () => void
+  /** Hide the step-advance button when a surrounding frame supplies Next (default: shown, as in /plan). */
+  hideNext?: boolean
 }) {
   const [ladderOpen, setLadderOpen] = useState(false)
   const [showExample, setShowExample] = useState(false)
@@ -289,14 +292,14 @@ export function StarTab({
           somebody who arrived wanting to jot three goals down had to write an
           essay first, and they do not; they leave. What is unfinished is listed
           in the "still to fill in" panel the shell renders under every tab. */}
-      <div className="flex justify-end">
+      {!hideNext && <div className="flex justify-end">
         <button
           onClick={onNext}
           className="text-sm font-medium px-4 py-2 rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 transition-colors"
         >
           Now break it into areas →
         </button>
-      </div>
+      </div>}
     </div>
   )
 }

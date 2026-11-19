@@ -46,6 +46,7 @@ export function NowTab({
   areaHandlers,
   onSeasonFocus,
   onNext,
+  hideNext = false,
 }: {
   plan: NsPlan
   today: string
@@ -55,6 +56,8 @@ export function NowTab({
   areaHandlers: AreaHandlers
   onSeasonFocus: (id: string) => void
   onNext: () => void
+  /** Hide the step-advance button when a surrounding frame supplies Next (default: shown, as in /plan). */
+  hideNext?: boolean
 }) {
   const [editing, setEditing] = useState(false)
 
@@ -144,14 +147,14 @@ export function NowTab({
       </section>
 
       {/* Always available, whatever is unfinished. */}
-      <div className="flex justify-end">
+      {!hideNext && <div className="flex justify-end">
         <button
           onClick={onNext}
           className="text-sm font-medium px-4 py-2 rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 transition-colors"
         >
           {NOW_INTRO.next}
         </button>
-      </div>
+      </div>}
     </div>
   )
 }

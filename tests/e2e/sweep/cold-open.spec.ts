@@ -156,7 +156,7 @@ const NOT_SWEPT: Record<string, string> = {
     "answers 404 by design to an account without a copy space, like this one; " +
     "plan-sandbox.spec.ts opens it on an account that has one and checks the 404 for one that has not",
   [PAGES.planNew]:
-    "the same copy-space gate as /plan/sandbox; plan-new.spec.ts walks it on an account that has one " +
+    "the same copy-space gate as /plan/sandbox; plan-new.spec.ts walks the first rebuild (/plan/new/first) and plan-new-sequence.spec.ts the real steps on an account that has one " +
     "and checks the 404 for one that has not",
   "/quit/lab":
     "the owner's hidden review lab: answers 404 without ?preview=1 by design; " +

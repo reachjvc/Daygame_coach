@@ -1,13 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { ROUTES } from "@/src/shared/routes"
 import { useState } from "react"
 import { questionsCopy } from "@/src/goals/planSteps/copy/questions"
 import { readAllCopy } from "@/src/goals/planSteps/copy/home"
 import { commonCopy } from "@/src/goals/planSteps/copy/common"
 import { readOptionIds } from "@/src/goals/planSteps/planFacts"
-import { homeHref } from "@/src/goals/planSteps/planRoutes"
+import { FIRST_BASE, homeHref } from "@/src/goals/planSteps/planRoutes"
 import { addFields, isPlanLink, setFieldKind, setFieldWhere } from "@/src/goals/planSteps/extras/questionsChanges"
 import { usePlanNew } from "../PlanNewContext"
 import { useNav } from "../nav"
@@ -142,7 +141,7 @@ function Kind({ id }: { id: string }) {
           <Pick options={options} value={source ? [source] : []} onChange={(v) => setSource(v[0] ?? "")} testPrefix="source" />
         </div>
       )}
-      {kind === "go" && <Line label={questionsCopy.kind.go_label} value={source} onChange={setSource} placeholder={`${ROUTES.planNew}/${questionsCopy.kind.go_placeholder}`} max={200} testId="go-link" />}
+      {kind === "go" && <Line label={questionsCopy.kind.go_label} value={source} onChange={setSource} placeholder={`${FIRST_BASE}/${questionsCopy.kind.go_placeholder}`} max={200} testId="go-link" />}
     </Frame>
   )
 }

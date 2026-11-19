@@ -34,7 +34,8 @@ test.describe.configure({ mode: "serial" })
 
 const SHOTS = process.env.PLAN_NEW_SHOTS ?? path.join(os.homedir(), ".cache/daygame-research/plan-steps/new-shots")
 const NAV = 120_000
-const BASE = ROUTES.planNew
+// The first rebuild lives one folder down since Phase 4 of Plans/plan-new-from-real.md: a path change only.
+const BASE = `${ROUTES.planNew}/first`
 
 const TABLES = [
   "life_plans", "life_plan_nodes", "life_plan_north_stars", "life_plan_areas", "life_plan_goals", "life_plan_goal_checkpoints",
@@ -428,6 +429,7 @@ test.describe("the new version of the plan", () => {
     const p = await other.newPage()
     const res = await p.goto(`${BASE}`, { timeout: NAV })
     expect(res?.status()).toBe(404)
+    expect((await p.goto(ROUTES.planNew, { timeout: NAV }))?.status()).toBe(404)
     const deep = await p.goto(`${BASE}/areas/pick`, { timeout: NAV })
     expect(deep?.status()).toBe(404)
     await other.close()

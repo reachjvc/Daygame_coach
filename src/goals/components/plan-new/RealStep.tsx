@@ -34,6 +34,7 @@ import { AreaDialog } from "@/src/goals/components/north-star/AreaDialog"
 import { AreaGoalsDialog } from "@/src/goals/components/north-star/AreaGoalsDialog"
 import { ROUTES } from "@/src/shared/routes"
 import { realStepRoute } from "@/src/goals/planSteps/realStepRoutes"
+import { stepRoute, type Sequence } from "@/src/goals/planSteps/planSequences"
 import { usePlanNew } from "./PlanNewContext"
 import { ErrandRibbon } from "../north-star/ErrandRibbon"
 
@@ -112,6 +113,8 @@ export interface RealStep extends Writers, Reads {
   onHideDue: (c: DueCard) => void
   /** The review period an address named, if any (`?period=`). */
   reviewPeriod: string | null
+  /** True inside the Frame, which has its own Next: the real part hides its own step-advance button. */
+  framed: boolean
 }
 
 const Ctx = createContext<RealStep | null>(null)
@@ -139,7 +142,19 @@ function queryOf(q: Q, extra?: Record<string, string>): string {
   return s ? `?${s}` : ""
 }
 
-export function RealStepHost({ stepId, children }: { stepId: NorthStarTabId; children: ReactNode }) {
+export function RealStepHost({
+  stepId,
+  sequence,
+  framed = false,
+  children,
+}: {
+  stepId: NorthStarTabId
+  /** Where a jump to a step lands: its screen in this sequence. Without one, `/plan/new/s/<step>`. */
+  sequence?: Sequence
+  /** The Frame around the step supplies Next, so the real part's own step-advance button is hidden. */
+  framed?: boolean
+  children: ReactNode
+}) {
   const { store, timezone, account } = usePlanNew()
   const session = useContext(SessionCtx)
   if (!session) throw new Error("RealStepHost needs <RealStepSessionProvider>")
@@ -171,19 +186,20 @@ export function RealStepHost({ stepId, children }: { stepId: NorthStarTabId; chi
   const [today, setToday] = useState<string | null>(() => getTodayInTimezone(timezone))
 
   /* ---- dialog state in the address ---- */
-  const live = useRef({ stepId, router, q: NO_Q })
+  const routeOf = useCallback((tab: NorthStarTabId) => (sequence ? stepRoute(sequence, tab) : realStepRoute(tab)), [sequence])
+  const live = useRef({ stepId, router, q: NO_Q, routeOf })
   const q: Q = { area: search.get("area"), goal: search.get("goal"), routine: search.get("routine") }
-  live.current = { stepId, router, q }
+  live.current = { stepId, router, q, routeOf }
   const draft = useRef<{ q: Q; touched: boolean; tab: NorthStarTabId | null } | null>(null)
   const apply = useCallback(() => {
     const d = draft.current
     draft.current = null
     if (!d) return
-    const { stepId: here, router: r } = live.current
+    const { stepId: here, router: r, routeOf: toRoute } = live.current
     const tab = d.tab ?? here
     const moved = tab !== here
     const next: Q = moved && !d.touched ? NO_Q : d.q
-    const href = `${realStepRoute(tab) ?? ROUTES.planNew}${queryOf(next)}`
+    const href = `${toRoute(tab) ?? ROUTES.planNew}${queryOf(next)}`
     if (moved) {
       r.push(href)
       return
@@ -350,6 +366,7 @@ export function RealStepHost({ stepId, children }: { stepId: NorthStarTabId; chi
     onDueGo,
     onHideDue,
     reviewPeriod: search.get("period"),
+    framed,
   }
 
   const areaDialogOpen = areaOpen && !!nowAreaId

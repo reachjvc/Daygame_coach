@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
+import { ROUTES } from "@/src/shared/routes"
 import { CORE_IDS, EXTRA_IDS, type CoreId, type ExtraId, homeHref } from "@/src/goals/planSteps/planRoutes"
 import { commonCopy, saveCopy } from "@/src/goals/planSteps/copy/common"
 import { Home } from "./Home"
@@ -27,9 +28,12 @@ import { TodayPage } from "./daily/Today"
 import { TrackPage } from "./daily/Track"
 import { JournalPage } from "./daily/Journal"
 import { isRealStepId, realStepOfParam, realStepRoute } from "@/src/goals/planSteps/realStepRoutes"
+import { screenById, sequenceOfPlan } from "@/src/goals/planSteps/planSequences"
 import { usePlanNew } from "./PlanNewContext"
 import { RealStepHost } from "./RealStep"
 import { RealStepView } from "./RealStepViews"
+import { SequenceHome } from "./SequenceHome"
+import { SequenceScreen } from "./SequenceScreen"
 import { btnQuiet } from "./ui"
 
 const MODULES: Record<CoreId, (p: { segs: string[] }) => React.JSX.Element> = {
@@ -58,11 +62,13 @@ export function PlanNewRouter({ slug }: { slug: string[] }) {
     const q = p.toString()
     router.replace(q ? `${route}?${q}` : route)
   }, [asked, askedPeriod, search, router])
-  if (asked) return <p className="px-4 pt-2 text-sm text-zinc-500">…</p>
-  if (slug.length === 0) return <Home />
+  if (asked) return <p className="px-4 pt-2 text-sm text-muted-foreground">…</p>
+  // The first rebuild keeps its own folder, unchanged: /plan/new/first/<module>/<screen>.
+  if (slug[0] === "first") return <FirstRebuildRouter slug={slug.slice(1)} />
+  if (slug.length === 0) return <SequenceHome />
   // Nothing is drawn from the plan before the first read has answered: a screen that opens on an empty
   // plan would look like a new account's, and its first Next could save over the real one.
-  if (!store.loaded) return <p className="px-4 pt-2 text-sm text-zinc-500">…</p>
+  if (!store.loaded) return <p className="px-4 pt-2 text-sm text-muted-foreground">…</p>
   if (store.status === "offline") {
     return (
       <div className="mx-auto max-w-xl space-y-3 px-4" role="alert">
@@ -71,7 +77,6 @@ export function PlanNewRouter({ slug }: { slug: string[] }) {
       </div>
     )
   }
-  if (slug[0] === "read") return <ReadAll />
   // The real step parts, full width, one page each: /plan/new/s/<stepId>.
   if (slug[0] === "s" && slug.length === 2 && isRealStepId(slug[1])) {
     return (
@@ -82,6 +87,35 @@ export function PlanNewRouter({ slug }: { slug: string[] }) {
       </div>
     )
   }
+  // The active sequence's screens: /plan/new/<screen id>, the real step parts in a Frame (build) or full width (daily).
+  const seq = sequenceOfPlan(store.plan)
+  const screen = slug.length === 1 ? screenById(seq, slug[0]) : null
+  if (screen) return <SequenceScreen seq={seq} screen={screen} />
+  return <PlanHomeLink />
+}
+
+function PlanHomeLink() {
+  return (
+    <div className="mx-auto max-w-xl px-4">
+      <Link href={ROUTES.planNew} className={btnQuiet}>{commonCopy.plan_home}</Link>
+    </div>
+  )
+}
+
+/** The first rebuild, as it was (its Home, Read it all, modules and daily pages), now one folder down. */
+function FirstRebuildRouter({ slug }: { slug: string[] }) {
+  const { store } = usePlanNew()
+  if (slug.length === 0) return <Home />
+  if (!store.loaded) return <p className="px-4 pt-2 text-sm text-muted-foreground">…</p>
+  if (store.status === "offline") {
+    return (
+      <div className="mx-auto max-w-xl space-y-3 px-4" role="alert">
+        <p className="text-sm text-rose-300">{store.note}</p>
+        <button type="button" className={btnQuiet} onClick={() => void store.retry()}>{saveCopy.retry}</button>
+      </div>
+    )
+  }
+  if (slug[0] === "read") return <ReadAll />
   const first = slug[0]
   if ((CORE_IDS as readonly string[]).includes(first)) {
     const Module = MODULES[first as CoreId]

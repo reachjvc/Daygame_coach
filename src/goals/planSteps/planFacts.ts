@@ -16,6 +16,8 @@ const NEW_PREFIX = "start:new:"
 
 export const HIDDEN_AREAS_KEY = `${NEW_PREFIX}areas-hidden`
 export const AREAS_DESCRIBED_KEY = `${NEW_PREFIX}areas-described`
+/** Which version of the screen order the copy plan is trying (Phase 4.1/7). Absent means V1. */
+export const SEQUENCE_KEY = `${NEW_PREFIX}sequence`
 export const CHECKIN_DAY_KEY = `${NEW_PREFIX}checkin-day`
 export const CHECKIN_HOUR_KEY = `${NEW_PREFIX}checkin-hour`
 export const CHECKIN_PHONE_KEY = `${NEW_PREFIX}checkin-phone`
