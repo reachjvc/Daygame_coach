@@ -16,6 +16,7 @@ import type { Evidence, QuitBelief, QuitMomentSwap, QuitNeed, QuitOption, QuitRe
 import { didYouUse } from "../../wording"
 import { localDate, realRefs, usable } from "../common"
 import { useCarry, useToolState } from "../hooks"
+import { EMPTY_IFTHEN, parseIfthen, type IfthenState } from "../ifthen/logic"
 import { NotReady } from "../NotReady"
 import { Blocks, Breathe, Bubbles, Help, Move, Reasons, Voice } from "./Tiles"
 import {
@@ -92,6 +93,7 @@ function Screens({ addiction, beliefs, moments, swaps, evidence, refs, signedIn,
   const pathname = usePathname()
   const sp = useSearchParams()
   const { state, update } = useToolState<SosState>(addiction, "sos", EMPTY_SOS, parseSos)
+  const { state: plan } = useToolState<IfthenState>(addiction, "ifthen", EMPTY_IFTHEN, parseIfthen)
   const { record } = useQuitRecord(addiction)
   const [ready, setReady] = useState(false)
   const [now, setNow] = useState(() => Date.now())
@@ -299,7 +301,7 @@ function Screens({ addiction, beliefs, moments, swaps, evidence, refs, signedIn,
       case "move":
         return <Move evidence={evidence} refs={refs} onBack={toShelf} />
       case "help":
-        return <Help moments={moments} swaps={swaps} onBack={toShelf} />
+        return <Help moments={moments} swaps={swaps} plan={plan?.lines ?? []} onBack={toShelf} />
       case "reasons":
         return (
           <Reasons

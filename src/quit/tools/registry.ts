@@ -4,6 +4,7 @@ import { CostTool } from "./cost/CostTool"
 import { DateTool } from "./date/DateTool"
 import { GivesTool } from "./gives/GivesTool"
 import { HowTool } from "./how/HowTool"
+import { IfthenTool } from "./ifthen/IfthenTool"
 import { LessonTool } from "./lesson/LessonTool"
 import { PastTool } from "./past/PastTool"
 import { RecordTool } from "./record/RecordTool"
@@ -25,7 +26,7 @@ export const TOOL_REGISTRY: Record<QuitToolId, ToolEntry> = {
   cost: { wave: 1, Component: CostTool },
   how: { wave: 1, Component: HowTool },
   date: { wave: 1, Component: DateTool },
-  ifthen: { wave: 2, Component: null },
+  ifthen: { wave: 1, Component: IfthenTool },
   clear: { wave: 2, Component: null },
   stake: { wave: 2, Component: null },
   tell: { wave: 2, Component: null },

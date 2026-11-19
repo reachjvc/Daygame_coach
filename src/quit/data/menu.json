@@ -101,11 +101,11 @@
         },
         {
           "id": "ifthen",
-          "name": "If-then cards",
-          "line": "Your 3 risky moments, and what you do instead.",
+          "name": "If-then plan",
+          "line": "Your riskiest moments, and what you'll do there instead.",
           "minutes": 2,
           "account": "none",
-          "wave": 2
+          "wave": 1
         },
         {
           "id": "clear",

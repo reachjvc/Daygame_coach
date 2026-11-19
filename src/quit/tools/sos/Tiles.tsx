@@ -8,6 +8,7 @@ import { usable } from "../common"
 import { BeliefBasis } from "../beliefs/BeliefBasis"
 import { addTile, canMove, move, newBoard, type Board, type Dir } from "./game2048"
 import { BUBBLE_COUNT, freshSheet, pop, poppedCount, sheetDone } from "./bubbles"
+import { lineForMoment, withStop, type Line } from "../ifthen/logic"
 import { beliefOf, MOVE_MS, niceDay, OTHER, ringClock, type Kept } from "./logic"
 
 const t = tt.sos
@@ -339,14 +340,21 @@ export function Move({ evidence, refs, onBack }: { evidence: Evidence; refs: Qui
 }
 
 /** What to do right here: pick the place, its three cards show together. */
-export function Help({ moments, swaps, onBack }: { moments: QuitOption[]; swaps: QuitMomentSwap[]; onBack: () => void }) {
+export function Help({ moments, swaps, plan, onBack }: { moments: QuitOption[]; swaps: QuitMomentSwap[]; plan: Line[]; onBack: () => void }) {
   const [picked, setPicked] = useState<string | null>(null)
   const cards = swaps.find((s) => s.momentId === picked)?.cards ?? []
+  const mine = picked ? lineForMoment(plan, picked) : null
   return (
     <Frame id="help" title={t.tools.help} line={t.helpLine} onBack={onBack}>
       <Chips label={t.helpMoment} options={moments.map((m) => ({ id: m.id, label: m.label }))} value={picked ? [picked] : []} onChange={(next) => setPicked(next[0])} />
       {picked && (
         <ul data-testid="help-cards" className="flex flex-col gap-3">
+          {mine && (
+            <li data-testid="help-plan" className="rounded-lg border border-primary bg-card p-4 text-lg [overflow-wrap:anywhere]">
+              <span className="block text-sm font-semibold text-muted-foreground">{t.yourPlan}</span>
+              {withStop(mine.then)}
+            </li>
+          )}
           {cards.map((c) => (
             <li key={c} data-testid="help-card" className="rounded-lg border border-border bg-card p-4 text-lg">
               {c}
