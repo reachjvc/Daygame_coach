@@ -142,7 +142,7 @@ test.describe("what it costs you, phone", () => {
     const u = await unitInRecord(page)
     expect(u.perDay).toBeCloseTo(2 / 7, 12)
     expect(u.priceBasis).toBe("default")
-    await expect(page.getByTestId("cost-basis")).toContainText("2022 sales")
+    await expect(page.getByTestId("cost-basis")).toContainText("4 weeks to 3 Sep 2022")
     await expect(page.getByTestId("cost-units")).toHaveText("104 disposable vapes a year")
     expect((await lines(page))[0]).toBe("2 a week ÷ 7 = 0.2857 a day.")
   })
@@ -187,7 +187,7 @@ test.describe("what it costs you, phone", () => {
     await page.getByTestId("chip-pouches").click()
     await expect(page.getByTestId("cost-count")).toHaveValue("")
     await expect(page.getByTestId("cost-price")).toHaveValue("5.64")
-    await expect(page.getByTestId("cost-basis")).toContainText("the maker's suggested price for one can")
+    await expect(page.getByTestId("cost-basis")).toContainText("maker suggests for one can in the US, before sales tax")
     await expect(page.getByTestId("cost-nocount")).toBeVisible()
     await expect(page.getByTestId("cost-size")).toHaveCount(0)
     await expect(page.locator("label", { hasText: "What does a can cost? (USD)" })).toBeVisible()
@@ -225,7 +225,7 @@ test.describe("what it costs you, phone", () => {
     await page.evaluate((p) => localStorage.setItem("quit-v1", JSON.stringify({ nicotine: { record: { quitDate: p, goal: "break", breakEnd: null, unit: { id: "cigarettes", perDay: 10, priceUsd: 0.52, priceBasis: "default" } } } })), past)
     await page.reload()
     await expect(page.getByTestId("cost-dateline")).toHaveText(`You stopped on ${fmt(past)}. The money you have kept since then is in Your record.`)
-    await expect(page.getByTestId("cost-dateline").locator("a")).toHaveCount(0) // the record tool is not live
+    await expect(page.getByTestId("cost-dateline").locator("a")).toHaveCount(1) // Your record is live: the name links to it
     await shot(page, "09-quit-date-line-past")
     for (const rec of [recordOf(null, null, cig), recordOf(future, "later", cig)]) {
       await page.evaluate((r) => localStorage.setItem("quit-v1", JSON.stringify({ nicotine: { record: r } })), rec)
@@ -258,7 +258,7 @@ test.describe("what it costs you, phone", () => {
     await page.getByTestId("date-next").click()
     await page.clock.runFor(300)
     await expect(page.getByTestId("use-price")).toHaveValue("12.5")
-    await expect(page.getByTestId("use-perday")).toHaveValue(/^0\.42857/)
+    await expect(page.getByTestId("use-perday")).toHaveValue("0.43") // shown to 2 decimals; the record keeps 3 / 7
   })
 
   test("10 no console error, no sideways scroll at 500 a day x $1,000, tap targets, the menu row opens it", async ({ page }) => {

@@ -660,7 +660,7 @@ function Result({ today, record, course, courseNote, bb, carry, addiction, acked
           {slipLive ? (
             <>
               {t.runSlipPre}{" "}
-              <Link href={carry(`/quit/${addiction}/slip`)} className="text-primary underline">
+              <Link href={carry(`/quit/${addiction}/slip`)} className="-my-3 inline-block py-3 text-primary underline">
                 {t.runSlipName}
               </Link>
               {t.runSlipPost}
