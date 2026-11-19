@@ -1,4 +1,6 @@
-import type { ViceEndingId } from "@/src/vice/types"
+import type { BlackBoxRecord, ViceEndingId } from "@/src/vice/types"
+import { living, startAttempt } from "@/src/vice/blackbox/blackboxStore"
+import { VICES } from "@/src/vice/data/vices"
 import type { QuitBelief, QuitEnding } from "./types"
 import { localDate } from "./tools/common"
 
@@ -41,4 +43,16 @@ export function reportAt(day: string, today: string, nowText: string): string {
 export function slipThought(short: string | null, own: string): string {
   const text = short ?? own.trim()
   return text.slice(0, 80)
+}
+
+/**
+ * Starts a living run for `viceId` on `startedOn` (today or a past day; a
+ * future day starts nothing). Returns the same record when a run already
+ * lives or the Black Box refuses the days (they touch a run it holds).
+ */
+export function startRunOn(record: BlackBoxRecord, viceId: string, startedOn: string, today: string): BlackBoxRecord {
+  if (startedOn > today) return record
+  if (living(record.attempts).some((a) => a.viceId === viceId && a.endedOn === null)) return record
+  const label = VICES.find((v) => v.id === viceId)?.label ?? viceId
+  return startAttempt(record, { viceId, label, startedOn, startedBy: "", structure: [], acknowledgedRisk: false, today })
 }

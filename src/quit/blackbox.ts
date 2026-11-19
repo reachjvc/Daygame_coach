@@ -5,12 +5,26 @@ import { useBlackBox } from "@/src/vice/blackbox/useBlackBox"
 import { useBlackBoxSync } from "@/src/vice/blackbox/useBlackBoxSync"
 import { fileReport, latestReportDay, living, nowInBrowser, removeReport, revivalClashes } from "@/src/vice/blackbox/blackboxStore"
 import type { ViceAttempt, ViceEndingId } from "@/src/vice/types"
-import { laterDay } from "./blackboxLogic"
+import { isSettled } from "@/src/vice/blackbox/viceSyncService"
+import { laterDay, startRunOn } from "./blackboxLogic"
+
+function hasSignInCookie(): boolean {
+  try {
+    return /(?:^|;\s*)sb-[^=]*auth-token/.test(document.cookie)
+  } catch {
+    return true
+  }
+}
 
 /** null while unknown; true when the visitor has an account session. Never blocks the tool. */
-export function useSignedIn(patient = false): boolean | null {
+export function useSignedIn(patient = false, quiet = false): boolean | null {
   const [signedIn, setSignedIn] = useState<boolean | null>(null)
   useEffect(() => {
+    // `quiet`: no sign-in cookie means signed out and no request is made (a 401 shows as a console error).
+    if (quiet && !hasSignInCookie()) {
+      setSignedIn(false)
+      return
+    }
     let cancelled = false
     const ctl = new AbortController()
     // A slow answer counts as signed out after 4 seconds, so no button waits for it for ever.
@@ -29,7 +43,7 @@ export function useSignedIn(patient = false): boolean | null {
       if (timer) clearTimeout(timer)
       ctl.abort()
     }
-  }, [patient])
+  }, [patient, quiet])
   return signedIn
 }
 
@@ -46,12 +60,20 @@ export interface SlipInput {
   ending: ViceEndingId
 }
 
-export interface QuitBlackBoxApi {
+/** What the quit date tool needs of the Black Box, signed in or not. */
+export interface QuitRunApi {
   /** The browser copy is read. */
   ready: boolean
+  /** Safe to start a run: the copy is read and, signed in, the account has answered (or could not). */
+  settled: boolean
   /** The living run for this vice, or null. */
   run: ViceAttempt | null
   today: string
+  /** Starts a living run on `startedOn` (today or past). True when a run lives afterwards. */
+  startRun: (startedOn: string) => boolean
+}
+
+export interface QuitBlackBoxApi extends QuitRunApi {
   /** Files a close call you beat; the new report id, or null when the Black Box refused it. */
   fileCloseCall: (input: CloseCallInput) => string | null
   /** Files a lapse (ends the run); the new report id, or null when refused. */
@@ -82,6 +104,18 @@ export function useQuitBlackBox(viceId: string): QuitBlackBoxApi {
   const run = useMemo(
     () => living(record.attempts).find((a) => a.viceId === viceId && a.endedOn === null) ?? null,
     [record, viceId],
+  )
+
+  const startRun = useCallback(
+    (startedOn: string): boolean => {
+      const cur = latest.current
+      const next = startRunOn(cur, viceId, startedOn, today)
+      if (next === cur) return living(cur.attempts).some((a) => a.viceId === viceId && a.endedOn === null)
+      latest.current = next
+      update(() => next)
+      return true
+    },
+    [update, viceId, today],
   )
 
   const file = useCallback(
@@ -142,10 +176,35 @@ export function useQuitBlackBox(viceId: string): QuitBlackBoxApi {
     [record, sync.state, sync.pending],
   )
 
+  // Signed in, a run is not started until the account has answered: otherwise a run the account already holds could be doubled.
+  const settled = ready && isSettled(sync.state)
   return useMemo(
-    () => ({ ready, run, today, fileCloseCall, fileSlip, status, has, undo }),
-    [ready, run, today, fileCloseCall, fileSlip, status, has, undo],
+    () => ({ ready, settled, run, today, startRun, fileCloseCall, fileSlip, status, has, undo }),
+    [ready, settled, run, today, startRun, fileCloseCall, fileSlip, status, has, undo],
   )
+}
+
+/** The Black Box for one vice, browser copy only (signed out). Nothing talks to an account. */
+export function useLocalQuitBlackBox(viceId: string): QuitRunApi {
+  const { record, update, ready, today } = useBlackBox()
+  const latest = useRef(record)
+  latest.current = record
+  const run = useMemo(
+    () => living(record.attempts).find((a) => a.viceId === viceId && a.endedOn === null) ?? null,
+    [record, viceId],
+  )
+  const startRun = useCallback(
+    (startedOn: string): boolean => {
+      const cur = latest.current
+      const next = startRunOn(cur, viceId, startedOn, today)
+      if (next === cur) return living(cur.attempts).some((a) => a.viceId === viceId && a.endedOn === null)
+      latest.current = next
+      update(() => next)
+      return true
+    },
+    [update, viceId, today],
+  )
+  return useMemo(() => ({ ready, settled: ready, run, today, startRun }), [ready, run, today, startRun])
 }
 
 export { nowInBrowser }
