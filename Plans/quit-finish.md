@@ -40,7 +40,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | 9 | What it costs you | wave-1 `cost` | per-pack price and live update (copy e); money setup from the shared record | not started |
 | 10 | Your past attempts | lab `past/best` | wave-1's "many tries are normal" number and "after the first slip" question | not started |
 | 11 | Today's lesson | lab `lessons/best` | — | not started |
-| 12 | How people quit | wave-1 `how` | the sourced sections of `library/best`, shortened | not started |
+| 12 | How people quit | wave-1 `how` | the sourced sections of `library/best`, shortened | building |
 | 13 | What it gives you | wave-1 `gives` | — | building |
 | later | Tell someone, Money on the line, Clear-out list, What helps besides apps, Who you are now | not built | accountability copies a, b, e as reference | not started |
 | later | Talk to a coach | `/quit/coaching` | needs his price, guarantee wording and privacy email | hidden |
@@ -803,6 +803,84 @@ five worded buttons, any day; alternative: the wave-1 0–100 slider after a day
 alternative: none (the site sends no notifications). G4 "Something else" and own swaps, because step 1 says "write
 down what you think nicotine gives you" in his own words; alternative: the 8 needs only. G5 b11 (weight) under "The
 nicotine itself"; alternative: a ninth need "Appetite" with its own swaps (needs sources first).
+
+### Tool 12: How people quit — brief (Opus, 2026-11-19) — build exactly this, decide nothing
+
+Model: Opus builds it (small tool; most of the work is choosing what to keep). Address: `/quit/nicotine/how`
+(rebuilds wave-1 `how` in place in `src/quit/tools/how/`). Folded in from lab `library/best`: its sourced sections,
+shortened (below). Never edit lab files; lab `library/best` imports `groupNumbers` from `src/quit/tools/how/logic.ts`,
+so that export keeps its behaviour. Nicotine only: no addiction switcher (E19). Desktop: the page column, like the
+other tools. It asks nothing, so it reads and writes nothing in the shared record. All choices below are **proposed**;
+the recommendation is the first option each time.
+
+**What it keeps from each source**
+- From wave-1 `how`: the hope number on top, all 15 checked numbers in their groups (who gets free, how quitting
+  goes, what helps, what happens after), every basis box, caveat and source, the medicine note at the end.
+- From `library/best`: the three "True or not?" facts (each placed once, in the section it belongs to: f3 "most
+  failed tries end in the first 8 days" under How quitting goes, f1 "patch alone vs patch plus gum" under What helps,
+  f2 "more anxious and depressed" under What happens after), and the four sourced outside services (US quitline,
+  Smokefree.gov, England helpline, NHS services) as "Free help outside this site".
+- Not taken from `library/best` (E15–E19): search, Saved, bookmarks, "Mark as read", "about 1 min read", the
+  addiction switcher, the card carousel. "What helps" swaps: the weak and untested ones belong to Tool 13 "What it
+  gives you"; the strong ones are already here (varenicline = the medicine number, combination NRT = fact f1), and
+  "Walk or climb stairs for five minutes" is not used because its sources don't back "five minutes" (C6; Craving now?
+  has the Move tile). "What to expect" (`symptomCourse`) is Tool 6's; here one line links to it. Outside-help rows
+  that are tips, not help outside (`combo-nrt` = f1, `exercise` (C6), `tell-one`), and `forum` (no source) are left
+  out (E16). Nothing is removed from the data file.
+
+**Screen (one page)**
+1. Top: the hope number as the large card. Under it one line (A18): "Almost every study here counted cigarette
+   smokers, most before vapes were common. Each card says who was counted."
+2. **On this page:** five jump buttons with counts ("Who gets free · 2", "How quitting goes · 4", "What helps · 5",
+   "What happens after · 6", "Free help · 4"; counted from the data, the second hope number `hope-lifetime` sits
+   under Who gets free); a tap scrolls to the section (no history entry), each at least
+   44 px.
+3. Sections in that order. Each number is a **compact card** (A15, E17): the big figure; the headline, where a
+   headline that starts with the big figure drops that start so it is not said twice ("About 19 in 100 /
+   Americans ever hooked…"); the "Counted:" line; then one **Details** button with a visible chevron that turns
+   (`aria-expanded`). Details opens: the checked tag and chips, the weak line, the basis box (study, who, how many,
+   where, when, what was measured, caveat) and the source tap. Closed cards, each about half as tall as today's. Under What helps, one line: "Craving right now? Craving now? has quick help for the moment."
+   (link when `sos` is live).
+4. **True or not?** cards (in their sections): the statement, two buttons **True** / **Not true**; a tap shows
+   "Right." or "Not quite.", the answer ("True" / "Not true"), the explanation, its "Counted:" line and its source.
+   Nothing is saved; a reload shows them closed again.
+5. **Free help outside this site:** the four services, each its line and an "Open the site" link (new tab,
+   44 px), with its source tap.
+6. One line: "What you'll feel, day by day, and what helps: <Tool 6 name>." (a link, name read from the menu;
+   shown only once Tool 6 is live, no line before). Then the medicine note (clozapine, olanzapine, theophylline) with
+   its source, and the page's Sources fold, as today.
+
+**Data fixes (`nicotine.json`)**
+- A16, RULEBOOK 12c: two big figures are time stamps. `after-first-month` "Week 1" → **"Anxiety fell"** (headline
+  already starts with it, so the card shows "Anxiety fell / from the first week off, …"); `after-mood` "Years 1 and 3"
+  → **"Life rated better"**; both lose `timeIsResult`. "26 years" stays: the time is the finding.
+
+**Counting (A27):** `start` on load; `done` once, when the Free help section scrolls into view.
+
+**Review items for this tool** (A, E, B, 2026-11-19), each answered above: A15 (wall of cards, no summary or jump
+links, figure said twice, hero breaks, folds without a marker), A16 (time-stamp figures), A18 (cigarette studies not
+said up front), A27 (done = page view), A30 and B28 (the Sources fold and the footer "Sources" link stack: frame-wide,
+left to Tool 0; the fold stays because it is the page's full list), E15 (one-liners dressed as articles), E16 (the same
+advice in three or four sections), E17 (empty-looking "Based on", footer outside the card), E18 (search: dropped), E19
+(switcher: dropped), C6 ("five minutes" not backed: the swap is not used).
+
+**Acceptance (Playwright `tests/e2e/quit/how.spec.ts`, 390x844 touch and 1280x800; screenshots looked at):**
+1. Every number card shows (hope first), each with its Counted line; Details opens the basis box with its six rows
+   and the source; the chevron button says expanded.
+2. No headline starts with its own big figure on screen; no big figure is "Week 1" or "Years 1 and 3".
+3. Jump buttons scroll their section into view; the page height on the phone is under 5,800 px with all cards closed
+   (built: 5,591 px, holding the facts and outside help too; the 15 number cards alone went from about 420 to about
+   200 px each).
+4. Each True or not? card: tapping the wrong answer shows "Not quite." and the right one, with the source.
+5. Free help shows the four services and no forum, exercise, tell-one or combo-nrt line.
+6. No search box, no "Mark as read", no "min read", no switcher.
+7. No console error, no sideways scroll, every tap target at least 44 px; the menu row opens it.
+8. Then the three-reviewer check and fix rounds; status "waiting for you".
+
+**Proposed (owner may veto):** H1 cards closed, with Details (alternative: open as today, 6,400 px). H2 the three
+facts sit inside their sections (alternative: a separate True or not? section). H3 the outside help stays here until
+"What helps besides apps" is built, then becomes a link. H4 the "mirror" lines ("You think nobody hooked like you ever
+really gets free") stay unused here, as in wave-1 (alternative: show each above its number).
 
 ## Done
 

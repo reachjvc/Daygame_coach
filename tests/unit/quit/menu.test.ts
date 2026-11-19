@@ -56,8 +56,9 @@ describe("who can be viewed", () => {
     expect(liveToolIds()).toEqual(expect.arrayContaining(["date", "sos"]))
     expect(toolReachable("date", false)).toBe(true)
     expect(toolReachable("sos", false)).toBe(true)
-    expect(toolReachable("cost", false)).toBe(false)
-    expect(toolReachable("cost", true)).toBe(true)
+    // "identity" (Who you are now) is a later tool, not built
+    expect(toolReachable("identity", false)).toBe(false)
+    expect(toolReachable("identity", true)).toBe(true)
     expect(previewAllowed(false)).toBe(false)
   })
   it("every live tool is a real menu tool, and finished tools are live", () => {

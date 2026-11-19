@@ -356,7 +356,7 @@
     },
     {
       "kind": "after-first-month",
-      "big": "Week 1",
+      "big": "Anxiety fell",
       "headline": "Anxiety fell from the first week off, in people hooked on nicotine who stayed off.",
       "mirror": "You think quitting will leave you on edge for weeks.",
       "severity": "dependent",
@@ -372,7 +372,6 @@
       "caveat": "It shows anxiety fell in those who stayed off, not how much. One small trial from the 1990s. People who slipped are not in this count. They were in a quit trial, so may have had support or medicine. Reviews count anxiety among withdrawal signs that peak in week 1 (belief 2); in this trial, among people who stayed off, it was already falling by then.",
       "projection": false,
       "checked": "hooked",
-      "timeIsResult": true,
       "weak": "Small: 70 people, one trial",
       "ref": {
         "cite": "West R, Hajek P (1997). What happens to anxiety levels on giving up smoking? American Journal of Psychiatry 154(11):1589-92.",
@@ -390,7 +389,7 @@
     },
     {
       "kind": "after-mood",
-      "big": "Years 1 and 3",
+      "big": "Life rated better",
       "headline": "Quitters rated their life and mood better than people who kept smoking, one and three years on.",
       "mirror": "You worry life will feel empty without cigarettes.",
       "severity": "treatment",
@@ -406,7 +405,6 @@
       "caveat": "Quitters weren't chosen at random, so they may differ in other ways: they already rated their life a little higher before quitting. Life satisfaction slipped for everyone, but less for quitters; the authors call the differences modest. Quitting made no difference to marriage satisfaction.",
       "projection": false,
       "checked": "not",
-      "timeIsResult": true,
       "weak": "Small differences, the authors say",
       "ref": {
         "cite": "Piper ME, Kenford S, Fiore MC, Baker TB (2012). Smoking cessation and quality of life: changes in life satisfaction over 3 years following a quit attempt. Annals of Behavioral Medicine.",

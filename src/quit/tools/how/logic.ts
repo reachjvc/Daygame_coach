@@ -30,3 +30,45 @@ export function groupNumbers(
   const rest = numbers.filter((n) => !isSameNumber(n, hope))
   return HOW_ORDER.map((group) => ({ group, items: rest.filter((n) => groupOf(n.kind) === group) })).filter((g) => g.items.length > 0)
 }
+
+/** The headline without a leading repeat of the big figure (A15): "About 19 in 100 Americans…" → "Americans…". */
+export function headlineAfterBig(headline: string, big: string): string {
+  const b = big.trim()
+  if (!b || !headline.toLowerCase().startsWith(b.toLowerCase())) return headline
+  const rest = headline.slice(b.length).replace(/^[\s,:;–-]+/, "")
+  return rest.length > 0 ? rest : headline
+}
+
+/** Sections of the page, in reading order. `hope-` numbers other than the hero sit under "who". */
+export type HowSection = "who" | "how" | "helps" | "after" | "other"
+export const SECTION_ORDER: HowSection[] = ["who", "how", "helps", "after", "other"]
+
+/** Where each "True or not?" fact sits (once each, review E16). Unknown ids go to "other". */
+export const FACT_SECTION: Record<string, HowSection> = { f1: "helps", f2: "after", f3: "how" }
+
+/** Outside-help rows that are real services. Tips (combo-nrt, exercise, tell-one) and the unsourced forum stay out (E16, C6). */
+export const OUTSIDE_IDS = ["quitline-us", "smokefree-gov", "quitline-uk", "nhs-services"] as const
+
+export type HowItem<F> = { type: "number"; n: QuitNumber } | { type: "fact"; f: F }
+
+/** Numbers (hero left out) and facts per section; empty sections dropped. */
+export function buildSections<F extends { id: string }>(
+  numbers: QuitNumber[],
+  hope: Pick<QuitNumber, "kind" | "big" | "headline"> | null,
+  facts: F[],
+): { section: HowSection; items: HowItem<F>[] }[] {
+  const groups = groupNumbers(numbers, hope)
+  return SECTION_ORDER.map((section) => {
+    const nums = groups
+      .filter((g) => (g.group === "hope" ? "who" : g.group) === section)
+      .flatMap((g) => g.items)
+      .map((n): HowItem<F> => ({ type: "number", n }))
+    const fs = facts.filter((f) => (FACT_SECTION[f.id] ?? "other") === section).map((f): HowItem<F> => ({ type: "fact", f }))
+    return { section, items: [...nums, ...fs] }
+  }).filter((s) => s.items.length > 0)
+}
+
+/** Outside help in the data's order, services only. */
+export function outsideHelp<B extends { id: string }>(besides: B[]): B[] {
+  return besides.filter((b) => (OUTSIDE_IDS as readonly string[]).includes(b.id))
+}

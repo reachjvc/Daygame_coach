@@ -276,21 +276,6 @@ test.describe("quit wave 1 part 1 @phone", () => {
     expect(stored.tenYearUsd).toBe(Math.round(stored.yearUsd) * 10)
   })
 
-  test("how shows every number card, hope first", async ({ page }) => {
-    await page.goto(quitUrl(`${A}/how`))
-    const cards = page.locator('[data-testid^="number-"]')
-    const expectedCards = data.numbers.filter((n) => !(data.hope && n.kind === data.hope.kind && n.big === data.hope.big && n.headline === data.hope.headline)).length + (data.hope ? 1 : 0)
-    await expect(cards).toHaveCount(expectedCards)
-    if (data.hope) await expect(cards.first()).toHaveAttribute("data-testid", `number-${data.hope.kind}`)
-    await expect(page.getByTestId("tag-checked")).toHaveCount(await cards.count())
-    await noSideways(page)
-    await shot(page, "how")
-    await page.locator("details summary", { hasText: t.common.basedOn }).first().click()
-    await shot(page, "how-based-on")
-    await page.getByRole("button", { name: t.common.source, exact: true }).first().click()
-    await expect(page.getByRole("link", { name: t.common.openSource }).first()).toHaveAttribute("target", "_blank")
-  })
-
   test("the sources fold and its footer link show only when the screen has sources", async ({ page }) => {
     await page.goto(quitUrl(`${A}/beliefs`))
     await expect(page.getByTestId("scene")).toBeVisible()

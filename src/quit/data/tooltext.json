@@ -151,7 +151,21 @@
       "helps": "What helps",
       "after": "What happens after",
       "other": "More"
-    }
+    },
+    "studiesLine": "Almost every study here counted cigarette smokers, most of them before vapes were common. Each card says who was counted.",
+    "onThisPage": "On this page",
+    "outside": "Free help outside this site",
+    "details": "Details",
+    "trueOrNot": "True or not?",
+    "guessTrue": "True",
+    "guessFalse": "Not true",
+    "right": "Right.",
+    "notQuite": "Not quite.",
+    "answerIs": "The answer: {answer}.",
+    "openSite": "Open the site",
+    "cravingLine": "Craving right now?",
+    "cravingLink": "Craving now? has quick help for the moment.",
+    "feelLine": "What you'll feel, day by day, and what helps:"
   },
   "privacy": {
     "backToTools": "Free quit tools",
