@@ -100,7 +100,7 @@ export function nameEveryRequest(account: string): () => void {
  *   - the copy space's own routes pass;
  *   - sign-out and crash reports pass untouched (they carry no plan data);
  *   - every OTHER request that is not a read (reminders, push devices,
- *     training, the role-model council, goals) never leaves the browser: it
+ *     training, goals) never leaves the browser: it
  *     fails here like a dropped connection (a TypeError, as fetch itself would), never as a refusal a sender might file as final. Reads go out naming the hidden account, which every
  *     route behind `requireAuth` refuses as "another account" (409), so what
  *     they would have shown is never the owner's.
