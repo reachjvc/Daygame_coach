@@ -229,7 +229,7 @@ function Page({ addiction, course, help, note, b3, nums, bb }: InnerProps & { bb
           <p data-testid="anxiety-line" className="mt-2 text-sm text-muted-foreground">
             {t.anxietyLine}
           </p>
-          <HelpFold testId="help-mood" count={4}>
+          <HelpFold testId="help-mood" count={3}>
             <HelpItem testId="help-mood-move" text={moveForMood.text} evidence={moveForMood.evidence} refs={moveForMood.refs} basis={moveForMood.basis} />
             <HelpItem testId="help-fog" head={t.fogHead} text={t.fogHelp} evidence={fog.evidence} refs={fogRefs} basis={{ who: t.fogWho, n: "79 studies", where: "Several countries", design: t.fogDesign, when: "Published 2012", caveat: t.fogCaveat }} />
             <HelpRow testId="help-caffeine-mood">
