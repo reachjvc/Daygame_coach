@@ -174,12 +174,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { lane: desktop, shard: 1/6, browser: chromium }
-          - { lane: desktop, shard: 2/6, browser: chromium }
-          - { lane: desktop, shard: 3/6, browser: chromium }
-          - { lane: desktop, shard: 4/6, browser: chromium }
-          - { lane: desktop, shard: 5/6, browser: chromium }
-          - { lane: desktop, shard: 6/6, browser: chromium }
+          - { lane: desktop, shard: 1/8, browser: chromium }
+          - { lane: desktop, shard: 2/8, browser: chromium }
+          - { lane: desktop, shard: 3/8, browser: chromium }
+          - { lane: desktop, shard: 4/8, browser: chromium }
+          - { lane: desktop, shard: 5/8, browser: chromium }
+          - { lane: desktop, shard: 6/8, browser: chromium }
+          - { lane: desktop, shard: 7/8, browser: chromium }
+          - { lane: desktop, shard: 8/8, browser: chromium }
           - { lane: timing, shard: 1/1, browser: chromium }
           - { lane: android, shard: 1/2, browser: chromium }
           - { lane: android, shard: 2/2, browser: chromium }
