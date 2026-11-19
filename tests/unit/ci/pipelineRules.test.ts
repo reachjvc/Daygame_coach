@@ -272,3 +272,33 @@ describe("the staging image job", () => {
     expect(off, "the static job no longer reports that staging publishing is off").toBeDefined()
   })
 })
+
+describe("live-check.yml: read-only, after a successful Production deploy, one place for the address", () => {
+  const live = load("live-check.yml")
+  const raw = readFileSync(join(DIR, "live-check.yml"), "utf8")
+
+  it("starts on deployment_status only, and only for a successful Production deploy", () => {
+    expect(triggers(live)).toEqual(["deployment_status"])
+    expect(live.jobs.live.if).toBe(
+      "${{ github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Production' }}",
+    )
+  })
+
+  it("reads, takes no secrets and states LIVE_URL once", () => {
+    expect(live.permissions).toEqual({ contents: "read" })
+    expect(raw).not.toMatch(/\bsecrets\./)
+    expect(raw.match(/https:\/\/daygame-coach\.vercel\.app/g)).toHaveLength(1)
+    expect((live as unknown as { env: Record<string, string> }).env.LIVE_URL).toBe("https://daygame-coach.vercel.app")
+    expect(live.jobs.live["runs-on"]).toBe("ubuntu-24.04")
+  })
+
+  it("waits for the deployed commit before the browser runs, and runs the live project only", () => {
+    const steps = live.jobs.live.steps ?? []
+    const wait = steps.findIndex((s) => s.run?.includes("scripts/ci/live-wait.mjs"))
+    const browser = steps.findIndex((s) => s.run?.includes("playwright test --project=live"))
+    expect(wait).toBeGreaterThanOrEqual(0)
+    expect(browser).toBeGreaterThan(wait)
+    expect(steps[wait].env?.DEPLOY_SHA).toBe("${{ github.event.deployment.sha }}")
+    expect(steps[browser].if).toBe("${{ steps.wait.outputs.state == 'match' }}")
+  })
+})

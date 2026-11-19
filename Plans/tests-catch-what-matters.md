@@ -311,6 +311,8 @@ Accept: per spec a dispatched run with `repeat_each=10` on its lane: 0 failed, 0
 Accept: one real production deploy runs the check green; quote the run. B4 decides whether this
 phase can finish.
 
+**Status:** built 2026-11-19, acceptance pending — the first real Production deploy after this commit is the B4/B5 test (workflow `live-check.yml`, runs `Live check`); the foreman records its run id. Checked: the live spec passes 8/8 against the real site from this PC in under 5 s; unit tests for the healthz poll (match, superseded, timeout), `main-status.mjs` and the workflow rules pass. Not yet checked: GitHub runner IPs (B4) and that Vercel's app-created `deployment_status` events start workflows (B5; from memory of GitHub's docs, the real run decides). Found: every signed-out page makes one `GET /api/settings/time-preferences` that answers 401 (a console error for each visitor; `components/ClockSync.tsx` documents it as intended; the spec allow-lists exactly that request with the reason; proposed fix, not done: skip the call when there is no sign-in cookie, as the quit pages already do).
+
 ## Phase 7 — How strong are the tests on daily tools · M · sonnet
 
 1. Commit `scripts/mutation/stryker.conf.json` (`testRunner: vitest`, `vitest.related: true`,

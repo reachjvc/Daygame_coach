@@ -4,7 +4,7 @@
  *
  *   node scripts/ci/main-status.mjs
  *
- * Prints one line per red workflow (CI, E2E Tests, Nightly checks) when the newest finished
+ * Prints one line per red workflow (CI, E2E Tests, Nightly checks, Live check) when the newest finished
  * push run on main failed, for example
  *   main is red since 2026-11-18: CI checks (run 44383715199)
  * and nothing when both are green. Always exits 0, within 5 s, also offline or
@@ -29,11 +29,14 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { pathToFileURL } from "node:url"
 
-// CI and E2E Tests judge push runs; the nightly runs on a schedule.
+// CI and E2E Tests judge push runs; the nightly runs on a schedule. The live check runs when Vercel
+// reports a deploy (`deployment_status`), whose ref is the deployed commit, not `main`, so it is not
+// filtered by branch; a Preview deploy leaves a skipped run, which findRed ignores, hence the wider window.
 const WORKFLOWS = [
   { name: "CI", event: "push" },
   { name: "E2E Tests", event: "push" },
   { name: "Nightly checks", event: "schedule" },
+  { name: "Live check", event: "deployment_status", anyBranch: true, limit: 100 },
 ]
 const WINDOW = 30
 // startup_failure: the run never started (a broken workflow file). action_required
@@ -52,7 +55,7 @@ const FLAKY_MIN = 2
 export function findRed(runs) {
   if (!Array.isArray(runs)) return []
   const red = []
-  for (const { name: workflow, event } of WORKFLOWS) {
+  for (const { name: workflow, event, limit } of WORKFLOWS) {
     // Only finished runs of the right event count; a cancelled or skipped run is neither red nor green.
     const finished = runs.filter(
       (r) =>
@@ -79,7 +82,7 @@ export function findRed(runs) {
       workflow,
       runId: finished[0].databaseId,
       since: String(oldest.createdAt).slice(0, 10),
-      atLeast: !sawSuccess && finished.length >= WINDOW,
+      atLeast: !sawSuccess && finished.length >= WINDOW && limit === undefined,
     })
   }
   return red
@@ -225,9 +228,9 @@ export async function main(env = process.env) {
   else {
     // One query per workflow: a push burst fills one shared list with unfinished runs.
     const lists = await Promise.all(
-      WORKFLOWS.map(({ name, event }) =>
+      WORKFLOWS.map(({ name, event, anyBranch, limit }) =>
         gh(
-          ["run", "list", "--branch", "main", "--workflow", name, "--event", event, "--status", "completed", "--limit", String(WINDOW), "--json", "databaseId,workflowName,event,status,conclusion,createdAt"],
+          ["run", "list", ...(anyBranch ? [] : ["--branch", "main"]), "--workflow", name, "--event", event, "--status", "completed", "--limit", String(limit ?? WINDOW), "--json", "databaseId,workflowName,event,status,conclusion,createdAt"],
           Math.min(3000, left()),
         ),
       ),

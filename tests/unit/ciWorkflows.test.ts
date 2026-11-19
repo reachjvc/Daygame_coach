@@ -89,7 +89,10 @@ function shardsOf(job: string, body: string): Shard[] {
 const e2eJobs = jobs(e2e)
 /** The jobs that run Playwright. A new one not named here makes its lanes look like lanes nothing runs. */
 const browserJobs = ["e2e-fast", "lanes", "nightly"]
+const liveCheckJobs = jobs(uncommented(readFileSync(join(root, ".github/workflows/live-check.yml"), "utf8")))
+// The `live` project belongs to live-check.yml (Phase 6 of Plans/tests-catch-what-matters.md), not to e2e.yml.
 const SHARDS = browserJobs.flatMap((job) => shardsOf(job, e2eJobs[job] ?? ""))
+const LIVE_SHARDS = shardsOf("live-check", liveCheckJobs["live"] ?? "")
 
 describe("the browser tests that CI actually runs", () => {
   test("every browser job is in e2e.yml and runs something", () => {
@@ -113,14 +116,14 @@ describe("the browser tests that CI actually runs", () => {
   })
 
   test("every Playwright project is run by exactly one CI job", () => {
-    const runsIn = (name: string) => [...new Set(SHARDS.filter((s) => s.lane === name).map((s) => s.job))]
+    const runsIn = (name: string) => [...new Set([...SHARDS, ...LIVE_SHARDS].filter((s) => s.lane === name).map((s) => s.job))]
     expect(PROJECT_NAMES.filter((n) => runsIn(n).length === 0), "defined but run by no CI job").toEqual([])
     expect(PROJECT_NAMES.filter((n) => runsIn(n).length > 1), "run by two jobs, doubling the minutes").toEqual([])
   })
 
   test("every lane named in e2e.yml is a project that exists", () => {
     // Playwright fails the whole run on a name it does not know.
-    expect([...new Set(SHARDS.map((s) => s.lane))].filter((l) => !PROJECT_NAMES.includes(l))).toEqual([])
+    expect([...new Set([...SHARDS, ...LIVE_SHARDS].map((s) => s.lane))].filter((l) => !PROJECT_NAMES.includes(l))).toEqual([])
   })
 
   test("every sharded lane runs every one of its shards, once", () => {
@@ -203,6 +206,24 @@ describe("the browser tests that CI actually runs", () => {
     // left on, CI tests a different app (playwright.config.ts says how it bit).
     expect(playwrightConfig.use?.serviceWorkers, "service workers must stay blocked by default").toBe("block")
     expect(playwrightConfig.globalSetup, "a global setup runs before every lane; the fixtures make what a test needs").toBeUndefined()
+  })
+})
+
+describe("the live-site check stays out of the pull-request lanes", () => {
+  const live = PROJECTS.find((p) => p.name === "live")
+  const ignored = (p: (typeof PROJECTS)[number]) => [p.testIgnore ?? []].flat().some((r) => r instanceof RegExp && r.test("tests/e2e/live/live-smoke.spec.ts"))
+
+  it("exists, selects only tests/e2e/live, and every other project ignores that folder", () => {
+    expect(live, "no `live` project").toBeTruthy()
+    expect((live?.testMatch as RegExp).test("tests/e2e/live/live-smoke.spec.ts")).toBe(true)
+    expect((live?.testMatch as RegExp).test("tests/e2e/audit.spec.ts")).toBe(false)
+    const open = PROJECTS.filter((p) => p.name !== "live" && !ignored(p) && !(p.testMatch instanceof RegExp && !p.testMatch.test("tests/e2e/live/live-smoke.spec.ts")))
+    expect(open.map((p) => p.name), "projects that would also run the live spec").toEqual([])
+  })
+
+  it("is run by live-check.yml alone, never by e2e.yml", () => {
+    expect(LIVE_SHARDS.map((s) => s.lane)).toEqual(["live"])
+    expect(SHARDS.filter((s) => s.lane === "live")).toEqual([])
   })
 })
 
