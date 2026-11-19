@@ -32,6 +32,8 @@ import { finishWorkout, startWorkout } from "@/src/db/workoutRepo"
 import { getProgram } from "@/src/programs/data/catalog"
 import type { ProgramSchedule } from "@/src/programs/types"
 
+import { OPEN_WORKOUT_REFUSAL } from "@/src/db/workoutLifecycle"
+
 vi.mock("@/src/db/supabase", async (importOriginal) =>
   (await import("@/tests/db/harness")).stackSupabaseModule(await importOriginal())
 )
@@ -287,7 +289,7 @@ describe("resetEnrollment", () => {
     const { id: theirs, before } = await aBystander("pr-rs-fa-other")
     const me = await newUser("pr-rs-fa-me")
     actWithoutRowSecurity(me)
-    await expect(resetEnrollment(me.id, theirs)).rejects.toThrow()
+    await expect(resetEnrollment(me.id, theirs)).rejects.toThrow("Enrollment not found")
     expect(await enrollmentText(theirs)).toBe(before)
   })
 })
@@ -338,7 +340,7 @@ describe("updateEnrollmentSchedule", () => {
     const { enrollment } = await enrollInProgram(me.id, { programId: "stronglifts-5x5", level: "beginner", unitSystem: "kg" })
     await startWorkout(me.id, { enrollmentId: enrollment.id, clientKey: `k-${randomUUID()}` })
     const before = await enrollmentText(enrollment.id)
-    await expect(updateEnrollmentSchedule(me.id, enrollment.id, null, { squat: 999 })).rejects.toThrow()
+    await expect(updateEnrollmentSchedule(me.id, enrollment.id, null, { squat: 999 })).rejects.toThrow(OPEN_WORKOUT_REFUSAL)
     expect(await enrollmentText(enrollment.id)).toBe(before)
   })
 })
@@ -369,7 +371,7 @@ describe("skipSession", () => {
     const { id: theirs, before } = await aBystander("pr-sk-fa-other")
     const me = await newUser("pr-sk-fa-me")
     actWithoutRowSecurity(me)
-    await expect(skipSession(me.id, theirs)).rejects.toThrow()
+    await expect(skipSession(me.id, theirs)).rejects.toThrow("Enrollment not found")
     expect(await enrollmentText(theirs)).toBe(before)
   })
 })
@@ -443,7 +445,7 @@ describe("reviseSessionLog", () => {
     actAs(me)
     const { enrollment } = await enrollInProgram(me.id, { programId: "stronglifts-5x5", level: "beginner", unitSystem: "kg" })
     const open = await startWorkout(me.id, { enrollmentId: enrollment.id, clientKey: `k-${randomUUID()}` })
-    await expect(reviseSessionLog(me.id, enrollment.id, open.id)).rejects.toThrow()
+    await expect(reviseSessionLog(me.id, enrollment.id, open.id)).rejects.toThrow(OPEN_WORKOUT_REFUSAL)
     expect(await asOwner((q) => q("select 1 from workout_logs where id = $1", [open.id]))).toHaveLength(1)
   })
 })

@@ -116,7 +116,7 @@ describe("discardWorkout", () => {
     const log = await text("workout_logs", "id", mine.id)
     const sets = await text("workout_sets", "log_id", mine.id)
 
-    await expect(discardWorkout(mine.user.id, mine.id)).rejects.toThrow()
+    await expect(discardWorkout(mine.user.id, mine.id)).rejects.toMatchObject({ fate: "finished" })
 
     expect(await text("workout_logs", "id", mine.id)).toEqual(log)
     expect(await text("workout_sets", "log_id", mine.id)).toEqual(sets)
@@ -128,7 +128,7 @@ describe("discardWorkout", () => {
     const me = await newUser("ws-dw-x-me")
     actAs(me)
 
-    await expect(discardWorkout(me.id, theirs.id)).rejects.toThrow()
+    await expect(discardWorkout(me.id, theirs.id)).rejects.toMatchObject({ name: "WorkoutGone", fate: "discarded" })
 
     expect(await text("workout_logs", "id", theirs.id)).toEqual(theirLog)
   })
