@@ -424,26 +424,16 @@ test.describe("time & energy audit @phone", () => {
       await page.keyboard.press("Escape")
       expect(await page.evaluate(() => localStorage.getItem("audit-queue-v1"))).toContain("Private thing")
 
-      const trail: string[] = []
-      const logs: string[] = []
-      page.on("framenavigated", (frame) => frame === page.mainFrame() && trail.push(`${Date.now() % 100000} ${new URL(frame.url()).pathname}`))
-      page.on("domcontentloaded", () => trail.push(`${Date.now() % 100000} DCL`))
-      page.on("load", () => trail.push(`${Date.now() % 100000} load`))
-      page.on("request", (r) => /dashboard|_rsc|healthz|audit|settings/.test(r.url()) && trail.push(`${Date.now() % 100000} req ${r.method()} ${r.url().replace(/^https?:\/\/[^/]+/, "").slice(0, 70)}`))
-      page.on("console", (m) => logs.push(m.text().slice(0, 150)))
-      page.on("pageerror", (e) => logs.push(`pageerror ${String(e).slice(0, 150)}`))
       await page.goto("/dashboard", { waitUntil: "domcontentloaded" })
       await whenHydrated(page.getByTestId("header-logout-button"), 60_000)
-      trail.push(`${Date.now() % 100000} click`)
+      // The page's own load, too: a press that lands while it is still loading (the
+      // button already answers, the rest of the page does not) was lost about one run
+      // in ten, and Log Out then never named what waits (CI trail: press, then the
+      // address and `load` ~150 ms later, no dialog for 20 s).
+      await page.waitForLoadState("load")
       await page.getByTestId("header-logout-button").click()
       // It cannot be sent (no signal for it), so Log Out names it first (alpha
       // fast-audit-01); only "Log out anyway" throws it away.
-      // DIAGNOSIS (Phase 5): what the page did, if the dialog never comes.
-      await page.getByTestId("log-out-anyway").waitFor({ timeout: 20_000 }).catch(async (error) => {
-        const queue = await page.evaluate(() => localStorage.getItem("audit-queue-v1")).catch(() => "unreadable")
-        const body = await page.evaluate(() => `btn=${document.querySelector('[data-testid="header-logout-button"]')?.outerHTML.slice(0, 300)} dialogs=${document.querySelectorAll('[role=dialog],[role=alertdialog]').length} hist=${history.length}`).catch(() => "unreadable")
-        throw new Error(`${error}\nDIAG url=${page.url()} queue=${String(queue).slice(0, 200)} nav=${JSON.stringify(trail)} console=${JSON.stringify(logs)} body=${body.slice(0, 600)}`)
-      })
       await page.getByTestId("log-out-anyway").click({ timeout: 20_000 })
       await expect.poll(() => new URL(page.url()).pathname, { timeout: 30_000 }).toBe("/")
       expect(await page.evaluate(() => localStorage.getItem("audit-queue-v1"))).toBeNull()
