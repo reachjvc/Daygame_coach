@@ -67,7 +67,7 @@ interface InnerProps {
 }
 
 function Inner(props: InnerProps) {
-  const signedIn = useSignedIn(true)
+  const signedIn = useSignedIn(true, true)
   const [bb, setBb] = useState<QuitBlackBoxApi | null>(null)
   const onApi = useCallback((api: QuitBlackBoxApi | null) => setBb(api), [])
   // Signed in the Black Box syncs to the account; otherwise it is the copy in this browser.

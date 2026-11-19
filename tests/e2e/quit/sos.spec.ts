@@ -346,8 +346,8 @@ test.describe("craving now, signed out", () => {
       await page.goBack()
       await page.getByTestId("finish").click()
       await page.getByTestId("ask-fight").click()
-      // the signed-out visit asks /api/whoami who it is and is told 401: that is the answer, not a fault
-      expect(errors.filter((e) => !e.includes("401 (Unauthorized)"))).toEqual([])
+      // with no sign-in cookie the tool does not ask /api/whoami, so no 401 shows in the console
+      expect(errors).toEqual([])
     })
   })
 
