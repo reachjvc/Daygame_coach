@@ -20,7 +20,7 @@ export function StandingModule({ segs }: { segs: string[] }) {
 }
 
 function Area({ areaId }: { areaId: string }) {
-  const { plan, change, from } = usePlanNew()
+  const { plan, change } = usePlanNew()
   const nav = useNav("standing/done")
   const order = standingOrder(plan)
   const at = Math.max(0, order.indexOf(areaId))

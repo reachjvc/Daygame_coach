@@ -29,7 +29,8 @@ describe("routines changes", () => {
   })
 
   it("sets steps in order, keeps a kept step's id and days, drops the rest", () => {
-    let { plan, id } = withRoutine()
+    const { plan: start, id } = withRoutine()
+    let plan = start
     plan = setRoutineSteps(plan, id, [step("Glass of water", 1), step("Bed made", 2)])
     plan = setRoutineWhen(plan, id, [0, 2], 450)
     const keptId = plan.routines[0].steps[0].id
@@ -42,13 +43,15 @@ describe("routines changes", () => {
   })
 
   it("stores where a step opens and the question it asks", () => {
-    let { plan, id } = withRoutine()
+    const { plan: start, id } = withRoutine()
+    let plan = start
     plan = setRoutineSteps(plan, id, [{ title: "Read your lines", minutes: 1, goesTo: "answer:affirmations", asks: " What is the main job? " }])
     expect(plan.routines[0].steps[0]).toMatchObject({ goesTo: "answer:affirmations", asks: "What is the main job?", libraryStepId: null })
   })
 
   it("an ordered routine gets its days on every step and on the routine; no days before it is set", () => {
-    let { plan, id } = withRoutine()
+    const { plan: start, id } = withRoutine()
+    let plan = start
     plan = setRoutineSteps(plan, id, [step("Bed made")])
     const today = "2026-11-18"
     expect(plan.routines[0]).toMatchObject({ daysPerWeek: 0 })

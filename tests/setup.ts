@@ -86,7 +86,8 @@ const same = (a: PropertyDescriptor | undefined, b: PropertyDescriptor | undefin
  * Log file in that worker drew the phone layout). So a getter whose answer
  * changed is also set back through its own setter.
  */
-function restore(target: object, before: Before, dropAdded: boolean) {
+function restore(target: object, before: Before, dropAdded: boolean): string[] {
+  const stuck: string[] = []
   for (const [key, { desc: original, value }] of before) {
     const now = Object.getOwnPropertyDescriptor(target, key)
     try {
@@ -98,16 +99,17 @@ function restore(target: object, before: Before, dropAdded: boolean) {
       // a property the environment made non-configurable cannot be swapped back, nor could a test have swapped it
     }
   }
-  if (!dropAdded) return
+  if (!dropAdded) return stuck
   for (const key of Object.getOwnPropertyNames(target)) {
     // React marks a document it listens on; it is React's cache, not the test's
     if (before.has(key) || key.startsWith('_react')) continue
-    try {
-      Reflect.deleteProperty(target, key)
-    } catch {
-      // non-configurable: same as above
-    }
+    // A property the file added without `configurable: true` cannot be removed,
+    // and stays for every later file in this worker (2026-11-19: a non-configurable
+    // `navigator.vibrate` made the next Time Log settings file throw
+    // "Cannot redefine property: vibrate"). Name it here, in the file that did it.
+    if (!Reflect.deleteProperty(target, key)) stuck.push(key)
   }
+  return stuck
 }
 const shared: [object, Before, boolean][] = [[globalThis, own(globalThis), false]]
 if (typeof navigator !== 'undefined') shared.push([navigator, own(navigator), true])
@@ -118,5 +120,13 @@ afterAll(() => {
   vi.unstubAllGlobals()
   vi.unstubAllEnvs()
   vi.restoreAllMocks()
-  for (const [target, before, dropAdded] of shared) restore(target, before, dropAdded)
+  const stuck = shared.flatMap(([target, before, dropAdded]) =>
+    restore(target, before, dropAdded).map((key) => `${target === navigator ? 'navigator' : 'document'}.${key}`),
+  )
+  if (stuck.length) {
+    throw new Error(
+      `This file added ${stuck.join(', ')} without \`configurable: true\`, so it cannot be removed and would ` +
+        'leak into the next file in this worker. Pass `configurable: true` to Object.defineProperty.',
+    )
+  }
 })

@@ -28,7 +28,6 @@ test.describe.configure({ mode: "serial" })
 const SHOTS = process.env.PLAN_NEW_SHOTS ?? path.join(os.homedir(), ".cache/daygame-research/plan-steps/new-shots-p7")
 const NAV = 120_000
 const BASE = ROUTES.planNew
-const DAY = 86_400_000
 
 const TABLES = [
   "life_plans", "life_plan_nodes", "life_plan_north_stars", "life_plan_areas", "life_plan_goals", "life_plan_goal_checkpoints",
@@ -75,7 +74,7 @@ async function look(page: Page, name: string): Promise<void> {
     Array.from(document.querySelectorAll<HTMLElement>("button, a[href]:not([href='/settings']), [role=button], input[type=checkbox]"))
       .filter((el) => {
         const r = el.getBoundingClientRect()
-        if (el instanceof HTMLInputElement && el.closest("label")?.getBoundingClientRect().height! >= 44) return false
+        if (el instanceof HTMLInputElement && (el.closest("label")?.getBoundingClientRect().height ?? 0) >= 44) return false
         return r.width > 0 && r.height > 0 && r.height < 40
       })
       .map((el) => `${el.tagName}:${(el.textContent ?? "").trim().slice(0, 24)}:${Math.round(el.getBoundingClientRect().height)}`),
@@ -282,8 +281,10 @@ test.describe("the extra modules and the daily side", () => {
     await expect(tid(page, "questions-kind")).toBeVisible()
     await look(page, "questions-kind")
     for (let guard = 0; guard < 8 && !(await tid(page, "questions-done").isVisible()); guard++) {
+      // each question step has its own address: wait for the next one instead of a fixed time
+      const at = page.url()
       await tid(page, "skip").click()
-      await page.waitForTimeout(300)
+      await expect(page).not.toHaveURL(at)
     }
     await expect(tid(page, "questions-done")).toBeVisible()
     await look(page, "questions-done")

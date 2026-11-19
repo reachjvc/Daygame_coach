@@ -254,6 +254,9 @@ test.describe("the copy space page", () => {
     const jwts = new Set<string>()
     for (const r of responses) {
       if (r.url().startsWith(api.origin)) continue
+      // build files are made before any request, so they cannot carry one; the Supabase library in them
+      // names "access_token" as code, which is what this body check would otherwise read as a session
+      if (new URL(r.url()).pathname.startsWith("/_next/static/")) continue
       const type = r.headers()["content-type"] ?? ""
       if (!/json|html|javascript|text/.test(type)) continue
       const body = await r.text().catch(() => "")

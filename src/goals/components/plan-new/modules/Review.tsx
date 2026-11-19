@@ -5,7 +5,7 @@ import { useState } from "react"
 import { reviewCopy } from "@/src/goals/planSteps/copy/review"
 import { reviewPageCopy } from "@/src/goals/planSteps/copy/daily"
 import { lineupIds } from "@/src/goals/planSteps/planFacts"
-import { shownPerson } from "@/src/role-models/catalog"
+import { usePersonLookup } from "../usePersonLookup"
 import { memberForDay } from "@/src/role-models/councilTypes"
 import { commonCopy } from "@/src/goals/planSteps/copy/common"
 import { protectedId, activeSeasonGoals, checkinSettings, weeklyItems, type WeeklyItem } from "@/src/goals/planSteps/planFacts"
@@ -343,7 +343,8 @@ function Slipped({ chrome, monday, slipped, onNext }: { chrome: { eyebrow: strin
   const week = plan.reviews.find((r) => r.id === `week-${monday}`)
   const [text, setText] = useState(week?.lessons ?? "")
   const commit = () => change((p) => writeWeek(p, monday, today, { lessons: text }))
-  const hint = shownPerson(memberForDay(lineupIds(plan), today) ?? "")?.name ?? ""
+  const lookup = usePersonLookup()
+  const hint = lookup?.(memberForDay(lineupIds(plan), today) ?? "")?.name ?? ""
   return (
     <Frame {...chrome} testId="run-slipped" title={s.title} help={s.help} next={{ onClick: () => { commit(); onNext() } }} skip={{ onClick: onNext }}>
       <GrownText label={s.field_label} value={text} onChange={setText} placeholder={s.placeholder} max={3000} rows={3} testId="slipped-text" />

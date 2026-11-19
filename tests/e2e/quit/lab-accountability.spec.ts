@@ -276,7 +276,8 @@ test("copy B: home grid, clocks, hold-to-check-in, profile, chat, partner reques
   const hold = page.getByTestId("b-hold")
   await expect(hold).toHaveAttribute("data-done", "false")
   await hold.dispatchEvent("pointerdown")
-  await page.waitForTimeout(300)
+  // released once the ring has started filling, long before it is full
+  await expect.poll(async () => Number(await hold.getAttribute("data-fill"))).toBeGreaterThan(0)
   await hold.dispatchEvent("pointerup")
   await expect(hold).toHaveAttribute("data-done", "false")
   await expect(page.getByTestId("example-bar")).toBeVisible()

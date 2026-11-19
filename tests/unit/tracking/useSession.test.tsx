@@ -46,12 +46,14 @@ describe("useSession - endedSession storage", () => {
 
     // Setup sessionStorage mock
     Object.defineProperty(window, "sessionStorage", {
+      configurable: true,
       value: mockSessionStorage,
       writable: true,
     })
 
     // Setup navigator.vibrate mock
     Object.defineProperty(navigator, "vibrate", {
+      configurable: true,
       value: mockVibrate,
       writable: true,
     })
@@ -258,11 +260,13 @@ describe("useSession - pageshow event handling", () => {
     mockSessionStorage.clear()
 
     Object.defineProperty(window, "sessionStorage", {
+      configurable: true,
       value: mockSessionStorage,
       writable: true,
     })
 
     Object.defineProperty(navigator, "vibrate", {
+      configurable: true,
       value: mockVibrate,
       writable: true,
     })

@@ -16,7 +16,7 @@ import {
   dueCards, fieldsFor, readingRows, rungsReachedBy, routineGroups, tasksDue, weekItems, type ReadingRow, type WeekItem,
 } from "@/src/goals/planSteps/daily/todayModel"
 import { fill, plural } from "@/src/goals/planSteps/text"
-import { shownPerson } from "@/src/role-models/catalog"
+import { usePersonLookup } from "../usePersonLookup"
 import { memberForDay, quoteForDay } from "@/src/role-models/councilTypes"
 import type { NsPlan, NsRoutineStep } from "@/src/goals/types"
 import { usePlanNew } from "../PlanNewContext"
@@ -296,7 +296,8 @@ function ReadingView({ row, date, onReading }: { row: ReadingRow; date: string; 
 function Lineup({ plan, date }: { plan: NsPlan; date: string }) {
   const { change } = usePlanNew()
   const ids = lineupIds(plan)
-  const person = shownPerson(memberForDay(ids, date) ?? "")
+  const lookup = usePersonLookup()
+  const person = lookup?.(memberForDay(ids, date) ?? "") ?? null
   const week = plan.answers[LINEUP_WEEK_VALUE_KEY]?.trim()
   if (ids.length === 0 || (!person && !week)) return null
   const quote = person ? quoteForDay(person.quotes, date) : null

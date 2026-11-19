@@ -4,7 +4,7 @@ import { useMemo, useState } from "react"
 import { valuesCopy } from "@/src/goals/planSteps/copy/values"
 
 import { NS_VALUE_GROUPS } from "@/src/goals/data/northStar"
-import { shownPerson } from "@/src/role-models/catalog"
+import { usePersonLookup } from "../usePersonLookup"
 import { goalsServingValue, isActive, topValues } from "@/src/goals/planSteps/planFacts"
 import { findValues, type FoundSource } from "@/src/goals/planSteps/extras/valuesFound"
 import { addValues, setMostImportant, setValueServes, valuesNotes } from "@/src/goals/planSteps/extras/valuesChanges"
@@ -47,7 +47,8 @@ const sourceText = (s: FoundSource): string => {
 function Found() {
   const { plan, change } = usePlanNew()
   const nav = useNav("values/done")
-  const found = useMemo(() => findValues(plan, (id) => shownPerson(id)?.name ?? null), [plan])
+  const lookup = usePersonLookup()
+  const found = useMemo(() => findValues(plan, (id) => lookup?.(id)?.name ?? null), [plan, lookup])
   const [kept, setKept] = useState<string[]>([])
   const commit = () => change((p) => addValues(p, kept))
   return (

@@ -35,7 +35,7 @@ export function TrackPage() {
 
       {week.length > 0 && (
         <Section title={trackCopy.week_heading} testId="track-week">
-          {week.map((r) => <WeekStrip key={r.item.id} row={r} />)}
+          {week.map((r) => <WeekRowLine key={r.item.id} row={r} />)}
         </Section>
       )}
 
@@ -101,7 +101,7 @@ export function TrackPage() {
   )
 }
 
-function WeekStrip({ row }: { row: WeekRow }) {
+function WeekRowLine({ row }: { row: WeekRow }) {
   const goal = row.item.kind === "goal"
   return (
     <div className={`${card} space-y-2`} data-testid={`strip-${row.item.id}`}>

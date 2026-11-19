@@ -95,6 +95,8 @@ const OUTLIVES_ITS_PARENT: Record<string, string> = {
   life_plan_experiences_area_fk: "an experience outlives its area",
   life_plan_experiences_goal_fk: "an experience outlives its goal",
   life_plan_fields_target_fk: "a field outlives its target",
+  plan_sandboxes_sandbox_user_id_fkey:
+    "the owner's copy-space row outlives its hidden account; the server makes a new one on next use (20261118120000_plan_sandboxes.sql)",
 }
 
 async function foreignKeys(db: Client): Promise<ForeignKey[]> {
