@@ -152,7 +152,7 @@ Accept: worktree exists; start SHA written.
 Accept: on a main push run the artifact exists and `node scripts/ci/main-status.mjs` prints a grouped
 line naming a real commit; with a green fixture it prints nothing. Quote both.
 
-**Status:** pushed 2026-11-19, waiting for the first two main push runs to prove the artifact and the carried firstSha (filled in below when seen).
+**Status:** done 2026-11-19 — report job writes artifact `e2e-failures` on every main push run and main-status prints it; chain proved on runs 44596562185 (first, firstSha null) -> 44598007336 -> 44599561980 -> 44600730312 (fix 336513ba matches tests without the line number); `node scripts/ci/main-status.mjs` printed `main is red since 2026-11-19: E2E Tests e2e-fast (run 44598007336)` / `  2 tests first red at 2ae85b01 "Tests catch: Phase 2 — lint at commit…" (e.g. cold-open.spec.ts:153)` (that group was the old line-number bug, fixed after) and now `  15 tests red since before tracking began (e.g. route-sweep.spec.ts:102)`; a green fixture prints nothing (mainStatus.test.ts); CI static+unit+database green on branch head 336513ba (run 44599833808).
 
 ## Phase 2 — The common main breakers caught at commit · S · sonnet
 
