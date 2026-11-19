@@ -41,7 +41,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | 10 | Your past attempts | lab `past/best` | wave-1's "many tries are normal" number and "after the first slip" question | not started |
 | 11 | Today's lesson | lab `lessons/best` | — | not started |
 | 12 | How people quit | wave-1 `how` | the sourced sections of `library/best`, shortened | not started |
-| 13 | What it gives you | wave-1 `gives` | — | not started |
+| 13 | What it gives you | wave-1 `gives` | — | building |
 | later | Tell someone, Money on the line, Clear-out list, What helps besides apps, Who you are now | not built | accountability copies a, b, e as reference | not started |
 | later | Talk to a coach | `/quit/coaching` | needs his price, guarantee wording and privacy email | hidden |
 
@@ -669,6 +669,136 @@ no run going is kept in the check-in only; alternative: start a run first (but t
 Tools 1 and 4 do). K3 pattern lines only from the morning forecast; alternative: keep the lab's urges and feelings
 lines with a "same evening" caveat. K4 reminders as calendar events, since the site cannot send notifications;
 alternative: drop the tab. K5 its own 10 feelings, not the 27 symptom words.
+
+### Tool 13: What it gives you — brief (Opus, 2026-11-19) — build exactly this, decide nothing
+
+Model: Sonnet builds in a worktree; Opus wrote and fact-checked the data (done, below) and reads the diff. Address:
+`/quit/nicotine/gives` (wave-1 tool, rebuilt in place in `src/quit/tools/gives/`). Base: wave-1 `gives` (there is no
+lab copy). It is his plan step 2 ("Find your 80% swaps") made into a tool: name what nicotine gives you, find swaps
+that give you most of it, and rate how close each one came. Nicotine only, no switcher. One question per screen on
+phones, progress bar, in-page Back, browser Back steps back, reload resumes. Desktop (1280): the same screens in the
+page column, like the date and craving tools. All choices below are **proposed**; the recommendation is the one
+written, the alternative is in "Proposed" at the end.
+
+**Menu row:** name unchanged; line **"Name what it does for you. Find swaps that give you most of it."** (review
+A11: the old line promised "80%" as if it were a result). `account: "none"`, wave 1, minutes 3.
+
+**Screens**
+
+1. **What does it give you? Pick 1 to 3.** The 8 needs as large option cards (not small chips): the name and, under
+   it, its new `line` in his voice ("Relief / It calms me down.", "Reward / It's my treat.", "Something to do / It
+   fills empty time.", "People / It's how I join in.", "Sleep / It helps me wind down.", "Focus / It helps me
+   concentrate.", "Confidence / I can't picture myself without it.", "The nicotine itself / My body wants the
+   nicotine."). A ninth card **"Something else"** opens a text field with a visible label "What does it give you?"
+   (max 60 characters, required while that card is picked); it counts toward the 3. Preselection, before he taps
+   anything: the link's `#need=` (or old `?need=`, rewritten as wave-1 does), else the needs of his top beliefs from
+   the 12 lies test (`parseBeliefs` + `topBeliefs` from `src/quit/tools/beliefs/logic.ts` as they are on main at build
+   time; Tool 5 keeps `parseBeliefs` and `ratings`). Three picked → the other cards are disabled with the line "Three
+   is the most. Untick one to change." Continue.
+2. **One screen per picked need** (heading: the need name, its line under it in grey).
+   - **"What you tell yourself"**: the `limiting` lines of beliefs with this need **that he rated 3 or more** in the
+     12 lies test (A10: never a thought he marked "Not me"). Test not taken: the heading reads **"What people tell
+     themselves"** and all the lines with this need show. Taken but none rated 3+: the section is left out.
+   - **Three swaps**, ordered by `orderSwaps` (his ratings first). Each card: the text, the evidence chip, and for a
+     sourced swap a closed **"Based on"** fold with Who (`counted`), How many (`n`), Caveat (`weak`) and the source
+     quotes and links. When Tool 5's `src/quit/tools/beliefs/BeliefBasis.tsx` is on main, use it; otherwise build
+     `src/quit/tools/gives/SwapBasis.tsx` with the same three rows and look (then tell Tool 5 in "Questions from the
+     build"). A "Not tested" swap shows no fold.
+   - Under each card a toggle button **"Add to my list"** / **"On my list · Remove"** (A10: one tap undoes it; no more
+     "Clear my answers" to take one off). Stored in `tried` as `{swapId, triedOn: today}` (the wave-1 shape: Tool 4
+     reads it); Remove deletes the entry and its rating.
+   - **"Your own swap"**: a text field (visible label "Something that gives you this, in your words", max 60) and Add.
+     Own swaps go on his list straight away and show above the three cards with Remove. For "Something else" this is
+     the only section (no data swaps, no quotes).
+   - Next / on the last need "See my list". A tap within 250 ms of a screen move is ignored and the button only moves
+     from the screen it was drawn on (A28: the double tap pushed `?s=3` twice). Browser Back from screen N shows N−1.
+3. **Result: "Your 80% swaps"** (`data-testid="result"`; the heading is his step 2 title, so "80%" is his aim, not a
+   promise; under the heading nothing, rule 6).
+   - Grouped by need (need name as a small heading, in the order picked). Each swap on his list: the text, "On your
+     list since Wed, Nov 19", and the rating row **"Tried it? How much of it did it give you?"** with five buttons:
+     None / A little / About half / Most of it / All of it (stored as 0 / 25 / 50 / 80 / 100 in `rated`, so
+     `orderSwaps` still works). Rated "Most of it" or "All of it": a small mark "80% swap". Rated None or A little:
+     a link "Try another one" to that need's screen. The rating can be set any day, also the first (the wave-1
+     slider only appeared on a later day and nobody found it, A10); tapping the chosen button again clears it.
+   - A need with nothing on the list: "Nothing on your list for <need> yet." with a link to its screen.
+   - **"Remind me to rate them"**: Google Calendar link and an .ics download for an event 7 days from today at 19:00,
+     30 minutes, title "Rate your swaps", description with the tool's address (no `?preview=1`), one VALARM at the
+     start, DTSTAMP = tap time. Its own small builder in `src/quit/tools/gives/logic.ts` (do not change the date tool's
+     `icsFor`).
+   - **Next** (each a link only while its tool is in `liveTools.json`, `isLiveTool`; otherwise not drawn): "Craving
+     now?" (`sos`) with the line "Help for the moment itself"; "Your quit date" (`date`, his step 3) with "Step 3 of
+     the plan: pick day 1". 
+   - "Change what it gives you" → screen 1 (keeps the list). "Back to the menu".
+   - "Start again" (small, at the bottom) asks first, inline: "This empties your list, your own swaps and your
+     ratings." Clear / Keep (lesson 2: no one-tap wipe).
+   - One line at the very bottom: "Your list is kept on this phone." (B1).
+   Opening the tool later: a saved list → the result; picks but no list → screen 2; nothing → screen 1.
+
+**Data (done by Opus 2026-11-19 in `nicotine.json`, quotes copied word for word from the PubMed abstracts, checked by
+script):**
+- Each need has a new `line` (above). Builder: add `line: string` to `QuitNeed` and `counted?: string`, `n?: string`,
+  `weak?: string` to `QuitSwap` in `src/quit/types.ts`; validator (`src/quit/validate.ts`): every need of a live file
+  has a `line` (max 8 words); a swap with evidence other than "none" has `counted` and `n`, and each digit run in `n`
+  (commas removed) appears in one of its quotes (same rule Tool 5 adds for beliefs: reuse its helper if it is on main).
+  Unit tests pass and fail.
+- Swaps fixed (A12, C6, A18): `sleep-1` (an alcohol trial) and `confidence-3` (a delinquency study) now "Not tested"
+  with no source; `connection-1` (a drinking study) became "Ask a friend or partner to stop with you" (Christakis
+  2008, 12,067 people, observational: weak); `reward-1` "Some evidence" (Halpern 2015, 2,538 people: 6 in 100 with
+  usual help, 9 to 16 in 100 with money on the line; only about 14 in 100 put up their own money; Cochrane 2025
+  high-certainty for incentives in general) instead of "Weak"; `reward-2` and `boredom-1` cite MacPherson 2010 (68
+  smokers, behavioural activation, pilot) instead of a residential drug-treatment trial (one drug per page);
+  `relief-1` is "15 minutes" (Taylor 2007: walking-type bouts tested lasted 15 minutes or more; 5 minutes was only
+  for isometric exercise); `focus-1` lost "then start 10 minutes later" (Chang 2012 found the same small effect at
+  every timing); `confidence-1` says "I've stopped" (fits vapes and pouches) and adds Callaghan 2021 (544
+  ex-smokers); `confidence-2` "each day without it". Every sourced swap has Who, How many and a caveat. The `relief-1`
+  Haasova ref stays (Tool 2's Move tile reads it).
+- b11 "I'll put on weight" now has need `substance` (Tool 5 handed this to Tool 13; A19, D28: under Confidence it read
+  as if weight gives confidence; under "The nicotine itself" it sits next to patch plus gum).
+- Of 24 swaps: 3 strong, 1 some, 7 weak, 13 not tested. A11 answered: the grades are honest, and the rating loop is
+  how he finds which ones give him most of it; no new swap without a source that fits.
+
+**Saved state** (`quit-v1`, tool `gives`, parsed by `parseGives`, which stays compatible): `done`, `picked` (need ids,
+plus `"own"` for Something else), `ownNeed: string | null` (60), `own: {needId: [{id, text, addedOn}]}` (at most 5 per
+need, 60 characters each), `tried` (unchanged shape; Tool 4 reads it), `rated` (0–100, unchanged). A wave-1 save
+opens as before. No record, no Black Box: nothing here is a quit event. Reads `beliefs` (ratings) only.
+
+**Report items for this tool, each answered above:** A10 (thin payoff and invisible rating loop: grouped list, rating
+any day, reminder, next links; no undo: Remove; quotes from "Not me": only his 3+), A11 (80%: his step's aim, not a
+promise; menu line reworded; grades honest), A12 (three off-topic studies and the reward grade), A18 (cigarette
+wording in swaps), A19 / D28 (b11 need), A28 (double tap), B2 / B25 (in-the-moment swaps: Tool 2 has its own
+`momentSwaps`; this tool is the week list, and links to Craving now?), C6 (five minutes), B204 (slip still lists
+tried swaps), lesson 2 (start again asks), lesson 4 (links only to live tools).
+
+**Old tests:** the wave-1 `gives` cases in `tests/e2e/quit/wave1-part1.spec.ts` and
+`tests/e2e/quit/phase7-signed-out.spec.ts` move into the new spec (keep what still holds: `?need=` preselects,
+unknown need ignored, top beliefs preselect). `tests/unit/quit/tools/gives.test.ts` and `phase7.test.ts` updated.
+
+**Acceptance (Playwright `tests/e2e/quit/gives.spec.ts`, 390x844 touch and 1280x800, screenshots looked at):**
+1. Fresh: screen 1 shows 9 cards with their lines; picking a 4th is not possible and the line shows.
+2. 12 lies test saved with b3 = 5 and b9 = 4 → Relief and Sleep preselected; Relief's screen quotes only "A cigarette
+   is the only thing…" (b3), not b12 when b12 is rated 1. No test saved → "What people tell themselves" with both.
+3. `#need=focus` preselects Focus; `?need=focus` is rewritten to `#need=focus`; `#need=nonsense` is ignored.
+4. Add, then Remove, a swap → it is gone from the list and from `tried`; its rating too.
+5. Own swap "Call my brother" on Relief → on the list; Something else "a reason to step outside" → its own screen
+   with only the own-swap field; the list shows both.
+6. Result: rate "Most of it" → the "80% swap" mark, and on reopening Relief's screen that swap is first; rate
+   "None" → "Try another one" goes to Relief's screen.
+7. .ics parses (one VEVENT, one VALARM, DTSTART 7 days ahead at 19:00, DTSTAMP within a minute of now, SUMMARY
+   "Rate your swaps"); the Google link holds the same date.
+8. Start again asks; Keep changes nothing; Clear empties the `gives` key only (beliefs untouched).
+9. Every "Based on" fold shows Who, How many and Caveat; "Not tested" swaps have none.
+10. Double tap on Continue and Next moves one screen; reload on each screen resumes; browser Back steps back.
+11. Slip (Tool 4) still lists a swap added here (unit test on `parseGives` with the new fields; `tried` unchanged).
+12. No console error, no sideways scroll, tap targets at least 44 px, a 60-character unbroken own swap does not widen
+    the page; the menu row opens the tool once `gives` is in `liveTools.json`.
+13. Then the three-reviewer check and fix rounds; status "waiting for you".
+
+**Proposed (owner may veto):** G1 the result heading uses his "80% swaps" and the menu line drops the number;
+alternative: keep "Get swaps that give you 80% of it" on the menu with a "his aim, not a study" note. G2 rating with
+five worded buttons, any day; alternative: the wave-1 0–100 slider after a day. G3 a calendar reminder in 7 days;
+alternative: none (the site sends no notifications). G4 "Something else" and own swaps, because step 1 says "write
+down what you think nicotine gives you" in his own words; alternative: the 8 needs only. G5 b11 (weight) under "The
+nicotine itself"; alternative: a ninth need "Appetite" with its own swaps (needs sources first).
 
 ## Done
 
