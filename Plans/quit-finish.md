@@ -38,7 +38,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | 7 | If-then plan | lab `ifthen/best` | — | not started |
 | 8 | Daily check-in | lab `checkin/best` | slip question from `diary/best` | building |
 | 9 | What it costs you | wave-1 `cost` | per-pack price and live update (copy e); money setup from the shared record | not started |
-| 10 | Your past attempts | lab `past/best` | wave-1's "many tries are normal" number and "after the first slip" question | not started |
+| 10 | Your past attempts | lab `past/best` | wave-1's "many tries are normal" number and "after the first slip" question | building |
 | 11 | Today's lesson | lab `lessons/best` | — | building |
 | 12 | How people quit | wave-1 `how` | the sourced sections of `library/best`, shortened | building |
 | 13 | What it gives you | wave-1 `gives` | — | building |
@@ -1107,6 +1107,133 @@ only. B207 voice chips ordered by his ratings: for Tool 2.
 11. Present mode at 390x844: all five answers visible without scrolling.
 12. No console error, no sideways scroll, every tap target at least 44 px.
 13. Then the three-reviewer check and fix rounds; status "waiting for you".
+
+### Tool 10: Your past attempts — brief (Opus, 2026-11-19) — build exactly this, decide nothing
+
+Model: Sonnet builds in a worktree; Opus reads the diff and checks the text. Address: `/quit/nicotine/past` (rebuilds
+wave-1 `past` in place in `src/quit/tools/past/`). Built from lab `past/best` (`src/quit/lab/past/best/*`): move what is
+reused (the list of tries, the pattern with its counts, the lengths chart, the example, delete with confirm) into
+`src/quit/tools/past/`; never edit lab files. Folded in from wave-1 `past`: the "many tries are normal" number
+(`numbers[kind="how-tries"]` in `nicotine.json`) and the question "After the first slip, what went through your head?"
+with its four answers. Nicotine only: no addiction switcher (E19). Desktop (1280): the same page in the page column, as
+Tools 1 and 2. Menu row unchanged ("Your past attempts", "How often you tried, what lasted, what ended it."). All
+choices below are **proposed**; the recommendation is the first option each time.
+
+**What it is for.** Tries he made before this quit: how long each lasted, what ended it, what helped. Runs since his
+quit date live in the Black Box and are shown by Your record (Tool 3); this tool does not ask about them again and
+does not write to the Black Box (old rough guesses would add to "clean days in all").
+
+**Data.** Kept in the `quit-v1` store under the tool key `past`, new shape `{ v: 2, count, tries, afterSlip }`:
+`count` = "never" | "1" | "2-3" | "4-9" | "10+" | null; `tries` = the lab `Try[]` (id, `when` "YYYY-MM" or "",
+`len`, `unit` days|weeks|months|**years**, `how`, `ended`, `endedText`, `helped`, `helpedText`); `afterSlip` = "gaveUp" |
+"restarted" | "justOnce" | "dontRemember" | null. `parsePast` reads the wave-1 shape too and imports it once, so
+nothing he entered is lost: wave-1 `tries` → `count` ("0" → "never"); a wave-1 longest stretch with a unit becomes
+one try (`len` = stretchN, `unit` = stretchUnit, `ended` = endings, `helped` = helped, `when` ""); `afterSlip` kept.
+One line at the bottom: "Saved on this phone." (B1). Pure functions in `logic.ts` with unit tests. Export
+`pastEndingsForPlan(raw: unknown): { id: string; label: string }[]` (top two endings by count, data-file ids) for the
+if-then tool (Tool 7) to read if its brief wants it; this tool claims no reader on screen (E10).
+
+**The page** (one scrolling page; the try form is its own screen):
+1. Heading "Your past attempts", line "Add the tries you remember. Every field is optional; a rough guess is fine."
+2. **About how many times have you tried to stop, in all?** Chips: Never · 1 · 2–3 · 4–9 · 10+ (one, tap again to
+   clear; saved at once). The list does not need every try: this answer counts all of them. "Never" shows "No tries
+   yet. Your first one starts with your quit date." ("Your quit date" a link when `isLiveTool("date")`).
+3. **Add a try** (primary button) and, while there is no try and no example, **See an example** (E12: the example is
+   never shown by default).
+4. **Your pattern** (from his tries; each line keeps its counts, as `best` does):
+   - Longest: "Longest try: 9 days. From 3 tries with a length."
+   - Most common ending / helped most often (`best` lines, from 2 repeats; "Each try ended differently so far." from
+     2 tries naming an ending).
+   - **The days most tries ended in** only from **3** tries with a length (E12; two tries gave the whole range). Line as
+     `best` ("Most of your tries ended in days 5–9. 3 of 4 tries with a length.", "on day 1" when from = to), with
+     "How is this worked out?" → "The shortest span of days that holds more than half of your tries. Worked out from
+     your own tries, not from a study." (B9: the old ⌈N/2⌉ rule is gone). With fewer: "Three tries with a length show
+     the days most of them ended in."
+   - Rough-units line when a length was typed in weeks, months or years: "Weeks count as 7 days, months as 30, years as
+     365."
+   - Lengths of 60 days or more read "about N months", 730 or more "about N years" (rounded), in every line.
+   - Nothing yet: "Add a length, an ending or what helped, and your pattern shows here."
+5. **After the first slip** (shown once he has a count other than Never, or a try). "After the first slip, what went
+   through your head?" Chips (one): I gave up · I started again the same day · "Just this once" · I don't remember.
+   Each answer gets its own reply (B7: every answer is used):
+   - gave up → "That first slip is where most tries end. A slip ends a run, not the quit: save it, keep your days,
+     pick a new day 1." + link "Slipped? Restart today" when `isLiveTool("slip")`, else plain text "Next time, go back
+     through steps 1–3 the same day."
+   - started again → "Keep doing that. Going back through steps 1–3 the same day is step 3 of the plan."
+   - "Just this once" → "That is one of the 12 lies." then belief `b4`'s `counterpart`.
+   - don't remember → "Next time, notice the first thought after a slip and write it down."
+   Under every answer, one fact card from belief `b4`: its `proof`, `counted` line, `weak` line and source tap
+   (Kenford 1994, already checked in the data). "the 12 lies" is a link only when `isLiveTool("beliefs")`.
+6. **Many tries are normal** (shown once he has a count other than Never, or a try; placed under his own pattern,
+   never first: B8). Heading "Many tries are normal", then: "You have {count} behind you." ("2–3 tries", "10 or more
+   tries"; when he listed more tries than the chip says, the listed number), then the study in our own words, no big
+   forecast figure: "In one study of daily smokers in Ontario, a model put the average at about 30 tries before one
+   lasted a year. Other ways of counting the same people gave about 7 to 142." and "An average, not a forecast for
+   you." Basis fold with the number's `basis` (design, who, n, where, when, measured), `caveat`, and the source tap
+   (`BasisBox` from `tools/date/Bits.tsx`).
+7. **How long each try lasted** (chart, from 2 tries with a length): bars oldest to newest by month (undated last, in
+   the order added), each bar with its length on top and the month under it ("Feb 25", "—" when undated) (E12); the
+   dashed average line and "Average: 12 days · 4 tries with a length". Scrolls inside its card, never the page.
+8. **Your tries**: newest first by month, undated last. Each row: "Nov 2025 · 9 days" (or "Date not given" / "No
+   length given"), then How / Ended / Helped lines (`best`, `break-words`). **Edit** and **Delete** → "Delete this try" /
+   "Keep it" (`best`), then "Removed. Undo" while the page is open (lesson 2).
+9. **Next** (only links to live tools, `isLiveTool`; a row whose tool is not live is not drawn): "Pick your next day 1"
+   → Your quit date; "Plan for the moments that ended your tries" → If-then plan (`ifthen`); "Runs since your quit date
+   are in Your record." (link when `record` is live, else plain). Then "Saved on this phone." No "Used in …" line, no
+   "Keep these in your plan", no "Risky moments for your if-then cards" (B6, E10). No "Clear my answers".
+
+**The try form** (own screen; a history entry `?try=new` or `?try=<id>`, so phone Back returns to the page; reload
+keeps the form open, new = empty, edit = the saved try; `?preview=1` kept): heading "A try" / "Edit this try".
+- When it was (month and year): month field, min 1960-01, **max this month** (E12: no future try).
+- How long it lasted: number field (1 to 999, "1,5" = 1.5, "abc" → "Type a number, like 3") and a unit select
+  Days / Weeks / Months / Years.
+- How you did it: the `best` chips.
+- What ended it: the data file's `endings` chips + "Something else that ended it" text (max 60, visible label).
+- What helped: the data file's `helped` chips + "Something else that helped" text (max 60, visible label).
+- **Save this try** (disabled until one field is filled; "Fill in at least one field.") and **Cancel**. A double tap
+  saves one try.
+
+**Example:** in memory only: four tries dated in the 18 months before today (the `best` set: 3 days, 9 days, 2 weeks,
+6 days, with endings and helped), count "4-9", no after-slip answer. A bar on top: "Example. Nothing here is yours, and
+nothing is saved." with **Leave the example**. No Edit/Delete/Add while it shows. Nothing touches storage (C16).
+
+**Report items for this tool** (review B, E, F2, 2026-11-19), each answered above: B6 (promises of tools that don't
+exist: lines removed; links only to live tools), B7 (questions dropped: "when did the last try end" is replaced by the
+month per try and used for order; all endings are kept and counted; every after-slip answer has its reply), B8 ("about
+30" led and read as a forecast: moved under his pattern, reworded, "not a forecast"), B9 (window without basis, broken
+at 1 day, nothing past 8 weeks: own-data rule with its basis line, 3 tries minimum, every length works), B29 (chip under
+44 px: every chip and button at least 44×44), E10 ("used in" line), E11 (the number and the after-slip question folded
+back), E12 (future month, order by date, bar labels, 2-try window, example shown as his own, "lab only" tag, switcher
+overwriting the hand-off), E19 (switcher). F2 past/a and past/b are copies only (video spinner, paywall, "$138.4"); nothing
+of theirs is taken.
+
+**Acceptance (Playwright `tests/e2e/quit/past.spec.ts`, 390x844 touch and 1280x800, clock fixed; screenshots looked
+at):**
+1. Fresh: no example shown; See an example fills pattern, chart and list with the bar; Leave the example → empty, and
+   `quit-v1` in localStorage unchanged.
+2. Count "4–9" → the after-slip and many-tries sections show; "Never" → the no-tries line, both sections hidden.
+3. Add three tries (5 days; 2 weeks; 9 days, two with "A bad day or stress") → "Longest try: 14 days.",
+   most common ending with "2 of 2 tries naming an ending", the window line with "How is this worked out?"; with only
+   two tries no window line.
+4. A try typed "1,5" months → saved as 1.5; "abc" shows the error; a month after this month is refused.
+5. List and chart are in month order whatever order they were added; bars carry month labels.
+6. Delete → confirm → "Removed. Undo" → Undo puts it back in its place.
+7. Each after-slip answer shows its own reply; "Just this once" shows b4's counterpart and the Kenford fact card with
+   its source.
+8. Wave-1 state in storage (tries "2-3", 3 weeks, endings stress+offered, helped told, afterSlip gaveUp) → the page
+   shows count 2–3, one try of 3 weeks with those endings, the gave-up reply.
+9. Form: phone Back closes it without saving; reload keeps it open; double tap Save makes one try; 200 characters
+   without a space in "Something else" do not widen the page.
+10. No link to a tool that is not in `liveTools.json`; no "Used in", "Keep these in your plan" or "lab only" text.
+11. No console error; no sideways scroll; every tap target at least 44 px; the menu row opens the tool once `past` is
+    in `liveTools.json`.
+12. Then the three-reviewer check and fix rounds; status "waiting for you".
+
+**Proposed (owner may veto):** P1 past tries stay apart from the Black Box (before-this-quit guesses would change
+"clean days in all"); alternative: save each as a past Black Box run. P2 the after-slip question is asked once for all
+tries; alternative: once per try in the form. P3 the example shows only on tap; alternative: shown first, as in `best`.
+P4 the "how many in all" chips stay, so 10+ tries need not be typed one by one; alternative: count only the list. P5
+the number is shown as a sentence with its range, no big "About 30"; alternative: the wave-1 number card as it was.
 
 ## Done
 
