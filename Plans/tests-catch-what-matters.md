@@ -323,6 +323,8 @@ affected today (nobody has paid).
 
 Accept: per spec a dispatched run with `repeat_each=10` on its lane: 0 failed, 0 flaky. Quote run ids.
 
+**Status:** PENDING
+
 ## Phase 6 — The live site checked after every deploy · M · sonnet · after Phase 1
 
 1. New `.github/workflows/live-check.yml`, `on: deployment_status`, job only when
