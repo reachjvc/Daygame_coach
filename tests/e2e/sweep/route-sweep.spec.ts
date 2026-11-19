@@ -12,7 +12,8 @@
  *
  * The route list here is DERIVED from `app/` (tests/support/appRoutes.ts), so a
  * new page is swept the day it exists and nobody has to remember it. The
- * projects `sweep-desktop`, `sweep-phone` and `sweep-webkit` run this file, so
+ * projects `sweep-desktop`, `sweep-android`, `sweep-phone` (iPhone, nightly) and
+ * `sweep-webkit` (nightly) run this file, so
  * every page is seen at two sizes and on two engines.
  *
  * A DEV-SERVER CAVEAT, RECORDED SO NOBODY CHASES IT TWICE. Under `npm run dev`

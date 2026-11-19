@@ -183,10 +183,11 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
     {
-      name: 'sweep-phone',
+      // The per-push phone sweep is Android (Chromium), like the other phone lanes (D1).
+      name: 'sweep-android',
       testMatch: SWEEPS,
       timeout: SWEEP_TIMEOUT,
-      use: { ...devices['iPhone 14'] },
+      use: { ...devices['Pixel 7'] },
     },
 
     // === Nightly (Q5): the other engines and the iPhone ===
@@ -224,6 +225,12 @@ export default defineConfig({
       testIgnore: SWEEPS,
       grep: PHONE_TIMING,
       workers: 1,
+      use: { ...devices['iPhone 14'] },
+    },
+    {
+      name: 'sweep-phone',
+      testMatch: SWEEPS,
+      timeout: SWEEP_TIMEOUT,
       use: { ...devices['iPhone 14'] },
     },
     {

@@ -204,8 +204,8 @@ describe("which phone and how many workers (Plans/tests-green-and-fast.md, Phase
     // D1: the owner's phone is Android and Chromium is faster in CI.
     expect(project("android")?.use?.defaultBrowserType).toBe("chromium")
     expect(project("timing-android")?.use?.defaultBrowserType).toBe("chromium")
-    expect([...lanesIn("lanes")].filter((l) => /android|phone/.test(l)).sort()).toEqual(["android", "sweep-phone", "timing-android"])
-    expect([...lanesIn("nightly")].filter((l) => /android|phone/.test(l)).sort()).toEqual(["phone", "timing-phone"])
+    expect([...lanesIn("lanes")].filter((l) => /android|phone/.test(l)).sort()).toEqual(["android", "sweep-android", "timing-android"])
+    expect([...lanesIn("nightly")].filter((l) => /android|phone/.test(l)).sort()).toEqual(["phone", "sweep-phone", "timing-phone"])
     expect(project("phone")?.use?.defaultBrowserType).toBe("webkit")
   })
 
