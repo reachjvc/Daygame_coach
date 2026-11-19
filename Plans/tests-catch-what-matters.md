@@ -94,6 +94,7 @@ that order.
 | B8 | Main red from other sessions (tests-green B10–B12, today's site-frame and sweep reds) | E2E 44581804643 | "green" acceptance runs | Not this plan's to fix. Judge a phase green on its own specs; Phase 1 makes the others name themselves |
 | B9 | Local full typecheck cannot finish while several sessions run | `node scripts/typecheck-ratchet.mjs` killed 3+ times per worker: `tsc exited with 143` (SIGTERM from `~/.cache/daygame-research/tools/memguard.sh` when RAM + swap < 2.5 GB; its log names tsc from this plan and from other sessions) | Part 2's local typecheck before push | Use CI `static` (same typecheck and lint ratchets) green on the branch head before pushing to main; every phase quotes that run |
 | B10 | Vercel deploy rate limit, hit by all sessions' pushes on 2026-11-19 | Commit status on main f43f0529 (20:16 UTC): `Vercel failure Deployment rate limited — retry in 24 hours.`; live `/api/healthz` buildId stays `ee1ae8db` (20:04 UTC) | Phase 6's real Production run (B4, B5 untested) | After the limit lifts, the next push to main deploys; find the first non-skipped `live-check.yml` run and quote it in Phase 6 |
+| B11 | Another session's `tests/e2e/quit/cost.spec.ts` (f43f0529) runs `mkdirSync('/home/jonaswsl/.cache/daygame-research/quit-finish/cost-shots')` at load | run 44621393139, every Playwright lane: `Error: EACCES: permission denied, mkdir '/home/jonaswsl/.cache/daygame-research/quit-finish/cost-shots'` | every browser run on a branch from main (all spec files load) | Not this plan's to fix (B8); Phase 8's acceptance run used a side branch with the path moved to /tmp. That spec's owner: use `os.tmpdir()` |
 
 ## Questions, each with a recommendation (proposed until you say yes)
 
@@ -382,6 +383,40 @@ Accept: before/after score table for all 8 files; no new test that only restates
 3. Skip the life plan and the quit tools (rebuilt daily by their own sessions).
 
 Accept: the map; each new spec green with `repeat_each=10` on android. "No gaps" is a valid result.
+
+### Phase 8 map (2026-11-19)
+
+Everything listed runs on `android` (`mobile/` or `@phone`). "Wheels" = the drums (`Drums.tsx`); before
+this phase no browser spec turned one (the only mention in `tests/e2e` was a tap on the Start box).
+New specs are all in `tests/e2e/mobile/mobile-time-flows.spec.ts`.
+
+| Flow | Spec line that does it as a person would | Result |
+|---|---|---|
+| Time Log: start | `helpers/timetrack.ts` `startNamed` (bar, sheet, Start), used by `mobile-toggl.spec.ts` "what you fill in after pressing Start…" and every `trackEntry` | covered |
+| stop | `tapStop` (round ■ on the bar), `trackEntry`; "a tap that stops the timer you were running says so" | covered |
+| switch task, by ▶ Continue | `mobile-toggl.spec.ts` "a tap that stops the timer you were running says so, and can be undone" | covered |
+| switch task, "Switched at…" | none (jsdom only: `switchedAtIsOneTapFromTheTimerBar.test.tsx`) | **gap 5** |
+| change start and end of a finished entry | none (the sheet's Start box was only measured, never turned) | **gap 1** |
+| change the start of a running entry | none | **gap 2** |
+| delete and undo | swipe-left delete with its toast in `toggl-time-tracker.spec.ts` ("a row swiped right continues it, left deletes it…", never taps Undo); favourite Undo; the sheet's "Delete time entry" only inside `deleteEntry` (no Undo) | **gap 3** |
+| add a missed entry for yesterday | none | **gap 4** |
+| Check-in (the Time & energy audit, `/audit`): answer from the notification link | `audit-ping.spec.ts` "F10: three taps from the notification…" (ceiling 3 written in the spec), "F09", "F08"; `audit.spec.ts` "a ping's address opens the answer sheet" | covered |
+| change an answer | `audit.spec.ts` "changes one answer and deletes one"; Undo in `audit-ping.spec.ts` "F12: Delete offers Undo…" | covered |
+| open the day's review | `audit.spec.ts` "End now asks first, opens the review…", "the review puts seeded activities in the right boxes…"; `auditReviewPlainWords.spec.ts` | covered |
+| sheet sizes of the check-in | `audit-sheet-fit.spec.ts` (fits the phone, no sideways scroll at widths) | covered |
+
+Gaps: 5 of the 6 allowed, one spec each. No gap on the check-in side. Each spec turns wheels by tapping the
+item wanted (never the typed "Start time" box), counts its taps against a ceiling written in the spec
+(7, 5, 3, 10, 6), checks Start and End boxes are the same control with the same wheels, the length reads
+`h:mm` (hours and minutes; the account's default `classic` format also shows `:ss`), controls at least 44 px
+(Start and End boxes at least 48 px), and that the account holds the same moments.
+
+Findings for the owner's list (not fixed here, no spec fails on them): in the entry sheet Done, Create,
+Delete time entry, the four ±nudge buttons and the wheel items are 44 px high; finding F27 asks 48 px in
+sheets. Specs hold them at 44 and the two time boxes at 48 (what the product does today). The Phase 8 text
+says "lengths show as hours and minutes": the default format shows hours, minutes and seconds (`1:30:00`).
+
+**Status:** done 2026-11-19 — map written; 5 gaps, 5 specs in `tests/e2e/mobile/mobile-time-flows.spec.ts`, no gap on the check-in; dispatched `grep="everyday time log flows" repeat_each=10` run 44622545088 (branch tests-catch-p8-accept, which only differs by another session's `quit/cost.spec.ts` writing a home folder at load, EACCES on every runner, B11): android shards 1/3, 2/3, 3/3 `17 passed (1.5m)`, `17 passed (1.5m)`, `16 passed (1.4m)` = 50 passed, 0 failed, 0 flaky.
 
 ## Phase 9 — Prove it and report · S · opus reviewer, sonnet
 
