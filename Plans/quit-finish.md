@@ -31,7 +31,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | 0 | The frame: menu, shared record, page titles, links | wave-1 menu | — | live f9190770 (no owner check: it has no screens of its own) |
 | 1 | Your quit date | lab `quitdate/best` | copy e's plan steps; the old "quit curve" hard-days calendar (mock F9kYB9… v2, study timing only) | waiting for you |
 | 2 | Craving now? | lab `sos/best` | wave-1's voice step and "other side" answer; the craving log of `diary/best` | waiting for you |
-| 3 | Your record (progress, money kept) | lab `progress/best` | the live counter feel of copies d and e | building |
+| 3 | Your record (progress, money kept) | lab `progress/best` | the live counter feel of copies d and e | checking |
 | 4 | Slipped? Restart today | wave-1 `slip` | slips go into the shared record; clean runs never reset | checking (live, review round 2 next) |
 | 5 | The 12 lies test | wave-1 `beliefs` | from `beliefs/best`: a reply per belief, "can you stop?", earlier results | building |
 | 6 | What you'll feel, and when | lab `timeline/best` | wave-1 `symptoms` (what helps per symptom) | not started |
@@ -1649,3 +1649,33 @@ targets or "what you could buy" here: Tool 3 holds targets.
 - The Black Box page (`/plan/quit-vice`) is not public, so "This slip is in your Black Box; remove it there." is plain text; the link appears by itself once `isPublicPage` says the page is public.
 - Pattern: the pairs line shows only once the 14-result gate is passed (the brief lists it under the same condition).
 - Tests: one e2e spec runs both widths; the full `typecheck-ratchet` was killed (exit 143, the RAM guard) four times, so only the changed files were type-checked.
+
+### From the Tool 3 build (Sonnet and Opus, 2026-11-19)
+
+- Built as briefed; choices the brief left open: the four tabs show only once a run exists; the example opens at
+  `?example=1` and is read-only (no Change, Add or Remove); a slip day wins over a clean day on the calendar.
+- Review round 1 (2026-11-19, live 30ef98fd; bugs Sonnet, feel and look Opus 6.5/10, content Opus; no blockers). Fixed:
+  an hour off across a daylight-saving change, double taps on Remove / Undo / Add, Undo lost on a tab switch, a $0.00
+  spend that vanished, a shared day counted twice, count or price 0 accepted, a bad Black Box row crashing the page;
+  the live counter made large (four numbers under the ring), the always-shown paragraph moved behind a tap on the ring,
+  a basis mark on every tappable figure, the price basis behind a tap and with a Change link, "No run going" led by the
+  days kept and a link to Your quit date, Money lists first with "+ Add" buttons, singular forms, "Reached today",
+  calendar dot and future days, an intro line; formula lines with the unit word and two decimals, no "Black Box" or
+  "filed" on screen, and price basis lines rewritten to what the sources say (cigarettes: the $10.34 is the unweighted
+  state average, $9.95 weighted; vape: the 4 weeks to 3 Sep 2022, shops only; pouches: one brand's suggested price).
+- Review round 2 (2026-11-19, local review server at 471cdfab; bugs Sonnet, feel/look and content Opus 8/10; no
+  blockers). Fixed: a page left open over midnight into the quit date now starts the run (it showed a false refusal);
+  the counter and money read the wall clock, so a clock change no longer moves them; "No run going." is drawn; the
+  milestones and "Next" use one day count; "1,000" reads as one thousand and the limits are named; counts show at most
+  2 decimals; the double-tap guard is per button; the calendar follows today across a month end; far dates show the
+  year; money steps and targets say "clean days at your rate" (and "once a new run starts" with no run); one clean-time
+  line under the money; no "$0.00 spent"; "midnight", not "00:00"; price basis shortened with the rest under "More";
+  tinted reached steps, "None yet", equal tiles on a computer, a visible selected day.
+- Proposed for the owner (not changed): R5 default cigarette price $0.50 (sales-weighted $9.95 / 20) instead of $0.52
+  (unweighted $10.34 / 20); the same lines in Your quit date's price screen could get the record's fuller wording.
+  R6 Craving now?'s "About $X kept since <date>" (whole days from the current quit date, slips ignored) and Your
+  record's money kept (clean time over all runs) show different amounts; recommendation: keep both (Tool 4 S2), or
+  let Craving now? show Your record's figure. R7 Your quit date's "Day N" counts from the record's date while Your
+  record's "Day N" counts from the living run (they differ after a slip until a new day 1 is set by Tool 4).
+- The data file's vape quote copies the abstract's "165.7%" increase; the full text says 65.7% (8.49 to 14.07). Not
+  shown on any screen; left for the data checker.
