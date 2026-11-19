@@ -11,8 +11,12 @@ const VERB: Record<string, string> = {
 }
 
 /** The verb phrase: "smoke", "vape", "use a pouch". Unknown unit: "use". */
-export function useVerb(unit: UnitLike | null | undefined): string {
+function verbOf(unit: UnitLike | null | undefined): string {
   return (unit && VERB[unit.id]) || "use"
+}
+
+export function useVerb(unit: UnitLike | null | undefined): string {
+  return verbOf(unit)
 }
 
 /** "Did you smoke?" / "Did you vape?" / "Did you use a pouch?" */
