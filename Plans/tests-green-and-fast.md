@@ -22,9 +22,9 @@ by phase. The execution prompt is at the end.
 
 | What | Now | Target | Now (after) |
 |---|---|---|---|
-| `npm ci` in every CI job | fails: onnxruntime GPU download 404 | passes |
+| `npm ci` in every CI job | fails: onnxruntime GPU download 404 | passes | passes in every job and in the Docker image (b70788dd, a62a1295) |
 | Pre-commit on this PC | the whole unit suite (613 files; 216 s in CI); this PC 2026-11-18: 53 s wall (613 files, 0 failed) | ≤ 30 s for a typical commit | related tests only: 1.8–28.4 s for one `src/` file, 0.3 s for a doc; full suite (config files) 34.5 s |
-| CI `checks` job, wall | 454 s (unit 217 s, DB 93 s, typecheck 62 s, lint 29 s) | ≤ 240 s |
+| CI `checks` job, wall | 454 s (unit 217 s, DB 93 s, typecheck 62 s, lint 29 s) | ≤ 240 s | 141 s: static 131, unit 75 + 108, database 123 side by side (CI 44402861154) |
 | Unit suite | 216 s: import 123 s, jsdom environment 128 s (baseline 97 s) | ≤ 100 s total CPU-wall in CI | two shards in parallel: 47 s + 65 s, then 39 s + 40 s (CI 44394669123) |
 | E2E on a main push, wall | 18–21 min (red phone shard 1/2: 1,152 s) | ≤ 6 min green; a red run stops ≤ 10 min |
 | E2E per green shard | 330–560 s (backend 28 s, build+start ~77 s, browsers 16–62 s) | ≤ 300 s |
@@ -91,6 +91,7 @@ Unit tests that failed once under local load and pass alone (Phase 3 input): `ba
 | B6 | Resent sign-up confirmation link fails (`resend()` sends no PKCE challenge; supabase-js 2.91 has no option) | Checked in Phase 2 (F5): still fails with `test.fail` removed | nothing here (test is marked `test.fail`) | Outside this plan: a design choice (fragment-reading confirm page, or resend as `signInWithOtp`). Schedule separately |
 | B7 | Quit tool browser specs red on main (another session's work in progress, Plans/quit-tool.md; commits "Quit tool phase 1–7" 2026-11-18, author reachjvc, e.g. ef2a1c49 "Quit tool phase 7: e2e specs from the audits") | E2E 44340099177 on that session's own head 157104b1, before any push from this plan: job `desktop 3/4`, step `Run Playwright tests` (`npx playwright test --project=desktop --shard=3/4`), 55 failed, first `tests/e2e/quit/menu.spec.ts:27` link "Quit nicotine" not found on /quit; same on main 1234fc96 (E2E 44342184859: desktop 3/4 54, phone 2/2 48, desktop 4/4 3, junk-params /quit and /quit/coaching). CI `image-staging` fails at "Wait for the browser tests on this commit" for the same reason. Owner sessions told 2026-11-18 | green main runs (Phase 7) | Outside this plan: the quit session fixes its specs. This plan does not touch quit files; quit failures count as this blocker |
 | B8 | GitHub queue jam on main: other sessions pushed main ~12 times in an hour (2026-11-18 18:20–19:15 UTC); every main push starts an 11-job E2E run that is never cancelled on main, and the free plan runs ~20 jobs at once, so 11 E2E runs waited in the queue | CI 44368770269 (a62a1295, F12 fix): job `image-staging`, step "Wait for the browser tests on this commit": `await-workflow: gave up after 45 minutes: .github/workflows/e2e.yml is queued` (E2E 44368770394). Also hit the API rate limit (5,000/h) once at 19:14 UTC | staging image proof; "three green main pushes" while the queue is long | In plan: Phase 5 cuts each main E2E run to ≤ 6 min; foreman polls every 3–5 min, not every minute. Re-run the staging job once the queue drains |
+| B9 | Other sessions' new work red on main, 2026-11-18 evening: (a) lint ratchet, 4 unused variables in `src/quit/lab/**` (quit-copy session, 9d6e1273, f048a80e); (b) `/quit/lab` 404 in the production build, `cold-open.spec.ts:183` (same session, hidden on purpose); (c) `/plan/sandbox` 404, `plan-sandbox.spec.ts:165` "chunk … carries a session", and `userDataCascades.integration.test.ts` "a new ON DELETE SET NULL" from `supabase/migrations/20261118120000_plan_sandboxes.sql:23` (plan-in-steps session) | E2E 44391054491 (e536f392): jobs e2e-fast, sweep-phone, desktop 2/4; CI 44402861154 (cc058d45): job `database`, step `Database tests`; authors: reachjvc commits of those sessions. Owners told 2026-11-18 21:40–22:20 UTC; (a) and (b) fixed in the quit session's next batch | three green main pushes in a row | Outside this plan: the owning sessions fix them |
 
 ## Decisions (taken; the owner can veto)
 
@@ -253,6 +254,8 @@ Accept: CI unit step ≤ 100 s, or Q3's second shard added and each shard ≤ 70
 
 Accept: one CI run where the wall time from first job start to last job end is ≤ 240 s. Quote it.
 
+**Status:** done 2026-11-18. `ci.yml`: `static` (secret scan, lint, typecheck, audit), `unit` (matrix 1/2, 2/2), `database`, side by side; image jobs need all three. CI 44402861154 on main cc058d45: static 21:55:06–21:57:17 (131 s), unit 1/2 75 s, unit 2/2 108 s, database 123 s; **first start → last end 141 s**. (Branch runs 44398373950 and 44399823464 measured 303 s and 258 s only because jobs waited for free runners, B8.) `durations.json`: `checks › Unit tests` → `unit 1/2 › Unit tests` (+ `unit 2/2 › Unit tests`, 97), `checks › Database tests` → `database › Database tests` (73). CI concurrency left as is: a main run waiting days for the owner's production approval would hold a shared group. That run's `database` job was red on another session's migration (B9).
+
 ## Phase 5 — Faster browser lanes · M · sonnet
 
 Measure every lever with one dispatched run before and one after. Keep it only if green and faster.
@@ -289,6 +292,8 @@ takes ≤ 6 min wall. The nightly lanes each finish in ≤ 15 min. Quote the job
    name who broke it."
 
 Accept: with a red run in the API the hook prints the line, and with a green one it prints nothing. Quote both.
+
+**Status:** done 2026-11-19 (code on main since fd8acc54). `npx vitest run tests/unit/ci/mainStatus.test.ts`: Test Files 1 passed (1), Tests 9 passed (9). Red fixture (`MAIN_STATUS_FIXTURE`, one failed push CI run): `main is red since 2026-11-18: CI (run 44383715199)`. Green fixture: prints nothing, exit 0. Live API on 2026-11-19 12:50 UTC: the newest 20 main runs were all still queued or running (B8), so it printed nothing (no finished run to judge). `SessionStart` hook in `.claude/settings.json`; the CLAUDE.md rule line is in.
 
 ## Phase 7 — Prove it · M · sonnet + a fresh reviewer
 
