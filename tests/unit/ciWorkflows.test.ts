@@ -213,7 +213,7 @@ describe("the live-site check stays out of the pull-request lanes", () => {
   const live = PROJECTS.find((p) => p.name === "live")
   const ignored = (p: (typeof PROJECTS)[number]) => [p.testIgnore ?? []].flat().some((r) => r instanceof RegExp && r.test("tests/e2e/live/live-smoke.spec.ts"))
 
-  it("exists, selects only tests/e2e/live, and every other project ignores that folder", () => {
+  test("exists, selects only tests/e2e/live, and every other project ignores that folder", () => {
     expect(live, "no `live` project").toBeTruthy()
     expect((live?.testMatch as RegExp).test("tests/e2e/live/live-smoke.spec.ts")).toBe(true)
     expect((live?.testMatch as RegExp).test("tests/e2e/audit.spec.ts")).toBe(false)
@@ -221,7 +221,7 @@ describe("the live-site check stays out of the pull-request lanes", () => {
     expect(open.map((p) => p.name), "projects that would also run the live spec").toEqual([])
   })
 
-  it("is run by live-check.yml alone, never by e2e.yml", () => {
+  test("is run by live-check.yml alone, never by e2e.yml", () => {
     expect(LIVE_SHARDS.map((s) => s.lane)).toEqual(["live"])
     expect(SHARDS.filter((s) => s.lane === "live")).toEqual([])
   })
