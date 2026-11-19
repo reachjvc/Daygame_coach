@@ -2,7 +2,7 @@
 
 Written 2026-11-19 (Opus), after the owner went through the before/after page of `Plans/rebrand-10kdaysclub.md`
 (https://claude.ai/artifact/ERBS6YKjuwV9jB61KtSfUE). That plan stays the record of round 1; this one is the next
-iteration. **Status: Phases 0–4 done (2026-11-19); board published, waiting for his picks (O2); Phase P running.** Everything below that is not his words is **proposed**.
+iteration. **Status: Phases 0–4, P1 and P2 done (2026-11-19); board published, waiting for his picks (O2).** Everything below that is not his words is **proposed**.
 
 His words in chat, 2026-11-19: *"Not super stoked about it in general. Also the text on the frontpage could be much
 sharper, but i guess you might need some handholding to get there. I need you to make a plan for the next iteration
@@ -427,6 +427,25 @@ into trouble"). Nothing here is legal advice; O4 is his.
   and confirm the test goes red; read the page as a stranger. Then a short board for him (full-length phone and
   computer shots, 👍 and notes). Ship after his yes.
 - **P4 (later):** the terms page, same method (Q8).
+
+**P1 done 2026-11-19** (Opus; branch `privacy-r2` in `~/.cache/daygame-research/rebrand-r2/privacy-wt`, commit
+`7054ed89`, not on main). `src/shared/privacy/dataList.ts`: 23 entries, 10 outside services, 99 tables (94 listed, 5
+ignored), 67 browser keys (all covered). Note with the search recipes: `rebrand-r2/privacy-p1.md`. Five facts only he
+knows (shown on the page as "not decided yet"): how long database data is kept; which mail service sends the confirm
+and reset emails; where the Ollama server runs and how long it keeps prompts; the nightly crash-report clean-up
+schedule; how long Vercel keeps server logs. **Today's live /privacy says things the code does not back up**, e.g.
+"quit tools keep your answers in this browser only" (signed in, the Black Box saves to the database), "things you
+delete are hidden, not erased" (only the Black Box and the Time Log), "ask through the coaching page" (that page is
+not found on the live site), webhooks "contact the address you gave" (they are never sent), and there is no
+delete-account button. The full list of 12 is in `privacy-p1.md`.
+
+**P2 done 2026-11-19** (branch `privacy-r2`, commit `e8b184f1`, not shipped; ships after his yes in P3). `/privacy` is
+drawn from the list inside the brand frame (`PublicShell`, back to the front page): "In short", one card per tool by
+part (tap to open: what, where, who else, how to delete, how long), the services, and the delete request with a
+marked gap until O3. `tests/unit/privacy/dataList.test.ts` (18 checks: tables, browser keys, packages, environment
+names, tools, completeness) and `privacyPage.test.tsx` (4). On its first run the test caught a quit tool that went
+live after P1 (`ifthen`), now listed. `/quit/coaching` lost its only link (the old privacy page's), so it joins
+`PUT_ASIDE` in `routeReachability.test.ts` with its reason. Type check: none new; lint clean. Phone page 6,762 px.
 
 ---
 
