@@ -865,6 +865,33 @@ line gives lines-to-owner before and after.
   cards each (second man: 35 lines; her short replies: 16), 8 hidden-style random checks of sure lines.
   If all hold, 199 of the 217 settle and 18 of 1453 lines (1.2%) remain.
 
+### Owner round 1 answers (2026-11-19, his words)
+
+- "Some category of them are not so important, because it is overlapping and just a single word. If the
+  conversation is still comprehensible, then that is not an important detail to get 100% correct."
+  Decided: lone overlapping words become "maybe heard" marks; nobody listens to them.
+- "Some of them are definitely like 2 men discussing it, which should be very obvious." Decided: when
+  the speaker machines say a man's voice is not the coach, the line is labelled "other man" by machine.
+- "We're mostly there and ready to go do it on a bunch of videos." Example cards: both word picks he
+  checked were right; three bits he could not make out himself.
+- The page was unclear about what he was grading. Next pages say on each card, in one line, what to judge.
+
+### Phase 12: production run on a batch (proposed, 2026-11-19)
+
+Goal: the finished transcript for every bucket-A set in the inventory (`~/.cache/daygame-research/gold/buckets/`,
+37 videos, 67 sets), with no listening by the owner.
+
+1. Settler v7: his two answers as rules (above). Every doubt left becomes a mark in the transcript:
+   "maybe heard: ...", "or: ...", "who?". Nothing goes to the owner by default. Frozen test must still pass.
+2. One driver script `code/run_set.py <video> <start> <end>`: fetch, cut the set (10 s margin), GPU machines of
+   the lean recipe under `gpu_guard.py`, bundle, two Sonnet judges (headless Claude on the subscription), settler
+   v7, final transcript JSON. Resumable; skips finished steps.
+3. Run it on the 67 sets, the 5 test videos last (already done). Log GPU time and Claude tokens per set.
+4. Owner look: one page with 3 finished transcripts as plain reading (is the conversation clear?), plus the
+   per-batch numbers. Each card says what to judge.
+
+Models: Sonnet builds and runs 1-3; Opus checks the finished transcripts before the owner page.
+
 ## Execution prompts
 
 One session per phase. Each starts with:
