@@ -14,9 +14,8 @@ model."*
 
 **Status (2026-11-19, afternoon): Phases 0–2 done. His look pick is in (see "His picks after the looks page" below).
 Next: the brand board (Phase 4a) for the one open choice, umbrella colour + mark + sign-in page; Phases 3, 5 and 6
-are built while it waits.** Phases 0–2 need nothing
-from the owner beyond pasting the prompt. Phase 2 ends at his pick of a look. Phase 4 stops once more for his logo
-pick. Phase 8 needs his Vercel login and the domain he buys.
+are built while it waits.** Phase 4b waits for his pick on the brand board (O8). Phase 8 needs his Vercel login
+and the domain he buys.
 
 ---
 
@@ -121,10 +120,12 @@ What that decides:
    with the untrue "Join hundreds of men" removed and its prices moved out.
 3. **A pricing page** that says plainly what is free (plan, Time Log, training, audit, Black Box) and what a
    subscription unlocks (the dating tools). Prices and plan names are unchanged; they are his to set.
-4. **A new look system:** he picks one of three clickable looks (Phase 2). Under every look sits one rule set, and
+4. **A new look system:** he picked look C in full (2026-11-19): each part a sub-brand in its own colour, Life gold,
+   Quit violet, Dating orange; the umbrella colour is picked on the brand board (Phase 4a). One rule set, and
    tests enforce it: colours only from the theme file, each part's colour chosen by the address, one logo, one
    name.
-5. **A new logo:** three taste questions, then a page with up to six marks. The crosshair (a gun sight, the old
+5. **A new logo:** his answers (a symbol and letters, bold and energetic), then the brand board with six marks,
+   the umbrella colour and the new sign-in page. The crosshair (a gun sight, the old
    mark) is replaced on the header, the sign-in pages, the browser tab icon, the iPhone and Android icons, the
    quit share picture and the new link-preview picture.
 6. **Inside the app, dating moves back but stays whole:**
