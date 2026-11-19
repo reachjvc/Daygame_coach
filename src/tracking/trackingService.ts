@@ -160,7 +160,7 @@ export async function endSession(sessionId: string): Promise<SessionRow> {
     is_active: false,
     duration_minutes: durationMinutes,
     total_approaches: totalApproaches,
-    goal_met: goalMet,
+    goal_met: false,
     end_reason: 'completed',
   })
 
