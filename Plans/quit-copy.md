@@ -1,5 +1,7 @@
 # Quit tools, copied from the best: one phase per tool
 
+**2026-11-19: Phase 14 (review page) dropped; finishing moved to `Plans/quit-finish.md`, which uses the lab variants as building blocks. The lab stays hidden.**
+
 Written 2026-11-18 (Opus, planning session). Status: **running. All copies done. `best` done for Phases 1–11 and 13; Phase 12 `best` in fact-check. Phase 14 review page in progress. Pushes batched hourly.**
 
 ## Why this plan exists

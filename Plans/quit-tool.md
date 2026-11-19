@@ -1,5 +1,7 @@
 # Quit tool: a free menu of quit tools, then a 90-day program
 
+**2026-11-19: tools are now finished one by one in `Plans/quit-finish.md`; this plan stays the spec and content source.**
+
 Written 2026-11-18, rewritten the same day after three research rounds and the owner's menu idea. Status:
 **Phases 0–6 and Phase 7 steps 1–4 done 2026-11-18 (all on main, hidden). Phase 7 step 5 (ship) is replaced
 by `Plans/quit-copy.md` (owner, 2026-11-18: copy every competitor's version of each tool, improve it, and let him

@@ -6,6 +6,7 @@ Code comments still name some of them. To read one, run
 
 | Plan | Why it went | Read it at |
 |---|---|---|
+| quit-review-fixes.md | Replaced 2026-11-19, the same day, by quit-finish.md: the owner wants tools finished one by one instead of a variant review. Its findings live on as the fix list. | 279fe920 |
 | caddy-deploy-and-cicd.md | Removed 2026-11-18: the owner reopened hosting and asked for the Hetzner plans to go. Phases 0–5b are built (`infra/`, CI images); code comments still cite its steps. Also removed: `docs/plans/own-platform-and-app.md`, `docs/plans/foundation.md`, `docs/plans/local-deploy-and-cd-pipeline.md` (same commit). | 0d687eb7 |
 | plan-progress-percent.md | Finished 2026-11-14: Phases 1–4 live (Today shows "Your plan is N % done", rings fill by percentage, Everything lists every step). His plan read 45 % on the day. | ea048b1d |
 | time-log-phone.md | Finished 2026-11-14: Phases 0–8 live (phone fixes, the frame, sheet, list, calendar, reports/settings, rename to Time Log, audit fixes). The owner's three phone checks are below. | b61a4736 |
