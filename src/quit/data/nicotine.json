@@ -1051,7 +1051,7 @@
       "kind": "moderation",
       "scene": "You’re three drinks in, outside the bar, and someone holds out a pack or a vape.",
       "short": "Only on drinking nights",
-      "need": "reward",
+      "need": "connection",
       "blackBoxEnding": "drink",
       "limiting": "I only use it when I drink. That doesn’t really count.",
       "counterpart": "Drinks are where my quit is easiest to lose. Those nights get a plan.",
@@ -1285,7 +1285,7 @@
           "id": "relief-1",
           "text": "Walk or take the stairs for 15 minutes",
           "evidence": "strong",
-          "counted": "smokers kept off cigarettes for a few hours in lab studies; urge to smoke rated after exercise or after sitting still",
+          "counted": "smokers asked not to smoke for a while before lab sessions; urge to smoke rated after exercise or after sitting still",
           "n": "12 studies",
           "weak": "Measured in the hour after, not over a whole quit. The walking-type bouts tested lasted 15 minutes or more.",
           "refs": [
@@ -1337,13 +1337,21 @@
           "evidence": "moderate",
           "counted": "US company staff who smoked, and their family and friends; off cigarettes 6 months, with money on the line or usual help",
           "n": "2,538 people",
-          "weak": "Off cigarettes at 6 months: about 6 in 100 with usual help, 9 to 16 in 100 with money on the line. When people had to put up their own money, only about 14 in 100 signed up.",
+          "weak": "Off cigarettes at 6 months: about 6 in 100 with usual help; about 10 in 100 when people put up $150 of their own to win back; about 16 in 100 with rewards only. Only about 14 in 100 agreed to put up their own money, and the study held it, not a friend.",
           "refs": [
             {
               "cite": "Halpern SD et al (2015). Randomized trial of four financial-incentive programs for smoking cessation. New England Journal of Medicine 372(22):2108-17.",
               "url": "https://pubmed.ncbi.nlm.nih.gov/25970009/",
               "pmid": "25970009",
               "quote": "rates of sustained abstinence from smoking through 6 months were higher with each of the four incentive programs (range, 9.4 to 16.0%) than with usual care (6.0%)",
+              "fetched": true,
+              "fetchedOn": "2026-11-19"
+            },
+            {
+              "cite": "Halpern SD et al (2015). Randomized trial of four financial-incentive programs for smoking cessation. New England Journal of Medicine 372(22):2108-17.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/25970009/",
+              "pmid": "25970009",
+              "quote": "Reward-based programs were associated with higher abstinence rates than deposit-based programs (15.7% vs. 10.2%, P<0.001).",
               "fetched": true,
               "fetchedOn": "2026-11-19"
             },
@@ -1376,7 +1384,7 @@
           "evidence": "weak",
           "counted": "US smokers with mild low mood who asked for help to stop; all had group sessions and nicotine replacement, half also planned enjoyable activities",
           "n": "68 smokers",
-          "weak": "One small pilot trial, in people with low mood only. Odds about 3.6 times higher, with a wide range (1.2 to 10.5).",
+          "weak": "One small pilot trial, in people with low mood only. The planning was taught over 8 group sessions, not done alone. Odds about 3.6 times higher, with a wide range (1.2 to 10.5).",
           "refs": [
             {
               "cite": "MacPherson L et al (2010). Randomized controlled trial of behavioral activation smoking cessation treatment for smokers with elevated depressive symptoms. Journal of Consulting and Clinical Psychology 78(1):55-61.",
@@ -1391,6 +1399,14 @@
               "url": "https://pubmed.ncbi.nlm.nih.gov/20099950/",
               "pmid": "20099950",
               "quote": "A sample of 68 adult smokers with mildly elevated depressive symptoms",
+              "fetched": true,
+              "fetchedOn": "2026-11-19"
+            },
+            {
+              "cite": "MacPherson L et al (2010). Randomized controlled trial of behavioral activation smoking cessation treatment for smokers with elevated depressive symptoms. Journal of Consulting and Clinical Psychology 78(1):55-61.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/20099950/",
+              "pmid": "20099950",
+              "quote": "BATS and ST were matched for contact time and included 8 sessions of group-based treatment.",
               "fetched": true,
               "fetchedOn": "2026-11-19"
             }
@@ -1420,7 +1436,7 @@
           "evidence": "weak",
           "counted": "US smokers with mild low mood who asked for help to stop; all had group sessions and nicotine replacement, half also planned enjoyable activities",
           "n": "68 smokers",
-          "weak": "One small pilot trial, in people with low mood only. Odds about 3.6 times higher, with a wide range (1.2 to 10.5).",
+          "weak": "One small pilot trial, in people with low mood only. The planning was taught over 8 group sessions, not done alone. Odds about 3.6 times higher, with a wide range (1.2 to 10.5).",
           "refs": [
             {
               "cite": "MacPherson L et al (2010). Randomized controlled trial of behavioral activation smoking cessation treatment for smokers with elevated depressive symptoms. Journal of Consulting and Clinical Psychology 78(1):55-61.",
@@ -1435,6 +1451,14 @@
               "url": "https://pubmed.ncbi.nlm.nih.gov/20099950/",
               "pmid": "20099950",
               "quote": "A sample of 68 adult smokers with mildly elevated depressive symptoms",
+              "fetched": true,
+              "fetchedOn": "2026-11-19"
+            },
+            {
+              "cite": "MacPherson L et al (2010). Randomized controlled trial of behavioral activation smoking cessation treatment for smokers with elevated depressive symptoms. Journal of Consulting and Clinical Psychology 78(1):55-61.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/20099950/",
+              "pmid": "20099950",
+              "quote": "BATS and ST were matched for contact time and included 8 sessions of group-based treatment.",
               "fetched": true,
               "fetchedOn": "2026-11-19"
             }
@@ -1503,8 +1527,16 @@
           "evidence": "weak",
           "counted": "adults in one US town (Framingham), followed 1971 to 2003",
           "n": "12,067 people",
-          "weak": "Watched, not tested: when a friend stopped, a person's chance of smoking fell 36%. Nobody was asked to stop together, and friends who stop together may differ in other ways.",
+          "weak": "Watched, not tested: when a spouse stopped, a person's chance of smoking fell 67%; when a friend stopped, 36%. Nobody was asked to stop together, and people who stop together may differ in other ways.",
           "refs": [
+            {
+              "cite": "Christakis NA, Fowler JH (2008). The collective dynamics of smoking in a large social network. New England Journal of Medicine 358(21):2249-58.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/18499567/",
+              "pmid": "18499567",
+              "quote": "Smoking cessation by a spouse decreased a person's chances of smoking by 67%",
+              "fetched": true,
+              "fetchedOn": "2026-11-19"
+            },
             {
               "cite": "Christakis NA, Fowler JH (2008). The collective dynamics of smoking in a large social network. New England Journal of Medicine 358(21):2249-58.",
               "url": "https://pubmed.ncbi.nlm.nih.gov/18499567/",
@@ -1555,9 +1587,34 @@
         },
         {
           "id": "sleep-2",
-          "text": "A hot shower as the last thing before bed",
-          "evidence": "none",
-          "refs": []
+          "text": "A warm shower or bath 1–2 hours before bed",
+          "evidence": "weak",
+          "refs": [
+            {
+              "cite": "Haghayegh S, Khoshnevis S, Smolensky MH, Diller KR, Castriotta RJ (2019). Before-bedtime passive body heating by warm shower or bath to improve sleep: a systematic review and meta-analysis. Sleep Medicine Reviews 46:124-35.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/31102877/",
+              "pmid": "31102877",
+              "quote": "The search yielded 5322 candidate articles of which 17 satisfied inclusion criteria after removing duplicates",
+              "fetched": true,
+              "fetchedOn": "2026-11-19"
+            },
+            {
+              "cite": "Haghayegh S, Khoshnevis S, Smolensky MH, Diller KR, Castriotta RJ (2019). Before-bedtime passive body heating by warm shower or bath to improve sleep: a systematic review and meta-analysis. Sleep Medicine Reviews 46:124-35.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/31102877/",
+              "pmid": "31102877",
+              "quote": "when scheduled 1-2 h before bedtime for little as 10 min significant shortening of SOL",
+              "fetched": true,
+              "fetchedOn": "2026-11-19"
+            }
+          ],
+          "counted": "adults in sleep studies, not about nicotine; time to fall asleep and sleep quality after a warm shower or bath",
+          "n": "17 studies",
+          "weak": "Water at 40 to 42.5 °C; as little as 10 minutes helped people fall asleep sooner. Few studies, and none about stopping nicotine.",
+          "check": {
+            "by": "gives review (opus)",
+            "on": "2026-11-19",
+            "verdict": "ok"
+          }
         },
         {
           "id": "sleep-3",
@@ -1650,7 +1707,7 @@
               "cite": "Black N et al (2020). Behaviour change techniques associated with smoking cessation in intervention and comparator groups of randomized controlled trials. Addiction 115(11):2008-20.",
               "url": "https://pubmed.ncbi.nlm.nih.gov/32196796/",
               "pmid": "32196796",
-              "quote": "commitment, social reward, identity associated with changed behaviour",
+              "quote": "and by three individual BCTs (prompting commitment, social reward, identity associated with changed behaviour)",
               "fetched": true,
               "fetchedOn": "2026-11-19"
             }
@@ -1761,7 +1818,7 @@
         },
         {
           "id": "substance-3",
-          "text": "Keep gum or mints for the hand-to-mouth habit",
+          "text": "Keep gum or mints for the mouth habit",
           "evidence": "none",
           "refs": []
         }
