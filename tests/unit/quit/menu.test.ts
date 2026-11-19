@@ -1,5 +1,18 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { frame, isViewable, menu, minutesText, toolName, viewableIds } from "@/src/quit/menu"
+import {
+  finishedToolIds,
+  findMenuTool,
+  frame,
+  isLiveTool,
+  isViewable,
+  liveToolIds,
+  menu,
+  minutesText,
+  previewAllowed,
+  toolName,
+  toolReachable,
+  viewableIds,
+} from "@/src/quit/menu"
 import { QUIT_TOOL_IDS } from "@/src/quit/types"
 
 afterEach(() => vi.unstubAllEnvs())
@@ -31,10 +44,24 @@ describe("who can be viewed", () => {
     expect(isViewable("gambling", false)).toBe(false)
     expect(isViewable("nope", false)).toBe(false)
   })
-  it("in production nothing is viewable while live.json is empty, unless ?preview=1", () => {
+  it("in production only nicotine (live.json) is viewable without ?preview=1; other addictions need it", () => {
     vi.stubEnv("NODE_ENV", "production")
-    expect(viewableIds(false)).toEqual([])
-    expect(isViewable("nicotine", false)).toBe(false)
-    expect(isViewable("nicotine", true)).toBe(true)
+    expect(viewableIds(false)).toEqual(["nicotine"])
+    expect(isViewable("nicotine", false)).toBe(true)
+    expect(isViewable("weed", false)).toBe(false)
+    expect(isViewable("weed", true)).toBe(true)
+  })
+  it("in production a tool page opens without ?preview=1 only when liveTools.json lists it", () => {
+    vi.stubEnv("NODE_ENV", "production")
+    expect(liveToolIds()).toEqual(["date", "sos"])
+    expect(toolReachable("date", false)).toBe(true)
+    expect(toolReachable("sos", false)).toBe(true)
+    expect(toolReachable("cost", false)).toBe(false)
+    expect(toolReachable("cost", true)).toBe(true)
+    expect(previewAllowed(false)).toBe(false)
+  })
+  it("every live tool is a real menu tool, and finished tools are live", () => {
+    for (const id of liveToolIds()) expect(findMenuTool(id), id).not.toBeNull()
+    for (const id of finishedToolIds()) expect(isLiveTool(id), id).toBe(true)
   })
 })

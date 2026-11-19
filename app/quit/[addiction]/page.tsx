@@ -4,7 +4,7 @@ import { AddictionSwitcher, ViewCount } from "@/src/quit/components/MenuClient"
 import {
   frame,
   isFlag,
-  isFinished,
+  isLiveTool,
   isViewable,
   menu,
   minutesText,
@@ -40,7 +40,7 @@ export default async function QuitMenuPage({
       <div className="mt-3">
         <AddictionSwitcher current={addiction} label={frame.switcherLabel} options={options} suffix={q} />
       </div>
-      {isFinished(menu.newHere.tool) && (
+      {isLiveTool(menu.newHere.tool) && (
         <p className="mt-4">
           <Link href={`/quit/${addiction}/${menu.newHere.tool}${q}`} className="flex min-h-11 items-center text-primary underline">
             {menu.newHere.text}
@@ -56,7 +56,7 @@ export default async function QuitMenuPage({
           <ul className="mt-2 flex flex-col gap-2">
             {group.tools.map((tool) => {
               const minutes = minutesText(tool.minutes)
-              const done = isFinished(tool.id)
+              const done = isLiveTool(tool.id)
               const href = withPreview(tool.href ?? `/quit/${addiction}/${tool.id}`, preview)
               const body = (
                 <>
@@ -101,7 +101,7 @@ export default async function QuitMenuPage({
         </section>
       ))}
 
-      {isFinished("sos") && (
+      {isLiveTool("sos") && (
         <div className="sticky bottom-0 -mx-4 mt-6 border-t border-border bg-background px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
           <Link
             href={`/quit/${addiction}/sos${q}`}

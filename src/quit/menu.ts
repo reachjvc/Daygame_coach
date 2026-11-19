@@ -1,6 +1,7 @@
 import frameJson from "./data/frame.json"
 import menuJson from "./data/menu.json"
 import finishedJson from "./data/finished.json"
+import liveToolsJson from "./data/liveTools.json"
 import { getAddiction, isLive, liveIds } from "./data"
 import { QUIT_ADDICTION_IDS, type QuitAddictionId, type QuitFrameText, type QuitMenu, type QuitMenuTool } from "./types"
 
@@ -11,7 +12,7 @@ export function isAddictionId(x: string): x is QuitAddictionId {
   return (QUIT_ADDICTION_IDS as readonly string[]).includes(x)
 }
 
-/** Development and test show unfinished files; production only with `?preview=1`. */
+/** Development and test show unbuilt files; production only with `?preview=1` (a dev aid: no link needs it). */
 export function previewAllowed(preview: boolean): boolean {
   return process.env.NODE_ENV !== "production" || preview
 }
@@ -61,6 +62,23 @@ export function finishedToolIds(): string[] {
 
 export function isFinished(toolId: string): boolean {
   return finishedToolIds().includes(toolId)
+}
+
+/**
+ * Tool ids that are built and open to everyone (`data/liveTools.json`). Drives which menu rows are links and which
+ * tool pages answer without `?preview=1`. Separate from finished.json, which means "the owner said done".
+ */
+export function liveToolIds(): string[] {
+  return liveToolsJson as string[]
+}
+
+export function isLiveTool(toolId: string): boolean {
+  return liveToolIds().includes(toolId)
+}
+
+/** A tool page opens when the tool is live, or (dev aid) when previews are allowed. */
+export function toolReachable(toolId: string, preview: boolean): boolean {
+  return isLiveTool(toolId) || previewAllowed(preview)
 }
 
 /** An internal quit address with the preview flag kept (`?preview=1`), joining an existing query when there is one. */

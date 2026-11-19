@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { Chips, OneQuestion, PrimaryButton } from "../../components/kit"
 import { useLocalQuitBlackBox, useQuitBlackBox, useSignedIn, type QuitRunApi } from "../../blackbox"
-import { isFinished } from "../../menu"
+import { isLiveTool } from "../../menu"
 import { addDays, isIsoDay, todayIso, useQuitRecord, type QuitGoal, type QuitRecord } from "../../record"
 import type { QuitPlanStep, QuitSymptomCourse, QuitUnit, ToolProps } from "../../types"
 import { usable } from "../common"
@@ -494,7 +494,7 @@ function Linked({ text, carry, addiction }: { text: string; carry: (p: string) =
   for (const [name, tool] of TOOL_NAMES) {
     const at = text.indexOf(name)
     if (at === -1) continue
-    if (!isFinished(tool)) return <>{text}</>
+    if (!isLiveTool(tool)) return <>{text}</>
     return (
       <>
         {text.slice(0, at)}
@@ -573,7 +573,7 @@ function Result({ today, record, course, courseNote, bb, carry, addiction, acked
   const left = end ? daysBetween(today, end) : null
   const ended = end !== null && left !== null && left <= 0
   const list = stretches(course, courseNote)
-  const slipLive = isFinished("slip")
+  const slipLive = isLiveTool("slip")
 
   const download = () => {
     const blob = new Blob([icsFor(day1, new Date())], { type: "text/calendar;charset=utf-8" })

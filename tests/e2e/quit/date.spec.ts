@@ -275,7 +275,7 @@ test.describe("quit date, signed out", () => {
     expect(w).toBeLessThanOrEqual(640)
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1280)
     expect(errors).toEqual([])
-    // the menu names the tool; it is a Soon row until it is in finished.json
+    // the menu names the tool; it is a link once it is in liveTools.json
     await page.goto(quitUrl("/quit/nicotine"))
     await expect(page.getByTestId("row-date")).toContainText("Your quit date")
   })

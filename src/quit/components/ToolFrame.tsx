@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import { frame, isFinished, previewSuffix, withPreview } from "../menu"
+import { frame, isLiveTool, previewAllowed, previewSuffix, withPreview } from "../menu"
 import type { QuitAddictionId } from "../types"
 
 interface ToolFrameProps {
@@ -12,7 +12,7 @@ interface ToolFrameProps {
   /** `?present=1`: no footer, type scaled 1.4x. */
   present?: boolean
   preview?: boolean
-  /** Hides the footer's "Craving now?" (the `sos` tool itself). It also stays hidden until `sos` is in finished.json. */
+  /** Hides the footer's "Craving now?" (the `sos` tool itself). It also stays hidden until `sos` is in liveTools.json. */
   hideCraving?: boolean
   children: React.ReactNode
 }
@@ -50,7 +50,7 @@ export function ToolFrame({ addiction, title, step, of, present = false, preview
       {!present && (
         <footer className="mt-10 border-t border-border pt-4 text-sm">
           <ul className="flex flex-col">
-            {!hideCraving && isFinished("sos") && (
+            {!hideCraving && isLiveTool("sos") && (
               <li>
                 <Link href={`/quit/${addiction}/sos${q}`} className="flex min-h-11 items-center font-medium text-primary">
                   {frame.cravingNow}
@@ -62,11 +62,13 @@ export function ToolFrame({ addiction, title, step, of, present = false, preview
                 {frame.freeTools}
               </Link>
             </li>
-            <li>
-              <Link href={withPreview("/quit/coaching", preview)} className="flex min-h-11 items-center">
-                {frame.coaching}
-              </Link>
-            </li>
+            {previewAllowed(preview) && (
+              <li>
+                <Link href={withPreview("/quit/coaching", preview)} className="flex min-h-11 items-center">
+                  {frame.coaching}
+                </Link>
+              </li>
+            )}
             <li>
               <Link href="/privacy" className="flex min-h-11 items-center">
                 {frame.privacy}

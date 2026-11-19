@@ -93,6 +93,22 @@ tapped. Finished tools live at `/quit/nicotine/<tool>` (behind `?preview=1` unti
 
 ### Tool 0: the frame — brief (Opus, 2026-11-19) — build exactly this, decide nothing
 
+**Release rule (owner, 2026-11-19: "no need to hide it, just have it be where you intend it to be").** Nicotine and
+every BUILT nicotine tool open on production with no `?preview=1`. Two lists, two meanings:
+- `src/quit/data/finished.json` = the owner said "done" (unchanged meaning).
+- `src/quit/data/liveTools.json` = built and open to everyone (today `["date","sos"]`). It drives what is tappable on
+  the menu, which tool pages answer 200 without the flag, and every link that points at a tool (footer "Craving now?",
+  sticky bar, plan-step links, slip link). Unlisted tools stay greyed "Soon" and their page is a 404.
+- `src/quit/data/live.json` = addictions open to everyone (`["nicotine"]`; the file must pass `validateLive`).
+- Still hidden (404 in production): `/quit/coaching` (B3), other addictions (no content), `/quit/lab`. `?preview=1`
+  remains a dev aid; no link may need it.
+
+**How to add a tool when it is built:** (1) append its id to `src/quit/data/liveTools.json`; (2) make sure it is a
+menu id in `menu.json`; (3) check every internal link on the new page goes only to live tools (use
+`isLiveTool(id)` from `src/quit/menu.ts` for any link to another tool); (4) run vitest, then the e2e spec "a
+production build links nothing that needs ?preview=1" (`E2E_PRODUCTION_BUILD=1`). Add it to `finished.json` only when
+the owner says "done".
+
 Model: Sonnet builds in a worktree (memory `worktree-e2e-servers`), Opus reads the diff.
 
 1. **Shared record.** New `src/quit/record.ts` on the existing `quit-v1` store (`src/quit/store.ts`): per addiction

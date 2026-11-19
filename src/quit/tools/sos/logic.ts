@@ -1,5 +1,5 @@
 import type { QuitBelief, QuitOption } from "../../types"
-import finished from "../../data/finished.json"
+import liveTools from "../../data/liveTools.json"
 import { isObj, pickInt, pickStr } from "../common"
 
 /** The wait lengths he can choose, in minutes; the middle one is the default. */
@@ -154,9 +154,9 @@ export function beliefOf(id: string | null, beliefs: QuitBelief[]): QuitBelief |
   return id && id !== OTHER ? (beliefs.find((b) => b.id === id) ?? null) : null
 }
 
-/** A tool counts as finished when it is listed in finished.json. */
+/** A tool counts as built when it is listed in liveTools.json (links to it are drawn). */
 export function isFinished(id: string): boolean {
-  return (finished as string[]).includes(id)
+  return (liveTools as string[]).includes(id)
 }
 
 export interface Kept {

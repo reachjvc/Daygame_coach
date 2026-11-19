@@ -10,9 +10,9 @@ import { makeValid } from "./fixtures/valid"
 const rules = (d: unknown) => [...new Set(validateAddiction(d, { live: true }).map((i) => i.rule))]
 
 describe("live files", () => {
-  it("live.json is empty and validateLive finds nothing", () => {
-    expect(liveIds()).toEqual([])
-    expect(isLive("nicotine")).toBe(false)
+  it("live.json lists nicotine and validateLive finds nothing", () => {
+    expect(liveIds()).toEqual(["nicotine"])
+    expect(isLive("nicotine")).toBe(true)
     expect(validateLive()).toEqual([])
   })
 
