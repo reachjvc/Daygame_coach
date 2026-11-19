@@ -217,6 +217,35 @@ branch push) or locally one file at a time (B1).
 Accept: `unasserted` ≤ 70, quoted from the baseline; CI `database` job green on the branch; the
 put-the-defect-back table filled in.
 
+### Group A (`trackingRepo` + `trackingService`)
+
+All 50 baseline rows of the two files (46 unasserted, 4 mentioned) are marked `"asserted"`. One file,
+`tests/integration/repos/trackingRepoWrites.integration.test.ts` (27 tests), reads every row back from
+the database. Each test first creates a second user with a row in every tracking table and ends on a
+whole-row, every-column comparison of that user's rows before and after. Service functions are tested
+through the service, so the recounted totals and badges are checked too.
+
+| File | Defect put back (reverted) | Test that went red | CI run |
+| --- | --- | --- | --- |
+| `src/db/trackingRepo.ts` | `removeFavoriteTemplate` loses `.eq("user_id", userId)` | "addFavoriteTemplate, removeFavoriteTemplate and getFavoriteTemplateIds keep that person's list…" | 44591070649 |
+| `src/db/trackingRepo.ts` | `updateUserTrackingStats` filter `.eq("user_id", userId)` replaced by `.not("user_id","is",null)` | "updateUserTrackingStats writes the fields named into that person's row only" (and the replace / roll / display tests that share the table) | 44591021580 |
+| `src/db/trackingRepo.ts` | `abandonSession` writes `end_reason: 'completed'` | "abandonSession (repo + service) closes that session as abandoned…" | 44593195181 |
+| `src/tracking/trackingService.ts` | `endSession` writes `goal_met: false` | "endSession (service) writes the ending of that session only…" and "reactivateSession (repo + service) opens that session again…" | 44593202103 |
+| `src/tracking/trackingService.ts` | `deleteSession` stops recounting after the delete | "deleteSession (repo + service) removes that session and its approaches only, and the counters go down" | 44593210310 |
+
+Defects were pushed to throwaway branches `tc-p4a-d1` … `tc-p4a-d5` (never to the work branch or main).
+
+Findings (no data loss, no leak; nothing fixed, nothing marked `it.fails`):
+- `createApproach` with a `session_id` that belongs to another person: the insert itself passes (a
+  foreign key is checked past row security), only the recount of their session is refused. The caller's
+  own approach row is left pointing at a session that is not theirs; it is invisible to the session's
+  owner and goes with that session if it is deleted. Pinned by the test (error `Failed to update session`).
+- `getFavoriteTemplateIds(<someone else's id>)` throws "Failed to create tracking stats: duplicate key"
+  instead of returning nothing (the read is refused by row security, the create then collides). No data
+  is touched; the caller only ever passes its own id.
+
+**Status (group A):** done 2026-11-19 — see the combined Phase 4 Status line for the baseline count.
+
 ## Phase 5 — Flaky specs fixed · M · sonnet
 
 1. `.github/workflows/e2e.yml` `workflow_dispatch` inputs `grep` (string) and `repeat_each` (number,
