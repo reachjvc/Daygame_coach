@@ -784,7 +784,7 @@ function EntryFields({
       onClick={stopHere}
       aria-label="Stop this timer"
       title="Stop timer"
-      className={cn(touchTarget, "rounded-full text-destructive hover:bg-destructive/10")}
+      className={cn(touchTarget, "rounded-full text-primary hover:bg-primary/10")}
     >
       <IconStop className="size-5 sm:size-4" />
     </button>

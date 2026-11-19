@@ -107,7 +107,7 @@ export function RunBar({
           type="button"
           onClick={once(onStop)}
           aria-label="Stop timer"
-          className="flex size-14 shrink-0 items-center justify-center rounded-full bg-destructive text-white shadow-md active:scale-95"
+          className="flex size-14 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md active:scale-95"
         >
           <IconStop className="size-5 fill-current" />
         </button>

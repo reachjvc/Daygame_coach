@@ -189,11 +189,9 @@ export function SyncBadge({
         // `text-destructive` measured 4.49:1 against this background — a hundredth under
         // the 4.5:1 floor, on the one label that means "your work did not save"
         ? "border-destructive/50 text-destructive-foreground bg-destructive"
-        : shown.tone === "amber"
-          // the app is dark everywhere and its `dark:` variant needs a `.dark` class this
-          // page does not have, so the light text is set outright (seen at 390px)
-          ? "border-amber-500/60 bg-amber-500/10 text-amber-300"
-          : "border-border text-foreground"
+        // "amber" keeps only its dot: an amber pill sat beside the Life part's gold and
+        // read as a second, slightly-wrong gold (owner, 2026-11-19, rebrand Phase 4c)
+        : "border-border text-foreground"
 
   /**
    * Quiet when everything is fine, loud when it is not.

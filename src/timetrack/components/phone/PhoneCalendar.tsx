@@ -202,7 +202,7 @@ export function BlockPanel({
                 aria-hidden
                 className={cn(
                   "flex size-11 items-center justify-center rounded-full",
-                  action.main ? (running ? "bg-destructive text-white" : "bg-primary text-primary-foreground") : "bg-secondary",
+                  action.main ? "bg-primary text-primary-foreground" : "bg-secondary",
                 )}
               >
                 <Icon className="size-4" />

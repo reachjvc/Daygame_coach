@@ -914,7 +914,7 @@ export function EntrySheet({
                 <button
                   type="button"
                   onClick={stopNow}
-                  className="flex h-11 items-center gap-2 rounded-full bg-destructive px-4 text-sm font-semibold text-white shadow-md"
+                  className="flex h-11 items-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-md"
                 >
                   <IconStop className="size-4 fill-current" />
                   Stop

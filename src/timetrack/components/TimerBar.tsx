@@ -978,7 +978,6 @@ export function TimerBar({
           ) : running ? (
             <Button
               size="sm"
-              variant="destructive"
               className="ml-auto min-w-[104px] flex-1 sm:flex-none"
               onClick={onStop}
               aria-label="Stop timer"

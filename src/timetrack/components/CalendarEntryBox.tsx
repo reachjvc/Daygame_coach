@@ -320,7 +320,7 @@ export function CalendarEntryBox({
               onClick={() => onStop(saved)}
               aria-label="Stop time entry"
               title="Stop time entry"
-              className={cn(touchTarget, "rounded-full text-destructive hover:bg-destructive/10")}
+              className={cn(touchTarget, "rounded-full text-primary hover:bg-primary/10")}
             >
               <IconStop className="size-4" />
             </button>
