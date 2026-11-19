@@ -2,7 +2,7 @@
 
 Written 2026-11-19 (Opus), after the owner went through the before/after page of `Plans/rebrand-10kdaysclub.md`
 (https://claude.ai/artifact/ERBS6YKjuwV9jB61KtSfUE). That plan stays the record of round 1; this one is the next
-iteration. **Status: Phase 0 done (2026-11-19); Phases 1–2 running.** Everything below that is not his words is **proposed**.
+iteration. **Status: Phases 0–2 done (2026-11-19); Phase 3 running.** Everything below that is not his words is **proposed**.
 
 His words in chat, 2026-11-19: *"Not super stoked about it in general. Also the text on the frontpage could be much
 sharper, but i guess you might need some handholding to get there. I need you to make a plan for the next iteration
@@ -225,7 +225,7 @@ number of workers to its verdict.
 
 **Done when:** `now/` and `before/` hold every screen at the right sizes, the Haiku check lists zero misses.
 
-**Phase 0 done 2026-11-19** (notes copied to the other two plans in `77a41f8f`). 26 shots, full length, in
+**Phase 0 done 2026-11-19** (notes copied to the other two plans in `1267fb54`). 26 shots, full length, in
 `~/.cache/daygame-research/rebrand-r2/shots/{before,now}/{phone,computer}/` (private); the Haiku height check found
 one miss (a blank shot from a dev server killed by low memory), re-shot, now zero. `rebrand-r2/shoot.mjs` also grows
 the window to the page's full height (so the fixed bottom bar covers nothing) and unrolls inner scroll boxes (the
@@ -260,6 +260,16 @@ Brief for the subagent (pass exactly these files): this plan (his notes, Part 1,
 **Done when:** `directions.md`, `look-variants.css` and nine badge SVGs exist; every direction names its checked
 reference or says "invention".
 
+**Phase 1 done 2026-11-19** (Opus; no repo commit, files private in `~/.cache/daygame-research/rebrand-r2/`):
+`directions.md`, `look-variants.css`, `badges/b{1,2,3}-{life,quit,dating}.svg` + `preview.png`, `refs/` (9 images),
+`check-looks.mjs`. All five products checked on their App Store screenshots (Apple's iPhone guide for Settings); none
+replaced. One difference: Apple Health colours each category's small card title, not the page title; D2 colours the
+page title anyway (his idea). Badges: B1 orange plate + dark icon, B2 dark plate + icon in the part colour, B3 orange
+ring + orange icon; Mark 4 not used (its drawing was not in the brief). Lowest contrast 4.69 (orange link on D4's gold
+glow; the glow was cut from 22% to 16% to pass). Selectors were checked by the parent on the running app afterwards
+(the dev server died under low memory during the phase): the phone Time Log does not match the Time Log marker, so
+Phase 3's look check covers it.
+
 ### Phase 2 — Five sets of front page words (one Opus subagent; runs beside Phase 1)
 
 Brief (pass exactly these): this plan (his notes, Part 1, this phase); `docs/product/vision.md`;
@@ -287,6 +297,13 @@ are "not necessarily what i want"); the `now/front` screenshots.
 
 **Done when:** `sets.json`, `mined.md` and `tests.md` exist and every set obeys the rules (a Haiku subagent checks
 the rules list against `sets.json` and reports breaches; fix each).
+
+**Phase 2 done 2026-11-19** (Opus; no repo commit, files private in `rebrand-r2/words/`: `mined.md`, `sets.json`,
+`sets.md`, `tests.md`). Haiku rules check: all eight rules pass, no breaches. Five angles: C1 the day count, C2 loud
+and short, C3 after the video, C4 the promise under a video, C5 the bad day. "I DID IT" in C1–C3. Every headline
+measured at two lines on a 390 px phone (today's takes three). One slot added: `doorsTitle` (the heading over the
+doors). Left for him: his full favourite line takes three lines on a phone, so no set keeps it whole; no Dating door
+line passes "could nobody else say it"; the top bar's "Login" / "Get Started" are in the shared frame, not in the sets.
 
 ### Phase 3 — Render the directions in the real app (Sonnet; Haiku checks)
 
