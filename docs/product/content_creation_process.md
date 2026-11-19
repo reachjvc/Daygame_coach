@@ -80,6 +80,11 @@ Creators working with AI (2026 posts and 15 YouTube videos):
 - **4 moving options for one scene, in the finished look:** too few, and not
   specific enough. But it gave good ideas.
 
+- **Reel "Outvoted" (2026-11-19): voice first, then a moving storyboard.** He
+  spoke the script once; Claude cut it by measurement and drew every scene as
+  a near-still timed to his words, played with the sound on one page. Result
+  not judged by him yet. Plan: `Plans/reel-outvoted.md`.
+
 ## Proposed next version (Claude, proposed, not decided)
 
 1. **Script.** Approved on one page.

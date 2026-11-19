@@ -29,6 +29,10 @@ say "I left notes".
   angles and formats vary, and some have no voice. Not only nicotine. Endings
   vary too: sometimes the reel sells. Six scripts wait for his 👍 (the page is
   listed in notes-seen.md).
+- **Reel "Outvoted" (R1 of the next reels)**: he spoke it on 2026-11-19, voice
+  only, in a few minutes. Cut to 2:02. Plan: `Plans/reel-outvoted.md`
+  (proposed). The moving storyboard page waits for his notes (listed in
+  notes-seen.md). Private folder: `~/.cache/daygame-research/content/reel-outvoted/`.
 - **The process itself**: being worked out on video 01. About 40% there
   (owner, 2026-11-18).
 - **After video 01**: see "Next video" below.
