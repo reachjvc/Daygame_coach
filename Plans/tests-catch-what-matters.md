@@ -217,7 +217,6 @@ branch push) or locally one file at a time (B1).
 Accept: `unasserted` ≤ 70, quoted from the baseline; CI `database` job green on the branch; the
 put-the-defect-back table filled in.
 
-<<<<<<< HEAD
 ### Group A (`trackingRepo` + `trackingService`)
 
 All 50 baseline rows of the two files (46 unasserted, 4 mentioned) are marked `"asserted"`. One file,
@@ -246,7 +245,7 @@ Findings (no data loss, no leak; nothing fixed, nothing marked `it.fails`):
   is touched; the caller only ever passes its own id.
 
 **Status (group A):** done 2026-11-19 — see the combined Phase 4 Status line for the baseline count.
-=======
+
 ### Group C (programs, workouts, saved weeks, Time Log restore, health logs)
 
 Files: `tests/integration/repos/{programRepo,workoutRepo,programDraft,timetrackBackup,healthRepo}Writes.integration.test.ts`.
@@ -275,7 +274,6 @@ Findings:
   owner call. Remove `.fails` when fixed.
 
 **Status (group C):** done 2026-11-19 — 23 functions asserted (programRepo 9, workoutRepo 3, programDraftRepo 3, healthRepo 7, restoreTimetrack); `unasserted` 128 -> 102 for this group alone (baseline count of "unasserted": 102 before merging A and B); CI run 44600185515 on branch tests-catch-p4c: database success, static success, unit 1/2 and 2/2 success; one finding (`unenroll` has no user filter, `it.fails`), no data loss fixed.
->>>>>>> 5a3e8a5f (Tests catch: Phase 4 group C — defect table, finding)
 
 ## Phase 5 — Flaky specs fixed · M · sonnet
 
