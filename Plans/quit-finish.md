@@ -35,7 +35,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | 4 | Slipped? Restart today | wave-1 `slip` | slips go into the shared record; clean runs never reset | building |
 | 5 | The 12 lies test | wave-1 `beliefs` | from `beliefs/best`: a reply per belief, "can you stop?", earlier results | building |
 | 6 | What you'll feel, and when | lab `timeline/best` | wave-1 `symptoms` (what helps per symptom) | not started |
-| 7 | If-then plan | lab `ifthen/best` | — | not started |
+| 7 | If-then plan | lab `ifthen/best` | — | building |
 | 8 | Daily check-in | lab `checkin/best` | slip question from `diary/best` | building |
 | 9 | What it costs you | wave-1 `cost` | per-pack price and live update (copy e); money setup from the shared record | not started |
 | 10 | Your past attempts | lab `past/best` | wave-1's "many tries are normal" number and "after the first slip" question | building |
@@ -1234,6 +1234,126 @@ at):**
 tries; alternative: once per try in the form. P3 the example shows only on tap; alternative: shown first, as in `best`.
 P4 the "how many in all" chips stay, so 10+ tries need not be typed one by one; alternative: count only the list. P5
 the number is shown as a sentence with its range, no big "About 30"; alternative: the wave-1 number card as it was.
+
+### Tool 7: If-then plan — brief (Opus, 2026-11-19) — build exactly this, decide nothing
+
+Model: Sonnet builds in a worktree; Opus reads the diff. Address: `/quit/nicotine/ifthen` (menu id `ifthen` already
+exists). Built from lab `ifthen/best` (`src/quit/lab/ifthen/best/*`): move what is reused into `src/quit/tools/ifthen/`
+(its own `text.ts`, `logic.ts`, `evidence.ts`, `IfthenTool.tsx`); never edit lab files. Nicotine only: no addiction
+switcher. One question per screen on phones (`useScreens`, `?s=N`), progress bar, in-page Back; browser Back steps
+back; reload resumes on the same screen; a double tap never skips a screen. Desktop: the same screens in the page
+column, as Tools 1 and 2. Every choice below is **proposed**; the recommendation is the option written.
+
+**Menu row:** name **"If-then plan"**, line **"Your riskiest moments, and what you'll do there instead."** (the old
+"Your 3 risky moments" promised a number the tool never asks for), `account: "none"`, wave 1 in `menu.json` and in
+`src/quit/tools/registry.ts`.
+
+**It asks nothing another tool asks, and says nothing Tool 2 contradicts.**
+- The moments are the 10 `riskyMoments` of `nicotine.json`, the same list and labels as Tool 2's "What to do right
+  here" and Tool 4's "Where were you?".
+- The first choices offered for a moment are exactly that moment's three `momentSwaps` cards, word for word (Tool 2
+  shows the same three). No rewording, so the two tools never disagree.
+- Where a craving or slip happened is asked by Tool 2 and Tool 4 (`where` on Black Box reports). This tool never asks
+  it again: it reads those saves to pre-tick moments (screen 1). It does not ask "how strong" either.
+- Importance and confidence (1–10) from `best` are dropped: they were asked and then used only in the print view
+  (review E14). Recommendation: drop; alternative: keep and, at 6 or under, ask "what would make this a 7?".
+
+**Data.** The plan is kept in the `quit-v1` store under tool key **`ifthen`** (`useToolState`), shape
+`{lines: [{id, momentId: string|null, ownMoment: string, then: string, from: "card"|"idea"|"own"}], draft: {ticked:
+[momentId or "own:<text>"], choices: {key: {then, from}}}, checkin: ISO day|"", reviews: {lineId: "kept"|"change"}}`
+with a parse function that trusts nothing (as the other tools). List moments are kept by **id** (labels come from the
+data file at render), own moments by their text (max 80). The draft makes reload resume mid-flow. One line under the
+plan: "Your plan is kept on this phone." (B1). The Black Box is read only (bridge as Tool 2: `useSignedIn(true, true)`,
+`BlackBoxBridge` signed in, `LocalBlackBoxBridge` signed out); nothing is filed.
+
+**Screens**
+1. **Where does it pull hardest?** Line: "Tick the moments you want a plan for. Start with the ones that pull
+   hardest." The 10 moment chips (toggle, `aria-pressed`), then "Something else" (text field, max 80, Add; own moments
+   show as ticked chips that untick on tap). Continue needs one tick ("Tick at least one moment." under a disabled
+   button).
+   **Pre-ticked** on a first visit (no plan, no draft), once the Black Box is settled: the moments named in his close
+   calls and slips (`reports[].where`), most often first, at most 3. Banner counted from what is really ticked:
+   "Ticked from your saves in Craving now? and Slipped?: In the car (3), After a meal (1). Change them if they're
+   wrong." Nothing saved → nothing ticked, no banner. (Review E2: the old banner said "Two" with one ticked, and past
+   endings made "If Someone offered one" sentences; the past tool's endings are not read: they are a different list.)
+   Study line under the chips, with its basis box (who / how many / design / when / sources): the McWilliams 2019
+   line from `best` `EVIDENCE.quitting`, unchanged.
+2. **One screen per ticked moment: "What will you do there?"** Top: "Moment 2 of 3" and the card being built (see
+   "The card" below), live. Then:
+   - **For this moment**: the moment's three `momentSwaps` cards as radio cards (absent for an own moment).
+   - **Quick ideas**: the `responses` of the data file except `reasons` ("Look at the money…": not doable without his
+     numbers) and `craving` ("Tap Craving now?…": E1). Eight cards.
+   - **Or write your own** (max 160). Typing selects it.
+   - Nudge under a typed answer that says what he will NOT do (the `best` nudge text and its Adriaanse basis box). The
+     negation list drops plain "stop" ("stop at the gym" was a false positive, E14); it keeps won't / will not / do
+     not / don't / not / never.
+   - On the first moment only: the Armitage 2008 line (`EVIDENCE.list`) with its basis box. The two Cooke 2023 alcohol
+     boxes (`format`, `paper`) are dropped for nicotine (E14: they undercut the tool and left out the review's
+     headline). Recommendation: drop; alternative: keep them with the headline added.
+   - The Sleep, Focus, Confidence, Reward and "nicotine itself" swap groups of `best` are not offered: they are
+     habits or medicine, not something to do at the moment (E1).
+   - Buttons: Back (previous moment, or screen 1) and Next / "See my plan" (disabled until something is picked or
+     typed; empty or spaces-only text does not count).
+3. **Your plan** (result, `data-testid="result"`).
+   - One card per line, in his order.
+   - Under each card: Change (opens the same choices as screen 2 for that one line, inline; Done disabled while the
+     text is empty — E14), Move up / Move down (44 px, aria-labels), Remove. Remove shows "Removed. Undo" for as long
+     as the screen is open (lesson 2).
+   - "Add or change moments" → screen 1 with the plan's moments ticked. Finishing again keeps every line whose moment
+     is still ticked (and its "then"), adds the new ones, and takes out the unticked ones (E3), with the same "Removed:
+     In the car. Undo" line on the plan.
+   - **Check back**: "When should the plan ask you: did these work?" chips In 1 week / In 2 weeks / No date (the date
+     shows as "Thu 3 Dec"). On or after that day the plan opens with "Did these work?" and Kept / Change on each
+     card; Change opens that card's editor. When every card is answered: "Set a new date" (the chips again). Line:
+     "A plan is a first try. If a line doesn't work, change it."
+   - **Print**: "Print or save" shows the plain print view of `best` (title "My if-then plan", the cards, the check-back
+     date) with a Print button (`window.print()`) and "Back to my plan". The print CSS hides everything else.
+   - **Used in** (E13: no switch that does nothing): one line "Your lines also show in Craving now?, under What to do
+     right here." — "Craving now?" is a link only when `sos` is live (`isLiveTool`). Plus "Your plan is kept on this
+     phone." and "Back to the menu".
+
+**The card (fixes E1, E2, E14 sentences).** No built sentence: each line shows two labelled parts,
+"**If** After a meal" / "**Then** Get up from the table and clear your plate." Text is shown exactly as the data or
+he wrote it (a missing full stop is added for display; no double full stops). This removes every "then I same
+wake-up time…", "your/you" and "If it is in the car" error, and works for own moments as typed.
+
+**Tool 2 change (small, in `src/quit/tools/sos/Tiles.tsx` `Help`):** when his plan has a line for the moment he
+taps, a card "Your plan" with his "then" shows first, above the three cards (read through the `ifthen` parse
+function). That is what makes "Used in: Craving now?" true. Nothing else in Tool 2 changes.
+
+**Report items for this tool** (review E, F2, A, B, 2026-11-19), each answered above: E1 (broken "then" sentences,
+non-moment groups, "Tap Craving now?"), E2 (hand-over sentences, banner count), E3 (untick does not remove), E13 (SOS
+switch), E14 (nudge false positive, empty edit and double full stop, awkward "If it is…" labels, unused
+importance/confidence, alcohol boxes, "Tetris" — the data now says "falling-blocks game", Back leaves the tool), E19
+(switcher), A (row opened "Coming soon"), B (past promised if-then cards that did not exist: now they do; the past
+tool's own link is Tool 10's call), F2 ifthen a/b/c (copies not used: b and c had dead controls and a lost save).
+Not taken from `best`: the addiction switcher, the example plan (it wrote into his data), importance/confidence, the
+SOS switch, the alcohol boxes, the past-tries hand-over.
+
+**Acceptance (Playwright `tests/e2e/quit/ifthen.spec.ts`, 390x844 touch and 1280x800, clock fixed; screenshots
+looked at):**
+1. Fresh: tick After a meal and In the car → screen 2 shows "Moment 1 of 2" and exactly Tool 2's three after-food
+   cards; pick one; next moment pick a quick idea → plan shows two cards "If … / Then …" with the exact texts.
+2. Own moment "Payday" + own "then" "go to the gym" → card "If Payday / Then go to the gym."; typing "I won't smoke"
+   shows the nudge; "stop at the shop" does not.
+3. Black Box seeded with 3 close calls `where: driving` and 1 slip `where: after-food` → screen 1 pre-ticks In the
+   car and After a meal; the banner names both with (3) and (1). Nothing seeded → nothing ticked, no banner.
+4. Add or change moments → untick In the car → See my plan: the line is gone, "Removed… Undo" brings it back.
+5. Remove → Undo; Move up/down changes order and survives reload; Change to empty text → Done disabled.
+6. Check back In 1 week; clock +8 days → "Did these work?" with Kept / Change; all answered → "Set a new date".
+7. Tool 2 at `/quit/nicotine/sos`, What to do right here → After a meal shows "Your plan" with his line first, then
+   the three cards; a moment without a line shows only the three.
+8. Reload on every screen resumes there with the same ticks and choices; browser Back steps back one screen; double
+   tap on Next moves one screen.
+9. Print view shows the cards and the date; no screen controls in it except Print and Back.
+10. No console error; no sideways scroll; every tap target at least 44 px; a 160-character unbroken own text does not
+    widen the page; the menu row "If-then plan" opens the tool.
+11. Then the three-reviewer check and fix rounds; status "waiting for you".
+
+**Proposed (owner may veto):** I1 two-part If/Then cards instead of one sentence (alternative: a sentence per line,
+which needs a "then I" rewrite of every card and breaks on typed text). I2 importance/confidence dropped. I3 alcohol
+study boxes dropped for nicotine. I4 pre-ticks from his Black Box saves, not from Your past attempts (different list).
+I5 Tool 2 shows his plan line for that moment (the only change to Tool 2).
 
 ## Done
 
