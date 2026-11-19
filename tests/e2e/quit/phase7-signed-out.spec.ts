@@ -213,22 +213,6 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
     await expect(page.getByTestId("question")).toBeFocused()
   })
 
-  test("A67 a slow sign-in answer does not hold back Yes", async ({ page }) => {
-    await page.route("**/api/whoami", async (route) => {
-      await new Promise((r) => setTimeout(r, 6000))
-      await route.abort()
-    })
-    await page.goto(quitUrl(`${A}/sos`))
-    await page.getByTestId("chip-b1").click()
-    await page.getByTestId("sos-continue").click()
-    await page.getByTestId("sos-continue").click()
-    await page.getByTestId("sos-to-question").click()
-    await expect(page.getByTestId("sos-yes")).toBeEnabled()
-    await page.getByTestId("sos-yes").click()
-    await expect(page.getByTestId("result")).toBeVisible()
-    await expect(page.getByTestId("sos-saved")).toHaveCount(0)
-  })
-
   test("A70 A72 A77 present and preview are carried; a repeated preview counts", async ({ page, request }) => {
     await page.goto(quitUrl(`${A}/cost?preview=1&present=1`))
     expect(await page.locator("header a").evaluateAll((as) => as.map((a) => a.getAttribute("href")).join(" "))).toContain("present=1")

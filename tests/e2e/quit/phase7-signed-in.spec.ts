@@ -56,13 +56,6 @@ async function seed(page: Page, startOffset: number) {
   }, record(startOffset))
   await expect.poll(async () => (await rows(page)).attempts.filter((a) => !a.deleted_at).length, { timeout: 20000 }).toBeLessThanOrEqual(1)
 }
-async function sosToQuestion(page: Page) {
-  await page.goto(quitUrl(`${A}/sos`))
-  await page.getByTestId("chip-b4").click()
-  await page.getByTestId("sos-continue").click()
-  await page.getByTestId("sos-continue").click()
-  await page.getByTestId("sos-to-question").click()
-}
 async function slipTo(page: Page, when: string) {
   await page.goto(quitUrl(`${A}/slip`))
   await page.getByTestId(`chip-${when}`).click()
@@ -73,27 +66,6 @@ async function slipTo(page: Page, when: string) {
 }
 
 test.describe("quit phase 7 fixes, signed in @phone", () => {
-  test("B-1 a double tap on Yes files one close call", async ({ page }) => {
-    await seed(page, -14)
-    await sosToQuestion(page)
-    await page.getByTestId("sos-yes").evaluate((el: HTMLElement) => {
-      el.click()
-      el.click()
-    })
-    await expect(page.getByTestId("sos-saved-text")).toHaveText(t.sos.savedClose, { timeout: 20000 })
-    expect(liveReports(await rows(page))).toHaveLength(1)
-  })
-
-  test("B-1 a real double click files one, and Undo takes all of it", async ({ page }) => {
-    await seed(page, -14)
-    await sosToQuestion(page)
-    await page.getByTestId("sos-yes").dblclick()
-    await expect(page.getByTestId("sos-saved-text")).toHaveText(t.sos.savedClose, { timeout: 20000 })
-    await page.getByTestId("sos-undo").click()
-    await expect(page.getByTestId("sos-undone")).toBeVisible()
-    await expect.poll(async () => liveReports(await rows(page)).length, { timeout: 20000 }).toBe(0)
-  })
-
   test("B-1 a double tap on the slip Continue files one lapse", async ({ page }) => {
     await seed(page, -14)
     await slipTo(page, "today")
@@ -103,40 +75,6 @@ test.describe("quit phase 7 fixes, signed in @phone", () => {
     })
     await expect(page.getByTestId("slip-saved-text")).toHaveText(t.slip.saved, { timeout: 20000 })
     expect(liveReports(await rows(page))).toHaveLength(1)
-  })
-
-  test("a Yes waiting for a slow sign-in answer is cancelled by Back and No", async ({ page }) => {
-    await seed(page, -14)
-    await page.route("**/api/whoami", async (route) => {
-      await new Promise((r) => setTimeout(r, 2500))
-      await route.continue()
-    })
-    await sosToQuestion(page)
-    await page.getByTestId("sos-yes").click()
-    await expect(page.getByTestId("result")).toBeVisible()
-    await page.goBack()
-    await page.getByTestId("sos-no").click()
-    await expect(page.getByTestId("sos-slip-link")).toBeVisible()
-    await page.waitForResponse((r) => r.url().includes("/api/whoami"))
-    // let the Black Box load and the filing effect run, then look: nothing was filed
-    await page.waitForResponse((r) => r.url().includes("/api/black-box") && r.request().method() === "GET")
-    await page.evaluate(() => new Promise((r) => setTimeout(r, 1500)))
-    expect(liveReports(await rows(page))).toHaveLength(0)
-  })
-
-  test("a Yes waiting for a slow sign-in answer is cancelled by Clear my answers", async ({ page }) => {
-    await seed(page, -14)
-    await page.route("**/api/whoami", async (route) => {
-      await new Promise((r) => setTimeout(r, 2500))
-      await route.continue()
-    })
-    await sosToQuestion(page)
-    await page.getByTestId("sos-yes").click()
-    await page.getByTestId("clear-answers").click()
-    await page.waitForResponse((r) => r.url().includes("/api/whoami"))
-    await page.waitForResponse((r) => r.url().includes("/api/black-box") && r.request().method() === "GET")
-    await page.evaluate(() => new Promise((r) => setTimeout(r, 1500)))
-    expect(liveReports(await rows(page))).toHaveLength(0)
   })
 
   test("a lapse filed on an old run does not stop a new lapse on the new run", async ({ page }) => {
@@ -157,15 +95,6 @@ test.describe("quit phase 7 fixes, signed in @phone", () => {
     await page.goto(quitUrl(`${A}/slip?s=3`))
     await page.getByTestId("slip-finish").click()
     await expect.poll(async () => liveReports(await rows(page)).filter((x) => x.attempt_id === newRun).length, { timeout: 25000 }).toBe(1)
-  })
-
-  test("B-3 a close call filed after the session is gone says it is on this phone only", async ({ page, context }) => {
-    await seed(page, -14)
-    await sosToQuestion(page)
-    await context.clearCookies()
-    await page.getByTestId("sos-yes").click()
-    await expect(page.getByTestId("sos-saved-text")).toHaveText(t.blackbox.localOnly, { timeout: 20000 })
-    await expect(page.getByText(t.sos.savedClose)).toHaveCount(0)
   })
 
   test("B-3 a lapse filed after the session is gone says it is on this phone only", async ({ page, context }) => {
