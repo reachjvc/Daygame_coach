@@ -107,6 +107,8 @@ export interface RealStep extends Writers, Reads {
   oneThingTyped: string | null
   setOneThingTyped: Dispatch<SetStateAction<string | null>>
   planPct: ns.NsPlanProgress
+  /** What the account knows that the plan does not (the one thing), as `NorthStarFlow` hands it to the rail and the progress. */
+  nsAccount: NsAccount
   dueCards: DueCard[]
   dueWeek: DueCard | undefined
   onDueGo: (c: DueCard) => void
@@ -146,6 +148,7 @@ export function RealStepHost({
   stepId,
   sequence,
   framed = false,
+  showRibbon = true,
   children,
 }: {
   stepId: NorthStarTabId
@@ -153,6 +156,8 @@ export function RealStepHost({
   sequence?: Sequence
   /** The Frame around the step supplies Next, so the real part's own step-advance button is hidden. */
   framed?: boolean
+  /** False when the shell around the step draws the errand ribbon itself, in its place under the step picker. */
+  showRibbon?: boolean
   children: ReactNode
 }) {
   const { store, timezone, account } = usePlanNew()
@@ -361,6 +366,7 @@ export function RealStepHost({
     oneThingTyped,
     setOneThingTyped,
     planPct,
+    nsAccount,
     dueCards,
     dueWeek,
     onDueGo,
@@ -375,7 +381,7 @@ export function RealStepHost({
   return (
     <PlanBasePathContext.Provider value={ROUTES.planNew}>
       <Ctx.Provider value={value}>
-        {ribbon && !areaDialogOpen && !goalDialogOpen && <div className="mb-5">{ribbon}</div>}
+        {showRibbon && ribbon && !areaDialogOpen && !goalDialogOpen && <div className="mb-5">{ribbon}</div>}
         {children}
         <RealStepDialogs />
       </Ctx.Provider>

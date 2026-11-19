@@ -68,6 +68,8 @@ export const ROUTES = {
    * Same gate as the copy space: only an account with a `plan_sandboxes` row; anyone else gets a 404.
    */
   planNew: "/plan/new",
+  /** The role model library on the copy space; each person at `/plan/new/role-models/<id>`. */
+  planNewRoleModels: "/plan/new/role-models",
   /**
    * The quit-a-vice module's front door: **the Black Box** since 2026-09-20.
    *

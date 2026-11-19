@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 
 import type { AreaPerson } from "../catalog"
-import { roleModelHref } from "../routes"
+import { useRoleModelHref } from "../RoleModelsHome"
 import { RoleModelVisual } from "./RoleModelVisual"
 
 /**
@@ -14,6 +14,7 @@ import { RoleModelVisual } from "./RoleModelVisual"
  * after the dialog opens; draws nothing when the library has nobody for it.
  */
 export function AreaPeople({ areaId, label }: { areaId: string; label: string }) {
+  const roleModelHref = useRoleModelHref()
   const [people, setPeople] = useState<AreaPerson[] | null>(null)
   useEffect(() => {
     let live = true

@@ -5,7 +5,7 @@ import { useState } from "react"
 
 import { memberForDay, quoteForDay } from "../councilTypes"
 import { useCouncil } from "../hooks/useCouncil"
-import { roleModelHref } from "../routes"
+import { useRoleModelHref } from "../RoleModelsHome"
 import { RoleModelVisual } from "./RoleModelVisual"
 import { WeekValueTick } from "./WeekValueTick"
 
@@ -24,6 +24,7 @@ import { WeekValueTick } from "./WeekValueTick"
  * goes into the day's note through the note's own save.
  */
 export function CouncilToday({ today, note, onNote }: { today: string; note: string; onNote: (text: string) => void }) {
+  const roleModelHref = useRoleModelHref()
   const { state } = useCouncil()
   const [asking, setAsking] = useState(false)
   if (state.status !== "ready") return null

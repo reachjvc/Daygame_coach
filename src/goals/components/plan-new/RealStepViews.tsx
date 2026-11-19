@@ -8,12 +8,13 @@
  * Differences from the real page, all on purpose and all about the frame, not the step:
  *  - the rail, the back link, "start over", the read-back and the to-do list are `NorthStarFlow`'s frame and are
  *    not drawn (Phase 4 puts the new frame around the build steps);
- *  - the review reminder is never wired (`onReminderChange` absent), as on `/plan/sandbox`.
+ *  - the review reminder is shown off and read-only (`onReminderChange` absent, `reminderReadOnly`), as the copy space has no pushes.
  */
 
 import type { ReactNode } from "react"
 import type { NorthStarTabId } from "@/src/goals/types"
 import { COMMIT_EDIT_COPY } from "@/src/goals/data/northStar"
+import { DEFAULT_REVIEW_DAY } from "@/src/goals/dueNowService"
 import * as ns from "@/src/goals/northStarService"
 import * as nsTrack from "@/src/goals/northStarTrackService"
 import { appendToReview, parsePeriodParam, removeReview, reviewIdFor, writeReview } from "@/src/goals/reviewService"
@@ -38,6 +39,9 @@ import { DueNow } from "@/src/goals/components/north-star/DueNow"
 import { PlanProgressList } from "../north-star/PlanProgressList"
 import { QuickAdd } from "../north-star/QuickAdd"
 import { useRealStep } from "./RealStep"
+
+/** What the reminder block shows on the copy space: off, the table's own day and hour, no device. Never read, never written. */
+const COPY_SPACE_REMINDER = { pushOn: false, reviewDay: DEFAULT_REVIEW_DAY, reviewHour: 19, hasEnabledDevice: false }
 
 /** The step `stepId` names, drawn from the real parts. */
 export function RealStepView(): ReactNode {
@@ -216,9 +220,10 @@ export function RealStepView(): ReactNode {
         <PeriodReviewTab
           key={named ? reviewIdFor(named) : "now"}
           initialPeriod={initialPeriod}
-          // The copy space has no reminder: never passed, so nothing is read or switched on for it.
-          reminder={null}
+          // The copy space shows the reminder block, off, with every control disabled: no read, no switch, no push.
+          reminder={COPY_SPACE_REMINDER}
           onReminderChange={undefined}
+          reminderReadOnly
           plan={plan}
           today={today}
           ticks={ticks}

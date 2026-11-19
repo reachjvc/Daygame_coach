@@ -1,7 +1,9 @@
+"use client"
+
 import Link from "next/link"
 
 import { initialsOf, type RoleModelCardData } from "../format"
-import { roleModelHref } from "../routes"
+import { useRoleModelHref } from "../RoleModelsHome"
 
 /**
  * One person in the gallery, in the look of the old test gallery
@@ -13,6 +15,7 @@ import { roleModelHref } from "../routes"
  * the look is decided (D6): when it is, the band is where it goes.
  */
 export function RoleModelCard({ card }: { card: RoleModelCardData }) {
+  const roleModelHref = useRoleModelHref()
   const c = card.color
   return (
     <Link

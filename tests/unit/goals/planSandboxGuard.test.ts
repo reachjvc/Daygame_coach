@@ -53,6 +53,8 @@ describe("the copy space page's requests", () => {
       ["/api/notifications/devices", "POST"],
       ["/api/notifications/devices/forget", "POST"],
       ["/api/programs/enrollments/abc/schedule", "PUT"],
+      ["/api/programs/enrollments/abc", "DELETE"],
+      ["/api/health/workout", "POST"],
       ["/api/role-models/council/extra", "PUT"],
       ["/api/role-models/other", "PUT"],
       ["/api/quit/count", "POST"],
@@ -87,8 +89,14 @@ describe("the copy space page's requests", () => {
   })
 
   it("lets reads of other routes out, naming the hidden account so the server refuses them as another account's", async () => {
-    await fetch("/api/programs/enrollments")
+    await fetch("/api/goals")
     expect(sent[0].headers.get(PAGE_ACCOUNT_HEADER)).toBe(HIDDEN)
+  })
+
+  it("sends the training log and the running programs as reads naming no account, so the server answers as the signed-in person", async () => {
+    for (const path of ["/api/health/workout?days=9", "/api/programs/enrollments", "/api/programs/enrollments?past=1", "/api/programs/enrollments/abc"]) await fetch(path)
+    expect(sent).toHaveLength(4)
+    for (const s of sent) expect(s.headers.has(PAGE_ACCOUNT_HEADER)).toBe(false)
   })
 
   it("lets the copy space's own routes through, sign-out and crash reports untouched", async () => {

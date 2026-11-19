@@ -99,6 +99,7 @@ export function nameEveryRequest(account: string): () => void {
  *     council rows;
  *   - the copy space's own routes pass;
  *   - sign-out and crash reports pass untouched (they carry no plan data);
+ *   - reads of the person's own training log and running programs go out naming no account (`OWNER_READ_PATHS`);
  *   - every OTHER request that is not a read (reminders, push devices,
  *     training, goals) never leaves the browser: it
  *     fails here like a dropped connection (a TypeError, as fetch itself would), never as a refusal a sender might file as final. Reads go out naming the hidden account, which every
@@ -122,6 +123,13 @@ const SANDBOX_PLAN_PATHS = /^\/api\/life-plan(\/day)?$/
 const SANDBOX_COUNCIL_PATHS = /^\/api\/role-models\/(council|week|settings|area)$/
 const SANDBOX_OWN_PATHS = /^\/api\/plan-sandbox\/(copy|reset)$/
 const PASS_UNTOUCHED = /^\/api\/(auth\/sign-out|errors)$/
+/**
+ * The signed-in person's OWN training log and running programs, READ ONLY. The copy plan's Track and Systems are
+ * judged against what he actually trained; the hidden account has no workouts, so a read naming it answered
+ * "another account" and Track said it could not read the log. These go out naming no account, so the server answers
+ * as the signed-in person. Only GET and HEAD: the same paths with any other method are blocked like every write.
+ */
+const OWNER_READ_PATHS = /^\/api\/(health\/workout|programs\/enrollments(\/[^/]+)?)$/
 const READS = new Set(["GET", "HEAD"])
 
 /** A plan or day route's address, aimed at the copy space. */
@@ -141,6 +149,7 @@ export function guardSandboxRequests(account: string): () => void {
     if (PASS_UNTOUCHED.test(url.pathname)) return original(input, init)
 
     const method = (init?.method ?? (input instanceof Request ? input.method : "GET")).toUpperCase()
+    if (READS.has(method) && OWNER_READ_PATHS.test(url.pathname)) return original(input, init)
     const toSandbox = SANDBOX_PLAN_PATHS.test(url.pathname) || SANDBOX_COUNCIL_PATHS.test(url.pathname)
     const aimed = toSandbox || SANDBOX_OWN_PATHS.test(url.pathname)
     if (!aimed && !READS.has(method)) {

@@ -16,8 +16,11 @@ const HOURS = Array.from({ length: 17 }, (_, i) => i + 6) // 06:00 to 22:00
  * on failure the old values stay and the line says so. When the reminder is on
  * and no device of this account takes reminders, the device block says why
  * this one cannot, or offers to switch notifications on here.
+ *
+ * `readOnly` draws the same block with every control off and nothing sent: the copy space shows the reminder, in the
+ * state it has there (off), and never switches one on.
  */
-export function ReviewReminder({ reminder, onChange }: { reminder: ReminderState | null; onChange: (next: ReminderState) => void }) {
+export function ReviewReminder({ reminder, onChange, readOnly = false }: { reminder: ReminderState | null; onChange: (next: ReminderState) => void; readOnly?: boolean }) {
   const [note, setNote] = useState<"saved" | "failed" | null>(null)
   const [saving, setSaving] = useState(false)
   // The newest value, so an answer that lands after "Turn on notifications" does not undo it.
@@ -26,6 +29,7 @@ export function ReviewReminder({ reminder, onChange }: { reminder: ReminderState
   if (reminder === null) return null
 
   const save = async (patch: Partial<Reminder>) => {
+    if (readOnly) return
     setSaving(true)
     try {
       const res = await fetch("/api/life-plan/reminders", {
@@ -53,7 +57,7 @@ export function ReviewReminder({ reminder, onChange }: { reminder: ReminderState
           role="switch"
           aria-checked={reminder.pushOn}
           aria-label={COPY.switchLabel}
-          disabled={saving}
+          disabled={saving || readOnly}
           onClick={() => void save({ pushOn: !reminder.pushOn })}
           className={`ml-auto relative inline-flex h-6 w-11 items-center rounded-full border transition-colors disabled:opacity-50 ${
             reminder.pushOn ? "bg-violet-500/60 border-violet-400/60" : "bg-white/10 border-white/15"
@@ -68,7 +72,7 @@ export function ReviewReminder({ reminder, onChange }: { reminder: ReminderState
           {COPY.dayLabel}
           <select
             value={reminder.reviewDay}
-            disabled={saving}
+            disabled={saving || readOnly}
             onChange={(e) => void save({ reviewDay: Number(e.target.value) })}
             className="rounded-lg border border-white/15 bg-zinc-900 px-2 py-1 text-zinc-100"
           >
@@ -79,7 +83,7 @@ export function ReviewReminder({ reminder, onChange }: { reminder: ReminderState
           {COPY.hourLabel}
           <select
             value={reminder.reviewHour}
-            disabled={saving}
+            disabled={saving || readOnly}
             onChange={(e) => void save({ reviewHour: Number(e.target.value) })}
             className="rounded-lg border border-white/15 bg-zinc-900 px-2 py-1 text-zinc-100"
           >

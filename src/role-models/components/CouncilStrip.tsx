@@ -4,7 +4,7 @@ import Link from "next/link"
 
 import type { RoleModelCardData } from "../format"
 import { useCouncil } from "../hooks/useCouncil"
-import { roleModelHref } from "../routes"
+import { useRoleModelHref } from "../RoleModelsHome"
 import { CouncilSettings } from "./CouncilSettings"
 import { RoleModelVisual } from "./RoleModelVisual"
 
@@ -13,6 +13,7 @@ import { RoleModelVisual } from "./RoleModelVisual"
  * the values you take from him, in your order. Move up, move down, remove.
  */
 export function CouncilStrip({ cards }: { cards: RoleModelCardData[] }) {
+  const roleModelHref = useRoleModelHref()
   const { state, error, busy, remove, reorder } = useCouncil()
   if (state.status !== "ready" || state.members.length === 0) return null
   const byId = new Map(cards.map((c) => [c.id, c]))

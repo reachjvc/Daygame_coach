@@ -12,7 +12,7 @@ import { RoleModelVisual } from "./RoleModelVisual"
  * "how we know", one line per piece of evidence with its source, so a reader
  * can check the claim. The shadow is part of the profile, never hidden.
  */
-export function RoleModelProfile({ person, council }: { person: RoleModelPerson; council?: ReactNode }) {
+export function RoleModelProfile({ person, council, libraryHref = ROUTES.roleModels }: { person: RoleModelPerson; council?: ReactNode; libraryHref?: string }) {
   const card = cardOf(person)
   const words = valueWordsOf(person)
   const his = possessiveOf(person)
@@ -21,7 +21,7 @@ export function RoleModelProfile({ person, council }: { person: RoleModelPerson;
 
   return (
     <article className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8" data-testid="role-model-profile">
-      <BackLink fallback={ROUTES.roleModels} fallbackLabel="All role models" />
+      <BackLink fallback={libraryHref} fallbackLabel="All role models" />
 
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <RoleModelVisual name={person.name} years={card.years} color={card.color} size="profile" />

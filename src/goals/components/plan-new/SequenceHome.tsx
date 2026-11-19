@@ -4,6 +4,7 @@ import Link from "next/link"
 import { TAB_LABELS } from "@/src/goals/data/northStar"
 import { screenRoute, sequenceOfPlan } from "@/src/goals/planSteps/planSequences"
 import { homeHref } from "@/src/goals/planSteps/planRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { linkQuiet } from "./ui"
 import { usePlanNew } from "./PlanNewContext"
 
@@ -26,8 +27,9 @@ export function SequenceHome() {
           </li>
         ))}
       </ol>
-      <div className="mt-4">
+      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
         <Link href={homeHref()} className={linkQuiet} data-testid="first-rebuild-link">The first rebuild</Link>
+        <Link href={ROUTES.planNewRoleModels} className={linkQuiet} data-testid="role-models-link">Role models</Link>
       </div>
     </div>
   )
