@@ -222,6 +222,22 @@ describe("formatFailures", () => {
     expect(lines.join("\n")).toContain("red since before tracking began")
     expect(lines.join("\n")).not.toContain("flaky")
   })
+  it("names the commit range when the list before sat several commits back, apart from exact starts", () => {
+    const lines = formatFailures({
+      failed: [
+        { ...f("e2e/a.spec.ts:1 a", "d75c752fffff", "Quit: tool 8 copy"), afterSha: "c38e0657ffff", afterRunId: 7, commits: 8 },
+        { ...f("e2e/b.spec.ts:2 b", "d75c752fffff", "Quit: tool 8 copy"), afterSha: "c38e0657ffff", afterRunId: 7, commits: 8 },
+        f("e2e/c.spec.ts:3 c", "d75c752fffff", "Quit: tool 8 copy"),
+        { ...f("e2e/d.spec.ts:4 d", "eeeeeeeeffff", "Other"), afterSha: "d75c752fffff", afterRunId: 8, commits: null },
+      ],
+      flaky: [],
+    })
+    expect(lines).toEqual([
+      '  2 tests first red between c38e0657 and d75c752f "Quit: tool 8 copy" (8 commits) (e.g. a.spec.ts:1)',
+      '  1 test first red at d75c752f "Quit: tool 8 copy" (e.g. c.spec.ts:3)',
+      '  1 test first red between d75c752f and eeeeeeee "Other" (e.g. d.spec.ts:4)',
+    ])
+  })
   it("prints nothing for a green list or junk", () => {
     expect(formatFailures({ failed: [], flaky: [] })).toEqual([])
     expect(formatFailures(undefined)).toEqual([])
@@ -244,6 +260,18 @@ describe("the script with the failures artifact", () => {
     expect(res.stdout.trim().split("\n")).toEqual([
       "main is red since 2026-11-19: E2E Tests (run 9)",
       '  1 test first red at abcdef12 "Break it" (e.g. a.spec.ts:7)',
+    ])
+    fs.rmSync(dir, { recursive: true, force: true })
+  })
+  it("prints the range line after the red line (fixtures)", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ms-"))
+    fs.writeFileSync(dir + "/runs.json", redRun)
+    fs.writeFileSync(dir + "/f.json", failures([{ id: "x/a.spec.ts:7 t", project: "d", firstSha: "abcdef1234", firstSubject: "Break it", firstRunId: 3, afterSha: "0123456789", afterRunId: 2, commits: 6 }]))
+    const res = run(dir, { MAIN_STATUS_FIXTURE: dir + "/runs.json", MAIN_STATUS_FAILURES_FIXTURE: dir + "/f.json" })
+    expect(res.status).toBe(0)
+    expect(res.stdout.trim().split("\n")).toEqual([
+      "main is red since 2026-11-19: E2E Tests (run 9)",
+      '  1 test first red between 01234567 and abcdef12 "Break it" (6 commits) (e.g. a.spec.ts:7)',
     ])
     fs.rmSync(dir, { recursive: true, force: true })
   })

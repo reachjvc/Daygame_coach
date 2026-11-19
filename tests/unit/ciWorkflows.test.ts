@@ -170,6 +170,22 @@ describe("the browser tests that CI actually runs", () => {
     expect(report).toMatch(/GH_TOKEN: \$\{\{ github\.token \}\}/)
   })
 
+  test("the previous failures list is looked for past cancelled runs, and a gap is counted in commits", () => {
+    /**
+     * Most main push runs end cancelled (a newer push supersedes the pending one) and keep no
+     * e2e-failures artifact. Looking at only the 5 newest completed runs found none on
+     * 2026-11-19, so 15 new failures were blamed on nobody. One page of 100 completed runs is
+     * read and e2e-failures.mjs --previous-runs keeps the older runs that finished.
+     */
+    const report = e2eJobs["report"] ?? ""
+    expect(report).toMatch(/runs\?branch=main&event=push&status=completed&per_page=100/)
+    expect(report).toMatch(/node scripts\/ci\/e2e-failures\.mjs --previous-runs previous-runs\.json \$\{\{ github\.run_id \}\}/)
+    expect(report).not.toMatch(/per_page=6\b/)
+    expect(report).toMatch(/echo "previous failures list: run \$id"/)
+    expect(report).toMatch(/compare\/\$psha\.\.\.\$\{\{ github\.sha \}\}" --jq \.ahead_by/)
+    expect(report).toMatch(/E2E_RANGE_COMMITS="\$range"/)
+  })
+
   test("no browser job is handed a Supabase key or an account's password", () => {
     /**
      * Since Phase 8 the browser suite runs against a throwaway local backend
