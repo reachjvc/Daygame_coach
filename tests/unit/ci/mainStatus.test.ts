@@ -102,6 +102,50 @@ describe("findRed", () => {
   })
 })
 
+describe("the live check (deployment_status runs)", () => {
+  const live = (conclusion: string, createdAt: string) =>
+    run("Live check", conclusion, createdAt, { event: "deployment_status" })
+
+  it("reports a red live check, and ignores the skipped runs a Preview deploy leaves", () => {
+    const failing = live("failure", "2026-11-19T10:00:00Z")
+    const red = findRed([live("skipped", "2026-11-19T11:00:00Z"), failing, live("success", "2026-11-18T10:00:00Z")])
+    expect(red).toEqual([{ workflow: "Live check", runId: failing.databaseId, since: "2026-11-19", atLeast: false }])
+    expect(formatLine(red[0])).toBe(`main is red since 2026-11-19: Live check (run ${failing.databaseId})`)
+  })
+
+  it("is quiet when the newest finished live check is green (superseded runs end green)", () => {
+    expect(findRed([live("success", "2026-11-19T10:00:00Z"), live("failure", "2026-11-18T10:00:00Z")])).toEqual([])
+  })
+
+  it("does not count a live-check run of another event", () => {
+    expect(findRed([run("Live check", "failure", "2026-11-19T10:00:00Z")])).toEqual([])
+  })
+
+  it("asks gh for it without a branch filter, in the same parallel round", async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "gh-live-"))
+    fs.writeFileSync(
+      dir + "/gh",
+      `#!/bin/sh
+echo "$@" >> ${dir}/calls
+case "$*" in
+  *"--workflow Live check "*) echo '[{"databaseId":55,"workflowName":"Live check","event":"deployment_status","status":"completed","conclusion":"failure","createdAt":"2026-11-19T10:00:00Z"}]';;
+  *"run view"*) echo '{"jobs":[{"name":"live","conclusion":"failure"}]}';;
+  *) echo '[]';;
+esac
+`,
+      { mode: 0o755 },
+    )
+    const res = spawnSync(process.execPath, ["scripts/ci/main-status.mjs"], { encoding: "utf8", env: { NODE_ENV: "test", PATH: `${dir}:/usr/bin:/bin` } })
+    expect(res.status).toBe(0)
+    expect(res.stdout.trim()).toBe("main is red since 2026-11-19: Live check live (run 55)")
+    const calls = fs.readFileSync(dir + "/calls", "utf8").split("\n").filter((l) => l.includes("--workflow Live check "))
+    expect(calls).toHaveLength(1)
+    expect(calls[0]).toContain("--event deployment_status")
+    expect(calls[0]).not.toContain("--branch")
+    fs.rmSync(dir, { recursive: true, force: true })
+  })
+})
+
 describe("firstFailedJob", () => {
   it("names the first failed job, or nothing", () => {
     expect(firstFailedJob({ jobs: [{ name: "lint", conclusion: "success" }, { name: "checks", conclusion: "failure" }] })).toBe("checks")

@@ -79,6 +79,16 @@ function usesWorkerAccount(content: string): boolean {
 }
 
 describe('E2E Test Isolation Compliance', () => {
+  test('the live-site specs never get an account and never import the fixtures that make one', () => {
+    for (const file of getAllE2EFiles()) {
+      const rel = path.relative(projectRoot, file).replace(/\\/g, '/')
+      if (!rel.startsWith('tests/e2e/live/')) continue
+      const content = fs.readFileSync(file, 'utf-8')
+      expect(usesWorkerAccount(content), `${rel} would sign in on the live site`).toBe(false)
+      expect(content, `${rel} reaches for a sign-in`).not.toMatch(/fixtures\/|SIGNED_OUT|storageState|signIn|signUp/)
+    }
+  })
+
   test('every spec signs in through the per-worker account fixture', () => {
     /**
      * A spec that takes `test` from '@playwright/test' gets no account: it
@@ -90,6 +100,9 @@ describe('E2E Test Isolation Compliance', () => {
     for (const file of getAllE2EFiles()) {
       const content = fs.readFileSync(file, 'utf-8')
       const rel = path.relative(projectRoot, file).replace(/\\/g, '/')
+      // tests/e2e/live is the one folder with no account on purpose: it opens the real site signed out,
+      // read-only (Phase 6 of Plans/tests-catch-what-matters.md). The next test makes sure it stays that way.
+      if (rel.startsWith('tests/e2e/live/')) continue
       if (!usesWorkerAccount(content)) violations.push(`${rel}: does not import test from fixtures/test`)
       if (/import\s*\{[^}]*\btest\b[^}]*\}\s*from\s*['"]@playwright\/test['"]/.test(content)) {
         violations.push(`${rel}: takes test from @playwright/test`)

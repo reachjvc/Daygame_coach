@@ -1,0 +1,60 @@
+name: Live check
+
+# AFTER EVERY PRODUCTION DEPLOY, OPEN THE LIVE SITE AND SAY IF IT IS BROKEN.
+# Plans/tests-catch-what-matters.md, Phase 6.
+#
+# Vercel tells GitHub about each deploy as a `deployment_status` event (created
+# by the Vercel app, not by GITHUB_TOKEN, so it starts workflows; GITHUB_TOKEN
+# events do not). Only a Production deploy that succeeded is checked.
+#
+# Read-only: no secrets, a token that can only read, and the spec aborts every
+# request that is not a GET (tests/e2e/live/live-smoke.spec.ts). It never signs in.
+on:
+  deployment_status:
+
+permissions:
+  contents: read
+
+# The one place the live address is written; the domain changes with the rebrand.
+env:
+  LIVE_URL: https://daygame-coach.vercel.app
+  ONNXRUNTIME_NODE_INSTALL_CUDA: skip
+
+jobs:
+  live:
+    if: ${{ github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Production' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+
+      # The wait needs no dependencies; it runs first so a superseded run stops cheaply.
+      - name: Wait until the site runs this commit
+        id: wait
+        env:
+          DEPLOY_SHA: ${{ github.event.deployment.sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/ci/live-wait.mjs
+
+      - name: Say so when a newer deploy replaced this one
+        if: ${{ steps.wait.outputs.state == 'superseded' }}
+        run: echo "superseded - a newer commit is live; its own run checks the site" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Install
+        if: ${{ steps.wait.outputs.state == 'match' }}
+        run: npm ci --ignore-scripts
+      - name: Install the browser
+        if: ${{ steps.wait.outputs.state == 'match' }}
+        run: |
+          npx playwright install chromium
+          node -e "require('@playwright/test')['chromium'].launch().then((b) => b.close())" || npx playwright install-deps chromium
+      - name: Open the public pages
+        if: ${{ steps.wait.outputs.state == 'match' }}
+        timeout-minutes: 3
+        env:
+          LIVE_CHECK: '1'
+        run: npx playwright test --project=live

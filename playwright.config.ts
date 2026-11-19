@@ -22,7 +22,12 @@ dotenv.config({ path: '.env.local', override: true })
  * Not when a unit test imports this file for its project list
  * (tests/unit/ciWorkflows.test.ts): that must not need Docker.
  */
-const STACK: StackEnv | null = process.env.VITEST ? null : startTestStack()
+/**
+ * LIVE_CHECK=1 is live-check.yml: the `live` project opens the real site, so it
+ * needs neither the test backend nor a local app (see `LIVE` below).
+ */
+const LIVE_CHECK = process.env.LIVE_CHECK === '1'
+const STACK: StackEnv | null = process.env.VITEST || LIVE_CHECK ? null : startTestStack()
 if (STACK) {
   process.env.NEXT_PUBLIC_SUPABASE_URL = STACK.API_URL
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = STACK.ANON_KEY
@@ -94,6 +99,13 @@ const ENGINE = /@engine\b|cross-browser\//
 const TIMING = /@timing\b/
 const PHONE_TIMING = /^(?=.*(?:mobile\/|@phone\b))(?=.*@timing\b)/
 const SWEEPS = /sweep\//
+/**
+ * The live-site check (tests/e2e/live, Plans/tests-catch-what-matters.md Phase 6)
+ * runs in the `live` project only, from live-check.yml, against LIVE_URL. Every
+ * other project ignores the folder: it needs no test backend and must never
+ * run in the pull-request lanes.
+ */
+const LIVE = /(^|\/)live\//
 
 /**
  * The derived sweeps open every page in the app (tests/support/appRoutes.ts).
@@ -144,13 +156,13 @@ export default defineConfig({
     // === Every pull request ===
     {
       name: 'desktop',
-      testIgnore: [/mobile\//, SWEEPS],
+      testIgnore: [/mobile\//, SWEEPS, LIVE],
       grepInvert: TIMING,
       use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'timing',
-      testIgnore: [/mobile\//, SWEEPS],
+      testIgnore: [/mobile\//, SWEEPS, LIVE],
       grep: TIMING,
       workers: 1,
       use: { ...devices['Desktop Chrome'] },
@@ -164,14 +176,14 @@ export default defineConfig({
      */
     {
       name: 'android',
-      testIgnore: SWEEPS,
+      testIgnore: [SWEEPS, LIVE],
       grep: PHONE,
       grepInvert: TIMING,
       use: { ...devices['Pixel 7'] },
     },
     {
       name: 'timing-android',
-      testIgnore: SWEEPS,
+      testIgnore: [SWEEPS, LIVE],
       grep: PHONE_TIMING,
       workers: 1,
       use: { ...devices['Pixel 7'] },
@@ -195,14 +207,14 @@ export default defineConfig({
     // are engine-sensitive (a background tab's timers differ by engine).
     {
       name: 'firefox',
-      testIgnore: SWEEPS,
+      testIgnore: [SWEEPS, LIVE],
       grep: ENGINE,
       workers: 1,
       use: { ...devices['Desktop Firefox'] },
     },
     {
       name: 'webkit',
-      testIgnore: SWEEPS,
+      testIgnore: [SWEEPS, LIVE],
       grep: ENGINE,
       workers: 1,
       use: { ...devices['Desktop Safari'] },
@@ -214,7 +226,7 @@ export default defineConfig({
      */
     {
       name: 'phone',
-      testIgnore: SWEEPS,
+      testIgnore: [SWEEPS, LIVE],
       grep: PHONE,
       grepInvert: TIMING,
       workers: process.env.CI ? 2 : undefined,
@@ -222,7 +234,7 @@ export default defineConfig({
     },
     {
       name: 'timing-phone',
-      testIgnore: SWEEPS,
+      testIgnore: [SWEEPS, LIVE],
       grep: PHONE_TIMING,
       workers: 1,
       use: { ...devices['iPhone 14'] },
@@ -239,6 +251,15 @@ export default defineConfig({
       timeout: SWEEP_TIMEOUT,
       use: { ...devices['Desktop Safari'] },
     },
+
+    // === After every production deploy (live-check.yml) ===
+    // Read-only against the real site; LIVE_URL names it (the workflow's one copy).
+    {
+      name: 'live',
+      testMatch: LIVE,
+      timeout: 60_000,
+      use: { ...devices['Desktop Chrome'], baseURL: process.env.LIVE_URL },
+    },
   ],
   /**
    * THE APP, ON ITS OWN PORT AND ITS OWN BUILD FOLDER, AGAINST THE TEST BACKEND.
@@ -254,7 +275,7 @@ export default defineConfig({
    * Locally a dev server: a production build freezes this WSL machine
    * (scripts/build.sh). In CI each shard builds its own (e2e.yml says why).
    */
-  webServer: {
+  webServer: LIVE_CHECK ? undefined : {
     command: process.env.CI
       ? `npm run build && npm start -- -p ${E2E_PORT}`
       : `npx next dev -p ${E2E_PORT}`,
