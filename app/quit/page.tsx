@@ -4,6 +4,8 @@ import { isLive } from "@/src/quit/data"
 import { frame, isFlag, menu, previewSuffix, viewableIds } from "@/src/quit/menu"
 import { QUIT_ADDICTION_IDS } from "@/src/quit/types"
 
+export const metadata = { title: "Quit something" }
+
 export default async function QuitHome({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const preview = isFlag((await searchParams).preview)
   const open = viewableIds(preview)

@@ -346,6 +346,8 @@ export interface QuitFrameText {
   switcherLabel: string
   minutes: string
   progress: string
+  soon: string
+  description: string
 }
 
 /** What a tool component receives. */

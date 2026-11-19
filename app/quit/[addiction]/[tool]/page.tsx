@@ -7,6 +7,19 @@ import { findMenuTool, isFlag, isViewable, menu, toolName } from "@/src/quit/men
 import { TOOL_REGISTRY } from "@/src/quit/tools/registry"
 import { QUIT_TOOL_IDS, type QuitToolId } from "@/src/quit/types"
 
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ addiction: string; tool: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const { addiction, tool } = await params
+  const menuTool = findMenuTool(tool)
+  if (!isViewable(addiction, isFlag((await searchParams).preview)) || !menuTool) return {}
+  return { title: { absolute: `${toolName(menuTool, addiction)} · ${menu.addictions[addiction].title}` } }
+}
+
 export default async function QuitToolPage({
   params,
   searchParams,

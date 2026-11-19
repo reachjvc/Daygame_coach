@@ -1,16 +1,19 @@
 import Link from "next/link"
+import { notFound } from "next/navigation"
 import { CoachingCost } from "@/src/quit/components/CoachingCost"
 import { addictionFromParam, catchText, coachingLabels, coachingText, priceText, stepsText } from "@/src/quit/coaching"
-import { isFlag } from "@/src/quit/menu"
+import { isFlag, previewAllowed, withPreview } from "@/src/quit/menu"
 import { canBuy, getOffer } from "@/src/quit/offer"
 
 export const metadata = { title: coachingText.title }
 
 export default async function CoachingPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams
+  const preview = isFlag(sp.preview)
+  if (!previewAllowed(preview)) notFound()
   const addiction = addictionFromParam(sp.a)
   const offer = getOffer()
-  const about = catchText(addiction, isFlag(sp.preview))
+  const about = catchText(addiction, preview)
   return (
     <div className="pb-8">
       <h1 className="text-2xl font-semibold leading-tight">{coachingText.title}</h1>
@@ -50,7 +53,7 @@ export default async function CoachingPage({ searchParams }: { searchParams: Pro
       {offer.donationLine !== null && <p className="mt-4 text-sm text-muted-foreground">{offer.donationLine}</p>}
       <ul className="mt-8 flex flex-col border-t border-border pt-2 text-sm">
         <li>
-          <Link href={`/quit/${addiction}`} className="flex min-h-11 items-center">
+          <Link href={withPreview(`/quit/${addiction}`, preview)} className="flex min-h-11 items-center">
             {coachingLabels.freeTools}
           </Link>
         </li>

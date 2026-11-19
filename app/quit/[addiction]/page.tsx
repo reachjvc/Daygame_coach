@@ -4,13 +4,21 @@ import { AddictionSwitcher, ViewCount } from "@/src/quit/components/MenuClient"
 import {
   frame,
   isFlag,
+  isFinished,
   isViewable,
   menu,
   minutesText,
   previewSuffix,
+  withPreview,
   toolName,
   viewableIds,
 } from "@/src/quit/menu"
+
+export async function generateMetadata({ params, searchParams }: { params: Promise<{ addiction: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const { addiction } = await params
+  if (!isViewable(addiction, isFlag((await searchParams).preview))) return {}
+  return { title: menu.addictions[addiction].title }
+}
 
 export default async function QuitMenuPage({
   params,
@@ -46,25 +54,44 @@ export default async function QuitMenuPage({
           <ul className="mt-2 flex flex-col gap-2">
             {group.tools.map((tool) => {
               const minutes = minutesText(tool.minutes)
-              const href = tool.href ?? `/quit/${addiction}/${tool.id}${q}`
-              return (
-                <li key={tool.id}>
-                  <Link
-                    href={href}
-                    data-testid={`row-${tool.id}`}
-                    className="block min-h-14 rounded-lg border border-border bg-card px-4 py-3"
-                  >
-                    <span className="flex items-start justify-between gap-3">
-                      <span className="font-medium">{toolName(tool, addiction)}</span>
-                      {tool.account !== "none" && (
+              const done = isFinished(tool.id)
+              const href = withPreview(tool.href ?? `/quit/${addiction}/${tool.id}`, preview)
+              const body = (
+                <>
+                  <span className="flex items-start justify-between gap-3">
+                    <span className="font-medium">{toolName(tool, addiction)}</span>
+                    {!done ? (
+                      <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
+                        {frame.soon}
+                      </span>
+                    ) : (
+                      tool.account !== "none" && (
                         <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
                           {menu.accountPills[tool.account]}
                         </span>
-                      )}
-                    </span>
-                    <span className="mt-0.5 block text-sm text-muted-foreground">{tool.line}</span>
-                    {minutes && <span className="mt-1 block text-xs text-muted-foreground">{minutes}</span>}
-                  </Link>
+                      )
+                    )}
+                  </span>
+                  <span className="mt-0.5 block text-sm text-muted-foreground">{tool.line}</span>
+                  {minutes && <span className="mt-1 block text-xs text-muted-foreground">{minutes}</span>}
+                </>
+              )
+              return (
+                <li key={tool.id}>
+                  {done ? (
+                    <Link href={href} data-testid={`row-${tool.id}`} className="block min-h-14 rounded-lg border border-border bg-card px-4 py-3">
+                      {body}
+                    </Link>
+                  ) : (
+                    <div
+                      data-testid={`row-${tool.id}`}
+                      data-soon="true"
+                      aria-disabled="true"
+                      className="block min-h-14 rounded-lg border border-dashed border-border bg-muted/30 px-4 py-3 opacity-60"
+                    >
+                      {body}
+                    </div>
+                  )}
                 </li>
               )
             })}

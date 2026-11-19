@@ -145,4 +145,16 @@ describe("the clock sync", () => {
     await Promise.resolve()
     blocked.mockRestore()
   })
+
+  it("on a quit page, signed out, makes no call at all", async () => {
+    const calls = prefs({ timezone: "UTC", timezone_source: "signup_default" })
+    window.history.pushState({}, "", "/quit/nicotine")
+    try {
+      render(<ClockSync />)
+      await new Promise((r) => setTimeout(r, 20))
+      expect(calls).toHaveLength(0)
+    } finally {
+      window.history.pushState({}, "", "/")
+    }
+  })
 })

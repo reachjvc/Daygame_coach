@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import { frame, previewSuffix } from "../menu"
+import { frame, previewSuffix, withPreview } from "../menu"
 import type { QuitAddictionId } from "../types"
 
 interface ToolFrameProps {
@@ -63,7 +63,7 @@ export function ToolFrame({ addiction, title, step, of, present = false, preview
               </Link>
             </li>
             <li>
-              <Link href="/quit/coaching" className="flex min-h-11 items-center">
+              <Link href={withPreview("/quit/coaching", preview)} className="flex min-h-11 items-center">
                 {frame.coaching}
               </Link>
             </li>

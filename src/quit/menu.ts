@@ -1,5 +1,6 @@
 import frameJson from "./data/frame.json"
 import menuJson from "./data/menu.json"
+import finishedJson from "./data/finished.json"
 import { getAddiction, isLive, liveIds } from "./data"
 import { QUIT_ADDICTION_IDS, type QuitAddictionId, type QuitFrameText, type QuitMenu, type QuitMenuTool } from "./types"
 
@@ -51,4 +52,19 @@ export function previewSuffix(preview: boolean, present = false): string {
 /** A `?name=1` flag from a page's search params; a repeated flag (`?preview=1&preview=1`) counts once. */
 export function isFlag(value: string | string[] | undefined): boolean {
   return Array.isArray(value) ? value.includes("1") : value === "1"
+}
+
+/** Tool ids that are finished; every other menu row shows "Soon" and is not a link. */
+export function finishedToolIds(): string[] {
+  return finishedJson as string[]
+}
+
+export function isFinished(toolId: string): boolean {
+  return finishedToolIds().includes(toolId)
+}
+
+/** An internal quit address with the preview flag kept (`?preview=1`), joining an existing query when there is one. */
+export function withPreview(href: string, preview: boolean): string {
+  if (!preview) return href
+  return href + (href.includes("?") ? "&" : "?") + "preview=1"
 }

@@ -64,8 +64,19 @@ function browserZone(): string | null {
   }
 }
 
+/** Quit pages are open to signed-out visitors; there the zone call is skipped unless a sign-in cookie exists. */
+function skipOnQuitPage(): boolean {
+  try {
+    if (!window.location.pathname.startsWith("/quit")) return false
+    return !/(?:^|;\s*)sb-[^=]*auth-token/.test(document.cookie)
+  } catch {
+    return false
+  }
+}
+
 export function ClockSync() {
   useEffect(() => {
+    if (skipOnQuitPage()) return
     if (alreadyTried()) return
     markTried()
 

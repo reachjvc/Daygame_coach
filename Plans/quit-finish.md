@@ -190,4 +190,7 @@ No slip button and no runs list here (they belong to tools 3 and 4); if the date
 
 ## Questions from the build
 
-(none yet)
+- Tool 0 step 3 greys only the menu rows. The sticky "Craving now?" bar, the "New here? ... 12 lies test" link and the
+  tool-page footer "Craving now?" link still point to tools that are not finished (Soon). Lesson 4 says no link to an
+  unfinished tool. Proposed: grey/remove them too until `sos` / `beliefs` are in finished.json. Not done: the brief did not say.
+- ClockSync (root layout) now skips the time-zone call on /quit pages unless a Supabase sign-in cookie exists; other pages unchanged.
