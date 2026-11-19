@@ -966,7 +966,7 @@
       "kind": "hard",
       "scene": "You press your stomach in the mirror and think: quitting means gaining.",
       "short": "I'll put on weight",
-      "need": "confidence",
+      "need": "substance",
       "limiting": "If I quit, I’ll put on weight.",
       "counterpart": "Weight is a risk I can plan for, and most of it comes in the first three months.",
       "whenThought": "Put a piece of fruit or something you like within reach, then go for a short walk.",
@@ -1106,19 +1106,23 @@
     {
       "id": "relief",
       "name": "Relief",
+      "line": "It calms me down.",
       "swaps": [
         {
           "id": "relief-1",
-          "text": "Walk or climb stairs for five minutes",
+          "text": "Walk or take the stairs for 15 minutes",
           "evidence": "strong",
+          "counted": "smokers kept off cigarettes for a few hours in lab studies; urge to smoke rated after exercise or after sitting still",
+          "n": "12 studies",
+          "weak": "Measured in the hour after, not over a whole quit. The walking-type bouts tested lasted 15 minutes or more.",
           "refs": [
             {
               "cite": "Taylor AH, Ussher MH, Faulkner G (2007). The acute effects of exercise on cigarette cravings, withdrawal symptoms, affect and smoking behaviour: a systematic review. Addiction 102(4):534-43.",
               "url": "https://pubmed.ncbi.nlm.nih.gov/17286639/",
               "pmid": "17286639",
-              "quote": "remained reduced for up to 50 minutes after exercise",
+              "quote": "All 12 studies that compared a bout of exercise with a passive condition reported a positive effect on cigarette cravings, withdrawal symptoms and smoking behaviour.",
               "fetched": true,
-              "fetchedOn": "2026-11-18"
+              "fetchedOn": "2026-11-19"
             },
             {
               "cite": "Haasova M et al (2013). The acute effects of physical activity on cigarette cravings: systematic review and meta-analysis with individual participant data. Addiction 108(1):26-37.",
@@ -1126,12 +1130,12 @@
               "pmid": "22861822",
               "quote": "There is strong evidence that physical activity acutely reduces cigarette craving.",
               "fetched": true,
-              "fetchedOn": "2026-11-18"
+              "fetchedOn": "2026-11-19"
             }
           ],
           "check": {
-            "by": "quit-tool checker (opus)",
-            "on": "2026-11-18",
+            "by": "gives brief (opus)",
+            "on": "2026-11-19",
             "verdict": "ok"
           }
         },
@@ -1152,11 +1156,15 @@
     {
       "id": "reward",
       "name": "Reward",
+      "line": "It's my treat.",
       "swaps": [
         {
           "id": "reward-1",
           "text": "Put money with a friend; earn it back",
-          "evidence": "weak",
+          "evidence": "moderate",
+          "counted": "US company staff who smoked, and their family and friends; off cigarettes 6 months, with money on the line or usual help",
+          "n": "2,538 people",
+          "weak": "Off cigarettes at 6 months: about 6 in 100 with usual help, 9 to 16 in 100 with money on the line. When people had to put up their own money, only about 14 in 100 signed up.",
           "refs": [
             {
               "cite": "Halpern SD et al (2015). Randomized trial of four financial-incentive programs for smoking cessation. New England Journal of Medicine 372(22):2108-17.",
@@ -1164,20 +1172,28 @@
               "pmid": "25970009",
               "quote": "rates of sustained abstinence from smoking through 6 months were higher with each of the four incentive programs (range, 9.4 to 16.0%) than with usual care (6.0%)",
               "fetched": true,
-              "fetchedOn": "2026-11-18"
+              "fetchedOn": "2026-11-19"
+            },
+            {
+              "cite": "Halpern SD et al (2015). Randomized trial of four financial-incentive programs for smoking cessation. New England Journal of Medicine 372(22):2108-17.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/25970009/",
+              "pmid": "25970009",
+              "quote": "Overall, 2538 participants were enrolled. Of those assigned to reward-based programs, 90.0% accepted the assignment, as compared with 13.7% of those assigned to deposit-based programs",
+              "fetched": true,
+              "fetchedOn": "2026-11-19"
             },
             {
               "cite": "Notley C et al (2025). Incentives for smoking cessation. Cochrane Database of Systematic Reviews.",
               "url": "https://pubmed.ncbi.nlm.nih.gov/39799985/",
               "pmid": "39799985",
-              "quote": "there is high-certainty evidence that incentives improve smoking",
+              "quote": "there is high-certainty evidence that incentives improve smoking cessation rates at long-term follow-up",
               "fetched": true,
-              "fetchedOn": "2026-11-18"
+              "fetchedOn": "2026-11-19"
             }
           ],
           "check": {
-            "by": "quit-tool checker (opus)",
-            "on": "2026-11-18",
+            "by": "gives brief (opus)",
+            "on": "2026-11-19",
             "verdict": "ok"
           }
         },
@@ -1185,19 +1201,30 @@
           "id": "reward-2",
           "text": "Plan one thing you enjoy for your hardest hour",
           "evidence": "weak",
+          "counted": "US smokers with mild low mood who asked for help to stop; all had group sessions and nicotine replacement, half also planned enjoyable activities",
+          "n": "68 smokers",
+          "weak": "One small pilot trial, in people with low mood only. Odds about 3.6 times higher, with a wide range (1.2 to 10.5).",
           "refs": [
             {
-              "cite": "Daughters SB et al (2018). The effect of a behavioral activation treatment for substance use on post-treatment abstinence: a randomized controlled trial. Addiction 113(3):535-44.",
-              "url": "https://pubmed.ncbi.nlm.nih.gov/28963853/",
-              "pmid": "28963853",
-              "quote": "LETS ACT had significantly higher abstinence rates at 3 months",
+              "cite": "MacPherson L et al (2010). Randomized controlled trial of behavioral activation smoking cessation treatment for smokers with elevated depressive symptoms. Journal of Consulting and Clinical Psychology 78(1):55-61.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/20099950/",
+              "pmid": "20099950",
+              "quote": "Across the follow-ups over 26 weeks, participants in BATS reported greater smoking abstinence (adjusted odds ratio = 3.59, 95% CI [1.22, 10.53], p = .02) than did those in ST.",
               "fetched": true,
-              "fetchedOn": "2026-11-18"
+              "fetchedOn": "2026-11-19"
+            },
+            {
+              "cite": "MacPherson L et al (2010). Randomized controlled trial of behavioral activation smoking cessation treatment for smokers with elevated depressive symptoms. Journal of Consulting and Clinical Psychology 78(1):55-61.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/20099950/",
+              "pmid": "20099950",
+              "quote": "A sample of 68 adult smokers with mildly elevated depressive symptoms",
+              "fetched": true,
+              "fetchedOn": "2026-11-19"
             }
           ],
           "check": {
-            "by": "quit-tool checker (opus)",
-            "on": "2026-11-18",
+            "by": "gives brief (opus)",
+            "on": "2026-11-19",
             "verdict": "ok"
           }
         },
@@ -1212,24 +1239,36 @@
     {
       "id": "boredom",
       "name": "Something to do",
+      "line": "It fills empty time.",
       "swaps": [
         {
           "id": "boredom-1",
           "text": "Schedule three things for your empty hour",
           "evidence": "weak",
+          "counted": "US smokers with mild low mood who asked for help to stop; all had group sessions and nicotine replacement, half also planned enjoyable activities",
+          "n": "68 smokers",
+          "weak": "One small pilot trial, in people with low mood only. Odds about 3.6 times higher, with a wide range (1.2 to 10.5).",
           "refs": [
             {
-              "cite": "Daughters SB et al (2018). The effect of a behavioral activation treatment for substance use on post-treatment abstinence: a randomized controlled trial. Addiction 113(3):535-44.",
-              "url": "https://pubmed.ncbi.nlm.nih.gov/28963853/",
-              "pmid": "28963853",
-              "quote": "LETS ACT had significantly higher abstinence rates at 3 months",
+              "cite": "MacPherson L et al (2010). Randomized controlled trial of behavioral activation smoking cessation treatment for smokers with elevated depressive symptoms. Journal of Consulting and Clinical Psychology 78(1):55-61.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/20099950/",
+              "pmid": "20099950",
+              "quote": "Across the follow-ups over 26 weeks, participants in BATS reported greater smoking abstinence (adjusted odds ratio = 3.59, 95% CI [1.22, 10.53], p = .02) than did those in ST.",
               "fetched": true,
-              "fetchedOn": "2026-11-18"
+              "fetchedOn": "2026-11-19"
+            },
+            {
+              "cite": "MacPherson L et al (2010). Randomized controlled trial of behavioral activation smoking cessation treatment for smokers with elevated depressive symptoms. Journal of Consulting and Clinical Psychology 78(1):55-61.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/20099950/",
+              "pmid": "20099950",
+              "quote": "A sample of 68 adult smokers with mildly elevated depressive symptoms",
+              "fetched": true,
+              "fetchedOn": "2026-11-19"
             }
           ],
           "check": {
-            "by": "quit-tool checker (opus)",
-            "on": "2026-11-18",
+            "by": "gives brief (opus)",
+            "on": "2026-11-19",
             "verdict": "ok"
           }
         },
@@ -1237,6 +1276,9 @@
           "id": "boredom-2",
           "text": "Play three minutes of a falling-blocks game",
           "evidence": "weak",
+          "counted": "students with cravings for drugs, food or activities, not checked for addiction",
+          "n": "31 students: 15 played the game, 16 did not",
+          "weak": "One week; cravings of all kinds, not only nicotine. Craving strength fell about 14 points out of 100.",
           "refs": [
             {
               "cite": "Skorka-Brown J, Andrade J, Whalley B, May J (2015). Playing Tetris decreases drug and other cravings in real world settings. Addictive Behaviors 51:165-70.",
@@ -1244,12 +1286,28 @@
               "pmid": "26275843",
               "quote": "Playing Tetris decreased craving strength for drugs (alcohol, nicotine, caffeine), food and drink, and activities (sex, exercise, gaming), with a mean reduction of 13.9 percentage points",
               "fetched": true,
-              "fetchedOn": "2026-11-18"
+              "fetchedOn": "2026-11-19"
+            },
+            {
+              "cite": "Skorka-Brown J, Andrade J, Whalley B, May J (2015). Playing Tetris decreases drug and other cravings in real world settings. Addictive Behaviors 51:165-70.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/26275843/",
+              "pmid": "26275843",
+              "quote": "31 undergraduate participants carried iPods for a week",
+              "fetched": true,
+              "fetchedOn": "2026-11-19"
+            },
+            {
+              "cite": "Skorka-Brown J, Andrade J, Whalley B, May J (2015). Playing Tetris decreases drug and other cravings in real world settings. Addictive Behaviors 51:165-70.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/26275843/",
+              "pmid": "26275843",
+              "quote": "Those randomly assigned to the intervention condition (n=15) then played Tetris for 3min and reported their craving again. Those in the monitoring-only control condition (n=16) provided baseline craving data",
+              "fetched": true,
+              "fetchedOn": "2026-11-19"
             }
           ],
           "check": {
-            "by": "quit-tool checker (opus)",
-            "on": "2026-11-18",
+            "by": "gives brief (opus)",
+            "on": "2026-11-19",
             "verdict": "ok"
           }
         },
@@ -1264,24 +1322,36 @@
     {
       "id": "connection",
       "name": "People",
+      "line": "It's how I join in.",
       "swaps": [
         {
           "id": "connection-1",
-          "text": "Add one friend who doesn’t smoke to your week",
+          "text": "Ask a friend or partner to stop with you",
           "evidence": "weak",
+          "counted": "adults in one US town (Framingham), followed 1971 to 2003",
+          "n": "12,067 people",
+          "weak": "Watched, not tested: when a friend stopped, a person's chance of smoking fell 36%. Nobody was asked to stop together, and friends who stop together may differ in other ways.",
           "refs": [
             {
-              "cite": "Litt MD, Kadden RM, Kabela-Cormier E, Petry N (2007). Changing network support for drinking: initial findings from the network support project. Journal of Consulting and Clinical Psychology 75(4):542-55.",
-              "url": "https://pubmed.ncbi.nlm.nih.gov/17663609/",
-              "pmid": "17663609",
-              "quote": "with both NS conditions yielding better outcomes than the CaseM condition",
+              "cite": "Christakis NA, Fowler JH (2008). The collective dynamics of smoking in a large social network. New England Journal of Medicine 358(21):2249-58.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/18499567/",
+              "pmid": "18499567",
+              "quote": "Smoking cessation by a friend decreased the chances by 36%",
               "fetched": true,
-              "fetchedOn": "2026-11-18"
+              "fetchedOn": "2026-11-19"
+            },
+            {
+              "cite": "Christakis NA, Fowler JH (2008). The collective dynamics of smoking in a large social network. New England Journal of Medicine 358(21):2249-58.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/18499567/",
+              "pmid": "18499567",
+              "quote": "We studied a densely interconnected social network of 12,067 people assessed repeatedly from 1971 to 2003",
+              "fetched": true,
+              "fetchedOn": "2026-11-19"
             }
           ],
           "check": {
-            "by": "quit-tool checker (opus)",
-            "on": "2026-11-18",
+            "by": "gives brief (opus)",
+            "on": "2026-11-19",
             "verdict": "ok"
           }
         },
@@ -1302,26 +1372,13 @@
     {
       "id": "sleep",
       "name": "Sleep",
+      "line": "It helps me wind down.",
       "swaps": [
         {
           "id": "sleep-1",
           "text": "Same wake-up time every day, weekends too",
-          "evidence": "weak",
-          "refs": [
-            {
-              "cite": "Miller MB et al (2023). Effect of cognitive behavioral therapy for insomnia on alcohol treatment outcomes among US veterans: a randomized clinical trial. JAMA Psychiatry 80(9):905-13.",
-              "url": "https://pubmed.ncbi.nlm.nih.gov/37342036/",
-              "pmid": "37342036",
-              "quote": "CBT-I outperformed sleep hygiene in reducing insomnia symptoms and alcohol-related problems over time",
-              "fetched": true,
-              "fetchedOn": "2026-11-18"
-            }
-          ],
-          "check": {
-            "by": "quit-tool checker (opus)",
-            "on": "2026-11-18",
-            "verdict": "ok"
-          }
+          "evidence": "none",
+          "refs": []
         },
         {
           "id": "sleep-2",
@@ -1340,11 +1397,15 @@
     {
       "id": "focus",
       "name": "Focus",
+      "line": "It helps me concentrate.",
       "swaps": [
         {
           "id": "focus-1",
-          "text": "Brisk 15-minute walk, then start the task 10 minutes later",
+          "text": "A brisk walk before a task that needs focus",
           "evidence": "weak",
+          "counted": "adults of all kinds doing one bout of exercise, then tests of memory and attention; not about nicotine",
+          "n": "79 studies",
+          "weak": "The gain was small, and none of the studies was about stopping nicotine.",
           "refs": [
             {
               "cite": "Chang YK, Labban JD, Gapin JI, Etnier JL (2012). The effects of acute exercise on cognitive performance: a meta-analysis. Brain Research 1453:87-101.",
@@ -1352,12 +1413,20 @@
               "pmid": "22480735",
               "quote": "the effects of acute exercise on cognitive performance are generally small",
               "fetched": true,
-              "fetchedOn": "2026-11-18"
+              "fetchedOn": "2026-11-19"
+            },
+            {
+              "cite": "Chang YK, Labban JD, Gapin JI, Etnier JL (2012). The effects of acute exercise on cognitive performance: a meta-analysis. Brain Research 1453:87-101.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/22480735/",
+              "pmid": "22480735",
+              "quote": "Searches of electronic databases and examinations of reference lists from relevant studies resulted in 79 studies meeting inclusion criteria.",
+              "fetched": true,
+              "fetchedOn": "2026-11-19"
             }
           ],
           "check": {
-            "by": "quit-tool checker (opus)",
-            "on": "2026-11-18",
+            "by": "gives brief (opus)",
+            "on": "2026-11-19",
             "verdict": "ok"
           }
         },
@@ -1378,77 +1447,98 @@
     {
       "id": "confidence",
       "name": "Confidence",
+      "line": "I can't picture myself without it.",
       "swaps": [
         {
           "id": "confidence-1",
-          "text": "Say “I don’t smoke”, not “I’m trying to quit”",
+          "text": "Say “I’ve stopped”, not “I’m trying to quit”",
           "evidence": "weak",
+          "counted": "ex-smokers in Australia and the UK, asked how they saw themselves, then asked a year later whether they smoked",
+          "n": "544 ex-smokers",
+          "weak": "A survey, not a trial: people who already felt done may differ in other ways.",
           "refs": [
+            {
+              "cite": "Callaghan L, Yong HH, Borland R, Cummings KM, Hitchman SC, Fong GT (2021). What kind of smoking identity following quitting would elevate smokers relapse risk? Addictive Behaviors 112:106654.",
+              "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7572756/",
+              "pmid": "32977267",
+              "quote": "Data analysed came from 544 former smokers (quit 1 month or more) who participated in the Australian and UK Waves 9 (2013) and 10 (2014)",
+              "fetched": true,
+              "fetchedOn": "2026-11-19"
+            },
+            {
+              "cite": "Callaghan L, Yong HH, Borland R, Cummings KM, Hitchman SC, Fong GT (2021). What kind of smoking identity following quitting would elevate smokers relapse risk? Addictive Behaviors 112:106654.",
+              "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7572756/",
+              "pmid": "32977267",
+              "quote": "a shift to a non-smoking identity may be protective of relapse",
+              "fetched": true,
+              "fetchedOn": "2026-11-19"
+            },
             {
               "cite": "Black N et al (2020). Behaviour change techniques associated with smoking cessation in intervention and comparator groups of randomized controlled trials. Addiction 115(11):2008-20.",
               "url": "https://pubmed.ncbi.nlm.nih.gov/32196796/",
               "pmid": "32196796",
               "quote": "commitment, social reward, identity associated with changed behaviour",
               "fetched": true,
-              "fetchedOn": "2026-11-18"
+              "fetchedOn": "2026-11-19"
             }
           ],
           "check": {
-            "by": "quit-tool checker (opus)",
-            "on": "2026-11-18",
+            "by": "gives brief (opus)",
+            "on": "2026-11-19",
             "verdict": "ok"
           }
         },
         {
           "id": "confidence-2",
-          "text": "Mark each smoke-free day on a calendar",
+          "text": "Mark each day without it on a calendar",
           "evidence": "weak",
+          "counted": "trials of goals of all kinds (health, study, work), not only quitting",
+          "n": "138 studies, 19,951 people",
+          "weak": "Not tested on stopping nicotine. Checking progress helped more when it was written down or shared.",
           "refs": [
             {
               "cite": "Harkin B et al (2016). Does monitoring goal progress promote goal attainment? A meta-analysis of the experimental evidence. Psychological Bulletin 142(2):198-229.",
               "url": "https://pubmed.ncbi.nlm.nih.gov/26479070/",
               "pmid": "26479070",
-              "quote": "progress monitoring had larger effects on goal attainment when the outcomes were reported or made public",
+              "quote": "A systematic literature search identified 138 studies (N = 19,951) that randomly allocated participants to an intervention designed to promote monitoring of goal progress",
               "fetched": true,
-              "fetchedOn": "2026-11-18"
+              "fetchedOn": "2026-11-19"
+            },
+            {
+              "cite": "Harkin B et al (2016). Does monitoring goal progress promote goal attainment? A meta-analysis of the experimental evidence. Psychological Bulletin 142(2):198-229.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/26479070/",
+              "pmid": "26479070",
+              "quote": "progress monitoring had larger effects on goal attainment when the outcomes were reported or made public, and when the information was physically recorded",
+              "fetched": true,
+              "fetchedOn": "2026-11-19"
             }
           ],
           "check": {
-            "by": "quit-tool checker (opus)",
-            "on": "2026-11-18",
+            "by": "gives brief (opus)",
+            "on": "2026-11-19",
             "verdict": "ok"
           }
         },
         {
           "id": "confidence-3",
           "text": "Write a letter from your day-90 self",
-          "evidence": "weak",
-          "refs": [
-            {
-              "cite": "van Gelder JL, Hershfield HE, Nordgren LF (2013). Vividness of the future self predicts delinquency. Psychological Science 24(6):974-80.",
-              "url": "https://pubmed.ncbi.nlm.nih.gov/23592649/",
-              "pmid": "23592649",
-              "quote": "those who wrote a letter to their future self were less inclined to make delinquent choices",
-              "fetched": true,
-              "fetchedOn": "2026-11-18"
-            }
-          ],
-          "check": {
-            "by": "quit-tool checker (opus)",
-            "on": "2026-11-18",
-            "verdict": "ok"
-          }
+          "evidence": "none",
+          "refs": []
         }
       ]
     },
     {
       "id": "substance",
       "name": "The nicotine itself",
+      "line": "My body wants the nicotine.",
       "swaps": [
         {
           "id": "substance-1",
           "text": "Patch plus gum or lozenge, used together",
           "evidence": "strong",
+          "counted": "smokers who wanted to stop, in trials of patch plus a fast form against one form alone; off cigarettes 6 months or more",
+          "n": "16 trials, 12,169 people",
+          "weak": "About 1.27 times as many stayed off with both as with one form. Tested in smokers, not in people who vape or use pouches.",
           "refs": [
             {
               "cite": "Lindson N et al (2023). Different doses, durations and modes of delivery of nicotine replacement therapy for smoking cessation. Cochrane Database of Systematic Reviews.",
@@ -1456,20 +1546,20 @@
               "pmid": "37335995",
               "quote": "combination NRT (fast-acting form plus patch) results in higher long-term quit rates than single form",
               "fetched": true,
-              "fetchedOn": "2026-11-18"
+              "fetchedOn": "2026-11-19"
             },
             {
-              "cite": "Hartmann-Boyce J et al (2018). Nicotine replacement therapy versus control for smoking cessation. Cochrane Database of Systematic Reviews 5:CD000146.",
-              "url": "https://pubmed.ncbi.nlm.nih.gov/29852054/",
-              "pmid": "29852054",
-              "quote": "NRTs increase the rate of quitting by 50% to 60%, regardless of setting",
+              "cite": "Lindson N et al (2023). Different doses, durations and modes of delivery of nicotine replacement therapy for smoking cessation. Cochrane Database of Systematic Reviews.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/37335995/",
+              "pmid": "37335995",
+              "quote": "(risk ratio (RR) 1.27, 95% confidence interval (CI) 1.17 to 1.37; I2 = 12%; 16 studies, 12,169 participants)",
               "fetched": true,
-              "fetchedOn": "2026-11-18"
+              "fetchedOn": "2026-11-19"
             }
           ],
           "check": {
-            "by": "quit-tool checker (opus)",
-            "on": "2026-11-18",
+            "by": "gives brief (opus)",
+            "on": "2026-11-19",
             "verdict": "ok"
           }
         },
@@ -1477,19 +1567,22 @@
           "id": "substance-2",
           "text": "Ask a doctor about varenicline, a quit pill",
           "evidence": "strong",
+          "counted": "smokers who wanted to stop, in trials of varenicline against a dummy pill; off cigarettes 6 months or more",
+          "n": "41 trials, 17,395 people",
+          "weak": "About 2.3 times as many stayed off as on the dummy pill. Prescription only, and tested in smokers.",
           "refs": [
             {
               "cite": "Livingstone-Banks J et al (2023). Nicotine receptor partial agonists for smoking cessation. Cochrane Database of Systematic Reviews 5:CD006103.",
               "url": "https://pubmed.ncbi.nlm.nih.gov/37142273/",
               "pmid": "37142273",
-              "quote": "high-certainty evidence that varenicline helps more people to quit than placebo",
+              "quote": "We found high-certainty evidence that varenicline helps more people to quit than placebo (RR 2.32, 95% CI 2.15 to 2.51; I2 = 60%, 41 studies, 17,395 participants)",
               "fetched": true,
-              "fetchedOn": "2026-11-18"
+              "fetchedOn": "2026-11-19"
             }
           ],
           "check": {
-            "by": "quit-tool checker (opus)",
-            "on": "2026-11-18",
+            "by": "gives brief (opus)",
+            "on": "2026-11-19",
             "verdict": "ok"
           }
         },
