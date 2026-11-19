@@ -77,7 +77,7 @@ const BASELINE_PATH = path.resolve(__dirname, "../support/writeCoverage.baseline
  * names it (the time tracker's running-timer notification, Phase 7), and the
  * ceiling had again drifted two above the real count.
  */
-const MAX_UNASSERTED = 128
+const MAX_UNASSERTED = 79
 
 type Baseline = Record<string, string>
 
