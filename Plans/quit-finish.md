@@ -32,7 +32,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | 1 | Your quit date | lab `quitdate/best` | copy e's plan steps; the old "quit curve" hard-days calendar (mock F9kYB9… v2, study timing only) | waiting for you |
 | 2 | Craving now? | lab `sos/best` | wave-1's voice step and "other side" answer; the craving log of `diary/best` | waiting for you |
 | 3 | Your record (progress, money kept) | lab `progress/best` | the live counter feel of copies d and e | not started |
-| 4 | Slipped? Restart today | wave-1 `slip` | slips go into the shared record; clean runs never reset | not started |
+| 4 | Slipped? Restart today | wave-1 `slip` | slips go into the shared record; clean runs never reset | building |
 | 5 | The 12 lies test | wave-1 `beliefs` | from `beliefs/best`: a reply per belief, "can you stop?", earlier results | not started |
 | 6 | What you'll feel, and when | lab `timeline/best` | wave-1 `symptoms` (what helps per symptom) | not started |
 | 7 | If-then plan | lab `ifthen/best` | — | not started |
@@ -295,6 +295,116 @@ files get the field empty.
     reaches `/api/black-box`.
 12. Then the three-reviewer check and fix rounds; when clean, add `sos` to `finished.json` (which also brings back
     the "Craving now?" bar) and set the status to "waiting for you".
+
+### Tool 4: Slipped? Restart today — brief (Opus, 2026-11-19) — build exactly this, decide nothing
+
+Model: Sonnet builds in a worktree; Opus reads the diff. Address: `/quit/nicotine/slip` (rebuilds wave-1 `slip` in
+place in `src/quit/tools/slip/`). Menu line becomes **"Save the slip, keep your days, pick a new day 1."** (the old
+"3 taps" was wrong: review B20). Nicotine only. One question per screen on phones, progress bar, in-page Back,
+browser Back steps back, reload resumes, a double tap never skips a screen or files twice. Desktop: the same screens
+in the page column, as the date and craving tools.
+
+**Data (no new tables, no record.ts runs):** the slip goes into the **Black Box** (`src/quit/blackbox.ts`), for every
+visitor: `BlackBoxBridge` signed in, `LocalBlackBoxBridge` signed out (as Tool 2 does, `useSignedIn(true, true)`).
+Wave-1 only bridged when signed in, so signed out nothing was saved (B19). A slip ends the living run (Black Box rule);
+the ended run and its days are never removed or changed (clean runs never reset). The new day 1 is written to
+`record.quitDate` (`useQuitRecord().setQuitDate`), so the date tool and the craving tool count from it and the date
+tool never tries to restart a run on the old date. Two small additions to `src/quit/blackbox.ts` (keep every
+existing export): `amend` also takes `thought?: string` and `ending?: ViceEndingId`; new
+`removeRun(attemptId): boolean` that removes a run only when it is living and has no living reports (for Undo and for
+changing a new day 1 from today to tomorrow). Unit tests for both.
+
+**Three cases, read from the Black Box once it is `settled` (never guess before; show nothing but the heading):**
+- **A. A run is living** → the questions, then file the slip with `fileSlip`.
+- **B. The latest nicotine run ended with a slip and no later run lives** (e.g. Tool 2 "Yes" filed it): never file
+  again. Line on top: "Your slip on <weekday day month> is in your record." Ask only what that report lacks: "Where
+  were you?" when its `where` is empty, "What did the voice say?" when its `thought` is empty; save the answers with
+  `amend`. Nothing missing → straight to the result.
+- **C. No run at all.** When `record.quitDate` is today or past, start the run on it first (the date tool's rule:
+  `startRun(quitDate)`), then case A. Otherwise ask screens 2 and 3 (nothing is filed: there is no run to end), and
+  the result says in one line "You had no run on record, so nothing was saved as a slip."
+- Before A: when `record.quitDate` is later than the last slip day and today or past (a new day 1 has come), start
+  the run on it, then case A. So "Tomorrow" chosen yesterday starts by itself.
+
+**Screens (case A):**
+1. **When was it?** Today / Yesterday / Another day (opens a date field; min = the later of the run's start and the
+   run's latest report day, max = today; that is what `fileReport` accepts, so it never refuses silently). A chip
+   whose day is before the min is not shown. When only today is possible, skip this screen (step count drops to 2).
+   Replaces wave-1 "Earlier this week" (= a guessed 2 days ago).
+2. **Where were you?** The 10 `riskyMoments` chips (same list and labels as Tool 2's row, so its pattern list counts
+   slips too; replaces the separate `endings` list, review D6) and "Somewhere else". Continue; a plain "Skip" link.
+   Saved as the report's `where` (empty for skip / somewhere else).
+3. **What did the voice say?** The 12 belief `short` chips and "Something else", which opens a text field with a
+   **visible** label "In your words (optional)" (B21), max 80. Continue files the slip (thought = `slipThought`,
+   ending = `endingForBelief`, `at` = `reportAt(day, today, nowInBrowser())`); "Skip" files with an empty thought.
+   One filing per visit (ref guard; a saved `reportId` that `has()` still holds is never filed again).
+
+**Result** (all cases; `data-testid="result"`):
+1. Heading **"A slip doesn't undo the days before."** (the same line as Tool 2's Yes screen).
+2. **Your days** card: "Your run: <start> to <slip day>, N days. It stays in your record." N = `runDays` from
+   `src/vice/blackboxService.ts` (the Black Box's own count, first and last day included), with a basis line "Counted
+   like your Black Box: from day 1 to the slip day, both counted." With more than one ended or living nicotine run:
+   "All your runs together: M days." (sum of `runDays`). Dates as "Wed 29 Oct", never ISO (B21). The save status
+   line as Tool 2: "Saved on this phone." / "Saved to your account." / "Saving to your Black Box..." and **Undo**
+   while the screen is open (case A only). Undo removes the new run first if this visit started one
+   (`removeRun`), then the slip (`undo`, which brings the run back), and puts `record.quitDate` back to what it was.
+3. **Back through steps 1 to 3** (same three names as Tool 2's text: your top lies, your swaps, a new day 1; no
+   intro line under the heading, rulebook rule 6):
+   - **1. Your top lies.** First the lie he named on screen 3 (or the one Tool 2 saved, matched by its `short`): its
+     `limiting` line, then its `counterpart` and `proof` with the source tap and `counted` line. Then his top lies
+     from the 12 lies test (`topBeliefs` on the test's saved ratings, read through the test's own parse function on
+     main at build time; Tool 5 is rebuilding it), each as its counterpart, without repeating the named one. Neither:
+     plan step 1 title and text; "the 12 lies test" is a link only when that tool is tappable.
+   - **2. Your swaps.** When he said where: the place label and its three `momentSwaps` cards (as Tool 2's "What to do
+     right here"). Else, when he named a lie: the three swaps of that lie's `need` (with their evidence chip). Plus
+     the swaps he marked tried in `gives` (as wave-1). Nothing: plan step 2 title and text.
+   - **3. A new day 1.** Chips **Today** (only when the slip day is before today; the Black Box does not allow a new
+     run on the slip day itself) and **Tomorrow**; one must be tapped. Shown as "Day 1: Thu 20 Nov". Today: starts
+     the run now (`startRun(today)`), sets `record.quitDate`, line "Your new run started today." Tomorrow: sets
+     `record.quitDate` to tomorrow, line "It starts by itself when you open this tool or Your quit date that day."
+     Switching Today → Tomorrow while the screen is open removes the run just started (`removeRun`). The date is
+     fixed when tapped (a later visit never shows a day 1 in the past, B20).
+4. No closing "Every day you keep that promise..." line (B21, D26: out of context and a rule-6 verdict line). The
+   days card carries that point with his own numbers.
+5. "Back to the menu". No "Clear my answers", no link to `/plan/quit-vice` ("Start the new run in your Black Box"):
+   this tool starts the run itself.
+
+**Visits:** a new visit with a living run that this tool did not start in its last visit begins at screen 1 with empty
+answers (no stale result, B20). The result comes back on reload only while it still describes the latest slip (no run
+lives, or the living run is the one this visit started).
+
+**Tool 2 consistency:** Tool 2's Yes screen keeps its text and links here once `slip` is tappable; arriving from it is
+case B, so the slip is never filed twice and its questions are not asked again. Never ask "Did you <verb>?" here.
+
+**Review items covered:** B19 (answers used on the result, signed-out saving), B20 (stale result, menu line), B21
+(closing line, raw date, unlabelled text box), D6 (one situation list, one slip owner: the Black Box), D26 (rule 6
+phrase, "a new day 1" now keeps every past day), C8 (no double slip: one filing guard, Undo), B32 (no `/api/whoami`
+401 signed out: `useSignedIn(true, true)`).
+
+**Acceptance (Playwright, local test stack then live with `?preview=1`, 390x844 touch and 1280x800, screenshots
+looked at):**
+1. Signed out, a living run started 20 days ago (seed the browser Black Box): Yesterday → In the car → "Just one
+   won't hurt" → result: days card "21 days" with dates as words; the lie's counterpart and proof; the three driving
+   cards; Black Box in localStorage has the slip with `where: "driving"` and the run ended yesterday.
+2. Day 1 Today → a new living run starting today; date tool `/quit/nicotine/date` shows "Today is day 1." and no
+   refusal notice. Switch to Tomorrow → that run is gone, `record.quitDate` = tomorrow.
+3. Undo → the slip is gone, the old run lives again, the new run is gone, `record.quitDate` back.
+4. Tool 2 "Yes" with a living run, then open slip → case B: "Your slip on ... is in your record", only "Where were
+   you?" asked (Tool 2 had a voice) → result; the Black Box holds one slip only.
+5. Run started today: screen 1 is skipped; result offers only Tomorrow.
+6. Another day: the date field refuses a day before the run's start.
+7. No run and no quit date: screens 2 and 3, result with the "nothing was saved" line, Tomorrow sets the date.
+8. Double tap on the last Continue files one slip; reload on each screen resumes; browser Back steps back.
+9. Clock moved to the next day after choosing Tomorrow → opening slip starts the new run and shows screen 1.
+10. Signed in on the test stack: the slip reaches `/api/black-box`.
+11. No console error, no sideways scroll, tap targets at least 44 px, the menu row opens the tool.
+12. Then the three-reviewer check and fix rounds; status "waiting for you".
+
+**Proposed (owner may veto):** S1 the days card uses the Black Box count (slip day included) so every tool shows the
+same number; alternative "days without it" (slip day not counted), which disagrees with the Black Box page by one.
+S2 Tool 2's "About $X kept since <date>" counts from the new day 1 after a slip (it reads `record.quitDate`);
+recommendation: Tool 3 sums money over all runs, and Tool 2 keeps its line. S3 the wave-1 `endings` list stays in the
+data file (past attempts uses it) but this tool no longer asks it.
 
 ## Done
 
