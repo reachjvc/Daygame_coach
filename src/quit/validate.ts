@@ -242,6 +242,24 @@ function ruleBeliefEnding(c: Ctx) {
   })
 }
 
+/** Every risky moment has exactly three cards. Nicotine must carry them; a draft addiction may hold an empty list. */
+function ruleMomentSwaps(c: Ctx) {
+  const d = c.data
+  const moments = arr(d.riskyMoments).map((m) => str(obj(m).id)).filter((x): x is string => x !== undefined)
+  const swaps = arr(d.momentSwaps)
+  if (swaps.length === 0 && d.id !== "nicotine") return
+  for (const id of moments) {
+    const found = swaps.filter((s) => obj(s).momentId === id)
+    const cards = found.length === 1 ? arr(obj(found[0]).cards) : []
+    if (found.length !== 1) c.add("momentSwaps", "moment-swaps", `riskyMoments "${id}" needs exactly one momentSwaps entry`)
+    else if (cards.length !== 3 || cards.some((x) => !str(x))) c.add("momentSwaps", "moment-swaps", `momentSwaps "${id}" needs exactly three cards`)
+  }
+  for (const s of swaps) {
+    const id = obj(s).momentId
+    if (typeof id !== "string" || !moments.includes(id)) c.add("momentSwaps", "moment-swaps", `momentSwaps entry "${String(id)}" matches no risky moment`)
+  }
+}
+
 function ruleDanger(c: Ctx) {
   const dg = obj(c.data.danger)
   if (dg.level === "none" && dg.line !== null && dg.line !== undefined)
@@ -292,6 +310,7 @@ export function validateAddiction(data: unknown, opts: { live: boolean } = { liv
   ruleDollar(c)
   ruleModeration(c)
   ruleBeliefEnding(c)
+  ruleMomentSwaps(c)
   ruleDanger(c)
   ruleForecast(c)
   ruleDoNotAvoid(c)

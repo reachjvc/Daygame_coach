@@ -19,8 +19,8 @@ export function useVerb(unit: UnitLike | null | undefined): string {
   return verbOf(unit)
 }
 
-/** "Did you smoke?" / "Did you vape?" / "Did you use a pouch?" */
+/** "Did you smoke?" / "Did you vape?" / "Did you use a pouch?"; "Did you use it?" when the unit is not known. */
 export function didYouUse(unit: UnitLike | null | undefined): string {
-  const phrase = verbOf(unit)
-  return `Did you ${phrase}?`
+  if (!unit || !VERB[unit.id]) return "Did you use it?"
+  return `Did you ${VERB[unit.id]}?`
 }

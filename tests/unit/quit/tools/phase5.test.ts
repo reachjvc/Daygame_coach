@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import nicotine from "@/src/quit/data/nicotine.json"
 import { tooltext } from "@/src/quit/tooltext"
 import { endingForBelief, endingForEnding, laterDay, reportAt, shiftDay, slipDay, slipThought } from "@/src/quit/blackboxLogic"
-import { currentSwap, firstUnanswered as sosFirst, formatClock, minutesGone, needForBelief, remainingMs, WAIT_MS, EMPTY_SOS } from "@/src/quit/tools/sos/logic"
 import { firstUnanswered as slipFirst, keepLine, EMPTY_SLIP } from "@/src/quit/tools/slip/logic"
 import { helpFor, listable, symptomLabel } from "@/src/quit/tools/symptoms/logic"
 import { NO_RESET, validateAddiction } from "@/src/quit/validate"
@@ -15,57 +14,6 @@ const strings = (x: unknown, out: string[] = []): string[] => {
   else if (x && typeof x === "object") Object.values(x).forEach((v) => strings(v, out))
   return out
 }
-
-describe("sos countdown maths", () => {
-  const t0 = 1_000_000
-  it("starts at ten minutes and ends at zero", () => {
-    expect(remainingMs(t0, t0)).toBe(WAIT_MS)
-    expect(remainingMs(t0, t0 + WAIT_MS)).toBe(0)
-    expect(remainingMs(t0, t0 + WAIT_MS + 5000)).toBe(0)
-  })
-  it("a reload 4 minutes in shows 6:00 left", () => {
-    expect(remainingMs(t0, t0 + 4 * 60000)).toBe(6 * 60000)
-    expect(formatClock(remainingMs(t0, t0 + 4 * 60000))).toBe("06:00")
-    expect(minutesGone(t0, t0 + 4 * 60000)).toBe(4)
-  })
-  it("a clock that moved back never shows more than ten minutes", () => {
-    expect(remainingMs(t0, t0 - 30000)).toBe(WAIT_MS)
-  })
-  it("formats mm:ss rounding up", () => {
-    expect(formatClock(WAIT_MS)).toBe("10:00")
-    expect(formatClock(59_001)).toBe("01:00")
-    expect(formatClock(1)).toBe("00:01")
-    expect(formatClock(0)).toBe("00:00")
-  })
-  it("counts whole minutes gone", () => {
-    expect(minutesGone(t0, t0 + 59_999)).toBe(0)
-    expect(minutesGone(t0, t0 + 60_000)).toBe(1)
-    expect(minutesGone(t0, t0 + WAIT_MS)).toBe(10)
-  })
-})
-
-describe("sos choices", () => {
-  it("preselects the need of the belief; none for something else", () => {
-    expect(needForBelief("b1", data.beliefs)).toBe("confidence")
-    expect(needForBelief("other", data.beliefs)).toBeNull()
-    expect(needForBelief("nope", data.beliefs)).toBeNull()
-    expect(needForBelief(null, data.beliefs)).toBeNull()
-  })
-  it("cycles the three swaps of the need, rated ones first", () => {
-    const need = data.needs[0]
-    const ids = [0, 1, 2, 3].map((i) => currentSwap(need, {}, i)?.id)
-    expect(ids[0]).toBe(need.swaps[0].id)
-    expect(ids[3]).toBe(ids[0])
-    expect(new Set(ids).size).toBe(need.swaps.length)
-    expect(currentSwap(need, { [need.swaps[2].id]: 90 }, 0)?.id).toBe(need.swaps[2].id)
-    expect(currentSwap(undefined, {}, 0)).toBeNull()
-  })
-  it("resumes at the first unanswered screen", () => {
-    expect(sosFirst(EMPTY_SOS)).toBe(1)
-    expect(sosFirst({ ...EMPTY_SOS, done: 2 })).toBe(3)
-    expect(sosFirst({ ...EMPTY_SOS, done: 9 })).toBe(5)
-  })
-})
 
 describe("sos text promises no craving length", () => {
   const BAN = /lasts?|will pass|passes in|\d+ minutes to pass|go(es)? away in/i

@@ -148,6 +148,12 @@ export interface QuitOption {
   label: string
 }
 
+/** Three cards for one of the addiction's risky moments. */
+export interface QuitMomentSwap {
+  momentId: string
+  cards: string[]
+}
+
 export interface QuitResponse {
   id: string
   text: string
@@ -274,6 +280,8 @@ export interface QuitAddictionFull {
   endings: QuitEnding[]
   helped: QuitOption[]
   riskyMoments: QuitOption[]
+  /** Three plain cards per risky moment; empty for an addiction whose content is not written yet. */
+  momentSwaps: QuitMomentSwap[]
   responses: QuitResponse[]
   clearOut: QuitClearItem[]
   symptomWords: Record<string, string>

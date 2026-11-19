@@ -1232,7 +1232,7 @@
         },
         {
           "id": "boredom-2",
-          "text": "Play three minutes of Tetris",
+          "text": "Play three minutes of a falling-blocks game",
           "evidence": "weak",
           "refs": [
             {
@@ -1634,6 +1634,88 @@
     {
       "id": "driving",
       "label": "In the car"
+    }
+  ],
+  "momentSwaps": [
+    {
+      "momentId": "after-food",
+      "cards": [
+        "Get up from the table and clear your plate.",
+        "Brush your teeth or have a mint right now.",
+        "Walk around the block before you sit down again."
+      ]
+    },
+    {
+      "momentId": "coffee",
+      "cards": [
+        "Drink it somewhere else today: another room, standing, or away from where you used.",
+        "Have gum or a mint with it.",
+        "When the cup is empty, get up and start the next thing."
+      ]
+    },
+    {
+      "momentId": "drinks",
+      "cards": [
+        "Make the next round a soft drink.",
+        "Stay inside, away from where people go out to use.",
+        "Tell one person there: \"I've stopped.\""
+      ]
+    },
+    {
+      "momentId": "work-break",
+      "cards": [
+        "Take the break, but walk a lap of the building instead.",
+        "Get a drink or a snack and sit with someone.",
+        "Text a friend for the length of the break."
+      ]
+    },
+    {
+      "momentId": "stress",
+      "cards": [
+        "Ten slow breaths before you decide anything.",
+        "Walk or take the stairs for a few minutes.",
+        "Write down in one line what's stressing you, to deal with after."
+      ]
+    },
+    {
+      "momentId": "bored",
+      "cards": [
+        "Pop bubbles or play the block puzzle here for three minutes.",
+        "Do one small job you've put off: a dish, an email, a call.",
+        "Give your hands something: gum, a toothpick, a pen."
+      ]
+    },
+    {
+      "momentId": "others-smoking",
+      "cards": [
+        "Stay inside, or walk the other way for a few minutes.",
+        "Say it once, plainly: \"I've stopped.\"",
+        "Hold a drink or chew gum, so your hands and mouth have something."
+      ]
+    },
+    {
+      "momentId": "late-night",
+      "cards": [
+        "Go to bed now.",
+        "Have a hot shower or a hot drink.",
+        "Text one person, or write down what you'd tell them."
+      ]
+    },
+    {
+      "momentId": "waking",
+      "cards": [
+        "Get up straight away and drink a glass of water.",
+        "Change the first ten minutes: shower first, or step outside without it.",
+        "Eat something with your first drink."
+      ]
+    },
+    {
+      "momentId": "driving",
+      "cards": [
+        "Put on a song you know by heart and sing it.",
+        "Have gum or a mint; keep a pack in the car.",
+        "Open the window and breathe slowly until the next stop."
+      ]
     }
   ],
   "responses": [

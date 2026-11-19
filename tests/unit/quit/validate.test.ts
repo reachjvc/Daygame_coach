@@ -59,6 +59,8 @@ describe("rules, one at a time on a valid fixture", () => {
     ["do-not-avoid", (d) => void (d.responses[0].text = "Won't have a cup.")],
     ["no-reset", (d) => void (d.catch = "A slip is not a reset.")],
     ["toll", (d) => void (d.numbers[0].caveat = "Millions of people.")],
+    ["moment-swaps", (d) => void (d.momentSwaps = [{ momentId: d.riskyMoments[0].id, cards: ["one", "two"] }])],
+    ["moment-swaps", (d) => void (d.momentSwaps = [{ momentId: d.riskyMoments[0].id, cards: ["one", "two", "three"] }, { momentId: "nope", cards: ["a", "b", "c"] }])],
   ]
 
   for (const [rule, mutate] of cases) {
@@ -68,6 +70,14 @@ describe("rules, one at a time on a valid fixture", () => {
       expect(rules(d)).toEqual([rule])
     })
   }
+
+  it("every nicotine risky moment has exactly three cards, none left over", () => {
+    const nic = getAddiction("nicotine")! as unknown as QuitAddictionFull
+    const ids = (nic.riskyMoments as { id: string }[]).map((m) => m.id)
+    expect(nic.momentSwaps.map((s) => s.momentId)).toEqual(ids)
+    for (const s of nic.momentSwaps) expect(s.cards).toHaveLength(3)
+    for (const id of ["alcohol", "weed", "porn"] as const) expect((getAddiction(id) as unknown as QuitAddictionFull).momentSwaps).toEqual([])
+  })
 
   it("founder voice is allowed in the reader's own lines", () => {
     const d = makeValid()

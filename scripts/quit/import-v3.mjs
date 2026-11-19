@@ -151,6 +151,7 @@ function build([v3id, id, name]) {
     endings: TODO,
     helped: TODO,
     riskyMoments: TODO,
+    momentSwaps: [],
     responses: TODO,
     clearOut: TODO,
     symptomWords,

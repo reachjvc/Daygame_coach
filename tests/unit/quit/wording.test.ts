@@ -13,7 +13,7 @@ describe("unit wording", () => {
   })
   it("falls back to plain words without a unit", () => {
     expect(useVerb(null)).toBe("use")
-    expect(didYouUse(undefined)).toBe("Did you use?")
-    expect(didYouUse({ id: "unknown" })).toBe("Did you use?")
+    expect(didYouUse(undefined)).toBe("Did you use it?")
+    expect(didYouUse({ id: "unknown" })).toBe("Did you use it?")
   })
 })

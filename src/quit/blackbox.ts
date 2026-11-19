@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useBlackBox } from "@/src/vice/blackbox/useBlackBox"
 import { useBlackBoxSync } from "@/src/vice/blackbox/useBlackBoxSync"
-import { fileReport, latestReportDay, living, nowInBrowser, removeReport, revivalClashes } from "@/src/vice/blackbox/blackboxStore"
-import type { ViceAttempt, ViceEndingId } from "@/src/vice/types"
+import { fileReport, latestReportDay, living, nowInBrowser, removeReport, revivalClashes, stampFor } from "@/src/vice/blackbox/blackboxStore"
+import type { ViceAttempt, ViceEndingId, ViceReport } from "@/src/vice/types"
 import { isSettled } from "@/src/vice/blackbox/viceSyncService"
 import { laterDay, startRunOn } from "./blackboxLogic"
 
@@ -52,12 +52,24 @@ export interface CloseCallInput {
   thought: string
   ending: ViceEndingId
   didInstead: string
+  /** How strong it was, 1 to 10; absent means not said. */
+  closeness?: number | null
+  /** An id of the addiction's `riskyMoments`; absent means not said. */
+  where?: string
 }
 
 export interface SlipInput {
   at: string
   thought: string
   ending: ViceEndingId
+  closeness?: number | null
+  where?: string
+}
+
+/** What `amend` may change on a filed report. */
+export interface ReportPatch {
+  closeness?: number | null
+  where?: string
 }
 
 /** What the quit date tool needs of the Black Box, signed in or not. */
@@ -87,17 +99,20 @@ export interface QuitBlackBoxApi extends QuitRunApi {
   has: (reportId: string) => boolean
   /** Takes a report back out; false when refused. */
   undo: (reportId: string) => boolean
+  /** Every living report against any run of this vice, oldest first. */
+  reports: ViceReport[]
+  /** Changes strength or situation of a filed report; false when it is not there. */
+  amend: (reportId: string, patch: ReportPatch) => boolean
 }
 
 const EMPTY_FIELDS = { closeness: null, withWhom: "", where: "", factors: [] as string[] }
 
-/**
- * The Black Box for one vice, for a signed-in visitor. Mount it only after
- * `useSignedIn` said true: the load and sync talk to the account.
- */
-export function useQuitBlackBox(viceId: string): QuitBlackBoxApi {
-  const { record, update, ready, today } = useBlackBox()
-  const sync = useBlackBoxSync({ record, update, ready })
+type BlackBoxCore = ReturnType<typeof useBlackBox>
+type SyncView = { state: string; pending: number } | null
+
+/** The API of one vice on top of a loaded record. `sync` is null when nothing is sent to an account. */
+function useApi(viceId: string, core: BlackBoxCore, sync: SyncView): QuitBlackBoxApi {
+  const { record, update, ready, today } = core
   const latest = useRef(record)
   latest.current = record
 
@@ -118,6 +133,13 @@ export function useQuitBlackBox(viceId: string): QuitBlackBoxApi {
     [update, viceId, today],
   )
 
+  const reports = useMemo(() => {
+    const mine = new Set(record.attempts.filter((a) => a.viceId === viceId).map((a) => a.id))
+    return living(record.reports)
+      .filter((r) => mine.has(r.attemptId))
+      .sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0))
+  }, [record, viceId])
+
   const file = useCallback(
     (wentThrough: boolean, input: CloseCallInput | SlipInput): string | null => {
       const cur = latest.current
@@ -135,6 +157,8 @@ export function useQuitBlackBox(viceId: string): QuitBlackBoxApi {
         thought: input.thought,
         ending: input.ending,
         ...EMPTY_FIELDS,
+        closeness: input.closeness ?? null,
+        where: input.where ?? "",
         didInstead: "didInstead" in input ? input.didInstead : "",
       })
       const made = next.reports.find((r) => !cur.reports.some((x) => x.id === r.id))
@@ -161,6 +185,31 @@ export function useQuitBlackBox(viceId: string): QuitBlackBoxApi {
     [update],
   )
 
+  const amend = useCallback(
+    (reportId: string, patch: ReportPatch): boolean => {
+      const cur = latest.current
+      if (!living(cur.reports).some((r) => r.id === reportId)) return false
+      const stamp = stampFor(cur)
+      const next = {
+        ...cur,
+        reports: cur.reports.map((r) =>
+          r.id === reportId
+            ? {
+                ...r,
+                ...(patch.closeness !== undefined ? { closeness: patch.closeness } : {}),
+                ...(patch.where !== undefined ? { where: patch.where } : {}),
+                updatedAt: stamp,
+              }
+            : r,
+        ),
+      }
+      latest.current = next
+      update(() => next)
+      return true
+    },
+    [update],
+  )
+
   const has = useCallback(
     (reportId: string): boolean => run !== null && record.reports.some((r) => r.id === reportId && !r.deletedAt && r.attemptId === run.id),
     [record, run],
@@ -170,41 +219,41 @@ export function useQuitBlackBox(viceId: string): QuitBlackBoxApi {
     (reportId: string): "saving" | "saved" | "local" => {
       // The tool's copy of this api can be one render behind the filing: it does not know the report yet.
       if (!record.reports.some((r) => r.id === reportId)) return "saving"
+      if (sync === null) return "local"
       if (sync.state === "failed" || sync.state === "offline" || sync.state === "unreachable") return "local"
       return sync.state === "synced" && sync.pending === 0 ? "saved" : "saving"
     },
-    [record, sync.state, sync.pending],
+    [record, sync],
   )
 
   // Signed in, a run is not started until the account has answered: otherwise a run the account already holds could be doubled.
-  const settled = ready && isSettled(sync.state)
+  const settled = ready && (sync === null || isSettled(sync.state as Parameters<typeof isSettled>[0]))
   return useMemo(
-    () => ({ ready, settled, run, today, startRun, fileCloseCall, fileSlip, status, has, undo }),
-    [ready, settled, run, today, startRun, fileCloseCall, fileSlip, status, has, undo],
+    () => ({ ready, settled, run, today, startRun, fileCloseCall, fileSlip, status, has, undo, reports, amend }),
+    [ready, settled, run, today, startRun, fileCloseCall, fileSlip, status, has, undo, reports, amend],
   )
 }
 
-/** The Black Box for one vice, browser copy only (signed out). Nothing talks to an account. */
-export function useLocalQuitBlackBox(viceId: string): QuitRunApi {
-  const { record, update, ready, today } = useBlackBox()
-  const latest = useRef(record)
-  latest.current = record
-  const run = useMemo(
-    () => living(record.attempts).find((a) => a.viceId === viceId && a.endedOn === null) ?? null,
-    [record, viceId],
-  )
-  const startRun = useCallback(
-    (startedOn: string): boolean => {
-      const cur = latest.current
-      const next = startRunOn(cur, viceId, startedOn, today)
-      if (next === cur) return living(cur.attempts).some((a) => a.viceId === viceId && a.endedOn === null)
-      latest.current = next
-      update(() => next)
-      return true
-    },
-    [update, viceId, today],
-  )
-  return useMemo(() => ({ ready, settled: ready, run, today, startRun }), [ready, run, today, startRun])
+/**
+ * The Black Box for one vice, for a signed-in visitor. Mount it only after
+ * `useSignedIn` said true: the load and sync talk to the account.
+ */
+export function useQuitBlackBox(viceId: string): QuitBlackBoxApi {
+  const core = useBlackBox()
+  const sync = useBlackBoxSync({ record: core.record, update: core.update, ready: core.ready })
+  const view = useMemo(() => ({ state: sync.state, pending: sync.pending }), [sync.state, sync.pending])
+  return useApi(viceId, core, view)
+}
+
+/** The same Black Box for a visitor with no account: the browser copy only, nothing is sent anywhere. */
+export function useQuitBlackBoxLocal(viceId: string): QuitBlackBoxApi {
+  const core = useBlackBox()
+  return useApi(viceId, core, null)
 }
 
 export { nowInBrowser }
+
+/** The quit date tool's name for the browser-only Black Box. */
+export function useLocalQuitBlackBox(viceId: string): QuitBlackBoxApi {
+  return useQuitBlackBoxLocal(viceId)
+}

@@ -33,8 +33,9 @@ describe("bad saved data falls back to empty, never NaN", () => {
       expect(parseSlip(j)).toEqual(EMPTY_SLIP)
       expect(parseSos(j)).toEqual(EMPTY_SOS)
     }
-    expect(parseSos({ waitStartedAt: "abc" }).waitStartedAt).toBeNull()
-    expect(parseSos({ waitStartedAt: -5 }).waitStartedAt).toBeNull()
+    expect(parseSos({ ringStartedAt: "abc" }).ringStartedAt).toBeNull()
+    expect(parseSos({ ringStartedAt: -5 }).ringStartedAt).toBeNull()
+    expect(parseSos({ ringMinutes: 7 }).ringMinutes).toBe(10)
   })
 })
 

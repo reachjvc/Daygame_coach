@@ -65,6 +65,7 @@ export function makeValid(): QuitAddictionFull {
     endings: [{ id: "e1", label: "I felt fine", blackBoxEnding: "fine" }],
     helped: [{ id: "h1", label: "A walk" }],
     riskyMoments: [{ id: "r1", label: "After lunch" }],
+    momentSwaps: [{ momentId: "r1", cards: ["Walk a lap.", "Drink water.", "Text a friend."] }],
     responses: [{ id: "p1", text: "I go for a walk." }],
     clearOut: [{ id: "c1", text: "Throw out the tea bags", removes: "tea bags" }],
     symptomWords: { craving: "Cravings" },
