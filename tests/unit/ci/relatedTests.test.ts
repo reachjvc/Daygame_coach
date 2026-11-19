@@ -85,3 +85,65 @@ describe('which tests a staged file reaches', () => {
     expect(relatedTests(['src/a/leaf.ts'], root)).not.toContain('tests/e2e/browser.spec.ts')
   })
 })
+
+describe('review findings, pinned (Phase 7 step 3)', () => {
+  let r: string
+  const put = (file: string, text = '') => {
+    fs.mkdirSync(path.dirname(path.join(r, file)), { recursive: true })
+    fs.writeFileSync(path.join(r, file), text)
+  }
+  beforeAll(() => {
+    r = fs.mkdtempSync(path.join(os.tmpdir(), 'related-review-'))
+    // 1: folders named data/infra/docs/public are code folders below the root
+    put('src/tracking/data/rules.ts', 'export const rules = 1')
+    put('tests/unit/tracking/rules.test.ts', "import { rules } from '@/src/tracking/data/rules'")
+    put('app/api/healthz/route.ts', 'export const GET = 1')
+    put('tests/unit/infra/healthz.test.ts', "import { GET } from '@/app/api/healthz/route'")
+    put('public/sw.js', 'self.x = 1')
+    put('tests/unit/shared/sw.test.ts', "import sw from '@/public/sw.js'")
+    put('docs/ignored.ts', 'export const d = 1')
+    put('tests/unit/docs/readsDocs.test.ts', "import { d } from '@/docs/ignored'")
+    // 2: a deleted file is not on disk; its importers still are
+    put('src/gone/user.ts', "import { gone } from './removed'")
+    put('tests/unit/gone.test.ts', "import { u } from '@/src/gone/user'")
+    put('tests/unit/removedItself.test.ts', "import { x } from 'pkg'")
+    // 3: tests that read files with fs
+    put('supabase/migrations/001_a.sql', 'select 1')
+    put('tests/unit/db/migrations.test.ts', "fs.readdirSync('supabase/migrations')")
+    put('infra/deploy.sh', 'echo')
+    put('tests/unit/infra/deploy.test.ts', "fs.readFileSync('infra/deploy.sh')")
+    put('tests/unit/other.test.ts', "fs.readFileSync('infra/other.sh')")
+    // 7: a semicolon-free type export must not swallow the next real import
+    put('src/tracking/types.ts', "export type Foo = { a: number }\nimport { real } from './real'\nexport const t = real")
+    put('src/tracking/real.ts', 'export const real = 1')
+    put('tests/unit/tracking/real.test.ts', "import { real } from '@/src/tracking/real'")
+    put('tests/unit/tracking/typesUser.test.ts', "import { t } from '@/src/tracking/types'")
+    put('src/tracking/barrel.ts', "export type { Foo }\nimport { real2 } from './real2'\nexport const b = real2")
+    put('src/tracking/real2.ts', 'export const real2 = 1')
+  })
+  afterAll(() => fs.rmSync(r, { recursive: true, force: true }))
+
+  test('data, infra, docs and public below the root are searched; public/sw.js resolves', () => {
+    expect(relatedTests(['src/tracking/data/rules.ts'], r)).toEqual(['tests/unit/tracking/rules.test.ts'])
+    expect(relatedTests(['app/api/healthz/route.ts'], r)).toEqual(['tests/unit/infra/healthz.test.ts'])
+    expect(relatedTests(['public/sw.js'], r)).toEqual(['tests/unit/shared/sw.test.ts'])
+    // a root folder is not searched for importers, but a staged file in it is still found by path
+    expect(relatedTests(['docs/ignored.ts'], r)).toEqual(['tests/unit/docs/readsDocs.test.ts'])
+  })
+
+  test('a deleted or renamed file runs the tests that import its old path; a deleted test is not run', () => {
+    expect(relatedTests(['src/gone/removed.ts'], r)).toEqual(['tests/unit/gone.test.ts'])
+    expect(relatedTests(['tests/unit/neverExisted.test.ts'], r)).toEqual([])
+  })
+
+  test('a staged sql or shell file finds the tests that read it by path or folder, and nothing else', () => {
+    expect(relatedTests(['supabase/migrations/002_new.sql'], r)).toEqual(['tests/unit/db/migrations.test.ts'])
+    expect(relatedTests(['infra/deploy.sh'], r)).toEqual(['tests/unit/infra/deploy.test.ts'])
+    expect(relatedTests(['docs/product/note.md'], r)).toEqual([])
+  })
+
+  test('a type export without semicolons does not erase the real import after it', () => {
+    expect(relatedTests(['src/tracking/real.ts'], r)).toEqual(['tests/unit/tracking/real.test.ts', 'tests/unit/tracking/typesUser.test.ts'])
+    expect(relatedTests(['src/tracking/real2.ts'], r)).toEqual([])
+  })
+})

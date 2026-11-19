@@ -5,21 +5,28 @@ echo "🔍 Running pre-commit checks..."
 # Run the unit tests that matter for what is staged (D2 of
 # Plans/tests-green-and-fast.md). CI still runs every test.
 echo "📦 Running unit tests..."
-staged=$(git diff --cached --name-only --diff-filter=ACMR)
+# NUL-separated, so a path with a space or newline stays one path. Deletions
+# count (D, and --no-renames so a rename is a delete plus an add): the tests
+# that imported the old path must still pass. related-tests.mjs finds them.
+staged_z=$(mktemp)
+trap 'rm -f "$staged_z"' EXIT
+git diff --cached --name-only -z --no-renames --diff-filter=ACMRD > "$staged_z"
+# Nothing staged (an empty commit): nothing to test.
+[ -s "$staged_z" ] || exit 0
 # Config, setup or workflow changes can break any test: run all of them.
 # So can a stylesheet: tests read app/*.css as text, which no import lookup finds.
-if echo "$staged" | grep -qE '(\.css$)|^(vitest\.config\.ts|tests/setup(Dom)?\.ts|tests/__mocks__/|package(-lock)?\.json|tsconfig\.json|\.github/|docs/testing/|playwright\.config\.ts)'; then
+if tr '\0' '\n' < "$staged_z" | grep -qE '(\.css$)|^(vitest\.config\.ts|tests/setup(Dom)?\.ts|tests/__mocks__/|package(-lock)?\.json|tsconfig\.json|\.github/|docs/testing/|playwright\.config\.ts)'; then
   npm test -- --reporter=dot || { echo "❌ Unit tests failed. Commit aborted."; exit 1; }
 else
-  code=$(echo "$staged" | grep -E '\.(ts|tsx|mjs|js|json)$' || true)
-  [ -z "$code" ] && exit 0
   # scripts/related-tests.mjs reads import specifiers (about 0.3 s);
-  # `vitest related` took ~20 s to build the same graph.
-  tests=$(node scripts/related-tests.mjs $code)
+  # `vitest related` took ~20 s to build the same graph. It also finds tests
+  # that read a staged file (a migration, a shell script) by its path, so a
+  # commit with no code in it still runs those.
+  tests=$(xargs -0 node scripts/related-tests.mjs < "$staged_z")
   if [ -z "$tests" ]; then
-    echo "No unit test imports the staged files."
+    echo "No unit test imports or reads the staged files."
   else
-    npx vitest run --reporter=dot $tests || { echo "❌ Unit tests failed. Commit aborted."; exit 1; }
+    printf '%s\n' "$tests" | tr '\n' '\0' | xargs -0 npx vitest run --reporter=dot || { echo "❌ Unit tests failed. Commit aborted."; exit 1; }
   fi
 fi
 
