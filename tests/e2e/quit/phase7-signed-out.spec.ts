@@ -46,27 +46,17 @@ async function rateAll(page: Page, ratings: number[]) {
 test.describe("quit phase 7 fixes, signed out @phone", () => {
   // the lies test ignores a tap within 250 ms of a move; the tests move the page clock on between taps
   test.beforeEach(({ page }) => page.clock.install())
+  // The wave-1 past tool was rebuilt (Tool 10); its flow is covered by past.spec.ts. A44 now checks the same promise
+  // on the new tool: an old "never tried" answer shows no leftover endings, pattern or after-slip reply.
   test("A44 never tried after earlier answers shows no leftover endings, window or gave-up line", async ({ page }) => {
     await page.goto(quitUrl(`${A}/past`))
-    await page.getByTestId("chip-2-3").click()
-    await page.getByTestId("chip-days").click()
-    await page.getByTestId("chip-month").click()
-    await page.getByTestId("past-continue").click()
-    await page.getByTestId(`chip-${D.endings[0].id}`).click()
-    await page.getByTestId("past-continue").click()
-    await page.getByTestId("chip-supply").click()
-    await page.getByTestId("past-continue").click()
-    await page.getByTestId("chip-gaveUp").click()
-    await page.getByTestId("past-continue").click()
-    await expect(page.getByTestId("risky")).toBeVisible()
-    await page.goto(quitUrl(`${A}/past?s=1`))
-    await page.getByTestId("chip-0").click()
-    await page.getByTestId("past-continue").click()
-    await expect(page.getByTestId("result")).toBeVisible()
-    for (const id of ["risky", "keep", "longest", "slip-line"]) await expect(page.getByTestId(id)).toHaveCount(0)
-    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("quit-v1") ?? "{}").nicotine.past)
-    expect(stored.endings).toEqual([])
-    expect(stored.afterSlip).toBeNull()
+    await page.evaluate(() =>
+      localStorage.setItem("quit-v1", JSON.stringify({ nicotine: { past: { done: 1, tries: "0", stretchN: 1, stretchUnit: null, lastEnded: null, endings: [], helped: [], afterSlip: null, result: null } } })),
+    )
+    await page.reload()
+    await expect(page.getByTestId("chip-never")).toHaveAttribute("aria-checked", "true")
+    await expect(page.getByTestId("no-tries")).toBeVisible()
+    for (const id of ["pattern", "after-slip", "many-tries", "try-list"]) await expect(page.getByTestId(id)).toHaveCount(0)
   })
 
   test("A76 the band link goes to a page a signed-out reader can open, and shows only while the date tool is finished", async ({ page }) => {
