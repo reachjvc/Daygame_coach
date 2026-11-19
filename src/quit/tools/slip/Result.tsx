@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { ChevronDown } from "lucide-react"
 import { CountedLine, EvidenceChip, SourceTap } from "../../components/kit"
 import { isLiveTool } from "../../menu"
 import { fill, tooltext } from "../../tooltext"
@@ -173,8 +174,11 @@ export function Result(p: ResultProps) {
             <p data-testid="lie-counterpart" className="text-lg font-medium">
               {p.lie.counterpart}
             </p>
-            <details data-testid="lie-proof-fold" className="mt-2">
-              <summary className="flex min-h-11 cursor-pointer items-center text-sm font-medium">{t.proofToggle}</summary>
+            <details data-testid="lie-proof-fold" className="group mt-2">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1 text-sm font-medium text-primary">
+                {t.proofToggle}
+                <ChevronDown aria-hidden className="size-4 transition-transform group-open:rotate-180" />
+              </summary>
               <p data-testid="lie-proof">{p.lie.proof}</p>
               <CountedLine text={p.lie.counted} />
               <SourceTap refs={realRefs(p.lie.refs)} />
@@ -189,8 +193,11 @@ export function Result(p: ResultProps) {
                 <li key={b.id} data-testid="top-lie" className="rounded-md border border-border bg-card px-3 py-2">
                   <p className="text-xs text-muted-foreground">{usable<string>(b.short)}</p>
                   <p>{b.counterpart}</p>
-                  <details className="mt-1">
-                    <summary className="flex min-h-11 cursor-pointer items-center text-sm font-medium">{t.proofToggle}</summary>
+                  <details className="group mt-1">
+                    <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1 text-sm font-medium text-primary">
+                {t.proofToggle}
+                <ChevronDown aria-hidden className="size-4 transition-transform group-open:rotate-180" />
+              </summary>
                     <p>{b.proof}</p>
                     <CountedLine text={b.counted} />
                     <SourceTap refs={realRefs(b.refs)} />
