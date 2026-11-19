@@ -463,7 +463,7 @@ O7.** Phase 3 starts only after his pick, read from the page's db and from his c
   every difference; fix each difference or write it down.
 - Pushed.
 
-### Phase 4a — The brand board: umbrella colour, the mark, the sign-in page (Opus designs; first thing the new session does; ends at O8)
+### Phase 4a — The brand board: umbrella colour, the mark, the sign-in page (Opus designs; first thing the new session does; ends at O8) — **DONE 2026-11-19**
 
 **Why one board:** the umbrella colour and the logo are one decision (he wrote "maybe a different color, maybe the
 part youre in" for the logo, and is unsure about white buttons on the umbrella pages), and the sign-in page is the
@@ -502,6 +502,14 @@ umbrella page he asked to look nicer. One board, one stop. The parts' colours ar
    (never `open`), writes the URL here, and **goes straight on with Phases 3, 5 and 6**.
 
 **Done when:** the board is published, the link is posted and written here.
+
+**Published 2026-11-19: https://claude.ai/artifact/Xoip1CmzkSx99xemTJainV** (db collections `likes`, `notes`; keys
+`umbrella-orange|white|blue|magenta`, `mark-1`…`mark-6`, `logo-umbrella`, `logo-part`, `signin`, `screen-front|signup|login|home|prices|today`,
+`general`). Source `~/.cache/daygame-research/rebrand/brand/brand.html`, tests in its `test/` folder (fake store, failed
+save included, all pass). Umbrella options: orange `#ff6b35`, white `#f4f4f5`, electric blue `#3b9cff` (6.59:1),
+hot magenta `#ff3df2` (6.42:1). Marks: 1 Tally, 2 10K plate, 3 Daybreak, 4 Streak steps (three colours), 5 Forward K,
+6 Three strides (three colours). Mock-only: the toast "This one is not part of the mock-up.", "EXAMPLE ROWS, NOT YOUR
+PLAN", and the wordmark font Archivo (proposed, not decided).
 
 ### Phase 4b — Build the picked brand (Sonnet, after O8)
 
