@@ -56,10 +56,9 @@
  */
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react"
-import { ChevronDown } from "lucide-react"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
 import type { NorthStarTabId, NsPlace, NsPlan } from "@/src/goals/types"
-import { COMMIT_EDIT_COPY, OLD_SHARED_PLAN_KEYS, planCacheKey, BUILD_STEPS, PROGRESS_COPY, RAIL_COPY, RECAP_COMMIT_ANCHOR, SCORED_TABS, stepFor, TAB_BLURBS, TAB_LABELS, TAB_ORDER, TODO_COPY, USE_STEPS } from "@/src/goals/data/northStar"
+import { COMMIT_EDIT_COPY, OLD_SHARED_PLAN_KEYS, planCacheKey, BUILD_STEPS, PROGRESS_COPY, RECAP_COMMIT_ANCHOR, stepFor, USE_STEPS } from "@/src/goals/data/northStar"
 import { planInUse } from "@/src/goals/planLanding"
 import * as ns from "@/src/goals/northStarService"
 import * as nsTrack from "@/src/goals/northStarTrackService"
@@ -67,7 +66,7 @@ import { fetchLifePlan, newNodeId, saveLifePlanChanges, startLifePlan } from "@/
 import { LIFE_PLAN_IMPORTED_KEY, NOTHING_TO_SHOW, SAVE_DEBOUNCE_MS, canSave, backoffMs, decideOnLoad, nextRevision, planHalfAfterLoad, planHasNothingWritten, sendableFingerprint, syncNotice, type SyncDecision, type SyncState } from "@/src/goals/lifePlanSync"
 import { fetchDayRecord, saveDayCatchingUp, sendDayOnLeave } from "@/src/goals/lifePlanDayClient"
 import { registerPlanPage } from "@/src/goals/planFlush"
-import { ACCOUNT_CHANGED_MESSAGE, guardSandboxRequests, nameEveryRequest, onAccountChanged } from "@/src/goals/planAccount"
+import { guardSandboxRequests, nameEveryRequest, onAccountChanged } from "@/src/goals/planAccount"
 import { stepTick } from "@/src/goals/dayTicks"
 import type { DayPatch } from "@/src/db/lifePlanDayTypes"
 import { recordAfterPatch, emptyDayRecord, keepEditsMadeWhileLoading, patchesBetween, recordIsEmpty, recordOf, recordToPatches, type DayRecord } from "@/src/goals/lifePlanDayService"
@@ -101,7 +100,11 @@ import { RecapTab } from "./RecapTab"
 import { ErrandRibbon } from "./ErrandRibbon"
 import { PlanProgressList } from "./PlanProgressList"
 import { QuickAdd } from "./QuickAdd"
-import { BackLink } from "@/components/BackLink"
+import { PlanHeader } from "./PlanHeader"
+import { StepPicker } from "./StepPicker"
+import { PlanStepNav } from "./PlanStepNav"
+import { PlanTodos } from "./PlanTodos"
+import { PlanReadBack } from "./PlanReadBack"
 import { SiteHeader, sidebarOffset } from "@/components/AppFrame"
 import { MobileTabBar } from "@/components/MobileTabBar"
 import { getTodayInTimezone } from "@/src/shared/dateUtils"
@@ -233,8 +236,6 @@ export function NorthStarFlow({
     try { const raw = window.localStorage.getItem(`plan-due-hidden:${userId}`); setHiddenDue(new Set(raw ? (JSON.parse(raw) as string[]) : [])) } catch { /* storage refused: nothing hidden */ }
   }, [userId])
   const [confirmReset, setConfirmReset] = useState(false)
-  const [copied, setCopied] = useState<"idle" | "done" | "failed">("idle")
-  const [readBackOpen, setReadBackOpen] = useState(false)
   // Both area dialogs are owned here, so only one is ever open and moving from
   // an area's rating to its goals is a tab switch rather than a re-find.
   const [nowAreaId, setNowAreaId] = useState<string | null>(null)
@@ -1170,9 +1171,6 @@ export function NorthStarFlow({
   // Before the account's plan has loaded, the server's answer, so the cards do not jump.
   const inUse = decision === null ? initialInUse : planInUse(plan)
   const showBuild = !inUse || buildOpen
-  const tabIndex = TAB_ORDER.indexOf(tab)
-  const readBack = loaded && today ? ns.planAsText(plan, today) : ""
-  const todos = loaded && today ? ns.planTodos(plan) : []
 
   const {
     starHandlers,
@@ -1254,14 +1252,6 @@ export function NorthStarFlow({
     setOpenRoutineId(null)
   }
 
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(readBack)
-      setCopied("done")
-    } catch {
-      setCopied("failed")
-    }
-  }
 
   /**
    * WHICH DIALOG IS UP, because the ribbon has to be inside it.
@@ -1306,49 +1296,6 @@ export function NorthStarFlow({
     try { window.localStorage.setItem(`plan-due-hidden:${userId}`, JSON.stringify(next)) } catch { /* storage refused: hidden until reload */ }
   }
 
-  /** One step card in the rail, numbered by TAB_ORDER so a number always names the same step. */
-  const card = (id: NorthStarTabId) => {
-    const active = id === tab
-    const state = states[id]
-    return (
-      <button
-        key={id}
-        onClick={() => { setTab(id); if (window.matchMedia?.("(max-width: 639px)").matches) railToggleRef.current?.focus() }}
-        aria-current={active ? "step" : undefined}
-        className={`rounded-xl border p-3 text-left transition-colors ${
-          active ? "border-primary/40 bg-primary/10" : "border-white/10 bg-white/[0.02] hover:border-white/25"
-        }`}
-      >
-        <span className="flex items-center gap-2">
-          <span className={`inline-flex items-center justify-center size-5 rounded-full text-[10px] tabular-nums shrink-0 ${
-            active ? "bg-primary/25 text-foreground" : "bg-white/5 text-zinc-500"
-          }`}>
-            {TAB_ORDER.indexOf(id) + 1}
-          </span>
-          <span className={`text-sm font-medium min-w-0 flex-1 ${active ? "text-white" : "text-zinc-300"}`}>{TAB_LABELS[id]}</span>
-          {/* HOW FULL, NOT WHETHER VISITED.
-              A green tick used to appear the moment a step had one
-              sentence in it, which is a scoreboard telling somebody
-              they are finished with work they have barely begun. */}
-          {/* No dot on the fork: there is nothing on it to fill in,
-              and a dot there would be scoring somebody on having
-              chosen a door. */}
-          {SCORED_TABS.includes(id) && <StepDot state={state} fraction={planPct.steps[id].fraction} label={TAB_LABELS[id]} />}
-        </span>
-        <span className="block text-[11px] text-zinc-500 mt-1">{TAB_BLURBS[id]}</span>
-        {/* What is left, in a few words, under the blurb. Not on an empty step:
-            its ring says nothing is written, and a count beside it of answers
-            the ring does not score (the season's four, before its sentence)
-            would contradict it. */}
-        {SCORED_TABS.includes(id) && state !== "empty" && (
-          <span className="block text-[11px] text-amber-200/70 mt-1 tabular-nums">
-            {PROGRESS_COPY.railLine(planPct.steps[id].fraction, planPct.steps[id].parts)}
-          </span>
-        )}
-      </button>
-    )
-  }
-
   /**
    * THE DAILY STEPS KEEP THE SITE'S BAR (Plans/site-navigation-build.md, risk 5).
    *
@@ -1361,68 +1308,19 @@ export function NorthStarFlow({
    */
   const siteBar = USE_STEPS.includes(tab)
   const stepNav = (
-    <div className={siteBar ? "sticky top-0 z-30 bg-zinc-950/90 backdrop-blur-sm border-b border-white/10" : "sticky bottom-0 bg-zinc-950/90 backdrop-blur-sm border-t border-white/10"}>
-      <div className={`max-w-5xl mx-auto flex items-center justify-between gap-3 ${siteBar ? "px-4 py-2 sm:px-6 sm:py-3" : "px-6 py-3"}`}>
-        {tabIndex > 0 ? (
-          <button onClick={() => setTab(TAB_ORDER[tabIndex - 1])} className="text-xs text-zinc-400 hover:text-white transition-colors">
-            ← {TAB_LABELS[TAB_ORDER[tabIndex - 1]]}
-          </button>
-        ) : <span />}
-        {/* What is actually happening to what you typed, said plainly and
-            with the off switch next to it. A copy going to a server is not a
-            thing to bury in a privacy policy nobody opens. */}
-        <span className="text-[11px] text-zinc-600 text-center min-w-0">
-          {/* WHAT HAPPENED TO THE PLAN ITSELF comes first and in amber, above
-              the line about the improvement copy. They are different facts
-              and the one people need is "is my work safe", not "was a
-              research copy sent". Silent while all is well. */}
-          {(otherAccount || serverNote) && (
-            <span className="block text-amber-200/80 mb-0.5">{otherAccount ? ACCOUNT_CHANGED_MESSAGE : serverNote}</span>
-          )}
-          {storageRefused && (
-            <span className="block text-amber-200/80 mb-0.5">
-              This browser will not let the page store anything. Your work is only in this tab.
-            </span>
-          )}
-          {/* THE MIRROR IS GONE, and with it the line offering to stop it.
-              Until 2026-09-24 this said "a copy sent so this page can be
-              improved", with a button to delete that copy — a whole plan,
-              journal included, going to an unauthenticated table keyed by a
-              random browser id. What is left says the one thing that is now
-              true and is worth saying: where the work is. */}
-          {/* `unsent` is the whole correction: during the debounce and while
-              the request is open, this browser has the work and the account
-              does not, and "Saved on this device." is what that is.
-              "unknown" is an account with no plan yet: nothing is saved until
-              something is written, and then it goes to the account
-              (Plans/life-plan-after-setup.md, F10). */}
-          {/* The routine line ("Saved to your account.") gives way on a phone
-              under the site bar, where the row must stay one line high; the
-              amber warnings above it stay at every width. */}
-          <span className={siteBar ? "hidden sm:inline" : undefined}>
-            {!plan.updatedAt && !unsent
-              ? "Nothing written yet"
-              : serverState === "saved" && !unsent
-                ? "Saved to your account."
-                : loaded && serverState === "unknown"
-                  ? "Saves to your account as you write."
-                  : "Saved on this device."}
-          </span>
-        </span>
-        {tabIndex < TAB_ORDER.length - 1 ? (
-          <button
-            onClick={() => setTab(TAB_ORDER[tabIndex + 1])}
-            className="text-sm font-medium px-4 py-2 rounded-lg whitespace-nowrap bg-primary/20 border border-primary/40 text-foreground hover:bg-primary/30 transition-colors"
-          >
-            {TAB_LABELS[TAB_ORDER[tabIndex + 1]]} →
-          </button>
-        ) : (
-          <span className="text-[11px] text-zinc-600 tabular-nums">
-            {progress.areasRated} of {progress.areas} areas rated
-          </span>
-        )}
-      </div>
-    </div>
+    <PlanStepNav
+      tab={tab}
+      siteBar={siteBar}
+      setTab={setTab}
+      plan={plan}
+      loaded={loaded}
+      unsent={unsent}
+      serverState={serverState}
+      serverNote={serverNote}
+      otherAccount={otherAccount}
+      storageRefused={storageRefused}
+      progress={progress}
+    />
   )
 
   return (
@@ -1432,54 +1330,14 @@ export function NorthStarFlow({
       {siteBar && stepNav}
       <div className={`max-w-5xl mx-auto px-6 py-10 ${siteBar ? "pb-tab-bar sm:pb-28" : "pb-28"}`}>
         {banner}
-        <div className="flex items-center justify-between gap-3 mb-6">
-          {/* The props stay, as the fallback: a return address on the link
-              wins, so arriving here from the tracking page goes back there. */}
-          <BackLink
-            fallback={backHref}
-            fallbackLabel={backLabel}
-            className="inline-flex items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors"
-          />
-          {confirmReset ? (
-            /* Two resets, because they are asked for at different moments. The
-               goals and the season are downstream of a decision and get redone
-               often; the 10s, the values and the north star took an hour and
-               are still true when the goals are wrong. */
-            <span className="flex flex-wrap items-center gap-2 text-[11px]">
-              <span className="text-zinc-400">Clear what?</span>
-              <button onClick={resetGoals} className="text-amber-200 hover:text-amber-100">
-                the goals and the season, keep my 10s
-              </button>
-              {/* "everything" has always included the day half — every rating,
-                  every tick, every day note and the whole journal — and never
-                  said so. It is the part that cannot be rewritten from memory. */}
-              <button onClick={reset} className="text-rose-300 hover:text-rose-200">
-                everything, including my journal and every day I have tracked
-              </button>
-              <button onClick={() => setConfirmReset(false)} className="text-zinc-500 hover:text-zinc-300">nothing, close this</button>
-            </span>
-          ) : (
-            <button onClick={() => setConfirmReset(true)} className="text-[11px] text-zinc-600 hover:text-zinc-300 transition-colors">
-              start over
-            </button>
-          )}
-        </div>
-
-        <header className="mb-6">
-          <h1 className="text-2xl font-semibold">Your plan</h1>
-          <p className="text-sm text-zinc-400 mt-1">
-            {/* "Everything saves as you type" was here until 2026-09-23 and was
-                false for the whole day half. The day route landed in M1 and the
-                line was NOT put back, deliberately: it is true only signed in
-                and only while the account can be reached, and a promise with
-                two conditions on it is the shape that goes stale in a file
-                nobody edits when the storage changes. Three of those were found
-                across three slices on 2026-09-25. What the page says instead is
-                nothing — and the banner below says the one thing that matters
-                on the day it is false. */}
-            Your north star, the areas under it, the goals that get you there, and an honest look at where you are.
-          </p>
-        </header>
+        <PlanHeader
+          backHref={backHref}
+          backLabel={backLabel}
+          confirmReset={confirmReset}
+          setConfirmReset={setConfirmReset}
+          onResetGoals={resetGoals}
+          onReset={reset}
+        />
 
         {/* COULD NOT BE READ IS NOT EMPTY, said where somebody is looking.
             Only for the one combination that is actually misleading: the read
@@ -1517,20 +1375,18 @@ export function NorthStarFlow({
 
         {/* The rail. Every tab is reachable at any time: on a phone behind one line,
             and once the plan is in use the setup steps behind "Edit your plan". */}
-        <button ref={railToggleRef} type="button" className="sm:hidden w-full mb-3 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-left text-sm text-zinc-200" aria-expanded={railOpen} aria-controls="plan-sections" onClick={() => setRailOpen((o) => !o)}>{inUse && USE_STEPS.includes(tab) ? RAIL_COPY.phoneUse(TAB_LABELS[tab]) : RAIL_COPY.phoneStep(TAB_ORDER.indexOf(tab) + 1, TAB_ORDER.length, TAB_LABELS[tab], SCORED_TABS.includes(tab) ? ns.percentDown(planPct.steps[tab].fraction) : null)} <span aria-hidden>▾</span></button>
-        <nav id="plan-sections" aria-label="Sections" className={`${railOpen ? "grid" : "hidden"} sm:grid gap-2 sm:grid-cols-2 lg:grid-cols-4 mb-8`}>
-          {inUse ? (
-            <>
-              {USE_STEPS.map(card)}
-              <div className="col-span-full">
-                <button type="button" aria-expanded={showBuild} onClick={() => setBuildOpen((o) => !o)} className="text-[12px] text-zinc-400 hover:text-zinc-100 py-1">{RAIL_COPY.editPlan(BUILD_STEPS.length, planPct.percent)} <span aria-hidden>{showBuild ? "▴" : "▾"}</span></button>
-              </div>
-              {showBuild && BUILD_STEPS.map(card)}
-            </>
-          ) : (
-            TAB_ORDER.map(card)
-          )}
-        </nav>
+        <StepPicker
+          tab={tab}
+          inUse={inUse}
+          states={states}
+          planPct={planPct}
+          railOpen={railOpen}
+          setRailOpen={setRailOpen}
+          showBuild={showBuild}
+          setBuildOpen={setBuildOpen}
+          railToggleRef={railToggleRef}
+          onPick={(id) => setTab(id)}
+        />
 
         {ribbon && !areaDialogOpen && !goalDialogOpen && <div className="mb-5">{ribbon}</div>}
 
@@ -1837,56 +1693,9 @@ export function NorthStarFlow({
             />
         ) : null}
 
-        {/* What is still missing, in one place, instead of gates on the way
-            through. Nothing here blocks anything; a goal with no date still
-            saves and every tab is always reachable. That only works if the
-            outstanding work is visible somewhere, which is here. */}
-        {loaded && today && tab !== "milestones" && tab !== "systems" && todos.length > 0 && !ns.planIsUntouched(plan) && (
-          <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-4">
-            <div className="flex items-baseline gap-2">
-              <h2 className="text-[13px] font-semibold text-zinc-200">{TODO_COPY.title}</h2>
-              <span className="text-[11px] text-zinc-600 tabular-nums">{todos.length}</span>
-            </div>
-            <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">{TODO_COPY.help}</p>
-            <ul className="flex flex-wrap gap-1.5 mt-2.5">
-              {todos.map((todo) => (
-                <li key={todo.id}>
-                  <button
-                    onClick={() => setTab(todo.tab)}
-                    className="text-[11px] px-2.5 py-1 rounded-full border border-white/10 text-zinc-400 hover:text-zinc-100 hover:border-white/30 transition-colors"
-                  >
-                    {todo.text}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <PlanTodos plan={plan} tab={tab} loaded={loaded} today={today} onGo={(t) => setTab(t)} />
 
-        {/* The plan read back as plain text. Closed by default: expanded it is
-            the longest thing on the page, and it is a thing you go and look at
-            rather than something you need under every screen. */}
-        {loaded && today && readBack.trim() && (
-          <div className="mt-8 rounded-2xl border border-primary/20 bg-primary/[0.04]">
-            <div className="flex items-center gap-3 px-5 py-3">
-              <button
-                onClick={() => setReadBackOpen((v) => !v)}
-                aria-expanded={readBackOpen}
-                className="flex items-center gap-2 min-w-0 text-left group"
-              >
-                <ChevronDown className={`size-4 shrink-0 text-zinc-500 transition-transform ${readBackOpen ? "" : "-rotate-90"}`} />
-                <span className="text-sm font-semibold text-zinc-200 group-hover:text-white transition-colors">Your plan, read back</span>
-                <span className="text-[11px] text-zinc-600 tabular-nums">{readBack.split("\n").length} lines</span>
-              </button>
-              <button onClick={copy} className="ml-auto text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors shrink-0">
-                {copied === "done" ? "copied" : copied === "failed" ? "your browser blocked the copy" : "copy as text"}
-              </button>
-            </div>
-            {readBackOpen && (
-              <pre className="px-5 pb-5 text-[12px] text-zinc-400 leading-relaxed whitespace-pre-wrap font-sans">{readBack}</pre>
-            )}
-          </div>
-        )}
+        <PlanReadBack plan={plan} loaded={loaded} today={today} />
       </div>
 
       {(tab === "now" || tab === "recap") && nowAreaId && (() => {
@@ -1958,38 +1767,3 @@ export function NorthStarFlow({
 }
 
 
-/**
- * Empty ring, ring with a dot, filled ring.
- *
- * Three states because there are three: nothing here yet, something here, and
- * every box this step asks for is filled. Amber rather than green — green is
- * the colour of "you are finished", and the middle state is the common one.
- */
-function StepDot({ state, fraction, label }: { state: ns.NsStepState; fraction: number; label: string }) {
-  const pct = ns.percentDown(fraction)
-  const said =
-    state === "done" ? `${label}: every box filled, 100 %` : state === "started" ? `${label}: in progress, ${pct} %` : `${label}: nothing written yet`
-  // A ring that fills as the step does (Plans/plan-progress-percent.md):
-  // the arc starts at twelve o'clock and runs clockwise.
-  const r = 6
-  const around = 2 * Math.PI * r
-  return (
-    <svg viewBox="0 0 16 16" className="size-4 shrink-0" role="img" aria-label={said}>
-      <title>{said}</title>
-      <circle cx="8" cy="8" r={r} fill={state === "done" ? "rgb(251 191 36 / 0.9)" : "none"} stroke="rgb(113 113 122 / 0.55)" strokeWidth="2" />
-      {state === "started" && (
-        <circle
-          cx="8"
-          cy="8"
-          r={r}
-          fill="none"
-          stroke="rgb(251 191 36 / 0.9)"
-          strokeWidth="2"
-          strokeDasharray={`${Math.max(fraction, 0.04) * around} ${around}`}
-          transform="rotate(-90 8 8)"
-        />
-      )}
-      {state === "done" && <circle cx="8" cy="8" r={r} fill="none" stroke="rgb(251 191 36 / 0.9)" strokeWidth="2" />}
-    </svg>
-  )
-}
