@@ -10,7 +10,7 @@ import { endingForBelief, reportAt, slipThought } from "../../blackboxLogic"
 import { useQuitRecord, todayIso } from "../../record"
 import { useQuitStore } from "../../store"
 import { fill, tooltext } from "../../tooltext"
-import type { QuitBelief, QuitMomentSwap, QuitNeed, QuitOption, QuitPlanStep, ToolProps } from "../../types"
+import type { QuitBelief, QuitMomentSwap, QuitNeed, QuitOption, ToolProps } from "../../types"
 import { usable } from "../common"
 import { parseBeliefs, topBeliefs } from "../beliefs/logic"
 import { parseGives } from "../gives/logic"
@@ -48,9 +48,8 @@ export function SlipTool({ addiction, data }: ToolProps) {
   const moments = usable<QuitOption[]>(data.riskyMoments)
   const swaps = usable<QuitMomentSwap[]>(data.momentSwaps)
   const needs = usable<QuitNeed[]>(data.needs)
-  const planSteps = usable<QuitPlanStep[]>(data.planSteps)
-  if (!beliefs || !moments || !swaps || !needs || !planSteps || planSteps.length < 2) return <NotReady />
-  return <Inner addiction={addiction} beliefs={beliefs} moments={moments} swaps={swaps} needs={needs} planSteps={planSteps} />
+  if (!beliefs || !moments || !swaps || !needs) return <NotReady />
+  return <Inner addiction={addiction} beliefs={beliefs} moments={moments} swaps={swaps} needs={needs} />
 }
 
 interface InnerProps {
@@ -59,7 +58,6 @@ interface InnerProps {
   moments: QuitOption[]
   swaps: QuitMomentSwap[]
   needs: QuitNeed[]
-  planSteps: QuitPlanStep[]
 }
 
 function Inner(props: InnerProps) {
@@ -76,7 +74,7 @@ function Inner(props: InnerProps) {
   )
 }
 
-function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedIn, bb }: InnerProps & { signedIn: boolean | null; bb: QuitBlackBoxApi | null }) {
+function Screens({ addiction, beliefs, moments, swaps, needs, signedIn, bb }: InnerProps & { signedIn: boolean | null; bb: QuitBlackBoxApi | null }) {
   const carry = useCarry()
   const store = useQuitStore()
   const rec = useQuitRecord(addiction)
@@ -126,7 +124,7 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
   useDoneCount(addiction, "slip", state !== null && prepared && isResult)
 
   /** Takes a new day 1 for the slip that is in the record: Today starts the run now, Tomorrow only sets the quit date. */
-  const applyDay1 = (d: Day1): boolean => {
+  const applyDay1 = (d: "today" | "tomorrow"): boolean => {
     if (!bb || !state) return false
     const on = day1Day(d, todayIso())
     if (d === "today" && !bb.startRun(on)) {
@@ -135,7 +133,7 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
     }
     const before = { date: rec.record.quitDate }
     rec.setQuitDate(on)
-    update((s) => ({ ...s, day1: d, day1On: on, quitBefore: s.quitBefore ?? before }))
+    update((s) => ({ ...s, day1: d, day1On: on, ownDate: on, quitBefore: s.quitBefore ?? before }))
     return true
   }
   const applyRef = useRef(applyDay1)
@@ -147,9 +145,15 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
     const report = bb.reports.find((r) => r.id === state.slipId)
     if (!report || autoFor.current === state.slipId) return
     autoFor.current = state.slipId
-    const d = defaultDay1(report.at.slice(0, 10), todayIso(), rec.record.quitDate)
+    const d = defaultDay1(report.at.slice(0, 10), todayIso(), rec.record.quitDate, state.ownDate)
     if (d) applyRef.current(d)
   }, [state, prepared, bb, isResult, undone, rec.record.quitDate])
+  // Case C with a quit date already planned ahead: the plan is kept until Today or Tomorrow is tapped.
+  useEffect(() => {
+    if (!state || !prepared || !isResult || undone || state.kase !== "C" || state.day1 !== null) return
+    const planned = rec.record.quitDate
+    if (planned && planned > todayIso()) update((s) => ({ ...s, day1: "keep", day1On: planned }))
+  }, [state, prepared, isResult, undone, rec.record.quitDate, update])
 
   if (undone) {
     return (
@@ -320,7 +324,7 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
           <PrimaryButton testId="slip-continue" disabled={!state.where || state.where === SKIP} onClick={() => advance({})}>
             {tooltext.common.continue}
           </PrimaryButton>
-          <button type="button" data-testid="slip-skip" onClick={() => advance({ where: SKIP })} className="inline-flex min-h-11 min-w-11 items-center self-start px-1 text-sm text-muted-foreground underline">
+          <button type="button" data-testid="slip-skip" onClick={() => advance({ where: SKIP })} className="-ml-1 inline-flex min-h-11 min-w-11 items-center self-start px-1 text-sm text-muted-foreground underline">
             {t.skip}
           </button>
         </OneQuestion>
@@ -359,7 +363,7 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
           <PrimaryButton testId="slip-continue" disabled={!state.told || state.told === SKIP} onClick={() => advance({})}>
             {tooltext.common.continue}
           </PrimaryButton>
-          <button type="button" data-testid="slip-skip" onClick={() => advance({ told: SKIP })} className="inline-flex min-h-11 min-w-11 items-center self-start px-1 text-sm text-muted-foreground underline">
+          <button type="button" data-testid="slip-skip" onClick={() => advance({ told: SKIP })} className="-ml-1 inline-flex min-h-11 min-w-11 items-center self-start px-1 text-sm text-muted-foreground underline">
             {t.skip}
           </button>
         </OneQuestion>
@@ -386,6 +390,9 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
     return tooltext.blackbox.saving
   })()
 
+  // Case C with a quit date planned ahead (before this tool changed it): offered as "Keep".
+  const plannedDate = state.quitBefore ? state.quitBefore.date : rec.record.quitDate
+  const keepDay = state.kase === "C" && plannedDate && plannedDate > today ? plannedDate : null
   const options = day1Options(slipDay, today)
   // Only Tomorrow is possible (the slip is today): said as a plain line, not offered as a lone chip.
   const forcedDay = state.kase !== "C" && options.length === 1 ? day1Day("tomorrow", today) : null
@@ -400,6 +407,13 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
         setSwitchRefused(true)
         return
       }
+    }
+    if (d === "keep") {
+      const planned = keepDay
+      if (!planned) return
+      rec.setQuitDate(planned)
+      update((s) => ({ ...s, day1: "keep", day1On: planned }))
+      return
     }
     applyDay1(d)
   }
@@ -435,11 +449,10 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
       placeCards={placeId ? (swaps.find((m) => m.momentId === placeId)?.cards ?? []) : []}
       need={need}
       tried={triedSwaps}
-      planSteps={planSteps}
       day1Options={options}
       day1={state.day1}
       day1On={state.day1On}
-      step3Day={state.day1On ?? forcedDay}
+      keepDay={keepDay}
       forcedDay={forcedDay}
       onDay1={chooseDay1}
       switchRefused={switchRefused}

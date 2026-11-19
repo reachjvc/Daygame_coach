@@ -136,6 +136,9 @@ describe("slip default day 1", () => {
     expect(defaultDay1(null, TODAY, null)).toBeNull()
     expect(defaultDay1("2026-11-18", TODAY, "2026-11-25")).toBeNull()
     expect(defaultDay1("2026-11-18", TODAY, "2026-11-10")).toBe("today")
+    // a date this tool set itself is not the reader's plan
+    expect(defaultDay1("2026-11-18", TODAY, "2026-11-20", "2026-11-20")).toBe("today")
+    expect(defaultDay1("2026-11-18", TODAY, "2026-11-25", "2026-11-20")).toBeNull()
   })
 })
 
@@ -238,6 +241,9 @@ describe("slip answers read back", () => {
     expect(lieOf("skip", "", beliefs)).toBeNull()
     // an id that is not a belief falls back to the thought
     expect(lieOf("zzz", beliefs[0].short as string, beliefs)?.id).toBe(beliefs[0].id)
+    // a thought filed with a straight apostrophe still finds the belief that now has a curly one, and the reverse
+    expect(lieOf(null, "It's something to do", [{ id: "x", short: "It’s something to do" }])?.id).toBe("x")
+    expect(lieOf(null, "It’s something to do", [{ id: "y", short: "It's something to do" }])?.id).toBe("y")
   })
   it("the place is the answer of this visit, else the filed one, never a made-up id", () => {
     const ids = data.riskyMoments.map((m) => m.id)
@@ -253,8 +259,8 @@ describe("slip saved state", () => {
     for (const j of [null, undefined, 5, "x", [], { steps: "x", done: -3, kase: "Z", pick: 4, day: "tomorrow" }]) expect(parseSlip(j)).toEqual(EMPTY_SLIP)
   })
   it("keeps a good state and drops bad parts", () => {
-    const s = parseSlip({ kase: "A", steps: ["when", "bad", "voice"], done: 2, touched: 5, min: "2026-10-30", pick: "another", day: "2026-11-01", where: "driving", told: "b3", ownWords: "x".repeat(200), slipId: "r1", day1: "today", day1On: "2026-11-19", quitBefore: { date: null } })
-    expect(s).toMatchObject({ kase: "A", steps: ["when", "voice"], done: 2, touched: 5, min: "2026-10-30", pick: "another", day: "2026-11-01", where: "driving", told: "b3", slipId: "r1", day1: "today", day1On: "2026-11-19", quitBefore: { date: null } })
+    const s = parseSlip({ kase: "A", steps: ["when", "bad", "voice"], done: 2, touched: 5, min: "2026-10-30", pick: "another", day: "2026-11-01", where: "driving", told: "b3", ownWords: "x".repeat(200), slipId: "r1", day1: "keep", day1On: "2026-11-19", quitBefore: { date: null }, ownDate: "2026-11-20" })
+    expect(s).toMatchObject({ kase: "A", steps: ["when", "voice"], done: 2, touched: 5, min: "2026-10-30", pick: "another", day: "2026-11-01", where: "driving", told: "b3", slipId: "r1", day1: "keep", day1On: "2026-11-19", quitBefore: { date: null }, ownDate: "2026-11-20" })
     expect(s.ownWords).toHaveLength(80)
   })
 })

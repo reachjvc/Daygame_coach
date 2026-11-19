@@ -17,7 +17,8 @@ export type Step = "when" | "where" | "voice"
 const STEPS: readonly Step[] = ["when", "where", "voice"]
 export type Kase = "A" | "B" | "C"
 export type WhenPick = "today" | "yesterday" | "another"
-export type Day1 = "today" | "tomorrow"
+/** "keep": case C with a quit date already planned ahead; it stays unless Today or Tomorrow is tapped. */
+export type Day1 = "today" | "tomorrow" | "keep"
 
 export interface SlipState {
   /** The case this visit works in (A: a run lives, B: the slip is already filed, C: no run); null before the visit is set up. */
@@ -45,6 +46,8 @@ export interface SlipState {
   day1On: string | null
   /** The record's quit date before this visit changed it; null when it was not changed. */
   quitBefore: { date: string | null } | null
+  /** The quit date this tool set itself (never counted as the reader's plan). */
+  ownDate: string | null
 }
 
 export const EMPTY_SLIP: SlipState = {
@@ -62,6 +65,7 @@ export const EMPTY_SLIP: SlipState = {
   day1: null,
   day1On: null,
   quitBefore: null,
+  ownDate: null,
 }
 
 /** Saved state, checked. */
@@ -81,9 +85,10 @@ export function parseSlip(x: unknown): SlipState {
     told: pickStr(o.told, null),
     ownWords: pickStr(o.ownWords, "").slice(0, MAX_OWN),
     slipId: pickStr(o.slipId, null),
-    day1: pickOne(o.day1, ["today", "tomorrow"] as const, null),
+    day1: pickOne(o.day1, ["today", "tomorrow", "keep"] as const, null),
     day1On: isDay(o.day1On) ? o.day1On : null,
     quitBefore: qb ? { date: isDay(qb.date) ? qb.date : null } : null,
+    ownDate: isDay(o.ownDate) ? o.ownDate : null,
   }
 }
 
@@ -187,7 +192,8 @@ export function lieOf<B extends { id: string; short: unknown }>(told: string | n
     if (b) return b
   }
   if (!thought) return null
-  return beliefs.find((x) => x.short === thought) ?? null
+  const norm = (v: unknown) => (typeof v === "string" ? v.replace(/[\u2018\u2019]/g, "'") : v)
+  return beliefs.find((x) => norm(x.short) === norm(thought)) ?? null
 }
 
 /** The moment id to show a place for: the answer of this visit, else the one on the filed report. */
@@ -197,11 +203,11 @@ export function placeOf(answer: string | null, filed: string, momentIds: string[
 }
 
 /** The new day 1 chips: Today only when the slip day is before today (the Black Box takes no new run on the slip day). */
-export function day1Options(slipDay: string | null, today: string): Day1[] {
+export function day1Options(slipDay: string | null, today: string): ("today" | "tomorrow")[] {
   return slipDay === null || slipDay < today ? ["today", "tomorrow"] : ["tomorrow"]
 }
 
-export function day1Day(choice: Day1, today: string): string {
+export function day1Day(choice: "today" | "tomorrow", today: string): string {
   return choice === "today" ? today : shiftDay(today, 1)
 }
 
@@ -244,8 +250,8 @@ export function daysCard(ended: ViceAttempt | undefined, runs: ViceAttempt[], to
  * The new day 1 chosen for the reader once a slip is in the record (cases A and B): Today when the slip day is before
  * today, else Tomorrow. Nothing in case C (no slip day), and nothing when a quit date later than today is already planned.
  */
-export function defaultDay1(slipDay: string | null, today: string, quitDate: string | null): Day1 | null {
+export function defaultDay1(slipDay: string | null, today: string, quitDate: string | null, ownDate: string | null = null): "today" | "tomorrow" | null {
   if (slipDay === null) return null
-  if (quitDate !== null && quitDate > today) return null
+  if (quitDate !== null && quitDate > today && quitDate !== ownDate) return null
   return slipDay < today ? "today" : "tomorrow"
 }

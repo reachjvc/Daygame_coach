@@ -634,13 +634,13 @@
       "short": "I’ve smoked too long",
       "need": "confidence",
       "limiting": "I’ve smoked too long. It’s too late.",
-      "counterpart": "It’s not too late. Stopping at any age gives years back.",
+      "counterpart": "It’s not too late. Even stopping at 60 gave years back.",
       "whenThought": "Write the thought down, and next to it: “Stopping at any age gives years back.” Then write one thing you would do with those years.",
       "editNote": "2026-11-19: 12 lies test finish (Tool 5): wording, basis size from the abstract",
       "test": "This week, write down the longest you have gone without it since you started, and what was going on in that stretch.",
       "proof": "Male British doctors who stopped smoking as late as 60 still gained about 3 years of life, on average.",
       "severity": "users",
-      "counted": "male doctors who smoked, not checked for addiction",
+      "counted": "34,439 male British doctors who smoked, not checked for addiction",
       "refs": [
         {
           "cite": "Doll R, Peto R, Boreham J, Sutherland I (2004). Mortality in relation to smoking: 50 years' observations on male British doctors. BMJ 328(7455):1519.",
@@ -722,7 +722,7 @@
       "proof": "In 469 heavily hooked heart patients who wanted to stop, stress fell more over a year in those who stayed off than in those who kept smoking.",
       "severity": "treatment",
       "counted": "469 hospital heart patients wanting to stop, highly dependent, followed a year",
-      "weak": "These were heart patients in a quit programme, so other groups may differ. It compared people who stayed off with people who kept smoking, over a year.",
+      "weak": "These were heart patients seen in hospital, so other groups may differ. It compared people who stayed off with people who kept smoking, over a year.",
       "refs": [
         {
           "cite": "Hajek P, Taylor T, McRobbie H (2010). The effect of stopping smoking on perceived stress levels. Addiction 105(8):1466-71.",
@@ -760,9 +760,9 @@
       "counterpart": "There’s no “just one”. One is how quit turns into smoking again.",
       "whenThought": "Answer it like a non-smoker, “No thanks, I don’t,” and leave the room for five minutes. Then text someone who knows you’re quitting that the thought came and you said no.",
       "test": "Each time the “just one” thought shows up this week, write down the time and what set it off.",
-      "proof": "Of daily smokers on a nicotine patch who smoked at all in week 2, 83 in 100 were smoking at 6 months. Of those who stayed clear in week 2, 46 in 100 were off at 6 months.",
+      "proof": "Of daily smokers on a nicotine patch who smoked at all in week 2, 17 in 100 were off at 6 months, against 46 in 100 of those who stayed clear.",
       "severity": "heavy",
-      "counted": "200 smokers, two patch trials, week 2, not checked for addiction",
+      "counted": "one patch trial, 88 smokers, not checked for addiction",
       "refs": [
         {
           "cite": "Kenford SL, Fiore MC, Jorenby DE, Smith SS, Wetter D, Baker TB (1994). Predicting smoking cessation: who will quit with and without the nicotine patch. JAMA 271(8):589-94.",
@@ -780,7 +780,7 @@
           "fetchedOn": "2026-11-19"
         }
       ],
-      "weak": "Smokers in patch trials were studied, not people hooked on vapes or pouches. 83 in 100 is the lower of the two trials; the other found 97 in 100.",
+      "weak": "Smokers in patch trials were studied, not people hooked on vapes or pouches. This is the first trial (88 smokers); the second (112 smokers) found 3 in 100 off against 41 in 100.",
       "check": {
         "by": "revision checker a (nicotine)",
         "on": "2026-11-09",
@@ -800,10 +800,10 @@
       "counterpart": "A vape is a step down, not a way out.",
       "whenThought": "Write the thought down, and next to it: “A vape is a step down, not a way out.” Then the vape is what you’re quitting: give it a date too.",
       "test": "On one ordinary afternoon this week, count every time you reach for the vape or pouches. Write the number down.",
-      "proof": "In 3,609 ex-smokers who had switched to vaping, dependence on the vape was lower than it had been on cigarettes (8.1 against 14.5 out of 20). It was higher with stronger liquid and with longer use.",
+      "proof": "In 3,609 ex-smokers who now vape, dependence on the vape rose with stronger liquid and with longer use.",
       "severity": "users",
       "counted": "ex-smokers who now only vape, not checked for addiction",
-      "weak": "An online survey of people who had already switched; they rated their old cigarette dependence from memory. It measures dependence, not harm.",
+      "weak": "An online survey of people who had already switched; they rated their old cigarette dependence from memory (14.5 against 8.1 out of 20 for the vape). It measures dependence, not harm.",
       "refs": [
         {
           "cite": "Foulds J, Veldheer S, Yingst J, Hrabovsky S, Wilson SJ, Nichols TT, Eissenberg T (2015). Development of a questionnaire for assessing dependence on electronic cigarettes among a large sample of ex-smoking e-cigarette users. Nicotine & Tobacco Research 17(2):186-92.",
@@ -922,7 +922,7 @@
       "test": "Write down three things you can start in under a minute. Next time you are bored this week, do the first one and note whether the pull got smaller.",
       "proof": "Students who played a falling-blocks game for three minutes rated their cravings, nicotine among them, 13.9 points lower out of 100.",
       "severity": "users",
-      "counted": "students with cravings for drugs, food or activities, not checked for addiction",
+      "counted": "31 students (15 played), cravings for drugs, food or activities, not checked",
       "refs": [
         {
           "cite": "Skorka-Brown J, Andrade J, Whalley B, May J (2015). Playing Tetris decreases drug and other cravings in real world settings. Addictive Behaviors 51:165-70.",
@@ -2022,7 +2022,7 @@
     {
       "momentId": "late-night",
       "cards": [
-        "Go to bed now.",
+        "Go to bed.",
         "Have a hot shower or a hot drink.",
         "Text one person, or write down what you'd tell them."
       ]

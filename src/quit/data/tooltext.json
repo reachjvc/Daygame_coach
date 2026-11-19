@@ -356,7 +356,7 @@
     "day1Today": "Today",
     "day1Tomorrow": "Tomorrow",
     "day1Set": "Day 1: {day}",
-    "startedToday": "Your new run started today.",
+    "startedToday": "Your new run started today. To start tomorrow instead, tap Tomorrow.",
     "startsPre": "It starts by itself when you open ",
     "startsLink": "Your quit date",
     "startsPost": " that day.",
@@ -364,8 +364,7 @@
     "toMenu": "Back to the menu",
     "daysSame": "Your run started and ended on {day}. It stays in your record.",
     "undo": "Take this slip back out",
-    "backThrough": "Back through steps 1 to 3",
-    "day1Question": "When is your new day 1?",
+    "backThrough": "Back through steps 1 and 2",
     "day1Heading": "Your new day 1",
     "day1Forced": "A new run can't start on the slip day, so your new day 1 is tomorrow, {day}.",
     "pickDay1": "Pick your day 1.",
@@ -375,8 +374,14 @@
     "proofToggle": "The proof",
     "toldYourself": "You told yourself: “{words}”",
     "nextTime": "Next time: {place}",
-    "step3Line": "A new day 1: {day}",
-    "step3Pick": "A new day 1: pick it above",
-    "redateRefused": "The Black Box would not change the day. Take this slip back out and file it again."
+    "redateRefused": "The Black Box would not change the day. Take this slip back out and file it again.",
+    "day1Keep": "Keep {day}",
+    "keepNote": "Your quit date stays as you planned it.",
+    "step1Empty": "The lies",
+    "lieTakePre": "Take ",
+    "lieTakeLink": "the 12 lies test",
+    "lieTakePost": " to find the lie that got you.",
+    "lieName": "Name the thought that got you, and write its answer next to it.",
+    "swapsNone": "Pick one thing to do instead next time: a walk, a call, gum."
   }
 }
