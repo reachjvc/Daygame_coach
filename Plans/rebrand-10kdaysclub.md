@@ -12,7 +12,7 @@ dating only, but not eliminating those parts. It is fine to put some parts of th
 page, new icons where relevant and new naming every appropriate place … so that it can be executed by a lesser
 model."*
 
-**Status: plan written. Nothing is built yet except the Phase 0 backup (2026-11-18).** Phases 0–2 need nothing
+**Status (2026-11-19): Phases 0 and 1 done. Phase 2 (looks page) next.** Phases 0–2 need nothing
 from the owner beyond pasting the prompt. Phase 2 ends at his pick of a look. Phase 4 stops once more for his logo
 pick. Phase 8 needs his Vercel login and the domain he buys.
 
@@ -198,7 +198,10 @@ Every phase: work in a worktree, ship by fast-forward (memory `shared-checkout-t
 `git commit --only <paths>`; run `node scripts/typecheck-ratchet.mjs` before pushing; after the push, wait until
 `https://daygame-coach.vercel.app/api/healthz` names the commit. Then mark the phase done here with its commit sha.
 
-### Phase 0 — Safety net (Sonnet; nothing visible changes)
+### Phase 0 — Safety net (Sonnet; nothing visible changes) — **DONE 2026-11-19**
+
+Done: tag `before-10kdays-rebrand` → `5ae7ebb9` on GitHub; 36 before-screenshots (18 pages × phone + desktop) in
+`~/.cache/daygame-research/rebrand/before/` (signed-in pages from the local test stack, user `rebrand-before@example.test`).
 
 Steps 2 and 3 of the old plan were done on 2026-11-18:
 - Backup in `~/dg-backups/full-2026-11-18/` (schema, roles, data, JSON per table, README with restore steps; all 99
@@ -224,7 +227,10 @@ Left to do:
 
 **Done when:** the tag is on GitHub and both screenshot sets exist.
 
-### Phase 1 — The name, everywhere it does not depend on the look (Sonnet)
+### Phase 1 — The name, everywhere it does not depend on the look (Sonnet) — **DONE 2026-11-19, `54fb56ce`**
+
+Done: all 13 steps. Emails: `smtp_sender_name` and both templates PATCHed; read back, only those three fields
+changed, no "DayGame" left (live values matched the backup before the PATCH).
 
 Every text is decided in Part 3; the builder writes no words of its own.
 
