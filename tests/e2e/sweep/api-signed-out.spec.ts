@@ -35,9 +35,7 @@ test.describe("API routes, signed out", () => {
   test.setTimeout(600_000)
 
   test("every route and method refuses a stranger", async ({ request }, testInfo) => {
-    // The sweep runs on two device sizes; a server-side answer does not depend on the screen.
-    test.skip(testInfo.project.name !== "sweep-desktop", "server answers only; one project is enough")
-
+    // The sweep projects run it at two device sizes; a server answer does not depend on the screen, and a skip would pass having checked nothing.
     const routes = apiRoutes()
     const pairs = routes.flatMap((r) => r.methods.map((method) => ({ ...r, method })))
     expect(routes.length, "route files found").toBeGreaterThan(100)
