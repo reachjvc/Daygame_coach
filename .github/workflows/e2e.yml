@@ -183,8 +183,9 @@ jobs:
           - { lane: desktop, shard: 7/8, browser: chromium }
           - { lane: desktop, shard: 8/8, browser: chromium }
           - { lane: timing, shard: 1/1, browser: chromium }
-          - { lane: android, shard: 1/2, browser: chromium }
-          - { lane: android, shard: 2/2, browser: chromium }
+          - { lane: android, shard: 1/3, browser: chromium }
+          - { lane: android, shard: 2/3, browser: chromium }
+          - { lane: android, shard: 3/3, browser: chromium }
           - { lane: timing-android, shard: 1/1, browser: chromium }
           - { lane: sweep-android, shard: 1/1, browser: chromium }
     steps: &lane-steps
