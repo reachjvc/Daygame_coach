@@ -2,6 +2,7 @@ import { test, expect } from "./fixtures/test"
 import { ROUTES } from "@/src/shared/routes"
 import { seedLifePlan, thisWeeksReview } from "./helpers/lifePlan"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
+import { addDays, dayIn } from "./helpers/accountClock"
 
 /**
  * STEPS WITH DAYS (Plans/life-plan-dated-steps.md), through the real page and
@@ -10,16 +11,9 @@ import type { PlanRows } from "@/src/db/lifePlanTypes"
  * its day, and it leaves the list; the week's review counts it.
  */
 
-function dayKey(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-}
-const daysFromNow = (n: number) => {
-  const d = new Date()
-  d.setDate(d.getDate() + n)
-  return dayKey(d)
-}
-
-function plan() {
+function plan(zone: string) {
+  // the account's calendar, not the runner's (helpers/accountClock.ts says why)
+  const daysFromNow = (n: number) => addDays(dayIn(zone), n)
   return {
     version: 1,
     seq: 6,
@@ -46,7 +40,7 @@ function plan() {
 }
 
 test("a late step is on Today, and ticking it there keeps the day", async ({ page, account, accountTimezone }) => {
-  await seedLifePlan(page, account.id, plan())
+  await seedLifePlan(page, account.id, plan(accountTimezone))
   await page.goto(`${ROUTES.plan}?step=today`)
   await expect(page.getByText("Saved to your account.")).toBeVisible()
   const due = page.getByTestId("today-steps-due")
@@ -61,7 +55,7 @@ test("a late step is on Today, and ticking it there keeps the day", async ({ pag
       const body = (await (await page.request.get("/api/life-plan")).json()) as { plan: PlanRows }
       return body.plan.checkpoints.map((c) => [c.title, c.done, c.done_on ?? null]).sort((a, b) => String(a[0]).localeCompare(String(b[0])))
     }, { timeout: 15_000 })
-    .toEqual([["E2E landing page", true, dayKey(new Date())], ["E2E pricing", false, null]])
+    .toEqual([["E2E landing page", true, dayIn(accountTimezone)], ["E2E pricing", false, null]])
 
   await page.goto(thisWeeksReview(accountTimezone))
   await page.getByRole("button", { name: /Your other goals/ }).click()

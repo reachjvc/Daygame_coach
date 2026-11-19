@@ -6,6 +6,19 @@ import { whenHydrated } from "./helpers/hydration"
 import { gotoPastDevCompile } from "./helpers/gotoPastDevCompile"
 import { pressLogOut } from "./helpers/logOut"
 import { ROUTES } from "@/src/shared/routes"
+import { daytimeZone, setAccountZone } from "./helpers/accountClock"
+
+// The worker's account is shared with other specs. These tests need hours of the same day behind
+// now, which just after local midnight (CI ran 00:00-00:50 Copenhagen) the account's own zone
+// cannot give: labels would also read "24:00" for a midnight end. So the account sits in a zone
+// where it is now daytime, and goes back to the worker's zone afterwards.
+const ZONE = daytimeZone()
+test.beforeEach(async ({ page }) => {
+  await setAccountZone(page, ZONE)
+})
+test.afterEach(async ({ page, accountTimezone }) => {
+  await setAccountZone(page, accountTimezone)
+})
 
 /**
  * ANSWERING A PING — alpha test findings of 2026-11-09, severity 4, from the
@@ -89,7 +102,7 @@ async function seedTimeEntry(userId: string, description: string, from: number, 
 }
 
 const labelOf = (q: number) => {
-  const f = (x: number) => new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Copenhagen", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(x))
+  const f = (x: number) => new Intl.DateTimeFormat("en-GB", { timeZone: ZONE, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(x))
   return `${f(q)}–${f(q + Q)}`
 }
 

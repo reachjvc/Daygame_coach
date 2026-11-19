@@ -3,6 +3,19 @@ import type { Browser, Page } from "@playwright/test"
 import { randomUUID } from "node:crypto"
 import { stackAdmin } from "./fixtures/stack"
 import { whenHydrated } from "./helpers/hydration"
+import { daytimeZone, setAccountZone } from "./helpers/accountClock"
+
+// The worker's account is shared with other specs. These tests need hours of the same day behind
+// now, which just after local midnight (CI ran 00:00-00:50 Copenhagen) the account's own zone
+// cannot give: labels would also read "24:00" for a midnight end. So the account sits in a zone
+// where it is now daytime, and goes back to the worker's zone afterwards.
+const ZONE = daytimeZone()
+test.beforeEach(async ({ page }) => {
+  await setAccountZone(page, ZONE)
+})
+test.afterEach(async ({ page, accountTimezone }) => {
+  await setAccountZone(page, accountTimezone)
+})
 
 /**
  * THE SAME QUARTER ANSWERED ON THE PHONE AND THE PC (alpha slow-pass-06).
@@ -48,12 +61,12 @@ async function openAudit(page: Page) {
 }
 
 const labelOf = (q: number) => {
-  const f = (x: number) => new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Copenhagen", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(x))
+  const f = (x: number) => new Intl.DateTimeFormat("en-GB", { timeZone: ZONE, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(x))
   return `${f(q)}–${f(q + Q)}`
 }
 
-async function inCopenhagen(page: Page) {
-  const res = await page.request.put("/api/settings/time-preferences", { data: { timezone: "Europe/Copenhagen", source: "chosen" } })
+async function inDaytimeZone(page: Page) {
+  const res = await page.request.put("/api/settings/time-preferences", { data: { timezone: ZONE, source: "chosen" } })
   expect(res.status()).toBe(200)
 }
 
@@ -82,7 +95,7 @@ async function secondDevice(browser: Browser, storageState: string) {
 test.describe("one quarter, two devices @phone", () => {
   /** Both cards open on the gap; the phone saves Walk; the PC's re-read is held back, so its card never saw Walk. */
   async function bothAnswer(page: Page, browser: Browser, account: { id: string; storageState: string }) {
-    await inCopenhagen(page)
+    await inDaytimeZone(page)
     const runId = await seedRun(account.id)
     const label = labelOf(qStart(Date.now()) - 2 * Q)
     const phone = await secondDevice(browser, account.storageState)
@@ -136,7 +149,7 @@ test.describe("one quarter, two devices @phone", () => {
 
   test("an answer that waited offline on the phone is not lost to the PC's: Use mine sends it", async ({ page, account, browser }) => {
     test.setTimeout(150_000)
-    await inCopenhagen(page)
+    await inDaytimeZone(page)
     const runId = await seedRun(account.id)
     const label = labelOf(qStart(Date.now()) - 2 * Q)
     const phone = await secondDevice(browser, account.storageState)
@@ -164,7 +177,7 @@ test.describe("one quarter, two devices @phone", () => {
 
   test("a refusal that came with the sheet closed offers the same choice on the page", async ({ page, account, browser }) => {
     test.setTimeout(150_000)
-    await inCopenhagen(page)
+    await inDaytimeZone(page)
     const runId = await seedRun(account.id)
     const label = labelOf(qStart(Date.now()) - 2 * Q)
     const phone = await secondDevice(browser, account.storageState)

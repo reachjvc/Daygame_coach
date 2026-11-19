@@ -3,6 +3,19 @@ import type { Page } from "@playwright/test"
 import { randomUUID } from "node:crypto"
 import { stackAdmin } from "./fixtures/stack"
 import { whenHydrated } from "./helpers/hydration"
+import { daytimeZone, setAccountZone } from "./helpers/accountClock"
+
+// The worker's account is shared with other specs. These tests need hours of the same day behind
+// now, which just after local midnight (CI ran 00:00-00:50 Copenhagen) the account's own zone
+// cannot give: labels would also read "24:00" for a midnight end. So the account sits in a zone
+// where it is now daytime, and goes back to the worker's zone afterwards.
+const ZONE = daytimeZone()
+test.beforeEach(async ({ page }) => {
+  await setAccountZone(page, ZONE)
+})
+test.afterEach(async ({ page, accountTimezone }) => {
+  await setAccountZone(page, accountTimezone)
+})
 
 /**
  * THE AUDIT WITH NO SIGNAL, FROM THE SLOW ALPHA PASS (2026-11-09).
@@ -44,12 +57,12 @@ async function activities(userId: string, runId: string): Promise<string[]> {
 }
 
 const labelOf = (q: number) => {
-  const f = (x: number) => new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Copenhagen", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(x))
+  const f = (x: number) => new Intl.DateTimeFormat("en-GB", { timeZone: ZONE, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(x))
   return `${f(q)}–${f(q + Q)}`
 }
 
-async function inCopenhagen(page: Page) {
-  const res = await page.request.put("/api/settings/time-preferences", { data: { timezone: "Europe/Copenhagen", source: "chosen" } })
+async function inDaytimeZone(page: Page) {
+  const res = await page.request.put("/api/settings/time-preferences", { data: { timezone: ZONE, source: "chosen" } })
   expect(res.status()).toBe(200)
 }
 
@@ -109,7 +122,7 @@ test.describe("audit reloaded with no signal", () => {
   test.use({ serviceWorkers: "allow" })
 
   test("slow-pass-04: reloading /audit offline, an answer waiting, still shows the day and takes answers", async ({ page, account }) => {
-    await inCopenhagen(page)
+    await inDaytimeZone(page)
     const runId = await seedRun(account.id)
     test.skip(!(await openStored(page)), NO_WORKER)
     const errors: string[] = []
@@ -144,7 +157,7 @@ test.describe("audit reloaded with no signal", () => {
   })
 
   test("slow-pass-02: a Time entry the last read saw running does not fill quarters after that read", async ({ page, account }) => {
-    await inCopenhagen(page)
+    await inDaytimeZone(page)
     await seedRun(account.id)
     const now = Date.now()
     const readAt = qStart(now) - 4 * Q + 5 * 60_000

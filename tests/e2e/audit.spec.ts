@@ -5,6 +5,19 @@ import { stackAdmin } from "./fixtures/stack"
 import { whenHydrated } from "./helpers/hydration"
 import { gotoPastDevCompile } from "./helpers/gotoPastDevCompile"
 import { ROUTES } from "@/src/shared/routes"
+import { daytimeZone, setAccountZone } from "./helpers/accountClock"
+
+// The worker's account is shared with other specs. These tests need hours of the same day behind
+// now, which just after local midnight (CI ran 00:00-00:50 Copenhagen) the account's own zone
+// cannot give: labels would also read "24:00" for a midnight end. So the account sits in a zone
+// where it is now daytime, and goes back to the worker's zone afterwards.
+const ZONE = daytimeZone()
+test.beforeEach(async ({ page }) => {
+  await setAccountZone(page, ZONE)
+})
+test.afterEach(async ({ page, accountTimezone }) => {
+  await setAccountZone(page, accountTimezone)
+})
 
 /**
  * THE TIME & ENERGY AUDIT (Plans/energy-audit.md, Phase 4): start, answer,
@@ -528,10 +541,10 @@ test.describe("time & energy audit @phone", () => {
     await page.goto(`${ROUTES.audit}?answer=${encodeURIComponent(asked.toISOString())}&send=${randomUUID()}`)
     const cards = page.getByTestId("audit-answer-sheet").getByTestId("audit-card")
     await expect(cards.first()).toBeVisible({ timeout: 60_000 })
-    const label = await page.evaluate((ms) => {
-      const f = (d: Date) => d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Copenhagen" })
+    const label = await page.evaluate(([ms, timeZone]) => {
+      const f = (d: Date) => d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone })
       return `${f(new Date(ms))}–${f(new Date(ms + 15 * 60_000))}`
-    }, asked.getTime())
+    }, [asked.getTime(), ZONE] as const)
     await expect(cards.first()).toContainText(label)
   })
 
@@ -545,11 +558,11 @@ test.describe("time & energy audit @phone", () => {
     await openAudit(page)
     await expect(page.getByTestId("audit-row-answered").filter({ hasText: "Early answer" })).toHaveCount(1)
     // make the answered quarter's time quiet: quiet from its start until an hour later, every day
-    const minute = await page.evaluate((ms) => {
+    const minute = await page.evaluate(([ms, timeZone]) => {
       const d = new Date(ms)
-      const [h, m] = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Copenhagen" }).split(":").map(Number)
+      const [h, m] = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone }).split(":").map(Number)
       return h * 60 + m
-    }, first)
+    }, [first, ZONE] as const)
     await page.getByTestId("audit-settings-open").click()
     await page.locator("#audit-quiet-start").selectOption(String(minute))
     await page.locator("#audit-quiet-end").selectOption(String((minute + 60) % 1440))

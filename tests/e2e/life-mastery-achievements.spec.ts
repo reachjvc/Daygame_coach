@@ -2,6 +2,7 @@ import { test, expect } from "./fixtures/test"
 import { ROUTES } from "@/src/shared/routes"
 import { seedLifePlan, thisWeeksReview } from "./helpers/lifePlan"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
+import { dayIn } from "./helpers/accountClock"
 
 /**
  * ACHIEVEMENTS (Plans/life-plan-achievements.md; Q11), through the real page
@@ -35,15 +36,11 @@ const PLAN = {
   seasonFocusId: null,
 }
 
-function todayKey(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-}
-
 test.describe("achievements", () => {
   test("ten approaches: said on Today, listed on the goals, celebrated first in the week's review", async ({ page, account, accountTimezone }) => {
     await seedLifePlan(page, account.id, PLAN)
-    const res = await page.request.put("/api/life-plan/day", { data: { date: todayKey(), numbers: { g1: 9 } } })
+    // the account's today, not the runner's (helpers/accountClock.ts)
+    const res = await page.request.put("/api/life-plan/day", { data: { date: dayIn(accountTimezone), numbers: { g1: 9 } } })
     expect(res.status(), await res.text()).toBe(200)
 
     await page.goto(`${ROUTES.plan}?step=today`)

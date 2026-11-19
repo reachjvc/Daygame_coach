@@ -6,6 +6,19 @@ import { whenHydrated } from "./helpers/hydration"
 import { gotoPastDevCompile } from "./helpers/gotoPastDevCompile"
 import { pressLogOut } from "./helpers/logOut"
 import { FETCH_AFTER_MS } from "@/components/logOutFetchDelay"
+import { daytimeZone, setAccountZone } from "./helpers/accountClock"
+
+// The worker's account is shared with other specs. These tests need hours of the same day behind
+// now, which just after local midnight (CI ran 00:00-00:50 Copenhagen) the account's own zone
+// cannot give: labels would also read "24:00" for a midnight end. So the account sits in a zone
+// where it is now daytime, and goes back to the worker's zone afterwards.
+const ZONE = daytimeZone()
+test.beforeEach(async ({ page }) => {
+  await setAccountZone(page, ZONE)
+})
+test.afterEach(async ({ page, accountTimezone }) => {
+  await setAccountZone(page, accountTimezone)
+})
 
 /**
  * THE AUDIT ACROSS DEVICES, SIGNAL AND ZONES — alpha test findings of
@@ -55,7 +68,7 @@ async function openAudit(page: Page, url = "/audit") {
 }
 
 const labelOf = (q: number) => {
-  const f = (x: number) => new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Copenhagen", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(x))
+  const f = (x: number) => new Intl.DateTimeFormat("en-GB", { timeZone: ZONE, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(x))
   return `${f(q)}–${f(q + Q)}`
 }
 
@@ -71,9 +84,9 @@ async function answerGap(page: Page, label: string, activity: string) {
   if (!autoSave) await card.getByTestId("audit-save").click()
 }
 
-/** A fresh sign-up's zone is whatever the test backend gave it; the labels here are Copenhagen's. */
-async function inCopenhagen(page: Page) {
-  const res = await page.request.put("/api/settings/time-preferences", { data: { timezone: "Europe/Copenhagen", source: "chosen" } })
+/** A fresh sign-up's zone is whatever the test backend gave it; the labels here are in the daytime zone. */
+async function inDaytimeZone(page: Page) {
+  const res = await page.request.put("/api/settings/time-preferences", { data: { timezone: ZONE, source: "chosen" } })
   expect(res.status()).toBe(200)
 }
 
@@ -89,7 +102,7 @@ test.describe("audit across devices @phone", () => {
     try {
       const page = await context.newPage()
       await signIn(page, throwawayAccount)
-      await inCopenhagen(page)
+      await inDaytimeZone(page)
       const runId = await seedRun(throwawayAccount.id)
       await openAudit(page)
       await page.route("**/api/audit/slots", (route) => route.abort("internetdisconnected"))
@@ -111,7 +124,7 @@ test.describe("audit across devices @phone", () => {
     try {
       const page = await context.newPage()
       await signIn(page, throwawayAccount)
-      await inCopenhagen(page)
+      await inDaytimeZone(page)
       const runId = await seedRun(throwawayAccount.id)
       await openAudit(page)
       await page.route("**/api/audit/slots", (route) => route.abort("internetdisconnected"))
@@ -137,7 +150,7 @@ test.describe("audit across devices @phone", () => {
     try {
       const page = await context.newPage()
       await signIn(page, throwawayAccount)
-      await inCopenhagen(page)
+      await inDaytimeZone(page)
       const runId = await seedRun(throwawayAccount.id)
       await openAudit(page)
       await page.route("**/api/audit/slots", (route) => route.abort("internetdisconnected"))

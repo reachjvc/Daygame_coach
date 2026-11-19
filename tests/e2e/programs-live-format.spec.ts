@@ -1,6 +1,7 @@
 import { test, expect } from "./fixtures/test"
 import { ROUTES } from "@/src/shared/routes"
 import { guardTrainingAccount, PHONE, resetTraining } from "./helpers/training.helper"
+import { addDays, dayIn, weekdayIn } from "./helpers/accountClock"
 
 /**
  * THE LIVE SCREEN FOR A PROGRAM IN THE NEW FORMAT — Plans/program-builder.md,
@@ -18,15 +19,24 @@ import { guardTrainingAccount, PHONE, resetTraining } from "./helpers/training.h
 
 guardTrainingAccount()
 
-const TODAY = new Date()
-/** ISO weekday of today on the fixture account's clock, which is UTC. */
-const WEEKDAY = ((TODAY.getUTCDay() + 6) % 7) + 1
-const D = `d${WEEKDAY}`
+/**
+ * Today and its ISO weekday on the account's clock, set before each test. Not
+ * the runner's: the account lives in Copenhagen and CI in UTC, so between
+ * 00:00 and 01:00 in Copenhagen the runner's weekday opened the wrong day
+ * (2026-11-18; helpers/accountClock.ts).
+ */
+let TODAY = ""
+let WEEKDAY = 0
+let D = ""
+test.beforeEach(({ accountTimezone }) => {
+  TODAY = dayIn(accountTimezone)
+  WEEKDAY = weekdayIn(accountTimezone)
+  D = `d${WEEKDAY}`
+})
 
-/** The Monday `weeksAgo` weeks before this week's, as `YYYY-MM-DD` (UTC). */
+/** The Monday `weeksAgo` weeks before this week's, as `YYYY-MM-DD` on the account's calendar. */
 function mondayWeeksAgo(weeksAgo: number): string {
-  const monday = new Date(Date.UTC(TODAY.getUTCFullYear(), TODAY.getUTCMonth(), TODAY.getUTCDate() - (WEEKDAY - 1) - 7 * weeksAgo))
-  return monday.toISOString().slice(0, 10)
+  return addDays(TODAY, -(WEEKDAY - 1) - 7 * weeksAgo)
 }
 
 function formatProgram() {

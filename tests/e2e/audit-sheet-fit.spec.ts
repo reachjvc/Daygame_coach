@@ -4,6 +4,19 @@ import { randomUUID } from "node:crypto"
 import { stackAdmin } from "./fixtures/stack"
 import { whenHydrated } from "./helpers/hydration"
 import { ROUTES } from "@/src/shared/routes"
+import { daytimeZone, setAccountZone } from "./helpers/accountClock"
+
+// The worker's account is shared with other specs. These tests need hours of the same day behind
+// now, which just after local midnight (CI ran 00:00-00:50 Copenhagen) the account's own zone
+// cannot give: labels would also read "24:00" for a midnight end. So the account sits in a zone
+// where it is now daytime, and goes back to the worker's zone afterwards.
+const ZONE = daytimeZone()
+test.beforeEach(async ({ page }) => {
+  await setAccountZone(page, ZONE)
+})
+test.afterEach(async ({ page, accountTimezone }) => {
+  await setAccountZone(page, accountTimezone)
+})
 
 /**
  * WHAT THE PHONE SHOWS WITHOUT SCROLLING — alpha prove-eye findings of
@@ -79,12 +92,12 @@ async function seedTimeEntry(userId: string, description: string, from: number, 
   expect(error).toBeNull()
 }
 
-async function inCopenhagen(page: Page) {
-  const res = await page.request.put("/api/settings/time-preferences", { data: { timezone: "Europe/Copenhagen", source: "chosen" } })
+async function inDaytimeZone(page: Page) {
+  const res = await page.request.put("/api/settings/time-preferences", { data: { timezone: ZONE, source: "chosen" } })
   expect(res.status()).toBe(200)
 }
 
-const clock = (x: number) => new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Copenhagen", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(x))
+const clock = (x: number) => new Intl.DateTimeFormat("en-GB", { timeZone: ZONE, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(x))
 const pingUrl = (q: number) => `${ROUTES.audit}?answer=${encodeURIComponent(new Date(q).toISOString())}&send=${randomUUID()}`
 
 /** Fully on screen, with no scrolling. */
@@ -101,7 +114,7 @@ async function shot(page: Page, name: string) {
 
 test.describe("the answer sheet fits the phone @phone", () => {
   test("14: a stretch Time filled from one entry is one card, and splits into its quarters", async ({ page, account }) => {
-    await inCopenhagen(page)
+    await inDaytimeZone(page)
     const run = await seedRun(account.id)
     const newest = qStart(Date.now()) - Q
     const gym = [newest - 3 * Q, newest - 2 * Q, newest - Q, newest]
@@ -134,7 +147,7 @@ test.describe("the answer sheet fits the phone @phone", () => {
 
   test("01: the card another device answered first is brought back into view", async ({ page, account }) => {
     test.setTimeout(120_000)
-    await inCopenhagen(page)
+    await inDaytimeZone(page)
     const run = await seedRun(account.id)
     const newest = qStart(Date.now()) - Q
     await answerAllBut(account.id, run, [newest - 2 * Q, newest - Q, newest])

@@ -7,7 +7,8 @@ echo "🔍 Running pre-commit checks..."
 echo "📦 Running unit tests..."
 staged=$(git diff --cached --name-only --diff-filter=ACMR)
 # Config, setup or workflow changes can break any test: run all of them.
-if echo "$staged" | grep -qE '^(vitest\.config\.ts|tests/setup(Dom)?\.ts|tests/__mocks__/|package(-lock)?\.json|tsconfig\.json|\.github/|docs/testing/|playwright\.config\.ts)'; then
+# So can a stylesheet: tests read app/*.css as text, which no import lookup finds.
+if echo "$staged" | grep -qE '(\.css$)|^(vitest\.config\.ts|tests/setup(Dom)?\.ts|tests/__mocks__/|package(-lock)?\.json|tsconfig\.json|\.github/|docs/testing/|playwright\.config\.ts)'; then
   npm test -- --reporter=dot || { echo "❌ Unit tests failed. Commit aborted."; exit 1; }
 else
   code=$(echo "$staged" | grep -E '\.(ts|tsx|mjs|js|json)$' || true)

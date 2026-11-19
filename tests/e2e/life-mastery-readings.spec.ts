@@ -1,5 +1,6 @@
 import { test, expect } from "./fixtures/test"
 import { seedLifePlan, thisWeeksReview } from "./helpers/lifePlan"
+import { addDays, dayIn } from "./helpers/accountClock"
 
 /**
  * READINGS ON A NUMBER GOAL (Plans/life-plan-readings.md), through the real
@@ -8,10 +9,6 @@ import { seedLifePlan, thisWeeksReview } from "./helpers/lifePlan"
  * reading, across a reload with this browser's copy thrown away, and earns
  * "Halfway to 80 kg" in the same review.
  */
-
-function dayKey(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-}
 
 const PLAN = {
   version: 1,
@@ -36,9 +33,8 @@ const PLAN = {
 
 test("a number goal's reading, written in the week's review", async ({ page, account, accountTimezone }) => {
   await seedLifePlan(page, account.id, PLAN)
-  const before = new Date()
-  before.setDate(before.getDate() - 12)
-  const res = await page.request.put("/api/life-plan/day", { data: { date: dayKey(before), numbers: { g1: 92 } } })
+  // days on the account's calendar, not the runner's (helpers/accountClock.ts says why)
+  const res = await page.request.put("/api/life-plan/day", { data: { date: addDays(dayIn(accountTimezone), -12), numbers: { g1: 92 } } })
   expect(res.status(), await res.text()).toBe(200)
 
   await page.goto(thisWeeksReview(accountTimezone))
@@ -53,7 +49,7 @@ test("a number goal's reading, written in the week's review", async ({ page, acc
   await expect(numbers).toContainText("latest 87.5 kg")
   await expect(page.getByTestId("review-earned")).toContainText("Halfway to 80 kg")
   await expect
-    .poll(async () => ((await (await page.request.get("/api/life-plan/day")).json()) as { numbers: Record<string, Record<string, number>> }).numbers[dayKey(new Date())]?.g1, { timeout: 15_000 })
+    .poll(async () => ((await (await page.request.get("/api/life-plan/day")).json()) as { numbers: Record<string, Record<string, number>> }).numbers[dayIn(accountTimezone)]?.g1, { timeout: 15_000 })
     .toBe(87.5)
 
   await page.evaluate(() => window.localStorage.clear())
