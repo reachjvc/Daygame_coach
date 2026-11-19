@@ -635,8 +635,8 @@
       "need": "confidence",
       "limiting": "I’ve smoked too long. It’s too late.",
       "counterpart": "It’s not too late. Even stopping at 60 gave years back.",
-      "whenThought": "Write the thought down, and next to it: “Stopping at any age gives years back.” Then write one thing you would do with those years.",
-      "editNote": "2026-11-19: 12 lies test finish (Tool 5): wording, basis size from the abstract",
+      "whenThought": "Write the thought down, and next to it: “Even stopping at 60 gave years back.” Then write one thing you would do with those years.",
+      "editNote": "2026-11-19: 12 lies test review round 1: claims held to the abstract",
       "test": "This week, write down the longest you have gone without it since you started, and what was going on in that stretch.",
       "proof": "Male British doctors who stopped smoking as late as 60 still gained about 3 years of life, on average.",
       "severity": "users",
@@ -657,9 +657,17 @@
           "fetched": true,
           "fetchedOn": "2026-11-19",
           "quote": "PARTICIPANTS: 34 439 male British doctors."
+        },
+        {
+          "cite": "Doll R, Peto R, Boreham J, Sutherland I (2004). Mortality in relation to smoking: 50 years' observations on male British doctors. BMJ 328(7455):1519.",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC437139/",
+          "pmid": "15213107",
+          "fetched": true,
+          "fetchedOn": "2026-11-19",
+          "quote": "Prospective study that has continued from 1951 to 2001."
         }
       ],
-      "weak": "It counts years of life gained, not who got free; men born 1900–1930, followed 50 years.",
+      "weak": "It counts years of life gained, not who got free; UK doctors followed from 1951 to 2001.",
       "check": {
         "by": "revision checker a (nicotine)",
         "on": "2026-11-09",
@@ -677,12 +685,12 @@
       "limiting": "Quitting will be hell. I can’t handle the withdrawal.",
       "counterpart": "I’ve got through rougher weeks than this. And this one ends.",
       "whenThought": "Write the thought down, and next to it: “I’ve got through rougher weeks than this. And this one ends.” Still using? Pick your day 1 and write it next to the thought. Already off it? Name the urge, “there is a craving,” and walk or drink water until it fades.",
-      "editNote": "2026-11-19: 12 lies test finish (Tool 5): wording, basis size from the abstract",
+      "editNote": "2026-11-19: 12 lies test review round 1: claims held to the abstract",
       "test": "This week, time your next strong urge on your phone, from the moment it starts until it fades. Write down the minutes.",
       "proof": "In smokers who stopped, anger, anxiety, low mood, restlessness and poor sleep peaked in the first week and were gone by week 2–4.",
       "severity": "users",
       "counted": "smokers who stopped, not checked for addiction",
-      "weak": "These are averages over many studies of smokers who stopped. They do not say how it will be for one person, and they did not check for addiction.",
+      "weak": "One author chose the 120 papers and judged them on his own. The times are typical, not a promise for one person.",
       "refs": [
         {
           "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
@@ -697,6 +705,14 @@
           "pmid": "17365764",
           "fetched": true,
           "quote": "120 of these were used in this review.",
+          "fetchedOn": "2026-11-19"
+        },
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "fetched": true,
+          "quote": "Data collection and interpretation were based solely on the author's subjective judgments.",
           "fetchedOn": "2026-11-19"
         }
       ],
@@ -738,6 +754,22 @@
           "fetched": true,
           "quote": "A total of 469 smokers hospitalized after MI or CAB surgery and wanting to stop smoking were seen in the hospital and completed 1-year follow-ups.",
           "fetchedOn": "2026-11-19"
+        },
+        {
+          "cite": "Hajek P, Taylor T, McRobbie H (2010). The effect of stopping smoking on perceived stress levels. Addiction 105(8):1466-71.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20528815/",
+          "pmid": "20528815",
+          "fetched": true,
+          "quote": "In highly dependent smokers who report that smoking helps them cope with stress, smoking cessation is associated with lowering of stress",
+          "fetchedOn": "2026-11-19"
+        },
+        {
+          "cite": "Hajek P, Taylor T, McRobbie H (2010). The effect of stopping smoking on perceived stress levels. Addiction 105(8):1466-71.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/20528815/",
+          "pmid": "20528815",
+          "fetched": true,
+          "quote": "41% (n = 194) maintained abstinence for 1 year.",
+          "fetchedOn": "2026-11-19"
         }
       ],
       "check": {
@@ -747,7 +779,7 @@
         "notes": "checked after revision: corrections applied to beliefs[2].test"
       },
       "n": "469 heart patients who wanted to stop",
-      "editNote": "2026-11-19: 12 lies test finish (Tool 5): wording, basis size from the abstract"
+      "editNote": "2026-11-19: 12 lies test review round 1: claims held to the abstract"
     },
     {
       "id": "b4",
@@ -757,7 +789,7 @@
       "need": "substance",
       "blackBoxEnding": "justone",
       "limiting": "Just one won’t hurt. I’m still quit.",
-      "counterpart": "There’s no “just one”. One is how quit turns into smoking again.",
+      "counterpart": "There’s no “just one”. In the first weeks, one is how most quits turn back into using.",
       "whenThought": "Answer it like a non-smoker, “No thanks, I don’t,” and leave the room for five minutes. Then text someone who knows you’re quitting that the thought came and you said no.",
       "test": "Each time the “just one” thought shows up this week, write down the time and what set it off.",
       "proof": "Of daily smokers on a nicotine patch who smoked at all in week 2, 17 in 100 were off at 6 months, against 46 in 100 of those who stayed clear.",
@@ -778,6 +810,14 @@
           "fetched": true,
           "quote": "Eighty-eight subjects participated in study 1, and 112 subjects participated in study 2.",
           "fetchedOn": "2026-11-19"
+        },
+        {
+          "cite": "Kenford SL, Fiore MC, Jorenby DE, Smith SS, Wetter D, Baker TB (1994). Predicting smoking cessation: who will quit with and without the nicotine patch. JAMA 271(8):589-94.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/8301790/",
+          "pmid": "8301790",
+          "fetched": true,
+          "quote": "Two independent randomized, double-blind, placebo-controlled studies",
+          "fetchedOn": "2026-11-19"
         }
       ],
       "weak": "Smokers in patch trials were studied, not people hooked on vapes or pouches. This is the first trial (88 smokers); the second (112 smokers) found 3 in 100 off against 41 in 100.",
@@ -787,8 +827,8 @@
         "verdict": "ok",
         "notes": "checked after revision: corrections applied to beliefs[3].test"
       },
-      "editNote": "2026-11-19: 12 lies test finish (Tool 5): wording, basis size from the abstract",
-      "n": "Eighty-eight smokers in trial 1 and 112 in trial 2"
+      "editNote": "2026-11-19: 12 lies test review round 1: claims held to the abstract",
+      "n": "Eighty-eight smokers in trial 1 and 112 in trial 2, some on a dummy patch; how many smoked in week 2 is not in the line we quote"
     },
     {
       "id": "b5",
@@ -834,6 +874,30 @@
           "pmid": "25332459",
           "fetched": true,
           "quote": "those who had used e-cigs longer had higher e-cig dependence scores",
+          "fetchedOn": "2026-11-19"
+        },
+        {
+          "cite": "Foulds J, Veldheer S, Yingst J, Hrabovsky S, Wilson SJ, Nichols TT, Eissenberg T (2015). Development of a questionnaire for assessing dependence on electronic cigarettes among a large sample of ex-smoking e-cigarette users. Nicotine & Tobacco Research 17(2):186-92.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/25332459/",
+          "pmid": "25332459",
+          "fetched": true,
+          "quote": "(range 0-20)",
+          "fetchedOn": "2026-11-19"
+        },
+        {
+          "cite": "Foulds J, Veldheer S, Yingst J, Hrabovsky S, Wilson SJ, Nichols TT, Eissenberg T (2015). Development of a questionnaire for assessing dependence on electronic cigarettes among a large sample of ex-smoking e-cigarette users. Nicotine & Tobacco Research 17(2):186-92.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/25332459/",
+          "pmid": "25332459",
+          "fetched": true,
+          "quote": "Those using zero nicotine liquid had significantly lower e-cig dependence scores than those using 1-12 mg/ml",
+          "fetchedOn": "2026-11-19"
+        },
+        {
+          "cite": "Foulds J, Veldheer S, Yingst J, Hrabovsky S, Wilson SJ, Nichols TT, Eissenberg T (2015). Development of a questionnaire for assessing dependence on electronic cigarettes among a large sample of ex-smoking e-cigarette users. Nicotine & Tobacco Research 17(2):186-92.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/25332459/",
+          "pmid": "25332459",
+          "fetched": true,
+          "quote": "who scored significantly lower than those using 13 or greater mg/ml nicotine liquid",
           "fetchedOn": "2026-11-19"
         }
       ],
@@ -947,9 +1011,17 @@
           "fetched": true,
           "fetchedOn": "2026-11-19",
           "quote": "Those randomly assigned to the intervention condition (n=15) then played Tetris for 3min and reported their craving again. Those in the monitoring-only control condition (n=16) provided baseline craving data"
+        },
+        {
+          "cite": "Skorka-Brown J, Andrade J, Whalley B, May J (2015). Playing Tetris decreases drug and other cravings in real world settings. Addictive Behaviors 51:165-70.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/26275843/",
+          "pmid": "26275843",
+          "fetched": true,
+          "fetchedOn": "2026-11-19",
+          "quote": "Participants reported craving target and strength (0-100)"
         }
       ],
-      "weak": "31 students over one week; cravings of all kinds, not only nicotine. The game tested was falling blocks, not the block puzzle in this tool.",
+      "weak": "31 students over one week; cravings of all kinds, not only nicotine. The game tested was falling blocks, not the number-tile puzzle under Craving now?",
       "check": {
         "by": "quit-tool checker (opus)",
         "on": "2026-11-18",
@@ -964,10 +1036,10 @@
       "scene": "The group heads outside for a break, and you go along to talk.",
       "short": "Breaks are where I talk",
       "need": "connection",
-      "limiting": "Smoke breaks are where I talk to people.",
+      "limiting": "Smoke or vape breaks are where I talk to people.",
       "counterpart": "I keep the break and the people. The nicotine was never the point.",
       "whenThought": "Bring a coffee or gum to the break and ask the first person you see about their day.",
-      "test": "Text one person from your break group this week and suggest a coffee somewhere else. Notice whether the talking needs a cigarette.",
+      "test": "Text one person from your break group this week and suggest a coffee somewhere else. Notice whether the talking needs nicotine.",
       "proof": "In a long US study of 12,067 people, a person’s own chances of smoking fell by 36% when a friend quit.",
       "severity": "users",
       "counted": "adults in one US town, smokers or not, not checked for addiction",
@@ -1004,8 +1076,8 @@
       "scene": "It’s late, the day is done, and the last hit is how it ends.",
       "short": "It helps me sleep",
       "need": "sleep",
-      "limiting": "A last cigarette or vape helps me wind down and sleep.",
-      "counterpart": "Nicotine cuts my sleep short. The rough nights after stopping are temporary.",
+      "limiting": "One last hit before bed helps me wind down and sleep.",
+      "counterpart": "Smokers fall asleep slower and sleep shorter. The rough nights after stopping pass in weeks.",
       "whenThought": "Get up and brush your teeth. Then decide whether you still want it.",
       "test": "For the next three nights, write down the time of your last nicotine, the time you fell asleep and how rested you feel. Compare the three.",
       "proof": "In a sleep lab, 44 smokers took longer to fall asleep and slept for a shorter period than 44 never-smokers of the same age and sex.",
@@ -1035,16 +1107,24 @@
           "fetched": true,
           "fetchedOn": "2026-11-19",
           "quote": "from 44 smokers (29 men and 15 women, median age 29.6 years) and compared with PSG data from 44 healthy, sex- and age-matched never smokers."
+        },
+        {
+          "cite": "Jaehne A et al (2012). How smoking affects sleep: a polysomnographical analysis. Sleep Medicine 13(10):1286-92.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/23026505/",
+          "pmid": "23026505",
+          "fetched": true,
+          "fetchedOn": "2026-11-19",
+          "quote": "consumed an average of 21.2 cigarettes per day"
         }
       ],
-      "weak": "A snapshot of 44 smokers, not people who quit.",
+      "weak": "A one-time look at 44 smokers, not people who quit. It shows a link, not that nicotine is the cause.",
       "check": {
         "by": "quit-tool checker (opus)",
         "on": "2026-11-18",
         "verdict": "ok"
       },
       "n": "44 smokers and 44 never-smokers",
-      "editNote": "2026-11-19: 12 lies test finish (Tool 5): wording, basis size from the abstract"
+      "editNote": "2026-11-19: 12 lies test review round 1: claims held to the abstract"
     },
     {
       "id": "b10",
@@ -1054,7 +1134,7 @@
       "need": "connection",
       "blackBoxEnding": "drink",
       "limiting": "I only use it when I drink. That doesn’t really count.",
-      "counterpart": "Drinks are where my quit is easiest to lose. Those nights get a plan.",
+      "counterpart": "Drinking nights are one of the easiest places to lose my quit. Those nights get a plan.",
       "whenThought": "Say “I’m good, thanks” before you think about it, then move to the other side of the group.",
       "test": "Before your next night out this week, write down your plan for the first offer: the exact words and who you will say them to.",
       "proof": "In the first 7 days of quitting, 300 women who smoked had more urges and more slips on occasions when they had been drinking.",
@@ -1076,6 +1156,14 @@
           "fetched": true,
           "fetchedOn": "2026-11-19",
           "quote": "Participants were 300 female smokers who enrolled in a study that tested an individually tailored smoking cessation treatment."
+        },
+        {
+          "cite": "Lam CY, Businelle MS, Aigner CJ et al (2014). Individual and combined effects of multiple high-risk triggers on postcessation smoking urge and lapse. Nicotine & Tobacco Research 16(5):569-75.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/24323569/",
+          "pmid": "24323569",
+          "fetched": true,
+          "fetchedOn": "2026-11-19",
+          "quote": "for 7 days starting on their quit date"
         }
       ],
       "weak": "All 300 were women, and the abstract gives no share of slips that happened while drinking, so no N in 100 is given.",
@@ -1085,7 +1173,7 @@
         "verdict": "ok"
       },
       "n": "300 women",
-      "editNote": "2026-11-19: 12 lies test finish (Tool 5): wording, basis size from the abstract"
+      "editNote": "2026-11-19: 12 lies test review round 1: claims held to the abstract"
     },
     {
       "id": "b11",
@@ -1233,6 +1321,22 @@
           "fetched": true,
           "fetchedOn": "2026-11-19",
           "quote": "symptoms (SMD -0.28, 95% CI -0.43 to -0.13; 15 studies, 3141 participants; I2 = 69%; low-certainty evidence); depression symptoms: (SMD -0.30, 95% CI -0.39 to -0.21; 34 studies, 7156 participants"
+        },
+        {
+          "cite": "Taylor GM et al (2021). Smoking cessation for improving mental health. Cochrane Database of Systematic Reviews 3:CD013522.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/33687070/",
+          "pmid": "33687070",
+          "fetched": true,
+          "fetchedOn": "2026-11-19",
+          "quote": "we rated our certainty in the estimates for anxiety as low, for depression as very low"
+        },
+        {
+          "cite": "Taylor GM et al (2021). Smoking cessation for improving mental health. Cochrane Database of Systematic Reviews 3:CD013522.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/33687070/",
+          "pmid": "33687070",
+          "fetched": true,
+          "fetchedOn": "2026-11-19",
+          "quote": "these data provide evidence that mental health does not worsen as a result of quitting smoking"
         }
       ],
       "check": {
@@ -3414,14 +3518,14 @@
       "min": 0,
       "max": 2,
       "label": "Mostly free",
-      "text": "Few of these twelve hold you. Set a date and run the plan.",
+      "text": "None or few of these twelve hold you. Set your date and make your plan.",
       "link": "/quit/nicotine/date"
     },
     {
       "id": "some",
       "min": 3,
       "max": 6,
-      "label": "Some hold you",
+      "label": "Partly held",
       "text": "Several of these still have a grip. Work through your top three, then set your date.",
       "link": "/quit/nicotine/date"
     },
@@ -3429,7 +3533,7 @@
       "id": "hooked",
       "min": 7,
       "max": 12,
-      "label": "Held by most",
+      "label": "Mostly held",
       "text": "Most of these hold you. Work through your top three, then set your date.",
       "link": "/quit/nicotine/date"
     }
