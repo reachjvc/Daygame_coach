@@ -882,6 +882,24 @@ facts sit inside their sections (alternative: a separate True or not? section). 
 "What helps besides apps" is built, then becomes a link. H4 the "mirror" lines ("You think nobody hooked like you ever
 really gets free") stay unused here, as in wave-1 (alternative: show each above its number).
 
+**Review round 1 (2026-11-19, live 0147818a; bugs Sonnet, look Opus 6/10, content Opus).** Fixed: "84 in 100" said
+twice (figure is now "About 84 in 100"); focus lost after a True/Not true tap (both answers stay, the right one gets a
+tick, his wrong pick a cross, the answer is read out); "done" counted when Free help comes into view; the Craving now?
+line is one link; What helps opens with the medicine number (cutting down first, "12 vs 12", moved last); the erection
+card leads What happens after; Free help grouped by country with a Call button for the two quitlines; Details has a
+"Hide details" at its foot and basis rows start with a capital; "Life rated better" overstated Piper 2012 (life ratings
+fell for everyone, less for quitters): now "Better mood" with a headline that says so; the anxiety card's unsourced
+"(belief 2)" sentence is gone and its design row no longer says "trial" (the abstract does not); the varenicline
+"where" row now counts the review's 68 varenicline trials; fact f2 gives the review's certainty (low, very low) and its
+firmest finding; fact f3 says "without help"; weight also in lb; the top line says no study counted pouch users; the
+medicine note names fluvoxamine and caffeine (Kroon 2007 lists both); the Sources list shows each paper once.
+Not changed, proposed for the owner: H5 lead with "About 84 in 100" (lifetime) and put "19 in 100" second (the look
+reviewer read 19 in 100 as "81 failed"); H6 a vaping card from the Cochrane review of quitting vaping (Butler 2025,
+PMID 41288132: varenicline helped in 2 small trials, patch plus gum showed no clear benefit) and a pouch line from the
+smokeless review (PMID 40232040), both through the normal source check first; H7 one plain sentence under each
+section heading (needs sources per sentence); H8 Scotland, Wales and Northern Ireland lines and the US Spanish line
+in Free help.
+
 ### Tool 11: Today's lesson — brief (Opus, 2026-11-19) — build exactly this, decide nothing
 
 Model: Opus builds it (the content fixes need the abstracts at hand), in a worktree. Address: `/quit/nicotine/lesson`

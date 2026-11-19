@@ -44,6 +44,6 @@ describe("how: sections", () => {
 
 describe("how: outside help", () => {
   it("keeps the four services and leaves out tips and the unsourced forum", () => {
-    expect(outsideHelp(data.besides).map((b) => b.id)).toEqual(["quitline-us", "quitline-uk", "smokefree-gov", "nhs-services"])
+    expect(outsideHelp(data.besides).map((b) => b.id)).toEqual(["quitline-us", "smokefree-gov", "quitline-uk", "nhs-services"])
   })
 })

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { ChevronDown } from "lucide-react"
+import { Check, ChevronDown, Phone, X } from "lucide-react"
 import { count } from "../../count"
 import { CountedLine, SourceTap, SourcesFold } from "../../components/kit"
 import { findMenuTool, isLiveTool, toolName } from "../../menu"
@@ -14,6 +14,7 @@ import { NotReady } from "../NotReady"
 import { buildSections, headlineAfterBig, outsideHelp, type HowSection } from "./logic"
 
 const BASIS_KEYS = ["design", "who", "n", "where", "when", "measured"] as const
+const capital = (x: string) => (x ? x[0].toUpperCase() + x.slice(1) : x)
 /** Tool 6 ("What you'll feel, and when"): the first of these ids that is live is linked; none live, no line. */
 const FEEL_TOOL_IDS = ["timeline", "symptoms"] as const
 
@@ -62,52 +63,76 @@ function NumberRow({ n, hero = false }: { n: QuitNumber; hero?: boolean }) {
             {BASIS_KEYS.map((k) => (
               <div key={k}>
                 <dt className="text-muted-foreground">{t.common.basis[k]}</dt>
-                <dd className="break-words">{n.basis[k]}</dd>
+                <dd className="break-words">{capital(n.basis[k])}</dd>
               </div>
             ))}
             {n.caveat && (
               <div>
                 <dt className="text-muted-foreground">{t.common.basis.caveat}</dt>
-                <dd className="break-words">{n.caveat}</dd>
+                <dd className="break-words">{capital(n.caveat)}</dd>
               </div>
             )}
           </dl>
           <SourceTap refs={[n.ref, ...(n.alsoRef ?? [])]} />
+          <button
+            type="button"
+            data-testid="hide-details"
+            aria-controls={id}
+            onClick={() => setOpen(false)}
+            className="inline-flex min-h-11 items-center gap-1 self-start text-sm font-medium text-primary"
+          >
+            {t.how.hideDetails}
+            <ChevronDown aria-hidden className="size-4 rotate-180" />
+          </button>
         </div>
       )}
     </article>
   )
 }
 
-/** "True or not?": he guesses, then sees the answer, why, who was counted and the source. Nothing is saved. */
+/** "True or not?": he guesses, then sees which was right, why, who was counted and the source. Nothing is saved. */
 function FactCard({ f }: { f: QuitFact }) {
   const [guess, setGuess] = useState<boolean | null>(null)
   const refs = realRefs(f.refs)
-  const btn = "inline-flex min-h-11 flex-1 items-center justify-center rounded-md border px-4 text-sm font-medium"
+  const choice = (value: boolean) => {
+    const picked = guess === value
+    const correct = guess !== null && f.answer === value
+    const tone = guess === null ? "border-border" : correct ? "border-primary text-primary" : picked ? "border-border text-muted-foreground" : "border-border opacity-60"
+    return (
+      <button
+        type="button"
+        data-testid={value ? "guess-true" : "guess-false"}
+        aria-pressed={picked}
+        onClick={() => setGuess(value)}
+        className={`inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-md border px-4 text-sm font-medium ${tone}`}
+      >
+        {guess !== null && correct && <Check aria-hidden className="size-4" />}
+        {guess !== null && picked && !correct && <X aria-hidden className="size-4" />}
+        {value ? t.how.guessTrue : t.how.guessFalse}
+      </button>
+    )
+  }
   return (
     <article data-testid={`fact-${f.id}`} className="rounded-lg border border-border bg-card p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t.how.trueOrNot}</p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-primary">{t.how.trueOrNot}</p>
       <p className="mt-1 text-base font-medium leading-snug">{f.statement}</p>
-      {guess === null ? (
-        <div className="mt-3 flex gap-2">
-          <button type="button" data-testid="guess-true" onClick={() => setGuess(true)} className={`${btn} border-border`}>
-            {t.how.guessTrue}
-          </button>
-          <button type="button" data-testid="guess-false" onClick={() => setGuess(false)} className={`${btn} border-border`}>
-            {t.how.guessFalse}
-          </button>
-        </div>
-      ) : (
-        <div data-testid="answer" className="mt-3">
-          <p className="text-base font-semibold">
-            {guess === f.answer ? t.how.right : t.how.notQuite}{" "}
-            {fill(t.how.answerIs, { answer: f.answer ? t.how.guessTrue : t.how.guessFalse })}
-          </p>
-          <p className="mt-1 text-base">{f.explain}</p>
-          <CountedLine text={f.counted} />
-          <SourceTap refs={refs} />
-        </div>
-      )}
+      <div className="mt-3 flex gap-2">
+        {choice(true)}
+        {choice(false)}
+      </div>
+      <div aria-live="polite">
+        {guess !== null && (
+          <div data-testid="answer" className="mt-3">
+            <p className="text-base font-semibold">
+              {guess === f.answer ? t.how.right : t.how.notQuite}{" "}
+              {fill(t.how.answerIs, { answer: f.answer ? t.how.guessTrue : t.how.guessFalse })}
+            </p>
+            <p className="mt-1 text-base">{f.explain}</p>
+            <CountedLine text={f.counted} />
+            <SourceTap refs={refs} />
+          </div>
+        )}
+      </div>
     </article>
   )
 }
@@ -119,14 +144,20 @@ function OutsideRow({ b }: { b: QuitBesides }) {
   return (
     <li data-testid={`outside-${b.id}`} className="rounded-lg border border-border bg-card px-4 pb-1 pt-3">
       <p className="text-base">{b.text}</p>
-      <div className="flex flex-wrap gap-x-6">
+      <div className="flex flex-wrap items-center gap-x-6">
+        {b.tel && (
+          <a href={`tel:${b.tel}`} data-testid="call" className="mt-1 inline-flex min-h-11 items-center gap-1.5 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">
+            <Phone aria-hidden className="size-4" />
+            {t.how.call}
+          </a>
+        )}
         {b.link && (
           <a href={b.link} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-sm text-primary underline">
             {t.how.openSite}
           </a>
         )}
         {refs.length > 0 && (
-          <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} className="inline-flex min-h-11 items-center text-sm text-primary underline">
+          <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} className="inline-flex min-h-11 items-center text-sm text-muted-foreground underline">
             {open ? t.common.hideSource : t.common.source}
           </button>
         )}
@@ -150,6 +181,17 @@ function OutsideRow({ b }: { b: QuitBesides }) {
   )
 }
 
+/** The page's Sources list: one entry per address (two cites of one paper show once). */
+function onePerUrl(refs: QuitRef[]): QuitRef[] {
+  const seen = new Set<string>()
+  return uniqueRefs(refs).filter((r) => {
+    const key = r.url || r.cite
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
 const SECTION_ID = (s: string) => `how-${s}`
 
 function jump(id: string) {
@@ -167,7 +209,7 @@ export function HowTool({ addiction, data }: ToolProps) {
   const facts = (usable<QuitFact[]>(data.facts) ?? []).filter((f) => realRefs(f.refs).length > 0)
   const outside = outsideHelp(usable<QuitBesides[]>(data.besides) ?? []).filter((b) => realRefs(b.refs).length > 0)
   const note = data.footerNote && typeof data.footerNote === "object" ? data.footerNote : null
-  const endRef = useRef<HTMLDivElement>(null)
+  const endRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     count(addiction, "how", "start")
@@ -191,7 +233,7 @@ export function HowTool({ addiction, data }: ToolProps) {
   const sections = buildSections(numbers, hope, facts)
   const groupName = (s: HowSection) => t.how.groups[s]
   const noteRefs: QuitRef[] = note ? realRefs(note.refs) : []
-  const all = uniqueRefs([
+  const all = onePerUrl([
     ...(hope ? [hope.ref, ...(hope.alsoRef ?? [])] : []),
     ...numbers.flatMap((n) => [n.ref, ...(n.alsoRef ?? [])]),
     ...facts.flatMap((f) => realRefs(f.refs)),
@@ -245,19 +287,16 @@ export function HowTool({ addiction, data }: ToolProps) {
                 it.type === "number" ? <NumberRow key={`${it.n.kind}-${i}`} n={it.n} /> : <FactCard key={it.f.id} f={it.f} />,
               )}
               {s.section === "helps" && sosLive && (
-                <p data-testid="sos-line" className="text-sm">
-                  {t.how.cravingLine}{" "}
-                  <Link href={carry(`/quit/${addiction}/sos`)} className="inline-flex min-h-11 items-center text-primary underline">
-                    {t.how.cravingLink}
-                  </Link>
-                </p>
+                <Link data-testid="sos-line" href={carry(`/quit/${addiction}/sos`)} className="flex min-h-11 items-center text-sm text-primary underline">
+                  {t.how.cravingLink}
+                </Link>
               )}
             </div>
           </section>
         ))}
 
         {outside.length > 0 && (
-          <section id={SECTION_ID("outside")} data-testid="group-outside" className="scroll-mt-4">
+          <section ref={endRef} id={SECTION_ID("outside")} data-testid="group-outside" className="scroll-mt-4">
             <h2 className="text-lg font-semibold">{t.how.outside}</h2>
             <ul className="mt-2 flex flex-col gap-3">
               {outside.map((b) => (
@@ -267,7 +306,7 @@ export function HowTool({ addiction, data }: ToolProps) {
           </section>
         )}
 
-        <div ref={endRef} className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4">
           {feelTool && feelId && (
             <p data-testid="feel-line" className="text-sm">
               {t.how.feelLine}{" "}

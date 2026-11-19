@@ -69,6 +69,8 @@ for (const size of SIZES) {
       await basis.getByRole("button", { name: t.common.source, exact: true }).click()
       await expect(basis.getByRole("link").first()).toHaveAttribute("target", "_blank")
       await shot(page, `how-details-${size.name}`)
+      await first.getByTestId("hide-details").click()
+      await expect(btn).toHaveAttribute("aria-expanded", "false")
       await noSideways(page)
       expect(await smallTargets(page)).toEqual([])
       expect(errors).toEqual([])
@@ -106,14 +108,19 @@ for (const size of SIZES) {
       }
       await page.getByTestId("fact-f3").scrollIntoViewIfNeeded()
       await shot(page, `how-facts-${size.name}`)
+      // both answers stay on the card, the pressed one keeps focus
+      await expect(page.getByTestId("fact-f1").getByTestId("guess-true")).toBeVisible()
+      await expect(page.getByTestId("fact-f1").getByTestId("guess-false")).toBeVisible()
       await page.reload()
       await expect(page.getByTestId("fact-f1").getByTestId("guess-true")).toBeVisible()
+      await expect(page.getByTestId("answer")).toHaveCount(0)
     })
 
     test("free help lists the four services only, and the library extras are gone", async ({ page }) => {
       await page.goto(URL)
       const rows = page.locator('[data-testid^="outside-"]')
       await expect(rows).toHaveCount(4)
+      await expect(page.getByTestId("call").first()).toHaveAttribute("href", /^tel:\+\d+$/)
       for (const id of ["forum", "exercise", "tell-one", "combo-nrt"]) await expect(page.getByTestId(`outside-${id}`)).toHaveCount(0)
       await expect(page.getByRole("searchbox")).toHaveCount(0)
       await expect(page.getByText(/Mark as read|min read/)).toHaveCount(0)

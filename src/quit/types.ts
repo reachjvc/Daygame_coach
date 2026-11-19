@@ -198,6 +198,8 @@ export interface QuitBesides {
   id: string
   text: string
   link?: string
+  /** A phone number to call, in international form (+1…), shown as a Call link. */
+  tel?: string
   refs?: QuitRef[]
 }
 

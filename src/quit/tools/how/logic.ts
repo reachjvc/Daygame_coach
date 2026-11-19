@@ -68,7 +68,7 @@ export function buildSections<F extends { id: string }>(
   }).filter((s) => s.items.length > 0)
 }
 
-/** Outside help in the data's order, services only. */
+/** Outside help, services only, grouped by country in the order of `OUTSIDE_IDS`. */
 export function outsideHelp<B extends { id: string }>(besides: B[]): B[] {
-  return besides.filter((b) => (OUTSIDE_IDS as readonly string[]).includes(b.id))
+  return OUTSIDE_IDS.map((id) => besides.find((b) => b.id === id)).filter((b): b is B => !!b)
 }

@@ -81,13 +81,13 @@
     "refs": []
   },
   "footerNote": {
-    "text": "On clozapine, olanzapine or theophylline? Tell your prescriber before you stop smoking or switch to a vape or pouches: tobacco smoke speeds their breakdown, so the dose may need to come down once smoking stops.",
+    "text": "On clozapine, olanzapine, fluvoxamine or theophylline? Tell your prescriber before you stop smoking or switch to a vape or pouches: tobacco smoke speeds their breakdown, so the dose may need to come down once smoking stops. Smoke speeds up caffeine the same way, so your usual coffee can feel stronger after you stop.",
     "refs": [
       {
         "cite": "Kroon LA (2007). Drug interactions with smoking. American Journal of Health-System Pharmacy 64(18):1917-21.",
         "url": "https://pubmed.ncbi.nlm.nih.gov/17823102/",
         "pmid": "17823102",
-        "quote": "upon smoking cessation, smokers may require a reduction in the dosage of an interacting medication."
+        "quote": "The primary pharmacokinetic interactions with smoking occur with drugs that are CYP1A2 substrates, such as caffeine, clozapine, fluvoxamine, olanzapine, tacrine, and theophylline."
       }
     ]
   },
@@ -160,7 +160,7 @@
     },
     {
       "kind": "hope-lifetime",
-      "big": "84 in 100",
+      "big": "About 84 in 100",
       "headline": "About 84 in 100 Americans ever hooked on nicotine are projected to get free of it in their lifetime.",
       "mirror": "You've smoked so long you think it's too late for you.",
       "severity": "dependent",
@@ -258,39 +258,6 @@
       }
     },
     {
-      "kind": "helps-stop-vs-cut",
-      "big": "12 vs 12 in 100",
-      "headline": "Expected off six months later: 12 in 100 who cut down first, the same 12 in 100 who stopped at once.",
-      "mirror": "You can't face stopping all at once, so you never start.",
-      "severity": "treatment",
-      "counted": "smokers in quit trials who wanted to stop, not checked for addiction",
-      "basis": {
-        "design": "a review of trials; this figure combines 22 trials that split people by chance",
-        "who": "people who smoke cigarettes and were willing to join a quit trial, most of them adults, about 23 cigarettes a day on average",
-        "n": "9,219 people in 22 trials (of 51 trials with 22,509 people in the review)",
-        "where": "29 of the review's 51 trials in the USA, most others in Europe and China; most recruited volunteers through ads",
-        "when": "searched to October 2018; published 2019",
-        "measured": "Not smoking at 6 months or longer: a plan to cut down before quitting, against quitting on a set day. Cutting down with varenicline or fast nicotine (gum, lozenge) may work better than cutting down alone."
-      },
-      "caveat": "Cutting down here is a step on the way to stopping, not smoking less for good. The 12 in 100 is the review's typical rate across its trials, not one group's count. One large English trial (697 smokers, all given nicotine replacement and nurse support) found stopping at once did better: 22 in 100 against about 16 in 100 still off at 6 months.",
-      "projection": true,
-      "checked": "not",
-      "ref": {
-        "cite": "Lindson N, Klemperer E, Hong B, Ordóñez-Mena JM, Aveyard P (2019). Smoking reduction interventions for smoking cessation. Cochrane Database of Systematic Reviews.",
-        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6953262/",
-        "pmid": "31565800",
-        "quote": "Risk with abrupt quitting | Risk with reduction to quit … Smoking cessation (≥ 6‐month follow‐up) | 12 per 100 | 12 per 100 (11 to 14) … 9219…",
-        "fetched": true,
-        "quoteTrimmed": true
-      },
-      "check": {
-        "by": "revision checker a (nicotine)",
-        "on": "2026-11-09",
-        "verdict": "ok",
-        "notes": "checked after revision"
-      }
-    },
-    {
       "kind": "helps-medicine",
       "big": "23 vs 10 in 100",
       "headline": "On varenicline, a prescription pill, about 23 in 100 smokers are expected to stay off six months; on a dummy, 10.",
@@ -301,7 +268,7 @@
         "design": "a review of trials; this figure combines 41 trials that split people by chance",
         "who": "adult smokers who wanted to stop; how much they smoked is not reported for this figure",
         "n": "17,395 people in 41 trials",
-        "where": "of the review's 75 trials, 28 in the USA; others in Canada, Europe, Asia and Australia, some across several countries",
+        "where": "of the review's 68 varenicline trials, 28 in the USA; others in Canada, Europe, Asia and Australia, some across several countries",
         "when": "searched to April 2022; published 2023",
         "measured": "Not smoking at 6 months or longer, by each trial's strictest definition, with a lab check such as a breath test where the trial did one; varenicline against a dummy pill. The review's exact figures: 230 and 99 in 1,000."
       },
@@ -355,6 +322,39 @@
       }
     },
     {
+      "kind": "after-body",
+      "big": "At least 25 in 100",
+      "headline": "Of men with erection problems who quit smoking, at least 25 in 100 improved a year later; none who kept smoking did.",
+      "mirror": "You think what smoking did to your sex life won't come back.",
+      "severity": "treatment",
+      "counted": "men with erection problems seeking quit help, not checked for addiction",
+      "basis": {
+        "design": "the same men followed 1 year, not a trial",
+        "who": "male smokers with erection problems and no other known cause, who asked for nicotine replacement; how much they smoked is not reported",
+        "n": "118 men who quit (163 who kept smoking)",
+        "where": "Tehran, Iran",
+        "when": "Followed 1 year; published 2004",
+        "measured": "A standard erection score, before and after one year."
+      },
+      "caveat": "Small, not a trial: one study in Tehran. Older men and men with severe problems improved less.",
+      "projection": false,
+      "checked": "not",
+      "weak": "Small: 118 men, one study",
+      "ref": {
+        "cite": "Pourmand G, Alidaee MR, Rasuli S, Maleki A, Mehrsai A (2004). Do cigarette smokers with erectile dysfunction benefit from stopping?: a prospective study. BJU International.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/15610111/",
+        "pmid": "15610111",
+        "quote": "After 1 year the ED status improved in > or = 25% of ex-smokers but in none of the current smokers",
+        "fetched": true
+      },
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
       "kind": "after-first-month",
       "big": "Anxiety fell",
       "headline": "Anxiety fell from the first week off, in people hooked on nicotine who stayed off.",
@@ -362,14 +362,14 @@
       "severity": "dependent",
       "counted": "people hooked on nicotine who stayed off four weeks",
       "basis": {
-        "design": "a quit-smoking trial; anxiety rated before and after quit day",
+        "design": "smokers followed from 2 weeks before to 4 weeks after quit day; anxiety rated before and after",
         "who": "smokers who met the criteria for nicotine dependence and tried to stop; how much they smoked is not reported in the paper's summary",
         "n": "70 who stayed off for all 4 weeks (of 101 who tried)",
         "where": "The authors worked at St George's Hospital Medical School, London",
         "when": "published 1997",
         "measured": "Anxiety by a single rating and a standard anxiety questionnaire, from 2 weeks before quit day to 4 weeks after. Only people with no slip at all counted as off."
       },
-      "caveat": "It shows anxiety fell in those who stayed off, not how much. One small trial from the 1990s. People who slipped are not in this count. They were in a quit trial, so may have had support or medicine. Reviews count anxiety among withdrawal signs that peak in week 1 (belief 2); in this trial, among people who stayed off, it was already falling by then.",
+      "caveat": "It shows anxiety fell in those who stayed off, not how much. One small trial from the 1990s. People who slipped are not in this count. They were patients trying to stop, so may have had support or medicine.",
       "projection": false,
       "checked": "hooked",
       "weak": "Small: 70 people, one trial",
@@ -389,8 +389,8 @@
     },
     {
       "kind": "after-mood",
-      "big": "Life rated better",
-      "headline": "Quitters rated their life and mood better than people who kept smoking, one and three years on.",
+      "big": "Better mood",
+      "headline": "Compared with people who kept smoking, quitters' mood was better and their life rating held up better, one and three years on.",
       "mirror": "You worry life will feel empty without cigarettes.",
       "severity": "treatment",
       "counted": "smokers in a quit trial; addiction scored, not required to join",
@@ -487,9 +487,42 @@
       }
     },
     {
+      "kind": "helps-stop-vs-cut",
+      "big": "12 vs 12 in 100",
+      "headline": "Expected off six months later: 12 in 100 who cut down first, the same 12 in 100 who stopped at once.",
+      "mirror": "You can't face stopping all at once, so you never start.",
+      "severity": "treatment",
+      "counted": "smokers in quit trials who wanted to stop, not checked for addiction",
+      "basis": {
+        "design": "a review of trials; this figure combines 22 trials that split people by chance",
+        "who": "people who smoke cigarettes and were willing to join a quit trial, most of them adults, about 23 cigarettes a day on average",
+        "n": "9,219 people in 22 trials (of 51 trials with 22,509 people in the review)",
+        "where": "29 of the review's 51 trials in the USA, most others in Europe and China; most recruited volunteers through ads",
+        "when": "searched to October 2018; published 2019",
+        "measured": "Not smoking at 6 months or longer: a plan to cut down before quitting, against quitting on a set day. Cutting down with varenicline or fast nicotine (gum, lozenge) may work better than cutting down alone."
+      },
+      "caveat": "Cutting down here is a step on the way to stopping, not smoking less for good. The 12 in 100 is the review's typical rate across its trials, not one group's count. One large English trial (697 smokers, all given nicotine replacement and nurse support) found stopping at once did better: 22 in 100 against about 16 in 100 still off at 6 months.",
+      "projection": true,
+      "checked": "not",
+      "ref": {
+        "cite": "Lindson N, Klemperer E, Hong B, Ordóñez-Mena JM, Aveyard P (2019). Smoking reduction interventions for smoking cessation. Cochrane Database of Systematic Reviews.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6953262/",
+        "pmid": "31565800",
+        "quote": "Risk with abrupt quitting | Risk with reduction to quit … Smoking cessation (≥ 6‐month follow‐up) | 12 per 100 | 12 per 100 (11 to 14) … 9219…",
+        "fetched": true,
+        "quoteTrimmed": true
+      },
+      "check": {
+        "by": "revision checker a (nicotine)",
+        "on": "2026-11-09",
+        "verdict": "ok",
+        "notes": "checked after revision"
+      }
+    },
+    {
       "kind": "after-body",
       "big": "4–5 kg",
-      "headline": "Quitters gained 4–5 kg on average in the first year.",
+      "headline": "Quitters gained 4–5 kg (about 9–11 lb) on average in the first year.",
       "mirror": "You fear the weight will keep piling on once you quit.",
       "severity": "treatment",
       "counted": "people who stayed quit in quit trials, not checked for addiction",
@@ -511,39 +544,6 @@
         "url": "https://pubmed.ncbi.nlm.nih.gov/22782848/",
         "pmid": "22782848",
         "quote": "Smoking cessation is associated with a mean increase of 4-5 kg in body weight after 12 months of abstinence, and most weight gain occurs within three months of quitting.",
-        "fetched": true
-      },
-      "check": {
-        "by": "revision checker a (nicotine)",
-        "on": "2026-11-09",
-        "verdict": "ok",
-        "notes": "checked after revision"
-      }
-    },
-    {
-      "kind": "after-body",
-      "big": "At least 25 in 100",
-      "headline": "Of men with erection problems who quit smoking, at least 25 in 100 improved a year later; none who kept smoking did.",
-      "mirror": "You think what smoking did to your sex life won't come back.",
-      "severity": "treatment",
-      "counted": "men with erection problems seeking quit help, not checked for addiction",
-      "basis": {
-        "design": "the same men followed 1 year, not a trial",
-        "who": "male smokers with erection problems and no other known cause, who asked for nicotine replacement; how much they smoked is not reported",
-        "n": "118 men who quit (163 who kept smoking)",
-        "where": "Tehran, Iran",
-        "when": "Followed 1 year; published 2004",
-        "measured": "A standard erection score, before and after one year."
-      },
-      "caveat": "Small, not a trial: one study in Tehran. Older men and men with severe problems improved less.",
-      "projection": false,
-      "checked": "not",
-      "weak": "Small: 118 men, one study",
-      "ref": {
-        "cite": "Pourmand G, Alidaee MR, Rasuli S, Maleki A, Mehrsai A (2004). Do cigarette smokers with erectile dysfunction benefit from stopping?: a prospective study. BJU International.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/15610111/",
-        "pmid": "15610111",
-        "quote": "After 1 year the ED status improved in > or = 25% of ex-smokers but in none of the current smokers",
         "fetched": true
       },
       "check": {
@@ -1214,7 +1214,7 @@
       "id": "f2",
       "statement": "People who quit smoking end up more anxious and more depressed than people who keep smoking.",
       "answer": false,
-      "explain": "In 15 studies of anxiety and 34 of depression, symptoms improved more in people who quit than in people who kept smoking. These are observational studies, so treat it as likely, not proven.",
+      "explain": "In 15 studies of anxiety and 34 of depression, symptoms improved more in people who quit than in people who kept smoking. The review rates that evidence low for anxiety and very low for depression. Its firmest finding: mental health did not get worse after quitting.",
       "severity": "users",
       "counted": "adults who smoked, in studies, not checked for addiction",
       "refs": [
@@ -1244,7 +1244,7 @@
     },
     {
       "id": "f3",
-      "statement": "Most quit tries that fail end in the first 8 days.",
+      "statement": "Of quit tries made without help, most that fail end in the first 8 days.",
       "answer": true,
       "explain": "In studies of smokers quitting without help, most relapse came in the first 8 days. The first week is the one to guard.",
       "severity": "users",
@@ -2331,7 +2331,8 @@
           "fetched": true,
           "fetchedOn": "2026-11-18"
         }
-      ]
+      ],
+      "tel": "+18007848669"
     },
     {
       "id": "quitline-uk",
@@ -2345,7 +2346,8 @@
           "fetched": true,
           "fetchedOn": "2026-11-18"
         }
-      ]
+      ],
+      "tel": "+443001231044"
     },
     {
       "id": "smokefree-gov",
