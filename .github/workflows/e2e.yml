@@ -174,15 +174,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { lane: desktop, shard: 1/4, browser: chromium }
-          - { lane: desktop, shard: 2/4, browser: chromium }
-          - { lane: desktop, shard: 3/4, browser: chromium }
-          - { lane: desktop, shard: 4/4, browser: chromium }
+          - { lane: desktop, shard: 1/6, browser: chromium }
+          - { lane: desktop, shard: 2/6, browser: chromium }
+          - { lane: desktop, shard: 3/6, browser: chromium }
+          - { lane: desktop, shard: 4/6, browser: chromium }
+          - { lane: desktop, shard: 5/6, browser: chromium }
+          - { lane: desktop, shard: 6/6, browser: chromium }
           - { lane: timing, shard: 1/1, browser: chromium }
           - { lane: android, shard: 1/2, browser: chromium }
           - { lane: android, shard: 2/2, browser: chromium }
           - { lane: timing-android, shard: 1/1, browser: chromium }
-          - { lane: sweep-phone, shard: 1/1, browser: webkit }
+          - { lane: sweep-android, shard: 1/1, browser: chromium }
     steps: &lane-steps
       # FIRST, BEFORE ANYTHING TOUCHES THE NETWORK. The test backend's ports
       # (55320-55329, tests/db/supabase/config.toml) sit inside Linux's
@@ -277,6 +279,7 @@ jobs:
           - { lane: phone, shard: 1/2, browser: webkit }
           - { lane: phone, shard: 2/2, browser: webkit }
           - { lane: timing-phone, shard: 1/1, browser: webkit }
+          - { lane: sweep-phone, shard: 1/1, browser: webkit }
           - { lane: sweep-webkit, shard: 1/1, browser: webkit }
     steps: *lane-steps
 
