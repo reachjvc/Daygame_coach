@@ -74,6 +74,7 @@ export const pastText = {
   nextTitle: "Next",
   nextDate: "Pick your next day 1",
   nextIfthen: "Plan for the moments that ended your tries",
+  nextRecordLink: "See the runs since your quit date in Your record",
   nextRecordPre: "Runs since your quit date are in ",
   nextRecordName: "Your record",
   nextRecordPost: ".",

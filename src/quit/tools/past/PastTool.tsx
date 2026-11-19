@@ -211,7 +211,7 @@ function Inner({ addiction, endings, helped, belief, number }: InnerProps) {
             {isLiveTool("date") ? (
               <>
                 {t.noTriesPre}
-                <Link href={carry(`/quit/${addiction}/date`)} className="text-primary underline">
+                <Link href={carry(`/quit/${addiction}/date`)} className="inline-flex min-h-11 items-center text-primary underline">
                   {t.noTriesName}
                 </Link>
                 {t.noTriesPost}
@@ -403,7 +403,7 @@ function AfterSlipBlock({ addiction, value, onChange, belief, carry }: { addicti
   const lies = (
     <>
       {isLiveTool("beliefs") ? (
-        <Link href={carry(`/quit/${addiction}/beliefs`)} className="text-primary underline">
+        <Link href={carry(`/quit/${addiction}/beliefs`)} className="inline-flex min-h-11 items-center text-primary underline">
           {t.slipJustOnceName}
         </Link>
       ) : (
@@ -422,7 +422,7 @@ function AfterSlipBlock({ addiction, value, onChange, belief, carry }: { addicti
             <p>
               {`${t.slipGaveUp} `}
               {isLiveTool("slip") ? (
-                <Link href={carry(`/quit/${addiction}/slip`)} className="text-primary underline">
+                <Link href={carry(`/quit/${addiction}/slip`)} className="inline-flex min-h-11 items-center text-primary underline">
                   {t.slipGaveUpLink}
                 </Link>
               ) : (
@@ -522,25 +522,15 @@ function Next({ addiction, carry }: { addiction: string; carry: (p: string) => s
       </Link>
     </li>
   )
-  const record = isLiveTool("record") ? (
-    <Link href={carry(`/quit/${addiction}/record`)} className="text-primary underline">
-      {t.nextRecordName}
-    </Link>
-  ) : (
-    t.nextRecordName
-  )
   return (
     <section data-testid="next" className={section}>
       <h3 className="text-base font-semibold">{t.nextTitle}</h3>
       <ul className="flex flex-col">
         {isLiveTool("date") && link("date", t.nextDate)}
         {isLiveTool("ifthen") && link("ifthen", t.nextIfthen)}
+        {isLiveTool("record") && link("record", t.nextRecordLink)}
       </ul>
-      <p className="text-sm">
-        {t.nextRecordPre}
-        {record}
-        {t.nextRecordPost}
-      </p>
+      {!isLiveTool("record") && <p className="text-sm">{`${t.nextRecordPre}${t.nextRecordName}${t.nextRecordPost}`}</p>}
     </section>
   )
 }

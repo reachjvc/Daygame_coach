@@ -333,7 +333,8 @@ test.describe("past attempts", () => {
     for (const tool of ["slip", "beliefs", "ifthen", "record"]) if (!liveTools.includes(tool)) expect(hrefs.some((h) => h.includes(`/${tool}`))).toBe(false)
     // the next section names only what is live; the record line is plain text while it is not
     await expect(page.getByTestId("next-date")).toHaveCount(liveTools.includes("date") ? 1 : 0)
-    await expect(page.getByTestId("next")).toContainText("Runs since your quit date are in Your record.")
+    if (liveTools.includes("record")) await expect(page.getByTestId("next-record")).toHaveText("See the runs since your quit date in Your record")
+    else await expect(page.getByTestId("next")).toContainText("Runs since your quit date are in Your record.")
     await expect(page.getByTestId("next-ifthen")).toHaveCount(liveTools.includes("ifthen") ? 1 : 0)
     if (liveTools.includes("date")) {
       await expect(page.getByTestId("next-date")).toHaveText("Pick your next day 1")
