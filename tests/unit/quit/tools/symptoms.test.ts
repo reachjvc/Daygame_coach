@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { CRAVING_MARK_DAYS, cravingPosition, dayPosition, phaseOf } from "@/src/quit/tools/symptoms/bandMath"
+import { cravingPosition, dayPosition, phaseOf } from "@/src/quit/tools/symptoms/bandMath"
 import { bandFor } from "@/src/quit/tools/symptoms/bands"
 import { dayState, daysToGo, fmtDay, fmtSlip, isNow, latestSlipDay, markDay, phaseWords, rightNow } from "@/src/quit/tools/symptoms/logic"
 import { betterOrder } from "@/src/quit/tools/symptoms/content"
@@ -103,7 +103,8 @@ describe("the Now pill", () => {
     expect(isNow("cue", 5)).toBe(false)
     expect(isNow("cue", 7)).toBe(true)
     expect(isNow("cue", 35)).toBe(true)
-    expect(isNow("cue", 36)).toBe(false)
+    expect(isNow("cue", 42)).toBe(true)
+    expect(isNow("cue", 43)).toBe(false)
     expect(isNow("craving", 28)).toBe(true)
     expect(isNow("craving", 29)).toBe(false)
     expect(isNow("hunger", 5)).toBe(false)
@@ -130,7 +131,7 @@ describe("bands", () => {
     expect(dayPosition(400)).toBe(dayPosition(42))
     expect(cravingPosition(400)).toBeGreaterThan(87.5)
     expect(cravingPosition(7)).toBe(12.5)
-    expect(cravingPosition(CRAVING_MARK_DAYS[3])).toBe(87.5)
+    expect(cravingPosition(365)).toBe(87.5)
     expect(cravingPosition(9999)).toBeLessThanOrEqual(100)
   })
 })

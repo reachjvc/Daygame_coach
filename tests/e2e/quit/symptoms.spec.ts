@@ -127,6 +127,11 @@ test.describe("what you'll feel, and when @phone", () => {
     await expect(page.getByTestId("now-mood")).toBeVisible()
     await expect(page.getByTestId("now-sleep")).toBeVisible()
     await expect(page.getByTestId("now-cue")).toHaveCount(0)
+    // jump chips mark the cards his day is in, and take him there
+    await expect(page.getByTestId("jump-sleep")).toContainText("Now")
+    await expect(page.getByTestId("jump-hunger")).not.toContainText("Now")
+    await page.getByTestId("jump-sleep").click()
+    await expect(page).toHaveURL(/#card-sleep$/)
     await expect(page.getByTestId("phase-cue")).toHaveText("You are on day 5. Not tested before day 7.")
     // help starts folded, with how many ideas it holds
     await expect(page.getByTestId("help-mood")).not.toHaveAttribute("open", "")
@@ -151,7 +156,7 @@ test.describe("what you'll feel, and when @phone", () => {
     await expect(page.getByTestId("day-number")).toHaveText("Day 400")
     await expect(page.getByTestId("right-now")).toContainText("Everyday urges keep fading over months")
     await expect(page.getByTestId("marker-craving")).toHaveAttribute("data-day", "400")
-    await expect(page.getByTestId("craving-mark-3")).toHaveAttribute("data-reached", "true")
+    await expect(page.getByTestId("craving-mark-2")).toHaveAttribute("data-reached", "true")
     await expect(page.getByTestId("phase-craving")).toContainText("Past month 12")
   })
 

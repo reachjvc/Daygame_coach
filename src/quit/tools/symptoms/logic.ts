@@ -81,7 +81,7 @@ export type CardId = "craving" | "cue" | "mood" | "sleep" | "hunger"
 export function rightNow(day: number): string {
   if (day <= 7) return "The hardest week for most. Mood, focus, sleep and restlessness peak now, and cravings are at their strongest."
   if (day <= 28) return "For most, mood and focus settle somewhere between day 10 and week 4. Hunger and cravings set off by places can last longer."
-  if (day <= 42) return "You are past the 4 weeks the studies give for mood, focus and sleep. Cravings set off by places and moments can still be strong around day 35."
+  if (day <= 42) return "You are past the 4 weeks most studies give for mood, focus and sleep; if yours has not settled, that happens too. In a lab test, cravings set off by smoking cues were stronger at day 35 than at day 7."
   return "Everyday urges keep fading over months. A year on, none of the people still off in one study had strong urges; about a third still had some."
 }
 
@@ -89,7 +89,7 @@ export function rightNow(day: number): string {
 export function isNow(card: CardId, day: number | null): boolean {
   if (day === null || day < 1) return false
   if (card === "craving") return day <= 28
-  if (card === "cue") return day >= 7 && day <= 35
+  if (card === "cue") return day >= 7 && day <= 42
   if (card === "mood" || card === "sleep") return day <= 28
   return false
 }
@@ -102,7 +102,7 @@ export function phaseWords(card: CardId, day: number): string {
     if (day <= 365) return "Past month 6: 13 in 100 of the people still off had strong urges then."
     return "Past month 12: none of the people still off had strong urges; about 34 in 100 had some."
   }
-  if (card === "hunger") return "It can last weeks; most of the weight comes in the first 3 months."
+  if (card === "hunger") return day <= 90 ? "It can last weeks; most of the weight comes in the first 3 months." : "Past the first 3 months, when most of the weight comes."
   const band = bandFor("nicotine", card === "cue" ? "cue-craving" : card === "sleep" ? "sleep" : "irritable")
   if (!band) return ""
   const p = phaseOf(band, day)
@@ -120,7 +120,7 @@ export function phaseWords(card: CardId, day: number): string {
     case "in-range":
       return card === "sleep" ? "Inside the 2 to 4 weeks a review gives." : "Inside the days the studies give: day 10 to week 4."
     default:
-      return card === "sleep" ? "Past the 4 weeks the review gives." : "Past the 4 weeks the studies give."
+      return card === "sleep" ? "Past the 4 weeks the review gives." : "Past the 4 weeks most studies give. If yours has not settled, that happens too."
   }
 }
 
@@ -131,10 +131,11 @@ const parts = (iso: string) => {
   return { wd: WEEKDAYS[d.getUTCDay()], m: MONTHS[d.getUTCMonth()], d: d.getUTCDate() }
 }
 
-/** "Thu, Oct 30". */
-export function fmtDay(iso: string): string {
+/** "Thu, Oct 30"; the year is added when it is not this year's ("Thu, Oct 16, 2025"). */
+export function fmtDay(iso: string, today?: string): string {
   const p = parts(iso)
-  return `${p.wd}, ${p.m} ${p.d}`
+  const year = today && iso.slice(0, 4) !== today.slice(0, 4) ? `, ${iso.slice(0, 4)}` : ""
+  return `${p.wd}, ${p.m} ${p.d}${year}`
 }
 
 /** "Wed 29 Oct". */

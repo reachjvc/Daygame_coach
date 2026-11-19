@@ -13,6 +13,8 @@ export interface Basis {
   where: string
   when: string
   caveat: string
+  /** What was measured, when the source says. */
+  measured?: string
 }
 
 export interface SourcedLine {
@@ -74,7 +76,7 @@ export const REFS = {
   swanson1997: ref(
     "Swanson JA, Lee JW, Hopp JW, Berk LS (1997). The impact of caffeine use on tobacco cessation and withdrawal. Addictive Behaviors 22(1):55-68.",
     "9022872",
-    "Three weeks after cessation, concentrations reached 203% of baseline for the caffeine user.",
+    "Three weeks after cessation, concentrations reached 203% of baseline for the caffeine user. Such concentrations may be sufficient to produce caffeine toxicity symptoms in smoking abstinence conditions.",
   ),
   kroon2007: ref(
     "Kroon LA (2007). Drug interactions with smoking. American Journal of Health-System Pharmacy 64(18):1917-21.",
@@ -106,6 +108,16 @@ export const REFS = {
     "8665038",
     "In the first year, participants who quit smoking showed improvement in FEV1, whereas continuing smokers showed worsening",
   ),
+  kroon2007Dose: ref(
+    "Kroon LA (2007). Drug interactions with smoking. American Journal of Health-System Pharmacy 64(18):1917-21.",
+    "17823102",
+    "The primary pharmacokinetic interactions with smoking occur with drugs that are CYP1A2 substrates, such as caffeine, clozapine, fluvoxamine, olanzapine, tacrine, and theophylline. [...] Conversely, upon smoking cessation, smokers may require a reduction in the dosage of an interacting medication.",
+  ),
+  west1987Strong: ref(
+    "West RJ, Hajek P, Belcher M (1987). Time course of cigarette withdrawal symptoms during four weeks of treatment with nicotine chewing gum. Addictive Behaviors 12(2):199-203.",
+    "3630807",
+    "At the end of treatment 35% were still experiencing strong urges to smoke and 23% reported finding it difficult keeping themselves from smoking.",
+  ),
   west1987Minority: ref(
     "West RJ, Hajek P, Belcher M (1987). Time course of cigarette withdrawal symptoms during four weeks of treatment with nicotine chewing gum. Addictive Behaviors 12(2):199-203.",
     "3630807",
@@ -114,22 +126,22 @@ export const REFS = {
   taylor2021: ref(
     "Taylor GM et al (2021). Smoking cessation for improving mental health. Cochrane Database of Systematic Reviews 3:CD013522.",
     "33687070",
-    "anxiety symptoms (SMD -0.28, 95% CI -0.43 to -0.13; 15 studies, 3141 participants; I2 = 69%; low-certainty evidence); depression symptoms: (SMD -0.30, 95% CI -0.39 to -0.21; 34 studies, 7156 participants; I2 = 69%' very low-certainty evidence)",
+    "anxiety symptoms (SMD -0.28, 95% CI -0.43 to -0.13; 15 studies, 3141 participants; I2 = 69%; low-certainty evidence); depression symptoms: (SMD -0.30, 95% CI -0.39 to -0.21; 34 studies, 7156 participants; I2 = 69%' very low-certainty evidence);  mixed anxiety and depression symptoms (SMD -0.31, 95% CI -0.40 to -0.22; 8 studies, 2829 participants; I2 = 0%; moderate certainty evidence)",
   ),
 } as const
 
 /** Card c: most people feel these mildly. */
 export const mildForMost: SourcedLine = {
   id: "mild",
-  text: "Most feel these mildly: in a smokers clinic, only a minority had severe symptoms in week 1.",
+  text: "Severe is not the rule: in a smokers clinic, only a minority had severe symptoms in week 1.",
   evidence: "weak",
   basis: {
     who: "Smokers-clinic clients who stayed off 4 weeks, using nicotine gum",
     n: "52",
     design: "Weekly ratings of withdrawal symptoms, from before quit day to week 4",
-    where: "UK, the authors' smokers clinic",
+    where: "A smokers clinic in the UK (the authors' address; not stated in the summary)",
     when: "Published 1987",
-    caveat: "A small study, and everyone used nicotine gum, which can soften withdrawal.",
+    caveat: "A small study, and everyone used nicotine gum, which can soften withdrawal. Only people who stayed off all 4 weeks were counted, so those who struggled most may be missing.",
   },
   refs: [REFS.west1987Minority],
 }
@@ -141,11 +153,11 @@ export const moodBetter: SourcedLine = {
   evidence: "weak",
   basis: {
     who: "Adults in studies that followed people who quit smoking and people who kept smoking",
-    n: "15 studies, 3,141 people (anxiety); 34 studies, 7,156 people (low mood)",
+    n: "15 studies, 3,141 people (anxiety); 34 studies, 7,156 people (low mood); 8 studies, 2,829 people (both together)",
     design: "Cochrane review; mostly the same people followed over time, not trials",
     where: "Several countries",
     when: "Published 2021",
-    caveat: "Low certainty for anxiety and very low for low mood: people who quit may differ in other ways. Studies of smokers.",
+    caveat: "Low certainty for anxiety, very low for low mood, moderate for the two measured together: people who quit may differ in other ways. Studies of smokers.",
   },
   refs: [REFS.taylor2021],
 }
@@ -153,23 +165,18 @@ export const moodBetter: SourcedLine = {
 /** Card a: everyday cravings. The time line marks and the text. */
 export const cravings = {
   title: "Cravings",
-  marks: [
-    { at: "Week 1", line: "Strongest" },
-    { at: "Week 4", line: "Fading (slower on gum)" },
-    { at: "Month 6", line: "13 in 100 still strong" },
-    { at: "Month 12", line: "None strong, 34 in 100 some" },
-  ],
-  text: "In 452 people quitting without medicine, urges fell steadily from the start; in 52 people on nicotine gum their strength did not drop until week 4. At 6 months, 13 in 100 of the people still off had strong urges; at 12 months none did, and about 34 in 100 still had some.",
+  text: "Strongest in the first weeks, then they fade over months. A year on, about a third of the people still off had some urges, and none had strong ones.",
+  detail: "In smokers who quit without medicine and stayed off, urge strength fell from week 1 onward. In a separate clinic study on nicotine gum it did not drop until week 4, and 35 in 100 still had strong urges then. At 6 months, 13 in 100 of the people still off had strong urges; at 12 months none did, and 34 in 100 had some.",
   evidence: "moderate" as Evidence,
   basis: {
     who: "Smokers quitting with support and no medicine (Ussher); smokers-clinic clients on nicotine gum (West)",
     n: "452 started (Ussher); asked while still off at weeks 1, 2, 3, 4, 26 and 52: 197, 156, 139, 131, 66 and 38 people. 52 people over 4 weeks (West).",
     design: "The same people followed and asked to rate their urges, off cigarettes confirmed by a breath test (Ussher); weekly ratings in a smokers clinic (West)",
-    where: "London, UK (Ussher); UK, the authors' smokers clinic (West)",
+    where: "London, UK (Ussher); a smokers clinic in the UK, by the authors' address (West)",
     when: "Published 2013 and 1987",
     caveat: "People who slipped dropped out of the later counts, so the late numbers describe those who stayed off: 66 people at 6 months, 38 at 12 months. The week-4 finding comes from people using nicotine gum.",
   } satisfies Basis,
-  refs: [REFS.ussher2013, REFS.west1987],
+  refs: [REFS.ussher2013, REFS.west1987, REFS.west1987Strong],
 }
 
 /** Card c: the line that some people's mood did not settle. */
@@ -183,7 +190,7 @@ export const notForEveryone: SourcedLine = {
     design: "Randomised: one group stayed off 31 days (checked by tests), the other kept smoking; mood rated twice a week",
     where: "USA",
     when: "Published 2002",
-    caveat: "Women only; those who stayed off were paid. Women with past depression had the bigger rise. The physical side of anxiety did settle, by week 2.",
+    caveat: "Women only; those who stayed off were paid. Women who tend toward low mood or worry, as a personality trait, had the bigger rise. The physical side of anxiety did settle, by week 2.",
   },
   refs: [REFS.gilbert2002],
 }
@@ -210,14 +217,15 @@ export const moveForMood: SourcedLine = {
 /** Cards c and d: caffeine, cigarette smokers only. */
 export const caffeine: SourcedLine = {
   id: "caffeine",
-  text: "If you drank coffee every day while smoking, try about half your usual amount. In a trial of 162 coffee-drinking smokers, those who quit and kept their usual caffeine had about double the caffeine in their body by week 3. Cutting it out entirely made people more tired for the first 3 days and did not ease other symptoms.",
+  text: "Smoked cigarettes and have caffeine every day? Have about half your usual amount for the first weeks. After quitting, the same coffee leaves about twice the caffeine in your body, which may be enough to cause jitters or bad sleep.",
   evidence: "weak",
   cigarettesOnly: true,
   basis: {
-    who: "Smokers who drank caffeine, in quit programmes of the American Lung Association",
+    who: "Smokers who used caffeine, in quit programmes of the American Lung Association",
     n: "162",
-    design: "Trial: clinics assigned to keep caffeine or stop it; caffeine measured in sputum (spit) for 3 weeks after quit day",
-    where: "California, USA",
+    measured: "Caffeine in sputum (spit) for 3 weeks after quit day. Those who kept their caffeine reached 203% of their level before quitting by week 3. Cutting caffeine out entirely made people more tired for the first 3 days and made no difference to other symptoms or to quitting.",
+    design: "Trial: clinics assigned to keep caffeine or stop it",
+    where: "USA (the place is not stated in the summary)",
     when: "Published 1997",
     caveat: "A pharmacy review (Kroon 2007) names chemicals in tobacco smoke as what speeds up caffeine; it does not name nicotine. Our reading: this does not apply if you only vaped or used pouches. \"About half\" is our arithmetic from \"doubled\", not a dose the study tested.",
   },
@@ -230,7 +238,7 @@ export const sleepSteps = {
   steps: [
     "Get up at the same time every day, whatever the night was like.",
     "Use the bed only for sleep.",
-    "Awake for about 20 minutes? Get up, do something quiet, and come back when sleepy.",
+    "Can't sleep? Get up, do something quiet, and go back to bed when sleepy.",
   ],
   evidence: "moderate" as Evidence,
   basis: {
@@ -263,7 +271,7 @@ export const hunger = {
 export const hungerHelp: SourcedLine[] = [
   {
     id: "exercise",
-    text: "Move every day. In 3 small trials (182 people), exercise programmes meant about 2 kg less weight gain a year later; at the end of the programmes there was little or no difference (4 trials, 404 people).",
+    text: "Exercise regularly. In 3 small trials (182 people), exercise programmes meant about 2 kg less weight gain a year later; at the end of the programmes there was little or no difference (4 trials, 404 people).",
     evidence: "weak",
     basis: {
       who: "People quitting smoking, in trials of ways to limit weight gain",
@@ -277,7 +285,7 @@ export const hungerHelp: SourcedLine[] = [
   },
   {
     id: "no-diet",
-    text: "Skip weight-loss lessons this month. In 2 small trials (61 people), detailed lessons without personal support did not cut weight gain, and in the same 2 trials (522 people) fewer may have stayed off. Low to very low certainty.",
+    text: "Skip weight-loss lessons on your own, without personal support. In 2 small trials (61 people) such lessons did not cut weight gain, and in 2 trials (522 people) fewer may have stayed off. Low to very low certainty.",
     evidence: "weak",
     basis: {
       who: "People quitting smoking",
@@ -285,7 +293,7 @@ export const hungerHelp: SourcedLine[] = [
       design: "Cochrane systematic review; weight-management lessons against none",
       where: "Several countries",
       when: "Published 2021",
-      caveat: "Low to very low certainty. Lessons with personal planning and feedback were not the same and are not what this line is about.",
+      caveat: "Low to very low certainty. Lessons with personal planning and feedback were not the same and are not what this line is about. Weight was counted only in the people who stayed off.",
     },
     refs: [REFS.hartmannBoyce2021Education],
   },
@@ -321,10 +329,10 @@ export const better: SourcedLine[] = [
     evidence: "moderate",
     cigarettesOnly: true,
     basis: {
-      who: "Smokers with early lung disease (mild to moderate airway narrowing); aged 35 to 60 in the Lung Health Study",
+      who: "Smokers with early lung disease (mild to moderate airway narrowing); aged 35 to 60, from the study's main paper",
       n: "5,733",
-      design: "Large trial (Lung Health Study); the same people followed for 5 years",
-      where: "USA and Canada (Lung Health Study centres)",
+      design: "Within a large trial (Lung Health Study): quitters and smokers compared over 5 years, but who quit was not assigned by chance",
+      where: "USA and Canada, from the study's main paper",
       when: "Published 1996",
       caveat: "Smokers with early lung disease, not everyone. How big the gain was is not in the summary we quote.",
     },
@@ -342,3 +350,30 @@ export const betterOrder: { when: string; line?: string; better?: string; number
   { when: "A year on", number: "after-body:15610111" },
   { when: "Years 1 and 3", number: "after-mood" },
 ]
+
+/** Under the cards, cigarette smokers only: some medicines need a lower dose after quitting. */
+export const medicines: SourcedLine = {
+  id: "medicines",
+  text: "Take a regular medicine? Tell your doctor you stopped smoking. For some medicines, such as clozapine, olanzapine or theophylline, the dose may need lowering.",
+  evidence: "moderate",
+  cigarettesOnly: true,
+  basis: {
+    who: "People who smoke and take medicines that tobacco smoke speeds up",
+    n: "A review of drug interactions",
+    design: "Pharmacy review",
+    where: "USA",
+    when: "Published 2007",
+    caveat: "The speed-up comes from chemicals in tobacco smoke, so this is about cigarettes. Ask your doctor or pharmacist; do not change a dose yourself.",
+  },
+  refs: [REFS.kroon2007Dose],
+}
+
+/** The cue card's basis, corrected from the date tool's shared box (four groups; who was studied). */
+export const cueBasis: Basis = {
+  who: "Smokers of 10 or more a day, not trying to quit, paid to stay off",
+  n: "86",
+  design: "Lab study: four groups kept off 7, 14 or 35 days; three were tested once on their last day, one on days 7, 14 and 35. Nobody was tested on other days or after day 35.",
+  where: "USA",
+  when: "Published 2011",
+  caveat: "Only days 7, 14 and 35 were tested, so nothing is claimed about days 1 to 6 or after day 35. The lab showed smoking cues, not real places. Paid volunteers in a lab, not people quitting in daily life.",
+}

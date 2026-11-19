@@ -35,8 +35,8 @@ export function phaseOf(band: Band, day: number): Phase {
   return "in-range"
 }
 
-/** The time line of the cravings card: four marks, evenly spaced, at these days. */
-export const CRAVING_MARK_DAYS = [7, 28, 182, 365] as const
+/** The time line of the cravings card: three spans (weeks 1-4, months 2-6, months 7-12), starting on these days. */
+export const CRAVING_MARK_DAYS = [1, 29, 183] as const
 
 /**
  * Percent position of his day on the cravings time line. The four marks sit at 12.5, 37.5, 62.5 and 87.5 percent;

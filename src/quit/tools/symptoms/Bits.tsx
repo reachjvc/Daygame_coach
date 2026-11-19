@@ -10,13 +10,14 @@ import { CRAVING_MARK_DAYS, cravingPosition, dayPosition, span } from "./bandMat
 import type { Basis } from "./content"
 import { symptomsText as t } from "./text"
 
-const ROWS = ["who", "n", "design", "where", "when", "caveat"] as const
+const ROWS = ["who", "n", "design", "where", "when", "measured", "caveat"] as const
 
 /** One basis as a small who / how many / design / where / when / caveat list; rows that are empty are left out. */
-export function BasisDl({ basis, label }: { basis: Partial<Basis>; label?: string }) {
+export function BasisDl({ basis, label, text }: { basis: Partial<Basis>; label?: string; text?: string }) {
   return (
     <div>
       {label && <p className="font-medium">{label}</p>}
+      {text && <p className="mb-1">{text}</p>}
       <dl className="flex flex-col gap-1">
         {ROWS.filter((k) => basis[k]).map((k) => (
           <div key={k}>
@@ -31,6 +32,8 @@ export function BasisDl({ basis, label }: { basis: Partial<Basis>; label?: strin
 
 export interface BasisPart {
   label?: string
+  /** The finding of this part, shown above its basis. */
+  text?: string
   basis: Partial<Basis>
 }
 
@@ -49,7 +52,7 @@ export function BasedOn({ parts, refs, evidence, testId }: { parts: BasisPart[];
           </div>
         )}
         {parts.map((p, i) => (
-          <BasisDl key={i} basis={p.basis} label={p.label} />
+          <BasisDl key={i} basis={p.basis} label={p.label} text={p.text} />
         ))}
         <SourceTap refs={refs} />
       </div>
@@ -164,8 +167,43 @@ export function BandView({ id, band, day, caption }: { id: string; band: Band; d
         <span>{t.axisStart}</span>
         <span>{t.axisEnd}</span>
       </div>
+      <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground" aria-hidden>
+        {peak && <Key swatch={<span className="inline-block h-3 w-4 rounded-sm bg-primary" />} label={t.legendPeak} />}
+        {gone && <Key swatch={<span className="inline-block h-3 w-4 rounded-sm border border-dashed border-primary bg-primary/40" />} label={t.legendFade} />}
+        {tested && <Key swatch={<span className="inline-block h-3 w-4 rounded-sm bg-primary/70" style={HATCH} />} label={t.legendTested} />}
+        {open && <Key swatch={<span className="inline-block h-3 w-4 rounded-sm border border-dashed border-primary bg-primary/20" />} label={t.legendOpen} />}
+        {day !== null && <Key swatch={<span className="inline-block h-3 w-0.5 bg-foreground" />} label={t.legendDay} />}
+      </ul>
       <p className="mt-1 text-sm text-muted-foreground">{caption}</p>
     </div>
+  )
+}
+
+function Key({ swatch, label }: { swatch: React.ReactNode; label: string }) {
+  return (
+    <li className="flex items-center gap-1.5">
+      {swatch}
+      {label}
+    </li>
+  )
+}
+
+/** A row of jump links to the cards; the cards his day is in are marked. */
+export function JumpChips({ items }: { items: { id: string; label: string; now: boolean }[] }) {
+  return (
+    <nav aria-label={t.jumpLabel} data-testid="jump-chips" className="flex flex-wrap gap-2">
+      {items.map((c) => (
+        <a
+          key={c.id}
+          href={`#card-${c.id}`}
+          data-testid={`jump-${c.id}`}
+          className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm ${c.now ? "border-primary bg-primary/15 font-medium" : "border-border bg-card"}`}
+        >
+          {c.label}
+          {c.now && <span className="ml-1.5 text-xs text-primary">· {t.now}</span>}
+        </a>
+      ))}
+    </nav>
   )
 }
 
@@ -179,7 +217,7 @@ export function CravingLine({ day }: { day: number | null }) {
         <div className="absolute inset-y-1 rounded-r-sm bg-primary/30" style={{ left: "62.5%", width: "37.5%" }} />
         {day !== null && <div data-testid="marker-craving" data-day={day} aria-label={t.markerLabel(day)} className="absolute inset-y-0 w-0.5 -translate-x-1/2 bg-foreground" style={{ left: `${cravingPosition(day)}%` }} />}
       </div>
-      <ol className="mt-1 grid grid-cols-4 gap-1 text-xs">
+      <ol className="mt-1 grid text-xs" style={{ gridTemplateColumns: "37.5% 25% 37.5%" }}>
         {t.cravingMarks.map((m, i) => (
           <li key={m.at} data-testid={`craving-mark-${i}`} data-reached={day !== null && day >= CRAVING_MARK_DAYS[i]} className="min-w-0 break-words text-center">
             <span className="block font-medium">{m.at}</span>
@@ -188,34 +226,5 @@ export function CravingLine({ day }: { day: number | null }) {
         ))}
       </ol>
     </div>
-  )
-}
-
-export function Legend({ showDay }: { showDay: boolean }) {
-  return (
-    <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-      <li className="flex items-center gap-1.5">
-        <span aria-hidden className="inline-block h-3 w-5 rounded-sm bg-primary" />
-        {t.legendPeak}
-      </li>
-      <li className="flex items-center gap-1.5">
-        <span aria-hidden className="inline-block h-3 w-5 rounded-sm border border-dashed border-primary bg-primary/40" style={FADE} />
-        {t.legendFade}
-      </li>
-      <li className="flex items-center gap-1.5">
-        <span aria-hidden className="inline-block h-3 w-5 rounded-sm bg-primary/70" style={HATCH} />
-        {t.legendTested}
-      </li>
-      <li className="flex items-center gap-1.5">
-        <span aria-hidden className="inline-block h-3 w-5 rounded-sm border border-dashed border-primary bg-primary/20" />
-        {t.legendOpen}
-      </li>
-      {showDay && (
-        <li className="flex items-center gap-1.5">
-          <span aria-hidden className="inline-block h-4 w-0.5 bg-foreground" />
-          {t.legendDay}
-        </li>
-      )}
-    </ul>
   )
 }
