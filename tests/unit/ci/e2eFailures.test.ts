@@ -62,6 +62,15 @@ describe("buildFailures", () => {
     expect(r.failed).toHaveLength(1)
     expect(r.failed[0].firstSha).toBe("bbbbbbbbbbbb")
   })
+  it("a test that moved lines keeps its firstSha and shows the new line", () => {
+    const r = buildFailures(report([["a.spec.ts", 42, "one", "unexpected"]]), prev(), ctx)
+    expect(r.failed).toEqual([{ id: "a.spec.ts:42 one", project: "desktop", firstSha: "0000000000", firstSubject: "Old", firstRunId: 0 }])
+  })
+  it("a flaky test that moved lines keeps its window", () => {
+    const first = buildFailures(report([["f.spec.ts", 9, "f", "flaky"]]), undefined, ctx)
+    const next = buildFailures(report([["f.spec.ts", 20, "f", "flaky"]]), first, ctx)
+    expect(next.flaky).toEqual([{ id: "f.spec.ts:20 f", project: "desktop", last5: [true, true] }])
+  })
   it("drops a test that passed", () => {
     expect(buildFailures(report([["a.spec.ts", 1, "one", "expected"]]), prev(), ctx).failed).toEqual([])
   })

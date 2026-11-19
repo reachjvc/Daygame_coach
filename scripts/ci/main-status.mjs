@@ -143,6 +143,14 @@ export function formatFailures(failures) {
   return lines
 }
 
+function readJson(path) {
+  try {
+    return JSON.parse(readFileSync(path, "utf8"))
+  } catch {
+    return undefined
+  }
+}
+
 /** Download the run's e2e-failures artifact into a temp dir and parse it; undefined on any trouble. */
 async function downloadFailures(runId, timeout) {
   if (timeout < 300) return undefined
@@ -227,18 +235,27 @@ export async function main(env = process.env) {
     runs = lists.flatMap((l) => (Array.isArray(l) ? l : []))
   }
   const found = findRed(runs)
-  const jobs = await Promise.all(found.map((red) => (fixture ? undefined : gh(["run", "view", String(red.runId), "--json", "jobs"], left()))))
+  // The failed-job lookup and the artifact download run side by side: in series they ate the budget.
+  const extras = await Promise.all(
+    found.map(async (red) => {
+      const [jobs, failures] = await Promise.all([
+        fixture ? undefined : gh(["run", "view", String(red.runId), "--json", "jobs"], left()),
+        red.workflow !== "E2E Tests"
+          ? undefined
+          : env.MAIN_STATUS_FAILURES_FIXTURE
+            ? readJson(env.MAIN_STATUS_FAILURES_FIXTURE)
+            : fixture
+              ? undefined
+              : downloadFailures(red.runId, left()),
+      ])
+      return { jobs, failures }
+    }),
+  )
   const out = []
   for (const [i, red] of found.entries()) {
-    out.push(formatLine(red, fixture ? undefined : firstFailedJob(jobs[i])))
-    if (red.workflow !== "E2E Tests") continue
+    out.push(formatLine(red, fixture ? undefined : firstFailedJob(extras[i].jobs)))
     try {
-      const failures = env.MAIN_STATUS_FAILURES_FIXTURE
-        ? JSON.parse(readFileSync(env.MAIN_STATUS_FAILURES_FIXTURE, "utf8"))
-        : fixture
-          ? undefined
-          : await downloadFailures(red.runId, left())
-      out.push(...formatFailures(failures))
+      out.push(...formatFailures(extras[i].failures))
     } catch {
       // the extra lines are a bonus
     }

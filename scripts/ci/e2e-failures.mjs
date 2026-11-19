@@ -24,7 +24,9 @@ import { pathToFileURL } from "node:url"
 
 export const FLAKY_WINDOW = 5
 
-const key = (t) => `${t.project}\u0000${t.id}`
+// The line is for display only: a test that moved lines is still the same test.
+const stripLine = (id) => String(id).replace(/^(\S+?):\d+ /, "$1 ")
+const key = (t) => `${t.project}\u0000${stripLine(t.id)}`
 
 /** @param {any} report Playwright JSON report @returns {{ failed: Array<{id:string,project:string}>, flaky: Array<{id:string,project:string}> }} */
 export function collectTests(report) {
@@ -62,7 +64,7 @@ export function buildFailures(report, previous, ctx) {
   })
   const history = new Map()
   for (const f of Array.isArray(previous?.flaky) ? previous.flaky : []) history.set(key(f), { id: f.id, project: f.project, last5: Array.isArray(f.last5) ? f.last5 : [] })
-  for (const t of now.flaky) if (!history.has(key(t))) history.set(key(t), { ...t, last5: [] })
+  for (const t of now.flaky) history.set(key(t), { ...t, last5: history.get(key(t))?.last5 ?? [] })
   const flakyNow = new Set(now.flaky.map(key))
   const flaky = []
   for (const [k, h] of history) {
