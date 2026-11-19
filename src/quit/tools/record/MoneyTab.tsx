@@ -16,13 +16,11 @@ function AmountForm({ ctx, onDone }: { ctx: RecordCtx; onDone: (saved: boolean) 
   const [unitId, setUnitId] = useState<string | null>(ctx.unit?.id ?? null)
   const [perDay, setPerDay] = useState(ctx.unit?.perDay === null || ctx.unit === null ? "" : String(ctx.unit?.perDay))
   const [price, setPrice] = useState(ctx.unit ? String(ctx.unit.priceUsd) : "")
-  const [tried, setTried] = useState(false)
   const unit = ctx.units.find((u) => u.id === unitId) ?? null
   const count = parseTyped(perDay, MAX_PER_DAY)
   const priceP = parseTyped(price, MAX_PRICE)
   const bad = count.kind === "bad" || priceP.kind === "bad"
   const save = () => {
-    setTried(true)
     if (!unit || bad) return
     const priceUsd = priceP.kind === "ok" ? priceP.value : (unit.defaultPriceUsd ?? 0)
     ctx.actions.saveUnit({ id: unit.id, perDay: count.kind === "ok" ? count.value : null, priceUsd, priceBasis: priceUsd !== unit.defaultPriceUsd ? "typed" : "default" })
@@ -74,7 +72,7 @@ function AmountForm({ ctx, onDone }: { ctx: RecordCtx; onDone: (saved: boolean) 
         </>
       )}
       <div className="flex gap-2">
-        <button type="submit" data-testid="amount-save" disabled={!unit || (tried && bad)} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-md bg-primary px-4 font-medium text-primary-foreground disabled:opacity-40">
+        <button type="submit" data-testid="amount-save" disabled={!unit} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-md bg-primary px-4 font-medium text-primary-foreground disabled:opacity-40">
           {t.save}
         </button>
         <button type="button" data-testid="amount-cancel" onClick={() => onDone(false)} className="inline-flex min-h-12 items-center justify-center rounded-md border border-border px-4">
