@@ -8,7 +8,7 @@ export const ifthenText = {
   pickTitle: "When does the craving pull hardest?",
   pickLine: "Tick the moments you want a plan for. Start with the ones that pull hardest.",
   pickGroup: "Moments",
-  banner: (list: string) => `We ticked these from your saves in Craving now? and Slipped?: ${list}. Untick any that are wrong.`,
+  banner: (list: string) => `Ticked from the cravings and slips you saved: ${list}. Untick any that are wrong.`,
   times: (n: number) => (n === 1 ? "once" : `${n} times`),
   customLabel: "Something else",
   customPlaceholder: "A moment in your own words",
@@ -42,6 +42,8 @@ export const ifthenText = {
   done: "Done",
   editLabel: "What I will do",
   up: "Move up",
+  upShort: "Up",
+  downShort: "Down",
   down: "Move down",
   remove: "Remove",
   removed: (names: string) => `Removed: ${names}.`,
@@ -51,7 +53,7 @@ export const ifthenText = {
   dueTitle: "Did these work?",
   dueLine: "Your check-back day is here. Answer for each line.",
   kept: "Kept",
-  dueSummary: (kept: number, change: number, open: number) => `${kept} kept, ${change} to change, ${open} not answered.`,
+  dueSummary: (kept: number, change: number) => [kept > 0 ? `${kept} kept` : "", change > 0 ? `${change} to change` : ""].filter(Boolean).join(", ") + ".",
   dueNewLine: "All answered. When should we ask again?",
   checkTitle: "Check back",
   checkLine: "When should we ask if these worked?",
@@ -59,7 +61,7 @@ export const ifthenText = {
   in2: "In 2 weeks",
   noDate: "No date",
   checkSet: (day: string) => `We will ask on ${day}.`,
-  checkNone: "No check-back day set.",
+  clearDate: "Clear",
   planNote: "A plan is a first try. If a line doesn't work, change it.",
 
   print: "Print or save",
@@ -70,9 +72,9 @@ export const ifthenText = {
   printNone: "no date set",
 
   keptHere: "Your plan is kept on this phone.",
-  usedIn: "In",
+  usedIn: "Your lines also show in",
   usedInSos: "Craving now?",
-  usedInEnd: ", under What to do right here, your line for a moment shows first. Moments you typed yourself show only here.",
+  usedInEnd: ": tap What to do right here, then the moment. Moments you typed yourself show only here.",
   toMenu: "Back to the menu",
 
 } as const

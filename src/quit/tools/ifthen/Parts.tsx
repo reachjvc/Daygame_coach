@@ -12,7 +12,22 @@ const wrap = "[overflow-wrap:anywhere]"
 const partLabel = "text-xs font-semibold uppercase tracking-wide text-muted-foreground"
 
 /** The card he is building: "If" and "Then" as two labelled parts, each text exactly as listed or as he wrote it. */
-export function PlanCard({ label, then, testId }: { label: string; then: string; testId: string }) {
+export function PlanCard({ label, then, testId, compact = false }: { label: string; then: string; testId: string; compact?: boolean }) {
+  if (compact) {
+    // One line each, label beside the text: the card being built on a question screen stays short.
+    return (
+      <div data-testid={testId} className={`flex flex-col gap-1 ${wrap}`}>
+        <p className="text-base">
+          <span className={`${partLabel} mr-2`}>{t.ifLabel}</span>
+          <span data-testid={`${testId}-if`}>{label}</span>
+        </p>
+        <p className="text-base">
+          <span className={`${partLabel} mr-2`}>{t.thenLabel}</span>
+          <span data-testid={`${testId}-then`}>{then.trim() ? showThen(then) : t.thenEmpty}</span>
+        </p>
+      </div>
+    )
+  }
   return (
     <div data-testid={testId} className={`flex flex-col gap-2 ${wrap}`}>
       <div>
@@ -175,7 +190,7 @@ export function LineCard({
   }
   return (
     <li data-testid={`card-${index}`} className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
-      <PlanCard label={label} then={line.then} testId={`card-${index}-text`} />
+      <PlanCard label={label} then={editing ? draft.then : line.then} testId={`card-${index}-text`} />
       {due && !editing && (
         <div role="group" aria-label={t.dueTitle} className="flex gap-2">
           {(["kept", "change"] as const).map((a) => (
@@ -221,11 +236,11 @@ export function LineCard({
             </button>
           </div>
           <div className="flex flex-wrap gap-2 border-t border-border pt-3">
-            <button type="button" data-testid={`card-${index}-up`} aria-label={t.up} disabled={index === 0} onClick={() => onMove(-1)} className={`${btn} w-11 disabled:opacity-40`}>
-              {"↑"}
+            <button type="button" data-testid={`card-${index}-up`} aria-label={t.up} disabled={index === 0} onClick={() => onMove(-1)} className={`${btn} gap-1 disabled:opacity-40`}>
+              <span aria-hidden="true">↑</span> {t.upShort}
             </button>
-            <button type="button" data-testid={`card-${index}-down`} aria-label={t.down} disabled={index === count - 1} onClick={() => onMove(1)} className={`${btn} w-11 disabled:opacity-40`}>
-              {"↓"}
+            <button type="button" data-testid={`card-${index}-down`} aria-label={t.down} disabled={index === count - 1} onClick={() => onMove(1)} className={`${btn} gap-1 disabled:opacity-40`}>
+              <span aria-hidden="true">↓</span> {t.downShort}
             </button>
             <button type="button" data-testid={`card-${index}-remove`} onClick={onRemove} className={`${btn} ml-auto`}>
               {t.remove}
@@ -243,7 +258,7 @@ export function PrintView({ cards, checkText, onClose }: { cards: { id: string; 
     <section data-testid="print-view" data-print-root className="flex flex-col gap-3 text-foreground">
       <style>
         {
-          "@media print{html,body{background:white !important;color:black !important}body *{visibility:hidden}[data-print-root],[data-print-root] *{visibility:visible}[data-print-root]{position:absolute;left:0;top:0;width:100%;color:black;background:white;border:0}[data-no-print]{display:none}}"
+          "@media print{html,body{background:white !important;color:black !important}body *{visibility:hidden}[data-print-root],[data-print-root] *{visibility:visible}[data-print-root]{position:absolute;left:0;top:0;width:100%;color:black;background:white;border:0}[data-no-print]{display:none}[data-print-root] .text-muted-foreground{color:#444 !important}}"
         }
       </style>
       <h2 className="hidden text-xl font-semibold print:block">{t.printTitle}</h2>

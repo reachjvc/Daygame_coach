@@ -161,8 +161,9 @@ for (const size of SIZES) {
       await expect(page.getByTestId("ev-list")).toBeVisible()
       await expect(page.locator('[data-testid^="idea-"]')).toHaveCount(0)
       await page.getByTestId("more-ideas").click()
-      await expect(page.locator('[data-testid^="idea-"]')).toHaveCount(7)
+      await expect(page.locator('[data-testid^="idea-"]')).toHaveCount(6)
       await expect(page.getByTestId("idea-teeth")).toHaveCount(0) // it repeats an after-meal card
+      await expect(page.getByTestId("idea-gum")).toHaveCount(0) // so does the mint
       await expect(page.getByTestId("idea-water")).toContainText(stop(idea("water")))
       await expect(page.getByTestId("idea-reasons")).toHaveCount(0)
       await expect(page.getByTestId("idea-craving")).toHaveCount(0)
@@ -361,8 +362,8 @@ for (const size of SIZES) {
       await expect(page.getByTestId("check-back")).toContainText("When should we ask if these worked?")
       await expect(page.getByTestId("due-banner")).toHaveCount(0)
       // nothing is shown as picked before he picks
-      await expect(page.getByTestId("check-none")).toHaveAttribute("aria-pressed", "false")
-      await expect(page.getByTestId("check-shown")).toHaveText("No check-back day set.")
+      await expect(page.getByTestId("check-none")).toHaveCount(0)
+      await expect(page.getByTestId("check-shown")).toHaveCount(0)
       await tap(page, "check-1w")
       await expect(page.getByTestId("check-shown")).toHaveText("We will ask on Thu 26 Nov.")
       await shot(page, `6-checkback-${size.name}`)
@@ -384,8 +385,10 @@ for (const size of SIZES) {
       await expect(page.getByTestId("due-summary")).toHaveCount(0)
       await tap(page, "change-1")
       await expect(page.getByTestId("card-1-edit")).toBeVisible()
-      await expect(page.getByTestId("due-summary")).toHaveText("1 kept, 1 to change, 0 not answered.")
-      await expect(page.getByTestId("due-banner").getByTestId("check-2w")).toBeVisible()
+      await expect(page.getByTestId("due-summary")).toHaveText("1 kept, 1 to change.")
+      // the summary and the new-date chips come below the cards, where he answers
+      await expect(page.getByTestId("due-done").getByTestId("check-2w")).toBeVisible()
+      await expect(page.getByTestId("due-done").getByTestId("check-none")).toBeVisible()
       await shot(page, `6-due-done-${size.name}`)
       await tap(page, "check-2w")
       await expect(page.getByTestId("due-banner")).toHaveCount(0)
@@ -546,9 +549,9 @@ for (const size of SIZES) {
       await expect(page.locator('[data-testid^="idea-"]')).toHaveCount(6)
       await pickIdea(page, "water")
       await tap(page, "then-next")
-      await page.getByTestId("more-ideas").click()
-      for (const id of ["move5", "leave", "text", "puzzle", "teeth", "water", "gum"]) await expect(page.getByTestId(`idea-${id}`)).toHaveCount(0)
-      await expect(page.locator('[data-testid^="idea-"]')).toHaveCount(1)
+      // in the car no quick idea is left (each one repeats a card or can't be done driving), so no More ideas button
+      await expect(page.getByTestId("more-ideas")).toHaveCount(0)
+      await expect(page.locator('[data-testid^="idea-"]')).toHaveCount(0)
     })
 
     test("12 a line of a moment the data file lost stays, under Other moment, with Change and Remove", async ({ page }) => {
@@ -579,6 +582,30 @@ for (const size of SIZES) {
       await expect(page.getByTestId("card-0-remove")).toBeVisible()
       const kept = await page.evaluate(() => JSON.parse(window.localStorage.getItem("quit-v1") ?? "{}").nicotine.ifthen.lines)
       expect(kept.map((l: { id: string; then: string }) => [l.id, l.then])).toEqual([["a", "Old"], ["b", "Have gum"], ["c", "Sing"]])
+    })
+
+    test("13 leaving the plan after a removal lands on the first screen with only the plan's moments", async ({ page }) => {
+      await open(page)
+      await build(page, [
+        { moment: "coffee", swap: 0 },
+        { moment: "stress", idea: "water" },
+      ])
+      await tap(page, "card-0-change")
+      await tap(page, "card-0-remove")
+      await page.goBack()
+      await expect(page.getByTestId("pick-next")).toBeVisible()
+      await expect(page.getByTestId("moment-coffee")).toHaveAttribute("aria-pressed", "false")
+      await expect(page.getByTestId("moment-stress")).toHaveAttribute("aria-pressed", "true")
+      await tap(page, "pick-next")
+      await expect(page.getByTestId("result")).toBeVisible()
+      await expect(page.locator('[data-testid^="card-"][data-testid$="-text"]')).toHaveCount(1)
+      // the last line too: nothing comes back
+      await tap(page, "card-0-change")
+      await tap(page, "card-0-remove")
+      await expect(page.getByTestId("plan-empty")).toBeVisible()
+      await page.goBack()
+      await expect(page.getByTestId("pick-next")).toBeDisabled()
+      await expect(page.locator('[aria-pressed="true"]')).toHaveCount(0)
     })
   })
 }

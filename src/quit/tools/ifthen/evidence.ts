@@ -58,7 +58,7 @@ export const EVIDENCE = {
   },
   list: {
     id: "list",
-    text: "In one trial, 193 smokers were split into four groups. The group given a list of responses and told to link each temptation to one smoked fewer cigarettes and quit more often than the other three groups. One of those groups had the same list without that step.",
+    text: "In one trial, 193 smokers were randomly split into four groups. The group given a list of responses and told to link each temptation to one smoked fewer cigarettes and quit more often than the other three groups. One of those groups had the same list without that step.",
     basis: {
       who: "Smokers (cigarettes); vapes and pouches were not studied",
       n: "193",
@@ -70,7 +70,7 @@ export const EVIDENCE = {
   },
   negation: {
     id: "negation",
-    text: "In experiments on eating habits, plans like \"if this, then not that\" backfired: the habit came back stronger than in people who only meant to cut down, or who planned something else to do instead. It was most likely when the habit was strong.",
+    text: "In experiments on eating habits, plans like \"if this, then not that\" backfired: the habit got stronger than in people who only set the goal, or who planned something else to do instead. It was most likely when the habit was strong.",
     basis: {
       who: "Not stated in the abstract; the paper is about unhealthy eating habits, not drugs",
       n: "Not stated in the abstract",

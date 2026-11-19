@@ -2014,7 +2014,7 @@
     {
       "momentId": "others-smoking",
       "cards": [
-        "Stay inside, or walk the other way for a few minutes.",
+        "Move away from them, or walk the other way for a few minutes.",
         "Say it once, plainly: \"I've stopped.\"",
         "Hold a drink or chew gum, so your hands and mouth have something."
       ]
@@ -2031,7 +2031,7 @@
       "momentId": "waking",
       "cards": [
         "Get up straight away and drink a glass of water.",
-        "Change the first ten minutes: shower first, or step outside without it.",
+        "Change the first ten minutes: shower first, or step outside without your nicotine.",
         "Eat something with your first coffee or tea."
       ]
     },
@@ -2071,7 +2071,7 @@
     },
     {
       "id": "puzzle",
-      "text": "Play a three-minute block puzzle"
+      "text": "Play a short block puzzle"
     },
     {
       "id": "teeth",

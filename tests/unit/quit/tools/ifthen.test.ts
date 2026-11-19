@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   ideasFor,
-  addToDraft,
-  dropFromDraft,
+  outOfStep,
   addRemoved,
   applyDraft,
   capFirst,
@@ -195,19 +194,16 @@ describe("round 2", () => {
     const all = ["move5", "water", "gum", "breathe", "leave", "text", "puzzle", "teeth"].map((id) => ({ id }))
     expect(ideasFor("others-smoking", all).map((x) => x.id)).not.toContain("leave")
     expect(ideasFor("drinks", all).map((x) => x.id)).not.toContain("leave")
-    expect(ideasFor("driving", all).map((x) => x.id)).toEqual(["breathe"])
+    expect(ideasFor("driving", all)).toEqual([])
     expect(ideasFor(null, all)).toHaveLength(8)
   })
-  it("a removed line leaves the draft and Undo puts it back", () => {
+  it("outOfStep sees a line removed or put back on the plan", () => {
     const l1 = { id: "a", momentId: "coffee", ownMoment: "", then: "x", from: "card" as const }
     const l2 = { id: "b", momentId: "stress", ownMoment: "", then: "y", from: "card" as const }
     const d = draftFromLines([l1, l2])
-    const dropped = dropFromDraft(d, l1)
-    expect(dropped?.ticked).toEqual(["stress"])
-    expect(dropped?.choices.coffee).toBeUndefined()
-    // the last tick stays with its answer, so the plan screen stays open
-    expect(dropFromDraft(dropped, l2)).toBe(dropped)
-    expect(addToDraft(dropped, l1)?.choices.coffee).toEqual({ then: "x", from: "card" })
+    expect(outOfStep(d, [l1, l2])).toBe(false)
+    expect(outOfStep(d, [l2])).toBe(true)
+    expect(outOfStep(draftFromLines([l2]), [l1, l2])).toBe(true)
   })
   it("a draft with no ticks does not hide saved lines; a bad check-back day is dropped", () => {
     const s = parseIfthen({ lines: [{ id: "a", momentId: "coffee", ownMoment: "", then: "x", from: "card" }], draft: { ticked: "bad" }, checkin: "2026-13-45" })
@@ -219,8 +215,8 @@ describe("round 2", () => {
 describe("ideasFor", () => {
   const ideas = ["move5", "water", "leave", "text", "puzzle", "teeth", "breathe"].map((id) => ({ id }))
   it("leaves out ideas that cannot be done at a moment", () => {
-    expect(ideasFor("driving", ideas).map((x) => x.id)).toEqual(["breathe"])
-    expect(ideasFor("drinks", ideas).map((x) => x.id)).toEqual(["water", "text", "puzzle", "breathe"])
+    expect(ideasFor("driving", ideas)).toEqual([])
+    expect(ideasFor("drinks", ideas).map((x) => x.id)).toEqual(["water", "text", "breathe"])
     expect(ideasFor("waking", ideas).map((x) => x.id)).not.toContain("leave")
   })
   it("offers all of them at his own moment", () => {

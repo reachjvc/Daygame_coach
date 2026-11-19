@@ -35,7 +35,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | 4 | Slipped? Restart today | wave-1 `slip` | slips go into the shared record; clean runs never reset | checking (live, review round 2 next) |
 | 5 | The 12 lies test | wave-1 `beliefs` | from `beliefs/best`: a reply per belief, "can you stop?", earlier results | building |
 | 6 | What you'll feel, and when | lab `timeline/best` | wave-1 `symptoms` (what helps per symptom) | checking (on main, reviews next) |
-| 7 | If-then plan | lab `ifthen/best` | — | building |
+| 7 | If-then plan | lab `ifthen/best` | — | waiting for you |
 | 8 | Daily check-in | lab `checkin/best` | slip question from `diary/best` | building |
 | 9 | What it costs you | wave-1 `cost` | per-pack price and live update (copy e); money setup from the shared record | building |
 | 10 | Your past attempts | lab `past/best` | wave-1's "many tries are normal" number and "after the first slip" question | waiting for you |
@@ -1791,6 +1791,24 @@ targets or "what you could buy" here: Tool 3 holds targets.
   card says to put the song on before driving off.
   Not changed, proposed: Craving now? chips get no "has a plan line" mark (a Tool 2 change); "Moment 3 of 3" when only
   one moment is new; the nudge does not block saving a "won't" line.
+- Round 3 (2026-11-20, same three reviewers on :3400 at 68a6689f): no blocker in any of the three. Fixed (Opus):
+  leaving the plan after Remove or Undo lands on the first screen with only the plan's moments ticked (a removed last
+  line came back through Back and Continue, and Back after Remove did nothing visible); the card being edited shows the
+  new pick live; on the check-back day the summary and the new-date chips come below the cards, without "0 …" parts;
+  the card being built on a question screen is one line each, so Next sits higher; Move shows "↑ Up" / "↓ Down"; Check
+  back has 1 week / 2 weeks and a Clear link (No date only on the check-back day); quick ideas that repeat a card's gum
+  or mint, go outside on a work break, or work against "Go to bed now" / "stay where the talking is" are not offered,
+  and In the car keeps only its three cards (no More ideas); the print view's labels print dark grey; no print view
+  with no lines. Text: the eating-habits line says "only set the goal" (the abstract's intention-only group) and "got
+  stronger"; the Armitage line says "randomly"; the banner reads "Ticked from the cravings and slips you saved"; the
+  used-in line says where to tap. Data for both tools: "Move away from them, or walk the other way…", "…step outside
+  without your nicotine.", "Play a short block puzzle"; Craving now?'s help line no longer says "Three ideas".
+  **Stopped after three rounds (recipe step 4).** The round 3 fixes above were checked by the spec and screenshots, not
+  by a fourth reviewer walk. Not changed, proposed: the page frame's top "Back" goes to the menu while the in-page
+  Back steps back (shared frame of every tool; rename it "All tools"); Craving now? chips get no "has a plan line"
+  mark; reload on the print view, then Back to my plan, then browser Back stays on the plan; the plan says "kept on
+  this phone" on a computer too (Craving now? says the same); the abstract's result for plans used alone (14 vs 4 in
+  100, very wide range) is left out.
 
 ### From the Tool 13 build (Sonnet, 2026-11-19)
 

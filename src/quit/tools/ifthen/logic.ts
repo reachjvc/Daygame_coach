@@ -129,7 +129,7 @@ export const withOwn = (d: Draft | null, text: string): Draft => {
   return { ...cur, ticked: addOwn(cur.ticked, text) }
 }
 
-/** Toggles one moment key in a draft; a key that was ticked loses its answer. */
+/** Toggles one moment key in a draft; its answer is kept, so ticking it again brings the answer back. */
 export function toggleTick(d: Draft | null, key: string): Draft {
   const cur = d ?? { ticked: [], choices: {}, pre: false, reached: 1 }
   if (cur.ticked.includes(key)) return { ...cur, ticked: cur.ticked.filter((k) => k !== key) }
@@ -152,16 +152,16 @@ export function withStop(text: string): string {
  * moment's own cards (outside is where people smoke), and ones that repeat one of its cards.
  */
 export const IDEA_EXCLUDE: Record<string, string[]> = {
-  "after-food": ["teeth"],
+  "after-food": ["teeth", "gum"],
   coffee: ["gum"],
-  drinks: ["move5", "teeth", "leave"],
-  "work-break": ["text"],
+  drinks: ["move5", "teeth", "leave", "puzzle"],
+  "work-break": ["text", "leave"],
   stress: ["breathe", "move5"],
-  bored: ["puzzle"],
-  "others-smoking": ["leave", "teeth"],
-  "late-night": ["text", "leave"],
+  bored: ["puzzle", "gum"],
+  "others-smoking": ["leave", "teeth", "gum"],
+  "late-night": ["text", "leave", "puzzle", "move5"],
   waking: ["leave", "water"],
-  driving: ["move5", "leave", "text", "puzzle", "teeth", "water", "gum"],
+  driving: ["move5", "leave", "text", "puzzle", "teeth", "water", "gum", "breathe"],
 }
 
 /** The quick ideas offered at one moment (a moment he typed gets them all). */
@@ -356,22 +356,11 @@ export function dayLabel(day: string): string {
   return `${WEEKDAYS[wd]} ${d} ${MONTHS[m - 1]}`
 }
 
-/** Takes a removed line's moment out of the draft, so walking the questions again does not quietly bring it back. */
-export function dropFromDraft(d: Draft | null, line: Line): Draft | null {
-  if (!d) return d
-  const k = lineKey(line)
-  const choices = { ...d.choices }
-  delete choices[k]
-  const ticked = d.ticked.filter((x) => x !== k)
-  // The last tick stays with its answer: the plan screen needs one answered tick to stay open.
-  if (ticked.length === 0) return d
-  return { ...d, ticked, choices, reached: Math.max(1, d.reached - 1) }
-}
-
-/** Puts an undone line's moment back into the draft with its answer. */
-export function addToDraft(d: Draft | null, line: Line): Draft | null {
-  if (!d) return d
-  const k = lineKey(line)
-  const ticked = d.ticked.includes(k) ? d.ticked : [...d.ticked, k]
-  return { ...d, ticked, choices: { ...d.choices, [k]: { then: line.then, from: line.from } }, reached: ticked.length + 2 }
+/** True when the draft's answered moments are not the plan's moments (a line was removed or put back on the plan). */
+export function outOfStep(d: Draft | null, lines: Line[]): boolean {
+  const planKeys = new Set(lines.map(lineKey))
+  const answered = new Set((d?.ticked ?? []).filter((k) => thenOk(d?.choices[k])))
+  if (planKeys.size !== answered.size) return true
+  for (const k of planKeys) if (!answered.has(k)) return true
+  return false
 }

@@ -17,13 +17,12 @@ import { InfoLine } from "../date/Bits"
 import { EVIDENCE } from "./evidence"
 import {
   addRemoved,
-  addToDraft,
   applyDraft,
-  dropFromDraft,
   cleanState,
   draftFromLines,
   EMPTY_IFTHEN,
   firstOpenMoment,
+  outOfStep,
   ideasFor,
   firstUnanswered,
   dayLabel,
@@ -145,6 +144,21 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
           },
     )
   }, [state, bb, moments, update])
+
+  // Leaving the plan after its lines changed (Remove, Undo) lands on the first screen with the plan's own moments
+  // ticked, so no removed line comes back unasked through Back and Continue, and no question shows a removed moment.
+  const wasResult = useRef(false)
+  useEffect(() => {
+    if (state === null) return
+    if (wasResult.current && !isResult && outOfStep(state.draft, state.lines)) {
+      update((s) => ({ ...s, draft: s.lines.length > 0 ? draftFromLines(s.lines, "pick") : null }))
+      setRemoved([])
+      const p = new URLSearchParams(sp.toString())
+      p.set("s", "1")
+      window.history.replaceState(null, "", `${pathname}?${p.toString()}`)
+    }
+    wasResult.current = isResult
+  }, [state, isResult, update, sp, pathname])
 
   // A double tap on Continue / Next must not pick a card on the next screen: option taps wait 400 ms after a screen change.
   const changedAt = useRef(0)
@@ -320,8 +334,8 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
         <p data-testid="moment-of" className="text-sm text-muted-foreground">
           {t.momentOf(i + 1, draft.ticked.length)}
         </p>
-        <div className="rounded-lg border border-border bg-card p-4">
-          <PlanCard label={labelOf(key)} then={choice?.then ?? ""} testId="live-card" />
+        <div className="rounded-lg border border-border bg-card px-4 py-3">
+          <PlanCard label={labelOf(key)} then={choice?.then ?? ""} testId="live-card" compact />
         </div>
         <Choices
           key={key}
@@ -376,7 +390,7 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
   }))
 
   // The print view is its own history entry (?print=1), so browser Back closes it and reload keeps it.
-  const printing = sp.get("print") === "1"
+  const printing = sp.get("print") === "1" && lines.length > 0
   const printHref = (on: boolean) => {
     const p = new URLSearchParams(sp.toString())
     if (on) p.set("print", "1")
@@ -400,25 +414,15 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
     return <PrintView cards={cardInfo} checkText={st.checkin ? dayLabel(st.checkin) : t.printNone} onClose={closePrint} />
   }
 
-  /** The plan is the screen after the last moment: when the draft's moments change, this entry keeps showing the plan. */
-  const stayOnPlan = (d: Draft | null) => {
-    if (!d) return
-    const p = new URLSearchParams(sp.toString())
-    p.set("s", String(totalScreens(d) + 1))
-    window.history.replaceState(null, "", `${pathname}?${p.toString()}`)
-  }
   const remove = (id: string) => {
     const index = lines.findIndex((l) => l.id === id)
     if (index < 0) return
     const line = lines[index]
-    const nd = dropFromDraft(st.draft, line)
     setRemoved((r) => addRemoved(r, line, index))
-    update((s) => ({ ...s, lines: s.lines.filter((l) => l.id !== id), draft: nd }))
-    stayOnPlan(nd)
+    update((s) => ({ ...s, lines: s.lines.filter((l) => l.id !== id) }))
   }
   const undo = () => {
     const back = removed
-    const nd = back.reduce((d, r) => addToDraft(d, r.line), st.draft)
     setRemoved([])
     update((s) => ({
       ...s,
@@ -426,22 +430,20 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
         s.lines.filter((l) => !back.some((r) => r.line.id === l.id)),
         back,
       ),
-      draft: nd,
     }))
-    stayOnPlan(nd)
   }
   const removedNames = removed.map((r) => (r.line.momentId ? labelOf(r.line.momentId) : r.line.ownMoment)).join(", ")
 
-  const chips = (
+  /** 1 week / 2 weeks; "No date" only where a choice is needed to finish (after the check-back day). */
+  const chips = (withNone: boolean) => (
     <div role="group" aria-label={t.checkTitle} className="flex flex-wrap gap-2">
       {(
         [
           ["check-1w", t.in1, 7],
           ["check-2w", t.in2, 14],
-          ["check-none", t.noDate, null],
+          ...(withNone ? ([["check-none", t.noDate, null]] as const) : []),
         ] as const
       ).map(([id, label, days]) => {
-        // "No date" is never shown as picked: an empty day is the start, not a choice he made.
         const on = days !== null && st.checkin === addDays(today, days)
         return (
           <button
@@ -476,15 +478,6 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
         <div data-testid="due-banner" className="rounded-lg border border-primary bg-card p-4">
           <h3 className="text-base font-semibold">{t.dueTitle}</h3>
           <p className="text-sm text-muted-foreground">{t.dueLine}</p>
-          {rc.open === 0 && (
-            <div className="mt-2 flex flex-col gap-2">
-              <p data-testid="due-summary" className="text-sm">
-                {t.dueSummary(rc.kept, rc.change, rc.open)}
-              </p>
-              <p className="text-sm">{t.dueNewLine}</p>
-              {chips}
-            </div>
-          )}
         </div>
       )}
 
@@ -526,6 +519,16 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
         </ul>
       )}
 
+      {due && rc.open === 0 && (
+        <div data-testid="due-done" className="flex flex-col gap-2 rounded-lg border border-primary bg-card p-4">
+          <p data-testid="due-summary" className="text-sm">
+            {t.dueSummary(rc.kept, rc.change)}
+          </p>
+          <p className="text-sm">{t.dueNewLine}</p>
+          {chips(true)}
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
@@ -553,10 +556,17 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
         <section data-testid="check-back" className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
           <h3 className="text-base font-semibold">{t.checkTitle}</h3>
           <p className="text-sm text-muted-foreground">{t.checkLine}</p>
-          {chips}
-          <p data-testid="check-shown" className="text-sm">
-            {st.checkin ? t.checkSet(dayLabel(st.checkin)) : t.checkNone}
-          </p>
+          {chips(false)}
+          {st.checkin && (
+            <div className="flex flex-wrap items-center gap-x-3">
+              <p data-testid="check-shown" className="text-sm">
+                {t.checkSet(dayLabel(st.checkin))}
+              </p>
+              <button type="button" data-testid="check-clear" onClick={() => setCheck(null)} className="inline-flex min-h-11 items-center text-sm text-muted-foreground underline">
+                {t.clearDate}
+              </button>
+            </div>
+          )}
           <p className="text-sm text-muted-foreground">{t.planNote}</p>
         </section>
       )}
