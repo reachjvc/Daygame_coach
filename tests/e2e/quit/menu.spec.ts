@@ -10,7 +10,7 @@ import { test, expect, SIGNED_OUT } from "../fixtures/test"
 import { quitUrl, NICOTINE_HIDDEN_WITHOUT_PREVIEW } from "../helpers/quit"
 import type { Page } from "@playwright/test"
 import { QUIT_TOOL_IDS } from "../../../src/quit/types"
-import { isLiveTool, liveToolIds } from "../../../src/quit/menu"
+import { findMenuTool, isLiveTool, liveToolIds } from "../../../src/quit/menu"
 
 test.use({ storageState: SIGNED_OUT, viewport: { width: 390, height: 844 } })
 
@@ -45,7 +45,8 @@ for (const colorScheme of ["dark", "light"] as const) {
         if (isLiveTool(id)) await expect(row).toHaveAttribute("href", /^\/quit\/nicotine\//)
         else await expect(row).toHaveAttribute("data-soon", "true")
       }
-      if (liveToolIds().length > 0) await expect(page.getByText("Free account").first()).toBeVisible()
+      // the account pill shows only on live rows that need a free account
+      await expect(page.getByText("Free account")).toHaveCount(liveToolIds().filter((id) => findMenuTool(id)?.account === "free").length)
       const body = (await page.locator("body").innerText()).toLowerCase()
       expect(body).not.toContain("no account")
       expect(body).not.toContain("start here")

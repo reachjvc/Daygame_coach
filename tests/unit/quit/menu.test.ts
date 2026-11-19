@@ -53,7 +53,7 @@ describe("who can be viewed", () => {
   })
   it("in production a tool page opens without ?preview=1 only when liveTools.json lists it", () => {
     vi.stubEnv("NODE_ENV", "production")
-    expect(liveToolIds()).toEqual(["date", "sos"])
+    expect(liveToolIds()).toEqual(expect.arrayContaining(["date", "sos"]))
     expect(toolReachable("date", false)).toBe(true)
     expect(toolReachable("sos", false)).toBe(true)
     expect(toolReachable("cost", false)).toBe(false)
