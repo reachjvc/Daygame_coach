@@ -781,6 +781,69 @@ was unsure of, 15 hidden spot checks and 14 lines where the judges heard differe
 two judges' lines before comparing, merge repeated items, and rank the rest, without dropping any heard
 speech.
 
+### Phase 11: let the machines settle their own disagreements (proposed, 2026-11-19)
+
+Goal: almost no lines for the owner, and a measured error rate on the lines nobody checks.
+Today 307 of 1406 lines (22%) go to him. The owner asked for a systematic way to use the
+disagreements instead of listening to them.
+
+Idea: most disagreements are two judges weighing the same evidence differently. Every
+past disagreement is data: for each kind of disagreement, measure how often each machine
+is right, then let a fixed, tested rule decide. The owner only gets the questions whose
+answer settles many lines at once.
+
+Models: Opus for the design and the frozen test (11.0, 11.5, 11.6); Sonnet builds and runs
+11.1–11.4.
+
+**11.0 Freeze the test first** (before any settler result is seen):
+- Truth: the owner's 25 big-test answers (`gold/bigtest.key.json`), his 11 probe answers
+  (`gold/P1.owner11.json`), and the probe key he called "super correct" (`gold/P1.draft.json`).
+  These are held out: no rule may be tuned on them.
+- Practice answers ("silver"): lines where both judges and all strong signals agree. The
+  owner's 4 of 4 sure spot checks back them; the settler may tune on them.
+- Pass: the settler gets at least as many owner answers right as the lean judges (24 of 25,
+  plus the probe counts), flips none that the judges had right, and drops no heard words.
+- Write the test to `code/settle_test.py`, store its sha256, never edit it after.
+
+**11.1 Line up the two judges and merge repeats** (pure rules, no judge):
+- Align judge A's and B's lines by time and words, so a line split in two by one judge and
+  kept whole by the other is not counted as a disagreement.
+- An unplaced item whose words already sit in a line within 2 s is an echo: mark it
+  "covered by line N" (kept in the record, not shown). Same words in two items: one item.
+- Report how many of the 307 this alone settles.
+
+**11.2 One evidence table per word stretch:** voice track (man/woman per quarter second),
+which split voice track heard the words, the 7 speaker machines, both voice prints, the
+joint model's own labels, both judges' picks, line length, overlap with other speech.
+
+**11.3 Trust scores:** for each signal, how often it is right on silver lines, separately
+per kind (one- or two-word reply, crosstalk, long clean line, voice-over). Combine them
+weighted by those scores (Dawid-Skene style). Recent papers warn that judges built on one
+model share blind spots, so the weights are checked on the held-out owner answers, never
+taken on trust. Each line gets a "chance this is wrong" number.
+
+**11.4 Word settler:** where judges heard different words, vote word by word across the
+4 speech models and the split track, weighted by their measured accuracy (Qwen3-ASR 0.84,
+Parakeet TDT 0.83, Canary 0.82, Parakeet 0.81 on agreed lines). Never invent words: every
+word comes from some machine.
+
+**11.5 Run the frozen test.** If it fails, fix the rules on silver only and re-run; after
+two failed rounds, stop and report what breaks.
+
+**11.6 Owner round, only after 11.5 passes:**
+- Group the remaining unsure lines into patterns (for example "her one-word reply under
+  his talk, pitch says woman, speaker machines say him").
+- For each possible question, compute how many lines change if he answers one way or the
+  other. Show only questions that settle a whole pattern (2–3 example lines each, every
+  card says "this answer settles N lines"), plus single lines whose content matters and
+  that nothing else can settle.
+- Hidden spot checks stay in (about 15) to measure the error on auto-accepted lines.
+- Target: under 5% of lines (about 70 of 1406) left for him; the page says how many lines
+  his answers settle in total.
+
+Done when: 11.5 passes, the owner page is posted with the settle counts, and the status
+line gives lines-to-owner before and after.
+
 ## Execution prompts
 
 One session per phase. Each starts with:
