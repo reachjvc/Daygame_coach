@@ -1,6 +1,8 @@
 "use client"
 
+import { useEffect } from "react"
 import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
 import { CORE_IDS, EXTRA_IDS, type CoreId, type ExtraId, homeHref } from "@/src/goals/planSteps/planRoutes"
 import { commonCopy, saveCopy } from "@/src/goals/planSteps/copy/common"
 import { Home } from "./Home"
@@ -24,7 +26,10 @@ import { SelfRatingsModule } from "./modules/SelfRatings"
 import { TodayPage } from "./daily/Today"
 import { TrackPage } from "./daily/Track"
 import { JournalPage } from "./daily/Journal"
+import { isRealStepId, realStepOfParam, realStepRoute } from "@/src/goals/planSteps/realStepRoutes"
 import { usePlanNew } from "./PlanNewContext"
+import { RealStepHost } from "./RealStep"
+import { RealStepView } from "./RealStepViews"
 import { btnQuiet } from "./ui"
 
 const MODULES: Record<CoreId, (p: { segs: string[] }) => React.JSX.Element> = {
@@ -38,6 +43,22 @@ const EXTRA_MODULES: Record<ExtraId, (p: { segs: string[] }) => React.JSX.Elemen
 
 export function PlanNewRouter({ slug }: { slug: string[] }) {
   const { store } = usePlanNew()
+  const router = useRouter()
+  const search = useSearchParams()
+  // An old link to the real tool's address style (`?step=today`, `?step=review&period=week-…`) lands on the step's page.
+  const asked = slug.length === 0 ? realStepOfParam(search.get("step")) : null
+  const askedPeriod = search.get("period")
+  useEffect(() => {
+    if (!asked) return
+    const route = realStepRoute(asked)
+    if (!route) return
+    const p = new URLSearchParams()
+    if (asked === "review" && askedPeriod) p.set("period", askedPeriod)
+    if (search.get("step") === "templates") p.set("catalogue", "1")
+    const q = p.toString()
+    router.replace(q ? `${route}?${q}` : route)
+  }, [asked, askedPeriod, search, router])
+  if (asked) return <p className="px-4 pt-2 text-sm text-zinc-500">…</p>
   if (slug.length === 0) return <Home />
   // Nothing is drawn from the plan before the first read has answered: a screen that opens on an empty
   // plan would look like a new account's, and its first Next could save over the real one.
@@ -51,6 +72,16 @@ export function PlanNewRouter({ slug }: { slug: string[] }) {
     )
   }
   if (slug[0] === "read") return <ReadAll />
+  // The real step parts, full width, one page each: /plan/new/s/<stepId>.
+  if (slug[0] === "s" && slug.length === 2 && isRealStepId(slug[1])) {
+    return (
+      <div className="mx-auto w-full max-w-5xl px-4 pb-28 pt-4 sm:px-6">
+        <RealStepHost stepId={slug[1]}>
+          <RealStepView />
+        </RealStepHost>
+      </div>
+    )
+  }
   const first = slug[0]
   if ((CORE_IDS as readonly string[]).includes(first)) {
     const Module = MODULES[first as CoreId]

@@ -29,6 +29,10 @@ export interface PlanNew {
   /** Change the plan; saved at once. */
   change: (fn: (plan: NsPlan) => NsPlan) => void
   today: string
+  /** The id the plan is kept under (the copy space's hidden account). */
+  account: string
+  /** The account's timezone (read on the server); the real step parts compute their day from it. */
+  timezone: string
   status: PlanStatus
   /** Where a Change link came from; Next returns there instead of going on. */
   from: string | null
@@ -38,7 +42,7 @@ export interface PlanNew {
 
 const Ctx = createContext<PlanNew | null>(null)
 
-export function PlanNewProvider({ children, account }: { children: ReactNode; account: string }) {
+export function PlanNewProvider({ children, account, timezone = "UTC" }: { children: ReactNode; account: string; timezone?: string }) {
   const store = usePlanStore()
   const [today] = useState(() => todayISO())
   const [hidden, setHidden] = useState<ExtraId[]>([])
@@ -49,8 +53,8 @@ export function PlanNewProvider({ children, account }: { children: ReactNode; ac
   }, [account])
   const status = useMemo(() => planStatus({ plan: store.plan, today, hour: new Date().getHours(), hidden }), [store.plan, today, hidden])
   const value = useMemo<PlanNew>(
-    () => ({ plan: store.plan, store, change: store.update, today, status, from: null, hideSuggestion }),
-    [store, today, status, hideSuggestion],
+    () => ({ plan: store.plan, store, change: store.update, today, timezone, account, status, from: null, hideSuggestion }),
+    [store, today, timezone, account, status, hideSuggestion],
   )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

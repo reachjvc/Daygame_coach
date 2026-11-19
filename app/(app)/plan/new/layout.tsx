@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import type { ReactNode } from "react"
 import { createServerSupabaseClient } from "@/src/db/server"
+import { getUserTimezone } from "@/src/db/settingsRepo"
 import { resolvePlanTarget, SandboxNotFoundError } from "@/src/db/planSandbox"
 import { PlanNewShell } from "@/src/goals/components/plan-new/PlanNewShell"
 
@@ -28,5 +29,8 @@ export default async function PlanNewLayout({ children }: { children: ReactNode 
     throw error
   }
 
-  return <PlanNewShell sandboxId={sandbox.userId}>{children}</PlanNewShell>
+  // "Today" is the signed-in account's own calendar day, as on /plan/sandbox.
+  const timezone = await getUserTimezone(user.id).catch(() => "UTC")
+
+  return <PlanNewShell sandboxId={sandbox.userId} timezone={timezone}>{children}</PlanNewShell>
 }
