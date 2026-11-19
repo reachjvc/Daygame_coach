@@ -1,0 +1,74 @@
+/*
+ * THE THEME, ON ITS OWN SO A SECOND STYLESHEET CAN SHARE IT.
+ *
+ * globals.css imports it for the whole app. The hidden review pages (the quit
+ * lab, /test) reference it from their own stylesheets, so their classes are
+ * built only for them and not shipped to every page (2026-11-19: they were
+ * ~8 KB of the ~47 KB every page downloads, and the role model library went
+ * over its 300 KB first-screen budget). The colours themselves are the
+ * `:root` variables in globals.css, which every page loads.
+ */
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /*
+    THE FAMILY NAMES COME FROM next/font, AND THE GENERIC IS STILL SPELLED OUT.
+    Two separate lessons, both learned the hard way.
+
+    1. These used to be typed by hand, and the SANS stack named
+       "Geist Mono Fallback" — the MONOSPACE metric-matched stand-in. Both
+       stand-ins are the same physical font, `local(Arial)`, at two different
+       scales: 104.76% for sans and 134.59% for mono. So whenever the Geist
+       webfont had not arrived, every word on the site was drawn 28% too large.
+       Eight months, from the first commit. next/font owns those names; keeping
+       a second hand-written copy of them here is what let the two disagree.
+
+    2. `var(--font-geist-sans)` expands to `"Geist", "Geist Fallback"` and
+       NOTHING ELSE — no generic at the end. Both of those are @font-face rules,
+       and in development Turbopack injects the file that defines them with
+       JavaScript, after the document has already been painted. In that window
+       neither face exists, and a stack with no generic resolves to nothing at
+       all: the browser falls back to its own default, which is usually a serif.
+       The hand-written version had `sans-serif` on the end and this lost it, so
+       it is spelled out again.
+  */
+  --font-sans: var(--font-geist-sans), sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}

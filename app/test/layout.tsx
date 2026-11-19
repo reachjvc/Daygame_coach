@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import "./test.css"
 
 /**
  * Layout gate for /test/* pages.
