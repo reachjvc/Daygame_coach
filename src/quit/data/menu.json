@@ -156,10 +156,10 @@
         {
           "id": "checkin",
           "name": "Daily check-in",
-          "line": "30 seconds a day for the first 2 weeks.",
-          "minutes": "30 s",
-          "account": "free",
-          "wave": 3
+          "line": "Morning: how hard will today be? Evening: how did it go?",
+          "minutes": null,
+          "account": "none",
+          "wave": 1
         },
         {
           "id": "lesson",

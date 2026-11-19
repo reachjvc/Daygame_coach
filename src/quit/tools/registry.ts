@@ -1,5 +1,6 @@
 import type { ComponentType } from "react"
 import { BeliefsTool } from "./beliefs/BeliefsTool"
+import { CheckinTool } from "./checkin/CheckinTool"
 import { CostTool } from "./cost/CostTool"
 import { DateTool } from "./date/DateTool"
 import { GivesTool } from "./gives/GivesTool"
@@ -32,7 +33,7 @@ export const TOOL_REGISTRY: Record<QuitToolId, ToolEntry> = {
   tell: { wave: 2, Component: null },
   sos: { wave: 1, Component: SosTool },
   symptoms: { wave: 1, Component: SymptomsTool },
-  checkin: { wave: 3, Component: null },
+  checkin: { wave: 1, Component: CheckinTool },
   lesson: { wave: 1, Component: LessonTool },
   record: { wave: 1, Component: RecordTool },
   slip: { wave: 1, Component: SlipTool },
