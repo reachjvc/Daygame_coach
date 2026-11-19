@@ -1867,3 +1867,24 @@ targets or "what you could buy" here: Tool 3 holds targets.
   record's "Day N" counts from the living run (they differ after a slip until a new day 1 is set by Tool 4).
 - The data file's vape quote copies the abstract's "165.7%" increase; the full text says 65.7% (8.49 to 14.07). Not
   shown on any screen; left for the data checker.
+
+### From the Tool 6 build (Opus and Sonnet, 2026-11-19)
+
+- Built in place at `/quit/nicotine/symptoms` (T1). New sourced text in `src/quit/tools/symptoms/content.ts` (T2); quotes
+  fetched from PubMed on 2026-11-19, copies in `~/.cache/daygame-research/quit-finish/timeline-src/`.
+- Page length: auto-opening "What helps" on every Now card made the phone page 7,500 px. All folds now start closed with a
+  count ("What helps · 3 ideas") and a chevron; data-file numbers show as a compact line with their basis folded. The cards
+  whose range holds his day ("Now") move to the top. Phone page about 5,000 px with everything closed.
+- Review round 1 (bugs Sonnet, look Opus, content Opus): no bugs. Content: every quote verbatim; fixed the coffee line that
+  said more than its study, the Gilbert line (randomised, compared with their own level too), the diet line's count (61 for
+  weight, 522 for quitting), the week-4 craving finding marked as from nicotine-gum users, the craving "Move" line (cravings
+  only), the Hughes caveat moved onto the review, "most people" → "on average", "trial" → "study", the caffeine count, the
+  Taylor basis, the brain-fog line (no made-up minutes), "studied in cigarette smokers" on every "What gets better" row,
+  Tashkin's "mild to moderate". Look: the two "improves more" lines moved from "What helps" to "What gets better" (one
+  Cochrane row with its basis), the anxiety number moved out of "What helps", "Based on" moved under each band, the hunger
+  phase line rewritten, Now cards first, a track behind the bands, the legend's "Your day" only with a day.
+- Not fixed, proposed: (a) after a slip with the record date on or before the slip day, Your quit date shows "Day 22"
+  counted from the record date while this tool shows "No run going since your slip" (the bugs reviewer traced it to the
+  date tool, which counts from the record date when no run lives); recommendation: the date tool follows the same rule.
+  (b) Past day 42 the band markers sit at the right edge; the phase line says "Past …". (c) A sticky "Craving now?" bar on
+  this page, as other tool pages have.
