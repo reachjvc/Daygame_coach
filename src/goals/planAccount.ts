@@ -93,6 +93,10 @@ export function nameEveryRequest(account: string): () => void {
  *
  *   - the plan and day routes get `?target=sandbox`, whatever the caller wrote,
  *     so no call from this page can reach the signed-in account's own plan;
+ *   - the role-model council routes (the council, its week value and marks, its
+ *     settings, the people for an area) get `?target=sandbox` the same way, and
+ *     their writes pass: the server answers them from the hidden account's own
+ *     council rows;
  *   - the copy space's own routes pass;
  *   - sign-out and crash reports pass untouched (they carry no plan data);
  *   - every OTHER request that is not a read (reminders, push devices,
@@ -114,6 +118,8 @@ export function isSandboxAccount(account: string): boolean {
 
 /** The plan routes the copy space page may call, as itself. */
 const SANDBOX_PLAN_PATHS = /^\/api\/life-plan(\/day)?$/
+/** The council routes the plan steps use; the server serves them from the hidden account's rows. */
+const SANDBOX_COUNCIL_PATHS = /^\/api\/role-models\/(council|week|settings|area)$/
 const SANDBOX_OWN_PATHS = /^\/api\/plan-sandbox\/(copy|reset)$/
 const PASS_UNTOUCHED = /^\/api\/(auth\/sign-out|errors)$/
 const READS = new Set(["GET", "HEAD"])
@@ -135,13 +141,14 @@ export function guardSandboxRequests(account: string): () => void {
     if (PASS_UNTOUCHED.test(url.pathname)) return original(input, init)
 
     const method = (init?.method ?? (input instanceof Request ? input.method : "GET")).toUpperCase()
-    const aimed = SANDBOX_PLAN_PATHS.test(url.pathname) || SANDBOX_OWN_PATHS.test(url.pathname)
+    const toSandbox = SANDBOX_PLAN_PATHS.test(url.pathname) || SANDBOX_COUNCIL_PATHS.test(url.pathname)
+    const aimed = toSandbox || SANDBOX_OWN_PATHS.test(url.pathname)
     if (!aimed && !READS.has(method)) {
       // Looks like the network being down, not like the server saying no: a sender that
       // retries after a failure (the audit queue, notifications) keeps what it could not send.
       throw new TypeError("Blocked in the copy space")
     }
-    if (SANDBOX_PLAN_PATHS.test(url.pathname)) url.searchParams.set("target", "sandbox")
+    if (toSandbox) url.searchParams.set("target", "sandbox")
 
     const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined))
     headers.set(PAGE_ACCOUNT_HEADER, account)

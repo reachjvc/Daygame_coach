@@ -6,12 +6,19 @@
  * each side to its own rows. Nothing here can write the owner's plan: the only
  * client that writes is the one `target` resolved to, and `copyIntoSandbox`
  * refuses to run unless that is the hidden account.
+ *
+ * The role-model council (picks, the week's value and settings, the week's
+ * marks) copies the same way. Its rows hold no ids of their own (the key is the
+ * account plus the person or day), so nothing is remapped, and the council's
+ * reminder is copied OFF. Quit-a-vice records need no copy of their own: they are
+ * goals and obstacles inside the plan rows.
  */
 
 import { randomUUID } from "node:crypto"
 import { applyLifePlanChanges, deleteLifePlan, ensureLifePlan, readLifePlan } from "./lifePlanRepo"
 import { insertDayRows, readDayRows } from "./lifePlanDayRepo"
 import { deleteReminder, readReminder, writeReminder } from "./lifePlanRemindersRepo"
+import { deleteCouncilRows, insertCouncilRows, readCouncilRows } from "./roleModelsRepo"
 import type { ResolvedPlanTarget } from "./planSandbox"
 import { diffPlanRows } from "@/src/goals/lifePlanDiff"
 import { idMapper, remapDayRows, remapPlanRows } from "@/src/goals/planSandboxCopy"
@@ -23,11 +30,12 @@ function mustBeSandbox(target: ResolvedPlanTarget): void {
   }
 }
 
-/** Empty the copy space: its plan, every day, its reminder. The next visit is a brand-new account's. */
+/** Empty the copy space: its plan, every day, its reminder, its council. The next visit is a brand-new account's. */
 export async function resetSandbox(sandbox: ResolvedPlanTarget): Promise<void> {
   mustBeSandbox(sandbox)
   await deleteLifePlan(sandbox.userId, sandbox.supabase)
   await deleteReminder(sandbox.userId, sandbox.supabase)
+  await deleteCouncilRows(sandbox.userId, sandbox.supabase)
 }
 
 /**
@@ -48,8 +56,10 @@ export async function copyIntoSandbox(
   const stored = await readLifePlan(owner.userId, owner.supabase)
   const days = stored ? await readDayRows(owner.userId, stored.rows.plan_id, owner.supabase) : null
   const reminder = await readReminder(owner.userId, owner.supabase)
+  const council = await readCouncilRows(owner.userId, owner.supabase)
 
   await resetSandbox(sandbox)
+  await insertCouncilRows(sandbox.userId, council, sandbox.supabase)
   if (!stored || !days) return false
 
   const made = await ensureLifePlan(sandbox.userId, sandbox.supabase)

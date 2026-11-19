@@ -24,6 +24,7 @@ import { readDayRows, readNodeIds, saveDay } from "@/src/db/lifePlanDayRepo"
 import { readReminder, writeReminder } from "@/src/db/lifePlanRemindersRepo"
 import { registerDevice } from "@/src/db/notificationsRepo"
 import { isSandboxUser, resolvePlanTarget, SandboxBusyError, SandboxNotFoundError, withSandboxBusy, type ResolvedPlanTarget } from "@/src/db/planSandbox"
+import { readCouncil, readCouncilSettings, readWeekMarks, saveCouncilMember, writeCouncilSettings, writeWeekMark } from "@/src/db/roleModelsRepo"
 import { copyIntoSandbox, resetSandbox } from "@/src/db/planSandboxCopy"
 import { MAPPED_COLUMNS, NULLED_COLUMNS, canonicalDays, canonicalPlan } from "@/src/goals/planSandboxCopy"
 import { PLAN_ROW_KEYS } from "@/src/db/lifePlanTypes"
@@ -281,6 +282,45 @@ describe("copying the owner's plan in", () => {
     await copyIntoSandbox(sess(owner), sandbox)
     expect(await readReminder(sandbox.userId, sandbox.supabase)).toEqual({ pushOn: false, reviewDay: 3, reviewHour: 8 })
     expect((await readReminder(owner.id, owner.client)).pushOn).toBe(true)
+  })
+
+  it("copies the council (picks, week value, marks) with the reminder OFF, saves to it as the copy, and reset empties only the copy", async () => {
+    const d = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10)
+    const { owner } = await arrangeOwner("sbx-council")
+    const sandbox = await sandboxOf(owner)
+    await saveCouncilMember(owner.id, { roleModelId: "alpha-one", takenValues: ["Courage", "Craft"], position: 0 }, true, owner.client)
+    await saveCouncilMember(owner.id, { roleModelId: "beta-two", takenValues: ["Calm"], position: 1 }, true, owner.client)
+    await writeCouncilSettings(owner.id, { weekValue: "Courage", weekOf: d(-2), remindOn: true, remindHour: 9 }, owner.client)
+    await writeWeekMark(owner.id, d(-2), "Courage", true, owner.client)
+    await writeWeekMark(owner.id, d(-1), "Courage", false, owner.client)
+    await asOwner((q) => q("alter table public.user_role_model_week_marks disable trigger user_role_model_week_marks_near_today"))
+    await asOwner((q) => q("insert into public.user_role_model_week_marks (user_id, day, value, lived) values ($1, '2020-01-01', 'Old', true)", [owner.id]))
+    await asOwner((q) => q("alter table public.user_role_model_week_marks enable trigger user_role_model_week_marks_near_today"))
+
+    await copyIntoSandbox(sess(owner), sandbox)
+
+    expect((await readCouncil(sandbox.userId, sandbox.supabase)).map((m) => [m.roleModelId, m.position, m.takenValues])).toEqual([
+      ["alpha-one", 0, ["Courage", "Craft"]],
+      ["beta-two", 1, ["Calm"]],
+    ])
+    expect(await readCouncilSettings(sandbox.userId, sandbox.supabase)).toEqual({ weekValue: "Courage", weekOf: d(-2), remindOn: false, remindHour: 9 })
+    expect((await readWeekMarks(sandbox.userId, d(-7), d(1), sandbox.supabase)).map((m) => [m.day, m.lived])).toEqual([[d(-2), true], [d(-1), false]])
+    expect((await readCouncilSettings(owner.id, owner.client)).remindOn).toBe(true)
+
+    // Saving as the copy touches only the copy.
+    await saveCouncilMember(sandbox.userId, { roleModelId: "gamma-three", takenValues: ["Grit"], position: 2 }, true, sandbox.supabase)
+    await writeWeekMark(sandbox.userId, d(-2), "Courage", null, sandbox.supabase)
+    expect(await readCouncil(owner.id, owner.client)).toHaveLength(2)
+    expect(await readWeekMarks(owner.id, d(-7), d(1), owner.client)).toHaveLength(2)
+
+    // Copying again replaces it (no sixth-member or duplicate-key refusal), and reset empties it.
+    await copyIntoSandbox(sess(owner), sandbox)
+    expect(await readCouncil(sandbox.userId, sandbox.supabase)).toHaveLength(2)
+    await resetSandbox(sandbox)
+    expect(await readCouncil(sandbox.userId, sandbox.supabase)).toEqual([])
+    expect(await readWeekMarks(sandbox.userId, d(-7), d(1), sandbox.supabase)).toEqual([])
+    expect((await readCouncilSettings(sandbox.userId, sandbox.supabase)).weekValue).toBeNull()
+    expect(await readCouncil(owner.id, owner.client)).toHaveLength(2)
   })
 
   it("replaces an earlier copy: copying twice leaves one plan, not two", async () => {

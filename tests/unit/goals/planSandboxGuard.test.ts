@@ -53,8 +53,9 @@ describe("the copy space page's requests", () => {
       ["/api/notifications/devices", "POST"],
       ["/api/notifications/devices/forget", "POST"],
       ["/api/programs/enrollments/abc/schedule", "PUT"],
-      ["/api/role-models/week", "PUT"],
-      ["/api/role-models/settings", "PUT"],
+      ["/api/role-models/council/extra", "PUT"],
+      ["/api/role-models/other", "PUT"],
+      ["/api/quit/count", "POST"],
       ["/api/goals", "DELETE"],
       ["/api/goals/batch", "POST"],
       ["/api/workouts", "POST"],
@@ -64,6 +65,25 @@ describe("the copy space page's requests", () => {
       await expect(fetch(path, { method, body: "{}" }), `${method} ${path}`).rejects.toBeInstanceOf(TypeError)
     }
     expect(sent).toEqual([])
+  })
+
+  it("aims the council routes at the copy space, writes included, and names the hidden account", async () => {
+    const calls: [string, string][] = [
+      ["/api/role-models/council", "GET"],
+      ["/api/role-models/council", "PUT"],
+      ["/api/role-models/council?id=a", "DELETE"],
+      ["/api/role-models/week", "GET"],
+      ["/api/role-models/week", "PUT"],
+      ["/api/role-models/settings", "GET"],
+      ["/api/role-models/settings", "PUT"],
+      ["/api/role-models/area", "GET"],
+    ]
+    for (const [path, method] of calls) await fetch(path, { method, body: method === "GET" ? undefined : "{}" })
+    expect(sent).toHaveLength(calls.length)
+    for (const s of sent) {
+      expect(s.url.searchParams.getAll("target")).toEqual(["sandbox"])
+      expect(s.headers.get(PAGE_ACCOUNT_HEADER)).toBe(HIDDEN)
+    }
   })
 
   it("lets reads of other routes out, naming the hidden account so the server refuses them as another account's", async () => {

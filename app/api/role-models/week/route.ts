@@ -5,11 +5,15 @@
  *   PUT  `{ day, lived: true | false | null }`: today or an earlier day of this
  *        week, for this week's value; `null` takes the mark back. A same-origin
  *        JSON request only.
+ *
+ * `?target=sandbox` acts on the hidden copy space's own rows (`src/db/planSandbox.ts`),
+ * the same way the plan and day routes do; with no target it is the session's own.
+ *        The day is the signed-in account's own calendar day.
  */
 
 import { NextResponse } from "next/server"
 
-import { requireAuth } from "@/src/db/auth"
+import { requirePlanTarget } from "@/src/db/planSandbox"
 import { readCouncilSettings, readWeekMarks, writeWeekMark } from "@/src/db/roleModelsRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { weekOf, weekValueFor } from "@/src/role-models/councilReminderService"
@@ -26,7 +30,7 @@ function fromAnotherSite(req: Request): boolean {
 }
 
 export async function GET(req: Request) {
-  const auth = await requireAuth(req)
+  const auth = await requirePlanTarget(req)
   if (!auth.success) return auth.response
   const q = new URL(req.url).searchParams
   const from = q.get("from")
@@ -35,14 +39,14 @@ export async function GET(req: Request) {
     return fail(400, "Give from and to as YYYY-MM-DD, at most 31 days apart")
   }
   try {
-    return NextResponse.json({ marks: await readWeekMarks(auth.userId, from, to) }, { headers: NO_STORE })
+    return NextResponse.json({ marks: await readWeekMarks(auth.userId, from, to, auth.supabase) }, { headers: NO_STORE })
   } catch {
     return fail(500, "Could not read your marks")
   }
 }
 
 export async function PUT(req: Request) {
-  const auth = await requireAuth(req)
+  const auth = await requirePlanTarget(req)
   if (!auth.success) return auth.response
   if (fromAnotherSite(req)) return fail(403, "Not from this site")
   if (!(req.headers.get("content-type") ?? "").toLowerCase().startsWith("application/json")) return fail(415, "Send JSON")
@@ -51,14 +55,14 @@ export async function PUT(req: Request) {
   const { day, lived } = body
   if (!isDay(day) || !(lived === true || lived === false || lived === null)) return fail(400, "Send { day: YYYY-MM-DD, lived: true | false | null }")
   try {
-    const tz = await getUserTimezone(auth.userId).catch(() => "UTC")
+    const tz = await getUserTimezone(auth.ownerId).catch(() => "UTC")
     const today = getTodayInTimezone(tz)
     if (day > today || weekOf(day) !== weekOf(today)) return fail(400, "Only this week's days, up to today")
-    const value = weekValueFor(await readCouncilSettings(auth.userId), today)
+    const value = weekValueFor(await readCouncilSettings(auth.userId, auth.supabase), today)
     if (!value) return fail(409, "Choose a value of the week first")
-    await writeWeekMark(auth.userId, day, value, lived as boolean | null)
+    await writeWeekMark(auth.userId, day, value, lived as boolean | null, auth.supabase)
     const week = weekOf(today)
-    return NextResponse.json({ marks: await readWeekMarks(auth.userId, week, today) }, { headers: NO_STORE })
+    return NextResponse.json({ marks: await readWeekMarks(auth.userId, week, today, auth.supabase) }, { headers: NO_STORE })
   } catch {
     return fail(500, "Could not save your mark")
   }
