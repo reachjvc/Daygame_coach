@@ -24,6 +24,8 @@ import {
   deleteWorkoutLog,
 } from "@/src/db/healthRepo"
 
+import { OPEN_WORKOUT_REFUSAL } from "@/src/db/workoutLifecycle"
+
 vi.mock("@/src/db/supabase", async (importOriginal) =>
   (await import("@/tests/db/harness")).stackSupabaseModule(await importOriginal())
 )
@@ -291,7 +293,7 @@ describe("deleteWorkoutLog", () => {
     const open = await aWorkout(me.id, { started: "2026-11-01T09:00:00Z", ended: null })
     const before = await rowText("workout_logs", open)
 
-    await expect(deleteWorkoutLog(me.id, open)).rejects.toThrow()
+    await expect(deleteWorkoutLog(me.id, open)).rejects.toThrow(OPEN_WORKOUT_REFUSAL)
 
     expect(await rowText("workout_logs", open)).toBe(before)
     expect(await asOwner((q) => q("select 1 from workout_sets where log_id = $1", [open]))).toHaveLength(1)
