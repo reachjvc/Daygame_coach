@@ -31,7 +31,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | 0 | The frame: menu, shared record, page titles, links | wave-1 menu | — | live f9190770 (no owner check: it has no screens of its own) |
 | 1 | Your quit date | lab `quitdate/best` | copy e's plan steps; the old "quit curve" hard-days calendar (mock F9kYB9… v2, study timing only) | waiting for you |
 | 2 | Craving now? | lab `sos/best` | wave-1's voice step and "other side" answer; the craving log of `diary/best` | waiting for you |
-| 3 | Your record (progress, money kept) | lab `progress/best` | the live counter feel of copies d and e | not started |
+| 3 | Your record (progress, money kept) | lab `progress/best` | the live counter feel of copies d and e | building |
 | 4 | Slipped? Restart today | wave-1 `slip` | slips go into the shared record; clean runs never reset | building |
 | 5 | The 12 lies test | wave-1 `beliefs` | from `beliefs/best`: a reply per belief, "can you stop?", earlier results | not started |
 | 6 | What you'll feel, and when | lab `timeline/best` | wave-1 `symptoms` (what helps per symptom) | not started |
@@ -295,6 +295,139 @@ files get the field empty.
     reaches `/api/black-box`.
 12. Then the three-reviewer check and fix rounds; when clean, add `sos` to `finished.json` (which also brings back
     the "Craving now?" bar) and set the status to "waiting for you".
+
+### Tool 3: Your record — brief (Opus, 2026-11-19) — build exactly this, decide nothing
+
+Model: Sonnet builds in a worktree; Opus reads the diff. Address: `/quit/nicotine/record` (the menu row id `record`
+already exists). Built from lab `progress/best` (`src/quit/lab/progress/best/*`, `shared/calc.ts`, `shared/Bits.tsx`):
+move what is reused into `src/quit/tools/record/`; never edit lab files. Folded in: the live counter of copy d (a
+ticking days / hours / minutes / seconds clock and the money tile that moves with it) and the ring of copy e (a ring
+that fills, with the run numbers beside it). Nicotine only: no addiction switcher (review C21). Desktop (1280): the
+same screens in the page column, like Tools 1 and 2. All choices below are **proposed**; the recommendation is the
+first option each time.
+
+**Menu row:** name **"Your record"**, line **"Every clean day counts. Close calls beaten. Never resets."**, group
+unchanged, `account: "none"` (works without an account, like Tools 1 and 2), wave 1 in `menu.json` and in
+`src/quit/tools/registry.ts` (today wave 3, which shows "Coming soon").
+
+**Data: it asks nothing another tool asks.**
+- Runs, slips and close calls come only from the Black Box (`src/quit/blackbox.ts`, the same bridge pattern as
+  `DateTool.tsx`: `useSignedIn(false, true)`, signed-in or local bridge mounted at one place). Totals use the Black
+  Box's own maths (`forVice` + `stats` / `runLanes` / `runDays` in `src/vice/blackboxService.ts`), so "total clean
+  days", "Day N" in Your quit date and the Black Box page always agree (review C3: the same 21 days showed 21 in one
+  tool and 20 in another). The quit day itself is day 1, never 0 (C18).
+- Quit date, goal, break end, unit, count a day and price come from the shared record (`useQuitRecord`). The price is
+  per cigarette, per disposable vape, per can, as Tool 1 saves it (not per pack).
+- Its own data (spending and targets) is kept in the `quit-v1` store under the tool key **`record-tool`** (the key
+  `record` is the shared record). One line under it: "Your spending and targets are kept on this phone." (B1).
+- Starting a run: when the record's date is today or past, the goal is stop or break, the Black Box is `settled`, and
+  the Black Box holds no nicotine run (living or ended) that started on or after that date, start one on that date
+  (`startRun`), as Your quit date does. Never otherwise (a run ended by a slip is not restarted here: that is Tool 4).
+- It logs no slips (Tool 4 does) and removes no runs (the Black Box page does).
+
+**Money kept (one shared function, `src/quit/money.ts`, unit tests):** clean time × count a day × price of one −
+spending. Clean time per run: from 00:00 of its start day to now while it lives, to 00:00 of its end day once a slip
+ended it (the slip day is not counted for money). It ticks live. Tool 2's Reasons tile keeps its own line ("About $X
+kept since <date>", from the current quit date; Tool 4 S2): both read the same count and price from the shared
+record, so none is typed twice (C3). Units not used
+= clean time × count a day, rounded down. Without a count or a price: the money and units tiles show "–" and "Add your
+numbers" (below). Negative money is shown as "−$367.46" (minus before the dollar sign) with the line "Spending is
+more than the money kept so far." (C15).
+
+**Screens** (a tab row at the top: **Home · Money · Milestones · Calendar**, each with a lucide icon and a 14 px or
+larger label, at least 44 px high (C25); each tab is a history entry `?tab=money`, so browser Back returns to the
+previous tab and reload stays on it; `?preview=1` kept):
+
+1. **Home.**
+   - **The ring (copies d and e):** about 200 px on a phone. Inside: total clean days, large, "clean days in all".
+     The ring fills toward the next step of the clean-day ladder ("7 of 14"), and one dot runs round it once a minute
+     (copy d's sweep; still with `prefers-reduced-motion`).
+   - **Live counter** under the ring, ticking each second: "This run: 4 d 14 h 23 min 05 s", line under it "Day 5 ·
+     since Thu, Nov 12". Tap → "Counted from the start of the day you picked; the time of day is not kept."
+   - Three cards in a row: **This run** (days), **Best run** (days), **Close calls beaten** (the vice's
+     `closeCallsSurvived`). Tap each → its formula line (as `best`).
+   - Three tiles: **Money kept** (live, cents), **Cigarettes not smoked** (unit word from the data file: cigarettes /
+     disposable vapes / cans of pouches; live), **Price of one** (with the price basis: Tool 1's `priceBasis` line, or
+     "Your own price." when typed — C24). Tap → formula with his real numbers, e.g. "10 a day × $0.52 × 23.6 days
+     clean − $0.00 spent = $122.72". Plural right for 1 (C15 "× 1 clear days").
+   - **Next step:** "Next: 14 clean days, on Wed, Nov 25 if this run keeps going."
+   - **Your runs:** newest first, each "9 days · Oct 20 to Oct 28" or "Going now", close calls in it, and for an ended
+     one "Ended by a slip on Oct 28" with the slip's thought (`break-words`, C17). Line: "Every run stays. Nothing is
+     wiped."
+   - **No run going** (all runs ended by slips): the ring and totals stay; the counter is replaced by "No run going.
+     Your 23 clean days still count." and a link to "Slipped? Restart today" when `slip` is open (see Links), else
+     the plain line "Start your next run in Slipped? Restart today."
+2. **Money.** The total, large and live. Period tabs **Total · Last 7 days · Last 30 days · Last 365 days** (clean
+   time inside the window × rate − spending dated inside it; rolling windows, so no "yesterday only" mixed with
+   today's spending — C15). The formula line under it. **Your amount a day** "10 cigarettes × $0.52 = $5.20 a day" with
+   **Change**: the same two fields as Tool 1 screen 4 (count, price), prefilled, saved to the shared record (it is the
+   same answer, not a second question), parsed with Tool 1's `parseTyped` ("7,50" = 7.50; "abc" → "Type a number,
+   like 7.50"; count up to 500, price up to 1000 — C19). When the record has no unit: **Add your numbers** opens the
+   same form with the unit chips of Tool 1 screen 4. Projections per month (× 365 ÷ 12) and per year (× 365) with
+   their formula lines. **Spent on it or on replacements** (gum, patches, a vape bought): amount (up to 100,000) and
+   what for (60 characters, `break-words`), dated today; each row has Remove, and a removal shows "Removed. Undo" for
+   as long as the screen is open. **Your targets:** name (60 characters) and price (up to 100,000), filled in order
+   from the money kept, progress bar, days to go at his rate counted from the real (possibly negative) total (C15),
+   Remove with Undo.
+3. **Milestones.** Clean-day ladder 1, 3, 7, 14, 30, 60, 90, 180, 365: reached ones with the date of that clean day
+   (across all runs); the next ones "N clean days to go" and, while a run lives, "on <date> if this run keeps going".
+   Money ladder $10, $25, $50, $100, $250, $500, $1,000, $2,500: reached only while today's money kept is at or above
+   it (so spending can take a step back, C15), with the first day it got there; else "about N days at your rate".
+   No badge art, no exclamation marks.
+4. **Calendar.** Month grid, Monday first, from the month of the first run to this month (Prev / Next stop there).
+   Clean days filled, slip days dashed (no red), close-call days with a small dot, today ringed, other days plain.
+   Tap a day → its line: "Clean. Day 5 of the run that started Nov 12." / "Slip: <thought>" / "Close call beaten:
+   <thought>" / "Not part of your record." No slip logging here.
+
+**Before day 1:**
+- No date (or goal "later") and no run in the Black Box: "Your record starts on your quit date." with a button to
+  Your quit date (link rule below), and **See an example**: the same screens filled from an example made in memory
+  (two runs, one ended by a slip, three close calls, 10 cigarettes a day at $0.52, one target). A bar on every screen:
+  "Example. Nothing here is yours, and nothing is saved." with **Leave the example**. Nothing in the example touches
+  storage or the Black Box (lesson 2, C16).
+- Date in the future: "3 days to go. Your record starts on Sat, Nov 21." and the same "See an example"; no counter that
+  counts up before day 1 (F1 quitdate/d, progress/c).
+- Goal "break": a line under the counter "Break: ends Thu, Dec 3." After that day: "Your break ended on Dec 3." with a
+  link to Your quit date.
+
+**Links:** a link to another quit tool (Your quit date, Slipped? Restart today) is drawn only when that tool is open
+to the public (the visible-tools list, `isFinished` until the visibility agent's list lands); otherwise plain text.
+
+**Report items for this tool** (review C, E, D, F1, 2026-11-19), each answered above: C3 (one date, one slip log,
+same day counts, SOS reads money from here), C15 (negative money, milestones, targets, plural, Day tab), C16 (no
+one-tap wipe: there is no "Start over"; example data never stored; removals have Undo), C17 (long text), C18 (day 0,
+live counter, flat look), C19 (limits and empty count), C21 (switcher), C24 (price basis with the ÷ 20 and the vape
+date, via Tool 1's basis line), C25 (tab labels), D35 (no icon, colour or progress visual: the ring), E5 (cost and
+progress were one money tool twice: proposed, Your record holds money kept since quitting; Tool 9 "What it costs you"
+becomes the before-quitting calculator reading the same record unit), F1 progress/c and quitdate/d (counting before
+day 1). Not taken from `best`: the addiction switcher, setup form (Tool 1 asks it), "Log a slip" (Tool 4), "Start
+over", the example seed that wrote into his data.
+
+**Acceptance (Playwright `tests/e2e/quit/record.spec.ts`, 390x844 touch and 1280x800, clock fixed; screenshots
+looked at):**
+1. Fresh, no date: the empty state and the link or plain text to Your quit date; See an example fills every tab;
+   Leave the example → empty again and storage (both `quit-v1` and the Black Box key) unchanged.
+2. Date today via the record (no run): the tool starts a run; Home shows 1 clean day, "Day 1", the counter ticks
+   (clock +65 s moves the seconds).
+3. Past date 20 days ago, 10 cigarettes at $0.52: 21 clean days; money tile and Money total agree; the formula line
+   holds 10, $0.52 and the clean time.
+4. A slip filed in the Black Box on day 10, then a new run: total clean days keep the first run's days; Your runs
+   lists both; the calendar marks the slip day dashed.
+5. Spending $500: money shows "−$…" with the line; the $100 step is not reached; a target's days to go grow; Remove →
+   Undo puts it back.
+6. Change: "7,50" saves 7.50 to the shared record (Your quit date shows it); "abc" shows the error; 501 refused.
+7. Future date: countdown, no counter.
+8. Tabs: Back returns to the previous tab, reload stays; a 200-character unbroken text in a spend note does not widen
+   the page.
+9. No console error; no sideways scroll; every tap target at least 44 px; the menu row "Your record" opens it once
+   it is open to the public.
+10. Then the three-reviewer check and fix rounds; when clean, set the status to "waiting for you".
+
+**Proposed (owner may veto):** R1 the big number is the Black Box's total clean days (slip day counted, as everywhere
+else), while money counts clean time without the slip days; alternative: count money on the same days (one day more
+per slip). R2 the live counter starts at 00:00 of day 1, because no tool keeps the hour he stopped; alternative: ask
+the hour in Your quit date. R3 Your record holds money kept since quitting and Tool 9 becomes the calculator before
+quitting (E5); alternative: one money tool. R4 spending and targets stay on the phone until B1 is answered.
 
 ### Tool 4: Slipped? Restart today — brief (Opus, 2026-11-19) — build exactly this, decide nothing
 
