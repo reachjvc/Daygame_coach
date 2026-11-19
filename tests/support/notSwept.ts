@@ -44,16 +44,21 @@ export const NOT_SWEPT: Record<string, string> = {
   "/plan/new/role-models":
     "under the same copy-space gate as /plan/new, so it answers 404 to this account by design; " +
     "plan-new-sequence.spec.ts opens it on an account that has a copy space",
+  "/quit/coaching":
+    "answers 404 in a production build without ?preview=1 (previewAllowed), and CI sweeps a production build; " +
+    "tests/e2e/quit/privacy-coaching.spec.ts opens it with the flag",
   "/quit/lab":
     "the owner's hidden review lab: answers 404 without ?preview=1 by design; " +
     "tests/e2e/quit/lab.spec.ts opens it with the flag and checks the 404 without it",
 }
 
 /**
- * Pages that call `notFound()` but only for bad input, so the sweep (which
- * sends none) still sees them render. Each needs a reason.
+ * Pages that call `notFound()` but only for bad input (an unknown id or param),
+ * so the sweep, which sends none, still sees them render. A page hidden by an
+ * environment, a flag or `?preview=1` does NOT belong here: it answers 404 to
+ * every visitor of a production build, which is what CI sweeps. Those go in
+ * `NOT_SWEPT`. `gatedPagesAreNotSwept.test.ts` refuses an entry whose page
+ * source mentions `process.env`, `NODE_ENV`, `preview` or `flag`.
+ * Empty today: every static page that calls `notFound(` is hidden on purpose.
  */
-export const NOT_FOUND_ONLY_ON_BAD_INPUT: Record<string, string> = {
-  "/quit/coaching":
-    "answers 404 only in a production build without ?preview=1 (previewAllowed); in the dev/test server the sweep runs against it renders",
-}
+export const NOT_FOUND_ONLY_ON_BAD_INPUT: Record<string, string> = {}

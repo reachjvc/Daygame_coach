@@ -173,7 +173,7 @@ line naming a real commit; with a green fixture it prints nothing. Quote both.
 
 Accept: the three quoted outputs; full unit suite green.
 
-**Status:** done 2026-11-19 — lint at commit (`lint-ratchet.mjs --files`, judged on staged text, same baseline as the full run), hidden-page gate (`NOT_SWEPT` now in tests/support/notSwept.ts; `gatedPagesAreNotSwept.test.ts` red without the `/quit/lab` line), staged `app/**/page.tsx` now runs the route-walker tests; `time sh .husky/pre-commit` for one src/ file: real 0m2.147s, "Lint: 1 file(s), none new."; full lint ratchet "Lint errors: 290, none new."
+**Status:** done 2026-11-19 — lint at commit (`lint-ratchet.mjs --files`, judged on staged text, same baseline as the full run), hidden-page gate (`NOT_SWEPT` now in tests/support/notSwept.ts; `gatedPagesAreNotSwept.test.ts` red without the `/quit/lab` line), staged `app/**/page.tsx` now runs the route-walker tests; `time sh .husky/pre-commit` for one src/ file: real 0m2.147s, "Lint: 1 file(s), none new."; full lint ratchet "Lint errors: 290, none new." Round 2: `/quit/coaching` moved to `NOT_SWEPT` (CI sweeps a production build, where it 404s); `NOT_FOUND_ONLY_ON_BAD_INPUT` is empty and refuses env/flag/preview pages.
 
 ## Phase 3 — Every API route refuses a stranger · M · sonnet
 
