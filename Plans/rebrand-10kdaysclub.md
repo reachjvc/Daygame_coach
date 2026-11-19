@@ -597,7 +597,19 @@ Compass ("direction") and Heart ("dating life area") already carry these meaning
 **Done when:** live phone screenshots of the five public pages match the looks page, there is no sideways scroll
 at 390 px, and the tests pass.
 
-### Phase 6 — Inside the app: dating moves back, stays whole (Sonnet, after Phase 3)
+### Phase 6 — Inside the app: dating moves back, stays whole (Sonnet, after Phase 3) — **DONE 2026-11-19, `b60fd6e5`**
+
+Done: all 11 steps. Differences from the brief:
+- The Dating tile is `DATING_TILE` in `components/navTabs.ts` (like `ALL_TOOLS_TILE`), not a `TOOLS` entry, so it is
+  not also a row in All tools.
+- The Field card hides when the stats counter `total_sessions` is 0 and no session is running (no new query).
+- `src/shared/iconRoles.ts` was not edited: its header asks for the owner's approval for any new entry. `Heart`
+  already carries "dating life area"; `NotebookPen` is used in one file only, which needs no entry.
+- Titles: Scenarios and Training moved to layouts so their sub-pages carry them too; the plan layout got a template
+  so the Black Box reads "Black Box · 10K Days Club".
+- `/articles` is listed as put aside in `tests/unit/navigation/routeReachability.test.ts`.
+Phone check on the local stack: Home (gold Training/Time Log/Audit, violet Black Box, orange Dating), All tools
+(Life, Quit, Dating), `/tools/dating`, The Field, You (Dating section last); no sideways scroll at 390 px.
 
 1. **The bar (`components/navTabs.ts`, `TABS`):** Home · Plan · You.
    - Remove the Activity entry.
@@ -854,7 +866,12 @@ bar "Home · Plan · You".
 
 ## Questions from the build
 
-(none yet)
+- **Home's "Tools with a lock open once you subscribe. / See plans" box** (2026-11-19, Phase 6): Home has no locked tile
+  any more (the locked tools moved behind the Dating tile), so the box talks about locks nobody sees there. Part 3 has
+  no words for it, so it was left as it is. Proposed: drop the box, or say W46 there.
+- **Next.js security notice** (2026-11-19): `next dev` stops once with "Your version of Next.js is affected by a known
+  security vulnerability" and suggests `next upgrade --agent=security`. Not part of this plan; an upgrade changes the
+  dependency files, which is his call.
 
 ## Execution prompt
 
