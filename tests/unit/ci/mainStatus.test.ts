@@ -35,7 +35,7 @@ describe("findRed", () => {
   it("reports CI red with its date and run id", () => {
     const failing = run("CI", "failure", "2026-11-18T10:00:00Z")
     const red = findRed([failing, run("CI", "success", "2026-11-17T10:00:00Z"), run("E2E Tests", "success", "2026-11-18T10:00:00Z")])
-    expect(red).toEqual([{ workflow: "CI", runId: failing.databaseId, since: "2026-11-18" }])
+    expect(red).toEqual([{ workflow: "CI", runId: failing.databaseId, since: "2026-11-18", atLeast: false }])
     expect(formatLine(red[0], "checks")).toBe(`main is red since 2026-11-18: CI checks (run ${failing.databaseId})`)
     expect(formatLine(red[0])).toBe(`main is red since 2026-11-18: CI (run ${failing.databaseId})`)
   })
@@ -49,14 +49,14 @@ describe("findRed", () => {
       run("E2E Tests", "success", "2026-11-15T12:00:00Z"),
       run("E2E Tests", "failure", "2026-11-14T12:00:00Z"),
     ])
-    expect(red).toEqual([{ workflow: "E2E Tests", runId: newest.databaseId, since: "2026-11-16" }])
+    expect(red).toEqual([{ workflow: "E2E Tests", runId: newest.databaseId, since: "2026-11-16", atLeast: false }])
   })
 
   it("skips a cancelled newest run and judges the next finished one", () => {
     expect(findRed([run("CI", "cancelled", "2026-11-18T10:00:00Z"), run("CI", "success", "2026-11-17T10:00:00Z")])).toEqual([])
     const failing = run("CI", "failure", "2026-11-17T10:00:00Z")
     expect(findRed([run("CI", "cancelled", "2026-11-18T10:00:00Z"), failing])).toEqual([
-      { workflow: "CI", runId: failing.databaseId, since: "2026-11-17" },
+      { workflow: "CI", runId: failing.databaseId, since: "2026-11-17", atLeast: false },
     ])
   })
 
@@ -70,6 +70,25 @@ describe("findRed", () => {
         run("Nightly checks", "failure", "2026-11-18T10:00:00Z"),
       ]),
     ).toEqual([])
+  })
+
+  it("counts a run that never started (startup_failure) as red, not action_required", () => {
+    const broken = run("CI", "startup_failure", "2026-11-18T10:00:00Z")
+    expect(findRed([broken, run("CI", "success", "2026-11-17T10:00:00Z")])).toEqual([
+      { workflow: "CI", runId: broken.databaseId, since: "2026-11-18", atLeast: false },
+    ])
+    expect(findRed([run("CI", "action_required", "2026-11-18T10:00:00Z"), run("CI", "success", "2026-11-17T10:00:00Z")])).toEqual([])
+  })
+
+  it("judges the nightly by its scheduled runs, and says 'since at least' when the window has no green run", () => {
+    const night = run("Nightly checks", "failure", "2026-11-18T03:00:00Z", { event: "schedule" })
+    expect(findRed([night, run("Nightly checks", "failure", "2026-11-18T09:00:00Z", { event: "push" })]).map((r) => r.workflow)).toEqual(["Nightly checks"])
+    const many = Array.from({ length: 30 }, (_, i) => run("CI", "failure", `2026-11-${String(30 - i).padStart(2, "0")}T10:00:00Z`))
+    const [red] = findRed(many)
+    expect(red.atLeast).toBe(true)
+    expect(formatLine(red)).toMatch(/^main is red since at least 2026-11-01: CI /)
+    // a short, all-red list is the whole history seen, not a capped window
+    expect(findRed(many.slice(0, 3))[0].atLeast).toBe(false)
   })
 
   it("reports both workflows when both are red", () => {
@@ -96,5 +115,36 @@ describe("the script", () => {
     })
     expect(res.status).toBe(0)
     expect(res.stdout).toBe("")
+  })
+})
+
+describe("the burst case (per-workflow query)", () => {
+  it("main() asks gh once per workflow, for finished runs, and reports red when the shared list would have hidden it", async () => {
+    const dir = (await import("node:fs")).mkdtempSync((await import("node:path")).join((await import("node:os")).tmpdir(), "gh-"))
+    const fs = await import("node:fs")
+    const ghPath = dir + "/gh"
+    // fake gh: a run list answers only for the asked workflow; logs the calls
+    fs.writeFileSync(
+      ghPath,
+      `#!/bin/sh
+echo "$@" >> ${dir}/calls
+case "$*" in
+  *"--workflow CI "*) echo '[{"databaseId":7,"workflowName":"CI","event":"push","status":"completed","conclusion":"failure","createdAt":"2026-11-18T10:00:00Z"}]';;
+  *"run view"*) echo '{"jobs":[{"name":"checks","conclusion":"failure"}]}';;
+  *) echo '[]';;
+esac
+`,
+      { mode: 0o755 },
+    )
+    const res = spawnSync(process.execPath, ["scripts/ci/main-status.mjs"], {
+      encoding: "utf8",
+      env: { NODE_ENV: "test", PATH: `${dir}:/usr/bin:/bin` },
+    })
+    expect(res.status).toBe(0)
+    expect(res.stdout.trim()).toBe("main is red since 2026-11-18: CI checks (run 7)")
+    const calls = fs.readFileSync(dir + "/calls", "utf8")
+    for (const wf of ["CI", "E2E Tests", "Nightly checks"]) expect(calls).toContain(`--workflow ${wf} `)
+    expect(calls).toContain("--status completed")
+    fs.rmSync(dir, { recursive: true, force: true })
   })
 })
