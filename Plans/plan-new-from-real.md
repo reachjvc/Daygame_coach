@@ -1,15 +1,17 @@
 # /plan/new, rebuilt from the real tool: everything comes over
 
-Written 2026-11-19. This plan **replaces the screens of `/plan/new`** (Phases 6–7 of `Plans/plan-in-steps.md`).
-Phases 1–5 of that plan stay as they are: the backups, the copy space, the invisible fixes to today's flow, and
-the save engine. The switch-over (its Phase 9) still waits for his word.
+Written 2026-11-19, revised the same day after his marks on the decision page. This plan **replaces the screens
+of `/plan/new`** (Phases 6–7 of `Plans/plan-in-steps.md`). Phases 1–5 of that plan stay as they are: the
+backups, the copy space, the invisible fixes to today's flow, and the save engine. The switch-over (its Phase 9)
+still waits for his word.
 
 **Status:**
 - **Phase 0 (inventory)** done on 2026-11-19 (Opus). Five private files with about 850 rows (see Part 1).
-- **Phase 1 (decision page)** published: https://claude.ai/artifact/RaASekbpeY8U4e5ogqWxGn. Its database holds his picks and notes. Waiting
-  for his marks. Phase 8 needs them; Phases 2–7 do not.
+- **Phase 1 (decision page)** done. His picks and notes were read on 2026-11-19 at 09:40 and are carried into
+  this plan ("His picks", below). Q1 (order) and Q8 (lines that move by themselves) are open. He wants to try
+  working versions of them in the real tool (Phase 7).
 - **Phase 2 onwards** not started.
-- **Backups:** last night's run was killed at 08:36 (TERM, the PC was off at 03:00 and WSL stopped during the
+- **Backups:** last night's run was killed at 08:36 (TERM: the PC was off at 03:00 and WSL stopped during the
   catch-up). It was rerun by hand at 09:15 and worked: `life-plan-2026-11-19.json.gz.gpg`.
 
 ## His words (2026-11-19)
@@ -24,6 +26,25 @@ around. Also, on an ethical level, there is nothing wrong with what we've done, 
 it is ours. I like if we're able to make it more simple to use, so you can suggest to me a different order of
 screens or something like that, but you must not just remove stuff without my knowing."*
 
+His notes on the decision page, the same morning:
+- **Order:** *"You can do the quick start, but i think north star needs to go first, it is sort of the way we get
+  to know ourselves. But it is fine that we deepen them later."* And: *"when i went through it, i did not
+  necessarily want to write my beliefs down or find my values for each north star, for each area, but for some
+  of them i did want to do those things. Perhaps it is better done later, but i think it is also nice to prompt
+  the user to do it automatically when theyre looking at the area, and thinking 'hmm, i just wrote my north
+  star/my area, and this is really important, and i wont get there if i keep doing X'. So i am split."*
+- **New words:** *"when you reword stuff, it often becomes quite AI-speak. I guess i can look it over, but in
+  order to lessen the amount i need to work, i would like for you to think it through."*
+- **The ready-made routines:** *"it does not perhaps have to be entirely X morning routine as we've taken it, but
+  just a morning routine that makes sense - the issue is that i dont want you to make the things smaller in
+  order to avoid copyright, i more likely want you to make them bigger and more all encompassing."*
+- **Lines that move by themselves:** *"I am not sure what this means. The 'experience' or the UI of it all may
+  need some changes to become more usable. Part of this exercise we're doing here is to allow me to look at it
+  with fresh eyes so i can decide how it should ideally work."*
+- **General:** *"Some things will be difficult for you to oneshot. And it is difficult for me to just explain in
+  words in an artifact like this. What i would prefer is to see a few different examples of how it could be
+  done, in the real (new) tool, and how it would affect the whole sequence of things happening."*
+
 ---
 
 # PART 1 — in plain words
@@ -33,7 +54,7 @@ screens or something like that, but you must not just remove stuff without my kn
 - **I checked the wrong thing.** "Nothing gets smaller" was measured as "every question the old flow asks still
   has a place" (171 jobs). That list holds what gets saved, not how it works. Visuals, drawn editors, option
   libraries and automatic help were never on it.
-- **I wrote new screens instead of reusing the real ones.** The real parts were left unused.
+- **I wrote new screens instead of reusing the real ones.**
 - **The spec cut 52 old jobs without asking him.** The reason given was "the old form traces to an outside
   source". In the inventory that comes to 122 rows.
 - **I built too fast and checked a stand-in.** Everything went up in one day, from text alone. The tests proved
@@ -54,89 +75,120 @@ every part with `/plan/new`. The private files are in `~/.cache/daygame-research
 | Today, track, journal, review, side pages (9–12) | 165 | 30 | 57 | 51 | 17 | 10 |
 | The frame around all steps | ~90 | — | — | — | — | — |
 
-The worst losses, in plain words:
-- The life wheel.
-- Your "10" in each area, with its examples, and the week and day scores 0–10 that fed the wheel, the review
-  and "scores over time".
-- The ready-made catalogue: 27 goal sets at 3 levels, 171 single goals and 43 practices.
-- The drawn curve editor for the steps toward a number.
-- Routine building: 24 presets, 79 library steps, the training splits and the week preview.
-- "What is running at what".
-- The app reading what you type: rate, climb, finish line, numbers, units, area.
-- Goal priority order, and deleting a goal.
-- Putting values in order, and the evidence behind "you already said this matters".
-- The full goal card.
-- Month, quarter and year reviews, with their boxes and verdicts.
-- Track's forward schedule.
-- Workout ticks.
-- Phone reminders.
-- The real council of role models.
-- 12 of 13 ready journal questions.
-- The vision question ladder.
-- The identity block under the north star.
-- Saving as you type.
+The worst losses:
+- the life wheel;
+- your "10" in each area, with its examples, and the week and day scores 0–10;
+- the ready-made catalogue: 27 goal sets at 3 levels, 171 single goals and 43 practices;
+- the drawn curve editor;
+- routine building: 24 presets, 79 library steps and the training splits;
+- "What is running at what";
+- the app reading what you type;
+- goal priority order, and deleting a goal;
+- putting values in order;
+- the full goal card;
+- month, quarter and year reviews;
+- Track's forward schedule;
+- workout ticks;
+- phone reminders;
+- the real council of role models;
+- 12 of 13 ready journal questions;
+- the vision question ladder;
+- the identity block;
+- saving as you type.
 
-Three more things to know:
-- **Some parts were already hidden in the real tool.** The guided build (six ways in), the ideal day, the week
-  grid and the five questions are built, but nothing on `/plan` opens them today.
-- **Experiences work differently.** In the real tool every experience becomes a goal. In the rebuild it is a
-  loose list.
-- **The rebuild has a bug.** Its weekly check-in shows 0 done for every weekly goal.
+Three more facts:
+- The guided build (six ways in), the ideal day, the week grid and the five questions are built in the real
+  tool, but nothing opens them.
+- In the real tool each experience is a goal.
+- The first rebuild's weekly check-in shows 0 done for every weekly goal.
 
-## The rule for this rebuild
+## The rules for this rebuild
 
 - **Everything in the real tool comes over:** every screen, control, picture, option list, help text,
-  automatic behaviour and piece of data. This includes the 122 rows the first spec cut.
+  automatic behaviour and piece of data, including the 122 rows the first spec cut.
+- **Bigger, never smaller.** Where a part comes back in a new form, the new form does at least everything the
+  old one did, and may do more. Nothing is made smaller to put distance from an outside source (his note on
+  Q3b).
 - **Allowed without asking:**
-  - our own words for labels (the outside names were a starting point; his own labels stay);
+  - our own words for labels that trace to an outside method, written to the words guide below;
   - phone fixes (things cut off, too wide, wrapping);
   - bug fixes.
-- **Needs his yes first** (proposed on the decision page): another order of screens, splitting a page into
-  several screens, merging two things, and anything new.
+- **Where he is unsure, build two or three working versions in the real new tool**, show how each changes the
+  whole sequence, and let him try them. Never ask him to choose from a description.
 - **Removing:** never done. At most "proposed to remove, because …" on a page, until he says so.
 - **Today's `/plan` keeps working, with the same look and words, on his real data.** Nothing on `/plan/new`
-  writes to his real account. It still runs on the copy space.
+  writes to his real account. It runs on the copy space.
 
 ## How: reuse the real parts, don't redraw them
 
 Every real step part takes its plan and its save actions from the page around it, and fetches nothing itself
-(the one exception is the review reminder). So the real parts can run inside the new step-by-step pages:
-- **One adapter** gives them the plan, the save actions and the account's day.
-- **The save actions move out of the big page file unchanged**, so today's `/plan` uses the very same code and
-  behaves the same.
-- **A fix to a shared part lands in both versions.** Only fixes that stop things being cut off reach `/plan`
-  this way. Words differ through a words layer that only `/plan/new` switches on.
-- **First a faithful copy, in the real order** (Phase 4). He can click it on his copied data before any
-  reorder.
-- **Then his order** (Phase 8), from his marks.
+(the one exception is the review reminder). So:
+- **One adapter** gives the real parts the plan, the save actions and the account's day inside the new
+  step-by-step pages.
+- **The save actions move out of the big page file unchanged.** Today's `/plan` uses the very same code, and a
+  diff proves it is a pure move.
+- **The order of screens is data.** One file lists the screens in order, plus where the optional deeper
+  questions appear. Each version he tries is one more list, not more code.
+- **First a faithful copy in today's order** (Phase 4). Then his picks (Phase 6). Then the versions for what he
+  is unsure about (Phase 7). The words come last, over everything at once (Phase 8).
 
-## Proposed order of screens (his call: decision page, question 1)
+## His picks (decision page, read 2026-11-19)
 
-**Option A, recommended: a quick start, then deepen.** Only what Today needs comes first. Everything else stays,
-as a list on the plan home that shows what each part gives you and how full it is. The checked research behind
-this is listed under "Where the facts come from".
+| # | Question | His pick | What this plan does |
+|---|---|---|---|
+| Q1 | Order of screens | No pick. Notes: north star first; deepen later; maybe prompt the deeper questions in place, for the areas that matter | **Three working versions** (Phase 7, V1–V3) |
+| Q2 | Split long pages into short topic screens | Split | Phase 6.2 |
+| Q3 | The 122 cut parts come back in our words | All | Phases 4 and 8 |
+| Q3b | The five ready-made routines that copy a taught practice | Bring back. Note: make them bigger and more complete, not a copy | Phase 8b: our own routines, designed from fresh research |
+| Q4 | Keep the plan home, season band, Done summaries, earlier notes | Keep | Phase 6.3, adapted to the real steps |
+| Q4b | Locks | No locks | Phase 6.3 |
+| Q5 | Bring in the hidden parts as "Plan my week" | In | Phase 6.4 |
+| Q6 | Percentages and "still to fill in" chips, counted by one rule | Back | Phase 6.5 |
+| Q7 | Each experience is a goal | Goal | Phase 4 (the real behaviour) |
+| Q8 | Lines that move between Systems and Experiences by themselves | No pick. Note: not clear what it means; wants to look with fresh eyes | **Three working versions** (Phase 7, S1–S3) |
+| Q9 | Drag plus buttons on the phone | Both | Phase 6.6 |
+| Q10 | Open on Today once in use | Today | Phase 6.7 |
+| Q11 | Keep the first rebuild's screens reachable | Keep | Phase 4.2 (`/plan/new/first/…`) |
 
-| Quick start (then Today works) | Deepen, any order | Daily and weekly use |
-|---|---|---|
-| 1 Your areas: the wheel, optional score now | 6 North star: horizon, paragraph with the question ladder, why, cost, identity block, lines, earlier ones | Today |
-| 2 This season: the one thing, end date, its areas on the wheel; then why / if not / who you'd be / values | 7 Your 10 per area: the 10 with examples, week and day scores, why, who you are there, what stops you, values, role models | Track |
-| 3 How to start: the four doors (ready-made set, build your week, one routine, write freely) | 8 Experiences: area by area, examples, dates, what each needs | Journal |
-| 4 Goals for the season: each one in short screens, the full goal card one tap away | 9 Values: gathered values with where you said them, the two lists, order | Review: week, month, quarter, year |
-| 5 What you do each week: systems, routines, "what is running at what" | 10 Everything: read it all, change in place, quick-add, closing questions, commit | |
+## The words guide (Phase 8; his note: no AI-speak, less work for him)
 
-**Option B: keep the real order** (north star, your 10s, where to start, systems, experiences, season, values,
-everything, then the daily steps). Each big page is still split into short screens if he says yes to question 2.
+- **Change only what must change:** a label that traces to an outside method (per `plan-steps/labels.md`), or one
+  the walk found confusing. A plain old label stays as it is. Fewer changes means less for him to check.
+- **Voice:** a straight-talking friend who coaches, talking to one man. "You", present tense, everyday words
+  from his life: gym, dates, approaches, money, sleep, work.
+- **Length:** a label is at most 4 words, a question at most 12, help text at most 2 short sentences.
+- **Banned words:** journey, unlock, empower, elevate, intentional, align, thrive, embrace, transform, holistic,
+  mindset shift, level up, game-changer, deep dive, leverage, optimize, best self, show up, lean into, hold
+  space, crush it.
+- **Banned patterns:** dash asides, "not X, but Y", rhythmic lists of three, colon-then-reveal, exclamation
+  marks, rhetorical questions in help text, emoji.
+- **Read-aloud test:** would a 25–35-year-old guy say it to a mate at the gym? If not, rewrite it.
+- **Every change carries:** the old label, the job, the new label, and one line on why it is ours and not a
+  renamed copy.
+- **Process:**
+  - a writer agent (Opus) gets each screen's shot, the current words, the job, this guide, and a "do not use"
+    list of the outside method's own names;
+  - a checker agent (Opus) sees `labels.md` and flags anything that is close to an outside name, breaks the
+    guide, or loses the meaning;
+  - at most two rounds.
+  This replaces the first plan's blind writer, whose words read generic.
+- **His check:** he sees the new words in place while he walks the tool. The review page lists only the changed
+  labels, by step, each next to its screen.
 
 ## Where the facts come from
 
-- **Checked on 2026-11-19:** the inventory (code plus walk screenshots); the backup log and the systemd journal.
-- **Checked web sources on setup flows, 2026.** Most are vendor posts; no independent study of goal-setting
-  setups was found:
-  - ask only what blocks first, move the rest to a checklist, default everything, make every step skippable,
-    and count steps honestly (Kompassify, Appcues, Userpilot);
-  - grouping related fields by topic is well supported (NN/g);
-  - one question per screen versus grouped sections is not settled by any real study.
+- **Checked on 2026-11-19:**
+  - the inventory (code plus walk screenshots);
+  - his picks and notes in the decision page's database;
+  - the backup log and the systemd journal;
+  - `planFacts.ts`: the `start:new:` answer keys, which hold extra facts without a schema change.
+- **Checked web sources on setup flows, 2026.** Most are vendor posts; no independent study was found:
+  - ask only what blocks first, move the rest to a checklist, and make every step skippable (Kompassify,
+    Appcues, Userpilot);
+  - grouping by topic is well supported (NN/g);
+  - one question per screen is not settled.
 - **From memory:** the walk's 1.5–2 hours to fill everything (walk report, 2026-11-18).
+- **Not yet researched:** the morning routine content. Phase 8b researches it fresh before designing.
 
 ---
 
@@ -144,75 +196,70 @@ everything, then the daily steps). Each big page is still split into short scree
 
 | ID | What | Tried, and what came back | Blocks | Plan |
 |---|---|---|---|---|
-| B1 | The save-engine branch `plan-engine` is not merged; another session is fixing it | `git log main..plan-engine`: 6 commits, 40 files. It rewrites `src/goals/planStore/*`, the SaveIndicator in `plan-new/ui.tsx`, id minting in `northStarService.ts`, `planChanges.ts`, `app/api/life-plan/route.ts` and `lifePlanRepo.ts` | Phase 7 only | Phases 2–6 touch none of those files. Phase 7 waits for the merge |
-| B2 | The copy space lets through only plan and day requests | Inventory D/E: workouts and enrollments are reads and pass the guard (as on `/plan/sandbox`). Reminder, council and quit writes are refused | Parts of Today, Review, role models | Reads as `/plan/sandbox` does. Reminders shown but off on the copy (no pushes). Council rows copied into the copy (3.4) |
-| B3 | New words must not come from the outside sources; this planning session has read the label inventory | — | Phase 6 | A fresh writer agent that sees only job lines, and a checker that sees `labels.md` |
-| B4 | WSL memory: two dev servers plus a typecheck crashed WSL on 2026-11-10 | `tools/load.sh` named in memory: "No such file or directory" | Speed | One dev server at a time; stop it before the typecheck; e2e with `--workers=1`; check `free -g` first |
+| B1 | The save-engine branch `plan-engine` is not merged; another session is fixing it | `git log main..plan-engine`: 6 commits, 40 files. It rewrites `src/goals/planStore/*`, the SaveIndicator in `plan-new/ui.tsx`, id minting in `northStarService.ts`, `planChanges.ts`, `app/api/life-plan/route.ts` and `lifePlanRepo.ts` | Phase 9 only | No other phase edits those files. Phase 9 waits for the merge |
+| B2 | The copy space lets through only plan and day requests | Inventory D/E: workout and enrollment reads pass the guard (as on `/plan/sandbox`); reminder, council and quit writes are refused | Parts of Today, Review, role models | Reads as `/plan/sandbox` does. Reminders shown but off on the copy (no pushes). Council rows copied into the copy (3.4) |
+| B3 | Words must be ours; this planning session has read the label inventory | — | Phase 8 | A fresh writer agent with the words guide and a do-not-use list, plus a checker that sees `labels.md` |
+| B4 | WSL memory: two dev servers plus a typecheck crashed WSL on 2026-11-10 | `tools/load.sh`, named in memory: "No such file or directory" | Speed | One dev server at a time; stop it before the typecheck; e2e with `--workers=1`; check `free -g` first |
 | B5 | Deploy rate limit (~60 pushes a day) | Memory, 2026-11-11 | — | One push per phase |
-| B6 | His real data for side-by-side screenshots | `~/dg-backups/nightly/life-plan-2026-11-19.json.gz.gpg` exists. `scripts/restore-life-plan.ts` restores into the local test stack; the passphrase is in `plan-steps/backup-passphrase.txt` | Phases 4, 8, 9 | Restore into the local stack under a test account, never live |
+| B6 | His real data for screenshots and walks | `~/dg-backups/nightly/life-plan-2026-11-19.json.gz.gpg` exists. `scripts/restore-life-plan.ts` restores into the local test stack; the passphrase is in `plan-steps/backup-passphrase.txt` | Phases 4, 7, 10 | Restore into the local stack under a test account, never live. Give that account a local `plan_sandboxes` row, then "Copy my real plan in" |
+| B7 | The shared checkout's `main` is 40 commits behind `origin/main`, and other sessions use it | `git status -sb` on 2026-11-19: ahead 1, behind 40 | Shipping | Never move the shared checkout. Ship from the worktree: rebase `plan-full` on `origin/main`, then `git push origin plan-full:main` |
 
 # DECISIONS I TOOK (proposed; he can veto any, say the letter)
 
 | # | Decision | Why |
 |---|---|---|
-| T1 | Reuse the real step parts through one adapter. The save actions move out of `NorthStarFlow.tsx` unchanged into a shared hook that both versions use | One source of truth. `/plan` keeps its behaviour, proved by its existing e2e suite |
-| T2 | First a faithful copy in the real order (Phase 4), then his order (Phase 8) | He sees the full tool before anything moves. The build does not wait for his marks |
-| T3 | The first rebuild's screens move to `/plan/new/first/…`, unchanged, until he says what happens to them | Nothing goes without his knowing, even my own work |
-| T4 | Fixes that stop things being cut off at phone width apply to `/plan` too | They change no words, no order, no behaviour. Every such fix is listed in the report to him |
-| T5 | New words reach only `/plan/new`, through a words layer. `/plan` keeps its words | His rule: today's flow stays as it is |
-| T6 | His February areas decision stands: eight areas plus the daily "Feeling about life" rating | His own pick on the areas page, 2026-11-18 |
-
-# OPEN QUESTIONS (on the decision page, each with a recommendation)
-
-| # | Question | Recommendation | Alternative | Cost if wrong |
-|---|---|---|---|---|
-| Q1 | Order of screens | A: quick start, then deepen | B: the real order | Phase 8 is a reorder: a day of work either way |
-| Q2 | Split big pages into a few short screens, grouped by topic, each with a "see it all on one page" view | Yes | Keep each page as one long page | Small |
-| Q3 | The 122 parts the first spec cut come back with our own words | Yes, all | He names ones to leave out | — |
-| Q3b | Five ready-made routines copy a taught practice, not just a name (a fixed long morning ritual, spoken lines with the body, happy/proud/grateful questions, a step that reads a bundle, a feel-it-as-real routine) | Bring back, renamed and reworded as ours | Leave out | Low |
-| Q4 | Keep what the first rebuild added: the plan home with "Next up", the season band, Done summaries, earlier notes | Keep | Drop | Low |
-| Q4b | Locks (a step opens only after the earlier one). The real tool has none | Drop the locks | Keep | Low |
-| Q5 | The parts the real tool hides (guided build, ideal day, week grid, five questions) | Bring them in as "Plan my week" under Deepen | Leave hidden | Medium build |
-| Q6 | Percentages and "still to fill in" chips | Bring back, counted by the same rule as the status so the numbers agree | Status words only | Low |
-| Q7 | Experiences | Each becomes a goal, as in the real tool | Loose list (rebuild) | Data shape |
-| Q8 | The app moves typed lines between Systems and Experiences by itself | Keep, but show "moved to Experiences · undo" | Never move | Low |
-| Q9 | Dragging on the phone (curve, value order) | Keep drag, add buttons beside it | Drag only | Low |
-| Q10 | Open on Today once the plan is in use | Yes, as now | Open on the plan home | Low |
-| Q11 | The first rebuild's screens stay reachable at `/plan/new/first/…` for now (T3) | Keep for now | Remove | Low |
+| T1 | Reuse the real step parts through one adapter. The save actions move out of `NorthStarFlow.tsx` unchanged into a shared hook | One source of truth; `/plan` keeps its behaviour |
+| T2 | The order of screens and the deeper prompts live in one data file (`planSequences.ts`) | Versions to try are cheap; his final pick is a one-line change |
+| T3 | The first rebuild's screens move to `/plan/new/first/…`, unchanged (his Q11: keep) | Nothing goes without his knowing |
+| T4 | Fixes that stop things being cut off at phone width apply to `/plan` too | No words, order or behaviour change; each fix is listed for him |
+| T5 | New words reach only `/plan/new`, through a words layer; `/plan` keeps its words | His rule: today's flow stays as it is |
+| T6 | His areas decision stands: eight areas plus the daily "Feeling about life" rating | His pick, 2026-11-18 |
+| T7 | Which version he is trying is kept in the copy plan as a `start:new:` answer, and a small switcher on the copy space sets it | No schema change; works on phone and PC |
 
 ---
 
 # PHASES
 
-Models: build and checks run on **Sonnet** (`claude --model sonnet`); mechanical merges on **Haiku**; reviews,
-words and the audit on **Opus** subagents (`model: "opus"`). Work in a worktree under
-`~/.cache/daygame-research/plan-steps/full-wt` on branch `plan-full` (never `/tmp`: a crash wipes it). Ship by
-fast-forward to `main`.
+**Models:**
+- **Sonnet** (`claude --model sonnet`): the session that runs this plan, building, tests.
+- **Haiku** (`model: "haiku"`): mechanical merges and counts.
+- **Opus** (`model: "opus"`): reviews, the split map, words, routine design and the audit.
+
+**Where:**
+- Work in a worktree at `~/.cache/daygame-research/plan-steps/full-wt` on branch `plan-full`. Never use `/tmp`:
+  a crash wipes it.
+- Ship per B7.
+
+**One phase per session is fine.** The Status block at the top says where to pick up.
 
 ## Phase 0 — Inventory (done, Opus)
 
 The five files above.
 
-## Phase 1 — Decision page (done, Opus; waits for his marks)
+## Phase 1 — Decision page (done)
 
 https://claude.ai/artifact/RaASekbpeY8U4e5ogqWxGn (source
 `~/.cache/daygame-research/plan-steps/decision-page/plan-rebuild-choices.html`). Its database:
-- `pick`: one doc per question id (`q1` … `q11`, `q3b`, `q4b`), holding `{choice, at}`. Choice values are in the
-  page source (Q1 `A`/`B`, Q2 `split`/`keep`, and so on);
-- `notes`: docs `{item, text, at}`, where `item` is a question id or `general`. A note is appended, never replaced;
-- `likes`: one doc per question id, holding `{liked}`.
-Read them with ArtifactData `list` (url = the page).
+- `pick`: one doc per question id, holding `{choice, at}`;
+- `notes`: docs `{item, text, at}`, where `item` is a question id or `general`;
+- `likes`.
+Everything up to 2026-11-19 08:32 is carried into this plan. Read it again before Phase 6: a newer note
+overrides this plan where it conflicts.
 
 ## Phase 2 — One checklist (Haiku)
 
-2.1 Merge the rows of A–E into `inventory/MASTER.md`. Each row gets an id (`A12`, `B40`, …), the item, the real
-    file:line, the old status, and two empty columns: `new home` (route + file) and `proved` (shot pair name).
-2.2 *Check:* the row count equals the sum of the five files. No row is dropped (a script counts them).
+2.1 Merge the rows of A–E into `inventory/MASTER.md`. Each row gets:
+    - an id (`A12`, `B40`, …);
+    - the item and the real file:line;
+    - the old status;
+    - three empty columns: `new home` (route + file), `proved` (shot pair) and `pick` (which of his picks or
+      versions touches it).
+2.2 *Check:* a script counts the rows. The count equals the sum of the five files.
 
 ## Phase 3 — The adapter (Sonnet builds, Opus reviews)
 
 3.1 `src/goals/components/north-star/usePlanWriters.ts`: move the handler factories (`NorthStarFlow.tsx`
-    ~1315–1697) and the inline writers (~2017–2370) **unchanged**. `NorthStarFlow` calls the hook. Verify the
+    ~1315–1697) and the inline writers (~2017–2370) **unchanged**. `NorthStarFlow` calls the hook. Re-find the
     line ranges first: the file may have moved.
 3.2 `usePlanReads.ts`:
     - the account's today, with its timezone and the 60-second, focus and visibility tick (~526–677);
@@ -220,38 +267,43 @@ Read them with ArtifactData `list` (url = the page).
     - training ticks (~1493–1526);
     - `useOneThing`.
 3.3 `src/goals/components/plan-new/RealStep.tsx`, the host:
-    - a day-safe `setPlan`: `store.update(fn)`, then start the day send when the day record changed. Test that
-      a tick made through a real part is in the account after a reload;
+    - a day-safe `setPlan`: `store.update(fn)`, then start the day send when the day record changed;
     - a dialog host for AreaDialog, AreaGoalsDialog and the errand ribbon, with its state in the query
       (`?area=`, `?goal=`, `?routine=`);
     - a map from the 12 step ids to `/plan/new` routes, for `onGoToTab`, `onNext` and `goTo`;
     - `PlanBasePathContext` set to `/plan/new`;
     - a `?step=` / `?period=` redirect in `PlanNewRouter.tsx`.
     The timezone comes from `getUserTimezone` in `app/(app)/plan/new/layout.tsx` into `PlanNewContext`.
-    Typing must not send one request per keystroke: test 50 typed characters against the request count.
 3.4 Copy space:
     - never pass `onReminderChange`;
     - workout and enrollment reads work as on `/plan/sandbox`;
     - check whether "Copy my real plan in again" copies the council (`user_role_models`) and the quit records.
-      If not, add them to the copy, with an Opus security review of that change.
+      If not, add them, with an Opus security review of that change.
 3.5 Do not edit the files listed in B1.
 3.6 *Check:*
+    - `git diff --color-moved=zebra` on `NorthStarFlow.tsx` shows the writers as moved, not changed. An Opus
+      reviewer signs off that the move changes no behaviour;
     - every existing `/plan` e2e spec passes unchanged: `life-plan-*.spec.ts`,
       `life-mastery-north-star-history`, `plan-saves-lose-nothing`, `plan-sandbox`;
-    - unit tests cover the route map and the day-safe `setPlan`;
+    - new tests:
+      - a tick made through a real part is in the account after a reload;
+      - 50 typed characters do not send 50 requests;
+      - the route map has a unit test;
     - the typecheck ratchet passes.
 
 ## Phase 4 — Faithful copy at `/plan/new` (Sonnet; depends on 3)
 
-4.1 Mount all 12 real steps in the real order. Build steps go in the Frame (Back · save · Next); the daily steps
-    run full width. The plan home lists the real steps. The rebuild's additions (Next up, season band, Read it
-    all, Done summaries, earlier notes) stay until Q4 is answered.
-4.2 Move the first rebuild's module screens to `/plan/new/first/…`, unchanged (T3).
+4.1 `src/goals/planSteps/planSequences.ts`: a sequence is an ordered list of screens. Each screen names a real
+    component (and later a `section`, Phase 6.2) and may carry optional "go deeper" prompts. Version **V1** is
+    today's 12-step order.
+4.2 Mount all 12 real steps through V1. Build steps go in the Frame (Back · save · Next); the daily steps run
+    full width. Never show two Next buttons: hide the real step's own Next inside the Frame. Move the first
+    rebuild's screens to `/plan/new/first/…`, unchanged.
 4.3 Words stay as in the real tool in this phase.
 4.4 *Check:*
     - every MASTER row has its `new home`;
-    - restore the 2026-11-19 backup into the local stack (B6) and screenshot old `/plan` and new `/plan/new` at
-      390 px for every step and sheet, in pairs, into `plan-steps/full-shots/`. Same content in each pair;
+    - restore the backup locally (B6). Screenshot old `/plan` and new `/plan/new` at 390 px, for every step
+      and sheet, in pairs, into `plan-steps/full-shots/`. Same content in each pair;
     - his real-account counts are unchanged after the deploy (`plan-steps/live/counts.py`).
 
 ## Phase 5 — Phone fixes in the real parts (Sonnet, Opus reviews; depends on 4)
@@ -267,68 +319,132 @@ Read them with ArtifactData `list` (url = the page).
     - Today's inputs have `min-w-[14rem]`;
     - the ValuesSoFar column is a fixed `w-[104px]`;
     - review units are parsed wrongly ("k on", "pull").
-5.2 *Check:* an e2e scan with no horizontal overflow (`scrollWidth <= clientWidth`) at 360 and 390 px on every
-    step of both `/plan` and `/plan/new`. List each fix that reached `/plan` (T4).
+5.2 *Check:*
+    - an e2e scan finds no horizontal overflow (`scrollWidth <= clientWidth`) at 360 and 390 px on every step
+      of both `/plan` and `/plan/new`;
+    - each fix that reached `/plan` is listed (T4).
 
-## Phase 6 — Words (Opus writer and checker, Sonnet applies; can run beside 5)
+## Phase 6 — His picks (Opus maps the splits, Sonnet builds; depends on 4)
 
-6.1 List every visible string in the reused parts, with its trace from `plan-steps/labels.md` (private). Strings
-    that trace to an outside method get new words. His own labels stay: North star, Season, Systems, Track,
-    Today, Journal, Review. Reuse `plan-steps/spec/words.md` where it already covers the job.
-6.2 A fresh writer agent gets job lines only: no repo, no cache, no old labels. A checker agent that sees
-    `labels.md` flags anything close. At most two rounds.
-6.3 Apply through `usePlanWords()`. Its default returns today's words, and only `/plan/new` provides the new
-    ones (T5).
-6.4 *Check:*
-    - a scan of `/plan/new`'s rendered text shows no flagged old label;
+6.1 Read the decision page again for newer notes.
+6.2 **Splits (Q2).** First an Opus subagent writes the split map: for each long part (north star, area sheet,
+    goal card, season, values, Everything, review), which sections form one screen, grouped by topic, never one
+    question per screen. Each split step keeps "see it all on one page", which is the whole real part. A split
+    component takes a `section` prop. Never copy its markup.
+6.3 **Q4 / Q4b.** Keep the plan home, Next up, the season band, the Done summaries and the earlier notes, now
+    computed over the real steps from the sequence. Remove the locks.
+6.4 **Q5.** Mount GuidedBuild, with IdealDay, WeekGrid and the five questions, as "Plan my week" under Deepen.
+6.5 **Q6.** One function computes each step's percentage and its "still to fill in" chips, for `/plan/new`
+    only. Unit tests cover the walk's contradicting cases (for example north star at 50 % after every box was
+    filled), and the numbers must now agree.
+6.6 **Q9.** Drag stays. Add up/down buttons to the value order and preset shapes to the curve editor, beside the
+    drag.
+6.7 **Q10.** Once the plan is in use, `/plan/new` opens on Today.
+6.8 *Check:*
+    - every MASTER row is reachable;
+    - the shot pairs are redone;
+    - the counts are unchanged.
+
+## Phase 7 — Versions to try (Sonnet builds; depends on 6)
+
+He wants to see how each choice changes the whole sequence, not read about it. Every version keeps every part.
+
+**Order (Q1):**
+- **V1, today's order:** the faithful copy, with splits.
+- **V2, north star first, then a quick start:**
+  - north star (paragraph and why; the rest of it later) → areas on the wheel (optional score now) → this
+    season → how to start (the four doors) → goals for the season → what you do each week. Today works from
+    there;
+  - then a Deepen list on the plan home: your 10 per area, the rest of the north star, experiences, values,
+    Everything, Plan my week.
+- **V3, like V2, plus deeper questions in place:**
+  - short, skippable prompts at the moment they matter, only for the areas that are in the season or that he
+    marks as important, never for all eight in a row;
+  - after an area's 10: "Go deeper on Dating? Why it matters · what stops you · values";
+  - after a goal: "What could stop you?";
+  - after the north star paragraph: "What happens if you never get there?";
+  - everything stays on the Deepen list too.
+
+**Lines that move by themselves (Q8).** Today, a line typed on Systems that reads like a one-off ("Two dates a
+month") is moved to Experiences without a word:
+- **S1:** as today, it moves silently;
+- **S2:** it moves and says "Moved to Experiences · Undo";
+- **S3:** it asks first: "Something you do every week, or something you want to happen?", with two buttons.
+
+7.1 Add V2, V3 and S1–S3 to `planSequences.ts` and the sorter. Add a small switcher, visible on the copy space
+    only (T7).
+7.2 For each version, a scripted new-user walk at 390 px on the restored data records:
+    - every screen in order (a filmstrip);
+    - the screens and estimated minutes until Today works;
+    - the total screens.
+    Time estimate: about 60 s per long text box, 15 s per short line, 3 s per tap; state the basis.
+7.3 *Check:* each version can be walked end to end as a new user and with his copied data. The counts are
+    unchanged.
+
+## Phase 8 — Words (Opus writer and checker, Sonnet applies; depends on 6 and 7)
+
+8.1 List every visible string in `/plan/new`, the new screens' titles and the V3 prompts included, with its
+    trace from `labels.md`. Apply the words guide (Part 1).
+8.2 Apply the words through `usePlanCopy(base, key)`: it returns today's words unless `/plan/new` provides
+    others (T5).
+8.3 *Check:*
+    - a scan of `/plan/new`'s rendered text finds no flagged old label and no banned word;
     - `/plan`'s visible text is byte-equal before and after (snapshot test).
 
-## Phase 7 — Store fix after the save engine merges (Sonnet, Opus reviews; depends on B1)
+## Phase 8b — The ready-made routines, made bigger (Opus researches and designs, Sonnet builds; beside 8)
 
-7.1 Move the day-send start from the adapter into `createPlanStore.update`, and remove the adapter's
-    workaround.
-7.2 *Check:* `plan-saves-lose-nothing` passes, plus the tick-survives-reload test from 3.3.
+8b.1 **Research fresh, and say what was checked.** Find what a complete morning routine covers today: recent
+     practitioner videos and posts (2025–2026), sleep and circadian research (light, water, movement), habit
+     research, and how people use AI with routines. Keep a private source list in
+     `~/.cache/daygame-research/plan-steps/routines/`.
+8b.2 **Design our own five, each at least as complete as the old one and broader:**
+     - a full morning routine;
+     - lines said out loud with posture and voice;
+     - morning questions (more than three);
+     - reading your plan (north star, season, today's three);
+     - seeing it done (the goal reached, and the steps to it).
+     Each step gets a why, minutes, and a short and a full version. Visible text names no outside method.
+8b.3 Build them into the routine library as presets.
 
-## Phase 8 — His order and splits (Sonnet; depends on 4 and his marks)
+## Phase 9 — Store fix after the save engine merges (Sonnet, Opus reviews; depends on B1)
 
-8.1 Read the decision page's database first (`pick`, `notes`). Apply each yes. A "no" or no answer keeps the
-    real way. A note is a fix to what it points at, not a new rule.
-8.2 Splits (if Q2 is yes):
-    - screens are grouped by topic, not one question per screen;
-    - each split step keeps its whole real part as "see it all on one page";
-    - a split component takes a `section` prop. Never copy its markup.
-8.3 *Check:*
-    - every MASTER row is reachable in the new order;
-    - redo the shot pairs;
-    - check the counts again.
+9.1 Move the day-send start from the adapter into `createPlanStore.update`, and remove the workaround.
+9.2 *Check:* `plan-saves-lose-nothing` passes, plus the tick-survives-reload test from 3.6. If `plan-engine` is
+    still unmerged, skip this phase and say so.
 
-## Phase 9 — Prove it (Opus, 4–5 adversarial agents; Sonnet fixes)
+## Phase 10 — Prove it (Opus, 4–5 adversarial agents; Sonnet fixes)
 
-9.1 One agent per inventory file. Each checks every row: old and new shot, and a data round trip (make, reload,
-    see it). It also hunts for bugs.
-9.2 Sonnet fixes. Repeat until no must-fix item is left.
-9.3 Phone walk on the emulator (`~/.cache/daygame-research/alpha/phone.sh`). Run `phone.sh stop` after.
+10.1 One agent per inventory file. Each checks every row: the old and new shot, and a data round trip (make it,
+     reload, see it). Each also hunts bugs, and walks V1–V3 and S1–S3.
+10.2 Sonnet fixes. Repeat until no must-fix item is left.
+10.3 Phone walk on the emulator (`~/.cache/daygame-research/alpha/phone.sh`), then `phone.sh stop`.
 
-## Phase 10 — His look (Sonnet builds the page)
+## Phase 11 — His look (Sonnet builds the page)
 
-A review page with side-by-side shots per step, a 👍 per step, and notes that save as he types (green Saved
-badge, earlier notes listed). Status says "built / live", never "done", until he says it is.
+One page, short, built to the review-board pattern: a 👍 per item, and notes that save as he types with a green
+Saved badge and earlier notes listed.
+1. **The versions:** V1–V3 side by side, each with its filmstrip, screens and minutes until Today, a "Try it"
+   link (with his copied data or as a new user), and a pick. Then S1–S3, each with a "Try it" link and a pick.
+2. **New words:** only the changed labels, by step, each next to its screen.
+3. **The five routines:** each step with its why and minutes.
+4. **Anything else:** one note box per step of the tool, for what he sees with fresh eyes.
+Status says "built / live", never "done", until he says it is.
 
-## Phase 11 — Switch-over (his word only)
+## Phase 12 — Switch-over (his word only)
 
-As `Plans/plan-in-steps.md` Phase 9. Old links (`?step=`, `?period=`, push notifications) map to the new routes.
+As `Plans/plan-in-steps.md` Phase 9, with his picked versions. Old links (`?step=`, `?period=`, push
+notifications) map to the new routes.
 
 ---
 
 # PART 2 — rules for the executing session
 
-- Read `CLAUDE.md`, this plan and the five inventory files first. The inventory is the checklist; MASTER.md is
-  the scoreboard.
+- Read `CLAUDE.md`, this plan and the five inventory files first. MASTER.md is the scoreboard.
 - Never write to his real account. Live test writes go inside `begin; … rollback;`. Recount his rows before and
   after each deploy.
-- Commit with `git commit --only <paths>`; never `git add -A` or `git stash`. Push without asking, one push per
-  phase. Run the typecheck ratchet before each push.
-- Keep this plan's Status at the top current after each phase.
+- Never move the shared checkout (B7). Commit in the worktree; WIP commits on `plan-full` may skip hooks; the
+  shipped commits pass hooks and the typecheck ratchet. Never `git add -A` or `git stash`.
+- Keep this plan's Status current after each phase, and commit it.
 - Report to him in plain words. Open with done / live / not yet, and say what is left.
 - When long work ends, send a PushNotification.
 
@@ -337,50 +453,53 @@ As `Plans/plan-in-steps.md` Phase 9. Old links (`?step=`, `?period=`, push notif
 # EXECUTION PROMPT (paste into a new session started on Sonnet: `claude --model sonnet` or `/model sonnet`)
 
 ```
-You are executing Plans/plan-new-from-real.md in /home/jonaswsl/projects/daygame-coach.
-Read CLAUDE.md, then that plan in full, then the Status block of Plans/plan-in-steps.md, then the five
-inventory files in ~/.cache/daygame-research/plan-steps/inventory/. The plan decides everything. Where it leaves
-a technical choice open, choose yourself and note it in the plan's Status.
+You are executing Plans/plan-new-from-real.md in /home/jonaswsl/projects/daygame-coach. The same prompt
+is used for every session until the plan is finished.
 
-Goal: /plan/new becomes the real life-plan tool (NorthStarFlow and all its parts), complete, running on the copy
-space, built by reusing the real components through one adapter. Nothing in the real tool is left out, and
-nothing is removed without the owner's yes.
+Start of every session:
+1. Read CLAUDE.md, then the plan in full. Its Status block says which phase is next.
+2. Read the five inventory files in ~/.cache/daygame-research/plan-steps/inventory/ and MASTER.md (once it
+   exists).
+3. Read the decision page's database (ArtifactData list on
+   https://claude.ai/artifact/RaASekbpeY8U4e5ogqWxGn: pick, notes, likes). The plan already carries
+   everything up to 2026-11-19 08:32. A newer note overrides the plan where they conflict.
+4. Continue at the first unfinished phase. Finish phases in order: 2, 3, 4, 5, 6, 7, then 8 and 8b, 9 (only
+   once branch plan-engine is merged into origin/main), 10, 11. Never Phase 12. When a phase is done and
+   your context is getting full, update Status, commit, report, and stop. The next session picks up from
+   there.
 
-Order:
-1. Phase 2 (Haiku subagent): MASTER.md.
-2. Phase 3, then Phase 4, then Phases 5 and 6 (6 may run beside 5). Phase 7 only once branch plan-engine is
-   merged into main (check git log main). If it is not merged, skip Phase 7 and note it in Status.
-3. Phase 8 only after reading the decision page's database: ArtifactData list on
-   https://claude.ai/artifact/RaASekbpeY8U4e5ogqWxGn, collections pick, notes, likes. If he has not picked
-   yet, skip Phase 8, run Phase 9 on the faithful copy, and say so.
-4. Phase 9, then Phase 10. Never Phase 11.
+Goal: /plan/new becomes the real life-plan tool (NorthStarFlow and all its parts), complete, on the copy
+space, by reusing the real components through one adapter. Then come his picks, three working versions for
+each open question, words that are ours, and a review page for him.
 
 Hard rules:
 - Never write to the owner's real account. /plan/new runs only on the copy space. Before and after every
-  deploy, run ~/.cache/daygame-research/plan-steps/live/counts.py and compare with the run before. If a
-  change comes from your work, stop and report it.
-- Today's /plan must look and read exactly as now. Its e2e specs must pass unchanged after every phase.
-  The only allowed /plan changes are moving the writers and reads into hooks (no behaviour change) and the
-  Phase 5 phone fixes. List each fix.
-- Do not edit the files plan-engine owns (plan, blocker B1).
-- Reuse the real components. Never redraw one. If a real part cannot be mounted, stop on that part, write why
-  in Status, and carry on with the rest.
-- Every MASTER.md row ends with a new home and a proved shot pair. A row you cannot place is written in
-  Status as "open". Never drop a row.
-- Words (Phase 6): the writer is a fresh Opus subagent that gets job lines only (no repo, no cache, no
-  labels.md). The checker is a second Opus subagent that does see labels.md.
-- Work in a git worktree at ~/.cache/daygame-research/plan-steps/full-wt on branch plan-full, never in /tmp.
-  Commit work in progress often. Ship by fast-forward to main with git commit --only. Never git add -A or
-  git stash. Run the typecheck ratchet before each push. One push per phase.
-- One dev server at a time: --webpack, its own port, the test-stack env (memory: worktree-e2e-servers).
-  Stop it before the typecheck. Run e2e with --workers=1. Stop the Android emulator after use. Check free -g
-  before heavy runs.
-- Subagents: model "sonnet" for building, "haiku" for mechanical checks, "opus" for reviews, words and the
-  audit.
+  deploy, run ~/.cache/daygame-research/plan-steps/live/counts.py and compare. If your work caused a change,
+  stop and report it.
+- Today's /plan must look and read exactly as now, and its e2e specs must pass unchanged after every phase.
+  The only allowed /plan changes are the pure move of the writers and reads into hooks (proved with git diff
+  --color-moved and an Opus review) and the Phase 5 phone fixes (list each one).
+- Reuse the real components; never redraw one. If a part cannot be mounted, write why in Status as "open"
+  and carry on. Every MASTER.md row ends with a new home and a proved shot pair; never drop a row.
+- Bigger, never smaller: a part that comes back in a new form does at least everything the old one did.
+- Removing anything needs his yes. Where he is unsure, build working versions he can try; never ask him to
+  choose from a description.
+- Design work goes to Opus subagents (model "opus"): the split map, words, routine research and design,
+  reviews, the audit. Building goes to you or Sonnet subagents; counts and merges to Haiku. Keep your own
+  context lean: give heavy reading and building to subagents with exact briefs (files, acceptance checks).
+- Words follow the plan's words guide. No AI-speak: banned words and patterns, the read-aloud test, change
+  only what must change.
+- Do not edit the files plan-engine owns (blocker B1).
+- Git: work in the worktree ~/.cache/daygame-research/plan-steps/full-wt on branch plan-full, never in
+  /tmp. Never move the shared checkout's HEAD. Ship with: git fetch; rebase plan-full on origin/main; tests
+  and the typecheck ratchet pass; git push origin plan-full:main. One push per phase. Never git add -A or git
+  stash.
+- One dev server at a time (--webpack, its own port, test-stack env; memory: worktree-e2e-servers). Stop it
+  before the typecheck. Run e2e with --workers=1. Check free -g before heavy runs. Stop the Android emulator
+  after use.
 - The repo is public: no outside source names and none of his private data in commits. Private material
   stays in ~/.cache/daygame-research.
-- Update the plan's Status after each phase and commit it.
-- Report to the owner in plain words; he is not a programmer. Open with done / live / not yet and say what is
-  left. Anything for him to look at goes on an artifact page, never a local path. Write "built" or "live",
-  never "done", until he says so. When the work ends, send a PushNotification.
+- Report to the owner in plain words; he is not a programmer. Open with done / live / not yet, and say what
+  is left. Anything for him to look at goes on an artifact page, never a local path. Write "built" or
+  "live", never "done", until he says so. When a session's work ends, send a PushNotification.
 ```
