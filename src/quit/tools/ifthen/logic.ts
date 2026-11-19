@@ -12,6 +12,7 @@ export interface Line {
   id: string
   /** The data file's moment id, or null for a moment he typed. */
   momentId: string | null
+  /** His words for a typed moment; for a list moment, its label as last shown (kept so the line never goes nameless). */
   ownMoment: string
   then: string
   from: From
@@ -60,7 +61,7 @@ function parseLine(x: unknown): Line | null {
   const ownMoment = typeof x.ownMoment === "string" ? x.ownMoment.trim().slice(0, MAX_OWN_MOMENT) : ""
   const then = x.then.slice(0, MAX_THEN)
   if (then.trim() === "" || (momentId === null && ownMoment === "")) return null
-  return { id: x.id, momentId, ownMoment: momentId ? "" : ownMoment, then, from: pickOne(x.from, FROMS, "own") }
+  return { id: x.id, momentId, ownMoment, then, from: pickOne(x.from, FROMS, "own") }
 }
 
 function parseDraft(x: unknown): Draft | null {
@@ -156,6 +157,7 @@ export const IDEA_EXCLUDE: Record<string, string[]> = {
   driving: ["move5", "leave", "text", "puzzle", "teeth"],
   drinks: ["move5", "teeth"],
   waking: ["leave"],
+  "after-food": ["teeth"],
 }
 
 /** The quick ideas offered at one moment (a moment he typed gets them all). */
@@ -211,12 +213,63 @@ export function matchMoment<M extends { id: string; label: string }>(text: strin
 }
 
 /** Drops lines and ticks of a list moment that the data file no longer has (corrupt or old storage). */
-export function cleanState(s: IfthenState, ids: string[]): IfthenState {
-  const ok = (id: string | null) => id === null || ids.includes(id)
-  const lines = s.lines.filter((l) => ok(l.momentId))
-  const draft = s.draft ? { ...s.draft, ticked: s.draft.ticked.filter((k) => k.startsWith(OWN) || ids.includes(k)) } : null
-  if (lines.length === s.lines.length && (!s.draft || draft!.ticked.length === s.draft.ticked.length)) return s
-  return { ...s, lines, draft }
+/** The name a line takes when its list moment is gone from the data file. */
+export const OTHER_MOMENT = "Other moment"
+
+/**
+ * Keeps the state in step with the data file without losing anything he entered. A list line stores its moment's
+ * current label. A line whose moment the data file no longer has becomes a line of a typed moment, under its stored
+ * label (or "Other moment", numbered when taken), so it stays on the plan with Change and Remove. A tick of a missing
+ * moment with an answer moves the same way; a bare tick of a missing moment is dropped (nothing he wrote is in it).
+ * Returns the same object when nothing changes.
+ */
+export function cleanState(s: IfthenState, moments: { id: string; label: string }[]): IfthenState {
+  const labelOf = new Map(moments.map((m) => [m.id, m.label]))
+  const taken = new Set(s.lines.filter((l) => l.momentId === null).map((l) => l.ownMoment.toLowerCase()))
+  for (const k of s.draft?.ticked ?? []) if (k.startsWith(OWN)) taken.add(k.slice(OWN.length).toLowerCase())
+  const moved = new Map<string, string>()
+  const freeName = (want: string): string => {
+    const base = (want.trim() || OTHER_MOMENT).slice(0, MAX_OWN_MOMENT - 3)
+    let name = base
+    for (let n = 2; taken.has(name.toLowerCase()); n++) name = `${base} ${n}`
+    taken.add(name.toLowerCase())
+    return name
+  }
+  let changed = false
+  const lines = s.lines.map((l) => {
+    if (l.momentId === null) return l
+    const label = labelOf.get(l.momentId)
+    if (label !== undefined) {
+      if (l.ownMoment === label) return l
+      changed = true
+      return { ...l, ownMoment: label }
+    }
+    changed = true
+    const name = moved.get(l.momentId) ?? freeName(l.ownMoment)
+    moved.set(l.momentId, name)
+    return { ...l, momentId: null, ownMoment: name }
+  })
+  let draft = s.draft
+  if (draft && draft.ticked.some((k) => !k.startsWith(OWN) && !labelOf.has(k))) {
+    changed = true
+    const ticked: string[] = []
+    const choices: Record<string, Choice> = { ...draft.choices }
+    for (const k of draft.ticked) {
+      if (k.startsWith(OWN) || labelOf.has(k)) {
+        ticked.push(k)
+        continue
+      }
+      const c = choices[k]
+      delete choices[k]
+      const name = moved.get(k) ?? (thenOk(c) ? freeName("") : null)
+      if (name === null) continue
+      const nk = ownKey(name)
+      if (!ticked.includes(nk)) ticked.push(nk)
+      if (thenOk(c) && !thenOk(choices[nk])) choices[nk] = c
+    }
+    draft = { ...draft, ticked, choices }
+  }
+  return changed ? { ...s, lines, draft } : s
 }
 
 export interface Removed {

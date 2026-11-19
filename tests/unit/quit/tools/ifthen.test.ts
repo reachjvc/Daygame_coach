@@ -252,11 +252,24 @@ describe("round 1 helpers", () => {
     expect(matchMoment("Payday", ms)).toBeNull()
     expect(matchMoment("  ", ms)).toBeNull()
   })
-  it("cleanState drops lines and ticks of a moment the data file lacks", () => {
-    const s = parseIfthen({ lines: [line("a", "coffee", "x"), line("b", "gone", "y"), line("c", null, "z", "Payday")] })
-    const c = cleanState(s, ["coffee"])
-    expect(c.lines.map((l) => l.id)).toEqual(["a", "c"])
-    expect(c.draft?.ticked).toEqual(["coffee", ownKey("Payday")])
-    expect(cleanState(c, ["coffee"])).toBe(c)
+  it("cleanState never drops a line: a lost moment's line moves to its stored label or Other moment", () => {
+    const ms = [{ id: "coffee", label: "With a coffee" }]
+    const gone = { ...line("b", "gone", "y"), ownMoment: "In the bath" }
+    const s = parseIfthen({ lines: [line("a", "coffee", "x"), gone, line("d", "gone2", "w"), line("c", null, "z", "Payday")] })
+    const c = cleanState(s, ms)
+    expect(c.lines.map((l) => [l.id, l.momentId, l.ownMoment, l.then])).toEqual([
+      ["a", "coffee", "With a coffee", "x"],
+      ["b", null, "In the bath", "y"],
+      ["d", null, "Other moment", "w"],
+      ["c", null, "Payday", "z"],
+    ])
+    expect(c.draft?.ticked).toEqual(["coffee", ownKey("In the bath"), ownKey("Other moment"), ownKey("Payday")])
+    expect(cleanState(c, ms)).toBe(c)
+  })
+  it("cleanState numbers a second Other moment and drops only a bare tick of a lost moment", () => {
+    const s = parseIfthen({ lines: [line("a", "gone1", "x"), line("b", "gone2", "y")], draft: { ticked: ["gone1", "gone2", "gone3"], choices: {}, reached: 1 } })
+    const c = cleanState(s, [])
+    expect(c.lines.map((l) => l.ownMoment)).toEqual(["Other moment", "Other moment 2"])
+    expect(c.draft?.ticked).toEqual([ownKey("Other moment"), ownKey("Other moment 2")])
   })
 })

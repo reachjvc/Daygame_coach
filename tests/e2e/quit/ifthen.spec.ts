@@ -54,8 +54,15 @@ async function bigEnough(page: Page) {
 async function tap(page: Page, id: string) {
   await page.getByTestId(id).click()
   await page.clock.runFor(500)
-  // the screen-change effect can run after the first advance; the second one is past the 400 ms guard for sure
-  await page.waitForTimeout(100)
+  // the screen-change effect can run after the first advance; two real macrotasks (MessageChannel, which the fake
+  // clock leaves alone and React's scheduler uses) let it run, then the second advance is past the 400 ms guard
+  for (let i = 0; i < 2; i++) {
+    await page.evaluate(() => new Promise<void>((done) => {
+      const ch = new MessageChannel()
+      ch.port1.onmessage = () => done()
+      ch.port2.postMessage(0)
+    }))
+  }
   await page.clock.runFor(500)
 }
 /** Opens "More ideas" when it is closed, then picks the quick idea. */
@@ -522,7 +529,7 @@ for (const size of SIZES) {
       await expect(page.locator('[data-testid^="idea-"]')).toHaveCount(3)
     })
 
-    test("12 a moment the data file does not have is ignored", async ({ page }) => {
+    test("12 a line of a moment the data file lost stays, under Other moment, with Change and Remove", async ({ page }) => {
       await open(page)
       await page.evaluate(() => {
         const q = JSON.parse(window.localStorage.getItem("quit-v1") ?? "{}")
@@ -532,6 +539,7 @@ for (const size of SIZES) {
             lines: [
               { id: "a", momentId: "gone", ownMoment: "", then: "Old", from: "card" },
               { id: "b", momentId: "coffee", ownMoment: "", then: "Have gum", from: "own" },
+              { id: "c", momentId: "gone2", ownMoment: "In the bath", then: "Sing", from: "own" },
             ],
           },
         }
@@ -539,8 +547,15 @@ for (const size of SIZES) {
       })
       await page.reload()
       await expect(page.getByTestId("result")).toBeVisible()
-      await expect(page.locator('[data-testid^="card-"][data-testid$="-text"]')).toHaveCount(1)
-      await expect(page.getByTestId("card-0-text-if")).toHaveText(ifOf("coffee"))
+      await expect(page.locator('[data-testid^="card-"][data-testid$="-text"]')).toHaveCount(3)
+      await expect(page.getByTestId("card-0-text-if")).toHaveText("other moment")
+      await expect(page.getByTestId("card-0-text-then")).toHaveText("Old.")
+      await expect(page.getByTestId("card-1-text-if")).toHaveText(ifOf("coffee"))
+      await expect(page.getByTestId("card-2-text-if")).toHaveText("in the bath")
+      await expect(page.getByTestId("card-0-change")).toBeVisible()
+      await expect(page.getByTestId("card-0-remove")).toBeVisible()
+      const kept = await page.evaluate(() => JSON.parse(window.localStorage.getItem("quit-v1") ?? "{}").nicotine.ifthen.lines)
+      expect(kept.map((l: { id: string; then: string }) => [l.id, l.then])).toEqual([["a", "Old"], ["b", "Have gum"], ["c", "Sing"]])
     })
   })
 }

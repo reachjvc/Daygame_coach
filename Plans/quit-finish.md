@@ -1739,7 +1739,7 @@ targets or "what you could buy" here: Tool 3 holds targets.
 - Removed lines: Undo restores only the latest removal (one "Removed: ... Undo" line at a time). Proposed: keep.
 - Print view colours come from the browser's print defaults (no hard-coded colours; the colour ratchet test forbids them).
 - Print view stays a local view (not its own address). Proposed: keep. Print CSS now gives html and body a white background and black text.
-- Round 1 fixes (Sonnet, 2026-11-19), one line per item:
+- Round 1 fixes (Sonnet, 2026-11-19; Opus added 21–22), one line per item:
   - 1 `useScreens` scrolls to the top when the screen changes (shared hook, one line).
   - 2 Option taps are ignored for 400 ms after a screen change, so a double tap cannot pick a card.
   - 3 Every removal of a visit is kept ("Removed: A, B."); one Undo restores all in place (original indexes).
@@ -1760,6 +1760,8 @@ targets or "what you could buy" here: Tool 3 holds targets.
   - 18 The nudge shows the finding line, then the basis box; unused text and `NEGATION_TAG` removed.
   - 19 Quitting study line, basis who and caveat, and the multicomponent quote follow the reviewer's wording.
   - 20 List study line, caveat and the second quote follow the reviewer's wording.
+  - 21 (Opus) A line whose moment the data file no longer has is never deleted: it moves to its stored label, or "Other moment" (numbered when taken), and keeps Change and Remove. List lines store their label for this. (Coordinator rule: nothing he entered is lost silently.)
+  - 22 (Opus) "Brush your teeth" is not offered as a quick idea after a meal (it repeats that moment's card). Data wording changed for both tools (19106860): "Around people who smoke or vape", "Brush your teeth or have a mint.", "away from your usual spot", "a short puzzle game", "without your nicotine", "doesn't use nicotine".
 
 ### From the Tool 13 build (Sonnet, 2026-11-19)
 

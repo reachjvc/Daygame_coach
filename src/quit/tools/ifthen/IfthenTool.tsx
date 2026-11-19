@@ -110,10 +110,7 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
   const preDone = useRef(false)
 
   const draft = state
-    ? cleanState(
-        state,
-        moments.map((m) => m.id),
-      ).draft
+    ? cleanState(state, moments).draft
     : null
   const total = totalScreens(draft)
   const { screen, go, back: goBack, isResult } = useScreens(firstUnanswered(draft), total, state !== null)
@@ -154,14 +151,14 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
   }, [screen, isResult])
   const settled = () => Date.now() - changedAt.current >= 400
 
-  const ids = useMemo(() => moments.map((m) => m.id), [moments])
-  const dirty = state !== null && cleanState(state, ids) !== state
+  // Keeps stored labels in step and moves lines of a moment the data file lost to "Other moment" (never deletes them).
+  const dirty = state !== null && cleanState(state, moments) !== state
   useEffect(() => {
-    if (dirty) update((s) => cleanState(s, ids))
-  }, [dirty, update, ids])
+    if (dirty) update((s) => cleanState(s, moments))
+  }, [dirty, update, moments])
 
   if (!state) return null
-  const st = cleanState(state, ids)
+  const st = cleanState(state, moments)
 
   const move = (fn: () => void) => {
     const now = Date.now()
