@@ -305,3 +305,9 @@ files get the field empty.
 - "Make your free plan" now carries ?preview=1 to the date tool (it is a /quit address).
 - Signed-out visitors: the Black Box bridge skips the /api/whoami call when there is no sign-in cookie (no 401 console error). Other tools still call it.
 - The ics download is built on tap (so DTSTAMP is the tap time); the event is on day 1 for a break too, not on the break's end.
+- Tool 2, no Black Box run: the pattern list and the money line read the record. Proposed: with no run in the Black Box the
+  after-flow still works, but "Keep a record" is offered and nothing is saved until he starts one (same as wave-1). Recommendation: keep this; saving
+  silently would create a record he never asked for.
+- Tool 2, meaning of pouch price and count for "money kept": proposed: for a pouch the count is pouches per day and the price is per
+  pouch (tin price divided by pouches in it is not asked here), so kept = days x count x price. Recommendation: use per-pouch price and show the
+  sum line so he can see the basis; if the record holds a tin price, ask in the Your record tool (Tool 3), not here.
