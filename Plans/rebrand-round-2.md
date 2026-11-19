@@ -2,7 +2,7 @@
 
 Written 2026-11-19 (Opus), after the owner went through the before/after page of `Plans/rebrand-10kdaysclub.md`
 (https://claude.ai/artifact/ERBS6YKjuwV9jB61KtSfUE). That plan stays the record of round 1; this one is the next
-iteration. **Status: plan written, nothing built.** Everything below that is not his words is **proposed**.
+iteration. **Status: Phase 0 done (2026-11-19); Phases 1–2 running.** Everything below that is not his words is **proposed**.
 
 His words in chat, 2026-11-19: *"Not super stoked about it in general. Also the text on the frontpage could be much
 sharper, but i guess you might need some handholding to get there. I need you to make a plan for the next iteration
@@ -224,6 +224,12 @@ number of workers to its verdict.
 6. Copy his two notes into the other plans (section above), commit those two lines with `git commit --only`.
 
 **Done when:** `now/` and `before/` hold every screen at the right sizes, the Haiku check lists zero misses.
+
+**Phase 0 done 2026-11-19** (notes copied to the other two plans in `77a41f8f`). 26 shots, full length, in
+`~/.cache/daygame-research/rebrand-r2/shots/{before,now}/{phone,computer}/` (private); the Haiku height check found
+one miss (a blank shot from a dev server killed by low memory), re-shot, now zero. `rebrand-r2/shoot.mjs` also grows
+the window to the page's full height (so the fixed bottom bar covers nothing) and unrolls inner scroll boxes (the
+calendar's hour grid) so the whole day shows. "Before" was re-shot from tag `before-10kdays-rebrand` on Next 16.4.6.
 
 ### Phase 1 — Five look directions and three badge sets (one Opus subagent; runs beside Phase 2)
 
