@@ -34,7 +34,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | 3 | Your record (progress, money kept) | lab `progress/best` | the live counter feel of copies d and e | checking |
 | 4 | Slipped? Restart today | wave-1 `slip` | slips go into the shared record; clean runs never reset | checking (live, review round 2 next) |
 | 5 | The 12 lies test | wave-1 `beliefs` | from `beliefs/best`: a reply per belief, "can you stop?", earlier results | building |
-| 6 | What you'll feel, and when | lab `timeline/best` | wave-1 `symptoms` (what helps per symptom) | not started |
+| 6 | What you'll feel, and when | lab `timeline/best` | wave-1 `symptoms` (what helps per symptom) | checking (on main, reviews next) |
 | 7 | If-then plan | lab `ifthen/best` | — | building |
 | 8 | Daily check-in | lab `checkin/best` | slip question from `diary/best` | building |
 | 9 | What it costs you | wave-1 `cost` | per-pack price and live update (copy e); money setup from the shared record | building |
