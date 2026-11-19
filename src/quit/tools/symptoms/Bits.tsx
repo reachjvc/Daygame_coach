@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import Link from "next/link"
+import { ChevronDown } from "lucide-react"
 import { EvidenceChip, SourceTap } from "../../components/kit"
 import { tooltext as tt } from "../../tooltext"
-import type { Evidence, QuitRef } from "../../types"
+import type { Evidence, QuitNumber, QuitRef } from "../../types"
 import { BAND_DAYS, type Band } from "./bands"
 import { CRAVING_MARK_DAYS, cravingPosition, dayPosition, span } from "./bandMath"
 import type { Basis } from "./content"
@@ -37,8 +37,11 @@ export interface BasisPart {
 /** "Based on": a fold with the basis (one or more parts), how well tested, and the sources one tap away. */
 export function BasedOn({ parts, refs, evidence, testId }: { parts: BasisPart[]; refs: QuitRef[]; evidence?: Evidence; testId: string }) {
   return (
-    <details data-testid={testId} className="mt-1 text-sm">
-      <summary className="flex min-h-11 cursor-pointer items-center font-medium">{tt.common.basedOn}</summary>
+    <details data-testid={testId} className="group/basis mt-1 text-sm">
+      <summary className="flex min-h-11 w-fit cursor-pointer list-none items-center gap-1 font-medium text-muted-foreground [&::-webkit-details-marker]:hidden">
+        {tt.common.basedOn}
+        <ChevronDown aria-hidden className="size-4 transition-transform group-open/basis:rotate-180" />
+      </summary>
       <div className="flex flex-col gap-3 pb-1">
         {evidence && (
           <div>
@@ -54,17 +57,70 @@ export function BasedOn({ parts, refs, evidence, testId }: { parts: BasisPart[];
   )
 }
 
-/** "What helps": folded; open from the start on a phone for the card his day is in. */
-export function HelpFold({ testId, startOpen, children }: { testId: string; startOpen: boolean; children: React.ReactNode }) {
-  const [open, setOpen] = useState(false)
-  useEffect(() => {
-    if (startOpen && window.matchMedia("(max-width: 767px)").matches) setOpen(true)
-  }, [startOpen])
+/** "What helps": folded, with how many ideas it holds; the items are a divided list. */
+export function HelpFold({ testId, count, children }: { testId: string; count: number; children: React.ReactNode }) {
   return (
-    <details data-testid={testId} open={open} onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)} className="mt-1 text-sm">
-      <summary className="flex min-h-11 cursor-pointer items-center font-medium">{t.whatHelps}</summary>
-      <div className="flex flex-col gap-3 pb-1">{children}</div>
+    <details data-testid={testId} className="group/help mt-2 rounded-md border border-border text-sm">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-3 font-medium [&::-webkit-details-marker]:hidden">
+        <span>
+          {t.whatHelps} <span className="font-normal text-muted-foreground">· {t.ideas(count)}</span>
+        </span>
+        <ChevronDown aria-hidden className="size-4 shrink-0 transition-transform group-open/help:rotate-180" />
+      </summary>
+      <div className="flex flex-col divide-y divide-border px-3 pb-1">{children}</div>
     </details>
+  )
+}
+
+/** One help idea inside a HelpFold. */
+export function HelpRow({ testId, children }: { testId: string; children: React.ReactNode }) {
+  return (
+    <div data-testid={testId} className="py-3">
+      {children}
+    </div>
+  )
+}
+
+const NUM_KEYS = ["design", "who", "n", "where", "when", "measured"] as const
+
+/** A data-file number in a few lines: figure and headline, who was counted, then its basis folded. */
+export function CompactNumber({ n, testId, lead, hideBig, after }: { n: QuitNumber; testId: string; lead?: string; hideBig?: boolean; after?: string }) {
+  const basis: Record<string, string> = {}
+  for (const k of NUM_KEYS) if (n.basis[k]) basis[k] = n.basis[k]
+  return (
+    <div data-testid={testId}>
+      <p className="text-base">
+        {lead && <span className="font-medium">{lead} </span>}
+        {!hideBig && <span className="font-semibold text-primary">{n.big}. </span>}
+        {n.headline}
+      </p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {tt.common.counted} {n.counted}
+        {n.weak ? `. ${n.weak}` : ""}
+      </p>
+      {after && <p className="mt-1 text-sm">{after}</p>}
+      <details className="group/basis mt-1 text-sm">
+        <summary className="flex min-h-11 w-fit cursor-pointer list-none items-center gap-1 font-medium text-muted-foreground [&::-webkit-details-marker]:hidden">
+          {tt.common.basedOn}
+          <ChevronDown aria-hidden className="size-4 transition-transform group-open/basis:rotate-180" />
+        </summary>
+        <dl className="flex flex-col gap-1 pb-1">
+          {Object.entries(basis).map(([k, v]) => (
+            <div key={k}>
+              <dt className="text-muted-foreground">{tt.common.basis[k as keyof typeof tt.common.basis]}</dt>
+              <dd className="break-words">{v}</dd>
+            </div>
+          ))}
+          {n.caveat && (
+            <div>
+              <dt className="text-muted-foreground">{tt.common.basis.caveat}</dt>
+              <dd className="break-words">{n.caveat}</dd>
+            </div>
+          )}
+        </dl>
+        <SourceTap refs={[n.ref, ...(n.alsoRef ?? [])]} />
+      </details>
+    </div>
   )
 }
 

@@ -2,6 +2,8 @@
 export const symptomsText = {
   title: "What you'll feel, and when",
   whatHelps: "What helps",
+  ideas: (n: number) => (n === 1 ? "1 idea" : `${n} ideas`),
+  coffeeSeeSleep: "Coffee can add to restlessness and anxiety after quitting cigarettes: see Sleep.",
   now: "Now",
   bandLabel: "Days 1 to 42",
   cravingLineLabel: "Cravings over weeks and months",

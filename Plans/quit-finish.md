@@ -593,7 +593,8 @@ population mismatch) and the Taylor 2007 line under "Short temper" (B, a stretch
 2. **Five symptom cards** (C12: the five identical cards become one grouped card). Each card: title, a "Now" pill
    when his day is inside its peak or fade range, the band (42-day axis as lab `best`, his day as a marker; the
    cravings card uses its own small time line, below), one "You are on day N: <phase words>" line, then
-   **What helps** (folded `<details>`, open by default on phones only for the card with the Now pill), then
+   **What helps** (folded `<details>` with its count, "What helps · 5 ideas"; all start closed, so the page stays
+   short; build note: auto-opening every Now card made the phone page 7,500 px), then
    "Based on" (basis box: who, how many, design, when, caveat) and the sources tap.
    - **a. Cravings** (new, B16). Time line with marks Week 1 · Week 4 · Month 6 · Month 12: "Strongest in the first
      weeks. Their strength did not drop until week 4 in one small study. Then they fade over months: at 6 months 13
@@ -627,6 +628,7 @@ population mismatch) and the Taylor 2007 line under "Short temper" (B, a stretch
        it out entirely made people more tired for the first 3 days and did not ease other symptoms." Basis: Swanson
        1997; why smokers only: Kroon 2007 (the speed-up comes from the smoke, not the nicotine), "So this does not
        apply if you only vaped or used pouches." "About half" is our arithmetic from "doubled", said so in the basis.
+       Shown in full once, under Sleep; Mood and focus has one line pointing there.
    - **d. Sleep.** Band as lab `best` (review: peak days 1–7, can last to day 28; the diary study saw no clear
      change, said in one line). Helps: **Three steps for sleep** (B18): "Get up at the same time every day,
      whatever the night was like." · "Use the bed only for sleep." · "Awake for about 20 minutes? Get up, do

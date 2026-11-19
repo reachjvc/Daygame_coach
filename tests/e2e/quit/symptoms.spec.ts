@@ -128,8 +128,9 @@ test.describe("what you'll feel, and when @phone", () => {
     await expect(page.getByTestId("now-sleep")).toBeVisible()
     await expect(page.getByTestId("now-cue")).toHaveCount(0)
     await expect(page.getByTestId("phase-cue")).toHaveText("You are on day 5. Not tested before day 7.")
-    // the card his day is in has its help open on a phone
-    await expect(page.getByTestId("help-mood")).toHaveAttribute("open", "")
+    // help starts folded, with how many ideas it holds
+    await expect(page.getByTestId("help-mood")).not.toHaveAttribute("open", "")
+    await expect(page.getByTestId("help-mood").locator("summary").first()).toContainText("What helps · 5 ideas")
     await shot(page, "phone-day5")
   })
 

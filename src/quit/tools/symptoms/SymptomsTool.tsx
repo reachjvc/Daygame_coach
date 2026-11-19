@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { EvidenceChip, SourceTap, SourcesFold } from "../../components/kit"
-import { NumberCard } from "../../components/NumberCard"
 import { useLocalQuitBlackBox, useQuitBlackBox, useSignedIn, type QuitBlackBoxApi } from "../../blackbox"
 import { count } from "../../count"
 import { isLiveTool } from "../../menu"
@@ -14,7 +13,7 @@ import { stretches } from "../date/hardDays"
 import { useCarry } from "../hooks"
 import { NotReady } from "../NotReady"
 import { bandFor } from "./bands"
-import { BandView, BasedOn, CravingLine, HelpFold, Legend, NowPill, ToolLink, type BasisPart } from "./Bits"
+import { BandView, BasedOn, CompactNumber, CravingLine, HelpFold, HelpRow, Legend, NowPill, ToolLink, type BasisPart } from "./Bits"
 import { alsoPossible, better, betterOrder, caffeine, cravings, hunger, hungerHelp, moveForMood, notForEveryone, reviewCaveat, sleepSteps, type SourcedLine } from "./content"
 import { dayState, daysToGo, fmtDay, fmtSlip, isNow, latestSlipDay, markDay, phaseWords, rightNow, type CardId, type DayState } from "./logic"
 import { symptomsText as t } from "./text"
@@ -192,13 +191,13 @@ function Page({ addiction, course, help, note, b3, nums, bb }: InnerProps & { bb
           <CravingLine day={day} />
           {phase("craving")}
           <p className="mt-2 text-base">{cravings.text}</p>
-          <HelpFold testId="help-craving" startOpen={isNow("craving", day)}>
-            <div className="rounded-md border border-border p-3">
+          <HelpFold testId="help-craving" count={2}>
+            <HelpRow testId="help-sos-row">
               <ToolLink href={link("sos")} live={live("sos")} testId="help-sos">
                 {t.cravingHelpLink}
               </ToolLink>
               <p className="text-muted-foreground">{t.cravingHelpLine}</p>
-            </div>
+            </HelpRow>
             <HelpItem testId="help-move" text={moveText} evidence={move.evidence} refs={moveRefs} basis={{ who: tt.sos.moveWho, design: `${tt.sos.moveDesign} ${tt.sos.moveMeasured}`, when: "Published 2013", caveat: tt.sos.moveCaveat }} />
           </HelpFold>
           <BasedOn testId="basis-craving" parts={[{ basis: cravings.basis }]} refs={cravings.refs} evidence={cravings.evidence} />
@@ -207,19 +206,19 @@ function Page({ addiction, course, help, note, b3, nums, bb }: InnerProps & { bb
         <Card id="cue" title={t.cueTitle} day={day}>
           <BandView id="cue" band={bandFor("nicotine", "cue-craving")!} day={day} caption={t.cueCaption} />
           {phase("cue")}
-          <HelpFold testId="help-cue" startOpen={isNow("cue", day)}>
-            <div className="rounded-md border border-border p-3">
+          <HelpFold testId="help-cue" count={2}>
+            <HelpRow testId="help-cue-sos-row">
               <ToolLink href={link("sos")} live={live("sos")} testId="help-cue-sos">
                 {t.cueHelpLink}
               </ToolLink>
               <p className="text-muted-foreground">{t.cueHelpIn}</p>
-            </div>
-            <div className="rounded-md border border-border p-3">
+            </HelpRow>
+            <HelpRow testId="help-ifthen-row">
               <ToolLink href={link("ifthen")} live={live("ifthen")} testId="help-ifthen">
                 {t.ifThen}
               </ToolLink>
               {!live("ifthen") && <p className="text-muted-foreground">{t.ifThenLine}</p>}
-            </div>
+            </HelpRow>
           </HelpFold>
           <BasedOn testId="basis-cue" parts={[{ basis: { ...cue.basis } }]} refs={cueRefs} evidence="weak" />
         </Card>
@@ -228,16 +227,16 @@ function Page({ addiction, course, help, note, b3, nums, bb }: InnerProps & { bb
           <BandView id="mood" band={bandFor("nicotine", "irritable")!} day={day} caption={t.moodCaption} />
           {phase("mood")}
           <p className="mt-2 text-sm text-muted-foreground">{t.moodNote}</p>
-          <div data-testid="not-for-everyone" className="mt-2 rounded-md border border-border p-3 text-sm">
+          <div data-testid="not-for-everyone" className="mt-2 border-l-2 border-primary pl-3 text-sm">
             <p>{notForEveryone.text}</p>
             <BasedOn testId="basis-gilbert" parts={[{ basis: notForEveryone.basis }]} refs={notForEveryone.refs} evidence={notForEveryone.evidence} />
           </div>
-          <HelpFold testId="help-mood" startOpen={isNow("mood", day)}>
+          <HelpFold testId="help-mood" count={5}>
             <HelpItem testId="help-mood-move" text={moveForMood.text} evidence={moveForMood.evidence} refs={moveForMood.refs} basis={moveForMood.basis} />
-            <div className="rounded-md border border-border p-3">
+            <HelpRow testId="help-anxiety">
               <p className="font-medium">{t.anxietyHead}</p>
-              <div className="mt-2">
-                <NumberCard n={nums.first} />
+              <div className="mt-1">
+                <CompactNumber n={nums.first} testId="number-after-first-month" />
               </div>
               <p className="mt-2">{t.moodDisagree}</p>
               <p className="mt-2">{anxious.text}</p>
@@ -245,10 +244,12 @@ function Page({ addiction, course, help, note, b3, nums, bb }: InnerProps & { bb
                 <EvidenceChip evidence={anxious.evidence} />
               </div>
               <SourceTap refs={without(realRefs(anxious.refs), HUGHES)} />
-            </div>
+            </HelpRow>
             <PlainHelp head={t.lowMoodHead} row={lowMood} testId="help-lowmood" />
             <PlainHelp head={t.fogHead} row={fog} testId="help-fog" />
-            <CaffeineItem testId="help-caffeine-mood" />
+            <HelpRow testId="help-caffeine-mood">
+              <p>{t.coffeeSeeSleep}</p>
+            </HelpRow>
           </HelpFold>
           <BasedOn testId="basis-mood" parts={moodBasis} refs={moodRefs} evidence="moderate" />
         </Card>
@@ -256,8 +257,8 @@ function Page({ addiction, course, help, note, b3, nums, bb }: InnerProps & { bb
         <Card id="sleep" title={t.sleepTitle} day={day}>
           <BandView id="sleep" band={bandFor("nicotine", "sleep")!} day={day} caption={t.sleepCaption} />
           {phase("sleep")}
-          <HelpFold testId="help-sleep" startOpen={isNow("sleep", day)}>
-            <div data-testid="sleep-steps" className="rounded-md border border-border p-3">
+          <HelpFold testId="help-sleep" count={2}>
+            <div data-testid="sleep-steps" className="py-3">
               <p className="font-medium">{sleepSteps.title}</p>
               <ol className="mt-1 flex list-decimal flex-col gap-1 pl-5">
                 {sleepSteps.steps.map((s) => (
@@ -278,10 +279,9 @@ function Page({ addiction, course, help, note, b3, nums, bb }: InnerProps & { bb
           {phase("hunger")}
           <p className="mt-2 text-base">{hunger.text}</p>
           <div className="mt-3">
-            <NumberCard n={nums.weight} />
-            <p className="mt-2 text-sm text-muted-foreground">{t.weightLine}</p>
+            <CompactNumber n={nums.weight} testId="number-after-body" lead="Weight:" after={t.weightLine} />
           </div>
-          <HelpFold testId="help-hunger" startOpen={false}>
+          <HelpFold testId="help-hunger" count={hungerHelp.length}>
             {hungerHelp.map((h) => (
               <HelpItem key={h.id} testId={`help-${h.id}`} text={h.text} evidence={h.evidence} refs={h.refs} basis={h.basis} />
             ))}
@@ -297,13 +297,13 @@ function Page({ addiction, course, help, note, b3, nums, bb }: InnerProps & { bb
 
       <section data-testid="better" className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">{t.betterTitle}</h2>
-        <ol className="flex flex-col gap-3">
+        <ol className="flex flex-col divide-y divide-border rounded-lg border border-border bg-card px-3">
           {betterOrder.map((row) => {
             const sourced = row.better ? betterLine(row.better) : null
             const label = `${row.when}${sourced?.cigarettesOnly ? ", cigarettes only" : ""}`
             return (
-              <li key={row.when} data-testid={`better-${row.when}`} className="rounded-lg border border-border bg-card p-3">
-                <p className="text-sm font-semibold">{label}</p>
+              <li key={row.when} data-testid={`better-${row.when}`} className="py-3">
+                <p className="text-sm font-semibold text-primary">{label}</p>
                 {sourced && (
                   <>
                     <p className="mt-1 text-base">{sourced.text}</p>
@@ -331,13 +331,13 @@ function Page({ addiction, course, help, note, b3, nums, bb }: InnerProps & { bb
                   </>
                 )}
                 {row.number === "after-body:15610111" && (
-                  <div className="mt-2">
-                    <NumberCard n={nums.erection} />
+                  <div className="mt-1">
+                    <CompactNumber n={nums.erection} testId="number-after-body-ed" />
                   </div>
                 )}
                 {row.number === "after-mood" && (
-                  <div className="mt-2">
-                    <NumberCard n={nums.mood} />
+                  <div className="mt-1">
+                    <CompactNumber n={nums.mood} testId="number-after-mood" hideBig />
                   </div>
                 )}
               </li>
@@ -359,7 +359,7 @@ function Page({ addiction, course, help, note, b3, nums, bb }: InnerProps & { bb
 
 function CaffeineItem({ testId }: { testId: string }) {
   return (
-    <div data-testid={testId} className="rounded-md border border-border p-3">
+    <div data-testid={testId} className="py-3">
       <p className="font-medium">
         {t.caffeineHead} <span className="text-sm font-normal text-muted-foreground">({t.cigarettesOnly})</span>
       </p>
@@ -386,7 +386,7 @@ function Card({ id, title, day, children }: { id: CardId; title: string; day: nu
 
 function HelpItem({ testId, text, evidence, refs, basis }: { testId: string; text: string; evidence: SourcedLine["evidence"]; refs: QuitRef[]; basis: SourcedLine["basis"] | Partial<SourcedLine["basis"]> }) {
   return (
-    <div data-testid={testId} className="rounded-md border border-border p-3">
+    <div data-testid={testId} className="py-3">
       <p>{text}</p>
       <div className="mt-2">
         <EvidenceChip evidence={evidence} />
@@ -398,7 +398,7 @@ function HelpItem({ testId, text, evidence, refs, basis }: { testId: string; tex
 
 function PlainHelp({ head, row, testId }: { head: string; row: QuitSymptomHelp; testId: string }) {
   return (
-    <div data-testid={testId} className="rounded-md border border-border p-3">
+    <div data-testid={testId} className="py-3">
       <p className="font-medium">{head}</p>
       <p className="mt-1">{row.text}</p>
       <div className="mt-2">
