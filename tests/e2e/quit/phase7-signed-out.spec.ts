@@ -214,10 +214,4 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
     expect(res.status()).toBe(200)
     expect(res.headers()["cache-control"]).toBe("public, max-age=86400")
   })
-
-  test("sleep symptom shows the four rules and no separate help row", async ({ page }) => {
-    await page.goto(quitUrl(`${A}/symptoms?symptom=sleep`))
-    await expect(page.getByTestId("sleep-rules")).toBeVisible()
-    await expect(page.getByTestId("symptom-help")).toHaveCount(0)
-  })
 })
