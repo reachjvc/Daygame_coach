@@ -198,17 +198,19 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
   if (!state || !rec.ready) return null
 
   /* ----- the slip answer ----- */
+  /** The report is still in the Black Box. (`bb.has` also needs a living run, and a slip ends the run.) */
+  const inBox = (id: string) => !!bb?.reports.some((r) => r.id === id)
   const setOutcome = (date: string, slipped: boolean) => {
     const day = state.days[date]
     if (slipped) {
-      if (day?.slipped === true && (day.slipReportId ? bb?.has(day.slipReportId) : filing.current.has(date))) return
+      if (day?.slipped === true && (day.slipReportId ? inBox(day.slipReportId) : filing.current.has(date))) return
       filing.current.add(date)
       setBlocked(null)
       update((s) => ({ ...s, days: { ...s.days, [date]: { ...s.days[date], slipped: true, slipReportId: undefined } } }))
       setWant({ date, at: reportAt(date, today, nowInBrowser()) })
       return
     }
-    if (day?.slipReportId && bb?.has(day.slipReportId) && !bb.undo(day.slipReportId)) {
+    if (day?.slipReportId && inBox(day.slipReportId) && !bb?.undo(day.slipReportId)) {
       setBlocked(date)
       return
     }
@@ -279,7 +281,7 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
     const last = step === steps.length
     const set = (patch: Day) => setAnswer(kind, date, step, patch)
     const slipOk = foreign || hasOutcome(day)
-    const filedHere = !!day?.slipReportId && !!bb?.has(day.slipReportId)
+    const filedHere = !!day?.slipReportId && inBox(day.slipReportId)
     const status = (() => {
       if (!day?.slipReportId || !bb) return signedIn === false ? tt.sos.savedLocal : tt.blackbox.saving
       const s = bb.status(day.slipReportId)

@@ -120,7 +120,8 @@ for (const vp of [
     const S = (n: string) => `${vp.name}-${n}`
 
     test.beforeEach(async ({ page }) => {
-      await page.clock.install({ time: NOW })
+      // test 9 sets its own date (the 3rd of December)
+      await page.clock.install({ time: test.info().title.startsWith("9 ") ? new Date("2026-12-03T10:00:00") : NOW })
     })
 
     test("1 fresh: empty cards; the example fills Month and Pattern; leaving it changes no storage", async ({ page }) => {
@@ -282,7 +283,7 @@ for (const vp of [
     })
 
     test("8 yesterday: every question says that day; a cell 20 days back can be filled; a future cell cannot", async ({ page }) => {
-      await seed(page, { days: { [day(-25)]: { slipped: false }, [day(-3)]: { slipped: false } } })
+      await seed(page, { days: { [day(-25)]: { slipped: false }, [day(-3)]: { slipped: false } }, record: CIG })
       await expect(page.getByTestId("lookback-start")).toHaveText("Fill in yesterday, Wed 18 Nov")
       await page.getByTestId("lookback-start").click()
       const titles: string[] = []
@@ -323,6 +324,11 @@ for (const vp of [
 
     test("9 month: four mode chips fully visible; on the 3rd last month's numbers show", async ({ page }) => {
       await seed(page, { days: { "2026-11-02": { slipped: false }, "2026-11-05": { slipped: true }, "2026-11-09": { slipped: false } } })
+      await expect(page.getByTestId("last-month")).toContainText("Last month, November 2026")
+      await expect(page.getByTestId("last-checked")).toHaveAttribute("data-n", "3")
+      await expect(page.getByTestId("last-clear")).toHaveAttribute("data-n", "2")
+      await expect(page.getByTestId("count-checked")).toHaveAttribute("data-n", "0")
+      await shot(page, S("9-today-day3"))
       await openTab(page, "month")
       for (const m of ["clear", "hard", "feelings", "notes"]) {
         const b = page.getByTestId(`mode-${m}`)
@@ -335,13 +341,6 @@ for (const vp of [
       await shot(page, S("9-month"))
       await page.getByTestId("mode-hard").click()
       await shot(page, S("9-month-hard"))
-      await page.clock.setSystemTime(new Date("2026-12-03T10:00:00"))
-      await page.reload()
-      await expect(page.getByTestId("last-month")).toContainText("Last month, November 2026")
-      await expect(page.getByTestId("last-checked")).toHaveAttribute("data-n", "3")
-      await expect(page.getByTestId("last-clear")).toHaveAttribute("data-n", "2")
-      await expect(page.getByTestId("count-checked")).toHaveAttribute("data-n", "0")
-      await shot(page, S("9-today-day3"))
     })
 
     test("10 pattern: 14 evenings show the forecast line with its four numbers, and no feelings or urges line", async ({ page }) => {
