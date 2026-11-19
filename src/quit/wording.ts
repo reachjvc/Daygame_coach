@@ -21,6 +21,6 @@ export function useVerb(unit: UnitLike | null | undefined): string {
 
 /** "Did you smoke?" / "Did you vape?" / "Did you use a pouch?" */
 export function didYouUse(unit: UnitLike | null | undefined): string {
-  const phrase = useVerb(unit)
+  const phrase = verbOf(unit)
   return `Did you ${phrase}?`
 }
