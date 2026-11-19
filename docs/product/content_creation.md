@@ -21,6 +21,11 @@ say "I left notes".
   - Hook: first ideas round done as rough sketches. He liked the calendar
     and the quest log, and maybe several animation styles in one video.
   - Next: per-scene choices in the finished look (see the process file).
+- **Quit Reels from story worlds** (owner's idea, 2026-11-19): a few
+  recurring animated worlds, with many short scripts fitted into them. Round 1
+  has 25 scripts and 7 worlds, taken from the book, and is waiting for his 👍.
+  The private copy is `~/.cache/daygame-research/first-1000/scripts-25.html`.
+  The page is listed in notes-seen.md.
 - **The process itself**: being worked out on video 01. About 40% there
   (owner, 2026-11-18).
 - **After video 01**: see "Next video" below.
