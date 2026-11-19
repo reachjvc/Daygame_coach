@@ -9,6 +9,9 @@
 
 import { describe, it, expect } from "vitest"
 import { spawnSync } from "node:child_process"
+import * as fs from "node:fs"
+import * as os from "node:os"
+import * as path from "node:path"
 import { findRed, formatLine, firstFailedJob, formatFailures } from "../../../scripts/ci/main-status.mjs"
 
 let id = 100
@@ -183,9 +186,6 @@ describe("formatFailures", () => {
 })
 
 describe("the script with the failures artifact", () => {
-  const fs = require("node:fs")
-  const os = require("node:os")
-  const path = require("node:path")
   const redRun = JSON.stringify([{ databaseId: 9, workflowName: "E2E Tests", event: "push", status: "completed", conclusion: "failure", createdAt: "2026-11-19T10:00:00Z" }])
   const failures = (failed: unknown[]) => JSON.stringify({ failed, flaky: [] })
   const run = (dir: string, extra: Record<string, string>) =>

@@ -54,8 +54,8 @@ describe("buildFailures", () => {
   })
   it("gives a new failure this run's commit", () => {
     const r = buildFailures(report([["a.spec.ts", 1, "one", "unexpected"], ["b.spec.ts", 2, "two", "unexpected"]]), prev(), ctx)
-    expect(r.failed.find((f: any) => f.id.startsWith("b.spec.ts"))).toMatchObject({ firstSha: "bbbbbbbbbbbb", firstSubject: "Second commit", firstRunId: 2 })
-    expect(r.failed.find((f: any) => f.id.startsWith("a.spec.ts"))?.firstSha).toBe("0000000000")
+    expect(r.failed.find((f: { id: string }) => f.id.startsWith("b.spec.ts"))).toMatchObject({ firstSha: "bbbbbbbbbbbb", firstSubject: "Second commit", firstRunId: 2 })
+    expect(r.failed.find((f: { id: string }) => f.id.startsWith("a.spec.ts"))?.firstSha).toBe("0000000000")
   })
   it("treats the same title in another project as another test", () => {
     const r = buildFailures(report([["a.spec.ts", 1, "one", "unexpected", "android"]]), prev(), ctx)
@@ -70,7 +70,7 @@ describe("buildFailures", () => {
     expect(r.failed[0]).toMatchObject({ firstSha: null, firstSubject: null, firstRunId: null })
   })
   it("builds the flaky window: starts, carries, caps at 5, drops when clean", () => {
-    let list: any = buildFailures(report([["f.spec.ts", 9, "f", "flaky"]]), undefined, ctx)
+    let list: ReturnType<typeof buildFailures> = buildFailures(report([["f.spec.ts", 9, "f", "flaky"]]), undefined, ctx)
     expect(list.flaky).toEqual([{ id: "f.spec.ts:9 f", project: "desktop", last5: [true] }])
     list = buildFailures(report([["f.spec.ts", 9, "f", "expected"]]), list, ctx)
     expect(list.flaky[0].last5).toEqual([true, false])
