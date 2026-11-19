@@ -524,7 +524,18 @@ hot magenta `#ff3df2` (6.42:1). Marks: 1 Tally, 2 10K plate, 3 Daybreak, 4 Strea
 6 Three strides (three colours). Mock-only: the toast "This one is not part of the mock-up.", "EXAMPLE ROWS, NOT YOUR
 PLAN", and the wordmark font Archivo (proposed, not decided).
 
-### Phase 4b — Build the picked brand (Sonnet, after O8)
+### Phase 4b — Build the picked brand (Sonnet, after O8) — **DONE 2026-11-19, `b6e50e55` (branch `rebrand`, not yet merged)**
+
+Done: all 7 steps. Differences from the brief:
+- Umbrella colour was already `#ff6b35`; only the placeholder comment changed. Mark is always the umbrella colour (no switch).
+- Lockup: mark, "10K Days", then the part badge (L/Q/D) and the part name in its colour. The brand board mock had no badge in the lockup.
+- `PartBadge` lives in `components/BrandMark.tsx` (R3: one drawing place). R3's mark signature is now the plate's slant transform.
+- Icons rendered by `~/.cache/daygame-research/rebrand/scripts/icons.mjs` (Chromium, no new dependency). `apple-icon.png` is full-bleed orange (iOS rounds it); maskable icons hold the mark at 70 % on `#121212`; favicon.ico holds 16/32/48.
+- Quit share card had no mark before; it now draws `<BrandMark/>` beside the name (only that line touched).
+- `app/opengraph-image.tsx` (mark, name, W1); `/opengraph-image` added to `isPublicPage` so crawlers are not sent to login. W1 now lives in `BRAND.description`; `metadataBase` from `NEXT_PUBLIC_APP_URL`, else `LIVE_URL_UNTIL_DOMAIN` in `src/shared/brand.ts`.
+- Sign-in pages share `components/AuthShell.tsx` (glow, large mark, heavy name, W60 on sign up and log in, three part badges, card with colour bar, taller fields and buttons). Words, ids, test ids and form code unchanged.
+- Phone screenshots: `~/.cache/daygame-research/rebrand/after/p4b/`. No sideways scroll at 390 px. Auth e2e: one flaky first-run timeout, passes on rerun.
+- Not yet checked: a real link-preview checker (needs the deployed site).
 
 **His picks on the brand board (O8), read from its db 2026-11-19 13:30:**
 - 👍 umbrella **orange** (`#ff6b35`, same as Dating). His note there: "I looked at some things, like you changed the
