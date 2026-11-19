@@ -64,9 +64,9 @@ export function stretches(course: QuitSymptomCourse[], note: string): Stretch[] 
       title: "Around day 35: cravings set off by cues can still be strong",
       line: "In a lab test, cue cravings were stronger at day 35 than at day 7. It says nothing about days 1 to 6.",
       basis: {
-        who: "Smokers paid to stay off cigarettes",
+        who: "Smokers of 10 or more a day, not trying to quit, paid to stay off cigarettes",
         n: "86",
-        design: "Lab study with three groups tested at day 7, day 14 or day 35 of staying off. Nobody was tested at other days or after day 35.",
+        design: "Lab study: four groups kept off 7, 14 or 35 days; three were tested once on their last day, one on days 7, 14 and 35. Nobody was tested at other days or after day 35.",
         when: "Published 2011",
         caveat: "Only days 7, 14 and 35 were tested, so nothing is claimed about days 1 to 6 or after day 35. Paid volunteers in a lab, not people quitting in daily life.",
       },

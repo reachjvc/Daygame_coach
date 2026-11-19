@@ -1922,3 +1922,16 @@ targets or "what you could buy" here: Tool 3 holds targets.
   date tool, which counts from the record date when no run lives); recommendation: the date tool follows the same rule.
   (b) Past day 42 the band markers sit at the right edge; the phase line says "Past …". (c) A sticky "Craving now?" bar on
   this page, as other tool pages have.
+- Review round 2: no bugs beyond the known slip case. Look: "reads like a research summary". Changed: each card now shows a
+  plain line, its band and "What helps"; the study numbers, the anxiety and Gilbert findings and "Severe is not the rule"
+  moved into the card's one "Based on" (last in the card); fixed card order with jump chips under the day card ("· Now" on
+  the cards his day is in) instead of moving cards; a key under each band instead of one legend at the top; the cravings
+  time line has three spans (weeks 1–4, months 2–6, months 7–12) so the marker sits under the right label; "What gets
+  better" has one "Based on" for all its rows; the smoker-only note moved to the top; coffee shortened (details in its
+  basis). Content: three blockers fixed (gum note no longer implies gum slows the fade; "Severe is not the rule" instead
+  of "most feel these mildly"; Gilbert's trait wording), plus Bedi's four groups and who was studied (also fixed in Your
+  quit date's basis box, `hardDays.ts`), the day-35 line ("stronger than at day 7", smoking cues in a lab), "if yours has
+  not settled, that happens too" after week 4, the mood caption (not settled by day 31 in a third study), no "20
+  minutes" in the sleep steps, the diet line, the lungs design (who quit was not random), caffeine wording, no
+  "ten minutes" on the craving help, a new "Good to know" note for cigarette smokers on medicines whose dose may need
+  lowering (Kroon 2007), years on dates outside this year, Now pill on the cue card to day 42.
