@@ -175,9 +175,9 @@ export function SourcesFold({ refs }: { refs: QuitRef[] }) {
       onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}
       className="group mt-8 rounded-md border border-border bg-card p-3 text-sm"
     >
-      <summary className="flex min-h-11 cursor-pointer items-center gap-1 font-medium">
-        {t.common.sourcesTitle}
-        <ChevronDown aria-hidden className="size-4 transition-transform group-open:rotate-180" />
+      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 font-medium [&::-webkit-details-marker]:hidden">
+        {fill(t.common.sourcesFold, { n: refs.length })}
+        <ChevronDown className="size-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden />
       </summary>
       <ul className="flex flex-col gap-3">
         {refs.map((r, i) => (

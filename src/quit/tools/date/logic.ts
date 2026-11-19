@@ -98,11 +98,12 @@ export function dayLine(day1: string, today: string): DayLine {
 
 export type Typed = { kind: "empty" } | { kind: "ok"; value: number } | { kind: "bad" }
 
-/** "7,50" and "7.50" both give 7.5; blank is empty; anything else is bad. */
+/** "7,50" and "7.50" both give 7.5; blank is empty; anything else is bad. A comma with exactly three digits after it ("1,000") could mean a thousand or one, so it is refused. */
 export function parseTyped(text: string, max: number): Typed {
   const t = text.trim()
   if (t === "") return { kind: "empty" }
   if (!/^\d*[.,]?\d+$|^\d+[.,]$/.test(t)) return { kind: "bad" }
+  if (/^\d+,\d{3}$/.test(t)) return { kind: "bad" }
   const value = Number(t.replace(",", "."))
   if (!Number.isFinite(value) || value < 0 || value > max) return { kind: "bad" }
   return { kind: "ok", value }

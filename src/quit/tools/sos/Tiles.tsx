@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { CountedLine, SourceTap, EvidenceChip, Chips } from "../../components/kit"
 import { fill, tooltext as tt } from "../../tooltext"
 import type { Evidence, QuitBelief, QuitMomentSwap, QuitOption, QuitRef } from "../../types"
-import { usable } from "../common"
+import { usable, countText } from "../common"
 import { BeliefBasis } from "../beliefs/BeliefBasis"
 import { addTile, canMove, move, newBoard, type Board, type Dir } from "./game2048"
 import { BUBBLE_COUNT, freshSheet, pop, poppedCount, sheetDone } from "./bubbles"
@@ -389,7 +389,7 @@ export function Reasons({ reasons, onReasons, kept, quitDate, onBack }: { reason
             {fill(t.kept, { amount: usd(kept.amountUsd, 0), date: niceDay(quitDate) })}
           </p>
           <p data-testid="kept-sum" className="mt-1 text-sm text-muted-foreground">
-            {fill(t.keptSum, { perDay: kept.perDay, each: usd(kept.eachUsd, kept.eachUsd < 1 ? 3 : 2), days: kept.days, total: usd(kept.amountUsd) })}
+            {fill(t.keptSum, { perDay: countText(kept.perDay), each: usd(kept.eachUsd, kept.eachUsd < 1 ? 3 : 2), days: kept.days, total: usd(kept.amountUsd) })}
           </p>
         </section>
       )}

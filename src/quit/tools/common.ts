@@ -32,6 +32,11 @@ export function checkedTag(n: Pick<QuitNumber, "checked" | "severity">): "hooked
   return HOOKED_SEVERITIES.includes(n.severity) ? "hooked" : "not"
 }
 
+/** A count for the eye: at most 2 decimals, no trailing zeros ("0.14", "2.5", "10"). */
+export function countText(n: number): string {
+  return String(Number(n.toFixed(2)))
+}
+
 /** Local date as YYYY-MM-DD. */
 export function localDate(d: Date = new Date()): string {
   const m = String(d.getMonth() + 1).padStart(2, "0")

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest"
 import { emptyRecord as emptyBox, living } from "@/src/vice/blackbox/blackboxStore"
 import { startRunOn } from "@/src/quit/blackboxLogic"
 import { addDays } from "@/src/quit/record"
+import { countText } from "@/src/quit/tools/common"
+import { priceBasisOne } from "@/src/quit/tools/priceBasis"
 import {
   breakEnd,
   calendarWeeks,
@@ -94,6 +96,9 @@ describe("typed numbers", () => {
     expect(parseTyped("7,50", 1000)).toEqual({ kind: "ok", value: 7.5 })
     expect(parseTyped("7.50", 1000)).toEqual({ kind: "ok", value: 7.5 })
     expect(parseTyped(" 12 ", 1000)).toEqual({ kind: "ok", value: 12 })
+    // a comma and exactly three digits could be a thousand or one: refused, not guessed
+    expect(parseTyped("1,000", 1000000)).toEqual({ kind: "bad" })
+    expect(parseTyped("1,00", 1000)).toEqual({ kind: "ok", value: 1 })
     expect(parseTyped("", 1000)).toEqual({ kind: "empty" })
     expect(parseTyped("abc", 1000)).toEqual({ kind: "bad" })
     expect(parseTyped("1.2.3", 1000)).toEqual({ kind: "bad" })
@@ -203,5 +208,23 @@ describe("starting a Black Box run", () => {
     expect(startRunOn(emptyBox(), "nicotine", "2026-11-20", today).attempts).toHaveLength(0)
     expect(startRunOn(past, "nicotine", "2026-11-01", today)).toBe(past)
     expect(living(startRunOn(emptyBox(), "nicotine", today, today).attempts)).toHaveLength(1)
+  })
+})
+
+describe("shared price basis and count text", () => {
+  it("every unit's basis names its amount in dollars and its source", () => {
+    expect(priceBasisOne.cigarettes).toMatch(/\$0\.52/)
+    expect(priceBasisOne.cigarettes).toMatch(/each state counts the same/)
+    expect(priceBasisOne.cigarettes).toMatch(/tax is included/)
+    expect(priceBasisOne.vape).toMatch(/\$14\.07/)
+    expect(priceBasisOne.vape).toMatch(/4 weeks to 3 Sep 2022/)
+    expect(priceBasisOne.vape).toMatch(/vape shops and online sales are left out/i)
+    expect(priceBasisOne.pouches).toMatch(/before sales tax/)
+    expect(priceBasisOne.pouches).toMatch(/\$5\.69/)
+  })
+  it("a count shows at most two decimals", () => {
+    expect(countText(1 / 7)).toBe("0.14")
+    expect(countText(2.5)).toBe("2.5")
+    expect(countText(10)).toBe("10")
   })
 })

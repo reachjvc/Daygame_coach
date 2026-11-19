@@ -1,3 +1,4 @@
+import { priceBasisOne, typeOwnPrice } from "../priceBasis"
 /** Reader text of "Your quit date". Study results live in evidence.ts and hardDays.ts only. */
 export const dateText = {
   back: "Back",
@@ -35,11 +36,7 @@ export const dateText = {
   perDayLabel: (many: string) => `About how many a day? (${many})`,
   perDayHelp: "Leave it empty if you do not know.",
   priceLabel: (one: string) => `What does one ${one} cost? (USD)`,
-  priceBasis: {
-    cigarettes: "Starts at 0.52: the US average pack of 20, $10.34, divided by 20 (Tobacco Insider, posted 26 Aug 2026). Type your own price to replace it.",
-    vape: "Starts at 14.07: the average price of a disposable vape in the US, from 2022 sales (Diaz and others, Tobacco Control, 2025). Type your own price to replace it.",
-    pouches: "Starts at 5.64: the maker's suggested price for one can in the US (Tobacco Insider, posted 12 Sep 2025). Type your own price to replace it.",
-  } as Record<string, string>,
+  priceBasis: Object.fromEntries(Object.entries(priceBasisOne).map(([id, line]) => [id, `${line} ${typeOwnPrice}`])) as Record<string, string>,
   badNumber: "Type a number, like 7.50",
   useNote: "Saved on this phone. The cost tool reads it later, so it asks you nothing twice.",
 

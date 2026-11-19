@@ -14,6 +14,7 @@
     "hideSource": "Hide source",
     "openSource": "Open the source",
     "sourcesTitle": "Sources",
+    "sourcesFold": "Where these numbers come from ({n})",
     "less": "Less",
     "more": "More",
     "stepLabel": "Question {n} of {total}",

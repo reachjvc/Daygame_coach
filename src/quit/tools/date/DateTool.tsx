@@ -7,7 +7,7 @@ import { useLocalQuitBlackBox, useQuitBlackBox, useSignedIn, type QuitRunApi } f
 import { isLiveTool } from "../../menu"
 import { addDays, isIsoDay, todayIso, useQuitRecord, type QuitGoal, type QuitRecord } from "../../record"
 import type { QuitPlanStep, QuitSymptomCourse, QuitUnit, ToolProps } from "../../types"
-import { usable } from "../common"
+import { usable, countText } from "../common"
 import { useCarry, useDoneCount, useScreens, useStartCount, useToolState } from "../hooks"
 import { NotReady } from "../NotReady"
 import { BasisBox, InfoLine, OptionCard } from "./Bits"
@@ -117,7 +117,7 @@ function Screens({ addiction, units, steps, course, courseNote, bb }: InnerProps
   useEffect(() => {
     if (!state || !rec.ready || state.unitId !== null || !rec.record.unit) return
     const u = rec.record.unit
-    update((s) => (s.unitId !== null ? s : { ...s, unitId: u.id, perDay: u.perDay === null ? "" : String(u.perDay), price: String(u.priceUsd), priceTouched: u.priceBasis === "typed" }))
+    update((s) => (s.unitId !== null ? s : { ...s, unitId: u.id, perDay: u.perDay === null ? "" : countText(u.perDay), price: String(u.priceUsd), priceTouched: u.priceBasis === "typed" }))
   }, [state, rec.ready, rec.record.unit, update])
 
   if (!state || !rec.ready) return null
@@ -360,9 +360,12 @@ function Screens({ addiction, units, steps, course, courseNote, bb }: InnerProps
     const save = () => {
       if (unit) {
         const typed = price.kind === "ok" ? price.value : (unit.defaultPriceUsd ?? 0)
+        // The box shows the saved count rounded to 2 decimals; left alone, the saved count stays exact (1 a week stays 1 / 7).
+        const saved = rec.record.unit
+        const untouched = saved !== null && saved.id === unit.id && saved.perDay !== null && state.perDay === countText(saved.perDay)
         rec.setUnit({
           id: unit.id,
-          perDay: count.kind === "ok" ? count.value : null,
+          perDay: untouched ? saved.perDay : count.kind === "ok" ? count.value : null,
           priceUsd: typed,
           priceBasis: state.priceTouched && typed !== unit.defaultPriceUsd ? "typed" : "default",
         })
