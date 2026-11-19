@@ -32,12 +32,13 @@ import { describe, expect, test } from "vitest"
 import * as fs from "node:fs"
 import * as path from "node:path"
 
-const css = fs.readFileSync(path.resolve(__dirname, "../../../app/globals.css"), "utf8")
+// The `@theme inline` block moved from app/globals.css to app/theme.css (c7eeb657).
+const css = fs.readFileSync(path.resolve(__dirname, "../../../app/theme.css"), "utf8")
 
 /** The value of a custom property declared in `@theme inline`. */
 function token(name: string): string {
   const match = css.match(new RegExp(`--${name}:\\s*([^;]+);`))
-  expect(match, `--${name} is not declared in app/globals.css`).not.toBeNull()
+  expect(match, `--${name} is not declared in app/theme.css`).not.toBeNull()
   return match![1].trim()
 }
 
