@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest"
 import {
   ideasFor,
-  ifText,
+  addToDraft,
+  dropFromDraft,
   addRemoved,
   applyDraft,
   capFirst,
@@ -189,28 +190,42 @@ describe("dayLabel", () => {
   })
 })
 
-describe("ifText", () => {
-  it("drops a leading When and lower-cases the first letter, except for I", () => {
-    expect(ifText("When I’m stressed")).toBe("I’m stressed")
-    expect(ifText("When I'm bored")).toBe("I'm bored")
-    expect(ifText("After a meal")).toBe("after a meal")
-    expect(ifText("In the car")).toBe("in the car")
-    expect(ifText("when payday comes")).toBe("payday comes")
-    expect(ifText("Payday")).toBe("payday")
-    expect(ifText("I get paid")).toBe("I get paid")
-    expect(ifText("Iced coffee")).toBe("iced coffee")
+describe("round 2", () => {
+  it("quick ideas skip what goes against or repeats a moment's cards", () => {
+    const all = ["move5", "water", "gum", "breathe", "leave", "text", "puzzle", "teeth"].map((id) => ({ id }))
+    expect(ideasFor("others-smoking", all).map((x) => x.id)).not.toContain("leave")
+    expect(ideasFor("drinks", all).map((x) => x.id)).not.toContain("leave")
+    expect(ideasFor("driving", all).map((x) => x.id)).toEqual(["breathe"])
+    expect(ideasFor(null, all)).toHaveLength(8)
+  })
+  it("a removed line leaves the draft and Undo puts it back", () => {
+    const l1 = { id: "a", momentId: "coffee", ownMoment: "", then: "x", from: "card" as const }
+    const l2 = { id: "b", momentId: "stress", ownMoment: "", then: "y", from: "card" as const }
+    const d = draftFromLines([l1, l2])
+    const dropped = dropFromDraft(d, l1)
+    expect(dropped?.ticked).toEqual(["stress"])
+    expect(dropped?.choices.coffee).toBeUndefined()
+    const last = dropFromDraft(dropped, l2)
+    expect(last?.ticked).toEqual(["stress"])
+    expect(last?.choices.stress).toBeUndefined()
+    expect(addToDraft(dropped, l1)?.choices.coffee).toEqual({ then: "x", from: "card" })
+  })
+  it("a draft with no ticks does not hide saved lines; a bad check-back day is dropped", () => {
+    const s = parseIfthen({ lines: [{ id: "a", momentId: "coffee", ownMoment: "", then: "x", from: "card" }], draft: { ticked: "bad" }, checkin: "2026-13-45" })
+    expect(s.draft?.ticked).toEqual(["coffee"])
+    expect(s.checkin).toBe("")
   })
 })
 
 describe("ideasFor", () => {
   const ideas = ["move5", "water", "leave", "text", "puzzle", "teeth", "breathe"].map((id) => ({ id }))
   it("leaves out ideas that cannot be done at a moment", () => {
-    expect(ideasFor("driving", ideas).map((x) => x.id)).toEqual(["water", "breathe"])
-    expect(ideasFor("drinks", ideas).map((x) => x.id)).toEqual(["water", "leave", "text", "puzzle", "breathe"])
+    expect(ideasFor("driving", ideas).map((x) => x.id)).toEqual(["breathe"])
+    expect(ideasFor("drinks", ideas).map((x) => x.id)).toEqual(["water", "text", "puzzle", "breathe"])
     expect(ideasFor("waking", ideas).map((x) => x.id)).not.toContain("leave")
   })
-  it("offers all of them at other moments and at his own", () => {
-    expect(ideasFor("coffee", ideas)).toHaveLength(7)
+  it("offers all of them at his own moment", () => {
+    expect(ideasFor("work-break", ideas).map((x) => x.id)).not.toContain("text")
     expect(ideasFor(null, ideas)).toHaveLength(7)
   })
 })

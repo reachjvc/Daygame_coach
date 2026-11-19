@@ -17,7 +17,9 @@ import { InfoLine } from "../date/Bits"
 import { EVIDENCE } from "./evidence"
 import {
   addRemoved,
+  addToDraft,
   applyDraft,
+  dropFromDraft,
   cleanState,
   draftFromLines,
   EMPTY_IFTHEN,
@@ -105,9 +107,9 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
   const started = useStartCount(addiction, "ifthen")
   const lastMove = useRef(0)
   const [removed, setRemoved] = useState<Removed[]>([])
-  const [printing, setPrinting] = useState(false)
   const [own, setOwn] = useState("")
   const preDone = useRef(false)
+  const printPushed = useRef(false)
 
   const draft = state
     ? cleanState(state, moments).draft
@@ -188,7 +190,7 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
     const bannerList = ticked
       .filter((k) => counts[k] > 0)
       .sort((a, b) => counts[b] - counts[a])
-      .map((k) => `${labelOf(k)} (${counts[k]})`)
+      .map((k) => `${labelOf(k)} (${t.times(counts[k])})`)
     const addOwn = () => {
       if (own.trim() === "") return
       started()
@@ -198,7 +200,7 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
       setOwn("")
     }
     return (
-      <OneQuestion step={1} total={shownTotal(draft)} onBack={null}>
+      <OneQuestion step={1} total={shownTotal(draft)} onBack={null} hideBar>
         <h2 className="text-lg font-semibold">{t.pickTitle}</h2>
         <p className="text-sm text-muted-foreground">{t.pickLine}</p>
         {draft?.pre && bannerList.length > 0 && (
@@ -373,15 +375,37 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
     then: l.then,
   }))
 
+  // The print view is its own history entry (?print=1), so browser Back closes it and reload keeps it.
+  const printing = sp.get("print") === "1"
+  const printHref = (on: boolean) => {
+    const p = new URLSearchParams(sp.toString())
+    if (on) p.set("print", "1")
+    else p.delete("print")
+    const q = p.toString()
+    return q ? `${pathname}?${q}` : pathname
+  }
+  const openPrint = () => {
+    printPushed.current = true
+    window.history.pushState(null, "", printHref(true))
+    window.scrollTo?.({ top: 0 })
+  }
+  const closePrint = () => {
+    if (printPushed.current) {
+      printPushed.current = false
+      window.history.back()
+    } else window.history.replaceState(null, "", printHref(false))
+    window.scrollTo?.({ top: 0 })
+  }
   if (printing) {
-    return <PrintView cards={cardInfo} checkText={st.checkin ? dayLabel(st.checkin) : t.printNone} onClose={() => setPrinting(false)} />
+    return <PrintView cards={cardInfo} checkText={st.checkin ? dayLabel(st.checkin) : t.printNone} onClose={closePrint} />
   }
 
   const remove = (id: string) => {
     const index = lines.findIndex((l) => l.id === id)
     if (index < 0) return
-    setRemoved((r) => addRemoved(r, lines[index], index))
-    update((s) => ({ ...s, lines: s.lines.filter((l) => l.id !== id) }))
+    const line = lines[index]
+    setRemoved((r) => addRemoved(r, line, index))
+    update((s) => ({ ...s, lines: s.lines.filter((l) => l.id !== id), draft: dropFromDraft(s.draft, line) }))
   }
   const undo = () => {
     const back = removed
@@ -392,6 +416,7 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
         s.lines.filter((l) => !back.some((r) => r.line.id === l.id)),
         back,
       ),
+      draft: back.reduce((d, r) => addToDraft(d, r.line), s.draft),
     }))
   }
   const removedNames = removed.map((r) => (r.line.momentId ? labelOf(r.line.momentId) : r.line.ownMoment)).join(", ")
@@ -405,7 +430,8 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
           ["check-none", t.noDate, null],
         ] as const
       ).map(([id, label, days]) => {
-        const on = days === null ? st.checkin === "" : st.checkin === addDays(today, days)
+        // "No date" is never shown as picked: an empty day is the start, not a choice he made.
+        const on = days !== null && st.checkin === addDays(today, days)
         return (
           <button
             key={id}
@@ -439,11 +465,11 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
         <div data-testid="due-banner" className="rounded-lg border border-primary bg-card p-4">
           <h3 className="text-base font-semibold">{t.dueTitle}</h3>
           <p className="text-sm text-muted-foreground">{t.dueLine}</p>
-          <p data-testid="due-summary" className="mt-1 text-sm">
-            {t.dueSummary(rc.kept, rc.change, rc.open)}
-          </p>
           {rc.open === 0 && (
             <div className="mt-2 flex flex-col gap-2">
+              <p data-testid="due-summary" className="text-sm">
+                {t.dueSummary(rc.kept, rc.change, rc.open)}
+              </p>
               <p className="text-sm">{t.dueNewLine}</p>
               {chips}
             </div>
@@ -476,7 +502,14 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
               }
               onMove={(dir) => update((s) => ({ ...s, lines: moveLine(s.lines, l.id, dir) }))}
               onRemove={() => remove(l.id)}
-              onAnswer={(a) => update((s) => ({ ...s, reviews: { ...s.reviews, [l.id]: a } }))}
+              onAnswer={(a) =>
+                update((s) => {
+                  const reviews = { ...s.reviews }
+                  if (a === null) delete reviews[l.id]
+                  else reviews[l.id] = a
+                  return { ...s, reviews }
+                })
+              }
             />
           ))}
         </ul>
@@ -499,7 +532,7 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
           {t.addMore}
         </button>
         {lines.length > 0 && (
-          <button type="button" data-testid="print-open" onClick={() => setPrinting(true)} className={`${btn} min-h-12`}>
+          <button type="button" data-testid="print-open" onClick={openPrint} className={`${btn} min-h-12`}>
             {t.print}
           </button>
         )}
@@ -510,26 +543,27 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
           <h3 className="text-base font-semibold">{t.checkTitle}</h3>
           <p className="text-sm text-muted-foreground">{t.checkLine}</p>
           {chips}
-          {st.checkin && (
-            <p data-testid="check-shown" className="text-sm">
-              {t.checkSet(dayLabel(st.checkin))}
-            </p>
-          )}
+          <p data-testid="check-shown" className="text-sm">
+            {st.checkin ? t.checkSet(dayLabel(st.checkin)) : t.checkNone}
+          </p>
           <p className="text-sm text-muted-foreground">{t.planNote}</p>
         </section>
       )}
 
-      <p data-testid="used-in" className="text-sm text-muted-foreground">
-        {t.usedIn}{" "}
-        {isLiveTool("sos") ? (
-          <Link href={carry(`/quit/${addiction}/sos`)} className="inline-block py-3 text-primary underline">
-            {t.usedInSos}
-          </Link>
-        ) : (
-          t.usedInSos
-        )}
-        {t.usedInEnd}
-      </p>
+      <div data-testid="used-in" className="flex flex-col gap-1 text-sm text-muted-foreground">
+        <p>{t.keptHere}</p>
+        <p>
+          {t.usedIn}{" "}
+          {isLiveTool("sos") ? (
+            <Link href={carry(`/quit/${addiction}/sos`)} className="text-primary underline underline-offset-4 [padding-block:0.75rem] [margin-block:-0.75rem]">
+              {t.usedInSos}
+            </Link>
+          ) : (
+            t.usedInSos
+          )}
+          {t.usedInEnd}
+        </p>
+      </div>
       <Link href={carry(`/quit/${addiction}`)} data-testid="to-menu" className="inline-flex min-h-11 items-center self-start text-sm text-muted-foreground underline">
         {t.toMenu}
       </Link>

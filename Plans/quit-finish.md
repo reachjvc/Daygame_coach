@@ -1772,6 +1772,24 @@ targets or "what you could buy" here: Tool 3 holds targets.
   - 20 List study line, caveat and the second quote follow the reviewer's wording.
   - 21 (Opus) A line whose moment the data file no longer has is never deleted: it moves to its stored label, or "Other moment" (numbered when taken), and keeps Change and Remove. List lines store their label for this. (Coordinator rule: nothing he entered is lost silently.)
   - 22 (Opus) "Brush your teeth" is not offered as a quick idea after a meal (it repeats that moment's card). Data wording changed for both tools (19106860): "Around people who smoke or vape", "Brush your teeth or have a mint.", "away from your usual spot", "a short puzzle game", "without your nicotine", "doesn't use nicotine".
+- Round 2 (2026-11-19; bugs Sonnet, feel and look Opus, content Opus, on the shared server at 141898dd). Fixed (Opus):
+  the If part is shown exactly as listed or typed, under small "If" / "Then" labels (round 1's lower-casing broke typed
+  names: "If tV time with Mum"); quick ideas that go against or repeat a moment's cards are not offered there ("go
+  outside" at drinks and around smokers, gum with coffee, texting on a work break, breaths and stairs when stressed,
+  water when waking or driving); a card shows only If, Then and Edit, and Edit holds Change, Move and Remove (twelve
+  buttons on a three-line plan before); "What will you do then?" lists the cards, More ideas, then his own words (2 rows,
+  a counter from 140 of 160), so Next is near the fold; his typed text stays when he taps a card; the print view is its
+  own history entry (Back closes it), without the nested card and repeated title on screen; a removed line leaves the
+  draft so going Back and Continue does not bring it back unasked; Cancel after "Change" on the check-back day takes the
+  answer back; no progress bar on the first screen (it went backwards as he ticked); "No date" is not shown as picked;
+  the count line shows only when all lines are answered; a bad saved draft or check-back day no longer hides the plan.
+  Text: titles "When does the craving pull hardest?" and "What will you do then?", the banner names Craving now? and
+  Slipped? and says "3 times" / "once", the used-in lines, the placeholder no longer sends him to a shop, the Armitage line
+  says what the abstract compares (all four groups) and who was studied, the eating-habits box has a caveat, the
+  McWilliams caveat notes the abstract's own range typo. Data for both tools: the coffee card lost "today", the car song
+  card says to put the song on before driving off.
+  Not changed, proposed: Craving now? chips get no "has a plan line" mark (a Tool 2 change); "Moment 3 of 3" when only
+  one moment is new; the nudge does not block saving a "won't" line.
 
 ### From the Tool 13 build (Sonnet, 2026-11-19)
 

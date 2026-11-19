@@ -3,22 +3,30 @@
 import { useState } from "react"
 import { BasisBox, OptionCard } from "../date/Bits"
 import { EVIDENCE } from "./evidence"
-import { hasNegation, ifText, showThen, thenOk, withStop, type Choice, type Line } from "./logic"
+import { hasNegation, MAX_THEN, showThen, thenOk, withStop, type Choice, type Line } from "./logic"
 import { ifthenText as t } from "./text"
 
 const btn = "inline-flex min-h-11 items-center justify-center rounded-md border border-border px-3 text-sm"
 const wrap = "[overflow-wrap:anywhere]"
 
-/** The card he is building: "If" and "Then", two labelled parts, shown as he wrote or picked them. */
+const partLabel = "text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+
+/** The card he is building: "If" and "Then" as two labelled parts, each text exactly as listed or as he wrote it. */
 export function PlanCard({ label, then, testId }: { label: string; then: string; testId: string }) {
   return (
-    <div data-testid={testId} className={`flex flex-col gap-1 ${wrap}`}>
-      <p className="text-lg">
-        <span className="font-semibold">{t.ifLabel}</span> <span data-testid={`${testId}-if`}>{ifText(label)}</span>
-      </p>
-      <p className="text-lg">
-        <span className="font-semibold">{t.thenLabel}</span> <span data-testid={`${testId}-then`}>{then.trim() ? showThen(then) : t.thenEmpty}</span>
-      </p>
+    <div data-testid={testId} className={`flex flex-col gap-2 ${wrap}`}>
+      <div>
+        <p className={partLabel}>{t.ifLabel}</p>
+        <p data-testid={`${testId}-if`} className="text-lg">
+          {label}
+        </p>
+      </div>
+      <div>
+        <p className={partLabel}>{t.thenLabel}</p>
+        <p data-testid={`${testId}-then`} className="text-lg">
+          {then.trim() ? showThen(then) : t.thenEmpty}
+        </p>
+      </div>
     </div>
   )
 }
@@ -53,8 +61,39 @@ export function Choices({
   prefix: string
 }) {
   const [more, setMore] = useState(swaps.length === 0 || value?.from === "idea")
-  const own = value?.from === "own" ? value.then : ""
-  const showIdeas = swaps.length === 0 || more
+  // What he typed is kept while he looks at a card, and comes back when he taps the box again.
+  const [typed, setTyped] = useState(value?.from === "own" ? value.then : "")
+  const own = value?.from === "own" ? value.then : typed
+  const showIdeas = ideas.length > 0 && (swaps.length === 0 || more)
+  const ownBox = (
+    <>
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="font-semibold">{swaps.length === 0 && ideas.length === 0 ? t.ownLabelAlone : t.ownLabel}</span>
+        <textarea
+          data-testid={`${prefix}own-then`}
+          value={own}
+          rows={2}
+          maxLength={MAX_THEN}
+          placeholder={t.ownPlaceholder}
+          onFocus={() => {
+            if (value?.from !== "own" && typed.trim() !== "") onChange({ then: typed, from: "own" })
+          }}
+          onChange={(e) => {
+            const v = e.target.value.replace(/\s*\n\s*/g, " ")
+            setTyped(v)
+            onChange({ then: v, from: "own" })
+          }}
+          className={`min-h-[4rem] w-full resize-none rounded-md border border-border bg-card px-3 py-2 text-base [field-sizing:content] ${wrap}`}
+        />
+      </label>
+      {own.length >= MAX_THEN - 20 && (
+        <p data-testid={`${prefix}own-count`} className="-mt-3 text-right text-xs text-muted-foreground tabular-nums">
+          {t.counter(own.length, MAX_THEN)}
+        </p>
+      )}
+      {value?.from === "own" && hasNegation(value.then) && <Nudge testId={`${prefix}nudge`} />}
+    </>
+  )
   return (
     <div className="flex flex-col gap-4">
       {swaps.length > 0 && (
@@ -65,25 +104,7 @@ export function Choices({
           ))}
         </div>
       )}
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="font-semibold">{t.ownLabel}</span>
-        <textarea
-          data-testid={`${prefix}own-then`}
-          value={own}
-          rows={3}
-          maxLength={160}
-          placeholder={t.ownPlaceholder}
-          onChange={(e) =>
-            onChange({
-              then: e.target.value.replace(/\s*\n\s*/g, " "),
-              from: "own",
-            })
-          }
-          className={`min-h-[5.5rem] w-full rounded-md border border-border bg-card px-3 py-2 text-base [field-sizing:content] ${wrap}`}
-        />
-      </label>
-      {value?.from === "own" && hasNegation(value.then) && <Nudge testId={`${prefix}nudge`} />}
-      {swaps.length > 0 && (
+      {swaps.length > 0 && ideas.length > 0 && (
         <button type="button" data-testid={`${prefix}more-ideas`} aria-expanded={more} onClick={() => setMore(!more)} className={`${btn} min-h-12 w-full`}>
           {more ? t.fewerIdeas : t.moreIdeas}
         </button>
@@ -102,11 +123,15 @@ export function Choices({
           ))}
         </div>
       )}
+      {ownBox}
     </div>
   )
 }
 
-/** One card of the plan, with Change, Move up, Move down, Remove, and Kept / Change when the check-back day is here. */
+/**
+ * One card of the plan. The card shows only If and Then and one Edit button; Edit opens the choices with
+ * Cancel and Done, and Move up, Move down and Remove. On the check-back day: Kept / Change (Change opens Edit).
+ */
 export function LineCard({
   line,
   label,
@@ -132,21 +157,26 @@ export function LineCard({
   onSave: (c: Choice) => void
   onMove: (dir: -1 | 1) => void
   onRemove: () => void
-  onAnswer: (a: "kept" | "change") => void
+  /** null takes the answer back. */
+  onAnswer: (a: "kept" | "change" | null) => void
 }) {
   const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState<Choice>({
-    then: line.then,
-    from: line.from,
-  })
-  const open = () => {
+  // Set when "Change" on the check-back day opened the editor: Cancel then takes that answer back.
+  const [fromDue, setFromDue] = useState(false)
+  const [draft, setDraft] = useState<Choice>({ then: line.then, from: line.from })
+  const open = (viaDue: boolean) => {
     setDraft({ then: line.then, from: line.from })
+    setFromDue(viaDue)
     setEditing(true)
+  }
+  const cancel = () => {
+    if (fromDue) onAnswer(null)
+    setEditing(false)
   }
   return (
     <li data-testid={`card-${index}`} className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
       <PlanCard label={label} then={line.then} testId={`card-${index}-text`} />
-      {due && (
+      {due && !editing && (
         <div role="group" aria-label={t.dueTitle} className="flex gap-2">
           {(["kept", "change"] as const).map((a) => (
             <button
@@ -156,7 +186,7 @@ export function LineCard({
               data-testid={`${a}-${index}`}
               onClick={() => {
                 onAnswer(a)
-                if (a === "change" && !editing) open()
+                if (a === "change") open(answer !== "change")
               }}
               className={`${btn} flex-1 ${answer === a ? "border-primary bg-primary text-primary-foreground" : "bg-card"}`}
             >
@@ -165,11 +195,16 @@ export function LineCard({
           ))}
         </div>
       )}
+      {!due && !editing && (
+        <button type="button" data-testid={`card-${index}-change`} onClick={() => open(false)} className={`${btn} self-start`}>
+          {t.edit}
+        </button>
+      )}
       {editing && (
         <div data-testid={`card-${index}-edit`} className="flex flex-col gap-3 rounded-md border border-border bg-background p-3">
           <Choices key={line.id} swaps={swaps} ideas={ideas} value={draft} onChange={setDraft} prefix={`edit-${index}-`} />
           <div className="flex gap-2">
-            <button type="button" data-testid={`card-${index}-cancel`} onClick={() => setEditing(false)} className={`${btn} min-h-12 flex-1`}>
+            <button type="button" data-testid={`card-${index}-cancel`} onClick={cancel} className={`${btn} min-h-12 flex-1 text-base`}>
               {t.cancel}
             </button>
             <button
@@ -185,24 +220,17 @@ export function LineCard({
               {t.done}
             </button>
           </div>
-        </div>
-      )}
-      {!due && (
-        <div className="flex flex-wrap gap-2">
-          {!editing && (
-            <button type="button" data-testid={`card-${index}-change`} onClick={open} className={btn}>
-              {t.change}
+          <div className="flex flex-wrap gap-2 border-t border-border pt-3">
+            <button type="button" data-testid={`card-${index}-up`} aria-label={t.up} disabled={index === 0} onClick={() => onMove(-1)} className={`${btn} w-11 disabled:opacity-40`}>
+              {"↑"}
             </button>
-          )}
-          <button type="button" data-testid={`card-${index}-up`} aria-label={t.up} disabled={index === 0} onClick={() => onMove(-1)} className={`${btn} w-11 disabled:opacity-40`}>
-            {"↑"}
-          </button>
-          <button type="button" data-testid={`card-${index}-down`} aria-label={t.down} disabled={index === count - 1} onClick={() => onMove(1)} className={`${btn} w-11 disabled:opacity-40`}>
-            {"↓"}
-          </button>
-          <button type="button" data-testid={`card-${index}-remove`} onClick={onRemove} className={btn}>
-            {t.remove}
-          </button>
+            <button type="button" data-testid={`card-${index}-down`} aria-label={t.down} disabled={index === count - 1} onClick={() => onMove(1)} className={`${btn} w-11 disabled:opacity-40`}>
+              {"↓"}
+            </button>
+            <button type="button" data-testid={`card-${index}-remove`} onClick={onRemove} className={`${btn} ml-auto`}>
+              {t.remove}
+            </button>
+          </div>
         </div>
       )}
     </li>
@@ -212,13 +240,13 @@ export function LineCard({
 /** The plain print view: the cards and the check-back day. Everything else is hidden when printing. */
 export function PrintView({ cards, checkText, onClose }: { cards: { id: string; label: string; then: string }[]; checkText: string; onClose: () => void }) {
   return (
-    <section data-testid="print-view" data-print-root className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 text-foreground">
+    <section data-testid="print-view" data-print-root className="flex flex-col gap-3 text-foreground">
       <style>
         {
           "@media print{html,body{background:white !important;color:black !important}body *{visibility:hidden}[data-print-root],[data-print-root] *{visibility:visible}[data-print-root]{position:absolute;left:0;top:0;width:100%;color:black;background:white;border:0}[data-no-print]{display:none}}"
         }
       </style>
-      <h2 className="text-xl font-semibold">{t.printTitle}</h2>
+      <h2 className="hidden text-xl font-semibold print:block">{t.printTitle}</h2>
       <ol className="flex flex-col gap-3">
         {cards.map((c, i) => (
           <li key={c.id} data-testid={`print-card-${i}`} className="rounded-md border border-border p-3">

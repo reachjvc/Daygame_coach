@@ -1,4 +1,5 @@
-import { isDay, isObj, pickInt, pickOne, pickStrings } from "../common"
+import { isIsoDay } from "../../record"
+import { isObj, pickInt, pickOne, pickStrings } from "../common"
 
 export const MAX_OWN_MOMENT = 80
 export const MAX_THEN = 160
@@ -105,8 +106,10 @@ export function parseIfthen(raw: unknown): IfthenState {
   }
   const reviews: IfthenState["reviews"] = {}
   if (isObj(raw.reviews)) for (const [k, v] of Object.entries(raw.reviews)) if (v === "kept" || v === "change") reviews[k] = v
-  const draft = parseDraft(raw.draft) ?? (lines.length > 0 ? draftFromLines(lines) : null)
-  return { lines, draft, checkin: isDay(raw.checkin) ? raw.checkin : "", reviews }
+  // A draft with no ticks while lines exist (a bad save) would hide the plan: the lines win.
+  const parsed = parseDraft(raw.draft)
+  const draft = parsed && !(parsed.ticked.length === 0 && lines.length > 0) ? parsed : lines.length > 0 ? draftFromLines(lines) : null
+  return { lines, draft, checkin: isIsoDay(raw.checkin) ? raw.checkin : "", reviews }
 }
 
 /** His close calls and slips as ticks: the list moments named in `where`, most often first, at most three. */
@@ -144,20 +147,21 @@ export function withStop(text: string): string {
   return /[.!?…]$/.test(s) ? s : `${s}.`
 }
 
-/** The "If" part of a card: a leading "When" is dropped and the first letter is lower case ("If after a meal", "If I’m stressed"). */
-export function ifText(label: string): string {
-  const s = label.trim()
-  const rest = s.replace(/^when\s+/i, "")
-  const t = rest === "" ? s : rest
-  return /^I(\s|['’]|$)/.test(t) ? t : t[0].toLowerCase() + t.slice(1)
-}
-
-/** Quick ideas that cannot or must not be done at a moment are not offered there. */
+/**
+ * Quick ideas not offered at a moment: ones that cannot or must not be done there, ones that go against that
+ * moment's own cards (outside is where people smoke), and ones that repeat one of its cards.
+ */
 export const IDEA_EXCLUDE: Record<string, string[]> = {
-  driving: ["move5", "leave", "text", "puzzle", "teeth"],
-  drinks: ["move5", "teeth"],
-  waking: ["leave"],
   "after-food": ["teeth"],
+  coffee: ["gum"],
+  drinks: ["move5", "teeth", "leave"],
+  "work-break": ["text"],
+  stress: ["breathe", "move5"],
+  bored: ["puzzle"],
+  "others-smoking": ["leave", "teeth"],
+  "late-night": ["text", "leave"],
+  waking: ["leave", "water"],
+  driving: ["move5", "leave", "text", "puzzle", "teeth", "water", "gum"],
 }
 
 /** The quick ideas offered at one moment (a moment he typed gets them all). */
@@ -350,4 +354,22 @@ export function dayLabel(day: string): string {
   const [y, m, d] = day.split("-").map(Number)
   const wd = new Date(Date.UTC(y, m - 1, d)).getUTCDay()
   return `${WEEKDAYS[wd]} ${d} ${MONTHS[m - 1]}`
+}
+
+/** Takes a removed line's moment out of the draft, so walking the questions again does not quietly bring it back. */
+export function dropFromDraft(d: Draft | null, line: Line): Draft | null {
+  if (!d) return d
+  const k = lineKey(line)
+  const choices = { ...d.choices }
+  delete choices[k]
+  const ticked = d.ticked.filter((x) => x !== k)
+  // The last tick stays (the plan screen needs one to stay open); without its answer it can't come back unasked.
+  return { ...d, ticked: ticked.length > 0 ? ticked : d.ticked, choices }
+}
+
+/** Puts an undone line's moment back into the draft with its answer. */
+export function addToDraft(d: Draft | null, line: Line): Draft | null {
+  if (!d) return d
+  const k = lineKey(line)
+  return { ...d, ticked: d.ticked.includes(k) ? d.ticked : [...d.ticked, k], choices: { ...d.choices, [k]: { then: line.then, from: line.from } } }
 }

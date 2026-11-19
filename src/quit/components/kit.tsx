@@ -202,10 +202,12 @@ interface OneQuestionProps {
   children: React.ReactNode
   /** Writes "Question N of M" above the bar. */
   showStep?: boolean
+  /** Leaves the bar out (a first screen whose step count is not known yet). */
+  hideBar?: boolean
 }
 
 /** One question per screen: progress, the question, an in-page Back. */
-export function OneQuestion({ step, total, onBack, children, showStep }: OneQuestionProps) {
+export function OneQuestion({ step, total, onBack, children, showStep, hideBar }: OneQuestionProps) {
   return (
     <section data-testid="question" data-step={step} className="flex flex-col gap-4">
       {showStep && (
@@ -213,6 +215,7 @@ export function OneQuestion({ step, total, onBack, children, showStep }: OneQues
           {fill(t.common.stepLabel, { n: step, total })}
         </p>
       )}
+      {!hideBar && (
       <div
         role="progressbar"
         aria-label={fill(t.common.stepLabel, { n: step, total })}
@@ -223,6 +226,7 @@ export function OneQuestion({ step, total, onBack, children, showStep }: OneQues
       >
         <div className="h-full bg-primary" style={{ width: `${Math.min(100, (step / total) * 100)}%` }} />
       </div>
+      )}
       {children}
       {onBack && (
         <button type="button" data-testid="screen-back" onClick={onBack} className="inline-flex min-h-11 items-center self-start text-sm text-muted-foreground underline">

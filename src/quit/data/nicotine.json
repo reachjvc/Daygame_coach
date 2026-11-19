@@ -1974,7 +1974,7 @@
     {
       "momentId": "coffee",
       "cards": [
-        "Drink it somewhere else today: another room, standing, or away from your usual spot.",
+        "Drink it somewhere else: another room, standing up, or away from your usual spot.",
         "Have gum or a mint with it.",
         "When the cup is empty, get up and start the next thing."
       ]
@@ -2038,7 +2038,7 @@
     {
       "momentId": "driving",
       "cards": [
-        "Put on a song you know by heart and sing it.",
+        "Before you drive off, put on a song you know by heart, then sing it.",
         "Have gum or a mint; keep some in the car.",
         "Open the window and breathe slowly until the next stop."
       ]
