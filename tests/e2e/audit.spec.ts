@@ -427,6 +427,9 @@ test.describe("time & energy audit @phone", () => {
       const trail: string[] = []
       const logs: string[] = []
       page.on("framenavigated", (frame) => frame === page.mainFrame() && trail.push(`${Date.now() % 100000} ${new URL(frame.url()).pathname}`))
+      page.on("domcontentloaded", () => trail.push(`${Date.now() % 100000} DCL`))
+      page.on("load", () => trail.push(`${Date.now() % 100000} load`))
+      page.on("request", (r) => /dashboard|_rsc|healthz|audit|settings/.test(r.url()) && trail.push(`${Date.now() % 100000} req ${r.method()} ${r.url().replace(/^https?:\/\/[^/]+/, "").slice(0, 70)}`))
       page.on("console", (m) => logs.push(m.text().slice(0, 150)))
       page.on("pageerror", (e) => logs.push(`pageerror ${String(e).slice(0, 150)}`))
       await page.goto("/dashboard", { waitUntil: "domcontentloaded" })
@@ -438,7 +441,7 @@ test.describe("time & energy audit @phone", () => {
       // DIAGNOSIS (Phase 5): what the page did, if the dialog never comes.
       await page.getByTestId("log-out-anyway").waitFor({ timeout: 20_000 }).catch(async (error) => {
         const queue = await page.evaluate(() => localStorage.getItem("audit-queue-v1")).catch(() => "unreadable")
-        const body = await page.locator("body").innerText().catch(() => "unreadable")
+        const body = await page.evaluate(() => `btn=${document.querySelector('[data-testid="header-logout-button"]')?.outerHTML.slice(0, 300)} dialogs=${document.querySelectorAll('[role=dialog],[role=alertdialog]').length} hist=${history.length}`).catch(() => "unreadable")
         throw new Error(`${error}\nDIAG url=${page.url()} queue=${String(queue).slice(0, 200)} nav=${JSON.stringify(trail)} console=${JSON.stringify(logs)} body=${body.slice(0, 600)}`)
       })
       await page.getByTestId("log-out-anyway").click({ timeout: 20_000 })
