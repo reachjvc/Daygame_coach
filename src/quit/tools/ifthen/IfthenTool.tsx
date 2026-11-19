@@ -46,6 +46,7 @@ import {
   type Removed,
 } from "./logic"
 import { Choices, LineCard, PlanCard, PrintView } from "./Parts"
+import { tooltext } from "../../tooltext"
 import { ifthenText as t } from "./text"
 
 const btn = "inline-flex min-h-11 items-center justify-center rounded-md border border-border px-3 text-sm"
@@ -572,7 +573,7 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
       )}
 
       <div data-testid="used-in" className="flex flex-col gap-1 text-sm text-muted-foreground">
-        <p>{t.keptHere}</p>
+        <p>{tooltext.sos.savedLocal}</p>
         <p>
           {t.usedIn}{" "}
           {isLiveTool("sos") ? (

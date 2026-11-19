@@ -71,7 +71,6 @@ export const ifthenText = {
   printCheck: "Check back",
   printNone: "no date set",
 
-  keptHere: "Your plan is kept on this phone.",
   usedIn: "Your lines also show in",
   usedInSos: "Craving now?",
   usedInEnd: ": tap What to do right here, then the moment. Moments you typed yourself show only here.",

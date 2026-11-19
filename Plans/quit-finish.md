@@ -1801,13 +1801,12 @@ targets or "what you could buy" here: Tool 3 holds targets.
   and In the car keeps only its three cards (no More ideas); the print view's labels print dark grey; no print view
   with no lines. Text: the eating-habits line says "only set the goal" (the abstract's intention-only group) and "got
   stronger"; the Armitage line says "randomly"; the banner reads "Ticked from the cravings and slips you saved"; the
-  used-in line says where to tap. Data for both tools: "Move away from them, or walk the other way…", "…step outside
+  used-in line says where to tap and the save line is the shared "Saved in this browser." Data for both tools: "Move away from them, or walk the other way…", "…step outside
   without your nicotine.", "Play a short block puzzle"; Craving now?'s help line no longer says "Three ideas".
   **Stopped after three rounds (recipe step 4).** The round 3 fixes above were checked by the spec and screenshots, not
   by a fourth reviewer walk. Not changed, proposed: the page frame's top "Back" goes to the menu while the in-page
   Back steps back (shared frame of every tool; rename it "All tools"); Craving now? chips get no "has a plan line"
-  mark; reload on the print view, then Back to my plan, then browser Back stays on the plan; the plan says "kept on
-  this phone" on a computer too (Craving now? says the same); the abstract's result for plans used alone (14 vs 4 in
+  mark; reload on the print view, then Back to my plan, then browser Back stays on the plan; the abstract's result for plans used alone (14 vs 4 in
   100, very wide range) is left out.
 
 ### From the Tool 13 build (Sonnet, 2026-11-19)
