@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useState } from "react"
-import { Crosshair } from "lucide-react"
+import { BrandMark } from "@/components/BrandMark"
+import { BRAND } from "@/src/shared/brand"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
@@ -60,8 +61,8 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-center gap-2 font-semibold text-xl mb-4">
-            <Crosshair className="size-6 text-primary" />
-            <span>DayGame Coach</span>
+            <BrandMark size={24} />
+            <span>{BRAND.name}</span>
           </div>
           <Card>
             <CardHeader>

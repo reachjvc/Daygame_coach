@@ -46,7 +46,7 @@ export function ActivityField({
         maxLength={ACTIVITY_MAX}
         autoComplete="off"
         enterKeyHint="done"
-        placeholder="Email, gym, daygame…"
+        placeholder="Email, gym, reading…"
         onChange={(e) => {
           onChange(e.target.value)
           setCursor(e.target.selectionStart)

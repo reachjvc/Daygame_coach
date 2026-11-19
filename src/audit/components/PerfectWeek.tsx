@@ -172,7 +172,7 @@ function BlockSheet({
             id="week-what"
             value={d.what}
             maxLength={WEEK_WHAT_MAX}
-            placeholder="Write the book, Gym, Daygame…"
+            placeholder="Write the book, Gym, Date night…"
             onChange={(e) => setWhat(e.target.value)}
             className="mt-1.5 h-11 w-full rounded-lg border border-border bg-background px-3 text-base"
             data-testid="week-what"

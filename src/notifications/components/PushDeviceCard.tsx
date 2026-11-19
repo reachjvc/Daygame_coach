@@ -65,7 +65,7 @@ function DeniedHelp() {
       {ios ? (
         <>
           <li>Open the iPhone&apos;s Settings, then Notifications.</li>
-          <li>Find Daygame and switch Allow Notifications on.</li>
+          <li>Find 10K Days and switch Allow Notifications on.</li>
         </>
       ) : android ? (
         <>
@@ -124,7 +124,7 @@ export function PushDeviceCard({
           {[
             <>Tap <b>Share</b> at the bottom of Safari</>,
             <>Choose <b>Add to Home Screen</b></>,
-            <>Open <b>Daygame</b> from its icon and come back here</>,
+            <>Open <b>10K Days</b> from its icon and come back here</>,
           ].map((step, i) => (
             <li key={i} className="flex items-center gap-3 rounded-xl bg-background/60 px-3 py-2.5">
               <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">

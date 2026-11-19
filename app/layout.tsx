@@ -5,6 +5,7 @@ import { ViewportHeightUpdater } from "@/components/ViewportHeightUpdater"
 import { ClockSync } from "@/components/ClockSync"
 import { HistoryBarrierProvider } from "@/src/shared/HistoryBarrierContext"
 import "./globals.css"
+import { BRAND } from "@/src/shared/brand"
 import { ErrorReporting } from "@/src/shared/components/ErrorReporting"
 import { StaleWorkerCleanup } from "@/src/shared/components/StaleWorkerCleanup"
 
@@ -32,9 +33,9 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: "AI Daygame Coach - Practice Social Skills from Home",
+  title: { default: BRAND.name, template: "%s · " + BRAND.name },
   description:
-    "Master your daygame and social skills with our AI coach. Practice approach scenarios, get real-time feedback, and build confidence before taking it to the real world.",
+    "Plan the life you want, build the habits, quit what holds you back and get better at dating. One day at a time.",
   icons: {
     icon: [
       {
@@ -58,7 +59,7 @@ export const metadata: Metadata = {
     capable: true,
     // The name under the icon on an iPhone home screen. Was "Time", which
     // made one feature look like the whole product. See app/manifest.ts.
-    title: "Daygame",
+    title: BRAND.short,
     statusBarStyle: "black-translucent",
   },
 }

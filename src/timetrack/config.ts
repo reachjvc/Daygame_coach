@@ -102,7 +102,7 @@ export const TIMER_VIEW_KEY = "time-tracker:timer-view"
  * saved keep the old string: it is a provenance note, and rewriting stored
  * rows to tidy a label is not a trade worth making.
  */
-export const CREATED_WITH = "daygame-coach"
+export const CREATED_WITH = "10kdaysclub"
 /**
  * This page used to seed sample entries carrying this tag. Nothing generates
  * them any more; the constant remains so a browser that still has them stored

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next"
 import { ROUTES } from "@/src/shared/routes"
+import { BRAND } from "@/src/shared/brand"
 
 /**
  * What "Add to Home Screen" installs.
@@ -10,7 +11,7 @@ import { ROUTES } from "@/src/shared/routes"
  *
  * ONE APP, NOT A TIME APP.
  *
- * This used to install as "Time": name "Daygame Coach — Time", short_name
+ * This used to install as "Time": name "<old product name> — Time", short_name
  * "Time", a description about tracking hours, opening straight to
  * /dashboard/time. The reasoning was that the tracker is the thing people
  * install -- you open it to start a timer, not to browse.
@@ -34,10 +35,10 @@ import { ROUTES } from "@/src/shared/routes"
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Daygame Coach",
+    name: BRAND.name,
     // Home screens truncate at roughly 12 characters.
-    short_name: "Daygame",
-    description: "Practice approaching, track your sessions, and build the habits behind them.",
+    short_name: BRAND.short,
+    description: "Plan your life, track your days, quit what holds you back.",
     start_url: ROUTES.dashboard,
     scope: "/",
     display: "standalone",

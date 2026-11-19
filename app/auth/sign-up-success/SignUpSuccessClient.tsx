@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useState } from "react"
-import { Crosshair } from "lucide-react"
+import { BrandMark } from "@/components/BrandMark"
+import { BRAND } from "@/src/shared/brand"
 
 /**
  * "Check your email" -- and a way out when the email never arrives.
@@ -71,8 +72,8 @@ export default function SignUpSuccessClient() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-center gap-2 font-semibold text-xl mb-4">
-            <Crosshair className="size-6 text-primary" />
-            <span>DayGame Coach</span>
+            <BrandMark size={24} />
+            <span>{BRAND.name}</span>
           </div>
           <Card>
             <CardHeader>

@@ -10,6 +10,7 @@ import { AppFrame } from "@/components/AppFrame"
 import { AppHeader } from "@/components/AppHeader"
 import { CheckoutButton } from "@/src/home/components/CheckoutButton"
 import { PRODUCTS } from "@/src/home/products"
+import { BRAND } from "@/src/shared/brand"
 
 interface HomePageProps {
   isLoggedIn?: boolean
@@ -184,7 +185,7 @@ export function HomePage({ isLoggedIn = false }: HomePageProps) {
         <div className="mx-auto max-w-6xl px-4 sm:px-8 text-center">
           <h2 className="text-balance text-3xl font-bold mb-6">Ready to Build Your Confidence?</h2>
           <p className="text-pretty text-lg mb-8 opacity-90 leading-relaxed">
-            Join hundreds of men who are improving their social skills from the comfort of home.
+            Practise at home, then take it to the street.
           </p>
           <CheckoutButton productId={PRODUCTS[2].id} />
         </div>
@@ -200,7 +201,7 @@ export function HomePage({ isLoggedIn = false }: HomePageProps) {
               to internal tooling. There are no such routes to fix, so the links
               go. */}
           <div className="text-center text-sm text-muted-foreground">
-            <p>&copy; 2025 DayGame Coach - JVC. All rights reserved.</p>
+            <p>&copy; 2026 {BRAND.name}</p>
           </div>
         </div>
       </footer>
