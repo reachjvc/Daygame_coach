@@ -46,6 +46,9 @@ His own words, 2026-11-18 (later), rules he asked for:
   path. Notes on those pages save by themselves as he types; he never has to
   press Save.
 
+His own words, 2026-11-19, a rule he asked for:
+- Never call a plan fixed, final or agreed. It stays open until he says so.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
