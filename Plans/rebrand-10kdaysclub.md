@@ -526,6 +526,18 @@ PLAN", and the wordmark font Archivo (proposed, not decided).
 
 ### Phase 4b — Build the picked brand (Sonnet, after O8)
 
+**His picks on the brand board (O8), read from its db 2026-11-19 13:30:**
+- 👍 umbrella **orange** (`#ff6b35`, same as Dating). His note there: "I looked at some things, like you changed the
+  color on the time app, and it doesnt look very good i dont think. It might be because some of the colors are still
+  in the old format, with only some changed to gold, though" → the Time Log gets a colour pass (Phase 4c).
+- 👍 **mark 2, "10K plate"**: "This one i like quite a bit". Front page note: "definitely mark2 or perhaps mark 4
+  looks the best". Mark 4 (Streak steps): "This one i like too, so keep it for something else, but the 10k mark is
+  best as an overall icon" → mark 4 is kept on file, not used yet.
+- Logo colour: **always the umbrella colour** ("i think this is probably bessts").
+- Sign-in: "quality on that mock up seems bad, could add more cooler design IMO" → the builder makes it bolder and
+  better than the mock, from the app's own parts; he sees it on the Phase 7 before/after page.
+
+
 Read his picks from the board's db and from his chat words first. Then:
 1. `--facet-brand` (and its foreground) in `app/globals.css` → the picked umbrella colour.
 2. Swap the SVG inside `components/BrandMark.tsx`. If he picked "the part's colour inside a part", the mark draws in
@@ -867,11 +879,10 @@ bar "Home · Plan · You".
 ## Questions from the build
 
 - **Home's "Tools with a lock open once you subscribe. / See plans" box** (2026-11-19, Phase 6): Home has no locked tile
-  any more (the locked tools moved behind the Dating tile), so the box talks about locks nobody sees there. Part 3 has
-  no words for it, so it was left as it is. Proposed: drop the box, or say W46 there.
+  any more, so the box talked about locks nobody sees there. **He said "you can do both" (2026-11-19): dropped, `0d5cc450`.**
 - **Next.js security notice** (2026-11-19): `next dev` stops once with "Your version of Next.js is affected by a known
-  security vulnerability" and suggests `next upgrade --agent=security`. Not part of this plan; an upgrade changes the
-  dependency files, which is his call.
+  security vulnerability" and suggests `next upgrade --agent=security`. **He said "you can do both" (2026-11-19):
+  upgraded 16.4.1 → 16.4.6 (and eslint-config-next), branch `next-upgrade`.**
 
 ## Execution prompt
 
