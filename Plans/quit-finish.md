@@ -842,3 +842,14 @@ nicotine itself"; alternative: a ninth need "Appetite" with its own swaps (needs
   (top lies, swaps, new day 1); beliefs b2, b3, b5 got their own caveat and b4's was made a full sentence; the status line says
   "Saving" while sign-in is unknown; the still-fighting note no longer repeats the ring's "five minutes"; the voice tile uses
   a microphone icon (lucide `Mic`). The date spec's desktop width bound moved from 600 to 640 (the page column).
+
+### From the Tool 4 build (Sonnet, 2026-11-19)
+
+- Acceptance 1 says "21 days" for a run started 20 days ago and a slip "Yesterday". The Black Box count (both ends counted) gives 20 (day -20 to day -1). The spec test asserts 20; 21 would be the count if the slip were today.
+- "Another day" shows only when it can pick a day other than Today or Yesterday (the run's earliest day is 2 or more days back). The brief did not say; an empty-choice field would be noise.
+- Case C (no run): both Today and Tomorrow are offered for the new day 1 (there is no slip day to forbid Today). Brief offered Today "only when the slip day is before today".
+- Small additive changes outside the tool: `QuitBlackBoxApi.runs` (living runs of the vice, needed to read the ended run's dates and to find the new run), `removeRun`, and `amend` with thought/ending (as briefed); `clearQuitDate` in `src/quit/record.ts` (Undo must put a missing quit date back to "none", and the hook had no way to do it). Pure `amendReport` and `removeRunIfEmpty` live in `blackboxLogic.ts` with unit tests.
+- Half-answered visits carry for 60 minutes (like Tool 2's visit rule); a filed result carries only while it still describes the latest slip. A due new day 1 always starts a fresh visit.
+- Old tests removed: the three wave-1 slip tests in wave1-part2.spec.ts, all of phase7-signed-in.spec.ts (every test there was about the wave-1 slip), the "A62" test in phase7-signed-out.spec.ts, and the keepLine/resume unit tests in phase5.test.ts. slip.spec.ts covers their points (double tap, one filing, local-only/saved status, fixed day 1).
+- `slip` is not in liveTools.json (shipping step): the menu row is greyed "Soon" until then; the spec checks the row text and clicks it only when live.
+- Not run: `node scripts/typecheck-ratchet.mjs` was killed (exit 143, memory pressure from other sessions) three times; a scoped `tsc -p` over src/quit, app/quit and the quit tests is clean.
