@@ -1415,7 +1415,7 @@
           "evidence": "strong",
           "counted": "smokers asked not to smoke for a while before lab sessions; urge to smoke rated after exercise or after sitting still",
           "n": "12 studies",
-          "weak": "Measured in the hour after, not over a whole quit. The walking-type bouts tested lasted 15 minutes or more.",
+          "weak": "Measured in the hour after, not over a whole quit, and only in smokers. The walking-type bouts tested lasted 15 minutes or more.",
           "refs": [
             {
               "cite": "Taylor AH, Ussher MH, Faulkner G (2007). The acute effects of exercise on cigarette cravings, withdrawal symptoms, affect and smoking behaviour: a systematic review. Addiction 102(4):534-43.",
@@ -1465,7 +1465,7 @@
           "evidence": "moderate",
           "counted": "US company staff who smoked, and their family and friends; off cigarettes 6 months, with money on the line or usual help",
           "n": "2,538 people",
-          "weak": "Off cigarettes at 6 months: about 6 in 100 with usual help; about 10 in 100 when people put up 150 dollars of their own to win back; about 16 in 100 with rewards only. Only about 14 in 100 agreed to put up their own money, and the study held it, not a friend.",
+          "weak": "Off cigarettes through 6 months, counting everyone offered each plan: about 6 in 100 with usual help; about 10 in 100 offered the deposit plan (put up 150 dollars, win it back plus up to 650 dollars more); about 16 in 100 offered rewards only. Only about 14 in 100 agreed to put up their own money. The study held the money; nobody tested a friend holding it. Smokers only.",
           "refs": [
             {
               "cite": "Halpern SD et al (2015). Randomized trial of four financial-incentive programs for smoking cessation. New England Journal of Medicine 372(22):2108-17.",
@@ -1512,7 +1512,7 @@
           "evidence": "weak",
           "counted": "US smokers with mild low mood who asked for help to stop; all had group sessions and nicotine replacement, half also planned enjoyable activities",
           "n": "68 smokers",
-          "weak": "One small pilot trial, in people with low mood only. The planning was taught over 8 group sessions, not done alone. Odds about 3.6 times higher, with a wide range (1.2 to 10.5).",
+          "weak": "One small pilot trial, in people with low mood only. The planning was taught over 8 group sessions, not done alone. The odds of being off cigarettes were about 3.6 times higher, with a wide range (1.2 to 10.5).",
           "refs": [
             {
               "cite": "MacPherson L et al (2010). Randomized controlled trial of behavioral activation smoking cessation treatment for smokers with elevated depressive symptoms. Journal of Consulting and Clinical Psychology 78(1):55-61.",
@@ -1564,7 +1564,7 @@
           "evidence": "weak",
           "counted": "US smokers with mild low mood who asked for help to stop; all had group sessions and nicotine replacement, half also planned enjoyable activities",
           "n": "68 smokers",
-          "weak": "One small pilot trial, in people with low mood only. The planning was taught over 8 group sessions, not done alone. Odds about 3.6 times higher, with a wide range (1.2 to 10.5).",
+          "weak": "One small pilot trial, in people with low mood only. The planning was taught over 8 group sessions, not done alone. The odds of being off cigarettes were about 3.6 times higher, with a wide range (1.2 to 10.5).",
           "refs": [
             {
               "cite": "MacPherson L et al (2010). Randomized controlled trial of behavioral activation smoking cessation treatment for smokers with elevated depressive symptoms. Journal of Consulting and Clinical Psychology 78(1):55-61.",
@@ -1603,7 +1603,7 @@
           "evidence": "weak",
           "counted": "students with cravings for drugs, food or activities, not checked for addiction",
           "n": "31 students: 15 played the game, 16 did not",
-          "weak": "One week; cravings of all kinds, not only nicotine. Craving strength fell about 14 points out of 100.",
+          "weak": "One week; cravings of all kinds, not only nicotine. Right after 3 minutes of play, craving strength fell about 14 points out of 100. Not tested on staying off nicotine.",
           "refs": [
             {
               "cite": "Skorka-Brown J, Andrade J, Whalley B, May J (2015). Playing Tetris decreases drug and other cravings in real world settings. Addictive Behaviors 51:165-70.",
@@ -1638,7 +1638,7 @@
         },
         {
           "id": "boredom-3",
-          "text": "Keep toothpicks, seeds or gum for your hands",
+          "text": "Keep toothpicks, seeds or gum for your mouth and hands",
           "evidence": "none",
           "refs": []
         }
@@ -1655,7 +1655,7 @@
           "evidence": "weak",
           "counted": "adults in one US town (Framingham), followed 1971 to 2003",
           "n": "12,067 people",
-          "weak": "Watched, not tested: when a spouse stopped, a person's chance of smoking fell 67%; when a friend stopped, 36%. Nobody was asked to stop together, and people who stop together may differ in other ways.",
+          "weak": "Watched, not tested: when a spouse stopped, a person's chance of smoking fell 67%; when a friend stopped, 36%. Nobody was asked to stop together, and people who stop together may differ in other ways. Cigarettes only; vapes and pouches did not exist yet.",
           "refs": [
             {
               "cite": "Christakis NA, Fowler JH (2008). The collective dynamics of smoking in a large social network. New England Journal of Medicine 358(21):2249-58.",
@@ -1696,7 +1696,7 @@
         },
         {
           "id": "connection-3",
-          "text": "Bring a coffee or gum to the break",
+          "text": "Bring water or gum to the break",
           "evidence": "none",
           "refs": []
         }
@@ -1896,7 +1896,7 @@
           "evidence": "strong",
           "counted": "smokers who wanted to stop, in trials of patch plus a fast form against one form alone; off cigarettes 6 months or more",
           "n": "16 trials, 12,169 people",
-          "weak": "About 1.27 times as many stayed off with both as with one form. Tested in smokers, not in people who vape or use pouches.",
+          "weak": "For every 100 who stayed off with one form, about 127 stayed off with both. Tested in smokers, not in people who vape or use pouches.",
           "refs": [
             {
               "cite": "Lindson N et al (2023). Different doses, durations and modes of delivery of nicotine replacement therapy for smoking cessation. Cochrane Database of Systematic Reviews.",
@@ -1927,13 +1927,21 @@
           "evidence": "strong",
           "counted": "smokers who wanted to stop, in trials of varenicline against a dummy pill; off cigarettes 6 months or more",
           "n": "41 trials, 17,395 people",
-          "weak": "About 2.3 times as many stayed off as on the dummy pill. Prescription only, and tested in smokers.",
+          "weak": "About 2.3 times as many stayed off as on the dummy pill. Serious side effects were reported a little more often (about 1.2 times as many). Prescription only, and tested in smokers.",
           "refs": [
             {
               "cite": "Livingstone-Banks J et al (2023). Nicotine receptor partial agonists for smoking cessation. Cochrane Database of Systematic Reviews 5:CD006103.",
               "url": "https://pubmed.ncbi.nlm.nih.gov/37142273/",
               "pmid": "37142273",
               "quote": "We found high-certainty evidence that varenicline helps more people to quit than placebo (RR 2.32, 95% CI 2.15 to 2.51; I2 = 60%, 41 studies, 17,395 participants)",
+              "fetched": true,
+              "fetchedOn": "2026-11-19"
+            },
+            {
+              "cite": "Livingstone-Banks J et al (2023). Nicotine receptor partial agonists for smoking cessation. Cochrane Database of Systematic Reviews 5:CD006103.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/37142273/",
+              "pmid": "37142273",
+              "quote": "moderate-certainty evidence that people taking varenicline are more likely to report SAEs than those not taking it (RR 1.23, 95% CI 1.01 to 1.48",
               "fetched": true,
               "fetchedOn": "2026-11-19"
             }
