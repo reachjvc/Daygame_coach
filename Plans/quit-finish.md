@@ -317,3 +317,8 @@ files get the field empty.
   empty-looking Move basis, a brand name in the "bored" proof, and four swap cards. Not fixed, proposed for the owner's
   look: desktop heading offset by about 24 px, the lone half-moon voice icon, "Saved" shown twice after a close call,
   "steps 1-3" not named on the slip screen, three beliefs whose basis repeats the line above it.
+- Tool 2 review round 2 (2026-11-19): the leftovers of round 1 are fixed. The tool and the date tool now fill the page column
+  (the heading was offset 24 px in both); the row save says "Added." so "Saved" shows once; the slip step names the three steps
+  (top lies, swaps, new day 1); beliefs b2, b3, b5 got their own caveat and b4's was made a full sentence; the status line says
+  "Saving" while sign-in is unknown; the still-fighting note no longer repeats the ring's "five minutes"; the voice tile uses
+  a microphone icon (lucide `Mic`). The date spec's desktop width bound moved from 600 to 640 (the page column).

@@ -1,5 +1,6 @@
 "use client"
 
+import { Mic } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
@@ -39,7 +40,7 @@ import {
 const t = tt.sos
 const TILES = ["voice", "breathe", "move", "bubbles", "blocks", "help", "reasons"] as const
 type TileId = (typeof TILES)[number]
-const GLYPH: Record<TileId, string> = { voice: "◐", breathe: "◯", move: "↗", bubbles: "●", blocks: "▦", help: "☰", reasons: "♡" }
+const GLYPH: Record<TileId, string> = { voice: "", breathe: "◯", move: "↗", bubbles: "●", blocks: "▦", help: "☰", reasons: "♡" }
 const isTile = (x: string | null): x is TileId => x !== null && (TILES as readonly string[]).includes(x)
 
 /** Craving now: a shelf of one-tap tools, a ten-minute ring, and two taps afterwards. */
@@ -330,10 +331,11 @@ function Screens({ addiction, beliefs, moments, swaps, evidence, refs, signedIn,
     }
     const filed = state.reportId !== null && !undone
     const statusText = () => {
-      if (!state.reportId || !bb) return signedIn === true ? tt.blackbox.saving : t.savedLocal
+      // While sign-in is unknown the line says saving, so it never claims "on this phone" and then changes its mind.
+      if (!state.reportId || !bb) return signedIn === false ? t.savedLocal : tt.blackbox.saving
       const s = bb.status(state.reportId)
       if (signedIn === true) return s === "saved" ? t.savedAccount : s === "local" ? tt.blackbox.localOnly : tt.blackbox.saving
-      return t.savedLocal
+      return signedIn === false ? t.savedLocal : tt.blackbox.saving
     }
     return (
       <section data-testid="result" className="flex flex-col gap-4">
@@ -471,7 +473,7 @@ function Screens({ addiction, beliefs, moments, swaps, evidence, refs, signedIn,
                 className="flex min-h-24 w-full flex-1 flex-col items-start justify-between gap-2 rounded-lg border border-border bg-card p-3 text-left"
               >
                 <span aria-hidden="true" className="text-2xl text-primary">
-                  {GLYPH[tile]}
+                  {tile === "voice" ? <Mic className="size-6" /> : GLYPH[tile]}
                 </span>
                 <span className="text-sm font-medium">{t.tools[tile]}</span>
               </button>
@@ -522,7 +524,7 @@ function Screens({ addiction, beliefs, moments, swaps, evidence, refs, signedIn,
   }
 
   return (
-    <div data-testid="sos" className="mx-auto flex w-full max-w-[560px] flex-col gap-4">
+    <div data-testid="sos" className="flex w-full flex-col gap-4">
       {banner}
       {!banner && view !== "shelf" && view !== "after" && ring.running && (
         <div data-testid="ring-mini" className="sticky top-0 z-10 flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-3 py-1 shadow-sm">

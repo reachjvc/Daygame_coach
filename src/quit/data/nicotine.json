@@ -675,6 +675,7 @@
       "proof": "In smokers who stopped, anger, anxiety, low mood, restlessness and poor sleep peaked in the first week and were gone by week 2–4.",
       "severity": "users",
       "counted": "smokers who stopped, not checked for addiction",
+      "weak": "These are averages over many studies of smokers who stopped. They do not say how it will be for one person, and they did not check for addiction.",
       "refs": [
         {
           "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
@@ -705,6 +706,7 @@
       "proof": "In 469 heavily hooked heart patients who wanted to stop, stress fell more over a year in those who stayed off than in those who kept smoking.",
       "severity": "treatment",
       "counted": "heart patients given quit help, heavily hooked on nicotine",
+      "weak": "These were heart patients in a quit programme, so other groups may differ. It compared people who stayed off with people who kept smoking, over a year.",
       "refs": [
         {
           "cite": "Hajek P, Taylor T, McRobbie H (2010). The effect of stopping smoking on perceived stress levels. Addiction 105(8):1466-71.",
@@ -744,7 +746,7 @@
           "fetched": true
         }
       ],
-      "weak": "No study of people hooked on it",
+      "weak": "Smokers in patch trials were studied, not people hooked on vapes or pouches.",
       "check": {
         "by": "revision checker a (nicotine)",
         "on": "2026-11-09",
@@ -766,6 +768,7 @@
       "proof": "In 3,446 ex-smokers who now only vape, dependence on the vape rose with liquid strength: lowest on nicotine-free liquid, highest at 13 mg/ml or more.",
       "severity": "users",
       "counted": "ex-smokers who now only vape, not checked for addiction",
+      "weak": "These were people who had already switched to vaping, so it says nothing about people who never smoked. It shows dependence rising with liquid strength, not that vaping is as harmful as smoking.",
       "refs": [
         {
           "cite": "Foulds J, Veldheer S, Yingst J, Hrabovsky S, Wilson SJ, Nichols TT, Eissenberg T (2015). Development of a questionnaire for assessing dependence on electronic cigarettes among a large sample of ex-smoking e-cigarette users. Nicotine & Tobacco Research 17(2):186-92.",
@@ -842,7 +845,6 @@
       "proof": "Students who played a falling-blocks game for three minutes rated their cravings, nicotine among them, 13.9 points lower out of 100.",
       "severity": "users",
       "counted": "students with cravings for drugs, food or activities, not checked for addiction",
-      "weak": "The game tested was falling blocks, not the block puzzle in this tool. Students rated their own cravings; nobody checked whether they stayed off.",
       "refs": [
         {
           "cite": "Skorka-Brown J, Andrade J, Whalley B, May J (2015). Playing Tetris decreases drug and other cravings in real world settings. Addictive Behaviors 51:165-70.",
@@ -853,7 +855,7 @@
           "fetchedOn": "2026-11-18"
         }
       ],
-      "weak": "31 students over one week; cravings of all kinds, not only nicotine.",
+      "weak": "31 students over one week; cravings of all kinds, not only nicotine. The game tested was falling blocks, not the block puzzle in this tool.",
       "check": {
         "by": "quit-tool checker (opus)",
         "on": "2026-11-18",

@@ -252,10 +252,10 @@
     "strengthLabel": "How strong, 1 to 10",
     "situationLabel": "Where were you",
     "rowSave": "Save",
-    "rowSaved": "Saved.",
+    "rowSaved": "Added.",
     "rowUpdated": "Updated the one from a few minutes ago.",
     "yesTitle": "A slip doesn't undo the days before.",
-    "yesStep": "Today, go back through steps 1–3 on paper.",
+    "yesStep": "Today, go back through steps 1–3 on paper: your top lies, your swaps, a new day 1.",
     "slipLink": "Slipped? Restart today",
     "savedLocal": "Saved on this phone.",
     "savedAccount": "Saved to your account.",
@@ -264,7 +264,7 @@
     "patternWait": "After three saves, your most common moments show here.",
     "patternBasis": "From your {n} saves.",
     "patternBar": "Share of saves",
-    "fightNote": "Give it five more minutes."
+    "fightNote": "Still fighting is a fine answer. Stay with the wait below."
   },
   "symptoms": {
     "intro": "Tap one to see what the studies say.",

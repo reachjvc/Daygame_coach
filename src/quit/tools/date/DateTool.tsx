@@ -91,7 +91,7 @@ function Inner(props: InnerProps) {
   const [bb, setBb] = useState<QuitRunApi | null>(null)
   const onApi = useCallback((api: QuitRunApi | null) => setBb(api), [])
   return (
-    <div className="mx-auto w-full max-w-[560px]">
+    <div className="w-full">
       {signedIn === true ? <SignedBridge key="in" viceId={props.addiction} onApi={onApi} /> : null}
       {signedIn === false ? <LocalBridge key="out" viceId={props.addiction} onApi={onApi} /> : null}
       <Screens {...props} bb={bb} />

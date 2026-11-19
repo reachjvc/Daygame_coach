@@ -354,11 +354,14 @@ test.describe("craving now, signed out", () => {
   test.describe("desktop", () => {
     test.use({ viewport: { width: 1280, height: 800 } })
 
-    test("shelf is a centred column about 560 px, tiles and results fit", async ({ page }) => {
+    test("shelf sits in the page column, flush with the heading, tiles and results fit", async ({ page }) => {
       await page.goto(URL)
       const box = (await page.getByTestId("sos").boundingBox())!
-      expect(box.width).toBeLessThanOrEqual(600)
+      expect(box.width).toBeLessThanOrEqual(640)
       expect(box.x).toBeGreaterThan(300)
+      // the heading and the tool start at the same left edge
+      const h = (await page.locator("h1").first().boundingBox())!
+      expect(Math.abs(h.x - box.x)).toBeLessThanOrEqual(2)
       await noSideways(page)
       await shot(page, "d-shelf")
       for (const tile of TILES) {

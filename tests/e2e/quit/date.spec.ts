@@ -272,7 +272,7 @@ test.describe("quit date, signed out", () => {
     await noSideways(page)
     await page.setViewportSize({ width: 1280, height: 800 })
     const w = await page.getByTestId("result").evaluate((e) => e.getBoundingClientRect().width)
-    expect(w).toBeLessThanOrEqual(600)
+    expect(w).toBeLessThanOrEqual(640)
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1280)
     expect(errors).toEqual([])
     // the menu names the tool; it is a Soon row until it is in finished.json
