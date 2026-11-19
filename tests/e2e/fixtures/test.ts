@@ -196,7 +196,7 @@ interface TestFixtures {
 // The second argument is Playwright's `use`, named `provide` here: the React
 // hooks lint rule reads any `use(...)` call as a hook.
 export const test = base.extend<TestFixtures, WorkerFixtures>({
-  accountTimezone: ['Europe/Copenhagen', { scope: 'worker', option: true }],
+  accountTimezone: ['Etc/GMT+12', { scope: 'worker', option: true }],
 
   account: [
     async ({ browser, accountTimezone }, provide, workerInfo) => {
