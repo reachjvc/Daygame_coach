@@ -55,7 +55,7 @@ import {
 import { pastText as t } from "./text"
 
 const section = "flex flex-col gap-2 rounded-lg border border-border bg-card p-3"
-const field = "min-h-11 w-full min-w-0 rounded-md border border-border bg-background px-2 text-base"
+const field = "min-h-11 min-w-0 rounded-md border border-border bg-background px-2 text-base"
 const ghost = "inline-flex min-h-11 items-center justify-center rounded-md border border-border bg-card px-4 text-sm"
 const wrap = "[overflow-wrap:anywhere]"
 const uid = () => Math.random().toString(36).slice(2, 10)
@@ -195,10 +195,7 @@ function Inner({ addiction, endings, helped, belief, number }: InnerProps) {
           </button>
         </div>
       )}
-      <div className="flex flex-col gap-1">
-        <h2 className="text-lg font-semibold">{t.title}</h2>
-        <p className="text-sm text-muted-foreground">{t.intro}</p>
-      </div>
+      <p className="text-sm text-muted-foreground">{t.intro}</p>
 
       <section data-testid="count" className="flex flex-col gap-2">
         <p className="font-medium">{t.countQuestion}</p>
@@ -565,7 +562,7 @@ function Form({ initial, endings, helped, today, onSave, onCancel }: { initial: 
       <h2 className="text-lg font-semibold">{editing ? t.formEdit : t.formNew}</h2>
       <label className="flex flex-col gap-1 text-sm">
         {t.whenLabel}
-        <input type="month" data-testid="f-when" min={FIRST_MONTH} max={maxMonth} value={x.when} onChange={(e) => set({ when: e.target.value })} className={field} />
+        <input type="month" data-testid="f-when" min={FIRST_MONTH} max={maxMonth} value={x.when} onChange={(e) => set({ when: e.target.value })} className={`${field} w-full`} />
         {!whenOk && (
           <span data-testid="f-when-error" role="alert" className="text-xs text-destructive">
             {t.whenOut}
@@ -611,7 +608,7 @@ function Form({ initial, endings, helped, today, onSave, onCancel }: { initial: 
         <Chips options={endings} value={x.ended} onChange={(ended) => set({ ended })} max={endings.length} label={t.endedLabel} />
         <label className="flex flex-col gap-1">
           {t.endedText}
-          <input type="text" data-testid="f-ended-text" maxLength={MAX_FREE} value={x.endedText} onChange={(e) => set({ endedText: e.target.value })} className={field} />
+          <input type="text" data-testid="f-ended-text" maxLength={MAX_FREE} value={x.endedText} onChange={(e) => set({ endedText: e.target.value.slice(0, MAX_FREE) })} className={`${field} w-full`} />
         </label>
       </div>
       <div data-testid="f-helped" className="flex flex-col gap-2 text-sm">
@@ -619,7 +616,7 @@ function Form({ initial, endings, helped, today, onSave, onCancel }: { initial: 
         <Chips options={helped} value={x.helped} onChange={(h) => set({ helped: h })} max={helped.length} label={t.helpedLabel} />
         <label className="flex flex-col gap-1">
           {t.helpedText}
-          <input type="text" data-testid="f-helped-text" maxLength={MAX_FREE} value={x.helpedText} onChange={(e) => set({ helpedText: e.target.value })} className={field} />
+          <input type="text" data-testid="f-helped-text" maxLength={MAX_FREE} value={x.helpedText} onChange={(e) => set({ helpedText: e.target.value.slice(0, MAX_FREE) })} className={`${field} w-full`} />
         </label>
       </div>
       {!ok && !lenBad && whenOk && <p className="text-xs text-muted-foreground">{t.needOne}</p>}
