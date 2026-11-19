@@ -81,7 +81,12 @@ const BASELINE_PATH = path.resolve(__dirname, "../support/writeCoverage.baseline
  * programRepo, workoutRepo, programDraftRepo, healthRepo and restoreTimetrack now have
  * integration tests that read the rows back (tests/integration/repos/*Writes*).
  */
-const MAX_UNASSERTED = 56
+/**
+ * Lowered 56 -> 26 on 2026-11-19 (Plans/tests-catch-what-matters.md, Phase 4, group B):
+ * goalRepo, settingsRepo, profileService, innerGameProgressRepo and
+ * valuesRepo.deleteUserValues each have a database test per write function.
+ */
+const MAX_UNASSERTED = 26
 
 type Baseline = Record<string, string>
 
