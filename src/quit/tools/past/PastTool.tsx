@@ -296,7 +296,7 @@ function Inner({ addiction, endings, helped, belief, number }: InnerProps) {
       </section>
       )}
 
-      <Next addiction={addiction} carry={carry} />
+      <Next addiction={addiction} carry={carry} hasEnding={shown.some((x) => x.ended.length > 0 || x.endedText.trim() !== "")} />
       {!inExample && (
         <p data-testid="saved-line" className="text-xs text-muted-foreground">
           {t.saved}
@@ -346,6 +346,7 @@ function Pattern({ tries, endings, helped }: { tries: Try[]; endings: Option[]; 
     <section data-testid="pattern" className={section}>
       <h3 className="text-base font-semibold">{t.patternTitle}</h3>
       {empty && <p className="text-sm text-muted-foreground">{t.patternNone}</p>}
+      {!empty && !longest && !topE && e.triesNaming < 2 && !topH && <p data-testid="pattern-more" className="text-sm text-muted-foreground">{t.patternMore}</p>}
       {longest && (
         <p data-testid="pattern-longest" className="text-sm">
           {t.longest(lengthText(longest.days), longest.of)}
@@ -436,7 +437,19 @@ function AfterSlipBlock({ addiction, value, onChange, belief, carry }: { addicti
               )}
             </>
           )}
-          {value === "restarted" && <p>{t.slipRestarted}</p>}
+          {value === "restarted" && (
+            <p>
+              {t.slipRestartedPre}
+              {isLiveTool("date") ? (
+                <Link href={carry(`/quit/${addiction}/date`)} className="inline-flex min-h-11 items-center text-primary underline">
+                  {t.slipRestartedName}
+                </Link>
+              ) : (
+                t.slipRestartedName
+              )}
+              {t.slipRestartedPost}
+            </p>
+          )}
           {value === "justOnce" && (
             <p>
               {t.slipJustOncePre}
@@ -492,7 +505,7 @@ function Chart({ tries }: { tries: Try[] }) {
         {`${t.avg(lengthText(avg))} · ${t.chartBasis(list.length)}`}
       </p>
       <div data-testid="chart-scroll" className="overflow-x-auto">
-        <div style={{ minWidth: list.length * 48, maxWidth: Math.max(list.length * 96, 240) }}>
+        <div className="mx-auto" style={{ minWidth: list.length * 48, maxWidth: Math.max(list.length * 96, 240) }}>
           <div className="relative flex items-end" style={{ height: BAR_AREA }}>
             <div aria-hidden="true" data-testid="avg-line" className="pointer-events-none absolute inset-x-0 border-t border-dashed border-muted-foreground" style={{ bottom: line }} />
             {list.map((b, k) => (
@@ -518,7 +531,7 @@ function Chart({ tries }: { tries: Try[] }) {
   )
 }
 
-function Next({ addiction, carry }: { addiction: string; carry: (p: string) => string }) {
+function Next({ addiction, carry, hasEnding }: { addiction: string; carry: (p: string) => string; hasEnding: boolean }) {
   const link = (tool: string, label: string) => (
     <li key={tool}>
       <Link href={carry(`/quit/${addiction}/${tool}`)} data-testid={`next-${tool}`} className="inline-flex min-h-11 items-center text-primary underline">
@@ -531,7 +544,7 @@ function Next({ addiction, carry }: { addiction: string; carry: (p: string) => s
       <h3 className="text-base font-semibold">{t.nextTitle}</h3>
       <ul className="flex flex-col">
         {isLiveTool("date") && link("date", t.nextDate)}
-        {isLiveTool("ifthen") && link("ifthen", t.nextIfthen)}
+        {isLiveTool("ifthen") && hasEnding && link("ifthen", t.nextIfthen)}
         {isLiveTool("record") && link("record", t.nextRecordLink)}
       </ul>
       {!isLiveTool("record") && <p className="text-sm">{`${t.nextRecordPre}${t.nextRecordName}${t.nextRecordPost}`}</p>}

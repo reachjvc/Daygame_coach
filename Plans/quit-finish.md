@@ -38,7 +38,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | 7 | If-then plan | lab `ifthen/best` | — | building |
 | 8 | Daily check-in | lab `checkin/best` | slip question from `diary/best` | building |
 | 9 | What it costs you | wave-1 `cost` | per-pack price and live update (copy e); money setup from the shared record | building |
-| 10 | Your past attempts | lab `past/best` | wave-1's "many tries are normal" number and "after the first slip" question | building |
+| 10 | Your past attempts | lab `past/best` | wave-1's "many tries are normal" number and "after the first slip" question | waiting for you |
 | 11 | Today's lesson | lab `lessons/best` | — | waiting for you |
 | 12 | How people quit | wave-1 `how` | the sourced sections of `library/best`, shortened | building |
 | 13 | What it gives you | wave-1 `gives` | — | building |
@@ -1813,6 +1813,15 @@ targets or "what you could buy" here: Tool 3 holds targets.
   'just one'. One is how quit turns into smoking again." is absolute (17 in 100 in study 1 were not smoking) and
   cigarette-only. This tool no longer shows the counterpart. The how-tries `caveat` "pulled up by the people who
   struggle most" is not in the paper; proposed: "includes people who never quit during the study".
+- Review round 2 (same three reviewers): every round-1 item confirmed fixed. Also fixed: the restarted reply links
+  "Your quit date"; "pick a new day 1 on the day you slip"; heading "Many tries are common" (the paper says "many
+  smokers", not "most people"); the how-tries caveat in `nicotine.json` no longer says "pulled up by the people who
+  struggle most" (not in the paper; now "across many people, including those who did not quit during the study", also
+  read by How people quit); "Just this once" gets one sourced sentence before the fact card; a lone try with only an
+  ending shows "Add another try, and what repeats shows here." instead of an empty card; the if-then link shows only
+  once a try names an ending; days rounded the same in list, pattern and chart; desktop chart centred.
+- Reviewers disagreed on "You have 2–3 tries behind you." (look reviewer: it ties the study to him; content reviewer:
+  next to "about 30" it reads as "27 to go"). Proposed P8: leave it out (no forecast); alternative: put it back.
 - Open, proposed: P6 Edit/Delete per try stay full buttons (reviewer suggested a "…" menu; recommendation: keep, one tap
   each). P7 a one-line summary on return ("3 tries · longest about 2 months"); recommendation: not now.
 

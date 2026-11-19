@@ -146,7 +146,8 @@ const UNIT_ONE: Record<LenUnit, string> = { days: "day", weeks: "week", months: 
 /** A try's length as he typed it: "1.5 weeks", "1 month", "3 days". */
 export function typedLength(x: Pick<Try, "len" | "unit">): string | null {
   if (x.len === null || !Number.isFinite(x.len) || x.len <= 0) return null
-  const n = Math.round(x.len * 10) / 10
+  // Days are whole days everywhere; weeks, months and years keep one decimal as typed.
+  const n = x.unit === "days" ? Math.max(1, Math.round(x.len)) : Math.round(x.len * 10) / 10
   return `${n} ${n === 1 ? UNIT_ONE[x.unit] : x.unit}`
 }
 
@@ -263,9 +264,10 @@ export function dangerWindow(tries: readonly Try[]): { from: number; to: number;
   const k = Math.floor(l.length / 2) + 1
   let best = 0
   for (let i = 1; i + k <= l.length; i++) if (l[i + k - 1] - l[i] < l[best + k - 1] - l[best]) best = i
-  const from = Math.floor(l[best])
-  const to = Math.ceil(l[best + k - 1])
-  return { from, to, count: l.filter((d) => d >= from && d <= to).length, of: l.length }
+  // Whole days, rounded the same way as every other length on the page.
+  const from = Math.max(1, Math.round(l[best]))
+  const to = Math.max(from, Math.round(l[best + k - 1]))
+  return { from, to, count: l.filter((d) => Math.round(d) >= from && Math.round(d) <= to).length, of: l.length }
 }
 
 /* ---------- chart ---------- */

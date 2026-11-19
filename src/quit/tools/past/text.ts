@@ -17,6 +17,7 @@ export const pastText = {
 
   patternTitle: "Your pattern",
   patternNone: "Add a length, an ending or what helped, and your pattern shows here.",
+  patternMore: "Add another try, and what repeats shows here.",
   longest: (len: string, n: number) => `Longest try: ${len}. From ${n} ${n === 1 ? "try" : "tries"} with a length.`,
   commonEnding: (labels: string[], k: number, m: number) =>
     labels.length === 1
@@ -41,15 +42,16 @@ export const pastText = {
   slip: { gaveUp: "I gave up", restarted: "I restarted my quit the same day", justOnce: "“Just this once”", dontRemember: "I don’t remember" } as Record<string, string>,
   slipGaveUp: "A slip ends a run, not the quit. The clean days you had still count. Pick a new day 1.",
   slipGaveUpLink: "Slipped? Restart today",
-  slipGaveUpPlain: "Next time, pick a new day 1 the same day.",
-  slipRestarted: "Keep doing that. The plan in Your quit date says the same: after a slip, go back through its steps 1–3 on paper, the same day.",
+  slipGaveUpPlain: "Next time, pick a new day 1 on the day you slip.",
+  slipRestartedPre: "Keep doing that. The plan in ",
+  slipRestartedName: "Your quit date",
+  slipRestartedPost: " says the same: after a slip, go back through its steps 1–3 on paper, the same day.",
   slipJustOncePre: "That is one of ",
   slipJustOnceName: "the 12 lies",
-  slipJustOncePost: ".",
+  slipJustOncePost: ". In two patch trials, most smokers who had even one in their second week off were smoking again six months later:",
   slipDontRemember: "Next time, notice the first thought after a slip and write it down.",
 
-  manyTitle: "Most people need many tries",
-  manyYouHave: (what: string) => `You have ${what} behind you.`,
+  manyTitle: "Many tries are common",
   manyStudy: "In one study of adults in Ontario who smoked cigarettes daily, the authors' preferred model put the average at about 30 tries before one lasted a year. Other ways of counting gave about 7 to 142.",
   manyNote: "An average across many people, not a forecast for you.",
   basisWhere: "Where",
