@@ -13,6 +13,9 @@ import {
   parseCount,
   parsePackSize,
   parsePrice,
+  price4,
+  importedCountMode,
+  usableUnit,
   yearlyCostFromRecord,
 } from "@/src/quit/tools/cost/logic"
 import { yearlyCost } from "@/src/quit/coaching"
@@ -37,15 +40,32 @@ describe("computeCost", () => {
     expect(formatCents(f.tenCents)).toBe("$18,980.00")
   })
   it("pack 9.00 / 20 = 0.45: $1,642.50 a year", () => {
-    expect(computeCost(10, 9 / 20).yearCents).toBe(164_250)
+    expect(computeCost(10, price4(9 / 20)).yearCents).toBe(164_250)
   })
   it("2 a week of a $14.07 vape: $4.02 a day, $1,467.30 a year", () => {
     const f = computeCost(2 / 7, 14.07)
     expect(f.dayCents).toBe(402)
     expect(f.yearCents).toBe(146_730)
   })
-  it("a price that is not whole cents rounds the day half up", () => {
-    expect(computeCost(10, 0.4495).dayCents).toBe(450)
+  it("a price that is not whole cents: the year is worked from the unrounded numbers", () => {
+    const f = computeCost(10, 0.4495)
+    expect(f.yearCents).toBe(164_068)
+    expect(f.dayCents).toBe(450)
+  })
+  it("one a week at $0.52 is $27.11 a year, not 7 cents x 365", () => {
+    const f = computeCost(1 / 7, 0.52)
+    expect(f.yearCents).toBe(2711)
+    expect(f.dayCents).toBe(7)
+    expect(f.monthCents).toBe(226)
+    expect(f.tenCents).toBe(27_110)
+  })
+  it("a day is the year divided by 365, a month the year divided by 12", () => {
+    for (const [n, p] of [[3, 7.5], [0.5, 14.07], [2 / 7, 5.64], [499, 999]] as const) {
+      const f = computeCost(n, p)
+      expect(f.dayCents).toBe(Math.round(f.yearCents / 365))
+      expect(f.monthCents).toBe(Math.round(f.yearCents / 12))
+      expect(f.tenCents).toBe(f.yearCents * 10)
+    }
   })
   it("zero use and the largest numbers", () => {
     expect(computeCost(0, 5).yearCents).toBe(0)
@@ -82,6 +102,18 @@ describe("reading the form", () => {
     expect(parseCount("3501", "week").kind).toBe("bad")
     expect(parseCount("3500", "week").kind).toBe("ok")
   })
+  it("a thousands comma is refused (1,000 could be one or a thousand), a decimal comma is not", () => {
+    expect(parseCount("1,000", "week").kind).toBe("bad")
+    expect(parsePrice("1,000", "one", 20).kind).toBe("bad")
+    expect(parsePrice("7,500", "one", 20).kind).toBe("bad")
+    expect(parsePrice("7,5", "one", 20)).toEqual({ kind: "ok", value: 7.5 })
+    expect(parseCount("2,5", "day")).toEqual({ kind: "ok", value: 2.5 })
+  })
+  it("a price of one is kept to 4 decimals", () => {
+    expect(price4(7 / 3)).toBe(2.3333)
+    expect(parsePrice("7", "pack", 3)).toEqual({ kind: "ok", value: 2.3333 })
+    expect(price4(0.52)).toBe(0.52)
+  })
   it("pack size is a whole number from 1 to 100", () => {
     expect(parsePackSize("20")).toEqual({ kind: "ok", value: 20 })
     for (const bad of ["0", "101", "2.5", "x", "-1"]) expect(parsePackSize(bad).kind, bad).toBe("bad")
@@ -109,8 +141,24 @@ describe("reading the form", () => {
 describe("saved state", () => {
   it("anything but the v2 shape is the empty state", () => {
     for (const j of [null, undefined, 5, "x", [], {}, { unit: "cigarettes", perDay: 20, daysPerWeek: 5, price: "0.60" }, { v: 1 }]) expect(parseCost(j)).toEqual(EMPTY_COST)
-    expect(parseCost({ v: 2, priceMode: "one", packSize: 25, countMode: "week" })).toEqual({ v: 2, priceMode: "one", packSize: 25, countMode: "week" })
+    expect(parseCost({ v: 2, priceMode: "one", packSize: 25, countMode: "week" })).toEqual({ v: 2, priceMode: "one", packSize: 25, countMode: "week", lastByUnit: {} })
     expect(parseCost({ v: 2, priceMode: "x", packSize: 0, countMode: 3 })).toEqual(EMPTY_COST)
+  })
+  it("lastByUnit keeps usable numbers per unit and drops the rest", () => {
+    const s = parseCost({ v: 2, lastByUnit: { cigarettes: { perDay: 10, priceUsd: 0.45, priceBasis: "typed" }, vape: { perDay: 1, priceUsd: "x" }, pouches: { perDay: 9999, priceUsd: 5 }, gum: 5 } })
+    expect(s.lastByUnit.cigarettes).toEqual({ perDay: 10, priceUsd: 0.45, priceBasis: "typed" })
+    expect(s.lastByUnit.vape).toBeUndefined()
+    expect(s.lastByUnit.pouches?.perDay).toBeNull()
+    expect(s.lastByUnit.gum).toBeUndefined()
+  })
+  it("a record out of the typed range counts as not set", () => {
+    const u = { id: "vape", perDay: 1, priceUsd: 14.07, priceBasis: "default" as const }
+    expect(usableUnit(u)).toEqual(u)
+    expect(usableUnit(null)).toBeNull()
+    expect(usableUnit({ ...u, priceUsd: 1001 })).toBeNull()
+    expect(usableUnit({ ...u, priceUsd: -1 })).toBeNull()
+    expect(usableUnit({ ...u, perDay: 501 })).toEqual({ ...u, perDay: null })
+    expect(usableUnit({ ...u, perDay: null })).toEqual({ ...u, perDay: null })
   })
 })
 
@@ -132,6 +180,11 @@ describe("old wave-1 answers", () => {
     expect(importOldCost({ ...old, price: "" }, UNITS, null)).toBeNull()
     expect(importOldCost({ ...old, unit: "gum" }, UNITS, null)).toBeNull()
     expect(importOldCost({ v: 2 }, UNITS, null)).toBeNull()
+  })
+  it("fewer than 7 days a week reads as a week count", () => {
+    expect(importedCountMode(old)).toBe("week")
+    expect(importedCountMode({ ...old, daysPerWeek: 7 })).toBe("day")
+    expect(importedCountMode(null)).toBe("day")
   })
   it("a missing count is the old default: 10 for cigarettes, 1 otherwise", () => {
     expect(importOldCost({ unit: "vape", perDay: null, daysPerWeek: 7, price: "10" }, UNITS, null)?.perDay).toBe(1)
