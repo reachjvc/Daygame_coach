@@ -85,7 +85,7 @@ describe("words", () => {
     expect(phaseWords("craving", 100)).toMatch(/Past week 4/)
     expect(phaseWords("craving", 200)).toMatch(/Past month 6/)
     expect(phaseWords("craving", 400)).toMatch(/Past month 12/)
-    expect(phaseWords("hunger", 3)).toMatch(/No day range/)
+    expect(phaseWords("hunger", 3)).toMatch(/can last weeks/)
   })
   it("formats dates and the countdown", () => {
     expect(fmtDay("2026-10-30")).toBe("Fri, Oct 30")
@@ -136,7 +136,7 @@ describe("bands", () => {
 })
 
 describe("what gets better", () => {
-  it("is in time order and has six rows", () => {
-    expect(betterOrder.map((r) => r.when)).toEqual(["Within a day", "From week 1", "First year", "Over a year", "A year on", "Years 1 and 3"])
+  it("is in time order and has seven rows", () => {
+    expect(betterOrder.map((r) => r.when)).toEqual(["Within a day", "From week 1", "Over months", "First year", "Over a year", "A year on", "Years 1 and 3"])
   })
 })

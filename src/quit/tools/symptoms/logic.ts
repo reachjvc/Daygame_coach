@@ -98,11 +98,11 @@ export function isNow(card: CardId, day: number | null): boolean {
 export function phaseWords(card: CardId, day: number): string {
   if (card === "craving") {
     if (day <= 28) return "These are the strongest weeks."
-    if (day <= 182) return "Past week 4, where their strength began to drop in one study. They fade over months."
+    if (day <= 182) return "Past week 4. They fade over months."
     if (day <= 365) return "Past month 6: 13 in 100 of the people still off had strong urges then."
     return "Past month 12: none of the people still off had strong urges; about 34 in 100 had some."
   }
-  if (card === "hunger") return "No day range is known for this one."
+  if (card === "hunger") return "It can last weeks; most of the weight comes in the first 3 months."
   const band = bandFor("nicotine", card === "cue" ? "cue-craving" : card === "sleep" ? "sleep" : "irritable")
   if (!band) return ""
   const p = phaseOf(band, day)
@@ -116,9 +116,9 @@ export function phaseWords(card: CardId, day: number): string {
     case "peak":
       return "Inside the peak week."
     case "after-peak":
-      return card === "sleep" ? "Past the peak week. A review says it can last to day 28." : "Past the peak week. Most people settle from day 10."
+      return card === "sleep" ? "Past the peak week. A review says it can last to day 28." : "Past the peak week. On average, back to normal by day 10 in one study, by week 4 in a review."
     case "in-range":
-      return card === "sleep" ? "Inside the 2 to 4 weeks a review gives." : "Inside the days most people settle: day 10 to week 4."
+      return card === "sleep" ? "Inside the 2 to 4 weeks a review gives." : "Inside the days the studies give: day 10 to week 4."
     default:
       return card === "sleep" ? "Past the 4 weeks the review gives." : "Past the 4 weeks the studies give."
   }

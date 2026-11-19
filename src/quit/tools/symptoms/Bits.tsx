@@ -153,7 +153,7 @@ export function BandView({ id, band, day, caption }: { id: string; band: Band; d
   const tested = band.tested ? span(band.tested[0], band.tested[1]) : null
   return (
     <div className="mt-3" data-testid={`band-${id}`}>
-      <div className="relative h-8 rounded-md bg-muted" role="img" aria-label={t.bandLabel}>
+      <div className="relative h-8 rounded-md bg-muted ring-1 ring-inset ring-border" role="img" aria-label={t.bandLabel}>
         {gone && <div data-testid={`band-gone-${id}`} className="absolute inset-y-1 rounded-sm border border-dashed border-primary bg-primary/40" style={{ left: `${gone.left}%`, width: `${gone.width}%`, ...FADE }} />}
         {peak && <div data-testid={`band-peak-${id}`} className="absolute inset-y-1 rounded-sm bg-primary" style={{ left: `${peak.left}%`, width: `${peak.width}%` }} />}
         {tested && <div data-testid={`band-tested-${id}`} className="absolute inset-y-1 rounded-sm bg-primary/70" style={{ left: `${tested.left}%`, width: `${tested.width}%`, ...HATCH }} />}
@@ -173,7 +173,7 @@ export function BandView({ id, band, day, caption }: { id: string; band: Band; d
 export function CravingLine({ day }: { day: number | null }) {
   return (
     <div className="mt-3" data-testid="timeline-craving">
-      <div className="relative h-8 rounded-md bg-muted" role="img" aria-label={t.cravingLineLabel}>
+      <div className="relative h-8 rounded-md bg-muted ring-1 ring-inset ring-border" role="img" aria-label={t.cravingLineLabel}>
         <div className="absolute inset-y-1 left-0 rounded-l-sm bg-primary" style={{ width: "37.5%" }} />
         <div className="absolute inset-y-1 rounded-none bg-primary/60" style={{ left: "37.5%", width: "25%" }} />
         <div className="absolute inset-y-1 rounded-r-sm bg-primary/30" style={{ left: "62.5%", width: "37.5%" }} />
@@ -181,7 +181,7 @@ export function CravingLine({ day }: { day: number | null }) {
       </div>
       <ol className="mt-1 grid grid-cols-4 gap-1 text-xs">
         {t.cravingMarks.map((m, i) => (
-          <li key={m.at} data-testid={`craving-mark-${i}`} data-reached={day !== null && day >= CRAVING_MARK_DAYS[i]} className="min-w-0 break-words">
+          <li key={m.at} data-testid={`craving-mark-${i}`} data-reached={day !== null && day >= CRAVING_MARK_DAYS[i]} className="min-w-0 break-words text-center">
             <span className="block font-medium">{m.at}</span>
             <span className="text-muted-foreground">{m.line}</span>
           </li>
@@ -191,7 +191,7 @@ export function CravingLine({ day }: { day: number | null }) {
   )
 }
 
-export function Legend() {
+export function Legend({ showDay }: { showDay: boolean }) {
   return (
     <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
       <li className="flex items-center gap-1.5">
@@ -210,10 +210,12 @@ export function Legend() {
         <span aria-hidden className="inline-block h-3 w-5 rounded-sm border border-dashed border-primary bg-primary/20" />
         {t.legendOpen}
       </li>
-      <li className="flex items-center gap-1.5">
-        <span aria-hidden className="inline-block h-4 w-0.5 bg-foreground" />
-        {t.legendDay}
-      </li>
+      {showDay && (
+        <li className="flex items-center gap-1.5">
+          <span aria-hidden className="inline-block h-4 w-0.5 bg-foreground" />
+          {t.legendDay}
+        </li>
+      )}
     </ul>
   )
 }

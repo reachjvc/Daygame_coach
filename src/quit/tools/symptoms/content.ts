@@ -106,26 +106,68 @@ export const REFS = {
     "8665038",
     "In the first year, participants who quit smoking showed improvement in FEV1, whereas continuing smokers showed worsening",
   ),
+  west1987Minority: ref(
+    "West RJ, Hajek P, Belcher M (1987). Time course of cigarette withdrawal symptoms during four weeks of treatment with nicotine chewing gum. Addictive Behaviors 12(2):199-203.",
+    "3630807",
+    "Mean ratings of irritability, depression, hunger, restlessness, and inability to concentrate were significantly higher in the first week of abstinence than at baseline, although only a minority of smokers experienced severe withdrawal symptoms.",
+  ),
+  taylor2021: ref(
+    "Taylor GM et al (2021). Smoking cessation for improving mental health. Cochrane Database of Systematic Reviews 3:CD013522.",
+    "33687070",
+    "anxiety symptoms (SMD -0.28, 95% CI -0.43 to -0.13; 15 studies, 3141 participants; I2 = 69%; low-certainty evidence); depression symptoms: (SMD -0.30, 95% CI -0.39 to -0.21; 34 studies, 7156 participants; I2 = 69%' very low-certainty evidence)",
+  ),
 } as const
+
+/** Card c: most people feel these mildly. */
+export const mildForMost: SourcedLine = {
+  id: "mild",
+  text: "Most feel these mildly: in a smokers clinic, only a minority had severe symptoms in week 1.",
+  evidence: "weak",
+  basis: {
+    who: "Smokers-clinic clients who stayed off 4 weeks, using nicotine gum",
+    n: "52",
+    design: "Weekly ratings of withdrawal symptoms, from before quit day to week 4",
+    where: "UK, the authors' smokers clinic",
+    when: "Published 1987",
+    caveat: "A small study, and everyone used nicotine gum, which can soften withdrawal.",
+  },
+  refs: [REFS.west1987Minority],
+}
+
+/** "What gets better": anxiety and low mood over months (Cochrane). */
+export const moodBetter: SourcedLine = {
+  id: "mood-months",
+  text: "Anxiety and low mood improved more in people who quit than in people who kept smoking.",
+  evidence: "weak",
+  basis: {
+    who: "Adults in studies that followed people who quit smoking and people who kept smoking",
+    n: "15 studies, 3,141 people (anxiety); 34 studies, 7,156 people (low mood)",
+    design: "Cochrane review; mostly the same people followed over time, not trials",
+    where: "Several countries",
+    when: "Published 2021",
+    caveat: "Low certainty for anxiety and very low for low mood: people who quit may differ in other ways. Studies of smokers.",
+  },
+  refs: [REFS.taylor2021],
+}
 
 /** Card a: everyday cravings. The time line marks and the text. */
 export const cravings = {
   title: "Cravings",
   marks: [
     { at: "Week 1", line: "Strongest" },
-    { at: "Week 4", line: "Strength starts to drop" },
+    { at: "Week 4", line: "Fading (slower on gum)" },
     { at: "Month 6", line: "13 in 100 still strong" },
     { at: "Month 12", line: "None strong, 34 in 100 some" },
   ],
-  text: "Strongest in the first weeks. In one small study their strength did not drop until week 4. Then they fade over months: at 6 months, 13 in 100 of the people still off had strong urges; at 12 months none did, and about 34 in 100 still had some.",
+  text: "In 452 people quitting without medicine, urges fell steadily from the start; in 52 people on nicotine gum their strength did not drop until week 4. At 6 months, 13 in 100 of the people still off had strong urges; at 12 months none did, and about 34 in 100 still had some.",
   evidence: "moderate" as Evidence,
   basis: {
     who: "Smokers quitting with support and no medicine (Ussher); smokers-clinic clients on nicotine gum (West)",
     n: "452 started (Ussher); asked while still off at weeks 1, 2, 3, 4, 26 and 52: 197, 156, 139, 131, 66 and 38 people. 52 people over 4 weeks (West).",
-    design: "The same people followed and asked to rate their urges, off cigarettes confirmed by a breath test (Ussher)",
-    where: "London, UK",
+    design: "The same people followed and asked to rate their urges, off cigarettes confirmed by a breath test (Ussher); weekly ratings in a smokers clinic (West)",
+    where: "London, UK (Ussher); UK, the authors' smokers clinic (West)",
     when: "Published 2013 and 1987",
-    caveat: "People who slipped dropped out of the later counts, so the late numbers describe those who stayed off: 66 people at 6 months, 38 at 12 months.",
+    caveat: "People who slipped dropped out of the later counts, so the late numbers describe those who stayed off: 66 people at 6 months, 38 at 12 months. The week-4 finding comes from people using nicotine gum.",
   } satisfies Basis,
   refs: [REFS.ussher2013, REFS.west1987],
 }
@@ -133,15 +175,15 @@ export const cravings = {
 /** Card c: the line that some people's mood did not settle. */
 export const notForEveryone: SourcedLine = {
   id: "gilbert",
-  text: "Not for everyone: in 96 women paid to stay off for 31 days, low mood, tension, anger and irritability had not come back to normal by day 31.",
+  text: "Not for everyone: in a study of 96 women, those paid to stay off for 31 days still had low mood, tension, anger and irritability at day 31, above their own level before quitting and above the women who kept smoking.",
   evidence: "weak",
   basis: {
-    who: "Women who smoked; half were paid to stay off, half kept smoking",
-    n: "96",
+    who: "Women who smoked, split by chance into a group paid to stay off and a group that kept smoking",
+    n: "96 (81 in 100 of those asked to stay off finished the 31 days)",
     design: "Randomised: one group stayed off 31 days (checked by tests), the other kept smoking; mood rated twice a week",
     where: "USA",
     when: "Published 2002",
-    caveat: "Women only, paid to stay off. Compared with people who kept smoking, not with their own mood before.",
+    caveat: "Women only; those who stayed off were paid. Women with past depression had the bigger rise. The physical side of anxiety did settle, by week 2.",
   },
   refs: [REFS.gilbert2002],
 }
@@ -152,10 +194,10 @@ export const reviewCaveat = "The review is one author's reading of 120 earlier s
 /** Card c: help for all five feelings. */
 export const moveForMood: SourcedLine = {
   id: "move",
-  text: "Move: a brisk walk or the stairs. Exercise eased withdrawal symptoms overall in all 12 lab studies that compared it with sitting still.",
+  text: "Move: a brisk walk or the stairs. In all 12 lab studies that compared a bout of exercise with sitting still, it eased cravings, withdrawal symptoms or smoking.",
   evidence: "moderate",
   basis: {
-    who: "Smokers kept off cigarettes for a few hours in lab studies",
+    who: "Smokers kept off cigarettes for a short time for the lab test",
     n: "12 studies",
     design: "Systematic review of lab studies: a bout of exercise against sitting still",
     where: "Several countries",
@@ -168,16 +210,16 @@ export const moveForMood: SourcedLine = {
 /** Cards c and d: caffeine, cigarette smokers only. */
 export const caffeine: SourcedLine = {
   id: "caffeine",
-  text: "If you drank coffee every day while smoking, try about half your usual amount. In 162 smokers who quit and kept their usual caffeine, caffeine levels had doubled by week 3. Cutting it out entirely made people more tired for the first 3 days and did not ease other symptoms.",
+  text: "If you drank coffee every day while smoking, try about half your usual amount. In a trial of 162 coffee-drinking smokers, those who quit and kept their usual caffeine had about double the caffeine in their body by week 3. Cutting it out entirely made people more tired for the first 3 days and did not ease other symptoms.",
   evidence: "weak",
   cigarettesOnly: true,
   basis: {
     who: "Smokers who drank caffeine, in quit programmes of the American Lung Association",
     n: "162",
-    design: "Trial: clinics assigned to keep caffeine or stop it; caffeine measured for 3 weeks after quit day",
+    design: "Trial: clinics assigned to keep caffeine or stop it; caffeine measured in sputum (spit) for 3 weeks after quit day",
     where: "California, USA",
     when: "Published 1997",
-    caveat: "The speed-up comes from the smoke, not the nicotine (pharmacy review, Kroon 2007), so this does not apply if you only vaped or used pouches. \"About half\" is our arithmetic from \"doubled\", not a dose the study tested.",
+    caveat: "A pharmacy review (Kroon 2007) names chemicals in tobacco smoke as what speeds up caffeine; it does not name nicotine. Our reading: this does not apply if you only vaped or used pouches. \"About half\" is our arithmetic from \"doubled\", not a dose the study tested.",
   },
   refs: [REFS.swanson1997, REFS.kroon2007],
 }
@@ -221,7 +263,7 @@ export const hunger = {
 export const hungerHelp: SourcedLine[] = [
   {
     id: "exercise",
-    text: "Move every day. In 3 small trials (182 people), exercise programmes meant about 2 kg less weight gain a year later. Low certainty.",
+    text: "Move every day. In 3 small trials (182 people), exercise programmes meant about 2 kg less weight gain a year later; at the end of the programmes there was little or no difference (4 trials, 404 people).",
     evidence: "weak",
     basis: {
       who: "People quitting smoking, in trials of ways to limit weight gain",
@@ -229,17 +271,17 @@ export const hungerHelp: SourcedLine[] = [
       design: "Cochrane systematic review; exercise programmes against usual care",
       where: "Several countries",
       when: "Published 2021",
-      caveat: "Low certainty. The review found no method with moderate certainty of a useful effect on long-term weight gain.",
+      caveat: "Small trials. The review found no method with moderate certainty of a useful effect on long-term weight gain.",
     },
     refs: [REFS.hartmannBoyce2021],
   },
   {
     id: "no-diet",
-    text: "No diet plan this month. In 2 trials (522 people), detailed weight-loss lessons without personal support did not cut weight gain and went with fewer people staying off.",
+    text: "Skip weight-loss lessons this month. In 2 small trials (61 people), detailed lessons without personal support did not cut weight gain, and in the same 2 trials (522 people) fewer may have stayed off. Low to very low certainty.",
     evidence: "weak",
     basis: {
       who: "People quitting smoking",
-      n: "2 trials, 522 people",
+      n: "2 trials: 61 people for weight, 522 for staying off",
       design: "Cochrane systematic review; weight-management lessons against none",
       where: "Several countries",
       when: "Published 2021",
@@ -251,12 +293,13 @@ export const hungerHelp: SourcedLine[] = [
 
 /** Under the cards: less-studied effects. */
 export const alsoPossible = {
-  text: "Also possible, less studied: constipation, cough, dizziness, more dreams, mouth ulcers.",
+  text: "Also possible, less studied (one author's judgement in a review): constipation, cough, dizziness, more dreams, mouth ulcers.",
   refs: [REFS.hughes2007Maybe],
 }
 
 /** "What gets better, and when": rows that are not already numbers in the data file. */
 export const better: SourcedLine[] = [
+  moodBetter,
   {
     id: "co",
     text: "Carbon monoxide in your breath halves about every 4.5 hours after the last cigarette.",
@@ -278,10 +321,10 @@ export const better: SourcedLine[] = [
     evidence: "moderate",
     cigarettesOnly: true,
     basis: {
-      who: "Smokers aged 35 to 60 with early lung disease (mild airway narrowing)",
+      who: "Smokers with early lung disease (mild to moderate airway narrowing); aged 35 to 60 in the Lung Health Study",
       n: "5,733",
       design: "Large trial (Lung Health Study); the same people followed for 5 years",
-      where: "USA and Canada",
+      where: "USA and Canada (Lung Health Study centres)",
       when: "Published 1996",
       caveat: "Smokers with early lung disease, not everyone. How big the gain was is not in the summary we quote.",
     },
@@ -293,6 +336,7 @@ export const better: SourcedLine[] = [
 export const betterOrder: { when: string; line?: string; better?: string; number?: string; belief?: string }[] = [
   { when: "Within a day", better: "co" },
   { when: "From week 1", number: "after-first-month" },
+  { when: "Over months", better: "mood-months" },
   { when: "First year", better: "lungs" },
   { when: "Over a year", belief: "b3" },
   { when: "A year on", number: "after-body:15610111" },
