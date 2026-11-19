@@ -231,6 +231,17 @@ jobs:
           restore-keys: |
             next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
 
+      # The system libraries' .deb files, kept between runs. The runner image's
+      # apt mirror downloaded WebKit's 126 MB at 181 kB/s (E2E 44516699059: 11 min
+      # 39 s in one job, more than 20 min in others), and the nightly lanes must
+      # finish in 15 minutes. Only a job whose browser will not start without
+      # them (WebKit, Firefox) fills this; Chromium never does.
+      - name: Cache the browser's system libraries
+        uses: actions/cache@v4
+        with:
+          path: ~/apt-debs
+          key: apt-debs-${{ runner.os }}-${{ steps.pw.outputs.version }}-${{ matrix.browser }}
+
       - name: Install Playwright browsers
         run: |
           npx playwright install ${{ matrix.browser }}
@@ -239,7 +250,13 @@ jobs:
           # Chromium's 10 minutes on three jobs). The runner image already has
           # what Chromium needs, so install them only when the browser will not
           # start without them.
-          node -e "require('@playwright/test')['${{ matrix.browser }}'].launch().then((b) => b.close())" || npx playwright install-deps ${{ matrix.browser }}
+          if ! node -e "require('@playwright/test')['${{ matrix.browser }}'].launch().then((b) => b.close())"; then
+            mkdir -p ~/apt-debs
+            sudo cp ~/apt-debs/*.deb /var/cache/apt/archives/ 2>/dev/null || true
+            npx playwright install-deps ${{ matrix.browser }}
+            sudo cp /var/cache/apt/archives/*.deb ~/apt-debs/ 2>/dev/null || true
+            sudo chown -R "$USER" ~/apt-debs
+          fi
 
       - uses: supabase/setup-cli@v1
         with:

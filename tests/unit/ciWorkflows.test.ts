@@ -236,7 +236,11 @@ describe("which phone and how many workers (Plans/tests-green-and-fast.md, Phase
     // install is a fallback; but a browser that cannot start must never be run.
     for (const job of browserJobs) {
       const steps = /steps: \*lane-steps/.test(e2eJobs[job] ?? "") ? e2eJobs["lanes"] : (e2eJobs[job] ?? "")
-      expect(steps, `${job}: no launch check with an install-deps fallback`).toMatch(/\.launch\(\)[^\n]*\|\| npx playwright install-deps /)
+      // Either `launch(...) || install-deps`, or `if ! launch(...); then ... install-deps` (the lanes, which
+      // restore and save the downloaded .deb files around it).
+      expect(steps, `${job}: no launch check with an install-deps fallback`).toMatch(
+        /\.launch\(\)[^\n]*\|\| npx playwright install-deps |if ! node -e [^\n]*\.launch\(\)[^\n]*; then\n(?:[^\n]*\n)*?\s*npx playwright install-deps /,
+      )
     }
   })
 
