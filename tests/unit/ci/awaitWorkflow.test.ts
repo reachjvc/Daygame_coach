@@ -127,6 +127,47 @@ describe("awaitWorkflow", () => {
     expect(c.now()).toBeLessThanOrEqual(45 * 60_000)
   })
 
+  it("a run still queued at the timeout ends neutral (unfinished), not red, when the caller asks", async () => {
+    let unfinished = false
+    const lines: string[] = []
+    const ok = await awaitWorkflow({
+      getRuns: async () => [run({ status: "pending", conclusion: null })],
+      onUnfinished: () => void (unfinished = true),
+      want,
+      timeoutMs: 45 * 60_000,
+      pollMs: 30_000,
+      ...clock(),
+      log: (l: string) => void lines.push(l),
+    })
+    expect(ok).toBe(true)
+    expect(unfinished).toBe(true)
+    expect(lines.join("\n")).toMatch(/not failed/)
+  })
+
+  it("unfinished never covers a red run, a run that never appeared, or a broken API", async () => {
+    for (const getRuns of [
+      async () => [run({ conclusion: "failure" })],
+      async () => [run({ conclusion: "timed_out" })],
+      async () => [],
+      async () => {
+        throw new Error("502")
+      },
+    ]) {
+      let unfinished = false
+      const ok = await awaitWorkflow({
+        getRuns,
+        onUnfinished: () => void (unfinished = true),
+        want,
+        timeoutMs: 45 * 60_000,
+        pollMs: 30_000,
+        ...clock(),
+        log: quiet,
+      })
+      expect(ok).toBe(false)
+      expect(unfinished).toBe(false)
+    }
+  })
+
   it("fails after three API errors in a row rather than reading them as a pass", async () => {
     let calls = 0
     const ok = await awaitWorkflow({

@@ -29,6 +29,14 @@
  * says so, and tells the next step not to publish (`superseded=true` in
  * GITHUB_OUTPUT). A cancellation while this commit is still main's tip, or
  * when main's tip cannot be read, still fails. Every other non-success fails.
+ *
+ * SECOND EXCEPTION: UNFINISHED. All main runs of e2e.yml share one concurrency
+ * group, so a run can wait in the queue behind another one for longer than
+ * the timeout (the last five main CI runs were red only for that). A run that
+ * is queued or still running at the timeout has not failed: the job ends
+ * successfully, says so, writes `unfinished=true` and publishes nothing. A
+ * red run, no run at all, and API errors still fail. The invariant stays:
+ * only a green e2e.yml on this commit publishes.
  */
 
 import { appendFileSync } from "node:fs"
@@ -89,6 +97,7 @@ async function fetchRuns({ repository, sha, token }) {
  * @param {object} o
  * @param {() => Promise<Array<object>>} o.getRuns
  * @param {() => Promise<string>} [o.getTip] the branch's current commit; without it a cancellation always fails
+ * @param {() => void} [o.onUnfinished] called when the run exists and has neither passed nor failed at the timeout (queued behind another main run); without it that is a failure
  * @param {() => void} [o.onSuperseded] called when the run was cancelled because the branch moved on
  * @param {{ sha: string, path: string }} o.want
  * @param {number} o.timeoutMs
@@ -98,7 +107,7 @@ async function fetchRuns({ repository, sha, token }) {
  * @param {(line: string) => void} o.log
  * @returns {Promise<boolean>}
  */
-export async function awaitWorkflow({ getRuns, getTip, onSuperseded, want, timeoutMs, pollMs, sleep, now, log }) {
+export async function awaitWorkflow({ getRuns, getTip, onSuperseded, onUnfinished, want, timeoutMs, pollMs, sleep, now, log }) {
   const deadline = now() + timeoutMs
   let apiFailures = 0
   let last = ""
@@ -111,7 +120,7 @@ export async function awaitWorkflow({ getRuns, getTip, onSuperseded, want, timeo
       apiFailures += 1
       log(`could not ask GitHub (${error.message}); attempt ${apiFailures} of 3`)
       if (apiFailures >= 3) return false
-      verdict = { state: "wait", detail: "retrying" }
+      verdict = { state: "retry", detail: "retrying" }
     }
     if (verdict.detail !== last) log(verdict.detail)
     last = verdict.detail
@@ -132,6 +141,11 @@ export async function awaitWorkflow({ getRuns, getTip, onSuperseded, want, timeo
       return false
     }
     if (now() + pollMs > deadline) {
+      if (verdict.state === "wait" && onUnfinished) {
+        log(`${verdict.detail}; still not finished after ${Math.round(timeoutMs / 60000)} minutes. It is queued or running, not failed: this job ends without publishing for ${want.sha}`)
+        onUnfinished()
+        return true
+      }
       log(`gave up after ${Math.round(timeoutMs / 60000)} minutes: ${verdict.detail}`)
       return false
     }
@@ -152,6 +166,10 @@ async function main() {
     onSuperseded: () => {
       // Tells the steps after this one (ci.yml's image-staging) not to publish.
       if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, "superseded=true\n")
+    },
+    onUnfinished: () => {
+      // Same: the browser tests have not answered, so nothing is published.
+      if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, "unfinished=true\n")
     },
     want: { sha, path, branch },
     timeoutMs: Number(process.env.TIMEOUT_MINUTES || 45) * 60_000,

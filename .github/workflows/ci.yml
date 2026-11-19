@@ -211,7 +211,9 @@ jobs:
       # e2e.yml cancels a main run that is still pending when a newer main push
       # arrives. If this commit's run ended that way and main has moved on, the
       # commit was superseded, not rejected: this step succeeds, says so, and
-      # sets `superseded=true` so nothing is published for it.
+      # sets `superseded=true` so nothing is published for it. A run still
+      # queued (all main runs share one group) or running at the timeout has
+      # not failed either: `unfinished=true`, nothing published, job green.
       - name: Wait for the browser tests on this commit
         id: wait
         run: node scripts/ci/await-workflow.mjs
@@ -219,7 +221,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build, prove and publish the staging image
-        if: ${{ steps.wait.outputs.superseded != 'true' }}
+        if: ${{ steps.wait.outputs.superseded != 'true' && steps.wait.outputs.unfinished != 'true' }}
         uses: ./.github/actions/publish-image
         with:
           package: daygame-coach-staging

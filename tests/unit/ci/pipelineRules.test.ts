@@ -229,6 +229,14 @@ describe("the staging image job", () => {
     expect(String(build.if)).toContain("steps.wait.outputs.superseded != 'true'")
   })
 
+  it("does not publish, and does not turn main red, for a browser run still queued at the timeout", () => {
+    const steps = job.steps ?? []
+    const build = steps.find((st) => st.uses === "./.github/actions/publish-image")!
+    expect(String(build.if)).toContain("steps.wait.outputs.unfinished != 'true'")
+    // the publish still needs the other conditions
+    expect(String(build.if)).toContain("steps.wait.outputs.superseded != 'true'")
+  })
+
   it("never creates the package itself: from this public repository it would come out public", () => {
     const privacy = publish.runs.steps.find((st) => st.name === "The package is private")!
     expect(privacy.run).not.toMatch(/docker push/)
