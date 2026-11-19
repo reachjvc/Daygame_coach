@@ -430,4 +430,20 @@ describe("when CI runs at all", () => {
       )
     }
   })
+
+  test("a dispatch can name tests and repeat them, and a normal run is unchanged", () => {
+    // Phase 5 of tests-catch-what-matters: prove a flaky spec fixed with repeat_each=10.
+    expect(e2e).toMatch(/workflow_dispatch:\n(?: *\n)* {4}inputs:\n {6}grep:[^\n]*\n(?: {8}[^\n]*\n)* {6}repeat_each:/)
+    expect(e2e).toMatch(/repeat_each:\n(?: {8}[^\n]*\n)*? {8}type: number\n {8}default: 1/)
+    for (const job of ["e2e-fast", "lanes"]) {
+      const body = e2eJobs[job] ?? ""
+      const run = body.match(/run: (npx playwright test [^\n]*)\n/)?.[1] ?? ""
+      // Empty grep adds no flag, so a push run is the run it always was; --repeat-each=1 is Playwright's default.
+      expect(run, `${job}: grep not passed`).toContain('${PW_GREP:+--grep "$PW_GREP" --pass-with-no-tests}')
+      expect(run, `${job}: repeat_each not passed`).toContain('--repeat-each="${PW_REPEAT_EACH:-1}"')
+      expect(body, `${job}: inputs reach the shell through env, not the command text`).toContain("PW_GREP: ${{ inputs.grep }}")
+      expect(body).toContain("PW_REPEAT_EACH: ${{ inputs.repeat_each }}")
+      expect(run, `${job}: an input is pasted into the command`).not.toContain("inputs.")
+    }
+  })
 })
