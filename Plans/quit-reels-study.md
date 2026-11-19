@@ -1,6 +1,6 @@
 # Quit reels study: what worked for 25 quit accounts, and what we can remake
 
-Written 2026-11-19. Status: **Phase 1 running; Phase 2 waits for his Instagram login.**
+Written 2026-11-19. Status (2026-11-19): **Phase 1 done** (follow page https://claude.ai/artifact/9qxAP3PUfFQUbSfh1DUD91). **YouTube side of Phases 2–4 done**: 240 Shorts from 16 channels that hit at least 3x, grouped into patterns. The remake board is https://claude.ai/artifact/Eb5B32Vh2EBvpC7uqbxWKE (notes, likes). **Instagram side waits for his login.**
 Feeds the next reels in `docs/product/content_creation.md`.
 
 ## In plain words
@@ -27,11 +27,19 @@ Commenting under the 25 accounts is optional and low priority. The best use is a
 mid-size account's fresh post (10k to 200k followers, under about 50 comments). There it is seen, and
 it can bring a few profile visits. This only pays once his own profile has reels on it.
 
+## Found on 2026-11-19
+
+- Instagram quit space is mostly alcohol. There are no big men's quit-nicotine or weed creators on Instagram, TikTok or YouTube. The biggest quit channels have 100k to 500k followers, and their typical Short gets 1k to 14k views. So the study spans all addictions.
+- YouTube Shorts can be read logged out with view counts (yt-dlp). TikTok gives only 9 to 13 videos per creator, too few for the outlier method.
+- Belief posts were the most common hit: 28 Shorts on 7 channels. A specific, surprising belief won (240x and 97x). Generic "myths" posts got 3x to 5x. Nobody ran a numbered series.
+- Brand channels (EX Program, Ripple, Jones, Killthecan) show 50x to 3000x jumps, which are probably paid. They are flagged, and those above 100x are kept out of the ranking.
+
 ## BLOCKERS
 
 | ID | What | Attempted, and what it returned | Blocks | Recommendation |
 |---|---|---|---|---|
 | B1 | Logged out, Instagram shows only followers and about 12 captions: no views, no dates | 2026-11-18 probe (find-the-men agent B); `ig-read.mjs whoami` on 2026-11-19 returned `logged_in: false` | Phase 2 | He logs in at http://localhost:7801 (read-only browser, started 2026-11-19, task `iglogin` on his daily page) |
+| B3 | Instagram stopped answering this PC's logged-out reads after about 45 profiles (2026-11-19) | Retried for about 25 minutes by the Phase 1 agent; WebFetch also hit the login wall | Follower checks | Check counts through the logged-in reader (`ig-read.mjs reels <handle>`, added 2026-11-19) |
 | B2 | Graphics card nearly full (7.9 of 8.2 GB used, 2026-11-19 at the time of the check) | `nvidia-smi` | Phase 3 transcription | Run speech-to-text on the CPU, or wait until the card is free; gpu_guard rule applies |
 
 ## OPEN QUESTIONS
