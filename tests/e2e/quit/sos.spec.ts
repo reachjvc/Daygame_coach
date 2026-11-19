@@ -14,12 +14,14 @@ import { test, expect, SIGNED_OUT } from "../fixtures/test"
 import { quitUrl } from "../helpers/quit"
 import nicotineJson from "../../../src/quit/data/nicotine.json"
 import tooltextJson from "../../../src/quit/data/tooltext.json"
+import liveToolsJson from "../../../src/quit/data/liveTools.json"
 
 const data = nicotineJson as unknown as {
   riskyMoments: { id: string; label: string }[]
   momentSwaps: { momentId: string; cards: string[] }[]
 }
 const tt = tooltextJson as unknown as { blackbox: { undone: string; keepRecord: string } }
+const liveTools = liveToolsJson as string[]
 const URL = quitUrl("/quit/nicotine/sos")
 const TILES = ["voice", "breathe", "move", "bubbles", "blocks", "help", "reasons"] as const
 const DAY0 = "2026-11-18"
@@ -273,7 +275,9 @@ test.describe("craving now, signed out", () => {
       await page.getByTestId("finish").click()
       await page.getByTestId("ask-yes").click()
       await expect(page.getByTestId("result-yes")).toBeVisible()
-      await expect(page.getByTestId("slip-step")).toContainText("steps 1")
+      // once `slip` is live the screen links to it; until then it names the steps
+      if (liveTools.includes("slip")) await expect(page.getByTestId("slip-link")).toHaveAttribute("href", /\/quit\/nicotine\/slip/)
+      else await expect(page.getByTestId("slip-step")).toContainText("steps 1")
       await expect(page.getByTestId("sos-saved")).toBeVisible()
       await shot(page, "7-result-yes")
       const live = () =>
