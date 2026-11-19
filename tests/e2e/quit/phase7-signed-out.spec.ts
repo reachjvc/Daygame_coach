@@ -139,8 +139,8 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
     await rateAll(page, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
     const link = page.getByTestId("band-free-link")
     await expect(link).toHaveText(t.beliefs.bandFreeLink)
-    // the site sends a signed-out reader to log in first, then on to the plan
-    await expect(link).toHaveAttribute("href", "/plan")
+    // the quit date tool needs no sign-in; the preview flag travels with the link
+    await expect(link).toHaveAttribute("href", "/quit/nicotine/date?preview=1")
   })
 
   test("A12 two tabs on beliefs do not wipe each other's answers", async ({ browser }) => {

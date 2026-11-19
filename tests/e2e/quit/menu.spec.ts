@@ -10,6 +10,7 @@ import { test, expect, SIGNED_OUT } from "../fixtures/test"
 import { quitUrl, NICOTINE_HIDDEN_WITHOUT_PREVIEW } from "../helpers/quit"
 import type { Page } from "@playwright/test"
 import { QUIT_TOOL_IDS } from "../../../src/quit/types"
+import { finishedToolIds, isFinished } from "../../../src/quit/menu"
 
 test.use({ storageState: SIGNED_OUT, viewport: { width: 390, height: 844 } })
 
@@ -34,10 +35,13 @@ for (const colorScheme of ["dark", "light"] as const) {
       expect(res?.status()).toBe(200)
       await expect(page.getByRole("heading", { level: 1, name: "Quit nicotine" })).toBeVisible()
       await expect(page.getByRole("combobox", { name: "Quit what?" })).toBeVisible()
-      await expect(page.getByRole("link", { name: /New here\?/ })).toBeVisible()
+      // the hint points at the 12 lies test: it shows only once that tool is in finished.json
+      await expect(page.getByRole("link", { name: /New here\?/ })).toHaveCount(isFinished("beliefs") ? 1 : 0)
       await expect(page.getByRole("heading", { level: 2 })).toHaveCount(5)
       await expect(page.locator('[data-testid^="row-"]')).toHaveCount(QUIT_TOOL_IDS.length)
-      await expect(page.getByText("Free account").first()).toBeVisible()
+      // the account pill shows on finished rows only; a Soon row shows "Soon" instead
+      if (finishedToolIds().length === 0) await expect(page.getByText("Free account")).toHaveCount(0)
+      else await expect(page.getByText("Free account").first()).toBeVisible()
       const body = (await page.locator("body").innerText()).toLowerCase()
       expect(body).not.toContain("no account")
       expect(body).not.toContain("start here")
@@ -65,6 +69,11 @@ for (const colorScheme of ["dark", "light"] as const) {
       await page.goto(quitUrl("/quit/nicotine"))
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
       const bar = page.getByTestId("sos-bar")
+      if (!isFinished("sos")) {
+        // not finished: the bar and the footer link to it are not drawn at all
+        await expect(bar).toHaveCount(0)
+        return
+      }
       await expect(bar).toBeVisible()
       const last = await page.locator('[data-testid^="row-"]').last().boundingBox()
       const barBox = await bar.boundingBox()

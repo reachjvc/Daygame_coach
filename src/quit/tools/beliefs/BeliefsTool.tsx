@@ -1,12 +1,11 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ROUTES } from "@/src/shared/routes"
 import Link from "next/link"
 import { ClearAnswers, CountedLine, OneQuestion, PrimaryButton, SourceTap, SourcesFold } from "../../components/kit"
 import { fill, tooltext as t } from "../../tooltext"
 import type { QuitBand, QuitBelief, QuitFact, QuitNeed, ToolProps } from "../../types"
-import { realRefs, uniqueRefs, usable } from "../common"
+import { isFreePlanLink, realRefs, uniqueRefs, usable } from "../common"
 import { useCarry, useDoneCount, useScreens, useStartCount, useToolState } from "../hooks"
 import { NotReady } from "../NotReady"
 import { bandFor, EMPTY_BELIEFS, firstUnanswered, heldCount, parseBeliefs, seeThrough, shareUrl, topBeliefs, type BeliefsState } from "./logic"
@@ -269,11 +268,11 @@ function Result({ addiction, name, state, beliefs, bands, needs, onClear }: Resu
   )
 }
 
-/** The band's way on. The free plan link goes to /plan for everyone; the site sends a signed-out reader to log in first. */
+/** The band's way on. The free plan link opens the quit date tool, which needs no sign-in. */
 function BandLink({ link, carryTo }: { link: string; carryTo: (path: string) => string }) {
-  if (link === ROUTES.plan) {
+  if (isFreePlanLink(link)) {
     return (
-      <Link href={ROUTES.plan} data-testid="band-free-link" className="mt-2 inline-flex min-h-11 items-center text-primary underline">
+      <Link href={carryTo(link)} data-testid="band-free-link" className="mt-2 inline-flex min-h-11 items-center text-primary underline">
         {t.beliefs.bandFreeLink}
       </Link>
     )

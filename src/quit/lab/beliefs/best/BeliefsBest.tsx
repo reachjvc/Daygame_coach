@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { ROUTES } from "@/src/shared/routes"
 import { getAddiction } from "../../../data"
 import { CountedLine, PrimaryButton, SourceTap } from "../../../components/kit"
 import { fill, tooltext as tt } from "../../../tooltext"
-import { localDate, realRefs, usable } from "../../../tools/common"
+import { isFreePlanLink, localDate, realRefs, usable } from "../../../tools/common"
 import { useCarry } from "../../../tools/hooks"
 import type { QuitAddictionId, QuitBand, QuitBelief, QuitNeed } from "../../../types"
 import type { LabProps } from "../../registry"
@@ -379,7 +378,7 @@ function TopCard({ b, id, needs, carry }: { b: QuitBelief; id: QuitAddictionId; 
 }
 
 function BandLink({ link, carry }: { link: string; carry: (path: string) => string }) {
-  const free = link === ROUTES.plan
+  const free = isFreePlanLink(link)
   return (
     <Link href={link.startsWith("/quit") ? carry(link) : link} className="mt-1 inline-flex min-h-11 items-center text-primary underline">
       {free ? tt.beliefs.bandFreeLink : tt.beliefs.bandLink}

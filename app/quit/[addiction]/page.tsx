@@ -40,11 +40,13 @@ export default async function QuitMenuPage({
       <div className="mt-3">
         <AddictionSwitcher current={addiction} label={frame.switcherLabel} options={options} suffix={q} />
       </div>
-      <p className="mt-4">
-        <Link href={`/quit/${addiction}/${menu.newHere.tool}${q}`} className="flex min-h-11 items-center text-primary underline">
-          {menu.newHere.text}
-        </Link>
-      </p>
+      {isFinished(menu.newHere.tool) && (
+        <p className="mt-4">
+          <Link href={`/quit/${addiction}/${menu.newHere.tool}${q}`} className="flex min-h-11 items-center text-primary underline">
+            {menu.newHere.text}
+          </Link>
+        </p>
+      )}
 
       {menu.groups.map((group) => (
         <section key={group.id} className="mt-6" aria-labelledby={`g-${group.id}`}>
@@ -99,15 +101,17 @@ export default async function QuitMenuPage({
         </section>
       ))}
 
-      <div className="sticky bottom-0 -mx-4 mt-6 border-t border-border bg-background px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
-        <Link
-          href={`/quit/${addiction}/sos${q}`}
-          data-testid="sos-bar"
-          className="flex min-h-12 items-center justify-center rounded-lg bg-primary px-4 text-base font-semibold text-primary-foreground"
-        >
-          {menu.sosBar}
-        </Link>
-      </div>
+      {isFinished("sos") && (
+        <div className="sticky bottom-0 -mx-4 mt-6 border-t border-border bg-background px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
+          <Link
+            href={`/quit/${addiction}/sos${q}`}
+            data-testid="sos-bar"
+            className="flex min-h-12 items-center justify-center rounded-lg bg-primary px-4 text-base font-semibold text-primary-foreground"
+          >
+            {menu.sosBar}
+          </Link>
+        </div>
+      )}
     </div>
   )
 }
