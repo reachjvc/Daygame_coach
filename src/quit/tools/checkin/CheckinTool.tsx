@@ -18,14 +18,18 @@ import type { ToolProps } from "../../types"
 import { useCarry, useDoneCount, useStartCount, useToolState } from "../hooks"
 import {
   EMPTY_CHECKIN,
+  firstMonth,
   PLEDGE_MAX,
   NOTE_MAX,
   canFill,
   dayLabel,
   hasOutcome,
   lookBack,
+  MODES,
   mergeSlips,
   monthCounts,
+  noSlipCase,
+  putDay,
   monthName,
   monthOf,
   parseCheckin,
@@ -41,7 +45,7 @@ import {
   type FlowKind,
   type Reminders,
 } from "./logic"
-import { checkinText as t, FEELINGS, SCALE, pastPhrase } from "./text"
+import { checkinText as t, FEELINGS, SCALE, URGE_SCALE, pastPhrase } from "./text"
 import { Card, DaySummary, MonthView, PatternView, RemindersView, TAB_IDS, TabRow, type TabId } from "./Views"
 
 /** Daily check-in: a morning pledge and forecast, an evening result, his month, a forecast pattern, reminders. Nicotine only. */
@@ -85,12 +89,10 @@ function answersOf(kind: FlowKind, d: Day | undefined): Day {
   return kind === "morning" ? { pledge: d.pledge, forecast: d.forecast } : { hard: d.hard, urges: d.urges, feelings: d.feelings, note: d.note }
 }
 
-const clean = (d: Day): Day => Object.fromEntries(Object.entries(d).filter(([, v]) => v !== undefined && !(Array.isArray(v) && v.length === 0) && !(typeof v === "string" && v.trim() === ""))) as Day
-
 type View =
   | { kind: "tab"; tab: TabId }
-  | { kind: "flow"; flow: FlowKind; date: string; step: number }
-  | { kind: "done"; date: string }
+  | { kind: "flow"; flow: FlowKind; date: string; step: number; month: boolean }
+  | { kind: "done"; date: string; month: boolean }
 
 interface Want {
   date: string
@@ -146,7 +148,12 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
   }, [key, ready])
 
   const go = (params: Record<string, string>) => window.history.pushState(null, "", hrefFor(params))
-  const swap = (params: Record<string, string>) => window.history.replaceState(null, "", hrefFor(params))
+  const swap = (params: Record<string, string>) => {
+    const href = hrefFor(params)
+    const tr = trail.current
+    if (tr) tr.stack[tr.idx] = href.split("?")[1] ?? ""
+    window.history.replaceState(null, "", href)
+  }
   /** Back: a step back in history when the previous entry is the wanted screen (or any, with `any`), else a rewrite of this one. */
   const back = (params: Record<string, string>, any = false) => {
     const tr = trail.current
@@ -170,16 +177,32 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
       const total = STEPS[flow].length
       const raw = Number(sp.get("s"))
       const step = Number.isInteger(raw) && raw >= 1 && raw <= total ? raw : (state?.draft?.kind === flow && state.draft.date === d ? state.draft.step : 1)
-      return { kind: "flow", flow, date: d, step }
+      return { kind: "flow", flow, date: d, step, month: sp.get("f") === "month" }
     }
-    if (ex === null && done !== null && isIsoDay(done)) return { kind: "done", date: done }
+    if (ex === null && done !== null && isIsoDay(done)) return { kind: "done", date: done, month: sp.get("f") === "month" }
     return { kind: "tab", tab: TAB_IDS.includes(tab as TabId) ? (tab as TabId) : "today" }
   })()
   useDoneCount(addiction, "checkin", view.kind === "done")
 
   const slips = slipDays(bb?.reports ?? [])
   const stored = state?.days ?? {}
+  /** What the calendar shows: Black Box slips count as slipped days. */
   const days: Days = ex ? ex.days : mergeSlips(stored, slips)
+  /** What is counted: only his own check-in answers (a slip that is only in the Black Box is not a check-in). */
+  const own: Days = ex ? ex.days : stored
+  const mParam = sp.get("m")
+  const monthNow = monthOf(today)
+  const monthYm = mParam && /^\d{4}-(0[1-9]|1[0-2])$/.test(mParam) && mParam <= monthNow && mParam >= firstMonth(own, today) ? mParam : monthNow
+  const dayParam = sp.get("day")
+  const monthDay = dayParam && isIsoDay(dayParam) ? dayParam : null
+  const modeParam = MODES.indexOf((sp.get("mode") ?? "") as (typeof MODES)[number])
+  const monthMode = modeParam >= 0 ? modeParam : 0
+  const monthParams = (patch: { m?: string; mode?: number; day?: string | null }): Record<string, string> => {
+    const m = patch.m ?? monthYm
+    const mode = patch.mode ?? monthMode
+    const day = patch.day === undefined ? monthDay : patch.day
+    return { tab: "month", ...(m !== monthNow ? { m } : {}), ...(mode !== 0 ? { mode: MODES[mode] } : {}), ...(day ? { day } : {}) }
+  }
   const verb = useVerb(rec.record.unit)
   const past = pastPhrase(verb)
 
@@ -192,7 +215,7 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
     // The Black Box would move a slip before the run's start or before its latest report: here that is "no run that day".
     const latest = run ? bb.reports.filter((r) => r.attemptId === run.id).reduce((m, r) => (r.at.slice(0, 10) > m ? r.at.slice(0, 10) : m), run.startedOn) : ""
     const id = run && date >= latest ? bb.fileSlip({ at, thought: "", ending: endingForBelief(null, []) }) : null
-    if (id) update((s) => ({ ...s, days: { ...s.days, [date]: { ...s.days[date], slipped: true, slipReportId: id } } }))
+    if (id) update((s) => ({ ...s, days: putDay(s.days, date, { ...s.days[date], slipped: true, slipReportId: id }) }))
   }, [want, bb, state, update])
 
   if (!state || !rec.ready) return null
@@ -206,7 +229,7 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
       if (day?.slipped === true && (day.slipReportId ? inBox(day.slipReportId) : filing.current.has(date))) return
       filing.current.add(date)
       setBlocked(null)
-      update((s) => ({ ...s, days: { ...s.days, [date]: { ...s.days[date], slipped: true, slipReportId: undefined } } }))
+      update((s) => ({ ...s, days: putDay(s.days, date, { ...s.days[date], slipped: true, slipReportId: undefined }) }))
       setWant({ date, at: reportAt(date, today, nowInBrowser()) })
       return
     }
@@ -217,7 +240,7 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
     filing.current.delete(date)
     setBlocked(null)
     setWant((w) => (w?.date === date ? null : w))
-    update((s) => ({ ...s, days: { ...s.days, [date]: { ...s.days[date], slipped: false, slipReportId: undefined } } }))
+    update((s) => ({ ...s, days: putDay(s.days, date, { ...s.days[date], slipped: false, slipReportId: undefined }) }))
   }
   const undoSlip = (date: string) => {
     const id = state.days[date]?.slipReportId
@@ -228,45 +251,67 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
     }
     filing.current.delete(date)
     setBlocked(null)
-    update((s) => ({ ...s, days: { ...s.days, [date]: { ...s.days[date], slipped: undefined, slipReportId: undefined } } }))
+    update((s) => ({ ...s, days: putDay(s.days, date, { ...s.days[date], slipped: undefined, slipReportId: undefined }) }))
   }
 
   /* ----- flows ----- */
   const draftFor = (s: CheckinState, kind: FlowKind, date: string): Draft =>
     s.draft?.kind === kind && s.draft.date === date ? s.draft : { kind, date, step: 1, answers: answersOf(kind, s.days[date]) }
-  const startFlow = (kind: FlowKind, date: string) =>
+  const flowParams = (kind: FlowKind, date: string, step: number, month: boolean): Record<string, string> => ({ flow: kind, d: date, s: String(step), ...(month ? { f: "month" } : {}) })
+  const startFlow = (kind: FlowKind, date: string, month = false) =>
     move(() => {
       started()
       const step = state.draft?.kind === kind && state.draft.date === date ? state.draft.step : 1
       update((s) => ({ ...s, draft: draftFor(s, kind, date) }))
-      go({ flow: kind, d: date, s: String(step) })
+      go(flowParams(kind, date, step, month))
     })
   const setAnswer = (kind: FlowKind, date: string, step: number, patch: Day) =>
     update((s) => {
       const d = draftFor(s, kind, date)
       return { ...s, draft: { ...d, step, answers: { ...d.answers, ...patch } } }
     })
-  const toStep = (kind: FlowKind, date: string, n: number) =>
+  const toStep = (kind: FlowKind, date: string, n: number, month: boolean) =>
     move(() => {
       update((s) => ({ ...s, draft: { ...draftFor(s, kind, date), step: n } }))
-      go({ flow: kind, d: date, s: String(n) })
+      go(flowParams(kind, date, n, month))
     })
-  const finish = (kind: FlowKind, date: string) =>
+  /** Saves, then shows the done screen so that browser Back leaves the flow: this visit's flow entries are walked back first. */
+  const finish = (kind: FlowKind, date: string, month: boolean) =>
     move(() => {
       update((s) => {
         const a = draftFor(s, kind, date).answers
         const prev = s.days[date] ?? {}
-        const next = clean(kind === "morning" ? { ...prev, pledge: a.pledge?.trim() || undefined, forecast: a.forecast } : { ...prev, hard: a.hard, urges: a.urges, feelings: a.feelings, note: a.note?.trim() || undefined })
-        return { ...s, days: { ...s.days, [date]: next }, draft: null }
+        const next = kind === "morning" ? { ...prev, pledge: a.pledge?.trim() || undefined, forecast: a.forecast } : { ...prev, hard: a.hard, urges: a.urges, feelings: a.feelings, note: a.note?.trim() || undefined }
+        return { ...s, days: putDay(s.days, date, next), draft: null }
       })
-      swap({ done: date })
+      const doneParams = { done: date, ...(month ? { f: "month" } : {}) }
+      const tr = trail.current
+      let n = 0
+      if (tr) while (tr.idx - n >= 0 && tr.stack[tr.idx - n].includes("flow=")) n++
+      if (n > 1) {
+        window.addEventListener("popstate", () => swap(doneParams), { once: true })
+        window.history.go(-(n - 1))
+      } else swap(doneParams)
     })
 
   const slipLive = isLiveTool("slip")
   const thatOf = (date: string) => date !== today
 
+  const outlineLink = "inline-flex min-h-12 items-center justify-center rounded-md border border-primary px-4 font-medium text-primary"
+  const slipNext = (
+    <>
+      {slipLive ? (
+        <Link href={carry(`/quit/${addiction}/slip`)} data-testid="slip-link" className={outlineLink}>
+          {tt.sos.slipLink}
+        </Link>
+      ) : (
+        <p data-testid="slip-step">{tt.sos.yesStep}</p>
+      )}
+    </>
+  )
+
   /* ----- one flow screen ----- */
-  function renderFlow(kind: FlowKind, date: string, step: number) {
+  function renderFlow(kind: FlowKind, date: string, step: number, month: boolean) {
     if (!state) return null
     const steps = STEPS[kind]
     const day = state.days[date]
@@ -274,33 +319,36 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
     const id = steps[step - 1]
     const that = thatOf(date)
     const foreign = bb ? bb.reports.some((r) => r.wentThrough && r.at.slice(0, 10) === date && r.id !== day?.slipReportId) : false
-    // A slip day or an unanswered question one cannot skip: a reload on a later screen without the answer lands on the first.
+    // An unanswered question one cannot skip: a reload on a later screen without the answer lands on the first.
     if (kind === "evening" && step > 1 && !foreign && day?.slipped === undefined) {
-      return renderFlow(kind, date, 1)
+      return renderFlow(kind, date, 1, month)
     }
     const last = step === steps.length
     const set = (patch: Day) => setAnswer(kind, date, step, patch)
     const slipOk = foreign || hasOutcome(day)
     const filedHere = !!day?.slipReportId && inBox(day.slipReportId)
+    const loading = !bb || !bb.settled
     const status = (() => {
-      if (!day?.slipReportId || !bb) return signedIn === false ? tt.sos.savedLocal : tt.blackbox.saving
-      const s = bb.status(day.slipReportId)
-      if (signedIn === true) return s === "saved" ? tt.sos.savedAccount : s === "local" ? tt.blackbox.localOnly : tt.blackbox.saving
-      return signedIn === false ? tt.sos.savedLocal : tt.blackbox.saving
+      if (!day?.slipReportId || !bb) return signedIn === false ? t.savedLocal : tt.blackbox.saving
+      const st = bb.status(day.slipReportId)
+      if (signedIn === true) return st === "saved" ? tt.sos.savedAccount : st === "local" ? t.localOnly : tt.blackbox.saving
+      return signedIn === false ? t.savedLocal : tt.blackbox.saving
     })()
+    const noSlip = day?.slipped === true && !day.slipReportId && want?.date !== date && !!bb?.settled
+    const noSlipKind = noSlipCase(date, bb?.runs ?? [])
 
     const title =
-      id === "pledge" ? t.pledgeTitle
-      : id === "forecast" ? t.forecastTitle
+      id === "pledge" ? t.pledgeTitle(that)
+      : id === "forecast" ? t.forecastTitle(that)
       : id === "outcome" ? (foreign ? t.slipInRecord(dayLabel(date)) : t.outcomeTitle(verb, that))
       : id === "hard" ? t.hardTitle(that)
       : id === "urges" ? t.urgesTitle(that)
       : id === "feelings" ? t.feelingsTitle(that)
       : t.noteTitle(that)
 
-    const scale = (value: number | undefined, onPick: (n: number) => void, testId: string) => (
+    const scale = (words: readonly string[], value: number | undefined, onPick: (n: number) => void, testId: string) => (
       <div role="radiogroup" aria-label={title} data-testid={testId} className="flex flex-col gap-2">
-        {SCALE.map((word, i) => {
+        {words.map((word, i) => {
           const n = i + 1
           return (
             <button
@@ -322,7 +370,7 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
 
     const nextDisabled = (id === "outcome" && !slipOk) || (kind === "morning" && last && ans.forecast === undefined && !ans.pledge?.trim())
     return (
-      <OneQuestion step={step} total={steps.length} onBack={step === 1 ? () => back({}, true) : () => back({ flow: kind, d: date, s: String(step - 1) })}>
+      <OneQuestion step={step} total={steps.length} onBack={step === 1 ? () => back({}, true) : () => back(flowParams(kind, date, step - 1, month))}>
         <p className="text-sm text-muted-foreground">{dayLabel(date)}</p>
         <h2 data-testid={`step-${id}`} className="text-xl font-semibold leading-snug">
           {title}
@@ -333,7 +381,7 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
             <p className="text-sm text-muted-foreground">{t.pledgeHelp}</p>
             <input
               data-testid="pledge-input"
-              aria-label={t.pledgeTitle}
+              aria-label={t.pledgeTitle(that)}
               placeholder={t.pledgePlaceholder}
               maxLength={PLEDGE_MAX}
               value={ans.pledge ?? ""}
@@ -342,7 +390,7 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
             />
           </>
         )}
-        {id === "forecast" && scale(ans.forecast, (n) => set({ forecast: n }), "forecast")}
+        {id === "forecast" && scale(SCALE, ans.forecast, (n) => set({ forecast: n }), "forecast")}
 
         {id === "outcome" && (
           <>
@@ -353,20 +401,26 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
             ) : (
               <>
                 <div role="radiogroup" aria-label={title} className="flex flex-col gap-2">
-                  {[false, true].map((s) => (
+                  {[false, true].map((sl) => (
                     <button
-                      key={String(s)}
+                      key={String(sl)}
                       type="button"
                       role="radio"
-                      aria-checked={day?.slipped === s}
-                      data-testid={s ? "outcome-slip" : "outcome-clear"}
-                      onClick={() => setOutcome(date, s)}
-                      className={`min-h-12 rounded-md border px-3 text-left ${day?.slipped === s ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}
+                      disabled={loading}
+                      aria-checked={day?.slipped === sl}
+                      data-testid={sl ? "outcome-slip" : "outcome-clear"}
+                      onClick={() => setOutcome(date, sl)}
+                      className={`min-h-12 rounded-md border px-3 text-left disabled:opacity-50 ${day?.slipped === sl ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}
                     >
-                      {s ? t.outcomeSlip(past) : t.outcomeClear}
+                      {sl ? t.outcomeSlip(past) : t.outcomeClear}
                     </button>
                   ))}
                 </div>
+                {loading && (
+                  <p data-testid="record-loading" className="text-sm text-muted-foreground">
+                    {t.loadingRecord}
+                  </p>
+                )}
                 {day?.slipped === true && (
                   <div data-testid="slip-block" className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3">
                     <p className="font-medium">{t.slipHeld}</p>
@@ -376,16 +430,24 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
                         <button type="button" data-testid="slip-undo" onClick={() => undoSlip(date)} className="inline-flex min-h-11 items-center self-start text-primary underline">
                           {tt.blackbox.undo}
                         </button>
-                        {slipLive ? (
-                          <Link href={carry(`/quit/${addiction}/slip`)} data-testid="slip-link" className="inline-flex min-h-12 items-center justify-center rounded-md bg-primary px-4 font-medium text-primary-foreground">
-                            {tt.sos.slipLink}
-                          </Link>
-                        ) : (
-                          <p data-testid="slip-step">{tt.sos.yesStep}</p>
-                        )}
+                        {slipNext}
                       </>
                     )}
-                    {!day.slipReportId && want?.date !== date && bb?.settled && <p data-testid="slip-none">{t.noRun}</p>}
+                    {noSlip && (
+                      <div data-testid="slip-none" className="flex flex-col gap-2">
+                        <p>{noSlipKind === "later" ? t.noSlipLater(that) : noSlipKind === "notStarted" ? t.noSlipNotStarted : noSlipKind === "ended" ? t.noSlipEnded : t.noSlipOther}</p>
+                        {noSlipKind === "notStarted" && isLiveTool("date") && (
+                          <Link href={carry(`/quit/${addiction}/date`)} data-testid="none-date-link" className="inline-flex min-h-11 items-center self-start text-primary underline">
+                            {t.openDate}
+                          </Link>
+                        )}
+                        {noSlipKind === "ended" && slipLive && (
+                          <Link href={carry(`/quit/${addiction}/slip`)} data-testid="slip-link" className={outlineLink}>
+                            {tt.sos.slipLink}
+                          </Link>
+                        )}
+                      </div>
+                    )}
                     {blocked === date && (
                       <p data-testid="slip-blocked">
                         {t.slipBlocked}{" "}
@@ -410,10 +472,10 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
                 {t.expectedThen(that, day.forecast)}
               </p>
             )}
-            {scale(ans.hard, (n) => set({ hard: n }), "hard")}
+            {scale(SCALE, ans.hard, (n) => set({ hard: n }), "hard")}
           </>
         )}
-        {id === "urges" && scale(ans.urges, (n) => set({ urges: n }), "urges")}
+        {id === "urges" && scale(URGE_SCALE, ans.urges, (n) => set({ urges: n }), "urges")}
 
         {id === "feelings" && (
           <>
@@ -452,20 +514,20 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
 
         <div className="flex flex-col gap-2">
           {kind === "morning" && last ? (
-            <PrimaryButton testId="flow-save" disabled={nextDisabled} onClick={() => finish(kind, date)}>
+            <PrimaryButton testId="flow-save" disabled={nextDisabled} onClick={() => finish(kind, date, month)}>
               {t.save}
             </PrimaryButton>
           ) : last ? (
-            <PrimaryButton testId="flow-done" onClick={() => finish(kind, date)}>
+            <PrimaryButton testId="flow-done" onClick={() => finish(kind, date, month)}>
               {that ? t.doneThat : t.doneToday}
             </PrimaryButton>
           ) : (
-            <PrimaryButton testId="flow-next" disabled={nextDisabled} onClick={() => toStep(kind, date, step + 1)}>
+            <PrimaryButton testId="flow-next" disabled={nextDisabled} onClick={() => toStep(kind, date, step + 1, month)}>
               {t.next}
             </PrimaryButton>
           )}
           {kind === "evening" && step >= 2 && !last && (
-            <button type="button" data-testid="flow-done" onClick={() => finish(kind, date)} className="inline-flex min-h-12 w-full items-center justify-center rounded-md border border-border px-4 text-base">
+            <button type="button" data-testid="flow-done" onClick={() => finish(kind, date, month)} className="inline-flex min-h-12 w-full items-center justify-center rounded-md border border-border px-4 text-base">
               {that ? t.doneThat : t.doneToday}
             </button>
           )}
@@ -475,15 +537,27 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
   }
 
   /* ----- the screens ----- */
-  if (view.kind === "flow") return <div data-testid="checkin">{renderFlow(view.flow, view.date, view.step)}</div>
+  if (view.kind === "flow") return <div data-testid="checkin">{renderFlow(view.flow, view.date, view.step, view.month)}</div>
 
   if (view.kind === "done") {
+    const dd = days[view.date]
     return (
       <section data-testid="done-screen" className="flex flex-col gap-4">
         <h2 className="text-xl font-semibold">{t.savedFor(dayLabel(view.date))}</h2>
-        <DaySummary date={view.date} day={days[view.date]} verb={verb} testId="done-summary" />
-        <PrimaryButton testId="done-back" onClick={() => swap({})}>
-          {t.backToToday}
+        <DaySummary date={view.date} day={dd} verb={verb} testId="done-summary" />
+        {dd?.slipped === true && (
+          <div data-testid="done-slip" className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3">
+            <p className="font-medium">{t.slipHeld}</p>
+            {slipNext}
+          </div>
+        )}
+        {dd?.slipped === false && (
+          <p data-testid="done-clear" className="font-medium">
+            {t.clearMonth(monthCounts(own, monthOf(view.date)).clear)}
+          </p>
+        )}
+        <PrimaryButton testId="done-back" onClick={() => swap(view.month ? monthParams({ m: monthOf(view.date), day: view.date }) : {})}>
+          {view.month ? t.doneMonth : t.backToToday}
         </PrimaryButton>
       </section>
     )
@@ -491,13 +565,16 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
 
   const tab = view.tab
   const times = ex ? ex.reminders : state.reminders
-  const onFill = ex ? null : (date: string) => startFlow("evening", date)
+  const onFill = ex ? null : (date: string) => startFlow("evening", date, true)
   const hasEntries = Object.keys(stored).length > 0
   const missed = ex ? null : lookBack(days, today)
-  const counts = monthCounts(days, monthOf(today))
-  const prev = shiftMonth(monthOf(today), -1)
-  const prevCounts = monthCounts(days, prev)
+  const counts = monthCounts(own, monthNow)
+  const prev = shiftMonth(monthNow, -1)
+  const prevCounts = monthCounts(own, prev)
   const day = days[today]
+  const morningSaved = !!day?.pledge?.trim() || day?.forecast !== undefined
+  const eveningOpen = day?.slipped === undefined && day?.hard === undefined
+  const mainAction: FlowKind | null = ex ? null : !morningSaved && new Date().getHours() < 12 ? "morning" : eveningOpen ? "evening" : null
   const link = `${typeof window === "undefined" ? "" : window.location.origin}/quit/${addiction}/checkin`
   const btn = "inline-flex min-h-11 items-center rounded-md border border-border px-4 text-sm"
 
@@ -506,7 +583,15 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
       {ex && (
         <div data-testid="example-bar" role="status" className="flex flex-wrap items-center justify-between gap-x-3 rounded-md border border-dashed border-primary px-3 py-1 text-sm">
           <span>{t.exampleBar}</span>
-          <button type="button" data-testid="example-leave" onClick={() => setEx(null)} className="inline-flex min-h-11 items-center text-primary underline">
+          <button
+            type="button"
+            data-testid="example-leave"
+            onClick={() => {
+              setEx(null)
+              if (tab === "month") swap({ tab: "month" })
+            }}
+            className="inline-flex min-h-11 items-center text-primary underline"
+          >
             {t.leaveExample}
           </button>
         </div>
@@ -518,12 +603,17 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
           <p data-testid="today-date" className="text-base font-medium">
             {dayLabel(today)}
           </p>
+          {mainAction && (
+            <PrimaryButton testId="main-action" onClick={() => startFlow(mainAction, today)}>
+              {mainAction === "morning" ? t.startMorning : t.startEvening}
+            </PrimaryButton>
+          )}
           <Card testId="morning-card">
             <h2 className="flex items-center gap-2 font-medium">
               <Sun className="size-5 text-primary" aria-hidden />
               {t.morningTitle}
             </h2>
-            {day?.pledge?.trim() || day?.forecast !== undefined ? (
+            {morningSaved ? (
               <div className="mt-1 flex flex-col gap-0.5 text-sm text-muted-foreground">
                 {day?.pledge?.trim() ? <p data-testid="morning-pledge" className="[overflow-wrap:anywhere]">{t.pledgeLine(day.pledge.trim())}</p> : null}
                 {day?.forecast !== undefined ? <p data-testid="morning-forecast">{t.expectedLine(day.forecast)}</p> : null}
@@ -533,7 +623,7 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
             )}
             {!ex && (
               <button type="button" data-testid="morning-start" onClick={() => startFlow("morning", today)} className={`mt-2 ${btn}`}>
-                {day?.pledge?.trim() || day?.forecast !== undefined ? t.change : t.start}
+                {morningSaved ? t.change : t.start}
               </button>
             )}
           </Card>
@@ -542,7 +632,7 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
               <Moon className="size-5 text-primary" aria-hidden />
               {t.eveningTitle}
             </h2>
-            {day?.slipped !== undefined || day?.hard !== undefined ? (
+            {!eveningOpen ? (
               <div className="mt-1 flex flex-col gap-0.5 text-sm text-muted-foreground">
                 {day?.slipped !== undefined && <p data-testid="evening-result">{day.slipped ? t.slipResult(past) : t.clearResult}</p>}
                 {day?.hard !== undefined && <p data-testid="evening-hard">{t.hardLine(day.hard)}</p>}
@@ -552,12 +642,12 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
             )}
             {!ex && (
               <button type="button" data-testid="evening-start" onClick={() => startFlow("evening", today)} className={`mt-2 ${btn}`}>
-                {day?.slipped !== undefined || day?.hard !== undefined ? t.change : t.start}
+                {!eveningOpen ? t.change : t.start}
               </button>
             )}
           </Card>
           {missed && (
-            <button type="button" data-testid="lookback-start" onClick={() => startFlow("evening", missed)} className="inline-flex min-h-11 items-center rounded-md border border-dashed border-border px-4 text-left text-sm">
+            <button type="button" data-testid="lookback-start" onClick={() => startFlow("evening", missed)} className={`${btn} w-full justify-center`}>
               {t.fillYesterday(dayLabel(missed))}
             </button>
           )}
@@ -590,8 +680,10 @@ function Screens({ addiction, signedIn, bb }: { addiction: string; signedIn: boo
           <p className="text-xs text-muted-foreground">{t.keptHere}</p>
         </div>
       )}
-      {tab === "month" && <MonthView days={days} today={today} verb={verb} onFill={onFill} />}
-      {tab === "pattern" && <PatternView days={days} />}
+      {tab === "month" && (
+        <MonthView days={days} own={own} today={today} verb={verb} ym={monthYm} mode={monthMode} picked={monthDay} onNav={(p) => swap(monthParams(p))} onFill={onFill} />
+      )}
+      {tab === "pattern" && <PatternView days={own} verb={verb} />}
       {tab === "reminders" && (
         <RemindersView
           times={times}

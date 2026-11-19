@@ -34,10 +34,11 @@ async function noSideways(page: Page) {
 }
 
 /** A Black Box with one nicotine run: living, or ended today by a slip report. */
-function blackBox(opts: { startedOn?: string; slipToday?: boolean } = {}) {
+function blackBox(opts: { startedOn?: string; slipToday?: boolean; slipOn?: string } = {}) {
   const stamp = new Date().toISOString()
   const attemptId = randomUUID()
   const reportId = randomUUID()
+  const slipDay = opts.slipOn ?? (opts.slipToday ? TODAY : null)
   const attempt = {
     id: attemptId,
     viceId: "nicotine",
@@ -45,13 +46,13 @@ function blackBox(opts: { startedOn?: string; slipToday?: boolean } = {}) {
     startedOn: opts.startedOn ?? day(-10),
     startedBy: "",
     structure: [],
-    endedOn: opts.slipToday ? TODAY : null,
-    endedByReportId: opts.slipToday ? reportId : null,
+    endedOn: slipDay,
+    endedByReportId: slipDay ? reportId : null,
     updatedAt: stamp,
     deletedAt: null,
   }
-  const reports = opts.slipToday
-    ? [{ id: reportId, attemptId, at: `${TODAY}T09:00:00`, wentThrough: true, thought: "", ending: "other", closeness: null, withWhom: "", where: "", factors: [], didInstead: "", updatedAt: stamp, deletedAt: null }]
+  const reports = slipDay
+    ? [{ id: reportId, attemptId, at: `${slipDay}T09:00:00`, wentThrough: true, thought: "", ending: "other", closeness: null, withWhom: "", where: "", factors: [], didInstead: "", updatedAt: stamp, deletedAt: null }]
     : []
   return { version: 1, attempts: [attempt], reports }
 }
@@ -130,11 +131,13 @@ for (const vp of [
       await expect(page.getByTestId("evening-card")).toContainText("Not done yet")
       await expect(page.getByTestId("lookback-start")).toHaveCount(0)
       await expect(page.getByTestId("today-date")).toHaveText("Thu 19 Nov")
-      await expect(page.getByText("Your check-ins are kept on this phone.")).toBeVisible()
+      await expect(page.getByText("Your check-ins are kept in this browser.")).toBeVisible()
+      await expect(page.getByTestId("main-action")).toHaveText("Start your morning check-in")
       await shot(page, S("1-today-empty"))
       const before = await store(page)
       await page.getByTestId("see-example").click()
       await expect(page.getByTestId("example-bar")).toContainText("Example. Nothing here is yours, and nothing is saved.")
+      await expect(page.getByTestId("morning-card")).toContainText("Expected: Hard (4)")
       await shot(page, S("1-example-today"))
       await openTab(page, "month")
       await expect(page.getByTestId("example-bar")).toBeVisible()
@@ -143,7 +146,7 @@ for (const vp of [
       await shot(page, S("1-example-month"))
       await openTab(page, "pattern")
       await expect(page.getByTestId("example-bar")).toBeVisible()
-      await expect(page.getByTestId("pattern-forecast")).toContainText("On the 6 days you expected it to be hard, you slipped on 3; on the other 14 days, on 1.")
+      await expect(page.getByTestId("pattern-forecast")).toContainText("Days you expected Hard or Very hard: you slipped on 3 of 6. Other days: you slipped on 1 of 14.")
       await shot(page, S("1-example-pattern"))
       await openTab(page, "reminders")
       await expect(page.getByTestId("example-bar")).toBeVisible()
@@ -161,7 +164,8 @@ for (const vp of [
 
     test("2 morning: pledge and Hard (4) show on Today and survive a reload", async ({ page }) => {
       await page.goto(URL)
-      await page.getByTestId("morning-start").click()
+      await page.getByTestId("main-action").click()
+      await expect(page.getByTestId("step-pledge")).toHaveText("Your promise for today")
       await shot(page, S("2-morning-pledge"))
       await page.getByTestId("pledge-input").fill("No smoking at the bar")
       await page.getByTestId("flow-next").click()
@@ -173,10 +177,12 @@ for (const vp of [
       await expect(page.getByTestId("done-screen")).toContainText("Saved for Thu 19 Nov")
       await shot(page, S("2-done"))
       await page.getByTestId("done-back").click()
-      await expect(page.getByTestId("morning-pledge")).toHaveText("Pledge: No smoking at the bar")
+      // the morning is saved: the main button now offers the evening
+      await expect(page.getByTestId("main-action")).toHaveText("Start your evening check-in")
+      await expect(page.getByTestId("morning-pledge")).toHaveText("Promise: No smoking at the bar")
       await expect(page.getByTestId("morning-forecast")).toHaveText("Expected: Hard (4)")
       await page.reload()
-      await expect(page.getByTestId("morning-pledge")).toHaveText("Pledge: No smoking at the bar")
+      await expect(page.getByTestId("morning-pledge")).toHaveText("Promise: No smoking at the bar")
       await expect(page.getByTestId("morning-forecast")).toHaveText("Expected: Hard (4)")
     })
 
@@ -185,7 +191,7 @@ for (const vp of [
       await startEvening(page)
       await shot(page, S("3-evening-question"))
       await page.getByTestId("outcome-slip").click()
-      await expect(page.getByTestId("slip-status")).toHaveText("Saved on this phone.")
+      await expect(page.getByTestId("slip-status")).toHaveText("Saved in this browser.")
       await expect(page.getByText("A slip doesn't undo the days before.")).toBeVisible()
       await shot(page, S("3-slip-filed"))
       expect(await livingSlips(page)).toEqual({ slips: [TODAY], liveRuns: 0 })
@@ -222,6 +228,12 @@ for (const vp of [
     test("5 a slip already in the Black Box: the evening does not ask, it says the slip is in the record", async ({ page }) => {
       await seed(page, { bb: blackBox({ slipToday: true }), record: CIG })
       await expect(page.getByTestId("evening-result")).toHaveText("You smoked")
+      // a slip that is only in the Black Box is not a check-in
+      await expect(page.getByTestId("count-checked")).toHaveAttribute("data-n", "0")
+      await openTab(page, "month")
+      await expect(page.getByTestId(`cell-${TODAY}`)).toHaveAttribute("data-state", "slip")
+      await shot(page, S("5-month-slip"))
+      await openTab(page, "today")
       await page.getByTestId("evening-start").click()
       await expect(page.getByTestId("step-outcome")).toHaveText("Your slip on Thu 19 Nov is in your record.")
       await expect(page.getByTestId("outcome-slip")).toHaveCount(0)
@@ -236,7 +248,8 @@ for (const vp of [
       const before = (await store(page))[1]
       await startEvening(page)
       await page.getByTestId("outcome-slip").click()
-      await expect(page.getByTestId("slip-none")).toHaveText("You had no run going that day, so nothing was saved as a slip.")
+      await expect(page.getByTestId("slip-none")).toHaveText("Your quit hasn't started in your record yet, so this isn't saved as a slip.")
+      await expect(page.getByTestId("none-date-link")).toHaveAttribute("href", /\/quit\/nicotine\/date/)
       await shot(page, S("6-no-run"))
       expect((await store(page))[1]).toEqual(before)
       await page.getByTestId("flow-next").click()
@@ -255,6 +268,7 @@ for (const vp of [
       await page.getByTestId("flow-next").dblclick()
       await step(page, "urges")
       await expect(page).toHaveURL(/s=3/)
+      await expect(page.getByTestId("urges-4")).toHaveText("4Strong")
       await page.getByTestId("urges-2").click()
       await shot(page, S("7-urges"))
       await page.reload()
@@ -268,14 +282,14 @@ for (const vp of [
       await page.getByTestId("flow-next").click()
       await step(page, "feelings")
       await expect(page.locator('[data-testid^="feeling-"]')).toHaveCount(10)
-      await page.getByTestId("feeling-tired").click()
+      await page.getByTestId("feeling-anxious").click()
       await shot(page, S("7-feelings"))
       await page.getByTestId("flow-next").click()
       await step(page, "note")
       await page.getByTestId("note-input").fill("A calm evening.")
       await shot(page, S("7-note"))
       await page.getByTestId("flow-done").click()
-      await expect(page.getByTestId("done-summary")).toContainText("Felt: Tired")
+      await expect(page.getByTestId("done-summary")).toContainText("Felt: Anxious")
       await expect(page.getByTestId("done-summary")).toContainText("A calm evening.")
       await shot(page, S("7-done"))
       await page.getByTestId("done-back").click()
@@ -319,9 +333,12 @@ for (const vp of [
       await page.getByTestId("outcome-clear").click()
       await page.getByTestId("flow-next").click()
       await page.getByTestId("flow-done").click()
+      await expect(page.getByTestId("done-back")).toHaveText("Back to the month")
+      await expect(page.getByTestId("done-clear")).toContainText("Clear day. 1 clear day this month.")
       await page.getByTestId("done-back").click()
-      await openTab(page, "month")
-      await page.getByTestId("month-prev").click()
+      // back on the same month and day
+      await expect(page.getByTestId("month-name")).toHaveText("October 2026")
+      await expect(page.getByTestId("day-summary")).toBeVisible()
       await expect(page.getByTestId(`cell-${day(-20)}`)).toHaveAttribute("data-state", "clear")
       await page.getByTestId("month-next").click()
       await expect(page.getByTestId(`cell-${day(1)}`)).toBeDisabled()
@@ -355,21 +372,74 @@ for (const vp of [
         const hard = i % 3 === 0 ? Math.min(5, forecast + 1) : i % 3 === 1 ? Math.max(1, forecast - 1) : forecast
         days[day(-(i + 1))] = { forecast, hard, urges: 5, feelings: ["bored", "tired"], slipped: i === 0 || i === 1 || i === 6 }
       }
-      await seed(page, { days })
+      await seed(page, { days, record: CIG })
       await openTab(page, "pattern")
-      await expect(page.getByTestId("pattern-forecast")).toHaveText("On the 6 days you expected it to be hard, you slipped on 2; on the other 10 days, on 1.")
+      await expect(page.getByTestId("pattern-forecast")).toHaveText("Days you expected Hard or Very hard: you slipped on 2 of 6. Other days: you slipped on 1 of 10.")
       const harder = Object.values(days).filter((d) => (d as { hard: number; forecast: number }).hard > (d as { forecast: number }).forecast).length
       const easier = Object.values(days).filter((d) => (d as { hard: number; forecast: number }).hard < (d as { forecast: number }).forecast).length
-      await expect(page.getByTestId("pairs-line")).toHaveText(`Of 16 days with a forecast and a result, it was harder than you expected on ${harder}, easier on ${easier} and the same on ${16 - harder - easier}.`)
+      await expect(page.getByTestId("pairs-line")).toHaveText(`On 16 days you rated the day in the morning and the evening: harder than you expected on ${harder}, easier on ${easier}, as expected on ${16 - harder - easier}.`)
       await expect(page.getByTestId("pattern-own")).toHaveText("These lines count only your own days. They are not a study.")
       const text = await page.getByTestId("tab-pattern-panel").innerText()
       expect(text).not.toMatch(/urge|bored|tired|feel/i)
       await shot(page, S("10-pattern"))
       // fewer than 14: the wait line says how many there are
-      await seed(page, { days: { [day(-1)]: { slipped: false, forecast: 3, hard: 3 }, [day(-2)]: { slipped: true }, [day(-3)]: { slipped: false } } })
+      await seed(page, { days: { [day(-1)]: { slipped: false, forecast: 3, hard: 3 }, [day(-2)]: { slipped: true }, [day(-3)]: { slipped: false } }, record: CIG })
       await openTab(page, "pattern")
-      await expect(page.getByTestId("pattern-wait")).toHaveText("Pattern lines start once you have 14 check-ins with a result. You have 3.")
+      await expect(page.getByTestId("pattern-wait")).toHaveText('Pattern lines start after 14 evenings where you answered "Did you smoke today?". So far: 3.')
       await shot(page, S("10-pattern-wait"))
+    })
+
+    test("15 history: Back after Done never lands inside the flow; Back from Fill in returns to the same month and day; leaving the example resets the month", async ({ page }) => {
+      await seed(page, { days: { [day(-25)]: { slipped: false } }, record: CIG })
+      await openTab(page, "month")
+      await page.getByTestId("month-prev").click()
+      await page.getByTestId(`cell-${day(-20)}`).click()
+      await expect(page).toHaveURL(new RegExp(`m=${day(-20).slice(0, 7)}&day=${day(-20)}`))
+      await page.getByTestId("fill-day").click()
+      await step(page, "outcome")
+      // Back from the flow returns to the same month and day
+      await page.goBack()
+      await expect(page.getByTestId("month-name")).toHaveText("October 2026")
+      await expect(page.getByTestId("day-summary")).toBeVisible()
+      await page.goForward()
+      await step(page, "outcome")
+      await page.getByTestId("outcome-clear").click()
+      await page.getByTestId("flow-next").click()
+      await step(page, "hard")
+      await page.getByTestId("flow-done").click()
+      await expect(page.getByTestId("done-screen")).toBeVisible()
+      await page.goBack()
+      await expect(page.getByTestId("tab-month-panel")).toBeVisible()
+      await expect(page.getByTestId("month-name")).toHaveText("October 2026")
+      // the example: leaving it returns to this month
+      await page.goto(URL)
+      await page.evaluate(() => window.localStorage.removeItem("quit-v1"))
+      await page.reload()
+      await page.getByTestId("see-example").click()
+      await openTab(page, "month")
+      await page.getByTestId("month-prev").click()
+      await expect(page.getByTestId("month-name")).toHaveText("October 2026")
+      await page.getByTestId("example-leave").click()
+      await expect(page.getByTestId("month-name")).toHaveText("November 2026")
+    })
+
+    test("16 the no-slip line follows the case; the Yes and No buttons wait for the record", async ({ page }) => {
+      // the last slip ended the clean days, and no run is going today
+      await seed(page, { bb: blackBox({ slipOn: day(-3) }), record: CIG })
+      await startEvening(page)
+      await page.getByTestId("outcome-slip").click()
+      await expect(page.getByTestId("slip-none")).toContainText("Your last slip ended your clean days in the record, so this isn't saved as a new slip.")
+      if ((liveTools as string[]).includes("slip")) await expect(page.getByTestId("slip-link")).toBeVisible()
+      await shot(page, S("16-ended"))
+      // a day inside a run that a later slip already ended
+      await page.getByTestId("flow-next").click()
+      await page.getByTestId("flow-done").click()
+      await page.getByTestId("done-back").click()
+      await seed(page, { bb: blackBox({ slipToday: true }), days: { [day(-30)]: { slipped: false } }, record: CIG })
+      await page.getByTestId("lookback-start").click()
+      await page.getByTestId("outcome-slip").click()
+      await expect(page.getByTestId("slip-none")).toHaveText("A later slip is already in your record, so that day isn't saved as a second slip.")
+      for (const q of ["no run", "phone"]) expect((await page.locator("body").innerText()).toLowerCase()).not.toContain(q)
     })
 
     test("11 reminders: the calendar file has two daily events stamped now", async ({ page }) => {
@@ -384,8 +454,9 @@ for (const vp of [
       const text = readFileSync((await download.path())!, "utf8").replace(/\r\n /g, "")
       expect(text.match(/BEGIN:VEVENT/g)).toHaveLength(2)
       expect(text.match(/RRULE:FREQ=DAILY/g)).toHaveLength(2)
-      expect(text).toContain("SUMMARY:Morning check-in")
-      expect(text).toContain("SUMMARY:Evening check-in")
+      expect(text).toContain("SUMMARY:Daily check-in: morning")
+      expect(text).toContain("SUMMARY:Daily check-in: evening")
+      expect(text.match(/TRIGGER:PT0M/g)).toHaveLength(2)
       expect(text).toContain("DTSTART:20261119T073000")
       expect(text).toContain("DTSTART:20261119T210000")
       expect(text).toContain("/quit/nicotine/checkin")
@@ -407,7 +478,7 @@ for (const vp of [
       await shot(page, S("12-vape"))
       await seed(page, { record: { quitDate: null, goal: null, breakEnd: null, unit: null } })
       await startEvening(page)
-      await expect(page.getByTestId("step-outcome")).toHaveText("Did you use it today?")
+      await expect(page.getByTestId("step-outcome")).toHaveText("Did you use nicotine today?")
       await seed(page, { record: { quitDate: null, goal: null, breakEnd: null, unit: { id: "cigarettes", perDay: 10, priceUsd: 0.52, priceBasis: "default" } } })
       await startEvening(page)
       await expect(page.getByTestId("step-outcome")).toHaveText("Did you smoke today?")

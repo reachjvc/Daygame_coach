@@ -1,6 +1,6 @@
 import { addDays, isIsoDay } from "../../record"
 import { isObj, pickBool, pickInt, pickStr } from "../common"
-import { FEELINGS } from "./text"
+import { isFeelingId } from "./text"
 
 /** One day of the check-in. Every part is optional. */
 export interface Day {
@@ -54,8 +54,6 @@ export const LAST_MONTH_UNTIL = 7
 
 /* ---------- reading what is stored ---------- */
 
-const FEELING_IDS: readonly string[] = FEELINGS.map((f) => f.id)
-
 /** One day; every bad part is dropped. */
 export function parseDay(x: unknown): Day {
   if (!isObj(x)) return {}
@@ -71,7 +69,7 @@ export function parseDay(x: unknown): Day {
   const urges = pickInt(x.urges, 1, 5, undefined)
   if (urges !== undefined) out.urges = urges
   if (Array.isArray(x.feelings)) {
-    const list = [...new Set(x.feelings.filter((f): f is string => typeof f === "string" && FEELING_IDS.includes(f)))]
+    const list = [...new Set(x.feelings.filter((f): f is string => typeof f === "string" && isFeelingId(f)))]
     if (list.length > 0) out.feelings = list
   }
   const note = pickStr(x.note, "").slice(0, NOTE_MAX)
@@ -236,6 +234,8 @@ export interface Patterns {
   ready: boolean
   /** The expected-hard comparison, or null when a side is under MIN_SIDE days or the two shares are equal. */
   forecast: ForecastLine | null
+  /** Why there is no forecast line once there are enough results: too few days on a side, or equal shares. */
+  reason: "sides" | "equal" | null
   pairs: ReturnType<typeof pairingCounts>
 }
 
@@ -246,17 +246,21 @@ export interface Patterns {
 export function patternsOf(days: Days): Patterns {
   const rows = Object.values(days).filter(hasOutcome)
   const pairs = pairingCounts(days)
-  if (rows.length < MIN_CHECKINS) return { count: rows.length, ready: false, forecast: null, pairs }
+  if (rows.length < MIN_CHECKINS) return { count: rows.length, ready: false, forecast: null, reason: null, pairs }
   const withF = rows.filter((d) => d.forecast !== undefined)
   const hardDays = withF.filter((d) => (d.forecast ?? 0) >= HARD_FROM)
   const other = withF.filter((d) => (d.forecast ?? 0) < HARD_FROM)
   let forecast: ForecastLine | null = null
+  let reason: Patterns["reason"] = "sides"
   if (hardDays.length >= MIN_SIDE && other.length >= MIN_SIDE) {
     const withSlips = hardDays.filter((d) => d.slipped).length
     const otherSlips = other.filter((d) => d.slipped).length
-    if (withSlips * other.length !== otherSlips * hardDays.length) forecast = { withDays: hardDays.length, withSlips, otherDays: other.length, otherSlips }
+    if (withSlips * other.length !== otherSlips * hardDays.length) {
+      forecast = { withDays: hardDays.length, withSlips, otherDays: other.length, otherSlips }
+      reason = null
+    } else reason = "equal"
   }
-  return { count: rows.length, ready: true, forecast, pairs }
+  return { count: rows.length, ready: true, forecast, reason, pairs }
 }
 
 /* ---------- month calendar ---------- */
@@ -282,29 +286,29 @@ export function cellLevel(d: Day | undefined, mode: Mode): { state: "none" | "cl
 const SEED: [number, boolean, number, number, string[], string?][] = [
   [4, true, 5, 5, ["bored", "restless"], "Long evening alone, gave in around ten."],
   [2, false, 1, 1, ["calm"]],
-  [3, false, 2, 2, ["tired"]],
+  [3, false, 2, 2, ["sad"]],
   [5, false, 4, 4, ["stressed", "bored"], "Hard morning, got through it by walking."],
-  [2, false, 2, 1, ["clear-headed"]],
+  [2, false, 2, 1, ["happy"]],
   [1, false, 1, 1, ["proud"]],
   [4, true, 4, 4, ["bored", "short-tempered"]],
-  [3, false, 3, 2, ["tired"]],
-  [2, false, 2, 2, ["clear-headed"]],
+  [3, false, 3, 2, ["anxious"]],
+  [2, false, 2, 2, ["happy"]],
   [4, false, 3, 3, ["stressed"]],
   [2, false, 1, 1, ["calm"]],
   [3, true, 4, 4, ["bored"], "Slipped after a bad call."],
   [2, false, 2, 1, ["calm", "proud"]],
   [4, false, 4, 4, ["restless"]],
   [1, false, 1, 1, ["calm"]],
-  [3, false, 2, 2, ["tired"]],
+  [3, false, 2, 2, ["anxious"]],
   [5, true, 5, 5, ["short-tempered", "stressed"], "Everything went wrong at work."],
-  [2, false, 2, 2, ["clear-headed"]],
+  [2, false, 2, 2, ["happy"]],
   [3, false, 3, 3, ["restless"]],
   [2, false, 1, 1, ["proud"]],
 ]
 
 /** 20 example days ending two days ago. Never stored, never sent to the Black Box. */
 export function seedExample(today: string): Days {
-  const out: Days = {}
+  const out: Days = { [today]: { pledge: "No smoking at the bar.", forecast: 4 } }
   SEED.forEach(([forecast, slipped, hard, urges, feelings, note], i) => {
     out[addDays(today, -(i + 2))] = { pledge: "Today I stay clear.", forecast, slipped, hard, urges, feelings, ...(note ? { note } : {}) }
   })
@@ -350,6 +354,11 @@ export function icsFor(times: Reminders, start: string, now: Date, link: string,
       "RRULE:FREQ=DAILY",
       `SUMMARY:${names[kind]}`,
       `DESCRIPTION:${esc(`Open the check-in: ${link}`)}`,
+      "BEGIN:VALARM",
+      "ACTION:DISPLAY",
+      `DESCRIPTION:${names[kind]}`,
+      "TRIGGER:PT0M",
+      "END:VALARM",
       "END:VEVENT",
     ]
   }
@@ -367,4 +376,30 @@ export function googleCalendarUrl(kind: "morning" | "evening", times: Reminders,
     `recur=${encodeURIComponent("RRULE:FREQ=DAILY")}`,
   ]
   return `https://calendar.google.com/calendar/render?${q.join("&")}`
+}
+
+/** A day put back into the days map: parts that are empty are dropped, and a day with nothing left is removed (never stored as {}). */
+export function putDay(days: Days, date: string, day: Day): Days {
+  const kept = Object.fromEntries(Object.entries(day).filter(([, v]) => v !== undefined && !(Array.isArray(v) && v.length === 0) && !(typeof v === "string" && v.trim() === ""))) as Day
+  const out = { ...days }
+  if (Object.keys(kept).length === 0) delete out[date]
+  else out[date] = kept
+  return out
+}
+
+interface RunLike {
+  startedOn: string
+  endedOn: string | null
+}
+
+/**
+ * Why a "Yes" for `date` was kept in the check-in only:
+ * "later" the day lies inside a run that a later slip already ended; "notStarted" no run, or the day is before the first run;
+ * "ended" the last slip ended the clean days and no run is going; "other" a run is going but holds a later entry.
+ */
+export function noSlipCase(date: string, runs: readonly RunLike[]): "later" | "notStarted" | "ended" | "other" {
+  if (runs.length === 0 || date < runs.reduce((m, r) => (r.startedOn < m ? r.startedOn : m), runs[0].startedOn)) return "notStarted"
+  if (runs.some((r) => r.endedOn !== null && r.startedOn <= date && date <= r.endedOn)) return "later"
+  if (!runs.some((r) => r.endedOn === null)) return "ended"
+  return "other"
 }

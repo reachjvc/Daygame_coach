@@ -8,6 +8,8 @@ import {
   icsFor,
   lookBack,
   mergeSlips,
+  noSlipCase,
+  putDay,
   monthCounts,
   monthGrid,
   pairingCounts,
@@ -19,7 +21,7 @@ import {
   slipDays,
   type Days,
 } from "@/src/quit/tools/checkin/logic"
-import { checkinText as t, pastPhrase, verbPhrase } from "@/src/quit/tools/checkin/text"
+import { checkinText as t, feelingLabel, pastPhrase, urgeWord, verbPhrase } from "@/src/quit/tools/checkin/text"
 import { useVerb } from "@/src/quit/wording"
 
 describe("parse of stored state", () => {
@@ -107,10 +109,22 @@ describe("pattern, from the morning forecast only", () => {
   })
   it("never builds an urges or feelings line", () => {
     const p = patternsOf(mk(20, (i) => ({ forecast: 3, slipped: i < 10 })))
-    expect(Object.keys(p).sort()).toEqual(["count", "forecast", "pairs", "ready"])
+    expect(Object.keys(p).sort()).toEqual(["count", "forecast", "pairs", "ready", "reason"])
   })
-  it("the example has a forecast line", () => {
+  it("the example has a forecast line and today's morning", () => {
     expect(patternsOf(seedExample("2026-11-19")).forecast).not.toBeNull()
+    expect(seedExample("2026-11-19")["2026-11-19"]).toMatchObject({ forecast: 4 })
+  })
+  it("says why there is no line: too few days on a side, or equal shares", () => {
+    expect(patternsOf(mk(16, (i) => ({ forecast: i < 2 ? 5 : 2, slipped: i === 0 }))).reason).toBe("sides")
+    // 4 hard days with 2 slips, 12 other days with 6 slips: the same share
+    expect(patternsOf(mk(16, (i) => ({ forecast: i < 4 ? 5 : 2, slipped: i < 2 || (i >= 4 && i < 10) }))).reason).toBe("equal")
+    expect(patternsOf(mk(16, (i) => ({ forecast: i < 6 ? 5 : 2, slipped: i < 2 }))).reason).toBeNull()
+  })
+  it("the lines read as written", () => {
+    expect(t.forecastPattern(6, 2, 10, 1)).toBe("Days you expected Hard or Very hard: you slipped on 2 of 6. Other days: you slipped on 1 of 10.")
+    expect(t.pairsLine(12, 4, 5, 3)).toBe("On 12 days you rated the day in the morning and the evening: harder than you expected on 4, easier on 5, as expected on 3.")
+    expect(t.patternWait("smoke", 3, 14)).toBe('Pattern lines start after 14 evenings where you answered "Did you smoke today?". So far: 3.')
   })
 })
 
@@ -171,6 +185,8 @@ describe("the calendar file", () => {
   it("holds two daily repeating events with the stamp of the tap time", () => {
     expect(unfolded.match(/BEGIN:VEVENT/g)).toHaveLength(2)
     expect(unfolded.match(/RRULE:FREQ=DAILY/g)).toHaveLength(2)
+    expect(unfolded.match(/BEGIN:VALARM/g)).toHaveLength(2)
+    expect(unfolded.match(/TRIGGER:PT0M/g)).toHaveLength(2)
     expect(unfolded).toContain("SUMMARY:Morning check-in")
     expect(unfolded).toContain("SUMMARY:Evening check-in")
     expect(unfolded).toContain("DTSTAMP:20261119T100000Z")
@@ -196,20 +212,55 @@ describe("words: that day and today, the unit", () => {
     expect(t.outcomeTitle("smoke", true)).toBe("Did you smoke that day?")
   })
   it("no question of a past day says today", () => {
-    const all = [t.outcomeTitle("vape", true), t.hardTitle(true), t.urgesTitle(true), t.feelingsTitle(true), t.noteTitle(true), t.expectedThen(true, 4), t.doneThat]
+    const all = [t.outcomeTitle("vape", true), t.hardTitle(true), t.urgesTitle(true), t.feelingsTitle(true), t.noteTitle(true), t.expectedThen(true, 4), t.doneThat, t.pledgeTitle(true), t.forecastTitle(true)]
     for (const q of all) expect(q).toMatch(/that (day|morning)|That morning/i)
     for (const q of all) expect(q.toLowerCase()).not.toContain("today")
   })
   it("the unit sets the verb; no unit says use it", () => {
     expect(t.outcomeTitle(useVerb({ id: "vape" }), false)).toBe("Did you vape today?")
-    expect(t.outcomeTitle(useVerb(null), false)).toBe("Did you use it today?")
+    expect(t.outcomeTitle(useVerb(null), false)).toBe("Did you use nicotine today?")
     expect(t.outcomeTitle(useVerb({ id: "pouches" }), false)).toBe("Did you use a pouch today?")
-    expect(pastPhrase(useVerb(null))).toBe("used it")
+    expect(pastPhrase(useVerb(null))).toBe("used nicotine")
     expect(pastPhrase("vape")).toBe("vaped")
-    expect(verbPhrase("use")).toBe("use it")
+    expect(verbPhrase("use")).toBe("use nicotine")
   })
   it("dates read like Tool 4", () => {
     expect(dayLabel("2026-11-19")).toBe("Thu 19 Nov")
     expect(t.slipInRecord(dayLabel("2026-11-19"))).toBe("Your slip on Thu 19 Nov is in your record.")
+  })
+})
+
+describe("never an empty day, the no-slip cases, words", () => {
+  it("putDay drops empty parts and removes a day with nothing left", () => {
+    expect(putDay({}, "2026-11-19", { slipped: undefined, slipReportId: undefined })).toEqual({})
+    expect(putDay({ "2026-11-19": { slipped: true } }, "2026-11-19", { slipped: undefined })).toEqual({})
+    expect(putDay({}, "2026-11-19", { note: "  ", feelings: [], hard: 3 })).toEqual({ "2026-11-19": { hard: 3 } })
+  })
+  it("a Black Box slip is not a check-in, but shows as a slip", () => {
+    const own: Days = { "2026-11-18": { slipped: false } }
+    const shown = mergeSlips(own, new Set(["2026-11-17"]))
+    expect(shown["2026-11-17"]).toEqual({ slipped: true })
+    expect(monthCounts(own, "2026-11")).toEqual({ checkedIn: 1, clear: 1 })
+    expect(monthCounts(shown, "2026-11").checkedIn).toBe(2)
+  })
+  it("picks the line by the case", () => {
+    const ended = { startedOn: "2026-11-01", endedOn: "2026-11-10" }
+    expect(noSlipCase("2026-11-19", [])).toBe("notStarted")
+    expect(noSlipCase("2026-10-30", [ended])).toBe("notStarted")
+    expect(noSlipCase("2026-11-05", [ended])).toBe("later")
+    expect(noSlipCase("2026-11-15", [ended])).toBe("ended")
+    expect(noSlipCase("2026-11-15", [ended, { startedOn: "2026-11-12", endedOn: null }])).toBe("other")
+  })
+  it("the urges scale has its own words, old feeling words keep their labels", () => {
+    expect(urgeWord(4)).toBe("Strong (4)")
+    expect(urgeWord(1)).toBe("None (1)")
+    expect(feelingLabel("tired")).toBe("Tired")
+    expect(feelingLabel("clear-headed")).toBe("Clear-headed")
+    expect(feelingLabel("happy")).toBe("Happy")
+    expect(parseCheckin({ days: { "2026-11-18": { feelings: ["tired", "happy", "zzz"] } } }).days["2026-11-18"].feelings).toEqual(["tired", "happy"])
+  })
+  it("no word says run, phone or pledge", () => {
+    const all = [t.noSlipLater(true), t.noSlipNotStarted, t.noSlipEnded, t.noSlipOther, t.keptHere, t.savedLocal, t.localOnly, t.remindersLine, t.pledgeLine("x"), t.pledgeTitle(false)].join(" ")
+    expect(all).not.toMatch(/\brun\b|phone|pledge/i)
   })
 })

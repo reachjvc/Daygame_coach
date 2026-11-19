@@ -1,7 +1,7 @@
 "use client"
 
-import { Bell, CalendarCheck, CalendarDays, ChevronLeft, ChevronRight, TrendingUp } from "lucide-react"
-import { useState } from "react"
+import { Bell, CalendarCheck, CalendarDays, ChevronLeft, ChevronRight, TrendingUp, X } from "lucide-react"
+import { useEffect, useRef } from "react"
 import {
   MODES,
   canFill,
@@ -94,25 +94,41 @@ const LEVEL_BG = ["", "bg-primary/20", "bg-primary/40", "bg-primary/60", "bg-pri
 /** The month grid: four modes, Prev and Next, counts, and a day's summary with "Fill in this day". */
 export function MonthView({
   days,
+  own,
   today,
   verb,
+  ym,
+  mode,
+  picked,
+  onNav,
   onFill,
 }: {
+  /** What the calendar shows (Black Box slips included). */
   days: Days
+  /** His own check-in answers: only these are counted. */
+  own: Days
   today: string
   verb: string
+  /** The month, mode and picked day come from the address, so Back returns to them. */
+  ym: string
+  mode: number
+  picked: string | null
+  onNav: (patch: { m?: string; mode?: number; day?: string | null }) => void
   /** null in the example: nothing can be filled there. */
   onFill: ((date: string) => void) | null
 }) {
-  const [ym, setYm] = useState(monthOf(today))
-  const [mode, setMode] = useState(0)
-  const [picked, setPicked] = useState<string | null>(null)
-  const first = firstMonth(days, today)
+  const first = firstMonth(own, today)
   const last = monthOf(today)
-  const counts = monthCounts(days, ym)
+  const counts = monthCounts(own, ym)
+  const summaryRef = useRef<HTMLDivElement>(null)
+  const tapped = useRef(false)
+  useEffect(() => {
+    if (tapped.current && picked) summaryRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" })
+    tapped.current = false
+  }, [picked])
   const none: readonly [string, string] = ["border-border bg-card", t.legendNone]
   const legends: (readonly [string, string])[][] = [
-    [["border-transparent bg-primary/80", t.legendClear], ["border-border bg-muted-foreground/30", t.legendSlip], none],
+    [["border-transparent bg-primary/80", t.legendClear], ["border-dashed border-foreground/60 bg-muted-foreground/30", t.legendSlip], none],
     [["border-transparent bg-primary/20", t.legendEasy], ["border-transparent bg-primary", t.legendVeryHard], none],
     [["border-transparent bg-primary/20", t.legendFew], ["border-transparent bg-primary", t.legendMany], none],
     [["border-transparent bg-primary/20", t.legendNotes], none],
@@ -120,7 +136,7 @@ export function MonthView({
   const navBtn = "inline-flex size-11 items-center justify-center rounded-full border border-border bg-card disabled:opacity-40"
   return (
     <section data-testid="tab-month-panel" className="flex flex-col gap-3">
-      <div role="radiogroup" aria-label={t.modesLabel} data-testid="modes" className="flex flex-wrap gap-2">
+      <div role="radiogroup" aria-label={t.modesLabel} data-testid="modes" className="grid grid-cols-2 gap-2">
         {t.modes.map((name, i) => (
           <button
             key={name}
@@ -128,21 +144,21 @@ export function MonthView({
             role="radio"
             aria-checked={mode === i}
             data-testid={`mode-${MODES[i]}`}
-            onClick={() => setMode(i)}
-            className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm ${mode === i ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}
+            onClick={() => onNav({ mode: i })}
+            className={`inline-flex min-h-11 items-center justify-center rounded-full border px-4 text-sm ${mode === i ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}
           >
             {name}
           </button>
         ))}
       </div>
       <div className="flex items-center justify-between gap-2">
-        <button type="button" data-testid="month-prev" aria-label={t.monthPrev} disabled={ym <= first} onClick={() => setYm(shiftMonth(ym, -1))} className={navBtn}>
+        <button type="button" data-testid="month-prev" aria-label={t.monthPrev} disabled={ym <= first} onClick={() => onNav({ m: shiftMonth(ym, -1), day: null })} className={navBtn}>
           <ChevronLeft className="size-5" aria-hidden />
         </button>
         <h3 data-testid="month-name" className="font-semibold">
           {monthName(ym)}
         </h3>
-        <button type="button" data-testid="month-next" aria-label={t.monthNext} disabled={ym >= last} onClick={() => setYm(shiftMonth(ym, 1))} className={navBtn}>
+        <button type="button" data-testid="month-next" aria-label={t.monthNext} disabled={ym >= last} onClick={() => onNav({ m: shiftMonth(ym, 1), day: null })} className={navBtn}>
           <ChevronRight className="size-5" aria-hidden />
         </button>
       </div>
@@ -171,7 +187,7 @@ export function MonthView({
           if (!key) return <span key={`b${idx}`} />
           const c = cellLevel(days[key], MODES[mode])
           const future = key > today
-          const tone = c.state === "slip" ? "border-border bg-muted-foreground/30" : c.state === "none" ? "border-border bg-card" : `border-transparent ${LEVEL_BG[c.state === "clear" ? 4 : c.level]}`
+          const tone = c.state === "slip" ? "border-dashed border-foreground/60 bg-muted-foreground/30" : c.state === "none" ? "border-border bg-card" : `border-transparent ${LEVEL_BG[c.state === "clear" ? 4 : c.level]}`
           return (
             <button
               key={key}
@@ -181,10 +197,14 @@ export function MonthView({
               data-state={c.state}
               data-level={c.level}
               aria-pressed={picked === key}
-              onClick={() => setPicked(key)}
+              onClick={() => {
+                tapped.current = true
+                onNav({ day: key })
+              }}
               className={`flex min-h-11 flex-col items-center justify-center rounded-md border text-xs text-foreground disabled:opacity-40 ${tone} ${key === today ? "outline outline-2 -outline-offset-2 outline-foreground" : ""} ${picked === key ? "ring-2 ring-primary" : ""}`}
             >
               <span>{Number(key.slice(8))}</span>
+              {c.state === "slip" ? <X className="size-3" aria-hidden /> : null}
               {c.state !== "none" && (mode === 1 || mode === 2) ? <span className="font-semibold">{c.level}</span> : null}
               {c.state !== "none" && mode === 3 ? <span aria-hidden="true">{"•"}</span> : null}
             </button>
@@ -204,14 +224,14 @@ export function MonthView({
         </li>
       </ul>
       {picked ? (
-        <>
+        <div ref={summaryRef} className="flex flex-col gap-3">
           <DaySummary date={picked} day={days[picked]} verb={verb} testId="day-summary" />
           {onFill && canFill(picked, today) && (
             <button type="button" data-testid="fill-day" onClick={() => onFill(picked)} className="inline-flex min-h-12 items-center justify-center rounded-md border border-primary px-4 text-primary">
               {days[picked]?.slipped !== undefined || days[picked]?.hard !== undefined ? t.changeDay : t.fillDay}
             </button>
           )}
-        </>
+        </div>
       ) : (
         <p className="text-sm text-muted-foreground">{t.pickDay}</p>
       )}
@@ -220,12 +240,12 @@ export function MonthView({
 }
 
 /** Pattern lines from the morning forecast only. */
-export function PatternView({ days }: { days: Days }) {
+export function PatternView({ days, verb }: { days: Days; verb: string }) {
   const p = patternsOf(days)
   return (
     <section data-testid="tab-pattern-panel" className="flex flex-col gap-3">
       {!p.ready ? (
-        <p data-testid="pattern-wait">{t.patternWait(p.count, MIN_CHECKINS)}</p>
+        <p data-testid="pattern-wait">{t.patternWait(verb, p.count, MIN_CHECKINS)}</p>
       ) : (
         <>
           {p.forecast ? (
@@ -233,7 +253,7 @@ export function PatternView({ days }: { days: Days }) {
               <p>{t.forecastPattern(p.forecast.withDays, p.forecast.withSlips, p.forecast.otherDays, p.forecast.otherSlips)}</p>
             </Card>
           ) : (
-            <p data-testid="pattern-none">{t.patternNone}</p>
+            <p data-testid="pattern-none">{p.reason === "equal" ? t.patternEqual : t.patternNone}</p>
           )}
           {p.pairs.n > 0 && (
             <Card testId="pairs-line">
