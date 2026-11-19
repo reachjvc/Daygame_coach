@@ -217,6 +217,7 @@ branch push) or locally one file at a time (B1).
 Accept: `unasserted` ≤ 70, quoted from the baseline; CI `database` job green on the branch; the
 put-the-defect-back table filled in.
 
+<<<<<<< HEAD
 ### Group A (`trackingRepo` + `trackingService`)
 
 All 50 baseline rows of the two files (46 unasserted, 4 mentioned) are marked `"asserted"`. One file,
@@ -245,6 +246,36 @@ Findings (no data loss, no leak; nothing fixed, nothing marked `it.fails`):
   is touched; the caller only ever passes its own id.
 
 **Status (group A):** done 2026-11-19 — see the combined Phase 4 Status line for the baseline count.
+=======
+### Group C (programs, workouts, saved weeks, Time Log restore, health logs)
+
+Files: `tests/integration/repos/{programRepo,workoutRepo,programDraft,timetrackBackup,healthRepo}Writes.integration.test.ts`.
+Each delete also has a "filter alone" test that swaps the signed-in session for the server's key, because
+row security otherwise hides a missing `user_id` filter in the repo.
+
+| file | defect put back | test that went red |
+|---|---|---|
+| healthRepo | `deleteWeightLog` without `.eq("user_id")` | deleteWeightLog > filter alone: another account's id ... deletes nothing |
+| healthRepo | `createWeightLog` writes `time_of_day: "evening"` over the given one | createWeightLog > writes every field it was given ... |
+| programDraftRepo | `deleteDraft` without `.eq("user_id")` | deleteDraft > filter alone: another account's week is not deleted |
+| programDraftRepo | `createDraft` writes `unit_system: "kg"` always | createDraft > writes every field it was given |
+| programRepo | `deleteEnrollmentPermanently` without `.eq("user_id")` | deleteEnrollmentPermanently > filter alone: another account's ended program is not erased |
+| programRepo | `resetEnrollment` rewinds to `dayIndex: 1` | resetEnrollment > rewinds the cursor, keeps the weights ... |
+| workoutRepo | `adjustWorkout` drops the merge with the stored adjustments | adjustWorkout > writes what changed on the day, merges rather than replaces |
+| workoutRepo | `discardWorkout` without `.eq("user_id")` | NONE: `requireLive(userId, ...)` runs first and refuses any workout that is not the caller's, so the filter on the delete is unreachable redundancy; not catchable by a test |
+| timetrackBackupRepo | `restoreTimetrack` skips the first row of each page (`slice(i + 1, ...)`) | restoreTimetrack > writes every row of the backup back as it was; and > restoring twice changes nothing |
+| timetrackBackupRepo | (user filter: `restoreTimetrack` has none, it writes only the backup's rows by id) | the "another account's rows byte-identical" test holds it; a first try with a no-op edit (`slice(i, i + PAGE_SIZE - 1)`, same rows under 1,000) stayed green, as it should |
+
+Findings:
+- `unenroll` (programRepo): never uses `userId` for the write. `end_enrollment(p_id)` has no user filter
+  and the repo only checks for an open workout, so only row security stops it. With the server's key it ends
+  another account's program. Not reachable from the app today. Marked `it.fails` in
+  `programRepoWrites.integration.test.ts`; fix is an ownership read in the repo (the unit fake in
+  `tests/unit/db/programRepoGuards.test.ts` would need that read) or a migration, both over 30 lines or an
+  owner call. Remove `.fails` when fixed.
+
+**Status (group C):** done 2026-11-19 — 23 functions asserted (programRepo 9, workoutRepo 3, programDraftRepo 3, healthRepo 7, restoreTimetrack); `unasserted` 128 -> 102 for this group alone (baseline count of "unasserted": 102 before merging A and B); CI run 44600185515 on branch tests-catch-p4c: database success, static success, unit 1/2 and 2/2 success; one finding (`unenroll` has no user filter, `it.fails`), no data loss fixed.
+>>>>>>> 5a3e8a5f (Tests catch: Phase 4 group C — defect table, finding)
 
 ## Phase 5 — Flaky specs fixed · M · sonnet
 
