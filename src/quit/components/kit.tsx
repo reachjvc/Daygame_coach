@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { ChevronDown } from "lucide-react"
 import { tooltext as t } from "../tooltext"
 import { fill } from "../tooltext"
 import type { Evidence, QuitRef } from "../types"
@@ -172,9 +173,12 @@ export function SourcesFold({ refs }: { refs: QuitRef[] }) {
       id="sources"
       open={open}
       onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}
-      className="mt-8 rounded-md border border-border bg-card p-3 text-sm"
+      className="group mt-8 rounded-md border border-border bg-card p-3 text-sm"
     >
-      <summary className="flex min-h-11 cursor-pointer items-center font-medium">{t.common.sourcesTitle}</summary>
+      <summary className="flex min-h-11 cursor-pointer items-center gap-1 font-medium">
+        {t.common.sourcesTitle}
+        <ChevronDown aria-hidden className="size-4 transition-transform group-open:rotate-180" />
+      </summary>
       <ul className="flex flex-col gap-3">
         {refs.map((r, i) => (
           <li key={`${r.url}-${i}`}>

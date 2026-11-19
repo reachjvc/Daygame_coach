@@ -32,7 +32,16 @@ function Figure({ n, hero }: { n: QuitNumber; hero?: boolean }) {
 /** One checked number, closed: figure, headline, who was counted, Details (tags, basis, caveat, source). */
 function NumberRow({ n, hero = false }: { n: QuitNumber; hero?: boolean }) {
   const [open, setOpen] = useState(false)
+  const toggle = useRef<HTMLButtonElement>(null)
   const tag = checkedTag(n)
+  /** "Hide details" at the foot: close, then bring the card's Details button back into view with focus on it. */
+  const hide = () => {
+    setOpen(false)
+    requestAnimationFrame(() => {
+      toggle.current?.focus({ preventScroll: true })
+      toggle.current?.scrollIntoView({ block: "nearest" })
+    })
+  }
   const id = `basis-${n.kind}-${n.big.replace(/\W+/g, "")}`
   return (
     <article data-testid={`number-${n.kind}`} className="rounded-lg border border-border bg-card px-4 pb-1 pt-3">
@@ -40,9 +49,10 @@ function NumberRow({ n, hero = false }: { n: QuitNumber; hero?: boolean }) {
       <CountedLine text={n.counted} />
       <button
         type="button"
+        ref={toggle}
         data-testid="details"
         aria-expanded={open}
-        aria-controls={id}
+        aria-controls={open ? id : undefined}
         onClick={() => setOpen((o) => !o)}
         className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary"
       >
@@ -78,7 +88,7 @@ function NumberRow({ n, hero = false }: { n: QuitNumber; hero?: boolean }) {
             type="button"
             data-testid="hide-details"
             aria-controls={id}
-            onClick={() => setOpen(false)}
+            onClick={hide}
             className="inline-flex min-h-11 items-center gap-1 self-start text-sm font-medium text-primary"
           >
             {t.how.hideDetails}
@@ -97,7 +107,17 @@ function FactCard({ f }: { f: QuitFact }) {
   const choice = (value: boolean) => {
     const picked = guess === value
     const correct = guess !== null && f.answer === value
-    const tone = guess === null ? "border-border" : correct ? "border-primary text-primary" : picked ? "border-border text-muted-foreground" : "border-border opacity-60"
+    // his pick keeps a strong outline; the right answer carries the tick in the accent colour
+    const tone =
+      guess === null
+        ? "border-border"
+        : picked && correct
+          ? "border-2 border-primary text-primary"
+          : picked
+            ? "border-2 border-foreground"
+            : correct
+              ? "border-border text-primary"
+              : "border-border opacity-60"
     return (
       <button
         type="button"
@@ -114,7 +134,7 @@ function FactCard({ f }: { f: QuitFact }) {
   }
   return (
     <article data-testid={`fact-${f.id}`} className="rounded-lg border border-border bg-card p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-primary">{t.how.trueOrNot}</p>
+      <p className="text-xs font-semibold uppercase text-primary">{t.how.trueOrNot}</p>
       <p className="mt-1 text-base font-medium leading-snug">{f.statement}</p>
       <div className="mt-3 flex gap-2">
         {choice(true)}
@@ -140,34 +160,39 @@ function FactCard({ f }: { f: QuitFact }) {
 /** One outside service: its line, then "Open the site" and "Source" side by side; the source opens full width below. */
 function OutsideRow({ b }: { b: QuitBesides }) {
   const [open, setOpen] = useState(false)
-  const refs = realRefs(b.refs)
+  const refs = sourcesByAddress(realRefs(b.refs))
+  const textId = `outside-text-${b.id}`
   return (
     <li data-testid={`outside-${b.id}`} className="rounded-lg border border-border bg-card px-4 pb-1 pt-3">
-      <p className="text-base">{b.text}</p>
+      <p id={textId} className="text-base">
+        {b.text}
+      </p>
       <div className="flex flex-wrap items-center gap-x-6">
         {b.tel && (
-          <a href={`tel:${b.tel}`} data-testid="call" className="mt-1 inline-flex min-h-11 items-center gap-1.5 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">
+          <a href={`tel:${b.tel}`} data-testid="call" aria-describedby={textId} className="mt-1 inline-flex min-h-11 items-center gap-1.5 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">
             <Phone aria-hidden className="size-4" />
             {t.how.call}
           </a>
         )}
         {b.link && (
-          <a href={b.link} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-sm text-primary underline">
+          <a href={b.link} target="_blank" rel="noopener noreferrer" aria-describedby={textId} className="inline-flex min-h-11 items-center text-sm text-primary underline">
             {t.how.openSite}
           </a>
         )}
         {refs.length > 0 && (
-          <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} className="inline-flex min-h-11 items-center text-sm text-muted-foreground underline">
+          <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} className="inline-flex min-h-11 items-center text-sm text-primary underline">
             {open ? t.common.hideSource : t.common.source}
           </button>
         )}
       </div>
       {open && (
         <ul className="mb-3 flex flex-col gap-3 rounded-md border border-border p-3 text-sm">
-          {refs.map((r, i) => (
-            <li key={`${r.url}-${i}`}>
+          {refs.map((r) => (
+            <li key={r.url || r.cite}>
               <p>{r.cite}</p>
-              {r.quote && <p className="mt-1 italic text-muted-foreground">{`“${r.quote}”`}</p>}
+              {r.quotes.map((q) => (
+                <p key={q} className="mt-1 italic text-muted-foreground">{`“${q}”`}</p>
+              ))}
               {r.url && (
                 <a href={r.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center break-all text-primary underline">
                   {t.common.openSource}
@@ -179,6 +204,19 @@ function OutsideRow({ b }: { b: QuitBesides }) {
       )}
     </li>
   )
+}
+
+/** Refs to one address shown once, with all their quotes. */
+function sourcesByAddress(refs: QuitRef[]): { cite: string; url?: string; quotes: string[] }[] {
+  const out: { cite: string; url?: string; quotes: string[] }[] = []
+  for (const r of refs) {
+    const key = r.url || r.cite
+    const hit = out.find((x) => (x.url || x.cite) === key)
+    if (hit) {
+      if (r.quote && !hit.quotes.includes(r.quote)) hit.quotes.push(r.quote)
+    } else out.push({ cite: r.cite, url: r.url, quotes: r.quote ? [r.quote] : [] })
+  }
+  return out
 }
 
 /** The page's Sources list: one entry per address (two cites of one paper show once). */
@@ -251,6 +289,9 @@ export function HowTool({ addiction, data }: ToolProps) {
   return (
     <>
       <div data-testid="how" className="flex flex-col gap-6">
+        <p data-testid="intro" className="-mt-2 text-base text-muted-foreground">
+          {t.how.intro}
+        </p>
         {hope && (
           <div className="flex flex-col gap-2">
             <NumberRow n={hope} hero />
@@ -287,9 +328,13 @@ export function HowTool({ addiction, data }: ToolProps) {
                 it.type === "number" ? <NumberRow key={`${it.n.kind}-${i}`} n={it.n} /> : <FactCard key={it.f.id} f={it.f} />,
               )}
               {s.section === "helps" && sosLive && (
-                <Link data-testid="sos-line" href={carry(`/quit/${addiction}/sos`)} className="flex min-h-11 items-center text-sm text-primary underline">
-                  {t.how.cravingLink}
-                </Link>
+                <p className="text-sm">
+                  {t.how.cravingLine}{" "}
+                  <Link data-testid="sos-line" href={carry(`/quit/${addiction}/sos`)} className="inline-flex min-h-11 items-center text-primary underline">
+                    {t.how.cravingTool}
+                  </Link>{" "}
+                  {t.how.cravingAfter}
+                </p>
               )}
             </div>
           </section>

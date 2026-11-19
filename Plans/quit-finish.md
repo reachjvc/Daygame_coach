@@ -900,6 +900,23 @@ smokeless review (PMID 40232040), both through the normal source check first; H7
 section heading (needs sources per sentence); H8 Scotland, Wales and Northern Ireland lines and the US Spanish line
 in Free help.
 
+**Review round 2 (2026-11-19, on the shared review server at main 471cdfab; bugs Sonnet, look Opus 7/10, content
+Opus).** Fixed: "Hide details" now brings the card's Details button back into view with focus on it; Details points
+`aria-controls` at its box only while open; Call and Open the site name their service to screen readers; his pick on a
+True/Not true card keeps a strong outline and the right answer carries the tick (a wrong pick no longer looks like the
+right one was pressed); "TRUE OR NOT?" spacing; the Craving now? line reads "Craving right now? Craving now? has quick
+help." with only the tool name linked; a one-line intro under the title, like the sibling tools; the US quitline
+shows its digits (1-800-784-8669) and Smokefree.gov is marked "US:"; Free help Source links in the same colour as
+elsewhere, one entry per address with all its quotes; the shared Sources fold got a chevron (kit, all tools); content:
+West & Hajek is "one small study" (the abstract never says trial) and no guess about help they had, "the first
+author worked at", the Piper headline says bad moods eased and life ratings fell less (and the caveat names the head
+start in mood too), "About 81 in 100", "nicotine-pouch users", and the caffeine sentence stays with what Kroon says.
+Not changed, proposed for the owner: H5 again (both the look and the content reviewer read "19 in 100" first as bad
+news); H9 most headlines repeat the big figure mid-sentence ("26 years … about 26 years"); rewording all 15 checked
+headlines is a content round of its own (alternative: drop the big line and bold the figure inside the headline);
+H10 two cards per row on desktop (today the same 608 px column as the siblings); the start count fires twice on the
+dev server only (React's dev double run), not in production.
+
 ### Tool 11: Today's lesson — brief (Opus, 2026-11-19) — build exactly this, decide nothing
 
 Model: Opus builds it (the content fixes need the abstracts at hand), in a worktree. Address: `/quit/nicotine/lesson`

@@ -81,7 +81,7 @@
     "refs": []
   },
   "footerNote": {
-    "text": "On clozapine, olanzapine, fluvoxamine or theophylline? Tell your prescriber before you stop smoking or switch to a vape or pouches: tobacco smoke speeds their breakdown, so the dose may need to come down once smoking stops. Smoke speeds up caffeine the same way, so your usual coffee can feel stronger after you stop.",
+    "text": "On clozapine, olanzapine, fluvoxamine or theophylline? Tell your prescriber before you stop smoking or switch to a vape or pouches: tobacco smoke speeds their breakdown, so the dose may need to come down once smoking stops. Smoke speeds up the breakdown of caffeine the same way, so the same coffee can leave more caffeine in you after you stop.",
     "refs": [
       {
         "cite": "Kroon LA (2007). Drug interactions with smoking. American Journal of Health-System Pharmacy 64(18):1917-21.",
@@ -365,14 +365,14 @@
         "design": "smokers followed from 2 weeks before to 4 weeks after quit day; anxiety rated before and after",
         "who": "smokers who met the criteria for nicotine dependence and tried to stop; how much they smoked is not reported in the paper's summary",
         "n": "70 who stayed off for all 4 weeks (of 101 who tried)",
-        "where": "The authors worked at St George's Hospital Medical School, London",
+        "where": "The first author worked at St George's Hospital Medical School, London",
         "when": "published 1997",
         "measured": "Anxiety by a single rating and a standard anxiety questionnaire, from 2 weeks before quit day to 4 weeks after. Only people with no slip at all counted as off."
       },
-      "caveat": "It shows anxiety fell in those who stayed off, not how much. One small trial from the 1990s. People who slipped are not in this count. They were patients trying to stop, so may have had support or medicine.",
+      "caveat": "It shows anxiety fell in those who stayed off, not how much. One small study from the 1990s. People who slipped are not in this count. The paper's summary calls them patients and does not say what help they had.",
       "projection": false,
       "checked": "hooked",
-      "weak": "Small: 70 people, one trial",
+      "weak": "Small: 70 people, one study",
       "ref": {
         "cite": "West R, Hajek P (1997). What happens to anxiety levels on giving up smoking? American Journal of Psychiatry 154(11):1589-92.",
         "url": "https://pubmed.ncbi.nlm.nih.gov/9356569/",
@@ -390,7 +390,7 @@
     {
       "kind": "after-mood",
       "big": "Better mood",
-      "headline": "Compared with people who kept smoking, quitters' mood was better and their life rating held up better, one and three years on.",
+      "headline": "Compared with people who kept smoking, quitters' bad moods eased and their life rating fell less, one and three years on.",
       "mirror": "You worry life will feel empty without cigarettes.",
       "severity": "treatment",
       "counted": "smokers in a quit trial; addiction scored, not required to join",
@@ -402,7 +402,7 @@
         "when": "joined 2005–2007, followed 3 years",
         "measured": "Quality of life, health-related quality of life, mood, relationship satisfaction and stressful events; smoking checked by a lab test. Quitters also had fewer stressors by year 3."
       },
-      "caveat": "Quitters weren't chosen at random, so they may differ in other ways: they already rated their life a little higher before quitting. Life satisfaction slipped for everyone, but less for quitters; the authors call the differences modest. Quitting made no difference to marriage satisfaction.",
+      "caveat": "Quitters weren't chosen at random, so they may differ in other ways: they already rated their life a little higher, and had a little less bad mood, before quitting. Life satisfaction slipped for everyone, but less for quitters; the authors call the differences modest. Quitting made no difference to marriage satisfaction.",
       "projection": false,
       "checked": "not",
       "weak": "Small differences, the authors say",
@@ -555,7 +555,7 @@
     },
     {
       "kind": "quit-status",
-      "big": "81 in 100",
+      "big": "About 81 in 100",
       "headline": "Of Americans who ever had a nicotine problem, mild cases included, about 81 in 100 had never used any help for it.",
       "mirror": "You don't want pills, patches or a group, and think that's unusual.",
       "severity": "disorder",
@@ -2314,7 +2314,7 @@
   "besides": [
     {
       "id": "quitline-us",
-      "text": "US: call 1-800-QUIT-NOW. It connects you to your state’s free quitline.",
+      "text": "US: call 1‑800‑QUIT‑NOW (1‑800‑784‑8669). It connects you to your state’s free quitline.",
       "link": "https://smokefree.gov/talk-to-an-expert",
       "refs": [
         {
@@ -2336,7 +2336,7 @@
     },
     {
       "id": "quitline-uk",
-      "text": "England: call the free Smokefree National Helpline on 0300 123 1044.",
+      "text": "England: call the free Smokefree National Helpline on 0300 123 1044.",
       "link": "https://www.nhs.uk/live-well/quit-smoking/nhs-stop-smoking-services-help-you-quit/",
       "refs": [
         {
@@ -2351,7 +2351,7 @@
     },
     {
       "id": "smokefree-gov",
-      "text": "Smokefree.gov builds a free quit plan and sends daily quit texts.",
+      "text": "US: Smokefree.gov builds a free quit plan and sends daily quit texts.",
       "link": "https://smokefree.gov/",
       "refs": [
         {
