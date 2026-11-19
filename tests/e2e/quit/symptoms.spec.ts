@@ -87,6 +87,14 @@ async function open(page: Page, seed: Seed = {}, at = NOW) {
   await expect(page.getByTestId("day-card")).toBeVisible()
 }
 
+/** Opens every fold, outer ones first (a fold inside a closed one cannot be clicked). */
+async function openFolds(page: Page) {
+  for (let pass = 0; pass < 3; pass++) {
+    const closed = page.locator("details:not([open]) > summary")
+    for (let i = await closed.count(); i > 0; i--) await closed.first().click()
+  }
+}
+
 const noSideways = async (page: Page) => expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(await page.evaluate(() => window.innerWidth))
 
 test.describe("what you'll feel, and when @phone", () => {
@@ -157,12 +165,10 @@ test.describe("what you'll feel, and when @phone", () => {
   test("7 every fold opens, every source link has an href, no placeholder text", async ({ page }) => {
     await open(page, { run: -4 })
     // open every fold, then every source tap (opening one can reveal more)
-    for (let pass = 0; pass < 3; pass++) {
-      const closed = page.locator("details:not([open]) > summary")
-      for (let i = await closed.count(); i > 0; i--) await closed.first().click()
-      const taps = page.getByRole("button", { name: /^Source$/ })
-      for (let i = await taps.count(); i > 0; i--) await taps.first().click()
-    }
+    await openFolds(page)
+    const taps = page.getByRole("button", { name: /^Source$/ })
+    for (let i = await taps.count(); i > 0; i--) await taps.first().click()
+    await openFolds(page)
     await expect(page.locator("details:not([open])")).toHaveCount(0)
     const links = page.locator('a[href^="https://pubmed.ncbi.nlm.nih.gov/"]')
     expect(await links.count()).toBeGreaterThan(20)
@@ -182,7 +188,7 @@ test.describe("what you'll feel, and when @phone", () => {
     await open(page, { run: -4, record: { off: -4, goal: "stop" } })
     const read = () => page.evaluate(() => ({ q: localStorage.getItem("quit-v1"), b: localStorage.getItem("vice-blackbox-v1"), s: localStorage.getItem("vice-blackbox-sent-v1") }))
     const before = await read()
-    for (const s of await page.locator("summary").all()) await s.click()
+    await openFolds(page)
     await page.clock.runFor(130_000)
     await page.reload()
     await expect(page.getByTestId("day-number")).toHaveText("Day 5")
@@ -196,7 +202,7 @@ test.describe("what you'll feel, and when @phone", () => {
     page.on("pageerror", (e) => errors.push(e.message))
     await open(page, { run: -4 })
     await noSideways(page)
-    for (const s of await page.locator("summary").all()) await s.click()
+    await openFolds(page)
     await noSideways(page)
     const small = await page.evaluate(() => {
       const out: string[] = []

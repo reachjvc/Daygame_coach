@@ -290,10 +290,10 @@ function Page({ addiction, course, help, note, b3, nums, bb }: InnerProps & { bb
         </Card>
       </ul>
 
-      <p data-testid="also-possible" className="text-sm text-muted-foreground">
+      <div data-testid="also-possible" className="text-sm text-muted-foreground">
         {alsoPossible.text}
         <SourceTap refs={alsoPossible.refs} />
-      </p>
+      </div>
 
       <section data-testid="better" className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">{t.betterTitle}</h2>
