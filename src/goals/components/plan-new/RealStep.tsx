@@ -35,7 +35,7 @@ import { AreaGoalsDialog } from "@/src/goals/components/north-star/AreaGoalsDial
 import { ROUTES } from "@/src/shared/routes"
 import { realStepRoute } from "@/src/goals/planSteps/realStepRoutes"
 import { usePlanNew } from "./PlanNewContext"
-import { ErrandRibbon } from "./realStepExtras"
+import { ErrandRibbon } from "../north-star/ErrandRibbon"
 
 /** What the person came to a step to do, with the way back to where they left (NorthStarFlow's errand). */
 export interface Errand {

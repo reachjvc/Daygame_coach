@@ -35,7 +35,8 @@ import { TodayTab } from "@/src/goals/components/north-star/TodayTab"
 import { JournalTab } from "@/src/goals/components/north-star/JournalTab"
 import { PeriodReviewTab } from "@/src/goals/components/north-star/PeriodReviewTab"
 import { DueNow } from "@/src/goals/components/north-star/DueNow"
-import { PlanProgressList, QuickAdd } from "./realStepExtras"
+import { PlanProgressList } from "../north-star/PlanProgressList"
+import { QuickAdd } from "../north-star/QuickAdd"
 import { useRealStep } from "./RealStep"
 
 /** The step `stepId` names, drawn from the real parts. */
