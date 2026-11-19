@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { CountedLine } from "../../components/kit"
-import { finishedToolIds, menu, isAddictionId } from "../../menu"
+import { liveToolIds, menu, isAddictionId } from "../../menu"
 import { useQuitRecord } from "../../record"
 import { fill, tooltext as t } from "../../tooltext"
 import type { QuitBand, QuitBelief, QuitFact, QuitNeed } from "../../types"
@@ -36,7 +36,7 @@ const BAND_LABEL = { free: t.beliefs.bandFreeLink, set: t.beliefs.setDate, see: 
 export function BeliefsResult({ addiction, beliefs, facts, bands, needs, results, onRetake, onDelete, onClear }: Props) {
   const carry = useCarry()
   const { record } = useQuitRecord(addiction)
-  const finished = finishedToolIds()
+  const finished = liveToolIds()
   const givesOpen = toolFinished(finished, "gives")
   const latest = results[results.length - 1]
   const previous = results.length > 1 ? results[results.length - 2] : null

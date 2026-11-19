@@ -12,7 +12,7 @@ import { test, expect, SIGNED_OUT } from "../fixtures/test"
 import { quitUrl } from "../helpers/quit"
 import nicotineJson from "../../../src/quit/data/nicotine.json"
 import tooltextJson from "../../../src/quit/data/tooltext.json"
-import finishedJson from "../../../src/quit/data/finished.json"
+import liveToolsJson from "../../../src/quit/data/liveTools.json"
 import menuJson from "../../../src/quit/data/menu.json"
 
 interface Belief {
@@ -28,7 +28,7 @@ interface Belief {
 }
 const data = nicotineJson as unknown as { beliefs: Belief[]; facts: { id: string; statement: string; explain: string; n?: string }[] }
 const tt = tooltextJson as unknown as typeof tooltextJson
-const finished = finishedJson as string[]
+const finished = liveToolsJson as string[]
 const menu = menuJson as unknown as { groups: { tools: { id: string; line: string }[] }[] }
 const MENU_LINE = menu.groups.flatMap((g) => g.tools).find((x) => x.id === "beliefs")!.line
 

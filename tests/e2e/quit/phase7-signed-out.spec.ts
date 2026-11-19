@@ -11,9 +11,9 @@ import { quitUrl } from "../helpers/quit"
 import type { Page } from "@playwright/test"
 import nicotineJson from "../../../src/quit/data/nicotine.json"
 import tooltextJson from "../../../src/quit/data/tooltext.json"
-import finishedJson from "../../../src/quit/data/finished.json"
+import liveToolsJson from "../../../src/quit/data/liveTools.json"
 
-const finished = finishedJson as string[]
+const finished = liveToolsJson as string[]
 
 const D = nicotineJson as unknown as {
   beliefs: { id: string; scene: string }[]
