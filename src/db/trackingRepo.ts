@@ -889,7 +889,6 @@ export async function removeFavoriteTemplate(userId: string, templateId: string)
   const { error } = await supabase
     .from("user_tracking_stats")
     .update({ favorite_template_ids: newFavorites, updated_at: new Date().toISOString() })
-    .eq("user_id", userId)
 
   if (error) {
     throw new Error(`Failed to remove favorite template: ${error.message}`)
