@@ -1,4 +1,4 @@
-import { isDay, isObj, pickOne, pickStrings } from "../common"
+import { isDay, isObj, pickInt, pickOne, pickStrings } from "../common"
 
 export const MAX_OWN_MOMENT = 80
 export const MAX_THEN = 160
@@ -28,6 +28,8 @@ export interface Draft {
   choices: Record<string, Choice>
   /** True when the first ticks came from his Black Box saves (the banner shows while it holds). */
   pre: boolean
+  /** The furthest screen he has been on (screen 1 until he taps Continue); a reload lands there. */
+  reached: number
 }
 
 export interface IfthenState {
@@ -74,11 +76,11 @@ function parseDraft(x: unknown): Draft | null {
       if (isObj(v) && typeof v.then === "string") choices[k] = { then: v.then.slice(0, MAX_THEN), from: pickOne(v.from, FROMS, "own") }
     }
   }
-  return { ticked, choices, pre: x.pre === true }
+  return { ticked, choices, pre: x.pre === true, reached: pickInt(x.reached, 1, 100, 1) }
 }
 
 /** A draft that shows the plan again: every line's moment ticked with its "then". */
-export function draftFromLines(lines: Line[], pre = false): Draft {
+export function draftFromLines(lines: Line[], reached: "plan" | "pick" = "plan"): Draft {
   const ticked: string[] = []
   const choices: Record<string, Choice> = {}
   for (const l of lines) {
@@ -87,7 +89,7 @@ export function draftFromLines(lines: Line[], pre = false): Draft {
     ticked.push(k)
     choices[k] = { then: l.then, from: l.from }
   }
-  return { ticked, choices, pre }
+  return { ticked, choices, pre: false, reached: reached === "plan" ? ticked.length + 2 : 1 }
 }
 
 /** Trusts nothing: bad pieces are dropped, not repaired. */
@@ -119,13 +121,13 @@ export function preTicks(reports: { where: string }[], moments: { id: string }[]
 
 /** Adds a typed moment to the draft's ticks. */
 export const withOwn = (d: Draft | null, text: string): Draft => {
-  const cur = d ?? { ticked: [], choices: {}, pre: false }
+  const cur = d ?? { ticked: [], choices: {}, pre: false, reached: 1 }
   return { ...cur, ticked: addOwn(cur.ticked, text) }
 }
 
 /** Toggles one moment key in a draft; a key that was ticked loses its answer. */
 export function toggleTick(d: Draft | null, key: string): Draft {
-  const cur = d ?? { ticked: [], choices: {}, pre: false }
+  const cur = d ?? { ticked: [], choices: {}, pre: false, reached: 1 }
   if (cur.ticked.includes(key)) return { ...cur, ticked: cur.ticked.filter((k) => k !== key) }
   return { ...cur, ticked: [...cur.ticked, key] }
 }
@@ -157,8 +159,11 @@ export function answeredRun(d: Draft): number {
 /** The furthest screen he may be on: screen 1 is the moments, then one per ticked moment, then the plan. */
 export function firstUnanswered(d: Draft | null): number {
   if (!d || d.ticked.length === 0) return 1
-  return 2 + answeredRun(d)
+  return Math.max(1, Math.min(d.reached, 2 + answeredRun(d)))
 }
+
+/** The draft after he reached `screen` (never moves back). */
+export const reachedTo = (d: Draft, screen: number): Draft => (screen > d.reached ? { ...d, reached: screen } : d)
 
 export const totalScreens = (d: Draft | null): number => 1 + (d?.ticked.length ?? 0)
 
@@ -224,3 +229,13 @@ export function reviewCounts(lines: Line[], reviews: IfthenState["reviews"]): { 
 
 /** The "then" he wrote for a moment, for Craving now? (first line of that moment). */
 export const lineForMoment = (lines: Line[], momentId: string): Line | null => lines.find((l) => l.momentId === momentId) ?? null
+
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+/** `2026-12-03` as "Thu 3 Dec". */
+export function dayLabel(day: string): string {
+  const [y, m, d] = day.split("-").map(Number)
+  const wd = new Date(Date.UTC(y, m - 1, d)).getUTCDay()
+  return `${WEEKDAYS[wd]} ${d} ${MONTHS[m - 1]}`
+}

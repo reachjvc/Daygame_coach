@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   applyDraft,
+  dayLabel,
   draftFromLines,
   EMPTY_IFTHEN,
   firstUnanswered,
@@ -10,6 +11,7 @@ import {
   ownKey,
   parseIfthen,
   preTicks,
+  reachedTo,
   restore,
   reviewCounts,
   withStop,
@@ -87,7 +89,7 @@ describe("negation nudge", () => {
 
 describe("applyDraft", () => {
   const lines = [line("a", "after-food", "Walk."), line("b", "driving", "Gum."), line("c", null, "Gym", "Payday")]
-  const draft = (ticked: string[], choices: Draft["choices"] = {}): Draft => ({ ticked, choices, pre: false })
+  const draft = (ticked: string[], choices: Draft["choices"] = {}): Draft => ({ ticked, choices, pre: false, reached: 1 })
 
   it("keeps lines of still-ticked moments and their then, adds new ones, removes unticked", () => {
     const d = draft(["after-food", ownKey("Payday"), "coffee"], { coffee: { then: "Drink water", from: "idea" } })
@@ -156,11 +158,24 @@ describe("check back", () => {
 describe("firstUnanswered", () => {
   it("walks the answered moments in a row", () => {
     expect(firstUnanswered(null)).toBe(1)
-    const d: Draft = { ticked: ["coffee", "stress"], choices: {}, pre: false }
+    const d: Draft = { ticked: ["coffee", "stress"], choices: {}, pre: false, reached: 1 }
+    expect(firstUnanswered(d)).toBe(1)
+    d.reached = 9
     expect(firstUnanswered(d)).toBe(2)
     d.choices.coffee = { then: "gum", from: "own" }
     expect(firstUnanswered(d)).toBe(3)
     d.choices.stress = { then: "walk", from: "own" }
     expect(firstUnanswered(d)).toBe(4)
+    d.reached = 3
+    expect(firstUnanswered(d)).toBe(3)
+    expect(reachedTo(d, 4).reached).toBe(4)
+    expect(reachedTo(d, 2)).toBe(d)
+  })
+})
+
+describe("dayLabel", () => {
+  it("writes the weekday, day and month", () => {
+    expect(dayLabel("2026-12-03")).toBe("Thu 3 Dec")
+    expect(dayLabel("2026-11-26")).toBe("Thu 26 Nov")
   })
 })

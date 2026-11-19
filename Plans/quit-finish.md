@@ -1426,3 +1426,13 @@ I5 Tool 2 shows his plan line for that moment (the only change to Tool 2).
 - A wave-1 save with all 12 ratings becomes a result even if the facts were half answered (no can-stop answer, so no can-stop block). A partial one becomes the draft and the saved `ratings` stay empty until a test is finished.
 - `OneQuestion` in the kit got an optional `showStep` prop ("Question N of 16"). Replies show the bar but no step text.
 - Results screen has a "Back to the menu" link at the end; the card's bottom line uses the request host.
+
+### From the Tool 7 build (Sonnet, 2026-11-19)
+
+- Card "If" part shows the data label as is, so labels that start with "When" read "If When I'm stressed". The brief says no rewording. Proposed: drop a leading "When" on display only (the data file stays the same), or reword those labels in the data file for all tools.
+- The menu row for `ifthen` shows greyed "Soon" until it is in liveTools.json, so the "menu row opens the tool" check is: row carries the new name and line; the tool opens by its address.
+- Added a `reached` number to the saved draft so a reload lands on the furthest screen he reached, not on screen 1 or 2 by guess. Proposed: keep.
+- The first screen is given `?s=1` when he taps Continue, so browser Back lands on it. Proposed: keep.
+- On the plan, when "Did these work?" is showing, the card's own Change button is hidden (the Change answer opens the editor), to avoid two buttons with one name. Proposed: keep.
+- Removed lines: Undo restores only the latest removal (one "Removed: ... Undo" line at a time). Proposed: keep.
+- Print view colours come from the browser's print defaults (no hard-coded colours; the colour ratchet test forbids them).

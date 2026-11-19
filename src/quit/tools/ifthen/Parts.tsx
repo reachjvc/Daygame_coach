@@ -130,7 +130,7 @@ export function LineCard({ line, label, index, count, swaps, ideas, due, answer,
         </div>
       )}
       <div className="flex flex-wrap gap-2">
-        {!editing && (
+        {!editing && !due && (
           <button type="button" data-testid={`card-${index}-change`} onClick={open} className={btn}>
             {t.change}
           </button>
@@ -152,12 +152,12 @@ export function LineCard({ line, label, index, count, swaps, ideas, due, answer,
 /** The plain print view: the cards and the check-back day. Everything else is hidden when printing. */
 export function PrintView({ cards, checkText, onClose }: { cards: { id: string; label: string; then: string }[]; checkText: string; onClose: () => void }) {
   return (
-    <section data-testid="print-view" data-print-root className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 text-foreground print:border-0 print:bg-white print:text-black">
-      <style>{"@media print{body *{visibility:hidden}[data-print-root],[data-print-root] *{visibility:visible}[data-print-root]{position:absolute;left:0;top:0;width:100%}[data-no-print]{display:none}}"}</style>
+    <section data-testid="print-view" data-print-root className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 text-foreground">
+      <style>{"@media print{body *{visibility:hidden}[data-print-root],[data-print-root] *{visibility:visible}[data-print-root]{position:absolute;left:0;top:0;width:100%;color:CanvasText;background:Canvas;border:0}[data-no-print]{display:none}}"}</style>
       <h2 className="text-xl font-semibold">{t.printTitle}</h2>
       <ol className="flex flex-col gap-3">
         {cards.map((c, i) => (
-          <li key={c.id} data-testid={`print-card-${i}`} className="rounded-md border border-border p-3 print:border-neutral-400">
+          <li key={c.id} data-testid={`print-card-${i}`} className="rounded-md border border-border p-3">
             <PlanCard label={c.label} then={c.then} testId={`print-card-${i}-text`} />
           </li>
         ))}

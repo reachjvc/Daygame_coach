@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
+import { usePathname, useSearchParams } from "next/navigation"
 import { BlackBoxBridge } from "../../components/BlackBoxBridge"
 import { LocalBlackBoxBridge } from "../../components/LocalBlackBoxBridge"
 import { OneQuestion, PrimaryButton } from "../../components/kit"
@@ -19,11 +20,13 @@ import {
   draftFromLines,
   EMPTY_IFTHEN,
   firstUnanswered,
+  dayLabel,
   isDue,
   MAX_OWN_MOMENT,
   moveLine,
   parseIfthen,
   preTicks,
+  reachedTo,
   restore,
   reviewCounts,
   thenOk,
@@ -38,7 +41,6 @@ import {
 import { Choices, LineCard, PlanCard, PrintView } from "./Parts"
 import { ifthenText as t } from "./text"
 
-const fmt = (day: string) => new Date(`${day}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" })
 const btn = "inline-flex min-h-11 items-center justify-center rounded-md border border-border px-3 text-sm"
 /** Responses that are not something to do at the moment (they need his numbers or point back at the SOS tool). */
 const NOT_A_MOMENT_IDEA = ["reasons", "craving"]
@@ -90,6 +92,8 @@ function Inner(props: InnerProps) {
 
 function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: QuitBlackBoxApi | null }) {
   const carry = useCarry()
+  const pathname = usePathname()
+  const sp = useSearchParams()
   const today = useToday()
   const { state, update } = useToolState<IfthenState>(addiction, "ifthen", EMPTY_IFTHEN, parseIfthen)
   const started = useStartCount(addiction, "ifthen")
@@ -117,7 +121,7 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
     if (state.draft || state.lines.length > 0) return
     const ticks = preTicks(bb.reports, moments)
     if (ticks.length === 0) return
-    update((s) => (s.draft || s.lines.length > 0 ? s : { ...s, draft: { ticked: ticks.map((x) => x.id), choices: {}, pre: true } }))
+    update((s) => (s.draft || s.lines.length > 0 ? s : { ...s, draft: { ticked: ticks.map((x) => x.id), choices: {}, pre: true, reached: 1 } }))
   }, [state, bb, moments, update])
 
   if (!state) return null
@@ -215,6 +219,13 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
           disabled={ticked.length === 0}
           onClick={() =>
             move(() => {
+              // The first screen gets its own address, so browser Back lands on it and not on the furthest screen.
+              if (sp.get("s") === null) {
+                const p = new URLSearchParams(sp.toString())
+                p.set("s", "1")
+                window.history.replaceState(null, "", `${pathname}?${p.toString()}`)
+              }
+              setDraft((d) => reachedTo(d as Draft, 2))
               go(2)
             })
           }
@@ -265,12 +276,13 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
           onClick={() =>
             move(() => {
               if (!last) {
+                setDraft((d) => reachedTo(d as Draft, screen + 1))
                 go(screen + 1)
                 return
               }
               const res = applyDraft(state.lines, draft)
               setRemoved(res.removed)
-              update((s) => ({ ...s, lines: res.lines }))
+              update((s) => ({ ...s, lines: res.lines, draft: reachedTo(draft, total + 1) }))
               go(total + 1)
             })
           }
@@ -290,7 +302,7 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
   const cardInfo = lines.map((l) => ({ id: l.id, label: l.momentId ? labelOf(l.momentId) : l.ownMoment, then: l.then }))
 
   if (printing) {
-    return <PrintView cards={cardInfo} checkText={state.checkin ? fmt(state.checkin) : t.printNone} onClose={() => setPrinting(false)} />
+    return <PrintView cards={cardInfo} checkText={state.checkin ? dayLabel(state.checkin) : t.printNone} onClose={() => setPrinting(false)} />
   }
 
   const remove = (id: string) => {
@@ -366,7 +378,7 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
           data-testid="add-more"
           onClick={() =>
             move(() => {
-              const d = draftFromLines(lines)
+              const d = draftFromLines(lines, "pick")
               setRemoved([])
               update((s) => ({ ...s, draft: d }))
               go(1)
@@ -405,7 +417,7 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
           </div>
           {state.checkin && (
             <p data-testid="check-shown" className="text-sm">
-              {t.checkSet(fmt(state.checkin))}
+              {t.checkSet(dayLabel(state.checkin))}
             </p>
           )}
         </section>

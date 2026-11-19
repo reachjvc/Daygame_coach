@@ -1,4 +1,4 @@
-import type { QuitRef } from "../../../types"
+import type { QuitRef } from "../../types"
 import type { Basis } from "../date/Bits"
 
 export interface IfEvidence {
