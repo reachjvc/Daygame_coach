@@ -52,10 +52,17 @@ test.describe("API routes, signed out", () => {
 
     for (const { route, method } of pairs) {
       const url = concretePath(route, id)
-      const response = (WRITE_METHODS as readonly string[]).includes(method)
-        ? await request.fetch(url, { method, data: {}, maxRedirects: 0 })
-        : await request.fetch(url, { method, maxRedirects: 0 })
-      const status = response.status()
+      let status: number
+      try {
+        const response = (WRITE_METHODS as readonly string[]).includes(method)
+          ? await request.fetch(url, { method, data: {}, maxRedirects: 0 })
+          : await request.fetch(url, { method, maxRedirects: 0 })
+        status = response.status()
+      } catch (error) {
+        // The server dropped the connection: not an answer.
+        problems.push(`${method} ${route}: no answer (${error instanceof Error ? error.message.split("\n")[0] : "error"})`)
+        continue
+      }
       const key = `${method} ${route}`
       const pub = publicOf(route, method)
 

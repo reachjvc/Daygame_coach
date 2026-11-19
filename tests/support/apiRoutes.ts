@@ -74,4 +74,35 @@ export interface PublicApi {
  * route that starts answering something else goes red, so one that begins
  * leaking data or failing with a 500 is caught.
  */
-export const PUBLIC_API: PublicApi[] = []
+export const PUBLIC_API: PublicApi[] = [
+  {
+    route: "/api/healthz",
+    method: "GET",
+    reason: "Deploy check, Docker healthcheck and uptime monitor ask it with no session; it holds no secret.",
+    answers: [200],
+  },
+  {
+    route: "/api/errors",
+    method: "POST",
+    reason: "Crash reports must arrive from signed-out visitors too; rate limited, text scrubbed.",
+    answers: [200],
+  },
+  {
+    route: "/api/auth/sign-out",
+    method: "POST",
+    reason: "Ending a session must work even when the session is already gone; it changes nothing for a stranger.",
+    answers: [200],
+  },
+  {
+    route: "/api/notifications/tick",
+    method: "POST",
+    reason: "The database clock calls it with a secret in the Authorization header; no secret means 401, no secret configured means 503.",
+    answers: [401, 503],
+  },
+  {
+    route: "/api/quit/count",
+    method: "POST",
+    reason: "Anonymous step counter of the quit tools: stores nothing, takes only a small valid JSON body, so `{}` is a 400 by design.",
+    answers: [400],
+  },
+]
