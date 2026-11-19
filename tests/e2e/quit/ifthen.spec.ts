@@ -166,7 +166,8 @@ for (const size of SIZES) {
       await expect(page.getByTestId("ev-list")).toBeVisible()
       await expect(page.locator('[data-testid^="idea-"]')).toHaveCount(0)
       await page.getByTestId("more-ideas").click()
-      await expect(page.locator('[data-testid^="idea-"]')).toHaveCount(8)
+      await expect(page.locator('[data-testid^="idea-"]')).toHaveCount(7)
+      await expect(page.getByTestId("idea-teeth")).toHaveCount(0) // it repeats an after-meal card
       await expect(page.getByTestId("idea-water")).toContainText(stop(idea("water")))
       await expect(page.getByTestId("idea-reasons")).toHaveCount(0)
       await expect(page.getByTestId("idea-craving")).toHaveCount(0)
