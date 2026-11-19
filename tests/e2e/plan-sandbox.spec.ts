@@ -102,10 +102,13 @@ function record(page: Page): { all: Seen[]; stop: () => void } {
   return { all, stop: () => page.off("request", on) }
 }
 
+/** The role-model council's routes: the copy space aims them at its own rows, as it does the plan and day routes. */
+const COUNCIL_PATHS = /^\/api\/role-models\/(council|week|settings|area)$/
+
 /** True for a request that acts on the copy space: the plan or day route aimed at it, or the copy space's own routes. */
 function actsOnCopySpace(r: Seen, sandboxId: string): boolean {
   const p = r.url.pathname
-  const aimed = (p === "/api/life-plan" || p === "/api/life-plan/day") && r.url.searchParams.get("target") === "sandbox"
+  const aimed = (p === "/api/life-plan" || p === "/api/life-plan/day" || COUNCIL_PATHS.test(p)) && r.url.searchParams.get("target") === "sandbox"
   const own = p === "/api/plan-sandbox/copy" || p === "/api/plan-sandbox/reset"
   return (aimed || own) && r.account === sandboxId
 }
@@ -212,7 +215,7 @@ test.describe("the copy space page", () => {
         ["/api/life-plan/reminders", "PUT"],
         ["/api/notifications/devices", "POST"],
         ["/api/programs/enrollments", "POST"],
-        ["/api/role-models/week", "PUT"],
+        ["/api/quit/count", "POST"],
         ["/api/goals", "DELETE"],
       ]) {
         out[`${method} ${path}`] = await fetch(path, { method, headers: { "content-type": "application/json" }, body: "{}" }).then((r) => r.status, (e) => (e instanceof TypeError ? "blocked" : String(e)))
@@ -222,10 +225,18 @@ test.describe("the copy space page", () => {
     for (const [what, status] of Object.entries(blocked)) expect(status, what).toBe("blocked")
     expect(net.all.slice(before).filter(isWrite), "a refused write must not reach the network").toEqual([])
 
+    // A council write is aimed at the copy space, as the hidden account, never sent as the owner.
+    // The page reads the reply to the end: a body nobody reads never resolves for the response loop below.
+    const councilSent = page.waitForRequest((r) => new URL(r.url()).pathname === "/api/role-models/week" && r.method() === "PUT")
+    await page.evaluate(() => fetch("/api/role-models/week", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ day: "2000-01-01", lived: true }) }).then((r) => r.text()).catch(() => null))
+    const council = await councilSent
+    expect(new URL(council.url()).searchParams.get("target")).toBe("sandbox")
+    expect(council.headers()["x-page-account"]).toBe(sandboxId)
+
     // THE REQUEST LOG, for the whole session.
     net.stop()
     const writes = net.all.filter(isWrite)
-    expect(writes.map((w) => w.url.pathname).sort(), "a copy, a plan save and a day save, so this proves something").toEqual(["/api/life-plan", "/api/life-plan/day", "/api/plan-sandbox/copy"])
+    expect(writes.map((w) => w.url.pathname).sort(), "a copy, a plan save and a day save, so this proves something").toEqual(["/api/life-plan", "/api/life-plan/day", "/api/plan-sandbox/copy", "/api/role-models/week"])
     const stray = writes.filter((w) => !actsOnCopySpace(w, sandboxId)).map((w) => `${w.method} ${w.url.pathname}${w.url.search} as ${w.account}`)
     expect(stray, "every write targets the copy space").toEqual([])
     // The plan and day reads of the page are aimed at the copy space too, and never name the owner.

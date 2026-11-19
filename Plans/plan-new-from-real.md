@@ -10,7 +10,28 @@ still waits for his word.
 - **Phase 1 (decision page)** done. His picks and notes were read on 2026-11-19 at 09:40 and are carried into
   this plan ("His picks", below). Q1 (order) and Q8 (lines that move by themselves) are open. He wants to try
   working versions of them in the real tool (Phase 7).
-- **Phase 2 onwards** not started.
+- **Phase 2 (one checklist)** done on 2026-11-19 (Haiku). `inventory/MASTER.md` holds 973 rows (A 170, B 225,
+  C 217, D 219, E 142); `inventory/count_check.py` passes (source = MASTER per file). The count includes the
+  legend and summary tables, so no row is lost; those rows get "new home: legend/summary" later.
+- **Phase 3 (adapter)** built on 2026-11-19:
+  - The writers and reads moved out of `NorthStarFlow.tsx` into `usePlanWriters.ts` and `usePlanReads.ts`.
+    ErrandRibbon, PlanProgressList and QuickAdd moved into their own files. An Opus review signed off "pure
+    move: yes" (`plan-steps/proof/p3-move-review.md`, diffs in `proof/`). One harmless difference: the
+    workout read now goes out before the plan read.
+  - `plan-new/RealStep.tsx` + `RealStepViews.tsx` host all 12 real steps at `/plan/new/s/<step>`. Dialogs
+    are in the query (`?area=` …), `?step=` / `?period=` redirect there, and the timezone comes from the
+    layout. Not yet there (Phase 4's Frame): the rail, back link, start over, to-do and read-back blocks.
+  - The copy space now copies, saves and empties the role-model council (Opus security review: no
+    must-fix). The quit-a-vice records have no table of their own: they are plan rows, and the plan rows
+    were already copied.
+  - The checks pass: the new e2e `plan-new-real` (a tick survives reload in the hidden account, 50 typed
+    characters send fewer than 10 writes, all 12 steps open), route-map and council-route unit tests,
+    `plan-sandbox` (its council line now proves the write goes to the copy space), `plan-new`, and the
+    `/plan` specs. The typecheck ratchet passes.
+  - Open: `life-plan-landing.spec.ts:40` ("Saved to your account." not visible) fails the same way on
+    origin/main (d1c98d4b), so we did not cause it. `:22` failed twice here, then passed on both main and
+    this branch (flaky).
+- **Phase 4 (faithful copy)** next.
 - **Backups:** last night's run was killed at 08:36 (TERM: the PC was off at 03:00 and WSL stopped during the
   catch-up). It was rerun by hand at 09:15 and worked: `life-plan-2026-11-19.json.gz.gpg`.
 
