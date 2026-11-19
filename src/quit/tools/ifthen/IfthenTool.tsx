@@ -16,18 +16,24 @@ import { NotReady } from "../NotReady"
 import { InfoLine } from "../date/Bits"
 import { EVIDENCE } from "./evidence"
 import {
+  addRemoved,
   applyDraft,
+  cleanState,
   draftFromLines,
   EMPTY_IFTHEN,
+  firstOpenMoment,
+  ideasFor,
   firstUnanswered,
   dayLabel,
   isDue,
+  matchMoment,
   MAX_OWN_MOMENT,
   moveLine,
   parseIfthen,
   preTicks,
   reachedTo,
   restore,
+  shownTotal,
   reviewCounts,
   thenOk,
   toggleTick,
@@ -103,7 +109,12 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
   const [own, setOwn] = useState("")
   const preDone = useRef(false)
 
-  const draft = state?.draft ?? null
+  const draft = state
+    ? cleanState(
+        state,
+        moments.map((m) => m.id),
+      ).draft
+    : null
   const total = totalScreens(draft)
   const { screen, go, back: goBack, isResult } = useScreens(firstUnanswered(draft), total, state !== null)
   useDoneCount(addiction, "ifthen", state !== null && isResult)
@@ -121,10 +132,36 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
     if (state.draft || state.lines.length > 0) return
     const ticks = preTicks(bb.reports, moments)
     if (ticks.length === 0) return
-    update((s) => (s.draft || s.lines.length > 0 ? s : { ...s, draft: { ticked: ticks.map((x) => x.id), choices: {}, pre: true, reached: 1 } }))
+    update((s) =>
+      s.draft || s.lines.length > 0
+        ? s
+        : {
+            ...s,
+            draft: {
+              ticked: ticks.map((x) => x.id),
+              choices: {},
+              pre: true,
+              reached: 1,
+            },
+          },
+    )
   }, [state, bb, moments, update])
 
+  // A double tap on Continue / Next must not pick a card on the next screen: option taps wait 400 ms after a screen change.
+  const changedAt = useRef(0)
+  useEffect(() => {
+    changedAt.current = Date.now()
+  }, [screen, isResult])
+  const settled = () => Date.now() - changedAt.current >= 400
+
+  const ids = useMemo(() => moments.map((m) => m.id), [moments])
+  const dirty = state !== null && cleanState(state, ids) !== state
+  useEffect(() => {
+    if (dirty) update((s) => cleanState(s, ids))
+  }, [dirty, update, ids])
+
   if (!state) return null
+  const st = cleanState(state, ids)
 
   const move = (fn: () => void) => {
     const now = Date.now()
@@ -136,6 +173,17 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
   const swapsOf = (momentId: string | null) => (momentId ? (swaps.find((s) => s.momentId === momentId)?.cards ?? []) : [])
   const setDraft = (fn: (d: Draft | null) => Draft) => update((s) => ({ ...s, draft: fn(s.draft) }))
   const back = screen > 1 ? goBack : null
+  /** Applies the draft to the plan and shows the plan. */
+  const finish = (d: Draft) => {
+    const res = applyDraft(st.lines, d)
+    setRemoved(res.removed)
+    update((s) => ({
+      ...s,
+      lines: res.lines,
+      draft: reachedTo(d, totalScreens(d) + 1),
+    }))
+    go(totalScreens(d) + 1)
+  }
 
   if (!isResult && screen === 1) {
     const ticked = draft?.ticked ?? []
@@ -147,11 +195,13 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
     const addOwn = () => {
       if (own.trim() === "") return
       started()
-      setDraft((d) => withOwn(d, own))
+      const hit = matchMoment(own, moments)
+      if (hit) setDraft((d) => (d?.ticked.includes(hit.id) ? d : toggleTick(d, hit.id)))
+      else setDraft((d) => withOwn(d, own))
       setOwn("")
     }
     return (
-      <OneQuestion step={1} total={total} onBack={null}>
+      <OneQuestion step={1} total={shownTotal(draft)} onBack={null}>
         <h2 className="text-lg font-semibold">{t.pickTitle}</h2>
         <p className="text-sm text-muted-foreground">{t.pickLine}</p>
         {draft?.pre && bannerList.length > 0 && (
@@ -213,7 +263,6 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
             {t.customAdd}
           </button>
         </div>
-        <InfoLine text={EVIDENCE.quitting.text} basis={EVIDENCE.quitting.basis} refs={[...EVIDENCE.quitting.refs]} testId="ev-quitting" />
         <PrimaryButton
           testId="pick-next"
           disabled={ticked.length === 0}
@@ -225,21 +274,27 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
                 p.set("s", "1")
                 window.history.replaceState(null, "", `${pathname}?${p.toString()}`)
               }
-              setDraft((d) => reachedTo(d as Draft, 2))
-              go(2)
+              const at = firstOpenMoment(draft as Draft)
+              if (at === -1) {
+                // Every ticked moment has its answer: straight to the plan.
+                finish(draft as Draft)
+                return
+              }
+              setDraft((d) => reachedTo(d as Draft, at + 2))
+              go(at + 2)
             })
           }
         >
           {t.continue}
         </PrimaryButton>
         {ticked.length === 0 && <p className="text-sm text-muted-foreground">{t.pickNone}</p>}
-        {state.lines.length > 0 && (
+        {st.lines.length > 0 && (
           <button
             type="button"
             data-testid="to-plan"
             onClick={() =>
               move(() => {
-                const d = draftFromLines(state.lines)
+                const d = draftFromLines(st.lines)
                 update((s) => ({ ...s, draft: d }))
                 go(totalScreens(d) + 1)
               })
@@ -249,6 +304,7 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
             {t.toPlan}
           </button>
         )}
+        <InfoLine text={EVIDENCE.quitting.text} basis={EVIDENCE.quitting.basis} refs={[...EVIDENCE.quitting.refs]} testId="ev-quitting" />
       </OneQuestion>
     )
   }
@@ -260,7 +316,7 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
     const last = i === draft.ticked.length - 1
     const momentId = key.startsWith("own:") ? null : key
     return (
-      <OneQuestion step={screen} total={total} onBack={back}>
+      <OneQuestion step={screen} total={shownTotal(draft)} onBack={back}>
         <h2 className="text-lg font-semibold">{t.thenTitle}</h2>
         <p data-testid="moment-of" className="text-sm text-muted-foreground">
           {t.momentOf(i + 1, draft.ticked.length)}
@@ -268,8 +324,20 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
         <div className="rounded-lg border border-border bg-card p-4">
           <PlanCard label={labelOf(key)} then={choice?.then ?? ""} testId="live-card" />
         </div>
-        <Choices swaps={swapsOf(momentId)} ideas={ideas} value={choice} onChange={(c) => setDraft((d) => ({ ...(d as Draft), choices: { ...(d as Draft).choices, [key]: c } }))} prefix="" />
-        {i === 0 && <InfoLine text={EVIDENCE.list.text} basis={EVIDENCE.list.basis} refs={[...EVIDENCE.list.refs]} testId="ev-list" />}
+        <Choices
+          key={key}
+          swaps={swapsOf(momentId)}
+          ideas={ideasFor(momentId, ideas)}
+          value={choice}
+          onChange={(c) =>
+            settled() &&
+            setDraft((d) => ({
+              ...(d as Draft),
+              choices: { ...(d as Draft).choices, [key]: c },
+            }))
+          }
+          prefix=""
+        />
         <PrimaryButton
           testId={last ? "see-plan" : "then-next"}
           disabled={!thenOk(choice)}
@@ -280,43 +348,82 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
                 go(screen + 1)
                 return
               }
-              const res = applyDraft(state.lines, draft)
-              setRemoved(res.removed)
-              update((s) => ({ ...s, lines: res.lines, draft: reachedTo(draft, total + 1) }))
-              go(total + 1)
+              finish(draft)
             })
           }
         >
           {last ? t.makePlan : t.next}
         </PrimaryButton>
         {!thenOk(choice) && <p className="text-sm text-muted-foreground">{t.needThen}</p>}
+        {i === 0 && <InfoLine text={EVIDENCE.list.text} basis={EVIDENCE.list.basis} refs={[...EVIDENCE.list.refs]} testId="ev-list" />}
       </OneQuestion>
     )
   }
 
   // The plan
-  const lines = state.lines
-  const due = isDue(state.checkin, today) && lines.length > 0
-  const rc = reviewCounts(lines, state.reviews)
-  const setCheck = (days: number | null) => update((s) => ({ ...s, checkin: days === null ? "" : addDays(today, days), reviews: {} }))
-  const cardInfo = lines.map((l) => ({ id: l.id, label: l.momentId ? labelOf(l.momentId) : l.ownMoment, then: l.then }))
+  const lines = st.lines
+  const due = isDue(st.checkin, today) && lines.length > 0
+  const rc = reviewCounts(lines, st.reviews)
+  const setCheck = (days: number | null) =>
+    update((s) => ({
+      ...s,
+      checkin: days === null ? "" : addDays(today, days),
+      reviews: {},
+    }))
+  const cardInfo = lines.map((l) => ({
+    id: l.id,
+    label: l.momentId ? labelOf(l.momentId) : l.ownMoment,
+    then: l.then,
+  }))
 
   if (printing) {
-    return <PrintView cards={cardInfo} checkText={state.checkin ? dayLabel(state.checkin) : t.printNone} onClose={() => setPrinting(false)} />
+    return <PrintView cards={cardInfo} checkText={st.checkin ? dayLabel(st.checkin) : t.printNone} onClose={() => setPrinting(false)} />
   }
 
   const remove = (id: string) => {
     const index = lines.findIndex((l) => l.id === id)
     if (index < 0) return
-    setRemoved([{ line: lines[index], index }])
+    setRemoved((r) => addRemoved(r, lines[index], index))
     update((s) => ({ ...s, lines: s.lines.filter((l) => l.id !== id) }))
   }
   const undo = () => {
     const back = removed
     setRemoved([])
-    update((s) => ({ ...s, lines: restore(s.lines.filter((l) => !back.some((r) => r.line.id === l.id)), back) }))
+    update((s) => ({
+      ...s,
+      lines: restore(
+        s.lines.filter((l) => !back.some((r) => r.line.id === l.id)),
+        back,
+      ),
+    }))
   }
   const removedNames = removed.map((r) => (r.line.momentId ? labelOf(r.line.momentId) : r.line.ownMoment)).join(", ")
+
+  const chips = (
+    <div role="group" aria-label={t.checkTitle} className="flex flex-wrap gap-2">
+      {(
+        [
+          ["check-1w", t.in1, 7],
+          ["check-2w", t.in2, 14],
+          ["check-none", t.noDate, null],
+        ] as const
+      ).map(([id, label, days]) => {
+        const on = days === null ? st.checkin === "" : st.checkin === addDays(today, days)
+        return (
+          <button
+            key={id}
+            type="button"
+            data-testid={id}
+            aria-pressed={on}
+            onClick={() => setCheck(days)}
+            className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm ${on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background"}`}
+          >
+            {label}
+          </button>
+        )
+      })}
+    </div>
+  )
 
   return (
     <section data-testid="result" className="flex flex-col gap-4">
@@ -339,9 +446,10 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
             {t.dueSummary(rc.kept, rc.change, rc.open)}
           </p>
           {rc.open === 0 && (
-            <button type="button" data-testid="due-new" onClick={() => setCheck(null)} className={`${btn} mt-2`}>
-              {t.dueNew}
-            </button>
+            <div className="mt-2 flex flex-col gap-2">
+              <p className="text-sm">{t.dueNewLine}</p>
+              {chips}
+            </div>
           )}
         </div>
       )}
@@ -360,10 +468,15 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
               index={i}
               count={lines.length}
               swaps={swapsOf(l.momentId)}
-              ideas={ideas}
+              ideas={ideasFor(l.momentId, ideas)}
               due={due}
-              answer={state.reviews[l.id]}
-              onSave={(c: Choice) => update((s) => ({ ...s, lines: s.lines.map((q) => (q.id === l.id ? { ...q, then: c.then, from: c.from } : q)) }))}
+              answer={st.reviews[l.id]}
+              onSave={(c: Choice) =>
+                update((s) => ({
+                  ...s,
+                  lines: s.lines.map((q) => (q.id === l.id ? { ...q, then: c.then, from: c.from } : q)),
+                }))
+              }
               onMove={(dir) => update((s) => ({ ...s, lines: moveLine(s.lines, l.id, dir) }))}
               onRemove={() => remove(l.id)}
               onAnswer={(a) => update((s) => ({ ...s, reviews: { ...s.reviews, [l.id]: a } }))}
@@ -399,44 +512,26 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
         <section data-testid="check-back" className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
           <h3 className="text-base font-semibold">{t.checkTitle}</h3>
           <p className="text-sm text-muted-foreground">{t.checkLine}</p>
-          <div role="group" aria-label={t.checkTitle} className="flex flex-wrap gap-2">
-            {(
-              [
-                ["check-1w", t.in1, 7],
-                ["check-2w", t.in2, 14],
-                ["check-none", t.noDate, null],
-              ] as const
-            ).map(([id, label, days]) => {
-              const on = days === null ? state.checkin === "" : state.checkin === addDays(today, days)
-              return (
-                <button key={id} type="button" data-testid={id} aria-pressed={on} onClick={() => setCheck(days)} className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm ${on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background"}`}>
-                  {label}
-                </button>
-              )
-            })}
-          </div>
-          {state.checkin && (
+          {chips}
+          {st.checkin && (
             <p data-testid="check-shown" className="text-sm">
-              {t.checkSet(dayLabel(state.checkin))}
+              {t.checkSet(dayLabel(st.checkin))}
             </p>
           )}
+          <p className="text-sm text-muted-foreground">{t.planNote}</p>
         </section>
       )}
 
-      <p className="text-sm text-muted-foreground">{t.planNote}</p>
       <p data-testid="used-in" className="text-sm text-muted-foreground">
         {t.usedIn}{" "}
         {isLiveTool("sos") ? (
-          <Link href={carry(`/quit/${addiction}/sos`)} className="inline-flex min-h-11 items-center text-primary underline">
+          <Link href={carry(`/quit/${addiction}/sos`)} className="inline-block py-3 text-primary underline">
             {t.usedInSos}
           </Link>
         ) : (
           t.usedInSos
         )}
         {t.usedInEnd}
-      </p>
-      <p data-testid="kept-here" className="text-sm text-muted-foreground">
-        {t.kept2}
       </p>
       <Link href={carry(`/quit/${addiction}`)} data-testid="to-menu" className="inline-flex min-h-11 items-center self-start text-sm text-muted-foreground underline">
         {t.toMenu}

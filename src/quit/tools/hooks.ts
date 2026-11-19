@@ -120,6 +120,8 @@ export function useScreens(firstUnanswered: number, total: number, ready = true)
     const changed = shown.current !== screen
     shown.current = screen
     if (first || !changed) return
+    // A new screen opens at its top, not where the last one was scrolled to.
+    window.scrollTo?.({ top: 0 })
     const el = document.querySelector<HTMLElement>('[data-testid="question"], [data-testid="result"]')
     if (!el) return
     if (!el.hasAttribute("tabindex")) el.tabIndex = -1

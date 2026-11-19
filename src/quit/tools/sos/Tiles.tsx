@@ -8,7 +8,7 @@ import { usable } from "../common"
 import { BeliefBasis } from "../beliefs/BeliefBasis"
 import { addTile, canMove, move, newBoard, type Board, type Dir } from "./game2048"
 import { BUBBLE_COUNT, freshSheet, pop, poppedCount, sheetDone } from "./bubbles"
-import { lineForMoment, withStop, type Line } from "../ifthen/logic"
+import { lineForMoment, showThen, withStop, type Line } from "../ifthen/logic"
 import { beliefOf, MOVE_MS, niceDay, OTHER, ringClock, type Kept } from "./logic"
 
 const t = tt.sos
@@ -352,10 +352,10 @@ export function Help({ moments, swaps, plan, onBack }: { moments: QuitOption[]; 
           {mine && (
             <li data-testid="help-plan" className="rounded-lg border border-primary bg-card p-4 text-lg [overflow-wrap:anywhere]">
               <span className="block text-sm font-semibold text-muted-foreground">{t.yourPlan}</span>
-              {withStop(mine.then)}
+              {showThen(mine.then)}
             </li>
           )}
-          {cards.filter((c) => !mine || withStop(c) !== withStop(mine.then)).map((c) => (
+          {cards.filter((c) => !mine || withStop(c).toLowerCase() !== withStop(mine.then).toLowerCase()).map((c) => (
             <li key={c} data-testid="help-card" className="rounded-lg border border-border bg-card p-4 text-lg">
               {c}
             </li>

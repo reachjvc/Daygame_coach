@@ -1738,6 +1738,28 @@ targets or "what you could buy" here: Tool 3 holds targets.
 - On the plan, when "Did these work?" is showing, the card's own Change button is hidden (the Change answer opens the editor), to avoid two buttons with one name. Proposed: keep.
 - Removed lines: Undo restores only the latest removal (one "Removed: ... Undo" line at a time). Proposed: keep.
 - Print view colours come from the browser's print defaults (no hard-coded colours; the colour ratchet test forbids them).
+- Print view stays a local view (not its own address). Proposed: keep. Print CSS now gives html and body a white background and black text.
+- Round 1 fixes (Sonnet, 2026-11-19), one line per item:
+  - 1 `useScreens` scrolls to the top when the screen changes (shared hook, one line).
+  - 2 Option taps are ignored for 400 ms after a screen change, so a double tap cannot pick a card.
+  - 3 Every removal of a visit is kept ("Removed: A, B."); one Undo restores all in place (original indexes).
+  - 4 The Change editor has Cancel beside Done.
+  - 5 Screen 2 order: the moment's cards, "Or write your own" (3-row growing textarea, max 160), "More ideas" (quick ideas, with a full stop; open from the start for an own moment or when the pick is a quick idea). Study line under the buttons.
+  - 6 After Continue he goes to the first unanswered moment; if all are answered, straight to the plan.
+  - 7 Progress counts the plan: ticked + 2, at least 2 ("1 of 2" on a fresh screen).
+  - 8 Screen 1: Continue sits right after "Something else"; the McWilliams line is under it.
+  - 9 Bottom of the plan is one line ("Kept on this phone. Lines for listed moments also show in Craving now? (What to do right here)."); the link has 44 px height by padding.
+  - 10 Due state: Move and Remove hidden; Kept / Change bordered; when all are answered the three date chips show in the box.
+  - 11 Placeholder "Walk to the shop and back"; own "then" shown with a capital; banner "We ticked the places you saved before: ..."; "Studied in eating habits" tag dropped.
+  - 12 Print: white page, black text.
+  - 13 Craving now? Help compares his line and the cards case-insensitively.
+  - 14 Typing a list label (case and apostrophe style ignored) ticks that moment, not an own chip.
+  - 15 Lines and ticks of a moment id the data file lacks are ignored at render and in Continue, and cleaned from storage.
+  - 16 `IDEA_EXCLUDE` (driving, drinks, waking): ideas that do not fit are not offered at that moment.
+  - 17 The If part: leading "When" dropped, first letter lower case unless "I" ("If after a meal", "If I'm stressed", "If payday").
+  - 18 The nudge shows the finding line, then the basis box; unused text and `NEGATION_TAG` removed.
+  - 19 Quitting study line, basis who and caveat, and the multicomponent quote follow the reviewer's wording.
+  - 20 List study line, caveat and the second quote follow the reviewer's wording.
 
 ### From the Tool 13 build (Sonnet, 2026-11-19)
 

@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest"
 import {
+  ideasFor,
   ifText,
+  addRemoved,
   applyDraft,
+  capFirst,
+  cleanState,
+  firstOpenMoment,
+  matchMoment,
+  shownTotal,
+  showThen,
   dayLabel,
   draftFromLines,
   EMPTY_IFTHEN,
@@ -182,10 +190,73 @@ describe("dayLabel", () => {
 })
 
 describe("ifText", () => {
-  it("drops a leading When from a list label", () => {
+  it("drops a leading When and lower-cases the first letter, except for I", () => {
     expect(ifText("When I’m stressed")).toBe("I’m stressed")
-    expect(ifText("After a meal")).toBe("After a meal")
-    expect(ifText("when payday comes")).toBe("Payday comes")
-    expect(ifText("When")).toBe("When")
+    expect(ifText("When I'm bored")).toBe("I'm bored")
+    expect(ifText("After a meal")).toBe("after a meal")
+    expect(ifText("In the car")).toBe("in the car")
+    expect(ifText("when payday comes")).toBe("payday comes")
+    expect(ifText("Payday")).toBe("payday")
+    expect(ifText("I get paid")).toBe("I get paid")
+    expect(ifText("Iced coffee")).toBe("iced coffee")
+  })
+})
+
+describe("ideasFor", () => {
+  const ideas = ["move5", "water", "leave", "text", "puzzle", "teeth", "breathe"].map((id) => ({ id }))
+  it("leaves out ideas that cannot be done at a moment", () => {
+    expect(ideasFor("driving", ideas).map((x) => x.id)).toEqual(["water", "breathe"])
+    expect(ideasFor("drinks", ideas).map((x) => x.id)).toEqual(["water", "leave", "text", "puzzle", "breathe"])
+    expect(ideasFor("waking", ideas).map((x) => x.id)).not.toContain("leave")
+  })
+  it("offers all of them at other moments and at his own", () => {
+    expect(ideasFor("coffee", ideas)).toHaveLength(7)
+    expect(ideasFor(null, ideas)).toHaveLength(7)
+  })
+})
+
+describe("round 1 helpers", () => {
+  it("addRemoved keeps original indexes so Undo puts both back in place", () => {
+    const lines = [line("a", "coffee", "x"), line("b", "stress", "y"), line("c", "bored", "z"), line("d", "driving", "w")]
+    // remove b (index 1), then c (now index 1)
+    let rem = addRemoved([], lines[1], 1)
+    rem = addRemoved(rem, lines[2], 1)
+    expect(rem.map((r) => r.index)).toEqual([1, 2])
+    const left = [lines[0], lines[3]]
+    expect(restore(left, rem).map((l) => l.id)).toEqual(["a", "b", "c", "d"])
+    // reverse order: remove c (index 2), then b (index 1)
+    let rem2 = addRemoved([], lines[2], 2)
+    rem2 = addRemoved(rem2, lines[1], 1)
+    expect(restore(left, rem2).map((l) => l.id)).toEqual(["a", "b", "c", "d"])
+  })
+  it("shownTotal counts the plan as a step, at least 2", () => {
+    expect(shownTotal(null)).toBe(2)
+    expect(shownTotal({ ticked: [], choices: {}, pre: false, reached: 1 })).toBe(2)
+    expect(shownTotal({ ticked: ["a", "b", "c"], choices: {}, pre: false, reached: 1 })).toBe(5)
+  })
+  it("firstOpenMoment finds the first ticked moment without an answer", () => {
+    const d: Draft = { ticked: ["a", "b", "c"], choices: { a: { then: "x", from: "own" }, c: { then: "z", from: "own" } }, pre: false, reached: 1 }
+    expect(firstOpenMoment(d)).toBe(1)
+    d.choices.b = { then: "y", from: "own" }
+    expect(firstOpenMoment(d)).toBe(-1)
+  })
+  it("shows a then with a capital and one full stop", () => {
+    expect(capFirst("go to the gym")).toBe("Go to the gym")
+    expect(showThen("go to the gym")).toBe("Go to the gym.")
+    expect(showThen("Go to the gym.")).toBe("Go to the gym.")
+  })
+  it("matchMoment finds a typed list label, case and apostrophes ignored", () => {
+    const ms = [{ id: "stress", label: "When I’m stressed" }, { id: "driving", label: "In the car" }]
+    expect(matchMoment("when i'm STRESSED ", ms)?.id).toBe("stress")
+    expect(matchMoment("in the  car", ms)?.id).toBe("driving")
+    expect(matchMoment("Payday", ms)).toBeNull()
+    expect(matchMoment("  ", ms)).toBeNull()
+  })
+  it("cleanState drops lines and ticks of a moment the data file lacks", () => {
+    const s = parseIfthen({ lines: [line("a", "coffee", "x"), line("b", "gone", "y"), line("c", null, "z", "Payday")] })
+    const c = cleanState(s, ["coffee"])
+    expect(c.lines.map((l) => l.id)).toEqual(["a", "c"])
+    expect(c.draft?.ticked).toEqual(["coffee", ownKey("Payday")])
+    expect(cleanState(c, ["coffee"])).toBe(c)
   })
 })

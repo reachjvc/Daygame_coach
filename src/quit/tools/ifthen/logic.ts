@@ -143,11 +143,25 @@ export function withStop(text: string): string {
   return /[.!?…]$/.test(s) ? s : `${s}.`
 }
 
-/** The "If" part of a card: a list label that starts with "When" drops it ("When I'm bored" reads "If I'm bored"). */
+/** The "If" part of a card: a leading "When" is dropped and the first letter is lower case ("If after a meal", "If I’m stressed"). */
 export function ifText(label: string): string {
   const s = label.trim()
   const rest = s.replace(/^when\s+/i, "")
-  return rest === s || rest === "" ? s : rest[0].toUpperCase() + rest.slice(1)
+  const t = rest === "" ? s : rest
+  return /^I(\s|['’]|$)/.test(t) ? t : t[0].toLowerCase() + t.slice(1)
+}
+
+/** Quick ideas that cannot or must not be done at a moment are not offered there. */
+export const IDEA_EXCLUDE: Record<string, string[]> = {
+  driving: ["move5", "leave", "text", "puzzle", "teeth"],
+  drinks: ["move5", "teeth"],
+  waking: ["leave"],
+}
+
+/** The quick ideas offered at one moment (a moment he typed gets them all). */
+export function ideasFor<T extends { id: string }>(momentId: string | null, ideas: T[]): T[] {
+  const no = momentId ? (IDEA_EXCLUDE[momentId] ?? []) : []
+  return ideas.filter((x) => !no.includes(x.id))
 }
 
 /** Is a "then" something he can keep (not empty or spaces)? */
@@ -173,6 +187,37 @@ export function firstUnanswered(d: Draft | null): number {
 export const reachedTo = (d: Draft, screen: number): Draft => (screen > d.reached ? { ...d, reached: screen } : d)
 
 export const totalScreens = (d: Draft | null): number => 1 + (d?.ticked.length ?? 0)
+
+/** The step count the progress bar shows: the moments screen, one per ticked moment, and the plan (at least 2). */
+export const shownTotal = (d: Draft | null): number => Math.max(2, (d?.ticked.length ?? 0) + 2)
+
+/** The index of the first ticked moment with no answer, or -1 when every ticked moment has one. */
+export function firstOpenMoment(d: Draft): number {
+  return d.ticked.findIndex((k) => !thenOk(d.choices[k]))
+}
+
+/** First capital letter, for display only ("go to the gym" reads "Go to the gym"). */
+export const capFirst = (s: string): string => (s === "" ? s : s[0].toUpperCase() + s.slice(1))
+
+/** A "then" as a card shows it: capital first letter, one full stop. */
+export const showThen = (text: string): string => withStop(capFirst(text.trim()))
+
+const plain = (s: string): string => s.replace(/[’‘`]/g, "'").trim().replace(/\s+/g, " ").toLowerCase()
+
+/** The list moment whose label he typed (case and apostrophe style ignored), or null. */
+export function matchMoment<M extends { id: string; label: string }>(text: string, moments: M[]): M | null {
+  const t = plain(text)
+  return t === "" ? null : (moments.find((m) => plain(m.label) === t) ?? null)
+}
+
+/** Drops lines and ticks of a list moment that the data file no longer has (corrupt or old storage). */
+export function cleanState(s: IfthenState, ids: string[]): IfthenState {
+  const ok = (id: string | null) => id === null || ids.includes(id)
+  const lines = s.lines.filter((l) => ok(l.momentId))
+  const draft = s.draft ? { ...s.draft, ticked: s.draft.ticked.filter((k) => k.startsWith(OWN) || ids.includes(k)) } : null
+  if (lines.length === s.lines.length && (!s.draft || draft!.ticked.length === s.draft.ticked.length)) return s
+  return { ...s, lines, draft }
+}
 
 export interface Removed {
   line: Line
@@ -201,6 +246,13 @@ export function applyDraft(lines: Line[], d: Draft, makeId: () => string = newLi
     next.push({ id: makeId(), momentId: own ? null : k, ownMoment: own ? k.slice(OWN.length) : "", then: c.then.trim(), from: c.from })
   }
   return { lines: next, removed }
+}
+
+/** Adds one removal to the list; `index` is where the line stood in the plan before any of these removals. */
+export function addRemoved(removed: Removed[], line: Line, index: number): Removed[] {
+  let at = index
+  for (const r of [...removed].sort((a, b) => a.index - b.index)) if (r.index <= at) at++
+  return [...removed, { line, index: at }]
 }
 
 /** Puts a line back where it stood (lowest index first), as "Undo" does. */
