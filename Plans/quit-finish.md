@@ -30,7 +30,7 @@ Status: **not started → building → checking → waiting for you → done (da
 |---|---|---|---|---|
 | 0 | The frame: menu, shared record, page titles, links | wave-1 menu | — | live f9190770 (no owner check: it has no screens of its own) |
 | 1 | Your quit date | lab `quitdate/best` | copy e's plan steps; the old "quit curve" hard-days calendar (mock F9kYB9… v2, study timing only) | building |
-| 2 | Craving now? | lab `sos/best` | one line of wave-1's "other side" answer; the craving log of `diary/best` | not started |
+| 2 | Craving now? | lab `sos/best` | wave-1's voice step and "other side" answer; the craving log of `diary/best` | building |
 | 3 | Your record (progress, money kept) | lab `progress/best` | the live counter feel of copies d and e | not started |
 | 4 | Slipped? Restart today | wave-1 `slip` | slips go into the shared record; clean runs never reset | not started |
 | 5 | The 12 lies test | wave-1 `beliefs` | from `beliefs/best`: a reply per belief, "can you stop?", earlier results | not started |
@@ -196,6 +196,89 @@ rendered. (b) "Make your free plan" in the 12 lies test (wave-1 and lab) points 
 10. No console error; no sideways scroll; every tap target at least 44 px; the menu row "Your quit date" opens it.
 11. Then the three-reviewer check (recipe step 3) and fix rounds; when clean, add `date` to `finished.json` and set
     the status to "waiting for you".
+
+### Tool 2: Craving now? — brief (Opus, 2026-11-19) — build exactly this, decide nothing
+
+Model: Sonnet builds in a worktree; Opus reads the diff and fact-checks the new text. Address: `/quit/nicotine/sos`
+(replaces the wave-1 tool there; move what is reused from lab `src/quit/lab/sos/best/*` and `shared/*` into
+`src/quit/tools/sos/`, keep the wave-1 voice step; never edit lab files). Menu line becomes **"Help in one tap:
+breathe, move, play, or what to do right where you are."** Nicotine only: no addiction switcher. Desktop: centred
+column about 560 px.
+
+**Opening (every visit starts fresh):** the shelf shows at once, and a **10-minute wait ring starts by itself** at
+the top ("Give it ten minutes", with 5 / 10 / 15 to change it; a tool, never a claim about how long a craving lasts).
+A visit counts as new when the last one ended (after-flow done) or started more than 60 minutes ago; an old result
+or "time is up" never shows on a new visit (review B1, C4). The ring keeps running while he is inside any tile. When it
+reaches zero: a short vibration where the phone allows it (`navigator.vibrate(200)`, ignored elsewhere) and the line
+"Ten minutes. How is it now?" with the after-flow buttons, also when he is inside a tile.
+
+**Shelf (one tap each; phone Back inside a tile returns to the shelf, through a history entry per tile — C7):**
+1. **What is it telling you?** The wave-1 voice step: the voice chips → "The other side" answer with its proof and
+   basis box (from `beliefs` in `nicotine.json`, as wave-1 does). No tape. No swap card here (help for the moment does
+   that). The chosen voice is kept for the log (`thought`).
+2. **Hold to breathe** (lab best, unchanged).
+3. **Move** → a timer tile: "Move for a few minutes": walk, stairs, or push-ups against a wall; a 5-minute countdown he
+   starts. Basis box: Haasova 2013 (exercise cuts cravings soon after, in its studies; entry already in the data).
+   Drop the "five minutes" claim and the Taylor 2007 "up to 50 minutes" quote from this tile (C6).
+4. **Bubble wrap** and 5. **Block puzzle** (lab best, unchanged). The data text "Play three minutes of Tetris" →
+   "Play three minutes of a falling-blocks game" (brand name, C23).
+6. **What to do right here** (was "Help for this moment"): the 10 situations from `riskyMoments`; tapping one shows
+   its three cards together, from a new data field `momentSwaps` (below). Nothing circular, nothing that takes days.
+7. **Your reasons**: his reasons (typed once, kept) and, when the record has a past quit date and a unit with count
+   and price, "About $X kept since <date>", worked out from those numbers, with the sum shown in one line under it.
+   Never a typed money field (C22). Without those numbers: reasons only.
+
+**After-flow** ("I'm through it" is always visible at the bottom of the shelf, and comes up when the ring ends):
+"Did you <verb>?" from `wording.ts` (smoke / vape / use a pouch, from the record's unit; "use it" when no unit — C20),
+with three answers:
+- **No, I got through it** → "You got through this one." plus one optional row: how strong (1–10) and where (the
+  situations). Saved as a close call in the Black Box (`fileCloseCall` in `src/quit/blackbox.ts`, `thought` from tile 1
+  if used). A second save within 5 minutes updates the first (lab rule). Then "Back to the menu".
+- **Still fighting it** → "Give it five more minutes" (restarts the ring at 5) and the shelf. Never the slip screen
+  (B3).
+- **Yes** → "A slip doesn't undo the days before." Saved as a slip in the Black
+  Box (`fileSlip`), with **Undo** (the Black Box `undo`) for as long as the screen is open. Then a link to "Slipped?
+  Restart today" when `slip` is in `finished.json`, else his step text: "Today, go back through steps 1–3 on paper."
+Signed out, the line under the save says "Saved on this phone."; signed in, "Saved to your account." (Black Box
+status).
+
+**His pattern:** under the shelf, a bar list of the situations of his saved close calls and slips (from the Black
+Box), from 3 saves on; before that one line: "After three saves, your most common moments show here."
+
+**New data field `momentSwaps` in `nicotine.json`** (written by Opus, our own words; no numbers, so no sources):
+
+| id | three cards |
+|---|---|
+| after-food | Get up from the table and clear your plate. · Brush your teeth or have a mint right now. · Walk around the block before you sit down again. |
+| coffee | Drink it somewhere else today: another room, standing, or away from where you used. · Have gum or a mint with it. · When the cup is empty, get up and start the next thing. |
+| drinks | Make the next round a soft drink. · Stay inside, away from where people go out to use. · Tell one person there: "I've stopped." |
+| work-break | Take the break, but walk a lap of the building instead. · Get a drink or a snack and sit with someone. · Text a friend for the length of the break. |
+| stress | Ten slow breaths before you decide anything. · Walk or take the stairs for a few minutes. · Write down in one line what's stressing you, to deal with after. |
+| bored | Pop bubbles or play the block puzzle here for three minutes. · Do one small job you've put off: a dish, an email, a call. · Give your hands something: gum, a toothpick, a pen. |
+| others-smoking | Stay inside, or walk the other way for a few minutes. · Say it once, plainly: "I've stopped." · Hold a drink or chew gum, so your hands and mouth have something. |
+| late-night | Go to bed now. · Have a hot shower or a hot drink. · Text one person, or write down what you'd tell them. |
+| waking | Get up straight away and drink a glass of water. · Change the first ten minutes: shower first, or step outside without it. · Eat something with your first drink. |
+| driving | Put on a song you know by heart and sing it. · Have gum or a mint; keep a pack in the car. · Open the window and breathe slowly until the next stop. |
+
+The validator (`src/quit/validate.ts`) checks every `riskyMoments` id has exactly three cards; other addictions'
+files get the field empty.
+
+**Acceptance (Playwright on live with `?preview=1`, 390x844 touch and 1280x800, screenshots looked at):**
+1. First visit: shelf and running ring visible without scrolling on the phone; no question before the shelf.
+2. Ring set to 5, page clock moved 5 minutes while inside Hold to breathe → the "How is it now?" line shows there.
+3. Phone/browser Back inside each tile returns to the shelf, never off the page.
+4. "In the car" shows the three driving cards; every situation shows its own three.
+5. "No" → close call saved; reload → the pattern list counts it; a second save within 5 minutes updates it (one row).
+6. "Still fighting it" → ring at 5:00, shelf; no slip text anywhere.
+7. "Yes" → slip saved, Undo removes it.
+8. Next visit (clock +61 minutes): fresh shelf and a new ring; no old result.
+9. Record unit "vape" → "Did you vape?"; no unit → "Did you use it?".
+10. Reasons with a past quit date, 10 cigarettes a day, $10.34 a pack of 20, 30 days → "About $155 kept" with its sum
+    line.
+11. No console error, no sideways scroll, tap targets at least 44 px; signed in on the test stack, the close call
+    reaches `/api/black-box`.
+12. Then the three-reviewer check and fix rounds; when clean, add `sos` to `finished.json` (which also brings back
+    the "Craving now?" bar) and set the status to "waiting for you".
 
 ## Done
 
