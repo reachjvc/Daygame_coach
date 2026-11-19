@@ -5,6 +5,7 @@ import { DateTool } from "./date/DateTool"
 import { GivesTool } from "./gives/GivesTool"
 import { HowTool } from "./how/HowTool"
 import { PastTool } from "./past/PastTool"
+import { RecordTool } from "./record/RecordTool"
 import { SlipTool } from "./slip/SlipTool"
 import { SosTool } from "./sos/SosTool"
 import { SymptomsTool } from "./symptoms/SymptomsTool"
@@ -31,7 +32,7 @@ export const TOOL_REGISTRY: Record<QuitToolId, ToolEntry> = {
   symptoms: { wave: 1, Component: SymptomsTool },
   checkin: { wave: 3, Component: null },
   lesson: { wave: 3, Component: null },
-  record: { wave: 3, Component: null },
+  record: { wave: 1, Component: RecordTool },
   slip: { wave: 1, Component: SlipTool },
   identity: { wave: 3, Component: null },
   besides: { wave: 2, Component: null },

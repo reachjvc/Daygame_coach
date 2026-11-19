@@ -178,10 +178,10 @@
         {
           "id": "record",
           "name": "Your record",
-          "line": "Every clear day counts. Close calls beaten. Never resets.",
+          "line": "Every clean day counts. Close calls beaten. Never resets.",
           "minutes": null,
-          "account": "free",
-          "wave": 3
+          "account": "none",
+          "wave": 1
         },
         {
           "id": "slip",
