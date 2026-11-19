@@ -77,7 +77,7 @@ const BASELINE_PATH = path.resolve(__dirname, "../support/writeCoverage.baseline
  * names it (the time tracker's running-timer notification, Phase 7), and the
  * ceiling had again drifted two above the real count.
  *
- * Lowered 128 -> 102 on 2026-11-19 (tests-catch Phase 4, group C): 23 functions of
+ * Lowered to 56 on 2026-11-19 (tests-catch Phase 4, after groups A and C): group C's 23 functions of
  * programRepo, workoutRepo, programDraftRepo, healthRepo and restoreTimetrack now have
  * integration tests that read the rows back (tests/integration/repos/*Writes*).
  */

@@ -273,7 +273,7 @@ Findings:
   `tests/unit/db/programRepoGuards.test.ts` would need that read) or a migration, both over 30 lines or an
   owner call. Remove `.fails` when fixed.
 
-**Status (group C):** done 2026-11-19 — 23 functions asserted (programRepo 9, workoutRepo 3, programDraftRepo 3, healthRepo 7, restoreTimetrack); `unasserted` 128 -> 102 for this group alone (baseline count of "unasserted": 102 before merging A and B); CI run 44600185515 on branch tests-catch-p4c: database success, static success, unit 1/2 and 2/2 success; one finding (`unenroll` has no user filter, `it.fails`), no data loss fixed.
+**Status (group C):** done 2026-11-19 — 23 functions asserted (programRepo 9, workoutRepo 3, programDraftRepo 3, healthRepo 7, restoreTimetrack); group C alone took the count 125 -> 102; with group A's marks merged the baseline holds 56 "unasserted" and MAX_UNASSERTED is 56; CI run 44600185515 on branch tests-catch-p4c: database success, static success, unit 1/2 and 2/2 success; one finding (`unenroll` has no user filter, `it.fails`), no data loss fixed.
 
 ## Phase 5 — Flaky specs fixed · M · sonnet
 
