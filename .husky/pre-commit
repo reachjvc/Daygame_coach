@@ -10,7 +10,7 @@ staged=$(git diff --cached --name-only --diff-filter=ACMR)
 if echo "$staged" | grep -qE '^(vitest\.config\.ts|tests/setup(Dom)?\.ts|tests/__mocks__/|package(-lock)?\.json|tsconfig\.json|\.github/|docs/testing/|playwright\.config\.ts)'; then
   npm test -- --reporter=dot || { echo "❌ Unit tests failed. Commit aborted."; exit 1; }
 else
-  code=$(echo "$staged" | grep -E '\.(ts|tsx|mjs|js|json)$')
+  code=$(echo "$staged" | grep -E '\.(ts|tsx|mjs|js|json)$' || true)
   [ -z "$code" ] && exit 0
   # scripts/related-tests.mjs reads import specifiers (about 0.3 s);
   # `vitest related` took ~20 s to build the same graph.
