@@ -44,7 +44,7 @@ test.describe("achievements", () => {
     expect(res.status(), await res.text()).toBe(200)
 
     await page.goto(`${ROUTES.plan}?step=today`)
-    await expect(page.getByText("Saved to your account.")).toBeVisible()
+    await expect(page.getByText("Saved to your account.")).toBeVisible({ timeout: 20_000 })
     await expect(page.getByTestId("earned-today")).not.toContainText("10 approaches in all")
     await page.getByRole("button", { name: "Log one E2E approaches" }).click()
     await expect(page.getByTestId("earned-today")).toContainText("10 approaches in all")

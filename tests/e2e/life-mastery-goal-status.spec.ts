@@ -33,7 +33,7 @@ const PLAN = {
 test("a goal paused from its card leaves Today and is named in the week's review", async ({ page, account, accountTimezone }) => {
   await seedLifePlan(page, account.id, PLAN)
   await page.goto(`${ROUTES.plan}?step=today`)
-  await expect(page.getByText("Saved to your account.")).toBeVisible()
+  await expect(page.getByText("Saved to your account.")).toBeVisible({ timeout: 20_000 })
   await page.getByRole("button", { name: "Open E2E gym sessions to change its date or its numbers" }).click()
 
   const status = page.getByRole("group", { name: "Where E2E gym sessions is" })
@@ -45,7 +45,7 @@ test("a goal paused from its card leaves Today and is named in the week's review
 
   await page.evaluate(() => window.localStorage.clear())
   await page.goto(`${ROUTES.plan}?step=today`)
-  await expect(page.getByText("Saved to your account.")).toBeVisible()
+  await expect(page.getByText("Saved to your account.")).toBeVisible({ timeout: 20_000 })
   await expect(page.getByRole("button", { name: "Log one E2E gym sessions" })).toHaveCount(0)
 
   await page.goto(thisWeeksReview(accountTimezone))

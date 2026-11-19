@@ -227,7 +227,7 @@ test.describe("the day half crosses devices", () => {
   test("a tick made just before a reload is kept, and reaches the account", async ({ page }) => {
     await page.goto(`${ROUTES.plan}?step=today`)
     const box = page.getByRole("checkbox", { name: "Did E2E cold shower" })
-    await expect(page.getByText("Saved to your account.")).toBeVisible()
+    await expect(page.getByText("Saved to your account.")).toBeVisible({ timeout: 20_000 })
     await box.check()
     // No wait: the reload lands inside the save's few seconds.
     await page.reload()

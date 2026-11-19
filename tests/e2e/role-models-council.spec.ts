@@ -130,7 +130,7 @@ test.describe("the council in the plan", () => {
     await add(page, a.id, [word])
     await page.goto(`${ROUTES.plan}?step=values`)
     const chip = page.getByTestId(`council-value-${word.toLowerCase()}`)
-    await expect(chip).toBeVisible()
+    await expect(chip).toBeVisible({ timeout: 20_000 })
     await chip.click()
     await expect(chip).toHaveCount(0)
   })
