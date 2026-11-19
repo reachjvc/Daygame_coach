@@ -17,6 +17,8 @@ His answers the same day, which shape everything below:
   Y6 yes.
 
 **Status:**
+- **2026-11-19:** he found `/plan/new` far thinner than the real tool. Its screens (Phases 6–7) are
+  replaced by `Plans/plan-new-from-real.md`, which reuses the real parts. Phases 1–5 continue as written.
 - **Phase 3 built** on branch `plan-p3` (not merged). Known and left for the Phase 5 outbox: an edit typed
   during an open save is still lost on a hard close (the browser kills the page before that save lands),
   and a copy of the plan kept in the browser can still be dropped on the next load when the account holds a
