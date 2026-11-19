@@ -152,6 +152,8 @@ Accept: worktree exists; start SHA written.
 Accept: on a main push run the artifact exists and `node scripts/ci/main-status.mjs` prints a grouped
 line naming a real commit; with a green fixture it prints nothing. Quote both.
 
+**Status:** pushed 2026-11-19, waiting for the first two main push runs to prove the artifact and the carried firstSha (filled in below when seen).
+
 ## Phase 2 — The common main breakers caught at commit · S · sonnet
 
 1. **Lint at commit.** If `scripts/lint-ratchet.mjs` has no file mode, add `--files <paths…>`: lint only

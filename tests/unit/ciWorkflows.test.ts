@@ -157,6 +157,16 @@ describe("the browser tests that CI actually runs", () => {
     expect(e2eJobs["report"]).toMatch(/if: \$\{\{ !cancelled\(\) \}\}/)
   })
 
+  test("the report job keeps the list of failing tests (e2e-failures) so a red main names its first bad commit", () => {
+    const report = e2eJobs["report"] ?? ""
+    expect(report).toMatch(/merge-reports --reporter json \.\/all-blob-reports/)
+    expect(report).toMatch(/node scripts\/ci\/e2e-failures\.mjs/)
+    expect(report).toMatch(/name: e2e-failures/)
+    expect(report).toMatch(/retention-days: 14/)
+    expect(report).toMatch(/actions: read/)
+    expect(report).toMatch(/GH_TOKEN: \$\{\{ github\.token \}\}/)
+  })
+
   test("no browser job is handed a Supabase key or an account's password", () => {
     /**
      * Since Phase 8 the browser suite runs against a throwaway local backend

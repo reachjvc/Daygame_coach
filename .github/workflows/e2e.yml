@@ -313,6 +313,12 @@ jobs:
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    # actions: read lets `gh` find the previous run's e2e-failures artifact.
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v7
 
@@ -337,3 +343,42 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+      # WHICH COMMIT BROKE IT. The same blobs as JSON, then scripts/ci/e2e-failures.mjs
+      # keeps a list of failing tests and the commit each first failed on. The list
+      # lives in artifact `e2e-failures` of the run before; scripts/ci/main-status.mjs
+      # reads it at session start. Tracking must never turn the report red itself.
+      - name: Merge the shards' reports as JSON
+        continue-on-error: true
+        run: npx playwright merge-reports --reporter json ./all-blob-reports > merged.json
+
+      # The newest earlier completed main push run of this workflow that kept the
+      # artifact, looking back at most 5 runs. None found: no previous file.
+      - name: Fetch the previous failures list
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        continue-on-error: true
+        run: |
+          mkdir -p previous-failures
+          for id in $(gh api "repos/${{ github.repository }}/actions/workflows/e2e.yml/runs?branch=main&event=push&status=completed&per_page=6" \
+              --jq '.workflow_runs[] | select(.id != ${{ github.run_id }}) | .id' | head -5); do
+            if gh run download "$id" --repo "${{ github.repository }}" --name e2e-failures --dir previous-failures 2>/dev/null; then
+              echo "previous failures list: run $id"
+              break
+            fi
+          done
+
+      - name: Write failures.json
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        continue-on-error: true
+        run: |
+          prev=""
+          [ -f previous-failures/failures.json ] && prev=previous-failures/failures.json
+          E2E_SUBJECT="$(git log -1 --format=%s)" node scripts/ci/e2e-failures.mjs merged.json $prev --out failures.json
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        continue-on-error: true
+        with:
+          name: e2e-failures
+          path: failures.json
+          retention-days: 14

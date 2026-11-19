@@ -9,7 +9,7 @@
 
 import { describe, it, expect } from "vitest"
 import { spawnSync } from "node:child_process"
-import { findRed, formatLine, firstFailedJob } from "../../../scripts/ci/main-status.mjs"
+import { findRed, formatLine, firstFailedJob, formatFailures } from "../../../scripts/ci/main-status.mjs"
 
 let id = 100
 const run = (workflowName: string, conclusion: string, createdAt: string, over: Record<string, unknown> = {}) => ({
@@ -145,6 +145,98 @@ esac
     const calls = fs.readFileSync(dir + "/calls", "utf8")
     for (const wf of ["CI", "E2E Tests", "Nightly checks"]) expect(calls).toContain(`--workflow ${wf} `)
     expect(calls).toContain("--status completed")
+    fs.rmSync(dir, { recursive: true, force: true })
+  })
+})
+
+describe("formatFailures", () => {
+  const f = (id: string, firstSha: string | null, firstSubject: string | null = null) => ({ id, project: "desktop", firstSha, firstSubject, firstRunId: 1 })
+  it("groups by first red commit, biggest first, and names an example", () => {
+    const lines = formatFailures({
+      failed: [
+        f("e2e/cold-open.spec.ts:192 a", "886a1721ffff", "Plan new: V1 sequence"),
+        f("e2e/programs.spec.ts:191 b", "3423892fffff", "Rebrand Phase 7: Training card on Your day"),
+        f("e2e/programs.spec.ts:200 c", "3423892fffff", "Rebrand Phase 7: Training card on Your day"),
+      ],
+      flaky: [{ id: "e2e/audit.spec.ts:411 x", project: "desktop", last5: [true, false, true, true, false] }],
+    })
+    expect(lines).toEqual([
+      '  2 tests first red at 3423892f "Rebrand Phase 7: Training card on You…" (e.g. programs.spec.ts:191)',
+      '  1 test first red at 886a1721 "Plan new: V1 sequence" (e.g. cold-open.spec.ts:192)',
+      "  flaky on main: audit.spec.ts:411 (3 of 5 runs)",
+    ])
+  })
+  it("says so when the start is unknown, caps at 3 groups, ignores a test that flaked once", () => {
+    const lines = formatFailures({
+      failed: [f("a.spec.ts:1 a", null), f("b.spec.ts:1 b", "1"), f("c.spec.ts:1 c", "2"), f("d.spec.ts:1 d", "3")],
+      flaky: [{ id: "z.spec.ts:1 z", project: "p", last5: [true, false, false] }],
+    })
+    expect(lines).toHaveLength(3)
+    expect(lines.join("\n")).toContain("red since before tracking began")
+    expect(lines.join("\n")).not.toContain("flaky")
+  })
+  it("prints nothing for a green list or junk", () => {
+    expect(formatFailures({ failed: [], flaky: [] })).toEqual([])
+    expect(formatFailures(undefined)).toEqual([])
+    expect(formatFailures({ failed: [null, { id: 5 }] })).toEqual([])
+  })
+})
+
+describe("the script with the failures artifact", () => {
+  const fs = require("node:fs")
+  const os = require("node:os")
+  const path = require("node:path")
+  const redRun = JSON.stringify([{ databaseId: 9, workflowName: "E2E Tests", event: "push", status: "completed", conclusion: "failure", createdAt: "2026-11-19T10:00:00Z" }])
+  const failures = (failed: unknown[]) => JSON.stringify({ failed, flaky: [] })
+  const run = (dir: string, extra: Record<string, string>) =>
+    spawnSync(process.execPath, ["scripts/ci/main-status.mjs"], { encoding: "utf8", env: { NODE_ENV: "test", PATH: "/nonexistent", ...extra } })
+
+  it("prints the grouped line after the red line (fixtures)", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ms-"))
+    fs.writeFileSync(dir + "/runs.json", redRun)
+    fs.writeFileSync(dir + "/f.json", failures([{ id: "x/a.spec.ts:7 t", project: "d", firstSha: "abcdef1234", firstSubject: "Break it", firstRunId: 3 }]))
+    const res = run(dir, { MAIN_STATUS_FIXTURE: dir + "/runs.json", MAIN_STATUS_FAILURES_FIXTURE: dir + "/f.json" })
+    expect(res.status).toBe(0)
+    expect(res.stdout.trim().split("\n")).toEqual([
+      "main is red since 2026-11-19: E2E Tests (run 9)",
+      '  1 test first red at abcdef12 "Break it" (e.g. a.spec.ts:7)',
+    ])
+    fs.rmSync(dir, { recursive: true, force: true })
+  })
+  it("prints nothing for a green fixture", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ms-"))
+    fs.writeFileSync(dir + "/runs.json", redRun.replace("failure", "success"))
+    fs.writeFileSync(dir + "/f.json", failures([{ id: "a:1 t", project: "d", firstSha: "abc", firstSubject: "x", firstRunId: 3 }]))
+    expect(run(dir, { MAIN_STATUS_FIXTURE: dir + "/runs.json", MAIN_STATUS_FAILURES_FIXTURE: dir + "/f.json" }).stdout).toBe("")
+    fs.rmSync(dir, { recursive: true, force: true })
+  })
+  it("keeps just the red line when the artifact is missing, broken, or gh is slow", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ms-"))
+    const redOnly = "main is red since 2026-11-19: E2E Tests (run 9)"
+    // missing artifact: gh run download fails
+    // slow: gh sleeps far longer than the budget on download
+    fs.writeFileSync(
+      dir + "/gh",
+      `#!/bin/sh
+case "$*" in
+  *"run list"*"E2E Tests"*) echo '${redRun}';;
+  *"run list"*) echo '[]';;
+  *"run view"*) echo '{"jobs":[]}';;
+  *"run download"*) if [ -f ${dir}/slow ]; then sleep 30; else exit 1; fi;;
+esac
+`,
+      { mode: 0o755 },
+    )
+    const env = { PATH: `${dir}:/usr/bin:/bin` }
+    let res = run(dir, env)
+    expect(res.status).toBe(0)
+    expect(res.stdout.trim()).toBe(redOnly)
+    fs.writeFileSync(dir + "/slow", "")
+    const t0 = Date.now()
+    res = run(dir, env)
+    expect(Date.now() - t0).toBeLessThan(5000)
+    expect(res.status).toBe(0)
+    expect(res.stdout.trim()).toBe(redOnly)
     fs.rmSync(dir, { recursive: true, force: true })
   })
 })
