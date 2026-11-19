@@ -28,8 +28,8 @@ Status: **not started → building → checking → waiting for you → done (da
 
 | # | Tool (menu name) | Built from | Folded in (nothing deleted; lab stays hidden) | Status |
 |---|---|---|---|---|
-| 0 | The frame: menu, shared record, page titles, links | wave-1 menu | — | building |
-| 1 | Your quit date | lab `quitdate/best` | copy e's plan steps; the old "quit curve" hard-days calendar (mock F9kYB9… v2, study timing only) | not started |
+| 0 | The frame: menu, shared record, page titles, links | wave-1 menu | — | live f9190770 (no owner check: it has no screens of its own) |
+| 1 | Your quit date | lab `quitdate/best` | copy e's plan steps; the old "quit curve" hard-days calendar (mock F9kYB9… v2, study timing only) | building |
 | 2 | Craving now? | lab `sos/best` | one line of wave-1's "other side" answer; the craving log of `diary/best` | not started |
 | 3 | Your record (progress, money kept) | lab `progress/best` | the live counter feel of copies d and e | not started |
 | 4 | Slipped? Restart today | wave-1 `slip` | slips go into the shared record; clean runs never reset | not started |
@@ -157,12 +157,24 @@ Desktop (1280): same screens in a centred column about 560 px wide.
    Then "Change my date" and "Back to the menu".
 7. **Not ready yet.** His step 1 with its "do" lines (fixed as in 5) and "Pick a date when you are ready" (goes to 2).
 
-**Data (shared record, `src/quit/record.ts` from Tool 0):** add `goal: "stop"|"break"|"later"|null` and
-`breakEnd: ISO date|null`; write `quitDate`, `goal`, `breakEnd`, `unit`. **Changing an existing date** asks first
-("Change your date? Your clean days so far stay counted.") and goes through `setQuitDate`, which never removes a run.
-No slip button and no runs list here (they belong to tools 3 and 4); if the date is past, show "Day N" only.
+**Data (decided 2026-11-19 after reading Tool 0's diff):** clean runs and slips already live in the **Black Box**
+(`src/vice/blackbox/*`, bridged for quit in `src/quit/blackbox.ts`): a browser copy, synced to the server
+(`/api/black-box`) when signed in. The wave-1 tools file slips and close calls there. So runs and slips come only from
+the Black Box, never from `record.ts`. Steps:
+- In `src/quit/record.ts` remove `runs`, `slips`, `cleanDays`, `currentRun`, `addSlip`, `undoSlip` and their tests (no
+  tool uses them). `record` keeps `quitDate`, `unit`, and gets `goal: "stop"|"break"|"later"|null` and
+  `breakEnd: ISO date|null`. `setQuitDate` only sets the date.
+- When the quit date is today or past and the Black Box has no living nicotine run, start one with `startAttempt` (or
+  `recordPastRun` for a past date) with `startedOn` = the quit date. A future date starts no run; the first visit to
+  this tool on or after that day starts it.
+- While a run is living, the result shows "Day N" from that run, and "Change my date" is replaced by one plain line:
+  "Your run started on <date>. Slipped? Use Slipped? Restart today." (a link only once `slip` is in `finished.json`).
+  The date is never moved under a living run, so no clean day is ever lost.
+- Before a run exists, changing the date asks nothing (nothing is lost) and simply sets the new date.
 
-**Also fix:** "Make your free plan" in the 12 lies test (wave-1 and lab) points to `/quit/nicotine/date` instead of
+**Also fix:** (a) Tool 0 question: the sticky "Craving now?" bar, the footer "Craving now?" link and the "New here?
+… 12 lies test" hint show only when their target (`sos`, `beliefs`) is in `finished.json`; until then they are not
+rendered. (b) "Make your free plan" in the 12 lies test (wave-1 and lab) points to `/quit/nicotine/date` instead of
 `/plan` (review A6, D).
 
 **Acceptance (Playwright on live with `?preview=1`, 390x844 touch and 1280x800, screenshots looked at):**
@@ -171,8 +183,9 @@ No slip button and no runs list here (they belong to tools 3 and 4); if the date
 2. Stop → In 3 days → result "3 days to go.", calendar starts at that date; chips are in date order on every weekday
    (unit test for each weekday).
 3. Pick a date 30 days ahead → the information line shows; 20 days ahead → no line; 43 days ahead not allowed.
-4. With a past date set and runs in the record, "Change my date" asks first and every run is still there after (unit
-   test on `setQuitDate` + one browser check).
+4. Past date ("Already off it", 20 days ago) → a living Black Box run starting that day, result "Day 21."; no
+   "Change my date" while it lives; signed out the run is in the browser Black Box, signed in it reaches
+   `/api/black-box` (test-stack account, never the live database).
 5. Break → 2 weeks → result shows the end date and the countdown; with the clock past the end → "The break has
    ended" with Stop for good / Another break / Not now.
 6. Not ready → step 1, no "above"/"table above" text anywhere on the page.
@@ -194,3 +207,5 @@ No slip button and no runs list here (they belong to tools 3 and 4); if the date
   tool-page footer "Craving now?" link still point to tools that are not finished (Soon). Lesson 4 says no link to an
   unfinished tool. Proposed: grey/remove them too until `sos` / `beliefs` are in finished.json. Not done: the brief did not say.
 - ClockSync (root layout) now skips the time-zone call on /quit pages unless a Supabase sign-in cookie exists; other pages unchanged.
+  **Answered (Opus, 2026-11-19):** both accepted. The bar, footer link and hint are hidden until their tool is finished
+  (Tool 1 "Also fix" (a)). The ClockSync change stays.
