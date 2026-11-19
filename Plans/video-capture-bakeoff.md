@@ -844,6 +844,27 @@ two failed rounds, stop and report what breaks.
 Done when: 11.5 passes, the owner page is posted with the settle counts, and the status
 line gives lines-to-owner before and after.
 
+### Phase 11 result so far (2026-11-19)
+
+- Frozen test `code/settle_test.py` written first (sha in `code/settle_test.sha256`). On the lean drafts it
+  found 9 of the owner's 36 answers wrong and unflagged ("silent errors").
+- Settler rounds (`code/settle.py`, drafts `gold/<clip>.draft.settle-vN.json`):
+
+  | Version | What changed | Test | Lines for the owner |
+  |---|---|---|---|
+  | lean (start) | two judges | silent errors 9 | 307 (22%) |
+  | v2 | judges lined up, repeats merged, trust scores per signal (Dawid-Skene) | FAIL, 2 silent | 311 (21.6%) |
+  | v4 | 4 bugs fixed, short doubtful bits re-listened on each voice track (177 GPU s) | PASS, 1 silent | 275 (18.9%) |
+  | v6 | Opus meaning judge on word differences; a settled wording needs 2 kinds of evidence | PASS, 1 silent | 217 (14.9%) |
+
+  The one silent error is a "No." the owner marked "likely her" himself.
+- Lining up the two judges alone cut "judges disagree on who" from 99 to 17. Weighing the same evidence
+  gets about halfway; the rest needed new evidence (the re-listen) or a decision only the owner can make.
+- Owner round 1 (page "Settle Round 1"): two policy questions with no listening (99 lone bits heard on
+  one track as "maybe heard" marks; 66 word differences kept as two readings), two rule checks of 6
+  cards each (second man: 35 lines; her short replies: 16), 8 hidden-style random checks of sure lines.
+  If all hold, 199 of the 217 settle and 18 of 1453 lines (1.2%) remain.
+
 ## Execution prompts
 
 One session per phase. Each starts with:
