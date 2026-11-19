@@ -23,6 +23,7 @@ import type { BlackBoxRecord, ViceAttempt, ViceEndingId, ViceReport } from "../t
 import { ENDING_FAMILIES } from "../data/blackbox"
 import { VICES } from "../data/vices"
 import { toDateISO } from "@/src/shared/dateUtils"
+import { mergeRecords } from "./viceSyncService"
 
 /**
  * Its own key. `quit-vice-v1` is NOT read, written or migrated by this file —
@@ -229,6 +230,29 @@ export function saveRecord(storage: Storage | null, record: BlackBoxRecord): voi
     // A full or blocked storage must not break the screen. The record stays in
     // memory for this session; the export door is how it gets out.
   }
+}
+
+/**
+ * Save `record` WITHOUT LETTING A STALE COPY WIN, and return what is now stored.
+ *
+ * A tab holds the record in memory and used to write all of it back. A tab that was behind (it had not yet heard
+ * that another tab filed, removed or re-dated a row) wrote its older rows over the newer ones: rows another tab had
+ * added vanished, a removal came back, a newer edit went back to the old one. Rows already have what it takes to
+ * settle this (a stamp and a tombstone per row), so a write is now a merge with what the browser holds: the newer
+ * stamp wins row by row, a tombstone wins when it is newer, nothing is dropped because it is missing from one side
+ * (no code path removes a row by leaving it out; removal is a tombstone). A tie keeps the row being written.
+ */
+export function saveRecordMerged(storage: Storage | null, record: BlackBoxRecord): BlackBoxRecord {
+  if (!storage) return record
+  let stored: BlackBoxRecord
+  try {
+    stored = parseRecord(storage.getItem(BLACKBOX_KEY))
+  } catch {
+    stored = emptyRecord()
+  }
+  const merged = mergeRecords(record, stored)
+  saveRecord(storage, merged)
+  return merged
 }
 
 // ---------------------------------------------------------------- writes

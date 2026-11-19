@@ -8,6 +8,13 @@ import {
   nowInBrowser,
   parseRecord,
   recordPastRun,
+  removeReport,
+  removeAttempt,
+  living,
+  loadRecord,
+  saveRecord,
+  saveRecordMerged,
+  resetStampClock,
   serializeRecord,
   newId,
   startAttempt,
@@ -250,5 +257,87 @@ describe("a run you already had", () => {
     expect(ending.closeness).toBeNull()
     expect(ending.withWhom).toBe("")
     expect(ending.factors).toEqual([])
+  })
+})
+
+/** A browser's storage, shared by two "tabs" that each hold their own in-memory copy. */
+function fakeStorage(): Storage {
+  const m = new Map<string, string>()
+  return {
+    getItem: (k: string) => (m.has(k) ? (m.get(k) as string) : null),
+    setItem: (k: string, v: string) => void m.set(k, v),
+    removeItem: (k: string) => void m.delete(k),
+    clear: () => m.clear(),
+    key: () => null,
+    length: 0,
+  } as unknown as Storage
+}
+
+describe("a tab that is behind cannot write over another tab", () => {
+  const run = () =>
+    startAttempt(emptyRecord(), { viceId: "nicotine", label: "Smoking", startedOn: "2026-11-01", startedBy: "", structure: [], acknowledgedRisk: false, today: "2026-11-19" })
+
+  it("(a) a removed slip stays removed when the stale tab saves an unrelated change", () => {
+    resetStampClock()
+    const storage = fakeStorage()
+    const base = run()
+    const attemptId = base.attempts[0].id
+    const filed = fileReport(base, { attemptId, at: "2026-11-18T10:00:00", wentThrough: false, thought: "", ending: "fine", closeness: null, withWhom: "", where: "", factors: [], didInstead: "" })
+    saveRecord(storage, filed)
+    const tabB = loadRecord(storage) // tab B reads, then goes stale
+    const reportId = filed.reports[0].id
+    // tab A takes the slip back out (Undo): the report is a tombstone and the run lives again
+    const undone = removeReport(filed, reportId)
+    saveRecordMerged(storage, undone)
+    // tab B, still holding the slip as live and the run as ended, saves an unrelated change
+    const touched = { ...tabB, attempts: tabB.attempts.map((a) => ({ ...a })) }
+    saveRecordMerged(storage, touched)
+    const now = loadRecord(storage)
+    expect(living(now.reports)).toHaveLength(0)
+    expect(living(now.attempts)[0].endedOn).toBeNull()
+  })
+
+  it("(b) a newer edit to a row is not overwritten by an older copy of it", () => {
+    resetStampClock()
+    const storage = fakeStorage()
+    const base = run()
+    saveRecord(storage, base)
+    const stale = loadRecord(storage)
+    const edited = { ...base, attempts: base.attempts.map((a) => ({ ...a, startedBy: "newer", updatedAt: "2099-01-01T00:00:00.000Z" })) }
+    saveRecordMerged(storage, edited)
+    saveRecordMerged(storage, stale)
+    expect(loadRecord(storage).attempts[0].startedBy).toBe("newer")
+  })
+
+  it("(c) rows another tab added are not dropped by a stale save", () => {
+    resetStampClock()
+    const storage = fakeStorage()
+    const base = run()
+    saveRecord(storage, base)
+    const stale = loadRecord(storage)
+    const attemptId = base.attempts[0].id
+    const filed = fileReport(base, { attemptId, at: "2026-11-18T10:00:00", wentThrough: true, thought: "", ending: "fine", closeness: null, withWhom: "", where: "", factors: [], didInstead: "" })
+    saveRecordMerged(storage, filed)
+    saveRecordMerged(storage, stale)
+    expect(loadRecord(storage).reports).toHaveLength(1)
+  })
+
+  it("a removed run stays removed against a stale live copy, and a newer live copy still wins over an older tombstone", () => {
+    resetStampClock()
+    const storage = fakeStorage()
+    const base = run()
+    saveRecord(storage, base)
+    const stale = loadRecord(storage)
+    saveRecordMerged(storage, removeAttempt(base, base.attempts[0].id))
+    saveRecordMerged(storage, stale)
+    expect(living(loadRecord(storage).attempts)).toHaveLength(0)
+  })
+
+  it("old stored data (rows with no stamps) is still read and kept", () => {
+    const storage = fakeStorage()
+    storage.setItem(BLACKBOX_KEY, JSON.stringify({ version: 1, attempts: [{ id: "x", viceId: "nicotine", label: "Smoking", startedOn: "2026-01-01", startedBy: "", structure: [], endedOn: null, endedByReportId: null }], reports: [] }))
+    const out = saveRecordMerged(storage, emptyRecord())
+    expect(out.attempts.map((a) => a.id)).toEqual(["x"])
+    expect(loadRecord(storage).attempts).toHaveLength(1)
   })
 })

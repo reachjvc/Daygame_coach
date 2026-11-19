@@ -20,7 +20,7 @@ vi.mock("@/src/db/supabase", () => ({
   createServerSupabaseClient: async () => createFakeSupabase(tables),
 }))
 
-import { readViceRows, writeViceRows } from "@/src/db/viceRepo"
+import { keepNewer, readViceRows, writeViceRows } from "@/src/db/viceRepo"
 import type { ViceAttemptRow, ViceReportRow } from "@/src/db/viceTypes"
 
 const USER = "11111111-1111-1111-1111-111111111111"
@@ -203,5 +203,29 @@ describe("an instant comes back spelled the way the app spells it", () => {
     const rows = await readViceRows(USER, null)
     expect(rows.attempts[0].updated_at > "2026-09-23T10:00:02.000Z").toBe(false)
     expect(rows.attempts[0].updated_at < "2026-09-23T10:00:02.000Z").toBe(false)
+  })
+})
+
+describe("an older copy of a row never overwrites a newer one on the account", () => {
+  it("a stale push of a live row does not undo a newer tombstone", async () => {
+    await writeViceRows(USER, { attempts: [], reports: [report({ deleted_at: "2026-05-05T09:00:00.000Z", updated_at: "2026-05-05T09:00:00.000Z" })] })
+    await writeViceRows(USER, { attempts: [], reports: [report({ updated_at: "2026-05-04T19:00:00.000Z" })] })
+    expect(tables.vice_reports).toHaveLength(1)
+    expect(tables.vice_reports[0].deleted_at).toBe("2026-05-05T09:00:00.000Z")
+  })
+
+  it("a newer edit still lands, and the same stamp is written again harmlessly", async () => {
+    await writeViceRows(USER, { attempts: [attempt()], reports: [] })
+    await writeViceRows(USER, { attempts: [attempt({ started_by: "later", updated_at: "2026-03-02T10:00:00.000Z" })], reports: [] })
+    expect(tables.vice_attempts[0].started_by).toBe("later")
+    await writeViceRows(USER, { attempts: [attempt({ started_by: "later", updated_at: "2026-03-02T10:00:00.000Z" })], reports: [] })
+    expect(tables.vice_attempts).toHaveLength(1)
+  })
+
+  it("keepNewer compares instants whatever their spelling", () => {
+    const held = [{ id: "a", updated_at: "2026-05-05 09:00:00+00" }]
+    expect(keepNewer([{ id: "a", updated_at: "2026-05-05T08:59:59.000Z" }], held)).toEqual([])
+    expect(keepNewer([{ id: "a", updated_at: "2026-05-05T09:00:00.000Z" }], held)).toHaveLength(1)
+    expect(keepNewer([{ id: "b", updated_at: "2000-01-01T00:00:00.000Z" }], held)).toHaveLength(1)
   })
 })

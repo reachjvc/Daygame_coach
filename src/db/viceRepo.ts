@@ -136,17 +136,48 @@ function toIsoZ(value: string): string {
  * a sync needs — the same row is sent again whenever it changes, and an edit
  * made on a second device is an update here, not a duplicate.
  */
+/**
+ * The rows worth writing: not older than the copy the account already holds.
+ *
+ * A device that has been open for hours can send a row it edited before another device edited the same row. The
+ * upsert below would put the older version over the newer one, so an unconditional upsert loses edits and brings
+ * back removals (a tombstone is just a newer row). The same rule the browser merge follows: the later stamp wins,
+ * and an equal stamp is written again harmlessly.
+ */
+export function keepNewer<T extends { id: string; updated_at: string }>(incoming: T[], held: { id: string; updated_at: string }[]): T[] {
+  const had = new Map(held.map((h) => [h.id, toIsoZ(h.updated_at)]))
+  return incoming.filter((r) => {
+    const at = had.get(r.id)
+    return at === undefined || toIsoZ(r.updated_at) >= at
+  })
+}
+
+const LOOKUP_CHUNK = 100
+
+async function heldStamps(table: "vice_attempts" | "vice_reports", userId: string, ids: string[]): Promise<{ id: string; updated_at: string }[]> {
+  const supabase = await createServerSupabaseClient()
+  const out: { id: string; updated_at: string }[] = []
+  for (let i = 0; i < ids.length; i += LOOKUP_CHUNK) {
+    const { data, error } = await supabase.from(table).select("id, updated_at").eq("user_id", userId).in("id", ids.slice(i, i + LOOKUP_CHUNK))
+    if (error) throw new Error(`Failed to read ${table} before writing: ${error.message}`)
+    out.push(...((data ?? []) as { id: string; updated_at: string }[]))
+  }
+  return out
+}
+
 export async function writeViceRows(userId: string, rows: ViceRows): Promise<void> {
   const supabase = await createServerSupabaseClient()
 
-  if (rows.attempts.length > 0) {
-    const owned = rows.attempts.map((a) => ({ ...a, user_id: userId }))
+  const attempts = rows.attempts.length > 0 ? keepNewer(rows.attempts, await heldStamps("vice_attempts", userId, rows.attempts.map((a) => a.id))) : []
+  if (attempts.length > 0) {
+    const owned = attempts.map((a) => ({ ...a, user_id: userId }))
     const { error } = await supabase.from("vice_attempts").upsert(owned, { onConflict: "id" })
     if (error) throw new Error(`Failed to write vice attempts: ${error.message}`)
   }
 
-  if (rows.reports.length > 0) {
-    const owned = rows.reports.map((r) => ({ ...r, user_id: userId }))
+  const reports = rows.reports.length > 0 ? keepNewer(rows.reports, await heldStamps("vice_reports", userId, rows.reports.map((r) => r.id))) : []
+  if (reports.length > 0) {
+    const owned = reports.map((r) => ({ ...r, user_id: userId }))
     const { error } = await supabase.from("vice_reports").upsert(owned, { onConflict: "id" })
     if (error) throw new Error(`Failed to write vice reports: ${error.message}`)
   }

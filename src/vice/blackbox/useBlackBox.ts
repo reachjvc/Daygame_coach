@@ -13,7 +13,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import type { BlackBoxRecord } from "../types"
-import { BLACKBOX_KEY, emptyRecord, loadRecord, saveRecord, todayInBrowser } from "./blackboxStore"
+import { BLACKBOX_KEY, emptyRecord, loadRecord, saveRecordMerged, todayInBrowser } from "./blackboxStore"
 
 export function useBlackBox() {
   const [record, setRecord] = useState<BlackBoxRecord>(emptyRecord)
@@ -56,8 +56,8 @@ export function useBlackBox() {
   const update = useCallback((next: (current: BlackBoxRecord) => BlackBoxRecord) => {
     setRecord((current) => {
       const updated = next(current)
-      saveRecord(typeof window === "undefined" ? null : window.localStorage, updated)
-      return updated
+      // Merged with what the browser holds, so a tab that is behind cannot write over a newer row or bring one back.
+      return saveRecordMerged(typeof window === "undefined" ? null : window.localStorage, updated)
     })
   }, [])
 
