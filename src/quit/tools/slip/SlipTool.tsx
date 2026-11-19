@@ -3,318 +3,377 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { BlackBoxBridge } from "../../components/BlackBoxBridge"
-import { Chips, ClearAnswers, OneQuestion, PrimaryButton, SourcesFold } from "../../components/kit"
+import { LocalBlackBoxBridge } from "../../components/LocalBlackBoxBridge"
+import { Chips, OneQuestion, PrimaryButton } from "../../components/kit"
 import { nowInBrowser, useSignedIn, type QuitBlackBoxApi } from "../../blackbox"
-import { endingForEnding, reportAt, shiftDay, slipDay, slipThought } from "../../blackboxLogic"
-import { ROUTES } from "@/src/shared/routes"
+import { endingForBelief, reportAt, slipThought } from "../../blackboxLogic"
+import { useQuitRecord, todayIso } from "../../record"
 import { useQuitStore } from "../../store"
-import { fill, tooltext as t } from "../../tooltext"
-import type { QuitBelief, QuitEnding, QuitNeed, QuitPlanStep, ToolProps } from "../../types"
-import { localDate, usable } from "../common"
+import { fill, tooltext } from "../../tooltext"
+import type { QuitBelief, QuitMomentSwap, QuitNeed, QuitOption, QuitPlanStep, ToolProps } from "../../types"
+import { usable } from "../common"
 import { parseBeliefs, topBeliefs } from "../beliefs/logic"
 import { parseGives } from "../gives/logic"
 import { useCarry, useDoneCount, useScreens, useStartCount, useToolState } from "../hooks"
 import { NotReady } from "../NotReady"
-import { EMPTY_SLIP, firstUnanswered, keepLine, MAX_OWN, OTHER, parseSlip, SLIP_WHEN, type SlipState } from "./logic"
+import {
+  EMPTY_SLIP,
+  ELSE,
+  MAX_OWN,
+  OTHER,
+  SKIP,
+  dayAllowed,
+  day1Day,
+  day1Options,
+  daysCard,
+  decide,
+  dayWords,
+  firstUnanswered,
+  keepsState,
+  lieOf,
+  parseSlip,
+  placeOf,
+  whenChoices,
+  type Day1,
+  type SlipState,
+} from "./logic"
+import { Result } from "./Result"
 
-/** Slipped? Three taps, then back through steps 1 to 3 with a new day 1. */
+const t = tooltext.slip
+
+/** Slipped? Restart today: the slip goes into the Black Box, the days stay, and a new day 1 is picked. */
 export function SlipTool({ addiction, data }: ToolProps) {
   const beliefs = usable<QuitBelief[]>(data.beliefs)
-  const endings = usable<QuitEnding[]>(data.endings)
-  if (!beliefs || !endings) return <NotReady />
-  return (
-    <Inner
-      addiction={addiction}
-      beliefs={beliefs}
-      endings={endings}
-      needs={usable<QuitNeed[]>(data.needs) ?? []}
-      planSteps={usable<QuitPlanStep[]>(data.planSteps)}
-    />
-  )
+  const moments = usable<QuitOption[]>(data.riskyMoments)
+  const swaps = usable<QuitMomentSwap[]>(data.momentSwaps)
+  const needs = usable<QuitNeed[]>(data.needs)
+  const planSteps = usable<QuitPlanStep[]>(data.planSteps)
+  if (!beliefs || !moments || !swaps || !needs || !planSteps || planSteps.length < 2) return <NotReady />
+  return <Inner addiction={addiction} beliefs={beliefs} moments={moments} swaps={swaps} needs={needs} planSteps={planSteps} />
 }
 
 interface InnerProps {
   addiction: string
   beliefs: QuitBelief[]
-  endings: QuitEnding[]
+  moments: QuitOption[]
+  swaps: QuitMomentSwap[]
   needs: QuitNeed[]
-  planSteps: QuitPlanStep[] | null
+  planSteps: QuitPlanStep[]
 }
 
 function Inner(props: InnerProps) {
-  const signedIn = useSignedIn()
+  const signedIn = useSignedIn(true, true)
   const [bb, setBb] = useState<QuitBlackBoxApi | null>(null)
   const onApi = useCallback((api: QuitBlackBoxApi | null) => setBb(api), [])
-  // The Black Box bridge sits at one fixed place, so moving between screens never remounts it.
+  // Signed in the Black Box syncs to the account, signed out it is the copy in this browser. Nothing mounts while that is unknown.
   return (
-    <>
-      {signedIn ? <BlackBoxBridge viceId={props.addiction} onApi={onApi} /> : null}
+    <div data-testid="slip" className="flex w-full flex-col gap-4">
+      {signedIn === true ? <BlackBoxBridge key="in" viceId={props.addiction} onApi={onApi} /> : null}
+      {signedIn === false ? <LocalBlackBoxBridge key="out" viceId={props.addiction} onApi={onApi} /> : null}
       <Screens {...props} signedIn={signedIn} bb={bb} />
-    </>
+    </div>
   )
 }
 
-function Screens({ addiction, beliefs, endings, needs, planSteps, signedIn, bb }: InnerProps & { signedIn: boolean | null; bb: QuitBlackBoxApi | null }) {
-  const store = useQuitStore()
+function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedIn, bb }: InnerProps & { signedIn: boolean | null; bb: QuitBlackBoxApi | null }) {
   const carry = useCarry()
-  const { state, update, clear } = useToolState<SlipState>(addiction, "slip", EMPTY_SLIP, parseSlip)
+  const store = useQuitStore()
+  const rec = useQuitRecord(addiction)
+  const { state, update: save } = useToolState<SlipState>(addiction, "slip", EMPTY_SLIP, parseSlip)
+  const [prepared, setPrepared] = useState(false)
   const [undone, setUndone] = useState(false)
   const [refused, setRefused] = useState(false)
-  const [datedToday, setDatedToday] = useState(false)
-  // One tap on Continue per visit to the last question: a double tap files one lapse.
-  const filing = useRef(false)
+  const [switchRefused, setSwitchRefused] = useState(false)
+  const [startRefused, setStartRefused] = useState(false)
+  const prep = useRef(false)
+  // A double tap moves one screen at most and files one slip.
+  const lastMove = useRef(0)
+  const started = useStartCount(addiction, "slip")
+
+  const update = useCallback((fn: (s: SlipState) => SlipState) => save((s) => ({ ...fn(s), touched: Date.now() })), [save])
+
+  // Set the visit up once the Black Box is settled: start a run that is due, read the case, keep or drop last visit's answers.
+  useEffect(() => {
+    if (prep.current || !state || !rec.ready || !bb || !bb.settled) return
+    prep.current = true
+    const today = todayIso()
+    const input = { runs: bb.runs, reports: bb.reports, quitDate: rec.record.quitDate, today }
+    let plan = decide(input)
+    if (plan.startOn && !bb.startRun(plan.startOn)) plan = decide({ ...input, quitDate: null })
+    if (!keepsState(state, plan, bb.runs, bb.reports, Date.now())) {
+      save(() => ({ ...EMPTY_SLIP, kase: plan.kase, steps: plan.steps, min: plan.min, slipId: plan.slipId, touched: Date.now() }))
+    }
+    setPrepared(true)
+  }, [state, rec.ready, rec.record.quitDate, bb, save])
 
   const first = state ? firstUnanswered(state) : 1
-  const { screen, go, back: goBack, reset, isResult } = useScreens(first, 3, state !== null)
-  const started = useStartCount(addiction, "slip")
-  useDoneCount(addiction, "slip", state !== null && isResult)
+  const total = state?.steps.length ?? 0
+  const { screen, go, back: goBack, reset, isResult } = useScreens(first, total, state !== null && prepared)
+  useDoneCount(addiction, "slip", state !== null && prepared && isResult)
 
-  useEffect(() => {
-    if (screen !== 3) filing.current = false
-  }, [screen])
+  if (!state || !prepared || !bb || state.kase === null) return null
+  const today = todayIso()
+  const steps = state.steps
+  const step = steps[screen - 1]
+  const momentIds = moments.map((m) => m.id)
 
-  // A signed-in visitor waits the moment it takes the Black Box to load before filing or undoing.
-  const bbLoading = signedIn === null || (signedIn && !(bb && bb.ready))
-  if (!state) return null
-  const back = screen > 1 ? goBack : null
-
-  const pass = (patch: Partial<SlipState> = {}) => {
-    update((s) => ({ ...s, ...patch, done: Math.max(s.done, screen) }))
-    go(screen + 1)
+  const move = (fn: () => void) => {
+    const now = Date.now()
+    if (now - lastMove.current < 250) return
+    lastMove.current = now
+    fn()
   }
 
-  if (screen === 1) {
+  const thoughtOf = (s: SlipState): string => {
+    const told = beliefs.find((b) => b.id === s.told)
+    return slipThought(told ? usable<string>(told.short) : null, s.told === OTHER ? s.ownWords : "")
+  }
+
+  /** Writes the answers of the screen being passed to the Black Box: files the slip on the last screen (case A), else amends it. */
+  const commit = (next: SlipState, last: boolean): string | null => {
+    const whereId = next.where && momentIds.includes(next.where) ? next.where : ""
+    const thought = thoughtOf(next)
+    const ending = endingForBelief(next.told, beliefs)
+    if (next.slipId && bb.reports.some((r) => r.id === next.slipId)) {
+      // The slip is in the record already: the answers are added to it. A skipped answer never blanks one that is there (case B).
+      if (step === "where" && (whereId !== "" || next.kase !== "B")) bb.amend(next.slipId, { where: whereId })
+      if (step === "voice" && (thought !== "" || next.kase !== "B")) bb.amend(next.slipId, { thought, ending })
+      return next.slipId
+    }
+    if (next.kase === "A" && last && !next.slipId) {
+      const day = next.day ?? today
+      const id = bb.fileSlip({ at: reportAt(day, today, nowInBrowser()), thought, ending, where: whereId })
+      setRefused(id === null)
+      return id
+    }
+    return next.slipId
+  }
+
+  const advance = (patch: Partial<SlipState>) =>
+    move(() => {
+      const next = { ...state, ...patch }
+      const slipId = commit(next, screen === steps.length)
+      update((s) => ({ ...s, ...patch, slipId: slipId ?? s.slipId, done: Math.max(s.done, screen) }))
+      go(screen + 1)
+    })
+
+  const back = screen > 1 ? goBack : null
+  const inRecord = (() => {
+    if (state.kase !== "B") return null
+    const r = bb.reports.find((x) => x.id === state.slipId)
+    return r ? fill(t.inRecord, { day: dayWords(r.at.slice(0, 10)) }) : null
+  })()
+
+  if (undone) {
+    return (
+      <div className="flex flex-col gap-4">
+        <p data-testid="slip-undone">{tooltext.blackbox.undone}</p>
+        <Link href={carry(`/quit/${addiction}`)} data-testid="to-menu" className="inline-flex min-h-11 items-center text-primary underline">
+          {t.toMenu}
+        </Link>
+      </div>
+    )
+  }
+
+  const bLine = inRecord && (
+    <p data-testid="slip-in-record" className="text-sm text-muted-foreground">
+      {inRecord}
+    </p>
+  )
+
+  if (!isResult && step === "when") {
+    const min = state.min && state.min <= today ? state.min : today
+    const choices = whenChoices(min, today)
+    const allowed = dayAllowed(state.day, min, today)
     return (
       <>
-        <OneQuestion step={1} total={3} onBack={null}>
-          <p className="font-medium">{t.slip.whenQuestion}</p>
+        {bLine}
+        <OneQuestion step={screen} total={steps.length} onBack={back}>
+          <h2 className="text-lg font-semibold">{t.whenQuestion}</h2>
           <Chips
-            label={t.slip.whenQuestion}
-            options={SLIP_WHEN.map((w) => ({ id: w, label: t.slip.when[w] }))}
-            value={state.when ? [state.when] : []}
+            label={t.whenQuestion}
+            options={choices.map((c) => ({ id: c.id, label: t.when[c.id] }))}
+            value={state.pick ? [state.pick] : []}
             onChange={(next) => {
               started()
-              update((s) => ({ ...s, when: next[0] as SlipState["when"] }))
+              const pick = next[0] as SlipState["pick"]
+              const chip = choices.find((c) => c.id === pick)
+              update((s) => ({ ...s, pick, day: chip?.day ?? (s.pick === "another" ? s.day : null) }))
             }}
           />
-          <PrimaryButton testId="slip-continue" disabled={state.when === null} onClick={() => pass()}>
-            {t.common.continue}
-          </PrimaryButton>
-        </OneQuestion>
-        <SourcesFold refs={[]} />
-      </>
-    )
-  }
-
-  if (screen === 2) {
-    return (
-      <>
-        <OneQuestion step={2} total={3} onBack={back}>
-          <p className="font-medium">{t.slip.wentQuestion}</p>
-          <Chips
-            label={t.slip.wentQuestion}
-            options={endings.map((e) => ({ id: e.id, label: e.label }))}
-            value={state.ending ? [state.ending] : []}
-            onChange={(next) => update((s) => ({ ...s, ending: next[0] }))}
-          />
-          <PrimaryButton testId="slip-continue" disabled={state.ending === null} onClick={() => pass()}>
-            {t.common.continue}
-          </PrimaryButton>
-        </OneQuestion>
-        <SourcesFold refs={[]} />
-      </>
-    )
-  }
-
-  if (screen === 3) {
-    const options = [
-      ...beliefs.map((b) => ({ id: b.id, label: usable<string>(b.short) ?? b.id })),
-      { id: OTHER, label: t.slip.somethingElse },
-    ]
-    const finish = () => {
-      if (filing.current) return
-      filing.current = true
-      let reportId: string | null = null
-      let failed = false
-      let moved = false
-      // A lapse already filed from this run and not taken back is not filed twice.
-      if (bb && bb.run && state.when && !(state.reportId !== null && bb.has(state.reportId))) {
-        const today = localDate()
-        moved = bb.run.startedOn === today && slipDay(state.when, today) < today
-        const told = beliefs.find((b) => b.id === state.told)
-        reportId = bb.fileSlip({
-          at: reportAt(slipDay(state.when, today), today, nowInBrowser()),
-          thought: slipThought(told ? usable<string>(told.short) : null, state.ownWords),
-          ending: endingForEnding(state.ending, endings),
-        })
-        failed = reportId === null
-      }
-      setRefused(failed)
-      setDatedToday(moved && !failed)
-      setUndone(false)
-      pass(reportId === null && state.reportId !== null && bb?.has(state.reportId) ? {} : { reportId })
-    }
-    return (
-      <>
-        <OneQuestion step={3} total={3} onBack={back}>
-          <p className="font-medium">{t.slip.toldQuestion}</p>
-          <Chips
-            label={t.slip.toldQuestion}
-            options={options}
-            value={state.told ? [state.told] : []}
-            onChange={(next) => update((s) => ({ ...s, told: next[0] }))}
-          />
-          {state.told === OTHER && (
-            <input
-              type="text"
-              data-testid="slip-own"
-              maxLength={MAX_OWN}
-              aria-label={t.slip.ownWords}
-              value={state.ownWords}
-              onChange={(e) => update((s) => ({ ...s, ownWords: e.target.value.slice(0, MAX_OWN) }))}
-              className="min-h-12 w-full rounded-md border border-border bg-card px-3 text-base"
-            />
+          {state.pick === "another" && (
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium">{t.dateLabel}</span>
+              <input
+                type="date"
+                data-testid="slip-date"
+                min={min}
+                max={today}
+                value={state.day ?? ""}
+                onChange={(e) => update((s) => ({ ...s, day: /^\d{4}-\d{2}-\d{2}$/.test(e.target.value) ? e.target.value : null }))}
+                className="min-h-11 w-full rounded-md border border-border bg-background px-3 text-base"
+              />
+              <span className="text-muted-foreground">{fill(t.dateHelp, { min: dayWords(min) })}</span>
+            </label>
           )}
-          <PrimaryButton testId="slip-finish" disabled={state.told === null || bbLoading} onClick={finish}>
-            {t.common.continue}
-          </PrimaryButton>
-        </OneQuestion>
-        <SourcesFold refs={[]} />
-      </>
-    )
-  }
-
-  const top = topBeliefs(parseBeliefs(store.get(addiction, "beliefs")).ratings, beliefs)
-  const tried = parseGives(store.get(addiction, "gives")).tried
-  const swaps = needs.flatMap((n) => n.swaps).filter((s) => tried[s.id])
-  const today = localDate()
-  // The date is fixed when the reader chooses; an older save without one falls back to the choice read today.
-  const day1 = state.newDay1On ?? (state.newDay1 === "today" ? today : state.newDay1 === "tomorrow" ? shiftDay(today, 1) : null)
-  const keep = keepLine(planSteps)
-  const filed = state.reportId !== null && !undone
-
-  return (
-    <div data-testid="result" className="flex flex-col gap-5">
-      {filed && (
-        <div data-testid="slip-saved" className="rounded-lg border border-primary p-4">
-          <p data-testid="slip-saved-text" className="font-medium">
-            {state.reportId && bb ? (bb.status(state.reportId) === "saved" ? t.slip.saved : bb.status(state.reportId) === "local" ? t.blackbox.localOnly : t.blackbox.saving) : t.blackbox.saving}
-          </p>
-          {datedToday && (
-            <p data-testid="slip-dated-today" className="mt-1 text-sm">
-              {t.slip.datedToday}
+          {state.pick === "another" && state.day && !allowed && (
+            <p data-testid="slip-date-error" role="alert" className="text-sm">
+              {fill(t.dateOut, { min: dayWords(min) })}
             </p>
           )}
-          <div className="mt-1 flex flex-wrap gap-x-4">
-            <button
-              type="button"
-              data-testid="slip-undo"
-              disabled={bbLoading}
-              onClick={() => {
-                if (bb && state.reportId && bb.undo(state.reportId)) {
-                  setUndone(true)
-                  update((s) => ({ ...s, reportId: null }))
-                }
-              }}
-              className="inline-flex min-h-11 items-center text-primary underline disabled:opacity-40"
-            >
-              {t.blackbox.undo}
-            </button>
-            <Link href={ROUTES.quitVice} data-testid="slip-new-run" className="inline-flex min-h-11 items-center text-primary underline">
-              {t.slip.startNew}
-            </Link>
-          </div>
-        </div>
-      )}
-      {undone && <p data-testid="slip-undone">{t.blackbox.undone}</p>}
-      {refused && <p>{t.blackbox.notSaved}</p>}
-      {!filed && !undone && !refused && signedIn === true && bb && !bb.run && (
-        <Link href={ROUTES.quitVice} data-testid="slip-keep-record" className="inline-flex min-h-11 items-center text-primary underline">
-          {t.blackbox.keepRecord}
-        </Link>
-      )}
-      <h2 className="text-lg font-semibold">{t.slip.resultHeading}</h2>
-      <section data-testid="slip-step1">
-        <h3 className="text-sm text-muted-foreground">{`1. ${t.slip.step1}`}</h3>
-        {top.length > 0 ? (
-          <ul className="mt-2 flex flex-col gap-2">
-            {top.map((b) => (
-              <li key={b.id} className="rounded-md border border-border bg-card px-3 py-2">
-                {b.counterpart}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-1">
-            {t.slip.step1None}{" "}
-            <Link href={carry(`/quit/${addiction}/beliefs`)} className="text-primary underline">
-              {t.slip.step1Link}
-            </Link>
-          </p>
-        )}
-      </section>
-      <section data-testid="slip-step2">
-        <h3 className="text-sm text-muted-foreground">{`2. ${t.slip.step2}`}</h3>
-        {swaps.length > 0 ? (
-          <ul className="mt-2 flex flex-col gap-2">
-            {swaps.map((s) => (
-              <li key={s.id} className="rounded-md border border-border bg-card px-3 py-2">
-                {s.text}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-1">
-            {t.slip.step2None}{" "}
-            <Link href={carry(`/quit/${addiction}/gives`)} className="text-primary underline">
-              {t.slip.step2Link}
-            </Link>
-          </p>
-        )}
-      </section>
-      <section data-testid="slip-step3">
-        <h3 className="text-sm text-muted-foreground">{`3. ${t.slip.step3}`}</h3>
-        <div className="mt-2">
+          <PrimaryButton testId="slip-continue" disabled={!allowed} onClick={() => advance({})}>
+            {tooltext.common.continue}
+          </PrimaryButton>
+        </OneQuestion>
+      </>
+    )
+  }
+
+  if (!isResult && step === "where") {
+    return (
+      <>
+        {bLine}
+        <OneQuestion step={screen} total={steps.length} onBack={back}>
+          <h2 className="text-lg font-semibold">{t.wentQuestion}</h2>
           <Chips
-            label={t.slip.step3}
-            options={[
-              { id: "today", label: t.slip.day1Today },
-              { id: "tomorrow", label: t.slip.day1Tomorrow },
-            ]}
-            value={state.newDay1 ? [state.newDay1] : []}
-            onChange={(next) =>
-              update((s) => ({
-                ...s,
-                newDay1: next[0] as SlipState["newDay1"],
-                newDay1On: next[0] === "tomorrow" ? shiftDay(localDate(), 1) : localDate(),
-              }))
-            }
+            label={t.wentQuestion}
+            options={[...moments.map((m) => ({ id: m.id, label: m.label })), { id: ELSE, label: t.somewhereElse }]}
+            value={state.where && state.where !== SKIP ? [state.where] : []}
+            onChange={(next) => {
+              started()
+              update((s) => ({ ...s, where: next[0] }))
+            }}
           />
-        </div>
-        {day1 && (
-          <p data-testid="slip-day1" className="mt-2 font-medium">
-            {fill(t.slip.day1Set, { day: day1 })}
-          </p>
-        )}
-      </section>
-      {keep && (
-        <p data-testid="slip-keep" className="text-lg font-medium">
-          {keep}
-        </p>
-      )}
-      <Link href={carry(`/quit/${addiction}`)} className="inline-flex min-h-11 items-center text-primary underline">
-        {t.slip.toMenu}
-      </Link>
-      <ClearAnswers
-        onClear={() => {
-          clear()
-          reset()
-          setUndone(false)
-          setRefused(false)
-          setDatedToday(false)
-        }}
-      />
-      <SourcesFold refs={[]} />
-    </div>
+          <PrimaryButton testId="slip-continue" disabled={!state.where || state.where === SKIP} onClick={() => advance({})}>
+            {tooltext.common.continue}
+          </PrimaryButton>
+          <button type="button" data-testid="slip-skip" onClick={() => advance({ where: SKIP })} className="inline-flex min-h-11 items-center self-start text-sm text-muted-foreground underline">
+            {t.skip}
+          </button>
+        </OneQuestion>
+      </>
+    )
+  }
+
+  if (!isResult && step === "voice") {
+    return (
+      <>
+        {bLine}
+        <OneQuestion step={screen} total={steps.length} onBack={back}>
+          <h2 className="text-lg font-semibold">{t.toldQuestion}</h2>
+          <Chips
+            label={t.toldQuestion}
+            options={[...beliefs.map((b) => ({ id: b.id, label: usable<string>(b.short) ?? b.id })), { id: OTHER, label: t.somethingElse }]}
+            value={state.told && state.told !== SKIP ? [state.told] : []}
+            onChange={(next) => {
+              started()
+              update((s) => ({ ...s, told: next[0] }))
+            }}
+          />
+          {state.told === OTHER && (
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium">{t.ownWords}</span>
+              <input
+                type="text"
+                data-testid="slip-own"
+                maxLength={MAX_OWN}
+                value={state.ownWords}
+                onChange={(e) => update((s) => ({ ...s, ownWords: e.target.value.slice(0, MAX_OWN) }))}
+                className="min-h-12 w-full rounded-md border border-border bg-card px-3 text-base"
+              />
+            </label>
+          )}
+          <PrimaryButton testId="slip-continue" disabled={!state.told || state.told === SKIP} onClick={() => advance({})}>
+            {tooltext.common.continue}
+          </PrimaryButton>
+          <button type="button" data-testid="slip-skip" onClick={() => advance({ told: SKIP })} className="inline-flex min-h-11 items-center self-start text-sm text-muted-foreground underline">
+            {t.skip}
+          </button>
+        </OneQuestion>
+      </>
+    )
+  }
+
+  // The result.
+  const report = bb.reports.find((r) => r.id === state.slipId) ?? null
+  const ended = state.slipId ? bb.runs.find((r) => r.endedByReportId === state.slipId) : undefined
+  const slipDay = report ? report.at.slice(0, 10) : null
+  const lie = lieOf(state.told, report?.thought ?? "", beliefs)
+  const top = topBeliefs(parseBeliefs(store.get(addiction, "beliefs")).ratings, beliefs).filter((b) => b.id !== lie?.id)
+  const placeId = placeOf(state.where, report?.where ?? "", momentIds)
+  const need = !placeId && lie ? (needs.find((n) => n.id === usable<string>(lie.need)) ?? null) : null
+  const tried = parseGives(store.get(addiction, "gives")).tried
+  const shown = new Set(need?.swaps.map((s) => s.id))
+  const triedSwaps = needs.flatMap((n) => n.swaps).filter((s) => tried[s.id] && !shown.has(s.id))
+  const status = (() => {
+    if (!state.slipId) return null
+    const s = report ? bb.status(state.slipId) : null
+    if (signedIn === true && s !== null) return s === "saved" ? t.savedAccount : s === "local" ? tooltext.blackbox.localOnly : tooltext.blackbox.saving
+    if (signedIn === false) return t.savedLocal
+    return tooltext.blackbox.saving
+  })()
+
+  const chooseDay1 = (d: Day1) => {
+    if (d === state.day1) return
+    setSwitchRefused(false)
+    setStartRefused(false)
+    // Leaving Today takes the run started a moment ago back out again.
+    if (state.day1 === "today") {
+      const run = bb.runs.find((r) => r.endedOn === null && r.startedOn === state.day1On)
+      if (run && !bb.removeRun(run.id)) {
+        setSwitchRefused(true)
+        return
+      }
+    }
+    const on = day1Day(d, today)
+    if (d === "today" && !bb.startRun(on)) {
+      setStartRefused(true)
+      return
+    }
+    const before = { date: rec.record.quitDate }
+    rec.setQuitDate(on)
+    update((s) => ({ ...s, day1: d, day1On: on, quitBefore: s.quitBefore ?? before }))
+  }
+
+  const undo = () => {
+    if (!state.slipId || state.kase !== "A") return
+    // The new run first (it blocks the old run coming back), then the slip, then the quit date as it was.
+    const fresh = state.day1 === "today" ? bb.runs.find((r) => r.endedOn === null && r.startedOn === state.day1On) : undefined
+    if (fresh && !bb.removeRun(fresh.id)) return
+    if (!bb.undo(state.slipId)) return
+    if (state.quitBefore) {
+      if (state.quitBefore.date) rec.setQuitDate(state.quitBefore.date)
+      else rec.clearQuitDate()
+    }
+    save(() => EMPTY_SLIP)
+    reset()
+    setUndone(true)
+  }
+
+  return (
+    <Result
+      inRecord={inRecord}
+      card={daysCard(ended, bb.runs, today)}
+      hadRun={state.kase !== "C"}
+      status={status}
+      canUndo={state.kase === "A" && state.slipId !== null && report !== null}
+      onUndo={undo}
+      refused={refused && state.slipId === null}
+      lie={lie}
+      top={top}
+      place={placeId ? (moments.find((m) => m.id === placeId) ?? null) : null}
+      placeCards={placeId ? (swaps.find((m) => m.momentId === placeId)?.cards ?? []) : []}
+      need={need}
+      tried={triedSwaps}
+      planSteps={planSteps}
+      day1Options={day1Options(slipDay, today)}
+      day1={state.day1}
+      day1On={state.day1On}
+      onDay1={chooseDay1}
+      switchRefused={switchRefused}
+      startRefused={startRefused}
+      href={carry}
+      addiction={addiction}
+    />
   )
 }

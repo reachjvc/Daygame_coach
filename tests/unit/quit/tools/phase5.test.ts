@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import nicotine from "@/src/quit/data/nicotine.json"
 import { tooltext } from "@/src/quit/tooltext"
 import { endingForBelief, endingForEnding, laterDay, reportAt, shiftDay, slipDay, slipThought } from "@/src/quit/blackboxLogic"
-import { firstUnanswered as slipFirst, keepLine, EMPTY_SLIP } from "@/src/quit/tools/slip/logic"
 import { helpFor, listable, symptomLabel } from "@/src/quit/tools/symptoms/logic"
 import { NO_RESET, validateAddiction } from "@/src/quit/validate"
 import type { QuitAddictionFull } from "@/src/quit/types"
@@ -31,16 +30,6 @@ describe("slip text", () => {
       expect(s).not.toMatch(NO_RESET)
       expect(s).not.toMatch(/start (again|over) from|lost (it all|your)|blew it|failed/i)
     }
-  })
-  it("finds the keep sentence of step 3 as written", () => {
-    expect(keepLine(data.planSteps)).toBe("Every day you keep that promise to yourself is a complete success.")
-    expect(keepLine("TODO")).toBeNull()
-    expect(keepLine([{ text: "a" }, { text: "b" }, { text: "Nothing." }])).toBeNull()
-  })
-  it("resumes at the first unanswered screen", () => {
-    expect(slipFirst(EMPTY_SLIP)).toBe(1)
-    expect(slipFirst({ ...EMPTY_SLIP, done: 3 })).toBe(4)
-    expect(slipFirst({ ...EMPTY_SLIP, done: 8 })).toBe(4)
   })
 })
 

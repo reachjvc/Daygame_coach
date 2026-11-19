@@ -68,6 +68,11 @@ export function setQuitDate(record: QuitRecord, date: string): QuitRecord {
   return { ...record, quitDate: date }
 }
 
+/** Takes the quit date away (back to "no date"), and nothing else. */
+export function clearQuitDate(record: QuitRecord): QuitRecord {
+  return { ...record, quitDate: null }
+}
+
 /** Sets goal, date and break end together (a break end only goes with a break). */
 export function setPlan(record: QuitRecord, plan: { goal: QuitGoal; quitDate: string | null; breakEnd: string | null }): QuitRecord {
   return {
@@ -135,6 +140,7 @@ export function useQuitRecord(addiction: string) {
     record,
     ready,
     setQuitDate: (date: string) => update((r) => setQuitDate(r, date)),
+    clearQuitDate: () => update((r) => clearQuitDate(r)),
     setPlan: (plan: { goal: QuitGoal; quitDate: string | null; breakEnd: string | null }) => update((r) => setPlan(r, plan)),
     setUnit: (unit: RecordUnit | null) => update((r) => setUnit(r, unit)),
   }

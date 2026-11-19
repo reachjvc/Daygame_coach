@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useBlackBox } from "@/src/vice/blackbox/useBlackBox"
 import { useBlackBoxSync } from "@/src/vice/blackbox/useBlackBoxSync"
-import { fileReport, latestReportDay, living, nowInBrowser, removeReport, revivalClashes, stampFor } from "@/src/vice/blackbox/blackboxStore"
+import { fileReport, latestReportDay, living, nowInBrowser, removeReport, revivalClashes } from "@/src/vice/blackbox/blackboxStore"
 import type { ViceAttempt, ViceEndingId, ViceReport } from "@/src/vice/types"
 import { isSettled } from "@/src/vice/blackbox/viceSyncService"
-import { laterDay, startRunOn } from "./blackboxLogic"
+import { amendReport, laterDay, removeRunIfEmpty, startRunOn, type AmendPatch } from "./blackboxLogic"
 
 function hasSignInCookie(): boolean {
   try {
@@ -67,10 +67,7 @@ export interface SlipInput {
 }
 
 /** What `amend` may change on a filed report. */
-export interface ReportPatch {
-  closeness?: number | null
-  where?: string
-}
+export type ReportPatch = AmendPatch
 
 /** What the quit date tool needs of the Black Box, signed in or not. */
 export interface QuitRunApi {
@@ -101,8 +98,12 @@ export interface QuitBlackBoxApi extends QuitRunApi {
   undo: (reportId: string) => boolean
   /** Every living report against any run of this vice, oldest first. */
   reports: ViceReport[]
-  /** Changes strength or situation of a filed report; false when it is not there. */
+  /** Changes strength, situation, thought or ending of a filed report; false when it is not there. */
   amend: (reportId: string, patch: ReportPatch) => boolean
+  /** Every living run of this vice, oldest first (ended and still going). */
+  runs: ViceAttempt[]
+  /** Removes a run that is still going and has no living report; false when refused. */
+  removeRun: (attemptId: string) => boolean
 }
 
 const EMPTY_FIELDS = { closeness: null, withWhom: "", where: "", factors: [] as string[] }
@@ -188,26 +189,32 @@ function useApi(viceId: string, core: BlackBoxCore, sync: SyncView): QuitBlackBo
   const amend = useCallback(
     (reportId: string, patch: ReportPatch): boolean => {
       const cur = latest.current
-      if (!living(cur.reports).some((r) => r.id === reportId)) return false
-      const stamp = stampFor(cur)
-      const next = {
-        ...cur,
-        reports: cur.reports.map((r) =>
-          r.id === reportId
-            ? {
-                ...r,
-                ...(patch.closeness !== undefined ? { closeness: patch.closeness } : {}),
-                ...(patch.where !== undefined ? { where: patch.where } : {}),
-                updatedAt: stamp,
-              }
-            : r,
-        ),
-      }
+      const next = amendReport(cur, reportId, patch)
+      if (next === cur) return false
       latest.current = next
       update(() => next)
       return true
     },
     [update],
+  )
+
+  const runs = useMemo(
+    () => living(record.attempts).filter((a) => a.viceId === viceId).sort((a, b) => (a.startedOn < b.startedOn ? -1 : a.startedOn > b.startedOn ? 1 : 0)),
+    [record, viceId],
+  )
+
+  const removeRun = useCallback(
+    (attemptId: string): boolean => {
+      const cur = latest.current
+      const mine = living(cur.attempts).find((a) => a.id === attemptId)
+      if (!mine || mine.viceId !== viceId) return false
+      const next = removeRunIfEmpty(cur, attemptId)
+      if (next === cur) return false
+      latest.current = next
+      update(() => next)
+      return true
+    },
+    [update, viceId],
   )
 
   const has = useCallback(
@@ -229,8 +236,8 @@ function useApi(viceId: string, core: BlackBoxCore, sync: SyncView): QuitBlackBo
   // Signed in, a run is not started until the account has answered: otherwise a run the account already holds could be doubled.
   const settled = ready && (sync === null || isSettled(sync.state as Parameters<typeof isSettled>[0]))
   return useMemo(
-    () => ({ ready, settled, run, today, startRun, fileCloseCall, fileSlip, status, has, undo, reports, amend }),
-    [ready, settled, run, today, startRun, fileCloseCall, fileSlip, status, has, undo, reports, amend],
+    () => ({ ready, settled, run, today, startRun, fileCloseCall, fileSlip, status, has, undo, reports, amend, runs, removeRun }),
+    [ready, settled, run, today, startRun, fileCloseCall, fileSlip, status, has, undo, reports, amend, runs, removeRun],
   )
 }
 

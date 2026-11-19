@@ -41,16 +41,6 @@ async function toPrice(page: Page) {
   await page.getByTestId("cost-continue").click()
 }
 
-async function slipToLast(page: Page) {
-  await page.goto(quitUrl(`${A}/slip`))
-  await page.getByTestId("chip-today").click()
-  await page.getByTestId("slip-continue").click()
-  await page.getByTestId(`chip-${D.endings[0].id}`).click()
-  await page.getByTestId("slip-continue").click()
-  await page.getByTestId("chip-b1").click()
-  await page.getByTestId("slip-finish").click()
-}
-
 test.describe("quit phase 7 fixes, signed out @phone", () => {
   test("A24 A26 A27 a price over the cap, negative or junk is refused with the range and Done stays off", async ({ page }) => {
     await toPrice(page)
@@ -122,16 +112,6 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
     const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("quit-v1") ?? "{}").nicotine.past)
     expect(stored.endings).toEqual([])
     expect(stored.afterSlip).toBeNull()
-  })
-
-  test("A62 slip tomorrow keeps the date chosen after midnight passes", async ({ page }) => {
-    await page.clock.install({ time: new Date("2026-10-24T20:00:00Z") })
-    await slipToLast(page)
-    await page.getByTestId("chip-tomorrow").click()
-    const before = await page.getByTestId("slip-day1").textContent()
-    await page.clock.setSystemTime(new Date("2026-10-26T12:00:00Z"))
-    await page.reload()
-    await expect(page.getByTestId("slip-day1")).toHaveText(before!)
   })
 
   test("A76 the mostly-free band links to a page a signed-out reader can open", async ({ page }) => {

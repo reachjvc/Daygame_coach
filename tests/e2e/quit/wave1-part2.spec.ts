@@ -1,14 +1,11 @@
 /**
- * QUIT TOOLS, WAVE 1 PART 2: CRAVING NOW, SYMPTOM GUIDE, SLIPPED.
+ * QUIT TOOLS, WAVE 1 PART 2: SYMPTOM GUIDE.
  *
- * Signed out: the symptom list and one symptom, a slip run. Signed
- * in (the worker's own test-backend account, never the owner's): a close call
- * and a lapse are filed in the Black Box and Undo takes them out again.
+ * Signed out: the symptom list and one symptom. (The slip tool has its own spec, slip.spec.ts.)
  * Every expected text is read from the data files at run time.
  * With QUIT_SHOTS_DIR set it also saves a screenshot of each screen.
  */
 
-import { randomUUID } from "node:crypto"
 import { test, expect, SIGNED_OUT } from "../fixtures/test"
 import { quitUrl } from "../helpers/quit"
 import type { Page } from "@playwright/test"
@@ -16,10 +13,6 @@ import nicotineJson from "../../../src/quit/data/nicotine.json"
 import tooltextJson from "../../../src/quit/data/tooltext.json"
 
 const data = nicotineJson as unknown as {
-  beliefs: { id: string; short: string; need: string; counterpart: string; blackBoxEnding?: string }[]
-  needs: { id: string; name: string; swaps: { id: string; text: string }[] }[]
-  endings: { id: string; label: string }[]
-  tapeForward: string[]
   symptomCourse: { symptom: string; peak: string | null; lasts: string; text: string }[]
   symptomHelp: { symptom: string; text: string }[]
   symptomWords: Record<string, string>
@@ -70,146 +63,5 @@ test.describe("quit wave 1 part 2, signed out @phone", () => {
     await shot(page, "symptoms-detail-irritable")
     await page.getByTestId("symptom-back").click()
     await expect(page.getByTestId("symptom-list")).toBeVisible()
-  })
-
-  test("slip run: three taps, steps 1 to 3, a new day 1", async ({ page }) => {
-    await page.goto(quitUrl(`${A}/slip`))
-    await expect(page.getByTestId(`chip-${"today"}`)).toHaveText(t.slip.when.today)
-    await shot(page, "slip-1-when")
-    await page.getByTestId("chip-yesterday").click()
-    await page.getByTestId("slip-continue").click()
-    await expect(page.getByTestId(`chip-${data.endings[0].id}`)).toBeVisible()
-    await shot(page, "slip-2-went-on")
-    await page.getByTestId(`chip-${data.endings[0].id}`).click()
-    await page.getByTestId("slip-continue").click()
-    await page.getByTestId("chip-other").click()
-    await page.getByTestId("slip-own").fill("x".repeat(120))
-    expect((await page.getByTestId("slip-own").inputValue()).length).toBe(80)
-    await shot(page, "slip-3-told")
-    await page.getByTestId("slip-finish").click()
-    await expect(page.getByTestId("result")).toBeVisible()
-    // signed out: no Black Box line, links to take the tests
-    await expect(page.getByTestId("slip-saved")).toHaveCount(0)
-    await expect(page.getByTestId("slip-step1")).toContainText(t.slip.step1None)
-    await expect(page.getByTestId("slip-step2")).toContainText(t.slip.step2None)
-    await page.getByTestId("chip-tomorrow").click()
-    await expect(page.getByTestId("slip-day1")).toContainText("Day 1:")
-    await expect(page.getByTestId("slip-keep")).toHaveText("Every day you keep that promise to yourself is a complete success.")
-    expect(await page.locator("body").innerText()).not.toMatch(/\breset\b|back to zero|start over|failed|blew it/i)
-    await noSideways(page)
-    await shot(page, "slip-4-result")
-    // the day 1 choice survives a reload
-    await page.reload()
-    await expect(page.getByTestId("slip-day1")).toBeVisible()
-  })
-
-  test("slip result lists his top lies and swaps when he took those tools", async ({ page }) => {
-    await page.goto(quitUrl(`${A}/slip`))
-    await page.evaluate(
-      ({ top, swap }) => {
-        window.localStorage.setItem(
-          "quit-v1",
-          JSON.stringify({
-            nicotine: {
-              beliefs: { ratings: { [top]: 5 }, facts: {} },
-              gives: { done: 1, picked: [], tried: { [swap]: { swapId: swap, triedOn: "2026-11-18" } }, rated: {} },
-              slip: { done: 3, when: "today", ending: null, told: "other", ownWords: "", newDay1: null, reportId: null },
-            },
-          }),
-        )
-      },
-      { top: data.beliefs[0].id, swap: data.needs[0].swaps[0].id },
-    )
-    await page.reload()
-    await expect(page.getByTestId("slip-step1")).toContainText(data.beliefs[0].counterpart)
-    await expect(page.getByTestId("slip-step2")).toContainText(data.needs[0].swaps[0].text)
-  })
-})
-
-/** A record with one nicotine run still going, started two weeks ago, written the way the Black Box keeps it. */
-function liveRun() {
-  const started = new Date(Date.now() - 14 * 86400000)
-  const p = (n: number) => String(n).padStart(2, "0")
-  const day = `${started.getFullYear()}-${p(started.getMonth() + 1)}-${p(started.getDate())}`
-  const stamp = new Date().toISOString()
-  return {
-    version: 1,
-    attempts: [
-      {
-        id: randomUUID(),
-        viceId: "nicotine",
-        label: "Smoking or vaping",
-        startedOn: day,
-        startedBy: "",
-        structure: [],
-        endedOn: null,
-        endedByReportId: null,
-        updatedAt: stamp,
-        deletedAt: null,
-      },
-    ],
-    reports: [],
-  }
-}
-
-interface Rows {
-  attempts: { id: string; ended_on: string | null; deleted_at: string | null }[]
-  reports: { id: string; went_through: boolean; thought: string; ending: string; did_instead: string; deleted_at: string | null }[]
-}
-
-async function serverRows(page: Page): Promise<Rows> {
-  const res = await page.request.get("/api/black-box")
-  expect(res.ok()).toBe(true)
-  return (await res.json()).rows as Rows
-}
-
-/** Tombstones whatever the worker's account holds, so each test starts from an empty Black Box. */
-async function emptyAccount(page: Page) {
-  const rows = await serverRows(page)
-  const buried = new Date(Date.now() + 5000).toISOString()
-  const bury = <T extends object>(r: T) => ({ ...r, updated_at: buried, deleted_at: buried })
-  if (rows.attempts.length === 0 && rows.reports.length === 0) return
-  const res = await page.request.put("/api/black-box", {
-    data: { rows: { attempts: rows.attempts.map(bury), reports: rows.reports.map(bury) } },
-  })
-  expect(res.ok()).toBe(true)
-}
-
-async function seedRun(page: Page) {
-  await page.goto(quitUrl(`${A}/symptoms`))
-  await emptyAccount(page)
-  await page.evaluate((r) => {
-    window.localStorage.setItem("vice-blackbox-v1", JSON.stringify(r))
-    window.localStorage.removeItem("vice-blackbox-sent-v1")
-  }, liveRun())
-}
-
-test.describe("quit wave 1 part 2, signed in with a living run @phone", () => {
-  test("a slip ends the run in the Black Box, and Undo brings it back", async ({ page }) => {
-    await seedRun(page)
-    await page.goto(quitUrl(`${A}/slip`))
-    await page.getByTestId("chip-today").click()
-    await page.getByTestId("slip-continue").click()
-    await page.getByTestId(`chip-${data.endings[0].id}`).click()
-    await page.getByTestId("slip-continue").click()
-    await page.getByTestId(`chip-${data.beliefs[2].id}`).click()
-    await page.getByTestId("slip-finish").click()
-    await expect(page.getByTestId("slip-saved")).toContainText(t.slip.saved)
-    await expect(page.getByTestId("slip-new-run")).toHaveAttribute("href", "/plan/quit-vice")
-    await shot(page, "slip-4-result-signed-in")
-    await expect
-      .poll(async () => (await serverRows(page)).reports.filter((r) => !r.deleted_at && r.went_through).length, { timeout: 20000 })
-      .toBe(1)
-    let rows = await serverRows(page)
-    expect(rows.reports.find((r) => !r.deleted_at)!.thought).toBe(data.beliefs[2].short)
-    expect(rows.attempts.find((a) => !a.deleted_at)!.ended_on).not.toBeNull()
-
-    await page.getByTestId("slip-undo").click()
-    await expect(page.getByTestId("slip-undone")).toBeVisible()
-    await expect
-      .poll(async () => (await serverRows(page)).attempts.find((a) => !a.deleted_at)?.ended_on ?? "alive", { timeout: 20000 })
-      .toBe("alive")
-    rows = await serverRows(page)
-    expect(rows.reports.filter((r) => !r.deleted_at)).toHaveLength(0)
   })
 })

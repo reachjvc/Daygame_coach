@@ -1,5 +1,5 @@
 import type { BlackBoxRecord, ViceEndingId } from "@/src/vice/types"
-import { living, startAttempt } from "@/src/vice/blackbox/blackboxStore"
+import { living, removeAttempt, stampFor, startAttempt } from "@/src/vice/blackbox/blackboxStore"
 import { VICES } from "@/src/vice/data/vices"
 import type { QuitBelief, QuitEnding } from "./types"
 import { localDate } from "./tools/common"
@@ -55,4 +55,44 @@ export function startRunOn(record: BlackBoxRecord, viceId: string, startedOn: st
   if (living(record.attempts).some((a) => a.viceId === viceId && a.endedOn === null)) return record
   const label = VICES.find((v) => v.id === viceId)?.label ?? viceId
   return startAttempt(record, { viceId, label, startedOn, startedBy: "", structure: [], acknowledgedRisk: false, today })
+}
+
+/** What `amendReport` may change on a filed report. */
+export interface AmendPatch {
+  closeness?: number | null
+  where?: string
+  thought?: string
+  ending?: ViceEndingId
+}
+
+/** A filed report with some fields changed; the same record when the report is not there. */
+export function amendReport(record: BlackBoxRecord, reportId: string, patch: AmendPatch): BlackBoxRecord {
+  if (!living(record.reports).some((r) => r.id === reportId)) return record
+  const stamp = stampFor(record)
+  return {
+    ...record,
+    reports: record.reports.map((r) =>
+      r.id === reportId
+        ? {
+            ...r,
+            ...(patch.closeness !== undefined ? { closeness: patch.closeness } : {}),
+            ...(patch.where !== undefined ? { where: patch.where } : {}),
+            ...(patch.thought !== undefined ? { thought: patch.thought } : {}),
+            ...(patch.ending !== undefined ? { ending: patch.ending } : {}),
+            updatedAt: stamp,
+          }
+        : r,
+    ),
+  }
+}
+
+/**
+ * Removes a run that is still going and holds no living report (a run just started and not yet used).
+ * The same record when the run is not living, has ended, or has a living report against it.
+ */
+export function removeRunIfEmpty(record: BlackBoxRecord, attemptId: string): BlackBoxRecord {
+  const run = living(record.attempts).find((a) => a.id === attemptId)
+  if (!run || run.endedOn !== null) return record
+  if (living(record.reports).some((r) => r.attemptId === attemptId)) return record
+  return removeAttempt(record, attemptId)
 }
