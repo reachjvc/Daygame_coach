@@ -242,7 +242,6 @@
     "reasonsPlaceholder": "One reason, in your words",
     "kept": "About {amount} kept since {date}",
     "keptSum": "{perDay} a day × {each} each × {days} days = {total}",
-    "keptSumPack": "{perDay} a day × {each} each ({pack} a pack of 20) × {days} days = {total}",
     "askStill": "Still fighting it",
     "askNo": "No, I got through it",
     "askYes": "Yes",

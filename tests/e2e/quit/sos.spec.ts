@@ -294,7 +294,7 @@ test.describe("craving now, signed out", () => {
 
     test("10 reasons with a past quit date show the money kept and its sum", async ({ page }) => {
       await startClock(page)
-      const record = { quitDate: "2026-10-19", runs: [{ start: "2026-10-19", end: null, endedBy: null }], slips: [], unit: { id: "cigarettes", perDay: 10, priceUsd: 10.34, priceBasis: "typed" } }
+      const record = { quitDate: "2026-10-19", runs: [{ start: "2026-10-19", end: null, endedBy: null }], slips: [], unit: { id: "cigarettes", perDay: 10, priceUsd: 0.517, priceBasis: "typed" } }
       await seed(page, { record })
       await page.getByTestId("tile-reasons").click()
       await expect(page.getByTestId("kept-amount")).toContainText("About $155 kept")

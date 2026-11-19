@@ -92,16 +92,15 @@ describe("his own pattern", () => {
 })
 
 describe("money kept comes from his numbers", () => {
-  it("10 cigarettes a day, 10.34 a pack of 20, 30 days is about 155", () => {
-    const k = moneyKept("2026-10-20", "2026-11-19", { id: "cigarettes", perDay: 10, priceUsd: 10.34 })
+  it("10 cigarettes a day, 0.517 each (10.34 a pack of 20), 30 days is about 155", () => {
+    const k = moneyKept("2026-10-20", "2026-11-19", { id: "cigarettes", perDay: 10, priceUsd: 0.517 })
     expect(k?.days).toBe(30)
     expect(Math.round(k!.amountUsd)).toBe(155)
-    expect(k?.packUsd).toBe(10.34)
+    expect(k?.eachUsd).toBe(0.517)
   })
   it("a vape is the price of one times the count", () => {
     const k = moneyKept("2026-11-17", "2026-11-19", { id: "vape", perDay: 1, priceUsd: 14.07 })
     expect(k?.amountUsd).toBeCloseTo(28.14, 2)
-    expect(k?.packUsd).toBeNull()
   })
   it("nothing without a past date, a count or a price", () => {
     const u = { id: "vape", perDay: 1, priceUsd: 14 }
@@ -110,6 +109,7 @@ describe("money kept comes from his numbers", () => {
     expect(moneyKept("2026-11-25", "2026-11-19", u)).toBeNull()
     expect(moneyKept("2026-11-01", "2026-11-19", null)).toBeNull()
     expect(moneyKept("2026-11-01", "2026-11-19", { ...u, perDay: 0 })).toBeNull()
+    expect(moneyKept("2026-11-01", "2026-11-19", { ...u, perDay: null })).toBeNull()
     expect(moneyKept("2026-11-01", "2026-11-19", { ...u, priceUsd: 0 })).toBeNull()
   })
   it("writes a day plainly", () => {

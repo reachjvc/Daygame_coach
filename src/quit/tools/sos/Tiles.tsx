@@ -379,9 +379,7 @@ export function Reasons({ reasons, onReasons, kept, quitDate, onBack }: { reason
             {fill(t.kept, { amount: usd(kept.amountUsd, 0), date: niceDay(quitDate) })}
           </p>
           <p data-testid="kept-sum" className="mt-1 text-sm text-muted-foreground">
-            {kept.packUsd !== null
-              ? fill(t.keptSumPack, { perDay: kept.perDay, each: usd(kept.eachUsd, 3), pack: usd(kept.packUsd), days: kept.days, total: usd(kept.amountUsd) })
-              : fill(t.keptSum, { perDay: kept.perDay, each: usd(kept.eachUsd), days: kept.days, total: usd(kept.amountUsd) })}
+            {fill(t.keptSum, { perDay: kept.perDay, each: usd(kept.eachUsd, kept.eachUsd < 1 ? 3 : 2), days: kept.days, total: usd(kept.amountUsd) })}
           </p>
         </section>
       )}

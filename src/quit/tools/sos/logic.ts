@@ -17,8 +17,6 @@ export const PATTERN_MIN = 3
 /** The move tile's countdown. */
 export const MOVE_MS = 5 * 60 * 1000
 export const OTHER = "other"
-/** A cigarette pack holds this many (the price in the record is per pack). */
-export const CIGARETTES_PER_PACK = 20
 
 export interface SosState {
   /** Epoch ms when this visit began; null before the first visit. */
@@ -167,22 +165,19 @@ export interface Kept {
   /** Price of one counted thing: a cigarette, a vape, a tin. */
   eachUsd: number
   perDay: number
-  /** The pack price when counted by cigarette. */
-  packUsd: number | null
 }
 
 /**
  * Money kept since a past quit date, from his own numbers: count a day times the price of one
- * (a cigarette is a pack price over 20). Null without a past date, a count or a price.
+ * (the record's price is per cigarette, per vape, per can). Null without a past date, a count or a price.
  */
-export function moneyKept(quitDate: string | null, today: string, unit: { id: string; perDay: number; priceUsd: number } | null): Kept | null {
+export function moneyKept(quitDate: string | null, today: string, unit: { id: string; perDay: number | null; priceUsd: number } | null): Kept | null {
   if (!quitDate || !unit || quitDate >= today) return null
-  if (!(unit.perDay > 0) || !(unit.priceUsd > 0)) return null
+  if (unit.perDay === null || !(unit.perDay > 0) || !(unit.priceUsd > 0)) return null
   const days = Math.round((Date.parse(`${today}T00:00:00Z`) - Date.parse(`${quitDate}T00:00:00Z`)) / 86_400_000)
   if (days < 1) return null
-  const packed = unit.id === "cigarettes"
-  const eachUsd = packed ? unit.priceUsd / CIGARETTES_PER_PACK : unit.priceUsd
-  return { amountUsd: eachUsd * unit.perDay * days, days, eachUsd, perDay: unit.perDay, packUsd: packed ? unit.priceUsd : null }
+  const eachUsd = unit.priceUsd
+  return { amountUsd: eachUsd * unit.perDay * days, days, eachUsd, perDay: unit.perDay }
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]

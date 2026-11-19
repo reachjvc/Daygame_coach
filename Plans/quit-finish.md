@@ -308,6 +308,6 @@ files get the field empty.
 - Tool 2, no Black Box run: the pattern list and the money line read the record. Proposed: with no run in the Black Box the
   after-flow still works, but "Keep a record" is offered and nothing is saved until he starts one (same as wave-1). Recommendation: keep this; saving
   silently would create a record he never asked for.
-- Tool 2, meaning of pouch price and count for "money kept": proposed: for a pouch the count is pouches per day and the price is per
-  pouch (tin price divided by pouches in it is not asked here), so kept = days x count x price. Recommendation: use per-pouch price and show the
-  sum line so he can see the basis; if the record holds a tin price, ask in the Your record tool (Tool 3), not here.
+- Tool 2, meaning of price for "money kept": Tool 1 made the record's price per single unit (one cigarette, one vape, one can),
+  so Tool 2 uses count a day x that price x days, with no pack division, and shows the sum line. Proposed: keep; the "10 a day,
+  $10.34 a pack" acceptance case reads as 0.517 each. For pouches the count is cans a day (matches "a can" in the data file).
