@@ -37,7 +37,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | 6 | What you'll feel, and when | lab `timeline/best` | wave-1 `symptoms` (what helps per symptom) | not started |
 | 7 | If-then plan | lab `ifthen/best` | — | building |
 | 8 | Daily check-in | lab `checkin/best` | slip question from `diary/best` | building |
-| 9 | What it costs you | wave-1 `cost` | per-pack price and live update (copy e); money setup from the shared record | not started |
+| 9 | What it costs you | wave-1 `cost` | per-pack price and live update (copy e); money setup from the shared record | building |
 | 10 | Your past attempts | lab `past/best` | wave-1's "many tries are normal" number and "after the first slip" question | building |
 | 11 | Today's lesson | lab `lessons/best` | — | building |
 | 12 | How people quit | wave-1 `how` | the sourced sections of `library/best`, shortened | building |
@@ -1354,6 +1354,135 @@ looked at):**
 which needs a "then I" rewrite of every card and breaks on typed text). I2 importance/confidence dropped. I3 alcohol
 study boxes dropped for nicotine. I4 pre-ticks from his Black Box saves, not from Your past attempts (different list).
 I5 Tool 2 shows his plan line for that moment (the only change to Tool 2).
+
+### Tool 9: What it costs you — brief (Opus, 2026-11-19) — build exactly this, decide nothing
+
+Model: Sonnet builds in a worktree; Opus reads the diff. Address: `/quit/nicotine/cost` (rebuilds wave-1 `cost` in place
+in `src/quit/tools/cost/`; copy e is `src/quit/lab/cost/e/*`, never edit lab files). Its job (Tool 3 R3, review E5): what
+the habit costs **while he still uses it**, a day, a month, a year and over 10 years. Money kept since quitting,
+spending and targets are Tool 3's, never here. Nicotine only: no addiction switcher. One page, no steps (a calculator,
+copy e's live result: no Save, no Continue). Desktop (1280): the same page in the page column, like Tools 1 to 4. All
+choices below are **proposed**; the recommendation is the first option each time (K1–K8 at the end).
+
+**Menu row:** name **"What it costs you"** (unchanged), line **"What you spend on it a day, a year and over 10
+years."** (no hours: every nicotine unit has `defaultMinutesPerUnit: null`, review B15), `account: "none"`, wave 1.
+
+**Data: one set of numbers for every tool.**
+- Unit, count a day and price come from the shared record (`useQuitRecord("nicotine").record.unit`), and every change he
+  makes here is written back to it with `setUnit` (the same answer as Tool 1 screen 4 and Tool 3's Change, never a
+  second copy, review C3 / E5). The record keeps the price of **one** cigarette, one disposable vape, one can, as Tool 1
+  saves it; per pack and per week are only ways to type and show it.
+- Never ask what the record already holds: with a unit, a count and a price in the record, the page opens on the result
+  and the numbers as one summary line, no fields.
+- Its own state, key `cost` in the `quit-v1` store, keeps only how he likes to type: `{ v: 2, priceMode: "pack" |
+  "one", packSize: 1–100 (default 20), countMode: "day" | "week" }`.
+- **Old wave-1 answers** (key `cost` without `v: 2`, with `unit`, `perDay`, `daysPerWeek`, `price`): when the record has
+  no unit and the old unit id exists in the data file, move them into the record once: `perDay` = old perDay × daysPerWeek
+  ÷ 7, `priceUsd` = old price (parsed with Tool 1's `parseTyped`; skip the import when it is bad), `priceBasis` "default"
+  when it equals the data default, else "typed". Then the `cost` key becomes the v2 shape. Nothing he typed is lost.
+- **Coaching cost line** (`src/quit/coaching.ts` `yearlyCost`, `CoachingCost.tsx`): read the record instead of
+  `cost.result` (count a day × price × 365, rounded to the dollar as today); null without a count or price. Update its
+  unit and e2e tests (`coaching.test.ts`, `privacy-coaching.spec.ts`).
+
+**The page, top to bottom:**
+1. **Your numbers.**
+   - Record complete: one line "10 cigarettes a day at $0.52 each" (`data-testid="cost-summary"`) and a **Change**
+     button (44 px). Under it: "Your quit date and Your record use these same numbers."
+   - Else (or after Change), the form, each field with a visible label:
+     a. **What do you use?** chips Cigarettes / Vape / Pouches (labels from Tool 1's `dateText.useUnits`, capitalised,
+        review B31, E20). Picking another unit clears the count and puts that unit's starting price (E20: never "20
+        disposable vapes a day × $14.07" by carry-over).
+     b. **How many {many}?** (review B10: never "How much? cigarettes"), with a two-way switch **a day | a week**
+        (default a day for cigarettes, a week for vapes and pouches: one disposable lasts several days, review B11).
+        Decimals allowed ("0.5"). Stored as perDay = week ÷ 7, not rounded. Switching converts the number shown (10 a
+        day ↔ 70 a week). Empty is allowed (record perDay null, like Tool 1's skip).
+     c. **Price.** Cigarettes: a switch **a pack | one cigarette** (default a pack, review B12, E6). Pack: "What does a
+        pack cost? (USD)" and "Cigarettes in a pack" (whole number 1–100, default 20); priceUsd = pack ÷ size, not
+        rounded. One: "What does one cigarette cost? (USD)". Vape: "What does one disposable vape cost? (USD)". Pouches:
+        "What does a can cost? (USD)". Prefilled from the record, else from the data default.
+     d. **Basis line under the price, always visible** (B13, E6, C24), `break-words`:
+        - cigarettes, pack: "Starts at $10.40 a pack: $0.52 a cigarette × 20. The $0.52 is the US average pack of 20,
+          $10.34, ÷ 20, rounded to the cent; the average is across states, not weighted by sales (Tobacco Insider,
+          posted 26 Aug 2026). Type what you pay."
+        - cigarettes, one; vape; pouches: Tool 1's `dateText.priceBasis` line for that unit (vape says 2022 sales,
+          pouches says the maker's suggested price).
+        - When the record's `priceBasis` is "typed": "Your own price." instead.
+     e. Numbers parsed with Tool 1's `parseTyped` ("7,50" = 7.50, review E4): count max 500 a day / 3,500 a week, price
+        max 1,000 (Tool 1's `MAX_PER_DAY`, `MAX_PRICE`); pack size whole 1–100. Anything else: the line "Type a number,
+        like 7.50" (`dateText.badNumber`; for pack size "Type a whole number from 1 to 100"), `role="alert"`, and the
+        record keeps its last good numbers.
+     f. Every good change is written to the record at once (no Save button). Status line under the form: "Saved on
+        this phone." When the record is complete, a **Done** button closes the form back to the summary line.
+2. **What it costs you** (live: updates on every keystroke, as copy e).
+   - Large: **A year** with the amount (`data-testid="cost-year"`, `data-value` the exact cents), `aria-live="polite"`;
+     when it changes it counts to the new value in about 0.4 s (copy e's count-up), no animation with
+     `prefers-reduced-motion`.
+   - Three tiles: **A day**, **A month**, **In 10 years** (`cost-day`, `cost-month`, `cost-ten`).
+   - Units line: "3,650 cigarettes a year" (count a day × 365, rounded to a whole; "1 can of pouches a year" for 1;
+     unit words `one` / `many` from the data file).
+   - **The working**, always shown (short, so not folded), and it adds up by hand (review E9): day = count × price
+     rounded to the cent; year = day × 365; month = year ÷ 12 rounded to the cent; 10 years = year × 10. Lines, as
+     they apply: "$10.40 a pack ÷ 20 = $0.52 a cigarette." · "70 a week ÷ 7 = 10 a day." · "10 a day × $0.52 = $5.20
+     a day." · "$5.20 × 365 = $1,898.00 a year." · "$1,898.00 ÷ 12 = $158.17 a month." · "$1,898.00 × 10 = $18,980.00
+     in 10 years." Then: "A year is 365 days. No price rise is counted." Prices of one shown to the cent, or with up to
+     4 decimals when they are not whole cents ($0.4495), so every line checks.
+   - Money format: "$1,898.00", always two decimals and thousands commas (as Tool 3). Long numbers wrap, never widen
+     the page (500 a day × $1,000).
+   - No count yet: the result shows "Type how many a day to see what it costs." and no figures.
+3. **Your quit date line** (from the record; links only to tools in `liveTools.json` via `isLiveTool` and
+   `withPreview`, else the tool name as plain text):
+   - Date in the future, goal stop or break: "From Sat, Nov 21 you keep $5.20 a day: $1,898.00 a year."
+   - Date today or past, goal stop or break: "You stopped on Thu, Nov 12. The money you have kept since then is in
+     Your record." ("Your record" a link when `record` is live).
+   - No date, or goal "later": "Pick a day 1 in Your quit date." ("Your quit date" a link).
+4. **Sources**: one `SourcesFold` with the chosen unit's `priceRefs` (only one Sources box on the page, B28).
+
+**Not here (each on purpose):** no "Clear my answers" or "Start over" (lesson 2, E7; the numbers belong to every tool),
+no hours (B15), no price-rise box (E8), no currency switch (USD), no share row, no 20-year chart (copy e), no
+"what you could buy" list: `costSwaps` prices have no source (B14) and targets are Tool 3's; `costSwaps` stays in
+`nicotine.json`, not shown (K4).
+
+**Old tests:** the wave-1 cost parts of `tests/unit/quit/tools/cost.test.ts`, `tests/unit/quit/tools/phase7.test.ts`,
+`tests/unit/quit/menu.test.ts` (`toolReachable("cost", …)`), `tests/e2e/quit/wave1-part1.spec.ts`,
+`tests/e2e/quit/phase7-signed-out.spec.ts` (`toPrice`) and `tests/e2e/quit/menu.spec.ts` (`/quit/nicotine/cost` is 404)
+test the replaced tool: rewrite them for this one or remove those cases. New unit tests in
+`tests/unit/quit/tools/cost.test.ts` for the maths, pack and week conversion, the import, and the coaching line.
+
+**Release:** add `cost` to `src/quit/data/liveTools.json` (Tool 0 "How to add a tool"); never `finished.json`.
+
+**Report items for this tool** (review B, E, C, A, 2026-11-19), each answered above: B10 (broken question), B11
+(vapes and pouches per week), B12 (pack price), B13 (basis visible), B14 (comparison prices unsourced: not shown), B15
+(hours promised), B28 (one Sources box), B31 (lowercase chips), B data "cost → coaching" (kept, from the record), C3 and
+E5 (one set of numbers; money kept is Tool 3's), C24 and E6 (÷ 20 shown, vape date, suggested price, no "data file"
+wording, weighted vs unweighted said), E4 (comma), E7 (no one-tap wipe), E8 (no rise box), E9 (working adds up), E20
+(chip label, "How many cigarettes", unit switch, upper limits; dropped parts named in "Not here"), F2 cost/e (no
+"number not sourced yet" tiles: none of copy e's app side is taken).
+
+**Acceptance (Playwright `tests/e2e/quit/cost.spec.ts`, 390x844 touch and 1280x800; screenshots looked at):**
+1. Fresh: the form is open; Cigarettes → count 10 → pack prefilled $10.40, size 20, basis line visible → A year
+   $1,898.00, a day $5.20, a month $158.17, 10 years $18,980.00, "3,650 cigarettes a year"; the record in
+   `quit-v1.nicotine.record.unit` is `{id: "cigarettes", perDay: 10, priceUsd: 0.52, priceBasis: "default"}`.
+2. Pack "9,00" → record price 0.45, "typed"; year $1,642.50 shows without tapping anything; the working lines add up.
+3. Record seeded as Tool 1 leaves it (vape, 0.5 a day, 14.07, default): the page opens on the result, no chips and no
+   fields; Change → the form with "a week" and 3.5.
+4. Vape, 2 a week, $14.07 → perDay 2/7 in the record; a day $4.02, a year $1,467.30.
+5. "abc" in count or price → "Type a number, like 7.50" and the record unchanged; 501 a day refused; size 0 refused.
+6. Cigarettes → Pouches: count empty, price $5.64 with the suggested-price line.
+7. Old wave-1 state seeded (cigarettes, 20 a day, 5 days a week, "0.60") and no record → record perDay 14.2857…,
+   0.60, "typed"; the coaching cost line reads the record.
+8. Quit-date line: future, past and no date each as written; links only to live tools.
+9. Reload keeps everything; Your quit date (`/quit/nicotine/date`, screen 4) shows the numbers typed here.
+10. No console error, no sideways scroll at 390 with 500 a day × $1,000, every tap target at least 44 px, the menu row
+    "What it costs you" opens it; desktop in the page column.
+11. Then the three-reviewer check and fix rounds; status "waiting for you".
+
+**Proposed (owner may veto):** K1 one live page that saves to the shared record as he types; alternative: steps and a
+Save button. K2 cigarette price asked per pack (stored per cigarette); alternative: per cigarette. K3 vapes and pouches
+counted per week by default; alternative: per day. K4 the "that's a jet ski" comparisons are not shown because their
+prices have no source (kept in the data file); alternative: source each price and show them. K5 no hours line (no
+nicotine data for minutes). K6 a 365-day year, no price rise. K7 the pack starts at $10.40 (20 × the $0.52 starting
+figure, so every tool agrees); alternative: change the data file's start to $0.517 so the pack shows $10.34. K8 no
+targets or "what you could buy" here: Tool 3 holds targets.
 
 ## Done
 
