@@ -226,7 +226,7 @@ export function TrackSchedule({
           <table className="w-full sm:min-w-[560px] border-collapse">
             <thead>
               <tr className="border-y border-white/5">
-                <th scope="col" className="sticky left-0 z-[1] bg-zinc-950 sm:static sm:bg-transparent text-left text-[10.5px] font-medium text-zinc-500 px-3 sm:px-5 py-2">
+                <th scope="col" className="sticky left-0 z-[1] bg-background sm:static sm:bg-transparent text-left text-[10.5px] font-medium text-zinc-500 px-3 sm:px-5 py-2">
                   {SCHEDULE_COPY.activityHeader}
                 </th>
                 {weeks.map((week) => (
@@ -246,11 +246,11 @@ export function TrackSchedule({
               return (
                 <tbody key={group.id} className="border-b border-white/5">
                   <tr className="bg-white/[0.02]">
-                    <th scope="row" className="sticky left-0 z-[1] bg-zinc-950 sm:static sm:bg-transparent text-left font-normal px-3 sm:px-5 py-2 min-w-[9.5rem] max-w-[150px] sm:min-w-0 sm:max-w-[240px]">
+                    <th scope="row" className="sticky left-0 z-[1] bg-background sm:static sm:bg-transparent text-left font-normal px-3 sm:px-5 py-2 max-w-[150px] sm:max-w-[240px]">
                       <button
                         onClick={() => toggle(key)}
                         aria-expanded={open}
-                        className="flex items-center gap-2 min-w-0 w-full text-left group"
+                        className="flex items-center gap-2 min-w-[8rem] sm:min-w-0 w-full text-left group"
                       >
                         <Chevron open={open} />
                         <Dot color={group.color} />
@@ -275,8 +275,8 @@ export function TrackSchedule({
                   {open &&
                     group.activities.map((activity) => (
                       <tr key={activity.id} className="border-t border-white/5">
-                        <th scope="row" className="sticky left-0 z-[1] bg-zinc-950 sm:static sm:bg-transparent text-left font-normal pl-7 pr-3 sm:pl-11 sm:pr-5 py-2 min-w-[9.5rem] max-w-[150px] sm:min-w-0 sm:max-w-[240px]">
-                          <span className="flex items-center gap-2 min-w-0">
+                        <th scope="row" className="sticky left-0 z-[1] bg-background sm:static sm:bg-transparent text-left font-normal pl-7 pr-3 sm:pl-11 sm:pr-5 py-2 max-w-[150px] sm:max-w-[240px]">
+                          <span className="flex items-center gap-2 min-w-[8rem] sm:min-w-0">
                             <Dot color={activity.areaColor} />
                             <span className="min-w-0">
                               <span className="block text-[12px] text-zinc-300 break-words sm:truncate">{activity.title}</span>
@@ -319,7 +319,7 @@ export function TrackSchedule({
             })}
             <tbody>
               <tr>
-                <th scope="row" className="sticky left-0 z-[1] bg-zinc-950 sm:static sm:bg-transparent text-left px-3 sm:px-5 py-2 text-[10.5px] font-medium text-zinc-500">
+                <th scope="row" className="sticky left-0 z-[1] bg-background sm:static sm:bg-transparent text-left px-3 sm:px-5 py-2 text-[10.5px] font-medium text-zinc-500">
                   {SCHEDULE_COPY.totalRow}
                 </th>
                 {weeks.map((week) => (

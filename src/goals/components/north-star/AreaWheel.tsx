@@ -224,6 +224,7 @@ export function AreaWheel({
           : subMode === "season" && rank >= 0
             ? a.color
             : rating != null ? a.color : "#71717a"
+        const labelFill = active ? "#fff" : "#e4e4e7"
         const pressProps = {
           role: "button",
           tabIndex: 0,
@@ -287,7 +288,7 @@ export function AreaWheel({
                     dominantBaseline="middle"
                     fontSize={labelFont.toFixed(2)}
                     fontWeight={active ? 700 : 500}
-                    fill={active ? "#fff" : "#e4e4e7"}
+                    fill={labelFill}
                     onClick={() => onPick(a.id)}
                     className="cursor-pointer"
                   >
@@ -318,7 +319,7 @@ export function AreaWheel({
                   dominantBaseline="middle"
                   fontSize="9.5"
                   fontWeight={active ? 700 : 500}
-                  fill={active ? "#fff" : "#e4e4e7"}
+                  fill={labelFill}
                   onClick={() => onPick(a.id)}
                   className="cursor-pointer"
                 >
