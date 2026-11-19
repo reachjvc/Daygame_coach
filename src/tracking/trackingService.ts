@@ -203,7 +203,6 @@ export async function reactivateSession(sessionId: string): Promise<SessionWithA
  */
 export async function deleteSession(sessionId: string, userId: string): Promise<void> {
   await repoDeleteSession(sessionId, userId)
-  await reconcileUserProgress(userId)
 }
 
 export async function getSessionWithApproaches(
