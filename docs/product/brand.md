@@ -25,6 +25,27 @@ Rules for this file:
 10kdaysclub.com, so all branding should reflect this broader market now. This means, the landing page should not
 say AI daygame coaching." The rebrand is planned in `Plans/rebrand-10kdaysclub.md`.
 
+## The umbrella and the look (2026-11-19)
+
+The owner's words, 2026-11-19:
+
+- "I like the look of my current frontpage, but it is only related to dating. I suppose i would want 'dating' to
+  be one window users can click into, and then theyre sold on the dating activities. Then … another part is the
+  broader lifestyle, with the plan, the time tools, the activity tracking (which also is symbiotic with dating
+  though), and then there's the quit section, which is part of the broader lifestyle. So what i think we need is
+  to decide on a coherent brand that can be an umbrella for all of this."
+- "I would not want to label it only quit, or quit first just because we're trying to sell something soonish, but
+  would rather aim the site towards what i want it to be long-term. Also, users will be directed to the quit tools
+  specifically, not the front page anyway."
+- "Men primarily, but no reason to entirely exclude women."
+- "For dating & Daygame, ive been very fond of the current color and design scheme. I think it works quite well.
+  It may also work for the brand in general. However, there is the possibility of making the 'quit' pages look
+  differently, or making the umbrella brand have its own color coding. It is important however that everything
+  goes together, and that we are sure to enforce rules long term that makes our look very coherent across pages,
+  but this could be a good opportunity to deepen the look on the site, through having several different facets of
+  what we offer, i.e. making it clear what the user is working on, through the color scheme too."
+- He wants to click through a few mocked-up looks and pick one before it is built.
+
 ## The name: where it stood (2026-10-16)
 
 What the owner said then:
