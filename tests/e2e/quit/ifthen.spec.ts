@@ -237,7 +237,7 @@ for (const size of SIZES) {
       await expect(page.getByTestId("removed")).toBeVisible()
       await expect(page.locator('[data-testid^="card-"][data-testid$="-text"]')).toHaveCount(2)
       await tap(page, "undo")
-      await expect(page.getByTestId("card-1-text-if")).toHaveText(label("bored"))
+      await expect(page.getByTestId("card-1-text-if")).toHaveText("I’m bored")
       await tap(page, "card-2-up")
       await expect(page.getByTestId("card-1-text-if")).toHaveText(label("coffee"))
       await tap(page, "card-0-down")

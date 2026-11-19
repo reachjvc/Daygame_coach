@@ -143,6 +143,13 @@ export function withStop(text: string): string {
   return /[.!?…]$/.test(s) ? s : `${s}.`
 }
 
+/** The "If" part of a card: a list label that starts with "When" drops it ("When I'm bored" reads "If I'm bored"). */
+export function ifText(label: string): string {
+  const s = label.trim()
+  const rest = s.replace(/^when\s+/i, "")
+  return rest === s || rest === "" ? s : rest[0].toUpperCase() + rest.slice(1)
+}
+
 /** Is a "then" something he can keep (not empty or spaces)? */
 export const thenOk = (c: Choice | undefined): c is Choice => !!c && c.then.trim() !== ""
 

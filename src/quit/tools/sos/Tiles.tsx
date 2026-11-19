@@ -355,7 +355,7 @@ export function Help({ moments, swaps, plan, onBack }: { moments: QuitOption[]; 
               {withStop(mine.then)}
             </li>
           )}
-          {cards.map((c) => (
+          {cards.filter((c) => !mine || withStop(c) !== withStop(mine.then)).map((c) => (
             <li key={c} data-testid="help-card" className="rounded-lg border border-border bg-card p-4 text-lg">
               {c}
             </li>

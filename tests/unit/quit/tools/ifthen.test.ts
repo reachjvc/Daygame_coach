@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  ifText,
   applyDraft,
   dayLabel,
   draftFromLines,
@@ -177,5 +178,14 @@ describe("dayLabel", () => {
   it("writes the weekday, day and month", () => {
     expect(dayLabel("2026-12-03")).toBe("Thu 3 Dec")
     expect(dayLabel("2026-11-26")).toBe("Thu 26 Nov")
+  })
+})
+
+describe("ifText", () => {
+  it("drops a leading When from a list label", () => {
+    expect(ifText("When I’m stressed")).toBe("I’m stressed")
+    expect(ifText("After a meal")).toBe("After a meal")
+    expect(ifText("when payday comes")).toBe("Payday comes")
+    expect(ifText("When")).toBe("When")
   })
 })

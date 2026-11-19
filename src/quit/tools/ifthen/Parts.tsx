@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { BasisBox, OptionCard } from "../date/Bits"
 import { EVIDENCE } from "./evidence"
-import { hasNegation, thenOk, withStop, type Choice, type Line } from "./logic"
+import { hasNegation, ifText, thenOk, withStop, type Choice, type Line } from "./logic"
 import { ifthenText as t } from "./text"
 
 const btn = "inline-flex min-h-11 items-center justify-center rounded-md border border-border px-3 text-sm"
@@ -14,7 +14,7 @@ export function PlanCard({ label, then, testId }: { label: string; then: string;
   return (
     <div data-testid={testId} className={`flex flex-col gap-1 ${wrap}`}>
       <p className="text-lg">
-        <span className="font-semibold">{t.ifLabel}</span> <span data-testid={`${testId}-if`}>{label}</span>
+        <span className="font-semibold">{t.ifLabel}</span> <span data-testid={`${testId}-if`}>{ifText(label)}</span>
       </p>
       <p className="text-lg">
         <span className="font-semibold">{t.thenLabel}</span> <span data-testid={`${testId}-then`}>{then.trim() ? withStop(then) : t.thenEmpty}</span>
