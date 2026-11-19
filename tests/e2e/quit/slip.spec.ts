@@ -79,6 +79,9 @@ interface Seed {
   record?: { quitDate: string | null; goal: string | null }
   /** The quit date tool's own answers. */
   date?: object
+  /** Ratings of the 12 lies test and the swaps marked as tried. */
+  beliefs?: object
+  gives?: object
 }
 
 /** Writes the browser state from a page that has no Black Box open, so nothing writes the old copy back. */
@@ -92,6 +95,8 @@ async function seed(page: Page, s: Seed = {}) {
     const q: Record<string, Record<string, unknown>> = { nicotine: {} }
     if (x.record) q.nicotine.record = { ...x.record, breakEnd: null, unit: null }
     if (x.date) q.nicotine.date = x.date
+    if (x.beliefs) q.nicotine.beliefs = x.beliefs
+    if (x.gives) q.nicotine.gives = x.gives
     localStorage.setItem("quit-v1", JSON.stringify(q))
   }, s)
 }
@@ -198,9 +203,18 @@ test.describe("slipped, signed out @phone", () => {
     await expect(page.getByTestId("lie-card")).toContainText("Counted:")
     await expect(page.getByTestId("lie-card").getByRole("button", { name: "Source" })).toBeVisible()
     await expect(page.getByTestId("swaps-place").getByTestId("swap-card")).toHaveText(DRIVING)
-    await expect(page.getByTestId("day1-today")).toBeVisible()
-    await expect(page.getByTestId("day1-tomorrow")).toBeVisible()
-    await expect(page.getByTestId("day1-line")).toHaveCount(0)
+    // the new day 1 is already chosen: Today, because the slip was yesterday
+    await expect(page.getByRole("heading", { name: t.day1Question })).toBeVisible()
+    await expect(page.getByTestId("day1-today")).toHaveAttribute("aria-checked", "true")
+    await expect(page.getByTestId("day1-tomorrow")).toHaveAttribute("aria-checked", "false")
+    await expect(page.getByTestId("day1-line")).toHaveText(`Day 1: ${words(day(0))}`)
+    await expect(page.getByTestId("step-day1-line")).toHaveText(`3. A new day 1: ${words(day(0))}`)
+    await expect(page.getByRole("heading", { name: t.backThrough })).toBeVisible()
+    await expect(page.getByRole("heading", { name: `1. ${t.step1One}` })).toBeVisible()
+    // order: days card, new day 1, back through steps
+    const ys = await Promise.all(["days-card", "step-day1", "step-lies", "step-swaps"].map(async (id) => (await page.getByTestId(id).boundingBox())!.y))
+    expect(ys).toEqual([...ys].sort((a, b) => a - b))
+    await expect(page.getByTestId("slip-undo")).toHaveText(t.undo)
     await expect(result).not.toContainText("Every day you keep")
     await expect(result.getByRole("link", { name: "Start the new run in your Black Box" })).toHaveCount(0)
     await expect(page.getByTestId("clear-answers")).toHaveCount(0)
@@ -212,18 +226,21 @@ test.describe("slipped, signed out @phone", () => {
     expect(reports).toHaveLength(1)
     expect(reports[0]).toMatchObject({ where: "driving", thought: JUST_ONE.short, ending: "justone", wentThrough: true })
     expect(reports[0].at.slice(0, 10)).toBe(day(-1))
-    expect((await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([[day(-20), day(-1)]])
+    expect((await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([
+      [day(-20), day(-1)],
+      [day(0), null],
+    ])
+    expect(await quitDate(page)).toBe(day(0))
     expect(errors).toEqual([])
   })
 
   test("2 a new day 1: Today starts a living run the date tool counts; Tomorrow takes it back out and sets the quit date", async ({ page }) => {
     await open(page, RUN20())
     await toResult(page)
-    await tap(page, "day1-today")
     await expect(page.getByTestId("day1-line")).toHaveText(`Day 1: ${words(day(0))}`)
     await expect(page.getByTestId("day1-note")).toHaveText(t.startedToday)
     await expect(page.getByTestId("day1-today")).toHaveAttribute("aria-checked", "true")
-    await expect(page.getByTestId("days-all")).toHaveText(`All your runs together: 21 days.`)
+    await expect(page.getByTestId("days-all")).toHaveCount(0)
     await shot(page, "p-5-result-day1-today")
     expect((await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([
       [day(-20), day(-1)],
@@ -241,8 +258,7 @@ test.describe("slipped, signed out @phone", () => {
     await expect(page.getByTestId("day1-today")).toHaveAttribute("aria-checked", "true")
     await tap(page, "day1-tomorrow")
     await expect(page.getByTestId("day1-line")).toHaveText(`Day 1: ${words(day(1))}`)
-    await expect(page.getByTestId("day1-note")).toContainText(t.startsPre.trim())
-    await expect(page.getByTestId("day1-note")).toContainText(t.startsLink)
+    await expect(page.getByTestId("day1-note")).toHaveText(`It starts by itself when you open Your quit date that day.`)
     expect((await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([[day(-20), day(-1)]])
     expect(await quitDate(page)).toBe(day(1))
     await shot(page, "p-6-result-day1-tomorrow")
@@ -251,7 +267,7 @@ test.describe("slipped, signed out @phone", () => {
   test("3 Undo takes the slip out, the old run lives again, the new run is gone, the quit date is back", async ({ page }) => {
     await open(page, RUN20())
     await toResult(page, { where: "coffee", told: CALMS.id })
-    await tap(page, "day1-today")
+    await expect(page.getByTestId("day1-line")).toBeVisible()
     await expect(page.getByTestId("slip-undo")).toBeVisible()
     await tap(page, "slip-undo")
     await expect(page.getByTestId("slip-undone")).toHaveText(tooltextJson.blackbox.undone)
@@ -287,8 +303,13 @@ test.describe("slipped, signed out @phone", () => {
     await expect(page.getByTestId("result")).toBeVisible()
     await expect(page.getByTestId("slip-in-record")).toBeVisible()
     await expect(page.getByTestId("days-line")).toHaveText(`Your run: ${words(day(-14))} to ${words(day(0))}, 15 days. It stays in your record.`)
+    // the slip is today, so a new run cannot start today: said as a line, tomorrow is the day 1
+    await expect(page.getByTestId("day1-forced")).toHaveText(`A new run can't start on the slip day, so your new day 1 is tomorrow, ${words(day(1))}.`)
+    await expect(page.getByTestId("day1-today")).toHaveCount(0)
+    await expect(page.getByTestId("day1-tomorrow")).toHaveCount(0)
+    expect(await quitDate(page)).toBe(day(1))
     await expect(page.getByTestId("lie-counterpart")).toHaveText(JUST_ONE.counterpart)
-    await expect(page.getByTestId("swaps-place")).toContainText("With a coffee")
+    await expect(page.getByTestId("swaps-place")).toContainText("Next time: With a coffee")
     await expect(page.getByTestId("slip-undo")).toHaveCount(0)
     await shot(page, "p-9-result-case-b")
     const reports = await liveReports(page)
@@ -308,7 +329,8 @@ test.describe("slipped, signed out @phone", () => {
     await expect(page.getByTestId("result")).toBeVisible()
     await expect(page.getByTestId("slip-in-record")).toHaveText(`Your slip on ${words(day(-1))} is in your record.`)
     await expect(page.getByTestId("swaps-place")).toContainText("In the car")
-    await expect(page.getByTestId("day1-today")).toBeVisible()
+    await expect(page.getByTestId("day1-today")).toHaveAttribute("aria-checked", "true")
+    await expect(page.getByTestId("step-day1-line")).toHaveText(`3. A new day 1: ${words(day(0))}`)
   })
 
   test("5 a run started today skips the date screen and the result offers Tomorrow only", async ({ page }) => {
@@ -320,10 +342,10 @@ test.describe("slipped, signed out @phone", () => {
     await tap(page, "slip-continue")
     await tap(page, "slip-skip")
     await expect(page.getByTestId("result")).toBeVisible()
-    await expect(page.getByTestId("days-line")).toHaveText(`Your run: ${words(day(0))} to ${words(day(0))}, 1 day. It stays in your record.`)
+    await expect(page.getByTestId("days-line")).toHaveText(`Your run started and ended on ${words(day(0))}. It stays in your record.`)
     await expect(page.getByTestId("day1-today")).toHaveCount(0)
-    await tap(page, "day1-tomorrow")
-    await expect(page.getByTestId("day1-line")).toHaveText(`Day 1: ${words(day(1))}`)
+    await expect(page.getByTestId("day1-forced")).toContainText(`tomorrow, ${words(day(1))}`)
+    expect(await quitDate(page)).toBe(day(1))
     await expect(page.getByTestId("swaps-place")).toContainText("When I’m stressed")
     const reports = await liveReports(page)
     expect(reports).toHaveLength(1)
@@ -341,6 +363,7 @@ test.describe("slipped, signed out @phone", () => {
     await expect(page.getByText(t.dateHelp.replace("{min}", words(day(-10))))).toBeVisible()
     await input.fill(day(-11))
     await expect(page.getByTestId("slip-date-error")).toHaveText(t.dateOut.replace("{min}", words(day(-10))))
+    await expect(page.getByText(t.dateHelp.replace("{min}", words(day(-10))), { exact: true })).toHaveCount(0)
     await expect(page.getByTestId("slip-continue")).toBeDisabled()
     await input.fill(day(1))
     await expect(page.getByTestId("slip-continue")).toBeDisabled()
@@ -376,7 +399,12 @@ test.describe("slipped, signed out @phone", () => {
     await tap(page, `chip-${CALMS.id}`)
     await tap(page, "slip-continue")
     await expect(page.getByTestId("result")).toBeVisible()
-    await expect(page.getByTestId("no-run")).toHaveText(t.noRun)
+    await expect(page.getByRole("heading", { level: 2, name: t.pickDay1 })).toBeVisible()
+    await expect(page.getByTestId("no-run")).toHaveText(t.noRunLine)
+    await expect(page.getByTestId("day1-today")).toHaveAttribute("aria-checked", "false")
+    await expect(page.getByTestId("day1-tomorrow")).toHaveAttribute("aria-checked", "false")
+    await expect(page.getByTestId("step-day1-line")).toHaveText(`3. ${t.step3Pick}`)
+    expect(await quitDate(page)).toBeNull()
     await expect(page.getByTestId("days-card")).toHaveCount(0)
     await expect(page.getByTestId("slip-undo")).toHaveCount(0)
     await expect(page.getByTestId("lie-counterpart")).toHaveText(CALMS.counterpart)
@@ -439,6 +467,89 @@ test.describe("slipped, signed out @phone", () => {
     const reports = await liveReports(page)
     expect(reports).toHaveLength(1)
     expect(reports[0]).toMatchObject({ where: "coffee", thought: JUST_ONE.short })
+  })
+
+  test("8b Back reaches screen 1 before and after filing; a new day re-dates the one slip", async ({ page }) => {
+    await open(page, RUN20())
+    await tap(page, "chip-yesterday")
+    await tap(page, "slip-continue")
+    // Back from screen 2, in the page and in the browser, reaches screen 1
+    await tap(page, "screen-back")
+    await expect(step(page)).toHaveAttribute("data-step", "1")
+    await expect(page.getByTestId("chip-yesterday")).toHaveAttribute("aria-checked", "true")
+    await tap(page, "slip-continue")
+    await page.goBack()
+    await expect(step(page)).toHaveAttribute("data-step", "1")
+    await page.goForward()
+    await tap(page, "chip-driving")
+    await tap(page, "slip-continue")
+    await tap(page, `chip-${CALMS.id}`)
+    await tap(page, "slip-continue")
+    await expect(page.getByTestId("result")).toBeVisible()
+    expect((await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([
+      [day(-20), day(-1)],
+      [day(0), null],
+    ])
+    // after filing: back to screens 3, 2, 1 in the browser, never the result
+    await page.goBack()
+    await expect(step(page)).toHaveAttribute("data-step", "3")
+    await page.goBack()
+    await expect(step(page)).toHaveAttribute("data-step", "2")
+    await page.goBack()
+    await expect(step(page)).toHaveAttribute("data-step", "1")
+    await tap(page, "chip-today")
+    await tap(page, "slip-continue")
+    await tap(page, "slip-continue")
+    await tap(page, "slip-continue")
+    await expect(page.getByTestId("result")).toBeVisible()
+    const reports = await liveReports(page)
+    expect(reports).toHaveLength(1)
+    expect(reports[0]).toMatchObject({ where: "driving", thought: CALMS.short })
+    expect(reports[0].at.slice(0, 10)).toBe(day(0))
+    // the slip is today now: no run started today, tomorrow is the day 1
+    expect((await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([[day(-20), day(0)]])
+    await expect(page.getByTestId("day1-forced")).toBeVisible()
+    expect(await quitDate(page)).toBe(day(1))
+  })
+
+  test("12 the result: own words, top lies from the test with the proof folded, swaps of the lie's need with their source", async ({ page }) => {
+    await open(page, { ...RUN20(), beliefs: { ratings: { b1: 5, b9: 4 }, facts: {} } })
+    await tap(page, "chip-yesterday")
+    await tap(page, "slip-continue")
+    await tap(page, "slip-skip")
+    await tap(page, "chip-other")
+    await page.getByTestId("slip-own").fill("one for the road")
+    await tap(page, "slip-continue")
+    await expect(page.getByTestId("own-words")).toHaveText("You told yourself: “one for the road”")
+    await expect(page.getByRole("heading", { name: "1. Your top lies" })).toBeVisible()
+    await expect(page.getByText(t.fromTest)).toBeVisible()
+    const lies = page.getByTestId("top-lie")
+    await expect(lies).toHaveCount(2)
+    await expect(lies.first()).toContainText(data.beliefs[0].short)
+    await expect(lies.first()).toContainText(data.beliefs[0].counterpart)
+    await expect(lies.first().locator("details")).not.toHaveAttribute("open", "")
+    await lies.first().locator("summary").click()
+    await expect(lies.first().locator("details")).toContainText(data.beliefs[0].proof)
+    await expect(page.getByTestId("swaps-place")).toHaveCount(0)
+    // a named lie and no place: the swaps of its need, each with its evidence chip
+    await seed(page, { ...RUN20(), beliefs: { ratings: {}, facts: {} } })
+    await page.goto(URL)
+    await tap(page, "chip-yesterday")
+    await tap(page, "slip-continue")
+    await tap(page, "slip-skip")
+    await tap(page, `chip-${JUST_ONE.id}`)
+    await tap(page, "slip-continue")
+    const need = data.needs.find((n) => n.id === JUST_ONE.need)!
+    await expect(page.getByTestId("swaps-need")).toContainText(`Swaps for ${need.name.toLowerCase()}`)
+    await expect(page.getByTestId("swaps-need").getByTestId("swap-card")).toHaveCount(need.swaps.length)
+    await expect(page.locator('[data-testid^="evidence-"]').first()).toBeVisible()
+  })
+
+  test("12b a planned future quit date stays put when no run exists and nothing is tapped", async ({ page }) => {
+    await open(page, { record: { quitDate: day(5), goal: "stop" } })
+    await toResult(page, { when: null })
+    expect(await quitDate(page)).toBe(day(5))
+    await expect(page.getByTestId("day1-today")).toHaveAttribute("aria-checked", "false")
   })
 
   test("9 after Tomorrow the next day starts the new run by itself and shows screen 1", async ({ page }) => {
@@ -572,10 +683,10 @@ test.describe("slipped, signed in @phone", () => {
       .toBe(1)
     const server = await serverRows(page)
     expect(server.reports.find((r) => !r.deleted_at)).toMatchObject({ thought: JUST_ONE.short, where_at: "driving", ending: "justone" })
-    expect(server.attempts.find((a) => !a.deleted_at)!.ended_on).toBe(day(-1))
+    expect(server.attempts.filter((a) => !a.deleted_at).map((a) => a.ended_on)).toContain(day(-1))
     await tap(page, "slip-undo")
     await expect(page.getByTestId("slip-undone")).toBeVisible()
-    await expect.poll(async () => (await serverRows(page)).attempts.find((a) => !a.deleted_at)?.ended_on ?? "alive", { timeout: 20000 }).toBe("alive")
+    await expect.poll(async () => (await serverRows(page)).attempts.filter((a) => !a.deleted_at).map((a) => a.ended_on ?? "alive"), { timeout: 20000 }).toEqual(["alive"])
     expect((await serverRows(page)).reports.filter((r) => !r.deleted_at)).toHaveLength(0)
   })
 })

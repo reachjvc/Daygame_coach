@@ -25,6 +25,7 @@ import {
   dayAllowed,
   day1Day,
   day1Options,
+  defaultDay1,
   daysCard,
   decide,
   dayWords,
@@ -85,6 +86,7 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
   const [refused, setRefused] = useState(false)
   const [switchRefused, setSwitchRefused] = useState(false)
   const [startRefused, setStartRefused] = useState(false)
+  const [redateRefused, setRedateRefused] = useState(false)
   const prep = useRef(false)
   // A double tap moves one screen at most and files one slip.
   const lastMove = useRef(0)
@@ -100,8 +102,20 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
     const input = { runs: bb.runs, reports: bb.reports, quitDate: rec.record.quitDate, today }
     let plan = decide(input)
     if (plan.startOn && !bb.startRun(plan.startOn)) plan = decide({ ...input, quitDate: null })
+    let now = state
     if (!keepsState(state, plan, bb.runs, bb.reports, Date.now())) {
-      save(() => ({ ...EMPTY_SLIP, kase: plan.kase, steps: plan.steps, min: plan.min, slipId: plan.slipId, touched: Date.now() }))
+      now = { ...EMPTY_SLIP, kase: plan.kase, steps: plan.steps, min: plan.min, slipId: plan.slipId, touched: Date.now() }
+      save(() => now)
+    }
+    // Every history entry of the visit names its screen, so Back can always reach screen 1.
+    try {
+      const u = new URL(window.location.href)
+      if (!u.searchParams.get("s")) {
+        u.searchParams.set("s", String(firstUnanswered(now)))
+        window.history.replaceState(null, "", u.pathname + u.search + u.hash)
+      }
+    } catch {
+      // no history to rewrite
     }
     setPrepared(true)
   }, [state, rec.ready, rec.record.quitDate, bb, save])
@@ -110,6 +124,32 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
   const total = state?.steps.length ?? 0
   const { screen, go, back: goBack, reset, isResult } = useScreens(first, total, state !== null && prepared)
   useDoneCount(addiction, "slip", state !== null && prepared && isResult)
+
+  /** Takes a new day 1 for the slip that is in the record: Today starts the run now, Tomorrow only sets the quit date. */
+  const applyDay1 = (d: Day1): boolean => {
+    if (!bb || !state) return false
+    const on = day1Day(d, todayIso())
+    if (d === "today" && !bb.startRun(on)) {
+      setStartRefused(true)
+      return false
+    }
+    const before = { date: rec.record.quitDate }
+    rec.setQuitDate(on)
+    update((s) => ({ ...s, day1: d, day1On: on, quitBefore: s.quitBefore ?? before }))
+    return true
+  }
+  const applyRef = useRef(applyDay1)
+  applyRef.current = applyDay1
+  const autoFor = useRef<string | null>(null)
+  // Once the result shows for a slip in the record (cases A and B) the new day 1 is already chosen; the reader can change it.
+  useEffect(() => {
+    if (!state || !prepared || !bb || !isResult || undone || state.kase === null || state.kase === "C" || !state.slipId || state.day1 !== null) return
+    const report = bb.reports.find((r) => r.id === state.slipId)
+    if (!report || autoFor.current === state.slipId) return
+    autoFor.current = state.slipId
+    const d = defaultDay1(report.at.slice(0, 10), todayIso(), rec.record.quitDate)
+    if (d) applyRef.current(d)
+  }, [state, prepared, bb, isResult, undone, rec.record.quitDate])
 
   if (undone) {
     return (
@@ -160,11 +200,39 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
     return next.slipId
   }
 
+  /** Changes the day of the slip that is filed: the new day 1 run out, the slip out, the slip in again on the new day. */
+  const redate = (next: SlipState, day: string): { id: string | null } | null => {
+    const old = state.slipId
+    if (!old) return null
+    const fresh = state.day1 === "today" ? bb.runs.find((r) => r.endedOn === null && r.startedOn === state.day1On) : undefined
+    if (fresh && !bb.removeRun(fresh.id)) return null
+    if (!bb.undo(old)) {
+      if (fresh) bb.startRun(fresh.startedOn)
+      return null
+    }
+    const whereId = next.where && momentIds.includes(next.where) ? next.where : ""
+    const id = bb.fileSlip({ at: reportAt(day, today, nowInBrowser()), thought: thoughtOf(next), ending: endingForBelief(next.told, beliefs), where: whereId })
+    return { id }
+  }
+
   const advance = (patch: Partial<SlipState>) =>
     move(() => {
       const next = { ...state, ...patch }
-      const slipId = commit(next, screen === steps.length)
-      update((s) => ({ ...s, ...patch, slipId: slipId ?? s.slipId, done: Math.max(s.done, screen) }))
+      let slipId = state.slipId
+      let extra: Partial<SlipState> = {}
+      const filed = slipId ? bb.reports.find((r) => r.id === slipId) : undefined
+      if (step === "when" && filed && next.day && filed.at.slice(0, 10) !== next.day) {
+        const res = redate(next, next.day)
+        if (!res) {
+          setRedateRefused(true)
+          return
+        }
+        setRedateRefused(false)
+        setRefused(res.id === null)
+        slipId = res.id
+        extra = { day1: null, day1On: null }
+      } else slipId = commit(next, screen === steps.length)
+      update((s) => ({ ...s, ...patch, ...extra, slipId, done: Math.max(s.done, screen) }))
       go(screen + 1)
     })
 
@@ -213,8 +281,13 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
                 onChange={(e) => update((s) => ({ ...s, day: /^\d{4}-\d{2}-\d{2}$/.test(e.target.value) ? e.target.value : null }))}
                 className="min-h-11 w-full rounded-md border border-border bg-background px-3 text-base"
               />
-              <span className="text-muted-foreground">{fill(t.dateHelp, { min: dayWords(min) })}</span>
+              {!(state.day && !allowed) && <span className="text-muted-foreground">{fill(t.dateHelp, { min: dayWords(min) })}</span>}
             </label>
+          )}
+          {redateRefused && (
+            <p data-testid="slip-redate-refused" role="alert" className="text-sm">
+              {t.redateRefused}
+            </p>
           )}
           {state.pick === "another" && state.day && !allowed && (
             <p data-testid="slip-date-error" role="alert" className="text-sm">
@@ -247,7 +320,7 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
           <PrimaryButton testId="slip-continue" disabled={!state.where || state.where === SKIP} onClick={() => advance({})}>
             {tooltext.common.continue}
           </PrimaryButton>
-          <button type="button" data-testid="slip-skip" onClick={() => advance({ where: SKIP })} className="inline-flex min-h-11 items-center self-start text-sm text-muted-foreground underline">
+          <button type="button" data-testid="slip-skip" onClick={() => advance({ where: SKIP })} className="inline-flex min-h-11 min-w-11 items-center self-start px-1 text-sm text-muted-foreground underline">
             {t.skip}
           </button>
         </OneQuestion>
@@ -286,7 +359,7 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
           <PrimaryButton testId="slip-continue" disabled={!state.told || state.told === SKIP} onClick={() => advance({})}>
             {tooltext.common.continue}
           </PrimaryButton>
-          <button type="button" data-testid="slip-skip" onClick={() => advance({ told: SKIP })} className="inline-flex min-h-11 items-center self-start text-sm text-muted-foreground underline">
+          <button type="button" data-testid="slip-skip" onClick={() => advance({ told: SKIP })} className="inline-flex min-h-11 min-w-11 items-center self-start px-1 text-sm text-muted-foreground underline">
             {t.skip}
           </button>
         </OneQuestion>
@@ -313,6 +386,9 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
     return tooltext.blackbox.saving
   })()
 
+  const options = day1Options(slipDay, today)
+  // Only Tomorrow is possible (the slip is today): said as a plain line, not offered as a lone chip.
+  const forcedDay = state.kase !== "C" && options.length === 1 ? day1Day("tomorrow", today) : null
   const chooseDay1 = (d: Day1) => {
     if (d === state.day1) return
     setSwitchRefused(false)
@@ -325,14 +401,7 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
         return
       }
     }
-    const on = day1Day(d, today)
-    if (d === "today" && !bb.startRun(on)) {
-      setStartRefused(true)
-      return
-    }
-    const before = { date: rec.record.quitDate }
-    rec.setQuitDate(on)
-    update((s) => ({ ...s, day1: d, day1On: on, quitBefore: s.quitBefore ?? before }))
+    applyDay1(d)
   }
 
   const undo = () => {
@@ -354,11 +423,12 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
     <Result
       inRecord={inRecord}
       card={daysCard(ended, bb.runs, today)}
-      hadRun={state.kase !== "C"}
+      noRun={state.kase === "C"}
       status={status}
       canUndo={state.kase === "A" && state.slipId !== null && report !== null}
       onUndo={undo}
       refused={refused && state.slipId === null}
+      ownWords={state.told === OTHER && state.ownWords.trim() ? state.ownWords.trim() : null}
       lie={lie}
       top={top}
       place={placeId ? (moments.find((m) => m.id === placeId) ?? null) : null}
@@ -366,9 +436,11 @@ function Screens({ addiction, beliefs, moments, swaps, needs, planSteps, signedI
       need={need}
       tried={triedSwaps}
       planSteps={planSteps}
-      day1Options={day1Options(slipDay, today)}
+      day1Options={options}
       day1={state.day1}
       day1On={state.day1On}
+      step3Day={state.day1On ?? forcedDay}
+      forcedDay={forcedDay}
       onDay1={chooseDay1}
       switchRefused={switchRefused}
       startRefused={startRefused}

@@ -220,7 +220,7 @@ test.describe("craving now, signed out", () => {
       await page.getByTestId("finish").click()
       await page.getByTestId("ask-no").click()
       await expect(page.getByTestId("result-no")).toBeVisible()
-      await expect(page.getByTestId("sos-saved-text")).toHaveText("Saved on this phone.")
+      await expect(page.getByTestId("sos-saved-text")).toHaveText("Saved in this browser.")
       await page.getByTestId("strength-7").click()
       await page.getByTestId("log-situation-coffee").click()
       await page.getByTestId("log-save").click()

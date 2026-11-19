@@ -13,6 +13,7 @@ import {
   daysCard,
   daysWord,
   decide,
+  defaultDay1,
   describesLatest,
   firstUnanswered,
   keepsState,
@@ -126,6 +127,18 @@ describe("slip day 1", () => {
   })
 })
 
+describe("slip default day 1", () => {
+  it("Today when the slip day is before today, else Tomorrow", () => {
+    expect(defaultDay1("2026-11-18", TODAY, null)).toBe("today")
+    expect(defaultDay1(TODAY, TODAY, null)).toBe("tomorrow")
+  })
+  it("nothing in case C, and nothing over a quit date already planned ahead", () => {
+    expect(defaultDay1(null, TODAY, null)).toBeNull()
+    expect(defaultDay1("2026-11-18", TODAY, "2026-11-25")).toBeNull()
+    expect(defaultDay1("2026-11-18", TODAY, "2026-11-10")).toBe("today")
+  })
+})
+
 describe("slip days card", () => {
   it("counts like the Black Box: first and last day, both counted", () => {
     const ended = attempt("2026-10-30", "2026-11-18")
@@ -134,12 +147,14 @@ describe("slip days card", () => {
     expect(card!.days).toBe(runDays(ended, TODAY))
     expect(daysCard(attempt("2026-11-18", "2026-11-18"), [], TODAY)!.days).toBe(1)
   })
-  it("sums every run when there is more than one", () => {
+  it("sums only ended runs, and only with two or more of them", () => {
     const a = attempt("2026-09-01", "2026-09-10")
     const b = attempt("2026-10-30", "2026-11-18")
     const c = attempt(TODAY)
     expect(daysCard(b, [a, b], TODAY)!.all).toBe(10 + 20)
-    expect(daysCard(b, [a, b, c], TODAY)!.all).toBe(10 + 20 + 1)
+    // a new run that is still going does not change the number (no jump when Today is tapped)
+    expect(daysCard(b, [a, b, c], TODAY)!.all).toBe(10 + 20)
+    expect(daysCard(b, [b, c], TODAY)!.all).toBeNull()
   })
   it("has no card without an ended run", () => {
     expect(daysCard(undefined, [], TODAY)).toBeNull()

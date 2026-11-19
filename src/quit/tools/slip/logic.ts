@@ -224,17 +224,28 @@ export interface DaysCard {
   end: string
   /** The Black Box's own count: day 1 to the slip day, both counted. */
   days: number
-  /** Every run of this vice together; null with one run only. */
+  /** Every ended run of this vice together; null with fewer than two ended runs. */
   all: number | null
 }
 
 /** The numbers of the days card for the run a slip ended. */
 export function daysCard(ended: ViceAttempt | undefined, runs: ViceAttempt[], today: string): DaysCard | null {
   if (!ended || ended.endedOn === null) return null
+  const done = runs.filter((r) => r.endedOn !== null)
   return {
     start: ended.startedOn,
     end: ended.endedOn,
     days: runDays(ended, today),
-    all: runs.length > 1 ? runs.reduce((sum, r) => sum + runDays(r, today), 0) : null,
+    all: done.length > 1 ? done.reduce((sum, r) => sum + runDays(r, today), 0) : null,
   }
+}
+
+/**
+ * The new day 1 chosen for the reader once a slip is in the record (cases A and B): Today when the slip day is before
+ * today, else Tomorrow. Nothing in case C (no slip day), and nothing when a quit date later than today is already planned.
+ */
+export function defaultDay1(slipDay: string | null, today: string, quitDate: string | null): Day1 | null {
+  if (slipDay === null) return null
+  if (quitDate !== null && quitDate > today) return null
+  return slipDay < today ? "today" : "tomorrow"
 }

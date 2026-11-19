@@ -721,7 +721,7 @@
       "test": "The next time something stresses you this week, rate it 0–10, note what you did, and rate it again ten minutes later.",
       "proof": "In 469 heavily hooked heart patients who wanted to stop, stress fell more over a year in those who stayed off than in those who kept smoking.",
       "severity": "treatment",
-      "counted": "heart patients given quit help, heavily hooked on nicotine",
+      "counted": "469 hospital heart patients wanting to stop, highly dependent, followed a year",
       "weak": "These were heart patients in a quit programme, so other groups may differ. It compared people who stayed off with people who kept smoking, over a year.",
       "refs": [
         {
@@ -760,9 +760,9 @@
       "counterpart": "There’s no “just one”. One is how quit turns into smoking again.",
       "whenThought": "Answer it like a non-smoker, “No thanks, I don’t,” and leave the room for five minutes. Then text someone who knows you’re quitting that the thought came and you said no.",
       "test": "Each time the “just one” thought shows up this week, write down the time and what set it off.",
-      "proof": "Of daily smokers on a nicotine patch who smoked at all in their second week off, 83 in 100 were smoking at 6 months.",
+      "proof": "Of daily smokers on a nicotine patch who smoked at all in week 2, 83 in 100 were smoking at 6 months. Of those who stayed clear in week 2, 46 in 100 were off at 6 months.",
       "severity": "heavy",
-      "counted": "daily smokers in patch trials, not checked for addiction",
+      "counted": "200 smokers, two patch trials, week 2, not checked for addiction",
       "refs": [
         {
           "cite": "Kenford SL, Fiore MC, Jorenby DE, Smith SS, Wetter D, Baker TB (1994). Predicting smoking cessation: who will quit with and without the nicotine patch. JAMA 271(8):589-94.",
@@ -1148,7 +1148,7 @@
       "test": "Look back at the last four weeks of your calendar and count the calm days. Then mark a quit day inside the next few weeks.",
       "proof": "In a trial of smokers who chose their own quit day, the model expected 40 in 100 who chose week 1 to be off at 6 months, against 4 in 100 for week 13.",
       "severity": "treatment",
-      "counted": "smokers in a quit trial, not checked for addiction",
+      "counted": "1,848 smokers in a US cash-reward trial; an association, not a test",
       "refs": [
         {
           "cite": "Anesi GL et al (2017). Time to selected quit date and subsequent rates of sustained smoking abstinence. Journal of Behavioral Medicine 40(6):989-97.",
@@ -1320,7 +1320,7 @@
         },
         {
           "id": "relief-3",
-          "text": "Text one person what is stressing you",
+          "text": "Text one person about what is stressing you",
           "evidence": "none",
           "refs": []
         }
@@ -1494,7 +1494,7 @@
     },
     {
       "id": "connection",
-      "name": "People",
+      "name": "Being with people",
       "line": "It's how I join in.",
       "swaps": [
         {
