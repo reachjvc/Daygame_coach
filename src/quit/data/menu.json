@@ -147,8 +147,8 @@
         },
         {
           "id": "symptoms",
-          "name": "Symptom guide",
-          "line": "Bad sleep, irritable, hungry, foggy: what helps, when it fades.",
+          "name": "What you'll feel, and when",
+          "line": "Day by day: what most people feel, how long it lasts, what helps.",
           "minutes": 2,
           "account": "none",
           "wave": 1
