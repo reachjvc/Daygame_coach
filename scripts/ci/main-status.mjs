@@ -20,7 +20,9 @@
  *
  * For a red E2E run the artifact `e2e-failures` (scripts/ci/e2e-failures.mjs, written by
  * the report job of e2e.yml) adds at most 3 lines grouped by the commit the tests first went
- * red at, and one flaky line. Missing or slow artifact: nothing is added.
+ * red at, and one flaky line. Missing or slow artifact: nothing is added. When the list before
+ * sat several commits back (cancelled runs between), the line names the range instead:
+ *   15 tests first red between c38e0657 and d75c752f "…" (8 commits) (e.g. x.spec.ts:12)
  */
 
 import { spawn } from "node:child_process"
@@ -121,8 +123,9 @@ export function formatFailures(failures) {
   const groups = new Map()
   for (const f of Array.isArray(failures.failed) ? failures.failed : []) {
     if (!f || typeof f.id !== "string") continue
-    const k = f.firstSha ?? ""
-    const g = groups.get(k) ?? { sha: f.firstSha ?? null, subject: f.firstSubject, ids: [] }
+    // A range (the previous list sat several commits back) is its own group: same end, other start.
+    const k = `${f.firstSha ?? ""} ${f.firstSha ? (f.afterSha ?? "") : ""}`
+    const g = groups.get(k) ?? { sha: f.firstSha ?? null, subject: f.firstSubject, after: f.firstSha ? (f.afterSha ?? null) : null, commits: f.commits, ids: [] }
     g.ids.push(f.id)
     groups.set(k, g)
   }
@@ -131,10 +134,14 @@ export function formatFailures(failures) {
     const n = g.ids.length
     const what = `${n} test${n === 1 ? "" : "s"}`
     const eg = `(e.g. ${shortId(g.ids[0])})`
+    const at = `${String(g.sha).slice(0, 8)} "${clip(g.subject)}"`
+    const span = Number.isInteger(g.commits) ? ` (${g.commits} commits)` : ""
     lines.push(
-      g.sha
-        ? `  ${what} first red at ${String(g.sha).slice(0, 8)} "${clip(g.subject)}" ${eg}`
-        : `  ${what} red since before tracking began ${eg}`,
+      !g.sha
+        ? `  ${what} red since before tracking began ${eg}`
+        : g.after
+          ? `  ${what} first red between ${String(g.after).slice(0, 8)} and ${at}${span} ${eg}`
+          : `  ${what} first red at ${at} ${eg}`,
     )
   }
   const flaky = (Array.isArray(failures.flaky) ? failures.flaky : [])
