@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest"
 import { createQuitStore, QUIT_STORE_KEY, type StorageLike } from "@/src/quit/store"
-import { amountOutOfRange, computeCost, EMPTY_COST, parseCost } from "@/src/quit/tools/cost/logic"
 import { EMPTY_BELIEFS, parseBeliefs } from "@/src/quit/tools/beliefs/logic"
 import { EMPTY_GIVES, parseGives } from "@/src/quit/tools/gives/logic"
 import { EMPTY_SLIP, parseSlip } from "@/src/quit/tools/slip/logic"
@@ -18,12 +17,6 @@ describe("bad saved data falls back to empty, never NaN", () => {
   it("gives", () => {
     for (const j of JUNK) expect(parseGives(j)).toEqual(EMPTY_GIVES)
   })
-  it("cost", () => {
-    for (const j of JUNK) expect(parseCost(j)).toEqual(EMPTY_COST)
-    const bad = parseCost({ unit: "cigarettes", done: 3, result: {} })
-    expect(bad.result).toBeNull()
-    expect(parseCost({ result: { yearUsd: 1, tenYearUsd: 10, hoursYear: null } }).result).toEqual({ yearUsd: 1, tenYearUsd: 10, hoursYear: null })
-  })
   it("slip and sos", () => {
     for (const j of JUNK) {
       expect(parseSlip(j)).toEqual(EMPTY_SLIP)
@@ -32,20 +25,6 @@ describe("bad saved data falls back to empty, never NaN", () => {
     expect(parseSos({ ringStartedAt: "abc" }).ringStartedAt).toBeNull()
     expect(parseSos({ ringStartedAt: -5 }).ringStartedAt).toBeNull()
     expect(parseSos({ ringMinutes: 7 }).ringMinutes).toBe(10)
-  })
-})
-
-describe("cost fixes", () => {
-  it("ten years is ten times the rounded year shown", () => {
-    const r = computeCost({ perDay: 10, daysPerWeek: 7, priceUsd: 0.52, minutesPerUnit: null })
-    expect(r.yearUsd).toBe(1892.8)
-    expect(r.tenYearUsd).toBe(18930)
-  })
-  it("flags only a typed value that is out of range", () => {
-    expect(amountOutOfRange("500", 0, 100)).toBe(true)
-    expect(amountOutOfRange("-5", 0, 100)).toBe(true)
-    expect(amountOutOfRange("1e2", 0, 100)).toBe(false)
-    expect(amountOutOfRange("", 0, 100)).toBe(false)
   })
 })
 
@@ -92,12 +71,5 @@ describe("count route", () => {
     expect((await post({ "content-type": "application/x-www-form-urlencoded" })).status).toBe(415)
     expect((await post({})).status).toBe(415)
     expect((await post({ "content-type": "application/json", origin: "https://evil.example" })).status).toBe(403)
-  })
-})
-
-describe("parseAmount never returns minus zero", () => {
-  it("-0 is 0", async () => {
-    const { parseAmount } = await import("@/src/quit/tools/cost/logic")
-    expect(Object.is(parseAmount("-0", 0, 100), 0)).toBe(true)
   })
 })

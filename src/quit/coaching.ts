@@ -3,6 +3,7 @@ import tooltext from "./data/tooltext.json"
 import { getAddiction } from "./data"
 import { getOffer } from "./offer"
 import { isAddictionId, isViewable } from "./menu"
+import { yearlyCostFromRecord } from "./tools/cost/logic"
 import { isTodo, type QuitAddictionId } from "./types"
 
 export const coachingText = coaching
@@ -33,11 +34,7 @@ export function catchText(id: QuitAddictionId, preview = false): string | null {
   return typeof text === "string" && text.trim() !== "" && !isTodo(text) ? text : null
 }
 
-/** What `cost` stored: `quit-v1[a].cost.result.yearUsd`. Null for anything else. */
+/** His yearly cost from the shared record (`quit-v1[a].record.unit`): count a day × price × 365. Null without a count or a price. */
 export function yearlyCost(stored: unknown): number | null {
-  if (!stored || typeof stored !== "object") return null
-  const result = (stored as { result?: unknown }).result
-  if (!result || typeof result !== "object") return null
-  const year = (result as { yearUsd?: unknown }).yearUsd
-  return typeof year === "number" && Number.isFinite(year) && year >= 0 ? year : null
+  return yearlyCostFromRecord(stored)
 }

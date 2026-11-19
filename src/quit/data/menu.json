@@ -72,7 +72,7 @@
         {
           "id": "cost",
           "name": "What it costs you",
-          "line": "Your money and hours a year, and over 10 years.",
+          "line": "What you spend on it a day, a year and over 10 years.",
           "minutes": 1,
           "account": "none",
           "wave": 1

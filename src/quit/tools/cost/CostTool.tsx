@@ -1,227 +1,423 @@
 "use client"
 
-import { useState } from "react"
-import { Chips, ClearAnswers, OneQuestion, PrimaryButton, SourcesFold, Stepper } from "../../components/kit"
-import { fill, tooltext as t } from "../../tooltext"
-import type { QuitCostSwap, QuitUnit, ToolProps } from "../../types"
+import { useCallback, useEffect, useRef, useState } from "react"
+import Link from "next/link"
+import { Chips, PrimaryButton, SourcesFold } from "../../components/kit"
+import { isLiveTool } from "../../menu"
+import { useQuitRecord, todayIso, type RecordUnit } from "../../record"
+import { useQuitStore } from "../../store"
+import type { QuitUnit, ToolProps } from "../../types"
 import { realRefs, uniqueRefs, usable } from "../common"
-import { useDoneCount, useScreens, useStartCount, useToolState } from "../hooks"
+import { dateText } from "../date/text"
+import { useCarry, useDoneCount, useStartCount, useToolState } from "../hooks"
 import { NotReady } from "../NotReady"
 import {
-  amountOutOfRange,
-  computeCost,
-  defaultPerDay,
   EMPTY_COST,
-  formatUsd,
-  MAX_MINUTES,
-  MAX_PER_DAY,
-  MAX_PRICE,
-  parseAmount,
+  basisFor,
+  boxNumber,
+  computeCost,
+  defaultCountMode,
+  formatCents,
+  formatCount,
+  formatMoney,
+  formatPrice,
+  importOldCost,
+  isOldCost,
   parseCost,
-  pickCostSwap,
+  parseCount,
+  parsePackSize,
+  parsePrice,
+  type CostFigures,
   type CostState,
+  type CountMode,
+  type PriceMode,
 } from "./logic"
+import { costText as t } from "./text"
 
-/** What it costs you: a year and ten years in dollars (and hours). */
-export function CostTool({ addiction, data }: ToolProps) {
-  const units = usable<QuitUnit[]>(data.units)
-  const swaps = usable<QuitCostSwap[]>(data.costSwaps)
-  if (!units || units.length === 0) return <NotReady />
-  return <Inner addiction={addiction} units={units} swaps={swaps ?? []} />
+const fmtDay = (day: string) => new Date(`${day}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
+
+/** The shown number glides to its new value in about 0.4 seconds; with reduced motion it jumps. */
+function useCountUp(target: number, ms = 400): number {
+  const [value, setValue] = useState(target)
+  const from = useRef(target)
+  useEffect(() => {
+    if (from.current === target) return
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      from.current = target
+      setValue(target)
+      return
+    }
+    const a = from.current
+    const t0 = performance.now()
+    let raf = 0
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - t0) / ms)
+      const v = p === 1 ? target : a + (target - a) * p
+      from.current = v
+      setValue(v)
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [target, ms])
+  return value
 }
 
-function Inner({ addiction, units, swaps }: { addiction: string; units: QuitUnit[]; swaps: QuitCostSwap[] }) {
-  const { state, update, clear } = useToolState<CostState>(addiction, "cost", EMPTY_COST, parseCost)
-  // A box holding text the browser cannot read as a number ("12e", "1,50") reports an empty value; it still needs the message.
-  const [badInput, setBadInput] = useState({ price: false, minutes: false })
-  const hasMinutes = (u: QuitUnit | undefined) => u?.defaultMinutesPerUnit != null
-  const unit = units.find((u) => u.id === state?.unit)
-  const total = 3
-  const { screen, go, back: goBack, reset, isResult } = useScreens((state?.done ?? 0) + 1, total, state !== null)
+/** What it costs you: a calculator that saves to the shared record as he types. */
+export function CostTool({ addiction, data }: ToolProps) {
+  const units = usable<QuitUnit[]>(data.units)
+  if (!units || units.length === 0) return <NotReady />
+  return <Inner addiction={addiction} units={units} />
+}
+
+interface Texts {
+  count: string
+  price: string
+  size: string
+}
+
+function seed(unit: RecordUnit | null, countMode: CountMode, priceMode: PriceMode, size: number): Texts {
+  if (!unit) return { count: "", price: "", size: String(size) }
+  const count = unit.perDay === null ? "" : boxNumber(countMode === "week" ? unit.perDay * 7 : unit.perDay)
+  const price = priceMode === "pack" && unit.id === "cigarettes" ? boxNumber(unit.priceUsd * size, 2) : boxNumber(unit.priceUsd, 2)
+  return { count, price, size: String(size) }
+}
+
+function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
+  const store = useQuitStore()
+  const rec = useQuitRecord(addiction)
+  const { state, update } = useToolState<CostState>(addiction, "cost", EMPTY_COST, parseCost)
   const started = useStartCount(addiction, "cost")
-  useDoneCount(addiction, "cost", state !== null && isResult)
+  const carry = useCarry()
+  const unitRec = rec.record.unit
+  const unit = units.find((u) => u.id === unitRec?.id) ?? null
+  const ready = state !== null && rec.ready
 
-  if (!state) return null
-  const back = screen > 1 ? goBack : null
-  const pass = (patch: Partial<CostState> = {}) => {
-    update((s) => ({ ...s, ...patch, done: Math.max(s.done, screen) }))
-    go(screen + 1)
-  }
+  const countMode: CountMode = state?.countMode ?? (unit ? defaultCountMode(unit.id) : "day")
+  const priceMode: PriceMode = unit?.id === "cigarettes" ? (state?.priceMode ?? "pack") : "one"
+  const size = state?.packSize ?? EMPTY_COST.packSize
+  const complete = unitRec !== null && unitRec.perDay !== null
+  const [open, setOpen] = useState<boolean | null>(null)
+  const [texts, setTexts] = useState<Texts>({ count: "", price: "", size: "" })
+  const [saved, setSaved] = useState(false)
 
-  if (isResult && unit && state.result) {
-    const r = state.result
-    const pick = pickCostSwap(r.yearUsd, swaps)
-    return (
-      <div data-testid="result" className="flex flex-col gap-4">
-        <section className="rounded-lg border border-border bg-card p-4">
-          <p className="text-sm text-muted-foreground">{t.cost.yearLabel}</p>
-          <p data-testid="year-cost" className="text-4xl font-semibold text-primary">
-            {formatUsd(r.yearUsd)}
-          </p>
-          <p className="mt-3 text-sm text-muted-foreground">{t.cost.tenYearLabel}</p>
-          <p data-testid="ten-year-cost" className="text-3xl font-semibold">
-            {formatUsd(r.tenYearUsd)}
-          </p>
-          {r.hoursYear !== null && <p className="mt-3 text-lg">{fill(t.cost.hoursLine, { n: Math.round(r.hoursYear) })}</p>}
-          <p className="mt-3 text-sm text-muted-foreground">{t.cost.basis}</p>
-        </section>
-        {pick && (
-          <p data-testid="cost-swap" className="text-lg">
-            {pick.years === null
-              ? fill(t.cost.swapNow, { text: pick.swap.text })
-              : fill(t.cost.swapIn, { n: pick.years, text: pick.swap.text })}
-          </p>
-        )}
-        <ClearAnswers
-          onClear={() => {
-            clear()
-            reset()
-          }}
-        />
-        <SourcesFold refs={uniqueRefs(realRefs(unit.priceRefs))} />
-      </div>
-    )
-  }
-
-  if (screen === 1 || !unit) {
-    return (
-      <>
-        <OneQuestion step={1} total={total} onBack={null}>
-          <p className="font-medium">{t.cost.unitQuestion}</p>
-          <Chips
-            label={t.cost.unitQuestion}
-            options={units.map((u) => ({ id: u.id, label: u.many }))}
-            value={state.unit ? [state.unit] : []}
-            onChange={([id]) => {
-              started()
-              update((s) =>
-                s.unit === id
-                  ? s
-                  : { ...s, unit: id, perDay: defaultPerDay(id), price: String(units.find((u) => u.id === id)?.defaultPriceUsd ?? ""), minutes: String(units.find((u) => u.id === id)?.defaultMinutesPerUnit ?? ""), result: null },
-              )
-            }}
-          />
-          <PrimaryButton testId="cost-continue" disabled={!state.unit} onClick={() => pass()}>
-            {t.common.continue}
-          </PrimaryButton>
-        </OneQuestion>
-        <SourcesFold refs={[]} />
-      </>
-    )
-  }
-
-  if (screen === 2) {
-    return (
-      <>
-        <OneQuestion step={2} total={total} onBack={back}>
-          <p className="font-medium">{`${t.cost.amountQuestion} ${unit.many}`}</p>
-          <p className="text-sm text-muted-foreground">{t.cost.perDay}</p>
-          <Stepper
-            label={t.cost.perDay}
-            value={state.perDay ?? defaultPerDay(unit.id)}
-            min={0}
-            max={MAX_PER_DAY}
-            onChange={(n) => update((s) => ({ ...s, perDay: n }))}
-          />
-          <p className="text-sm text-muted-foreground">{t.cost.daysPerWeek}</p>
-          <Stepper label={t.cost.daysPerWeek} value={state.daysPerWeek} min={1} max={7} onChange={(n) => update((s) => ({ ...s, daysPerWeek: n }))} />
-          <PrimaryButton testId="cost-continue" onClick={() => pass({ perDay: state.perDay ?? defaultPerDay(unit.id) })}>
-            {t.common.continue}
-          </PrimaryButton>
-        </OneQuestion>
-        <SourcesFold refs={[]} />
-      </>
-    )
-  }
-
-  const price = parseAmount(state.price, 0, MAX_PRICE)
-  const minutes = hasMinutes(unit) ? parseAmount(state.minutes, 0, MAX_MINUTES) : null
-  const valid = price !== null && (!hasMinutes(unit) || minutes !== null)
-  const priceBad = badInput.price || amountOutOfRange(state.price, 0, MAX_PRICE)
-  const minutesBad = hasMinutes(unit) && (badInput.minutes || amountOutOfRange(state.minutes, 0, MAX_MINUTES))
-  const finish = () => {
-    if (!valid) return
-    pass({
-      result: computeCost({
-        perDay: state.perDay ?? defaultPerDay(unit.id),
-        daysPerWeek: state.daysPerWeek,
-        priceUsd: price ?? 0,
-        minutesPerUnit: hasMinutes(unit) ? minutes : null,
-      }),
-    })
-  }
-  const onEnter = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault()
-      finish()
+  // First read: wave-1 answers move into the shared record once; the form starts open when the record has no unit or no count.
+  useEffect(() => {
+    if (!ready || open !== null) return
+    let u = rec.record.unit
+    const stored = store.get(addiction, "cost")
+    if (stored !== undefined && isOldCost(stored)) {
+      const moved = importOldCost(stored, units, u)
+      if (moved) {
+        rec.setUnit(moved)
+        u = moved
+      }
+      update(() => EMPTY_COST)
     }
+    setOpen(!(u !== null && u.perDay !== null))
+    setTexts(seed(u, state?.countMode ?? (u ? defaultCountMode(u.id) : "day"), u?.id === "cigarettes" ? (state?.priceMode ?? "pack") : "one", size))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready])
+  const figures = unitRec && unitRec.perDay !== null ? computeCost(unitRec.perDay, unitRec.priceUsd) : null
+  useDoneCount(addiction, "cost", figures !== null)
+
+  const reseed = useCallback((u: RecordUnit | null, cm: CountMode, pm: PriceMode, sz: number) => setTexts(seed(u, cm, pm, sz)), [])
+
+  if (!ready || open === null) return null
+
+  const write = (next: RecordUnit) => {
+    started()
+    rec.setUnit(next)
+    setSaved(true)
   }
+  const countErr = parseCount(texts.count, countMode).kind === "bad"
+  const sizeField = parsePackSize(texts.size)
+  const sizeErr = priceMode === "pack" && sizeField.kind !== "ok"
+  const sizeNow = sizeField.kind === "ok" ? sizeField.value : size
+  const priceErr = unit !== null && parsePrice(texts.price, priceMode, sizeNow).kind === "bad"
+
+  const pickUnit = (id: string) => {
+    const u = units.find((x) => x.id === id)
+    if (!u || unitRec?.id === id) return
+    const cm = defaultCountMode(id)
+    const next: RecordUnit = { id, perDay: null, priceUsd: u.defaultPriceUsd ?? 0, priceBasis: "default" }
+    update((s) => ({ ...s, countMode: cm, priceMode: "pack", packSize: EMPTY_COST.packSize }))
+    write(next)
+    reseed(next, cm, "pack", EMPTY_COST.packSize)
+  }
+  const onCount = (text: string) => {
+    setTexts((x) => ({ ...x, count: text }))
+    const f = parseCount(text, countMode)
+    if (unitRec && f.kind !== "bad") write({ ...unitRec, perDay: f.kind === "ok" ? f.value : null })
+  }
+  const setMode = (cm: CountMode) => {
+    if (cm === countMode) return
+    update((s) => ({ ...s, countMode: cm }))
+    reseed({ ...(unitRec as RecordUnit) }, cm, priceMode, size)
+  }
+  const savePrice = (priceText: string, sizeText: string, pm: PriceMode) => {
+    if (!unit || !unitRec) return
+    const sf = parsePackSize(sizeText)
+    const sz = sf.kind === "ok" ? sf.value : size
+    if (pm === "pack" && sf.kind !== "ok") return
+    const f = parsePrice(priceText, pm, sz)
+    if (f.kind !== "ok") return
+    const basis = basisFor(f.value, unit)
+    write({ ...unitRec, priceUsd: basis === "default" ? (unit.defaultPriceUsd as number) : f.value, priceBasis: basis })
+  }
+  const onPrice = (text: string) => {
+    setTexts((x) => ({ ...x, price: text }))
+    savePrice(text, texts.size, priceMode)
+  }
+  const onSize = (text: string) => {
+    setTexts((x) => ({ ...x, size: text }))
+    const f = parsePackSize(text)
+    if (f.kind === "ok") update((s) => ({ ...s, packSize: f.value }))
+    savePrice(texts.price, text, priceMode)
+  }
+  const setPriceMode = (pm: PriceMode) => {
+    if (pm === priceMode || !unitRec) return
+    update((s) => ({ ...s, priceMode: pm }))
+    reseed(unitRec, countMode, pm, size)
+  }
+
+  const input = "min-h-12 w-full rounded-md border border-border bg-card px-3 text-base"
+  const perText = countMode === "week" ? t.modeWeek : t.modeDay
+  const summary =
+    unitRec && unit && unitRec.perDay !== null
+      ? t.summary(formatCount(countMode === "week" ? unitRec.perDay * 7 : unitRec.perDay), unit.many, perText, formatPrice(unitRec.priceUsd))
+      : null
+
   return (
-    <>
-      <OneQuestion step={3} total={total} onBack={back}>
-        <label htmlFor="cost-price" className="font-medium">
-          {fill(t.cost.priceQuestion, { unit: unit.one })}
-        </label>
-        <input
-          id="cost-price"
-          data-testid="cost-price"
-          type="number"
-          inputMode="decimal"
-          min={0}
-          max={MAX_PRICE}
-          step={0.01}
-          value={state.price}
-          onChange={(e) => {
-            const v = e.target.value
-            setBadInput((b) => ({ ...b, price: e.target.validity.badInput }))
-            update((s) => ({ ...s, price: v }))
-          }}
-          onKeyDown={onEnter}
-          aria-invalid={priceBad || undefined}
-          aria-describedby={priceBad ? "cost-price-error" : undefined}
-          className="h-12 w-full rounded-md border border-border bg-card px-3 text-lg"
-        />
-        {priceBad && (
-          <p id="cost-price-error" data-testid="cost-price-error" role="alert" className="text-sm text-destructive">
-            {fill(t.cost.range, { min: 0, max: MAX_PRICE })}
-          </p>
-        )}
-        {hasMinutes(unit) && (
+    <div className="flex flex-col gap-6">
+      <section aria-label={t.title} data-testid="cost-numbers" className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
+        {!open && summary ? (
           <>
-            <label htmlFor="cost-minutes" className="font-medium">
-              {fill(t.cost.minutesQuestion, { unit: unit.one })}
-            </label>
-            <input
-              id="cost-minutes"
-              data-testid="cost-minutes"
-              type="number"
-              inputMode="numeric"
-              min={0}
-              max={MAX_MINUTES}
-              step={1}
-              value={state.minutes}
-              onChange={(e) => {
-                const v = e.target.value
-                setBadInput((b) => ({ ...b, minutes: e.target.validity.badInput }))
-                update((s) => ({ ...s, minutes: v }))
+            <p data-testid="cost-summary" className="text-lg font-medium">
+              {summary}
+            </p>
+            <button
+              type="button"
+              data-testid="cost-change"
+              onClick={() => {
+                reseed(unitRec, countMode, priceMode, size)
+                setSaved(false)
+                setOpen(true)
               }}
-              onKeyDown={onEnter}
-              aria-invalid={minutesBad || undefined}
-              aria-describedby={minutesBad ? "cost-minutes-error" : undefined}
-              className="h-12 w-full rounded-md border border-border bg-card px-3 text-lg"
-            />
-            {minutesBad && (
-              <p id="cost-minutes-error" data-testid="cost-minutes-error" role="alert" className="text-sm text-destructive">
-                {fill(t.cost.range, { min: 0, max: MAX_MINUTES })}
-              </p>
+              className="inline-flex min-h-11 items-center justify-center self-start rounded-md border border-border px-4 text-base font-medium"
+            >
+              {t.change}
+            </button>
+            <p className="text-sm text-muted-foreground">{t.shared}</p>
+          </>
+        ) : (
+          <>
+            <div className="flex flex-col gap-2">
+              <span className="text-sm font-medium">{t.unitLabel}</span>
+              <Chips label={t.unitLabel} options={units.map((u) => ({ id: u.id, label: dateText.useUnits[u.id] ?? u.many }))} value={unitRec ? [unitRec.id] : []} onChange={([id]) => pickUnit(id)} />
+            </div>
+            {unit && unitRec && (
+              <>
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="cost-count" className="text-sm font-medium">
+                    {t.countLabel(unit.many)}
+                  </label>
+                  <Switch label={t.modeLabel} testId="cost-count-mode" value={countMode} options={[{ id: "day", label: t.modeDay }, { id: "week", label: t.modeWeek }]} onChange={(id) => setMode(id as CountMode)} />
+                  <input id="cost-count" data-testid="cost-count" type="text" inputMode="decimal" maxLength={8} value={texts.count} onChange={(e) => onCount(e.target.value)} aria-invalid={countErr || undefined} className={input} />
+                  <span className="text-sm text-muted-foreground">{t.countHelp}</span>
+                  {countErr && (
+                    <span data-testid="cost-count-error" role="alert" className="text-sm text-foreground">
+                      {dateText.badNumber}
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  {unit.id === "cigarettes" && (
+                    <Switch label={t.priceModeLabel} testId="cost-price-mode" value={priceMode} options={[{ id: "pack", label: t.priceModePack }, { id: "one", label: t.priceModeOne }]} onChange={(id) => setPriceMode(id as PriceMode)} />
+                  )}
+                  <label htmlFor="cost-price" className="text-sm font-medium">
+                    {priceMode === "pack" ? t.packPriceLabel : unit.id === "pouches" ? t.pouchPriceLabel : t.onePriceLabel(unit.one)}
+                  </label>
+                  <input id="cost-price" data-testid="cost-price" type="text" inputMode="decimal" maxLength={10} value={texts.price} onChange={(e) => onPrice(e.target.value)} aria-invalid={priceErr || undefined} className={input} />
+                  {priceErr && (
+                    <span data-testid="cost-price-error" role="alert" className="text-sm text-foreground">
+                      {t.needPrice}
+                    </span>
+                  )}
+                  {priceMode === "pack" && (
+                    <>
+                      <label htmlFor="cost-size" className="text-sm font-medium">
+                        {t.packSizeLabel}
+                      </label>
+                      <input id="cost-size" data-testid="cost-size" type="text" inputMode="numeric" maxLength={3} value={texts.size} onChange={(e) => onSize(e.target.value)} aria-invalid={sizeErr || undefined} className={input} />
+                      {sizeErr && (
+                        <span data-testid="cost-size-error" role="alert" className="text-sm text-foreground">
+                          {t.badSize}
+                        </span>
+                      )}
+                    </>
+                  )}
+                  <p data-testid="cost-basis" className="break-words text-sm text-muted-foreground">
+                    {unitRec.priceBasis === "typed" ? t.basisTyped : priceMode === "pack" ? t.basisPack : (dateText.priceBasis[unit.id] ?? "")}
+                  </p>
+                </div>
+                {saved && (
+                  <p data-testid="cost-saved" className="text-sm text-muted-foreground">
+                    {t.saved}
+                  </p>
+                )}
+                {complete && (
+                  <PrimaryButton
+                    testId="cost-done"
+                    disabled={countErr || priceErr || sizeErr}
+                    onClick={() => setOpen(false)}
+                  >
+                    {t.done}
+                  </PrimaryButton>
+                )}
+              </>
             )}
           </>
         )}
-        <PrimaryButton testId="cost-continue" disabled={!valid} onClick={finish}>
-          {t.common.done}
-        </PrimaryButton>
-      </OneQuestion>
-      <SourcesFold refs={uniqueRefs(realRefs(unit.priceRefs))} />
-    </>
+      </section>
+
+      <Result unit={unit} rec={unitRec} figures={figures} countMode={countMode} priceMode={priceMode} size={size} />
+      <DateLine record={rec.record} figures={figures} carry={carry} addiction={addiction} />
+      {unit && <SourcesFold refs={uniqueRefs(realRefs(unit.priceRefs))} />}
+    </div>
+  )
+}
+
+function Switch({ label, options, value, onChange, testId }: { label: string; options: { id: string; label: string }[]; value: string; onChange: (id: string) => void; testId: string }) {
+  return (
+    <div role="radiogroup" aria-label={label} data-testid={testId} className="inline-flex self-start overflow-hidden rounded-full border border-border">
+      {options.map((o) => (
+        <button
+          key={o.id}
+          type="button"
+          role="radio"
+          aria-checked={value === o.id}
+          data-testid={`${testId}-${o.id}`}
+          onClick={() => onChange(o.id)}
+          className={`min-h-11 px-4 text-base ${value === o.id ? "bg-primary text-primary-foreground" : "bg-card text-foreground"}`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+interface ResultProps {
+  unit: QuitUnit | null
+  rec: RecordUnit | null
+  figures: CostFigures | null
+  countMode: CountMode
+  priceMode: PriceMode
+  size: number
+}
+
+function Result({ unit, rec, figures, countMode, priceMode, size }: ResultProps) {
+  const year = useCountUp(figures ? figures.yearCents / 100 : 0)
+  return (
+    <section data-testid="cost-result" aria-label={t.resultTitle} className="flex flex-col gap-4">
+      <h2 className="text-lg font-semibold">{t.resultTitle}</h2>
+      {!unit || !rec || !figures || rec.perDay === null ? (
+        <p data-testid="cost-nocount" className="text-muted-foreground">
+          {t.noCount}
+        </p>
+      ) : (
+        <>
+          <div className="rounded-lg border border-border bg-card p-4">
+            <p className="text-sm text-muted-foreground">{t.year}</p>
+            <p data-testid="cost-year" data-value={(figures.yearCents / 100).toFixed(2)} aria-live="polite" className="break-words text-4xl font-semibold text-primary">
+              {formatMoney(year)}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <Tile label={t.day} id="cost-day" value={figures.dayCents} />
+            <Tile label={t.month} id="cost-month" value={figures.monthCents} />
+            <Tile label={t.ten} id="cost-ten" value={figures.tenCents} />
+          </div>
+          <p data-testid="cost-units" className="text-base">
+            {t.unitsYear(formatCount(figures.unitsYear), figures.unitsYear === 1 ? unit.one : unit.many)}
+          </p>
+          <Working unit={unit} rec={rec} figures={figures} countMode={countMode} priceMode={priceMode} size={size} />
+        </>
+      )}
+    </section>
+  )
+}
+
+function Tile({ label, id, value }: { label: string; id: string; value: number }) {
+  return (
+    <div className="min-w-0 rounded-lg border border-border bg-card p-3">
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p data-testid={id} data-value={(value / 100).toFixed(2)} className="break-words text-xl font-semibold">
+        {formatCents(value)}
+      </p>
+    </div>
+  )
+}
+
+function Working({ unit, rec, figures, countMode, priceMode, size }: { unit: QuitUnit; rec: RecordUnit; figures: CostFigures; countMode: CountMode; priceMode: PriceMode; size: number }) {
+  const perDay = rec.perDay as number
+  const price = formatPrice(rec.priceUsd)
+  const lines: string[] = []
+  if (rec.id === "cigarettes" && priceMode === "pack") lines.push(t.workPack(formatPrice(rec.priceUsd * size), size, price, unit.one))
+  if (countMode === "week") lines.push(t.workWeek(formatCount(perDay * 7), formatCount(perDay)))
+  lines.push(t.workDay(formatCount(perDay), price, formatCents(figures.dayCents)))
+  lines.push(t.workYear(formatCents(figures.dayCents), formatCents(figures.yearCents)))
+  lines.push(t.workMonth(formatCents(figures.yearCents), formatCents(figures.monthCents)))
+  lines.push(t.workTen(formatCents(figures.yearCents), formatCents(figures.tenCents)))
+  return (
+    <div data-testid="cost-working" className="flex flex-col gap-1 break-words text-sm text-muted-foreground">
+      <h3 className="font-medium text-foreground">{t.workTitle}</h3>
+      {lines.map((l, i) => (
+        <p key={i} data-testid={`cost-line-${i}`}>
+          {l}
+        </p>
+      ))}
+      <p>{t.workNote}</p>
+    </div>
+  )
+}
+
+function DateLine({ record, figures, carry, addiction }: { record: ReturnType<typeof useQuitRecord>["record"]; figures: CostFigures | null; carry: (p: string) => string; addiction: string }) {
+  const today = todayIso()
+  const link = (tool: string, name: string) =>
+    isLiveTool(tool) ? (
+      <Link href={carry(`/quit/${addiction}/${tool}`)} className="inline-flex min-h-11 items-center text-primary underline">
+        {name}
+      </Link>
+    ) : (
+      <>{name}</>
+    )
+  const date = record.quitDate
+  const hasPlan = date !== null && (record.goal === "stop" || record.goal === "break")
+  let body: React.ReactNode
+  if (!hasPlan) {
+    body = (
+      <>
+        {t.datePickPre}
+        {link("date", t.nameDate)}
+        {t.datePickPost}
+      </>
+    )
+  } else if (date > today) {
+    body = figures ? t.dateFuture(fmtDay(date), formatCents(figures.dayCents), formatCents(figures.yearCents)) : t.dateFutureBare(fmtDay(date))
+  } else {
+    body = (
+      <>
+        {t.datePastPre(fmtDay(date))}
+        {link("record", t.nameRecord)}
+        {t.datePastPost}
+      </>
+    )
+  }
+  return (
+    <p data-testid="cost-dateline" className="text-base">
+      {body}
+    </p>
   )
 }

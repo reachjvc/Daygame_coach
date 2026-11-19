@@ -25,10 +25,6 @@ const A = "/quit/nicotine"
 
 test.use({ storageState: SIGNED_OUT, viewport: { width: 390, height: 844 } })
 
-async function noSideways(page: Page) {
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
-}
-
 /** A tap within 250 ms of a move is ignored by the lies test, so each tap waits a little first. */
 async function tapId(page: Page, id: string) {
   await page.clock.runFor(300)
@@ -47,65 +43,9 @@ async function rateAll(page: Page, ratings: number[]) {
   await tapId(page, "canstop-unsure")
 }
 
-async function toPrice(page: Page) {
-  await page.goto(quitUrl(`${A}/cost`))
-  await page.getByTestId("chip-cigarettes").click()
-  await page.getByTestId("cost-continue").click()
-  await page.getByTestId("cost-continue").click()
-}
-
 test.describe("quit phase 7 fixes, signed out @phone", () => {
   // the lies test ignores a tap within 250 ms of a move; the tests move the page clock on between taps
   test.beforeEach(({ page }) => page.clock.install())
-  test("A24 A26 A27 a price over the cap, negative or junk is refused with the range and Done stays off", async ({ page }) => {
-    await toPrice(page)
-    const range = t.cost.range.replace("{min}", "0").replace("{max}", "100")
-    for (const bad of ["500", "-5", "100.01"]) {
-      await page.getByTestId("cost-price").fill(bad)
-      await expect(page.getByTestId("cost-price-error")).toHaveText(range)
-      await expect(page.getByTestId("cost-continue")).toBeDisabled()
-    }
-    await noSideways(page)
-  })
-
-  test("A26 1e2 is a valid 100 and the result is worked out from what is shown", async ({ page }) => {
-    await toPrice(page)
-    await page.getByTestId("cost-price").fill("1e2")
-    await expect(page.getByTestId("cost-price-error")).toHaveCount(0)
-    await page.getByTestId("cost-continue").click()
-    // 10 a day x 7 x 52 x $100
-    await expect(page.getByTestId("year-cost")).toHaveText("$364,000")
-  })
-
-  test("a box of text the browser cannot read as a number gets the range message too", async ({ page }) => {
-    await toPrice(page)
-    await page.getByTestId("cost-price").pressSequentially("12e")
-    await expect(page.getByTestId("cost-price-error")).toBeVisible()
-    await expect(page.getByTestId("cost-continue")).toBeDisabled()
-  })
-
-  test("A15 Enter in the price field finishes cost", async ({ page }) => {
-    await toPrice(page)
-    await page.getByTestId("cost-price").fill("0.6")
-    await page.keyboard.press("Enter")
-    await expect(page.getByTestId("result")).toBeVisible()
-  })
-
-  test("A15 Enter with a bad price does nothing", async ({ page }) => {
-    await toPrice(page)
-    await page.getByTestId("cost-price").fill("500")
-    await page.keyboard.press("Enter")
-    await expect(page.getByTestId("result")).toHaveCount(0)
-  })
-
-  test("A21 the ten-year figure is ten times the year figure shown", async ({ page }) => {
-    await toPrice(page)
-    await page.getByTestId("cost-price").fill("0.52")
-    await page.getByTestId("cost-continue").click()
-    await expect(page.getByTestId("year-cost")).toHaveText("$1,893")
-    await expect(page.getByTestId("ten-year-cost")).toHaveText("$18,930")
-  })
-
   test("A44 never tried after earlier answers shows no leftover endings, window or gave-up line", async ({ page }) => {
     await page.goto(quitUrl(`${A}/past`))
     await page.getByTestId("chip-2-3").click()

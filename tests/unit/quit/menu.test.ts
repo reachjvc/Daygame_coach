@@ -59,6 +59,7 @@ describe("who can be viewed", () => {
     // "identity" (Who you are now) is a later tool, not built
     expect(toolReachable("identity", false)).toBe(false)
     expect(toolReachable("identity", true)).toBe(true)
+    expect(toolReachable("cost", false)).toBe(true)
     expect(previewAllowed(false)).toBe(false)
   })
   it("every live tool is a real menu tool, and finished tools are live", () => {

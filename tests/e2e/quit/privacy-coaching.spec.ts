@@ -47,9 +47,9 @@ test("@phone /quit/coaching has no Stripe link or buy button while the link is n
   await shot(page, "coaching")
 })
 
-test("@phone /quit/coaching shows his yearly cost from the store", async ({ page }) => {
+test("@phone /quit/coaching shows his yearly cost from the shared record", async ({ page }) => {
   await page.addInitScript(() => {
-    localStorage.setItem("quit-v1", JSON.stringify({ nicotine: { cost: { result: { yearUsd: 1825, tenYearUsd: 18250, hoursYear: null } } } }))
+    localStorage.setItem("quit-v1", JSON.stringify({ nicotine: { record: { quitDate: null, goal: null, breakEnd: null, unit: { id: "cigarettes", perDay: 10, priceUsd: 0.5, priceBasis: "typed" } } } }))
   })
   await page.goto(quitUrl("/quit/coaching"))
   await expect(page.getByTestId("coaching-cost")).toHaveText("What it costs you a year: $1,825")

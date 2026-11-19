@@ -114,7 +114,7 @@ test("a production build links nothing that needs ?preview=1 and shows no coachi
   }
   if (!prod) return
   expect((await page.request.get("/quit/coaching")).status()).toBe(404)
-  expect((await page.request.get("/quit/nicotine/cost")).status()).toBe(404)
+  expect((await page.request.get("/quit/nicotine/gives")).status()).toBe(404)
 })
 
 test("an unknown addiction or tool is 404", async ({ page }) => {

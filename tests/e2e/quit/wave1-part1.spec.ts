@@ -215,27 +215,16 @@ test.describe("quit wave 1 part 1 @phone", () => {
     await shot(page, "gives-slider")
   })
 
-  test("cost with the defaults shows a dollar figure", async ({ page }) => {
-    const unit = data.units[0]
+  test("cost opens on a form and shows a dollar figure once a count is typed", async ({ page }) => {
     await page.goto(quitUrl(`${A}/cost`))
-    await page.getByTestId(`chip-${unit.id}`).click()
-    await shot(page, "cost-unit")
-    await page.getByTestId("cost-continue").click()
-    await noSideways(page)
-    await shot(page, "cost-amount")
-    await page.getByTestId("cost-continue").click()
-    if (unit.defaultPriceUsd === null) await page.getByTestId("cost-price").fill("1")
-    if (unit.defaultMinutesPerUnit === null && (await page.getByTestId("cost-minutes").count()) > 0) await page.getByTestId("cost-minutes").fill("5")
-    await shot(page, "cost-price")
-    await page.getByTestId("cost-continue").click()
-    await expect(page.getByTestId("year-cost")).toHaveText(/^\$[\d,]+$/)
-    await expect(page.getByTestId("ten-year-cost")).toHaveText(/^\$[\d,]+$/)
+    await page.getByTestId("chip-cigarettes").click()
+    await shot(page, "cost-form")
+    await page.getByTestId("cost-count").fill("10")
+    await expect(page.getByTestId("cost-year")).toHaveText("$1,898.00")
     await noSideways(page)
     await shot(page, "cost-result")
-    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("quit-v1") ?? "{}").nicotine.cost.result)
-    expect(stored.yearUsd).toBeGreaterThan(0)
-    // ten years = ten times the whole-dollar year figure the reader sees
-    expect(stored.tenYearUsd).toBe(Math.round(stored.yearUsd) * 10)
+    const unit = await page.evaluate(() => JSON.parse(localStorage.getItem("quit-v1") ?? "{}").nicotine.record.unit)
+    expect(unit).toEqual({ id: "cigarettes", perDay: 10, priceUsd: 0.52, priceBasis: "default" })
   })
 
   test("the sources fold and its footer link show only when the screen has sources", async ({ page }) => {

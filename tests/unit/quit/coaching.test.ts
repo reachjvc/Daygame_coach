@@ -30,14 +30,11 @@ describe("offer and page rules", () => {
   })
 })
 
-describe("cost line from the store", () => {
-  it("reads quit-v1[a].cost.result.yearUsd", () => {
-    expect(yearlyCost({ result: { yearUsd: 1825, tenYearUsd: 18250, hoursYear: null } })).toBe(1825)
+describe("cost line from the shared record", () => {
+  it("reads quit-v1[a].record.unit: count a day x price x 365", () => {
+    expect(yearlyCost({ unit: { id: "cigarettes", perDay: 10, priceUsd: 0.5, priceBasis: "typed" } })).toBe(1825)
   })
-  it.each([[undefined], [null], ["x"], [{}], [{ result: {} }], [{ result: { yearUsd: "5" } }], [{ result: { yearUsd: -1 } }], [{ result: { yearUsd: NaN } }]])(
-    "ignores %j",
-    (v) => expect(yearlyCost(v)).toBeNull(),
-  )
+  it.each([[undefined], [null], ["x"], [{}], [{ unit: { id: "vape", perDay: null, priceUsd: 14.07, priceBasis: "default" } }]])("ignores %j", (v) => expect(yearlyCost(v)).toBeNull())
 })
 
 describe("catch paragraph", () => {
