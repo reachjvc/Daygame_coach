@@ -1565,3 +1565,11 @@ targets or "what you could buy" here: Tool 3 holds targets.
 - On the plan, when "Did these work?" is showing, the card's own Change button is hidden (the Change answer opens the editor), to avoid two buttons with one name. Proposed: keep.
 - Removed lines: Undo restores only the latest removal (one "Removed: ... Undo" line at a time). Proposed: keep.
 - Print view colours come from the browser's print defaults (no hard-coded colours; the colour ratchet test forbids them).
+
+### From the Tool 13 build (Sonnet, 2026-11-19)
+
+- `src/quit/tools/beliefs/BeliefBasis.tsx` is not on main, so `src/quit/tools/gives/SwapBasis.tsx` was built with the same three rows (Who, How many, Caveat) plus the quotes and links. Tool 5 can swap it for BeliefBasis.
+- Opening rule: the brief says "picks but no list -> screen 2". The shared screen clamp only lets a reader open screens up to the first unanswered one, so with no list yet, Next would have been blocked. Built: no list shows the screen after the last one passed; a list, or a walk to the last need, shows the result (which then reads "Nothing on your list for <need> yet." for an empty need).
+- A wave-1 slider rating (any 0 to 100) shows on the nearest of the five buttons; a rating that lands on "Most of it" or "All of it" gets the "80% swap" mark.
+- `tests/e2e/quit/menu.spec.ts` "the nicotine menu shows 5 groups" fails on main as well as here: it expects a "Free account" pill, but no live tool has `account` other than "none". Not touched.
+- Rating buttons sit in a 3-column grid on phones (5 in a row from 640 px), so no single button wraps alone.

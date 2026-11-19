@@ -171,6 +171,26 @@ function ruleBasis(c: Ctx) {
       else if (s.evidence !== "none" && !hasRef(s.refs)) c.add(`${p}.refs`, "basis", `${p} has no source`)
     }),
   )
+  arr(d.needs).forEach((n, i) => {
+    const line = str(obj(n).line)
+    if (c.live && line === undefined) c.add(`needs[${i}].line`, "basis", `needs[${i}] has no line`)
+    else if (line !== undefined && words(line) > 8) c.add(`needs[${i}].line`, "words", `needs[${i}].line is ${words(line)} words (max 8)`)
+    if (!c.live) return
+    arr(obj(n).swaps).forEach((raw, j) => {
+      const s = obj(raw)
+      if (s.evidence === "none") return
+      const p = `needs[${i}].swaps[${j}]`
+      if (str(s.counted) === undefined) c.add(`${p}.counted`, "basis", `${p} has a source and no "counted" (who)`)
+      const n = str(s.n)
+      if (n === undefined) {
+        c.add(`${p}.n`, "basis", `${p} has a source and no "n" (how many)`)
+        return
+      }
+      const quotes = arr(s.refs).map((r) => str(obj(r).quote) ?? "").join(" \n ").replace(/,/g, "")
+      for (const run of n.replace(/,/g, "").match(/\d+/g) ?? [])
+        if (!new RegExp(`(?<!\\d)${run}(?!\\d)`).test(quotes)) c.add(`${p}.n`, "basis", `${p}.n has "${run}", which is in none of its quotes`)
+    })
+  })
   arr(d.units).forEach((raw, i) => {
     const u = obj(raw)
     if (u.defaultPriceUsd !== null && u.defaultPriceUsd !== undefined && !hasRef(u.priceRefs))

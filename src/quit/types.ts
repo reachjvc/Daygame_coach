@@ -133,11 +133,19 @@ export interface QuitSwap {
   text: string
   evidence: Evidence
   refs: QuitRef[]
+  /** Who the study counted. Sourced swaps of live files have it. */
+  counted?: string
+  /** How many, in words ("12,067 people"). Every digit run must appear in one of the quotes. */
+  n?: string
+  /** What the study cannot tell you. */
+  weak?: string
 }
 
 export interface QuitNeed {
   id: QuitNeedId
   name: string
+  /** The need in his voice ("It calms me down."), max 8 words. Live files have it. */
+  line?: string
   swaps: QuitSwap[]
 }
 

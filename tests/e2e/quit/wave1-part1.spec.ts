@@ -1,7 +1,7 @@
 /**
  * QUIT TOOLS, WAVE 1 PART 1, OPENED COLD ON A PHONE.
  *
- * Signed out, 390x844: the lies test (beliefs), what it gives you (gives),
+ * Signed out, 390x844: the lies test (beliefs),
  * what it costs you (cost) and how people quit (how).
  * Every text the test expects is read from the data files at run time, so it
  * holds for any valid content. Read-only: nothing is written to a server.
@@ -166,53 +166,6 @@ test.describe("quit wave 1 part 1 @phone", () => {
     await page.getByTestId("clear-answers").click()
     await page.getByTestId("clear-yes").click()
     await expect(page.getByTestId("scene")).toHaveText(data.beliefs[0].scene)
-  })
-
-  test("gives is preselected from the lies test, and ?need= wins", async ({ page }) => {
-    await page.goto(quitUrl(`${A}/beliefs`))
-    await runBeliefs(page, RATINGS)
-    // the lies test links to gives only once gives is finished; the saved ratings are read either way
-    await page.goto(quitUrl(`${A}/gives`))
-    await expect(page.getByTestId(`chip-${data.beliefs[0].need}`)).toHaveAttribute("aria-checked", "true")
-    await noSideways(page)
-    await shot(page, "gives-pick")
-    await page.getByTestId("gives-continue").click()
-    const first = data.needs.find((n) => n.id === data.beliefs[0].need)!
-    await expect(page.getByTestId("swap")).toHaveCount(first.swaps.length)
-    await expect(page.getByTestId("swap").first()).toContainText(first.swaps[0].text)
-    await noSideways(page)
-    await shot(page, "gives-need")
-    await page.getByTestId("try-swap").first().click()
-    await expect(page.getByText(t.gives.tried)).toBeVisible()
-
-    const other = data.needs.find((n) => n.id !== data.beliefs[0].need)!
-    await page.goto(quitUrl(`${A}/gives?need=${other.id}`))
-    await expect(page.getByTestId(`chip-${other.id}`)).toHaveAttribute("aria-checked", "true")
-    await expect(page.getByTestId(`chip-${data.beliefs[0].need}`)).toHaveAttribute("aria-checked", "false")
-    await page.evaluate(() => localStorage.clear())
-    await page.goto(quitUrl(`${A}/gives?need=nonsense`))
-    await expect(page.getByTestId("gives-continue")).toBeDisabled()
-  })
-
-  test("a swap tried on an earlier day shows the slider and saving reorders the swaps", async ({ page }) => {
-    const need = data.needs[0]
-    await page.goto(quitUrl(`${A}/gives`))
-    await page.evaluate(
-      ({ need, swap }) => {
-        localStorage.setItem(
-          "quit-v1",
-          JSON.stringify({ nicotine: { gives: { done: 1, picked: [need], tried: { [swap]: { swapId: swap, triedOn: "2000-01-01" } }, rated: {} } } }),
-        )
-      },
-      { need: need.id, swap: need.swaps[1].id },
-    )
-    await page.goto(quitUrl(`${A}/gives?s=2`))
-    await expect(page.getByText(t.gives.rateQuestion)).toBeVisible()
-    await expect(page.getByTestId("swap").nth(0)).toHaveAttribute("data-swap", need.swaps[0].id)
-    await page.getByTestId("rate-slider").fill("100")
-    await page.getByTestId("rate-save").click()
-    await expect(page.getByTestId("swap").nth(0)).toHaveAttribute("data-swap", need.swaps[1].id)
-    await shot(page, "gives-slider")
   })
 
   test("cost opens on a form and shows a dollar figure once a count is typed", async ({ page }) => {

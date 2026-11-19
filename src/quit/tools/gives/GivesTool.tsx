@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
-import { Chips, ClearAnswers, EvidenceChip, OneQuestion, PrimaryButton, SourceTap, SourcesFold } from "../../components/kit"
+import { EvidenceChip, OneQuestion, PrimaryButton, SourcesFold } from "../../components/kit"
+import { isLiveTool } from "../../menu"
 import { useQuitStore } from "../../store"
 import { fill, tooltext as t } from "../../tooltext"
 import type { QuitBelief, QuitNeed, QuitSwap, ToolProps } from "../../types"
@@ -10,9 +11,36 @@ import { localDate, realRefs, uniqueRefs, usable } from "../common"
 import { parseBeliefs, topBeliefs } from "../beliefs/logic"
 import { useCarry, useDoneCount, useScreens, useStartCount, useToolState } from "../hooks"
 import { NotReady } from "../NotReady"
-import { cleanNeeds, EMPTY_GIVES, MAX_NEEDS, needsRating, orderSwaps, parseGives, preselectNeeds, type GivesState } from "./logic"
+import { SwapBasis } from "./SwapBasis"
+import {
+  EMPTY_GIVES,
+  MAX_NEEDS,
+  MAX_OWN_PER_NEED,
+  MAX_TEXT,
+  OWN,
+  RATINGS,
+  addOwn,
+  addTried,
+  cleanNeeds,
+  firstScreen,
+  isEightyPercent,
+  orderSwaps,
+  parseGives,
+  preselectNeeds,
+  quotesFor,
+  rate,
+  ratingGoogleUrl,
+  ratingIcs,
+  ratingIndex,
+  removeOwn,
+  removeTried,
+  tidy,
+  type GivesState,
+} from "./logic"
 
-/** What it gives you: pick 1 to 3 needs, then three swaps for each. */
+const fmt = (day: string) => new Date(`${day}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
+
+/** What it gives you: name 1 to 3 needs, add swaps for each, then rate how close each came. */
 export function GivesTool({ addiction, data }: ToolProps) {
   const needs = usable<QuitNeed[]>(data.needs)
   const beliefs = usable<QuitBelief[]>(data.beliefs)
@@ -41,111 +69,136 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
     setLinkNeed(need)
   }, [])
 
+  const ratings = useMemo(() => parseBeliefs(store.get(addiction, "beliefs")).ratings, [store, addiction])
   // The needs picked so far; before any choice, the preselection.
   const pre = useMemo(() => {
-    const ratings = parseBeliefs(store.get(addiction, "beliefs")).ratings
     const topNeeds = topBeliefs(ratings, beliefs)
       .map((b) => usable<string>(b.need))
       .filter((n): n is string => n !== null)
     return preselectNeeds(linkNeed, topNeeds, known)
-  }, [store, addiction, beliefs, known, linkNeed])
+  }, [ratings, beliefs, known, linkNeed])
 
   const picked = state ? cleanNeeds(state.picked ?? pre, known) : []
-  // A link with ?need= starts the pick again from that need.
-  const queryNeed = linkNeed
+  // A link with a need starts the pick again from that need.
   const appliedNeed = useRef<string | null>(null)
   useEffect(() => {
-    if (!state || !queryNeed || appliedNeed.current === queryNeed) return
-    appliedNeed.current = queryNeed
-    const fromLink = cleanNeeds(queryNeed.split(","), known)
+    if (!state || !linkNeed || appliedNeed.current === linkNeed) return
+    appliedNeed.current = linkNeed
+    const fromLink = cleanNeeds(linkNeed.split(",").filter((x) => x !== OWN), known)
     if (fromLink.length > 0) update((s) => ({ ...s, picked: fromLink, done: 0 }))
-  }, [state, queryNeed, known, update])
+  }, [state, linkNeed, known, update])
 
   const total = 1 + picked.length
-  const first = (state?.done ?? 0) + 1
+  const first = state ? firstScreen(state, picked) : 1
   const { screen, go, back: goBack, reset, isResult } = useScreens(first, total, state !== null)
   const started = useStartCount(addiction, "gives")
   useDoneCount(addiction, "gives", state !== null && isResult)
 
+  // A tap within 250 ms of a screen move is ignored, and a button only moves from the screen it was drawn on.
+  const lastMove = useRef(0)
+  const shownScreen = useRef(screen)
+  useEffect(() => {
+    shownScreen.current = screen
+  }, [screen])
+  const move = (drawn: number, fn: () => void) => {
+    const now = Date.now()
+    if (now - lastMove.current < 250 || shownScreen.current !== drawn) return
+    lastMove.current = now
+    fn()
+  }
+
   if (!state) return null
   const back = screen > 1 ? goBack : null
   const today = localDate()
+  const needName = (id: string) => (id === OWN ? (state.ownNeed ?? t.gives.otherName) : (needs.find((n) => n.id === id)?.name ?? id))
 
   if (screen === 1) {
     return (
       <>
-        <OneQuestion step={1} total={total} onBack={null}>
-          <p className="font-medium">{t.gives.pickQuestion}</p>
-          <Chips
-            label={t.gives.pickQuestion}
-            max={MAX_NEEDS}
-            options={needs.map((n) => ({ id: n.id, label: n.name }))}
-            value={picked}
-            onChange={(next) => {
-              started()
-              update((s) => ({ ...s, picked: next }))
-            }}
-          />
-          {picked.length >= MAX_NEEDS && <p className="text-sm text-muted-foreground">{t.gives.pickMax}</p>}
-          <PrimaryButton
-            testId="gives-continue"
-            disabled={picked.length === 0}
-            onClick={() => {
-              update((s) => ({ ...s, picked, done: Math.max(s.done, 1) }))
+        <PickScreen
+          needs={needs}
+          picked={picked}
+          ownNeed={state.ownNeed}
+          total={total}
+          onPick={(next) => {
+            started()
+            update((s) => ({ ...s, picked: next }))
+          }}
+          onOwnNeed={(text) => update((s) => ({ ...s, ownNeed: text.slice(0, MAX_TEXT) }))}
+          onContinue={() =>
+            move(1, () => {
+              update((s) => ({ ...s, picked, ownNeed: s.ownNeed ? tidy(s.ownNeed) : s.ownNeed, done: Math.max(s.done, 1) }))
               go(2)
-            }}
-          >
-            {t.common.continue}
-          </PrimaryButton>
-        </OneQuestion>
+            })
+          }
+        />
         <SourcesFold refs={[]} />
       </>
     )
   }
 
   if (!isResult) {
-    const need = needs.find((n) => n.id === picked[screen - 2])
-    if (!need) return null
-    const quotes = beliefs.filter((b) => usable<string>(b.need) === need.id).map((b) => b.limiting)
-    const swaps = orderSwaps(need.swaps, state.rated)
+    const id = picked[screen - 2]
+    if (!id) return null
+    const isOwn = id === OWN
+    const need = isOwn ? null : needs.find((n) => n.id === id)
+    if (!isOwn && !need) return null
+    const { lines, people } = need ? quotesFor(beliefs, need.id, ratings) : { lines: [], people: false }
+    const swaps = need ? orderSwaps(need.swaps, state.rated) : []
+    const own = state.own[id] ?? []
     const last = screen === total
     return (
       <>
         <OneQuestion step={screen} total={total} onBack={back}>
-          <h2 className="text-xl font-semibold">{need.name}</h2>
-          {quotes.length > 0 && (
-            <section>
-              <h3 className="text-sm text-muted-foreground">{t.gives.quotesHeading}</h3>
+          <header>
+            <h2 data-testid="need-heading" className="text-xl font-semibold">
+              {needName(id)}
+            </h2>
+            {need?.line && <p className="text-sm text-muted-foreground">{need.line}</p>}
+          </header>
+          {lines.length > 0 && (
+            <section data-testid="quotes">
+              <h3 className="text-sm text-muted-foreground">{people ? t.gives.quotesPeople : t.gives.quotesHeading}</h3>
               <ul className="mt-1 flex flex-col gap-1">
-                {quotes.map((q) => (
-                  <li key={q} className="text-base italic">{`“${q}”`}</li>
+                {lines.map((q) => (
+                  <li key={q} className="break-words text-base italic">{`“${q}”`}</li>
                 ))}
               </ul>
             </section>
           )}
-          <section>
-            <h3 className="text-sm text-muted-foreground">{t.gives.swapsHeading}</h3>
-            <ul className="mt-2 flex flex-col gap-3">
-              {swaps.map((s) => (
-                <SwapRow
-                  key={s.id}
-                  swap={s}
-                  triedOn={state.tried[s.id]?.triedOn}
-                  rating={state.rated[s.id]}
-                  today={today}
-                  onTry={() => {
-                    started()
-                    update((st) => ({ ...st, tried: { ...st.tried, [s.id]: { swapId: s.id, triedOn: today } } }))
-                  }}
-                  onSave={(pct) => update((st) => ({ ...st, rated: { ...st.rated, [s.id]: pct } }))}
-                />
-              ))}
-            </ul>
-          </section>
-          <PrimaryButton testId="gives-next" onClick={() => {
-              update((s) => ({ ...s, done: Math.max(s.done, screen) }))
-              go(screen + 1)
-            }}>
+          <OwnSwaps
+            need={id}
+            list={own}
+            onAdd={(text) => update((s) => addOwn(s, id, text, today, Date.now()))}
+            onRemove={(sid) => update((s) => removeOwn(s, id, sid))}
+          />
+          {swaps.length > 0 && (
+            <section>
+              <h3 className="text-sm text-muted-foreground">{t.gives.swapsHeading}</h3>
+              <ul className="mt-2 flex flex-col gap-3">
+                {swaps.map((s) => (
+                  <SwapCard
+                    key={s.id}
+                    swap={s}
+                    onList={state.tried[s.id] !== undefined}
+                    onToggle={() => {
+                      started()
+                      update((st) => (st.tried[s.id] ? removeTried(st, s.id) : addTried(st, s.id, today)))
+                    }}
+                  />
+                ))}
+              </ul>
+            </section>
+          )}
+          <PrimaryButton
+            testId="gives-next"
+            onClick={() =>
+              move(screen, () => {
+                update((s) => ({ ...s, done: Math.max(s.done, screen) }))
+                go(screen + 1)
+              })
+            }
+          >
             {last ? t.gives.finish : t.gives.nextNeed}
           </PrimaryButton>
         </OneQuestion>
@@ -154,86 +207,339 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
     )
   }
 
-  const chosen = picked
-    .flatMap((id) => needs.find((n) => n.id === id)?.swaps ?? [])
-    .filter((s) => state.tried[s.id])
   return (
-    <div data-testid="result" className="flex flex-col gap-4">
-      <h2 className="text-lg font-semibold">{t.gives.resultHeading}</h2>
-      {chosen.length === 0 ? (
-        <p className="text-muted-foreground">{t.gives.emptyResult}</p>
-      ) : (
-        <ul className="flex flex-col gap-2">
-          {chosen.map((s) => (
-            <li key={s.id} className="rounded-md border border-border bg-card px-3 py-2">
-              {s.text}
-            </li>
-          ))}
-        </ul>
-      )}
-      <Link href={carry(`/quit/${addiction}`)} className="inline-flex min-h-12 items-center justify-center rounded-md bg-primary px-4 font-medium text-primary-foreground">
-        {t.gives.toMenu}
-      </Link>
-      <ClearAnswers
-        onClear={() => {
-          clear()
-          reset()
-        }}
-      />
-      <SourcesFold refs={uniqueRefs(chosen.flatMap((s) => realRefs(s.refs)))} />
-    </div>
+    <ResultScreen
+      addiction={addiction}
+      state={state}
+      picked={picked}
+      needs={needs}
+      needName={needName}
+      today={today}
+      carry={carry}
+      onRate={(sid, value) => update((s) => ({ ...s, rated: rate(s.rated, sid, value) }))}
+      onGo={(id) => move(screen, () => go(picked.indexOf(id) + 2))}
+      onChange={() => move(screen, () => go(1))}
+      onStartAgain={() => {
+        clear()
+        reset()
+      }}
+    />
   )
 }
 
-interface SwapRowProps {
-  swap: QuitSwap
-  triedOn: string | undefined
-  rating: number | undefined
-  today: string
-  onTry: () => void
-  onSave: (pct: number) => void
+/* ---------- screen 1 ---------- */
+
+function PickScreen(props: {
+  needs: QuitNeed[]
+  picked: string[]
+  ownNeed: string | null
+  total: number
+  onPick: (next: string[]) => void
+  onOwnNeed: (text: string) => void
+  onContinue: () => void
+}) {
+  const { needs, picked, ownNeed, total } = props
+  const full = picked.length >= MAX_NEEDS
+  const ownPicked = picked.includes(OWN)
+  const toggle = (id: string) => {
+    if (picked.includes(id)) props.onPick(picked.filter((x) => x !== id))
+    else if (!full) props.onPick([...picked, id])
+  }
+  const cards: { id: string; name: string; line: string }[] = [
+    ...needs.map((n) => ({ id: n.id as string, name: n.name, line: n.line ?? "" })),
+    { id: OWN, name: t.gives.otherName, line: t.gives.otherLine },
+  ]
+  const needsText = ownPicked && tidy(ownNeed ?? "") === ""
+  return (
+    <OneQuestion step={1} total={total} onBack={null}>
+      <p className="font-medium">{t.gives.pickQuestion}</p>
+      <div role="group" aria-label={t.gives.pickQuestion} className="flex flex-col gap-2">
+        {cards.map((c) => {
+          const on = picked.includes(c.id)
+          const locked = !on && full
+          return (
+            <button
+              key={c.id}
+              type="button"
+              role="checkbox"
+              aria-checked={on}
+              aria-disabled={locked}
+              disabled={locked}
+              data-testid={`need-${c.id}`}
+              onClick={() => toggle(c.id)}
+              className={`flex min-h-16 w-full items-center gap-3 rounded-lg border p-3 text-left disabled:opacity-50 ${on ? "border-primary bg-primary/10" : "border-border bg-card"}`}
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block font-semibold">{c.name}</span>
+                <span className="block text-sm text-muted-foreground">{c.line}</span>
+              </span>
+              <span aria-hidden="true" className={`size-5 shrink-0 rounded-md border-2 ${on ? "border-primary bg-primary" : "border-border"}`} />
+            </button>
+          )
+        })}
+      </div>
+      {ownPicked && (
+        <label className="flex flex-col gap-1 text-sm">
+          <span>{t.gives.otherLabel}</span>
+          <input
+            data-testid="own-need"
+            type="text"
+            value={ownNeed ?? ""}
+            maxLength={MAX_TEXT}
+            onChange={(e) => props.onOwnNeed(e.target.value)}
+            className="min-h-11 w-full rounded-md border border-border bg-background px-3 text-base"
+          />
+        </label>
+      )}
+      {full && <p data-testid="pick-max" className="text-sm text-muted-foreground">{t.gives.pickMax}</p>}
+      <PrimaryButton testId="gives-continue" disabled={picked.length === 0 || needsText} onClick={props.onContinue}>
+        {t.common.continue}
+      </PrimaryButton>
+    </OneQuestion>
+  )
 }
 
-function SwapRow({ swap, triedOn, rating, today, onTry, onSave }: SwapRowProps) {
-  const [value, setValue] = useState(rating ?? 50)
-  const showSlider = needsRating(triedOn, today)
+/* ---------- screen 2 ---------- */
+
+function SwapCard({ swap, onList, onToggle }: { swap: QuitSwap; onList: boolean; onToggle: () => void }) {
   return (
     <li data-testid="swap" data-swap={swap.id} className="rounded-lg border border-border bg-card p-3">
       <p className="text-base">{swap.text}</p>
       <div className="mt-1">
         <EvidenceChip evidence={swap.evidence} />
       </div>
-      <SourceTap refs={realRefs(swap.refs)} />
-      {triedOn === undefined ? (
-        <button type="button" data-testid="try-swap" onClick={onTry} className="mt-2 inline-flex min-h-11 items-center rounded-md border border-primary px-3 text-primary">
-          {t.gives.tryIt}
-        </button>
-      ) : (
-        <p className="mt-2 text-sm text-primary">{t.gives.tried}</p>
-      )}
-      {showSlider && (
-        <div className="mt-2 flex flex-col gap-2">
-          <label className="text-sm" htmlFor={`rate-${swap.id}`}>
-            {t.gives.rateQuestion}
-          </label>
-          <input
-            id={`rate-${swap.id}`}
-            data-testid="rate-slider"
-            type="range"
-            min={0}
-            max={100}
-            step={10}
-            value={value}
-            onChange={(e) => setValue(Number(e.target.value))}
-            className="h-11 w-full"
-          />
-          <p className="text-sm tabular-nums">{fill(t.gives.ratingValue, { n: value })}</p>
-          <button type="button" data-testid="rate-save" onClick={() => onSave(value)} className="inline-flex min-h-11 items-center self-start rounded-md border border-border px-3">
-            {t.gives.save}
-          </button>
-          {rating !== undefined && <p className="text-sm text-muted-foreground">{fill(t.gives.saved, { n: rating })}</p>}
-        </div>
-      )}
+      <SwapBasis swap={swap} />
+      <button
+        type="button"
+        data-testid="toggle-swap"
+        aria-pressed={onList}
+        onClick={onToggle}
+        className={`mt-2 inline-flex min-h-11 items-center rounded-md border px-3 ${onList ? "border-primary bg-primary/10 text-foreground" : "border-primary text-primary"}`}
+      >
+        {onList ? t.gives.onList : t.gives.add}
+      </button>
     </li>
+  )
+}
+
+function OwnSwaps({ need, list, onAdd, onRemove }: { need: string; list: { id: string; text: string }[]; onAdd: (text: string) => void; onRemove: (id: string) => void }) {
+  const [text, setText] = useState("")
+  const full = list.length >= MAX_OWN_PER_NEED
+  const submit = () => {
+    if (tidy(text) === "" || full) return
+    onAdd(text)
+    setText("")
+  }
+  return (
+    <section data-testid="own-swaps" className="flex flex-col gap-2">
+      <h3 className="text-sm text-muted-foreground">{t.gives.ownHeading}</h3>
+      {list.length > 0 && (
+        <ul className="flex flex-col gap-2">
+          {list.map((o) => (
+            <li key={o.id} data-testid="own-swap" className="flex items-center gap-2 rounded-lg border border-primary bg-primary/10 p-3">
+              <span className="min-w-0 flex-1 break-words">{o.text}</span>
+              <button type="button" data-testid="own-remove" aria-label={`${t.gives.ownRemove}: ${o.text}`} onClick={() => onRemove(o.id)} className="inline-flex min-h-11 shrink-0 items-center px-2 text-sm underline">
+                {t.gives.ownRemove}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {full ? (
+        <p className="text-sm text-muted-foreground">{t.gives.ownFull}</p>
+      ) : (
+        <form
+          className="flex flex-col gap-2"
+          onSubmit={(e) => {
+            e.preventDefault()
+            submit()
+          }}
+        >
+          <label htmlFor={`own-${need}`} className="text-sm">
+            {t.gives.ownLabel}
+          </label>
+          <div className="flex gap-2">
+            <input
+              id={`own-${need}`}
+              data-testid="own-input"
+              type="text"
+              value={text}
+              maxLength={MAX_TEXT}
+              onChange={(e) => setText(e.target.value)}
+              className="min-h-11 min-w-0 flex-1 rounded-md border border-border bg-background px-3 text-base"
+            />
+            <button type="submit" data-testid="own-add" disabled={tidy(text) === ""} className="inline-flex min-h-11 shrink-0 items-center rounded-md border border-primary px-4 text-primary disabled:opacity-40">
+              {t.gives.ownAdd}
+            </button>
+          </div>
+        </form>
+      )}
+    </section>
+  )
+}
+
+/* ---------- result ---------- */
+
+function ResultScreen(props: {
+  addiction: string
+  state: GivesState
+  picked: string[]
+  needs: QuitNeed[]
+  needName: (id: string) => string
+  today: string
+  carry: (path: string) => string
+  onRate: (swapId: string, value: number) => void
+  onGo: (needId: string) => void
+  onChange: () => void
+  onStartAgain: () => void
+}) {
+  const { addiction, state, picked, needs, today, carry } = props
+  const [asking, setAsking] = useState(false)
+  const [origin, setOrigin] = useState("")
+  useEffect(() => setOrigin(window.location.origin), [])
+  const address = `${origin}/quit/${addiction}/gives`
+
+  const groups = picked.map((id) => {
+    const data = id === OWN ? [] : orderSwaps((needs.find((n) => n.id === id)?.swaps ?? []).filter((s) => state.tried[s.id]), state.rated)
+    const items = [
+      ...(state.own[id] ?? []).map((o) => ({ id: o.id, text: o.text, since: o.addedOn })),
+      ...data.map((s) => ({ id: s.id, text: s.text, since: state.tried[s.id].triedOn })),
+    ]
+    return { id, items }
+  })
+  const allRefs = uniqueRefs(picked.flatMap((id) => (needs.find((n) => n.id === id)?.swaps ?? []).filter((s) => state.tried[s.id]).flatMap((s) => realRefs(s.refs))))
+
+  const download = () => {
+    const blob = new Blob([ratingIcs(today, new Date(), address)], { type: "text/calendar;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = t.gives.icsFile
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 10_000)
+  }
+
+  const linkClass = "inline-flex min-h-11 items-center rounded-md border border-border bg-card px-4 text-sm"
+  return (
+    <div data-testid="result" className="flex flex-col gap-5">
+      <h2 className="text-xl font-semibold">{t.gives.resultHeading}</h2>
+      {groups.map((g) => (
+        <section key={g.id} data-testid="result-need" data-need={g.id} className="flex flex-col gap-2">
+          <h3 className="break-words text-sm font-semibold text-muted-foreground">{props.needName(g.id)}</h3>
+          {g.items.length === 0 ? (
+            <p data-testid="need-empty" className="text-sm">
+              {fill(t.gives.emptyNeed, { need: props.needName(g.id) })}{" "}
+              <button type="button" data-testid="empty-link" onClick={() => props.onGo(g.id)} className="inline-flex min-h-11 items-center text-primary underline">
+                {t.gives.emptyLink}
+              </button>
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {g.items.map((it) => {
+                const sel = ratingIndex(state.rated[it.id])
+                return (
+                  <li key={it.id} data-testid="listed" data-swap={it.id} className="rounded-lg border border-border bg-card p-3">
+                    <p className="break-words text-base">{it.text}</p>
+                    <p className="text-sm text-muted-foreground">{fill(t.gives.since, { day: fmt(it.since) })}</p>
+                    <p id={`rq-${it.id}`} className="mt-2 text-sm">{t.gives.rateQuestion}</p>
+                    <div role="radiogroup" aria-labelledby={`rq-${it.id}`} className="mt-1 grid grid-cols-3 gap-2 sm:grid-cols-5">
+                      {RATINGS.map((r, i) => (
+                        <button
+                          key={r.value}
+                          type="button"
+                          role="radio"
+                          aria-checked={sel === i}
+                          data-testid={`rate-${r.value}`}
+                          onClick={() => props.onRate(it.id, r.value)}
+                          className={`inline-flex min-h-11 items-center rounded-md border px-3 text-sm ${sel === i ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background"}`}
+                        >
+                          {r.label}
+                        </button>
+                      ))}
+                    </div>
+                    {isEightyPercent(state.rated[it.id]) && (
+                      <p data-testid="mark-80" className="mt-2 inline-flex rounded-full border border-primary px-2.5 py-0.5 text-xs font-medium text-primary">
+                        {t.gives.mark80}
+                      </p>
+                    )}
+                    {sel !== null && sel <= 1 && (
+                      <p className="mt-1">
+                        <button type="button" data-testid="try-another" onClick={() => props.onGo(g.id)} className="inline-flex min-h-11 items-center text-sm text-primary underline">
+                          {t.gives.another}
+                        </button>
+                      </p>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </section>
+      ))}
+
+      <section className="flex flex-col gap-2">
+        <h3 className="text-base font-semibold">{t.gives.remindTitle}</h3>
+        <div className="flex flex-wrap gap-2">
+          <a data-testid="remind-google" href={ratingGoogleUrl(today, address)} target="_blank" rel="noopener noreferrer" className={linkClass}>
+            {t.gives.remindGoogle}
+          </a>
+          <button type="button" data-testid="remind-ics" onClick={download} className={linkClass}>
+            {t.gives.remindIcs}
+          </button>
+        </div>
+        <p className="text-sm text-muted-foreground">{t.gives.remindNote}</p>
+      </section>
+
+      {(isLiveTool("sos") || isLiveTool("date")) && (
+        <section className="flex flex-col gap-2">
+          <h3 className="text-base font-semibold">{t.gives.nextHeading}</h3>
+          {isLiveTool("sos") && (
+            <Link data-testid="next-sos" href={carry(`/quit/${addiction}/sos`)} className="flex min-h-12 flex-col justify-center rounded-lg border border-border bg-card px-3 py-2">
+              <span className="font-medium">{t.gives.nextSos}</span>
+              <span className="text-sm text-muted-foreground">{t.gives.nextSosLine}</span>
+            </Link>
+          )}
+          {isLiveTool("date") && (
+            <Link data-testid="next-date" href={carry(`/quit/${addiction}/date`)} className="flex min-h-12 flex-col justify-center rounded-lg border border-border bg-card px-3 py-2">
+              <span className="font-medium">{t.gives.nextDate}</span>
+              <span className="text-sm text-muted-foreground">{t.gives.nextDateLine}</span>
+            </Link>
+          )}
+        </section>
+      )}
+
+      <div className="flex flex-col gap-2">
+        <button type="button" data-testid="change-needs" onClick={props.onChange} className="inline-flex min-h-12 w-full items-center justify-center rounded-md border border-primary px-4 font-medium text-primary">
+          {t.gives.change}
+        </button>
+        <Link data-testid="to-menu" href={carry(`/quit/${addiction}`)} className="inline-flex min-h-12 w-full items-center justify-center rounded-md bg-primary px-4 font-medium text-primary-foreground">
+          {t.gives.toMenu}
+        </Link>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        {asking ? (
+          <div data-testid="start-again-ask" className="rounded-md border border-border bg-card p-3 text-sm">
+            <p>{t.gives.startAgainAsk}</p>
+            <div className="mt-2 flex gap-2">
+              <button type="button" data-testid="start-again-clear" onClick={props.onStartAgain} className="inline-flex min-h-11 items-center rounded-md border border-border px-4">
+                {t.gives.clear}
+              </button>
+              <button type="button" data-testid="start-again-keep" onClick={() => setAsking(false)} className="inline-flex min-h-11 items-center rounded-md border border-primary px-4 text-primary">
+                {t.gives.keep}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" data-testid="start-again" onClick={() => setAsking(true)} className="inline-flex min-h-11 items-center self-start text-sm text-muted-foreground underline">
+            {t.gives.startAgain}
+          </button>
+        )}
+      </div>
+      <p className="text-sm text-muted-foreground">{t.gives.kept}</p>
+      <SourcesFold refs={allRefs} />
+    </div>
   )
 }

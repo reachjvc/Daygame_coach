@@ -56,6 +56,7 @@ describe("who can be viewed", () => {
     expect(liveToolIds()).toEqual(expect.arrayContaining(["date", "sos"]))
     expect(toolReachable("date", false)).toBe(true)
     expect(toolReachable("sos", false)).toBe(true)
+    expect(toolReachable("gives", false)).toBe(true)
     // "identity" (Who you are now) is a later tool, not built
     expect(toolReachable("identity", false)).toBe(false)
     expect(toolReachable("identity", true)).toBe(true)

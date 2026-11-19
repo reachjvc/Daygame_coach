@@ -56,8 +56,8 @@
         {
           "id": "gives",
           "name": "What it gives you",
-          "line": "Name what it does for you. Get swaps that give you 80% of it.",
-          "minutes": 2,
+          "line": "Name what it does for you. Find swaps that give you most of it.",
+          "minutes": 3,
           "account": "none",
           "wave": 1
         },

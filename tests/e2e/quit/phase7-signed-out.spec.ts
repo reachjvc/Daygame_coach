@@ -180,12 +180,12 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
     expect(new URL(url).hash).toMatch(/^#need=[a-z]+$/)
     expect(sent.filter((u) => /need=/.test(u.split("#")[0]))).toEqual([])
     const need = new URL(url).hash.slice(6)
-    await expect(page.getByTestId(`chip-${need}`)).toHaveAttribute("aria-checked", "true")
+    await expect(page.getByTestId(`need-${need}`)).toHaveAttribute("aria-checked", "true")
   })
 
   test("C1 an old ?need= link still works and its address becomes the # form", async ({ page }) => {
     await page.goto(quitUrl(`${A}/gives?preview=1&need=sleep`))
-    await expect(page.getByTestId("chip-sleep")).toHaveAttribute("aria-checked", "true")
+    await expect(page.getByTestId("need-sleep")).toHaveAttribute("aria-checked", "true")
     await expect.poll(() => new URL(page.url()).search).not.toMatch(/need=/)
     expect(new URL(page.url()).hash).toBe("#need=sleep")
   })

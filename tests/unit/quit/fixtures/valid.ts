@@ -60,7 +60,8 @@ export function makeValid(): QuitAddictionFull {
     needs: NEED_IDS.map((id) => ({
       id,
       name: id,
-      swaps: [{ id: `${id}-1`, text: "Walk for ten minutes", evidence: "moderate" as const, refs: [ref] }],
+      line: "It helps me.",
+      swaps: [{ id: `${id}-1`, text: "Walk for ten minutes", evidence: "moderate" as const, refs: [ref], counted: "tea drinkers in one study", n: "one study", weak: "Small study." }],
     })),
     endings: [{ id: "e1", label: "I felt fine", blackBoxEnding: "fine" }],
     helped: [{ id: "h1", label: "A walk" }],
