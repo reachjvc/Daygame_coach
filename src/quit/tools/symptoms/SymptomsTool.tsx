@@ -1,8 +1,8 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { EvidenceChip, SourcesFold } from "../../components/kit"
-import { useLocalQuitBlackBox, useQuitBlackBox, useSignedIn, type QuitBlackBoxApi } from "../../blackbox"
+import { useSignedIn } from "../../blackbox"
 import { count } from "../../count"
 import { isLiveTool } from "../../menu"
 import { todayIso, useQuitRecord } from "../../record"
@@ -16,6 +16,7 @@ import { bandFor } from "./bands"
 import { BandView, BasedOn, CravingLine, HelpFold, HelpRow, JumpChips, NowPill, ToolLink, type BasisPart } from "./Bits"
 import { alsoPossible, better, betterOrder, caffeine, cravings, cueBasis, hunger, hungerHelp, medicines, mildForMost, moveForMood, notForEveryone, reviewCaveat, sleepSteps, type SourcedLine } from "./content"
 import { dayState, daysToGo, fmtDay, fmtSlip, isNow, latestSlipDay, markDay, phaseWords, rightNow, type CardId, type DayState } from "./logic"
+import { useBlackBoxView, type BlackBoxView } from "./readBlackBox"
 import { symptomsText as t } from "./text"
 
 const HUGHES = "17365764"
@@ -34,24 +35,6 @@ function useToday(): string {
     }
   }, [])
   return today
-}
-
-/** The Black Box bridge, signed in (synced with the account) or signed out (the browser copy). Only read from. */
-function SignedBridge({ viceId, onApi }: { viceId: string; onApi: (api: QuitBlackBoxApi | null) => void }) {
-  const api = useQuitBlackBox(viceId)
-  useEffect(() => {
-    onApi(api)
-    return () => onApi(null)
-  }, [api, onApi])
-  return null
-}
-function LocalBridge({ viceId, onApi }: { viceId: string; onApi: (api: QuitBlackBoxApi | null) => void }) {
-  const api = useLocalQuitBlackBox(viceId)
-  useEffect(() => {
-    onApi(api)
-    return () => onApi(null)
-  }, [api, onApi])
-  return null
 }
 
 /** What you'll feel, and when: a reference page. It reads the day from the Black Box or the record and writes nothing. */
@@ -88,12 +71,9 @@ interface InnerProps {
 
 function Inner(props: InnerProps) {
   const signedIn = useSignedIn(false, true)
-  const [bb, setBb] = useState<QuitBlackBoxApi | null>(null)
-  const onApi = useCallback((api: QuitBlackBoxApi | null) => setBb(api), [])
+  const bb = useBlackBoxView(props.addiction, signedIn)
   return (
     <div className="w-full">
-      {signedIn === true ? <SignedBridge key="in" viceId={props.addiction} onApi={onApi} /> : null}
-      {signedIn === false ? <LocalBridge key="out" viceId={props.addiction} onApi={onApi} /> : null}
       <Page {...props} bb={bb} />
     </div>
   )
@@ -102,17 +82,17 @@ function Inner(props: InnerProps) {
 const helpRow = (help: QuitSymptomHelp[], symptom: string) => help.find((h) => h.symptom === symptom)
 const without = (refs: QuitRef[], pmid: string) => refs.filter((r) => r.pmid !== pmid)
 
-function Page({ addiction, course, help, note, b3, nums, bb }: InnerProps & { bb: QuitBlackBoxApi | null }) {
+function Page({ addiction, course, help, note, b3, nums, bb }: InnerProps & { bb: BlackBoxView }) {
   const carry = useCarry()
   const today = useToday()
   const rec = useQuitRecord(addiction)
-  const ready = rec.ready && bb !== null && bb.ready
+  const ready = rec.ready && bb.ready
   useEffect(() => {
     if (!ready) return
     count(addiction, "symptoms", "start")
     count(addiction, "symptoms", "done")
   }, [addiction, ready])
-  if (!ready || !bb) return null
+  if (!ready) return null
 
   const state = dayState({
     runStart: bb.run?.startedOn ?? null,

@@ -240,3 +240,42 @@ test.describe("desktop", () => {
     await shot(page, "desktop-day21")
   })
 })
+
+test.describe("signed in, read only", () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+  test("opening the page writes nothing: no storage write, nothing sent to the account, a newer copy is not put back over", async ({ page }) => {
+    const BOX_KEYS = ["vice-blackbox-v1", "vice-blackbox-sent-v1", "quit-v1"]
+    // every storage write of each page load is recorded on the window
+    await page.addInitScript((keys: string[]) => {
+      const w: string[] = []
+      ;(window as unknown as { __writes: string[] }).__writes = w
+      const set = Storage.prototype.setItem
+      const remove = Storage.prototype.removeItem
+      Storage.prototype.setItem = function (k: string, v: string) {
+        if (keys.includes(k)) w.push(`set ${k}`)
+        return set.call(this, k, v)
+      }
+      Storage.prototype.removeItem = function (k: string) {
+        if (keys.includes(k)) w.push(`remove ${k}`)
+        return remove.call(this, k)
+      }
+    }, BOX_KEYS)
+    const sent: string[] = []
+    page.on("request", (r) => {
+      if (r.url().includes("/api/black-box") && r.method() !== "GET") sent.push(`${r.method()} ${r.url()}`)
+    })
+    await open(page, { run: -4 })
+    // the account may hold its own runs, so only wait until the page has read both copies
+    await expect(page.getByTestId("day-card")).toHaveAttribute("data-state", /day|ahead|slip|none/)
+    await expect(page.getByTestId("symptom-cards")).toBeVisible()
+    await page.clock.runFor(130_000)
+    expect(await page.evaluate(() => (window as unknown as { __writes: string[] }).__writes)).toEqual([])
+    expect(sent).toEqual([])
+    // another tool saves a newer copy while this page is open: it stays as saved
+    const newer = box({ run: -1 })
+    await page.evaluate((bb) => localStorage.setItem("vice-blackbox-v1", JSON.stringify(bb)), newer)
+    await page.clock.runFor(130_000)
+    expect(JSON.parse((await page.evaluate(() => localStorage.getItem("vice-blackbox-v1"))) ?? "null")).toEqual(newer)
+    expect(sent).toEqual([])
+  })
+})
