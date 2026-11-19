@@ -1,10 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180">
-  <!-- Crosshair brand mark - Apple Touch Icon -->
-  <rect width="180" height="180" rx="40" fill="#1a1a2e"/>
-  <circle cx="90" cy="90" r="50" fill="none" stroke="#ff6b35" stroke-width="6"/>
-  <circle cx="90" cy="90" r="10" fill="#ff6b35"/>
-  <line x1="90" y1="20" x2="90" y2="48" stroke="#ff6b35" stroke-width="6" stroke-linecap="round"/>
-  <line x1="90" y1="132" x2="90" y2="160" stroke="#ff6b35" stroke-width="6" stroke-linecap="round"/>
-  <line x1="20" y1="90" x2="48" y2="90" stroke="#ff6b35" stroke-width="6" stroke-linecap="round"/>
-  <line x1="132" y1="90" x2="160" y2="90" stroke="#ff6b35" stroke-width="6" stroke-linecap="round"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect x="1" y="1" width="30" height="30" rx="7.5" fill="#ff6b35"/><g transform="translate(16 16) skewX(-9) translate(-16 -16)" fill="none" stroke="#121212" stroke-width="3.2" stroke-linecap="square" stroke-linejoin="miter"><path d="M5.2 12.6 L8.2 9.8 V22.4"/><rect x="11.6" y="11.4" width="5.4" height="9.4" rx="2.7"/><path d="M21.4 9.8 V22.4 M27.2 9.8 L22.6 16.1 L27.2 22.4"/></g></svg>

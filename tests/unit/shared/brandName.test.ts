@@ -55,8 +55,8 @@ function liveCode(): string[] {
   return out
 }
 
-/** The mark's own drawing. Phase 4b replaces it together with BrandMark.tsx. */
-const MARK_SIGNATURE = /<circle cx="16" cy="16" r="11"/
+/** The mark's own drawing. The 10K plate's slant; Phase 4b. */
+const MARK_SIGNATURE = /translate\(16 16\) skewX\(-9\)/
 
 describe("R3: one name, one logo", () => {
   it("the name is typed only in src/shared/brand.ts", () => {

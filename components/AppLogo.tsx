@@ -2,14 +2,14 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BrandMark } from "@/components/BrandMark"
+import { BrandMark, PartBadge } from "@/components/BrandMark"
 import { BRAND } from "@/src/shared/brand"
 import { FACET_LABEL, facetFor } from "@/src/shared/facets"
 
 /**
  * The name, or inside a part its lockup: "10K Days · Life" with the part's name
  * in the part's colour (look C, Plans/rebrand-10kdaysclub.md, Phase 3). The part
- * comes from the address, like the page's colour. Phase 4b adds the part badge.
+ * comes from the address, like the page's colour. The part's badge sits before its name (Phase 4b).
  */
 export function PartLockup() {
   const facet = facetFor(usePathname() ?? "/")
@@ -17,7 +17,10 @@ export function PartLockup() {
   return (
     <span data-testid="part-lockup">
       {BRAND.short}
-      <span className="text-primary"> · {FACET_LABEL[facet]}</span>
+      <span className="ml-1.5 inline-flex items-center gap-1.5 align-middle text-primary">
+        <PartBadge part={facet} size={18} />
+        {FACET_LABEL[facet]}
+      </span>
     </span>
   )
 }

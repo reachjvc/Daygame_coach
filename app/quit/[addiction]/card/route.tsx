@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og"
+import { BrandMark } from "@/components/BrandMark"
 import type { NextRequest } from "next/server"
 import { getAddiction } from "@/src/quit/data"
 import { frame, isFlag, isViewable } from "@/src/quit/menu"
@@ -33,7 +34,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ addi
           padding: 90,
         }}
       >
-        <div style={{ display: "flex", fontSize: 40, color: "#a1a1aa" }}>{frame.siteName}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 40, color: "#a1a1aa" }}>
+          <BrandMark size={72} className="" />
+          {frame.siteName}
+        </div>
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", fontSize: 360, fontWeight: 700, lineHeight: 1 }}>{held}</div>
           <div style={{ display: "flex", fontSize: 72, fontWeight: 700, lineHeight: 1.15, marginTop: 30 }}>{line}</div>

@@ -4,14 +4,12 @@ import type React from "react"
 
 import { createBrowserSupabaseClient } from "@/src/db"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useState } from "react"
-import { BrandMark } from "@/components/BrandMark"
-import { BRAND } from "@/src/shared/brand"
+import { AuthShell } from "@/components/AuthShell"
 
 /**
  * "Check your email" -- and a way out when the email never arrives.
@@ -68,85 +66,70 @@ export default function SignUpSuccessClient() {
   }
 
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center p-6 md:p-10 bg-gradient-to-b from-background to-muted/20">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col gap-6">
-          <div className="flex items-center justify-center gap-2 font-semibold text-xl mb-4">
-            <BrandMark size={24} />
-            <span>{BRAND.name}</span>
-          </div>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Check your email</CardTitle>
-              <CardDescription>We&apos;ve sent you a confirmation link</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                Click the link in the email to activate your account. It can take a
-                minute or two to arrive — <strong>check your spam folder</strong> if
-                you don&apos;t see it.
-              </p>
+    <AuthShell title="Check your email" description="We've sent you a confirmation link">
+      <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+        Click the link in the email to activate your account. It can take a
+        minute or two to arrive — <strong>check your spam folder</strong> if
+        you don&apos;t see it.
+      </p>
 
-              <form onSubmit={handleResend} data-testid="resend-form">
-                <div className="flex flex-col gap-4">
-                  {!searchParams.get("email") && (
-                    <div className="grid gap-2">
-                      <Label htmlFor="resend-email">Your email</Label>
-                      <Input
-                        id="resend-email"
-                        type="email"
-                        placeholder="m@example.com"
-                        required
-                        autoComplete="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        data-testid="resend-email-input"
-                      />
-                    </div>
-                  )}
+      <form onSubmit={handleResend} data-testid="resend-form">
+        <div className="flex flex-col gap-4">
+          {!searchParams.get("email") && (
+            <div className="grid gap-2">
+              <Label htmlFor="resend-email">Your email</Label>
+              <Input
+                id="resend-email"
+                type="email"
+                placeholder="m@example.com"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                data-testid="resend-email-input"
+              />
+            </div>
+          )}
 
-                  {sent && (
-                    <p className="text-sm text-muted-foreground" data-testid="resend-sent-message">
-                      Sent again. If an account is waiting to be confirmed, the link
-                      is on its way.
-                    </p>
-                  )}
+          {sent && (
+            <p className="text-sm text-muted-foreground" data-testid="resend-sent-message">
+              Sent again. If an account is waiting to be confirmed, the link
+              is on its way.
+            </p>
+          )}
 
-                  {rateLimited && (
-                    <p
-                      className="text-sm text-amber-600 dark:text-amber-500"
-                      data-testid="resend-rate-limited-message"
-                    >
-                      You already asked for a link a moment ago. Check your inbox and
-                      your spam folder, or wait a minute and try again.
-                    </p>
-                  )}
+          {rateLimited && (
+            <p
+              className="text-sm text-amber-600 dark:text-amber-500"
+              data-testid="resend-rate-limited-message"
+            >
+              You already asked for a link a moment ago. Check your inbox and
+              your spam folder, or wait a minute and try again.
+            </p>
+          )}
 
-                  {error && (
-                    <p className="text-sm text-red-500" data-testid="resend-error-message">
-                      {error}
-                    </p>
-                  )}
+          {error && (
+            <p className="text-sm text-red-500" data-testid="resend-error-message">
+              {error}
+            </p>
+          )}
 
-                  <Button
-                    type="submit"
-                    variant="outline"
-                    className="w-full"
-                    disabled={isLoading}
-                    data-testid="resend-submit-button"
-                  >
-                    {isLoading ? "Sending..." : "Didn't get it? Send it again"}
-                  </Button>
-                </div>
-              </form>
-
-              <Button asChild className="w-full mt-3">
-                <Link href="/auth/login">Back to Login</Link>
-              </Button>
-            </CardContent>
-          </Card>
+          <Button
+            type="submit"
+            variant="outline"
+            className="w-full"
+            disabled={isLoading}
+            data-testid="resend-submit-button"
+          >
+            {isLoading ? "Sending..." : "Didn't get it? Send it again"}
+          </Button>
         </div>
-      </div>
-    </div>
+      </form>
+
+      <Button asChild className="w-full mt-3">
+        <Link href="/auth/login">Back to Login</Link>
+      </Button>
+    
+    </AuthShell>
   )
 }

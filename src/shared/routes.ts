@@ -152,6 +152,8 @@ export function isUnder(pathname: string, prefix: string): boolean {
 export function isPublicPage(pathname: string): boolean {
   return (
     pathname === "/" ||
+    // The link-preview picture (app/opengraph-image.tsx): crawlers have no session.
+    pathname === "/opengraph-image" ||
     isUnder(pathname, "/auth") ||
     isUnder(pathname, "/test") ||
     isUnder(pathname, "/quit") ||

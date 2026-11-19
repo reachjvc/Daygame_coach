@@ -5,7 +5,6 @@ import type React from "react"
 import { forgetOfflineCopies } from "@/src/shared/offlineCopies"
 import { createBrowserSupabaseClient } from "@/src/db"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
@@ -13,8 +12,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
 import { checkPassword, isWeakPasswordError } from "@/src/shared/passwordRules"
-import { BrandMark } from "@/components/BrandMark"
-import { BRAND } from "@/src/shared/brand"
+import { AuthShell } from "@/components/AuthShell"
 
 /**
  * Reached only via /auth/confirm?next=/auth/reset-password, which has already
@@ -79,97 +77,78 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center p-6 md:p-10 bg-gradient-to-b from-background to-muted/20">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col gap-6">
-          <div className="flex items-center justify-center gap-2 font-semibold text-xl mb-4">
-            <BrandMark size={24} />
-            <span>{BRAND.name}</span>
+    <AuthShell title="Set a new password" description={sessionState === "expired" ? "This link is no longer valid" : "Choose a password you haven't used here before"}>
+      {sessionState === "checking" && (
+        <p className="text-sm text-muted-foreground">Checking your link...</p>
+      )}
+
+      {sessionState === "expired" && (
+        <>
+          <p
+            className="text-sm text-muted-foreground mb-6 leading-relaxed"
+            data-testid="reset-expired-message"
+          >
+            Password reset links expire after one hour and can only be used
+            once. Request a new one and it&apos;ll work.
+          </p>
+          <Button asChild className="w-full">
+            <Link href="/auth/forgot-password">Request a new link</Link>
+          </Button>
+        </>
+      )}
+
+      {sessionState === "valid" && (
+        <form onSubmit={handleSubmit} data-testid="reset-form">
+          <div className="flex flex-col gap-6">
+            <div className="grid gap-2">
+              <Label htmlFor="password">New password</Label>
+              <Input
+                id="password"
+                type="password"
+                required
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                data-testid="reset-password-input"
+              />
+              {password.length > 0 && checkPassword(password) && (
+                <p
+                  className="text-sm text-muted-foreground"
+                  data-testid="reset-password-hint"
+                >
+                  {checkPassword(password)}
+                </p>
+              )}
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="repeat-password">Repeat new password</Label>
+              <Input
+                id="repeat-password"
+                type="password"
+                required
+                autoComplete="new-password"
+                value={repeatPassword}
+                onChange={(e) => setRepeatPassword(e.target.value)}
+                data-testid="reset-repeat-input"
+              />
+            </div>
+            {error && (
+              <p className="text-sm text-red-500" data-testid="reset-error-message">
+                {error}
+              </p>
+            )}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading}
+              data-testid="reset-submit-button"
+            >
+              {isLoading ? "Saving..." : "Save new password"}
+            </Button>
           </div>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Set a new password</CardTitle>
-              <CardDescription>
-                {sessionState === "expired"
-                  ? "This link is no longer valid"
-                  : "Choose a password you haven't used here before"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {sessionState === "checking" && (
-                <p className="text-sm text-muted-foreground">Checking your link...</p>
-              )}
-
-              {sessionState === "expired" && (
-                <>
-                  <p
-                    className="text-sm text-muted-foreground mb-6 leading-relaxed"
-                    data-testid="reset-expired-message"
-                  >
-                    Password reset links expire after one hour and can only be used
-                    once. Request a new one and it&apos;ll work.
-                  </p>
-                  <Button asChild className="w-full">
-                    <Link href="/auth/forgot-password">Request a new link</Link>
-                  </Button>
-                </>
-              )}
-
-              {sessionState === "valid" && (
-                <form onSubmit={handleSubmit} data-testid="reset-form">
-                  <div className="flex flex-col gap-6">
-                    <div className="grid gap-2">
-                      <Label htmlFor="password">New password</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        required
-                        autoComplete="new-password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        data-testid="reset-password-input"
-                      />
-                      {password.length > 0 && checkPassword(password) && (
-                        <p
-                          className="text-sm text-muted-foreground"
-                          data-testid="reset-password-hint"
-                        >
-                          {checkPassword(password)}
-                        </p>
-                      )}
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="repeat-password">Repeat new password</Label>
-                      <Input
-                        id="repeat-password"
-                        type="password"
-                        required
-                        autoComplete="new-password"
-                        value={repeatPassword}
-                        onChange={(e) => setRepeatPassword(e.target.value)}
-                        data-testid="reset-repeat-input"
-                      />
-                    </div>
-                    {error && (
-                      <p className="text-sm text-red-500" data-testid="reset-error-message">
-                        {error}
-                      </p>
-                    )}
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={isLoading}
-                      data-testid="reset-submit-button"
-                    >
-                      {isLoading ? "Saving..." : "Save new password"}
-                    </Button>
-                  </div>
-                </form>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
+        </form>
+      )}
+    
+    </AuthShell>
   )
 }

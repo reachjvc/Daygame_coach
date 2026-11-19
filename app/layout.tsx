@@ -5,7 +5,7 @@ import { ViewportHeightUpdater } from "@/components/ViewportHeightUpdater"
 import { ClockSync } from "@/components/ClockSync"
 import { HistoryBarrierProvider } from "@/src/shared/HistoryBarrierContext"
 import "./globals.css"
-import { BRAND } from "@/src/shared/brand"
+import { BRAND, LIVE_URL_UNTIL_DOMAIN } from "@/src/shared/brand"
 import { FacetScope } from "@/components/FacetScope"
 import { ErrorReporting } from "@/src/shared/components/ErrorReporting"
 import { StaleWorkerCleanup } from "@/src/shared/components/StaleWorkerCleanup"
@@ -34,9 +34,11 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
+  // Absolute address for the link-preview picture. Falls back to the current
+  // live address until the real domain is set up (Plan Phase 8).
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || LIVE_URL_UNTIL_DOMAIN),
   title: { default: BRAND.name, template: "%s · " + BRAND.name },
-  description:
-    "Plan the life you want, build the habits, quit what holds you back and get better at dating. One day at a time.",
+  description: BRAND.description,
   icons: {
     icon: [
       {
