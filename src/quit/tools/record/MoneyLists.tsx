@@ -205,7 +205,7 @@ export function TargetsBlock({ ctx }: { ctx: RecordCtx }) {
                   </button>
                 )}
               </div>
-              <div role="progressbar" aria-label={f.target.name} aria-valuemin={0} aria-valuemax={f.target.price} aria-valuenow={f.funded} className="h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div role="progressbar" aria-label={f.target.name} aria-valuemin={0} aria-valuemax={f.target.price} aria-valuenow={f.funded} className="h-2 w-full overflow-hidden rounded-full bg-foreground/15">
                 <div className="h-full bg-primary" style={{ width: `${Math.min(100, (f.funded / f.target.price) * 100)}%` }} />
               </div>
               <p className="text-sm text-muted-foreground">{t.targetFunded(fmtMoney(f.funded), fmtMoney(f.target.price))}</p>

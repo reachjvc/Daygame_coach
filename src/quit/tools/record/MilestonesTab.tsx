@@ -40,6 +40,16 @@ export function MilestonesTab({ ctx }: { ctx: RecordCtx }) {
       <section aria-label={t.moneyLadder} className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">{t.moneyLadder}</h2>
         <p className="text-sm text-muted-foreground">{t.moneyLadderLine}</p>
+        {rate === null ? (
+          <p data-testid="money-steps-empty" className="text-sm text-muted-foreground">
+            {t.noRateMilestone}{" "}
+            {!ctx.readOnly && (
+              <button type="button" data-testid="money-steps-add" onClick={ctx.openChange} className="inline-flex min-h-11 items-center font-medium text-primary underline">
+                {t.addNumbers}
+              </button>
+            )}
+          </p>
+        ) : (
         <ul className="flex flex-col gap-2">
           {money.map((s) => (
             <Row
@@ -51,6 +61,7 @@ export function MilestonesTab({ ctx }: { ctx: RecordCtx }) {
             />
           ))}
         </ul>
+        )}
       </section>
     </div>
   )

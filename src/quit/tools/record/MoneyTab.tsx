@@ -58,23 +58,23 @@ function AmountForm({ ctx }: { ctx: RecordCtx }) {
         <>
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium">{dateText.perDayLabel(unit.many)}</span>
-            <input type="text" inputMode="decimal" data-testid="amount-perday" value={perDay} maxLength={8} onChange={(e) => setPerDay(e.target.value)} className="min-h-12 w-full rounded-md border border-border bg-background px-3 text-base" />
+            <input type="text" inputMode="decimal" data-testid="amount-perday" aria-invalid={count.kind === "bad" || count.kind === "big" || countZero} value={perDay} maxLength={8} onChange={(e) => setPerDay(e.target.value)} className="min-h-12 w-full rounded-md border border-border bg-background px-3 text-base" />
             <span className="text-muted-foreground">{dateText.perDayHelp}</span>
             <span className="text-muted-foreground">{t.perDayHint}</span>
             {(count.kind === "bad" || count.kind === "big" || countZero) && (
-              <span data-testid="amount-error-perday" role="alert">
+              <span data-testid="amount-error-perday" role="alert" className="font-medium text-destructive">
                 {countZero ? t.aboveZeroCount : count.kind === "big" ? t.bigCount : t.badNumber}
               </span>
             )}
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium">{dateText.priceLabel(unit.one)}</span>
-            <input type="text" inputMode="decimal" data-testid="amount-price" value={price} maxLength={8} onChange={(e) => setPrice(e.target.value)} className="min-h-12 w-full rounded-md border border-border bg-background px-3 text-base" />
+            <input type="text" inputMode="decimal" data-testid="amount-price" aria-invalid={priceP.kind === "bad" || priceP.kind === "big" || priceZero} value={price} maxLength={8} onChange={(e) => setPrice(e.target.value)} className="min-h-12 w-full rounded-md border border-border bg-background px-3 text-base" />
             <span className="break-words text-muted-foreground">
               <PriceBasis unitId={unit.id} typed={false} testId="form-price-basis" />
             </span>
             {(priceP.kind === "bad" || priceP.kind === "big" || priceZero) && (
-              <span data-testid="amount-error-price" role="alert">
+              <span data-testid="amount-error-price" role="alert" className="font-medium text-destructive">
                 {priceZero ? t.aboveZeroPrice : priceP.kind === "big" ? t.bigPrice : t.badNumber}
               </span>
             )}
@@ -161,7 +161,7 @@ export function MoneyTab({ ctx }: { ctx: RecordCtx }) {
         ) : null}
         {ui.saved && !ui.editing && (
           <p role="status" data-testid="amount-saved" className="text-sm text-muted-foreground">
-            {t.saved} {t.savedNote}
+            {t.savedNote}
           </p>
         )}
         {ui.editing ? (
@@ -196,7 +196,7 @@ export function MoneyTab({ ctx }: { ctx: RecordCtx }) {
 
       <SpendBlock ctx={ctx} />
       <TargetsBlock ctx={ctx} />
-      <p className="text-sm text-muted-foreground">{t.phoneNote}</p>
+      {!ctx.readOnly && <p className="text-sm text-muted-foreground">{t.phoneNote}</p>}
     </div>
   )
 }
