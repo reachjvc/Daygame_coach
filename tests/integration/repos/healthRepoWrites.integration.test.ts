@@ -235,10 +235,13 @@ describe("deleteNutritionLog", () => {
 async function aWorkout(userId: string, over: { started?: string | null; ended?: string | null } = {}): Promise<string> {
   const id = randomUUID()
   await asOwner(async (q) => {
+    const started = over.started === undefined ? "2026-11-01T09:00:00Z" : over.started
+    const ended = over.ended === undefined ? "2026-11-01T09:45:00Z" : over.ended
+    // the table's lifecycle rule: an open workout has no duration or intensity, a finished one has both
     await q(
-      `insert into workout_logs (id, user_id, session_type, duration_min, intensity, started_at, ended_at)
-       values ($1, $2, 'weights', 45, 3, $3, $4)`,
-      [id, userId, over.started === undefined ? "2026-11-01T09:00:00Z" : over.started, over.ended === undefined ? "2026-11-01T09:45:00Z" : over.ended]
+      `insert into workout_logs (id, user_id, session_type, duration_min, intensity, logged_at, started_at, ended_at)
+       values ($1, $2, 'weights', $3, $4, coalesce($5::timestamptz, now()), $5, $6)`,
+      [id, userId, ended ? 45 : null, ended ? 3 : null, started, ended]
     )
     await q(
       `insert into workout_sets (log_id, exercise, set_number, reps, weight_kg) values ($1, 'Squat', 1, 5, 100)`,

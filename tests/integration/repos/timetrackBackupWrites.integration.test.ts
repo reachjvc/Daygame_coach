@@ -86,58 +86,47 @@ async function snapshot(userId: string): Promise<Record<string, string[]>> {
   return out
 }
 
+/** Backed-up rows as JSON, ordered, for comparison with what the database now holds. */
+async function storedRows(table: string, userId: string): Promise<Record<string, unknown>[]> {
+  const rows = await asOwner((q) => q(`select to_jsonb(t) as r from ${table} t where user_id = $1`, [userId]))
+  return rows.map((r) => r.r as Record<string, unknown>)
+}
+
+/** The database stamps `updated_at` on every update of these tables, so it is the one column that may differ. */
+const withoutStamp = (row: Record<string, unknown>) => {
+  const { updated_at: _stamp, ...rest } = row
+  void _stamp
+  return JSON.stringify(Object.entries(rest).sort(([x], [y]) => x.localeCompare(y)))
+}
+
 describe("restoreTimetrack", () => {
-  it("writes every row of the backup back as it was, after the rows were lost and changed", async () => {
+  it("writes every row of the backup back as it was, after rows were lost and changed", async () => {
     const a = await aTimeLog("restore-own")
-    const before = await snapshot(a.id)
     const backup = await exportTimetrack(a.id)
 
-    // damage: one entry deleted outright, another edited, a tag link and the settings gone/changed
+    // damage: one entry and its tag link deleted outright, others edited
     await asOwner(async (q) => {
       await q("delete from timetrack_entry_tags where entry_id = $1", [a.entry])
       await q("delete from timetrack_entries where id = $1", [a.entry])
       await q("update timetrack_entries set description = 'Overwritten', duration_seconds = 1, billable = true where id = $1", [a.entry2])
-      await q("update timetrack_projects set name = 'Renamed', rate = 1 where id = $1", [a.project])
+      await q("update timetrack_projects set name = 'Renamed', rate = 1, member_ids = '{}' where id = $1", [a.project])
+      await q("update timetrack_workspaces set name = 'Gone', config = '{}' where id = $1", [a.ws])
       await q("update timetrack_settings set prefs = '{}' where user_id = $1", [a.id])
     })
 
     const result = await restoreTimetrack(backup)
 
-    expect(result.total).toBe(Object.values(backup.counts).reduce((s, n) => s + n, 0))
+    expect(result.total).toBe(Object.values(backup.counts).reduce((sum, n) => sum + n, 0))
     expect(result.written.timetrack_entries).toBe(2)
-    const after = await snapshot(a.id)
-    // The restored rows hold the backup's own values, field for field. (A change stamp the
-    // database writes on the way in is the one column allowed to differ, so compare by column.)
-    const rows = await asOwner((q) =>
-      q(
-        `select e.id, e.description, e.billable, e.duration_seconds, e.project_id, e.task_id, e.started_at, e.stopped_at,
-                p.name as project_name, p.rate, p.color, p.member_ids, s.prefs
-         from timetrack_entries e
-         join timetrack_projects p on p.id = e.project_id
-         join timetrack_settings s on s.user_id = e.user_id
-         where e.user_id = $1 and e.id = $2`,
-        [a.id, a.entry]
-      )
-    )
-    expect(rows).toHaveLength(1)
-    expect(rows[0]).toMatchObject({
-      description: "Wrote the header",
-      billable: true,
-      duration_seconds: 5400,
-      project_id: a.project,
-      task_id: a.task,
-      project_name: "Site",
-      color: "#112233",
-      member_ids: ["x", "y"],
-      prefs: { theme: "dark" },
-    })
-    expect(Number(rows[0].rate)).toBe(42.5)
-    const [second] = await asOwner((q) => q("select description, duration_seconds from timetrack_entries where id = $1", [a.entry2]))
-    expect(second).toEqual({ description: "Second one", duration_seconds: 900 })
-    expect(after.timetrack_entry_tags).toEqual(before.timetrack_entry_tags)
+    expect(result.written.timetrack_entry_tags).toBe(1)
+    let compared = 0
     for (const table of TIMETRACK_TABLES) {
-      expect(after[table].length, `${table} row count`).toBe(before[table].length)
+      const saved = (backup.tables[table] as Record<string, unknown>[]).map(withoutStamp).sort()
+      const now = (await storedRows(table, a.id)).map(withoutStamp).sort()
+      expect(now, `${table} as the backup holds it`).toEqual(saved)
+      compared += saved.length
     }
+    expect(compared, "the backup held a row in every table this test arranged").toBeGreaterThanOrEqual(8)
   })
 
   it("leaves another account's rows byte-identical, and writes only rows the backup holds", async () => {
@@ -180,11 +169,13 @@ describe("restoreTimetrack", () => {
     await asOwner((q) => q("delete from timetrack_entries where id = $1", [a.entry2]))
 
     await restoreTimetrack(backup)
-    const once = await snapshot(a.id)
+    const once: Record<string, string[]> = {}
+    for (const table of TIMETRACK_TABLES) once[table] = (await storedRows(table, a.id)).map(withoutStamp).sort()
     await restoreTimetrack(backup)
 
-    const twice = await snapshot(a.id)
-    for (const table of TIMETRACK_TABLES) expect(twice[table].length, table).toBe(once[table].length)
-    expect(twice.timetrack_entries.map((r) => r.slice(0, 60)).sort()).toEqual(once.timetrack_entries.map((r) => r.slice(0, 60)).sort())
+    for (const table of TIMETRACK_TABLES) {
+      expect((await storedRows(table, a.id)).map(withoutStamp).sort(), table).toEqual(once[table])
+    }
+    expect(once.timetrack_entries).toHaveLength(2)
   })
 })
