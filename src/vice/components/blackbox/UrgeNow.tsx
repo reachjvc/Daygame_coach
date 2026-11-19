@@ -151,7 +151,7 @@ export function UrgeNow({
                   onClick={() => setChoice(o.id)}
                   className={`min-h-11 rounded-xl border px-3.5 py-3 text-left transition-colors ${
                     choice === o.id
-                      ? "border-violet-400/45 bg-violet-500/10"
+                      ? "border-primary/45 bg-primary/10"
                       : "border-white/10 bg-white/[0.02] hover:border-white/25"
                   }`}
                 >
@@ -172,7 +172,7 @@ export function UrgeNow({
                   value={wrote}
                   onChange={(e) => setWrote(e.target.value)}
                   rows={3}
-                  className="mt-1.5 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-[13px] text-white placeholder:text-zinc-700 focus:border-violet-400/50 focus:outline-none"
+                  className="mt-1.5 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-[13px] text-white placeholder:text-zinc-700 focus:border-primary/50 focus:outline-none"
                 />
               </label>
             )}

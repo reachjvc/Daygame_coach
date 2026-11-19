@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
+import { readFileSync, readdirSync } from "node:fs"
+import { join, relative } from "node:path"
 import { describe, expect, it } from "vitest"
 
 /**
@@ -32,3 +32,42 @@ describe("the brand name", () => {
     expect(frame.siteName).toBe(BRAND.name)
   })
 })
+
+/**
+ * R3. ONE NAME, ONE LOGO (docs/product/look.md).
+ * The name is typed in one place and read from `BRAND`; the mark is drawn in one
+ * place and rendered as `<BrandMark/>`. A copy anywhere else is a copy the next
+ * rename or logo swap misses.
+ */
+function liveCode(): string[] {
+  const out: string[] = []
+  const walk = (dir: string) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = join(dir, e.name)
+      const rel = relative(ROOT, p).split("\\").join("/")
+      if (e.isDirectory()) {
+        if (e.name === "node_modules" || e.name === "lab" || rel === "app/test") continue
+        walk(p)
+      } else if (/\.(tsx?|mjs)$/.test(e.name)) out.push(rel)
+    }
+  }
+  for (const top of ["app", "src", "components"]) walk(join(ROOT, top))
+  return out
+}
+
+/** The mark's own drawing. Phase 4b replaces it together with BrandMark.tsx. */
+const MARK_SIGNATURE = /<circle cx="16" cy="16" r="11"/
+
+describe("R3: one name, one logo", () => {
+  it("the name is typed only in src/shared/brand.ts", () => {
+    const typed = liveCode().filter((f) => f !== "src/shared/brand.ts" && readFileSync(join(ROOT, f), "utf8").includes("10K Days Club"))
+    expect(typed, "Read the name from BRAND in src/shared/brand.ts").toEqual([])
+  })
+
+  it("the mark is drawn only in components/BrandMark.tsx", () => {
+    const drawn = liveCode().filter((f) => f !== "components/BrandMark.tsx" && MARK_SIGNATURE.test(readFileSync(join(ROOT, f), "utf8")))
+    expect(drawn, "Render <BrandMark/> instead of drawing the mark").toEqual([])
+    expect(MARK_SIGNATURE.test(readFileSync(join(ROOT, "components/BrandMark.tsx"), "utf8"))).toBe(true)
+  })
+})
+

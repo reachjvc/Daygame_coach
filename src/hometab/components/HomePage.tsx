@@ -6,6 +6,7 @@ import { getUserTimezone } from "@/src/db/settingsRepo"
 import { ALL_TOOLS_TILE, TOOLS } from "@/components/navTabs"
 import { TrainingCard } from "@/src/programs/components/TrainingCard"
 import { ROUTES } from "@/src/shared/routes"
+import { facetFor } from "@/src/shared/facets"
 import { PAYWALL_HREF, tileAccess, type ToolViewer } from "../tileAccess"
 import { ToolTile } from "./ToolTile"
 import { CardPlaceholder, FieldCard, PlanCard, TimeCard } from "./HomeCards"
@@ -52,9 +53,9 @@ export async function HomePage() {
 
       <nav aria-label="Your tools" className="mb-6 grid grid-cols-4 gap-2 sm:grid-cols-8 sm:gap-3" data-testid="home-tiles">
         {TOOLS.filter((t) => t.tile).map((t) => (
-          <ToolTile key={t.id} id={t.id} label={t.short} icon={t.icon} access={tileAccess(t, viewer, ROUTES.dashboard)} />
+          <ToolTile key={t.id} id={t.id} label={t.short} icon={t.icon} access={tileAccess(t, viewer, ROUTES.dashboard)} href={t.href} />
         ))}
-        <ToolTile id="all" label={ALL_TOOLS_TILE.label} icon={ALL_TOOLS_TILE.icon} access={{ state: "open", href: ALL_TOOLS_TILE.href }} />
+        <ToolTile id="all" label={ALL_TOOLS_TILE.label} icon={ALL_TOOLS_TILE.icon} access={{ state: "open", href: ALL_TOOLS_TILE.href }} href={ALL_TOOLS_TILE.href} />
       </nav>
 
       {!viewer.has_purchased && (
@@ -69,7 +70,7 @@ export async function HomePage() {
       )}
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-2 [&>*]:min-w-0">
-        <div className="md:col-span-2 [&_[data-testid=season-band]]:mb-0">
+        <div className="md:col-span-2 [&_[data-testid=season-band]]:mb-0" data-facet={facetFor(ROUTES.plan)}>
           <Suspense fallback={<CardPlaceholder testId="home-plan-card" />}>
             <PlanCard userId={user.id} />
           </Suspense>
@@ -78,7 +79,7 @@ export async function HomePage() {
             already holds its height while it loads. */}
         {/* Full width: its own layout puts the button beside the text, which a
             third of a laptop screen squeezed to a word per line. */}
-        <div className="md:col-span-2">
+        <div className="md:col-span-2" data-facet={facetFor(ROUTES.training)}>
           <TrainingCard from={ROUTES.dashboard} />
         </div>
         <Suspense fallback={<CardPlaceholder testId="home-field-card" />}>

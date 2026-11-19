@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { PreviewLink } from "@/src/quit/components/PreviewLink"
 import { frame } from "@/src/quit/menu"
+import { PartLockup } from "@/components/AppLogo"
 
 export const metadata: Metadata = { description: frame.description }
 
@@ -10,7 +11,7 @@ export default function QuitLayout({ children }: { children: React.ReactNode }) 
     <div className="min-h-dvh bg-background text-foreground">
       <header className="mx-auto flex h-12 max-w-[640px] items-center px-4 pt-[env(safe-area-inset-top)]">
         <PreviewLink href="/quit" className="flex min-h-11 items-center text-sm font-semibold">
-          {frame.siteName}
+          <PartLockup />
         </PreviewLink>
       </header>
       <main className="mx-auto max-w-[640px] px-4 pb-[env(safe-area-inset-bottom)]">{children}</main>

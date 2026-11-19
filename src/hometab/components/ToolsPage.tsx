@@ -5,6 +5,7 @@ import { createServerSupabaseClient, getProfile } from "@/src/db/server"
 import { COMING_TOOLS, TOOLS, type Tool } from "@/components/navTabs"
 import { tileAccess, type ToolViewer } from "../tileAccess"
 import { ROUTES } from "@/src/shared/routes"
+import { facetFor } from "@/src/shared/facets"
 
 const GROUPS: { id: Tool["group"]; title: string }[] = [
   { id: "dating", title: "Dating" },
@@ -41,7 +42,7 @@ export async function ToolsPage() {
                 const access = tileAccess(t, viewer, ROUTES.tools)
                 return (
                   <li key={t.id}>
-                    <Link href={access.href} className="flex min-h-12 items-center gap-3 px-4 py-3 hover:bg-muted/40" data-testid={`tools-row-${t.id}`} data-access={access.state}>
+                    <Link href={access.href} className="flex min-h-12 items-center gap-3 px-4 py-3 hover:bg-muted/40" data-testid={`tools-row-${t.id}`} data-access={access.state} data-facet={facetFor(t.href)}>
                       <t.icon className="size-5 shrink-0 text-primary" aria-hidden />
                       <span className="flex-1 text-sm text-foreground">{t.label}</span>
                       {access.state === "locked" && <span className="text-xs text-muted-foreground">See plans</span>}

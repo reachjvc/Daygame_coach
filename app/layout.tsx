@@ -6,6 +6,7 @@ import { ClockSync } from "@/components/ClockSync"
 import { HistoryBarrierProvider } from "@/src/shared/HistoryBarrierContext"
 import "./globals.css"
 import { BRAND } from "@/src/shared/brand"
+import { FacetScope } from "@/components/FacetScope"
 import { ErrorReporting } from "@/src/shared/components/ErrorReporting"
 import { StaleWorkerCleanup } from "@/src/shared/components/StaleWorkerCleanup"
 
@@ -83,7 +84,8 @@ export default function RootLayout({
             signed out, and nothing at all if a zone was ever set. */}
         <ClockSync />
         <HistoryBarrierProvider>
-          {children}
+          {/* each page in its part's colour: src/shared/facets.ts */}
+          <FacetScope>{children}</FacetScope>
         </HistoryBarrierProvider>
       </body>
     </html>

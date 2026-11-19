@@ -372,7 +372,7 @@ export function BlackBoxPage() {
         <button
           type="button"
           onClick={() => setDialog({ kind: "thought" })}
-          className="mt-5 flex w-full items-center justify-between gap-3 rounded-2xl border border-orange-400/35 bg-gradient-to-b from-orange-500/[0.14] to-orange-500/[0.05] px-4 py-4 text-left transition-colors hover:border-orange-400/55"
+          className="mt-5 flex w-full items-center justify-between gap-3 rounded-2xl border border-primary/35 bg-gradient-to-b from-primary/[0.14] to-primary/[0.05] px-4 py-4 text-left transition-colors hover:border-primary/55"
         >
           <span>
             <span className="block text-[15px] font-medium text-white">I&rsquo;m having a thought</span>
@@ -380,7 +380,7 @@ export function BlackBoxPage() {
               See what happened the last time you had it
             </span>
           </span>
-          <span aria-hidden className="text-[18px] text-orange-300">&rarr;</span>
+          <span aria-hidden className="text-[18px] text-primary">&rarr;</span>
         </button>
       )}
 
@@ -630,7 +630,7 @@ export function BlackBoxPage() {
               return (
                 <div key={row.ending} className="border-b border-white/10 py-3 last:border-b-0">
                   <div className="flex items-baseline justify-between gap-3">
-                    <span className={`text-[13.5px] ${accent ? "font-medium text-orange-300" : "text-zinc-200"}`}>
+                    <span className={`text-[13.5px] ${accent ? "font-medium text-primary" : "text-zinc-200"}`}>
                       {row.label}
                     </span>
                     {/* A thought that has never won has cost nothing, and

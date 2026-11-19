@@ -2,13 +2,17 @@ import Link from "next/link"
 import { Lock } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import type { TileState } from "../tileAccess"
+import { facetFor } from "@/src/shared/facets"
 
 /**
  * One square on Home's grid. Four fit across a 320px phone: 4 × 64px plus
  * three 8px gaps is 280px inside a 16px gutter, and each stays above the 44px
  * a fingertip needs.
+ *
+ * Its colour is the part it opens (`href`, the tool's own address, not where a
+ * lock sends you): rule R2 of docs/product/look.md.
  */
-export function ToolTile({ id, label, icon: Icon, access }: { id: string; label: string; icon: LucideIcon; access: TileState }) {
+export function ToolTile({ id, label, icon: Icon, access, href }: { id: string; label: string; icon: LucideIcon; access: TileState; href: string }) {
   const locked = access.state !== "open"
   return (
     <Link
@@ -16,6 +20,7 @@ export function ToolTile({ id, label, icon: Icon, access }: { id: string; label:
       className="group relative flex min-h-[76px] flex-col items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-1 py-3 text-center transition-colors hover:border-primary"
       data-testid={`home-tile-${id}`}
       data-access={access.state}
+      data-facet={facetFor(href)}
       aria-label={access.state === "locked" ? `${label} (locked: see plans)` : access.state === "preview" ? `${label} (preview)` : undefined}
     >
       <Icon className="size-6 text-primary" aria-hidden />

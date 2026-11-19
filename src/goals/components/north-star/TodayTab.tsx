@@ -330,7 +330,7 @@ function GoField({
           type="checkbox"
           checked={done}
           onChange={onToggle}
-          className="size-4 shrink-0 accent-violet-500"
+          className="size-4 shrink-0 accent-primary"
           aria-label={TODAY_COPY.fieldGoDoneAria(label)}
         />
         <span className="min-w-0 flex-1">
@@ -343,7 +343,7 @@ function GoField({
           <button
             onClick={onOpen}
             aria-label={TODAY_COPY.fieldOpenAria(label, source.label)}
-            className="shrink-0 inline-flex items-center gap-1 rounded-md border border-violet-400/40 bg-violet-500/10 px-2.5 py-1 text-[11px] text-violet-100 hover:bg-violet-500/20 transition-colors"
+            className="shrink-0 inline-flex items-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-2.5 py-1 text-[11px] text-foreground hover:bg-primary/20 transition-colors"
           >
             {TODAY_COPY.fieldOpen}
             <ArrowRight className="size-3.5" />
@@ -432,7 +432,7 @@ function GoesTo({
           <button
             onClick={onOpen}
             aria-label={GOES_TO_COPY.openAria(title, source.label)}
-            className="inline-flex items-center gap-1.5 min-w-0 rounded-md border border-violet-400/35 bg-violet-500/10 px-2 py-1 text-[10.5px] text-violet-100 hover:bg-violet-500/20 transition-colors"
+            className="inline-flex items-center gap-1.5 min-w-0 rounded-md border border-primary/35 bg-primary/10 px-2 py-1 text-[10.5px] text-foreground hover:bg-primary/20 transition-colors"
           >
             <ArrowRight className="size-3 shrink-0" />
             <span className="truncate">{source.label}</span>
@@ -520,7 +520,7 @@ function Asks({
             onSet(draft.trim())
             setEditing(false)
           }}
-          className="rounded-md border border-violet-400/40 bg-violet-500/10 px-2.5 py-1 text-[10.5px] text-violet-100 disabled:opacity-40 hover:bg-violet-500/20 transition-colors"
+          className="rounded-md border border-primary/40 bg-primary/10 px-2.5 py-1 text-[10.5px] text-foreground disabled:opacity-40 hover:bg-primary/20 transition-colors"
         >
           {TODAY_COPY.askSave}
         </button>
@@ -602,7 +602,7 @@ function SubStepRow({
         type="checkbox"
         checked={done}
         onChange={onToggle}
-        className="size-3.5 shrink-0 accent-violet-500"
+        className="size-3.5 shrink-0 accent-primary"
         aria-label={TODAY_COPY.subTitleAria(sub.title)}
       />
       <input
@@ -1157,7 +1157,7 @@ export function TodayTab({
               type="checkbox"
               checked={item.done}
               onChange={() => onToggleStep(activity.id)}
-              className="size-4 shrink-0 accent-violet-500"
+              className="size-4 shrink-0 accent-primary"
               aria-label={`Did ${activity.title}`}
             />
             <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: activity.areaColor }} />
@@ -1228,7 +1228,7 @@ export function TodayTab({
                 {item.target != null && item.target > 0 && (
                   <span className="h-1 w-full max-w-[7rem] rounded-full bg-white/10 overflow-hidden">
                     <span
-                      className="block h-full rounded-full bg-violet-400/80 transition-[width]"
+                      className="block h-full rounded-full bg-primary/80 transition-[width]"
                       style={{ width: `${Math.min(100, Math.round((counted / item.target) * 100))}%` }}
                     />
                   </span>
@@ -1255,7 +1255,7 @@ export function TodayTab({
             <button
               onClick={() => count(item, 1)}
               aria-label={TODAY_COPY.countOneAria(activity.title)}
-              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-violet-400/40 bg-violet-500/15 text-violet-100 hover:bg-violet-500/25 transition-colors"
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-primary/40 bg-primary/15 text-foreground hover:bg-primary/25 transition-colors"
             >
               <Plus className="size-3.5" />
               <span className="text-[11.5px] font-medium">{TODAY_COPY.countOne}</span>
@@ -1429,7 +1429,7 @@ export function TodayTab({
                           type="checkbox"
                           checked={item.done}
                           onChange={() => onToggleExperience(item.id)}
-                          className="size-4 shrink-0 accent-violet-500"
+                          className="size-4 shrink-0 accent-primary"
                           aria-label={`Have done ${item.title}`}
                         />
                         <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: item.areaColor }} />

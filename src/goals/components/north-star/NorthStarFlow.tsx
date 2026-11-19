@@ -1316,12 +1316,12 @@ export function NorthStarFlow({
         onClick={() => { setTab(id); if (window.matchMedia?.("(max-width: 639px)").matches) railToggleRef.current?.focus() }}
         aria-current={active ? "step" : undefined}
         className={`rounded-xl border p-3 text-left transition-colors ${
-          active ? "border-violet-400/40 bg-violet-500/10" : "border-white/10 bg-white/[0.02] hover:border-white/25"
+          active ? "border-primary/40 bg-primary/10" : "border-white/10 bg-white/[0.02] hover:border-white/25"
         }`}
       >
         <span className="flex items-center gap-2">
           <span className={`inline-flex items-center justify-center size-5 rounded-full text-[10px] tabular-nums shrink-0 ${
-            active ? "bg-violet-500/25 text-violet-100" : "bg-white/5 text-zinc-500"
+            active ? "bg-primary/25 text-foreground" : "bg-white/5 text-zinc-500"
           }`}>
             {TAB_ORDER.indexOf(id) + 1}
           </span>
@@ -1412,7 +1412,7 @@ export function NorthStarFlow({
         {tabIndex < TAB_ORDER.length - 1 ? (
           <button
             onClick={() => setTab(TAB_ORDER[tabIndex + 1])}
-            className="text-sm font-medium px-4 py-2 rounded-lg whitespace-nowrap bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 transition-colors"
+            className="text-sm font-medium px-4 py-2 rounded-lg whitespace-nowrap bg-primary/20 border border-primary/40 text-foreground hover:bg-primary/30 transition-colors"
           >
             {TAB_LABELS[TAB_ORDER[tabIndex + 1]]} →
           </button>
@@ -1867,7 +1867,7 @@ export function NorthStarFlow({
             the longest thing on the page, and it is a thing you go and look at
             rather than something you need under every screen. */}
         {loaded && today && readBack.trim() && (
-          <div className="mt-8 rounded-2xl border border-violet-400/20 bg-violet-500/[0.04]">
+          <div className="mt-8 rounded-2xl border border-primary/20 bg-primary/[0.04]">
             <div className="flex items-center gap-3 px-5 py-3">
               <button
                 onClick={() => setReadBackOpen((v) => !v)}

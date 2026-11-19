@@ -26,7 +26,7 @@ export function Panel({ children, tone = "plain", className = "" }: {
     plain: "border-white/10 bg-white/[0.03]",
     quiet: "border-white/[0.07] bg-white/[0.015]",
     warn: "border-amber-400/30 bg-amber-500/[0.06]",
-    live: "border-violet-400/30 bg-violet-500/[0.06]",
+    live: "border-primary/30 bg-primary/[0.06]",
   }
   return <div className={`rounded-2xl border p-4 ${tones[tone]} ${className}`}>{children}</div>
 }
@@ -84,7 +84,7 @@ export function Field({ label, help, value, onChange, placeholder, rows = 3, min
         placeholder={placeholder}
         aria-label={label ? undefined : ariaLabel}
         rows={rows}
-        className="w-full mt-1.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[13px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-violet-400/40 resize-y transition-colors"
+        className="w-full mt-1.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[13px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-primary/40 resize-y transition-colors"
       />
       {/* Says what is short, and does not stop anybody. Nothing in this module
           blocks on a word count; a half-answer saved beats a blank field. */}
@@ -113,7 +113,7 @@ export function Line({ label, value, onChange, placeholder, maxLength }: {
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         maxLength={maxLength}
-        className="min-h-11 w-full rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 text-[13px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-violet-400/40 transition-colors"
+        className="min-h-11 w-full rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 text-[13px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-primary/40 transition-colors"
       />
     </div>
   )
@@ -165,9 +165,9 @@ export function Scale({ label, help, value, onChange, lowAnchor, highAnchor, max
           onKeyUp={commit}
           // MEASURED 16 HIGH, which is a thumb-width target you aim at with a
           // fingertip. The track stays thin; the control's box does not.
-          className="min-h-11 flex-1 accent-violet-400"
+          className="min-h-11 flex-1 accent-primary"
         />
-        <span className={`w-8 text-right text-lg tabular-nums ${value === undefined ? "text-zinc-500" : "text-violet-200"}`}>
+        <span className={`w-8 text-right text-lg tabular-nums ${value === undefined ? "text-zinc-500" : "text-primary"}`}>
           {value === undefined ? "–" : value}
         </span>
       </div>
@@ -200,7 +200,7 @@ export function Chip({ label, on, onClick }: { label: string; on: boolean; onCli
       aria-pressed={on}
       className={`inline-flex min-h-11 items-center text-[12px] px-3 py-1.5 rounded-full border transition-colors ${
         on
-          ? "border-violet-400/50 bg-violet-500/20 text-violet-100"
+          ? "border-primary/50 bg-primary/20 text-foreground"
           : "border-white/10 bg-white/[0.02] text-zinc-400 hover:border-white/30 hover:text-zinc-200"
       }`}
     >
@@ -261,7 +261,7 @@ export function ChipBank({ label, help, options, selected, onToggle, allowCustom
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add() } }}
             placeholder="Something else"
             aria-label={`Add your own to ${label}`}
-            className="flex-1 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[12px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-violet-400/40 transition-colors"
+            className="flex-1 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[12px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-primary/40 transition-colors"
           />
           <button
             type="button"
@@ -314,7 +314,7 @@ export function LineList({ label, help, items, onChange, placeholder, seeds, max
                 value={item}
                 onChange={(e) => onChange(items.map((v, j) => (j === i ? e.target.value : v)))}
                 aria-label={`${name}, item ${i + 1}`}
-                className="flex-1 min-w-0 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[13px] text-zinc-100 focus:outline-none focus:border-violet-400/40 transition-colors"
+                className="flex-1 min-w-0 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[13px] text-zinc-100 focus:outline-none focus:border-primary/40 transition-colors"
               />
               <button
                 type="button"
@@ -337,7 +337,7 @@ export function LineList({ label, help, items, onChange, placeholder, seeds, max
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(draft) } }}
             placeholder={placeholder}
             aria-label={`Add to ${name}`}
-            className="flex-1 min-w-0 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[13px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-violet-400/40 transition-colors"
+            className="flex-1 min-w-0 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[13px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-primary/40 transition-colors"
           />
           <button
             type="button"
@@ -395,7 +395,7 @@ export function PrimaryButton({ children, onClick, disabled }: { children: React
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex min-h-11 items-center text-sm font-medium px-4 py-2 rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 disabled:opacity-40 disabled:hover:bg-violet-500/20 transition-colors"
+      className="inline-flex min-h-11 items-center text-sm font-medium px-4 py-2 rounded-lg bg-primary/20 border border-primary/40 text-foreground hover:bg-primary/30 disabled:opacity-40 disabled:hover:bg-primary/20 transition-colors"
     >
       {children}
     </button>

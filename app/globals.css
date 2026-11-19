@@ -51,6 +51,43 @@
   --sidebar-accent-foreground: #e0e0e0;
   --sidebar-border: #374151;
   --sidebar-ring: #ff6b35;
+
+  /* THE THREE PARTS AND THE UMBRELLA (Plans/rebrand-10kdaysclub.md, Phase 3; look C,
+     picked 2026-11-19). Each page takes one through [data-facet] below, chosen by its
+     address (src/shared/facets.ts). docs/product/look.md has the rules. */
+  --facet-life: #f5c542;
+  --facet-life-foreground: #121212;
+  --facet-quit: #a78bfa;
+  --facet-quit-foreground: #121212;
+  --facet-dating: #ff6b35;
+  --facet-dating-foreground: #121212;
+  /* placeholder until the owner picks the umbrella colour on the brand board (Phase 4a, O8) */
+  --facet-brand: #ff6b35;
+  --facet-brand-foreground: #121212;
+}
+
+/* A part's colour becomes the page's primary, so every bg-primary, text-primary and
+   focus ring inside follows by itself. Set on a page by FacetScope, on a tile, card,
+   row or door by the address it opens. */
+[data-facet="brand"] {
+  --primary: var(--facet-brand);
+  --primary-foreground: var(--facet-brand-foreground);
+  --ring: var(--facet-brand);
+}
+[data-facet="life"] {
+  --primary: var(--facet-life);
+  --primary-foreground: var(--facet-life-foreground);
+  --ring: var(--facet-life);
+}
+[data-facet="quit"] {
+  --primary: var(--facet-quit);
+  --primary-foreground: var(--facet-quit-foreground);
+  --ring: var(--facet-quit);
+}
+[data-facet="dating"] {
+  --primary: var(--facet-dating);
+  --primary-foreground: var(--facet-dating-foreground);
+  --ring: var(--facet-dating);
 }
 
 .dark {

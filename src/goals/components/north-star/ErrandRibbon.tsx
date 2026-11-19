@@ -32,9 +32,9 @@ export function ErrandRibbon({
   onDismiss: () => void
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-violet-400/35 bg-violet-500/10 px-4 py-2.5">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-primary/35 bg-primary/10 px-4 py-2.5">
       <span className="min-w-0 flex-1">
-        <span className="block text-[10px] uppercase tracking-wide text-violet-300/70">{ERRAND_COPY.from}</span>
+        <span className="block text-[10px] uppercase tracking-wide text-primary/70">{ERRAND_COPY.from}</span>
         <span className="block text-[12.5px] text-zinc-100 truncate">{label}</span>
       </span>
       {done !== null && (
@@ -54,7 +54,7 @@ export function ErrandRibbon({
       <button
         onClick={onBack}
         aria-label={ERRAND_COPY.backAria}
-        className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-violet-400/40 bg-violet-500/20 px-2.5 py-1.5 text-[11.5px] text-violet-50 hover:bg-violet-500/30 transition-colors"
+        className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/20 px-2.5 py-1.5 text-[11.5px] text-foreground hover:bg-primary/30 transition-colors"
       >
         <ArrowLeft className="size-3.5" />
         {ERRAND_COPY.back}

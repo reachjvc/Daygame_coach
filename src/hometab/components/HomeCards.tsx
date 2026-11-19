@@ -7,6 +7,7 @@ import { loadSeasonBand } from "@/src/goals/seasonBandData"
 import { getActiveSession, getTrackingStatsForDisplay } from "@/src/tracking/trackingService"
 import { clockIn, timerName, watchTimer } from "@/src/timetrack/runningTimerService"
 import { ROUTES } from "@/src/shared/routes"
+import { facetFor } from "@/src/shared/facets"
 import { withReturn } from "@/src/shared/returnTo"
 
 /**
@@ -22,9 +23,10 @@ import { withReturn } from "@/src/shared/returnTo"
  * than drawing a zero it does not know to be true.
  */
 
-function HomeCard({ title, testId, children }: { title: string; testId: string; children: ReactNode }) {
+/** `href` is the tool the card is about; the card wears that part's colour (rule R2). */
+function HomeCard({ title, testId, href, children }: { title: string; testId: string; href: string; children: ReactNode }) {
   return (
-    <section className="rounded-xl border border-border bg-card p-4 sm:p-5" data-testid={testId}>
+    <section className="rounded-xl border border-border bg-card p-4 sm:p-5" data-testid={testId} data-facet={facetFor(href)}>
       <h2 className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h2>
       {children}
     </section>
@@ -40,7 +42,7 @@ export async function PlanCard({ userId }: { userId: string }) {
   const band = await loadSeasonBand(userId)
   if (!band.seasonReady) {
     return (
-      <HomeCard title="Today's plan" testId="home-plan-card">
+      <HomeCard title="Today's plan" testId="home-plan-card" href={ROUTES.plan}>
         <p className="text-sm text-muted-foreground">
           Your plan could not be read just now. <Link className="text-primary underline" href={ROUTES.plan}>Open your plan</Link>
         </p>
@@ -48,7 +50,7 @@ export async function PlanCard({ userId }: { userId: string }) {
     )
   }
   return (
-    <div data-testid="home-plan-card">
+    <div data-testid="home-plan-card" data-facet={facetFor(ROUTES.plan)}>
       <SeasonBand plan={band.seasonPlan} oneThing={band.oneThing} ready={band.seasonReady} today={band.today} ticks={band.seasonTicks} />
     </div>
   )
@@ -69,7 +71,7 @@ export async function FieldCard({ userId }: { userId: string }) {
     ? `${stats.current_week_approaches} approach${stats.current_week_approaches === 1 ? "" : "es"} in ${stats.current_week_sessions} session${stats.current_week_sessions === 1 ? "" : "s"} this week`
     : "Your numbers could not be read just now."
   return (
-    <HomeCard title="Field" testId="home-field-card">
+    <HomeCard title="Field" testId="home-field-card" href={ROUTES.tracking}>
       <p className="mb-3 text-base font-medium text-foreground">{active ? "A session is running" : line}</p>
       <div className="flex flex-wrap gap-2">
         {active ? (
@@ -101,7 +103,7 @@ export async function TimeCard({ userId, timezone }: { userId: string; timezone:
   const running = await watchTimer(userId)
   const now = running?.find((r) => !r.stoppedAt && !r.deletedAt) ?? null
   return (
-    <HomeCard title="Time Log" testId="home-time-card">
+    <HomeCard title="Time Log" testId="home-time-card" href={ROUTES.time}>
       <p className="mb-3 text-base font-medium text-foreground">
         {running === null
           ? "Your timer could not be read just now."
