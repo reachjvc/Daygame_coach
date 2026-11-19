@@ -160,18 +160,14 @@ export function Bubbles({ onBack }: { onBack: () => void }) {
   )
 }
 
-const TILE: Record<number, string> = {
-  2: "bg-stone-200 text-stone-800",
-  4: "bg-amber-200 text-stone-800",
-  8: "bg-orange-300 text-stone-900",
-  16: "bg-orange-400 text-stone-900",
-  32: "bg-orange-500 text-white",
-  64: "bg-red-500 text-white",
-  128: "bg-yellow-300 text-stone-900",
-  256: "bg-yellow-400 text-stone-900",
-  512: "bg-yellow-500 text-stone-900",
-  1024: "bg-lime-400 text-stone-900",
-  2048: "bg-emerald-400 text-stone-900",
+/** A block's colour: the part's own colour (the theme's primary), stronger the bigger the number. */
+function tileStyle(n: number): { backgroundColor: string; color: string } {
+  const level = Math.min(11, Math.max(1, Math.round(Math.log2(n))))
+  const pct = 12 + level * 8
+  return {
+    backgroundColor: `color-mix(in oklab, var(--primary) ${pct}%, var(--card))`,
+    color: pct >= 56 ? "var(--primary-foreground)" : "var(--foreground)",
+  }
 }
 
 /** The block puzzle: swipe or arrow keys. */
@@ -258,7 +254,8 @@ export function Blocks({ best, onBest, onBack }: { best: number; onBest: (n: num
             data-testid="tile"
             data-value={n}
             aria-label={t.tile}
-            className={`flex aspect-square items-center justify-center rounded-md text-xl font-bold ${n ? (TILE[n] ?? "bg-emerald-500 text-white") : "bg-muted/50"}`}
+            style={n ? tileStyle(n) : undefined}
+            className={`flex aspect-square items-center justify-center rounded-md text-xl font-bold ${n ? "" : "bg-muted/50"}`}
           >
             {n || ""}
           </div>
