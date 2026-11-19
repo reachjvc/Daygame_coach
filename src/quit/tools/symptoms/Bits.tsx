@@ -38,11 +38,11 @@ export interface BasisPart {
 }
 
 /** "Based on": a fold with the basis (one or more parts), how well tested, and the sources one tap away. */
-export function BasedOn({ parts, refs, evidence, testId }: { parts: BasisPart[]; refs: QuitRef[]; evidence?: Evidence; testId: string }) {
+export function BasedOn({ parts, refs, evidence, testId, label }: { parts: BasisPart[]; refs: QuitRef[]; evidence?: Evidence; testId: string; label?: string }) {
   return (
     <details data-testid={testId} className="group/basis mt-1 text-sm">
       <summary className="flex min-h-11 w-fit cursor-pointer list-none items-center gap-1 font-medium text-muted-foreground [&::-webkit-details-marker]:hidden">
-        {tt.common.basedOn}
+        {label ?? tt.common.basedOn}
         <ChevronDown aria-hidden className="size-4 transition-transform group-open/basis:rotate-180" />
       </summary>
       <div className="flex flex-col gap-3 pb-1">
@@ -151,7 +151,8 @@ const HATCH = { backgroundImage: "repeating-linear-gradient(135deg, transparent 
 /** The 42-day band of one card. His day is a marker; the open end of the cue band is a flat dashed bar, not a fade. */
 export function BandView({ id, band, day, caption }: { id: string; band: Band; day: number | null; caption: string }) {
   const peak = band.peak ? span(band.peak[0], band.peak[1]) : null
-  const gone = band.gone ? span(band.gone[0], band.gone[1]) : null
+  // The fading part starts the day after the peak, so no empty days sit between them (days 8 and 9 are not symptom-free).
+  const gone = band.gone ? span(band.peak ? band.peak[1] + 1 : band.gone[0], band.gone[1]) : null
   const open = band.openFrom !== null && band.openFrom < BAND_DAYS ? span(band.openFrom + 1, BAND_DAYS) : null
   const tested = band.tested ? span(band.tested[0], band.tested[1]) : null
   return (

@@ -76,7 +76,7 @@ export const REFS = {
   swanson1997: ref(
     "Swanson JA, Lee JW, Hopp JW, Berk LS (1997). The impact of caffeine use on tobacco cessation and withdrawal. Addictive Behaviors 22(1):55-68.",
     "9022872",
-    "Three weeks after cessation, concentrations reached 203% of baseline for the caffeine user. Such concentrations may be sufficient to produce caffeine toxicity symptoms in smoking abstinence conditions.",
+    "Continuous caffeine consumption with smoking cessation has been associated with more than doubled caffeine plasma levels. Such concentrations may be sufficient to produce caffeine toxicity symptoms in smoking abstinence conditions. [...] Three weeks after cessation, concentrations reached 203% of baseline for the caffeine user.",
   ),
   kroon2007: ref(
     "Kroon LA (2007). Drug interactions with smoking. American Journal of Health-System Pharmacy 64(18):1917-21.",
@@ -138,8 +138,8 @@ export const mildForMost: SourcedLine = {
   basis: {
     who: "Smokers-clinic clients who stayed off 4 weeks, using nicotine gum",
     n: "52",
-    design: "Weekly ratings of withdrawal symptoms, from before quit day to week 4",
-    where: "A smokers clinic in the UK (the authors' address; not stated in the summary)",
+    design: "Ratings of withdrawal symptoms from before quit day to week 4",
+    where: "A smokers clinic; the place is not reported",
     when: "Published 1987",
     caveat: "A small study, and everyone used nicotine gum, which can soften withdrawal. Only people who stayed off all 4 weeks were counted, so those who struggled most may be missing.",
   },
@@ -172,7 +172,7 @@ export const cravings = {
     who: "Smokers quitting with support and no medicine (Ussher); smokers-clinic clients on nicotine gum (West)",
     n: "452 started (Ussher); asked while still off at weeks 1, 2, 3, 4, 26 and 52: 197, 156, 139, 131, 66 and 38 people. 52 people over 4 weeks (West).",
     design: "The same people followed and asked to rate their urges, off cigarettes confirmed by a breath test (Ussher); weekly ratings in a smokers clinic (West)",
-    where: "London, UK (Ussher); a smokers clinic in the UK, by the authors' address (West)",
+    where: "London, UK (Ussher, the authors' address); a smokers clinic, place not reported (West)",
     when: "Published 2013 and 1987",
     caveat: "People who slipped dropped out of the later counts, so the late numbers describe those who stayed off: 66 people at 6 months, 38 at 12 months. The week-4 finding comes from people using nicotine gum.",
   } satisfies Basis,
@@ -217,7 +217,7 @@ export const moveForMood: SourcedLine = {
 /** Cards c and d: caffeine, cigarette smokers only. */
 export const caffeine: SourcedLine = {
   id: "caffeine",
-  text: "Smoked cigarettes and have caffeine every day? Have about half your usual amount for the first weeks. After quitting, the same coffee leaves about twice the caffeine in your body, which may be enough to cause jitters or bad sleep.",
+  text: "Smoked cigarettes and have caffeine every day? Our suggestion, not tested: have about half your usual amount for the first weeks. After quitting, the same coffee leaves about twice the caffeine in your body, which may be enough to cause jitters or bad sleep.",
   evidence: "weak",
   cigarettesOnly: true,
   basis: {
@@ -225,7 +225,7 @@ export const caffeine: SourcedLine = {
     n: "162",
     measured: "Caffeine in sputum (spit) for 3 weeks after quit day. Those who kept their caffeine reached 203% of their level before quitting by week 3. Cutting caffeine out entirely made people more tired for the first 3 days and made no difference to other symptoms or to quitting.",
     design: "Trial: clinics assigned to keep caffeine or stop it",
-    where: "USA (the place is not stated in the summary)",
+    where: "USA; the place is not reported",
     when: "Published 1997",
     caveat: "A pharmacy review (Kroon 2007) names chemicals in tobacco smoke as what speeds up caffeine; it does not name nicotine. Our reading: this does not apply if you only vaped or used pouches. \"About half\" is our arithmetic from \"doubled\", not a dose the study tested.",
   },
@@ -261,7 +261,7 @@ export const hunger = {
     who: "Smokers-clinic clients on nicotine gum who stayed off 4 weeks (West); women paid to stay off 31 days (Gilbert)",
     n: "147 (West); 96 (Gilbert)",
     design: "Weekly ratings over 4 weeks (West); twice-weekly ratings against a group that kept smoking (Gilbert)",
-    where: "London, UK; USA",
+    where: "UK (West; authors at Royal Holloway, London University); USA (Gilbert)",
     when: "Published 1989 and 2002",
     caveat: "Small studies, and the first used nicotine gum. They say hunger lasts, not for how many weeks.",
   } satisfies Basis,
@@ -274,12 +274,12 @@ export const hungerHelp: SourcedLine[] = [
     text: "Exercise regularly. In 3 small trials (182 people), exercise programmes meant about 2 kg less weight gain a year later; at the end of the programmes there was little or no difference (4 trials, 404 people).",
     evidence: "weak",
     basis: {
-      who: "People quitting smoking, in trials of ways to limit weight gain",
+      who: "People in quit-smoking trials that used exercise programmes",
       n: "3 trials, 182 people",
       design: "Cochrane systematic review; exercise programmes against usual care",
       where: "Several countries",
       when: "Published 2021",
-      caveat: "Small trials. The review found no method with moderate certainty of a useful effect on long-term weight gain.",
+      caveat: "Small trials. Weight was counted only in those who stayed off. The review found no method with moderate certainty of a useful effect on long-term weight gain.",
     },
     refs: [REFS.hartmannBoyce2021],
   },

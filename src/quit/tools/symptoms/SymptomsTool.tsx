@@ -21,6 +21,9 @@ import { symptomsText as t } from "./text"
 
 const HUGHES = "17365764"
 const HAASOVA = "22861822"
+/** Fields the date tool's shared basis boxes leave out or word as notes about the summary. */
+const REVIEW_FIX = { n: "120 studies reviewed; number of people not reported", where: "USA (the author); studies from several countries" }
+const DIARY_FIX = { who: "Smokers who quit and logged their symptoms in an electronic diary; all had a group quit programme", where: "Pittsburgh, USA" }
 
 /** Today as an ISO day, refreshed each minute and when the tab is shown again. */
 function useToday(): string {
@@ -109,12 +112,12 @@ function Page({ addiction, course, help, note, b3, nums, bb }: InnerProps & { bb
   const hard = stretch[0]
   const fade = stretch[1]
   const moodBasis: BasisPart[] = [
-    { label: t.basisLabelReview, basis: { ...hard.basis, caveat: `${reviewCaveat} ${hard.basis.caveat}` } },
-    { label: t.basisLabelDiary, basis: { ...fade.basis, caveat: `${t.moodScore} Tracked up to day 21. The review puts the end at 2 to 4 weeks, so the two do not agree.` } },
+    { label: t.basisLabelReview, basis: { ...hard.basis, ...REVIEW_FIX, caveat: `${reviewCaveat} ${hard.basis.caveat}` } },
+    { label: t.basisLabelDiary, basis: { ...fade.basis, ...DIARY_FIX, caveat: `${t.moodScore} Tracked up to day 21. The review puts the end at 2 to 4 weeks, so the two do not agree.` } },
   ]
   const sleepBasis: BasisPart[] = [
-    { label: t.basisLabelReview, basis: { ...hard.basis } },
-    { label: t.basisLabelDiary, basis: { ...fade.basis, design: "Diary study: symptoms rated day by day, before and after quitting.", caveat: "It saw no clear change in sleep after quitting, so no day range is drawn from it." } },
+    { label: t.basisLabelReview, basis: { ...hard.basis, ...REVIEW_FIX } },
+    { label: t.basisLabelDiary, basis: { ...fade.basis, ...DIARY_FIX, design: "Diary study: symptoms rated day by day, before and after quitting.", caveat: "It saw no clear change in sleep after quitting, so no day range is drawn from it." } },
   ]
   const rowRefs = (symptoms: string[]) => realRefs(course.filter((c) => symptoms.includes(c.symptom)).flatMap((c) => realRefs(c.refs)))
   const moodRefs = uniqueRefs(rowRefs(["irritable", "anxious", "low-mood", "brain-fog", "restless"]))
@@ -212,9 +215,9 @@ function Page({ addiction, course, help, note, b3, nums, bb }: InnerProps & { bb
               </ToolLink>
               <p className="text-muted-foreground">{t.cravingHelpLine}</p>
             </HelpRow>
-            <HelpItem testId="help-move" text={t.cravingMove} evidence={move.evidence} refs={moveRefs} basis={{ who: tt.sos.moveWho, n: t.cravingMoveN, design: `${tt.sos.moveDesign} ${tt.sos.moveMeasured}`, when: "Published 2013", caveat: tt.sos.moveCaveat }} />
+            <HelpItem testId="help-move" text={t.cravingMove} evidence={move.evidence} refs={moveRefs} basis={{ who: tt.sos.moveWho, n: t.cravingMoveN, where: "Several countries (UK authors)", design: `${tt.sos.moveDesign} ${tt.sos.moveMeasured}`, when: "Published 2013", caveat: tt.sos.moveCaveat }} />
           </HelpFold>
-          <BasedOn testId="basis-craving" parts={[{ text: cravings.detail, basis: cravings.basis }]} refs={cravings.refs} evidence={cravings.evidence} />
+          <BasedOn testId="basis-craving" label={t.basedOnTiming} parts={[{ text: cravings.detail, basis: cravings.basis }]} refs={cravings.refs} evidence={cravings.evidence} />
         </Card>
 
         <Card id="mood" title={t.moodTitle} day={day}>
@@ -223,14 +226,20 @@ function Page({ addiction, course, help, note, b3, nums, bb }: InnerProps & { bb
           <p className="mt-2 text-base">
             {t.moodNote} {t.moodPlain}
           </p>
-          <HelpFold testId="help-mood" count={3}>
+          <p data-testid="anxiety-line" className="mt-2 text-sm text-muted-foreground">
+            {t.anxietyLine}
+          </p>
+          <HelpFold testId="help-mood" count={4}>
             <HelpItem testId="help-mood-move" text={moveForMood.text} evidence={moveForMood.evidence} refs={moveForMood.refs} basis={moveForMood.basis} />
-            <HelpItem testId="help-fog" head={t.fogHead} text={t.fogHelp} evidence={fog.evidence} refs={fogRefs} basis={{ who: t.fogWho, n: "79 studies", design: t.fogDesign, when: "Published 2012", caveat: t.fogCaveat }} />
+            <HelpItem testId="help-fog" head={t.fogHead} text={t.fogHelp} evidence={fog.evidence} refs={fogRefs} basis={{ who: t.fogWho, n: "79 studies", where: "Several countries", design: t.fogDesign, when: "Published 2012", caveat: t.fogCaveat }} />
             <HelpRow testId="help-caffeine-mood">
               <p>{t.coffeeSeeSleep}</p>
             </HelpRow>
+            <HelpRow testId="help-no-tip">
+              <p className="text-muted-foreground">{t.noMoodTip}</p>
+            </HelpRow>
           </HelpFold>
-          <BasedOn testId="basis-mood" parts={moodParts} refs={moodAllRefs} evidence="moderate" />
+          <BasedOn testId="basis-mood" label={t.basedOnTiming} parts={moodParts} refs={moodAllRefs} evidence="moderate" />
         </Card>
 
         <Card id="sleep" title={t.sleepTitle} day={day}>
@@ -251,12 +260,13 @@ function Page({ addiction, course, help, note, b3, nums, bb }: InnerProps & { bb
             </div>
             <CaffeineItem testId="help-caffeine-sleep" />
           </HelpFold>
-          <BasedOn testId="basis-sleep" parts={sleepBasis} refs={sleepRefs} evidence="weak" />
+          <BasedOn testId="basis-sleep" label={t.basedOnTiming} parts={sleepBasis} refs={sleepRefs} evidence="weak" />
         </Card>
 
         <Card id="cue" title={t.cueTitle} day={day}>
           <BandView id="cue" band={bandFor("nicotine", "cue-craving")!} day={day} caption={t.cueCaption} />
           {phase("cue")}
+          <p className="mt-2 text-base">{t.cuePlain}</p>
           <HelpFold testId="help-cue" count={2}>
             <HelpRow testId="help-cue-sos-row">
               <ToolLink href={link("sos")} live={live("sos")} testId="help-cue-sos">
@@ -271,21 +281,21 @@ function Page({ addiction, course, help, note, b3, nums, bb }: InnerProps & { bb
               <p className="text-muted-foreground">{live("ifthen") ? t.ifThenLiveLine : t.ifThenLine}</p>
             </HelpRow>
           </HelpFold>
-          <BasedOn testId="basis-cue" parts={[{ basis: cueBasis }]} refs={cueRefs} evidence="weak" />
+          <BasedOn testId="basis-cue" label={t.basedOnTiming} parts={[{ basis: cueBasis }]} refs={cueRefs} evidence="weak" />
         </Card>
 
         <Card id="hunger" title={hunger.title} day={day}>
           {phase("hunger")}
           <p className="mt-2 text-base">{hunger.text}</p>
           <p className="mt-2 text-base">
-            <span className="font-medium">{t.weightHead}</span> {nums.weight.headline} {t.weightLine}
+            <span className="font-medium">{t.weightHead}</span> {nums.weight.headline} {t.weightLine} {t.weightSmokers}
           </p>
           <HelpFold testId="help-hunger" count={hungerHelp.length}>
             {hungerHelp.map((h) => (
               <HelpItem key={h.id} testId={`help-${h.id}`} text={h.text} evidence={h.evidence} refs={h.refs} basis={h.basis} />
             ))}
           </HelpFold>
-          <BasedOn testId="basis-hunger" parts={[{ text: hunger.text, basis: hunger.basis }, numPart(nums.weight, t.weightHead)]} refs={uniqueRefs([...hunger.refs, nums.weight.ref])} evidence={hunger.evidence} />
+          <BasedOn testId="basis-hunger" label={t.basedOnHunger} parts={[{ text: hunger.text, basis: hunger.basis }, numPart(nums.weight, t.weightHead)]} refs={uniqueRefs([...hunger.refs, nums.weight.ref])} evidence={hunger.evidence} />
         </Card>
       </ul>
 
@@ -309,7 +319,13 @@ function Page({ addiction, course, help, note, b3, nums, bb }: InnerProps & { bb
               const label = `${row.when}${sourced?.cigarettesOnly ? ", cigarettes only" : `, ${t.studiedInSmokers}`}`
               const n = row.number === "after-first-month" ? nums.first : row.number === "after-mood" ? nums.mood : row.number ? nums.erection : null
               const text = sourced ? sourced.text : row.belief === "b3" ? b3.proof : n ? n.headline : ""
-              const who = sourced ? `${tt.common.basis.who}: ${sourced.basis.who}` : n ? `${tt.common.counted} ${n.counted}` : row.belief === "b3" ? `${tt.common.basis.who}: ${t.b3Who}` : ""
+              const who = sourced
+                ? `${tt.common.basis.who}: ${sourced.basis.who} (${sourced.basis.n})`
+                : n
+                  ? `${tt.common.basis.who}: ${n.counted} (${n.basis.n})`
+                  : row.belief === "b3"
+                    ? `${tt.common.basis.who}: ${t.b3Who} (469)`
+                    : ""
               return (
                 <li key={row.when} data-testid={`better-${row.when}`} className="py-3">
                   <p className="text-sm font-semibold text-primary">{label}</p>

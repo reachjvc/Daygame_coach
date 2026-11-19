@@ -122,7 +122,7 @@ test.describe("what you'll feel, and when @phone", () => {
     await open(page, { run: -4 })
     await expect(page.getByTestId("day-number")).toHaveText("Day 5")
     await expect(page.getByTestId("day-from")).toHaveText("Counted from Sun, Nov 15, your day 1.")
-    await expect(page.getByTestId("right-now")).toContainText("The hardest week for most.")
+    await expect(page.getByTestId("right-now")).toContainText("On average the hardest week.")
     for (const id of ["cue", "mood", "sleep", "craving"]) await expect(page.getByTestId(`marker-${id}`)).toHaveAttribute("data-day", "5")
     await expect(page.getByTestId("now-mood")).toBeVisible()
     await expect(page.getByTestId("now-sleep")).toBeVisible()
@@ -142,7 +142,7 @@ test.describe("what you'll feel, and when @phone", () => {
   test("4 record date 20 days ago, no run: Day 21, the 8 to 28 line", async ({ page }) => {
     await open(page, { record: { off: -20, goal: "stop" } })
     await expect(page.getByTestId("day-number")).toHaveText("Day 21")
-    await expect(page.getByTestId("right-now")).toContainText("settle somewhere between day 10 and week 4")
+    await expect(page.getByTestId("right-now")).toContainText("settle between day 10 and week 4")
     await shot(page, "phone-day21")
   })
 

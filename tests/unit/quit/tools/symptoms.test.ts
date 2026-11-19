@@ -61,14 +61,14 @@ describe("words", () => {
     expect(at(8)).toBe(at(28))
     expect(at(29)).toBe(at(42))
     expect(new Set([at(7), at(8), at(29), at(43)]).size).toBe(4)
-    expect(at(1)).toMatch(/^The hardest week/)
+    expect(at(1)).toMatch(/^On average the hardest week/)
     expect(at(8)).toMatch(/between day 10 and week 4/)
     expect(at(29)).toMatch(/past the 4 weeks/)
     expect(at(400)).toMatch(/a third still had some/)
   })
   it("the cue card words are fixed: 1-6, 7-35, after 35", () => {
     for (const d of [1, 6]) expect(phaseWords("cue", d)).toBe("Not tested before day 7.")
-    for (const d of [7, 20, 35]) expect(phaseWords("cue", d)).toBe("Within the days tested.")
+    for (const d of [7, 20, 35]) expect(phaseWords("cue", d)).toBe("Between the tested days (7, 14 and 35).")
     for (const d of [36, 400]) expect(phaseWords("cue", d)).toBe("Past the last day tested: no end known.")
   })
   it("mood and sleep phases", () => {
@@ -81,7 +81,8 @@ describe("words", () => {
     expect(phaseWords("sleep", 40)).toMatch(/Past the 4 weeks/)
   })
   it("cravings and hunger words", () => {
-    expect(phaseWords("craving", 10)).toMatch(/strongest weeks/)
+    expect(phaseWords("craving", 5)).toMatch(/strongest weeks/)
+    expect(phaseWords("craving", 10)).toMatch(/Still the strong weeks/)
     expect(phaseWords("craving", 100)).toMatch(/Past week 4/)
     expect(phaseWords("craving", 200)).toMatch(/Past month 6/)
     expect(phaseWords("craving", 400)).toMatch(/Past month 12/)

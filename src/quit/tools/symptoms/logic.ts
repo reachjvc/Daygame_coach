@@ -79,9 +79,9 @@ export type CardId = "craving" | "cue" | "mood" | "sleep" | "hunger"
 
 /** The "Right now" line, by phase (the brief's words). */
 export function rightNow(day: number): string {
-  if (day <= 7) return "The hardest week for most. Mood, focus, sleep and restlessness peak now, and cravings are at their strongest."
-  if (day <= 28) return "For most, mood and focus settle somewhere between day 10 and week 4. Hunger and cravings set off by places can last longer."
-  if (day <= 42) return "You are past the 4 weeks most studies give for mood, focus and sleep; if yours has not settled, that happens too. In a lab test, cravings set off by smoking cues were stronger at day 35 than at day 7."
+  if (day <= 7) return "On average the hardest week. Mood, focus, sleep and restlessness peak now, and cravings are at their strongest."
+  if (day <= 28) return "On average, mood and focus settle between day 10 and week 4. Hunger and cravings set off by smoking cues can last longer."
+  if (day <= 42) return "You are past the 4 weeks most studies give for mood, focus and sleep; if yours has not settled, that happens too. Cravings set off by smoking cues can be stronger now than in week 1, in a lab study."
   return "Everyday urges keep fading over months. A year on, none of the people still off in one study had strong urges; about a third still had some."
 }
 
@@ -97,7 +97,8 @@ export function isNow(card: CardId, day: number | null): boolean {
 /** The plain words after "You are on day N." for one card. */
 export function phaseWords(card: CardId, day: number): string {
   if (card === "craving") {
-    if (day <= 28) return "These are the strongest weeks."
+    if (day <= 7) return "These are the strongest weeks."
+    if (day <= 28) return "Still the strong weeks; in one clinic study their strength began to drop after week 4."
     if (day <= 182) return "Past week 4. They fade over months."
     if (day <= 365) return "Past month 6: 13 in 100 of the people still off had strong urges then."
     return "Past month 12: none of the people still off had strong urges; about 34 in 100 had some."
@@ -110,7 +111,7 @@ export function phaseWords(card: CardId, day: number): string {
     case "open-before":
       return "Not tested before day 7."
     case "open-within":
-      return "Within the days tested."
+      return "Between the tested days (7, 14 and 35)."
     case "open-past":
       return "Past the last day tested: no end known."
     case "peak":
