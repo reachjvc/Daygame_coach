@@ -90,7 +90,7 @@ function Screens({ addiction, beliefs, moments, swaps, evidence, refs, signedIn,
   const carry = useCarry()
   const pathname = usePathname()
   const sp = useSearchParams()
-  const { state, update, clear } = useToolState<SosState>(addiction, "sos", EMPTY_SOS, parseSos)
+  const { state, update } = useToolState<SosState>(addiction, "sos", EMPTY_SOS, parseSos)
   const { record } = useQuitRecord(addiction)
   const [ready, setReady] = useState(false)
   const [now, setNow] = useState(() => Date.now())

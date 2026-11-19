@@ -27,8 +27,6 @@ const data = nicotineJson as unknown as {
 }
 const t = tooltextJson
 const A = "/quit/nicotine"
-const BELIEF = data.beliefs[3] // "Just one won't hurt", need: substance
-const NEED = data.needs.find((n) => n.id === BELIEF.need)!
 
 test.use({ viewport: { width: 390, height: 844 } })
 
