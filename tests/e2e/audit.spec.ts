@@ -424,11 +424,23 @@ test.describe("time & energy audit @phone", () => {
       await page.keyboard.press("Escape")
       expect(await page.evaluate(() => localStorage.getItem("audit-queue-v1"))).toContain("Private thing")
 
+      const trail: string[] = []
+      const logs: string[] = []
+      page.on("framenavigated", (frame) => frame === page.mainFrame() && trail.push(`${Date.now() % 100000} ${new URL(frame.url()).pathname}`))
+      page.on("console", (m) => logs.push(m.text().slice(0, 150)))
+      page.on("pageerror", (e) => logs.push(`pageerror ${String(e).slice(0, 150)}`))
       await page.goto("/dashboard", { waitUntil: "domcontentloaded" })
       await whenHydrated(page.getByTestId("header-logout-button"), 60_000)
+      trail.push(`${Date.now() % 100000} click`)
       await page.getByTestId("header-logout-button").click()
       // It cannot be sent (no signal for it), so Log Out names it first (alpha
       // fast-audit-01); only "Log out anyway" throws it away.
+      // DIAGNOSIS (Phase 5): what the page did, if the dialog never comes.
+      await page.getByTestId("log-out-anyway").waitFor({ timeout: 20_000 }).catch(async (error) => {
+        const queue = await page.evaluate(() => localStorage.getItem("audit-queue-v1")).catch(() => "unreadable")
+        const body = await page.locator("body").innerText().catch(() => "unreadable")
+        throw new Error(`${error}\nDIAG url=${page.url()} queue=${String(queue).slice(0, 200)} nav=${JSON.stringify(trail)} console=${JSON.stringify(logs)} body=${body.slice(0, 600)}`)
+      })
       await page.getByTestId("log-out-anyway").click({ timeout: 20_000 })
       await expect.poll(() => new URL(page.url()).pathname, { timeout: 30_000 }).toBe("/")
       expect(await page.evaluate(() => localStorage.getItem("audit-queue-v1"))).toBeNull()
