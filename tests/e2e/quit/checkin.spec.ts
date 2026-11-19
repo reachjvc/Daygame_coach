@@ -208,6 +208,11 @@ for (const vp of [
       if ((liveTools as string[]).includes("slip")) {
         await expect(page.getByTestId("slip-link")).toHaveText("Slipped? Restart today")
         await expect(page.getByTestId("slip-link")).toHaveAttribute("href", /\/quit\/nicotine\/slip/)
+        // Tool 4 sees the slip already in the record (its case B)
+        await page.getByTestId("slip-link").click()
+        await expect(page).toHaveURL(/\/quit\/nicotine\/slip/)
+        await expect(page.getByTestId("slip-in-record")).toBeVisible()
+        await shot(page, S("4-slip-case-b"))
       } else {
         await expect(page.getByTestId("slip-link")).toHaveCount(0)
         await expect(page.getByTestId("slip-step")).toHaveText(tt.sos.yesStep)
