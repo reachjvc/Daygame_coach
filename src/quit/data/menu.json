@@ -92,9 +92,9 @@
       "name": "Plan it",
       "tools": [
         {
-          "id": "curve",
-          "name": "Your quit curve",
-          "line": "Your day 1, and the hard days drawn on your calendar.",
+          "id": "date",
+          "name": "Your quit date",
+          "line": "Pick day 1. See the hard days on your calendar.",
           "minutes": 3,
           "account": "none",
           "wave": 1

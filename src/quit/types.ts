@@ -13,7 +13,7 @@ export const QUIT_TOOL_IDS = [
   "past",
   "cost",
   "how",
-  "curve",
+  "date",
   "ifthen",
   "clear",
   "stake",

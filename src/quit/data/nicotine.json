@@ -2979,7 +2979,7 @@
       "max": 2,
       "label": "Mostly free",
       "text": "Few of these twelve hold you. Set a date and run the plan.",
-      "link": "/plan"
+      "link": "/quit/nicotine/date"
     },
     {
       "id": "some",
@@ -3001,16 +3001,16 @@
   "planSteps": [
     {
       "title": "Name what it does for you",
-      "text": "Identify what beliefs are driving your smoking. Find a positive reframe (the table above).",
+      "text": "Identify what beliefs are driving your smoking. Find a positive reframe (the 12 lies test).",
       "do": [
         "Still using? Don’t quit yet. For the next few days, use it the way you always do.",
-        "When one of the thoughts above comes up, do the step under it. Don’t go looking for it.",
+        "When one of those thoughts comes up, do the step under it. Don’t go looking for it.",
         "Already stopped? Don’t start again to do this step: write it from memory.",
         "Allow it. No guilt, no promises. You’re studying it, not fighting it.",
         "Write down what you think nicotine gives you: calm, focus, a break.",
         "Each time, write one line: the time, where you are, what you wanted from it.",
         "Ten minutes after each one, ask: did it give me that, or did it just stop the itch?",
-        "Most of it is relief from the itch nicotine itself made. Set each one against the beliefs above."
+        "Most of it is relief from the itch nicotine itself made. Set each one against the 12 lies test."
       ]
     },
     {

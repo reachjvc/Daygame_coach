@@ -292,3 +292,16 @@ files get the field empty.
 - ClockSync (root layout) now skips the time-zone call on /quit pages unless a Supabase sign-in cookie exists; other pages unchanged.
   **Answered (Opus, 2026-11-19):** both accepted. The bar, footer link and hint are hidden until their tool is finished
   (Tool 1 "Also fix" (a)). The ClockSync change stays.
+
+### From the Tool 1 build (Sonnet, 2026-11-19)
+
+- Price per unit. The data file's `defaultPriceUsd` is per cigarette (0.52 = the 10.34 US average pack / 20), per disposable vape and per can of pouches, and the cost tool asks "what does one <unit> cost". The brief says "price per pack". Built as the data file says (one cigarette, one vape, one can) so the record and the cost tool agree; the basis line under the price explains the 0.52. Proposed: keep, or switch to a pack price and divide by 20 in one place.
+- Study numbers. nicotine.json holds no "n" for Hughes 2007, Shiffman 2006 or Bedi 2011. Used Shiffman n=214 (from Plans/quit-tool.md) and Bedi n=86 (from docs/research/addiction-one-pagers); the Hughes review shows "number not in the line we quote". The checker should confirm 214 and 86 against the abstracts, or add them to nicotine.json.
+- The data file's step 1 also said "against the beliefs above". Changed to "against the 12 lies test" so the Not ready page has no "above" (Acceptance 6).
+- Stretch 2 is days 8 to 10 (Shiffman: back to baseline within 10 days), shown after days 1 to 7; its basis box says the Hughes review puts the end at 2 to 4 weeks. Stretch 3 is day 35 to day 42 (end of the calendar), marked "not tested after day 35".
+- A living Black Box run wins over the date picked: if a run already lives when someone walks the tool, the result shows the run's own start date and no new run starts. The record's quitDate is not changed to match. Proposed: also set the record's date to the run's start.
+- "Day N" with no living run (the Black Box refused the days, or a run was ended by a slip) is counted from the record's date, which can be wrong after a slip. A one-line notice shows when the Black Box refuses.
+- Break ended: "Stop for good" keeps the date and the living run and only changes the goal; "Another break" asks a length counted from today; "Not now" only hides the three choices for that end date. The brief did not say what each does.
+- "Make your free plan" now carries ?preview=1 to the date tool (it is a /quit address).
+- Signed-out visitors: the Black Box bridge skips the /api/whoami call when there is no sign-in cookie (no 401 console error). Other tools still call it.
+- The ics download is built on tap (so DTSTAMP is the tap time); the event is on day 1 for a break too, not on the break's end.

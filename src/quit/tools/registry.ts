@@ -1,6 +1,7 @@
 import type { ComponentType } from "react"
 import { BeliefsTool } from "./beliefs/BeliefsTool"
 import { CostTool } from "./cost/CostTool"
+import { DateTool } from "./date/DateTool"
 import { GivesTool } from "./gives/GivesTool"
 import { HowTool } from "./how/HowTool"
 import { PastTool } from "./past/PastTool"
@@ -21,7 +22,7 @@ export const TOOL_REGISTRY: Record<QuitToolId, ToolEntry> = {
   past: { wave: 1, Component: PastTool },
   cost: { wave: 1, Component: CostTool },
   how: { wave: 1, Component: HowTool },
-  curve: { wave: 1, Component: null },
+  date: { wave: 1, Component: DateTool },
   ifthen: { wave: 2, Component: null },
   clear: { wave: 2, Component: null },
   stake: { wave: 2, Component: null },
