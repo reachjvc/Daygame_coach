@@ -40,7 +40,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | 9 | What it costs you | wave-1 `cost` | per-pack price and live update (copy e); money setup from the shared record | building |
 | 10 | Your past attempts | lab `past/best` | wave-1's "many tries are normal" number and "after the first slip" question | waiting for you |
 | 11 | Today's lesson | lab `lessons/best` | — | waiting for you |
-| 12 | How people quit | wave-1 `how` | the sourced sections of `library/best`, shortened | building |
+| 12 | How people quit | wave-1 `how` | the sourced sections of `library/best`, shortened | waiting for you |
 | 13 | What it gives you | wave-1 `gives` | — | building |
 | later | Tell someone, Money on the line, Clear-out list, What helps besides apps, Who you are now | not built | accountability copies a, b, e as reference | not started |
 | later | Talk to a coach | `/quit/coaching` | needs his price, guarantee wording and privacy email | hidden |
@@ -1071,6 +1071,16 @@ news); H9 most headlines repeat the big figure mid-sentence ("26 years … about
 headlines is a content round of its own (alternative: drop the big line and bold the figure inside the headline);
 H10 two cards per row on desktop (today the same 608 px column as the siblings); the start count fires twice on the
 dev server only (React's dev double run), not in production.
+
+**Review round 3 (2026-11-19, dev server on the latest code; bugs Sonnet, look Opus 7.5/10, content Opus: every changed
+line checks out, no should-fix).** Fixed: True/Not true buttons wrap instead of pushing the page sideways at 320 px
+with large text; once answered, the right answer carries the thick accent border and tick, a wrong pick is thin and
+dashed with a cross; the medicine note is a card with the heading "Taking medicine?"; "About 90 in 100"; the intro
+reads "What studies found about quitting, and who they counted."; the 84 in 100 caveat says leaving out prisons and
+hospitals may make the true share lower (the authors' words). Left as is: the f3 line "The first week is the one to
+guard." (the content reviewer calls it advice, the look reviewer calls it the one hopeful line; it follows from the
+source's "most relapse occurs in the first 8 days"); the shared Sources fold's padding (Tool 0); spacing inside an
+open Details box. Both look reviewers support H5 and H7. Clean after three rounds; status: waiting for you.
 
 ### Tool 11: Today's lesson — brief (Opus, 2026-11-19) — build exactly this, decide nothing
 

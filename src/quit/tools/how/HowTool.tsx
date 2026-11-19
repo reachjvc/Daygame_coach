@@ -107,24 +107,22 @@ function FactCard({ f }: { f: QuitFact }) {
   const choice = (value: boolean) => {
     const picked = guess === value
     const correct = guess !== null && f.answer === value
-    // his pick keeps a strong outline; the right answer carries the tick in the accent colour
+    // once answered, the right answer stands out (thick accent border, tick); a wrong pick is thin and dashed with a cross
     const tone =
       guess === null
         ? "border-border"
-        : picked && correct
+        : correct
           ? "border-2 border-primary text-primary"
           : picked
-            ? "border-2 border-foreground"
-            : correct
-              ? "border-border text-primary"
-              : "border-border opacity-60"
+            ? "border-dashed border-foreground"
+            : "border-border opacity-60"
     return (
       <button
         type="button"
         data-testid={value ? "guess-true" : "guess-false"}
         aria-pressed={picked}
         onClick={() => setGuess(value)}
-        className={`inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-md border px-4 text-sm font-medium ${tone}`}
+        className={`inline-flex min-h-11 min-w-32 flex-1 items-center justify-center gap-1.5 rounded-md border px-3 text-center text-sm font-medium ${tone}`}
       >
         {guess !== null && correct && <Check aria-hidden className="size-4" />}
         {guess !== null && picked && !correct && <X aria-hidden className="size-4" />}
@@ -136,7 +134,7 @@ function FactCard({ f }: { f: QuitFact }) {
     <article data-testid={`fact-${f.id}`} className="rounded-lg border border-border bg-card p-4">
       <p className="text-xs font-semibold uppercase text-primary">{t.how.trueOrNot}</p>
       <p className="mt-1 text-base font-medium leading-snug">{f.statement}</p>
-      <div className="mt-3 flex gap-2">
+      <div className="mt-3 flex flex-wrap gap-2">
         {choice(true)}
         {choice(false)}
       </div>
@@ -361,8 +359,9 @@ export function HowTool({ addiction, data }: ToolProps) {
             </p>
           )}
           {note && (
-            <div data-testid="footer-note" className="rounded-lg border border-border p-4">
-              <p className="text-sm">{note.text}</p>
+            <div data-testid="footer-note" className="rounded-lg border border-border bg-card px-4 pb-1 pt-3">
+              <h2 className="text-base font-semibold">{t.how.medicineTitle}</h2>
+              <p className="mt-1 text-sm">{note.text}</p>
               <SourceTap refs={noteRefs} />
             </div>
           )}

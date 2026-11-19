@@ -173,7 +173,7 @@
         "when": "2001–2002",
         "measured": "The age when the signs first appeared and the age when they finally stopped and never came back, as people recalled it. From those ages the model projects the share free over a whole life. The model puts 3 in 100 free within a year of getting hooked and about 18 in 100 within 10 years."
       },
-      "caveat": "'Free' means no signs of being hooked left, not that they never touched it again. Men got free less often than women. People in prison or hospital weren't surveyed.",
+      "caveat": "'Free' means no signs of being hooked left, not that they never touched it again. Men got free less often than women. People in prison or hospital weren't surveyed, so the true share may be lower.",
       "projection": true,
       "checked": "hooked",
       "weak": null,
@@ -588,7 +588,7 @@
     },
     {
       "kind": "after-lasting",
-      "big": "90 in 100",
+      "big": "About 90 in 100",
       "headline": "Of quitters still off a year after quit day, about 90 in 100 stayed off one more year, on average.",
       "mirror": "You think even a year off won't stick.",
       "severity": "treatment",
