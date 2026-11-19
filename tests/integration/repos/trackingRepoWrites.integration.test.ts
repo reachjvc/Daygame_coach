@@ -204,7 +204,6 @@ describe("a session", () => {
       started_at: "2026-02-03T18:00:00.000Z",
       goal: 5,
       primary_location: "Soho",
-      location_data: { city: "London" },
       session_focus: "openers",
       technique_focus: "direct",
       if_then_plan: "if I hesitate then I count to three",
@@ -220,7 +219,6 @@ describe("a session", () => {
       user_id: me.id,
       goal: 5,
       primary_location: "Soho",
-      location_data: { city: "London" },
       session_focus: "openers",
       technique_focus: "direct",
       if_then_plan: "if I hesitate then I count to three",
@@ -448,7 +446,8 @@ describe("an approach", () => {
     expect(await dbRow("user_tracking_stats", me.id, "user_id")).toMatchObject({ total_approaches: 1, total_numbers: 1 })
 
     // for somebody else's session: refused, and nothing of theirs moves
-    await expect(createApproach({ user_id: me.id, session_id: other.sessionId, outcome: "good" })).rejects.toThrow()
+    // (the insert itself passes: a foreign key is checked past row security; the recount of their session is what is refused)
+    await expect(createApproach({ user_id: me.id, session_id: other.sessionId, outcome: "good" })).rejects.toThrow(/Failed to update session/)
     await expect(createApproach({ user_id: other.user.id, outcome: "good" })).rejects.toThrow(/row-level security/)
     await other.stillUntouched()
   })
@@ -471,8 +470,8 @@ describe("an approach", () => {
     expect(await dbRow("approaches", sibling.id)).toEqual(siblingBefore)
     expect(await dbRow("user_tracking_stats", me.id, "user_id")).toMatchObject({ total_numbers: 1 })
 
-    await repoUpdateApproach(target.id, { set_type: "group" })
-    expect(await dbRow("approaches", target.id)).toMatchObject({ set_type: "group", outcome: "number" })
+    await repoUpdateApproach(target.id, { set_type: "mixed_group" })
+    expect(await dbRow("approaches", target.id)).toMatchObject({ set_type: "mixed_group", outcome: "number" })
 
     await expect(updateApproach(other.approachId, { note: "Hijacked" })).rejects.toThrow(/Failed to update approach/)
     await expect(repoUpdateApproach(other.approachId, { outcome: "instadate" })).rejects.toThrow(/Failed to update approach/)
@@ -792,8 +791,8 @@ describe("a review", () => {
     expect(await dbRow("reviews", sibling.id)).toEqual(siblingBefore)
     expect(await dbRow("user_tracking_stats", me.id, "user_id")).toMatchObject({ weekly_reviews_completed: 2 })
 
-    await repoUpdateReview(draft.id, { period_end: "2026-06-13" })
-    expect(await dbRow("reviews", draft.id)).toMatchObject({ period_end: "2026-06-13", new_commitment: "new" })
+    await repoUpdateReview(draft.id, { previous_commitment: "changed" })
+    expect(await dbRow("reviews", draft.id)).toMatchObject({ previous_commitment: "changed", new_commitment: "new" })
 
     await expect(updateReview(other.reviewId, { new_commitment: "Hijacked" })).rejects.toThrow(/Failed to update review/)
     await other.stillUntouched()
@@ -810,7 +809,6 @@ describe("a sticking point", () => {
       name: "Hesitating",
       description: "I freeze before opening",
       status: "active",
-      occurrence_count: 3,
     })
     const viaRepo = await repoCreateStickingPoint({ user_id: me.id, name: "Second" })
 
@@ -819,7 +817,7 @@ describe("a sticking point", () => {
       name: "Hesitating",
       description: "I freeze before opening",
       status: "active",
-      occurrence_count: 3,
+      occurrence_count: 0,
       resolved_at: null,
       resolution_notes: null,
     })
@@ -831,7 +829,7 @@ describe("a sticking point", () => {
   it("updateStickingPoint (repo + service) changes the fields named on that point only", async () => {
     const other = await bystander()
     const me = await person("point-update")
-    const target = await createStickingPoint({ user_id: me.id, name: "Target", description: "keep", occurrence_count: 1 })
+    const target = await createStickingPoint({ user_id: me.id, name: "Target", description: "keep" })
     const sibling = await createStickingPoint({ user_id: me.id, name: "Sibling" })
     const siblingBefore = await dbRow("sticking_points", sibling.id)
 
