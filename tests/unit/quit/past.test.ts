@@ -18,6 +18,7 @@ import {
   oldestFirst,
   parseLength,
   parsePast,
+  typedLength,
   pastEndingsForPlan,
   showsMore,
   topRepeated,
@@ -215,12 +216,31 @@ describe("hand-off for the if-then tool", () => {
   })
 })
 
+describe("review round 1", () => {
+  it("wave-1 answers without a stretch still keep their endings and helped", () => {
+    const s = parsePast({ tries: "4-9", stretchN: 2, endings: ["stress"], helped: ["told"] })
+    expect(s.count).toBe("4-9")
+    expect(s.tries).toHaveLength(1)
+    expect(s.tries[0]).toMatchObject({ len: null, ended: ["stress"], helped: ["told"] })
+    const z = parsePast({ tries: "0", stretchN: 3, stretchUnit: "weeks", endings: ["fight"] })
+    expect(z.count).toBeNull()
+    expect(z.tries[0]).toMatchObject({ len: 3, unit: "weeks", ended: ["fight"] })
+  })
+  it("lengths: whole days in sums, the typed unit in the list", () => {
+    expect(lengthText(10.5)).toBe("11 days")
+    expect(lengthText(28.7)).toBe("29 days")
+    expect(typedLength({ len: 1.5, unit: "weeks" })).toBe("1.5 weeks")
+    expect(typedLength({ len: 1, unit: "months" })).toBe("1 month")
+    expect(typedLength({ len: null, unit: "days" })).toBeNull()
+  })
+})
+
 describe("text", () => {
   it("has no exclamation mark and keeps the brief's lines", () => {
     expect(JSON.stringify(pastText)).not.toContain("!")
     expect(pastText.longest("14 days", 3)).toBe("Longest try: 14 days. From 3 tries with a length.")
-    expect(pastText.windowDays(1, 1, 2, 3)).toBe("Most of your tries ended on day 1. 2 of 3 tries with a length.")
-    expect(pastText.windowDays(5, 9, 3, 4)).toBe("Most of your tries ended in days 5–9. 3 of 4 tries with a length.")
+    expect(pastText.windowDays(1, 1, 2, 3)).toBe("Most of your tries lasted 1 day. 2 of 3 tries with a length.")
+    expect(pastText.windowDays(5, 9, 3, 4)).toBe("Most of your tries lasted between 5 and 9 days. 3 of 4 tries with a length.")
     expect(pastText.commonEnding(["A"], 2, 2)).toBe("Most common ending: A. 2 of 2 tries naming an ending.")
   })
 })

@@ -42,7 +42,7 @@ import {
   showsMore,
   topRepeated,
   triesBehind,
-  tryDays,
+  typedLength,
   usesRoughUnits,
   FIRST_MONTH,
   type AfterSlip,
@@ -91,6 +91,9 @@ interface Removed {
   x: Try
 }
 
+/** The data file's "Something else" ending: the text box below the chips does that job. */
+const OTHER_ENDING = "other"
+
 function Inner({ addiction, endings, helped, belief, number }: InnerProps) {
   const carry = useCarry()
   const pathname = usePathname()
@@ -100,7 +103,7 @@ function Inner({ addiction, endings, helped, belief, number }: InnerProps) {
   useDoneCount(addiction, "past", state !== null)
   const [example, setExample] = useState<PastState | null>(null)
   const [confirm, setConfirm] = useState<string | null>(null)
-  const [removed, setRemoved] = useState<Removed | null>(null)
+  const [removed, setRemoved] = useState<Removed[]>([])
   const [today] = useState(() => todayIso())
   // True when the open form was put on the history stack in this visit, so Back is a real step back.
   const pushed = useRef(false)
@@ -162,20 +165,20 @@ function Inner({ addiction, endings, helped, belief, number }: InnerProps) {
   const save = (x: Try) => {
     started()
     update((s) => ({ ...s, tries: s.tries.some((o) => o.id === x.id) ? s.tries.map((o) => (o.id === x.id ? x : o)) : [...s.tries, x] }))
-    setRemoved(null)
     closeForm()
   }
   const remove = (id: string) => {
     const at = state.tries.findIndex((x) => x.id === id)
     if (at === -1) return
-    setRemoved({ at, x: state.tries[at] })
+    const x = state.tries[at]
+    setRemoved((r) => [...r, { at, x }])
     setConfirm(null)
     update((s) => ({ ...s, tries: s.tries.filter((x) => x.id !== id) }))
   }
   const undo = () => {
-    if (!removed) return
-    const r = removed
-    setRemoved(null)
+    const r = removed[removed.length - 1]
+    if (!r) return
+    setRemoved(removed.slice(0, -1))
     update((s) => (s.tries.some((x) => x.id === r.x.id) ? s : { ...s, tries: [...s.tries.slice(0, r.at), r.x, ...s.tries.slice(r.at)] }))
   }
 
@@ -188,9 +191,9 @@ function Inner({ addiction, endings, helped, belief, number }: InnerProps) {
   return (
     <div data-testid="past-page" className="flex w-full flex-col gap-4">
       {inExample && (
-        <div data-testid="example-bar" className="flex items-center justify-between gap-2 rounded-md border border-dashed border-border px-3 py-1 text-xs text-muted-foreground">
+        <div data-testid="example-bar" className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed border-border px-3 py-2 text-sm text-muted-foreground">
           <span>{t.exampleLabel}</span>
-          <button type="button" data-testid="example-clear" onClick={() => setExample(null)} className="inline-flex min-h-11 items-center underline">
+          <button type="button" data-testid="example-clear" onClick={() => setExample(null)} className="inline-flex min-h-11 items-center rounded-md border border-border bg-card px-3 text-sm text-foreground">
             {t.leaveExample}
           </button>
         </div>
@@ -241,29 +244,29 @@ function Inner({ addiction, endings, helped, belief, number }: InnerProps) {
         </div>
       )}
 
-      <Pattern tries={shown} endings={endings} helped={helped} />
+      {shown.length > 0 && <Pattern tries={shown} endings={endings} helped={helped} />}
 
       {more && <AfterSlipBlock addiction={addiction} value={view.afterSlip} onChange={setSlip} belief={belief} carry={carry} />}
       {more && <ManyTries count={view.count} listed={shown.length} number={number} />}
 
       <Chart tries={shown} />
 
+      {(shown.length > 0 || removed.length > 0) && (
       <section data-testid="try-list" className={section}>
         <h3 className="text-base font-semibold">{t.listTitle}</h3>
-        {removed && (
+        {removed.length > 0 && !inExample && (
           <p data-testid="removed" className="flex flex-wrap items-center gap-2 text-sm">
             <span>{t.removed}</span>
-            <button type="button" data-testid="undo" onClick={undo} className="inline-flex min-h-11 items-center text-primary underline">
+            <button type="button" data-testid="undo" onClick={undo} className="inline-flex min-h-11 min-w-11 items-center justify-center px-2 text-primary underline">
               {t.undo}
             </button>
           </p>
         )}
-        {shown.length === 0 && <p data-testid="list-empty" className="text-sm text-muted-foreground">{t.listEmpty}</p>}
         <ol className="flex flex-col gap-2">
           {newestFirst(shown).map((x, i) => (
             <li key={x.id} data-testid={`try-${i}`} className="flex min-w-0 flex-col gap-1 rounded-md border border-border p-2">
               <p className="text-sm font-semibold" data-testid={`try-${i}-head`}>
-                {`${monthLong(x.when) || t.dateNone} · ${tryDays(x) !== null ? lengthText(tryDays(x) as number) : t.lenNone}`}
+                {`${monthLong(x.when) || t.dateNone} · ${typedLength(x) ?? t.lenNone}`}
               </p>
               <TryLines x={x} endings={endings} helped={helped} />
               {!inExample && (
@@ -273,7 +276,7 @@ function Inner({ addiction, endings, helped, belief, number }: InnerProps) {
                   </button>
                   {confirm === x.id ? (
                     <>
-                      <button type="button" data-testid={`try-${i}-confirm`} onClick={() => remove(x.id)} className={`${ghost} border-primary`}>
+                      <button type="button" data-testid={`try-${i}-confirm`} onClick={() => remove(x.id)} className={`${ghost} border-destructive text-destructive`}>
                         {t.removeConfirm}
                       </button>
                       <button type="button" data-testid={`try-${i}-keep`} onClick={() => setConfirm(null)} className={ghost}>
@@ -291,17 +294,20 @@ function Inner({ addiction, endings, helped, belief, number }: InnerProps) {
           ))}
         </ol>
       </section>
+      )}
 
       <Next addiction={addiction} carry={carry} />
-      <p data-testid="saved-line" className="text-xs text-muted-foreground">
-        {t.saved}
-      </p>
+      {!inExample && (
+        <p data-testid="saved-line" className="text-xs text-muted-foreground">
+          {t.saved}
+        </p>
+      )}
     </div>
   )
 }
 
 function TryLines({ x, endings, helped }: { x: Try; endings: Option[]; helped: Option[] }) {
-  const lab = (ids: string[], opts: Option[], text: string) => [...ids.map((i) => opts.find((o) => o.id === i)?.label ?? i), ...(text.trim() ? [text.trim()] : [])]
+  const lab = (ids: string[], opts: Option[], text: string) => [...ids.map((i) => opts.find((o) => o.id === i)?.label ?? i), ...(text.trim() ? [`“${text.trim()}”`] : [])]
   const rows: [string, string[]][] = [
     [t.howLabel, x.how.map((i) => t.hows.find((h) => h.id === i)?.label ?? i)],
     [t.endedLabel, lab(x.ended, endings, x.endedText)],
@@ -419,16 +425,16 @@ function AfterSlipBlock({ addiction, value, onChange, belief, carry }: { addicti
       {value && (
         <div data-testid={`slip-reply-${value}`} className="flex flex-col gap-1 text-sm">
           {value === "gaveUp" && (
-            <p>
-              {`${t.slipGaveUp} `}
+            <>
+              <p>{t.slipGaveUp}</p>
               {isLiveTool("slip") ? (
-                <Link href={carry(`/quit/${addiction}/slip`)} className="inline-flex min-h-11 items-center text-primary underline">
+                <Link href={carry(`/quit/${addiction}/slip`)} data-testid="slip-link" className="inline-flex min-h-11 items-center self-start text-primary underline">
                   {t.slipGaveUpLink}
                 </Link>
               ) : (
-                t.slipGaveUpPlain
+                <p>{t.slipGaveUpPlain}</p>
               )}
-            </p>
+            </>
           )}
           {value === "restarted" && <p>{t.slipRestarted}</p>}
           {value === "justOnce" && (
@@ -436,13 +442,12 @@ function AfterSlipBlock({ addiction, value, onChange, belief, carry }: { addicti
               {t.slipJustOncePre}
               {lies}
               {t.slipJustOncePost}
-              {belief ? ` ${belief.counterpart}` : ""}
             </p>
           )}
           {value === "dontRemember" && <p>{t.slipDontRemember}</p>}
         </div>
       )}
-      {value && belief && <FactCard belief={belief} />}
+      {value === "justOnce" && belief && <FactCard belief={belief} />}
     </section>
   )
 }
@@ -454,7 +459,6 @@ function ManyTries({ count, listed, number }: { count: Count | null; listed: num
   return (
     <section data-testid="many-tries" className={section}>
       <h3 className="text-base font-semibold">{t.manyTitle}</h3>
-      <p className="text-sm">{t.manyYouHave(what)}</p>
       {number && (
         <>
           <p className="text-sm">{t.manyStudy}</p>
@@ -488,12 +492,12 @@ function Chart({ tries }: { tries: Try[] }) {
         {`${t.avg(lengthText(avg))} · ${t.chartBasis(list.length)}`}
       </p>
       <div data-testid="chart-scroll" className="overflow-x-auto">
-        <div style={{ minWidth: list.length * 48 }}>
+        <div style={{ minWidth: list.length * 48, maxWidth: Math.max(list.length * 96, 240) }}>
           <div className="relative flex items-end" style={{ height: BAR_AREA }}>
             <div aria-hidden="true" data-testid="avg-line" className="pointer-events-none absolute inset-x-0 border-t border-dashed border-muted-foreground" style={{ bottom: line }} />
             {list.map((b, k) => (
               <div key={b.id} role="img" data-testid={`bar-${k}`} aria-label={`${monthShort(b.when) || t.dateNone}: ${lengthText(b.days)}`} className="flex h-full min-w-12 flex-1 flex-col items-center justify-end">
-                <span data-testid={`bar-${k}-top`} className="text-xs text-muted-foreground">
+                <span data-testid={`bar-${k}-top`} className="relative z-10 rounded bg-card px-1 text-xs text-muted-foreground">
                   {barText(b.days)}
                 </span>
                 <span className="block w-6 rounded-t bg-primary" style={{ height: Math.max(2, shares[k] * BAR_MAX) }} />
@@ -596,7 +600,7 @@ function Form({ initial, endings, helped, today, onSave, onCancel }: { initial: 
       </div>
       <div data-testid="f-ended" className="flex flex-col gap-2 text-sm">
         <span>{t.endedLabel}</span>
-        <Chips options={endings} value={x.ended} onChange={(ended) => set({ ended })} max={endings.length} label={t.endedLabel} />
+        <Chips options={endings.filter((e) => e.id !== OTHER_ENDING || x.ended.includes(OTHER_ENDING))} value={x.ended} onChange={(ended) => set({ ended })} max={endings.length} label={t.endedLabel} />
         <label className="flex flex-col gap-1">
           {t.endedText}
           <input type="text" data-testid="f-ended-text" maxLength={MAX_FREE} value={x.endedText} onChange={(e) => set({ endedText: e.target.value.slice(0, MAX_FREE) })} className={`${field} w-full`} />

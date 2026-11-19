@@ -6,7 +6,7 @@ import { fill } from "../tooltext"
 import type { Evidence, QuitRef } from "../types"
 
 const chipBase =
-  "inline-flex min-h-11 items-center justify-center rounded-full border px-4 py-2 text-left text-base leading-snug transition-colors"
+  "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border px-4 py-2 text-left text-base leading-snug transition-colors"
 
 export interface ChipOption {
   id: string

@@ -85,17 +85,15 @@ function fromWave1(o: Record<string, unknown>): PastState {
   const count: Count | null = wave1Count === null ? null : wave1Count === "0" ? "never" : (wave1Count as Count)
   const unit = pickOne<LenUnit, null>(o.stretchUnit, LEN_UNITS, null)
   const afterSlip = pickOne<AfterSlip, null>(o.afterSlip, AFTER_SLIP, null)
+  const ended = (pickStrings(o.endings, []) as string[]).slice(0, 3)
+  const helped = pickStrings(o.helped, []) as string[]
   const tries: Try[] = []
-  if (count !== null && count !== "never" && unit !== null) {
-    tries.push({
-      ...emptyTry("wave1"),
-      len: pickInt(o.stretchN, 1, 99, 1),
-      unit,
-      ended: (pickStrings(o.endings, []) as string[]).slice(0, 3),
-      helped: pickStrings(o.helped, []) as string[],
-    })
+  // Anything he gave about a try becomes one try, so nothing he entered is lost.
+  if (unit !== null || ended.length > 0 || helped.length > 0) {
+    tries.push({ ...emptyTry("wave1"), len: unit !== null ? pickInt(o.stretchN, 1, 99, 1) : null, unit: unit ?? "days", ended, helped })
   }
-  return { v: 2, count, tries, afterSlip }
+  // "0 tries" next to answers about a try cannot both be true: the count is left open.
+  return { v: 2, count: count === "never" && tries.length > 0 ? null : count, tries, afterSlip }
 }
 
 /** Saved state, checked. Reads the wave-1 shape too. */
@@ -139,15 +137,24 @@ export function usesRoughUnits(tries: readonly Try[]): boolean {
 export function lengthText(d: number): string {
   if (d >= 730) return `about ${Math.round(d / 365)} years`
   if (d >= 60) return `about ${Math.round(d / 30)} months`
-  const r = Number.isInteger(d) ? d : Math.round(d * 10) / 10
+  const r = Math.round(d)
   return `${r} ${r === 1 ? "day" : "days"}`
+}
+
+const UNIT_ONE: Record<LenUnit, string> = { days: "day", weeks: "week", months: "month", years: "year" }
+
+/** A try's length as he typed it: "1.5 weeks", "1 month", "3 days". */
+export function typedLength(x: Pick<Try, "len" | "unit">): string | null {
+  if (x.len === null || !Number.isFinite(x.len) || x.len <= 0) return null
+  const n = Math.round(x.len * 10) / 10
+  return `${n} ${n === 1 ? UNIT_ONE[x.unit] : x.unit}`
 }
 
 /** The short form on top of a chart bar: the day count, then "2 mo", "2 y". */
 export function barText(d: number): string {
   if (d >= 730) return `${Math.round(d / 365)} y`
   if (d >= 60) return `${Math.round(d / 30)} mo`
-  return String(Number.isInteger(d) ? d : Math.round(d * 10) / 10)
+  return String(Math.round(d))
 }
 
 export type Typed = { kind: "empty" } | { kind: "bad" } | { kind: "ok"; value: number }

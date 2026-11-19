@@ -1589,3 +1589,30 @@ targets or "what you could buy" here: Tool 3 holds targets.
 - Not fixed, proposed: a run ended on the Black Box page (not by a slip) still counts from the old quit date until a
   new date is set (rare; the Black Box API the tools share does not expose ended runs). Day 5 and Day −2 bodies repeat
   their exercise in part (kept: the body says why, the exercise what to write down).
+
+### From the Tool 10 build (past attempts, 2026-11-19)
+
+- Built by Sonnet from the brief; decisions it took that the brief did not say: no second heading (the page frame
+  shows the tool name); the basis fold puts "measured" in the Study row and "where" after the date (BasisBox has no
+  rows for them); chart bar tops use "3 mo" / "2 y" with a note; the length field is a text field (so "1,5" works).
+- Review round 1 (bugs Sonnet, feel/look Opus, content Opus; local dev server, Vercel deploy limit) fixed: two deletes
+  in a row lost the first (Undo is now a stack); wave-1 answers without a stretch lost their endings (now one try);
+  "1" chip 40 px wide (shared `Chips` got `min-w-11`, all tools); the Kenford fact card ("83 in 100 were smoking at 6
+  months") showed under every after-slip answer and read as a verdict after "Keep doing that" — now only under "Just
+  this once"; "That first slip is where most tries end" had no source — removed; "I started again the same day" could
+  mean using again — now "I restarted my quit the same day", and its reply names the plan in Your quit date; the
+  many-tries card said "You have 2–3 tries behind you" next to "about 30" (reads as "27 to go") — that line is gone,
+  heading "Most people need many tries", the study sentence says cigarettes and "the authors' preferred model", note
+  "An average across many people, not a forecast for you." (the paper: "not individually predictive"); window line now
+  "lasted between 5 and 9 days"; days rounded to whole days, the list shows the unit he typed ("1.5 weeks"); the
+  "Something else" ending chip is gone (the text box does that); typed words show in quotes; empty pattern and list
+  cards hidden until a try exists; "Saved on this phone." hidden in the example; bigger Undo and Leave the example;
+  red Delete confirm; bar labels sit above the average line; desktop chart narrower; error text "Type a number from 1
+  to 999, like 3"; form heading "Add a past try".
+- Not changed here, for Tool 5 (it owns the 12 lies data): belief b4's `counted` says "not checked for addiction" but
+  Kenford's subjects were scored on the Fagerstrom questionnaire (15+ a day, CO 10 ppm+); its `counterpart` "There's no
+  'just one'. One is how quit turns into smoking again." is absolute (17 in 100 in study 1 were not smoking) and
+  cigarette-only. This tool no longer shows the counterpart. The how-tries `caveat` "pulled up by the people who
+  struggle most" is not in the paper; proposed: "includes people who never quit during the study".
+- Open, proposed: P6 Edit/Delete per try stay full buttons (reviewer suggested a "…" menu; recommendation: keep, one tap
+  each). P7 a one-line summary on return ("3 tries · longest about 2 months"); recommendation: not now.
