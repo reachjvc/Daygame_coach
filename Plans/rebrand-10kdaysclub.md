@@ -703,6 +703,14 @@ Phone check on the local stack: Home (gold Training/Time Log/Audit, violet Black
 
 ### Phase 7 — Prove it (Haiku runs, Opus judges)
 
+**Progress 2026-11-19:**
+- Step 1 grep gate: clean except `src/home/components/DatingPage.tsx` ("Master Daygame From Home", "our AI coach"), which is the Dating door and allowed.
+- Step 2 live HTML: all 12 pages' titles and descriptions say 10K Days Club; the only "daygame" left is the address in `og:image` (Phase 8). Manifest says "10K Days Club"; `/opengraph-image` serves a PNG.
+- Step 3 before/after page: **https://claude.ai/artifact/ERBS6YKjuwV9jB61KtSfUE** (23 pairs; db `likes`, `notes`, keys `pair-<slug>`, `general`). Source `~/.cache/daygame-research/rebrand/p7/`.
+- Step 4 emails: no templates in the repo; the hosted templates saved in Phase 1 say "10K Days Club", sender "10K Days Club", subjects carry no brand. `site_url` / `uri_allow_list` still name the old address (Phase 8). Live settings not re-read.
+- Step 5 Stripe: moot. No checkout session exists; `/pricing` opens the "Stripe migration in progress" dialog with names from `src/home/products.ts` ("Monthly Plan", "2-Month Plan").
+- `/quit/coaching` is 404 on purpose: `076f4a38` (quit-finish) put it behind preview. Not a rebrand slip.
+
 1. **Grep gate:** `git grep -n -i -E "daygame|day game|AI coach"` over `app/layout.tsx`, `app/manifest.ts`,
    `app/auth`, `components/AppLogo.tsx`, `components/BrandMark.tsx`, `src/home`, `src/hometab`,
    `src/quit/data/frame.json` and `src/notifications/components` → empty.
