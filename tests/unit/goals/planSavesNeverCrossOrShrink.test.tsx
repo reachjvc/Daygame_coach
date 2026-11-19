@@ -44,9 +44,11 @@ describe("one keepalive budget for everything sent on leave", () => {
 
   it("the plan and the day's parts share it: what does not fit goes as a plain request", async () => {
     const calls: { keepalive: boolean; bytes: number }[] = []
+    const settle: Array<() => void> = []
     vi.stubGlobal("fetch", vi.fn((_url: string, init: RequestInit) => {
       calls.push({ keepalive: init.keepalive === true, bytes: new Blob([String(init.body)]).size })
-      return new Promise(() => {}) // stays in flight, holding its claim
+      // stays in flight, holding its claim, until the end of this test
+      return new Promise((_resolve, reject) => settle.push(() => reject(new Error("test over"))))
     }))
     // A plan save near 40 KB takes most of the budget...
     let plan = ns.emptyNsPlan()
@@ -63,6 +65,10 @@ describe("one keepalive budget for everything sent on leave", () => {
     expect(day.some((c) => !c.keepalive)).toBe(true)
     // Nothing kept alive ever went over the budget in total.
     expect(keepaliveInUse()).toBeLessThanOrEqual(KEEPALIVE_BUDGET_BYTES)
+    // The budget is module state: give every claim back so the next test (or a
+    // shuffled order) starts from zero.
+    settle.forEach((s) => s())
+    await vi.waitFor(() => expect(keepaliveInUse()).toBe(0))
   })
 })
 

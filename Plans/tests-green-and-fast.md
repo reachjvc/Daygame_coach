@@ -319,6 +319,22 @@ Accept: with a red run in the API the hook prints the line, and with a green one
 
 Accept: the run ids for step 1 quoted; the facts table has a "Now (after)" column filled in.
 
+### Review findings (Phase 7 step 3)
+
+Fix commits are on branch tg-review, shipped to main in one push (SHAs below are the pre-rebase ones).
+
+| # | Finding | Fixed in | Check |
+|---|---|---|---|
+| 1 | `related-tests.mjs` skipped `data`, `infra`, `docs`, `public`, `supabase` at any depth | 8b1ea813 | Skips now match root-relative paths; `public` is searched (`@/public/sw.js` resolves). `src/tracking/data/milestoneRules.ts` now lists `tests/unit/tracking/milestoneRules.test.ts` (before: 0 tests); `app/api/healthz/route.ts` lists `tests/unit/infra/healthz.test.ts`; `public/sw.js` lists `serviceWorker.test.ts` and 3 more (before: 0) |
+| 2 | Hook dropped deletions (`--diff-filter=ACMR`) and paths not on disk | 8b1ea813 | Hook uses `ACMRD --no-renames`; a staged path that is gone still resolves importers in the working tree; a deleted test is not run. Unit test |
+| 3 | Hook exited 0 with no code staged, though ~73 unit tests read files | 8b1ea813 | Hook always calls the script; the script also finds tests whose source names a staged path, or (for non-code files) its folder of 2+ segments. `supabase/migrations/x.sql` lists 12+ tests; a `Plans/*.md`-only commit takes 0.25 s |
+| 4 | image-staging red after 45 min while E2E sat queued in the shared group | 663c4bb9 | Chosen: at the timeout a run that is queued or running ends the wait green with `unfinished=true`, and the publish step needs `unfinished != 'true'`. Red run, no run, timed_out and API errors still fail. Cost: a commit whose E2E never answered in 45 min gets no staging image; the next main commit does. Tests in awaitWorkflow.test.ts and pipelineRules.test.ts; no assertion removed; ciWorkflows.test.ts needed no change |
+| 5 | `main-status` ignored `startup_failure` | 2d9825a5 | Counted as red. `action_required` (waiting for approval) is not red, decided and pinned in a test |
+| 6 | `main-status` read only the 20 newest runs of all workflows | 2d9825a5 | One `gh run list --workflow … --status completed --limit 30` per workflow (CI, E2E Tests, Nightly checks on its `schedule` runs), in parallel; real run 3.2 s, exit 0. Date reads "since at least" when the window holds no green run. Unit tests incl. a fake `gh` |
+| 7 | `TYPE_ONLY` regex crossed lines and erased a later real import | 8b1ea813 | The clause may not cross `;`, `=`, `(`, `import` or `export`. Unit test with the semicolon-free shape |
+| 8 | `$code` unquoted split paths with spaces | 8b1ea813 | NUL-separated list and `xargs -0`. Hook test with `Plans/a b.md` and a staged deletion |
+| side | `planSavesNeverCrossOrShrink.test.tsx` failed under shuffle (seeds 3, 9, 12345): the third test left never-settling fetches holding the keepalive budget | next commit | The test now rejects its pending fetches and waits for the budget to read 0. Seeds 3, 9, 12345 and the normal order pass |
+
 ---
 
 # PART 2 — Rules for the executing session
