@@ -39,7 +39,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | 8 | Daily check-in | lab `checkin/best` | slip question from `diary/best` | building |
 | 9 | What it costs you | wave-1 `cost` | per-pack price and live update (copy e); money setup from the shared record | not started |
 | 10 | Your past attempts | lab `past/best` | wave-1's "many tries are normal" number and "after the first slip" question | not started |
-| 11 | Today's lesson | lab `lessons/best` | — | not started |
+| 11 | Today's lesson | lab `lessons/best` | — | building |
 | 12 | How people quit | wave-1 `how` | the sourced sections of `library/best`, shortened | building |
 | 13 | What it gives you | wave-1 `gives` | — | building |
 | later | Tell someone, Money on the line, Clear-out list, What helps besides apps, Who you are now | not built | accountability copies a, b, e as reference | not started |
@@ -881,6 +881,96 @@ advice in three or four sections), E17 (empty-looking "Based on", footer outside
 facts sit inside their sections (alternative: a separate True or not? section). H3 the outside help stays here until
 "What helps besides apps" is built, then becomes a link. H4 the "mirror" lines ("You think nobody hooked like you ever
 really gets free") stay unused here, as in wave-1 (alternative: show each above its number).
+
+### Tool 11: Today's lesson — brief (Opus, 2026-11-19) — build exactly this, decide nothing
+
+Model: Opus builds it (the content fixes need the abstracts at hand), in a worktree. Address: `/quit/nicotine/lesson`
+(menu id `lesson`). Built from lab `lessons/best` (`src/quit/lab/lessons/best/*`): what is reused moves into
+`src/quit/tools/lesson/`; lab files stay untouched. The 17 lessons (day −3 to −1, day 1 to 14) stay in `nicotine.json`
+`lessons`. Nicotine only: no addiction switcher (review D25). Desktop (1280): the page column, like Tools 1 to 4. All
+choices below are **proposed**; the recommendation is the first option each time.
+
+**Menu row:** name "Today's lesson", line **"One short lesson a day, with one thing to do. From 3 days before day 1
+to day 14."** (the old "at your hour. 90 days." was untrue: there is no reminder and 17 lessons), minutes 3,
+`account: "none"`, wave 1 in `menu.json` and `registry.ts`.
+
+**Which day (it asks nothing; it reads the shared record and the Black Box):**
+1. A living nicotine run in the Black Box → day N from its `startedOn` (the start day is day 1, as Your quit date's
+   "Day N"; there is no day 0, D34).
+2. Else `record.quitDate` in the future → day −1, −2, −3 for the three days before. Further ahead: "Your lessons start
+   on <date>, 3 days before your quit date." with **Read the first lesson now**.
+3. Else `record.quitDate` today or past and no slip in the Black Box on or after it → day N from the quit date (the
+   date tool starts the run on its next visit; this tool writes nothing to the Black Box).
+4. Else (no date, goal "later", or the last run ended with a slip and no new day 1 is set) → the day −3 lesson "Pick
+   the day", with one line: no date: "The lessons follow your quit date. Until you pick one, start here."; after a
+   slip: "Your last run ended on <date>. The lessons start again from day 1 with your next run." The line links to
+   Your quit date / Slipped? Restart today only when that tool is live (`isLiveTool`), else plain text (D2 blocker).
+5. Past day 14 → **the end card** (D18): "That was the last lesson, on day 14." "You did N of 17 exercises." and
+   "What next": links to the live tools Your record, Craving now?, Daily check-in (only those live), plus All days.
+   Never "No new lesson today" for ever.
+After a slip and a new day 1, the lessons start again from day 1; what he marked done and wrote stays (no reset).
+
+**Screens** (tabs **Today · All days**, `?tab=all`; a lesson opened from the list is `?day=N`, a history entry, so
+browser Back returns to the list; reload stays):
+1. **Today.** A strip of 17 steps (−3 … 14), done ones filled, today ringed, "Day 5 of 14" (or "2 days before day
+   1") above it. Then the lesson card:
+   - day label and date ("Day 5 · Thu, Nov 19"), the title, the body;
+   - **Counted:** line under the body (new field `counted` per lesson, below) and the source tap;
+   - **The thought behind it** (fold): the linked belief's thought (`limiting`), the proof, its counted line and
+     source (no counterpart: b1's counterpart has no source, D21; Tool 5 owns that text);
+   - **Do this today**: the exercise, a note box that saves as he types ("Saved on this phone.", no Save button,
+     owner rule), and **Mark as done** (tap again: "Not done yet"; the note stays). No "I have read it" lock (D23).
+   - "Tomorrow: <next title>" under it, and once: "You can read any day again in All days." (D24 said twice).
+2. **All days.** Two groups, "Before day 1" and "Day 1 to 14": day label, title, a check for done, a "Today" pill.
+   Tap → the lesson card (as above, with Back, and Previous / Next lesson).
+Dropped from `best`, each answered: the thumbs (stored only on the phone; nobody could see them, D23), the reminder time
+("No reminder is sent", and the check-in has its own, D6, D23), the read-time line (every lesson is under 200 words,
+E15), the lab "Set day" box (D34), the addiction switcher (D25). Look (D35): lucide icons (BookOpen, PenLine, Check),
+the progress strip.
+
+**Data:** reads `useQuitRecord` (quitDate, goal) and the Black Box (living run, slip reports) through the bridge as
+DateTool (`useSignedIn(false, true)`, signed-in or local bridge). Its own state in the `quit-v1` store, tool key
+`lesson`: `{done: {[day]: ms}, notes: {[day]: string ≤ 1000}}`. One line under the note box: "Your notes are kept on
+this phone." (B1).
+
+**Content fixes in `nicotine.json` lessons** (checked against the PubMed abstracts on 2026-11-19; each lesson gets a
+`counted` line, ≤ 30 words, validator limit added — D19):
+- Day −3 (Anesi 2017): counted "1,848 smokers in a US trial who picked a quit day within 90 days. A model's estimate in
+  a planned side analysis; later pickers may differ in other ways."
+- Day −1 and Day 8 (Kenford 1994): "Two small patch trials, 88 and 112 daily smokers. 83 in 100 is the lower result;
+  the other trial found 97." Day 8 gets this source and one sentence with it (D20: it had none).
+- Day 4: Miller 2023 (alcohol, veterans) is removed (D20); the sleep steps cite Trauer 2015 (CBT for insomnia, 20
+  trials, 1,162 adults with long-lasting insomnia), and the counted line says it was not tested in people who just
+  quit.
+- Day 5 (Skorka-Brown 2015): body says "a field study of 31 students", counted "15 played; their cravings were for
+  many things, nicotine among them."
+- Day 6 (Christakis 2008): counted gives the range 12 to 55% and "a link seen in the data, not a trial".
+- Day 11 (Foulds 2015): "3,446" → the abstract's "3,609 ex-smokers who now vaped" (D22), online survey.
+- The others: who and how many as their abstracts say (Shiffman 214; Hajek 469; Lam 300 women; Aubin 62 studies;
+  Doll 34,439 male doctors; Taylor 12 studies; Heishman 41 lab studies; Hughes a one-author review).
+
+**Report items for this tool:** D2 (no date → stuck at −3), D18 (no finish), D19 (no counted lines), D20 (Day 8 no
+source, Day 4 wrong population), D21 (b1 counterpart: not shown here), D22 (Foulds number), D23 (thumbs, reminder,
+lock, lost half-typed note), D24 (line twice), D25 (switcher), D34 (day 0), D35 (look), D6 (second reminder), A-report
+menu row (Coming soon, wrong line), E15/E-cross (lessons are the long reading; Tool 12 may link here once both are live).
+
+**Acceptance (Playwright `tests/e2e/quit/lesson.spec.ts`, 390x844 touch and 1280x800, clock fixed; screenshots
+looked at):**
+1. Fresh, no date: the day −3 lesson with the "follow your quit date" line; the date link only if `date` is live.
+2. Record date 4 days ago and a living run from it: Day 5 lesson; strip shows day 5 ringed.
+3. Record date 2 days ahead: Day −2 lesson; 10 days ahead: the "start on <date>" card, then Read the first lesson now.
+4. Note typed, reload → note still there; Mark as done → the All days row shows the check; Not done yet keeps the note.
+5. All days → tap Day 7 → card; browser Back → list; reload on both stays.
+6. Run started 20 days ago → the end card with the exercise count; no "No new lesson today".
+7. A slip after the quit date and no new date → day −3 with the "last run ended" line.
+8. Every lesson shows a Counted line; Day 4 has no Miller source; Day 11 says 3,609.
+9. No console error, no sideways scroll, tap targets at least 44 px, the menu row opens it.
+10. Then the three-reviewer check and fix rounds; status "waiting for you".
+
+**Proposed (owner may veto):** L1 the lessons follow the current run, so after a slip they start again from day 1
+(withdrawal starts again too); alternative: keep counting from the first quit date. L2 no reminder until the check-in
+or a phone app can send one; alternative: keep the stored time. L3 thumbs dropped; alternative: send them to a table he
+can read (needs B1). L4 the belief fold leaves out the counterpart until Tool 5 sources b1.
 
 ## Done
 
