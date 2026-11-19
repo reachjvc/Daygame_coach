@@ -33,7 +33,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | 2 | Craving now? | lab `sos/best` | wave-1's voice step and "other side" answer; the craving log of `diary/best` | waiting for you |
 | 3 | Your record (progress, money kept) | lab `progress/best` | the live counter feel of copies d and e | building |
 | 4 | Slipped? Restart today | wave-1 `slip` | slips go into the shared record; clean runs never reset | building |
-| 5 | The 12 lies test | wave-1 `beliefs` | from `beliefs/best`: a reply per belief, "can you stop?", earlier results | not started |
+| 5 | The 12 lies test | wave-1 `beliefs` | from `beliefs/best`: a reply per belief, "can you stop?", earlier results | building |
 | 6 | What you'll feel, and when | lab `timeline/best` | wave-1 `symptoms` (what helps per symptom) | not started |
 | 7 | If-then plan | lab `ifthen/best` | — | not started |
 | 8 | Daily check-in | lab `checkin/best` | slip question from `diary/best` | building |
@@ -971,6 +971,124 @@ looked at):**
 (withdrawal starts again too); alternative: keep counting from the first quit date. L2 no reminder until the check-in
 or a phone app can send one; alternative: keep the stored time. L3 thumbs dropped; alternative: send them to a table he
 can read (needs B1). L4 the belief fold leaves out the counterpart until Tool 5 sources b1.
+
+### Tool 5: The 12 lies test — brief (Opus, 2026-11-19) — build exactly this, decide nothing
+
+Model: Sonnet builds in a worktree; Opus wrote and fact-checked the data changes (done, below) and reads the diff.
+Address: `/quit/nicotine/beliefs` (wave-1 tool, rebuilt in place in `src/quit/tools/beliefs/`). Built from wave-1
+`beliefs` (worded scale, true/false facts with the reveal, result, share card, clear). Folded in from lab
+`beliefs/best` (`src/quit/lab/beliefs/best/*`, never edited): a reply per agreed belief, "Do you believe you can
+stop?", earlier results. Not folded in: the fears screen (review D10: it repeats beliefs he just rated and is used for
+nothing; proposed: drop). Nicotine only, no switcher. Desktop: same screens in the page column. Menu row unchanged
+except the line **"Rate 12 thoughts. See the answer to the ones that hold you."** and minutes 4. The menu hint
+becomes **"New here? Start with the 12 lies test."** (review A24: "Most start" claimed what people do; done in data).
+
+**Screens** (one per screen, in `?s=N` through `useScreens`; reload resumes, browser Back steps back, in-page Back;
+a tap within 250 ms of a move is ignored and every answer is keyed to the screen it was made on — review A1):
+
+1. **Questions 1–12, one belief each.** Visible step text "Question N of 16" above the bar (D29). A small grey
+   scene line, then the thought itself large in quotes (`limiting`, A9), then **"How much is this you?"** and the five
+   worded buttons stacked (Not me / A bit / Somewhat / Mostly / That's me; D12). 1–3 moves to the next question.
+2. **Reply (only after 4 or 5; its own screen and history entry, not counted as a question).** "The other side":
+   `counterpart` large, `proof`, the Counted line, and the **belief basis box** (below). Continue.
+3. **Questions 13–15, the facts** (wave-1 as is): statement, True / False; the reveal on the same screen: Right. /
+   Not quite., `explain`, Counted line, the basis box, Next.
+4. **Question 16: "Do you believe you can stop?"** Yes / Not sure / No. No line under the heading (RULEBOOK rule 6,
+   D24). Tapping goes to the result.
+5. **Result**, in this order (D27: shorter; A29: verdict on top):
+   a. "Your result", "Taken Nov 19, 2026, 10:42" (date and time, so two the same day differ; D27).
+   b. Verdict card: "{n} of 12 hold you", band label, band text, and the band link to `/quit/nicotine/date` (all three
+      bands now link there; "Make your free plan" for `free`, "Set your date" for the others, "See your quit date" when
+      the shared record has a `quitDate`). Rendered only while `date` is finished (`isFinished` in `src/quit/menu.ts`).
+   c. Your can-stop answer and one line for it (D10): Yes → "Good. Write it down where you will see it in the first
+      week." Not sure → "Not sure is an honest answer. You don't need to be sure to pick a day 1." No → "Then don't
+      decide it today. The thoughts that hold you below are part of why the no feels true. Start with them." With an
+      earlier result whose answer differs: "Last time: No."
+   d. **"These hold you most"**: ratings 4–5 only, highest first, ties in data order, at most 3 (A5, D8: the list and
+      the count now use the same rule). Each card: the thought, "The other side", "When this thought comes", "Test it
+      this week", then a closed "The proof" fold with proof, Counted line and basis box (he saw it on the reply).
+      No 4–5 but some 3s: heading "None hold you hard. These pull a little:" with the top 3 of the 3s, same cards.
+      All 1–2: "None of the twelve hold you much."
+   e. "You already see through these" (ratings 1–2), the short lines.
+   f. With an earlier result: **"Since last time"**: one line per belief whose rating changed, e.g. "Less: It calms me
+      down (Mostly → A bit)"; no change: "Same as last time."
+   g. "Your 16 answers" closed fold: each short line with its word (not a bare number; D27), the three facts with
+      Right / Not quite, and the can-stop answer.
+   h. Share and save (A7): **Share my result** uses `navigator.share` with the card image as a file where
+      `navigator.canShare({files})` allows it, else text + link, else copies the link ("Link copied"). **Save the
+      image** fetches the card and downloads it as `12-lies-result.png` without leaving the page; if the fetch fails
+      it opens the card in a new tab. Share text: "I believed {n} of the 12 lies nicotine tells you." (from the
+      menu's `lies` name, lower-cased "The" → "the"; never `data.name`).
+   i. **Take it again**. During a retake every question screen shows "Stop and keep my last result"; with at least
+      one new answer it asks first ("Stop? The answers of this new try are dropped." Stop / Keep going) (D7).
+   j. **Earlier results**, newest first, compact: date and time, "{n} of 12 hold you", band label, can-stop answer,
+      the top thoughts in quotes; each with **Delete** and an inline confirm (D11).
+   k. "Clear all my answers" with an inline confirm (removes results and the draft; lesson 2).
+   l. Links to `gives` (the per-card need link, "What it gives you" button, band `gives`) render only while `gives`
+      is finished. Until then nothing. When it is: wording "Swaps for what it gives you" (D28), not "What it gives
+      you: Confidence" (A19). The need mapping of b11 (weight → Confidence) is for Tool 13 to settle.
+   m. "Back to the menu".
+
+Opening the tool: results and no draft → the result; a draft → the screen it was on; nothing → question 1.
+
+**Belief basis box (shared with Tool 2).** New `src/quit/tools/beliefs/BeliefBasis.tsx`, used here and by the sos
+voice tile (`src/quit/tools/sos/Tiles.tsx`, replacing its own `sos-basis` details; keep that test id through a prop) so
+the two stay in sync. Closed fold "Based on" with: Who = `counted`, How many = `n` (new data field) or, when absent,
+**"Not in the line we quote"**, Caveat = `weak`, then the sources (`SourceTap` with every ref quote). Facts get the
+same box (Who, How many, sources; no caveat field).
+
+**Data (done by Opus 2026-11-19 in `nicotine.json`; quotes copied verbatim from the PubMed abstracts):**
+- Every belief and fact has `n` (how many people or studies), and each number in it is in one of that item's ref
+  quotes (new quotes added from the abstracts). Builder: add `n?: string` to `QuitBelief` and `QuitFact`, and a
+  validator rule in `src/quit/validate.ts`: each digit run in `n` (commas or spaces between digits removed) must
+  appear in a quote of that item's refs, likewise normalised; unit test for pass and fail.
+- b1 counterpart was unsourced (D21): now "It's not too late. Stopping at any age gives years back." (Doll 2004).
+- b1, b2 pointed to a "quit list" that doesn't exist (A14): replaced.
+- b5 (A13, D22): the proof didn't answer the thought and "3,446" is not in the abstract. Now "It's only a vape",
+  with the abstract's 3,609, the 8.1 vs 14.5 finding, and the strength and length findings; caveat says it measures
+  dependence, not harm.
+- b4 caveat names 83 as the lower of 83 / 97 in 100 and the two trial sizes; b7 shows 15 played, 16 did not (31);
+  b8 shows the 12%–55% range; b12 1,848 (D19).
+- Cigarette-only wording (A18): b3, b7, b10 thoughts and b3, b7, b8 answers say nicotine / use it. b1 "I've smoked
+  too long" kept (most users smoked first; proposed). Curly apostrophes in all belief text (B30).
+- Bands: no band names an unfinished tool; all link to the date tool.
+- Tool 2 shows the same fields (short, counterpart, proof, counted, weak), so its voice tile changes with them.
+
+**Saved state** (`quit-v1`, tool `beliefs`; slip and gives read `ratings` through `parseBeliefs`, which stays):
+`{ ratings, facts }` = the latest finished test (unchanged shape for them), plus `draft: {ratings, facts, canStop,
+startedAt} | null` and `results: [{at (ISO date-time), ratings, facts, canStop}]` (at most 20, oldest dropped).
+A wave-1 save with all 12 ratings and no `results` shows as one result "Taken before Nov 19, 2026" (`at` null); a
+partial wave-1 save becomes the draft. Reads the shared record's `quitDate` only; writes nothing to it. No Black Box.
+
+**Share card** `app/quit/[addiction]/card/route.tsx`: the new share text; the number in the quit colour
+(`--facet-quit` #a78bfa); bottom line is the request's host plus `/quit/nicotine/beliefs` (A7: no bare path;
+proposed: whatever host serves it, so a later domain needs no change). Without `held` it draws a question card ("How
+many of the 12 lies nicotine tells you do you believe?") used as the beliefs page `og:image`, with the menu line as
+its description (A8). Card links carry `v=2` so day-old cached cards are not reused (A31).
+
+**Answered, not built (proposed):** A17 the header "Back" and the in-page "Back" — frame wording, for Tool 0 (proposed:
+header reads "Menu"). A21 present mode: kept working; arrow keys not added. A25 / D25 other addictions: nicotine
+only. B207 voice chips ordered by his ratings: for Tool 2.
+
+**Acceptance (Playwright, local and on live with `?preview=1`, 390x844 touch and 1280x800, screenshots looked at):**
+1. Fresh: all "Somewhat" → no reply screens, facts, can-stop "Not sure" → result: "0 of 12 hold you" and "None hold you
+   hard. These pull a little:" with 3 cards; never "These hold you most" with 0 held.
+2. Rate b3 "That's me" → reply screen with "The other side", basis box shows Who, How many "469 heart patients who
+   wanted to stop", Caveat; Continue → question 4. Browser Back from question 4 → the reply; again → question 3.
+3. Double tap on any rating moves one screen and saves one rating (stored state checked).
+4. Reload on a question, a reply, a fact reveal and the result resumes there.
+5. Finish twice (second time change two ratings, can-stop No then Yes) → the result shows "Since last time" with the
+   two changes, "Last time: No.", and one earlier result with its own date and time; Delete asks, then removes it.
+6. Take it again → "Stop and keep my last result" on question 1 goes back without asking; after one answer it asks.
+7. A wave-1 save `{ratings: all 12, facts: all 3}` opens as a result "Taken before …"; slip and gives still read it.
+8. "Save the image" downloads a PNG and stays on the page; `/quit/nicotine/card?held=7&preview=1` reads "I believed 7
+   of the 12 lies nicotine tells you." and shows a host; without `held` it draws the question card.
+9. No link to `gives`; the band link shows only while `date` is in finished.json (test both with a stubbed list in a
+   unit test of the link helper).
+10. The sos voice tile shows the same basis box (its spec still passes).
+11. Present mode at 390x844: all five answers visible without scrolling.
+12. No console error, no sideways scroll, every tap target at least 44 px.
+13. Then the three-reviewer check and fix rounds; status "waiting for you".
 
 ## Done
 

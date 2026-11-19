@@ -48,8 +48,8 @@
         {
           "id": "beliefs",
           "name": "{lies}",
-          "line": "Rate 12 beliefs. See the answer to the ones that hold you.",
-          "minutes": 3,
+          "line": "Rate 12 thoughts. See the answer to the ones that hold you.",
+          "minutes": 4,
           "account": "none",
           "wave": 1
         },
@@ -226,7 +226,7 @@
     }
   ],
   "newHere": {
-    "text": "New here? Most start with the 12 lies test.",
+    "text": "New here? Start with the 12 lies test.",
     "tool": "beliefs"
   }
 }
