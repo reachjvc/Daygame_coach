@@ -2,7 +2,7 @@
 
 Written 2026-11-19 (Opus), after the owner went through the before/after page of `Plans/rebrand-10kdaysclub.md`
 (https://claude.ai/artifact/ERBS6YKjuwV9jB61KtSfUE). That plan stays the record of round 1; this one is the next
-iteration. **Status: Phases 0–3 done (2026-11-19); Phase 4 (the board) running.** Everything below that is not his words is **proposed**.
+iteration. **Status: Phases 0–4 done (2026-11-19); board published, waiting for his picks (O2); Phase P running.** Everything below that is not his words is **proposed**.
 
 His words in chat, 2026-11-19: *"Not super stoked about it in general. Also the text on the frontpage could be much
 sharper, but i guess you might need some handholding to get there. I need you to make a plan for the next iteration
@@ -181,6 +181,7 @@ Haiku does the counting. No Opus subagent reads the whole repo: each brief names
 | Q7 | Red "SAVE" ribbons on Prices (finding 3) | Orange in Phase 6 (one class) | Leave | None |
 | Q8 | Terms page (finding 4) | Phase P4, same list-and-test method as privacy, after P3 | Separate plan | None now |
 | Q9 | Where the decided look goes for his own rebuild | `docs/product/look.md` is updated in Phase 6; his "Code 3" task reads the old look from `app/globals.css`, which Phase 6 also changes | — | His new app copies an outdated look |
+| Q10 | Make the "cooler" pass (front page, sign up, Quit door) even when his picks are clear? (his notes: Quit door "looks cheap", sign up "could look even cooler") | Yes: a short second round before the build; the board asks him (note `nothere-1`: "skip it" skips it) | Build straight from his picks | Cheap-looking pages go live in the new colours |
 
 ## His notes that belong to other plans (Phase 0 copies them there, word for word)
 
@@ -359,6 +360,15 @@ retries.
 8. Start Phase P. **Stop for O2.**
 
 **Done when:** the board is published, the link is posted and written here, the daily task is in.
+
+**Phase 4 done 2026-11-19.** Round 2 board: **https://claude.ai/artifact/PShQUXtUfaFdoE12CWXKmT** (db collections
+`notes` and `likes`; keys as in step 4, plus `look-<id>-<screen>-pc`, `words-<id>-shot(-pc)`, `badge-<id>-login`,
+`nothere-1`…`6`). Source: `~/.cache/daygame-research/rebrand-r2/board/` (`template.html`, `looks.json`, `build.py`).
+Tested with a fake store (save, failed save + retry, note history, 👍) at 390 px and 1280 px, no sideways scroll. Opus
+review (`board/review.md`): six gaps fixed before publishing — phone frames no longer trap the page's scroll; Training
+shot in Before, Now and D1–D5; a "Not on this board" card answers Quit door, sign up, Your plan, Talk to a coach,
+Privacy and the kept pages; the phone row keeps its place when switching looks; Before's computer Time Log re-shot with
+its entries; C4 and C5 say they drop "I DID IT". Daily page: task `rebrand2-board` on 2026-11-20 replaced `rebrand2`.
 
 ### Phase 5 — Read his picks; narrow; write the build spec (Opus subagent)
 
