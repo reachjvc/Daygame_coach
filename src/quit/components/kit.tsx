@@ -123,6 +123,16 @@ export function EvidenceChip({ evidence }: { evidence: Evidence }) {
   )
 }
 
+/** The header of a fold (`<details className="group">`): a chevron that turns when it opens, so it looks tappable. */
+export function FoldSummary({ children }: { children: React.ReactNode }) {
+  return (
+    <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 font-medium [&::-webkit-details-marker]:hidden">
+      {children}
+      <ChevronDown aria-hidden data-testid="fold-chevron" className="size-4 shrink-0 text-muted-foreground transition-transform group-[[open]]:rotate-180" />
+    </summary>
+  )
+}
+
 /** Tap to read where a claim comes from: cite, quote, link (P22). */
 export function SourceTap({ refs }: { refs: QuitRef[] }) {
   const [open, setOpen] = useState(false)

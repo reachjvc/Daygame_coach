@@ -115,7 +115,12 @@
     "clearAsk": "Clear everything? Your results and this try are removed.",
     "clearYes": "Clear",
     "toMenu": "Back to the menu",
-    "questionCard": "How many of {lies} do you believe?"
+    "questionCard": "How many of {lies} do you believe?",
+    "heldNone": "None of the {total} hold you",
+    "readySetDate": "When you’re ready: set your date",
+    "canStopLineNoneHeld": "Then don’t decide it today. None of the twelve thoughts hold you much, so the no may come from somewhere else. Write down what makes it feel true.",
+    "youSaid": "You said {word}.",
+    "cardAsk": "How many do you believe?"
   },
   "gives": {
     "pickQuestion": "What does it give you? Pick 1 to 3.",

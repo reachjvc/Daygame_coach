@@ -43,7 +43,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ addi
           <div style={{ display: "flex", fontSize: 360, fontWeight: 700, lineHeight: 1, color: "#a78bfa" }}>{held === null ? "?" : held}</div>
           <div style={{ display: "flex", fontSize: 72, fontWeight: 700, lineHeight: 1.15, marginTop: 30 }}>{line}</div>
         </div>
-        <div style={{ display: "flex", fontSize: 36, color: MUTED }}>{`${req.nextUrl.host}/quit/${addiction}/beliefs`}</div>
+        <div style={{ display: "flex", flexDirection: "column", fontSize: 36, color: MUTED }}>
+          {held !== null && <div style={{ display: "flex", fontSize: 30, marginBottom: 10 }}>{tooltext.beliefs.cardAsk}</div>}
+          <div style={{ display: "flex" }}>{`${req.nextUrl.host}/quit/${addiction}/beliefs`}</div>
+        </div>
       </div>
     ),
     { width: 1080, height: 1350, headers: { "Cache-Control": "public, max-age=86400" } },

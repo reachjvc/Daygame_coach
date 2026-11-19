@@ -1,10 +1,10 @@
 "use client"
 
-import { useCallback, useMemo, useRef, useState } from "react"
-import { CountedLine, OneQuestion, PrimaryButton, SourcesFold } from "../../components/kit"
-import { tooltext as t } from "../../tooltext"
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { OneQuestion, PrimaryButton } from "../../components/kit"
+import { fill, tooltext as t } from "../../tooltext"
 import type { QuitBand, QuitBelief, QuitFact, QuitNeed, ToolProps } from "../../types"
-import { realRefs, usable } from "../common"
+import { usable } from "../common"
 import { useDoneCount, useScreens, useStartCount, useToolState } from "../hooks"
 import { NotReady } from "../NotReady"
 import { BeliefBasis } from "./BeliefBasis"
@@ -52,6 +52,23 @@ interface InnerProps {
 
 const RATING_WORDS = t.beliefs.ratings
 
+const DEPTH_KEY = "quit-lies-depth"
+
+/**
+ * History entries this tab's visit has added, written as `{ d, l }` with the history length at the time.
+ * A reload (or a remount) finds the same length and carries the count on; a new visit pushed an entry, so the
+ * length differs and it starts at 0.
+ */
+function carriedDepth(): number {
+  try {
+    const raw = JSON.parse(window.sessionStorage.getItem(DEPTH_KEY) ?? "null") as { d?: unknown; l?: unknown } | null
+    const d = raw?.d
+    return typeof d === "number" && Number.isInteger(d) && d > 0 && d < 200 && raw?.l === window.history.length ? d : 0
+  } catch {
+    return 0
+  }
+}
+
 function Inner({ addiction, present, beliefs, facts, bands, needs }: InnerProps) {
   const ids = useMemo(() => beliefs.map((b) => b.id), [beliefs])
   const parse = useCallback((x: unknown) => parseFull(x, ids), [ids])
@@ -67,8 +84,26 @@ function Inner({ addiction, present, beliefs, facts, bands, needs }: InnerProps)
   const total = list.length
   const showResult = state !== null && draft === null && results.length > 0
   const first = !state ? 1 : draft ? firstUnansweredScreen(draft, beliefs, facts) : results.length > 0 ? total + 1 : 1
-  const { screen, go, back: goBack, reset } = useScreens(first, total, state !== null)
+  const { screen, go, back: goBack, depth, settle } = useScreens(first, total, state !== null)
   useDoneCount(addiction, "beliefs", showResult)
+  // Entries a reload left behind: the trail restarts at a reload, the history does not.
+  const carried = useRef<number | null>(null)
+  useEffect(() => {
+    if (carried.current === null) carried.current = carriedDepth()
+  }, [])
+  useEffect(() => {
+    try {
+      window.sessionStorage.setItem(DEPTH_KEY, JSON.stringify({ d: depth() + (carried.current ?? 0), l: window.history.length }))
+    } catch {
+      // storage blocked: Back after a reload may stop on an old screen
+    }
+  }, [screen, depth])
+  /** Leaves the visit's history entries behind, so one browser Back goes to where he was before the test. */
+  const leave = () => {
+    const extra = carried.current ?? 0
+    carried.current = 0
+    settle(extra)
+  }
 
   if (!state) return null
 
@@ -93,12 +128,13 @@ function Inner({ addiction, present, beliefs, facts, bands, needs }: InnerProps)
           move(() => {
             update((s) => startRetake(s, now()))
             go(1)
+            window.scrollTo({ top: 0 })
           })
         }
         onDelete={(i) => update((s) => deleteResult(s, i))}
         onClear={() => {
           clear()
-          reset()
+          leave()
         }}
       />
     )
@@ -114,7 +150,7 @@ function Inner({ addiction, present, beliefs, facts, bands, needs }: InnerProps)
   const stop = () => {
     update(dropDraft)
     setConfirmStop(false)
-    reset()
+    leave()
   }
   const stopControl = retaking && (
     <div className="mt-2">
@@ -155,7 +191,6 @@ function Inner({ addiction, present, beliefs, facts, bands, needs }: InnerProps)
                 {b.counterpart}
               </p>
               <p data-testid="reply-proof">{b.proof}</p>
-              <CountedLine text={b.counted} />
               <BeliefBasis item={b} />
               <div className="mt-3">
                 <PrimaryButton testId="reply-next" onClick={() => move(() => go(here + 1))}>
@@ -165,7 +200,6 @@ function Inner({ addiction, present, beliefs, facts, bands, needs }: InnerProps)
             </section>
           </OneQuestion>
           {stopControl}
-          <SourcesFold refs={realRefs(b.refs)} />
         </>
       )
     }
@@ -190,10 +224,14 @@ function Inner({ addiction, present, beliefs, facts, bands, needs }: InnerProps)
                   move(() => {
                     started()
                     const at = now()
-                    update((s) => rate(s, b.id, i + 1, at))
-                    // the next screen is worked out from the new ratings: a 4 or 5 adds a reply screen after this one
+                    // the next screen is worked out from the new ratings: a 4 or 5 adds a reply screen after this one.
                     const next = screensFor({ ...(draft?.ratings ?? {}), [b.id]: i + 1 }, beliefs, facts.length)
-                    go(next.findIndex((x) => x.kind === "q" && x.i === cur.i) + 2)
+                    // The address and the answer change in one transition, so the screen never shows the one the new
+                    // answer alone would resume at (that flash put a wrong entry in the history trail).
+                    startTransition(() => {
+                      go(next.findIndex((x) => x.kind === "q" && x.i === cur.i) + 2)
+                      update((s) => rate(s, b.id, i + 1, at))
+                    })
                   })
                 }
                 className={`rounded-md border px-4 text-left text-base ${present ? "min-h-11" : "min-h-12"} ${current === i + 1 ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}
@@ -239,9 +277,11 @@ function Inner({ addiction, present, beliefs, facts, bands, needs }: InnerProps)
             </div>
           ) : (
             <div data-testid="fact-answer" className="flex flex-col gap-1">
+              <p data-testid="fact-said" className="text-sm text-muted-foreground">
+                {fill(t.beliefs.youSaid, { word: answered ? t.beliefs.factTrue : t.beliefs.factFalse })}
+              </p>
               <p className="font-semibold">{answered === f.answer ? t.beliefs.factRight : t.beliefs.factWrong}</p>
               <p>{f.explain}</p>
-              <CountedLine text={f.counted} />
               <BeliefBasis item={f} caveat={false} />
               <div className="mt-3">
                 <PrimaryButton testId="fact-next" onClick={() => move(() => go(here + 1))}>
@@ -252,7 +292,6 @@ function Inner({ addiction, present, beliefs, facts, bands, needs }: InnerProps)
           )}
         </OneQuestion>
         {stopControl}
-        <SourcesFold refs={typeof answered === "boolean" ? realRefs(f.refs) : []} />
       </>
     )
   }
@@ -273,7 +312,7 @@ function Inner({ addiction, present, beliefs, facts, bands, needs }: InnerProps)
                 move(() => {
                   const at = now()
                   update((s) => finish(s, c, at))
-                  reset()
+                  leave()
                 })
               }
               className="min-h-12 rounded-md border border-border bg-card px-4 text-left text-base"

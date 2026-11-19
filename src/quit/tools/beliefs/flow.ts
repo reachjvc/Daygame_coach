@@ -53,13 +53,17 @@ function parseDraft(x: unknown): Draft | null {
 const mirror = (latest: BeliefResult | undefined) => ({ ratings: latest?.ratings ?? {}, facts: latest?.facts ?? {} })
 
 /**
- * Saved state, checked. A wave-1 save (no `results` list) with all the ratings becomes one result with no date;
+ * Saved state, checked. A saved result without a rating for every belief is dropped. A wave-1 save (no `results` list) with all the ratings becomes one result with no date;
  * a partial one becomes the draft.
  */
 export function parseFull(x: unknown, beliefIds: string[]): BeliefsFull {
   const o = isObj(x) ? x : {}
   if (Array.isArray(o.results)) {
-    const results = o.results.map(parseResult).filter((r): r is BeliefResult => r !== null).slice(-MAX_RESULTS)
+    // a result counts only when it rates every belief; a partial one is dropped
+    const results = o.results
+      .map(parseResult)
+      .filter((r): r is BeliefResult => r !== null && beliefIds.every((id) => id in r.ratings))
+      .slice(-MAX_RESULTS)
     return { ...mirror(results[results.length - 1]), draft: parseDraft(o.draft), results }
   }
   const old = parseBeliefs(x)

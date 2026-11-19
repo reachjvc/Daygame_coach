@@ -22,6 +22,7 @@ import {
   takenAt,
   type BeliefResult,
 } from "@/src/quit/tools/beliefs/flow"
+import { papersOf } from "@/src/quit/tools/beliefs/BeliefBasis"
 import { heldCount, topBeliefs } from "@/src/quit/tools/beliefs/logic"
 import { makeValid } from "../fixtures/valid"
 
@@ -89,16 +90,25 @@ describe("saved state and wave-1 saves", () => {
   })
 
   it("a new save keeps its draft and results, drops bad entries, caps at 20", () => {
-    const many = Array.from({ length: 25 }, (_, i) => ({ at: NOW, ratings: { b1: (i % 5) + 1 }, facts: {}, canStop: "yes" }))
-    const s = parseFull({ results: [...many, "junk", { at: "not a date", ratings: { b1: 9 }, canStop: "maybe" }], draft: { ratings: { b2: 2 } } }, ids)
+    const many = Array.from({ length: 25 }, (_, i) => ({ at: NOW, ratings: all((i % 5) + 1), facts: {}, canStop: "yes" }))
+    const s = parseFull({ results: [...many, "junk", { at: "not a date", ratings: all(2), canStop: "maybe" }], draft: { ratings: { b2: 2 } } }, ids)
     expect(s.results).toHaveLength(MAX_RESULTS)
-    expect(s.results[MAX_RESULTS - 1]).toEqual({ at: null, ratings: {}, facts: {}, canStop: null })
+    expect(s.results[MAX_RESULTS - 1]).toEqual({ at: null, ratings: { ...all(2) }, facts: {}, canStop: null })
     expect(s.draft?.ratings).toEqual({ b2: 2 })
   })
 
+  it("a saved result without a rating for every belief is dropped", () => {
+    const partial = { at: NOW, ratings: { b1: 5, b2: 2 }, facts: {}, canStop: "no" }
+    const full = { at: NOW, ratings: all(3), facts: {}, canStop: "yes" }
+    const s = parseFull({ results: [partial, full, partial] }, ids)
+    expect(s.results).toEqual([full])
+    expect(s.ratings).toEqual(all(3))
+    expect(parseFull({ results: [partial] }, ids).results).toEqual([])
+  })
+
   it("the old reader still sees the latest finished test", () => {
-    const s = parseFull({ results: [{ at: NOW, ratings: { b1: 5, b2: 2 }, facts: { f1: true }, canStop: "no" }] }, ids)
-    expect(s.ratings).toEqual({ b1: 5, b2: 2 })
+    const s = parseFull({ results: [{ at: NOW, ratings: { ...all(3), b1: 5, b2: 2 }, facts: { f1: true }, canStop: "no" }] }, ids)
+    expect(s.ratings).toEqual({ ...all(3), b1: 5, b2: 2 })
     expect(s.facts).toEqual({ f1: true })
   })
 })
@@ -225,5 +235,18 @@ describe("share wording and dates", () => {
   it("shows date and time, and nothing for a wave-1 result", () => {
     expect(takenAt(null)).toBeNull()
     expect(takenAt("2026-11-19T10:42:00")).toBe("Nov 19, 2026, 10:42")
+  })
+})
+
+describe("the basis box sources", () => {
+  it("joins refs of one paper into one entry holding all its quotes, once each", () => {
+    const a = { cite: "A (2010). One.", url: "https://example.org/a" }
+    const b = { cite: "B (2011). Two.", url: "https://example.org/b" }
+    const papers = papersOf([{ ...a, quote: "first" }, { ...b, quote: "other" }, { ...a, quote: "second" }, { ...a, quote: "first" }, { ...b }])
+    expect(papers).toEqual([
+      { ...a, quotes: ["first", "second"] },
+      { ...b, quotes: ["other"] },
+    ])
+    expect(papersOf([])).toEqual([])
   })
 })

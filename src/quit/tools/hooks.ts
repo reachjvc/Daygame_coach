@@ -174,7 +174,33 @@ export function useScreens(firstUnanswered: number, total: number, ready = true)
     window.history.replaceState(null, "", hrefFor(prev))
     addressMoved()
   }, [screen, hrefFor])
-  return { screen, go, back, reset, isResult: screen === total + 1 }
+  /** How many history entries this visit has added behind the one shown. */
+  const depth = useCallback(() => trail.current?.idx ?? 0, [])
+  /**
+   * Ends the visit's trail: goes back over every entry the visit added (`extra` more from before a reload) and
+   * rewrites the entry it lands on to the plain address, so one browser Back from there leaves the tool.
+   */
+  const settle = useCallback(
+    (extra = 0) => {
+      const steps = depth() + extra
+      if (steps <= 0) {
+        trail.current = null
+        window.history.replaceState(null, "", hrefFor(null))
+        return
+      }
+      const plain = hrefFor(null)
+      const onPop = () => {
+        window.removeEventListener("popstate", onPop)
+        window.history.replaceState(null, "", plain)
+        // the entry we landed on is the new start of the trail
+        trail.current = null
+      }
+      window.addEventListener("popstate", onPop)
+      window.history.go(-steps)
+    },
+    [depth, hrefFor],
+  )
+  return { screen, go, back, reset, depth, settle, isResult: screen === total + 1 }
 }
 
 /** Counts `start` once, on the first answer of a visit that had none. */

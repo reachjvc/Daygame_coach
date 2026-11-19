@@ -92,6 +92,8 @@ async function finishWith(page: Page, canStop: "yes" | "unsure" | "no", tag?: st
   if (tag) await shot(page, "canstop", tag)
   await tap(page, `canstop-${canStop}`)
   await expect(page.getByTestId("result")).toBeVisible()
+  // the visit's history entries are walked back and the landing entry has the plain address
+  await expect.poll(() => page.url()).not.toContain("s=")
 }
 async function fullTest(page: Page, ratings: number[], canStop: "yes" | "unsure" | "no" = "unsure", tag?: string) {
   await rateFrom(page, ratings, 0, tag)
@@ -115,7 +117,7 @@ for (const vp of VIEWPORTS) {
       await noSideways(page)
       await fullTest(page, ALL(3), "unsure", vp.name)
       await noSideways(page)
-      await expect(page.getByTestId("held-line")).toHaveText("0 of 12 hold you")
+      await expect(page.getByTestId("held-line")).toHaveText(tt.beliefs.heldNone.replace("{total}", "12"))
       await expect(page.getByTestId("top-heading")).toHaveText(tt.beliefs.softHeading)
       await expect(page.getByTestId("top-belief")).toHaveCount(3)
       await expect(page.locator("body")).not.toContainText(tt.beliefs.topHeading)
@@ -259,7 +261,7 @@ for (const vp of VIEWPORTS) {
       expect(s.results[0].ratings.b1).toBe(3)
     })
 
-    test("7 a wave-1 save opens as a result Taken before, and slip still reads it", async ({ page }) => {
+    test("7 a wave-1 save opens as a result Taken before, and gives still reads it", async ({ page }) => {
       await page.goto(quitUrl(`${A}/symptoms`))
       const ratings = Object.fromEntries(data.beliefs.map((b, i) => [b.id, i === 0 ? 5 : 3]))
       await page.evaluate((r) => localStorage.setItem("quit-v1", JSON.stringify({ nicotine: { beliefs: { ratings: r, facts: { f1: true, f2: false, f3: true } } } })), ratings)
@@ -325,7 +327,7 @@ for (const vp of VIEWPORTS) {
       await fullTest(page, [5, 5, 5, 5, 5, 5, 5, 1, 1, 1, 1, 1], "yes")
       const text = "I believed 7 of the 12 lies nicotine tells you."
       // the card is fetched ahead; share carries it as a file once it has arrived
-      const shared = () => page.evaluate(() => (window as unknown as { __shared: { text: string; files?: string[] } | null }).__shared)
+      const shared = () => page.evaluate(() => (window as unknown as { __shared: { text: string; title?: string; files?: string[] } | null }).__shared)
       await expect
         .poll(async () => {
           await page.getByTestId("share").click()
@@ -333,6 +335,7 @@ for (const vp of VIEWPORTS) {
         })
         .toEqual(["12-lies-result.png"])
       expect((await shared())?.text).toBe(text)
+      expect(((await shared()) as { title?: string }).title).toBe("The 12 lies nicotine tells you")
       await page.evaluate(() => ((window as unknown as Record<string, unknown>).__files = false))
       await page.getByTestId("share").click()
       const plain = await page.evaluate(() => (window as unknown as { __shared: { text: string; url: string; files?: unknown } }).__shared)
@@ -394,7 +397,7 @@ for (const vp of VIEWPORTS) {
           roots.forEach((root) =>
             root.querySelectorAll<HTMLElement>("button, a[href], summary, [role=radio]").forEach((el) => {
               const r = el.getBoundingClientRect()
-              if (r.width > 0 && r.height > 0 && r.height < 43.5) out.push(`${el.textContent?.trim().slice(0, 30)} ${Math.round(r.height)}px`)
+              if (r.width > 0 && r.height > 0 && (r.height < 43.5 || r.width < 43.5)) out.push(`${el.textContent?.trim().slice(0, 30)} ${Math.round(r.width)}x${Math.round(r.height)}px`)
             }),
           )
           return out
@@ -437,6 +440,102 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByTestId("scene")).toHaveText(data.beliefs[0].scene)
       expect((await stored(page)) ?? null).toBeNull()
       expect(errors).toEqual([])
+    })
+    test("13 one browser Back from the result leaves the test; a reload on the result keeps the result", async ({ page }) => {
+      await page.goto(quitUrl(A))
+      await page.goto(URL)
+      await rateFrom(page, [5, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3])
+      await answerFacts(page)
+      await finishWith(page, "yes")
+      await page.reload()
+      await expect(page.getByTestId("result")).toBeVisible()
+      await page.goBack()
+      await expect(page).toHaveURL(new RegExp(`${A}(\\?preview=1)?$`))
+      await page.goForward()
+      await expect(page.getByTestId("result")).toBeVisible()
+      expect(page.url()).not.toContain("s=")
+    })
+
+    test("13b a reload in the middle of the test does not leave dead entries either", async ({ page }) => {
+      await page.goto(quitUrl(A))
+      await page.goto(URL)
+      await rateFrom(page, ALL(3), 0, undefined, 4)
+      await expect(page.getByTestId("scene")).toHaveText(data.beliefs[4].scene)
+      await page.reload()
+      await expect(page.getByTestId("scene")).toHaveText(data.beliefs[4].scene)
+      await rateFrom(page, ALL(3), 4)
+      await answerFacts(page)
+      await finishWith(page, "yes")
+      await page.goBack()
+      await expect(page).toHaveURL(new RegExp(`${A}(\\?preview=1)?$`))
+    })
+
+    test("14 round 1: reply and fact screens, chevrons, one entry per paper, You said", async ({ page }) => {
+      await page.goto(URL)
+      await rateFrom(page, [3, 3], 0, undefined, 2)
+      await tap(page, "rate-5")
+      await expect(page.getByTestId("reply")).toBeVisible()
+      await expect(page.getByTestId("reply")).not.toContainText(tt.common.counted)
+      await expect(page.locator("details#sources")).toHaveCount(0)
+      const basis = page.getByTestId("belief-basis")
+      await expect(basis.getByTestId("fold-chevron")).toBeVisible()
+      const turn = () => basis.getByTestId("fold-chevron").evaluate((el) => getComputedStyle(el).rotate)
+      const closed = await turn()
+      await basis.locator("summary").click()
+      await expect.poll(turn).not.toBe(closed)
+      await basis.getByRole("button", { name: tt.common.source }).click()
+      const papers = basis.getByTestId("basis-paper")
+      const cites = new Set(
+        (nicotineJson as unknown as { beliefs: { id: string; refs: { cite: string; quote?: string }[] }[] }).beliefs[2].refs.map((r) => r.cite),
+      )
+      await expect(papers).toHaveCount(cites.size)
+      await tap(page, "reply-next")
+      await rateFrom(page, ALL(3), 3)
+      await tap(page, "fact-false")
+      await expect(page.getByTestId("fact-said")).toHaveText("You said False.")
+      await expect(page.getByTestId("fact-answer")).not.toContainText(tt.common.counted)
+      await expect(page.locator("details#sources")).toHaveCount(0)
+      await expect(page.getByTestId("fact-answer").getByTestId("fold-chevron")).toBeVisible()
+    })
+
+    test("15 round 1: the verdict card and the No answer", async ({ page }) => {
+      await page.goto(URL)
+      await fullTest(page, ALL(1), "no")
+      await expect(page.getByTestId("held-line")).toHaveText("None of the 12 hold you")
+      await expect(page.getByTestId("canstop-line")).toHaveText(tt.beliefs.canStopLineNoneHeld)
+      const link = page.getByTestId("band-link")
+      await expect(link).toHaveText(tt.beliefs.readySetDate)
+      await expect(link).toHaveClass(/bg-primary/)
+      const card = await page.getByTestId("band").boundingBox()
+      const btn = await link.boundingBox()
+      expect(btn!.width).toBeGreaterThan(card!.width - 40)
+      await expect(page.getByTestId("band").getByTestId("band-link")).toHaveCount(1)
+      await expect(page.getByTestId("see-through").locator("li").first()).toHaveCSS("border-top-width", "0px")
+      await expect(page.getByTestId("answers").getByTestId("fold-chevron")).toBeVisible()
+      await page.clock.runFor(300)
+      await tap(page, "again")
+      await rateFrom(page, ALL(1), 0)
+      await answerFacts(page)
+      await finishWith(page, "unsure")
+      await expect(page.getByTestId("band-link")).toHaveText(tt.beliefs.bandFreeLink)
+      await tap(page, "again")
+      await rateFrom(page, [5, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1], 0)
+      await answerFacts(page)
+      await finishWith(page, "no")
+      await expect(page.getByTestId("canstop-line")).toHaveText(tt.beliefs.canStopLine.no)
+      await expect(page.getByTestId("band-link")).toHaveText(tt.beliefs.readySetDate)
+      await expect(page.getByTestId("top-proof").first().getByTestId("fold-chevron").first()).toBeVisible()
+    })
+
+    test("16 round 1: Take it again starts at the top of question 1", async ({ page }) => {
+      await page.goto(URL)
+      await fullTest(page, ALL(3), "yes")
+      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+      expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(200)
+      await tap(page, "again")
+      await expect(page.getByTestId("scene")).toHaveText(data.beliefs[0].scene)
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
+      await expect(page.getByRole("heading", { level: 1 })).toBeInViewport()
     })
   })
 }
