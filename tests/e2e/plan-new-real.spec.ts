@@ -61,6 +61,13 @@ const sandboxIdOf = async (ownerId: string) =>
 const tickCount = async (userId: string) =>
   withDb(async (db) => (await db.query("select count(*)::int as n from public.life_plan_day_ticks where user_id = $1", [userId])).rows[0].n as number)
 
+/** The hidden account's current north star text ("" when none). */
+const northStarText = (userId: string) =>
+  withDb(async (db) => {
+    const r = await db.query("select text from public.life_plan_north_stars where user_id = $1 and ended_on is null", [userId])
+    return (r.rows[0]?.text as string | undefined) ?? ""
+  })
+
 async function giveCopySpace(ownerId: string): Promise<void> {
   const { error } = await stackAdmin().from("plan_sandboxes").upsert({ owner_id: ownerId }, { onConflict: "owner_id", ignoreDuplicates: true })
   if (error) throw new Error(`could not give the account a copy space: ${error.message}`)
@@ -112,20 +119,21 @@ test.describe("the real step parts on /plan/new/s/<step>", () => {
 
   test("fifty typed characters in the north star box send far fewer than fifty requests", async ({ page, account }) => {
     test.setTimeout(240_000)
-    await seedAndCopy(page, account.id)
+    const sandboxId = await seedAndCopy(page, account.id)
     await page.goto(realStepRoute("star")!, { timeout: NAV })
     const north = page.getByRole("textbox", { name: "Your north star" })
     await expect(north).toBeVisible({ timeout: NAV })
     await north.fill("")
-    // Let the save of the clearing settle, then count only what typing sends.
-    await page.waitForTimeout(3_000)
+    // Let the save of the clearing reach the hidden account, then count only what typing sends.
+    await expect.poll(() => northStarText(sandboxId), { timeout: 30_000 }).toBe("")
     const sent: PwRequest[] = []
     const on = (r: PwRequest) => { if (isPlanWrite(r)) sent.push(r) }
     page.on("request", on)
     const text = "x".repeat(10) + "abcdefghij" + "0123456789" + "KLMNOPQRST" + "uvwxyz-_.,"
     expect(text.length).toBe(50)
     await north.pressSequentially(text)
-    await page.waitForTimeout(6_000)
+    // Typing is done once the whole text is in the hidden account; then nothing more is owed.
+    await expect.poll(() => northStarText(sandboxId), { timeout: 30_000 }).toBe(text)
     page.off("request", on)
     expect(sent.length, `plan requests while typing 50 characters: ${sent.map((r) => r.method() + " " + new URL(r.url()).pathname).join(", ")}`).toBeLessThan(10)
     expect(sent.length).toBeGreaterThan(0)

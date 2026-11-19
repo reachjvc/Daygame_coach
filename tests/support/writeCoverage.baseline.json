@@ -88,6 +88,8 @@
   "src/db/programRepo.ts:unenroll": "unasserted",
   "src/db/programRepo.ts:updateEnrollmentSchedule": "unasserted",
   "src/db/roleModelsRepo.ts:councilRemindersDueAsServer": "asserted",
+  "src/db/roleModelsRepo.ts:deleteCouncilRows": "asserted",
+  "src/db/roleModelsRepo.ts:insertCouncilRows": "asserted",
   "src/db/roleModelsRepo.ts:removeCouncilMember": "asserted",
   "src/db/roleModelsRepo.ts:saveCouncilMember": "asserted",
   "src/db/roleModelsRepo.ts:writeCouncilOrder": "asserted",

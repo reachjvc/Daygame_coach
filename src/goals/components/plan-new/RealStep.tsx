@@ -243,7 +243,6 @@ export function RealStepHost({ stepId, children }: { stepId: NorthStarTabId; chi
   const decision = useMemo<SyncDecision | null>(() => (loaded ? { kind: "start-empty", revision: 0 } : null), [loaded])
   const reads = usePlanReads({ plan, setPlan, loaded, today, setToday, timezone, decision })
   const { ticks, oneThing } = reads
-  const { goalHandlers } = writers
 
   const openAreaGoals = useCallback((areaId: string) => {
     queue((d) => { d.touched = true; d.tab = "milestones"; d.q = { area: areaId, goal: null, routine: d.q.routine } })
