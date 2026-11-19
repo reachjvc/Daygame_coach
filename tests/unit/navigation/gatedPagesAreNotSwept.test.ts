@@ -42,6 +42,18 @@ describe("pages that answer 404 on purpose", () => {
     }
   })
 
+  test("a bad-input-only entry is not hidden by an environment, flag or preview", () => {
+    for (const route of Object.keys(NOT_FOUND_ONLY_ON_BAD_INPUT)) {
+      const page = staticRoutes().find((r) => r.route === route)
+      expect(page, `${route} is in NOT_FOUND_ONLY_ON_BAD_INPUT but is not a static page`).toBeTruthy()
+      const src = readFileSync(page!.file, "utf-8")
+      expect(
+        /process\.env|NODE_ENV|preview|flag/i.test(src),
+        `${route} reads an environment, flag or preview, so it is hidden, not bad-input-only: move it to NOT_SWEPT`,
+      ).toBe(false)
+    }
+  })
+
   test("a bad-input-only entry is not also a gate that hides the whole page", () => {
     const both = Object.keys(NOT_FOUND_ONLY_ON_BAD_INPUT).filter((r) => r in NOT_SWEPT)
     expect(both, "listed in both lists").toEqual([])
