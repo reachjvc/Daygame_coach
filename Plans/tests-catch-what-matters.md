@@ -118,6 +118,8 @@ where noted; 5 before 8; 9 last.
 
 Accept: worktree exists; start SHA written.
 
+**Status:** done 2026-11-19 — rig worktree ~/.cache/daygame-research/tests-catch/wt on branch tests-catch; start SHA 7530375257ff59edc38bb5c61a98c3e067abf685 (origin/main when execution began).
+
 ## Phase 1 — A red main names the commit that broke it · M · sonnet
 
 1. `.github/workflows/e2e.yml`, job `report`: after the HTML merge, also run
