@@ -244,7 +244,7 @@ for (const size of SIZES) {
       await expect(page.getByTestId("card-0-text-if")).toHaveText(label("coffee"))
       await page.reload()
       await expect(page.getByTestId("card-0-text-if")).toHaveText(label("coffee"))
-      await expect(page.getByTestId("card-1-text-if")).toHaveText(label("stress"))
+      await expect(page.getByTestId("card-1-text-if")).toHaveText("I’m stressed")
       await expect(page.getByTestId("card-2-text-if")).toHaveText(label("bored"))
       await tap(page, "card-0-change")
       await expect(page.getByTestId("card-0-done")).toBeEnabled()
@@ -350,7 +350,7 @@ for (const size of SIZES) {
       await tap(page, "check-2w")
       await tap(page, "print-open")
       await expect(page.getByTestId("print-view")).toBeVisible()
-      await expect(page.getByTestId("print-card-0-text-if")).toHaveText(label("stress"))
+      await expect(page.getByTestId("print-card-0-text-if")).toHaveText("I’m stressed")
       await expect(page.getByTestId("print-card-1-text-then")).toHaveText("go to the gym.")
       await expect(page.getByTestId("print-check")).toContainText("Thu 3 Dec")
       await expect(page.getByTestId("print-view").locator("button")).toHaveCount(2)
@@ -399,12 +399,16 @@ for (const size of SIZES) {
       await bigEnough(page)
       await tap(page, "print-close")
       expect(errors).toEqual([])
-      // the menu row carries the new name and line
+      // the menu row carries the new name and line, and opens the tool
       await page.goto(quitUrl("/quit/nicotine"))
       const row = page.getByTestId("row-ifthen")
       await expect(row).toContainText("If-then plan")
       await expect(row).toContainText("Your riskiest moments, and what you'll do there instead.")
       await noSideways(page)
+      // it is live: the row is a link that opens the tool
+      await row.click()
+      await expect(page).toHaveURL(/\/quit\/nicotine\/ifthen/)
+      await expect(page.locator("[data-testid=result], [data-testid=moment-after-food]").first()).toBeVisible()
     })
   })
 }
