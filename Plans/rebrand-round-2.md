@@ -2,7 +2,7 @@
 
 Written 2026-11-19 (Opus), after the owner went through the before/after page of `Plans/rebrand-10kdaysclub.md`
 (https://claude.ai/artifact/ERBS6YKjuwV9jB61KtSfUE). That plan stays the record of round 1; this one is the next
-iteration. **Status: Phases 0–2 done (2026-11-19); Phase 3 running.** Everything below that is not his words is **proposed**.
+iteration. **Status: Phases 0–3 done (2026-11-19); Phase 4 (the board) running.** Everything below that is not his words is **proposed**.
 
 His words in chat, 2026-11-19: *"Not super stoked about it in general. Also the text on the frontpage could be much
 sharper, but i guess you might need some handholding to get there. I need you to make a plan for the next iteration
@@ -322,6 +322,18 @@ On branch `look-r2` only:
    Sonnet fixes the CSS and re-shoots those shots. One round; anything left is written on the board.
 
 **Done when:** every shot exists, passes the height check, and the Opus list is fixed or written down.
+
+**Phase 3 done 2026-11-19** (branch `look-r2`, local commit `f0552c3a`, never merged). `app/look-variants.css` is
+imported from `app/layout.tsx` right after `globals.css` (a CSS `@import` cannot sit at the end of a file); badges
+show through a new `components/R2PartBadge.tsx` in the header lockup and on the sign-in pages. 104 shots, full length:
+Haiku height check 0 misses; a re-probe read a filled button (or the Time Log icon) as plain RGB on 75 screens, all
+`rgb(255, 107, 53)` (11 screens have no filled button). Opus look check (`rebrand-r2/look-check.md`): fixed in one
+round — the Time Log marker misses its loading screen (added `h1.shrink-0.text-sm`); Your plan draws its own
+near-black page with hand-written violet (now charcoal and orange in every look, and D4's glow / D5's line reach it);
+D2's Home card labels; The Field's purple Sessions icon. Left and written on the board: text links on log in and in
+the footer stay white; Training, the Audit and a locked Time Log tile were not shot. The dev server is killed by low
+memory now and then (other sessions hold ~15 GB); `rebrand-r2/dev-loop.sh` restarts it and `shoot.mjs` waits and
+retries.
 
 ### Phase 4 — The round 2 board (Sonnet builds; Opus reviews; ends at O2)
 
