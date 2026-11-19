@@ -32,7 +32,7 @@ export function MilestonesTab({ ctx }: { ctx: RecordCtx }) {
         <p className="text-sm text-muted-foreground">{t.daysLadderLine}</p>
         <ul className="flex flex-col gap-2">
           {days.map((s) => (
-            <Row key={s.threshold} id={`day-${s.threshold}`} label={s.threshold === 1 ? "1 day" : `${s.threshold} days`} done={s.date !== null} line={s.date ? t.reachedOn(fmtDay(s.date)) : s.projected ? t.toGoOn(s.toGo, fmtDay(s.projected)) : t.toGoDays(s.toGo)} />
+            <Row key={s.threshold} id={`day-${s.threshold}`} label={s.threshold === 1 ? "1 day" : `${s.threshold} days`} done={s.date !== null} line={s.date ? (s.date === today ? t.reachedToday(fmtDay(s.date)) : t.reachedOn(fmtDay(s.date))) : s.projected ? t.toGoOn(s.toGo, fmtDay(s.projected)) : t.toGoDays(s.toGo)} />
           ))}
         </ul>
       </section>
@@ -46,7 +46,7 @@ export function MilestonesTab({ ctx }: { ctx: RecordCtx }) {
               id={`money-${s.threshold}`}
               label={fmtMoney(s.threshold).replace(".00", "")}
               done={s.reachedOn !== null}
-              line={s.reachedOn ? t.reachedOn(fmtDay(s.reachedOn)) : s.daysAtRate !== null && rate !== null ? `${t.atRate(s.daysAtRate)}: ${fmtMoney(rate)} a day` : t.noRateMilestone}
+              line={s.reachedOn ? (s.reachedOn === today ? t.reachedToday(fmtDay(s.reachedOn)) : t.reachedOn(fmtDay(s.reachedOn))) : s.daysAtRate !== null && rate !== null ? `${t.atRate(s.daysAtRate)}: ${fmtMoney(rate)} a day` : t.noRateMilestone}
             />
           ))}
         </ul>

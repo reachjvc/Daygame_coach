@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { DAY_MS, amountPerDay, cleanMs, dayStartMs, fmtMoney, moneyKept, totalCleanMs, unitsNotUsed } from "@/src/quit/money"
+import { DAY_MS, amountPerDay, calPos, cleanMs, cleanIntervals, dayStartMs, fmtMoney, moneyKept, totalCleanMs, unitsNotUsed, windowFrom } from "@/src/quit/money"
 
 const at = (day: string, h = 0, m = 0) => {
   const [y, mo, d] = day.split("-").map(Number)
@@ -24,9 +24,9 @@ describe("clean time per run", () => {
   it("a window keeps only the clean time inside it", () => {
     const now = at("2026-11-19", 10)
     const run = { start: "2026-10-01", end: null }
-    expect(cleanMs(run, now, now - 7 * DAY_MS) / DAY_MS).toBeCloseTo(7, 6)
+    expect(cleanMs(run, now, windowFrom(7, now)) / DAY_MS).toBeCloseTo(7, 6)
     // a window older than the run's start is cut at the start
-    expect(cleanMs({ start: "2026-11-17", end: null }, now, now - 30 * DAY_MS) / DAY_MS).toBeCloseTo(2 + 10 / 24, 6)
+    expect(cleanMs({ start: "2026-11-17", end: null }, now, windowFrom(30, now)) / DAY_MS).toBeCloseTo(2 + 10 / 24, 6)
   })
   it("adds the runs", () => {
     const runs = [
@@ -60,7 +60,7 @@ describe("money kept", () => {
     expect(moneyKept({ runs, nowMs: now, perDay: 0, priceUsd: 0.52 })).toBeNull()
   })
   it("a period window counts only its own clean time", () => {
-    expect(moneyKept({ runs, nowMs: now, perDay: 10, priceUsd: 0.52, fromMs: now - 7 * DAY_MS })).toBe(36.4)
+    expect(moneyKept({ runs, nowMs: now, perDay: 10, priceUsd: 0.52, fromPos: windowFrom(7, now) })).toBe(36.4)
   })
   it("units not used are rounded down", () => {
     expect(unitsNotUsed(runs, now, 10)).toBe(200)
@@ -75,5 +75,51 @@ describe("fmtMoney", () => {
     expect(fmtMoney(1234.5)).toBe("$1,234.50")
     expect(fmtMoney(0)).toBe("$0.00")
     expect(fmtMoney(-0.001)).toBe("$0.00")
+  })
+})
+
+describe("merged intervals", () => {
+  it("a slip day and the new run starting that day count once", () => {
+    const now = at("2026-11-19", 12)
+    const runs = [
+      { start: "2026-11-01", end: "2026-11-10" },
+      { start: "2026-11-05", end: null }, // overlaps the first run
+    ]
+    expect(cleanIntervals(runs, now)).toHaveLength(1)
+    expect(totalCleanMs(runs, now) / DAY_MS).toBeCloseTo(18.5, 1)
+  })
+  it("a run that ends the day another starts adds up without a gap or overlap", () => {
+    const runs = [
+      { start: "2026-11-01", end: "2026-11-10" },
+      { start: "2026-11-10", end: null },
+    ]
+    expect(totalCleanMs(runs, at("2026-11-19")) / DAY_MS).toBeCloseTo(18, 1)
+  })
+})
+
+describe("a clock change does not move clean time", () => {
+  const was = process.env.TZ
+  it("counts whole calendar days across the end of daylight time", () => {
+    process.env.TZ = "Europe/Berlin"
+    try {
+      // 2026-10-25 has 25 hours in Berlin
+      const now = new Date(2026, 10, 19, 10, 0, 1).getTime()
+      const run = { start: "2026-10-20", end: null }
+      expect(cleanMs(run, now)).toBe(30 * DAY_MS + 10 * 3_600_000 + 1000)
+      expect(calPos(new Date(2026, 9, 26, 0, 0, 0).getTime()) - calPos(new Date(2026, 9, 24, 0, 0, 0).getTime())).toBe(2 * DAY_MS)
+    } finally {
+      if (was === undefined) delete process.env.TZ
+      else process.env.TZ = was
+    }
+  })
+  it("and across the start of daylight time", () => {
+    process.env.TZ = "America/New_York"
+    try {
+      const now = new Date(2026, 2, 20, 6, 0, 0).getTime()
+      expect(cleanMs({ start: "2026-03-01", end: null }, now)).toBe(19 * DAY_MS + 6 * 3_600_000)
+    } finally {
+      if (was === undefined) delete process.env.TZ
+      else process.env.TZ = was
+    }
   })
 })

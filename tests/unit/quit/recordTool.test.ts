@@ -12,11 +12,12 @@ import {
   monthGrid,
   monthSpan,
   nextDayStep,
-  periodFromMs,
   ringFill,
   runToStart,
   spentInPeriod,
   splitElapsed,
+  toCents,
+  elapsedSince,
   viewOf,
   type RecordView,
 } from "@/src/quit/tools/record/logic"
@@ -107,7 +108,6 @@ describe("money windows and milestones", () => {
     expect(spentInPeriod(spends, null, now)).toBe(105)
     expect(moneyFor(moneyRuns, unit, spends, now, 7).money).toBe(31.4)
     expect(moneyFor(moneyRuns, unit, spends, now, null).money).toBe(-1)
-    expect(periodFromMs(null, now)).toBe(Number.NEGATIVE_INFINITY)
     expect(moneyFor(moneyRuns, null, [], now, null).money).toBeNull()
   })
   it("a money step is reached only while the money kept is at or above it, with its first day", () => {
@@ -196,9 +196,9 @@ describe("small helpers", () => {
     expect(splitElapsed(-5)).toEqual({ days: 0, hours: 0, minutes: 0, seconds: 0 })
   })
   it("days text has one decimal and the right plural", () => {
-    expect(daysText(23.6)).toBe("23.6 days")
+    expect(daysText(44.866)).toBe("44.87 days")
     expect(daysText(1)).toBe("1 day")
-    expect(daysText(0.04)).toBe("0.0 days")
+    expect(daysText(0.004)).toBe("0.00 days")
   })
 })
 
@@ -229,5 +229,36 @@ describe("the example and the saved data", () => {
     expect(s.spends[0].note).toHaveLength(60)
     expect(s.targets).toEqual([{ id: "t", name: "Shoes", price: 90 }])
     expect(parseRecordTool("junk")).toEqual({ spends: [], targets: [] })
+  })
+})
+
+describe("robustness and cents", () => {
+  it("skips malformed Black Box rows instead of crashing", () => {
+    const bad = {
+      version: 1,
+      attempts: [run("a", "2026-10-29", null, null), run("x", "not-a-day", null, null), run("y", "2026-10-01", "2026-13-45", null)],
+      reports: [rep("ok", "a", "2026-11-10", false, "fine"), { ...rep("r1", "a", "2026-11-11", false, "x"), at: "garbage" }, { ...rep("r2", "a", "2026-11-11", false, "x"), at: undefined as unknown as string }],
+    } as BlackBoxRecord
+    const v = viewOf(bad, "nicotine", TODAY)
+    expect(v.runs).toHaveLength(1)
+    expect(v.closeCalls).toBe(1)
+    expect(v.total).toBe(22)
+  })
+  it("a day held by two runs is listed once for the milestones, the Black Box total stays", () => {
+    const two: BlackBoxRecord = { version: 1, attempts: [run("a", "2026-11-10", "2026-11-12", "s"), run("b", "2026-11-12", null, null)], reports: [rep("s", "a", "2026-11-12", true, "")] }
+    const v = viewOf(two, "nicotine", TODAY)
+    expect(v.total).toBe(3 + 8)
+    expect(v.cleanDays).toHaveLength(10)
+    expect(new Set(v.cleanDays).size).toBe(v.cleanDays.length)
+  })
+  it("rounds to cents; below one cent is refused", () => {
+    expect(toCents(0.004)).toBeNull()
+    expect(toCents(0.005)).toBe(0.01)
+    expect(toCents(12.345)).toBe(12.35)
+    expect(toCents(0)).toBeNull()
+  })
+  it("the counter counts from 00:00 of the first day on the calendar line", () => {
+    expect(elapsedSince("2026-11-12", new Date(2026, 10, 19, 10, 0, 1).getTime())).toBe(7 * 86_400_000 + 10 * 3_600_000 + 1000)
+    expect(elapsedSince("2026-11-25", new Date(2026, 10, 19).getTime())).toBe(0)
   })
 })

@@ -1,7 +1,7 @@
 import type { BlackBoxRecord } from "@/src/vice/types"
 import { forVice, runLanes, stats } from "@/src/vice/blackboxService"
-import { addDays } from "../../record"
-import { DAY_MS, amountPerDay, dayStartMs, moneyKept, round2, totalCleanMs, type MoneyRun } from "../../money"
+import { addDays, isIsoDay } from "../../record"
+import { DAY_MS, amountPerDay, dayStartMs, moneyKept, round2, totalCleanMs, calPos, dayPos, windowFrom, type MoneyRun } from "../../money"
 import { daysBetween, mondayIndex } from "../date/logic"
 
 export { daysBetween, mondayIndex }
@@ -57,7 +57,13 @@ export interface RecordView {
 
 /** One vice's runs and reports, with the Black Box's own maths (`forVice`, `stats`, `runLanes`, `runDays`). */
 export function viewOf(box: BlackBoxRecord, viceId: string, today: string): RecordView {
-  const mine = forVice(box, viceId)
+  // Malformed rows (a report with no valid day, a run with a non-calendar day) are skipped, never a crash.
+  const sane: BlackBoxRecord = {
+    ...box,
+    attempts: box.attempts.filter((a) => isIsoDay(a.startedOn) && (a.endedOn === null || isIsoDay(a.endedOn))),
+    reports: box.reports.filter((r) => typeof r.at === "string" && isIsoDay(r.at.slice(0, 10))),
+  }
+  const mine = forVice(sane, viceId)
   const lanes = runLanes(mine, today)
   const s = stats(mine, today)
   const runs: RunView[] = lanes.map((l) => {
@@ -70,21 +76,22 @@ export function viewOf(box: BlackBoxRecord, viceId: string, today: string): Reco
       live: l.live,
       closeCalls: mine.reports
         .filter((r) => r.attemptId === l.attempt.id && !r.wentThrough)
-        .map((r) => ({ day: r.at.slice(0, 10), thought: r.thought }))
+        .map((r) => ({ day: r.at.slice(0, 10), thought: typeof r.thought === "string" ? r.thought : "" }))
         .sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : 0)),
-      slip: ended ? { day: ended.at.slice(0, 10), thought: ended.thought } : l.attempt.endedOn ? { day: l.attempt.endedOn, thought: "" } : null,
+      slip: ended ? { day: ended.at.slice(0, 10), thought: typeof ended.thought === "string" ? ended.thought : "" } : l.attempt.endedOn ? { day: l.attempt.endedOn, thought: "" } : null,
     }
   })
   const cleanDays: string[] = []
   for (const r of runs) for (let i = 0; i < r.days; i++) cleanDays.push(addDays(r.start, i))
-  cleanDays.sort()
+  // A calendar day held by two runs (a slip day and the new run that day) counts once here.
+  const uniqueDays = [...new Set(cleanDays)].sort()
   return {
     runs,
     total: s.totalCleanDays,
     current: s.currentDays,
     best: s.longestDays,
     closeCalls: s.closeCallsSurvived,
-    cleanDays,
+    cleanDays: uniqueDays,
     slips: runs.flatMap((r) => (r.slip ? [r.slip] : [])),
     closeCallList: runs.flatMap((r) => r.closeCalls),
   }
@@ -109,15 +116,10 @@ export interface Target {
 
 /* ---------- periods ---------- */
 
-/** The start of a rolling window ending now; `-Infinity` for the whole time. */
-export function periodFromMs(days: number | null, nowMs: number): number {
-  return days === null ? Number.NEGATIVE_INFINITY : nowMs - days * DAY_MS
-}
-
 /** Spending dated inside the window (from the local day the window starts on). */
 export function spentInPeriod(spends: Spend[], days: number | null, nowMs: number): number {
   if (days === null) return round2(spends.reduce((n, s) => n + s.amount, 0))
-  const from = dayKeyOf(nowMs - days * DAY_MS)
+  const from = addDays(dayKeyOf(nowMs), -days)
   return round2(spends.filter((s) => s.day >= from).reduce((n, s) => n + s.amount, 0))
 }
 
@@ -234,6 +236,8 @@ export function monthGrid(year: number, month: number): (string | null)[][] {
 export interface DayInfo {
   day: string
   today: boolean
+  /** A day after today. */
+  future: boolean
   /** The run this clean day belongs to, and which day of it. */
   clean: { runStart: string; dayNo: number } | null
   slips: string[]
@@ -253,6 +257,7 @@ export function dayInfo(day: string, view: RecordView, today: string): DayInfo {
   return {
     day,
     today: day === today,
+    future: day > today,
     clean,
     slips: view.slips.filter((s) => s.day === day).map((s) => s.thought),
     closeCalls: view.closeCallList.filter((c) => c.day === day).map((c) => c.thought),
@@ -299,10 +304,10 @@ export function splitElapsed(ms: number): Split {
   return { days: Math.floor(t / 86400), hours: Math.floor((t % 86400) / 3600), minutes: Math.floor((t % 3600) / 60), seconds: t % 60 }
 }
 
-/** Days with one decimal and the right plural: "23.6 days", "1 day". */
+/** Days with two decimals and the right plural: "44.87 days", "1 day". */
 export function daysText(days: number): string {
-  const s = (Math.round(days * 10) / 10).toFixed(1)
-  return s === "1.0" ? "1 day" : `${s} days`
+  const s = (Math.round(days * 100) / 100).toFixed(2)
+  return s === "1.00" ? "1 day" : `${s} days`
 }
 export const plural = (n: number, one: string, many: string) => (n === 1 ? `${n} ${one}` : `${n} ${many}`)
 
@@ -314,13 +319,25 @@ export interface PeriodMoney {
   spent: number
   /** Clean time inside the window, in days. */
   cleanDays: number
-  fromMs: number
+  /** Where the window starts on the calendar line (`windowFrom`). */
+  fromPos: number
 }
 
 /** Money kept in a rolling window (`days`) or the whole time (`null`): clean time x count x price - spending dated inside it. */
 export function moneyFor(runs: MoneyRun[], unit: { perDay: number | null; priceUsd: number } | null, spends: Spend[], nowMs: number, days: number | null): PeriodMoney {
-  const fromMs = periodFromMs(days, nowMs)
+  const fromPos = windowFrom(days, nowMs)
   const spent = spentInPeriod(spends, days, nowMs)
-  const money = unit ? moneyKept({ runs, nowMs, perDay: unit.perDay, priceUsd: unit.priceUsd, spent, fromMs }) : null
-  return { money, spent, cleanDays: totalCleanMs(runs, nowMs, fromMs) / DAY_MS, fromMs }
+  const money = unit ? moneyKept({ runs, nowMs, perDay: unit.perDay, priceUsd: unit.priceUsd, spent, fromPos }) : null
+  return { money, spent, cleanDays: totalCleanMs(runs, nowMs, fromPos) / DAY_MS, fromPos }
+}
+
+/** Milliseconds from 00:00 of `startDay` to now on the calendar line (a clock change never moves it). */
+export function elapsedSince(startDay: string, nowMs: number): number {
+  return Math.max(0, calPos(nowMs) - dayPos(startDay))
+}
+
+/** An amount typed by the reader, rounded to cents; null when it is below one cent. */
+export function toCents(value: number): number | null {
+  const v = Math.round(value * 100) / 100
+  return v >= 0.01 ? v : null
 }

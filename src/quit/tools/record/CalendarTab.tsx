@@ -66,13 +66,13 @@ export function CalendarTab({ ctx }: { ctx: RecordCtx }) {
                   data-state={st}
                   data-today={i.today ? "true" : "false"}
                   data-close={i.closeCalls.length > 0 ? "true" : "false"}
-                  aria-label={t.calDayLabel(fmtDay(day), st === "clean" ? t.stateClean : st === "slip" ? t.stateSlip : t.stateOther)}
+                  aria-label={t.calDayLabel(fmtDay(day), st === "clean" ? t.stateClean : st === "slip" ? t.stateSlip : t.stateOther, i.closeCalls.length > 0)}
                   aria-pressed={picked === day}
                   onClick={() => setPicked(day)}
                   className={`relative flex size-full min-h-11 items-center justify-center rounded-md text-base tabular-nums ${cls} ${i.today ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : ""} ${picked === day ? "outline outline-2 outline-primary" : ""}`}
                 >
                   {label}
-                  {i.closeCalls.length > 0 && <span aria-hidden="true" className="absolute bottom-1 size-1.5 rounded-full bg-foreground" />}
+                  {i.closeCalls.length > 0 && <span aria-hidden="true" className={`absolute bottom-1 size-1.5 rounded-full ${st === "clean" ? "bg-primary-foreground" : "bg-foreground"}`} />}
                 </button>
               )
             })}
@@ -109,7 +109,7 @@ export function CalendarTab({ ctx }: { ctx: RecordCtx }) {
             {info.closeCalls.map((s, k) => (
               <p key={`c${k}`}>{t.calClose(s)}</p>
             ))}
-            {!info.clean && info.slips.length === 0 && info.closeCalls.length === 0 && <p>{t.calNone}</p>}
+            {!info.clean && info.slips.length === 0 && info.closeCalls.length === 0 && <p>{info.future ? t.calFuture : t.calNone}</p>}
           </>
         )}
       </div>

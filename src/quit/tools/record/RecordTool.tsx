@@ -13,11 +13,11 @@ import { useCarry, useToolState } from "../hooks"
 import { NotReady } from "../NotReady"
 import { LocalBox, SignedBox, type RecordBox } from "./box"
 import { CalendarTab } from "./CalendarTab"
-import type { RecordCtx } from "./ctx"
+import type { Gone, RecordCtx, RecordUi } from "./ctx"
 import { exampleFor } from "./example"
 import { fmtDay } from "./fmt"
 import { HomeTab } from "./HomeTab"
-import { daysBetween, runToStart, viewOf, type Spend, type Target } from "./logic"
+import { daysBetween, runToStart, viewOf, type PeriodId, type Spend, type Target } from "./logic"
 import { MilestonesTab } from "./MilestonesTab"
 import { MoneyTab } from "./MoneyTab"
 import { EMPTY_RECORD_TOOL, parseRecordTool, type RecordToolState } from "./state"
@@ -72,6 +72,27 @@ function Screens({ addiction, units, box }: { addiction: string; units: QuitUnit
   const today = todayIso(new Date(nowMs))
   const [refused, setRefused] = useState(false)
   const tried = useRef<string | null>(null)
+  // Screen state kept here so it survives a change of tab (the tabs unmount their screens).
+  const [period, setPeriod] = useState<PeriodId>("total")
+  const [editing, setEditing] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [spendOpen, setSpendOpen] = useState(false)
+  const [targetOpen, setTargetOpen] = useState(false)
+  const [goneSpends, setGoneSpends] = useState<Gone<Spend>[]>([])
+  const [goneTargets, setGoneTargets] = useState<Gone<Target>[]>([])
+  const lastTap = useRef(0)
+  const tap = useCallback((fn: () => void) => {
+    const now = Date.now()
+    if (now - lastTap.current < 400) return
+    lastTap.current = now
+    fn()
+  }, [])
+  const ui: RecordUi = { period, setPeriod, editing, setEditing, saved, setSaved, spendOpen, setSpendOpen, targetOpen, setTargetOpen, goneSpends, setGoneSpends, goneTargets, setGoneTargets, tap }
+  const openChange = () => {
+    setSaved(false)
+    setEditing(true)
+    openTab("money")
+  }
 
   const view = useMemo(() => (box ? viewOf(box.record, addiction, today) : null), [box, addiction, today])
   const start = view && rec.ready ? runToStart(rec.record.quitDate, rec.record.goal, today, view) : null
@@ -156,7 +177,7 @@ function Screens({ addiction, units, box }: { addiction: string; units: QuitUnit
   const real = view.runs.length > 0
 
   if (real) {
-    const ctx: RecordCtx = { addiction, today, nowMs, view, record: rec.record, unit: rec.record.unit, unitData: unitOf(rec.record.unit), units, spends: toolState.spends, targets: toolState.targets, readOnly: false, carry, openTab, actions }
+    const ctx: RecordCtx = { addiction, today, nowMs, view, record: rec.record, unit: rec.record.unit, unitData: unitOf(rec.record.unit), units, spends: toolState.spends, targets: toolState.targets, readOnly: false, carry, openTab, openChange, ui, actions }
     return <Tabs tab={tab} ctx={ctx} onTab={openTab} />
   }
   // A run is about to start (the date is today or past): show nothing rather than the empty state for a moment.
@@ -166,7 +187,7 @@ function Screens({ addiction, units, box }: { addiction: string; units: QuitUnit
     const ex = exampleFor(today, addiction)
     const exView = viewOf(ex.box, addiction, today)
     const record: QuitRecord = { quitDate: exView.runs[0]?.start ?? null, goal: "stop", breakEnd: null, unit: ex.unit }
-    const ctx: RecordCtx = { addiction, today, nowMs, view: exView, record, unit: ex.unit, unitData: unitOf(ex.unit), units, spends: ex.spends, targets: ex.targets, readOnly: true, carry, openTab, actions: noActions }
+    const ctx: RecordCtx = { addiction, today, nowMs, view: exView, record, unit: ex.unit, unitData: unitOf(ex.unit), units, spends: ex.spends, targets: ex.targets, readOnly: true, carry, openTab, openChange, ui, actions: noActions }
     return (
       <div className="flex flex-col gap-4">
         <div data-testid="example-bar" className="flex flex-col gap-1 rounded-lg border border-dashed border-foreground p-3">
@@ -187,7 +208,9 @@ function Screens({ addiction, units, box }: { addiction: string; units: QuitUnit
       {future && rec.record.quitDate ? (
         <>
           <h2 data-testid="future-title" className="text-xl font-semibold">
-            {t.futureTitle(daysBetween(today, rec.record.quitDate))}
+            <span className="mr-2 text-5xl tabular-nums">{daysBetween(today, rec.record.quitDate)}</span>
+            {" "}
+            {t.futureDays(daysBetween(today, rec.record.quitDate))}
           </h2>
           <p data-testid="future-line">{t.futureLine(fmtDay(rec.record.quitDate))}</p>
         </>
@@ -206,7 +229,7 @@ function Screens({ addiction, units, box }: { addiction: string; units: QuitUnit
       )}
       {dateLive ? (
         <Link href={carry(`/quit/${addiction}/date`)} data-testid="to-date" className="inline-flex min-h-12 items-center justify-center rounded-md bg-primary px-4 font-medium text-primary-foreground">
-          {t.toDate}
+          {rec.record.quitDate ? t.changeDate : t.toDate}
         </Link>
       ) : (
         <p data-testid="to-date-plain" className="text-sm text-muted-foreground">
@@ -223,6 +246,9 @@ function Screens({ addiction, units, box }: { addiction: string; units: QuitUnit
 function Tabs({ tab, ctx, onTab }: { tab: RecordTab; ctx: RecordCtx; onTab: (t: RecordTab) => void }) {
   return (
     <div data-testid="record" className="flex flex-col gap-4">
+      <p data-testid="top-line" className="text-base text-muted-foreground">
+        {t.topLine}
+      </p>
       <div role="tablist" aria-label={t.tabsLabel} className="grid grid-cols-4 gap-1 rounded-lg bg-muted p-1">
         {RECORD_TABS.map((id) => {
           const Icon = TAB_ICON[id]
