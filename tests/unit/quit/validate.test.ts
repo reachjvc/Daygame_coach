@@ -3,7 +3,7 @@ import path from "node:path"
 import { describe, expect, it } from "vitest"
 import { getAddiction, isLive, liveIds } from "@/src/quit/data"
 import { canBuy, getOffer } from "@/src/quit/offer"
-import { validateAddiction, validateLive } from "@/src/quit/validate"
+import { digitRuns, validateAddiction, validateLive } from "@/src/quit/validate"
 import type { QuitAddictionFull } from "@/src/quit/types"
 import { makeValid } from "./fixtures/valid"
 
@@ -59,6 +59,8 @@ describe("rules, one at a time on a valid fixture", () => {
     ["do-not-avoid", (d) => void (d.responses[0].text = "Won't have a cup.")],
     ["no-reset", (d) => void (d.catch = "A slip is not a reset.")],
     ["toll", (d) => void (d.numbers[0].caveat = "Millions of people.")],
+    ["n-in-quote", (d) => void (d.beliefs[0].n = "469 heart patients")],
+    ["n-in-quote", (d) => void ((d.facts[0] as { n?: string }).n = "16 trials, 12,169 people")],
     ["moment-swaps", (d) => void (d.momentSwaps = [{ momentId: d.riskyMoments[0].id, cards: ["one", "two"] }])],
     ["moment-swaps", (d) => void (d.momentSwaps = [{ momentId: d.riskyMoments[0].id, cards: ["one", "two", "three"] }, { momentId: "nope", cards: ["a", "b", "c"] }])],
   ]
@@ -70,6 +72,21 @@ describe("rules, one at a time on a valid fixture", () => {
       expect(rules(d)).toEqual([rule])
     })
   }
+
+  it("n passes when each number is in a quote, commas and spaces between digits removed", () => {
+    const d = makeValid()
+    d.beliefs[0].refs = [{ ...d.beliefs[0].refs[0], quote: "469 smokers; 12,169 participants in 16 studies" }]
+    d.beliefs[0].n = "469 people, 12 169 in 16 studies"
+    expect(rules(d)).toEqual([])
+    d.beliefs[0].n = "Not stated"
+    expect(rules(d)).toEqual([])
+    d.beliefs[1].n = "12169 people"
+    expect(rules(d)).toEqual(["n-in-quote"])
+  })
+
+  it("digitRuns joins digits split by a comma or space", () => {
+    expect(digitRuns("12,169 and 3 609 and 8.1")).toEqual(["12169", "3609", "8", "1"])
+  })
 
   it("every nicotine risky moment has exactly three cards, none left over", () => {
     const nic = getAddiction("nicotine")! as unknown as QuitAddictionFull

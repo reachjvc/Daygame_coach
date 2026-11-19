@@ -105,6 +105,8 @@ export interface QuitBelief {
   counted: string | null
   refs: QuitRef[]
   weak?: string | null
+  /** How many people or studies the proof counted, in plain words; every number in it is in a ref quote. */
+  n?: string
   ownWords?: boolean
   /** The Black Box ending family a thought of this belief belongs to; absent means "other". */
   blackBoxEnding?: ViceEndingId
@@ -120,6 +122,8 @@ export interface QuitFact {
   explain: string
   severity: Severity
   counted: string | null
+  /** How many people or studies the explanation counted; every number in it is in a ref quote. */
+  n?: string
   refs: QuitRef[]
   check?: Check
 }

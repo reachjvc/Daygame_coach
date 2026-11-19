@@ -16,9 +16,18 @@ export async function generateMetadata({
 }) {
   const { addiction, tool } = await params
   const menuTool = findMenuTool(tool)
-  const pv = isFlag((await searchParams).preview)
-  if (!isViewable(addiction, pv) || !menuTool || !toolReachable(tool, pv)) return {}
-  return { title: { absolute: `${toolName(menuTool, addiction)} · ${menu.addictions[addiction].title}` } }
+  const preview = isFlag((await searchParams).preview)
+  if (!isViewable(addiction, preview) || !menuTool || !toolReachable(tool, preview)) return {}
+  const title = `${toolName(menuTool, addiction)} · ${menu.addictions[addiction].title}`
+  if (tool !== "beliefs") return { title: { absolute: title } }
+  // The lies test shares as a question card; `v=2` keeps day-old cached cards from being reused.
+  const image = `/quit/${addiction}/card?${preview ? "preview=1&" : ""}v=2`
+  return {
+    title: { absolute: title },
+    description: menuTool.line,
+    openGraph: { title, description: menuTool.line, images: [{ url: image, width: 1080, height: 1350 }] },
+    twitter: { card: "summary_large_image", title, description: menuTool.line, images: [image] },
+  }
 }
 
 export default async function QuitToolPage({

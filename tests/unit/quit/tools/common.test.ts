@@ -50,6 +50,8 @@ function strings(x: unknown, out: string[] = []): string[] {
 describe("reader text rules over the UI text files", () => {
   const files = { "tooltext.json": tooltext, "menu.json": menu, "frame.json": frame }
   const rules = { SCREEN, CHEER, FOUNDER, FORECAST, NO_RESET }
+  // The brief of Tool 5 fixes this wording for the rating question (it asks how much, it does not screen).
+  const allowed: Record<string, string[]> = { SCREEN: ["How much is this you?"] }
 
   for (const [file, json] of Object.entries(files)) {
     const all = strings(json)
@@ -58,7 +60,7 @@ describe("reader text rules over the UI text files", () => {
     })
     for (const [name, re] of Object.entries(rules)) {
       it(`${file} passes ${name}`, () => {
-        expect(all.filter((s) => re.test(s))).toEqual([])
+        expect(all.filter((s) => re.test(s) && !(allowed[name] ?? []).includes(s))).toEqual([])
       })
     }
   }

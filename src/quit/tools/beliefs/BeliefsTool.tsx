@@ -1,16 +1,33 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import Link from "next/link"
-import { ClearAnswers, CountedLine, OneQuestion, PrimaryButton, SourceTap, SourcesFold } from "../../components/kit"
-import { fill, tooltext as t } from "../../tooltext"
+import { useCallback, useMemo, useRef, useState } from "react"
+import { CountedLine, OneQuestion, PrimaryButton, SourcesFold } from "../../components/kit"
+import { tooltext as t } from "../../tooltext"
 import type { QuitBand, QuitBelief, QuitFact, QuitNeed, ToolProps } from "../../types"
-import { isFreePlanLink, realRefs, uniqueRefs, usable } from "../common"
-import { useCarry, useDoneCount, useScreens, useStartCount, useToolState } from "../hooks"
+import { realRefs, usable } from "../common"
+import { useDoneCount, useScreens, useStartCount, useToolState } from "../hooks"
 import { NotReady } from "../NotReady"
-import { bandFor, EMPTY_BELIEFS, firstUnanswered, heldCount, parseBeliefs, seeThrough, shareUrl, topBeliefs, type BeliefsState } from "./logic"
+import { BeliefBasis } from "./BeliefBasis"
+import { BeliefsResult } from "./BeliefsResult"
+import {
+  EMPTY_FULL,
+  answerFact,
+  deleteResult,
+  dropDraft,
+  finish,
+  firstUnansweredScreen,
+  hasAnswers,
+  parseFull,
+  questionNumber,
+  rate,
+  screensFor,
+  startRetake,
+  type BeliefsFull,
+  type CanStop,
+  CAN_STOP,
+} from "./flow"
 
-/** The 12 lies test: 12 ratings, 3 facts, then the result. */
+/** The 12 lies test: 12 ratings (a reply after each 4 or 5), 3 facts, "can you stop?", then the result. */
 export function BeliefsTool({ addiction, data }: ToolProps) {
   const beliefs = usable<QuitBelief[]>(data.beliefs)
   const facts = usable<QuitFact[]>(data.facts)
@@ -20,37 +37,63 @@ export function BeliefsTool({ addiction, data }: ToolProps) {
     beliefs !== null && beliefs.length > 0 && facts !== null && bands !== null && needs !== null &&
     beliefs.every((b) => usable<string>(b.scene) !== null && usable<string>(b.short) !== null)
   if (!ok) return <NotReady />
-  return <Inner addiction={addiction} name={data.name} beliefs={beliefs} facts={facts} bands={bands} needs={needs} />
+  return <Inner addiction={addiction} beliefs={beliefs} facts={facts} bands={bands} needs={needs} />
 }
 
 interface InnerProps {
   addiction: string
-  name: string
   beliefs: QuitBelief[]
   facts: QuitFact[]
   bands: QuitBand[]
   needs: QuitNeed[]
 }
 
-function Inner({ addiction, name, beliefs, facts, bands, needs }: InnerProps) {
-  const { state, update, clear } = useToolState<BeliefsState>(addiction, "beliefs", EMPTY_BELIEFS, parseBeliefs)
-  const total = beliefs.length + facts.length
-  const first = state ? firstUnanswered(state, beliefs, facts) : 1
-  const { screen, go, back: goBack, reset, isResult } = useScreens(first, total, state !== null)
+const RATING_WORDS = t.beliefs.ratings
+
+function Inner({ addiction, beliefs, facts, bands, needs }: InnerProps) {
+  const ids = useMemo(() => beliefs.map((b) => b.id), [beliefs])
+  const parse = useCallback((x: unknown) => parseFull(x, ids), [ids])
+  const { state, update, clear } = useToolState<BeliefsFull>(addiction, "beliefs", EMPTY_FULL, parse)
   const started = useStartCount(addiction, "beliefs")
-  useDoneCount(addiction, "beliefs", state !== null && isResult)
+  // A tap within 250 ms of a move is ignored, so a double tap moves one screen and saves one answer.
+  const lastMove = useRef(0)
+  const [confirmStop, setConfirmStop] = useState(false)
+
+  const draft = state?.draft ?? null
+  const results = state?.results ?? []
+  const list = screensFor(draft?.ratings ?? {}, beliefs, facts.length)
+  const total = list.length
+  const showResult = state !== null && draft === null && results.length > 0
+  const first = !state ? 1 : draft ? firstUnansweredScreen(draft, beliefs, facts) : results.length > 0 ? total + 1 : 1
+  const { screen, go, back: goBack, reset } = useScreens(first, total, state !== null)
+  useDoneCount(addiction, "beliefs", showResult)
 
   if (!state) return null
 
-  if (isResult) {
+  const move = (fn: () => void) => {
+    const now = Date.now()
+    if (now - lastMove.current < 250) return
+    lastMove.current = now
+    fn()
+  }
+  const now = () => new Date().toISOString()
+
+  if (showResult) {
     return (
-      <Result
+      <BeliefsResult
         addiction={addiction}
-        name={name}
-        state={state}
         beliefs={beliefs}
+        facts={facts}
         bands={bands}
         needs={needs}
+        results={results}
+        onRetake={() =>
+          move(() => {
+            update((s) => startRetake(s, now()))
+            go(1)
+          })
+        }
+        onDelete={(i) => update((s) => deleteResult(s, i))}
         onClear={() => {
           clear()
           reset()
@@ -59,31 +102,98 @@ function Inner({ addiction, name, beliefs, facts, bands, needs }: InnerProps) {
     )
   }
 
-  const back = screen > 1 ? goBack : null
+  const here = Math.min(screen, total)
+  const cur = list[here - 1]
+  const qn = questionNumber(list, here)
+  const qTotal = beliefs.length + facts.length + 1
+  const back = here > 1 ? goBack : null
+  const retaking = results.length > 0
 
-  if (screen <= beliefs.length) {
-    const b = beliefs[screen - 1]
-    const current = state.ratings[b.id]
+  const stop = () => {
+    update(dropDraft)
+    setConfirmStop(false)
+    reset()
+  }
+  const stopControl = retaking && (
+    <div className="mt-2">
+      {!confirmStop ? (
+        <button
+          type="button"
+          data-testid="stop-retake"
+          onClick={() => (hasAnswers(draft) ? setConfirmStop(true) : stop())}
+          className="inline-flex min-h-11 items-center text-sm text-muted-foreground underline"
+        >
+          {t.beliefs.stopKeep}
+        </button>
+      ) : (
+        <div data-testid="stop-confirm" role="alertdialog" aria-label={t.beliefs.stopAsk} className="flex flex-col gap-2 rounded-md border border-border bg-card p-3">
+          <p>{t.beliefs.stopAsk}</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" data-testid="stop-yes" onClick={stop} className="min-h-12 rounded-md border border-border">
+              {t.beliefs.stopYes}
+            </button>
+            <button type="button" data-testid="stop-no" onClick={() => setConfirmStop(false)} className="min-h-12 rounded-md bg-primary text-primary-foreground">
+              {t.beliefs.keepGoing}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
+  if (cur.kind === "q" || cur.kind === "reply") {
+    const b = beliefs[cur.i]
+    if (cur.kind === "reply") {
+      return (
+        <>
+          <OneQuestion step={qn} total={qTotal} onBack={back}>
+            <section data-testid="reply" className="flex flex-col gap-2">
+              <h2 className="text-sm text-muted-foreground">{t.beliefs.replyTitle}</h2>
+              <p data-testid="reply-counterpart" className="text-xl font-medium leading-snug">
+                {b.counterpart}
+              </p>
+              <p data-testid="reply-proof">{b.proof}</p>
+              <CountedLine text={b.counted} />
+              <BeliefBasis item={b} />
+              <div className="mt-3">
+                <PrimaryButton testId="reply-next" onClick={() => move(() => go(here + 1))}>
+                  {t.common.continue}
+                </PrimaryButton>
+              </div>
+            </section>
+          </OneQuestion>
+          {stopControl}
+          <SourcesFold refs={realRefs(b.refs)} />
+        </>
+      )
+    }
+    const current = draft?.ratings[b.id]
     return (
       <>
-        <OneQuestion step={screen} total={total} onBack={back}>
-          <blockquote data-testid="scene" className="rounded-lg border border-border bg-card p-4 text-lg leading-snug">
+        <OneQuestion step={qn} total={qTotal} onBack={back} showStep>
+          <p data-testid="scene" className="text-sm text-muted-foreground">
             {usable<string>(b.scene)}
-          </blockquote>
-          <p className="font-medium">{t.beliefs.rate}</p>
-          <div role="radiogroup" aria-label={t.beliefs.rate} className="flex flex-col gap-2">
-            {t.beliefs.ratings.map((label, i) => (
+          </p>
+          <blockquote data-testid="limiting" className="text-2xl font-medium leading-snug">{`“${b.limiting}”`}</blockquote>
+          <p className="font-medium">{t.beliefs.rateQuestion}</p>
+          <div role="radiogroup" aria-label={t.beliefs.rateQuestion} className="flex flex-col gap-2">
+            {RATING_WORDS.map((label, i) => (
               <button
                 key={label}
                 type="button"
                 role="radio"
                 aria-checked={current === i + 1}
                 data-testid={`rate-${i + 1}`}
-                onClick={() => {
-                  started()
-                  update((s) => ({ ...s, ratings: { ...s.ratings, [b.id]: i + 1 } }))
-                  go(screen + 1)
-                }}
+                onClick={() =>
+                  move(() => {
+                    started()
+                    const at = now()
+                    update((s) => rate(s, b.id, i + 1, at))
+                    // the next screen is worked out from the new ratings: a 4 or 5 adds a reply screen after this one
+                    const next = screensFor({ ...(draft?.ratings ?? {}), [b.id]: i + 1 }, beliefs, facts.length)
+                    go(next.findIndex((x) => x.kind === "q" && x.i === cur.i) + 2)
+                  })
+                }
                 className={`min-h-12 rounded-md border px-4 text-left text-base ${current === i + 1 ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}
               >
                 {label}
@@ -91,195 +201,87 @@ function Inner({ addiction, name, beliefs, facts, bands, needs }: InnerProps) {
             ))}
           </div>
         </OneQuestion>
-        <SourcesFold refs={[]} />
+        {stopControl}
       </>
     )
   }
 
-  const f = facts[screen - beliefs.length - 1]
-  const answered = state.facts[f.id]
-  const refs = realRefs(f.refs)
-  return (
-    <>
-      <OneQuestion step={screen} total={total} onBack={back}>
-        <p data-testid="fact-statement" className="rounded-lg border border-border bg-card p-4 text-lg leading-snug">
-          {f.statement}
-        </p>
-        {typeof answered !== "boolean" ? (
-          <div className="grid grid-cols-2 gap-2">
-            {[true, false].map((v) => (
-              <button
-                key={String(v)}
-                type="button"
-                data-testid={v ? "fact-true" : "fact-false"}
-                onClick={() => {
-                  started()
-                  update((s) => ({ ...s, facts: { ...s.facts, [f.id]: v } }))
-                }}
-                className="min-h-12 rounded-md border border-border bg-card text-base"
-              >
-                {v ? t.beliefs.factTrue : t.beliefs.factFalse}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div data-testid="fact-answer" className="flex flex-col gap-1">
-            <p className="font-semibold">{answered === f.answer ? t.beliefs.factRight : t.beliefs.factWrong}</p>
-            <p>{f.explain}</p>
-            <CountedLine text={f.counted} />
-            <SourceTap refs={refs} />
-            <div className="mt-3">
-              <PrimaryButton testId="fact-next" onClick={() => go(screen + 1)}>
-                {t.common.next}
-              </PrimaryButton>
-            </div>
-          </div>
-        )}
-      </OneQuestion>
-      <SourcesFold refs={typeof answered === "boolean" ? refs : []} />
-    </>
-  )
-}
-
-interface ResultProps {
-  addiction: string
-  name: string
-  state: BeliefsState
-  beliefs: QuitBelief[]
-  bands: QuitBand[]
-  needs: QuitNeed[]
-  onClear: () => void
-}
-
-function Result({ addiction, name, state, beliefs, bands, needs, onClear }: ResultProps) {
-  const carry = useCarry()
-  const [copied, setCopied] = useState(false)
-  const seen = useMemo(() => seeThrough(state.ratings, beliefs), [state.ratings, beliefs])
-  const top = useMemo(() => topBeliefs(state.ratings, beliefs), [state.ratings, beliefs])
-  const held = heldCount(state.ratings, beliefs)
-  const band = bandFor(held, bands)
-  const refs = uniqueRefs(top.flatMap((b) => realRefs(b.refs)))
-  const slots = { n: held, total: beliefs.length, name }
-
-  const share = async () => {
-    const url = shareUrl(window.location.origin, addiction)
-    try {
-      if (typeof navigator.share === "function") {
-        await navigator.share({ title: fill(t.beliefs.shareTitle, slots), text: fill(t.beliefs.shareText, slots), url })
-        return
-      }
-      await navigator.clipboard.writeText(url)
-      setCopied(true)
-    } catch {
-      // the reader closed the share sheet, or the clipboard is blocked
-    }
-  }
-
-  return (
-    <>
-      <div data-testid="result" className="flex flex-col gap-6">
-        {seen.length > 0 && (
-          <section data-testid="see-through">
-            <h2 className="text-lg font-semibold">{t.beliefs.seeThrough}</h2>
-            <ul className="mt-2 flex flex-col gap-1">
-              {seen.map((b) => (
-                <li key={b.id} className="rounded-md border border-border bg-card px-3 py-2">
-                  {usable<string>(b.short)}
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-        <section>
-          <h2 className="text-lg font-semibold">{t.beliefs.topHeading}</h2>
-          {top.length === 0 && <p className="mt-2 text-muted-foreground">{t.beliefs.noTop}</p>}
-          <div className="mt-2 flex flex-col gap-4">
-            {top.map((b) => {
-              const need = needs.find((n) => n.id === usable<string>(b.need))
-              return (
-                <article key={b.id} data-testid="top-belief" className="rounded-lg border border-border bg-card p-4">
-                  <p className="text-sm text-muted-foreground">{t.beliefs.thoughtLabel}</p>
-                  <p className="text-lg leading-snug">{`“${b.limiting}”`}</p>
-                  <p className="mt-3 text-sm text-muted-foreground">{t.beliefs.counterLabel}</p>
-                  <p className="font-medium">{b.counterpart}</p>
-                  <p className="mt-3 text-sm text-muted-foreground">{t.beliefs.proofLabel}</p>
-                  <p>{b.proof}</p>
-                  <CountedLine text={b.counted} />
-                  <SourceTap refs={realRefs(b.refs)} />
-                  <p className="mt-3 text-sm text-muted-foreground">{t.beliefs.whenLabel}</p>
-                  <p>{b.whenThought}</p>
-                  <p className="mt-3 text-sm text-muted-foreground">{t.beliefs.testLabel}</p>
-                  <p>{usable<string>(b.test)}</p>
-                  {need && (
-                    <Link
-                      href={`${carry(`/quit/${addiction}/gives`)}#need=${encodeURIComponent(need.id)}`}
-                      className="mt-3 inline-flex min-h-11 items-center text-primary underline"
-                    >
-                      {fill(t.beliefs.needLink, { need: need.name })}
-                    </Link>
-                  )}
-                </article>
-              )
-            })}
-          </div>
-        </section>
-        {band && (
-          <section data-testid="band" className="rounded-lg border border-border bg-card p-4">
-            <h2 className="text-lg font-semibold">{t.beliefs.bandHeading}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{fill(t.beliefs.heldLine, slots)}</p>
-            <p className="mt-2 text-xl font-semibold text-primary">{band.label}</p>
-            <p>{band.text}</p>
-            {band.link && <BandLink link={band.link} carryTo={carry} />}
-          </section>
-        )}
-        <section className="flex flex-col gap-2">
-          <button
-            type="button"
-            data-testid="share"
-            onClick={share}
-            className="inline-flex min-h-12 items-center justify-center rounded-md border border-border bg-card px-4"
-          >
-            {t.beliefs.share}
-          </button>
-          {copied && (
-            <p role="status" data-testid="link-copied" className="text-sm text-muted-foreground">
-              {t.beliefs.linkCopied}
-            </p>
-          )}
-          <a
-            data-testid="save-image"
-            href={carry(`/quit/${addiction}/card`, { held: String(held) })}
-            className="inline-flex min-h-12 items-center justify-center rounded-md border border-border bg-card px-4"
-          >
-            {t.beliefs.saveImage}
-          </a>
-        </section>
-        <Link
-          href={carry(`/quit/${addiction}/gives`)}
-          data-testid="next-gives"
-          className="inline-flex min-h-12 items-center justify-center rounded-md bg-primary px-4 font-medium text-primary-foreground"
-        >
-          {t.beliefs.next}
-        </Link>
-        <ClearAnswers onClear={onClear} />
-      </div>
-      <SourcesFold refs={refs} />
-    </>
-  )
-}
-
-/** The band's way on. The free plan link opens the quit date tool, which needs no sign-in. */
-function BandLink({ link, carryTo }: { link: string; carryTo: (path: string) => string }) {
-  if (isFreePlanLink(link)) {
+  if (cur.kind === "fact") {
+    const f = facts[cur.i]
+    const answered = draft?.facts[f.id]
     return (
-      <Link href={carryTo(link)} data-testid="band-free-link" className="mt-2 inline-flex min-h-11 items-center text-primary underline">
-        {t.beliefs.bandFreeLink}
-      </Link>
+      <>
+        <OneQuestion step={qn} total={qTotal} onBack={back} showStep>
+          <p data-testid="fact-statement" className="rounded-lg border border-border bg-card p-4 text-lg leading-snug">
+            {f.statement}
+          </p>
+          {typeof answered !== "boolean" ? (
+            <div className="grid grid-cols-2 gap-2">
+              {[true, false].map((v) => (
+                <button
+                  key={String(v)}
+                  type="button"
+                  data-testid={v ? "fact-true" : "fact-false"}
+                  onClick={() =>
+                    move(() => {
+                      started()
+                      const at = now()
+                      update((s) => answerFact(s, f.id, v, at))
+                    })
+                  }
+                  className="min-h-12 rounded-md border border-border bg-card text-base"
+                >
+                  {v ? t.beliefs.factTrue : t.beliefs.factFalse}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div data-testid="fact-answer" className="flex flex-col gap-1">
+              <p className="font-semibold">{answered === f.answer ? t.beliefs.factRight : t.beliefs.factWrong}</p>
+              <p>{f.explain}</p>
+              <CountedLine text={f.counted} />
+              <BeliefBasis item={f} caveat={false} />
+              <div className="mt-3">
+                <PrimaryButton testId="fact-next" onClick={() => move(() => go(here + 1))}>
+                  {t.common.next}
+                </PrimaryButton>
+              </div>
+            </div>
+          )}
+        </OneQuestion>
+        {stopControl}
+        <SourcesFold refs={typeof answered === "boolean" ? realRefs(f.refs) : []} />
+      </>
     )
   }
+
   return (
-    <Link href={link.startsWith("/quit") ? carryTo(link) : link} className="mt-2 inline-flex min-h-11 items-center text-primary underline">
-      {t.beliefs.bandLink}
-    </Link>
+    <>
+      <OneQuestion step={qn} total={qTotal} onBack={back} showStep>
+        <h2 data-testid="canstop-question" className="text-2xl font-medium leading-snug">
+          {t.beliefs.canStopQuestion}
+        </h2>
+        <div className="flex flex-col gap-2">
+          {CAN_STOP.map((c: CanStop) => (
+            <button
+              key={c}
+              type="button"
+              data-testid={`canstop-${c}`}
+              onClick={() =>
+                move(() => {
+                  const at = now()
+                  update((s) => finish(s, c, at))
+                  reset()
+                })
+              }
+              className="min-h-12 rounded-md border border-border bg-card px-4 text-left text-base"
+            >
+              {t.beliefs.canStopOptions[c]}
+            </button>
+          ))}
+        </div>
+      </OneQuestion>
+      {stopControl}
+    </>
   )
 }

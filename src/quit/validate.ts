@@ -235,6 +235,25 @@ function ruleModeration(c: Ctx) {
   })
 }
 
+/** The digit runs of a text, with the commas and spaces between digits taken out ("12,169" is "12169"). */
+export function digitRuns(text: string): string[] {
+  return text.replace(/(?<=\d)[,\s](?=\d)/g, "").match(/\d+/g) ?? []
+}
+
+/** Every number in an item's `n` ("how many") must be in a quote of that item's refs. */
+function ruleNInQuote(c: Ctx) {
+  for (const name of ["beliefs", "facts"]) {
+    arr(c.data[name]).forEach((raw, i) => {
+      const x = obj(raw)
+      const n = str(x.n)
+      if (n === undefined) return
+      const inQuotes = new Set(arr(x.refs).flatMap((r) => digitRuns(str(obj(r).quote) ?? "")))
+      for (const run of digitRuns(n))
+        if (!inQuotes.has(run)) c.add(`${name}[${i}].n`, "n-in-quote", `the number ${run} in "${n}" is in no ref quote of ${name}[${i}]`)
+    })
+  }
+}
+
 function ruleBeliefEnding(c: Ctx) {
   arr(c.data.beliefs).forEach((raw, i) => {
     const e = obj(raw).blackBoxEnding
@@ -311,6 +330,7 @@ export function validateAddiction(data: unknown, opts: { live: boolean } = { liv
   ruleDollar(c)
   ruleModeration(c)
   ruleBeliefEnding(c)
+  ruleNInQuote(c)
   ruleMomentSwaps(c)
   ruleDanger(c)
   ruleForecast(c)

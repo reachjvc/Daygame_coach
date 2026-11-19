@@ -2,23 +2,22 @@ import { ImageResponse } from "next/og"
 import { BrandMark } from "@/components/BrandMark"
 import type { NextRequest } from "next/server"
 import { getAddiction } from "@/src/quit/data"
-import { frame, isFlag, isViewable } from "@/src/quit/menu"
+import { frame, isFlag, isViewable, menu } from "@/src/quit/menu"
+import { liesInSentence } from "@/src/quit/tools/beliefs/flow"
 import { parseHeld } from "@/src/quit/tools/beliefs/logic"
-import { usable } from "@/src/quit/tools/common"
 import { fill, tooltext } from "@/src/quit/tooltext"
-import type { QuitBelief } from "@/src/quit/types"
 
-/** The share image of the lies test: the count only, nothing about the reader. */
+/** The share image of the lies test: the count only, nothing about the reader. Without `held` it asks the question (the page's own preview image). */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ addiction: string }> }) {
   const { addiction } = await params
   const preview = isFlag(req.nextUrl.searchParams.getAll("preview"))
   if (!isViewable(addiction, preview)) return new Response(null, { status: 404 })
-  const held = parseHeld(req.nextUrl.searchParams.get("held"))
-  if (held === null) return new Response(null, { status: 400 })
-  const data = getAddiction(addiction)
-  if (!data) return new Response(null, { status: 404 })
-  const total = usable<QuitBelief[]>(data.beliefs)?.length ?? 12
-  const line = fill(tooltext.beliefs.shareText, { n: held, total, name: data.name })
+  const rawHeld = req.nextUrl.searchParams.get("held")
+  const held = rawHeld === null ? null : parseHeld(rawHeld)
+  if (rawHeld !== null && held === null) return new Response(null, { status: 400 })
+  if (!getAddiction(addiction)) return new Response(null, { status: 404 })
+  const slots = { n: held ?? 0, lies: liesInSentence(menu.addictions[addiction].lies) }
+  const line = fill(held === null ? tooltext.beliefs.questionCard : tooltext.beliefs.shareText, slots)
 
   return new ImageResponse(
     (
@@ -39,10 +38,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ addi
           {frame.siteName}
         </div>
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ display: "flex", fontSize: 360, fontWeight: 700, lineHeight: 1 }}>{held}</div>
+          <div style={{ display: "flex", fontSize: 360, fontWeight: 700, lineHeight: 1, color: "#a78bfa" }}>{held === null ? "?" : held}</div>
           <div style={{ display: "flex", fontSize: 72, fontWeight: 700, lineHeight: 1.15, marginTop: 30 }}>{line}</div>
         </div>
-        <div style={{ display: "flex", fontSize: 36, color: "#a1a1aa" }}>{`/quit/${addiction}/beliefs`}</div>
+        <div style={{ display: "flex", fontSize: 36, color: "#a1a1aa" }}>{`${req.nextUrl.host}/quit/${addiction}/beliefs`}</div>
       </div>
     ),
     { width: 1080, height: 1350, headers: { "Cache-Control": "public, max-age=86400" } },

@@ -25,7 +25,8 @@
       "when": "When",
       "measured": "What was measured",
       "caveat": "Caveat"
-    }
+    },
+    "basisNone": "Not in the line we quote"
   },
   "tags": {
     "hooked": "Checked as hooked",
@@ -66,13 +67,54 @@
     "bandHeading": "Where you are",
     "heldLine": "{n} of {total} hold you",
     "share": "Share my result",
-    "shareTitle": "{name}: the lies test",
-    "shareText": "I believed {n} of {name}’s {total} lies.",
+    "shareTitle": "{lies}",
+    "shareText": "I believed {n} of {lies}.",
     "linkCopied": "Link copied",
     "saveImage": "Save the image",
     "bandLink": "Go on from here",
     "next": "What it gives you",
-    "bandFreeLink": "Make your free plan"
+    "bandFreeLink": "Make your free plan",
+    "rateQuestion": "How much is this you?",
+    "stopKeep": "Stop and keep my last result",
+    "stopAsk": "Stop? The answers of this new try are dropped.",
+    "stopYes": "Stop",
+    "keepGoing": "Keep going",
+    "replyTitle": "The other side",
+    "canStopQuestion": "Do you believe you can stop?",
+    "canStopOptions": {
+      "yes": "Yes",
+      "unsure": "Not sure",
+      "no": "No"
+    },
+    "canStopLine": {
+      "yes": "Good. Write it down where you can see it in the first week.",
+      "unsure": "Not sure is an honest answer. You don’t need to be sure to pick a day 1.",
+      "no": "Then don’t decide it today. The thoughts that hold you below are part of why the no feels true. Start with them."
+    },
+    "lastTime": "Last time: {answer}.",
+    "resultTitle": "Your result",
+    "takenAt": "Taken {at}",
+    "takenBefore": "Taken before Nov 19, 2026",
+    "softHeading": "None hold you hard. These pull a little:",
+    "proofFold": "The proof",
+    "swapsLink": "Swaps for what it gives you",
+    "setDate": "Set your date",
+    "seeDate": "See your quit date",
+    "sinceHeading": "Since last time",
+    "sinceSame": "Same as last time.",
+    "changeMore": "More: {short} ({from} → {to})",
+    "changeLess": "Less: {short} ({from} → {to})",
+    "answersFold": "Your 16 answers",
+    "again": "Take it again",
+    "earlierHeading": "Earlier results",
+    "delete": "Delete",
+    "deleteAsk": "Delete this result?",
+    "keepIt": "Keep it",
+    "clearAll": "Clear all my answers",
+    "clearAsk": "Clear everything? Your results and this try are removed.",
+    "clearYes": "Clear",
+    "toMenu": "Back to the menu",
+    "questionCard": "How many of {lies} do you believe?"
   },
   "gives": {
     "pickQuestion": "What does it give you? Pick 1 to 3.",

@@ -196,12 +196,19 @@ interface OneQuestionProps {
   total: number
   onBack: (() => void) | null
   children: React.ReactNode
+  /** Writes "Question N of M" above the bar. */
+  showStep?: boolean
 }
 
 /** One question per screen: progress, the question, an in-page Back. */
-export function OneQuestion({ step, total, onBack, children }: OneQuestionProps) {
+export function OneQuestion({ step, total, onBack, children, showStep }: OneQuestionProps) {
   return (
     <section data-testid="question" data-step={step} className="flex flex-col gap-4">
+      {showStep && (
+        <p data-testid="step-text" className="-mb-2 text-sm text-muted-foreground">
+          {fill(t.common.stepLabel, { n: step, total })}
+        </p>
+      )}
       <div
         role="progressbar"
         aria-label={fill(t.common.stepLabel, { n: step, total })}

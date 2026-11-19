@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { CountedLine, SourceTap, EvidenceChip, Chips } from "../../components/kit"
 import { fill, tooltext as tt } from "../../tooltext"
 import type { Evidence, QuitBelief, QuitMomentSwap, QuitOption, QuitRef } from "../../types"
-import { realRefs, usable } from "../common"
+import { usable } from "../common"
+import { BeliefBasis } from "../beliefs/BeliefBasis"
 import { addTile, canMove, move, newBoard, type Board, type Dir } from "./game2048"
 import { BUBBLE_COUNT, freshSheet, pop, poppedCount, sheetDone } from "./bubbles"
 import { beliefOf, MOVE_MS, niceDay, OTHER, ringClock, type Kept } from "./logic"
@@ -45,11 +46,7 @@ export function Voice({ beliefs, value, onPick, onBack }: { beliefs: QuitBelief[
           <h3 className="mt-3 text-sm text-muted-foreground">{t.proofLabel}</h3>
           <p>{belief.proof}</p>
           <CountedLine text={belief.counted} />
-          <details data-testid="sos-basis" className="mt-1 text-sm">
-            <summary className="flex min-h-11 cursor-pointer items-center font-medium">{t.basisTitle}</summary>
-            <p className="text-muted-foreground">{belief.weak ?? belief.counted}</p>
-          </details>
-          <SourceTap refs={realRefs(belief.refs)} />
+          <BeliefBasis item={belief} testId="sos-basis" />
         </section>
       )}
       {value === OTHER && (
