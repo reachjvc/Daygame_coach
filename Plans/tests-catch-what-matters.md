@@ -92,6 +92,7 @@ that order.
 | B6 | Dependency manifests | Not needed: the mutation tool runs by `npx`; nothing here edits `package.json` | nothing | If a step turns out to need one, stop that step and record it |
 | B7 | Vercel's ~60 deploys a day | memory `vercel-late-deploy-rollback` | pushes | At most one push to main per finished phase |
 | B8 | Main red from other sessions (tests-green B10–B12, today's site-frame and sweep reds) | E2E 44581804643 | "green" acceptance runs | Not this plan's to fix. Judge a phase green on its own specs; Phase 1 makes the others name themselves |
+| B9 | Local full typecheck cannot finish while several sessions run | `node scripts/typecheck-ratchet.mjs` killed 3+ times per worker: `tsc exited with 143` (SIGTERM from `~/.cache/daygame-research/tools/memguard.sh` when RAM + swap < 2.5 GB; its log names tsc from this plan and from other sessions) | Part 2's local typecheck before push | Use CI `static` (same typecheck and lint ratchets) green on the branch head before pushing to main; every phase quotes that run |
 
 ## Questions, each with a recommendation (proposed until you say yes)
 
@@ -304,6 +305,8 @@ proof: `updateSubscriptionStatus writes the status on the subscription named ...
 affected today (nobody has paid).
 
 **Status (group B):** done 2026-11-19 — CI run 44602957663 on branch tests-catch-p4b (head 36fe28d5): success (static, unit 1/2, unit 2/2, database all success).
+
+**Status:** done 2026-11-19 — checked by the foreman: `tests/support/writeCoverage.baseline.json` on origin/main holds 26 `"unasserted"` (was 125), `MAX_UNASSERTED = 26`; CI on each pushed head green on database, static and both unit jobs: group A 44599988639 (b1b82125), group B 44603532244 (48d242d6), group C 44602388341 (3260a2db). One product bug fixed (`updateSubscriptionStatus` wrote nothing: `purchases` has no UPDATE policy); one finding kept as `it.fails` (`unenroll` has no user filter of its own); no data loss or leak found.
 
 ## Phase 5 — Flaky specs fixed · M · sonnet
 
