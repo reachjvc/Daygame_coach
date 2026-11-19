@@ -39,7 +39,8 @@
  */
 
 import { spawnSync } from "node:child_process"
-import { applyRatchet, assertCheckerRan, tally } from "./lib/ratchet.mjs"
+import { applyRatchet, assertCheckerRan, loadBaseline, tally } from "./lib/ratchet.mjs"
+import { checkFiles, toFinding } from "./lib/lint-files.mjs"
 
 const BASELINE = "eslint-baseline.json"
 const REGENERATE = "node scripts/lint-ratchet.mjs --update"
@@ -47,6 +48,29 @@ const FORMAT = "eslint-findings-v1"
 
 const update = process.argv.includes("--update")
 const acceptNew = process.argv.includes("--accept-new")
+
+/*
+ * FILE MODE, for the pre-commit hook: `--files a.ts b.tsx`. Lints only those
+ * files, same config, same signatures, same baseline, and fails only for a
+ * finding the baseline does not already allow for that file. See
+ * scripts/lib/lint-files.mjs. Nothing is ever written in this mode.
+ */
+const filesAt = process.argv.indexOf("--files")
+if (filesAt >= 0) {
+  const files = process.argv.slice(filesAt + 1).filter((a) => !a.startsWith("--"))
+  const baseline = loadBaseline(BASELINE, FORMAT)
+  if (!baseline) {
+    console.error(`No usable ${BASELINE}. Create it once with: ${REGENERATE}`)
+    process.exit(1)
+  }
+  const { checked, added } = await checkFiles(files, baseline)
+  if (added.length) {
+    console.error(`${added.length} lint error(s) not in ${BASELINE}:\n  ${added.join("\n  ")}\n\nFix them. Do not raise the baseline.`)
+    process.exit(1)
+  }
+  console.log(`Lint: ${checked.length} file(s), none new.`)
+  process.exit(0)
+}
 
 /*
  * `--format json` rather than parsing human output: eslint's text formatter
@@ -75,25 +99,9 @@ const findings = []
 for (const file of report) {
   const relative = file.filePath.replace(process.cwd() + "/", "")
   for (const message of file.messages) {
-    if (message.severity !== 2) continue
-    // A fatal parse error has no ruleId; it still has to be visible.
-    const rule = message.ruleId ?? "(fatal parse error)"
-    findings.push({ file: relative, signature: `${rule}: ${normalise(message.message)}` })
+    const finding = toFinding(relative, message)
+    if (finding) findings.push(finding)
   }
-}
-
-/**
- * The same finding, spelled the same way every run.
- *
- * eslint embeds identifiers in its messages — "'foo' is defined but never used"
- * — which is what makes two unused variables in one file distinguishable, and
- * is worth keeping. What is not worth keeping is anything positional, so any
- * digits that look like a location are not part of a signature. Nothing here
- * strips the identifier itself: renaming a variable genuinely is a different
- * finding, and having it show up as new is correct.
- */
-function normalise(message) {
-  return message.replace(/\s+/g, " ").trim()
 }
 
 assertCheckerRan(run, {

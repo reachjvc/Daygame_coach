@@ -13,6 +13,21 @@ trap 'rm -f "$staged_z"' EXIT
 git diff --cached --name-only -z --no-renames --diff-filter=ACMRD > "$staged_z"
 # Nothing staged (an empty commit): nothing to test.
 [ -s "$staged_z" ] || exit 0
+# Lint the staged code files before the tests (Plans/tests-catch-what-matters.md,
+# Phase 2): a new lint error is the commonest thing that turned main red. Only
+# findings above eslint-baseline.json count, judged on the staged text, so an
+# old error in a file you touch never blocks you and unstaged edits never do.
+# Deletions are not linted (ACMR, no D); a rename lints the new path.
+lint_z=$(mktemp)
+trap 'rm -f "$staged_z" "$lint_z"' EXIT
+git diff --cached --name-only -z --diff-filter=ACMR > "$lint_z"
+lint_files=$(tr '\0' '\n' < "$lint_z" | grep -E '\.(ts|tsx|js|mjs)$' | head -c 1 || true)
+if [ -n "$lint_files" ]; then
+  echo "🧹 Running lint on staged files..."
+  # `|| true` on the grep above: no code staged is not an error under `sh -e`.
+  tr '\0' '\n' < "$lint_z" | grep -E '\.(ts|tsx|js|mjs)$' | tr '\n' '\0' | xargs -0 node scripts/lint-ratchet.mjs --files || { echo "❌ New lint errors. Commit aborted."; exit 1; }
+fi
+
 # Config, setup or workflow changes can break any test: run all of them.
 # So can a stylesheet: tests read app/*.css as text, which no import lookup finds.
 if tr '\0' '\n' < "$staged_z" | grep -qE '(\.css$)|^(vitest\.config\.ts|tests/setup(Dom)?\.ts|tests/__mocks__/|package(-lock)?\.json|tsconfig\.json|\.github/|docs/testing/|playwright\.config\.ts)'; then

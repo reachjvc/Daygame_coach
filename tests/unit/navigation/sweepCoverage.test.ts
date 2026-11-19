@@ -12,11 +12,9 @@
  *
  * They are the same assertions here, over the same functions, in `npm test`.
  * The one list a browser file still owns — the cold-open sweep's exclusions —
- * is read out of that spec's source rather than copied, so the two cannot drift.
+ * is imported from tests/support/notSwept.ts, which the spec imports too, so the two cannot drift.
  */
 
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 import { describe, test, expect } from "vitest"
 import {
   JUNK_PARAM_VALUES,
@@ -24,24 +22,13 @@ import {
   searchParamNames,
   staticRoutes,
 } from "@/tests/support/appRoutes"
+import { NOT_SWEPT } from "@/tests/support/notSwept"
 
-const ROOT = join(__dirname, "../../..")
 const ON_DISK = staticRoutes().map((r) => r.route)
 
-/**
- * The cold-open sweep's `NOT_SWEPT` keys, from the spec itself.
- *
- * Every key of that object is a quoted route at the start of its line, between
- * `const NOT_SWEPT` and the closing brace. If the object is reshaped so this
- * finds fewer than the sales page and the five auth pages, it fails loudly
- * rather than checking an empty list.
- */
+/** The cold-open sweep's `NOT_SWEPT` keys, from the one list both read (tests/support/notSwept.ts). */
 function coldOpenExclusions(): string[] {
-  const src = readFileSync(join(ROOT, "tests/e2e/sweep/cold-open.spec.ts"), "utf-8")
-  const start = src.indexOf("const NOT_SWEPT")
-  if (start < 0) throw new Error("cold-open.spec.ts no longer declares NOT_SWEPT; this reader is out of date")
-  const body = src.slice(start, src.indexOf("\n}\n", start))
-  return [...body.matchAll(/^\s*"(\/[^"]*)"\s*:/gm)].map((m) => m[1])
+  return Object.keys(NOT_SWEPT)
 }
 
 describe("the route sweeps cover the app", () => {

@@ -120,6 +120,9 @@ describe('review findings, pinned (Phase 7 step 3)', () => {
     put('tests/unit/tracking/typesUser.test.ts', "import { t } from '@/src/tracking/types'")
     put('src/tracking/barrel.ts', "export type { Foo }\nimport { real2 } from './real2'\nexport const b = real2")
     put('src/tracking/real2.ts', 'export const real2 = 1')
+    put('tests/support/appRoutes.ts', 'export const walk = 1')
+    put('tests/unit/navigation/gated.test.ts', "import { walk } from '@/tests/support/appRoutes'")
+    put('app/quit/lab/page.tsx', 'export default function P() { return null }')
   })
   afterAll(() => fs.rmSync(r, { recursive: true, force: true }))
 
@@ -145,5 +148,11 @@ describe('review findings, pinned (Phase 7 step 3)', () => {
   test('a type export without semicolons does not erase the real import after it', () => {
     expect(relatedTests(['src/tracking/real.ts'], r)).toEqual(['tests/unit/tracking/real.test.ts', 'tests/unit/tracking/typesUser.test.ts'])
     expect(relatedTests(['src/tracking/real2.ts'], r)).toEqual([])
+  })
+
+  test('a staged app page runs the tests that import the route walker, a non-page does not', () => {
+    expect(relatedTests(['app/quit/lab/page.tsx'], r)).toEqual(['tests/unit/navigation/gated.test.ts'])
+    expect(relatedTests(['app/(app)/plan/page.tsx'], r)).toEqual(['tests/unit/navigation/gated.test.ts'])
+    expect(relatedTests(['app/quit/lab/helper.ts'], r)).toEqual([])
   })
 })

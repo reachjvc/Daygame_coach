@@ -15,6 +15,8 @@
  * file's path (or its folder, two segments or more) appearing in the test's
  * source. What neither finds runs in CI, and in the full-suite branch of the
  * hook when a config, setup or workflow file is staged.
+ * A staged page file under `app/` (any `page.tsx`) also runs every test that imports the route walker
+ * (`tests/support/appRoutes.ts`), since those tests read pages by walking `app/`.
  * Deleted and renamed files count: pass the old path.
  *
  * Usage: node scripts/related-tests.mjs <staged file>…   (one test path per line)
@@ -90,6 +92,11 @@ export function relatedTests(staged, root = process.cwd()) {
 
   const seen = new Set()
   const queue = [...staged]
+  // The route guards read every `app/**/page.tsx` by walking the folder
+  // (tests/support/appRoutes.ts), so no test names a page file. A staged page
+  // therefore counts as a change to that walker: every test that imports it
+  // runs (gatedPagesAreNotSwept, routeList, sweepCoverage, ...).
+  if (staged.some((f) => /^app\/.*\/?page\.tsx$/.test(f))) queue.push('tests/support/appRoutes.ts')
   while (queue.length) {
     const file = queue.pop()
     if (seen.has(file)) continue
