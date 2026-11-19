@@ -18,9 +18,21 @@ export interface CostState {
   packSize: number
   /** null = not chosen yet: a day for cigarettes, a week for vapes and pouches. */
   countMode: CountMode | null
+  /** The numbers last used per unit, so tapping Vape and back to Cigarettes gives the cigarette numbers back. */
+  lastByUnit: Record<string, { perDay: number | null; priceUsd: number; priceBasis: RecordUnit["priceBasis"] }>
 }
 
-export const EMPTY_COST: CostState = { v: 2, priceMode: "pack", packSize: DEFAULT_PACK_SIZE, countMode: null }
+export const EMPTY_COST: CostState = { v: 2, priceMode: "pack", packSize: DEFAULT_PACK_SIZE, countMode: null, lastByUnit: {} }
+
+function parseLast(x: unknown): CostState["lastByUnit"] {
+  const out: CostState["lastByUnit"] = {}
+  if (!isObj(x)) return out
+  for (const [k, v] of Object.entries(x)) {
+    const u = usableUnit(isObj(v) ? parseRecord({ unit: { id: k, ...v } }).unit : null)
+    if (u) out[k] = { perDay: u.perDay, priceUsd: u.priceUsd, priceBasis: u.priceBasis }
+  }
+  return out
+}
 
 /** Saved state, checked. Anything that is not the v2 shape gives the empty state. */
 export function parseCost(x: unknown): CostState {
@@ -30,6 +42,7 @@ export function parseCost(x: unknown): CostState {
     priceMode: pickOne(x.priceMode, ["pack", "one"] as const, "pack"),
     packSize: pickInt(x.packSize, 1, MAX_PACK_SIZE, DEFAULT_PACK_SIZE),
     countMode: pickOne(x.countMode, ["day", "week"] as const, null),
+    lastByUnit: parseLast(x.lastByUnit),
   }
 }
 
@@ -51,18 +64,32 @@ export interface CostFigures {
 
 const cents = (n: number) => Math.round(Number(n.toPrecision(12)))
 
-/** day = count × price to the cent; year = day × 365; month = year ÷ 12 to the cent; 10 years = year × 10. */
+/**
+ * year = count a day × price × 365, to the cent (a week count is stored as week ÷ 7, so this is week × price × 365 ÷ 7);
+ * a day = year ÷ 365; a month = year ÷ 12; 10 years = year × 10. The year is worked out from the unrounded numbers, so a
+ * small count (1 a week) is not rounded to the cent before it is multiplied.
+ */
 export function computeCost(perDay: number, priceUsd: number): CostFigures {
-  const dayCents = cents(perDay * priceUsd * 100)
-  const yearCents = dayCents * DAYS_PER_YEAR
+  const yearCents = cents(perDay * priceUsd * DAYS_PER_YEAR * 100)
   return {
-    dayCents,
+    dayCents: cents(yearCents / DAYS_PER_YEAR),
     yearCents,
     monthCents: cents(yearCents / 12),
     tenCents: yearCents * 10,
     unitsYear: cents(perDay * DAYS_PER_YEAR),
   }
 }
+
+/** A record unit this page can work with: count and price inside the typed limits. Anything else is treated as not set. */
+export function usableUnit(u: RecordUnit | null): RecordUnit | null {
+  if (!u) return null
+  if (!(u.priceUsd >= 0 && u.priceUsd <= MAX_PRICE)) return null
+  if (u.perDay !== null && !(u.perDay >= 0 && u.perDay <= MAX_PER_DAY)) return { ...u, perDay: null }
+  return u
+}
+
+/** Prices of one are kept to 4 decimals (a $7 pack of 3 is $2.3333), so no long float reaches the other tools. */
+export const price4 = (n: number) => Math.round(Number((n * 10_000).toPrecision(12))) / 10_000
 
 /** The yearly cost the coaching page shows, from the shared record's stored value; null without a count or a price. */
 export function yearlyCostFromRecord(stored: unknown): number | null {
@@ -102,7 +129,11 @@ export function boxNumber(n: number, minDecimals = 0): string {
 
 export type Field<T> = { kind: "ok"; value: T } | { kind: "empty" } | { kind: "bad" }
 
+/** "1,000" could be a thousand or one: refused, so a thousands comma never saves a wrong number. */
+const thousands = (text: string) => /^\d{1,3},\d{3}$/.test(text.trim())
+
 export function parseCount(text: string, mode: CountMode): Field<number> {
+  if (thousands(text)) return { kind: "bad" }
   const t = parseTyped(text, mode === "week" ? MAX_PER_WEEK : MAX_PER_DAY)
   return t.kind === "ok" ? { kind: "ok", value: mode === "week" ? t.value / 7 : t.value } : t
 }
@@ -117,9 +148,10 @@ export function parsePackSize(text: string): Field<number> {
 
 /** The price of one unit from what is typed: a pack price ÷ size, or the price of one. Empty is not allowed. */
 export function parsePrice(text: string, mode: PriceMode, size: number): Field<number> {
+  if (thousands(text)) return { kind: "bad" }
   const t = parseTyped(text, MAX_PRICE)
   if (t.kind !== "ok") return t.kind === "empty" ? { kind: "bad" } : t
-  return { kind: "ok", value: mode === "pack" ? t.value / size : t.value }
+  return { kind: "ok", value: price4(mode === "pack" ? t.value / size : t.value) }
 }
 
 const sameMoney = (a: number, b: number) => Math.abs(a - b) < 1e-9
@@ -143,7 +175,12 @@ export function importOldCost(old: unknown, units: Pick<QuitUnit, "id" | "defaul
   if (typed.kind !== "ok") return null
   const rawPerDay = typeof old.perDay === "number" && Number.isFinite(old.perDay) && old.perDay >= 0 ? old.perDay : unit.id === "cigarettes" ? 10 : 1
   const days = pickInt(old.daysPerWeek, 1, 7, 7)
-  return { id: unit.id, perDay: (rawPerDay * days) / 7, priceUsd: typed.value, priceBasis: basisFor(typed.value, unit) }
+  return { id: unit.id, perDay: (rawPerDay * days) / 7, priceUsd: price4(typed.value), priceBasis: basisFor(typed.value, unit) }
+}
+
+/** Wave-1 asked days a week: fewer than 7 reads best as a week count ("100 a week", not "14.2857 a day"). */
+export function importedCountMode(old: unknown): CountMode {
+  return isObj(old) && typeof old.daysPerWeek === "number" && old.daysPerWeek < 7 ? "week" : "day"
 }
 
 export function isOldCost(stored: unknown): boolean {

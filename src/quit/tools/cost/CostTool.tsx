@@ -22,6 +22,8 @@ import {
   formatMoney,
   formatPrice,
   importOldCost,
+  importedCountMode,
+  usableUnit,
   isOldCost,
   parseCost,
   parseCount,
@@ -51,7 +53,7 @@ function useCountUp(target: number, ms = 400): number {
     const t0 = performance.now()
     let raf = 0
     const tick = (now: number) => {
-      const p = Math.min(1, (now - t0) / ms)
+      const p = Math.max(0, Math.min(1, (now - t0) / ms))
       const v = p === 1 ? target : a + (target - a) * p
       from.current = v
       setValue(v)
@@ -89,11 +91,12 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
   const { state, update } = useToolState<CostState>(addiction, "cost", EMPTY_COST, parseCost)
   const started = useStartCount(addiction, "cost")
   const carry = useCarry()
-  const unitRec = rec.record.unit
+  const unitRec = usableUnit(rec.record.unit)
   const unit = units.find((u) => u.id === unitRec?.id) ?? null
   const ready = state !== null && rec.ready
 
-  const countMode: CountMode = state?.countMode ?? (unit ? defaultCountMode(unit.id) : "day")
+  // a count given elsewhere (Your quit date asks it a day) is shown a day until he picks otherwise
+  const countMode: CountMode = state?.countMode ?? (unitRec && unitRec.perDay !== null ? "day" : unit ? defaultCountMode(unit.id) : "day")
   const priceMode: PriceMode = unit?.id === "cigarettes" ? (state?.priceMode ?? "pack") : "one"
   const size = state?.packSize ?? EMPTY_COST.packSize
   const complete = unitRec !== null && unitRec.perDay !== null
@@ -104,18 +107,20 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
   // First read: wave-1 answers move into the shared record once; the form starts open when the record has no unit or no count.
   useEffect(() => {
     if (!ready || open !== null) return
-    let u = rec.record.unit
+    let u = usableUnit(rec.record.unit)
+    let cm: CountMode | null = state?.countMode ?? null
     const stored = store.get(addiction, "cost")
     if (stored !== undefined && isOldCost(stored)) {
-      const moved = importOldCost(stored, units, u)
+      const moved = importOldCost(stored, units, rec.record.unit)
       if (moved) {
         rec.setUnit(moved)
         u = moved
+        cm = importedCountMode(stored)
       }
-      update(() => EMPTY_COST)
+      update(() => ({ ...EMPTY_COST, countMode: cm }))
     }
     setOpen(!(u !== null && u.perDay !== null))
-    setTexts(seed(u, state?.countMode ?? (u ? defaultCountMode(u.id) : "day"), u?.id === "cigarettes" ? (state?.priceMode ?? "pack") : "one", size))
+    setTexts(seed(u, cm ?? (u && u.perDay !== null ? "day" : u ? defaultCountMode(u.id) : "day"), u?.id === "cigarettes" ? (state?.priceMode ?? "pack") : "one", size))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready])
   const figures = unitRec && unitRec.perDay !== null ? computeCost(unitRec.perDay, unitRec.priceUsd) : null
@@ -131,24 +136,35 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
     setSaved(true)
   }
   const countErr = parseCount(texts.count, countMode).kind === "bad"
+  const countEmpty = parseCount(texts.count, countMode).kind === "empty"
   const sizeField = parsePackSize(texts.size)
   const sizeErr = priceMode === "pack" && sizeField.kind !== "ok"
   const sizeNow = sizeField.kind === "ok" ? sizeField.value : size
   const priceErr = unit !== null && parsePrice(texts.price, priceMode, sizeNow).kind === "bad"
+  const anyErr = countErr || priceErr || sizeErr
 
   const pickUnit = (id: string) => {
     const u = units.find((x) => x.id === id)
     if (!u || unitRec?.id === id) return
-    const cm = defaultCountMode(id)
-    const next: RecordUnit = { id, perDay: null, priceUsd: u.defaultPriceUsd ?? 0, priceBasis: "default" }
-    update((s) => ({ ...s, countMode: cm, priceMode: "pack", packSize: EMPTY_COST.packSize }))
+    // the numbers of the unit he leaves are kept here, and come back if he taps it again
+    const kept = state?.lastByUnit[id]
+    const cm = kept && kept.perDay !== null ? "day" : defaultCountMode(id)
+    const next: RecordUnit = kept ? { id, ...kept } : { id, perDay: null, priceUsd: u.defaultPriceUsd ?? 0, priceBasis: "default" }
+    update((s) => ({
+      ...s,
+      countMode: cm,
+      priceMode: "pack",
+      packSize: EMPTY_COST.packSize,
+      lastByUnit: unitRec ? { ...s.lastByUnit, [unitRec.id]: { perDay: unitRec.perDay, priceUsd: unitRec.priceUsd, priceBasis: unitRec.priceBasis } } : s.lastByUnit,
+    }))
     write(next)
     reseed(next, cm, "pack", EMPTY_COST.packSize)
   }
   const onCount = (text: string) => {
     setTexts((x) => ({ ...x, count: text }))
     const f = parseCount(text, countMode)
-    if (unitRec && f.kind !== "bad") write({ ...unitRec, perDay: f.kind === "ok" ? f.value : null })
+    // an emptied box is not written: clearing it to retype never wipes the count the other tools read
+    if (unitRec && f.kind === "ok") write({ ...unitRec, perDay: f.value })
   }
   const setMode = (cm: CountMode) => {
     if (cm === countMode) return
@@ -172,7 +188,8 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
   const onSize = (text: string) => {
     setTexts((x) => ({ ...x, size: text }))
     const f = parsePackSize(text)
-    if (f.kind === "ok") update((s) => ({ ...s, packSize: f.value }))
+    // the size is kept only with a good price, so the saved price of one and the size always belong together
+    if (f.kind === "ok" && parsePrice(texts.price, priceMode, f.value).kind === "ok") update((s) => ({ ...s, packSize: f.value }))
     savePrice(texts.price, text, priceMode)
   }
   const setPriceMode = (pm: PriceMode) => {
@@ -185,7 +202,13 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
   const perText = countMode === "week" ? t.modeWeek : t.modeDay
   const summary =
     unitRec && unit && unitRec.perDay !== null
-      ? t.summary(formatCount(countMode === "week" ? unitRec.perDay * 7 : unitRec.perDay), unit.many, perText, formatPrice(unitRec.priceUsd))
+      ? (() => {
+          const n = countMode === "week" ? unitRec.perDay * 7 : unitRec.perDay
+          const words = formatCount(n) === "1" ? unit.one : unit.many
+          return priceMode === "pack"
+            ? t.summaryPack(formatCount(n), words, perText, formatMoney(Math.round(unitRec.priceUsd * size * 100) / 100), size)
+            : t.summary(formatCount(n), words, perText, formatPrice(unitRec.priceUsd))
+        })()
       : null
 
   return (
@@ -226,12 +249,15 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
                   <input id="cost-count" data-testid="cost-count" type="text" inputMode="decimal" maxLength={8} value={texts.count} onChange={(e) => onCount(e.target.value)} aria-invalid={countErr || undefined} className={input} />
                   <span className="text-sm text-muted-foreground">{t.countHelp}</span>
                   {countErr && (
-                    <span data-testid="cost-count-error" role="alert" className="text-sm text-foreground">
-                      {dateText.badNumber}
+                    <span data-testid="cost-count-error" role="alert" className="text-sm font-medium text-destructive">
+                      {t.needCount(countMode === "week" ? "3,500" : "500")}
                     </span>
                   )}
                 </div>
                 <div className="flex flex-col gap-2">
+                  {unit.id === "cigarettes" && (
+                    <span className="text-sm font-medium">{t.priceModeLabel}</span>
+                  )}
                   {unit.id === "cigarettes" && (
                     <Switch label={t.priceModeLabel} testId="cost-price-mode" value={priceMode} options={[{ id: "pack", label: t.priceModePack }, { id: "one", label: t.priceModeOne }]} onChange={(id) => setPriceMode(id as PriceMode)} />
                   )}
@@ -240,7 +266,7 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
                   </label>
                   <input id="cost-price" data-testid="cost-price" type="text" inputMode="decimal" maxLength={10} value={texts.price} onChange={(e) => onPrice(e.target.value)} aria-invalid={priceErr || undefined} className={input} />
                   {priceErr && (
-                    <span data-testid="cost-price-error" role="alert" className="text-sm text-foreground">
+                    <span data-testid="cost-price-error" role="alert" className="text-sm font-medium text-destructive">
                       {t.needPrice}
                     </span>
                   )}
@@ -251,14 +277,14 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
                       </label>
                       <input id="cost-size" data-testid="cost-size" type="text" inputMode="numeric" maxLength={3} value={texts.size} onChange={(e) => onSize(e.target.value)} aria-invalid={sizeErr || undefined} className={input} />
                       {sizeErr && (
-                        <span data-testid="cost-size-error" role="alert" className="text-sm text-foreground">
+                        <span data-testid="cost-size-error" role="alert" className="text-sm font-medium text-destructive">
                           {t.badSize}
                         </span>
                       )}
                     </>
                   )}
                   <p data-testid="cost-basis" className="break-words text-sm text-muted-foreground">
-                    {unitRec.priceBasis === "typed" ? t.basisTyped : priceMode === "pack" ? t.basisPack : (dateText.priceBasis[unit.id] ?? "")}
+                    {unitRec.priceBasis === "typed" ? t.basisTyped : priceMode === "pack" ? t.basisPack : (t.basisOne[unit.id] ?? "")}
                   </p>
                 </div>
                 {saved && (
@@ -266,11 +292,20 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
                     {t.saved}
                   </p>
                 )}
+                {figures && !anyErr && !countEmpty && (
+                  // the answer stays in sight while he types: this line sticks to the bottom of the screen
+                  <p data-testid="cost-live" aria-hidden="true" className="sticky bottom-2 z-10 self-stretch rounded-md border border-primary bg-background px-3 py-2 text-base font-semibold text-primary shadow">
+                    {t.liveYear(formatCents(figures.yearCents))}
+                  </p>
+                )}
                 {complete && (
                   <PrimaryButton
                     testId="cost-done"
-                    disabled={countErr || priceErr || sizeErr}
-                    onClick={() => setOpen(false)}
+                    disabled={anyErr}
+                    onClick={() => {
+                      setOpen(false)
+                      requestAnimationFrame(() => document.querySelector("[data-testid=cost-result]")?.scrollIntoView({ block: "start" }))
+                    }}
                   >
                     {t.done}
                   </PrimaryButton>
@@ -281,7 +316,7 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
         )}
       </section>
 
-      <Result unit={unit} rec={unitRec} figures={figures} countMode={countMode} priceMode={priceMode} size={size} />
+      {unit && <Result unit={unit} rec={unitRec} figures={figures} bad={open && anyErr} empty={open && countEmpty} countMode={countMode} priceMode={priceMode} size={size} />}
       <DateLine record={rec.record} figures={figures} carry={carry} addiction={addiction} />
       {unit && <SourcesFold refs={uniqueRefs(realRefs(unit.priceRefs))} />}
     </div>
@@ -309,6 +344,10 @@ function Switch({ label, options, value, onChange, testId }: { label: string; op
 }
 
 interface ResultProps {
+  /** A box holds a bad or empty number: no figure is shown that does not match the boxes. */
+  bad: boolean
+  /** The count box is empty while he edits. */
+  empty: boolean
   unit: QuitUnit | null
   rec: RecordUnit | null
   figures: CostFigures | null
@@ -317,12 +356,16 @@ interface ResultProps {
   size: number
 }
 
-function Result({ unit, rec, figures, countMode, priceMode, size }: ResultProps) {
+function Result({ unit, rec, figures, bad, empty, countMode, priceMode, size }: ResultProps) {
   const year = useCountUp(figures ? figures.yearCents / 100 : 0)
   return (
     <section data-testid="cost-result" aria-label={t.resultTitle} className="flex flex-col gap-4">
       <h2 className="text-lg font-semibold">{t.resultTitle}</h2>
-      {!unit || !rec || !figures || rec.perDay === null ? (
+      {bad && figures ? (
+        <p data-testid="cost-fix" className="text-muted-foreground">
+          {t.fixFirst}
+        </p>
+      ) : empty || !unit || !rec || !figures || rec.perDay === null ? (
         <p data-testid="cost-nocount" className="text-muted-foreground">
           {t.noCount}
         </p>
@@ -334,7 +377,7 @@ function Result({ unit, rec, figures, countMode, priceMode, size }: ResultProps)
               {formatMoney(year)}
             </p>
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             <Tile label={t.day} id="cost-day" value={figures.dayCents} />
             <Tile label={t.month} id="cost-month" value={figures.monthCents} />
             <Tile label={t.ten} id="cost-ten" value={figures.tenCents} />
@@ -351,9 +394,9 @@ function Result({ unit, rec, figures, countMode, priceMode, size }: ResultProps)
 
 function Tile({ label, id, value }: { label: string; id: string; value: number }) {
   return (
-    <div className="min-w-0 rounded-lg border border-border bg-card p-3">
+    <div className="min-w-0 rounded-lg border border-border bg-card p-2 sm:p-3">
       <p className="text-sm text-muted-foreground">{label}</p>
-      <p data-testid={id} data-value={(value / 100).toFixed(2)} className="break-words text-xl font-semibold">
+      <p data-testid={id} data-value={(value / 100).toFixed(2)} className="break-words text-base font-semibold sm:text-xl">
         {formatCents(value)}
       </p>
     </div>
@@ -364,10 +407,10 @@ function Working({ unit, rec, figures, countMode, priceMode, size }: { unit: Qui
   const perDay = rec.perDay as number
   const price = formatPrice(rec.priceUsd)
   const lines: string[] = []
-  if (rec.id === "cigarettes" && priceMode === "pack") lines.push(t.workPack(formatPrice(rec.priceUsd * size), size, price, unit.one))
-  if (countMode === "week") lines.push(t.workWeek(formatCount(perDay * 7), formatCount(perDay)))
-  lines.push(t.workDay(formatCount(perDay), price, formatCents(figures.dayCents)))
-  lines.push(t.workYear(formatCents(figures.dayCents), formatCents(figures.yearCents)))
+  if (rec.id === "cigarettes" && priceMode === "pack") lines.push(t.workPack(formatMoney(Math.round(rec.priceUsd * size * 100) / 100), size, price, unit.one))
+  const year = formatCents(figures.yearCents)
+  lines.push(countMode === "week" ? t.workYearWeek(formatCount(perDay * 7), price, year) : t.workYearDay(formatCount(perDay), price, year))
+  lines.push(t.workDay(year, formatCents(figures.dayCents)))
   lines.push(t.workMonth(formatCents(figures.yearCents), formatCents(figures.monthCents)))
   lines.push(t.workTen(formatCents(figures.yearCents), formatCents(figures.tenCents)))
   return (
@@ -405,11 +448,12 @@ function DateLine({ record, figures, carry, addiction }: { record: ReturnType<ty
       </>
     )
   } else if (date > today) {
-    body = figures ? t.dateFuture(fmtDay(date), formatCents(figures.dayCents), formatCents(figures.yearCents)) : t.dateFutureBare(fmtDay(date))
+    if (record.goal === "break") body = figures ? t.dateBreakFuture(fmtDay(date), formatCents(figures.dayCents)) : t.dateBreakFutureBare(fmtDay(date))
+    else body = figures ? t.dateFuture(fmtDay(date), formatCents(figures.dayCents), formatCents(figures.yearCents)) : t.dateFutureBare(fmtDay(date))
   } else {
     body = (
       <>
-        {t.datePastPre(fmtDay(date))}
+        {record.goal === "break" ? t.dateBreakPastPre(fmtDay(date)) : t.datePastPre(fmtDay(date))}
         {link("record", t.nameRecord)}
         {t.datePastPost}
       </>
