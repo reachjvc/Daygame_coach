@@ -255,7 +255,7 @@ export const sleepSteps = {
 /** Card e: hunger and weight. */
 export const hunger = {
   title: "Hunger and weight",
-  text: "Hunger can stay up for weeks. It outlasted the other symptoms in a study of 147 people over 4 weeks, and appetite was still up at day 31 in the study of 96 women.",
+  text: "Hunger can stay up for weeks. It outlasted the other symptoms in a study of 147 people over 4 weeks, and appetite was still up at day 31 in a study of 96 women.",
   evidence: "weak" as Evidence,
   basis: {
     who: "Smokers-clinic clients on nicotine gum who stayed off 4 weeks (West); women paid to stay off 31 days (Gilbert)",
