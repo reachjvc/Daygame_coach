@@ -1635,3 +1635,16 @@ targets or "what you could buy" here: Tool 3 holds targets.
   struggle most" is not in the paper; proposed: "includes people who never quit during the study".
 - Open, proposed: P6 Edit/Delete per try stay full buttons (reviewer suggested a "…" menu; recommendation: keep, one tap
   each). P7 a one-line summary on return ("3 tries · longest about 2 months"); recommendation: not now.
+
+### From the Tool 8 build (Sonnet, 2026-11-19)
+
+- Menu row minutes: the old "30 s" had no basis either, so `minutes` is now `null` (no time line on the row). Proposed: keep null, or name a time he has measured.
+- Evening step 1 shows "Next" after the answer (the answer itself is saved at once); "Done for today" starts on step 2 as the brief says. The 5-step count stays the same when the slip day is already in the Black Box: step 1 is then the notice "Your slip on ... is in your record." with Next.
+- Reload or re-open: the draft is kept, and tapping Start on the same day and part resumes on the saved screen. A closed tab shows no "Continue" card on Today (the brief did not ask for one). Proposed: add one line "Continue your evening" when a draft exists.
+- The example has no Start / Change / Fill-in buttons (flows would write real data). The brief said every tab is filled from the seed, which ends two days ago, so the Today cards read "Not done yet" in the example.
+- `bb.has(id)` is false after a slip because the slip ends the run it tests against, so the "already filed" and Undo checks use "the report is still in the Black Box" (`bb.reports`) instead. Tool 4 may want the same.
+- A slip for a day before the run's start or before the run's latest report is treated as "no run that day" here (the Black Box would otherwise move it to the later day and the check-in would show the wrong day).
+- A slip day only in the Black Box counts as the day's evening answer: "Fill in yesterday" does not show for it, and it counts in the pattern's 14 results.
+- The Black Box page (`/plan/quit-vice`) is not public, so "This slip is in your Black Box; remove it there." is plain text; the link appears by itself once `isPublicPage` says the page is public.
+- Pattern: the pairs line shows only once the 14-result gate is passed (the brief lists it under the same condition).
+- Tests: one e2e spec runs both widths; the full `typecheck-ratchet` was killed (exit 143, the RAM guard) four times, so only the changed files were type-checked.
