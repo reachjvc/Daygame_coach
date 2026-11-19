@@ -31,7 +31,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | 0 | The frame: menu, shared record, page titles, links | wave-1 menu | — | live f9190770 (no owner check: it has no screens of its own) |
 | 1 | Your quit date | lab `quitdate/best` | copy e's plan steps; the old "quit curve" hard-days calendar (mock F9kYB9… v2, study timing only) | waiting for you |
 | 2 | Craving now? | lab `sos/best` | wave-1's voice step and "other side" answer; the craving log of `diary/best` | waiting for you |
-| 3 | Your record (progress, money kept) | lab `progress/best` | the live counter feel of copies d and e | checking |
+| 3 | Your record (progress, money kept) | lab `progress/best` | the live counter feel of copies d and e | waiting for you |
 | 4 | Slipped? Restart today | wave-1 `slip` | slips go into the shared record; clean runs never reset | checking (live, review round 2 next) |
 | 5 | The 12 lies test | wave-1 `beliefs` | from `beliefs/best`: a reply per belief, "can you stop?", earlier results | building |
 | 6 | What you'll feel, and when | lab `timeline/best` | wave-1 `symptoms` (what helps per symptom) | checking (on main, reviews next) |
@@ -1859,6 +1859,12 @@ targets or "what you could buy" here: Tool 3 holds targets.
   year; money steps and targets say "clean days at your rate" (and "once a new run starts" with no run); one clean-time
   line under the money; no "$0.00 spent"; "midnight", not "00:00"; price basis shortened with the rest under "More";
   tinted reached steps, "None yet", equal tiles on a computer, a visible selected day.
+- Review round 3 (2026-11-19, local dev server on the branch; Opus; no blocker, two should-fix): fixed the target bar
+  with no visible track and form errors that looked like help lines (now red, the field marked, "That is more than
+  500. Type up to 500 a day."); also "Saved." said once, no "kept in this browser" in the example, one "Add your
+  numbers" line on Milestones instead of eight, and the ring line "Next step: 30 days, 9 to go". Left as is: the
+  formula's days to two decimals can be a cent off by hand ("about" says so). Status set to waiting for you after
+  these fixes passed the unit tests and the record e2e spec (24/24), without a fourth review round.
 - Proposed for the owner (not changed): R5 default cigarette price $0.50 (sales-weighted $9.95 / 20) instead of $0.52
   (unweighted $10.34 / 20); the same lines in Your quit date's price screen could get the record's fuller wording.
   R6 Craving now?'s "About $X kept since <date>" (whole days from the current quit date, slips ignored) and Your
