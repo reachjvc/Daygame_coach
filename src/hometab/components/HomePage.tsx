@@ -1,5 +1,4 @@
 import { Suspense } from "react"
-import Link from "next/link"
 import { redirect } from "next/navigation"
 import { createServerSupabaseClient, getProfile } from "@/src/db/server"
 import { getUserTimezone } from "@/src/db/settingsRepo"
@@ -7,7 +6,7 @@ import { ALL_TOOLS_TILE, DATING_TILE, TOOLS } from "@/components/navTabs"
 import { TrainingCard } from "@/src/programs/components/TrainingCard"
 import { ROUTES } from "@/src/shared/routes"
 import { facetFor } from "@/src/shared/facets"
-import { PAYWALL_HREF, tileAccess, type ToolViewer } from "../tileAccess"
+import { tileAccess, type ToolViewer } from "../tileAccess"
 import { ToolTile } from "./ToolTile"
 import { CardPlaceholder, FieldCard, PlanCard, TimeCard } from "./HomeCards"
 
@@ -58,17 +57,6 @@ export async function HomePage() {
         <ToolTile id={DATING_TILE.id} label={DATING_TILE.label} icon={DATING_TILE.icon} access={{ state: "open", href: DATING_TILE.href }} href={DATING_TILE.href} />
         <ToolTile id="all" label={ALL_TOOLS_TILE.label} icon={ALL_TOOLS_TILE.icon} access={{ state: "open", href: ALL_TOOLS_TILE.href }} href={ALL_TOOLS_TILE.href} />
       </nav>
-
-      {!viewer.has_purchased && (
-        /* The Dashboard's "Ready to Start Training?" block, shortened: the
-           locks on the tiles above are what it is about. */
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4" data-testid="home-plans-cta">
-          <p className="text-sm text-foreground">Tools with a lock open once you subscribe.</p>
-          <Link href={PAYWALL_HREF} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-            See plans
-          </Link>
-        </div>
-      )}
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-2 [&>*]:min-w-0">
         <div className="md:col-span-2 [&_[data-testid=season-band]]:mb-0" data-facet={facetFor(ROUTES.plan)}>
