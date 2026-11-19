@@ -110,7 +110,7 @@ function Screens({ addiction, units, steps, course, courseNote, bb }: InnerProps
 
   const list = screensFor(state?.goal ?? null, state?.another ?? false)
   const first = state ? firstUnanswered(state, today) : 1
-  const { screen, go, back: goBack, reset, isResult } = useScreens(first, list.length, state !== null && rec.ready)
+  const { screen, go, back: goBack, isResult } = useScreens(first, list.length, state !== null && rec.ready)
   useDoneCount(addiction, "date", state !== null && isResult)
 
   // A saved unit in the shared record shows again when the answers are changed.
