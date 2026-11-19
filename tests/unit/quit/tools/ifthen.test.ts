@@ -205,9 +205,8 @@ describe("round 2", () => {
     const dropped = dropFromDraft(d, l1)
     expect(dropped?.ticked).toEqual(["stress"])
     expect(dropped?.choices.coffee).toBeUndefined()
-    const last = dropFromDraft(dropped, l2)
-    expect(last?.ticked).toEqual(["stress"])
-    expect(last?.choices.stress).toBeUndefined()
+    // the last tick stays with its answer, so the plan screen stays open
+    expect(dropFromDraft(dropped, l2)).toBe(dropped)
     expect(addToDraft(dropped, l1)?.choices.coffee).toEqual({ then: "x", from: "card" })
   })
   it("a draft with no ticks does not hide saved lines; a bad check-back day is dropped", () => {

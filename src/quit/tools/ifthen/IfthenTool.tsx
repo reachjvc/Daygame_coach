@@ -400,15 +400,25 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
     return <PrintView cards={cardInfo} checkText={st.checkin ? dayLabel(st.checkin) : t.printNone} onClose={closePrint} />
   }
 
+  /** The plan is the screen after the last moment: when the draft's moments change, this entry keeps showing the plan. */
+  const stayOnPlan = (d: Draft | null) => {
+    if (!d) return
+    const p = new URLSearchParams(sp.toString())
+    p.set("s", String(totalScreens(d) + 1))
+    window.history.replaceState(null, "", `${pathname}?${p.toString()}`)
+  }
   const remove = (id: string) => {
     const index = lines.findIndex((l) => l.id === id)
     if (index < 0) return
     const line = lines[index]
+    const nd = dropFromDraft(st.draft, line)
     setRemoved((r) => addRemoved(r, line, index))
-    update((s) => ({ ...s, lines: s.lines.filter((l) => l.id !== id), draft: dropFromDraft(s.draft, line) }))
+    update((s) => ({ ...s, lines: s.lines.filter((l) => l.id !== id), draft: nd }))
+    stayOnPlan(nd)
   }
   const undo = () => {
     const back = removed
+    const nd = back.reduce((d, r) => addToDraft(d, r.line), st.draft)
     setRemoved([])
     update((s) => ({
       ...s,
@@ -416,8 +426,9 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
         s.lines.filter((l) => !back.some((r) => r.line.id === l.id)),
         back,
       ),
-      draft: back.reduce((d, r) => addToDraft(d, r.line), s.draft),
+      draft: nd,
     }))
+    stayOnPlan(nd)
   }
   const removedNames = removed.map((r) => (r.line.momentId ? labelOf(r.line.momentId) : r.line.ownMoment)).join(", ")
 
@@ -555,7 +566,7 @@ function Screens({ addiction, moments, swaps, ideas, bb }: InnerProps & { bb: Qu
         <p>
           {t.usedIn}{" "}
           {isLiveTool("sos") ? (
-            <Link href={carry(`/quit/${addiction}/sos`)} className="text-primary underline underline-offset-4 [padding-block:0.75rem] [margin-block:-0.75rem]">
+            <Link href={carry(`/quit/${addiction}/sos`)} className="text-primary underline underline-offset-4 [padding-block:0.875rem]">
               {t.usedInSos}
             </Link>
           ) : (

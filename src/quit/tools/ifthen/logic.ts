@@ -363,13 +363,15 @@ export function dropFromDraft(d: Draft | null, line: Line): Draft | null {
   const choices = { ...d.choices }
   delete choices[k]
   const ticked = d.ticked.filter((x) => x !== k)
-  // The last tick stays (the plan screen needs one to stay open); without its answer it can't come back unasked.
-  return { ...d, ticked: ticked.length > 0 ? ticked : d.ticked, choices }
+  // The last tick stays with its answer: the plan screen needs one answered tick to stay open.
+  if (ticked.length === 0) return d
+  return { ...d, ticked, choices, reached: Math.max(1, d.reached - 1) }
 }
 
 /** Puts an undone line's moment back into the draft with its answer. */
 export function addToDraft(d: Draft | null, line: Line): Draft | null {
   if (!d) return d
   const k = lineKey(line)
-  return { ...d, ticked: d.ticked.includes(k) ? d.ticked : [...d.ticked, k], choices: { ...d.choices, [k]: { then: line.then, from: line.from } } }
+  const ticked = d.ticked.includes(k) ? d.ticked : [...d.ticked, k]
+  return { ...d, ticked, choices: { ...d.choices, [k]: { then: line.then, from: line.from } }, reached: ticked.length + 2 }
 }
