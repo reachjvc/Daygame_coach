@@ -39,7 +39,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | 8 | Daily check-in | lab `checkin/best` | slip question from `diary/best` | building |
 | 9 | What it costs you | wave-1 `cost` | per-pack price and live update (copy e); money setup from the shared record | building |
 | 10 | Your past attempts | lab `past/best` | wave-1's "many tries are normal" number and "after the first slip" question | building |
-| 11 | Today's lesson | lab `lessons/best` | — | building |
+| 11 | Today's lesson | lab `lessons/best` | — | waiting for you |
 | 12 | How people quit | wave-1 `how` | the sourced sections of `library/best`, shortened | building |
 | 13 | What it gives you | wave-1 `gives` | — | building |
 | later | Tell someone, Money on the line, Clear-out list, What helps besides apps, Who you are now | not built | accountability copies a, b, e as reference | not started |
@@ -1586,6 +1586,7 @@ targets or "what you could buy" here: Tool 3 holds targets.
   (now "a few metres away from the smoke"); Day 11 now says the study's main result and that pouches were not studied;
   Day 14's unsourced "cues" claim removed and its fold links b2; Kenford, Doll, Anesi, Hughes, Heishman and the sleep
   counted lines say more; Day 8 "can get loud", "Answer it plainly"; the brand name left the Day 5 quote; "5 kg (11 lb)".
+- Round 1 fixes pushed fe7de355 (checked on a local server: e2e 10 of 11, the 11th a test line updated to the new day label; screenshots looked at). Task on his daily page for 2026-11-20.
 - Not fixed, proposed: a run ended on the Black Box page (not by a slip) still counts from the old quit date until a
   new date is set (rare; the Black Box API the tools share does not expose ended runs). Day 5 and Day −2 bodies repeat
   their exercise in part (kept: the body says why, the exercise what to write down).
