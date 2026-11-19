@@ -76,8 +76,12 @@ const BASELINE_PATH = path.resolve(__dirname, "../support/writeCoverage.baseline
  * Lowered 131 -> 128 on 2026-11-04: `pushTimetrackRows` gained a test that
  * names it (the time tracker's running-timer notification, Phase 7), and the
  * ceiling had again drifted two above the real count.
+ *
+ * Lowered 128 -> 102 on 2026-11-19 (tests-catch Phase 4, group C): 23 functions of
+ * programRepo, workoutRepo, programDraftRepo, healthRepo and restoreTimetrack now have
+ * integration tests that read the rows back (tests/integration/repos/*Writes*).
  */
-const MAX_UNASSERTED = 79
+const MAX_UNASSERTED = 56
 
 type Baseline = Record<string, string>
 
