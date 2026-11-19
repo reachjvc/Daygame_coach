@@ -12,7 +12,7 @@ dating only, but not eliminating those parts. It is fine to put some parts of th
 page, new icons where relevant and new naming every appropriate place … so that it can be executed by a lesser
 model."*
 
-**Status (2026-11-19): Phases 0 and 1 done. Phase 2 (looks page) next.** Phases 0–2 need nothing
+**Status (2026-11-19): Phases 0–2 done. Waiting for his look pick (O7) on https://claude.ai/artifact/CArfEQDsZit3oAziztCATV.** Phases 0–2 need nothing
 from the owner beyond pasting the prompt. Phase 2 ends at his pick of a look. Phase 4 stops once more for his logo
 pick. Phase 8 needs his Vercel login and the domain he buys.
 
@@ -296,7 +296,19 @@ Every text is decided in Part 3; the builder writes no words of its own.
 - The live `/`, `/auth/login` and `/quit` show "10K Days Club" in the tab and the header.
 - Pushed, and healthz names the commit.
 
-### Phase 2 — The looks page: three clickable looks (Opus designs, Sonnet publishes; ends at O7)
+### Phase 2 — The looks page: three clickable looks (Opus designs, Sonnet publishes; ends at O7) — **DONE 2026-11-19**
+
+Done: **https://claude.ai/artifact/CArfEQDsZit3oAziztCATV** (db collections `likes`, `notes`; keys `look-A`,
+`look-A-screen-01`…, `colour-life-1/2`, `colour-quit-1/2`, `rule-R1`…`R5`, `general`). Source:
+`~/.cache/daygame-research/rebrand/looks/looks.html`, tests in its `test/` folder (29/29 with a fake store).
+- References checked: A Strava (brand guidelines, one orange) held; B Apple Health (apple.com/health topic colours)
+  held; **C replaced**: Nike Run/Training Club and Duolingo did not hold up, Microsoft 365 (one family, app colour +
+  letter badge) used instead.
+- Colour choices (contrast on #121212): Life Blue `#60a5fa` 7.4 / Gold `#f5c542` 11.6; Quit Violet `#a78bfa` 6.9 /
+  Cyan `#22d3ee` 10.4; Dating `#ff6b35` 6.6.
+- Words the designer supplied (mock-up only, not for the build): a "not part of the mock-up" toast, the label
+  "EXAMPLE ROWS, NOT YOUR PLAN", letter badges L/Q/D, door icons (compass for Life, broken chain for Quit), the end
+  of the Home Training line "or pick a program.", page text around the phone.
 
 **Goal:** he clicks through the same screens in three looks and picks one.
 
