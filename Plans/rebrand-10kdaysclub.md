@@ -12,7 +12,9 @@ dating only, but not eliminating those parts. It is fine to put some parts of th
 page, new icons where relevant and new naming every appropriate place … so that it can be executed by a lesser
 model."*
 
-**Status (2026-11-19): Phases 0–2 done. Waiting for his look pick (O7) on https://claude.ai/artifact/CArfEQDsZit3oAziztCATV.** Phases 0–2 need nothing
+**Status (2026-11-19, afternoon): Phases 0–2 done. His look pick is in (see "His picks after the looks page" below).
+Next: the brand board (Phase 4a) for the one open choice, umbrella colour + mark + sign-in page; Phases 3, 5 and 6
+are built while it waits.** Phases 0–2 need nothing
 from the owner beyond pasting the prompt. Phase 2 ends at his pick of a look. Phase 4 stops once more for his logo
 pick. Phase 8 needs his Vercel login and the domain he buys.
 
@@ -51,6 +53,38 @@ What these answers decide (everything else below is **proposed** by Claude until
 5. Words speak to men first and never shut women out.
 6. The look gets **one colour per part of the site** if he picks that on the looks page, plus **written rules that
    tests enforce** so it stays coherent. He picks among clickable looks before any visual work is built.
+
+## His picks after the looks page, 2026-11-19 (his words from the page's notes and from chat)
+
+Notes on https://claude.ai/artifact/CArfEQDsZit3oAziztCATV (no 👍 were given):
+- All tools, look B: "I like these categories and the difference in colors here. Not sure about it in other places"
+  · "I prefer it in gold".
+- Front page, look C: "I prefer the front page on sub brands a little bit more, still with gold over blue".
+- Quit door, look C: "this needs some work, but it is fine that we just decide on colors now".
+- Sign up, look C: "should probably make the sign up look nicer when we're at it".
+- The Field, look C: "this looks good as is".
+
+Chat answers:
+- How far a part's colour reaches: "i think it needs to be colored to the specific page type, always in that color.
+  But i am not sure about white buttons on the front page".
+- Quit colour: **Violet**. The five look rules R1–R5: **keep all five**.
+- Logo (Phase 4 questions): **both** a symbol and letters; **bold and energetic**; its colour: "Maybe a different
+  color, maybe the part youre in".
+- "you probably want to have another think at this, before you go. Maybe one more mock up (but you decide on the
+  best process)".
+
+What that decides:
+1. **Look C, in full.** Each part is a sub-brand ("10K Days · Life" / "· Quit" / "· Dating") and its colour runs
+   through every page of that part: buttons, links, focus rings, tiles, headings, badge. Not markers only.
+2. Colours: **Life gold `#f5c542`**, **Quit violet `#a78bfa`**, **Dating today's orange `#ff6b35`**.
+3. The coherence rules R1–R5 are his (no longer proposed).
+4. **Still open: the umbrella colour.** The parts' pages are settled; the pages that belong to no part (front page
+   hero, sign-in, Home's own controls, Prices, You's account controls) need a colour of their own. He is not sure
+   about white, and wrote "maybe a different color" for the logo. This and the logo are **one** decision, so they go
+   on one board (Phase 4a), together with the nicer sign-in page.
+5. The Quit door's content is not the rebrand's job: it belongs to `Plans/quit-copy.md` (the session working in
+   `src/quit/**`). The rebrand only re-colours it. His note is handed over under "Handed to other plans" below.
+6. The Field stays as it is, apart from its name and its colour (Dating orange, which it already is).
 
 ---
 
@@ -148,8 +182,8 @@ What these answers decide (everything else below is **proposed** by Claude until
 | O4 | Claim the free handles: Instagram @10kdaysclub, YouTube @10kdaysclub | Same day as the domain | No | Any time |
 | O5 | Rename the GitHub repo `Daygame_coach` → `10kdaysclub` and make it private | Yes, both | No | Phase 9 |
 | O6 | List every device and browser he uses the site on, and whether it is installed on the home screen | — | No | Before Phase 8 step 5 |
-| O7 | **Pick a look** on the looks page (Phase 2), and mark the proposed look rules | — | No | End of Phase 2 |
-| O8 | **Answer three logo questions, then pick a mark** (Phase 4) | — | No | Phase 4 |
+| O7 | **Pick a look** on the looks page (Phase 2), and mark the proposed look rules | **Done 2026-11-19**: look C in full, gold/violet/orange, rules kept | No | — |
+| O8 | **Pick on the brand board** (Phase 4a): the umbrella colour, one mark (and whether the mark takes the part's colour), the sign-in page. The three logo questions are answered (both, bold and energetic, "maybe a different color, maybe the part youre in") | — | No | After Phase 4a |
 
 ## Which model runs what
 
@@ -191,7 +225,8 @@ What these answers decide (everything else below is **proposed** by Claude until
 
 ## PHASES
 
-Order: **0 → 1 → 2 → (his look pick, O7) → 3 → 4 questions → 5 and 6 → (his logo pick, O8) → 4 build → 7.**
+Order: **0 → 1 → 2 → (O7, done) → 4a brand board published → 3 → 5 → 6 (while the board waits) → (his pick, O8)
+→ 4b build → 7.** Phase 4a goes first so the board is ready while the build runs.
 Phases 8 and 9 follow when O2, O3, O5 and O6 arrive.
 
 Every phase: work in a worktree, ship by fast-forward (memory `shared-checkout-tool-quirks`); commit with
@@ -362,10 +397,13 @@ Done: **https://claude.ai/artifact/CArfEQDsZit3oAziztCATV** (db collections `lik
 **Done when:** the page is published, the link is posted, and the plan names the URL. **The build stops here for
 O7.** Phase 3 starts only after his pick, read from the page's db and from his chat words.
 
-### Phase 3 — The look system and its rules (Sonnet, after O7)
+### Phase 3 — The look system and its rules (Sonnet, after O7; O7 done: look C in full)
 
-1. **Tokens:** in `app/globals.css`, add `--facet-life`, `--facet-quit`, `--facet-dating` (plus `-foreground`)
-   with the picked colours. In Look A all three equal `--primary`.
+1. **Tokens:** in `app/globals.css` (the `:root` and `.dark` blocks that hold `--primary`; the `@theme` block moved
+   to `app/theme.css` on 2026-11-19), add:
+   - `--facet-life: #f5c542`, `--facet-quit: #a78bfa`, `--facet-dating: #ff6b35`, each with `-foreground: #121212`.
+   - `--facet-brand: #ff6b35` with `--facet-brand-foreground: #121212` and the comment "placeholder until the owner
+     picks the umbrella colour on the brand board (Phase 4a, O8)". Phase 4b changes this one value.
 2. **One map from address to part:** new `src/shared/facets.ts`.
    - `export type Facet = "brand" | "life" | "quit" | "dating"` and `facetFor(pathname): Facet`.
    - **life:** `/life`, `/plan` (except `/plan/quit-vice`), `/training`, `/time`, `/audit`, `/tracking/daily`.
@@ -378,9 +416,18 @@ O7.** Phase 3 starts only after his pick, read from the page's db and from his c
    - Set `data-facet` on the element that wraps **every** page, including pages that hide the frame (`/plan`,
      `/time`, `/training/live`). That is the wrapper in `app/(app)/layout.tsx`, plus `app/quit/layout.tsx` and the
      public layouts.
-   - In CSS, `[data-facet="quit"] { --primary: var(--facet-quit); --ring: var(--facet-quit); }` and the same for
-     the other parts. Every component that already uses `primary` follows by itself.
-   - Look C also shows the part's badge beside the logo.
+   - In CSS, `[data-facet="quit"] { --primary: var(--facet-quit); --primary-foreground:
+     var(--facet-quit-foreground); --ring: var(--facet-quit); }` and the same for `life`, `dating` and `brand`. Every
+     component that already uses `primary` follows by itself. Look C in full: the part's colour reaches buttons,
+     links, focus rings, tiles and headings on every page of that part.
+   - **Things that lead into a part take that part's colour, wherever they sit:** a Home tile, a Home card, an All
+     tools row, a front-page door gets `data-facet={facetFor(href)}` from the address it opens. So Home shows gold
+     Training and Time Log, a violet Black Box and an orange Dating tile, as on the looks page.
+   - **The part's lockup in the page header:** beside the logo, "10K Days · Life" (or Quit, Dating) in the part's
+     colour, on every page of that part (look C). Until O8 it is the part name in its colour with no badge: the L/Q/D
+     letter plates on the looks page were the designer's mock-up, not decided. Phase 4b puts the picked badge there.
+   - The phone's browser bar colour (`themeColor` in `app/layout.tsx`, `theme_color` and `background_color` in
+     `app/manifest.ts`, all `#0b1120` today) stays as it is; it is not a part colour.
 4. **The coherence rules,** as he asked ("enforce rules long term"). Write them in a new `docs/product/look.md`,
    each with the test that holds it. Show them on the looks page as proposed first (Phase 2).
    - **R1. Every colour comes from the theme file.** New `tests/unit/shared/colourRatchet.test.ts`, built like
@@ -391,8 +438,9 @@ O7.** Phase 3 starts only after his pick, read from the page's db and from his c
      - Compare against `colour-baseline.json`. A file's count may only fall, and a new file starts at 0.
      - On 2026-11-19 there were 1,724 palette uses in 220 files and 284 raw hex values in 60 files. The baseline
        records today's counts. It forbids new ones; it does not demand a rewrite.
-   - **R2. A part's colour is chosen by the address, never by the page.** `tests/unit/shared/facets.test.ts`:
-     every address in `ROUTES` maps to a part, and the map holds the lists in step 2.
+   - **R2. A part's colour is chosen by an address, never by hand:** a page by its own address, a tile, card, row
+     or door by the address it opens. `tests/unit/shared/facets.test.ts`: every address in `ROUTES` maps to a part,
+     the map holds the lists in step 2, and every entry of `TOOLS` gets its facet from `facetFor(tool.href)`.
    - **R3. One name, one logo.** Extend `brandName.test.ts`:
      - The literal `10K Days Club` appears only in `src/shared/brand.ts` and the JSON data files.
      - No live file outside `components/BrandMark.tsx` draws the brand mark.
@@ -403,42 +451,78 @@ O7.** Phase 3 starts only after his pick, read from the page's db and from his c
    - Replace the stale line in `.claude/rules/ui.md` ("Fresh users land on `/preferences`") with "Fresh users
      land on `/dashboard`" and a pointer to `docs/product/look.md`.
 5. **Convert on the screens of the looks page only:** hard-coded orange (`text-orange-*`, `bg-orange-*`, `#ff6b35`,
-   `#f97316`) on those screens becomes `primary`, so each part's colour shows there. Lower the baseline in the same
-   commit.
+   `#f97316`) **and hard-coded purple/violet** (Your plan and the Black Box use purple buttons today) on those
+   screens becomes `primary`, so each part's colour shows there. Lower the baseline in the same commit.
+   - The Field's stat icons keep their own green and purple (his note: "this looks good as is").
 
 **Done when:**
 - The tests pass and the baseline is committed.
-- Phone screenshots of the looks-page screens on the local stack match the picked look. A Haiku subagent compares
-  the pairs and lists every difference; fix each difference or write it down.
+- Phone screenshots of the looks-page screens on the local stack match look C on the looks page with Life gold and
+  Quit violet, apart from the umbrella colour (placeholder until O8). A Haiku subagent compares the pairs and lists
+  every difference; fix each difference or write it down.
 - Pushed.
 
-### Phase 4 — The logo and icons (questions after O7; Opus draws; Sonnet builds after O8)
+### Phase 4a — The brand board: umbrella colour, the mark, the sign-in page (Opus designs; first thing the new session does; ends at O8)
 
-1. **Ask him, with AskUserQuestion, word for word:**
-   - "Should the new mark be letters (like '10K'), a symbol, or both together?" Options: Letters / A symbol /
-     Both.
-   - "Which feeling should it give first?" Options: Steady and serious / Bold and energetic / Warm and friendly.
-   - "What colour should the logo itself be?" Options: Today's orange / White, so each part's colour sits beside
-     it / The colour of the part you are in.
-2. **Opus subagent draws six marks** as SVG on a 32×32 grid that also reads at 16 px.
-   - Original work: no copy of an existing logo, nothing that resembles a target or a gun sight.
-   - A board artifact shows each mark at 16 px (tab), 32 px, 180 px (iPhone icon, rounded mask), 512 px (Android,
-     circle mask), and in the header beside "10K Days Club", on `#121212`.
-   - 👍 and a self-saving note box per mark, as in Phase 2.
-   - Publish it, post the link, write the URL here. **The build stops for O8**; Phases 5 and 6 go on meanwhile.
-3. **After his pick:**
-   - Swap the SVG inside `components/BrandMark.tsx`.
-   - Regenerate `public/icon.svg`, `apple-icon.svg`, `icon-dark-32x32.svg/.png`, `icon-light-32x32.svg/.png`,
-     `icon-192.png`, `icon-512.png`, `icon-maskable-192.png`, `icon-maskable-512.png`, `apple-icon.png` and
-     `app/favicon.ico`. Maskable files keep the mark inside the 80 % safe zone.
-   - The quit share image (`app/quit/[addiction]/card/route.tsx`) draws the new mark.
-   - Add `app/opengraph-image.tsx` (1200×630): mark, "10K Days Club" and W1. Add `metadataBase` in
-     `app/layout.tsx` from `process.env.NEXT_PUBLIC_APP_URL`, falling back to `https://daygame-coach.vercel.app`
-     until Phase 8.
-   - If Look C was picked: one small badge per part, in the same style.
+**Why one board:** the umbrella colour and the logo are one decision (he wrote "maybe a different color, maybe the
+part youre in" for the logo, and is unsure about white buttons on the umbrella pages), and the sign-in page is the
+umbrella page he asked to look nicer. One board, one stop. The parts' colours are decided and are fixed on it.
+
+1. **One Opus subagent** (`model: "opus"`) gets: this plan (the picks section, this phase, Part 3), the looks page
+   source `~/.cache/daygame-research/rebrand/looks/looks.html` (reuse its phone frame, screens and feedback code),
+   the before-screenshots in `~/.cache/daygame-research/rebrand/before/`, and `app/globals.css`.
+2. **The umbrella colour, up to four options**, each shown properly (not as an afterthought):
+   - Today's orange (`#ff6b35`; same as Dating).
+   - White, done well: he was unsure about the mock's version, so show it at its best.
+   - One or two new colours the designer proposes: bold and energetic; text contrast at least 4.5 on `#121212`; and
+     clearly apart from Life gold `#f5c542`, Quit violet `#a78bfa`, Dating orange `#ff6b35`, delete red `#e63946` and
+     success green `#34d399` (show the hue gap and contrast numbers).
+3. **Six marks**, each a symbol and letters together (his answer "both"), bold and energetic, original (no copy of an
+   existing logo, nothing like a target or gun sight), drawn as SVG on a 32×32 grid that still reads at 16 px.
+   - Before drawing, check how real multi-part brands draw a family mark and its sub-brand lockups (Microsoft 365
+     was checked on the looks page: one family mark, each app its own colour and letter plate). Say on the board
+     what was checked and where. At most two of the six may use the three part colours together.
+   - Each mark comes with its three part lockups ("10K Days · Life", "· Quit", "· Dating") and a small part badge
+     drawn from the mark. These replace the mock-up's L/Q/D plates.
+   - A grid per mark: 16 px (tab), 32 px, 180 px (iPhone icon, rounded mask), 512 px (Android, circle mask), on
+     `#121212`.
+4. **Logo colour, a switch:** "the mark always in the umbrella colour" or "the mark in the part's colour inside a
+   part".
+5. **The sign-in page, redesigned** (sign up and log in): the mark, W60 under it, today's field labels and words,
+   built only from the app's own building blocks (card, input, button: rule R5). Nicer is the designer's call within
+   that.
+6. **Screens in the phone** (switchers at the top: umbrella colour, mark 1–6, logo colour mode): Front page, Sign
+   up, Log in, Home (signed in), Prices, Your plan Today (a Life page, so umbrella and part show side by side).
+7. **Feedback, visible without a click:** 👍 and a self-saving note box for each umbrella option, each mark, each
+   logo colour mode, each screen, the sign-in design, and one general box. Same db shapes and code as the looks
+   page (`likes/<key>`, `notes/<key>`). Test with a fake `window.claude` store, including a failed save.
+8. **Keep it short** (memory `short-artifacts`): one line per option on what it is and what was checked; no essays.
+9. The build session reads the whole file, publishes it with `capabilities: {db: {}}`, posts the link in chat
+   (never `open`), writes the URL here, and **goes straight on with Phases 3, 5 and 6**.
+
+**Done when:** the board is published, the link is posted and written here.
+
+### Phase 4b — Build the picked brand (Sonnet, after O8)
+
+Read his picks from the board's db and from his chat words first. Then:
+1. `--facet-brand` (and its foreground) in `app/globals.css` → the picked umbrella colour.
+2. Swap the SVG inside `components/BrandMark.tsx`. If he picked "the part's colour inside a part", the mark draws in
+   `currentColor` under the page's facet; otherwise in the umbrella colour.
+3. The part lockup in the page header (Phase 3 step 3) gets the picked badge.
+4. Regenerate `public/icon.svg`, `apple-icon.svg`, `icon-dark-32x32.svg/.png`, `icon-light-32x32.svg/.png`,
+   `icon-192.png`, `icon-512.png`, `icon-maskable-192.png`, `icon-maskable-512.png`, `apple-icon.png` and
+   `app/favicon.ico` (the umbrella colour). Maskable files keep the mark inside the 80 % safe zone.
+5. The quit share image (`app/quit/[addiction]/card/route.tsx`) draws the new mark. Touch only the mark there
+   (`Plans/quit-copy.md` works in that folder).
+6. Add `app/opengraph-image.tsx` (1200×630): mark, "10K Days Club" and W1. Add `metadataBase` in `app/layout.tsx` from
+   `process.env.NEXT_PUBLIC_APP_URL`, falling back to `https://daygame-coach.vercel.app` until Phase 8.
+7. **The five sign-in pages** (`app/auth/login/LoginPageClient.tsx`, `app/auth/sign-up/page.tsx`,
+   `app/auth/forgot-password/page.tsx`, `app/auth/reset-password/page.tsx`,
+   `app/auth/sign-up-success/SignUpSuccessClient.tsx`) follow the picked sign-in design. Their words stay as today,
+   plus W60. Keep every `data-testid`, field `id` and form behaviour; run the auth e2e specs.
 
 **Done when:**
-- The live tab icon, the header and the five sign-in pages show the new mark.
+- The live tab icon, the header, the part lockups and the five sign-in pages show the new mark and design.
 - `/manifest.webmanifest` icons open and show it.
 - A link to the site pasted into a link-preview checker shows the new picture.
 
@@ -450,6 +534,8 @@ O7.** Phase 3 starts only after his pick, read from the page's db and from his c
    - `isPublicPage` adds `/life`, `/dating` and `/pricing`.
    - `tests/unit/navigation/routeList.test.ts` must still pass.
 2. **Front page `/`:** replace the body of `src/home/components/HomePage.tsx` with W10–W14.
+   - Look C: the hero and closing buttons are in the umbrella colour (`brand`); each door, its icon and its button
+     are in its part's colour (Phase 3 step 3, from the door's address). Follow the looks page, look C, screen 1.
    - Keep the `#pricing` behaviour as a redirect: `/#pricing` scrolls nowhere now, so the hash effect sends the
      visitor to `/pricing`.
    - Signed in, the page still wears `AppFrame`, as today.
@@ -500,7 +586,8 @@ at 390 px, and the tests pass.
    - `ToolsPage` takes an optional group. A new page `app/(app)/tools/dating/page.tsx` shows only Dating, with
      heading and intro W51.
    - Add the route to `TAB_ROUTES`.
-4. **Home tiles (`TOOLS` order and `tile` flags):** Training, Time Log, Audit, Black Box, **Dating** (a new tile:
+4. **Home tiles (`TOOLS` order and `tile` flags)** — each tile and card in its part's colour, from its address
+   (Phase 3 step 3): Training, Time Log, Audit, Black Box, **Dating** (a new tile:
    icon `Heart`, href `ROUTES.datingTools`, label "Dating"), All tools.
    - Scenarios, Ask Coach and Inner Game get `tile: false`. They stay in All tools and on the Dating page with
      their locks.
@@ -638,10 +725,20 @@ Unchanged from the 2026-11-18 version. In order:
   per day (memory `vercel-late-deploy-rollback`).
 - Other sessions share this tree: `Plans/quit-copy.md` works in `src/quit/**` and `app/quit/**`;
   `Plans/plan-in-steps.md` works in `/plan/new`. Pull before each phase and touch only the lines named here.
-- **Main was red on 2026-11-19 for reasons outside this plan.** `tests/unit/infra/e2eSleepsAreTimed.test.ts` fails
-  on a fixed sleep in two specs: `tests/e2e/plan-new-extras.spec.ts` (plan-in-steps session) and
-  `tests/e2e/quit/lab-accountability.spec.ts` (quit-lab session). If it is still red when this build starts, say
-  so in chat and do not "fix" it inside a rebrand commit.
+- **If main is red when a phase starts,** name the commit and session that broke it in chat (`gh run list`, then
+  `git log` on the failing test's files) and do not "fix" it inside a rebrand commit. (2026-11-19 morning: red from
+  `c7eeb657`, fixed by its own session in `947a20ac` within the hour.)
+- **Where to build:** the worktree `~/.cache/daygame-research/rebrand/wt` (branch `rebrand`, `node_modules`
+  symlinked) is set up; `git pull --rebase origin main` in it and push with `git push origin HEAD:main`. The shared
+  checkout `~/projects/daygame-coach` is left alone (it is 40+ commits behind with other sessions' uncommitted work).
+- **Hook trap:** `core.hooksPath` points at the shared checkout's `.husky/_`, which runs the shared checkout's stale
+  `pre-commit`. It fails on a commit with no code file (a plan-only commit). For a commit that touches only `.md`
+  files, use `git commit --no-verify`; the hook would run nothing for it anyway. Code commits pass through the hook
+  normally.
+- **Local stack for screenshots:** start the dev server from the worktree with the stack's env (see Phase 0); stop
+  it before the full vitest run or the type ratchet (memory `worktree-e2e-servers`). `next dev` rewrites
+  `tsconfig.json` and writes `AGENTS.md` in the worktree: `git checkout -- tsconfig.json` and delete `AGENTS.md`
+  before committing.
 - Anything for the owner to look at goes on an artifact page. Post the link and never call `open`. Every page has
   👍 and self-saving notes.
 - Report to him in plain words, opening with done / live / not yet.
@@ -709,6 +806,9 @@ bar "Home · Plan · You".
 - W45 Scenarios preview, signed in, not paying: "Subscribe to unlock every scenario." Button "See prices".
 - W46 You → Billing: "Subscribe to unlock Scenarios, Ask Coach and Inner Game." Button "See prices".
 
+**Sign-in pages** (Phase 4b)
+- W60 the line under the logo on sign up and log in: W1. Every other word on the five sign-in pages stays as today.
+
 **Inside the app**
 - W50 All tools group headings: "Life", "Quit", "Dating". Page line kept: "Everything in the app. A lock means it
   opens once you subscribe."
@@ -716,21 +816,31 @@ bar "Home · Plan · You".
 
 ---
 
+## Handed to other plans
+
+- **Quit door `/quit`, for `Plans/quit-copy.md`:** his note on the looks page (2026-11-19): "this needs some work,
+  but it is fine that we just decide on colors now". The rebrand only re-colours `/quit` (Quit violet) and renames
+  its header; what the page says and shows is the quit-copy plan's.
+
 ## Questions from the build
 
 (none yet)
 
 ## Execution prompt
 
-See the end of the planning session's last message (2026-11-19); the same text is below.
+Rewritten 2026-11-19 after his look pick. Type `/model sonnet` on its own first (a slash command inside pasted
+text does not run), then paste:
 
 ```
-/model sonnet
-Read Plans/rebrand-10kdaysclub.md in full, then CLAUDE.md. Execute Phase 0, Phase 1 and Phase 2 in order,
-following Part 2. Phase 2's designs come from one subagent with model "opus" given the Phase 2 brief and Part 3;
-you publish its page and post the link in chat. Stop after Phase 2 and tell me in plain words what is live and
-what I need to do (pick a look on the page). When I have picked, continue with Phase 3, ask me the Phase 4
-questions, then build Phases 5 and 6 while the logo board waits for my pick, then Phase 4's build and Phase 7.
-Do Phases 8 and 9 only when the plan's O2, O3, O5 and O6 are done. After each phase, mark it done in the plan
-with its commit sha, push, and check healthz.
+Read Plans/rebrand-10kdaysclub.md in full, then CLAUDE.md. Phases 0, 1 and 2 are done and O7 is answered
+(see "His picks after the looks page"). Follow Part 2 throughout.
+1. Phase 4a first: one subagent with model "opus" builds the brand board from the Phase 4a brief and Part 3.
+   Read the whole file it returns, publish it with capabilities {db: {}}, post the link in chat, and write the
+   URL into the plan.
+2. Without waiting for my pick, build Phase 3, then Phase 5, then Phase 6. After each phase: mark it done in
+   the plan with its commit sha, push, and check that healthz names the commit.
+3. When Phase 6 is live, tell me in plain words what is live and that the brand board waits for my pick.
+   If I have not picked yet, stop there.
+4. After my pick (read the board's db and my chat words): Phase 4b, then Phase 7.
+Do Phases 8 and 9 only when the plan's O2, O3, O5 and O6 are done.
 ```
