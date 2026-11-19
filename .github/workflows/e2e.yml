@@ -42,6 +42,18 @@ on:
     # (the first nightly at '0 3' started at 07:59, 2026-10-15).
     - cron: '23 3 * * *'
   workflow_dispatch:
+    # Prove a flaky spec fixed: dispatch on a branch with the spec's title as
+    # `grep` and repeat_each 10. Every lane then runs only the tests that match
+    # (a lane with none passes at once); both empty = exactly a normal run.
+    inputs:
+      grep:
+        description: Only run tests whose title matches this (playwright --grep)
+        type: string
+        default: ''
+      repeat_each:
+        description: Run every matching test this many times (playwright --repeat-each)
+        type: number
+        default: 1
 
 permissions:
   contents: read
@@ -143,9 +155,11 @@ jobs:
           version: 2.120.0
 
       - name: Every route, opened cold
-        run: npx playwright test --project=sweep-desktop
+        run: npx playwright test --project=sweep-desktop ${PW_GREP:+--grep "$PW_GREP" --pass-with-no-tests} --repeat-each="${PW_REPEAT_EACH:-1}"
         env:
           CI: true
+          PW_GREP: ${{ inputs.grep }}
+          PW_REPEAT_EACH: ${{ inputs.repeat_each }}
           PLAYWRIGHT_BLOB_OUTPUT_NAME: report-e2e-fast.zip
 
       - name: Keep the report
@@ -266,9 +280,11 @@ jobs:
           version: 2.120.0
 
       - name: Run the lane
-        run: npx playwright test --project=${{ matrix.lane }} --shard=${{ matrix.shard }}
+        run: npx playwright test --project=${{ matrix.lane }} --shard=${{ matrix.shard }} ${PW_GREP:+--grep "$PW_GREP" --pass-with-no-tests} --repeat-each="${PW_REPEAT_EACH:-1}"
         env:
           CI: true
+          PW_GREP: ${{ inputs.grep }}
+          PW_REPEAT_EACH: ${{ inputs.repeat_each }}
           # One name per shard, or the merge overwrites one lane's shard 1 with another's.
           PLAYWRIGHT_BLOB_OUTPUT_NAME: report-${{ matrix.lane }}-${{ strategy.job-index }}.zip
 

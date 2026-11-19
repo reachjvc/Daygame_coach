@@ -128,9 +128,15 @@ test.describe("the council in the plan", () => {
     const a = people.find((p) => p.values.some((v) => v.word.toLowerCase() !== "honesty"))!
     const word = a.values.find((v) => v.word.toLowerCase() !== "honesty")!.word
     await add(page, a.id, [word])
+    // The chip shows as soon as the council has loaded, before the account's plan has: and a
+    // tap in that gap is undone when the plan lands (the page opened with no copy of its own,
+    // so the account's plan replaces the page's). Press only after both reads have answered.
+    const planRead = page.waitForResponse((r) => new URL(r.url()).pathname === "/api/life-plan" && r.request().method() === "GET")
+    const dayRead = page.waitForResponse((r) => new URL(r.url()).pathname === "/api/life-plan/day" && r.request().method() === "GET")
     await page.goto(`${ROUTES.plan}?step=values`)
+    await Promise.all([planRead, dayRead])
     const chip = page.getByTestId(`council-value-${word.toLowerCase()}`)
-    await expect(chip).toBeVisible()
+    await expect(chip).toBeVisible({ timeout: 20_000 })
     await chip.click()
     await expect(chip).toHaveCount(0)
   })

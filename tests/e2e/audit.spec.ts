@@ -426,6 +426,11 @@ test.describe("time & energy audit @phone", () => {
 
       await page.goto("/dashboard", { waitUntil: "domcontentloaded" })
       await whenHydrated(page.getByTestId("header-logout-button"), 60_000)
+      // The page's own load, too: a press that lands while it is still loading (the
+      // button already answers, the rest of the page does not) was lost about one run
+      // in ten, and Log Out then never named what waits (CI trail: press, then the
+      // address and `load` ~150 ms later, no dialog for 20 s).
+      await page.waitForLoadState("load")
       await page.getByTestId("header-logout-button").click()
       // It cannot be sent (no signal for it), so Log Out names it first (alpha
       // fast-audit-01); only "Log out anyway" throws it away.

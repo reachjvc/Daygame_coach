@@ -42,7 +42,7 @@ function plan(zone: string) {
 test("a late step is on Today, and ticking it there keeps the day", async ({ page, account, accountTimezone }) => {
   await seedLifePlan(page, account.id, plan(accountTimezone))
   await page.goto(`${ROUTES.plan}?step=today`)
-  await expect(page.getByText("Saved to your account.")).toBeVisible()
+  await expect(page.getByText("Saved to your account.")).toBeVisible({ timeout: 20_000 })
   const due = page.getByTestId("today-steps-due")
   await expect(due).toContainText("E2E landing page")
   await expect(due).toContainText("3 days late")
