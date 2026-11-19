@@ -34,7 +34,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | 3 | Your record (progress, money kept) | lab `progress/best` | the live counter feel of copies d and e | waiting for you |
 | 4 | Slipped? Restart today | wave-1 `slip` | slips go into the shared record; clean runs never reset | checking (live, review round 2 next) |
 | 5 | The 12 lies test | wave-1 `beliefs` | from `beliefs/best`: a reply per belief, "can you stop?", earlier results | building |
-| 6 | What you'll feel, and when | lab `timeline/best` | wave-1 `symptoms` (what helps per symptom) | checking (on main, reviews next) |
+| 6 | What you'll feel, and when | lab `timeline/best` | wave-1 `symptoms` (what helps per symptom) | waiting for you |
 | 7 | If-then plan | lab `ifthen/best` | — | waiting for you |
 | 8 | Daily check-in | lab `checkin/best` | slip question from `diary/best` | building |
 | 9 | What it costs you | wave-1 `cost` | per-pack price and live update (copy e); money setup from the shared record | building |
@@ -1953,3 +1953,19 @@ targets or "what you could buy" here: Tool 3 holds targets.
   minutes" in the sleep steps, the diet line, the lungs design (who quit was not random), caffeine wording, no
   "ten minutes" on the craving help, a new "Good to know" note for cigarette smokers on medicines whose dose may need
   lowering (Kroon 2007), years on dates outside this year, Now pill on the cue card to day 42.
+- Data safety (2026-11-20, found by the date/sos agent): signed in, the page mounted the syncing Black Box bridge, whose
+  first load writes the merged record back to the browser and pushes unsent rows, so an open tab could put a stale copy
+  over rows another tool had just saved. Now the page reads the Black Box through its own read-only view
+  (`readBlackBox.ts`: browser copy plus, signed in, the account's copy merged in memory by the same union rule) and
+  writes nothing anywhere. New e2e test: a signed-in visit makes no storage write and no request that is not a GET to
+  `/api/black-box`, and a newer copy saved while the page is open stays as saved.
+- Review round 3: bugs clean (nice to have only: reload does not keep the scroll position; absurd hand-edited dates show
+  huge day counts). Look and content findings fixed: the cue card says what the study found (stronger at day 35, did
+  not drop), the fading band starts the day after the peak (no empty days 8–9), "for most" → "on average" (the studies
+  report averages), the Swanson quote in its own order, one visible line on anxiety not rising in one study, "Between
+  the tested days (7, 14 and 35)", the coffee advice marked "our suggestion, not tested", "where" on every basis and no
+  notes about "the summary" in plain view, each card's fold named ("Based on: timing"), counts on every "What gets
+  better" row, an honest "No tested tip just for short temper, anxiety or low mood yet; moving is the best-tested",
+  softer day 8–28 and day 29–42 lines. Three review rounds are done (recipe step 4); round 3's findings are fixed and
+  were not reviewed a fourth time. Left, proposed: (d) the data file's "Years 1 and 3" headline says "life rating
+  fell less" (Piper 2012), which reads as bad news and cannot be checked against the abstract; (e) the slip case (a).
