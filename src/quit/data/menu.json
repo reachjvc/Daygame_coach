@@ -164,10 +164,10 @@
         {
           "id": "lesson",
           "name": "Today's lesson",
-          "line": "3 minutes a day at your hour. 90 days.",
+          "line": "One short lesson a day, with one thing to do. From 3 days before day 1 to day 14.",
           "minutes": 3,
-          "account": "free",
-          "wave": 3
+          "account": "none",
+          "wave": 1
         }
       ]
     },

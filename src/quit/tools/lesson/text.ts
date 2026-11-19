@@ -1,0 +1,46 @@
+/** Reader text of "Today's lesson". The lessons themselves come from the data file. */
+export const lessonText = {
+  tabs: { today: "Today", all: "All days" },
+  tabsLabel: "Lesson screens",
+  dayLabel: (n: number) => (n < 0 ? `Day −${Math.abs(n)}` : `Day ${n}`),
+  dayWithDate: (label: string, date: string) => `${label} · ${date}`,
+  stripLabel: "Your lessons, from 3 days before day 1 to day 14",
+  placeDay: (n: number, last: number) => `Day ${n} of ${last}`,
+  placeBefore: (n: number) => (n === 1 ? "1 day before day 1" : `${n} days before day 1`),
+
+  noDate: "The lessons follow your quit date. Until you pick one, start here.",
+  noDateLink: "Pick your date in Your quit date.",
+  slipLine: (date: string) => `Your last run ended on ${date}. The lessons start again from day 1 with your next run.`,
+  slipLink: "Pick a new day 1 in Slipped? Restart today.",
+
+  earlyTitle: (date: string) => `Your lessons start on ${date}, 3 days before your quit date.`,
+  earlyLine: (n: number) => (n === 1 ? "Your quit date is tomorrow." : `Your quit date is in ${n} days.`),
+  readFirst: "Read the first lesson now",
+
+  endTitle: "That was the last lesson, on day 14.",
+  endDone: (n: number, total: number) => `You did ${n} of ${total} exercises.`,
+  endNext: "What next",
+  endAll: "Read any lesson again in All days.",
+
+  countedLabel: "Counted:",
+  thoughtTitle: "The thought behind it",
+  thoughtLabel: "The thought",
+  proofLabel: "What the evidence says",
+  exerciseTitle: "Do this today",
+  noteLabel: "Your note (optional)",
+  noteSaved: "Saved on this phone.",
+  noteKept: "Your notes are kept on this phone.",
+  markDone: "Mark as done",
+  doneLine: "Done.",
+  notDone: "Not done yet",
+  tomorrow: (title: string) => `Tomorrow: ${title}`,
+  reread: "You can read any day again in All days.",
+
+  groupBefore: "Before day 1",
+  groupAfter: "Day 1 to 14",
+  todayPill: "Today",
+  doneMark: "Done",
+  backToList: "All days",
+  prev: "Previous lesson",
+  next: "Next lesson",
+} as const

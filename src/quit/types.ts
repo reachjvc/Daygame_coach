@@ -221,6 +221,8 @@ export interface QuitLesson {
   beliefId: string
   title: string
   body: string
+  /** Who and how many the numbers in `body` come from, and the caveat (RULEBOOK rule 9). */
+  counted?: string
   exercise: string
   refs: QuitRef[]
 }

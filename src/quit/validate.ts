@@ -110,6 +110,7 @@ function ruleWords(c: Ctx) {
   arr(d.lessons).forEach((l, i) => {
     lim(`lessons[${i}].body`, obj(l).body, 180)
     lim(`lessons[${i}].exercise`, obj(l).exercise, 40)
+    lim(`lessons[${i}].counted`, obj(l).counted, 30)
   })
   const quotes = (x: unknown, path: string) => {
     if (Array.isArray(x)) x.forEach((v, i) => quotes(v, `${path}[${i}]`))
