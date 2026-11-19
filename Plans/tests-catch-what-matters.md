@@ -1,0 +1,334 @@
+# Tests that catch what matters
+
+Written 2026-11-19. **Status: proposed.** Pasting the execution prompt at the end is the go.
+Follows `Plans/tests-green-and-fast.md` (tests green again, suites fast; its Phase 7 is still open).
+That plan made the tests run. This one makes them catch more of what can hurt: lost or leaked data,
+a broken live site, and a red main that nobody owns. Every phase is low to medium risk. No test is
+deleted. Each phase names the model that runs it.
+
+## What you are agreeing to, in plain words
+
+- **No money.** GitHub runs are free for this public repo. The mutation tool (Phase 7) is free and
+  downloads on demand; nothing is added to the app's package list.
+- **Your real data is never touched.** Every new data test runs on the throwaway test database. The
+  one new check against the live site (Phase 6) opens public pages signed out and never writes.
+- **Nothing irreversible, nothing deleted.** Tests are only added or repaired.
+- **One new thing runs on its own:** after each deploy, a one-minute check opens the live site and
+  goes red if it is broken. Red shows up in every Claude session's start line, like main does now.
+
+## What you will notice when it is done
+
+1. When main is red, every session sees **which commit broke which test**. Today every browser run on
+   main since 09:53 UTC was red (27 in a row), from several sessions' work, and each one can say
+   "not mine".
+2. Two kinds of mistakes that turned main red again and again get caught **at commit, in seconds**,
+   instead of 20 minutes after the push.
+3. **Every server address in the app is checked to refuse a stranger**, not 21 picked by hand.
+4. The functions that **write your data** (training sessions, approaches, field reports, goals,
+   workouts, time-log restore, settings) each get a test proving they write the right row and only
+   your row. 125 of them have no test at all today.
+5. **The live site is checked after every deploy.** On 2026-11-18 it logged 26 server errors
+   ("Cannot find module") across 13 deploys, and nothing told anyone.
+6. **We learn how strong the tests on your daily tools really are** (Time Log, check-ins, black box),
+   by breaking the code on purpose and seeing whether the tests notice. Gaps found get tests.
+7. Flaky tests (pass only on the second try) get fixed, and the everyday phone flows of the Time Log
+   and check-ins get a test each where none walks them the way you use them.
+
+## Facts measured 2026-11-19 (origin/main 14949b79)
+
+| What | Now | Target | After |
+|---|---|---|---|
+| Unit tests | 8,260 in 691 files, 94.6 s with coverage on this PC | unchanged speed (± 10 %) | |
+| Unit line coverage (unit only; database and browser tests not counted) | 33.6 % lines, 29.5 % branches. Time Log 85 %, check-ins 77 %, programs 78 %; goals 30 %, quit 25 %, tracking 20 %, `app/api` 11 % | no % target (see "Left out") | |
+| Functions that write user data (`tests/unit/writeCoverage.test.ts`) | 236: 51 asserted, 60 mentioned, **125 unasserted** (ceiling 128) | unasserted ≤ 70 | |
+| API routes (`app/api/**/route.ts`) | 137; **52** have no test that names their path; `security-auth.spec.ts` checks 21 from a hand list | all 137 checked signed out | |
+| Main E2E on 2026-11-19 | **27 red in a row** since 09:53 UTC (green 08:04–09:46), from rebrand, quit, plan-new and sweep changes | red runs name their first red commit | |
+| Main CI static job | Lint ratchet red in 5 main CI runs, 2026-11-18 22:00 – 11-19 07:00 UTC | lint caught at commit | |
+| Sweep broken by a page hidden on purpose | 4 times in 2 days: `/quit/lab`, `/plan/sandbox`, `/quit/coaching`, `/plan/new/role-models` | caught at commit | |
+| Known flaky browser specs | 6 (tests-green B13) | 0 | |
+| Check of the live site after deploy | none | every production deploy | |
+| Mutation score (share of planted bugs the tests catch) | one file tried: `src/audit/pingService.ts` 45 % (24 caught, 29 in code no unit test runs), 29 s | measured on 8 daily-use files, survivors triaged | |
+
+Live-data ranking (read-only row counts, 2026-11-19; numbers kept out of this public repo): the
+tables with the most rows are training sessions, workout sets, approaches, Time Log entries, life
+plan nodes, field reports, life plan seasons, goal snapshots, vice reports and goals. Phase 4 goes in
+that order.
+
+## What the research says (checked 2026-11-19 unless marked)
+
+- **Mutation testing** is the honest measure of whether tests catch bugs; coverage can be 100 % with
+  weak asserts. Thoughtworks Technology Radar, April 2026: "Trial", names Stryker. Checked.
+- **AI-written tests confirm their own author's mistakes** ("self-confirming loop"); the fixes teams use
+  are mutation testing, a different author for tests than for code, and running candidate tests many
+  times to catch flakiness (Stevens 2026 paper and practitioner write-ups, mostly vendor blogs).
+  Checked; numbers in those posts are not verified.
+- **Flaky tests:** retries hide real bugs; teams track tests that pass only on retry and fix them by
+  waiting for real state, not sleeping. Playwright marks them "flaky". Checked (vendor blogs, consistent).
+- This repo already knows the self-confirming problem: `scripts/tests-must-fail-without-the-fix.mjs`
+  and the write-coverage ratchet were written after the same failure (memory, confirmed in the files).
+
+## Left out on purpose
+
+| Idea | Why not now |
+|---|---|
+| Screenshot comparison tests | The rebrand changes colours and layout this week; pictures would go red daily for nothing |
+| Gating pushes (branch first, merge queue) | You want pushes to main without gates. Phases 1–2 make breaks visible and owned instead |
+| A coverage % target | Rewards the easy tests: the write-coverage file records helpers covered while the database write was not |
+| Property-based tests (fast-check) | Needs a new package. Phase 7 shows first whether the merge logic tests are weak |
+| Tests for the quit tools and `/plan/new` | Their own sessions rebuild them daily and write their own specs |
+| Checking every `[id]` route with a second account | Needs a test object per route; `security-idor.spec.ts` covers the main ones. Revisit after Phase 3 |
+| Deleting tests | No test found that fails the removal rule (R-DEL in tests-green-and-fast). Nothing removed |
+| More speed work | Done by tests-green-and-fast |
+
+## Blockers, each tried once
+
+| ID | What | Tried, result | Blocks | Recommendation |
+|---|---|---|---|---|
+| B1 | One shared local test database | `docker ps`: `supabase_db_daygame-tests Up 7 hours (healthy)`, shared by every session | local integration and browser runs | GitHub runs them. Locally one file at a time by memory `integration-tests-without-stack-up` / `worktree-e2e-servers` |
+| B2 | tests-green-and-fast Phase 7 still open in another session; it edited `scripts/ci/main-status.mjs` today (2d9825a5) | `git log origin/main` | Phases 1, 5, 6 touch the same files | Rebase before every commit; never edit `docs/testing/durations.json` baselines (that plan lowers them) |
+| B3 | Mutation tool on this test setup (vitest 4, three projects) | First run red before mutating: `every variable the code reads is on the list … expected [ …(2) ] to deeply equal []` (in-place instrumentation adds code a repo-scanning test reads). Second run with `vitest.related: true`: worked, 29 s, `@stryker-mutator/core@9.6.1` | Phase 7 | Always `related: true`, in a scratch worktree, never in the shared checkout |
+| B4 | Live site reachable from a check | From this PC: `/api/healthz` 200 with `buildId`; public pages 200. The per-deploy URL answers 302 (Vercel sign-in wall) | Phase 6 | Use the production domain and wait for `buildId` = the deployed commit. GitHub runner IPs untried: the first Phase 6 run is that attempt; if blocked (403 or challenge), record it and stop Phase 6 |
+| B5 | Deploys reach GitHub as events | Newest Production deployment has status `success` by `vercel[bot]` | Phase 6 trigger | `on: deployment_status`. That app-created events start workflows is from memory of GitHub's docs, not checked |
+| B6 | Dependency manifests | Not needed: the mutation tool runs by `npx`; nothing here edits `package.json` | nothing | If a step turns out to need one, stop that step and record it |
+| B7 | Vercel's ~60 deploys a day | memory `vercel-late-deploy-rollback` | pushes | At most one push to main per finished phase |
+| B8 | Main red from other sessions (tests-green B10–B12, today's site-frame and sweep reds) | E2E 44581804643 | "green" acceptance runs | Not this plan's to fix. Judge a phase green on its own specs; Phase 1 makes the others name themselves |
+
+## Questions, each with a recommendation (proposed until you say yes)
+
+| Question | Recommendation | Alternative | Cost if wrong |
+|---|---|---|---|
+| Q1 When the live check fails, what happens? | It goes red and every session's start line says so. Nothing automatic | Roll back on Vercel by itself (needs power over your Vercel account) | A broken live site waits for the next session |
+| Q2 Should a test that passes only on its second try turn main red? | No. Show it in the start line when it flaked in 2 of the last 5 main runs | Fail the run (`failOnFlakyTests`) | More red on a main many sessions push to |
+| Q3 Run the mutation check every night? | No. Once now, with a saved command any session can rerun | Nightly on GitHub | A weak test on new code goes unnoticed until someone reruns it |
+
+---
+
+# PHASES
+
+Every phase ends with a **Status** line in this plan: done with the deciding command output quoted,
+or `blocked: <ID>` with the exact message. Phases 1, 2, 3, 4 and 6 do not depend on each other except
+where noted; 5 before 8; 9 last.
+
+## Phase 0 — Rig · XS · haiku
+
+1. `git worktree add -b tests-catch ~/.cache/daygame-research/tests-catch/wt origin/main`, symlink
+   `node_modules` from the main checkout. Each later phase gets its own worktree branched from the
+   newest `origin/main` under `~/.cache/daygame-research/tests-catch/`.
+2. Write the start SHA here.
+
+Accept: worktree exists; start SHA written.
+
+## Phase 1 — A red main names the commit that broke it · M · sonnet
+
+1. `.github/workflows/e2e.yml`, job `report`: after the HTML merge, also run
+   `npx playwright merge-reports --reporter json ./all-blob-reports > merged.json`.
+2. New `scripts/ci/e2e-failures.mjs <merged.json> [previous failures.json]` writes `failures.json`:
+   `{ sha, subject, runId, failed: [{ id: "<file>:<line> <title>", project, firstSha, firstSubject, firstRunId }], flaky: [{ id, project, last5: [bools] }] }`.
+   A test failing in both runs keeps the previous `firstSha`; a new failure gets this run's sha; a test
+   that passed drops out. With no previous file, `firstSha` is `null` (printed "red since before
+   tracking began").
+3. On a push to main, the report job downloads the previous file: the newest earlier completed main
+   push run of `e2e.yml` that has artifact `e2e-failures` (look back at most 5 runs). Give the job
+   `permissions: { contents: read, actions: read }` and `GH_TOKEN: ${{ github.token }}`. Upload
+   `failures.json` as artifact `e2e-failures` (retention 14 days) and write a short table to
+   `$GITHUB_STEP_SUMMARY`.
+4. `scripts/ci/main-status.mjs`: for a red E2E run, download its `e2e-failures` artifact (3 s timeout;
+   skip silently when missing or slow; total stays ≤ 5 s, exit 0 always). After the existing line,
+   print at most 3 lines grouped by first red commit, then one flaky line if any test flaked in ≥ 2 of
+   its last 5:
+   ```
+   main is red since 2026-11-19: E2E Tests (run 44581804643)
+     4 tests first red at 3423892f "Rebrand Phase 7: Training card on You…" (e.g. programs-one-language.spec.ts:191)
+     2 tests first red at 886a1721 "Plan new: V1 sequence…" (e.g. cold-open.spec.ts:192)
+     flaky on main: audit.spec.ts:411 (3 of 5 runs)
+   ```
+5. Tests: `tests/unit/ci/e2eFailures.test.ts` (carry forward, new failure, fixed test drops out, no
+   previous file, flaky window) and new fixtures in `tests/unit/ci/mainStatus.test.ts`. Keep
+   `tests/unit/ciWorkflows.test.ts` and `pipelineRules.test.ts` green; add an assertion that the report
+   job uploads `e2e-failures`. Never delete one of their assertions.
+
+Accept: on a main push run the artifact exists and `node scripts/ci/main-status.mjs` prints a grouped
+line naming a real commit; with a green fixture it prints nothing. Quote both.
+
+## Phase 2 — The common main breakers caught at commit · S · sonnet
+
+1. **Lint at commit.** If `scripts/lint-ratchet.mjs` has no file mode, add `--files <paths…>`: lint only
+   those files with the same config and fail only where a file's count per rule rises above
+   `eslint-baseline.json`. Call it from `.husky/pre-commit` for staged `.ts/.tsx/.js/.mjs` files, before
+   the tests. Keep every existing comment there; update `tests/unit/ci/preCommitHook.test.ts`.
+   Budget ≤ 8 s for 5 files; quote `time sh .husky/pre-commit` for one `src/` file.
+2. **Pages hidden on purpose.** Move `NOT_SWEPT` out of `tests/e2e/sweep/cold-open.spec.ts` into
+   `tests/support/` (the spec imports it). New `tests/unit/navigation/gatedPagesAreNotSwept.test.ts`:
+   every static route from `tests/support/appRoutes` whose page file calls `notFound(` must be in
+   `NOT_SWEPT` with a reason, or in a short `NOT_FOUND_ONLY_ON_BAD_INPUT` list with a reason. Do the
+   same for any exclusion list `route-sweep.spec.ts` keeps. Prove it: remove the `/quit/lab` entry,
+   the test goes red with a message naming the page; put it back.
+3. Check `scripts/related-tests.mjs` runs that test when only an `app/**/page.tsx` is staged (commit
+   8b1ea813 taught it files read by glob). Throwaway commit on the work branch; quote the output. If not
+   picked, make it picked.
+
+Accept: the three quoted outputs; full unit suite green.
+
+## Phase 3 — Every API route refuses a stranger · M · sonnet
+
+1. New `tests/e2e/sweep/api-signed-out.spec.ts`, desktop project, `request` fixture with no cookies.
+   Routes come from disk (`app/api/**/route.ts`), methods from the file's exports
+   (`export (async )?function GET|POST|…` or `export const GET`). Dynamic segments get a random UUID;
+   writes send `{}`.
+2. Allowed answers: 401, 403, 404, 405. Never 2xx, never 5xx. A 400 means the route reads the body
+   before checking sign-in: a finding. Routes meant to be public (healthz, auth callbacks, webhooks that
+   check a signature, cron that checks a secret, …) go in a `PUBLIC_API` list in `tests/support/`, each
+   with a reason and the answer it gives a stranger. A unit test fails on a stale entry.
+3. A route that answers 2xx with data or 5xx is a product bug: make it check sign-in first with the
+   app's existing helper (copy how a neighbouring route does it), one commit per route. Keep the
+   hand list in `security-auth.spec.ts` (it also checks bad tokens).
+
+Accept: a dispatched E2E run with the new spec green; the count of routes checked quoted (137 or the
+current number); each finding and its fix listed here.
+
+## Phase 4 — Writes to your data get real tests · L · sonnet, three agents in parallel
+
+Order (by live rows): A = `src/db/trackingRepo.ts` + `src/tracking/trackingService.ts` (46 functions);
+B = `goalRepo` (9), `valuesRepo.deleteUserValues`, `settingsRepo` (9), `profileService` (5),
+`innerGameProgressRepo` (6); C = `programRepo` (9), `workoutRepo` (3), `programDraftRepo` (3),
+`timetrackBackupRepo.restoreTimetrack`, `healthRepo` (7). Skip lab and test-only writers
+(`apiAiService` test logging, `embeddingsTestRepo`, `scenario*`).
+
+Per function, an integration test in `tests/integration/repos/<repo>Writes.integration.test.ts`
+(through the service where the app calls the service):
+1. The row as written: every field the function sets.
+2. A second user's rows, created first, are byte-identical afterwards.
+3. Delete, archive, reset: only the target rows change.
+4. **Put the defect back:** per file, two hand edits (drop the user filter; change one written field);
+   the tests go red; revert. Write which test caught each in the Status.
+
+Then mark each function `"asserted"` in `tests/support/writeCoverage.baseline.json` and lower
+`MAX_UNASSERTED` to the new count. A test that finds data loss or a leak: fix it in the repo function
+when ≤ 30 lines with the test as proof; bigger, mark the test `it.fails` with a comment naming the
+finding and add a finding row here. Run integration files on GitHub (CI `database` job runs on every
+branch push) or locally one file at a time (B1).
+
+Accept: `unasserted` ≤ 70, quoted from the baseline; CI `database` job green on the branch; the
+put-the-defect-back table filled in.
+
+## Phase 5 — Flaky specs fixed · M · sonnet
+
+1. `.github/workflows/e2e.yml` `workflow_dispatch` inputs `grep` (string) and `repeat_each` (number,
+   default 1), passed to the lane's `playwright test` call. Update `ciWorkflows.test.ts`.
+2. For each flaky spec (tests-green B13: `life-mastery-dated-steps.spec.ts:42`,
+   `life-mastery-day-persists.spec.ts:227`, `role-models-council.spec.ts:127`,
+   `life-mastery-achievements.spec.ts:40`, `audit.spec.ts:411`, `programs-live-format.spec.ts:408`
+   android; plus `timetrack-sync.spec.ts:639` if Phase 1's artifact shows it first red on a commit
+   that did not touch the Time Log): read the trace of the failed try, find the race, wait for real
+   state (a request, a label), never a sleep. Unsure whether the product or the test races: treat it
+   as the product.
+
+Accept: per spec a dispatched run with `repeat_each=10` on its lane: 0 failed, 0 flaky. Quote run ids.
+
+## Phase 6 — The live site checked after every deploy · M · sonnet · after Phase 1
+
+1. New `.github/workflows/live-check.yml`, `on: deployment_status`, job only when
+   `github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Production'`.
+   `env: LIVE_URL: https://daygame-coach.vercel.app` (one place; the domain changes with the rebrand).
+   `permissions: contents: read`, no secrets.
+2. Poll `$LIVE_URL/api/healthz` until `buildId` equals `github.event.deployment.sha` (max 10 min). If a
+   newer commit is live first, end green ("superseded").
+3. New Playwright project `live` (excluded from every other project), spec
+   `tests/e2e/live/live-smoke.spec.ts`: open the public pages signed out (`/`, `/life`, `/dating`,
+   `/quit`, `/pricing`, `/auth/login`, `/privacy`): 200, no Next error page, no "Cannot find module",
+   no console error. It never writes: every non-GET request to `LIVE_URL` is aborted, and the test
+   fails unless that request is in a short list in the spec with a reason (say, an analytics beacon).
+   ≤ 3 min per run.
+4. Add the workflow to `main-status.mjs` (its runs come from `deployment_status`, not `push`).
+   Unit-test the healthz poll (match, superseded, timeout) with a fake fetch.
+
+Accept: one real production deploy runs the check green; quote the run. B4 decides whether this
+phase can finish.
+
+## Phase 7 — How strong are the tests on daily tools · M · sonnet
+
+1. Commit `scripts/mutation/stryker.conf.json` (`testRunner: vitest`, `vitest.related: true`,
+   `inPlace: true`, `coverageAnalysis: perTest`, `reporters: clear-text, json`) and
+   `scripts/mutation/run.sh <file>` that runs
+   `npx -y -p @stryker-mutator/core@9.6.1 -p @stryker-mutator/vitest-runner@9.6.1 stryker run …`
+   with `--mutate <file>` and refuses to run outside a git worktree (in-place edits the files).
+2. Check `~/.cache/daygame-research/tools/load.sh` first: `ok` concurrency 4, `busy` 2, `game` wait.
+3. Run on: `src/timetrack/syncService.ts`, `syncVersionService.ts`, `timetrackService.ts`,
+   `runningTimerService.ts`, `src/audit/auditQueue.ts`, `auditService.ts`,
+   `src/vice/blackbox/blackboxStore.ts`, `src/shared/dateUtils.ts`. Write score, survived and no-coverage
+   counts per file here.
+4. Triage each surviving mutant: no behaviour change (ignore, say why in one line) or a real gap
+   (write one test of the behaviour, not of the line). At most 40 new tests; data paths first (merge,
+   queue, conflict, dates). Rerun the file; write the new score.
+
+Accept: before/after score table for all 8 files; no new test that only restates the code.
+
+## Phase 8 — Everyday phone flows · M · sonnet · after Phase 5
+
+1. Map the everyday flows on `android` to the spec line that does each the way a person would (taps,
+   the time wheel, not typing): Time Log start, stop, switch task, change start **and** end of a
+   finished entry, change the start of a running one, delete and undo, add a missed entry for
+   yesterday; check-in: answer from the notification link, change an answer, open the day's review.
+   Write the map here.
+2. For each gap (at most 6), one spec. Where measurable: start and end use the same control; lengths
+   show as hours and minutes; controls ≥ 44 px (48 px in sheets, finding F27); the number of taps is
+   written down as a ceiling.
+3. Skip the life plan and the quit tools (rebuilt daily by their own sessions).
+
+Accept: the map; each new spec green with `repeat_each=10` on android. "No gaps" is a valid result.
+
+## Phase 9 — Prove it and report · S · opus reviewer, sonnet
+
+1. A fresh `opus` subagent that wrote none of it runs `/code-review` on `<start SHA>..HEAD`
+   (this plan's commits). Fix or record every finding.
+2. A fresh `sonnet` subagent picks 10 new tests at random, breaks the code each guards with a one-line
+   edit, confirms red, reverts. A test that stays green is rewritten.
+3. Fill the "After" column. Remove the worktrees, `git worktree prune`, archive this plan into
+   `Plans/ARCHIVE.md` (memory `plans-archive`).
+4. Report to the owner in plain words, starting with any doubt: product bugs found, what now catches
+   what, before and after numbers.
+
+Accept: review and break-test results quoted; facts table filled.
+
+---
+
+# PART 2 — Rules for the executing session
+
+- **Foreman.** The session running the prompt does no phase work. It starts one background `Agent`
+  per phase (three for Phase 4) with the model the phase names, briefed with the phase text, its
+  acceptance, this Part 2 and its worktree. It checks every acceptance itself against the thing
+  itself (the GitHub run in the API, the diff, the numbers) before marking the phase done. A worker
+  that fails the same acceptance twice: send the phase once more to an `opus` agent.
+- **Shared checkout.** Work only in worktrees under `~/.cache/daygame-research/tests-catch/`. Never
+  `git add -A`, `git stash` or `--no-verify` on main. Ship: rebase onto `origin/main`, run the related
+  unit tests and `node scripts/typecheck-ratchet.mjs` and `npm run lint:ratchet` (stop dev servers
+  first), then `git push origin HEAD:main`. One push per finished phase (B7).
+- Never run `test-stack.mjs up`, the full integration suite or the full browser suite locally (B1).
+- Load: `~/.cache/daygame-research/tools/load.sh` before heavy local work; tell workers the same.
+- Never touch the live database. The live site only through Phase 6's read-only check.
+- Never weaken an assertion about data, sync, sign-in or privacy to make it pass. Never delete a test.
+- Red main from other sessions (B8) is not yours: judge your phase on its own specs and say so.
+- The repo is public: no personal data, live row counts or user content in commits.
+- Each phase ends with a **Status** line here, committed with the work.
+
+---
+
+# EXECUTION PROMPT
+
+Paste into a new Claude Code session in this folder (it delegates to smaller models):
+
+```
+/goal Execute Plans/tests-catch-what-matters.md, Phase 0 through Phase 9, skipping phases that already
+have a "done" Status line. Read first: that whole plan (Part 2 is binding), CLAUDE.md and your memory
+index. You are the foreman: do no phase work yourself. For each phase start a background Agent with
+the model the phase names, in its own worktree under ~/.cache/daygame-research/tests-catch/, briefed
+with the phase text, its acceptance check and Part 2. Phases 1, 2, 3, 4 (three agents: groups A, B, C)
+and 7 may run in parallel, as many as tools/load.sh allows; 6 waits for 1; 8 waits for 5; 9 is last.
+Before marking a phase done, check its acceptance yourself against the thing itself: the GitHub run in
+the API, the diff, the measured numbers. If a worker fails the same acceptance twice, give that phase
+once to a model "opus" agent. Done means: every phase has a Status line, the facts table has its After
+column, a fresh opus agent reviewed start..HEAD, worktrees are pruned and the plan is archived. Escape:
+a blocker outside this plan is recorded in the blocker table with the exact message and counts as met.
+Re-run the same failing GitHub run at most twice. Commit and push your own work. End with the Phase 9
+report in plain words for a non-programmer, starting with any doubt.
+```
