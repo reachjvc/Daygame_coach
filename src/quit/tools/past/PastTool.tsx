@@ -258,6 +258,7 @@ function Inner({ addiction, endings, helped, belief, number }: InnerProps) {
             </button>
           </p>
         )}
+        {shown.length === 0 && <p data-testid="list-empty" className="text-sm text-muted-foreground">{t.listEmpty}</p>}
         <ol className="flex flex-col gap-2">
           {newestFirst(shown).map((x, i) => (
             <li key={x.id} data-testid={`try-${i}`} className="flex min-w-0 flex-col gap-1 rounded-md border border-border p-2">

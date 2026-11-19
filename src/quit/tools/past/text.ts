@@ -37,7 +37,7 @@ export const pastText = {
   roughNote: "Weeks count as 7 days, months as 30, years as 365.",
 
   slipTitle: "After the first slip",
-  slipQuestion: "After the first slip, what went through your head?",
+  slipQuestion: "What went through your head?",
   slip: { gaveUp: "I gave up", restarted: "I started again the same day", justOnce: "“Just this once”", dontRemember: "I don’t remember" } as Record<string, string>,
   slipGaveUp: "That first slip is where most tries end. A slip ends a run, not the quit: save it, keep your days, pick a new day 1.",
   slipGaveUpLink: "Slipped? Restart today",
@@ -61,6 +61,7 @@ export const pastText = {
   noMonth: "—",
 
   listTitle: "Your tries",
+  listEmpty: "No tries added yet. Tap Add a try for each one you remember.",
   dateNone: "Date not given",
   lenNone: "No length given",
   edit: "Edit",
