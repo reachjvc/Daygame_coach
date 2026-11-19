@@ -7,6 +7,7 @@ import {
   parseDayParam,
   parseLessonState,
   placeFor,
+  proofRepeats,
   setDone,
   setNote,
   shownTitle,
@@ -74,6 +75,13 @@ describe("saved state", () => {
   })
   it("caps a note at 1000 characters", () => {
     expect(setNote(EMPTY_LESSON, 1, "a".repeat(1200)).notes["1"]).toHaveLength(1000)
+  })
+})
+
+describe("proofRepeats", () => {
+  it("spots a proof the body already says", () => {
+    expect(proofRepeats("In 469 heavily hooked heart patients who wanted to stop, stress fell. Walk.", "In 469 heavily hooked heart patients who wanted to stop, stress fell.")).toBe(true)
+    expect(proofRepeats("Something else entirely.", "In 469 heart patients, stress fell.")).toBe(false)
   })
 })
 

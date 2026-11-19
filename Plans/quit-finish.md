@@ -1573,3 +1573,19 @@ targets or "what you could buy" here: Tool 3 holds targets.
 - A wave-1 slider rating (any 0 to 100) shows on the nearest of the five buttons; a rating that lands on "Most of it" or "All of it" gets the "80% swap" mark.
 - `tests/e2e/quit/menu.spec.ts` "the nicotine menu shows 5 groups" fails on main as well as here: it expects a "Free account" pill, but no live tool has `account` other than "none". Not touched.
 - Rating buttons sit in a 3-column grid on phones (5 in a row from 640 px), so no single button wraps alone.
+
+### From the Tool 11 build (Opus, 2026-11-19)
+
+- Live 86b46c85. Review round 1 (bugs Sonnet, feel and look Opus, content and sources Opus) found no blocker in the
+  tool. Fixed: a double tap on Mark as done ended as not done; "Not done yet" read like a status (now "Undo"); the
+  exercise sat below the fold on a phone (it now comes right after the lesson, the sources after it); the day was named
+  twice on Today; a blank band on the waiting card; the end card's "You did 0 of 17" (the count shows only when above
+  0) and link style; strip ends labelled −3 and 14; "First lesson" instead of "Day −3" with no date; "Tomorrow" opens
+  that lesson; a counter near the 1,000-character note limit; a note open in two tabs; Back to All days after browser
+  Back/Forward; a fold that repeated the lesson's own sentence. Content: Day 6 told him to stand at the smoking spot
+  (now "a few metres away from the smoke"); Day 11 now says the study's main result and that pouches were not studied;
+  Day 14's unsourced "cues" claim removed and its fold links b2; Kenford, Doll, Anesi, Hughes, Heishman and the sleep
+  counted lines say more; Day 8 "can get loud", "Answer it plainly"; the brand name left the Day 5 quote; "5 kg (11 lb)".
+- Not fixed, proposed: a run ended on the Black Box page (not by a slip) still counts from the old quit date until a
+  new date is set (rare; the Black Box API the tools share does not expose ended runs). Day 5 and Day −2 bodies repeat
+  their exercise in part (kept: the body says why, the exercise what to write down).

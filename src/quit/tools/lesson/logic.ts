@@ -69,6 +69,13 @@ export function shownTitle(title: string): string {
   return t.charAt(0).toUpperCase() + t.slice(1)
 }
 
+/** True when the lesson body already holds the proof's sentence (same words, ignoring case, quotes and punctuation). */
+export function proofRepeats(body: string, proof: string): boolean {
+  const norm = (x: string) => x.toLowerCase().replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim()
+  const p = norm(proof)
+  return p.length > 0 && norm(body).includes(p.slice(0, Math.min(p.length, 80)))
+}
+
 /** Lessons in day order. */
 export const sortLessons = (lessons: QuitLesson[]) => [...lessons].sort((a, b) => a.day - b.day)
 

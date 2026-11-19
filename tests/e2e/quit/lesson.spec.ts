@@ -106,10 +106,12 @@ test.describe("today's lesson, signed out, phone", () => {
     await open(page, { quitDate: day(-4), runStart: day(-4) })
     await expect(page.getByTestId("lesson")).toHaveAttribute("data-day", "5")
     await expect(page.getByTestId("place")).toHaveText("Day 5 of 14")
-    await expect(page.getByTestId("lesson-meta")).toContainText("Day 5 · Thu, Nov 19")
+    await expect(page.getByTestId("lesson-meta")).toHaveText("Thu, Nov 19")
     await expect(page.getByTestId("lesson-title")).toHaveText("The empty hour")
     await expect(page.locator('[data-testid="strip"] [data-now="true"]')).toHaveAttribute("data-day", "5")
     await expect(page.getByTestId("tomorrow")).toHaveText("Tomorrow: The break")
+    await page.getByTestId("tomorrow").click()
+    await expect(page.getByTestId("lesson")).toHaveAttribute("data-day", "6")
   })
 
   test("3 a future date counts down; far ahead it waits, then opens the first lesson", async ({ page }) => {
@@ -134,7 +136,8 @@ test.describe("today's lesson, signed out, phone", () => {
     await expect(page.getByTestId("note-status")).toHaveText("Saved on this phone.")
     await page.reload()
     await expect(page.getByTestId("note")).toHaveValue("Five-minute walk after lunch")
-    await page.getByTestId("done-btn").click()
+    // a double tap marks done once and leaves it done
+    await page.getByTestId("done-btn").dblclick()
     await expect(page.getByTestId("done-line")).toBeVisible()
     await expect(page.locator('[data-testid="strip"] [data-day="1"]')).toHaveAttribute("data-done", "true")
     await page.getByTestId("tab-all").click()
@@ -167,7 +170,8 @@ test.describe("today's lesson, signed out, phone", () => {
   test("6 past day 14: the end card with the exercise count", async ({ page }) => {
     await open(page, { quitDate: day(-20), runStart: day(-20) })
     await expect(page.getByTestId("end")).toContainText("That was the last lesson, on day 14.")
-    await expect(page.getByTestId("end-count")).toHaveText("You did 0 of 17 exercises.")
+    // nothing marked done: no count that reads like a telling-off
+    await expect(page.getByTestId("end-count")).toHaveCount(0)
     await expect(page.getByText("No new lesson today")).toHaveCount(0)
   })
 

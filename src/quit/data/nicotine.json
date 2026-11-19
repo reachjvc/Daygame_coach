@@ -3012,7 +3012,7 @@
       "beliefId": "b12",
       "title": "Pick the day",
       "body": "There is no calm week coming. Waiting for one is how a month turns into a year. Open your calendar and pick the nearest day that is not a disaster, in days or at most a few weeks. In one trial of 1,848 smokers who chose their own quit day, a model expected 40 in 100 who picked week 1 to be off at 6 months, against 4 in 100 for week 13. Write the date where you can see it, and tell one person. The next three days are setup, not quitting. Keep using nicotine the way you always do.",
-      "counted": "1,848 smokers in a US trial who picked a quit day within 90 days. A model's estimate in a planned side analysis; later pickers may differ in other ways.",
+      "counted": "1,848 smokers in a US trial, most offered cash for quitting, who picked a quit day within 90 days. A model's estimate; later pickers may differ in other ways.",
       "exercise": "Write the date down. Under it, write the one thing most likely to make that day hard, and one thing to do about it.",
       "refs": [
         {
@@ -3048,7 +3048,7 @@
       "beliefId": "b4",
       "title": "The night before",
       "body": "Tonight is setup. Throw out every pack, vape and pouch can, plus the lighters and ashtrays. Check the car, your jackets and your bags for spares. If you use patches, gum or lozenges, put them within reach. Tomorrow there is no “just one”. Among daily smokers on a nicotine patch who smoked at all in week 2, 83 in 100 were smoking six months later. The first two weeks are the ones to guard.",
-      "counted": "Two small patch trials, 88 and 112 daily smokers. 83 in 100 is the lower result; the other trial found 97.",
+      "counted": "Two small patch trials, 88 and 112 people smoking 15 or more a day. The 83 and 97 count only those on a real patch who smoked in week 2.",
       "exercise": "Do the clear-out now: packs, vapes, lighters, spares. Text one person the time you plan to start tomorrow.",
       "refs": [
         {
@@ -3065,7 +3065,7 @@
       "beliefId": "b2",
       "title": "Day 1: the first day",
       "body": "Today the symptoms are on their way up: in smokers who stopped, they peaked within the first week. A craving is a wave, not an order. Name it: “there is a craving.” Move for five minutes, drink water, watch the clock, and let it pass. Do not plan the next ninety days. Plan the next hour. Mark the day when it ends.",
-      "counted": "One author's review of many studies; it gives no single count of people.",
+      "counted": "120 studies, chosen and judged by one author.",
       "exercise": "Each time an urge hits, write the time and one line on what set it off. Then walk for five minutes.",
       "refs": [
         {
@@ -3101,7 +3101,7 @@
       "beliefId": "b6",
       "title": "Day 3: the fog",
       "body": "Trouble concentrating is a real withdrawal symptom. It peaks in the first week and fades within weeks. Nicotine’s own boost to attention is small, so you are not losing a superpower. Work in short blocks, write the task down before you start, and walk for five minutes between blocks. Judge your focus in a month, not today.",
-      "counted": "41 lab studies; nicotine's boost was small (effect sizes 0.16 to 0.44). The fog: one author's review of withdrawal studies.",
+      "counted": "41 lab studies in non-smokers and smokers not in withdrawal; the boost was small (effect sizes 0.16 to 0.44). The fog: one author's review of 120 studies.",
       "exercise": "Write tomorrow’s one important task on paper tonight. Work on it in two 25-minute blocks.",
       "refs": [
         {
@@ -3127,7 +3127,7 @@
       "beliefId": "b9",
       "title": "Day 4: the nights",
       "body": "Sleep is often worst in the first week. Same wake-up time every day, weekends too. Use the bed for sleep only. If you are awake after about 20 minutes, get up, keep the light low, and go back when sleepy. These steps come from therapy for long-lasting insomnia. Smokers take longer to fall asleep and sleep less, so the nights after this stretch have room to improve.",
-      "counted": "The sleep steps: 20 trials, 1,162 adults with long-lasting insomnia, not people who just quit. Smokers' sleep: 44 smokers against 44 never-smokers in a sleep lab.",
+      "counted": "The sleep steps: 20 trials, 1,162 adults with long-lasting insomnia, not people who just quit. Smokers' sleep: 44 smokers against 44 never-smokers, measured once.",
       "exercise": "Set an alarm for the same time tomorrow. Tonight, write down when you got into bed and when you fell asleep.",
       "refs": [
         {
@@ -3168,7 +3168,7 @@
           "cite": "Skorka-Brown J, Andrade J, Whalley B, May J (2015). Playing Tetris decreases drug and other cravings in real world settings. Addictive Behaviors 51:165-70.",
           "url": "https://pubmed.ncbi.nlm.nih.gov/26275843/",
           "pmid": "26275843",
-          "quote": "Playing Tetris decreased craving strength for drugs (alcohol, nicotine, caffeine), food and drink, and activities (sex, exercise, gaming), with a mean reduction of 13.9 percentage points",
+          "quote": "decreased craving strength for drugs (alcohol, nicotine, caffeine), food and drink, and activities (sex, exercise, gaming), with a mean reduction of 13.9 percentage points",
           "fetched": true,
           "fetchedOn": "2026-11-18"
         }
@@ -3178,7 +3178,7 @@
       "day": 6,
       "beliefId": "b8",
       "title": "Day 6: the break",
-      "body": "Keep the break and the people. Skip the nicotine. Bring a coffee or gum, stand where you always stand, and talk about the same things. In a large long-term study of 12,067 people, when a friend quit, a person’s own chances of smoking fell by 36%.",
+      "body": "Keep the break and the people. Skip the nicotine. Bring a coffee or gum, step a few metres away from the smoke, and talk about the same things. In a large long-term study of 12,067 people, when a friend quit, a person’s own chances of smoking fell by 36%.",
       "counted": "12,067 people followed from 1971 to 2003. The 36% could be anywhere from 12% to 55%. A link seen in the data, not a trial.",
       "exercise": "Tell one person from the break group today that you stopped. Ask for a coffee somewhere that is not the smoking spot.",
       "refs": [
@@ -3222,8 +3222,8 @@
       "day": 8,
       "beliefId": "b4",
       "title": "Day 8: not one",
-      "body": "This is the week where “just one” gets loud. It sounds reasonable because you have done well. In two small patch trials, at least 83 in 100 of those who smoked at all in week 2 were smoking again six months later. Answer it like a non-smoker: “No thanks, I don’t.” Leave the room for five minutes.",
-      "counted": "Two small patch trials, 88 and 112 daily smokers. 83 in 100 is the lower result; the other trial found 97.",
+      "body": "This is the week where “just one” can get loud. It sounds reasonable because you have done well. In two small patch trials, at least 83 in 100 of those who smoked at all in week 2 were smoking again six months later. Answer it plainly: “No thanks, I don’t.” Leave the room for five minutes.",
+      "counted": "Two small patch trials, 88 and 112 people smoking 15 or more a day. The 83 and 97 count only those on a real patch who smoked in week 2.",
       "exercise": "Write the exact sentence to say if someone offers. Say it out loud twice.",
       "refs": [
         {
@@ -3258,7 +3258,7 @@
       "day": 10,
       "beliefId": "b11",
       "title": "Day 10: the scale",
-      "body": "Most weight gain after quitting comes in the first three months. After a year, an estimated 53 in 100 unaided quitters had lost weight or gained under 5 kg; the rest gained more. Regular meals, a snack you like and a daily walk make it easier to plan for. Do not diet this month. One thing at a time.",
+      "body": "Most weight gain after quitting comes in the first three months. After a year, an estimated 53 in 100 unaided quitters had lost weight or gained under 5 kg (11 lb); the rest gained more. Regular meals, a snack you like and a daily walk make it easier to plan for. Do not diet this month. One thing at a time.",
       "counted": "62 studies pooled. The 53 in 100 is the authors' estimate for quitters without treatment who stayed off a year: 16 lost weight, 37 gained under 5 kg.",
       "exercise": "Write three meals and a snack for tomorrow. Do not weigh yourself.",
       "refs": [
@@ -3284,8 +3284,8 @@
       "day": 11,
       "beliefId": "b5",
       "title": "Day 11: do not switch",
-      "body": "A vape or pouch does not end the habit. It moves it. In an online survey of 3,609 ex-smokers who now vaped, dependence was higher with stronger liquid. If you switched, the thing to quit now is the vape or the pouch, with its own date and the same steps. If you did not, keep it that way.",
-      "counted": "An online survey of 3,609 ex-smokers who now vaped. They chose to take part, so they may not be typical.",
+      "body": "Switching to a vape or pouch keeps the nicotine habit going. In an online survey of 3,609 ex-smokers who now vaped, dependence was higher with stronger liquid and longer use, though lower than they recalled for cigarettes. If you switched, the thing to quit now is the vape or the pouch, with its own date and the same steps. If you did not, keep it that way.",
+      "counted": "An online survey of 3,609 ex-smokers who now vaped; they chose to take part. Pouches were not studied.",
       "exercise": "If you switched, write the date for quitting that too. If not, write what to say to yourself when you see one.",
       "refs": [
         {
@@ -3302,7 +3302,7 @@
       "beliefId": "b1",
       "title": "Day 12: too late",
       "body": "Male British doctors who stopped smoking as late as 60 still gained about 3 years of life, on average. Put the days you have kept so far next to the thought.",
-      "counted": "34,439 male British doctors followed for 50 years. About 3 years is the average gain for stopping at 60.",
+      "counted": "34,439 male British doctors followed for 50 years. About 3 years is the average gain for stopping at 60. Cigarettes only; no such data for vapes or pouches.",
       "exercise": "Write the thought “it’s too late”. Under it, write how many days you have kept so far.",
       "refs": [
         {
@@ -3334,10 +3334,10 @@
     },
     {
       "day": 14,
-      "beliefId": "b12",
+      "beliefId": "b2",
       "title": "Day 14: two weeks",
-      "body": "Two weeks. Symptoms that peaked in week one are fading. Withdrawal keeps fading over the next two weeks, and more of the pull now comes from cues and moments, so the work shifts to your moments and your swaps. Keep marking days. Choose your next date: day 30.",
-      "counted": "One author's review of many studies; it gives no single count of people.",
+      "body": "Two weeks. Symptoms that peaked in week one are fading. Withdrawal keeps fading over the next two weeks, so keep working on your moments and your swaps. Keep marking days. Choose your next date: day 30.",
+      "counted": "120 studies, chosen and judged by one author.",
       "exercise": "Mark day 14 on your calendar. Write the date for day 30 next to it, and one thing to do that day.",
       "refs": [
         {

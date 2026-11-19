@@ -5,6 +5,10 @@ export const lessonText = {
   dayLabel: (n: number) => (n < 0 ? `Day −${Math.abs(n)}` : `Day ${n}`),
   dayWithDate: (label: string, date: string) => `${label} · ${date}`,
   stripLabel: "Your lessons, from 3 days before day 1 to day 14",
+  stripStart: "−3",
+  stripEnd: "14",
+  firstLesson: "First lesson",
+  sourcesTitle: "Where this comes from",
   placeDay: (n: number, last: number) => `Day ${n} of ${last}`,
   placeBefore: (n: number) => (n === 1 ? "1 day before day 1" : `${n} days before day 1`),
 
@@ -18,7 +22,7 @@ export const lessonText = {
   readFirst: "Read the first lesson now",
 
   endTitle: "That was the last lesson, on day 14.",
-  endDone: (n: number, total: number) => `You did ${n} of ${total} exercises.`,
+  endDone: (n: number) => (n === 1 ? "1 exercise done." : `${n} exercises done.`),
   endNext: "What next",
   endAll: "Read any lesson again in All days.",
 
@@ -32,7 +36,8 @@ export const lessonText = {
   noteKept: "Your notes are kept on this phone.",
   markDone: "Mark as done",
   doneLine: "Done.",
-  notDone: "Not done yet",
+  notDone: "Undo",
+  noteCount: (n: number, max: number) => `${n} of ${max} characters`,
   tomorrow: (title: string) => `Tomorrow: ${title}`,
   reread: "You can read any day again in All days.",
 

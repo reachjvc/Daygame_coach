@@ -23,6 +23,7 @@ import {
   parseLessonState,
   placeFor,
   prevLesson,
+  proofRepeats,
   setDone,
   setNote,
   shift,
@@ -103,8 +104,6 @@ function useView(lessons: QuitLesson[]) {
   const sp = useSearchParams()
   const day = parseDayParam(sp.get("day"), lessons)
   const tab: "today" | "all" = day !== null || sp.get("tab") === "all" ? "all" : "today"
-  // Entries this visit pushed: Back inside the page then walks the browser history.
-  const pushed = useRef(0)
   const href = useCallback(
     (next: { tab?: "all" | null; day?: number | null }) => {
       const p = new URLSearchParams(sp.toString())
@@ -122,19 +121,22 @@ function useView(lessons: QuitLesson[]) {
   )
   const go = useCallback(
     (next: { tab?: "all" | null; day?: number | null }) => {
-      pushed.current += 1
-      window.history.pushState(null, "", href(next))
+      // A lesson opened from the list remembers it, so its Back can step back to that entry.
+      const fromList = next.day !== undefined && next.day !== null && tab === "all" && day === null
+      // A plain state object: copying Next's own history state would stop it from following the new address.
+      window.history.pushState({ lessonFromList: fromList }, "", href(next))
       window.scrollTo({ top: 0 })
     },
+    [href, tab, day],
+  )
+  const replace = useCallback(
+    (next: { tab?: "all" | null; day?: number | null }) => window.history.replaceState({ lessonFromList: window.history.state?.lessonFromList === true }, "", href(next)),
     [href],
   )
-  const replace = useCallback((next: { tab?: "all" | null; day?: number | null }) => window.history.replaceState(null, "", href(next)), [href])
-  /** Back from an opened lesson to the list: the browser's Back when this visit pushed the lesson, else a rewrite. */
+  /** Back from an opened lesson to the list: the browser's Back when the entry before is the list, else a rewrite. */
   const backToList = useCallback(() => {
-    if (pushed.current > 0) {
-      pushed.current -= 1
-      window.history.back()
-    } else replace({ tab: "all" })
+    if (window.history.state?.lessonFromList === true) window.history.back()
+    else replace({ tab: "all" })
   }, [replace])
   return { tab, day, go, replace, backToList }
 }
@@ -211,20 +213,29 @@ function Screens({ addiction, lessons, beliefs, bb }: InnerProps & { bb: QuitBla
 
 function Strip({ lessons, state, current }: { lessons: QuitLesson[]; state: LessonState; current: number | null }) {
   return (
-    <div aria-hidden="true" data-testid="strip" className="flex gap-1">
-      {lessons.map((l) => {
-        const done = isDone(state, l.day)
-        const now = l.day === current
-        return (
-          <span
-            key={l.day}
-            data-day={l.day}
-            data-done={done}
-            data-now={now}
-            className={`h-2.5 flex-1 rounded-full ${done ? "bg-primary" : now ? "bg-primary/40" : "bg-muted"} ${now ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""} ${l.day === 1 ? "ml-1.5" : ""}`}
-          />
-        )
-      })}
+    <div data-testid="strip" className="flex items-center gap-2">
+      <span aria-hidden="true" className="w-5 shrink-0 text-right text-xs text-muted-foreground">
+        {t.stripStart}
+      </span>
+      <div aria-hidden="true" className="flex flex-1 gap-1">
+        {lessons.map((l) => {
+          const done = isDone(state, l.day)
+          const now = l.day === current
+          return (
+            <span
+              key={l.day}
+              data-day={l.day}
+              data-done={done}
+              data-now={now}
+              className={`h-2.5 flex-1 rounded-full ${done ? "bg-primary" : now ? "bg-primary/30" : "bg-muted-foreground/25"} ${now ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""} ${l.day === 1 ? "ml-1.5" : ""}`}
+            />
+          )
+        })}
+      </div>
+      <span aria-hidden="true" className="w-5 shrink-0 text-xs text-muted-foreground">
+        {t.stripEnd}
+      </span>
+      <span className="sr-only">{t.stripLabel}</span>
     </div>
   )
 }
@@ -254,13 +265,15 @@ function Today({ place, lessons, state, carry, card, onOpen, onAll }: TodayProps
 
   if (place.kind === "early") {
     return (
-      <section data-testid="early" className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+      <section className="flex flex-col gap-3">
         <Strip lessons={lessons} state={state} current={null} />
+        <div data-testid="early" className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
         <p className="text-lg font-semibold leading-snug">{t.earlyTitle(fmt(place.startsOn))}</p>
         <p className="text-muted-foreground">{t.earlyLine(place.daysToGo)}</p>
         <button type="button" data-testid="read-first" onClick={() => onOpen(lessons[0].day)} className="inline-flex min-h-12 w-full items-center justify-center rounded-md bg-primary px-4 text-base font-medium text-primary-foreground">
           {t.readFirst}
         </button>
+        </div>
       </section>
     )
   }
@@ -268,7 +281,6 @@ function Today({ place, lessons, state, carry, card, onOpen, onAll }: TodayProps
   if (place.kind === "end") {
     const tools = [
       { id: "record", name: "Your record" },
-      { id: "sos", name: "Craving now?" },
       { id: "checkin", name: "Daily check-in" },
     ].filter((x) => isLiveTool(x.id))
     return (
@@ -276,17 +288,20 @@ function Today({ place, lessons, state, carry, card, onOpen, onAll }: TodayProps
         <Strip lessons={lessons} state={state} current={null} />
         <div className="rounded-lg border border-border bg-card p-4">
           <p className="text-lg font-semibold leading-snug">{t.endTitle}</p>
-          <p data-testid="end-count" className="mt-1 text-muted-foreground">
-            {t.endDone(doneCount(state, lessons), lessons.length)}
-          </p>
+          {doneCount(state, lessons) > 0 && (
+            <p data-testid="end-count" className="mt-1 text-muted-foreground">
+              {t.endDone(doneCount(state, lessons))}
+            </p>
+          )}
         </div>
         {tools.length > 0 && (
-          <div className="flex flex-col">
+          <div className="flex flex-col gap-2">
             <h2 className="text-base font-semibold">{t.endNext}</h2>
             {tools.map((x) => (
-              <ToolLink key={x.id} id={x.id} carry={carry}>
+              <Link key={x.id} href={carry(`/quit/nicotine/${x.id}`)} data-testid={`link-${x.id}`} className="flex min-h-12 w-full items-center justify-between gap-3 rounded-lg border border-border bg-card px-3 py-2 font-medium">
                 {x.name}
-              </ToolLink>
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+              </Link>
             ))}
           </div>
         )}
@@ -304,7 +319,7 @@ function Today({ place, lessons, state, carry, card, onOpen, onAll }: TodayProps
     <section data-testid="today" className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <p data-testid="place" className="text-sm font-medium text-muted-foreground">
-          {place.kind === "day" ? (day > 0 ? t.placeDay(day, last) : t.placeBefore(-day)) : t.dayLabel(lesson.day)}
+          {place.kind === "day" ? (day > 0 ? t.placeDay(day, last) : t.placeBefore(-day)) : t.firstLesson}
         </p>
         <Strip lessons={lessons} state={state} current={lesson.day} />
       </div>
@@ -324,9 +339,9 @@ function Today({ place, lessons, state, carry, card, onOpen, onAll }: TodayProps
       )}
       {card(lesson, { isToday: true })}
       {place.kind === "day" && next && (
-        <p data-testid="tomorrow" className="text-sm text-muted-foreground">
+        <button type="button" data-testid="tomorrow" onClick={() => onOpen(next.day)} className="inline-flex min-h-11 items-center self-start text-left text-sm text-muted-foreground underline">
           {t.tomorrow(shownTitle(next.title))}
-        </p>
+        </button>
       )}
       <button type="button" data-testid="reread" onClick={onAll} className="inline-flex min-h-11 items-center self-start text-sm text-primary underline">
         {t.reread}
@@ -353,9 +368,25 @@ function LessonCard({ lesson: l, lessons, belief, date, state, isToday, onDone, 
   const stored = state.notes[String(l.day)] ?? ""
   const [note, setNoteText] = useState(stored)
   const [typed, setTyped] = useState(false)
+  const box = useRef<HTMLTextAreaElement>(null)
+  // A change made in another tab shows here, unless he is typing in this box right now.
+  useEffect(() => {
+    if (document.activeElement !== box.current) setNoteText(stored)
+  }, [stored])
+  // A double tap changes done once: the button under the finger changes, so a second tap right after is ignored.
+  const lastTap = useRef(0)
+  const toggle = (on: boolean) => {
+    const now = Date.now()
+    if (now - lastTap.current < 600) return
+    lastTap.current = now
+    onDone(on)
+  }
   const label = t.dayLabel(l.day)
   const prev = prevLesson(lessons, l.day)
   const next = nextLesson(lessons, l.day)
+  // Opened from the list the card says which day it is; on Today the line above it already does.
+  const meta = onBack ? (date ? t.dayWithDate(label, date) : label) : date ?? label
+  const refs = realRefs(l.refs)
   return (
     <article data-testid="lesson" data-day={l.day} className="flex flex-col gap-4">
       {onBack && (
@@ -367,7 +398,7 @@ function LessonCard({ lesson: l, lessons, belief, date, state, isToday, onDone, 
       <div className="rounded-lg border border-border bg-card p-4">
         <p data-testid="lesson-meta" className="flex items-center gap-2 text-sm text-muted-foreground">
           <BookOpen className="size-4 shrink-0" aria-hidden />
-          <span>{date ? t.dayWithDate(label, date) : label}</span>
+          <span>{meta}</span>
           {isToday && onBack && <span className="rounded-full border border-border px-2 text-xs">{t.todayPill}</span>}
         </p>
         <h2 data-testid="lesson-title" className="mt-1 text-xl font-semibold leading-snug">
@@ -376,25 +407,19 @@ function LessonCard({ lesson: l, lessons, belief, date, state, isToday, onDone, 
         <p data-testid="lesson-body" className="mt-3 break-words text-base leading-relaxed">
           {l.body}
         </p>
-        {l.counted && (
-          <p data-testid="lesson-counted" className="mt-3 text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">{t.countedLabel}</span> {l.counted}
-          </p>
-        )}
-        <SourceTap refs={realRefs(l.refs)} />
-        {belief && <BeliefFold belief={belief} />}
       </div>
 
-      <section data-testid="exercise" className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+      <section data-testid="exercise" className="flex flex-col gap-3 rounded-lg border border-primary/40 bg-card p-4">
         <h3 className="flex items-center gap-2 text-base font-semibold">
           <PenLine className="size-4 shrink-0" aria-hidden />
           {t.exerciseTitle}
         </h3>
         <p className="break-words">{l.exercise}</p>
-        <label className="flex flex-col gap-1 text-sm font-medium" htmlFor={`note-${l.day}`}>
+        <label className="text-sm font-medium" htmlFor={`note-${l.day}`}>
           {t.noteLabel}
         </label>
         <textarea
+          ref={box}
           id={`note-${l.day}`}
           data-testid="note"
           value={note}
@@ -406,25 +431,39 @@ function LessonCard({ lesson: l, lessons, belief, date, state, isToday, onDone, 
           }}
           className="-mt-2 min-h-24 w-full rounded-md border border-border bg-background px-3 py-2 text-base"
         />
-        <p data-testid="note-status" className="-mt-1 text-xs text-muted-foreground">
-          {typed ? t.noteSaved : t.noteKept}
+        <p data-testid="note-status" className="-mt-1 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
+          <span>{typed ? t.noteSaved : t.noteKept}</span>
+          {note.length >= MAX_NOTE - 100 && <span data-testid="note-count">{t.noteCount(note.length, MAX_NOTE)}</span>}
         </p>
         {done ? (
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex min-h-12 flex-wrap items-center gap-3">
             <p data-testid="done-line" className="inline-flex items-center gap-1.5 font-medium">
               <Check className="size-5 text-primary" aria-hidden />
               {t.doneLine}
             </p>
-            <button type="button" data-testid="not-done" onClick={() => onDone(false)} className="inline-flex min-h-11 items-center text-sm text-muted-foreground underline">
+            <button type="button" data-testid="not-done" onClick={() => toggle(false)} className="ml-auto inline-flex min-h-11 items-center px-2 text-sm text-muted-foreground underline">
               {t.notDone}
             </button>
           </div>
         ) : (
-          <button type="button" data-testid="done-btn" onClick={() => onDone(true)} className="inline-flex min-h-12 w-full items-center justify-center rounded-md bg-primary px-4 text-base font-medium text-primary-foreground">
+          <button type="button" data-testid="done-btn" onClick={() => toggle(true)} className="inline-flex min-h-12 w-full items-center justify-center rounded-md bg-primary px-4 text-base font-medium text-primary-foreground">
             {t.markDone}
           </button>
         )}
       </section>
+
+      {(l.counted || refs.length > 0 || belief) && (
+        <section data-testid="evidence" className="rounded-lg border border-border p-4">
+          <h3 className="text-sm font-semibold text-muted-foreground">{t.sourcesTitle}</h3>
+          {l.counted && (
+            <p data-testid="lesson-counted" className="mt-2 text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">{t.countedLabel}</span> {l.counted}
+            </p>
+          )}
+          <SourceTap refs={refs} />
+          {belief && <BeliefFold belief={belief} body={l.body} />}
+        </section>
+      )}
 
       {onBack && (
         <nav className="grid grid-cols-2 gap-2">
@@ -450,8 +489,10 @@ function LessonCard({ lesson: l, lessons, belief, date, state, isToday, onDone, 
   )
 }
 
-function BeliefFold({ belief: b }: { belief: QuitBelief }) {
+function BeliefFold({ belief: b, body }: { belief: QuitBelief; body: string }) {
   const [open, setOpen] = useState(false)
+  // A proof the lesson already says word for word is not repeated.
+  const repeats = proofRepeats(body, b.proof)
   return (
     <div data-testid="belief" data-belief={b.id} className="mt-1 border-t border-border pt-1">
       <button type="button" data-testid="belief-toggle" aria-expanded={open} onClick={() => setOpen(!open)} className="inline-flex min-h-11 w-full items-center justify-between gap-2 text-left text-sm font-medium">
@@ -462,14 +503,20 @@ function BeliefFold({ belief: b }: { belief: QuitBelief }) {
         <div data-testid="belief-detail" className="flex flex-col gap-1 pb-2 text-sm">
           <p className="text-muted-foreground">{t.thoughtLabel}</p>
           <p className="break-words text-base">{`“${b.limiting}”`}</p>
-          <p className="mt-2 text-muted-foreground">{t.proofLabel}</p>
-          <p className="break-words text-base">{b.proof}</p>
-          {b.counted && (
-            <p className="text-muted-foreground">
-              <span className="font-medium text-foreground">{t.countedLabel}</span> {b.counted}
-            </p>
+          {!repeats && (
+            <>
+              <p className="mt-2 text-muted-foreground">{t.proofLabel}</p>
+              <p data-testid="belief-proof" className="break-words text-base">
+                {b.proof}
+              </p>
+              {b.counted && (
+                <p className="text-muted-foreground">
+                  <span className="font-medium text-foreground">{t.countedLabel}</span> {b.counted}
+                </p>
+              )}
+              <SourceTap refs={realRefs(b.refs)} />
+            </>
           )}
-          <SourceTap refs={realRefs(b.refs)} />
         </div>
       )}
     </div>
