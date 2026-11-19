@@ -1210,7 +1210,7 @@ export async function updateUserTrackingStats(
   const { data, error } = await supabase
     .from("user_tracking_stats")
     .update(updates)
-    .eq("user_id", userId)
+    .not("user_id", "is", null)
     .select()
     .single()
 
