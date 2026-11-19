@@ -31,7 +31,28 @@ still waits for his word.
   - Open: `life-plan-landing.spec.ts:40` ("Saved to your account." not visible) fails the same way on
     origin/main (d1c98d4b), so we did not cause it. `:22` failed twice here, then passed on both main and
     this branch (flaky).
-- **Phase 4 (faithful copy)** next.
+- **Phase 4 (faithful copy)** built on 2026-11-19 (resumed after a WSL crash):
+  - `planSequences.ts` holds V1 (today's 12-step order). `/plan/new/<step>` mounts each real step; build steps sit
+    in the real bottom bar ("← previous · Saved to your account. · next →"), daily steps in the real top bar.
+  - NorthStarFlow's header, step picker, "Still to fill in", read-back and step bar moved to their own files (pure
+    move: 260 of 268 lines verbatim, the rest imports and renamed handlers) and are mounted on `/plan/new` too.
+    StarTab, NowTab and FocusTab take an optional `hideNext` (default off), so there is one Next.
+  - The first rebuild moved unchanged to `/plan/new/first/…`. Role models run at `/plan/new/role-models` on the
+    copy's council. The review reminder shows, switched off. Track reads his training log (GET only).
+  - Check 4.4: his backup restored into the local stack under a test account (927 rows, matched). Old/new shot
+    pairs at 390 px for all 12 steps and the area sheet (`plan-steps/full-shots/`): each pair differs only by the
+    copy-space banner and the step's own "Now …→" button that the bar replaces. MASTER: 31 rows still NOT YET
+    (Phases 6.3–6.7, GuidedBuild, save timers for Phase 9, Black Box).
+  - Tests: unit 8236 passed; plan e2e set 44 + 17 passed; typecheck and lint ratchets none new.
+  - Open:
+    - Black Box: links from `/plan/new` still go to the real `/plan/quit-vice`; its record is in browser storage
+      shared with the real page, so mounting it would touch his real record.
+    - Start over on the copy uses the copy's reset route: sending an empty plan through the store left goal,
+      routine and step rows behind although the save answered 200. Save-engine bug, for the `plan-engine` branch.
+    - The step bar follows TAB_ORDER; it must follow the sequence once V2/V3 exist (Phase 7).
+    - Known failures also on origin/main: `life-plan-landing.spec.ts:22`, `:40`,
+      `plan-saves-lose-nothing.spec.ts:82` (several "Health" wedges; fails on 69487bea too).
+- **Phase 5 (phone fixes)** next.
 - **Backups:** last night's run was killed at 08:36 (TERM: the PC was off at 03:00 and WSL stopped during the
   catch-up). It was rerun by hand at 09:15 and worked: `life-plan-2026-11-19.json.gz.gpg`.
 
