@@ -392,8 +392,8 @@ test.describe("craving now, signed in @phone", () => {
   }
 
   test("11 the close call reaches /api/black-box and Undo takes it out", async ({ page }) => {
-    // seed from a page that has no Black Box open, so nothing writes the browser copy back over it
-    await page.goto(quitUrl("/quit/nicotine/symptoms"))
+    // seed from a page that has no Black Box open (the privacy page), so nothing writes the browser copy back over it
+    await page.goto("/privacy")
     // start from an empty account
     const rows = (await (await page.request.get("/api/black-box")).json()).rows as { attempts: object[]; reports: object[] }
     const buried = new Date(Date.now() + 5000).toISOString()
