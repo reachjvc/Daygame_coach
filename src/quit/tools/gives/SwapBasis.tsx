@@ -17,7 +17,7 @@ export function SwapBasis({ swap }: { swap: QuitSwap }) {
   ]
   return (
     <div data-testid="swap-basis" className="mt-1">
-      <button type="button" data-testid="swap-basis-toggle" aria-expanded={open} onClick={() => setOpen(!open)} className="inline-flex min-h-11 min-w-11 items-center justify-center px-2 text-sm text-primary underline">
+      <button type="button" data-testid="swap-basis-toggle" aria-expanded={open} onClick={() => setOpen(!open)} className="inline-flex min-h-11 min-w-11 items-center justify-start px-0 text-sm text-primary underline">
         {open ? t.gives.basisClose : t.gives.basisOpen}
       </button>
       {open && (

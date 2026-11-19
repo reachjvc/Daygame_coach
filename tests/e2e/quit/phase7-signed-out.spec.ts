@@ -163,13 +163,15 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
     await rateAll(page, [5, 4, 4, 3, 2, 1, 1, 1, 1, 1, 1, 1])
     // the lies test links to gives only once gives is finished
     if (!finished.includes("gives")) return expect(page.locator('a[href*="#need="]')).toHaveCount(0)
+    // the link carries the need after the #; the tool applies it once and then drops it from the address
+    const href = (await page.locator('a[href*="#need="]').first().getAttribute("href"))!
+    expect(href.split("#")[1]).toMatch(/^need=[a-z]+$/)
+    expect(href.split("#")[0]).not.toMatch(/need=/)
     await page.locator('a[href*="#need="]').first().click()
     await page.waitForURL(/\/gives/)
-    const url = page.url()
-    expect(new URL(url).search).not.toMatch(/need=/)
-    expect(new URL(url).hash).toMatch(/^#need=[a-z]+$/)
+    expect(new URL(page.url()).search).not.toMatch(/need=/)
     expect(sent.filter((u) => /need=/.test(u.split("#")[0]))).toEqual([])
-    const need = new URL(url).hash.slice(6)
+    const need = href.split("#need=")[1]
     await expect(page.getByTestId(`need-${need}`)).toHaveAttribute("aria-checked", "true")
   })
 
@@ -177,7 +179,7 @@ test.describe("quit phase 7 fixes, signed out @phone", () => {
     await page.goto(quitUrl(`${A}/gives?preview=1&need=sleep`))
     await expect(page.getByTestId("need-sleep")).toHaveAttribute("aria-checked", "true")
     await expect.poll(() => new URL(page.url()).search).not.toMatch(/need=/)
-    expect(new URL(page.url()).hash).toBe("#need=sleep")
+    await expect.poll(() => new URL(page.url()).hash).toBe("")
   })
 
   test("C2 the privacy page tells that the held count is in the saved image's address", async ({ page }) => {

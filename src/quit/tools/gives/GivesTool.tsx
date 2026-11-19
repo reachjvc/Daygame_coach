@@ -91,6 +91,9 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
     appliedNeed.current = linkNeed
     const fromLink = cleanNeeds(linkNeed.split(",").filter((x) => x !== OWN), known)
     if (fromLink.length > 0) update((s) => ({ ...s, picked: fromLink, done: 0 }))
+    // Applied once: the link leaves the address, so a reload after Back does not reset his picks.
+    const here = new URL(window.location.href)
+    if (here.hash) window.history.replaceState(null, "", `${here.pathname}${here.search}`)
   }, [state, linkNeed, known, update])
 
   const total = 1 + picked.length
@@ -109,6 +112,15 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
     const now = Date.now()
     if (now - lastMove.current < 250 || shownScreen.current !== drawn) return
     lastMove.current = now
+    fn()
+  }
+
+  // A second tap on the same add, remove or rating button within 250 ms is ignored, so a double tap does not switch it on and straight off.
+  const lastTap = useRef<{ key: string; at: number }>({ key: "", at: 0 })
+  const once = (key: string, fn: () => void) => {
+    const now = Date.now()
+    if (lastTap.current.key === key && now - lastTap.current.at < 250) return
+    lastTap.current = { key, at: now }
     fn()
   }
 
@@ -162,7 +174,7 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
       <>
         <OneQuestion step={screen} total={total} onBack={back}>
           <header>
-            <h2 data-testid="need-heading" className="break-words text-xl font-semibold">
+            <h2 data-testid="need-heading" className="break-words text-lg font-semibold">
               {needName(id)}
             </h2>
             {need?.line && <p className="text-sm text-muted-foreground">{need.line}</p>}
@@ -179,16 +191,19 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
           )}
           {swaps.length > 0 && (
             <section>
-              <ul className="flex flex-col gap-3">
+              <h3 data-testid="swaps-heading" className="text-sm text-muted-foreground">{t.gives.swapsHeading}</h3>
+              <ul className="mt-2 flex flex-col gap-3">
                 {swaps.map((s) => (
                   <SwapCard
                     key={s.id}
                     swap={s}
                     onList={state.tried[s.id] !== undefined}
-                    onToggle={() => {
+                    onToggle={() =>
+                      once(`toggle-${s.id}`, () => {
                       started()
                       update((st) => (st.tried[s.id] ? removeTried(st, s.id) : addTried(st, s.id, today)))
-                    }}
+                      })
+                    }
                   />
                 ))}
               </ul>
@@ -226,8 +241,8 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
       needName={needName}
       today={today}
       carry={carry}
-      onRate={(sid, value) => update((s) => ({ ...s, rated: rate(s.rated, sid, value) }))}
-      onRemove={(it) => update((s) => (it.kind === "own" ? removeOwn(s, it.need, it.id) : removeTried(s, it.id)))}
+      onRate={(sid, value) => once(`rate-${sid}`, () => update((s) => ({ ...s, rated: rate(s.rated, sid, value) })))}
+      onRemove={(it) => once(`remove-${it.id}`, () => update((s) => (it.kind === "own" ? removeOwn(s, it.need, it.id) : removeTried(s, it.id))))}
       onGo={(id) => move(screen, () => go(picked.indexOf(id) + 2))}
       onChange={() => move(screen, () => go(1))}
       onStartAgain={() => {
@@ -263,7 +278,7 @@ function PickScreen(props: {
   const needsText = ownPicked && tidy(ownNeed ?? "") === ""
   return (
     <OneQuestion step={1} total={total} onBack={null}>
-      <p className="font-medium">{t.gives.pickQuestion}</p>
+      <h2 className="text-lg font-semibold">{t.gives.pickQuestion}</h2>
       <div role="group" aria-label={t.gives.pickQuestion} className="flex flex-col gap-2">
         {cards.map((c) => {
           const on = picked.includes(c.id)
@@ -289,6 +304,7 @@ function PickScreen(props: {
           )
         })}
       </div>
+      {full && <p data-testid="pick-max" className="text-sm text-muted-foreground">{t.gives.pickMax}</p>}
       {ownPicked && (
         <label className="flex flex-col gap-1 text-sm">
           <span>{t.gives.otherLabel}</span>
@@ -307,7 +323,6 @@ function PickScreen(props: {
           {t.gives.ownNeedHint}
         </p>
       )}
-      {full && <p data-testid="pick-max" className="text-sm text-muted-foreground">{t.gives.pickMax}</p>}
       <PrimaryButton testId="gives-continue" disabled={picked.length === 0 || needsText} onClick={props.onContinue}>
         {t.common.continue}
       </PrimaryButton>
@@ -497,8 +512,13 @@ function ResultScreen(props: {
   const outlineButton = "inline-flex min-h-11 items-center justify-center rounded-md border border-primary px-4 text-sm font-medium text-primary"
   return (
     <div data-testid="result" className="flex flex-col gap-5">
-      <h2 className="text-xl font-semibold">{t.gives.resultHeading}</h2>
-      {total > 0 && <p data-testid="rate-question" className="text-sm">{t.gives.rateQuestion}</p>}
+      <h2 data-testid="result-heading" className="text-lg font-semibold">{total > 0 ? t.gives.resultHeading : t.gives.emptyHeading}</h2>
+      {total > 0 && (
+        <div className="flex flex-col gap-1">
+          <p data-testid="rate-question" className="text-sm">{t.gives.rateQuestion}</p>
+          <p data-testid="eighty-note" className="text-sm text-muted-foreground">{t.gives.eightyNote}</p>
+        </div>
+      )}
       {groups.map((g) => {
         const isAlso = g.id === ALSO
         if (isAlso && g.items.length === 0) return null
@@ -506,8 +526,8 @@ function ResultScreen(props: {
           <section key={g.id} data-testid={isAlso ? "result-also" : "result-need"} data-need={g.id} className="flex flex-col gap-2">
             <h3 className="break-words text-sm font-semibold text-muted-foreground">{isAlso ? t.gives.alsoHeading : props.needName(g.id)}</h3>
             {g.items.length === 0 ? (
-              <div data-testid="need-empty" className="flex flex-col items-start gap-2 text-sm">
-                <p>{fill(t.gives.emptyNeed, { need: props.needName(g.id) })}</p>
+              <div data-testid="need-empty" className="flex min-w-0 max-w-full flex-col items-start gap-2 text-sm">
+                <p className="max-w-full break-words [overflow-wrap:anywhere]">{fill(t.gives.emptyNeed, { need: props.needName(g.id) })}</p>
                 <button type="button" data-testid="empty-link" onClick={() => props.onGo(g.id)} className={outlineButton}>
                   {t.gives.emptyLink}
                 </button>

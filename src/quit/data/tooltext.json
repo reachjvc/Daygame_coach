@@ -129,7 +129,7 @@
     "pickQuestion": "What does it give you? Pick 1 to 3.",
     "pickMax": "Three is the most. Untick one to change.",
     "otherName": "Something else",
-    "otherLine": "Something that is not on this list.",
+    "otherLine": "Not on this list.",
     "otherLabel": "What does it give you?",
     "quotesHeading": "What you tell yourself",
     "quotesPeople": "What people tell themselves",
@@ -171,7 +171,10 @@
     "basisQuotes": "What the study said",
     "ownDuplicate": "Already on your list.",
     "ownNeedHint": "Type what it gives you, or untick Something else.",
-    "alsoHeading": "Also on your list"
+    "alsoHeading": "Also on your list",
+    "swapsHeading": "Swaps to try",
+    "emptyHeading": "Nothing on your list yet",
+    "eightyNote": "An 80% swap gives you most of what nicotine gave you. You judge that; it is not a study number."
   },
   "how": {
     "groups": {

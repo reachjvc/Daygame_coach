@@ -42,14 +42,18 @@ export function parseGives(x: unknown): GivesState {
     }
   }
   const own: GivesState["own"] = {}
+  const seen = new Set<string>()
   if (isObj(o.own)) {
     for (const [need, list] of Object.entries(o.own)) {
       if (!Array.isArray(list)) continue
       const clean: OwnSwap[] = []
       for (const v of list) {
-        if (!isObj(v) || typeof v.id !== "string" || typeof v.text !== "string" || !isDay(v.addedOn)) continue
+        if (!isObj(v) || typeof v.id !== "string" || typeof v.text !== "string" || !isDay(v.addedOn) || seen.has(v.id)) continue
         const text = tidy(v.text)
-        if (text) clean.push({ id: v.id, text, addedOn: v.addedOn })
+        if (text) {
+          seen.add(v.id)
+          clean.push({ id: v.id, text, addedOn: v.addedOn })
+        }
       }
       if (clean.length > 0) own[need] = clean.slice(0, MAX_OWN_PER_NEED)
     }
@@ -155,9 +159,9 @@ export function removeTried(state: GivesState, swapId: string): GivesState {
 export const RATINGS = [
   { value: 0, label: "None" },
   { value: 25, label: "A little" },
-  { value: 50, label: "About half" },
-  { value: 80, label: "Most of it" },
-  { value: 100, label: "All of it" },
+  { value: 50, label: "Half" },
+  { value: 80, label: "Most" },
+  { value: 100, label: "All" },
 ] as const
 
 /** The button a stored number belongs to: under 13 None, 13-37 A little, 38-59 About half, 60-89 Most of it, 90 or more All of it. */

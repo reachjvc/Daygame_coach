@@ -109,6 +109,17 @@ describe("parseGives", () => {
     expect(parseGives(JSON.parse(JSON.stringify(s))).tried).toEqual({ "relief-1": { swapId: "relief-1", triedOn: "2026-11-19" } })
   })
 
+  it("drops own swaps whose id repeats, keeping the first", () => {
+    const s = parseGives({
+      own: {
+        relief: [{ id: "o1", text: "One", addedOn: "2026-11-19" }, { id: "o1", text: "Two", addedOn: "2026-11-19" }],
+        reward: [{ id: "o1", text: "Three", addedOn: "2026-11-19" }, { id: "o2", text: "Four", addedOn: "2026-11-19" }],
+      },
+    })
+    expect(s.own.relief.map((o) => o.text)).toEqual(["One"])
+    expect(s.own.reward.map((o) => o.text)).toEqual(["Four"])
+  })
+
   it("gives the empty state for junk", () => {
     expect(parseGives("x")).toEqual(EMPTY_GIVES)
   })

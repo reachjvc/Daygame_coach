@@ -143,7 +143,14 @@ for (const view of [
       await page.goto(quitUrl("/quit/nicotine/gives?need=focus"))
       await expect(page.getByTestId("need-focus")).toHaveAttribute("aria-checked", "true")
       await expect.poll(() => new URL(page.url()).search).not.toMatch(/need=/)
-      expect(new URL(page.url()).hash).toBe("#need=focus")
+      // the old link is rewritten to the # form, applied once, and the hash then leaves the address
+      await expect.poll(() => new URL(page.url()).hash).toBe("")
+      // the link is applied once: the hash leaves the address, so a reload keeps his own picks
+      await expect.poll(() => new URL(page.url()).hash).toBe("")
+      await page.getByTestId("need-reward").click()
+      await page.reload()
+      await expect(page.getByTestId("need-reward")).toHaveAttribute("aria-checked", "true")
+      await expect(page.getByTestId("need-focus")).toHaveAttribute("aria-checked", "true")
       await page.evaluate(() => localStorage.clear())
       await page.goto("about:blank")
       await page.goto(quitUrl("/quit/nicotine/gives#need=nonsense"))
@@ -246,18 +253,22 @@ for (const view of [
       await expect(page.getByTestId("rate-question")).toHaveText("Tried it? How much of it did it give you?")
       await expect(page.getByText("Tried it? How much of it did it give you?")).toHaveCount(1)
       const row = (id: string) => page.locator(`[data-testid="listed"][data-swap="${id}"]`)
-      for (const label of ["None", "A little", "About half", "Most of it", "All of it"]) await expect(row(swaps[1].id).getByRole("radio", { name: label })).toBeVisible()
+      for (const label of ["None", "A little", "Half", "Most", "All"]) await expect(row(swaps[1].id).getByRole("radio", { name: label })).toBeVisible()
       await shot(page, "3-result-fresh")
       await row(swaps[2].id).getByTestId("rate-80").click()
+      await page.clock.runFor(300)
       await expect(row(swaps[2].id).getByTestId("mark-80")).toHaveText("80% swap")
       await expect(row(swaps[1].id).getByTestId("mark-80")).toHaveCount(0)
       expect((await stored(page)).gives.rated).toEqual({ [swaps[2].id]: 80 })
       // tap the chosen button again: cleared
       await row(swaps[2].id).getByTestId("rate-80").click()
+      await page.clock.runFor(300)
       await expect(row(swaps[2].id).getByTestId("mark-80")).toHaveCount(0)
       await row(swaps[2].id).getByTestId("rate-100").click()
+      await page.clock.runFor(300)
       await expect(row(swaps[2].id).getByTestId("mark-80")).toBeVisible()
       await row(swaps[1].id).getByTestId("rate-0").click()
+      await page.clock.runFor(300)
       await expect(row(swaps[1].id).getByTestId("try-another")).toBeVisible()
       await expect(row(swaps[2].id).getByTestId("try-another")).toHaveCount(0)
       await shot(page, "3-result-rated")
@@ -484,6 +495,11 @@ for (const view of [
       await tap(page, "gives-continue")
       await expect(page.getByTestId("need-heading")).toHaveText("W" + "w".repeat(59))
       await noSideways(page)
+      await tap(page, "gives-next")
+      await expect(page.getByTestId("need-empty")).toContainText("W" + "w".repeat(59))
+      await expect(page.getByTestId("result-heading")).toHaveText("Nothing on your list yet")
+      await noSideways(page)
+      await shot(page, "3-result-empty")
       expect((await stored(page)).gives.ownNeed).toBe("w".repeat(60))
     })
 
@@ -582,6 +598,52 @@ for (const view of [
       await noSideways(page)
       await bigTargets(page)
       await shot(page, "3-result-own")
+    })
+
+    test("R2 the need screen has a small 'Swaps to try' heading; the pick screen question is an h2; the max line sits above the Something else field", async ({ page }) => {
+      await open(page)
+      await expect(page.getByRole("heading", { level: 2, name: "What does it give you? Pick 1 to 3." })).toBeVisible()
+      await pick(page, "relief", "reward", "sleep")
+      const before = await page.evaluate(() => {
+        const max = document.querySelector('[data-testid="pick-max"]')!
+        const last = document.querySelector('[data-testid="need-own"]')!
+        return !!(last.compareDocumentPosition(max) & Node.DOCUMENT_POSITION_FOLLOWING)
+      })
+      expect(before).toBe(true)
+      await page.getByTestId("need-sleep").click()
+      await page.getByTestId("need-own").click()
+      const maxFirst = await page.evaluate(() => {
+        const max = document.querySelector('[data-testid="pick-max"]')!
+        const field = document.querySelector('[data-testid="own-need"]')!
+        return !!(max.compareDocumentPosition(field) & Node.DOCUMENT_POSITION_FOLLOWING)
+      })
+      expect(maxFirst).toBe(true)
+      await page.getByTestId("own-need").fill("a reason")
+      await tap(page, "gives-continue")
+      await expect(page.getByTestId("swaps-heading")).toHaveText("Swaps to try")
+      await expect(page.getByTestId("need-heading")).toHaveCSS("font-size", "18px")
+      await shot(page, "2-need-swaps-heading")
+    })
+
+    test("R2 a double tap on Add to my list or on a rating does not switch it straight off; the result explains an 80% swap", async ({ page }) => {
+      await open(page)
+      await pick(page, "relief")
+      await tap(page, "gives-continue")
+      await page.getByTestId("toggle-swap").first().dblclick()
+      await expect(page.getByTestId("toggle-swap").first()).toHaveText("On my list · Remove")
+      await page.clock.runFor(300)
+      await tap(page, "gives-next")
+      await page.getByTestId("rate-80").dblclick()
+      await expect(page.getByTestId("rate-80")).toHaveAttribute("aria-checked", "true")
+      await expect(page.getByTestId("eighty-note")).toHaveText("An 80% swap gives you most of what nicotine gave you. You judge that; it is not a study number.")
+      await expect(page.getByTestId("result-heading")).toHaveCSS("font-size", "18px")
+      const labels = await page.getByTestId("listed").first().locator('[role="radio"]').allInnerTexts()
+      expect(labels).toEqual(["None", "A little", "Half", "Most", "All"])
+      for (const box of await page.getByTestId("listed").first().locator('[role="radio"]').all()) {
+        const h = (await box.boundingBox())!.height
+        expect(h).toBeLessThan(50)
+      }
+      await shot(page, "3-result-rated2")
     })
   })
 }
