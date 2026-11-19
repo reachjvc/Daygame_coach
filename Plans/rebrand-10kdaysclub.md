@@ -398,7 +398,20 @@ Done: **https://claude.ai/artifact/CArfEQDsZit3oAziztCATV** (db collections `lik
 **Done when:** the page is published, the link is posted, and the plan names the URL. **The build stops here for
 O7.** Phase 3 starts only after his pick, read from the page's db and from his chat words.
 
-### Phase 3 — The look system and its rules (Sonnet, after O7; O7 done: look C in full)
+### Phase 3 — The look system and its rules (Sonnet, after O7; O7 done: look C in full) — **DONE 2026-11-19, `b9b6972b` + `ee1a8baf`, live**
+
+Done: tokens and `[data-facet]` rules in `app/globals.css`; `src/shared/facets.ts`; `components/FacetScope.tsx` in the
+root layout (one wrapper covers every page, so no per-layout edits were needed; it also sets `data-facet` on `<html>`
+for dialogs); Home tiles, Home cards and All tools rows take the part of the address they open; `PartLockup` in
+`components/AppLogo.tsx` (header and the quit tools' header). R1–R4 tests and `docs/product/look.md`; `ui.md` line fixed.
+Violet/orange converted to `primary` in `TodayTab`, `NorthStarFlow`, `ErrandRibbon`, the Black Box and `src/vice/components/Ui.tsx`.
+Notes:
+- The colour baseline counts 6,725 uses in 239 files (the plan's 1,724 + 284 was counted another way); it is today's snapshot.
+- R4's test holds a waiting list of pages whose titles come in Phases 5 and 6.
+- Visual check: phone screenshots of Home, All tools, the Black Box, Your plan, Time Log, `/quit` and sign up on the local
+  stack, checked by the build session itself against look C (no Haiku pass). Life tiles gold, Black Box violet, Dating
+  orange, the quit header reads "10K Days · Quit" in violet. Other steps of Your plan still have their own hard-coded
+  violet (outside the looks-page screens, left for later under R1).
 
 1. **Tokens:** in `app/globals.css` (the `:root` and `.dark` blocks that hold `--primary`; the `@theme` block moved
    to `app/theme.css` on 2026-11-19), add:
@@ -535,7 +548,15 @@ Read his picks from the board's db and from his chat words first. Then:
 - `/manifest.webmanifest` icons open and show it.
 - A link to the site pasted into a link-preview checker shows the new picture.
 
-### Phase 5 — The public pages (Sonnet, after Phase 3; logo swap lands later by itself)
+### Phase 5 — The public pages (Sonnet, after Phase 3; logo swap lands later by itself) — **DONE 2026-11-19, `f5815e57`**
+
+Done: `/`, `/life`, `/dating`, `/pricing` (shared `PublicShell`: sales header or app frame, footer W14); locks, "See
+plans", Billing "View Plans", the Scenarios and Inner Game "See pricing" buttons all go to `/pricing` (button text "See
+prices", as W45); `/#pricing` is sent on to `/pricing`; titles Life, Dating, Prices, Log in, Sign up (`/quit` already had
+"Quit something"). Tests in `tests/unit/home/publicPages.test.tsx`. Phone check on the local stack: no sideways scroll at
+390 px on all seven public pages; titles read "<Page> · 10K Days Club".
+Door icons: Compass (Life), Unlink (Quit), Heart (Dating), from the looks page. `src/shared/iconRoles.ts` was not edited:
+Compass ("direction") and Heart ("dating life area") already carry these meanings, and Unlink is used in one file only.
 
 1. **Routes:**
    - In `src/shared/routes.ts`, add `life: "/life"`, `dating: "/dating"`, `pricing: "/pricing"`,
