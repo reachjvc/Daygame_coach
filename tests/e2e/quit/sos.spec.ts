@@ -124,6 +124,28 @@ test.describe("craving now, signed out", () => {
       await shot(page, "2-ring-over-in-tile")
     })
 
+    test("inside a tile: the small ring shows, I'm through it opens the answer, Back goes to the shelf", async ({ page }) => {
+      await startClock(page)
+      await page.goto(URL)
+      await page.getByTestId("tile-breathe").click()
+      await expect(page.getByTestId("ring-mini")).toBeVisible()
+      await page.clock.runFor(60_000)
+      await expect(page.getByTestId("ring-mini")).toContainText("09:")
+      await page.getByTestId("mini-finish").click()
+      await expect(page.getByTestId("ask")).toBeVisible()
+      await page.goBack()
+      await expect(page.getByTestId("shelf")).toBeVisible()
+      // the banner inside a tile, answered: Back reaches the shelf in one step
+      await page.getByTestId("wait-5").click()
+      await page.getByTestId("tile-help").click()
+      await page.clock.runFor(5 * 60_000 + 1000)
+      await page.getByTestId("ring-over").getByTestId("ask-fight").click()
+      await expect(page.getByTestId("shelf")).toBeVisible()
+      await expect(ring(page)).toHaveText("05:00")
+      await page.clock.runFor(5 * 60_000 + 1000)
+      await expect(page.getByTestId("ring-over")).toBeVisible()
+    })
+
     test("3 Back inside every tile returns to the shelf, never off the page", async ({ page }) => {
       await page.goto(URL)
       for (const tile of TILES) {

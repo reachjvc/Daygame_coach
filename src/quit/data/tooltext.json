@@ -191,6 +191,7 @@
     },
     "back": "Back to tools",
     "ringTitle": "Give it {words} minutes",
+    "ringMiniLabel": "Time left on the wait",
     "ringWords": {
       "5": "five",
       "10": "ten",
@@ -234,7 +235,8 @@
     "moveDesign": "A review that pooled studies, using each participant's own data.",
     "moveMeasured": "How strong cigarette cravings were soon after physical activity.",
     "moveCaveat": "It measured cravings soon after the activity, not whether people stayed off. It studied cigarette cravings.",
-    "moveWho": "Smokers in the pooled studies.",
+    "moveWho": "Smokers who had not smoked for a while, in the studies the review pooled.",
+    "moveFinding": "In these studies, cigarette cravings were lower soon after a short spell of physical activity.",
     "helpLine": "Pick the place you are in. Three ideas show together.",
     "helpMoment": "Where are you",
     "reasonsLine": "Your own words, kept on this phone.",

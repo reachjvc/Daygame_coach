@@ -108,6 +108,7 @@ function Screens({ addiction, beliefs, moments, swaps, evidence, refs, signedIn,
   const pushed = useRef(false)
   const sentStart = useRef(false)
   const wasOver = useRef(false)
+  const seenRing = useRef(false)
 
   const tParam = sp.get("t")
   const view: "shelf" | "after" | TileId = tParam === "after" ? "after" : isTile(tParam) ? tParam : "shelf"
@@ -168,6 +169,12 @@ function Screens({ addiction, beliefs, moments, swaps, evidence, refs, signedIn,
   const over = ring?.over === true && state?.ended === false
   useEffect(() => {
     if (!ready || !ring) return
+    if (!seenRing.current) {
+      // A ring that is already over when the page opens is not a new "time is up".
+      seenRing.current = true
+      wasOver.current = ring.over
+      return
+    }
     if (ring.over && !wasOver.current) {
       try {
         navigator.vibrate?.(200)
@@ -193,7 +200,7 @@ function Screens({ addiction, beliefs, moments, swaps, evidence, refs, signedIn,
 
   // The filing waits for the Black Box to be read; the answer on screen never waits.
   useEffect(() => {
-    if (!want || !bb || !bb.ready || !state) return
+    if (!want || !bb || !bb.ready || !bb.settled || !state) return
     setWant(null)
     if (!bb.run) {
       setNoRun(true)
@@ -222,7 +229,7 @@ function Screens({ addiction, beliefs, moments, swaps, evidence, refs, signedIn,
   const verb = didYouUse(unit)
   const ringWords = t.ringWords[String(state.ringMinutes) as keyof typeof t.ringWords]
 
-  const restartRing = (minutes: WaitMinutes) => update((s) => ({ ...s, ringMinutes: minutes, ringStartedAt: Date.now() }))
+  const restartRing = (minutes: WaitMinutes) => update((s) => ({ ...s, ringMinutes: minutes, ringStartedAt: Date.now(), ended: false }))
 
   const answer = (a: "no" | "fight" | "yes") => {
     if (answered.current) return
@@ -249,7 +256,8 @@ function Screens({ addiction, beliefs, moments, swaps, evidence, refs, signedIn,
     })
     update((s) => ({ ...s, ended: true, reportId: null, reportKind: null }))
     count(addiction, "sos", "done")
-    if (view !== "after") open("after")
+    if (view === "shelf") open("after")
+    else if (view !== "after") window.history.replaceState(null, "", hrefFor("after"))
   }
 
   const askBlock = (
@@ -356,7 +364,7 @@ function Screens({ addiction, beliefs, moments, swaps, evidence, refs, signedIn,
               {statusText()}
             </p>
             {updated && <p className="text-sm text-muted-foreground">{t.rowUpdated}</p>}
-            <button
+            {!updated && <button
               type="button"
               data-testid="sos-undo"
               onClick={() => {
@@ -368,7 +376,7 @@ function Screens({ addiction, beliefs, moments, swaps, evidence, refs, signedIn,
               className="inline-flex min-h-11 items-center text-primary underline"
             >
               {tt.blackbox.undo}
-            </button>
+            </button>}
           </div>
         )}
         {undone && <p data-testid="sos-undone">{tt.blackbox.undone}</p>}
@@ -426,7 +434,7 @@ function Screens({ addiction, beliefs, moments, swaps, evidence, refs, signedIn,
           data-testid="log-save"
           disabled={strength === null && situation === null}
           onClick={() => {
-            if (bb && state.reportId && bb.amend(state.reportId, { closeness: strength, where: situation ?? undefined })) setRowMsg(true)
+            if (bb && state.reportId && bb.amend(state.reportId, { ...(strength !== null ? { closeness: strength } : {}), ...(situation !== null ? { where: situation } : {}) })) setRowMsg(true)
           }}
           className="inline-flex min-h-12 items-center justify-center rounded-md border border-primary px-4 text-primary disabled:opacity-40"
         >
@@ -516,6 +524,25 @@ function Screens({ addiction, beliefs, moments, swaps, evidence, refs, signedIn,
   return (
     <div data-testid="sos" className="mx-auto flex w-full max-w-[560px] flex-col gap-4">
       {banner}
+      {!banner && view !== "shelf" && view !== "after" && ring.running && (
+        <div data-testid="ring-mini" className="sticky top-0 z-10 flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-3 py-1 shadow-sm">
+          <span role="timer" aria-label={t.ringMiniLabel} className="text-lg font-semibold tabular-nums">
+            {ringClock(ring.leftMs)}
+          </span>
+          <button
+            type="button"
+            data-testid="mini-finish"
+            onClick={() => {
+              setPhase("ask")
+              answered.current = false
+              window.history.replaceState(null, "", hrefFor("after"))
+            }}
+            className="inline-flex min-h-11 items-center text-primary underline"
+          >
+            {t.through}
+          </button>
+        </div>
+      )}
       {body}
     </div>
   )

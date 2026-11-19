@@ -30,6 +30,10 @@ function Frame({ id, title, line, onBack, children }: { id: string; title: strin
 export function Voice({ beliefs, value, onPick, onBack }: { beliefs: QuitBelief[]; value: string | null; onPick: (id: string) => void; onBack: () => void }) {
   const options = [...beliefs.map((b) => ({ id: b.id, label: usable<string>(b.short) ?? b.id })), { id: OTHER, label: t.somethingElse }]
   const belief = beliefOf(value, beliefs)
+  // The answer can land below the screen on a phone: bring it into view when a voice is picked.
+  useEffect(() => {
+    if (value) document.querySelector('[data-testid="sos-counterpart"], [data-testid="sos-other"]')?.scrollIntoView({ block: "nearest", behavior: "smooth" })
+  }, [value])
   return (
     <Frame id="voice" title={t.tools.voice} onBack={onBack}>
       <p className="font-medium">{t.voiceQuestion}</p>
@@ -163,7 +167,7 @@ export function Bubbles({ onBack }: { onBack: () => void }) {
 /** A block's colour: the part's own colour (the theme's primary), stronger the bigger the number. */
 function tileStyle(n: number): { backgroundColor: string; color: string } {
   const level = Math.min(11, Math.max(1, Math.round(Math.log2(n))))
-  const pct = 12 + level * 8
+  const pct = Math.min(100, 8 + level * 9)
   return {
     backgroundColor: `color-mix(in oklab, var(--primary) ${pct}%, var(--card))`,
     color: pct >= 56 ? "var(--primary-foreground)" : "var(--foreground)",
@@ -309,6 +313,7 @@ export function Move({ evidence, refs, onBack }: { evidence: Evidence; refs: Qui
       </div>
       <div data-testid="move-basis" className="rounded-lg border border-border bg-card p-3 text-sm">
         <EvidenceChip evidence={evidence} />
+        <p data-testid="move-finding" className="mt-2">{t.moveFinding}</p>
         <details className="mt-1">
           <summary className="flex min-h-11 cursor-pointer items-center font-medium">{t.basisTitle}</summary>
           <dl className="flex flex-col gap-2">

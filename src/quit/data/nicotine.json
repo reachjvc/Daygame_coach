@@ -839,9 +839,10 @@
       "counterpart": "Boredom is a gap, and a cigarette is only one thing that fills it.",
       "whenThought": "Stand up and change rooms. Give it three minutes before you decide.",
       "test": "Write down three things you can start in under a minute. Next time you are bored this week, do the first one and note whether the pull got smaller.",
-      "proof": "Students who played Tetris for three minutes rated their cravings, nicotine among them, 13.9 points lower out of 100.",
+      "proof": "Students who played a falling-blocks game for three minutes rated their cravings, nicotine among them, 13.9 points lower out of 100.",
       "severity": "users",
       "counted": "students with cravings for drugs, food or activities, not checked for addiction",
+      "weak": "The game tested was falling blocks, not the block puzzle in this tool. Students rated their own cravings; nobody checked whether they stayed off.",
       "refs": [
         {
           "cite": "Skorka-Brown J, Andrade J, Whalley B, May J (2015). Playing Tetris decreases drug and other cravings in real world settings. Addictive Behaviors 51:165-70.",
@@ -1657,7 +1658,7 @@
       "momentId": "drinks",
       "cards": [
         "Make the next round a soft drink.",
-        "Stay inside, away from where people go out to use.",
+        "Keep your drink in your hand and stay where the talking is.",
         "Tell one person there: \"I've stopped.\""
       ]
     },
@@ -1680,7 +1681,7 @@
     {
       "momentId": "bored",
       "cards": [
-        "Pop bubbles or play the block puzzle here for three minutes.",
+        "Pop bubbles or play the block puzzle here for a few minutes.",
         "Do one small job you've put off: a dish, an email, a call.",
         "Give your hands something: gum, a toothpick, a pen."
       ]
@@ -1706,14 +1707,14 @@
       "cards": [
         "Get up straight away and drink a glass of water.",
         "Change the first ten minutes: shower first, or step outside without it.",
-        "Eat something with your first drink."
+        "Eat something with your first coffee or tea."
       ]
     },
     {
       "momentId": "driving",
       "cards": [
         "Put on a song you know by heart and sing it.",
-        "Have gum or a mint; keep a pack in the car.",
+        "Have gum or a mint; keep some in the car.",
         "Open the window and breathe slowly until the next stop."
       ]
     }

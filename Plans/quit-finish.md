@@ -30,7 +30,7 @@ Status: **not started → building → checking → waiting for you → done (da
 |---|---|---|---|---|
 | 0 | The frame: menu, shared record, page titles, links | wave-1 menu | — | live f9190770 (no owner check: it has no screens of its own) |
 | 1 | Your quit date | lab `quitdate/best` | copy e's plan steps; the old "quit curve" hard-days calendar (mock F9kYB9… v2, study timing only) | building |
-| 2 | Craving now? | lab `sos/best` | wave-1's voice step and "other side" answer; the craving log of `diary/best` | building |
+| 2 | Craving now? | lab `sos/best` | wave-1's voice step and "other side" answer; the craving log of `diary/best` | waiting for you |
 | 3 | Your record (progress, money kept) | lab `progress/best` | the live counter feel of copies d and e | not started |
 | 4 | Slipped? Restart today | wave-1 `slip` | slips go into the shared record; clean runs never reset | not started |
 | 5 | The 12 lies test | wave-1 `beliefs` | from `beliefs/best`: a reply per belief, "can you stop?", earlier results | not started |
@@ -311,3 +311,9 @@ files get the field empty.
 - Tool 2, meaning of price for "money kept": Tool 1 made the record's price per single unit (one cigarette, one vape, one can),
   so Tool 2 uses count a day x that price x days, with no pack division, and shows the sum line. Proposed: keep; the "10 a day,
   $10.34 a pack" acceptance case reads as 0.517 each. For pouches the count is cans a day (matches "a can" in the data file).
+- Tool 2 review round 1 (2026-11-19): fixed a lost save for a signed-in person on a new device, an Undo that took out an
+  older close call, a "Save" that wiped the strength, a ring that never prompted again after Back, a vibration on page
+  load, Back after answering inside a tile, the voice answer landing off screen, a missing small ring inside tiles, an
+  empty-looking Move basis, a brand name in the "bored" proof, and four swap cards. Not fixed, proposed for the owner's
+  look: desktop heading offset by about 24 px, the lone half-moon voice icon, "Saved" shown twice after a close call,
+  "steps 1-3" not named on the slip screen, three beliefs whose basis repeats the line above it.
