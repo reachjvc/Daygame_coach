@@ -277,6 +277,34 @@ Findings:
 
 **Status (group C):** done 2026-11-19 — 23 functions asserted (programRepo 9, workoutRepo 3, programDraftRepo 3, healthRepo 7, restoreTimetrack); group C alone took the count 125 -> 102; with group A's marks merged the baseline holds 56 "unasserted" and MAX_UNASSERTED is 56; CI run 44600185515 on branch tests-catch-p4c: database success, static success, unit 1/2 and 2/2 success; one finding (`unenroll` has no user filter, `it.fails`), no data loss fixed.
 
+### Group B (goalRepo, valuesRepo.deleteUserValues, settingsRepo, profileService, innerGameProgressRepo)
+
+Files: `tests/integration/repos/{goalRepo,settingsRepo,profileService,innerGameProgressRepo,valuesRepo}Writes.integration.test.ts`
+(66 tests). 32 functions marked `"asserted"`; the other five goalRepo writers that were "mentioned"
+(`createGoal`, `incrementGoalProgress`, `rollGoalPeriods`, `syncLinkedGoals`, `updateGoal`) are left alone.
+`MAX_UNASSERTED` 56 -> 26 (the test's own count after merging with the other groups on main).
+
+| File | Defect put back | Test that went red |
+|---|---|---|
+| `src/db/goalRepo.ts` | `archiveGoal` writes `is_active: true` | `archiveGoal switches off that one goal and touches no other` |
+| `src/db/goalRepo.ts` | `deleteGoal` without `.eq("user_id")` | stayed green: row security fences the delete, so the filter is the second lock, not the only one |
+| `src/db/settingsRepo.ts` | `updateDifficulty` writes `"beginner"` | `updateDifficulty writes difficulty and nothing else` |
+| `src/db/settingsRepo.ts` | `updateSubscriptionStatus` without the `user_id` filter | `updateSubscriptionStatus does not touch somebody else's purchase, even one the caller names` |
+| `src/profile/profileService.ts` | `updateAgeRangeForUser` writes the end as the start | `updateAgeRangeForUser writes both ends, clamped to 18..45 and in order` |
+| `src/profile/profileService.ts` | `updateSecondaryRegionDirectForUser` drops the "same as primary means none" rule | `writes null for null, and for the same region as the primary` |
+| `src/db/innerGameProgressRepo.ts` | `resetProgress` without `.eq("user_id")` | `resetProgress puts every field of the person's row back to the start` (the database refuses an UPDATE with no WHERE) |
+| `src/db/innerGameProgressRepo.ts` | `resetSection` leaves `cutting_completed` true | `resetSection hurdles ...` and `resetSection cutting ...` (plus the other section tests) |
+| `src/db/valuesRepo.ts` | `deleteUserValues` filter replaced by a match-everything filter | stayed green: row security fences the delete to the caller's own rows |
+
+**Finding (fixed, group B):** `settingsRepo.updateSubscriptionStatus` wrote nothing. `purchases` has
+no UPDATE policy, so through the signed-in client the update matched zero rows and reported success;
+cancelling or resuming a subscription never changed the purchase's `subscription_status`. Fixed in the
+repo (admin client, fenced by a new `userId` argument; the two callers in `settingsService.ts` pass it),
+proof: `updateSubscriptionStatus writes the status on the subscription named ...`. No customer is
+affected today (nobody has paid).
+
+**Status (group B):** done 2026-11-19 — CI run 44601729058 on branch tests-catch-p4b (head fbdd7db5, rebased on main): success (static, unit 1/2, unit 2/2, database all success).
+
 ## Phase 5 — Flaky specs fixed · M · sonnet
 
 1. `.github/workflows/e2e.yml` `workflow_dispatch` inputs `grep` (string) and `repeat_each` (number,

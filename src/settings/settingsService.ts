@@ -264,7 +264,7 @@ export async function handleCancelSubscription(userId: string): Promise<void> {
     })
 
     // Update local records
-    await updateSubscriptionStatus(purchase.stripe_subscription_id, "canceling")
+    await updateSubscriptionStatus(userId, purchase.stripe_subscription_id, "canceling")
     await updateSubscriptionCancelledAt(userId, new Date().toISOString())
   } catch (err) {
     console.error("Error canceling subscription:", err)
@@ -288,7 +288,7 @@ export async function handleReactivateSubscription(userId: string): Promise<void
     })
 
     // Update local records
-    await updateSubscriptionStatus(purchase.stripe_subscription_id, "active")
+    await updateSubscriptionStatus(userId, purchase.stripe_subscription_id, "active")
     await updateSubscriptionCancelledAt(userId, null)
   } catch (err) {
     console.error("Error reactivating subscription:", err)
