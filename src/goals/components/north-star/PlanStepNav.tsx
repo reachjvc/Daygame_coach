@@ -55,7 +55,7 @@ export function PlanStepNav({
   const forward = next !== undefined ? next : tabIndex < TAB_ORDER.length - 1 ? { label: TAB_LABELS[TAB_ORDER[tabIndex + 1]], onGo: () => setTab(TAB_ORDER[tabIndex + 1]) } : null
   return (
       <div className={siteBar ? "sticky top-0 z-30 bg-zinc-950/90 backdrop-blur-sm border-b border-white/10" : "sticky bottom-0 bg-zinc-950/90 backdrop-blur-sm border-t border-white/10"}>
-        <div className={`max-w-5xl mx-auto flex items-center justify-between gap-3 ${wrapLabels ? "flex-wrap sm:flex-nowrap" : ""} ${siteBar ? "px-4 py-2 sm:px-6 sm:py-3" : "px-6 py-3"}`}>
+        <div className={`max-w-5xl mx-auto flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap ${siteBar ? "px-4 py-2 sm:px-6 sm:py-3" : "px-6 py-3"}`}>
           {back ? (
             <button onClick={back.onGo} data-testid={testIds ? "back" : undefined} className={`text-xs text-zinc-400 hover:text-white transition-colors shrink-0 ${wrapLabels ? "min-w-0 max-w-[42%] whitespace-normal text-left sm:max-w-none sm:whitespace-nowrap" : "whitespace-nowrap"}`}>
               ← {back.label}
@@ -64,7 +64,7 @@ export function PlanStepNav({
           {/* What is actually happening to what you typed, said plainly and
               with the off switch next to it. A copy going to a server is not a
               thing to bury in a privacy policy nobody opens. */}
-          <span className={`text-[11px] text-zinc-600 text-center min-w-0 ${wrapLabels ? "order-last basis-full sm:order-none sm:basis-auto" : ""}`}>
+          <span className={`text-[11px] text-zinc-600 text-center ${wrapLabels ? "min-w-0 order-last basis-full sm:order-none sm:basis-auto" : "min-w-[8rem] sm:min-w-0"}`}>
             {/* WHAT HAPPENED TO THE PLAN ITSELF comes first and in amber, above
                 the line about the improvement copy. They are different facts
                 and the one people need is "is my work safe", not "was a
