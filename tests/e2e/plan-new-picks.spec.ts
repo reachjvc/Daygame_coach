@@ -2,6 +2,7 @@ import { test, expect as baseExpect } from "./fixtures/test"
 import { ROUTES } from "@/src/shared/routes"
 import { fullPlan } from "@/tests/support/fullLifePlan"
 import { emptyNsPlan } from "@/src/goals/northStarService"
+import { PROGRESS_COPY, TODO_COPY } from "@/src/goals/data/northStar"
 import { AREA_REVIEW_COPY, REVIEW_PERIOD_COPY, TAB_LABELS } from "@/src/goals/data/northStar"
 import { fingerprint, seedAndCopy } from "./helpers/planNewCopy"
 import { screenRoute, sequenceById } from "@/src/goals/planSteps/planSequences"
@@ -147,5 +148,139 @@ test.describe("the plan home (Q4, Q4b, Q5)", () => {
     await expect(page.getByText("Make them real").first()).toBeVisible()
     expect(errors).toEqual([])
     expect(await fingerprint(account.id), "the owner's rows did not move").toEqual(ownerBefore)
+  })
+})
+
+test.describe("one rule for every number (Q6)", () => {
+  test("North star is 100 % on the picker, the progress list and the home, with no chip, once every box is filled", async ({ page, account }) => {
+    test.setTimeout(600_000)
+    const plan = {
+      ...emptyNsPlan(),
+      northStar: "A life I chose.",
+      answers: { star_why: "Because I said so.", identity_total: "a", conduct: "b", become: "c", affirmations: "d" },
+    }
+    await seedAndCopy(page, account.id, plan, { everyDayStep: false })
+    const errors: string[] = []
+    page.on("pageerror", (e) => errors.push(e.message))
+    // The picker's card, on a build screen
+    await page.goto(`${ROUTES.planNew}/star.self`, { timeout: NAV })
+    const card = page.locator("#plan-sections").getByRole("button", { name: new RegExp(`^\\d+\\s*${TAB_LABELS.star}`) }).first()
+    await expect(card).toContainText(PROGRESS_COPY.railLine(1, []), { timeout: NAV })
+    // "Still to fill in": nothing about the north star
+    await expect(page.getByText("Your north star paragraph", { exact: true })).toHaveCount(0)
+    await expect(page.getByText(/questions? under the paragraph still blank/)).toHaveCount(0)
+    // The progress list on Everything: the same 100 %
+    await page.goto(`${ROUTES.planNew}/everything.driving-force`, { timeout: NAV })
+    const list = page.getByTestId("plan-progress")
+    await expect(list).toBeVisible({ timeout: NAV })
+    await expect(list.getByRole("button", { name: new RegExp(TAB_LABELS.star) })).toContainText("100 %")
+    // The plan home: Done, and Next up has moved on
+    await page.goto(`${ROUTES.planNew}?home=1`, { timeout: NAV })
+    await expect(page.getByTestId("home-star-state")).toHaveText("Done", { timeout: NAV })
+    await expect(page.getByTestId("home-star-chip")).toHaveCount(0)
+    await expect(page.getByTestId("next-up-name")).not.toHaveText(TAB_LABELS.star)
+    // The percentages on the home and the progress list are one number
+    const total = (await page.getByTestId("plan-percent").textContent())?.trim()
+    await page.goto(`${ROUTES.planNew}/everything.driving-force`, { timeout: NAV })
+    await expect(page.getByTestId("plan-progress").getByRole("heading")).toContainText(String(total).replace(" %", " %"))
+    expect(errors).toEqual([])
+    void TODO_COPY
+  })
+
+  test("a part-filled north star names what is left on every surface, and the chip lands on the screen that holds it", async ({ page, account }) => {
+    test.setTimeout(600_000)
+    const plan = { ...emptyNsPlan(), northStar: "A life I chose.", answers: {} }
+    await seedAndCopy(page, account.id, plan, { everyDayStep: false })
+    await page.goto(`${ROUTES.planNew}/star.vision`, { timeout: NAV })
+    const chip = page.getByRole("button", { name: /questions under the paragraph still blank/ })
+    await expect(chip).toBeVisible({ timeout: NAV })
+    await chip.click()
+    await expect.poll(() => new URL(page.url()).pathname, { timeout: NAV }).toBe(`${ROUTES.planNew}/star.self`)
+    await page.goto(`${ROUTES.planNew}?home=1`, { timeout: NAV })
+    await expect(page.getByTestId("home-star-chip")).toContainText(/Why that life matters to you/)
+    await expect(page.getByTestId("home-star-state")).toHaveText(/^\d+ %$/)
+  })
+})
+
+test.describe("buttons beside the drag (Q9)", () => {
+  test("the value order moves a value up and down with buttons, saves to the copy and survives a reload", async ({ page, account }) => {
+    test.setTimeout(600_000)
+    const sandboxId = await seedAndCopy(page, account.id)
+    const ownerBefore = await fingerprint(account.id)
+    await page.goto(`${ROUTES.planNew}/values.order`, { timeout: NAV })
+    const order = () => page.getByLabel(/^Reorder /).evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")))
+    await expect(page.getByLabel(/^Reorder /).first()).toBeVisible({ timeout: NAV })
+    const before = await order()
+    expect(before.length).toBeGreaterThanOrEqual(2)
+    // every row has both buttons, each at least 44 px, the first cannot go up and the last cannot go down
+    const ups = page.getByRole("button", { name: /^Move .+ up$/ })
+    const downs = page.getByRole("button", { name: /^Move .+ down$/ })
+    await expect(ups).toHaveCount(before.length)
+    await expect(downs).toHaveCount(before.length)
+    for (const b of [...(await ups.all()), ...(await downs.all())]) {
+      const box = await b.boundingBox()
+      expect(box!.width).toBeGreaterThanOrEqual(44)
+      expect(box!.height).toBeGreaterThanOrEqual(44)
+    }
+    await expect(ups.first()).toBeDisabled()
+    await expect(downs.last()).toBeDisabled()
+    await downs.first().click()
+    await expect.poll(order).toEqual([before[1], before[0], ...before.slice(2)])
+    // saved to the copy (the store flushes), then the same order after a reload
+    await expect.poll(async () => {
+      const { rows } = await (await import("./helpers/planNewCopy")).withDb((db) => db.query("select count(*)::int as n from public.life_plan_values where user_id = $1", [sandboxId]))
+      return rows[0].n
+    }).toBeGreaterThan(0)
+    await page.waitForTimeout(2500)
+    await page.reload({ timeout: NAV })
+    await expect(page.getByLabel(/^Reorder /).first()).toBeVisible({ timeout: NAV })
+    expect(await order()).toEqual([before[1], before[0], ...before.slice(2)])
+    // and back up
+    await page.getByRole("button", { name: /^Move .+ up$/ }).nth(1).click()
+    await expect.poll(order).toEqual(before)
+    expect(await fingerprint(account.id), "the owner's rows did not move").toEqual(ownerBefore)
+  })
+
+  test("the curve editor gets shape and step buttons beside the drag, 44 px high", async ({ page, account }) => {
+    test.setTimeout(600_000)
+    const full = fullPlan()
+    const g = full.goals[0]
+    const plan = { ...full, goals: full.goals.map((x, i) => (i === 0 ? { ...x, type: "milestone_ladder", unit: "km", ladder: { start: 0, target: 42, steps: 5, curveTension: 0, controlPoints: [], pins: [] } } : x)) }
+    await seedAndCopy(page, account.id, plan)
+    await page.goto(`${ROUTES.planNew}/milestones?area=${g.areaId}&goal=${g.id}`, { timeout: NAV })
+    const card = page.getByRole("dialog")
+    await expect(card.getByTestId("goal-sections")).toBeVisible({ timeout: NAV })
+    const buttons = card.getByTestId("curve-buttons")
+    await expect(buttons).toBeVisible({ timeout: NAV })
+    for (const b of await buttons.getByRole("button").all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44)
+    await expect(buttons.getByRole("button", { name: "Curve shape: Linear" })).toHaveAttribute("aria-pressed", "true")
+    await buttons.getByRole("button", { name: "Curve shape: Many small wins" }).click()
+    await expect(buttons.getByRole("button", { name: "Curve shape: Many small wins" })).toHaveAttribute("aria-pressed", "true")
+    await expect(buttons.getByRole("button", { name: "Curve shape: Linear" })).toHaveAttribute("aria-pressed", "false")
+    await buttons.getByRole("button", { name: /^More milestones/ }).click()
+    await expect(card.locator("span", { hasText: /^6 milestones$/ })).toBeVisible()
+  })
+})
+
+test.describe("once the plan is in use /plan/new opens on Today (Q10)", () => {
+  test("opens on Today when a goal or a routine step exists; the plan home stays one tap away", async ({ page, account }) => {
+    test.setTimeout(600_000)
+    await seedAndCopy(page, account.id) // goals and a routine step: in use
+    const ownerBefore = await fingerprint(account.id)
+    await page.goto(ROUTES.planNew, { timeout: NAV })
+    await expect.poll(() => new URL(page.url()).pathname, { timeout: NAV }).toBe(`${ROUTES.planNew}/today`)
+    await expect(page.getByTestId("sequence-today")).toBeVisible({ timeout: NAV })
+    await page.getByTestId("plan-home-link").click()
+    await expect(page.getByTestId("plan-home")).toBeVisible({ timeout: NAV })
+    expect(new URL(page.url()).searchParams.get("home")).toBe("1")
+    expect(await fingerprint(account.id), "the owner's rows did not move").toEqual(ownerBefore)
+  })
+
+  test("a plan with nothing to do yet opens on the plan home", async ({ page, account }) => {
+    test.setTimeout(600_000)
+    await seedAndCopy(page, account.id, { ...emptyNsPlan(), northStar: "A life." }, { everyDayStep: false })
+    await page.goto(ROUTES.planNew, { timeout: NAV })
+    await expect(page.getByTestId("plan-home")).toBeVisible({ timeout: NAV })
+    expect(new URL(page.url()).pathname).toBe(ROUTES.planNew)
   })
 })
