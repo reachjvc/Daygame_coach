@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 import { count } from "../count"
 import { QUIT_STORE_KEY, useQuitStore } from "../store"
@@ -72,6 +72,20 @@ export function useCarry() {
   )
 }
 
+/** The address bar's query, as a store `useScreens` reads: it changes on browser Back and Forward and on a screen move. */
+const ADDRESS_MOVED = "quit-address-moved"
+function subscribeAddress(onChange: () => void) {
+  window.addEventListener("popstate", onChange)
+  window.addEventListener(ADDRESS_MOVED, onChange)
+  return () => {
+    window.removeEventListener("popstate", onChange)
+    window.removeEventListener(ADDRESS_MOVED, onChange)
+  }
+}
+const readAddress = () => window.location.search
+const readNoAddress = () => null
+const addressMoved = () => window.dispatchEvent(new Event(ADDRESS_MOVED))
+
 /**
  * One screen at a time, kept in `?s=N` so the browser Back button walks back.
  * A missing or out-of-range `s` lands on the first unanswered screen.
@@ -80,17 +94,22 @@ export function useCarry() {
 export function useScreens(firstUnanswered: number, total: number, ready = true) {
   const pathname = usePathname()
   const sp = useSearchParams()
-  const screen = clampScreen(sp.get("s"), firstUnanswered, total)
+  // The screen comes from the address bar itself, not from Next's copy of it. After a reload, each browser Back
+  // makes Next fetch that address from the server; a screen change made while that fetch is out was rolled back
+  // when it landed (address `?s=1`, screen 2 still drawn). The server render and the first client render use
+  // Next's copy, which is the same address then.
+  const search = useSyncExternalStore(subscribeAddress, readAddress, readNoAddress)
+  const screen = clampScreen((search === null ? sp : new URLSearchParams(search)).get("s"), firstUnanswered, total)
 
   const hrefFor = useCallback(
     (n: number | null) => {
-      const p = new URLSearchParams(sp.toString())
+      const p = new URLSearchParams(window.location.search)
       if (n === null) p.delete("s")
       else p.set("s", String(n))
       const q = p.toString()
       return q ? `${pathname}?${q}` : pathname
     },
-    [sp, pathname],
+    [pathname],
   )
   // The screens of the history entries made in this visit, and where we are in them.
   // It starts only once the saved answers are read: before that the screen is a guess,
@@ -130,10 +149,17 @@ export function useScreens(firstUnanswered: number, total: number, ready = true)
   }, [screen, ready])
 
   // Native history calls: Next syncs useSearchParams with them and no server round trip is needed.
-  const go = useCallback((n: number) => window.history.pushState(null, "", hrefFor(n)), [hrefFor])
+  const go = useCallback(
+    (n: number) => {
+      window.history.pushState(null, "", hrefFor(n))
+      addressMoved()
+    },
+    [hrefFor],
+  )
   const reset = useCallback(() => {
     trail.current = { stack: [1], idx: 0 }
     window.history.replaceState(null, "", hrefFor(null))
+    addressMoved()
   }, [hrefFor])
   /** Like the browser's Back: steps back in history when the previous screen is the previous entry, else rewrites this entry. Never adds one. */
   const back = useCallback(() => {
@@ -146,6 +172,7 @@ export function useScreens(firstUnanswered: number, total: number, ready = true)
     }
     t.stack[t.idx] = prev
     window.history.replaceState(null, "", hrefFor(prev))
+    addressMoved()
   }, [screen, hrefFor])
   return { screen, go, back, reset, isResult: screen === total + 1 }
 }

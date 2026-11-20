@@ -362,8 +362,15 @@ for (const view of [
       await toResult(page)
       await page.goBack()
       await expect(page.getByTestId("need-heading")).toHaveText("Reward")
+      // After a reload, each browser Back makes Next fetch that screen's address from the server, and a second
+      // fetch of it follows. A Back tap between the two was rolled back when the second landed (address ?s=1,
+      // screen 2 still drawn; CI hit it by chance). The tap waits for the first fetch, so it lands in that gap.
+      const refetched = page
+        .waitForResponse((r) => r.url().includes("_rsc=") && new URL(r.url()).searchParams.get("s") === "2", { timeout: 10_000 })
+        .catch(() => null)
       await page.goBack()
       await expect(page.getByTestId("need-heading")).toHaveText("Relief")
+      await refetched
       await expect(page.getByTestId("screen-back")).toBeVisible()
       await page.getByTestId("screen-back").click()
       await expect(page.getByTestId("need-relief")).toBeVisible()
