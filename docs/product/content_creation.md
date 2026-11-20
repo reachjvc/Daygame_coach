@@ -42,7 +42,10 @@ say "I left notes".
   `Plans/reel-outvoted.md` (proposed). Private folder:
   `~/.cache/daygame-research/content/reel-outvoted/`.
 - **The process itself**: being worked out on video 01. About 40% there
-  (owner, 2026-11-18).
+  (owner, 2026-11-18). On 2026-11-20 he marked the ten ways page: 👍 on
+  ways 2, 3, 5, 7 and 8, and he wants a finder for videos that outperform
+  so he can say what he likes. His marks and the proposed next version are
+  in the process file.
 - **After video 01**: see "Next video" below.
 
 ## The idea (owner, 2026-11-10)

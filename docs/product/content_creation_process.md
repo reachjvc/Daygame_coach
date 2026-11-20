@@ -161,22 +161,64 @@ makers sell a tool):
 - Private notes: `process-research/2026-11-20-code-motion.md`,
   `-formats.md`, `-ai-generators.md` (same private folder as above).
 
-## Proposed next version (Claude, proposed 2026-11-20, not decided)
+### His marks on the ten ways page (owner, 2026-11-20, evening)
 
-1. **Script, then a sentence check before he records.** Five fresh readers
+- 👍 on five ways: 2 (copy one channel's house look), 3 (three finished
+  looks of the same ten seconds), 5 (whole film, then timed notes that
+  become rules), 7 (AI film clips for each line) and 8 (AI paintings with a
+  slow camera). A 👍 on 7 or 8 is not a yes to spend money.
+- The research summary: "very good and useful".
+- Way 1: he wants a tool that finds reels or YouTube videos that
+  outperform. He looks at some of them and decides what he likes about each.
+- Way 4: Claude misunderstood. He is not set on one world, and the look is
+  not the blocks. One fixed look fits a channel whose figures are the brand
+  (always the same stick figures, the "Monke" YouTube channel), "so that
+  people understand what they get, so we should have a look".
+- Way 6: more than three films. Use all of the computing power, around the
+  clock.
+- Way 8: "could work". Different tools for different things.
+- Way 10 (moving words and shapes only): no. "I think we use the AI."
+- He asked whether ways 8 and 9 came from the research. They did not: both
+  are Claude's own, from memory. The research found the painted look as a
+  format, and one maker who says real footage is quicker than code for
+  realistic pictures; nobody in it builds a reel either way.
+
+## Proposed next version (Claude, proposed 2026-11-20 after his marks, not decided)
+
+Once, to find the look:
+
+1. **Finder.** A page of videos that beat their channel's usual numbers,
+   grouped by look, each playable. He 👍 the ones he likes and says what he
+   likes about them.
+2. **Rule sheet.** Claude measures the liked ones frame by frame into a
+   rule sheet for the look (ways 1 and 2).
+3. **Three finished looks.** The same ten seconds of his voice, built in
+   three looks from his likes. He picks one, or parts (way 3).
+
+Every reel:
+
+4. **Script, then a sentence check before he records.** Five fresh readers
    plus Claude's own call. He sees only the lines in doubt.
-2. **Voice.** He records. Claude cuts the take, closes the pauses by
-   measurement and removes breaths (method under test).
-3. **Picture plan.** One row per line: blocks, other animation, or him on
-   camera. He taps the spots he wants.
-4. **His filming list** comes out of the plan. He films the clips in the
-   same sitting as the voice.
-5. **Build and one full render.** He sees the finished film (his choice of
-   2026-11-19).
-6. **After posting.** The retention graph is laid over the sentences and
+5. **Voice.** He records. Claude cuts the take, closes the pauses by
+   measurement and removes breaths.
+6. **Build the whole film**, with the tool that fits each spot: code for
+   words and shapes, AI pictures or clips where a real picture is needed
+   (paid tools wait for his yes), his own filmed clips where he wants to be
+   in it. Claude plans the pictures itself; he gets no cut table.
+7. **He watches the finished film once** and writes notes with a time.
+   Each note is fixed and saved as a rule for later reels (way 5).
+8. **Nights.** Several different whole films of the same voice are built
+   while he sleeps, as many as the limits allow (way 6).
+9. **After posting.** The retention graph is laid over the sentences and
    feeds the next sentence check.
 
 Open questions:
 - Does a reader panel find the same dead lines he hears?
-- Do filmed clips of him sit well inside the block world? Test on one spot.
-- Which breath method leaves none he can hear?
+- Do filmed clips of him sit well inside an animated look? Test on one spot.
+- What does "we use the AI" on way 10 rule in: AI pictures and clips (ways
+  7 and 8), or something else?
+- What limits the night films: the PC, or Claude's weekly allowance?
+  Outvoted took about 2.4 million tokens for one film. Not measured yet.
+- Prices for the picture and clip tools. Found so far: $2 to $6 for a
+  15-second clip and about $20 a reel after retries (one creator), about
+  $40 for 44 seconds (a seller). No price found for pictures.
