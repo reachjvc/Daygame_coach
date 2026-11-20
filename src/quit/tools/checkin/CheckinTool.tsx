@@ -310,13 +310,15 @@ function Screens({
       armShield();
     }
   }, [sig]);
-  const shieldEl = shield ? (
-    <div
-      aria-hidden="true"
-      data-testid="tap-shield"
-      className="fixed inset-0 z-50"
-    />
-  ) : null;
+  /* The moment taps work again, written in the same render as the screen, so a
+     browser test waits for exactly that instead of a guessed length of time. */
+  const tapsOpenAt = screenAt.current + 400;
+  const shieldEl = (
+    <>
+      <span hidden data-testid="taps-open-at" data-at={tapsOpenAt} />
+      {shield ? <div aria-hidden="true" data-testid="tap-shield" className="fixed inset-0 z-50" /> : null}
+    </>
+  );
 
   const mParam = sp.get("m");
   const monthNow = monthOf(today);

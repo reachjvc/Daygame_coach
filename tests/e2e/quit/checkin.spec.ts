@@ -94,19 +94,25 @@ async function openTab(page: Page, id: string) {
   await page.getByTestId(`tab-${id}`).click()
   await expect(page.getByTestId(`tab-${id}-panel`)).toBeVisible()
 }
-/** A screen is shown, and the 400 ms in which the tool ignores taps on a new screen have passed. */
+/** The 400 ms in which the tool ignores taps on a new screen have passed: the page says when they end. */
+const settle = (page: Page) =>
+  page.waitForFunction(() => {
+    const at = document.querySelector('[data-testid="taps-open-at"]')?.getAttribute("data-at")
+    return at != null && Date.now() >= Number(at)
+  })
+/** A screen is shown, and taps on it work. */
 const step = async (page: Page, id: string) => {
   await expect(page.getByTestId(`step-${id}`)).toBeVisible()
-  await page.waitForTimeout(450)
+  await settle(page)
 }
-const settle = (page: Page) => page.waitForTimeout(450)
-/** Two taps on the same spot, `gap` ms apart (a double tap). */
-async function dbl(page: Page, id: string, gap: number) {
+/** Two taps on the same spot with `pause` between them (a double tap). The pause is
+ *  passed in so the sleep sits in the @timing test that measures it. */
+async function dbl(page: Page, id: string, pause: () => Promise<void>) {
   const b = (await page.getByTestId(id).boundingBox())!
   const x = b.x + b.width / 2
   const y = b.y + b.height / 2
   await page.mouse.click(x, y)
-  await page.waitForTimeout(gap)
+  await pause()
   await page.mouse.click(x, y)
 }
 const saved = (page: Page) =>
@@ -530,12 +536,12 @@ for (const vp of [
     })
 
     for (const gap of [120, 300]) {
-      test(`19 a double tap ${gap} ms apart moves one screen and records only the tapped answer`, async ({ page }) => {
+      test(`19 a double tap ${gap} ms apart moves one screen and records only the tapped answer @timing`, async ({ page }) => {
         await seed(page, { record: CIG })
         // Continue
         await startEvening(page)
         await page.getByTestId("outcome-clear").click()
-        await dbl(page, "flow-next", gap)
+        await dbl(page, "flow-next", () => page.waitForTimeout(gap))
         await page.waitForTimeout(600)
         await expect(page).toHaveURL(/s=2/)
         await expect(page.getByTestId("step-hard")).toBeVisible()
@@ -543,7 +549,7 @@ for (const vp of [
         expect(st.days[TODAY]).toEqual({ slipped: false })
         expect(st.drafts).toEqual({})
         // a scale row
-        await dbl(page, "hard-3", gap)
+        await dbl(page, "hard-3", () => page.waitForTimeout(gap))
         await page.waitForTimeout(600)
         await expect(page).toHaveURL(/s=3/)
         await expect(page.getByTestId("step-urges")).toBeVisible()
@@ -554,7 +560,7 @@ for (const vp of [
         await page.evaluate(() => window.localStorage.removeItem("quit-v1"))
         await page.reload()
         await startEvening(page)
-        await dbl(page, "outcome-clear", gap)
+        await dbl(page, "outcome-clear", () => page.waitForTimeout(gap))
         await page.waitForTimeout(600)
         await expect(page.getByTestId("step-outcome")).toBeVisible()
         st = await saved(page)
@@ -562,13 +568,13 @@ for (const vp of [
         expect(st.drafts).toEqual({})
       })
 
-      test(`19 a double tap ${gap} ms apart on the last morning row lands on the done screen and stays`, async ({ page }) => {
+      test(`19 a double tap ${gap} ms apart on the last morning row lands on the done screen and stays @timing`, async ({ page }) => {
         await page.goto(URL)
         await page.getByTestId("main-action").click()
         await step(page, "pledge")
         await page.getByTestId("flow-next").click()
         await step(page, "forecast")
-        await dbl(page, "forecast-4", gap)
+        await dbl(page, "forecast-4", () => page.waitForTimeout(gap))
         await page.waitForTimeout(700)
         await expect(page.getByTestId("done-screen")).toBeVisible()
         await expect(page).toHaveURL(/done=/)
@@ -577,7 +583,7 @@ for (const vp of [
         expect(st.drafts).toEqual({})
         // the done button also moves once
         await settle(page)
-        await dbl(page, "done-back", gap)
+        await dbl(page, "done-back", () => page.waitForTimeout(gap))
         await page.waitForTimeout(600)
         await expect(page.getByTestId("tab-today-panel")).toBeVisible()
         await expect(page.getByTestId("evening-result")).toHaveCount(0)

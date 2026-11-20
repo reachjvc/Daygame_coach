@@ -42,8 +42,15 @@ function walk(node: ts.Node, visit: (node: ts.Node) => void): void {
   node.forEachChild((child) => walk(child, visit))
 }
 
-function literalText(node: ts.Node | undefined): string | null {
+/**
+ * A block's title as written. A title built in a loop (`` `19 a double tap ${gap} ms` ``)
+ * is named by its source text, `${gap}` and all: one entry covers every round of
+ * the loop, as it is one block of code. Without this, a looped test had no title
+ * and everything in it was reported as outside any test.
+ */
+function literalText(node: ts.Node | undefined, source: ts.SourceFile): string | null {
   if (node && (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node))) return node.text
+  if (node && ts.isTemplateExpression(node)) return node.getText(source).slice(1, -1)
   return null
 }
 
@@ -60,7 +67,7 @@ function blocks(source: ts.SourceFile): Block[] {
   walk(source, (node) => {
     if (!ts.isCallExpression(node)) return
     const callee = node.expression.getText(source)
-    const title = literalText(node.arguments[0])
+    const title = literalText(node.arguments[0], source)
     if (title === null) return
     const last = node.arguments[node.arguments.length - 1]
     if (!last || !(ts.isArrowFunction(last) || ts.isFunctionExpression(last))) return

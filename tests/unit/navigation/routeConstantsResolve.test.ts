@@ -43,9 +43,25 @@ function servesHere(dir: string): boolean {
  * never appears in the address.
  */
 function isServed(path: string): boolean {
-  if (servesHere(join(APP, path))) return true
-  return readdirSync(APP, { withFileTypes: true }).some(
-    (e) => e.isDirectory() && /^\(.+\)$/.test(e.name) && servesHere(join(APP, e.name, path)),
+  return reaches(APP, path.split("/").filter(Boolean))
+}
+
+/**
+ * Walk the address one segment at a time. A segment is served by a folder of
+ * that name, or by a dynamic `[param]` folder at that level: `/quit/nicotine`
+ * is `app/quit/[addiction]/page.tsx`, and joining the whole path as one folder
+ * name reported it missing. A route group `(name)` is stepped through without
+ * using up a segment.
+ */
+function reaches(dir: string, segs: string[]): boolean {
+  if (!existsSync(dir)) return false
+  if (segs.length === 0) return servesHere(dir)
+  const entries = readdirSync(dir, { withFileTypes: true }).filter((e) => e.isDirectory())
+  const [seg, ...rest] = segs
+  return entries.some(
+    (e) =>
+      ((e.name === seg || /^\[[^.].*\]$/.test(e.name)) && reaches(join(dir, e.name), rest)) ||
+      (/^\(.+\)$/.test(e.name) && reaches(join(dir, e.name), segs)),
   )
 }
 

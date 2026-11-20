@@ -35,6 +35,9 @@ const TIMED_SLEEPS: Record<string, number> = {
   "tests/e2e/toggl-time-tracker.spec.ts › idle detection never fires while you work elsewhere, and asks when you come back @timing": 1,
   // two samples across idle seconds: growth is the assertion
   "tests/e2e/mobile/mobile-toggl.spec.ts › an idle page does no work: observers are not rebuilt as the clock ticks @timing": 2,
+  // the pause between the two taps, and the time the second tap gets to do harm
+  "tests/e2e/quit/checkin.spec.ts › 19 a double tap ${gap} ms apart moves one screen and records only the tapped answer @timing": 6,
+  "tests/e2e/quit/checkin.spec.ts › 19 a double tap ${gap} ms apart on the last morning row lands on the done screen and stays @timing": 4,
 }
 
 const isSleep = (callee: string) => /\.waitForTimeout$/.test(callee)
