@@ -36,6 +36,23 @@ describe("the plan home over the real steps", () => {
     expect(next.kind === "build" && next.chip).toMatch(/questions under the paragraph/)
   })
 
+  it("Next up's words and its address come from the same chip", () => {
+    let plan = ns.toggleSeasonArea(ns.emptyNsPlan(), "lm_fitness", NOW)
+    for (const step of ["star", "now", "systems", "milestones"] as const) void step
+    const numbers = planNumbers(plan, accountOf(plan), TODAY)
+    // make every step before Season done so Season is next
+    for (const step of ["star", "now", "systems", "milestones"] as const) numbers.steps[step] = { ...numbers.steps[step], state: "done", chips: [] }
+    const next = nextUp(V1, plan, numbers, TODAY)
+    expect(next.kind === "build" && next.step).toBe("focus")
+    expect(next.kind === "build" && next.chip).toBe(numbers.steps.focus.chips[0].text)
+    expect(next.kind === "build" && next.screen.id).toBe("season.one-thing")
+    // when the focus is the first thing left, the address opens the area's sheet
+    numbers.steps.focus = { ...numbers.steps.focus, chips: numbers.steps.focus.chips.filter((c) => c.id === "focus.focus") }
+    const focus = nextUp(V1, plan, numbers, TODAY)
+    expect(focus.kind === "build" && focus.href).toBe("/plan/new/now?area=lm_fitness")
+    expect(focus.kind === "build" && focus.chip).toBe("No focus area for the season")
+  })
+
   it("has no locks: a later step is Next up when the earlier ones are done, never blocked when they are not", () => {
     const plan = fullPlan()
     const numbers = planNumbers(plan, accountOf(plan), TODAY)

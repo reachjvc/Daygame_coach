@@ -63,7 +63,18 @@ describe("planNumbers", () => {
     const s = stepNumbers(plan, "focus", NONE, TODAY)
     expect(s.state).toBe("started")
     expect(s.fraction).toBeGreaterThan(0)
-    expect(s.chips.map((c) => c.id)).toEqual(["focus.areas", "focus.focus", "focus.one", "focus.goal"])
+    expect(s.chips.map((c) => c.id)).toEqual(["focus.one", "focus.goal", "focus.areas", "focus.focus"])
+  })
+
+  it("the focus chip opens a season area's sheet (the only place the focus is set), else sends to pick areas; season chips run in screen order", () => {
+    let plan = ns.emptyNsPlan()
+    const order = ["season.one-thing", "season.one-thing", "season.why", "season.why", "season.who", "season.who", "season.areas", "season.areas"]
+    expect(stepNumbers(plan, "focus", NONE, TODAY).chips.map((c) => c.section)).toEqual(order)
+    expect(stepNumbers(plan, "focus", NONE, TODAY).chips.at(-1)!.areaId).toBeUndefined()
+    plan = ns.toggleSeasonArea(plan, "lm_fitness", NOW)
+    const focus = stepNumbers(plan, "focus", NONE, TODAY).chips.find((c) => c.id === "focus.focus")!
+    expect(focus.areaId).toBe("lm_fitness")
+    expect(focus.tab).toBe("now")
   })
 
   it("values with one or two ranked have a chip (the real tool shows 33 % and nothing to do)", () => {

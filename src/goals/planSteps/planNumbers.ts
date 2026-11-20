@@ -44,6 +44,10 @@ export interface NumberBox {
   chip: string
   /** The screen section that holds the field (`planSections.ts`); the step's first screen when absent. */
   section?: string
+  /** Open this area's sheet on Your 10s instead (the season's focus is set only there). */
+  areaId?: string
+  /** The step whose screens hold the field, when it is not the box's own step. */
+  tab?: NorthStarTabId
 }
 
 export interface PlanChip {
@@ -51,6 +55,7 @@ export interface PlanChip {
   text: string
   tab: NorthStarTabId
   section?: string
+  areaId?: string
 }
 
 export interface StepNumbers {
@@ -150,15 +155,22 @@ export function stepBoxes(plan: NsPlan, tab: NorthStarTabId, account: NsAccount,
 
   if (tab === "focus") {
     const w = 1 / 8
+    // In screen order: part 1 (one thing), 2 (why), 3 (who), 4 (areas), so the first chip is the first screen to visit.
+    // The focus is set only in an area's sheet ("Make this the season's focus"): with a season area picked the chip opens
+    // that sheet, otherwise it sends to the areas screen to pick one first.
+    const firstSeasonArea = plan.seasonAreaIds[0]
     return [
-      single("areas", "Season areas", plan.seasonAreaIds.length > 0, w, "No season areas picked", "season.areas"),
-      single("focus", "Focus area", plan.seasonFocusId != null, w, "No focus area for the season", "season.areas"),
       single("one", "One-thing sentence", account.hasOneThing, w, "The one-thing sentence", "season.one-thing"),
+      single("goal", "A goal serving the one thing", plan.goals.some((g) => g.servesOneThing), w, "A goal that serves the one thing", "season.one-thing"),
       single("why", "Its why", filled(ONE_ANSWERS.why), w, "Why the one thing matters", "season.why"),
       single("cost", "Its cost", filled(ONE_ANSWERS.cost), w, "What it costs if it does not happen", "season.why"),
       single("identity", "Who it makes you", filled(ONE_ANSWERS.identity), w, "Who you would have to be", "season.who"),
       single("values", "The values it serves", filled(ONE_ANSWERS.values), w, "The values it serves", "season.who"),
-      single("goal", "A goal serving the one thing", plan.goals.some((g) => g.servesOneThing), w, "A goal that serves the one thing", "season.one-thing"),
+      single("areas", "Season areas", plan.seasonAreaIds.length > 0, w, "No season areas picked", "season.areas"),
+      {
+        ...single("focus", "Focus area", plan.seasonFocusId != null, w, "No focus area for the season", "season.areas"),
+        ...(firstSeasonArea ? { tab: "now" as const, areaId: firstSeasonArea, section: undefined } : {}),
+      },
     ]
   }
 
@@ -194,7 +206,7 @@ export function stepNumbers(plan: NsPlan, tab: NorthStarTabId, account: NsAccoun
     fraction,
     parts: boxes.map(({ label, have, of, weight }) => ({ label, have, of, weight })),
     boxes,
-    chips: boxes.filter((b) => b.have < b.of).map((b) => ({ id: `${tab}.${b.id}`, text: b.chip, tab, section: b.section })),
+    chips: boxes.filter((b) => b.have < b.of).map((b) => ({ id: `${tab}.${b.id}`, text: b.chip, tab: b.tab ?? tab, section: b.section, ...(b.areaId ? { areaId: b.areaId } : {}) })),
   }
 }
 

@@ -127,7 +127,7 @@ export function PlanHome() {
             <p className="mt-1 text-lg font-semibold text-foreground" data-testid="next-up-name">{TAB_LABELS[next.step]}</p>
             <p className="mt-1 text-sm text-foreground">{fill(homeCopy.next_up.job_prefix, { job: next.job })}</p>
             {next.chip && <p className="mt-1 text-xs text-muted-foreground">{next.chip}</p>}
-            <Link href={screenRoute(seq, next.screen)} className={`${btnPrimary} mt-3`} data-testid="next-up-go">
+            <Link href={next.href} className={`${btnPrimary} mt-3`} data-testid="next-up-go">
               {next.started ? homeCopy.next_up.continue : homeCopy.next_up.start}
             </Link>
           </>
@@ -219,7 +219,7 @@ function StepRow({ n, step, seq }: { n: number; step: NorthStarTabId; seq: Seque
           </span>
           {first && s.state !== "empty" && (
             <Link
-              href={first.section ? `${ROUTES.planNew}/${first.section}` : screenRoute(seq, screens[0])}
+              href={first.areaId ? `${ROUTES.planNew}/now?area=${encodeURIComponent(first.areaId)}` : first.section ? `${ROUTES.planNew}/${first.section}` : screenRoute(seq, screens[0])}
               className="inline-flex min-h-11 max-w-full items-center rounded-lg border border-primary/50 bg-primary/10 px-3 py-2 text-left text-xs text-primary"
               data-testid={`home-${step}-chip`}
             >

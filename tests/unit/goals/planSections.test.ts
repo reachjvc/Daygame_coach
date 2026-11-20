@@ -1,9 +1,10 @@
 // @vitest-environment node
 import { describe, it, expect } from "vitest"
-import { ALL_SECTION_IDS, AREA_SECTIONS, GOAL_SECTIONS, STEP_SECTIONS, SPLIT_STEPS, ANCHOR_SECTION, stepOfSection, showSection } from "@/src/goals/planSteps/planSections"
+import { readFileSync } from "node:fs"
+import { ALL_SECTION_IDS, AREA_SECTIONS, GOAL_SECTIONS, STEP_SECTIONS, SPLIT_STEPS, ANCHOR_SECTION, stepOfSection, showSection, sectionOfAnchor } from "@/src/goals/planSteps/planSections"
 import { SECTION_TITLES } from "@/src/goals/planSteps/sectionTitles"
 import { SEQUENCES, screenById, screenForSection, screensForStep, sequenceById } from "@/src/goals/planSteps/planSequences"
-import { TAB_ORDER, STAR_ANCHOR, RECAP_DRIVING_ANCHOR, RECAP_COMMIT_ANCHOR } from "@/src/goals/data/northStar"
+import { STAR_PROMPTS, STAR_WHY_ID, REVIEW_PROMPTS, TAB_ORDER, STAR_ANCHOR, RECAP_DRIVING_ANCHOR, RECAP_COMMIT_ANCHOR } from "@/src/goals/data/northStar"
 import { ROW_BUCKETS, SCOPE, expandRows } from "./fixtures/splitRows"
 
 describe("planSections", () => {
@@ -57,6 +58,21 @@ describe("planSections", () => {
     expect(ANCHOR_SECTION[STAR_ANCHOR]).toBe("star.vision")
     expect(ANCHOR_SECTION[RECAP_DRIVING_ANCHOR]).toBe("everything.driving-force")
     expect(ANCHOR_SECTION[RECAP_COMMIT_ANCHOR]).toBe("everything.commit")
+  })
+
+  it("every anchor the real code emits lands on the section that draws it", () => {
+    const star = STAR_PROMPTS.map((p) => p.id)
+    const review = REVIEW_PROMPTS.map((p) => p.id)
+    const of = (a: string) => sectionOfAnchor(a, star, STAR_WHY_ID, review)
+    for (const p of STAR_PROMPTS) expect(of(`star-${p.id}`), p.id).toBe(p.id === STAR_WHY_ID ? "star.vision" : "star.self")
+    for (const id of review) expect(of(`prompt-${id}`), id).toBe("everything.commit")
+    expect(of(STAR_ANCHOR)).toBe("star.vision")
+    expect(of("star-nope")).toBeUndefined()
+    expect(of("journal-set-x")).toBeUndefined()
+    // and the emitter in the track service uses exactly these two shapes
+    const src = readFileSync("src/goals/northStarTrackService.ts", "utf8")
+    expect(src).toContain("`star-${prompt.id}`")
+    expect(src).toContain("`prompt-${prompt.id}`")
   })
 
   it("showSection draws everything without a section and only its own with one", () => {

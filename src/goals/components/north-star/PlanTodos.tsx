@@ -15,11 +15,11 @@ export function PlanTodos({ plan, tab, loaded, today, onGo, todos: given }: {
   tab: NorthStarTabId
   loaded: boolean
   today: string | null
-  onGo: (tab: NorthStarTabId, section?: string) => void
+  onGo: (tab: NorthStarTabId, section?: string, areaId?: string) => void
   /** The chips, when one rule elsewhere decides them (`/plan/new`); absent = the real tool's own list, as `/plan` has it. */
-  todos?: Array<{ id: string; text: string; tab: NorthStarTabId; section?: string }>
+  todos?: Array<{ id: string; text: string; tab: NorthStarTabId; section?: string; areaId?: string }>
 }) {
-  const todos: Array<{ id: string; text: string; tab: NorthStarTabId; section?: string }> = loaded && today ? given ?? ns.planTodos(plan) : []
+  const todos: Array<{ id: string; text: string; tab: NorthStarTabId; section?: string; areaId?: string }> = loaded && today ? given ?? ns.planTodos(plan) : []
   return (
     <>
     {/* What is still missing, in one place, instead of gates on the way
@@ -37,7 +37,7 @@ export function PlanTodos({ plan, tab, loaded, today, onGo, todos: given }: {
           {todos.map((todo) => (
             <li key={todo.id}>
               <button
-                onClick={() => onGo(todo.tab, todo.section)}
+                onClick={() => onGo(todo.tab, todo.section, todo.areaId)}
                 className="text-[11px] px-2.5 py-1 rounded-full border border-white/10 text-zinc-400 hover:text-zinc-100 hover:border-white/30 transition-colors"
               >
                 {todo.text}

@@ -53,3 +53,20 @@ export const ANCHOR_SECTION: Readonly<Record<string, StepSectionId>> = {
   "recap-driving-force": "everything.driving-force", // RECAP_DRIVING_ANCHOR
   "recap-commit": "everything.commit", // RECAP_COMMIT_ANCHOR
 }
+
+/**
+ * The section that draws the element an anchor names, or undefined. Besides the fixed anchors this knows the two prompt
+ * families `northStarTrackService` emits: `star-<id>` (the why is drawn on `star.vision`, every other star prompt on
+ * `star.self`) and `prompt-<id>` (the closing questions, drawn on `everything.commit`).
+ */
+export function sectionOfAnchor(anchor: string | undefined | null, starPromptIds: readonly string[] = [], whyId = "star_why", reviewPromptIds: readonly string[] = []): StepSectionId | undefined {
+  if (!anchor) return undefined
+  if (ANCHOR_SECTION[anchor]) return ANCHOR_SECTION[anchor]
+  if (anchor.startsWith("star-")) {
+    const id = anchor.slice(5)
+    if (!starPromptIds.includes(id)) return undefined
+    return id === whyId ? "star.vision" : "star.self"
+  }
+  if (anchor.startsWith("prompt-") && reviewPromptIds.includes(anchor.slice(7))) return "everything.commit"
+  return undefined
+}

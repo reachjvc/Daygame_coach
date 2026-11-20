@@ -20,7 +20,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { useRouter, useSearchParams } from "next/navigation"
 import type { NorthStarTabId, NsAccount, NsPlace, NsPlan } from "@/src/goals/types"
 import type { SyncDecision } from "@/src/goals/lifePlanSync"
-import { PROGRESS_COPY, stepFor } from "@/src/goals/data/northStar"
+import { PROGRESS_COPY, REVIEW_PROMPTS, STAR_PROMPTS, STAR_WHY_ID, stepFor } from "@/src/goals/data/northStar"
 import * as ns from "@/src/goals/northStarService"
 import * as nsTrack from "@/src/goals/northStarTrackService"
 import { stepTick } from "@/src/goals/dayTicks"
@@ -37,7 +37,7 @@ import { ROUTES } from "@/src/shared/routes"
 import { realStepRoute } from "@/src/goals/planSteps/realStepRoutes"
 import { planNumbers, type PlanNumbers } from "@/src/goals/planSteps/planNumbers"
 import { screenForSection, stepRoute, type Screen, type Sequence } from "@/src/goals/planSteps/planSequences"
-import { ANCHOR_SECTION, AREA_SECTIONS, GOAL_SECTIONS, stepOfSection, type AreaSectionId, type GoalSectionId } from "@/src/goals/planSteps/planSections"
+import { sectionOfAnchor, AREA_SECTIONS, GOAL_SECTIONS, stepOfSection, type AreaSectionId, type GoalSectionId } from "@/src/goals/planSteps/planSections"
 import { usePlanNew } from "./PlanNewContext"
 import { ErrandRibbon } from "../north-star/ErrandRibbon"
 
@@ -300,7 +300,7 @@ export function RealStepHost({
       d.touched = true
       d.tab = stepFor(place.tab)
       // A link that names a place inside a split step lands on the screen that holds it.
-      const anchored = place.anchor ? ANCHOR_SECTION[place.anchor] : undefined
+      const anchored = sectionOfAnchor(place.anchor, STAR_PROMPTS.map((p) => p.id), STAR_WHY_ID, REVIEW_PROMPTS.map((p) => p.id))
       d.section = anchored && stepOfSection(anchored) === d.tab ? anchored : undefined
       d.q = {
         area: place.areaId ?? null,

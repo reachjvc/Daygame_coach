@@ -21,7 +21,7 @@ import { COMMIT_KEY } from "@/src/goals/data/northStarStart"
 import { DEFAULT_REVIEW_DAY, dueNow } from "@/src/goals/dueNowService"
 import * as ns from "@/src/goals/northStarService"
 import { ratedAreaCount } from "@/src/goals/reviewService"
-import { screenForSection, screensForStep, type Screen, type Sequence } from "@/src/goals/planSteps/planSequences"
+import { screenForSection, screenRoute, screensForStep, type Screen, type Sequence } from "@/src/goals/planSteps/planSequences"
 import type { PlanNumbers } from "@/src/goals/planSteps/planNumbers"
 
 /** What the account knows that the plan does not: the one thing is the season's sentence. */
@@ -43,16 +43,29 @@ export function dailyScreensOf(seq: Sequence): Screen[] {
 
 export type NextUp =
   | { kind: "season-ended" | "review-due"; screen: Screen; step: NorthStarTabId }
-  | { kind: "build"; screen: Screen; step: NorthStarTabId; started: boolean; job: string; chip: string | null }
+  | { kind: "build"; screen: Screen; href: string; step: NorthStarTabId; started: boolean; job: string; chip: string | null }
   | { kind: "all-set"; screen: Screen | null; step: "today" }
 
 const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
 
-/** The screen that holds the first thing a step still needs, else the step's first screen. */
-export function screenToFill(seq: Sequence, step: NorthStarTabId, numbers: PlanNumbers): Screen | null {
-  const section = numbers.steps[step].chips.find((c) => c.section)?.section
-  return (section ? screenForSection(seq, section) : null) ?? screensForStep(seq, step)[0] ?? null
+/**
+ * Where the first thing a step still needs is filled in: the step's first chip decides both the words Next up shows and
+ * this address, so they cannot disagree. The chip's section screen, else the area sheet it names, else the step's first screen.
+ */
+export function targetToFill(seq: Sequence, step: NorthStarTabId, numbers: PlanNumbers): { screen: Screen; href: string } | null {
+  const chip = numbers.steps[step].chips[0]
+  const first = screensForStep(seq, step)[0]
+  const screen = (chip?.section ? screenForSection(seq, chip.section) : null) ?? first
+  if (!screen) return null
+  if (chip?.areaId) {
+    const now = screensForStep(seq, chip.tab)[0] ?? screen
+    return { screen: now, href: `${screenRoute(seq, now)}?area=${encodeURIComponent(chip.areaId)}` }
+  }
+  return { screen, href: screenRoute(seq, screen) }
 }
+
+/** The screen of `targetToFill`. */
+export const screenToFill = (seq: Sequence, step: NorthStarTabId, numbers: PlanNumbers): Screen | null => targetToFill(seq, step, numbers)?.screen ?? null
 
 export function nextUp(seq: Sequence, plan: NsPlan, numbers: PlanNumbers, today: string): NextUp {
   const cards = dueNow(plan, today, { reviewDay: DEFAULT_REVIEW_DAY, hidden: new Set(), progress: null })
@@ -65,11 +78,12 @@ export function nextUp(seq: Sequence, plan: NsPlan, numbers: PlanNumbers, today:
   if (week && reviewScreen) return { kind: "review-due", screen: reviewScreen, step: "review" }
   for (const step of buildStepsOf(seq)) {
     if (!SCORED_TABS.includes(step) || numbers.steps[step].state === "done") continue
-    const screen = screenToFill(seq, step, numbers)
-    if (!screen) continue
+    const target = targetToFill(seq, step, numbers)
+    if (!target) continue
     return {
       kind: "build",
-      screen,
+      screen: target.screen,
+      href: target.href,
       step,
       started: numbers.steps[step].state !== "empty",
       job: lowerFirst(TAB_BLURBS[step]),

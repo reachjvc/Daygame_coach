@@ -173,7 +173,7 @@ export function RealShell({ children, seq }: { children: ReactNode; seq?: Sequen
           </div>
         )}
         {children}
-        <PlanTodos plan={plan} tab={tab} loaded={store.loaded} today={r.today} todos={numbers.chips} onGo={(t, section) => r.setTab(t, section)} />
+        <PlanTodos plan={plan} tab={tab} loaded={store.loaded} today={r.today} todos={numbers.chips} onGo={(t, section, areaId) => (areaId ? r.goTo({ tab: t, areaId }) : r.setTab(t, section))} />
         <PlanReadBack plan={plan} loaded={store.loaded} today={r.today} />
       </div>
       {!siteBar && nav}
