@@ -146,7 +146,10 @@ Each walker owns one code and writes only in its own folder:
   things per screen: same behaviour? can a first-time user find each feature? Findings go back to the builder.
 - Done when: the reviewer's list is empty or each remaining item is named on the owner page.
 
-### Phase 4: your look (Opus builds the page; you decide)
+Status 2026-11-20: specs (Opus) and copies (Sonnet builder + separate Sonnet reviewer, one fix round each) done for
+r1, r2 and r4 (part A). r3 and r5 wait for Q1 and Q7; r1's guessed replies wait for Q8.
+
+### Phase 4: your look (Opus builds the page; you decide) — page published 2026-11-20 (private; address in the private folder)
 - One private page: per product, the working copy (opens on your phone), the real screens beside it, a short
   "what it does best / what feels hollow" from the walk, a 👍 and a notes box that saves as you type.
 - Done when you say so. Your notes decide which copy is the starting point of the original tool.
