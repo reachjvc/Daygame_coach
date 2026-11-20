@@ -67,6 +67,16 @@ describe("who is sent where", () => {
     expect(screen.getByTestId("tools-row-scenarios")).toHaveAttribute("data-access", "preview")
   })
 
+  it("the Quit group opens the live nicotine tools, for payers and non-payers alike", async () => {
+    db.user = { id: "u1" }
+    db.profile = { id: "u1", has_purchased: false }
+    render(await ToolsPage())
+    const row = screen.getByTestId("tools-row-quit-nicotine")
+    expect(row.getAttribute("href")?.split("?")[0]).toBe(ROUTES.quitNicotine)
+    expect(row).toHaveAttribute("data-access", "open")
+    expect(row).toHaveTextContent("Quit nicotine")
+  })
+
   it("an account with no profile row is treated as not paid, not as a visitor", async () => {
     db.user = { id: "u1" }
     render(await ToolsPage())
