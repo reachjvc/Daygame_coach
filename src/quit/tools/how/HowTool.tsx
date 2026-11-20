@@ -353,7 +353,7 @@ export function HowTool({ addiction, data }: ToolProps) {
           {feelTool && feelId && (
             <p data-testid="feel-line" className="text-sm">
               {t.how.feelLine}{" "}
-              <Link href={carry(`/quit/${addiction}/${feelId}`)} className="text-primary underline">
+              <Link data-testid="feel-link" href={carry(`/quit/${addiction}/${feelId}`)} className="-my-3 inline-block py-3 text-primary underline">
                 {toolName(feelTool, addiction)}
               </Link>
             </p>
