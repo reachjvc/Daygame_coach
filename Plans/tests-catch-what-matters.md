@@ -1,6 +1,6 @@
 # Tests that catch what matters
 
-Written 2026-11-19. **Status: proposed.** Pasting the execution prompt at the end is the go.
+Written 2026-11-19. **Status: done 2026-11-20, archived.** Pasting the execution prompt at the end is the go.
 Follows `Plans/tests-green-and-fast.md` (tests green again, suites fast; its Phase 7 is still open).
 That plan made the tests run. This one makes them catch more of what can hurt: lost or leaked data,
 a broken live site, and a red main that nobody owns. Every phase is low to medium risk. No test is
@@ -38,16 +38,16 @@ deleted. Each phase names the model that runs it.
 
 | What | Now | Target | After |
 |---|---|---|---|
-| Unit tests | 8,260 in 691 files, 94.6 s with coverage on this PC | unchanged speed (± 10 %) | |
-| Unit line coverage (unit only; database and browser tests not counted) | 33.6 % lines, 29.5 % branches. Time Log 85 %, check-ins 77 %, programs 78 %; goals 30 %, quit 25 %, tracking 20 %, `app/api` 11 % | no % target (see "Left out") | |
-| Functions that write user data (`tests/unit/writeCoverage.test.ts`) | 236: 51 asserted, 60 mentioned, **125 unasserted** (ceiling 128) | unasserted ≤ 70 | |
-| API routes (`app/api/**/route.ts`) | 137; **52** have no test that names their path; `security-auth.spec.ts` checks 21 from a hand list | all 137 checked signed out | |
-| Main E2E on 2026-11-19 | **27 red in a row** since 09:53 UTC (green 08:04–09:46), from rebrand, quit, plan-new and sweep changes | red runs name their first red commit | |
-| Main CI static job | Lint ratchet red in 5 main CI runs, 2026-11-18 22:00 – 11-19 07:00 UTC | lint caught at commit | |
-| Sweep broken by a page hidden on purpose | 4 times in 2 days: `/quit/lab`, `/plan/sandbox`, `/quit/coaching`, `/plan/new/role-models` | caught at commit | |
-| Known flaky browser specs | 6 (tests-green B13) | 0 | |
-| Check of the live site after deploy | none | every production deploy | |
-| Mutation score (share of planted bugs the tests catch) | one file tried: `src/audit/pingService.ts` 45 % (24 caught, 29 in code no unit test runs), 29 s | measured on 8 daily-use files, survivors triaged | |
+| Unit tests | 8,260 in 691 files, 94.6 s with coverage on this PC | unchanged speed (± 10 %) | 8,690 in 718 files, 50.6 s and 48.8 s with coverage (2026-11-20, origin/main 8959514d); 2 red from other sessions (colourRatchet, e2eSleepsAreTimed) |
+| Unit line coverage (unit only; database and browser tests not counted) | 33.6 % lines, 29.5 % branches. Time Log 85 %, check-ins 77 %, programs 78 %; goals 30 %, quit 25 %, tracking 20 %, `app/api` 11 % | no % target (see "Left out") | 33.9 % lines, 29.6 % branches. Time Log 85.5 %, programs 78.2 %, goals 30.5 %, quit 28.2 %, tracking 20.3 %, `app/api` 11.1 %; check-ins not re-measured on the same basis |
+| Functions that write user data (`tests/unit/writeCoverage.test.ts`) | 236: 51 asserted, 60 mentioned, **125 unasserted** (ceiling 128) | unasserted ≤ 70 | 236: 156 asserted, 54 mentioned, **26 unasserted** (ceiling 26) |
+| API routes (`app/api/**/route.ts`) | 137; **52** have no test that names their path; `security-auth.spec.ts` checks 21 from a hand list | all 137 checked signed out | 137, all checked signed out by `api-signed-out.spec.ts` (194 route x method pairs, 5 public pinned); dynamic `[id]` routes only prove a random id is not served (open gap) |
+| Main E2E on 2026-11-19 | **27 red in a row** since 09:53 UTC (green 08:04–09:46), from rebrand, quit, plan-new and sweep changes | red runs name their first red commit | still red from other sessions (B8); red runs now name the first red commit or commit range (Phase 1 rework, run 44625136161) |
+| Main CI static job | Lint ratchet red in 5 main CI runs, 2026-11-18 22:00 – 11-19 07:00 UTC | lint caught at commit | lint caught at commit by the pre-commit hook (`lint-ratchet.mjs --files`); main static still red on one other session's file already on main |
+| Sweep broken by a page hidden on purpose | 4 times in 2 days: `/quit/lab`, `/plan/sandbox`, `/quit/coaching`, `/plan/new/role-models` | caught at commit | caught at commit by `gatedPagesAreNotSwept.test.ts` (runs when a page file is staged) |
+| Known flaky browser specs | 6 (tests-green B13) | 0 | the 6 fixed (Phase 5 runs); 1 new flake on main: `route-sweep.spec.ts:102` /tracking (3 of 5 runs) |
+| Check of the live site after deploy | none | every production deploy | every Production deploy: `live-check.yml` green on 5 in a row, e.g. run 44653577849 (8 passed) |
+| Mutation score (share of planted bugs the tests catch) | one file tried: `src/audit/pingService.ts` 45 % (24 caught, 29 in code no unit test runs), 29 s | measured on 8 daily-use files, survivors triaged | 8 files measured, scores now 76–92 % (Phase 7 table), survivors triaged by pattern |
 
 Live-data ranking (read-only row counts, 2026-11-19; numbers kept out of this public repo): the
 tables with the most rows are training sessions, workout sets, approaches, Time Log entries, life
@@ -354,6 +354,8 @@ phase can finish.
 
 **Status:** blocked: B10 — `Vercel failure Deployment rate limited — retry in 24 hours.` (commit status on main f43f0529), so no Production deploy can run the check today. Built and on main (a6e6b4b5): `live-check.yml`, `scripts/ci/live-wait.mjs`, project `live`, `tests/e2e/live/live-smoke.spec.ts`, the main-status line. Checked: the spec passes 8/8 against the real site from this PC in under 5 s; CI static green on the branch head (run 44604986181); `live-check.yml` does start on `deployment_status` (skipped runs for Preview and staging events), so B5 is half checked; B4 (GitHub runner IPs) untested. Found: every signed-out page makes one `GET /api/settings/time-preferences` that answers 401 (a console error for each visitor; `components/ClockSync.tsx` documents it as intended; the spec allow-lists exactly that request with the reason; proposed fix, not done: skip the call when there is no sign-in cookie, as the quit pages already do).
 
+**Status:** done 2026-11-20 (foreman) — the deploy limit lifted; `live-check.yml` ran on real Production deploys: run 44653577849 (1d488393) `live-wait: match (live buildId 1d488393…, 1 polls)`, `8 passed (7.1s)`; also green on 44645008139, 44642629098, 44633789267, 44629750162. B4 met (GitHub runners reach the site); B10 cleared.
+
 ## Phase 7 — How strong are the tests on daily tools · M · sonnet
 
 1. Commit `scripts/mutation/stryker.conf.json` (`testRunner: vitest`, `vitest.related: true`,
@@ -557,3 +559,5 @@ a blocker outside this plan is recorded in the blocker table with the exact mess
 Re-run the same failing GitHub run at most twice. Commit and push your own work. End with the Phase 9
 report in plain words for a non-programmer, starting with any doubt.
 ```
+
+**Status:** done 2026-11-20 (foreman) — review: fresh opus reviewer over all 26 "Tests catch" commits, no high finding, no assertion about data, sync, sign-in or privacy weakened; 11 findings, all fixed or recorded in 2a9eadac (list above). Break test: 252 candidate cases, seed 20261120, 10 picked; each went red with a one-line break and green after revert (6 Phase 4 integration, CI, API routes, sync merge); none rewritten. Facts table After column filled.
