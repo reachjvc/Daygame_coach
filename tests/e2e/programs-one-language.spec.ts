@@ -23,12 +23,10 @@ import type { Page } from "@playwright/test"
 import { urlOf } from "@/tests/support/appRoutes"
 import { ROUTES } from "@/src/shared/routes"
 import { test, expect } from "./fixtures/test"
-import { PHONE, resetAndEnroll } from "./helpers/training.helper"
+import { PHONE, primaryFill, resetAndEnroll } from "./helpers/training.helper"
 
 test.use({ viewport: PHONE, hasTouch: true })
 
-/** The one orange, as the stylesheet declares it. */
-const ORANGE = "rgb(255, 107, 53)"
 /** The sunset red, which no bordered button may reach for on hover. */
 const SUNSET_RED = "rgb(230, 57, 70)"
 
@@ -106,8 +104,13 @@ async function tinyText(page: Page, floor = 12): Promise<string[]> {
   )
 }
 
-/** Elements filled with the app's one orange. */
+/**
+ * Elements filled with the page's primary colour — "the orange" in the names
+ * below, which it was until Rebrand Phase 3 gave Training the Life gold. The
+ * colour is read from the page (`primaryFill`), not typed here.
+ */
 async function oranges(page: Page): Promise<string[]> {
+  const primary = await primaryFill(page)
   return page.$$eval(
     "body *",
     (nodes, colour) =>
@@ -119,7 +122,7 @@ async function oranges(page: Page): Promise<string[]> {
           return window.getComputedStyle(el).backgroundColor === colour
         })
         .map((el) => (el.textContent ?? "").trim().slice(0, 40) || el.tagName.toLowerCase()),
-    ORANGE
+    primary
   )
 }
 

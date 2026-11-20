@@ -21,7 +21,7 @@
 
 import { test, expect } from "./fixtures/test"
 import { ROUTES } from "@/src/shared/routes"
-import { PHONE, cleanUp, resetAndEnroll } from "./helpers/training.helper"
+import { PHONE, cleanUp, primaryFill, resetAndEnroll } from "./helpers/training.helper"
 
 /**
  * When the running test began, a minute of slack back.
@@ -309,15 +309,18 @@ test.describe("the live screen's menus", () => {
      * THE ONE ORANGE THING IS THE ONE THING TO DO. Two of them is a screen
      * with no primary action, which on the screen you look at between sets is
      * the difference between finding Finish and hunting for it.
+     *
+     * "Orange" is the page's primary, read from the page: Training wears the
+     * Life gold since Rebrand Phase 3 (see `primaryFill`).
      */
-    const orange = await page.evaluate(() => {
-      const target = "rgb(255, 107, 53)"
+    const primary = await primaryFill(page)
+    const orange = await page.evaluate((target) => {
       return [...document.querySelectorAll("button, a")].filter((el) => {
         const style = getComputedStyle(el)
         return style.backgroundColor === target
       }).length
-    })
-    expect(orange).toBe(1)
+    }, primary)
+    expect(orange, `controls filled with the primary ${primary}`).toBe(1)
 
     const small = await page.evaluate(() => {
       const offenders: string[] = []

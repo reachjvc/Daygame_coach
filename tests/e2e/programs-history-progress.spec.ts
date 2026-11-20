@@ -663,6 +663,12 @@ test("every control on History and Progress is thumb-sized", async ({ page }) =>
         for (const el of document.querySelectorAll("*")) {
           if (el.closest("[hidden]")) continue
           if (!el.textContent?.trim() || el.children.length > 0) continue
+          // Only text that is drawn, as for the controls above. The laptop
+          // header is `hidden sm:block`, so at 390 px it is display:none, and
+          // its logo's part badge (an SVG letter "L" for Life, since Rebrand
+          // Phase 4b) was being read as 11px text nobody can see.
+          const box = el.getBoundingClientRect()
+          if (box.width === 0 || box.height === 0) continue
           const size = parseFloat(getComputedStyle(el).fontSize)
           if (size < 12) out.push(`${el.tagName} ${size}px: ${el.textContent.trim().slice(0, 20)}`)
         }

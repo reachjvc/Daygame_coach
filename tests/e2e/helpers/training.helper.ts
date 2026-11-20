@@ -298,3 +298,30 @@ export async function cleanUp(page: Page, since?: string): Promise<void> {
     }
   }, since)
 }
+
+/**
+ * THE PAGE'S ONE "DO THIS" COLOUR, as the browser resolves it.
+ *
+ * These screens used to measure a hard-coded orange (`rgb(255, 107, 53)`).
+ * Since Rebrand Phase 3 (Plans/rebrand-10kdaysclub.md, docs/product/look.md
+ * R2) every page takes its part's colour from its address: `FacetScope` sets
+ * `data-facet`, and `[data-facet=…]` swaps `--primary`. Training is part of
+ * Life, so its primary is the Life gold, and a test that still looked for
+ * orange found zero of them and went red although the screen had exactly one.
+ *
+ * So the rule the tests keep is the one they always meant: exactly one
+ * control wears the page's primary. The colour is read from the page, by
+ * resolving `var(--primary)` on a probe inside the page's own facet wrapper,
+ * so the next colour change cannot break the count again.
+ */
+export async function primaryFill(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const scope = document.body.querySelector("[data-facet]") ?? document.body
+    const probe = document.createElement("div")
+    probe.style.backgroundColor = "var(--primary)"
+    scope.appendChild(probe)
+    const colour = window.getComputedStyle(probe).backgroundColor
+    probe.remove()
+    return colour
+  })
+}
