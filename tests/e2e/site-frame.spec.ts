@@ -1,6 +1,6 @@
 import { test, expect } from "./fixtures/test"
 import { HIDDEN_ROUTE_PREFIXES, PHONE_BAR_HIDDEN_PREFIXES, ROUTE_LABELS, TAB_ROUTES, TABS, TOOLS } from "@/components/navTabs"
-import { isUnder } from "@/src/shared/routes"
+import { ROUTES, isUnder } from "@/src/shared/routes"
 
 /**
  * EVERY TAB DESTINATION HAS THE APP'S NAVIGATION, AND NONE POSES AS A CHILD OF ANOTHER PAGE.
@@ -24,6 +24,13 @@ const WIDTHS = [
   { name: "laptop", viewport: { width: 1280, height: 800 }, labels: TABS.map((t) => t.label) },
   { name: "phone", viewport: { width: 390, height: 844 }, labels: TABS.map((t) => t.label) },
 ]
+
+/** `/tools/<group>`, where the group is one All tools has (`Tool.group`) */
+const TOOL_GROUPS = new Set(TOOLS.map((t) => t.group))
+const isToolsGroup = (href: string) => {
+  const [first, group, ...rest] = href.split("/").filter(Boolean)
+  return `/${first}` === ROUTES.tools && TOOL_GROUPS.has(group as (typeof TOOLS)[number]["group"]) && rest.length === 0
+}
 
 /** Time keeps the laptop header and draws its own phone bar and back control (D9, Plans/time-tracker-like-toggl.md) */
 const OWN_PHONE_BAR = (href: string) => PHONE_BAR_HIDDEN_PREFIXES.some((p) => isUnder(href, p))
@@ -54,8 +61,11 @@ for (const item of FRAMED) {
       })
       for (const label of width.labels) expect(seen.navLinks).toContain(label)
       expect(seen.backControls).toEqual([])
-      // One segment: a tab destination is not part of another page.
-      expect(item.href.split("/").filter(Boolean)).toHaveLength(1)
+      // One segment: a tab destination is not part of another page. The one
+      // exception is a group of All tools on its own (`/tools/dating`, the Dating
+      // tile on Home, Plans/rebrand-10kdaysclub.md, Phase 6): the same list cut to
+      // one group, a sibling of All tools rather than a page inside it.
+      if (!isToolsGroup(item.href)) expect(item.href.split("/").filter(Boolean)).toHaveLength(1)
     })
   }
 }
