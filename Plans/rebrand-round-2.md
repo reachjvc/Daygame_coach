@@ -517,6 +517,29 @@ with new door cards that list the real tools; three badge sets in the B1 style. 
 `localStorage.r3front` on branch `look-r2` (`R3Front.tsx`); shots by `rebrand-r2/shoot-r3.mjs`, page source in
 `rebrand-r2/r3/`. Next: read its marks, then the build spec (Phase 5 step 3 onward).
 
+**His round 3 notes (2026-11-20, 15:07–15:14, his words from the board db `notes`; no likes):**
+- `r3-front-a`: "i Dont hate this. still \"the life you wanted by day 10000\" is not really motivating. THats like for
+  as long as i have been alive. I want the life i want in 1000 days, not 10000 days. I suppose my name might be
+  wrong, or it should be understood as i said before like 10k reps of something, 10k hours of something"
+- `r3-front-b`: "Also dont hate this. I think it might be a little ambiguous as to what the headline is really saying.
+  Also, i am not sure on how it looks on the phone. Seems like you have to scroll quite a bit (4 screens?) in order
+  to see the entire front page. What is normal here? I dont think i can even see the front page right now" — then:
+  "I just looked at my front page now on the phone and it already looks quite nice, i like the text underneath the
+  title that i have on the live version right now a little more than this version right here"
+- `r3-front-c`: "i think this is a good idea, but maybve you took \"reps\" too explicitly. I want to more \"show\" it,
+  than tell it, in a way. I am not quite sure what i mean though."
+- `r3-badge-r1`: "quit i like the most here"
+- `r3-badge-r2`: "life and datiing here"
+- `r3-badge-r3`: "perhaps dating here is nice, maybe a symbol for another part of the site"
+
+Measured 2026-11-20 at 390 x 844: the live front page is 1,717 px tall (2.0 phone screens, signed out); the round 3
+pages are 2,198–2,257 px (2.6–2.7 screens).
+
+**Proposed reading (not his decision):** badges: Quit from set R1, Life and Dating from set R2; R3's Dating badge kept
+as a spare symbol for another part of the site. Front page: none of A/B/C as is. Keep the live subtitle he likes;
+drop "day 10,000" as a goal; 10K shown as reps/hours of practice rather than said outright (C's idea, less
+literal). His doubt about the name itself ("my name might be wrong") is his call and stays open.
+
 ## Questions from the build
 
 (none yet)
