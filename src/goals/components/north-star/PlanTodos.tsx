@@ -10,8 +10,16 @@ import * as ns from "@/src/goals/northStarService"
  * Moved out of `NorthStarFlow` unchanged (Plans/plan-new-from-real.md, Phase 4); the list and its gate come from the
  * plan here, so both pages show the same thing.
  */
-export function PlanTodos({ plan, tab, loaded, today, onGo }: { plan: NsPlan; tab: NorthStarTabId; loaded: boolean; today: string | null; onGo: (tab: NorthStarTabId) => void }) {
-  const todos = loaded && today ? ns.planTodos(plan) : []
+export function PlanTodos({ plan, tab, loaded, today, onGo, todos: given }: {
+  plan: NsPlan
+  tab: NorthStarTabId
+  loaded: boolean
+  today: string | null
+  onGo: (tab: NorthStarTabId, section?: string) => void
+  /** The chips, when one rule elsewhere decides them (`/plan/new`); absent = the real tool's own list, as `/plan` has it. */
+  todos?: Array<{ id: string; text: string; tab: NorthStarTabId; section?: string }>
+}) {
+  const todos: Array<{ id: string; text: string; tab: NorthStarTabId; section?: string }> = loaded && today ? given ?? ns.planTodos(plan) : []
   return (
     <>
     {/* What is still missing, in one place, instead of gates on the way
@@ -29,7 +37,7 @@ export function PlanTodos({ plan, tab, loaded, today, onGo }: { plan: NsPlan; ta
           {todos.map((todo) => (
             <li key={todo.id}>
               <button
-                onClick={() => onGo(todo.tab)}
+                onClick={() => onGo(todo.tab, todo.section)}
                 className="text-[11px] px-2.5 py-1 rounded-full border border-white/10 text-zinc-400 hover:text-zinc-100 hover:border-white/30 transition-colors"
               >
                 {todo.text}

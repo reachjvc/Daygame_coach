@@ -34,6 +34,7 @@ import { AreaDialog } from "@/src/goals/components/north-star/AreaDialog"
 import { AreaGoalsDialog } from "@/src/goals/components/north-star/AreaGoalsDialog"
 import { ROUTES } from "@/src/shared/routes"
 import { realStepRoute } from "@/src/goals/planSteps/realStepRoutes"
+import { planNumbers, type PlanNumbers } from "@/src/goals/planSteps/planNumbers"
 import { screenForSection, stepRoute, type Screen, type Sequence } from "@/src/goals/planSteps/planSequences"
 import { ANCHOR_SECTION, AREA_SECTIONS, GOAL_SECTIONS, stepOfSection, type AreaSectionId, type GoalSectionId } from "@/src/goals/planSteps/planSections"
 import { usePlanNew } from "./PlanNewContext"
@@ -108,6 +109,8 @@ export interface RealStep extends Writers, Reads {
   oneThingTyped: string | null
   setOneThingTyped: Dispatch<SetStateAction<string | null>>
   planPct: ns.NsPlanProgress
+  /** Every number and chip on `/plan/new`, from one rule (`planNumbers`); `planPct` is its `progress`. */
+  numbers: PlanNumbers
   /** What the account knows that the plan does not (the one thing), as `NorthStarFlow` hands it to the rail and the progress. */
   nsAccount: NsAccount
   dueCards: DueCard[]
@@ -342,7 +345,9 @@ export function RealStepHost({
   /* ---- the one thing, progress, Due now ---- */
   const nsAccount = useMemo<NsAccount>(() => ({ hasOneThing: !!oneThing.current }), [oneThing.current])
   const oneThingBody = oneThing.current?.body ?? null
-  const planPct = ns.planProgress(plan, nsAccount)
+  // One rule for every percentage, ring and chip on this page (Phase 6.5); `/plan` keeps the service's own.
+  const numbers = useMemo(() => planNumbers(plan, nsAccount, day), [plan, nsAccount, day])
+  const planPct = numbers.progress
 
   const [hiddenDue, setHiddenDue] = useState<ReadonlySet<string>>(new Set())
   const dueKey = `plan-due-hidden:${account}`
@@ -423,6 +428,7 @@ export function RealStepHost({
     oneThingTyped,
     setOneThingTyped,
     planPct,
+    numbers,
     nsAccount,
     dueCards,
     dueWeek,

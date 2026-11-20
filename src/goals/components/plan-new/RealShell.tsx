@@ -45,11 +45,11 @@ function navLabel(here: Screen, target: Screen, seq: Sequence): string {
 export function RealShell({ children, seq }: { children: ReactNode; seq?: Sequence }) {
   const r = useRealStep()
   const { store } = usePlanNew()
-  const { plan, stepId: tab, planPct, nsAccount } = r
+  const { plan, stepId: tab, planPct, nsAccount, numbers } = r
   const inUse = planInUse(plan)
   const siteBar = USE_STEPS.includes(tab)
-  const states = ns.stepStates(plan, nsAccount)
-  const progress = ns.nsProgress(plan, nsAccount)
+  const states = numbers.states
+  const progress = { ...ns.nsProgress(plan, nsAccount), done: numbers.done }
 
   /* ---- the picker's open/closed state, as `NorthStarFlow` keeps it ---- */
   const [railOpen, setRailOpen] = useState(!inUse)
@@ -174,7 +174,7 @@ export function RealShell({ children, seq }: { children: ReactNode; seq?: Sequen
           </div>
         )}
         {children}
-        <PlanTodos plan={plan} tab={tab} loaded={store.loaded} today={r.today} onGo={(t) => r.setTab(t)} />
+        <PlanTodos plan={plan} tab={tab} loaded={store.loaded} today={r.today} todos={numbers.chips} onGo={(t, section) => r.setTab(t, section)} />
         <PlanReadBack plan={plan} loaded={store.loaded} today={r.today} />
       </div>
       {!siteBar && nav}
