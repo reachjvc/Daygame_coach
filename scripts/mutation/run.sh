@@ -15,7 +15,9 @@ if [ "$(git rev-parse --git-dir)" = "$(git rev-parse --git-common-dir)" ]; then
   exit 1
 fi
 cd "$top"
-[ -z "$(git status --porcelain -- "$file")" ] || { echo "refusing: $file has uncommitted changes" >&2; exit 1; }
-trap 'git checkout -- "$file"; rm -f stryker-setup-*.js' EXIT
+# Stryker in place may rewrite files other than the target: require a clean worktree
+# (the main checkout was refused above) and restore every tracked file on exit.
+[ -z "$(git status --porcelain --untracked-files=no)" ] || { echo "refusing: the worktree has uncommitted changes" >&2; exit 1; }
+trap 'git checkout -- .; rm -f stryker-setup-*.js' EXIT
 npx -y -p @stryker-mutator/core@9.6.1 -p @stryker-mutator/vitest-runner@9.6.1 stryker run \
   scripts/mutation/stryker.conf.json --mutate "$target" --concurrency "$conc"

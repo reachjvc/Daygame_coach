@@ -64,8 +64,17 @@ describe("buildFailures", () => {
     expect(r.failed.find((f: { id: string }) => f.id.startsWith("b.spec.ts"))).toMatchObject({ firstSha: "bbbbbbbbbbbb", firstSubject: "Second commit", firstRunId: 2 })
     expect(r.failed.find((f: { id: string }) => f.id.startsWith("a.spec.ts"))?.firstSha).toBe("0000000000")
   })
+  it("carries a previous failure forward when its test is absent from the report (missing shard)", () => {
+    const r = buildFailures(report([["z.spec.ts", 9, "other", "passed"]]), prev(), ctx)
+    expect(r.failed).toEqual([{ id: "a.spec.ts:1 one", project: "desktop", firstSha: "0000000000", firstSubject: "Old", firstRunId: 0 }])
+  })
+  it("a previous failure that ran and passed or skipped does not carry forward", () => {
+    expect(buildFailures(report([["a.spec.ts", 1, "one", "passed"]]), prev(), ctx).failed).toEqual([])
+    expect(buildFailures(report([["a.spec.ts", 1, "one", "skipped"]]), prev(), ctx).failed).toEqual([])
+  })
   it("treats the same title in another project as another test", () => {
-    const r = buildFailures(report([["a.spec.ts", 1, "one", "unexpected", "android"]]), prev(), ctx)
+    // The desktop run of the same test passed (so it is not carried forward); android is new red.
+    const r = buildFailures(report([["a.spec.ts", 1, "one", "passed"], ["a.spec.ts", 1, "one", "unexpected", "android"]]), prev(), ctx)
     expect(r.failed).toHaveLength(1)
     expect(r.failed[0].firstSha).toBe("bbbbbbbbbbbb")
   })

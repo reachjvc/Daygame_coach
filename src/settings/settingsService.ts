@@ -248,6 +248,31 @@ export async function getSubscriptionDetails(
 }
 
 /**
+ * A purchase row is not proof the subscription is his: `purchases` lets a
+ * signed-in user insert his own row with any `stripe_subscription_id`. Before
+ * changing a subscription at Stripe, check its customer is this user's. The
+ * profile stores no Stripe customer id, so the link is the customer's email
+ * against the profile email (case-insensitive). Refuses when either is missing.
+ */
+async function assertSubscriptionIsUsers(userId: string, subscriptionId: string): Promise<void> {
+  const refuse = () =>
+    createSettingsError("This subscription does not belong to your account", "UNAUTHORIZED")
+  let customerEmail: string | null = null
+  try {
+    const stripe = getStripe()
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+    const customer = await stripe.customers.retrieve(subscription.customer as string)
+    customerEmail = "deleted" in customer && customer.deleted ? null : (customer.email ?? null)
+  } catch (err) {
+    console.error("Error verifying subscription owner:", err)
+    throw createSettingsError("Failed to verify subscription", "STRIPE_ERROR")
+  }
+  const profile = await getSettingsProfile(userId)
+  const mine = profile?.email?.trim().toLowerCase()
+  if (!mine || !customerEmail || customerEmail.trim().toLowerCase() !== mine) throw refuse()
+}
+
+/**
  * Cancel subscription at period end.
  */
 export async function handleCancelSubscription(userId: string): Promise<void> {
@@ -256,6 +281,8 @@ export async function handleCancelSubscription(userId: string): Promise<void> {
   if (!purchase?.stripe_subscription_id) {
     throw createSettingsError("No active subscription found", "NOT_FOUND")
   }
+
+  await assertSubscriptionIsUsers(userId, purchase.stripe_subscription_id)
 
   try {
     // Cancel at period end (user keeps access until then)
@@ -281,6 +308,8 @@ export async function handleReactivateSubscription(userId: string): Promise<void
   if (!purchase?.stripe_subscription_id) {
     throw createSettingsError("No subscription found", "NOT_FOUND")
   }
+
+  await assertSubscriptionIsUsers(userId, purchase.stripe_subscription_id)
 
   try {
     await getStripe().subscriptions.update(purchase.stripe_subscription_id, {

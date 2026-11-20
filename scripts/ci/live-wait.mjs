@@ -8,7 +8,7 @@
  * site's own `/api/healthz` says which commit it serves (`buildId`). Polls it:
  *   - buildId = DEPLOY_SHA            -> exit 0, the smoke test may run
  *   - another buildId that is NEWER   -> exit 0, "superseded": the next deploy's
- *     run checks the site, so this run has nothing to say (writes superseded=true
+ *     run checks the site, so this run has nothing to say (writes state=superseded
  *     to GITHUB_OUTPUT so the next step skips)
  *   - nothing matches in 10 minutes   -> exit 1
  * "Newer" is asked of GitHub's compare API with the run's own token (no secret):
@@ -40,7 +40,9 @@ export async function waitForBuild({ fetch: doFetch, liveUrl, sha, isNewer, time
       const res = await doFetch(`${liveUrl}/api/healthz`, { headers: { accept: "application/json" } })
       if (res.ok) {
         const body = await res.json()
-        if (body && typeof body.buildId === "string") buildId = body.buildId
+        // A commit sha only: the id goes into a GitHub API path, so nothing else may through.
+        if (body && typeof body.buildId === "string" && /^[0-9a-f]{40}$/.test(body.buildId)) buildId = body.buildId
+        else if (body && body.buildId !== undefined) log("healthz buildId is not a 40-character commit sha, ignored")
       } else {
         log(`healthz answered ${res.status}`)
       }

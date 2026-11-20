@@ -122,6 +122,7 @@ describe('review findings, pinned (Phase 7 step 3)', () => {
     put('src/tracking/real2.ts', 'export const real2 = 1')
     put('tests/support/appRoutes.ts', 'export const walk = 1')
     put('tests/unit/navigation/gated.test.ts', "import { walk } from '@/tests/support/appRoutes'")
+    put('app/x/subpage.tsx', 'export default function P() { return null }')
     put('app/quit/lab/page.tsx', 'export default function P() { return null }')
   })
   afterAll(() => fs.rmSync(r, { recursive: true, force: true }))
@@ -154,5 +155,7 @@ describe('review findings, pinned (Phase 7 step 3)', () => {
     expect(relatedTests(['app/quit/lab/page.tsx'], r)).toEqual(['tests/unit/navigation/gated.test.ts'])
     expect(relatedTests(['app/(app)/plan/page.tsx'], r)).toEqual(['tests/unit/navigation/gated.test.ts'])
     expect(relatedTests(['app/quit/lab/helper.ts'], r)).toEqual([])
+    // `subpage.tsx` merely ends in `page.tsx`; it is not a route page
+    expect(relatedTests(['app/x/subpage.tsx'], r)).toEqual([])
   })
 })

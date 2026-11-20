@@ -47,15 +47,16 @@ test.beforeAll(() => {
   if (!LIVE_URL) throw new Error("LIVE_URL is not set: the live check needs the address it opens")
 })
 
-/** Abort every non-GET/HEAD request to the live site; note the ones that are not on the allow-list. */
+/** Abort every non-GET/HEAD request to ANY host; note the ones that are not on the allow-list (allow-list applies to the live origin only). */
 async function blockWrites(page: Page, writes: string[]) {
-  await page.route(`${ORIGIN}/**`, (route) => {
+  await page.route("**/*", (route) => {
     const req: Request = route.request()
     const method = req.method()
     if (method === "GET" || method === "HEAD") return route.continue()
     const url = new URL(req.url())
-    const allowed = ALLOWED_WRITES.some((a) => a.method === method && a.path.test(url.pathname))
-    if (!allowed) writes.push(`${method} ${url.pathname}`)
+    const onLive = url.origin === new URL(ORIGIN).origin
+    const allowed = onLive && ALLOWED_WRITES.some((a) => a.method === method && a.path.test(url.pathname))
+    if (!allowed) writes.push(onLive ? `${method} ${url.pathname}` : `${method} ${url.origin}${url.pathname}`)
     return route.abort()
   })
 }

@@ -96,7 +96,7 @@ export function relatedTests(staged, root = process.cwd()) {
   // (tests/support/appRoutes.ts), so no test names a page file. A staged page
   // therefore counts as a change to that walker: every test that imports it
   // runs (gatedPagesAreNotSwept, routeList, sweepCoverage, ...).
-  if (staged.some((f) => /^app\/.*\/?page\.tsx$/.test(f))) queue.push('tests/support/appRoutes.ts')
+  if (staged.some((f) => /^app\/(?:.*\/)?page\.tsx$/.test(f))) queue.push('tests/support/appRoutes.ts')
   while (queue.length) {
     const file = queue.pop()
     if (seen.has(file)) continue

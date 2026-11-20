@@ -27,13 +27,13 @@
  *
  * TODAY, measured 2026-09-08: 178 functions write user data.
  *
- *     125  "unasserted"  no test file mentions them at all
+ *     125  "unasserted"  no test file mentions them at all (since lowered: see MAX_UNASSERTED)
  *      52  "mentioned"   some test names them; whether it checks what they save
  *                        is NOT verified, and this guard does not claim it is
  *       1  "asserted"    a test checks the payload handed to the database
  *                        (completeOnboardingForUser — the one that started this)
  *
- * The ratchet below holds the 125. That is the number to drive down.
+ * The ratchet below holds the unasserted count (26 now). That is the number to drive down.
  */
 
 import { describe, it, expect } from "vitest"
@@ -80,8 +80,7 @@ const BASELINE_PATH = path.resolve(__dirname, "../support/writeCoverage.baseline
  * Lowered to 56 on 2026-11-19 (tests-catch Phase 4, after groups A and C): group C's 23 functions of
  * programRepo, workoutRepo, programDraftRepo, healthRepo and restoreTimetrack now have
  * integration tests that read the rows back (tests/integration/repos/*Writes*).
- */
-/**
+ *
  * Lowered 56 -> 26 on 2026-11-19 (Plans/tests-catch-what-matters.md, Phase 4, group B):
  * goalRepo, settingsRepo, profileService, innerGameProgressRepo and
  * valuesRepo.deleteUserValues each have a database test per write function.

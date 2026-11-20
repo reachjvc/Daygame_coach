@@ -6,6 +6,12 @@
  * cookies: GET for reads, `{}` as JSON for writes, a made-up UUID for every
  * dynamic segment.
  *
+ * LIMIT, said plainly: a dynamic segment (`[id]`) gets a random UUID that no row
+ * has, so a 404 there cannot tell "refused a stranger" from "no such row". For
+ * dynamic routes this only proves the route does not serve a made-up id; it
+ * cannot catch a leak of a REAL row. Open gap (proposed in the plan): seed a row
+ * owned by another test account and ask for it signed out.
+ *
  * Allowed: 401, 403, 404, 405. Never a 2xx (data for a stranger), never a 5xx
  * (a route that falls over before it checks who is asking). A 400 is a finding
  * too: the route read the body before it checked sign-in.
@@ -34,7 +40,7 @@ test.describe("API routes, signed out", () => {
   // Each route compiles on first request under `next dev`.
   test.setTimeout(600_000)
 
-  test("every route and method refuses a stranger", async ({ request }, testInfo) => {
+  test("every route and method refuses a stranger (dynamic [id] routes: only checked not to serve a random id)", async ({ request }, testInfo) => {
     // The sweep projects run it at two device sizes; a server answer does not depend on the screen, and a skip would pass having checked nothing.
     const routes = apiRoutes()
     const pairs = routes.flatMap((r) => r.methods.map((method) => ({ ...r, method })))

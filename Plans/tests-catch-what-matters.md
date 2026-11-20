@@ -94,7 +94,7 @@ that order.
 | B8 | Main red from other sessions (tests-green B10–B12, today's site-frame and sweep reds) | E2E 44581804643 | "green" acceptance runs | Not this plan's to fix. Judge a phase green on its own specs; Phase 1 makes the others name themselves |
 | B9 | Local full typecheck cannot finish while several sessions run | `node scripts/typecheck-ratchet.mjs` killed 3+ times per worker: `tsc exited with 143` (SIGTERM from `~/.cache/daygame-research/tools/memguard.sh` when RAM + swap < 2.5 GB; its log names tsc from this plan and from other sessions) | Part 2's local typecheck before push | Use CI `static` (same typecheck and lint ratchets) green on the branch head before pushing to main; every phase quotes that run |
 | B10 | Vercel deploy rate limit, hit by all sessions' pushes on 2026-11-19 | Commit status on main f43f0529 (20:16 UTC): `Vercel failure Deployment rate limited — retry in 24 hours.`; live `/api/healthz` buildId stays `ee1ae8db` (20:04 UTC) | Phase 6's real Production run (B4, B5 untested) | After the limit lifts, the next push to main deploys; find the first non-skipped `live-check.yml` run and quote it in Phase 6 |
-| B11 | Another session's `tests/e2e/quit/cost.spec.ts` (f43f0529) runs `mkdirSync('/home/jonaswsl/.cache/daygame-research/quit-finish/cost-shots')` at load | run 44621393139, every Playwright lane: `Error: EACCES: permission denied, mkdir '/home/jonaswsl/.cache/daygame-research/quit-finish/cost-shots'` | every browser run on a branch from main (all spec files load) | Not this plan's to fix (B8); Phase 8's acceptance run used a side branch with the path moved to /tmp. That spec's owner: use `os.tmpdir()` |
+| B11 | Another session's `tests/e2e/quit/cost.spec.ts` (f43f0529) runs `mkdirSync('~/.cache/<research dir>/quit-finish/cost-shots')` at load | run 44621393139, every Playwright lane: `Error: EACCES: permission denied, mkdir '~/.cache/<research dir>/quit-finish/cost-shots'` | every browser run on a branch from main (all spec files load) | Not this plan's to fix (B8); Phase 8's acceptance run used a side branch with the path moved to /tmp. That spec's owner: use `os.tmpdir()` |
 
 ## Questions, each with a recommendation (proposed until you say yes)
 
@@ -483,6 +483,37 @@ says "lengths show as hours and minutes": the default format shows hours, minute
    what, before and after numbers.
 
 Accept: review and break-test results quoted; facts table filled.
+
+### Review findings (fresh reviewer, fixes by the Phase 9 fix worker)
+
+1. Foreign Stripe subscription id (security, older than this plan): FIXED in code. Cancel and
+   reactivate now check the subscription's Stripe customer email equals the signed-in user's
+   profile email before any Stripe update, else refuse `UNAUTHORIZED`; unit test
+   `tests/unit/settings/cancelSubscriptionOwner.test.ts` proves a foreign id is refused and
+   Stripe update is not called. (`profiles` has no Stripe customer id column, so email is the
+   only link the code has.) RECORDED, PROPOSED, needs the owner (a migration reaches the live
+   database): drop the user INSERT policy on `purchases`.
+2. Mutation script restored only the first target file: FIXED. The trap now runs
+   `git checkout -- .` (the script already refuses the main checkout), the start refuses any
+   uncommitted tracked change, `disableTypeChecks: false` set in the Stryker config.
+3. `api-signed-out.spec.ts` counts 404 for random ids on dynamic routes: header and test title now
+   say it only proves they do not serve a random id; no assertion weakened. RECORDED as an open
+   gap, PROPOSED: seed a row owned by another test account and ask for it signed out.
+4. `e2e-failures.mjs` forgot failures whose test was absent from the report: FIXED (carried
+   forward unchanged when absent entirely; passed or skipped still drops), unit tests added.
+5. `live-smoke.spec.ts` aborted only non-GET to the live origin: FIXED, routes every host and
+   aborts any non-GET/HEAD (the allow-list applies to the live origin only). It cannot be
+   dispatched against live (B10).
+6. `live-wait.mjs` used any `buildId` in an API path: FIXED, only `/^[0-9a-f]{40}$/` accepted, unit test.
+7. `live-wait.mjs` header said `superseded=true`: FIXED, now `state=superseded`.
+8. Product bug `planHalfAfterLoad` drops an edit made before the account plan loads (page opened
+   with no browser copy): RECORDED with `it.fails` in `tests/unit/goals/planHalfAfterLoad.test.ts`;
+   not fixed (product code, sync rules need the owner's call on merge behaviour).
+9. Absolute home paths in this plan: FIXED (B11 reworded; no others found).
+10. `scripts/related-tests.mjs` page regex matched `subpage.tsx`: FIXED to
+    `/^app\/(?:.*\/)?page\.tsx$/`, test case for `app/x/subpage.tsx` added.
+11. `writeCoverage.test.ts` header said 125 unasserted: FIXED (doc only; the limit of 26 and the
+    assertion are unchanged), the two doc blocks merged.
 
 ---
 

@@ -73,6 +73,16 @@ describe("waitForBuild", () => {
     expect(r.polls).toBeLessThanOrEqual(41)
   })
 
+  it("ignores a buildId that is not a 40-char commit sha: never asks GitHub about it", async () => {
+    const asked: string[] = []
+    const r = await run(["../../x?y=1", "ABC", SHA], async (id) => {
+      asked.push(id)
+      return false
+    }, 60_000)
+    expect(r).toMatchObject({ state: "match", polls: 3 })
+    expect(asked).toEqual([])
+  })
+
   it("times out when the site never answers", async () => {
     const r = await run(["down"], async () => false, 60_000)
     expect(r).toMatchObject({ state: "timeout", buildId: undefined })

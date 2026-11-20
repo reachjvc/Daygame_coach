@@ -3,6 +3,7 @@
   "testRunner": "vitest",
   "vitest": { "related": true },
   "inPlace": true,
+  "disableTypeChecks": false,
   "coverageAnalysis": "perTest",
   "reporters": ["clear-text", "json"],
   "jsonReporter": { "fileName": "reports/mutation/mutation.json" },

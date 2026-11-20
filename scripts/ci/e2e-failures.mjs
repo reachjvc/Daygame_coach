@@ -84,6 +84,19 @@ export function collectTests(report) {
   return { failed: [...failed.values()], flaky: [...flaky.values()] }
 }
 
+/** Every test the report mentions, whatever its status (passed, skipped, failed...): keys only. */
+export function collectSeen(report) {
+  const seen = new Set()
+  const walk = (suite) => {
+    for (const spec of suite.specs ?? []) {
+      for (const t of spec.tests ?? []) seen.add(key({ id: `${spec.file}:${spec.line} ${spec.title}`, project: t.projectName ?? "" }))
+    }
+    for (const s of suite.suites ?? []) walk(s)
+  }
+  for (const s of report?.suites ?? []) walk(s)
+  return seen
+}
+
 const AFTER_FIELDS = ["afterSha", "afterRunId", "commits"]
 
 /**
@@ -112,6 +125,11 @@ export function buildFailures(report, previous, ctx) {
       ? { ...t, firstSha: ctx.sha, firstSubject: ctx.subject, firstRunId: ctx.runId, ...after }
       : { ...t, firstSha: null, firstSubject: null, firstRunId: null }
   })
+  // A previous failure whose test is absent from this report entirely (a missing shard, not run)
+  // neither passed nor failed: carry it forward unchanged, or it would come back later as "new red".
+  const seen = collectSeen(report)
+  const nowKeys = new Set(now.failed.map(key))
+  for (const [k, f] of prevFailed) if (!nowKeys.has(k) && !seen.has(k)) failed.push(f)
   const history = new Map()
   for (const f of Array.isArray(previous?.flaky) ? previous.flaky : []) history.set(key(f), { id: f.id, project: f.project, last5: Array.isArray(f.last5) ? f.last5 : [] })
   for (const t of now.flaky) history.set(key(t), { ...t, last5: history.get(key(t))?.last5 ?? [] })

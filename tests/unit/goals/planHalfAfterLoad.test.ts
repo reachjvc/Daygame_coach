@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { planHalfAfterLoad } from "@/src/goals/lifePlanSync"
-import { addGoal, normalizeNsPlan, serializeNsPlan, setNorthStar } from "@/src/goals/northStarService"
+import { addGoal, emptyNsPlan, normalizeNsPlan, serializeNsPlan, setNorthStar } from "@/src/goals/northStarService"
 import { planToRows, rowsToPlan } from "@/src/goals/lifePlanMapper"
 import { fullPlan } from "@/tests/support/fullLifePlan"
 import type { NsPlan } from "@/src/goals/types"
@@ -50,5 +50,18 @@ describe("an edit made while the account is read", () => {
     const account = fromAccount(opened)
     expect(planHalfAfterLoad(opened, opened, account)).toBe(account)
     expect(planHalfAfterLoad(setNorthStar(opened, "x", NOW), null, account)).toBe(account)
+  })
+
+  // KNOWN PRODUCT BUG (review of the tests-catch plan, Phase 9): a page that opened with
+  // NO browser copy (a fresh browser) and is edited before the account answers loses the
+  // edit: `planHalfAfterLoad` returns the account's plan whole. It fails today on purpose;
+  // when the edit is kept this flips to "unexpectedly passed" and `.fails` must be removed.
+  // (The test above this one pins the same `null` case as "takes the account's plan" for an
+  // edit-free page, which stays right.)
+  it.fails("keeps an edit typed on a page that opened with no browser copy", () => {
+    const edited = setNorthStar(emptyNsPlan(), "Typed before the account answered.", NOW)
+    const account = fromAccount(browserCopy(fullPlan()))
+    const out = planHalfAfterLoad(edited, null, account)
+    expect(out.northStar).toBe("Typed before the account answered.")
   })
 })
