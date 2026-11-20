@@ -289,6 +289,22 @@ jobs:
           PW_REPEAT_EACH: ${{ inputs.repeat_each }}
           # One name per shard, or the merge overwrites one lane's shard 1 with another's.
           PLAYWRIGHT_BLOB_OUTPUT_NAME: report-${{ matrix.lane }}-${{ strategy.job-index }}.zip
+          # DESKTOP SHARDS BY TIME, NOT BY COUNT. `--shard` cuts the lane's tests,
+          # in file order, into equal counts. The slow plan and life-mastery walks
+          # sit together in that order, so on 2026-11-20 shards 2/8 and 3/8 held
+          # 679 s and 550 s of test time and 4/8 to 7/8 held 123-199 s (E2E
+          # 44795467263; 2/8 took 350-485 s on the same tests, over the duration
+          # ratchet's 390 s). Playwright reads this variable as one weight per
+          # shard (node_modules/playwright/lib/runner/testGroups.js,
+          # filterForShard): each shard takes that share of the tests, still in
+          # file order, every test exactly once. These are the test counts that
+          # give each shard about 334 s of the 2,674 s in that run, with twelve
+          # moved from 1/8 to 2/8 after a measured run (E2E 44802293098: 1/8
+          # 403 s, its 30 s audit waits; 2/8 256 s; the rest 252-308 s). Not in
+          # Playwright's documentation: if an upgrade drops it, the lane falls
+          # back to equal counts, still runs every test, and the nightly ratchet
+          # says which shard got slow. Re-measure when it does.
+          PWTEST_SHARD_WEIGHTS: ${{ matrix.lane == 'desktop' && '84:83:59:47:93:211:248:88' || '' }}
 
       # A blob per shard; `report` merges them into one. Traces are off under
       # CI (playwright.config.ts), so a blob carries no credential.
