@@ -52,16 +52,21 @@ describe("an edit made while the account is read", () => {
     expect(planHalfAfterLoad(setNorthStar(opened, "x", NOW), null, account)).toBe(account)
   })
 
-  // KNOWN PRODUCT BUG (review of the tests-catch plan, Phase 9): a page that opened with
-  // NO browser copy (a fresh browser) and is edited before the account answers loses the
-  // edit: `planHalfAfterLoad` returns the account's plan whole. It fails today on purpose;
-  // when the edit is kept this flips to "unexpectedly passed" and `.fails` must be removed.
-  // (The test above this one pins the same `null` case as "takes the account's plan" for an
-  // edit-free page, which stays right.)
-  it.fails("keeps an edit typed on a page that opened with no browser copy", () => {
+  // Found in the review of the tests-catch plan, Phase 9: a page that opened with no
+  // browser copy (a fresh browser) and was edited before the account answered lost the
+  // edit. Over an account that holds nothing written it is now kept. Over a written
+  // account the page never shows the blank to edit (northStarFlowOpensBlank.test.tsx),
+  // and the test above pins that the account's plan is taken there.
+  it("keeps an edit typed on a page that opened with no copy, when the account holds nothing written", () => {
     const edited = setNorthStar(emptyNsPlan(), "Typed before the account answered.", NOW)
-    const account = fromAccount(browserCopy(fullPlan()))
+    const account = fromAccount(emptyNsPlan())
     const out = planHalfAfterLoad(edited, null, account)
+    expect(out).toBe(edited)
     expect(out.northStar).toBe("Typed before the account answered.")
+  })
+
+  it("takes the account's shell when the blank page was not edited", () => {
+    const account = fromAccount(emptyNsPlan())
+    expect(planHalfAfterLoad(emptyNsPlan(), null, account)).toBe(account)
   })
 })

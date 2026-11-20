@@ -178,6 +178,13 @@ export function NorthStarFlow({
 }) {
   const [plan, setPlan] = useState<NsPlan>(ns.emptyNsPlan)
   const [loaded, setLoaded] = useState(false)
+  /**
+   * THIS BROWSER HELD NO COPY, so the plan on screen is a blank one until the
+   * account answers. Anything typed into that blank would land on top of the
+   * account's real plan, which this page has not seen, so the plan stays
+   * behind "Opening your plan…" until the account's read is decided.
+   */
+  const [openedBlank, setOpenedBlank] = useState(false)
   // A step that folded into another (Plans/life-plan-rebuild.md: the one thing
   // into Season, Commit into Everything, Templates into Where to start): an old
   // link or button naming it lands on its new home, see `stepFor`.
@@ -538,6 +545,7 @@ export function NorthStarFlow({
     }
     browserCopy.current = saved
     if (saved) setPlan(saved)
+    setOpenedBlank(!saved)
     setLoaded(true)
   }, [])
 
@@ -1390,7 +1398,7 @@ export function NorthStarFlow({
 
         {ribbon && !areaDialogOpen && !goalDialogOpen && <div className="mb-5">{ribbon}</div>}
 
-        {!loaded || !today ? (
+        {!loaded || !today || (openedBlank && decision === null) ? (
           <p className="text-sm text-zinc-500">Opening your plan…</p>
         ) : tab === "star" ? (
           <StarTab

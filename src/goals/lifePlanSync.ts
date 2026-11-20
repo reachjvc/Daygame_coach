@@ -193,12 +193,17 @@ export function sendableFingerprint(plan: Plan): string {
  * KEPT ONLY WHEN IT IS SAFE TO KEEP: the edits sit on the copy the page opened
  * with, and the account holds that same copy, so the edited plan IS the
  * account's plan plus the edits, and the save then sends them. In every other
- * case (another device changed the plan since; the page opened with no copy)
- * the account's plan is taken, as before: merging two different plans field
+ * case (another device changed the plan since; the page opened with no copy
+ * and the account holds a written plan) the account's plan is taken, as before: merging two different plans field
  * by field is how parts get lost.
  */
 export function planHalfAfterLoad(current: Plan, openedWith: Plan | null, account: Plan): Plan {
-  if (!openedWith) return account
+  // No copy: the page opened on a blank plan. An edit on that blank is kept
+  // only when the account holds nothing written either (a new account, or a
+  // shell opened once), so it is the account's plan plus the edit. Over a
+  // written account it is not, and the page does not show the blank to edit
+  // while it waits (NorthStarFlow, `openedBlank`).
+  if (!openedWith) return planHasNothingWritten(account) && !planHasNothingWritten(current) ? current : account
   const opened = sendableFingerprint(openedWith)
   if (sendableFingerprint(current) === opened) return account
   if (sendableFingerprint(account) !== opened) return account
