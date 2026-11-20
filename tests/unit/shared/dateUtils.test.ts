@@ -52,7 +52,7 @@ describe("getTodayInTimezone", () => {
     // compile error, which is the point: a caller with no timezone was a caller
     // guessing, and the compiler lists them all. Asserted with @ts-expect-error
     // so the day someone re-adds the null overload, this test fails.
-    //  - null is not a timezone
+    // @ts-expect-error - null is not a timezone
     expect(() => getTodayInTimezone(null)).toBeDefined()
     expect(getTodayInTimezone("UTC")).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
@@ -107,7 +107,7 @@ describe("getNowInTimezone", () => {
   })
 
   it("cannot be asked for the time without saying whose clock", () => {
-    //  - null is not a timezone
+    // @ts-expect-error - null is not a timezone
     expect(() => getNowInTimezone(null)).toBeDefined()
     expect(getNowInTimezone("UTC")).toBeInstanceOf(Date)
   })

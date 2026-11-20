@@ -24,10 +24,10 @@ const entry = (id: string, extra: Record<string, unknown> = {}) => ({ id, user_i
 const workspace = (id: string) => ({ id, user_id: "u1", deleted_at: null as string | null, updated_at: "v", name: "W" })
 const rows = (over: Record<string, unknown>) => ({ ...emptyRows(), ...over }) as never as ReturnType<typeof emptyRows>
 const server = (n: number, workspaces = ["w1"]) => rows({ timetrack_workspaces: workspaces.map(workspace), timetrack_entries: Array.from({ length: n }, (_, i) => entry(`e${i}`)) })
-const deleting = (n: number, workspaces: string[] = []) => ({
+const deleting = (n: number, workspaces: string[] = []): ReturnType<typeof emptyRows> => ({
   timetrack_entries: Array.from({ length: n }, (_, i) => entry(`e${i}`, { deleted_at: GONE })),
   ...(workspaces.length ? { timetrack_workspaces: workspaces.map(workspace) } : {}),
-})
+}) as never
 
 describe("what the sync refuses to send, and how it cuts what it sends", () => {
   test("a mass delete swapping the workspace is refused at its edges, a long queue is cut whole, a settings row is sent clean", () => {
@@ -40,7 +40,7 @@ describe("what the sync refuses to send, and how it cuts what it sends", () => {
       expect(safeToSend(deleting(3), server(3), true)).toEqual({ ok: true })
       expect(safeToSend(deleting(3, ["w1"]), server(3), true)).toEqual({ ok: true })
       expect(safeToSend(deleting(3, ["w1", "brand-new"]), server(3), true)).toEqual({ ok: false, deletes: 3 })
-      expect(safeToSend({ ...deleting(3), timetrack_workspaces: [{ ...workspace("brand-new"), deleted_at: GONE }] }, server(3), true).ok).toBe(true)
+      expect(safeToSend({ ...deleting(3), timetrack_workspaces: [{ ...workspace("brand-new"), deleted_at: GONE }] } as never, server(3), true).ok).toBe(true)
       expect(safeToSend(deleting(3, swap), null, true)).toEqual({ ok: true })
       expect(safeToSend(deleting(3, swap), server(0, []), true)).toEqual({ ok: true })
       expect(safeToSend(deleting(1), server(3), false)).toEqual({ ok: false, deletes: 1 })

@@ -187,7 +187,7 @@ describe("runs on the record", () => {
     { // removals take only what belongs, and an emptied record holds nothing
       { // removing the report that ended a run brings the run back, unless another run of that vice covers its days; removing a run takes its reports and nobody else's
         const ended = attempt("a1", { endedOn: "2026-09-01", endedByReportId: "r1" })
-        const rec = { ...emptyRecord(), attempts: [ended], reports: [report("r1", "a1", { wentThrough: true }), report("r2", "a1")] } as never
+        const rec = { ...emptyRecord(), attempts: [ended], reports: [report("r1", "a1", { wentThrough: true }), report("r2", "a1")] } as unknown as ReturnType<typeof emptyRecord>
         const revived = removeReport(rec, "r1")
         expect(revived.attempts[0]).toMatchObject({ endedOn: null, endedByReportId: null })
         expect(revived.reports.map((r) => r.deletedAt !== null)).toEqual([true, false])
