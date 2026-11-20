@@ -30,7 +30,7 @@
 import { randomUUID } from "node:crypto"
 import type { APIRequestContext } from "@playwright/test"
 import { test, expect, SIGNED_OUT } from "../fixtures/test"
-import { createTestApproachViaAPI, createTestSessionViaAPI } from "../helpers/auth.helper"
+import { createTestApproachViaAPI, createTestSessionViaAPI, ensureNoActiveSessionViaAPI } from "../helpers/auth.helper"
 import { apiRoutes, WRITE_METHODS, type ApiMethod } from "../../support/apiRoutes"
 
 const REFUSALS_B = [403, 404, 405]
@@ -523,7 +523,8 @@ test.describe("API routes with another account's real id", () => {
       await contextB.close()
       await contextOut.close()
       // The worker's next test starts on this account: leave no session, no open workout, no program.
-      await a.post(`/api/tracking/session/${seeds.sessionActiveId}/end`, { data: {} }).catch(() => undefined)
+      // ensureNoActiveSessionViaAPI ends whichever session is active, not only the seeded one.
+      await ensureNoActiveSessionViaAPI(page).catch(() => undefined)
       await a.delete(`/api/workouts/${seeds.workoutOpen.id}`).catch(() => undefined)
     }
   })
