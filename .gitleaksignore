@@ -11,3 +11,7 @@ f266405acaebe301acec6456fe7441180a30ad10:tests/unit/pipeline/test_pipeline_runne
 
 # Not a key: the rule matched a line of command-line flag names in the pipeline docs.
 7e4c08e7e3a87332748da5c684a9b6323bc661b6:docs/pipeline/validation_harness.md:generic-api-key:109
+
+# Not a key: the public example push subscription (p256dh + auth) from the Web
+# Push docs, sent to the local test backend to seed a device row. Read 2026-11-20.
+5fee818edcbf03861175777f9141ce728211ec88:tests/e2e/sweep/api-other-account.spec.ts:generic-api-key:292
