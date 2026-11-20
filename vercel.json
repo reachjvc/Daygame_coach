@@ -2,7 +2,8 @@
   "git": {
     "deploymentEnabled": {
       "tests-green": false,
-      "tg-*": false
+      "tg-*": false,
+      "ship-*": false
     }
   }
 }

@@ -11,8 +11,15 @@ Product map: `docs/product/map.md`; direction: `docs/product/vision.md`.
   A screen is not done until it works on a phone.
 - Other Claude sessions share this working tree. Commit with
   `git commit --only <paths>`; never `git add -A` or `git stash`.
-- `main` is the live site; every push deploys. Commit and push your own work
-  without being asked.
+- `main` is the live site; every change to it deploys. Ship your own work
+  without being asked, and only with `node scripts/ship.mjs`.
+- Main only moves to a commit that has already passed CI and E2E ("CI passed"
+  and "E2E passed"). It does not matter who caused a failure. A red test is
+  fixed or its change is reverted; it is never skipped, loosened or waved
+  through. `scripts/ship.mjs` tests your commits on a `ship-*` branch and moves
+  main only when both checks are green. GitHub's branch protection refuses
+  every other push to main. Never weaken that protection, the gate jobs or the
+  required checks, and never bypass them.
 - If the session-start line says main is red, fix it first or name who broke it.
 - `npm run build` keeps `--webpack`; the default bundler exhausts WSL memory.
 - Test writes against the live database go inside `begin; … rollback;`.

@@ -35,6 +35,15 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   if [ "$local_sha" = "$zero" ]; then
     continue
   fi
+  # main only takes a commit that already passed "CI passed" and "E2E passed"
+  # (CLAUDE.md; GitHub's branch protection refuses the rest anyway). Saying so
+  # here gives the way through instead of GitHub's bare refusal.
+  if [ "$remote_ref" = "refs/heads/main" ] && ! node scripts/ci/commit-checks.mjs "$local_sha" >&2; then
+    echo "pre-push: $local_sha has not passed CI and E2E, so main does not take it." >&2
+    echo "          Ship with: node scripts/ship.mjs  (tests it on a ship-* branch, then moves main)." >&2
+    status=1
+    continue
+  fi
   # A new branch, or a remote tip this clone has never seen: scan every commit
   # no remote has yet. Otherwise scan only what the push adds.
   if [ "$remote_sha" = "$zero" ] || ! git cat-file -e "${remote_sha}^{commit}" 2>/dev/null; then

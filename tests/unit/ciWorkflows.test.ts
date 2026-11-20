@@ -108,7 +108,7 @@ describe("the browser tests that CI actually runs", () => {
     // ref is refs/pull/N/merge, and every lane would skip, green.
     expect(e2eJobs["e2e-fast"]).not.toMatch(/^ {4}if:/m)
     expect(e2eJobs["lanes"]).toMatch(
-      /^ {4}if: \$\{\{ github\.event_name != 'push' \|\| github\.ref == 'refs\/heads\/main' \|\| github\.ref == 'refs\/heads\/beta' \}\}$/m,
+      /^ {4}if: \$\{\{ github\.event_name != 'push' \|\| github\.ref == 'refs\/heads\/main' \|\| github\.ref == 'refs\/heads\/beta' \|\| startsWith\(github\.ref, 'refs\/heads\/ship-'\) \}\}$/m,
     )
     expect(e2eJobs["nightly"]).toMatch(
       /^ {4}if: \$\{\{ github\.event_name == 'schedule' \|\| github\.event_name == 'workflow_dispatch' \}\}$/m,

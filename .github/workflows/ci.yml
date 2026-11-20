@@ -173,6 +173,27 @@ jobs:
         timeout-minutes: 15
 
   # ===========================================================================
+  # THE GATE. GitHub's branch protection on main requires this one check
+  # ("CI passed"), so a commit reaches main only after static, unit and
+  # database all passed on it (scripts/ship.mjs). One gate job instead of
+  # naming every shard in the protection settings: shards can change here
+  # without touching GitHub's settings.
+  # ===========================================================================
+  ci-passed:
+    name: CI passed
+    needs: [static, unit, database]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Every check job passed
+        env:
+          RESULTS: ${{ needs.static.result }} ${{ needs.unit.result }} ${{ needs.database.result }}
+        run: |
+          echo "static, unit, database: $RESULTS"
+          [ "$RESULTS" = "success success success" ]
+
+  # ===========================================================================
   # THE STAGING IMAGE. After the three check jobs above pass on a push to
   # main, and only when the repository variable STAGING_PUBLISH is
   # `on` (a job's own `if:` cannot read environment variables).

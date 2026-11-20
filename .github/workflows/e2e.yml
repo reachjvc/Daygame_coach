@@ -179,7 +179,9 @@ jobs:
   # lane are 1..N of N with none missing.
   # ===========================================================================
   lanes:
-    if: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta' }}
+    # ship-* branches are where scripts/ship.mjs tests a commit before main
+    # may take it, so they run every lane, like main.
+    if: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta' || startsWith(github.ref, 'refs/heads/ship-') }}
     name: ${{ matrix.lane }} ${{ matrix.shard }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
@@ -318,6 +320,30 @@ jobs:
           - { lane: sweep-phone, shard: 1/1, browser: webkit }
           - { lane: sweep-webkit, shard: 1/1, browser: webkit }
     steps: *lane-steps
+
+  # ===========================================================================
+  # THE GATE. GitHub's branch protection on main requires this one check
+  # ("E2E passed"), so a commit reaches main only after every browser job
+  # here passed on it (scripts/ship.mjs). On main and ship-* every lane must
+  # pass; on other branches the lanes are skipped by design and only the fast
+  # job counts.
+  # ===========================================================================
+  e2e-passed:
+    name: E2E passed
+    needs: [e2e-fast, lanes]
+    if: ${{ always() && github.event_name != 'schedule' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Every browser job passed
+        env:
+          FAST: ${{ needs.e2e-fast.result }}
+          LANES: ${{ needs.lanes.result }}
+          FULL: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta' || startsWith(github.ref, 'refs/heads/ship-') }}
+        run: |
+          echo "e2e-fast: $FAST, lanes: $LANES (every lane required: $FULL)"
+          [ "$FAST" = success ] || exit 1
+          if [ "$FULL" = true ]; then [ "$LANES" = success ] || exit 1; fi
 
   # ===========================================================================
   # ONE REPORT FOR THE WHOLE RUN, whichever jobs ran and however they ended.

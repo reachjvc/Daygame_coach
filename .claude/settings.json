@@ -62,6 +62,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "sh scripts/ci/sync-checkout.sh",
+            "timeout": 20
+          },
+          {
+            "type": "command",
             "command": "node scripts/ci/main-status.mjs",
             "timeout": 8
           }
