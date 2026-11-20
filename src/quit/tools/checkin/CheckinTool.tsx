@@ -231,12 +231,12 @@ function Screens({
     else swap(params);
   };
   /** A double tap on one screen moves once: the second tap finds this screen locked until the address changes. */
-  const move = (fn: () => void) => {
-    if (!tapOk()) return;
+  const move = (fn: () => void, screenChange = true) => {
+    if (screenChange && !tapOk()) return;
     if (lock.current === key) return;
     lock.current = key;
     // the screen is about to change (the address follows a moment later): taps from now on are ignored
-    screenAt.current = Date.now();
+    if (screenChange) screenAt.current = Date.now();
     fn();
   };
 
@@ -1073,7 +1073,8 @@ function Screens({
       <TabRow
         value={tab}
         onChange={(id) =>
-          id !== tab && move(() => go(id === "today" ? {} : { tab: id }))
+          id !== tab &&
+          move(() => go(id === "today" ? {} : { tab: id }), false)
         }
       />
 
