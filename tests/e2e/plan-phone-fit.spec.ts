@@ -39,6 +39,9 @@ async function withDb<T>(fn: (db: Client) => Promise<T>): Promise<T> {
 async function seedAndCopy(page: Page, ownerId: string): Promise<void> {
   const { error } = await stackAdmin().from("plan_sandboxes").upsert({ owner_id: ownerId }, { onConflict: "owner_id", ignoreDuplicates: true })
   if (error) throw new Error(`could not give the account a copy space: ${error.message}`)
+  // seedLifePlan adds to a plan the account already holds (the worker's account is shared by every test here), so the
+  // plan is taken out first: every test then sees the same twelve areas and six routines.
+  await withDb((db) => db.query("delete from public.life_plans where user_id = $1", [ownerId]))
   const full = fullPlan()
   const extra = (planWithSteps([{ id: "s_e2e", title: "E2E cold shower", daysPerWeek: 7 }]) as { routines: object[] }).routines[0]
   await seedLifePlan(page, ownerId, { ...full, routines: [...full.routines, { ...extra, id: "r_e2e" }] })
@@ -68,11 +71,11 @@ function findOffenders(): string[] {
     const r = el.getBoundingClientRect()
     if (r.width === 0 && r.height === 0) continue
     if (el.closest("[aria-hidden='true'], .sr-only, svg *, script, style, [data-nextjs-dialog-overlay], nextjs-portal")) continue
-    // A sideways scroller inside the screen is deliberate: its content may be wider; the box itself is checked below.
+    // Only a box marked data-phone-scroll may hold content wider than itself; any other box that scrolls sideways is reported below.
     let scroller: Element | null = null
     for (let p = el.parentElement; p; p = p.parentElement) {
       const o = getComputedStyle(p).overflowX
-      if (o === "auto" || o === "scroll") { scroller = p; break }
+      if ((o === "auto" || o === "scroll") && p.hasAttribute("data-phone-scroll")) { scroller = p; break }
     }
     const pastEdge = r.right > vw + 1 || r.left < -1
     if (pastEdge && scroller) {
@@ -122,8 +125,8 @@ function findOffenders(): string[] {
     const kids = Array.from(group.children).filter((c) => /out of 10/.test(c.getAttribute("aria-label") ?? ""))
     if (kids.length >= 11 && new Set(kids.map((k) => Math.round(k.getBoundingClientRect().top))).size > 1) out.push(`WRAPS the 0-10 row (${kids.length} buttons on ${new Set(kids.map((k) => Math.round(k.getBoundingClientRect().top))).size} lines)`)
   }
-  // The step bar (sticky) keeps each of its words on one line.
-  for (const el of Array.from(document.querySelectorAll(".sticky:not(th) button, .sticky:not(th) span, .sticky:not(th) a"))) {
+  // The step bar's buttons keep their words on one line (the save line between them may wrap).
+  for (const el of Array.from(document.querySelectorAll(".sticky:not(th) button, .sticky:not(th) a"))) {
     if (el.children.length > 0 || !(el.textContent ?? "").trim()) continue
     const range = document.createRange()
     range.selectNodeContents(el)

@@ -45,9 +45,12 @@ const NARROW_BELOW = 360
 const READ_LABEL = 10.5
 const READ_SUB = 9.5
 
-/** Two lines at most: split at the space that leaves the shorter longer line, each line cut at 12 characters. */
+/**
+ * Two lines at most. A name that fitted on one line before (up to 16 characters) stays whole: when it is long it
+ * is split at the space that leaves the shorter longer line, and only a line over 16 characters is cut, at 15.
+ */
 function labelLines(label: string): string[] {
-  const cut = (t: string) => (t.length > 12 ? `${t.slice(0, 11)}…` : t)
+  const cut = (t: string) => (t.length > 16 ? `${t.slice(0, 15)}…` : t)
   if (label.length <= 12 || !label.includes(" ")) return [cut(label)]
   let best = [label]
   let bestMax = Infinity
@@ -126,6 +129,15 @@ export function AreaWheel({
    * things. Measuring instead means the box is tight for four areas and still
    * correct for nine.
    */
+  /** The little line under an area's name. */
+  const subTextOf = (a: NsArea): string => {
+    const rating = ratings[a.id] ?? null
+    const goals = goalCounts[a.id] ?? 0
+    const rank = picked.indexOf(a.id)
+    const goalsSub = goals > 0 ? `${goals} ${goals === 1 ? "goal" : "goals"}` : "no goals"
+    const ratingSub = rating != null ? `${rating}/10` : goals > 0 ? goalsSub : "not rated"
+    return subMode === "goals" ? goalsSub : subMode === "season" ? (rank >= 0 ? `#${rank + 1} this season` : ratingSub) : ratingSub
+  }
   const geometry = (labelFont: number, subFont: number) => {
     const PAD = 6
     let minX = C - R
@@ -143,12 +155,11 @@ export function AreaWheel({
       if (narrow) {
         const lines = labelLines(a.label)
         const chars = Math.max(...lines.map((l) => l.length), 7)
-        w = chars * 0.56 * labelFont
+        w = Math.max(chars * 0.56 * labelFont, subTextOf(a).length * 0.56 * subFont)
         const rows = lines.length + 1
         const lh = labelFont * 1.2
-        top = ly - (rows * lh) / 2
+        top = ly - (rows * lh) / 2 - (anchor === "middle" ? 8 : 0)
         bottom = ly + (rows * lh) / 2 + 2
-        void subFont
       } else {
         const label = a.label.length > 16 ? 16 : a.label.length
         // ~5.4px per character at the 9.5px label size. An estimate is fine: it
@@ -268,7 +279,7 @@ export function AreaWheel({
             {goals > 0 && (
               <circle
                 cx={lx - (anchor === "end" ? -6 : anchor === "start" ? 6 : 0)}
-                cy={ly - (anchor === "middle" ? 10 : 0)}
+                cy={narrow && anchor === "middle" ? ly - (labelLines(a.label).length + 1) * labelFont * 0.6 - 4 : ly - (anchor === "middle" ? 10 : 0)}
                 r="2.4"
                 fill={a.color}
                 className="pointer-events-none"

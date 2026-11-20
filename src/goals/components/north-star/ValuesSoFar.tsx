@@ -99,7 +99,7 @@ function EvidenceRow({ plan, row, onAdd, onGoTo }: {
 }) {
   return (
     <li className="rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2">
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+      <div className="flex flex-wrap sm:flex-nowrap items-center gap-x-2 gap-y-1">
         {row.rank !== null && (
           <span className="text-[11px] tabular-nums text-zinc-500 w-4 shrink-0">{row.rank}.</span>
         )}

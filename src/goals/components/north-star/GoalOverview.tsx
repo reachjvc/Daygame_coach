@@ -314,7 +314,7 @@ function GoalRow({ plan, goal, area, rank, total, today, onOpen, onSetPriority, 
         onMove={(d) => onMovePriority(goal.id, d)}
       />
       <span className="text-[11px] shrink-0" aria-hidden>{TYPE_ICON[goal.type]}</span>
-      <button onClick={onOpen} className="min-w-0 flex-1 basis-40 sm:basis-auto text-left group">
+      <button onClick={onOpen} className="min-w-0 flex-1 basis-40 sm:basis-0 text-left group">
         <span className="block text-[13px] text-zinc-100 group-hover:text-white transition-colors break-words sm:truncate">
           {goal.sentence.trim() || goal.title}
         </span>

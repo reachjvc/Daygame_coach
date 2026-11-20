@@ -394,7 +394,7 @@ function GoesTo({
   if (picking) {
     return (
       <div className="px-5 pb-2 pl-[3.25rem] flex flex-wrap items-center gap-2">
-        <label className="flex min-w-0 max-w-full items-center gap-1.5 text-[10.5px] text-zinc-500">
+        <label className="flex max-sm:min-w-0 max-sm:max-w-full items-center gap-1.5 text-[10.5px] text-zinc-500">
           {GOES_TO_COPY.pick}
           <select
             autoFocus
@@ -404,7 +404,7 @@ function GoesTo({
               setPicking(false)
             }}
             aria-label={GOES_TO_COPY.setAria(title)}
-            className="min-w-0 max-w-full sm:max-w-[16rem] rounded-lg border border-white/10 bg-zinc-900 px-2 py-1.5 text-[11.5px] text-zinc-200 focus:border-white/30 focus:outline-none"
+            className="max-sm:min-w-0 max-sm:max-w-full sm:max-w-[16rem] rounded-lg border border-white/10 bg-zinc-900 px-2 py-1.5 text-[11.5px] text-zinc-200 focus:border-white/30 focus:outline-none"
           >
             <option value="">{GOES_TO_COPY.nowhere}</option>
             {groups.map((group) => (
@@ -1560,7 +1560,7 @@ export function TodayTab({
                 {/* WHICH DIRECTION IT RUNS. Everything else about a field is
                     the same either way, so it is one dropdown and not two
                     kinds of thing to add. */}
-                <label className="flex min-w-0 max-w-full items-center gap-1.5 text-[10.5px] text-zinc-500">
+                <label className="flex max-sm:min-w-0 max-sm:max-w-full items-center gap-1.5 text-[10.5px] text-zinc-500">
                   {TODAY_COPY.fieldKindLabel}
                   <select
                     value={field.kind}
@@ -1581,12 +1581,12 @@ export function TodayTab({
                     changes, because "shows" and "goes to" are not the same
                     promise. */}
                 {(field.kind === "read" || field.kind === "go") && (
-                  <label className="flex min-w-0 max-w-full items-center gap-1.5 text-[10.5px] text-zinc-500">
+                  <label className="flex max-sm:min-w-0 max-sm:max-w-full items-center gap-1.5 text-[10.5px] text-zinc-500">
                     {field.kind === "go" ? TODAY_COPY.fieldGoes : TODAY_COPY.fieldShows}
                     <select
                       value={field.readSourceId ?? ""}
                       onChange={(e) => onFieldSource(field.id, e.target.value || null)}
-                      className="min-w-0 max-w-full sm:max-w-[16rem] rounded-lg border border-white/10 bg-zinc-900 px-2 py-1.5 text-[11.5px] text-zinc-200 focus:border-white/30 focus:outline-none"
+                      className="max-sm:min-w-0 max-sm:max-w-full sm:max-w-[16rem] rounded-lg border border-white/10 bg-zinc-900 px-2 py-1.5 text-[11.5px] text-zinc-200 focus:border-white/30 focus:outline-none"
                     >
                       <option value="">{field.kind === "go" ? TODAY_COPY.fieldGoesNothing : TODAY_COPY.fieldShowsNothing}</option>
                       {(field.kind === "go" ? placeGroups : sourceGroups).map((group) => (
@@ -1601,7 +1601,7 @@ export function TodayTab({
                     </select>
                   </label>
                 )}
-                <label className="flex min-w-0 max-w-full items-center gap-1.5 text-[10.5px] text-zinc-500">
+                <label className="flex max-sm:min-w-0 max-sm:max-w-full items-center gap-1.5 text-[10.5px] text-zinc-500">
                   {TODAY_COPY.fieldAttachedTo}
                   <select
                     value={field.targetId ?? ""}
