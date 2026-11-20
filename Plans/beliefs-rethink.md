@@ -64,8 +64,9 @@ results, timers), not just look right.
 | # | Item | Status |
 |---|---|---|
 | O1 | Throwaway email inboxes for walks | **Yes**, 2026-11-20 ("you can begin your work by using the throwaways") |
-| O2 | Buy r3's app ($0.99 one-time) | Open (Q1). Claude never buys |
-| O3 | Pay for r5's paid modules | Open (Q4), only after the free part is walked and the price is known |
+| O2 | Buy r3's app ($0.99 one-time) | **No**, 2026-11-20 ("I would prefer to not have to pay for any apps") |
+| O3 | Pay for r5's paid modules | **No**, 2026-11-20 (same words) |
+| O4 | He walks apps or submits forms himself | **No**, 2026-11-20 ("i prefer" that Claude gets "very close to the real apps. From pictures, youtube walkthroughs, creating throwaway emails or whatever"; he judges the copies, not the real apps) |
 
 ## BLOCKERS (each tried once on 2026-11-20)
 
@@ -82,13 +83,13 @@ results, timers), not just look right.
 
 | Question | Recommendation | Alternative | Cost if wrong |
 |---|---|---|---|
-| Q1 Buy r3's app ($0.99, one-time)? | **Yes**: you buy it on your phone and screen-record one full session (about 10 min). The free worksheets hold the method, but the app is the only guided, one-screen-at-a-time version, which is what our tool would be | No: worksheets + store screens only, app screens marked "inferred" | Without it the copy guesses the guided flow, the part that matters most |
+| Q1 Buy r3's app ($0.99, one-time)? | **Answered no** (O2). Was: **Yes**: you buy it on your phone and screen-record one full session (about 10 min). The free worksheets hold the method, but the app is the only guided, one-screen-at-a-time version, which is what our tool would be | No: worksheets + store screens only, app screens marked "inferred" | Without it the copy guesses the guided flow, the part that matters most |
 | Q2 r2 is gone: use the stand-in? | **Yes**: the peer-support group's free belief-disputing tool is addiction-specific and public | Drop r2, walk 4 | One fewer way of arguing with a belief to learn from |
 | Q3 r4's iPhone app from store screens only? | **Yes**, the open-source one is walked fully and does the same job | Borrow an iPhone | Its paid-tier screens stay "inferred" |
-| Q4 r5's paid modules | Walk the free 3 modules first, then report the price; you decide then | Buy now | Days 2–7 copied from the site, blog and store screens only |
+| Q4 r5's paid modules | **Answered no** (O3). Was: Walk the free 3 modules first, then report the price; you decide then | Buy now | Days 2–7 copied from the site, blog and store screens only |
 | Q5 Where study copies live | **Private pages only** (one page per product: working copy beside the real screens). Never on the live site | Hidden lab pages on the site (`/quit/lab`, as in the earlier round) | Lab pages are public addresses on the live site; you said copies are not shipped |
-| Q7 Three free Android apps cannot be installed here (B3) | **You install the three free apps on your phone** and screen-record the free part of each (r5's Day 1, about 40 min; the two others about 5–10 min each), then drop the videos where Claude can read them. No payment: stop at any price screen | You sign your own Google account into the emulator yourself (Claude never sees the password) | Without either, those apps are copied from store screens and the site only, the same "hollow" problem as before |
-| Q8 r1's "I'm not a robot" box now gives a picture puzzle (2026-11-20; it passed with one click on 2026-11-14), so the walk could not submit and the email series was not received | **You submit the quiz once on your phone** (about 3 min) with the throwaway address Claude gives you; Claude then collects the result email and the series for 7 days | Use the 2026-11-14 walk's saved email text only (text, no layout; episodes 2–6 timing unknown) | The copy's result screen and email series stay partly guessed |
+| Q7 Three free Android apps cannot be installed here (B3) | **Answered no** (O4): Claude finds another route (Phase 1b). Was: **You install the three free apps on your phone** and screen-record the free part of each (r5's Day 1, about 40 min; the two others about 5–10 min each), then drop the videos where Claude can read them. No payment: stop at any price screen | You sign your own Google account into the emulator yourself (Claude never sees the password) | Without either, those apps are copied from store screens and the site only, the same "hollow" problem as before |
+| Q8 (**answered no**, O4: Claude retries itself, Phase 1b) r1's "I'm not a robot" box now gives a picture puzzle (2026-11-20; it passed with one click on 2026-11-14), so the walk could not submit and the email series was not received | **You submit the quiz once on your phone** (about 3 min) with the throwaway address Claude gives you; Claude then collects the result email and the series for 7 days | Use the 2026-11-14 walk's saved email text only (text, no layout; episodes 2–6 timing unknown) | The copy's result screen and email series stay partly guessed |
 | Q6 The current belief tool and the earlier copies | **Keep untouched** until you say otherwise | Remove | None; nothing is removed without your word |
 
 ## PHASES
@@ -131,6 +132,19 @@ Each walker owns one code and writes only in its own folder:
   **`phone.sh stop` when done**.
 - Done when: a Haiku checker confirms every `flow.json` screen has a shot, every `next` points at a real screen,
   and every control has its options. Gaps go in "not seen", never filled by guessing.
+
+### Phase 1b: close the gaps without the owner (Sonnet; Opus checks) — after his 2026-11-20 answer (O2–O4)
+No purchases, nothing for him to do. Proposed routes, each tried once and written in the private `<code>/walk.md`:
+- **Free Android apps (r5 Day 1, r2's stand-in app, r4's large diary app):** install the open-source Aurora Store
+  (from F-Droid) on the emulator and use its anonymous sign-in, which downloads free Play apps without a Google
+  account; or a mirror reached from a headed browser on the hidden screen. Walk each free part fully; stop at any
+  price screen.
+- **r1's picture puzzle:** one retry from a headed browser on the hidden screen with a throwaway inbox. No
+  puzzle-solving services. If it still asks for a puzzle, use the 2026-11-14 saved emails.
+- **r3's paid app and r4's iPhone app:** never bought or pirated. Rebuilt from store screens, every public
+  review that describes a screen, and any public screen-recording video (YouTube, TikTok, Reddit), frames taken
+  per screen change. Unseen screens marked "inferred" with what they are inferred from.
+- Then Phases 2–3 for each product that gained screens, and the copies go on the Phase 4 page.
 
 ### Phase 2: spec each copy (Opus, one per product, in parallel) — depends on Phase 1 for that product
 - `<code>/spec.md`: screen by screen, what the copy shows and does, in our words (their words, drawings and brand
