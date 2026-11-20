@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { headers } from "next/headers"
 import { createServerSupabaseClient } from "./supabase"
+import { checkSignIn } from "./authResilience"
 import { hasAccess, hasPurchased } from "./profilesRepo"
 import { ACCOUNT_CHANGED_HEADER, PAGE_ACCOUNT_HEADER } from "@/src/shared/pageAccount"
 
@@ -38,17 +39,27 @@ export type AuthResult = AuthSuccess | AuthFailure
  */
 export async function requireAuth(req?: Request): Promise<AuthResult> {
   const supabase = await createServerSupabaseClient()
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser()
+  const check = await checkSignIn(supabase)
 
-  if (authError || !user) {
+  // Could not tell (Supabase unreachable or not plainly answering): a 503 the
+  // caller retries, never the 401 that tells it the person is signed out
+  // (src/db/authResilience.ts). Nobody is let in either way.
+  if (check.state === "unknown") {
+    return {
+      success: false,
+      response: NextResponse.json(
+        { error: "Could not reach the sign-in service. Try again shortly.", retryable: true },
+        { status: 503, headers: { "retry-after": "10", "cache-control": "no-store" } },
+      ),
+    }
+  }
+  if (check.state === "signed-out") {
     return {
       success: false,
       response: NextResponse.json({ error: "Authentication required" }, { status: 401 }),
     }
   }
+  const user = check.user
 
   if (await namesAnotherAccount(req, user.id)) {
     return { success: false, response: accountChangedResponse() }

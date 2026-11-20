@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js"
 import { cookies, headers } from "next/headers"
 
 import { authCookieOptions, requestIsHttps } from "./authCookies"
+import { refreshSafeFetch } from "./authResilience"
 
 /**
  * EVERY DATABASE READ IS ANSWERED BY THE DATABASE, NOT BY THE RENDER.
@@ -39,7 +40,8 @@ export async function createServerSupabaseClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookieOptions: authCookieOptions(requestIsHttps(headerStore)),
-      global: { fetch: unmemoizedFetch },
+      // A refresh answered with a server fault must not delete the session (authResilience.ts).
+      global: { fetch: refreshSafeFetch(unmemoizedFetch) },
       cookies: {
         getAll() {
           return cookieStore.getAll()

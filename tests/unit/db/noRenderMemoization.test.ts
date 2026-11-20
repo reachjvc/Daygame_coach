@@ -60,7 +60,16 @@ describe("database reads during a render", () => {
     process.env.SUPABASE_SERVICE_ROLE_KEY ??= "service"
     await createServerSupabaseClient()
     createAdminSupabaseClient()
-    expect(fetchOf(seen.ssr), "createServerSupabaseClient").toBe(unmemoizedFetch)
     expect(fetchOf(seen.admin), "createAdminSupabaseClient").toBe(unmemoizedFetch)
+    // The session client wraps it (refreshSafeFetch, authResilience.ts), so it is
+    // checked by what it sends: every request still carries a signal of its own.
+    const real = vi.fn(async () => new Response("[]"))
+    vi.stubGlobal("fetch", real)
+    const client = fetchOf(seen.ssr)!
+    await client("https://db.test/rest/v1/user_tracking_stats?user_id=eq.1")
+    await client("https://db.test/rest/v1/user_tracking_stats?user_id=eq.1")
+    const signals = real.mock.calls.map((call) => (call as unknown as [string, RequestInit])[1].signal)
+    expect(signals.every((sig) => sig instanceof AbortSignal), "createServerSupabaseClient").toBe(true)
+    expect(signals[0]).not.toBe(signals[1])
   })
 })
