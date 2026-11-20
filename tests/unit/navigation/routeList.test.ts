@@ -66,8 +66,17 @@ describe("the route list", () => {
   it("names only pages that exist", () => {
     // A value pointing at a folder that does not exist is a 404 that no amount
     // of importing it correctly will save you from.
-    const served = new Set(productRoutes().map((r) => r.route))
-    const missing = ADDRESSES.filter(([, address]) => !served.has(address)).map(([name]) => `ROUTES.${name}`)
+    // A folder like `app/quit/[addiction]` serves `/quit/nicotine` too, so a
+    // dynamic page counts when the address fills its brackets.
+    const pattern = (route: string) =>
+      new RegExp(
+        `^${route
+          .split("/")
+          .map((seg) => (/^\[\[?\.\.\./.test(seg) ? ".+" : /^\[.+\]$/.test(seg) ? "[^/]+" : seg.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")))
+          .join("/")}$`,
+      )
+    const served = productRoutes().map((r) => pattern(r.route))
+    const missing = ADDRESSES.filter(([, address]) => !served.some((re) => re.test(address))).map(([name]) => `ROUTES.${name}`)
     expect(missing).toEqual([])
   })
 

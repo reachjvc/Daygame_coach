@@ -2,7 +2,7 @@
  * QUIT TOOL 13, "WHAT IT GIVES YOU", WALKED ON A PHONE AND AT DESKTOP WIDTH (acceptance 1 to 12 of Plans/quit-finish.md).
  *
  * The clock is fixed (Thursday 2026-11-19, 10:00). Signed out; nothing is written to a server.
- * Screenshots of each screen go to GIVES_SHOTS (default: the quit-finish scratch folder).
+ * Screenshots of each screen go to GIVES_SHOTS (default: test-results/gives-shots).
  */
 
 import { mkdirSync, readFileSync } from "node:fs"
@@ -15,7 +15,7 @@ const data = nicotineJson as unknown as {
   beliefs: { id: string; need: string; limiting: string }[]
   needs: { id: string; name: string; line: string; swaps: { id: string; text: string; evidence: string }[] }[]
 }
-const SHOTS = process.env.GIVES_SHOTS ?? "/home/jonaswsl/.cache/daygame-research/quit-finish/gives/shots"
+const SHOTS = process.env.GIVES_SHOTS ?? "test-results/gives-shots"
 const PAGE = quitUrl("/quit/nicotine/gives")
 const NOW = new Date("2026-11-19T10:00:00")
 const TODAY = "2026-11-19"

@@ -33,6 +33,7 @@ import {
   type LessonState,
   type Place,
 } from "./logic"
+import { ROUTES } from "@/src/shared/routes"
 import { lessonText as t } from "./text"
 
 const TOOL = "lesson"
@@ -254,7 +255,7 @@ interface TodayProps {
 function ToolLink({ id, carry, children }: { id: string; carry: (p: string) => string; children: string }) {
   if (!isLiveTool(id)) return <span data-testid={`text-${id}`}>{children}</span>
   return (
-    <Link href={carry(`/quit/nicotine/${id}`)} data-testid={`link-${id}`} className="inline-flex min-h-11 items-center font-medium text-primary underline">
+    <Link href={carry(`${ROUTES.quitNicotine}/${id}`)} data-testid={`link-${id}`} className="inline-flex min-h-11 items-center font-medium text-primary underline">
       {children}
     </Link>
   )
@@ -298,7 +299,7 @@ function Today({ place, lessons, state, carry, card, onOpen, onAll }: TodayProps
           <div className="flex flex-col gap-2">
             <h2 className="text-base font-semibold">{t.endNext}</h2>
             {tools.map((x) => (
-              <Link key={x.id} href={carry(`/quit/nicotine/${x.id}`)} data-testid={`link-${x.id}`} className="flex min-h-12 w-full items-center justify-between gap-3 rounded-lg border border-border bg-card px-3 py-2 font-medium">
+              <Link key={x.id} href={carry(`${ROUTES.quitNicotine}/${x.id}`)} data-testid={`link-${x.id}`} className="flex min-h-12 w-full items-center justify-between gap-3 rounded-lg border border-border bg-card px-3 py-2 font-medium">
                 {x.name}
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
               </Link>

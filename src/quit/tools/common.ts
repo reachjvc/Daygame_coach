@@ -1,3 +1,4 @@
+import { ROUTES } from "@/src/shared/routes"
 import { isTodo, type Draftable, type QuitNumber, type QuitRef, type Severity } from "../types"
 
 /** A draft field that is still "TODO" is not usable. */
@@ -92,4 +93,4 @@ export function pickRecord<V>(x: unknown, keep: (v: unknown) => v is V): Record<
 export const isDay = (x: unknown): x is string => typeof x === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x)
 
 /** The band link that means "make your free plan": the quit date tool, a page a signed-out reader can open. */
-export const isFreePlanLink = (link: string): boolean => link === "/quit/nicotine/date"
+export const isFreePlanLink = (link: string): boolean => link === `${ROUTES.quitNicotine}/date`

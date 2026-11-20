@@ -21,7 +21,7 @@ export function PublicShell({ isLoggedIn, children }: { isLoggedIn: boolean; chi
       <footer className="border-t border-border bg-card py-8" data-testid="public-footer">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 text-sm text-muted-foreground">
           <span>&copy; 2026 {BRAND.name}</span>
-          <Link href={ROUTES.pricing} className="inline-flex min-h-11 items-center text-foreground underline underline-offset-4">Prices</Link>
+          <Link href={ROUTES.pricing} className="inline-flex min-h-11 min-w-11 items-center justify-center text-foreground underline underline-offset-4">Prices</Link>
           <Link href="/privacy" className="inline-flex min-h-11 items-center text-foreground underline underline-offset-4">Privacy</Link>
         </div>
       </footer>

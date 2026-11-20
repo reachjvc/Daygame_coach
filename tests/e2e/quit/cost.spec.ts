@@ -2,7 +2,7 @@
  * QUIT TOOL 9, "WHAT IT COSTS YOU", WALKED ON A PHONE AND A COMPUTER (acceptance 1 to 10 of Plans/quit-finish.md).
  *
  * Signed out. The shared record is read and written through `localStorage["quit-v1"].nicotine.record`.
- * Screenshots go to COST_SHOTS_DIR when it is set.
+ * Screenshots go to COST_SHOTS_DIR when it is set, else test-results/cost-shots.
  */
 
 import { mkdirSync } from "node:fs"
@@ -11,7 +11,7 @@ import { test, expect, SIGNED_OUT } from "../fixtures/test"
 import { quitUrl } from "../helpers/quit"
 
 const URL = quitUrl("/quit/nicotine/cost")
-const SHOTS = process.env.COST_SHOTS_DIR ?? "/home/jonaswsl/.cache/daygame-research/quit-finish/cost-shots"
+const SHOTS = process.env.COST_SHOTS_DIR ?? "test-results/cost-shots"
 mkdirSync(SHOTS, { recursive: true })
 
 test.use({ storageState: SIGNED_OUT, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })

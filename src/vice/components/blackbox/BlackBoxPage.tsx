@@ -711,7 +711,7 @@ export function BlackBoxPage() {
           <p className="mt-1.5 text-[12px] text-zinc-500">{syncNotice(sync.state, sync.pending)}</p>
         )}
         {sync.newerSaved && (
-          <p data-testid="newer-saved" className="mt-1.5 text-[12px] text-zinc-500">
+          <p data-testid="newer-saved" className="mt-1.5 text-[12px] text-muted-foreground">
             Something you changed here had already been saved in a newer version, so the newer one was kept.
           </p>
         )}

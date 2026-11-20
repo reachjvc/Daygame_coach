@@ -13,7 +13,6 @@ import { quitUrl } from "../helpers/quit"
 import type { Page } from "@playwright/test"
 import nicotineJson from "../../../src/quit/data/nicotine.json"
 import frameJson from "../../../src/quit/data/frame.json"
-import tooltextJson from "../../../src/quit/data/tooltext.json"
 
 const data = nicotineJson as unknown as {
   name: string
@@ -28,7 +27,6 @@ const data = nicotineJson as unknown as {
   hope: { kind: string; big: string; headline: string } | null
   planSteps: { text: string }[]
 }
-const t = tooltextJson
 
 test.use({ storageState: SIGNED_OUT, viewport: { width: 390, height: 844 } })
 test.describe("quit wave 1 part 1 @phone", () => {
