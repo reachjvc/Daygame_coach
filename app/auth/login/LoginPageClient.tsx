@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { createBrowserSupabaseClient } from "@/src/db"
+import { isAuthRetryableFetchError } from "@supabase/supabase-js"
 import { forgetStoredPages } from "@/src/shared/offlineCopies"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -103,6 +104,11 @@ export default function LoginPageClient() {
       if (/email\s*not\s*confirmed/i.test(message)) {
         setUnconfirmed(true)
         setError(null)
+      } else if (isAuthRetryableFetchError(error) || /failed to fetch|load failed|networkerror/i.test(message)) {
+        // The browser's own words for "no answer" ("Failed to fetch" in Chrome,
+        // "Load failed" in Safari) read like a broken site or a lost account.
+        // Nothing was refused: the sign-in service could not be reached.
+        setError("Can't reach the sign-in service right now. Check your connection and try again in a minute.")
       } else {
         setError(message)
       }

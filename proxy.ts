@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 import { isPublicPage, legacyRedirect } from "@/src/shared/routes"
+import { checkSignIn, couldNotTellPage, refreshSafeFetch, withoutUnreadableSession } from "@/src/db/authResilience"
 
 /**
  * Next 16 renamed middleware.ts to proxy.ts. This is the edge guard: it decides
@@ -58,18 +59,24 @@ export async function proxy(request: NextRequest) {
     },
   })
 
+  /** Every cookie Supabase wrote on this request, for the could-not-tell answer below. */
+  const written: { name: string; value: string; options: Parameters<typeof response.cookies.set>[2] }[] = []
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // A refresh answered with a server fault must not delete the session (src/db/authResilience.ts).
+      global: { fetch: refreshSafeFetch(fetch) },
       cookies: {
         getAll() {
-          return request.cookies.getAll()
+          // A session cookie that cannot be decoded reads as no session (authResilience.ts).
+          return withoutUnreadableSession(request.cookies.getAll())
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
             request.cookies.set(name, value)
             response.cookies.set(name, value, options)
+            written.push({ name, value, options })
           })
         },
       },
@@ -92,7 +99,40 @@ export async function proxy(request: NextRequest) {
    * matched request; the routes below still call `requireAuth()` themselves,
    * so this remains defence in depth rather than the only check.
    */
-  const { data: { user } } = await supabase.auth.getUser()
+  const check = await checkSignIn(supabase)
+  const user = check.state === "signed-in" ? check.user : null
+
+  /**
+   * COULD NOT TELL: SAY SO, NEVER "SIGNED OUT" (src/db/authResilience.ts).
+   *
+   * Supabase could not be reached or did not plainly answer, so nobody is let
+   * in, and nobody is told they are signed out either: a page gets a 503 that
+   * tries again by itself, an API call a 503 its caller retries (the time
+   * tracker stops for good on a 401, and keeps trying on a 5xx).
+   *
+   * THE COOKIES COME ALONG WHEN THEY HOLD A NEW SESSION. A refresh can succeed
+   * and the check after it fail. The refresh used up the old refresh token, so
+   * dropping the new one here would leave the browser holding a spent token,
+   * and its next request would be a real sign-out. A write that only deletes
+   * (supabase-js giving up on a refresh it could not read) is not passed on:
+   * the old session may still be good once the server answers again.
+   */
+  // Only where a missing user is refused below: /api/test/* answers either way.
+  const guarded = !path.startsWith("/api/") || path.startsWith("/api/timetrack/") || path.startsWith("/api/audit/")
+  if (check.state === "unknown" && guarded) {
+    const answer = path.startsWith("/api/")
+      ? NextResponse.json({ error: "Could not reach the sign-in service. Try again shortly.", retryable: true }, { status: 503 })
+      : new NextResponse(couldNotTellPage(pathname + search), {
+          status: 503,
+          headers: { "content-type": "text/html; charset=utf-8" },
+        })
+    answer.headers.set("cache-control", "no-store")
+    answer.headers.set("retry-after", "10")
+    if (written.some(({ value }) => value !== "")) {
+      for (const { name, value, options } of written) answer.cookies.set(name, value, options)
+    }
+    return answer
+  }
 
   // API routes answer with 401, never a redirect to a login page: a fetch()
   // that receives an HTML login page reports a confusing parse error instead of
