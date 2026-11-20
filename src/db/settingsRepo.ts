@@ -365,7 +365,7 @@ export async function getActiveSubscriptionPurchase(
  * Update subscription status in purchases table.
  *
  * THE ADMIN CLIENT, ON PURPOSE. `purchases` has no UPDATE policy (a person may
- * read and insert their own purchases, not edit them), so through the signed-in
+ * read their own purchases, not write them), so through the signed-in
  * client this update matched zero rows and reported success: cancelling or
  * resuming a subscription changed Stripe and `profiles` but never the purchase.
  * Found by tests/integration/repos/settingsRepoWrites.integration.test.ts. The
