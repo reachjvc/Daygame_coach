@@ -467,7 +467,55 @@ live after P1 (`ifthen`), now listed. `/quit/coaching` lost its only link (the o
 
 ## His round 2 notes
 
-(none yet)
+Read 2026-11-20 from the round 2 board (https://claude.ai/artifact/PShQUXtUfaFdoE12CWXKmT, db `notes`, `likes`),
+written 14:21–14:34. He commented on D1 only (and one line on D5); verbatim:
+
+- **In your words.** Who: "a 30 year old man, wanting to improve his life. He is feeling stuck with something within
+  dating, quitting a vice or life progress in general". Ten years: "Basically created the entire life that he wanted,
+  whether that be love, money, purpose. He wants to go where he wants to go, and we help him do that". First five
+  seconds: "This could be it". Lines: "I just dont want AI stuff. I guess I want something motivational and
+  on-brand. I might need to see a bunch of different ideas".
+- **D1 general:** "not sure those pages are actually fully white anymore, but it would be fine to make it all more
+  designed and more branded". 👍 on D1 log in.
+- **D1 front (phone):** "I am still not sure this is it. Perhaps it is the layout, but possibly it is the colors".
+- **D1 front (computer):** "I think the three areas could pop way more. I also think most of the text needs to be
+  changed. Particularly the 10000 days = 27 years, thats not really appealing. A lot of it sounds too AI, like "then
+  go out and log what happens". We're not really selling my product well here at all" · "But it is also quite
+  difficult with the information i have given you, so it might be too difficult".
+- **D1 Home:** "this is not too important for the rebrand, but this also needs a slightly different look. Perhaps
+  simply in terms of what is shown here. I also think users should have their most used tools be part of the bar
+  automatically / have some modularity (by modularity i always mean ability to change it to what they like)".
+- **D1 All tools:** "I would like for the headers like life, quit etc. to look cooler, and perhaps these things need
+  to be dropdowns, as we add more tools. Also not sure about this".
+- **D1 Time Log:** "Generally looks fine" · **calendar:** "Generally fine" · **Training:** "This also looks good
+  here" · **The Field:** "In general this looks very nice, i think".
+- **D1 Your plan:** "I am working on this with another agent too. It needs simplification more than anything".
+- **D1 Quit door:** "This is also not really about the rebrand, but this needs to be more well-designed".
+- **D5:** "i am not sure what i am looking at with the differences youve made here".
+- **Badges B1:** "i like this style of icons more, but may want to see more iterations".
+- **Words C1:** "This is more appealing. The day X: I did it, sounds nice, but i also wonder, could it be even more
+  "dynamic". For some people, they want to do something in day 100, others day 1000. Another way to understand the
+  10k day club, is also that you need 10000 hours of practice, 10000 iterations, not just 10000 days (10000 days is
+  likely too much for people to really be motivated)."
+- **Words C2:** "Something about this i quite like too. THe short snappy, plan it, quit it, decide and one day, ill
+  say I DID IT!"
+
+**On the board itself, in chat 2026-11-20:** "you tend to show me too much", and "when i click something (one of
+the toggles) it changes what i was looking at, i.e. it moves me to some other place on the artifact which is
+confusing. It would be easier to work with if i could more easily understand what exactly i was meant to look at,
+and it would be better if it was less."
+
+**Proposed reading (not his decision):** D1 (one orange) is the look; the open part is the front page (words and
+doors) and the badges. Home bar modularity, All tools drop-downs/headers, Quit door design go to their own work
+after the rebrand; Your plan is with the other session.
+
+**Round 3 board (2026-11-20), the short second board:** https://claude.ai/artifact/8bZLZjBGFUDWs2BDkUNUKP (db
+`notes`, `likes`; keys `r3-front-a|b|c`, `r3-badge-r1|r2|r3`, `r3-general`). No switchers: three front pages
+stacked (A "Your day", the day number cycles 100/365/1,000/10,000; B "Plan it. Quit it."; C "10,000 reps"), all D1
+with new door cards that list the real tools; three badge sets in the B1 style. Words in
+`~/.cache/daygame-research/rebrand-r2/wt/src/home/r3words.json` (proposed), shown through
+`localStorage.r3front` on branch `look-r2` (`R3Front.tsx`); shots by `rebrand-r2/shoot-r3.mjs`, page source in
+`rebrand-r2/r3/`. Next: read its marks, then the build spec (Phase 5 step 3 onward).
 
 ## Questions from the build
 
