@@ -52,6 +52,10 @@ say "I left notes".
   (8 versions of one person, a themed episode "men who quit for their
   kids") is planned in `Plans/celeb-clip-reels.md` (proposed). The method
   is in the process file, section "Celebrity clip reels".
+- **Look finder (step 1 of the proposed process)**: built 2026-11-20. 18
+  YouTube videos that beat their channel's usual views, in six looks, each
+  playable with a 👍 and a note (page listed in notes-seen.md). Waits for
+  his marks; the rule sheet and the three 10-second looks come after.
 - **After video 01**: see "Next video" below.
 
 ## The idea (owner, 2026-11-10)
