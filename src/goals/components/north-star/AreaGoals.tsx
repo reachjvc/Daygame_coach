@@ -19,11 +19,12 @@ import { Plus } from "lucide-react"
 import type { NsArea, NsPlan, VisionGoalType } from "@/src/goals/types"
 import { areaGoalsByPriority, goalRank, subGoalsOf } from "@/src/goals/northStarService"
 import { GoalCard, type GoalHandlers } from "./GoalCard"
+import type { GoalSectionId } from "@/src/goals/planSteps/planSections"
 import { NO_TRAINING_TICKS, type TrainingTicks } from "@/src/goals/dayTicks"
 import { isActive } from "@/src/goals/goalStatus"
 import { GOAL_STATUS_COPY } from "@/src/goals/data/northStar"
 
-export function AreaGoals({ area, plan, today, ticks = NO_TRAINING_TICKS, openId, onOpen, handlers, onAddGoal, showHeading = true }: {
+export function AreaGoals({ area, plan, today, ticks = NO_TRAINING_TICKS, openId, onOpen, handlers, onAddGoal, showHeading = true, goalSection, onGoalSection }: {
   area: NsArea
   plan: NsPlan
   today: string
@@ -34,6 +35,9 @@ export function AreaGoals({ area, plan, today, ticks = NO_TRAINING_TICKS, openId
   onAddGoal: (areaId: string, title: string, type: VisionGoalType) => void
   /** Off when the panel around this already names the area in its own header. */
   showHeading?: boolean
+  /** The open card shows only this section, with chips to switch (`/plan/new`); absent = whole card (`/plan`). */
+  goalSection?: GoalSectionId
+  onGoalSection?: (next: GoalSectionId | null) => void
 }) {
   // Priority order, not the order they happened to be typed in.
   const goals = areaGoalsByPriority(plan, area.id)
@@ -97,6 +101,8 @@ export function AreaGoals({ area, plan, today, ticks = NO_TRAINING_TICKS, openId
           open={openId === goal.id}
           onToggleOpen={() => onOpen(goal.id)}
           handlers={handlers}
+          section={goalSection}
+          onSection={onGoalSection}
         />
       ))}
       {finished.length > 0 && (

@@ -14,7 +14,11 @@
  */
 
 import { useEffect, useRef, useState, type ReactNode } from "react"
-import { BUILD_STEPS, USE_STEPS } from "@/src/goals/data/northStar"
+import Link from "next/link"
+import { BUILD_STEPS, TAB_LABELS, USE_STEPS } from "@/src/goals/data/northStar"
+import { nextScreen, prevScreen, screenRoute, screensForStep, type Screen, type Sequence } from "@/src/goals/planSteps/planSequences"
+import { SECTION_TITLES } from "@/src/goals/planSteps/sectionTitles"
+import type { SectionId } from "@/src/goals/planSteps/planSections"
 import * as ns from "@/src/goals/northStarService"
 import { planInUse } from "@/src/goals/planLanding"
 import type { SyncState } from "@/src/goals/lifePlanSync"
@@ -29,7 +33,16 @@ import { PlanStepNav } from "../north-star/PlanStepNav"
 import { usePlanNew } from "./PlanNewContext"
 import { useRealStep } from "./RealStep"
 
-export function RealShell({ children }: { children: ReactNode }) {
+/** What a Back or Next button says for a screen: the step's name, or "Part 2 of 3" when it stays in a split step. */
+function navLabel(here: Screen, target: Screen, seq: Sequence): string {
+  if (target.step === here.step && target.section) {
+    const parts = screensForStep(seq, target.step)
+    return `Part ${parts.findIndex((p) => p.id === target.id) + 1} of ${parts.length}`
+  }
+  return TAB_LABELS[target.step]
+}
+
+export function RealShell({ children, seq }: { children: ReactNode; seq?: Sequence }) {
   const r = useRealStep()
   const { store } = usePlanNew()
   const { plan, stepId: tab, planPct, nsAccount } = r
@@ -87,8 +100,21 @@ export function RealShell({ children }: { children: ReactNode }) {
   const dialogOpen =
     ((tab === "now" || tab === "recap") && !!r.nowAreaId) || ((tab === "milestones" || tab === "systems") && !!r.planAreaId && !!r.nowGoalId)
 
+  /* ---- Back and Next follow the sequence's screens, so a split step's parts come one after the other ---- */
+  const screen = r.screen
+  const go = (target: Screen) => () => r.router.push(screenRoute(seq as Sequence, target))
+  const parts = screen && seq ? screensForStep(seq, screen.step) : []
+  // "See it all" draws the whole step, so Back and Next leave it: before its first part, after its last.
+  const prev = screen && seq ? prevScreen(seq, r.seeAll && parts.length ? parts[0] : screen) : undefined
+  const next = screen && seq ? nextScreen(seq, r.seeAll && parts.length ? parts[parts.length - 1] : screen) : undefined
+  const navPrev = screen && seq ? (prev ? { label: navLabel(screen, prev, seq), onGo: go(prev) } : null) : undefined
+  const navNext = screen && seq ? (next ? { label: navLabel(screen, next, seq), onGo: go(next) } : null) : undefined
+  const partIndex = screen ? parts.findIndex((p) => p.id === screen.id) : -1
+
   const nav = (
     <PlanStepNav
+      prev={navPrev}
+      next={navNext}
       tab={tab}
       siteBar={siteBar}
       setTab={r.setTab}
@@ -133,6 +159,20 @@ export function RealShell({ children }: { children: ReactNode }) {
           onPick={(id) => r.setTab(id)}
         />
         {r.ribbon && !dialogOpen && <div className="mb-5">{r.ribbon}</div>}
+        {screen?.section && parts.length > 1 && (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1" data-testid="section-bar">
+            <p className="text-[12px] text-zinc-400" data-testid="section-title">
+              {r.seeAll ? TAB_LABELS[screen.step] : `Part ${partIndex + 1} of ${parts.length}: ${SECTION_TITLES[screen.section as SectionId]}`}
+            </p>
+            <Link
+              href={r.seeAll ? screenRoute(seq as Sequence, screen) : `${screenRoute(seq as Sequence, screen)}?all=1`}
+              className="inline-flex min-h-11 items-center text-[12px] text-violet-300 hover:text-violet-100 underline decoration-dotted underline-offset-2"
+              data-testid="see-it-all"
+            >
+              {r.seeAll ? "Back to the short screens" : "See it all on one page"}
+            </Link>
+          </div>
+        )}
         {children}
         <PlanTodos plan={plan} tab={tab} loaded={store.loaded} today={r.today} onGo={(t) => r.setTab(t)} />
         <PlanReadBack plan={plan} loaded={store.loaded} today={r.today} />

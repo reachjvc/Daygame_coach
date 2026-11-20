@@ -8,15 +8,16 @@ import { ROUTES } from "@/src/shared/routes"
 describe("planSequences", () => {
   const v1 = sequenceById("v1")
 
-  it("V1 is the twelve steps in the real tool's order", () => {
+  it("V1 is the twelve steps in the real tool's order, the long ones split into screens", () => {
     expect(DEFAULT_SEQUENCE_ID).toBe("v1")
-    expect(screensOf("v1").map((s) => s.step)).toEqual(TAB_ORDER)
-    expect(screensOf("v1")).toHaveLength(12)
+    expect(screensOf("v1").map((s) => s.step).filter((s, i, a) => a.indexOf(s) === i)).toEqual(TAB_ORDER)
+    expect(screensOf("v1").length).toBeGreaterThan(12)
   })
 
   it("splits build and daily the way NorthStarFlow does", () => {
-    expect(v1.screens.filter((s) => s.kind === "build").map((s) => s.step)).toEqual(BUILD_STEPS)
-    expect(v1.screens.filter((s) => s.kind === "daily").map((s) => s.step).sort()).toEqual([...USE_STEPS].sort())
+    const uniq = (a: string[]) => a.filter((s, i) => a.indexOf(s) === i)
+    expect(uniq(v1.screens.filter((s) => s.kind === "build").map((s) => s.step))).toEqual(BUILD_STEPS)
+    expect(uniq(v1.screens.filter((s) => s.kind === "daily").map((s) => s.step)).sort()).toEqual([...USE_STEPS].sort())
     expect(BUILD_STEPS).toEqual(["star", "now", "pick", "systems", "milestones", "focus", "values", "recap"])
   })
 
@@ -53,7 +54,7 @@ describe("planSequences", () => {
 
   it("finds the screen for a step and an unknown id falls back to V1", () => {
     expect(stepRoute(v1, "today")).toBe(`${ROUTES.planNew}/today`)
-    expect(screenForStep(v1, "star")?.id).toBe("star")
+    expect(screenForStep(v1, "star")?.id).toBe("star.vision")
     expect(screenById(v1, "nope")).toBeNull()
     expect(sequenceById("zzz").id).toBe("v1")
     expect(sequenceById(null).id).toBe("v1")

@@ -23,6 +23,7 @@
  */
 
 import { planLimit } from "@/src/goals/planLimits"
+import { showSection } from "@/src/goals/planSteps/planSections"
 import { useState } from "react"
 // Only utility icons here on purpose. Every semantic icon in this project
 // already carries a meaning somewhere else, and reusing one in a new context
@@ -99,6 +100,7 @@ export function StarTab({
   onNewNorthStar,
   onNext,
   hideNext = false,
+  section,
 }: {
   plan: NsPlan
   onStar: (text: string) => void
@@ -110,7 +112,10 @@ export function StarTab({
   onNext: () => void
   /** Hide the step-advance button when a surrounding frame supplies Next (default: shown, as in /plan). */
   hideNext?: boolean
+  /** Draw only one section of the step (`/plan/new`'s split screens); absent = the whole step, as `/plan` draws it. */
+  section?: "star.vision" | "star.self"
 }) {
+  const show = (id: string) => showSection(section, id)
   const [ladderOpen, setLadderOpen] = useState(false)
   const [showExample, setShowExample] = useState(false)
   const [confirmOverwrite, setConfirmOverwrite] = useState(false)
@@ -131,7 +136,7 @@ export function StarTab({
     <div className="space-y-5">
       {/* The horizon decides what the whole paragraph means, so it is a choice
           on the page rather than a caption above it. */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      {show("star.vision") && <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
         <p className="text-[12px] text-zinc-400">{HORIZON_SCREEN.question}</p>
         <div className="flex flex-wrap items-center gap-2 mt-2">
           {HORIZON_CHOICES.map((years) => {
@@ -153,9 +158,9 @@ export function StarTab({
           })}
           <span className="text-[11px] text-zinc-600">{HORIZON_SCREEN.note}</span>
         </div>
-      </div>
+      </div>}
 
-      <div className="rounded-2xl border border-violet-400/25 bg-gradient-to-br from-violet-500/[0.07] via-white/[0.03] to-transparent p-5">
+      {show("star.vision") && <div className="rounded-2xl border border-violet-400/25 bg-gradient-to-br from-violet-500/[0.07] via-white/[0.03] to-transparent p-5">
         <h2 className="text-lg font-semibold text-white">{NORTH_STAR_SCREEN.question}</h2>
         <p className="text-[12.5px] text-zinc-400 mt-1.5 leading-relaxed">{NORTH_STAR_SCREEN.hint}</p>
         <p className="text-[12px] text-zinc-500 mt-2 leading-relaxed">{NORTH_STAR_SCREEN.help}</p>
@@ -188,24 +193,24 @@ export function StarTab({
         )}
         {written && <p className="text-[11px] text-zinc-500 mt-3 leading-relaxed">{NORTH_STAR_REREAD}</p>}
         <NorthStarHistory plan={plan} onNewNorthStar={onNewNorthStar} />
-      </div>
+      </div>}
 
       {/* The why sits on its own, directly under the paragraph. It is the one
           answer that decides whether any of the rest survives February. */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+      {show("star.vision") && <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
         <StarQuestion prompt={starPrompt(STAR_WHY_ID)} plan={plan} onAnswer={onAnswer} />
-      </div>
+      </div>}
 
       {/* The values used to be written here as well as on step 7, the same two
           lists twice. They live on step 7 only now; this line says where. */}
-      <p className="text-[11.5px] text-zinc-500 px-1" data-testid="star-values-pointer">{STAR_VALUES_POINTER}</p>
+      {show("star.self") && <p className="text-[11.5px] text-zinc-500 px-1" data-testid="star-values-pointer">{STAR_VALUES_POINTER}</p>}
 
       {/* Who you are, how you show up, and only then the gap.
           The order and the reason for it are in STAR_PROMPTS' own comment: the
           first two are declarations you condition, the third is what is missing
           between here and the paragraph, and running them together made them
           read as one question asked twice. */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+      {show("star.self") && <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="text-sm font-semibold text-zinc-200">{STAR_WORK_INTRO.title}</h2>
           <span className="text-[11px] text-zinc-600 tabular-nums shrink-0">
@@ -222,10 +227,10 @@ export function StarTab({
           </div>
           <StarQuestion prompt={starPrompt("affirmations")} plan={plan} onAnswer={onAnswer} />
         </div>
-      </div>
+      </div>}
 
       {/* The ladder. Closed until asked for. */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.02]">
+      {show("star.vision") && <div className="rounded-2xl border border-white/10 bg-white/[0.02]">
         <button
           onClick={() => setLadderOpen((v) => !v)}
           aria-expanded={ladderOpen}
@@ -286,7 +291,7 @@ export function StarTab({
             )}
           </div>
         )}
-      </div>
+      </div>}
 
       {/* Always available. Gating this on the paragraph being written meant
           somebody who arrived wanting to jot three goals down had to write an

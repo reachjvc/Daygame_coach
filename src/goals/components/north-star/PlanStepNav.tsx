@@ -25,6 +25,8 @@ export function PlanStepNav({
   storageRefused,
   progress,
   testIds = false,
+  prev,
+  next,
 }: {
   tab: NorthStarTabId
   siteBar: boolean
@@ -38,14 +40,22 @@ export function PlanStepNav({
   storageRefused: boolean
   progress: NsProgress
   testIds?: boolean
+  /**
+   * Where Back and Next go, when a sequence of screens decides it (`/plan/new`). Undefined = the real tool's twelve
+   * steps in `TAB_ORDER`, as `/plan` has them; null = nothing that way.
+   */
+  prev?: { label: string; onGo: () => void } | null
+  next?: { label: string; onGo: () => void } | null
 }) {
   const tabIndex = TAB_ORDER.indexOf(tab)
+  const back = prev !== undefined ? prev : tabIndex > 0 ? { label: TAB_LABELS[TAB_ORDER[tabIndex - 1]], onGo: () => setTab(TAB_ORDER[tabIndex - 1]) } : null
+  const forward = next !== undefined ? next : tabIndex < TAB_ORDER.length - 1 ? { label: TAB_LABELS[TAB_ORDER[tabIndex + 1]], onGo: () => setTab(TAB_ORDER[tabIndex + 1]) } : null
   return (
       <div className={siteBar ? "sticky top-0 z-30 bg-zinc-950/90 backdrop-blur-sm border-b border-white/10" : "sticky bottom-0 bg-zinc-950/90 backdrop-blur-sm border-t border-white/10"}>
         <div className={`max-w-5xl mx-auto flex items-center justify-between gap-3 ${siteBar ? "px-4 py-2 sm:px-6 sm:py-3" : "px-6 py-3"}`}>
-          {tabIndex > 0 ? (
-            <button onClick={() => setTab(TAB_ORDER[tabIndex - 1])} data-testid={testIds ? "back" : undefined} className="text-xs text-zinc-400 hover:text-white transition-colors whitespace-nowrap shrink-0">
-              ← {TAB_LABELS[TAB_ORDER[tabIndex - 1]]}
+          {back ? (
+            <button onClick={back.onGo} data-testid={testIds ? "back" : undefined} className="text-xs text-zinc-400 hover:text-white transition-colors whitespace-nowrap shrink-0">
+              ← {back.label}
             </button>
           ) : <span />}
           {/* What is actually happening to what you typed, said plainly and
@@ -89,13 +99,13 @@ export function PlanStepNav({
                     : "Saved on this device."}
             </span>
           </span>
-          {tabIndex < TAB_ORDER.length - 1 ? (
+          {forward ? (
             <button
-              onClick={() => setTab(TAB_ORDER[tabIndex + 1])}
+              onClick={forward.onGo}
           data-testid={testIds ? "next" : undefined}
               className="text-sm font-medium px-4 py-2 rounded-lg whitespace-nowrap shrink-0 bg-primary/20 border border-primary/40 text-foreground hover:bg-primary/30 transition-colors"
             >
-              {TAB_LABELS[TAB_ORDER[tabIndex + 1]]} →
+              {forward.label} →
             </button>
           ) : (
             <span className="text-[11px] text-zinc-600 tabular-nums">

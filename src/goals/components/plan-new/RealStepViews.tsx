@@ -11,7 +11,7 @@
  *  - the review reminder is shown off and read-only (`onReminderChange` absent, `reminderReadOnly`), as the copy space has no pushes.
  */
 
-import type { ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import type { NorthStarTabId } from "@/src/goals/types"
 import { COMMIT_EDIT_COPY } from "@/src/goals/data/northStar"
 import { DEFAULT_REVIEW_DAY } from "@/src/goals/dueNowService"
@@ -46,12 +46,14 @@ const COPY_SPACE_REMINDER = { pushOn: false, reviewDay: DEFAULT_REVIEW_DAY, revi
 /** The step `stepId` names, drawn from the real parts. */
 export function RealStepView(): ReactNode {
   const r = useRealStep()
-  const { plan, today, ticks, setTab } = r
+  const { plan, today, ticks, setTab, section } = r
   const tab: NorthStarTabId = r.stepId
+  /** On a split screen only the blocks of its section are drawn; `show` is "does this part draw on this screen". */
+  const show = (...ids: string[]) => !section || ids.includes(section)
 
   switch (tab) {
     case "star":
-      return <StarTab plan={plan} {...r.starHandlers} onNext={() => setTab("now")} hideNext={r.framed} />
+      return <StarTab plan={plan} {...r.starHandlers} onNext={() => setTab("now")} hideNext={r.framed} section={section as "star.vision" | "star.self" | undefined} />
 
     case "now":
       return (
@@ -101,7 +103,7 @@ export function RealStepView(): ReactNode {
     case "focus":
       return (
         <div className="space-y-8">
-          <OneThingTab
+          {show("season.one-thing", "season.why", "season.who") && <OneThingTab
             plan={plan}
             handlers={r.oneThingHandlers}
             account={r.oneThing}
@@ -109,17 +111,22 @@ export function RealStepView(): ReactNode {
             onTyped={r.setOneThingTyped}
             today={today}
             goalHandlers={r.goalHandlers}
-          />
-          <FocusTab
+            section={section as "season.one-thing" | "season.why" | "season.who" | undefined}
+            goalSection={r.goalSection}
+            onGoalSection={r.setGoalSection}
+          />}
+          {show("season.areas", "season.order") && <FocusTab
             plan={plan}
             today={today}
             handlers={r.focusHandlers}
             onOpenGoal={(areaId, goalId) => { r.setPlanAreaId(areaId); r.setNowGoalId(goalId); setTab("milestones") }}
             onNext={() => setTab("milestones")}
             hideNext={r.framed}
-            // The sentence is just above, in the same step: no echo of it here.
-            oneThing={null}
-          />
+            // The sentence is just above, in the same step: no echo of it here. On a screen of its own the sentence is not
+            // above, so the real echo shows it.
+            oneThing={section === "season.areas" ? r.oneThingBody : null}
+            section={section as "season.areas" | "season.order" | undefined}
+          />}
         </div>
       )
 
@@ -150,7 +157,7 @@ export function RealStepView(): ReactNode {
     case "values":
       return (
         <div className="space-y-5">
-          <ValuesSoFar
+          {show("values.so-far") && <ValuesSoFar
             plan={plan}
             {...r.valuesSoFarWriters}
             onGoTo={(mention) => {
@@ -165,9 +172,9 @@ export function RealStepView(): ReactNode {
                 setTab(mention.tab)
               }
             }}
-          />
-          <ValuesWork plan={plan} handlers={r.valuesHandlers} mode="elicit" />
-          <ValuesWork plan={plan} handlers={r.valuesHandlers} mode="order" />
+          />}
+          {show("values.lists") && <ValuesWork plan={plan} handlers={r.valuesHandlers} mode="elicit" />}
+          {show("values.order") && <ValuesWork plan={plan} handlers={r.valuesHandlers} mode="order" />}
         </div>
       )
 
@@ -212,36 +219,15 @@ export function RealStepView(): ReactNode {
     case "journal":
       return <JournalTab plan={plan} today={today} {...r.journalWriters} />
 
-    case "review": {
-      const named = parsePeriodParam(r.reviewPeriod ?? undefined)
-      const dueWeek = r.dueWeek
-      const initialPeriod = named ?? (dueWeek && "period" in dueWeek.go ? dueWeek.go.period ?? null : null)
-      return (
-        <PeriodReviewTab
-          key={named ? reviewIdFor(named) : "now"}
-          initialPeriod={initialPeriod}
-          // The copy space shows the reminder block, off, with every control disabled: no read, no switch, no push.
-          reminder={COPY_SPACE_REMINDER}
-          onReminderChange={undefined}
-          reminderReadOnly
-          plan={plan}
-          today={today}
-          ticks={ticks}
-          handlers={{
-            onWrite: (period, patch) => r.setPlan((p) => writeReview(p, period, patch, today)),
-            onRemove: (id) => r.setPlan((p) => removeReview(p, id)),
-            onAddMoments: (period, lines) => r.setPlan((p) => appendToReview(p, period, "magicMoments", lines, today)),
-            onReading: (goalId, date, value) => r.setPlan((p) => ns.setGoalReading(p, date, goalId, value)),
-          }}
-        />
-      )
-    }
+    case "review":
+      return <ReviewScreen />
 
     case "recap":
       return (
         <>
-          <PlanProgressList progress={r.planPct} onGo={(t) => setTab(t)} />
+          {show("everything.driving-force") && <PlanProgressList progress={r.planPct} onGo={(t) => setTab(t)} />}
           <RecapTab
+            section={section as "everything.driving-force" | "everything.plan" | "everything.links" | "everything.check" | "everything.commit" | undefined}
             plan={plan}
             today={today}
             ticks={ticks}
@@ -268,6 +254,7 @@ export function RealStepView(): ReactNode {
             }
             commit={
               <CommitTab
+                section={section as "everything.plan" | "everything.links" | "everything.check" | "everything.commit" | undefined}
                 plan={plan}
                 today={today}
                 onOpenToday={() => setTab("today")}
@@ -282,7 +269,7 @@ export function RealStepView(): ReactNode {
                   </section>
                 }
               >
-                <ReviewTab plan={plan} today={today} handlers={r.reviewHandlers} valuesHandlers={r.valuesHandlers} values={false} />
+                <ReviewTab plan={plan} today={today} handlers={r.reviewHandlers} valuesHandlers={r.valuesHandlers} values={false} section={section as "everything.check" | "everything.commit" | undefined} />
               </CommitTab>
             }
           />
@@ -306,4 +293,49 @@ export function RealStepView(): ReactNode {
     default:
       return null
   }
+}
+
+/**
+ * THE REVIEW STEP. The period lives in the tab's own state; it is also kept in the address (`?period=`) beside every
+ * change, so a move between the review's screens, a reload and a link all keep it. The tab remounts when a link names
+ * another period, but not for a change the tab itself made.
+ */
+function ReviewScreen(): ReactNode {
+  const r = useRealStep()
+  const { plan, today, ticks } = r
+  const named = parsePeriodParam(r.reviewPeriod ?? undefined)
+  const dueWeek = r.dueWeek
+  const initialPeriod = named ?? (dueWeek && "period" in dueWeek.go ? dueWeek.go.period ?? null : null)
+  const namedId = named ? reviewIdFor(named) : "now"
+  const own = useRef<string | null>(null)
+  const [key, setKey] = useState(namedId)
+  useEffect(() => {
+    if (namedId === own.current) return
+    setKey(namedId)
+  }, [namedId])
+  return (
+    <PeriodReviewTab
+      key={key}
+      initialPeriod={initialPeriod}
+      // The copy space shows the reminder block, off, with every control disabled: no read, no switch, no push.
+      reminder={COPY_SPACE_REMINDER}
+      onReminderChange={undefined}
+      reminderReadOnly
+      plan={plan}
+      today={today}
+      ticks={ticks}
+      section={r.section as "review.open" | "review.goals" | "review.write" | undefined}
+      onPeriod={(period) => {
+        const id = period.cadence === "fortnight" ? null : reviewIdFor(period)
+        own.current = id ?? "now"
+        r.setPeriodParam(id)
+      }}
+      handlers={{
+        onWrite: (period, patch) => r.setPlan((p) => writeReview(p, period, patch, today)),
+        onRemove: (id) => r.setPlan((p) => removeReview(p, id)),
+        onAddMoments: (period, lines) => r.setPlan((p) => appendToReview(p, period, "magicMoments", lines, today)),
+        onReading: (goalId, date, value) => r.setPlan((p) => ns.setGoalReading(p, date, goalId, value)),
+      }}
+    />
+  )
 }

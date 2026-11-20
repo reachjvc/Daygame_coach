@@ -33,6 +33,7 @@ import { areaReview, wheelRatings } from "@/src/goals/northStarService"
 import { AreaWheel } from "./AreaWheel"
 import { GoalOverview } from "./GoalOverview"
 import { OneThingEcho } from "./OneThingEcho"
+import { showSection } from "@/src/goals/planSteps/planSections"
 
 export interface FocusHandlers {
   onToggleArea: (areaId: string) => void
@@ -56,6 +57,7 @@ export function FocusTab({
   onNext,
   hideNext = false,
   oneThing,
+  section,
 }: {
   plan: NsPlan
   today: string
@@ -66,7 +68,10 @@ export function FocusTab({
   hideNext?: boolean
   /** The saved sentence, or null. Read once by the flow and passed down. */
   oneThing: string | null
+  /** Draw only one section of the step (`/plan/new`'s split screens); absent = the whole step, as `/plan` draws it. */
+  section?: "season.areas" | "season.order"
 }) {
+  const show = (id: string) => showSection(section, id)
   const [adding, setAdding] = useState("")
   const ratings = wheelRatings(plan, today)
   const picked = plan.seasonAreaIds
@@ -74,10 +79,10 @@ export function FocusTab({
 
   return (
     <div className="space-y-5">
-      <p className="text-[12.5px] text-zinc-400 leading-relaxed">{FOCUS_COPY.intro}</p>
+      {show("season.areas") && <p className="text-[12.5px] text-zinc-400 leading-relaxed">{FOCUS_COPY.intro}</p>}
 
       {/* ------------------------------------------------------ the areas */}
-      <section className="rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-4">
+      {show("season.areas") && <section className="rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-4">
         <h2 className="text-sm font-semibold text-zinc-200">{FOCUS_COPY.areasTitle}</h2>
         <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed">{FOCUS_COPY.areasHelp}</p>
 
@@ -171,21 +176,21 @@ export function FocusTab({
         <p className="text-[11px] text-zinc-500 mt-2.5">
           {picked.length === 0 ? FOCUS_COPY.areasNone : FOCUS_COPY.areasPicked(picked.length)}
         </p>
-      </section>
+      </section>}
 
       {/* THE ONE THING IS WRITTEN JUST ABOVE THIS, on the same Season step
           (Plans/life-plan-rebuild.md, Phase 3), so the flow passes no echo of
           it. What is here is the rest of the season: which areas, and in what
           order. The echo stays for a page that shows this half on its own. */}
-      <OneThingEcho
+      {show("season.areas") && <OneThingEcho
         body={oneThing}
         label={FOCUS_COPY.oneEcho}
         editLabel={FOCUS_COPY.oneEchoEdit}
         onEdit={() => handlers.onGoToTab("one")}
-      />
+      />}
 
       {/* ------------------------------------------------------- the order */}
-      <section className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
+      {show("season.order") && <section className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
         <div className="px-5 pt-4">
           <h2 className="text-sm font-semibold text-zinc-200">{FOCUS_COPY.orderTitle}</h2>
           <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed">{FOCUS_COPY.orderHelp}</p>
@@ -216,7 +221,7 @@ export function FocusTab({
             onOpenRoutine={handlers.onOpenRoutine}
           />
         )}
-      </section>
+      </section>}
 
       {!hideNext && <div className="flex justify-end">
         <button

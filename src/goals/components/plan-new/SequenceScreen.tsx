@@ -16,8 +16,8 @@ import { RealStepView } from "./RealStepViews"
 export function SequenceScreen({ seq, screen }: { seq: Sequence; screen: Screen }) {
   return (
     <div data-testid={`sequence-${screen.id}`}>
-      <RealStepHost stepId={screen.step} sequence={seq} framed={screen.kind === "build"} showRibbon={false}>
-        <RealShell>
+      <RealStepHost stepId={screen.step} sequence={seq} screen={screen} framed={screen.kind === "build"} showRibbon={false}>
+        <RealShell seq={seq}>
           <RealStepView />
         </RealShell>
       </RealStepHost>

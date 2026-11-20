@@ -78,6 +78,15 @@ import { takesReadings } from "@/src/goals/goalReadings"
 import { NO_TRAINING_TICKS, type TrainingTicks } from "@/src/goals/dayTicks"
 import { planLimit } from "@/src/goals/planLimits"
 import { LimitCounter } from "./LimitCounter"
+import { showSection, type GoalSectionId } from "@/src/goals/planSteps/planSections"
+
+/** The chips of the open card on `/plan/new`: existing words, except the first, which has no heading in the card (Phase 8). */
+const GOAL_SECTION_LABELS: readonly (readonly [GoalSectionId, string])[] = [
+  ["goal.shape", "Area and date"],
+  ["goal.why", NS_WHY_ANGLES[0].question],
+  ["goal.do", "What will you actually do about this?"],
+  ["goal.stops", "What could stop you?"],
+]
 
 const formatShortDay = (key: string) => dateKeyLabel(key, { day: "numeric", month: "short" })
 
@@ -126,7 +135,7 @@ export interface GoalHandlers {
   onGoToTab: (tab: import("@/src/goals/types").NorthStarTabId) => void
 }
 
-export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoals, today, ticks = NO_TRAINING_TICKS, plan, isFocus, open, onToggleOpen, handlers }: {
+export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoals, today, ticks = NO_TRAINING_TICKS, plan, isFocus, open, onToggleOpen, handlers, section, onSection }: {
   goal: NsGoal
   area: NsArea | undefined
   areas: NsArea[]
@@ -144,7 +153,12 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
   open: boolean
   onToggleOpen: () => void
   handlers: GoalHandlers
+  /** Draw only one section of the open card (`/plan/new`); absent = the whole card, as `/plan` draws it. */
+  section?: GoalSectionId
+  /** With `section`: chips that switch section (`null` = see it all). Absent = no chips. */
+  onSection?: (next: GoalSectionId | null) => void
 }) {
+  const show = (id: string) => showSection(section, id)
   const [angle, setAngle] = useState(0)
   const color = area?.color ?? "#a1a1aa"
   const hasWhy = goalHasWhy(goal)
@@ -386,6 +400,36 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
 
       {open && (
         <div className="px-3 pb-3 space-y-4 border-t border-white/5 pt-3">
+          {onSection && (
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Parts of this goal" data-testid="goal-sections">
+              {GOAL_SECTION_LABELS.map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => onSection(id)}
+                  aria-pressed={section === id}
+                  data-testid={`goal-section-${id}`}
+                  className={`min-h-11 rounded-lg border px-3 py-2 text-left text-[12px] transition-colors ${
+                    section === id ? "border-violet-400/50 bg-violet-500/15 text-violet-100" : "border-white/10 text-zinc-400 hover:text-zinc-200 hover:border-white/25"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => onSection(null)}
+                aria-pressed={!section}
+                data-testid="goal-section-all"
+                className={`min-h-11 rounded-lg border px-3 py-2 text-[12px] transition-colors ${
+                  !section ? "border-violet-400/50 bg-violet-500/15 text-violet-100" : "border-white/10 text-zinc-400 hover:text-zinc-200 hover:border-white/25"
+                }`}
+              >
+                See it all on one page
+              </button>
+            </div>
+          )}
+          {show("goal.shape") && <>
           {/* This goal is really one of this page's own tools, or a thing that
               already exists as a step in a routine. Said once, so the plan does
               not carry the same commitment twice with no link between them. */}
@@ -575,8 +619,10 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
           {/* What it has earned, in place of a date on a goal that repeats
               (the owner's item 22), and what feeds it has earned. */}
           <GoalAchievements plan={plan} goal={goal} today={today} ticks={ticks} />
+          </>}
 
           {/* The why. One question at a time, changeable when it runs dry. */}
+          {show("goal.why") && <>
           <div>
             <div className="flex items-baseline justify-between gap-3">
               <p className="text-[13px] text-zinc-200">{currentAngle.question}</p>
@@ -682,13 +728,16 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
               />
             </div>
           </div>
+          </>}
 
-          <ActionBlock goal={goal} plan={plan} color={color} needsAction={needsAction} handlers={handlers} />
-          <ReasonsDrill goal={goal} color={color} handlers={handlers} />
+          {show("goal.do") && <ActionBlock goal={goal} plan={plan} color={color} needsAction={needsAction} handlers={handlers} />}
+          {show("goal.why") && <ReasonsDrill goal={goal} color={color} handlers={handlers} />}
+          {show("goal.stops") && <>
           <ObstacleBlock goal={goal} color={color} handlers={handlers} />
           <BeliefBlock goal={goal} color={color} handlers={handlers} />
+          </>}
 
-          <TagList
+          {show("goal.why") && <TagList
             label="What would you have to value to do this?"
             hint="One word each. These are offered back to you on step 7, Values & identity, when you build the whole-life list."
             placeholder="Discipline"
@@ -696,13 +745,13 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
             items={goal.values}
             suggestions={NS_VALUE_SUGGESTIONS}
             onChange={(values) => handlers.onUpdate(goal.id, { values })}
-          />
+          />}
 
           {/* Some goals do not stay in their box. Dropping one thing, or fixing
               sleep, moves four areas at once, and a goal that only ever appears
               under the area it was filed in reads as a small thing on the side.
               Ticked here, it shows up inside each area it actually serves. */}
-          {otherAreas.length > 0 && (
+          {show("goal.do") && otherAreas.length > 0 && (
             <div>
               <p className="text-[11.5px] text-zinc-300">{SERVES_COPY.goal.label}</p>
               <p className="text-[10.5px] text-zinc-600 mt-0.5 leading-relaxed">{SERVES_COPY.goal.help}</p>
@@ -732,7 +781,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
           )}
 
           {/* Whatever gets rewarded gets repeated, and a stake is the other half. */}
-          <div className="grid gap-3 sm:grid-cols-2">
+          {show("goal.why") && <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="block text-[11px] text-zinc-400 mb-1" htmlFor={`reward-${goal.id}`}>What do you give yourself when it lands?</label>
               <input
@@ -755,9 +804,9 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
                 className="w-full rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-white/25 transition-colors"
               />
             </div>
-          </div>
+          </div>}
 
-          <FeedsPicker goal={goal} allGoals={allGoals} areas={areas} color={color} onLink={handlers.onLink} onUnlink={handlers.onUnlink} />
+          {show("goal.do") && <FeedsPicker goal={goal} allGoals={allGoals} areas={areas} color={color} onLink={handlers.onLink} onUnlink={handlers.onUnlink} />}
         </div>
       )}
     </div>

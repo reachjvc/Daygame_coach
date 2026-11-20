@@ -33,6 +33,7 @@ import {
   wheelRatings,
 } from "@/src/goals/northStarService"
 import { latestScores, periodLabel, periodOfReview } from "@/src/goals/reviewService"
+import { showSection } from "@/src/goals/planSteps/planSections"
 import { AreaWheel } from "./AreaWheel"
 import { ValuesWork, type ValuesHandlers } from "./ValuesWork"
 
@@ -44,7 +45,7 @@ export interface ReviewHandlers {
   onGoToNow: () => void
 }
 
-export function ReviewTab({ plan, today, handlers, valuesHandlers, values = true }: {
+export function ReviewTab({ plan, today, handlers, valuesHandlers, values = true, section }: {
   plan: NsPlan
   today: string
   handlers: ReviewHandlers
@@ -54,7 +55,10 @@ export function ReviewTab({ plan, today, handlers, valuesHandlers, values = true
    * block edits the same list a screen higher up.
    */
   values?: boolean
+  /** Draw only one section of the step (`/plan/new`'s split screens); absent = the whole tab, as `/plan` draws it. */
+  section?: "everything.check" | "everything.commit"
 }) {
+  const show = (id: string) => showSection(section, id)
   // Nothing open to begin with. Defaulting to the first area meant the wheel's
   // first sector arrived already expanded, so clicking the most obvious thing on
   // the screen CLOSED it — the wheel is a toggle, and it was pre-toggled.
@@ -71,6 +75,7 @@ export function ReviewTab({ plan, today, handlers, valuesHandlers, values = true
 
   return (
     <div className="space-y-6">
+      {show("everything.check") && <>
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
         <h2 className="text-sm font-semibold text-zinc-200">{REVIEW_INTRO.title}</h2>
         <p className="text-[12px] text-zinc-500 mt-1 leading-relaxed">{REVIEW_INTRO.help}</p>
@@ -95,6 +100,7 @@ export function ReviewTab({ plan, today, handlers, valuesHandlers, values = true
           />
         ))}
       </div>
+      </>}
 
       {/* Ordering the values happens HERE, not on the opening screen.
           On the north star tab you have written one paragraph, so a ranked list
@@ -104,7 +110,7 @@ export function ReviewTab({ plan, today, handlers, valuesHandlers, values = true
       {values && <ValuesWork plan={plan} handlers={valuesHandlers} mode="order" />}
 
       {/* Whole-life. The per-area answers roll up into these. */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+      {show("everything.commit") && <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
         <h2 className="text-sm font-semibold text-zinc-200">And across the whole of it</h2>
         <p className="text-[12px] text-zinc-500 mt-1 leading-relaxed">
           You have answered these one area at a time. Now answer them for the person, because the person is what the areas have in common.
@@ -128,7 +134,7 @@ export function ReviewTab({ plan, today, handlers, valuesHandlers, values = true
             </div>
           ))}
         </div>
-      </div>
+      </div>}
     </div>
   )
 }

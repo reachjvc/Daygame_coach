@@ -62,6 +62,7 @@ import {
 } from "@/src/goals/northStarService"
 import type { TrainingTicks } from "@/src/goals/dayTicks"
 import { latestScores } from "@/src/goals/reviewService"
+import { showSection } from "@/src/goals/planSteps/planSections"
 import { AreaWheel } from "./AreaWheel"
 import { ValuesWork, type ValuesHandlers } from "./ValuesWork"
 
@@ -349,6 +350,7 @@ export function RecapTab({
   oneThing,
   goals,
   commit,
+  section,
 }: {
   plan: NsPlan
   today: string
@@ -386,7 +388,10 @@ export function RecapTab({
    * each is on the page once, and editable where it stands.
    */
   commit?: React.ReactNode
+  /** Draw only one section of the step (`/plan/new`'s split screens); absent = the whole step, as `/plan` draws it. */
+  section?: "everything.driving-force" | "everything.plan" | "everything.links" | "everything.check" | "everything.commit"
 }) {
+  const show = (id: string) => showSection(section, id)
   /** Which block is in edit mode. One at a time, so the page stays readable. */
   const [editing, setEditing] = useState<string | null>(null)
   const [dump, setDump] = useState("")
@@ -417,6 +422,7 @@ export function RecapTab({
 
   return (
     <div className="space-y-4">
+      {show("everything.driving-force") && <>
       <div>
         <h2 className="text-lg font-semibold text-white">{RECAP_COPY.title}</h2>
         <p className="text-[12.5px] text-zinc-400 mt-1 leading-relaxed">{RECAP_COPY.help}</p>
@@ -638,6 +644,9 @@ export function RecapTab({
         )}
       </Block>
 
+      </>}
+
+      {show("everything.plan") && <>
       {/* The twelve areas. The wheel because it is the picture people remember
           the shape of, and the cards because the wheel cannot hold a sentence. */}
       <Block title={RECAP_COPY.areasTitle} help={RECAP_COPY.areasHelp} defaultOpen={false}>
@@ -766,11 +775,13 @@ export function RecapTab({
         </div>
       </Block>
 
+      </>}
+
       {/* What could stop you, who could help, and what you signed: the
           commit work when the flow hands it in, read back otherwise. */}
       {commit ? (
-        commit
-      ) : (
+        section && section === "everything.driving-force" ? null : commit
+      ) : show("everything.commit") && (
       <Block
         title={RECAP_COPY.closingTitle}
         defaultOpen={false}
@@ -810,11 +821,11 @@ export function RecapTab({
           values — is one practice and this page is all five of them. It sits
           last because that is where somebody is standing when they have done
           it, and it is the only row on the page that is about the page. */}
-      <section id={RECAP_DRIVING_ANCHOR} className="scroll-mt-24 rounded-2xl border border-violet-400/20 bg-violet-500/[0.04] px-5 py-4">
+      {show("everything.driving-force") && <section id={RECAP_DRIVING_ANCHOR} className="scroll-mt-24 rounded-2xl border border-violet-400/20 bg-violet-500/[0.04] px-5 py-4">
         <h2 className="text-sm font-semibold text-violet-100">{RECAP_COPY.wholeTitle}</h2>
         <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed">{RECAP_COPY.wholeHelp}</p>
         <PracticeRow plan={plan} today={today} ticks={ticks} practiceKey="whole" onTick={handlers.onTickPractice} onTrack={handlers.onTrackPractice} />
-      </section>
+      </section>}
     </div>
   )
 }

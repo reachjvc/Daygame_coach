@@ -27,6 +27,7 @@ import {
 } from "@/src/goals/data/northStar"
 import { areaCoverage, areaReach, areaReview, wheelRatings } from "@/src/goals/northStarService"
 import { AreaGoals } from "./AreaGoals"
+import type { GoalSectionId } from "@/src/goals/planSteps/planSections"
 import { GoalLibrary } from "./GoalLibrary"
 import type { GoalHandlers } from "./GoalCard"
 import { NO_TRAINING_TICKS, type TrainingTicks } from "@/src/goals/dayTicks"
@@ -66,6 +67,8 @@ export function AreaGoalsDialog({
   onGoToRating,
   banner,
   onClose,
+  goalSection,
+  onGoalSection,
 }: {
   area: NsArea
   plan: NsPlan
@@ -94,6 +97,9 @@ export function AreaGoalsDialog({
    */
   banner?: ReactNode
   onClose: () => void
+  /** The open goal card shows only this section, with chips to switch (`/plan/new`); absent = whole card (`/plan`). */
+  goalSection?: GoalSectionId
+  onGoalSection?: (next: GoalSectionId | null) => void
 }) {
   const review = areaReview(plan, area.id)
   const reach = areaReach(plan, area.id)
@@ -182,6 +188,8 @@ export function AreaGoalsDialog({
               handlers={goalHandlers}
               onAddGoal={onAddGoal}
               showHeading={false}
+              goalSection={goalSection}
+              onGoalSection={onGoalSection}
             />
             {goals.length === 0 && <p className="text-[11px] text-zinc-600 leading-relaxed mt-2">{GOALS_INTRO.shapes}</p>}
             <div className="mt-3">

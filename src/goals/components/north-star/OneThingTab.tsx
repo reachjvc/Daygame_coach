@@ -41,6 +41,7 @@ import {
 import { OneThingCard, type OneThingHandlers } from "./OneThing"
 import { GoalCard, type GoalHandlers } from "./GoalCard"
 import type { OneThingAccount } from "./useOneThing"
+import { showSection, type GoalSectionId } from "@/src/goals/planSteps/planSections"
 import { SentenceBox } from "./SentenceBox"
 
 export interface OneThingTabHandlers extends OneThingHandlers {
@@ -61,6 +62,9 @@ export function OneThingTab({
   onTyped,
   today,
   goalHandlers,
+  section,
+  goalSection,
+  onGoalSection,
 }: {
   plan: NsPlan
   handlers: OneThingTabHandlers
@@ -79,7 +83,13 @@ export function OneThingTab({
    * those rules to be slightly different.
    */
   goalHandlers: GoalHandlers
+  /** Draw only one section of the step (`/plan/new`'s split screens); absent = the whole step, as `/plan` draws it. */
+  section?: "season.one-thing" | "season.why" | "season.who"
+  /** An open requirement card shows only this section, with chips to switch (`/plan/new`); absent = whole card (`/plan`). */
+  goalSection?: GoalSectionId
+  onGoalSection?: (next: GoalSectionId | null) => void
 }) {
+  const show = (id: string) => showSection(section, id)
   /* THE SAVED SENTENCE. Everything that reads back your one thing reads this —
      the related goals, the banner, the recap — because those must never show a
      sentence you have not committed to. */
@@ -123,10 +133,10 @@ export function OneThingTab({
 
   return (
     <div className="space-y-5">
-      <p className="text-[12.5px] text-zinc-400 leading-relaxed">{ONE_COPY.intro}</p>
+      {show("season.one-thing") && <p className="text-[12.5px] text-zinc-400 leading-relaxed">{ONE_COPY.intro}</p>}
 
       {/* ------------------------------------------------------ the sentence */}
-      <section className="rounded-2xl border border-violet-400/25 bg-violet-500/[0.05] px-5 py-4">
+      {show("season.one-thing") && <section className="rounded-2xl border border-violet-400/25 bg-violet-500/[0.05] px-5 py-4">
         <OneThingCard
           account={account}
           typed={typed}
@@ -134,7 +144,7 @@ export function OneThingTab({
           title={ONE_COPY.title}
           help={ONE_COPY.help}
         />
-      </section>
+      </section>}
 
       {!written ? (
         <p className="text-[11.5px] text-zinc-500 leading-relaxed px-1">{ONE_COPY.waiting}</p>
@@ -149,17 +159,19 @@ export function OneThingTab({
               weed for 100 days", and the next thing the step wants is an essay.
               The list that turns the sentence into a system now comes first,
               and the reflection follows it. */}
-          <Requirements
+          {show("season.one-thing") && <Requirements
             plan={plan}
             requirements={requirements}
             related={related}
             handlers={handlers}
             today={today}
             goalHandlers={goalHandlers}
-          />
+            goalSection={goalSection}
+            onGoalSection={onGoalSection}
+          />}
 
           {/* --------------------------------------------- why, and the cost */}
-          <section className="rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-4 space-y-4">
+          {show("season.why") && <section className="rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-4 space-y-4">
             <div>
               <h2 className="text-sm font-semibold text-zinc-200">{ONE_COPY.whyTitle}</h2>
               <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed">{ONE_COPY.whyHelp}</p>
@@ -186,9 +198,10 @@ export function OneThingTab({
                 />
               </div>
             </div>
-          </section>
+          </section>}
 
           {/* --------------------------------------------------- who, and what for */}
+          {show("season.who") && <>
           <section className="rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-4">
             <h2 className="text-sm font-semibold text-zinc-200">{ONE_COPY.identityTitle}</h2>
             <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed">{ONE_COPY.identityHelp}</p>
@@ -259,6 +272,7 @@ export function OneThingTab({
               })}
             </ul>
           </section>
+          </>}
         </>
       )}
     </div>
@@ -296,6 +310,8 @@ function Requirements({
   handlers,
   today,
   goalHandlers,
+  goalSection,
+  onGoalSection,
 }: {
   plan: NsPlan
   requirements: ReturnType<typeof oneThingRequirements>
@@ -303,6 +319,8 @@ function Requirements({
   handlers: OneThingTabHandlers
   today: string
   goalHandlers: GoalHandlers
+  goalSection?: GoalSectionId
+  onGoalSection?: (next: GoalSectionId | null) => void
 }) {
   const [draft, setDraft] = useState("")
   const [areaId, setAreaId] = useState<string | null>(null)
@@ -350,6 +368,8 @@ function Requirements({
               open={openId === goal.id}
               onToggleOpen={() => setOpenId((id) => (id === goal.id ? null : goal.id))}
               handlers={goalHandlers}
+              section={goalSection}
+              onSection={onGoalSection}
             />
           ))}
         </div>

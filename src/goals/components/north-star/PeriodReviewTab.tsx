@@ -53,6 +53,7 @@ import { ScoreRow } from "./ScoreRow"
 import { AchievementList } from "./Achievements"
 import { earnedBetween } from "@/src/goals/planAchievementsService"
 import { NO_TRAINING_TICKS, type TrainingTicks } from "@/src/goals/dayTicks"
+import { showSection } from "@/src/goals/planSteps/planSections"
 
 export interface PeriodReviewHandlers {
   onWrite: (period: ReviewPeriod, patch: ReviewPatch) => void
@@ -69,7 +70,7 @@ const NUMBERS_SHOWN = 6
 /** How many reviews the scores-over-time table shows, newest kept. */
 const OVER_TIME_COLUMNS = 8
 
-export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handlers, initialPeriod, reminder = null, onReminderChange, reminderReadOnly = false }: {
+export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handlers, initialPeriod, reminder = null, onReminderChange, reminderReadOnly = false, section, onPeriod }: {
   plan: NsPlan
   today: string
   /** The weekly reminder's settings, null until read (Phase 5 of Plans/life-plan-after-setup.md). */
@@ -82,8 +83,14 @@ export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handle
   /** The finished workouts' ticks, so a step done by training counts toward what was earned. */
   ticks?: TrainingTicks
   handlers: PeriodReviewHandlers
+  /** Draw only one section of the step (`/plan/new`'s split screens); absent = the whole tab, as `/plan` draws it. */
+  section?: "review.open" | "review.goals" | "review.write"
+  /** Told beside every change of period, so a split screen can keep it in the address (`/plan/new`). Absent on `/plan`. */
+  onPeriod?: (next: ReviewPeriod) => void
 }) {
-  const [period, setPeriod] = useState<ReviewPeriod>(() => initialPeriod ?? periodOf("week", today))
+  const show = (id: string) => showSection(section, id)
+  const [period, setPeriodState] = useState<ReviewPeriod>(() => initialPeriod ?? periodOf("week", today))
+  const setPeriod = (next: ReviewPeriod) => { setPeriodState(next); onPeriod?.(next) }
   const current = period.cadence === "fortnight" ? null : periodOf(period.cadence, today)
   const atNow = current !== null && current.start === period.start
   const review = reviewFor(plan, period)
@@ -96,7 +103,7 @@ export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handle
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+      {show("review.open") && <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
         <h2 className="text-sm font-semibold text-zinc-200">{COPY.title}</h2>
         <p className="text-[12px] text-zinc-500 mt-1 leading-relaxed">{COPY.help}</p>
         <p className="text-[12px] text-zinc-500 mt-1.5 leading-relaxed">{COPY.anyDay}</p>
@@ -110,10 +117,10 @@ export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handle
             <p className="text-[11px] text-zinc-500 mt-1">{COPY.readStarFirst}</p>
           </>
         )}
-      </div>
+      </div>}
 
-      {period.cadence === "week" && onReminderChange && <ReviewReminder reminder={reminder} onChange={onReminderChange} />}
-      {period.cadence === "week" && !onReminderChange && reminderReadOnly && <ReviewReminder reminder={reminder} onChange={() => {}} readOnly />}
+      {show("review.open") && period.cadence === "week" && onReminderChange && <ReviewReminder reminder={reminder} onChange={onReminderChange} />}
+      {show("review.open") && period.cadence === "week" && !onReminderChange && reminderReadOnly && <ReviewReminder reminder={reminder} onChange={() => {}} readOnly />}
 
       <div className="flex flex-wrap items-center gap-3">
         <div role="group" aria-label="How often" className="inline-flex rounded-lg border border-white/10 p-0.5">
@@ -168,12 +175,12 @@ export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handle
       {/* Celebrate first (Stefan: "What was the good? Celebrate first, always
           first"; the owner's item 32). What the stretch earned, worked out from
           what was logged and ticked in it. */}
-      <EarnedInPeriod key={reviewIdFor(period)} plan={plan} period={period} today={today} ticks={ticks} review={review} onAdd={(lines) => handlers.onAddMoments(period, lines)} />
+      {show("review.open") && <EarnedInPeriod key={reviewIdFor(period)} plan={plan} period={period} today={today} ticks={ticks} review={review} onAdd={(lines) => handlers.onAddMoments(period, lines)} />}
 
       {/* Then the period read back, as Stefan's weekly review goes over the
           goals: what the period before set out to bring, each goal against
           its number with an answer, and the routines. */}
-      <ReadBack
+      {show("review.goals") && <ReadBack
         key={`readback-${reviewIdFor(period)}`}
         plan={plan}
         period={period}
@@ -182,8 +189,9 @@ export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handle
         review={review}
         onVerdict={(goalId, value) => write({ verdict: { goalId, value } })}
         onReading={handlers.onReading}
-      />
+      />}
 
+      {show("review.write") && <>
       <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
         <div className="flex items-baseline gap-2">
           <h3 className="text-[13px] font-semibold text-zinc-200">{COPY.scoresTitle}</h3>
@@ -242,7 +250,9 @@ export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handle
       {review && (
         <RemoveReview key={`remove-${review.id}`} onRemove={() => handlers.onRemove(review.id)} />
       )}
+      </>}
 
+      {show("review.open") && <>
       <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
         <h3 className="text-[13px] font-semibold text-zinc-200">{COPY.earlierTitle(noun)}</h3>
         {earlier.length === 0 ? (
@@ -257,6 +267,7 @@ export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handle
       </section>
 
       <ScoresOverTime plan={plan} openId={review?.id ?? null} onOpen={(r) => setPeriod(periodOfReview(r))} />
+      </>}
     </div>
   )
 }

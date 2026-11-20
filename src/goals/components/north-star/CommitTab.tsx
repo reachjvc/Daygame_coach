@@ -26,6 +26,7 @@ import { planLimit } from "@/src/goals/planLimits"
 import { useState } from "react"
 import { Check } from "lucide-react"
 import type { NsPlan } from "@/src/goals/types"
+import { showSection } from "@/src/goals/planSteps/planSections"
 import { COMMIT_COPY, RECAP_COMMIT_ANCHOR } from "@/src/goals/data/northStar"
 import { COMMIT_DATE_KEY, COMMIT_KEY } from "@/src/goals/data/northStarStart"
 import { answerOf, formatTargetDate, planAsText, planCascade, weeklyLoad } from "@/src/goals/northStarService"
@@ -41,6 +42,7 @@ export function CommitTab({
   children,
   tools,
   onOpenToday,
+  section,
 }: {
   plan: NsPlan
   today: string
@@ -58,7 +60,10 @@ export function CommitTab({
    */
   tools?: React.ReactNode
   onOpenToday?: () => void
+  /** Draw only one section of the step (`/plan/new`'s split screens); absent = the whole step, as `/plan` draws it. */
+  section?: "everything.plan" | "everything.links" | "everything.check" | "everything.commit"
 }) {
+  const show = (id: string) => showSection(section, id)
   const [open, setOpen] = useState(false)
   const commitment = answerOf(plan, COMMIT_KEY)
   const committedOn = answerOf(plan, COMMIT_DATE_KEY)
@@ -69,7 +74,7 @@ export function CommitTab({
   return (
     <div className="space-y-5">
       {/* What is being committed to, counted, then in full. */}
-      <section className="rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-4">
+      {show("everything.plan") && <section className="rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-4">
         <h2 className="text-sm font-semibold text-zinc-200">{COMMIT_COPY.title}</h2>
         <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed">{COMMIT_COPY.help}</p>
         <p className="text-[12.5px] text-zinc-300 mt-3 tabular-nums">
@@ -91,16 +96,16 @@ export function CommitTab({
             )}
           </>
         )}
-      </section>
+      </section>}
 
       {/* Fix it here, while you are reading it. */}
-      {tools}
+      {show("everything.links") && tools}
 
       {/* What could go wrong, and whether the goals aim at the 10. */}
-      {children}
+      {(!section || section === "everything.check" || section === "everything.commit") && children}
 
       {/* The commitment itself. The anchor an old Commit link scrolls to. */}
-      <section id={RECAP_COMMIT_ANCHOR} className="scroll-mt-24 rounded-2xl border border-violet-400/25 bg-violet-500/[0.05] px-5 py-4">
+      {show("everything.commit") && <section id={RECAP_COMMIT_ANCHOR} className="scroll-mt-24 rounded-2xl border border-violet-400/25 bg-violet-500/[0.05] px-5 py-4">
         <h2 className="text-sm font-semibold text-violet-100">{COMMIT_COPY.commitTitle}</h2>
         <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed">{COMMIT_COPY.commitHelp}</p>
         <textarea
@@ -134,7 +139,7 @@ export function CommitTab({
           </button>
           {committedOn && onOpenToday && <button type="button" onClick={onOpenToday} className="text-[12.5px] font-medium px-3 py-1.5 rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 transition-colors">{COMMIT_COPY.openToday}</button>}
         </div>
-      </section>
+      </section>}
     </div>
   )
 }
