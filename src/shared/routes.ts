@@ -89,6 +89,8 @@ export const ROUTES = {
    * production links into the archive.
    */
   quitVice: "/plan/quit-vice",
+  /** The free nicotine quit tools' menu (Plans/quit-finish.md); each tool at `/quit/nicotine/<tool>`. */
+  quitNicotine: "/quit/nicotine",
   /** The role model library (Plans/role-models.md); each person at `/plan/role-models/<id>`. */
   roleModels: "/plan/role-models",
   /**

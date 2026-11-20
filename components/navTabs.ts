@@ -1,4 +1,4 @@
-import { LayoutDashboard, Dumbbell, Swords, HelpCircle, Timer, ScrollText, BatteryCharging, Brain, Box, Footprints, Grid2x2, Heart, NotebookPen, UserRound, type LucideIcon } from "lucide-react"
+import { LayoutDashboard, Dumbbell, Swords, HelpCircle, Timer, ScrollText, BatteryCharging, Brain, Box, CigaretteOff, Footprints, Grid2x2, Heart, NotebookPen, UserRound, type LucideIcon } from "lucide-react"
 import { ROUTES, isUnder } from "@/src/shared/routes"
 
 /**
@@ -174,6 +174,8 @@ export const TOOLS: readonly Tool[] = [
   { id: "audit", label: "Time & energy audit", short: "Audit", icon: BatteryCharging, href: ROUTES.audit, group: "life", access: "open", tile: true },
   { id: "daily", label: "Daily reflection", short: "Reflect", icon: NotebookPen, href: ROUTES.trackingDaily, group: "life", access: "open", tile: false },
   { id: "black-box", label: "Black Box", short: "Black Box", icon: Box, href: ROUTES.quitVice, group: "quit", access: "open", tile: true },
+  // The quit tools went live 2026-11-19 (Plans/quit-finish.md) but had no row here; added 2026-11-20.
+  { id: "quit-nicotine", label: "Quit nicotine", short: "Nicotine", icon: CigaretteOff, href: ROUTES.quitNicotine, group: "quit", access: "open", tile: false },
   // Scenarios, Ask Coach and Inner Game left Home for the one Dating tile (DATING_TILE below).
   { id: "scenarios", label: "Scenarios", short: "Scenarios", icon: Swords, href: ROUTES.scenarios, group: "dating", access: "preview", tile: false },
   { id: "coach", label: "Ask Coach", short: "Coach", icon: HelpCircle, href: ROUTES.coach, group: "dating", access: "paid", tile: false },
