@@ -171,6 +171,14 @@ function Screens({
   const lock = useRef<string | null>(null);
   const sigRef = useRef<string | null>(null);
   const screenAt = useRef(0);
+  const [shield, setShield] = useState(false);
+  const shieldTimer = useRef<number | undefined>(undefined);
+  /** A clear layer over the whole page for 400 ms after a screen change, so a second tap cannot hit what the new screen has under the finger (the page footer too). */
+  const armShield = () => {
+    setShield(true);
+    window.clearTimeout(shieldTimer.current);
+    shieldTimer.current = window.setTimeout(() => setShield(false), 400);
+  };
   /** Every tap on a screen that has just changed is ignored for 400 ms: a double tap must not land on the next screen's buttons. */
   const tapOk = () => Date.now() - screenAt.current >= 400;
   const filedIds = useRef<Set<string>>(new Set());
@@ -236,7 +244,10 @@ function Screens({
     if (lock.current === key) return;
     lock.current = key;
     // the screen is about to change (the address follows a moment later): taps from now on are ignored
-    if (screenChange) screenAt.current = Date.now();
+    if (screenChange) {
+      screenAt.current = Date.now();
+      armShield();
+    }
     fn();
   };
 
@@ -292,6 +303,20 @@ function Screens({
     sigRef.current = sig;
     screenAt.current = Date.now();
   }
+  const sigNow = useRef(sig);
+  useEffect(() => {
+    if (sigNow.current !== sig) {
+      sigNow.current = sig;
+      armShield();
+    }
+  }, [sig]);
+  const shieldEl = shield ? (
+    <div
+      aria-hidden="true"
+      data-testid="tap-shield"
+      className="fixed inset-0 z-50"
+    />
+  ) : null;
 
   const mParam = sp.get("m");
   const monthNow = monthOf(today);
@@ -685,7 +710,14 @@ function Screens({
       </div>
     );
 
-    const scaleValue = id === "forecast" ? ans.forecast : id === "hard" ? ans.hard : id === "urges" ? ans.urges : 0;
+    const scaleValue =
+      id === "forecast"
+        ? ans.forecast
+        : id === "hard"
+          ? ans.hard
+          : id === "urges"
+            ? ans.urges
+            : 0;
     const isScale = id === "forecast" || id === "hard" || id === "urges";
     const showContinue = !last && (!isScale || scaleValue !== undefined);
     const nextDisabled =
@@ -695,11 +727,7 @@ function Screens({
         ans.forecast === undefined &&
         !ans.pledge?.trim());
     return (
-      <OneQuestion
-        step={step}
-        total={steps.length}
-        onBack={null}
-      >
+      <OneQuestion step={step} total={steps.length} onBack={null}>
         {step > 1 && (
           <button
             type="button"
@@ -947,6 +975,7 @@ function Screens({
   if (view.kind === "flow")
     return (
       <div data-testid="checkin">
+        {shieldEl}
         {renderFlow(view.flow, view.date, view.step, view.month)}
       </div>
     );
@@ -961,6 +990,7 @@ function Screens({
     const clearN = monthCounts(own, monthOf(view.date)).clear;
     return (
       <section data-testid="done-screen" className="flex flex-col gap-4">
+        {shieldEl}
         <h2 className="text-lg font-semibold">
           {t.savedFor(dayLabel(view.date))}
         </h2>
@@ -1050,6 +1080,7 @@ function Screens({
 
   return (
     <div data-testid="checkin" className="flex w-full flex-col gap-4">
+      {shieldEl}
       {ex && (
         <div
           data-testid="example-bar"
@@ -1073,8 +1104,7 @@ function Screens({
       <TabRow
         value={tab}
         onChange={(id) =>
-          id !== tab &&
-          move(() => go(id === "today" ? {} : { tab: id }), false)
+          id !== tab && move(() => go(id === "today" ? {} : { tab: id }), false)
         }
       />
 
