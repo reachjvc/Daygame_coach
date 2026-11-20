@@ -1062,14 +1062,15 @@ export function TodayTab({
   /**
    * The pickers' option groups, in the order Today draws their rows.
    *
-   * Grouped by walking the list rather than by bucketing it, so the groups
-   * come out in the service's order and a header cannot appear twice.
+   * Grouped in the order each header first appears in the service's list, and an item whose header was already drawn
+   * joins it: the driving force and the top goal's why come last in the list but belong under "Your star" and "Goals", and
+   * a header that came out twice was a duplicate React key (and two headers with one name).
    */
   const group = <T extends { group: string }>(items: T[]) => {
     const out: { label: string; items: T[] }[] = []
     for (const item of items) {
-      const last = out[out.length - 1]
-      if (last && last.label === item.group) last.items.push(item)
+      const have = out.find((g) => g.label === item.group)
+      if (have) have.items.push(item)
       else out.push({ label: item.group, items: [item] })
     }
     return out

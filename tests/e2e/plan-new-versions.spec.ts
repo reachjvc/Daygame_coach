@@ -238,6 +238,59 @@ test.describe("V3: the go-deeper cards", () => {
   })
 })
 
+test.describe("review fixes", () => {
+  test("V3 cards wait for three words and a free hand; the season screen offers the area card as an area is picked", async ({ page, account }) => {
+    test.setTimeout(900_000)
+    const full = fullPlan()
+    const sandboxId = await seedAndCopy(page, account.id, { ...full, northStar: "", answers: { ...full.answers, [SEQUENCE_KEY]: "v3" } })
+    await page.goto(`${ROUTES.planNew}/star.vision`, { timeout: NAV })
+    const box = page.locator("#north-star-paragraph")
+    await expect(box).toBeVisible({ timeout: NAV })
+    await box.click()
+    await box.fill("A life")
+    await page.waitForTimeout(800)
+    await expect(page.getByTestId("deeper-star")).toHaveCount(0)
+    await box.fill("A life I chose well")
+    await page.waitForTimeout(800)
+    await expect(page.getByTestId("deeper-star")).toHaveCount(0) // still typing: nothing jumps
+    await page.getByRole("heading").first().click()
+    await box.blur()
+    await expect(page.getByTestId("deeper-star")).toBeVisible()
+    // The season screen: the card for each picked area; Not now sticks and is the same mark the wheel card uses.
+    const health = full.areas[0]
+    await page.goto(`${ROUTES.planNew}/season.areas`, { timeout: NAV })
+    const card = page.getByTestId(`deeper-season-area-${health.id}`)
+    await expect(card).toContainText(`Go deeper on ${health.label}?`, { timeout: NAV })
+    await card.getByRole("button", { name: "Not now" }).click()
+    await expect(card).toHaveCount(0)
+    await waitForAnswer(sandboxId, deeperKey("area", health.id))
+    await page.goto(`${ROUTES.planNew}/now?area=${health.id}`, { timeout: NAV })
+    await expect(page.getByTestId("area-sections")).toBeVisible({ timeout: NAV })
+    await expect(page.getByTestId("deeper-area")).toHaveCount(0)
+    // Opening the other area's card goes to its why section.
+    await page.goto(`${ROUTES.planNew}/season.areas`, { timeout: NAV })
+    const money = full.areas[1]
+    await page.getByTestId(`deeper-season-area-${money.id}`).getByRole("button", { name: "Go deeper" }).click()
+    await expect(page.getByTestId("area-section-area.why")).toHaveAttribute("aria-pressed", "true", { timeout: NAV })
+  })
+
+  test("a fresh copy of the real plan keeps the version, the sorter and the Not-now marks", async ({ page, account }) => {
+    test.setTimeout(900_000)
+    const full = fullPlan()
+    const sandboxId = await seedAndCopy(page, account.id, { ...full, answers: { ...full.answers, [SEQUENCE_KEY]: "v3", [SORTER_KEY]: "s2", [deeperKey("star")]: "no" } })
+    // The real plan (the owner's) carries none of them; copy it in again.
+    await withDb((db) => db.query("delete from public.life_plan_answers where user_id = $1 and prompt_id like 'start:new:%'", [account.id]))
+    expect((await page.request.post("/api/plan-sandbox/copy")).status()).toBe(200)
+    const text = await answersText(sandboxId)
+    expect(text).toContain("start:new:sequence,v3")
+    expect(text).toContain("start:new:sorter,s2")
+    expect(text).toContain(deeperKey("star"))
+    await page.goto(`${ROUTES.planNew}?home=1`, { timeout: NAV })
+    await expect(page.getByTestId("version-v3")).toHaveAttribute("aria-pressed", "true", { timeout: NAV })
+    await expect(page.getByTestId("sorter-s2")).toHaveAttribute("aria-pressed", "true")
+  })
+})
+
 test.describe("the sorter on Systems and Experiences", () => {
   const line = "Two dates a month"
   const areaOf = () => ns.emptyNsPlan().areas[0]
@@ -304,8 +357,26 @@ test.describe("the sorter on Systems and Experiences", () => {
     for (const b of await ask.getByRole("button").all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44)
     await expect(ask).toContainText(line)
     expect(await goalsOf(sandboxId, line)).toBe(0)
+    // On a phone the question never covers the box that was typed in; it survives a reload, still unwritten.
+    for (const width of [360, 390]) {
+      await page.setViewportSize({ width, height: 740 })
+      await expect(ask).toBeVisible()
+      // Where the page leaves the box when asked to show it (centred), nothing of the question is over it.
+      const covered = await systemsBox(page).evaluate((el) => {
+        el.scrollIntoView({ block: "center" })
+        const r = el.getBoundingClientRect()
+        const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+        return !(top === el || el.contains(top))
+      })
+      expect(covered, `the question covers the box at ${width} px`).toBe(false)
+    }
+    await page.reload({ timeout: NAV })
+    await expect(page.getByTestId("sorter-ask")).toContainText(line, { timeout: NAV })
+    expect(await goalsOf(sandboxId, line)).toBe(0)
     await page.getByTestId("sorter-want").click()
     await expect(ask).toHaveCount(0)
+    await page.reload({ timeout: NAV })
+    await expect(page.getByTestId("sorter-ask")).toHaveCount(0)
     await expect(page.getByTestId("sorter-notice")).toHaveCount(0)
     await expect(listed(page, line)).toHaveCount(0) // gone from Systems
     // A second line, answered "Every week", stays on Systems.
@@ -319,5 +390,22 @@ test.describe("the sorter on Systems and Experiences", () => {
     await page.goto(`${ROUTES.planNew}/milestones?area=${area.id}`, { timeout: NAV })
     await expect(listed(page, line).first()).toBeVisible({ timeout: NAV })
     await expect(listed(page, "Meet one new person")).toHaveCount(0)
+  })
+
+  test("S3: a quit line answered 'Want it to happen' stays an experience after a reload", async ({ page, account }) => {
+    test.setTimeout(900_000)
+    const area = areaOf()
+    const sandboxId = await seedAndCopy(page, account.id, newUser({ [SORTER_KEY]: "s3" }), { everyDayStep: false })
+    await page.goto(`${ROUTES.planNew}/milestones?area=${area.id}`, { timeout: NAV })
+    const wants = page.getByLabel(/^Everything you want in /)
+    await expect(wants).toBeVisible({ timeout: NAV })
+    await wants.fill("No weed")
+    await wants.press("Enter")
+    await expect(page.getByTestId("sorter-ask")).toContainText("No weed")
+    await page.getByTestId("sorter-want").click()
+    await expect.poll(() => goalsOf(sandboxId, "No weed"), { timeout: 60_000 }).toBe(1)
+    await expect.poll(async () => withDb(async (db) => (await db.query("select x::text as t from public.life_plan_goals x where user_id = $1", [sandboxId])).rows[0]?.t ?? ""), { timeout: 60_000 }).not.toContain("habit_ramp")
+    await page.reload({ timeout: NAV })
+    await expect(listed(page, "No weed").first()).toBeVisible({ timeout: NAV })
   })
 })

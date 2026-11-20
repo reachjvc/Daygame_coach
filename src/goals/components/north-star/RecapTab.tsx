@@ -239,11 +239,11 @@ function PracticeRow({
     return (
       <button
         onClick={() => onTrack(offer.blueprintId, offer.stepId)}
-        className="mt-3 flex items-center gap-2 text-[11.5px] text-zinc-500 hover:text-zinc-200 transition-colors"
+        className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-left text-[11.5px] text-zinc-500 hover:text-zinc-200 transition-colors sm:flex-nowrap"
       >
         <span className="size-4 shrink-0 rounded-[4px] border border-dashed border-white/20 inline-flex items-center justify-center">+</span>
-        <span>{RECAP_COPY.practiceStart}</span>
-        <span className="text-zinc-600">
+        <span className="whitespace-nowrap">{RECAP_COPY.practiceStart}</span>
+        <span className="basis-full pl-6 text-zinc-600 sm:basis-auto sm:pl-0">
           {RECAP_COPY.practiceStartHelp}{" "}
           {offer.addsRoutine ? RECAP_COPY.practiceAdds(offer.routineLabel) : RECAP_COPY.practiceWhere(offer.routineLabel)}
         </span>
