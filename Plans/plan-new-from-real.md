@@ -78,8 +78,31 @@ still waits for his word.
       (12, 24, 36 areas after 1, 2, 3 seeds). Specs that seed one account twice may test a doubled plan.
       `plan-phone-fit` deletes the plan before each seed.
     - `plan-sandbox.spec.ts:168` is flaky under load (passes alone, and the same on 14949b79).
-- **Phase 6 (his picks)** next. The split map (6.2, proposed, Opus) is written:
-  `plan-steps/spec/split-map.md` (383 MASTER rows placed once each).
+- **Phase 5 deploy:** pushed 2026-11-20 as eaa6f49b; Vercel answered "Deployment rate limited — retry in 24
+  hours", so the live site stayed on 5dc7a658. The next push deploys it.
+- **Phase 6 (his picks)** built on 2026-11-20. Report: `plan-steps/proof/p6-report.md`; Opus review: `/plan`
+  unchanged (every edit to a shared part is inert without the new props), copy space safe; its must-fixes and
+  should-fixes are done.
+  - 6.2 splits: one screen per section of the split map (`planSections.ts`, `planSequences.ts`), e.g.
+    `/plan/new/star.vision`; old step addresses land on the first screen; "See it all on one page" (`?all=1`)
+    shows the whole real part and keeps the query. The area sheet and goal card get a row of section chips.
+    Typed-but-unsaved text survives a screen change. 383 MASTER rows of the split parts mapped, 0 problems;
+    an e2e opens every fold and proves each whole page's lines are on its short screens.
+  - 6.3 plan home (`PlanHome`): season band, Next up, status and Done summary per step, earlier notes. No locks.
+  - 6.4 "Plan my week" at `/plan/new/week` (GuidedBuild with the real handlers), under Deepen on the home.
+  - 6.5 one numbers function (`planNumbers.ts`) for `/plan/new`: Done, 100 % and "no chip" always agree.
+    Proposed rules (not his): the north star ladder counts toward the paragraph until it is written; the season
+    is "started" once any answer is written; values need three in the list for their chip to go.
+  - 6.6 up/down buttons on the value order; the curve editor's existing shape row is 44 px on `/plan/new`, with
+    Undo when a shape would clear dragged points.
+  - 6.7 once the plan is in use (an active goal or a routine step, the rule `/plan` uses) `/plan/new` opens on
+    Today; `?home=1` or the "Plan home" link shows the home.
+  - Tests: vitest 8714 passed (2 fails in other sessions' files: colour count in `BlackBoxPage.tsx`, a sleep in
+    `tests/e2e/quit/checkin.spec.ts`); `/plan` e2e set, `plan-new*`, `plan-phone-fit`, new `plan-new-picks`:
+    only the known failures; typecheck and lint ratchets none new.
+  - Open: "Plan my week" has no Frame or shell yet; old step numbers in real words ("change it at step 3") and
+    the placeholder chip "Area and date" are for Phase 8.
+- **Phase 7 (versions to try)** next.
 - **Backups:** last night's run was killed at 08:36 (TERM: the PC was off at 03:00 and WSL stopped during the
   catch-up). It was rerun by hand at 09:15 and worked: `life-plan-2026-11-19.json.gz.gpg`.
 
