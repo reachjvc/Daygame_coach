@@ -37,8 +37,7 @@ describe("the plan home over the real steps", () => {
   })
 
   it("Next up's words and its address come from the same chip", () => {
-    let plan = ns.toggleSeasonArea(ns.emptyNsPlan(), "lm_fitness", NOW)
-    for (const step of ["star", "now", "systems", "milestones"] as const) void step
+    const plan = ns.toggleSeasonArea(ns.emptyNsPlan(), "lm_fitness", NOW)
     const numbers = planNumbers(plan, accountOf(plan), TODAY)
     // make every step before Season done so Season is next
     for (const step of ["star", "now", "systems", "milestones"] as const) numbers.steps[step] = { ...numbers.steps[step], state: "done", chips: [] }

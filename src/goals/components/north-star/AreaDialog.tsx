@@ -130,7 +130,9 @@ export function AreaDialog({
   return (
     <Dialog open onOpenChange={(next) => { if (!next) onClose() }}>
       <DialogContent
-        className="grid-cols-[minmax(0,1fr)] sm:max-w-2xl max-h-[86vh] overflow-y-auto bg-zinc-950 border-white/10 text-white"
+        // On `/plan/new` the sheet opens without putting a focus ring on its title or its first link: the sheet itself holds focus.
+        onOpenAutoFocus={onSection ? (e) => { e.preventDefault(); (e.currentTarget as HTMLElement).focus() } : undefined}
+        className={`grid-cols-[minmax(0,1fr)] sm:max-w-2xl max-h-[86vh] overflow-y-auto bg-zinc-950 border-white/10 text-white${onSection ? " outline-none" : ""}`}
         style={{ borderTopColor: area.color, borderTopWidth: 3 }}
       >
         <DialogHeader>
@@ -482,7 +484,7 @@ export function AreaDialog({
               moves straight to the next area in the wheel's own order, which is
               how you get through twelve of these without going back to the list
               every time. */}
-          <section className="sticky bottom-0 -mx-4 px-4 -mb-4 pb-4 sm:-mx-6 sm:px-6 sm:mb-0 sm:pb-1 pt-3 bg-zinc-950 border-t border-white/10 flex flex-wrap items-center gap-2">
+          <section className={`sticky ${onSection ? "-bottom-4 sm:bottom-0" : "bottom-0"} -mx-4 px-4 -mb-4 pb-4 sm:-mx-6 sm:px-6 sm:mb-0 sm:pb-1 pt-3 bg-zinc-950 border-t border-white/10 flex flex-wrap items-center gap-2`}>
             <span className="text-[10.5px] text-zinc-600 min-w-0 flex-1">{AREA_REVIEW_COPY.autosave}</span>
             <button
               onClick={onClose}
