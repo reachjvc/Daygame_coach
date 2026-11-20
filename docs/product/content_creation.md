@@ -46,6 +46,12 @@ say "I left notes".
   ways 2, 3, 5, 7 and 8, and he wants a finder for videos that outperform
   so he can say what he likes. His marks and the proposed next version are
   in the process file.
+- **Celebrity clip reels** (owner, 2026-11-20): re-cut viral celebrity
+  quit clips and make them ours. Round 1 (10 reels, full screen, viral
+  original next to each) is on its page, listed in notes-seen.md. Round 2
+  (8 versions of one person, a themed episode "men who quit for their
+  kids") is planned in `Plans/celeb-clip-reels.md` (proposed). The method
+  is in the process file, section "Celebrity clip reels".
 - **After video 01**: see "Next video" below.
 
 ## The idea (owner, 2026-11-10)

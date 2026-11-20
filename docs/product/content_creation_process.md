@@ -222,3 +222,66 @@ Open questions:
 - Prices for the picture and clip tools. Found so far: $2 to $6 for a
   15-second clip and about $20 a reel after retries (one creator), about
   $40 for 44 seconds (a seller). No price found for pictures.
+
+## Celebrity clip reels (owner, 2026-11-20)
+
+This is a separate kind of reel. We take short celebrity interview moments
+about quitting (TV shows, podcasts) that went viral on clip channels. We
+re-cut them from the show's own full upload and add value of our own.
+Round 1 made 10 near-reposts. Round 2 tests ways to make them ours. The
+plan is `Plans/celeb-clip-reels.md`; it points to a private plan, because
+it names people and video ids.
+
+His rules for these (2026-11-20):
+- Full screen 9:16. No black bars or blurred bands.
+- Every review page plays the viral original next to ours, so he can
+  compare.
+- Add real value, not tricks. Instagram or YouTube spotting a repost
+  account worries him more than copyright claims from the owners.
+- His own voice is preferred. An AI voice is fine as a placeholder.
+- Don't only make them longer. Cut differently, or cut something and add
+  something new. Some versions must get shorter.
+
+Ways to make them ours (Claude's research, 2026-11-20). He rated #5,
+taken broader, especially strong, then #1 and #2:
+1. **Tell his story, not one clip.** Join two or three moments of the same
+   person from different shows or years with short on-screen lines of ours.
+2. **Our point on quitting.** End with one line of ours on what the moment
+   teaches.
+3. **A narrator with opinions.** A voice that sets up the clip and reacts.
+   It gives an opinion or context and never describes the screen.
+4. **Fact cards with new information.** Years, numbers, events the clip
+   doesn't say, each with a source.
+5. **Themed episodes.** 2–4 people per reel, linked by our lines or
+   narration. Examples: "Men who quit for their kids", "Rockstars who quit
+   alcohol", "Celebrities who quit hard drugs".
+6. **Keep them a minority on the account.** Post them between our own
+   original reels.
+
+Left out on purpose: mirroring, speed or pitch changes, borders, emoji
+stickers, caption removal. Both platforms call these low-effort.
+
+What the platforms say (checked 2026-11-20):
+- Instagram (30 April 2026): accounts that mainly post other people's
+  content stop being recommended to non-followers.
+  - A border, watermark, subtitles or credit line do not make it original.
+  - On-screen text with more context, graphics with new information,
+    voiceover and a point of view do count.
+  - It judges the share of recent posts that are original over a rolling
+    30 days.
+  - Source: https://creators.instagram.com/blog/rewarding-original-creators-on-instagram
+- YouTube (1 October 2026): Shorts re-uploaded from others without
+  anything added reach fewer people.
+  - Commentary, unique edits and storytelling count.
+  - A voiceover that only describes the screen does not count.
+  - Separately, YouTube's ad rules exclude clips "edited together with
+    little or no narrative".
+  - Source: https://support.google.com/youtube/blog/470890423/prioritizing-original-content-on-shorts?hl=en
+- Copyright is a separate question. The show owners' matching systems
+  ignore credit lines and edits, and posting each reel stays his call.
+
+Tools (private): `~/.cache/daygame-research/celeb-reels/code/`.
+- `render.py` makes one-source reels: captions, a face-tracked 9:16 crop,
+  the hook and the source tag.
+- Round 2 adds `render2.py` for multi-source cuts, cards and the
+  placeholder voice.
