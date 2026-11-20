@@ -176,7 +176,7 @@ describe("the sorter (Q8)", () => {
     expect(ns.isSystem(back.goals[0])).toBe(true)
     expect(back.goals[0].title).toBe("See the northern lights")
     // Nothing re-sorts it: the kind is stored, a round trip through the plan's own normaliser keeps it.
-    expect(ns.isSystem(ns.normalizeNsPlan(JSON.parse(JSON.stringify(back))).goals[0])).toBe(true)
+    expect(ns.isSystem(ns.normalizeNsPlan(JSON.parse(JSON.stringify(back)))!.goals[0])).toBe(true)
     // And it can go the other way: a rate typed on Experiences.
     const rate = ns.addGoalsFromDump(ns.emptyNsPlan(), a, "Train 3 times a week")
     expect(ns.isSystem(rate.goals[0])).toBe(true)

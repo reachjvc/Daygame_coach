@@ -7,7 +7,7 @@ import * as ns from "@/src/goals/northStarService"
 import { fullPlan } from "@/tests/support/fullLifePlan"
 import { ROUTES } from "@/src/shared/routes"
 import { seedAndCopy, fingerprint } from "../../tests/e2e/helpers/planNewCopy"
-import { SEQUENCES, nextScreen, screenRoute, sequenceById, type Sequence } from "@/src/goals/planSteps/planSequences"
+import { SEQUENCES, nextScreen, screenRoute, type Sequence } from "@/src/goals/planSteps/planSequences"
 import { SEQUENCE_KEY, SORTER_KEY } from "@/src/goals/planSteps/planFacts"
 import { sorterOfPlan } from "@/src/goals/planSteps/planSorter"
 
