@@ -248,10 +248,10 @@ test.describe("review fixes", () => {
     await expect(box).toBeVisible({ timeout: NAV })
     await box.click()
     await box.fill("A life")
-    await page.waitForTimeout(800)
+    await page.evaluate(() => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))))
     await expect(page.getByTestId("deeper-star")).toHaveCount(0)
     await box.fill("A life I chose well")
-    await page.waitForTimeout(800)
+    await page.evaluate(() => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))))
     await expect(page.getByTestId("deeper-star")).toHaveCount(0) // still typing: nothing jumps
     await page.getByRole("heading").first().click()
     await box.blur()
