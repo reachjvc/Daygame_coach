@@ -60,7 +60,7 @@ export function screensOfStep(step: NorthStarTabId): Screen[] {
 const V1: Sequence = {
   id: "v1",
   label: "V1",
-  blurb: "Today's order, every part in turn",
+  blurb: "Today's steps in today's order, but long pages are split into short screens (the rest of a page is on its next screen, or under \"See it all on one page\")",
   screens: TAB_ORDER.flatMap(screensOfStep),
 }
 
