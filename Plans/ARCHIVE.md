@@ -6,6 +6,7 @@ Code comments still name some of them. To read one, run
 
 | Plan | Why it went | Read it at |
 |---|---|---|
+| tests-catch-what-matters.md | Finished 2026-11-20: Phases 0–9 done (red main names its first red commit, lint and hidden pages caught at commit, every API route asked signed out, write tests 125 to 26 unasserted, 6 flaky specs fixed, live site checked after each deploy, mutation scores on 8 daily files, phone time-wheel specs). Open items are in its Phase 9 review findings. | c8dd735c |
 | quit-review-fixes.md | Replaced 2026-11-19, the same day, by quit-finish.md: the owner wants tools finished one by one instead of a variant review. Its findings live on as the fix list. | 279fe920 |
 | caddy-deploy-and-cicd.md | Removed 2026-11-18: the owner reopened hosting and asked for the Hetzner plans to go. Phases 0–5b are built (`infra/`, CI images); code comments still cite its steps. Also removed: `docs/plans/own-platform-and-app.md`, `docs/plans/foundation.md`, `docs/plans/local-deploy-and-cd-pipeline.md` (same commit). | 0d687eb7 |
 | plan-progress-percent.md | Finished 2026-11-14: Phases 1–4 live (Today shows "Your plan is N % done", rings fill by percentage, Everything lists every step). His plan read 45 % on the day. | ea048b1d |
