@@ -36,7 +36,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | 5 | The 12 lies test | wave-1 `beliefs` | from `beliefs/best`: a reply per belief, "can you stop?", earlier results | building |
 | 6 | What you'll feel, and when | lab `timeline/best` | wave-1 `symptoms` (what helps per symptom) | waiting for you |
 | 7 | If-then plan | lab `ifthen/best` | — | waiting for you |
-| 8 | Daily check-in | lab `checkin/best` | slip question from `diary/best` | building |
+| 8 | Daily check-in | lab `checkin/best` | slip question from `diary/best` | waiting for you |
 | 9 | What it costs you | wave-1 `cost` | per-pack price and live update (copy e); money setup from the shared record | building |
 | 10 | Your past attempts | lab `past/best` | wave-1's "many tries are normal" number and "after the first slip" question | waiting for you |
 | 11 | Today's lesson | lab `lessons/best` | — | waiting for you |
@@ -2009,4 +2009,5 @@ targets or "what you could buy" here: Tool 3 holds targets.
   - "Clean" replaces "clear" in every reader line; the internal mode id `clear` stays (it is in the address).
   - "Angry" replaces "Short-tempered" in the chips; the old key still reads "Short-tempered".
   - Gates: scoped tsc exit 0; `tests/unit/quit` 53 files, 986 tests; eslint clean; check-in e2e 49 passed (both widths); date.spec and sos.spec 65 passed, one sos signed-in test hit a dev-server connection reset once and passed on its own rerun.
+- Review rounds (Tool 8, Opus, 2026-11-20): three rounds of bugs (Sonnet), feel and look (Opus), and content (Opus) reviewers, run against the shared local server (Vercel deploy limit). The scores rose from 6.5 to 7 to 7.5. Round 3 still found a real bug (a double tap skipped a screen and saved an answer he never gave). That bug and the other round 3 findings are fixed and tested (e2e double taps 120 and 300 ms apart), but were not reviewed a fourth time: the recipe stops after three rounds. Left, proposed: (a) after a reload, in-page Back and then browser Back can show one step twice; (b) K6, the pattern line on near-equal shares; (c) the shared "use it" fallback in `wording.ts`; (d) a slip removed in another open tab shows in this tab only after a reload (the browser Black Box copy does not follow other tabs); (e) undoing a past slip leaves a later check-in-only "Yes" outside the Black Box.
 
