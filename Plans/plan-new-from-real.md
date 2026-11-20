@@ -52,7 +52,34 @@ still waits for his word.
     - The step bar follows TAB_ORDER; it must follow the sequence once V2/V3 exist (Phase 7).
     - Known failures also on origin/main: `life-plan-landing.spec.ts:22`, `:40`,
       `plan-saves-lose-nothing.spec.ts:82` (several "Health" wedges; fails on 69487bea too).
-- **Phase 5 (phone fixes)** next.
+- **Phase 5 (phone fixes)** built on 2026-11-20. Layout only, in the real parts under
+  `src/goals/components/north-star/`, so each fix reaches `/plan` too (T4). Desktop at 1280 px: 0 differing pixels
+  on all 11 before/after pairs. The fixes that reached `/plan`, at phone width only:
+  1. the goal card and area sheet no longer grow wider than the phone (`AreaGoalsDialog`, `AreaDialog`);
+  2. the life wheel draws bigger labels, long names on two lines, below 360 px drawn width (`AreaWheel`);
+  3. the 0–10 row sits on one line (`ScoreRow`);
+  4. the area sheet's bottom bar stays inside the sheet (`AreaDialog`, `AreaGoalsDialog`);
+  5. experience, season, Today and Track rows wrap instead of squeezing titles to a few letters (`GoalOverview`,
+     `TodayTab`, `TrackSchedule`);
+  6. the step footer keeps back · save line · next on one row; only the save line wraps (`PlanStepNav`);
+  7. the Track grid scrolls inside its own box with the first column fixed; the page no longer scrolls sideways
+     (`TrackSchedule`);
+  8. Today's inputs and selects fit the card (`TodayTab`);
+  9. the values-so-far row wraps, its count column is fixed only on desktop (`ValuesSoFar`).
+  - Check: new e2e `plan-phone-fit` (360 and 390 px, all 12 `/plan` steps, all 12 `/plan/new` screens, an area
+    sheet and a goal card) failed 4 of 4 before and passes 4 of 4 after. Opus review: must-fixes done
+    (`plan-steps/proof/p5-fixes.md`, shots in `plan-steps/p5-shots2/`). Plan e2e set: only the known failures.
+    Vitest 8262 passed; typecheck and lint ratchets none new.
+  - Open:
+    - Review units ("Run 5k on Sundays" reads "k on", "15 pull-ups" reads "pull"): the parser is
+      `parseGoalTarget` in `northStarService.ts`, a B1 file. Tests wait as `it.fails`; the two-line fix is in
+      `p5-fixes.md`, for after `plan-engine` merges.
+    - The e2e helper `seedLifePlan` adds a second plan beside the one an account holds instead of replacing it
+      (12, 24, 36 areas after 1, 2, 3 seeds). Specs that seed one account twice may test a doubled plan.
+      `plan-phone-fit` deletes the plan before each seed.
+    - `plan-sandbox.spec.ts:168` is flaky under load (passes alone, and the same on 14949b79).
+- **Phase 6 (his picks)** next. The split map (6.2, proposed, Opus) is written:
+  `plan-steps/spec/split-map.md` (383 MASTER rows placed once each).
 - **Backups:** last night's run was killed at 08:36 (TERM: the PC was off at 03:00 and WSL stopped during the
   catch-up). It was rerun by hand at 09:15 and worked: `life-plan-2026-11-19.json.gz.gpg`.
 
