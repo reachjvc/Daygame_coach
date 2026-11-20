@@ -268,14 +268,12 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByTestId("taken-on")).toHaveText("Taken before Nov 19, 2026")
       await expect(page.getByTestId("held-line")).toHaveText("1 of 12 hold you")
       await expect(page.getByTestId("canstop-answer")).toHaveCount(0)
+      // slip reads the wave-1 ratings: with no run, two skipped questions reach its result, whose top lie is the one rated 5
       await page.goto(quitUrl(`${A}/slip`))
-      await page.evaluate(() => {
-        const s = JSON.parse(localStorage.getItem("quit-v1")!)
-        s.nicotine.slip = { done: 3, when: "today", ending: null, told: "other", ownWords: "", newDay1: null, reportId: null }
-        localStorage.setItem("quit-v1", JSON.stringify(s))
-      })
-      await page.reload()
-      await expect(page.getByTestId("slip-step1")).toContainText(data.beliefs[0].counterpart)
+      await tap(page, "slip-skip")
+      await tap(page, "slip-skip")
+      await expect(page.getByTestId("result")).toBeVisible()
+      await expect(page.getByTestId("top-lie").first()).toContainText(data.beliefs[0].counterpart)
       // a partial wave-1 save is the draft: the tool resumes at the first unanswered question
       await page.evaluate(() => localStorage.setItem("quit-v1", JSON.stringify({ nicotine: { beliefs: { ratings: { b1: 3, b2: 3 }, facts: {} } } })))
       await page.goto(URL)

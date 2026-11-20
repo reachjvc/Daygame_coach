@@ -74,10 +74,10 @@ test("two moments, a listed then and a typed then, the nudge, the plan, check-in
   await expect(page.getByTestId("ev-list")).toContainText("In one trial of 193 smokers")
   await shot(page, "then-quick")
   await page.getByTestId("group-1").click()
-  await page.getByTestId("then-move5").click()
-  await expect(page.getByTestId("then-move5").getByTestId("evidence-strong")).toBeVisible()
+  await page.getByTestId("then-relief-1").click()
+  await expect(page.getByTestId("then-relief-1").getByTestId("evidence-strong")).toBeVisible()
   await page.getByTestId("picked-source").getByRole("button", { name: "Source" }).click()
-  await expect(page.getByTestId("picked-source")).toContainText("remained reduced for up to 50 minutes after exercise")
+  await expect(page.getByTestId("picked-source")).toContainText("There is strong evidence that physical activity acutely reduces cigarette craving")
   await shot(page, "then-swap-source")
   await page.getByTestId("then-next").click()
 
@@ -98,7 +98,7 @@ test("two moments, a listed then and a typed then, the nudge, the plan, check-in
   await page.getByTestId("see-plan").click()
 
   // plan cards: text, edit, reorder
-  await expect(page.getByTestId("card-text-0")).toHaveText("If it is after a meal, then I walk or climb stairs for five minutes.")
+  await expect(page.getByTestId("card-text-0")).toHaveText("If it is after a meal, then I walk or take the stairs for 15 minutes.")
   await expect(page.getByTestId("card-text-1")).toHaveText("If Sam calls, then I let it ring and go outside.")
   await shot(page, "plan")
   await page.getByTestId("card-edit-1").click()
