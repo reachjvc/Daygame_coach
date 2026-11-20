@@ -114,7 +114,11 @@ test("a production build links nothing that needs ?preview=1 and shows no coachi
   }
   if (!prod) return
   expect((await page.request.get("/quit/coaching")).status()).toBe(404)
-  expect((await page.request.get("/quit/nicotine/gives")).status()).toBe(404)
+  // every menu tool not in liveTools.json (not built yet) is a 404 in production; the list follows the file, so a
+  // tool that goes live drops out of it instead of turning this check red
+  for (const id of QUIT_TOOL_IDS.filter((x) => !isLiveTool(x))) {
+    expect((await page.request.get(`/quit/nicotine/${id}`)).status(), id).toBe(404)
+  }
 })
 
 test("an unknown addiction or tool is 404", async ({ page }) => {
