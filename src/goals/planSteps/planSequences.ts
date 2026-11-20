@@ -19,7 +19,8 @@ import { ROUTES } from "@/src/shared/routes"
 import { TAB_LABELS, TAB_ORDER, USE_STEPS } from "@/src/goals/data/northStar"
 import type { NorthStarTabId, NsPlan } from "@/src/goals/types"
 import { SEQUENCE_KEY } from "@/src/goals/planSteps/planFacts"
-import { STEP_SECTIONS } from "@/src/goals/planSteps/planSections"
+import { STEP_SECTIONS, type SectionId } from "@/src/goals/planSteps/planSections"
+import { SECTION_TITLES } from "@/src/goals/planSteps/sectionTitles"
 
 export interface Screen {
   /** The address segment: `/plan/new/<id>`. Unique inside a sequence. */
@@ -161,11 +162,26 @@ export function stepRoute(seq: Sequence, step: NorthStarTabId): string | null {
   return screen ? screenRoute(seq, screen) : null
 }
 
-/** What a Back or Next button says for `target`: the step's name, or "Part 2 of 3" when it stays inside a split step. */
+/** The parts of a screen's step along the walk the screen is on: the path, or (for a Deepen screen) the Deepen list. */
+export const walkPartsOf = (seq: Sequence, screen: Screen): Screen[] => walkOf(seq, screen).filter((s) => s.step === screen.step)
+
+/** The numbering of the steps in a version: the build steps (the path's first, then those only on the Deepen list), then the daily steps. */
+export function stepOrder(seq: Sequence): NorthStarTabId[] {
+  const out: NorthStarTabId[] = []
+  for (const kind of ["build", "daily"] as const) for (const s of allScreens(seq)) if (s.kind === kind && !out.includes(s.step)) out.push(s.step)
+  return out
+}
+
+/**
+ * What a Back or Next button says for `target`: "Part 2 of 3" when it stays inside a split step (counted along the walk the
+ * screen is on), else the step's name; and when the step has several screens, the screen's own title after it, so two
+ * buttons that lead to different screens of one step never read alike.
+ */
 export function navLabel(seq: Sequence, here: Screen, target: Screen): string {
   if (target.step === here.step && target.section) {
-    const parts = screensForStep(seq, target.step)
+    const parts = walkPartsOf(seq, target)
     return `Part ${parts.findIndex((p) => p.id === target.id) + 1} of ${parts.length}`
   }
+  if (target.section && screensForStep(seq, target.step).length > 1) return `${TAB_LABELS[target.step]}: ${SECTION_TITLES[target.section as SectionId]}`
   return TAB_LABELS[target.step]
 }

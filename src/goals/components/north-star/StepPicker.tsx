@@ -22,6 +22,7 @@ export function StepPicker({
   setBuildOpen,
   railToggleRef,
   onPick,
+  order = TAB_ORDER,
 }: {
   tab: NorthStarTabId
   inUse: boolean
@@ -33,6 +34,8 @@ export function StepPicker({
   setBuildOpen: (update: (open: boolean) => boolean) => void
   railToggleRef: RefObject<HTMLButtonElement | null>
   onPick: (id: NorthStarTabId) => void
+  /** The order and numbering of the steps; default is the real tool's (`/plan/new` passes the active version's). */
+  order?: readonly NorthStarTabId[]
 }) {
   /** One step card in the rail, numbered by TAB_ORDER so a number always names the same step. */
   const card = (id: NorthStarTabId) => {
@@ -51,7 +54,7 @@ export function StepPicker({
           <span className={`inline-flex items-center justify-center size-5 rounded-full text-[10px] tabular-nums shrink-0 ${
             active ? "bg-primary/25 text-foreground" : "bg-white/5 text-zinc-500"
           }`}>
-            {TAB_ORDER.indexOf(id) + 1}
+            {order.indexOf(id) + 1}
           </span>
           <span className={`text-sm font-medium min-w-0 flex-1 ${active ? "text-white" : "text-zinc-300"}`}>{TAB_LABELS[id]}</span>
           {/* HOW FULL, NOT WHETHER VISITED.
@@ -81,7 +84,7 @@ export function StepPicker({
     <>
     {/* The rail. Every tab is reachable at any time: on a phone behind one line,
         and once the plan is in use the setup steps behind "Edit your plan". */}
-    <button ref={railToggleRef} type="button" className="sm:hidden w-full mb-3 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-left text-sm text-zinc-200" aria-expanded={railOpen} aria-controls="plan-sections" onClick={() => setRailOpen((o) => !o)}>{inUse && USE_STEPS.includes(tab) ? RAIL_COPY.phoneUse(TAB_LABELS[tab]) : RAIL_COPY.phoneStep(TAB_ORDER.indexOf(tab) + 1, TAB_ORDER.length, TAB_LABELS[tab], SCORED_TABS.includes(tab) ? ns.percentDown(planPct.steps[tab].fraction) : null)} <span aria-hidden>▾</span></button>
+    <button ref={railToggleRef} type="button" className="sm:hidden w-full mb-3 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-left text-sm text-zinc-200" aria-expanded={railOpen} aria-controls="plan-sections" onClick={() => setRailOpen((o) => !o)}>{inUse && USE_STEPS.includes(tab) ? RAIL_COPY.phoneUse(TAB_LABELS[tab]) : RAIL_COPY.phoneStep(order.indexOf(tab) + 1, order.length, TAB_LABELS[tab], SCORED_TABS.includes(tab) ? ns.percentDown(planPct.steps[tab].fraction) : null)} <span aria-hidden>▾</span></button>
     <nav id="plan-sections" aria-label="Sections" className={`${railOpen ? "grid" : "hidden"} sm:grid gap-2 sm:grid-cols-2 lg:grid-cols-4 mb-8`}>
       {inUse ? (
         <>
@@ -89,10 +92,10 @@ export function StepPicker({
           <div className="col-span-full">
             <button type="button" aria-expanded={showBuild} onClick={() => setBuildOpen((o) => !o)} className="text-[12px] text-zinc-400 hover:text-zinc-100 py-1">{RAIL_COPY.editPlan(BUILD_STEPS.length, planPct.percent)} <span aria-hidden>{showBuild ? "▴" : "▾"}</span></button>
           </div>
-          {showBuild && BUILD_STEPS.map(card)}
+          {showBuild && order.filter((id) => BUILD_STEPS.includes(id)).map(card)}
         </>
       ) : (
-        TAB_ORDER.map(card)
+        order.map(card)
       )}
     </nav>
     </>

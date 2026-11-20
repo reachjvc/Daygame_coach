@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect } from "vitest"
-import { SEQUENCES, allScreens, isDeepen, nextScreen, onPath, prevScreen, screenById, screenForSection, screenForStep, sequenceById, sequenceOfPlan, type Sequence } from "@/src/goals/planSteps/planSequences"
+import { SEQUENCES, allScreens, navLabel, stepOrder, walkPartsOf, isDeepen, nextScreen, onPath, prevScreen, screenById, screenForSection, screenForStep, sequenceById, sequenceOfPlan, type Sequence } from "@/src/goals/planSteps/planSequences"
 import { ALL_SECTION_IDS, AREA_SECTIONS, GOAL_SECTIONS } from "@/src/goals/planSteps/planSections"
 import { SEQUENCE_KEY, SORTER_KEY, deeperKey } from "@/src/goals/planSteps/planFacts"
 import { accountOf, buildStepsOf, deepenItems, nextUp } from "@/src/goals/planSteps/planHome"
@@ -202,5 +202,27 @@ describe("the sorter (Q8)", () => {
     expect(deeperKey("area", "a1")).toBe("start:new:deeper:area:a1")
     expect(deeperKey("goal", "g2")).toBe("start:new:deeper:goal:g2")
     expect(fullPlan().areas.length).toBeGreaterThan(0)
+  })
+})
+
+describe("step numbers and Back/Next words follow the version", () => {
+  it("numbers the steps in the version's own order, build steps first, default unchanged", () => {
+    expect(stepOrder(sequenceById("v1"))).toEqual(["star", "now", "pick", "systems", "milestones", "focus", "values", "recap", "track", "today", "journal", "review"])
+    expect(stepOrder(sequenceById("v2"))).toEqual(["star", "now", "focus", "pick", "systems", "milestones", "values", "recap", "track", "today", "journal", "review"])
+  })
+
+  it("two buttons that lead to different screens of one step never read alike", () => {
+    const v2 = sequenceById("v2")
+    const pick = screenById(v2, "pick")!
+    expect(navLabel(v2, pick, prevScreen(v2, pick)!)).not.toBe(navLabel(v2, pick, nextScreen(v2, pick)!))
+    expect(navLabel(v2, pick, nextScreen(v2, pick)!)).toMatch(/^Season: /)
+  })
+
+  it("Part N of M counts along the walk the screen is on", () => {
+    const v2 = sequenceById("v2")
+    expect(walkPartsOf(v2, screenById(v2, "season.areas")!).map((s) => s.id)).toEqual(["season.areas", "season.one-thing"])
+    expect(walkPartsOf(v2, screenById(v2, "season.why")!).map((s) => s.id)).toEqual(["season.why", "season.who", "season.order"])
+    const first = screenById(v2, "season.areas")!
+    expect(navLabel(v2, first, screenById(v2, "season.one-thing")!)).toBe("Part 2 of 2")
   })
 })
