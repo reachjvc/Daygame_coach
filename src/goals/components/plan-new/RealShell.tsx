@@ -15,6 +15,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { BUILD_STEPS, TAB_LABELS, USE_STEPS } from "@/src/goals/data/northStar"
 import { planHomeHref } from "@/src/goals/planSteps/planRoutes"
 import { navLabel, nextScreen, prevScreen, screenRoute, screensForStep, type Screen, type Sequence } from "@/src/goals/planSteps/planSequences"
@@ -99,6 +100,15 @@ export function RealShell({ children, seq }: { children: ReactNode; seq?: Sequen
     const keep = screen && target.step === screen.step && r.reviewPeriod ? `?period=${encodeURIComponent(r.reviewPeriod)}` : ""
     r.router.push(`${screenRoute(seq as Sequence, target)}${keep}`)
   }
+  // "See it all" and back keep what is open: the review period, an open area sheet or goal card and its part.
+  const search = useSearchParams()
+  const seeAllQuery = (() => {
+    const q = new URLSearchParams(search.toString())
+    if (r.seeAll) q.delete("all")
+    else q.set("all", "1")
+    const text = q.toString()
+    return text ? `?${text}` : ""
+  })()
   const parts = screen && seq ? screensForStep(seq, screen.step) : []
   // "See it all" draws the whole step, so Back and Next leave it: before its first part, after its last.
   const prev = screen && seq ? prevScreen(seq, r.seeAll && parts.length ? parts[0] : screen) : undefined
@@ -164,7 +174,7 @@ export function RealShell({ children, seq }: { children: ReactNode; seq?: Sequen
               {r.seeAll ? TAB_LABELS[screen.step] : `Part ${partIndex + 1} of ${parts.length}: ${SECTION_TITLES[screen.section as SectionId]}`}
             </p>
             <Link
-              href={r.seeAll ? screenRoute(seq as Sequence, screen) : `${screenRoute(seq as Sequence, screen)}?all=1`}
+              href={`${screenRoute(seq as Sequence, screen)}${seeAllQuery}`}
               className="inline-flex min-h-11 items-center text-[12px] text-primary hover:text-primary underline decoration-dotted underline-offset-2"
               data-testid="see-it-all"
             >

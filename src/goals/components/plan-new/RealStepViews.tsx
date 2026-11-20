@@ -17,7 +17,7 @@ import { COMMIT_EDIT_COPY } from "@/src/goals/data/northStar"
 import { DEFAULT_REVIEW_DAY } from "@/src/goals/dueNowService"
 import * as ns from "@/src/goals/northStarService"
 import * as nsTrack from "@/src/goals/northStarTrackService"
-import { appendToReview, parsePeriodParam, removeReview, reviewIdFor, writeReview } from "@/src/goals/reviewService"
+import { appendToReview, parsePeriodParam, periodOfReview, removeReview, reviewIdFor, writeReview } from "@/src/goals/reviewService"
 import { StarTab } from "@/src/goals/components/north-star/StarTab"
 import { NowTab } from "@/src/goals/components/north-star/NowTab"
 import { PathPicker } from "@/src/goals/components/north-star/PathPicker"
@@ -114,6 +114,8 @@ export function RealStepView(): ReactNode {
             section={section as "season.one-thing" | "season.why" | "season.who" | undefined}
             goalSection={r.goalSection}
             onGoalSection={r.setGoalSection}
+            hideNext={r.framed}
+            draftKey={`plan-new-draft:${r.account}`}
           />}
           {show("season.areas", "season.order") && <FocusTab
             plan={plan}
@@ -303,7 +305,9 @@ export function RealStepView(): ReactNode {
 function ReviewScreen(): ReactNode {
   const r = useRealStep()
   const { plan, today, ticks } = r
-  const named = parsePeriodParam(r.reviewPeriod ?? undefined)
+  // A fortnight (the copied 10s) has no rule that builds it from its start: it is the review the plan holds under that id.
+  const fortnight = (plan.reviews ?? []).find((x) => x.cadence === "fortnight" && reviewIdFor({ cadence: "fortnight", start: x.periodStart }) === r.reviewPeriod)
+  const named = parsePeriodParam(r.reviewPeriod ?? undefined) ?? (fortnight ? periodOfReview(fortnight) : null)
   const dueWeek = r.dueWeek
   const initialPeriod = named ?? (dueWeek && "period" in dueWeek.go ? dueWeek.go.period ?? null : null)
   const namedId = named ? reviewIdFor(named) : "now"
@@ -326,8 +330,8 @@ function ReviewScreen(): ReactNode {
       ticks={ticks}
       section={r.section as "review.open" | "review.goals" | "review.write" | undefined}
       onPeriod={(period) => {
-        const id = period.cadence === "fortnight" ? null : reviewIdFor(period)
-        own.current = id ?? "now"
+        const id = reviewIdFor(period)
+        own.current = id
         r.setPeriodParam(id)
       }}
       handlers={{

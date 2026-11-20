@@ -41,6 +41,7 @@ import {
 import { OneThingCard, type OneThingHandlers } from "./OneThing"
 import { GoalCard, type GoalHandlers } from "./GoalCard"
 import type { OneThingAccount } from "./useOneThing"
+import { useKeptState } from "./useKeptState"
 import { showSection, type GoalSectionId } from "@/src/goals/planSteps/planSections"
 import { SentenceBox } from "./SentenceBox"
 
@@ -65,6 +66,8 @@ export function OneThingTab({
   section,
   goalSection,
   onGoalSection,
+  hideNext = false,
+  draftKey,
 }: {
   plan: NsPlan
   handlers: OneThingTabHandlers
@@ -88,6 +91,10 @@ export function OneThingTab({
   /** An open requirement card shows only this section, with chips to switch (`/plan/new`); absent = whole card (`/plan`). */
   goalSection?: GoalSectionId
   onGoalSection?: (next: GoalSectionId | null) => void
+  /** Hide the step-advance button when a surrounding frame supplies Next (default: shown, as in /plan). */
+  hideNext?: boolean
+  /** Keeps the add-a-requirement row's typed text in this tab's session, under this key, across a change of screen (`/plan/new`). */
+  draftKey?: string
 }) {
   const show = (id: string) => showSection(section, id)
   /* THE SAVED SENTENCE. Everything that reads back your one thing reads this —
@@ -168,6 +175,8 @@ export function OneThingTab({
             goalHandlers={goalHandlers}
             goalSection={goalSection}
             onGoalSection={onGoalSection}
+            hideNext={hideNext}
+            draftKey={draftKey}
           />}
 
           {/* --------------------------------------------- why, and the cost */}
@@ -312,6 +321,8 @@ function Requirements({
   goalHandlers,
   goalSection,
   onGoalSection,
+  hideNext,
+  draftKey,
 }: {
   plan: NsPlan
   requirements: ReturnType<typeof oneThingRequirements>
@@ -321,9 +332,11 @@ function Requirements({
   goalHandlers: GoalHandlers
   goalSection?: GoalSectionId
   onGoalSection?: (next: GoalSectionId | null) => void
+  hideNext?: boolean
+  draftKey?: string
 }) {
-  const [draft, setDraft] = useState("")
-  const [areaId, setAreaId] = useState<string | null>(null)
+  const [draft, setDraft] = useKeptState(draftKey && `${draftKey}:draft`, "")
+  const [areaId, setAreaId] = useKeptState<string | null>(draftKey && `${draftKey}:area`, null)
   /**
    * PRACTICE IS WHERE THE PICKER OPENS, and it is a starting position rather
    * than a guess: it is on the screen, labelled, with its meaning under it, and
@@ -331,7 +344,7 @@ function Requirements({
    * repeatedly — that is what a season is — so opening on "you climb to a
    * number" would be the wrong end of the common case.
    */
-  const [type, setType] = useState<VisionGoalType>("habit_ramp")
+  const [type, setType] = useKeptState<VisionGoalType>(draftKey && `${draftKey}:type`, "habit_ramp")
   /** Which requirement is expanded. One at a time, like the areas. */
   const [openId, setOpenId] = useState<string | null>(null)
   const guess = draft.trim() ? guessAreaId(areaKeywordIndex(plan.areas), draft) : null
@@ -479,7 +492,7 @@ function Requirements({
         </div>
       )}
 
-      {requirements.length > 0 && (
+      {requirements.length > 0 && !hideNext && (
         <button
           onClick={() => handlers.onGoToTab("milestones")}
           className="mt-4 inline-flex items-center gap-1.5 text-[12.5px] px-3 py-1.5 rounded-lg border border-violet-500/40 bg-violet-500/15 text-violet-100 hover:bg-violet-500/25 transition-colors"

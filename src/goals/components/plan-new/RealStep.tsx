@@ -47,6 +47,8 @@ export interface Errand {
   tickId: string | null
   back: NorthStarTabId
   backAnchor?: string
+  /** The screen (section) of a split step the person left, so the way back returns to it (`/plan/new`). */
+  backSection?: string
 }
 
 interface Session {
@@ -80,6 +82,8 @@ type Reads = ReturnType<typeof usePlanReads>
 export interface RealStep extends Writers, Reads {
   stepId: NorthStarTabId
   plan: NsPlan
+  /** The id the plan is kept under (the copy space's hidden account). */
+  account: string
   /** The account's day (its timezone), never null once a step is drawn. */
   today: string
   timezone: string
@@ -224,9 +228,9 @@ export function RealStepHost({
     const target = section ? screenForSection(sequence, section) : null
     return target && target.step === tab ? `${ROUTES.planNew}/${target.id}` : stepRoute(sequence, tab)
   }, [sequence])
-  const live = useRef({ stepId, router, q: NO_Q, routeOf })
+  const live = useRef<{ stepId: NorthStarTabId; router: typeof router; q: Q; routeOf: typeof routeOf; screenSection?: string }>({ stepId, router, q: NO_Q, routeOf })
   const q: Q = { area: search.get("area"), goal: search.get("goal"), routine: search.get("routine") }
-  live.current = { stepId, router, q, routeOf }
+  live.current = { stepId, router, q, routeOf, screenSection: screen?.section || undefined }
   const draft = useRef<{ q: Q; touched: boolean; tab: NorthStarTabId | null; section?: string } | null>(null)
   const apply = useCallback(() => {
     const d = draft.current
@@ -308,13 +312,22 @@ export function RealStepHost({
         routine: null,
       }
     })
-    setErrand(on ?? null)
+    // Remember which screen of a split step the person leaves, so the way back lands on it.
+    setErrand(on ? { ...on, backSection: on.backSection ?? live.current.screenSection } : null)
     setAnchor(place.anchor ?? null)
   }, [queue, setErrand, setAnchor])
   const endErrand = useCallback((go: boolean) => {
     setErrand((e) => {
       if (e && go) {
-        queue((d) => { d.touched = true; d.tab = stepFor(e.back); d.q = NO_Q })
+        queue((d) => {
+          d.touched = true
+          d.tab = stepFor(e.back)
+          d.q = NO_Q
+          // The screen that was left, else the one that holds the element the way back names.
+          const named = sectionOfAnchor(e.backAnchor, STAR_PROMPTS.map((p) => p.id), STAR_WHY_ID, REVIEW_PROMPTS.map((p) => p.id))
+          const wanted = e.backSection ?? named
+          d.section = wanted && stepOfSection(wanted) === d.tab ? wanted : undefined
+        })
         setAnchor(e.backAnchor ?? null)
       }
       return null
@@ -404,6 +417,7 @@ export function RealStepHost({
     ...reads,
     stepId,
     plan,
+    account,
     today: day,
     timezone,
     setPlan,

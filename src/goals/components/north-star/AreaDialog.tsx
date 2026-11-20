@@ -41,7 +41,8 @@ import { ValueBrowser } from "./ValueBrowser"
 import { AreaPeople } from "@/src/role-models/components/AreaPeople"
 import { SentenceBox } from "./SentenceBox"
 import { planLimit } from "@/src/goals/planLimits"
-import { showSection, type AreaSectionId } from "@/src/goals/planSteps/planSections"
+import { SectionPart } from "./SectionPart"
+import type { AreaSectionId } from "@/src/goals/planSteps/planSections"
 
 export function AreaDialog({
   area,
@@ -91,7 +92,6 @@ export function AreaDialog({
   /** With `section`: a row of chips that switches section (`null` = see it all). Absent = no chips. */
   onSection?: (next: AreaSectionId | null) => void
 }) {
-  const show = (id: string) => showSection(section, id)
   const review = areaReview(plan, area.id)
   const reach = areaReach(plan, area.id)
   const areaValues = areaValueSuggestions(plan, area.id)
@@ -199,7 +199,7 @@ export function AreaDialog({
 
         <div className="space-y-5">
           {/* 1. The 10 first. A rating with nothing behind it is a mood. */}
-          {show("area.ten") && <>
+          <SectionPart section={section} id="area.ten" className="space-y-5">
           <section>
             <p className="text-[13px] text-zinc-200">{AREA_REVIEW_COPY.ten.question}</p>
             <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">{AREA_REVIEW_COPY.ten.help}</p>
@@ -319,9 +319,9 @@ export function AreaDialog({
               className="w-full mt-1.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-400/40 resize-y transition-colors"
             />
           </section>
-          </>}
+          </SectionPart>
 
-          {show("area.why") && <>
+          <SectionPart section={section} id="area.why" className="space-y-5">
           {/* The purpose, per area. His own structure and the piece we did not
               have: "I've got my vision here, I've got my purpose for my
               relationship, and then I've got my goals... So I do that for each
@@ -395,9 +395,9 @@ export function AreaDialog({
             </div>
           </section>
 
-          </>}
+          </SectionPart>
 
-          {show("area.ten") && <>
+          <SectionPart section={section} id="area.ten" className="space-y-5">
           {/* What already runs here. Without this, opening Money said nothing
               about the work routine that is the entire reason the number is
               moving. The goals filed here are the next tab's business. */}
@@ -473,7 +473,7 @@ export function AreaDialog({
               )}
             </section>
           )}
-          </>}
+          </SectionPart>
 
           {/* Somewhere to go when you have finished.
               Everything saves as you type, so the only thing missing was a way
