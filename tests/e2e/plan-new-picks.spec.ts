@@ -6,7 +6,7 @@ import { PROGRESS_COPY, TODO_COPY } from "@/src/goals/data/northStar"
 import { AREA_REVIEW_COPY, REVIEW_PERIOD_COPY, TAB_LABELS } from "@/src/goals/data/northStar"
 import { fingerprint, seedAndCopy } from "./helpers/planNewCopy"
 import { screenRoute, sequenceById } from "@/src/goals/planSteps/planSequences"
-import { STEP_SECTIONS } from "@/src/goals/planSteps/planSections"
+import { AREA_SECTIONS, GOAL_SECTIONS, STEP_SECTIONS } from "@/src/goals/planSteps/planSections"
 
 /**
  * HIS PICKS ON /plan/new (Plans/plan-new-from-real.md, Phase 6), on the copy space.
@@ -52,28 +52,47 @@ test.describe("the split screens", () => {
     expect(await fingerprint(account.id), "the owner's rows did not move").toEqual(ownerBefore)
   })
 
-  test("nothing disappears: every line of a step's see-it-all page is on one of its short screens", async ({ page, account }) => {
-    test.setTimeout(900_000)
+  test("nothing disappears: every line of a step's, sheet's and card's whole view is on one of its short views, folds open", async ({ page, account }) => {
+    test.setTimeout(1_500_000)
     await seedAndCopy(page, account.id)
-    const lines = async () =>
-      (await page.locator("body").innerText()).split("\n").map((l) => l.replace(/\s+/g, " ").trim()).filter(Boolean)
+    const lines = async (scope: string) =>
+      (await page.locator(scope).first().innerText()).split("\n").map((l) => l.replace(/\s+/g, " ").trim()).filter(Boolean)
+    // Open every fold in the content (not the step picker): details, and buttons that say aria-expanded=false.
+    const openFolds = async (scope: string) => {
+      for (let pass = 0; pass < 3; pass++) {
+        await page.evaluate((sel) => {
+          const root = document.querySelector(sel)
+          if (!root) return
+          root.querySelectorAll("details:not([open])").forEach((d) => ((d as HTMLDetailsElement).open = true))
+          root.querySelectorAll<HTMLElement>('button[aria-expanded="false"]').forEach((b) => { if (!b.closest("#plan-sections") && !b.hasAttribute("data-fold-skip")) b.click() })
+        }, scope)
+        await page.waitForLoadState("networkidle")
+      }
+    }
     const chrome = /^(Part \d+ of \d+|See it all on one page|Back to the short screens)/
+    const compare = async (what: string, shortUrls: string[], allUrl: string, scope: string) => {
+      const union = new Set<string>()
+      for (const url of shortUrls) {
+        await page.goto(url, { timeout: NAV })
+        await expect(page.locator(scope).first()).toBeVisible({ timeout: NAV })
+        await openFolds(scope)
+        for (const l of await lines(scope)) union.add(l)
+      }
+      await page.goto(allUrl, { timeout: NAV })
+      await expect(page.locator(scope).first()).toBeVisible({ timeout: NAV })
+      await openFolds(scope)
+      const missing = (await lines(scope)).filter((l) => !chrome.test(l) && !union.has(l))
+      expect(missing, `${what}: lines on the whole view that no short view shows`).toEqual([])
+    }
     for (const [step, list] of Object.entries(STEP_SECTIONS)) {
       const ids = list as readonly string[]
-      const union = new Set<string>()
-      for (const id of ids) {
-        await page.goto(`${ROUTES.planNew}/${id}`, { timeout: NAV })
-        await expect(page.getByTestId(`sequence-${id}`)).toBeVisible({ timeout: NAV })
-        await expect(page.getByTestId("see-it-all")).toBeVisible()
-        await page.waitForLoadState("networkidle")
-        for (const l of await lines()) union.add(l)
-      }
-      await page.goto(`${screenRoute(V1, V1.screens.find((s) => s.step === step)!)}?all=1`, { timeout: NAV })
-      await expect(page.getByTestId("see-it-all")).toHaveText("Back to the short screens", { timeout: NAV })
-      await page.waitForLoadState("networkidle")
-      const missing = (await lines()).filter((l) => !chrome.test(l) && !union.has(l))
-      expect(missing, `${step}: lines on the whole page that no short screen shows`).toEqual([])
+      await compare(step, ids.map((id) => `${ROUTES.planNew}/${id}`), `${screenRoute(V1, V1.screens.find((s) => s.step === step)!)}?all=1`, "body")
     }
+    const full = fullPlan()
+    const area = full.areas[0]
+    const goal = full.goals[0]
+    await compare("area sheet", AREA_SECTIONS.map((p) => `${ROUTES.planNew}/now?area=${area.id}&part=${p}`), `${ROUTES.planNew}/now?area=${area.id}&part=all`, '[role="dialog"]')
+    await compare("goal card", GOAL_SECTIONS.map((p) => `${ROUTES.planNew}/milestones?area=${goal.areaId}&goal=${goal.id}&part=${p}`), `${ROUTES.planNew}/milestones?area=${goal.areaId}&goal=${goal.id}&part=all`, '[role="dialog"]')
   })
 
   test("an area sheet and a goal card open on one section, switch with chips, and show it all", async ({ page, account }) => {
@@ -88,27 +107,29 @@ test.describe("the split screens", () => {
     await page.goto(`${ROUTES.planNew}/now?area=${area.id}`, { timeout: NAV })
     const sheet = page.getByRole("dialog")
     await expect(sheet.getByTestId("area-sections")).toBeVisible({ timeout: NAV })
-    await expect(sheet.getByText(AREA_REVIEW_COPY.ten.question).first()).toBeVisible()
-    await expect(sheet.getByText(AREA_REVIEW_COPY.purpose.question, { exact: true })).toHaveCount(1) // only the chip
+    const ten = sheet.getByText(AREA_REVIEW_COPY.ten.question, { exact: true }).last() // the question, after its chip
+    const why = sheet.getByText(AREA_REVIEW_COPY.purpose.question, { exact: true }).last()
+    await expect(ten).toBeVisible()
+    await expect(why).toBeHidden()
     await sheet.getByTestId("area-section-area.why").click()
-    await expect(sheet.getByText(AREA_REVIEW_COPY.purpose.question, { exact: true })).toHaveCount(2) // chip and question
-    await expect(sheet.getByText(AREA_REVIEW_COPY.ten.question, { exact: true })).toHaveCount(1)
+    await expect(why).toBeVisible()
+    await expect(ten).toBeHidden()
     expect(new URL(page.url()).searchParams.get("part")).toBe("area.why")
     await sheet.getByTestId("area-section-all").click()
-    await expect(sheet.getByText(AREA_REVIEW_COPY.ten.question, { exact: true })).toHaveCount(2)
-    await expect(sheet.getByText(AREA_REVIEW_COPY.purpose.question, { exact: true })).toHaveCount(2)
+    await expect(ten).toBeVisible()
+    await expect(why).toBeVisible()
     // the goal card, from the Experiences screen
     await page.goto(`${ROUTES.planNew}/milestones?area=${goal.areaId}&goal=${goal.id}`, { timeout: NAV })
     const card = page.getByRole("dialog")
     await expect(card.getByTestId("goal-sections")).toBeVisible({ timeout: NAV })
     await expect(card.getByTestId("goal-section-goal.shape")).toHaveAttribute("aria-pressed", "true")
-    await expect(card.getByLabel(/^Why you want:/)).toHaveCount(0)
+    await expect(card.getByLabel(/^Why you want:/)).toBeHidden()
     await card.getByTestId("goal-section-goal.why").click()
-    await expect(card.getByLabel(/^Why you want:/)).toHaveCount(1)
+    await expect(card.getByLabel(/^Why you want:/)).toBeVisible()
     await card.getByTestId("goal-section-goal.stops").click()
-    await expect(card.getByLabel(/^Why you want:/)).toHaveCount(0)
+    await expect(card.getByLabel(/^Why you want:/)).toBeHidden()
     await card.getByTestId("goal-section-all").click()
-    await expect(card.getByLabel(/^Why you want:/)).toHaveCount(1)
+    await expect(card.getByLabel(/^Why you want:/)).toBeVisible()
     expect(errors).toEqual([])
   })
 
@@ -269,7 +290,7 @@ test.describe("buttons beside the drag (Q9)", () => {
     test.setTimeout(600_000)
     const full = fullPlan()
     const g = full.goals[0]
-    const plan = { ...full, goals: full.goals.map((x, i) => (i === 0 ? { ...x, type: "milestone_ladder", unit: "km", ladder: { start: 0, target: 42, steps: 5, curveTension: 0, controlPoints: [], pins: [] } } : x)) }
+    const plan = { ...full, goals: full.goals.map((x, i) => (i === 0 ? { ...x, type: "milestone_ladder", unit: "km", ladder: { start: 0, target: 42, steps: 5, curveTension: 0, controlPoints: [{ x: 0.5, y: 0.3 }], pins: [] } } : x)) }
     await seedAndCopy(page, account.id, plan)
     await page.goto(`${ROUTES.planNew}/milestones?area=${g.areaId}&goal=${g.id}`, { timeout: NAV })
     const card = page.getByRole("dialog")
@@ -277,12 +298,21 @@ test.describe("buttons beside the drag (Q9)", () => {
     const buttons = card.getByTestId("curve-buttons")
     await expect(buttons).toBeVisible({ timeout: NAV })
     for (const b of await buttons.getByRole("button").all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44)
-    await expect(buttons.getByRole("button", { name: "Curve shape: Linear" })).toHaveAttribute("aria-pressed", "true")
-    await buttons.getByRole("button", { name: "Curve shape: Many small wins" }).click()
-    await expect(buttons.getByRole("button", { name: "Curve shape: Many small wins" })).toHaveAttribute("aria-pressed", "true")
-    await expect(buttons.getByRole("button", { name: "Curve shape: Linear" })).toHaveAttribute("aria-pressed", "false")
+    // the shapes are the editor's own preset row (Balanced is on), 44 px high; picking Quick Wins keeps the step count of the preset
+    const presets = card.locator("[data-tour^='curve-preset-']")
+    await expect(presets).toHaveCount(3)
+    for (const b of await presets.all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44)
+    // a preset replaces the dragged point, and says so with an Undo that brings it back
+    await presets.first().click()
+    await expect(card.locator("span", { hasText: /^8 milestones$/ })).toBeVisible()
+    const undo = buttons.getByRole("button", { name: /^Undo/ })
+    await expect(undo).toBeVisible()
+    await undo.click()
+    await expect(undo).toHaveCount(0)
+    await expect(card.locator("span", { hasText: /^5 milestones$/ })).toBeVisible()
+    await presets.first().click()
     await buttons.getByRole("button", { name: /^More milestones/ }).click()
-    await expect(card.locator("span", { hasText: /^6 milestones$/ })).toBeVisible()
+    await expect(card.locator("span", { hasText: /^9 milestones$/ })).toBeVisible()
   })
 })
 

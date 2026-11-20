@@ -34,7 +34,7 @@
  */
 
 import { planLimit } from "@/src/goals/planLimits"
-import { useState, type ReactNode } from "react"
+import { useRef, useState, type ReactNode } from "react"
 // ChevronDown for the disclosure. Reordering is a drag now, so it wears
 // GripVertical — the handle every other sortable list in the project uses
 // (SortablePriorityList, WidgetGrid, GoalCategorySection), same role, no new
@@ -88,9 +88,12 @@ export interface ValuesHandlers {
  * take if you let go now, so the column renumbers under your hand instead of
  * lying until the drop.
  */
-function SortableValue({ id, label, children, trailing, onUp, onDown }: {
+function SortableValue({ id, label, children, trailing, onUp, onDown, upEnds, downEnds }: {
   id: string
   label: string
+  /** The row will be first (last) after this move: its own button goes disabled, so focus moves to the other one. */
+  upEnds?: boolean
+  downEnds?: boolean
   /** Move the row one place (`/plan/new`'s buttons beside the drag); absent = no buttons, as on `/plan`. */
   onUp?: (() => void) | null
   onDown?: (() => void) | null
@@ -100,6 +103,8 @@ function SortableValue({ id, label, children, trailing, onUp, onDown }: {
   children?: ReactNode
 }) {
   const { ref, style, handle, isDragging, rank } = useValueHandle(id)
+  const upRef = useRef<HTMLButtonElement>(null)
+  const downRef = useRef<HTMLButtonElement>(null)
   return (
     <li ref={ref} style={style} className={isDragging ? "relative" : undefined}>
       <div
@@ -122,14 +127,16 @@ function SortableValue({ id, label, children, trailing, onUp, onDown }: {
           <span className="flex shrink-0 items-center" data-testid="value-move">
             <button
               type="button"
-              onClick={() => onUp?.()}
+              ref={upRef}
+              onClick={() => { onUp?.(); if (upEnds) setTimeout(() => downRef.current?.focus(), 0) }}
               disabled={!onUp}
               aria-label={`Move ${label} up`}
               className="inline-flex size-11 items-center justify-center rounded-lg text-foreground hover:bg-white/10 disabled:opacity-25 transition-colors"
             ><ChevronUp className="size-4" /></button>
             <button
               type="button"
-              onClick={() => onDown?.()}
+              ref={downRef}
+              onClick={() => { onDown?.(); if (downEnds) setTimeout(() => upRef.current?.focus(), 0) }}
               disabled={!onDown}
               aria-label={`Move ${label} down`}
               className="inline-flex size-11 items-center justify-center rounded-lg text-foreground hover:bg-white/10 disabled:opacity-25 transition-colors"
@@ -412,6 +419,8 @@ export function ValuesWork({ plan, handlers, mode }: {
                       key={ids[i]}
                       id={ids[i]}
                       label={value}
+                      upEnds={i === 1}
+                      downEnds={i === plan.values.length - 2}
                       onUp={moveButtons ? (i > 0 ? () => handlers.onMoveValue(value, i - 1) : null) : undefined}
                       onDown={moveButtons ? (i < plan.values.length - 1 ? () => handlers.onMoveValue(value, i + 1) : null) : undefined}
                       trailing={<>

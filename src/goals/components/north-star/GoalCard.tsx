@@ -408,7 +408,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
       {open && (
         <div className="px-3 pb-3 space-y-4 border-t border-white/5 pt-3">
           {onSection && (
-            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Parts of this goal" data-testid="goal-sections">
+            <div className="flex gap-1.5 overflow-x-auto pb-1" data-phone-scroll role="group" aria-label="Parts of this goal" data-testid="goal-sections">
               {GOAL_SECTION_LABELS.map(([id, label]) => (
                 <button
                   key={id}
@@ -416,7 +416,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
                   onClick={() => onSection(id)}
                   aria-pressed={section === id}
                   data-testid={`goal-section-${id}`}
-                  className={`min-h-11 rounded-lg border px-3 py-2 text-left text-[12px] transition-colors ${
+                  className={`min-h-11 w-44 shrink-0 rounded-lg border px-3 py-2 text-left text-[12px] leading-snug transition-colors ${
                     section === id ? "border-primary/50 bg-primary/15 text-primary" : "border-white/10 text-muted-foreground hover:text-foreground hover:border-white/25"
                   }`}
                 >
@@ -428,7 +428,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
                 onClick={() => onSection(null)}
                 aria-pressed={!section}
                 data-testid="goal-section-all"
-                className={`min-h-11 rounded-lg border px-3 py-2 text-[12px] transition-colors ${
+                className={`min-h-11 shrink-0 rounded-lg border px-3 py-2 text-[12px] leading-snug transition-colors ${
                   !section ? "border-primary/50 bg-primary/15 text-primary" : "border-white/10 text-muted-foreground hover:text-foreground hover:border-white/25"
                 }`}
               >

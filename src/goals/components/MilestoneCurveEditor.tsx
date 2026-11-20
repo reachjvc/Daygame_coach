@@ -93,6 +93,7 @@ export function MilestoneCurveEditor({
   const [hoveredMilestoneIdx, setHoveredMilestoneIdx] = useState<number | null>(null)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [hoveredPresetId, setHoveredPresetId] = useState<string | null>(null)
+  const [undoConfig, setUndoConfig] = useState<MilestoneLadderConfig | null>(null)
 
   const milestones = useMemo(() => generateMilestoneLadder(config), [config])
 
@@ -154,6 +155,8 @@ export function MilestoneCurveEditor({
   )
 
   const handlePresetSelect = (preset: CurvePreset) => {
+    // With the phone controls on, a preset never silently throws away points the person dragged: it can be undone.
+    if (shapeButtons && (config.controlPoints ?? []).length > 0) setUndoConfig(config)
     onChange({ ...config, steps: preset.steps, curveTension: preset.curveTension, controlPoints: [] })
   }
 
@@ -330,6 +333,7 @@ export function MilestoneCurveEditor({
               onPointerLeave={() => setHoveredPresetId(null)}
               style={{
                 flex: 1,
+                minHeight: shapeButtons ? 44 : undefined,
                 padding: "8px 12px",
                 background: isActive ? theme.accentFaded : "transparent",
                 border: "none",
@@ -797,35 +801,19 @@ export function MilestoneCurveEditor({
           <span>Fewer big leaps</span>
           <span>Many small wins</span>
         </div>
-        {/* Buttons beside the drag (`/plan/new`; off on `/plan`): the same changes the slider and the points make, one tap
-            each, 44 px high, for a phone or a keyboard. */}
+        {/* Buttons beside the drag (`/plan/new`; off on `/plan`). The shapes are the preset row above (Quick Wins, Balanced,
+            Ambitious), made 44 px high; here are the step buttons, and an Undo for a preset that replaced dragged points. */}
         {shapeButtons && (
           <div className="mt-3 space-y-2" data-testid="curve-buttons">
-            <div role="group" aria-label="Curve shape" className="grid grid-cols-3 gap-2">
-              {([["Fewer big leaps", -1.5], ["Linear", 0], ["Many small wins", 1.5]] as const).map(([label, tension]) => {
-                const active = Math.abs(config.curveTension - tension) < 0.05 && (config.controlPoints ?? []).length === 0
-                return (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={() => onChange({ ...config, curveTension: tension, controlPoints: [] })}
-                    aria-pressed={active}
-                    aria-label={`Curve shape: ${label}`}
-                    style={{
-                      minHeight: 44,
-                      borderRadius: 8,
-                      border: `1px solid ${active ? accentColor : theme.border}`,
-                      background: active ? theme.accentFaded : "transparent",
-                      color: active ? theme.text : theme.muted,
-                      fontSize: 12,
-                      padding: "6px 8px",
-                    }}
-                  >
-                    {label}
-                  </button>
-                )
-              })}
-            </div>
+            {undoConfig && (config.controlPoints ?? []).length === 0 && (
+              <button
+                type="button"
+                onClick={() => { onChange(undoConfig); setUndoConfig(null) }}
+                style={{ minHeight: 44, width: "100%", borderRadius: 8, border: `1px solid ${accentColor}`, background: "transparent", color: accentColor, fontSize: 12 }}
+              >
+                Undo: bring back the points you dragged
+              </button>
+            )}
             <div className="grid grid-cols-2 gap-2">
               {([["Fewer milestones", -1], ["More milestones", 1]] as const).map(([label, delta]) => (
                 <button

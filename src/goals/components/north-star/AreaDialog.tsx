@@ -168,7 +168,7 @@ export function AreaDialog({
         {banner}
 
         {onSection && (
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Parts of this area" data-testid="area-sections">
+          <div className="flex gap-1.5 overflow-x-auto pb-1" data-phone-scroll role="group" aria-label="Parts of this area" data-testid="area-sections">
             {([["area.ten", AREA_REVIEW_COPY.ten.question], ["area.why", AREA_REVIEW_COPY.purpose.question]] as const).map(([id, label]) => (
               <button
                 key={id}
@@ -176,7 +176,7 @@ export function AreaDialog({
                 onClick={() => onSection(id)}
                 aria-pressed={section === id}
                 data-testid={`area-section-${id}`}
-                className={`min-h-11 rounded-lg border px-3 py-2 text-left text-[12px] transition-colors ${
+                className={`min-h-11 w-44 shrink-0 rounded-lg border px-3 py-2 text-left text-[12px] leading-snug transition-colors ${
                   section === id ? "border-primary/50 bg-primary/15 text-primary" : "border-white/10 text-muted-foreground hover:text-foreground hover:border-white/25"
                 }`}
               >
@@ -188,7 +188,7 @@ export function AreaDialog({
               onClick={() => onSection(null)}
               aria-pressed={!section}
               data-testid="area-section-all"
-              className={`min-h-11 rounded-lg border px-3 py-2 text-[12px] transition-colors ${
+              className={`min-h-11 shrink-0 rounded-lg border px-3 py-2 text-[12px] leading-snug transition-colors ${
                 !section ? "border-primary/50 bg-primary/15 text-primary" : "border-white/10 text-muted-foreground hover:text-foreground hover:border-white/25"
               }`}
             >
