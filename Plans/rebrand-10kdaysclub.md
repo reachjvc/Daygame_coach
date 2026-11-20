@@ -12,6 +12,8 @@ dating only, but not eliminating those parts. It is fine to put some parts of th
 page, new icons where relevant and new naming every appropriate place … so that it can be executed by a lesser
 model."*
 
+**Paused 2026-11-20 by the owner; the live work went on in `Plans/rebrand-round-2.md`, whose status says where to resume.**
+
 **Status (2026-11-19, afternoon): Phases 0–2 done. His look pick is in (see "His picks after the looks page" below).
 Next: the brand board (Phase 4a) for the one open choice, umbrella colour + mark + sign-in page; Phases 3, 5 and 6
 are built while it waits.** Phase 4b waits for his pick on the brand board (O8). Phase 8 needs his Vercel login

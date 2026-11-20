@@ -2,7 +2,14 @@
 
 Written 2026-11-19 (Opus), after the owner went through the before/after page of `Plans/rebrand-10kdaysclub.md`
 (https://claude.ai/artifact/ERBS6YKjuwV9jB61KtSfUE). That plan stays the record of round 1; this one is the next
-iteration. **Status: Phases 0–4, P1 and P2 done (2026-11-19); board published, waiting for his picks (O2).** Everything below that is not his words is **proposed**.
+iteration. **Status: Phases 0–4, P1 and P2 done (2026-11-19); board published, waiting for his picks (O2).**
+
+**Paused 2026-11-20 by the owner** (his words: the rebrand "has been rebranded somewhat satisfactory for a moment";
+the platform move, `Plans/platform.md`, comes first). Resume here: his round 3 notes are in (section "His round 3
+notes", 2026-11-20). Next step: answer them with a round 4 front-words page (keep the live subtitle he likes, no
+"day 10,000" goal, 10K shown as reps/hours rather than said), and the proposed badge mix (Quit from R1, Life and
+Dating from R2). Also waiting: the privacy fix on branch `privacy-r2` (P1–P2 committed there, P3 still to do).
+Reminder on his daily page for 2026-12-04. Everything below that is not his words is **proposed**.
 
 His words in chat, 2026-11-19: *"Not super stoked about it in general. Also the text on the frontpage could be much
 sharper, but i guess you might need some handholding to get there. I need you to make a plan for the next iteration
