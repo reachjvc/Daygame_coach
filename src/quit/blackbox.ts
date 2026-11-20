@@ -80,6 +80,8 @@ export interface QuitRunApi {
   today: string
   /** Starts a living run on `startedOn` (today or past). True when a run lives afterwards. */
   startRun: (startedOn: string) => boolean
+  /** Every living report against any run of this vice, oldest first. */
+  reports: ViceReport[]
 }
 
 export interface QuitBlackBoxApi extends QuitRunApi {
@@ -96,8 +98,6 @@ export interface QuitBlackBoxApi extends QuitRunApi {
   has: (reportId: string) => boolean
   /** Takes a report back out; false when refused. */
   undo: (reportId: string) => boolean
-  /** Every living report against any run of this vice, oldest first. */
-  reports: ViceReport[]
   /** Changes strength, situation, thought or ending of a filed report; false when it is not there. */
   amend: (reportId: string, patch: ReportPatch) => boolean
   /** Every living run of this vice, oldest first (ended and still going). */

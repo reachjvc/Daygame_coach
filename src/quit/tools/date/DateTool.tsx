@@ -8,6 +8,7 @@ import { isLiveTool } from "../../menu"
 import { addDays, isIsoDay, todayIso, useQuitRecord, type QuitGoal, type QuitRecord } from "../../record"
 import type { QuitPlanStep, QuitSymptomCourse, QuitUnit, ToolProps } from "../../types"
 import { usable, countText } from "../common"
+import { dayState, latestSlipDay } from "../symptoms/logic"
 import { useCarry, useDoneCount, useScreens, useStartCount, useToolState } from "../hooks"
 import { NotReady } from "../NotReady"
 import { BasisBox, InfoLine, OptionCard } from "./Bits"
@@ -559,14 +560,18 @@ function Result({ today, record, course, courseNote, bb, carry, addiction, acked
   const quitDate = record.quitDate
   const isBreak = record.goal === "break"
   const run = bb?.run ?? null
+  // The same rule as What you'll feel: no living run after a slip on or after the saved date means no "Day N".
+  const slip = bb && bb.ready ? dayState({ runStart: run ? run.startedOn : null, recordDate: quitDate, goal: record.goal, slipDay: latestSlipDay(bb.reports), today }) : null
+  const afterSlip = slip !== null && slip.kind === "slip"
 
   // The first visit on or after the date starts the living run (a past date backdates it). A future date starts nothing.
   useEffect(() => {
     if (!bb || !bb.settled || bb.run || !quitDate || quitDate > today) return
+    if (dayState({ runStart: null, recordDate: quitDate, goal: record.goal, slipDay: latestSlipDay(bb.reports), today }).kind === "slip") return
     if (tried.current === quitDate) return
     tried.current = quitDate
     if (!bb.startRun(quitDate)) setRefused(true)
-  }, [bb, quitDate, today])
+  }, [bb, quitDate, today, record.goal])
 
   if (!quitDate) return null
   // While a run lives it is the truth: the date is never moved under it.
@@ -598,8 +603,21 @@ function Result({ today, record, course, courseNote, bb, carry, addiction, acked
           {fmtLong(day1)}
         </p>
         <p data-testid="result-days" className="mt-1 text-lg">
-          {line.kind === "ahead" ? t.daysToGo(line.n) : line.kind === "dayOne" ? t.dayOne : t.dayN(line.n)}
+          {afterSlip ? t.noRunSlip(fmtLong((slip as { slipDay: string }).slipDay)) : line.kind === "ahead" ? t.daysToGo(line.n) : line.kind === "dayOne" ? t.dayOne : t.dayN(line.n)}
         </p>
+        {afterSlip && (
+          <p data-testid="after-slip" className="mt-1 text-sm">
+            {t.noRunSlipPick}
+            {slipLive ? (
+              <Link href={carry(`/quit/${addiction}/slip`)} className="-my-3 inline-block py-3 text-primary underline">
+                {t.runSlipName}
+              </Link>
+            ) : (
+              `“${t.runSlipName}”`
+            )}
+            {t.noRunSlipPickEnd}
+          </p>
+        )}
         {end && left !== null && (
           <div className="mt-3 border-t border-border pt-3">
             <p data-testid="break-end" className="text-sm">
@@ -639,6 +657,7 @@ function Result({ today, record, course, courseNote, bb, carry, addiction, acked
         </p>
       )}
 
+      {!afterSlip && (
       <section className="flex flex-col gap-2">
         <h3 className="text-base font-semibold">{t.calTitle}</h3>
         <div className="flex flex-wrap gap-2">
@@ -651,8 +670,9 @@ function Result({ today, record, course, courseNote, bb, carry, addiction, acked
         </div>
         <p className="text-sm text-muted-foreground">{t.calNote}</p>
       </section>
+      )}
 
-      <HardDays day1={day1} today={today} list={list} />
+      {!afterSlip && <HardDays day1={day1} today={today} list={list} />}
 
       {run ? (
         <p data-testid="run-line" className="text-sm">

@@ -294,6 +294,34 @@ async function stopOnPast(page: Page) {
   await stopOn(page, day(-20))
 }
 
+test.describe("quit date, after a slip", () => {
+  test.use({ storageState: SIGNED_OUT })
+
+  test("a slip with no new run: no Day N, the slip day, a link to Slipped? to pick day 1", async ({ page }) => {
+    await open(page)
+    await stopOn(page, day(-20))
+    await expect(page.getByTestId("result-days")).toHaveText("Day 21.")
+    // the Black Box now holds a slip yesterday and no living run (what the slip tool leaves behind)
+    await page.evaluate((slipDay) => {
+      const rec = JSON.parse(localStorage.getItem("vice-blackbox-v1") ?? "{}")
+      const stamp = new Date().toISOString()
+      const attempt = rec.attempts.find((a: { viceId: string; deletedAt: string | null }) => a.viceId === "nicotine" && !a.deletedAt)
+      attempt.endedOn = slipDay
+      attempt.endedByReportId = "slip-1"
+      attempt.updatedAt = stamp
+      rec.reports.push({ id: "slip-1", attemptId: attempt.id, at: `${slipDay}T21:00:00`, wentThrough: true, thought: "", ending: "fine", closeness: null, withWhom: "", where: "", factors: [], didInstead: "", updatedAt: stamp, deletedAt: null })
+      localStorage.setItem("vice-blackbox-v1", JSON.stringify(rec))
+    }, day(-1))
+    await page.goto(URL)
+    await expect(page.getByTestId("result")).toBeVisible()
+    await expect(page.getByTestId("result-days")).toContainText("No run going since your slip on")
+    expect(await page.getByTestId("result").innerText()).not.toMatch(/Day \d+/)
+    await expect(page.getByTestId("after-slip")).toContainText("Slipped? Restart today")
+    await expect(page.getByTestId("run-refused")).toHaveCount(0)
+    await noSideways(page)
+  })
+})
+
 test.describe("quit date, signed in", () => {
   test("4 signed in: the run reaches /api/black-box", async ({ page }) => {
     await page.clock.install({ time: NOW })
