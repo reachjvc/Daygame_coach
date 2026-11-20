@@ -41,6 +41,9 @@ export const NOT_SWEPT: Record<string, string> = {
   [PAGES.planNew]:
     "the same copy-space gate as /plan/sandbox; plan-new.spec.ts walks the first rebuild (/plan/new/first) and plan-new-sequence.spec.ts the real steps on an account that has one " +
     "and checks the 404 for one that has not",
+  [PAGES.backstage]:
+    "the same copy-space gate as /plan/sandbox (the owner's list of hidden pages), so it answers 404 to this account by design; " +
+    "tests/unit/backstage/backstageLinks.test.ts checks its links",
   "/plan/new/role-models":
     "under the same copy-space gate as /plan/new, so it answers 404 to this account by design; " +
     "plan-new-sequence.spec.ts opens it on an account that has a copy space",

@@ -11,6 +11,18 @@ export function PlanSandboxCard() {
   return (
     <section className="mb-6 rounded-xl border border-border bg-card" data-testid="plan-sandbox-card">
       <Link
+        href={ROUTES.backstage}
+        className="flex min-h-12 items-center gap-3 border-b border-border px-4 py-3 hover:bg-muted/40"
+        data-testid="backstage-card-link"
+      >
+        <FlaskConical className="size-5 shrink-0 text-primary" aria-hidden />
+        <span className="flex-1 text-sm text-foreground">
+          Backstage
+          <span className="block text-xs text-muted-foreground">Everything live but hidden from other users, in one list. Only you see it.</span>
+        </span>
+        <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+      </Link>
+      <Link
         href={ROUTES.planSandbox}
         className="flex min-h-12 items-center gap-3 px-4 py-3 hover:bg-muted/40"
         data-testid="plan-sandbox-card-link"

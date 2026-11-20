@@ -71,6 +71,12 @@ export const ROUTES = {
   /** The role model library on the copy space; each person at `/plan/new/role-models/<id>`. */
   planNewRoleModels: "/plan/new/role-models",
   /**
+   * BACKSTAGE: one page that links every part of the site that is live but hidden from other
+   * users (the copy space, quit previews, the lab, admin). Same gate as the copy space: only an
+   * account with a `plan_sandboxes` row (the owner's); anyone else gets a 404.
+   */
+  backstage: "/backstage",
+  /**
    * The quit-a-vice module's front door: **the Black Box** since 2026-09-20.
    *
    * On 2026-09-20 this address stopped being the old hub and became a

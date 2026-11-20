@@ -1,7 +1,8 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { ChevronRight, Lock } from "lucide-react"
+import { ChevronRight, FlaskConical, Lock } from "lucide-react"
 import { createServerSupabaseClient, getProfile } from "@/src/db/server"
+import { hasPlanSandbox } from "@/src/db/planSandbox"
 import { COMING_TOOLS, TOOLS, type Tool } from "@/components/navTabs"
 import { tileAccess, type ToolViewer } from "../tileAccess"
 import { ROUTES } from "@/src/shared/routes"
@@ -31,7 +32,7 @@ export async function ToolsPage({ group }: { group?: Tool["group"] } = {}) {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) redirect("/auth/login")
-  const profile = await getProfile(user.id)
+  const [profile, owner] = await Promise.all([getProfile(user.id), group ? false : hasPlanSandbox({ userId: user.id, supabase })])
   const viewer: ToolViewer = { has_purchased: profile?.has_purchased ?? false }
   const groups = group ? GROUPS.filter((g) => g.id === group) : GROUPS
   const from = group === "dating" ? ROUTES.datingTools : ROUTES.tools
@@ -48,6 +49,16 @@ export async function ToolsPage({ group }: { group?: Tool["group"] } = {}) {
           <h1 className="mb-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">All tools</h1>
           <p className="mb-6 text-sm text-muted-foreground">Everything in the app. A lock means it opens once you subscribe.</p>
         </>
+      )}
+      {owner && (
+        <Link href={ROUTES.backstage} className="mb-8 flex min-h-12 items-center gap-3 rounded-xl border border-primary/40 bg-card px-4 py-3 hover:bg-muted/40" data-testid="tools-backstage">
+          <FlaskConical className="size-5 shrink-0 text-primary" aria-hidden />
+          <span className="flex-1 text-sm text-foreground">
+            Backstage
+            <span className="block text-xs text-muted-foreground">Everything live but hidden from other users. Only you see this row.</span>
+          </span>
+          <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+        </Link>
       )}
       <div className={`grid gap-8 ${group ? "" : "md:grid-cols-2"}`}>
         {groups.map((g) => (

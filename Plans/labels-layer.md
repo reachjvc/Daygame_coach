@@ -266,13 +266,3 @@ One session per line:
   disputed, 9 rare, 10 spot checks), tested with a fake store incl. a failed
   save; task added to his daily page for 2026-11-20. Next: Phase 3 after his
   marks.
-- 2026-11-20: owner asked for the video link and context on every set, and said
-  "we should definitely lean on what he says about the things happening in the
-  conversation, when we hear them happening". Done on the page (same link): each
-  set and card links to the video at that moment, says what the video is and why
-  the coach shows the set, and marks his talk to camera. Whole-read sets changed
-  (proposed) to the full breakdown set (B7, where the coach names the hook point
-  himself) plus B1; the other sets moved to cards. Guide v1.1 (proposed) adds
-  "the coach's own words" and gives the labellers his talk to camera; its re-run
-  waits because the owner paused background Claude calls today. In B7 the coach
-  places hook point later than both v1 labellers did.
