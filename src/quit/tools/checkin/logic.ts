@@ -1,6 +1,6 @@
 import { addDays, isIsoDay } from "../../record"
 import { isObj, pickBool, pickInt, pickStr } from "../common"
-import { isFeelingId } from "./text"
+import { checkinText as T, isFeelingId } from "./text"
 
 /** One day of the check-in. Every part is optional. */
 export interface Day {
@@ -95,6 +95,8 @@ function parseDraft(x: unknown): Draft | null {
   const answers = parseDay(x.answers)
   delete answers.slipped
   delete answers.slipReportId
+  delete answers.slipGone
+  if (Object.keys(answers).length === 0) return null
   return { kind: x.kind, date: x.date, step, answers }
 }
 
@@ -293,9 +295,12 @@ export type Mode = "clear" | "hard" | "feelings" | "notes"
 export const MODES: readonly Mode[] = ["clear", "hard", "feelings", "notes"]
 
 /** What a cell shows in a mode: "none" when the day has nothing for it, else a level 1 to 5 (clear and notes use 1). */
-export function cellLevel(d: Day | undefined, mode: Mode): { state: "none" | "clear" | "slip" | "set"; level: number } {
+export function cellLevel(d: Day | undefined, mode: Mode): { state: "none" | "clear" | "slip" | "set" | "morning"; level: number } {
   if (!d) return { state: "none", level: 0 }
-  if (mode === "clear") return d.slipped === undefined ? { state: "none", level: 0 } : { state: d.slipped ? "slip" : "clear", level: 1 }
+  if (mode === "clear") {
+    if (d.slipped === undefined) return d.pledge?.trim() || d.forecast !== undefined ? { state: "morning", level: 0 } : { state: "none", level: 0 }
+    return { state: d.slipped ? "slip" : "clear", level: 1 }
+  }
   if (mode === "hard") return d.hard === undefined ? { state: "none", level: 0 } : { state: "set", level: d.hard }
   if (mode === "feelings") {
     const n = d.feelings?.length ?? 0
@@ -314,7 +319,7 @@ const SEED: [number, boolean, number, number, string[], string?][] = [
   [5, false, 4, 4, ["stressed", "bored"], "Hard morning, got through it by walking."],
   [2, false, 2, 1, ["happy"]],
   [1, false, 1, 1, ["proud"]],
-  [4, true, 4, 4, ["bored", "short-tempered"]],
+  [4, true, 4, 4, ["bored", "angry"]],
   [3, false, 3, 2, ["anxious"]],
   [2, false, 2, 2, ["happy"]],
   [4, false, 3, 3, ["stressed"]],
@@ -324,7 +329,7 @@ const SEED: [number, boolean, number, number, string[], string?][] = [
   [4, false, 4, 4, ["restless"]],
   [1, false, 1, 1, ["calm"]],
   [3, false, 2, 2, ["anxious"]],
-  [5, true, 5, 5, ["short-tempered", "stressed"], "Everything went wrong at work."],
+  [5, true, 5, 5, ["angry", "stressed"], "Everything went wrong at work."],
   [2, false, 2, 2, ["happy"]],
   [3, false, 3, 3, ["restless"]],
   [2, false, 1, 1, ["proud"]],
@@ -377,7 +382,7 @@ export function icsFor(times: Reminders, start: string, now: Date, link: string,
       `DTEND:${compact(start)}T${endTime(t)}`,
       "RRULE:FREQ=DAILY",
       `SUMMARY:${names[kind]}`,
-      `DESCRIPTION:${esc(`Open the check-in: ${link}`)}`,
+      `DESCRIPTION:${esc(`${kind === "morning" ? T.morningAsk : T.eveningAsk} Open the check-in: ${link}`)}`,
       "BEGIN:VALARM",
       "ACTION:DISPLAY",
       `DESCRIPTION:${names[kind]}`,
@@ -396,7 +401,7 @@ export function googleCalendarUrl(kind: "morning" | "evening", times: Reminders,
     "action=TEMPLATE",
     `text=${encodeURIComponent(names[kind])}`,
     `dates=${compact(start)}T${clock(t)}/${compact(start)}T${endTime(t)}`,
-    `details=${encodeURIComponent(`Open the check-in: ${link}`)}`,
+    `details=${encodeURIComponent(`${kind === "morning" ? T.morningAsk : T.eveningAsk} Open the check-in: ${link}`)}`,
     `recur=${encodeURIComponent("RRULE:FREQ=DAILY")}`,
   ]
   return `https://calendar.google.com/calendar/render?${q.join("&")}`
@@ -428,3 +433,6 @@ export function noSlipCase(date: string, runs: readonly RunLike[]): "later" | "n
   if (!runs.some((r) => r.endedOn === null)) return "ended"
   return "other"
 }
+
+/** Days with something he answered (a day holding only the "slip removed" flag is not an entry). */
+export const entryCount = (days: Days): number => Object.values(days).filter((d) => hasAnyMoment(d)).length

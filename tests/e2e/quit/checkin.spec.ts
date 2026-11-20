@@ -94,7 +94,26 @@ async function openTab(page: Page, id: string) {
   await page.getByTestId(`tab-${id}`).click()
   await expect(page.getByTestId(`tab-${id}-panel`)).toBeVisible()
 }
-const step = (page: Page, id: string) => expect(page.getByTestId(`step-${id}`)).toBeVisible()
+/** A screen is shown, and the 400 ms in which the tool ignores taps on a new screen have passed. */
+const step = async (page: Page, id: string) => {
+  await expect(page.getByTestId(`step-${id}`)).toBeVisible()
+  await page.waitForTimeout(450)
+}
+const settle = (page: Page) => page.waitForTimeout(450)
+/** Two taps on the same spot, `gap` ms apart (a double tap). */
+async function dbl(page: Page, id: string, gap: number) {
+  const b = (await page.getByTestId(id).boundingBox())!
+  const x = b.x + b.width / 2
+  const y = b.y + b.height / 2
+  await page.mouse.click(x, y)
+  await page.waitForTimeout(gap)
+  await page.mouse.click(x, y)
+}
+const saved = (page: Page) =>
+  page.evaluate(() => {
+    const q = JSON.parse(window.localStorage.getItem("quit-v1") ?? "{}")
+    return (q.nicotine?.checkin ?? { days: {}, drafts: {} }) as { days: Record<string, Record<string, unknown>>; drafts: Record<string, { step: number; answers: Record<string, unknown> }> }
+  })
 
 async function startEvening(page: Page) {
   await page.getByTestId("evening-start").click()
@@ -122,7 +141,8 @@ for (const vp of [
 
     test.beforeEach(async ({ page }) => {
       // test 9 sets its own date (the 3rd of December)
-      await page.clock.install({ time: test.info().title.startsWith("9 ") ? new Date("2026-12-03T10:00:00") : NOW })
+      const t = test.info().title
+      await page.clock.install({ time: t.startsWith("9 ") ? new Date("2026-12-03T10:00:00") : t.startsWith("22 ") ? new Date("2026-11-19T14:00:00") : NOW })
     })
 
     test("1 fresh: empty cards; the example fills Month and Pattern; leaving it changes no storage", async ({ page }) => {
@@ -133,13 +153,16 @@ for (const vp of [
       await expect(page.getByTestId("today-date")).toHaveText("Thu 19 Nov")
       await expect(page.getByText("Your check-ins are kept in this browser.")).toBeVisible()
       await expect(page.getByTestId("main-action")).toHaveText("Start your morning check-in")
+      // the big button starts the morning, so the morning card has no Start of its own
+      await expect(page.getByTestId("morning-start")).toHaveCount(0)
+      await expect(page.getByTestId("counts-start")).toHaveText("Your counts start with your first check-in.")
       await shot(page, S("1-today-empty"))
       const before = await store(page)
       await page.getByTestId("see-example").click()
       await expect(page.getByTestId("example-bar")).toContainText("Example. Nothing here is yours, and nothing is saved.")
       await expect(page.getByTestId("morning-card")).toContainText("You expected Hard (4)")
       await expect(page.getByTestId("morning-card")).toContainText("Not at the bar tonight.")
-      await expect(page.getByTestId("evening-result")).toHaveText("Clear day")
+      await expect(page.getByTestId("evening-result")).toHaveText("Clean day")
       await expect(page.getByTestId("both-done")).toHaveText("Both done for today.")
       await expect(page.getByText("Your check-ins are kept in this browser.")).toHaveCount(0)
       await shot(page, S("1-example-today"))
@@ -150,7 +173,8 @@ for (const vp of [
       await shot(page, S("1-example-month"))
       await openTab(page, "pattern")
       await expect(page.getByTestId("example-bar")).toBeVisible()
-      await expect(page.getByTestId("pattern-forecast")).toContainText("Days you expected Hard or Very hard: you slipped on 3 of 7. Days you expected Easy to In between: you slipped on 1 of 14.")
+      await expect(page.getByTestId("pattern-forecast")).toContainText("Expected Hard or Very hard: slipped on 3 of 7 days.")
+      await expect(page.getByTestId("pattern-forecast")).toContainText("Expected Easy to In between: slipped on 1 of 14 days.")
       await expect(page.getByTestId("pattern-own")).toHaveText("These lines count only the example's days.")
       await shot(page, S("1-example-pattern"))
       await openTab(page, "reminders")
@@ -173,6 +197,7 @@ for (const vp of [
       await expect(page.getByTestId("step-pledge")).toHaveText("Your promise for today")
       await shot(page, S("2-morning-pledge"))
       await page.getByTestId("pledge-input").fill("No smoking at the bar")
+      await settle(page)
       await page.getByTestId("flow-next").click()
       await step(page, "forecast")
       await expect(page.getByTestId("forecast-4")).toContainText("Hard")
@@ -180,7 +205,9 @@ for (const vp of [
       // a tap on a row saves it and, on the last morning screen, finishes
       await page.getByTestId("forecast-4").click()
       await expect(page.getByTestId("done-screen")).toContainText("Saved for Thu 19 Nov")
+      await expect(page.getByTestId("come-back")).toHaveText("Come back this evening to say how it went.")
       await shot(page, S("2-done"))
+      await settle(page)
       await page.getByTestId("done-back").click()
       // the morning is saved: the main button now offers the evening
       await expect(page.getByTestId("main-action")).toHaveText("Start your evening check-in")
@@ -216,6 +243,11 @@ for (const vp of [
       await seed(page, { bb: blackBox(), record: CIG })
       await startEvening(page)
       await page.getByTestId("outcome-slip").click()
+      // the Yes screen holds no restart link; the done screen does
+      await expect(page.getByTestId("slip-link")).toHaveCount(0)
+      await expect(page.getByTestId("slip-step")).toHaveCount(0)
+      await page.getByTestId("flow-done").click()
+      await expect(page.getByTestId("done-slip")).toContainText("A slip doesn't undo the days before.")
       if ((liveTools as string[]).includes("slip")) {
         await expect(page.getByTestId("slip-link")).toHaveText("Slipped? Restart today")
         await expect(page.getByTestId("slip-link")).toHaveAttribute("href", /\/quit\/nicotine\/slip/)
@@ -244,6 +276,7 @@ for (const vp of [
       await expect(page.getByTestId("outcome-slip")).toHaveCount(0)
       await expect(page.getByText("Did you smoke")).toHaveCount(0)
       await shot(page, S("5-slip-in-record"))
+      await settle(page)
       await page.getByTestId("flow-next").click()
       await step(page, "hard")
     })
@@ -258,7 +291,9 @@ for (const vp of [
       await expect(page.getByText("A slip doesn't undo the days before.")).toHaveCount(0)
       await shot(page, S("6-no-run"))
       expect((await store(page))[1]).toEqual(before)
+      await settle(page)
       await page.getByTestId("flow-next").click()
+      await step(page, "hard")
       await page.getByTestId("flow-done").click()
       await expect(page.getByTestId("done-summary")).toContainText("You smoked")
     })
@@ -296,10 +331,14 @@ for (const vp of [
       await expect(page.getByTestId("done-summary")).toContainText("Felt: Anxious")
       await expect(page.getByTestId("done-summary")).toContainText("A calm evening.")
       await shot(page, S("7-done"))
+      await expect(page.getByTestId("done-summary")).not.toContainText("Clean day")
+      await settle(page)
       await page.getByTestId("done-back").click()
-      await expect(page.getByTestId("evening-result")).toHaveText("Clear day")
+      await expect(page.getByTestId("evening-result")).toHaveText("Clean day")
+      await settle(page)
       // a second evening: answer step 1 and finish at once with Done for today
       await page.getByTestId("evening-start").click()
+      await step(page, "outcome")
       await expect(page.getByTestId("flow-done")).toHaveText("Done for today")
       await page.getByTestId("flow-done").click()
       await expect(page.getByTestId("done-screen")).toBeVisible()
@@ -317,7 +356,9 @@ for (const vp of [
           await shot(page, S("8-yesterday"))
           await page.getByTestId("outcome-clear").click()
         }
-        if (id !== "note") await page.getByTestId("flow-next").click()
+        // a tap on a scale row moves on by itself; the other screens use Continue
+        if (id === "hard" || id === "urges") await page.getByTestId(`${id}-3`).click()
+        else if (id !== "note") await page.getByTestId("flow-next").click()
       }
       expect(titles[0]).toBe("Did you smoke on Wed 18 Nov?")
       for (const q of titles.slice(1)) expect(q).toContain("that day")
@@ -325,20 +366,26 @@ for (const vp of [
       await expect(page.getByTestId("flow-done")).toHaveText("Done for that day")
       await page.getByTestId("flow-done").click()
       await expect(page.getByTestId("done-screen")).toContainText("Saved for Wed 18 Nov")
+      await settle(page)
       await page.getByTestId("done-back").click()
       await openTab(page, "month")
       await page.getByTestId("month-prev").click()
       await page.getByTestId(`cell-${day(-20)}`).click()
+      // the tapped day's summary and its Fill in button are fully in view
+      await expect(page.getByTestId("fill-day")).toBeInViewport({ ratio: 1 })
+      await expect(page.getByTestId("day-summary")).toBeInViewport({ ratio: 1 })
       await page.getByTestId("fill-day").click()
       await step(page, "outcome")
       await expect(page.getByTestId("step-outcome")).toHaveText("Did you smoke on Fri 30 Oct?")
       await expect(page).toHaveURL(new RegExp(`d=${day(-20)}`))
       await page.getByTestId("outcome-clear").click()
       await page.getByTestId("flow-next").click()
+      await step(page, "hard")
       await page.getByTestId("flow-done").click()
       await expect(page.getByTestId("done-back")).toHaveText("Back to the month")
-      await expect(page.getByTestId("done-clear")).toContainText("Clear day.")
-      await expect(page.getByTestId("done-clear")).toContainText("2 clear days this month.")
+      await expect(page.getByTestId("done-clear")).toContainText("Clean day.")
+      await expect(page.getByTestId("done-clear")).toContainText("2 clean days checked in this month.")
+      await settle(page)
       await page.getByTestId("done-back").click()
       // back on the same month and day
       await expect(page.getByTestId("month-name")).toHaveText("October 2026")
@@ -354,8 +401,10 @@ for (const vp of [
       await expect(page.getByTestId("last-checked")).toHaveAttribute("data-n", "3")
       await expect(page.getByTestId("last-clear")).toHaveAttribute("data-n", "2")
       await expect(page.getByTestId("count-checked")).toHaveAttribute("data-n", "0")
+      await expect(page.getByTestId("counts-note")).toContainText("Checked in: any morning or evening answer. Clean: days you answered No to")
       await shot(page, S("9-today-day3"))
       await openTab(page, "month")
+      await expect(page.getByTestId("counts-note")).toContainText("Clean: days you answered No to")
       for (const m of ["clear", "hard", "feelings", "notes"]) {
         const b = page.getByTestId(`mode-${m}`)
         await expect(b).toBeInViewport({ ratio: 1 })
@@ -378,7 +427,8 @@ for (const vp of [
       }
       await seed(page, { days, record: CIG })
       await openTab(page, "pattern")
-      await expect(page.getByTestId("pattern-forecast")).toHaveText("Days you expected Hard or Very hard: you slipped on 2 of 6. Days you expected Easy to In between: you slipped on 1 of 10.")
+      await expect(page.getByTestId("pattern-forecast")).toContainText("Expected Hard or Very hard: slipped on 2 of 6 days.")
+      await expect(page.getByTestId("pattern-forecast")).toContainText("Expected Easy to In between: slipped on 1 of 10 days.")
       const harder = Object.values(days).filter((d) => (d as { hard: number; forecast: number }).hard > (d as { forecast: number }).forecast).length
       const easier = Object.values(days).filter((d) => (d as { hard: number; forecast: number }).hard < (d as { forecast: number }).forecast).length
       await expect(page.getByTestId("pairs-line")).toHaveText(`On 16 days you rated the day in the morning and the evening: harder than you expected on ${harder}, easier on ${easier}, as expected on ${16 - harder - easier}.`)
@@ -389,8 +439,8 @@ for (const vp of [
       // fewer than 14: the wait line says how many there are
       await seed(page, { days: { [day(-1)]: { slipped: false, forecast: 3, hard: 3 }, [day(-2)]: { slipped: true }, [day(-3)]: { slipped: false } }, record: CIG })
       await openTab(page, "pattern")
-      await expect(page.getByTestId("pattern-wait")).toHaveText("Pattern lines start once 14 days have a yes or no answer. You have 3.")
-      await expect(page.getByTestId("pattern-bar-label")).toHaveText("3 of 14")
+      await expect(page.getByTestId("pattern-wait")).toHaveText('Your pattern shows once you have answered "Did you smoke?" on 14 days. You have 3.')
+      await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "3")
       await shot(page, S("10-pattern-wait"))
     })
 
@@ -437,16 +487,20 @@ for (const vp of [
       await startEvening(page)
       await page.getByTestId("outcome-slip").click()
       await expect(page.getByTestId("slip-none")).toContainText("You have no new day 1 since your last slip, so this isn't saved as a new slip. It stays in your check-in.")
-      if ((liveTools as string[]).includes("slip")) await expect(page.getByTestId("slip-link")).toBeVisible()
+      await expect(page.getByTestId("slip-link")).toHaveCount(0)
       await shot(page, S("16-ended"))
-      // a day inside a run that a later slip already ended
+      // the restart link is on the done screen
       await page.getByTestId("flow-next").click()
+      await step(page, "hard")
       await page.getByTestId("flow-done").click()
-      await page.getByTestId("done-back").click()
+      if ((liveTools as string[]).includes("slip")) await expect(page.getByTestId("done-restart").getByTestId("slip-link")).toBeVisible()
+      await shot(page, S("16-ended-done"))
+      // a day inside a run that a later slip already ended
       await seed(page, { bb: blackBox({ slipToday: true }), days: { [day(-30)]: { slipped: false } }, record: CIG })
       await page.getByTestId("lookback-start").click()
+      await step(page, "outcome")
       await page.getByTestId("outcome-slip").click()
-      await expect(page.getByTestId("slip-none")).toHaveText("Your record already has a slip after this day, so this one isn't saved as a slip.")
+      await expect(page.getByTestId("slip-none")).toHaveText("Your record already has a slip after this day, so this one isn't saved as a slip. It stays in your check-in.")
       for (const q of ["no run", "phone"]) expect((await page.locator("body").innerText()).toLowerCase()).not.toContain(q)
     })
 
@@ -474,6 +528,98 @@ for (const vp of [
       await expect(page.getByTestId("tab-today-panel")).toBeVisible()
     })
 
+    for (const gap of [120, 300]) {
+      test(`19 a double tap ${gap} ms apart moves one screen and records only the tapped answer`, async ({ page }) => {
+        await seed(page, { record: CIG })
+        // Continue
+        await startEvening(page)
+        await page.getByTestId("outcome-clear").click()
+        await dbl(page, "flow-next", gap)
+        await page.waitForTimeout(600)
+        await expect(page).toHaveURL(/s=2/)
+        await expect(page.getByTestId("step-hard")).toBeVisible()
+        let st = await saved(page)
+        expect(st.days[TODAY]).toEqual({ slipped: false })
+        expect(st.drafts).toEqual({})
+        // a scale row
+        await dbl(page, "hard-3", gap)
+        await page.waitForTimeout(600)
+        await expect(page).toHaveURL(/s=3/)
+        await expect(page.getByTestId("step-urges")).toBeVisible()
+        st = await saved(page)
+        expect(Object.values(st.drafts)[0].answers).toEqual({ hard: 3 })
+        // No
+        await page.goto(URL)
+        await page.evaluate(() => window.localStorage.removeItem("quit-v1"))
+        await page.reload()
+        await startEvening(page)
+        await dbl(page, "outcome-clear", gap)
+        await page.waitForTimeout(600)
+        await expect(page.getByTestId("step-outcome")).toBeVisible()
+        st = await saved(page)
+        expect(st.days[TODAY]).toEqual({ slipped: false })
+        expect(st.drafts).toEqual({})
+      })
+
+      test(`19 a double tap ${gap} ms apart on the last morning row lands on the done screen and stays`, async ({ page }) => {
+        await page.goto(URL)
+        await page.getByTestId("main-action").click()
+        await step(page, "pledge")
+        await page.getByTestId("flow-next").click()
+        await step(page, "forecast")
+        await dbl(page, "forecast-4", gap)
+        await page.waitForTimeout(700)
+        await expect(page.getByTestId("done-screen")).toBeVisible()
+        await expect(page).toHaveURL(/done=/)
+        const st = await saved(page)
+        expect(st.days[TODAY]).toEqual({ forecast: 4 })
+        expect(st.drafts).toEqual({})
+        // the done button also moves once
+        await settle(page)
+        await dbl(page, "done-back", gap)
+        await page.waitForTimeout(600)
+        await expect(page.getByTestId("tab-today-panel")).toBeVisible()
+        await expect(page.getByTestId("evening-result")).toHaveCount(0)
+      })
+    }
+
+    test("20 Back above the title is 44 px; a scale screen shows Continue only once answered; the reload then Back repeat is logged, not fixed", async ({ page }) => {
+      await seed(page, { record: CIG })
+      await startEvening(page)
+      await page.getByTestId("outcome-clear").click()
+      await page.getByTestId("flow-next").click()
+      await step(page, "hard")
+      await expect(page.getByTestId("flow-next")).toHaveCount(0)
+      const back = (await page.getByTestId("screen-back").boundingBox())!
+      const title = (await page.getByTestId("step-hard").boundingBox())!
+      expect(back.y).toBeLessThan(title.y)
+      expect(back.width).toBeGreaterThanOrEqual(44)
+      await page.getByTestId("hard-2").click()
+      await step(page, "urges")
+      await page.getByTestId("screen-back").click()
+      await step(page, "hard")
+      await expect(page.getByTestId("flow-next")).toBeVisible()
+      await expect(page.getByTestId("screen-back")).toHaveCount(1)
+    })
+
+    test("21 a morning-only day is its own tile, and the morning card has no Start while the big button starts it", async ({ page }) => {
+      await seed(page, { days: { [day(-1)]: { pledge: "x", forecast: 3 }, [day(-2)]: { slipped: false } }, record: CIG })
+      await expect(page.getByTestId("morning-card")).toContainText("Not done yet")
+      await openTab(page, "month")
+      await expect(page.getByTestId(`cell-${day(-1)}`)).toHaveAttribute("data-state", "morning")
+      await expect(page.getByTestId("legend")).toContainText("Morning only")
+      await shot(page, S("21-month-morning-only"))
+    })
+
+    test("22 after noon with no morning answer: Skipped with a Fill in button, and the big button offers the evening", async ({ page }) => {
+      await seed(page, { record: CIG })
+      await expect(page.getByTestId("morning-card")).toContainText("Skipped")
+      await expect(page.getByTestId("morning-start")).toHaveText("Fill in")
+      await expect(page.getByTestId("main-action")).toHaveText("Start your evening check-in")
+      await expect(page.getByTestId("evening-start")).toHaveCount(0)
+      await shot(page, S("22-skipped"))
+    })
+
     test("11 reminders: the calendar file has two daily events stamped now", async ({ page }) => {
       await page.goto(URL)
       await openTab(page, "reminders")
@@ -488,6 +634,8 @@ for (const vp of [
       expect(text.match(/RRULE:FREQ=DAILY/g)).toHaveLength(2)
       expect(text).toContain("SUMMARY:Daily check-in: morning")
       expect(text).toContain("SUMMARY:Daily check-in: evening")
+      expect(text).toContain("DESCRIPTION:How hard will today be? Open the check-in:")
+      expect(text).toContain("DESCRIPTION:How did today go? Open the check-in:")
       expect(text.match(/TRIGGER:PT0M/g)).toHaveLength(2)
       expect(text).toContain("DTSTART:20261119T073000")
       expect(text).toContain("DTSTART:20261119T210000")
@@ -496,6 +644,8 @@ for (const vp of [
       const ms = Date.UTC(+stamp[1], +stamp[2] - 1, +stamp[3], +stamp[4], +stamp[5], +stamp[6])
       expect(Math.abs(ms - nowMs)).toBeLessThan(60_000)
       for (const k of ["morning", "evening"]) await expect(page.getByTestId(`cal-google-${k}`)).toHaveAttribute("href", /calendar\.google\.com.*RRULE%3AFREQ%3DDAILY/)
+      await expect(page.getByTestId("cal-google-morning")).toHaveText("Add morning to Google Calendar")
+      await expect(page.getByTestId("cal-google-evening")).toHaveAttribute("href", /details=How%20did%20today%20go%3F%20Open%20the%20check-in/)
       // the times are kept
       await page.reload()
       await openTab(page, "reminders")
@@ -548,10 +698,18 @@ for (const vp of [
       await page.getByTestId("evening-start").click()
       await page.getByTestId("outcome-clear").click()
       await tapTargets(page)
-      for (const id of ["hard", "urges", "feelings", "note"]) {
-        await page.getByTestId("flow-next").click()
-        await step(page, id)
-      }
+      await page.getByTestId("flow-next").click()
+      await step(page, "hard")
+      const back = (await page.getByTestId("screen-back").boundingBox())!
+      expect(back.width).toBeGreaterThanOrEqual(44)
+      expect(back.height).toBeGreaterThanOrEqual(44)
+      await expect(page.getByTestId("flow-next")).toHaveCount(0)
+      await page.getByTestId("hard-3").click()
+      await step(page, "urges")
+      await page.getByTestId("urges-3").click()
+      await step(page, "feelings")
+      await page.getByTestId("flow-next").click()
+      await step(page, "note")
       await page.getByTestId("note-input").fill(long)
       await noSideways(page)
       await tapTargets(page)

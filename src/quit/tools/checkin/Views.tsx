@@ -62,14 +62,14 @@ export function TabRow({ value, onChange }: { value: TabId; onChange: (id: TabId
 }
 
 /** What one day holds, in lines. */
-export function DaySummary({ date, day, verb, testId, hideDate = false }: { date: string; day: Day | undefined; verb: string; testId: string; hideDate?: boolean }) {
+export function DaySummary({ date, day, verb, testId, hideDate = false, hideOutcome = false }: { date: string; day: Day | undefined; verb: string; testId: string; hideDate?: boolean; hideOutcome?: boolean }) {
   const lines: { id: string; text: string }[] = []
-  if (day?.slipped !== undefined) lines.push({ id: "outcome", text: day.slipped ? t.slipResult(pastPhrase(verb)) : t.clearResult })
+  if (day?.pledge?.trim()) lines.push({ id: "pledge", text: t.sumPledge(day.pledge.trim()) })
+  if (!hideOutcome && day?.slipped !== undefined) lines.push({ id: "outcome", text: day.slipped ? t.slipResult(pastPhrase(verb)) : t.clearResult })
   if (day?.forecast !== undefined) lines.push({ id: "expected", text: t.sumExpected(day.forecast) })
   if (day?.hard !== undefined) lines.push({ id: "hard", text: t.sumHard(day.hard) })
   if (day?.urges !== undefined) lines.push({ id: "urges", text: t.sumUrges(day.urges) })
   if (day?.feelings?.length) lines.push({ id: "feelings", text: t.sumFeelings(day.feelings.map(feelingLabel)) })
-  if (day?.pledge?.trim()) lines.push({ id: "pledge", text: t.sumPledge(day.pledge.trim()) })
   if (day?.note?.trim()) lines.push({ id: "note", text: t.sumNote(day.note.trim()) })
   return (
     <Card testId={testId}>
@@ -143,12 +143,15 @@ export function MonthView({
   const summaryRef = useRef<HTMLDivElement>(null)
   const tapped = useRef(false)
   useEffect(() => {
-    if (tapped.current && picked) summaryRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" })
+    if (tapped.current && picked) {
+      const el = summaryRef.current
+      window.setTimeout(() => el?.scrollIntoView({ block: "nearest", behavior: "auto" }), 60)
+    }
     tapped.current = false
   }, [picked])
   const none: readonly [string, string] = ["border-border bg-card", t.legendNone]
   const legends: (readonly [string, string])[][] = [
-    [["border-transparent bg-primary/80", t.legendClear], ["border-dashed border-foreground/60 bg-muted-foreground/30", t.legendSlip], none],
+    [["border-transparent bg-primary/80", t.legendClear], ["border-dashed border-foreground/60 bg-muted-foreground/30", t.legendSlip], ["border-primary bg-card", t.legendMorning], none],
     [["border-transparent bg-primary/20", t.legendEasy], ["border-transparent bg-primary", t.legendVeryHard], none],
     [["border-transparent bg-primary/20", t.legendFew], ["border-transparent bg-primary", t.legendMany], none],
     [["border-transparent bg-primary/20", t.legendNotes], none],
@@ -183,7 +186,9 @@ export function MonthView({
         </button>
       </div>
       <CountTiles checked={counts.checkedIn} clear={counts.clear} ids={["month-checked", "month-clear"]} />
-      <p className="text-xs text-muted-foreground">{t.checkedNote}</p>
+      <p data-testid="counts-note" className="text-xs text-muted-foreground">
+        {t.countsNote(verb)}
+      </p>
       <div data-testid="grid" data-mode={MODES[mode]} className="grid grid-cols-7 gap-1">
         {t.weekdays.map((w) => (
           <span key={w} className="text-center text-xs text-muted-foreground">
@@ -194,7 +199,7 @@ export function MonthView({
           if (!key) return <span key={`b${idx}`} />
           const c = cellLevel(days[key], MODES[mode])
           const future = key > today
-          const tone = c.state === "slip" ? "border-dashed border-foreground/60 bg-muted-foreground/30" : c.state === "none" ? "border-border bg-card" : `border-transparent ${LEVEL_BG[c.state === "clear" ? 4 : c.level]}`
+          const tone = c.state === "morning" ? "border-primary bg-card" : c.state === "slip" ? "border-dashed border-foreground/60 bg-muted-foreground/30" : c.state === "none" ? "border-border bg-card" : `border-transparent ${LEVEL_BG[c.state === "clear" ? 4 : c.level]}`
           return (
             <button
               key={key}
@@ -247,7 +252,7 @@ export function MonthView({
 }
 
 /** Pattern lines from the morning forecast only. */
-export function PatternView({ days, example }: { days: Days; example: boolean }) {
+export function PatternView({ days, example, verb }: { days: Days; example: boolean; verb: string }) {
   const p = patternsOf(days)
   const showsLine = p.ready && (p.forecast !== null || p.pairs.n > 0)
   return (
@@ -264,16 +269,14 @@ export function PatternView({ days, example }: { days: Days; example: boolean })
           >
             <div className="h-full bg-primary" style={{ width: `${Math.min(100, (p.count / MIN_CHECKINS) * 100)}%` }} />
           </div>
-          <p data-testid="pattern-bar-label" className="text-sm font-medium">
-            {t.patternBar(p.count, MIN_CHECKINS)}
-          </p>
-          <p data-testid="pattern-wait">{t.patternWait(p.count)}</p>
+          <p data-testid="pattern-wait">{t.patternWait(verb, p.count)}</p>
         </>
       ) : (
         <>
           {p.forecast ? (
             <Card testId="pattern-forecast">
-              <p>{t.forecastPattern(p.forecast.withDays, p.forecast.withSlips, p.forecast.otherDays, p.forecast.otherSlips)}</p>
+              <p>{t.forecastHard(p.forecast.withDays, p.forecast.withSlips)}</p>
+              <p>{t.forecastEasy(p.forecast.otherDays, p.forecast.otherSlips)}</p>
             </Card>
           ) : (
             <p data-testid="pattern-none">{p.reason === "equal" ? t.patternEqual : t.patternNone}</p>

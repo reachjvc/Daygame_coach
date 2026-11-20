@@ -21,6 +21,7 @@ import type { ToolProps } from "../../types";
 import { useCarry, useDoneCount, useStartCount, useToolState } from "../hooks";
 import {
   EMPTY_CHECKIN,
+  entryCount,
   applySlips,
   draftKey,
   firstMonth,
@@ -168,6 +169,10 @@ function Screens({
   const [blocked, setBlocked] = useState<string | null>(null);
   const filing = useRef<Set<string>>(new Set());
   const lock = useRef<string | null>(null);
+  const sigRef = useRef<string | null>(null);
+  const screenAt = useRef(0);
+  /** Every tap on a screen that has just changed is ignored for 400 ms: a double tap must not land on the next screen's buttons. */
+  const tapOk = () => Date.now() - screenAt.current >= 400;
   const filedIds = useRef<Set<string>>(new Set());
   const seen = useRef<Set<string>>(new Set());
 
@@ -219,6 +224,7 @@ function Screens({
   };
   /** Back: a step back in history when the previous entry is the wanted screen (or any, with `any`), else a rewrite of this one. */
   const back = (params: Record<string, string>, any = false) => {
+    if (!tapOk()) return;
     const tr = trail.current;
     if (tr && tr.idx > 0 && (any || tr.stack[tr.idx - 1] === keyOf(params)))
       window.history.back();
@@ -226,6 +232,7 @@ function Screens({
   };
   /** A double tap on one screen moves once: the second tap finds this screen locked until the address changes. */
   const move = (fn: () => void) => {
+    if (!tapOk()) return;
     if (lock.current === key) return;
     lock.current = key;
     fn();
@@ -272,6 +279,17 @@ function Screens({
     };
   })();
   useDoneCount(addiction, "checkin", view.kind === "done");
+  const sig =
+    view.kind === "tab"
+      ? "tab"
+      : view.kind === "flow"
+        ? `flow|${view.flow}|${view.date}|${view.step}`
+        : `done|${view.date}`;
+  if (sigRef.current === null) sigRef.current = sig;
+  else if (sigRef.current !== sig) {
+    sigRef.current = sig;
+    screenAt.current = Date.now();
+  }
 
   const mParam = sp.get("m");
   const monthNow = monthOf(today);
@@ -375,6 +393,7 @@ function Screens({
   /** The report is still in the Black Box. (`bb.has` also needs a living run, and a slip ends the run.) */
   const inBox = (id: string) => !!bb?.reports.some((r) => r.id === id);
   const setOutcome = (date: string, slipped: boolean) => {
+    if (!tapOk()) return;
     const day = state.days[date];
     const wall = todayIso();
     if (slipped) {
@@ -419,6 +438,7 @@ function Screens({
     }));
   };
   const undoSlip = (date: string) => {
+    if (!tapOk()) return;
     const id = state.days[date]?.slipReportId;
     if (!id || !bb) return;
     if (!bb.undo(id)) {
@@ -466,7 +486,6 @@ function Screens({
     move(() => {
       started();
       const step = state.drafts[draftKey(kind, date)]?.step ?? 1;
-      update((s) => withDraft(s, draftFor(s, kind, date)));
       go(flowParams(kind, date, step, month));
     });
   const setAnswer = (kind: FlowKind, date: string, step: number, patch: Day) =>
@@ -476,7 +495,10 @@ function Screens({
     });
   const toStep = (kind: FlowKind, date: string, n: number, month: boolean) =>
     move(() => {
-      update((s) => withDraft(s, { ...draftFor(s, kind, date), step: n }));
+      update((s) => {
+        const d = s.drafts[draftKey(kind, date)];
+        return d ? withDraft(s, { ...d, step: n }) : s;
+      });
       go(flowParams(kind, date, n, month));
     });
   /** Saves, then shows the done screen so that browser Back leaves the flow: this visit's flow entries are walked back first. */
@@ -619,6 +641,7 @@ function Screens({
 
     /** A tap on a row saves it and moves on by itself (through the move lock); on the last morning screen it saves and finishes. */
     const pick = (patch: Day) => {
+      if (!tapOk()) return;
       set(patch);
       if (last) finish(kind, date, month);
       else toStep(kind, date, step + 1, month);
@@ -660,6 +683,9 @@ function Screens({
       </div>
     );
 
+    const scaleValue = id === "forecast" ? ans.forecast : id === "hard" ? ans.hard : id === "urges" ? ans.urges : 0;
+    const isScale = id === "forecast" || id === "hard" || id === "urges";
+    const showContinue = !last && (!isScale || scaleValue !== undefined);
     const nextDisabled =
       (id === "outcome" && !slipOk) ||
       (kind === "morning" &&
@@ -670,12 +696,18 @@ function Screens({
       <OneQuestion
         step={step}
         total={steps.length}
-        onBack={
-          step === 1
-            ? null
-            : () => back(flowParams(kind, date, step - 1, month))
-        }
+        onBack={null}
       >
+        {step > 1 && (
+          <button
+            type="button"
+            data-testid="screen-back"
+            onClick={() => back(flowParams(kind, date, step - 1, month))}
+            className="inline-flex min-h-11 min-w-11 items-center self-start text-sm text-muted-foreground underline"
+          >
+            {t.back}
+          </button>
+        )}
         <p className="text-sm text-muted-foreground">{dayLabel(date)}</p>
         <h2
           data-testid={`step-${id}`}
@@ -763,7 +795,6 @@ function Screens({
                           >
                             {tt.blackbox.undo}
                           </button>
-                          {slipNext}
                         </>
                       )}
                       {noSlip && (
@@ -789,15 +820,6 @@ function Screens({
                               className="inline-flex min-h-11 items-center self-start text-primary underline"
                             >
                               {t.openDate}
-                            </Link>
-                          )}
-                          {noSlipKind === "ended" && slipLive && (
-                            <Link
-                              href={carry(`/quit/${addiction}/slip`)}
-                              data-testid="slip-link"
-                              className={outlineLink}
-                            >
-                              {tt.sos.slipLink}
                             </Link>
                           )}
                         </div>
@@ -847,6 +869,7 @@ function Screens({
                     aria-pressed={on}
                     data-testid={`feeling-${f.id}`}
                     onClick={() =>
+                      tapOk() &&
                       set({
                         feelings: on
                           ? (ans.feelings ?? []).filter((x) => x !== f.id)
@@ -877,13 +900,14 @@ function Screens({
 
         <div className="flex flex-col gap-2">
           {kind === "morning" && last ? (
-            <PrimaryButton
-              testId="flow-save"
-              disabled={nextDisabled}
-              onClick={() => finish(kind, date, month)}
-            >
-              {t.save}
-            </PrimaryButton>
+            !nextDisabled && (
+              <PrimaryButton
+                testId="flow-save"
+                onClick={() => finish(kind, date, month)}
+              >
+                {t.save}
+              </PrimaryButton>
+            )
           ) : last ? (
             <PrimaryButton
               testId="flow-done"
@@ -892,13 +916,15 @@ function Screens({
               {that ? t.doneThat : t.doneToday}
             </PrimaryButton>
           ) : (
-            <PrimaryButton
-              testId="flow-next"
-              disabled={nextDisabled}
-              onClick={() => toStep(kind, date, step + 1, month)}
-            >
-              {t.next}
-            </PrimaryButton>
+            showContinue && (
+              <PrimaryButton
+                testId="flow-next"
+                disabled={nextDisabled}
+                onClick={() => toStep(kind, date, step + 1, month)}
+              >
+                {t.next}
+              </PrimaryButton>
+            )
           )}
           {kind === "evening" && (step >= 2 || slipOk) && !last && (
             <button
@@ -954,19 +980,34 @@ function Screens({
             className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4"
           >
             <p className="text-lg font-semibold">{t.slipHeld}</p>
-            <p className="text-sm text-muted-foreground">
-              {t.clearMonth(clearN)}
-            </p>
+            {clearN > 0 && (
+              <p className="text-sm text-muted-foreground">
+                {t.clearMonth(clearN)}
+              </p>
+            )}
             {slipNext}
           </div>
         )}
+        {!slipInRecord &&
+          dd?.slipped === true &&
+          noSlipCase(view.date, bb?.runs ?? []) === "ended" && (
+            <div data-testid="done-restart" className="flex flex-col gap-2">
+              {slipNext}
+            </div>
+          )}
         <DaySummary
           date={view.date}
           day={dd}
           verb={verb}
           testId="done-summary"
           hideDate
+          hideOutcome={dd?.slipped === false || slipInRecord}
         />
+        {dd?.slipped === undefined && dd?.hard === undefined && (
+          <p data-testid="come-back" className="text-sm text-muted-foreground">
+            {t.comeBack}
+          </p>
+        )}
         <PrimaryButton
           testId="done-back"
           onClick={() =>
@@ -986,7 +1027,7 @@ function Screens({
   const tab = view.tab;
   const times = ex ? ex.reminders : state.reminders;
   const onFill = ex ? null : (date: string) => startFlow("evening", date, true);
-  const hasEntries = Object.keys(stored).length > 0;
+  const hasEntries = entryCount(stored) > 0;
   const missed = ex ? null : lookBack(days, today);
   const counts = monthCounts(own, monthNow);
   const prev = shiftMonth(monthNow, -1);
@@ -1079,16 +1120,18 @@ function Screens({
                   ) : null}
                 </div>
               ) : (
-                <p className="mt-1 text-sm text-muted-foreground">{t.notYet}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {hour >= 12 && !ex ? t.skipped : t.notYet}
+                </p>
               )}
-              {!ex && (
+              {!ex && (morningSaved || mainAction !== "morning") && (
                 <button
                   type="button"
                   data-testid="morning-start"
                   onClick={() => startFlow("morning", todayIso())}
                   className={`mt-2 ${btn}`}
                 >
-                  {morningSaved ? t.change : t.start}
+                  {morningSaved ? t.change : hour >= 12 ? t.fillIn : t.start}
                 </button>
               )}
             </Card>
@@ -1111,7 +1154,7 @@ function Screens({
               ) : (
                 <p className="mt-1 text-sm text-muted-foreground">{t.notYet}</p>
               )}
-              {!ex && (
+              {!ex && (!eveningOpen || mainAction !== "evening") && (
                 <button
                   type="button"
                   data-testid="evening-start"
@@ -1133,38 +1176,6 @@ function Screens({
               {t.fillYesterday(dayLabel(missed))}
             </button>
           )}
-          <Card testId="month-counts">
-            <h2 className="mb-2 font-medium">{t.monthTitle}</h2>
-            {Object.keys(own).length === 0 ? (
-              <p data-testid="counts-start" className="text-sm">
-                {t.countsStart}
-              </p>
-            ) : (
-              <CountTiles
-                checked={counts.checkedIn}
-                clear={counts.clear}
-                ids={["count-checked", "count-clear"]}
-              />
-            )}
-            {showsLastMonth(today) && Object.keys(own).length > 0 && (
-              <div
-                data-testid="last-month"
-                className="mt-3 flex flex-col gap-2 border-t border-border pt-3"
-              >
-                <p className="text-sm font-medium">
-                  {t.lastMonthTitle(monthName(prev))}
-                </p>
-                <CountTiles
-                  checked={prevCounts.checkedIn}
-                  clear={prevCounts.clear}
-                  ids={["last-checked", "last-clear"]}
-                />
-              </div>
-            )}
-            <p className="mt-2 text-xs text-muted-foreground">
-              {t.neverResets}
-            </p>
-          </Card>
           {!hasEntries && !ex && (
             <button
               type="button"
@@ -1180,6 +1191,46 @@ function Screens({
               {t.seeExample}
             </button>
           )}
+          <Card testId="month-counts">
+            <h2 className="mb-2 font-medium">{t.monthTitle}</h2>
+            {entryCount(own) === 0 ? (
+              <p data-testid="counts-start" className="text-sm">
+                {t.countsStart}
+              </p>
+            ) : (
+              <CountTiles
+                checked={counts.checkedIn}
+                clear={counts.clear}
+                ids={["count-checked", "count-clear"]}
+              />
+            )}
+            {showsLastMonth(today) && entryCount(own) > 0 && (
+              <div
+                data-testid="last-month"
+                className="mt-3 flex flex-col gap-2 border-t border-border pt-3"
+              >
+                <p className="text-sm font-medium">
+                  {t.lastMonthTitle(monthName(prev))}
+                </p>
+                <CountTiles
+                  checked={prevCounts.checkedIn}
+                  clear={prevCounts.clear}
+                  ids={["last-checked", "last-clear"]}
+                />
+              </div>
+            )}
+            {entryCount(own) > 0 && (
+              <p
+                data-testid="counts-note"
+                className="mt-2 text-xs text-muted-foreground"
+              >
+                {t.countsNote(verb)}
+              </p>
+            )}
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t.neverResets}
+            </p>
+          </Card>
           {!ex && <p className="text-xs text-muted-foreground">{t.keptHere}</p>}
         </div>
       )}
@@ -1196,7 +1247,9 @@ function Screens({
           onFill={onFill}
         />
       )}
-      {tab === "pattern" && <PatternView days={own} example={ex !== null} />}
+      {tab === "pattern" && (
+        <PatternView days={own} example={ex !== null} verb={verb} />
+      )}
       {tab === "reminders" && (
         <RemindersView
           times={times}

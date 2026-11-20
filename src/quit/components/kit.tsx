@@ -229,7 +229,7 @@ export function OneQuestion({ step, total, onBack, children, showStep, hideBar }
       )}
       {children}
       {onBack && (
-        <button type="button" data-testid="screen-back" onClick={onBack} className="inline-flex min-h-11 items-center self-start text-sm text-muted-foreground underline">
+        <button type="button" data-testid="screen-back" onClick={onBack} className="inline-flex min-h-11 min-w-11 items-center self-start text-sm text-muted-foreground underline">
           {t.common.back}
         </button>
       )}

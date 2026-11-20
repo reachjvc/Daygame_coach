@@ -8,6 +8,8 @@ import {
   icsFor,
   lookBack,
   applySlips,
+  cellLevel,
+  entryCount,
   mergeSlips,
   noSlipCase,
   putDay,
@@ -54,7 +56,7 @@ describe("parse of stored state", () => {
   })
   it("keeps one draft per kind and day, and still reads the old single draft", () => {
     const a = { kind: "evening", date: "2026-11-18", step: 2, answers: { hard: 3 } }
-    const b = { kind: "evening", date: "2026-11-17", step: 4, answers: {} }
+    const b = { kind: "evening", date: "2026-11-17", step: 4, answers: { hard: 2 } }
     const s = parseCheckin({ draft: a, drafts: { "evening:2026-11-17": b } })
     expect(Object.keys(s.drafts).sort()).toEqual(["evening:2026-11-17", "evening:2026-11-18"])
     expect(parseCheckin({ draft: a }).drafts["evening:2026-11-18"].step).toBe(2)
@@ -130,9 +132,10 @@ describe("pattern, from the morning forecast only", () => {
     expect(patternsOf(mk(16, (i) => ({ forecast: i < 6 ? 5 : 2, slipped: i < 2 }))).reason).toBeNull()
   })
   it("the lines read as written", () => {
-    expect(t.forecastPattern(6, 2, 10, 1)).toBe("Days you expected Hard or Very hard: you slipped on 2 of 6. Days you expected Easy to In between: you slipped on 1 of 10.")
+    expect(t.forecastHard(7, 3)).toBe("Expected Hard or Very hard: slipped on 3 of 7 days.")
+    expect(t.forecastEasy(14, 1)).toBe("Expected Easy to In between: slipped on 1 of 14 days.")
     expect(t.pairsLine(12, 4, 5, 3)).toBe("On 12 days you rated the day in the morning and the evening: harder than you expected on 4, easier on 5, as expected on 3.")
-    expect(t.patternWait(3)).toBe("Pattern lines start once 14 days have a yes or no answer. You have 3.")
+    expect(t.patternWait("smoke", 3)).toBe('Your pattern shows once you have answered "Did you smoke?" on 14 days. You have 3.')
   })
 })
 
@@ -200,7 +203,8 @@ describe("the calendar file", () => {
     expect(unfolded).toContain("DTSTAMP:20261119T100000Z")
     expect(unfolded).toContain("DTSTART:20261119T080000")
     expect(unfolded).toContain("DTSTART:20261119T210000")
-    expect(unfolded).toContain("https://example.test/quit/nicotine/checkin")
+    expect(unfolded).toContain("DESCRIPTION:How hard will today be? Open the check-in: https://example.test/quit/nicotine/checkin")
+    expect(unfolded).toContain("DESCRIPTION:How did today go? Open the check-in: https://example.test/quit/nicotine/checkin")
     expect(ics.endsWith("END:VCALENDAR\r\n")).toBe(true)
   })
   it("no line is longer than 75 characters", () => {
@@ -264,13 +268,16 @@ describe("never an empty day, the no-slip cases, words", () => {
     expect(urgeWord(4)).toBe("Strong")
     expect(urgeWord(1)).toBe("None")
     expect(feelingLabel("tired")).toBe("Tired")
+    expect(feelingLabel("short-tempered")).toBe("Short-tempered")
+    expect(feelingLabel("angry")).toBe("Angry")
     expect(feelingLabel("clear-headed")).toBe("Clear-headed")
     expect(feelingLabel("happy")).toBe("Happy")
     expect(parseCheckin({ days: { "2026-11-18": { feelings: ["tired", "happy", "zzz"] } } }).days["2026-11-18"].feelings).toEqual(["tired", "happy"])
   })
   it("no word says run, phone or pledge", () => {
-    const all = [t.noSlipLater, t.noSlipNever, t.noSlipBefore, t.noSlipEnded, t.noSlipOther, t.slipBlocked, t.saving, t.slipGone, t.keptHere, t.savedLocal, t.localOnly, t.remindersLine, t.pledgeLine("x"), t.pledgeTitle(false)].join(" ")
-    expect(all).not.toMatch(/\brun\b|phone|pledge|black box/i)
+    const all = [t.clearResult, t.outcomeClear, t.clearBig, t.countsNote("smoke"), t.noSlipLater, t.noSlipNever, t.noSlipBefore, t.noSlipEnded, t.noSlipOther, t.slipBlocked, t.saving, t.slipGone, t.keptHere, t.savedLocal, t.localOnly, t.remindersLine, t.pledgeLine("x"), t.pledgeTitle(false)].join(" ")
+    expect(all).not.toMatch(/\brun\b|phone|pledge|black box|clear|urge/i)
+    for (const l of [t.noSlipLater, t.noSlipNever, t.noSlipBefore, t.noSlipEnded, t.noSlipOther]) expect(l.endsWith("It stays in your check-in.")).toBe(true)
   })
 })
 
@@ -286,5 +293,22 @@ describe("the Black Box wins over his own No", () => {
     expect(t.forecastTitle(true)).toContain("that day")
     expect(t.expectedLine(4)).toBe("You expected Hard (4)")
     expect(t.expectedThen(false, 4)).toBe("This morning you expected Hard (4)")
+  })
+})
+
+describe("entries, morning-only days, empty drafts", () => {
+  it("a day holding only the slip-removed flag is not an entry", () => {
+    expect(entryCount({ "2026-11-18": { slipGone: true } })).toBe(0)
+    expect(entryCount({ "2026-11-18": { slipGone: true }, "2026-11-17": { hard: 2 } })).toBe(1)
+    expect(monthCounts({ "2026-11-18": { slipGone: true } }, "2026-11").checkedIn).toBe(0)
+  })
+  it("a morning-only day has its own calendar state", () => {
+    expect(cellLevel({ pledge: "x" }, "clear").state).toBe("morning")
+    expect(cellLevel({ forecast: 3 }, "clear").state).toBe("morning")
+    expect(cellLevel({ forecast: 3, slipped: false }, "clear").state).toBe("clear")
+    expect(cellLevel({}, "clear").state).toBe("none")
+  })
+  it("a draft with no answers is dropped", () => {
+    expect(parseCheckin({ drafts: { a: { kind: "evening", date: "2026-11-18", step: 2, answers: {} } } }).drafts).toEqual({})
   })
 })
