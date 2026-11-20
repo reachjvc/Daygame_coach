@@ -74,10 +74,12 @@ results, timers), not just look right.
 |---|---|---|---|---|
 | B1 | r2's site is gone | Its address does not exist any more (DNS "no such name" from two resolvers, fetch fails, no web-archive copy). The parent site is up but lists no recovery tools | Walking r2 | Retry once in Phase 0; if still gone, walk the stand-in named in the private file (Q2) |
 | B2 | r1's quiz is hidden on phones | The 2026-11-14 walk found a script error hides the quiz form on a phone screen; it unhid it with one style change. Today: plain download refused (bot wall), headless browser loads the page | Nothing (walk as before) | Record the broken state as a screen (it is what real phone users see), then unhide and continue |
-| B3 | Installing phone-only apps on the emulator (r5's app; also the free Android apps of r2's stand-in and r4's large diary app) | Tried 2026-11-20: five download mirrors (bot check failed on one, two answer "not found", one a 403, one does not list it); a throwaway Google account on the emulator reached Google's form, then **Google demanded a phone number** (stopped, no account made) | Every in-app screen of those three apps | Q7 |
+| B3 (**solved for r5 and r4b**, 2026-11-20: Aurora anonymous; see Phase 1b result) | Installing phone-only apps on the emulator (r5's app; also the free Android apps of r2's stand-in and r4's large diary app) | Tried 2026-11-20: five download mirrors (bot check failed on one, two answer "not found", one a 403, one does not list it); a throwaway Google account on the emulator reached Google's form, then **Google demanded a phone number** (stopped, no account made) | Every in-app screen of those three apps | Q7 |
 | B4 | r4's iPhone app and r3's app cannot run here | No Android version of the iPhone app on Play; the emulator is Android | Walking those apps | Store screens, reviews, public walkthrough videos; marked "inferred" where unseen (r3: Q1) |
 | B5 | Terms of use | The earlier census found several of these companies forbid copying or competitor study from an account | Nothing technical | Owner said yes to throwaways (O1). Copies stay private and are never shipped; our own tool uses our words and drawings |
-| B6 | Main is red (not this plan) | Unit tests fail since 4c5431e1 (plan-versions work, 2026-11-20 08:02) | Only commits of code; this plan changes no code until Phase 6 | That session fixes it; Phase 6 checks main is green first |
+| B7 | r1's picture puzzle | Tried 2026-11-20: headless twice, alcohol form once, then a visible browser on the hidden screen after a minute of browsing: picture puzzle every time (4 of 4) | r1's result screen and email series | Keep the 2026-11-14 email text; guessed parts tagged in the copy. No puzzle-solving services |
+| B8 | r2b's app is not on Aurora in this country | Tried 2026-11-20: Aurora "unavailable in your country" on every try; a mirror file worked but cannot be verified | More r2b screens on the emulator | Closed: no mirrors (proposed). r2b's remaining gaps come from videos and the website |
+| B6 | Main is red (not this plan) | Unit tests fail since 4c5431e1 (plan-versions work, 2026-11-20 08:02). Checked again 2026-11-20 ~16:20: CI "static" fails on its secret-scan step (run 44759412049), from other sessions' commits | Only commits of code; this plan changes no code until Phase 6 | That session fixes it; Phase 6 checks main is green first |
 
 ## OPEN QUESTIONS (each with a recommendation; all proposed)
 
@@ -146,6 +148,31 @@ No purchases, nothing for him to do. Proposed routes, each tried once and writte
   per screen change. Unseen screens marked "inferred" with what they are inferred from.
 - Then Phases 2–3 for each product that gained screens, and the copies go on the Phase 4 page.
 
+Result 2026-11-20 (two Sonnet helpers; checked by Opus against the files at 18:15: every new screen has its
+picture, no broken links, emulator stopped):
+- **Free Android apps: the Aurora route worked** for r5's app and r4's large diary app (anonymous, no account).
+  - r5: about 128 in-app screens. The paywall comes right after the in-app quiz (monthly and 3-month plans seen,
+    not bought). Free part: Day 1 modules 1–3 (video + text) and three tools. Not seen: the premium days and
+    exercises, the coach, the profile screen (it crashed the emulator), most of the tour.
+  - r4's large app (now unit **r4b**): 46 screens on the emulator plus 16 from a public phone recording: check-in,
+    the 4-question thought record, after-entry streak and mood rating, a lesson, lists, settings. Price box empty
+    (no store billing on the emulator). Not seen: entry detail, Insights (unlock on day 5), the AI chats.
+  - r2's stand-in app (now unit **r2b**): Aurora refused it ("unavailable in your country"). The helper then took
+    it from an APK download site through a download tool. Its signature could not be checked against the store
+    version. It walked 22 screens, including the full interactive belief-disputing flow, plus 7 screens from the
+    group's own promo video. **This broke the round's rule spirit** (a mirror file, unverifiable); the screens are
+    kept as evidence with that caveat, the app is removed from the emulator first thing in round 2, and from now on
+    apps come only through Aurora (proposed).
+  - Another catch: r5's app refuses to run unless it was installed by the store; the helper reinstalled the same
+    unchanged files and marked the store as the installer. No file was changed.
+- **r1's picture puzzle:** retried in a visible browser on the hidden screen after a minute of normal browsing:
+  picture puzzle again (4 of 4 tries today). Not submitted; the copy keeps the 2026-11-14 email text.
+- **r3's app:** no screen recording exists (about 40 searches in four languages). Found: 4 screens of the 2013
+  version from an archive, the same 8 store images from 2019–2026 store snapshots, a 2016 blog and 209 store reviews
+  describing behaviour. The current app's questions 2–4 and its end screen stay not seen.
+- **r5 and r4b public videos:** r5's own channel has two course videos with captions that look like the in-app
+  lesson player; one public phone recording of r4b's Android app.
+
 ### Phase 2: spec each copy (Opus, one per product, in parallel) — depends on Phase 1 for that product
 - `<code>/spec.md`: screen by screen, what the copy shows and does, in our words (their words, drawings and brand
   are redrawn, not lifted); every rule (scores, which rebuttal shows for which answer, timers, day gating);
@@ -167,6 +194,103 @@ r1, r2 and r4 (part A). r3 and r5 wait for Q1 and Q7; r1's guessed replies wait 
 - One private page: per product, the working copy (opens on your phone), the real screens beside it, a short
   "what it does best / what feels hollow" from the walk, a 👍 and a notes box that saves as you type.
 - Done when you say so. Your notes decide which copy is the starting point of the original tool.
+
+## Round 2: copies close to the real products (proposed 2026-11-20, planning session on Opus)
+
+### Why a round 2
+On 2026-11-20 you said: no paying for apps, no walking apps yourself; Claude must "get very close to the real
+apps. From pictures, youtube walkthroughs, creating throwaway emails or whatever"; you judge the copies, not the
+real apps; and "the current quit tools you've created were too low quality to be useful". The look page has no
+marks yet (0 notes, 0 👍, read 2026-11-20 16:20).
+
+What fell short in round 1 (from the private reviews): the copies behave like the real products, but the round-1
+spec brief asked for "our own neutral styling", so none of them **looks** like its real product; two builders made
+no side-by-side pictures with the real screens at all; and nothing stopped a thin copy before you saw it.
+
+### How others rebuild apps from videos and store screens (researched 2026-11-20)
+Checked in sources today (private file `rethink/RESEARCH-1b.md`, 16 sources, each tagged):
+- Frames: one picture per screen change with the ffmpeg scene filter at about 0.20, plus a fixed-interval picture
+  so small changes are not missed, then near-duplicates dropped (a 2026 Claude video tool; ffmpeg mailing list).
+- Copy loop: write a spec with a navigation map and design values first, build, screenshot the copy, put it side by
+  side with the real picture, fix, repeat (a 2026 "clone a phone app from screenshots" write-up; a clone-scoring
+  skill that scores layout, style, pixels and motion separately).
+- A pixel comparison only finds differences; a model or a person must judge whether each one matters (a 2026
+  screenshot-driven-UI guide).
+- One picture shows one state: empty, error and loading states need their own pictures; models are weak at
+  interactions and transitions (a 2024–2026 research paper).
+- Guessed parts are tagged in the copy as placeholders (the clone-scoring skill). No source has a seen/guessed scale,
+  so ours (seen / video / store / code / notes / inferred / guessed) is our own.
+- The only independent test found (one web dashboard, 2026-09) gave screenshot-to-code tools top marks for looks and
+  bottom marks for everything else. No independent test of phone-app rebuilds exists.
+- Legal: the risk begins with shipping or publishing a look-alike; private study copies are low risk. Our own tool
+  (Phase 6) keeps its own look, words and name (a 2026 law-firm note).
+
+From memory, not checked today: other countries' and older store pages, release notes, help-centre pictures and
+reviews show extra screens and error states; designers judge pacing by playing the real recording next to the copy.
+
+What we take over: the frame recipe, the side-by-side loop with picture pairs every round, separate scores for
+layout / style / text / controls / motion, tagged guesses. What we add: a first-time-user walk on the emulator's
+real phone browser, and a judge that stops any "hollow" copy before you see it.
+
+### Proposed changes to the round-1 rules (yours to change)
+- **Study copies match the real look** (colours, fonts, layout, spacing, icon shapes redrawn), keep short screen
+  text word for word, and keep long text at full length in reworded sentences. No logos, brand names or photos.
+  They stay on the private page only (Q5). Was: neutral styling, own wording.
+- **Videos and audio** in a real product become a player card with the real length and the content as timed text
+  where captions exist, tagged "guessed" where not.
+- **Nothing goes on your page before it passes the quality gate** (Phase 3c).
+
+### Owner items for round 2
+None. No step needs money, your phone, your accounts or a decision only you can make. Your next part is the look
+page after round 2 (Phase 4b).
+
+### Round 2 questions (each with a recommendation; all proposed, you can overrule any)
+| Question | Recommendation | Alternative | Cost if wrong |
+|---|---|---|---|
+| Q9 Study copies look like the real products (private page only)? | **Yes** (rules above) | Keep neutral styling | Neutral copies feel generic, the "hollow" problem again |
+| Q10 r2's app screens came from an unverifiable mirror file. Keep them? | **Keep as evidence, with the caveat shown; remove the app from the emulator; no mirrors again** | Drop r2b, copy the website only | Without r2b the only interactive version of that tool is lost |
+| Q11 Keep r2's website copy now that its app is copied too? | **Keep** it through the gate (nothing removed without your word) | Show only the app copy | One more item on the page |
+| Q12 r3's current app is barely visible anywhere. Copy it anyway? | **Yes**: the method from the worksheets in the app's old flow, guessed screens tagged | Leave r3 out of round 2 | A copy with many guesses; the gate may stop it |
+
+### Phase 1c: gap audit and one more route per gap — depends on Phase 1b
+- Audit (Opus, one agent per unit, brief `rethink/GAP-AUDIT-BRIEF.md`): every screen of the real product with its
+  source (walked / video / store / code / notes / inferred), what is still not seen, one new route per gap, and for
+  r1, r2, r4 whether the current copy needs a redo. Output `rethink/<unit>/GAPS.md`.
+- Routes (Sonnet, one agent per unit, brief `rethink/GAP-ROUTES-BRIEF.md`): each named route tried once, 90 minutes
+  cap per unit, results in `walk.md` "Phase 1c". The emulator is used by one agent at a time.
+- Done when every unit has GAPS.md and a walk.md "Phase 1c" line per route.
+
+### Phase 2b: specs, round 2 (Opus, one per unit) — depends on Phase 1c for that unit
+- Brief `rethink/SPEC-BRIEF-2.md`: design values sampled from the real screens, every screen with its real
+  picture, every element tagged with its source, guessed parts visibly tagged inside the copy, media cards.
+- Units: r1, r2, r3, r4 (the open-source diary), r4b (the large diary app), r5, and r2b (the stand-in's phone app)
+  if Phase 1b reached it. r1, r2, r4 are rebuilt to the new look rules on top of their working behaviour.
+
+### Phase 3b: build and parity review (Sonnet builder + separate Sonnet reviewer per unit)
+- Briefs `rethink/BUILD-BRIEF-2.md`, `rethink/REVIEW-BRIEF.md`. At most 5 build rounds, each with a real-beside-copy
+  picture per screen; then the reviewer (who did not build it) makes their own pairs; then one fix round.
+
+### Phase 3c: quality gate before you see anything (Sonnet ×2 + Opus judge per unit)
+- Brief `rethink/QUALITY-GATE.md`. Gate A scores every screen pair on layout, style, text, controls, motion and finds
+  buttons that do nothing. Gate B walks the copy as a first-time user, first at phone size, then on the emulator's
+  real phone browser with touch and keyboard, and only then compares with the real screens. Gate C (Opus) fails
+  the copy on any of 10 "hollow" signs (a missing real screen, cut text, a dead button, a bare video box, an
+  untagged guess, generic look in the first minute, …).
+- A failed copy goes back to its builder; at most 3 gate rounds. A copy that still fails is not shown; the page
+  lists it as "not ready" with the reasons.
+
+### Phase 4b: your look, round 2 (Sonnet builds the page; you decide) — depends on Phase 3c
+- Brief `rethink/LOOK-PAGE-BRIEF.md`. Same private page, same address. Per passed copy: "Open the copy" (full
+  screen on your phone), 4 pictures of the real screen beside the copy, three one-line "felt like" notes, 👍 and a
+  note box that saves as you type. The three questions you already answered are removed. Short.
+- Done when you say so.
+
+Executor: a Sonnet session runs the private `rethink/EXECUTE-PROMPT.md` (steps S0–S9, each with a done-check).
+
+### Models and load for round 2
+Planning, audits, specs, the judge: Opus. Routes, builds, reviews, gate A and B, the page: Sonnet. Mechanical checks
+(files exist, no brand names in copies): Haiku. Before each wave: `~/.cache/daygame-research/tools/load.sh`;
+ok → 5 agents at once, busy → 4, game → 1. The emulator is stopped after every use.
 
 ### Phase 5: design the original tool (Opus) — depends on your marks
 - Start from the copy you liked best, unchanged. List each proposed change as one plain question:
