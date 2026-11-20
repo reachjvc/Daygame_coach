@@ -20,3 +20,5 @@ Short version:
   next to ours.
 
 Status: proposed. Nothing in it is decided until the owner says so.
+Round 2 was built and passed the review gate on 2026-11-20. It waits for
+the owner's 👍 and notes on its page (listed in notes-seen.md).

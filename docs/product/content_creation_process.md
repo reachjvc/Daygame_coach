@@ -285,3 +285,17 @@ Tools (private): `~/.cache/daygame-research/celeb-reels/code/`.
   the hook and the source tag.
 - Round 2 adds `render2.py` for multi-source cuts, cards and the
   placeholder voice.
+- `render2.py` takes an edit list. Each clip can set:
+  - a picture from another source (B-roll),
+  - muted sound,
+  - a trim for VHS black edges,
+  - a tighter reframe for wide shots,
+  - the speaker's name in the source tag.
+- Learned in round 2 (2026-11-20):
+  - Check every contact sheet: wide shots and cutaways often put the
+    wrong person, a poster or a logo in the 9:16 crop.
+  - Cover an interviewer cutaway in the middle of his line with a
+    picture of him.
+  - Measure caption width against the right-side buttons.
+  - The review gate found facts a card overstated. It also found two
+    versions that were only recuts, with nothing added.

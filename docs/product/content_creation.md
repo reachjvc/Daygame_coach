@@ -49,9 +49,14 @@ say "I left notes".
 - **Celebrity clip reels** (owner, 2026-11-20): re-cut viral celebrity
   quit clips and make them ours. Round 1 (10 reels, full screen, viral
   original next to each) is on its page, listed in notes-seen.md. Round 2
-  (8 versions of one person, a themed episode "men who quit for their
-  kids") is planned in `Plans/celeb-clip-reels.md` (proposed). The method
-  is in the process file, section "Celebrity clip reels".
+  was built on 2026-11-20 and waits for his 👍 and notes on its own page
+  (listed in notes-seen.md, linked from the round 1 page). It has 8
+  versions of one person's reel (all shorter than the 71 s base, one way
+  each), a themed episode "men who quit for their kids" in 3 versions,
+  and cast lists for two more themes. The narrator is a placeholder AI
+  voice. An Opus review gate checked every version. Plan:
+  `Plans/celeb-clip-reels.md` (proposed). The method is in the process
+  file, section "Celebrity clip reels".
 - **Look finder (step 1 of the proposed process)**: built 2026-11-20. 18
   YouTube videos that beat their channel's usual views, in six looks, each
   playable with a 👍 and a note (page listed in notes-seen.md). Waits for
