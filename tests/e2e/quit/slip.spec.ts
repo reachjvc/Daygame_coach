@@ -230,7 +230,7 @@ test.describe("slipped, signed out @phone", () => {
     expect(reports).toHaveLength(1)
     expect(reports[0]).toMatchObject({ where: "driving", thought: JUST_ONE.short, ending: "justone", wentThrough: true })
     expect(reports[0].at.slice(0, 10)).toBe(day(-1))
-    expect((await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([
+    await expect.poll(async () => (await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([
       [day(-20), day(-1)],
       [day(0), null],
     ])
@@ -246,7 +246,7 @@ test.describe("slipped, signed out @phone", () => {
     await expect(page.getByTestId("day1-today")).toHaveAttribute("aria-checked", "true")
     await expect(page.getByTestId("days-all")).toHaveCount(0)
     await shot(page, "p-5-result-day1-today")
-    expect((await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([
+    await expect.poll(async () => (await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([
       [day(-20), day(-1)],
       [day(0), null],
     ])
@@ -255,7 +255,7 @@ test.describe("slipped, signed out @phone", () => {
     await page.goto(quitUrl("/quit/nicotine/date"))
     await expect(page.getByTestId("result-days")).toHaveText("Today is day 1.")
     await expect(page.getByTestId("run-refused")).toHaveCount(0)
-    expect((await liveRuns(page)).filter((a) => a.endedOn === null)).toHaveLength(1)
+    await expect.poll(async () => (await liveRuns(page)).filter((a) => a.endedOn === null)).toHaveLength(1)
     // back in the slip tool the result is still there: the living run is the one this visit started
     await page.goto(URL)
     await expect(page.getByTestId("result")).toBeVisible()
@@ -263,7 +263,7 @@ test.describe("slipped, signed out @phone", () => {
     await tap(page, "day1-tomorrow")
     await expect(page.getByTestId("day1-line")).toHaveText(`Day 1: ${words(day(1))}`)
     await expect(page.getByTestId("day1-note")).toHaveText(`It starts by itself when you open Your quit date that day.`)
-    expect((await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([[day(-20), day(-1)]])
+    await expect.poll(async () => (await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([[day(-20), day(-1)]])
     expect(await quitDate(page)).toBe(day(1))
     await shot(page, "p-6-result-day1-tomorrow")
   })
@@ -276,7 +276,7 @@ test.describe("slipped, signed out @phone", () => {
     await tap(page, "slip-undo")
     await expect(page.getByTestId("slip-undone")).toHaveText(tooltextJson.blackbox.undone)
     expect(await liveReports(page)).toHaveLength(0)
-    expect((await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([[day(-20), null]])
+    await expect.poll(async () => (await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([[day(-20), null]])
     expect(await quitDate(page)).toBe(day(-20))
     await shot(page, "p-7-undone")
     // a new visit begins at screen 1 with empty answers
@@ -427,7 +427,7 @@ test.describe("slipped, signed out @phone", () => {
     await open(page, { record: { quitDate: day(-5), goal: "stop" } })
     await expect(step(page)).toHaveAttribute("data-step", "1")
     await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuemax", "3")
-    expect((await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([[day(-5), null]])
+    await expect.poll(async () => (await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([[day(-5), null]])
     await toResult(page, { when: "today" })
     await expect(page.getByTestId("days-line")).toContainText(`${words(day(-5))} to ${words(day(0))}, 6 days`)
   })
@@ -488,7 +488,7 @@ test.describe("slipped, signed out @phone", () => {
     await tap(page, `chip-${CALMS.id}`)
     await tap(page, "slip-continue")
     await expect(page.getByTestId("result")).toBeVisible()
-    expect((await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([
+    await expect.poll(async () => (await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([
       [day(-20), day(-1)],
       [day(0), null],
     ])
@@ -509,7 +509,7 @@ test.describe("slipped, signed out @phone", () => {
     expect(reports[0]).toMatchObject({ where: "driving", thought: CALMS.short })
     expect(reports[0].at.slice(0, 10)).toBe(day(0))
     // the slip is today now: no run started today, tomorrow is the day 1
-    expect((await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([[day(-20), day(0)]])
+    await expect.poll(async () => (await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([[day(-20), day(0)]])
     await expect(page.getByTestId("day1-forced")).toBeVisible()
     expect(await quitDate(page)).toBe(day(1))
     // and back to yesterday: the tool's own Tomorrow is not a plan, so Today is chosen again
@@ -568,7 +568,7 @@ test.describe("slipped, signed out @phone", () => {
     expect(await quitDate(page)).toBe(day(3))
     await tap(page, "day1-today")
     expect(await quitDate(page)).toBe(day(0))
-    expect((await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([[day(0), null]])
+    await expect.poll(async () => (await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([[day(0), null]])
     await expect(page.getByTestId("day1-keep")).toBeVisible()
     await tap(page, "day1-keep")
     expect(await quitDate(page)).toBe(day(3))
@@ -583,7 +583,7 @@ test.describe("slipped, signed out @phone", () => {
     await expect(page.getByTestId("day1-keep")).toHaveAttribute("aria-checked", "true")
     expect(await quitDate(page)).toBe(day(3))
     // the old run ended with the slip; no new run was started
-    expect((await liveRuns(page)).filter((a) => a.endedOn === null)).toHaveLength(0)
+    await expect.poll(async () => (await liveRuns(page)).filter((a) => a.endedOn === null)).toHaveLength(0)
   })
 
   test("13 nothing to show back: the plain fallbacks", async ({ page }) => {
@@ -603,7 +603,7 @@ test.describe("slipped, signed out @phone", () => {
     await page.goto(URL)
     await expect(step(page)).toHaveAttribute("data-step", "1")
     await expect(page.getByTestId("result")).toHaveCount(0)
-    expect((await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([
+    await expect.poll(async () => (await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([
       [day(-20), day(-1)],
       [day(1), null],
     ])

@@ -1,7 +1,7 @@
 import { createBrowserClient } from "@supabase/ssr"
 
 import { browserAuthCookieOptions } from "./authCookies"
-import { refreshSafeFetch } from "./authResilience"
+import { refreshSafeFetch } from "./refreshSafeFetch"
 
 /**
  * Create a Supabase client for use in browser/client components.
