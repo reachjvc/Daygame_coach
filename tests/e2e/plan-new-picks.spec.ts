@@ -52,6 +52,30 @@ test.describe("the split screens", () => {
     expect(await fingerprint(account.id), "the owner's rows did not move").toEqual(ownerBefore)
   })
 
+  test("nothing disappears: every line of a step's see-it-all page is on one of its short screens", async ({ page, account }) => {
+    test.setTimeout(900_000)
+    await seedAndCopy(page, account.id)
+    const lines = async () =>
+      (await page.locator("body").innerText()).split("\n").map((l) => l.replace(/\s+/g, " ").trim()).filter(Boolean)
+    const chrome = /^(Part \d+ of \d+|See it all on one page|Back to the short screens)/
+    for (const [step, list] of Object.entries(STEP_SECTIONS)) {
+      const ids = list as readonly string[]
+      const union = new Set<string>()
+      for (const id of ids) {
+        await page.goto(`${ROUTES.planNew}/${id}`, { timeout: NAV })
+        await expect(page.getByTestId(`sequence-${id}`)).toBeVisible({ timeout: NAV })
+        await expect(page.getByTestId("see-it-all")).toBeVisible()
+        await page.waitForTimeout(1500)
+        for (const l of await lines()) union.add(l)
+      }
+      await page.goto(`${screenRoute(V1, V1.screens.find((s) => s.step === step)!)}?all=1`, { timeout: NAV })
+      await expect(page.getByTestId("see-it-all")).toHaveText("Back to the short screens", { timeout: NAV })
+      await page.waitForTimeout(1500)
+      const missing = (await lines()).filter((l) => !chrome.test(l) && !union.has(l))
+      expect(missing, `${step}: lines on the whole page that no short screen shows`).toEqual([])
+    }
+  })
+
   test("an area sheet and a goal card open on one section, switch with chips, and show it all", async ({ page, account }) => {
     test.setTimeout(900_000)
     await seedAndCopy(page, account.id)
