@@ -30,9 +30,13 @@ say "I left notes".
   vary too: sometimes the reel sells. Six scripts wait for his 👍 (the page is
   listed in notes-seen.md).
 - **Reel "Outvoted" (R1 of the next reels)**: he spoke it on 2026-11-19, voice
-  only, in a few minutes. Cut to 2:02. Plan: `Plans/reel-outvoted.md`
-  (proposed). The moving storyboard page waits for his notes (listed in
-  notes-seen.md). Private folder: `~/.cache/daygame-research/content/reel-outvoted/`.
+  only, in a few minutes. Cut to 1:57. He turned down the moving storyboard;
+  Claude now builds the whole film in the block look and he sees it finished.
+  The full-size film was rendered on 2026-11-20 and waits for his look (film
+  page listed in notes-seen.md). He re-records the voice with a better
+  microphone another day. Plan:
+  `Plans/reel-outvoted.md` (proposed). Private folder:
+  `~/.cache/daygame-research/content/reel-outvoted/`.
 - **The process itself**: being worked out on video 01. About 40% there
   (owner, 2026-11-18).
 - **After video 01**: see "Next video" below.

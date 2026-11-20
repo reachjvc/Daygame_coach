@@ -34,6 +34,15 @@ now (rule in `CLAUDE.md`).
 - He likes the idea bank: every visual world we build becomes a reusable
   piece. He likes testing out different processes.
 
+2026-11-19:
+- Looking at something before it is finished may not work for him.
+- He wants a full animation: "graphically looking awesome is the goal, super
+  coherent, rather than a bunch of screens that change."
+- He liked the falling block tower of video 01 and the drawn street scene.
+- Count the tokens, but quality first: "use as many as necessary".
+- Breathing in the voice is annoying. Cut it out, or he needs another way to
+  record.
+
 ## Idea bank
 
 Private folder `~/.cache/daygame-research/content/bank/`: one reusable
@@ -82,8 +91,13 @@ Creators working with AI (2026 posts and 15 YouTube videos):
 
 - **Reel "Outvoted" (2026-11-19): voice first, then a moving storyboard.** He
   spoke the script once; Claude cut it by measurement and drew every scene as
-  a near-still timed to his words, played with the sound on one page. Result
-  not judged by him yet. Plan: `Plans/reel-outvoted.md`.
+  a near-still timed to his words, played with the sound on one page. He
+  turned it down: "a bunch of very simple animations", not something he can
+  judge. Plan: `Plans/reel-outvoted.md`.
+- **Reel "Outvoted", second way (2026-11-19): the whole film, then he looks.**
+  One planned story in the block look, built in full, checked by Claude on
+  stills and a small draft, rendered once. Tokens counted per stage in the
+  plan. Result not judged by him yet.
 
 ## Proposed next version (Claude, proposed, not decided)
 
