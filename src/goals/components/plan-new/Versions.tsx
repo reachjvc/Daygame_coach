@@ -125,7 +125,7 @@ export function SorterCards({ notice, asks, onUndo, onDismiss, onAnswer }: {
     <div aria-hidden className="h-44" />
     <div ref={card} className="pointer-events-none fixed inset-x-0 bottom-20 z-[80] flex justify-center px-3" data-testid="sorter-card">
       {ask ? (
-        <div className="pointer-events-auto w-full max-w-md rounded-xl border border-primary/40 bg-zinc-900 p-3 shadow-xl" role="alertdialog" aria-label="Where does this line go?" data-testid="sorter-ask">
+        <div className="pointer-events-auto w-full max-w-md rounded-xl border border-primary/40 bg-card p-3 shadow-xl" role="alertdialog" aria-label="Where does this line go?" data-testid="sorter-ask">
           <p className="break-words text-xs text-muted-foreground">{`“${ask.title}”`}</p>
           <p className="mt-1 text-sm font-medium text-foreground">Something you do every week, or something you want to happen?</p>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -139,7 +139,7 @@ export function SorterCards({ notice, asks, onUndo, onDismiss, onAnswer }: {
         </div>
       ) : (
         notice && (
-          <div className="pointer-events-auto flex w-full max-w-md items-center gap-2 rounded-xl border border-white/15 bg-zinc-900 px-3 py-1 shadow-xl" role="status" data-testid="sorter-notice">
+          <div className="pointer-events-auto flex w-full max-w-md items-center gap-2 rounded-xl border border-white/15 bg-card px-3 py-1 shadow-xl" role="status" data-testid="sorter-notice">
             <p className="min-w-0 flex-1 break-words text-sm text-foreground">
               {`Moved to ${HALF_NAME[otherHalf(notice.from)]} · `}
               <button type="button" onClick={onUndo} className="inline-flex min-h-11 items-center text-primary underline underline-offset-2" data-testid="sorter-undo">Undo</button>
