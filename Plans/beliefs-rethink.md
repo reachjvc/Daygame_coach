@@ -73,7 +73,7 @@ results, timers), not just look right.
 |---|---|---|---|---|
 | B1 | r2's site is gone | Its address does not exist any more (DNS "no such name" from two resolvers, fetch fails, no web-archive copy). The parent site is up but lists no recovery tools | Walking r2 | Retry once in Phase 0; if still gone, walk the stand-in named in the private file (Q2) |
 | B2 | r1's quiz is hidden on phones | The 2026-11-14 walk found a script error hides the quiz form on a phone screen; it unhid it with one style change. Today: plain download refused (bot wall), headless browser loads the page | Nothing (walk as before) | Record the broken state as a screen (it is what real phone users see), then unhide and continue |
-| B3 | Installing r5's app on the emulator | The emulator has the Play Store but no Google account. Mirror sites answer a bot check to plain downloads; one mirror answers 200 | Walking r5's app | Phase 0 tries, in order: a mirror through the headless browser; then a throwaway Google account on the emulator (stop if it asks for a phone number). If both fail: web quiz + store screens + public videos, unseen screens marked "inferred" |
+| B3 | Installing phone-only apps on the emulator (r5's app; also the free Android apps of r2's stand-in and r4's large diary app) | Tried 2026-11-20: five download mirrors (bot check failed on one, two answer "not found", one a 403, one does not list it); a throwaway Google account on the emulator reached Google's form, then **Google demanded a phone number** (stopped, no account made) | Every in-app screen of those three apps | Q7 |
 | B4 | r4's iPhone app and r3's app cannot run here | No Android version of the iPhone app on Play; the emulator is Android | Walking those apps | Store screens, reviews, public walkthrough videos; marked "inferred" where unseen (r3: Q1) |
 | B5 | Terms of use | The earlier census found several of these companies forbid copying or competitor study from an account | Nothing technical | Owner said yes to throwaways (O1). Copies stay private and are never shipped; our own tool uses our words and drawings |
 | B6 | Main is red (not this plan) | Unit tests fail since 4c5431e1 (plan-versions work, 2026-11-20 08:02) | Only commits of code; this plan changes no code until Phase 6 | That session fixes it; Phase 6 checks main is green first |
@@ -87,6 +87,8 @@ results, timers), not just look right.
 | Q3 r4's iPhone app from store screens only? | **Yes**, the open-source one is walked fully and does the same job | Borrow an iPhone | Its paid-tier screens stay "inferred" |
 | Q4 r5's paid modules | Walk the free 3 modules first, then report the price; you decide then | Buy now | Days 2–7 copied from the site, blog and store screens only |
 | Q5 Where study copies live | **Private pages only** (one page per product: working copy beside the real screens). Never on the live site | Hidden lab pages on the site (`/quit/lab`, as in the earlier round) | Lab pages are public addresses on the live site; you said copies are not shipped |
+| Q7 Three free Android apps cannot be installed here (B3) | **You install the three free apps on your phone** and screen-record the free part of each (r5's Day 1, about 40 min; the two others about 5–10 min each), then drop the videos where Claude can read them. No payment: stop at any price screen | You sign your own Google account into the emulator yourself (Claude never sees the password) | Without either, those apps are copied from store screens and the site only, the same "hollow" problem as before |
+| Q8 r1's "I'm not a robot" box now gives a picture puzzle (2026-11-20; it passed with one click on 2026-11-14), so the walk could not submit and the email series was not received | **You submit the quiz once on your phone** (about 3 min) with the throwaway address Claude gives you; Claude then collects the result email and the series for 7 days | Use the 2026-11-14 walk's saved email text only (text, no layout; episodes 2–6 timing unknown) | The copy's result screen and email series stay partly guessed |
 | Q6 The current belief tool and the earlier copies | **Keep untouched** until you say otherwise | Remove | None; nothing is removed without your word |
 
 ## PHASES
@@ -104,7 +106,17 @@ Work folder (private): `~/.cache/daygame-research/quit-copy/beliefs/rethink/<cod
 - B1 retried: still "no such name". r2 walks the stand-in (Q2 recommendation; reversible).
 - B3's install route is tried by r5's walker at the start of its walk.
 
-### Phase 1: walk every product (5 × Sonnet in parallel) — depends on Phase 0
+### Phase 1: walk every product (5 × Sonnet in parallel) — depends on Phase 0 — walked 2026-11-20
+
+Result 2026-11-20 (details in each private `<code>/walk.md`):
+- r1: 30 screens / 93 shots, smoking and alcohol forms, every branch and error; **not submitted** (picture puzzle, Q8).
+- r2: stand-in walked; it has no web form, only read-only pages and fill-in worksheets (12 downloaded, 4 filled).
+  Its free phone app is the only interactive version (B3, Q7).
+- r3: 42 screens (site, every modal, 10 worksheets, method step by step); app only from 5 store screens (Q1).
+- r4: 56 screens; the open-source diary walked fully and checked against its code; the large diary app from
+  10 store screens; it does have an Android app after all (B3, Q7).
+- r5: site and its 5-question quiz walked (23 answer variations); the app could not be installed (B3, Q7).
+
 Each walker owns one code and writes only in its own folder:
 - `shots/NN-<slug>.png`: every screen at 390×844 (phone first), plus 1280×800 where the layout changes.
 - `flow.json`: one entry per screen `{ id, url, title, text (all visible words), controls: [{ label, kind, required,
