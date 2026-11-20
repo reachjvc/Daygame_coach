@@ -1999,3 +1999,14 @@ targets or "what you could buy" here: Tool 3 holds targets.
   and page restore, a PUT is single-flight, the account returns the newer copies of rows it refused (a plain line says so),
   stamps more than 5 minutes ahead of the server clock are pulled back, removed rows are blanked of free text, and equal stamps
   break the same way on both sides by content. The atomic parts wait for blocker B4.
+- Round 3 review fixes (Tool 8, 2026-11-20), choices made and one item not done:
+  - Double tap, at the root: a tap that starts a screen change stamps the time at once (not when the address follows), every tap handler that writes an answer or moves checks that stamp (400 ms), and a clear full-page layer covers the page for 400 ms after a screen change, because the second tap of a double tap also landed on the page footer link "30 days with a coach" on the shorter done screen. Tab taps use only the one-entry lock (no layer), so two quick tab taps both work.
+  - NOT DONE (item 3): after a reload, in-page Back and then browser Back can show the same step twice. A reload loses this visit's list of history entries, so the in-page Back rewrites the entry instead of stepping back. Fixing it needs a stored marker in the history entry itself; left as it is.
+  - The kit's `screen-back` now has `min-w-11` (every tool); this tool draws its own `screen-back` above the title (steps 2 and on, not step 1) and passes no `onBack` to the kit, so there is no second Back at the bottom. date.spec and sos.spec pass.
+  - The restart link (or its step text) is on the done screen only. It also shows on the done screen of a check-in-only slip when the last slip ended the run (the "no new day 1" case), since that line used to carry the link.
+  - Scale screens hide Continue until answered; the last morning screen shows Save only with a forecast or a promise.
+  - An example day, a day with only `slipGone`, and drafts: empty drafts are dropped when read; opening a flow or pressing Continue writes no draft.
+  - "Clean" replaces "clear" in every reader line; the internal mode id `clear` stays (it is in the address).
+  - "Angry" replaces "Short-tempered" in the chips; the old key still reads "Short-tempered".
+  - Gates: scoped tsc exit 0; `tests/unit/quit` 53 files, 986 tests; eslint clean; check-in e2e 49 passed (both widths); date.spec and sos.spec 65 passed, one sos signed-in test hit a dev-server connection reset once and passed on its own rerun.
+
