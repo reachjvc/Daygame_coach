@@ -52,12 +52,13 @@ export async function giveCopySpace(ownerId: string): Promise<void> {
  * The full plan plus a routine step that runs every day (so Today has a box to tick), copied into the copy space. The
  * account's own plan is taken out first: `seedLifePlan` adds to a plan the account already holds, which doubles the areas.
  */
-export async function seedAndCopy(page: Page, ownerId: string, plan: object = fullPlan()): Promise<string> {
+export async function seedAndCopy(page: Page, ownerId: string, plan: object = fullPlan(), opts: { everyDayStep?: boolean } = {}): Promise<string> {
   await giveCopySpace(ownerId)
   await withDb((db) => db.query("delete from public.life_plans where user_id = $1", [ownerId]))
   const full = plan as { routines: object[] }
   const extra = (planWithSteps([{ id: "s_e2e", title: "E2E cold shower", daysPerWeek: 7 }]) as { routines: object[] }).routines[0]
-  await seedLifePlan(page, ownerId, { ...full, routines: [...full.routines, { ...extra, id: "r_e2e" }] })
+  const everyDay = opts.everyDayStep !== false
+  await seedLifePlan(page, ownerId, { ...full, routines: everyDay ? [...full.routines, { ...extra, id: "r_e2e" }] : full.routines })
   if ((await page.request.post("/api/plan-sandbox/reset")).status() !== 200) throw new Error("reset failed")
   if ((await page.request.post("/api/plan-sandbox/copy")).status() !== 200) throw new Error("copy failed")
   const id = await sandboxIdOf(ownerId)

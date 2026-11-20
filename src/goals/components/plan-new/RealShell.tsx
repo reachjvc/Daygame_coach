@@ -94,7 +94,11 @@ export function RealShell({ children, seq }: { children: ReactNode; seq?: Sequen
 
   /* ---- Back and Next follow the sequence's screens, so a split step's parts come one after the other ---- */
   const screen = r.screen
-  const go = (target: Screen) => () => r.router.push(screenRoute(seq as Sequence, target))
+  // Another screen of the same step keeps the review period (`?period=`); another step starts clean.
+  const go = (target: Screen) => () => {
+    const keep = screen && target.step === screen.step && r.reviewPeriod ? `?period=${encodeURIComponent(r.reviewPeriod)}` : ""
+    r.router.push(`${screenRoute(seq as Sequence, target)}${keep}`)
+  }
   const parts = screen && seq ? screensForStep(seq, screen.step) : []
   // "See it all" draws the whole step, so Back and Next leave it: before its first part, after its last.
   const prev = screen && seq ? prevScreen(seq, r.seeAll && parts.length ? parts[0] : screen) : undefined

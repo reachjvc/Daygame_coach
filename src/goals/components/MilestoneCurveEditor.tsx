@@ -10,6 +10,7 @@ import {
   interpolateWithControlPoints,
 } from "../milestoneService"
 import { getCurveTheme } from "../curveThemes"
+import { useTouchControls } from "./north-star/touchControls"
 import type { MilestoneLadderConfig, GeneratedMilestone, CurveThemeId } from "../types"
 
 interface MilestoneCurveEditorProps {
@@ -64,6 +65,7 @@ export function MilestoneCurveEditor({
   targetDate,
 }: MilestoneCurveEditorProps) {
   const theme = getCurveTheme(themeId)
+  const shapeButtons = useTouchControls()
 
   // Pace calculation when targetDate is set
   const paceText = useMemo(() => {
@@ -795,6 +797,60 @@ export function MilestoneCurveEditor({
           <span>Fewer big leaps</span>
           <span>Many small wins</span>
         </div>
+        {/* Buttons beside the drag (`/plan/new`; off on `/plan`): the same changes the slider and the points make, one tap
+            each, 44 px high, for a phone or a keyboard. */}
+        {shapeButtons && (
+          <div className="mt-3 space-y-2" data-testid="curve-buttons">
+            <div role="group" aria-label="Curve shape" className="grid grid-cols-3 gap-2">
+              {([["Fewer big leaps", -1.5], ["Linear", 0], ["Many small wins", 1.5]] as const).map(([label, tension]) => {
+                const active = Math.abs(config.curveTension - tension) < 0.05 && (config.controlPoints ?? []).length === 0
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => onChange({ ...config, curveTension: tension, controlPoints: [] })}
+                    aria-pressed={active}
+                    aria-label={`Curve shape: ${label}`}
+                    style={{
+                      minHeight: 44,
+                      borderRadius: 8,
+                      border: `1px solid ${active ? accentColor : theme.border}`,
+                      background: active ? theme.accentFaded : "transparent",
+                      color: active ? theme.text : theme.muted,
+                      fontSize: 12,
+                      padding: "6px 8px",
+                    }}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {([["Fewer milestones", -1], ["More milestones", 1]] as const).map(([label, delta]) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => handleStepsChange(config.steps + delta)}
+                  disabled={config.steps + delta < 2 || config.steps + delta > 20}
+                  aria-label={`${label}: ${Math.max(2, Math.min(20, config.steps + delta))}`}
+                  style={{
+                    minHeight: 44,
+                    borderRadius: 8,
+                    border: `1px solid ${theme.border}`,
+                    background: "transparent",
+                    color: theme.muted,
+                    fontSize: 12,
+                    padding: "6px 8px",
+                    opacity: config.steps + delta < 2 || config.steps + delta > 20 ? 0.4 : 1,
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Advanced controls toggle + reset ── */}

@@ -28,6 +28,7 @@ import { patchesBetween, recordOf } from "@/src/goals/lifePlanDayService"
 import { DEFAULT_REVIEW_DAY, dueNow, type DueCard } from "@/src/goals/dueNowService"
 import { getTodayInTimezone } from "@/src/shared/dateUtils"
 import { PlanBasePathContext } from "@/src/goals/components/north-star/planBasePath"
+import { TouchControlsContext } from "@/src/goals/components/north-star/touchControls"
 import { usePlanWriters } from "@/src/goals/components/north-star/usePlanWriters"
 import { usePlanReads } from "@/src/goals/components/north-star/usePlanReads"
 import { AreaDialog } from "@/src/goals/components/north-star/AreaDialog"
@@ -452,11 +453,13 @@ export function RealStepHost({
 
   return (
     <PlanBasePathContext.Provider value={ROUTES.planNew}>
+      <TouchControlsContext.Provider value>
       <Ctx.Provider value={value}>
         {showRibbon && ribbon && !areaDialogOpen && !goalDialogOpen && <div className="mb-5">{ribbon}</div>}
         {children}
         <RealStepDialogs />
       </Ctx.Provider>
+      </TouchControlsContext.Provider>
     </PlanBasePathContext.Provider>
   )
 }

@@ -39,7 +39,8 @@ import { useState, type ReactNode } from "react"
 // GripVertical — the handle every other sortable list in the project uses
 // (SortablePriorityList, WidgetGrid, GoalCategorySection), same role, no new
 // meaning borrowed.
-import { ChevronDown, GripVertical, X } from "lucide-react"
+import { ChevronDown, ChevronUp, GripVertical, X } from "lucide-react"
+import { useTouchControls } from "./touchControls"
 import { DndContext } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import type { NsPlan } from "@/src/goals/types"
@@ -87,9 +88,12 @@ export interface ValuesHandlers {
  * take if you let go now, so the column renumbers under your hand instead of
  * lying until the drop.
  */
-function SortableValue({ id, label, children, trailing }: {
+function SortableValue({ id, label, children, trailing, onUp, onDown }: {
   id: string
   label: string
+  /** Move the row one place (`/plan/new`'s buttons beside the drag); absent = no buttons, as on `/plan`. */
+  onUp?: (() => void) | null
+  onDown?: (() => void) | null
   /** The row's own controls, right-aligned and outside the drag handle. */
   trailing: ReactNode
   /** Anything that opens underneath the row, e.g. the means-value drill. */
@@ -114,6 +118,24 @@ function SortableValue({ id, label, children, trailing }: {
           <span className="text-[11px] tabular-nums text-zinc-500 w-4 shrink-0">{rank}.</span>
           <span className="min-w-0 flex-1 text-[13px] text-zinc-100">{label}</span>
         </div>
+        {(onUp !== undefined || onDown !== undefined) && (
+          <span className="flex shrink-0 items-center" data-testid="value-move">
+            <button
+              type="button"
+              onClick={() => onUp?.()}
+              disabled={!onUp}
+              aria-label={`Move ${label} up`}
+              className="inline-flex size-11 items-center justify-center rounded-lg text-zinc-300 hover:bg-white/10 disabled:opacity-25 transition-colors"
+            ><ChevronUp className="size-4" /></button>
+            <button
+              type="button"
+              onClick={() => onDown?.()}
+              disabled={!onDown}
+              aria-label={`Move ${label} down`}
+              className="inline-flex size-11 items-center justify-center rounded-lg text-zinc-300 hover:bg-white/10 disabled:opacity-25 transition-colors"
+            ><ChevronDown className="size-4" /></button>
+          </span>
+        )}
         {trailing}
       </div>
       {children}
@@ -142,6 +164,7 @@ export function ValuesWork({ plan, handlers, mode }: {
   const [listsOpen, setListsOpen] = useState(false)
 
   const { ids, dnd } = useValueDrag(plan.values, handlers.onMoveValue)
+  const moveButtons = useTouchControls()
 
   const diff = valuesDiff(plan)
   const conflicts = valueConflicts(plan)
@@ -389,6 +412,8 @@ export function ValuesWork({ plan, handlers, mode }: {
                       key={ids[i]}
                       id={ids[i]}
                       label={value}
+                      onUp={moveButtons ? (i > 0 ? () => handlers.onMoveValue(value, i - 1) : null) : undefined}
+                      onDown={moveButtons ? (i < plan.values.length - 1 ? () => handlers.onMoveValue(value, i + 1) : null) : undefined}
                       trailing={<>
                         {means && (
                           <button
