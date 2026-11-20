@@ -59,9 +59,13 @@ const ROUTES = staticRoutes().map((r) => r.route)
 async function settle(page: Page) {
   await page.waitForLoadState("load")
   try {
+    // VISIBLE headings only. A streamed page arrives first as a hidden
+    // `<div hidden>` beside the loading spinner and is swapped in by a script a
+    // moment later; its h1 was counted while hidden, so `/tracking` was read on
+    // the spinner and reported "only 3 words on screen" (CI, 2026-11-20).
     await page.waitForFunction(
       () =>
-        document.querySelectorAll("h1,h2,h3").length > 0 ||
+        [...document.querySelectorAll("h1,h2,h3")].some((h) => h.getClientRects().length > 0 && (h.textContent ?? "").trim() !== "") ||
         document.body.innerText.trim().split(/\s+/).length > 12,
       undefined,
       { timeout: 8000 },
