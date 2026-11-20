@@ -102,7 +102,29 @@ still waits for his word.
     only the known failures; typecheck and lint ratchets none new.
   - Open: "Plan my week" has no Frame or shell yet; old step numbers in real words ("change it at step 3") and
     the placeholder chip "Area and date" are for Phase 8.
-- **Phase 7 (versions to try)** next.
+- **Phase 7 (versions to try)** built on 2026-11-20. Report: `plan-steps/proof/p7-report.md`; filmstrips and
+  minutes: `plan-steps/p7-film/summary.md`. Opus review: `/plan` unchanged, copy space safe, every version keeps
+  every part; its must-fixes and should-fixes are done.
+  - V1 (today's order), V2 (north star first, then a quick start; the rest on a Deepen list on the plan home) and
+    V3 (V2 plus "go deeper" cards for season areas, a goal's "What could stop you?" and the north star's cost).
+    S1 (silent move), S2 ("Moved to Experiences · Undo"), S3 (asks first) on every box that adds a line.
+  - A switcher on the copy space only; the choice is kept as `start:new:sequence` / `start:new:sorter` and
+    survives "Copy my real plan in again".
+  - A new user's short walk at 390 px, until Today has a line to tick: V1 21 screens, about 8 minutes; V2 and V3
+    8 screens, about 4 minutes. Filling every box: V1 25.5, V2/V3 9.1 minutes. A model (60 s per long box, 15 s
+    per short line, 3 s per tap), not a stopwatch.
+  - Bug and phone fixes that also reach `/plan` (layout or keys only, desktop unchanged): duplicate React keys in
+    Today's pickers; the goal row on the review's goals; the "Track this" row on Everything; the season note on
+    the 10s; the coverage note on the goal card; on a phone the step bar's save line gets its own row.
+  - Tests: new `plan-new-versions` (11) and `planVersions` unit tests pass; the `/plan` e2e set, `plan-new*`,
+    `plan-phone-fit`: only the known failures; vitest 8724 passed (the two fails are other sessions' files);
+    typecheck and lint ratchets none new.
+  - Open: `/api/settings/time-preferences` answers 409 on copy-space pages (the clock sync meets the copy
+    space's wall, by design). The 0–10 buttons are 24 px tall on a phone. Words for Phase 8.
+- **Phase 8b design** (proposed, Opus, not yet built): five routines in
+  `plan-steps/routines/design.md`, `presets.json`, `sources.md`
+  (38 sources). They are added as presets beside his own routines and replace none.
+- **Phase 8 (words) and 8b (build the routines)** next.
 - **Backups:** last night's run was killed at 08:36 (TERM: the PC was off at 03:00 and WSL stopped during the
   catch-up). It was rerun by hand at 09:15 and worked: `life-plan-2026-11-19.json.gz.gpg`.
 
