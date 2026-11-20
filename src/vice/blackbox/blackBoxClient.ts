@@ -58,23 +58,34 @@ export async function fetchBlackBox(since: string | null): Promise<FetchedRecord
   }
 }
 
+/** What a push came to: whether it landed, and the account's newer copies of any rows it refused. */
+export interface PushResult {
+  ok: boolean
+  /** Rows the account already held in a newer version; merge these. Null when none (or the answer carried none). */
+  newer: BlackBoxRecord | null
+}
+
 /**
  * Send the rows this device has changed.
  *
- * Returns whether they landed. A false is never treated as "saved anyway": the
+ * `ok` is whether they landed. A false is never treated as "saved anyway": the
  * watermark only moves on a true, so anything that did not land is sent again
  * next time rather than being quietly forgotten.
  */
-export async function pushBlackBox(record: BlackBoxRecord): Promise<boolean> {
-  if (record.attempts.length === 0 && record.reports.length === 0) return true
+export async function pushBlackBox(record: BlackBoxRecord): Promise<PushResult> {
+  if (record.attempts.length === 0 && record.reports.length === 0) return { ok: true, newer: null }
   try {
     const res = await fetch("/api/black-box", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ rows: recordToRows(record) }),
     })
-    return res.ok
+    if (!res.ok) return { ok: false, newer: null }
+    const body = (await res.json().catch(() => null)) as { skipped?: ViceRows } | null
+    const sk = body?.skipped
+    const newer = sk && (sk.attempts?.length || sk.reports?.length) ? rowsToRecord({ attempts: sk.attempts ?? [], reports: sk.reports ?? [] }) : null
+    return { ok: true, newer }
   } catch {
-    return false
+    return { ok: false, newer: null }
   }
 }

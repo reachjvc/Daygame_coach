@@ -56,8 +56,9 @@ export async function PUT(req: Request) {
   try {
     // The owner is stamped by the repo, from the session — never taken from the
     // body, and never only at the top level.
-    await writeViceRows(auth.userId, { attempts, reports })
-    return NextResponse.json({ written: attempts.length + reports.length })
+    const { skipped } = await writeViceRows(auth.userId, { attempts, reports })
+    // `skipped` holds the account's own copies of rows it refused because it already had a newer version of them.
+    return NextResponse.json({ written: attempts.length + reports.length - skipped.attempts.length - skipped.reports.length, skipped })
   } catch (error) {
     console.error("[black-box] write failed", error)
     return NextResponse.json({ error: "Could not save your record" }, { status: 500 })

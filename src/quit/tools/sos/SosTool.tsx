@@ -383,6 +383,11 @@ function Screens({ addiction, beliefs, moments, swaps, evidence, refs, signedIn,
             </button>}
           </div>
         )}
+        {bb?.newerSaved && (
+          <p data-testid="sos-newer" className="text-sm text-muted-foreground">
+            {t.newerSaved}
+          </p>
+        )}
         {undone && <p data-testid="sos-undone">{tt.blackbox.undone}</p>}
         {refused && <p>{tt.blackbox.notSaved}</p>}
         {noRun && (

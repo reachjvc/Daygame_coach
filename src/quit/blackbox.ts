@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useBlackBox } from "@/src/vice/blackbox/useBlackBox"
 import { useBlackBoxSync } from "@/src/vice/blackbox/useBlackBoxSync"
 import { fileReport, latestReportDay, living, nowInBrowser, removeReport, revivalClashes } from "@/src/vice/blackbox/blackboxStore"
-import type { ViceAttempt, ViceEndingId, ViceReport } from "@/src/vice/types"
+import type { BlackBoxRecord, ViceAttempt, ViceEndingId, ViceReport } from "@/src/vice/types"
 import { isSettled } from "@/src/vice/blackbox/viceSyncService"
 import { amendReport, laterDay, removeRunIfEmpty, startRunOn, type AmendPatch } from "./blackboxLogic"
 
@@ -80,6 +80,8 @@ export interface QuitRunApi {
   today: string
   /** Starts a living run on `startedOn` (today or past). True when a run lives afterwards. */
   startRun: (startedOn: string) => boolean
+  /** The account already held a newer version of something sent from here, and it was kept. */
+  newerSaved: boolean
   /** Every living report against any run of this vice, oldest first. */
   reports: ViceReport[]
 }
@@ -109,7 +111,7 @@ export interface QuitBlackBoxApi extends QuitRunApi {
 const EMPTY_FIELDS = { closeness: null, withWhom: "", where: "", factors: [] as string[] }
 
 type BlackBoxCore = ReturnType<typeof useBlackBox>
-type SyncView = { state: string; pending: number } | null
+type SyncView = { state: string; pending: number; newerSaved?: boolean } | null
 
 /** The API of one vice on top of a loaded record. `sync` is null when nothing is sent to an account. */
 function useApi(viceId: string, core: BlackBoxCore, sync: SyncView): QuitBlackBoxApi {
@@ -128,7 +130,8 @@ function useApi(viceId: string, core: BlackBoxCore, sync: SyncView): QuitBlackBo
       const next = startRunOn(cur, viceId, startedOn, today)
       if (next === cur) return living(cur.attempts).some((a) => a.viceId === viceId && a.endedOn === null)
       latest.current = next
-      update(() => next)
+      // Applied to the newest record: two tabs that both start a run end up with one (`startRunOn` starts none when one lives).
+      update((c) => startRunOn(c, viceId, startedOn, today))
       return true
     },
     [update, viceId, today],
@@ -141,11 +144,11 @@ function useApi(viceId: string, core: BlackBoxCore, sync: SyncView): QuitBlackBo
       .sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0))
   }, [record, viceId])
 
-  const file = useCallback(
-    (wentThrough: boolean, input: CloseCallInput | SlipInput): string | null => {
-      const cur = latest.current
+  /** The filing as a function of a record, so it can be applied to the newest one. `wantedId` keeps the id the caller was given. */
+  const filing = useCallback(
+    (wentThrough: boolean, input: CloseCallInput | SlipInput, wantedId: string | null) => (cur: BlackBoxRecord): BlackBoxRecord => {
       const attempt = living(cur.attempts).find((a) => a.viceId === viceId && a.endedOn === null)
-      if (!attempt) return null
+      if (!attempt) return cur
       let at = input.at
       if (wentThrough) {
         const floor = latestReportDay(cur, attempt.id)
@@ -162,13 +165,30 @@ function useApi(viceId: string, core: BlackBoxCore, sync: SyncView): QuitBlackBo
         where: input.where ?? "",
         didInstead: "didInstead" in input ? input.didInstead : "",
       })
+      if (wantedId === null) return next
+      // The caller already holds an id: the report this filing makes carries it, wherever it is applied.
+      const made = next.reports.find((r) => !cur.reports.some((x) => x.id === r.id))
+      if (!made || made.id === wantedId) return next
+      return {
+        ...next,
+        attempts: next.attempts.map((x) => (x.endedByReportId === made.id ? { ...x, endedByReportId: wantedId } : x)),
+        reports: next.reports.map((r) => (r.id === made.id ? { ...r, id: wantedId } : r)),
+      }
+    },
+    [viceId],
+  )
+
+  const file = useCallback(
+    (wentThrough: boolean, input: CloseCallInput | SlipInput): string | null => {
+      const cur = latest.current
+      const next = filing(wentThrough, input, null)(cur)
       const made = next.reports.find((r) => !cur.reports.some((x) => x.id === r.id))
       if (!made) return null
       latest.current = next
-      update(() => next)
+      update(filing(wentThrough, input, made.id))
       return made.id
     },
-    [update, viceId],
+    [update, filing],
   )
 
   const fileCloseCall = useCallback((input: CloseCallInput) => file(false, input), [file])
@@ -180,7 +200,8 @@ function useApi(viceId: string, core: BlackBoxCore, sync: SyncView): QuitBlackBo
       const next = removeReport(cur, reportId)
       if (next === cur) return false
       latest.current = next
-      update(() => next)
+      // Judged again on the newest record: a slip another tab already took out stays out and is not touched again.
+      update((c) => (revivalClashes(c, reportId) ? c : removeReport(c, reportId)))
       return true
     },
     [update],
@@ -192,7 +213,8 @@ function useApi(viceId: string, core: BlackBoxCore, sync: SyncView): QuitBlackBo
       const next = amendReport(cur, reportId, patch)
       if (next === cur) return false
       latest.current = next
-      update(() => next)
+      // A report another tab removed is not brought back by an amendment: `amendReport` ignores a row that is not living.
+      update((c) => amendReport(c, reportId, patch))
       return true
     },
     [update],
@@ -211,7 +233,7 @@ function useApi(viceId: string, core: BlackBoxCore, sync: SyncView): QuitBlackBo
       const next = removeRunIfEmpty(cur, attemptId)
       if (next === cur) return false
       latest.current = next
-      update(() => next)
+      update((c) => removeRunIfEmpty(c, attemptId))
       return true
     },
     [update, viceId],
@@ -236,8 +258,8 @@ function useApi(viceId: string, core: BlackBoxCore, sync: SyncView): QuitBlackBo
   // Signed in, a run is not started until the account has answered: otherwise a run the account already holds could be doubled.
   const settled = ready && (sync === null || isSettled(sync.state as Parameters<typeof isSettled>[0]))
   return useMemo(
-    () => ({ ready, settled, run, today, startRun, fileCloseCall, fileSlip, status, has, undo, reports, amend, runs, removeRun }),
-    [ready, settled, run, today, startRun, fileCloseCall, fileSlip, status, has, undo, reports, amend, runs, removeRun],
+    () => ({ ready, settled, run, today, startRun, newerSaved: sync?.newerSaved === true, fileCloseCall, fileSlip, status, has, undo, reports, amend, runs, removeRun }),
+    [ready, settled, run, today, startRun, sync?.newerSaved, fileCloseCall, fileSlip, status, has, undo, reports, amend, runs, removeRun],
   )
 }
 
@@ -248,7 +270,7 @@ function useApi(viceId: string, core: BlackBoxCore, sync: SyncView): QuitBlackBo
 export function useQuitBlackBox(viceId: string): QuitBlackBoxApi {
   const core = useBlackBox()
   const sync = useBlackBoxSync({ record: core.record, update: core.update, ready: core.ready })
-  const view = useMemo(() => ({ state: sync.state, pending: sync.pending }), [sync.state, sync.pending])
+  const view = useMemo(() => ({ state: sync.state, pending: sync.pending, newerSaved: sync.newerSaved }), [sync.state, sync.pending, sync.newerSaved])
   return useApi(viceId, core, view)
 }
 

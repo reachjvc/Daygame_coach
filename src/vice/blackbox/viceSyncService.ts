@@ -63,12 +63,21 @@ interface Syncable {
 /**
  * Which of two versions of the same row is the one to keep.
  *
- * Ties go to the one already held rather than the incoming one, so a sync that
+ * Equal stamps with equal content keep the one already held, so a sync that
  * changes nothing really changes nothing — a re-push of identical rows must not
  * make every row look freshly edited to the next device.
  */
 function newer<T extends Syncable>(held: T, incoming: T): T {
-  return incoming.updatedAt > held.updatedAt ? incoming : held
+  if (incoming.updatedAt !== held.updatedAt) return incoming.updatedAt > held.updatedAt ? incoming : held
+  // Two different versions with the same stamp: both sides must pick the SAME one, whichever they hold first,
+  // or two devices (or the browser and the account) keep swapping them. The larger content key wins.
+  return contentKey(incoming) > contentKey(held) ? incoming : held
+}
+
+/** A row's content as one string with its keys in a fixed order, so equal rows give equal strings on every device. */
+export function contentKey(row: object): string {
+  const o = row as Record<string, unknown>
+  return JSON.stringify(Object.keys(o).sort().map((k) => [k, o[k]]))
 }
 
 /**

@@ -567,6 +567,18 @@ export function revivalClashes(record: BlackBoxRecord, reportId: string): boolea
 }
 
 /**
+ * A removed row keeps its id, its place and its stamps (that is what makes the removal travel), and nothing the
+ * person wrote: the free text is blanked, so a removed night's thoughts do not stay on the account as a "deleted" row.
+ */
+function tombstoneReport(r: ViceReport, stamp: string): ViceReport {
+  return { ...r, thought: "", withWhom: "", where: "", didInstead: "", factors: [], deletedAt: stamp, updatedAt: stamp }
+}
+
+function tombstoneAttempt(a: ViceAttempt, stamp: string): ViceAttempt {
+  return { ...a, startedBy: "", structure: [], deletedAt: stamp, updatedAt: stamp }
+}
+
+/**
  * Remove one report.
  *
  * If it is the one that ended a run, the run goes back to being alive — the
@@ -584,9 +596,7 @@ export function removeReport(record: BlackBoxRecord, reportId: string): BlackBox
         ? { ...a, endedOn: null, endedByReportId: null, updatedAt: stamp }
         : a,
     ),
-    reports: record.reports.map((r) =>
-      r.id === reportId ? { ...r, deletedAt: stamp, updatedAt: stamp } : r,
-    ),
+    reports: record.reports.map((r) => (r.id === reportId ? tombstoneReport(r, stamp) : r)),
   }
 }
 
@@ -596,14 +606,8 @@ export function removeAttempt(record: BlackBoxRecord, attemptId: string): BlackB
   const stamp = stampFor(record)
   return {
     ...record,
-    attempts: record.attempts.map((a) =>
-      a.id === attemptId ? { ...a, deletedAt: stamp, updatedAt: stamp } : a,
-    ),
-    reports: record.reports.map((r) =>
-      r.attemptId === attemptId && r.deletedAt === null
-        ? { ...r, deletedAt: stamp, updatedAt: stamp }
-        : r,
-    ),
+    attempts: record.attempts.map((a) => (a.id === attemptId ? tombstoneAttempt(a, stamp) : a)),
+    reports: record.reports.map((r) => (r.attemptId === attemptId && r.deletedAt === null ? tombstoneReport(r, stamp) : r)),
   }
 }
 

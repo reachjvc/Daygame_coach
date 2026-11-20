@@ -360,3 +360,19 @@ describe("a device whose clock is behind another's", () => {
     expect(filed.reports[0].updatedAt > future).toBe(true)
   })
 })
+
+describe("equal stamps are broken the same way on both sides", () => {
+  const row = (label: string) => ({ id: "x", viceId: "nicotine", label, startedOn: "2026-11-01", startedBy: "", structure: [], endedOn: null, endedByReportId: null, updatedAt: "2026-11-19T10:00:00.000Z", deletedAt: null })
+  it("the same row wins whichever side holds it first", () => {
+    const a = row("a")
+    const b = row("b")
+    const one = mergeRows([a], [b])
+    const two = mergeRows([b], [a])
+    expect(one).toEqual(two)
+    expect(one).toHaveLength(1)
+  })
+  it("an identical row again changes nothing", () => {
+    const a = row("a")
+    expect(mergeRows([a], [{ ...a }])).toEqual([a])
+  })
+})

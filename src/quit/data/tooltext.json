@@ -296,6 +296,7 @@
     "situationLabel": "Where were you",
     "rowSave": "Save",
     "rowSaved": "Added.",
+    "newerSaved": "Something you changed here had already been saved in a newer version, so the newer one was kept.",
     "rowUpdated": "Updated the one from a few minutes ago.",
     "yesTitle": "A slip doesn't undo the days before.",
     "yesStep": "Today, go back through steps 1–3 on paper: your top lies, your swaps, a new day 1.",

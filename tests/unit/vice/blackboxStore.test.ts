@@ -341,3 +341,21 @@ describe("a tab that is behind cannot write over another tab", () => {
     expect(loadRecord(storage).attempts).toHaveLength(1)
   })
 })
+
+describe("a removed row keeps nothing the person wrote", () => {
+  it("blanks the free text of a removed report and of a removed run, and keeps ids and stamps", () => {
+    resetStampClock()
+    const base = startAttempt(emptyRecord(), { viceId: "nicotine", label: "Smoking", startedOn: "2026-11-01", startedBy: "my private reason", structure: ["told someone"], acknowledgedRisk: false, today: "2026-11-19" })
+    const attemptId = base.attempts[0].id
+    const filed = fileReport(base, { attemptId, at: "2026-11-18T10:00:00", wentThrough: false, thought: "private thought", ending: "fine", closeness: 5, withWhom: "alone", where: "kitchen", factors: ["tired"], didInstead: "walked" })
+    const reportId = filed.reports[0].id
+    const gone = removeReport(filed, reportId)
+    const r = gone.reports[0]
+    expect([r.thought, r.withWhom, r.where, r.didInstead, r.factors]).toEqual(["", "", "", "", []])
+    expect(r.id).toBe(reportId)
+    expect(r.deletedAt).not.toBeNull()
+    const goneRun = removeAttempt(filed, attemptId)
+    expect([goneRun.attempts[0].startedBy, goneRun.attempts[0].structure]).toEqual(["", []])
+    expect(goneRun.reports[0].thought).toBe("")
+  })
+})

@@ -38,6 +38,7 @@ import { fetchBlackBox, pushBlackBox } from "./blackBoxClient"
 import {
   canPush,
   decideOnLoad,
+  mergeRecords,
   pendingSince,
   watermark,
   type SyncDecision,
@@ -69,6 +70,8 @@ function writeWatermark(value: string | null): void {
 
 export interface BlackBoxSync {
   state: SyncState
+  /** The account already held a newer version of something this device sent, and it was taken instead. */
+  newerSaved: boolean
   /** Rows waiting to go up. Shown when offline so nobody wonders what is held. */
   pending: number
 }
@@ -83,6 +86,7 @@ export function useBlackBoxSync({
   ready: boolean
 }): BlackBoxSync {
   const [state, setState] = useState<SyncState>("unknown")
+  const [newerSaved, setNewerSaved] = useState(false)
 
   const sentUpTo = useRef<string | null>(null)
   const decision = useRef<SyncDecision | null>(null)
@@ -90,6 +94,8 @@ export function useBlackBoxSync({
   /** The record as it is right now, for callbacks that must not close over a stale one. */
   const latest = useRef(record)
   latest.current = record
+  const updateRef = useRef(update)
+  updateRef.current = update
 
   /**
    * Send whatever is unsent.
@@ -98,7 +104,7 @@ export function useBlackBoxSync({
    * on the local copy because the read failed, this browser does not know what
    * it would be writing over, so it writes nothing.
    */
-  const push = useCallback(async (from?: BlackBoxRecord) => {
+  const pushOnce = useCallback(async (from?: BlackBoxRecord) => {
     if (!canPush(decision.current)) {
       // After a failed first read, unsent rows are held here: say that, not "syncing".
       if (decision.current !== null) setState(navigator.onLine ? "unreachable" : "offline")
@@ -119,8 +125,8 @@ export function useBlackBoxSync({
       return
     }
     setState("syncing")
-    const ok = await pushBlackBox({ version: 1, attempts: due.attempts, reports: due.reports })
-    if (!ok) {
+    const sent = await pushBlackBox({ version: 1, attempts: due.attempts, reports: due.reports })
+    if (!sent.ok) {
       // NOT a failure of the record. The rows are still here and still unsent,
       // and the watermark has not moved, so the next attempt carries them.
       setState(navigator.onLine ? "failed" : "offline")
@@ -128,8 +134,42 @@ export function useBlackBoxSync({
     }
     sentUpTo.current = watermark(due, sentUpTo.current)
     writeWatermark(sentUpTo.current)
+    if (sent.newer) {
+      // The account refused some rows because it already held a newer version of them: take that version.
+      const theirs = sent.newer
+      updateRef.current((cur) => mergeRecords(cur, theirs))
+      setNewerSaved(true)
+    }
     setState("synced")
   }, [])
+
+  /**
+   * ONE PUT AT A TIME. A second debounce (or the `online` event, or the load) that fires while a request is in flight
+   * would send the same rows again, and two requests can land in either order: the older send could be applied last.
+   * A call made during a flight waits for it and then sends whatever is still unsent, once.
+   */
+  const flight = useRef<Promise<void> | null>(null)
+  const again = useRef(false)
+  const push = useCallback(
+    (from?: BlackBoxRecord): Promise<void> => {
+      if (flight.current) {
+        again.current = true
+        return flight.current
+      }
+      const run = async () => {
+        await pushOnce(from)
+        while (again.current) {
+          again.current = false
+          await pushOnce()
+        }
+      }
+      flight.current = run().finally(() => {
+        flight.current = null
+      })
+      return flight.current
+    },
+    [pushOnce],
+  )
 
   // ---------------------------------------------------------------- the load
   useEffect(() => {
@@ -216,5 +256,5 @@ export function useBlackBoxSync({
   // Unsent work outranks a stale "synced" from the last completed sync.
   const shown: SyncState = pending > 0 && (state === "synced" || state === "unknown") ? "syncing" : state
 
-  return { state: shown, pending }
+  return { state: shown, pending, newerSaved }
 }

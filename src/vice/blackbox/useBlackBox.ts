@@ -13,6 +13,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import type { BlackBoxRecord } from "../types"
+import { mergeRecords } from "./viceSyncService"
 import { BLACKBOX_KEY, emptyRecord, loadRecord, saveRecordMerged, todayInBrowser } from "./blackboxStore"
 
 export function useBlackBox() {
@@ -43,21 +44,45 @@ export function useBlackBox() {
    */
   useEffect(() => {
     if (typeof window === "undefined") return
+    // The stored record is MERGED into the one in memory, never put in its place: a replacement would drop a row
+    // this tab has just written and not saved yet, and would bring back a row the tab has just removed.
+    const pull = () => setRecord((cur) => mergeRecords(cur, loadRecord(window.localStorage)))
     const sync = (e: StorageEvent) => {
       // `key === null` is a whole-storage clear, which is also a change to this.
       if (e.key !== null && e.key !== BLACKBOX_KEY) return
-      setRecord(loadRecord(window.localStorage))
+      pull()
+    }
+    // A tab that was asleep (a phone with the browser in the background, a page restored from the back/forward
+    // cache) has heard no `storage` events. Catch up when it wakes.
+    const wake = () => {
+      if (document.visibilityState === "visible") pull()
+    }
+    const show = (e: PageTransitionEvent) => {
+      if (e.persisted) pull()
     }
     window.addEventListener("storage", sync)
-    return () => window.removeEventListener("storage", sync)
+    document.addEventListener("visibilitychange", wake)
+    window.addEventListener("pageshow", show)
+    return () => {
+      window.removeEventListener("storage", sync)
+      document.removeEventListener("visibilitychange", wake)
+      window.removeEventListener("pageshow", show)
+    }
   }, [])
 
-  /** Every write goes through here, so nothing can change the record without persisting it. */
+  /**
+   * Every write goes through here, so nothing can change the record without persisting it.
+   *
+   * THE CHANGE IS APPLIED TO THE NEWEST RECORD, NOT TO THE ONE THIS TAB LAST SAW: `next` receives the in-memory
+   * record merged with what the browser holds now, so "take this slip back out" is judged against a slip another
+   * tab may already have removed, and "start a run" against a run another tab may already have started. The result
+   * is merged with the browser copy once more before it is saved (a stale row can never win).
+   */
   const update = useCallback((next: (current: BlackBoxRecord) => BlackBoxRecord) => {
     setRecord((current) => {
-      const updated = next(current)
-      // Merged with what the browser holds, so a tab that is behind cannot write over a newer row or bring one back.
-      return saveRecordMerged(typeof window === "undefined" ? null : window.localStorage, updated)
+      const storage = typeof window === "undefined" ? null : window.localStorage
+      const base = storage ? mergeRecords(current, loadRecord(storage)) : current
+      return saveRecordMerged(storage, next(base))
     })
   }, [])
 

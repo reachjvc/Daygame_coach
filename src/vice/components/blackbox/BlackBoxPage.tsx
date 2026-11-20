@@ -710,6 +710,11 @@ export function BlackBoxPage() {
         {!nothingWritten && syncNotice(sync.state, sync.pending) && (
           <p className="mt-1.5 text-[12px] text-zinc-500">{syncNotice(sync.state, sync.pending)}</p>
         )}
+        {sync.newerSaved && (
+          <p data-testid="newer-saved" className="mt-1.5 text-[12px] text-zinc-500">
+            Something you changed here had already been saved in a newer version, so the newer one was kept.
+          </p>
+        )}
         <div className="mt-3 flex flex-wrap items-center gap-4">
           {!nothingWritten && <QuietButton onClick={download}>Save a copy</QuietButton>}
           {/* A BUTTON THAT OPENS THE PICKER, NOT A LABEL WRAPPED ROUND IT.

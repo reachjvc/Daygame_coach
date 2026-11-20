@@ -20,7 +20,7 @@ vi.mock("@/src/db/supabase", () => ({
   createServerSupabaseClient: async () => createFakeSupabase(tables),
 }))
 
-import { keepNewer, readViceRows, writeViceRows } from "@/src/db/viceRepo"
+import { MAX_AHEAD_MS, clampStamp, readViceRows, splitNewer, writeViceRows } from "@/src/db/viceRepo"
 import type { ViceAttemptRow, ViceReportRow } from "@/src/db/viceTypes"
 
 const USER = "11111111-1111-1111-1111-111111111111"
@@ -222,10 +222,32 @@ describe("an older copy of a row never overwrites a newer one on the account", (
     expect(tables.vice_attempts).toHaveLength(1)
   })
 
-  it("keepNewer compares instants whatever their spelling", () => {
-    const held = [{ id: "a", updated_at: "2026-05-05 09:00:00+00" }]
-    expect(keepNewer([{ id: "a", updated_at: "2026-05-05T08:59:59.000Z" }], held)).toEqual([])
-    expect(keepNewer([{ id: "a", updated_at: "2026-05-05T09:00:00.000Z" }], held)).toHaveLength(1)
-    expect(keepNewer([{ id: "b", updated_at: "2000-01-01T00:00:00.000Z" }], held)).toHaveLength(1)
+  it("hands back the account's copy of a row it refused", async () => {
+    await writeViceRows(USER, { attempts: [attempt({ started_by: "newer", updated_at: "2026-03-02T10:00:00.000Z" })], reports: [] })
+    const out = await writeViceRows(USER, { attempts: [attempt({ started_by: "older" })], reports: [] })
+    expect(out.skipped.attempts.map((x) => x.started_by)).toEqual(["newer"])
+    expect(tables.vice_attempts[0].started_by).toBe("newer")
+  })
+
+  it("splitNewer compares instants whatever their spelling, and breaks a tie on content the same way both ways", () => {
+    const held = [{ id: "a", updated_at: "2026-05-05 09:00:00+00", deleted_at: null }]
+    const key = (r: { id: string; updated_at: string }) => `${r.id}`
+    expect(splitNewer([{ id: "a", updated_at: "2026-05-05T08:59:59.000Z", deleted_at: null }], held, key).write).toEqual([])
+    expect(splitNewer([{ id: "a", updated_at: "2026-05-05T09:00:00.000Z", deleted_at: null }], held, key).write).toHaveLength(1)
+    expect(splitNewer([{ id: "b", updated_at: "2000-01-01T00:00:00.000Z", deleted_at: null }], held, key).write).toHaveLength(1)
+    // same stamp, different content: only the larger key is written, so a row never flips back and forth
+    const k2 = (r: { id: string; updated_at: string; tag?: string }) => r.tag ?? ""
+    const h2 = [{ id: "a", updated_at: "2026-05-05T09:00:00.000Z", deleted_at: null, tag: "m" }]
+    expect(splitNewer([{ id: "a", updated_at: "2026-05-05T09:00:00.000Z", deleted_at: null, tag: "z" }], h2, k2).write).toHaveLength(1)
+    expect(splitNewer([{ id: "a", updated_at: "2026-05-05T09:00:00.000Z", deleted_at: null, tag: "a" }], h2, k2).skipped).toHaveLength(1)
+  })
+
+  it("a stamp more than five minutes ahead of the server clock is pulled back", async () => {
+    const now = new Date("2026-05-05T09:00:00.000Z")
+    expect(clampStamp("2099-01-01T00:00:00.000Z", now)).toBe(new Date(now.getTime() + MAX_AHEAD_MS).toISOString())
+    expect(clampStamp("2026-05-05T09:04:00.000Z", now)).toBe("2026-05-05T09:04:00.000Z")
+    expect(clampStamp(null, now)).toBeNull()
+    await writeViceRows(USER, { attempts: [attempt({ updated_at: "2099-01-01T00:00:00.000Z" })], reports: [] }, now)
+    expect(tables.vice_attempts[0].updated_at).toBe("2026-05-05T09:05:00.000Z")
   })
 })
