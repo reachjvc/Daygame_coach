@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ROUTES } from "@/src/shared/routes"
-import { CORE_IDS, EXTRA_IDS, type CoreId, type ExtraId, homeHref } from "@/src/goals/planSteps/planRoutes"
+import { CORE_IDS, EXTRA_IDS, type CoreId, type ExtraId, homeHref, planHomeHref } from "@/src/goals/planSteps/planRoutes"
 import { commonCopy, saveCopy } from "@/src/goals/planSteps/copy/common"
 import { Home } from "./Home"
 import { ReadAll } from "./ReadAll"
@@ -32,7 +32,8 @@ import { screenById, sequenceOfPlan } from "@/src/goals/planSteps/planSequences"
 import { usePlanNew } from "./PlanNewContext"
 import { RealStepHost } from "./RealStep"
 import { RealStepView } from "./RealStepViews"
-import { SequenceHome } from "./SequenceHome"
+import { PlanHomeGate } from "./PlanHome"
+import { PlanMyWeek } from "./PlanMyWeek"
 import { SequenceScreen } from "./SequenceScreen"
 import { btnQuiet } from "./ui"
 
@@ -65,7 +66,7 @@ export function PlanNewRouter({ slug }: { slug: string[] }) {
   if (asked) return <p className="px-4 pt-2 text-sm text-muted-foreground">…</p>
   // The first rebuild keeps its own folder, unchanged: /plan/new/first/<module>/<screen>.
   if (slug[0] === "first") return <FirstRebuildRouter slug={slug.slice(1)} />
-  if (slug.length === 0) return <SequenceHome />
+  if (slug.length === 0) return <PlanHomeGate />
   // Nothing is drawn from the plan before the first read has answered: a screen that opens on an empty
   // plan would look like a new account's, and its first Next could save over the real one.
   if (!store.loaded) return <p className="px-4 pt-2 text-sm text-muted-foreground">…</p>
@@ -77,6 +78,8 @@ export function PlanNewRouter({ slug }: { slug: string[] }) {
       </div>
     )
   }
+  // Plan my week: the guided build (Deepen list on the plan home).
+  if (slug.length === 1 && slug[0] === "week") return <PlanMyWeek />
   // The real step parts, full width, one page each: /plan/new/s/<stepId>.
   if (slug[0] === "s" && slug.length === 2 && isRealStepId(slug[1])) {
     return (
@@ -97,7 +100,7 @@ export function PlanNewRouter({ slug }: { slug: string[] }) {
 function PlanHomeLink() {
   return (
     <div className="mx-auto max-w-xl px-4">
-      <Link href={ROUTES.planNew} className={btnQuiet}>{commonCopy.plan_home}</Link>
+      <Link href={planHomeHref()} className={btnQuiet}>{commonCopy.plan_home}</Link>
     </div>
   )
 }

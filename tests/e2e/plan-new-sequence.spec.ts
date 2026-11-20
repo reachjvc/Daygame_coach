@@ -5,7 +5,7 @@ import { ROUTES } from "@/src/shared/routes"
 import { fullPlan } from "@/tests/support/fullLifePlan"
 import { planWithSteps, seedLifePlan } from "./helpers/lifePlan"
 import { stackAdmin, testStackEnv } from "./fixtures/stack"
-import { screensOf, screenRoute, sequenceById } from "@/src/goals/planSteps/planSequences"
+import { navLabel, screensOf, screenRoute, sequenceById } from "@/src/goals/planSteps/planSequences"
 import { TAB_LABELS, TODO_COPY } from "@/src/goals/data/northStar"
 
 /**
@@ -102,10 +102,10 @@ test.describe("the V1 sequence on /plan/new/<screen>", () => {
       // One Next, worded as the real tool words it, and the bar's Back (when there is a step before) and save line beside it.
       const after = V1.screens[V1.screens.findIndex((s) => s.id === here.id) + 1]
       await expect(page.getByTestId("next")).toHaveCount(1)
-      await expect(page.getByTestId("next")).toHaveText(`${TAB_LABELS[after.step]} →`)
+      await expect(page.getByTestId("next")).toHaveText(`${navLabel(V1, here, after)} →`)
       const before = V1.screens[V1.screens.findIndex((s) => s.id === here.id) - 1]
       await expect(page.getByTestId("back")).toHaveCount(before ? 1 : 0)
-      if (before) await expect(page.getByTestId("back")).toHaveText(`← ${TAB_LABELS[before.step]}`)
+      if (before) await expect(page.getByTestId("back")).toHaveText(`← ${navLabel(V1, here, before)}`)
       await expect(page.getByTestId("save-status").first()).toBeVisible()
       await expect(page.getByTestId("save-status").first()).toHaveText(/Saved to your account\.|Saves to your account as you write\.|Saved on this device\.|Nothing written yet/)
       await page.getByTestId("next").click()
@@ -118,8 +118,8 @@ test.describe("the V1 sequence on /plan/new/<screen>", () => {
       await expect(page.locator("h1, h2").filter({ hasText: /\S/ }).first()).toBeVisible({ timeout: NAV })
       // The bar sits at the top, with the previous and the next step (review has no next).
       const at = V1.screens.findIndex((x) => x.id === d.id)
-      await expect(page.getByTestId("back")).toHaveText(`← ${TAB_LABELS[V1.screens[at - 1].step]}`)
-      if (V1.screens[at + 1]) await expect(page.getByTestId("next")).toHaveText(`${TAB_LABELS[V1.screens[at + 1].step]} →`)
+      await expect(page.getByTestId("back")).toHaveText(`← ${navLabel(V1, d, V1.screens[at - 1])}`)
+      if (V1.screens[at + 1]) await expect(page.getByTestId("next")).toHaveText(`${navLabel(V1, d, V1.screens[at + 1])} →`)
       else await expect(page.getByTestId("next")).toHaveCount(0)
       await expect(page.getByTestId("plan-sandbox-banner")).toBeVisible()
     }
@@ -131,16 +131,17 @@ test.describe("the V1 sequence on /plan/new/<screen>", () => {
     expect(await fingerprint(account.id), "the owner's rows did not move").toEqual(ownerBefore)
   })
 
-  test("the plan home lists the twelve screens in order and links to the first rebuild", async ({ page, account }) => {
+  test("the plan home lists the build steps and the daily steps and links to the first rebuild", async ({ page, account }) => {
     test.setTimeout(240_000)
     await seedAndCopy(page, account.id)
     const errors: string[] = []
     page.on("pageerror", (e) => errors.push(e.message))
-    await page.goto(ROUTES.planNew, { timeout: NAV })
-    const home = page.getByTestId("sequence-home")
+    await page.goto(`${ROUTES.planNew}?home=1`, { timeout: NAV })
+    const home = page.getByTestId("plan-home")
     await expect(home).toBeVisible({ timeout: NAV })
-    const hrefs = await home.locator("ol a").evaluateAll((as) => as.map((a) => new URL((a as HTMLAnchorElement).href).pathname))
-    expect(hrefs).toEqual(screensOf("v1").map((s) => screenRoute(V1, s)))
+    const hrefs = await home.getByTestId(/^home-[a-z]+-open$/).evaluateAll((as) => as.map((a) => new URL((a as HTMLAnchorElement).href).pathname))
+    const firstScreens = V1.screens.filter((s) => s.kind === "build").filter((s, i, a) => a.findIndex((x) => x.step === s.step) === i)
+    expect(hrefs).toEqual(firstScreens.map((s) => screenRoute(V1, s)))
     await home.getByTestId("first-rebuild-link").click()
     await expect.poll(() => new URL(page.url()).pathname, { timeout: NAV }).toBe(`${ROUTES.planNew}/first`)
     await expect(page.getByTestId("plan-sandbox-banner")).toBeVisible()
@@ -157,7 +158,7 @@ test.describe("the V1 sequence on /plan/new/<screen>", () => {
     page.on("pageerror", (e) => errors.push(e.message))
     for (const id of ["star", "today"]) {
       await page.goto(`${ROUTES.planNew}/${id}`, { timeout: NAV })
-      await expect(page.getByTestId(`sequence-${id}`)).toBeVisible({ timeout: NAV })
+      await expect(page.getByTestId(`sequence-${id === "star" ? "star.vision" : id}`)).toBeVisible({ timeout: NAV })
       await expect(page.getByRole("heading", { level: 1, name: "Your plan" })).toBeVisible({ timeout: NAV })
       await expect(page.getByRole("button", { name: "start over" })).toBeVisible()
       await expect(page.getByTestId("back-link")).toHaveText("Home")

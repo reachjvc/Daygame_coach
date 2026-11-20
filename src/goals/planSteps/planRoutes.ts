@@ -35,3 +35,8 @@ export function moduleOfTarget(target: string): CoreId | null {
 }
 
 export const isExtraId = (id: string): id is ExtraId => (EXTRA_IDS as readonly string[]).includes(id)
+
+/** The plan home of the real steps (`/plan/new`). `?home=1` keeps it from opening Today once the plan is in use. */
+export const planHomeHref = () => `${ROUTES.planNew}?home=1`
+/** Plan my week: the guided build, a Deepen item on the plan home. */
+export const weekHref = () => `${ROUTES.planNew}/week`

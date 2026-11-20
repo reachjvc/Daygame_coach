@@ -14,7 +14,7 @@
  */
 
 import { ROUTES } from "@/src/shared/routes"
-import { TAB_ORDER, USE_STEPS } from "@/src/goals/data/northStar"
+import { TAB_LABELS, TAB_ORDER, USE_STEPS } from "@/src/goals/data/northStar"
 import type { NorthStarTabId, NsPlan } from "@/src/goals/types"
 import { SEQUENCE_KEY } from "@/src/goals/planSteps/planFacts"
 import { STEP_SECTIONS } from "@/src/goals/planSteps/planSections"
@@ -106,4 +106,13 @@ export const screenForStep = (seq: Sequence, step: NorthStarTabId): Screen | nul
 export function stepRoute(seq: Sequence, step: NorthStarTabId): string | null {
   const screen = screenForStep(seq, step)
   return screen ? screenRoute(seq, screen) : null
+}
+
+/** What a Back or Next button says for `target`: the step's name, or "Part 2 of 3" when it stays inside a split step. */
+export function navLabel(seq: Sequence, here: Screen, target: Screen): string {
+  if (target.step === here.step && target.section) {
+    const parts = screensForStep(seq, target.step)
+    return `Part ${parts.findIndex((p) => p.id === target.id) + 1} of ${parts.length}`
+  }
+  return TAB_LABELS[target.step]
 }

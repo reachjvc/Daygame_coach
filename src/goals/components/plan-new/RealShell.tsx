@@ -16,7 +16,8 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import Link from "next/link"
 import { BUILD_STEPS, TAB_LABELS, USE_STEPS } from "@/src/goals/data/northStar"
-import { nextScreen, prevScreen, screenRoute, screensForStep, type Screen, type Sequence } from "@/src/goals/planSteps/planSequences"
+import { planHomeHref } from "@/src/goals/planSteps/planRoutes"
+import { navLabel, nextScreen, prevScreen, screenRoute, screensForStep, type Screen, type Sequence } from "@/src/goals/planSteps/planSequences"
 import { SECTION_TITLES } from "@/src/goals/planSteps/sectionTitles"
 import type { SectionId } from "@/src/goals/planSteps/planSections"
 import * as ns from "@/src/goals/northStarService"
@@ -32,15 +33,6 @@ import { PlanReadBack } from "../north-star/PlanReadBack"
 import { PlanStepNav } from "../north-star/PlanStepNav"
 import { usePlanNew } from "./PlanNewContext"
 import { useRealStep } from "./RealStep"
-
-/** What a Back or Next button says for a screen: the step's name, or "Part 2 of 3" when it stays in a split step. */
-function navLabel(here: Screen, target: Screen, seq: Sequence): string {
-  if (target.step === here.step && target.section) {
-    const parts = screensForStep(seq, target.step)
-    return `Part ${parts.findIndex((p) => p.id === target.id) + 1} of ${parts.length}`
-  }
-  return TAB_LABELS[target.step]
-}
 
 export function RealShell({ children, seq }: { children: ReactNode; seq?: Sequence }) {
   const r = useRealStep()
@@ -107,8 +99,8 @@ export function RealShell({ children, seq }: { children: ReactNode; seq?: Sequen
   // "See it all" draws the whole step, so Back and Next leave it: before its first part, after its last.
   const prev = screen && seq ? prevScreen(seq, r.seeAll && parts.length ? parts[0] : screen) : undefined
   const next = screen && seq ? nextScreen(seq, r.seeAll && parts.length ? parts[parts.length - 1] : screen) : undefined
-  const navPrev = screen && seq ? (prev ? { label: navLabel(screen, prev, seq), onGo: go(prev) } : null) : undefined
-  const navNext = screen && seq ? (next ? { label: navLabel(screen, next, seq), onGo: go(next) } : null) : undefined
+  const navPrev = screen && seq ? (prev ? { label: navLabel(seq, screen, prev), onGo: go(prev) } : null) : undefined
+  const navNext = screen && seq ? (next ? { label: navLabel(seq, screen, next), onGo: go(next) } : null) : undefined
   const partIndex = screen ? parts.findIndex((p) => p.id === screen.id) : -1
 
   const nav = (
@@ -146,6 +138,9 @@ export function RealShell({ children, seq }: { children: ReactNode; seq?: Sequen
         {resetFailed && (
           <p role="alert" className="mb-4 text-sm text-destructive">Could not start over. Nothing was removed. Try again.</p>
         )}
+        <Link href={planHomeHref()} className="mb-3 inline-flex min-h-11 items-center text-[12px] text-violet-300 hover:text-violet-100 underline decoration-dotted underline-offset-2" data-testid="plan-home-link">
+          Plan home
+        </Link>
         <StepPicker
           tab={tab}
           inUse={inUse}
