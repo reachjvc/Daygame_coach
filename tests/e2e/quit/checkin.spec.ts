@@ -400,7 +400,7 @@ for (const vp of [
       await page.getByTestId("mode-hard").click()
       await page.getByTestId("month-prev").click()
       await page.getByTestId(`cell-${day(-20)}`).click()
-      await expect(page).toHaveURL(new RegExp(`m=${day(-20).slice(0, 7)}&day=${day(-20)}`))
+      await expect(page).toHaveURL(new RegExp(`m=${day(-20).slice(0, 7)}&mode=hard&day=${day(-20)}`))
       await page.getByTestId("fill-day").click()
       await step(page, "outcome")
       // Back from the flow returns to the same month and day

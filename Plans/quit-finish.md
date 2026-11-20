@@ -1895,6 +1895,19 @@ targets or "what you could buy" here: Tool 3 holds targets.
   - The example fills today's morning (promise and Hard (4)), so it shows 18 days checked in.
   - Question for the shared fallback: with no unit `src/quit/wording.ts` still says "use it" / "Did you use it?" (Tool 2 and others). This tool says "use nicotine" in its own text only. Proposed: change the shared fallback the same way.
   - Gates for this round: scoped tsc over src/quit, app/quit, tests/unit/quit and the check-in spec; vitest on the check-in unit file only (33 tests); eslint; the check-in e2e spec at both widths (31 passed). Not run: the rest of tests/unit/quit and menu.spec (per the new rules).
+- Round 2 review fixes (Tool 8, 2026-11-20), choices made where the list was silent:
+  - Drafts are a map `drafts` keyed `${kind}:${date}`; the old single `draft` is still read and moved into the map.
+  - A stored slip whose report is gone is cleared only once the Black Box is settled, and a report filed in this visit counts as gone only after it was seen once in the Black Box copy (that copy can lag one render behind). The cleared day carries `slipGone`; the line shows on the evening question until it is answered or the evening is saved.
+  - The Black Box slip applies to his own days in the counts (a stored "No" on that day counts as slipped, still checked in); a day that is only in the Black Box is still not counted.
+  - Today and "that day" are read from the wall clock at the tap (`todayIso()`), and the stale value refreshes every 10 s; the 12:00 rule re-checks every minute.
+  - A tap on a scale row saves and moves on through the move lock; Continue stays on those screens (it skips an unanswered row). On the first evening screen, once answered, "Done for today" shows under Continue.
+  - The "Both done" line counts the evening as done when it has a slip answer or a "how hard".
+  - The month mode travels in the flow and done addresses (`mode`), so "Back to the month" keeps it.
+  - "A slip doesn't undo the days before." shows only for a slip saved here or in the record for that day, also on the done screen. The Restart link or step text shows with it, not on a check-in-only Yes.
+  - The "Fill in yesterday" button opens yesterday by the wall clock at the tap.
+  - The reformat: `CheckinTool.tsx` was run through prettier this round, so its diff is large; the logic changes are the ones listed above.
+  - Gates this round: scoped tsc (exit 0), `tests/unit/quit` (52 files, 979 tests), eslint, the check-in e2e spec at both widths (35 passed). menu.spec not run.
+- Proposed K6 (owner may veto): the forecast pattern line shows whenever the two shares differ (the brief's rule), so 1 of 5 against 2 of 11 shows as a line; alternative: show it only when the shares differ by at least two days' worth, else "Too few days to tell apart."
 
 ### From the Tool 3 build (Sonnet and Opus, 2026-11-19)
 
