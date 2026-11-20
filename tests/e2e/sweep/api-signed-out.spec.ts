@@ -8,9 +8,10 @@
  *
  * LIMIT, said plainly: a dynamic segment (`[id]`) gets a random UUID that no row
  * has, so a 404 there cannot tell "refused a stranger" from "no such row". For
- * dynamic routes this only proves the route does not serve a made-up id; it
- * cannot catch a leak of a REAL row. Open gap (proposed in the plan): seed a row
- * owned by another test account and ask for it signed out.
+ * dynamic routes this only proves the route does not serve a made-up id. The
+ * REAL-id half lives in `api-other-account.spec.ts`: it seeds one row per
+ * family as one account, sends those ids to every dynamic route and method as
+ * a second account and with no session, and reads the rows back unchanged.
  *
  * Allowed: 401, 403, 404, 405. Never a 2xx (data for a stranger), never a 5xx
  * (a route that falls over before it checks who is asking). A 400 is a finding
