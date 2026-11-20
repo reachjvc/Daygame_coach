@@ -16,6 +16,8 @@ export interface Day {
   note?: string
   /** The Black Box report this tool filed for the day's slip. */
   slipReportId?: string
+  /** The slip saved here was removed from the record elsewhere; the evening says so once. */
+  slipGone?: boolean
 }
 export type Days = Record<string, Day>
 
@@ -33,11 +35,14 @@ export type Reminders = typeof DEFAULT_REMINDERS
 
 export interface CheckinState {
   days: Days
-  draft: Draft | null
+  /** Unfinished flows, one per kind and day (`${kind}:${date}`). */
+  drafts: Record<string, Draft>
   reminders: Reminders
 }
 
-export const EMPTY_CHECKIN: CheckinState = { days: {}, draft: null, reminders: DEFAULT_REMINDERS }
+export const EMPTY_CHECKIN: CheckinState = { days: {}, drafts: {}, reminders: DEFAULT_REMINDERS }
+
+export const draftKey = (kind: FlowKind, date: string) => `${kind}:${date}`
 
 export const PLEDGE_MAX = 140
 export const NOTE_MAX = 500
@@ -76,6 +81,7 @@ export function parseDay(x: unknown): Day {
   if (note.trim()) out.note = note
   const id = pickStr(x.slipReportId, "")
   if (id) out.slipReportId = id
+  if (x.slipGone === true) out.slipGone = true
   return out
 }
 
@@ -105,10 +111,20 @@ export function parseCheckin(x: unknown): CheckinState {
       if (Object.keys(d).length > 0) days[k] = d
     }
   }
+  // drafts: a map by kind and day; the old single `draft` is still read
+  const drafts: Record<string, Draft> = {}
+  const old = parseDraft(o.draft)
+  if (old) drafts[draftKey(old.kind, old.date)] = old
+  if (isObj(o.drafts)) {
+    for (const v of Object.values(o.drafts)) {
+      const d = parseDraft(v)
+      if (d) drafts[draftKey(d.kind, d.date)] = d
+    }
+  }
   const r = isObj(o.reminders) ? o.reminders : {}
   return {
     days,
-    draft: parseDraft(o.draft),
+    drafts,
     reminders: { morning: isTime(r.morning) ? r.morning : DEFAULT_REMINDERS.morning, evening: isTime(r.evening) ? r.evening : DEFAULT_REMINDERS.evening },
   }
 }
@@ -157,6 +173,14 @@ const hasAnyMoment = (d: Day | undefined): boolean =>
 export function monthCounts(days: Days, ym: string): { checkedIn: number; clear: number } {
   const keys = Object.keys(days).filter((k) => monthOf(k) === ym)
   return { checkedIn: keys.filter((k) => hasAnyMoment(days[k])).length, clear: keys.filter((k) => days[k].slipped === false).length }
+}
+
+/** His own days with the Black Box slips applied: a day he answered "No" that the Black Box holds a slip on is a slipped day, still checked in. Days that are only in the Black Box are not added. */
+export function applySlips(days: Days, slips: ReadonlySet<string>): Days {
+  if (slips.size === 0) return days
+  const out: Days = {}
+  for (const [k, d] of Object.entries(days)) out[k] = slips.has(k) ? { ...d, slipped: true } : d
+  return out
 }
 
 /** Last month's numbers show on days 1 to 7 of a month. */
@@ -308,7 +332,7 @@ const SEED: [number, boolean, number, number, string[], string?][] = [
 
 /** 20 example days ending two days ago. Never stored, never sent to the Black Box. */
 export function seedExample(today: string): Days {
-  const out: Days = { [today]: { pledge: "No smoking at the bar.", forecast: 4 } }
+  const out: Days = { [today]: { pledge: "Not at the bar tonight.", forecast: 4, slipped: false, hard: 3, urges: 2 } }
   SEED.forEach(([forecast, slipped, hard, urges, feelings, note], i) => {
     out[addDays(today, -(i + 2))] = { pledge: "Today I stay clear.", forecast, slipped, hard, urges, feelings, ...(note ? { note } : {}) }
   })
@@ -394,11 +418,12 @@ interface RunLike {
 
 /**
  * Why a "Yes" for `date` was kept in the check-in only:
- * "later" the day lies inside a run that a later slip already ended; "notStarted" no run, or the day is before the first run;
+ * "later" the day lies inside a run that a later slip already ended; "never" no run was ever started; "before" the day is before the first run's start;
  * "ended" the last slip ended the clean days and no run is going; "other" a run is going but holds a later entry.
  */
-export function noSlipCase(date: string, runs: readonly RunLike[]): "later" | "notStarted" | "ended" | "other" {
-  if (runs.length === 0 || date < runs.reduce((m, r) => (r.startedOn < m ? r.startedOn : m), runs[0].startedOn)) return "notStarted"
+export function noSlipCase(date: string, runs: readonly RunLike[]): "later" | "never" | "before" | "ended" | "other" {
+  if (runs.length === 0) return "never"
+  if (date < runs.reduce((m, r) => (r.startedOn < m ? r.startedOn : m), runs[0].startedOn)) return "before"
   if (runs.some((r) => r.endedOn !== null && r.startedOn <= date && date <= r.endedOn)) return "later"
   if (!runs.some((r) => r.endedOn === null)) return "ended"
   return "other"

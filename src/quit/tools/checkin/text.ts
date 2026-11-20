@@ -5,7 +5,7 @@ export const SCALE = ["Easy", "Fairly easy", "In between", "Hard", "Very hard"] 
 export const scaleWord = (n: number) => `${SCALE[n - 1]} (${n})`
 /** The urges scale. */
 export const URGE_SCALE = ["None", "Weak", "Medium", "Strong", "Very strong"] as const
-export const urgeWord = (n: number) => `${URGE_SCALE[n - 1]} (${n})`
+export const urgeWord = (n: number) => URGE_SCALE[n - 1]
 
 /** Verb phrases, present and past, by the verb the shared record gives (`useVerb`). */
 const PAST: Record<string, string> = {
@@ -35,8 +35,8 @@ export const checkinText = {
   loadingRecord: "Loading your record…",
   savedLocal: "Saved in this browser.",
   localOnly: "Saved in this browser only. Sign in again to send it to your account.",
-  clearMonth: (n: number) => `Clear day. ${n} clear ${n === 1 ? "day" : "days"} this month.`,
-  expectedLine: (n: number) => `Expected: ${scaleWord(n)}`,
+  clearMonth: (n: number) => `${n} clear ${n === 1 ? "day" : "days"} this month.`,
+  expectedLine: (n: number) => `You expected ${scaleWord(n)}`,
   hardLine: (n: number) => `How hard: ${scaleWord(n)}`,
   fillYesterday: (label: string) => `Fill in yesterday, ${label}`,
   monthTitle: "This month",
@@ -53,7 +53,7 @@ export const checkinText = {
   eveningOpen: "Evening not answered",
 
   back: "Back",
-  next: "Next",
+  next: "Continue",
   doneToday: "Done for today",
   doneThat: "Done for that day",
   save: "Save",
@@ -61,23 +61,25 @@ export const checkinText = {
 
   pledgeTitle: (thatDay: boolean) => `Your promise for ${thatDay ? "that day" : "today"}`,
   pledgeHelp: "One line, in your own words. You can leave it empty.",
-  pledgePlaceholder: "Today I will ...",
+  pledgePlaceholder: (thatDay: boolean) => (thatDay ? "I will ..." : "Today I will ..."),
   forecastTitle: (thatDay: boolean) => `How hard do you expect ${thatDay ? "that day" : "today"} to be?`,
 
-  outcomeTitle: (verb: string, thatDay: boolean) => `Did you ${verbPhrase(verb)} ${thatDay ? "that day" : "today"}?`,
+  outcomeTitle: (verb: string, thatDay: boolean, label?: string) => `Did you ${verbPhrase(verb)} ${thatDay && label ? `on ${label}` : thatDay ? "that day" : "today"}?`,
   outcomeClear: "No, a clear day",
   outcomeSlip: (past: string) => `Yes, I ${past}`,
   slipInRecord: (label: string) => `Your slip on ${label} is in your record.`,
   slipHeld: "A slip doesn't undo the days before.",
-  noSlipLater: (thatDay: boolean) => `A later slip is already in your record, so ${thatDay ? "that day" : "today"} isn't saved as a second slip.`,
-  noSlipNotStarted: "Your quit hasn't started in your record yet, so this isn't saved as a slip.",
-  noSlipEnded: "Your last slip ended your clean days in the record, so this isn't saved as a new slip.",
-  noSlipOther: "Your record already has a later entry, so this day isn't saved as a slip.",
+  noSlipLater: "Your record already has a slip after this day, so this one isn't saved as a slip.",
+  noSlipNever: "Your quit hasn't started in your record yet, so this isn't saved as a slip.",
+  noSlipBefore: "This day is before your quit started, so it isn't saved as a slip. It stays in your check-in.",
+  noSlipEnded: "You have no new day 1 since your last slip, so this isn't saved as a new slip. It stays in your check-in.",
+  noSlipOther: "Your record already has a craving or slip after this day, so this one isn't saved as a slip.",
+  slipGone: "The slip saved here was removed from your record.",
+  saving: "Saving to your record...",
   openDate: "Your quit date",
-  slipBlocked: "This slip is in your Black Box; remove it there.",
-  slipBlockedLink: "Open your Black Box",
+  slipBlocked: "This slip stays in your record, because a new day 1 came after it.",
   hardTitle: (thatDay: boolean) => `How hard was ${thatDay ? "that day" : "today"}?`,
-  expectedThen: (thatDay: boolean, n: number) => `${thatDay ? "That morning" : "This morning"} you expected: ${scaleWord(n)}`,
+  expectedThen: (thatDay: boolean, n: number) => `${thatDay ? "That morning" : "This morning"} you expected ${scaleWord(n)}`,
   urgesTitle: (thatDay: boolean) => (thatDay ? "How strong were the urges that day?" : "How strong were the urges?"),
   feelingsTitle: (thatDay: boolean) => (thatDay ? "What did you feel that day?" : "What did you feel?"),
   feelingsHelp: "Tap any that fit.",
@@ -106,7 +108,7 @@ export const checkinText = {
   fillDay: "Fill in this day",
   changeDay: "Change",
   legendClear: "Clear day",
-  legendSlip: "Slipped (dashed, with a mark)",
+  legendSlip: "Slipped",
   legendNone: "Nothing saved",
   legendToday: "Today",
   legendEasy: "Easy (1)",
@@ -116,13 +118,18 @@ export const checkinText = {
   legendNotes: "A note",
 
   patternTitle: "Your pattern",
-  patternWait: (verb: string, n: number, need: number) => `Pattern lines start after ${need} evenings where you answered "Did you ${verbPhrase(verb)} today?". So far: ${n}.`,
+  patternWait: (n: number) => `Pattern lines start once 14 days have a yes or no answer. You have ${n}.`,
+  patternBar: (n: number, need: number) => `${n} of ${need}`,
   patternNone: "No pattern yet. It needs at least 3 days you expected Hard or Very hard, and 3 other days.",
   patternEqual: "No pattern yet: you slipped on the same share of days either way.",
-  forecastPattern: (a: number, ax: number, b: number, bx: number) => `Days you expected Hard or Very hard: you slipped on ${ax} of ${a}. Other days: you slipped on ${bx} of ${b}.`,
+  forecastPattern: (a: number, ax: number, b: number, bx: number) => `Days you expected Hard or Very hard: you slipped on ${ax} of ${a}. Days you expected Easy to In between: you slipped on ${bx} of ${b}.`,
   pairsLine: (n: number, harder: number, easier: number, same: number) =>
     `On ${n} days you rated the day in the morning and the evening: harder than you expected on ${harder}, easier on ${easier}, as expected on ${same}.`,
   patternOwn: "These lines count only your own days. They are not a study.",
+  patternExample: "These lines count only the example's days.",
+  countsStart: "Your counts start with your first check-in.",
+  bothDone: "Both done for today.",
+  clearBig: "Clear day.",
 
   remindersTitle: "Reminders",
   remindersLine: "This site cannot send you reminders. Add two daily events to your calendar, and it will remind you.",

@@ -62,7 +62,7 @@ export function TabRow({ value, onChange }: { value: TabId; onChange: (id: TabId
 }
 
 /** What one day holds, in lines. */
-export function DaySummary({ date, day, verb, testId }: { date: string; day: Day | undefined; verb: string; testId: string }) {
+export function DaySummary({ date, day, verb, testId, hideDate = false }: { date: string; day: Day | undefined; verb: string; testId: string; hideDate?: boolean }) {
   const lines: { id: string; text: string }[] = []
   if (day?.slipped !== undefined) lines.push({ id: "outcome", text: day.slipped ? t.slipResult(pastPhrase(verb)) : t.clearResult })
   if (day?.forecast !== undefined) lines.push({ id: "expected", text: t.sumExpected(day.forecast) })
@@ -73,11 +73,11 @@ export function DaySummary({ date, day, verb, testId }: { date: string; day: Day
   if (day?.note?.trim()) lines.push({ id: "note", text: t.sumNote(day.note.trim()) })
   return (
     <Card testId={testId}>
-      <h3 className="font-medium">{dayLabel(date)}</h3>
+      {!hideDate && <h3 className="font-medium">{dayLabel(date)}</h3>}
       {lines.length === 0 ? (
         <p className="mt-1 text-sm text-muted-foreground">{t.sumEmpty}</p>
       ) : (
-        <div className="mt-1 flex flex-col gap-1 text-sm">
+        <div className={`${hideDate ? "" : "mt-1 "}flex flex-col gap-1 text-sm`}>
           {lines.map((l) => (
             <p key={l.id} data-testid={`sum-${l.id}`} className="[overflow-wrap:anywhere]">
               {l.text}
@@ -86,6 +86,26 @@ export function DaySummary({ date, day, verb, testId }: { date: string; day: Day
         </div>
       )}
     </Card>
+  )
+}
+
+/** Two number tiles: days checked in and clear days. */
+export function CountTiles({ checked, clear, ids }: { checked: number; clear: number; ids: [string, string] }) {
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <div className="rounded-lg border border-border bg-card p-3">
+        <p className="text-2xl font-semibold" data-testid={ids[0]} data-n={checked}>
+          {checked}
+        </p>
+        <p className="text-sm text-muted-foreground">{t.checkedShort}</p>
+      </div>
+      <div className="rounded-lg border border-border bg-card p-3">
+        <p className="text-2xl font-semibold" data-testid={ids[1]} data-n={clear}>
+          {clear}
+        </p>
+        <p className="text-sm text-muted-foreground">{t.clearShort}</p>
+      </div>
+    </div>
   )
 }
 
@@ -162,20 +182,7 @@ export function MonthView({
           <ChevronRight className="size-5" aria-hidden />
         </button>
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="rounded-lg border border-border bg-card p-3">
-          <p className="text-2xl font-semibold" data-testid="month-checked" data-n={counts.checkedIn}>
-            {counts.checkedIn}
-          </p>
-          <p className="text-sm text-muted-foreground">{t.checkedShort}</p>
-        </div>
-        <div className="rounded-lg border border-border bg-card p-3">
-          <p className="text-2xl font-semibold" data-testid="month-clear" data-n={counts.clear}>
-            {counts.clear}
-          </p>
-          <p className="text-sm text-muted-foreground">{t.clearShort}</p>
-        </div>
-      </div>
+      <CountTiles checked={counts.checkedIn} clear={counts.clear} ids={["month-checked", "month-clear"]} />
       <p className="text-xs text-muted-foreground">{t.checkedNote}</p>
       <div data-testid="grid" data-mode={MODES[mode]} className="grid grid-cols-7 gap-1">
         {t.weekdays.map((w) => (
@@ -240,12 +247,28 @@ export function MonthView({
 }
 
 /** Pattern lines from the morning forecast only. */
-export function PatternView({ days, verb }: { days: Days; verb: string }) {
+export function PatternView({ days, example }: { days: Days; example: boolean }) {
   const p = patternsOf(days)
+  const showsLine = p.ready && (p.forecast !== null || p.pairs.n > 0)
   return (
     <section data-testid="tab-pattern-panel" className="flex flex-col gap-3">
       {!p.ready ? (
-        <p data-testid="pattern-wait">{t.patternWait(verb, p.count, MIN_CHECKINS)}</p>
+        <>
+          <div
+            role="progressbar"
+            aria-label={t.patternBar(p.count, MIN_CHECKINS)}
+            aria-valuemin={0}
+            aria-valuemax={MIN_CHECKINS}
+            aria-valuenow={p.count}
+            className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+          >
+            <div className="h-full bg-primary" style={{ width: `${Math.min(100, (p.count / MIN_CHECKINS) * 100)}%` }} />
+          </div>
+          <p data-testid="pattern-bar-label" className="text-sm font-medium">
+            {t.patternBar(p.count, MIN_CHECKINS)}
+          </p>
+          <p data-testid="pattern-wait">{t.patternWait(p.count)}</p>
+        </>
       ) : (
         <>
           {p.forecast ? (
@@ -262,9 +285,11 @@ export function PatternView({ days, verb }: { days: Days; verb: string }) {
           )}
         </>
       )}
-      <p data-testid="pattern-own" className="text-sm text-muted-foreground">
-        {t.patternOwn}
-      </p>
+      {showsLine && (
+        <p data-testid="pattern-own" className="text-sm text-muted-foreground">
+          {example ? t.patternExample : t.patternOwn}
+        </p>
+      )}
     </section>
   )
 }
@@ -302,11 +327,11 @@ export function RemindersView({ times, onChange, today, link }: { times: Reminde
       <button type="button" data-testid="cal-ics" onClick={download} className="inline-flex min-h-12 items-center justify-center rounded-md bg-primary px-4 font-medium text-primary-foreground">
         {t.addCalendar}
       </button>
-      <div className="flex flex-wrap gap-2">
-        <a data-testid="cal-google-morning" href={googleCalendarUrl("morning", times, today, link, names)} target="_blank" rel="noopener noreferrer" className={btn}>
+      <div className="flex flex-col gap-2">
+        <a data-testid="cal-google-morning" href={googleCalendarUrl("morning", times, today, link, names)} target="_blank" rel="noopener noreferrer" className={`${btn} w-full justify-center`}>
           {t.googleMorning}
         </a>
-        <a data-testid="cal-google-evening" href={googleCalendarUrl("evening", times, today, link, names)} target="_blank" rel="noopener noreferrer" className={btn}>
+        <a data-testid="cal-google-evening" href={googleCalendarUrl("evening", times, today, link, names)} target="_blank" rel="noopener noreferrer" className={`${btn} w-full justify-center`}>
           {t.googleEvening}
         </a>
       </div>

@@ -7,6 +7,7 @@ import {
   googleCalendarUrl,
   icsFor,
   lookBack,
+  applySlips,
   mergeSlips,
   noSlipCase,
   putDay,
@@ -27,7 +28,7 @@ import { useVerb } from "@/src/quit/wording"
 describe("parse of stored state", () => {
   it("gives an empty state for anything that is not an object", () => {
     for (const bad of [undefined, null, 5, "x", []]) {
-      expect(parseCheckin(bad)).toEqual({ days: {}, draft: null, reminders: DEFAULT_REMINDERS })
+      expect(parseCheckin(bad)).toEqual({ days: {}, drafts: {}, reminders: DEFAULT_REMINDERS })
     }
   })
   it("keeps good parts and drops bad ones", () => {
@@ -43,13 +44,20 @@ describe("parse of stored state", () => {
     })
     expect(Object.keys(s.days)).toEqual(["2026-11-18"])
     expect(s.days["2026-11-18"]).toEqual({ pledge: "No smoking at the bar", forecast: 4, feelings: ["tired"], note: "x".repeat(500), slipReportId: "abc" })
-    expect(s.draft).toEqual({ kind: "evening", date: "2026-11-18", step: 3, answers: { hard: 4 } })
+    expect(s.drafts).toEqual({ "evening:2026-11-18": { kind: "evening", date: "2026-11-18", step: 3, answers: { hard: 4 } } })
     expect(s.reminders).toEqual({ morning: "08:00", evening: "22:30" })
   })
   it("drops a draft with a bad kind, date or step", () => {
-    expect(parseCheckin({ draft: { kind: "noon", date: "2026-11-18", step: 1, answers: {} } }).draft).toBeNull()
-    expect(parseCheckin({ draft: { kind: "morning", date: "yesterday", step: 1, answers: {} } }).draft).toBeNull()
-    expect(parseCheckin({ draft: { kind: "morning", date: "2026-11-18", step: 3, answers: {} } }).draft).toBeNull()
+    expect(parseCheckin({ draft: { kind: "noon", date: "2026-11-18", step: 1, answers: {} } }).drafts).toEqual({})
+    expect(parseCheckin({ draft: { kind: "morning", date: "yesterday", step: 1, answers: {} } }).drafts).toEqual({})
+    expect(parseCheckin({ draft: { kind: "morning", date: "2026-11-18", step: 3, answers: {} } }).drafts).toEqual({})
+  })
+  it("keeps one draft per kind and day, and still reads the old single draft", () => {
+    const a = { kind: "evening", date: "2026-11-18", step: 2, answers: { hard: 3 } }
+    const b = { kind: "evening", date: "2026-11-17", step: 4, answers: {} }
+    const s = parseCheckin({ draft: a, drafts: { "evening:2026-11-17": b } })
+    expect(Object.keys(s.drafts).sort()).toEqual(["evening:2026-11-17", "evening:2026-11-18"])
+    expect(parseCheckin({ draft: a }).drafts["evening:2026-11-18"].step).toBe(2)
   })
   it("cuts a pledge to 140 characters", () => {
     expect(parseCheckin({ days: { "2026-11-18": { pledge: "p".repeat(200) } } }).days["2026-11-18"].pledge).toHaveLength(140)
@@ -122,9 +130,9 @@ describe("pattern, from the morning forecast only", () => {
     expect(patternsOf(mk(16, (i) => ({ forecast: i < 6 ? 5 : 2, slipped: i < 2 }))).reason).toBeNull()
   })
   it("the lines read as written", () => {
-    expect(t.forecastPattern(6, 2, 10, 1)).toBe("Days you expected Hard or Very hard: you slipped on 2 of 6. Other days: you slipped on 1 of 10.")
+    expect(t.forecastPattern(6, 2, 10, 1)).toBe("Days you expected Hard or Very hard: you slipped on 2 of 6. Days you expected Easy to In between: you slipped on 1 of 10.")
     expect(t.pairsLine(12, 4, 5, 3)).toBe("On 12 days you rated the day in the morning and the evening: harder than you expected on 4, easier on 5, as expected on 3.")
-    expect(t.patternWait("smoke", 3, 14)).toBe('Pattern lines start after 14 evenings where you answered "Did you smoke today?". So far: 3.')
+    expect(t.patternWait(3)).toBe("Pattern lines start once 14 days have a yes or no answer. You have 3.")
   })
 })
 
@@ -209,6 +217,7 @@ describe("the calendar file", () => {
 describe("words: that day and today, the unit", () => {
   it("the slip question says today, or that day for a past day", () => {
     expect(t.outcomeTitle("smoke", false)).toBe("Did you smoke today?")
+    expect(t.outcomeTitle("smoke", true, "Thu 12 Nov")).toBe("Did you smoke on Thu 12 Nov?")
     expect(t.outcomeTitle("smoke", true)).toBe("Did you smoke that day?")
   })
   it("no question of a past day says today", () => {
@@ -245,22 +254,37 @@ describe("never an empty day, the no-slip cases, words", () => {
   })
   it("picks the line by the case", () => {
     const ended = { startedOn: "2026-11-01", endedOn: "2026-11-10" }
-    expect(noSlipCase("2026-11-19", [])).toBe("notStarted")
-    expect(noSlipCase("2026-10-30", [ended])).toBe("notStarted")
+    expect(noSlipCase("2026-11-19", [])).toBe("never")
+    expect(noSlipCase("2026-10-30", [ended])).toBe("before")
     expect(noSlipCase("2026-11-05", [ended])).toBe("later")
     expect(noSlipCase("2026-11-15", [ended])).toBe("ended")
     expect(noSlipCase("2026-11-15", [ended, { startedOn: "2026-11-12", endedOn: null }])).toBe("other")
   })
   it("the urges scale has its own words, old feeling words keep their labels", () => {
-    expect(urgeWord(4)).toBe("Strong (4)")
-    expect(urgeWord(1)).toBe("None (1)")
+    expect(urgeWord(4)).toBe("Strong")
+    expect(urgeWord(1)).toBe("None")
     expect(feelingLabel("tired")).toBe("Tired")
     expect(feelingLabel("clear-headed")).toBe("Clear-headed")
     expect(feelingLabel("happy")).toBe("Happy")
     expect(parseCheckin({ days: { "2026-11-18": { feelings: ["tired", "happy", "zzz"] } } }).days["2026-11-18"].feelings).toEqual(["tired", "happy"])
   })
   it("no word says run, phone or pledge", () => {
-    const all = [t.noSlipLater(true), t.noSlipNotStarted, t.noSlipEnded, t.noSlipOther, t.keptHere, t.savedLocal, t.localOnly, t.remindersLine, t.pledgeLine("x"), t.pledgeTitle(false)].join(" ")
-    expect(all).not.toMatch(/\brun\b|phone|pledge/i)
+    const all = [t.noSlipLater, t.noSlipNever, t.noSlipBefore, t.noSlipEnded, t.noSlipOther, t.slipBlocked, t.saving, t.slipGone, t.keptHere, t.savedLocal, t.localOnly, t.remindersLine, t.pledgeLine("x"), t.pledgeTitle(false)].join(" ")
+    expect(all).not.toMatch(/\brun\b|phone|pledge|black box/i)
+  })
+})
+
+describe("the Black Box wins over his own No", () => {
+  it("a day he answered No that the Black Box holds a slip on counts as slipped, still checked in", () => {
+    const own: Days = { "2026-11-18": { slipped: false }, "2026-11-17": { slipped: false } }
+    const applied = applySlips(own, new Set(["2026-11-18", "2026-11-12"]))
+    expect(applied["2026-11-18"]).toEqual({ slipped: true })
+    expect(applied["2026-11-12"]).toBeUndefined()
+    expect(monthCounts(applied, "2026-11")).toEqual({ checkedIn: 2, clear: 1 })
+  })
+  it("the forecast line reads each side", () => {
+    expect(t.forecastTitle(true)).toContain("that day")
+    expect(t.expectedLine(4)).toBe("You expected Hard (4)")
+    expect(t.expectedThen(false, 4)).toBe("This morning you expected Hard (4)")
   })
 })
