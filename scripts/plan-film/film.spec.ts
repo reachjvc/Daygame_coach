@@ -142,7 +142,7 @@ async function typeOn(page: Page, seq: Sequence, screenId: string): Promise<void
         await expect(dialog).toBeVisible({ timeout: NAV })
         if (seq.id === "v1") await dialog.locator("textarea").first().fill(`A clear picture of ${area.label.toLowerCase()} going well.`)
         // The score: this week's row, then today's.
-        for (const row of await dialog.getByRole("button", { name: "6", exact: true }).all()) await row.click().catch(() => {})
+        for (const row of await dialog.locator("button", { hasText: /^6$/ }).all()) await row.click().catch(() => {})
         await page.waitForTimeout(500)
         await page.keyboard.press("Escape")
         await expect(dialog).toHaveCount(0)
