@@ -33,8 +33,12 @@ say "I left notes".
   only, in a few minutes. Cut to 1:57. He turned down the moving storyboard;
   Claude now builds the whole film in the block look and he sees it finished.
   The full-size film was rendered on 2026-11-20 and waits for his look (film
-  page listed in notes-seen.md). He re-records the voice with a better
-  microphone another day. Plan:
+  page listed in notes-seen.md). He watched it on 2026-11-20: right path, but
+  too slow, too much blocks only, he wants himself filmed in it, and he
+  still hears breathing (his words are in the process file). A second-pass
+  page with a sentence check and seven cutaway spots waits for his 👍
+  (listed in notes-seen.md); a breath listening test follows. He re-records
+  the voice with a better microphone another day. Plan:
   `Plans/reel-outvoted.md` (proposed). Private folder:
   `~/.cache/daygame-research/content/reel-outvoted/`.
 - **The process itself**: being worked out on video 01. About 40% there

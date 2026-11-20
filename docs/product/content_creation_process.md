@@ -43,6 +43,20 @@ now (rule in `CLAUDE.md`).
 - Breathing in the voice is annoying. Cut it out, or he needs another way to
   record.
 
+2026-11-20, after watching the finished "Outvoted" film:
+- Definitely on the right path. He likes much of the animation; the blocks
+  tell a whole story.
+- The pace is still too slow.
+- He wants a way to check that every word he says is worthwhile.
+- He wants more animation: the story sticks to the blocks too much. Lines
+  like "at night" and "in the morning" are obvious places for a different
+  kind of picture. The blocks can stay the main line.
+- He should film himself, and that goes into the video (maybe him waking
+  up). This needs a process that storyboards the choice, and more
+  animations for the other spots.
+- He still hears a good amount of his breathing. He wants it gone if that is
+  possible, and expects to test different ways of doing it.
+
 ## Idea bank
 
 Private folder `~/.cache/daygame-research/content/bank/`: one reusable
@@ -99,22 +113,49 @@ Creators working with AI (2026 posts and 15 YouTube videos):
   stills and a small draft, rendered once. Tokens counted per stage in the
   plan. Result not judged by him yet.
 
-## Proposed next version (Claude, proposed, not decided)
+- **Second pass on "Outvoted" (2026-11-20), measured, nothing rebuilt yet.**
+  154 words a minute overall; 30 of 117 seconds are pauses; he speaks at
+  about 207 words a minute between them. 174 top quit Shorts from our own
+  study: median 194 words a minute (rough, from auto captions). Five fresh
+  AI readers marked each sentence keep, shorter or cut: all five cut the
+  same five lines. The page with the results and seven proposed cutaway
+  spots is listed in notes-seen.md. Working files:
+  `~/.cache/daygame-research/content/reel-outvoted/wordcheck/` and `pass2/`.
 
-1. **Script.** Approved on one page.
-2. **Voice.** He records it. Claude cuts it at the pauses and times scenes
-   to it.
-3. **Scene list.** The script cut into scenes of 5 to 8 seconds. Each scene
-   says what the viewer must understand.
-4. **Choices per scene.** 3 or 4 options per scene, in the finished look
-   (not sketches): moving where motion carries the point, side by side. He
-   votes per scene. Styles may differ between scenes.
-5. **Build.** Claude builds the chosen scenes, each as a low-quality preview
-   first.
-6. **Rough cut.** All scenes timed to his voice, in one video on a page.
-7. **Final.** One full render. His notes become rules for the next video.
+## What others do about pace, pictures and breaths (researched 2026-11-20)
+
+Mostly blogs by companies that sell editing tools; none shows a controlled
+test. Full notes (private):
+`~/.cache/daygame-research/content/process-research/2026-11-20-*.md`.
+
+- Line tests: cut a line unless it raises curiosity, makes the stakes clear,
+  gives value or sets up the next beat; merge lines that do the same job.
+- Pauses: editors close natural gaps to 0.1 to 0.4 seconds and keep a few
+  chosen beats.
+- Pictures: one row per spoken line with its picture; change the picture
+  when the line's job changes; cutaways of 2 to 5 seconds in Reels; the face
+  for personal lines and for the ask (one seller's test).
+- After posting: lay the retention graph over the lines; a drop names the
+  line before it.
+- Not found: proof that reader panels predict viewers; an example of one
+  animated world cutting to footage of its maker and back.
+
+## Proposed next version (Claude, proposed 2026-11-20, not decided)
+
+1. **Script, then a sentence check before he records.** Five fresh readers
+   plus Claude's own call. He sees only the lines in doubt.
+2. **Voice.** He records. Claude cuts the take, closes the pauses by
+   measurement and removes breaths (method under test).
+3. **Picture plan.** One row per line: blocks, other animation, or him on
+   camera. He taps the spots he wants.
+4. **His filming list** comes out of the plan. He films the clips in the
+   same sitting as the voice.
+5. **Build and one full render.** He sees the finished film (his choice of
+   2026-11-19).
+6. **After posting.** The retention graph is laid over the sentences and
+   feeds the next sentence check.
 
 Open questions:
-- How many options per scene can he judge?
-- What does one option cost to make?
-- Does he need motion to judge, or are stills enough?
+- Does a reader panel find the same dead lines he hears?
+- Do filmed clips of him sit well inside the block world? Test on one spot.
+- Which breath method leaves none he can hear?
