@@ -36,7 +36,11 @@ import { AreaGoalsDialog } from "@/src/goals/components/north-star/AreaGoalsDial
 import { ROUTES } from "@/src/shared/routes"
 import { realStepRoute } from "@/src/goals/planSteps/realStepRoutes"
 import { planNumbers, type PlanNumbers } from "@/src/goals/planSteps/planNumbers"
-import { screenForSection, stepRoute, type Screen, type Sequence } from "@/src/goals/planSteps/planSequences"
+import { screenForSection, sequenceOfPlan, stepRoute, type Screen, type Sequence } from "@/src/goals/planSteps/planSequences"
+import { deeperKey } from "@/src/goals/planSteps/planFacts"
+import { addLineOn, moveLineTo, sorterOfPlan, sortLines, type Half } from "@/src/goals/planSteps/planSorter"
+import { DeeperPromptsContext, type DeeperPrompts } from "@/src/goals/components/north-star/deeperPrompts"
+import { DeeperCard, SorterCards, type SorterAsk, type SorterNotice } from "./Versions"
 import { sectionOfAnchor, AREA_SECTIONS, GOAL_SECTIONS, stepOfSection, type AreaSectionId, type GoalSectionId } from "@/src/goals/planSteps/planSections"
 import { usePlanNew } from "./PlanNewContext"
 import { ErrandRibbon } from "../north-star/ErrandRibbon"
@@ -60,6 +64,11 @@ interface Session {
   /** Unsaved text in the one thing box; survives a step change, gone on reload. */
   oneThingTyped: string | null
   setOneThingTyped: Dispatch<SetStateAction<string | null>>
+  /** The sorter (S2, S3): a line it moved, and the lines it still asks about. They outlive a screen change. */
+  sorterNotice: SorterNotice | null
+  setSorterNotice: Dispatch<SetStateAction<SorterNotice | null>>
+  sorterAsks: SorterAsk[]
+  setSorterAsks: Dispatch<SetStateAction<SorterAsk[]>>
 }
 
 const SessionCtx = createContext<Session | null>(null)
@@ -72,7 +81,12 @@ export function RealStepSessionProvider({ children }: { children: ReactNode }) {
   const [errand, setErrand] = useState<Errand | null>(null)
   const [anchor, setAnchor] = useState<string | null>(null)
   const [oneThingTyped, setOneThingTyped] = useState<string | null>(null)
-  const value = useMemo(() => ({ errand, setErrand, anchor, setAnchor, oneThingTyped, setOneThingTyped }), [errand, anchor, oneThingTyped])
+  const [sorterNotice, setSorterNotice] = useState<SorterNotice | null>(null)
+  const [sorterAsks, setSorterAsks] = useState<SorterAsk[]>([])
+  const value = useMemo(
+    () => ({ errand, setErrand, anchor, setAnchor, oneThingTyped, setOneThingTyped, sorterNotice, setSorterNotice, sorterAsks, setSorterAsks }),
+    [errand, anchor, oneThingTyped, sorterNotice, sorterAsks],
+  )
   return <SessionCtx.Provider value={value}>{children}</SessionCtx.Provider>
 }
 
@@ -195,7 +209,7 @@ export function RealStepHost({
   const { store, timezone, account } = usePlanNew()
   const session = useContext(SessionCtx)
   if (!session) throw new Error("RealStepHost needs <RealStepSessionProvider>")
-  const { errand, setErrand, setAnchor, anchor, oneThingTyped, setOneThingTyped } = session
+  const { errand, setErrand, setAnchor, anchor, oneThingTyped, setOneThingTyped, sorterNotice, setSorterNotice, sorterAsks, setSorterAsks } = session
   const router = useRouter()
   const search = useSearchParams()
   const plan = store.plan
@@ -335,6 +349,97 @@ export function RealStepHost({
   }, [queue, setErrand, setAnchor])
 
   const writers = usePlanWriters({ setPlan, today, setTab, setPlanAreaId, setNowGoalId, setOpenRoutineId })
+
+  /* ---- the sorter (Phase 7, Q8): a line typed on Systems or Experiences that reads as the other half ---- */
+  // Only inside a sequence, on the two halves. S1 is today's behaviour: the real writer, untouched.
+  const sorter = sorterOfPlan(plan)
+  const typedHalf: Half | null = screen ? (stepId === "systems" ? "systems" : stepId === "milestones" ? "experiences" : null) : null
+  const baseAddDump = writers.guideHandlers.onAddDump
+  const guideHandlers = useMemo(() => {
+    if (!typedHalf || sorter === "s1") return writers.guideHandlers
+    return {
+      ...writers.guideHandlers,
+      onAddDump: (areaId: string, text: string) => {
+        const { stay, away } = sortLines(text, typedHalf)
+        if (away.length === 0) return baseAddDump(areaId, text)
+        if (stay.length > 0) baseAddDump(areaId, stay.join("\n"))
+        if (sorter === "s2") {
+          baseAddDump(areaId, away.join("\n"))
+          setSorterNotice({ areaId, titles: away, from: typedHalf })
+          return
+        }
+        setSorterAsks((q) => [...q, ...away.map((title): SorterAsk => ({ areaId, title, typedOn: typedHalf }))])
+      },
+    }
+  }, [writers.guideHandlers, baseAddDump, typedHalf, sorter, setSorterNotice, setSorterAsks])
+  const undoSorter = () => {
+    const n = sorterNotice
+    if (!n) return
+    setPlan((p) => n.titles.reduce((acc, title) => moveLineTo(acc, n.areaId, title, n.from), p))
+    setSorterNotice(null)
+  }
+  const answerSorter = (ask: SorterAsk, half: Half) => {
+    setPlan((p) => addLineOn(p, ask.areaId, ask.title, half))
+    setSorterAsks((q) => q.filter((a) => a !== ask))
+  }
+  const dismissSorter = useCallback(() => setSorterNotice(null), [setSorterNotice])
+
+  /* ---- V3: the short go-deeper cards, for the areas in the season, drawn in place by the real parts ---- */
+  const seq = sequence ?? sequenceOfPlan(plan)
+  const markDeeper = (key: string, how: "no" | "opened") => setPlan((p) => ns.setAnswer(p, key, how))
+  const inSeasonArea = (areaId: string) => plan.seasonAreaIds.includes(areaId)
+  const starSection = section
+  const deeperPrompts: DeeperPrompts | null = seq.prompts && screen
+    ? {
+        area: (areaId) => {
+          const area = plan.areas.find((a) => a.id === areaId)
+          const key = deeperKey("area", areaId)
+          if (!area || areaSection !== "area.ten" || !inSeasonArea(areaId) || !ns.areaReview(plan, areaId).ten.trim() || plan.answers[key]) return null
+          return (
+            <DeeperCard
+              testId="deeper-area"
+              title={`Go deeper on ${area.label}?`}
+              line="Why it matters · what stops you · values"
+              openLabel="Go deeper"
+              onOpen={() => { markDeeper(key, "opened"); setAreaSection("area.why") }}
+              onNotNow={() => markDeeper(key, "no")}
+            />
+          )
+        },
+        goal: (goalId, areaId) => {
+          const goal = plan.goals.find((g) => g.id === goalId)
+          const key = deeperKey("goal", goalId)
+          if (!goal || goalSection !== "goal.shape" || !inSeasonArea(areaId) || !goal.title.trim() || plan.answers[key]) return null
+          return (
+            <DeeperCard
+              testId="deeper-goal"
+              title="What could stop you?"
+              openLabel="Write it"
+              onOpen={() => { markDeeper(key, "opened"); setGoalSection("goal.stops") }}
+              onNotNow={() => markDeeper(key, "no")}
+            />
+          )
+        },
+        star: () => {
+          const key = deeperKey("star")
+          if (starSection !== "star.vision" || !plan.northStar.trim() || plan.answers[key]) return null
+          return (
+            <DeeperCard
+              testId="deeper-star"
+              title="What happens if you never get there?"
+              openLabel="Write it"
+              onOpen={() => {
+                markDeeper(key, "opened")
+                const box = document.getElementById(`star-${STAR_WHY_ID}`)
+                box?.scrollIntoView({ behavior: "smooth", block: "center" })
+                box?.focus()
+              }}
+              onNotNow={() => markDeeper(key, "no")}
+            />
+          )
+        },
+      }
+    : null
   const decision = useMemo<SyncDecision | null>(() => (loaded ? { kind: "start-empty", revision: 0 } : null), [loaded])
   const reads = usePlanReads({ plan, setPlan, loaded, today, setToday, timezone, decision })
   const { ticks, oneThing } = reads
@@ -414,6 +519,7 @@ export function RealStepHost({
 
   const value: RealStep = {
     ...writers,
+    guideHandlers,
     ...reads,
     stepId,
     plan,
@@ -468,11 +574,14 @@ export function RealStepHost({
   return (
     <PlanBasePathContext.Provider value={ROUTES.planNew}>
       <TouchControlsContext.Provider value>
+      <DeeperPromptsContext.Provider value={deeperPrompts}>
       <Ctx.Provider value={value}>
         {showRibbon && ribbon && !areaDialogOpen && !goalDialogOpen && <div className="mb-5">{ribbon}</div>}
         {children}
         <RealStepDialogs />
+        <SorterCards notice={sorterNotice} asks={sorterAsks} onUndo={undoSorter} onDismiss={dismissSorter} onAnswer={answerSorter} />
       </Ctx.Provider>
+      </DeeperPromptsContext.Provider>
       </TouchControlsContext.Provider>
     </PlanBasePathContext.Provider>
   )

@@ -79,6 +79,7 @@ import { NO_TRAINING_TICKS, type TrainingTicks } from "@/src/goals/dayTicks"
 import { planLimit } from "@/src/goals/planLimits"
 import { LimitCounter } from "./LimitCounter"
 import { SectionPart } from "./SectionPart"
+import { useDeeperPrompts } from "./deeperPrompts"
 import type { GoalSectionId } from "@/src/goals/planSteps/planSections"
 
 /** The section of the card that holds the field a gap names ("a why" is in the why part, "an action" in the do part, the rest in the first). */
@@ -167,6 +168,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
   onSection?: (next: GoalSectionId | null) => void
 }) {
   const [angle, setAngle] = useState(0)
+  const deeper = useDeeperPrompts()
   const color = area?.color ?? "#a1a1aa"
   const hasWhy = goalHasWhy(goal)
   const qualified = goalIsQualified(goal, plan)
@@ -626,6 +628,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
           {/* What it has earned, in place of a date on a goal that repeats
               (the owner's item 22), and what feeds it has earned. */}
           <GoalAchievements plan={plan} goal={goal} today={today} ticks={ticks} />
+          {deeper?.goal(goal.id, goal.areaId)}
           </SectionPart>
 
           {/* The why. One question at a time, changeable when it runs dry. */}

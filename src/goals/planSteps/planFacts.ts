@@ -18,6 +18,10 @@ export const HIDDEN_AREAS_KEY = `${NEW_PREFIX}areas-hidden`
 export const AREAS_DESCRIBED_KEY = `${NEW_PREFIX}areas-described`
 /** Which version of the screen order the copy plan is trying (Phase 4.1/7). Absent means V1. */
 export const SEQUENCE_KEY = `${NEW_PREFIX}sequence`
+/** How a line typed on the wrong half is sorted on the copy plan (Phase 7, Q8): s1 silently, s2 with Undo, s3 asks first. Absent means s1. */
+export const SORTER_KEY = `${NEW_PREFIX}sorter`
+/** "Not now" on a deeper prompt (V3), remembered per item: `kind` is area, goal or star; `id` the area or goal (star has none). */
+export const deeperKey = (kind: "area" | "goal" | "star", id = "") => `${NEW_PREFIX}deeper:${kind}${id ? `:${id}` : ""}`
 export const CHECKIN_DAY_KEY = `${NEW_PREFIX}checkin-day`
 export const CHECKIN_HOUR_KEY = `${NEW_PREFIX}checkin-hour`
 export const CHECKIN_PHONE_KEY = `${NEW_PREFIX}checkin-phone`

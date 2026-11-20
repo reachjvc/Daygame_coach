@@ -18,7 +18,7 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { BUILD_STEPS, TAB_LABELS, USE_STEPS } from "@/src/goals/data/northStar"
 import { planHomeHref } from "@/src/goals/planSteps/planRoutes"
-import { navLabel, nextScreen, prevScreen, screenRoute, screensForStep, type Screen, type Sequence } from "@/src/goals/planSteps/planSequences"
+import { isDeepen, navLabel, nextScreen, prevScreen, screenRoute, screensForStep, type Screen, type Sequence } from "@/src/goals/planSteps/planSequences"
 import { SECTION_TITLES } from "@/src/goals/planSteps/sectionTitles"
 import type { SectionId } from "@/src/goals/planSteps/planSections"
 import * as ns from "@/src/goals/northStarService"
@@ -167,6 +167,11 @@ export function RealShell({ children, seq }: { children: ReactNode; seq?: Sequen
           railToggleRef={railToggleRef}
           onPick={(id) => r.setTab(id)}
         />
+        {screen && seq && isDeepen(seq, screen) && (
+          <Link href={`${planHomeHref()}#deepen`} className="mb-3 inline-flex min-h-11 items-center text-[12px] text-primary underline decoration-dotted underline-offset-2" data-testid="back-to-deepen">
+            Back to the Deepen list
+          </Link>
+        )}
         {r.ribbon && !dialogOpen && <div className="mb-5">{r.ribbon}</div>}
         {screen?.section && parts.length > 1 && (
           <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1" data-testid="section-bar">

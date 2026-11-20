@@ -42,6 +42,7 @@ import { AreaPeople } from "@/src/role-models/components/AreaPeople"
 import { SentenceBox } from "./SentenceBox"
 import { planLimit } from "@/src/goals/planLimits"
 import { SectionPart } from "./SectionPart"
+import { useDeeperPrompts } from "./deeperPrompts"
 import type { AreaSectionId } from "@/src/goals/planSteps/planSections"
 
 export function AreaDialog({
@@ -93,6 +94,7 @@ export function AreaDialog({
   onSection?: (next: AreaSectionId | null) => void
 }) {
   const review = areaReview(plan, area.id)
+  const deeper = useDeeperPrompts()
   const reach = areaReach(plan, area.id)
   const areaValues = areaValueSuggestions(plan, area.id)
   const latest = latestScores(plan, today)[area.id] ?? null
@@ -251,6 +253,7 @@ export function AreaDialog({
               </div>
             )}
           </section>
+          {deeper?.area(area.id)}
 
           <section className={hasTen ? "" : "opacity-60"}>
             <p className="text-[13px] text-zinc-200">{AREA_REVIEW_COPY.rating.question}</p>

@@ -22,7 +22,7 @@ import { seasonCopy } from "@/src/goals/planSteps/copy/season"
 import { goalsCopy } from "@/src/goals/planSteps/copy/goals"
 import { directionNotes, goalNotes, seasonNotes, type EarlierNote } from "@/src/goals/planSteps/earlierNotes"
 import { goalsOfTier, protectedId, weeklyItems } from "@/src/goals/planSteps/planFacts"
-import { accountOf, buildStepsOf, dailyScreensOf, nextUp, stepSummary } from "@/src/goals/planSteps/planHome"
+import { accountOf, buildStepsOf, dailyScreensOf, deepenItems, nextUp, stepSummary } from "@/src/goals/planSteps/planHome"
 import { planNumbers } from "@/src/goals/planSteps/planNumbers"
 import { homeHref, weekHref } from "@/src/goals/planSteps/planRoutes"
 import { screenRoute, screensForStep, sequenceOfPlan, type Sequence } from "@/src/goals/planSteps/planSequences"
@@ -85,6 +85,7 @@ export function PlanHome() {
   ].filter((l) => !l.startsWith("0 "))
   const earlier: EarlierNote[] = [...directionNotes(plan), ...seasonNotes(plan), ...plan.goals.flatMap(goalNotes)]
   const seasonScreen = screensForStep(seq, "focus")[0]
+  const deepen = deepenItems(seq)
 
   return (
     <div className="mx-auto w-full max-w-xl space-y-6 px-4 pb-16 pt-4" data-testid="plan-home">
@@ -150,9 +151,17 @@ export function PlanHome() {
         </ol>
       </section>
 
-      <section aria-label={homeCopy.extra_heading}>
-        <h2 className="mb-2 text-sm font-semibold text-foreground">{homeCopy.extra_heading}</h2>
+      <section id="deepen" aria-label={deepen.length ? "Deepen" : homeCopy.extra_heading} data-testid={deepen.length ? "deepen-list" : undefined}>
+        <h2 className="mb-2 text-sm font-semibold text-foreground">{deepen.length ? "Deepen" : homeCopy.extra_heading}</h2>
         <ul className="space-y-2">
+          {deepen.map((item) => (
+            <li key={item.id} className={card} data-testid={`deepen-${item.id}`}>
+              <Link href={item.href} className="block min-h-11" data-testid={`deepen-${item.id}-open`}>
+                <p className="text-sm font-medium text-foreground">{item.title}</p>
+                <p className="text-xs text-muted-foreground">{item.blurb}</p>
+              </Link>
+            </li>
+          ))}
           <li className={card} data-testid="deepen-week">
             <Link href={weekHref()} className="block min-h-11" data-testid="deepen-week-open">
               <p className="text-sm font-medium text-foreground">Plan my week</p>

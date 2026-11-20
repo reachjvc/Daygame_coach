@@ -22,6 +22,7 @@
  * without saying so first.
  */
 
+import { useDeeperPrompts } from "./deeperPrompts"
 import { planLimit } from "@/src/goals/planLimits"
 import { showSection } from "@/src/goals/planSteps/planSections"
 import { useState } from "react"
@@ -116,6 +117,7 @@ export function StarTab({
   section?: "star.vision" | "star.self"
 }) {
   const show = (id: string) => showSection(section, id)
+  const deeper = useDeeperPrompts()
   const [ladderOpen, setLadderOpen] = useState(false)
   const [showExample, setShowExample] = useState(false)
   const [confirmOverwrite, setConfirmOverwrite] = useState(false)
@@ -194,6 +196,8 @@ export function StarTab({
         {written && <p className="text-[11px] text-zinc-500 mt-3 leading-relaxed">{NORTH_STAR_REREAD}</p>}
         <NorthStarHistory plan={plan} onNewNorthStar={onNewNorthStar} />
       </div>}
+
+      {show("star.vision") && deeper?.star()}
 
       {/* The why sits on its own, directly under the paragraph. It is the one
           answer that decides whether any of the rest survives February. */}

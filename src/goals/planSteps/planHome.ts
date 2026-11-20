@@ -16,12 +16,15 @@
  */
 
 import type { NorthStarTabId, NsAccount, NsPlan } from "@/src/goals/types"
-import { SCORED_TABS, TAB_BLURBS } from "@/src/goals/data/northStar"
+import { SCORED_TABS, TAB_BLURBS, TAB_LABELS } from "@/src/goals/data/northStar"
 import { COMMIT_KEY } from "@/src/goals/data/northStarStart"
 import { DEFAULT_REVIEW_DAY, dueNow } from "@/src/goals/dueNowService"
 import * as ns from "@/src/goals/northStarService"
 import { ratedAreaCount } from "@/src/goals/reviewService"
-import { screenForSection, screenRoute, screensForStep, type Screen, type Sequence } from "@/src/goals/planSteps/planSequences"
+import { onPath, screenForSection, screenRoute, screensForStep, sequenceById, type Screen, type Sequence } from "@/src/goals/planSteps/planSequences"
+import { SECTION_TITLES } from "@/src/goals/planSteps/sectionTitles"
+import type { SectionId } from "@/src/goals/planSteps/planSections"
+import { ROUTES } from "@/src/shared/routes"
 import type { PlanNumbers } from "@/src/goals/planSteps/planNumbers"
 
 /** What the account knows that the plan does not: the one thing is the season's sentence. */
@@ -53,7 +56,7 @@ const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
  * this address, so they cannot disagree. The chip's section screen, else the area sheet it names, else the step's first screen.
  */
 export function targetToFill(seq: Sequence, step: NorthStarTabId, numbers: PlanNumbers): { screen: Screen; href: string } | null {
-  const chip = numbers.steps[step].chips[0]
+  const chip = chipsOnPath(seq, step, numbers)[0]
   const first = screensForStep(seq, step)[0]
   const screen = (chip?.section ? screenForSection(seq, chip.section) : null) ?? first
   if (!screen) return null
@@ -62,6 +65,18 @@ export function targetToFill(seq: Sequence, step: NorthStarTabId, numbers: PlanN
     return { screen: now, href: `${screenRoute(seq, now)}?area=${encodeURIComponent(chip.areaId)}` }
   }
   return { screen, href: screenRoute(seq, screen) }
+}
+
+/**
+ * The chips of a step that "Next up" may send to. On a version with a Deepen list (V2, V3) a chip whose field sits on a
+ * Deepen screen is not a next step (it waits on the list), and a step the version calls optional stops holding "Next up"
+ * once anything of it is written. V1 has no list, so every chip counts, as before.
+ */
+export function chipsOnPath(seq: Sequence, step: NorthStarTabId, numbers: PlanNumbers) {
+  const s = numbers.steps[step]
+  if (!seq.deepen?.length) return s.chips
+  if (seq.optionalSteps?.includes(step) && s.state !== "empty") return []
+  return s.chips.filter((c) => (c.section ? onPath(seq, c.section) : onPath(seq, c.tab)))
 }
 
 /** The screen of `targetToFill`. */
@@ -78,6 +93,7 @@ export function nextUp(seq: Sequence, plan: NsPlan, numbers: PlanNumbers, today:
   if (week && reviewScreen) return { kind: "review-due", screen: reviewScreen, step: "review" }
   for (const step of buildStepsOf(seq)) {
     if (!SCORED_TABS.includes(step) || numbers.steps[step].state === "done") continue
+    if (chipsOnPath(seq, step, numbers).length === 0) continue
     const target = targetToFill(seq, step, numbers)
     if (!target) continue
     return {
@@ -87,7 +103,7 @@ export function nextUp(seq: Sequence, plan: NsPlan, numbers: PlanNumbers, today:
       step,
       started: numbers.steps[step].state !== "empty",
       job: lowerFirst(TAB_BLURBS[step]),
-      chip: numbers.steps[step].chips[0]?.text ?? null,
+      chip: chipsOnPath(seq, step, numbers)[0]?.text ?? null,
     }
   }
   return { kind: "all-set", screen: first("today"), step: "today" }
@@ -139,4 +155,35 @@ export function stepSummary(plan: NsPlan, step: NorthStarTabId, today: string): 
     default:
       return ""
   }
+}
+
+
+export interface DeepenItem {
+  id: string
+  title: string
+  /** One line under the title. */
+  blurb: string
+  href: string
+}
+
+/**
+ * THE DEEPEN LIST of a version (V2, V3), in V1's order: every screen off the path, plus "Your 10 per area", which is the
+ * first part of an area's sheet on the wheel (the score and the 10 are one box in the real tool, so the wheel screen on
+ * the path opens it; this entry is the way back to it). Empty for V1, which has no list.
+ */
+export function deepenItems(seq: Sequence): DeepenItem[] {
+  if (!seq.deepen?.length) return []
+  const out: DeepenItem[] = []
+  for (const screen of sequenceById("v1").screens) {
+    if (seq.deepen.some((d) => d.id === screen.id)) {
+      out.push({
+        id: screen.id,
+        title: screen.section ? SECTION_TITLES[screen.section as SectionId] : TAB_LABELS[screen.step],
+        blurb: screen.section ? TAB_LABELS[screen.step] : TAB_BLURBS[screen.step],
+        href: screenRoute(seq, screen),
+      })
+    }
+    if (screen.id === "now") out.push({ id: "tens", title: "Your 10 per area", blurb: "Open an area on the wheel: its 10 is the first part of its sheet.", href: `${ROUTES.planNew}/now` })
+  }
+  return out
 }
