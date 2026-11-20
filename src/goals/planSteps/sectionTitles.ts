@@ -47,3 +47,28 @@ export const SECTION_TITLES: Record<SectionId, string> = {
   "goal.do": "What will you actually do about this?",
   "goal.stops": "What could stop you?",
 }
+
+/**
+ * A SHORT NAME FOR EACH SCREEN, for Back and Next when a step has several screens ("Season: areas"). Two words at most, taken
+ * from the section's own title, so two buttons that lead to different screens of one step never read alike and still fit the bar.
+ */
+export const SECTION_SHORT: Record<string, string> = {
+  "star.vision": "paragraph",
+  "star.self": "the rest",
+  "season.one-thing": "one thing",
+  "season.why": "why",
+  "season.who": "who",
+  "season.areas": "areas",
+  "season.order": "order",
+  "values.so-far": "so far",
+  "values.lists": "lists",
+  "values.order": "order",
+  "everything.driving-force": "read",
+  "everything.plan": "plan",
+  "everything.links": "links",
+  "everything.check": "check",
+  "everything.commit": "commit",
+  "review.open": "open",
+  "review.goals": "goals",
+  "review.write": "write",
+}

@@ -133,6 +133,7 @@ export function RealShell({ children, seq }: { children: ReactNode; seq?: Sequen
       storageRefused={false}
       progress={progress}
       testIds
+      wrapLabels
     />
   )
 

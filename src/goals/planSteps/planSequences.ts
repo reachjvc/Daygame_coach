@@ -19,8 +19,8 @@ import { ROUTES } from "@/src/shared/routes"
 import { TAB_LABELS, TAB_ORDER, USE_STEPS } from "@/src/goals/data/northStar"
 import type { NorthStarTabId, NsPlan } from "@/src/goals/types"
 import { SEQUENCE_KEY } from "@/src/goals/planSteps/planFacts"
-import { STEP_SECTIONS, type SectionId } from "@/src/goals/planSteps/planSections"
-import { SECTION_TITLES } from "@/src/goals/planSteps/sectionTitles"
+import { STEP_SECTIONS } from "@/src/goals/planSteps/planSections"
+import { SECTION_SHORT } from "@/src/goals/planSteps/sectionTitles"
 
 export interface Screen {
   /** The address segment: `/plan/new/<id>`. Unique inside a sequence. */
@@ -174,7 +174,7 @@ export function stepOrder(seq: Sequence): NorthStarTabId[] {
 
 /**
  * What a Back or Next button says for `target`: "Part 2 of 3" when it stays inside a split step (counted along the walk the
- * screen is on), else the step's name; and when the step has several screens, the screen's own title after it, so two
+ * screen is on), else the step's name; and when the step has several screens, the screen's short name after it, so two
  * buttons that lead to different screens of one step never read alike.
  */
 export function navLabel(seq: Sequence, here: Screen, target: Screen): string {
@@ -182,6 +182,6 @@ export function navLabel(seq: Sequence, here: Screen, target: Screen): string {
     const parts = walkPartsOf(seq, target)
     return `Part ${parts.findIndex((p) => p.id === target.id) + 1} of ${parts.length}`
   }
-  if (target.section && screensForStep(seq, target.step).length > 1) return `${TAB_LABELS[target.step]}: ${SECTION_TITLES[target.section as SectionId]}`
+  if (target.section && screensForStep(seq, target.step).length > 1) return `${TAB_LABELS[target.step] === "Values & identity" ? "Values" : TAB_LABELS[target.step]}: ${SECTION_SHORT[target.section] ?? target.section}`
   return TAB_LABELS[target.step]
 }

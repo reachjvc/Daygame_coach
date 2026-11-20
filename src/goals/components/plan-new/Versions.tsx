@@ -39,7 +39,7 @@ export function VersionSwitcher() {
             {s.label}
           </button>
         ))}
-        <span className="min-w-0 flex-1 text-xs text-muted-foreground" data-testid="version-blurb">{seq.blurb}</span>
+        <span className="min-w-0 basis-full text-xs text-muted-foreground sm:flex-1 sm:basis-0" data-testid="version-blurb">{seq.blurb}</span>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <span className="w-14 text-xs text-muted-foreground">Sorter</span>
@@ -48,7 +48,7 @@ export function VersionSwitcher() {
             {s.label}
           </button>
         ))}
-        <span className="min-w-0 flex-1 text-xs text-muted-foreground" data-testid="sorter-blurb">{SORTERS.find((s) => s.id === sorter)?.blurb}</span>
+        <span className="min-w-0 basis-full text-xs text-muted-foreground sm:flex-1 sm:basis-0" data-testid="sorter-blurb">{SORTERS.find((s) => s.id === sorter)?.blurb}</span>
       </div>
     </div>
   )

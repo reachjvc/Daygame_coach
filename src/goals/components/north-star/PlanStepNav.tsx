@@ -27,6 +27,7 @@ export function PlanStepNav({
   testIds = false,
   prev,
   next,
+  wrapLabels = false,
 }: {
   tab: NorthStarTabId
   siteBar: boolean
@@ -46,22 +47,24 @@ export function PlanStepNav({
    */
   prev?: { label: string; onGo: () => void } | null
   next?: { label: string; onGo: () => void } | null
+  /** `/plan/new`'s Back and Next name a screen ("Season: What is this season about?"): let them wrap on a phone (default off, as `/plan`). */
+  wrapLabels?: boolean
 }) {
   const tabIndex = TAB_ORDER.indexOf(tab)
   const back = prev !== undefined ? prev : tabIndex > 0 ? { label: TAB_LABELS[TAB_ORDER[tabIndex - 1]], onGo: () => setTab(TAB_ORDER[tabIndex - 1]) } : null
   const forward = next !== undefined ? next : tabIndex < TAB_ORDER.length - 1 ? { label: TAB_LABELS[TAB_ORDER[tabIndex + 1]], onGo: () => setTab(TAB_ORDER[tabIndex + 1]) } : null
   return (
       <div className={siteBar ? "sticky top-0 z-30 bg-zinc-950/90 backdrop-blur-sm border-b border-white/10" : "sticky bottom-0 bg-zinc-950/90 backdrop-blur-sm border-t border-white/10"}>
-        <div className={`max-w-5xl mx-auto flex items-center justify-between gap-3 ${siteBar ? "px-4 py-2 sm:px-6 sm:py-3" : "px-6 py-3"}`}>
+        <div className={`max-w-5xl mx-auto flex items-center justify-between gap-3 ${wrapLabels ? "flex-wrap sm:flex-nowrap" : ""} ${siteBar ? "px-4 py-2 sm:px-6 sm:py-3" : "px-6 py-3"}`}>
           {back ? (
-            <button onClick={back.onGo} data-testid={testIds ? "back" : undefined} className="text-xs text-zinc-400 hover:text-white transition-colors whitespace-nowrap shrink-0">
+            <button onClick={back.onGo} data-testid={testIds ? "back" : undefined} className={`text-xs text-zinc-400 hover:text-white transition-colors shrink-0 ${wrapLabels ? "min-w-0 max-w-[42%] whitespace-normal text-left sm:max-w-none sm:whitespace-nowrap" : "whitespace-nowrap"}`}>
               ← {back.label}
             </button>
           ) : <span />}
           {/* What is actually happening to what you typed, said plainly and
               with the off switch next to it. A copy going to a server is not a
               thing to bury in a privacy policy nobody opens. */}
-          <span className="text-[11px] text-zinc-600 text-center min-w-0">
+          <span className={`text-[11px] text-zinc-600 text-center min-w-0 ${wrapLabels ? "order-last basis-full sm:order-none sm:basis-auto" : ""}`}>
             {/* WHAT HAPPENED TO THE PLAN ITSELF comes first and in amber, above
                 the line about the improvement copy. They are different facts
                 and the one people need is "is my work safe", not "was a
@@ -103,7 +106,7 @@ export function PlanStepNav({
             <button
               onClick={forward.onGo}
           data-testid={testIds ? "next" : undefined}
-              className="text-sm font-medium px-4 py-2 rounded-lg whitespace-nowrap shrink-0 bg-primary/20 border border-primary/40 text-foreground hover:bg-primary/30 transition-colors"
+              className={`text-sm font-medium px-4 py-2 rounded-lg shrink-0 bg-primary/20 border border-primary/40 text-foreground hover:bg-primary/30 transition-colors ${wrapLabels ? "min-w-0 max-w-[56%] whitespace-normal text-right max-sm:px-3 max-sm:text-[13px] sm:max-w-none sm:whitespace-nowrap" : "whitespace-nowrap"}`}
             >
               {forward.label} →
             </button>

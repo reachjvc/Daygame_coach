@@ -216,7 +216,7 @@ describe("step numbers and Back/Next words follow the version", () => {
     const v2 = sequenceById("v2")
     const pick = screenById(v2, "pick")!
     expect(navLabel(v2, pick, prevScreen(v2, pick)!)).not.toBe(navLabel(v2, pick, nextScreen(v2, pick)!))
-    expect(navLabel(v2, pick, nextScreen(v2, pick)!)).toMatch(/^Season: /)
+    expect(navLabel(v2, pick, nextScreen(v2, pick)!)).toBe("Season: one thing")
   })
 
   it("Part N of M counts along the walk the screen is on", () => {

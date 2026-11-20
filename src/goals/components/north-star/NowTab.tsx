@@ -90,7 +90,7 @@ export function NowTab({
       {focus && (
         <div className="rounded-2xl border border-violet-400/30 bg-violet-500/[0.07] px-5 py-3 flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="text-[13px] font-medium text-violet-100">{SEASON_FOCUS_COPY.banner(focus.label)}</span>
-          <span className="text-[11px] text-zinc-400 min-w-0 flex-1">{SEASON_FOCUS_COPY.bannerNote}</span>
+          <span className="text-[11px] text-zinc-400 min-w-[10rem] flex-1">{SEASON_FOCUS_COPY.bannerNote}</span>
           <button
             onClick={() => onSeasonFocus(focus.id)}
             className="text-[10.5px] text-zinc-500 hover:text-zinc-200 transition-colors shrink-0"

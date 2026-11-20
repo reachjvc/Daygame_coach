@@ -142,8 +142,31 @@ async function settle(page: Page): Promise<void> {
   await page.waitForLoadState("networkidle", { timeout: NAV }).catch(() => undefined)
 }
 
+/**
+ * A column squeezed to a few letters: a block of text with two or more words, narrower than 110 px, that wraps onto three or
+ * more lines ("Run a / half / marathon"). Found by the height of the text against
+ * its line height, so it needs no list of classes.
+ */
+function findSqueezed(): string[] {
+  const out: string[] = []
+  const vis = (e: Element) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 }
+  for (const el of Array.from(document.querySelectorAll<HTMLElement>("span, p, li, button, label, h2, h3"))) {
+    if (!vis(el) || el.closest("svg, [aria-hidden=true], [data-fold-skip]")) continue
+    // Leaf text only: an element whose own children are all text or inline phrases.
+    if (Array.from(el.children).some((c) => getComputedStyle(c).display === "block" || getComputedStyle(c).display === "flex")) continue
+    const text = (el.textContent ?? "").trim().replace(/\s+/g, " ")
+    const words = text.split(" ").filter(Boolean)
+    if (words.length < 2 || text.length > 80) continue
+    const r = el.getBoundingClientRect()
+    const line = parseFloat(getComputedStyle(el).lineHeight) || parseFloat(getComputedStyle(el).fontSize) * 1.3
+    const lines = Math.round(r.height / line)
+    if (r.width < 110 && lines >= 3) out.push(`squeezed to ${Math.round(r.width)} px (${lines} lines): "${text.slice(0, 40)}"`)
+  }
+  return out
+}
+
 async function look(page: Page, label: string, fails: string[]): Promise<void> {
-  const found = await page.evaluate(findOffenders)
+  const found = [...(await page.evaluate(findOffenders)), ...(await page.evaluate(findSqueezed))]
   for (const f of found) fails.push(`[${page.viewportSize()?.width}px] ${label}: ${f}`)
 }
 

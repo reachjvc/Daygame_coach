@@ -165,7 +165,7 @@ export function AreaGoalsDialog({
             >
               {coverage.label}
             </span>
-            <span className="min-w-0 flex-1 text-[10.5px] text-zinc-500 leading-relaxed">{coverage.note}</span>
+            <span className="min-w-[10rem] flex-1 text-[10.5px] text-zinc-500 leading-relaxed">{coverage.note}</span>
             <button
               onClick={() => onSeasonFocus(area.id)}
               aria-pressed={isFocus}
