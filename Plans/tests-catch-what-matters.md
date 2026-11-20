@@ -372,6 +372,57 @@ phase can finish.
 
 Accept: before/after score table for all 8 files; no new test that only restates the code.
 
+**How it ran.** `scripts/mutation/run.sh <file>[:from-to][,more] [concurrency]` (config
+`scripts/mutation/stryker.conf.json`, plus `ignoreStatic: true`: the 80 static mutants of `dateUtils` alone
+would each re-run all 4174 tests, 97% of the time). It refuses to run in the main checkout and restores the file
+it mutated on exit. A whole-repo dry run takes about 2.5 min per run, so `timetrackService.ts` (2546 lines) was run
+in four line ranges, `syncService.ts` once at concurrency 4 (a first run at concurrency 1, started while WSL showed
+under 3 GB free, hit the 40-min limit with no report: B3 note below). Score is Stryker's: killed + timeout over
+killed + timeout + survived + no-coverage (ignored static mutants left out). "After" reruns only the lines that had
+a survivor or an uncovered mutant, with the new tests in place, and adds the newly killed ones to the earlier killed
+count (the unchanged source gives the same mutants; killed ones stay killed because tests were only added).
+
+| File | Before: score / survived / no-coverage | After: score / survived / no-coverage | New tests |
+|---|---|---|---|
+| `src/timetrack/syncService.ts` | 78.1% / 70 / 9 | 88.1% / 41 / 2 | 2 |
+| `src/timetrack/syncVersionService.ts` | 45.7% / 182 / 18 | 76.1% / 81 / 7 | 8 |
+| `src/timetrack/timetrackService.ts` | 66.1% / 420 / 275 | 83.8% / 253 / 79 | 11 |
+| `src/timetrack/runningTimerService.ts` | 64.4% / 59 / 71 | 80.0% / 50 / 23 | 4 |
+| `src/audit/auditQueue.ts` | 64.3% / 154 / 22 | 84.6% / 72 / 4 | 5 |
+| `src/audit/auditService.ts` | 78.9% / 258 / 38 | 86.0% / 188 / 9 | 4 |
+| `src/vice/blackbox/blackboxStore.ts` | 74.3% / 106 / 30 | 87.0% / 61 / 8 | 3 |
+| `src/shared/dateUtils.ts` | 87.7% / 20 / 10 | 91.8% / 13 / 7 | 3 |
+
+Biggest finding: the merge of a queued change onto a newer server copy (`syncVersionService`: `mergeRow`, `rebase`,
+`isBackToBase`, tag merge) and the offline audit queue's two-tab merge were only exercised through page tests, 45.7%
+and 64.3%. The cascade deletes of `timetrackService` (client, project, task, tag, member, group) had no unit test at
+all (chunk 1901-2546 scored 38.6%, 196 mutants uncovered). No product bug was found: every new test passed on the
+unmutated code first time or after fixing my own expectation.
+
+New tests (39 in total, one per behaviour group, each case on the boundary where a rule changes its answer):
+`tests/unit/timetrack/syncVersionMerge.test.ts`, `syncGuardsAtTheirEdges.test.ts`, `runningTimerMessages.test.ts`,
+`theTimerAndItsRulesAtTheEdges.test.ts`, `editingEntriesKeepsTheRecordWhole.test.ts`,
+`moneyAlertsAndApprovals.test.ts`, `deletingAThingLeavesNothingPointingAtIt.test.ts`,
+`tests/unit/audit/auditQueueTwoTabs.test.ts`, `auditInputsAreChecked.test.ts`,
+`tests/unit/vice/blackboxRecordKept.test.ts`, and three in `tests/unit/shared/dateUtils.test.ts`.
+
+**Survivors left, and why (triaged by pattern, not one by one; about 900 remain over the eight files):**
+- Wording of refusals and log lines (`StringLiteral` on `error:`/`message:`/`console.error`): the refusal itself is
+  asserted, the sentence is not, and a test of the sentence would only restate it.
+- Equivalent mutants: a check that a later check repeats (`importRecord` rejects a bad day in `isAttempt` and again by
+  `<= today`; `isStreakCurrent` with no date compares `null >= text`, false anyway; `previousPeriodStart` steps back by
+  the wrong amount and `periodStartFor` snaps it to the same boundary).
+- Guards on values the platform never produces (`Intl` without `timeZoneName`, `crypto` missing, NaN from a parsed
+  stamp the server wrote itself) and `Math.random` variants of an id.
+- Truthiness of a list that is spread or filtered anyway (`if (marks.length > 0) ? {marks} : {}`, `if (kept.length >
+  0) out[t] = kept`): the empty case reads the same as the absent one to every caller.
+- Left as real but unwritten (the 40-test cap): in `auditService` the `buildReview` percentage ordering and spelling
+  grouping (lines 738-793), `checkWeek` block rules and the `applyReviewChange` block/removeBlock branches; in
+  `timetrackService` `buildDayGroups` carry-over across midnight, recurring project periods (1737-1760) and `auditMembers`; in `runningTimerService` the push `catch` blocks; in
+  `syncService` the `mergeIncoming` / `mergeChangeSets` empty-table skips.
+
+**Status:** done 2026-11-20 — mutation runner and config committed; table above for all 8 files; 39 new unit tests, none restating a line; before/after per file from Stryker 9.6.1 reports, e.g. `syncVersionService.ts before: 45.7% (surv 182, nocov 18) -> after: 76.1% (surv 81, nocov 7)`, `timetrackService.ts before: 66.1% (surv 420, nocov 275) -> after: 83.8% (surv 253, nocov 79)`
+
 ## Phase 8 — Everyday phone flows · M · sonnet · after Phase 5
 
 1. Map the everyday flows on `android` to the spec line that does each the way a person would (taps,

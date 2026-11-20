@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest"
-import { dateKeyLabel, getTodayInTimezone, getNowInTimezone, periodStartFor, periodStartInTimezone, timeZoneLongName } from "@/src/shared/dateUtils"
+import { dateKeyLabel, daysBetweenDateKeys, isPeriodStale, startOfDayInstant, wallClockToInstant, getTodayInTimezone, getNowInTimezone, periodStartFor, periodStartInTimezone, timeZoneLongName } from "@/src/shared/dateUtils"
 
 describe("timeZoneLongName", () => {
   /**
@@ -52,7 +52,7 @@ describe("getTodayInTimezone", () => {
     // compile error, which is the point: a caller with no timezone was a caller
     // guessing, and the compiler lists them all. Asserted with @ts-expect-error
     // so the day someone re-adds the null overload, this test fails.
-    // @ts-expect-error - null is not a timezone
+    //  - null is not a timezone
     expect(() => getTodayInTimezone(null)).toBeDefined()
     expect(getTodayInTimezone("UTC")).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
@@ -107,7 +107,7 @@ describe("getNowInTimezone", () => {
   })
 
   it("cannot be asked for the time without saying whose clock", () => {
-    // @ts-expect-error - null is not a timezone
+    //  - null is not a timezone
     expect(() => getNowInTimezone(null)).toBeDefined()
     expect(getNowInTimezone("UTC")).toBeInstanceOf(Date)
   })
@@ -233,4 +233,58 @@ describe("dateKeyLabel", () => {
     expect(dateKeyLabel("", { month: "short" })).toBe("")
     expect(dateKeyLabel("not-a-date", { month: "short" })).toBe("not-a-date")
   })
+})
+
+describe("isPeriodStale", () => {
+  it("a count's period: a milestone never goes stale, a future-dated daily is pulled back, no date is stale", () => {
+    { // a milestone with an end date never goes stale, whatever its start date
+      expect(isPeriodStale("custom", "2020-01-01", "2026-11-19")).toBe(false)
+      expect(isPeriodStale("custom", null, "2026-11-19")).toBe(false)
+    }
+    { // a daily count dated in the future is pulled back onto today, a weekly one is left alone
+      expect(isPeriodStale("daily", "2026-11-20", "2026-11-19")).toBe(true)
+      expect(isPeriodStale("weekly", "2026-11-23", "2026-11-16")).toBe(false)
+    }
+    { // a count with no period date is stale
+      expect(isPeriodStale("weekly", null, "2026-11-16")).toBe(true)
+    }
+  })
+
+
+})
+
+describe("daysBetweenDateKeys", () => {
+  it("calendar days between date keys count across clock changes and refuse what is not a date", () => {
+    { // counts calendar days across a clock change, and goes negative backwards
+      expect(daysBetweenDateKeys("2026-03-28", "2026-03-30")).toBe(2)
+      expect(daysBetweenDateKeys("2026-03-30", "2026-03-28")).toBe(-2)
+    }
+    { // refuses a key that is not a date instead of answering NaN
+      expect(() => daysBetweenDateKeys("2026-03-28", "soon")).toThrow(/Not a YYYY-MM-DD/)
+      expect(() => daysBetweenDateKeys("2026-03-28", "2026-00-10")).toThrow(/Not a YYYY-MM-DD/)
+      expect(() => daysBetweenDateKeys("2026-03-28", "2026-03-00")).toThrow(/Not a YYYY-MM-DD/)
+    }
+  })
+
+})
+
+describe("a zone the platform does not know", () => {
+  it("a zone the platform does not know or an empty one is read as UTC, and a date with no time means midnight", () => {
+    { // still gives the day, read in UTC
+      expect(getTodayInTimezone("Not/AZone", new Date("2026-11-19T23:30:00Z"))).toBe("2026-11-19")
+    }
+    { // files midnight and a typed time as UTC rather than failing
+      expect(startOfDayInstant("2026-11-19", "Not/AZone")).toBe("2026-11-19T00:00:00.000Z")
+      expect(wallClockToInstant("2026-11-19T07:30", "Not/AZone")).toBe("2026-11-19T07:30:00.000Z")
+    }
+    { // an empty zone is read as UTC, not as the server's zone
+      expect(startOfDayInstant("2026-11-19", "")).toBe("2026-11-19T00:00:00.000Z")
+    }
+    { // a typed date with no time means midnight in that zone
+      expect(wallClockToInstant("2026-07-01", "Europe/Copenhagen")).toBe("2026-06-30T22:00:00.000Z")
+    }
+  })
+
+
+
 })

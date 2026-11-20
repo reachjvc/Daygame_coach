@@ -112,3 +112,8 @@ backups/
 # on anybody else's box. The public certificate is not a secret; the CA's
 # private key never leaves the named Docker volume.
 infra/caddy/local-root-ca.crt
+
+# Mutation runs (scripts/mutation/run.sh): scratch output of Stryker
+/reports/
+/.stryker-tmp/
+/stryker-setup-*.js

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/stryker-mutator/stryker/master/packages/core/schema/stryker-core.json",
+  "testRunner": "vitest",
+  "vitest": { "related": true },
+  "inPlace": true,
+  "coverageAnalysis": "perTest",
+  "reporters": ["clear-text", "json"],
+  "jsonReporter": { "fileName": "reports/mutation/mutation.json" },
+  "ignorePatterns": ["reports", ".next", "node_modules"],
+  "ignoreStatic": true,
+  "timeoutMS": 20000
+}
