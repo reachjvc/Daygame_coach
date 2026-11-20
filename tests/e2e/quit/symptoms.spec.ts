@@ -221,8 +221,16 @@ test.describe("what you'll feel, and when @phone", () => {
       return out
     })
     expect(small).toEqual([])
+    expect(errors).toEqual([])
     // the menu row opens it
     await page.goto(quitUrl("/quit/nicotine"))
+    // Leaving a page cancels the prefetches it still had open (its links to
+    // /quit and /quit/nicotine), and WebKit reports each one as a console
+    // error, "Fetch API cannot load …?_rsc=… due to access control checks"
+    // (nightly E2E 44800384257, phone 2/2). That is this test's own goto, not
+    // the page: the tool page was checked clean just above, and errors count
+    // again from the menu's load on.
+    errors.length = 0
     await page.getByRole("link", { name: /What you'll feel, and when/ }).click()
     await expect(page).toHaveURL(/\/quit\/nicotine\/symptoms/)
     await expect(page.getByTestId("day-card")).toBeVisible()
