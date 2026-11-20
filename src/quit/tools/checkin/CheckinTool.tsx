@@ -235,6 +235,8 @@ function Screens({
     if (!tapOk()) return;
     if (lock.current === key) return;
     lock.current = key;
+    // the screen is about to change (the address follows a moment later): taps from now on are ignored
+    screenAt.current = Date.now();
     fn();
   };
 
