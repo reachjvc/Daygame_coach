@@ -82,10 +82,32 @@ export function RealStepSessionProvider({ children }: { children: ReactNode }) {
   const [anchor, setAnchor] = useState<string | null>(null)
   const [oneThingTyped, setOneThingTyped] = useState<string | null>(null)
   const [sorterNotice, setSorterNotice] = useState<SorterNotice | null>(null)
-  const [sorterAsks, setSorterAsks] = useState<SorterAsk[]>([])
+  const { account } = usePlanNew()
+  // A question the sorter still asks (S3) survives a reload and a screen change: nothing is written to the plan until it
+  // is answered, so the typed line must not be lost meanwhile. Kept for this tab, per copy plan, cleared when answered.
+  const asksKey = `plan-sorter-asks:${account}`
+  const [sorterAsks, setSorterAsksState] = useState<SorterAsk[]>([])
+  const asksLoaded = useRef(false)
+  useEffect(() => {
+    try {
+      const raw = window.sessionStorage.getItem(asksKey)
+      if (raw) setSorterAsksState(JSON.parse(raw) as SorterAsk[])
+    } catch { /* storage refused: the question lives until reload */ }
+    asksLoaded.current = true
+  }, [asksKey])
+  const setSorterAsks = useCallback<Dispatch<SetStateAction<SorterAsk[]>>>((arg) => {
+    setSorterAsksState((prev) => {
+      const next = typeof arg === "function" ? arg(prev) : arg
+      try {
+        if (next.length) window.sessionStorage.setItem(asksKey, JSON.stringify(next))
+        else window.sessionStorage.removeItem(asksKey)
+      } catch { /* storage refused */ }
+      return next
+    })
+  }, [asksKey])
   const value = useMemo(
     () => ({ errand, setErrand, anchor, setAnchor, oneThingTyped, setOneThingTyped, sorterNotice, setSorterNotice, sorterAsks, setSorterAsks }),
-    [errand, anchor, oneThingTyped, sorterNotice, sorterAsks],
+    [errand, anchor, oneThingTyped, sorterNotice, sorterAsks, setSorterAsks],
   )
   return <SessionCtx.Provider value={value}>{children}</SessionCtx.Provider>
 }
@@ -350,28 +372,38 @@ export function RealStepHost({
 
   const writers = usePlanWriters({ setPlan, today, setTab, setPlanAreaId, setNowGoalId, setOpenRoutineId })
 
-  /* ---- the sorter (Phase 7, Q8): a line typed on Systems or Experiences that reads as the other half ---- */
-  // Only inside a sequence, on the two halves. S1 is today's behaviour: the real writer, untouched.
+  /* ---- the sorter (Phase 7, Q8): a line typed where it reads as the other half ---- */
+  // Only inside a sequence. S1 is today's behaviour: the real writers, untouched. The Systems and Experiences screens
+  // sort by the half they are; the catalogue's "write your own" and the Everything step's quick add ask for what a person
+  // WANTS (their examples are wants), so they count as Experiences.
   const sorter = sorterOfPlan(plan)
   const typedHalf: Half | null = screen ? (stepId === "systems" ? "systems" : stepId === "milestones" ? "experiences" : null) : null
-  const baseAddDump = writers.guideHandlers.onAddDump
-  const guideHandlers = useMemo(() => {
-    if (!typedHalf || sorter === "s1") return writers.guideHandlers
-    return {
-      ...writers.guideHandlers,
-      onAddDump: (areaId: string, text: string) => {
-        const { stay, away } = sortLines(text, typedHalf)
-        if (away.length === 0) return baseAddDump(areaId, text)
-        if (stay.length > 0) baseAddDump(areaId, stay.join("\n"))
+  const sortedAdd = useCallback(
+    (base: (areaId: string, text: string) => void, half: Half | null) => {
+      if (!screen || !half || sorter === "s1") return base
+      return (areaId: string, text: string) => {
+        const { stay, away } = sortLines(text, half)
+        if (away.length === 0) return base(areaId, text)
+        if (stay.length > 0) base(areaId, stay.join("\n"))
         if (sorter === "s2") {
-          baseAddDump(areaId, away.join("\n"))
-          setSorterNotice({ areaId, titles: away, from: typedHalf })
+          base(areaId, away.join("\n"))
+          setSorterNotice({ areaId, titles: away, from: half })
           return
         }
-        setSorterAsks((q) => [...q, ...away.map((title): SorterAsk => ({ areaId, title, typedOn: typedHalf }))])
-      },
-    }
-  }, [writers.guideHandlers, baseAddDump, typedHalf, sorter, setSorterNotice, setSorterAsks])
+        setSorterAsks((q) => [...q, ...away.map((title): SorterAsk => ({ areaId, title, typedOn: half }))])
+      }
+    },
+    [screen, sorter, setSorterNotice, setSorterAsks],
+  )
+  const guideHandlers = useMemo(
+    () => (typedHalf ? { ...writers.guideHandlers, onAddDump: sortedAdd(writers.guideHandlers.onAddDump, typedHalf) } : writers.guideHandlers),
+    [writers.guideHandlers, typedHalf, sortedAdd],
+  )
+  const boardHandlers = useMemo(
+    () => ({ ...writers.boardHandlers, onAddOwn: sortedAdd(writers.boardHandlers.onAddOwn, "experiences") }),
+    [writers.boardHandlers, sortedAdd],
+  )
+  const onQuickAdd = sortedAdd(writers.onQuickAdd, "experiences")
   const undoSorter = () => {
     const n = sorterNotice
     if (!n) return
@@ -386,6 +418,10 @@ export function RealStepHost({
 
   /* ---- V3: the short go-deeper cards, for the areas in the season, drawn in place by the real parts ---- */
   const seq = sequence ?? sequenceOfPlan(plan)
+  // A card appears once the box it follows holds three words and nobody is typing in a box, so the page does not jump
+  // under the person's hands while a sentence is written.
+  const typing = useTextFocus()
+  const words = (text: string) => text.trim().split(/\s+/).filter(Boolean).length
   const markDeeper = (key: string, how: "no" | "opened") => setPlan((p) => ns.setAnswer(p, key, how))
   const inSeasonArea = (areaId: string) => plan.seasonAreaIds.includes(areaId)
   const starSection = section
@@ -394,7 +430,7 @@ export function RealStepHost({
         area: (areaId) => {
           const area = plan.areas.find((a) => a.id === areaId)
           const key = deeperKey("area", areaId)
-          if (!area || areaSection !== "area.ten" || !inSeasonArea(areaId) || !ns.areaReview(plan, areaId).ten.trim() || plan.answers[key]) return null
+          if (!area || areaSection !== "area.ten" || !inSeasonArea(areaId) || typing || words(ns.areaReview(plan, areaId).ten) < 3 || plan.answers[key]) return null
           return (
             <DeeperCard
               testId="deeper-area"
@@ -406,10 +442,26 @@ export function RealStepHost({
             />
           )
         },
+        // On the season's own screen, as each area is picked: the same card, the same "Not now".
+        seasonArea: (areaId) => {
+          const area = plan.areas.find((a) => a.id === areaId)
+          const key = deeperKey("area", areaId)
+          if (!area || typing || plan.answers[key]) return null
+          return (
+            <DeeperCard
+              testId={`deeper-season-area-${areaId}`}
+              title={`Go deeper on ${area.label}?`}
+              line="Why it matters · what stops you · values"
+              openLabel="Go deeper"
+              onOpen={() => { markDeeper(key, "opened"); router.push(`${ROUTES.planNew}/now?area=${encodeURIComponent(areaId)}&part=area.why`) }}
+              onNotNow={() => markDeeper(key, "no")}
+            />
+          )
+        },
         goal: (goalId, areaId) => {
           const goal = plan.goals.find((g) => g.id === goalId)
           const key = deeperKey("goal", goalId)
-          if (!goal || goalSection !== "goal.shape" || !inSeasonArea(areaId) || !goal.title.trim() || plan.answers[key]) return null
+          if (!goal || goalSection !== "goal.shape" || !inSeasonArea(areaId) || typing || !goal.title.trim() || plan.answers[key]) return null
           return (
             <DeeperCard
               testId="deeper-goal"
@@ -422,7 +474,7 @@ export function RealStepHost({
         },
         star: () => {
           const key = deeperKey("star")
-          if (starSection !== "star.vision" || !plan.northStar.trim() || plan.answers[key]) return null
+          if (starSection !== "star.vision" || typing || words(plan.northStar) < 3 || plan.answers[key]) return null
           return (
             <DeeperCard
               testId="deeper-star"
@@ -520,6 +572,8 @@ export function RealStepHost({
   const value: RealStep = {
     ...writers,
     guideHandlers,
+    boardHandlers,
+    onQuickAdd,
     ...reads,
     stepId,
     plan,
@@ -585,6 +639,24 @@ export function RealStepHost({
       </TouchControlsContext.Provider>
     </PlanBasePathContext.Provider>
   )
+}
+
+/** True while a text box or text area has the focus. */
+function useTextFocus(): boolean {
+  const [typing, setTyping] = useState(false)
+  useEffect(() => {
+    const read = () => {
+      const el = document.activeElement
+      setTyping(!!el && (el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && !["button", "checkbox", "radio", "range"].includes((el as HTMLInputElement).type))))
+    }
+    // After the focus has moved: `focusout` fires before the next element has it.
+    const later = () => window.setTimeout(read, 0)
+    document.addEventListener("focusin", read)
+    document.addEventListener("focusout", later)
+    read()
+    return () => { document.removeEventListener("focusin", read); document.removeEventListener("focusout", later) }
+  }, [])
+  return typing
 }
 
 /**

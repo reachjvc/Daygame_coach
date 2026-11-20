@@ -10,7 +10,7 @@
  *   to happen?") show.
  */
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import * as ns from "@/src/goals/northStarService"
 import { SEQUENCE_KEY } from "@/src/goals/planSteps/planFacts"
 import { SEQUENCES, sequenceOfPlan } from "@/src/goals/planSteps/planSequences"
@@ -109,9 +109,21 @@ export function SorterCards({ notice, asks, onUndo, onDismiss, onAnswer }: {
     return () => window.clearTimeout(t)
   }, [notice, onDismiss])
   const ask = asks[0]
+  const card = useRef<HTMLDivElement>(null)
+  // The card sits above the bottom bar and the page is padded by the same height (the spacer), so the box that was typed in
+  // can always be scrolled clear of it; if it is under the card now, scroll it up by the overlap.
+  useEffect(() => {
+    const el = card.current
+    const box = document.activeElement
+    if (!el || !box || box === document.body) return
+    const over = box.getBoundingClientRect().bottom - el.getBoundingClientRect().top
+    if (over > -16) window.scrollBy({ top: over + 16 })
+  }, [ask, notice])
   if (!ask && !notice) return null
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-20 z-[80] flex justify-center px-3">
+    <>
+    <div aria-hidden className="h-44" />
+    <div ref={card} className="pointer-events-none fixed inset-x-0 bottom-20 z-[80] flex justify-center px-3" data-testid="sorter-card">
       {ask ? (
         <div className="pointer-events-auto w-full max-w-md rounded-xl border border-primary/40 bg-zinc-900 p-3 shadow-xl" role="alertdialog" aria-label="Where does this line go?" data-testid="sorter-ask">
           <p className="break-words text-xs text-muted-foreground">{`“${ask.title}”`}</p>
@@ -138,5 +150,6 @@ export function SorterCards({ notice, asks, onUndo, onDismiss, onAnswer }: {
         )
       )}
     </div>
+    </>
   )
 }

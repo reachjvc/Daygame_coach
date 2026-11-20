@@ -7,6 +7,7 @@ import { accountOf, buildStepsOf, deepenItems, nextUp } from "@/src/goals/planSt
 import { planNumbers } from "@/src/goals/planSteps/planNumbers"
 import { DEFAULT_SORTER, addLineOn, homeOfLine, moveLineTo, sortLines, sorterOfPlan, withSorter } from "@/src/goals/planSteps/planSorter"
 import * as ns from "@/src/goals/northStarService"
+import { keepCopySpaceAnswers } from "@/src/goals/planSandboxCopy"
 import { fullPlan } from "@/tests/support/fullLifePlan"
 
 const V1 = sequenceById("v1")
@@ -224,5 +225,35 @@ describe("step numbers and Back/Next words follow the version", () => {
     expect(walkPartsOf(v2, screenById(v2, "season.why")!).map((s) => s.id)).toEqual(["season.why", "season.who", "season.order"])
     const first = screenById(v2, "season.areas")!
     expect(navLabel(v2, first, screenById(v2, "season.one-thing")!)).toBe("Part 2 of 2")
+  })
+})
+
+describe("a quit line answered 'Want it to happen' stays an experience after a reload", () => {
+  it("clears the quit mark, and a round trip through the loader keeps it", () => {
+    const a = ns.emptyNsPlan().areas[0].id
+    const plan = addLineOn(ns.emptyNsPlan(), a, "No weed", "experiences")
+    expect(plan.goals[0].isAbstinence).toBe(false)
+    expect(ns.isMilestone(plan.goals[0])).toBe(true)
+    const again = ns.normalizeNsPlan(JSON.parse(JSON.stringify(plan)))!
+    expect(again.goals[0].isAbstinence).toBe(false)
+    expect(ns.isMilestone(again.goals[0])).toBe(true)
+    // and "Every week" keeps it where it reads
+    expect(ns.isSystem(addLineOn(ns.emptyNsPlan(), a, "No weed", "systems").goals[0])).toBe(true)
+  })
+})
+
+describe("a fresh copy of the real plan keeps the copy space's own settings", () => {
+  it("keeps the version, the sorter and the Not-now marks, and nothing else of the old copy", () => {
+    const row = (prompt_id: string, body: string, id: string) => ({ id, user_id: "u", plan_id: "p", kind: "answer" as const, prompt_id, body })
+    const copied = [row("star_why", "real", "c1"), row("start:new:sequence", "v1", "c2")]
+    const before = [row("start:new:sequence", "v3", "b1"), row("start:new:sorter", "s2", "b2"), row("start:new:deeper:star", "no", "b3"), row("star_why", "old", "b4")]
+    let n = 0
+    const out = keepCopySpaceAnswers(copied, before, { userId: "sb", planId: "np" }, () => `n${++n}`)
+    const get = (k: string) => out.filter((a) => a.prompt_id === k).map((a) => a.body)
+    expect(get("start:new:sequence")).toEqual(["v3"])
+    expect(get("start:new:sorter")).toEqual(["s2"])
+    expect(get("start:new:deeper:star")).toEqual(["no"])
+    expect(get("star_why")).toEqual(["real"])
+    expect(out.every((a) => a.user_id === (a.id.startsWith("c") ? "u" : "sb"))).toBe(true)
   })
 })

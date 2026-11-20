@@ -24,7 +24,8 @@
  * is one place the season is decided.
  */
 
-import { useState } from "react"
+import { Fragment, useState } from "react"
+import { useDeeperPrompts } from "./deeperPrompts"
 import { Plus, X } from "lucide-react"
 import type { NorthStarTabId, NsPlan } from "@/src/goals/types"
 import { FOCUS_COPY } from "@/src/goals/data/northStar"
@@ -74,6 +75,7 @@ export function FocusTab({
   const show = (id: string) => showSection(section, id)
   const [adding, setAdding] = useState("")
   const ratings = wheelRatings(plan, today)
+  const deeper = useDeeperPrompts()
   const picked = plan.seasonAreaIds
   const goalCounts = Object.fromEntries(plan.areas.map((a) => [a.id, plan.goals.filter((g) => g.areaId === a.id).length]))
 
@@ -119,7 +121,8 @@ export function FocusTab({
               const ten = areaReview(plan, area.id).ten.split("\n")[0].trim()
               const rating = ratings[area.id] ?? null
               return (
-                <li key={id} className="flex items-center gap-2 rounded-xl border border-violet-400/30 bg-violet-500/[0.07] px-3 py-2">
+                <Fragment key={id}>
+                <li className="flex items-center gap-2 rounded-xl border border-violet-400/30 bg-violet-500/[0.07] px-3 py-2">
                   <span className="inline-flex items-center justify-center size-5 rounded-full text-[10px] tabular-nums shrink-0 bg-violet-500/30 text-violet-50">
                     {i + 1}
                   </span>
@@ -141,6 +144,8 @@ export function FocusTab({
                     <X className="size-3.5" />
                   </button>
                 </li>
+                {deeper?.seasonArea(id) && <li className="list-none">{deeper.seasonArea(id)}</li>}
+                </Fragment>
               )
             })}
           </ol>

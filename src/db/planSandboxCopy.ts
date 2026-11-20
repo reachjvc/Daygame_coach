@@ -21,7 +21,7 @@ import { deleteReminder, readReminder, writeReminder } from "./lifePlanReminders
 import { deleteCouncilRows, insertCouncilRows, readCouncilRows } from "./roleModelsRepo"
 import type { ResolvedPlanTarget } from "./planSandbox"
 import { diffPlanRows } from "@/src/goals/lifePlanDiff"
-import { idMapper, remapDayRows, remapPlanRows } from "@/src/goals/planSandboxCopy"
+import { idMapper, keepCopySpaceAnswers, remapDayRows, remapPlanRows } from "@/src/goals/planSandboxCopy"
 
 /** The copy space only: a "self" target here would write the real account. */
 function mustBeSandbox(target: ResolvedPlanTarget): void {
@@ -58,13 +58,16 @@ export async function copyIntoSandbox(
   const reminder = await readReminder(owner.userId, owner.supabase)
   const council = await readCouncilRows(owner.userId, owner.supabase)
 
+  // The copy space's own settings (the version being tried and the like) survive a fresh copy of the real plan.
+  const before = await readLifePlan(sandbox.userId, sandbox.supabase).catch(() => null)
   await resetSandbox(sandbox)
   await insertCouncilRows(sandbox.userId, council, sandbox.supabase)
   if (!stored || !days) return false
 
   const made = await ensureLifePlan(sandbox.userId, sandbox.supabase)
   const mapId = idMapper(newId)
-  const plan = remapPlanRows(stored.rows, mapId, sandbox.userId, made.id)
+  const copiedRows = remapPlanRows(stored.rows, mapId, sandbox.userId, made.id)
+  const plan = before ? { ...copiedRows, answers: keepCopySpaceAnswers(copiedRows.answers, before.rows.answers, { userId: sandbox.userId, planId: made.id }, newId) } : copiedRows
   const changes = diffPlanRows(null, plan)
   await applyLifePlanChanges(changes, made.revision, sandbox.userId, sandbox.supabase)
   await insertDayRows(remapDayRows(days, stored.rows.plan_id, mapId, sandbox.userId, made.id), sandbox.supabase)

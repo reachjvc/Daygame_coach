@@ -170,3 +170,25 @@ export function canonicalDays(days: DayRows, nodes: PlanRows["nodes"]): Record<k
     numbers: canon((days.numbers ?? []) as unknown as Row[], []),
   }
 }
+
+/**
+ * WHAT THE COPY SPACE KEEPS WHEN IT IS COPIED AGAIN: the version and sorter being tried and the "Not now" marks of the
+ * go-deeper cards (answers whose key starts `start:new:sequence`, `start:new:sorter`, `start:new:deeper:`). They are the
+ * copy space's own settings, not part of the real plan, so a fresh copy of the real plan must not reset them.
+ */
+export const COPY_SPACE_KEPT_ANSWER = /^start:new:(sequence|sorter|deeper:)/
+
+/** The copied answers, with the copy space's own settings (from before the copy) laid over them. */
+export function keepCopySpaceAnswers(
+  copied: PlanRows["answers"],
+  before: PlanRows["answers"],
+  owner: { userId: string; planId: string },
+  newId: IdMaker,
+): PlanRows["answers"] {
+  const kept = before.filter((a) => a.kind === "answer" && COPY_SPACE_KEPT_ANSWER.test(a.prompt_id))
+  const names = new Set(kept.map((a) => a.prompt_id))
+  return [
+    ...copied.filter((a) => !(a.kind === "answer" && names.has(a.prompt_id))),
+    ...kept.map((a) => ({ ...a, id: newId(), user_id: owner.userId, plan_id: owner.planId })),
+  ]
+}

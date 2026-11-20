@@ -44,15 +44,6 @@ export function sortLines(text: string, typedOn: Half): { stay: string[]; away: 
   return { stay, away }
 }
 
-/**
- * File one line on the half the person chose. On the half it reads as, this is exactly what a typed line does today;
- * on the other, the line is filed with that half's kind of goal.
- */
-export function addLineOn(plan: NsPlan, areaId: string, title: string, half: Half, now = new Date().toISOString()): NsPlan {
-  if (homeOfLine(title) === half) return ns.addGoalsFromDump(plan, areaId, title, now)
-  return ns.addGoal(plan, areaId, title, half === "systems" ? "habit_ramp" : "achievement", now)
-}
-
 /** The newest goal in an area with this title, if any. */
 const newestGoal = (plan: NsPlan, areaId: string, title: string) =>
   [...plan.goals].reverse().find((g) => g.areaId === areaId && g.title.trim().toLowerCase() === title.trim().toLowerCase())
@@ -62,6 +53,17 @@ export function moveLineTo(plan: NsPlan, areaId: string, title: string, half: Ha
   const goal = newestGoal(plan, areaId, title)
   if (!goal) return plan
   return ns.setGoalType(plan, goal.id, half === "systems" ? "habit_ramp" : "achievement", now)
+}
+
+/**
+ * File one line on the half the person chose. On the half it reads as, this is exactly what a typed line does today; on
+ * the other it is filed as it reads and then flipped with `setGoalType` (the same call Undo uses), which also settles
+ * whether it is a prohibition: a quit line ("No weed") answered "Want it to happen" stops being one, so the answer
+ * survives a reload.
+ */
+export function addLineOn(plan: NsPlan, areaId: string, title: string, half: Half, now = new Date().toISOString()): NsPlan {
+  const filed = ns.addGoalsFromDump(plan, areaId, title, now)
+  return homeOfLine(title) === half ? filed : moveLineTo(filed, areaId, title, half, now)
 }
 
 /** The sorter's choice, as a plan with the answer set. */

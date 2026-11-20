@@ -10,6 +10,8 @@ import { createContext, useContext, type ReactNode } from "react"
 export interface DeeperPrompts {
   /** Under an area's 10, once it is written. */
   area: (areaId: string) => ReactNode
+  /** Under a picked season area, on the season screen. */
+  seasonArea: (areaId: string) => ReactNode
   /** Under a goal's shape. */
   goal: (goalId: string, areaId: string) => ReactNode
   /** Under the north star paragraph, once it is written. */
