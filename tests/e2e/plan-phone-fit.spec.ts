@@ -7,6 +7,7 @@ import { planWithSteps, seedLifePlan } from "./helpers/lifePlan"
 import { stackAdmin, testStackEnv } from "./fixtures/stack"
 import { screensOf, screenRoute, sequenceById } from "@/src/goals/planSteps/planSequences"
 import { TAB_ORDER } from "@/src/goals/data/northStar"
+import { AREA_SECTIONS, GOAL_SECTIONS, STEP_SECTIONS } from "@/src/goals/planSteps/planSections"
 
 /**
  * THE LIFE-PLAN TOOL FITS A PHONE (Plans/plan-new-from-real.md, Phase 5).
@@ -199,3 +200,36 @@ for (const surface of SURFACES) {
     })
   })
 }
+
+/**
+ * THE SCREENS OF HIS PICKS (Plans/plan-new-from-real.md, Phase 6): the plan home, Plan my week, each long step shown whole
+ * ("see it all"), each part of the area sheet and of the goal card. The short screens themselves are in the loop above
+ * (every screen of V1).
+ */
+test.describe("/plan/new, the screens of his picks, fit a phone", () => {
+  test(`nothing past the edge, at ${WIDTHS.join(" and ")} px`, async ({ page, account }) => {
+    test.setTimeout(1_500_000)
+    await seedAndCopy(page, account.id)
+    const fails: string[] = []
+    const fullAreaId = fullPlan().areas[0].id
+    const goal = fullPlan().goals[0]
+    const addresses: Array<[string, string]> = [
+      ["plan home", `${ROUTES.planNew}?home=1`],
+      ["Plan my week", `${ROUTES.planNew}/week`],
+      ...Object.entries(STEP_SECTIONS).map(([step, ids]): [string, string] => [`${step} (see it all)`, `${ROUTES.planNew}/${ids[0]}?all=1`]),
+      ...AREA_SECTIONS.map((part): [string, string] => [`area sheet, ${part}`, `${ROUTES.planNew}/now?area=${fullAreaId}&part=${part}`]),
+      ["area sheet, all", `${ROUTES.planNew}/now?area=${fullAreaId}&part=all`],
+      ...GOAL_SECTIONS.map((part): [string, string] => [`goal card, ${part}`, `${ROUTES.planNew}/milestones?area=${goal.areaId}&goal=${goal.id}&part=${part}`]),
+      ["goal card, all", `${ROUTES.planNew}/milestones?area=${goal.areaId}&goal=${goal.id}&part=all`],
+    ]
+    for (const w of WIDTHS) {
+      await page.setViewportSize({ width: w, height: 800 })
+      for (const [name, url] of addresses) {
+        await page.goto(url, { timeout: NAV })
+        await settle(page)
+        await look(page, name, fails)
+      }
+    }
+    expect(fails.join("\n"), "offenders").toBe("")
+  })
+})

@@ -65,12 +65,12 @@ test.describe("the split screens", () => {
         await page.goto(`${ROUTES.planNew}/${id}`, { timeout: NAV })
         await expect(page.getByTestId(`sequence-${id}`)).toBeVisible({ timeout: NAV })
         await expect(page.getByTestId("see-it-all")).toBeVisible()
-        await page.waitForTimeout(1500)
+        await page.waitForLoadState("networkidle")
         for (const l of await lines()) union.add(l)
       }
       await page.goto(`${screenRoute(V1, V1.screens.find((s) => s.step === step)!)}?all=1`, { timeout: NAV })
       await expect(page.getByTestId("see-it-all")).toHaveText("Back to the short screens", { timeout: NAV })
-      await page.waitForTimeout(1500)
+      await page.waitForLoadState("networkidle")
       const missing = (await lines()).filter((l) => !chrome.test(l) && !union.has(l))
       expect(missing, `${step}: lines on the whole page that no short screen shows`).toEqual([])
     }
@@ -255,7 +255,7 @@ test.describe("buttons beside the drag (Q9)", () => {
       const { rows } = await (await import("./helpers/planNewCopy")).withDb((db) => db.query("select count(*)::int as n from public.life_plan_values where user_id = $1", [sandboxId]))
       return rows[0].n
     }).toBeGreaterThan(0)
-    await page.waitForTimeout(2500)
+    await expect(page.getByTestId("save-status").first()).toHaveText("Saved to your account.")
     await page.reload({ timeout: NAV })
     await expect(page.getByLabel(/^Reorder /).first()).toBeVisible({ timeout: NAV })
     expect(await order()).toEqual([before[1], before[0], ...before.slice(2)])

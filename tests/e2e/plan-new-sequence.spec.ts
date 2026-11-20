@@ -5,8 +5,8 @@ import { ROUTES } from "@/src/shared/routes"
 import { fullPlan } from "@/tests/support/fullLifePlan"
 import { planWithSteps, seedLifePlan } from "./helpers/lifePlan"
 import { stackAdmin, testStackEnv } from "./fixtures/stack"
-import { navLabel, screensOf, screenRoute, sequenceById } from "@/src/goals/planSteps/planSequences"
-import { TAB_LABELS, TODO_COPY } from "@/src/goals/data/northStar"
+import { navLabel, screenRoute, sequenceById } from "@/src/goals/planSteps/planSequences"
+import { TODO_COPY } from "@/src/goals/data/northStar"
 
 /**
  * THE V1 SEQUENCE ON /plan/new/<screen> (Plans/plan-new-from-real.md, Phase 4), on the copy space.
@@ -224,7 +224,7 @@ test.describe("the V1 sequence on /plan/new/<screen>", () => {
     const ownerBefore = await fingerprint(account.id)
     const errors: string[] = []
     page.on("pageerror", (e) => errors.push(e.message))
-    await page.goto(`${ROUTES.planNew}/values`, { timeout: NAV })
+    await page.goto(`${ROUTES.planNew}/values.lists`, { timeout: NAV })
     const link = page.getByTestId("values-choose-council")
     await expect(link).toHaveAttribute("href", ROUTES.planNewRoleModels, { timeout: NAV })
     await link.click()

@@ -142,7 +142,7 @@ export function RealShell({ children, seq }: { children: ReactNode; seq?: Sequen
         {resetFailed && (
           <p role="alert" className="mb-4 text-sm text-destructive">Could not start over. Nothing was removed. Try again.</p>
         )}
-        <Link href={planHomeHref()} className="mb-3 inline-flex min-h-11 items-center text-[12px] text-violet-300 hover:text-violet-100 underline decoration-dotted underline-offset-2" data-testid="plan-home-link">
+        <Link href={planHomeHref()} className="mb-3 inline-flex min-h-11 items-center text-[12px] text-primary hover:text-primary underline decoration-dotted underline-offset-2" data-testid="plan-home-link">
           Plan home
         </Link>
         <StepPicker
@@ -160,12 +160,12 @@ export function RealShell({ children, seq }: { children: ReactNode; seq?: Sequen
         {r.ribbon && !dialogOpen && <div className="mb-5">{r.ribbon}</div>}
         {screen?.section && parts.length > 1 && (
           <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1" data-testid="section-bar">
-            <p className="text-[12px] text-zinc-400" data-testid="section-title">
+            <p className="text-[12px] text-muted-foreground" data-testid="section-title">
               {r.seeAll ? TAB_LABELS[screen.step] : `Part ${partIndex + 1} of ${parts.length}: ${SECTION_TITLES[screen.section as SectionId]}`}
             </p>
             <Link
               href={r.seeAll ? screenRoute(seq as Sequence, screen) : `${screenRoute(seq as Sequence, screen)}?all=1`}
-              className="inline-flex min-h-11 items-center text-[12px] text-violet-300 hover:text-violet-100 underline decoration-dotted underline-offset-2"
+              className="inline-flex min-h-11 items-center text-[12px] text-primary hover:text-primary underline decoration-dotted underline-offset-2"
               data-testid="see-it-all"
             >
               {r.seeAll ? "Back to the short screens" : "See it all on one page"}

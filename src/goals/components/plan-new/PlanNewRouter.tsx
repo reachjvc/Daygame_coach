@@ -3,7 +3,6 @@
 import { useEffect } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { ROUTES } from "@/src/shared/routes"
 import { CORE_IDS, EXTRA_IDS, type CoreId, type ExtraId, homeHref, planHomeHref } from "@/src/goals/planSteps/planRoutes"
 import { commonCopy, saveCopy } from "@/src/goals/planSteps/copy/common"
 import { Home } from "./Home"

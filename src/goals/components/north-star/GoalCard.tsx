@@ -410,7 +410,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
                   aria-pressed={section === id}
                   data-testid={`goal-section-${id}`}
                   className={`min-h-11 rounded-lg border px-3 py-2 text-left text-[12px] transition-colors ${
-                    section === id ? "border-violet-400/50 bg-violet-500/15 text-violet-100" : "border-white/10 text-zinc-400 hover:text-zinc-200 hover:border-white/25"
+                    section === id ? "border-primary/50 bg-primary/15 text-primary" : "border-white/10 text-muted-foreground hover:text-foreground hover:border-white/25"
                   }`}
                 >
                   {label}
@@ -422,7 +422,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
                 aria-pressed={!section}
                 data-testid="goal-section-all"
                 className={`min-h-11 rounded-lg border px-3 py-2 text-[12px] transition-colors ${
-                  !section ? "border-violet-400/50 bg-violet-500/15 text-violet-100" : "border-white/10 text-zinc-400 hover:text-zinc-200 hover:border-white/25"
+                  !section ? "border-primary/50 bg-primary/15 text-primary" : "border-white/10 text-muted-foreground hover:text-foreground hover:border-white/25"
                 }`}
               >
                 See it all on one page

@@ -125,14 +125,14 @@ function SortableValue({ id, label, children, trailing, onUp, onDown }: {
               onClick={() => onUp?.()}
               disabled={!onUp}
               aria-label={`Move ${label} up`}
-              className="inline-flex size-11 items-center justify-center rounded-lg text-zinc-300 hover:bg-white/10 disabled:opacity-25 transition-colors"
+              className="inline-flex size-11 items-center justify-center rounded-lg text-foreground hover:bg-white/10 disabled:opacity-25 transition-colors"
             ><ChevronUp className="size-4" /></button>
             <button
               type="button"
               onClick={() => onDown?.()}
               disabled={!onDown}
               aria-label={`Move ${label} down`}
-              className="inline-flex size-11 items-center justify-center rounded-lg text-zinc-300 hover:bg-white/10 disabled:opacity-25 transition-colors"
+              className="inline-flex size-11 items-center justify-center rounded-lg text-foreground hover:bg-white/10 disabled:opacity-25 transition-colors"
             ><ChevronDown className="size-4" /></button>
           </span>
         )}

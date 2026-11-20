@@ -21,7 +21,7 @@ function Body() {
     <div className="mx-auto w-full max-w-5xl space-y-4 px-4 pb-28 pt-4 sm:px-6" data-testid="plan-my-week">
       <header className="space-y-2">
         <Link href={planHomeHref()} className={linkQuiet} data-testid="week-back">Your plan</Link>
-        <h1 className="text-2xl font-semibold text-zinc-50">Plan my week</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Plan my week</h1>
       </header>
       <GuidedBuild plan={r.plan} today={r.today} handlers={r.guideHandlers} />
     </div>
